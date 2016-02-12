@@ -7,14 +7,9 @@
 
    inbound: (syscall.type=listen and evt.dir='>') or (syscall.type=accept and evt.dir='<')
 
-   (*) There are a few minor differences with the syntax implemented in libsinsp:
+   (*) There currently one known difference with the syntax implemented in libsinsp:
 
-   - (Feature!) In libsinsp, field names cannot start with 'a', 'o', or 'n'. With this parser they can
-
-   - (Bug!) In libsinsp, operator right-hand sides only need to be quoted if they contain spaces or parens. With this parser, they need to be quoted if they contain any non-alphanumeric character. For example:
-
-   (libsinsp)    fd.name = mylog or fd.name contains .log and event.dir = <
-   (this parser) fd.name = mylog or fd.name contains '.log' and event.dir = '<'
+   - In libsinsp, field names cannot start with 'a', 'o', or 'n'. With this parser they can
 
 ]]--
 
@@ -197,7 +192,7 @@ local G = {
   MacroDef = (C(V"Macro") * V"Skip" * V"Colon" * (V"Filter"));
 
   -- Terminals
-  Value = terminal "Number" + terminal "String" + terminal "Identifier";
+  Value = terminal "Number" + terminal "String" + terminal "BareString";
 
   InList = symb("(") * list(V"Value", symb(",")) * symb(")");
 
@@ -220,6 +215,8 @@ local G = {
   Number = C(V"Hex" + V"Float" + V"Int") /
            function (n) return tonumber(n) end;
   String = (P'"' * C(((P'\\' * P(1)) + (P(1) - P'"'))^0) * P'"' +  P"'" * C(((P"\\" * P(1)) + (P(1) - P"'"))^0) * P"'")  / function (s) return fix_str(s) end;
+  BareString = C(((P(1) - S' (),'))^1);
+
   OrOp = kw("or") / "or";
   AndOp = kw("and") / "and";
   Colon = kw(":");

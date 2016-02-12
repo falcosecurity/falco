@@ -50,17 +50,19 @@ good "a.b icontains 'bla'"
 good "a.g in ()"
 good "a.g in (1, 'a', b)"
 good "a.g in ( 1 ,, , b)"
+good "evt.dir=> and fd.name=*.log"
+good "evt.dir=> and fd.name=/var/log/httpd.log"
+good "a.g in (1, 'a', b.c)"
+good "a.b = a.a"
 
-bad "a.g in (1, 'a', b.c)"
-bad "a.b = a.a"
 bad "(a.b = 1"
-
 # Macros
 
 good "a: a.b exists"
 good "a: b and c"
 good "a: b"
 good "a : b"
+good "a : evt.dir=>"
 good "inbound: (syscall.type=listen and evt.dir='>') or (syscall.type=accept and evt.dir='<')"
 bad "a:"
 
