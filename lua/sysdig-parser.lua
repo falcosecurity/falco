@@ -11,7 +11,7 @@
 
    - In libsinsp, field names cannot start with 'a', 'o', or 'n'. With this parser they can
 
-]]--
+--]]
 
 local parser = {}
 
@@ -256,7 +256,7 @@ end
    Traverses the AST and replaces `in` relational expressions with a sequence of ORs.
 
    For example, `a.b in [1, 2]` is expanded to `a.b = 1 or a.b = 2` (in ASTs)
-]]--
+--]]
 function expand_in(node)
    local t = node.type
 
