@@ -237,6 +237,40 @@ local G = {
   OneWord = V"Name" + V"Number" + V"String" +  P(1);
 }
 
+function print_ast(node, level)
+   local t = node.type
+   local prefix = string.rep(" ", level*2)
+   level = level + 1
+
+   if t == "Filter" then
+      print_ast(node.value, level)
+
+   elseif t == "BinaryBoolOp" or t == "BinaryRelOp" then
+      print(prefix..node.operator)
+      print_ast(node.left, level)
+      print_ast(node.right, level)
+
+   elseif t == "UnaryRelOp" or t == "UnaryBoolOp" then
+      print (prefix..node.operator)
+      print_ast(node.argument, level)
+
+   elseif t == "List" then
+      print(prefix.. "List: ")
+      for i, v in ipairs(node.elements) do
+         print_ast(v, level)
+      end
+
+   elseif t == "FieldName" or t == "Number" or t == "String" or t == "BareString" or t == "Macro" then
+      print (prefix..t.." "..node.value)
+
+   elseif t == "MacroDef" then
+      -- don't print for now
+   else
+      error ("Unexpected type: "..t)
+   end
+end
+
+
 
 function parser.parse (subject)
   local errorinfo = { subject = subject }
