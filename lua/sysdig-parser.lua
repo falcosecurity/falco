@@ -237,6 +237,74 @@ local G = {
   OneWord = V"Name" + V"Number" + V"String" +  P(1);
 }
 
+function map(f, arr)
+   local res = {}
+   for i,v in ipairs(arr) do
+      res[i] = f(v)
+   end
+   return res
+end
+
+function foldr(f, acc, arr)
+   for i,v in pairs(arr) do
+      acc = f(acc, v)
+   end
+   return acc
+end
+
+--[[
+   Traverses the AST and replaces `in` relational expressions with a sequence of ORs.
+
+   For example, `a.b in [1, 2]` is expanded to `a.b = 1 or a.b = 2` (in ASTs)
+]]--
+function expand_in(node)
+   local t = node.type
+
+   if t == "Filter" then
+      expand_in(node.value)
+
+   elseif t == "UnaryBoolOp" then
+      expand_in(node.argument)
+
+   elseif t == "BinaryBoolOp" then
+      expand_in(node.left)
+      expand_in(node.right)
+
+   elseif t == "BinaryRelOp" and node.operator == "in" then
+      if (table.maxn(node.right.elements) == 0) then
+         error ("In list with zero elements")
+      end
+
+      local mapper = function(element)
+         return {
+            type = "BinaryRelOp",
+            operator = "eq",
+            left = node.left,
+            right = element
+         }
+      end
+
+      local equalities = map(mapper, node.right.elements)
+      local lasteq = equalities[table.maxn(equalities)]
+      equalities[table.maxn(equalities)] = nil
+
+      local folder = function(left, right)
+         return {
+            type = "BinaryBoolOp",
+            operator = "or",
+            left = left,
+            right = right
+         }
+      end
+      lasteq = foldr(folder, lasteq, equalities)
+
+      node.type=lasteq.type
+      node.operator=lasteq.operator
+      node.left=lasteq.left
+      node.right=lasteq.right
+   end
+end
+
 function print_ast(node, level)
    local t = node.type
    local prefix = string.rep(" ", level*2)
@@ -276,6 +344,10 @@ function parser.parse (subject)
   local errorinfo = { subject = subject }
   lpeg.setmaxstack(1000)
   local ast, error_msg = lpeg.match(G, subject, nil, errorinfo)
+  if (error_msg) then
+     return ast, error_msg
+  end
+  expand_in(ast)
   return ast, error_msg
 end
 

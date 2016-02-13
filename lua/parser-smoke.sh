@@ -15,12 +15,12 @@ function error_exit_bad
 
 function good
 {
-    lua test.lua "$1" || error_exit_good "$1"
+    lua test.lua "$1" 2> /dev/null || error_exit_good "$1"
 }
 
 function bad
 {
-    lua test.lua "$1" && error_exit_bad "$1"
+    lua test.lua "$1" 2> /dev/null && error_exit_bad "$1"
 }
 
 # Filters
@@ -47,7 +47,6 @@ good "a.b = 'bla'"
 good "a.b = not"
 good "a.b contains bla"
 good "a.b icontains 'bla'"
-good "a.g in ()"
 good "a.g in (1, 'a', b)"
 good "a.g in ( 1 ,, , b)"
 good "evt.dir=> and fd.name=*.log"
@@ -55,6 +54,7 @@ good "evt.dir=> and fd.name=/var/log/httpd.log"
 good "a.g in (1, 'a', b.c)"
 good "a.b = a.a"
 
+bad "a.g in ()"
 bad "(a.b = 1"
 # Macros
 
@@ -66,4 +66,6 @@ good "a : evt.dir=>"
 good "inbound: (syscall.type=listen and evt.dir='>') or (syscall.type=accept and evt.dir='<')"
 bad "a:"
 
+echo
+echo "All tests passed."
 exit 0
