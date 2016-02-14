@@ -13,7 +13,8 @@
 
 --]]
 
-local parser = {}
+local compiler = {}
+compiler.parser = {}
 
 local lpeg = require "lpeg"
 
@@ -340,15 +341,44 @@ end
 
 
 
-function parser.parse (subject)
+--[[
+   Parses a single line (which should be either a macro definition or a filter) and returns the AST.
+--]]
+function compiler.parser.parseline (subject)
   local errorinfo = { subject = subject }
   lpeg.setmaxstack(1000)
   local ast, error_msg = lpeg.match(G, subject, nil, errorinfo)
-  if (error_msg) then
-     return ast, error_msg
-  end
-  expand_in(ast)
   return ast, error_msg
 end
 
-return parser
+
+--[[
+   Sets up compiler state and returns it.
+
+   This is an opaque blob that is passed into subsequent compiler calls and
+   should not be modified by the client.
+
+   It holds state such as macro definitions that must be kept across calls
+   to the line-oriented compiler.
+--]]
+function compiler.init()
+   return {}
+end
+
+--[[
+   Compiles a digwatch filter or macro
+--]]
+function compiler.compile_line(line, state)
+   ast, error_message = compiler.parser.parseline(line)
+
+   if (error_msg) then
+      return {}, state, error_msg
+   end
+   expand_in(ast)
+--   extract_macros(ast, state)
+--   expand_macros(ast, state)
+   return ast, state, error_msg
+end
+
+
+return compiler
