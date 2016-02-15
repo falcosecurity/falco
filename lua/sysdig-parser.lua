@@ -168,7 +168,7 @@ end
 local G = {
    V"Start", -- Entry rule
 
-   Start = (V"MacroDef" / macro + V"Filter" / filter) * -1 + report_error();
+   Start = V"Skip" * (V"MacroDef" / macro + V"Filter" / filter) * -1 + report_error();
 
   -- Grammar
   Filter = V"OrExpression";
@@ -313,8 +313,94 @@ function expand_in(node)
    end
 end
 
+--[[
+
+   Given a map of macro definitions, traverse AST and replace macro references
+   with their definitions.
+
+   The AST is changed in-place.
+
+   The return value is a boolean which is true if any macro was
+   substitued. This allows a caller to re-traverse until no more macros are
+   found, a simple strategy for recursive resoltuions (e.g. when a macro
+   definition uses another macro).
+
+--]]
+function expand_macros(node, defs, changed)
+   if node.type == "Filter" then
+      if (node.value.type == "Macro") then
+         if (defs[node.value.value] == nil) then
+            tostring = require 'ml'.tstring
+            error("Undefined macro '".. node.value.value .. "' used in filter.")
+         end
+         node.value = defs[node.value.value]
+         changed = true
+      end
+      return expand_macros(node.value, defs, changed)
+
+   elseif node.type == "BinaryBoolOp" then
+
+      if (node.left.type == "Macro") then
+         if (defs[node.left.value] == nil) then
+            error("Undefined macro '".. node.left.value .. "' used in filter.")
+         end
+         node.left = defs[node.left.value]
+         changed = true
+      end
+
+      if (node.right.type == "Macro") then
+         if (defs[node.right.value] == nil) then
+            error("Undefined macro ".. node.right.value .. "used in filter.")
+         end
+         node.right = defs[node.right.value]
+         changed = true
+      end
+
+      local changed_left = expand_macros(node.left, defs, false)
+      local changed_right = expand_macros(node.right, defs, false)
+      return changed or changed_left or changed_right
+
+   elseif node.type == "UnaryBoolOp" then
+      if (node.argument.type == "Macro") then
+         if (defs[node.argument.value] == nil) then
+            error("Undefined macro ".. node.argument.value .. "used in filter.")
+         end
+         node.argument = defs[node.argument.value]
+         changed = true
+      end
+      return expand_macros(node.argument, defs, changed)
+   end
+   return changed
+end
+
+function get_macros(node, set)
+   if (node.type == "Macro") then
+      set[node.value] = true
+      return set
+   end
+
+   if node.type == "Filter" then
+      return get_macros(node.value, set)
+   end
+
+   if node.type == "BinaryBoolOp" then
+      local left = get_macros(node.left, {})
+      local right = get_macros(node.right, {})
+
+      for m, _ in pairs(left) do set[m] = true end
+      for m, _ in pairs(right) do set[m] = true end
+
+      return set
+   end
+   if node.type == "UnaryBoolOp" then
+      return get_macros(node.argument, set)
+   end
+   return set
+end
+
 function print_ast(node, level)
    local t = node.type
+   level = level or 0
    local prefix = string.rep(" ", level*2)
    level = level + 1
 
@@ -345,13 +431,13 @@ function print_ast(node, level)
       error ("Unexpected type: "..t)
    end
 end
-
+compiler.parser.print_ast = print_ast
 
 
 --[[
    Parses a single line (which should be either a macro definition or a filter) and returns the AST.
 --]]
-function compiler.parser.parseline (subject)
+function compiler.parser.parse_line (subject)
   local errorinfo = { subject = subject }
   lpeg.setmaxstack(1000)
   local ast, error_msg = lpeg.match(G, subject, nil, errorinfo)
@@ -369,22 +455,41 @@ end
    to the line-oriented compiler.
 --]]
 function compiler.init()
-   return {}
+   return {macros={}}
 end
 
 --[[
    Compiles a digwatch filter or macro
 --]]
 function compiler.compile_line(line, state)
-   ast, error_message = compiler.parser.parseline(line)
+   local ast, error_msg = compiler.parser.parse_line(line)
 
    if (error_msg) then
-      return {}, state, error_msg
+      return nil, error_msg
    end
-   expand_in(ast)
---   extract_macros(ast, state)
---   expand_macros(ast, state)
-   return ast, state, error_msg
+
+   local macros = get_macros(ast.value, {})
+   for m, _ in pairs(macros) do
+      if state.macros[m] == nil then
+         error ("Undefined macro '"..m.."' used in '"..line.."'")
+      end
+   end
+
+   if (ast.type == "MacroDef") then
+      state.macros[ast.name] = ast.value
+      return ast, error_msg
+   elseif (ast.type == "Filter") then
+      expand_in(ast)
+
+      repeat
+         expanded  = expand_macros(ast, state.macros, false)
+      until expanded == false
+
+   else
+      error("Unexpected top-level AST type: "..ast.type)
+   end
+
+   return ast, error_msg
 end
 
 

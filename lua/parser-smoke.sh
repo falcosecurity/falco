@@ -15,12 +15,12 @@ function error_exit_bad
 
 function good
 {
-    lua test.lua "$1" 2> /dev/null || error_exit_good "$1"
+    lua test.lua "a: x.y=1; b: a and z.x exists; c: b; $1" 2> /dev/null || error_exit_good "$1"
 }
 
 function bad
 {
-    lua test.lua "$1" 2> /dev/null && error_exit_bad "$1"
+    lua test.lua "a: x.y=1; b: a and z.x exists; c: b; $1" 2> /dev/null && error_exit_bad "$1"
 }
 
 # Filters
@@ -41,7 +41,7 @@ good "not not a"
 good "(not not a)"
 good "not a.b=1"
 good "not a.a exists"
-good "notz"
+good "notz: a and b; notz"
 good "a.b = bla"
 good "a.b = 'bla'"
 good "a.b = not"

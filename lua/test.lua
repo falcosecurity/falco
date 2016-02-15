@@ -7,9 +7,18 @@ end
 
 local state = compiler.init()
 
-local ast, state, error_msg = compiler.compile_line(arg[1], state)
-if not ast then
-    os.exit(1)
+local function doit(line)
+   local ast, error_msg = compiler.compile_line(line, state)
+
+   if not ast then
+      print("error", error_msg)
+      os.exit(1)
+   end
+
+   compiler.parser.print_ast(ast)
+end
+for str in string.gmatch(arg[1], "([^;]+)") do
+   doit(str)
 end
 
 os.exit(0)
