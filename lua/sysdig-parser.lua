@@ -104,8 +104,15 @@ local function list (pat, sep)
    return Ct(pat^0 * (sep * pat^0)^0) / function(elements) return {type = "List", elements=elements} end
 end
 
+--http://lua-users.org/wiki/StringTrim
+function trim(s)
+   if (type(s) ~= "string") then return s end
+  return (s:gsub("^%s*(.-)%s*$", "%1"))
+end
+
 local function terminal (tag)
-   return token(V(tag), tag) / function (tok) return { type = tag, value = tok} end
+   -- Rather than trim the whitespace in this way, it would be nicer to exclude it from the capture...
+   return token(V(tag), tag) / function (tok) return { type = tag, value = trim(tok)} end
 end
 
 local function unaryboolop (op, e)
