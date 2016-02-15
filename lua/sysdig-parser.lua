@@ -216,7 +216,7 @@ local G = {
   Number = C(V"Hex" + V"Float" + V"Int") /
            function (n) return tonumber(n) end;
   String = (P'"' * C(((P'\\' * P(1)) + (P(1) - P'"'))^0) * P'"' +  P"'" * C(((P"\\" * P(1)) + (P(1) - P"'"))^0) * P"'")  / function (s) return fix_str(s) end;
-  BareString = C(((P(1) - S' (),'))^1);
+  BareString = C(((P(1) - S' (),='))^1);
 
   OrOp = kw("or") / "or";
   AndOp = kw("and") / "and";

@@ -55,6 +55,7 @@ good "a.g in (1, 'a', b.c)"
 good "a.b = a.a"
 
 bad "a.g in ()"
+bad "a.b = b = 1"
 bad "(a.b = 1"
 # Macros
 
