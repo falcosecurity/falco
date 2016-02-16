@@ -1,0 +1,32 @@
+class sinsp_filter
+  ::compile(str)
+call sinsp_filter::push_expression when entering a new nesting level (e.g. parens)
+call sinsp_filter::parse_check to parse a single relational expression
+     parse_check creates a sinsp_filter_check 'chk' of right type for field in this expression
+this 'chk' holds the fieldname, operator, value, and also the boolean op that was "on the left" of the expression (or BO_NONE). Then it is added to the parent sinsp_filter_expression by calling sinsp_filter_expression::add_check
+
+
+
+
+class sinsp_filter_expression : sinsp_filter_check
+has a list of sinsp_filter_checks (m_checks)
+
+
+
+class sinsp_filter_check // represents single relational expression
+
+
+Summary: what we'll need to do:
+
+- add an bool arg `lua_parsing` to sinsp::set_filter(const string& filter) (sinsp.cpp:1285)
+  that bool (defaults false) is passed to the sinsp_filter constructor
+- if true, sinsp_filter constructor will call lua_compile() instead of compile()
+- add a new method sinsp_filter::lua_compile(const string& filter) (filter.cpp)
+  this method calls up into lua with the string and some handle object that lua parser will use.
+
+What lua parser can do with said handle:
+- create a filter_expression
+- create new sinsp_filter_check by calling g_filterlist.new_filter_check_from_fldname (filter.cpp:1483)
+- set its comparison operator and previous bool operator (filter.cpp:1504)
+- parse field name (filter.cpp:1506)
+- parse value (filter.cpp:1610)
