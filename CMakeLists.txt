@@ -24,7 +24,25 @@ endif()
 
 set(PACKAGE_NAME "draios-digwatch")
 
-add_subdirectory(${PROJECT_SOURCE_DIR}/../sysdig ${PROJECT_BINARY_DIR}/sysdig)
+add_definitions(-DK8S_DISABLE_THREAD)
+
+set(SYSDIG_DIR ${PROJECT_SOURCE_DIR}/../sysdig)
+
+add_subdirectory(${SYSDIG_DIR} ${PROJECT_BINARY_DIR}/sysdig)
+
+set(CURL_BUNDLE_DIR "${sysdig_BINARY_DIR}/curl-prefix/src/curl")
+set(CURL_INCLUDE_DIR "${CURL_BUNDLE_DIR}/include/")
+set(CURL_LIBRARIES "${CURL_BUNDLE_DIR}/lib/.libs/libcurl.a")
+if(NOT USE_BUNDLED_OPENSSL)
+	set(CURL_SSL_OPTION "")
+else()
+	set(CURL_SSL_OPTION "--with-ssl=${OPENSSL_INSTALL_DIR}")
+endif()
+
+message(STATUS "Using bundled curl in '${CURL_BUNDLE_DIR}'")
+message(STATUS "Using SSL for curl in '${CURL_SSL_OPTION}'")
+
+
 
 add_subdirectory(userspace/digwatch)
 
