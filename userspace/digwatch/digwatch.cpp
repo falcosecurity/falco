@@ -123,9 +123,9 @@ captureinfo do_inspect(sinsp* inspector,
 //
 // ARGUMENT PARSING AND PROGRAM SETUP
 //
-digwatch_init_res digwatch_init(int argc, char **argv)
+int digwatch_init(int argc, char **argv)
 {
-	digwatch_init_res res;
+	int result;
 	sinsp* inspector = NULL;
 	int op;
 	uint64_t cnt = -1;
@@ -164,15 +164,13 @@ digwatch_init_res digwatch_init(int argc, char **argv)
 			{
 			case 'h':
 				usage();
-				delete inspector;
-				return digwatch_init_res(EXIT_SUCCESS);
+				result = EXIT_SUCCESS;
+				goto exit;
 			case 'M':
 				duration_to_tot = atoi(optarg);
 				if(duration_to_tot <= 0)
 				{
 					throw sinsp_exception(string("invalid duration") + optarg);
-					res.m_res = EXIT_FAILURE;
-					goto exit;
 				}
 				break;
 			case 'N':
@@ -191,17 +189,14 @@ digwatch_init_res digwatch_init(int argc, char **argv)
 				if(cnt <= 0)
 				{
 					throw sinsp_exception(string("invalid event count ") + optarg);
-					res.m_res = EXIT_FAILURE;
-					goto exit;
 				}
 				break;
 			case 'u':
 				user_parser = optarg;
 				break;
 			case '?':
-				delete inspector;
-				return digwatch_init_res(EXIT_FAILURE);
-				break;
+				result = EXIT_FAILURE;
+				goto exit;
 			default:
 				break;
 			}
@@ -229,7 +224,7 @@ digwatch_init_res digwatch_init(int argc, char **argv)
 
 #else
 			fprintf(stderr, "filtering not compiled.\n");
-			res.m_res = EXIT_FAILURE;
+			result = EXIT_FAILURE;
 			goto exit;
 #endif
 		}
@@ -254,12 +249,12 @@ digwatch_init_res digwatch_init(int argc, char **argv)
 	catch(sinsp_exception& e)
 	{
 		cerr << e.what() << endl;
-		res.m_res = EXIT_FAILURE;
+		result = EXIT_FAILURE;
 	}
 	catch(...)
 	{
 		printf("Exeception\n");
-		res.m_res = EXIT_FAILURE;
+		result = EXIT_FAILURE;
 	}
 
 exit:
@@ -269,7 +264,7 @@ exit:
 		delete inspector;
 	}
 
-	return res;
+	return result;
 }
 
 //
@@ -277,9 +272,5 @@ exit:
 //
 int main(int argc, char **argv)
 {
-	digwatch_init_res res;
-
-	res = digwatch_init(argc, argv);
-
-	return res.m_res;
+	return digwatch_init(argc, argv);
 }

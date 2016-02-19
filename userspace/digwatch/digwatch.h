@@ -23,25 +23,6 @@ along with sysdig.  If not, see <http://www.gnu.org/licenses/>.
 #endif // HAS_CAPTURE
 
 
-//
-// Capture results
-//
-class digwatch_init_res
-{
-public:
-	digwatch_init_res()
-	{
-		m_res = EXIT_SUCCESS;
-	}
-
-	digwatch_init_res(int res)
-	{
-		m_res = res;
-	}
-
-	int m_res;
-	vector<string> m_next_run_args;
-};
 
 //
 // Capture results
