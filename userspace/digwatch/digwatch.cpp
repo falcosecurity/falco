@@ -241,10 +241,7 @@ digwatch_init_res digwatch_init(int argc, char **argv)
 
 		g_lua_parser = new lua_parser(inspector, user_parser);
 
-		if(filter.size())
-		{
-			inspector->set_filter(filter);
-		}
+		inspector->set_filter(g_lua_parser->m_filter);
 		inspector->open("");
 
 		cinfo = do_inspect(inspector,
