@@ -8,9 +8,11 @@ endif()
 
 include_directories(${PROJECT_SOURCE_DIR}/../sysdig/userspace/libscap)
 include_directories(${PROJECT_SOURCE_DIR}/../sysdig/userspace/libsinsp)
+include_directories("${PROJECT_BINARY_DIR}/userspace/digwatch")
 
 add_executable(digwatch rules.cpp digwatch.cpp)
 
 target_link_libraries(digwatch sinsp)
 
 
+configure_file(config_digwatch.h.in config_digwatch.h)
