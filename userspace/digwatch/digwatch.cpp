@@ -8,14 +8,12 @@
 #include <algorithm>
 
 #include <sinsp.h>
-#include "lua_parser.h"
+#include "rules.h"
 #include "digwatch.h"
 #include "utils.h"
 
 #include <unistd.h>
 #include <getopt.h>
-
-lua_parser* g_lua_parser;
 
 static void usage();
 
@@ -127,6 +125,7 @@ int digwatch_init(int argc, char **argv)
 {
 	int result;
 	sinsp* inspector = NULL;
+	digwatch_rules* rules = NULL;
 	int op;
 	uint64_t cnt = -1;
 	sinsp_evt::param_fmt event_buffer_format = sinsp_evt::PF_NORMAL;
@@ -234,9 +233,9 @@ int digwatch_init(int argc, char **argv)
 		//
 		sinsp_evt_formatter formatter(inspector, output_format);
 
-		g_lua_parser = new lua_parser(inspector, user_parser);
+		rules = new digwatch_rules(inspector, user_parser);
 
-		inspector->set_filter(g_lua_parser->m_filter);
+		inspector->set_filter(rules->get_filter());
 		inspector->open("");
 
 		cinfo = do_inspect(inspector,
