@@ -1,15 +1,13 @@
 --[[
    Sysdig grammar and parser.
 
-   Much of the scaffolding and helpers was deriverd Andre Murbach Maidl's Lua parser (https://github.com/andremm/lua-parser).
+   Much of the scaffolding and helpers was derived from Andre Murbach Maidl's Lua parser (https://github.com/andremm/lua-parser).
 
    Parses regular filters following the existing sysdig filter syntax (*), as well as "macro" definitions. Macro definitions are written like:
 
    inbound: (syscall.type=listen and evt.dir='>') or (syscall.type=accept and evt.dir='<')
 
-   (*) There currently one known difference with the syntax implemented in libsinsp:
-
-   - In libsinsp, field names cannot start with 'a', 'o', or 'n'. With this parser they can
+   (*) There is currently one known difference with the syntax implemented in libsinsp: In libsinsp, field names cannot start with 'a', 'o', or 'n'. With this parser they can.
 
 --]]
 
