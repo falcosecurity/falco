@@ -31,22 +31,10 @@ local function install_filter(node)
       filter.rel_expr(node.left.value, node.operator, node.right.value)
       -- io.write(node.left.value.." "..node.operator.." "..node.right.value)
 
-      -- xxx still need to handle case where node.right.type=="list"
-
    elseif t == "UnaryRelOp"  then
       filter.rel_expr(node.argument.value, node.operator)
       --io.write(node.argument.value.." "..node.operator)
 
-   elseif t == "List" then
-      error("Not handling List yet")
-
-   elseif t == "FieldName" or t == "Number" or t == "String" or t == "BareString" or t == "Macro" then
-      error ("Unexpected type: "..t)
-
-      io.write(t.." "..node.value)
-
-   elseif t == "MacroDef" then
-      error ("Unexpected type: "..t)
    else
       error ("Unexpected type: "..t)
    end
