@@ -33,7 +33,7 @@ static void usage()
 	   " -h, --help         Print this page\n"
 	   " -m <filename>, --main-lua <filename>\n"
 	   "                    Name of lua compiler main file\n"
-	   "                    (default: rules_loader.lua\n"
+	   "                    (default: rules_loader.lua)\n"
 	   " -M <num_seconds>   Stop collecting after <num_seconds> reached.\n"
 	   " -N                 Don't convert port numbers to names.\n"
 	   " -n <num>, --numevents=<num>\n"
@@ -244,16 +244,16 @@ int digwatch_init(int argc, char **argv)
 		//
 		sinsp_evt_formatter formatter(inspector, output_format);
 
-		trim(lua_main_filename);
-		if (lua_main_filename.size() == 0)
-		{
-			lua_main_filename = DIGWATCH_LUA_MAIN;
-		}
-
 		char* env_lua_dir = getenv("DIGWATCH_LUA_DIR");
 		if (env_lua_dir)
 		{
 			lua_dir = string(env_lua_dir);
+		}
+
+		trim(lua_main_filename);
+		if (lua_main_filename.size() == 0)
+		{
+			lua_main_filename = lua_dir + DIGWATCH_LUA_MAIN;
 		}
 
 		rules = new digwatch_rules(inspector, lua_main_filename, lua_dir);

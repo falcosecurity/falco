@@ -67,18 +67,18 @@ void digwatch_rules::load_rules(string rules_filename)
 		throw sinsp_exception("can't open file " + rules_filename);
 	}
 
-	lua_getglobal(m_ls, m_lua_compiler_cb.c_str());
+	lua_getglobal(m_ls, m_lua_load_rule.c_str());
 	if(lua_isfunction(m_ls, -1))
 	{
 		lua_pop(m_ls, 1);
 	} else {
-		throw sinsp_exception("No function " + m_lua_compiler_cb + " found in lua compiler module");
+		throw sinsp_exception("No function " + m_lua_load_rule + " found in lua compiler module");
 	}
 
 	std::string line;
 	while (std::getline(is, line))
 	{
-		lua_getglobal(m_ls, m_lua_compiler_cb.c_str());
+		lua_getglobal(m_ls, m_lua_load_rule.c_str());
 		lua_pushstring(m_ls, line.c_str());
 
 		if(lua_pcall(m_ls, 1, 0, 0) != 0)
@@ -89,6 +89,18 @@ void digwatch_rules::load_rules(string rules_filename)
 		}
 	}
 
+	lua_getglobal(m_ls, m_lua_on_done.c_str());
+	if(lua_isfunction(m_ls, -1))
+	{
+		if(lua_pcall(m_ls, 0, 0, 0) != 0)
+		{
+			const char* lerr = lua_tostring(m_ls, -1);
+			string err = "Error installing rules: " + string(lerr);
+			throw sinsp_exception(err);
+		}
+	} else {
+		throw sinsp_exception("No function " + m_lua_on_done + " found in lua compiler module");
+	}
 
 }
 
