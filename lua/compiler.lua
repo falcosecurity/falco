@@ -1,5 +1,5 @@
 --[[
-   Sysdig grammar and parser.
+   Digwatch grammar and parser.
 
    Much of the scaffolding and helpers was derived from Andre Murbach Maidl's Lua parser (https://github.com/andremm/lua-parser).
 
@@ -226,13 +226,13 @@ local G = {
   OrOp = kw("or") / "or";
   AndOp = kw("and") / "and";
   Colon = kw(":");
-  RelOp = symb("=") / "eq" +
-          symb("==") / "eq" +
-          symb("!=") / "ne" +
-          symb("<=") / "le" +
-          symb(">=") / "ge" +
-          symb("<") / "lt" +
-          symb(">") / "gt" +
+  RelOp = symb("=") / "=" +
+          symb("==") / "==" +
+          symb("!=") / "!=" +
+          symb("<=") / "<=" +
+          symb(">=") / ">=" +
+          symb("<") / "<" +
+          symb(">") / ">" +
           symb("contains") / "contains" +
           symb("icontains") / "icontains";
   InOp = kw("in") / "in";
