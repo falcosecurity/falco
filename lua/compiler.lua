@@ -1,15 +1,13 @@
 --[[
-   Sysdig grammar and parser.
+   Digwatch grammar and parser.
 
-   Much of the scaffolding and helpers was deriverd Andre Murbach Maidl's Lua parser (https://github.com/andremm/lua-parser).
+   Much of the scaffolding and helpers was derived from Andre Murbach Maidl's Lua parser (https://github.com/andremm/lua-parser).
 
    Parses regular filters following the existing sysdig filter syntax (*), as well as "macro" definitions. Macro definitions are written like:
 
    inbound: (syscall.type=listen and evt.dir='>') or (syscall.type=accept and evt.dir='<')
 
-   (*) There currently one known difference with the syntax implemented in libsinsp:
-
-   - In libsinsp, field names cannot start with 'a', 'o', or 'n'. With this parser they can
+   (*) There is currently one known difference with the syntax implemented in libsinsp: In libsinsp, field names cannot start with 'a', 'o', or 'n'. With this parser they can.
 
 --]]
 
@@ -228,13 +226,13 @@ local G = {
   OrOp = kw("or") / "or";
   AndOp = kw("and") / "and";
   Colon = kw(":");
-  RelOp = symb("=") / "eq" +
-          symb("==") / "eq" +
-          symb("!=") / "ne" +
-          symb("<=") / "le" +
-          symb(">=") / "ge" +
-          symb("<") / "lt" +
-          symb(">") / "gt" +
+  RelOp = symb("=") / "=" +
+          symb("==") / "==" +
+          symb("!=") / "!=" +
+          symb("<=") / "<=" +
+          symb(">=") / ">=" +
+          symb("<") / "<" +
+          symb(">") / ">" +
           symb("contains") / "contains" +
           symb("icontains") / "icontains";
   InOp = kw("in") / "in";
@@ -455,17 +453,17 @@ end
    to the line-oriented compiler.
 --]]
 function compiler.init()
-   return {macros={}}
+   return {macros={}, ast=nil}
 end
 
 --[[
-   Compiles a digwatch filter or macro
+   Compiles a single line from a digwatch ruleset and updates the passed-in state object. Returns the AST of the line.
 --]]
 function compiler.compile_line(line, state)
    local ast, error_msg = compiler.parser.parse_line(line)
 
    if (error_msg) then
-      return nil, error_msg
+      error(error_msg)
    end
 
    local macros = get_macros(ast.value, {})
@@ -476,20 +474,31 @@ function compiler.compile_line(line, state)
    end
 
    if (ast.type == "MacroDef") then
+      -- Parsed line is a macro definition, so update our dictionary of macros and
+      -- return
       state.macros[ast.name] = ast.value
-      return ast, error_msg
+      return ast
+
    elseif (ast.type == "Filter") then
+      -- Line is a filter, so expand in-clauses and macro references, then
+      -- stitch it into global ast
+
       expand_in(ast)
 
       repeat
          expanded  = expand_macros(ast, state.macros, false)
       until expanded == false
 
+      if (state.ast == nil) then
+	 state.ast = ast
+      else
+	 state.ast = { type = "BinaryBoolOp", operator = "or", left = state.ast, right = ast }
+      end
    else
       error("Unexpected top-level AST type: "..ast.type)
    end
 
-   return ast, error_msg
+   return ast
 end
 
 
