@@ -6,16 +6,21 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <algorithm>
+#include <unistd.h>
+#include <getopt.h>
+
+extern "C" {
+#include "lua.h"
+#include "lualib.h"
+#include "lauxlib.h"
+}
 
 #include <sinsp.h>
+#include <config_digwatch.h>
 #include "rules.h"
 #include "digwatch.h"
 #include "utils.h"
 
-#include <unistd.h>
-#include <getopt.h>
-
-static void usage();
 
 //
 // Program help
@@ -23,15 +28,16 @@ static void usage();
 static void usage()
 {
     printf(
-	   "Usage: digwatch [options] [-p <output_format>] [filter]\n\n"
+	   "Usage: digwatch [options] [-p <output_format>] rules_filename\n\n"
 	   "Options:\n"
 	   " -h, --help         Print this page\n"
+	   " -m <filename>, --main-lua <filename>\n"
+	   "                    Name of lua compiler main file\n"
+	   "                    (default: rules_loader.lua\n"
 	   " -M <num_seconds>   Stop collecting after <num_seconds> reached.\n"
 	   " -N                 Don't convert port numbers to names.\n"
 	   " -n <num>, --numevents=<num>\n"
 	   "                    Stop capturing after <num> events\n"
-	   " -u <filename>, --user-parser <filename>\n"
-	   "                    Name of lua file containing parser\n"
 	   " -r <readfile>, --read=<readfile>\n"
 	   "                    Read the events from <readfile>.\n"
 	   " --unbuffered       Turn off output buffering. This causes every single line\n"
@@ -133,13 +139,14 @@ int digwatch_init(int argc, char **argv)
 	captureinfo cinfo;
 	string output_format;
 	int long_index = 0;
-	string user_parser;
+	string lua_main_filename;
+	string lua_dir = DIGWATCH_INSTALLATION_DIR;
 
 	static struct option long_options[] =
 	{
 		{"help", no_argument, 0, 'h' },
 		{"numevents", required_argument, 0, 'n' },
-		{"user-parser", required_argument, 0, 'u' },
+		{"main-lua", required_argument, 0, 'u' },
 		{"readfile", required_argument, 0, 'r' },
 		{"unbuffered", no_argument, 0, 0 },
 		{0, 0, 0, 0}
@@ -156,7 +163,7 @@ int digwatch_init(int argc, char **argv)
 		// Parse the args
 		//
 		while((op = getopt_long(argc, argv,
-                                        "hM:Nn:r:u:",
+                                        "hm:M:Nn:r:",
                                         long_options, &long_index)) != -1)
 		{
 			switch(op)
@@ -165,6 +172,9 @@ int digwatch_init(int argc, char **argv)
 				usage();
 				result = EXIT_SUCCESS;
 				goto exit;
+			case 'm':
+				lua_main_filename = optarg;
+				break;
 			case 'M':
 				duration_to_tot = atoi(optarg);
 				if(duration_to_tot <= 0)
@@ -190,9 +200,6 @@ int digwatch_init(int argc, char **argv)
 					throw sinsp_exception(string("invalid event count ") + optarg);
 				}
 				break;
-			case 'u':
-				user_parser = optarg;
-				break;
 			case '?':
 				result = EXIT_FAILURE;
 				goto exit;
@@ -204,20 +211,17 @@ int digwatch_init(int argc, char **argv)
 
 		inspector->set_buffer_format(event_buffer_format);
 
-		string filter;
+		string rules_file;
 
-		//
-		// the filter is at the end of the command line
-		//
 		if(optind < argc)
 		{
 #ifdef HAS_FILTERING
 			for(int32_t j = optind ; j < argc; j++)
 			{
-				filter += argv[j];
+				rules_file += argv[j];
 				if(j < argc - 1)
 				{
-					filter += " ";
+					rules_file += " ";
 				}
 			}
 
@@ -228,13 +232,33 @@ int digwatch_init(int argc, char **argv)
 #endif
 		}
 
+		if (rules_file.size() == 0) {
+			usage();
+			result = EXIT_FAILURE;
+			goto exit;
+
+		}
+
 		//
 		// Create the event formatter
 		//
 		sinsp_evt_formatter formatter(inspector, output_format);
 
-		rules = new digwatch_rules(inspector, user_parser);
+		trim(lua_main_filename);
+		if (lua_main_filename.size() == 0)
+		{
+			lua_main_filename = DIGWATCH_LUA_MAIN;
+		}
 
+		char* env_lua_dir = getenv("DIGWATCH_LUA_DIR");
+		if (env_lua_dir)
+		{
+			lua_dir = string(env_lua_dir);
+		}
+
+		rules = new digwatch_rules(inspector, lua_main_filename, lua_dir);
+
+		rules->load_rules(rules_file);
 		inspector->set_filter(rules->get_filter());
 		inspector->open("");
 
@@ -252,7 +276,7 @@ int digwatch_init(int argc, char **argv)
 	}
 	catch(...)
 	{
-		printf("Exeception\n");
+		printf("Exception\n");
 		result = EXIT_FAILURE;
 	}
 

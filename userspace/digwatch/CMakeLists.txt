@@ -15,4 +15,5 @@ add_executable(digwatch rules.cpp digwatch.cpp)
 target_link_libraries(digwatch sinsp)
 
 
+set(DIGWATCH_LUA_MAIN "rule_loader.lua")
 configure_file(config_digwatch.h.in config_digwatch.h)
