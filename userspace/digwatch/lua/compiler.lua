@@ -163,13 +163,23 @@ local function macro (name, filter)
    return {type = "MacroDef", name = name, value = filter}
 end
 
+local function outputformat (format)
+   return {type = "OutputFormat", value = format}
+end
+
+local function rule(filter, output)
+   return {type = "Rule", filter = filter, output = output}
+end
+
 local G = {
    V"Start", -- Entry rule
 
-   Start = V"Skip" * (V"MacroDef" / macro + V"Filter" / filter)^-1 * -1 + report_error();
+   Start = V"Skip" * (V"MacroDef" / macro + V"Rule" / rule)^-1 * -1 + report_error();
 
   -- Grammar
-  Filter = V"OrExpression";
+   Rule = V"Filter" / filter * ((V"Skip" * V"Pipe" * V"Skip" * (P(1)^0 / outputformat) )^-1 );
+
+   Filter = V"OrExpression";
   OrExpression =
      bool(V"AndExpression", V"OrOp");
 
@@ -226,6 +236,7 @@ local G = {
   OrOp = kw("or") / "or";
   AndOp = kw("and") / "and";
   Colon = kw(":");
+  Pipe = kw("|");
   RelOp = symb("=") / "=" +
           symb("==") / "==" +
           symb("!=") / "!=" +
@@ -402,7 +413,12 @@ function print_ast(node, level)
    local prefix = string.rep(" ", level*2)
    level = level + 1
 
-   if t == "Filter" then
+   if t == "Rule" then
+      print_ast(node.filter, level)
+      if (node.output) then
+	 print(prefix.."| "..node.output.value)
+      end
+   elseif t == "Filter" then
       print_ast(node.value, level)
 
    elseif t == "BinaryBoolOp" or t == "BinaryRelOp" then
@@ -463,6 +479,7 @@ function compiler.compile_line(line, state)
    local ast, error_msg = compiler.parser.parse_line(line)
 
    if (error_msg) then
+      print ("Compilation error: ", error_msg)
       error(error_msg)
    end
 
@@ -474,7 +491,15 @@ function compiler.compile_line(line, state)
       return {}
    end
 
-   local macros = get_macros(ast.value, {})
+   local macros
+   if (ast.type == "Rule") then
+      macros = get_macros(ast.filter, {})
+   elseif (ast.type == "MacroDef") then
+      macros = get_macros(ast.value, {})
+   else
+      error ("Unexpected type: "..t)
+   end
+
    for m, _ in pairs(macros) do
       if state.macros[m] == nil then
          error ("Undefined macro '"..m.."' used in '"..line.."'")
@@ -487,11 +512,11 @@ function compiler.compile_line(line, state)
       state.macros[ast.name] = ast.value
       return ast
 
-   elseif (ast.type == "Filter") then
+   elseif (ast.type == "Rule") then
       -- Line is a filter, so expand in-clauses and macro references, then
       -- stitch it into global ast
 
-      expand_in(ast)
+      expand_in(ast.filter)
 
       repeat
          expanded  = expand_macros(ast, state.macros, false)
