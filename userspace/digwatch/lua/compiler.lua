@@ -166,7 +166,7 @@ end
 local G = {
    V"Start", -- Entry rule
 
-   Start = V"Skip" * (V"MacroDef" / macro + V"Filter" / filter) * -1 + report_error();
+   Start = V"Skip" * (V"MacroDef" / macro + V"Filter" / filter)^-1 * -1 + report_error();
 
   -- Grammar
   Filter = V"OrExpression";
@@ -464,6 +464,14 @@ function compiler.compile_line(line, state)
 
    if (error_msg) then
       error(error_msg)
+   end
+
+   if (type(ast) == "number") then
+      -- hack: we get a number (# of matched chars) V"Skip" back if this line
+      -- only contained whitespace. (According to docs 'v"Skip" / 0' in Start
+      -- rule should not capture anything but it doesn't seem to work that
+      -- way...)
+      return {}
    end
 
    local macros = get_macros(ast.value, {})

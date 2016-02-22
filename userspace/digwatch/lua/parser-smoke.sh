@@ -24,7 +24,8 @@ function bad
 }
 
 # Filters
-good "a"
+good "  "
+good "  a"
 good "a and b"
 good "(a)"
 good "(a and b)"
