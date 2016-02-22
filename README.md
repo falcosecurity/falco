@@ -48,7 +48,7 @@ Set the path of the digwatch lua directory in the env var `DIGWATCH_LUA_DIR`:
 Create a file with some [digwatch rules](Rule-syntax-and-design). For example:
 ```
 write: (syscall.type=write and fd.typechar=f) or syscall.type=mkdir or syscall.type=creat or syscall.type=rename
-interactive: evt.type=execve and proc.pname=bash
+interactive: proc.pname = bash or proc.pname = sshd
 write and interactive and fd.name contains sysdig
 write and interactive and fd.name contains .txt
 ```
