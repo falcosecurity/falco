@@ -15,16 +15,17 @@ function error_exit_bad
 
 function good
 {
-    lua test.lua "a: x.y=1; b: a and z.x exists; c: b; $1" 2> /dev/null || error_exit_good "$1"
+    lua5.1 test.lua "a: x.y=1; b: a and z.x exists; c: b; $1" 2> /dev/null || error_exit_good "$1"
 }
 
 function bad
 {
-    lua test.lua "a: x.y=1; b: a and z.x exists; c: b; $1" 2> /dev/null && error_exit_bad "$1"
+    lua5.1 test.lua "a: x.y=1; b: a and z.x exists; c: b; $1" 2> /dev/null && error_exit_bad "$1"
 }
 
 # Filters
-good "a"
+good "  "
+good "  a"
 good "a and b"
 good "(a)"
 good "(a and b)"
@@ -53,10 +54,13 @@ good "evt.dir=> and fd.name=*.log"
 good "evt.dir=> and fd.name=/var/log/httpd.log"
 good "a.g in (1, 'a', b.c)"
 good "a.b = a.a"
+good "a.b = a.a |"
+good "a.b = a.a | %evt.type %fd.num blabla"
 
 bad "a.g in ()"
 bad "a.b = b = 1"
 bad "(a.b = 1"
+bad " | %a.b"
 # Macros
 
 good "a: a.b exists"
@@ -66,6 +70,8 @@ good "a : b"
 good "a : evt.dir=>"
 good "inbound: (syscall.type=listen and evt.dir='>') or (syscall.type=accept and evt.dir='<')"
 bad "a:"
+bad "a : b | bla"
+
 
 echo
 echo "All tests passed."
