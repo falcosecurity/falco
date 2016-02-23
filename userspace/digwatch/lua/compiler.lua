@@ -341,7 +341,6 @@ function expand_macros(node, defs, changed)
    elseif node.type == "Filter" then
       if (node.value.type == "Macro") then
          if (defs[node.value.value] == nil) then
-            tostring = require 'ml'.tstring
             error("Undefined macro '".. node.value.value .. "' used in filter.")
          end
          node.value = defs[node.value.value]
@@ -445,7 +444,7 @@ function print_ast(node, level)
    elseif t == "MacroDef" then
       -- don't print for now
    else
-      error ("Unexpected type: "..t)
+      error ("Unexpected type in print_ast: "..t)
    end
 end
 compiler.parser.print_ast = print_ast
@@ -463,22 +462,9 @@ end
 
 
 --[[
-   Sets up compiler state and returns it.
-
-   This is an opaque blob that is passed into subsequent compiler calls and
-   should not be modified by the client.
-
-   It holds state such as macro definitions that must be kept across calls
-   to the line-oriented compiler.
+   Compiles a single line from a digwatch ruleset and updates the passed-in macros table. Returns the AST of the line.
 --]]
-function compiler.init()
-   return {macros={}, filter_ast=nil}
-end
-
---[[
-   Compiles a single line from a digwatch ruleset and updates the passed-in state object. Returns the AST of the line.
---]]
-function compiler.compile_line(line, state)
+function compiler.compile_line(line, macro_defs)
    local ast, error_msg = compiler.parser.parse_line(line)
 
    if (error_msg) then
@@ -504,7 +490,7 @@ function compiler.compile_line(line, state)
    end
 
    for m, _ in pairs(macros) do
-      if state.macros[m] == nil then
+      if macros[m] == nil then
          error ("Undefined macro '"..m.."' used in '"..line.."'")
       end
    end
@@ -512,7 +498,7 @@ function compiler.compile_line(line, state)
    if (ast.type == "MacroDef") then
       -- Parsed line is a macro definition, so update our dictionary of macros and
       -- return
-      state.macros[ast.name] = ast.value
+      macro_defs[ast.name] = ast.value
       return ast
 
    elseif (ast.type == "Rule") then
@@ -522,14 +508,9 @@ function compiler.compile_line(line, state)
       expand_in(ast.filter)
 
       repeat
-         expanded  = expand_macros(ast, state.macros, false)
+	 expanded  = expand_macros(ast, macro_defs, false)
       until expanded == false
 
-      if (state.filter_ast == nil) then
-	 state.filter_ast = ast.filter.value
-      else
-	 state.filter_ast = { type = "BinaryBoolOp", operator = "or", left = state.filter_ast, right = ast.filter.value }
-      end
    else
       error("Unexpected top-level AST type: "..ast.type)
    end

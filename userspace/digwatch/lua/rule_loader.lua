@@ -32,7 +32,7 @@ local function install_filter(node)
       --io.write(node.argument.value.." "..node.operator)
 
    else
-      error ("Unexpected type: "..t)
+      error ("Unexpected type in install_filter: "..t)
    end
 end
 
@@ -49,12 +49,34 @@ end
 
 local state
 
+--[[
+   Sets up compiler state and returns it.
+
+   It holds state such as macro definitions that must be kept across calls
+   to the line-oriented compiler.
+--]]
+local function init()
+   return {macros={}, filter_ast=nil}
+end
+
 
 function load_rule(r)
    if (state == nil) then
-      state = compiler.init()
+      state = init()
    end
-   compiler.compile_line(r, state)
+   local line_ast = compiler.compile_line(r, state.macros)
+
+   if (line_ast.type == "MacroDef") then
+      return
+   elseif (not (line_ast.type == "Rule")) then
+      error ("Unexpected type in load_rule: "..line_ast.type)
+   end
+
+   if (state.filter_ast == nil) then
+      state.filter_ast = line_ast.filter.value
+   else
+      state.filter_ast = { type = "BinaryBoolOp", operator = "or", left = state.filter_ast, right = line_ast.filter.value }
+   end
 end
 
 function on_done()

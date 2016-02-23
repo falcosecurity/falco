@@ -5,10 +5,11 @@ if #arg ~= 1 then
     os.exit(1)
 end
 
-local state = compiler.init()
+local macros = {}
+local ast
 
 local function doit(line)
-   local ast = compiler.compile_line(line, state)
+   ast = compiler.compile_line(line, macros)
 
    if not ast then
       print("error", error_msg)
@@ -20,8 +21,8 @@ for str in string.gmatch(arg[1], "([^;]+)") do
    doit(str)
 end
 
-if not (state.ast == nil) then -- can be nil if only macros
-   compiler.parser.print_ast(state.ast)
+if not (ast) then
+   compiler.parser.print_ast(ast)
 end
 
 os.exit(0)
