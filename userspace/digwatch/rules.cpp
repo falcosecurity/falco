@@ -56,6 +56,10 @@ int digwatch_rules::set_formatter (lua_State *ls) {
 	return 0;
 }
 
+sinsp_evt_formatter* digwatch_rules::lookup_formatter(uint32_t index)
+{
+	return g_format_map[index];
+}
 
 void digwatch_rules::add_lua_path(string path)
 {

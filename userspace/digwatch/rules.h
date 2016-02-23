@@ -15,6 +15,8 @@ class digwatch_rules
 
 	// set_formatter(index, format_string)
 	static int set_formatter(lua_State *ls);
+	sinsp_evt_formatter* lookup_formatter(uint32_t index);
+
  private:
 	void add_lua_path(string path);
 	void load_compiler(string lua_main_filename);

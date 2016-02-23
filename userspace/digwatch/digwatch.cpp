@@ -28,7 +28,7 @@ extern "C" {
 static void usage()
 {
     printf(
-	   "Usage: digwatch [options] [-p <output_format>] rules_filename\n\n"
+	   "Usage: digwatch [options] rules_filename\n\n"
 	   "Options:\n"
 	   " -h, --help         Print this page\n"
 	   " -m <filename>, --main-lua <filename>\n"
@@ -55,13 +55,14 @@ static void usage()
 captureinfo do_inspect(sinsp* inspector,
 		       uint64_t cnt,
 		       int duration_to_tot,
-		       sinsp_evt_formatter* formatter)
+		       digwatch_rules* rules)
 {
 	captureinfo retval;
 	int32_t res;
 	sinsp_evt* ev;
 	string line;
         int duration_start = 0;
+	sinsp_evt_formatter* formatter;
 
 	//
 	// Loop through the events
@@ -113,6 +114,13 @@ captureinfo do_inspect(sinsp* inspector,
 		{
 			continue;
 		}
+
+		formatter = rules->lookup_formatter(ev->get_check_id());
+		if (!formatter)
+		{
+			throw sinsp_exception("Error: No formatter for event with id %d " + to_string(ev->get_check_id()));
+		}
+
 		if(formatter->tostring(ev, &line))
 		{
 			cout << line;
@@ -137,7 +145,6 @@ int digwatch_init(int argc, char **argv)
 	sinsp_evt::param_fmt event_buffer_format = sinsp_evt::PF_NORMAL;
 	int duration_to_tot = 0;
 	captureinfo cinfo;
-	string output_format;
 	int long_index = 0;
 	string lua_main_filename;
 	string lua_dir = DIGWATCH_INSTALLATION_DIR;
@@ -151,8 +158,6 @@ int digwatch_init(int argc, char **argv)
 		{"unbuffered", no_argument, 0, 0 },
 		{0, 0, 0, 0}
 	};
-
-	output_format = "*%evt.num %evt.outputtime %evt.cpu %proc.name (%thread.tid) %evt.dir %evt.type %evt.info";
 
 	try
 	{
@@ -240,10 +245,6 @@ int digwatch_init(int argc, char **argv)
 		}
 
 		//
-		// Create the event formatter
-		//
-		sinsp_evt_formatter formatter(inspector, output_format);
-
 		char* env_lua_dir = getenv("DIGWATCH_LUA_DIR");
 		if (env_lua_dir)
 		{
@@ -265,7 +266,7 @@ int digwatch_init(int argc, char **argv)
 		cinfo = do_inspect(inspector,
 				   cnt,
 				   duration_to_tot,
-				   &formatter);
+				   rules);
 
 		inspector->close();
 	}
