@@ -336,7 +336,9 @@ end
 
 --]]
 function expand_macros(node, defs, changed)
-   if node.type == "Filter" then
+   if (node.type == "Rule") then
+      macros = expand_macros(node.filter, defs, changed)
+   elseif node.type == "Filter" then
       if (node.value.type == "Macro") then
          if (defs[node.value.value] == nil) then
             tostring = require 'ml'.tstring
@@ -344,6 +346,7 @@ function expand_macros(node, defs, changed)
          end
          node.value = defs[node.value.value]
          changed = true
+	 return changed
       end
       return expand_macros(node.value, defs, changed)
 
