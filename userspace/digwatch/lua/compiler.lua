@@ -168,6 +168,9 @@ local function outputformat (format)
 end
 
 local function rule(filter, output)
+   if not output then
+      output = outputformat("")
+   end
    return {type = "Rule", filter = filter, output = output}
 end
 
