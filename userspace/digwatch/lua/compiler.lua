@@ -339,6 +339,14 @@ end
 
 --]]
 function expand_macros(node, defs, changed)
+
+   function copy(obj)
+      if type(obj) ~= 'table' then return obj end
+      local res = {}
+      for k, v in pairs(obj) do res[copy(k)] = copy(v) end
+      return res
+   end
+
    if (node.type == "Rule") then
       macros = expand_macros(node.filter, defs, changed)
    elseif node.type == "Filter" then
@@ -346,7 +354,7 @@ function expand_macros(node, defs, changed)
          if (defs[node.value.value] == nil) then
             error("Undefined macro '".. node.value.value .. "' used in filter.")
          end
-         node.value = defs[node.value.value]
+         node.value = copy(defs[node.value.value])
          changed = true
 	 return changed
       end
@@ -358,7 +366,7 @@ function expand_macros(node, defs, changed)
          if (defs[node.left.value] == nil) then
             error("Undefined macro '".. node.left.value .. "' used in filter.")
          end
-         node.left = defs[node.left.value]
+         node.left = copy(defs[node.left.value])
          changed = true
       end
 
@@ -366,7 +374,7 @@ function expand_macros(node, defs, changed)
          if (defs[node.right.value] == nil) then
             error("Undefined macro ".. node.right.value .. "used in filter.")
          end
-         node.right = defs[node.right.value]
+         node.right = copy(defs[node.right.value])
          changed = true
       end
 
@@ -379,7 +387,7 @@ function expand_macros(node, defs, changed)
          if (defs[node.argument.value] == nil) then
             error("Undefined macro ".. node.argument.value .. "used in filter.")
          end
-         node.argument = defs[node.argument.value]
+         node.argument = copy(defs[node.argument.value])
          changed = true
       end
       return expand_macros(node.argument, defs, changed)
