@@ -7,6 +7,27 @@
 
 local compiler = require "compiler"
 
+local function mark_check_nodes(ast, index)
+   local t = ast.type
+
+   if t == "BinaryBoolOp" then
+      mark_check_nodes(ast.left, index)
+      mark_check_nodes(ast.right, index)
+
+   elseif t == "UnaryBoolOp" then
+      mark_check_nodes(ast.argument, index)
+
+   elseif t == "BinaryRelOp" then
+      ast.index = index
+
+   elseif t == "UnaryRelOp"  then
+      ast.index = index
+
+   else
+      error ("Unexpected type in install_filter: "..t)
+   end
+end
+
 local function install_filter(node)
    local t = node.type
 
@@ -24,11 +45,11 @@ local function install_filter(node)
       filter.unnest() -- io.write(")")
 
    elseif t == "BinaryRelOp" then
-      filter.rel_expr(node.left.value, node.operator, node.right.value)
+      filter.rel_expr(node.left.value, node.operator, node.right.value, node.index)
       -- io.write(node.left.value.." "..node.operator.." "..node.right.value)
 
    elseif t == "UnaryRelOp"  then
-      filter.rel_expr(node.argument.value, node.operator)
+      filter.rel_expr(node.argument.value, node.operator, node.index)
       --io.write(node.argument.value.." "..node.operator)
 
    else
@@ -75,6 +96,8 @@ function load_rule(r)
    end
 
    digwatch.set_formatter(state.n_rules, line_ast.output.value)
+   mark_check_nodes(line_ast.filter.value, state.n_rules)
+
    state.n_rules = state.n_rules + 1
 
    if (state.filter_ast == nil) then
