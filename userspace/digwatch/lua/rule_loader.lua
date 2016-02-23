@@ -10,16 +10,12 @@ local compiler = require "compiler"
 local function install_filter(node)
    local t = node.type
 
-   if t == "Filter" then
-      install_filter(node.value)
-
-   elseif t == "BinaryBoolOp" then
+   if t == "BinaryBoolOp" then
       filter.nest() --io.write("(")
       install_filter(node.left)
       filter.bool_op(node.operator) --io.write(" "..node.operator.." ")
       install_filter(node.right)
       filter.unnest() --io.write(")")
-
 
    elseif t == "UnaryBoolOp" then
       filter.nest() --io.write("(")
@@ -62,5 +58,5 @@ function load_rule(r)
 end
 
 function on_done()
-   install_filter(state.ast)
+   install_filter(state.filter_ast)
 end

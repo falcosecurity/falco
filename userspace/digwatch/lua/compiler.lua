@@ -472,7 +472,7 @@ end
    to the line-oriented compiler.
 --]]
 function compiler.init()
-   return {macros={}, ast=nil}
+   return {macros={}, filter_ast=nil}
 end
 
 --[[
@@ -525,10 +525,10 @@ function compiler.compile_line(line, state)
          expanded  = expand_macros(ast, state.macros, false)
       until expanded == false
 
-      if (state.ast == nil) then
-	 state.ast = ast
+      if (state.filter_ast == nil) then
+	 state.filter_ast = ast.filter.value
       else
-	 state.ast = { type = "BinaryBoolOp", operator = "or", left = state.ast, right = ast }
+	 state.filter_ast = { type = "BinaryBoolOp", operator = "or", left = state.filter_ast, right = ast.filter.value }
       end
    else
       error("Unexpected top-level AST type: "..ast.type)
