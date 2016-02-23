@@ -6,17 +6,56 @@ extern "C" {
 #include "lauxlib.h"
 }
 
+std::map<uint32_t, sinsp_evt_formatter*> g_format_map;
+sinsp* g_inspector;
+
+const static struct luaL_reg ll_digwatch [] =
+{
+	{"set_formatter", &digwatch_rules::set_formatter},
+	{NULL,NULL}
+};
+
 digwatch_rules::digwatch_rules(sinsp* inspector, string lua_main_filename, string lua_dir)
 {
+	g_inspector = inspector;
+
 	// Initialize Lua interpreter
 	m_ls = lua_open();
 	luaL_openlibs(m_ls);
 
 	m_lua_parser = new lua_parser(inspector, m_ls);
 
+	luaL_openlib(m_ls, "digwatch", ll_digwatch, 0);
+
 	add_lua_path(lua_dir);
 	load_compiler(lua_main_filename);
 }
+
+int digwatch_rules::set_formatter (lua_State *ls) {
+	uint32_t index = luaL_checkinteger(ls, 1);
+	string format = luaL_checkstring(ls, 2);
+
+	try
+	{
+		if(format == "" || format == "default")
+		{
+			g_format_map[index] = new sinsp_evt_formatter(g_inspector, DEFAULT_OUTPUT_STR);
+		}
+		else
+		{
+			g_format_map[index] = new sinsp_evt_formatter(g_inspector, format);
+		}
+	}
+	catch(sinsp_exception& e)
+	{
+		string err = "invalid output format " + format;
+		fprintf(stderr, "%s\n", err.c_str());
+		throw sinsp_exception("set_formatter error");
+	}
+
+	return 0;
+}
+
 
 void digwatch_rules::add_lua_path(string path)
 {
@@ -84,7 +123,7 @@ void digwatch_rules::load_rules(string rules_filename)
 		if(lua_pcall(m_ls, 1, 0, 0) != 0)
 		{
 			const char* lerr = lua_tostring(m_ls, -1);
-			string err = "Error loading rule: " + string(lerr);
+			string err = "Error loading rule '" + line + "':" + string(lerr);
 			throw sinsp_exception(err);
 		}
 	}

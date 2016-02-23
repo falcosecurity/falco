@@ -56,7 +56,7 @@ local state
    to the line-oriented compiler.
 --]]
 local function init()
-   return {macros={}, filter_ast=nil}
+   return {macros={}, filter_ast=nil, n_rules=0}
 end
 
 
@@ -66,11 +66,16 @@ function load_rule(r)
    end
    local line_ast = compiler.compile_line(r, state.macros)
 
-   if (line_ast.type == "MacroDef") then
+   if (line_ast.type == nil) then -- blank line
+      return
+   elseif (line_ast.type == "MacroDef") then
       return
    elseif (not (line_ast.type == "Rule")) then
       error ("Unexpected type in load_rule: "..line_ast.type)
    end
+
+   digwatch.set_formatter(state.n_rules, line_ast.output.value)
+   state.n_rules = state.n_rules + 1
 
    if (state.filter_ast == nil) then
       state.filter_ast = line_ast.filter.value
