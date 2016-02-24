@@ -177,9 +177,11 @@ end
 local G = {
    V"Start", -- Entry rule
 
-   Start = V"Skip" * (V"MacroDef" / macro + V"Rule" / rule)^-1 * -1 + report_error();
+   Start = V"Skip" * (V"Comment" + V"MacroDef" / macro + V"Rule" / rule)^-1 * -1 + report_error();
 
   -- Grammar
+   Comment = P"#" * P(1)^0;
+
    Rule = V"Filter" / filter * ((V"Skip" * V"Pipe" * V"Skip" * (P(1)^0 / outputformat) )^-1 );
 
    Filter = V"OrExpression";

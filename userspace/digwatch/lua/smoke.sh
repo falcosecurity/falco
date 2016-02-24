@@ -27,6 +27,8 @@ function bad
 good "  "
 good "  a"
 good "a and b"
+good "#a and b; a and b"
+good "#a and b; # ; ; a and b"
 good "(a)"
 good "(a and b)"
 good "(a.a exists and b)"

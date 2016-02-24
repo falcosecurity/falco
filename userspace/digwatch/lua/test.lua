@@ -21,7 +21,7 @@ for str in string.gmatch(arg[1], "([^;]+)") do
    doit(str)
 end
 
-if not (ast) then
+if (ast and ast.type) then
    compiler.parser.print_ast(ast)
 end
 
