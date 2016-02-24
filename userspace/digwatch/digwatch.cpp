@@ -118,13 +118,13 @@ captureinfo do_inspect(sinsp* inspector,
 		}
 
 		formatter = formats->lookup_formatter(ev->get_check_id());
-		if (!formatter)
+		if(!formatter)
 		{
 			throw sinsp_exception("Error: No formatter for event with id %d " + to_string(ev->get_check_id()));
 		}
 
 		bool has_all = formatter->tostring(ev, &line);
-		if (!has_all) {
+		if(!has_all) {
 			cout << "(missing fields) ";
 		}
 		cout << line;
@@ -243,7 +243,7 @@ int digwatch_init(int argc, char **argv)
 #endif
 		}
 
-		if (rules_file.size() == 0) {
+		if(rules_file.size() == 0) {
 			usage();
 			result = EXIT_FAILURE;
 			goto exit;
@@ -252,13 +252,13 @@ int digwatch_init(int argc, char **argv)
 
 		//
 		char* env_lua_dir = getenv("DIGWATCH_LUA_DIR");
-		if (env_lua_dir)
+		if(env_lua_dir)
 		{
 			lua_dir = string(env_lua_dir);
 		}
 
 		trim(lua_main_filename);
-		if (lua_main_filename.size() == 0)
+		if(lua_main_filename.size() == 0)
 		{
 			lua_main_filename = lua_dir + DIGWATCH_LUA_MAIN;
 		}
