@@ -2,13 +2,13 @@
 
 function error_exit_good
 {
-    echo "Error: '$1' did not parse" 1>&2
+    echo "Error: '$1' did not compiler" 1>&2
     exit 1
 }
 
 function error_exit_bad
 {
-    echo "Error: incorrect filter '$1' parsed ok" 1>&2
+    echo "Error: incorrect filter '$1' compiler ok" 1>&2
     exit 1
 }
 
@@ -72,6 +72,7 @@ good "a : evt.dir=>"
 good "inbound: (syscall.type=listen and evt.dir='>') or (syscall.type=accept and evt.dir='<')"
 bad "a:"
 bad "a : b | bla"
+bad "b and d"
 
 
 echo

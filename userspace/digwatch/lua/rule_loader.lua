@@ -7,15 +7,18 @@
 
 local compiler = require "compiler"
 
-local function mark_check_nodes(ast, index)
+--[[
+   Traverse AST, adding the passed-in 'index' to each node that contains a relational expression
+--]]
+local function mark_relational_nodes(ast, index)
    local t = ast.type
 
    if t == "BinaryBoolOp" then
-      mark_check_nodes(ast.left, index)
-      mark_check_nodes(ast.right, index)
+      mark_relational_nodes(ast.left, index)
+      mark_relational_nodes(ast.right, index)
 
    elseif t == "UnaryBoolOp" then
-      mark_check_nodes(ast.argument, index)
+      mark_relational_nodes(ast.argument, index)
 
    elseif t == "BinaryRelOp" then
       ast.index = index
@@ -95,11 +98,20 @@ function load_rule(r)
       error ("Unexpected type in load_rule: "..line_ast.type)
    end
 
+   -- Register a formatter with the output string from this rule
    digwatch.set_formatter(state.n_rules, line_ast.output.value)
-   mark_check_nodes(line_ast.filter.value, state.n_rules)
+
+   -- Store the index of this formatter in each relational expression that
+   -- this rule contains.
+   -- This index will eventually be stamped in events passing this rule, and
+   -- we'll use it later to determine which output to display when we get an
+   -- event.
+   mark_relational_nodes(line_ast.filter.value, state.n_rules)
 
    state.n_rules = state.n_rules + 1
 
+   -- Rule ASTs are merged together into one big AST, with "OR" between each
+   -- rule.
    if (state.filter_ast == nil) then
       state.filter_ast = line_ast.filter.value
    else

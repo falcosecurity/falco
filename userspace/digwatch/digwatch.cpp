@@ -19,7 +19,6 @@ extern "C" {
 #include <config_digwatch.h>
 #include "rules.h"
 #include "formats.h"
-#include "digwatch.h"
 #include "utils.h"
 
 
@@ -35,10 +34,7 @@ static void usage()
 	   " -m <filename>, --main-lua <filename>\n"
 	   "                    Name of lua compiler main file\n"
 	   "                    (default: rules_loader.lua)\n"
-	   " -M <num_seconds>   Stop collecting after <num_seconds> reached.\n"
 	   " -N                 Don't convert port numbers to names.\n"
-	   " -n <num>, --numevents=<num>\n"
-	   "                    Stop capturing after <num> events\n"
 	   " -r <readfile>, --read=<readfile>\n"
 	   "                    Read the events from <readfile>.\n"
 	   " --unbuffered       Turn off output buffering. This causes every single line\n"
@@ -53,42 +49,20 @@ static void usage()
 //
 // Event processing loop
 //
-captureinfo do_inspect(sinsp* inspector,
-		       uint64_t cnt,
-		       int duration_to_tot,
-		       digwatch_rules* rules,
-		       digwatch_formats* formats)
+void do_inspect(sinsp* inspector,
+		digwatch_rules* rules,
+		digwatch_formats* formats)
 {
-	captureinfo retval;
 	int32_t res;
 	sinsp_evt* ev;
 	string line;
-        int duration_start = 0;
 	sinsp_evt_formatter* formatter;
 
 	//
 	// Loop through the events
 	//
-	duration_start = ((double)clock()) / CLOCKS_PER_SEC;
 	while(1)
 	{
-		if(duration_to_tot > 0)
-		{
-			int duration_tot = ((double)clock()) / CLOCKS_PER_SEC - duration_start;
-			if(duration_tot >= duration_to_tot)
-			{
-				break;
-			}
-		}
-		if(retval.m_nevts == cnt)
-		{
-			//
-			// End of capture, either because the user stopped it, or because
-			// we reached the event count specified with -n.
-			//
-			break;
-		}
-
 		res = inspector->next(&ev);
 
 		if(res == SCAP_TIMEOUT)
@@ -109,8 +83,6 @@ captureinfo do_inspect(sinsp* inspector,
 			throw sinsp_exception(inspector->getlasterr().c_str());
 		}
 
-		retval.m_nevts++;
-
 		if(!inspector->is_debug_enabled() &&
 			ev->get_category() & EC_INTERNAL)
 		{
@@ -118,13 +90,13 @@ captureinfo do_inspect(sinsp* inspector,
 		}
 
 		formatter = formats->lookup_formatter(ev->get_check_id());
-		if (!formatter)
+		if(!formatter)
 		{
 			throw sinsp_exception("Error: No formatter for event with id %d " + to_string(ev->get_check_id()));
 		}
 
 		bool has_all = formatter->tostring(ev, &line);
-		if (!has_all) {
+		if(!has_all) {
 			cout << "(missing fields) ";
 		}
 		cout << line;
@@ -132,8 +104,6 @@ captureinfo do_inspect(sinsp* inspector,
 
 
 	}
-
-	return retval;
 }
 
 //
@@ -146,10 +116,7 @@ int digwatch_init(int argc, char **argv)
 	digwatch_rules* rules = NULL;
 	digwatch_formats* formats = NULL;
 	int op;
-	uint64_t cnt = -1;
 	sinsp_evt::param_fmt event_buffer_format = sinsp_evt::PF_NORMAL;
-	int duration_to_tot = 0;
-	captureinfo cinfo;
 	int long_index = 0;
 	string lua_main_filename;
 	string lua_dir = DIGWATCH_INSTALLATION_DIR;
@@ -158,7 +125,6 @@ int digwatch_init(int argc, char **argv)
 	static struct option long_options[] =
 	{
 		{"help", no_argument, 0, 'h' },
-		{"numevents", required_argument, 0, 'n' },
 		{"main-lua", required_argument, 0, 'u' },
 		{"readfile", required_argument, 0, 'r' },
 		{"unbuffered", no_argument, 0, 0 },
@@ -174,7 +140,7 @@ int digwatch_init(int argc, char **argv)
 		// Parse the args
 		//
 		while((op = getopt_long(argc, argv,
-                                        "hm:M:Nn:r:",
+                                        "hm:Nr:",
                                         long_options, &long_index)) != -1)
 		{
 			switch(op)
@@ -186,30 +152,8 @@ int digwatch_init(int argc, char **argv)
 			case 'm':
 				lua_main_filename = optarg;
 				break;
-			case 'M':
-				duration_to_tot = atoi(optarg);
-				if(duration_to_tot <= 0)
-				{
-					throw sinsp_exception(string("invalid duration") + optarg);
-				}
-				break;
 			case 'N':
 				inspector->set_hostname_and_port_resolution_mode(false);
-				break;
-			case 'n':
-				try
-				{
-					cnt = sinsp_numparser::parseu64(optarg);
-				}
-				catch(...)
-				{
-					throw sinsp_exception("can't parse the -n argument, make sure it's a number");
-				}
-
-				if(cnt <= 0)
-				{
-					throw sinsp_exception(string("invalid event count ") + optarg);
-				}
 				break;
 			case '?':
 				result = EXIT_FAILURE;
@@ -243,7 +187,7 @@ int digwatch_init(int argc, char **argv)
 #endif
 		}
 
-		if (rules_file.size() == 0) {
+		if(rules_file.size() == 0) {
 			usage();
 			result = EXIT_FAILURE;
 			goto exit;
@@ -252,13 +196,13 @@ int digwatch_init(int argc, char **argv)
 
 		//
 		char* env_lua_dir = getenv("DIGWATCH_LUA_DIR");
-		if (env_lua_dir)
+		if(env_lua_dir)
 		{
 			lua_dir = string(env_lua_dir);
 		}
 
 		trim(lua_main_filename);
-		if (lua_main_filename.size() == 0)
+		if(lua_main_filename.size() == 0)
 		{
 			lua_main_filename = lua_dir + DIGWATCH_LUA_MAIN;
 		}
@@ -274,11 +218,9 @@ int digwatch_init(int argc, char **argv)
 		inspector->set_filter(rules->get_filter());
 		inspector->open("");
 
-		cinfo = do_inspect(inspector,
-				   cnt,
-				   duration_to_tot,
-				   rules,
-				   formats);
+		do_inspect(inspector,
+			   rules,
+			   formats);
 
 		inspector->close();
 	}
