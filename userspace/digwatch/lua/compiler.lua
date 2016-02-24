@@ -338,7 +338,7 @@ end
    definition uses another macro).
 
 --]]
-function expand_macros(node, defs, changed)
+function expand_macros(ast, defs, changed)
 
    function copy(obj)
       if type(obj) ~= 'table' then return obj end
@@ -347,110 +347,110 @@ function expand_macros(node, defs, changed)
       return res
    end
 
-   if (node.type == "Rule") then
-      macros = expand_macros(node.filter, defs, changed)
-   elseif node.type == "Filter" then
-      if (node.value.type == "Macro") then
-         if (defs[node.value.value] == nil) then
-            error("Undefined macro '".. node.value.value .. "' used in filter.")
+   if (ast.type == "Rule") then
+      macros = expand_macros(ast.filter, defs, changed)
+   elseif ast.type == "Filter" then
+      if (ast.value.type == "Macro") then
+         if (defs[ast.value.value] == nil) then
+            error("Undefined macro '".. ast.value.value .. "' used in filter.")
          end
-         node.value = copy(defs[node.value.value])
+         ast.value = copy(defs[ast.value.value])
          changed = true
 	 return changed
       end
-      return expand_macros(node.value, defs, changed)
+      return expand_macros(ast.value, defs, changed)
 
-   elseif node.type == "BinaryBoolOp" then
+   elseif ast.type == "BinaryBoolOp" then
 
-      if (node.left.type == "Macro") then
-         if (defs[node.left.value] == nil) then
-            error("Undefined macro '".. node.left.value .. "' used in filter.")
+      if (ast.left.type == "Macro") then
+         if (defs[ast.left.value] == nil) then
+            error("Undefined macro '".. ast.left.value .. "' used in filter.")
          end
-         node.left = copy(defs[node.left.value])
+         ast.left = copy(defs[ast.left.value])
          changed = true
       end
 
-      if (node.right.type == "Macro") then
-         if (defs[node.right.value] == nil) then
-            error("Undefined macro ".. node.right.value .. "used in filter.")
+      if (ast.right.type == "Macro") then
+         if (defs[ast.right.value] == nil) then
+            error("Undefined macro ".. ast.right.value .. "used in filter.")
          end
-         node.right = copy(defs[node.right.value])
+         ast.right = copy(defs[ast.right.value])
          changed = true
       end
 
-      local changed_left = expand_macros(node.left, defs, false)
-      local changed_right = expand_macros(node.right, defs, false)
+      local changed_left = expand_macros(ast.left, defs, false)
+      local changed_right = expand_macros(ast.right, defs, false)
       return changed or changed_left or changed_right
 
-   elseif node.type == "UnaryBoolOp" then
-      if (node.argument.type == "Macro") then
-         if (defs[node.argument.value] == nil) then
-            error("Undefined macro ".. node.argument.value .. "used in filter.")
+   elseif ast.type == "UnaryBoolOp" then
+      if (ast.argument.type == "Macro") then
+         if (defs[ast.argument.value] == nil) then
+            error("Undefined macro ".. ast.argument.value .. "used in filter.")
          end
-         node.argument = copy(defs[node.argument.value])
+         ast.argument = copy(defs[ast.argument.value])
          changed = true
       end
-      return expand_macros(node.argument, defs, changed)
+      return expand_macros(ast.argument, defs, changed)
    end
    return changed
 end
 
-function get_macros(node, set)
-   if (node.type == "Macro") then
-      set[node.value] = true
+function get_macros(ast, set)
+   if (ast.type == "Macro") then
+      set[ast.value] = true
       return set
    end
 
-   if node.type == "Filter" then
-      return get_macros(node.value, set)
+   if ast.type == "Filter" then
+      return get_macros(ast.value, set)
    end
 
-   if node.type == "BinaryBoolOp" then
-      local left = get_macros(node.left, {})
-      local right = get_macros(node.right, {})
+   if ast.type == "BinaryBoolOp" then
+      local left = get_macros(ast.left, {})
+      local right = get_macros(ast.right, {})
 
       for m, _ in pairs(left) do set[m] = true end
       for m, _ in pairs(right) do set[m] = true end
 
       return set
    end
-   if node.type == "UnaryBoolOp" then
-      return get_macros(node.argument, set)
+   if ast.type == "UnaryBoolOp" then
+      return get_macros(ast.argument, set)
    end
    return set
 end
 
-function print_ast(node, level)
-   local t = node.type
+function print_ast(ast, level)
+   local t = ast.type
    level = level or 0
    local prefix = string.rep(" ", level*2)
    level = level + 1
 
    if t == "Rule" then
-      print_ast(node.filter, level)
-      if (node.output) then
-	 print(prefix.."| "..node.output.value)
+      print_ast(ast.filter, level)
+      if (ast.output) then
+	 print(prefix.."| "..ast.output.value)
       end
    elseif t == "Filter" then
-      print_ast(node.value, level)
+      print_ast(ast.value, level)
 
    elseif t == "BinaryBoolOp" or t == "BinaryRelOp" then
-      print(prefix..node.operator)
-      print_ast(node.left, level)
-      print_ast(node.right, level)
+      print(prefix..ast.operator)
+      print_ast(ast.left, level)
+      print_ast(ast.right, level)
 
    elseif t == "UnaryRelOp" or t == "UnaryBoolOp" then
-      print (prefix..node.operator)
-      print_ast(node.argument, level)
+      print (prefix..ast.operator)
+      print_ast(ast.argument, level)
 
    elseif t == "List" then
       print(prefix.. "List: ")
-      for i, v in ipairs(node.elements) do
+      for i, v in ipairs(ast.elements) do
          print_ast(v, level)
       end
 
    elseif t == "FieldName" or t == "Number" or t == "String" or t == "BareString" or t == "Macro" then
-      print (prefix..t.." "..node.value)
+      print (prefix..t.." "..ast.value)
 
    elseif t == "MacroDef" then
       -- don't print for now
