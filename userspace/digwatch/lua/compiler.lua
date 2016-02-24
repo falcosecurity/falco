@@ -420,6 +420,23 @@ function get_macros(ast, set)
    return set
 end
 
+function check_macros(ast)
+   local macros
+   if (ast.type == "Rule") then
+      macros = get_macros(ast.filter, {})
+   elseif (ast.type == "MacroDef") then
+      macros = get_macros(ast.value, {})
+   else
+      error ("Unexpected type: "..t)
+   end
+
+   for m, _ in pairs(macros) do
+      if macros[m] == nil then
+         error ("Undefined macro '"..m.."' used in '"..line.."'")
+      end
+   end
+end
+
 function print_ast(ast, level)
    local t = ast.type
    level = level or 0
@@ -491,20 +508,8 @@ function compiler.compile_line(line, macro_defs)
       return {}
    end
 
-   local macros
-   if (ast.type == "Rule") then
-      macros = get_macros(ast.filter, {})
-   elseif (ast.type == "MacroDef") then
-      macros = get_macros(ast.value, {})
-   else
-      error ("Unexpected type: "..t)
-   end
-
-   for m, _ in pairs(macros) do
-      if macros[m] == nil then
-         error ("Undefined macro '"..m.."' used in '"..line.."'")
-      end
-   end
+   -- check that any macros used have already been defined
+   check_macros(ast)
 
    if (ast.type == "MacroDef") then
       -- Parsed line is a macro definition, so update our dictionary of macros and
