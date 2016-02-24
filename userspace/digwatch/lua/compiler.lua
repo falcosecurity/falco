@@ -168,6 +168,9 @@ local function outputformat (format)
 end
 
 local function rule(filter, output)
+   if not output then
+      output = outputformat("")
+   end
    return {type = "Rule", filter = filter, output = output}
 end
 
@@ -336,14 +339,24 @@ end
 
 --]]
 function expand_macros(node, defs, changed)
-   if node.type == "Filter" then
+
+   function copy(obj)
+      if type(obj) ~= 'table' then return obj end
+      local res = {}
+      for k, v in pairs(obj) do res[copy(k)] = copy(v) end
+      return res
+   end
+
+   if (node.type == "Rule") then
+      macros = expand_macros(node.filter, defs, changed)
+   elseif node.type == "Filter" then
       if (node.value.type == "Macro") then
          if (defs[node.value.value] == nil) then
-            tostring = require 'ml'.tstring
             error("Undefined macro '".. node.value.value .. "' used in filter.")
          end
-         node.value = defs[node.value.value]
+         node.value = copy(defs[node.value.value])
          changed = true
+	 return changed
       end
       return expand_macros(node.value, defs, changed)
 
@@ -353,7 +366,7 @@ function expand_macros(node, defs, changed)
          if (defs[node.left.value] == nil) then
             error("Undefined macro '".. node.left.value .. "' used in filter.")
          end
-         node.left = defs[node.left.value]
+         node.left = copy(defs[node.left.value])
          changed = true
       end
 
@@ -361,7 +374,7 @@ function expand_macros(node, defs, changed)
          if (defs[node.right.value] == nil) then
             error("Undefined macro ".. node.right.value .. "used in filter.")
          end
-         node.right = defs[node.right.value]
+         node.right = copy(defs[node.right.value])
          changed = true
       end
 
@@ -374,7 +387,7 @@ function expand_macros(node, defs, changed)
          if (defs[node.argument.value] == nil) then
             error("Undefined macro ".. node.argument.value .. "used in filter.")
          end
-         node.argument = defs[node.argument.value]
+         node.argument = copy(defs[node.argument.value])
          changed = true
       end
       return expand_macros(node.argument, defs, changed)
@@ -442,7 +455,7 @@ function print_ast(node, level)
    elseif t == "MacroDef" then
       -- don't print for now
    else
-      error ("Unexpected type: "..t)
+      error ("Unexpected type in print_ast: "..t)
    end
 end
 compiler.parser.print_ast = print_ast
@@ -460,22 +473,9 @@ end
 
 
 --[[
-   Sets up compiler state and returns it.
-
-   This is an opaque blob that is passed into subsequent compiler calls and
-   should not be modified by the client.
-
-   It holds state such as macro definitions that must be kept across calls
-   to the line-oriented compiler.
+   Compiles a single line from a digwatch ruleset and updates the passed-in macros table. Returns the AST of the line.
 --]]
-function compiler.init()
-   return {macros={}, ast=nil}
-end
-
---[[
-   Compiles a single line from a digwatch ruleset and updates the passed-in state object. Returns the AST of the line.
---]]
-function compiler.compile_line(line, state)
+function compiler.compile_line(line, macro_defs)
    local ast, error_msg = compiler.parser.parse_line(line)
 
    if (error_msg) then
@@ -501,7 +501,7 @@ function compiler.compile_line(line, state)
    end
 
    for m, _ in pairs(macros) do
-      if state.macros[m] == nil then
+      if macros[m] == nil then
          error ("Undefined macro '"..m.."' used in '"..line.."'")
       end
    end
@@ -509,7 +509,7 @@ function compiler.compile_line(line, state)
    if (ast.type == "MacroDef") then
       -- Parsed line is a macro definition, so update our dictionary of macros and
       -- return
-      state.macros[ast.name] = ast.value
+      macro_defs[ast.name] = ast.value
       return ast
 
    elseif (ast.type == "Rule") then
@@ -519,14 +519,9 @@ function compiler.compile_line(line, state)
       expand_in(ast.filter)
 
       repeat
-         expanded  = expand_macros(ast, state.macros, false)
+	 expanded  = expand_macros(ast, macro_defs, false)
       until expanded == false
 
-      if (state.ast == nil) then
-	 state.ast = ast
-      else
-	 state.ast = { type = "BinaryBoolOp", operator = "or", left = state.ast, right = ast }
-      end
    else
       error("Unexpected top-level AST type: "..ast.type)
    end

@@ -6,11 +6,10 @@ extern "C" {
 #include "lauxlib.h"
 }
 
-digwatch_rules::digwatch_rules(sinsp* inspector, string lua_main_filename, string lua_dir)
+
+digwatch_rules::digwatch_rules(sinsp* inspector, lua_State *ls, string lua_main_filename, string lua_dir)
 {
-	// Initialize Lua interpreter
-	m_ls = lua_open();
-	luaL_openlibs(m_ls);
+	m_ls = ls;
 
 	m_lua_parser = new lua_parser(inspector, m_ls);
 
@@ -84,7 +83,7 @@ void digwatch_rules::load_rules(string rules_filename)
 		if(lua_pcall(m_ls, 1, 0, 0) != 0)
 		{
 			const char* lerr = lua_tostring(m_ls, -1);
-			string err = "Error loading rule: " + string(lerr);
+			string err = "Error loading rule '" + line + "':" + string(lerr);
 			throw sinsp_exception(err);
 		}
 	}
