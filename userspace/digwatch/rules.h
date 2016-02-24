@@ -3,8 +3,6 @@
 #include "sinsp.h"
 #include "lua_parser.h"
 
-class sinsp_evt_formatter;
-
 class digwatch_rules
 {
  public:
@@ -12,10 +10,6 @@ class digwatch_rules
 	~digwatch_rules();
 	void load_rules(string rules_filename);
 	sinsp_filter* get_filter();
-
-	// set_formatter(index, format_string)
-	static int set_formatter(lua_State *ls);
-	sinsp_evt_formatter* lookup_formatter(uint32_t index);
 
  private:
 	void add_lua_path(string path);

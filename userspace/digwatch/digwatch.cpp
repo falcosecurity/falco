@@ -18,6 +18,7 @@ extern "C" {
 #include <sinsp.h>
 #include <config_digwatch.h>
 #include "rules.h"
+#include "formats.h"
 #include "digwatch.h"
 #include "utils.h"
 
@@ -55,7 +56,8 @@ static void usage()
 captureinfo do_inspect(sinsp* inspector,
 		       uint64_t cnt,
 		       int duration_to_tot,
-		       digwatch_rules* rules)
+		       digwatch_rules* rules,
+		       digwatch_formats* formats)
 {
 	captureinfo retval;
 	int32_t res;
@@ -115,7 +117,7 @@ captureinfo do_inspect(sinsp* inspector,
 			continue;
 		}
 
-		formatter = rules->lookup_formatter(ev->get_check_id());
+		formatter = formats->lookup_formatter(ev->get_check_id());
 		if (!formatter)
 		{
 			throw sinsp_exception("Error: No formatter for event with id %d " + to_string(ev->get_check_id()));
@@ -142,6 +144,7 @@ int digwatch_init(int argc, char **argv)
 	int result;
 	sinsp* inspector = NULL;
 	digwatch_rules* rules = NULL;
+	digwatch_formats* formats = NULL;
 	int op;
 	uint64_t cnt = -1;
 	sinsp_evt::param_fmt event_buffer_format = sinsp_evt::PF_NORMAL;
@@ -265,6 +268,7 @@ int digwatch_init(int argc, char **argv)
 		luaL_openlibs(ls);
 
 		rules = new digwatch_rules(inspector, ls, lua_main_filename, lua_dir);
+		formats = new digwatch_formats(inspector, ls);
 
 		rules->load_rules(rules_file);
 		inspector->set_filter(rules->get_filter());
@@ -273,7 +277,8 @@ int digwatch_init(int argc, char **argv)
 		cinfo = do_inspect(inspector,
 				   cnt,
 				   duration_to_tot,
-				   rules);
+				   rules,
+				   formats);
 
 		inspector->close();
 	}
