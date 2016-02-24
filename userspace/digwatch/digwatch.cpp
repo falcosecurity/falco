@@ -150,6 +150,7 @@ int digwatch_init(int argc, char **argv)
 	int long_index = 0;
 	string lua_main_filename;
 	string lua_dir = DIGWATCH_INSTALLATION_DIR;
+	lua_State* ls;
 
 	static struct option long_options[] =
 	{
@@ -259,7 +260,11 @@ int digwatch_init(int argc, char **argv)
 			lua_main_filename = lua_dir + DIGWATCH_LUA_MAIN;
 		}
 
-		rules = new digwatch_rules(inspector, lua_main_filename, lua_dir);
+		// Initialize Lua interpreter
+		ls = lua_open();
+		luaL_openlibs(ls);
+
+		rules = new digwatch_rules(inspector, ls, lua_main_filename, lua_dir);
 
 		rules->load_rules(rules_file);
 		inspector->set_filter(rules->get_filter());
@@ -290,6 +295,7 @@ exit:
 		delete inspector;
 	}
 
+	lua_close(ls);
 	return result;
 }
 

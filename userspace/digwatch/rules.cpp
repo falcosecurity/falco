@@ -15,13 +15,11 @@ const static struct luaL_reg ll_digwatch [] =
 	{NULL,NULL}
 };
 
-digwatch_rules::digwatch_rules(sinsp* inspector, string lua_main_filename, string lua_dir)
+digwatch_rules::digwatch_rules(sinsp* inspector, lua_State *ls, string lua_main_filename, string lua_dir)
 {
 	g_inspector = inspector;
 
-	// Initialize Lua interpreter
-	m_ls = lua_open();
-	luaL_openlibs(m_ls);
+	m_ls = ls;
 
 	m_lua_parser = new lua_parser(inspector, m_ls);
 
