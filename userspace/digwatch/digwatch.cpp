@@ -121,11 +121,13 @@ captureinfo do_inspect(sinsp* inspector,
 			throw sinsp_exception("Error: No formatter for event with id %d " + to_string(ev->get_check_id()));
 		}
 
-		if(formatter->tostring(ev, &line))
-		{
-			cout << line;
-			cout << endl;
+		bool has_all = formatter->tostring(ev, &line);
+		if (!has_all) {
+			cout << "(missing fields) ";
 		}
+		cout << line;
+		cout << endl;
+
 
 	}
 
