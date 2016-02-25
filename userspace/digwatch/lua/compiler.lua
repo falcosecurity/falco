@@ -300,7 +300,7 @@ function expand_in(node)
       local mapper = function(element)
          return {
             type = "BinaryRelOp",
-            operator = "eq",
+            operator = "=",
             left = node.left,
             right = element
          }
