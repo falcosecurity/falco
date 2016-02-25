@@ -350,7 +350,7 @@ function expand_macros(ast, defs, changed)
    end
 
    if (ast.type == "Rule") then
-      macros = expand_macros(ast.filter, defs, changed)
+      return expand_macros(ast.filter, defs, changed)
    elseif ast.type == "Filter" then
       if (ast.value.type == "Macro") then
          if (defs[ast.value.value] == nil) then
@@ -514,6 +514,8 @@ function compiler.compile_line(line, macro_defs)
    check_macros(ast)
 
    if (ast.type == "MacroDef") then
+      expand_in(ast.value)
+
       -- Parsed line is a macro definition, so update our dictionary of macros and
       -- return
       macro_defs[ast.name] = ast.value
