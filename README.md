@@ -52,7 +52,7 @@ interactive: proc.pname = bash or proc.pname = sshd
 write and interactive and fd.name contains sysdig
 write and interactive and fd.name contains .txt
 ```
-(Note: compared to the syntax in the page referenced above, this is missing the output spec (`.. | <output>`). This part is not implemented yet. Stay tuned...)
+
 
 
 Let's assume you called that file rules.txt. Now you can run digwatch like so:
