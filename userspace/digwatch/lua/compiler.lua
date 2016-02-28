@@ -99,7 +99,7 @@ end
 
 
 local function list (pat, sep)
-   return Ct(pat^0 * (sep * pat^0)^0) / function(elements) return {type = "List", elements=elements} end
+   return Ct(pat^-1 * (sep * pat^0)^0) / function(elements) return {type = "List", elements=elements} end
 end
 
 --http://lua-users.org/wiki/StringTrim
