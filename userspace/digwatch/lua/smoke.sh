@@ -57,8 +57,6 @@ good "evt.dir=> and fd.name=*.log"
 good "evt.dir=> and fd.name=/var/log/httpd.log"
 good "a.g in (1, 'a', b.c)"
 good "a.b = a.a"
-good "a.b = a.a |"
-good "a.b = a.a | %evt.type %fd.num blabla"
 
 good "evt.arg[0] contains /bin"
 bad "evt.arg[a] contains /bin"
@@ -67,9 +65,9 @@ bad "evt.arg[] contains /bin"
 bad "a.g in ()"
 bad "a.b = b = 1"
 bad "(a.b = 1"
-bad " | %a.b"
-# Macros
 
+
+# Macros
 good "a: a.b exists"
 good "a: b and c"
 good "a: b"
@@ -77,8 +75,18 @@ good "a : b"
 good "a : evt.dir=>"
 good "inbound: (syscall.type=listen and evt.dir='>') or (syscall.type=accept and evt.dir='<')"
 bad "a:"
-bad "a : b | bla"
 bad "b and d"
+
+# Outputs
+good "a.b = a.a |"
+good "a.b = a.a | %evt.type %fd.num blabla"
+good "a.b = a.a | blabla (%evt.type %fd.num)"
+good "a.b = a.a | f(evt)"
+good "a.b = a.a | f()"
+bad "a.b = a.a | f() evt"
+
+bad "a : b | bla"
+bad " | %a.b"
 
 
 echo
