@@ -31,6 +31,9 @@ local function mark_relational_nodes(ast, index)
    end
 end
 
+--[[
+   Take a filter AST and set it up in the libsinsp runtime, using the filter API.
+--]]
 local function install_filter(node)
    local t = node.type
 
@@ -59,17 +62,6 @@ local function install_filter(node)
       error ("Unexpected type in install_filter: "..t)
    end
 end
-
-
--- filter.rel_expr("proc.name",  "=", "cat")
--- filter.bool_op("and")
--- filter.nest()
--- filter.nest()
--- filter.rel_expr("fd.num",  "=", "1")
--- filter.bool_op("or")
--- filter.rel_expr("fd.num",  "=", "2")
--- filter.unnest()
--- filter.unnest()
 
 local state
 
