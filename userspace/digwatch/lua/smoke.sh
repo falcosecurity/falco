@@ -60,6 +60,10 @@ good "a.b = a.a"
 good "a.b = a.a |"
 good "a.b = a.a | %evt.type %fd.num blabla"
 
+good "evt.arg[0] contains /bin"
+bad "evt.arg[a] contains /bin"
+bad "evt.arg[] contains /bin"
+
 bad "a.g in ()"
 bad "a.b = b = 1"
 bad "(a.b = 1"

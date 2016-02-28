@@ -225,7 +225,7 @@ local G = {
   idRest = alnum + P("_");
   Identifier = V"idStart" * V"idRest"^0;
   Macro = V"idStart" * V"idRest"^0 * -P".";
-  FieldName = V"Identifier" * (P"." + V"Identifier")^1;
+  FieldName = V"Identifier" * (P"." + V"Identifier")^1 * (P"[" * V"Int" * P"]")^-1;
   Name = C(V"Identifier") * -V"idRest";
   Hex = (P("0x") + P("0X")) * xdigit^1;
   Expo = S("eE") * S("+-")^-1 * digit^1;
@@ -374,7 +374,7 @@ function expand_macros(ast, defs, changed)
 
       if (ast.right.type == "Macro") then
          if (defs[ast.right.value] == nil) then
-            error("Undefined macro ".. ast.right.value .. "used in filter.")
+            error("Undefined macro ".. ast.right.value .. " used in filter.")
          end
          ast.right = copy(defs[ast.right.value])
          changed = true
@@ -387,7 +387,7 @@ function expand_macros(ast, defs, changed)
    elseif ast.type == "UnaryBoolOp" then
       if (ast.argument.type == "Macro") then
          if (defs[ast.argument.value] == nil) then
-            error("Undefined macro ".. ast.argument.value .. "used in filter.")
+            error("Undefined macro ".. ast.argument.value .. " used in filter.")
          end
          ast.argument = copy(defs[ast.argument.value])
          changed = true
