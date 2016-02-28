@@ -99,7 +99,7 @@ end
 
 
 local function list (pat, sep)
-   return Ct(pat^0 * (sep * pat^0)^0) / function(elements) return {type = "List", elements=elements} end
+   return Ct(pat^-1 * (sep * pat^0)^0) / function(elements) return {type = "List", elements=elements} end
 end
 
 --http://lua-users.org/wiki/StringTrim
@@ -167,6 +167,10 @@ local function outputformat (format)
    return {type = "OutputFormat", value = format}
 end
 
+local function functioncall (name, args)
+   return {type = "FunctionCall", name = name, arguments = args}
+end
+
 local function rule(filter, output)
    if not output then
       output = outputformat("")
@@ -182,7 +186,7 @@ local G = {
   -- Grammar
    Comment = P"#" * P(1)^0;
 
-   Rule = V"Filter" / filter * ((V"Skip" * V"Pipe" * V"Skip" * (P(1)^0 / outputformat) )^-1 );
+   Rule = V"Filter" / filter * ((V"Skip" * V"Pipe" * V"Skip" * V"Output")^-1 );
 
    Filter = V"OrExpression";
   OrExpression =
@@ -211,6 +215,9 @@ local G = {
   PrimaryExp = symb("(") * V"Filter" * symb(")");
 
   MacroDef = (C(V"Macro") * V"Skip" * V"Colon" * (V"Filter"));
+
+  FuncArgs = symb("(") * list(V"Value", symb(",")) * symb(")");
+  Output = ((V"Name" * V"FuncArgs") / functioncall) + P(1)^0 / outputformat;
 
   -- Terminals
   Value = terminal "Number" + terminal "String" + terminal "BareString";
@@ -448,8 +455,17 @@ function print_ast(ast, level)
    if t == "Rule" then
       print_ast(ast.filter, level)
       if (ast.output) then
-	 print(prefix.."| "..ast.output.value)
+	 print(prefix.."| ")
+	 print_ast(ast.output)
       end
+   elseif t == "OutputFormat" then
+      print(ast.value)
+
+   elseif t == "FunctionCall" then
+      print(ast.name .. "(" )
+      print_ast(ast.arguments)
+      print(")")
+
    elseif t == "Filter" then
       print_ast(ast.value, level)
 
@@ -463,7 +479,6 @@ function print_ast(ast, level)
       print_ast(ast.argument, level)
 
    elseif t == "List" then
-      print(prefix.. "List: ")
       for i, v in ipairs(ast.elements) do
          print_ast(v, level)
       end
