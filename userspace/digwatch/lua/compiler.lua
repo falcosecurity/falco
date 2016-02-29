@@ -167,8 +167,8 @@ local function outputformat (format)
    return {type = "OutputFormat", value = format}
 end
 
-local function functioncall (name, args)
-   return {type = "FunctionCall", name = name, arguments = args}
+local function functioncall (str, name, args)
+   return {type = "FunctionCall", name = name, arguments = args, source = str}
 end
 
 local function rule(filter, output)
@@ -217,7 +217,7 @@ local G = {
   MacroDef = (C(V"Macro") * V"Skip" * V"Colon" * (V"Filter"));
 
   FuncArgs = symb("(") * list(V"Value", symb(",")) * symb(")");
-  Output = ((V"Name" * V"FuncArgs") / functioncall) + P(1)^0 / outputformat;
+  Output = (C(V"Name" * V"FuncArgs") / functioncall) + P(1)^0 / outputformat;
 
   -- Terminals
   Value = terminal "Number" + terminal "String" + terminal "BareString";
