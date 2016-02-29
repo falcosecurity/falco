@@ -24,7 +24,8 @@ digwatch_formats::digwatch_formats(sinsp* inspector, lua_State *ls)
 	luaL_openlib(m_ls, "digwatch", ll_digwatch, 0);
 }
 
-int digwatch_formats::formatter(lua_State *ls) {
+int digwatch_formats::formatter(lua_State *ls)
+{
 	string format = luaL_checkstring(ls, 1);
 	sinsp_evt_formatter* formatter;
 	try
@@ -43,7 +44,8 @@ int digwatch_formats::formatter(lua_State *ls) {
 	return 1;
 }
 
-int digwatch_formats::format_event (lua_State *ls) {
+int digwatch_formats::format_event (lua_State *ls)
+{
 	string line;
 
 	if (!lua_islightuserdata(ls, -1) || !lua_islightuserdata(ls, -2)) {
