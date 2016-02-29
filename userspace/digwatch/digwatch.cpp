@@ -111,7 +111,7 @@ void do_inspect(sinsp* inspector,
 //
 int digwatch_init(int argc, char **argv)
 {
-	int result;
+	int result = EXIT_SUCCESS;
 	sinsp* inspector = NULL;
 	digwatch_rules* rules = NULL;
 	digwatch_formats* formats = NULL;
@@ -120,7 +120,7 @@ int digwatch_init(int argc, char **argv)
 	int long_index = 0;
 	string lua_main_filename;
 	string lua_dir = DIGWATCH_INSTALLATION_DIR;
-	lua_State* ls;
+	lua_State* ls = NULL;
 
 	static struct option long_options[] =
 	{
@@ -147,7 +147,6 @@ int digwatch_init(int argc, char **argv)
 			{
 			case 'h':
 				usage();
-				result = EXIT_SUCCESS;
 				goto exit;
 			case 'm':
 				lua_main_filename = optarg;
@@ -242,7 +241,10 @@ exit:
 		delete inspector;
 	}
 
-	lua_close(ls);
+	if(ls)
+	{
+		lua_close(ls);
+	}
 	return result;
 }
 
