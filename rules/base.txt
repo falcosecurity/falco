@@ -1,0 +1,72 @@
+#############
+# Definitions
+#############
+
+# File actions
+write: (syscall.type=write and fd.type in (file, directory))
+read: (syscall.type=read and evt.dir=> and fd.type in (file, directory))
+rename: syscall.type = rename
+mkdir: syscall.type = mkdir
+remove: syscall.type in (remove, rmdir, unlink, unlink_at)
+
+modify: rename or mkdir or remove
+
+
+# File categories
+terminal_file_fd: fd.name=/dev/ptmx or fd.directory=/dev/pts
+bin_dir: fd.directory in (/bin, /sbin, /usr/bin, /usr/sbin)
+
+bin_dir_arg0: evt.arg[0] contains /bin or evt.arg[0] contains /sbin or evt.arg[0] contains /usr/bin or evt.arg[0] contains /usr/sbin
+bin_dir_arg1: evt.arg[1] contains /bin or evt.arg[1] contains /sbin or evt.arg[1] contains /usr/bin or evt.arg[1] contains /usr/sbin
+
+ubuntu_so_dirs: fd.directory contains /lib/x86_64-linux-gnu or fd.directory contains /usr/lib/x86_64-linux-gnu or fd.directory contains /usr/lib/sudo
+centos_so_dirs: fd.directory contains /lib64 or fd.directory contains /user/lib64 or fd.directory contains /usr/libexec
+
+
+# Network
+inbound: (syscall.type=listen and evt.dir=>) or (syscall.type=accept and evt.dir=<)
+outbound: ((syscall.type=connect and evt.dir=<) or (syscall.type=sendto and evt.dir=>)) and (fd.typechar=4 or fd.typechar=6)
+
+active_mq_port: fd.lport=61616
+active_mq_web_port: fd.lport=8161
+active_mq: active_mq_port or active_mq_web_port
+
+cassandra_thrift_client_port: fd.lport=9160
+cassandra_cql_port: fd.lport=9042
+cassandra_port: cassandra_thrift_client_port or cassandra_cql_port
+
+elasticsearch_cluster_port: fd.lport=9300
+elasticsearch_api_port: fd.lport=9200
+elasticsearch_port: elasticsearch_cluster_port or elasticsearch_api_port
+
+ssh_port: fd.lport=22
+
+# System
+modules: syscall.type in (delete_module, init_module)
+setns: syscall.type = setns
+container: container.id != host
+interactive: proc.aname=sshd
+
+
+#######
+# Rules
+#######
+
+# Don't write to binary dirs
+write and bin_dir
+
+# Don't modify binary dirs
+modify and (bin_dir_arg0 or bin_dir_arg1)
+
+# Don't load shared objects coming from unexpected places
+read and fd.name contains .so and not (ubuntu_so_dirs or centos_so_dirs)
+
+# Attempts to access things that shouldn't be
+evt.res = EACCES
+
+# Only sysdig can change namespace
+setns and proc.name != sysdig
+
+# Let's assume this is a node running elasticsearch
+inbound and not (ssh_port or elasticsearch_port) and not fd.rip="127.0.0.1"
+
