@@ -173,7 +173,7 @@ end
 
 local function rule(filter, output)
    if not output then
-      output = outputformat("")
+      output = outputformat(nil)
    end
    return {type = "Rule", filter = filter, output = output}
 end

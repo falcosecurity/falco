@@ -6,12 +6,12 @@ extern "C" {
 #include "lauxlib.h"
 }
 
-std::map<uint32_t, sinsp_evt_formatter*> g_format_map;
 sinsp* g_inspector;
 
 const static struct luaL_reg ll_digwatch [] =
 {
-	{"set_formatter", &digwatch_formats::set_formatter},
+	{"formatter", &digwatch_formats::formatter},
+	{"format_event", &digwatch_formats::format_event},
 	{NULL,NULL}
 };
 
@@ -24,20 +24,12 @@ digwatch_formats::digwatch_formats(sinsp* inspector, lua_State *ls)
 	luaL_openlib(m_ls, "digwatch", ll_digwatch, 0);
 }
 
-int digwatch_formats::set_formatter (lua_State *ls) {
-	uint32_t index = luaL_checkinteger(ls, 1);
-	string format = luaL_checkstring(ls, 2);
-
+int digwatch_formats::formatter(lua_State *ls) {
+	string format = luaL_checkstring(ls, 1);
+	sinsp_evt_formatter* formatter;
 	try
 	{
-		if(format == "" || format == "default")
-		{
-			g_format_map[index] = new sinsp_evt_formatter(g_inspector, DEFAULT_OUTPUT_STR);
-		}
-		else
-		{
-			g_format_map[index] = new sinsp_evt_formatter(g_inspector, format);
-		}
+		formatter = new sinsp_evt_formatter(g_inspector, format);
 	}
 	catch(sinsp_exception& e)
 	{
@@ -46,12 +38,24 @@ int digwatch_formats::set_formatter (lua_State *ls) {
 		throw sinsp_exception("set_formatter error");
 	}
 
-	return 0;
+	lua_pushlightuserdata(ls, formatter);
+
+	return 1;
 }
 
-sinsp_evt_formatter* digwatch_formats::lookup_formatter(uint32_t index)
-{
-	return g_format_map[index];
-}
+int digwatch_formats::format_event (lua_State *ls) {
+	string line;
 
+	if (!lua_islightuserdata(ls, -1) || !lua_islightuserdata(ls, -2)) {
+		string err = "invalid arguments passed to format_event() ";
+		throw sinsp_exception("format_event error");
+	}
+	sinsp_evt* evt = (sinsp_evt*)lua_topointer(ls, 1);
+	sinsp_evt_formatter* formatter = (sinsp_evt_formatter*)lua_topointer(ls, 2);
+
+	formatter->tostring(evt, &line);
+
+	lua_pushstring(ls, line.c_str());
+	return 1;
+}
 

@@ -5,6 +5,8 @@
 
 --]]
 
+local DEFAULT_OUTPUT_FORMAT = "%evt.num %evt.time %evt.cpu %proc.name (%thread.tid) %evt.dir %evt.type %evt.args"
+
 local compiler = require "compiler"
 
 --[[
@@ -72,7 +74,7 @@ local state
    to the line-oriented compiler.
 --]]
 local function init()
-   return {macros={}, filter_ast=nil, n_rules=0}
+   return {macros={}, filter_ast=nil, n_rules=0, outputs={}}
 end
 
 
@@ -90,8 +92,16 @@ function load_rule(r)
       error ("Unexpected type in load_rule: "..line_ast.type)
    end
 
-   -- Register a formatter with the output string from this rule
-   digwatch.set_formatter(state.n_rules, line_ast.output.value)
+   state.n_rules = state.n_rules + 1
+
+   local format
+   if line_ast.output.value==nil then
+      format = DEFAULT_OUTPUT_FORMAT
+   else
+      format = line_ast.output.value
+   end
+
+   state.outputs[state.n_rules] = digwatch.formatter(format)
 
    -- Store the index of this formatter in each relational expression that
    -- this rule contains.
@@ -99,8 +109,6 @@ function load_rule(r)
    -- we'll use it later to determine which output to display when we get an
    -- event.
    mark_relational_nodes(line_ast.filter.value, state.n_rules)
-
-   state.n_rules = state.n_rules + 1
 
    -- Rule ASTs are merged together into one big AST, with "OR" between each
    -- rule.
@@ -114,3 +122,8 @@ end
 function on_done()
    install_filter(state.filter_ast)
 end
+
+function on_event(evt, rule_id)
+   print(digwatch.format_event(evt, state.outputs[rule_id]))
+end
+
