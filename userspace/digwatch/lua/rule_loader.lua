@@ -5,6 +5,8 @@
 
 --]]
 
+local DEFAULT_OUTPUT_FORMAT = "%evt.num %evt.time %evt.cpu %proc.name (%thread.tid) %evt.dir %evt.type %evt.args"
+
 local compiler = require "compiler"
 
 --[[
@@ -72,9 +74,30 @@ local state
    to the line-oriented compiler.
 --]]
 local function init()
-   return {macros={}, filter_ast=nil, n_rules=0}
+   return {macros={}, filter_ast=nil, n_rules=0, outputs={}}
 end
 
+
+function set_output(output_ast)
+
+   if(output_ast.type == "OutputFormat") then
+
+      local format
+      if output_ast.value==nil then
+	 format = DEFAULT_OUTPUT_FORMAT
+      else
+	 format = output_ast.value
+      end
+
+      state.outputs[state.n_rules] = {type="format", formatter=digwatch.formatter(format)}
+
+   elseif (output_ast.type == "FunctionCall") then
+      require(output_ast.mname)
+      state.outputs[state.n_rules] = {type="function", mname = output_ast.mname, source=output_ast.source}
+   else
+      error ("Unexpected type in set_output: ".. output_ast.type)
+   end
+end
 
 function load_rule(r)
    if (state == nil) then
@@ -90,8 +113,9 @@ function load_rule(r)
       error ("Unexpected type in load_rule: "..line_ast.type)
    end
 
-   -- Register a formatter with the output string from this rule
-   digwatch.set_formatter(state.n_rules, line_ast.output.value)
+   state.n_rules = state.n_rules + 1
+
+   set_output(line_ast.output)
 
    -- Store the index of this formatter in each relational expression that
    -- this rule contains.
@@ -99,8 +123,6 @@ function load_rule(r)
    -- we'll use it later to determine which output to display when we get an
    -- event.
    mark_relational_nodes(line_ast.filter.value, state.n_rules)
-
-   state.n_rules = state.n_rules + 1
 
    -- Rule ASTs are merged together into one big AST, with "OR" between each
    -- rule.
@@ -114,3 +136,15 @@ end
 function on_done()
    install_filter(state.filter_ast)
 end
+
+evt = nil
+function on_event(evt_, rule_id)
+   if state.outputs[rule_id].type == "format" then
+      print(digwatch.format_event(evt, state.outputs[rule_id].formatter))
+   elseif state.outputs[rule_id].type == "function" then
+      local reqmod =  "local "..state.outputs[rule_id].mname.." = require('" ..state.outputs[rule_id].mname .. "')";
+      evt = evt_
+      assert(loadstring(reqmod .. "; print(type(evt));" ..state.outputs[rule_id].source))()
+   end
+end
+

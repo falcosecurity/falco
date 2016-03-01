@@ -167,13 +167,13 @@ local function outputformat (format)
    return {type = "OutputFormat", value = format}
 end
 
-local function functioncall (name, args)
-   return {type = "FunctionCall", name = name, arguments = args}
+local function functioncall (str, mname, fname, args)
+   return {type = "FunctionCall", mname = mname, fname = fname, arguments = args, source = str}
 end
 
 local function rule(filter, output)
    if not output then
-      output = outputformat("")
+      output = outputformat(nil)
    end
    return {type = "Rule", filter = filter, output = output}
 end
@@ -217,7 +217,7 @@ local G = {
   MacroDef = (C(V"Macro") * V"Skip" * V"Colon" * (V"Filter"));
 
   FuncArgs = symb("(") * list(V"Value", symb(",")) * symb(")");
-  Output = ((V"Name" * V"FuncArgs") / functioncall) + P(1)^0 / outputformat;
+  Output = (C(V"Name" * P(".") * V"Name" * V"FuncArgs") / functioncall) + P(1)^0 / outputformat;
 
   -- Terminals
   Value = terminal "Number" + terminal "String" + terminal "BareString";
@@ -462,7 +462,7 @@ function print_ast(ast, level)
       print(ast.value)
 
    elseif t == "FunctionCall" then
-      print(ast.name .. "(" )
+      print(ast.mname..ast.fname .. "(" )
       print_ast(ast.arguments)
       print(")")
 

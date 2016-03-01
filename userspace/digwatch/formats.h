@@ -10,9 +10,11 @@ class digwatch_formats
  public:
 	digwatch_formats(sinsp* inspector, lua_State *ls);
 
-	// set_formatter(index, format_string)
-	static int set_formatter(lua_State *ls);
-	sinsp_evt_formatter* lookup_formatter(uint32_t index);
+	// formatter = digwatch.formatter(format_string)
+	static int formatter(lua_State *ls);
+
+	// formatted_string = digwatch.format_event(evt, formatter)
+	static int format_event(lua_State *ls);
 
  private:
 	lua_State* m_ls;

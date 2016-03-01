@@ -45,18 +45,19 @@ static void usage()
     );
 }
 
+string lua_on_event = "on_event";
 
 //
 // Event processing loop
 //
 void do_inspect(sinsp* inspector,
 		digwatch_rules* rules,
-		digwatch_formats* formats)
+		digwatch_formats* formats,
+		lua_State* ls)
 {
 	int32_t res;
 	sinsp_evt* ev;
 	string line;
-	sinsp_evt_formatter* formatter;
 
 	//
 	// Loop through the events
@@ -89,20 +90,24 @@ void do_inspect(sinsp* inspector,
 			continue;
 		}
 
-		formatter = formats->lookup_formatter(ev->get_check_id());
-		if(!formatter)
+		lua_getglobal(ls, lua_on_event.c_str());
+
+		if(lua_isfunction(ls, -1))
 		{
-			throw sinsp_exception("Error: No formatter for event with id %d " + to_string(ev->get_check_id()));
+			lua_pushlightuserdata(ls, ev);
+			lua_pushnumber(ls, ev->get_check_id());
+
+			if(lua_pcall(ls, 2, 0, 0) != 0)
+			{
+				const char* lerr = lua_tostring(ls, -1);
+				string err = "Error installing rules: " + string(lerr);
+				throw sinsp_exception(err);
+			}
 		}
-
-		bool has_all = formatter->tostring(ev, &line);
-		if(!has_all) {
-			cout << "(missing fields) ";
+		else
+		{
+			throw sinsp_exception("No function " + lua_on_event + " found in lua compiler module");
 		}
-		cout << line;
-		cout << endl;
-
-
 	}
 }
 
@@ -111,7 +116,7 @@ void do_inspect(sinsp* inspector,
 //
 int digwatch_init(int argc, char **argv)
 {
-	int result;
+	int result = EXIT_SUCCESS;
 	sinsp* inspector = NULL;
 	digwatch_rules* rules = NULL;
 	digwatch_formats* formats = NULL;
@@ -120,7 +125,7 @@ int digwatch_init(int argc, char **argv)
 	int long_index = 0;
 	string lua_main_filename;
 	string lua_dir = DIGWATCH_INSTALLATION_DIR;
-	lua_State* ls;
+	lua_State* ls = NULL;
 
 	static struct option long_options[] =
 	{
@@ -147,7 +152,6 @@ int digwatch_init(int argc, char **argv)
 			{
 			case 'h':
 				usage();
-				result = EXIT_SUCCESS;
 				goto exit;
 			case 'm':
 				lua_main_filename = optarg;
@@ -220,7 +224,8 @@ int digwatch_init(int argc, char **argv)
 
 		do_inspect(inspector,
 			   rules,
-			   formats);
+			   formats,
+			   ls);
 
 		inspector->close();
 	}
@@ -242,7 +247,10 @@ exit:
 		delete inspector;
 	}
 
-	lua_close(ls);
+	if(ls)
+	{
+		lua_close(ls);
+	}
 	return result;
 }
 
