@@ -19,6 +19,7 @@ extern "C" {
 #include <config_digwatch.h>
 #include "rules.h"
 #include "formats.h"
+#include "fields.h"
 #include "utils.h"
 
 
@@ -216,6 +217,8 @@ int digwatch_init(int argc, char **argv)
 		rules = new digwatch_rules(inspector, ls, lua_main_filename, lua_dir);
 
 		digwatch_formats::init(inspector, ls);
+		digwatch_fields::init(inspector, ls);
+
 		digwatch_fields::init(inspector, ls);
 
 		rules->load_rules(rules_file);
