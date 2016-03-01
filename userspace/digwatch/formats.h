@@ -1,7 +1,12 @@
 #pragma once
 
 #include "sinsp.h"
-#include "lua_parser.h"
+
+extern "C" {
+#include "lua.h"
+#include "lualib.h"
+#include "lauxlib.h"
+}
 
 class sinsp_evt_formatter;
 

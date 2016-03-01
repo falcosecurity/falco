@@ -1,10 +1,5 @@
 #include "formats.h"
 
-extern "C" {
-#include "lua.h"
-#include "lualib.h"
-#include "lauxlib.h"
-}
 
 sinsp* g_inspector;
 
