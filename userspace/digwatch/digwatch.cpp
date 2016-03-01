@@ -19,6 +19,7 @@ extern "C" {
 #include <config_digwatch.h>
 #include "rules.h"
 #include "formats.h"
+#include "fields.h"
 #include "utils.h"
 
 
@@ -52,7 +53,6 @@ string lua_on_event = "on_event";
 //
 void do_inspect(sinsp* inspector,
 		digwatch_rules* rules,
-		digwatch_formats* formats,
 		lua_State* ls)
 {
 	int32_t res;
@@ -119,7 +119,6 @@ int digwatch_init(int argc, char **argv)
 	int result = EXIT_SUCCESS;
 	sinsp* inspector = NULL;
 	digwatch_rules* rules = NULL;
-	digwatch_formats* formats = NULL;
 	int op;
 	sinsp_evt::param_fmt event_buffer_format = sinsp_evt::PF_NORMAL;
 	int long_index = 0;
@@ -216,7 +215,11 @@ int digwatch_init(int argc, char **argv)
 		luaL_openlibs(ls);
 
 		rules = new digwatch_rules(inspector, ls, lua_main_filename, lua_dir);
-		formats = new digwatch_formats(inspector, ls);
+
+		digwatch_formats::init(inspector, ls);
+		digwatch_fields::init(inspector, ls);
+
+		digwatch_fields::init(inspector, ls);
 
 		rules->load_rules(rules_file);
 		inspector->set_filter(rules->get_filter());
@@ -224,7 +227,6 @@ int digwatch_init(int argc, char **argv)
 
 		do_inspect(inspector,
 			   rules,
-			   formats,
 			   ls);
 
 		inspector->close();

@@ -1,12 +1,7 @@
 #include "formats.h"
 
-extern "C" {
-#include "lua.h"
-#include "lualib.h"
-#include "lauxlib.h"
-}
 
-sinsp* g_inspector;
+sinsp* digwatch_formats::s_inspector = NULL;
 
 const static struct luaL_reg ll_digwatch [] =
 {
@@ -15,13 +10,11 @@ const static struct luaL_reg ll_digwatch [] =
 	{NULL,NULL}
 };
 
-digwatch_formats::digwatch_formats(sinsp* inspector, lua_State *ls)
+void digwatch_formats::init(sinsp* inspector, lua_State *ls)
 {
-	g_inspector = inspector;
+	s_inspector = inspector;
 
-	m_ls = ls;
-
-	luaL_openlib(m_ls, "digwatch", ll_digwatch, 0);
+	luaL_openlib(ls, "digwatch", ll_digwatch, 0);
 }
 
 int digwatch_formats::formatter(lua_State *ls)
@@ -30,7 +23,7 @@ int digwatch_formats::formatter(lua_State *ls)
 	sinsp_evt_formatter* formatter;
 	try
 	{
-		formatter = new sinsp_evt_formatter(g_inspector, format);
+		formatter = new sinsp_evt_formatter(s_inspector, format);
 	}
 	catch(sinsp_exception& e)
 	{
