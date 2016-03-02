@@ -29,7 +29,7 @@ local function mark_relational_nodes(ast, index)
       ast.index = index
 
    else
-      error ("Unexpected type in install_filter: "..t)
+      error ("Unexpected type in mark_relational_nodes: "..t)
    end
 end
 
