@@ -43,6 +43,7 @@ int digwatch_formats::format_event (lua_State *ls)
 
 	if (!lua_islightuserdata(ls, -1) || !lua_islightuserdata(ls, -2)) {
 		string err = "invalid arguments passed to format_event() ";
+		fprintf(stderr, "%s\n", err.c_str());
 		throw sinsp_exception("format_event error");
 	}
 	sinsp_evt* evt = (sinsp_evt*)lua_topointer(ls, 1);
