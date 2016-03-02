@@ -140,7 +140,7 @@ end
 evt = nil
 function on_event(evt_, rule_id)
    if state.outputs[rule_id].type == "format" then
-      print(digwatch.format_event(evt, state.outputs[rule_id].formatter))
+      print(digwatch.format_event(evt_, state.outputs[rule_id].formatter))
    elseif state.outputs[rule_id].type == "function" then
       local reqmod =  "local "..state.outputs[rule_id].mname.." = require('" ..state.outputs[rule_id].mname .. "')";
       evt = evt_
