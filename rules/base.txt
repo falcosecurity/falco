@@ -22,6 +22,9 @@ bin_dir_rename: evt.arg[1] contains /bin or evt.arg[1] contains /sbin or evt.arg
 ubuntu_so_dirs: fd.directory contains /lib/x86_64-linux-gnu or fd.directory contains /usr/lib/x86_64-linux-gnu or fd.directory contains /usr/lib/sudo
 centos_so_dirs: fd.directory contains /lib64 or fd.directory contains /user/lib64 or fd.directory contains /usr/libexec
 
+coreutils_binaries: proc.name in (truncate, sha1sum, numfmt, fmt, fold, uniq, cut, who, groups, csplit, sort, expand, printf, printenv, unlink, tee, chcon, stat, basename, split, nice, yes, whoami, sha224sum, hostid, users, stdbuf, base64, unexpand, cksum, od, paste, nproc, pathchk, sha256sum, wc, test, comm, arch, du, factor, sha512sum, md5sum, tr, runcon, env, dirname, tsort, join, shuf, install, logname, pinky, nohup, expr, pr, tty, timeout, tail, [, seq, sha384sum, nl, head, id, mkfifo, sum, dircolors, ptx, shred, tac, link, chroot, vdir, chown, touch, ls, dd, uname, true, pwd, date, chgrp, chmod, mktemp, cat, mknod, sync, ln, false, rm, mv, cp, echo, readlink, sleep, stty, mkdir, df, dir, rmdir, touch)
+
+
 
 # Network
 inbound: (syscall.type=listen and evt.dir=>) or (syscall.type=accept and evt.dir=<)
@@ -52,34 +55,34 @@ interactive: proc.aname=sshd
 #######
 
 # Don't write to binary dirs
-write and bin_dir
+write and bin_dir | Write to bin dir (%proc.name %evt.dir %evt.type %evt.args %fd.name)
 
 # Don't modify binary dirs
-modify and (bin_dir_rename or bin_dir_mkdir)
+modify and (bin_dir_rename or bin_dir_mkdir) | Modify bin dir (%proc.name %evt.dir %evt.type %evt.args %fd.name)
 
 # Don't load shared objects coming from unexpected places
-read and fd.name contains .so and not (ubuntu_so_dirs or centos_so_dirs)
+read and fd.name contains .so and not (ubuntu_so_dirs or centos_so_dirs) | .so from wrong place (%proc.name %evt.dir %evt.type %evt.args %fd.name)
 
 # Attempts to access things that shouldn't be
-evt.res = EACCES
-
-# Only sysdig can change namespace
-setns and proc.name != sysdig
+evt.res = EACCES | EACCESS (%proc.name %evt.dir %evt.type %evt.args %fd.name)
 
 # Let's assume this is a node running elasticsearch
-inbound and not (ssh_port or elasticsearch_port) and not fd.rip="127.0.0.1"
+inbound and not (ssh_port or elasticsearch_port) and not fd.rip="127.0.0.1" | bad rip (%proc.name %evt.dir %evt.type %evt.args %fd.name)
 
 # Only sysdig and docker can call setns
-syscall.type = setns and not proc.name in (docker, sysdig)
+syscall.type = setns and not proc.name in (docker, sysdig) | Unexpected setns (%proc.name %evt.dir %evt.type %evt.args %fd.name)
 
 # Shells should only be run by cron or sshd
-proc.name = bash and not proc.pname in (bash, sshd, cron)
+proc.name = bash and not proc.pname in (bash, sshd, cron) | Unexpected shell (%proc.name %evt.dir %evt.type %evt.args %fd.name)
 
 # Anything run by root
-user.name = root
+evt.type != switch and user.name = root and interactive | Interactive root (%proc.name %evt.dir %evt.type %evt.args %fd.name)
 
 # Chmod should only be run interactively (by a user)
-syscall.type = chmod and not interactive
+syscall.type = chmod and not interactive | non-interactive chmod (%proc.name %evt.dir %evt.type %evt.args %fd.name)
 
 # Shells in a container
-container and proc.name = bash
+container and proc.name = bash | shell in a container (%proc.name %evt.dir %evt.type %evt.args %fd.name)
+
+# Network traffic to/from standard utils
+(fd.typechar = 4 or fd.typechar=6) and coreutils_binaries | network traffic to %proc.name (%proc.name %evt.dir %evt.type %evt.args %fd.name)
