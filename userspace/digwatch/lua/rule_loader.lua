@@ -144,7 +144,7 @@ function on_event(evt_, rule_id)
    elseif state.outputs[rule_id].type == "function" then
       local reqmod =  "local "..state.outputs[rule_id].mname.." = require('" ..state.outputs[rule_id].mname .. "')";
       evt = evt_
-      assert(loadstring(reqmod .. "; print(type(evt));" ..state.outputs[rule_id].source))()
+      assert(loadstring(reqmod .. state.outputs[rule_id].source))()
    end
 end
 
