@@ -67,7 +67,8 @@ modify and (bin_dir_rename or bin_dir_mkdir) | Modify bin dir (%proc.name %evt.d
 read and fd.name contains .so and not (ubuntu_so_dirs or centos_so_dirs) | .so from wrong place (%proc.name %evt.dir %evt.type %evt.args %fd.name)
 
 # Attempts to access things that shouldn't be
-evt.res = EACCES | EACCESS (%proc.name %evt.dir %evt.type %evt.args %fd.name)
+# Disabled, somewhat noisy, need dupe suppression before enabling
+# evt.res = EACCES | EACCESS (%proc.name %evt.dir %evt.type %evt.args %fd.name)
 
 # Let's assume this is a node running elasticsearch
 inbound and not (ssh_port or elasticsearch_port) and not fd.rip="127.0.0.1" | bad rip (%proc.name %evt.dir %evt.type %evt.args %fd.name)
@@ -76,10 +77,10 @@ inbound and not (ssh_port or elasticsearch_port) and not fd.rip="127.0.0.1" | ba
 syscall.type = setns and not proc.name in (docker, sysdig) | Unexpected setns (%proc.name %evt.dir %evt.type %evt.args %fd.name)
 
 # Shells should only be run by cron or sshd
-proc.name = bash and not proc.pname in (bash, sshd, cron) | Unexpected shell (%proc.name %evt.dir %evt.type %evt.args %fd.name)
+proc.name = bash and not proc.pname in (bash, sshd, cron, sudo, su, tmux) | Unexpected shell (%proc.name %evt.dir %evt.type %evt.args %fd.name)
 
 # Anything run by root
-evt.type != switch and user.name = root and interactive | Interactive root (%proc.name %evt.dir %evt.type %evt.args %fd.name)
+evt.type != switch and user.name = root and proc.name != sshd and interactive | Interactive root (%proc.name %evt.dir %evt.type %evt.args %fd.name)
 
 # Chmod should only be run interactively (by a user)
 syscall.type = chmod and not interactive | non-interactive chmod (%proc.name %evt.dir %evt.type %evt.args %fd.name)
