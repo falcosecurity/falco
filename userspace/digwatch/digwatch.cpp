@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <iostream>
+#include <signal.h>
 #include <time.h>
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -21,6 +22,13 @@ extern "C" {
 #include "formats.h"
 #include "fields.h"
 #include "utils.h"
+
+static bool g_terminate = false;
+
+static void signal_callback(int signal)
+{
+	g_terminate = true;
+}
 
 
 //
@@ -64,6 +72,12 @@ void do_inspect(sinsp* inspector,
 	//
 	while(1)
 	{
+
+		if(g_terminate)
+		{
+			break;
+		}
+
 		res = inspector->next(&ev);
 
 		if(res == SCAP_TIMEOUT)
@@ -195,6 +209,20 @@ int digwatch_init(int argc, char **argv)
 			result = EXIT_FAILURE;
 			goto exit;
 
+		}
+
+		if(signal(SIGINT, signal_callback) == SIG_ERR)
+		{
+			fprintf(stderr, "An error occurred while setting SIGINT signal handler.\n");
+			result = EXIT_FAILURE;
+			goto exit;
+		}
+
+		if(signal(SIGTERM, signal_callback) == SIG_ERR)
+		{
+			fprintf(stderr, "An error occurred while setting SIGTERM signal handler.\n");
+			result = EXIT_FAILURE;
+			goto exit;
 		}
 
 		//
