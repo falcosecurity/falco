@@ -44,11 +44,14 @@ elasticsearch_port: elasticsearch_cluster_port or elasticsearch_api_port
 
 ssh_port: fd.lport=22
 
+# Ssh
+ssh_error_message: evt.arg.data contains "Invalid user" or evt.arg.data contains "preauth"
+
 # System
 modules: syscall.type in (delete_module, init_module)
 container: container.id != host
 interactive: proc.aname=sshd
-
+syslog: fd.name = /dev/log
 
 #######
 # Rules
@@ -86,3 +89,6 @@ container and proc.name = bash | shell in a container (%proc.name %evt.dir %evt.
 
 # Network traffic to/from standard utils
 (fd.typechar = 4 or fd.typechar=6) and coreutils_binaries | network traffic to %proc.name (%proc.name %evt.dir %evt.type %evt.args %fd.name)
+
+# SSH errors (failed logins, disconnects, ..)
+syslog and ssh_error_message and evt.dir = < | output.syslog(evt, "warning", "sshd: %proc.name %evt.arg.data")
