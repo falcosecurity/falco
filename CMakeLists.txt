@@ -36,11 +36,6 @@ set(CURL_LIBRARIES "${CURL_BUNDLE_DIR}/lib/.libs/libcurl.a")
 
 set(LUAJIT_INCLUDE_DIR "${sysdig_BINARY_DIR}/luajit-prefix/src/luajit/src")
 
-if(NOT USE_BUNDLED_OPENSSL)
-	set(CURL_SSL_OPTION "")
-else()
-	set(CURL_SSL_OPTION "--with-ssl=${OPENSSL_INSTALL_DIR}")
-endif()
 
 message(STATUS "Using bundled curl in '${CURL_BUNDLE_DIR}'")
 message(STATUS "Using SSL for curl in '${CURL_SSL_OPTION}'")
