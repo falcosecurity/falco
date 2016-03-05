@@ -33,8 +33,6 @@ $ make
 
 as a result, you should have a digwatch executable `build/userspace/digwatch/digwatch`.
 
-Still not quite done yet! we need to install the [lpeg](http://www.inf.puc-rio.br/~roberto/lpeg/) Lua library. (This should be done automatically as part of the build of course...). To install it, just do: `luarocks install lpeg`.
-
 
 ### Running
 

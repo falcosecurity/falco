@@ -125,6 +125,37 @@ void do_inspect(sinsp* inspector,
 	}
 }
 
+void add_lua_path(lua_State *ls, string path)
+{
+	string cpath = string(path);
+	path += "?.lua";
+	cpath += "?.so";
+
+	lua_getglobal(ls, "package");
+
+	lua_getfield(ls, -1, "path");
+	string cur_path = lua_tostring(ls, -1 );
+	cur_path += ';';
+	lua_pop(ls, 1);
+
+	cur_path.append(path.c_str());
+
+	lua_pushstring(ls, cur_path.c_str());
+	lua_setfield(ls, -2, "path");
+
+	lua_getfield(ls, -1, "cpath");
+	string cur_cpath = lua_tostring(ls, -1 );
+	cur_cpath += ';';
+	lua_pop(ls, 1);
+
+	cur_cpath.append(cpath.c_str());
+
+	lua_pushstring(ls, cur_cpath.c_str());
+	lua_setfield(ls, -2, "cpath");
+
+	lua_pop(ls, 1);
+}
+
 //
 // ARGUMENT PARSING AND PROGRAM SETUP
 //
@@ -241,8 +272,9 @@ int digwatch_init(int argc, char **argv)
 		// Initialize Lua interpreter
 		ls = lua_open();
 		luaL_openlibs(ls);
+		add_lua_path(ls, lua_dir);
 
-		rules = new digwatch_rules(inspector, ls, lua_main_filename, lua_dir);
+		rules = new digwatch_rules(inspector, ls, lua_main_filename);
 
 		digwatch_formats::init(inspector, ls);
 		digwatch_fields::init(inspector, ls);

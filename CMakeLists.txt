@@ -40,6 +40,16 @@ set(LUAJIT_INCLUDE_DIR "${sysdig_BINARY_DIR}/luajit-prefix/src/luajit/src")
 message(STATUS "Using bundled curl in '${CURL_BUNDLE_DIR}'")
 message(STATUS "Using SSL for curl in '${CURL_SSL_OPTION}'")
 
+include(ExternalProject)
+
+ExternalProject_Add(lpeg
+		    URL "https://s3.amazonaws.com/download.draios.com/dependencies/lpeg-1.0.0.tar.gz"
+                    URL_MD5 "0aec64ccd13996202ad0c099e2877ece"
+                    BUILD_COMMAND LUA_INCLUDE=/sysdig/digwatch/build-ubuntu/sysdig/luajit-prefix/src/luajit/src ${PROJECT_SOURCE_DIR}/scripts/build-lpeg.sh
+                    BUILD_IN_SOURCE 1
+		    CONFIGURE_COMMAND ""
+                    INSTALL_COMMAND cp lpeg.so re.lua ${PROJECT_SOURCE_DIR}/userspace/digwatch/lua)
+
 
 
 add_subdirectory(userspace/digwatch)

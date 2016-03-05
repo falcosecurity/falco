@@ -6,13 +6,12 @@
 class digwatch_rules
 {
  public:
-	digwatch_rules(sinsp* inspector, lua_State *ls, string lua_main_filename, string lua_dir);
+	digwatch_rules(sinsp* inspector, lua_State *ls, string lua_main_filename);
 	~digwatch_rules();
 	void load_rules(string rules_filename);
 	sinsp_filter* get_filter();
 
  private:
-	void add_lua_path(string path);
 	void load_compiler(string lua_main_filename);
 
 	lua_parser* m_lua_parser;
