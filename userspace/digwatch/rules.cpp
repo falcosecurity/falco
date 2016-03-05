@@ -7,33 +7,15 @@ extern "C" {
 }
 
 
-digwatch_rules::digwatch_rules(sinsp* inspector, lua_State *ls, string lua_main_filename, string lua_dir)
+digwatch_rules::digwatch_rules(sinsp* inspector, lua_State *ls, string lua_main_filename)
 {
 	m_ls = ls;
 
 	m_lua_parser = new lua_parser(inspector, m_ls);
 
-	add_lua_path(lua_dir);
 	load_compiler(lua_main_filename);
 }
 
-void digwatch_rules::add_lua_path(string path)
-{
-	path += "?.lua";
-
-	lua_getglobal(m_ls, "package");
-	lua_getfield(m_ls, -1, "path");
-
-	string cur_path = lua_tostring(m_ls, -1 );
-	cur_path += ';';
-
-	cur_path.append(path.c_str());
-	lua_pop(m_ls, 1);
-
-	lua_pushstring(m_ls, cur_path.c_str());
-	lua_setfield(m_ls, -2, "path");
-	lua_pop(m_ls, 1);
-}
 
 void digwatch_rules::load_compiler(string lua_main_filename)
 {
