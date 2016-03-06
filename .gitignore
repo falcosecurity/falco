@@ -1,1 +1,4 @@
 /build*
+
+userspace/digwatch/lua/re.lua
+userspace/digwatch/lua/lpeg.so
