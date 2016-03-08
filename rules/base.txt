@@ -19,11 +19,24 @@ bin_dir: fd.directory in (/bin, /sbin, /usr/bin, /usr/sbin)
 bin_dir_mkdir: evt.arg[0] contains /bin or evt.arg[0] contains /sbin or evt.arg[0] contains /usr/bin or evt.arg[0] contains /usr/sbin
 bin_dir_rename: evt.arg[1] contains /bin or evt.arg[1] contains /sbin or evt.arg[1] contains /usr/bin or evt.arg[1] contains /usr/sbin
 
+etc_dir: fd.directory contains /etc
+
 ubuntu_so_dirs: fd.directory contains /lib/x86_64-linux-gnu or fd.directory contains /usr/lib/x86_64-linux-gnu or fd.directory contains /usr/lib/sudo
 centos_so_dirs: fd.directory contains /lib64 or fd.directory contains /user/lib64 or fd.directory contains /usr/libexec
 
 coreutils_binaries: proc.name in (truncate, sha1sum, numfmt, fmt, fold, uniq, cut, who, groups, csplit, sort, expand, printf, printenv, unlink, tee, chcon, stat, basename, split, nice, yes, whoami, sha224sum, hostid, users, stdbuf, base64, unexpand, cksum, od, paste, nproc, pathchk, sha256sum, wc, test, comm, arch, du, factor, sha512sum, md5sum, tr, runcon, env, dirname, tsort, join, shuf, install, logname, pinky, nohup, expr, pr, tty, timeout, tail, [, seq, sha384sum, nl, head, id, mkfifo, sum, dircolors, ptx, shred, tac, link, chroot, vdir, chown, touch, ls, dd, uname, true, pwd, date, chgrp, chmod, mktemp, cat, mknod, sync, ln, false, rm, mv, cp, echo, readlink, sleep, stty, mkdir, df, dir, rmdir, touch)
+adduser_binaries: proc.name in (adduser, deluser, addgroup, delgroup)
+login_binaries: proc.name in (bin, login, su, sbin, nologin, bin, faillog, lastlog, newgrp, sg)
 
+# dpkg -L passwd | grep bin | xargs -L 1 basename | tr "\\n" ","
+passwd_binaries: proc.name in (sbin, shadowconfig, sbin, grpck, pwunconv, grpconv, pwck, groupmod, vipw, pwconv, useradd, newusers, cppw, chpasswd, usermod, groupadd, groupdel, grpunconv, chgpasswd, userdel, bin, chage, chsh, gpasswd, chfn, expiry, passwd, vigr, cpgr)
+
+# repoquery -l shadow-utils | grep bin | xargs -L 1 basename | tr "\\n" ","
+shadowutils_binaries: proc.name in (chage,gpasswd,lastlog,newgrp,sg,adduser,chpasswd,groupadd,groupdel,groupmems,groupmod,grpck,grpconv,grpunconv,newusers,pwck,pwconv,pwunconv,useradd,userdel,usermod,vigr,vipw)
+
+system_binaries: coreutils_binaries or adduser_binaries or login_binaries or passwd_binaries or shadowutils_binaries
+
+sensitive_files: fd.name contains /etc/passwd or fd.name = /etc/sudoers or fd.directory = /etc/sudoers.d or fd.directory = /etc/pam.d or fd.name = /etc/pam.conf
 
 
 # Network
@@ -50,47 +63,70 @@ ssh_error_message: evt.arg.data contains "Invalid user" or evt.arg.data contains
 # System
 modules: syscall.type in (delete_module, init_module)
 container: container.id != host
-interactive: proc.aname=sshd
+interactive: proc.aname=sshd or proc.name=systemd-logind
 syslog: fd.name = /dev/log
+
+# System users that should never log into a system. Consider adding your own
+# service users (e.g. 'apache' or 'mysqld') here.
+system_users: user.name in (bin, daemon, games, lp, mail, nobody, sshd, sync, uucp, www-data)
+
 
 #######
 # Rules
 #######
 
 # Don't write to binary dirs
-write and bin_dir and evt.dir = > | %evt.time: Write to bin dir (%proc.name %evt.dir %evt.type %evt.args %fd.name)
+write and bin_dir and evt.dir = > | %evt.time: Write to bin dir (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)
+
+# Don't write to /etc
+write and etc_dir and evt.dir = > | %evt.time: Write to etc dir (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)
+
+# Don't read 'sensitive' files
+read and not proc.name in (sudo, su) and sensitive_files | %evt.time: Read sensitive file (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)
 
 # Don't modify binary dirs
-modify and (bin_dir_rename or bin_dir_mkdir) | %evt.time: Modify bin dir (%proc.name %evt.dir %evt.type %evt.args %fd.name)
+modify and (bin_dir_rename or bin_dir_mkdir) | %evt.time: Modify bin dir (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)
 
 # Don't load shared objects coming from unexpected places
-read and fd.name contains .so and not (ubuntu_so_dirs or centos_so_dirs) | output.first_sequence(evt, "fd.filename", "shared_obj", "%evt.time: .so from unexpected dir (%proc.name %evt.dir %evt.type %evt.args %fd.name)")
+read and fd.name contains .so and not (ubuntu_so_dirs or centos_so_dirs) | output.first_sequence(evt, "fd.filename", "shared_obj", "%evt.time: .so from unexpected dir (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)")
 
 # Attempts to access things that shouldn't be
-# Disabled, somewhat noisy, need dupe suppression before enabling
-# evt.res = EACCES | %evt.time: EACCESS (%proc.name %evt.dir %evt.type %evt.args %fd.name)
+evt.res = EACCES | %evt.time: EACCESS (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)
 
 # Let's assume this is a node running elasticsearch
-inbound and fd.sockfamily = ip and not (ssh_port or elasticsearch_port) and not fd.rip="127.0.0.1" | %evt.time: bad rip (%proc.name %evt.dir %evt.type %evt.args %fd.name)
+inbound and fd.sockfamily = ip and not (ssh_port or elasticsearch_port) and not fd.rip="127.0.0.1" | %evt.time: bad rip (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)
 
 # Only sysdig and docker can call setns
-syscall.type = setns and not proc.name in (docker, sysdig) | %evt.time: Unexpected setns (%proc.name %evt.dir %evt.type %evt.args %fd.name)
+syscall.type = setns and not proc.name in (docker, sysdig) | %evt.time: Unexpected setns (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)
 
 # Shells should only be run by cron or sshd
-proc.name = bash and not proc.pname in (bash, sshd, cron, sudo, su, tmux) | %evt.time: Unexpected shell (%proc.name %evt.dir %evt.type %evt.args %fd.name)
+proc.name = bash and not proc.pname in (bash, sshd, cron, sudo, su, tmux) | %evt.time: Unexpected shell (%user.name %proc.name %proc.pname %evt.dir %evt.type %evt.args %fd.name)
 
 # Anything run interactively by root
-# evt.type != switch and user.name = root and proc.name != sshd and interactive | %evt.time: Interactive root (%proc.name %evt.dir %evt.type %evt.args %fd.name)
+# evt.type != switch and user.name = root and proc.name != sshd and interactive | %evt.time: Interactive root (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)
+
+# Anything run interactively by a non-login user
+system_users and interactive | %evt.time: Sytem user ran an interactive command (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)
 
 # Chmod should only be run interactively (by a user)
-syscall.type = chmod and not interactive | %evt.time: non-interactive chmod (%proc.name %evt.dir %evt.type %evt.args %fd.name)
+syscall.type = chmod and not interactive | %evt.time: non-interactive chmod (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)
 
 # Shells in a container
-container and proc.name = bash | %evt.time: shell in a container (%proc.name %evt.dir %evt.type %evt.args %fd.name)
+container and proc.name = bash | %evt.time: shell in a container (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)
 
 # Network traffic to/from standard utils
 # sockfamily ip is to exclude certain processes (like 'groups') that communicate on unix-domain sockets
-fd.sockfamily = ip and coreutils_binaries | %evt.time: network traffic to %proc.name (%proc.name %evt.dir %evt.type %evt.args %fd.name)
+fd.sockfamily = ip and system_binaries | %evt.time: network traffic to %proc.name (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)
 
 # SSH errors (failed logins, disconnects, ..)
 syslog and ssh_error_message and evt.dir = < | output.syslog(evt, "warning", "sshd: %proc.name %evt.arg.data")
+
+# Non-sudo setuid
+evt.type=setuid and proc.name != sudo | %evt.time: unexpected setuid call by non-sudo (%user.name %proc.name %evt.dir %evt.type %evt.args)
+
+# User management (su and sudo are ok)
+not proc.name in (su, sudo) and (adduser_binaries or login_binaries or passwd_binaries or shadowutils_binaries) | %evt.time: user-management binary command run (%user.name %proc.name %evt.dir %evt.type %evt.args)
+
+# Some rootkits hide files in /dev
+(evt.type = creat or evt.arg.flags contains O_CREAT) and fd.directory = /dev | %evt.time: file created in /dev (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)
+
