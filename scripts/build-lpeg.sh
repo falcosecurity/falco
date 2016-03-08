@@ -7,3 +7,4 @@ gcc -O2 -fPIC -I$LUA_INCLUDE -c lptree.c -o lptree.o
 gcc -O2 -fPIC -I$LUA_INCLUDE -c lpvm.c -o lpvm.o
 gcc -shared -o lpeg.so -L/usr/local/lib lpcap.o lpcode.o lpprint.o lptree.o lpvm.o
 
+chmod ug+w re.lua
