@@ -1,6 +1,9 @@
 include_directories(${PROJECT_SOURCE_DIR}/../sysdig/userspace/libsinsp/third-party/jsoncpp)
 include_directories("${LUAJIT_INCLUDE_DIR}")
 
+set(CURL_BUNDLE_DIR "${sysdig_BINARY_DIR}/curl-prefix/src/curl")
+set(CURL_INCLUDE_DIR "${CURL_BUNDLE_DIR}/include/")
+
 if(NOT APPLE)
     include_directories("${CURL_INCLUDE_DIR}")
 endif()

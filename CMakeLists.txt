@@ -30,12 +30,7 @@ set(SYSDIG_DIR ${PROJECT_SOURCE_DIR}/../sysdig)
 
 add_subdirectory(${SYSDIG_DIR} ${PROJECT_BINARY_DIR}/sysdig)
 
-set(CURL_BUNDLE_DIR "${sysdig_BINARY_DIR}/curl-prefix/src/curl")
-set(CURL_INCLUDE_DIR "${CURL_BUNDLE_DIR}/include/")
-set(CURL_LIBRARIES "${CURL_BUNDLE_DIR}/lib/.libs/libcurl.a")
-
 set(LUAJIT_INCLUDE_DIR "${sysdig_BINARY_DIR}/luajit-prefix/src/luajit/src")
-
 
 message(STATUS "Using bundled curl in '${CURL_BUNDLE_DIR}'")
 message(STATUS "Using SSL for curl in '${CURL_SSL_OPTION}'")
