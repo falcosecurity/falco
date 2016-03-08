@@ -43,6 +43,7 @@ message(STATUS "Using SSL for curl in '${CURL_SSL_OPTION}'")
 include(ExternalProject)
 
 ExternalProject_Add(lpeg
+                    DEPENDS luajit
 		    URL "https://s3.amazonaws.com/download.draios.com/dependencies/lpeg-1.0.0.tar.gz"
                     URL_MD5 "0aec64ccd13996202ad0c099e2877ece"
                     BUILD_COMMAND LUA_INCLUDE=${LUAJIT_INCLUDE_DIR} ${PROJECT_SOURCE_DIR}/scripts/build-lpeg.sh
