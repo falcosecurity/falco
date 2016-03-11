@@ -120,13 +120,13 @@ fd.sockfamily = ip and system_binaries | %evt.time: network traffic to %proc.nam
 syslog and ssh_error_message and evt.dir = < | output.syslog(evt, "warning", "sshd: %proc.name %evt.arg.data")
 
 # Non-sudo setuid
-evt.type=setuid and proc.name != sudo | %evt.time: unexpected setuid call by non-sudo (%user.name %proc.name %evt.dir %evt.type %evt.args)
+evt.type=setuid and not_cron and proc.name != sudo | %evt.time: unexpected setuid call by non-sudo (%user.name %proc.name %evt.dir %evt.type %evt.args)
 
 # User management (su and sudo are ok)
 not proc.name in (su, sudo) and (adduser_binaries or login_binaries or passwd_binaries or shadowutils_binaries) | %evt.time: user-management binary command run (%user.name %proc.name %evt.dir %evt.type %evt.args)
 
 # Some rootkits hide files in /dev
-(evt.type = creat or evt.arg.flags contains O_CREAT) and fd.directory = /dev and fd.filename != /dev/null | %evt.time: file created in /dev (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)
+(evt.type = creat or evt.arg.flags contains O_CREAT) and fd.directory = /dev and fd.name != /dev/null | %evt.time: file created in /dev (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)
 
 # Example: you might enable this on a node running elasticsearch (tailor to your server type)
 # inbound and fd.sockfamily = ip and not (ssh_port or elasticsearch_port) and not fd.rip="127.0.0.1" | %evt.time: bad rip (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)
