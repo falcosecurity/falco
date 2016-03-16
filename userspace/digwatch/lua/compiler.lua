@@ -449,7 +449,7 @@ end
 function print_ast(ast, level)
    local t = ast.type
    level = level or 0
-   local prefix = string.rep(" ", level*2)
+   local prefix = string.rep(" ", level*4)
    level = level + 1
 
    if t == "Rule" then
