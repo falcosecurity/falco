@@ -36,15 +36,25 @@ end
 --[[
    Take a filter AST and set it up in the libsinsp runtime, using the filter API.
 --]]
-local function install_filter(node)
+local function install_filter(node, parent_bool_op)
    local t = node.type
 
    if t == "BinaryBoolOp" then
-      filter.nest() --io.write("(")
-      install_filter(node.left)
-      filter.bool_op(node.operator) --io.write(" "..node.operator.." ")
-      install_filter(node.right)
-      filter.unnest() --io.write(")")
+
+      -- "nesting" (the runtime equivalent of placing parens in syntax) is
+      -- never necessary when we have identical successive operators. so we
+      -- avoid it as a runtime performance optimization.
+      if (not(node.operator == parent_bool_op)) then
+	 filter.nest() -- io.write("(")
+      end
+
+      install_filter(node.left, node.operator)
+      filter.bool_op(node.operator) -- io.write(" "..node.operator.." ")
+      install_filter(node.right, node.operator)
+
+      if (not (node.operator == parent_bool_op)) then
+	 filter.unnest() -- io.write(")")
+      end
 
    elseif t == "UnaryBoolOp" then
       filter.nest() --io.write("(")
@@ -135,6 +145,7 @@ end
 
 function on_done()
    install_filter(state.filter_ast)
+   io.flush()
 end
 
 evt = nil
