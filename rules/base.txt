@@ -51,7 +51,7 @@ ssh_error_message: evt.arg.data contains "Invalid user" or evt.arg.data contains
 # System
 modules: syscall.type in (delete_module, init_module)
 container: container.id != host
-interactive: proc.aname=sshd or proc.name=systemd-logind
+interactive: (proc.aname=sshd and proc.name != sshd) or proc.name=systemd-logind
 syslog: fd.name = /dev/log
 not_cron: proc.name != cron
 
@@ -65,13 +65,13 @@ system_users: user.name in (bin, daemon, games, lp, mail, nobody, sshd, sync, uu
 #######
 
 # Don't write to binary dirs
-write and bin_dir and evt.dir = > | %evt.time: Write to bin dir (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)
+evt.dir = > and write and bin_dir  | %evt.time: Write to bin dir (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)
 
 # Don't write to /etc
-write and etc_dir and evt.dir = > | %evt.time: Write to etc dir (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)
+evt.dir = > and write and etc_dir  | %evt.time: Write to etc dir (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)
 
 # Don't read 'sensitive' files
-read and not proc.name in (sudo, su) and not_cron and sensitive_files | %evt.time: Read sensitive file (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)
+read and not proc.name in (sshd, sudo, su) and not_cron and sensitive_files | %evt.time: Read sensitive file (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)
 
 # Don't modify binary dirs
 modify and (bin_dir_rename or bin_dir_mkdir) | %evt.time: Modify bin dir (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)
@@ -105,16 +105,17 @@ container and proc.name = bash | %evt.time: shell in a container (%user.name %pr
 fd.sockfamily = ip and system_binaries | %evt.time: network traffic to %proc.name (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)
 
 # SSH errors (failed logins, disconnects, ..)
-syslog and ssh_error_message and evt.dir = < | output.syslog(evt, "warning", "sshd: %proc.name %evt.arg.data")
+syslog and ssh_error_message and evt.dir = < | %evt.time: sshd error (%proc.name %evt.arg.data)
 
 # Non-sudo setuid
-evt.type=setuid and not_cron and proc.name != sudo | %evt.time: unexpected setuid call by non-sudo (%user.name %proc.name %evt.dir %evt.type %evt.args)
+evt.type=setuid and not_cron and not proc.name in (sudo, sshd) | %evt.time: unexpected setuid call by non-sudo (%user.name %proc.name %evt.dir %evt.type %evt.args)
 
 # User management (su and sudo are ok)
 not proc.name in (su, sudo) and (adduser_binaries or login_binaries or passwd_binaries or shadowutils_binaries) | %evt.time: user-management binary command run (%user.name %proc.name %evt.dir %evt.type %evt.args)
 
 # Some rootkits hide files in /dev
-(evt.type = creat or evt.arg.flags contains O_CREAT) and fd.directory = /dev and fd.name != /dev/null | %evt.time: file created in /dev (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)
+# (we may need to add additional checks against false positives, see: https://bugs.launchpad.net/ubuntu/+source/rkhunter/+bug/86153)
+(evt.type = creat or evt.arg.flags contains O_CREAT) and proc.name != blkid and fd.directory = /dev and fd.name != /dev/null | %evt.time: file created in /dev (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)
 
 # Elasticsearch connections ports
 elasticsearch_cluster_port: fd.sport=9300
