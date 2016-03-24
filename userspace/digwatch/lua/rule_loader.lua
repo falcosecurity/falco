@@ -33,6 +33,15 @@ local function mark_relational_nodes(ast, index)
    end
 end
 
+function map(f, arr)
+   local res = {}
+   for i,v in ipairs(arr) do
+      res[i] = f(v)
+   end
+   return res
+end
+
+
 --[[
    Take a filter AST and set it up in the libsinsp runtime, using the filter API.
 --]]
@@ -63,7 +72,12 @@ local function install_filter(node, parent_bool_op)
       filter.unnest() -- io.write(")")
 
    elseif t == "BinaryRelOp" then
-      filter.rel_expr(node.left.value, node.operator, node.right.value, node.index)
+      if (node.operator == "in") then
+	 elements = map(function (el) return el.value end, node.right.elements)
+	 filter.rel_expr(node.left.value, node.operator, elements, node.index)
+      else
+	 filter.rel_expr(node.left.value, node.operator, node.right.value, node.index)
+      end
       -- io.write(node.left.value.." "..node.operator.." "..node.right.value)
 
    elseif t == "UnaryRelOp"  then
