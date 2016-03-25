@@ -117,7 +117,7 @@ not proc.name in (su, sudo) and (adduser_binaries or login_binaries or passwd_bi
 # (we may need to add additional checks against false positives, see: https://bugs.launchpad.net/ubuntu/+source/rkhunter/+bug/86153)
 (evt.type = creat or evt.arg.flags contains O_CREAT) and proc.name != blkid and fd.directory = /dev and fd.name != /dev/null | %evt.time: file created in /dev (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)
 
-# Elasticsearch connections ports
+# Elasticsearch ports
 elasticsearch_cluster_port: fd.sport=9300
 elasticsearch_api_port: fd.sport=9200
 elasticsearch_port: elasticsearch_cluster_port or elasticsearch_api_port
@@ -125,7 +125,7 @@ user.name = elasticsearch and inbound and not elasticsearch_port | %evt.time: Un
 user.name = elasticsearch and outbound and not elasticsearch_cluster_port | %evt.time: Unexpected Elasticsearch outbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)
 
 
-# ActiveMQ connections ports
+# ActiveMQ ports
 activemq_cluster_port: fd.sport=61616
 activemq_web_port: fd.sport=8161
 activemq_port: activemq_web_port or activemq_cluster_port
@@ -133,7 +133,7 @@ user.name = activemq and inbound and not activemq_port | %evt.time: Unexpected A
 user.name = activemq and outbound and not activemq_cluster_port | %evt.time: Unexpected ActiveMQ outbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)
 
 
-# Cassandra connections ports
+# Cassandra ports
 # https://docs.datastax.com/en/cassandra/2.0/cassandra/security/secureFireWall_r.html
 cassandra_thrift_client_port: fd.sport=9160
 cassandra_cql_port: fd.sport=9042
@@ -145,7 +145,7 @@ cassandra_port: cassandra_thrift_client_port or cassandra_cql_port or cassandra_
 user.name = cassandra and inbound and not cassandra_port | %evt.time: Unexpected Cassandra inbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)
 user.name = cassandra and outbound and not (cassandra_ssl_cluster_port or cassandra_cluster_port)  | %evt.time: Unexpected Cassandra outbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)
 
-# Couchbase connections ports
+# Couchbase ports
 # http://docs.couchbase.com/admin/admin/Install/install-networkPorts.html
 # Web Administration Port
 couchbase_web_port: fd.sport=8091
@@ -179,14 +179,14 @@ user.name = couchbase and inbound and not couchbase_port | %evt.time: Unexpected
 user.name = couchbase and outbound and not couchbase_internal_port | %evt.time: Unexpected Couchbase inbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)
 
 
-# Couchdb connections ports
+# Couchdb ports
 # https://github.com/davisp/couchdb/blob/master/etc/couchdb/local.ini
 couchdb_httpd_port: fd.sport=5984
 couchdb_httpd_ssl_port: fd.sport=6984
 # xxx can't tell what clustering ports are used. not writing rules for this
 # yet.
 
-# Etcd connections ports
+# Etcd ports
 etcd_client_port: fd.sport=2379
 etcd_peer_port: fd.sport=2380
 # need to double-check which user etcd runs as
@@ -194,7 +194,7 @@ user.name = etcd and inbound and not (etcd_client_port or etcd_peer_port) | %evt
 user.name = etcd and outbound and not couchbase_internal_port | %evt.time: Unexpected Etcd outbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)
 
 
-# Fluentd connections ports
+# Fluentd ports
 fluentd_http_port: fd.sport=9880
 fluentd_forward_port: fd.sport=24224
 user.name = td-agent and inbound and not (fluentd_forward_port or fluentd_http_port) | %evt.time: Unexpected Fluentd inbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)
