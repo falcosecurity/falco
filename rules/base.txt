@@ -237,3 +237,6 @@ mongodb_configserver_port: fd.sport = 27019
 mongodb_webserver_port: fd.sport = 28017
 
 user.name = mongodb and inbound and not (mongodb_server_port or mongodb_shardserver_port or mongodb_configserver_port or mongodb_webserver_port) | %evt.time: Unexpected MongoDF inbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)
+
+# MySQL ports
+user.name = mysql and inbound and fd.sport != 3306 | %evt.time: Unexpected MySQL inbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)
