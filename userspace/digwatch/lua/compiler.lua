@@ -529,7 +529,7 @@ function compiler.compile_line(line, macro_defs)
    check_macros(ast)
 
    if (ast.type == "MacroDef") then
-      expand_in(ast.value)
+      --expand_in(ast.value)
 
       -- Parsed line is a macro definition, so update our dictionary of macros and
       -- return
@@ -540,7 +540,7 @@ function compiler.compile_line(line, macro_defs)
       -- Line is a filter, so expand in-clauses and macro references, then
       -- stitch it into global ast
 
-      expand_in(ast.filter)
+      --expand_in(ast.filter)
 
       repeat
 	 expanded  = expand_macros(ast, macro_defs, false)
