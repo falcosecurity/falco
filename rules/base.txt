@@ -205,7 +205,7 @@ user.name = td-agent and outbound and not fluentd_forward_port | %evt.time: Unex
 user.name = gearman and outbound and outbound and not fd.sport = 4730 | %evt.time: Unexpected Gearman outbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)
 
 # Zookeeper
-zookeeper_port: 2181
+zookeeper_port: fd.sport = 2181
 
 # HBase ports
 # http://blog.cloudera.com/blog/2013/07/guide-to-using-apache-hbase-ports/
