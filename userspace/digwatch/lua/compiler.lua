@@ -155,6 +155,18 @@ end
 
 -- grammar
 
+local function normalize_level(level)
+   valid_levels = {"emergency", "alert", "critical", "error", "warning", "notice", "informational", "debug"}
+   level = string.lower(level)
+   for i,v in ipairs(valid_levels) do
+      if (string.find(v, "^"..level)) then
+	 return v
+      end
+   end
+   error("Invalid severity level: "..level)
+end
+
+
 local function filter(e)
    return {type = "Filter", value=e}
 end
@@ -163,12 +175,12 @@ local function macro (name, filter)
    return {type = "MacroDef", name = name, value = filter}
 end
 
-local function outputformat (format)
-   return {type = "OutputFormat", value = format}
+local function outputformat (level, format)
+   return {type = "OutputFormat", level = normalize_level(level), value = format}
 end
 
-local function functioncall (str, mname, fname, args)
-   return {type = "FunctionCall", mname = mname, fname = fname, arguments = args, source = str}
+local function functioncall (level, str, mname, fname, args)
+   return {type = "FunctionCall", level = normalize_level(level), mname = mname, fname = fname, arguments = args, source = str}
 end
 
 local function rule(filter, output)
@@ -217,7 +229,7 @@ local G = {
   MacroDef = (C(V"Macro") * V"Skip" * V"Colon" * (V"Filter"));
 
   FuncArgs = symb("(") * list(V"Value", symb(",")) * symb(")");
-  Output = (C(V"Name" * P(".") * V"Name" * V"FuncArgs") / functioncall) + P(1)^0 / outputformat;
+  Output = (C(V"Identifier") * V"Skip" * C(V"Name" * P(".") * V"Name" * V"FuncArgs") / functioncall) + (C(V"Identifier") * V"Skip" * C(P(1)^0) / outputformat);
 
   -- Terminals
   Value = terminal "Number" + terminal "String" + terminal "BareString";
