@@ -114,7 +114,7 @@ void do_inspect(sinsp* inspector,
 			if(lua_pcall(ls, 2, 0, 0) != 0)
 			{
 				const char* lerr = lua_tostring(ls, -1);
-				string err = "Error installing rules: " + string(lerr);
+				string err = "Error invoking function output: " + string(lerr);
 				throw sinsp_exception(err);
 			}
 		}

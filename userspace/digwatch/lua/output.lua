@@ -24,6 +24,11 @@ function mod.first_sequence(evt, fieldname, key, format)
       msg = digwatch.format_event(evt, formatter)
       print (msg)
    end
+   if field_value == nil then
+      formatter = digwatch.formatter(format)
+      s = digwatch.format_event(evt, formatter)
+      error("first_sequence: field '"..fieldname.."' is nil in event ("..s..")")
+   end
    first_sequence_state[key][field_value] = now
 end
 
