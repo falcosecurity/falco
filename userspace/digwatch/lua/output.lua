@@ -2,6 +2,7 @@ local mod = {}
 
 function mod.syslog(evt, level, format)
    nixio = require("nixio")
+   format = "%evt.time: "..format
    formatter = digwatch.formatter(format)
    msg = digwatch.format_event(evt, formatter)
    nixio.syslog(level, msg)
@@ -13,6 +14,8 @@ local first_sequence_state = {}
 function mod.first_sequence(evt, fieldname, key, format)
    local field_value = digwatch.field(evt, fieldname)
    local now = os.time()
+
+   format = "%evt.time: "..format
 
    if first_sequence_state[key] == nil then
       first_sequence_state[key] = {}
