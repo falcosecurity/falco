@@ -44,11 +44,6 @@ static void usage()
 	   "                    Name of lua compiler main file\n"
 	   "                    (default: rules_loader.lua)\n"
 	   " -N                 Don't convert port numbers to names.\n"
-	   " -r <readfile>, --read=<readfile>\n"
-	   "                    Read the events from <readfile>.\n"
-	   " --unbuffered       Turn off output buffering. This causes every single line\n"
-	   "                    emitted by digwatch to be flushed, which generates higher CPU\n"
-	   "                    usage but is useful when piping digwatch's output into another\n"
 	   "                    process or into a script.\n"
 	   "\n"
     );
@@ -175,8 +170,6 @@ int digwatch_init(int argc, char **argv)
 	{
 		{"help", no_argument, 0, 'h' },
 		{"main-lua", required_argument, 0, 'u' },
-		{"readfile", required_argument, 0, 'r' },
-		{"unbuffered", no_argument, 0, 0 },
 		{0, 0, 0, 0}
 	};
 
@@ -189,7 +182,7 @@ int digwatch_init(int argc, char **argv)
 		// Parse the args
 		//
 		while((op = getopt_long(argc, argv,
-                                        "hm:Nr:",
+                                        "hm:N",
                                         long_options, &long_index)) != -1)
 		{
 			switch(op)
