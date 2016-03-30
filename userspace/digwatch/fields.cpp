@@ -47,7 +47,7 @@ int digwatch_fields::field(lua_State *ls)
 
 		if(chk == NULL)
 		{
-			string err = "nonexistent fieldname passed to digwatch.field()" + string(fieldname);
+			string err = "nonexistent fieldname passed to digwatch.field(): " + string(fieldname);
 			fprintf(stderr, "%s\n", err.c_str());
 			throw sinsp_exception("digwatch.field() error");
 		}

@@ -164,6 +164,10 @@ end
 
 evt = nil
 function on_event(evt_, rule_id)
+   if state.outputs[rule_id] == nil then
+      error ("rule_loader.on_event(): event with invalid rule_id: ", rule_id)
+   end
+
    if state.outputs[rule_id].type == "format" then
       print(digwatch.format_event(evt_, state.outputs[rule_id].formatter))
    elseif state.outputs[rule_id].type == "function" then
