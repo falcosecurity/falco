@@ -31,6 +31,8 @@ static void signal_callback(int signal)
 }
 
 
+std::vector<string> valid_output_names {"stdout", "syslog"};
+
 //
 // Program help
 //
@@ -44,6 +46,7 @@ static void usage()
 	   "                    Name of lua compiler main file\n"
 	   "                    (default: rules_loader.lua)\n"
 	   " -N                 Don't convert port numbers to names.\n"
+	   " -o                 Output type (options are 'stdout', 'syslog', default is 'stdout')\n"
 	   "                    process or into a script.\n"
 	   "\n"
     );
@@ -56,6 +59,7 @@ string lua_on_event = "on_event";
 //
 void do_inspect(sinsp* inspector,
 		digwatch_rules* rules,
+		string output_name,
 		lua_State* ls)
 {
 	int32_t res;
@@ -105,8 +109,9 @@ void do_inspect(sinsp* inspector,
 		{
 			lua_pushlightuserdata(ls, ev);
 			lua_pushnumber(ls, ev->get_check_id());
+			lua_pushstring(ls, output_name.c_str());
 
-			if(lua_pcall(ls, 2, 0, 0) != 0)
+			if(lua_pcall(ls, 3, 0, 0) != 0)
 			{
 				const char* lerr = lua_tostring(ls, -1);
 				string err = "Error invoking function output: " + string(lerr);
@@ -163,6 +168,7 @@ int digwatch_init(int argc, char **argv)
 	sinsp_evt::param_fmt event_buffer_format = sinsp_evt::PF_NORMAL;
 	int long_index = 0;
 	string lua_main_filename;
+	string output_name = "stdout";
 	string lua_dir = DIGWATCH_INSTALLATION_DIR;
 	lua_State* ls = NULL;
 
@@ -176,13 +182,13 @@ int digwatch_init(int argc, char **argv)
 	try
 	{
 		inspector = new sinsp();
-
+		bool valid;
 
 		//
 		// Parse the args
 		//
 		while((op = getopt_long(argc, argv,
-                                        "hm:N",
+                                        "hm:No:",
                                         long_options, &long_index)) != -1)
 		{
 			switch(op)
@@ -195,6 +201,14 @@ int digwatch_init(int argc, char **argv)
 				break;
 			case 'N':
 				inspector->set_hostname_and_port_resolution_mode(false);
+				break;
+			case 'o':
+				valid = std::find(valid_output_names.begin(), valid_output_names.end(), optarg) != valid_output_names.end();
+				if (!valid)
+				{
+					throw sinsp_exception(string("Invalid output name ") + optarg);
+				}
+				output_name = optarg;
 				break;
 			case '?':
 				result = EXIT_FAILURE;
@@ -280,6 +294,7 @@ int digwatch_init(int argc, char **argv)
 
 		do_inspect(inspector,
 			   rules,
+			   output_name,
 			   ls);
 
 		inspector->close();

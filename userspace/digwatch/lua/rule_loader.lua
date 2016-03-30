@@ -113,11 +113,8 @@ function set_output(output_ast)
 	 format = output_ast.value
       end
 
-      state.outputs[state.n_rules] = {type="format", formatter=digwatch.formatter("%evt.time: "..format)}
+      state.outputs[state.n_rules] = {format=format, level = output_ast.level}
 
-   elseif (output_ast.type == "FunctionCall") then
-      require(output_ast.mname)
-      state.outputs[state.n_rules] = {type="function", mname = output_ast.mname, source=output_ast.source}
    else
       error ("Unexpected type in set_output: ".. output_ast.type)
    end
@@ -162,18 +159,17 @@ function on_done()
    io.flush()
 end
 
-evt = nil
-function on_event(evt_, rule_id)
+local outputs = require('output')
+
+function on_event(evt_, rule_id, output_name)
+   if not (type(outputs[output_name]) == 'function') then
+      error("rule_loader.on_event(): invalid output_name: ", output_name)
+   end
+
    if state.outputs[rule_id] == nil then
       error ("rule_loader.on_event(): event with invalid rule_id: ", rule_id)
    end
 
-   if state.outputs[rule_id].type == "format" then
-      print(digwatch.format_event(evt_, state.outputs[rule_id].formatter))
-   elseif state.outputs[rule_id].type == "function" then
-      local reqmod =  "local "..state.outputs[rule_id].mname.." = require('" ..state.outputs[rule_id].mname .. "')";
-      evt = evt_
-      assert(loadstring(reqmod .. state.outputs[rule_id].source))()
-   end
+   outputs[output_name](evt_, state.outputs[rule_id].level, state.outputs[rule_id].format)
 end
 
