@@ -5,7 +5,7 @@
 
 --]]
 
-local DEFAULT_OUTPUT_FORMAT = "%evt.num %evt.time %evt.cpu %proc.name (%thread.tid) %evt.dir %evt.type %evt.args"
+local DEFAULT_OUTPUT_FORMAT = "%evt.time: %evt.num %evt.cpu %proc.name (%thread.tid) %evt.dir %evt.type %evt.args"
 
 local compiler = require "compiler"
 
@@ -113,7 +113,7 @@ function set_output(output_ast)
 	 format = output_ast.value
       end
 
-      state.outputs[state.n_rules] = {type="format", formatter=digwatch.formatter(format)}
+      state.outputs[state.n_rules] = {type="format", formatter=digwatch.formatter("%evt.time: "..format)}
 
    elseif (output_ast.type == "FunctionCall") then
       require(output_ast.mname)
