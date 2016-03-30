@@ -160,7 +160,7 @@ local function normalize_level(level)
    level = string.lower(level)
    for i,v in ipairs(valid_levels) do
       if (string.find(v, "^"..level)) then
-	 return v
+	 return i - 1 -- (syslog levels start at 0, lua indices start at 1)
       end
    end
    error("Invalid severity level: "..level)
