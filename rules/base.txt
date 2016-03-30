@@ -77,7 +77,7 @@ read and not proc.name in (sshd, sudo, su) and not_cron and sensitive_files | WA
 modify and (bin_dir_rename or bin_dir_mkdir) | WARNING Modify bin dir (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)
 
 # Don't load shared objects coming from unexpected places
-read and fd.name contains .so and not (ubuntu_so_dirs or centos_so_dirs) | WARNING output.first_sequence(evt, "fd.filename", "shared_obj", "Loaded .so from unexpected dir (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)")
+read and fd.name contains .so and not (ubuntu_so_dirs or centos_so_dirs) | WARNING Loaded .so from unexpected dir (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)
 
 # Attempts to access things that shouldn't be
 evt.res = EACCES | INFO System call returned EACCESS (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)

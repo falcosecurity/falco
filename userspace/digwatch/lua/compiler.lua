@@ -179,10 +179,6 @@ local function outputformat (level, format)
    return {type = "OutputFormat", level = normalize_level(level), value = format}
 end
 
-local function functioncall (level, str, mname, fname, args)
-   return {type = "FunctionCall", level = normalize_level(level), mname = mname, fname = fname, arguments = args, source = str}
-end
-
 local function rule(filter, output)
    if not output then
       output = outputformat(nil)
@@ -229,7 +225,7 @@ local G = {
   MacroDef = (C(V"Macro") * V"Skip" * V"Colon" * (V"Filter"));
 
   FuncArgs = symb("(") * list(V"Value", symb(",")) * symb(")");
-  Output = (C(V"Identifier") * V"Skip" * C(V"Name" * P(".") * V"Name" * V"FuncArgs") / functioncall) + (C(V"Identifier") * V"Skip" * C(P(1)^0) / outputformat);
+  Output = C(V"Identifier") * V"Skip" * C(P(1)^0) / outputformat;
 
   -- Terminals
   Value = terminal "Number" + terminal "String" + terminal "BareString";
@@ -472,11 +468,6 @@ function print_ast(ast, level)
       end
    elseif t == "OutputFormat" then
       print(ast.value)
-
-   elseif t == "FunctionCall" then
-      print(ast.mname..ast.fname .. "(" )
-      print_ast(ast.arguments)
-      print(")")
 
    elseif t == "Filter" then
       print_ast(ast.value, level)
