@@ -169,7 +169,7 @@ int digwatch_init(int argc, char **argv)
 	int long_index = 0;
 	string lua_main_filename;
 	string output_name = "stdout";
-	string lua_dir = DIGWATCH_INSTALLATION_DIR;
+	string lua_dir = DIGWATCH_LUA_DIR;
 	lua_State* ls = NULL;
 
 	static struct option long_options[] =

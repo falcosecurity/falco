@@ -14,3 +14,9 @@ set(DIGWATCH_LUA_MAIN "rule_loader.lua")
 configure_file(config_digwatch.h.in config_digwatch.h)
 
 install(TARGETS digwatch DESTINATION bin)
+install(FILES lua/compiler.lua
+	DESTINATION share/digwatch/lua)
+install(FILES lua/rule_loader.lua
+	DESTINATION share/digwatch/lua)
+install(FILES lua/output.lua
+	DESTINATION share/digwatch/lua)
