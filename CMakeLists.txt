@@ -31,7 +31,7 @@ else()
 	set(KBUILD_FLAGS "${DRAIOS_FEATURE_FLAGS}")
 endif()
 
-set(PACKAGE_NAME "draios-digwatch")
+set(PACKAGE_NAME "digwatch")
 set(PROBE_VERSION "${DIGWATCH_VERSION}")
 set(PROBE_NAME "sysdig-probe")
 set(PROBE_DEVICE_NAME "sysdig")
