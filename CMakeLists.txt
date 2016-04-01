@@ -7,7 +7,7 @@ if(NOT DEFINED DIGWATCH_VERSION)
 endif()
 
 if(NOT DEFINED DIR_ETC)
-	set(DIR_ETC "${CMAKE_INSTALL_PREFIX}/etc")
+	set(DIR_ETC "/etc")
 endif()
 
 set(DRAIOS_DEBUG_FLAGS "-D_DEBUG")
@@ -144,6 +144,7 @@ add_subdirectory(${SYSDIG_DIR}/driver ${PROJECT_BINARY_DIR}/driver)
 add_subdirectory(${SYSDIG_DIR}/userspace/libscap ${PROJECT_BINARY_DIR}/userspace/libscap)
 add_subdirectory(${SYSDIG_DIR}/userspace/libsinsp ${PROJECT_BINARY_DIR}/userspace/libsinsp)
 
+add_subdirectory(rules)
 add_subdirectory(userspace/digwatch)
 
 
