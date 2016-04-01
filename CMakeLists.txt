@@ -144,6 +144,7 @@ add_subdirectory(${SYSDIG_DIR}/driver ${PROJECT_BINARY_DIR}/driver)
 add_subdirectory(${SYSDIG_DIR}/userspace/libscap ${PROJECT_BINARY_DIR}/userspace/libscap)
 add_subdirectory(${SYSDIG_DIR}/userspace/libsinsp ${PROJECT_BINARY_DIR}/userspace/libsinsp)
 
+add_subdirectory(scripts)
 add_subdirectory(rules)
 add_subdirectory(userspace/digwatch)
 
@@ -157,7 +158,7 @@ set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${CM
 set(CPACK_PROJECT_CONFIG_FILE "${PROJECT_SOURCE_DIR}/CMakeCPackOptions.cmake")
 set(CPACK_STRIP_FILES "ON")
 
-set(CPACK_GENERATOR DEB)
+set(CPACK_GENERATOR DEB RPM TGZ)
 
 set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Sysdig <support@sysdig.com>")
 set(CPACK_DEBIAN_PACKAGE_SECTION "utils")
