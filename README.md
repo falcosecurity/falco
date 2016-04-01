@@ -1,4 +1,4 @@
-# Digwatch: security monitoring with sysdig
+# Digwatch: activity monitoring with sysdig
 
 ## Build and run instructions
 
