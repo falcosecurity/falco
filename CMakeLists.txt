@@ -129,6 +129,7 @@ ExternalProject_Add(luajit
 		BUILD_IN_SOURCE 1
 		INSTALL_COMMAND "")
 
+set (LPEG_SRC "${PROJECT_BINARY_DIR}/lpeg-prefix/src/lpeg")
 ExternalProject_Add(lpeg
                     DEPENDS luajit
 		    URL "https://s3.amazonaws.com/download.draios.com/dependencies/lpeg-1.0.0.tar.gz"
@@ -136,7 +137,7 @@ ExternalProject_Add(lpeg
                     BUILD_COMMAND LUA_INCLUDE=${LUAJIT_INCLUDE} ${PROJECT_SOURCE_DIR}/scripts/build-lpeg.sh
                     BUILD_IN_SOURCE 1
 		    CONFIGURE_COMMAND ""
-                    INSTALL_COMMAND cp lpeg.so re.lua ${PROJECT_SOURCE_DIR}/userspace/digwatch/lua)
+                    INSTALL_COMMAND "")
 
 
 

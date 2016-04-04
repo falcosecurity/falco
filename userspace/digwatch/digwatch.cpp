@@ -14,6 +14,7 @@ extern "C" {
 #include "lua.h"
 #include "lualib.h"
 #include "lauxlib.h"
+#include "lpeg.h"
 }
 
 #include <sinsp.h>
@@ -279,6 +280,7 @@ int digwatch_init(int argc, char **argv)
 		// Initialize Lua interpreter
 		ls = lua_open();
 		luaL_openlibs(ls);
+		luaopen_lpeg(ls);
 		add_lua_path(ls, lua_dir);
 
 		rules = new digwatch_rules(inspector, ls, lua_main_filename);
