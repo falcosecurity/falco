@@ -14,6 +14,7 @@ extern "C" {
 #include "lua.h"
 #include "lualib.h"
 #include "lauxlib.h"
+#include "lpeg.h"
 }
 
 #include <sinsp.h>
@@ -169,7 +170,7 @@ int digwatch_init(int argc, char **argv)
 	int long_index = 0;
 	string lua_main_filename;
 	string output_name = "stdout";
-	string lua_dir = DIGWATCH_INSTALLATION_DIR;
+	string lua_dir = DIGWATCH_LUA_DIR;
 	lua_State* ls = NULL;
 
 	static struct option long_options[] =
@@ -279,6 +280,7 @@ int digwatch_init(int argc, char **argv)
 		// Initialize Lua interpreter
 		ls = lua_open();
 		luaL_openlibs(ls);
+		luaopen_lpeg(ls);
 		add_lua_path(ls, lua_dir);
 
 		rules = new digwatch_rules(inspector, ls, lua_main_filename);
@@ -290,7 +292,19 @@ int digwatch_init(int argc, char **argv)
 
 		rules->load_rules(rules_file);
 		inspector->set_filter(rules->get_filter());
-		inspector->open("");
+
+		try
+		{
+			inspector->open("");
+		}
+		catch(sinsp_exception e)
+		{
+			if(system("modprobe " PROBE_NAME " > /dev/null 2> /dev/null"))
+			{
+				fprintf(stderr, "Unable to load the driver\n");
+			}
+			inspector->open("");
+		}
 
 		do_inspect(inspector,
 			   rules,
