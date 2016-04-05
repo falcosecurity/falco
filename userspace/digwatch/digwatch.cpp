@@ -292,7 +292,19 @@ int digwatch_init(int argc, char **argv)
 
 		rules->load_rules(rules_file);
 		inspector->set_filter(rules->get_filter());
-		inspector->open("");
+
+		try
+		{
+			inspector->open("");
+		}
+		catch(sinsp_exception e)
+		{
+			if(system("modprobe " PROBE_NAME " > /dev/null 2> /dev/null"))
+			{
+				fprintf(stderr, "Unable to load the driver\n");
+			}
+			inspector->open("");
+		}
 
 		do_inspect(inspector,
 			   rules,

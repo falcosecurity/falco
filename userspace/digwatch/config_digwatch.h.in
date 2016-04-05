@@ -6,3 +6,4 @@
 
 #define DIGWATCH_LUA_MAIN "${DIGWATCH_LUA_MAIN}"
 
+#define PROBE_NAME "${PROBE_NAME}"
