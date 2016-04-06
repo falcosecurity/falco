@@ -22,6 +22,7 @@ extern "C" {
 #include "rules.h"
 #include "formats.h"
 #include "fields.h"
+#include "syslog.h"
 #include "utils.h"
 
 static bool g_terminate = false;
@@ -288,7 +289,7 @@ int digwatch_init(int argc, char **argv)
 		digwatch_formats::init(inspector, ls);
 		digwatch_fields::init(inspector, ls);
 
-		digwatch_fields::init(inspector, ls);
+		digwatch_syslog::init(ls);
 
 		rules->load_rules(rules_file);
 		inspector->set_filter(rules->get_filter());
