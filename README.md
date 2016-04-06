@@ -34,12 +34,7 @@ $ make
 as a result, you should have a digwatch executable `build/userspace/digwatch/digwatch`.
 
 
-### Running
-
-Set the path of the digwatch lua directory in the env var `DIGWATCH_LUA_DIR`:
-
-`export DIGWATCH_LUA_DIR=<path_to_digwatch>/userspace/digwatch/lua/`
-
+### Running locally-built sysdig
 
 
 Create a file with some [digwatch rules](Rule-syntax-and-design). For example:

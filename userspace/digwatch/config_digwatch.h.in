@@ -3,6 +3,8 @@
 #define DIGWATCH_VERSION "${DIGWATCH_VERSION}"
 
 #define DIGWATCH_LUA_DIR "/usr/share/digwatch/lua/"
+#define DIGWATCH_SOURCE_LUA_DIR "${PROJECT_SOURCE_DIR}/userspace/digwatch/lua/"
+
 
 #define DIGWATCH_LUA_MAIN "${DIGWATCH_LUA_MAIN}"
 
