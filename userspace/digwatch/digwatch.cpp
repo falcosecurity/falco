@@ -190,7 +190,7 @@ int digwatch_init(int argc, char **argv)
 		// Parse the args
 		//
 		while((op = getopt_long(argc, argv,
-                                        "hm:No:",
+                                        "hNo:",
                                         long_options, &long_index)) != -1)
 		{
 			switch(op)
@@ -198,9 +198,6 @@ int digwatch_init(int argc, char **argv)
 			case 'h':
 				usage();
 				goto exit;
-			case 'm':
-				lua_main_filename = optarg;
-				break;
 			case 'N':
 				inspector->set_hostname_and_port_resolution_mode(false);
 				break;
@@ -272,11 +269,7 @@ int digwatch_init(int argc, char **argv)
 			lua_dir = string(env_lua_dir);
 		}
 
-		trim(lua_main_filename);
-		if(lua_main_filename.size() == 0)
-		{
-			lua_main_filename = lua_dir + DIGWATCH_LUA_MAIN;
-		}
+		lua_main_filename = lua_dir + DIGWATCH_LUA_MAIN;
 
 		// Initialize Lua interpreter
 		ls = lua_open();
