@@ -190,7 +190,7 @@ int digwatch_init(int argc, char **argv)
 		// Parse the args
 		//
 		while((op = getopt_long(argc, argv,
-                                        "hm:No:",
+                                        "hNo:",
                                         long_options, &long_index)) != -1)
 		{
 			switch(op)
@@ -198,9 +198,6 @@ int digwatch_init(int argc, char **argv)
 			case 'h':
 				usage();
 				goto exit;
-			case 'm':
-				lua_main_filename = optarg;
-				break;
 			case 'N':
 				inspector->set_hostname_and_port_resolution_mode(false);
 				break;
@@ -265,18 +262,21 @@ int digwatch_init(int argc, char **argv)
 			goto exit;
 		}
 
-		//
-		char* env_lua_dir = getenv("DIGWATCH_LUA_DIR");
-		if(env_lua_dir)
+		lua_main_filename = lua_dir + DIGWATCH_LUA_MAIN;
+		if (!std::ifstream(lua_main_filename))
 		{
-			lua_dir = string(env_lua_dir);
+			lua_dir = DIGWATCH_SOURCE_LUA_DIR;
+			lua_main_filename = lua_dir + DIGWATCH_LUA_MAIN;
+			if (!std::ifstream(lua_main_filename))
+			{
+				fprintf(stderr, "Could not find Digwatch Lua libraries (tried %s, %s). \n",
+					DIGWATCH_LUA_DIR DIGWATCH_LUA_MAIN,
+					lua_main_filename.c_str());
+				result = EXIT_FAILURE;
+				goto exit;
+			}
 		}
 
-		trim(lua_main_filename);
-		if(lua_main_filename.size() == 0)
-		{
-			lua_main_filename = lua_dir + DIGWATCH_LUA_MAIN;
-		}
 
 		// Initialize Lua interpreter
 		ls = lua_open();
