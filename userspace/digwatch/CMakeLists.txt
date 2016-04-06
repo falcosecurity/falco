@@ -7,7 +7,7 @@ include_directories("${PROJECT_BINARY_DIR}/userspace/digwatch")
 include_directories("${CURL_INCLUDE_DIR}")
 include_directories("${LPEG_SRC}")
 
-add_executable(digwatch formats.cpp fields.cpp rules.cpp digwatch.cpp)
+add_executable(digwatch formats.cpp fields.cpp rules.cpp syslog.cpp digwatch.cpp)
 
 target_link_libraries(digwatch sinsp)
 target_link_libraries(digwatch "${LPEG_SRC}/lpeg.a")
