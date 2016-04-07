@@ -44,12 +44,7 @@ static void usage()
 	   "Usage: digwatch [options] rules_filename\n\n"
 	   "Options:\n"
 	   " -h, --help         Print this page\n"
-	   " -m <filename>, --main-lua <filename>\n"
-	   "                    Name of lua compiler main file\n"
-	   "                    (default: rules_loader.lua)\n"
-	   " -N                 Don't convert port numbers to names.\n"
 	   " -o                 Output type (options are 'stdout', 'syslog', default is 'stdout')\n"
-	   "                    process or into a script.\n"
 	   "\n"
     );
 }
@@ -190,7 +185,7 @@ int digwatch_init(int argc, char **argv)
 		// Parse the args
 		//
 		while((op = getopt_long(argc, argv,
-                                        "hNo:",
+                                        "ho:",
                                         long_options, &long_index)) != -1)
 		{
 			switch(op)
@@ -198,9 +193,6 @@ int digwatch_init(int argc, char **argv)
 			case 'h':
 				usage();
 				goto exit;
-			case 'N':
-				inspector->set_hostname_and_port_resolution_mode(false);
-				break;
 			case 'o':
 				valid = std::find(valid_output_names.begin(), valid_output_names.end(), optarg) != valid_output_names.end();
 				if (!valid)
@@ -293,6 +285,8 @@ int digwatch_init(int argc, char **argv)
 
 		rules->load_rules(rules_file);
 		inspector->set_filter(rules->get_filter());
+
+		inspector->set_hostname_and_port_resolution_mode(false);
 
 		try
 		{
