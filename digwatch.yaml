@@ -1,0 +1,6 @@
+rules_file: /etc/digwatch.conf
+priority_level: warning
+outputs:
+  - file
+  - syslog
+
