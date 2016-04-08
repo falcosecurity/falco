@@ -45,6 +45,8 @@ static void usage()
 	   "Options:\n"
 	   " -h, --help         Print this page\n"
 	   " -o                 Output type (options are 'stdout', 'syslog', default is 'stdout')\n"
+           " -r <readfile>, --read=<readfile>\n"
+           "                    Read the events from <readfile>.\n"
 	   "\n"
     );
 }
@@ -166,13 +168,14 @@ int digwatch_init(int argc, char **argv)
 	int long_index = 0;
 	string lua_main_filename;
 	string output_name = "stdout";
+	string infile;
 	string lua_dir = DIGWATCH_LUA_DIR;
 	lua_State* ls = NULL;
 
 	static struct option long_options[] =
 	{
 		{"help", no_argument, 0, 'h' },
-		{"main-lua", required_argument, 0, 'u' },
+		{"readfile", required_argument, 0, 'r' },
 		{0, 0, 0, 0}
 	};
 
@@ -185,7 +188,7 @@ int digwatch_init(int argc, char **argv)
 		// Parse the args
 		//
 		while((op = getopt_long(argc, argv,
-                                        "ho:",
+                                        "ho:r:",
                                         long_options, &long_index)) != -1)
 		{
 			switch(op)
@@ -200,6 +203,9 @@ int digwatch_init(int argc, char **argv)
 					throw sinsp_exception(string("Invalid output name ") + optarg);
 				}
 				output_name = optarg;
+				break;
+			case 'r':
+				infile = optarg;
 				break;
 			case '?':
 				result = EXIT_FAILURE;
@@ -288,19 +294,25 @@ int digwatch_init(int argc, char **argv)
 
 		inspector->set_hostname_and_port_resolution_mode(false);
 
-		try
+		if (infile.size())
 		{
-			inspector->open("");
+			inspector->open(infile);
 		}
-		catch(sinsp_exception e)
+		else
 		{
-			if(system("modprobe " PROBE_NAME " > /dev/null 2> /dev/null"))
+			try
 			{
-				fprintf(stderr, "Unable to load the driver\n");
+				inspector->open();
 			}
-			inspector->open("");
+			catch(sinsp_exception e)
+			{
+				if(system("modprobe " PROBE_NAME " > /dev/null 2> /dev/null"))
+				{
+					fprintf(stderr, "Unable to load the driver\n");
+				}
+				inspector->open();
+			}
 		}
-
 		do_inspect(inspector,
 			   rules,
 			   output_name,
