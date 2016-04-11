@@ -159,17 +159,27 @@ function on_done()
    io.flush()
 end
 
-local outputs = require('output')
+local output_functions = require('output')
 
-function on_event(evt_, rule_id, output_name)
-   if not (type(outputs[output_name]) == 'function') then
-      error("rule_loader.on_event(): invalid output_name: ", output_name)
+outputs = {}
+
+function add_output(output_name, config)
+   if not (type(output_functions[output_name]) == 'function') then
+      error("rule_loader.add_output(): invalid output_name: ", output_name)
    end
+
+   table.insert(outputs, {output = output_functions[output_name], config=config})
+end
+
+function on_event(evt_, rule_id)
 
    if state.outputs[rule_id] == nil then
       error ("rule_loader.on_event(): event with invalid rule_id: ", rule_id)
    end
 
-   outputs[output_name](evt_, state.outputs[rule_id].level, state.outputs[rule_id].format)
+   for index,o in ipairs(outputs) do
+      o.output(evt_, state.outputs[rule_id].level, state.outputs[rule_id].format, o.config)
+   end
+
 end
 
