@@ -5,10 +5,11 @@ include_directories(${PROJECT_SOURCE_DIR}/../sysdig/userspace/libscap)
 include_directories(${PROJECT_SOURCE_DIR}/../sysdig/userspace/libsinsp)
 include_directories("${PROJECT_BINARY_DIR}/userspace/digwatch")
 include_directories("${CURL_INCLUDE_DIR}")
+include_directories("${YAMLCPP_INCLUDE_DIR}")
 include_directories("${LPEG_SRC}")
 include_directories(${DRAIOS_DEPENDENCIES_DIR}/yaml-${DRAIOS_YAML_VERSION}/target/include)
 
-add_executable(digwatch formats.cpp fields.cpp rules.cpp syslog.cpp digwatch.cpp)
+add_executable(digwatch configuration.cpp formats.cpp fields.cpp rules.cpp syslog.cpp digwatch.cpp)
 
 target_link_libraries(digwatch sinsp)
 target_link_libraries(digwatch
