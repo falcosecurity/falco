@@ -4,9 +4,18 @@
 
 using namespace std;
 
+
+// If we don't have a configuration file, we just use stdout output and all other defaults
 void digwatch_configuration::init()
 {
-	string m_config_file = DIGWATCH_CONF_FILE;
+	output_config stdout_output;
+	stdout_output.name = "stdout";
+	m_outputs.push_back(stdout_output);
+}
+
+void digwatch_configuration::init(string conf_filename)
+{
+	string m_config_file = conf_filename;
 	m_config = new yaml_configuration(m_config_file);
 
 	m_rules_file = m_config->get_scalar<string>("rules_file", "/etc/digwatch.conf");

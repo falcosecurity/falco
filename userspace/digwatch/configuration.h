@@ -92,6 +92,7 @@ private:
 class digwatch_configuration
 {
  public:
+	void init(std::string conf_filename);
 	void init();
 	std::string m_rules_file;
 	std::string m_priority_level;
