@@ -18,12 +18,14 @@ extern "C" {
 }
 
 #include <sinsp.h>
-#include <config_digwatch.h>
+#include "config_digwatch.h"
+#include "configuration.h"
 #include "rules.h"
 #include "formats.h"
 #include "fields.h"
 #include "syslog.h"
 #include "utils.h"
+#include <yaml-cpp/yaml.h>
 
 static bool g_terminate = false;
 
@@ -155,6 +157,8 @@ void add_lua_path(lua_State *ls, string path)
 	lua_pop(ls, 1);
 }
 
+
+
 //
 // ARGUMENT PARSING AND PROGRAM SETUP
 //
@@ -169,6 +173,7 @@ int digwatch_init(int argc, char **argv)
 	string lua_main_filename;
 	string output_name = "stdout";
 	string infile;
+	string conf_filename;
 	string lua_dir = DIGWATCH_LUA_DIR;
 	lua_State* ls = NULL;
 
@@ -188,7 +193,7 @@ int digwatch_init(int argc, char **argv)
 		// Parse the args
 		//
 		while((op = getopt_long(argc, argv,
-                                        "ho:r:",
+                                        "c:ho:R:",
                                         long_options, &long_index)) != -1)
 		{
 			switch(op)
@@ -196,6 +201,9 @@ int digwatch_init(int argc, char **argv)
 			case 'h':
 				usage();
 				goto exit;
+			case 'c':
+				conf_filename = optarg;
+				break;
 			case 'o':
 				valid = std::find(valid_output_names.begin(), valid_output_names.end(), optarg) != valid_output_names.end();
 				if (!valid)
@@ -246,6 +254,50 @@ int digwatch_init(int argc, char **argv)
 
 		}
 
+		ifstream* conf_stream;
+		if (conf_filename.size())
+		{
+			conf_stream = new ifstream(conf_filename);
+			if (!conf_stream->good())
+			{
+				fprintf(stderr, "Could not find configuration file at %s \n", conf_filename.c_str());
+				result = EXIT_FAILURE;
+				goto exit;
+			}
+		}
+		else
+		{
+			conf_stream = new ifstream(DIGWATCH_SOURCE_CONF_FILE);
+			if (conf_stream->good())
+			{
+				conf_filename = DIGWATCH_SOURCE_CONF_FILE;
+			}
+			else
+			{
+				conf_stream = new ifstream(DIGWATCH_INSTALL_CONF_FILE);
+				if (conf_stream->good())
+				{
+					conf_filename = DIGWATCH_INSTALL_CONF_FILE;
+				}
+				else
+				{
+					conf_filename = "";
+				}
+			}
+		}
+
+		digwatch_configuration config;
+		if (conf_filename.size())
+		{
+			cout << "Using configuration file " + conf_filename + "\n";
+			config.init(conf_filename);
+		}
+		else
+		{
+			cout << "No configuration file found, proceeding with defaults\n";
+			config.init();
+		}
+
 		if(signal(SIGINT, signal_callback) == SIG_ERR)
 		{
 			fprintf(stderr, "An error occurred while setting SIGINT signal handler.\n");
@@ -274,7 +326,6 @@ int digwatch_init(int argc, char **argv)
 				goto exit;
 			}
 		}
-
 
 		// Initialize Lua interpreter
 		ls = lua_open();
@@ -327,7 +378,7 @@ int digwatch_init(int argc, char **argv)
 	}
 	catch(...)
 	{
-		printf("Exception\n");
+		printf("Error, exiting.\n");
 		result = EXIT_FAILURE;
 	}
 

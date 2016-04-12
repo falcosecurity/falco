@@ -84,6 +84,19 @@ ExternalProject_Add(b64
 		BUILD_IN_SOURCE 1
 		INSTALL_COMMAND "")
 
+
+set(YAMLCPP_SRC "${PROJECT_BINARY_DIR}/yamlcpp-prefix/src/yamlcpp")
+message(STATUS "Using bundled yaml-cpp in '${YAMLCPP_SRC}'")
+set(YAMLCPP_LIB "${YAMLCPP_SRC}/libyaml-cpp.a")
+set(YAMLCPP_INCLUDE_DIR "${YAMLCPP_SRC}/include")
+# Once the next version of yaml-cpp is released (first version not requiring
+# boost), we can switch to that and no longer pull from github.
+ExternalProject_Add(yamlcpp
+		GIT_REPOSITORY "https://github.com/jbeder/yaml-cpp.git"
+		GIT_TAG "7d2873ce9f2202ea21b6a8c5ecbc9fe38032c229"
+		BUILD_IN_SOURCE 1
+		INSTALL_COMMAND "")
+
 set(OPENSSL_BUNDLE_DIR "${PROJECT_BINARY_DIR}/openssl-prefix/src/openssl")
 set(OPENSSL_INSTALL_DIR "${OPENSSL_BUNDLE_DIR}/target")
 set(OPENSSL_LIBRARY_SSL "${OPENSSL_INSTALL_DIR}/lib/libssl.a")

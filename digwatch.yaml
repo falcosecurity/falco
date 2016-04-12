@@ -1,0 +1,16 @@
+rules_file: /etc/digwatch.conf
+
+# Priority level
+# Any rule with priority lower than this level will be discarded
+priority_level: warning
+
+syslog_output:
+  enabled: true
+
+file_output:
+  enabled: true
+  filename: "bla.bla"
+
+stdout_output:
+  enabled: false
+
