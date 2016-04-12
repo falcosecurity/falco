@@ -156,24 +156,38 @@ void add_lua_path(lua_State *ls, string path)
 	lua_pop(ls, 1);
 }
 
-void add_output(lua_State *ls, string output_name)
+void add_output(lua_State *ls, output_config oc)
 {
+
+	uint8_t nargs = 1;
 	lua_getglobal(ls, lua_add_output.c_str());
 
-	if(lua_isfunction(ls, -1))
-	{
-		lua_pushstring(ls, output_name.c_str());
-		if(lua_pcall(ls, 1, 0, 0) != 0)
-		{
-			const char* lerr = lua_tostring(ls, -1);
-			string err = "Error invoking add_output: " + string(lerr);
-			throw sinsp_exception(err);
-		}
-	}
-	else
+	if(!lua_isfunction(ls, -1))
 	{
 		throw sinsp_exception("No function " + lua_add_output + " found. ");
 	}
+	lua_pushstring(ls, oc.name.c_str());
+
+	// If we have options, build up a lua table containing them
+	if (oc.options.size())
+	{
+		nargs = 2;
+		lua_createtable(ls, 0, oc.options.size());
+
+		for (auto it = oc.options.cbegin(); it != oc.options.cend(); ++it)
+		{
+			lua_pushstring(ls, (*it).second.c_str());
+			lua_setfield(ls, -2, (*it).first.c_str());
+		}
+	}
+
+	if(lua_pcall(ls, nargs, 0, 0) != 0)
+	{
+		const char* lerr = lua_tostring(ls, -1);
+		string err = "Error invoking add_output: " + string(lerr);
+		throw sinsp_exception(err);
+	}
+
 }
 
 
@@ -363,7 +377,10 @@ int digwatch_init(int argc, char **argv)
 
 		inspector->set_hostname_and_port_resolution_mode(false);
 
-		add_output(ls, output_name);
+		for(std::vector<output_config>::iterator it = config.m_outputs.begin(); it != config.m_outputs.end(); ++it)
+		{
+			add_output(ls, *it);
+		}
 
 		if (infile.size())
 		{

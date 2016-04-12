@@ -165,7 +165,7 @@ outputs = {}
 
 function add_output(output_name, config)
    if not (type(output_functions[output_name]) == 'function') then
-      error("rule_loader.add_output(): invalid output_name: ", output_name)
+      error("rule_loader.add_output(): invalid output_name: "..output_name)
    end
 
    table.insert(outputs, {output = output_functions[output_name], config=config})
