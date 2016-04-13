@@ -152,7 +152,8 @@ ExternalProject_Add(lpeg
 		    CONFIGURE_COMMAND ""
                     INSTALL_COMMAND "")
 
-
+install(FILES digwatch.yaml
+	DESTINATION "${DIR_ETC}")
 
 add_subdirectory(${SYSDIG_DIR}/userspace/libscap ${PROJECT_BINARY_DIR}/userspace/libscap)
 add_subdirectory(${SYSDIG_DIR}/userspace/libsinsp ${PROJECT_BINARY_DIR}/userspace/libsinsp)

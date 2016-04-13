@@ -46,9 +46,10 @@ static void usage()
 	   "Usage: digwatch [options] rules_filename\n\n"
 	   "Options:\n"
 	   " -h, --help         Print this page\n"
+	   " -c                 Configuration file (default " DIGWATCH_SOURCE_CONF_FILE ", " DIGWATCH_INSTALL_CONF_FILE ")\n"
 	   " -o                 Output type (options are 'stdout', 'syslog', default is 'stdout')\n"
-           " -r <readfile>, --read=<readfile>\n"
-           "                    Read the events from <readfile>.\n"
+           " -e <events_file>   Read the events from <events_file> (in .scap format) instead of tapping into live.\n"
+           " -r <rules_file>    Rules configuration file (defaults to value set in configuration file, or /etc/digwatch_rules.conf).\n"
 	   "\n"
     );
 }
@@ -203,15 +204,15 @@ int digwatch_init(int argc, char **argv)
 	int long_index = 0;
 	string lua_main_filename;
 	string output_name = "stdout";
-	string infile;
+	string scap_filename;
 	string conf_filename;
+	string rules_filename;
 	string lua_dir = DIGWATCH_LUA_DIR;
 	lua_State* ls = NULL;
 
 	static struct option long_options[] =
 	{
 		{"help", no_argument, 0, 'h' },
-		{"readfile", required_argument, 0, 'r' },
 		{0, 0, 0, 0}
 	};
 
@@ -224,7 +225,7 @@ int digwatch_init(int argc, char **argv)
 		// Parse the args
 		//
 		while((op = getopt_long(argc, argv,
-                                        "c:ho:R:",
+                                        "c:ho:e:r:",
                                         long_options, &long_index)) != -1)
 		{
 			switch(op)
@@ -243,8 +244,11 @@ int digwatch_init(int argc, char **argv)
 				}
 				output_name = optarg;
 				break;
+			case 'e':
+				scap_filename = optarg;
+				break;
 			case 'r':
-				infile = optarg;
+				rules_filename = optarg;
 				break;
 			case '?':
 				result = EXIT_FAILURE;
@@ -257,33 +261,6 @@ int digwatch_init(int argc, char **argv)
 
 		inspector->set_buffer_format(event_buffer_format);
 
-		string rules_file;
-
-		if(optind < argc)
-		{
-#ifdef HAS_FILTERING
-			for(int32_t j = optind ; j < argc; j++)
-			{
-				rules_file += argv[j];
-				if(j < argc - 1)
-				{
-					rules_file += " ";
-				}
-			}
-
-#else
-			fprintf(stderr, "filtering not compiled.\n");
-			result = EXIT_FAILURE;
-			goto exit;
-#endif
-		}
-
-		if(rules_file.size() == 0) {
-			usage();
-			result = EXIT_FAILURE;
-			goto exit;
-
-		}
 
 		ifstream* conf_stream;
 		if (conf_filename.size())
@@ -329,6 +306,12 @@ int digwatch_init(int argc, char **argv)
 			config.init();
 		}
 
+		if (rules_filename.size())
+		{
+			config.m_rules_filename = rules_filename;
+		}
+		cout << "Using rules file " + config.m_rules_filename + "\n";
+
 		if(signal(SIGINT, signal_callback) == SIG_ERR)
 		{
 			fprintf(stderr, "An error occurred while setting SIGINT signal handler.\n");
@@ -371,7 +354,7 @@ int digwatch_init(int argc, char **argv)
 
 		digwatch_syslog::init(ls);
 
-		rules->load_rules(rules_file);
+		rules->load_rules(config.m_rules_filename);
 		inspector->set_filter(rules->get_filter());
 
 		inspector->set_hostname_and_port_resolution_mode(false);
@@ -381,9 +364,9 @@ int digwatch_init(int argc, char **argv)
 			add_output(ls, *it);
 		}
 
-		if (infile.size())
+		if (scap_filename.size())
 		{
-			inspector->open(infile);
+			inspector->open(scap_filename);
 		}
 		else
 		{

@@ -1,7 +1,8 @@
-rules_file: /etc/digwatch.conf
+rules_file: /etc/digwatch_rules.conf
 
 # Priority level
 # Any rule with priority lower than this level will be discarded
+# WARNING currently has no effect!
 priority_level: warning
 
 syslog_output:
