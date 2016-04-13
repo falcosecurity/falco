@@ -168,6 +168,12 @@ function add_output(output_name, config)
       error("rule_loader.add_output(): invalid output_name: "..output_name)
    end
 
+   -- outputs can optionally define a validation function so that we don't
+   -- find out at runtime (when an event finally matches a rule!) that the config is invalid
+   if (type(output_functions[output_name.."_validate"]) == 'function') then
+     output_functions[output_name.."_validate"](config)
+   end
+
    table.insert(outputs, {output = output_functions[output_name], config=config})
 end
 

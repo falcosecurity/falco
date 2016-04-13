@@ -184,8 +184,7 @@ void add_output(lua_State *ls, output_config oc)
 	if(lua_pcall(ls, nargs, 0, 0) != 0)
 	{
 		const char* lerr = lua_tostring(ls, -1);
-		string err = "Error invoking add_output: " + string(lerr);
-		throw sinsp_exception(err);
+		throw sinsp_exception(string(lerr));
 	}
 
 }

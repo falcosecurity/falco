@@ -8,8 +8,8 @@ syslog_output:
   enabled: false
 
 file_output:
-  enabled: false
-  filename: "bla.bla"
+  enabled: true
+  filename: ./events.txt
 
 stdout_output:
   enabled: true
