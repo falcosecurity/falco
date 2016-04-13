@@ -224,7 +224,7 @@ int digwatch_init(int argc, char **argv)
 		// Parse the args
 		//
 		while((op = getopt_long(argc, argv,
-                                        "c:ho:R:",
+                                        "c:ho:r:u:",
                                         long_options, &long_index)) != -1)
 		{
 			switch(op)
