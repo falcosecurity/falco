@@ -261,7 +261,6 @@ int digwatch_init(int argc, char **argv)
 
 		if(optind < argc)
 		{
-#ifdef HAS_FILTERING
 			for(int32_t j = optind ; j < argc; j++)
 			{
 				rules_file += argv[j];
@@ -271,11 +270,6 @@ int digwatch_init(int argc, char **argv)
 				}
 			}
 
-#else
-			fprintf(stderr, "filtering not compiled.\n");
-			result = EXIT_FAILURE;
-			goto exit;
-#endif
 		}
 
 		if(rules_file.size() == 0) {
