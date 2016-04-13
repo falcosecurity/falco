@@ -94,7 +94,7 @@ class digwatch_configuration
  public:
 	void init(std::string conf_filename);
 	void init();
-	std::string m_rules_file;
+	std::string m_rules_filename;
 	std::string m_priority_level;
 	std::vector<output_config> m_outputs;
  private:

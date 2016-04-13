@@ -18,7 +18,7 @@ void digwatch_configuration::init(string conf_filename)
 	string m_config_file = conf_filename;
 	m_config = new yaml_configuration(m_config_file);
 
-	m_rules_file = m_config->get_scalar<string>("rules_file", "/etc/digwatch.conf");
+	m_rules_filename = m_config->get_scalar<string>("rules_file", "/etc/digwatch_rules.conf");
 	m_priority_level = m_config->get_scalar<string>("priority_level", "warning");
 
 	output_config file_output;

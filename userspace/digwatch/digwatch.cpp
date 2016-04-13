@@ -365,7 +365,7 @@ int digwatch_init(int argc, char **argv)
 
 		digwatch_syslog::init(ls);
 
-		rules->load_rules(rules_file);
+		rules->load_rules(config.m_rules_filename);
 		inspector->set_filter(rules->get_filter());
 
 		inspector->set_hostname_and_port_resolution_mode(false);
