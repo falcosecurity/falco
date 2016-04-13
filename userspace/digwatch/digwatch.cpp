@@ -46,9 +46,10 @@ static void usage()
 	   "Usage: digwatch [options] rules_filename\n\n"
 	   "Options:\n"
 	   " -h, --help         Print this page\n"
+	   " -c                 Configuration file (default " DIGWATCH_SOURCE_CONF_FILE ", " DIGWATCH_INSTALL_CONF_FILE ")\n"
 	   " -o                 Output type (options are 'stdout', 'syslog', default is 'stdout')\n"
-           " -r <readfile>, --read=<readfile>\n"
-           "                    Read the events from <readfile>.\n"
+           " -e <events_file>   Read the events from <events_file> (in .scap format) instead of tapping into live.\n"
+           " -r <rules_file>    Rules configuration file (defaults to value set in configuration file, or /etc/digwatch_rules.conf).\n"
 	   "\n"
     );
 }
@@ -212,7 +213,6 @@ int digwatch_init(int argc, char **argv)
 	static struct option long_options[] =
 	{
 		{"help", no_argument, 0, 'h' },
-		{"readfile", required_argument, 0, 'r' },
 		{0, 0, 0, 0}
 	};
 
@@ -225,7 +225,7 @@ int digwatch_init(int argc, char **argv)
 		// Parse the args
 		//
 		while((op = getopt_long(argc, argv,
-                                        "c:ho:r:u:",
+                                        "c:ho:e:r:",
                                         long_options, &long_index)) != -1)
 		{
 			switch(op)
@@ -244,10 +244,10 @@ int digwatch_init(int argc, char **argv)
 				}
 				output_name = optarg;
 				break;
-			case 'r':
+			case 'e':
 				scap_filename = optarg;
 				break;
-			case 'u':
+			case 'r':
 				rules_filename = optarg;
 				break;
 			case '?':
