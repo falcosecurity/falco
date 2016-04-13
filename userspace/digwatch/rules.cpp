@@ -45,7 +45,7 @@ void digwatch_rules::load_rules(string rules_filename)
 	is.open(rules_filename);
 	if(!is.is_open())
 	{
-		throw sinsp_exception("can't open file " + rules_filename);
+		throw sinsp_exception("Can't open file " + rules_filename + ". Try setting file location in config file or use '-r' flag.");
 	}
 
 	lua_getglobal(m_ls, m_lua_load_rule.c_str());
