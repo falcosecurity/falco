@@ -203,7 +203,7 @@ int digwatch_init(int argc, char **argv)
 	int long_index = 0;
 	string lua_main_filename;
 	string output_name = "stdout";
-	string infile;
+	string scap_filename;
 	string conf_filename;
 	string lua_dir = DIGWATCH_LUA_DIR;
 	lua_State* ls = NULL;
@@ -244,7 +244,7 @@ int digwatch_init(int argc, char **argv)
 				output_name = optarg;
 				break;
 			case 'r':
-				infile = optarg;
+				scap_filename = optarg;
 				break;
 			case '?':
 				result = EXIT_FAILURE;
@@ -375,9 +375,9 @@ int digwatch_init(int argc, char **argv)
 			add_output(ls, *it);
 		}
 
-		if (infile.size())
+		if (scap_filename.size())
 		{
-			inspector->open(infile);
+			inspector->open(scap_filename);
 		}
 		else
 		{
