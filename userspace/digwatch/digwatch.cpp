@@ -54,13 +54,13 @@ static void usage()
 }
 
 string lua_on_event = "on_event";
+string lua_add_output = "add_output";
 
 //
 // Event processing loop
 //
 void do_inspect(sinsp* inspector,
 		digwatch_rules* rules,
-		string output_name,
 		lua_State* ls)
 {
 	int32_t res;
@@ -110,9 +110,8 @@ void do_inspect(sinsp* inspector,
 		{
 			lua_pushlightuserdata(ls, ev);
 			lua_pushnumber(ls, ev->get_check_id());
-			lua_pushstring(ls, output_name.c_str());
 
-			if(lua_pcall(ls, 3, 0, 0) != 0)
+			if(lua_pcall(ls, 2, 0, 0) != 0)
 			{
 				const char* lerr = lua_tostring(ls, -1);
 				string err = "Error invoking function output: " + string(lerr);
@@ -157,6 +156,38 @@ void add_lua_path(lua_State *ls, string path)
 	lua_pop(ls, 1);
 }
 
+void add_output(lua_State *ls, output_config oc)
+{
+
+	uint8_t nargs = 1;
+	lua_getglobal(ls, lua_add_output.c_str());
+
+	if(!lua_isfunction(ls, -1))
+	{
+		throw sinsp_exception("No function " + lua_add_output + " found. ");
+	}
+	lua_pushstring(ls, oc.name.c_str());
+
+	// If we have options, build up a lua table containing them
+	if (oc.options.size())
+	{
+		nargs = 2;
+		lua_createtable(ls, 0, oc.options.size());
+
+		for (auto it = oc.options.cbegin(); it != oc.options.cend(); ++it)
+		{
+			lua_pushstring(ls, (*it).second.c_str());
+			lua_setfield(ls, -2, (*it).first.c_str());
+		}
+	}
+
+	if(lua_pcall(ls, nargs, 0, 0) != 0)
+	{
+		const char* lerr = lua_tostring(ls, -1);
+		throw sinsp_exception(string(lerr));
+	}
+
+}
 
 
 //
@@ -345,6 +376,11 @@ int digwatch_init(int argc, char **argv)
 
 		inspector->set_hostname_and_port_resolution_mode(false);
 
+		for(std::vector<output_config>::iterator it = config.m_outputs.begin(); it != config.m_outputs.end(); ++it)
+		{
+			add_output(ls, *it);
+		}
+
 		if (infile.size())
 		{
 			inspector->open(infile);
@@ -366,7 +402,6 @@ int digwatch_init(int argc, char **argv)
 		}
 		do_inspect(inspector,
 			   rules,
-			   output_name,
 			   ls);
 
 		inspector->close();

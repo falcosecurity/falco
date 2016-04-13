@@ -5,12 +5,12 @@ rules_file: /etc/digwatch.conf
 priority_level: warning
 
 syslog_output:
-  enabled: true
+  enabled: false
 
 file_output:
   enabled: true
-  filename: "bla.bla"
+  filename: ./events.txt
 
 stdout_output:
-  enabled: false
+  enabled: true
 
