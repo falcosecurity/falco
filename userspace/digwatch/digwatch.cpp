@@ -205,6 +205,7 @@ int digwatch_init(int argc, char **argv)
 	string output_name = "stdout";
 	string scap_filename;
 	string conf_filename;
+	string rules_filename;
 	string lua_dir = DIGWATCH_LUA_DIR;
 	lua_State* ls = NULL;
 
@@ -246,6 +247,9 @@ int digwatch_init(int argc, char **argv)
 			case 'r':
 				scap_filename = optarg;
 				break;
+			case 'u':
+				rules_filename = optarg;
+				break;
 			case '?':
 				result = EXIT_FAILURE;
 				goto exit;
@@ -257,27 +261,6 @@ int digwatch_init(int argc, char **argv)
 
 		inspector->set_buffer_format(event_buffer_format);
 
-		string rules_file;
-
-		if(optind < argc)
-		{
-			for(int32_t j = optind ; j < argc; j++)
-			{
-				rules_file += argv[j];
-				if(j < argc - 1)
-				{
-					rules_file += " ";
-				}
-			}
-
-		}
-
-		if(rules_file.size() == 0) {
-			usage();
-			result = EXIT_FAILURE;
-			goto exit;
-
-		}
 
 		ifstream* conf_stream;
 		if (conf_filename.size())
@@ -322,6 +305,12 @@ int digwatch_init(int argc, char **argv)
 			cout << "No configuration file found, proceeding with defaults\n";
 			config.init();
 		}
+
+		if (rules_filename.size())
+		{
+			config.m_rules_filename = rules_filename;
+		}
+		cout << "Using rules file " + config.m_rules_filename + "\n";
 
 		if(signal(SIGINT, signal_callback) == SIG_ERR)
 		{
