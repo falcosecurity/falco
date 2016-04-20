@@ -1,0 +1,46 @@
+---
+layout: wiki
+title: Wiki | Sysdig Update and Uninstall
+slug: wiki
+wiki-title: Sysdig Update and Uninstall
+wiki-url: https://github.com/draios/sysdig/wiki/sysdig-update-and-uninstall
+---
+
+        <h2>
+<a id="user-content-update" class="anchor" href="#update" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Update</h2>
+
+<p>Updates are installed as part of the normal system updates available with <em>apt-get</em> and <em>yum</em>. If you want to force an update here are the instructions for the various distributions.</p>
+
+<p><strong>Debian, Ubuntu</strong></p>
+
+<pre><code>apt-get update  
+apt-get -y install sysdig
+</code></pre>
+
+<p><strong>CentOS, RHEL, Fedora, Amazon Linux</strong></p>
+
+<pre><code>yum clean expire-cache
+yum -y install sysdig
+</code></pre>
+
+<p><strong>OSX</strong></p>
+
+<pre><code>brew upgrade sysdig
+</code></pre>
+
+<h2>
+<a id="user-content-uninstallation" class="anchor" href="#uninstallation" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Uninstallation</h2>
+
+<p>Here are the instructions for the various distributions.</p>
+
+<p><strong>Debian, Ubuntu</strong></p>
+
+<pre><code>apt-get remove sysdig
+</code></pre>
+
+<p><strong>CentOS, RHEL, Fedora, Amazon Linux</strong></p>
+
+<pre><code>yum erase sysdig
+</code></pre>
+
+      

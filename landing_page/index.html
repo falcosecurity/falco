@@ -1,0 +1,143 @@
+
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Draios | Sysdig</title>
+        <link rel="shortcut icon" href="wp-content/themes/website/img/favicon.ico" />
+        <meta name="description" content="Draios - Your cloud infrastructure as you've never seen it before">
+        <meta name="viewport" content="width=device-width">
+
+        <link rel="stylesheet" type="text/css" href="wp-content/themes/website/scripts/css/bootstrap.min.css">
+
+        <script type="text/javascript">
+            (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+            m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+            })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+            ga('create', 'UA-40398182-1', 'draios.com');
+        </script>
+
+        <link rel="stylesheet" type="text/css" href="wp-content/themes/website/sysdig/index.css">
+        <script type="text/javascript" src="wp-content/themes/website/scripts/js/jquery-1.9.1.min.js"></script>
+        <script type="text/javascript" src="wp-content/themes/website/scripts/js/jquery.ajaxchimp.js"></script>
+        
+        <script>
+         (function(){
+           $(document).ready(function (){
+             global = {};
+             global.version = Math.floor((Math.random()*3)+4);
+             
+             if (global.version === 4) {
+
+                global.h1 =   "True Insight into the Cloud";
+                global.h2 =   "Too many layers. Too many technologies. Too many tools. Too many alerts.";
+                global.p  =   "Getting visibility into your modern, distributed, service-oriented architecture is a straight up pain.<br>\
+                              What if you had a distributed version of sysdig that let you traverse your entire architecture in a single view?<br>\
+                              Draios has created a completely new and intuitive way to view what’s really happening in your infrastructure.<br>\
+                              With almost no configuration required. Yeah, it’s pretty cool. We’d love to have you check it out.";
+
+             } else if (global.version === 5) {
+
+                global.h1 =   "True Insight into Your Infrastructure";
+                global.h2 =   "Too many layers. Too many technologies. Too many tools. Too many alerts.";
+                global.p  =   "We’ve reinvented alerting, visibility, and troubleshooting for the modern era.\
+                              Draios is built on top of the uniquely rich data collected by sysdig from across your entire infrastructure.\
+                              It’s pretty cool. We’d love to have you check it out.";
+
+             } else if (global.version === 6) {
+
+                global.h1 =   "True Insight into Your Infrastructure";
+                global.h2 =   "Too many layers. Too many technologies. Too many tools. Too many alerts.";
+                global.p  =   "We know how it is. Draios gives you the right context, right when you need it.<br>\
+                              We think it’s pretty cool, and we’d love to have you check it out.";
+             }
+
+
+             $('#h1').html(global.h1);
+             $('#h2').html(global.h2);
+             $('#p').html(global.p);
+             $('#version').val(global.version);
+             
+             ga('send', 'pageview', {
+               page: '/sysdig?f=js&lp='+global.version,
+               title: global.h1
+            });
+
+             var controlGroup = $('.control-group');
+             $('#mc-embedded-subscribe-form').ajaxChimp({
+                callback: function(response, msg) {
+                    controlGroup.removeClass('success');
+                    controlGroup.removeClass('error');
+
+                    if (response.result === 'success') {
+                        controlGroup.addClass('success');
+
+                        ga('send', {
+                            'page':             '/sysdig?f=js&lp='+global.version,
+                            'title':            global.h1,
+                            'hitType':          'event',
+                            'eventCategory':    'Join Beta Button - '+global.version,
+                            'eventAction':      'Subscribed'
+                        });
+
+                    } else {
+                        controlGroup.addClass('error');
+
+                        ga('send', {
+                            'page':             '/sysdig?f=js&lp='+global.version,
+                            'title':            global.h1,
+                            'hitType':          'event',
+                            'eventCategory':    'Join Beta Button - '+global.version,
+                            'eventAction':      'Error',
+                            'eventLabel':       msg
+                        });
+                    }
+                },
+
+                resetCallback: function() {
+                    controlGroup.removeClass('success');
+                    controlGroup.removeClass('error');
+                }
+             });
+     
+           });
+         })();         
+
+        </script>
+    </head>
+
+    <body>
+        <img id="header" src="wp-content/themes/website/sysdig/header.png">
+
+        <div id="wrapper">
+            <a href="index.html"><img id="logo" src="wp-content/themes/website/img/logo.png"></a>
+
+            <h1 id="h1"></h1>
+
+            <img id="central-image" src="wp-content/themes/website/sysdig/central-image.png">
+
+            <div id="main">
+                <h2 id="h2"></h2>
+                <p id="p"></p>
+            </div>
+
+            <div id="form" class="mc_embed_signup">
+
+            <form action="http://draios.us7.list-manage1.com/subscribe/post?u=47c29acd4ea49b2def4f00d89&amp;id=0e04087118" method="post" id="mc-embedded-subscribe-form" name="mc-embedded-subscribe-form" class="validate join-beta" target="_blank" novalidate>
+                <div class="control-group">
+                    <input type="email" value="" name="EMAIL" class="required email mail" id="mce-EMAIL" placeholder="Your email here">
+
+                    <button type="submit" name="subscribe" id="mc-embedded-subscribe" class="button join no-ajax-submit">Request a Beta Invite</button>
+                    <label for="mce-EMAIL" class="control-label"></span>
+                </div>
+                <div id="mce-responses" class="clear"></div>
+                <!-- real people should not fill this in and expect good things - do not remove this or risk form bot signups-->
+                <div style="position: absolute; left: -5000px;"><input type="text" name="b_47c29acd4ea49b2def4f00d89_0e04087118" value=""></div>
+            </form>
+            </div>
+        </div>
+    </body>
+</html>

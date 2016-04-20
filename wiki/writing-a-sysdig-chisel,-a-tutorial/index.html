@@ -1,0 +1,330 @@
+---
+layout: wiki
+title: Wiki | Writing a Sysdig Chisel, a Tutorial
+slug: wiki
+wiki-title: Writing a Sysdig Chisel, a Tutorial
+wiki-url: https://github.com/draios/sysdig/wiki/writing-a-sysdig-chisel,-a-tutorial
+---
+
+        <p>This page will guide you through creating a simple but fully featured sysdig chisel. We're going to create a chisel that takes a system call name as a parameter and prints how many times that system call has been called.</p>
+
+<p>sysdig chisels are written in Lua, a powerful and fast embedded scripting language. If you are not familiar with it, we suggest you take a look at the book <a href="http://www.lua.org/pil/">Programming in Lua</a> and at the <a href="http://www.lua.org/manual/5.2/">Lua reference manual</a>.</p>
+
+<h2>
+<a id="user-content-the-basics" class="anchor" href="#the-basics" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>The Basics</h2>
+
+<p>Let's start with the simplest possible running chisel.</p>
+
+<div class="highlight highlight-source-lua"><pre><span class="pl-c">-- Chisel description</span>
+description <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>counts how many times the specified system call has been called<span class="pl-pds">"</span></span>
+short_description <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>syscall count<span class="pl-pds">"</span></span>
+category <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>misc<span class="pl-pds">"</span></span>
+
+<span class="pl-c">-- Chisel argument list</span>
+args <span class="pl-k">=</span> {}
+
+<span class="pl-c">-- Event parsing callback</span>
+<span class="pl-k">function</span> <span class="pl-en">on_event</span>()
+    <span class="pl-c1">print</span>(<span class="pl-s"><span class="pl-pds">"</span>event!<span class="pl-pds">"</span></span>)
+    <span class="pl-k">return</span> <span class="pl-c1">true</span>
+<span class="pl-k">end</span></pre></div>
+
+<p>In order to be recognized by sysdig as a chisel, a Lua script <strong>must</strong> define the following global variables:</p>
+
+<ul>
+<li>description</li>
+<li>short description</li>
+<li>category </li>
+<li>list of arguments that, as you can see from this example, can be empty</li>
+</ul>
+
+<p>In addition to that, we include the on_event(), so that we can see something happening when the chisel executes.
+So let's run the beast! First, save the code as countsc.lua in the directory where the sysdig executable is, and then type</p>
+
+<blockquote>
+<p>sysdig -c countsc</p>
+</blockquote>
+
+<p>The output is going to be very unexciting and will look like this</p>
+
+<blockquote>
+<p>event!<br>
+event!<br>
+event!<br>
+event!  </p>
+</blockquote>
+
+<h2>
+<a id="user-content-handling-arguments" class="anchor" href="#handling-arguments" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Handling Arguments</h2>
+
+<p>Our chisel needs an argument: the name of the system call that the user wants to count. We need sysdig to know about it, and then be ready to receive the argument value once sysdig has collected it from the command line. In order to do that, we fill the <em>arg</em> table with our argument information, and we add the on_set_arg() function. on_set_arg() gets called with the name and value of each of the arguments that are listed in <em>args</em>.</p>
+
+<div class="highlight highlight-source-lua"><pre><span class="pl-c">-- Chisel description</span>
+description <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>counts how many times the specified system call has been called<span class="pl-pds">"</span></span>
+short_description <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>syscall count<span class="pl-pds">"</span></span>
+category <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>misc<span class="pl-pds">"</span></span>
+
+<span class="pl-c">-- Chisel argument list</span>
+args <span class="pl-k">=</span> 
+{
+    {
+        name <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>syscall_name<span class="pl-pds">"</span></span>, 
+        description <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>the name of the system call to count<span class="pl-pds">"</span></span>, 
+        argtype <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>string<span class="pl-pds">"</span></span>
+    },
+}
+
+<span class="pl-c">-- Argument notification callback</span>
+<span class="pl-k">function</span> <span class="pl-en">on_set_arg</span>(<span class="pl-smi">name, val</span>)
+    syscallname <span class="pl-k">=</span> val
+    <span class="pl-k">return</span> <span class="pl-c1">true</span>
+<span class="pl-k">end</span>
+
+<span class="pl-c">-- Event parsing callback</span>
+<span class="pl-k">function</span> <span class="pl-en">on_event</span>()
+    <span class="pl-c1">print</span>(syscallname)
+    <span class="pl-k">return</span> <span class="pl-c1">true</span>
+<span class="pl-k">end</span></pre></div>
+
+<p>We can run the new code with this command line</p>
+
+<blockquote>
+<p>sysdig -c countsc open</p>
+</blockquote>
+
+<p>And the output will be an equally unexciting</p>
+
+<blockquote>
+<p>open<br>
+open<br>
+open<br>
+open</p>
+</blockquote>
+
+<h2>
+<a id="user-content-chisel-initialization-and-extracting-fields" class="anchor" href="#chisel-initialization-and-extracting-fields" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Chisel Initialization and Extracting Fields</h2>
+
+<p>Let's complicate our code a bit.</p>
+
+<div class="highlight highlight-source-lua"><pre><span class="pl-c">-- Chisel description</span>
+description <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>counts how many times the specified system call has been called<span class="pl-pds">"</span></span>
+short_description <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>syscall count<span class="pl-pds">"</span></span>
+category <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>misc<span class="pl-pds">"</span></span>
+
+<span class="pl-c">-- Chisel argument list</span>
+args <span class="pl-k">=</span> 
+{
+    {
+        name <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>syscall_name<span class="pl-pds">"</span></span>, 
+        description <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>the name of the system call to count<span class="pl-pds">"</span></span>, 
+        argtype <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>string<span class="pl-pds">"</span></span>
+    },
+}
+
+<span class="pl-c">-- Argument notification callback</span>
+<span class="pl-k">function</span> <span class="pl-en">on_set_arg</span>(<span class="pl-smi">name, val</span>)
+    syscallname <span class="pl-k">=</span> val
+    <span class="pl-k">return</span> <span class="pl-c1">true</span>
+<span class="pl-k">end</span>
+
+<span class="pl-c">-- Initialization callback</span>
+<span class="pl-k">function</span> <span class="pl-en">on_init</span>()
+    <span class="pl-c">-- Request the fields that we need</span>
+    ftype <span class="pl-k">=</span> chisel.<span class="pl-c1">request_field</span>(<span class="pl-s"><span class="pl-pds">"</span>evt.type<span class="pl-pds">"</span></span>)
+    fdir <span class="pl-k">=</span> chisel.<span class="pl-c1">request_field</span>(<span class="pl-s"><span class="pl-pds">"</span>evt.dir<span class="pl-pds">"</span></span>)  
+    <span class="pl-k">return</span> <span class="pl-c1">true</span>
+<span class="pl-k">end</span>
+
+count <span class="pl-k">=</span> <span class="pl-c1">0</span>
+
+<span class="pl-c">-- Event parsing callback</span>
+<span class="pl-k">function</span> <span class="pl-en">on_event</span>()
+    <span class="pl-k">if</span> evt.<span class="pl-c1">field</span>(ftype) <span class="pl-k">==</span> syscallname <span class="pl-k">and</span> evt.<span class="pl-c1">field</span>(fdir) <span class="pl-k">==</span> <span class="pl-s"><span class="pl-pds">"</span>&gt;<span class="pl-pds">"</span></span> <span class="pl-k">then</span>
+        count <span class="pl-k">=</span> count <span class="pl-k">+</span> <span class="pl-c1">1</span>
+        <span class="pl-c1">print</span>(count)
+    <span class="pl-k">end</span>
+
+    <span class="pl-k">return</span> <span class="pl-c1">true</span>
+<span class="pl-k">end</span></pre></div>
+
+<p>Usually, after receiving all the parameters, a chisel wants to initialize things before the capture starts. Doing that is just a matter of adding the on_init() function, which is called by the engine before receiving the first event.</p>
+
+<p>In our case, since we want to count how many times a system call has been called, we need to know what system call type each of the captured events corresponds to. We also need the event direction, because sysdig generates two events (an enter one and an exit one) for every system call, and we don't want to double count. We instruct the engine to extract this data for us by requesting the <em>evt.type</em> and <em>evt.dir</em> fields to the engine from on_init(), with chisel.request_field().</p>
+
+<p>chisel.request_field() accepts any sysdig filter/display field. If you're curious about which fields you can use, take a look at the sysdig tutorial, or type</p>
+
+<blockquote>
+<p>sysdig -l</p>
+</blockquote>
+
+<p>or</p>
+
+<blockquote>
+<p>sysdig -L  </p>
+</blockquote>
+
+<p>Now take a look at on_event(). Once the values have been requested with request_field(), we can extract their value for each incoming event.</p>
+
+<p>The output of our script now makes much more sense, but it's still very verbose. It would be nice to print just a summary at the end of the capture.</p>
+
+<h2>
+<a id="user-content-getting-notified-when-the-capture-ends" class="anchor" href="#getting-notified-when-the-capture-ends" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Getting Notified When the Capture Ends</h2>
+
+<p>Adding on_capture_end() to our script allows us to get notified when the capture ends, i.e.:</p>
+
+<ul>
+<li>when the last packet is reached in an offline capture</li>
+<li>when CTRL+C is called on a live capture</li>
+</ul>
+
+<p>This is exactly what we need to make our script less verbose, so let's add it to the code:</p>
+
+<div class="highlight highlight-source-lua"><pre><span class="pl-c">-- Chisel description</span>
+description <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>counts how many times the specified system call has been called<span class="pl-pds">"</span></span>
+short_description <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>syscall count<span class="pl-pds">"</span></span>
+category <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>misc<span class="pl-pds">"</span></span>
+
+<span class="pl-c">-- Chisel argument list</span>
+args <span class="pl-k">=</span> 
+{
+    {
+        name <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>syscall_name<span class="pl-pds">"</span></span>, 
+        description <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>the name of the system call to count<span class="pl-pds">"</span></span>, 
+        argtype <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>string<span class="pl-pds">"</span></span>
+    },
+}
+
+<span class="pl-c">-- Argument notification callback</span>
+<span class="pl-k">function</span> <span class="pl-en">on_set_arg</span>(<span class="pl-smi">name, val</span>)
+    syscallname <span class="pl-k">=</span> val
+    <span class="pl-k">return</span> <span class="pl-c1">true</span>
+<span class="pl-k">end</span>
+
+<span class="pl-c">-- Initialization callback</span>
+<span class="pl-k">function</span> <span class="pl-en">on_init</span>()
+    <span class="pl-c">-- Request the fileds that we need</span>
+    ftype <span class="pl-k">=</span> chisel.<span class="pl-c1">request_field</span>(<span class="pl-s"><span class="pl-pds">"</span>evt.type<span class="pl-pds">"</span></span>)
+    fdir <span class="pl-k">=</span> chisel.<span class="pl-c1">request_field</span>(<span class="pl-s"><span class="pl-pds">"</span>evt.dir<span class="pl-pds">"</span></span>)
+
+    <span class="pl-k">return</span> <span class="pl-c1">true</span>
+<span class="pl-k">end</span>
+
+count <span class="pl-k">=</span> <span class="pl-c1">0</span>
+
+<span class="pl-c">-- Event parsing callback</span>
+<span class="pl-k">function</span> <span class="pl-en">on_event</span>()
+    <span class="pl-k">if</span> evt.<span class="pl-c1">field</span>(ftype) <span class="pl-k">==</span> syscallname <span class="pl-k">and</span> evt.<span class="pl-c1">field</span>(fdir) <span class="pl-k">==</span> <span class="pl-s"><span class="pl-pds">"</span>&gt;<span class="pl-pds">"</span></span> <span class="pl-k">then</span>
+        count <span class="pl-k">=</span> count <span class="pl-k">+</span> <span class="pl-c1">1</span>
+    <span class="pl-k">end</span>
+
+    <span class="pl-k">return</span> <span class="pl-c1">true</span>
+<span class="pl-k">end</span>
+
+<span class="pl-c">-- End of capture callback</span>
+<span class="pl-k">function</span> <span class="pl-en">on_capture_end</span>()
+    <span class="pl-c1">print</span>(syscallname <span class="pl-k">..</span> <span class="pl-s"><span class="pl-pds">"</span> has been called <span class="pl-pds">"</span></span> <span class="pl-k">..</span> count <span class="pl-k">..</span> <span class="pl-s"><span class="pl-pds">"</span> times<span class="pl-pds">"</span></span>)
+    <span class="pl-k">return</span> <span class="pl-c1">true</span>
+<span class="pl-k">end</span></pre></div>
+
+<p>Let's take a look at the result</p>
+
+<blockquote>
+<p>sysdig -c countsc open
+open has been called 7484 times</p>
+</blockquote>
+
+<p>Beautiful! We're done, right?
+Well, not yet. We can still improve our script, and use it as an opportunity to learn about filtering. </p>
+
+<h2>
+<a id="user-content-filtering" class="anchor" href="#filtering" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Filtering</h2>
+
+<p>Our current code receives every single event in on_event(), just to count a little subset of them. That's not ideal because:</p>
+
+<ul>
+<li>it makes our code more complex than it should be</li>
+<li>it's not as efficient as it could be. Just in time compiled Lua is very fast, but if possible we should delegate stuff to the sysdig engine, which is written in C++ and heavily optimized.
+Fortunately, chisels can leverage the sysdig filtering engine. Look at this code:</li>
+</ul>
+
+<div class="highlight highlight-source-lua"><pre><span class="pl-c">-- Chisel description</span>
+description <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>counts how many times the specified system call has been called<span class="pl-pds">"</span></span>
+short_description <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>syscall count<span class="pl-pds">"</span></span>
+category <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>misc<span class="pl-pds">"</span></span>
+
+<span class="pl-c">-- Chisel argument list</span>
+args <span class="pl-k">=</span> 
+{
+    {
+        name <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>syscall_name<span class="pl-pds">"</span></span>, 
+        description <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>the name of the system call to count<span class="pl-pds">"</span></span>, 
+        argtype <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>string<span class="pl-pds">"</span></span>
+    },
+}
+
+<span class="pl-c">-- Argument notification callback</span>
+<span class="pl-k">function</span> <span class="pl-en">on_set_arg</span>(<span class="pl-smi">name, val</span>)
+    syscallname <span class="pl-k">=</span> val
+    <span class="pl-k">return</span> <span class="pl-c1">true</span>
+<span class="pl-k">end</span>
+
+<span class="pl-c">-- Initialization callback</span>
+<span class="pl-k">function</span> <span class="pl-en">on_init</span>()
+    <span class="pl-c">-- Request the fileds that we need</span>
+    ftype <span class="pl-k">=</span> chisel.<span class="pl-c1">request_field</span>(<span class="pl-s"><span class="pl-pds">"</span>evt.type<span class="pl-pds">"</span></span>)
+    fdir <span class="pl-k">=</span> chisel.<span class="pl-c1">request_field</span>(<span class="pl-s"><span class="pl-pds">"</span>evt.dir<span class="pl-pds">"</span></span>)
+
+    <span class="pl-c">-- set the filter</span>
+    chisel.<span class="pl-c1">set_filter</span>(<span class="pl-s"><span class="pl-pds">"</span>evt.type=<span class="pl-pds">"</span></span> <span class="pl-k">..</span> syscallname <span class="pl-k">..</span> <span class="pl-s"><span class="pl-pds">"</span> and evt.dir = &gt;<span class="pl-pds">"</span></span>)
+
+    <span class="pl-k">return</span> <span class="pl-c1">true</span>
+<span class="pl-k">end</span>
+
+count <span class="pl-k">=</span> <span class="pl-c1">0</span>
+
+<span class="pl-c">-- Event parsing callback</span>
+<span class="pl-k">function</span> <span class="pl-en">on_event</span>()
+    count <span class="pl-k">=</span> count <span class="pl-k">+</span> <span class="pl-c1">1</span>
+    <span class="pl-k">return</span> <span class="pl-c1">true</span>
+<span class="pl-k">end</span>
+
+<span class="pl-c">-- End of capture callback</span>
+<span class="pl-k">function</span> <span class="pl-en">on_capture_end</span>()
+    <span class="pl-c1">print</span>(syscallname <span class="pl-k">..</span> <span class="pl-s"><span class="pl-pds">"</span> has been called <span class="pl-pds">"</span></span> <span class="pl-k">..</span> count <span class="pl-k">..</span> <span class="pl-s"><span class="pl-pds">"</span> times<span class="pl-pds">"</span></span>)
+    <span class="pl-k">return</span> <span class="pl-c1">true</span>
+<span class="pl-k">end</span></pre></div>
+
+<p>We use chisel.set_filter() in on_init() to set a sysdig filter that keeps only enter events for the system call that we're interested in. At that point on_event is just a trivial counter increment. I recommend that you read the sysdig tutorial if you want to learn more about filtering.</p>
+
+<h2>
+<a id="user-content-output" class="anchor" href="#output" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Output</h2>
+
+<p>Throughout this page we've used print to put information on the console.  Do that, make wonderful, custom-designed interfaces.  But, if you want to get lazy you can let sysdig do the work.</p>
+
+<div class="highlight highlight-source-lua"><pre><span class="pl-c">-- Chisel description</span>
+description <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>basic chisel<span class="pl-pds">"</span></span>
+short_description <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>basic<span class="pl-pds">"</span></span>
+category <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>misc<span class="pl-pds">"</span></span>
+
+<span class="pl-c">-- Chisel argument list</span>
+args <span class="pl-k">=</span> {}
+
+<span class="pl-c">-- initialization callback</span>
+<span class="pl-k">function</span> <span class="pl-en">on_init</span>()
+    chisel.<span class="pl-c1">set_event_formatter</span>(<span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>)
+
+    <span class="pl-k">return</span> <span class="pl-c1">true</span>
+<span class="pl-k">end</span>
+
+<span class="pl-c">-- Event parsing callback</span>
+<span class="pl-k">function</span> <span class="pl-en">on_event</span>()
+    <span class="pl-k">return</span> <span class="pl-c1">true</span>
+<span class="pl-k">end</span></pre></div>
+
+<p>The empty string "" is equivalent to "default".  Otherwise, you can use the filtering syntax to specify which fields are displayed.</p>
+
+<p>That's it! I hope you enjoyed this tutorial. For more information, consult the <a href="{{ site.baseurl }}wiki/sysdig-chisel-api-reference-manual">chisel API manual</a> and use the <a href="https://github.com/draios/sysdig/tree/master/userspace/sysdig/chisels">existing chisels</a> as a reference. If you build something cool, don't forget to submit it to the community, through our <a href="https://github.com/draios/sysdig">github repository</a> or the mailing list.</p>
+
+<p>Happy chiseling! </p>
+
+      

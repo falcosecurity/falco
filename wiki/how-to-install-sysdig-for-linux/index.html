@@ -1,0 +1,167 @@
+---
+layout: wiki
+title: Wiki | How to Install Sysdig for Linux
+slug: wiki
+wiki-title: How to Install Sysdig for Linux
+wiki-url: https://github.com/draios/sysdig/wiki/how-to-install-sysdig-for-linux
+---
+
+        <p><strong>NOTE</strong>: Run all commands as root or with sudo. See bottom of the page for instructions on how to use sysdig as non-root after installation.</p>
+
+<h2>
+<a id="user-content-table-of-contents" class="anchor" href="#table-of-contents" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Table of Contents</h2>
+
+<ul>
+<li><a href="{{ site.baseurl }}wiki/how-to-install-sysdig-for-linux#automatic-installation">Automatic Installation</a></li>
+<li><a href="{{ site.baseurl }}wiki/how-to-install-sysdig-for-linux#manual-installation">Manual Installation</a></li>
+<li><a href="{{ site.baseurl }}wiki/how-to-install-sysdig-for-linux#use-sysdig-as-non-root">Use sysdig as non-root</a></li>
+<li><a href="{{ site.baseurl }}wiki/how-to-install-sysdig-for-linux#installation-inside-a-docker-container">Installation inside a Docker container</a></li>
+<li><a href="{{ site.baseurl }}wiki/how-to-install-sysdig-for-linux#troubleshooting">Troubleshooting</a></li>
+</ul>
+
+<h2>
+<a id="user-content-requirements" class="anchor" href="#requirements" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Requirements</h2>
+
+<h3>
+<a id="user-content-distributions" class="anchor" href="#distributions" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Distributions</h3>
+
+<p>The following distributions are supported:</p>
+
+<ul>
+<li>Debian, from 6.0</li>
+<li>Ubuntu, from 10.04</li>
+<li>CentOS, from 6</li>
+<li>RHEL, from 6</li>
+<li>Fedora, from 13</li>
+<li>Amazon Linux, any version available from the AWS Marketplace </li>
+<li>Oracle Linux, from 6</li>
+<li>Linux Mint, from 9</li>
+<li>CoreOS</li>
+</ul>
+
+<h2>
+<a id="user-content-automatic-installation" class="anchor" href="#automatic-installation" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Automatic Installation</h2>
+
+<p>To install sysdig automatically in one step, simply run the following command. This is the recommended installation method.</p>
+
+<p><strong>Warning</strong>: The installation script will <em>only</em> install the sysdig package from the Draios APT/YUM repository after verifying all the requirements. For step-by-step manual installation, see the guide below. To install sysdig from the source code, see the instructions <a href="{{ site.baseurl }}wiki/how-to-install-sysdig-from-the-source-code">here</a>.</p>
+
+<pre><code>curl -s https://s3.amazonaws.com/download.draios.com/stable/install-sysdig | sudo bash
+</code></pre>
+
+<h2>
+<a id="user-content-manual-installation" class="anchor" href="#manual-installation" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Manual Installation</h2>
+
+<p><strong>Debian, Ubuntu</strong></p>
+
+<p>1) Trust the Draios GPG key, configure the apt repository, and update the package list</p>
+
+<pre><code>curl -s https://s3.amazonaws.com/download.draios.com/DRAIOS-GPG-KEY.public | apt-key add -  
+curl -s -o /etc/apt/sources.list.d/draios.list http://download.draios.com/stable/deb/draios.list  
+apt-get update
+</code></pre>
+
+<p>2) Install kernel headers</p>
+
+<p><strong>Warning</strong>: The following command might not work with any kernel. Make sure to customize the name of the package properly</p>
+
+<pre><code>apt-get -y install linux-headers-$(uname -r)
+</code></pre>
+
+<p>3) Install sysdig</p>
+
+<pre><code>apt-get -y install sysdig
+</code></pre>
+
+<p><strong>CentOS, RHEL, Fedora, Amazon Linux</strong></p>
+
+<p>1) Trust the Draios GPG key, configure the yum repository</p>
+
+<pre><code>rpm --import https://s3.amazonaws.com/download.draios.com/DRAIOS-GPG-KEY.public  
+curl -s -o /etc/yum.repos.d/draios.repo http://download.draios.com/stable/rpm/draios.repo
+</code></pre>
+
+<p>2) Install the EPEL repository</p>
+
+<p>Note: The following command is required only if DKMS is not available in the distribution. You can verify if DKMS is available with <code>yum list dkms</code></p>
+
+<pre><code>rpm -i http://mirror.us.leaseweb.net/epel/6/i386/epel-release-6-8.noarch.rpm
+</code></pre>
+
+<p>3) Install kernel headers</p>
+
+<p><strong>Warning</strong>: The following command might not work with any kernel. Make sure to customize the name of the package properly</p>
+
+<pre><code>yum -y install kernel-devel-$(uname -r)
+</code></pre>
+
+<p>4) Install sysdig</p>
+
+<pre><code>yum -y install sysdig
+</code></pre>
+
+<h2>
+<a id="user-content-installation-inside-a-docker-container" class="anchor" href="#installation-inside-a-docker-container" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Installation inside a Docker container</h2>
+
+<p>sysdig can also run inside a Docker container.
+To guarantee a smooth deployment, the kernel headers must be installed in the host operating system, before running sysdig.</p>
+
+<p>This can usually be done on Debian-like distributions with:</p>
+
+<pre><code>apt-get -y install linux-headers-$(uname -r)
+</code></pre>
+
+<p>Or, on RHEL-like distributions:</p>
+
+<pre><code>yum -y install kernel-devel-$(uname -r)
+</code></pre>
+
+<p>sysdig can then be run with:</p>
+
+<pre><code>docker pull sysdig/sysdig
+</code></pre>
+
+<pre><code>docker run -i -t --name sysdig --privileged -v /var/run/docker.sock:/host/var/run/docker.sock -v /dev:/host/dev -v /proc:/host/proc:ro -v /boot:/host/boot:ro -v /lib/modules:/host/lib/modules:ro -v /usr:/host/usr:ro sysdig/sysdig
+</code></pre>
+
+<h2>
+<a id="user-content-use-sysdig-as-non-root" class="anchor" href="#use-sysdig-as-non-root" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Use sysdig as non-root</h2>
+
+<p>Sysdig must be run as root, because:</p>
+
+<ul>
+<li>It needs to scan the full <code>/proc</code> file system</li>
+<li>It needs to access to <code>/dev/sysdig*</code> devices</li>
+<li>It needs to automatically load the <code>sysdig-probe</code> kernel module in case it's not loaded yet</li>
+</ul>
+
+<p>However, there is a solution that allows non-root users to run sysdig by using <code>sudo</code>.</p>
+
+<p>0) Create a group you want to give the right to run sysdig.</p>
+
+<pre><code>groupadd sysdig
+</code></pre>
+
+<p>1) Add the user(s) which shall be able to run sysdig to that group.</p>
+
+<pre><code>usermod -aG sysdig alice
+usermod -aG sysdig bob
+</code></pre>
+
+<p>2) Use <code>visudo</code> to edit the sudo-config. Add the line <code>%sysdig ALL= /path/to/sysdig</code> and save. The path is most likely <code>/usr/local/bin/sysdig</code>, but you can make sure by running <code>which sysdig</code>.</p>
+
+<p>3) Every member of the group sysdig is now allowed to use the <code>sudo</code> command, but only for the sysdig binary.</p>
+
+<h2>
+<a id="user-content-troubleshooting" class="anchor" href="#troubleshooting" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Troubleshooting</h2>
+
+<h3>
+<a id="user-content-missing-asmasm-offsetsh" class="anchor" href="#missing-asmasm-offsetsh" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Missing asm/asm-offsets.h</h3>
+
+<p>On Ubuntu 10.04 with customized upstream kernels (such as AWS) you may need to symlink the asm headers to the correct location:</p>
+
+<pre><code>ln -nsf /usr/src/linux-headers-`uname -r`/include/asm-x86 /usr/src/linux-headers-`uname -r`/include/asm
+apt-get -y install
+</code></pre>
+
+      

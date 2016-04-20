@@ -1,0 +1,217 @@
+---
+layout: wiki
+title: Wiki | Csysdig View Format Reference
+slug: wiki
+wiki-title: Csysdig View Format Reference
+wiki-url: https://github.com/draios/sysdig/wiki/csysdig-view-format-reference
+---
+
+        <p>views are the core of csysdig's data processing system. Understanding them allows you to customize and extend csysdig.</p>
+
+<p>Views are Lua scripts that specify both what data csysdig will show on the screen and how it will be presented. This information is expressed as a Lua table which contains general view details like name, type and description, and specific details for each column that the view contains.</p>
+
+<p>This document explains how views work and documents their format. After you're done reading it, you should be able to modify or extend csysdig.</p>
+
+<h2>
+<a id="user-content-why-lua" class="anchor" href="#why-lua" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Why Lua?</h2>
+
+<p>The curious reader might wonder why, since views have a strictly declarative format, we opted for Lua tables as the base for their syntax instead of something more general like json. There are two reasons: </p>
+
+<ol>
+<li>The sysdig code base already already has support for Lua, so leveraging it came at no additional cost and didn't require the introduction of a second parser.</li>
+<li>More importantly, we don't foresee Views to always be strictly declarative. In the future, we want views to be able to actively generate their own data, by either processing the sysdig/csysdig event stream or by interacting with the system. </li>
+</ol>
+
+<h2>
+<a id="user-content-how-csysdig-views-work" class="anchor" href="#how-csysdig-views-work" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>How csysdig Views Work</h2>
+
+<p>At its core, the csysdig data system is very simple. It captures system events (for example system calls) using the sysdig engine, it processes these events to produce fields similar to the ones that you use for filters in vanilla sysdig, and then it puts these fields in tables. There are two types of views: table views and list views.</p>
+
+<h3>
+<a id="user-content-table-views" class="anchor" href="#table-views" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Table Views</h3>
+
+<p>Think about a table view as a mini SQL table with one primary key. This image shows how a csysdig table view is created:</p>
+
+<p><img src="/draios/sysdig/wiki/images/arch_table.png"></p>
+
+<ol>
+<li>The data processing starts from an event, for example an write system call. Arbitrary sysdig filter fields can be extracted from this event. In this example we're extracting two fields, the file name (fd.name), and the write size (evt.buflen). </li>
+<li>The first field is used as a key for a lookup table. Since foo.txt is already present in the table, the evt.buflen value from the event (25) is added to the one in the table entry. This is because we chose SUM as the aggregation for that column, but other aggregations, like MIN, MAX and AVG are available too. </li>
+<li>At regular intervals (usually 2 seconds, but this can be configured using the -d command line switch) the content of the table is rendered on the terminal and the table is cleared so that it's it ready for the next sample.</li>
+</ol>
+
+<p>As the name suggests, table views are perfect to render information that is tabular by its nature: process lists, file lists, network connections, and so on.</p>
+
+<h3>
+<a id="user-content-list-views" class="anchor" href="#list-views" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>List Views</h3>
+
+<p>Think about a list view as an array. When you throw something at it, it will be appended at the end. This image shows how a list view works:</p>
+
+<p><img src="/draios/sysdig/wiki/images/arch_list.png"></p>
+
+<ol>
+<li>The extraction process works exactly like the one of table views. </li>
+<li>However, list views have no keys, so every new row is added at the end of the list. This means that there can be duplicates.</li>
+<li>List views don't have a flush interval. Their content is flushed to the terminal each time an event is received. List views are not periodically cleared. If you want to empty one, you need to do it explicitly by pressing the 'c' key on the keyboard, otherwise it will grow indefinitely.</li>
+</ol>
+
+<p>List views are ideal to render event-based things, like the list of files that a process opens, the commands that a user executes, the connections established on a port, and so on. Since list views don't perform any aggregation, they can easily generate a lot of data, so it's recommended that you always set the <em>filter</em> field for them.</p>
+
+<h2>
+<a id="user-content-view-syntax-reference" class="anchor" href="#view-syntax-reference" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>View Syntax Reference</h2>
+
+<p>In order to be recognized as a view, a Lua script <strong>must</strong> include a table called <em>view_info</em>. The table contains both the general details about the view and a sub-table called <em>columns</em> with the details of each of the columns.</p>
+
+<p>This section of the document documents the fields that can be used for both the view and the columns.</p>
+
+<h3>
+<a id="user-content-view_info-fields" class="anchor" href="#view_info-fields" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>view_info Fields</h3>
+
+<p><strong>id</strong><br>
+The View ID. This field must be unique, and is used for internal view identification. It's also used as the argument of the <em>-v</em> csysdig command line flag to manually run the view.  </p>
+
+<p><strong>name</strong><br>
+The View Name. This will be shown on the top left of the user interface, so it must be short.</p>
+
+<p><strong>description</strong><br>
+The view description. This is shown in the view help page, and can have arbitrary length.</p>
+
+<p><strong>tips</strong><br>
+An array of strings that contain tips related to using this view. These tips are shown in the view help page, and can have arbitrary length.</p>
+
+<p><strong>view_type</strong><br>
+This can be "table" or "list", and indicates if this is going to be a table view or a list view. If "table" is used here, the view must have a key column. If "list" is used here, the view must not have a key column. Failure to comply with these requirements will cause the view to fail loading.</p>
+
+<p><strong>filter</strong><br>
+This field accepts a sysdig filter that will be executed by csysdig before feeding events to the view. As a consequence, you get a lot of flexibility in limiting the kind of data that the view processes.</p>
+
+<p><strong>applies_to</strong><br>
+This is a list of sysdig fileds that identifies which key types this view can be attached to.  </p>
+
+<p>When you click on an element in the csysdig UI, csysdig needs to determine which views can be applied to that element. It does that by scanning the list of views, checking the <em>apply_to</em> list for each of them, and accepting the ones that contain the element key in their <em>apply_to</em>. Said in another way, if you put proc.pid here, this view will be available as a drill down view when the user clicks on a process.  </p>
+
+<p>Putting an empty string in this list will make it appear in the root list of views, i.e. the list that appears when csysdig starts, before any drill down is performed.</p>
+
+<p><strong>is_root</strong><br>
+Set this field to <em>true</em> if you want this view to be the first one to show up when csysdig starts. Note that, if more than one view has this flag set, csysdig will start with the first one it loads, which you can assume is random.</p>
+
+<p><strong>drilldown_target</strong><br>
+Allows to specify the view that will be loaded when the user types <em>enter</em> on this view.</p>
+
+<p><strong>use_defaults</strong><br>
+This flag determines what happens when one of the column fields is not present for a received event. If this is set to false, the event will be dropped and no update to the table will happen. If this is set to true, the fields that don't exist will be assumed to be zero, and the event will be inserted in the table.</p>
+
+<p><strong>columns</strong><br>
+The list of columns for this view. See the next section.</p>
+
+<p><strong>Actions</strong><br>
+The list of hotkey actions for this view. See the Action Fields section below.</p>
+
+<h3>
+<a id="user-content-column-fields" class="anchor" href="#column-fields" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Column Fields</h3>
+
+<p><strong>name</strong><br>
+The column name. This will be printed by csysdig in the column header, so it should be very short.</p>
+
+<p><strong>description</strong><br>
+The column description. This is shown in the view help page, so it can have arbitrary length.</p>
+
+<p><strong>is_key</strong><br>
+<em>true</em> if this column is a key. Note that only one key is accepted for table views, and none is accepted for list views. Note also that key columns <strong>will not</strong> appear in the csysdig output. If you need to show a column key, you must define a duplicate that is not a key.</p>
+
+<p><strong>tags</strong><br>
+Specifies one or more tags that allow column filtering. For the moment, the only supported tag is <em>containers</em>. This a column with this tag will only be shown when the <em>-pc</em> flag is specified on the command line when starting csysdig.</p>
+
+<p><strong>field</strong>
+The sysdig field extracted for this column. This can be any of the fields listed by '<em>sysdig -l</em>". This means that you have <strong>a lot</strong> of options.</p>
+
+<p><strong>colsize</strong><br>
+The horizontal size (in characters) that this column will have when rendered on the screen.</p>
+
+<p><strong>aggregation</strong><br>
+For numeric fields, this is the aggregation that the engine performs when adding the value to a table view. It can be one of <strong>SUM</strong>, <strong>AVG</strong>, <strong>MIN</strong> and <strong>MAX</strong>. This field is optional and can be omitted in list views.</p>
+
+<p><strong>is_sorting</strong><br>
+If this field is set to <em>true</em>, the view will be sorted by this column.</p>
+
+<h3>
+<a id="user-content-action-fields" class="anchor" href="#action-fields" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Action Fields</h3>
+
+<p><strong>hotkey</strong><br>
+The key associated with this action. Pressing the key in csysdig when this view is loaded will cause the action to start.</p>
+
+<p><strong>command</strong><br>
+The command line executed when the key is pressed. The command line can contain any of the views field, with the syntax <em>%field</em>. For example, assuming that the view contains a proc.pid column, you can include its value like this: "kill -9 %proc.pid".</p>
+
+<p><strong>description</strong><br>
+A human readable short description of the hotkey action, which will be shown when F7 or F8 are pressed.</p>
+
+<p><strong>wait_finish</strong><br>
+'false' if the executed command should return immediately. 'true' if the user should hit enter before returning to csysdig (so that he has time to read the output). This field is optional and the default value is true.</p>
+
+<h2>
+<a id="user-content-views-location" class="anchor" href="#views-location" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Views Location</h2>
+
+<p>Default csysdig views can be found in the sysdig chisel folder, <em>/usr/share/sysdig/chisels</em>. Alternatively, you can add your own views in ~/.chisels and csysdig will pick them up.</p>
+
+<h2>
+<a id="user-content-putting-things-together-a-working-example" class="anchor" href="#putting-things-together-a-working-example" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Putting Things Together: a Working Example</h2>
+
+<p>Let's finish this manual with a simple working example: a view that will list all the processes that have opened files in /etc, sorted by the number of files that they opened.</p>
+
+<div class="highlight highlight-source-lua"><pre>view_info <span class="pl-k">=</span> 
+{
+    id <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>test_etc_open<span class="pl-pds">"</span></span>,
+    name <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>/etc Open Count<span class="pl-pds">"</span></span>,
+    description <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>This is a test view that shows how many times each process opens a file in /etc.<span class="pl-pds">"</span></span>,
+    view_type <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>table<span class="pl-pds">"</span></span>,
+    filter <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>evt.type=open and fd.name contains /etc<span class="pl-pds">"</span></span>,
+    applies_to <span class="pl-k">=</span> {<span class="pl-s"><span class="pl-pds">"</span><span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>proc.pid<span class="pl-pds">"</span></span>},
+    drilldown_target <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>files<span class="pl-pds">"</span></span>,
+    use_defaults <span class="pl-k">=</span> <span class="pl-c1">true</span>,
+    columns <span class="pl-k">=</span> 
+    {
+        {
+            name <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>NA<span class="pl-pds">"</span></span>,
+            field <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>proc.pid<span class="pl-pds">"</span></span>,
+            is_key <span class="pl-k">=</span> <span class="pl-c1">true</span>
+        },
+        {
+            is_sorting <span class="pl-k">=</span> <span class="pl-c1">true</span>,
+            name <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>OPEN COUNT<span class="pl-pds">"</span></span>,
+            field <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>evt.count<span class="pl-pds">"</span></span>,
+            description <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>The number times the process has opened files in /etc.<span class="pl-pds">"</span></span>,
+            colsize <span class="pl-k">=</span> <span class="pl-c1">12</span>,
+            aggregation <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>SUM<span class="pl-pds">"</span></span>
+        },
+        {
+            name <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>Command<span class="pl-pds">"</span></span>,
+            description <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>The full command line of the process.<span class="pl-pds">"</span></span>,
+            field <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>proc.exeline<span class="pl-pds">"</span></span>,
+            colsize <span class="pl-k">=</span> <span class="pl-c1">200</span>
+        }
+    },
+    actions <span class="pl-k">=</span> 
+    {
+        {
+            hotkey <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>k<span class="pl-pds">"</span></span>,
+            command <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>kill %proc.pid<span class="pl-pds">"</span></span>,
+            description <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>kill<span class="pl-pds">"</span></span>,
+            wait_finish <span class="pl-k">=</span> <span class="pl-c1">false</span>
+        },
+    },
+}</pre></div>
+
+<p>Note how:</p>
+
+<ul>
+<li>the view has a filter that restricts his input to open events for file descriptor whose name contains <em>/etc</em>.</li>
+<li>applies to is {"", "proc.pid"}. This means that the view will appear in the main view selector and when you drill down in a process.</li>
+<li>drilldown_target is set to "files", a view that will show us the list of files that the selected process is opening in /etc. A nice exploration sequence! ;-)</li>
+<li>the view has three columns, two of which are visible, and is sorted by the <em>OPEN COUNT</em> column.</li>
+<li>the view has an action, which lets you kill the selected process and is triggered by pressing the 'k' key.</li>
+</ul>
+
+<p>Now you just have to save this view in ~/.chisels (remember to give it a .lua extension), and you will be ready to enjoy your exploration!</p>
+
+      

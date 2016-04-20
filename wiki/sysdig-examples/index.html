@@ -1,0 +1,380 @@
+---
+layout: wiki
+title: Wiki | Sysdig Examples
+slug: wiki
+wiki-title: Sysdig Examples
+wiki-url: https://github.com/draios/sysdig/wiki/sysdig-examples
+---
+
+        <h3>
+<a id="user-content-this-is-an-ever-growing-list-of-cool-things-you-can-do-with-sysdig-commands" class="anchor" href="#this-is-an-ever-growing-list-of-cool-things-you-can-do-with-sysdig-commands" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>This is an ever growing list of cool things you can do with sysdig commands.</h3>
+
+<p>Got another interesting idea? Anything that you would find useful and that isn't here? Feel free to add to this list, or send a message to the <a href="https://groups.google.com/forum/#!forum/sysdig">sysdig mailing</a> list to discuss!</p>
+
+<p><em>Note</em>: Make sure you also take a look at <a href="https://www.youtube.com/watch?v=UJ4wVrbP-Q8">csysdig</a>, which packs a lot of useful functionality into a simple to use UI.<br>
+<em>Note</em>: The command lines on this page return live data. However, you can use them with trace files too by just adding the -r switch.<br>
+<em>Note</em>: If you need a list of basic sysdig commands, for instance to learn how to create a trace file, see the <a href="{{ site.baseurl }}wiki/sysdig-quick-reference-guide#wiki-basic-command-list">quick reference guide</a></p>
+
+<ul>
+<li><a href="#networking">Networking</a></li>
+<li><a href="#containers">Containers</a></li>
+<li><a href="#application">Application</a></li>
+<li><a href="#disk">Disk I/O</a></li>
+<li><a href="#process">Processes and CPU usage</a></li>
+<li><a href="#performance">Performance and Errors</a></li>
+<li><a href="#security">Security</a></li>
+</ul>
+
+<p><a name="networking"></a></p>
+
+<h4>
+<a id="user-content-networking" class="anchor" href="#networking" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Networking</h4>
+
+<ul>
+<li>
+<p>See the top processes in terms of network bandwidth usage</p>
+
+<pre><code>sysdig -c topprocs_net
+</code></pre>
+</li>
+<li>
+<p>Show the network data exchanged with the host 192.168.0.1  </p>
+
+<ul>
+<li>
+<p>As binary:  </p>
+
+<pre><code>sysdig -s2000 -X -c echo_fds fd.cip=192.168.0.1  
+</code></pre>
+</li>
+<li>
+<p>As ASCII:  </p>
+
+<pre><code>sysdig -s2000 -A -c echo_fds fd.cip=192.168.0.1
+</code></pre>
+</li>
+</ul>
+</li>
+<li>
+<p>See the top local server ports  </p>
+
+<ul>
+<li>
+<p>In terms of established connections:  </p>
+
+<pre><code>sysdig -c fdcount_by fd.sport "evt.type=accept"  
+</code></pre>
+</li>
+<li>
+<p>In terms of total bytes:  </p>
+
+<pre><code>sysdig -c fdbytes_by fd.sport
+</code></pre>
+</li>
+</ul>
+</li>
+<li>
+<p>See the top client IPs  </p>
+
+<ul>
+<li>
+<p>In terms of established connections  </p>
+
+<pre><code>sysdig -c fdcount_by fd.cip "evt.type=accept"  
+</code></pre>
+</li>
+<li>
+<p>In terms of total bytes  </p>
+
+<pre><code>sysdig -c fdbytes_by fd.cip
+</code></pre>
+</li>
+</ul>
+</li>
+<li>
+<p>List all the incoming connections that are not served by apache.</p>
+
+<pre><code>sysdig -p"%proc.name %fd.name" "evt.type=accept and proc.name!=httpd"
+</code></pre>
+</li>
+</ul>
+
+<p><a name="containers"></a></p>
+
+<h4>
+<a id="user-content-containers" class="anchor" href="#containers" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Containers</h4>
+
+<ul>
+<li>
+<p>View the list of containers running on the machine and their resource usage </p>
+
+<pre><code>sudo csysdig -vcontainers
+</code></pre>
+</li>
+<li>
+<p>View the list of processes with container context </p>
+
+<pre><code>sudo csysdig -pc
+</code></pre>
+</li>
+<li>
+<p>View the CPU usage of the processes running inside the wordpress1 container </p>
+
+<pre><code>sudo sysdig -pc -c topprocs_cpu container.name=wordpress1
+</code></pre>
+</li>
+<li>
+<p>View the network bandwidth usage of the processes running inside the wordpress1 container </p>
+
+<pre><code>sudo sysdig -pc -c topprocs_net container.name=wordpress1
+</code></pre>
+</li>
+<li>
+<p>View the processes using most network bandwidth inside the wordpress1 container </p>
+
+<pre><code>sudo sysdig -pc -c topprocs_net container.name=wordpress1
+</code></pre>
+</li>
+<li>
+<p>View the top files in terms of I/O bytes inside the wordpress1 container </p>
+
+<pre><code>sudo sysdig -pc -c topfiles_bytes container.name=wordpress1
+</code></pre>
+</li>
+<li>
+<p>View the top network connections inside the wordpress1 container </p>
+
+<pre><code>sudo sysdig -pc -c topconns container.name=wordpress1
+</code></pre>
+</li>
+<li>
+<p>Show all the interactive commands executed inside the wordpress1 container</p>
+
+<pre><code>sudo sysdig -pc -c spy_users container.name=wordpress1
+</code></pre>
+</li>
+</ul>
+
+<p><a name="application"></a></p>
+
+<h4>
+<a id="user-content-application" class="anchor" href="#application" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Application</h4>
+
+<ul>
+<li>
+<p>See all the GET HTTP requests made by the machine</p>
+
+<pre><code>sudo sysdig -s 2000 -A -c echo_fds fd.port=80 and evt.buffer contains GET
+</code></pre>
+</li>
+<li>
+<p>See all the SQL select queries made by the machine</p>
+
+<pre><code>sudo sysdig -s 2000 -A -c echo_fds evt.buffer contains SELECT 
+</code></pre>
+</li>
+<li>
+<p>See queries made via apache to an external MySQL server happening in real time</p>
+
+<pre><code>sysdig -s 2000 -A -c echo_fds fd.sip=192.168.30.5 and proc.name=apache2 and evt.buffer contains SELECT
+</code></pre>
+</li>
+</ul>
+
+<p><a name="disk"></a></p>
+
+<h4>
+<a id="user-content-disk-io" class="anchor" href="#disk-io" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Disk I/O</h4>
+
+<ul>
+<li>
+<p>See the top processes in terms of disk bandwidth usage</p>
+
+<pre><code>sysdig -c topprocs_file
+</code></pre>
+</li>
+<li>
+<p>List the processes that are using a high number of files</p>
+
+<pre><code>sysdig -c fdcount_by proc.name "fd.type=file"
+</code></pre>
+</li>
+<li>
+<p>See the top files in terms of read+write bytes</p>
+
+<pre><code>sysdig -c topfiles_bytes
+</code></pre>
+</li>
+<li>
+<p>Print the top files that apache has been reading from or writing to</p>
+
+<pre><code>sysdig -c topfiles_bytes proc.name=httpd
+</code></pre>
+</li>
+<li>
+<p>Basic opensnoop: snoop file opens as they occur</p>
+
+<pre><code>sysdig -p "%12user.name %6proc.pid %12proc.name %3fd.num %fd.typechar %fd.name" evt.type=open
+</code></pre>
+</li>
+<li>
+<p>See the top directories in terms of R+W disk activity</p>
+
+<pre><code>sysdig -c fdbytes_by fd.directory "fd.type=file"
+</code></pre>
+</li>
+<li>
+<p>See the top files in terms of R+W disk activity in the /tmp directory</p>
+
+<pre><code>sysdig -c fdbytes_by fd.filename "fd.directory=/tmp/"
+</code></pre>
+</li>
+<li>
+<p>Observe the I/O activity on all the files named 'passwd'</p>
+
+<pre><code>sysdig -A -c echo_fds "fd.filename=passwd"
+</code></pre>
+</li>
+<li>
+<p>Display I/O activity by FD type  </p>
+
+<pre><code>sysdig -c fdbytes_by fd.type
+</code></pre>
+</li>
+</ul>
+
+<p><a name="process"></a></p>
+
+<h4>
+<a id="user-content-processes-and-cpu-usage" class="anchor" href="#processes-and-cpu-usage" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Processes and CPU usage</h4>
+
+<ul>
+<li>
+<p>See the top processes in terms of CPU usage</p>
+
+<pre><code>sysdig -c topprocs_cpu
+</code></pre>
+</li>
+<li>
+<p>Observe the standard output of a process</p>
+
+<pre><code>sysdig -s4096 -A -c stdout proc.name=cat
+</code></pre>
+</li>
+</ul>
+
+<p><a name="performance"></a></p>
+
+<h4>
+<a id="user-content-performance-and-errors" class="anchor" href="#performance-and-errors" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Performance and Errors</h4>
+
+<ul>
+<li>
+<p>See the files where most time has been spent</p>
+
+<pre><code>sysdig -c topfiles_time
+</code></pre>
+</li>
+<li>
+<p>See the files where apache spent most time</p>
+
+<pre><code>sysdig -c topfiles_time proc.name=httpd
+</code></pre>
+</li>
+<li>
+<p>See the top processes in terms of I/O errors</p>
+
+<pre><code>sysdig -c topprocs_errors
+</code></pre>
+</li>
+<li>
+<p>See the top files in terms of I/O errors</p>
+
+<pre><code>sysdig -c topfiles_errors
+</code></pre>
+</li>
+<li>
+<p>See all the failed disk I/O calls</p>
+
+<pre><code>sysdig fd.type=file and evt.failed=true
+</code></pre>
+</li>
+<li>
+<p>See all the failed file opens by httpd</p>
+
+<pre><code>sysdig "proc.name=httpd and evt.type=open and evt.failed=true"
+</code></pre>
+</li>
+<li>
+<p>See the system calls where most time has been spent</p>
+
+<pre><code>sysdig -c topscalls_time
+</code></pre>
+</li>
+<li>
+<p>See the top system calls returning errors</p>
+
+<pre><code>sysdig -c topscalls "evt.failed=true"
+</code></pre>
+</li>
+<li>
+<p>snoop failed file opens as they occur</p>
+
+<pre><code>sysdig -p "%12user.name %6proc.pid %12proc.name %3fd.num %fd.typechar %fd.name" evt.type=open and evt.failed=true
+</code></pre>
+</li>
+<li>
+<p>Print the file I/O calls that have a latency greater than 1ms:</p>
+
+<pre><code>sysdig -c fileslower 1
+</code></pre>
+</li>
+</ul>
+
+<p><a name="security"></a></p>
+
+<h4>
+<a id="user-content-security" class="anchor" href="#security" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Security</h4>
+
+<ul>
+<li>
+<p>Show the directories that the user "root" visits</p>
+
+<pre><code>sysdig -p"%evt.arg.path" "evt.type=chdir and user.name=root"
+</code></pre>
+</li>
+<li>
+<p>Observe ssh activity</p>
+
+<pre><code>sysdig -A -c echo_fds fd.name=/dev/ptmx and proc.name=sshd
+</code></pre>
+</li>
+<li>
+<p>Show every file open that happens in /etc</p>
+
+<pre><code>sysdig evt.type=open and fd.name contains /etc
+</code></pre>
+</li>
+<li>
+<p>Show the ID of all the login shells that have launched the "tar" command</p>
+
+<pre><code>sysdig -r file.scap -c list_login_shells tar
+</code></pre>
+</li>
+<li>
+<p>Show all the commands executed by the login shell with the given ID</p>
+
+<pre><code>sysdig -r trace.scap.gz -c spy_users proc.loginshellid=5459
+</code></pre>
+</li>
+<li>
+<p>Applied use of sysdig for forensics analysis:</p>
+
+<ul>
+<li><a href="http://draios.com/fishing-for-hackers/">Fishing for Hackers: Analysis of a Linux Server Attack</a></li>
+<li><a href="http://draios.com/fishing-for-hackers-part-2/">Fishing for Hackers (Part 2): Quickly Identify Suspicious Activity With Sysdig</a></li>
+</ul>
+</li>
+</ul>
+
+      

@@ -1,0 +1,35 @@
+---
+layout: default
+---
+
+<link href="{{ site.baseurl }}assets/vendor/highlight.css" rel="stylesheet">
+<link href='{{ site.baseurl }}assets/css/wiki.css' rel='stylesheet'>
+
+<!-- Section Wiki -->
+<div id="section-wiki" class="section section-default section-center">
+    <div class="section-inner">
+        <a href="http://sysdigcloud.com" id="cloud-wiki-up" class="sysdigcloud">
+            <input type="hidden" value="CloudTop">
+            <div class="content">
+                <img class="img-responsive center-block syscloudlogo" src="{{ site.baseurl }}assets/img/sysdigcloud_white.svg" alt="Sysdig Cloud" />
+                <h3>Container-Native Monitoring</h3>
+                <div class="btn btn-lg btn-tertiary">Check it Out</div>
+            </div>
+        </a>
+
+        <h1>{{ page.wiki-title }}</h1>
+        <p><em>Note: this content is mirrored from the sysdig github repository. Please <a href="{{ page.wiki-url }}">go there</a> to edit or contribute to the sysdig wiki.</em></p>
+
+        {{ content }}
+
+        <a href="http://sysdigcloud.com" id="cloud-wiki-down" class="sysdigcloud">
+            <input type="hidden" value="CloudBottom">
+            <div class="content">
+                <img class="img-responsive center-block syscloudlogo" src="{{ site.baseurl }}assets/img/sysdigcloud_white.svg" alt="Sysdig Cloud" />
+                <h3>Container-Native Monitoring</h3>
+                <div class="btn btn-lg btn-tertiary">Check it Out</div>
+            </div>
+        </a>
+    </div>
+</div>
+<!-- /Section -->

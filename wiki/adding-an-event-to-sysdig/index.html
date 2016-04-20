@@ -1,0 +1,96 @@
+---
+layout: wiki
+title: Wiki | Adding an event to sysdig
+slug: wiki
+wiki-title: Adding an event to sysdig
+wiki-url: https://github.com/draios/sysdig/wiki/adding-an-event-to-sysdig
+---
+
+        <p>This document contains the list of steps to follow in order to add a new event to sysdig. It's very rough and will be improved in the future. For the moment, its goal is acting as a reference, showing all of the places that need to be modified.</p>
+
+<p>Sysdig events can come from any place inside (and outside) the kernel, but for sake of simplicity we will make the assumption that the new event that we want to add comes from a tracepoint.</p>
+
+<h2>
+<a id="user-content-step-1-define-a-new-event-id" class="anchor" href="#step-1-define-a-new-event-id" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Step 1: Define a new event ID</h2>
+
+<p>The event ID needs to be added at the end of the ppm_event_type enumeration in <a href="https://github.com/draios/sysdig/blob/master/driver/ppm_events_public.h">ppm_events_public.h</a>. Make sure not to introduce gaps in the numbering, and make sure to always add <strong>two</strong> IDs, one for enter and one for exit. The exit event can be ignored, but it <strong>needs</strong> to be there.</p>
+
+<p>Also, remember to increase PPM_EVENT_MAX.</p>
+
+<h2>
+<a id="user-content-step-2-define-the-format-of-your-event" class="anchor" href="#step-2-define-the-format-of-your-event" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Step 2: Define the format of your event</h2>
+
+<p>Add your event definition at the end of the g_event_info array in <a href="https://github.com/draios/sysdig/blob/master/driver/event_table.c">driver/event_table.c</a> <strong>AND</strong> <a href="https://github.com/draios/sysdig/blob/master/userspace/libscap/event_table.c">userspace/libscap/event_table.c</a>. </p>
+
+<p>Yes, there are two copies of that file, and they need to be kept in sync. The reason is separation between user code and the kernel code, with the goal of potentially becoming part of the mainline kernel in the future.</p>
+
+<p>There must be <strong>two</strong> entries here as well, one for enter and one for exit, and the exit one can just be a dummy one.  </p>
+
+<h2>
+<a id="user-content-step-3-add-the-callback-for-your-tracepoint" class="anchor" href="#step-3-add-the-callback-for-your-tracepoint" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Step 3: Add the callback for your tracepoint</h2>
+
+<p>This is the function that will be called by the kernel every time the tracepoint is hit. The prototype will depend of the tracepoint you intercept. Here's, as an example, the sched_switch callback from the sysdig driver.</p>
+
+<pre><code>#ifdef CAPTURE_CONTEXT_SWITCHES
+#if (LINUX_VERSION_CODE &lt; KERNEL_VERSION(2, 6, 35))
+TRACEPOINT_PROBE(sched_switch_probe, struct rq *rq, struct task_struct *prev, struct task_struct *next)
+#else
+TRACEPOINT_PROBE(sched_switch_probe, struct task_struct *prev, struct task_struct *next)
+#endif
+{
+    record_event(PPME_SCHEDSWITCHEX_E,
+        NULL,
+        -1,
+        0,
+        prev,
+        next);
+}
+#endif
+</code></pre>
+
+<p>The tracepoint callback will need to interpret the tracepoint parameters and then call record_event, with the event ID that you've+ just defined as the first argument.</p>
+
+<h2>
+<a id="user-content-step-4-register-your-tracepoint" class="anchor" href="#step-4-register-your-tracepoint" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Step 4: Register your tracepoint</h2>
+
+<p>Add a call to compat_register_trace in ppm_open (<a href="https://github.com/draios/sysdig/blob/master/driver/main.c">driver/main.c</a>) to register your tracepoint and make it point to the callback defined in step 2.</p>
+
+<p>Also make sure to call compat_unregister_trace in ppm_open and ppm_release to properly disconnect your tracepoint.</p>
+
+<h2>
+<a id="user-content-step-5-implement-the-filler" class="anchor" href="#step-5-implement-the-filler" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Step 5: Implement the filler</h2>
+
+<p>Fillers are functions that take raw event arguments and pack them into the sysdig-probe buffer. They are implemented in <a href="https://github.com/draios/sysdig/blob/master/driver/ppm_fillers.c">driver/ppm_fillers.c</a>.</p>
+
+<p>You will need to:</p>
+
+<ul>
+<li>declare your tracepoint filler prototype in the following way: <code>static int f_my_event(struct event_filler_arguments *args);</code>
+</li>
+<li>implement your filler. You can use the other fillers in ppm_fillers.c as a reference. </li>
+<li>add your filler to the g_ppm_events array</li>
+</ul>
+
+<h2>
+<a id="user-content-done" class="anchor" href="#done" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Done!</h2>
+
+<p>At this point, your event should be recognized and decoded by sysdig. You should also be able to use its fields for filters, output formatting and chisels.</p>
+
+<p>Unless you need custom state for the event, or you want to create new filter fields for it. In that case follow the following two steps.</p>
+
+<h2>
+<a id="user-content-step-6-parse-the-event-at-user-level" class="anchor" href="#step-6-parse-the-event-at-user-level" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Step 6: parse the event at user level</h2>
+
+<p>If your event requires special parsing or contains information that influences sysdig state, you might need to parse it in libsinsp. In order to do so, you will have to edit sinsp_parser::process_event in <a href="https://github.com/draios/sysdig/blob/master/userspace/libsinsp/parsers.cpp">libsinsp/parsers.cpp</a>.</p>
+
+<h2>
+<a id="user-content-step-7-add-filter-fields" class="anchor" href="#step-7-add-filter-fields" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Step 7: add filter fields</h2>
+
+<p>If you want to add new filter fields related to your event, the place to edit is <a href="https://github.com/draios/sysdig/blob/master/userspace/libsinsp/filterchecks.cpp">libsinsp/filterchecks.cpp</a>. This is the file where currently every filter field is implemented, and you can use the existing filtering classes as references.</p>
+
+<h2>
+<a id="user-content-an-example" class="anchor" href="#an-example" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>An example</h2>
+
+<p><a href="https://github.com/draios/sysdig/commit/a353da7dfac9a2862b52008ef7b0f2a23bae339b">This commit</a> adds the support of the setns system call to the driver. It offers a good summary of the step listed above.</p>
+
+      

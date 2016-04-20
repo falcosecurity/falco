@@ -1,0 +1,52 @@
+
+#content {
+    padding: 0px 150px;
+}
+
+h1, h2, h3, h4, h5, h6 { color: #EE655B; }
+h3, h4 { color: black; }
+h1 { margin: 50px 5em 50px 0px; font-size: 50px; }
+h2 { margin: 50px 0px 20px 0px; font-size: 35px; }
+h3 { margin: 50px 0px 20px 0px; font-size: 30px; }
+h4 { margin: 50px 0px 20px 0px; font-size: 25px; }
+h5 { margin: 50px 0px 15px 0px; font-size: 20px; }
+h6 { margin: 50px 0px 10px 0px; font-size: 15px; }
+
+#content a, #content a:hover, #content a:focus, #content a:visited {
+    color: #EE655B;
+    text-decoration: underline;
+}
+
+blockquote, code, pre {
+    font-family: 'droid-sans-mono', monospace, sans-serif;
+    font-weight: 400;
+}
+
+blockquote p {
+    font-size: inherit !important;
+}
+
+#content h1:first-child {
+    width: 530px;
+}
+
+.dialog.band .dialogContainer {
+    position: absolute;
+    top: 150px;
+    right: -10px;
+
+    border-radius: 15px 0px 0px 15px;
+}
+
+.sysdigcloud h3 {
+    margin: 0;
+    margin-bottom: 8px;
+}
+
+@media (max-width: 768px) {
+
+    h1 {
+        font-size: 36px;
+        line-height: 50px;
+    }
+}
