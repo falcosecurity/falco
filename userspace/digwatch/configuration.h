@@ -95,6 +95,7 @@ class digwatch_configuration
 	void init(std::string conf_filename);
 	void init();
 	std::string m_rules_filename;
+	bool m_json_output;
 	std::vector<output_config> m_outputs;
  private:
 	yaml_configuration* m_config;

@@ -1,4 +1,5 @@
 rules_file: /etc/digwatch_rules.conf
+json_output: true
 
 syslog_output:
   enabled: false
