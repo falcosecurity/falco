@@ -145,7 +145,7 @@ ExternalProject_Add(luajit
 set (LPEG_SRC "${PROJECT_BINARY_DIR}/lpeg-prefix/src/lpeg")
 ExternalProject_Add(lpeg
                     DEPENDS luajit
-		    URL "https://s3.amazonaws.com/download.draios.com/dependencies/lpeg-1.0.0.tar.gz"
+		    URL "http://s3.amazonaws.com/download.draios.com/dependencies/lpeg-1.0.0.tar.gz"
                     URL_MD5 "0aec64ccd13996202ad0c099e2877ece"
                     BUILD_COMMAND LUA_INCLUDE=${LUAJIT_INCLUDE} ${PROJECT_SOURCE_DIR}/scripts/build-lpeg.sh
                     BUILD_IN_SOURCE 1
