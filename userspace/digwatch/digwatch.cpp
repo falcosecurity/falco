@@ -200,7 +200,7 @@ int digwatch_init(int argc, char **argv)
 	sinsp* inspector = NULL;
 	digwatch_rules* rules = NULL;
 	int op;
-	sinsp_evt::param_fmt event_buffer_format = sinsp_evt::PF_NORMAL;
+	sinsp_evt::param_fmt event_buffer_format;
 	int long_index = 0;
 	string lua_main_filename;
 	string output_name = "stdout";
@@ -258,8 +258,6 @@ int digwatch_init(int argc, char **argv)
 			}
 
 		}
-
-		inspector->set_buffer_format(event_buffer_format);
 
 
 		ifstream* conf_stream;
@@ -358,6 +356,16 @@ int digwatch_init(int argc, char **argv)
 		inspector->set_filter(rules->get_filter());
 
 		inspector->set_hostname_and_port_resolution_mode(false);
+
+		if (config.m_json_output)
+		{
+			event_buffer_format = sinsp_evt::PF_JSON;
+		}
+		else
+		{
+			event_buffer_format = sinsp_evt::PF_NORMAL;
+		}
+		inspector->set_buffer_format(event_buffer_format);
 
 		for(std::vector<output_config>::iterator it = config.m_outputs.begin(); it != config.m_outputs.end(); ++it)
 		{
