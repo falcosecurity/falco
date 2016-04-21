@@ -1,0 +1,180 @@
+#!/bin/bash
+#
+# Copyright (C) 2013-2014 Draios inc.
+#
+# This file is part of sysdig.
+#
+# sysdig is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License version 2 as
+# published by the Free Software Foundation.
+#
+# sysdig is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with sysdig.  If not, see <http://www.gnu.org/licenses/>.
+#
+set -e
+
+function install_rpm {
+	if ! hash curl > /dev/null 2>&1; then
+		echo "* Installing curl"
+		yum -q -y install curl
+	fi
+
+	if ! yum -q list dkms > /dev/null 2>&1; then
+		echo "* Installing EPEL repository (for DKMS)"
+		if [ $VERSION -eq 7 ] && [ $DISTRO = "centos" ]; then
+			rpm --quiet -i http://mirrors.kernel.org/centos/7/extras/x86_64/Packages/epel-release-7-5.noarch.rpm
+		elif [ $VERSION -eq 7 ]; then
+			rpm --quiet -i http://mirrors.kernel.org/fedora-epel/7/x86_64/e/epel-release-7-5.noarch.rpm
+		else
+			rpm --quiet -i http://mirrors.kernel.org/fedora-epel/6/i386/epel-release-6-8.noarch.rpm
+		fi
+	fi
+
+	echo "* Installing Sysdig public key"
+	rpm --quiet --import https://s3.amazonaws.com/download.draios.com/DRAIOS-GPG-KEY.public
+	echo "* Installing Sysdig repository"
+	curl -s -o /etc/yum.repos.d/draios.repo http://download.draios.com/_REPOSITORY_NAME_/rpm/draios.repo
+	echo "* Installing kernel headers"
+	KERNEL_VERSION=$(uname -r)
+	if [[ $KERNEL_VERSION == *PAE* ]]; then
+		yum -q -y install kernel-PAE-devel-${KERNEL_VERSION%.PAE} || kernel_warning
+	elif [[ $KERNEL_VERSION == *stab* ]]; then
+		# It's OpenVZ kernel and we should install another package
+		yum -q -y install vzkernel-devel-$KERNEL_VERSION || kernel_warning
+	else
+		yum -q -y install kernel-devel-$KERNEL_VERSION || kernel_warning
+	fi
+	echo "* Installing Sysdig"
+	yum -q -y install sysdig
+}
+
+function install_deb {
+	export DEBIAN_FRONTEND=noninteractive
+
+	if ! hash curl > /dev/null 2>&1; then
+		echo "* Installing curl"
+		apt-get -qq -y install curl < /dev/null
+	fi
+
+	echo "* Installing Sysdig public key"
+	curl -s https://s3.amazonaws.com/download.draios.com/DRAIOS-GPG-KEY.public | apt-key add -
+	echo "* Installing Sysdig repository"
+	curl -s -o /etc/apt/sources.list.d/draios.list http://download.draios.com/_REPOSITORY_NAME_/deb/draios.list
+	apt-get -qq update < /dev/null
+	echo "* Installing kernel headers"
+	apt-get -qq -y install linux-headers-$(uname -r) < /dev/null || kernel_warning
+	echo "* Installing Sysdig"
+	apt-get -qq -y install sysdig < /dev/null
+}
+
+function unsupported {
+	echo 'Unsupported operating system. Please consider writing to the mailing list at'
+	echo 'https://groups.google.com/forum/#!forum/sysdig or trying the manual'
+	echo 'installation.'
+	exit 1
+}
+
+function kernel_warning {
+	echo "Unable to find kernel development files for the current kernel version" $(uname -r)
+	echo "This usually means that your system is not up-to-date or you installed a custom kernel version."
+	echo "The installation will continue but you'll need to install these yourself in order to use sysdig."
+	echo 'Please write to the mailing list at https://groups.google.com/forum/#!forum/sysdig'
+	echo "if you need further assistance."
+}
+
+if [ $(id -u) != 0 ]; then
+	echo "Installer must be run as root (or with sudo)."
+	exit 1
+fi
+
+echo "* Detecting operating system"
+
+ARCH=$(uname -m)
+if [[ ! $ARCH = *86 ]] && [ ! $ARCH = "x86_64" ]; then
+	unsupported
+fi
+
+if [ -f /etc/debian_version ]; then
+	if [ -f /etc/lsb-release ]; then
+		. /etc/lsb-release
+		DISTRO=$DISTRIB_ID
+		VERSION=${DISTRIB_RELEASE%%.*}
+	else
+		DISTRO="Debian"
+		VERSION=$(cat /etc/debian_version | cut -d'.' -f1)
+	fi
+
+	case "$DISTRO" in
+
+		"Ubuntu")
+			if [ $VERSION -ge 10 ]; then
+				install_deb
+			else
+				unsupported
+			fi
+			;;
+
+		"LinuxMint")
+			if [ $VERSION -ge 9 ]; then
+				install_deb
+			else
+				unsupported
+			fi
+			;;
+
+		"Debian")
+			if [ $VERSION -ge 6 ]; then
+				install_deb
+			elif [[ $VERSION == *sid* ]]; then
+				install_deb
+			else
+				unsupported
+			fi
+			;;
+
+		*)
+			unsupported
+			;;
+
+	esac
+
+elif [ -f /etc/system-release-cpe ]; then
+	DISTRO=$(cat /etc/system-release-cpe | cut -d':' -f3)
+	VERSION=$(cat /etc/system-release-cpe | cut -d':' -f5 | cut -d'.' -f1 | sed 's/[^0-9]*//g')
+
+	case "$DISTRO" in
+
+		"oracle" | "centos" | "redhat")
+			if [ $VERSION -ge 6 ]; then
+				install_rpm
+			else
+				unsupported
+			fi
+			;;
+
+		"amazon")
+			install_rpm
+			;;
+
+		"fedoraproject")
+			if [ $VERSION -ge 13 ]; then
+				install_rpm
+			else
+				unsupported
+			fi
+			;;
+
+		*)
+			unsupported
+			;;
+
+	esac
+
+else
+	unsupported
+fi
