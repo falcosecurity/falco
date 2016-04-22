@@ -1,6 +1,7 @@
 #include "configuration.h"
 #include "config_digwatch.h"
 #include "sinsp.h"
+#include "logger.h"
 
 using namespace std;
 
@@ -53,4 +54,7 @@ void digwatch_configuration::init(string conf_filename)
 	{
 		throw sinsp_exception("Error reading config file (" + m_config_file + "): No outputs configured. Please configure at least one output file output enabled but no filename in configuration block");
 	}
+
+	digwatch_logger::log_stderr = m_config->get_scalar<bool>("log_stderr", false);
+	digwatch_logger::log_syslog = m_config->get_scalar<bool>("log_syslog", true);
 }

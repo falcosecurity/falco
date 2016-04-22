@@ -1,5 +1,8 @@
 rules_file: /etc/digwatch_rules.conf
-json_output: true
+json_output: false
+
+log_stderr: true
+log_syslog: true
 
 syslog_output:
   enabled: false
