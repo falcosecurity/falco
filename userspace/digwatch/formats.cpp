@@ -1,4 +1,5 @@
 #include "formats.h"
+#include "syslog.h"
 
 
 sinsp* digwatch_formats::s_inspector = NULL;
@@ -27,8 +28,8 @@ int digwatch_formats::formatter(lua_State *ls)
 	}
 	catch(sinsp_exception& e)
 	{
-		string err = "invalid output format " + format;
-		fprintf(stderr, "%s\n", err.c_str());
+		digwatch_syslog::log(LOG_ERR, "Invalid output format '" + format + "'.\n");
+
 		throw sinsp_exception("set_formatter error");
 	}
 
@@ -42,8 +43,7 @@ int digwatch_formats::format_event (lua_State *ls)
 	string line;
 
 	if (!lua_islightuserdata(ls, -1) || !lua_islightuserdata(ls, -2)) {
-		string err = "invalid arguments passed to format_event() ";
-		fprintf(stderr, "%s\n", err.c_str());
+		digwatch_syslog::log(LOG_ERR, "Invalid arguments passed to format_event()\n");
 		throw sinsp_exception("format_event error");
 	}
 	sinsp_evt* evt = (sinsp_evt*)lua_topointer(ls, 1);

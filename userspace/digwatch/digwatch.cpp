@@ -254,7 +254,7 @@ int digwatch_init(int argc, char **argv)
 			conf_stream = new ifstream(conf_filename);
 			if (!conf_stream->good())
 			{
-				fprintf(stderr, "Could not find configuration file at %s \n", conf_filename.c_str());
+				digwatch_syslog::log(LOG_ERR, "Could not find configuration file at " + conf_filename + ". Exiting \n");
 				result = EXIT_FAILURE;
 				goto exit;
 			}
@@ -283,20 +283,20 @@ int digwatch_init(int argc, char **argv)
 		digwatch_configuration config;
 		if (conf_filename.size())
 		{
-			cout << "Using configuration file " + conf_filename + "\n";
 			config.init(conf_filename);
+			// log after config init because config determines where logs go
+			digwatch_syslog::log(LOG_INFO, "Digwatch initialized with configuration file " + conf_filename + "\n");
 		}
 		else
 		{
-			cout << "No configuration file found, proceeding with defaults\n";
 			config.init();
+			digwatch_syslog::log(LOG_INFO, "Digwatch initialized. No configuration file found, proceeding with defaults\n");
 		}
 
 		if (rules_filename.size())
 		{
 			config.m_rules_filename = rules_filename;
 		}
-		cout << "Using rules file " + config.m_rules_filename + "\n";
 
 		lua_main_filename = lua_dir + DIGWATCH_LUA_MAIN;
 		if (!std::ifstream(lua_main_filename))
@@ -305,9 +305,9 @@ int digwatch_init(int argc, char **argv)
 			lua_main_filename = lua_dir + DIGWATCH_LUA_MAIN;
 			if (!std::ifstream(lua_main_filename))
 			{
-				fprintf(stderr, "Could not find Digwatch Lua libraries (tried %s, %s). \n",
-					DIGWATCH_LUA_DIR DIGWATCH_LUA_MAIN,
-					lua_main_filename.c_str());
+				digwatch_syslog::log(LOG_ERR, "Could not find Digwatch Lua libraries (tried " +
+						     string(DIGWATCH_LUA_DIR DIGWATCH_LUA_MAIN) + ", " +
+						     lua_main_filename + "). Exiting \n");
 				result = EXIT_FAILURE;
 				goto exit;
 			}
@@ -328,6 +328,7 @@ int digwatch_init(int argc, char **argv)
 
 		rules->load_rules(config.m_rules_filename);
 		inspector->set_filter(rules->get_filter());
+		digwatch_syslog::log(LOG_INFO, "Parsed rules from file " + config.m_rules_filename + "\n");
 
 		inspector->set_hostname_and_port_resolution_mode(false);
 
@@ -360,7 +361,7 @@ int digwatch_init(int argc, char **argv)
 			{
 				if(system("modprobe " PROBE_NAME " > /dev/null 2> /dev/null"))
 				{
-					fprintf(stderr, "Unable to load the driver\n");
+					digwatch_syslog::log(LOG_ERR, "Unable to load the driver. Exiting\n");
 				}
 				inspector->open();
 			}
@@ -373,12 +374,14 @@ int digwatch_init(int argc, char **argv)
 	}
 	catch(sinsp_exception& e)
 	{
-		cerr << e.what() << endl;
+		digwatch_syslog::log(LOG_ERR, "Runtime error: " + string(e.what()) + ". Exiting\n");
+
 		result = EXIT_FAILURE;
 	}
 	catch(...)
 	{
-		printf("Error, exiting.\n");
+		digwatch_syslog::log(LOG_ERR, "Unexpected error, Exiting\n");
+
 		result = EXIT_FAILURE;
 	}
 
