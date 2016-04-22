@@ -9,7 +9,7 @@ include_directories("${YAMLCPP_INCLUDE_DIR}")
 include_directories("${LPEG_SRC}")
 include_directories(${DRAIOS_DEPENDENCIES_DIR}/yaml-${DRAIOS_YAML_VERSION}/target/include)
 
-add_executable(digwatch configuration.cpp formats.cpp fields.cpp rules.cpp syslog.cpp digwatch.cpp)
+add_executable(digwatch configuration.cpp formats.cpp fields.cpp rules.cpp logger.cpp digwatch.cpp)
 
 target_link_libraries(digwatch sinsp)
 target_link_libraries(digwatch

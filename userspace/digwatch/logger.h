@@ -9,7 +9,7 @@ extern "C" {
 #include "lauxlib.h"
 }
 
-class digwatch_syslog
+class digwatch_logger
 {
  public:
 	static void init(lua_State *ls);
