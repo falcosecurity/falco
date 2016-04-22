@@ -42,7 +42,7 @@ static void usage()
 	   " -c                 Configuration file (default " DIGWATCH_SOURCE_CONF_FILE ", " DIGWATCH_INSTALL_CONF_FILE ")\n"
 	   " -o                 Output type (options are 'stdout', 'syslog', default is 'stdout')\n"
            " -e <events_file>   Read the events from <events_file> (in .scap format) instead of tapping into live.\n"
-           " -r <rules_file>    Rules configuration file (defaults to value set in configuration file, or /etc/digwatch_rules.conf).\n"
+           " -r <rules_file>    Rules file (defaults to value set in configuration file, or /etc/digwatch_rules.conf).\n"
 	   "\n"
     );
 }
