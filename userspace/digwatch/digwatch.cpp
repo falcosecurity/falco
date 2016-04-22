@@ -27,13 +27,6 @@ extern "C" {
 #include "utils.h"
 #include <yaml-cpp/yaml.h>
 
-static bool g_terminate = false;
-
-static void signal_callback(int signal)
-{
-	g_terminate = true;
-}
-
 
 std::vector<string> valid_output_names {"stdout", "syslog"};
 
@@ -73,11 +66,6 @@ void do_inspect(sinsp* inspector,
 	//
 	while(1)
 	{
-
-		if(g_terminate)
-		{
-			break;
-		}
 
 		res = inspector->next(&ev);
 
@@ -309,20 +297,6 @@ int digwatch_init(int argc, char **argv)
 			config.m_rules_filename = rules_filename;
 		}
 		cout << "Using rules file " + config.m_rules_filename + "\n";
-
-		if(signal(SIGINT, signal_callback) == SIG_ERR)
-		{
-			fprintf(stderr, "An error occurred while setting SIGINT signal handler.\n");
-			result = EXIT_FAILURE;
-			goto exit;
-		}
-
-		if(signal(SIGTERM, signal_callback) == SIG_ERR)
-		{
-			fprintf(stderr, "An error occurred while setting SIGTERM signal handler.\n");
-			result = EXIT_FAILURE;
-			goto exit;
-		}
 
 		lua_main_filename = lua_dir + DIGWATCH_LUA_MAIN;
 		if (!std::ifstream(lua_main_filename))
