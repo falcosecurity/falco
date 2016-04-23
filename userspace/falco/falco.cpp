@@ -326,6 +326,8 @@ int digwatch_init(int argc, char **argv)
 
 		digwatch_logger::init(ls);
 
+
+		inspector->set_drop_event_flags(EF_DROP_FALCO);
 		rules->load_rules(config.m_rules_filename);
 		inspector->set_filter(rules->get_filter());
 		digwatch_logger::log(LOG_INFO, "Parsed rules from file " + config.m_rules_filename + "\n");
