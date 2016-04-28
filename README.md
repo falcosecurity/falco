@@ -1,4 +1,5 @@
-# Sysdig Falco: Host Activity Monitoring with Sysdig Filters
+# Sysdig Falco
+### *Host Activity Monitoring using Sysdig Event Filtering*
 
 ## Overview
 Brief description of what, why, how, and pointer to website.
