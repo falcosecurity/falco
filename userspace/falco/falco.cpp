@@ -36,13 +36,13 @@ std::vector<string> valid_output_names {"stdout", "syslog"};
 static void usage()
 {
     printf(
-	   "Usage: digwatch [options] rules_filename\n\n"
+	   "Usage: falco [options] rules_filename\n\n"
 	   "Options:\n"
 	   " -h, --help         Print this page\n"
 	   " -c                 Configuration file (default " DIGWATCH_SOURCE_CONF_FILE ", " DIGWATCH_INSTALL_CONF_FILE ")\n"
 	   " -o                 Output type (options are 'stdout', 'syslog', default is 'stdout')\n"
            " -e <events_file>   Read the events from <events_file> (in .scap format) instead of tapping into live.\n"
-           " -r <rules_file>    Rules file (defaults to value set in configuration file, or /etc/digwatch_rules.conf).\n"
+           " -r <rules_file>    Rules file (defaults to value set in configuration file, or /etc/falco_rules.conf).\n"
 	   "\n"
     );
 }
@@ -285,12 +285,12 @@ int digwatch_init(int argc, char **argv)
 		{
 			config.init(conf_filename);
 			// log after config init because config determines where logs go
-			digwatch_logger::log(LOG_INFO, "Digwatch initialized with configuration file " + conf_filename + "\n");
+			digwatch_logger::log(LOG_INFO, "Falco initialized with configuration file " + conf_filename + "\n");
 		}
 		else
 		{
 			config.init();
-			digwatch_logger::log(LOG_INFO, "Digwatch initialized. No configuration file found, proceeding with defaults\n");
+			digwatch_logger::log(LOG_INFO, "Falco initialized. No configuration file found, proceeding with defaults\n");
 		}
 
 		if (rules_filename.size())
@@ -305,7 +305,7 @@ int digwatch_init(int argc, char **argv)
 			lua_main_filename = lua_dir + DIGWATCH_LUA_MAIN;
 			if (!std::ifstream(lua_main_filename))
 			{
-				digwatch_logger::log(LOG_ERR, "Could not find Digwatch Lua libraries (tried " +
+				digwatch_logger::log(LOG_ERR, "Could not find Falco Lua libraries (tried " +
 						     string(DIGWATCH_LUA_DIR DIGWATCH_LUA_MAIN) + ", " +
 						     lua_main_filename + "). Exiting \n");
 				result = EXIT_FAILURE;

@@ -1,3 +1,3 @@
-install(FILES digwatch_rules.conf
+install(FILES falco_rules.conf
 	DESTINATION "${DIR_ETC}")
 

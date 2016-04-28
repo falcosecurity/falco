@@ -3,16 +3,16 @@ include_directories("${LUAJIT_INCLUDE}")
 
 include_directories(${PROJECT_SOURCE_DIR}/../sysdig/userspace/libscap)
 include_directories(${PROJECT_SOURCE_DIR}/../sysdig/userspace/libsinsp)
-include_directories("${PROJECT_BINARY_DIR}/userspace/digwatch")
+include_directories("${PROJECT_BINARY_DIR}/userspace/falco")
 include_directories("${CURL_INCLUDE_DIR}")
 include_directories("${YAMLCPP_INCLUDE_DIR}")
 include_directories("${LPEG_SRC}")
 include_directories(${DRAIOS_DEPENDENCIES_DIR}/yaml-${DRAIOS_YAML_VERSION}/target/include)
 
-add_executable(digwatch configuration.cpp formats.cpp fields.cpp rules.cpp logger.cpp digwatch.cpp)
+add_executable(falco configuration.cpp formats.cpp fields.cpp rules.cpp logger.cpp falco.cpp)
 
-target_link_libraries(digwatch sinsp)
-target_link_libraries(digwatch
+target_link_libraries(falco sinsp)
+target_link_libraries(falco
 	"${LPEG_SRC}/lpeg.a"
 	"${YAMLCPP_LIB}")
 
@@ -20,7 +20,7 @@ target_link_libraries(digwatch
 set(DIGWATCH_LUA_MAIN "rule_loader.lua")
 configure_file(config_digwatch.h.in config_digwatch.h)
 
-install(TARGETS digwatch DESTINATION bin)
+install(TARGETS falco DESTINATION bin)
 install(FILES lua/compiler.lua
 	DESTINATION share/digwatch/lua)
 install(FILES lua/rule_loader.lua

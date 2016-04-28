@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 2.8.2)
 
-project(digwatch)
+project(falco)
 
-if(NOT DEFINED DIGWATCH_VERSION)
-	set(DIGWATCH_VERSION "0.1.1dev")
+if(NOT DEFINED FALCO_VERSION)
+	set(FALCO_VERSION "0.1.1dev")
 endif()
 
 if(NOT DEFINED DIR_ETC)
@@ -31,8 +31,8 @@ else()
 	set(KBUILD_FLAGS "${DRAIOS_FEATURE_FLAGS}")
 endif()
 
-set(PACKAGE_NAME "digwatch")
-set(PROBE_VERSION "${DIGWATCH_VERSION}")
+set(PACKAGE_NAME "falco")
+set(PROBE_VERSION "${FALCO_VERSION}")
 set(PROBE_NAME "sysdig-probe")
 set(PROBE_DEVICE_NAME "sysdig")
 
@@ -152,21 +152,21 @@ ExternalProject_Add(lpeg
 		    CONFIGURE_COMMAND ""
                     INSTALL_COMMAND "")
 
-install(FILES digwatch.yaml
+install(FILES falco.yaml
 	DESTINATION "${DIR_ETC}")
 
 add_subdirectory(${SYSDIG_DIR}/userspace/libscap ${PROJECT_BINARY_DIR}/userspace/libscap)
 add_subdirectory(${SYSDIG_DIR}/userspace/libsinsp ${PROJECT_BINARY_DIR}/userspace/libsinsp)
 
 add_subdirectory(rules)
-add_subdirectory(userspace/digwatch)
+add_subdirectory(userspace/falco)
 
 
 set(CPACK_PACKAGE_NAME "${PACKAGE_NAME}")
 set(CPACK_PACKAGE_VENDOR "Sysdig Inc.")
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "digwatch, a system-level activity monitoring tool")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "falco, a system-level activity monitoring tool")
 set(CPACK_PACKAGE_DESCRIPTION_FILE "${PROJECT_SOURCE_DIR}/scripts/description.txt")
-set(CPACK_PACKAGE_VERSION "${DIGWATCH_VERSION}")
+set(CPACK_PACKAGE_VERSION "${FALCO_VERSION}")
 set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${CMAKE_SYSTEM_PROCESSOR}")
 set(CPACK_PROJECT_CONFIG_FILE "${PROJECT_SOURCE_DIR}/CMakeCPackOptions.cmake")
 set(CPACK_STRIP_FILES "ON")
