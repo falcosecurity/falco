@@ -7,7 +7,7 @@ gcc -O2 -fPIC -I$LUA_INCLUDE -c lptree.c -o lptree.o
 gcc -O2 -fPIC -I$LUA_INCLUDE -c lpvm.c -o lpvm.o
 
 
-# For building lpeg.so, which we don't need now that we're statically linking lpeg.a into digwatch
+# For building lpeg.so, which we don't need now that we're statically linking lpeg.a into falco
 #gcc -shared -o lpeg.so -L/usr/local/lib lpcap.o lpcode.o lpprint.o lptree.o lpvm.o
 #gcc -shared -o lpeg.so -L/usr/local/lib lpcap.o lpcode.o lpprint.o lptree.o lpvm.o
 

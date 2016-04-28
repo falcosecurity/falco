@@ -1,3 +1,3 @@
-Digwatch instruments your physical and virtual machines at the OS level by installing into the Linux kernel and capturing system calls and other OS events.
+Sysdig Falco instruments your physical and virtual machines at the OS level by installing into the Linux kernel and capturing system calls and other OS events.
 Then, using a rule-based configuration, you can specify filters for events of interest that you would like to log or be notified of.
 
