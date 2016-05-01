@@ -17,13 +17,13 @@ target_link_libraries(falco
 	"${YAMLCPP_LIB}")
 
 
-set(DIGWATCH_LUA_MAIN "rule_loader.lua")
-configure_file(config_digwatch.h.in config_digwatch.h)
+set(FALCO_LUA_MAIN "rule_loader.lua")
+configure_file(config_falco.h.in config_falco.h)
 
 install(TARGETS falco DESTINATION bin)
 install(FILES lua/compiler.lua
-	DESTINATION share/digwatch/lua)
+	DESTINATION share/falco/lua)
 install(FILES lua/rule_loader.lua
-	DESTINATION share/digwatch/lua)
+	DESTINATION share/falco/lua)
 install(FILES lua/output.lua
-	DESTINATION share/digwatch/lua)
+	DESTINATION share/falco/lua)

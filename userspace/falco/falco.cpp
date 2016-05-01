@@ -18,7 +18,7 @@ extern "C" {
 }
 
 #include <sinsp.h>
-#include "config_digwatch.h"
+#include "config_falco.h"
 #include "configuration.h"
 #include "rules.h"
 #include "formats.h"
@@ -39,7 +39,7 @@ static void usage()
 	   "Usage: falco [options] rules_filename\n\n"
 	   "Options:\n"
 	   " -h, --help         Print this page\n"
-	   " -c                 Configuration file (default " DIGWATCH_SOURCE_CONF_FILE ", " DIGWATCH_INSTALL_CONF_FILE ")\n"
+	   " -c                 Configuration file (default " FALCO_SOURCE_CONF_FILE ", " FALCO_INSTALL_CONF_FILE ")\n"
 	   " -o                 Output type (options are 'stdout', 'syslog', default is 'stdout')\n"
            " -e <events_file>   Read the events from <events_file> (in .scap format) instead of tapping into live.\n"
            " -r <rules_file>    Rules file (defaults to value set in configuration file, or /etc/falco_rules.conf).\n"
@@ -195,7 +195,7 @@ int digwatch_init(int argc, char **argv)
 	string scap_filename;
 	string conf_filename;
 	string rules_filename;
-	string lua_dir = DIGWATCH_LUA_DIR;
+	string lua_dir = FALCO_LUA_DIR;
 	lua_State* ls = NULL;
 
 	static struct option long_options[] =
@@ -261,17 +261,17 @@ int digwatch_init(int argc, char **argv)
 		}
 		else
 		{
-			conf_stream = new ifstream(DIGWATCH_SOURCE_CONF_FILE);
+			conf_stream = new ifstream(FALCO_SOURCE_CONF_FILE);
 			if (conf_stream->good())
 			{
-				conf_filename = DIGWATCH_SOURCE_CONF_FILE;
+				conf_filename = FALCO_SOURCE_CONF_FILE;
 			}
 			else
 			{
-				conf_stream = new ifstream(DIGWATCH_INSTALL_CONF_FILE);
+				conf_stream = new ifstream(FALCO_INSTALL_CONF_FILE);
 				if (conf_stream->good())
 				{
-					conf_filename = DIGWATCH_INSTALL_CONF_FILE;
+					conf_filename = FALCO_INSTALL_CONF_FILE;
 				}
 				else
 				{
@@ -298,15 +298,15 @@ int digwatch_init(int argc, char **argv)
 			config.m_rules_filename = rules_filename;
 		}
 
-		lua_main_filename = lua_dir + DIGWATCH_LUA_MAIN;
+		lua_main_filename = lua_dir + FALCO_LUA_MAIN;
 		if (!std::ifstream(lua_main_filename))
 		{
-			lua_dir = DIGWATCH_SOURCE_LUA_DIR;
-			lua_main_filename = lua_dir + DIGWATCH_LUA_MAIN;
+			lua_dir = FALCO_SOURCE_LUA_DIR;
+			lua_main_filename = lua_dir + FALCO_LUA_MAIN;
 			if (!std::ifstream(lua_main_filename))
 			{
 				digwatch_logger::log(LOG_ERR, "Could not find Falco Lua libraries (tried " +
-						     string(DIGWATCH_LUA_DIR DIGWATCH_LUA_MAIN) + ", " +
+						     string(FALCO_LUA_DIR FALCO_LUA_MAIN) + ", " +
 						     lua_main_filename + "). Exiting \n");
 				result = EXIT_FAILURE;
 				goto exit;
