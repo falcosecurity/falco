@@ -1,5 +1,5 @@
 --[[
-   Digwatch grammar and parser.
+   Falco grammar and parser.
 
    Much of the scaffolding and helpers was derived from Andre Murbach Maidl's Lua parser (https://github.com/andremm/lua-parser).
 

@@ -15,7 +15,7 @@ For now, local compilation and installation is the way to install (see "Building
 
 ## Configuring Falco
 
-Digwatch is primarily configured via two files: a configuration file (such as the `falco.yaml` in this repository) and a rules file (such as the `falco_rules.conf` file in `rules/`). These two files are written to `/etc` after you install the Falco package.
+Falco is primarily configured via two files: a configuration file (such as the `falco.yaml` in this repository) and a rules file (such as the `falco_rules.conf` file in `rules/`). These two files are written to `/etc` after you install the Falco package.
 
 ### Rules file
 
