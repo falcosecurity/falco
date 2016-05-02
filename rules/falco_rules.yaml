@@ -1,0 +1,438 @@
+#############
+# Definitions
+#############
+
+# File actions
+- macro: write
+  condition: (syscall.type=write and fd.type in (file, directory))
+- macro: read
+  condition: (syscall.type=read and evt.dir=> and fd.type in (file, directory))
+- macro: rename
+  condition: syscall.type = rename
+- macro: mkdir
+  condition: syscall.type = mkdir
+- macro: remove
+  condition: syscall.type in (remove, rmdir, unlink, unlink_at)
+
+- macro: modify
+  condition: rename or mkdir or remove
+
+
+# File categories
+- macro: terminal_file_fd
+  condition: fd.name=/dev/ptmx or fd.directory=/dev/pts
+- macro: bin_dir
+  condition: fd.directory in (/bin, /sbin, /usr/bin, /usr/sbin)
+
+- macro: bin_dir_mkdir
+  condition: evt.arg[0] contains /bin or evt.arg[0] contains /sbin or evt.arg[0] contains /usr/bin or evt.arg[0] contains /usr/sbin
+- macro: bin_dir_rename
+  condition: evt.arg[1] contains /bin or evt.arg[1] contains /sbin or evt.arg[1] contains /usr/bin or evt.arg[1] contains /usr/sbin
+
+- macro: etc_dir
+  condition: fd.directory contains /etc
+
+- macro: ubuntu_so_dirs
+  condition: fd.directory contains /lib/x86_64-linux-gnu or fd.directory contains /usr/lib/x86_64-linux-gnu or fd.directory contains /usr/lib/sudo
+- macro: centos_so_dirs
+  condition: fd.directory contains /lib64 or fd.directory contains /user/lib64 or fd.directory contains /usr/libexec
+
+- macro: coreutils_binaries
+  condition: >
+    proc.name in (truncate, sha1sum, numfmt, fmt, fold, uniq, cut, who,
+    groups, csplit, sort, expand, printf, printenv, unlink, tee, chcon, stat,
+    basename, split, nice, yes, whoami, sha224sum, hostid, users, stdbuf,
+    base64, unexpand, cksum, od, paste, nproc, pathchk, sha256sum, wc, test,
+    comm, arch, du, factor, sha512sum, md5sum, tr, runcon, env, dirname,
+    tsort, join, shuf, install, logname, pinky, nohup, expr, pr, tty, timeout,
+    tail, [, seq, sha384sum, nl, head, id, mkfifo, sum, dircolors, ptx, shred,
+    tac, link, chroot, vdir, chown, touch, ls, dd, uname, true, pwd, date,
+    chgrp, chmod, mktemp, cat, mknod, sync, ln, false, rm, mv, cp, echo,
+    readlink, sleep, stty, mkdir, df, dir, rmdir, touch)
+- macro: adduser_binaries
+  condition: proc.name in (adduser, deluser, addgroup, delgroup)
+- macro: login_binaries
+  condition: proc.name in (bin, login, su, sbin, nologin, bin, faillog, lastlog, newgrp, sg)
+
+# dpkg -L passwd | grep bin | xargs -L 1 basename | tr "\\n" ","
+- macro: passwd_binaries
+  condition: >
+    proc.name in (sbin, shadowconfig, sbin, grpck, pwunconv, grpconv, pwck,
+    groupmod, vipw, pwconv, useradd, newusers, cppw, chpasswd, usermod,
+    groupadd, groupdel, grpunconv, chgpasswd, userdel, bin, chage, chsh,
+    gpasswd, chfn, expiry, passwd, vigr, cpgr)
+
+# repoquery -l shadow-utils | grep bin | xargs -L 1 basename | tr "\\n" ","
+- macro: shadowutils_binaries
+  condition: >
+    proc.name in (chage, gpasswd, lastlog, newgrp, sg, adduser, chpasswd,
+    groupadd, groupdel, groupmems, groupmod, grpck, grpconv, grpunconv,
+    newusers, pwck, pwconv, pwunconv, useradd, userdel, usermod, vigr, vipw)
+
+- macro: system_binaries
+  condition: coreutils_binaries or adduser_binaries or login_binaries or passwd_binaries or shadowutils_binaries
+
+- macro: sensitive_files
+  condition: fd.name contains /etc/passwd or fd.name = /etc/sudoers or fd.directory = /etc/sudoers.d or fd.directory = /etc/pam.d or fd.name = /etc/pam.conf
+
+
+# Network
+- macro: inbound
+  condition: (syscall.type=listen and evt.dir=>) or (syscall.type=accept and evt.dir=<)
+- macro: outbound
+  condition: ((syscall.type=connect and evt.dir=<) or (syscall.type=sendto and evt.dir=>)) and (fd.typechar=4 or fd.typechar=6)
+
+- macro: ssh_port
+  condition: fd.lport=22
+
+# Ssh
+- macro: ssh_error_message
+  condition: evt.arg.data contains "Invalid user" or evt.arg.data contains "preauth"
+
+# System
+- macro: modules
+  condition: syscall.type in (delete_module, init_module)
+- macro: container
+  condition: container.id != host
+- macro: interactive
+  condition: (proc.aname=sshd and proc.name != sshd) or proc.name=systemd-logind
+- macro: syslog
+  condition: fd.name = /dev/log
+- macro: not_cron
+  condition: proc.name != cron
+
+# System users that should never log into a system. Consider adding your own
+# service users (e.g. 'apache' or 'mysqld') here.
+- macro: system_users
+  condition: user.name in (bin, daemon, games, lp, mail, nobody, sshd, sync, uucp, www-data)
+
+
+#######
+# Rules
+#######
+
+# Don't write to binary dirs
+- condition: evt.dir = > and write and bin_dir
+  output: "Write to bin dir (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
+  priority: WARNING
+
+# Don't write to /etc
+- condition: evt.dir = > and write and etc_dir
+  output: "Write to etc dir (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
+  priority: WARNING
+
+# Don't read 'sensitive' files
+- condition: read and not proc.name in (sshd, sudo, su) and not_cron and sensitive_files
+  output: "Read sensitive file (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
+  priority: WARNING
+
+# Don't modify binary dirs
+- condition: modify and (bin_dir_rename or bin_dir_mkdir)
+  output: "Modify bin dir (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
+  priority: WARNING
+
+# Don't load shared objects coming from unexpected places
+- condition: read and fd.name contains .so and not (ubuntu_so_dirs or centos_so_dirs)
+  output: "Loaded .so from unexpected dir (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
+  priority: WARNING
+
+# Attempts to access things that shouldn't be
+- condition: evt.res = EACCES
+  output: "System call returned EACCESS (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
+  priority: INFO
+
+# Only sysdig and docker can call setns
+- condition: syscall.type = setns and not proc.name in (docker, sysdig)
+  output: "Unexpected setns (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
+  priority: WARNING
+
+# Shells should only be run by cron or sshd
+- condition: proc.name = bash and not proc.pname in (bash, sshd, cron, sudo, su, tmux)
+  output: "Unexpected shell (%user.name %proc.name %proc.pname %evt.dir %evt.type %evt.args %fd.name)"
+  priority: WARNING
+
+# Anything run interactively by root
+# - condition: evt.type != switch and user.name = root and proc.name != sshd and interactive
+#  output: "Interactive root (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
+#  priority: WARNING
+
+# Anything run interactively by a non-login user
+- condition: system_users and interactive
+  output: "Sytem user ran an interactive command (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
+  priority: WARNING
+
+# Chmod should only be run interactively (by a user)
+- condition: syscall.type = chmod and not interactive
+  output: "non-interactive chmod (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
+  priority: WARNING
+
+# Shells in a container
+- condition: container and proc.name = bash
+  output: "shell in a container (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
+  priority: WARNING
+
+# Network traffic to/from standard utils
+# sockfamily ip is to exclude certain processes (like 'groups') that communicate on unix-domain sockets
+- condition: fd.sockfamily = ip and system_binaries
+  output: "network traffic to %proc.name (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
+  priority: WARNING
+
+# SSH errors (failed logins, disconnects, ..)
+- condition: syslog and ssh_error_message and evt.dir = <
+  output: "sshd error (%proc.name %evt.arg.data)"
+  priority: WARNING
+
+# Non-sudo setuid
+- condition: evt.type=setuid and not_cron and not proc.name in (sudo, sshd)
+  output: "unexpected setuid call by non-sudo (%user.name %proc.name %evt.dir %evt.type %evt.args)"
+  priority: WARNING
+
+# User management (su and sudo are ok)
+- condition: not proc.name in (su, sudo) and (adduser_binaries or login_binaries or passwd_binaries or shadowutils_binaries)
+  output: "user-management binary command run (%user.name %proc.name %evt.dir %evt.type %evt.args)"
+  priority: WARNING
+
+# Some rootkits hide files in /dev
+# (we may need to add additional checks against false positives, see: https://bugs.launchpad.net/ubuntu/+source/rkhunter/+bug/86153)
+- condition: (evt.type = creat or evt.arg.flags contains O_CREAT) and proc.name != blkid and fd.directory = /dev and fd.name != /dev/null
+  output: "file created in /dev (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
+  priority: WARNING
+
+# Elasticsearch ports
+- macro: elasticsearch_cluster_port
+  condition: fd.sport=9300
+- macro: elasticsearch_api_port
+  condition: fd.sport=9200
+- macro: elasticsearch_port
+  condition: elasticsearch_cluster_port or elasticsearch_api_port
+
+- condition: user.name = elasticsearch and inbound and not elasticsearch_port
+  output: "Unexpected Elasticsearch inbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
+  priority: WARNING
+
+- condition: user.name = elasticsearch and outbound and not elasticsearch_cluster_port
+  output: "Unexpected Elasticsearch outbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
+  priority: WARNING
+
+
+# ActiveMQ ports
+- macro: activemq_cluster_port
+  condition: fd.sport=61616
+- macro: activemq_web_port
+  condition: fd.sport=8161
+- macro: activemq_port
+  condition: activemq_web_port or activemq_cluster_port
+
+- condition: user.name = activemq and inbound and not activemq_port
+  output: "Unexpected ActiveMQ inbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
+  priority: WARNING
+
+- condition: user.name = activemq and outbound and not activemq_cluster_port
+  output: "Unexpected ActiveMQ outbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
+  priority: WARNING
+
+
+# Cassandra ports
+# https://docs.datastax.com/en/cassandra/2.0/cassandra/security/secureFireWall_r.html
+- macro: cassandra_thrift_client_port
+  condition: fd.sport=9160
+- macro: cassandra_cql_port
+  condition: fd.sport=9042
+- macro: cassandra_cluster_port
+  condition: fd.sport=7000
+- macro: cassandra_ssl_cluster_port
+  condition: fd.sport=7001
+- macro: cassandra_jmx_port
+  condition: fd.sport=7199
+- macro: cassandra_port
+  condition: cassandra_thrift_client_port or cassandra_cql_port or cassandra_cluster_port or cassandra_ssl_cluster_port or cassandra_jmx_port
+
+- condition: user.name = cassandra and inbound and not cassandra_port
+  output: "Unexpected Cassandra inbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
+  priority: WARNING
+
+- condition: user.name = cassandra and outbound and not (cassandra_ssl_cluster_port or cassandra_cluster_port)
+  output: "Unexpected Cassandra outbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
+  priority: WARNING
+
+# Couchbase ports
+# http://docs.couchbase.com/admin/admin/Install/install-networkPorts.html
+# Web Administration Port
+- macro: couchbase_web_port
+  condition: fd.sport=8091
+# Couchbase API Port
+- macro: couchbase_api_port
+  condition: fd.sport=8092
+# Internal/External Bucket Port for SSL
+- macro: couchbase_ssl_bucket_port
+  condition: fd.sport=11207
+# Internal Bucket Port
+- macro: couchbase_bucket_port
+  condition: fd.sport=11209
+# Internal/External Bucket Port
+- macro: couchbase_bucket_port_ie
+  condition: fd.sport=11210
+# Client interface (proxy)
+- macro: couchbase_client_interface_port
+  condition: fd.sport=11211
+# Incoming SSL Proxy
+- macro: couchbase_incoming_ssl
+  condition: fd.sport=11214
+# Internal Outgoing SSL Proxy
+- macro: couchbase_outgoing_ssl
+  condition: fd.sport=11215
+# Internal REST HTTPS for SSL
+- macro: couchbase_internal_rest_port
+  condition: fd.sport=18091
+# Internal CAPI HTTPS for SSL
+- macro: couchbase_internal_capi_port
+  condition: fd.sport=18092
+# Erlang Port Mapper ( epmd )
+- macro: couchbase_epmd_port
+  condition: fd.sport=4369
+# Node data exchange
+- macro: couchbase_dataexchange_port
+  condition: fd.sport>=21100 and fd.sport<=21299
+
+- macro: couchbase_internal_port
+  condition: couchbase_bucket_port or couchbase_epmd_port or couchbase_dataexchange_port
+- macro: couchbase_port
+  condition: >
+    couchbase_web_port or couchbase_api_port or couchbase_ssl_bucket_port or
+    couchbase_internal_port or couchbase_bucket_port_ie or
+    couchbase_client_interface_port or couchbase_incoming_ssl or
+    couchbase_outgoing_ssl or couchbase_internal_rest_port or
+    couchbase_internal_capi_port
+
+- condition: user.name = couchbase and inbound and not couchbase_port
+  output: "Unexpected Couchbase inbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
+  priority: WARNING
+
+- condition: user.name = couchbase and outbound and not couchbase_internal_port
+  output: "Unexpected Couchbase inbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
+  priority: WARNING
+
+
+# Couchdb ports
+# https://github.com/davisp/couchdb/blob/master/etc/couchdb/local.ini
+- macro: couchdb_httpd_port
+  condition: fd.sport=5984
+- macro: couchdb_httpd_ssl_port
+  condition: fd.sport=6984
+# xxx can't tell what clustering ports are used. not writing rules for this
+# yet.
+
+# Etcd ports
+- macro: etcd_client_port
+  condition: fd.sport=2379
+- macro: etcd_peer_port
+  condition: fd.sport=2380
+# need to double-check which user etcd runs as
+- condition: user.name = etcd and inbound and not (etcd_client_port or etcd_peer_port)
+  output: "Unexpected Etcd inbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
+  priority: WARNING
+
+- condition: user.name = etcd and outbound and not couchbase_internal_port
+  output: "Unexpected Etcd outbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
+  priority: WARNING
+
+
+# Fluentd ports
+- macro: fluentd_http_port
+  condition: fd.sport=9880
+- macro: fluentd_forward_port
+  condition: fd.sport=24224
+
+- condition: user.name = td-agent and inbound and not (fluentd_forward_port or fluentd_http_port)
+  output: "Unexpected Fluentd inbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
+  priority: WARNING
+
+- condition: user.name = td-agent and outbound and not fluentd_forward_port
+  output: "Unexpected Fluentd outbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
+  priority: WARNING
+
+# Gearman ports
+# http://gearman.org/protocol/
+- condition: user.name = gearman and outbound and outbound and not fd.sport = 4730
+  output: "Unexpected Gearman outbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
+  priority: WARNING
+
+# Zookeeper
+- macro: zookeeper_port
+  condition: fd.sport = 2181
+
+# HBase ports
+# http://blog.cloudera.com/blog/2013/07/guide-to-using-apache-hbase-ports/
+- macro: hbase_master_port
+  condition: fd.sport = 60000
+- macro: hbase_master_info_port
+  condition: fd.sport = 60010
+- macro: hbase_regionserver_port
+  condition: fd.sport = 60020
+- macro: hbase_regionserver_info_port
+  condition: fd.sport = 60030
+- macro: hbase_rest_port
+  condition: fd.sport = 8080
+- macro: hbase_rest_info_port
+  condition: fd.sport = 8085
+- macro: hbase_regionserver_thrift_port
+  condition: fd.sport = 9090
+- macro: hbase_thrift_info_port
+  condition: fd.sport = 9095
+
+# If you're not running HBase under the 'hbase' user, adjust first expression
+# in each rule below
+- condition: >
+    user.name = hbase and inbound and not (hbase_master_port or
+    hbase_master_info_port or hbase_regionserver_port or
+    hbase_regionserver_info_port or hbase_rest_port or hbase_rest_info_port or
+    hbase_regionserver_thrift_port or hbase_thrift_info_port)
+  output: "Unexpected HBase inbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
+  priority: WARNING
+
+- condition: user.name = hbase and outbound and not (zookeeper_port or hbase_master_port or hbase_regionserver_port)
+  output: "Unexpected HBase outbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
+  priority: WARNING
+
+
+# Kafka ports
+- condition: user.name = kafka and inbound and fd.sport != 9092
+  output: "Unexpected Kafka inbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
+  priority: WARNING
+
+# Memcached ports
+- condition: user.name = memcached and inbound and fd.sport != 11211
+  output: "Unexpected Memcached inbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
+  priority: WARNING
+
+- condition: user.name = memcached and outbound
+  output: "Unexpected Memcached outbound connection (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
+  priority: WARNING
+
+
+# MongoDB ports
+- macro: mongodb_server_port
+  condition: fd.sport = 27017
+- macro: mongodb_shardserver_port
+  condition: fd.sport = 27018
+- macro: mongodb_configserver_port
+  condition: fd.sport = 27019
+- macro: mongodb_webserver_port
+  condition: fd.sport = 28017
+
+- condition: user.name = mongodb and inbound and not (mongodb_server_port or mongodb_shardserver_port or mongodb_configserver_port or mongodb_webserver_port)
+  output: "Unexpected MongoDB inbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
+  priority: WARNING
+
+# MySQL ports
+- condition: user.name = mysql and inbound and fd.sport != 3306
+  output: "Unexpected MySQL inbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
+  priority: WARNING
+
+# HTTP server
+- macro: http_server
+  condition: proc.name in (nginx, httpd, lighttpd)
+
+- condition: http_server and inbound and fd.sport != 80 and fd.sport != 443
+  output: "Unexpected HTTP server inbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
+  priority: WARNING
