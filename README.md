@@ -4,8 +4,9 @@
 ## Overview
 Brief description of what, why, how, and pointer to website.
 
-### What kind of events can Falco detect?
+### What kind of behaviors can Falco detect?
 
+Falco can detect and alert on any behavior that involves making Linux system calls.  Thanks to Sysdig's core decoding and state tracking functionality, Falco alerts can be triggered by the use of specific system calls, their arguments, and by properties of the calling process. Rules are expressed in a high-level, human-readable language. 
 
 
 ## Installing Falco
