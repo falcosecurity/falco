@@ -6,7 +6,6 @@ include_directories(${PROJECT_SOURCE_DIR}/../sysdig/userspace/libsinsp)
 include_directories("${PROJECT_BINARY_DIR}/userspace/falco")
 include_directories("${CURL_INCLUDE_DIR}")
 include_directories("${YAMLCPP_INCLUDE_DIR}")
-include_directories("${LPEG_SRC}")
 include_directories(${DRAIOS_DEPENDENCIES_DIR}/yaml-${DRAIOS_YAML_VERSION}/target/include)
 
 add_executable(falco configuration.cpp formats.cpp fields.cpp rules.cpp logger.cpp falco.cpp)
