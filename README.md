@@ -69,11 +69,11 @@ Instructions for Centos and Ubuntu.
 
 
 
-## Building Falco
+## Building and running Falco locally from source
 Building Falco requires having `cmake` and `g++` installed.
 
 
-### Building
+### Building Falco
 Clone this repo in a directory that also contains the sysdig source repo. The result should be something like:
 
 ```
@@ -98,8 +98,13 @@ $ make
 
 as a result, you should have a falco executable in `build/userspace/falco/falco`.
 
+### (Optional) Install sysdig kernel driver
 
-### Running locally-built Falco
+If you have a binary version of sysdig installed, the sysdig kernel module is already loaded and can be used by falco. Otherwise, you should load the kernel module from the sysdig source directory. Assuming you are in the `build` dir, you can install the kernel module via:
+
+`$ insmod driver/sysdig-probe.ko`
+
+### Running Falco
 
 Assuming you are in the `build` dir, you can run Falco as:
 
