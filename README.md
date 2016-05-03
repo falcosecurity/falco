@@ -98,9 +98,15 @@ $ make
 
 as a result, you should have a falco executable in `build/userspace/falco/falco`.
 
-### (Optional) Install sysdig kernel driver
+### Load latest sysdig kernel module
 
-If you have a binary version of sysdig installed, the sysdig kernel module is already loaded and can be used by falco. Otherwise, you should load the kernel module from the sysdig source directory. Assuming you are in the `build` dir, you can install the kernel module via:
+If you have a binary version of sysdig installed, an older sysdig kernel module may already be loaded. To ensure you are using the latest version, you should unload any existing sysdig kernel module and load the locally built version.
+
+Unload any existing kernel module via:
+
+`$ rmmod sysdig_probe`
+
+To load the locally built version, assuming you are in the `build` dir, use:
 
 `$ insmod driver/sysdig-probe.ko`
 
