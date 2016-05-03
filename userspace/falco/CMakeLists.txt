@@ -13,6 +13,8 @@ add_executable(falco configuration.cpp formats.cpp fields.cpp rules.cpp logger.c
 target_link_libraries(falco sinsp)
 target_link_libraries(falco
 	"${LPEG_SRC}/lpeg.a"
+	"${LYAML_LIB}"
+        "${LIBYAML_LIB}"
 	"${YAMLCPP_LIB}")
 
 
@@ -20,9 +22,6 @@ set(FALCO_LUA_MAIN "rule_loader.lua")
 configure_file(config_falco.h.in config_falco.h)
 
 install(TARGETS falco DESTINATION bin)
-install(FILES lua/compiler.lua
-	DESTINATION share/falco/lua)
-install(FILES lua/rule_loader.lua
-	DESTINATION share/falco/lua)
-install(FILES lua/output.lua
-	DESTINATION share/falco/lua)
+install(DIRECTORY lua
+	DESTINATION share/falco/lua
+	FILES_MATCHING PATTERN *.lua)

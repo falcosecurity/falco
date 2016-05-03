@@ -152,6 +152,27 @@ ExternalProject_Add(lpeg
 		    CONFIGURE_COMMAND ""
                     INSTALL_COMMAND "")
 
+
+set (LIBYAML_SRC "${PROJECT_BINARY_DIR}/libyaml-prefix/src/libyaml/src")
+set(LIBYAML_LIB "${LIBYAML_SRC}/.libs/libyaml.a")
+ExternalProject_Add(libyaml
+		    URL "http://download.draios.com/dependencies/libyaml-0.1.4.tar.gz"
+                    URL_MD5 "4a4bced818da0b9ae7fc8ebc690792a7"
+                    BUILD_COMMAND ${CMD_MAKE}
+                    BUILD_IN_SOURCE 1
+		    CONFIGURE_COMMAND ./bootstrap && ./configure
+                    INSTALL_COMMAND "")
+
+set (LYAML_SRC "${PROJECT_BINARY_DIR}/lyaml-prefix/src/lyaml/ext/yaml")
+set(LYAML_LIB "${LYAML_SRC}/.libs/yaml.a")
+ExternalProject_Add(lyaml
+		    URL "http://download.draios.com/dependencies/lyaml-release-v6.0.tar.gz"
+                    URL_MD5 "dc3494689a0dce7cf44e7a99c72b1f30"
+                    BUILD_COMMAND ${CMD_MAKE}
+                    BUILD_IN_SOURCE 1
+		    CONFIGURE_COMMAND ./configure --enable-static LIBS=-L../../../libyaml-prefix/src/libyaml/src/.libs CFLAGS=-I../../../libyaml-prefix/src/libyaml/include CPPFLAGS=-I../../../libyaml-prefix/src/libyaml/include LUA_INCLUDE=-I../../../luajit-prefix/src/luajit/src LUA=../../../luajit-prefix/src/luajit/src/luajit
+                    INSTALL_COMMAND sh -c "cp -R ${PROJECT_BINARY_DIR}/lyaml-prefix/src/lyaml/lib/* ${PROJECT_SOURCE_DIR}/userspace/falco/lua")
+
 install(FILES falco.yaml
 	DESTINATION "${DIR_ETC}")
 
