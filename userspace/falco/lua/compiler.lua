@@ -155,17 +155,6 @@ end
 
 -- grammar
 
-local function normalize_level(level)
-   valid_levels = {"emergency", "alert", "critical", "error", "warning", "notice", "informational", "debug"}
-   level = string.lower(level)
-   for i,v in ipairs(valid_levels) do
-      if (string.find(v, "^"..level)) then
-	 return i - 1 -- (syslog levels start at 0, lua indices start at 1)
-      end
-   end
-   error("Invalid severity level: "..level)
-end
-
 
 local function filter(e)
    return {type = "Filter", value=e}
@@ -417,10 +406,7 @@ function compiler.parser.parse_filter (subject)
 end
 
 
---[[
-   Compiles a single line from a falco ruleset and updates the passed-in macros table. Returns the AST of the line.
---]]
-function compiler.compile_line(line, macro_defs)
+function compiler.compile_macro(line)
    local ast, error_msg = compiler.parser.parse_filter(line)
 
    if (error_msg) then
@@ -428,24 +414,22 @@ function compiler.compile_line(line, macro_defs)
       error(error_msg)
    end
 
-   if (type(ast) == "number") then
-      -- hack: we get a number (# of matched chars) V"Skip" back if this line
-      -- only contained whitespace. (According to docs 'v"Skip" / 0' in Start
-      -- rule should not capture anything but it doesn't seem to work that
-      -- way...)
-      return {}
+   return ast
+end
+
+--[[
+   Parses a single filter, then expands macros using passed-in table of definitions. Returns resulting AST.
+--]]
+function compiler.compile_filter(source, macro_defs)
+   local ast, error_msg = compiler.parser.parse_filter(source)
+
+   if (error_msg) then
+      print ("Compilation error: ", error_msg)
+      error(error_msg)
    end
 
-   if (ast.type == "MacroDef") then
-      -- Parsed line is a macro definition, so update our dictionary of macros and
-      -- return
-      macro_defs[ast.name] = ast.value
-      return ast
-
-   elseif (ast.type == "Rule") then
-      -- Line is a filter, so expand macro references then
-      -- stitch it into global ast
-
+   if (ast.type == "Rule") then
+      -- Line is a filter, so expand macro references
       repeat
 	 expanded  = expand_macros(ast, macro_defs, false)
       until expanded == false

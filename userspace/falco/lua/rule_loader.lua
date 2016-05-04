@@ -6,8 +6,11 @@
 --]]
 
 local DEFAULT_OUTPUT_FORMAT = "%evt.time: %evt.num %evt.cpu %proc.name (%thread.tid) %evt.dir %evt.type %evt.args"
+local DEFAULT_PRIORITY = "WARNING"
+
 
 local compiler = require "compiler"
+local yaml = require"lyaml"
 
 --[[
    Traverse AST, adding the passed-in 'index' to each node that contains a relational expression
@@ -89,78 +92,90 @@ local function install_filter(node, parent_bool_op)
    end
 end
 
-local state
-
---[[
-   Sets up compiler state and returns it.
-
-   It holds state such as macro definitions that must be kept across calls
-   to the line-oriented compiler.
---]]
-local function init()
-   return {macros={}, filter_ast=nil, n_rules=0, outputs={}}
-end
-
-
-function set_output(output_ast)
+function set_output(output_format, state)
 
    if(output_ast.type == "OutputFormat") then
 
       local format
-      if output_ast.value==nil then
-	 format = DEFAULT_OUTPUT_FORMAT
-      else
-	 format = output_ast.value
-      end
-
-      state.outputs[state.n_rules] = {format=format, level = output_ast.level}
 
    else
       error ("Unexpected type in set_output: ".. output_ast.type)
    end
 end
 
-function load_rule(r)
-   if (state == nil) then
-      state = init()
+local function priority(s)
+   valid_levels = {"emergency", "alert", "critical", "error", "warning", "notice", "informational", "debug"}
+   s = string.lower(s)
+   for i,v in ipairs(valid_levels) do
+      if (string.find(v, "^"..s)) then
+	 return i - 1 -- (syslog levels start at 0, lua indices start at 1)
+      end
    end
-   local line_ast = compiler.compile_line(r, state.macros)
-
-   if (line_ast.type == nil) then -- blank line
-      return
-   elseif (line_ast.type == "MacroDef") then
-      return
-   elseif (not (line_ast.type == "Rule")) then
-      error ("Unexpected type in load_rule: "..line_ast.type)
-   end
-
-   state.n_rules = state.n_rules + 1
-
-   set_output(line_ast.output)
-
-   -- Store the index of this formatter in each relational expression that
-   -- this rule contains.
-   -- This index will eventually be stamped in events passing this rule, and
-   -- we'll use it later to determine which output to display when we get an
-   -- event.
-   mark_relational_nodes(line_ast.filter.value, state.n_rules)
-
-   -- Rule ASTs are merged together into one big AST, with "OR" between each
-   -- rule.
-   if (state.filter_ast == nil) then
-      state.filter_ast = line_ast.filter.value
-   else
-      state.filter_ast = { type = "BinaryBoolOp", operator = "or", left = state.filter_ast, right = line_ast.filter.value }
-   end
+   error("Invalid severity level: "..level)
 end
 
-function on_done()
+local state = {macros={}, filter_ast=nil, n_rules=0, outputs={}}
+
+function load_rules(filename)
+
+   local f = assert(io.open(filename, "r"))
+   local s = f:read("*all")
+   f:close()
+   local rules = yaml.load(s)
+
+   for i,v in ipairs(rules) do -- iterate over yaml list
+
+      if (not (type(v) == "table")) then
+	 error ("Unexpected element of type " ..type(v)..". Each element should be a yaml associative array.")
+      end
+
+      if (v['macro']) then
+	 local ast = compiler.compile_macro(v['condition'])
+	 state.macros[v['macro']] = ast.filter.value
+
+      else -- filter
+
+	 if (v['condition'] == nil) then
+	    error ("Missing condition in rule")
+	 end
+
+	 if (v['output'] == nil) then
+	    error ("Missing output in rule with condition"..v['condition'])
+	 end
+
+	 local filter_ast = compiler.compile_filter(v['condition'], state.macros)
+
+	 if (filter_ast.type == "Rule") then
+	    state.n_rules = state.n_rules + 1
+
+	    state.outputs[state.n_rules] = {format=v['output'] or DEFAULT_OUTPUT_FORMAT,
+					    level=priority(v['priority'] or DEFAULT_PRIORITY)}
+
+	    -- Store the index of this formatter in each relational expression that
+	    -- this rule contains.
+	    -- This index will eventually be stamped in events passing this rule, and
+	    -- we'll use it later to determine which output to display when we get an
+	    -- event.
+	    mark_relational_nodes(filter_ast.filter.value, state.n_rules)
+
+	    -- Rule ASTs are merged together into one big AST, with "OR" between each
+	    -- rule.
+	    if (state.filter_ast == nil) then
+	       state.filter_ast = filter_ast.filter.value
+	    else
+	       state.filter_ast = { type = "BinaryBoolOp", operator = "or", left = state.filter_ast, right = filter_ast.filter.value }
+	    end
+	 else
+	    error ("Unexpected type in load_rule: "..filter_ast.type)
+	 end
+      end
+   end
+
    install_filter(state.filter_ast)
    io.flush()
 end
 
 local output_functions = require('output')
-
 outputs = {}
 
 function add_output(output_name, config)
