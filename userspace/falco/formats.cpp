@@ -2,23 +2,23 @@
 #include "logger.h"
 
 
-sinsp* digwatch_formats::s_inspector = NULL;
+sinsp* falco_formats::s_inspector = NULL;
 
-const static struct luaL_reg ll_digwatch [] =
+const static struct luaL_reg ll_falco [] =
 {
-	{"formatter", &digwatch_formats::formatter},
-	{"format_event", &digwatch_formats::format_event},
+	{"formatter", &falco_formats::formatter},
+	{"format_event", &falco_formats::format_event},
 	{NULL,NULL}
 };
 
-void digwatch_formats::init(sinsp* inspector, lua_State *ls)
+void falco_formats::init(sinsp* inspector, lua_State *ls)
 {
 	s_inspector = inspector;
 
-	luaL_openlib(ls, "digwatch", ll_digwatch, 0);
+	luaL_openlib(ls, "falco", ll_falco, 0);
 }
 
-int digwatch_formats::formatter(lua_State *ls)
+int falco_formats::formatter(lua_State *ls)
 {
 	string format = luaL_checkstring(ls, 1);
 	sinsp_evt_formatter* formatter;
@@ -28,7 +28,7 @@ int digwatch_formats::formatter(lua_State *ls)
 	}
 	catch(sinsp_exception& e)
 	{
-		digwatch_logger::log(LOG_ERR, "Invalid output format '" + format + "'.\n");
+		falco_logger::log(LOG_ERR, "Invalid output format '" + format + "'.\n");
 
 		throw sinsp_exception("set_formatter error");
 	}
@@ -38,12 +38,12 @@ int digwatch_formats::formatter(lua_State *ls)
 	return 1;
 }
 
-int digwatch_formats::format_event (lua_State *ls)
+int falco_formats::format_event (lua_State *ls)
 {
 	string line;
 
 	if (!lua_islightuserdata(ls, -1) || !lua_islightuserdata(ls, -2)) {
-		digwatch_logger::log(LOG_ERR, "Invalid arguments passed to format_event()\n");
+		falco_logger::log(LOG_ERR, "Invalid arguments passed to format_event()\n");
 		throw sinsp_exception("format_event error");
 	}
 	sinsp_evt* evt = (sinsp_evt*)lua_topointer(ls, 1);

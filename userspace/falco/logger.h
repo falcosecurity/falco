@@ -9,12 +9,12 @@ extern "C" {
 #include "lauxlib.h"
 }
 
-class digwatch_logger
+class falco_logger
 {
  public:
 	static void init(lua_State *ls);
 
-	// value = digwatch.syslog(level, message)
+	// value = falco.syslog(level, message)
 	static int syslog(lua_State *ls);
 
 	static void log(int priority, const string msg);

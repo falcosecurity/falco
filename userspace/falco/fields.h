@@ -8,12 +8,12 @@ extern "C" {
 #include "lauxlib.h"
 }
 
-class digwatch_fields
+class falco_fields
 {
  public:
 	static void init(sinsp* inspector, lua_State *ls);
 
-	// value = digwatch.field(evt, fieldname)
+	// value = falco.field(evt, fieldname)
 	static int field(lua_State *ls);
 
 	static sinsp* s_inspector;

@@ -510,7 +510,7 @@ end
 
 
 --[[
-   Compiles a single line from a digwatch ruleset and updates the passed-in macros table. Returns the AST of the line.
+   Compiles a single line from a falco ruleset and updates the passed-in macros table. Returns the AST of the line.
 --]]
 function compiler.compile_line(line, macro_defs)
    local ast, error_msg = compiler.parser.parse_line(line)

@@ -5,23 +5,23 @@
 
 
 
-const static struct luaL_reg ll_digwatch [] =
+const static struct luaL_reg ll_falco [] =
 {
-	{"syslog", &digwatch_logger::syslog},
+	{"syslog", &falco_logger::syslog},
 	{NULL,NULL}
 };
 
 
-void digwatch_logger::init(lua_State *ls)
+void falco_logger::init(lua_State *ls)
 {
-	luaL_openlib(ls, "digwatch", ll_digwatch, 0);
+	luaL_openlib(ls, "falco", ll_falco, 0);
 }
 
-int digwatch_logger::syslog(lua_State *ls) {
+int falco_logger::syslog(lua_State *ls) {
 	int priority = luaL_checknumber(ls, 1);
 
 	if (priority > LOG_DEBUG) {
-		return luaL_argerror(ls, 1, "digwatch.syslog: priority must be a number between 0 and 7");
+		return luaL_argerror(ls, 1, "falco.syslog: priority must be a number between 0 and 7");
 	}
 
 	const char *msg = luaL_checkstring(ls, 2);
@@ -30,15 +30,15 @@ int digwatch_logger::syslog(lua_State *ls) {
 	return 0;
 }
 
-bool digwatch_logger::log_stderr;
-bool digwatch_logger::log_syslog;
+bool falco_logger::log_stderr;
+bool falco_logger::log_syslog;
 
-void digwatch_logger::log(int priority, const string msg) {
-	if (digwatch_logger::log_syslog) {
+void falco_logger::log(int priority, const string msg) {
+	if (falco_logger::log_syslog) {
 		::syslog(priority, "%s", msg.c_str());
 	}
 
-	if (digwatch_logger::log_stderr) {
+	if (falco_logger::log_stderr) {
 		std::time_t result = std::time(nullptr);
 		string tstr = std::asctime(std::localtime(&result));
 		tstr = tstr.substr(0, 24);// remove trailling newline

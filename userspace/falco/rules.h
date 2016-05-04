@@ -3,11 +3,11 @@
 #include "sinsp.h"
 #include "lua_parser.h"
 
-class digwatch_rules
+class falco_rules
 {
  public:
-	digwatch_rules(sinsp* inspector, lua_State *ls, string lua_main_filename);
-	~digwatch_rules();
+	falco_rules(sinsp* inspector, lua_State *ls, string lua_main_filename);
+	~falco_rules();
 	void load_rules(string rules_filename);
 	sinsp_filter* get_filter();
 

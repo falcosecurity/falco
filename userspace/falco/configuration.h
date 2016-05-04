@@ -89,7 +89,7 @@ private:
 };
 
 
-class digwatch_configuration
+class falco_configuration
 {
  public:
 	void init(std::string conf_filename);

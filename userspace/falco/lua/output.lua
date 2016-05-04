@@ -4,8 +4,8 @@ levels = {"Emergency", "Alert", "Critical", "Error", "Warning", "Notice", "Infor
 
 function mod.stdout(evt, level, format)
    format = "%evt.time: "..levels[level+1].." "..format
-   formatter = digwatch.formatter(format)
-   msg = digwatch.format_event(evt, formatter)
+   formatter = falco.formatter(format)
+   msg = falco.format_event(evt, formatter)
    print (msg)
 end
 
@@ -24,8 +24,8 @@ end
 
 function mod.file(evt, level, format, options)
    format = "%evt.time: "..levels[level+1].." "..format
-   formatter = digwatch.formatter(format)
-   msg = digwatch.format_event(evt, formatter)
+   formatter = falco.formatter(format)
+   msg = falco.format_event(evt, formatter)
 
    file = io.open(options.filename, "a+")
    file:write(msg, "\n")
@@ -34,9 +34,9 @@ end
 
 function mod.syslog(evt, level, format)
 
-   formatter = digwatch.formatter(format)
-   msg = digwatch.format_event(evt, formatter)
-   digwatch.syslog(level, msg)
+   formatter = falco.formatter(format)
+   msg = falco.format_event(evt, formatter)
+   falco.syslog(level, msg)
 end
 
 return mod
