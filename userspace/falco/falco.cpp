@@ -15,6 +15,7 @@ extern "C" {
 #include "lualib.h"
 #include "lauxlib.h"
 #include "lpeg.h"
+#include "lyaml.h"
 }
 
 #include <sinsp.h>
@@ -317,6 +318,7 @@ int falco_init(int argc, char **argv)
 		ls = lua_open();
 		luaL_openlibs(ls);
 		luaopen_lpeg(ls);
+		luaopen_yaml(ls);
 		add_lua_path(ls, lua_dir);
 
 		rules = new falco_rules(inspector, ls, lua_main_filename);
