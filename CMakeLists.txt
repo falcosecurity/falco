@@ -155,6 +155,7 @@ ExternalProject_Add(lpeg
 install(FILES falco.yaml
 	DESTINATION "${DIR_ETC}")
 
+add_subdirectory(${SYSDIG_DIR}/driver ${PROJECT_BINARY_DIR}/driver)
 add_subdirectory(${SYSDIG_DIR}/userspace/libscap ${PROJECT_BINARY_DIR}/userspace/libscap)
 add_subdirectory(${SYSDIG_DIR}/userspace/libsinsp ${PROJECT_BINARY_DIR}/userspace/libsinsp)
 
