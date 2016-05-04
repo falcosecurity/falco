@@ -290,59 +290,6 @@ function foldr(f, acc, arr)
 end
 
 --[[
-   Traverses the AST and replaces `in` relational expressions with a sequence of ORs.
-
-   For example, `a.b in [1, 2]` is expanded to `a.b = 1 or a.b = 2` (in ASTs)
---]]
-function expand_in(node)
-   local t = node.type
-
-   if t == "Filter" then
-      expand_in(node.value)
-
-   elseif t == "UnaryBoolOp" then
-      expand_in(node.argument)
-
-   elseif t == "BinaryBoolOp" then
-      expand_in(node.left)
-      expand_in(node.right)
-
-   elseif t == "BinaryRelOp" and node.operator == "in" then
-      if (table.maxn(node.right.elements) == 0) then
-         error ("In list with zero elements")
-      end
-
-      local mapper = function(element)
-         return {
-            type = "BinaryRelOp",
-            operator = "=",
-            left = node.left,
-            right = element
-         }
-      end
-
-      local equalities = map(mapper, node.right.elements)
-      local lasteq = equalities[table.maxn(equalities)]
-      equalities[table.maxn(equalities)] = nil
-
-      local folder = function(left, right)
-         return {
-            type = "BinaryBoolOp",
-            operator = "or",
-            left = left,
-            right = right
-         }
-      end
-      lasteq = foldr(folder, lasteq, equalities)
-
-      node.type=lasteq.type
-      node.operator=lasteq.operator
-      node.left=lasteq.left
-      node.right=lasteq.right
-   end
-end
-
---[[
 
    Given a map of macro definitions, traverse AST and replace macro references
    with their definitions.
@@ -532,18 +479,14 @@ function compiler.compile_line(line, macro_defs)
    check_macros(ast)
 
    if (ast.type == "MacroDef") then
-      --expand_in(ast.value)
-
       -- Parsed line is a macro definition, so update our dictionary of macros and
       -- return
       macro_defs[ast.name] = ast.value
       return ast
 
    elseif (ast.type == "Rule") then
-      -- Line is a filter, so expand in-clauses and macro references, then
+      -- Line is a filter, so expand macro references then
       -- stitch it into global ast
-
-      --expand_in(ast.filter)
 
       repeat
 	 expanded  = expand_macros(ast, macro_defs, false)
