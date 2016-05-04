@@ -171,30 +171,19 @@ local function filter(e)
    return {type = "Filter", value=e}
 end
 
-local function macro (name, filter)
-   return {type = "MacroDef", name = name, value = filter}
-end
-
-local function outputformat (level, format)
-   return {type = "OutputFormat", level = normalize_level(level), value = format}
-end
-
-local function rule(filter, output)
-   if not output then
-      output = outputformat(nil)
-   end
-   return {type = "Rule", filter = filter, output = output}
+local function rule(filter)
+   return {type = "Rule", filter = filter}
 end
 
 local G = {
    V"Start", -- Entry rule
 
-   Start = V"Skip" * (V"Comment" + V"MacroDef" / macro + V"Rule" / rule)^-1 * -1 + report_error();
+   Start = V"Skip" * (V"Comment" + V"Rule" / rule)^-1 * -1 + report_error();
 
   -- Grammar
    Comment = P"#" * P(1)^0;
 
-   Rule = V"Filter" / filter * ((V"Skip" * V"Pipe" * V"Skip" * V"Output")^-1 );
+   Rule = V"Filter" / filter * ((V"Skip")^-1 );
 
    Filter = V"OrExpression";
   OrExpression =
@@ -222,10 +211,7 @@ local G = {
 
   PrimaryExp = symb("(") * V"Filter" * symb(")");
 
-  MacroDef = (C(V"Macro") * V"Skip" * V"Colon" * (V"Filter"));
-
   FuncArgs = symb("(") * list(V"Value", symb(",")) * symb(")");
-  Output = C(V"Identifier") * V"Skip" * C(P(1)^0) / outputformat;
 
   -- Terminals
   Value = terminal "Number" + terminal "String" + terminal "BareString";
@@ -256,7 +242,6 @@ local G = {
   OrOp = kw("or") / "or";
   AndOp = kw("and") / "and";
   Colon = kw(":");
-  Pipe = kw("|");
   RelOp = symb("=") / "=" +
           symb("==") / "==" +
           symb("!=") / "!=" +
@@ -409,13 +394,6 @@ function print_ast(ast, level)
 
    if t == "Rule" then
       print_ast(ast.filter, level)
-      if (ast.output) then
-	 print(prefix.."| ")
-	 print_ast(ast.output)
-      end
-   elseif t == "OutputFormat" then
-      print(ast.value)
-
    elseif t == "Filter" then
       print_ast(ast.value, level)
 
@@ -446,9 +424,9 @@ compiler.parser.print_ast = print_ast
 
 
 --[[
-   Parses a single line (which should be either a macro definition or a filter) and returns the AST.
+   Parses a single filter and returns the AST.
 --]]
-function compiler.parser.parse_line (subject)
+function compiler.parser.parse_filter (subject)
   local errorinfo = { subject = subject }
   lpeg.setmaxstack(1000)
   local ast, error_msg = lpeg.match(G, subject, nil, errorinfo)
@@ -460,7 +438,7 @@ end
    Compiles a single line from a falco ruleset and updates the passed-in macros table. Returns the AST of the line.
 --]]
 function compiler.compile_line(line, macro_defs)
-   local ast, error_msg = compiler.parser.parse_line(line)
+   local ast, error_msg = compiler.parser.parse_filter(line)
 
    if (error_msg) then
       print ("Compilation error: ", error_msg)
