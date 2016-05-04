@@ -1,13 +1,13 @@
-# Sysdig website
+# Sysdig Falco website
 
-This repository contains the source code of www.sysdig.org.
+This repository contains the source code of www.sysdig.org/falco
 
 
 ### Workflow
 
-The production website is accessible at http://www.sysdig.org.
+The production website is accessible at http://www.sysdig.org/falco
 
-Changes are first applied to the staging website (http://staging.sysdig.org) and then applied to production.
+Changes are first applied to the staging website (http://staging.sysdig.org/falco) and then applied to production.
 
 1. Use the repository [**sysdig-website-staging**](https://github.com/draios/sysdig-website-staging) (branch **gh-pages**) to change staging website
 1. Verify changes at http://staging.sysdig.org/

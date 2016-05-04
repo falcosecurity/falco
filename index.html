@@ -193,10 +193,10 @@ slug: home
                 <div class="btn btn-lg btn-tertiary">Check it Out</div>
             </div>
         </a>
-        <h3 class="desc-text"><span class="br">Sysdig is open source, system-level exploration: capture system state and activity from a running Linux instance, then save, <span class="nowrap">filter and analyze.</span></span>
-          Sysdig is scriptable in Lua and includes a command line interface and a powerful interactive UI, csysdig, that runs in your terminal.
-          Think of sysdig as strace + tcpdump + htop + iftop + lsof <span class="nowrap">+ awesome sauce.</span><br>
-          With state of the art container visibility on top.
+        <h3 class="desc-text"><span class="br">Sysdig Falco is an open source, host activity monitor powered by sysdig’s 
+        universal system level visibility. Write simple and powerful rules, and then output warnings in the format you need. 
+        Continuously monitor and detect container, application, host, or network activity... all in one place, 
+        from one source of data, with one syntax.
         </h3>
     </div>
 </div>
@@ -225,25 +225,12 @@ slug: home
         <div class="row command">
             <div class="col-xs-6">
                 <span class="vertical-center">
-                    Dump system activity to file, so that sysdig can be used to process it later.
+                    A shell is run in a container
                 </span>
             </div>
             <div class="col-xs-6">
                 <span class="vertical-center">
-                    sudo sysdig -w trace.scap
-                </span>
-            </div>
-        </div>
-
-        <div class="row command">
-            <div class="col-xs-6">
-                <span class="vertical-center">
-                  View the top network connections for a single container.
-                </span>
-            </div>
-            <div class="col-xs-6">
-                <span class="vertical-center">
-                  sudo sysdig -pc -c topconns container.name=wordpress1
+                    container.id != host and proc.name = bash
                 </span>
             </div>
         </div>
@@ -251,25 +238,13 @@ slug: home
         <div class="row command">
             <div class="col-xs-6">
                 <span class="vertical-center">
-                    See the files where apache spends the most<br> time doing I/O.
+                  Unexpected outbound Elasticsearch connection (with an explicit output format after the “|”)
                 </span>
             </div>
             <div class="col-xs-6">
                 <span class="vertical-center">
-                    sudo sysdig -c topfiles_time proc.name=httpd
-                </span>
-            </div>
-        </div>
-
-        <div class="row command">
-            <div class="col-xs-6">
-                <span class="vertical-center">
-                  Show all the interactive commands executed inside a given container.
-                </span>
-            </div>
-            <div class="col-xs-6">
-                <span class="vertical-center">
-                  sudo sysdig -pc -c spy_users container.name=wordpress1
+                  elasticsearch_cluster_port: fd.sport=9300
+user.name = elasticsearch and outbound and not elasticsearch_cluster_port | WARNING Unexpected Elasticsearch outbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)
                 </span>
             </div>
         </div>
@@ -277,12 +252,51 @@ slug: home
         <div class="row command">
             <div class="col-xs-6">
                 <span class="vertical-center">
-                    Show every time a file is opened under /etc.
+                    Write to directory holding system binaries
                 </span>
             </div>
             <div class="col-xs-6">
                 <span class="vertical-center">
-                    sudo sysdig evt.type=open and fd.name contains /etc
+                    bin_dir: fd.directory in (/bin, /sbin, /usr/bin, /usr/sbin) write and bin_dir 
+                </span>
+            </div>
+        </div>
+
+        <div class="row command">
+            <div class="col-xs-6">
+                <span class="vertical-center">
+                  Non-authorized container namespace change
+                </span>
+            </div>
+            <div class="col-xs-6">
+                <span class="vertical-center">
+                  syscall.type = setns and not proc.name in (docker, sysdig) 
+                </span>
+            </div>
+        </div>
+
+        <div class="row command">
+            <div class="col-xs-6">
+                <span class="vertical-center">
+                    Non-device files written in /dev (some rootkits do this)
+                </span>
+            </div>
+            <div class="col-xs-6">
+                <span class="vertical-center">
+                    (evt.type = creat or evt.arg.flags contains O_CREAT) and proc.name != blkid and fd.directory = /dev and fd.name != /dev/null
+                </span>
+            </div>
+        </div>
+
+        <div class="row command">
+            <div class="col-xs-6">
+                <span class="vertical-center">
+                    Process other than skype/webex tries to access camera
+                </span>
+            </div>
+            <div class="col-xs-6">
+                <span class="vertical-center">
+                    evt.type = open and fd.name = /dev/video0 and not proc.name in (skype, webex)
                 </span>
             </div>
         </div>
@@ -312,43 +326,40 @@ slug: home
         <div class="features-up"></div>
         <div class="features-left"></div>
         <div class="col-sm-6">
-            <h2 class="title">Crazy Powerful</h2>
-            <div class="text"><span class="br-sm">Sysdig gives you instant access
-              to a treasure trove of data buried within your system.
-              Rich filtering, scripting, and an interactive UI take you
-              from the big picture to finest detail in just a few clicks.</span></div>
+            <h2 class="title">See everything</h2>
+            <div class="text"><span class="br-sm">Sysdig gives you instant access to a treasure trove of 
+            data buried within your system. Easily build sophisticated rules that see file access, 
+            system logs, network activity - your entire system - and inform you of every problem.</span></div>
         </div>
         <div class="col-sm-6">
-            <h2 class="title">Easy to Use</h2>
-            <div class="text"><span class="br-sm">For pragmatic people, by pragmatic people.
-              With a dead-simple install, and a natural, intuitive UI,
-              you'll be up and running with sysdig in seconds (seriously!).</span></div>
+            <h2 class="title">Designed for the rest of us</h2>
+            <div class="text"><span class="br-sm">Too often, security tools and intrusion detection systems in are
+              powerful but too complex for just anyone to use. Sysdig Falco is designed to make you productive in minutes.
+</span></div>
         </div>
         <div class="col-sm-6 clear">
-            <h2 class="title">Container-friendly</h2>
-            <div class="text"><span class="br-sm">If you use containers, sysdig is the tool for you.
-              Sysdig's unique technology offers full container visibility, with no plugins,
-              no instrumentation, and no configuration.</span></div>
+            <h2 class="title">Adapts to Your Environment</h2>
+            <div class="text"><span class="br-sm">Augment the base rules to meet your security requirements. 
+            Flexible outputs mean you can pipe Sysdig Falco alerts to a broad collection of other tools and systems. </span></div>
         </div>
         <div class="col-sm-6">
-            <h2 class="title">Fast and Stable</h2>
-            <div class="text"><span class="br-sm">Sysdig is built to run in production. By running
-              as little code as possible in the kernel,
-              sysdig minimizes performance overhead
+            <h2 class="title">Container-friendly</h2>
+            <div class="text"><span class="br-sm">Monitor containers from the outside, without any dependencies.
+            Sysdig Falco’s rules are docker and rkt aware, meaning you can make container-specific rules.
+            Falco understands the ecosystem as well - Kubernetes, Mesos, and Swarm metadata can be 
+            leveraged in your monitoring rules.
+
               and the risk of crashes.</span></div>
         </div>
         <div class="col-sm-6">
-            <h2 class="title">Fits to Your Workflow</h2>
-            <div class="text"><span class="br-sm">Not the other way around. Watch system
-              activity in real time, or do a trace dump
-              and analyze later.</span></div>
+            <h2 class="title">Back-test rules</h2>
+            <div class="text"><span class="br-sm">Create rules and then test them on historical system capture files. 
+            Know exactly what you’re going to get, before you go into production!</span></div>
         </div>
         <div class="col-sm-6">
-            <h2 class="title">Flexible</h2>
-            <div class="text"><span class="br-sm">Both sysdig and csysdig
-              can be extended with Lua scripts that we call chisels and views.
-              The ever growing collection of scripts covers tons of troubleshooting,
-              monitoring and security cases.</span></div>
+            <h2 class="title">Fast and Stable Core</h2>
+            <div class="text"><span class="br-sm">We leverage the sysdig kernel probe which has been in use for years, 
+            across hundreds of thousands of hosts.</span></div>
         </div>
         <div class="features-right"></div>
         <div class="features-down"></div>
