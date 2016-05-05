@@ -9,8 +9,10 @@ local DEFAULT_OUTPUT_FORMAT = "%evt.time: %evt.num %evt.cpu %proc.name (%thread.
 local DEFAULT_PRIORITY = "WARNING"
 
 
+local output = require('output')
 local compiler = require "compiler"
 local yaml = require"lyaml"
+
 
 --[[
    Traverse AST, adding the passed-in 'index' to each node that contains a relational expression
@@ -175,32 +177,12 @@ function load_rules(filename)
    io.flush()
 end
 
-local output_functions = require('output')
-outputs = {}
-
-function add_output(output_name, config)
-   if not (type(output_functions[output_name]) == 'function') then
-      error("rule_loader.add_output(): invalid output_name: "..output_name)
-   end
-
-   -- outputs can optionally define a validation function so that we don't
-   -- find out at runtime (when an event finally matches a rule!) that the config is invalid
-   if (type(output_functions[output_name.."_validate"]) == 'function') then
-     output_functions[output_name.."_validate"](config)
-   end
-
-   table.insert(outputs, {output = output_functions[output_name], config=config})
-end
-
 function on_event(evt_, rule_id)
 
    if state.outputs[rule_id] == nil then
       error ("rule_loader.on_event(): event with invalid rule_id: ", rule_id)
    end
 
-   for index,o in ipairs(outputs) do
-      o.output(evt_, state.outputs[rule_id].level, state.outputs[rule_id].format, o.config)
-   end
-
+   output.event(evt_, state.outputs[rule_id].level, state.outputs[rule_id].format)
 end
 
