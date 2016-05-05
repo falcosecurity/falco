@@ -5,34 +5,34 @@
 
 extern sinsp_filter_check_list g_filterlist;
 
-const static struct luaL_reg ll_digwatch [] =
+const static struct luaL_reg ll_falco [] =
 {
-	{"field", &digwatch_fields::field},
+	{"field", &falco_fields::field},
 	{NULL,NULL}
 };
 
-sinsp* digwatch_fields::s_inspector = NULL;
+sinsp* falco_fields::s_inspector = NULL;
 
-std::map<string, sinsp_filter_check*> digwatch_fields::s_fieldname_map;
+std::map<string, sinsp_filter_check*> falco_fields::s_fieldname_map;
 
 
-void digwatch_fields::init(sinsp* inspector, lua_State *ls)
+void falco_fields::init(sinsp* inspector, lua_State *ls)
 {
 	s_inspector = inspector;
 
-	luaL_openlib(ls, "digwatch", ll_digwatch, 0);
+	luaL_openlib(ls, "falco", ll_falco, 0);
 }
 
-int digwatch_fields::field(lua_State *ls)
+int falco_fields::field(lua_State *ls)
 {
 
 	sinsp_filter_check* chk=NULL;
 
 	if (!lua_islightuserdata(ls, 1))
 	{
-		string err = "invalid argument passed to digwatch.field()";
+		string err = "invalid argument passed to falco.field()";
 		fprintf(stderr, "%s\n", err.c_str());
-		throw sinsp_exception("digwatch.field() error");
+		throw sinsp_exception("falco.field() error");
 	}
 	sinsp_evt* evt = (sinsp_evt*)lua_topointer(ls, 1);
 
@@ -47,9 +47,9 @@ int digwatch_fields::field(lua_State *ls)
 
 		if(chk == NULL)
 		{
-			string err = "nonexistent fieldname passed to digwatch.field(): " + string(fieldname);
+			string err = "nonexistent fieldname passed to falco.field(): " + string(fieldname);
 			fprintf(stderr, "%s\n", err.c_str());
-			throw sinsp_exception("digwatch.field() error");
+			throw sinsp_exception("falco.field() error");
 		}
 
 		chk->parse_field_name(fieldname.c_str(), true);

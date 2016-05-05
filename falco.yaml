@@ -1,4 +1,4 @@
-rules_file: /etc/digwatch_rules.conf
+rules_file: /etc/falco_rules.conf
 json_output: false
 
 log_stderr: true

@@ -1,4 +1,4 @@
 /build*
 
-userspace/digwatch/lua/re.lua
-userspace/digwatch/lua/lpeg.so
+userspace/falco/lua/re.lua
+userspace/falco/lua/lpeg.so

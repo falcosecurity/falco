@@ -1,7 +1,7 @@
 --[[
-   Compile and install digwatch rules.
+   Compile and install falco rules.
 
-   This module exports functions that are called from digwatch c++-side to compile and install a set of rules.
+   This module exports functions that are called from falco c++-side to compile and install a set of rules.
 
 --]]
 

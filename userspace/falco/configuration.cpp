@@ -7,14 +7,14 @@ using namespace std;
 
 
 // If we don't have a configuration file, we just use stdout output and all other defaults
-void digwatch_configuration::init()
+void falco_configuration::init()
 {
 	output_config stdout_output;
 	stdout_output.name = "stdout";
 	m_outputs.push_back(stdout_output);
 }
 
-void digwatch_configuration::init(string conf_filename)
+void falco_configuration::init(string conf_filename)
 {
 	string m_config_file = conf_filename;
 	m_config = new yaml_configuration(m_config_file);
@@ -55,6 +55,6 @@ void digwatch_configuration::init(string conf_filename)
 		throw sinsp_exception("Error reading config file (" + m_config_file + "): No outputs configured. Please configure at least one output file output enabled but no filename in configuration block");
 	}
 
-	digwatch_logger::log_stderr = m_config->get_scalar<bool>("log_stderr", false);
-	digwatch_logger::log_syslog = m_config->get_scalar<bool>("log_syslog", true);
+	falco_logger::log_stderr = m_config->get_scalar<bool>("log_stderr", false);
+	falco_logger::log_syslog = m_config->get_scalar<bool>("log_syslog", true);
 }

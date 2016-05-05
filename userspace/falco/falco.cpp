@@ -54,7 +54,7 @@ string lua_add_output = "add_output";
 // Event processing loop
 //
 void do_inspect(sinsp* inspector,
-		digwatch_rules* rules,
+		falco_rules* rules,
 		lua_State* ls)
 {
 	int32_t res;
@@ -182,11 +182,11 @@ void add_output(lua_State *ls, output_config oc)
 //
 // ARGUMENT PARSING AND PROGRAM SETUP
 //
-int digwatch_init(int argc, char **argv)
+int falco_init(int argc, char **argv)
 {
 	int result = EXIT_SUCCESS;
 	sinsp* inspector = NULL;
-	digwatch_rules* rules = NULL;
+	falco_rules* rules = NULL;
 	int op;
 	sinsp_evt::param_fmt event_buffer_format;
 	int long_index = 0;
@@ -254,7 +254,7 @@ int digwatch_init(int argc, char **argv)
 			conf_stream = new ifstream(conf_filename);
 			if (!conf_stream->good())
 			{
-				digwatch_logger::log(LOG_ERR, "Could not find configuration file at " + conf_filename + ". Exiting \n");
+				falco_logger::log(LOG_ERR, "Could not find configuration file at " + conf_filename + ". Exiting \n");
 				result = EXIT_FAILURE;
 				goto exit;
 			}
@@ -280,17 +280,17 @@ int digwatch_init(int argc, char **argv)
 			}
 		}
 
-		digwatch_configuration config;
+		falco_configuration config;
 		if (conf_filename.size())
 		{
 			config.init(conf_filename);
 			// log after config init because config determines where logs go
-			digwatch_logger::log(LOG_INFO, "Falco initialized with configuration file " + conf_filename + "\n");
+			falco_logger::log(LOG_INFO, "Falco initialized with configuration file " + conf_filename + "\n");
 		}
 		else
 		{
 			config.init();
-			digwatch_logger::log(LOG_INFO, "Falco initialized. No configuration file found, proceeding with defaults\n");
+			falco_logger::log(LOG_INFO, "Falco initialized. No configuration file found, proceeding with defaults\n");
 		}
 
 		if (rules_filename.size())
@@ -305,7 +305,7 @@ int digwatch_init(int argc, char **argv)
 			lua_main_filename = lua_dir + FALCO_LUA_MAIN;
 			if (!std::ifstream(lua_main_filename))
 			{
-				digwatch_logger::log(LOG_ERR, "Could not find Falco Lua libraries (tried " +
+				falco_logger::log(LOG_ERR, "Could not find Falco Lua libraries (tried " +
 						     string(FALCO_LUA_DIR FALCO_LUA_MAIN) + ", " +
 						     lua_main_filename + "). Exiting \n");
 				result = EXIT_FAILURE;
@@ -319,18 +319,18 @@ int digwatch_init(int argc, char **argv)
 		luaopen_lpeg(ls);
 		add_lua_path(ls, lua_dir);
 
-		rules = new digwatch_rules(inspector, ls, lua_main_filename);
+		rules = new falco_rules(inspector, ls, lua_main_filename);
 
-		digwatch_formats::init(inspector, ls);
-		digwatch_fields::init(inspector, ls);
+		falco_formats::init(inspector, ls);
+		falco_fields::init(inspector, ls);
 
-		digwatch_logger::init(ls);
+		falco_logger::init(ls);
 
 
 		inspector->set_drop_event_flags(EF_DROP_FALCO);
 		rules->load_rules(config.m_rules_filename);
 		inspector->set_filter(rules->get_filter());
-		digwatch_logger::log(LOG_INFO, "Parsed rules from file " + config.m_rules_filename + "\n");
+		falco_logger::log(LOG_INFO, "Parsed rules from file " + config.m_rules_filename + "\n");
 
 		inspector->set_hostname_and_port_resolution_mode(false);
 
@@ -363,7 +363,7 @@ int digwatch_init(int argc, char **argv)
 			{
 				if(system("modprobe " PROBE_NAME " > /dev/null 2> /dev/null"))
 				{
-					digwatch_logger::log(LOG_ERR, "Unable to load the driver. Exiting\n");
+					falco_logger::log(LOG_ERR, "Unable to load the driver. Exiting\n");
 				}
 				inspector->open();
 			}
@@ -376,13 +376,13 @@ int digwatch_init(int argc, char **argv)
 	}
 	catch(sinsp_exception& e)
 	{
-		digwatch_logger::log(LOG_ERR, "Runtime error: " + string(e.what()) + ". Exiting\n");
+		falco_logger::log(LOG_ERR, "Runtime error: " + string(e.what()) + ". Exiting\n");
 
 		result = EXIT_FAILURE;
 	}
 	catch(...)
 	{
-		digwatch_logger::log(LOG_ERR, "Unexpected error, Exiting\n");
+		falco_logger::log(LOG_ERR, "Unexpected error, Exiting\n");
 
 		result = EXIT_FAILURE;
 	}
@@ -406,5 +406,5 @@ exit:
 //
 int main(int argc, char **argv)
 {
-	return digwatch_init(argc, argv);
+	return falco_init(argc, argv);
 }

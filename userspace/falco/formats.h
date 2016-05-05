@@ -10,15 +10,15 @@ extern "C" {
 
 class sinsp_evt_formatter;
 
-class digwatch_formats
+class falco_formats
 {
  public:
 	static void init(sinsp* inspector, lua_State *ls);
 
-	// formatter = digwatch.formatter(format_string)
+	// formatter = falco.formatter(format_string)
 	static int formatter(lua_State *ls);
 
-	// formatted_string = digwatch.format_event(evt, formatter)
+	// formatted_string = falco.format_event(evt, formatter)
 	static int format_event(lua_State *ls);
 
 	static sinsp* s_inspector;

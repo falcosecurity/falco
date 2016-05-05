@@ -7,7 +7,7 @@ extern "C" {
 }
 
 
-digwatch_rules::digwatch_rules(sinsp* inspector, lua_State *ls, string lua_main_filename)
+falco_rules::falco_rules(sinsp* inspector, lua_State *ls, string lua_main_filename)
 {
 	m_ls = ls;
 
@@ -17,7 +17,7 @@ digwatch_rules::digwatch_rules(sinsp* inspector, lua_State *ls, string lua_main_
 }
 
 
-void digwatch_rules::load_compiler(string lua_main_filename)
+void falco_rules::load_compiler(string lua_main_filename)
 {
 	ifstream is;
 	is.open(lua_main_filename);
@@ -39,7 +39,7 @@ void digwatch_rules::load_compiler(string lua_main_filename)
 	}
 }
 
-void digwatch_rules::load_rules(string rules_filename)
+void falco_rules::load_rules(string rules_filename)
 {
 	ifstream is;
 	is.open(rules_filename);
@@ -85,12 +85,12 @@ void digwatch_rules::load_rules(string rules_filename)
 
 }
 
-sinsp_filter* digwatch_rules::get_filter()
+sinsp_filter* falco_rules::get_filter()
 {
 	return m_lua_parser->get_filter();
 }
 
-digwatch_rules::~digwatch_rules()
+falco_rules::~falco_rules()
 {
 	delete m_lua_parser;
 }
