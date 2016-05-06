@@ -3,10 +3,31 @@
 #############
 
 # File actions
-- macro: write
-  condition: (syscall.type=write and fd.type in (file, directory))
-- macro: read
-  condition: (syscall.type=read and evt.dir=> and fd.type in (file, directory))
+
+
+# Currently disabled as read/write are ignored syscalls. The nearly
+# similar open_write/open_read check for files being opened for
+# reading/writing.
+# - macro: write
+#   condition: (syscall.type=write and fd.type in (file, directory))
+# - macro: read
+#   condition: (syscall.type=read and evt.dir=> and fd.type in (file, directory))
+
+- macro: open_write
+  condition: >
+    (evt.type=open or evt.type=openat) and
+    fd.typechar='f' and
+    (evt.arg.flags contains O_WRONLY or
+    evt.arg.flags contains O_RDWR or
+    evt.arg.flags contains O_CREAT or
+    evt.arg.flags contains O_TRUNC)
+- macro: open_read
+  condition: >
+    (evt.type=open or evt.type=openat) and
+    fd.typechar='f' and
+    (evt.arg.flags contains O_RDONLY or
+    evt.arg.flags contains O_RDWR)
+
 - macro: rename
   condition: syscall.type = rename
 - macro: mkdir
@@ -79,8 +100,10 @@
 # Network
 - macro: inbound
   condition: (syscall.type=listen and evt.dir=>) or (syscall.type=accept and evt.dir=<)
+
+# Currently sendto is an ignored syscall, otherwise this could also check for (syscall.type=sendto and evt.dir=>)
 - macro: outbound
-  condition: ((syscall.type=connect and evt.dir=<) or (syscall.type=sendto and evt.dir=>)) and (fd.typechar=4 or fd.typechar=6)
+  condition: syscall.type=connect and evt.dir=< and (fd.typechar=4 or fd.typechar=6)
 
 - macro: ssh_port
   condition: fd.lport=22
@@ -112,17 +135,17 @@
 #######
 
 # Don't write to binary dirs
-- condition: evt.dir = > and write and bin_dir
+- condition: evt.dir = > and open_write and bin_dir
   output: "Write to bin dir (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
 # Don't write to /etc
-- condition: evt.dir = > and write and etc_dir
+- condition: evt.dir = > and open_write and etc_dir
   output: "Write to etc dir (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
 # Don't read 'sensitive' files
-- condition: read and not proc.name in (sshd, sudo, su) and not_cron and sensitive_files
+- condition: open_read and not proc.name in (sshd, sudo, su) and not_cron and sensitive_files
   output: "Read sensitive file (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
@@ -132,7 +155,7 @@
   priority: WARNING
 
 # Don't load shared objects coming from unexpected places
-- condition: read and fd.name contains .so and not (ubuntu_so_dirs or centos_so_dirs)
+- condition: open_read and fd.name contains .so and not (ubuntu_so_dirs or centos_so_dirs)
   output: "Loaded .so from unexpected dir (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
