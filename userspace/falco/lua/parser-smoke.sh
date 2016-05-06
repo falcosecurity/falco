@@ -15,16 +15,15 @@ function error_exit_bad
 
 function good
 {
-    lua5.1 test.lua "a: x.y=1; b: a and z.x exists; c: b; $1" 2> /dev/null || error_exit_good "$1"
+    lua5.1 test.lua "$1" 2> /dev/null || error_exit_good "$1"
 }
 
 function bad
 {
-    lua5.1 test.lua "a: x.y=1; b: a and z.x exists; c: b; $1" 2> /dev/null && error_exit_bad "$1"
+    lua5.1 test.lua "$1" 2> /dev/null && error_exit_bad "$1"
 }
 
 # Filters
-good "  "
 good "  a"
 good "a and b"
 good "#a and b; a and b"
@@ -45,7 +44,7 @@ good "not not a"
 good "(not not a)"
 good "not a.b=1"
 good "not a.a exists"
-good "notz: a and b; notz"
+good "notz and a and b"
 good "a.b = bla"
 good "a.b = 'bla'"
 good "a.b = not"
@@ -62,31 +61,8 @@ good "evt.arg[0] contains /bin"
 bad "evt.arg[a] contains /bin"
 bad "evt.arg[] contains /bin"
 
-bad "a.g in ()"
 bad "a.b = b = 1"
 bad "(a.b = 1"
-
-
-# Macros
-good "a: a.b exists"
-good "a: b and c"
-good "a: b"
-good "a : b"
-good "a : evt.dir=>"
-good "inbound: (syscall.type=listen and evt.dir='>') or (syscall.type=accept and evt.dir='<')"
-bad "a:"
-bad "b and d"
-
-# Outputs
-good "a.b = a.a |"
-good "a.b = a.a | %evt.type %fd.num blabla"
-good "a.b = a.a | blabla (%evt.type %fd.num)"
-good "a.b = a.a | f(evt)"
-good "a.b = a.a | f()"
-bad "a.b = a.a | f() evt"
-
-bad "a : b | bla"
-bad " | %a.b"
 
 
 echo

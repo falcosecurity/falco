@@ -1,3 +1,3 @@
-install(FILES falco_rules.conf
+install(FILES falco_rules.yaml
 	DESTINATION "${DIR_ETC}")
 

@@ -17,7 +17,6 @@ class falco_rules
 	lua_parser* m_lua_parser;
 	lua_State* m_ls;
 
-	string m_lua_load_rule = "load_rule";
-	string m_lua_on_done = "on_done";
+	string m_lua_load_rules = "load_rules";
 	string m_lua_on_event = "on_event";
 };

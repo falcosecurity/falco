@@ -1,4 +1,4 @@
-local compiler = require "compiler"
+local parser = require "parser"
 
 if #arg ~= 1 then
     print("Usage: test.lua <string>")
@@ -9,7 +9,7 @@ local macros = {}
 local ast
 
 local function doit(line)
-   ast = compiler.compile_line(line, macros)
+   ast = parser.parse_filter(line)
 
    if not ast then
       print("error", error_msg)
@@ -22,7 +22,7 @@ for str in string.gmatch(arg[1], "([^;]+)") do
 end
 
 if (ast and ast.type) then
-   compiler.parser.print_ast(ast)
+   parser.print_ast(ast)
 end
 
 os.exit(0)
