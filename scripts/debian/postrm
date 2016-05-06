@@ -1,0 +1,8 @@
+#!/bin/sh
+set -e
+
+NAME=falco
+
+if [ "$1" = "purge" ] ; then
+	update-rc.d $NAME remove >/dev/null
+fi
