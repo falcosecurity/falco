@@ -291,4 +291,46 @@ function print_ast(ast, level)
 end
 parser.print_ast = print_ast
 
+-- Traverse the provided ast and call the provided callback function
+-- for any nodes of the specified type. The callback function should
+-- have the signature:
+--     cb(ast_node, ctx)
+-- ctx is optional.
+function traverse_ast(ast, node_type, cb, ctx)
+   local t = ast.type
+
+   if t == node_type then
+      cb(ast, ctx)
+   end
+
+   if t == "Rule" then
+      traverse_ast(ast.filter, node_type, cb, ctx)
+
+   elseif t == "Filter" then
+      traverse_ast(ast.value, node_type, cb, ctx)
+
+   elseif t == "BinaryBoolOp" or t == "BinaryRelOp" then
+      traverse_ast(ast.left, node_type, cb, ctx)
+      traverse_ast(ast.right, node_type, cb, ctx)
+
+   elseif t == "UnaryRelOp" or t == "UnaryBoolOp" then
+      traverse_ast(ast.argument, node_type, cb, ctx)
+
+   elseif t == "List" then
+      for i, v in ipairs(ast.elements) do
+         traverse_ast(v, node_type, cb, ctx)
+      end
+
+   elseif t == "MacroDef" then
+      traverse_ast(ast.value, node_type, cb, ctx)
+
+   elseif t == "FieldName" or t == "Number" or t == "String" or t == "BareString" or t == "Macro" then
+      -- do nothing, no traversal needed
+
+   else
+      error ("Unexpected type in traverse_ast: "..t)
+   end
+end
+parser.traverse_ast = traverse_ast
+
 return parser

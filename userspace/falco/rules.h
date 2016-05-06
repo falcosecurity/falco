@@ -15,8 +15,10 @@ class falco_rules
 	void load_compiler(string lua_main_filename);
 
 	lua_parser* m_lua_parser;
+	sinsp* m_inspector;
 	lua_State* m_ls;
 
 	string m_lua_load_rules = "load_rules";
+	string m_lua_ignored_syscalls = "ignored_syscalls";
 	string m_lua_on_event = "on_event";
 };
