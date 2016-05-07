@@ -20,7 +20,7 @@ DESC="Falco"
 NAME=falco
 DAEMON=/usr/bin/$NAME
 PIDFILE=/var/run/$NAME.pid
-DAEMON_ARGS="--daemon --falcopid=$PIDFILE"
+DAEMON_ARGS="--daemon --pidfile=$PIDFILE"
 SCRIPTNAME=/etc/init.d/$NAME
 
 # Exit if the package is not installed

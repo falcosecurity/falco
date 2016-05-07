@@ -34,7 +34,7 @@ start() {
     [ -x $exec ] || exit 5
     # [ -f $config ] || exit 6
     echo -n $"Starting $prog: "
-    daemon $exec --daemon --falcopid=$pidfile
+    daemon $exec --daemon --pidfile=$pidfile
     retval=$?
     echo
     [ $retval -eq 0 ] && touch $lockfile
