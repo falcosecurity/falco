@@ -111,6 +111,51 @@ function get_macros(ast, set)
    return set
 end
 
+function check_for_ignored_syscalls_events(ast, filter_type, source)
+
+   function check_syscall(val)
+      if ignored_syscalls[val] then
+	 error("Ignored syscall \""..val.."\" in "..filter_type..": "..source)
+      end
+
+   end
+
+   function check_event(val)
+      if ignored_events[val] then
+	 error("Ignored event \""..val.."\" in "..filter_type..": "..source)
+      end
+   end
+
+   function cb(node)
+      if node.left.type == "FieldName" and
+	 (node.left.value == "evt.type" or
+	  node.left.value == "syscall.type") then
+
+	    if node.operator == "in" then
+	       for i, v in ipairs(node.right.elements) do
+		  if v.type == "BareString" then
+		     if node.left.value == "evt.type" then
+			check_event(v.value)
+		     else
+			check_syscall(v.value)
+		     end
+		  end
+	       end
+	    else
+	       if node.right.type == "BareString" then
+		  if node.left.value == "evt.type" then
+		     check_event(node.right.value)
+		  else
+		     check_syscall(node.right.value)
+		  end
+	       end
+	    end
+      end
+   end
+
+   parser.traverse_ast(ast, "BinaryRelOp", cb)
+end
+
 function compiler.compile_macro(line)
    local ast, error_msg = parser.parse_filter(line)
 
@@ -118,6 +163,10 @@ function compiler.compile_macro(line)
       print ("Compilation error: ", error_msg)
       error(error_msg)
    end
+
+   -- Traverse the ast looking for events/syscalls in the ignored
+   -- syscalls table. If any are found, return an error.
+   check_for_ignored_syscalls_events(ast, 'macro', line)
 
    return ast
 end
@@ -132,6 +181,10 @@ function compiler.compile_filter(source, macro_defs)
       print ("Compilation error: ", error_msg)
       error(error_msg)
    end
+
+   -- Traverse the ast looking for events/syscalls in the ignored
+   -- syscalls table. If any are found, return an error.
+   check_for_ignored_syscalls_events(ast, 'rule', source)
 
    if (ast.type == "Rule") then
       -- Line is a filter, so expand macro references

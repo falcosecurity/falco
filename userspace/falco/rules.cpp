@@ -9,6 +9,7 @@ extern "C" {
 
 falco_rules::falco_rules(sinsp* inspector, lua_State *ls, string lua_main_filename)
 {
+        m_inspector = inspector;
 	m_ls = ls;
 
 	m_lua_parser = new lua_parser(inspector, m_ls);
@@ -44,6 +45,42 @@ void falco_rules::load_rules(string rules_filename)
 	lua_getglobal(m_ls, m_lua_load_rules.c_str());
 	if(lua_isfunction(m_ls, -1))
 	{
+		// Create a table containing the syscalls/events that
+		// are ignored by the kernel module. load_rules will
+		// return an error if any rule references one of these
+		// syscalls/events.
+		sinsp_evttables* einfo = m_inspector->get_event_info_tables();
+		const struct ppm_event_info* etable = einfo->m_event_info;
+		const struct ppm_syscall_desc* stable = einfo->m_syscall_info_table;
+
+		lua_newtable(m_ls);
+
+		for(uint32_t j = 0; j < PPM_EVENT_MAX; j++)
+		{
+			if(etable[j].flags & EF_DROP_FALCO)
+			{
+				lua_pushstring(m_ls, etable[j].name);
+				lua_pushnumber(m_ls, 1);
+				lua_settable(m_ls, -3);
+			}
+		}
+
+		lua_setglobal(m_ls, m_lua_ignored_events.c_str());
+
+		lua_newtable(m_ls);
+
+		for(uint32_t j = 0; j < PPM_SC_MAX; j++)
+		{
+			if(stable[j].flags & EF_DROP_FALCO)
+			{
+				lua_pushstring(m_ls, stable[j].name);
+				lua_pushnumber(m_ls, 1);
+				lua_settable(m_ls, -3);
+			}
+		}
+
+		lua_setglobal(m_ls, m_lua_ignored_syscalls.c_str());
+
 		lua_pushstring(m_ls, rules_filename.c_str());
 		if(lua_pcall(m_ls, 1, 0, 0) != 0)
 		{
