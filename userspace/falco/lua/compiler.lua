@@ -111,11 +111,18 @@ function get_macros(ast, set)
    return set
 end
 
-function check_for_ignored_syscalls(ast, filter_type, source)
+function check_for_ignored_syscalls_events(ast, filter_type, source)
 
-   function check_value(val)
+   function check_syscall(val)
       if ignored_syscalls[val] then
 	 error("Ignored syscall \""..val.."\" in "..filter_type..": "..source)
+      end
+
+   end
+
+   function check_event(val)
+      if ignored_events[val] then
+	 error("Ignored event \""..val.."\" in "..filter_type..": "..source)
       end
    end
 
@@ -127,12 +134,20 @@ function check_for_ignored_syscalls(ast, filter_type, source)
 	    if node.operator == "in" then
 	       for i, v in ipairs(node.right.elements) do
 		  if v.type == "BareString" then
-		     check_value(v.value)
+		     if node.left.value == "evt.type" then
+			check_event(v.value)
+		     else
+			check_syscall(v.value)
+		     end
 		  end
 	       end
 	    else
 	       if node.right.type == "BareString" then
-		  check_value(node.right.value)
+		  if node.left.value == "evt.type" then
+		     check_event(node.right.value)
+		  else
+		     check_syscall(node.right.value)
+		  end
 	       end
 	    end
       end
@@ -151,7 +166,7 @@ function compiler.compile_macro(line)
 
    -- Traverse the ast looking for events/syscalls in the ignored
    -- syscalls table. If any are found, return an error.
-   check_for_ignored_syscalls(ast, 'macro', line)
+   check_for_ignored_syscalls_events(ast, 'macro', line)
 
    return ast
 end
@@ -169,7 +184,7 @@ function compiler.compile_filter(source, macro_defs)
 
    -- Traverse the ast looking for events/syscalls in the ignored
    -- syscalls table. If any are found, return an error.
-   check_for_ignored_syscalls(ast, 'rule', source)
+   check_for_ignored_syscalls_events(ast, 'rule', source)
 
    if (ast.type == "Rule") then
       -- Line is a filter, so expand macro references
