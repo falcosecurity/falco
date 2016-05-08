@@ -279,7 +279,7 @@ blockquote. pre, code {
 }
 
 .section-primary {
-    background-color:#ee5a4c;
+    background-color:#999999;
     color:#fff;
     font-weight:300;
     color:#fff
@@ -1113,7 +1113,7 @@ blockquote. pre, code {
     width: 6em;
     -moz-border-radius: 0 0.4em 0.4em 0;
     border-radius: 0 0.4em 0.4em 0;
-    background-color: #ee655b;
+    background-color: #999999;
     position: relative;
 }
 
@@ -1122,7 +1122,7 @@ blockquote. pre, code {
     height: 6em;
     -moz-border-radius: 0 0 0.4em 0.4em;
     border-radius: 0 0 0.4em 0.4em;
-    background-color: #ee655b;
+    background-color: #999999;
     position: relative;
     top: -0.4em;
 }
@@ -1133,7 +1133,7 @@ blockquote. pre, code {
     float:right;
     -moz-border-radius: 0.4em 0.4em 0 0 ;
     border-radius: 0.4em 0.4em 0 0 ;
-    background-color: #ee655b;
+    background-color: #999999;
     position: relative;
     top: -4em;
 }
@@ -1143,7 +1143,7 @@ blockquote. pre, code {
     width: 6em;
     -moz-border-radius: 0.4em 0 0 0.4em;
     border-radius: 0.4em 0 0 0.4em;
-    background-color: #ee655b;
+    background-color: #999999;
     position: relative;
     top: 1.6em;
     right: -0.4em;
@@ -1156,7 +1156,7 @@ blockquote. pre, code {
 }
 
 #page-home #section-features h2{
-    color: #ee655b;
+    color: #999999;
 }
 
 /*
