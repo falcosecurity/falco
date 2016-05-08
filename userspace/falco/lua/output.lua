@@ -5,7 +5,7 @@ levels = {"Emergency", "Alert", "Critical", "Error", "Warning", "Notice", "Infor
 local outputs = {}
 
 function mod.stdout(evt, level, format)
-   format = "%evt.time: "..levels[level+1].." "..format
+   format = "*%evt.time: "..levels[level+1].." "..format
    formatter = falco.formatter(format)
    msg = falco.format_event(evt, formatter)
    print (msg)
