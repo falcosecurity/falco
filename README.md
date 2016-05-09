@@ -2,17 +2,108 @@
 ### *Host Activity Monitoring using Sysdig Event Filtering*
 
 ## Overview
-Brief description of what, why, how, and pointer to website.
+Sysdig Falco is a behavioral activity monitor designed to secure your applications. Powered by Sysdig’s universal system level visibility, write simple and powerful rules, and then output warnings in the format you need. Continuously monitor and detect container, application, host, and network activity... all in one place, from one source of data, with one set of rules.
+
 
 ### What kind of behaviors can Falco detect?
 
-Falco can detect and alert on any behavior that involves making Linux system calls.  Thanks to Sysdig's core decoding and state tracking functionality, Falco alerts can be triggered by the use of specific system calls, their arguments, and by properties of the calling process. Rules are expressed in a high-level, human-readable language. 
+Falco can detect and alert on any behavior that involves making Linux system calls.  Thanks to Sysdig's core decoding and state tracking functionality, Falco alerts can be triggered by the use of specific system calls, their arguments, and by properties of the calling process. Rules are expressed in a high-level, human-readable language. For example, you can easily detect things like:
+- A shell is run inside a container
+- A server process spawns a child process of an unexpected type
+- Unexpected read of a sensitive file (like `/etc/passwd`)
+- A non-device file is written to `/dev`
+- A standard system binary (like `ls`) makes an outbound network connection
 
 
 ## Installing Falco
+### Scripted install
+
+To install Falco automatically in one step, simply run the following command as root or with sudo:
+
+`curl -s https://s3.amazonaws.com/download.draios.com/stable/install-falco | sudo bash`
+
+### Package install
+
+#### RHEL
+
+- Trust the Draios GPG key, configure the yum repository
+```
+rpm --import https://s3.amazonaws.com/download.draios.com/DRAIOS-GPG-KEY.public
+curl -s -o /etc/yum.repos.d/draios.repo http://download.draios.com/stable/rpm/draios.repo
+```
+- Install the EPEL repository
+
+Note: The following command is required only if DKMS is not available in the distribution. You can verify if DKMS is available with yum list dkms
+
+`rpm -i http://mirror.us.leaseweb.net/epel/6/i386/epel-release-6-8.noarch.rpm`
+
+- Install kernel headers
+
+Warning: The following command might not work with any kernel. Make sure to customize the name of the package properly
+
+`yum -y install kernel-devel-$(uname -r)`
+
+- Install Falco
+
+`yum -y install falco`
+
+#### Debian
+
+- Trust the Draios GPG key, configure the apt repository, and update the package list
+
+```
+curl -s https://s3.amazonaws.com/download.draios.com/DRAIOS-GPG-KEY.public | apt-key add -
+curl -s -o /etc/apt/sources.list.d/draios.list http://download.draios.com/stable/deb/draios.list
+apt-get update
+```
+
+- Install kernel headers
+
+Warning: The following command might not work with any kernel. Make sure to customize the name of the package properly
+
+`apt-get -y install linux-headers-$(uname -r)`
+
+- Install Falco
+
+`apt-get -y install falco`
+
+
 Instructions for installing via .deb, .rpm, or docker. To be filled in pre-release.
 
 For now, local compilation and installation is the way to install (see "Building Falco" below).
+
+#### Container install (general)
+
+If you have full control of your host operating system, then installing Falco using the normal installation method is the recommended best practice. This method allows full visibility into all containers on the host OS. No changes to the standard automatic/manual installation procedures are required.
+
+However, Falco can also run inside a Docker container. To guarantee a smooth deployment, the kernel headers must be installed in the host operating system, before running Falco.
+
+This can usually be done on Debian-like distributions with:
+`apt-get -y install linux-headers-$(uname -r)`
+
+Or, on RHEL-like distributions:
+`yum -y install kernel-devel-$(uname -r)`
+
+Falco can then be run with:
+
+```
+docker pull sysdig/falco
+docker run -i -t --name falco --privileged -v /var/run/docker.sock:/host/var/run/docker.sock -v /dev:/host/dev -v /proc:/host/proc:ro -v /boot:/host/boot:ro -v /lib/modules:/host/lib/modules:ro -v /usr:/host/usr:ro sysdig/falco falco
+```
+
+#### Container install (CoreOS)
+
+The recommended way to run Falco on CoreOS is inside of its own Docker container using the install commands in the paragraph above. This method allows full visibility into all containers on the host OS.
+
+This method is automatically updated, includes some nice features such as automatic setup and bash completion, and is a generic approach that can be used on other distributions outside CoreOS as well.
+
+However, some users may prefer to run Falco in the CoreOS toolbox. While not the recommended method, this can be achieved by installing Falco inside the toolbox using the normal installation method, and then manually running the sysdig-probe-loader script:
+
+```
+toolbox --bind=/dev --bind=/var/run/docker.sock
+curl -s https://s3.amazonaws.com/download.draios.com/stable/install-falco | bash
+sysdig-probe-loader
+```
 
 ## Configuring Falco
 
