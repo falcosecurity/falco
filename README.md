@@ -15,7 +15,48 @@ Falco can detect and alert on any behavior that involves making Linux system cal
 - A standard system binary (like `ls`) makes an outbound network connection
 
 
-## Installing Falco
+## Configuring Falco
+
+Falco is primarily configured via two files: a configuration file (such as the `falco.yaml` in this repository) and a rules file (such as the `falco_rules.conf` file in `rules/`). These two files are written to `/etc` after you install the Falco package.
+
+### Rules file
+
+The rules file is where you define the events and actions that you want to be notified on. We've provided a sample rule file `./rules/falco_rules.conf` as a starting point, but you'll want to familiarize yourself with the contents, and most likely, to adapt it to your environment. 
+
+_Call for contributions: If you come up with additional rules which you think should be part of this core set - PR welcome! And likewise if you have an entirely separate ruleset that may not belong in the core rule set._
+
+A Falco rules file is comprised of two kinds of elements: rules and macro definitions. 
+
+Here's an example of a rule that alerts whenever a bash shell is run inside a container:
+
+`container.id != host and proc.name = bash | WARNING Bash run in a container (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)`
+
+The part to the left of the pipe (`|`) is the _condition_. It is expressed using the Sysdig [filter syntax](http://www.sysdig.org/wiki/sysdig-user-guide/#filtering). Any Sysdig filter expression is a valid Falco expression (with the caveat of certain excluded system calls, discussed below). In addition, Falco expressions can contain _macro_ terms, which are not present in Sysdig syntax.
+
+The part to the right of the pipe is the _output_. It is composed of a priority level and an output format. The priority level is case-insensitive and should be one of "emergency", "alert", "critical", "error", "warning", "notice", "informational", or "debug". The output format specifies the message that should be output if a matching event occurs, and follows the Sysdig [output format syntax](http://www.sysdig.org/wiki/sysdig-user-guide/#output-formatting).
+
+Macro definitions provide a way to define common sub-portions of rules in a reusable way. The syntax for a macro is:
+
+`macro_name: macro_definition`
+
+where `macro_name` is a string, and `macro_definition` is any valid Falco condition. 
+
+(_insert example here_).
+
+
+#### Ignored system calls
+
+For performance reasons, some system calls are currently discarded before Falco processing. The current list is: 
+`clock_getres,clock_gettime,clock_nanosleep,clock_settime,close,epoll_create,epoll_create1,epoll_ctl,epoll_pwait,epoll_wait,eventfd,fcntl,fcntl64,fstat,fstat64,getitimer,gettimeofday,nanosleep,poll,ppoll,pread64,preadv,pselect6,pwrite64,pwritev,read,readv,recv,recvfrom,recvmmsg,recvmsg,select,send,sendfile,sendfile64,sendmmsg,sendmsg,sendto,setitimer,settimeofday,shutdown,socket,splice,switch,tee,timer_create,timer_delete,timerfd_create,timerfd_gettime,timerfd_settime,timer_getoverrun,timer_gettime,timer_settime,wait4,write,writev,`
+
+
+
+
+### Configuration file
+Falco is configured via a yaml file. The sample config `falco.yaml` in this repo has comments describing the various options.
+
+
+## Installation
 ### Scripted install
 
 To install Falco automatically in one step, simply run the following command as root or with sudo:
@@ -26,7 +67,7 @@ To install Falco automatically in one step, simply run the following command as 
 
 #### RHEL
 
-- Trust the Draios GPG key, configure the yum repository
+- Trust the Draios GPG key and configure the yum repository
 ```
 rpm --import https://s3.amazonaws.com/download.draios.com/DRAIOS-GPG-KEY.public
 curl -s -o /etc/yum.repos.d/draios.repo http://download.draios.com/stable/rpm/draios.repo
@@ -104,48 +145,6 @@ toolbox --bind=/dev --bind=/var/run/docker.sock
 curl -s https://s3.amazonaws.com/download.draios.com/stable/install-falco | bash
 sysdig-probe-loader
 ```
-
-## Configuring Falco
-
-Falco is primarily configured via two files: a configuration file (such as the `falco.yaml` in this repository) and a rules file (such as the `falco_rules.conf` file in `rules/`). These two files are written to `/etc` after you install the Falco package.
-
-### Rules file
-
-The rules file is where you define the events and actions that you want to be notified on. We've provided a sample rule file `./rules/falco_rules.conf` as a starting point, but you'll want to familiarize yourself with the contents, and most likely, to adapt it to your environment. 
-
-_Call for contributions: If you come up with additional rules which you think should be part of this core set - PR welcome! And likewise if you have an entirely separate ruleset that may not belong in the core rule set._
-
-A Falco rules file is comprised of two kinds of elements: rules and macro definitions. 
-
-Here's an example of a rule that alerts whenever a bash shell is run inside a container:
-
-`container.id != host and proc.name = bash | WARNING Bash run in a container (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)`
-
-The part to the left of the pipe (`|`) is the _condition_. It is expressed using the Sysdig [filter syntax](http://www.sysdig.org/wiki/sysdig-user-guide/#filtering). Any Sysdig filter expression is a valid Falco expression (with the caveat of certain excluded system calls, discussed below). In addition, Falco expressions can contain _macro_ terms, which are not present in Sysdig syntax.
-
-The part to the right of the pipe is the _output_. It is composed of a priority level and an output format. The priority level is case-insensitive and should be one of "emergency", "alert", "critical", "error", "warning", "notice", "informational", or "debug". The output format specifies the message that should be output if a matching event occurs, and follows the Sysdig [output format syntax](http://www.sysdig.org/wiki/sysdig-user-guide/#output-formatting).
-
-Macro definitions provide a way to define common sub-portions of rules in a reusable way. The syntax for a macro is:
-
-`macro_name: macro_definition`
-
-where `macro_name` is a string, and `macro_definition` is any valid Falco condition. 
-
-(_insert example here_).
-
-
-
-#### Ignored system calls
-
-For performance reasons, some system calls are currently discarded before Falco processing. The current list is: 
-`clock_getres,clock_gettime,clock_nanosleep,clock_settime,close,epoll_create,epoll_create1,epoll_ctl,epoll_pwait,epoll_wait,eventfd,fcntl,fcntl64,fstat,fstat64,getitimer,gettimeofday,nanosleep,poll,ppoll,pread64,preadv,pselect6,pwrite64,pwritev,read,readv,recv,recvfrom,recvmmsg,recvmsg,select,send,sendfile,sendfile64,sendmmsg,sendmsg,sendto,setitimer,settimeofday,shutdown,socket,splice,switch,tee,timer_create,timer_delete,timerfd_create,timerfd_gettime,timerfd_settime,timer_getoverrun,timer_gettime,timer_settime,wait4,write,writev,`
-
-
-
-
-### Configuration file
-Falco is configured via a yaml file. The sample config `falco.yaml` in this repo has comments describing the various options.
-
 
 ## Running Falco
 
