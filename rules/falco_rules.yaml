@@ -46,9 +46,9 @@
   condition: fd.directory in (/bin, /sbin, /usr/bin, /usr/sbin)
 
 - macro: bin_dir_mkdir
-  condition: evt.arg[0] contains /bin or evt.arg[0] contains /sbin or evt.arg[0] contains /usr/bin or evt.arg[0] contains /usr/sbin
+  condition: evt.arg[0] contains /bin/ or evt.arg[0] contains /sbin/ or evt.arg[0] contains /usr/bin/ or evt.arg[0] contains /usr/sbin/
 - macro: bin_dir_rename
-  condition: evt.arg[1] contains /bin or evt.arg[1] contains /sbin or evt.arg[1] contains /usr/bin or evt.arg[1] contains /usr/sbin
+  condition: evt.arg[1] contains /bin/ or evt.arg[1] contains /sbin/ or evt.arg[1] contains /usr/bin/ or evt.arg[1] contains /usr/sbin/
 
 - macro: etc_dir
   condition: fd.directory contains /etc
@@ -57,6 +57,8 @@
   condition: fd.directory contains /lib/x86_64-linux-gnu or fd.directory contains /usr/lib/x86_64-linux-gnu or fd.directory contains /usr/lib/sudo
 - macro: centos_so_dirs
   condition: fd.directory contains /lib64 or fd.directory contains /user/lib64 or fd.directory contains /usr/libexec
+- macro: linux_so_dirs
+  condition: ubuntu_so_dirs or centos_so_dirs or fd.name=/etc/ld.so.cache
 
 - macro: coreutils_binaries
   condition: >
@@ -145,7 +147,7 @@
   priority: WARNING
 
 # Don't read 'sensitive' files
-- condition: open_read and not proc.name in (sshd, sudo, su) and not_cron and sensitive_files
+- condition: open_read and not proc.name in (sshd, sudo, su, iptables, ps, httpd-foregroun, httpd, nginx, systemd-logind, lsb_release, check-new-relea, dumpe2fs, accounts-daemon, bash) and not_cron and sensitive_files
   output: "Read sensitive file (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
@@ -155,9 +157,13 @@
   priority: WARNING
 
 # Don't load shared objects coming from unexpected places
-- condition: open_read and fd.name contains .so and not (ubuntu_so_dirs or centos_so_dirs)
-  output: "Loaded .so from unexpected dir (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
-  priority: WARNING
+# Commenting this out for now--there are lots of shared library
+# locations below /usr/lib for things like python, perl, etc. We may
+# want to just add /usr/lib to the list, but that is really
+# permissive.
+# - condition: open_read and fd.name contains .so and not (linux_so_dirs)
+#   output: "Loaded .so from unexpected dir (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
+#   priority: WARNING
 
 # Attempts to access things that shouldn't be
 - condition: evt.res = EACCES
@@ -170,7 +176,7 @@
   priority: WARNING
 
 # Shells should only be run by cron or sshd
-- condition: proc.name = bash and not proc.pname in (bash, sshd, cron, sudo, su, tmux)
+- condition: proc.name = bash and proc.pname exists and not proc.pname in (bash, sshd, cron, sudo, su, tmux, screen, emacs, systemd, fs-bash)
   output: "Unexpected shell (%user.name %proc.name %proc.pname %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
@@ -191,7 +197,7 @@
 
 # Shells in a container
 - condition: container and proc.name = bash
-  output: "shell in a container (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
+  output: "shell in a container (%user.name %container.id %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
 # Network traffic to/from standard utils
@@ -206,7 +212,7 @@
   priority: WARNING
 
 # Non-sudo setuid
-- condition: evt.type=setuid and not_cron and not proc.name in (sudo, sshd)
+- condition: evt.type=setuid and not_cron and not proc.name in (sudo, sshd, exe, httpd-foregroun, httpd, nginx, mysqld)
   output: "unexpected setuid call by non-sudo (%user.name %proc.name %evt.dir %evt.type %evt.args)"
   priority: WARNING
 
@@ -458,4 +464,16 @@
 
 - condition: http_server and inbound and fd.sport != 80 and fd.sport != 443
   output: "Unexpected HTTP server inbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
+  priority: WARNING
+
+# fs-bash is a restricted version of bash suitable for use in curl <curl> | sh installers.
+# Don't let processes who are children of fs-bash call listen()
+- condition: evt.type=listen and proc.aname=fs-bash
+  output: "unexpected listen call by a child process of fs-bash (%proc.name %evt.args)"
+  priority: WARNING
+
+# Don't let processes who are children of fs-bash call setsid() to escape
+# their parent process either.
+- condition: evt.type=setsid and proc.aname=fs-bash
+  output: "unexpected setsid call by a child process of fs-bash (%proc.name %evt.args)"
   priority: WARNING
