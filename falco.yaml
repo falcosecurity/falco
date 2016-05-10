@@ -1,14 +1,14 @@
 rules_file: /etc/falco_rules.yaml
 json_output: false
 
-log_stderr: true
+log_stderr: false
 log_syslog: true
 
 syslog_output:
   enabled: true
 
 file_output:
-  enabled: true
+  enabled: false
   filename: ./events.txt
 
 stdout_output:
