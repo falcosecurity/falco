@@ -14,7 +14,7 @@
 Sysdig Falco is a behavioral activity monitor designed to secure your applications. Powered by Sysdig’s universal system level visibility, write simple and powerful rules, and then output warnings in the format you need. Continuously monitor and detect container, application, host, and network activity... all in one place, from one source of data, with one set of rules.
 
 
-### What kind of behaviors can Falco detect?
+#### What kind of behaviors can Falco detect?
 
 Falco can detect and alert on any behavior that involves making Linux system calls. Thanks to Sysdig's core decoding and state tracking functionality, Falco alerts can be triggered by the use of specific system calls, their arguments, and by properties of the calling process. For example, you can easily detect things like:
 - A shell is run inside a container
@@ -23,7 +23,7 @@ Falco can detect and alert on any behavior that involves making Linux system cal
 - A non-device file is written to `/dev`
 - A standard system binary (like `ls`) makes an outbound network connection
 
-### How you use it
+#### How you use it
 
 Falco is deployed as a long-running daemon. You can install it as a debian/rpm
 package on a regular host or container host, or you can deploy it as a
@@ -83,15 +83,15 @@ Falco is configured via a yaml file. The sample config `falco.yaml` in this repo
 
 
 ## Installation
-### Scripted install
+#### Scripted install
 
 To install Falco automatically in one step, simply run the following command as root or with sudo:
 
 `curl -s https://s3.amazonaws.com/download.draios.com/stable/install-falco | sudo bash`
 
-### Package install
+#### Package install
 
-#### RHEL
+##### RHEL
 
 - Trust the Draios GPG key and configure the yum repository
 ```
@@ -114,7 +114,7 @@ Warning: The following command might not work with any kernel. Make sure to cust
 
 `yum -y install falco`
 
-#### Debian
+##### Debian
 
 - Trust the Draios GPG key, configure the apt repository, and update the package list
 
@@ -139,7 +139,7 @@ Instructions for installing via .deb, .rpm, or docker. To be filled in pre-relea
 
 For now, local compilation and installation is the way to install (see "Building Falco" below).
 
-#### Container install (general)
+##### Container install (general)
 
 If you have full control of your host operating system, then installing Falco using the normal installation method is the recommended best practice. This method allows full visibility into all containers on the host OS. No changes to the standard automatic/manual installation procedures are required.
 
@@ -158,7 +158,7 @@ docker pull sysdig/falco
 docker run -i -t --name falco --privileged -v /var/run/docker.sock:/host/var/run/docker.sock -v /dev:/host/dev -v /proc:/host/proc:ro -v /boot:/host/boot:ro -v /lib/modules:/host/lib/modules:ro -v /usr:/host/usr:ro sysdig/falco falco
 ```
 
-#### Container install (CoreOS)
+##### Container install (CoreOS)
 
 The recommended way to run Falco on CoreOS is inside of its own Docker container using the install commands in the paragraph above. This method allows full visibility into all containers on the host OS.
 
@@ -176,10 +176,10 @@ sysdig-probe-loader
 
 Falco is intended to be run as a service. But for experimentation and designing/testing rulesets, you will likely want to run it manually from the command-line.
 
-### Running Falco as a service
+#### Running Falco as a service
 Instructions for Centos and Ubuntu.
 
-### Running Falco manually
+#### Running Falco manually
 
 `falco --help`
 
@@ -189,7 +189,7 @@ Instructions for Centos and Ubuntu.
 Building Falco requires having `cmake` and `g++` installed.
 
 
-### Building Falco
+#### Building Falco
 Clone this repo in a directory that also contains the sysdig source repo. The result should be something like:
 
 ```
@@ -214,7 +214,7 @@ $ make
 
 as a result, you should have a falco executable in `build/userspace/falco/falco`.
 
-### Load latest sysdig kernel module
+#### Load latest sysdig kernel module
 
 If you have a binary version of sysdig installed, an older sysdig kernel module may already be loaded. To ensure you are using the latest version, you should unload any existing sysdig kernel module and load the locally built version.
 
@@ -226,7 +226,7 @@ To load the locally built version, assuming you are in the `build` dir, use:
 
 `$ insmod driver/sysdig-probe.ko`
 
-### Running Falco
+#### Running Falco
 
 Assuming you are in the `build` dir, you can run Falco as:
 
