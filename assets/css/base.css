@@ -59,7 +59,7 @@ body {
 a {
     text-decoration:none;
     outline:none;
-    color:#ee5a4c;
+    color:#999999;
     -webkit-transition:color 0.2s;
     -moz-transition:color 0.2s;
     -ms-transition:color 0.2s;
@@ -303,7 +303,7 @@ blockquote. pre, code {
 }
 
 .section-secondary {
-    background-color:#ee5a4c;
+    background-color:#999999;
     color:#fff
 }
 
@@ -360,7 +360,7 @@ blockquote. pre, code {
 .section-background h1,.section-background h2,.section-background h3,.section-background h4 {
     font-weight:300;
     margin-top:0;
-    color:#ee5a4c
+    color:#999999
 }
 
 /*
@@ -489,7 +489,7 @@ blockquote. pre, code {
 }
 
 .header .header-nav a:hover {
-    color: #ee5a4c;
+    color: #999999;
 }
 
 .header .header-nav>ul {
@@ -667,7 +667,7 @@ blockquote. pre, code {
 }
 
 #footer a:hover {
-    color: #ee5a4c;
+    color: #999999;
 }
 
 #footer #menu-sysdig-navigation a:hover {
@@ -692,7 +692,7 @@ blockquote. pre, code {
 }
 
 #footer .col-left .title {
-    color:#ee5a4c;
+    color:#999999;
     font-weight:600;
     margin-bottom:4px
 }
@@ -707,7 +707,7 @@ blockquote. pre, code {
 }
 
 #footer .col-right .title {
-    color:#1d8b90;
+    color:#ee5a4c;
     font-weight:600
 }
 
@@ -1165,7 +1165,7 @@ blockquote. pre, code {
  */
 
 #page-home #section-testimonials {
-    background-color: #ee5a4c;
+    background-color: #999999;
     margin-top: 4em;
 }
 
@@ -1281,7 +1281,7 @@ html[xmlns] .slides {
 
 .testimonials-slider .flex-direction-nav a:hover {
     background:rgba(255,255,255,0.7);
-    color:#ee5a4c;
+    color:#999999;
 }
 
 .testimonials-slider .flex-direction-nav .flex-prev {
@@ -1338,7 +1338,7 @@ html[xmlns] .slides {
 }
 
 #section-last .row a:hover {
-    color: #ee5a4c;
+    color: #999999;
 }
 
 #section-last .row .col-xs-6:first-child {
@@ -2288,14 +2288,14 @@ html[xmlns] .slides {
     font-size: 3em;
     margin-top: .5em;
     margin-bottom: .5em;
-    color:#ee5a4c;
+    color:#999999;
     margin-right: 5em;
 }
 
 #section-install h2 {
     font-size: 2em;
     margin-top: 1.5em;
-    color:#ee5a4c;
+    color:#999999;
 }
 
 #section-install .agent-install h4 {
@@ -2309,7 +2309,7 @@ html[xmlns] .slides {
 
 #section-install .panel-title h2, #section-install .panel-title h4{
     margin: 0;
-    color: #ee5a4c;
+    color: #999999;
 }
 
 #section-install .list-group {
