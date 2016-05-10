@@ -1,0 +1,162 @@
+
+@import url(https://fonts.googleapis.com/css?family=Raleway:400,200,100,300,500,600,700,800,900);
+@import url(https://fonts.googleapis.com/css?family=Asap:400,700);
+
+html, body {
+    font-family: 'Raleway';
+
+    margin: 0px;
+    padding: 0px;
+    text-align: center;
+}
+
+#header {
+    width: 100%;
+}
+
+@media (max-width: 1250px) {
+    #header {
+        max-width: 1250px;
+        width: 1250px;
+    }
+}
+
+#wrapper {
+    width: 1250px;
+    margin: 0px auto;
+}
+
+#logo {
+    margin-top: 20px;
+}
+
+h1 {
+    font-size: 60px;
+    font-weight: 900;
+    letter-spacing: -1px;
+    line-height: 55px;
+    color: #EB632F;
+    margin-top: 30px;
+}
+
+#central-image {
+    margin-top: 30px;
+}
+
+#main {
+    margin-top: 30px;
+}
+
+#main h2 {
+    font-size: 28px;
+    font-weight: 400;
+    line-height: 30px;
+    color: #EB632F;
+    margin-bottom: 0px;
+}
+
+#main p {
+    font-size: 17px;
+    font-weight: 300;
+    line-height: 25px;
+
+    margin: 0px auto;
+    margin-top: 15px;
+    width: 905px;
+}
+
+#form {
+    margin: 30px auto;
+}
+
+.mail, input[type="email"] {
+  color: #333;
+  border-radius: 0;
+  border: 2px solid #8e8e8e;
+  font-family: 'Raleway', sans-serif;
+  font-size: 20px;
+  font-weight: 400;
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  box-shadow: none;
+  width: 330px;
+  height: 25px;
+  transition: border linear .2s,box-shadow linear .2s;
+  padding: 6px;
+  line-height: 25px;
+  letter-spacing: 1px;
+}
+input[type="email"]::-webkit-input-placeholder,
+input[type="email"]:-moz-placeholder,
+input[type="email"]:-ms-placeholder,
+input[type="email"]:-o-placeholder {
+    color: #AFAFAF;
+}
+.mail.alt, input[type="email"].alt {
+  font-size: 17px;
+  margin-right: 3px;
+  padding: 4px 6px 2px 4px;
+  width: 200px;
+  line-height: initial;
+}
+.mail:focus, input[type="email"]:focus {
+  outline: 0;
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  box-shadow: none;
+  border-color: rgba(82, 168, 236, 0.8);
+}
+.control-group {
+  font-family: 'Asap', sans-serif;
+  font-weight: 400;
+  font-size: 13px;
+}
+.control-group.alt {
+  font-size: 11px;
+  margin-top: 21px;
+  margin-left: 106px;
+}
+.help-inline {
+    padding-left: 0px;
+}
+
+.join {
+  font-family: 'Asap';
+  font-weight: 700;
+  background: #6AD5FF;
+  color: #FFF;
+  font-size: 25px;
+  display: inline-block;
+  height: 40px;
+  margin-left: 10px;
+  margin-top: -10px;
+  line-height: 20px;
+  cursor: pointer;
+  border: 0;
+  padding: 7px 18px !important;
+  letter-spacing: -1px;
+}
+.join:hover { opacity: .9; }
+.join.unclickable { background: #BFD2DA; box-shadow: none; }
+.join.unclickable:active { margin-top: 0px !important; }
+.join.unclickable:hover { opacity: 1; }
+
+.join {
+    padding: 10px;
+
+    border-radius: 20px;
+
+    -webkit-box-shadow: 1px 1px 5px rgba(0, 0, 0, .5);
+       -moz-box-shadow: 1px 1px 5px rgba(0, 0, 0, .5);
+        -ms-box-shadow: 1px 1px 5px rgba(0, 0, 0, .5);
+         -o-box-shadow: 1px 1px 5px rgba(0, 0, 0, .5);
+    box-shadow: 0px 5px 10px 0px rgba(0, 0, 0, .5);
+
+    background-color: #637AA6;
+    background-image: -webkit-linear-gradient(#637AA6, #414D65);
+    background-image:    -moz-linear-gradient(#637AA6, #414D65);
+    background-image:     -ms-linear-gradient(#637AA6, #414D65);
+    background-image:      -o-linear-gradient(#637AA6, #414D65);
+    background-image: linear-gradient(#637AA6, #414D65);
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#637AA6', endColorstr='#414D65');
+}

@@ -1,0 +1,128 @@
+---
+layout: wiki
+title: Wiki | Chisels User Guide
+slug: wiki
+wiki-title: Chisels User Guide
+wiki-url: https://github.com/draios/sysdig/wiki/chisels-user-guide
+---
+
+        <p>Sysdig’s chisels are little scripts that analyze the sysdig event stream to perform useful actions. 
+If you’ve used system tracing tools like dtrace, you’re probably familiar with running scripts that trace OS events. Usually, with dtrace-like tools you write your scripts using a domain-specific language that gets compiled into bytecode and injected in the kernel. Sysdig uses a different approach: events are efficiently brought to user-level, enriched with context, and then scripts can be applied to them. This brings several benefits:</p>
+
+<ul>
+<li>A well known scripting language can be used instead of a custom one. In fact, sysdig’s chisels are Lua scripts. Lua is well known, powerful, stable and extremely efficient.</li>
+<li>Chisels can leverage the broad collection of Lua libraries.</li>
+<li>Chisels work well on live systems, but can also be used with capture files for offline analysis.<br>
+</li>
+</ul>
+
+<p>To get the list of available chisels, just type</p>
+
+<blockquote>
+<p>$ sysdig -cl  </p>
+</blockquote>
+
+<p>You will get a short description for each of the available chisels.<br>
+If you need a detailed description and the list of arguments for one of the chisels, you use the -i command line switch:</p>
+
+<blockquote>
+<p>$ sysdig -ispy_ip</p>
+</blockquote>
+
+<p>To run one of the chisels, you use the –c flag. For instance, let’s run the topfiles_bytes chisel:</p>
+
+<blockquote>
+<p>$ sysdig –c topfiles_bytes</p>
+</blockquote>
+
+<p>And if a chisel needs arguments, you specify them after the chisel name:</p>
+
+<blockquote>
+<p>$ sysdig –c spy_ip 192.168.1.157</p>
+</blockquote>
+
+<p>Chisels can be combined with filters, which usually makes them much more useful. For example, let’s take the simple topfiles_bytes chisel. If we run it without arguments, it will show us the most accessed files on the whole machine.</p>
+
+<pre><code>$ sysdig -c topfiles_bytes  
+Bytes     Filename  
+------------------------------
+23.32KB   /proc/net/unix  
+9.11KB    /usr/share/icons/hicolor/16x16/actions/terminator_receive_off.png  
+5.64KB    /etc/localtime  
+4.92KB    /proc/interrupts  
+4.38KB    /dev/input/event2  
+4.37KB    /etc/wgetrc  
+2.88KB    /proc/stat  
+2.39KB    /usr/share/locale/locale.alias  
+1.85KB    /proc/18263/status  
+</code></pre>
+
+<p>Let’s say we’re not interested in accesses to /dev. We can filter it out with something like this</p>
+
+<pre><code>$ sysdig -c topfiles_bytes "not fd.name contains /dev"  
+Bytes     Filename  
+------------------------------  
+23.32KB   /proc/net/unix  
+9.11KB    /usr/share/icons/hicolor/16x16/actions/terminator_receive_off.png  
+5.64KB    /etc/localtime  
+4.92KB    /proc/interrupts  
+4.37KB    /etc/wgetrc  
+2.88KB    /proc/stat  
+2.39KB    /usr/share/locale/locale.alias  
+1.85KB    /proc/18263/status  
+</code></pre>
+
+<p>Or maybe we want to see the top files in a specific folder:</p>
+
+<pre><code>$ sysdig -c topfiles_bytes "fd.name contains /root"  
+Bytes     Filename
+------------------------------
+1.29KB    /root/agent/build/debug/test/index.html.93
+1.10KB    /root/.dropbox/PENDING_aWX7WU
+1.10KB    /root/.dropbox/UPDATED_UsxrsX
+16B       /root/.dropbox/filecache.dbx```
+</code></pre>
+
+<p>Or the ones accessed by a specific process:</p>
+
+<pre><code>$ sysdig -c topfiles_bytes "proc.name=vi"  
+Bytes     Filename
+------------------------------
+4.00KB    /root/agent/build/debug/test/.lo.txt.swp  
+3.36KB    /usr/share/terminfo/x/xterm-256color  
+2.18KB    /etc/passwd  
+1.98KB    /root/agent/build/debug/test/lo.txt  
+1.92KB    /etc/virc  
+1.66KB    /etc/nsswitch.conf  
+832B      /lib64/libpcre.so.1  
+832B      /lib64/libc.so.6  
+832B      /lib64/libnss_files.so.2  
+</code></pre>
+
+<p>Or by a specific user:</p>
+
+<pre><code>$ sysdig -c topfiles_bytes "user.name=loris"  
+Bytes     Filename
+------------------------------
+3.31KB    /etc/nsswitch.conf  
+2.18KB    /etc/passwd  
+1.62KB    /lib64/libselinux.so.1  
+1.62KB    /lib64/libc.so.6  
+1.62KB    /lib64/libpcre.so.1  
+1.62KB    /lib64/libdl.so.2  
+1.62KB    /lib64/libnss_files.so.2  
+898B      /etc/group  
+54B       /proc/self/task/30414/attr/current  
+</code></pre>
+
+<p>One last thing to remember about chisels is that you can run as many as you want at the same time. For example,</p>
+
+<blockquote>
+<p>$ sysdig -c stdin -c stdout proc.name=cat</p>
+</blockquote>
+
+<p>will replay both standard input and standard output of cat.
+As mentioned before, chisels are written in Lua, so customizing them or writing new ones is very easy and pretty fun. The <a href="{{ site.baseurl }}wiki/writing-a-sysdig-chisel,-a-tutorial">chisel tutorial</a> and 
+<a href="{{ site.baseurl }}wiki/sysdig-chisel-api-reference-manual">chisel API reference</a> include all you need to get started.  </p>
+
+      

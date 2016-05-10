@@ -1,0 +1,73 @@
+---
+layout: wiki
+title: Wiki | Container Enabled Chisels
+slug: wiki
+wiki-title: Container Enabled Chisels
+wiki-url: https://github.com/draios/sysdig/wiki/container-enabled-chisels
+---
+
+        <p>sysdig now supporting Docker, LXC, and libvirt-lxc containers and the following chisels have been added or modified to enable their support.</p>
+
+<h3>
+<a id="user-content-examples" class="anchor" href="#examples" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Examples</h3>
+
+<ul>
+<li>sudo sysdig -cl # -cl, --list-chisels lists the available chisels</li>
+<li>sudo sysdig -i lscontainers # -i chiselname, --chisel-info chiselname list chisel's details </li>
+<li>sudo sysdig -c lscontainers</li>
+<li>sudo sysdig -pc -c topprocs_cpu</li>
+<li>sudo sysdig -pcontainer -c topprocs_cpu</li>
+</ul>
+
+<h2>
+<a id="user-content-new-container-specific-chisels" class="anchor" href="#new-container-specific-chisels" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>New Container Specific Chisels</h2>
+
+<ul>
+<li>lscontainers: List the running containers.</li>
+<li>topcontainers_cpu: Top containers by CPU usage.</li>
+<li>topcontainers_error: Top containers by number of errors.</li>
+<li>topcontainers_file: Top containers by R+W disk bytes.</li>
+<li>topcontainers_net: Top containers by network I/O.</li>
+</ul>
+
+<h2>
+<a id="user-content-updated-chisels-supporting-containers" class="anchor" href="#updated-chisels-supporting-containers" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Updated Chisels Supporting Containers</h2>
+
+<p>Specifically this means each one of these are container aware with either the <strong>-pc</strong> pr <strong>-pcontainer</strong> sysdig option flag.</p>
+
+<ul>
+<li>echo_fds: Print the data read and written by processes.</li>
+<li>fileslower: Trace slow file I/O.</li>
+<li>list_login_shells: List the login shell IDs.</li>
+<li>netlower: Trace slow network I/0.</li>
+<li>proc_exec_time: Show process execution time.</li>
+<li>scallslower: Trace slow syscalls.</li>
+<li>spy_logs: Echo any write made by any process to a log file.</li>
+<li>spy_syslog: Print every message written to syslog.</li>
+<li>spy_users: Display interactive user activity.</li>
+<li>stderr: Print stderr of processes.</li>
+<li>topconns: Top network connections by total bytes.</li>
+<li>topfiles_bytes: Top files by R+W bytes.</li>
+<li>topfiles_errors: Top files by number of errors.</li>
+<li>topfiles_time: Top files by time.</li>
+<li>topports_server: Top TCP/UDP server ports by R+W bytes.</li>
+<li>topprocs_cpu: Top processes by CPU usage.</li>
+<li>topprocs_errors: Top processes by number of errors.</li>
+<li>topprocs_file: Top processes by R+W disk bytes.</li>
+<li>topprocs_net: Top processes by network I/O.</li>
+<li>topscalls: Top system calls by number of calls.</li>
+<li>topscalls_time: Top system calls by time.</li>
+</ul>
+
+<h4>
+<a id="user-content-chisels-documentation" class="anchor" href="#chisels-documentation" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Chisels Documentation</h4>
+
+<ul>
+<li><a href="{{ site.baseurl }}wiki/chisels-user-guide">User Guide</a></li>
+<li>
+<a href="{{ site.baseurl }}wiki/writing-a-sysdig-chisel,-a-tutorial">How to Write a Chisel</a><br>
+</li>
+<li><a href="{{ site.baseurl }}wiki/sysdig-chisel-api-reference-manual">Chisel API Reference Manual</a></li>
+</ul>
+
+      

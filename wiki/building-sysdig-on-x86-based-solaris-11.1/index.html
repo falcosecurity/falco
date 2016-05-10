@@ -1,0 +1,90 @@
+---
+layout: wiki
+title: Wiki | Building sysdig on x86 based Solaris 11.1
+slug: wiki
+wiki-title: Building sysdig on x86 based Solaris 11.1
+wiki-url: https://github.com/draios/sysdig/wiki/building-sysdig-on-x86-based-solaris-11.1
+---
+
+        <p>The following instructions are to build the userspace side of sysdig on <code>SunOS solaris 5.11 (11.1) i86pc</code>.  We use the GNU build chain (ie., gmake, g++ and friends).  </p>
+
+<blockquote>
+<p>Notes: sysdig <strong>does not</strong> have any kernel modules available for SunOS at the time of this writing. The product that will be compiled below is limited to analyzing scap files created on other systems.</p>
+</blockquote>
+
+<ul>
+<li>Goal: Userspace sysdig application.</li>
+<li>Operating System: Intel-based Solaris 5.11.</li>
+<li>Duration: 20 minutes ~ 2 hours depending on network and system speed.</li>
+</ul>
+
+<h2>
+<a id="user-content-building" class="anchor" href="#building" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Building</h2>
+
+<h3>
+<a id="user-content-install-g-48-or-greater" class="anchor" href="#install-g-48-or-greater" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Install g++ 4.8 or greater</h3>
+
+<p>g++ 4.5 which is offered at the time of this authorship through the official solaris repositories (April 7, 2014) does not support some of the C++11 styles in sysdig's userspace code.  Thus, you'll need a newer version of g++ (4.8 is known to work).</p>
+
+<h4>
+<a id="user-content-add-and-configure-the-opencsw-repository" class="anchor" href="#add-and-configure-the-opencsw-repository" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Add and configure the OpenCSW repository</h4>
+
+<p>g++ 4.8 can be installed through the OpenCSW repository with the <code>pkgutil</code> program. You can use <a href="http://www.opencsw.org/manual/for-administrators/getting-started.html">the getting started guide on the OpenCSW site</a> to find out how to install and configure the OpenCSW repository.  </p>
+
+<p>As of this writing, g++ 4.8 can be found in the "unstable" branch (how to specify this branch is discussed in the <a href="http://www.opencsw.org/manual/for-administrators/getting-started.html">instructions linked to</a> above).  Check the current <a href="https://www.opencsw.org/get-it/packages/">list of packages</a> to see the latest g++ offerings.</p>
+
+<h4>
+<a id="user-content-install-g-48" class="anchor" href="#install-g-48" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Install g++ 4.8</h4>
+
+<p>After following the instructions above, execute</p>
+
+<pre><code># pkgutil -i gcc4g++
+</code></pre>
+
+<p>And answer the prompts to your liking (I answered 'y' to all of them).</p>
+
+<h3>
+<a id="user-content-tell-cmake-to-use-opencsws-g" class="anchor" href="#tell-cmake-to-use-opencsws-g" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Tell Cmake to use OpenCSW's g++</h3>
+
+<blockquote>
+<p>Note: If you had already tried to build sysdig prior to reading this and failed, make sure to clean out your build directory with an <code>rm -fr *</code> inside the build directory prior to continuing (or create a new build directory if you aren't comfortable issuing that command).  </p>
+</blockquote>
+
+<p>Go to the base sysdig source directory (the directories and files should look <a href="https://github.com/draios/sysdig">similar to the file listings here</a>) and make a build directory:</p>
+
+<pre><code>~/sysdig:$ mkdir build 
+~/sysdig/build:$ cd build
+</code></pre>
+
+<p>In order to use the newer OpenCSW g++, modify your path on the command line, prior to the <code>cmake</code> command, like so:</p>
+
+<pre><code>~/sysdig/build:$ PATH=/opt/csw/bin:$PATH cmake ..
+...
+-- Check for working CXX compiler: /opt/csw/bin/c++
+-- Check for working CXX compiler: /opt/csw/bin/c++ -- works
+...
+</code></pre>
+
+<p>Notice how our output tells us that that Cmake is going to correctly be using the c++ compiler in the <code>/opt/csw/bin/</code> path as opposed to the incorrect one in <code>/usr/bin</code>.</p>
+
+<h3>
+<a id="user-content-build-the-userspace-sysdig" class="anchor" href="#build-the-userspace-sysdig" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Build the userspace sysdig</h3>
+
+<p>Now, we cross all of our fingers, put on our lucky pink feather boa, and run make:</p>
+
+<pre><code>~/sysdig/build:$ make
+</code></pre>
+
+<p>You may get a few embarrassing warnings, but it's all going to be ok. I assure you.</p>
+
+<h3>
+<a id="user-content-smoketest-it" class="anchor" href="#smoketest-it" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Smoketest it</h3>
+
+<p>After all is done you should be able to run</p>
+
+<pre><code>~/sysdig/build:$ ./userspace/sysdig/sysdig -l
+</code></pre>
+
+<p>And have it run.  Yes! we win again! Feel free to run a <code>sudo make install</code> if desired.</p>
+
+      

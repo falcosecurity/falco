@@ -1,0 +1,268 @@
+---
+layout: default
+title: Install
+slug: install
+---
+
+<!-- Section Install-->
+<div id="section-install" class="section section-default section-center">
+    <div class="section-inner">
+        <a href="http://sysdigcloud.com" id="cloud-wiki-up" class="sysdigcloud">
+            <input type="hidden" value="CloudTop">
+            <div class="content">
+                <img class="img-responsive center-block syscloudlogo" src="{{ site.baseurl }}assets/img/sysdigcloud_white.svg" alt="Sysdig Cloud" />
+                <h3>Container-Native Monitoring</h3>
+                <div class="btn btn-lg btn-tertiary">Check it Out</div>
+            </div>
+        </a>
+
+        <h1>Sysdig Installation Guide</h1>
+
+        <p>If you have any issues with installation, please contact the sysdig <a href="https://groups.google.com/forum/#!forum/sysdig">mailing list</a>.</p>
+
+
+<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+    <div class="panel panel-default">
+        <div class="panel-heading" role="tab" id="headingOne">
+            <h4 class="panel-title">
+                <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                    <h2>Linux</h2>
+                </a>
+            </h4>
+        </div>
+        <div id="collapseOne" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingOne">
+            <div class="panel-body">
+                <p><strong>Requirements</strong></p>
+                <p>The following distributions are supported:</p>
+
+                <div class="clear">
+                    <ul class="list-group col-md-4">
+                        <li class="list-group-item list-head"><h4><b>RHEL based</b></h4></li>
+                        <li class="list-group-item">RHEL, from 6</li>
+                        <li class="list-group-item">CentOS, from 6</li>
+                        <li class="list-group-item">Amazon Linux, any version avaiable from the AWS Marketplace</li>
+                        <li class="list-group-item">Fedora, from 13</li>
+                        <li class="list-group-item">Oracle Linux, from 6</li>
+                    </ul>
+
+                    <ul class="list-group col-md-4">
+                        <li class="list-group-item list-head"><h4><b>Debian based</b></h4></li>
+                        <li class="list-group-item">Debian, from 6.0</li>
+                        <li class="list-group-item">Ubuntu, from 10.04</li>
+                        <li class="list-group-item">Linux Mint, from 9</li>
+                    </ul>
+
+                    <ul class="list-group col-md-4">
+                        <li class="list-group-item list-head"><h4><b>Container based</b></h4></li>
+                        <li class="list-group-item">Docker</li>
+                        <li class="list-group-item">CoreOS</li>
+                        <li class="list-group-item">LXC</li>
+                    </ul>
+                </div>
+                <blockquote class="clear"><strong>Note</strong>: sysdig is now included in the latest versions of <a href="https://packages.debian.org/search?keywords=sysdig&searchon=names&suite=all&section=all">Debian</a> and <a href="http://packages.ubuntu.com/search?keywords=sysdig&searchon=names&suite=all&section=all">Ubuntu</a>; however, sysdig is updated with new functionality all the time, so we recommend following the install instructions below to be sure you have the latest and greatest.</blockquote>
+                <p class="clear"><strong>Basic Install</strong></p>
+                <p>To install sysdig automatically in one step, simply run the following command as root or with sudo.</p>
+                <pre>curl -s https://s3.amazonaws.com/download.draios.com/stable/install-sysdig | sudo bash</pre>
+                <br/>
+                <p class="clear"><strong>Advanced Install</strong></p>
+                <p>Manual installation is also easy - just follow the relevant instructions below. This method can be useful for scripted deployments and deployments to containerized environments.</p>
+                <blockquote><strong>Note</strong>: for the latest packages, <a href="{{ site.baseurl }}wiki/latest-packages">go here</a>, and to compile from the source code, <a href="{{ site.baseurl }}wiki/how-to-install-sysdig-from-the-source-code">go here</a>.</blockquote>
+
+
+                <div class="panel-group" id="accordionLinux" role="tablist" aria-multiselectable="true">
+                    <div class="panel panel-default">
+                        <div class="panel-heading" role="tab" id="headingRHEL">
+                            <h4 class="panel-title">
+                                <a data-toggle="collapse" data-parent="#accordionLinux" href="#collapseRHEL" aria-expanded="true" aria-controls="collapseRHEL">
+                                    <h4>RHEL based install</h4>
+                                </a>
+                            </h4>
+                        </div>
+                        <div id="collapseRHEL" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingRHEL">
+                            <div class="panel-body">
+                                <p>1) Trust the Draios GPG key, configure the yum repository</p>
+
+                                <pre><code>rpm --import https://s3.amazonaws.com/download.draios.com/DRAIOS-GPG-KEY.public
+curl -s -o /etc/yum.repos.d/draios.repo http://download.draios.com/stable/rpm/draios.repo</code></pre>
+
+                                <p>2) Install the EPEL repository</p>
+
+                                <p>Note: The following command is required only if DKMS is not available in the distribution. You can verify if DKMS is available with <code>yum list dkms</code></p>
+
+                                <pre><code>rpm -i http://mirror.us.leaseweb.net/epel/6/i386/epel-release-6-8.noarch.rpm</code></pre>
+
+                                <p>3) Install kernel headers</p>
+
+                                <p><strong>Warning</strong>: The following command might not work with any kernel. Make sure to customize the name of the package properly</p>
+
+                                <pre><code>yum -y install kernel-devel-$(uname -r)</code></pre>
+
+                                <p>4) Install sysdig</p>
+
+                                <pre><code>yum -y install sysdig</code></pre>
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel panel-default">
+                        <div class="panel-heading" role="tab" id="headingDebian">
+                            <h4 class="panel-title">
+                                <a class="collapsed" data-toggle="collapse" data-parent="#accordionLinux" href="#collapseDebian" aria-expanded="false" aria-controls="collapseDebian">
+                                    <h4>Debian based install</h4>
+                                </a>
+                            </h4>
+                        </div>
+                        <div id="collapseDebian" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingDebian">
+                            <div class="panel-body">
+                                <p>1) Trust the Draios GPG key, configure the apt repository, and update the package list</p>
+
+                                <pre><code>curl -s https://s3.amazonaws.com/download.draios.com/DRAIOS-GPG-KEY.public | apt-key add -
+curl -s -o /etc/apt/sources.list.d/draios.list http://download.draios.com/stable/deb/draios.list
+apt-get update</code></pre>
+
+                                <p>2) Install kernel headers</p>
+
+                                <p><strong>Warning</strong>: The following command might not work with any kernel. Make sure to customize the name of the package properly</p>
+
+                                <pre><code>apt-get -y install linux-headers-$(uname -r)</code></pre>
+
+                                <p>3) Install sysdig</p>
+
+                                <pre><code>apt-get -y install sysdig</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel panel-default">
+                        <div class="panel-heading" role="tab" id="headingContainer">
+                            <h4 class="panel-title">
+                                <a class="collapsed" data-toggle="collapse" data-parent="#accordionLinux" href="#collapseContainer" aria-expanded="false" aria-controls="collapseContainer">
+                                    <h4>Container install (General)</h4>
+                                </a>
+                            </h4>
+                        </div>
+                        <div id="collapseContainer" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingContainer">
+                            <div class="panel-body">
+                                <p>If you have full control of your host operating system, then installing sysdig using the normal installation method is the recommended best practice. This method allows full visibility into all containers on the host OS. No changes to the standard automatic/manual installation procedures are required.</p>
+
+                                <p>However, sysdig can also run inside a Docker container.
+                                To guarantee a smooth deployment, the kernel headers must be installed in the host operating system, before running sysdig.</p>
+
+                                <p>This can usually be done on Debian-like distributions with:</p>
+
+                                <pre><code>apt-get -y install linux-headers-$(uname -r)</code></pre>
+
+                                <p>Or, on RHEL-like distributions:</p>
+
+                                <pre><code>yum -y install kernel-devel-$(uname -r)</code></pre>
+
+                                <p>sysdig can then be run with:</p>
+
+                                <pre><code>docker pull sysdig/sysdig</code></pre>
+
+                                <pre><code>docker run -i -t --name sysdig --privileged -v /var/run/docker.sock:/host/var/run/docker.sock -v /dev:/host/dev -v /proc:/host/proc:ro -v /boot:/host/boot:ro -v /lib/modules:/host/lib/modules:ro -v /usr:/host/usr:ro sysdig/sysdig</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel panel-default">
+                        <div class="panel-heading" role="tab" id="headingCoreos">
+                            <h4 class="panel-title">
+                                <a class="collapsed" data-toggle="collapse" data-parent="#accordionLinux" href="#collapseCoreos" aria-expanded="false" aria-controls="collapseCoreos">
+                                    <h4>Container install (CoreOS)</h4>
+                                </a>
+                            </h4>
+                        </div>
+                        <div id="collapseCoreos" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingCoreos">
+                            <div class="panel-body">
+                                <p>The recommended way to run sysdig on CoreOS is inside of its own Docker container. This method allows full visibility into all containers on the host OS.</p>
+
+                                <pre><code>docker pull sysdig/sysdig</code></pre>
+
+                                <pre><code>docker run -i -t --name sysdig --privileged -v /var/run/docker.sock:/host/var/run/docker.sock -v /dev:/host/dev -v /proc:/host/proc:ro -v /boot:/host/boot:ro -v /lib/modules:/host/lib/modules:ro -v /usr:/host/usr:ro sysdig/sysdig</code></pre>
+
+                                <p>This method is automatically updated, includes some nice features such as automatic setup and bash completion, and is a generic approach that can be used on other distributions outside CoreOS as well.</p>
+
+                                <p>However, some users may prefer to run sysdig in the CoreOS toolbox. While not the recommended method, this can be achieved by installing sysdig inside the toolbox using the normal installation method, and then manually running the <code>sysdig-probe-loader</code> script:</p>
+
+                                <pre><code>$ toolbox --bind=/dev --bind=/var/run/docker.sock
+# curl -s https://s3.amazonaws.com/download.draios.com/stable/install-sysdig | bash
+# sysdig-probe-loader</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+
+            </div>
+        </div>
+    </div>
+    <div class="panel panel-default">
+        <div class="panel-heading" role="tab" id="headingTwo">
+            <h4 class="panel-title">
+                <a class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                    <h2>Windows</h2>
+                </a>
+            </h4>
+        </div>
+        <div id="collapseTwo" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingTwo">
+            <div class="panel-body">
+                <blockquote><strong>Note</strong>: currently only the Linux version of sysdig is capable of capturing events and doing live analysis. On the other platforms, you will be limited to working with the trace files generated by a Linux installation of sysdig.</blockquote>
+                <p><strong>Requirements</strong></p>
+                <p>The following versions of Windows are supported:</p>
+                <ul>
+                    <li>Windows Vista</li>
+                    <li>Windows 7</li>
+                    <li>Windows 8 and 8.1</li>
+                    <li>Windows Server 2003, 2008 and 2012</li>
+                </ul>
+                <p><strong>Installation</strong></p>
+                <ol>
+                    <li>Download and install the Visual Studio 2013 x86 Redistributable (vcredist_x86.exe) from <a href="http://www.microsoft.com/en-us/download/details.aspx?id=40784">here</a></li>
+                    <li>Download the sysdig zip file from <a href="{{ site.baseurl }}wiki/latest-packages/">here</a></li>
+                    <li>Unzip the file</li>
+                    <li>Open a command prompt and navigate to the unzipped folder</li>
+                    <li>You can now run sysdig, e.g. <code>sysdig -cl </code></li>
+                </ol>
+            </div>
+        </div>
+    </div>
+    <div class="panel panel-default">
+        <div class="panel-heading" role="tab" id="headingThree">
+            <h4 class="panel-title">
+                <a class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                    <h2>OSX</h2>
+                </a>
+            </h4>
+        </div>
+        <div id="collapseThree" class="panel-collapse collapse" role="tabpanel" aria-labelledby="headingThree">
+            <div class="panel-body">
+                <blockquote><strong>Note</strong>: currently only the Linux version of sysdig is capable of capturing events and doing live analysis. On the other platforms, you will be limited to working with the trace files generated by a Linux installation of sysdig.</blockquote>
+                <p><strong>Homebrew</strong></p>
+                <pre><code>brew update
+brew install sysdig</code></pre>
+                <p><strong>MacPorts</strong></p>
+                <pre><code>sudo port install sysdig</code></pre>
+                </div>
+            </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
+        <a href="http://sysdigcloud.com" id="cloud-wiki-down" class="sysdigcloud">
+            <input type="hidden" value="CloudBottom">
+            <div class="content">
+                <img class="img-responsive center-block syscloudlogo" src="{{ site.baseurl }}assets/img/sysdigcloud_white.svg" alt="Sysdig Cloud" />
+                <h3>Container-Native Monitoring</h3>
+                <div class="btn btn-lg btn-tertiary">Check it Out</div>
+            </div>
+        </a>
+    </div>
+</div>
+<!-- /Section -->

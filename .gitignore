@@ -1,0 +1,7 @@
+# Jekyll
+_site/
+
+# Mac
+.DS_Store
+
+/CNAME

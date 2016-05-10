@@ -1,0 +1,206 @@
+---
+layout: wiki
+title: Wiki | Sysdig Quick Reference Guide
+slug: wiki
+wiki-title: Sysdig Quick Reference Guide
+wiki-url: https://github.com/draios/sysdig/wiki/sysdig-quick-reference-guide
+---
+
+        <p><strong>Table of Contents</strong>  </p>
+
+<ul>
+<li>
+<a href="#command-format">Command Format</a><br>
+</li>
+<li>
+<a href="#command-options">Command Options</a><br>
+</li>
+<li>
+<a href="#basic-command-list">Basic Command List</a><br>
+</li>
+<li>
+<a href="#output-format">Output Format</a><br>
+</li>
+<li>
+<a href="#filtering">Filtering</a><br>
+</li>
+<li>
+<a href="#chisels">Chisels</a><br>
+</li>
+</ul>
+
+<h3>
+<a id="user-content-command-format" class="anchor" href="#command-format" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Command Format</h3>
+
+<p><strong>sysdig</strong> [<em>option</em>]... [<em>filter</em>]</p>
+
+<h3>
+<a id="user-content-command-options" class="anchor" href="#command-options" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Command Options</h3>
+
+<p><strong>-b</strong>, <strong>--print-base64</strong><br>
+  Print data buffers in base64. This is useful for encoding binary data that needs to be used over media designed to handle textual data (i.e., terminal or json).</p>
+
+<p><strong>-c</strong> <em>chiselname</em> <em>chiselargs</em>, <strong>--chisel</strong>=<em>chiselname</em> <em>chiselargs</em><br>
+  run the specified chisel. If the chisel requires arguments, they must be specified in the command line after the name.</p>
+
+<p><strong>-cl</strong>, <strong>--list-chisels</strong><br>
+  List the available chisels. Looks for chisels in ., ./chisels, ~/chisels and /usr/share/sysdig/chisels.</p>
+
+<p><strong>-dv</strong>, <strong>--displayflt</strong><br>
+  Make the given filter a display one Setting this option causes the events to be filtered after being parsed by the state system. Events are normally filtered before being analyzed, which is more efficient, but can cause state (e.g. FD names) to be lost</p>
+
+<p><strong>-h</strong>, <strong>--help</strong><br>
+  Print this page</p>
+
+<p><strong>-j</strong>, <strong>--json</strong><br>
+  Emit output as json, data buffer encoding will depend from the print format selected.</p>
+
+<p><strong>-l</strong>, <strong>--list</strong><br>
+  List the fields that can be used for filtering and output formatting. Use -lv to get additional information for each field.</p>
+
+<p><strong>-L</strong>, <strong>--list-events</strong><br>
+  List the events that the engine supports</p>
+
+<p><strong>-n</strong> <em>num</em>, <strong>--numevents</strong>=<em>num</em><br>
+  Stop capturing after  events</p>
+
+<p><strong>-p</strong> <em>output_format</em>, <strong>--print</strong>=<em>output_format</em><br>
+  Specify the format to be used when printing the events. See the examples section below for more info.</p>
+
+<p><strong>-q</strong>, <strong>--quiet</strong><br>
+  Don't print events on the screen. Useful when dumping to disk.</p>
+
+<p><strong>-r</strong> <em>readfile</em>, <strong>--read</strong>=<em>readfile</em><br>
+  Read the events from .</p>
+
+<p><strong>-S</strong>, <strong>--summary</strong><br>
+  print the event summary (i.e. the list of the top events) when the capture ends.</p>
+
+<p><strong>-s</strong> <em>len</em>, <strong>--snaplen</strong>=<em>len</em><br>
+  Capture the first  bytes of each I/O buffer. By default, the first 80 bytes are captured. Use this option with caution, it can generate huge trace files.</p>
+
+<p><strong>-t</strong> <em>timetype</em>, <strong>--timetype</strong>=<em>timetype</em><br>
+  Change the way event time is diplayed. Accepted values are <strong>h</strong> for human-readable string, <strong>a</strong> for abosulte timestamp from epoch, <strong>r</strong> for relative time from the beginning of the capture, and <strong>d</strong> for delta between event enter and exit.</p>
+
+<p><strong>-v</strong>, <strong>--verbose</strong><br>
+  Verbose output</p>
+
+<p><strong>-w</strong> <em>writefile</em>, <strong>--write</strong>=<em>writefile</em><br>
+  Write the captured events to <em>writefile</em>.</p>
+
+<h3>
+<a id="user-content-basic-command-list" class="anchor" href="#basic-command-list" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Basic Command List</h3>
+
+<p>Capture all the events from the live system and print them to screen</p>
+
+<blockquote>
+<p>sysdig</p>
+</blockquote>
+
+<p>Capture all the events from the live system and save them to disk</p>
+
+<blockquote>
+<p>sysdig -qw dumpfile.scap</p>
+</blockquote>
+
+<p>Read events from a file and print them to screen</p>
+
+<blockquote>
+<p>sysdig -r dumpfile.scap</p>
+</blockquote>
+
+<p>Print all the open system calls invoked by cat</p>
+
+<blockquote>
+<p>sysdig proc.name=cat and evt.type=open</p>
+</blockquote>
+
+<p>Print the name of the files opened by cat</p>
+
+<blockquote>
+<p>./sysdig -p"%evt.arg.name" proc.name=cat and evt.type=open</p>
+</blockquote>
+
+<p>List the available chisels</p>
+
+<blockquote>
+<p>./sysdig -cl</p>
+</blockquote>
+
+<p>Run the spy_ip chisel for the 192.168.1.157 IP address:</p>
+
+<blockquote>
+<p>sysdig –c spy_ip 192.168.1.157</p>
+</blockquote>
+
+<h3>
+<a id="user-content-output-format" class="anchor" href="#output-format" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Output Format</h3>
+
+<p>By default, sysdig prints the information for each captured event on a single line, with the following format:</p>
+
+<p><code>&lt;evt.time&gt; &lt;evt.cpu&gt; &lt;proc.name&gt; &lt;thread.tid&gt; &lt;evt.dir&gt; &lt;evt.type&gt; &lt;evt.args&gt;</code></p>
+
+<p>where:
+ evt.time is the event timestamp
+ evt.cpu is the CPU number where the event was captured
+ proc.name is the name of the process that generated the event
+ thread.tid id the TID that generated the event, which corresponds to the
+   PID for single thread processes
+ evt.dir is the event direction, &gt; for enter events and &lt; for exit events
+ evt.type is the name of the event, e.g. 'open' or 'read'
+ evt.args is the list of event arguments.</p>
+
+<p>The output format can be customized with the -p switch, using any of the fields listed by 'sysdig -l'.</p>
+
+<h3>
+<a id="user-content-filtering" class="anchor" href="#filtering" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Filtering</h3>
+
+<p>sysdig filters are specified at the end of the command line. The simplest filter is a simple field-value check:</p>
+
+<blockquote>
+<p>$ sysdig proc.name=cat</p>
+</blockquote>
+
+<p>The list of available fields can be obtained with 'sysdig -l'.
+Checks can use one of these comparison operators: <em>=</em>, <em>!=</em>, <em>&lt;</em>, <em>&lt;=</em>, <em>&gt;</em>, <em>&gt;=</em> and <em>contains</em>. e.g.</p>
+
+<blockquote>
+<p>$ sysdig fd.name contains /etc</p>
+</blockquote>
+
+<p>Multiple checks can be combined through brakets and the following boolean operators: <em>and</em>, <em>or</em>, <em>not</em>. e.g.</p>
+
+<blockquote>
+<p>$ sysdig "not(fd.name contains /proc or fd.name contains /dev)"</p>
+</blockquote>
+
+<h3>
+<a id="user-content-chisels" class="anchor" href="#chisels" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Chisels</h3>
+
+<p>Sysdig’s chisels are little scripts that analyze the sysdig event stream to perform useful actions.
+To get the list of available chisels, type</p>
+
+<blockquote>
+<p>$ sysdig –cl  </p>
+</blockquote>
+
+<p>For each chisel, you get the description and the list of arguments it expects. 
+To run one of the chisels, you use the –c flag, e.g.:</p>
+
+<blockquote>
+<p>$ sysdig –c topfiles_bytes</p>
+</blockquote>
+
+<p>If a chisel needs arguments, you specify them after the chisel name:</p>
+
+<blockquote>
+<p>$ sysdig –c spy_ip 192.168.1.157</p>
+</blockquote>
+
+<p>Chiesls can be combined with filters:</p>
+
+<blockquote>
+<p>$ sysdig -c topfiles_bytes "not fd.name contains /dev"</p>
+</blockquote>
+
+      

@@ -1,0 +1,341 @@
+---
+layout: wiki
+title: Wiki | Sysdig Chisel API Reference Manual
+slug: wiki
+wiki-title: Sysdig Chisel API Reference Manual
+wiki-url: https://github.com/draios/sysdig/wiki/sysdig-chisel-api-reference-manual
+---
+
+        <p>sysdig chisels are Lua scripts that can be invoked from the sysdig command line, hook into the sysdig engine, and can be used to extend sysdig with advanced funcionality.</p>
+
+<p>Chisels talk with sysdig using three separate interfaces: </p>
+
+<ul>
+<li>
+<strong>Callbacks</strong> a set of callbacks that get called when something interesting happens, e.g. when an event is received</li>
+<li>
+<strong>sysdig library</strong>, with functions to interact with the main program</li>
+<li>
+<strong>evt library</strong>, used to extract information from a captured event</li>
+</ul>
+
+<p>This page documents each of these interfaces.</p>
+
+<h2>
+<a id="user-content-mandatory-globals" class="anchor" href="#mandatory-globals" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Mandatory Globals</h2>
+
+<p>In order to be recognized as a chisel, a Lua script <em>must</em> export the following global variables:</p>
+
+<ul>
+<li>
+<em>description</em>: a string containing the chisel verbose description</li>
+<li>
+<em>short_description</em>: a string that explains what the chisel does in a few words, and can be used in a list</li>
+<li>
+<em>category</em>: the chisel category, e.g. <em>IO</em>, <em>net</em>, <em>security</em>, etc.</li>
+<li>
+<em>args</em>: a table describing each of the chisel arguments, in the following format:</li>
+</ul>
+
+<div class="highlight highlight-source-lua"><pre>description <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>a string containing the chisel verbose description<span class="pl-pds">"</span></span>
+short_description <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>a string that explains what the chisel does in a few words<span class="pl-pds">"</span></span>
+category <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>the chisel category<span class="pl-pds">"</span></span>
+
+<span class="pl-c">-- Chisel argument list</span>
+args <span class="pl-k">=</span> 
+{
+    {
+        name <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>name1<span class="pl-pds">"</span></span>, 
+        description <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>description1<span class="pl-pds">"</span></span>, 
+        argtype <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>ipv4<span class="pl-pds">"</span></span>
+        optional <span class="pl-k">=</span> <span class="pl-c1">false</span>
+    },
+    {
+        name <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>name2<span class="pl-pds">"</span></span>, 
+        description <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>description2<span class="pl-pds">"</span></span>, 
+        argtype <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">"</span>string<span class="pl-pds">"</span></span>
+        optional <span class="pl-k">=</span> <span class="pl-c1">true</span>
+    },
+}</pre></div>
+
+<p><em>Notes</em>: </p>
+
+<ul>
+<li>If optional is set to false, sysdig expects the argument to be specified on the command line after the chisel name, and will fail if the argument is not there. </li>
+<li>Each argument in <em>args</em> generates a call to the on_set_arg() callback. </li>
+<li>
+<em>args</em> can be empty if the chisel doesn't require any argument. </li>
+<li>If more than 1 argument is provided the argument list for chisels must be encapsulated with "". E.g. sysdig -c chisel_name "arg1 arg2 arg3"</li>
+</ul>
+
+<h2>
+<a id="user-content-callbacks" class="anchor" href="#callbacks" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Callbacks</h2>
+
+<p>Callbacks are the way sysdig uses to notify a chisel that something has happened. Most callbacks don't need to be registered. Just include the function in the chisel and, if present, the engine will call it. The only exception is on_interval(), which needs to be registered with sysdig.set_interval_s() or sysdig.set_interval_ns().
+Callbacks are optional. If you don't need one of them, just don't include it.</p>
+
+<p><strong>on_set_arg(name, val)</strong></p>
+
+<p>This callback is called by the engine for every argument contained in the <em>args</em> global table. <em>name</em> is the name of the argument to set, while <em>val</em> is the value that the user specified on the sysdig command line.</p>
+
+<p>Returning false means that the parameter is not valid and will cause sysdig to quit.</p>
+
+<p><strong>on_init()</strong></p>
+
+<p>Called by sysdig <em>after</em> <em>on_set_arg()</em> has been called for every chisel argument, but <em>before</em> the capture is configured. Usually, this is where the chisel initialization happens.</p>
+
+<p>Returning false means that the chisel initialization failed and will cause sysdig to quit.</p>
+
+<p><strong>on_capture_start()</strong></p>
+
+<p>Called by sysdig <em>after</em> the capture is configured, <em>after</em> <em>on_set_arg()</em> has been called for every chisel argument, but <em>before</em> any packet has been captured. It can be used for final chisel initializations that require to query the capture state.</p>
+
+<p>Returning false means that the chisel initialization failed and will cause sysdig to quit.  </p>
+
+<p><strong>on_event()</strong></p>
+
+<p>Invoked every time one of the captured events passes the filter specified with <em>set_filter()</em>, or for each event if <em>set_filter()</em> has not been called. This is the function that usually contains the core chisel logic, and where you want to make sure things are efficient. From this callback you have access to the <em>evt</em> library to extract information from the currently processed event.</p>
+
+<p>If you specified a formatter, returning false in <em>on_event()</em> will make the formatter ignore the event.</p>
+
+<p><strong>on_capture_end(ts_s, ts_ns, delta)</strong></p>
+
+<p>Called by the engine at the end of the capture, i.e.</p>
+
+<ul>
+<li>When CTRL+C is pressed for live captures.</li>
+<li>After the last event has been read from offline captures.<br>
+</li>
+</ul>
+
+<p>The function receives the following arguments:  </p>
+
+<ul>
+<li>ts_s, ts_ns: the second and nanosecond parts of the timestamp of the last event in the capture</li>
+<li>delta: the time between the first and last packet in the capture, in nanoseconds</li>
+</ul>
+
+<p><strong>on_interval(ts_s, ts_ns, delta)</strong></p>
+
+<p>Periodic timeout callback. Can be used to do things like reporting information once a second. Use <em>chisel.set_interval_s()</em> or <em>chisel.set_interval_ns()</em> to configure it.<br>
+The function receives the following arguments:  </p>
+
+<ul>
+<li>ts_s, ts_ns: the second and nanosecond parts of the time when this function is called</li>
+<li>delta: the delta time between the call and the previous call to on_interval()</li>
+</ul>
+
+<h2>
+<a id="user-content-sysdig-library" class="anchor" href="#sysdig-library" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>sysdig library</h2>
+
+<p>The functions in this library can be used to get or set global sysdig configuration, like the snaplen or the program capture filter.</p>
+
+<p><strong>sysdig.end_capture()</strong></p>
+
+<p><em>Available from version 0.1.88</em></p>
+
+<p>This call causes sysdig to stop receving events and makes it initiate the end of capture cleanup.</p>
+
+<p><strong>sysdig.get_machine_info()</strong></p>
+
+<p>Return a table with information about the machine generating the events.
+The returned table has this fields:  </p>
+
+<ul>
+<li>num_cpus: the number of CPU cores on the machine</li>
+<li>memory_size_bytes: the machine RAM size</li>
+<li>max_pid: the maximum pid allowed on the machine</li>
+<li>hostname: the machine hostname</li>
+</ul>
+
+<p><em>Note</em>: this call works with file captures as well, because the machine info is stored in the trace files. In that case, the returned machine info is the one of the machine where the capture happened.</p>
+
+<p><strong>sysdig.get_filter()</strong></p>
+
+<p><em>Available from version 0.1.87</em></p>
+
+<p>Return a string containing the filter that was passed to sysdig on the command line.</p>
+
+<p><strong>sysdig.get_evtsource_name()</strong></p>
+
+<p><em>Available from version 0.1.87</em></p>
+
+<p>Return a string containing the name of the event source, either the trace file name (if the events are coming from a trace file), or "" (if this is a live capture).</p>
+
+<p><strong>sysdig.get_output_format()</strong></p>
+
+<p>Return a string with the output format that the user specified on the command line.
+The return value can be "normal" or "json".</p>
+
+<p><strong>sysdig.is_print_container_data()</strong></p>
+
+<p><em>Available from version 0.1.98</em></p>
+
+<p>A boolean value indicating if the -pc or -pcontainer sysdig flag has been provided.  Specifically this is used to switch the chisel from not printing or printing container information.  If true then the -pc or -pcontainer flag was used and false otherwise.</p>
+
+<p><strong>sysdig.get_container_table(filter)</strong></p>
+
+<p><em>Available from version 0.1.98</em></p>
+
+<p>Return the sysdig container table.</p>
+
+<p>A filter can be optionally passed as an input parameter to restrict the returned elements. The syntax of the filter is the one used for regular sysdig filters, but only the fd, proc, user and group filter families can be used.</p>
+
+<p>The following values are returned:</p>
+
+<ul>
+<li>id: the container id. I.e. the unique identifier associated with this container.</li>
+<li>name: the container name. I.e. the name provided by the creator.</li>
+<li>image: the container image text. E.g. Ubuntu, mysql, haproxy, &amp; etc</li>
+<li>type: the container type. Supported types: (docker, lxc, &amp; libvirt_lxc)</li>
+<li>
+<strong>Note</strong>: (container.id == host) and/or (container.name == host) is the host and not any specific container.</li>
+</ul>
+
+<p><strong>sysdig.get_thread_table(filter)</strong></p>
+
+<p><em>Available from version 0.1.88</em></p>
+
+<p>Return the sysdig process table.</p>
+
+<p>A filter can be optionally passed as an input parameter to restrict the returned elements. The syntax of the filter is the one used for regular sysdig filters, but only the fd, proc, user and group filter families can be used.</p>
+
+<p>The return value is a table with the thread PID as key and a table with the following fields as value:</p>
+
+<ul>
+<li>tid: the thread id.</li>
+<li>pid: the process id. Same as tid for single thread processes.</li>
+<li>ptid: the PID of the process that created this one.</li>
+<li>comm: the command name (e.g. top)</li>
+<li>exe: the command full executable name (e.g. /bin/top)</li>
+<li>args: an array of strings containing the process arguments</li>
+<li>fdlimit: the maximum number of FDs that this process can open.</li>
+<li>uid: the ID of the user that started this process.</li>
+<li>username: the name of the user that started this process. </li>
+<li>gid: the user group ID of the user that started this process.</li>
+<li>vmsize_kb: the process' virtual memory size.</li>
+<li>vmrss_kb: the process' resident memory size.</li>
+<li>vmswap_kb: the process' swap memory size.</li>
+<li>pfmajor: the number of major page faults that this thread generated since it was started.</li>
+<li>pfminor: the number of minor page faults that this thread generated since it was started.</li>
+<li>fdtable: the file descriptor table for this process. This field is a table with the FD number as key and a table with the following fields as value:
+
+<ul>
+<li>name: the FD name. The format of this field depends on the FD type and can be empty. For example, this field contains the full name for files, and the tuple for sockets.</li>
+<li>type: the FD type. Can have one of the following values: file, directory, ipv4, ipv6, unix, pipe, event, signalfd, eventpoll, inotify, timerfd.</li>
+<li>sip: if the FD is a socket, the server IP address.</li>
+<li>sport: if the FD is a socket, the server IP port. </li>
+<li>cip:  if the FD is a socket, the client IP address.</li>
+<li>cport:  if the FD is a socket, the client port.</li>
+<li>is_server: <em>true</em> if the FD is a socket and the server side is on this machine.</li>
+<li>l4proto: if the FD is a socket, the transport protocol. Can have one of these values: tcp, udp, icmp, raw.<br>
+</li>
+</ul>
+</li>
+</ul>
+
+<p><strong>sysdig.is_tty()</strong></p>
+
+<p><em>Available from version 0.1.87</em></p>
+
+<p>Return true if the sysdig is run in an interactive terminal that has ANSI capabilities. Can be used by a chisel to determine if it's possible to use color on the screen.</p>
+
+<p><strong>sysdig.islive()</strong></p>
+
+<p>Return true if the current capture is live, i.e. if the events are coming from a the system and not from a trace file.</p>
+
+<p><strong>sysdig.run_sysdig(args)</strong></p>
+
+<p><em>Available from version 0.1.87</em></p>
+
+<p>Exits from this sysdig execution and starts another one, with the arguments given in the <em>args</em> string. It can be used by a chisel to run another one on a different capture, or to start sysdig again to perform a different task (for example saving some events to file).</p>
+
+<p><strong>sysdig.set_fatfile_dump_mode(mode)</strong></p>
+
+<p><em>Available from version 0.1.87</em></p>
+
+<p>Enable/disable fatfile mode. The <em>mode</em> argument is a boolean value. 'true' enables fatfile mode, 'false' disables it.
+Refer to the the -F flag in the sysdig manual for details about fatfile mode.  </p>
+
+<p><strong>sysdig.set_filter(filter)</strong></p>
+
+<p>Configure the sysdig capture engine to apply the given filter before parsing the captured events. This has the same result as setting the filter from the sysdig command line, and will override the command line filter if one is specified.</p>
+
+<p><strong>sysdig.set_snaplen(snaplen)</strong></p>
+
+<p>Configure the number of bytes that are captured from buffers of I/O system calls like read(), write(), sendto(), recvfrom(), etc.</p>
+
+<h2>
+<a id="user-content-chisel-library" class="anchor" href="#chisel-library" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>chisel library</h2>
+
+<p>The functions in this library are mostly related to setting up the chisel environment and are usually called at initialization time, i.e. inside on_init().</p>
+
+<p><strong>chisel.exec(chiselname, arg1, arg2, ...)</strong></p>
+
+<p>This function can be used to stop the execution of the calling chisel and, instead, run a different chisel. The function arguments are the chisel name, followed by the arguments to pass to the new chisel. </p>
+
+<p><strong>chisel.request_field(fld_name)</strong></p>
+
+<p>This function is used to configure the sysdig engine to extract a filter field when an event is captured. <em>fld_name</em> is the name of the sysdig filter field to extract (see the sysdig tutorial or type <em>sysdig -l</em> for a list of available fields).
+The function returns a field handle that can be fed to evt.field() to get the field value from the on_event() callback. </p>
+
+<p><strong>chisel.set_filter(filter)</strong></p>
+
+<p>Configure the sysdig engine to apply the given filter before handing the events to this chisel's on_event() callback.</p>
+
+<p><em>Notes</em></p>
+
+<ul>
+<li>The filter set with set_filter() is private for this chisel and won't influence other chisels that are run from the same command line.</li>
+<li>You can set only one filter per chisel. Calling set_filter() twice will cause the first filter to be overridden.</li>
+<li>It's very important to be as aggressive as possible with filters. The sysdig engine is heavily optimized, so eliminating as many events as possible before reaching the chisel's on_event() will make the chisel much more efficient.</li>
+</ul>
+
+<p><strong>chisel.set_event_formatter(format)</strong></p>
+
+<p>Configure an event formatter. <em>format</em> is a string containing a list of fields to print, with the same syntax that you would use with the -p sysdig command line switch (refer to the sysdig manual for more information).</p>
+
+<p>By default, chisels have no event formatter, and that gives them the freedom to print whatever they want using Lua's print() function. Setting a formatter, on the other hand, lets you delegate event formatting to sysdig, leveraging sysdig's filter fields system.  Use the string "default" or an empty string, "", to let sysdig apply its default format to the chisel output. Note that only events for which on_event() returns <em>true</em> are going to be printed.  Also note, chisel output will not be overridden with the -p flag.</p>
+
+<p><strong>chisel.set_interval_s(interval)</strong></p>
+
+<p>Set a periodic callback for this chisel. If you use this function, the chisel needs to include a function called on_interval(), which the engine will call every <em>interval</em> seconds. This can be used to perform periodic tasks, like printing information to the screen once a second.</p>
+
+<p><strong>chisel.set_interval_ns(interval)</strong></p>
+
+<p>Like set_interval_s(), but allows more granular timeouts. </p>
+
+<h2>
+<a id="user-content-evt-library" class="anchor" href="#evt-library" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>evt library</h2>
+
+<p>The functions in this library are related to the event that is currently processed and therefore can only be called from the on_event() callback.</p>
+
+<p><strong>evt.get_cpuid()</strong></p>
+
+<p>Return number of the CPU where this event was captured.</p>
+
+<p><strong>evt.field(fld)</strong></p>
+
+<p>Extract a field's value from an event. <em>fld</em> is a field handle obtained from a previous call to request_field().
+The function returns the field value, which can be a number or a string depending on the field. Use <em>sysdig -lv</em> to find out the type of each exported field. </p>
+
+<p><em>Notes</em></p>
+
+<ul>
+<li>If the requested field is not exported by an event (e.g. non I/O events don't export the fd.name field), the return value of field() will be nil.</li>
+<li>One important field you need to be aware of is evt.rawarg. This field can be used to extract arbitrary system call arguments, e.g. evt.rawarg.res, and its type depends on the field you're asking. Use <em>sysdig -L</em> to find out the type of event arguments.</li>
+</ul>
+
+<p><strong>evt.get_num()</strong></p>
+
+<p>Return the incremental event number.</p>
+
+<p><strong>evt.get_ts()</strong></p>
+
+<p>Returns two integers representing the second and nanosecond parts of the raw event timestamp respectively.</p>
+
+<p><strong>evt.get_type()</strong></p>
+
+<p>Return the event type as a number. This function can be used for efficient event filtering. For the list of event type numbers, please refer to the ppm_event_type enumeration in driver/ppm_event_events_public.h.</p>
+
+      

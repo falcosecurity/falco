@@ -1,0 +1,470 @@
+---
+layout: default
+title: Home
+slug: home
+---
+
+<script>
+    $(document).ready(function() {
+
+        //SLIDER
+
+        $('.testimonials-slider').flexslider({
+            animation: "slide",
+            controlNav: false,
+            prevText: "<i class='fa fa-chevron-left'></i>",
+            nextText: "<i class='fa fa-chevron-right'></i>",
+            slideshowSpeed: 5000
+        });
+        var flexActivated = false;
+        $('.testimonials-slider').flexslider("pause");
+
+        $(window).scroll(function (event) {
+            if($(window).scrollTop() >= 2500 && flexActivated !== true){
+                $('.testimonials-slider').flexslider("play");
+                flexActivated = true;
+            }
+        });
+
+
+        //VIDEO
+
+        var $window = $(window);
+        var $overlay = $('#video .overlay');
+        var $overlayContent = $('#video .overlay-content');
+        var $overlayContentX = $('#video .overlay-content .glyphicon');
+        var containerWidth = $('#page').width();
+        var opened = false;
+
+        // Load YouTube APIs asynchronously
+        var tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        var firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        // Called by YouTube
+        window.onYouTubeIframeAPIReady = function() {
+            window.player = new YT.Player('video-iframe', {
+                videoId: 'UJ4wVrbP-Q8',
+                height: '100%',
+                width: '100%',
+                playerVars: {
+                    // Don't show annotations
+                    iv_load_policy: 3,
+                    modestbranding: 1,
+                    showinfo:       0
+                },
+            });
+
+            setTimeout(function()
+            {
+                $overlay.css('display','none');
+                $overlayContent.css('display','none');
+            }, 500);
+        }
+
+        // Toggle overlay and video
+
+        var displayOverlay = function() {
+
+            // Centering
+            var windowWidth = $window.width();
+            var windowHeight = $window.height();
+            var videoWidth = $overlayContent.width();
+            var videoHeight = $overlayContent.height();
+            var containerMargin = (windowWidth - containerWidth) / 2;
+
+            $overlayContent.css('top', (windowHeight - videoHeight) / 2);
+            $overlayContent.css('left', (containerWidth - videoWidth) / 2 + containerMargin);
+
+            // Dislaying
+            if (!opened) {
+                $overlay.css('opacity', 0);
+                $overlayContent.css('opacity', 0);
+
+                $overlay.css('display', 'block');
+                $overlayContent.css('display', 'block');
+
+                $overlay.animate({ opacity: 0.7 }, 500);
+                $overlayContent.animate({ opacity: 1 }, 500);
+
+                if (window.player && typeof window.player.playVideo === 'function') window.player.playVideo();
+
+                opened = true;
+            }
+        };
+
+        var closeOverlay = function() {
+            if (!opened) return;
+
+            if (window.player && typeof window.player.playVideo === 'function') window.player.pauseVideo();
+
+            $overlay.animate({ opacity: 0 }, 500);
+            $overlayContent.animate({ opacity: 0 }, 500, function() {
+                $overlay.css('display', 'none');
+                $overlayContent.css('display', 'none');
+            });
+
+            opened = false;
+        };
+
+        $window.keypress(function(event) {
+            if (event.keyCode == 27) {
+                closeOverlay();
+            }
+        });
+
+
+        $('.button-video').click(function() {
+            if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) {
+                window.location.href = "https://www.youtube.com/watch?v=UJ4wVrbP-Q8";
+            } else {
+                displayOverlay();
+                // Tracking code
+            }
+
+        });
+
+        $overlayContentX.click(closeOverlay);
+        $overlayContent.click(closeOverlay);
+        $overlay.click(closeOverlay);
+        $window.on('resize', function() {
+            if (opened) displayOverlay();
+        });
+
+
+
+        // Tidy up the boxes in features section
+        function equalHeightForPairs(selection){
+            //this returns if we are in mobile view and the boxes are 100%
+            if($(selection[0]).parent().css("width") / $(selection[0]).css("width") < 2){
+                return
+            }
+            selection.each(function(i, e){
+                if(i % 2 !== 0){
+                    $(e).css("height", $(selection[i-1]).css("height"));
+                }
+            });
+        }
+        equalHeightForPairs($('#section-features > .section-inner > .col-sm-6'));
+
+
+        // Meetup icon
+        $('#community-meetup-red').fadeOut(0);
+        $('.meetup-community-link').hover(
+            function(){
+                $('#community-meetup').fadeOut(150);
+                $('#community-meetup-red').fadeIn(150);
+            },
+            function(){
+                $('#community-meetup').fadeIn(150);
+                $('#community-meetup-red').fadeOut(150);
+            }
+        );
+    });
+</script>
+
+<!-- Section Banner-->
+<div id="section-banner" class="section section-primary section-center">
+    <div class="section-inner">
+        <img class="hero-img img-responsive center-block" src="{{ site.baseurl }}assets/img/sysdig_white.svg" alt="Sysdig" />
+        <h1 class="hero-title"><span class="br-sm"><span class="nowrap">The Behavioral Activity Monitor
+</span></span> <span class="nowrap">With Container Support</span></h1>
+        <a class="btn btn-lg btn-tertiary ga-button" href="https://github.com/draios/falco"><input type="hidden" value="HeroInstall">Get it Now</a>
+
+        <div id="video">
+            <div class="overlay"></div>
+            <div class="overlay-content">
+                <span class="glyphicon glyphicon-remove-circle"></span>
+                <div id="video-iframe"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /Section -->
+
+<!-- Section Desc -->
+<div id="section-desc" class="section section-default section-center">
+    <div class="section-inner">
+            <div class="content">
+            </div>
+        </a>
+        <h3 class="desc-text"><span class="br">Sysdig Falco is an open source, behavioral activity monitor designed to secure your applications. Powered by sysdig’s universal system level visibility, write simple and powerful rules, and then output warnings in the format you need. Continuously monitor and detect container, application, host, and network activity... all in one place, from one source of data, with one set of rules.
+        </h3>
+    </div>
+</div>
+<!-- /Section -->
+
+<!-- Section Examples -->
+<div id="examples"></div>
+<div id="section-examples" class="section section-default section-center">
+    <div class="section-inner">
+        <div class="separator-cloud mrg-top-xl pad-top-md"></div>
+        <h1 class="title">A little taste of what Falco can do...</h1>
+<!-- Hidden Video Section-->
+        <div class="row" style="display: none;">
+            <div class="screenshot-video col-md-10 col-md-offset-1">
+                <span class="fa-stack fa-lg button-video">
+                    <i class="fa fa-circle fa-stack-2x"></i>
+                    <i class="fa fa-play fa-stack-1x fa-inverse"></i>
+                </span>
+                <img class="img-responsive center-block button-video" src="{{ site.baseurl }}assets/img/csysdig_screenshot.jpg" alt="Csysdig" />
+            </div>
+            <div class="col-md-1">&nbsp;</div>
+        </div>
+<!-- Comment out the area below the hidden video until we have an example ->
+        <h1 class="title" style="margin-top: 1em;">...and a little taste of what sysdig can do from the command line</h1>
+-->
+        <div class="row command">
+            <div class="col-xs-6">
+                <span class="vertical-center">
+                    A shell is run in a container
+                </span>
+            </div>
+            <div class="col-xs-6">
+                <span class="vertical-center">
+                    container.id != host and proc.name = bash
+                </span>
+            </div>
+        </div>
+
+        <div class="row command">
+            <div class="col-xs-6">
+                <span class="vertical-center">
+                  Unexpected outbound Elasticsearch connection
+                </span>
+            </div>
+            <div class="col-xs-6">
+                <span class="vertical-center">
+                  user.name = elasticsearch and outbound and not fd.sport=9300 
+                </span>
+            </div>
+        </div>
+
+        <div class="row command">
+            <div class="col-xs-6">
+                <span class="vertical-center">
+                    Write to directory holding system binaries
+                </span>
+            </div>
+            <div class="col-xs-6">
+                <span class="vertical-center">
+                    bin_dir: fd.directory in (/bin, /sbin, /usr/bin, /usr/sbin) write and bin_dir 
+                </span>
+            </div>
+        </div>
+
+        <div class="row command">
+            <div class="col-xs-6">
+                <span class="vertical-center">
+                  Non-authorized container namespace change
+                </span>
+            </div>
+            <div class="col-xs-6">
+                <span class="vertical-center">
+                  syscall.type = setns and not proc.name in (docker, sysdig) 
+                </span>
+            </div>
+        </div>
+
+        <div class="row command">
+            <div class="col-xs-6">
+                <span class="vertical-center">
+                    Non-device files written in /dev (some rootkits do this)
+                </span>
+            </div>
+            <div class="col-xs-6">
+                <span class="vertical-center">
+                    (evt.type = creat or evt.arg.flags contains O_CREAT) and proc.name != blkid and fd.directory = /dev and fd.name != /dev/null
+                </span>
+            </div>
+        </div>
+
+        <div class="row command">
+            <div class="col-xs-6">
+                <span class="vertical-center">
+                    Process other than skype/webex tries to access camera
+                </span>
+            </div>
+            <div class="col-xs-6">
+                <span class="vertical-center">
+                    evt.type = open and fd.name = /dev/video0 and not proc.name in (skype, webex)
+                </span>
+            </div>
+        </div>
+
+        <a class="btn btn-lg btn-primary" href="https://github.com/draios/falco/blob/dev/rules/falco_rules.yaml">See more examples</a>
+    </div>
+</div>
+<!-- /Section -->
+
+<!-- Section Desc2 -->
+<div id="section-desc2" class="section section-default section-center">
+    <div class="section-inner">
+        <div class="separator-cloud mrg-top-xl pad-top-md"></div>
+        <h3 class="desc-text"><span class="br">Falco was hatched from an important realization: the rich data within system 
+            calls can be used to secure your applications, even inside containers. And as opposed to other approaches 
+            that patch together logs, file scanning, network traffic, we could do it in a simpler, unified way that is accessible
+             to everyone.</span>
+        </h3>
+    </div>
+</div>
+<!-- /Section -->
+
+<!-- Section Features -->
+<div id="section-features" class="section section-default section-center">
+    <div class="section-inner">
+        <div class="features-up"></div>
+        <div class="features-left"></div>
+        <div class="col-sm-6">
+            <h2 class="title">See everything</h2>
+            <div class="text"><span class="br-sm">Falco gives you instant access to a treasure trove of data buried within your system,
+             with one instrumentation point. Easily build rules around process spawning, file access, logs,
+              network activity - your entire system - and inform you immediately.</span></div>
+        </div>
+        <div class="col-sm-6">
+            <h2 class="title">Designed for the rest of us</h2>
+            <div class="text"><span class="br-sm">Too often, security tools and intrusion detection systems are powerful but 
+                too complex for everyone to use. Falco is designed to make you productive in minutes.
+
+</span></div>
+        </div>
+        <div class="col-sm-6 clear">
+            <h2 class="title">Adapts to Your Environment</h2>
+            <div class="text"><span class="br-sm">Augment the base rules to meet your security requirements. Flexible outputs
+             mean you can pipe Falco alerts to a broad collection of other tools and systems.  </span></div>
+        </div>
+        <div class="col-sm-6">
+            <h2 class="title">Container-native</h2>
+            <div class="text"><span class="br-sm">Secure containers from the outside. Falco’s rules are docker and rkt aware,
+             so you can make container-specific rules. It understands Kubernetes, Mesos, and Swarm metadata as well.
+            </span></div>
+        </div>
+        <div class="col-sm-6">
+            <h2 class="title">Back-test rules</h2>
+            <div class="text"><span class="br-sm">Create rules and then test them on historical system capture files.
+             Know exactly what you’re going to get, before you go into production!</span></div>
+        </div>
+        <div class="col-sm-6">
+            <h2 class="title">Fast and Stable Core</h2>
+            <div class="text"><span class="br-sm">We leverage the sysdig kernel probe which has been in use for years, 
+            across hundreds of thousands of hosts.</span></div>
+        </div>
+        <div class="features-right"></div>
+        <div class="features-down"></div>
+    </div>
+    <a class="btn btn-lg btn-tertiary ga-button clear" href="https://github.com/draios/falco"><input type="hidden" value="BottomInstall">Get it Now</a>
+</div>
+<!-- /Section -->
+
+<!-- Section Testimonials -->
+<div id="section-testimonials" class="section section-primary section-center">
+    <div class="background" style="background:url('{{ site.baseurl }}assets/img/sysdig_icon_red.svg') no-repeat center 3.5em/15em;">
+        <div class="section-inner">
+            <div class="testimonials-slider flexslider">
+                <ul class="slides">
+                    <li class="item item-0 two-row-slide">
+                        <div class="quote"><h1><span class="br-sm">“Sysdig is a pretty awesome tool</span><span class="br-sm"> for debugging pretty much anything.”</span></h1></div>
+                        <div class="caption">
+                            <div class="author">DevOps Weekly</div>
+                        </div>
+                    </li>
+                    <li class="item item-1 two-row-slide">
+                        <div class="quote"><h1><span class="br-sm">“Say goodbye to top, lsof, strace,</span><span class="br-sm">iostat, ps, etc - I use one tool now: sysdig.”</span></h1></div>
+                        <div class="caption">
+                            <div class="author">Luca Deri</div>
+                            <div class="company">Founder, ntop</div>
+                        </div>
+                    </li>
+                    <li class="item item-2">
+                        <div class="quote"><h1><span class="br-sm">“Sysdig is amazing. Detailed,</span><span class="br-sm">system-wide tracing that’s actually stable,</span><span class="br-sm">low overhead, and easy to use.”</span></h1></div>
+                        <div class="caption">
+                            <div class="author">Grzegorz Nosek</div>
+                            <div class="company">Chief Tinkering Officer, MegiTeam</div>
+                        </div>
+                    </li>
+                    <li class="item item-3 two-row-slide">
+                        <div class="quote"><h1><span class="br-sm">“Sysdig is powerful, yet intuitive;</span><span class="br-sm"> you just jump in and go.”</span></h1></div>
+                        <div class="caption">
+                            <div class="author">Ben Cane</div>
+                            <div class="company">Founder, Runbook.io</div>
+                        </div>
+                    </li>
+                    <li class="item item-4">
+                        <div class="quote"><h1><span class="br-sm">“Sysdig is developing into</span><span class="br-sm">a serious swiss army knife,</span><span class="br-sm">and you should give it a try.”</span></h1></div>
+                        <div class="caption">
+                            <div class="author">Lukas Pustina</div>
+                            <div class="company">Performance Engineer, codecentric</div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /Section -->
+
+
+<!-- Section Last -->
+<div id="community"></div>
+<div id="section-last" class="section section-default section-center">
+    <div class="section-inner">
+        <h1>Join the Community / Get Support</h1>
+
+
+        <div class="row" id="community-links">
+            <div class="col-xs-6">
+                <a href="http://twitter.com/sysdig" class="block">
+                    <div class="row">
+                        <div class="col-xs-10">
+                            Follow us on Twitter<br>for the #DigoftheDay
+                        </div>
+                        <div class="col-xs-2"><i class="fa fa-twitter"></i></div>
+                    </div>
+                </a>
+
+                <a href="http://www.meetup.com/Sysdig-San-Francisco/" class="block meetup meetup-community-link">
+                    <div class="row">
+                        <div class="col-xs-10">
+                            Meet up with the team<br>and other sysdig users
+                        </div>
+                        <div class="col-xs-2 community-meetup">
+                            <img id="community-meetup-red" src="{{ site.baseurl }}assets/img/meetup_community_red.svg" alt="Meetup">
+                            <img id="community-meetup" src="{{ site.baseurl }}assets/img/meetup_community.svg" alt="Meetup">
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-xs-6">
+                <a href="https://groups.google.com/forum/#!forum/sysdig" class="block" id="community-icon">
+                    <div class="row">
+                        <div class="col-xs-2"><i class="fa fa-comment"></i></div>
+                        <div class="col-xs-10">
+                            Join the Mailing list to talk with<br>the team and other users
+                        </div>
+                    </div>
+                </a>
+
+                <a href="https://github.com/draios/falco" class="block">
+                    <div class="row">
+                        <div class="col-xs-2"><i class="fa fa-github"></i></div>
+                        <div class="col-xs-10">
+                            Visit GitHub for documentation<br>and source code
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+        <a href="http://sysdigcloud.com" id="cloud-last" class="sysdigcloud">
+            <input type="hidden" value="CloudBottom">
+            <div class="content">
+                <img class="img-responsive center-block syscloudlogo" src="/assets/img/sysdigcloud_white.svg" alt="Sysdig Cloud" />
+                <h3>Have Containers in Production</h3>
+                <div class="btn btn-lg btn-tertiary">What Are They Doing?</div>
+            </div>
+        </a>
+
+    </div>
+</div>
+<!-- /Section -->

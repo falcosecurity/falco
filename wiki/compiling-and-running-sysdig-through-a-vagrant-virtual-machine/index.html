@@ -1,0 +1,74 @@
+---
+layout: wiki
+title: Wiki | Compiling and running sysdig through a vagrant virtual machine
+slug: wiki
+wiki-title: Compiling and running sysdig through a vagrant virtual machine
+wiki-url: https://github.com/draios/sysdig/wiki/compiling-and-running-sysdig-through-a-vagrant-virtual-machine
+---
+
+        <h2>
+<a id="user-content-install-the-dependencies-on-your-host-machine" class="anchor" href="#install-the-dependencies-on-your-host-machine" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Install the dependencies on your host machine.</h2>
+
+<h3>
+<a id="user-content-vagrant" class="anchor" href="#vagrant" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Vagrant</h3>
+
+<p>Linux distributions probably have vagrant in their repositories already.  You can also go to the <a href="http://www.vagrantup.com/">vagrant</a> website for more details.</p>
+
+<h3>
+<a id="user-content-virtualbox" class="anchor" href="#virtualbox" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Virtualbox</h3>
+
+<p>Vagrant is capable of using many types of virtualization "containers". The one here uses VirtualBox - which is available for Linux, OSX, and Windows.  </p>
+
+<blockquote>
+<p>Refer to the version of vagrant you installed above and make sure you install the appropriate version of VirtualBox.</p>
+</blockquote>
+
+<h2>
+<a id="user-content-bring-up-the-vm" class="anchor" href="#bring-up-the-vm" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Bring up the VM</h2>
+
+<p>Go into the directory with the <code>VagrantFile</code> in it, make sure you are on a decent internet connection (1.5 Mb DSL should be fine), have about 2.5GB of space, and run</p>
+
+<p><code>$ vagrant up</code></p>
+
+<p>It will download a ~250MB ISO of ubuntu (currently) and then create a VM for you with all the necessary tools in order to build and run sysdig in a VM.  This may take on the order of 30 minutes or so the first time (but it only needs to be done once).</p>
+
+<blockquote>
+<p>You may get an error stating <code>Chef never successfully completed!</code> if your internet connection drops during the process.  Run <code>vagrant provision</code> from the command line and you should be good.</p>
+</blockquote>
+
+<h2>
+<a id="user-content-log-in-to-the-vm" class="anchor" href="#log-in-to-the-vm" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Log in to the VM</h2>
+
+<p>Now, from the same directory you ran the <code>vagrant up</code> command, run</p>
+
+<p><code>$ vagrant ssh</code></p>
+
+<p>The sysdig source-code files are mapped to the <code>/vagrant/</code> directory inside of the VM.</p>
+
+<h2>
+<a id="user-content-build-sysdig" class="anchor" href="#build-sysdig" aria-hidden="true"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewbox="0 0 16 16" width="16"><path d="M4 9h1v1h-1c-1.5 0-3-1.69-3-3.5s1.55-3.5 3-3.5h4c1.45 0 3 1.69 3 3.5 0 1.41-0.91 2.72-2 3.25v-1.16c0.58-0.45 1-1.27 1-2.09 0-1.28-1.02-2.5-2-2.5H4c-0.98 0-2 1.22-2 2.5s1 2.5 2 2.5z m9-3h-1v1h1c1 0 2 1.22 2 2.5s-1.02 2.5-2 2.5H9c-0.98 0-2-1.22-2-2.5 0-0.83 0.42-1.64 1-2.09v-1.16c-1.09 0.53-2 1.84-2 3.25 0 1.81 1.55 3.5 3 3.5h4c1.45 0 3-1.69 3-3.5s-1.5-3.5-3-3.5z"></path></svg></a>Build sysdig</h2>
+
+<p>Inside the VM, run the following:</p>
+
+<pre><code>vagrant@precise64:~$ cd /vagrant
+vagrant@precise64:/vagrant$ mkdir build-vagrant
+vagrant@precise64:/vagrant/build-vagrant$ cmake ..
+-- The C compiler identification is GNU
+...
+-- Build files have been written to: /vagrant/build-vagrant
+
+vagrant@precise64:/vagrant/build-vagrant$ sudo make install
+
+Scanning dependencies of target luajit
+...
+-- Installing: /usr/local/share/sysdig/chisels/stderr.lua
+</code></pre>
+
+<p>And that's it. You should now be able to run</p>
+
+<pre><code>vagrant@precise64:/vagrant/build-vagrant$ sysdig -l
+</code></pre>
+
+<p>The <code>/vagrant</code> directory is a shared resource with the host machine.  You can edit code on your host machine and then rebuild from inside the VM without having to transfer anything over.</p>
+
+      

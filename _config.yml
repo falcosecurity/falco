@@ -1,0 +1,6 @@
+name: sysdig
+markdown: redcarpet
+highlighter: pygments
+exclude: [ CNAME, README.md, update-wiki.rb ]
+url: http://sysdig.org/
+baseurl: /
