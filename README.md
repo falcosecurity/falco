@@ -1,6 +1,15 @@
 # Sysdig Falco
 ### *Host Activity Monitoring using Sysdig Event Filtering*
 
+**Table of Contents**
+
+- [Overview](#overview)
+- [Rules](#rules)
+- [Configuration](#configuration)
+- [Installation](#installation)
+- [Running Falco](#running-falco)
+
+
 ## Overview
 Sysdig Falco is a behavioral activity monitor designed to secure your applications. Powered by Sysdig’s universal system level visibility, write simple and powerful rules, and then output warnings in the format you need. Continuously monitor and detect container, application, host, and network activity... all in one place, from one source of data, with one set of rules.
 
@@ -14,12 +23,10 @@ Falco can detect and alert on any behavior that involves making Linux system cal
 - A non-device file is written to `/dev`
 - A standard system binary (like `ls`) makes an outbound network connection
 
-
-## Configuring Falco
+## Rules
 
 Falco is primarily configured via two files: a configuration file (such as the `falco.yaml` in this repository) and a rules file (such as the `falco_rules.conf` file in `rules/`). These two files are written to `/etc` after you install the Falco package.
 
-### Rules file
 
 The rules file is where you define the events and actions that you want to be notified on. We've provided a sample rule file `./rules/falco_rules.conf` as a starting point, but you'll want to familiarize yourself with the contents, and most likely, to adapt it to your environment. 
 
@@ -50,9 +57,7 @@ For performance reasons, some system calls are currently discarded before Falco 
 `clock_getres,clock_gettime,clock_nanosleep,clock_settime,close,epoll_create,epoll_create1,epoll_ctl,epoll_pwait,epoll_wait,eventfd,fcntl,fcntl64,fstat,fstat64,getitimer,gettimeofday,nanosleep,poll,ppoll,pread64,preadv,pselect6,pwrite64,pwritev,read,readv,recv,recvfrom,recvmmsg,recvmsg,select,send,sendfile,sendfile64,sendmmsg,sendmsg,sendto,setitimer,settimeofday,shutdown,socket,splice,switch,tee,timer_create,timer_delete,timerfd_create,timerfd_gettime,timerfd_settime,timer_getoverrun,timer_gettime,timer_settime,wait4,write,writev,`
 
 
-
-
-### Configuration file
+## Configuration
 Falco is configured via a yaml file. The sample config `falco.yaml` in this repo has comments describing the various options.
 
 
