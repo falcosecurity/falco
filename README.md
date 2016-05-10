@@ -48,34 +48,52 @@ configured output(s).
 
 ## Rules
 
-The rules file is where you define the events and actions that you want to be
-notified on.
+_Call for contributions: If you come up with additional rules which you'd like to see in the core repository - PR welcome!_
 
-_Call for contributions: If you come up with additional rules which you think should be part of this core set - PR welcome! And likewise if you have an entirely separate ruleset that may not belong in the core rule set._
+A Falco rules file is comprised of two kinds of elements: rules and macro definitions. Macros are simply definitions that can be re-used inside rules and other macros, providing a way to factor out and name common patterns.
 
-A Falco rules file is comprised of two kinds of elements: rules and macro definitions.
+#### Conditions
 
-Here's an example of a rule that alerts whenever a bash shell is run inside a container:
+The key part of a rule is the _condition_ field. A condition is simply a boolean predicate on sysdig events. 
+Conditions are expressed using the Sysdig [filter syntax](http://www.sysdig.org/wiki/sysdig-user-guide/#filtering). Any Sysdig filter is a valid Falco condition (with the caveat of certain excluded system calls, discussed below). In addition, Falco expressions can contain _macro_ terms, which are not present in Sysdig syntax.
 
-`container.id != host and proc.name = bash | WARNING Bash run in a container (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)`
+Here's an example of a condition that alerts whenever a bash shell is run inside a container:
 
-The part to the left of the pipe (`|`) is the _condition_. It is expressed using the Sysdig [filter syntax](http://www.sysdig.org/wiki/sysdig-user-guide/#filtering). Any Sysdig filter expression is a valid Falco expression (with the caveat of certain excluded system calls, discussed below). In addition, Falco expressions can contain _macro_ terms, which are not present in Sysdig syntax.
+`container.id != host and proc.name = bash`
 
-The part to the right of the pipe is the _output_. It is composed of a priority level and an output format. The priority level is case-insensitive and should be one of "emergency", "alert", "critical", "error", "warning", "notice", "informational", or "debug". The output format specifies the message that should be output if a matching event occurs, and follows the Sysdig [output format syntax](http://www.sysdig.org/wiki/sysdig-user-guide/#output-formatting).
+The first clause checks that the event happened in a container (sysdig events have a `container` field that is equal to "host" if the event happened on a regular host). The second clause checks that the process name is `bash`. Note that this condition does not even include a clause with system call! It only uses event metadata. As such, if a bash shell does start up in a container, Falco will output events for every syscall that is done by that shell.
 
-Macro definitions provide a way to define common sub-portions of rules in a reusable way. The syntax for a macro is:
+_Tip: If you're new to sysdig and unsure what fields are available, run `sysdig -l` to see the list of supported fields._
 
-`macro_name: macro_definition`
+#### Rules
 
-where `macro_name` is a string, and `macro_definition` is any valid Falco condition.
+Along with a condition, each rule includes an _output_ and a _priority_. The output format specifies the message that should be output if a matching event occurs, and follows the Sysdig [output format syntax](http://www.sysdig.org/wiki/sysdig-user-guide/#output-formatting). The priority is a case-insensitive representation of severity and should be one of "emergency", "alert", "critical", "error", "warning", "notice", "informational", or "debug".
 
-(_insert example here_).
+A complete rule using the above condition might be:
+
+```yaml
+- condition: container.id != host and proc.name = bash
+  output: "shell in a container (%user.name %container.id %proc.name %evt.dir %evt.type %evt.args %fd.name)"
+  priority: WARNING
+```
+
+#### Macros
+As noted above, macros provide a way to define common sub-portions of rules in a reusable way. As a very simple example, if we had many rules for events happening in containers, we might to define a `in_container` macro:
+
+```yaml
+- macro: in_container
+  condition: container.id != host
+```
+
+With this macro defined, we can then rewrite the above rule's condition as `in_container and proc.name = bash`.
+
+For many more examples of rules and macros, please take a look at the accompanying [rules file](rules/falco_rules.yaml).
 
 
 #### Ignored system calls
 
 For performance reasons, some system calls are currently discarded before Falco processing. The current list is: 
-`clock_getres,clock_gettime,clock_nanosleep,clock_settime,close,epoll_create,epoll_create1,epoll_ctl,epoll_pwait,epoll_wait,eventfd,fcntl,fcntl64,fstat,fstat64,getitimer,gettimeofday,nanosleep,poll,ppoll,pread64,preadv,pselect6,pwrite64,pwritev,read,readv,recv,recvfrom,recvmmsg,recvmsg,select,send,sendfile,sendfile64,sendmmsg,sendmsg,sendto,setitimer,settimeofday,shutdown,socket,splice,switch,tee,timer_create,timer_delete,timerfd_create,timerfd_gettime,timerfd_settime,timer_getoverrun,timer_gettime,timer_settime,wait4,write,writev,`
+`clock_getres,clock_gettime,clock_nanosleep,clock_settime,close,epoll_create,epoll_create1,epoll_ctl,epoll_pwait,epoll_wait,eventfd,fcntl,fcntl64,fstat,fstat64,getitimer,gettimeofday,nanosleep,poll,ppoll,pread64,preadv,pselect6,pwrite64,pwritev,read,readv,recv,recvfrom,recvmmsg,recvmsg,select,send,sendfile,sendfile64,sendmmsg,sendmsg,sendto,setitimer,settimeofday,shutdown,socket,splice,switch,tee,timer_create,timer_delete,timerfd_create,timerfd_gettime,timerfd_settime,timer_getoverrun,timer_gettime,timer_settime,wait4,write,writev`
 
 
 ## Configuration
