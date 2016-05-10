@@ -272,13 +272,6 @@ write and interactive and fd.name contains .txt
 
 And you will see an output event for any interactive process that touches a file with "sysdig" or ".txt" in its name!
 
-
-
-
-
-
-
-
-
-
-
+License Terms
+---
+Falco is licensed to you under the [GPL 2.0](./COPYING) open source license.
