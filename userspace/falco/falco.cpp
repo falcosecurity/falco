@@ -29,19 +29,18 @@ extern "C" {
 #include <yaml-cpp/yaml.h>
 
 
-std::vector<string> valid_output_names {"stdout", "syslog"};
-
 //
 // Program help
 //
 static void usage()
 {
     printf(
-	   "Usage: falco [options] rules_filename\n\n"
+	   "Usage: falco [options]\n\n"
 	   "Options:\n"
 	   " -h, --help                    Print this page\n"
 	   " -c                            Configuration file (default " FALCO_SOURCE_CONF_FILE ", " FALCO_INSTALL_CONF_FILE ")\n"
-	   " -o                            Output type (options are 'stdout', 'syslog', default is 'stdout')\n"
+	   " -o, --option <key>=<val>      Set the value of option <key> to <val>. Overrides values in configuration file.\n"
+	   "                               <key> can be a two-part <key>.<subkey>\n"
 	   " -d, --daemon                  Run as a daemon\n"
 	   " -p, --pidfile <pid_file>      When run as a daemon, write pid to specified file\n"
            " -e <events_file>              Read the events from <events_file> (in .scap format) instead of tapping into live.\n"
@@ -50,8 +49,25 @@ static void usage()
     );
 }
 
+static void display_fatal_err(const string &msg, bool daemon)
+{
+	falco_logger::log(LOG_ERR, msg);
+
+	/**
+	 * If stderr logging is not enabled, also log to stderr. When
+	 * daemonized this will simply write to /dev/null.
+	 */
+	if (! falco_logger::log_stderr)
+	{
+		std::cerr << msg;
+	}
+}
+
 string lua_on_event = "on_event";
 string lua_add_output = "add_output";
+
+// Splitting into key=value or key.subkey=value will be handled by configuration class.
+std::list<string> cmdline_options;
 
 //
 // Event processing loop
@@ -194,7 +210,6 @@ int falco_init(int argc, char **argv)
 	sinsp_evt::param_fmt event_buffer_format;
 	int long_index = 0;
 	string lua_main_filename;
-	string output_name = "syslog";
 	string scap_filename;
 	string conf_filename;
 	string rules_filename;
@@ -207,14 +222,15 @@ int falco_init(int argc, char **argv)
 	{
 		{"help", no_argument, 0, 'h' },
 		{"daemon", no_argument, 0, 'd' },
-		{"pidfile", required_argument, 0, 'd' },
+		{"option", required_argument, 0, 'o'},
+		{"pidfile", required_argument, 0, 'p' },
+
 		{0, 0, 0, 0}
 	};
 
 	try
 	{
 		inspector = new sinsp();
-		bool valid;
 
 		//
 		// Parse the args
@@ -232,12 +248,7 @@ int falco_init(int argc, char **argv)
 				conf_filename = optarg;
 				break;
 			case 'o':
-				valid = std::find(valid_output_names.begin(), valid_output_names.end(), optarg) != valid_output_names.end();
-				if (!valid)
-				{
-					throw sinsp_exception(string("Invalid output name ") + optarg);
-				}
-				output_name = optarg;
+				cmdline_options.push_back(optarg);
 				break;
 			case 'e':
 				scap_filename = optarg;
@@ -262,15 +273,7 @@ int falco_init(int argc, char **argv)
 
 		// Some combinations of arguments are not allowed.
 		if (daemon && pidfilename == "") {
-			falco_logger::log(LOG_ERR, "If -d is provided, a pid file must also be provided. Exiting.\n");
-			result = EXIT_FAILURE;
-			goto exit;
-		}
-
-		if (daemon && output_name == "stdout") {
-			falco_logger::log(LOG_ERR, "If -d is provided, can not output to stdout. Exiting.\n");
-			result = EXIT_FAILURE;
-			goto exit;
+			throw sinsp_exception("If -d is provided, a pid file must also be provided");
 		}
 
 		ifstream* conf_stream;
@@ -279,9 +282,7 @@ int falco_init(int argc, char **argv)
 			conf_stream = new ifstream(conf_filename);
 			if (!conf_stream->good())
 			{
-				falco_logger::log(LOG_ERR, "Could not find configuration file at " + conf_filename + ". Exiting.\n");
-				result = EXIT_FAILURE;
-				goto exit;
+				throw sinsp_exception("Could not find configuration file at " + conf_filename);
 			}
 		}
 		else
@@ -308,13 +309,13 @@ int falco_init(int argc, char **argv)
 		falco_configuration config;
 		if (conf_filename.size())
 		{
-			config.init(conf_filename);
+			config.init(conf_filename, cmdline_options);
 			// log after config init because config determines where logs go
 			falco_logger::log(LOG_INFO, "Falco initialized with configuration file " + conf_filename + "\n");
 		}
 		else
 		{
-			config.init();
+			config.init(cmdline_options);
 			falco_logger::log(LOG_INFO, "Falco initialized. No configuration file found, proceeding with defaults\n");
 		}
 
@@ -441,10 +442,13 @@ int falco_init(int argc, char **argv)
 				goto exit;
 			}
 
-			// Close stdin, stdout, stderr.
+			// Close stdin, stdout, stderr and reopen to /dev/null
 			close(0);
 			close(1);
 			close(2);
+			open("/dev/null", O_RDONLY);
+			open("/dev/null", O_RDWR);
+			open("/dev/null", O_RDWR);
 		}
 
 		do_inspect(inspector,
@@ -455,13 +459,13 @@ int falco_init(int argc, char **argv)
 	}
 	catch(sinsp_exception& e)
 	{
-		falco_logger::log(LOG_ERR, "Runtime error: " + string(e.what()) + ". Exiting.\n");
+		display_fatal_err("Runtime error: " + string(e.what()) + ". Exiting.\n", daemon);
 
 		result = EXIT_FAILURE;
 	}
 	catch(...)
 	{
-		falco_logger::log(LOG_ERR, "Unexpected error, Exiting\n");
+		display_fatal_err("Unexpected error, Exiting\n", daemon);
 
 		result = EXIT_FAILURE;
 	}

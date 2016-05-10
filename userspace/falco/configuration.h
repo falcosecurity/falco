@@ -57,6 +57,19 @@ public:
 	}
 
 	/**
+	 * Set the top-level node identified by key to value
+	 */
+	template<typename T>
+	void set_scalar(const std::string &key, const T& value)
+	{
+		auto node = m_root;
+		if (node.IsDefined())
+		{
+			node[key] = value;
+		}
+	}
+
+	/**
 	* Get a scalar value defined inside a 2 level nested structure like:
 	* file_output:
 	*   enabled: true
@@ -84,6 +97,19 @@ public:
 		return default_value;
 	}
 
+	/**
+	 * Set the second-level node identified by key[key][subkey] to value.
+	 */
+	template<typename T>
+	void set_scalar(const std::string& key, const std::string& subkey, const T& value)
+	{
+		auto node = m_root;
+		if (node.IsDefined())
+		{
+			node[key][subkey] = value;
+		}
+	}
+
 private:
 	YAML::Node m_root;
 };
@@ -92,12 +118,23 @@ private:
 class falco_configuration
 {
  public:
-	void init(std::string conf_filename);
-	void init();
+	void init(std::string conf_filename, std::list<std::string> &cmdline_options);
+	void init(std::list<std::string> &cmdline_options);
+
 	std::string m_rules_filename;
 	bool m_json_output;
 	std::vector<output_config> m_outputs;
  private:
+	void init_cmdline_options(std::list<std::string> &cmdline_options);
+
+	/**
+	 * Given a <key>=<value> specifier, set the appropriate option
+	 * in the underlying yaml config. <key> can contain '.'
+	 * characters for nesting. Currently only 1- or 2- level keys
+	 * are supported and only scalar values are supported.
+	 */
+	void set_cmdline_option(const std::string &spec);
+
 	yaml_configuration* m_config;
 };
 
