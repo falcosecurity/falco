@@ -92,12 +92,15 @@ For many more examples of rules and macros, please take a look at the accompanyi
 
 #### Ignored system calls
 
-For performance reasons, some system calls are currently discarded before Falco processing. The current list is: 
+For performance reasons, some system calls are currently discarded before Falco processing. The current list is:
 `clock_getres,clock_gettime,clock_nanosleep,clock_settime,close,epoll_create,epoll_create1,epoll_ctl,epoll_pwait,epoll_wait,eventfd,fcntl,fcntl64,fstat,fstat64,getitimer,gettimeofday,nanosleep,poll,ppoll,pread64,preadv,pselect6,pwrite64,pwritev,read,readv,recv,recvfrom,recvmmsg,recvmsg,select,send,sendfile,sendfile64,sendmmsg,sendmsg,sendto,setitimer,settimeofday,shutdown,socket,splice,switch,tee,timer_create,timer_delete,timerfd_create,timerfd_gettime,timerfd_settime,timer_getoverrun,timer_gettime,timer_settime,wait4,write,writev`
 
 
 ## Configuration
-Falco is configured via a yaml file. The sample config `falco.yaml` in this repo has comments describing the various options.
+
+General configuration is done via a separate yaml file. The
+[config file](falco.yaml) in this repo has comments describing the various
+configuration options.
 
 
 ## Installation
