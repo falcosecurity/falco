@@ -32,7 +32,7 @@ container.
 Falco is configured via a rules file defining the behaviors and events to
 watch for, and a general configuration file. Rules are expressed in a
 high-level, human-readable language. We've provided a sample rule file
-`./rules/falco_rules.conf` as a starting point - you can (and will likely
+`./rules/falco_rules.yaml` as a starting point - you can (and will likely
 want!) to adapt it to your environment.
 
 When developing rules, one helpful feature is Falco's ability to read trace
@@ -54,7 +54,7 @@ A Falco rules file is comprised of two kinds of elements: rules and macro defini
 
 #### Conditions
 
-The key part of a rule is the _condition_ field. A condition is simply a boolean predicate on sysdig events. 
+The key part of a rule is the _condition_ field. A condition is simply a boolean predicate on sysdig events.
 Conditions are expressed using the Sysdig [filter syntax](http://www.sysdig.org/wiki/sysdig-user-guide/#filtering). Any Sysdig filter is a valid Falco condition (with the caveat of certain excluded system calls, discussed below). In addition, Falco expressions can contain _macro_ terms, which are not present in Sysdig syntax.
 
 Here's an example of a condition that alerts whenever a bash shell is run inside a container:
@@ -254,7 +254,7 @@ To load the locally built version, assuming you are in the `build` dir, use:
 
 Assuming you are in the `build` dir, you can run Falco as:
 
-`$ sudo ./userspace/falco/falco -c ../falco.yaml -r ../rules/falco_rules.conf`
+`$ sudo ./userspace/falco/falco -c ../falco.yaml -r ../rules/falco_rules.yaml`
 
 Or instead you can try using some of the simpler rules files in `rules`. Or to get started, try creating a file with this:
 
