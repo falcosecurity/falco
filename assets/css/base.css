@@ -117,7 +117,7 @@ blockquote. pre, code {
 
 .btn-lg {
     font-weight:400;
-    font-size:24px;
+    font-size:28px;
     padding:8px 18px;
     -webkit-border-radius:4px;
     -moz-border-radius:4px;
@@ -133,7 +133,7 @@ blockquote. pre, code {
 .btn-tertiary {
     background:#7d2571;
     color:#fff;
-    padding: 8px 18px;
+    padding: 12px 24px;
 }
 
 .btn-tertiary:hover {
