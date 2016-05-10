@@ -1,0 +1,9 @@
+#!/bin/sh
+set -e
+
+NAME=falco
+
+if [ -x "/etc/init.d/$NAME" ]; then
+        update-rc.d $NAME defaults >/dev/null
+fi
+

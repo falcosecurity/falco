@@ -30,8 +30,8 @@ int falco_logger::syslog(lua_State *ls) {
 	return 0;
 }
 
-bool falco_logger::log_stderr;
-bool falco_logger::log_syslog;
+bool falco_logger::log_stderr = true;
+bool falco_logger::log_syslog = true;
 
 void falco_logger::log(int priority, const string msg) {
 	if (falco_logger::log_syslog) {

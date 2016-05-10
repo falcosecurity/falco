@@ -39,11 +39,13 @@ static void usage()
     printf(
 	   "Usage: falco [options] rules_filename\n\n"
 	   "Options:\n"
-	   " -h, --help         Print this page\n"
-	   " -c                 Configuration file (default " FALCO_SOURCE_CONF_FILE ", " FALCO_INSTALL_CONF_FILE ")\n"
-	   " -o                 Output type (options are 'stdout', 'syslog', default is 'stdout')\n"
-           " -e <events_file>   Read the events from <events_file> (in .scap format) instead of tapping into live.\n"
-           " -r <rules_file>    Rules file (defaults to value set in configuration file, or /etc/falco_rules.conf).\n"
+	   " -h, --help                    Print this page\n"
+	   " -c                            Configuration file (default " FALCO_SOURCE_CONF_FILE ", " FALCO_INSTALL_CONF_FILE ")\n"
+	   " -o                            Output type (options are 'stdout', 'syslog', default is 'stdout')\n"
+	   " -d, --daemon                  Run as a daemon\n"
+	   " -p, --pidfile <pid_file>      When run as a daemon, write pid to specified file\n"
+           " -e <events_file>              Read the events from <events_file> (in .scap format) instead of tapping into live.\n"
+           " -r <rules_file>               Rules file (defaults to value set in configuration file, or /etc/falco_rules.conf).\n"
 	   "\n"
     );
 }
@@ -192,16 +194,20 @@ int falco_init(int argc, char **argv)
 	sinsp_evt::param_fmt event_buffer_format;
 	int long_index = 0;
 	string lua_main_filename;
-	string output_name = "stdout";
+	string output_name = "syslog";
 	string scap_filename;
 	string conf_filename;
 	string rules_filename;
 	string lua_dir = FALCO_LUA_DIR;
 	lua_State* ls = NULL;
+	bool daemon = false;
+	string pidfilename = "/var/run/falco.pid";
 
 	static struct option long_options[] =
 	{
 		{"help", no_argument, 0, 'h' },
+		{"daemon", no_argument, 0, 'd' },
+		{"pidfile", required_argument, 0, 'd' },
 		{0, 0, 0, 0}
 	};
 
@@ -214,7 +220,7 @@ int falco_init(int argc, char **argv)
 		// Parse the args
 		//
 		while((op = getopt_long(argc, argv,
-                                        "c:ho:e:r:",
+                                        "c:ho:e:r:dp:",
                                         long_options, &long_index)) != -1)
 		{
 			switch(op)
@@ -239,6 +245,12 @@ int falco_init(int argc, char **argv)
 			case 'r':
 				rules_filename = optarg;
 				break;
+			case 'd':
+				daemon = true;
+				break;
+			case 'p':
+				pidfilename = optarg;
+				break;
 			case '?':
 				result = EXIT_FAILURE;
 				goto exit;
@@ -248,6 +260,18 @@ int falco_init(int argc, char **argv)
 
 		}
 
+		// Some combinations of arguments are not allowed.
+		if (daemon && pidfilename == "") {
+			falco_logger::log(LOG_ERR, "If -d is provided, a pid file must also be provided. Exiting.\n");
+			result = EXIT_FAILURE;
+			goto exit;
+		}
+
+		if (daemon && output_name == "stdout") {
+			falco_logger::log(LOG_ERR, "If -d is provided, can not output to stdout. Exiting.\n");
+			result = EXIT_FAILURE;
+			goto exit;
+		}
 
 		ifstream* conf_stream;
 		if (conf_filename.size())
@@ -255,7 +279,7 @@ int falco_init(int argc, char **argv)
 			conf_stream = new ifstream(conf_filename);
 			if (!conf_stream->good())
 			{
-				falco_logger::log(LOG_ERR, "Could not find configuration file at " + conf_filename + ". Exiting \n");
+				falco_logger::log(LOG_ERR, "Could not find configuration file at " + conf_filename + ". Exiting.\n");
 				result = EXIT_FAILURE;
 				goto exit;
 			}
@@ -308,7 +332,7 @@ int falco_init(int argc, char **argv)
 			{
 				falco_logger::log(LOG_ERR, "Could not find Falco Lua libraries (tried " +
 						     string(FALCO_LUA_DIR FALCO_LUA_MAIN) + ", " +
-						     lua_main_filename + "). Exiting \n");
+						     lua_main_filename + "). Exiting.\n");
 				result = EXIT_FAILURE;
 				goto exit;
 			}
@@ -365,11 +389,64 @@ int falco_init(int argc, char **argv)
 			{
 				if(system("modprobe " PROBE_NAME " > /dev/null 2> /dev/null"))
 				{
-					falco_logger::log(LOG_ERR, "Unable to load the driver. Exiting\n");
+					falco_logger::log(LOG_ERR, "Unable to load the driver. Exiting.\n");
 				}
 				inspector->open();
 			}
 		}
+
+		// If daemonizing, do it here so any init errors will
+		// be returned in the foreground process.
+		if (daemon) {
+			pid_t pid, sid;
+
+			pid = fork();
+			if (pid < 0) {
+				// error
+				falco_logger::log(LOG_ERR, "Could not fork. Exiting.\n");
+				result = EXIT_FAILURE;
+				goto exit;
+			} else if (pid > 0) {
+				// parent. Write child pid to pidfile and exit
+				std::ofstream pidfile;
+				pidfile.open(pidfilename);
+
+				if (!pidfile.good())
+				{
+					falco_logger::log(LOG_ERR, "Could not write pid to pid file " + pidfilename + ". Exiting.\n");
+					result = EXIT_FAILURE;
+					goto exit;
+				}
+				pidfile << pid;
+				pidfile.close();
+				goto exit;
+			}
+			// if here, child.
+
+			// Become own process group.
+			sid = setsid();
+			if (sid < 0) {
+				falco_logger::log(LOG_ERR, "Could not set session id. Exiting.\n");
+				result = EXIT_FAILURE;
+				goto exit;
+			}
+
+			// Set umask so no files are world anything or group writable.
+			umask(027);
+
+			// Change working directory to '/'
+			if ((chdir("/")) < 0) {
+				falco_logger::log(LOG_ERR, "Could not change working directory to '/'. Exiting.\n");
+				result = EXIT_FAILURE;
+				goto exit;
+			}
+
+			// Close stdin, stdout, stderr.
+			close(0);
+			close(1);
+			close(2);
+		}
+
 		do_inspect(inspector,
 			   rules,
 			   ls);
@@ -378,7 +455,7 @@ int falco_init(int argc, char **argv)
 	}
 	catch(sinsp_exception& e)
 	{
-		falco_logger::log(LOG_ERR, "Runtime error: " + string(e.what()) + ". Exiting\n");
+		falco_logger::log(LOG_ERR, "Runtime error: " + string(e.what()) + ". Exiting.\n");
 
 		result = EXIT_FAILURE;
 	}

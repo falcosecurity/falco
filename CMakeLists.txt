@@ -181,6 +181,7 @@ add_subdirectory(${SYSDIG_DIR}/userspace/libscap ${PROJECT_BINARY_DIR}/userspace
 add_subdirectory(${SYSDIG_DIR}/userspace/libsinsp ${PROJECT_BINARY_DIR}/userspace/libsinsp)
 
 add_subdirectory(rules)
+add_subdirectory(scripts)
 add_subdirectory(userspace/falco)
 
 
@@ -192,18 +193,23 @@ set(CPACK_PACKAGE_VERSION "${FALCO_VERSION}")
 set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${CMAKE_SYSTEM_PROCESSOR}")
 set(CPACK_PROJECT_CONFIG_FILE "${PROJECT_SOURCE_DIR}/CMakeCPackOptions.cmake")
 set(CPACK_STRIP_FILES "ON")
+set(CPACK_PACKAGE_RELOCATABLE "OFF")
 
 set(CPACK_GENERATOR DEB RPM TGZ)
 
 set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Sysdig <support@sysdig.com>")
 set(CPACK_DEBIAN_PACKAGE_SECTION "utils")
-
 set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "http://www.sysdig.org")
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "sysdig")
+set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${PROJECT_SOURCE_DIR}/scripts/debian/postinst;${PROJECT_SOURCE_DIR}/scripts/debian/prerm;${PROJECT_SOURCE_DIR}/scripts/debian/postrm")
 
 set(CPACK_RPM_PACKAGE_LICENSE "GPLv2")
 set(CPACK_RPM_PACKAGE_URL "http://www.sysdig.org")
 set(CPACK_RPM_PACKAGE_REQUIRES "sysdig")
-set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION /usr/src /usr/share/man /usr/share/man/man8)
+set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE "${PROJECT_SOURCE_DIR}/scripts/rpm/postinstall")
+set(CPACK_RPM_PRE_UNINSTALL_SCRIPT_FILE "${PROJECT_SOURCE_DIR}/scripts/rpm/preuninstall")
+set(CPACK_RPM_POST_UNINSTALL_SCRIPT_FILE "${PROJECT_SOURCE_DIR}/scripts/rpm/postuninstall")
+set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION /usr/src /usr/share/man /usr/share/man/man8 /etc /usr /usr/bin /usr/share /etc/rc.d /etc/rc.d/init.d )
+set(CPACK_RPM_PACKAGE_RELOCATABLE "OFF")
 
 include(CPack)
