@@ -16,23 +16,44 @@ Sysdig Falco is a behavioral activity monitor designed to secure your applicatio
 
 ### What kind of behaviors can Falco detect?
 
-Falco can detect and alert on any behavior that involves making Linux system calls.  Thanks to Sysdig's core decoding and state tracking functionality, Falco alerts can be triggered by the use of specific system calls, their arguments, and by properties of the calling process. Rules are expressed in a high-level, human-readable language. For example, you can easily detect things like:
+Falco can detect and alert on any behavior that involves making Linux system calls. Thanks to Sysdig's core decoding and state tracking functionality, Falco alerts can be triggered by the use of specific system calls, their arguments, and by properties of the calling process. For example, you can easily detect things like:
 - A shell is run inside a container
 - A server process spawns a child process of an unexpected type
 - Unexpected read of a sensitive file (like `/etc/passwd`)
 - A non-device file is written to `/dev`
 - A standard system binary (like `ls`) makes an outbound network connection
 
+### How you use it
+
+Falco is deployed as a long-running daemon. You can install it as a debian/rpm
+package on a regular host or container host, or you can deploy it as a
+container.
+
+Falco is configured via a rules file defining the behaviors and events to
+watch for, and a general configuration file. Rules are expressed in a
+high-level, human-readable language. We've provided a sample rule file
+`./rules/falco_rules.conf` as a starting point - you can (and will likely
+want!) to adapt it to your environment.
+
+When developing rules, one helpful feature is Falco's ability to read trace
+files saved by sysdig. This allows you to "record" the offending behavior
+once, and replay it with Falco as many times as needed while tweaking your
+rules.
+
+Once deployed, Falco uses the Sysdig kernel module and userspace libraries to
+watch for any events matching one of the conditions defined in the rule
+file. If a matching event occurs, a notification is written to the the
+configured output(s).
+
+
 ## Rules
 
-Falco is primarily configured via two files: a configuration file (such as the `falco.yaml` in this repository) and a rules file (such as the `falco_rules.conf` file in `rules/`). These two files are written to `/etc` after you install the Falco package.
-
-
-The rules file is where you define the events and actions that you want to be notified on. We've provided a sample rule file `./rules/falco_rules.conf` as a starting point, but you'll want to familiarize yourself with the contents, and most likely, to adapt it to your environment. 
+The rules file is where you define the events and actions that you want to be
+notified on.
 
 _Call for contributions: If you come up with additional rules which you think should be part of this core set - PR welcome! And likewise if you have an entirely separate ruleset that may not belong in the core rule set._
 
-A Falco rules file is comprised of two kinds of elements: rules and macro definitions. 
+A Falco rules file is comprised of two kinds of elements: rules and macro definitions.
 
 Here's an example of a rule that alerts whenever a bash shell is run inside a container:
 
@@ -46,7 +67,7 @@ Macro definitions provide a way to define common sub-portions of rules in a reus
 
 `macro_name: macro_definition`
 
-where `macro_name` is a string, and `macro_definition` is any valid Falco condition. 
+where `macro_name` is a string, and `macro_definition` is any valid Falco condition.
 
 (_insert example here_).
 
