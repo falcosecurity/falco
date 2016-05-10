@@ -7,10 +7,3 @@ if [ -x "/etc/init.d/$NAME" ]; then
         update-rc.d $NAME defaults >/dev/null
 fi
 
-if [ -x "/etc/init.d/$NAME" ]; then
-        if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-                invoke-rc.d $NAME start || exit $?
-        else
-                /etc/init.d/$NAME start || exit $?
-        fi
-fi
