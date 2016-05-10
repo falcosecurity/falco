@@ -155,7 +155,6 @@ Warning: The following command might not work with any kernel. Make sure to cust
 
 `apt-get -y install falco`
 
-
 Instructions for installing via .deb, .rpm, or docker. To be filled in pre-release.
 
 For now, local compilation and installation is the way to install (see "Building Falco" below).
@@ -197,13 +196,17 @@ sysdig-probe-loader
 
 Falco is intended to be run as a service. But for experimentation and designing/testing rulesets, you will likely want to run it manually from the command-line.
 
-#### Running Falco as a service
-Instructions for Centos and Ubuntu.
+#### Running Falco as a service (after installing package)
+
+`service falco start`
+
+#### Running Falco in a container
+
+`docker run -i -t --name falco --privileged -v /var/run/docker.sock:/host/var/run/docker.sock -v /dev:/host/dev -v /proc:/host/proc:ro -v /boot:/host/boot:ro -v /lib/modules:/host/lib/modules:ro -v /usr:/host/usr:ro sysdig/falco falco`
 
 #### Running Falco manually
 
-`falco --help`
-
+Do `falco --help` to see the command-line options available when running manually.
 
 
 ## Building and running Falco locally from source
