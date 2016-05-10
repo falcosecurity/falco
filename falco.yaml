@@ -1,5 +1,5 @@
 # File containing Falco rules, loaded at startup.
-rules_file: /etc/falco_rules.conf
+rules_file: /etc/falco_rules.yaml
 
 # Whether to output events in json or text
 json_output: false
