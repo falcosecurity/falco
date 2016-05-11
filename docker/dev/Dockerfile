@@ -46,4 +46,4 @@ COPY ./docker-entrypoint.sh /
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
-CMD ["bash"]
+CMD ["/usr/bin/falco"]

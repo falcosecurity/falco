@@ -6,7 +6,7 @@ json_output: false
 
 # Send information logs to stderr and/or syslog Note these are *not* security
 # notification logs! These are just Falco lifecycle (and possibly error) logs.
-log_stderr: false
+log_stderr: true
 log_syslog: true
 
 
@@ -21,5 +21,5 @@ file_output:
   filename: ./events.txt
 
 stdout_output:
-  enabled: false
+  enabled: true
 
