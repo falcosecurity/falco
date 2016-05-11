@@ -115,6 +115,10 @@
 - macro: sensitive_files
   condition: fd.name contains /etc/passwd or fd.name = /etc/sudoers or fd.directory = /etc/sudoers.d or fd.directory = /etc/pam.d or fd.name = /etc/pam.conf
 
+# Indicates that the process is new. Currently detected using time
+# since process was started, using a threshold of 5 seconds.
+- macro: proc_is_new
+  condition: proc.duration <= 5000000000
 
 # Network
 - macro: inbound
@@ -166,6 +170,11 @@
 # Don't read 'sensitive' files
 - condition: open_read and not server_binaries and not userexec_binaries and not proc.name in (iptables, ps, systemd-logind, lsb_release, check-new-relea, dumpe2fs, accounts-daemon, bash) and not_cron and sensitive_files
   output: "Read sensitive file (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
+  priority: WARNING
+
+# These processes might read sensitive files at startup, but not afterward.
+- condition: open_read and server_binaries and not proc_is_new and sensitive_files
+  output: "Read sensitive file after startup (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
 # Don't modify binary dirs
