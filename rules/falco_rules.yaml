@@ -92,6 +92,23 @@
     groupadd, groupdel, groupmems, groupmod, grpck, grpconv, grpunconv,
     newusers, pwck, pwconv, pwunconv, useradd, userdel, usermod, vigr, vipw)
 
+- macro: docker_binaries
+  condition: proc.name in (docker, exe)
+
+- macro: http_server_binaries
+  condition: proc.name in (nginx, httpd, httpd-foregroun, lighttpd)
+
+- macro: db_server_binaries
+  condition: proc.name in (mysqld)
+
+- macro: server_binaries
+  condition: http_server_binaries or db_server_binaries or docker_binaries or proc.name in (sshd)
+
+# A canonical set of processes that run other programs with different
+# privileges or as a different user.
+- macro: userexec_binaries
+  condition: proc.name in (sudo, su)
+
 - macro: system_binaries
   condition: coreutils_binaries or adduser_binaries or login_binaries or passwd_binaries or shadowutils_binaries
 
@@ -147,7 +164,7 @@
   priority: WARNING
 
 # Don't read 'sensitive' files
-- condition: open_read and not proc.name in (sshd, sudo, su, iptables, ps, httpd-foregroun, httpd, nginx, systemd-logind, lsb_release, check-new-relea, dumpe2fs, accounts-daemon, bash) and not_cron and sensitive_files
+- condition: open_read and not server_binaries and not userexec_binaries and not proc.name in (iptables, ps, systemd-logind, lsb_release, check-new-relea, dumpe2fs, accounts-daemon, bash) and not_cron and sensitive_files
   output: "Read sensitive file (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
@@ -211,9 +228,9 @@
   output: "sshd error (%proc.name %evt.arg.data)"
   priority: WARNING
 
-# Non-sudo setuid
-- condition: evt.type=setuid and not_cron and not proc.name in (sudo, sshd, exe, httpd-foregroun, httpd, nginx, mysqld)
-  output: "unexpected setuid call by non-sudo (%user.name %proc.name %evt.dir %evt.type %evt.args)"
+# setuid by a process that doesn't typically change uid (servers, sudo, su, etc.)
+- condition: evt.type=setuid and not_cron and not userexec_binaries and not server_binaries
+  output: "unexpected setuid call (%user.name %proc.name %proc.cwd %proc.aname[0] %proc.aname[1] %proc.aname[2] %proc.aname[3] %proc.pid %proc.ppid %evt.dir %evt.type %evt.args)"
   priority: WARNING
 
 # User management (su and sudo are ok)
@@ -458,11 +475,7 @@
   output: "Unexpected MySQL inbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
-# HTTP server
-- macro: http_server
-  condition: proc.name in (nginx, httpd, lighttpd)
-
-- condition: http_server and inbound and fd.sport != 80 and fd.sport != 443
+- condition: http_server_binaries and inbound and fd.sport != 80 and fd.sport != 443
   output: "Unexpected HTTP server inbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
