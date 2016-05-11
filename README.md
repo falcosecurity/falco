@@ -135,6 +135,9 @@ Warning: The following command might not work with any kernel. Make sure to cust
 
 `yum -y install falco`
 
+
+To uninstall, just do `yum erase falco`.
+
 ##### Debian
 
 - Trust the Draios GPG key, configure the apt repository, and update the package list
@@ -155,9 +158,8 @@ Warning: The following command might not work with any kernel. Make sure to cust
 
 `apt-get -y install falco`
 
-Instructions for installing via .deb, .rpm, or docker. To be filled in pre-release.
+To uninstall, just do `apt-get remove falco`.
 
-For now, local compilation and installation is the way to install (see "Building Falco" below).
 
 ##### Container install (general)
 
@@ -191,6 +193,8 @@ toolbox --bind=/dev --bind=/var/run/docker.sock
 curl -s https://s3.amazonaws.com/download.draios.com/stable/install-falco | bash
 sysdig-probe-loader
 ```
+
+
 
 ## Running Falco
 
