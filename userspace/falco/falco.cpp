@@ -45,7 +45,7 @@ static void usage()
 	   " -d, --daemon                  Run as a daemon\n"
 	   " -p, --pidfile <pid_file>      When run as a daemon, write pid to specified file\n"
            " -e <events_file>              Read the events from <events_file> (in .scap format) instead of tapping into live.\n"
-           " -r <rules_file>               Rules file (defaults to value set in configuration file, or /etc/falco_rules.conf).\n"
+           " -r <rules_file>               Rules file (defaults to value set in configuration file, or /etc/falco_rules.yaml).\n"
 	   "\n"
     );
 }
