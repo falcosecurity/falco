@@ -38,6 +38,8 @@
 - macro: modify
   condition: rename or mkdir or remove
 
+- macro: spawn_process
+  condition: syscall.type = execve
 
 # File categories
 - macro: terminal_file_fd
@@ -174,6 +176,11 @@
 
 # These processes might read sensitive files at startup, but not afterward.
 - condition: open_read and server_binaries and not proc_is_new and sensitive_files
+  output: "Read sensitive file after startup (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
+  priority: WARNING
+
+# Don't let databases spawn processes (i.e. workers) after startup.
+- condition: db_server_binaries and not proc_is_new and spawn_process
   output: "Read sensitive file after startup (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
