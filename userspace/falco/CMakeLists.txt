@@ -23,5 +23,5 @@ configure_file(config_falco.h.in config_falco.h)
 
 install(TARGETS falco DESTINATION bin)
 install(DIRECTORY lua
-	DESTINATION share/falco/lua
+	DESTINATION share/falco
 	FILES_MATCHING PATTERN *.lua)
