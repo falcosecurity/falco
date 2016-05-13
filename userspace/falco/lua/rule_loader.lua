@@ -182,6 +182,54 @@ function load_rules(filename)
    io.flush()
 end
 
+local rule_fmt = "%-50s %s"
+
+-- http://lua-users.org/wiki/StringRecipes, with simplifications and bugfixes
+local function wrap(str, limit, indent)
+   indent = indent or ""
+   limit = limit or 72
+   local here = 1
+   return str:gsub("(%s+)()(%S+)()",
+		   function(sp, st, word, fi)
+		      if fi-here > limit then
+			 here = st
+			 return "\n"..indent..word
+		      end
+                   end)
+end
+
+local function describe_single_rule(name)
+   if (state.rules_by_name[name] == nil) then
+      error ("No such rule: "..name)
+   end
+
+   -- Wrap the description into an multiple lines each of length ~ 60
+   -- chars, with indenting to line up with the first line.
+   local wrapped = wrap(state.rules_by_name[name]['desc'], 60, string.format(rule_fmt, "", ""))
+
+   local line = string.format(rule_fmt, name, wrapped)
+   print(line)
+   print()
+end
+
+-- If name is nil, describe all rules
+function describe_rule(name)
+
+   print()
+   local line = string.format(rule_fmt, "Rule", "Description")
+   print(line)
+   line = string.format(rule_fmt, "----", "-----------")
+   print(line)
+
+   if name == nil then
+      for rulename, rule in pairs(state.rules_by_name) do
+	 describe_single_rule(rulename)
+      end
+   else
+      describe_single_rule(name)
+   end
+end
+
 function on_event(evt_, rule_id)
 
    if state.rules_by_idx[rule_id] == nil then

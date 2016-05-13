@@ -45,6 +45,8 @@ static void usage()
 	   " -p, --pidfile <pid_file>      When run as a daemon, write pid to specified file\n"
            " -e <events_file>              Read the events from <events_file> (in .scap format) instead of tapping into live.\n"
            " -r <rules_file>               Rules file (defaults to value set in configuration file, or /etc/falco_rules.yaml).\n"
+	   " -L                            Show the name and description of all rules and exit.\n"
+	   " -l <rule>                     Show the name and description of the rule with name <rule> and exit.\n"
 	   "\n"
     );
 }
@@ -217,6 +219,8 @@ int falco_init(int argc, char **argv)
 	lua_State* ls = NULL;
 	bool daemon = false;
 	string pidfilename = "/var/run/falco.pid";
+	bool describe_all_rules = false;
+	string describe_rule = "";
 
 	static struct option long_options[] =
 	{
@@ -236,7 +240,7 @@ int falco_init(int argc, char **argv)
 		// Parse the args
 		//
 		while((op = getopt_long(argc, argv,
-                                        "c:ho:e:r:dp:",
+                                        "c:ho:e:r:dp:Ll:",
                                         long_options, &long_index)) != -1)
 		{
 			switch(op)
@@ -261,6 +265,12 @@ int falco_init(int argc, char **argv)
 				break;
 			case 'p':
 				pidfilename = optarg;
+				break;
+			case 'L':
+				describe_all_rules = true;
+				break;
+			case 'l':
+				describe_rule = optarg;
 				break;
 			case '?':
 				result = EXIT_FAILURE;
@@ -358,6 +368,18 @@ int falco_init(int argc, char **argv)
 		rules->load_rules(config.m_rules_filename);
 		inspector->set_filter(rules->get_filter());
 		falco_logger::log(LOG_INFO, "Parsed rules from file " + config.m_rules_filename + "\n");
+
+		if (describe_all_rules)
+		{
+			rules->describe_rule(NULL);
+			goto exit;
+		}
+
+		if (describe_rule != "")
+		{
+			rules->describe_rule(&describe_rule);
+			goto exit;
+		}
 
 		inspector->set_hostname_and_port_resolution_mode(false);
 
