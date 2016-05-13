@@ -1049,11 +1049,6 @@ blockquote. pre, code {
     z-index: 100;
 }
 
-#page-home #section-examples .command div:last-child .vertical-center:before {
-    content: "~$";
-    color: #000100;
-
-}
 
 .row .vertical-center {
     height: 100%;
