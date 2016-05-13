@@ -114,8 +114,11 @@
 - macro: system_binaries
   condition: coreutils_binaries or adduser_binaries or login_binaries or passwd_binaries or shadowutils_binaries
 
+- macro: mail_binaries
+  condition: proc.name in (sendmail, postfix, procmail)
+
 - macro: sensitive_files
-  condition: fd.name contains /etc/passwd or fd.name = /etc/sudoers or fd.directory = /etc/sudoers.d or fd.directory = /etc/pam.d or fd.name = /etc/pam.conf
+  condition: fd.name contains /etc/shadow or fd.name = /etc/sudoers or fd.directory = /etc/sudoers.d or fd.directory = /etc/pam.d or fd.name = /etc/pam.conf
 
 # Indicates that the process is new. Currently detected using time
 # since process was started, using a threshold of 5 seconds.
@@ -146,8 +149,10 @@
   condition: (proc.aname=sshd and proc.name != sshd) or proc.name=systemd-logind
 - macro: syslog
   condition: fd.name = /dev/log
-- macro: not_cron
-  condition: proc.name != cron
+- macro: cron
+  condition: proc.name in (cron, crond)
+- macro: parent_cron
+  condition: proc.pname in (cron, crond)
 
 # System users that should never log into a system. Consider adding your own
 # service users (e.g. 'apache' or 'mysqld') here.
@@ -170,7 +175,7 @@
   priority: WARNING
 
 # Don't read 'sensitive' files
-- condition: open_read and not server_binaries and not userexec_binaries and not proc.name in (iptables, ps, systemd-logind, lsb_release, check-new-relea, dumpe2fs, accounts-daemon, bash) and not_cron and sensitive_files
+- condition: open_read and not server_binaries and not userexec_binaries and not proc.name in (iptables, ps, systemd-logind, lsb_release, check-new-relea, dumpe2fs, accounts-daemon, bash) and not cron and sensitive_files
   output: "Read sensitive file (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
@@ -203,13 +208,13 @@
   output: "System call returned EACCESS (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: INFO
 
-# Only sysdig and docker can call setns
-- condition: syscall.type = setns and not proc.name in (docker, sysdig)
+# Only sysdig related software and docker can call setns
+- condition: syscall.type = setns and not proc.name in (docker, sysdig, dragent)
   output: "Unexpected setns (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
-# Shells should only be run by cron or sshd
-- condition: proc.name = bash and proc.pname exists and not proc.pname in (bash, sshd, cron, sudo, su, tmux, screen, emacs, systemd, fs-bash)
+# Shells can only be run by some processes.
+- condition: proc.name = bash and evt.dir=< and evt.type in (clone, execve) and proc.pname exists and not parent_cron and not proc.pname in (bash, sshd, sudo, docker, su, tmux, screen, emacs, systemd, flock, fs-bash, nginx, monit, supervisord)
   output: "Unexpected shell (%user.name %proc.name %proc.pname %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
@@ -220,17 +225,17 @@
 
 # Anything run interactively by a non-login user
 - condition: system_users and interactive
-  output: "Sytem user ran an interactive command (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
+  output: "System user ran an interactive command (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
-# Chmod should only be run interactively (by a user)
-- condition: syscall.type = chmod and not interactive
-  output: "non-interactive chmod (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
+# Chmod can't be run on important binaries or sensitive files
+- condition: syscall.type = chmod and (system_binaries or sensitive_files)
+  output: "chmod on sensitive file/system binary (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
-# Shells in a container
-- condition: container and proc.name = bash
-  output: "shell in a container (%user.name %container.id %proc.name %evt.dir %evt.type %evt.args %fd.name)"
+# Shells in a container are generally not allowed, unless their parent was a shell or docker
+- condition: container and proc.name = bash and evt.dir=< and evt.type in (clone, execve) and proc.pname exists and not proc.pname in (bash, docker)
+  output: "shell in a container (%user.name %container.id %container.name %proc.name %proc.pname %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
 # Network traffic to/from standard utils
@@ -244,13 +249,13 @@
   output: "sshd error (%proc.name %evt.arg.data)"
   priority: WARNING
 
-# setuid by a process that doesn't typically change uid (servers, sudo, su, etc.)
-- condition: evt.type=setuid and not_cron and not userexec_binaries and not server_binaries
-  output: "unexpected setuid call (%user.name %proc.name %proc.cwd %proc.aname[0] %proc.aname[1] %proc.aname[2] %proc.aname[3] %proc.pid %proc.ppid %evt.dir %evt.type %evt.args)"
+# Non-sudo setuid. Root is allowed to setuid, as that typically involves dropping privileges.
+- condition: evt.type=setuid and evt.dir=> and not user.name=root and not userexec_binaries
+  output: "unexpected setuid call by non-sudo, non-root (%user.name %proc.name %evt.dir %evt.type %evt.args)"
   priority: WARNING
 
-# User management (su and sudo are ok)
-- condition: not proc.name in (su, sudo) and (adduser_binaries or login_binaries or passwd_binaries or shadowutils_binaries)
+# User management (su and sudo are ok). Also, user management in containers is ok (some containers create custom users from a base linux distro).
+- condition: not proc.name in (su, sudo) and not container and (adduser_binaries or login_binaries or passwd_binaries or shadowutils_binaries)
   output: "user-management binary command run (%user.name %proc.name %evt.dir %evt.type %evt.args)"
   priority: WARNING
 
