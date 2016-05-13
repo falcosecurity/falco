@@ -164,33 +164,39 @@
 # Rules
 #######
 
-# Don't write to binary dirs
-- condition: evt.dir = > and open_write and bin_dir
+- rule: write_binary_dir
+  desc: an attempt to write to any file below a set of binary directories
+  condition: evt.dir = > and open_write and bin_dir
   output: "Write to bin dir (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
-# Don't write to /etc
-- condition: evt.dir = > and open_write and etc_dir
+- rule: write_etc
+  desc: an attempt to write to any file below /etc
+  condition: evt.dir = > and open_write and etc_dir
   output: "Write to etc dir (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
-# Don't read 'sensitive' files
-- condition: open_read and not server_binaries and not userexec_binaries and not proc.name in (iptables, ps, systemd-logind, lsb_release, check-new-relea, dumpe2fs, accounts-daemon, bash) and not cron and sensitive_files
+- rule: read_sensitive_file_untrusted
+  desc: an attempt to read any sensitive file (e.g. files containing user/password/authentication information). Exceptions are made for known trusted programs.
+  condition: open_read and not server_binaries and not userexec_binaries and not proc.name in (iptables, ps, systemd-logind, lsb_release, check-new-relea, dumpe2fs, accounts-daemon, bash) and not cron and sensitive_files
   output: "Read sensitive file (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
-# These processes might read sensitive files at startup, but not afterward.
-- condition: open_read and server_binaries and not proc_is_new and sensitive_files
+- rule: read_sensitive_file_trusted_after_startup
+  desc: an attempt to read any sensitive file (e.g. files containing user/password/authentication information) by a trusted program after startup. The idea is that trusted programs might read these files at startup to load initial state, but not afterwards.
+  condition: open_read and server_binaries and not proc_is_new and sensitive_files
   output: "Read sensitive file after startup (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
-# Don't let databases spawn processes (i.e. workers) after startup.
-- condition: db_server_binaries and not proc_is_new and spawn_process
+- rule: db_program_spawn_process
+  desc: a database-server related program spawning a new process after startup. This shouldn\'t occur and is a followon from some SQL injection attacks.
+  condition: db_server_binaries and not proc_is_new and spawn_process
   output: "Read sensitive file after startup (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
-# Don't modify binary dirs
-- condition: modify and (bin_dir_rename or bin_dir_mkdir)
+- rule: modify_binary_dirs
+  desc: an attempt to modify any file below a set of binary directories.
+  condition: modify and (bin_dir_rename or bin_dir_mkdir)
   output: "Modify bin dir (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
@@ -203,18 +209,21 @@
 #   output: "Loaded .so from unexpected dir (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
 #   priority: WARNING
 
-# Attempts to access things that shouldn't be
-- condition: evt.res = EACCES
+- rule: syscall_returns_eaccess
+  desc: any system call that returns EACCESS. This is not always a strong indication of a problem, hence the INFO priority.
+  condition: evt.res = EACCESS
   output: "System call returned EACCESS (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: INFO
 
-# Only sysdig related software and docker can call setns
-- condition: syscall.type = setns and not proc.name in (docker, sysdig, dragent)
+- rule: change_thread_namespace
+  desc: an attempt to change a program/thread\'s namespace (commonly done as a part of creating a container) by calling setns.
+  condition: syscall.type = setns and not proc.name in (docker, sysdig, dragent)
   output: "Unexpected setns (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
-# Shells can only be run by some processes.
-- condition: proc.name = bash and evt.dir=< and evt.type in (clone, execve) and proc.pname exists and not parent_cron and not proc.pname in (bash, sshd, sudo, docker, su, tmux, screen, emacs, systemd, flock, fs-bash, nginx, monit, supervisord)
+- rule: run_shell_untrusted
+  desc: an attempt to spawn a shell by a non-shell program. Exceptions are made for trusted binaries.
+  condition: proc.name = bash and evt.dir=< and evt.type in (clone, execve) and proc.pname exists and not parent_cron and not proc.pname in (bash, sshd, sudo, docker, su, tmux, screen, emacs, systemd, flock, fs-bash, nginx, monit, supervisord)
   output: "Unexpected shell (%user.name %proc.name %proc.pname %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
@@ -223,45 +232,53 @@
 #  output: "Interactive root (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
 #  priority: WARNING
 
-# Anything run interactively by a non-login user
-- condition: system_users and interactive
+- rule: system_user_interactive
+  desc: an attempt to run interactive commands by a system (i.e. non-login) user
+  condition: system_users and interactive
   output: "System user ran an interactive command (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
-# Chmod can't be run on important binaries or sensitive files
-- condition: syscall.type = chmod and (system_binaries or sensitive_files)
+- rule: chmod_sensitive_files
+  desc: an attempt to chmod any important binary or sensitive file (e.g. files containing user/password/authentication information)
+  condition: syscall.type = chmod and (system_binaries or sensitive_files)
   output: "chmod on sensitive file/system binary (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
-# Shells in a container are generally not allowed, unless their parent was a shell or docker
-- condition: container and proc.name = bash and evt.dir=< and evt.type in (clone, execve) and proc.pname exists and not proc.pname in (bash, docker)
+- rule: run_shell_in_container
+  desc: an attempt to spawn a shell by a non-shell program in a container. Container entrypoints are excluded.
+  condition: container and proc.name = bash and evt.dir=< and evt.type in (clone, execve) and proc.pname exists and not proc.pname in (bash, docker)
   output: "shell in a container (%user.name %container.id %container.name %proc.name %proc.pname %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
-# Network traffic to/from standard utils
 # sockfamily ip is to exclude certain processes (like 'groups') that communicate on unix-domain sockets
-- condition: fd.sockfamily = ip and system_binaries
+- rule: system_binaries_network_activity
+  desc: any network activity performed by system binaries that are not expected to send or receive any network traffic
+  condition: fd.sockfamily = ip and system_binaries
   output: "network traffic to %proc.name (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
-# SSH errors (failed logins, disconnects, ..)
-- condition: syslog and ssh_error_message and evt.dir = <
+- rule: ssh_error_syslog
+  desc: any ssh errors (failed logins, disconnects, ...) sent to syslog
+  condition: syslog and ssh_error_message and evt.dir = <
   output: "sshd error (%proc.name %evt.arg.data)"
   priority: WARNING
 
-# Non-sudo setuid. Root is allowed to setuid, as that typically involves dropping privileges.
-- condition: evt.type=setuid and evt.dir=> and not user.name=root and not userexec_binaries
+- rule: non_sudo_suid
+  desc: an attempt to change users by calling setuid. sudo/su are excluded. user "root" is also excluded, as setuid calls typically involve dropping privileges.
+  condition: evt.type=setuid and evt.dir=> and not user.name=root and not userexec_binaries
   output: "unexpected setuid call by non-sudo, non-root (%user.name %proc.name %evt.dir %evt.type %evt.args)"
   priority: WARNING
 
-# User management (su and sudo are ok). Also, user management in containers is ok (some containers create custom users from a base linux distro).
-- condition: not proc.name in (su, sudo) and not container and (adduser_binaries or login_binaries or passwd_binaries or shadowutils_binaries)
+- rule: user_mgmt_binaries
+  desc: activity by any programs that can manage users, passwords, or permissions. sudo and su are excluded. Activity in containers is also excluded--some containers create custom users on top of a base linux distribution at startup.
+  condition: not proc.name in (su, sudo) and not container and (adduser_binaries or login_binaries or passwd_binaries or shadowutils_binaries)
   output: "user-management binary command run (%user.name %proc.name %evt.dir %evt.type %evt.args)"
   priority: WARNING
 
-# Some rootkits hide files in /dev
 # (we may need to add additional checks against false positives, see: https://bugs.launchpad.net/ubuntu/+source/rkhunter/+bug/86153)
-- condition: (evt.type = creat or evt.arg.flags contains O_CREAT) and proc.name != blkid and fd.directory = /dev and fd.name != /dev/null
+- rule: create_files_below_dev
+  desc: creating any files below /dev other than known programs that manage devices. Some rootkits hide files in /dev.
+  condition: (evt.type = creat or evt.arg.flags contains O_CREAT) and proc.name != blkid and fd.directory = /dev and fd.name != /dev/null
   output: "file created in /dev (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
@@ -273,11 +290,15 @@
 - macro: elasticsearch_port
   condition: elasticsearch_cluster_port or elasticsearch_api_port
 
-- condition: user.name = elasticsearch and inbound and not elasticsearch_port
+- rule: elasticsearch_unexpected_network_inbound
+  desc: inbound network traffic to elasticsearch on a port other than the standard ports
+  condition: user.name = elasticsearch and inbound and not elasticsearch_port
   output: "Unexpected Elasticsearch inbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
-- condition: user.name = elasticsearch and outbound and not elasticsearch_cluster_port
+- rule: elasticsearch_unexpected_network_outbound
+  desc: outbound network traffic from elasticsearch on a port other than the standard ports
+  condition: user.name = elasticsearch and outbound and not elasticsearch_cluster_port
   output: "Unexpected Elasticsearch outbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
@@ -290,11 +311,15 @@
 - macro: activemq_port
   condition: activemq_web_port or activemq_cluster_port
 
-- condition: user.name = activemq and inbound and not activemq_port
+- rule: activemq_unexpected_network_inbound
+  desc: inbound network traffic to activemq on a port other than the standard ports
+  condition: user.name = activemq and inbound and not activemq_port
   output: "Unexpected ActiveMQ inbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
-- condition: user.name = activemq and outbound and not activemq_cluster_port
+- rule: activemq_unexpected_network_outbound
+  desc: outbound network traffic from activemq on a port other than the standard ports
+  condition: user.name = activemq and outbound and not activemq_cluster_port
   output: "Unexpected ActiveMQ outbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
@@ -314,11 +339,15 @@
 - macro: cassandra_port
   condition: cassandra_thrift_client_port or cassandra_cql_port or cassandra_cluster_port or cassandra_ssl_cluster_port or cassandra_jmx_port
 
-- condition: user.name = cassandra and inbound and not cassandra_port
+- rule: cassandra_unexpected_network_inbound
+  desc: inbound network traffic to cassandra on a port other than the standard ports
+  condition: user.name = cassandra and inbound and not cassandra_port
   output: "Unexpected Cassandra inbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
-- condition: user.name = cassandra and outbound and not (cassandra_ssl_cluster_port or cassandra_cluster_port)
+- rule: cassandra_unexpected_network_outbound
+  desc: outbound network traffic from cassandra on a port other than the standard ports
+  condition: user.name = cassandra and outbound and not (cassandra_ssl_cluster_port or cassandra_cluster_port)
   output: "Unexpected Cassandra outbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
@@ -371,11 +400,15 @@
     couchbase_outgoing_ssl or couchbase_internal_rest_port or
     couchbase_internal_capi_port
 
-- condition: user.name = couchbase and inbound and not couchbase_port
+- rule: couchbase_unexpected_network_inbound
+  desc: inbound network traffic to couchbase on a port other than the standard ports
+  condition: user.name = couchbase and inbound and not couchbase_port
   output: "Unexpected Couchbase inbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
-- condition: user.name = couchbase and outbound and not couchbase_internal_port
+- rule: couchbase_unexpected_network_outbound
+  desc: outbound network traffic from couchbase on a port other than the standard ports
+  condition: user.name = couchbase and outbound and not couchbase_internal_port
   output: "Unexpected Couchbase inbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
@@ -395,11 +428,15 @@
 - macro: etcd_peer_port
   condition: fd.sport=2380
 # need to double-check which user etcd runs as
-- condition: user.name = etcd and inbound and not (etcd_client_port or etcd_peer_port)
+- rule: etcd_unexpected_network_inbound
+  desc: inbound network traffic to etcd on a port other than the standard ports
+  condition: user.name = etcd and inbound and not (etcd_client_port or etcd_peer_port)
   output: "Unexpected Etcd inbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
-- condition: user.name = etcd and outbound and not couchbase_internal_port
+- rule: etcd_unexpected_network_outbound
+  desc: outbound network traffic from etcd on a port other than the standard ports
+  condition: user.name = etcd and outbound and not couchbase_internal_port
   output: "Unexpected Etcd outbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
@@ -410,17 +447,23 @@
 - macro: fluentd_forward_port
   condition: fd.sport=24224
 
-- condition: user.name = td-agent and inbound and not (fluentd_forward_port or fluentd_http_port)
+- rule: fluentd_unexpected_network_inbound
+  desc: inbound network traffic to fluentd on a port other than the standard ports
+  condition: user.name = td-agent and inbound and not (fluentd_forward_port or fluentd_http_port)
   output: "Unexpected Fluentd inbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
-- condition: user.name = td-agent and outbound and not fluentd_forward_port
+- rule: tdagent_unexpected_network_outbound
+  desc: outbound network traffic from fluentd on a port other than the standard ports
+  condition: user.name = td-agent and outbound and not fluentd_forward_port
   output: "Unexpected Fluentd outbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
 # Gearman ports
 # http://gearman.org/protocol/
-- condition: user.name = gearman and outbound and outbound and not fd.sport = 4730
+- rule: gearman_unexpected_network_outbound
+  desc: outbound network traffic from gearman on a port other than the standard ports
+  condition: user.name = gearman and outbound and outbound and not fd.sport = 4730
   output: "Unexpected Gearman outbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
@@ -449,7 +492,9 @@
 
 # If you're not running HBase under the 'hbase' user, adjust first expression
 # in each rule below
-- condition: >
+- rule: hbase_unexpected_network_inbound
+  desc: inbound network traffic to hbase on a port other than the standard ports
+  condition: >
     user.name = hbase and inbound and not (hbase_master_port or
     hbase_master_info_port or hbase_regionserver_port or
     hbase_regionserver_info_port or hbase_rest_port or hbase_rest_info_port or
@@ -457,22 +502,30 @@
   output: "Unexpected HBase inbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
-- condition: user.name = hbase and outbound and not (zookeeper_port or hbase_master_port or hbase_regionserver_port)
+- rule: hbase_unexpected_network_outbound
+  desc: outbound network traffic from hbase on a port other than the standard ports
+  condition: user.name = hbase and outbound and not (zookeeper_port or hbase_master_port or hbase_regionserver_port)
   output: "Unexpected HBase outbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
 
 # Kafka ports
-- condition: user.name = kafka and inbound and fd.sport != 9092
+- rule: kafka_unexpected_network_inbound
+  desc: inbound network traffic to kafka on a port other than the standard ports
+  condition: user.name = kafka and inbound and fd.sport != 9092
   output: "Unexpected Kafka inbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
 # Memcached ports
-- condition: user.name = memcached and inbound and fd.sport != 11211
+- rule: memcached_unexpected_network_inbound
+  desc: inbound network traffic to memcached on a port other than the standard ports
+  condition: user.name = memcached and inbound and fd.sport != 11211
   output: "Unexpected Memcached inbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
-- condition: user.name = memcached and outbound
+- rule: memcached_network_outbound
+  desc: any outbound network traffic from memcached. memcached never initiates outbound connections.
+  condition: user.name = memcached and outbound
   output: "Unexpected Memcached outbound connection (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
@@ -487,27 +540,34 @@
 - macro: mongodb_webserver_port
   condition: fd.sport = 28017
 
-- condition: user.name = mongodb and inbound and not (mongodb_server_port or mongodb_shardserver_port or mongodb_configserver_port or mongodb_webserver_port)
+- rule: mongodb_unexpected_network_inbound
+  desc: inbound network traffic to mongodb on a port other than the standard ports
+  condition: user.name = mongodb and inbound and not (mongodb_server_port or mongodb_shardserver_port or mongodb_configserver_port or mongodb_webserver_port)
   output: "Unexpected MongoDB inbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
 # MySQL ports
-- condition: user.name = mysql and inbound and fd.sport != 3306
+- rule: mysql_unexpected_network_inbound
+  desc: inbound network traffic to mysql on a port other than the standard ports
+  condition: user.name = mysql and inbound and fd.sport != 3306
   output: "Unexpected MySQL inbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
-- condition: http_server_binaries and inbound and fd.sport != 80 and fd.sport != 443
+- rule: http_server_unexpected_network_inbound
+  desc: inbound network traffic to a http server program on a port other than the standard ports
+  condition: http_server_binaries and inbound and fd.sport != 80 and fd.sport != 443
   output: "Unexpected HTTP server inbound port (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
   priority: WARNING
 
 # fs-bash is a restricted version of bash suitable for use in curl <curl> | sh installers.
-# Don't let processes who are children of fs-bash call listen()
-- condition: evt.type=listen and proc.aname=fs-bash
+- rule: installer_bash_starts_network_server
+  desc: an attempt by any program that is a child of fs-bash to start listening for network connections
+  condition: evt.type=listen and proc.aname=fs-bash
   output: "unexpected listen call by a child process of fs-bash (%proc.name %evt.args)"
   priority: WARNING
 
-# Don't let processes who are children of fs-bash call setsid() to escape
-# their parent process either.
-- condition: evt.type=setsid and proc.aname=fs-bash
+- rule: installer_bash_starts_session
+  desc: an attempt by any program that is a child of fs-bash to start a new session (process group)
+  condition: evt.type=setsid and proc.aname=fs-bash
   output: "unexpected setsid call by a child process of fs-bash (%proc.name %evt.args)"
   priority: WARNING
