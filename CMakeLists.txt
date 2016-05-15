@@ -10,6 +10,10 @@ if(NOT DEFINED DIR_ETC)
 	set(DIR_ETC "/etc")
 endif()
 
+if(NOT CMAKE_BUILD_TYPE)
+	SET(CMAKE_BUILD_TYPE Release)
+endif()
+
 set(DRAIOS_DEBUG_FLAGS "-D_DEBUG")
 
 set(CMAKE_C_FLAGS "-Wall -ggdb ${DRAIOS_FEATURE_FLAGS}")
