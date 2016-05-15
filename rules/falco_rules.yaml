@@ -106,6 +106,9 @@
 - macro: server_binaries
   condition: http_server_binaries or db_server_binaries or docker_binaries or proc.name in (sshd)
 
+- macro: package_mgmt_binaries
+  condition: proc.name in (dpkg, rpm)
+
 # A canonical set of processes that run other programs with different
 # privileges or as a different user.
 - macro: userexec_binaries
@@ -196,13 +199,13 @@
 
 - rule: modify_binary_dirs
   desc: an attempt to modify any file below a set of binary directories.
-  condition: modify and bin_dir_rename
+  condition: modify and bin_dir_rename and not package_mgmt_binaries
   output: "File below known binary directory renamed/removed (%user.name %proc.name %evt.type %evt.args %fd.name)"
   priority: WARNING
 
 - rule: mkdir_binary_dirs
   desc: an attempt to create a directory below a set of binary directories.
-  condition: mkdir and bin_dir_mkdir
+  condition: mkdir and bin_dir_mkdir and not package_mgmt_binaries
   output: "Directory below known binary directory created (%user.name %proc.name %evt.type %evt.args %fd.name)"
   priority: WARNING
 
