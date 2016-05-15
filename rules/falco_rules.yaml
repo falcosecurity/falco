@@ -191,7 +191,7 @@
 - rule: db_program_spawn_process
   desc: a database-server related program spawning a new process after startup. This shouldn\'t occur and is a follow on from some SQL injection attacks.
   condition: db_server_binaries and not proc_is_new and spawn_process
-  output: "Database-related program spawned new process after startup (user=%user.name command=%proc.cmdline file=%fd.name)"
+  output: "Database-related program spawned new process after startup (user=%user.name command=%proc.cmdline)"
   priority: WARNING
 
 - rule: modify_binary_dirs
@@ -247,7 +247,7 @@
 - rule: run_shell_in_container
   desc: an attempt to spawn a shell by a non-shell program in a container. Container entrypoints are excluded.
   condition: container and proc.name = bash and evt.dir=< and evt.type in (clone, execve) and proc.pname exists and not proc.pname in (bash, docker)
-  output: "Shell spawned in a container other than entrypoint (user=%user.name container_id=%container.id container_name%container.name shell=%proc.name parent=%proc.pname)"
+  output: "Shell spawned in a container other than entrypoint (user=%user.name container_id=%container.id container_name=%container.name shell=%proc.name parent=%proc.pname)"
   priority: WARNING
 
 # sockfamily ip is to exclude certain processes (like 'groups') that communicate on unix-domain sockets
