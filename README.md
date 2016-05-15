@@ -264,10 +264,24 @@ Or instead you can try using some of the simpler rules files in `rules`. Or to g
 
 Create a file with some [Falco rules](Rule-syntax-and-design). For example:
 ```
-write: (syscall.type=write and fd.typechar=f) or syscall.type=mkdir or syscall.type=creat or syscall.type=rename
-interactive: proc.pname = bash or proc.pname = sshd
-write and interactive and fd.name contains sysdig
-write and interactive and fd.name contains .txt
+- macro: open_write
+  condition: >
+    (evt.type=open or evt.type=openat) and
+    fd.typechar='f' and
+    (evt.arg.flags contains O_WRONLY or
+    evt.arg.flags contains O_RDWR or
+    evt.arg.flags contains O_CREAT or
+    evt.arg.flags contains O_TRUNC)
+
+- macro: bin_dir
+  condition: fd.directory in (/bin, /sbin, /usr/bin, /usr/sbin)
+
+- rule: write_binary_dir
+  desc: an attempt to write to any file below a set of binary directories
+  condition: evt.dir = > and open_write and bin_dir
+  output: "File below a known binary directory opened for writing (user=%user.name command=%proc.cmdline file=%fd.name)"
+  priority: WARNING
+
 ```
 
 And you will see an output event for any interactive process that touches a file with "sysdig" or ".txt" in its name!
