@@ -5,10 +5,6 @@
 
 --]]
 
-local DEFAULT_OUTPUT_FORMAT = "%evt.time: %evt.num %evt.cpu %proc.name (%thread.tid) %evt.dir %evt.type %evt.args"
-local DEFAULT_PRIORITY = "WARNING"
-
-
 local output = require('output')
 local compiler = require "compiler"
 local yaml = require"lyaml"
@@ -116,7 +112,11 @@ local function priority(s)
    error("Invalid severity level: "..level)
 end
 
-local state = {macros={}, filter_ast=nil, n_rules=0, outputs={}}
+-- Note that the rules_by_name and rules_by_idx refer to the same rule
+-- object. The by_name index is used for things like describing rules,
+-- and the by_idx index is used to map the relational node index back
+-- to a rule.
+local state = {macros={}, filter_ast=nil, rules_by_name={}, n_rules=0, rules_by_idx={}}
 
 function load_rules(filename)
 
@@ -135,23 +135,28 @@ function load_rules(filename)
 	 local ast = compiler.compile_macro(v['condition'])
 	 state.macros[v['macro']] = ast.filter.value
 
-      else -- filter
+      else -- rule
 
-	 if (v['condition'] == nil) then
-	    error ("Missing condition in rule")
+	 if (v['rule'] == nil) then
+	    error ("Missing name in rule")
 	 end
 
-	 if (v['output'] == nil) then
-	    error ("Missing output in rule with condition"..v['condition'])
+	 for i, field in ipairs({'condition', 'output', 'desc', 'priority'}) do
+	    if (v[field] == nil) then
+	       error ("Missing "..field.." in rule with name "..v['rule'])
+	    end
 	 end
+
+	 -- Convert the priority as a string to a level now
+	 v['level'] = priority(v['priority'])
+	 state.rules_by_name[v['rule']] = v
 
 	 local filter_ast = compiler.compile_filter(v['condition'], state.macros)
 
 	 if (filter_ast.type == "Rule") then
 	    state.n_rules = state.n_rules + 1
 
-	    state.outputs[state.n_rules] = {format=v['output'] or DEFAULT_OUTPUT_FORMAT,
-					    level=priority(v['priority'] or DEFAULT_PRIORITY)}
+	    state.rules_by_idx[state.n_rules] = v
 
 	    -- Store the index of this formatter in each relational expression that
 	    -- this rule contains.
@@ -177,12 +182,60 @@ function load_rules(filename)
    io.flush()
 end
 
+local rule_fmt = "%-50s %s"
+
+-- http://lua-users.org/wiki/StringRecipes, with simplifications and bugfixes
+local function wrap(str, limit, indent)
+   indent = indent or ""
+   limit = limit or 72
+   local here = 1
+   return str:gsub("(%s+)()(%S+)()",
+		   function(sp, st, word, fi)
+		      if fi-here > limit then
+			 here = st
+			 return "\n"..indent..word
+		      end
+                   end)
+end
+
+local function describe_single_rule(name)
+   if (state.rules_by_name[name] == nil) then
+      error ("No such rule: "..name)
+   end
+
+   -- Wrap the description into an multiple lines each of length ~ 60
+   -- chars, with indenting to line up with the first line.
+   local wrapped = wrap(state.rules_by_name[name]['desc'], 60, string.format(rule_fmt, "", ""))
+
+   local line = string.format(rule_fmt, name, wrapped)
+   print(line)
+   print()
+end
+
+-- If name is nil, describe all rules
+function describe_rule(name)
+
+   print()
+   local line = string.format(rule_fmt, "Rule", "Description")
+   print(line)
+   line = string.format(rule_fmt, "----", "-----------")
+   print(line)
+
+   if name == nil then
+      for rulename, rule in pairs(state.rules_by_name) do
+	 describe_single_rule(rulename)
+      end
+   else
+      describe_single_rule(name)
+   end
+end
+
 function on_event(evt_, rule_id)
 
-   if state.outputs[rule_id] == nil then
+   if state.rules_by_idx[rule_id] == nil then
       error ("rule_loader.on_event(): event with invalid rule_id: ", rule_id)
    end
 
-   output.event(evt_, state.outputs[rule_id].level, state.outputs[rule_id].format)
+   output.event(evt_, state.rules_by_idx[rule_id].level, state.rules_by_idx[rule_id].output)
 end
 

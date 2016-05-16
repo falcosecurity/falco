@@ -89,9 +89,33 @@ void falco_rules::load_rules(string rules_filename)
 			throw sinsp_exception(err);
 		}
 	} else {
-		throw sinsp_exception("No function " + m_lua_load_rules + " found in lua compiler module");
+		throw sinsp_exception("No function " + m_lua_load_rules + " found in lua rule module");
 	}
 }
+
+void falco_rules::describe_rule(std::string *rule)
+{
+	lua_getglobal(m_ls, m_lua_describe_rule.c_str());
+	if(lua_isfunction(m_ls, -1))
+	{
+		if (rule == NULL)
+		{
+			lua_pushnil(m_ls);
+		} else {
+			lua_pushstring(m_ls, rule->c_str());
+		}
+
+		if(lua_pcall(m_ls, 1, 0, 0) != 0)
+		{
+			const char* lerr = lua_tostring(m_ls, -1);
+			string err = "Could not describe " + (rule == NULL ? "all rules" : "rule " + *rule) + ": " + string(lerr);
+			throw sinsp_exception(err);
+		}
+	} else {
+		throw sinsp_exception("No function " + m_lua_describe_rule + " found in lua rule module");
+	}
+}
+
 
 sinsp_filter* falco_rules::get_filter()
 {
