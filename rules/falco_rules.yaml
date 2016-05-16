@@ -39,7 +39,7 @@
   condition: rename or remove
   
 - macro: spawn_process
-  condition: syscall.type = execve
+  condition: syscall.type = execve and evt.dir=<
 
 # File categories
 - macro: terminal_file_fd
@@ -232,8 +232,8 @@
 
 - rule: run_shell_untrusted
   desc: an attempt to spawn a shell by a non-shell program. Exceptions are made for trusted binaries.
-  condition: proc.name = bash and evt.dir=< and evt.type in (clone, execve) and proc.pname exists and not parent_cron and not proc.pname in (bash, sshd, sudo, docker, su, tmux, screen, emacs, systemd, flock, fs-bash, nginx, monit, supervisord)
-  output: "Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname)"
+  condition: proc.name = bash and evt.dir=< and evt.type=execve and proc.pname exists and not parent_cron and not proc.pname in (bash, sshd, sudo, docker, su, tmux, screen, emacs, systemd, flock, fs-bash, nginx, monit, supervisord)
+  output: "Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline)"
   priority: WARNING
 
 # Anything run interactively by root
@@ -249,8 +249,8 @@
 
 - rule: run_shell_in_container
   desc: an attempt to spawn a shell by a non-shell program in a container. Container entrypoints are excluded.
-  condition: container and proc.name = bash and evt.dir=< and evt.type in (clone, execve) and proc.pname exists and not proc.pname in (bash, docker)
-  output: "Shell spawned in a container other than entrypoint (user=%user.name container_id=%container.id container_name=%container.name shell=%proc.name parent=%proc.pname)"
+  condition: container and proc.name = bash and evt.dir=< and evt.type=execve and proc.pname exists and not proc.pname in (bash, docker)
+  output: "Shell spawned in a container other than entrypoint (user=%user.name container_id=%container.id container_name=%container.name shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline)"
   priority: WARNING
 
 # sockfamily ip is to exclude certain processes (like 'groups') that communicate on unix-domain sockets
@@ -266,10 +266,10 @@
   output: "sshd sent error message to syslog (error=%evt.buffer)"
   priority: WARNING
 
-- rule: non_sudo_suid
+- rule: non_sudo_setuid
   desc: an attempt to change users by calling setuid. sudo/su are excluded. user "root" is also excluded, as setuid calls typically involve dropping privileges.
   condition: evt.type=setuid and evt.dir=> and not user.name=root and not userexec_binaries
-  output: "Unexpected setuid call by non-sudo, non-root program (user=%user.name command=%proc.cmdline)"
+  output: "Unexpected setuid call by non-sudo, non-root program (user=%user.name command=%proc.cmdline uid=%evt.arg.uid)"
   priority: WARNING
 
 - rule: user_mgmt_binaries
