@@ -67,7 +67,11 @@ _Tip: If you're new to sysdig and unsure what fields are available, run `sysdig 
 
 #### Rules
 
-Along with a condition, each rule includes an _output_ and a _priority_. The output format specifies the message that should be output if a matching event occurs, and follows the Sysdig [output format syntax](http://www.sysdig.org/wiki/sysdig-user-guide/#output-formatting). The priority is a case-insensitive representation of severity and should be one of "emergency", "alert", "critical", "error", "warning", "notice", "informational", or "debug".
+Along with a condition, each rule includes the following fields:
+
+* _rule_: a short unique name for the rule
+* _desc_: a longer description of what the rule detects
+* _output_ and _priority_: The output format specifies the message that should be output if a matching event occurs, and follows the Sysdig [output format syntax](http://www.sysdig.org/wiki/sysdig-user-guide/#output-formatting). The priority is a case-insensitive representation of severity and should be one of "emergency", "alert", "critical", "error", "warning", "notice", "informational", or "debug".
 
 A complete rule using the above condition might be:
 
@@ -93,7 +97,7 @@ For many more examples of rules and macros, please take a look at the accompanyi
 #### Ignored system calls
 
 For performance reasons, some system calls are currently discarded before Falco processing. The current list is:
-`clock_getres,clock_gettime,clock_nanosleep,clock_settime,close,epoll_create,epoll_create1,epoll_ctl,epoll_pwait,epoll_wait,eventfd,fcntl,fcntl64,fstat,fstat64,getitimer,gettimeofday,nanosleep,poll,ppoll,pread64,preadv,pselect6,pwrite64,pwritev,read,readv,recv,recvfrom,recvmmsg,recvmsg,select,send,sendfile,sendfile64,sendmmsg,sendmsg,sendto,setitimer,settimeofday,shutdown,socket,splice,switch,tee,timer_create,timer_delete,timerfd_create,timerfd_gettime,timerfd_settime,timer_getoverrun,timer_gettime,timer_settime,wait4,write,writev`
+`clock_getres,clock_gettime,clock_nanosleep,clock_settime,close,epoll_create,epoll_create1,epoll_ctl,epoll_pwait,epoll_wait,eventfd,fcntl,fcntl64,fstat,fstat64,getitimer,gettimeofday,nanosleep,poll,ppoll,pread64,preadv,pselect6,pwrite64,pwritev,read,readv,recv,recvfrom,recvmmsg,recvmsg,select,send,sendfile,sendfile64,sendmmsg,sendmsg,sendto,setitimer,settimeofday,shutdown,splice,switch,tee,timer_create,timer_delete,timerfd_create,timerfd_gettime,timerfd_settime,timer_getoverrun,timer_gettime,timer_settime,wait4,write,writev`
 
 
 ## Configuration
