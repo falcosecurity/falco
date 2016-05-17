@@ -142,7 +142,7 @@ blockquote. pre, code {
 }
 
 .btn-primary {
-    background-color:#3f3f3f;
+    background-color:#7d2571;
     padding: 8px 18px;
     z-index: 990;
 }
@@ -153,7 +153,7 @@ blockquote. pre, code {
 
 .btn-secondary {
     background-color:#fff;
-    color:#3f3f3f;
+    color:#7d2571;
     padding: 8px 18px;
 }
 
