@@ -841,55 +841,6 @@ blockquote. pre, code {
     padding: 0em 1em;
 }
 
-/*
- * SYSDIG CLOUDS
- *
- */
-
-#cloud-first {
-    background: url("../img/cloud_white.svg") no-repeat center center;
-    background-size: 17em;
-    position: relative;
-    top: -10em;
-    left: calc(50% + 14em);
-    margin-bottom: -9em;
-    width: 16em;
-}
-
-#cloud-last {
-    background: url("../img/cloud_white.svg") no-repeat center center;
-    background-size: 17em;
-    position: relative;
-    left: calc(50% - 8em);
-    margin-top: 2em;
-    margin-bottom: -5em;
-    width: 16em;
-}
-
-#cloud-wiki-up {
-    background: url("../img/cloud_white.svg") no-repeat center center;
-    background-size: 17em;
-    position: absolute;
-    top: 1em;
-    right: -2em;
-    margin-bottom: -11em;
-    width: 16em;
-    text-align: center;
-    padding-top: 1em;
-}
-
-#cloud-wiki-down {
-    background: url("../img/cloud_white.svg") no-repeat center center;
-    background-size: 17em;
-    position: relative;
-    left: calc(50% - 8em);
-    margin-top: 2em;
-    margin-bottom: -7em;
-    width: 16em;
-    text-align: center;
-    padding-top: 1em;
-}
-
 .sysdigcloud {
     display:block;
     height: 11em;
