@@ -1911,19 +1911,6 @@ html[xmlns] .slides {
     clear:both
 }
 
-@media (max-width: 1000px) {
-
-    #page-home #section-banner .section-inner {
-        padding-bottom:10em;
-    }
-
-    #cloud-first {
-        top: -10em;
-        left: calc(50% - 8em);
-        margin-bottom: -9em;
-    }
-}
-
 @media (max-width: 768px) {
 
     h1 {
@@ -1960,11 +1947,6 @@ html[xmlns] .slides {
 
     #footer .social-icons-nav {
         margin-top: 0;
-    }
-
-    #page-home #section-banner .section-inner {
-        padding-top: 2em;
-        padding-bottom:6em;
     }
 
     .section-primary .hero-title{
