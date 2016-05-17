@@ -1,5 +1,16 @@
 # Sysdig Falco
 
+####Latest release
+
+**v0.1.0**
+Read the [change log](https://github.com/draios/falco/blob/dev/CHANGELOG.md)
+
+This is the initial falco release. Note that much of falco's code comes from
+[sysdig](https://github.com/draios/sysdig), so overall stability is very good
+for an early release. On the other hand performance is still a work in
+progress. On busy hosts and/or with large rule sets, you may see the current
+version of falco using high CPU. Expect big improvements in coming releases.
+
 ####Table of Contents
 
 - [Overview](#overview)
