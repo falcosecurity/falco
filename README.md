@@ -290,6 +290,13 @@ Create a file with some [Falco rules](Rule-syntax-and-design). For example:
 
 And you will see an output event for any interactive process that touches a file with "sysdig" or ".txt" in its name!
 
+Join the Community
+---
+* Contact the [official mailing list] (https://groups.google.com/forum/#!forum/falco) for support and to talk with other users.
+* Follow us on [Twitter] (https://twitter.com/sysdig) for general falco and sysdig news.
+* This is our [blog] (https://sysdig.com/blog/), where you can find the latest [falco](https://sysdig.com/blog/tag/falco/) posts.
+* Join our [Public Slack](https://sysdig.slack.com) channel for sysdig and falco announcements and discussions.
+
 License Terms
 ---
 Falco is licensed to you under the [GPL 2.0](./COPYING) open source license.
