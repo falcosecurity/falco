@@ -1846,6 +1846,11 @@ html[xmlns] .slides {
     white-space:nowrap
 }
 
+#page-home #section-banner .section-inner {
+    padding-top: 3em;
+    padding-bottom: 2em;
+}
+
 
 /*
  * RESPONSIVENESS
