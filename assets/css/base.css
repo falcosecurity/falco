@@ -1956,8 +1956,7 @@ html[xmlns] .slides {
 
     .section-primary .hero-title{
         letter-spacing: 0;
-        margin: 0 -0.5em;
-        margin-bottom: 1em;
+        margin: 0 0 1em 0;
     }
 
     #page-home #section-banner .hero-img {
@@ -2179,7 +2178,7 @@ html[xmlns] .slides {
 
     .section-primary .hero-title{
         font-size: 1.2em;
-        margin: 1em;
+        margin: 1em 0;
     }
 
     #page-home #section-examples .command {
