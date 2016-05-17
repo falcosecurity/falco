@@ -27,8 +27,8 @@ script:
     - cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE
     - make VERBOSE=1
     - make package
-#    - cd ..
-#    - test/falco_trace_regression.sh build/userspace/falco/falco
+    - cd ..
+    - sudo test/falco_trace_regression.sh build/userspace/falco/falco
 notifications:
   webhooks:
     urls:

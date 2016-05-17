@@ -5,6 +5,10 @@ SCRIPT=$(readlink -f $0)
 BASEDIR=$(dirname $SCRIPT)
 
 FALCO=$1
+BUILDDIR=$(dirname $FALCO)
+
+# Load the built kernel module by hand
+insmod $BUILDDIR/../../driver/sysdig-probe.ko
 
 # For now, simply ensure that falco can run without errors.
 FALCO_CMDLINE="$FALCO -c $BASEDIR/../falco.yaml -r $BASEDIR/../rules/falco_rules.yaml"
