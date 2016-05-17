@@ -97,7 +97,7 @@ For many more examples of rules and macros, please take a look at the accompanyi
 #### Ignored system calls
 
 For performance reasons, some system calls are currently discarded before Falco processing. The current list is:
-`clock_getres,clock_gettime,clock_nanosleep,clock_settime,close,epoll_create,epoll_create1,epoll_ctl,epoll_pwait,epoll_wait,eventfd,fcntl,fcntl64,fstat,fstat64,getitimer,gettimeofday,nanosleep,poll,ppoll,pread64,preadv,pselect6,pwrite64,pwritev,read,readv,recv,recvfrom,recvmmsg,recvmsg,select,send,sendfile,sendfile64,sendmmsg,sendmsg,sendto,setitimer,settimeofday,shutdown,splice,switch,tee,timer_create,timer_delete,timerfd_create,timerfd_gettime,timerfd_settime,timer_getoverrun,timer_gettime,timer_settime,wait4,write,writev`
+`clock_getres,clock_gettime,clock_nanosleep,clock_settime,close,epoll_create,epoll_create1,epoll_ctl,epoll_pwait,epoll_wait,eventfd,fcntl,fcntl64,fstat,fstat64,fstatat64,fstatfs,fstatfs64,futex,getitimer,gettimeofday,ioprio_get,ioprio_set,llseek,lseek,lstat,lstat64,mmap,mmap2,munmap,nanosleep,poll,ppoll,pread64,preadv,procinfo,pselect6,pwrite64,pwritev,read,readv,recv,recvfrom,recvmmsg,recvmsg,sched_yield,select,send,sendfile,sendfile64,sendmmsg,sendmsg,sendto,setitimer,settimeofday,shutdown,splice,stat,stat64,statfs,statfs64,switch,tee,timer_create,timer_delete,timerfd_create,timerfd_gettime,timerfd_settime,timer_getoverrun,timer_gettime,timer_settime,wait4,write,writev`
 
 
 ## Configuration
