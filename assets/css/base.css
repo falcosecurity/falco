@@ -2257,3 +2257,160 @@ html[xmlns] .slides {
     background-color: #f5f5f5;
     border: 1px solid #CCC;
 }
+
+
+.bleeding-box {
+    display: block;
+    position: relative;
+    padding: 34px 50px;
+}
+
+.bleeding-box-inner {
+    display: block;
+    position: relative;
+    z-index: 200;
+}
+
+.bleeding-box-inner > span {
+    display: block;
+}
+
+.bleeding-box:before {
+    content: " ";
+    display: block;
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 100;
+}
+
+.bleeding-box-left {
+    padding-left: 0;
+}
+
+.bleeding-box-left:before {
+    left: -2000px;
+}
+
+.bleeding-box-right {
+    padding-right: 0;
+}
+
+.bleeding-box-right:before {
+    right: -2000px;
+}
+
+.bleeding-box .title {
+    font-size: 32px;
+    font-weight: 300;
+    line-height: 38px;
+}
+
+.bleeding-box .title span {
+    padding-left: 14px;
+    padding-right: 14px;
+}
+
+.bleeding-box .text {
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 16px;
+}
+
+.bleeding-box .link-text {
+    font-size: 21px;
+    font-weight: 200;
+    margin-top: 20px;
+}
+
+.bleeding-box strong {
+    font-weight: 600;
+}
+
+.bleeding-box-primary,
+.bleeding-box-secondary {
+    color: #ffffff;
+}
+
+.bleeding-box-primary .text, .bleeding-box-primary .link-text,
+.bleeding-box-secondary .text, .bleeding-box-secondary .link-text {
+    color: rgba(255,255,255,0.6);
+    transition: all 0.2s linear;
+}
+
+.bleeding-box-primary:hover, .bleeding-box-primary:hover .text, .bleeding-box-primary:hover .link-text,
+.bleeding-box-primary:focus, .bleeding-box-primary:focus .text, .bleeding-box-primary:focus .link-text,
+.bleeding-box-primary:active, .bleeding-box-primary:active .text, .bleeding-box-primary:active .link-text,
+.bleeding-box-secondary:hover, .bleeding-box-secondary:hover .text, .bleeding-box-secondary:hover .link-text,
+.bleeding-box-secondary:focus, .bleeding-box-secondary:focus .text, .bleeding-box-secondary:focus .link-text,
+.bleeding-box-secondary:active, .bleeding-box-secondary:active .text, .bleeding-box-secondary:active .link-text {
+    color: #ffffff;
+}
+
+.bleeding-box-primary:hover,
+.bleeding-box-primary:focus,
+.bleeding-box-primary:active,
+.bleeding-box-secondary:hover,
+.bleeding-box-secondary:focus,
+.bleeding-box-secondary:active {
+    color: #ffffff;
+}
+
+.bleeding-box-primary,
+.bleeding-box-primary:before {
+    background-color: #1D8B90;
+}
+
+.bleeding-box-secondary,
+.bleeding-box-secondary:before {
+    background-color: #EE5A4C;
+}
+
+@media (max-width: 767px) {
+
+    .bleeding-box-left,
+    .bleeding-box-right {
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    .bleeding-box-left:before,
+    .bleeding-box-right:before {
+        right: -200px;
+        left: -200px;
+    }
+}
+
+#section-products {
+    overflow: hidden;
+}
+
+#section-products .section-inner {
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+#section-products .section-inner > .row {
+    margin: 4px -2px 4px -2px;
+}
+
+#section-products .section-inner > .row > div {
+    padding-left: 2px;
+    padding-right: 2px;
+}
+
+#section-products .logo {
+    margin-top: 38px;
+    margin-bottom: 44px;
+    height: 94px;
+}
+
+#section-products .bleeding-box-left .logo {
+    width: 94px;
+}
+
+#section-products .bleeding-box-right .logo {
+    width: 134px;
+}
