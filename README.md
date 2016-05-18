@@ -11,6 +11,9 @@ for an early release. On the other hand performance is still a work in
 progress. On busy hosts and/or with large rule sets, you may see the current
 version of falco using high CPU. Expect big improvements in coming releases.
 
+Dev Branch: [![Build Status](https://travis-ci.org/draios/falco.svg?branch=dev)](https://travis-ci.org/draios/falco)<br />
+Master Branch: [![Build Status](https://travis-ci.org/draios/falco.svg?branch=master)](https://travis-ci.org/draios/falco)
+
 ####Table of Contents
 
 - [Overview](#overview)

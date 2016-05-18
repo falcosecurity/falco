@@ -1,0 +1,38 @@
+language: c
+env:
+    - BUILD_TYPE=Debug
+    - BUILD_TYPE=Release
+before_install:
+    - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
+    - sudo apt-get update
+install:
+    - sudo apt-get --force-yes install g++-4.8
+    - sudo apt-get install rpm linux-headers-$(uname -r)
+    - git clone https://github.com/draios/sysdig.git ../sysdig
+before_script:
+    - export KERNELDIR=/lib/modules/$(ls /lib/modules | sort | head -1)/build
+script:
+    - set -e
+    - export CC="gcc-4.8"
+    - export CXX="g++-4.8"
+    - wget https://s3.amazonaws.com/download.draios.com/dependencies/cmake-3.3.2.tar.gz
+    - tar -xzf cmake-3.3.2.tar.gz
+    - cd cmake-3.3.2
+    - ./bootstrap --prefix=/usr
+    - make
+    - sudo make install
+    - cd ..
+    - mkdir build
+    - cd build
+    - cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+    - make VERBOSE=1
+    - make package
+    - cd ..
+    - sudo test/falco_trace_regression.sh build/userspace/falco/falco
+notifications:
+  webhooks:
+    urls:
+#      - https://webhooks.gitter.im/e/fdbc2356fb0ea2f15033
+    on_success: change
+    on_failure: always
+    on_start: never
