@@ -24,7 +24,7 @@ Master Branch: [![Build Status](https://travis-ci.org/draios/falco.svg?branch=ma
 
 
 ## Overview
-Sysdig Falco is a behavioral activity monitor designed to secure your applications. Powered by Sysdig’s universal system level visibility, write simple and powerful rules, and then output warnings in the format you need. Continuously monitor and detect container, application, host, and network activity... all in one place, from one source of data, with one set of rules.
+Sysdig Falco is a behavioral activity monitor designed to detect anomalous activity in your applications. Powered by sysdig’s system call capture infrastructure, falco lets you continuously monitor and detect container, application, host, and network activity... all in one place, from one source of data, with one set of rules.
 
 
 #### What kind of behaviors can Falco detect?
