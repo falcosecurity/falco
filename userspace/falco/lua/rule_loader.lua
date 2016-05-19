@@ -230,7 +230,7 @@ function describe_rule(name)
    end
 end
 
-local rule_output_counts = {by_level={}, by_name={}}
+local rule_output_counts = {total=0, by_level={}, by_name={}}
 
 for idx, level in ipairs(output.levels) do
    rule_output_counts[level] = 0
@@ -242,6 +242,7 @@ function on_event(evt_, rule_id)
       error ("rule_loader.on_event(): event with invalid rule_id: ", rule_id)
    end
 
+   rule_output_counts.total = rule_output_counts.total + 1
    local rule = state.rules_by_idx[rule_id]
 
    if rule_output_counts.by_level[rule.level] == nil then
@@ -260,6 +261,7 @@ function on_event(evt_, rule_id)
 end
 
 function print_stats()
+   print("Events detected: "..rule_output_counts.total)
    print("Rule counts by severity:")
    for idx, level in ipairs(output.levels) do
       -- To keep the output concise, we only print 0 counts for error, warning, and info levels

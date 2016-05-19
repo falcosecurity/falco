@@ -9,6 +9,14 @@ install:
     - sudo apt-get --force-yes install g++-4.8
     - sudo apt-get install rpm linux-headers-$(uname -r)
     - git clone https://github.com/draios/sysdig.git ../sysdig
+    - sudo apt-get install -y python-pip libvirt-dev jq
+    - cd ..
+    - curl -Lo avocado-36.0-tar.gz https://github.com/avocado-framework/avocado/archive/36.0lts.tar.gz
+    - tar -zxvf avocado-36.0-tar.gz
+    - cd avocado-36.0lts
+    - sudo pip install -r requirements-travis.txt
+    - sudo python setup.py install
+    - cd ../falco
 before_script:
     - export KERNELDIR=/lib/modules/$(ls /lib/modules | sort | head -1)/build
 script:
@@ -28,7 +36,7 @@ script:
     - make VERBOSE=1
     - make package
     - cd ..
-    - sudo test/falco_trace_regression.sh build/userspace/falco/falco
+    - sudo test/run_regression_tests.sh
 notifications:
   webhooks:
     urls:
