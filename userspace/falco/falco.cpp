@@ -28,6 +28,14 @@ extern "C" {
 #include "utils.h"
 #include <yaml-cpp/yaml.h>
 
+bool g_terminate = false;
+//
+// Helper functions
+//
+static void signal_callback(int signal)
+{
+	g_terminate = true;
+}
 
 //
 // Program help
@@ -90,7 +98,11 @@ void do_inspect(sinsp* inspector,
 
 		res = inspector->next(&ev);
 
-		if(res == SCAP_TIMEOUT)
+		if (g_terminate)
+		{
+			break;
+		}
+		else if(res == SCAP_TIMEOUT)
 		{
 			continue;
 		}
@@ -398,6 +410,20 @@ int falco_init(int argc, char **argv)
 			add_output(ls, *it);
 		}
 
+		if(signal(SIGINT, signal_callback) == SIG_ERR)
+		{
+			fprintf(stderr, "An error occurred while setting SIGINT signal handler.\n");
+			result = EXIT_FAILURE;
+			goto exit;
+		}
+
+		if(signal(SIGTERM, signal_callback) == SIG_ERR)
+		{
+			fprintf(stderr, "An error occurred while setting SIGTERM signal handler.\n");
+			result = EXIT_FAILURE;
+			goto exit;
+		}
+
 		if (scap_filename.size())
 		{
 			inspector->open(scap_filename);
@@ -406,7 +432,7 @@ int falco_init(int argc, char **argv)
 		{
 			try
 			{
-				inspector->open();
+				inspector->open(200);
 			}
 			catch(sinsp_exception e)
 			{
