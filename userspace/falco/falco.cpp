@@ -75,6 +75,7 @@ static void display_fatal_err(const string &msg, bool daemon)
 
 string lua_on_event = "on_event";
 string lua_add_output = "add_output";
+string lua_print_stats = "print_stats";
 
 // Splitting into key=value or key.subkey=value will be handled by configuration class.
 std::list<string> cmdline_options;
@@ -211,6 +212,26 @@ void add_output(lua_State *ls, output_config oc)
 
 }
 
+// Print statistics on the the rules that triggered
+void print_stats(lua_State *ls)
+{
+	lua_getglobal(ls, lua_print_stats.c_str());
+
+	if(lua_isfunction(ls, -1))
+	{
+		if(lua_pcall(ls, 0, 0, 0) != 0)
+		{
+			const char* lerr = lua_tostring(ls, -1);
+			string err = "Error invoking function print_stats: " + string(lerr);
+			throw sinsp_exception(err);
+		}
+	}
+	else
+	{
+		throw sinsp_exception("No function " + lua_print_stats + " found in lua rule loader module");
+	}
+
+}
 
 //
 // ARGUMENT PARSING AND PROGRAM SETUP
@@ -504,6 +525,8 @@ int falco_init(int argc, char **argv)
 			   ls);
 
 		inspector->close();
+
+		print_stats(ls);
 	}
 	catch(sinsp_exception& e)
 	{

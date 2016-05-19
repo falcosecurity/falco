@@ -2,6 +2,8 @@ local mod = {}
 
 levels = {"Emergency", "Alert", "Critical", "Error", "Warning", "Notice", "Informational", "Debug"}
 
+mod.levels = levels
+
 local outputs = {}
 
 function mod.stdout(evt, level, format)

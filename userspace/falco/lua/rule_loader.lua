@@ -230,12 +230,49 @@ function describe_rule(name)
    end
 end
 
+local rule_output_counts = {by_level={}, by_name={}}
+
+for idx, level in ipairs(output.levels) do
+   rule_output_counts[level] = 0
+end
+
 function on_event(evt_, rule_id)
 
    if state.rules_by_idx[rule_id] == nil then
       error ("rule_loader.on_event(): event with invalid rule_id: ", rule_id)
    end
 
-   output.event(evt_, state.rules_by_idx[rule_id].level, state.rules_by_idx[rule_id].output)
+   local rule = state.rules_by_idx[rule_id]
+
+   if rule_output_counts.by_level[rule.level] == nil then
+      rule_output_counts.by_level[rule.level] = 1
+   else
+      rule_output_counts.by_level[rule.level] = rule_output_counts.by_level[rule.level] + 1
+   end
+
+   if rule_output_counts.by_name[rule.rule] == nil then
+      rule_output_counts.by_name[rule.rule] = 1
+   else
+      rule_output_counts.by_name[rule.rule] = rule_output_counts.by_name[rule.rule] + 1
+   end
+
+   output.event(evt_, rule.level, rule.output)
 end
+
+function print_stats()
+   print("Rule counts by severity:")
+   for idx, level in ipairs(output.levels) do
+      -- To keep the output concise, we only print 0 counts for error, warning, and info levels
+      if rule_output_counts[level] > 0 or level == "Error" or level == "Warning" or level == "Informational" then
+	 print ("   "..level..": "..rule_output_counts[level])
+      end
+   end
+
+   print("Triggered rules by rule name:")
+   for name, count in pairs(rule_output_counts.by_name) do
+      print ("   "..name..": "..count)
+   end
+end
+
+
 
