@@ -38,12 +38,16 @@
 - macro: modify
   condition: rename or remove
   
-- macro: spawn_process
-  condition: syscall.type = execve and evt.dir=<
+- macro: spawned_process
+  condition: evt.type = execve and evt.dir=<
 
 # File categories
 - macro: terminal_file_fd
   condition: fd.name=/dev/ptmx or fd.directory=/dev/pts
+
+# This really should be testing that the directory begins with these
+# prefixes but sysdig's filter doesn't have a "starts with" operator
+# (yet).
 - macro: bin_dir
   condition: fd.directory in (/bin, /sbin, /usr/bin, /usr/sbin)
 
@@ -52,6 +56,8 @@
 - macro: bin_dir_rename
   condition: evt.arg[1] contains /bin/ or evt.arg[1] contains /sbin/ or evt.arg[1] contains /usr/bin/ or evt.arg[1] contains /usr/sbin/
 
+# This really should be testing that the directory begins with /etc,
+# but sysdig's filter doesn't have a "starts with" operator (yet).
 - macro: etc_dir
   condition: fd.directory contains /etc
 
@@ -74,25 +80,31 @@
     tac, link, chroot, vdir, chown, touch, ls, dd, uname, true, pwd, date,
     chgrp, chmod, mktemp, cat, mknod, sync, ln, false, rm, mv, cp, echo,
     readlink, sleep, stty, mkdir, df, dir, rmdir, touch)
-- macro: adduser_binaries
-  condition: proc.name in (adduser, deluser, addgroup, delgroup)
-- macro: login_binaries
-  condition: proc.name in (bin, login, su, sbin, nologin, bin, faillog, lastlog, newgrp, sg)
 
-# dpkg -L passwd | grep bin | xargs -L 1 basename | tr "\\n" ","
+# dpkg -L login | grep bin | xargs ls -ld | grep -v '^d' | awk '{print $9}' | xargs -L 1 basename | tr "\\n" ","
+- macro: login_binaries
+  condition: proc.name in (login, systemd-logind, su, nologin, faillog, lastlog, newgrp, sg)
+
+# dpkg -L passwd | grep bin | xargs ls -ld | grep -v '^d' | awk '{print $9}' | xargs -L 1 basename | tr "\\n" ","
 - macro: passwd_binaries
   condition: >
-    proc.name in (sbin, shadowconfig, sbin, grpck, pwunconv, grpconv, pwck,
+    proc.name in (shadowconfig, grpck, pwunconv, grpconv, pwck,
     groupmod, vipw, pwconv, useradd, newusers, cppw, chpasswd, usermod,
-    groupadd, groupdel, grpunconv, chgpasswd, userdel, bin, chage, chsh,
+    groupadd, groupdel, grpunconv, chgpasswd, userdel, chage, chsh,
     gpasswd, chfn, expiry, passwd, vigr, cpgr)
 
-# repoquery -l shadow-utils | grep bin | xargs -L 1 basename | tr "\\n" ","
+# repoquery -l shadow-utils | grep bin | xargs ls -ld | grep -v '^d' | awk '{print $9}' | xargs -L 1 basename | tr "\\n" ","
 - macro: shadowutils_binaries
   condition: >
-    proc.name in (chage, gpasswd, lastlog, newgrp, sg, adduser, chpasswd,
-    groupadd, groupdel, groupmems, groupmod, grpck, grpconv, grpunconv,
-    newusers, pwck, pwconv, pwunconv, useradd, userdel, usermod, vigr, vipw)
+    proc.name in (chage, gpasswd, lastlog, newgrp, sg, adduser, deluser, chpasswd,
+    groupadd, groupdel, addgroup, delgroup, groupmems, groupmod, grpck, grpconv, grpunconv,
+    newusers, pwck, pwconv, pwunconv, useradd, userdel, usermod, vigr, vipw, unix_chkpwd)
+
+- macro: sysdigcloud_binaries
+  condition: proc.name in (setup-backend, dragent)
+
+- macro: sysdigcloud_binaries_parent
+  condition: proc.pname in (setup-backend, dragent)
 
 - macro: docker_binaries
   condition: proc.name in (docker, exe)
@@ -103,25 +115,33 @@
 - macro: db_server_binaries
   condition: proc.name in (mysqld)
 
-- macro: server_binaries
-  condition: http_server_binaries or db_server_binaries or docker_binaries or proc.name in (sshd)
+- macro: db_server_binaries_parent
+  condition: proc.pname in (mysqld)
 
+- macro: server_binaries
+  condition: (http_server_binaries or db_server_binaries or docker_binaries or proc.name in (sshd))
+
+# The truncated dpkg-preconfigu is intentional, process names are
+# truncated at the sysdig level.
 - macro: package_mgmt_binaries
-  condition: proc.name in (dpkg, rpm)
+  condition: proc.name in (dpkg, dpkg-preconfigu, rpm, yum)
 
 # A canonical set of processes that run other programs with different
 # privileges or as a different user.
 - macro: userexec_binaries
   condition: proc.name in (sudo, su)
 
+- macro: user_mgmt_binaries
+  condition: (login_binaries or passwd_binaries or shadowutils_binaries)
+
 - macro: system_binaries
-  condition: coreutils_binaries or adduser_binaries or login_binaries or passwd_binaries or shadowutils_binaries
+  condition: (coreutils_binaries or user_mgmt_binaries)
 
 - macro: mail_binaries
-  condition: proc.name in (sendmail, postfix, procmail)
+  condition: proc.name in (sendmail, sendmail-msp, postfix, procmail)
 
 - macro: sensitive_files
-  condition: fd.name contains /etc/shadow or fd.name = /etc/sudoers or fd.directory = /etc/sudoers.d or fd.directory = /etc/pam.d or fd.name = /etc/pam.conf
+  condition: (fd.name contains /etc/shadow or fd.name = /etc/sudoers or fd.directory = /etc/sudoers.d or fd.directory = /etc/pam.d or fd.name = /etc/pam.conf)
 
 # Indicates that the process is new. Currently detected using time
 # since process was started, using a threshold of 5 seconds.
@@ -130,7 +150,7 @@
 
 # Network
 - macro: inbound
-  condition: (syscall.type=listen and evt.dir=>) or (syscall.type=accept and evt.dir=<)
+  condition: ((syscall.type=listen and evt.dir=>) or (syscall.type=accept and evt.dir=<))
 
 # Currently sendto is an ignored syscall, otherwise this could also check for (syscall.type=sendto and evt.dir=>)
 - macro: outbound
@@ -141,7 +161,7 @@
 
 # Ssh
 - macro: ssh_error_message
-  condition: evt.arg.data contains "Invalid user" or evt.arg.data contains "preauth"
+  condition: (evt.arg.data contains "Invalid user" or evt.arg.data contains "preauth" or evt.arg.data contains "Failed password")
 
 # System
 - macro: modules
@@ -149,9 +169,9 @@
 - macro: container
   condition: container.id != host
 - macro: interactive
-  condition: (proc.aname=sshd and proc.name != sshd) or proc.name=systemd-logind
+  condition: ((proc.aname=sshd and proc.name != sshd) or proc.name=systemd-logind)
 - macro: syslog
-  condition: fd.name = /dev/log
+  condition: fd.name in (/dev/log, /run/systemd/journal/syslog)
 - macro: cron
   condition: proc.name in (cron, crond)
 - macro: parent_cron
@@ -169,32 +189,32 @@
 
 - rule: write_binary_dir
   desc: an attempt to write to any file below a set of binary directories
-  condition: evt.dir = > and open_write and bin_dir
+  condition: evt.dir = < and open_write and not package_mgmt_binaries and bin_dir
   output: "File below a known binary directory opened for writing (user=%user.name command=%proc.cmdline file=%fd.name)"
   priority: WARNING
 
 - rule: write_etc
   desc: an attempt to write to any file below /etc
-  condition: evt.dir = > and open_write and etc_dir
+  condition: evt.dir = < and open_write and not shadowutils_binaries and not sysdigcloud_binaries_parent and not package_mgmt_binaries and etc_dir
   output: "File below /etc opened for writing (user=%user.name command=%proc.cmdline file=%fd.name)"
   priority: WARNING
 
 - rule: read_sensitive_file_untrusted
   desc: an attempt to read any sensitive file (e.g. files containing user/password/authentication information). Exceptions are made for known trusted programs.
-  condition: open_read and not server_binaries and not userexec_binaries and not proc.name in (iptables, ps, systemd-logind, lsb_release, check-new-relea, dumpe2fs, accounts-daemon, bash) and not cron and sensitive_files
+  condition: open_read and not user_mgmt_binaries and not userexec_binaries and not proc.name in (iptables, ps, lsb_release, check-new-relea, dumpe2fs, accounts-daemon, bash, sshd) and not cron and sensitive_files
   output: "Sensitive file opened for reading by non-trusted program (user=%user.name command=%proc.cmdline file=%fd.name)"
   priority: WARNING
 
 - rule: read_sensitive_file_trusted_after_startup
   desc: an attempt to read any sensitive file (e.g. files containing user/password/authentication information) by a trusted program after startup. Trusted programs might read these files at startup to load initial state, but not afterwards.
-  condition: open_read and server_binaries and not proc_is_new and sensitive_files
+  condition: open_read and server_binaries and not proc_is_new and sensitive_files and proc.name!="sshd"
   output: "Sensitive file opened for reading by trusted program after startup (user=%user.name command=%proc.cmdline file=%fd.name)"
   priority: WARNING
 
-- rule: db_program_spawn_process
-  desc: a database-server related program spawning a new process after startup. This shouldn\'t occur and is a follow on from some SQL injection attacks.
-  condition: db_server_binaries and not proc_is_new and spawn_process
-  output: "Database-related program spawned new process after startup (user=%user.name command=%proc.cmdline)"
+- rule: db_program_spawned_process
+  desc: a database-server related program spawned a new process other than itself. This shouldn\'t occur and is a follow on from some SQL injection attacks.
+  condition: db_server_binaries_parent and not db_server_binaries and spawned_process
+  output: "Database-related program spawned process other than itself (user=%user.name program=%proc.cmdline parent=%proc.pname)"
   priority: WARNING
 
 - rule: modify_binary_dirs
@@ -218,11 +238,12 @@
 #   output: "Loaded .so from unexpected dir (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
 #   priority: WARNING
 
-- rule: syscall_returns_eaccess
-  desc: any system call that returns EACCESS. This is not always a strong indication of a problem, hence the INFO priority.
-  condition: evt.res = EACCESS
-  output: "System call returned EACCESS (user=%user.name command=%proc.cmdline syscall=%evt.type args=%evt.args)"
-  priority: INFO
+# Temporarily disabling this rule as it's tripping over https://github.com/draios/sysdig/issues/598
+# - rule: syscall_returns_eaccess
+#   desc: any system call that returns EACCESS. This is not always a strong indication of a problem, hence the INFO priority.
+#   condition: evt.res = EACCESS
+#   output: "System call returned EACCESS (user=%user.name command=%proc.cmdline syscall=%evt.type args=%evt.args)"
+#   priority: INFO
 
 - rule: change_thread_namespace
   desc: an attempt to change a program/thread\'s namespace (commonly done as a part of creating a container) by calling setns.
@@ -232,7 +253,7 @@
 
 - rule: run_shell_untrusted
   desc: an attempt to spawn a shell by a non-shell program. Exceptions are made for trusted binaries.
-  condition: proc.name = bash and evt.dir=< and evt.type=execve and proc.pname exists and not parent_cron and not proc.pname in (bash, sshd, sudo, docker, su, tmux, screen, emacs, systemd, flock, fs-bash, nginx, monit, supervisord)
+  condition: not container and proc.name = bash and spawned_process and proc.pname exists and not parent_cron and not proc.pname in (bash, sshd, sudo, docker, su, tmux, screen, emacs, systemd, login, flock, fbash, nginx, monit, supervisord, dragent)
   output: "Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline)"
   priority: WARNING
 
@@ -243,13 +264,13 @@
 
 - rule: system_user_interactive
   desc: an attempt to run interactive commands by a system (i.e. non-login) user
-  condition: spawn_process and system_users and interactive
+  condition: spawned_process and system_users and interactive
   output: "System user ran an interactive command (user=%user.name command=%proc.cmdline)"
   priority: WARNING
 
 - rule: run_shell_in_container
-  desc: an attempt to spawn a shell by a non-shell program in a container. Container entrypoints are excluded.
-  condition: container and proc.name = bash and evt.dir=< and evt.type=execve and proc.pname exists and not proc.pname in (bash, docker)
+  desc: a shell was spawned by a non-shell program in a container. Container entrypoints are excluded.
+  condition: container and proc.name = bash and spawned_process and proc.pname exists and not proc.pname in (bash, docker)
   output: "Shell spawned in a container other than entrypoint (user=%user.name container_id=%container.id container_name=%container.name shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline)"
   priority: WARNING
 
@@ -260,22 +281,26 @@
   output: "Known system binary sent/received network traffic (user=%user.name command=%proc.cmdline connection=%fd.name)"
   priority: WARNING
 
-- rule: ssh_error_syslog
-  desc: any ssh errors (failed logins, disconnects, ...) sent to syslog
-  condition: syslog and ssh_error_message and evt.dir = <
-  output: "sshd sent error message to syslog (error=%evt.buffer)"
-  priority: WARNING
+# With the current restriction on system calls handled by falco
+# (e.g. excluding read/write/sendto/recvfrom/etc, this rule won't
+# trigger).
+# - rule: ssh_error_syslog
+#   desc: any ssh errors (failed logins, disconnects, ...) sent to syslog
+#   condition: syslog and ssh_error_message and evt.dir = <
+#   output: "sshd sent error message to syslog (error=%evt.buffer)"
+#   priority: WARNING
 
+# sshd, sendmail-msp, sendmail attempt to setuid to root even when running as non-root. Excluding here to avoid meaningless FPs
 - rule: non_sudo_setuid
   desc: an attempt to change users by calling setuid. sudo/su are excluded. user "root" is also excluded, as setuid calls typically involve dropping privileges.
-  condition: evt.type=setuid and evt.dir=> and not user.name=root and not userexec_binaries
+  condition: evt.type=setuid and evt.dir=> and not user.name=root and not userexec_binaries and not proc.name in (sshd, sendmail-msp, sendmail)
   output: "Unexpected setuid call by non-sudo, non-root program (user=%user.name command=%proc.cmdline uid=%evt.arg.uid)"
   priority: WARNING
 
 - rule: user_mgmt_binaries
   desc: activity by any programs that can manage users, passwords, or permissions. sudo and su are excluded. Activity in containers is also excluded--some containers create custom users on top of a base linux distribution at startup.
-  condition: spawn_process and not proc.name in (su, sudo) and not container and (adduser_binaries or login_binaries or passwd_binaries or shadowutils_binaries)
-  output: "User management binary command run outside of container (user=%user.name command=%proc.cmdline)"
+  condition: spawned_process and not proc.name in (su, sudo) and not container and user_mgmt_binaries and not parent_cron and not proc.pname in (systemd, run-parts)
+  output: "User management binary command run outside of container (user=%user.name command=%proc.cmdline parent=%proc.pname)"
   priority: WARNING
 
 # (we may need to add additional checks against false positives, see: https://bugs.launchpad.net/ubuntu/+source/rkhunter/+bug/86153)
@@ -285,17 +310,17 @@
   output: "File created below /dev by untrusted program (user=%user.name command=%proc.cmdline file=%fd.name)"
   priority: WARNING
 
-# fs-bash is a restricted version of bash suitable for use in curl <curl> | sh installers.
+# fbash is a small shell script that runs bash, and is suitable for use in curl <curl> | fbash installers.
 - rule: installer_bash_starts_network_server
-  desc: an attempt by any program that is a child of fs-bash to start listening for network connections
-  condition: evt.type=listen and proc.aname=fs-bash
-  output: "Unexpected listen call by a child process of fs-bash (command=%proc.cmdline)"
+  desc: an attempt by any program that is a child of fbash to start listening for network connections
+  condition: evt.type=listen and proc.aname=fbash
+  output: "Unexpected listen call by a child process of fbash (command=%proc.cmdline)"
   priority: WARNING
 
 - rule: installer_bash_starts_session
-  desc: an attempt by any program that is a child of fs-bash to start a new session (process group)
-  condition: evt.type=setsid and proc.aname=fs-bash
-  output: "Unexpected setsid call by a child process of fs-bash (command=%proc.cmdline)"
+  desc: an attempt by any program that is a child of fbash to start a new session (process group)
+  condition: evt.type=setsid and proc.aname=fbash
+  output: "Unexpected setsid call by a child process of fbash (command=%proc.cmdline)"
   priority: WARNING
 
 ###########################
