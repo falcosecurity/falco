@@ -42,7 +42,7 @@ set(PROBE_DEVICE_NAME "sysdig")
 
 set(CMD_MAKE make)
 
-set(SYSDIG_DIR ${PROJECT_SOURCE_DIR}/../sysdig)
+set(SYSDIG_DIR "${PROJECT_SOURCE_DIR}/../sysdig")
 
 include(ExternalProject)
 
@@ -151,7 +151,7 @@ ExternalProject_Add(lpeg
                     DEPENDS luajit
 		    URL "http://s3.amazonaws.com/download.draios.com/dependencies/lpeg-1.0.0.tar.gz"
                     URL_MD5 "0aec64ccd13996202ad0c099e2877ece"
-                    BUILD_COMMAND LUA_INCLUDE=${LUAJIT_INCLUDE} ${PROJECT_SOURCE_DIR}/scripts/build-lpeg.sh
+                    BUILD_COMMAND LUA_INCLUDE=${LUAJIT_INCLUDE} "${PROJECT_SOURCE_DIR}/scripts/build-lpeg.sh"
                     BUILD_IN_SOURCE 1
 		    CONFIGURE_COMMAND ""
                     INSTALL_COMMAND "")
@@ -180,9 +180,9 @@ ExternalProject_Add(lyaml
 install(FILES falco.yaml
 	DESTINATION "${DIR_ETC}")
 
-add_subdirectory(${SYSDIG_DIR}/driver ${PROJECT_BINARY_DIR}/driver)
-add_subdirectory(${SYSDIG_DIR}/userspace/libscap ${PROJECT_BINARY_DIR}/userspace/libscap)
-add_subdirectory(${SYSDIG_DIR}/userspace/libsinsp ${PROJECT_BINARY_DIR}/userspace/libsinsp)
+add_subdirectory("${SYSDIG_DIR}/driver" "${PROJECT_BINARY_DIR}/driver")
+add_subdirectory("${SYSDIG_DIR}/userspace/libscap" "${PROJECT_BINARY_DIR}/userspace/libscap")
+add_subdirectory("${SYSDIG_DIR}/userspace/libsinsp" "${PROJECT_BINARY_DIR}/userspace/libsinsp")
 
 add_subdirectory(rules)
 add_subdirectory(scripts)
