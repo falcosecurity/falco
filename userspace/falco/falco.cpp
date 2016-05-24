@@ -494,10 +494,7 @@ int falco_init(int argc, char **argv)
 
 exit:
 
-	if(inspector)
-	{
-		delete inspector;
-	}
+	delete inspector;
 
 	if(ls)
 	{
