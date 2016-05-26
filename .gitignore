@@ -1,4 +1,9 @@
 /build*
+*~
+test/falco_test.pyc
+test/falco_tests.yaml
+test/traces-negative
+test/traces-positive
 
 userspace/falco/lua/re.lua
 userspace/falco/lua/lpeg.so
