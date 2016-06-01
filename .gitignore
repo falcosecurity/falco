@@ -4,6 +4,8 @@ test/falco_test.pyc
 test/falco_tests.yaml
 test/traces-negative
 test/traces-positive
+test/traces-info
+test/job-results
 
 userspace/falco/lua/re.lua
 userspace/falco/lua/lpeg.so

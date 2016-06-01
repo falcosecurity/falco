@@ -18,6 +18,9 @@ class FalcoTest(Test):
         self.should_detect = self.params.get('detect', '*')
         self.trace_file = self.params.get('trace_file', '*')
 
+        if self.should_detect:
+            self.detect_level = self.params.get('detect_level', '*')
+
         # Doing this in 2 steps instead of simply using
         # module_is_loaded to avoid logging lsmod output to the log.
         lsmod_output = process.system_output("lsmod", verbose=False)
@@ -44,17 +47,29 @@ class FalcoTest(Test):
                 cmd, res.exit_status))
 
         # Get the number of events detected.
-        res = re.search('Events detected: (\d+)', res.stdout)
-        if res is None:
+        match = re.search('Events detected: (\d+)', res.stdout)
+        if match is None:
             self.fail("Could not find a line 'Events detected: <count>' in falco output")
 
-        events_detected = int(res.group(1))
+        events_detected = int(match.group(1))
 
         if not self.should_detect and events_detected > 0:
             self.fail("Detected {} events when should have detected none".format(events_detected))
 
-        if self.should_detect and events_detected == 0:
-            self.fail("Detected {} events when should have detected > 0".format(events_detected))
+        if self.should_detect:
+            if events_detected == 0:
+                self.fail("Detected {} events when should have detected > 0".format(events_detected))
+
+            level_line = '{}: (\d+)'.format(self.detect_level)
+            match = re.search(level_line, res.stdout)
+
+            if match is None:
+                self.fail("Could not find a line '{}: <count>' in falco output".format(self.detect_level))
+
+            events_detected = int(match.group(1))
+
+            if not events_detected > 0:
+                self.fail("Detected {} events at level {} when should have detected > 0".format(events_detected, self.detect_level))
 
         pass
 

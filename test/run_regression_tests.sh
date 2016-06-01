@@ -5,7 +5,8 @@ SCRIPTDIR=$(dirname $SCRIPT)
 MULT_FILE=$SCRIPTDIR/falco_tests.yaml
 
 function download_trace_files() {
-    for TRACE in traces-positive traces-negative ; do
+    for TRACE in traces-positive traces-negative traces-info ; do
+	rm -rf $SCRIPTDIR/$TRACE
 	curl -so $SCRIPTDIR/$TRACE.zip https://s3.amazonaws.com/download.draios.com/falco-tests/$TRACE.zip &&
 	unzip -d $SCRIPTDIR $SCRIPTDIR/$TRACE.zip &&
 	rm -rf $SCRIPTDIR/$TRACE.zip
@@ -21,6 +22,7 @@ function prepare_multiplex_file() {
 	cat << EOF >> $MULT_FILE
   $NAME:
     detect: True
+    detect_level: Warning
     trace_file: $trace
 EOF
     done
@@ -31,6 +33,17 @@ EOF
 	cat << EOF >> $MULT_FILE
   $NAME:
     detect: False
+    trace_file: $trace
+EOF
+    done
+
+    for trace in $SCRIPTDIR/traces-info/*.scap ; do
+	[ -e "$trace" ] || continue
+	NAME=`basename $trace .scap`
+	cat << EOF >> $MULT_FILE
+  $NAME:
+    detect: True
+    detect_level: Informational
     trace_file: $trace
 EOF
     done
