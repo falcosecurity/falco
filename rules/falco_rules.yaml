@@ -312,15 +312,15 @@
 
 # fbash is a small shell script that runs bash, and is suitable for use in curl <curl> | fbash installers.
 - rule: installer_bash_starts_network_server
-  desc: an attempt by any program that is a child of fbash to start listening for network connections
-  condition: evt.type=listen and proc.aname=fbash
-  output: "Unexpected listen call by a child process of fbash (command=%proc.cmdline)"
+  desc: an attempt by any program that is in a session led by fbash to start listening for network connections
+  condition: evt.type=listen and proc.sname=fbash
+  output: "Unexpected listen call by a process in a fbash session (command=%proc.cmdline)"
   priority: WARNING
 
 - rule: installer_bash_starts_session
-  desc: an attempt by any program that is a child of fbash to start a new session (process group)
-  condition: evt.type=setsid and proc.aname=fbash
-  output: "Unexpected setsid call by a child process of fbash (command=%proc.cmdline)"
+  desc: an attempt by any program that is in a session led by fbash to start a new session
+  condition: evt.type=setsid and proc.sname=fbash
+  output: "Unexpected setsid call by a process in fbash session (command=%proc.cmdline)"
   priority: WARNING
 
 ###########################
