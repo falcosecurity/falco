@@ -13,7 +13,7 @@ class sinsp_evt_formatter;
 class falco_formats
 {
  public:
-	static void init(sinsp* inspector, lua_State *ls);
+	static void init(sinsp* inspector, lua_State *ls, bool json_output);
 
 	// formatter = falco.formatter(format_string)
 	static int formatter(lua_State *ls);

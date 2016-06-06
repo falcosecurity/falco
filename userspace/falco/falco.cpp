@@ -242,7 +242,6 @@ int falco_init(int argc, char **argv)
 	sinsp* inspector = NULL;
 	falco_rules* rules = NULL;
 	int op;
-	sinsp_evt::param_fmt event_buffer_format;
 	int long_index = 0;
 	string lua_main_filename;
 	string scap_filename;
@@ -391,7 +390,7 @@ int falco_init(int argc, char **argv)
 
 		rules = new falco_rules(inspector, ls, lua_main_filename);
 
-		falco_formats::init(inspector, ls);
+		falco_formats::init(inspector, ls, config.m_json_output);
 		falco_fields::init(inspector, ls);
 
 		falco_logger::init(ls);
@@ -415,16 +414,6 @@ int falco_init(int argc, char **argv)
 		}
 
 		inspector->set_hostname_and_port_resolution_mode(false);
-
-		if (config.m_json_output)
-		{
-			event_buffer_format = sinsp_evt::PF_JSON;
-		}
-		else
-		{
-			event_buffer_format = sinsp_evt::PF_NORMAL;
-		}
-		inspector->set_buffer_format(event_buffer_format);
 
 		for(std::vector<output_config>::iterator it = config.m_outputs.begin(); it != config.m_outputs.end(); ++it)
 		{

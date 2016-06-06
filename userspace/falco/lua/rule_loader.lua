@@ -256,7 +256,7 @@ function on_event(evt_, rule_id)
       rule_output_counts.by_name[rule.rule] = rule_output_counts.by_name[rule.rule] + 1
    end
 
-   output.event(evt_, rule.level, rule.output)
+   output.event(evt_, rule.rule, rule.level, rule.output)
 end
 
 function print_stats()
