@@ -102,14 +102,13 @@ function set_output(output_format, state)
 end
 
 local function priority(s)
-   valid_levels = {"emergency", "alert", "critical", "error", "warning", "notice", "informational", "debug"}
    s = string.lower(s)
-   for i,v in ipairs(valid_levels) do
-      if (string.find(v, "^"..s)) then
+   for i,v in ipairs(output.levels) do
+      if (string.find(string.lower(v), "^"..s)) then
 	 return i - 1 -- (syslog levels start at 0, lua indices start at 1)
       end
    end
-   error("Invalid severity level: "..level)
+   error("Invalid severity level: "..s)
 end
 
 -- Note that the rules_by_name and rules_by_idx refer to the same rule
@@ -232,8 +231,8 @@ end
 
 local rule_output_counts = {total=0, by_level={}, by_name={}}
 
-for idx, level in ipairs(output.levels) do
-   rule_output_counts[level] = 0
+for idx=0,table.getn(output.levels)-1,1 do
+   rule_output_counts.by_level[idx] = 0
 end
 
 function on_event(evt_, rule_id)
@@ -265,8 +264,8 @@ function print_stats()
    print("Rule counts by severity:")
    for idx, level in ipairs(output.levels) do
       -- To keep the output concise, we only print 0 counts for error, warning, and info levels
-      if rule_output_counts[level] > 0 or level == "Error" or level == "Warning" or level == "Informational" then
-	 print ("   "..level..": "..rule_output_counts[level])
+      if rule_output_counts.by_level[idx-1] > 0 or level == "Error" or level == "Warning" or level == "Informational" then
+	 print ("   "..level..": "..rule_output_counts.by_level[idx-1])
       end
    end
 

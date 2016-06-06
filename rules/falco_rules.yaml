@@ -124,7 +124,7 @@
 # The truncated dpkg-preconfigu is intentional, process names are
 # truncated at the sysdig level.
 - macro: package_mgmt_binaries
-  condition: proc.name in (dpkg, dpkg-preconfigu, rpm, yum)
+  condition: proc.name in (dpkg, dpkg-preconfigu, rpm, rpmkey, yum)
 
 # A canonical set of processes that run other programs with different
 # privileges or as a different user.
@@ -141,7 +141,7 @@
   condition: proc.name in (sendmail, sendmail-msp, postfix, procmail)
 
 - macro: sensitive_files
-  condition: (fd.name contains /etc/shadow or fd.name = /etc/sudoers or fd.directory = /etc/sudoers.d or fd.directory = /etc/pam.d or fd.name = /etc/pam.conf)
+  condition: (fd.name contains /etc/shadow or fd.name = /etc/sudoers or fd.directory in (/etc/sudoers.d, /etc/pam.d) or fd.name = /etc/pam.conf)
 
 # Indicates that the process is new. Currently detected using time
 # since process was started, using a threshold of 5 seconds.
@@ -194,10 +194,17 @@
   priority: WARNING
 
 - rule: write_etc
-  desc: an attempt to write to any file below /etc
-  condition: evt.dir = < and open_write and not shadowutils_binaries and not sysdigcloud_binaries_parent and not package_mgmt_binaries and etc_dir
+  desc: an attempt to write to any file below /etc, not in a pipe installer session
+  condition: evt.dir = < and open_write and not shadowutils_binaries and not sysdigcloud_binaries_parent and not package_mgmt_binaries and etc_dir and not proc.sname=fbash
   output: "File below /etc opened for writing (user=%user.name command=%proc.cmdline file=%fd.name)"
   priority: WARNING
+
+# Within a fbash session, the severity is lowered to INFO
+- rule: write_etc_installer
+  desc: an attempt to write to any file below /etc, in a pipe installer session
+  condition: evt.dir = < and open_write and not shadowutils_binaries and not sysdigcloud_binaries_parent and not package_mgmt_binaries and etc_dir and proc.sname=fbash
+  output: "File below /etc opened for writing (user=%user.name command=%proc.cmdline file=%fd.name) within pipe installer session"
+  priority: INFO
 
 - rule: read_sensitive_file_untrusted
   desc: an attempt to read any sensitive file (e.g. files containing user/password/authentication information). Exceptions are made for known trusted programs.
@@ -209,6 +216,13 @@
   desc: an attempt to read any sensitive file (e.g. files containing user/password/authentication information) by a trusted program after startup. Trusted programs might read these files at startup to load initial state, but not afterwards.
   condition: open_read and server_binaries and not proc_is_new and sensitive_files and proc.name!="sshd"
   output: "Sensitive file opened for reading by trusted program after startup (user=%user.name command=%proc.cmdline file=%fd.name)"
+  priority: WARNING
+
+# Only let rpm-related programs write to the rpm database
+- rule: write_rpm_database
+  desc: an attempt to write to the rpm database by any non-rpm related program
+  condition: open_write and not proc.name in (rpm,rpmkey,yum) and fd.directory=/var/lib/rpm
+  output: "Rpm database opened for writing by a non-rpm program (command=%proc.cmdline file=%fd.name)"
   priority: WARNING
 
 - rule: db_program_spawned_process
@@ -312,16 +326,44 @@
 
 # fbash is a small shell script that runs bash, and is suitable for use in curl <curl> | fbash installers.
 - rule: installer_bash_starts_network_server
-  desc: an attempt by any program that is a child of fbash to start listening for network connections
-  condition: evt.type=listen and proc.aname=fbash
-  output: "Unexpected listen call by a child process of fbash (command=%proc.cmdline)"
+  desc: an attempt by a program in a pipe installer session to start listening for network connections
+  condition: evt.type=listen and proc.sname=fbash
+  output: "Unexpected listen call by a process in a fbash session (command=%proc.cmdline)"
   priority: WARNING
 
 - rule: installer_bash_starts_session
-  desc: an attempt by any program that is a child of fbash to start a new session (process group)
-  condition: evt.type=setsid and proc.aname=fbash
-  output: "Unexpected setsid call by a child process of fbash (command=%proc.cmdline)"
+  desc: an attempt by a program in a pipe installer session to start a new session
+  condition: evt.type=setsid and proc.sname=fbash
+  output: "Unexpected setsid call by a process in fbash session (command=%proc.cmdline)"
   priority: WARNING
+
+- rule: installer_bash_non_https_connection
+  desc: an attempt by a program in a pipe installer session to make an outgoing connection on a non-http(s) port
+  condition: outbound and not fd.sport in (80, 443, 53) and proc.sname=fbash
+  output: "Outbound connection on non-http(s) port by a process in a fbash session (command=%proc.cmdline connection=%fd.name)"
+  priority: WARNING
+
+# It'd be nice if we could warn when processes in a fbash session try
+# to download from any nonstandard location? This is probably blocked
+# on https://github.com/draios/falco/issues/88 though.
+
+# Notice when processes try to run chkconfig/systemctl.... to install a service.
+# Note: this is not a WARNING, as you'd expect some service management
+# as a part of doing the installation.
+- rule: installer_bash_manages_service
+  desc: an attempt by a program in a pipe installer session to manage a system service (systemd/chkconfig)
+  condition: evt.type=execve and proc.name in (chkconfig, systemctl) and proc.sname=fbash
+  output: "Service management program run by process in a fbash session (command=%proc.cmdline)"
+  priority: INFO
+
+# Notice when processes try to run any package management binary within a fbash session.
+# Note: this is not a WARNING, as you'd expect some package management
+# as a part of doing the installation
+- rule: installer_bash_runs_pkgmgmt
+  desc: an attempt by a program in a pipe installer session to run a package management binary
+  condition: evt.type=execve and package_mgmt_binaries and proc.sname=fbash
+  output: "Package management program run by process in a fbash session (command=%proc.cmdline)"
+  priority: INFO
 
 ###########################
 # Application-Related Rules
