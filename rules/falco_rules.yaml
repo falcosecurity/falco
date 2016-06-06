@@ -37,7 +37,7 @@
 
 - macro: modify
   condition: rename or remove
-  
+
 - macro: spawned_process
   condition: evt.type = execve and evt.dir=<
 
@@ -320,7 +320,7 @@
 # (we may need to add additional checks against false positives, see: https://bugs.launchpad.net/ubuntu/+source/rkhunter/+bug/86153)
 - rule: create_files_below_dev
   desc: creating any files below /dev other than known programs that manage devices. Some rootkits hide files in /dev.
-  condition: (evt.type = creat or evt.arg.flags contains O_CREAT) and proc.name != blkid and fd.directory = /dev and fd.name != /dev/null
+  condition: (evt.type = creat or evt.arg.flags contains O_CREAT) and proc.name != blkid and fd.directory = /dev and not fd.name in (/dev/null,/dev/stdin,/dev/stdout,/dev/stderr)
   output: "File created below /dev by untrusted program (user=%user.name command=%proc.cmdline file=%fd.name)"
   priority: WARNING
 
