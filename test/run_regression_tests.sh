@@ -13,40 +13,35 @@ function download_trace_files() {
     done
 }
 
+function prepare_multiplex_fileset() {
+
+    dir=$1
+    detect=$2
+    detect_level=$3
+    json_output=$4
+
+    for trace in $SCRIPTDIR/$dir/*.scap ; do
+	[ -e "$trace" ] || continue
+	NAME=`basename $trace .scap`
+	cat << EOF >> $MULT_FILE
+  $NAME-detect-$detect-json-$json_output:
+    detect: $detect
+    detect_level: $detect_level
+    trace_file: $trace
+    json_output: $json_output
+EOF
+    done
+}
+
 function prepare_multiplex_file() {
     echo "trace_files: !mux" > $MULT_FILE
 
-    for trace in $SCRIPTDIR/traces-positive/*.scap ; do
-	[ -e "$trace" ] || continue
-	NAME=`basename $trace .scap`
-	cat << EOF >> $MULT_FILE
-  $NAME:
-    detect: True
-    detect_level: Warning
-    trace_file: $trace
-EOF
-    done
+    prepare_multiplex_fileset traces-positive True Warning False
+    prepare_multiplex_fileset traces-negative False Warning True
+    prepare_multiplex_fileset traces-info True Informational False
 
-    for trace in $SCRIPTDIR/traces-negative/*.scap ; do
-	[ -e "$trace" ] || continue
-	NAME=`basename $trace .scap`
-	cat << EOF >> $MULT_FILE
-  $NAME:
-    detect: False
-    trace_file: $trace
-EOF
-    done
-
-    for trace in $SCRIPTDIR/traces-info/*.scap ; do
-	[ -e "$trace" ] || continue
-	NAME=`basename $trace .scap`
-	cat << EOF >> $MULT_FILE
-  $NAME:
-    detect: True
-    detect_level: Informational
-    trace_file: $trace
-EOF
-    done
+    prepare_multiplex_fileset traces-positive True Warning True
+    prepare_multiplex_fileset traces-info True Informational True
 
     echo "Contents of $MULT_FILE:"
     cat $MULT_FILE
