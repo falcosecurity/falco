@@ -2,6 +2,7 @@
 
 import os
 import re
+import json
 
 from avocado import Test
 from avocado.utils import process
@@ -17,6 +18,7 @@ class FalcoTest(Test):
 
         self.should_detect = self.params.get('detect', '*')
         self.trace_file = self.params.get('trace_file', '*')
+        self.json_output = self.params.get('json_output', '*')
 
         if self.should_detect:
             self.detect_level = self.params.get('detect_level', '*')
@@ -35,8 +37,8 @@ class FalcoTest(Test):
         self.log.info("Trace file %s", self.trace_file)
 
         # Run the provided trace file though falco
-        cmd = '{}/userspace/falco/falco -r {}/../rules/falco_rules.yaml -c {}/../falco.yaml -e {}'.format(
-            self.falcodir, self.falcodir, self.falcodir, self.trace_file)
+        cmd = '{}/userspace/falco/falco -r {}/../rules/falco_rules.yaml -c {}/../falco.yaml -e {} -o json_output={}'.format(
+            self.falcodir, self.falcodir, self.falcodir, self.trace_file, self.json_output)
 
         self.falco_proc = process.SubProcess(cmd)
 
@@ -71,6 +73,15 @@ class FalcoTest(Test):
             if not events_detected > 0:
                 self.fail("Detected {} events at level {} when should have detected > 0".format(events_detected, self.detect_level))
 
+        if self.json_output:
+            # Just verify that any lines starting with '{' are valid json objects.
+            # Doesn't do any deep inspection of the contents.
+            for line in res.stdout.splitlines():
+                if line.startswith('{'):
+                    obj = json.loads(line)
+                    for attr in ['time', 'rule', 'priority', 'output']:
+                        if not attr in obj:
+                            self.fail("Falco JSON object {} does not contain property \"{}\"".format(line, attr))
         pass
 
 
