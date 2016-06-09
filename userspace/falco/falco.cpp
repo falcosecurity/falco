@@ -28,6 +28,14 @@ extern "C" {
 #include "utils.h"
 #include <yaml-cpp/yaml.h>
 
+bool g_terminate = false;
+//
+// Helper functions
+//
+static void signal_callback(int signal)
+{
+	g_terminate = true;
+}
 
 //
 // Program help
@@ -67,6 +75,7 @@ static void display_fatal_err(const string &msg, bool daemon)
 
 string lua_on_event = "on_event";
 string lua_add_output = "add_output";
+string lua_print_stats = "print_stats";
 
 // Splitting into key=value or key.subkey=value will be handled by configuration class.
 std::list<string> cmdline_options;
@@ -90,7 +99,11 @@ void do_inspect(sinsp* inspector,
 
 		res = inspector->next(&ev);
 
-		if(res == SCAP_TIMEOUT)
+		if (g_terminate)
+		{
+			break;
+		}
+		else if(res == SCAP_TIMEOUT)
 		{
 			continue;
 		}
@@ -199,6 +212,26 @@ void add_output(lua_State *ls, output_config oc)
 
 }
 
+// Print statistics on the the rules that triggered
+void print_stats(lua_State *ls)
+{
+	lua_getglobal(ls, lua_print_stats.c_str());
+
+	if(lua_isfunction(ls, -1))
+	{
+		if(lua_pcall(ls, 0, 0, 0) != 0)
+		{
+			const char* lerr = lua_tostring(ls, -1);
+			string err = "Error invoking function print_stats: " + string(lerr);
+			throw sinsp_exception(err);
+		}
+	}
+	else
+	{
+		throw sinsp_exception("No function " + lua_print_stats + " found in lua rule loader module");
+	}
+
+}
 
 //
 // ARGUMENT PARSING AND PROGRAM SETUP
@@ -209,7 +242,6 @@ int falco_init(int argc, char **argv)
 	sinsp* inspector = NULL;
 	falco_rules* rules = NULL;
 	int op;
-	sinsp_evt::param_fmt event_buffer_format;
 	int long_index = 0;
 	string lua_main_filename;
 	string scap_filename;
@@ -358,7 +390,7 @@ int falco_init(int argc, char **argv)
 
 		rules = new falco_rules(inspector, ls, lua_main_filename);
 
-		falco_formats::init(inspector, ls);
+		falco_formats::init(inspector, ls, config.m_json_output);
 		falco_fields::init(inspector, ls);
 
 		falco_logger::init(ls);
@@ -383,19 +415,23 @@ int falco_init(int argc, char **argv)
 
 		inspector->set_hostname_and_port_resolution_mode(false);
 
-		if (config.m_json_output)
-		{
-			event_buffer_format = sinsp_evt::PF_JSON;
-		}
-		else
-		{
-			event_buffer_format = sinsp_evt::PF_NORMAL;
-		}
-		inspector->set_buffer_format(event_buffer_format);
-
 		for(std::vector<output_config>::iterator it = config.m_outputs.begin(); it != config.m_outputs.end(); ++it)
 		{
 			add_output(ls, *it);
+		}
+
+		if(signal(SIGINT, signal_callback) == SIG_ERR)
+		{
+			fprintf(stderr, "An error occurred while setting SIGINT signal handler.\n");
+			result = EXIT_FAILURE;
+			goto exit;
+		}
+
+		if(signal(SIGTERM, signal_callback) == SIG_ERR)
+		{
+			fprintf(stderr, "An error occurred while setting SIGTERM signal handler.\n");
+			result = EXIT_FAILURE;
+			goto exit;
 		}
 
 		if (scap_filename.size())
@@ -406,7 +442,7 @@ int falco_init(int argc, char **argv)
 		{
 			try
 			{
-				inspector->open();
+				inspector->open(200);
 			}
 			catch(sinsp_exception e)
 			{
@@ -478,6 +514,8 @@ int falco_init(int argc, char **argv)
 			   ls);
 
 		inspector->close();
+
+		print_stats(ls);
 	}
 	catch(sinsp_exception& e)
 	{
@@ -494,10 +532,7 @@ int falco_init(int argc, char **argv)
 
 exit:
 
-	if(inspector)
-	{
-		delete inspector;
-	}
+	delete inspector;
 
 	if(ls)
 	{

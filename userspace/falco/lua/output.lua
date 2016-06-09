@@ -2,12 +2,14 @@ local mod = {}
 
 levels = {"Emergency", "Alert", "Critical", "Error", "Warning", "Notice", "Informational", "Debug"}
 
+mod.levels = levels
+
 local outputs = {}
 
-function mod.stdout(evt, level, format)
+function mod.stdout(evt, rule, level, format)
    format = "*%evt.time: "..levels[level+1].." "..format
    formatter = falco.formatter(format)
-   msg = falco.format_event(evt, formatter)
+   msg = falco.format_event(evt, rule, levels[level+1], formatter)
    print (msg)
 end
 
@@ -24,26 +26,26 @@ function mod.file_validate(options)
 
 end
 
-function mod.file(evt, level, format, options)
+function mod.file(evt, rule, level, format, options)
    format = "%evt.time: "..levels[level+1].." "..format
    formatter = falco.formatter(format)
-   msg = falco.format_event(evt, formatter)
+   msg = falco.format_event(evt, rule, levels[level+1], formatter)
 
    file = io.open(options.filename, "a+")
    file:write(msg, "\n")
    file:close()
 end
 
-function mod.syslog(evt, level, format)
+function mod.syslog(evt, rule, level, format)
 
    formatter = falco.formatter(format)
-   msg = falco.format_event(evt, formatter)
+   msg = falco.format_event(evt, rule, levels[level+1], formatter)
    falco.syslog(level, msg)
 end
 
-function mod.event(event, level, format)
+function mod.event(event, rule, level, format)
    for index,o in ipairs(outputs) do
-      o.output(event, level, format, o.config)
+      o.output(event, rule, level, format, o.config)
    end
 end
 

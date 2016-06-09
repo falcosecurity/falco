@@ -102,14 +102,13 @@ function set_output(output_format, state)
 end
 
 local function priority(s)
-   valid_levels = {"emergency", "alert", "critical", "error", "warning", "notice", "informational", "debug"}
    s = string.lower(s)
-   for i,v in ipairs(valid_levels) do
-      if (string.find(v, "^"..s)) then
+   for i,v in ipairs(output.levels) do
+      if (string.find(string.lower(v), "^"..s)) then
 	 return i - 1 -- (syslog levels start at 0, lua indices start at 1)
       end
    end
-   error("Invalid severity level: "..level)
+   error("Invalid severity level: "..s)
 end
 
 -- Note that the rules_by_name and rules_by_idx refer to the same rule
@@ -230,12 +229,51 @@ function describe_rule(name)
    end
 end
 
+local rule_output_counts = {total=0, by_level={}, by_name={}}
+
+for idx=0,table.getn(output.levels)-1,1 do
+   rule_output_counts.by_level[idx] = 0
+end
+
 function on_event(evt_, rule_id)
 
    if state.rules_by_idx[rule_id] == nil then
       error ("rule_loader.on_event(): event with invalid rule_id: ", rule_id)
    end
 
-   output.event(evt_, state.rules_by_idx[rule_id].level, state.rules_by_idx[rule_id].output)
+   rule_output_counts.total = rule_output_counts.total + 1
+   local rule = state.rules_by_idx[rule_id]
+
+   if rule_output_counts.by_level[rule.level] == nil then
+      rule_output_counts.by_level[rule.level] = 1
+   else
+      rule_output_counts.by_level[rule.level] = rule_output_counts.by_level[rule.level] + 1
+   end
+
+   if rule_output_counts.by_name[rule.rule] == nil then
+      rule_output_counts.by_name[rule.rule] = 1
+   else
+      rule_output_counts.by_name[rule.rule] = rule_output_counts.by_name[rule.rule] + 1
+   end
+
+   output.event(evt_, rule.rule, rule.level, rule.output)
 end
+
+function print_stats()
+   print("Events detected: "..rule_output_counts.total)
+   print("Rule counts by severity:")
+   for idx, level in ipairs(output.levels) do
+      -- To keep the output concise, we only print 0 counts for error, warning, and info levels
+      if rule_output_counts.by_level[idx-1] > 0 or level == "Error" or level == "Warning" or level == "Informational" then
+	 print ("   "..level..": "..rule_output_counts.by_level[idx-1])
+      end
+   end
+
+   print("Triggered rules by rule name:")
+   for name, count in pairs(rule_output_counts.by_name) do
+      print ("   "..name..": "..count)
+   end
+end
+
+
 
