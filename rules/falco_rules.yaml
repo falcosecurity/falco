@@ -14,26 +14,17 @@
 #   condition: (syscall.type=read and evt.dir=> and fd.type in (file, directory))
 
 - macro: open_write
-  condition: >
-    (evt.type=open or evt.type=openat) and
-    fd.typechar='f' and
-    (evt.arg.flags contains O_WRONLY or
-    evt.arg.flags contains O_RDWR or
-    evt.arg.flags contains O_CREAT or
-    evt.arg.flags contains O_TRUNC)
+  condition: (evt.type=open or evt.type=openat) and evt.is_open_write=true and fd.typechar='f'
+
 - macro: open_read
-  condition: >
-    (evt.type=open or evt.type=openat) and
-    fd.typechar='f' and
-    (evt.arg.flags contains O_RDONLY or
-    evt.arg.flags contains O_RDWR)
+  condition: (evt.type=open or evt.type=openat) and evt.is_open_read=true and fd.typechar='f'
 
 - macro: rename
-  condition: syscall.type = rename
+  condition: evt.type = rename
 - macro: mkdir
-  condition: syscall.type = mkdir
+  condition: evt.type = mkdir
 - macro: remove
-  condition: syscall.type in (remove, rmdir, unlink, unlink_at)
+  condition: evt.type in (rmdir, unlink, unlinkat)
 
 - macro: modify
   condition: rename or remove
@@ -59,7 +50,7 @@
 - macro: ubuntu_so_dirs
   condition: fd.name startswith /lib/x86_64-linux-gnu or fd.name startswith /usr/lib/x86_64-linux-gnu or fd.name startswith /usr/lib/sudo
 - macro: centos_so_dirs
-  condition: fd.name startswith /lib64 or fd.name startswith /user/lib64 or fd.name startswith /usr/libexec
+  condition: fd.name startswith /lib64 or fd.name startswith /usr/lib64 or fd.name startswith /usr/libexec
 - macro: linux_so_dirs
   condition: ubuntu_so_dirs or centos_so_dirs or fd.name=/etc/ld.so.cache
 
@@ -116,10 +107,16 @@
 # The truncated dpkg-preconfigu is intentional, process names are
 # truncated at the sysdig level.
 - list: package_mgmt_binaries
-  items: [dpkg, dpkg-preconfigu, rpm, rpmkey, yum]
+  items: [dpkg, dpkg-preconfigu, rpm, rpmkey, yum, frontend]
 
 - macro: package_mgmt_procs
   condition: proc.name in (package_mgmt_binaries)
+
+- list: ssl_mgmt_binaries
+  items: [ca-certificates]
+
+- list: dhcp_binaries
+  items: [dhclient, dhclient-script]
 
 # A canonical set of processes that run other programs with different
 # privileges or as a different user.
@@ -132,11 +129,11 @@
 - macro: system_procs
   condition: proc.name in (coreutils_binaries, user_mgmt_binaries)
 
-- macro: mail_procs
-  condition: proc.name in (sendmail, sendmail-msp, postfix, procmail)
+- list: mail_binaries
+  items: [sendmail, sendmail-msp, postfix, procmail, exim4]
 
 - macro: sensitive_files
-  condition: fd.name startswith /etc and (fd.name contains /etc/shadow or fd.name = /etc/sudoers or fd.directory in (/etc/sudoers.d, /etc/pam.d) or fd.name = /etc/pam.conf)
+  condition: fd.name startswith /etc and (fd.name in (/etc/shadow, /etc/sudoers, /etc/pam.conf) or fd.directory in (/etc/sudoers.d, /etc/pam.d))
 
 # Indicates that the process is new. Currently detected using time
 # since process was started, using a threshold of 5 seconds.
@@ -145,11 +142,11 @@
 
 # Network
 - macro: inbound
-  condition: ((syscall.type=listen and evt.dir=>) or (syscall.type=accept and evt.dir=<))
+  condition: ((evt.type=listen and evt.dir=>) or (evt.type=accept and evt.dir=<))
 
-# Currently sendto is an ignored syscall, otherwise this could also check for (syscall.type=sendto and evt.dir=>)
+# Currently sendto is an ignored syscall, otherwise this could also check for (evt.type=sendto and evt.dir=>)
 - macro: outbound
-  condition: syscall.type=connect and evt.dir=< and (fd.typechar=4 or fd.typechar=6)
+  condition: evt.type=connect and evt.dir=< and (fd.typechar=4 or fd.typechar=6)
 
 - macro: ssh_port
   condition: fd.lport=22
@@ -160,7 +157,7 @@
 
 # System
 - macro: modules
-  condition: syscall.type in (delete_module, init_module)
+  condition: evt.type in (delete_module, init_module)
 - macro: container
   condition: container.id != host
 - macro: interactive
@@ -182,39 +179,46 @@
 
 - rule: write_binary_dir
   desc: an attempt to write to any file below a set of binary directories
-  condition: evt.dir = < and open_write and not package_mgmt_procs and bin_dir
+  condition: bin_dir and evt.dir = < and open_write and not package_mgmt_procs
   output: "File below a known binary directory opened for writing (user=%user.name command=%proc.cmdline file=%fd.name)"
   priority: WARNING
 
+- macro: write_etc_common
+  condition: >
+    etc_dir and evt.dir = < and open_write
+    and not proc.name in (shadowutils_binaries, sysdigcloud_binaries, package_mgmt_binaries, ssl_mgmt_binaries, dhcp_binaries, ldconfig.real)
+    and not proc.pname in (sysdigcloud_binaries)
+    and not fd.directory in (/etc/cassandra, /etc/ssl/certs/java)
+
 - rule: write_etc
   desc: an attempt to write to any file below /etc, not in a pipe installer session
-  condition: evt.dir = < and open_write and not proc.name in (shadowutils_binaries, sysdigcloud_binaries, package_mgmt_binaries) and etc_dir and not proc.pname in (sysdigcloud_binaries) and not proc.sname=fbash
+  condition: write_etc_common and not proc.sname=fbash
   output: "File below /etc opened for writing (user=%user.name command=%proc.cmdline file=%fd.name)"
   priority: WARNING
 
 # Within a fbash session, the severity is lowered to INFO
 - rule: write_etc_installer
   desc: an attempt to write to any file below /etc, in a pipe installer session
-  condition: evt.dir = < and open_write and not proc.name in (shadowutils_binaries, sysdigcloud_binaries, package_mgmt_binaries) and etc_dir and not proc.pname in (sysdigcloud_binaries) and proc.sname=fbash
+  condition: write_etc_common and proc.sname=fbash
   output: "File below /etc opened for writing (user=%user.name command=%proc.cmdline file=%fd.name) within pipe installer session"
   priority: INFO
 
 - rule: read_sensitive_file_untrusted
   desc: an attempt to read any sensitive file (e.g. files containing user/password/authentication information). Exceptions are made for known trusted programs.
-  condition: open_read and not proc.name in (user_mgmt_binaries, userexec_binaries, cron_binaries, iptables, ps, lsb_release, check-new-relea, dumpe2fs, accounts-daemon, bash, sshd) and sensitive_files
+  condition: sensitive_files and open_read and not proc.name in (user_mgmt_binaries, userexec_binaries, package_mgmt_binaries, cron_binaries, iptables, ps, lsb_release, check-new-relea, dumpe2fs, accounts-daemon, bash, sshd) and not proc.cmdline contains /usr/bin/mandb
   output: "Sensitive file opened for reading by non-trusted program (user=%user.name command=%proc.cmdline file=%fd.name)"
   priority: WARNING
 
 - rule: read_sensitive_file_trusted_after_startup
   desc: an attempt to read any sensitive file (e.g. files containing user/password/authentication information) by a trusted program after startup. Trusted programs might read these files at startup to load initial state, but not afterwards.
-  condition: open_read and server_procs and not proc_is_new and sensitive_files and proc.name!="sshd"
+  condition: sensitive_files and open_read and server_procs and not proc_is_new and proc.name!="sshd"
   output: "Sensitive file opened for reading by trusted program after startup (user=%user.name command=%proc.cmdline file=%fd.name)"
   priority: WARNING
 
 # Only let rpm-related programs write to the rpm database
 - rule: write_rpm_database
   desc: an attempt to write to the rpm database by any non-rpm related program
-  condition: open_write and not proc.name in (rpm,rpmkey,yum) and fd.name startswith /var/lib/rpm
+  condition: fd.name startswith /var/lib/rpm and open_write and not proc.name in (rpm,rpmkey,yum)
   output: "Rpm database opened for writing by a non-rpm program (command=%proc.cmdline file=%fd.name)"
   priority: WARNING
 
@@ -254,7 +258,7 @@
 
 - rule: change_thread_namespace
   desc: an attempt to change a program/thread\'s namespace (commonly done as a part of creating a container) by calling setns.
-  condition: syscall.type = setns and not proc.name in (docker, sysdig, dragent)
+  condition: evt.type = setns and not proc.name in (docker, sysdig, dragent, nsenter, exe)
   output: "Namespace change (setns) by unexpected program (user=%user.name command=%proc.cmdline container=%container.id)"
   priority: WARNING
 
@@ -277,14 +281,14 @@
 
 - rule: run_shell_in_container
   desc: a shell was spawned by a non-shell program in a container. Container entrypoints are excluded.
-  condition: container and proc.name = bash and spawned_process and proc.pname exists and not proc.pname in (bash, docker)
+  condition: container and proc.name = bash and spawned_process and proc.pname exists and not proc.pname in (sh, bash, docker)
   output: "Shell spawned in a container other than entrypoint (user=%user.name container_id=%container.id container_name=%container.name shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline)"
   priority: WARNING
 
 # sockfamily ip is to exclude certain processes (like 'groups') that communicate on unix-domain sockets
 - rule: system_procs_network_activity
   desc: any network activity performed by system binaries that are not expected to send or receive any network traffic
-  condition: (inbound or outbound) and (fd.sockfamily = ip and system_procs)
+  condition: (fd.sockfamily = ip and system_procs) and (inbound or outbound)
   output: "Known system binary sent/received network traffic (user=%user.name command=%proc.cmdline connection=%fd.name)"
   priority: WARNING
 
@@ -297,23 +301,23 @@
 #   output: "sshd sent error message to syslog (error=%evt.buffer)"
 #   priority: WARNING
 
-# sshd, sendmail-msp, sendmail attempt to setuid to root even when running as non-root. Excluding here to avoid meaningless FPs
+# sshd, mail programs attempt to setuid to root even when running as non-root. Excluding here to avoid meaningless FPs
 - rule: non_sudo_setuid
   desc: an attempt to change users by calling setuid. sudo/su are excluded. user "root" is also excluded, as setuid calls typically involve dropping privileges.
-  condition: evt.type=setuid and evt.dir=> and not user.name=root and not proc.name in (userexec_binaries, sshd, sendmail-msp, sendmail)
+  condition: evt.type=setuid and evt.dir=> and not user.name=root and not proc.name in (userexec_binaries, mail_binaries, sshd)
   output: "Unexpected setuid call by non-sudo, non-root program (user=%user.name command=%proc.cmdline uid=%evt.arg.uid)"
   priority: WARNING
 
 - rule: user_mgmt_binaries
   desc: activity by any programs that can manage users, passwords, or permissions. sudo and su are excluded. Activity in containers is also excluded--some containers create custom users on top of a base linux distribution at startup.
-  condition: spawned_process and not proc.name in (su, sudo) and not container and proc.name in (user_mgmt_binaries) and not proc.pname in (cron_binaries, systemd, run-parts)
+  condition: spawned_process and proc.name in (user_mgmt_binaries) and not proc.name in (su, sudo) and not container and not proc.pname in (cron_binaries, systemd, run-parts)
   output: "User management binary command run outside of container (user=%user.name command=%proc.cmdline parent=%proc.pname)"
   priority: WARNING
 
 # (we may need to add additional checks against false positives, see: https://bugs.launchpad.net/ubuntu/+source/rkhunter/+bug/86153)
 - rule: create_files_below_dev
   desc: creating any files below /dev other than known programs that manage devices. Some rootkits hide files in /dev.
-  condition: (evt.type = creat or evt.arg.flags contains O_CREAT) and proc.name != blkid and fd.directory = /dev and not fd.name in (/dev/null,/dev/stdin,/dev/stdout,/dev/stderr)
+  condition: (evt.type = creat or evt.arg.flags contains O_CREAT) and proc.name != blkid and fd.directory = /dev and not fd.name in (/dev/null,/dev/stdin,/dev/stdout,/dev/stderr,/dev/tty)
   output: "File created below /dev by untrusted program (user=%user.name command=%proc.cmdline file=%fd.name)"
   priority: WARNING
 
@@ -332,7 +336,7 @@
 
 - rule: installer_bash_non_https_connection
   desc: an attempt by a program in a pipe installer session to make an outgoing connection on a non-http(s) port
-  condition: outbound and not fd.sport in (80, 443, 53) and proc.sname=fbash
+  condition: proc.sname=fbash and outbound and not fd.sport in (80, 443, 53)
   output: "Outbound connection on non-http(s) port by a process in a fbash session (command=%proc.cmdline connection=%fd.name)"
   priority: WARNING
 
