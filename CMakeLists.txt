@@ -58,6 +58,18 @@ ExternalProject_Add(zlib
 		BUILD_IN_SOURCE 1
 		INSTALL_COMMAND "")
 
+set(JQ_SRC "${PROJECT_BINARY_DIR}/jq-prefix/src/jq")
+message(STATUS "Using bundled jq in '${JQ_SRC}'")
+set(JQ_INCLUDE "${JQ_SRC}")
+set(JQ_LIB "${JQ_SRC}/.libs/libjq.a")
+ExternalProject_Add(jq
+                URL "http://download.draios.com/dependencies/jq-1.5.tar.gz"
+                URL_MD5 "0933532b086bd8b6a41c1b162b1731f9"
+                CONFIGURE_COMMAND ./configure --disable-maintainer-mode --enable-all-static --disable-dependency-tracking
+                BUILD_COMMAND ${CMD_MAKE} LDFLAGS=-all-static
+                BUILD_IN_SOURCE 1
+                INSTALL_COMMAND "")
+
 set(JSONCPP_SRC "${SYSDIG_DIR}/userspace/libsinsp/third-party/jsoncpp")
 set(JSONCPP_INCLUDE "${JSONCPP_SRC}")
 set(JSONCPP_LIB_SRC "${JSONCPP_SRC}/jsoncpp.cpp")
@@ -103,6 +115,7 @@ ExternalProject_Add(yamlcpp
 
 set(OPENSSL_BUNDLE_DIR "${PROJECT_BINARY_DIR}/openssl-prefix/src/openssl")
 set(OPENSSL_INSTALL_DIR "${OPENSSL_BUNDLE_DIR}/target")
+set(OPENSSL_INCLUDE_DIR "${PROJECT_BINARY_DIR}/openssl-prefix/src/openssl/include")
 set(OPENSSL_LIBRARY_SSL "${OPENSSL_INSTALL_DIR}/lib/libssl.a")
 set(OPENSSL_LIBRARY_CRYPTO "${OPENSSL_INSTALL_DIR}/lib/libcrypto.a")
 
