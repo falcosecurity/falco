@@ -156,7 +156,12 @@ function check_for_ignored_syscalls_events(ast, filter_type, source)
    parser.traverse_ast(ast, "BinaryRelOp", cb)
 end
 
-function compiler.compile_macro(line)
+function compiler.compile_macro(line, list_defs)
+
+   for name, items in pairs(list_defs) do
+      line = string.gsub(line, name, table.concat(items, ", "))
+   end
+
    local ast, error_msg = parser.parse_filter(line)
 
    if (error_msg) then
@@ -174,7 +179,12 @@ end
 --[[
    Parses a single filter, then expands macros using passed-in table of definitions. Returns resulting AST.
 --]]
-function compiler.compile_filter(source, macro_defs)
+function compiler.compile_filter(source, macro_defs, list_defs)
+
+   for name, items in pairs(list_defs) do
+      source = string.gsub(source, name, table.concat(items, ", "))
+   end
+
    local ast, error_msg = parser.parse_filter(source)
 
    if (error_msg) then
