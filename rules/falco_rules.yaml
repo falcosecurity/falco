@@ -43,28 +43,23 @@
 
 # File categories
 - macro: terminal_file_fd
-  condition: fd.name=/dev/ptmx or fd.directory=/dev/pts
+  condition: fd.name=/dev/ptmx or fd.name startswith /dev/pts
 
-# This really should be testing that the directory begins with these
-# prefixes but sysdig's filter doesn't have a "starts with" operator
-# (yet).
 - macro: bin_dir
   condition: fd.directory in (/bin, /sbin, /usr/bin, /usr/sbin)
 
 - macro: bin_dir_mkdir
-  condition: evt.arg[0] contains /bin/ or evt.arg[0] contains /sbin/ or evt.arg[0] contains /usr/bin/ or evt.arg[0] contains /usr/sbin/
+  condition: evt.arg[0] startswith /bin/ or evt.arg[0] startswith /sbin/ or evt.arg[0] startswith /usr/bin/ or evt.arg[0] startswith /usr/sbin/
 - macro: bin_dir_rename
-  condition: evt.arg[1] contains /bin/ or evt.arg[1] contains /sbin/ or evt.arg[1] contains /usr/bin/ or evt.arg[1] contains /usr/sbin/
+  condition: evt.arg[1] startswith /bin/ or evt.arg[1] startswith /sbin/ or evt.arg[1] startswith /usr/bin/ or evt.arg[1] startswith /usr/sbin/
 
-# This really should be testing that the directory begins with /etc,
-# but sysdig's filter doesn't have a "starts with" operator (yet).
 - macro: etc_dir
-  condition: fd.directory contains /etc
+  condition: fd.name startswith /etc
 
 - macro: ubuntu_so_dirs
-  condition: fd.directory contains /lib/x86_64-linux-gnu or fd.directory contains /usr/lib/x86_64-linux-gnu or fd.directory contains /usr/lib/sudo
+  condition: fd.name startswith /lib/x86_64-linux-gnu or fd.name startswith /usr/lib/x86_64-linux-gnu or fd.name startswith /usr/lib/sudo
 - macro: centos_so_dirs
-  condition: fd.directory contains /lib64 or fd.directory contains /user/lib64 or fd.directory contains /usr/libexec
+  condition: fd.name startswith /lib64 or fd.name startswith /user/lib64 or fd.name startswith /usr/libexec
 - macro: linux_so_dirs
   condition: ubuntu_so_dirs or centos_so_dirs or fd.name=/etc/ld.so.cache
 
@@ -141,7 +136,7 @@
   condition: proc.name in (sendmail, sendmail-msp, postfix, procmail)
 
 - macro: sensitive_files
-  condition: (fd.name contains /etc/shadow or fd.name = /etc/sudoers or fd.directory in (/etc/sudoers.d, /etc/pam.d) or fd.name = /etc/pam.conf)
+  condition: fd.name startswith /etc and (fd.name contains /etc/shadow or fd.name = /etc/sudoers or fd.directory in (/etc/sudoers.d, /etc/pam.d) or fd.name = /etc/pam.conf)
 
 # Indicates that the process is new. Currently detected using time
 # since process was started, using a threshold of 5 seconds.
@@ -221,7 +216,7 @@
 # Only let rpm-related programs write to the rpm database
 - rule: write_rpm_database
   desc: an attempt to write to the rpm database by any non-rpm related program
-  condition: open_write and not proc.name in (rpm,rpmkey,yum) and fd.directory=/var/lib/rpm
+  condition: open_write and not proc.name in (rpm,rpmkey,yum) and fd.name startswith /var/lib/rpm
   output: "Rpm database opened for writing by a non-rpm program (command=%proc.cmdline file=%fd.name)"
   priority: WARNING
 

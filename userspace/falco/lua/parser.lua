@@ -236,7 +236,8 @@ local G = {
           symb("<") / "<" +
           symb(">") / ">" +
           symb("contains") / "contains" +
-          symb("icontains") / "icontains";
+          symb("icontains") / "icontains" +
+          symb("startswith") / "startswith";
   InOp = kw("in") / "in";
   UnaryBoolOp = kw("not") / "not";
   ExistsOp = kw("exists") / "exists";
