@@ -115,7 +115,7 @@ end
 -- object. The by_name index is used for things like describing rules,
 -- and the by_idx index is used to map the relational node index back
 -- to a rule.
-local state = {macros={}, filter_ast=nil, rules_by_name={}, n_rules=0, rules_by_idx={}}
+local state = {macros={}, lists={}, filter_ast=nil, rules_by_name={}, n_rules=0, rules_by_idx={}}
 
 function load_rules(filename)
 
@@ -131,8 +131,27 @@ function load_rules(filename)
       end
 
       if (v['macro']) then
-	 local ast = compiler.compile_macro(v['condition'])
+	 local ast = compiler.compile_macro(v['condition'], state.lists)
 	 state.macros[v['macro']] = ast.filter.value
+
+      elseif (v['list']) then
+	 -- list items are represented in yaml as a native list, so no
+	 -- parsing necessary
+	 local items = {}
+
+	 -- List items may be references to other lists, so go through
+	 -- the items and expand any references to the items in the list
+	 for i, item in ipairs(v['items']) do
+	    if (state.lists[item] == nil) then
+	       items[#items+1] = item
+	    else
+	       for i, exp_item in ipairs(state.lists[item]) do
+		  items[#items+1] = exp_item
+	       end
+	    end
+	 end
+
+	 state.lists[v['list']] = items
 
       else -- rule
 
@@ -150,7 +169,7 @@ function load_rules(filename)
 	 v['level'] = priority(v['priority'])
 	 state.rules_by_name[v['rule']] = v
 
-	 local filter_ast = compiler.compile_filter(v['condition'], state.macros)
+	 local filter_ast = compiler.compile_filter(v['condition'], state.macros, state.lists)
 
 	 if (filter_ast.type == "Rule") then
 	    state.n_rules = state.n_rules + 1
