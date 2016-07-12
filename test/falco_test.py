@@ -42,7 +42,7 @@ class FalcoTest(Test):
 
         self.falco_proc = process.SubProcess(cmd)
 
-        res = self.falco_proc.run(timeout=60, sig=9)
+        res = self.falco_proc.run(timeout=180, sig=9)
 
         if res.exit_status != 0:
             self.error("Falco command \"{}\" exited with non-zero return value {}".format(
