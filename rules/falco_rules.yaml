@@ -224,7 +224,7 @@
 
 - rule: db_program_spawned_process
   desc: a database-server related program spawned a new process other than itself. This shouldn\'t occur and is a follow on from some SQL injection attacks.
-  condition: proc.pname in (db_server_binaries) and not proc.name in (db_server_binaries) and spawned_process
+  condition: proc.pname in (db_server_binaries) and spawned_process and not proc.name in (db_server_binaries)
   output: "Database-related program spawned process other than itself (user=%user.name program=%proc.cmdline parent=%proc.pname)"
   priority: WARNING
 
@@ -264,7 +264,7 @@
 
 - rule: run_shell_untrusted
   desc: an attempt to spawn a shell by a non-shell program. Exceptions are made for trusted binaries.
-  condition: not container and proc.name = bash and spawned_process and proc.pname exists and not proc.pname in (cron_binaries, bash, sshd, sudo, docker, su, tmux, screen, emacs, systemd, login, flock, fbash, nginx, monit, supervisord, dragent)
+  condition: spawned_process and not container and proc.name = bash and proc.pname exists and not proc.pname in (cron_binaries, bash, sshd, sudo, docker, su, tmux, screen, emacs, systemd, login, flock, fbash, nginx, monit, supervisord, dragent)
   output: "Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline)"
   priority: WARNING
 
@@ -281,7 +281,7 @@
 
 - rule: run_shell_in_container
   desc: a shell was spawned by a non-shell program in a container. Container entrypoints are excluded.
-  condition: container and proc.name = bash and spawned_process and proc.pname exists and not proc.pname in (sh, bash, docker)
+  condition: spawned_process and container and proc.name = bash and proc.pname exists and not proc.pname in (sh, bash, docker)
   output: "Shell spawned in a container other than entrypoint (user=%user.name container_id=%container.id container_name=%container.name shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline)"
   priority: WARNING
 
@@ -317,7 +317,7 @@
 # (we may need to add additional checks against false positives, see: https://bugs.launchpad.net/ubuntu/+source/rkhunter/+bug/86153)
 - rule: create_files_below_dev
   desc: creating any files below /dev other than known programs that manage devices. Some rootkits hide files in /dev.
-  condition: (evt.type = creat or evt.arg.flags contains O_CREAT) and proc.name != blkid and fd.directory = /dev and not fd.name in (/dev/null,/dev/stdin,/dev/stdout,/dev/stderr,/dev/tty)
+  condition: (evt.type = creat or (evt.type = open and evt.arg.flags contains O_CREAT)) and proc.name != blkid and fd.directory = /dev and not fd.name in (/dev/null,/dev/stdin,/dev/stdout,/dev/stderr,/dev/tty)
   output: "File created below /dev by untrusted program (user=%user.name command=%proc.cmdline file=%fd.name)"
   priority: WARNING
 
