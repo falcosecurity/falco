@@ -399,11 +399,11 @@ int falco_init(int argc, char **argv)
 		falco_fields::init(inspector, ls);
 
 		falco_logger::init(ls);
+		falco_rules::init(ls);
 
 
 		inspector->set_drop_event_flags(EF_DROP_FALCO);
 		rules->load_rules(config.m_rules_filename, verbose);
-		inspector->set_filter(rules->get_filter());
 		falco_logger::log(LOG_INFO, "Parsed rules from file " + config.m_rules_filename + "\n");
 
 		if (describe_all_rules)
