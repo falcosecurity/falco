@@ -40,7 +40,7 @@ void falco_rules::load_compiler(string lua_main_filename)
 	}
 }
 
-void falco_rules::load_rules(string rules_filename)
+void falco_rules::load_rules(string rules_filename, bool verbose)
 {
 	lua_getglobal(m_ls, m_lua_load_rules.c_str());
 	if(lua_isfunction(m_ls, -1))
@@ -82,7 +82,8 @@ void falco_rules::load_rules(string rules_filename)
 		lua_setglobal(m_ls, m_lua_ignored_syscalls.c_str());
 
 		lua_pushstring(m_ls, rules_filename.c_str());
-		if(lua_pcall(m_ls, 1, 0, 0) != 0)
+		lua_pushboolean(m_ls, (verbose ? 1 : 0));
+		if(lua_pcall(m_ls, 2, 0, 0) != 0)
 		{
 			const char* lerr = lua_tostring(m_ls, -1);
 			string err = "Error loading rules:" + string(lerr);

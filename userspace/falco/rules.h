@@ -8,7 +8,7 @@ class falco_rules
  public:
 	falco_rules(sinsp* inspector, lua_State *ls, string lua_main_filename);
 	~falco_rules();
-	void load_rules(string rules_filename);
+	void load_rules(string rules_filename, bool verbose);
 	void describe_rule(string *rule);
 	sinsp_filter* get_filter();
 

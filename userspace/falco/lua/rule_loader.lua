@@ -117,7 +117,9 @@ end
 -- to a rule.
 local state = {macros={}, lists={}, filter_ast=nil, rules_by_name={}, n_rules=0, rules_by_idx={}}
 
-function load_rules(filename)
+function load_rules(filename, verbose)
+
+   compiler.set_verbose(verbose)
 
    local f = assert(io.open(filename, "r"))
    local s = f:read("*all")

@@ -1,6 +1,13 @@
 local parser = require("parser")
 local compiler = {}
 
+compiler.verbose = false
+
+function compiler.set_verbose(verbose)
+   compiler.verbose = verbose
+   parser.set_verbose(verbose)
+end
+
 function map(f, arr)
    local res = {}
    for i,v in ipairs(arr) do

@@ -11,6 +11,12 @@
 
 local parser = {}
 
+parser.verbose = false
+
+function parser.set_verbose(verbose)
+   parser.verbose = verbose
+end
+
 local lpeg = require "lpeg"
 
 lpeg.locale(lpeg)

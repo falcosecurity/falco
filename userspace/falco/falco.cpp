@@ -55,6 +55,7 @@ static void usage()
            " -r <rules_file>               Rules file (defaults to value set in configuration file, or /etc/falco_rules.yaml).\n"
 	   " -L                            Show the name and description of all rules and exit.\n"
 	   " -l <rule>                     Show the name and description of the rule with name <rule> and exit.\n"
+	   " -v                            Verbose output.\n"
 	   "\n"
     );
 }
@@ -253,6 +254,7 @@ int falco_init(int argc, char **argv)
 	string pidfilename = "/var/run/falco.pid";
 	bool describe_all_rules = false;
 	string describe_rule = "";
+	bool verbose = false;
 
 	static struct option long_options[] =
 	{
@@ -272,7 +274,7 @@ int falco_init(int argc, char **argv)
 		// Parse the args
 		//
 		while((op = getopt_long(argc, argv,
-                                        "c:ho:e:r:dp:Ll:",
+                                        "c:ho:e:r:dp:Ll:v",
                                         long_options, &long_index)) != -1)
 		{
 			switch(op)
@@ -300,6 +302,9 @@ int falco_init(int argc, char **argv)
 				break;
 			case 'L':
 				describe_all_rules = true;
+				break;
+			case 'v':
+				verbose = true;
 				break;
 			case 'l':
 				describe_rule = optarg;
@@ -397,7 +402,7 @@ int falco_init(int argc, char **argv)
 
 
 		inspector->set_drop_event_flags(EF_DROP_FALCO);
-		rules->load_rules(config.m_rules_filename);
+		rules->load_rules(config.m_rules_filename, verbose);
 		inspector->set_filter(rules->get_filter());
 		falco_logger::log(LOG_INFO, "Parsed rules from file " + config.m_rules_filename + "\n");
 
