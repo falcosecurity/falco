@@ -2,6 +2,7 @@
 
 #include "formats.h"
 #include "logger.h"
+#include "falco_engine.h"
 
 
 sinsp* falco_formats::s_inspector = NULL;
@@ -10,6 +11,7 @@ bool s_json_output = false;
 const static struct luaL_reg ll_falco [] =
 {
 	{"formatter", &falco_formats::formatter},
+	{"free_formatter", &falco_formats::free_formatter},
 	{"format_event", &falco_formats::format_event},
 	{NULL,NULL}
 };
@@ -32,12 +34,24 @@ int falco_formats::formatter(lua_State *ls)
 	}
 	catch(sinsp_exception& e)
 	{
-		falco_logger::log(LOG_ERR, "Invalid output format '" + format + "'.\n");
-
-		throw sinsp_exception("set_formatter error");
+		throw falco_exception("Invalid output format '" + format + "'.\n");
 	}
 
 	lua_pushlightuserdata(ls, formatter);
+
+	return 1;
+}
+
+int falco_formats::free_formatter(lua_State *ls)
+{
+	if (!lua_islightuserdata(ls, -1))
+	{
+		throw falco_exception("Invalid argument passed to free_formatter");
+	}
+
+	sinsp_evt_formatter *formatter = (sinsp_evt_formatter *) lua_topointer(ls, 1);
+
+	delete(formatter);
 
 	return 1;
 }
@@ -50,8 +64,7 @@ int falco_formats::format_event (lua_State *ls)
 	    !lua_isstring(ls, -2) ||
 	    !lua_isstring(ls, -3) ||
 	    !lua_islightuserdata(ls, -4)) {
-		falco_logger::log(LOG_ERR, "Invalid arguments passed to format_event()\n");
-		throw sinsp_exception("format_event error");
+		throw falco_exception("Invalid arguments passed to format_event()\n");
 	}
 	sinsp_evt* evt = (sinsp_evt*)lua_topointer(ls, 1);
 	const char *rule = (char *) lua_tostring(ls, 2);

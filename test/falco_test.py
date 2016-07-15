@@ -105,7 +105,7 @@ class FalcoTest(Test):
             if events_detected == 0:
                 self.fail("Detected {} events when should have detected > 0".format(events_detected))
 
-            level_line = '{}: (\d+)'.format(self.detect_level)
+            level_line = '(?i){}: (\d+)'.format(self.detect_level)
             match = re.search(level_line, res.stdout)
 
             if match is None:

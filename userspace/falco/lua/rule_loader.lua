@@ -5,7 +5,6 @@
 
 --]]
 
-local output = require('output')
 local compiler = require "compiler"
 local yaml = require"lyaml"
 
@@ -101,31 +100,23 @@ function set_output(output_format, state)
    end
 end
 
-local function priority(s)
-   s = string.lower(s)
-   for i,v in ipairs(output.levels) do
-      if (string.find(string.lower(v), "^"..s)) then
-	 return i - 1 -- (syslog levels start at 0, lua indices start at 1)
-      end
-   end
-   error("Invalid severity level: "..s)
-end
-
 -- Note that the rules_by_name and rules_by_idx refer to the same rule
 -- object. The by_name index is used for things like describing rules,
 -- and the by_idx index is used to map the relational node index back
 -- to a rule.
 local state = {macros={}, lists={}, filter_ast=nil, rules_by_name={}, n_rules=0, rules_by_idx={}}
 
-function load_rules(filename, rules_mgr, verbose, all_events)
+function load_rules(rules_content, rules_mgr, verbose, all_events)
 
    compiler.set_verbose(verbose)
    compiler.set_all_events(all_events)
 
-   local f = assert(io.open(filename, "r"))
-   local s = f:read("*all")
-   f:close()
-   local rules = yaml.load(s)
+   local rules = yaml.load(rules_content)
+
+   if rules == nil then
+      -- An empty rules file is acceptable
+      return
+   end
 
    for i,v in ipairs(rules) do -- iterate over yaml list
 
@@ -168,8 +159,6 @@ function load_rules(filename, rules_mgr, verbose, all_events)
 	    end
 	 end
 
-	 -- Convert the priority as a string to a level now
-	 v['level'] = priority(v['priority'])
 	 state.rules_by_name[v['rule']] = v
 
 	 local filter_ast, evttypes = compiler.compile_filter(v['rule'], v['condition'],
@@ -190,7 +179,7 @@ function load_rules(filename, rules_mgr, verbose, all_events)
 	    install_filter(filter_ast.filter.value)
 
 	    -- Pass the filter and event types back up
-	    falco_rules.add_filter(rules_mgr, evttypes)
+	    falco_rules.add_filter(rules_mgr, v['rule'], evttypes)
 
 	    -- Rule ASTs are merged together into one big AST, with "OR" between each
 	    -- rule.
@@ -256,11 +245,7 @@ function describe_rule(name)
    end
 end
 
-local rule_output_counts = {total=0, by_level={}, by_name={}}
-
-for idx=0,table.getn(output.levels)-1,1 do
-   rule_output_counts.by_level[idx] = 0
-end
+local rule_output_counts = {total=0, by_priority={}, by_name={}}
 
 function on_event(evt_, rule_id)
 
@@ -271,10 +256,10 @@ function on_event(evt_, rule_id)
    rule_output_counts.total = rule_output_counts.total + 1
    local rule = state.rules_by_idx[rule_id]
 
-   if rule_output_counts.by_level[rule.level] == nil then
-      rule_output_counts.by_level[rule.level] = 1
+   if rule_output_counts.by_priority[rule.priority] == nil then
+      rule_output_counts.by_priority[rule.priority] = 1
    else
-      rule_output_counts.by_level[rule.level] = rule_output_counts.by_level[rule.level] + 1
+      rule_output_counts.by_priority[rule.priority] = rule_output_counts.by_priority[rule.priority] + 1
    end
 
    if rule_output_counts.by_name[rule.rule] == nil then
@@ -283,17 +268,14 @@ function on_event(evt_, rule_id)
       rule_output_counts.by_name[rule.rule] = rule_output_counts.by_name[rule.rule] + 1
    end
 
-   output.event(evt_, rule.rule, rule.level, rule.output)
+   return rule.rule, rule.priority, rule.output
 end
 
 function print_stats()
    print("Events detected: "..rule_output_counts.total)
    print("Rule counts by severity:")
-   for idx, level in ipairs(output.levels) do
-      -- To keep the output concise, we only print 0 counts for error, warning, and info levels
-      if rule_output_counts.by_level[idx-1] > 0 or level == "Error" or level == "Warning" or level == "Informational" then
-	 print ("   "..level..": "..rule_output_counts.by_level[idx-1])
-      end
+   for priority, count in pairs(rule_output_counts.by_priority) do
+      print ("   "..priority..": "..count)
    end
 
    print("Triggered rules by rule name:")

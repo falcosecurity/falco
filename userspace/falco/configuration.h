@@ -1,13 +1,12 @@
 #pragma once
 
 #include <yaml-cpp/yaml.h>
+#include <string>
+#include <vector>
+#include <list>
 #include <iostream>
 
-struct output_config
-{
-	std::string name;
-	std::map<std::string, std::string> options;
-};
+#include "falco_outputs.h"
 
 class yaml_configuration
 {
@@ -17,7 +16,7 @@ public:
 	{
 		m_path = path;
 		YAML::Node config;
-		std::vector<output_config> outputs;
+		std::vector<falco_outputs::output_config> outputs;
 		try
 		{
 			m_root = YAML::LoadFile(path);
@@ -118,12 +117,15 @@ private:
 class falco_configuration
 {
  public:
+	falco_configuration();
+	virtual ~falco_configuration();
+
 	void init(std::string conf_filename, std::list<std::string> &cmdline_options);
 	void init(std::list<std::string> &cmdline_options);
 
 	std::string m_rules_filename;
 	bool m_json_output;
-	std::vector<output_config> m_outputs;
+	std::vector<falco_outputs::output_config> m_outputs;
  private:
 	void init_cmdline_options(std::list<std::string> &cmdline_options);
 
