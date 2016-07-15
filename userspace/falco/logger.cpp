@@ -1,9 +1,6 @@
 #include <ctime>
 #include "logger.h"
 #include "chisel_api.h"
-#include "filterchecks.h"
-
-
 
 const static struct luaL_reg ll_falco [] =
 {

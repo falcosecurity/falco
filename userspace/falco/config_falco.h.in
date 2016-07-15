@@ -8,7 +8,4 @@
 #define FALCO_INSTALL_CONF_FILE "/etc/falco.yaml"
 #define FALCO_SOURCE_LUA_DIR "${PROJECT_SOURCE_DIR}/userspace/falco/lua/"
 
-
-#define FALCO_LUA_MAIN "${FALCO_LUA_MAIN}"
-
 #define PROBE_NAME "${PROBE_NAME}"

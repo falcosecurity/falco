@@ -38,12 +38,12 @@ EOF
 function prepare_multiplex_file() {
     cp $SCRIPTDIR/falco_tests.yaml.in $MULT_FILE
 
-    prepare_multiplex_fileset traces-positive True Warning False
-    prepare_multiplex_fileset traces-negative False Warning True
-    prepare_multiplex_fileset traces-info True Informational False
+    prepare_multiplex_fileset traces-positive True WARNING False
+    prepare_multiplex_fileset traces-negative False WARNING True
+    prepare_multiplex_fileset traces-info True INFO False
 
-    prepare_multiplex_fileset traces-positive True Warning True
-    prepare_multiplex_fileset traces-info True Informational True
+    prepare_multiplex_fileset traces-positive True WARNING True
+    prepare_multiplex_fileset traces-info True INFO True
 
     echo "Contents of $MULT_FILE:"
     cat $MULT_FILE
