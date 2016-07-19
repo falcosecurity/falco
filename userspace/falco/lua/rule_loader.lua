@@ -117,7 +117,9 @@ end
 -- to a rule.
 local state = {macros={}, lists={}, filter_ast=nil, rules_by_name={}, n_rules=0, rules_by_idx={}}
 
-function load_rules(filename)
+function load_rules(filename, rules_mgr, verbose)
+
+   compiler.set_verbose(verbose)
 
    local f = assert(io.open(filename, "r"))
    local s = f:read("*all")
@@ -169,7 +171,8 @@ function load_rules(filename)
 	 v['level'] = priority(v['priority'])
 	 state.rules_by_name[v['rule']] = v
 
-	 local filter_ast = compiler.compile_filter(v['condition'], state.macros, state.lists)
+	 local filter_ast, evttypes = compiler.compile_filter(v['rule'], v['condition'],
+							      state.macros, state.lists)
 
 	 if (filter_ast.type == "Rule") then
 	    state.n_rules = state.n_rules + 1
@@ -182,6 +185,11 @@ function load_rules(filename)
 	    -- we'll use it later to determine which output to display when we get an
 	    -- event.
 	    mark_relational_nodes(filter_ast.filter.value, state.n_rules)
+
+	    install_filter(filter_ast.filter.value)
+
+	    -- Pass the filter and event types back up
+	    falco_rules.add_filter(rules_mgr, evttypes)
 
 	    -- Rule ASTs are merged together into one big AST, with "OR" between each
 	    -- rule.
@@ -196,7 +204,6 @@ function load_rules(filename)
       end
    end
 
-   install_filter(state.filter_ast)
    io.flush()
 end
 

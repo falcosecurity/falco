@@ -36,7 +36,7 @@ EOF
 }
 
 function prepare_multiplex_file() {
-    echo "trace_files: !mux" > $MULT_FILE
+    cp $SCRIPTDIR/falco_tests.yaml.in $MULT_FILE
 
     prepare_multiplex_fileset traces-positive True Warning False
     prepare_multiplex_fileset traces-negative False Warning True
