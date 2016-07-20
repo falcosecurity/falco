@@ -1,6 +1,9 @@
 
 #include "falco_outputs.h"
 
+#include "config_falco.h"
+
+
 #include "formats.h"
 #include "logger.h"
 
@@ -24,7 +27,7 @@ void falco_outputs::init(bool json_output)
 		throw falco_exception("No inspector provided");
 	}
 
-	falco_common::init(m_lua_main_filename);
+	falco_common::init(m_lua_main_filename.c_str(), FALCO_SOURCE_LUA_DIR);
 
 	falco_formats::init(m_inspector, m_ls, json_output);
 

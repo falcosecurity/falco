@@ -7,7 +7,6 @@
 
 #include "rules.h"
 
-#include "config_falco.h"
 #include "falco_common.h"
 
 //

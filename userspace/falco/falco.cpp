@@ -14,6 +14,7 @@
 
 #include "configuration.h"
 #include "falco_engine.h"
+#include "config_falco.h"
 
 bool g_terminate = false;
 //

@@ -6,8 +6,8 @@ if(NOT DEFINED FALCO_VERSION)
 	set(FALCO_VERSION "0.1.1dev")
 endif()
 
-if(NOT DEFINED DIR_ETC)
-	set(DIR_ETC "/etc")
+if(NOT DEFINED FALCO_ETC_DIR)
+	set(FALCO_ETC_DIR "/etc")
 endif()
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -39,6 +39,7 @@ set(PACKAGE_NAME "falco")
 set(PROBE_VERSION "${FALCO_VERSION}")
 set(PROBE_NAME "sysdig-probe")
 set(PROBE_DEVICE_NAME "sysdig")
+set(CMAKE_INSTALL_PREFIX /usr)
 
 set(CMD_MAKE make)
 
@@ -160,11 +161,12 @@ ExternalProject_Add(luajit
 		INSTALL_COMMAND "")
 
 set (LPEG_SRC "${PROJECT_BINARY_DIR}/lpeg-prefix/src/lpeg")
+set (LPEG_LIB "${PROJECT_BINARY_DIR}/lpeg-prefix/src/lpeg/build/lpeg.a")
 ExternalProject_Add(lpeg
                     DEPENDS luajit
 		    URL "http://s3.amazonaws.com/download.draios.com/dependencies/lpeg-1.0.0.tar.gz"
                     URL_MD5 "0aec64ccd13996202ad0c099e2877ece"
-                    BUILD_COMMAND LUA_INCLUDE=${LUAJIT_INCLUDE} "${PROJECT_SOURCE_DIR}/scripts/build-lpeg.sh"
+                    BUILD_COMMAND LUA_INCLUDE=${LUAJIT_INCLUDE} "${PROJECT_SOURCE_DIR}/scripts/build-lpeg.sh" "${LPEG_SRC}/build"
                     BUILD_IN_SOURCE 1
 		    CONFIGURE_COMMAND ""
                     INSTALL_COMMAND "")
@@ -188,17 +190,19 @@ ExternalProject_Add(lyaml
                     BUILD_COMMAND ${CMD_MAKE}
                     BUILD_IN_SOURCE 1
 		    CONFIGURE_COMMAND ./configure --enable-static LIBS=-L../../../libyaml-prefix/src/libyaml/src/.libs CFLAGS=-I../../../libyaml-prefix/src/libyaml/include CPPFLAGS=-I../../../libyaml-prefix/src/libyaml/include LUA_INCLUDE=-I../../../luajit-prefix/src/luajit/src LUA=../../../luajit-prefix/src/luajit/src/luajit
-                    INSTALL_COMMAND sh -c "cp -R ${PROJECT_BINARY_DIR}/lyaml-prefix/src/lyaml/lib/* ${PROJECT_SOURCE_DIR}/userspace/falco/lua")
+                    INSTALL_COMMAND sh -c "cp -R ${PROJECT_BINARY_DIR}/lyaml-prefix/src/lyaml/lib/* ${PROJECT_SOURCE_DIR}/userspace/engine/lua")
 
 install(FILES falco.yaml
-	DESTINATION "${DIR_ETC}")
+	DESTINATION "${FALCO_ETC_DIR}")
 
 add_subdirectory("${SYSDIG_DIR}/driver" "${PROJECT_BINARY_DIR}/driver")
 add_subdirectory("${SYSDIG_DIR}/userspace/libscap" "${PROJECT_BINARY_DIR}/userspace/libscap")
 add_subdirectory("${SYSDIG_DIR}/userspace/libsinsp" "${PROJECT_BINARY_DIR}/userspace/libsinsp")
 
-add_subdirectory(rules)
 add_subdirectory(scripts)
+set(FALCO_SINSP_LIBRARY sinsp)
+set(FALCO_SHARE_DIR share/falco)
+add_subdirectory(userspace/engine)
 add_subdirectory(userspace/falco)
 
 
