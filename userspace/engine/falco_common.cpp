@@ -1,6 +1,6 @@
 #include <fstream>
 
-#include "config_falco.h"
+#include "config_falco_engine.h"
 #include "falco_common.h"
 
 falco_common::falco_common()
@@ -22,24 +22,24 @@ void falco_common::set_inspector(sinsp *inspector)
 	m_inspector = inspector;
 }
 
-void falco_common::init(string &lua_main_filename)
+void falco_common::init(const char *lua_main_filename, const char *source_dir)
 {
 	ifstream is;
-	string lua_dir = FALCO_LUA_DIR;
+	string lua_dir = FALCO_ENGINE_LUA_DIR;
 	string lua_main_path = lua_dir + lua_main_filename;
 
 	is.open(lua_main_path);
 	if (!is.is_open())
 	{
-		lua_dir = FALCO_SOURCE_LUA_DIR;
+		lua_dir = source_dir;
 		lua_main_path = lua_dir + lua_main_filename;
 
 		is.open(lua_main_path);
 		if (!is.is_open())
 		{
 			throw falco_exception("Could not find Falco Lua entrypoint (tried " +
-					      string(FALCO_LUA_DIR) + lua_main_filename + ", " +
-					      string(FALCO_SOURCE_LUA_DIR) + lua_main_filename + ")");
+					      string(FALCO_ENGINE_LUA_DIR) + lua_main_filename + ", " +
+					      string(source_dir) + lua_main_filename + ")");
 		}
 	}
 

@@ -2,7 +2,7 @@
 
 #define FALCO_VERSION "${FALCO_VERSION}"
 
-#define FALCO_LUA_DIR "/usr/share/falco/lua/"
+#define FALCO_LUA_DIR "${CMAKE_INSTALL_PREFIX}/${FALCO_SHARE_DIR}/lua/"
 #define FALCO_SOURCE_DIR "${PROJECT_SOURCE_DIR}"
 #define FALCO_SOURCE_CONF_FILE "${PROJECT_SOURCE_DIR}/falco.yaml"
 #define FALCO_INSTALL_CONF_FILE "/etc/falco.yaml"
