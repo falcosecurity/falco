@@ -6,6 +6,8 @@ test/traces-negative
 test/traces-positive
 test/traces-info
 test/job-results
+test/.phoronix-test-suite
+test/results*.json.*
 
 userspace/falco/lua/re.lua
 userspace/falco/lua/lpeg.so
