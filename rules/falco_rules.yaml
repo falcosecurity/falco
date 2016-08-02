@@ -230,7 +230,7 @@
 
 - rule: modify_binary_dirs
   desc: an attempt to modify any file below a set of binary directories.
-  condition: modify and bin_dir_rename and not package_mgmt_procs
+  condition: bin_dir_rename and modify and not package_mgmt_procs
   output: "File below known binary directory renamed/removed (user=%user.name command=%proc.cmdline operation=%evt.type file=%fd.name %evt.args)"
   priority: WARNING
 
@@ -317,7 +317,7 @@
 # (we may need to add additional checks against false positives, see: https://bugs.launchpad.net/ubuntu/+source/rkhunter/+bug/86153)
 - rule: create_files_below_dev
   desc: creating any files below /dev other than known programs that manage devices. Some rootkits hide files in /dev.
-  condition: (evt.type = creat or (evt.type = open and evt.arg.flags contains O_CREAT)) and proc.name != blkid and fd.directory = /dev and not fd.name in (/dev/null,/dev/stdin,/dev/stdout,/dev/stderr,/dev/tty)
+  condition: fd.directory = /dev and (evt.type = creat or (evt.type = open and evt.arg.flags contains O_CREAT)) and proc.name != blkid and not fd.name in (/dev/null,/dev/stdin,/dev/stdout,/dev/stderr,/dev/tty)
   output: "File created below /dev by untrusted program (user=%user.name command=%proc.cmdline file=%fd.name)"
   priority: WARNING
 
