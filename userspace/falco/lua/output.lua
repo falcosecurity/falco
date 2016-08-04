@@ -27,7 +27,7 @@ function mod.file_validate(options)
 end
 
 function mod.file(evt, rule, level, format, options)
-   format = "%evt.time: "..levels[level+1].." "..format
+   format = "*%evt.time: "..levels[level+1].." "..format
    formatter = falco.formatter(format)
    msg = falco.format_event(evt, rule, levels[level+1], formatter)
 
@@ -41,6 +41,22 @@ function mod.syslog(evt, rule, level, format)
    formatter = falco.formatter(format)
    msg = falco.format_event(evt, rule, levels[level+1], formatter)
    falco.syslog(level, msg)
+end
+
+function mod.program(evt, rule, level, format, options)
+
+   format = "*%evt.time: "..levels[level+1].." "..format
+   formatter = falco.formatter(format)
+   msg = falco.format_event(evt, rule, levels[level+1], formatter)
+
+   -- XXX Ideally we'd check that the program ran
+   -- successfully. However, the luajit we're using returns true even
+   -- when the shell can't run the program.
+
+   file = io.popen(options.program, "w")
+
+   file:write(msg, "\n")
+   file:close()
 end
 
 function mod.event(event, rule, level, format)
