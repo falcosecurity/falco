@@ -2,10 +2,15 @@ local parser = require("parser")
 local compiler = {}
 
 compiler.verbose = false
+compiler.all_events = false
 
 function compiler.set_verbose(verbose)
    compiler.verbose = verbose
    parser.set_verbose(verbose)
+end
+
+function compiler.set_all_events(all_events)
+   compiler.all_events = all_events
 end
 
 function map(f, arr)
@@ -274,7 +279,9 @@ function compiler.compile_macro(line, list_defs)
 
    -- Traverse the ast looking for events/syscalls in the ignored
    -- syscalls table. If any are found, return an error.
-   check_for_ignored_syscalls_events(ast, 'macro', line)
+   if not compiler.all_events then
+      check_for_ignored_syscalls_events(ast, 'macro', line)
+   end
 
    return ast
 end
@@ -297,7 +304,9 @@ function compiler.compile_filter(name, source, macro_defs, list_defs)
 
    -- Traverse the ast looking for events/syscalls in the ignored
    -- syscalls table. If any are found, return an error.
-   check_for_ignored_syscalls_events(ast, 'rule', source)
+   if not compiler.all_events then
+      check_for_ignored_syscalls_events(ast, 'rule', source)
+   end
 
    if (ast.type == "Rule") then
       -- Line is a filter, so expand macro references
