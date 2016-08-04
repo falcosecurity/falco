@@ -54,6 +54,20 @@ void falco_configuration::init(string conf_filename, std::list<std::string> &cmd
 		m_outputs.push_back(syslog_output);
 	}
 
+	output_config program_output;
+	program_output.name = "program";
+	if (m_config->get_scalar<bool>("program_output", "enabled", false))
+	{
+		string program;
+		program = m_config->get_scalar<string>("program_output", "program", "");
+		if (program == string(""))
+		{
+			throw sinsp_exception("Error reading config file (" + m_config_file + "): program output enabled but no program in configuration block");
+		}
+		program_output.options["program"] = program;
+		m_outputs.push_back(program_output);
+	}
+
 	if (m_outputs.size() == 0)
 	{
 		throw sinsp_exception("Error reading config file (" + m_config_file + "): No outputs configured. Please configure at least one output file output enabled but no filename in configuration block");

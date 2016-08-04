@@ -23,3 +23,6 @@ file_output:
 stdout_output:
   enabled: true
 
+program_output:
+  enabled: false
+  program: mail -s "Falco Notification" someone@example.com
