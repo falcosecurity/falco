@@ -33,7 +33,7 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 
 	init_cmdline_options(cmdline_options);
 
-	m_rules_filename = m_config->get_scalar<string>("rules_file", "/etc/falco_rules.yaml");
+	m_rules_filenames.push_back(m_config->get_scalar<string>("rules_file", "/etc/falco_rules.yaml"));
 	m_json_output = m_config->get_scalar<bool>("json_output", false);
 
 	falco_outputs::output_config file_output;

@@ -1,0 +1,13 @@
+# This ruleset depends on the is_cat macro defined in single_rule.yaml
+
+- rule: exec_from_cat
+  desc: A process named cat does execve
+  condition: evt.type=execve and is_cat
+  output: "An exec was seen (command=%proc.cmdline)"
+  priority: ERROR
+
+- rule: access_from_cat
+  desc: A process named cat does an access
+  condition: evt.type=access and is_cat
+  output: "An access was seen (command=%proc.cmdline)"
+  priority: INFO
