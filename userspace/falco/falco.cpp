@@ -2,6 +2,9 @@
 
 #include <stdio.h>
 #include <fstream>
+#include <set>
+#include <list>
+#include <string>
 #include <signal.h>
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -41,6 +44,7 @@ static void usage()
 	   " -p, --pidfile <pid_file>      When run as a daemon, write pid to specified file\n"
            " -e <events_file>              Read the events from <events_file> (in .scap format) instead of tapping into live.\n"
            " -r <rules_file>               Rules file (defaults to value set in configuration file, or /etc/falco_rules.yaml).\n"
+	   "                               Can be specified multiple times to read from multiple files.\n"
 	   " -D <pattern>                  Disable any rules matching the regex <pattern>. Can be specified multiple times.\n"
 	   " -L                            Show the name and description of all rules and exit.\n"
 	   " -l <rule>                     Show the name and description of the rule with name <rule> and exit.\n"
@@ -140,7 +144,7 @@ int falco_init(int argc, char **argv)
 	int long_index = 0;
 	string scap_filename;
 	string conf_filename;
-	string rules_filename;
+	list<string> rules_filenames;
 	bool daemon = false;
 	string pidfilename = "/var/run/falco.pid";
 	bool describe_all_rules = false;
@@ -192,7 +196,7 @@ int falco_init(int argc, char **argv)
 				scap_filename = optarg;
 				break;
 			case 'r':
-				rules_filename = optarg;
+				rules_filenames.push_back(optarg);
 				break;
 			case 'D':
 				pattern = optarg;
@@ -273,14 +277,16 @@ int falco_init(int argc, char **argv)
 			falco_logger::log(LOG_INFO, "Falco initialized. No configuration file found, proceeding with defaults\n");
 		}
 
-		if (rules_filename.size())
+		if (rules_filenames.size())
 		{
-			config.m_rules_filename = rules_filename;
+			config.m_rules_filenames = rules_filenames;
 		}
 
-		engine->load_rules_file(rules_filename, verbose, all_events);
-
-		falco_logger::log(LOG_INFO, "Parsed rules from file " + rules_filename + "\n");
+		for (auto filename : config.m_rules_filenames)
+		{
+			engine->load_rules_file(filename, verbose, all_events);
+			falco_logger::log(LOG_INFO, "Parsed rules from file " + filename + "\n");
+		}
 
 		for (auto pattern : disabled_rule_patterns)
 		{

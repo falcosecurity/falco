@@ -123,7 +123,7 @@ class falco_configuration
 	void init(std::string conf_filename, std::list<std::string> &cmdline_options);
 	void init(std::list<std::string> &cmdline_options);
 
-	std::string m_rules_filename;
+	std::list<std::string> m_rules_filenames;
 	bool m_json_output;
 	std::vector<falco_outputs::output_config> m_outputs;
  private:

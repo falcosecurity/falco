@@ -26,8 +26,28 @@ class FalcoTest(Test):
         self.json_output = self.params.get('json_output', '*', default=False)
         self.rules_file = self.params.get('rules_file', '*', default=os.path.join(self.basedir, '../rules/falco_rules.yaml'))
 
-        if not os.path.isabs(self.rules_file):
-            self.rules_file = os.path.join(self.basedir, self.rules_file)
+        if not isinstance(self.rules_file, list):
+            self.rules_file = [self.rules_file]
+
+        self.rules_args = ""
+
+        for file in self.rules_file:
+            if not os.path.isabs(file):
+                file = os.path.join(self.basedir, file)
+            self.rules_args = self.rules_args + "-r " + file + " "
+
+        self.disabled_rules = self.params.get('disabled_rules', '*', default='')
+
+        if self.disabled_rules == '':
+            self.disabled_rules = []
+
+        if not isinstance(self.disabled_rules, list):
+            self.disabled_rules = [self.disabled_rules]
+
+        self.disabled_args = ""
+
+        for rule in self.disabled_rules:
+            self.disabled_args = self.disabled_args + "-D " + rule + " "
 
         self.rules_warning = self.params.get('rules_warning', '*', default=False)
         if self.rules_warning == False:
@@ -48,6 +68,9 @@ class FalcoTest(Test):
 
         if self.should_detect:
             self.detect_level = self.params.get('detect_level', '*')
+
+            if not isinstance(self.detect_level, list):
+                self.detect_level = [self.detect_level]
 
         # Doing this in 2 steps instead of simply using
         # module_is_loaded to avoid logging lsmod output to the log.
@@ -105,16 +128,17 @@ class FalcoTest(Test):
             if events_detected == 0:
                 self.fail("Detected {} events when should have detected > 0".format(events_detected))
 
-            level_line = '(?i){}: (\d+)'.format(self.detect_level)
-            match = re.search(level_line, res.stdout)
+            for level in self.detect_level:
+                level_line = '(?i){}: (\d+)'.format(level)
+                match = re.search(level_line, res.stdout)
 
-            if match is None:
-                self.fail("Could not find a line '{}: <count>' in falco output".format(self.detect_level))
+                if match is None:
+                    self.fail("Could not find a line '{}: <count>' in falco output".format(level))
 
-            events_detected = int(match.group(1))
+                    events_detected = int(match.group(1))
 
-            if not events_detected > 0:
-                self.fail("Detected {} events at level {} when should have detected > 0".format(events_detected, self.detect_level))
+                    if not events_detected > 0:
+                        self.fail("Detected {} events at level {} when should have detected > 0".format(events_detected, level))
 
     def check_json_output(self, res):
         if self.json_output:
@@ -131,8 +155,8 @@ class FalcoTest(Test):
         self.log.info("Trace file %s", self.trace_file)
 
         # Run the provided trace file though falco
-        cmd = '{}/userspace/falco/falco -r {} -c {}/../falco.yaml -e {} -o json_output={} -v'.format(
-            self.falcodir, self.rules_file, self.falcodir, self.trace_file, self.json_output)
+        cmd = '{}/userspace/falco/falco {} {} -c {}/../falco.yaml -e {} -o json_output={} -v'.format(
+            self.falcodir, self.rules_args, self.disabled_args, self.falcodir, self.trace_file, self.json_output)
 
         self.falco_proc = process.SubProcess(cmd)
 
