@@ -41,6 +41,61 @@ function run_sysdig_on() {
     time_cmd "$cmd" "$file"
 }
 
+function write_agent_config() {
+    cat > $ROOT/userspace/dragent/dragent.yaml <<EOF
+customerid: XXX
+app_checks_enabled: false
+log:
+  file_priority: info
+  console_priority: info
+  event_priority: info
+jmx:
+  enabled: false
+statsd:
+  enabled: false
+collector: collector-staging.sysdigcloud.com
+EOF
+
+    if [ $FALCO_AGENT == 1 ]; then
+	cat >> $ROOT/userspace/dragent/dragent.yaml <<EOF
+falco_engine:
+  enabled: true
+  rules_filename: /etc/falco_rules.yaml
+  sampling_multiplier: 0
+EOF
+    else
+	cat >> $ROOT/userspace/dragent/dragent.yaml <<EOF
+falco_engine:
+  enabled: false
+EOF
+    fi
+
+    if [ $AGENT_AUTODROP == 1 ]; then
+	cat >> $ROOT/userspace/dragent/dragent.yaml <<EOF
+autodrop:
+  enabled: true
+EOF
+    else
+	cat >> $ROOT/userspace/dragent/dragent.yaml <<EOF
+autodrop:
+  enabled: false
+EOF
+    fi
+
+    cat $ROOT/userspace/dragent/dragent.yaml
+}
+
+function run_agent_on() {
+
+    file="$1"
+
+    write_agent_config
+
+    cmd="$ROOT/userspace/dragent/dragent -r $file"
+
+    time_cmd "$cmd" "$file"
+}
+
 function run_trace() {
 
     if [ ! -e $TRACEDIR ]; then
@@ -58,8 +113,10 @@ function run_trace() {
     for file in ${files[@]}; do
 	if [[ $ROOT == *"falco"* ]]; then
 	    run_falco_on "$file"
-	else
+	elif [[ $ROOT == *"sysdig"* ]]; then
 	    run_sysdig_on "$file"
+	else
+	    run_agent_on "$file"
 	fi
     done
 }
@@ -74,19 +131,31 @@ function start_monitor_cpu_usage() {
 
 function start_subject_prog() {
 
-    echo "   starting falco/sysdig program"
+    echo "   starting falco/sysdig/agent program"
     # Do a blocking sudo command now just to ensure we have a password
     sudo bash -c ""
 
     if [[ $ROOT == *"falco"* ]]; then
 	sudo $ROOT/userspace/falco/falco -c $ROOT/../falco.yaml -r $ROOT/../rules/falco_rules.yaml --option=stdout_output.enabled=false > ./prog-output.txt 2>&1 &
-    else
+    elif [[ $ROOT == *"sysdig"* ]]; then
 	sudo $ROOT/userspace/sysdig/sysdig -N -z evt.type=none &
+    else
+	write_agent_config
+	pushd $ROOT/userspace/dragent
+	sudo ./dragent > ./prog-output.txt 2>&1 &
+	popd
     fi
 
     SUDO_PID=$!
     sleep 5
-    SUBJ_PID=`ps -h -o pid --ppid $SUDO_PID`
+    if [[ $ROOT == *"agent"* ]]; then
+	# The agent spawns several processes all below a main monitor
+	# process. We want the child with the lowest pid.
+	MON_PID=`ps -h -o pid --ppid $SUDO_PID`
+	SUBJ_PID=`ps -h -o pid --ppid $MON_PID | head -1`
+    else
+	SUBJ_PID=`ps -h -o pid --ppid $SUDO_PID`
+    fi
 
     if [ -z $SUBJ_PID ]; then
 	echo "Could not find pid of subject program--did it start successfully? Not continuing."
@@ -252,9 +321,11 @@ usage() {
     echo "            if <test> is not 'all', it is passed directly to the command line of \"phoronix-test-suite run <test>\""
     echo "            if <test> is 'all', a built-in set of phoronix tests will be chosen and run"
     echo "   -T/--tracedir: Look for trace files in this directory. If doesn't exist, will download trace files from s3"
+    echo "   -A/--agent-autodrop: When running an agent, whether or not to enable autodrop"
+    echo "   -F/--falco-agent: When running an agent, whether or not to enable falco"
 }
 
-OPTS=`getopt -o hv:r:R:o:t:T: --long help,variant:,root:,results:,output:,test:,tracedir: -n $0 -- "$@"`
+OPTS=`getopt -o hv:r:R:o:t:T: --long help,variant:,root:,results:,output:,test:,tracedir:,agent-autodrop:,falco-agent: -n $0 -- "$@"`
 
 if [ $? != 0 ]; then
     echo "Exiting" >&2
@@ -271,6 +342,8 @@ OUTPUT_FILE=`dirname $0`/program-output.txt
 TEST=trace:all
 TRACEDIR=/tmp/falco-perf-traces.$USER
 CPU_INTERVAL=10
+AGENT_AUTODROP=1
+FALCO_AGENT=1
 
 while true; do
     case "$1" in
@@ -281,6 +354,8 @@ while true; do
 	-o | --output ) OUTPUT_FILE="$2"; shift 2;;
 	-t | --test ) TEST="$2"; shift 2;;
 	-T | --tracedir ) TRACEDIR="$2"; shift 2;;
+	-A | --agent-autodrop ) AGENT_AUTODROP="$2"; shift 2;;
+	-F | --falco-agent ) FALCO_AGENT="$2"; shift 2;;
 	* ) break;;
     esac
 done
