@@ -115,9 +115,12 @@ end
 -- object. The by_name index is used for things like describing rules,
 -- and the by_idx index is used to map the relational node index back
 -- to a rule.
-local state = {macros={}, filter_ast=nil, rules_by_name={}, n_rules=0, rules_by_idx={}}
+local state = {macros={}, lists={}, filter_ast=nil, rules_by_name={}, n_rules=0, rules_by_idx={}}
 
-function load_rules(filename)
+function load_rules(filename, rules_mgr, verbose, all_events)
+
+   compiler.set_verbose(verbose)
+   compiler.set_all_events(all_events)
 
    local f = assert(io.open(filename, "r"))
    local s = f:read("*all")
@@ -131,8 +134,27 @@ function load_rules(filename)
       end
 
       if (v['macro']) then
-	 local ast = compiler.compile_macro(v['condition'])
+	 local ast = compiler.compile_macro(v['condition'], state.lists)
 	 state.macros[v['macro']] = ast.filter.value
+
+      elseif (v['list']) then
+	 -- list items are represented in yaml as a native list, so no
+	 -- parsing necessary
+	 local items = {}
+
+	 -- List items may be references to other lists, so go through
+	 -- the items and expand any references to the items in the list
+	 for i, item in ipairs(v['items']) do
+	    if (state.lists[item] == nil) then
+	       items[#items+1] = item
+	    else
+	       for i, exp_item in ipairs(state.lists[item]) do
+		  items[#items+1] = exp_item
+	       end
+	    end
+	 end
+
+	 state.lists[v['list']] = items
 
       else -- rule
 
@@ -150,7 +172,8 @@ function load_rules(filename)
 	 v['level'] = priority(v['priority'])
 	 state.rules_by_name[v['rule']] = v
 
-	 local filter_ast = compiler.compile_filter(v['condition'], state.macros)
+	 local filter_ast, evttypes = compiler.compile_filter(v['rule'], v['condition'],
+							      state.macros, state.lists)
 
 	 if (filter_ast.type == "Rule") then
 	    state.n_rules = state.n_rules + 1
@@ -163,6 +186,11 @@ function load_rules(filename)
 	    -- we'll use it later to determine which output to display when we get an
 	    -- event.
 	    mark_relational_nodes(filter_ast.filter.value, state.n_rules)
+
+	    install_filter(filter_ast.filter.value)
+
+	    -- Pass the filter and event types back up
+	    falco_rules.add_filter(rules_mgr, evttypes)
 
 	    -- Rule ASTs are merged together into one big AST, with "OR" between each
 	    -- rule.
@@ -177,7 +205,6 @@ function load_rules(filename)
       end
    end
 
-   install_filter(state.filter_ast)
    io.flush()
 end
 

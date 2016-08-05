@@ -1,0 +1,186 @@
+- rule: no_warnings
+  desc: Rule with no warnings
+  condition: evt.type=execve
+  output: "None"
+  priority: WARNING
+
+- rule: no_evttype
+  desc: No evttype at all
+  condition: proc.name=foo
+  output: "None"
+  priority: WARNING
+
+- rule: evttype_not_equals
+  desc: Using != for event type
+  condition: evt.type!=execve
+  output: "None"
+  priority: WARNING
+
+- rule: leading_not
+  desc: condition starts with not
+  condition: not evt.type=execve
+  output: "None"
+  priority: WARNING
+
+- rule: not_equals_after_evttype
+  desc: != after evt.type, not affecting results
+  condition: evt.type=execve and proc.name!=foo
+  output: "None"
+  priority: WARNING
+
+- rule: not_after_evttype
+  desc: not operator after evt.type, not affecting results
+  condition: evt.type=execve and not proc.name=foo
+  output: "None"
+  priority: WARNING
+
+- rule: leading_trailing_evttypes
+  desc: evttype at beginning and end
+  condition: evt.type=execve and proc.name=foo or evt.type=open
+  output: "None"
+  priority: WARNING
+
+- rule: leading_multtrailing_evttypes
+  desc: one evttype at beginning, multiple at end
+  condition: evt.type=execve and proc.name=foo or evt.type=open or evt.type=connect
+  output: "None"
+  priority: WARNING
+
+- rule: leading_multtrailing_evttypes_using_in
+  desc: one evttype at beginning, multiple at end, using in
+  condition: evt.type=execve and proc.name=foo or evt.type in (open, connect)
+  output: "None"
+  priority: WARNING
+
+- rule: not_equals_at_end
+  desc: not_equals at final evttype
+  condition: evt.type=execve and proc.name=foo or evt.type=open or evt.type!=connect
+  output: "None"
+  priority: WARNING
+
+- rule: not_at_end
+  desc: not operator for final evttype
+  condition: evt.type=execve and proc.name=foo or evt.type=open or not evt.type=connect
+  output: "None"
+  priority: WARNING
+
+- rule: not_before_trailing_evttype
+  desc: a not before a trailing event type
+  condition: evt.type=execve and not proc.name=foo or evt.type=open
+  output: "None"
+  priority: WARNING
+
+- rule: not_equals_before_trailing_evttype
+  desc: a != before a trailing event type
+  condition: evt.type=execve and proc.name!=foo or evt.type=open
+  output: "None"
+  priority: WARNING
+
+- rule: not_equals_and_not
+  desc: both != and not before event types
+  condition: evt.type=execve and proc.name!=foo or evt.type=open or not evt.type=connect
+  output: "None"
+  priority: WARNING
+
+- rule: not_equals_before_in
+  desc: != before an in with event types
+  condition: evt.type=execve and proc.name!=foo or evt.type in (open, connect)
+  output: "None"
+  priority: WARNING
+
+- rule: not_before_in
+  desc: a not before an in with event types
+  condition: evt.type=execve and not proc.name=foo or evt.type in (open, connect)
+  output: "None"
+  priority: WARNING
+
+- rule: not_in_before_in
+  desc: a not with in before an in with event types
+  condition: evt.type=execve and not proc.name in (foo, bar) or evt.type in (open, connect)
+  output: "None"
+  priority: WARNING
+
+- rule: evttype_in
+  desc: using in for event types
+  condition: evt.type in (execve, open)
+  output: "None"
+  priority: WARNING
+
+- rule: evttype_in_plus_trailing
+  desc: using in for event types and a trailing evttype
+  condition: evt.type in (execve, open) and proc.name=foo or evt.type=connect
+  output: "None"
+  priority: WARNING
+
+- rule: leading_in_not_equals_before_evttype
+  desc: initial in() for event types, then a != before an additional event type
+  condition: evt.type in (execve, open) and proc.name!=foo or evt.type=connect
+  output: "None"
+  priority: WARNING
+
+- rule: leading_in_not_equals_at_evttype
+  desc: initial in() for event types, then a != with an additional event type
+  condition: evt.type in (execve, open) or evt.type!=connect
+  output: "None"
+  priority: WARNING
+
+- rule: not_with_evttypes
+  desc: not in for event types
+  condition: not evt.type in (execve, open)
+  output: "None"
+  priority: WARNING
+
+- rule: not_with_evttypes_addl
+  desc: not in for event types, and an additional event type
+  condition: not evt.type in (execve, open) or evt.type=connect
+  output: "None"
+  priority: WARNING
+
+- rule: not_equals_before_evttype
+  desc: != before any event type
+  condition: proc.name!=foo and evt.type=execve
+  output: "None"
+  priority: WARNING
+
+- rule: not_equals_before_in_evttype
+  desc: != before any event type using in
+  condition: proc.name!=foo and evt.type in (execve, open)
+  output: "None"
+  priority: WARNING
+
+- rule: not_before_evttype
+  desc: not operator before any event type
+  condition: not proc.name=foo and evt.type=execve
+  output: "None"
+  priority: WARNING
+
+- rule: not_before_evttype_using_in
+  desc: not operator before any event type using in
+  condition: not proc.name=foo and evt.type in (execve, open)
+  output: "None"
+  priority: WARNING
+
+- rule: repeated_evttypes
+  desc: event types appearing multiple times
+  condition: evt.type=open or evt.type=open
+  output: "None"
+  priority: WARNING
+
+- rule: repeated_evttypes_with_in
+  desc: event types appearing multiple times with in
+  condition: evt.type in (open, open)
+  output: "None"
+  priority: WARNING
+
+- rule: repeated_evttypes_with_separate_in
+  desc: event types appearing multiple times with separate ins
+  condition: evt.type in (open) or evt.type in (open, open)
+  output: "None"
+  priority: WARNING
+
+- rule: repeated_evttypes_with_mix
+  desc: event types appearing multiple times with mix of = and in
+  condition: evt.type=open or evt.type in (open, open)
+  output: "None"
+  priority: WARNING
+

@@ -11,6 +11,12 @@
 
 local parser = {}
 
+parser.verbose = false
+
+function parser.set_verbose(verbose)
+   parser.verbose = verbose
+end
+
 local lpeg = require "lpeg"
 
 lpeg.locale(lpeg)
@@ -236,7 +242,8 @@ local G = {
           symb("<") / "<" +
           symb(">") / ">" +
           symb("contains") / "contains" +
-          symb("icontains") / "icontains";
+          symb("icontains") / "icontains" +
+          symb("startswith") / "startswith";
   InOp = kw("in") / "in";
   UnaryBoolOp = kw("not") / "not";
   ExistsOp = kw("exists") / "exists";
@@ -296,33 +303,33 @@ parser.print_ast = print_ast
 -- have the signature:
 --     cb(ast_node, ctx)
 -- ctx is optional.
-function traverse_ast(ast, node_type, cb, ctx)
+function traverse_ast(ast, node_types, cb, ctx)
    local t = ast.type
 
-   if t == node_type then
+   if node_types[t] ~= nil then
       cb(ast, ctx)
    end
 
    if t == "Rule" then
-      traverse_ast(ast.filter, node_type, cb, ctx)
+      traverse_ast(ast.filter, node_types, cb, ctx)
 
    elseif t == "Filter" then
-      traverse_ast(ast.value, node_type, cb, ctx)
+      traverse_ast(ast.value, node_types, cb, ctx)
 
    elseif t == "BinaryBoolOp" or t == "BinaryRelOp" then
-      traverse_ast(ast.left, node_type, cb, ctx)
-      traverse_ast(ast.right, node_type, cb, ctx)
+      traverse_ast(ast.left, node_types, cb, ctx)
+      traverse_ast(ast.right, node_types, cb, ctx)
 
    elseif t == "UnaryRelOp" or t == "UnaryBoolOp" then
-      traverse_ast(ast.argument, node_type, cb, ctx)
+      traverse_ast(ast.argument, node_types, cb, ctx)
 
    elseif t == "List" then
       for i, v in ipairs(ast.elements) do
-         traverse_ast(v, node_type, cb, ctx)
+         traverse_ast(v, node_types, cb, ctx)
       end
 
    elseif t == "MacroDef" then
-      traverse_ast(ast.value, node_type, cb, ctx)
+      traverse_ast(ast.value, node_types, cb, ctx)
 
    elseif t == "FieldName" or t == "Number" or t == "String" or t == "BareString" or t == "Macro" then
       -- do nothing, no traversal needed

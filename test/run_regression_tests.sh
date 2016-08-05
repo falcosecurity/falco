@@ -3,11 +3,13 @@
 SCRIPT=$(readlink -f $0)
 SCRIPTDIR=$(dirname $SCRIPT)
 MULT_FILE=$SCRIPTDIR/falco_tests.yaml
+BRANCH=$1
 
 function download_trace_files() {
+    echo "branch=$BRANCH"
     for TRACE in traces-positive traces-negative traces-info ; do
 	rm -rf $SCRIPTDIR/$TRACE
-	curl -so $SCRIPTDIR/$TRACE.zip https://s3.amazonaws.com/download.draios.com/falco-tests/$TRACE.zip &&
+	curl -fso $SCRIPTDIR/$TRACE.zip https://s3.amazonaws.com/download.draios.com/falco-tests/$TRACE-$BRANCH.zip || curl -fso $SCRIPTDIR/$TRACE.zip https://s3.amazonaws.com/download.draios.com/falco-tests/$TRACE.zip &&
 	unzip -d $SCRIPTDIR $SCRIPTDIR/$TRACE.zip &&
 	rm -rf $SCRIPTDIR/$TRACE.zip
     done
@@ -34,7 +36,7 @@ EOF
 }
 
 function prepare_multiplex_file() {
-    echo "trace_files: !mux" > $MULT_FILE
+    cp $SCRIPTDIR/falco_tests.yaml.in $MULT_FILE
 
     prepare_multiplex_fileset traces-positive True Warning False
     prepare_multiplex_fileset traces-negative False Warning True

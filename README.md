@@ -2,7 +2,7 @@
 
 ####Latest release
 
-**v0.2.0**
+**v0.3.0**
 Read the [change log](https://github.com/draios/falco/blob/dev/CHANGELOG.md)
 
 Dev Branch: [![Build Status](https://travis-ci.org/draios/falco.svg?branch=dev)](https://travis-ci.org/draios/falco)<br />
@@ -20,12 +20,6 @@ Falco can detect and alert on any behavior that involves making Linux system cal
 - Unexpected read of a sensitive file (like `/etc/shadow`)
 - A non-device file is written to `/dev`
 - A standard system binary (like `ls`) makes an outbound network connection
-
-This is the initial falco release. Note that much of falco's code comes from
-[sysdig](https://github.com/draios/sysdig), so overall stability is very good
-for an early release. On the other hand performance is still a work in
-progress. On busy hosts and/or with large rule sets, you may see the current
-version of falco using high CPU. Expect big improvements in coming releases.
 
 Documentation
 ---

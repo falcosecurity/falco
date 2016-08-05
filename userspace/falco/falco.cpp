@@ -55,6 +55,8 @@ static void usage()
            " -r <rules_file>               Rules file (defaults to value set in configuration file, or /etc/falco_rules.yaml).\n"
 	   " -L                            Show the name and description of all rules and exit.\n"
 	   " -l <rule>                     Show the name and description of the rule with name <rule> and exit.\n"
+	   " -v                            Verbose output.\n"
+	   " -A                            Monitor all events, including those with EF_DROP_FALCO flag.\n"
 	   "\n"
     );
 }
@@ -253,6 +255,8 @@ int falco_init(int argc, char **argv)
 	string pidfilename = "/var/run/falco.pid";
 	bool describe_all_rules = false;
 	string describe_rule = "";
+	bool verbose = false;
+	bool all_events = false;
 
 	static struct option long_options[] =
 	{
@@ -272,7 +276,7 @@ int falco_init(int argc, char **argv)
 		// Parse the args
 		//
 		while((op = getopt_long(argc, argv,
-                                        "c:ho:e:r:dp:Ll:",
+                                        "c:ho:e:r:dp:Ll:vA",
                                         long_options, &long_index)) != -1)
 		{
 			switch(op)
@@ -300,6 +304,12 @@ int falco_init(int argc, char **argv)
 				break;
 			case 'L':
 				describe_all_rules = true;
+				break;
+			case 'v':
+				verbose = true;
+				break;
+			case 'A':
+				all_events = true;
 				break;
 			case 'l':
 				describe_rule = optarg;
@@ -394,11 +404,14 @@ int falco_init(int argc, char **argv)
 		falco_fields::init(inspector, ls);
 
 		falco_logger::init(ls);
+		falco_rules::init(ls);
 
 
-		inspector->set_drop_event_flags(EF_DROP_FALCO);
-		rules->load_rules(config.m_rules_filename);
-		inspector->set_filter(rules->get_filter());
+		if(!all_events)
+		{
+			inspector->set_drop_event_flags(EF_DROP_FALCO);
+		}
+		rules->load_rules(config.m_rules_filename, verbose, all_events);
 		falco_logger::log(LOG_INFO, "Parsed rules from file " + config.m_rules_filename + "\n");
 
 		if (describe_all_rules)

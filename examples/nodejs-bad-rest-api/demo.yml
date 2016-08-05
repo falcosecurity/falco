@@ -1,0 +1,24 @@
+# Owned by software vendor, serving install-software.sh.
+express_server:
+  container_name: express_server
+  image: node:latest
+  working_dir: /usr/src/app
+  command: bash -c "npm install && node server.js"
+  ports:
+    - "8080:8080"
+  volumes:
+        - ${PWD}:/usr/src/app
+
+falco:
+  container_name: falco
+  image: sysdig/falco:latest
+  privileged: true
+  volumes:
+    - /var/run/docker.sock:/host/var/run/docker.sock
+    - /dev:/host/dev
+    - /proc:/host/proc:ro
+    - /boot:/host/boot:ro
+    - /lib/modules:/host/lib/modules:ro
+    - /usr:/host/usr:ro
+    - ${PWD}/../../rules/falco_rules.yaml:/etc/falco_rules.yaml
+  tty: true

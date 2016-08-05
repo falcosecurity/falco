@@ -1,6 +1,18 @@
 local parser = require("parser")
 local compiler = {}
 
+compiler.verbose = false
+compiler.all_events = false
+
+function compiler.set_verbose(verbose)
+   compiler.verbose = verbose
+   parser.set_verbose(verbose)
+end
+
+function compiler.set_all_events(all_events)
+   compiler.all_events = all_events
+end
+
 function map(f, arr)
    local res = {}
    for i,v in ipairs(arr) do
@@ -153,10 +165,111 @@ function check_for_ignored_syscalls_events(ast, filter_type, source)
       end
    end
 
-   parser.traverse_ast(ast, "BinaryRelOp", cb)
+   parser.traverse_ast(ast, {BinaryRelOp=1}, cb)
 end
 
-function compiler.compile_macro(line)
+-- Examine the ast and find the event types for which the rule should
+-- run. All evt.type references are added as event types up until the
+-- first "!=" binary operator or unary not operator. If no event type
+-- checks are found afterward in the rule, the rule is considered
+-- optimized and is associated with the event type(s).
+--
+-- Otherwise, the rule is associated with a 'catchall' category and is
+-- run for all event types. (Also, a warning is printed).
+--
+
+function get_evttypes(name, ast, source)
+
+   local evttypes = {}
+   local evtnames = {}
+   local found_event = false
+   local found_not = false
+   local found_event_after_not = false
+
+   function cb(node)
+     if node.type == "UnaryBoolOp" then
+	if node.operator == "not" then
+	   found_not = true
+	end
+     else
+	 if node.operator == "!=" then
+	    found_not = true
+	 end
+	 if node.left.type == "FieldName" and node.left.value == "evt.type" then
+	    found_event = true
+	    if found_not then
+	       found_event_after_not = true
+	    end
+	    if node.operator == "in" then
+	       for i, v in ipairs(node.right.elements) do
+		  if v.type == "BareString" then
+		     evtnames[v.value] = 1
+		     for id in string.gmatch(events[v.value], "%S+") do
+			evttypes[id] = 1
+		     end
+		  end
+	       end
+	    else
+	       if node.right.type == "BareString" then
+		  evtnames[node.right.value] = 1
+		  for id in string.gmatch(events[node.right.value], "%S+") do
+		     evttypes[id] = 1
+		  end
+	       end
+	    end
+	 end
+      end
+   end
+
+   parser.traverse_ast(ast.filter.value, {BinaryRelOp=1, UnaryBoolOp=1} , cb)
+
+   if not found_event then
+      io.stderr:write("Rule "..name..": warning (no-evttype):\n")
+      io.stderr:write(source.."\n")
+      io.stderr:write("         did not contain any evt.type restriction, meaning it will run for all event types.\n")
+      io.stderr:write("         This has a significant performance penalty. Consider adding an evt.type restriction if possible.\n")
+      evttypes = {}
+      evtnames = {}
+   end
+
+   if found_event_after_not then
+      io.stderr:write("Rule "..name..": warning (trailing-evttype):\n")
+      io.stderr:write(source.."\n")
+      io.stderr:write("         does not have all evt.type restrictions at the beginning of the condition,\n")
+      io.stderr:write("         or uses a negative match (i.e. \"not\"/\"!=\") for some evt.type restriction.\n")
+      io.stderr:write("         This has a performance penalty, as the rule can not be limited to specific event types.\n")
+      io.stderr:write("         Consider moving all evt.type restrictions to the beginning of the rule and/or\n")
+      io.stderr:write("         replacing negative matches with positive matches if possible.\n")
+      evttypes = {}
+      evtnames = {}
+   end
+
+   evtnames_only = {}
+   local num_evtnames = 0
+   for name, dummy in pairs(evtnames) do
+      table.insert(evtnames_only, name)
+      num_evtnames = num_evtnames + 1
+   end
+
+   if num_evtnames == 0 then
+      table.insert(evtnames_only, "all")
+   end
+
+   table.sort(evtnames_only)
+
+   if compiler.verbose then
+      io.stderr:write("Event types for rule "..name..": "..table.concat(evtnames_only, ",").."\n")
+   end
+
+   return evttypes
+end
+
+function compiler.compile_macro(line, list_defs)
+
+   for name, items in pairs(list_defs) do
+      line = string.gsub(line, name, table.concat(items, ", "))
+   end
+
    local ast, error_msg = parser.parse_filter(line)
 
    if (error_msg) then
@@ -166,7 +279,9 @@ function compiler.compile_macro(line)
 
    -- Traverse the ast looking for events/syscalls in the ignored
    -- syscalls table. If any are found, return an error.
-   check_for_ignored_syscalls_events(ast, 'macro', line)
+   if not compiler.all_events then
+      check_for_ignored_syscalls_events(ast, 'macro', line)
+   end
 
    return ast
 end
@@ -174,7 +289,12 @@ end
 --[[
    Parses a single filter, then expands macros using passed-in table of definitions. Returns resulting AST.
 --]]
-function compiler.compile_filter(source, macro_defs)
+function compiler.compile_filter(name, source, macro_defs, list_defs)
+
+   for name, items in pairs(list_defs) do
+      source = string.gsub(source, name, table.concat(items, ", "))
+   end
+
    local ast, error_msg = parser.parse_filter(source)
 
    if (error_msg) then
@@ -184,7 +304,9 @@ function compiler.compile_filter(source, macro_defs)
 
    -- Traverse the ast looking for events/syscalls in the ignored
    -- syscalls table. If any are found, return an error.
-   check_for_ignored_syscalls_events(ast, 'rule', source)
+   if not compiler.all_events then
+      check_for_ignored_syscalls_events(ast, 'rule', source)
+   end
 
    if (ast.type == "Rule") then
       -- Line is a filter, so expand macro references
@@ -196,7 +318,9 @@ function compiler.compile_filter(source, macro_defs)
       error("Unexpected top-level AST type: "..ast.type)
    end
 
-   return ast
+   evttypes = get_evttypes(name, ast, source)
+
+   return ast, evttypes
 end
 
 

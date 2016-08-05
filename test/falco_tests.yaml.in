@@ -1,0 +1,62 @@
+trace_files: !mux
+  builtin_rules_no_warnings:
+    detect: False
+    trace_file: empty.scap
+    rules_warning: False
+
+  test_warnings:
+    detect: False
+    trace_file: empty.scap
+    rules_file: falco_rules_warnings.yaml
+    rules_warning:
+      - no_evttype
+      - evttype_not_equals
+      - leading_not
+      - not_equals_at_end
+      - not_at_end
+      - not_before_trailing_evttype
+      - not_equals_before_trailing_evttype
+      - not_equals_and_not
+      - not_equals_before_in
+      - not_before_in
+      - not_in_before_in
+      - leading_in_not_equals_before_evttype
+      - leading_in_not_equals_at_evttype
+      - not_with_evttypes
+      - not_with_evttypes_addl
+      - not_equals_before_evttype
+      - not_equals_before_in_evttype
+      - not_before_evttype
+      - not_before_evttype_using_in
+    rules_events:
+      - no_warnings: [execve]
+      - no_evttype: [all]
+      - evttype_not_equals: [all]
+      - leading_not: [all]
+      - not_equals_after_evttype: [execve]
+      - not_after_evttype: [execve]
+      - leading_trailing_evttypes: [execve,open]
+      - leading_multtrailing_evttypes: [connect,execve,open]
+      - leading_multtrailing_evttypes_using_in: [connect,execve,open]
+      - not_equals_at_end: [all]
+      - not_at_end: [all]
+      - not_before_trailing_evttype: [all]
+      - not_equals_before_trailing_evttype: [all]
+      - not_equals_and_not: [all]
+      - not_equals_before_in: [all]
+      - not_before_in: [all]
+      - not_in_before_in: [all]
+      - evttype_in: [execve,open]
+      - evttype_in_plus_trailing: [connect,execve,open]
+      - leading_in_not_equals_before_evttype: [all]
+      - leading_in_not_equals_at_evttype: [all]
+      - not_with_evttypes: [all]
+      - not_with_evttypes_addl: [all]
+      - not_equals_before_evttype: [all]
+      - not_equals_before_in_evttype: [all]
+      - not_before_evttype: [all]
+      - not_before_evttype_using_in: [all]
+      - repeated_evttypes: [open]
+      - repeated_evttypes_with_in: [open]
+      - repeated_evttypes_with_separate_in: [open]
+      - repeated_evttypes_with_mix: [open]
