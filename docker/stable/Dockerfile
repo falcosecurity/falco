@@ -19,6 +19,7 @@ RUN apt-get update \
 	bash-completion \
 	curl \
 	ca-certificates \
+	gnupg2 \
 	gcc \
 	gcc-4.9 && rm -rf /var/lib/apt/lists/*
 
