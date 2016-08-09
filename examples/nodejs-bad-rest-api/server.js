@@ -14,8 +14,8 @@ router.get('/', function(req, res) {
 });
 
 router.get('/exec/:cmd', function(req, res) {
-    var output = child_process.execSync(req.params.cmd);
-    res.send(output);
+    var ret = child_process.spawnSync(req.params.cmd);
+    res.send(ret.stdout);
 });
 
 app.use('/api', router);
