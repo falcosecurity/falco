@@ -93,7 +93,7 @@
   items: [setup-backend, dragent]
 
 - list: docker_binaries
-  items: [docker, exe]
+  items: [docker, dockerd, exe]
 
 - list: http_server_binaries
   items: [nginx, httpd, httpd-foregroun, lighttpd]
@@ -186,7 +186,7 @@
 - macro: write_etc_common
   condition: >
     etc_dir and evt.dir = < and open_write
-    and not proc.name in (shadowutils_binaries, sysdigcloud_binaries, package_mgmt_binaries, ssl_mgmt_binaries, dhcp_binaries, ldconfig.real)
+    and not proc.name in (shadowutils_binaries, sysdigcloud_binaries, package_mgmt_binaries, ssl_mgmt_binaries, dhcp_binaries, ldconfig.real, ldconfig)
     and not proc.pname in (sysdigcloud_binaries)
     and not fd.directory in (/etc/cassandra, /etc/ssl/certs/java)
 
@@ -258,13 +258,13 @@
 
 - rule: change_thread_namespace
   desc: an attempt to change a program/thread\'s namespace (commonly done as a part of creating a container) by calling setns.
-  condition: evt.type = setns and not proc.name in (docker, sysdig, dragent, nsenter, exe)
+  condition: evt.type = setns and not proc.name in (docker_binaries, sysdig, dragent, nsenter)
   output: "Namespace change (setns) by unexpected program (user=%user.name command=%proc.cmdline container=%container.id)"
   priority: WARNING
 
 - rule: run_shell_untrusted
   desc: an attempt to spawn a shell by a non-shell program. Exceptions are made for trusted binaries.
-  condition: spawned_process and not container and proc.name = bash and proc.pname exists and not proc.pname in (cron_binaries, bash, sshd, sudo, docker, su, tmux, screen, emacs, systemd, login, flock, fbash, nginx, monit, supervisord, dragent)
+  condition: spawned_process and not container and proc.name = bash and proc.pname exists and not proc.pname in (cron_binaries, bash, sshd, sudo, docker_binaries, su, tmux, screen, emacs, systemd, login, flock, fbash, nginx, monit, supervisord, dragent)
   output: "Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline)"
   priority: WARNING
 
@@ -281,7 +281,7 @@
 
 - rule: run_shell_in_container
   desc: a shell was spawned by a non-shell program in a container. Container entrypoints are excluded.
-  condition: spawned_process and container and proc.name = bash and proc.pname exists and not proc.pname in (sh, bash, docker)
+  condition: spawned_process and container and proc.name = bash and proc.pname exists and not proc.pname in (sh, bash, docker_binaries)
   output: "Shell spawned in a container other than entrypoint (user=%user.name container_id=%container.id container_name=%container.name shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline)"
   priority: WARNING
 
