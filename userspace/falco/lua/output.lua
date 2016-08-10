@@ -6,10 +6,7 @@ mod.levels = levels
 
 local outputs = {}
 
-function mod.stdout(evt, rule, level, format)
-   format = "*%evt.time: "..levels[level+1].." "..format
-   formatter = falco.formatter(format)
-   msg = falco.format_event(evt, rule, levels[level+1], formatter)
+function mod.stdout(level, msg)
    print (msg)
 end
 
@@ -26,29 +23,17 @@ function mod.file_validate(options)
 
 end
 
-function mod.file(evt, rule, level, format, options)
-   format = "*%evt.time: "..levels[level+1].." "..format
-   formatter = falco.formatter(format)
-   msg = falco.format_event(evt, rule, levels[level+1], formatter)
-
+function mod.file(level, msg)
    file = io.open(options.filename, "a+")
    file:write(msg, "\n")
    file:close()
 end
 
-function mod.syslog(evt, rule, level, format)
-
-   formatter = falco.formatter(format)
-   msg = falco.format_event(evt, rule, levels[level+1], formatter)
+function mod.syslog(level, msg)
    falco.syslog(level, msg)
 end
 
-function mod.program(evt, rule, level, format, options)
-
-   format = "*%evt.time: "..levels[level+1].." "..format
-   formatter = falco.formatter(format)
-   msg = falco.format_event(evt, rule, levels[level+1], formatter)
-
+function mod.program(level, msg)
    -- XXX Ideally we'd check that the program ran
    -- successfully. However, the luajit we're using returns true even
    -- when the shell can't run the program.
@@ -59,10 +44,27 @@ function mod.program(evt, rule, level, format, options)
    file:close()
 end
 
-function mod.event(event, rule, level, format)
-   for index,o in ipairs(outputs) do
-      o.output(event, rule, level, format, o.config)
+local function level_of(s)
+   s = string.lower(s)
+   for i,v in ipairs(levels) do
+      if (string.find(string.lower(v), "^"..s)) then
+	 return i - 1 -- (syslog levels start at 0, lua indices start at 1)
+      end
    end
+   error("Invalid severity level: "..s)
+end
+
+function output_event(event, rule, priority, format)
+   local level = level_of(priority)
+   format = "*%evt.time: "..levels[level+1].." "..format
+   formatter = falco.formatter(format)
+   msg = falco.format_event(event, rule, levels[level+1], formatter)
+
+   for index,o in ipairs(outputs) do
+      o.output(level, msg)
+   end
+
+   falco.free_formatter(formatter)
 end
 
 function add_output(output_name, config)

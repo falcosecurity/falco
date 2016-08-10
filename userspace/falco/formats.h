@@ -18,6 +18,9 @@ class falco_formats
 	// formatter = falco.formatter(format_string)
 	static int formatter(lua_State *ls);
 
+	// falco.free_formatter(formatter)
+	static int free_formatter(lua_State *ls);
+
 	// formatted_string = falco.format_event(evt, formatter)
 	static int format_event(lua_State *ls);
 

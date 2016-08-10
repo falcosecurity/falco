@@ -1,32 +1,23 @@
 #define __STDC_FORMAT_MACROS
 
 #include <stdio.h>
-#include <iostream>
+#include <fstream>
+#include <set>
+#include <list>
+#include <string>
 #include <signal.h>
-#include <time.h>
 #include <fcntl.h>
 #include <sys/stat.h>
-#include <algorithm>
 #include <unistd.h>
 #include <getopt.h>
 
-extern "C" {
-#include "lua.h"
-#include "lualib.h"
-#include "lauxlib.h"
-#include "lpeg.h"
-#include "lyaml.h"
-}
-
 #include <sinsp.h>
-#include "config_falco.h"
-#include "configuration.h"
-#include "rules.h"
-#include "formats.h"
-#include "fields.h"
+
 #include "logger.h"
-#include "utils.h"
-#include <yaml-cpp/yaml.h>
+
+#include "configuration.h"
+#include "falco_engine.h"
+#include "config_falco.h"
 
 bool g_terminate = false;
 //
@@ -53,6 +44,8 @@ static void usage()
 	   " -p, --pidfile <pid_file>      When run as a daemon, write pid to specified file\n"
            " -e <events_file>              Read the events from <events_file> (in .scap format) instead of tapping into live.\n"
            " -r <rules_file>               Rules file (defaults to value set in configuration file, or /etc/falco_rules.yaml).\n"
+	   "                               Can be specified multiple times to read from multiple files.\n"
+	   " -D <pattern>                  Disable any rules matching the regex <pattern>. Can be specified multiple times.\n"
 	   " -L                            Show the name and description of all rules and exit.\n"
 	   " -l <rule>                     Show the name and description of the rule with name <rule> and exit.\n"
 	   " -v                            Verbose output.\n"
@@ -61,7 +54,7 @@ static void usage()
     );
 }
 
-static void display_fatal_err(const string &msg, bool daemon)
+static void display_fatal_err(const string &msg)
 {
 	falco_logger::log(LOG_ERR, msg);
 
@@ -75,23 +68,18 @@ static void display_fatal_err(const string &msg, bool daemon)
 	}
 }
 
-string lua_on_event = "on_event";
-string lua_add_output = "add_output";
-string lua_print_stats = "print_stats";
-
 // Splitting into key=value or key.subkey=value will be handled by configuration class.
 std::list<string> cmdline_options;
 
 //
 // Event processing loop
 //
-void do_inspect(sinsp* inspector,
-		falco_rules* rules,
-		lua_State* ls)
+void do_inspect(falco_engine *engine,
+		falco_outputs *outputs,
+		sinsp* inspector)
 {
 	int32_t res;
 	sinsp_evt* ev;
-	string line;
 
 	//
 	// Loop through the events
@@ -129,110 +117,18 @@ void do_inspect(sinsp* inspector,
 			continue;
 		}
 
-		lua_getglobal(ls, lua_on_event.c_str());
-
-		if(lua_isfunction(ls, -1))
+		// As the inspector has no filter at its level, all
+		// events are returned here. Pass them to the falco
+		// engine, which will match the event against the set
+		// of rules. If a match is found, pass the event to
+		// the outputs.
+		falco_engine::rule_result *res = engine->process_event(ev);
+		if(res)
 		{
-			lua_pushlightuserdata(ls, ev);
-			lua_pushnumber(ls, ev->get_check_id());
-
-			if(lua_pcall(ls, 2, 0, 0) != 0)
-			{
-				const char* lerr = lua_tostring(ls, -1);
-				string err = "Error invoking function output: " + string(lerr);
-				throw sinsp_exception(err);
-			}
-		}
-		else
-		{
-			throw sinsp_exception("No function " + lua_on_event + " found in lua compiler module");
+			outputs->handle_event(res->evt, res->rule, res->priority, res->format);
+			delete(res);
 		}
 	}
-}
-
-void add_lua_path(lua_State *ls, string path)
-{
-	string cpath = string(path);
-	path += "?.lua";
-	cpath += "?.so";
-
-	lua_getglobal(ls, "package");
-
-	lua_getfield(ls, -1, "path");
-	string cur_path = lua_tostring(ls, -1 );
-	cur_path += ';';
-	lua_pop(ls, 1);
-
-	cur_path.append(path.c_str());
-
-	lua_pushstring(ls, cur_path.c_str());
-	lua_setfield(ls, -2, "path");
-
-	lua_getfield(ls, -1, "cpath");
-	string cur_cpath = lua_tostring(ls, -1 );
-	cur_cpath += ';';
-	lua_pop(ls, 1);
-
-	cur_cpath.append(cpath.c_str());
-
-	lua_pushstring(ls, cur_cpath.c_str());
-	lua_setfield(ls, -2, "cpath");
-
-	lua_pop(ls, 1);
-}
-
-void add_output(lua_State *ls, output_config oc)
-{
-
-	uint8_t nargs = 1;
-	lua_getglobal(ls, lua_add_output.c_str());
-
-	if(!lua_isfunction(ls, -1))
-	{
-		throw sinsp_exception("No function " + lua_add_output + " found. ");
-	}
-	lua_pushstring(ls, oc.name.c_str());
-
-	// If we have options, build up a lua table containing them
-	if (oc.options.size())
-	{
-		nargs = 2;
-		lua_createtable(ls, 0, oc.options.size());
-
-		for (auto it = oc.options.cbegin(); it != oc.options.cend(); ++it)
-		{
-			lua_pushstring(ls, (*it).second.c_str());
-			lua_setfield(ls, -2, (*it).first.c_str());
-		}
-	}
-
-	if(lua_pcall(ls, nargs, 0, 0) != 0)
-	{
-		const char* lerr = lua_tostring(ls, -1);
-		throw sinsp_exception(string(lerr));
-	}
-
-}
-
-// Print statistics on the the rules that triggered
-void print_stats(lua_State *ls)
-{
-	lua_getglobal(ls, lua_print_stats.c_str());
-
-	if(lua_isfunction(ls, -1))
-	{
-		if(lua_pcall(ls, 0, 0, 0) != 0)
-		{
-			const char* lerr = lua_tostring(ls, -1);
-			string err = "Error invoking function print_stats: " + string(lerr);
-			throw sinsp_exception(err);
-		}
-	}
-	else
-	{
-		throw sinsp_exception("No function " + lua_print_stats + " found in lua rule loader module");
-	}
-
 }
 
 //
@@ -242,15 +138,13 @@ int falco_init(int argc, char **argv)
 {
 	int result = EXIT_SUCCESS;
 	sinsp* inspector = NULL;
-	falco_rules* rules = NULL;
+	falco_engine *engine = NULL;
+	falco_outputs *outputs = NULL;
 	int op;
 	int long_index = 0;
-	string lua_main_filename;
 	string scap_filename;
 	string conf_filename;
-	string rules_filename;
-	string lua_dir = FALCO_LUA_DIR;
-	lua_State* ls = NULL;
+	list<string> rules_filenames;
 	bool daemon = false;
 	string pidfilename = "/var/run/falco.pid";
 	bool describe_all_rules = false;
@@ -271,12 +165,20 @@ int falco_init(int argc, char **argv)
 	try
 	{
 		inspector = new sinsp();
+		engine = new falco_engine();
+		engine->set_inspector(inspector);
+
+		outputs = new falco_outputs();
+		outputs->set_inspector(inspector);
+
+		set<string> disabled_rule_patterns;
+		string pattern;
 
 		//
 		// Parse the args
 		//
 		while((op = getopt_long(argc, argv,
-                                        "c:ho:e:r:dp:Ll:vA",
+                                        "c:ho:e:r:D:dp:Ll:vA",
                                         long_options, &long_index)) != -1)
 		{
 			switch(op)
@@ -294,7 +196,11 @@ int falco_init(int argc, char **argv)
 				scap_filename = optarg;
 				break;
 			case 'r':
-				rules_filename = optarg;
+				rules_filenames.push_back(optarg);
+				break;
+			case 'D':
+				pattern = optarg;
+				disabled_rule_patterns.insert(pattern);
 				break;
 			case 'd':
 				daemon = true;
@@ -325,29 +231,29 @@ int falco_init(int argc, char **argv)
 
 		// Some combinations of arguments are not allowed.
 		if (daemon && pidfilename == "") {
-			throw sinsp_exception("If -d is provided, a pid file must also be provided");
+			throw std::invalid_argument("If -d is provided, a pid file must also be provided");
 		}
 
-		ifstream* conf_stream;
+		ifstream conf_stream;
 		if (conf_filename.size())
 		{
-			conf_stream = new ifstream(conf_filename);
-			if (!conf_stream->good())
+			conf_stream.open(conf_filename);
+			if (!conf_stream.is_open())
 			{
-				throw sinsp_exception("Could not find configuration file at " + conf_filename);
+				throw std::runtime_error("Could not find configuration file at " + conf_filename);
 			}
 		}
 		else
 		{
-			conf_stream = new ifstream(FALCO_SOURCE_CONF_FILE);
-			if (conf_stream->good())
+			conf_stream.open(FALCO_SOURCE_CONF_FILE);
+			if (!conf_stream.is_open())
 			{
 				conf_filename = FALCO_SOURCE_CONF_FILE;
 			}
 			else
 			{
-				conf_stream = new ifstream(FALCO_INSTALL_CONF_FILE);
-				if (conf_stream->good())
+				conf_stream.open(FALCO_INSTALL_CONF_FILE);
+				if (!conf_stream.is_open())
 				{
 					conf_filename = FALCO_INSTALL_CONF_FILE;
 				}
@@ -371,66 +277,47 @@ int falco_init(int argc, char **argv)
 			falco_logger::log(LOG_INFO, "Falco initialized. No configuration file found, proceeding with defaults\n");
 		}
 
-		if (rules_filename.size())
+		if (rules_filenames.size())
 		{
-			config.m_rules_filename = rules_filename;
+			config.m_rules_filenames = rules_filenames;
 		}
 
-		lua_main_filename = lua_dir + FALCO_LUA_MAIN;
-		if (!std::ifstream(lua_main_filename))
+		for (auto filename : config.m_rules_filenames)
 		{
-			lua_dir = FALCO_SOURCE_LUA_DIR;
-			lua_main_filename = lua_dir + FALCO_LUA_MAIN;
-			if (!std::ifstream(lua_main_filename))
-			{
-				falco_logger::log(LOG_ERR, "Could not find Falco Lua libraries (tried " +
-						     string(FALCO_LUA_DIR FALCO_LUA_MAIN) + ", " +
-						     lua_main_filename + "). Exiting.\n");
-				result = EXIT_FAILURE;
-				goto exit;
-			}
+			engine->load_rules_file(filename, verbose, all_events);
+			falco_logger::log(LOG_INFO, "Parsed rules from file " + filename + "\n");
 		}
 
-		// Initialize Lua interpreter
-		ls = lua_open();
-		luaL_openlibs(ls);
-		luaopen_lpeg(ls);
-		luaopen_yaml(ls);
-		add_lua_path(ls, lua_dir);
+		for (auto pattern : disabled_rule_patterns)
+		{
+			falco_logger::log(LOG_INFO, "Disabling rules matching pattern: " + pattern + "\n");
+			engine->enable_rule(pattern, false);
+		}
 
-		rules = new falco_rules(inspector, ls, lua_main_filename);
-
-		falco_formats::init(inspector, ls, config.m_json_output);
-		falco_fields::init(inspector, ls);
-
-		falco_logger::init(ls);
-		falco_rules::init(ls);
-
+		outputs->init(config.m_json_output);
 
 		if(!all_events)
 		{
 			inspector->set_drop_event_flags(EF_DROP_FALCO);
 		}
-		rules->load_rules(config.m_rules_filename, verbose, all_events);
-		falco_logger::log(LOG_INFO, "Parsed rules from file " + config.m_rules_filename + "\n");
 
 		if (describe_all_rules)
 		{
-			rules->describe_rule(NULL);
+			engine->describe_rule(NULL);
 			goto exit;
 		}
 
 		if (describe_rule != "")
 		{
-			rules->describe_rule(&describe_rule);
+			engine->describe_rule(&describe_rule);
 			goto exit;
 		}
 
 		inspector->set_hostname_and_port_resolution_mode(false);
 
-		for(std::vector<output_config>::iterator it = config.m_outputs.begin(); it != config.m_outputs.end(); ++it)
+		for(auto output : config.m_outputs)
 		{
-			add_output(ls, *it);
+			outputs->add_output(output);
 		}
 
 		if(signal(SIGINT, signal_callback) == SIG_ERR)
@@ -522,23 +409,17 @@ int falco_init(int argc, char **argv)
 			open("/dev/null", O_RDWR);
 		}
 
-		do_inspect(inspector,
-			   rules,
-			   ls);
+		do_inspect(engine,
+			   outputs,
+			   inspector);
 
 		inspector->close();
 
-		print_stats(ls);
+		engine->print_stats();
 	}
-	catch(sinsp_exception& e)
+	catch(exception &e)
 	{
-		display_fatal_err("Runtime error: " + string(e.what()) + ". Exiting.\n", daemon);
-
-		result = EXIT_FAILURE;
-	}
-	catch(...)
-	{
-		display_fatal_err("Unexpected error, Exiting\n", daemon);
+		display_fatal_err("Runtime error: " + string(e.what()) + ". Exiting.\n");
 
 		result = EXIT_FAILURE;
 	}
@@ -546,11 +427,9 @@ int falco_init(int argc, char **argv)
 exit:
 
 	delete inspector;
+	delete engine;
+	delete outputs;
 
-	if(ls)
-	{
-		lua_close(ls);
-	}
 	return result;
 }
 

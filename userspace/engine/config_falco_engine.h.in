@@ -1,0 +1,4 @@
+#pragma once
+
+#define FALCO_ENGINE_LUA_DIR "${CMAKE_INSTALL_PREFIX}/${FALCO_SHARE_DIR}/lua/"
+#define FALCO_ENGINE_SOURCE_LUA_DIR "${PROJECT_SOURCE_DIR}/../falco/userspace/engine/lua/"
