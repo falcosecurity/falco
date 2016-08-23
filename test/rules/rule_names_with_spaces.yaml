@@ -1,0 +1,8 @@
+- macro: is_cat
+  condition: proc.name=cat
+
+- rule: Open From Cat
+  desc: A process named cat does an open
+  condition: evt.type=open and is_cat
+  output: "An open was seen (command=%proc.cmdline)"
+  priority: WARNING
