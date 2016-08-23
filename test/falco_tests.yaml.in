@@ -105,3 +105,23 @@ trace_files: !mux
     disabled_rules:
       - "open.*"
     trace_file: trace_files/cat_write.scap
+
+  file_output:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/single_rule.yaml
+    conf_file: confs/file_output.yaml
+    trace_file: trace_files/cat_write.scap
+    outputs:
+      - /tmp/falco_outputs/file_output.txt: Warning An open was seen
+
+  program_output:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/single_rule.yaml
+    conf_file: confs/program_output.yaml
+    trace_file: trace_files/cat_write.scap
+    outputs:
+      - /tmp/falco_outputs/program_output.txt: Warning An open was seen
