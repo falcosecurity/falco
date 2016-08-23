@@ -61,6 +61,13 @@ trace_files: !mux
       - repeated_evttypes_with_separate_in: [open]
       - repeated_evttypes_with_mix: [open]
 
+  rule_names_with_spaces:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/rule_names_with_spaces.yaml
+    trace_file: trace_files/cat_write.scap
+
   multiple_rules_first_empty:
     detect: True
     detect_level: WARNING
