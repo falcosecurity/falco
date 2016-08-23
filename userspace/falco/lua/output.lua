@@ -23,17 +23,17 @@ function mod.file_validate(options)
 
 end
 
-function mod.file(level, msg)
+function mod.file(level, msg, options)
    file = io.open(options.filename, "a+")
    file:write(msg, "\n")
    file:close()
 end
 
-function mod.syslog(level, msg)
+function mod.syslog(level, msg, options)
    falco.syslog(level, msg)
 end
 
-function mod.program(level, msg)
+function mod.program(level, msg, options)
    -- XXX Ideally we'd check that the program ran
    -- successfully. However, the luajit we're using returns true even
    -- when the shell can't run the program.
@@ -61,7 +61,7 @@ function output_event(event, rule, priority, format)
    msg = falco.format_event(event, rule, levels[level+1], formatter)
 
    for index,o in ipairs(outputs) do
-      o.output(level, msg)
+      o.output(level, msg, o.config)
    end
 
    falco.free_formatter(formatter)
