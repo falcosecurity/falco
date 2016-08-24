@@ -50,6 +50,8 @@ function prepare_multiplex_file() {
 }
 
 function run_tests() {
+    rm -rf /tmp/falco_outputs
+    mkdir /tmp/falco_outputs
     CMD="avocado run --multiplex $MULT_FILE --job-results-dir $SCRIPTDIR/job-results -- $SCRIPTDIR/falco_test.py"
     echo "Running: $CMD"
     $CMD

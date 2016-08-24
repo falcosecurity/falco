@@ -36,6 +36,10 @@ class FalcoTest(Test):
                 file = os.path.join(self.basedir, file)
             self.rules_args = self.rules_args + "-r " + file + " "
 
+        self.conf_file = self.params.get('conf_file', '*', default=os.path.join(self.basedir, '../falco.yaml'))
+        if not os.path.isabs(self.conf_file):
+            self.conf_file = os.path.join(self.basedir, self.conf_file)
+
         self.disabled_rules = self.params.get('disabled_rules', '*', default='')
 
         if self.disabled_rules == '':
@@ -81,6 +85,20 @@ class FalcoTest(Test):
             process.run('sudo insmod {}/driver/sysdig-probe.ko'.format(self.falcodir))
 
         self.str_variant = self.trace_file
+
+        self.outputs = self.params.get('outputs', '*', default='')
+
+        if self.outputs == '':
+            self.outputs = {}
+        else:
+            outputs = []
+            for item in self.outputs:
+                for item2 in item:
+                    output = {}
+                    output['file'] = item2[0]
+                    output['line'] = item2[1]
+                    outputs.append(output)
+            self.outputs = outputs
 
     def check_rules_warnings(self, res):
 
@@ -140,6 +158,23 @@ class FalcoTest(Test):
                     if not events_detected > 0:
                         self.fail("Detected {} events at level {} when should have detected > 0".format(events_detected, level))
 
+    def check_outputs(self):
+        for output in self.outputs:
+            # Open the provided file and match each line against the
+            # regex in line.
+            file = open(output['file'], 'r')
+            found = False
+            for line in file:
+                match = re.search(output['line'], line)
+
+                if match is not None:
+                    found = True
+
+            if found == False:
+                self.fail("Could not find a line '{}' in file '{}'".format(output['line'], output['file']))
+
+        return True
+
     def check_json_output(self, res):
         if self.json_output:
             # Just verify that any lines starting with '{' are valid json objects.
@@ -155,8 +190,8 @@ class FalcoTest(Test):
         self.log.info("Trace file %s", self.trace_file)
 
         # Run the provided trace file though falco
-        cmd = '{}/userspace/falco/falco {} {} -c {}/../falco.yaml -e {} -o json_output={} -v'.format(
-            self.falcodir, self.rules_args, self.disabled_args, self.falcodir, self.trace_file, self.json_output)
+        cmd = '{}/userspace/falco/falco {} {} -c {} -e {} -o json_output={} -v'.format(
+            self.falcodir, self.rules_args, self.disabled_args, self.conf_file, self.trace_file, self.json_output)
 
         self.falco_proc = process.SubProcess(cmd)
 
@@ -171,6 +206,7 @@ class FalcoTest(Test):
             self.check_rules_events(res)
         self.check_detections(res)
         self.check_json_output(res)
+        self.check_outputs()
         pass
 
 
