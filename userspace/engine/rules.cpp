@@ -11,6 +11,7 @@ extern "C" {
 const static struct luaL_reg ll_falco_rules [] =
 {
 	{"add_filter", &falco_rules::add_filter},
+	{"enable_rule", &falco_rules::enable_rule},
 	{NULL,NULL}
 };
 
@@ -63,6 +64,30 @@ void falco_rules::add_filter(string &rule, list<uint32_t> &evttypes)
 	sinsp_filter *filter = m_lua_parser->get_filter(true);
 
 	m_engine->add_evttype_filter(rule, evttypes, filter);
+}
+
+int falco_rules::enable_rule(lua_State *ls)
+{
+	if (! lua_islightuserdata(ls, -3) ||
+	    ! lua_isstring(ls, -2) ||
+	    ! lua_isnumber(ls, -1))
+	{
+		throw falco_exception("Invalid arguments passed to enable_rule()\n");
+	}
+
+	falco_rules *rules = (falco_rules *) lua_topointer(ls, -3);
+	const char *rulec = lua_tostring(ls, -2);
+	std::string rule = rulec;
+	bool enabled = (lua_tonumber(ls, -1) ? true : false);
+
+	rules->enable_rule(rule, enabled);
+
+	return 0;
+}
+
+void falco_rules::enable_rule(string &rule, bool enabled)
+{
+	m_engine->enable_rule(rule, enabled);
 }
 
 void falco_rules::load_rules(const string &rules_content, bool verbose, bool all_events)
