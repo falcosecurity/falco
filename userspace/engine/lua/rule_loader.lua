@@ -188,6 +188,15 @@ function load_rules(rules_content, rules_mgr, verbose, all_events)
 	    else
 	       state.filter_ast = { type = "BinaryBoolOp", operator = "or", left = state.filter_ast, right = filter_ast.filter.value }
 	    end
+
+	    -- Enable/disable the rule
+	    if (v['enabled'] == nil) then
+	       v['enabled'] = true
+	    end
+
+	    if (v['enabled'] == false) then
+	       falco_rules.enable_rule(rules_mgr, v['rule'], 0)
+	    end
 	 else
 	    error ("Unexpected type in load_rule: "..filter_ast.type)
 	 end
