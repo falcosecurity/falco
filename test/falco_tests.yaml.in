@@ -113,6 +113,12 @@ trace_files: !mux
       - "open.*"
     trace_file: trace_files/cat_write.scap
 
+  disabled_rules_using_enabled_flag:
+    detect: False
+    rules_file:
+      - rules/single_rule_enabled_flag.yaml
+    trace_file: trace_files/cat_write.scap
+
   file_output:
     detect: True
     detect_level: WARNING
