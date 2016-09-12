@@ -218,14 +218,16 @@ local G = {
   idRest = alnum + P("_");
   Identifier = V"idStart" * V"idRest"^0;
   Macro = V"idStart" * V"idRest"^0 * -P".";
-  FieldName = V"Identifier" * (P"." + V"Identifier")^1 * (P"[" * V"Int" * P"]")^-1;
+  Int = digit^1;
+  PathString = (alnum + S'-_/*?')^1;
+  Index = V"Int" + V"PathString";
+  FieldName = V"Identifier" * (P"." + V"Identifier")^1 * (P"[" * V"Index" * P"]")^-1;
   Name = C(V"Identifier") * -V"idRest";
   Hex = (P("0x") + P("0X")) * xdigit^1;
   Expo = S("eE") * S("+-")^-1 * digit^1;
   Float = (((digit^1 * P(".") * digit^0) +
           (P(".") * digit^1)) * V"Expo"^-1) +
           (digit^1 * V"Expo");
-  Int = digit^1;
   Number = C(V"Hex" + V"Float" + V"Int") /
            function (n) return tonumber(n) end;
   String = (P'"' * C(((P'\\' * P(1)) + (P(1) - P'"'))^0) * P'"' +  P"'" * C(((P"\\" * P(1)) + (P(1) - P"'"))^0) * P"'")  / function (s) return fix_str(s) end;
@@ -243,6 +245,7 @@ local G = {
           symb(">") / ">" +
           symb("contains") / "contains" +
           symb("icontains") / "icontains" +
+          symb("glob") / "glob" +
           symb("startswith") / "startswith";
   InOp = kw("in") / "in";
   UnaryBoolOp = kw("not") / "not";
