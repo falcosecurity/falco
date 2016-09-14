@@ -275,7 +275,7 @@
   priority: WARNING
 
 - macro: trusted_containers
-  condition: (container.image startswith sysdig/agent or container.image startswith sysdig/falco or container.image startswith sysdig/sysdig)
+  condition: (container.image startswith sysdig/agent or container.image startswith sysdig/falco or container.image startswith sysdig/sysdig or container.image startswith gcr.io/google_containers/hyperkube)
 
 - rule: File Open by Privileged Container
   desc: Any open by a privileged container. Exceptions are made for known trusted images.
@@ -305,7 +305,7 @@
 
 - rule: Run shell in container
   desc: a shell was spawned by a non-shell program in a container. Container entrypoints are excluded.
-  condition: spawned_process and container and shell_procs and proc.pname exists and not proc.pname in (shell_binaries, docker_binaries, initdb, pg_ctl)
+  condition: spawned_process and container and shell_procs and proc.pname exists and not proc.pname in (shell_binaries, docker_binaries, initdb, pg_ctl, awk, apache2)
   output: "Shell spawned in a container other than entrypoint (user=%user.name container_id=%container.id container_name=%container.name shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline)"
   priority: WARNING
 
