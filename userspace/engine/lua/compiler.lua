@@ -143,7 +143,7 @@ function check_for_ignored_syscalls_events(ast, filter_type, source)
 	 (node.left.value == "evt.type" or
 	  node.left.value == "syscall.type") then
 
-	    if node.operator == "in" then
+	    if node.operator == "in" or node.operator == "pmatch" then
 	       for i, v in ipairs(node.right.elements) do
 		  if v.type == "BareString" then
 		     if node.left.value == "evt.type" then
@@ -200,7 +200,7 @@ function get_evttypes(name, ast, source)
 	    if found_not then
 	       found_event_after_not = true
 	    end
-	    if node.operator == "in" then
+	    if node.operator == "in" or node.operator == "pmatch" then
 	       for i, v in ipairs(node.right.elements) do
 		  if v.type == "BareString" then
 		     evtnames[v.value] = 1
