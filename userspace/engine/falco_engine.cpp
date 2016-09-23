@@ -113,6 +113,7 @@ falco_engine::rule_result *falco_engine::process_event(sinsp_evt *ev)
 		res->rule = p;
 		res->priority = lua_tostring(m_ls, -2);
 		res->format = lua_tostring(m_ls, -1);
+		lua_pop(m_ls, 3);
 	}
 	else
 	{
