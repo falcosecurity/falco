@@ -72,7 +72,7 @@ local function install_filter(node, parent_bool_op)
       filter.unnest() -- io.write(")")
 
    elseif t == "BinaryRelOp" then
-      if (node.operator == "in") then
+      if (node.operator == "in" or node.operator == "pmatch") then
 	 elements = map(function (el) return el.value end, node.right.elements)
 	 filter.rel_expr(node.left.value, node.operator, elements, node.index)
       else
