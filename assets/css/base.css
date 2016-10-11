@@ -482,7 +482,7 @@ blockquote. pre, code {
 }
 
 .header .header-logo, .header .header-logo img {
-    height: 4em;
+    max-height: 4em;
     display:block;
     float:left
 }
@@ -656,6 +656,7 @@ blockquote. pre, code {
 
 .header .navbar-toggle {
     margin-top: 1em;
+    margin-bottom: 0 !important;
     font-size: 0.7em;
     padding: 0.4em 0.8em;
 }
