@@ -1941,7 +1941,7 @@ html[xmlns] .slides {
     }
 
     #header,
-    #header .header-fixed, {
+    #header .header-fixed {
         height: 3em;
     }
 
