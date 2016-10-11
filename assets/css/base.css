@@ -94,7 +94,7 @@ blockquote. pre, code {
 #page {
     min-height:200px;
     overflow:hidden;
-    margin-top:70px;
+    /*margin-top:70px;*/
 }
 
 .btn {
@@ -384,7 +384,7 @@ blockquote. pre, code {
 .show-banner #meetup-banner {
     display: table;
 }
-.show-banner #page {
+/*.show-banner #page {
     padding-top: 3em;
 }
 .show-banner #header {
@@ -418,7 +418,7 @@ blockquote. pre, code {
     -ms-transition:background 0.2s linear;
     -o-transition:background 0.2s linear;
     transition:background 0.2s linear
-}
+}*/
 
 #meetup-banner a:hover {
     background:#4a4a4a;
@@ -435,20 +435,32 @@ blockquote. pre, code {
  *
  */
 
-#header {
-    position:fixed;
-    top: 0;
-    left:0;
-    right:0;
-    height:4em;
-    background:#fff;
-    -webkit-box-shadow:0 0 4px rgba(0,0,0,0.2);
-    -moz-box-shadow:0 0 4px rgba(0,0,0,0.2);
-    -ms-box-shadow:0 0 4px rgba(0,0,0,0.2);
-    -o-box-shadow:0 0 4px rgba(0,0,0,0.2);
-    box-shadow:0 0 4px rgba(0,0,0,0.2);
-    z-index:999
-}
+ #header {
+     height:4em;
+ }
+
+ #header .header-fixed {
+     position:fixed;
+     top: 0;
+     left:0;
+     right:0;
+     height:4em;
+     background:#fff;
+     -webkit-box-shadow:0 0 4px rgba(0,0,0,0.2);
+     -moz-box-shadow:0 0 4px rgba(0,0,0,0.2);
+     -ms-box-shadow:0 0 4px rgba(0,0,0,0.2);
+     -o-box-shadow:0 0 4px rgba(0,0,0,0.2);
+     box-shadow:0 0 4px rgba(0,0,0,0.2);
+     z-index:999
+ }
+
+ body.has-header-before #header .header-fixed {
+     position: relative;
+ }
+
+ body.has-header-before #header.scrolled .header-fixed {
+     position: fixed;
+ }
 
 .header .header-inner {
     font-family: "proxima-nova", sans-serif;
@@ -1928,12 +1940,8 @@ html[xmlns] .slides {
         font-weight: 300;
     }
 
-    #page {
-        margin-top: 3em;
-    }
-
-
-    #header {
+    #header,
+    #header .header-fixed, {
         height: 3em;
     }
 
@@ -2413,4 +2421,88 @@ html[xmlns] .slides {
 
 #section-products .bleeding-box-right .logo {
     width: 134px;
+}
+
+
+/* -------------------------------------------------------------------------- */
+/* CCWFS Banner
+/* -------------------------------------------------------------------------- */
+
+.ccwfs-banner {
+    background-color: #080808;
+    z-index: 999;
+}
+
+.ccwfs-banner .sp-section-background {
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.ccwfs-banner .sp-section-inner {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.ccwfs-banner .ccwfs-banner-title {
+    margin-bottom: 0px;
+    font-size: 1.6rem;
+    font-family: "proxima-nova",sans-serif;
+    font-weight: 200;
+}
+
+.ccwfs-banner .ccwfs-banner-details {
+    color: #ffffff;
+}
+
+@media (min-width: 840px) {
+
+    .ccwfs-banner .ccwfs-banner-row-table {
+        display: table;
+        table-layout: fixed;
+        width: 100%;
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+    .ccwfs-banner .ccwfs-banner-row-table > div {
+        display: table-cell;
+        vertical-align: middle;
+        float: none;
+    }
+}
+
+
+.ccwfs-banner .btn-secondary-outline {
+    border-radius: 0;
+    outline: none;
+    padding: 2px 12px;
+    line-height: 21px;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    -ms-border-radius: 4px;
+    -o-border-radius: 4px;
+    border-radius: 4px;
+    -webkit-transition: all 0.3s;
+    -moz-transition: all 0.3s;
+    -ms-transition: all 0.3s;
+    -o-transition: all 0.3s;
+    transition: all 0.3s;
+    border: 2px solid #8c8c8c;
+    -webkit-transition: all 0.2s linear;
+    -moz-transition: all 0.2s linear;
+    -o-transition: all 0.2s linear;
+    transition: all 0.2s linear;
+    color: #ee5a4c;
+    background-image: none;
+    background-color: transparent;
+    border-color: #ee5a4c;
+    font-size: 1rem;
+    padding: 8px 20px;
+    line-height: 1.42857143;
+}
+
+.ccwfs-banner .sp-section-background{background-size:auto}.ccwfs-banner .sp-section-inner{max-width:840px !important;padding-top:0;padding-bottom:0;padding-left:15px !important;padding-right:15px !important}.ccwfs-banner .ccwfs-banner-row-table-left,.ccwfs-banner .ccwfs-banner-row-table-right{padding-left:0;padding-right:0}.ccwfs-banner .ccwfs-banner-row-table-left{width:72%}.ccwfs-banner .ccwfs-banner-title-table{display:table}.ccwfs-banner .ccwfs-banner-title-table>div{display:table-cell;vertical-align:middle;padding-top:6px;padding-bottom:6px}.ccwfs-banner .ccwfs-banner-title-table>div:first-child{padding-right:15px;border-right:1px solid #ee5a4c}.ccwfs-banner .ccwfs-banner-title-table>div:last-child{padding-left:15px}.ccwfs-banner .ccwfs-banner-logo{width:130px}.ccwfs-banner .ccwfs-banner-logo img{max-width:100%}.ccwfs-banner .ccwfs-banner-title{color:#ee5a4c}.ccwfs-banner .ccwfs-banner-title-copy{text-align:left}.ccwfs-banner .ccwfs-banner-right-table{display:table}.ccwfs-banner .ccwfs-banner-right-table>div{display:table-cell;vertical-align:middle}.ccwfs-banner .ccwfs-banner-mascot{width:61px}.ccwfs-banner .ccwfs-banner-mascot img{width:138%}.ccwfs-banner .ccwfs-banner-details{padding-left:15px;padding-right:15px;width:142px;line-height:1.2;font-size:13px;font-weight:600;text-align:right}@media (max-width: 840px){.ccwfs-banner .ccwfs-banner-row-table-left,.ccwfs-banner .ccwfs-banner-row-table-right{width:100% !important;padding-left:.9375rem;padding-right:.9375rem}.ccwfs-banner .ccwfs-banner-title-table{margin-left:auto;margin-right:auto;padding-top:20px}.ccwfs-banner .ccwfs-banner-right-table{margin-left:auto;margin-right:auto}}@media (max-width: 540px){.ccwfs-banner .ccwfs-banner-title-copy{width:50%}}
+
+.ccwfs-banner .ccwfs-banner-row-table-left {
+    width: 64%;
 }
