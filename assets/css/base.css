@@ -482,7 +482,8 @@ blockquote. pre, code {
 }
 
 .header .header-logo, .header .header-logo img {
-    max-height: 4em;
+    height: 4em;
+    max-height: 100%;
     display:block;
     float:left
 }
