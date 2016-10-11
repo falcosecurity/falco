@@ -140,30 +140,68 @@
             });
         </script>
     </head>
-    <body> <!-- use class="show-banner" to show the banner>
+    <body class="has-header-before"> 
+
+        <section id="sp-section-1" class="sp-section sp-section-black ccwfs-banner">
+            <div class="sp-section-background" style="background-image:url({{ site.baseurl }}assets/img/CCWFS-banner-bg.png);">
+                <div class="sp-section-inner">
+                    <div class="row">
+                        <div class="ccwfs-banner-row-table row-table-sm text-center-xs">
+                            <div class="ccwfs-banner-row-table-left mg-b-xl-sxs">
+                                <div class="ccwfs-banner-title-table">
+                                    <div class="ccwfs-banner-logo">
+                                        <img src="{{ site.baseurl }}assets/img/CCWFS-banner-logo.svg">
+                                    </div>
+                                    <div class="ccwfs-banner-title-copy">
+                                        <h4 class="ccwfs-banner-title mg-b-0-i">Camp-Con-World-Fest-Summit</h4>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="ccwfs-banner-row-table-right">
+                                <div class="ccwfs-banner-right-table">
+                                    <div class="ccwfs-banner-mascot">
+                                        <img src="{{ site.baseurl }}assets/img/CCWFS-banner-mascot.svg">
+                                    </div>
+                                    <div class="ccwfs-banner-details">
+                                        <div>OCT 26, 2016</div>
+                                        <div>SAN FRANCISCO</div>
+                                        <div>open source event</div>
+                                    </div>
+                                    <div class="ccwfs-banner-button">
+                                        <a class="btn btn-secondary-outline" href="http://www.sysdigccwfs.com/">Join us</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- Meetup banner -->
-        <div id="meetup-banner">
+        <!--<div id="meetup-banner">
             <input type="hidden" value="Meetup banner">
             <a href="https://attendee.gotowebinar.com/register/4298365159005528577?source=opensourcewebsite" target="_blank">
                 <img src="{{ site.baseurl }}assets/img/MeetupLogo.png" alt="Meetup">RSVP now for the first Sysdig online meetup!
             </a>
-        </div>
-
+        </div>-->
 
         <!-- Header -->
         <div id="header" class="header">
-            <div class="header-inner">
-                <a class="header-logo" href="http://www.sysdig.org/falco/">
-                    <img src="assets/img/Sysdig-Falco-Banner-product-grey.svg" alt="Logo" />
-                </a>
-                <a class="navbar-toggle btn btn-lg btn-tertiary" href="https://github.com/draios/falco/">Get it Now</a>
-                <div class="header-nav collapse navbar-collapse">
-                    <ul class="menu">
-                        <li class="menu-item"><a href="http://sysdig.org">Sysdig</a></li>
-                        <li class="menu-item"><a href="https://groups.google.com/forum/#!forum/falco">Community</a></li>
-                        <li class="menu-item"><a href="https://github.com/draios/falco/wiki">Wiki</a></li>
-                        <li class="menu-item"><a href="https://sysdig.com/blog/tag/falco/">Blog</a></li>
-                    </ul>
+            <div class="header-fixed">
+                <div class="header-inner">
+                    <a class="header-logo" href="http://www.sysdig.org/falco/">
+                        <img src="assets/img/Sysdig-Falco-Banner-product-grey.svg" alt="Logo" />
+                    </a>
+                    <a class="navbar-toggle btn btn-lg btn-tertiary" href="https://github.com/draios/falco/">Get it Now</a>
+                    <div class="header-nav collapse navbar-collapse">
+                        <ul class="menu">
+                            <li class="menu-item"><a href="http://sysdig.org">Sysdig</a></li>
+                            <li class="menu-item"><a href="https://groups.google.com/forum/#!forum/falco">Community</a></li>
+                            <li class="menu-item"><a href="https://github.com/draios/falco/wiki">Wiki</a></li>
+                            <li class="menu-item"><a href="https://sysdig.com/blog/tag/falco/">Blog</a></li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
