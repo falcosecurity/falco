@@ -60,10 +60,40 @@ static void usage()
 	   " -d, --daemon                  Run as a daemon\n"
 	   " -D <pattern>                  Disable any rules matching the regex <pattern>. Can be specified multiple times.\n"
            " -e <events_file>              Read the events from <events_file> (in .scap format) instead of tapping into live.\n"
+	   " -k <url>, --k8s-api=<url>\n"
+	   "                               Enable Kubernetes support by connecting to the API server\n"
+      	   "                               specified as argument. E.g. \"http://admin:password@127.0.0.1:8080\".\n"
+	   "                               The API server can also be specified via the environment variable\n"
+	   "                               FALCO_K8S_API.\n"
+	   " -K <bt_file> | <cert_file>:<key_file[#password]>[:<ca_cert_file>], --k8s-api-cert=<bt_file> | <cert_file>:<key_file[#password]>[:<ca_cert_file>]\n"
+	   "                               Use the provided files names to authenticate user and (optionally) verify the K8S API\n"
+	   "                               server identity.\n"
+	   "                               Each entry must specify full (absolute, or relative to the current directory) path\n"
+	   "                               to the respective file.\n"
+	   "                               Private key password is optional (needed only if key is password protected).\n"
+	   "                               CA certificate is optional. For all files, only PEM file format is supported. \n"
+	   "                               Specifying CA certificate only is obsoleted - when single entry is provided \n"
+	   "                               for this option, it will be interpreted as the name of a file containing bearer token.\n"
+	   "                               Note that the format of this command-line option prohibits use of files whose names contain\n"
+	   "                               ':' or '#' characters in the file name.\n"
 	   " -L                            Show the name and description of all rules and exit.\n"
 	   " -l <rule>                     Show the name and description of the rule with name <rule> and exit.\n"
+	   " -m <url[,marathon_url]>, --mesos-api=<url[,marathon_url]>\n"
+	   "                               Enable Mesos support by connecting to the API server\n"
+	   "                               specified as argument. E.g. \"http://admin:password@127.0.0.1:5050\".\n"
+	   "                               Marathon url is optional and defaults to Mesos address, port 8080.\n"
+	   "                               The API servers can also be specified via the environment variable\n"
+	   "                               FALCO_MESOS_API.\n"
 	   " -o, --option <key>=<val>      Set the value of option <key> to <val>. Overrides values in configuration file.\n"
 	   "                               <key> can be a two-part <key>.<subkey>\n"
+	   " -p <output_format>, --print=<output_format>\n"
+	   "                               Add additional information to each falco notification's output.\n"
+	   "                               With -pc or -pcontainer will use a container-friendly format.\n"
+	   "                               With -pk or -pkubernetes will use a kubernetes-friendly format.\n"
+	   "                               With -pm or -pmesos will use a mesos-friendly format.\n"
+	   "                               Additionally, specifying -pc/-pk/-pm will change the interpretation\n"
+	   "                               of %%container.info in rule output fields\n"
+	   "                               See the examples section below for more info.\n"
 	   " -P, --pidfile <pid_file>      When run as a daemon, write pid to specified file\n"
            " -r <rules_file>               Rules file (defaults to value set in configuration file, or /etc/falco_rules.yaml).\n"
 	   "                               Can be specified multiple times to read from multiple files.\n"
@@ -169,12 +199,21 @@ int falco_init(int argc, char **argv)
 	string describe_rule = "";
 	bool verbose = false;
 	bool all_events = false;
+	string* k8s_api = 0;
+	string* k8s_api_cert = 0;
+	string* mesos_api = 0;
+	string output_format = "";
+	bool replace_container_info = false;
 
 	static struct option long_options[] =
 	{
 		{"help", no_argument, 0, 'h' },
 		{"daemon", no_argument, 0, 'd' },
+		{"k8s-api", required_argument, 0, 'k'},
+		{"k8s-api-cert", required_argument, 0, 'K' },
+		{"mesos-api", required_argument, 0, 'm'},
 		{"option", required_argument, 0, 'o'},
+		{"print", required_argument, 0, 'p' },
 		{"pidfile", required_argument, 0, 'P' },
 
 		{0, 0, 0, 0}
@@ -182,13 +221,6 @@ int falco_init(int argc, char **argv)
 
 	try
 	{
-		inspector = new sinsp();
-		engine = new falco_engine();
-		engine->set_inspector(inspector);
-
-		outputs = new falco_outputs();
-		outputs->set_inspector(inspector);
-
 		set<string> disabled_rule_patterns;
 		string pattern;
 
@@ -219,7 +251,14 @@ int falco_init(int argc, char **argv)
 				break;
 			case 'e':
 				scap_filename = optarg;
+				k8s_api = new string();
+				mesos_api = new string();
 				break;
+			case 'k':
+				k8s_api = new string(optarg);
+				break;
+			case 'K':
+				k8s_api_cert = new string(optarg);
 				break;
 			case 'L':
 				describe_all_rules = true;
@@ -227,11 +266,36 @@ int falco_init(int argc, char **argv)
 			case 'l':
 				describe_rule = optarg;
 				break;
+			case 'm':
+				mesos_api = new string(optarg);
+				break;
 			case 'o':
 				cmdline_options.push_back(optarg);
 				break;
 			case 'P':
 				pidfilename = optarg;
+				break;
+			case 'p':
+				if(string(optarg) == "c" || string(optarg) == "container")
+				{
+					output_format = "container=%container.name (id=%container.id)";
+					replace_container_info = true;
+				}
+				else if(string(optarg) == "k" || string(optarg) == "kubernetes")
+				{
+					output_format = "k8s.pod=%k8s.pod.name container=%container.id";
+					replace_container_info = true;
+				}
+				else if(string(optarg) == "m" || string(optarg) == "mesos")
+				{
+					output_format = "task=%mesos.task.name container=%container.id";
+					replace_container_info = true;
+				}
+				else
+				{
+					output_format = optarg;
+					replace_container_info = false;
+				}
 				break;
 			case 'r':
 				rules_filenames.push_back(optarg);
@@ -247,6 +311,14 @@ int falco_init(int argc, char **argv)
 			}
 
 		}
+
+		inspector = new sinsp();
+		engine = new falco_engine();
+		engine->set_inspector(inspector);
+
+		outputs = new falco_outputs();
+		outputs->set_inspector(inspector);
+		outputs->set_extra(output_format, replace_container_info);
 
 		// Some combinations of arguments are not allowed.
 		if (daemon && pidfilename == "") {
@@ -427,6 +499,63 @@ int falco_init(int argc, char **argv)
 			open("/dev/null", O_RDWR);
 			open("/dev/null", O_RDWR);
 		}
+
+		//
+		// run k8s, if required
+		//
+		if(k8s_api)
+		{
+			if(!k8s_api_cert)
+			{
+				if(char* k8s_cert_env = getenv("FALCO_K8S_API_CERT"))
+				{
+					k8s_api_cert = new string(k8s_cert_env);
+				}
+			}
+			inspector->init_k8s_client(k8s_api, k8s_api_cert, verbose);
+			k8s_api = 0;
+			k8s_api_cert = 0;
+		}
+		else if(char* k8s_api_env = getenv("FALCO_K8S_API"))
+		{
+			if(k8s_api_env != NULL)
+			{
+				if(!k8s_api_cert)
+				{
+					if(char* k8s_cert_env = getenv("FALCO_K8S_API_CERT"))
+					{
+						k8s_api_cert = new string(k8s_cert_env);
+					}
+				}
+				k8s_api = new string(k8s_api_env);
+				inspector->init_k8s_client(k8s_api, k8s_api_cert, verbose);
+			}
+			else
+			{
+				delete k8s_api;
+				delete k8s_api_cert;
+			}
+			k8s_api = 0;
+			k8s_api_cert = 0;
+		}
+
+		//
+		// run mesos, if required
+		//
+		if(mesos_api)
+		{
+			inspector->init_mesos_client(mesos_api, verbose);
+		}
+		else if(char* mesos_api_env = getenv("FALCO_MESOS_API"))
+		{
+			if(mesos_api_env != NULL)
+			{
+				mesos_api = new string(mesos_api_env);
+				inspector->init_mesos_client(mesos_api, verbose);
+			}
+		}
+		delete mesos_api;
+		mesos_api = 0;
 
 		do_inspect(engine,
 			   outputs,

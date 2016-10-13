@@ -44,6 +44,8 @@ public:
 
 	void add_output(output_config oc);
 
+	void set_extra(string &extra, bool replace_container_info);
+
 	//
 	// ev is an event that has matched some rule. Pass the event
 	// to all configured outputs.
@@ -54,4 +56,6 @@ private:
 	std::string m_lua_add_output = "add_output";
 	std::string m_lua_output_event = "output_event";
 	std::string m_lua_main_filename = "output.lua";
+	std::string m_extra;
+	bool m_replace_container_info;
 };
