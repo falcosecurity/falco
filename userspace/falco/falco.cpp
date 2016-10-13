@@ -56,18 +56,18 @@ static void usage()
 	   "Options:\n"
 	   " -h, --help                    Print this page\n"
 	   " -c                            Configuration file (default " FALCO_SOURCE_CONF_FILE ", " FALCO_INSTALL_CONF_FILE ")\n"
-	   " -o, --option <key>=<val>      Set the value of option <key> to <val>. Overrides values in configuration file.\n"
-	   "                               <key> can be a two-part <key>.<subkey>\n"
+	   " -A                            Monitor all events, including those with EF_DROP_FALCO flag.\n"
 	   " -d, --daemon                  Run as a daemon\n"
-	   " -p, --pidfile <pid_file>      When run as a daemon, write pid to specified file\n"
-           " -e <events_file>              Read the events from <events_file> (in .scap format) instead of tapping into live.\n"
-           " -r <rules_file>               Rules file (defaults to value set in configuration file, or /etc/falco_rules.yaml).\n"
-	   "                               Can be specified multiple times to read from multiple files.\n"
 	   " -D <pattern>                  Disable any rules matching the regex <pattern>. Can be specified multiple times.\n"
+           " -e <events_file>              Read the events from <events_file> (in .scap format) instead of tapping into live.\n"
 	   " -L                            Show the name and description of all rules and exit.\n"
 	   " -l <rule>                     Show the name and description of the rule with name <rule> and exit.\n"
+	   " -o, --option <key>=<val>      Set the value of option <key> to <val>. Overrides values in configuration file.\n"
+	   "                               <key> can be a two-part <key>.<subkey>\n"
+	   " -P, --pidfile <pid_file>      When run as a daemon, write pid to specified file\n"
+           " -r <rules_file>               Rules file (defaults to value set in configuration file, or /etc/falco_rules.yaml).\n"
+	   "                               Can be specified multiple times to read from multiple files.\n"
 	   " -v                            Verbose output.\n"
-	   " -A                            Monitor all events, including those with EF_DROP_FALCO flag.\n"
 	   "\n"
     );
 }
@@ -175,7 +175,7 @@ int falco_init(int argc, char **argv)
 		{"help", no_argument, 0, 'h' },
 		{"daemon", no_argument, 0, 'd' },
 		{"option", required_argument, 0, 'o'},
-		{"pidfile", required_argument, 0, 'p' },
+		{"pidfile", required_argument, 0, 'P' },
 
 		{0, 0, 0, 0}
 	};
@@ -196,7 +196,7 @@ int falco_init(int argc, char **argv)
 		// Parse the args
 		//
 		while((op = getopt_long(argc, argv,
-                                        "c:ho:e:r:D:dp:Ll:vA",
+                                        "hc:AdD:e:k:K:Ll:m:o:P:p:r:v",
                                         long_options, &long_index)) != -1)
 		{
 			switch(op)
@@ -207,36 +207,37 @@ int falco_init(int argc, char **argv)
 			case 'c':
 				conf_filename = optarg;
 				break;
-			case 'o':
-				cmdline_options.push_back(optarg);
+			case 'A':
+				all_events = true;
 				break;
-			case 'e':
-				scap_filename = optarg;
-				break;
-			case 'r':
-				rules_filenames.push_back(optarg);
+			case 'd':
+				daemon = true;
 				break;
 			case 'D':
 				pattern = optarg;
 				disabled_rule_patterns.insert(pattern);
 				break;
-			case 'd':
-				daemon = true;
+			case 'e':
+				scap_filename = optarg;
 				break;
-			case 'p':
-				pidfilename = optarg;
 				break;
 			case 'L':
 				describe_all_rules = true;
 				break;
-			case 'v':
-				verbose = true;
-				break;
-			case 'A':
-				all_events = true;
-				break;
 			case 'l':
 				describe_rule = optarg;
+				break;
+			case 'o':
+				cmdline_options.push_back(optarg);
+				break;
+			case 'P':
+				pidfilename = optarg;
+				break;
+			case 'r':
+				rules_filenames.push_back(optarg);
+				break;
+			case 'v':
+				verbose = true;
 				break;
 			case '?':
 				result = EXIT_FAILURE;
