@@ -27,6 +27,7 @@ along with falco.  If not, see <http://www.gnu.org/licenses/>.
 using namespace std;
 
 falco_outputs::falco_outputs()
+	: m_replace_container_info(false)
 {
 
 }
@@ -49,6 +50,12 @@ void falco_outputs::init(bool json_output)
 	falco_formats::init(m_inspector, m_ls, json_output);
 
 	falco_logger::init(m_ls);
+}
+
+void falco_outputs::set_extra(string &extra, bool replace_container_info)
+{
+	m_extra = extra;
+	m_replace_container_info = replace_container_info;
 }
 
 void falco_outputs::add_output(output_config oc)
@@ -87,12 +94,42 @@ void falco_outputs::handle_event(sinsp_evt *ev, string &level, string &priority,
 {
 	lua_getglobal(m_ls, m_lua_output_event.c_str());
 
+	// If the format string contains %container.info, replace it
+	// with extra. Otherwise, add extra onto the end of the format
+	// string.
+	string format_w_extra = format;
+	size_t pos;
+
+	if((pos = format_w_extra.find("%container.info")) != string::npos)
+	{
+		// There may not be any extra, or we're not supposed
+		// to replace it, in which case we use the generic
+		// "%container.name (id=%container.id)"
+		if(m_extra == "" || ! m_replace_container_info)
+		{
+			// 15 == strlen(%container.info)
+			format_w_extra.replace(pos, 15, "%container.name (id=%container.id)");
+		}
+		else
+		{
+			format_w_extra.replace(pos, 15, m_extra);
+		}
+	}
+	else
+	{
+		// Just add the extra to the end
+		if (m_extra != "")
+		{
+			format_w_extra += " " + m_extra;
+		}
+	}
+
 	if(lua_isfunction(m_ls, -1))
 	{
 		lua_pushlightuserdata(m_ls, ev);
 		lua_pushstring(m_ls, level.c_str());
 		lua_pushstring(m_ls, priority.c_str());
-		lua_pushstring(m_ls, format.c_str());
+		lua_pushstring(m_ls, format_w_extra.c_str());
 
 		if(lua_pcall(m_ls, 4, 0, 0) != 0)
 		{
