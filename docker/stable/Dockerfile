@@ -19,6 +19,7 @@ RUN echo "deb http://httpredir.debian.org/debian jessie main" > /etc/apt/sources
  && apt-get install -y --no-install-recommends \
 	bash-completion \
 	curl \
+	jq \
 	ca-certificates \
 	gnupg2 \
 	gcc \
