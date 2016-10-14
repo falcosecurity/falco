@@ -337,14 +337,14 @@ int falco_init(int argc, char **argv)
 		else
 		{
 			conf_stream.open(FALCO_SOURCE_CONF_FILE);
-			if (!conf_stream.is_open())
+			if (conf_stream.is_open())
 			{
 				conf_filename = FALCO_SOURCE_CONF_FILE;
 			}
 			else
 			{
 				conf_stream.open(FALCO_INSTALL_CONF_FILE);
-				if (!conf_stream.is_open())
+				if (conf_stream.is_open())
 				{
 					conf_filename = FALCO_INSTALL_CONF_FILE;
 				}
