@@ -314,7 +314,7 @@
 
 - rule: Run shell in container
   desc: a shell was spawned by a non-shell program in a container. Container entrypoints are excluded.
-  condition: spawned_process and container and shell_procs and proc.pname exists and not proc.pname in (shell_binaries, docker_binaries, initdb, pg_ctl, awk, apache2)
+  condition: spawned_process and container and shell_procs and proc.pname exists and not proc.pname in (shell_binaries, docker_binaries, initdb, pg_ctl, awk, apache2, falco)
   output: "Shell spawned in a container other than entrypoint (user=%user.name %container.info shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline)"
   priority: WARNING
 
