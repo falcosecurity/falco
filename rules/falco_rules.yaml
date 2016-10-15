@@ -101,6 +101,9 @@
 - list: docker_binaries
   items: [docker, dockerd, exe]
 
+- list: k8s_binaries
+  items: [hyperkube, skydns, kube2sky]
+
 - list: http_server_binaries
   items: [nginx, httpd, httpd-foregroun, lighttpd]
 
@@ -273,13 +276,13 @@
 
 - rule: Change thread namespace
   desc: an attempt to change a program/thread\'s namespace (commonly done as a part of creating a container) by calling setns.
-  condition: evt.type = setns and not proc.name in (docker_binaries, sysdig, dragent, nsenter)
+  condition: evt.type = setns and not proc.name in (docker_binaries, k8s_binaries, sysdig, dragent, nsenter)
   output: "Namespace change (setns) by unexpected program (user=%user.name command=%proc.cmdline %container.info)"
   priority: WARNING
 
 - rule: Run shell untrusted
   desc: an attempt to spawn a shell by a non-shell program. Exceptions are made for trusted binaries.
-  condition: spawned_process and not container and shell_procs and proc.pname exists and not proc.pname in (cron_binaries, shell_binaries, sshd, sudo, docker_binaries, su, tmux, screen, emacs, systemd, login, flock, fbash, nginx, monit, supervisord, dragent, aws, initdb, docker-compose, make, configure, awk, falco)
+  condition: spawned_process and not container and shell_procs and proc.pname exists and not proc.pname in (cron_binaries, shell_binaries, sshd, sudo, docker_binaries, k8s_binaries, su, tmux, screen, emacs, systemd, login, flock, fbash, nginx, monit, supervisord, dragent, aws, initdb, docker-compose, make, configure, awk, falco)
   output: "Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline)"
   priority: WARNING
 
@@ -314,7 +317,7 @@
 
 - rule: Run shell in container
   desc: a shell was spawned by a non-shell program in a container. Container entrypoints are excluded.
-  condition: spawned_process and container and shell_procs and proc.pname exists and not proc.pname in (shell_binaries, docker_binaries, initdb, pg_ctl, awk, apache2, falco)
+  condition: spawned_process and container and shell_procs and proc.pname exists and not proc.pname in (shell_binaries, docker_binaries, k8s_binaries, initdb, pg_ctl, awk, apache2, falco, cron)
   output: "Shell spawned in a container other than entrypoint (user=%user.name %container.info shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline)"
   priority: WARNING
 
