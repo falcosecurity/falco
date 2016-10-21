@@ -122,10 +122,11 @@ std::list<string> cmdline_options;
 //
 // Event processing loop
 //
-void do_inspect(falco_engine *engine,
-		falco_outputs *outputs,
-		sinsp* inspector)
+uint64_t do_inspect(falco_engine *engine,
+		    falco_outputs *outputs,
+		    sinsp* inspector)
 {
+	uint64_t num_evts = 0;
 	int32_t res;
 	sinsp_evt* ev;
 
@@ -176,7 +177,11 @@ void do_inspect(falco_engine *engine,
 			outputs->handle_event(res->evt, res->rule, res->priority, res->format);
 			delete(res);
 		}
+
+		num_evts++;
 	}
+
+	return num_evts;
 }
 
 //
@@ -212,6 +217,11 @@ int falco_init(int argc, char **argv)
 	int file_limit = 0;
 	unsigned long event_limit = 0L;
 	bool compress = false;
+
+	// Used for stats
+	uint64_t num_evts;
+	double duration;
+	scap_stats cstats;
 
 	static struct option long_options[] =
 	{
@@ -518,6 +528,8 @@ int falco_init(int argc, char **argv)
 			inspector->autodump_next_file();
 		}
 
+		duration = ((double)clock()) / CLOCKS_PER_SEC;
+
 		//
 		// run k8s, if required
 		//
@@ -575,9 +587,25 @@ int falco_init(int argc, char **argv)
 		delete mesos_api;
 		mesos_api = 0;
 
-		do_inspect(engine,
-			   outputs,
-			   inspector);
+		num_evts = do_inspect(engine,
+				      outputs,
+				      inspector);
+
+		duration = ((double)clock()) / CLOCKS_PER_SEC - duration;
+
+		inspector->get_capture_stats(&cstats);
+
+		if(verbose)
+		{
+			fprintf(stderr, "Driver Events:%" PRIu64 "\nDriver Drops:%" PRIu64 "\n",
+				cstats.n_evts,
+				cstats.n_drops);
+
+			fprintf(stderr, "Elapsed time: %.3lf, Captured Events: %" PRIu64 ", %.2lf eps\n",
+				duration,
+				num_evts,
+				num_evts / duration);
+		}
 
 		inspector->close();
 
