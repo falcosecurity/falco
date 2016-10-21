@@ -192,6 +192,7 @@ int falco_init(int argc, char **argv)
 	int long_index = 0;
 	string scap_filename;
 	string conf_filename;
+	string outfile;
 	list<string> rules_filenames;
 	bool daemon = false;
 	string pidfilename = "/var/run/falco.pid";
@@ -205,6 +206,13 @@ int falco_init(int argc, char **argv)
 	string output_format = "";
 	bool replace_container_info = false;
 
+	// Used for writing trace files
+	int duration_seconds = 0;
+	int rollover_mb = 0;
+	int file_limit = 0;
+	unsigned long event_limit = 0L;
+	bool compress = false;
+
 	static struct option long_options[] =
 	{
 		{"help", no_argument, 0, 'h' },
@@ -215,6 +223,7 @@ int falco_init(int argc, char **argv)
 		{"option", required_argument, 0, 'o'},
 		{"print", required_argument, 0, 'p' },
 		{"pidfile", required_argument, 0, 'P' },
+		{"writefile", required_argument, 0, 'w' },
 
 		{0, 0, 0, 0}
 	};
@@ -228,7 +237,7 @@ int falco_init(int argc, char **argv)
 		// Parse the args
 		//
 		while((op = getopt_long(argc, argv,
-                                        "hc:AdD:e:k:K:Ll:m:o:P:p:r:v",
+                                        "hc:AdD:e:k:K:Ll:m:o:P:p:r:vw:",
                                         long_options, &long_index)) != -1)
 		{
 			switch(op)
@@ -302,6 +311,9 @@ int falco_init(int argc, char **argv)
 				break;
 			case 'v':
 				verbose = true;
+				break;
+			case 'w':
+				outfile = optarg;
 				break;
 			case '?':
 				result = EXIT_FAILURE;
@@ -498,6 +510,12 @@ int falco_init(int argc, char **argv)
 			open("/dev/null", O_RDONLY);
 			open("/dev/null", O_RDWR);
 			open("/dev/null", O_RDWR);
+		}
+
+		if(outfile != "")
+		{
+			inspector->setup_cycle_writer(outfile, rollover_mb, duration_seconds, file_limit, event_limit, compress);
+			inspector->autodump_next_file();
 		}
 
 		//
