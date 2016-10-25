@@ -2,7 +2,7 @@
 
 ####Latest release
 
-**v0.3.0**
+**v0.4.0**
 Read the [change log](https://github.com/draios/falco/blob/dev/CHANGELOG.md)
 
 Dev Branch: [![Build Status](https://travis-ci.org/draios/falco.svg?branch=dev)](https://travis-ci.org/draios/falco)<br />
@@ -16,6 +16,7 @@ Sysdig Falco is a behavioral activity monitor designed to detect anomalous activ
 Falco can detect and alert on any behavior that involves making Linux system calls. Thanks to Sysdig's core decoding and state tracking functionality, falco alerts can be triggered by the use of specific system calls, their arguments, and by properties of the calling process. For example, you can easily detect things like:
 
 - A shell is run inside a container
+- A container is running in privileged mode, or is mounting a sensitive path like `/proc` from the host.
 - A server process spawns a child process of an unexpected type
 - Unexpected read of a sensitive file (like `/etc/shadow`)
 - A non-device file is written to `/dev`
