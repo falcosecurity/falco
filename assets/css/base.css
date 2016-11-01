@@ -98,26 +98,31 @@ blockquote. pre, code {
 }
 
 .btn {
-    border-radius:0;
-    outline:none;
-    padding:10px 18px;
-    line-height:21px;
-    -webkit-border-radius:4px;
-    -moz-border-radius:4px;
-    -ms-border-radius:4px;
-    -o-border-radius:4px;
-    border-radius:4px;
-    -webkit-transition:all 0.2s;
-    -moz-transition:all 0.2s;
-    -ms-transition:all 0.2s;
-    -o-transition:all 0.2s;
-    transition:all 0.2s;
-    border:none
+    /*display: inline-block;*/
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.42857143;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    cursor: pointer;
+    user-select: none;
+    border: 1px solid transparent;
+    padding: 8px 20px;
+    font-size: 1rem;
+    line-height: 1.5;
+    border-radius: 4px;
+}
+
+.btn:hover,
+.btn:focus,
+.btn:active {
+    opacity: 0.8;
 }
 
 .btn-lg {
     font-weight:400;
-    font-size:28px;
+    font-size:24px;
     padding:8px 18px;
     -webkit-border-radius:4px;
     -moz-border-radius:4px;
@@ -130,36 +135,33 @@ blockquote. pre, code {
     line-height:1.33
 }
 
-.btn-tertiary {
-    background:#7d2571;
-    color:#fff;
-    padding: 12px 24px;
-}
 
-.btn-tertiary:hover {
-    background:#935483;
-    color:#fff
-}
-
-.btn-primary {
-    background-color:#7d2571;
-    padding: 8px 18px;
-    z-index: 990;
-}
-
-.btn-primary:hover {
-    background-color:#5f5f5f;
+.btn-primary,
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+    background:#3f3f3f;
+    color:#ffffff;
 }
 
 .btn-secondary {
-    background-color:#fff;
-    color:#7d2571;
-    padding: 8px 18px;
+    background:#ffffff;
+    color:#3f3f3f;
 }
 
-.btn-secondary:hover {
-    background-color:#3f3f3f;
-    color: #fff;
+.btn-secondary:hover,
+.btn-secondary:focus,
+.btn-secondary:active {
+    background:#3f3f3f;
+    color:#ffffff;
+}
+
+.btn-tertiary,
+.btn-tertiary:hover,
+.btn-tertiary:focus,
+.btn-tertiary:active {
+    background:#7d2571;
+    color:#fff;
 }
 
 .social-icons-nav {
@@ -535,15 +537,22 @@ blockquote. pre, code {
 }
 
 .header .header-nav>ul>li.highlight>a {
-    padding-left:10px;
-    padding-right:10px;
-    background:#7d2571;
-    color:#fff;
-    -webkit-transition:background 0.2s linear;
-    -moz-transition:background 0.2s linear;
-    -ms-transition:background 0.2s linear;
-    -o-transition:background 0.2s linear;
-    transition:background 0.2s linear
+    padding: 8px 20px;
+    background: #7e2572;
+    border: 1px solid #7e2572;
+    font-size: 16px;
+    line-height: 1.42857143;
+    color: #fff;
+    -webkit-transition: background 0.2s linear;
+    -moz-transition: background 0.2s linear;
+    -ms-transition: background 0.2s linear;
+    -o-transition: background 0.2s linear;
+    transition: background 0.2s linear;
+    -webkit-border-radius: 4px;
+    -moz-border-radius: 4px;
+    -ms-border-radius: 4px;
+    -o-border-radius: 4px;
+    border-radius: 4px;
 }
 
 .header .header-nav>ul>li.highlight>a:hover {
@@ -875,8 +884,8 @@ blockquote. pre, code {
 }
 
 .sysdigcloud .btn {
-    font-size: 18px;
-    padding:4px 12px;
+    font-size: 16px;
+    padding: 0px 12px;
     border-radius: 3px;
     margin-top: -.1em;
     background-color: white;
@@ -1876,9 +1885,12 @@ html[xmlns] .slides {
         width:20%
     }
 
+    .header .header-nav>ul {
+        padding-top:16px;
+    }
+
     .header .header-nav>ul>li {
         display:inline-block;
-        padding-top:20px;
     }
 
     #upper-header .header-nav>ul>li {
