@@ -365,7 +365,7 @@ add_subdirectory("${SYSDIG_DIR}/userspace/libsinsp" "${PROJECT_BINARY_DIR}/users
 
 add_subdirectory(scripts)
 set(FALCO_SINSP_LIBRARY sinsp)
-set(FALCO_SHARE_DIR share/falco)
+set(FALCO_SHARE_DIR ${CMAKE_INSTALL_PREFIX}/share/falco)
 add_subdirectory(userspace/engine)
 add_subdirectory(userspace/falco)
 
