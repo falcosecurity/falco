@@ -28,7 +28,11 @@ function time_cmd() {
 function run_falco_on() {
     file="$1"
 
-    cmd="$ROOT/userspace/falco/falco -c $ROOT/../falco.yaml -r $ROOT/../rules/falco_rules.yaml --option=stdout_output.enabled=false -e $file"
+    if [ -z $RULES_FILE ]; then
+	RULES_FILE=$SOURCE/rules/falco_rules.yaml
+    fi
+
+    cmd="$ROOT/userspace/falco/falco -c $SOURCE/falco.yaml -r $SOURCE/rules/falco_rules.yaml --option=stdout_output.enabled=false -e $file -A"
 
     time_cmd "$cmd" "$file"
 }
@@ -131,15 +135,26 @@ function start_monitor_cpu_usage() {
 
 function start_subject_prog() {
 
-    echo "   starting falco/sysdig/agent program"
     # Do a blocking sudo command now just to ensure we have a password
     sudo bash -c ""
 
-    if [[ $ROOT == *"falco"* ]]; then
-	sudo $ROOT/userspace/falco/falco -c $ROOT/../falco.yaml -r $ROOT/../rules/falco_rules.yaml --option=stdout_output.enabled=false > ./prog-output.txt 2>&1 &
+    if [[ $ROOT == *"multimatch"* ]]; then
+	echo "   starting test_mm..."
+	if [ -z $RULES_FILE ]; then
+	    RULES_FILE=$SOURCE/../output/rules.yaml
+	fi
+	sudo $ROOT/test_mm -s $SOURCE/search_order.yaml -r $RULES_FILE > ./prog-output.txt 2>&1 &
+    elif [[ $ROOT == *"falco"* ]]; then
+	echo "   starting falco..."
+	if [ -z $RULES_FILE ]; then
+	    RULES_FILE=$SOURCE/rules/falco_rules.yaml
+	fi
+	sudo $ROOT/userspace/falco/falco -c $SOURCE/falco.yaml -r $RULES_FILE --option=stdout_output.enabled=false > ./prog-output.txt -A 2>&1 &
     elif [[ $ROOT == *"sysdig"* ]]; then
+	echo "   starting sysdig..."
 	sudo $ROOT/userspace/sysdig/sysdig -N -z evt.type=none &
     else
+	echo "   starting agent..."
 	write_agent_config
 	pushd $ROOT/userspace/dragent
 	sudo ./dragent > ./prog-output.txt 2>&1 &
@@ -180,8 +195,8 @@ function run_juttle_examples() {
 
 function run_kubernetes_demo() {
     pushd $SCRIPTDIR/../../infrastructure/test-infrastructures/kubernetes-demo
-    bash run-local.sh
-    bash init.sh
+    sudo bash run-local.sh
+    sudo bash init.sh
     sleep 600
     docker stop $(docker ps -qa)
     docker rm -fv $(docker ps -qa)
@@ -306,8 +321,10 @@ usage() {
     echo "   -h/--help: show this help"
     echo "   -v/--variant: a variant name to attach to this set of test results"
     echo "   -r/--root: root directory containing falco/sysdig binaries (i.e. where you ran 'cmake')"
+    echo "   -s/--source: root directory containing falco/sysdig source code"
     echo "   -R/--results: append test results to this file"
     echo "   -o/--output: append program output to this file"
+    echo "   -U/--rules: path to rules file (only applicable for falco/test_mm)"
     echo "   -t/--test: test to run. Argument has the following format:"
     echo "       trace:<trace>: read the specified trace file."
     echo "            trace:all means run all traces"
@@ -325,7 +342,7 @@ usage() {
     echo "   -F/--falco-agent: When running an agent, whether or not to enable falco"
 }
 
-OPTS=`getopt -o hv:r:R:o:t:T: --long help,variant:,root:,results:,output:,test:,tracedir:,agent-autodrop:,falco-agent: -n $0 -- "$@"`
+OPTS=`getopt -o hv:r:s:R:o:U:t:T: --long help,variant:,root:,source:,results:,output:,rules:,test:,tracedir:,agent-autodrop:,falco-agent: -n $0 -- "$@"`
 
 if [ $? != 0 ]; then
     echo "Exiting" >&2
@@ -336,9 +353,11 @@ eval set -- "$OPTS"
 
 VARIANT="falco"
 ROOT=`dirname $0`/../build
+SOURCE=$ROOT
 SCRIPTDIR=`dirname $0`
 RESULTS_FILE=`dirname $0`/results.json
 OUTPUT_FILE=`dirname $0`/program-output.txt
+RULES_FILE=
 TEST=trace:all
 TRACEDIR=/tmp/falco-perf-traces.$USER
 CPU_INTERVAL=10
@@ -350,8 +369,10 @@ while true; do
 	-h | --help ) usage; exit 1;;
 	-v | --variant ) VARIANT="$2"; shift 2;;
 	-r | --root ) ROOT="$2"; shift 2;;
+	-s | --source ) SOURCE="$2"; shift 2;;
 	-R | --results ) RESULTS_FILE="$2"; shift 2;;
 	-o | --output ) OUTPUT_FILE="$2"; shift 2;;
+	-U | --rules ) RULES_FILE="$2"; shift 2;;
 	-t | --test ) TEST="$2"; shift 2;;
 	-T | --tracedir ) TRACEDIR="$2"; shift 2;;
 	-A | --agent-autodrop ) AGENT_AUTODROP="$2"; shift 2;;
@@ -372,6 +393,12 @@ fi
 
 ROOT=`realpath $ROOT`
 
+if [ -z $SOURCE ]; then
+    echo "A source directory containing falco/sysdig source code. Not continuing."
+    exit 1
+fi
+
+SOURCE=`realpath $SOURCE`
 
 if [ -z $RESULTS_FILE ]; then
     echo "An output file for test results must be provided. Not continuing."
