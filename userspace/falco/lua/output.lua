@@ -75,14 +75,14 @@ end
 function output_event(event, rule, priority, format)
    local level = level_of(priority)
    format = "*%evt.time: "..levels[level+1].." "..format
-   formatter = falco.formatter(format)
-   msg = falco.format_event(event, rule, levels[level+1], formatter)
+   formatter = formats.formatter(format)
+   msg = formats.format_event(event, rule, levels[level+1], formatter)
 
    for index,o in ipairs(outputs) do
       o.output(level, msg, o.config)
    end
 
-   falco.free_formatter(formatter)
+   formats.free_formatter(formatter)
 end
 
 function add_output(output_name, config)
