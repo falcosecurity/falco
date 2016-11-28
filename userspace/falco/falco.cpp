@@ -337,10 +337,10 @@ int falco_init(int argc, char **argv)
 		inspector = new sinsp();
 		engine = new falco_engine();
 		engine->set_inspector(inspector);
+		engine->set_extra(output_format, replace_container_info);
 
 		outputs = new falco_outputs();
 		outputs->set_inspector(inspector);
-		outputs->set_extra(output_format, replace_container_info);
 
 		// Some combinations of arguments are not allowed.
 		if (daemon && pidfilename == "") {

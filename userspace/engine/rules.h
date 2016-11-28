@@ -31,7 +31,8 @@ class falco_rules
  public:
 	falco_rules(sinsp* inspector, falco_engine *engine, lua_State *ls);
 	~falco_rules();
-	void load_rules(const string &rules_content, bool verbose, bool all_events);
+	void load_rules(const string &rules_content, bool verbose, bool all_events,
+			std::string &extra, bool replace_container_info);
 	void describe_rule(string *rule);
 
 	static void init(lua_State *ls);

@@ -162,7 +162,7 @@ function table.tostring( tbl )
 end
 
 
-function load_rules(rules_content, rules_mgr, verbose, all_events)
+function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replace_container_info)
 
    compiler.set_verbose(verbose)
    compiler.set_all_events(all_events)
@@ -256,6 +256,30 @@ function load_rules(rules_content, rules_mgr, verbose, all_events)
 
 	    if (v['enabled'] == false) then
 	       falco_rules.enable_rule(rules_mgr, v['rule'], 0)
+	    end
+
+	    -- If the format string contains %container.info, replace it
+	    -- with extra. Otherwise, add extra onto the end of the format
+	    -- string.
+	    if string.find(v['output'], "%container.info", nil, true) ~= nil then
+
+		-- There may not be any extra, or we're not supposed
+		-- to replace it, in which case we use the generic
+		-- "%container.name (id=%container.id)"
+	       if replace_container_info == false then
+		  v['output'] = string.gsub(v['output'], "%%container.info", "%%container.name (id=%%container.id)")
+		  if extra ~= "" then
+		     v['output'] = v['output'].." "..extra
+		  end
+	       else
+		  safe_extra = string.gsub(extra, "%%", "%%%%")
+		  v['output'] = string.gsub(v['output'], "%%container.info", safe_extra)
+	       end
+	    else
+	       -- Just add the extra to the end
+		if extra ~= "" then
+		   v['output'] = v['output'].." "..extra
+		end
 	    end
 	 else
 	    error ("Unexpected type in load_rule: "..filter_ast.type)
