@@ -290,8 +290,8 @@ function compiler.compile_macro(line, list_defs)
    local ast, error_msg = parser.parse_filter(line)
 
    if (error_msg) then
-      print ("Compilation error when compiling \""..line.."\": ", error_msg)
-      error(error_msg)
+      msg = "Compilation error when compiling \""..line.."\": ".. error_msg
+      error(msg)
    end
 
    -- Traverse the ast looking for events/syscalls in the ignored
@@ -315,8 +315,8 @@ function compiler.compile_filter(name, source, macro_defs, list_defs)
    local ast, error_msg = parser.parse_filter(source)
 
    if (error_msg) then
-      print ("Compilation error when compiling \""..source.."\": ", error_msg)
-      error(error_msg)
+      msg = "Compilation error when compiling \""..source.."\": "..error_msg
+      error(msg)
    end
 
    -- Traverse the ast looking for events/syscalls in the ignored
