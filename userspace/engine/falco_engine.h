@@ -96,6 +96,16 @@ public:
 	//
 	void set_sampling_multiplier(double sampling_multiplier);
 
+	//
+	// You can optionally add "extra" formatting fields to the end
+	// of all output expressions. You can also choose to replace
+	// %container.info with the extra information or add it to the
+	// end of the expression. This is used in open source falco to
+	// add k8s/mesos/container information to outputs when
+	// available.
+	//
+	void set_extra(string &extra, bool replace_container_info);
+
 private:
 
 	//
@@ -132,5 +142,8 @@ private:
 	double m_sampling_multiplier;
 
 	std::string m_lua_main_filename = "rule_loader.lua";
+
+	std::string m_extra;
+	bool m_replace_container_info;
 };
 
