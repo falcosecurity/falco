@@ -281,6 +281,12 @@ function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replac
 		   v['output'] = v['output'].." "..extra
 		end
 	    end
+
+	    -- Ensure that the output field is properly formatted by
+	    -- creating a formatter from it. Any error will be thrown
+	    -- up to the top level.
+	    formatter = formats.formatter(v['output'])
+	    formats.free_formatter(formatter)
 	 else
 	    error ("Unexpected type in load_rule: "..filter_ast.type)
 	 end

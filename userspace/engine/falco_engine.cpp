@@ -24,6 +24,8 @@ along with falco.  If not, see <http://www.gnu.org/licenses/>.
 #include "falco_engine.h"
 #include "config_falco_engine.h"
 
+#include "formats.h"
+
 extern "C" {
 #include "lpeg.h"
 #include "lyaml.h"
@@ -73,6 +75,15 @@ void falco_engine::load_rules(const string &rules_content, bool verbose, bool al
 	{
 		m_rules = new falco_rules(m_inspector, this, m_ls);
 	}
+
+	// Note that falco_formats is added to both the lua state used
+	// by the falco engine as well as the separate lua state used
+	// by falco outputs.  Within the engine, only
+	// formats.formatter is used, so we can unconditionally set
+	// json_output to false.
+	bool json_output = false;
+	falco_formats::init(m_inspector, m_ls, json_output);
+
 	m_rules->load_rules(rules_content, verbose, all_events, m_extra, m_replace_container_info);
 }
 

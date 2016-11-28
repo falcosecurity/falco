@@ -39,7 +39,7 @@ void falco_formats::init(sinsp* inspector, lua_State *ls, bool json_output)
 	s_inspector = inspector;
 	s_json_output = json_output;
 
-	luaL_openlib(ls, "falco", ll_falco, 0);
+	luaL_openlib(ls, "formats", ll_falco, 0);
 }
 
 int falco_formats::formatter(lua_State *ls)
@@ -52,7 +52,7 @@ int falco_formats::formatter(lua_State *ls)
 	}
 	catch(sinsp_exception& e)
 	{
-		throw falco_exception("Invalid output format '" + format + "'.\n");
+		luaL_error(ls, "Invalid output format '%s': '%s'", format.c_str(), e.what());
 	}
 
 	lua_pushlightuserdata(ls, formatter);
@@ -64,14 +64,14 @@ int falco_formats::free_formatter(lua_State *ls)
 {
 	if (!lua_islightuserdata(ls, -1))
 	{
-		throw falco_exception("Invalid argument passed to free_formatter");
+		luaL_error(ls, "Invalid argument passed to free_formatter");
 	}
 
 	sinsp_evt_formatter *formatter = (sinsp_evt_formatter *) lua_topointer(ls, 1);
 
 	delete(formatter);
 
-	return 1;
+	return 0;
 }
 
 int falco_formats::format_event (lua_State *ls)
