@@ -46,6 +46,9 @@ void falco_outputs::init(bool json_output)
 
 	falco_common::init(m_lua_main_filename.c_str(), FALCO_SOURCE_LUA_DIR);
 
+	// Note that falco_formats is added to both the lua state used
+	// by the falco engine as well as the separate lua state used
+	// by falco outputs.
 	falco_formats::init(m_inspector, m_ls, json_output);
 
 	falco_logger::init(m_ls);
