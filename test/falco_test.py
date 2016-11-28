@@ -17,6 +17,8 @@ class FalcoTest(Test):
         """
         self.falcodir = self.params.get('falcodir', '/', default=os.path.join(self.basedir, '../build'))
 
+        self.stderr_contains = self.params.get('stderr_contains', '*', default='')
+        self.exit_status = self.params.get('exit_status', '*', default=0)
         self.should_detect = self.params.get('detect', '*', default=False)
         self.trace_file = self.params.get('trace_file', '*')
 
@@ -197,9 +199,18 @@ class FalcoTest(Test):
 
         res = self.falco_proc.run(timeout=180, sig=9)
 
+        if self.stderr_contains != '':
+            match = re.search(self.stderr_contains, res.stderr)
+            if match is None:
+                self.fail("Stderr of falco process did not contain content matching {}".format(self.stderr_contains))
+
+        if res.exit_status != self.exit_status:
+            self.error("Falco command \"{}\" exited with unexpected return value {} (!= {})".format(
+                cmd, res.exit_status, self.exit_status))
+
+        # No need to check any outputs if the falco process exited abnormally.
         if res.exit_status != 0:
-            self.error("Falco command \"{}\" exited with non-zero return value {}".format(
-                cmd, res.exit_status))
+            return
 
         self.check_rules_warnings(res)
         if len(self.rules_events) > 0:

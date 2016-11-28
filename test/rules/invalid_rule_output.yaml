@@ -1,0 +1,5 @@
+- rule: rule_with_invalid_output
+  desc: A rule with an invalid output field
+  condition: evt.type=open
+  output: "An open was seen %not_a_real_field"
+  priority: WARNING
