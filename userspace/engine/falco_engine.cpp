@@ -110,20 +110,20 @@ void falco_engine::enable_rule(string &pattern, bool enabled)
 	m_evttype_filter.enable(pattern, enabled);
 }
 
-falco_engine::rule_result *falco_engine::process_event(sinsp_evt *ev)
+unique_ptr<falco_engine::rule_result> falco_engine::process_event(sinsp_evt *ev)
 {
 
 	if(should_drop_evt())
 	{
-		return NULL;
+		return unique_ptr<struct rule_result>();
 	}
 
 	if(!m_evttype_filter.run(ev))
 	{
-		return NULL;
+		return unique_ptr<struct rule_result>();
 	}
 
-	struct rule_result *res = new rule_result();
+	unique_ptr<struct rule_result> res(new rule_result());
 
 	lua_getglobal(m_ls, lua_on_event.c_str());
 
