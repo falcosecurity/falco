@@ -171,11 +171,10 @@ uint64_t do_inspect(falco_engine *engine,
 		// engine, which will match the event against the set
 		// of rules. If a match is found, pass the event to
 		// the outputs.
-		falco_engine::rule_result *res = engine->process_event(ev);
+		unique_ptr<falco_engine::rule_result> res = engine->process_event(ev);
 		if(res)
 		{
 			outputs->handle_event(res->evt, res->rule, res->priority, res->format);
-			delete(res);
 		}
 
 		num_evts++;

@@ -63,7 +63,7 @@ public:
 	// the rule that matched. If no rule matched, returns NULL.
 	//
 	// the reutrned rule_result is allocated and must be delete()d.
-	rule_result *process_event(sinsp_evt *ev);
+	std::unique_ptr<rule_result> process_event(sinsp_evt *ev);
 
 	//
 	// Print details on the given rule. If rule is NULL, print
