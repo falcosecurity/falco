@@ -49,13 +49,12 @@ int falco_formats::formatter(lua_State *ls)
 	try
 	{
 		formatter = new sinsp_evt_formatter(s_inspector, format);
+		lua_pushlightuserdata(ls, formatter);
 	}
 	catch(sinsp_exception& e)
 	{
 		luaL_error(ls, "Invalid output format '%s': '%s'", format.c_str(), e.what());
 	}
-
-	lua_pushlightuserdata(ls, formatter);
 
 	return 1;
 }
