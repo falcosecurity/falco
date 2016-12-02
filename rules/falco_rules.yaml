@@ -116,7 +116,7 @@
 # The truncated dpkg-preconfigu is intentional, process names are
 # truncated at the sysdig level.
 - list: package_mgmt_binaries
-  items: [dpkg, dpkg-preconfigu, rpm, rpmkey, yum, frontend]
+  items: [dpkg, dpkg-preconfigu, dnf, rpm, rpmkey, yum, frontend]
 
 - macro: package_mgmt_procs
   condition: proc.name in (package_mgmt_binaries)
@@ -236,7 +236,7 @@
 # Only let rpm-related programs write to the rpm database
 - rule: Write below rpm database
   desc: an attempt to write to the rpm database by any non-rpm related program
-  condition: fd.name startswith /var/lib/rpm and open_write and not proc.name in (rpm,rpmkey,yum)
+  condition: fd.name startswith /var/lib/rpm and open_write and not proc.name in (dnf,rpm,rpmkey,yum)
   output: "Rpm database opened for writing by a non-rpm program (command=%proc.cmdline file=%fd.name)"
   priority: WARNING
 
