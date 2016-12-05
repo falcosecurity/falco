@@ -143,13 +143,13 @@ function start_subject_prog() {
 	if [ -z $RULES_FILE ]; then
 	    RULES_FILE=$SOURCE/../output/rules.yaml
 	fi
-	sudo $ROOT/test_mm -s $SOURCE/search_order.yaml -r $RULES_FILE > ./prog-output.txt 2>&1 &
+	sudo FALCO_STATS_EXTRA_variant=$VARIANT FALCO_STATS_EXTRA_benchmark=$live_test $ROOT/test_mm -S $SOURCE/search_order.yaml -s $STATS_FILE -r $RULES_FILE > ./prog-output.txt 2>&1 &
     elif [[ $ROOT == *"falco"* ]]; then
 	echo "   starting falco..."
 	if [ -z $RULES_FILE ]; then
 	    RULES_FILE=$SOURCE/rules/falco_rules.yaml
 	fi
-	sudo $ROOT/userspace/falco/falco -c $SOURCE/falco.yaml -r $RULES_FILE --option=stdout_output.enabled=false > ./prog-output.txt -A 2>&1 &
+	sudo FALCO_STATS_EXTRA_variant=$VARIANT FALCO_STATS_EXTRA_benchmark=$live_test $ROOT/userspace/falco/falco -c $SOURCE/falco.yaml -s $STATS_FILE -r $RULES_FILE --option=stdout_output.enabled=false > ./prog-output.txt -A 2>&1 &
     elif [[ $ROOT == *"sysdig"* ]]; then
 	echo "   starting sysdig..."
 	sudo $ROOT/userspace/sysdig/sysdig -N -z evt.type=none &
@@ -323,6 +323,7 @@ usage() {
     echo "   -r/--root: root directory containing falco/sysdig binaries (i.e. where you ran 'cmake')"
     echo "   -s/--source: root directory containing falco/sysdig source code"
     echo "   -R/--results: append test results to this file"
+    echo "   -S/--stats: append capture statistics to this file (only works for falco/test_mm)"
     echo "   -o/--output: append program output to this file"
     echo "   -U/--rules: path to rules file (only applicable for falco/test_mm)"
     echo "   -t/--test: test to run. Argument has the following format:"
@@ -342,7 +343,7 @@ usage() {
     echo "   -F/--falco-agent: When running an agent, whether or not to enable falco"
 }
 
-OPTS=`getopt -o hv:r:s:R:o:U:t:T: --long help,variant:,root:,source:,results:,output:,rules:,test:,tracedir:,agent-autodrop:,falco-agent: -n $0 -- "$@"`
+OPTS=`getopt -o hv:r:s:R:S:o:U:t:T: --long help,variant:,root:,source:,results:,stats:,output:,rules:,test:,tracedir:,agent-autodrop:,falco-agent: -n $0 -- "$@"`
 
 if [ $? != 0 ]; then
     echo "Exiting" >&2
@@ -356,6 +357,7 @@ ROOT=`dirname $0`/../build
 SOURCE=$ROOT
 SCRIPTDIR=`dirname $0`
 RESULTS_FILE=`dirname $0`/results.json
+STATS_FILE=`dirname $0`/capture_stats.json
 OUTPUT_FILE=`dirname $0`/program-output.txt
 RULES_FILE=
 TEST=trace:all
@@ -371,6 +373,7 @@ while true; do
 	-r | --root ) ROOT="$2"; shift 2;;
 	-s | --source ) SOURCE="$2"; shift 2;;
 	-R | --results ) RESULTS_FILE="$2"; shift 2;;
+	-S | --stats ) STATS_FILE="$2"; shift 2;;
 	-o | --output ) OUTPUT_FILE="$2"; shift 2;;
 	-U | --rules ) RULES_FILE="$2"; shift 2;;
 	-t | --test ) TEST="$2"; shift 2;;
@@ -402,6 +405,11 @@ SOURCE=`realpath $SOURCE`
 
 if [ -z $RESULTS_FILE ]; then
     echo "An output file for test results must be provided. Not continuing."
+    exit 1
+fi
+
+if [ -z $STATS_FILE ]; then
+    echo "An output file for capture statistics must be provided. Not continuing."
     exit 1
 fi
 

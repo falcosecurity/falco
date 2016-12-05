@@ -11,6 +11,8 @@ static void timer_handler (int signum)
 	g_save_stats = true;
 }
 
+extern char **environ;
+
 StatsFileWriter::StatsFileWriter()
 	: m_num_stats(0), m_inspector(NULL)
 {
@@ -48,6 +50,30 @@ bool StatsFileWriter::init(sinsp *inspector, string &filename, uint32_t interval
 		return false;
 	}
 
+	// (Undocumented) feature. Take any environment keys prefixed
+	// with FALCO_STATS_EXTRA_XXX and add them to the output. Used by
+	// run_performance_tests.sh.
+	for(uint32_t i=0; environ[i]; i++)
+	{
+		char *p = strstr(environ[i], "=");
+		if(!p)
+		{
+			errstr = string("Could not find environment separator in ") + string(environ[i]);
+			return false;
+		}
+		string key(environ[i], p-environ[i]);
+		string val(p+1, strlen(environ[i])-(p-environ[i])-1);
+		if(key.compare(0, 18, "FALCO_STATS_EXTRA_") == 0)
+		{
+			string sub = key.substr(18);
+			if (m_extra != "")
+			{
+				m_extra += ", ";
+			}
+			m_extra += "\"" + sub + "\": " + "\"" + val + "\"";
+		}
+	}
+
 	return true;
 }
 
@@ -73,8 +99,12 @@ void StatsFileWriter::handle()
 			delta.n_preemptions = cstats.n_preemptions - m_last_stats.n_preemptions;
 		}
 
-		m_output << "{\"sample\": " << m_num_stats <<
-			", \"cur\": {" <<
+		m_output << "{\"sample\": " << m_num_stats;
+		if(m_extra != "")
+		{
+			m_output << ", " << m_extra;
+		}
+		m_output << ", \"cur\": {" <<
 			"\"events\": " << cstats.n_evts <<
 			", \"drops\": " << cstats.n_drops <<
 			", \"preemptions\": " << cstats.n_preemptions <<

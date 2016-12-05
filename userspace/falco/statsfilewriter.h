@@ -1,6 +1,8 @@
 #pragma once
 
 #include <fstream>
+#include <string>
+#include <map>
 
 #include <sinsp.h>
 
@@ -25,6 +27,6 @@ protected:
 	uint32_t m_num_stats;
 	sinsp *m_inspector;
 	std::ofstream m_output;
-
+	std::string m_extra;
 	scap_stats m_last_stats;
 };
