@@ -9,7 +9,7 @@ include_directories("${CURL_INCLUDE_DIR}")
 include_directories("${YAMLCPP_INCLUDE_DIR}")
 include_directories("${DRAIOS_DEPENDENCIES_DIR}/yaml-${DRAIOS_YAML_VERSION}/target/include")
 
-add_executable(falco configuration.cpp logger.cpp falco_outputs.cpp falco.cpp)
+add_executable(falco configuration.cpp logger.cpp falco_outputs.cpp statsfilewriter.cpp falco.cpp)
 
 target_link_libraries(falco falco_engine sinsp)
 target_link_libraries(falco
