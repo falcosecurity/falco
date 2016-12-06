@@ -51,7 +51,10 @@ public:
 	void handle_event(sinsp_evt *ev, std::string &level, std::string &priority, std::string &format);
 
 private:
+	bool m_initialized;
+
 	std::string m_lua_add_output = "add_output";
 	std::string m_lua_output_event = "output_event";
+	std::string m_lua_output_cleanup = "output_cleanup";
 	std::string m_lua_main_filename = "output.lua";
 };
