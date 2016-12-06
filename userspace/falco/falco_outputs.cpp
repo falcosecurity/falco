@@ -27,13 +27,28 @@ along with falco.  If not, see <http://www.gnu.org/licenses/>.
 using namespace std;
 
 falco_outputs::falco_outputs()
+	: m_initialized(false)
 {
 
 }
 
 falco_outputs::~falco_outputs()
 {
+	if(m_initialized)
+	{
+		lua_getglobal(m_ls, m_lua_output_cleanup.c_str());
 
+		if(!lua_isfunction(m_ls, -1))
+		{
+			throw falco_exception("No function " + m_lua_output_cleanup + " found. ");
+		}
+
+		if(lua_pcall(m_ls, 0, 0, 0) != 0)
+		{
+			const char* lerr = lua_tostring(m_ls, -1);
+			throw falco_exception(string(lerr));
+		}
+	}
 }
 
 void falco_outputs::init(bool json_output)
@@ -52,6 +67,8 @@ void falco_outputs::init(bool json_output)
 	falco_formats::init(m_inspector, m_ls, json_output);
 
 	falco_logger::init(m_ls);
+
+	m_initialized = true;
 }
 
 void falco_outputs::add_output(output_config oc)
