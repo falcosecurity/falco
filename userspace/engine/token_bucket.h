@@ -40,9 +40,6 @@ public:
 	bool claim();
 private:
 
-	// Utility function to get the time in nanoseconds since the epoch.
-	uint64_t get_epoch_ns();
-
 	//
 	// The number of tokens generated per second.
 	//
