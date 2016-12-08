@@ -4,7 +4,7 @@ include_directories("${PROJECT_SOURCE_DIR}/../sysdig/userspace/libsinsp")
 include_directories("${PROJECT_BINARY_DIR}/userspace/engine")
 include_directories("${LUAJIT_INCLUDE}")
 
-add_library(falco_engine STATIC rules.cpp falco_common.cpp falco_engine.cpp formats.cpp)
+add_library(falco_engine STATIC rules.cpp falco_common.cpp falco_engine.cpp token_bucket.cpp formats.cpp)
 
 target_include_directories(falco_engine PUBLIC
   "${LUAJIT_INCLUDE}")

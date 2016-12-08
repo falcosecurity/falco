@@ -15,6 +15,21 @@ log_syslog: true
 # "alert", "critical", "error", "warning", "notice", "info", "debug".
 log_level: info
 
+# A throttling mechanism implemented as a token bucket limits the
+# rate of falco notifications. This throttling is controlled by the following configuration
+# options:
+#  - rate: the number of tokens (i.e. right to send a notification)
+#    gained per second. Defaults to 1.
+#  - max_burst: the maximum number of tokens outstanding. Defaults to 1000.
+#
+# With these defaults, falco could send up to 1000 notifications after
+# an initial quiet period, and then up to 1 notification per second
+# afterward. It would gain the full burst back after 1000 seconds of
+# no activity.
+
+outputs:
+  rate: 1
+  max_burst: 1000
 
 # Where security notifications should go.
 # Multiple outputs can be enabled.
