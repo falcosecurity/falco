@@ -103,14 +103,14 @@ void falco_outputs::add_output(output_config oc)
 
 }
 
-void falco_outputs::handle_event(sinsp_evt *ev, string &level, string &priority, string &format)
+void falco_outputs::handle_event(sinsp_evt *ev, string &rule, string &priority, string &format)
 {
 	lua_getglobal(m_ls, m_lua_output_event.c_str());
 
 	if(lua_isfunction(m_ls, -1))
 	{
 		lua_pushlightuserdata(m_ls, ev);
-		lua_pushstring(m_ls, level.c_str());
+		lua_pushstring(m_ls, rule.c_str());
 		lua_pushstring(m_ls, priority.c_str());
 		lua_pushstring(m_ls, format.c_str());
 
