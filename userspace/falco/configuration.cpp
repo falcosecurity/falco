@@ -105,6 +105,9 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 
 	falco_logger::set_level(log_level);
 
+	m_notifications_rate = m_config->get_scalar<uint32_t>("outputs", "rate", 1);
+	m_notifications_max_burst = m_config->get_scalar<uint32_t>("outputs", "max_burst", 1000);
+
 	falco_logger::log_stderr = m_config->get_scalar<bool>("log_stderr", false);
 	falco_logger::log_syslog = m_config->get_scalar<bool>("log_syslog", true);
 }
