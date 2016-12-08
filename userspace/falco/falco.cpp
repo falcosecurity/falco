@@ -427,7 +427,7 @@ int falco_init(int argc, char **argv)
 			engine->enable_rule(pattern, false);
 		}
 
-		outputs->init(config.m_json_output);
+		outputs->init(config.m_json_output, config.m_notifications_rate, config.m_notifications_max_burst);
 
 		if(!all_events)
 		{

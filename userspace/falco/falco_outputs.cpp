@@ -51,7 +51,7 @@ falco_outputs::~falco_outputs()
 	}
 }
 
-void falco_outputs::init(bool json_output)
+void falco_outputs::init(bool json_output, uint32_t rate, uint32_t max_burst)
 {
 	// The engine must have been given an inspector by now.
 	if(! m_inspector)
@@ -67,6 +67,8 @@ void falco_outputs::init(bool json_output)
 	falco_formats::init(m_inspector, m_ls, json_output);
 
 	falco_logger::init(m_ls);
+
+	m_notifications_tb.init(rate, max_burst);
 
 	m_initialized = true;
 }
@@ -105,6 +107,12 @@ void falco_outputs::add_output(output_config oc)
 
 void falco_outputs::handle_event(sinsp_evt *ev, string &rule, string &priority, string &format)
 {
+	if(!m_notifications_tb.claim())
+	{
+		falco_logger::log(LOG_DEBUG, "Skipping rate-limited notification for rule " + rule + "\n");
+		return;
+	}
+
 	lua_getglobal(m_ls, m_lua_output_event.c_str());
 
 	if(lua_isfunction(m_ls, -1))

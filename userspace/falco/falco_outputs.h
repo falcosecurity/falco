@@ -19,6 +19,7 @@ along with falco.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "falco_common.h"
+#include "token_bucket.h"
 
 //
 // This class acts as the primary interface between a program and the
@@ -40,7 +41,7 @@ public:
 		std::map<std::string, std::string> options;
 	};
 
-	void init(bool json_output);
+	void init(bool json_output, uint32_t rate, uint32_t max_burst);
 
 	void add_output(output_config oc);
 
@@ -52,6 +53,9 @@ public:
 
 private:
 	bool m_initialized;
+
+	// Rate limits notifications
+	token_bucket m_notifications_tb;
 
 	std::string m_lua_add_output = "add_output";
 	std::string m_lua_output_event = "output_event";
