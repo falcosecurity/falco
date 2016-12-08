@@ -20,17 +20,61 @@ along with falco.  If not, see <http://www.gnu.org/licenses/>.
 #include "logger.h"
 #include "chisel_api.h"
 
+#include "falco_common.h"
+
 const static struct luaL_reg ll_falco [] =
 {
 	{"syslog", &falco_logger::syslog},
 	{NULL,NULL}
 };
 
+int falco_logger::level = LOG_INFO;
 
 void falco_logger::init(lua_State *ls)
 {
 	luaL_openlib(ls, "falco", ll_falco, 0);
 }
+
+void falco_logger::set_level(string &level)
+{
+	if(level == "emergency")
+	{
+		falco_logger::level = LOG_EMERG;
+	}
+	else if(level == "alert")
+	{
+		falco_logger::level = LOG_ALERT;
+	}
+	else if(level == "critical")
+	{
+		falco_logger::level = LOG_CRIT;
+	}
+	else if(level == "error")
+	{
+		falco_logger::level = LOG_ERR;
+	}
+	else if(level == "warning")
+	{
+		falco_logger::level = LOG_WARNING;
+	}
+	else if(level == "notice")
+	{
+		falco_logger::level = LOG_NOTICE;
+	}
+	else if(level == "info")
+	{
+		falco_logger::level = LOG_INFO;
+	}
+	else if(level == "debug")
+	{
+		falco_logger::level = LOG_DEBUG;
+	}
+	else
+	{
+		throw falco_exception("Unknown log level " + level);
+	}
+}
+
 
 int falco_logger::syslog(lua_State *ls) {
 	int priority = luaL_checknumber(ls, 1);
@@ -49,6 +93,12 @@ bool falco_logger::log_stderr = true;
 bool falco_logger::log_syslog = true;
 
 void falco_logger::log(int priority, const string msg) {
+
+	if(priority > falco_logger::level)
+	{
+		return;
+	}
+
 	if (falco_logger::log_syslog) {
 		::syslog(priority, "%s", msg.c_str());
 	}

@@ -9,6 +9,12 @@ json_output: false
 log_stderr: true
 log_syslog: true
 
+# Minimum log level to include in logs. Note: these levels are
+# separate from the priority field of rules. This refers only to the
+# log level of falco's internal logging. Can be one of "emergency",
+# "alert", "critical", "error", "warning", "notice", "info", "debug".
+log_level: info
+
 
 # Where security notifications should go.
 # Multiple outputs can be enabled.
