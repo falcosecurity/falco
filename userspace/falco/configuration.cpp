@@ -101,6 +101,10 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 		throw invalid_argument("Error reading config file (" + m_config_file + "): No outputs configured. Please configure at least one output file output enabled but no filename in configuration block");
 	}
 
+	string log_level = m_config->get_scalar<string>("log_level", "info");
+
+	falco_logger::set_level(log_level);
+
 	falco_logger::log_stderr = m_config->get_scalar<bool>("log_stderr", false);
 	falco_logger::log_syslog = m_config->get_scalar<bool>("log_syslog", true);
 }

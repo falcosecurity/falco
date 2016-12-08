@@ -32,11 +32,15 @@ class falco_logger
  public:
 	static void init(lua_State *ls);
 
+	// Will throw exception if level is unknown.
+	static void set_level(string &level);
+
 	// value = falco.syslog(level, message)
 	static int syslog(lua_State *ls);
 
 	static void log(int priority, const string msg);
 
+	static int level;
 	static bool log_stderr;
 	static bool log_syslog;
 };
