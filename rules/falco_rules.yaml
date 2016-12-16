@@ -76,7 +76,7 @@
 
 # dpkg -L login | grep bin | xargs ls -ld | grep -v '^d' | awk '{print $9}' | xargs -L 1 basename | tr "\\n" ","
 - list: login_binaries
-  items: [login, systemd-logind, su, nologin, faillog, lastlog, newgrp, sg]
+  items: [login, systemd, systemd-logind, su, nologin, faillog, lastlog, newgrp, sg]
 
 # dpkg -L passwd | grep bin | xargs ls -ld | grep -v '^d' | awk '{print $9}' | xargs -L 1 basename | tr "\\n" ","
 - list: passwd_binaries
