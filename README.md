@@ -2,7 +2,7 @@
 
 ####Latest release
 
-**v0.4.0**
+**v0.5.0**
 Read the [change log](https://github.com/draios/falco/blob/dev/CHANGELOG.md)
 
 Dev Branch: [![Build Status](https://travis-ci.org/draios/falco.svg?branch=dev)](https://travis-ci.org/draios/falco)<br />
@@ -21,6 +21,11 @@ Falco can detect and alert on any behavior that involves making Linux system cal
 - Unexpected read of a sensitive file (like `/etc/shadow`)
 - A non-device file is written to `/dev`
 - A standard system binary (like `ls`) makes an outbound network connection
+
+#### How Falco Compares to Other Security Tools like SELinux, Auditd, etc.
+
+One of the questions we often get when we talk about Sysdig Falco is “How does it compare to other tools like SELinux, AppArmor, Auditd, etc. that also have security policies?”. We wrote a [blog post](https://sysdig.com/blog/selinux-seccomp-falco-technical-discussion/) comparing Falco to other tools.
+
 
 Documentation
 ---
