@@ -36,6 +36,7 @@ along with falco.  If not, see <http://www.gnu.org/licenses/>.
 #include "configuration.h"
 #include "falco_engine.h"
 #include "config_falco.h"
+#include "statsfilewriter.h"
 
 bool g_terminate = false;
 //
@@ -97,6 +98,8 @@ static void usage()
 	   " -P, --pidfile <pid_file>      When run as a daemon, write pid to specified file\n"
            " -r <rules_file>               Rules file (defaults to value set in configuration file, or /etc/falco_rules.yaml).\n"
 	   "                               Can be specified multiple times to read from multiple files.\n"
+	   " -s <stats_file>               If specified, write statistics related to falco's reading/processing of events\n"
+	   "                               to this file. (Only useful in live mode).\n"
 	   " -v                            Verbose output.\n"
 	   "\n"
     );
@@ -124,11 +127,23 @@ std::list<string> cmdline_options;
 //
 uint64_t do_inspect(falco_engine *engine,
 		    falco_outputs *outputs,
-		    sinsp* inspector)
+		    sinsp* inspector,
+		    string &stats_filename)
 {
 	uint64_t num_evts = 0;
 	int32_t res;
 	sinsp_evt* ev;
+	StatsFileWriter writer;
+
+	if (stats_filename != "")
+	{
+		string errstr;
+
+		if (!writer.init(inspector, stats_filename, 5, errstr))
+		{
+			throw falco_exception(errstr);
+		}
+	}
 
 	//
 	// Loop through the events
@@ -137,6 +152,8 @@ uint64_t do_inspect(falco_engine *engine,
 	{
 
 		res = inspector->next(&ev);
+
+		writer.handle();
 
 		if (g_terminate)
 		{
@@ -171,11 +188,10 @@ uint64_t do_inspect(falco_engine *engine,
 		// engine, which will match the event against the set
 		// of rules. If a match is found, pass the event to
 		// the outputs.
-		falco_engine::rule_result *res = engine->process_event(ev);
+		unique_ptr<falco_engine::rule_result> res = engine->process_event(ev);
 		if(res)
 		{
 			outputs->handle_event(res->evt, res->rule, res->priority, res->format);
-			delete(res);
 		}
 
 		num_evts++;
@@ -203,6 +219,7 @@ int falco_init(int argc, char **argv)
 	string pidfilename = "/var/run/falco.pid";
 	bool describe_all_rules = false;
 	string describe_rule = "";
+	string stats_filename = "";
 	bool verbose = false;
 	bool all_events = false;
 	string* k8s_api = 0;
@@ -247,7 +264,7 @@ int falco_init(int argc, char **argv)
 		// Parse the args
 		//
 		while((op = getopt_long(argc, argv,
-                                        "hc:AdD:e:k:K:Ll:m:o:P:p:r:vw:",
+                                        "hc:AdD:e:k:K:Ll:m:o:P:p:r:s:vw:",
                                         long_options, &long_index)) != -1)
 		{
 			switch(op)
@@ -319,6 +336,9 @@ int falco_init(int argc, char **argv)
 			case 'r':
 				rules_filenames.push_back(optarg);
 				break;
+			case 's':
+				stats_filename = optarg;
+				break;
 			case 'v':
 				verbose = true;
 				break;
@@ -337,10 +357,10 @@ int falco_init(int argc, char **argv)
 		inspector = new sinsp();
 		engine = new falco_engine();
 		engine->set_inspector(inspector);
+		engine->set_extra(output_format, replace_container_info);
 
 		outputs = new falco_outputs();
 		outputs->set_inspector(inspector);
-		outputs->set_extra(output_format, replace_container_info);
 
 		// Some combinations of arguments are not allowed.
 		if (daemon && pidfilename == "") {
@@ -407,7 +427,7 @@ int falco_init(int argc, char **argv)
 			engine->enable_rule(pattern, false);
 		}
 
-		outputs->init(config.m_json_output);
+		outputs->init(config.m_json_output, config.m_notifications_rate, config.m_notifications_max_burst);
 
 		if(!all_events)
 		{
@@ -589,7 +609,8 @@ int falco_init(int argc, char **argv)
 
 		num_evts = do_inspect(engine,
 				      outputs,
-				      inspector);
+				      inspector,
+				      stats_filename);
 
 		duration = ((double)clock()) / CLOCKS_PER_SEC - duration;
 

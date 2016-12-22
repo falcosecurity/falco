@@ -95,6 +95,13 @@ trace_files: !mux
       - rules/double_rule.yaml
     trace_file: trace_files/cat_write.scap
 
+  invalid_rule_output:
+    exit_status: 1
+    stderr_contains: "Runtime error: Error loading rules:.* Invalid output format 'An open was seen %not_a_real_field': 'invalid formatting token not_a_real_field'. Exiting."
+    rules_file:
+      - rules/invalid_rule_output.yaml
+    trace_file: trace_files/cat_write.scap
+
   disabled_rules:
     detect: False
     rules_file:

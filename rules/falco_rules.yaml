@@ -76,7 +76,7 @@
 
 # dpkg -L login | grep bin | xargs ls -ld | grep -v '^d' | awk '{print $9}' | xargs -L 1 basename | tr "\\n" ","
 - list: login_binaries
-  items: [login, systemd-logind, su, nologin, faillog, lastlog, newgrp, sg]
+  items: [login, systemd, systemd-logind, su, nologin, faillog, lastlog, newgrp, sg]
 
 # dpkg -L passwd | grep bin | xargs ls -ld | grep -v '^d' | awk '{print $9}' | xargs -L 1 basename | tr "\\n" ","
 - list: passwd_binaries
@@ -116,7 +116,7 @@
 # The truncated dpkg-preconfigu is intentional, process names are
 # truncated at the sysdig level.
 - list: package_mgmt_binaries
-  items: [dpkg, dpkg-preconfigu, rpm, rpmkey, yum, frontend]
+  items: [dpkg, dpkg-preconfigu, dnf, rpm, rpmkey, yum, frontend]
 
 - macro: package_mgmt_procs
   condition: proc.name in (package_mgmt_binaries)
@@ -236,7 +236,7 @@
 # Only let rpm-related programs write to the rpm database
 - rule: Write below rpm database
   desc: an attempt to write to the rpm database by any non-rpm related program
-  condition: fd.name startswith /var/lib/rpm and open_write and not proc.name in (rpm,rpmkey,yum)
+  condition: fd.name startswith /var/lib/rpm and open_write and not proc.name in (dnf,rpm,rpmkey,yum)
   output: "Rpm database opened for writing by a non-rpm program (command=%proc.cmdline file=%fd.name)"
   priority: WARNING
 
@@ -282,17 +282,17 @@
 
 - rule: Run shell untrusted
   desc: an attempt to spawn a shell by a non-shell program. Exceptions are made for trusted binaries.
-  condition: spawned_process and not container and shell_procs and proc.pname exists and not proc.pname in (cron_binaries, shell_binaries, sshd, sudo, docker_binaries, k8s_binaries, su, tmux, screen, emacs, systemd, login, flock, fbash, nginx, monit, supervisord, dragent, aws, initdb, docker-compose, make, configure, awk, falco)
+  condition: spawned_process and not container and shell_procs and proc.pname exists and not proc.pname in (cron_binaries, shell_binaries, sshd, sudo, docker_binaries, k8s_binaries, su, tmux, screen, emacs, systemd, login, flock, fbash, nginx, monit, supervisord, dragent, aws, initdb, docker-compose, make, configure, awk, falco, fail2ban-server, apt-get, apt)
   output: "Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline)"
   priority: WARNING
 
 - macro: trusted_containers
-  condition: (container.image startswith sysdig/agent or container.image startswith sysdig/falco or container.image startswith sysdig/sysdig or container.image startswith gcr.io/google_containers/hyperkube)
+  condition: (container.image startswith sysdig/agent or container.image startswith sysdig/falco or container.image startswith sysdig/sysdig or container.image startswith gcr.io/google_containers/hyperkube or container.image startswith gcr.io/google_containers/kube-proxy)
 
 - rule: File Open by Privileged Container
   desc: Any open by a privileged container. Exceptions are made for known trusted images.
   condition: (open_read or open_write) and container and container.privileged=true and not trusted_containers
-  output: File opened for read/write by non-privileged container (user=%user.name command=%proc.cmdline %container.info file=%fd.name)
+  output: File opened for read/write by privileged container (user=%user.name command=%proc.cmdline %container.info file=%fd.name)
   priority: WARNING
 
 - macro: sensitive_mount

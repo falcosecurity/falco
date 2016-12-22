@@ -24,6 +24,8 @@ along with falco.  If not, see <http://www.gnu.org/licenses/>.
 #include "falco_engine.h"
 #include "config_falco_engine.h"
 
+#include "formats.h"
+
 extern "C" {
 #include "lpeg.h"
 #include "lyaml.h"
@@ -38,7 +40,8 @@ string lua_print_stats = "print_stats";
 using namespace std;
 
 falco_engine::falco_engine(bool seed_rng)
-	: m_rules(NULL), m_sampling_ratio(1), m_sampling_multiplier(0)
+	: m_rules(NULL), m_sampling_ratio(1), m_sampling_multiplier(0),
+	  m_replace_container_info(false)
 {
 	luaopen_lpeg(m_ls);
 	luaopen_yaml(m_ls);
@@ -72,7 +75,16 @@ void falco_engine::load_rules(const string &rules_content, bool verbose, bool al
 	{
 		m_rules = new falco_rules(m_inspector, this, m_ls);
 	}
-	m_rules->load_rules(rules_content, verbose, all_events);
+
+	// Note that falco_formats is added to both the lua state used
+	// by the falco engine as well as the separate lua state used
+	// by falco outputs.  Within the engine, only
+	// formats.formatter is used, so we can unconditionally set
+	// json_output to false.
+	bool json_output = false;
+	falco_formats::init(m_inspector, m_ls, json_output);
+
+	m_rules->load_rules(rules_content, verbose, all_events, m_extra, m_replace_container_info);
 }
 
 void falco_engine::load_rules_file(const string &rules_filename, bool verbose, bool all_events)
@@ -98,20 +110,20 @@ void falco_engine::enable_rule(string &pattern, bool enabled)
 	m_evttype_filter.enable(pattern, enabled);
 }
 
-falco_engine::rule_result *falco_engine::process_event(sinsp_evt *ev)
+unique_ptr<falco_engine::rule_result> falco_engine::process_event(sinsp_evt *ev)
 {
 
 	if(should_drop_evt())
 	{
-		return NULL;
+		return unique_ptr<struct rule_result>();
 	}
 
 	if(!m_evttype_filter.run(ev))
 	{
-		return NULL;
+		return unique_ptr<struct rule_result>();
 	}
 
-	struct rule_result *res = new rule_result();
+	unique_ptr<struct rule_result> res(new rule_result());
 
 	lua_getglobal(m_ls, lua_on_event.c_str());
 
@@ -182,6 +194,12 @@ void falco_engine::set_sampling_ratio(uint32_t sampling_ratio)
 void falco_engine::set_sampling_multiplier(double sampling_multiplier)
 {
 	m_sampling_multiplier = sampling_multiplier;
+}
+
+void falco_engine::set_extra(string &extra, bool replace_container_info)
+{
+	m_extra = extra;
+	m_replace_container_info = replace_container_info;
 }
 
 inline bool falco_engine::should_drop_evt()

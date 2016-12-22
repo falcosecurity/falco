@@ -19,6 +19,7 @@ along with falco.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "falco_common.h"
+#include "token_bucket.h"
 
 //
 // This class acts as the primary interface between a program and the
@@ -40,22 +41,24 @@ public:
 		std::map<std::string, std::string> options;
 	};
 
-	void init(bool json_output);
+	void init(bool json_output, uint32_t rate, uint32_t max_burst);
 
 	void add_output(output_config oc);
-
-	void set_extra(string &extra, bool replace_container_info);
 
 	//
 	// ev is an event that has matched some rule. Pass the event
 	// to all configured outputs.
 	//
-	void handle_event(sinsp_evt *ev, std::string &level, std::string &priority, std::string &format);
+	void handle_event(sinsp_evt *ev, std::string &rule, std::string &priority, std::string &format);
 
 private:
+	bool m_initialized;
+
+	// Rate limits notifications
+	token_bucket m_notifications_tb;
+
 	std::string m_lua_add_output = "add_output";
 	std::string m_lua_output_event = "output_event";
+	std::string m_lua_output_cleanup = "output_cleanup";
 	std::string m_lua_main_filename = "output.lua";
-	std::string m_extra;
-	bool m_replace_container_info;
 };

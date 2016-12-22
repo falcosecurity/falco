@@ -43,7 +43,4 @@ class falco_formats
 	static int format_event(lua_State *ls);
 
 	static sinsp* s_inspector;
-
- private:
-	lua_State* m_ls;
 };

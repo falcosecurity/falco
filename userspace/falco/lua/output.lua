@@ -24,6 +24,8 @@ mod.levels = levels
 
 local outputs = {}
 
+local formatters = {}
+
 function mod.stdout(level, msg)
    print (msg)
 end
@@ -75,14 +77,26 @@ end
 function output_event(event, rule, priority, format)
    local level = level_of(priority)
    format = "*%evt.time: "..levels[level+1].." "..format
-   formatter = falco.formatter(format)
-   msg = falco.format_event(event, rule, levels[level+1], formatter)
+   if formatters[rule] == nil then
+      formatter = formats.formatter(format)
+      formatters[rule] = formatter
+   else
+      formatter = formatters[rule]
+   end
+
+   msg = formats.format_event(event, rule, levels[level+1], formatter)
 
    for index,o in ipairs(outputs) do
       o.output(level, msg, o.config)
    end
+end
 
-   falco.free_formatter(formatter)
+function output_cleanup()
+   for rule, formatter in pairs(formatters) do
+      formats.free_formatter(formatter)
+   end
+
+   formatters = {}
 end
 
 function add_output(output_name, config)

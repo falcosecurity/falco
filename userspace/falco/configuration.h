@@ -144,6 +144,8 @@ class falco_configuration
 	std::list<std::string> m_rules_filenames;
 	bool m_json_output;
 	std::vector<falco_outputs::output_config> m_outputs;
+	uint32_t m_notifications_rate;
+	uint32_t m_notifications_max_burst;
  private:
 	void init_cmdline_options(std::list<std::string> &cmdline_options);
 

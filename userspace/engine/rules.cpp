@@ -108,7 +108,9 @@ void falco_rules::enable_rule(string &rule, bool enabled)
 	m_engine->enable_rule(rule, enabled);
 }
 
-void falco_rules::load_rules(const string &rules_content, bool verbose, bool all_events)
+void falco_rules::load_rules(const string &rules_content,
+			     bool verbose, bool all_events,
+			     string &extra, bool replace_container_info)
 {
 	lua_getglobal(m_ls, m_lua_load_rules.c_str());
 	if(lua_isfunction(m_ls, -1))
@@ -182,7 +184,9 @@ void falco_rules::load_rules(const string &rules_content, bool verbose, bool all
 		lua_pushlightuserdata(m_ls, this);
 		lua_pushboolean(m_ls, (verbose ? 1 : 0));
 		lua_pushboolean(m_ls, (all_events ? 1 : 0));
-		if(lua_pcall(m_ls, 4, 0, 0) != 0)
+		lua_pushstring(m_ls, extra.c_str());
+		lua_pushboolean(m_ls, (replace_container_info ? 1 : 0));
+		if(lua_pcall(m_ls, 6, 0, 0) != 0)
 		{
 			const char* lerr = lua_tostring(m_ls, -1);
 			string err = "Error loading rules:" + string(lerr);

@@ -123,7 +123,46 @@ end
 -- to a rule.
 local state = {macros={}, lists={}, filter_ast=nil, rules_by_name={}, n_rules=0, rules_by_idx={}}
 
-function load_rules(rules_content, rules_mgr, verbose, all_events)
+-- From http://lua-users.org/wiki/TableUtils
+--
+function table.val_to_str ( v )
+  if "string" == type( v ) then
+    v = string.gsub( v, "\n", "\\n" )
+    if string.match( string.gsub(v,"[^'\"]",""), '^"+$' ) then
+      return "'" .. v .. "'"
+    end
+    return '"' .. string.gsub(v,'"', '\\"' ) .. '"'
+  else
+    return "table" == type( v ) and table.tostring( v ) or
+      tostring( v )
+  end
+end
+
+function table.key_to_str ( k )
+  if "string" == type( k ) and string.match( k, "^[_%a][_%a%d]*$" ) then
+    return k
+  else
+    return "[" .. table.val_to_str( k ) .. "]"
+  end
+end
+
+function table.tostring( tbl )
+  local result, done = {}, {}
+  for k, v in ipairs( tbl ) do
+    table.insert( result, table.val_to_str( v ) )
+    done[ k ] = true
+  end
+  for k, v in pairs( tbl ) do
+    if not done[ k ] then
+      table.insert( result,
+        table.key_to_str( k ) .. "=" .. table.val_to_str( v ) )
+    end
+  end
+  return "{" .. table.concat( result, "," ) .. "}"
+end
+
+
+function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replace_container_info)
 
    compiler.set_verbose(verbose)
    compiler.set_all_events(all_events)
@@ -133,6 +172,10 @@ function load_rules(rules_content, rules_mgr, verbose, all_events)
    if rules == nil then
       -- An empty rules file is acceptable
       return
+   end
+
+   if type(rules) ~= "table" then
+      error("Rules content \""..rules_content.."\" is not yaml")
    end
 
    for i,v in ipairs(rules) do -- iterate over yaml list
@@ -164,9 +207,9 @@ function load_rules(rules_content, rules_mgr, verbose, all_events)
 
 	 state.lists[v['list']] = items
 
-      else -- rule
+      elseif (v['rule']) then
 
-	 if (v['rule'] == nil) then
+	 if (v['rule'] == nil or type(v['rule']) == "table") then
 	    error ("Missing name in rule")
 	 end
 
@@ -214,9 +257,41 @@ function load_rules(rules_content, rules_mgr, verbose, all_events)
 	    if (v['enabled'] == false) then
 	       falco_rules.enable_rule(rules_mgr, v['rule'], 0)
 	    end
+
+	    -- If the format string contains %container.info, replace it
+	    -- with extra. Otherwise, add extra onto the end of the format
+	    -- string.
+	    if string.find(v['output'], "%container.info", nil, true) ~= nil then
+
+		-- There may not be any extra, or we're not supposed
+		-- to replace it, in which case we use the generic
+		-- "%container.name (id=%container.id)"
+	       if replace_container_info == false then
+		  v['output'] = string.gsub(v['output'], "%%container.info", "%%container.name (id=%%container.id)")
+		  if extra ~= "" then
+		     v['output'] = v['output'].." "..extra
+		  end
+	       else
+		  safe_extra = string.gsub(extra, "%%", "%%%%")
+		  v['output'] = string.gsub(v['output'], "%%container.info", safe_extra)
+	       end
+	    else
+	       -- Just add the extra to the end
+		if extra ~= "" then
+		   v['output'] = v['output'].." "..extra
+		end
+	    end
+
+	    -- Ensure that the output field is properly formatted by
+	    -- creating a formatter from it. Any error will be thrown
+	    -- up to the top level.
+	    formatter = formats.formatter(v['output'])
+	    formats.free_formatter(formatter)
 	 else
 	    error ("Unexpected type in load_rule: "..filter_ast.type)
 	 end
+      else
+	 error ("Unknown rule object: "..table.tostring(v))
       end
    end
 
