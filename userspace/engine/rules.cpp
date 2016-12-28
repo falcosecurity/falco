@@ -28,6 +28,7 @@ extern "C" {
 #include "falco_engine.h"
 const static struct luaL_reg ll_falco_rules [] =
 {
+	{"clear_filters", &falco_rules::clear_filters},
 	{"add_filter", &falco_rules::add_filter},
 	{"enable_rule", &falco_rules::enable_rule},
 	{NULL,NULL}
@@ -42,6 +43,24 @@ falco_rules::falco_rules(sinsp* inspector, falco_engine *engine, lua_State *ls)
 void falco_rules::init(lua_State *ls)
 {
 	luaL_openlib(ls, "falco_rules", ll_falco_rules, 0);
+}
+
+int falco_rules::clear_filters(lua_State *ls)
+{
+	if (! lua_islightuserdata(ls, -1))
+	{
+		throw falco_exception("Invalid arguments passed to clear_filters()\n");
+	}
+
+	falco_rules *rules = (falco_rules *) lua_topointer(ls, -1);
+	rules->clear_filters();
+
+	return 0;
+}
+
+void falco_rules::clear_filters()
+{
+	m_engine->clear_filters();
 }
 
 int falco_rules::add_filter(lua_State *ls)

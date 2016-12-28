@@ -49,6 +49,8 @@ falco_engine::falco_engine(bool seed_rng)
 	falco_common::init(m_lua_main_filename.c_str(), FALCO_ENGINE_SOURCE_LUA_DIR);
 	falco_rules::init(m_ls);
 
+	m_evttype_filter.reset(new sinsp_evttype_filter());
+
 	if(seed_rng)
 	{
 		srandom((unsigned) getpid());
@@ -107,7 +109,7 @@ void falco_engine::load_rules_file(const string &rules_filename, bool verbose, b
 
 void falco_engine::enable_rule(string &pattern, bool enabled)
 {
-	m_evttype_filter.enable(pattern, enabled);
+	m_evttype_filter->enable(pattern, enabled);
 }
 
 unique_ptr<falco_engine::rule_result> falco_engine::process_event(sinsp_evt *ev)
@@ -118,7 +120,7 @@ unique_ptr<falco_engine::rule_result> falco_engine::process_event(sinsp_evt *ev)
 		return unique_ptr<struct rule_result>();
 	}
 
-	if(!m_evttype_filter.run(ev))
+	if(!m_evttype_filter->run(ev))
 	{
 		return unique_ptr<struct rule_result>();
 	}
@@ -183,7 +185,12 @@ void falco_engine::add_evttype_filter(string &rule,
 				      list<uint32_t> &evttypes,
 				      sinsp_filter* filter)
 {
-	m_evttype_filter.add(rule, evttypes, filter);
+	m_evttype_filter->add(rule, evttypes, filter);
+}
+
+void falco_engine::clear_filters()
+{
+	m_evttype_filter.reset(new sinsp_evttype_filter());
 }
 
 void falco_engine::set_sampling_ratio(uint32_t sampling_ratio)

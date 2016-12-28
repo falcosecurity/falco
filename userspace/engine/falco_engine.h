@@ -19,6 +19,7 @@ along with falco.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <string>
+#include <memory>
 
 #include "sinsp.h"
 #include "filter.h"
@@ -84,6 +85,9 @@ public:
 				list<uint32_t> &evttypes,
 				sinsp_filter* filter);
 
+	// Clear all existing filters.
+	void clear_filters();
+
 	//
 	// Set the sampling ratio, which can affect which events are
 	// matched against the set of rules.
@@ -116,7 +120,7 @@ private:
 	inline bool should_drop_evt();
 
 	falco_rules *m_rules;
-        sinsp_evttype_filter m_evttype_filter;
+	std::unique_ptr<sinsp_evttype_filter> m_evttype_filter;
 
 	//
 	// Here's how the sampling ratio and multiplier influence
