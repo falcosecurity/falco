@@ -121,7 +121,16 @@ end
 -- object. The by_name index is used for things like describing rules,
 -- and the by_idx index is used to map the relational node index back
 -- to a rule.
-local state = {macros={}, lists={}, filter_ast=nil, rules_by_name={}, n_rules=0, rules_by_idx={}}
+local state = {macros={}, lists={}, filter_ast=nil, rules_by_name={}, macros_by_name={}, lists_by_name={},
+	       n_rules=0, rules_by_idx={}, ordered_rule_names={}, ordered_macro_names={}, ordered_list_names={}}
+
+local function reset_rules(rules_mgr)
+   falco_rules.clear_filters(rules_mgr)
+   state.n_rules = 0
+   state.rules_by_idx = {}
+   state.macros = {}
+   state.lists = {}
+end
 
 -- From http://lua-users.org/wiki/TableUtils
 --
@@ -178,34 +187,42 @@ function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replac
       error("Rules content \""..rules_content.."\" is not yaml")
    end
 
-   for i,v in ipairs(rules) do -- iterate over yaml list
+   -- Iterate over yaml list. In this pass, all we're doing is
+   -- populating the set of rules, macros, and lists. We're not
+   -- expanding/compiling anything yet. All that will happen in a
+   -- second pass
+   for i,v in ipairs(rules) do
 
       if (not (type(v) == "table")) then
 	 error ("Unexpected element of type " ..type(v)..". Each element should be a yaml associative array.")
       end
 
       if (v['macro']) then
-	 local ast = compiler.compile_macro(v['condition'], state.lists)
-	 state.macros[v['macro']] = ast.filter.value
+	 if state.macros_by_name[v['macro']] == nil then
+	    state.ordered_macro_names[#state.ordered_macro_names+1] = v['macro']
+	 end
 
-      elseif (v['list']) then
-	 -- list items are represented in yaml as a native list, so no
-	 -- parsing necessary
-	 local items = {}
-
-	 -- List items may be references to other lists, so go through
-	 -- the items and expand any references to the items in the list
-	 for i, item in ipairs(v['items']) do
-	    if (state.lists[item] == nil) then
-	       items[#items+1] = item
-	    else
-	       for i, exp_item in ipairs(state.lists[item]) do
-		  items[#items+1] = exp_item
-	       end
+	 for i, field in ipairs({'condition'}) do
+	    if (v[field] == nil) then
+	       error ("Missing "..field.." in macro with name "..v['macro'])
 	    end
 	 end
 
-	 state.lists[v['list']] = items
+	 state.macros_by_name[v['macro']] = v
+
+      elseif (v['list']) then
+
+	 if state.lists_by_name[v['list']] == nil then
+	    state.ordered_list_names[#state.ordered_list_names+1] = v['list']
+	 end
+
+	 for i, field in ipairs({'items'}) do
+	    if (v[field] == nil) then
+	       error ("Missing "..field.." in list with name "..v['list'])
+	    end
+	 end
+
+	 state.lists_by_name[v['list']] = v
 
       elseif (v['rule']) then
 
@@ -219,79 +236,129 @@ function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replac
 	    end
 	 end
 
+	 -- Note that we can overwrite rules, but the rules are still
+	 -- loaded in the order in which they first appeared,
+	 -- potentially across multiple files.
+	 if state.rules_by_name[v['rule']] == nil then
+	    state.ordered_rule_names[#state.ordered_rule_names+1] = v['rule']
+	 end
+
 	 state.rules_by_name[v['rule']] = v
 
-	 local filter_ast, evttypes = compiler.compile_filter(v['rule'], v['condition'],
-							      state.macros, state.lists)
-
-	 if (filter_ast.type == "Rule") then
-	    state.n_rules = state.n_rules + 1
-
-	    state.rules_by_idx[state.n_rules] = v
-
-	    -- Store the index of this formatter in each relational expression that
-	    -- this rule contains.
-	    -- This index will eventually be stamped in events passing this rule, and
-	    -- we'll use it later to determine which output to display when we get an
-	    -- event.
-	    mark_relational_nodes(filter_ast.filter.value, state.n_rules)
-
-	    install_filter(filter_ast.filter.value)
-
-	    -- Pass the filter and event types back up
-	    falco_rules.add_filter(rules_mgr, v['rule'], evttypes)
-
-	    -- Rule ASTs are merged together into one big AST, with "OR" between each
-	    -- rule.
-	    if (state.filter_ast == nil) then
-	       state.filter_ast = filter_ast.filter.value
-	    else
-	       state.filter_ast = { type = "BinaryBoolOp", operator = "or", left = state.filter_ast, right = filter_ast.filter.value }
-	    end
-
-	    -- Enable/disable the rule
-	    if (v['enabled'] == nil) then
-	       v['enabled'] = true
-	    end
-
-	    if (v['enabled'] == false) then
-	       falco_rules.enable_rule(rules_mgr, v['rule'], 0)
-	    end
-
-	    -- If the format string contains %container.info, replace it
-	    -- with extra. Otherwise, add extra onto the end of the format
-	    -- string.
-	    if string.find(v['output'], "%container.info", nil, true) ~= nil then
-
-		-- There may not be any extra, or we're not supposed
-		-- to replace it, in which case we use the generic
-		-- "%container.name (id=%container.id)"
-	       if replace_container_info == false then
-		  v['output'] = string.gsub(v['output'], "%%container.info", "%%container.name (id=%%container.id)")
-		  if extra ~= "" then
-		     v['output'] = v['output'].." "..extra
-		  end
-	       else
-		  safe_extra = string.gsub(extra, "%%", "%%%%")
-		  v['output'] = string.gsub(v['output'], "%%container.info", safe_extra)
-	       end
-	    else
-	       -- Just add the extra to the end
-		if extra ~= "" then
-		   v['output'] = v['output'].." "..extra
-		end
-	    end
-
-	    -- Ensure that the output field is properly formatted by
-	    -- creating a formatter from it. Any error will be thrown
-	    -- up to the top level.
-	    formatter = formats.formatter(v['output'])
-	    formats.free_formatter(formatter)
-	 else
-	    error ("Unexpected type in load_rule: "..filter_ast.type)
-	 end
       else
 	 error ("Unknown rule object: "..table.tostring(v))
+      end
+   end
+
+   -- We've now loaded all the rules, macros, and list. Now
+   -- compile/expand the rules, macros, and lists. We use
+   -- ordered_rule_{lists,macros,names} to compile them in the order
+   -- in which they appeared in the file(s).
+   reset_rules(rules_mgr)
+
+   for i, name in ipairs(state.ordered_list_names) do
+
+      local v = state.lists_by_name[name]
+
+      -- list items are represented in yaml as a native list, so no
+      -- parsing necessary
+      local items = {}
+
+      -- List items may be references to other lists, so go through
+      -- the items and expand any references to the items in the list
+      for i, item in ipairs(v['items']) do
+	 if (state.lists[item] == nil) then
+	    items[#items+1] = item
+	 else
+	    for i, exp_item in ipairs(state.lists[item]) do
+	       items[#items+1] = exp_item
+	    end
+	 end
+      end
+
+      state.lists[v['list']] = items
+   end
+
+   for i, name in ipairs(state.ordered_macro_names) do
+
+      local v = state.macros_by_name[name]
+
+      local ast = compiler.compile_macro(v['condition'], state.lists)
+      state.macros[v['macro']] = ast.filter.value
+   end
+
+   for i, name in ipairs(state.ordered_rule_names) do
+
+      local v = state.rules_by_name[name]
+
+      local filter_ast, evttypes = compiler.compile_filter(v['rule'], v['condition'],
+							   state.macros, state.lists)
+
+      if (filter_ast.type == "Rule") then
+	 state.n_rules = state.n_rules + 1
+
+	 state.rules_by_idx[state.n_rules] = v
+
+	 -- Store the index of this formatter in each relational expression that
+	 -- this rule contains.
+	 -- This index will eventually be stamped in events passing this rule, and
+	 -- we'll use it later to determine which output to display when we get an
+	 -- event.
+	 mark_relational_nodes(filter_ast.filter.value, state.n_rules)
+
+	 install_filter(filter_ast.filter.value)
+
+	 -- Pass the filter and event types back up
+	 falco_rules.add_filter(rules_mgr, v['rule'], evttypes)
+
+	 -- Rule ASTs are merged together into one big AST, with "OR" between each
+	 -- rule.
+	 if (state.filter_ast == nil) then
+	    state.filter_ast = filter_ast.filter.value
+	 else
+	    state.filter_ast = { type = "BinaryBoolOp", operator = "or", left = state.filter_ast, right = filter_ast.filter.value }
+	 end
+
+	 -- Enable/disable the rule
+	 if (v['enabled'] == nil) then
+	    v['enabled'] = true
+	 end
+
+	 if (v['enabled'] == false) then
+	    falco_rules.enable_rule(rules_mgr, v['rule'], 0)
+	 end
+
+	 -- If the format string contains %container.info, replace it
+	 -- with extra. Otherwise, add extra onto the end of the format
+	 -- string.
+	 if string.find(v['output'], "%container.info", nil, true) ~= nil then
+
+	    -- There may not be any extra, or we're not supposed
+	    -- to replace it, in which case we use the generic
+	    -- "%container.name (id=%container.id)"
+	    if replace_container_info == false then
+	       v['output'] = string.gsub(v['output'], "%%container.info", "%%container.name (id=%%container.id)")
+	       if extra ~= "" then
+		  v['output'] = v['output'].." "..extra
+	       end
+	    else
+	       safe_extra = string.gsub(extra, "%%", "%%%%")
+	       v['output'] = string.gsub(v['output'], "%%container.info", safe_extra)
+	    end
+	 else
+	    -- Just add the extra to the end
+	    if extra ~= "" then
+	       v['output'] = v['output'].." "..extra
+	    end
+	 end
+
+	 -- Ensure that the output field is properly formatted by
+	 -- creating a formatter from it. Any error will be thrown
+	 -- up to the top level.
+	 formatter = formats.formatter(v['output'])
+	 formats.free_formatter(formatter)
+      else
+	 error ("Unexpected type in load_rule: "..filter_ast.type)
       end
    end
 
