@@ -1,5 +1,11 @@
+- list: cat_binaries
+  items: [cat]
+
+- list: cat_capable_binaries
+  items: [cat_binaries]
+
 - macro: is_cat
-  condition: proc.name=cat
+  condition: proc.name in (cat_capable_binaries)
 
 - rule: open_from_cat
   desc: A process named cat does an open
