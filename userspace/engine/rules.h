@@ -36,10 +36,12 @@ class falco_rules
 	void describe_rule(string *rule);
 
 	static void init(lua_State *ls);
+	static int clear_filters(lua_State *ls);
 	static int add_filter(lua_State *ls);
 	static int enable_rule(lua_State *ls);
 
  private:
+	void clear_filters();
 	void add_filter(string &rule, list<uint32_t> &evttypes);
 	void enable_rule(string &rule, bool enabled);
 
