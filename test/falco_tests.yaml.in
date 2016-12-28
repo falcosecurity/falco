@@ -95,6 +95,34 @@ trace_files: !mux
       - rules/double_rule.yaml
     trace_file: trace_files/cat_write.scap
 
+  multiple_rules_overriding:
+    detect: False
+    rules_file:
+      - rules/single_rule.yaml
+      - rules/override_rule.yaml
+    trace_file: trace_files/cat_write.scap
+
+  macro_overriding:
+    detect: False
+    rules_file:
+      - rules/single_rule.yaml
+      - rules/override_macro.yaml
+    trace_file: trace_files/cat_write.scap
+
+  list_overriding:
+    detect: False
+    rules_file:
+      - rules/single_rule.yaml
+      - rules/override_list.yaml
+    trace_file: trace_files/cat_write.scap
+
+  nested_list_overriding:
+    detect: False
+    rules_file:
+      - rules/single_rule.yaml
+      - rules/override_nested_list.yaml
+    trace_file: trace_files/cat_write.scap
+
   invalid_rule_output:
     exit_status: 1
     stderr_contains: "Runtime error: Error loading rules:.* Invalid output format 'An open was seen %not_a_real_field': 'invalid formatting token not_a_real_field'. Exiting."
