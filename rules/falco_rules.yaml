@@ -204,7 +204,7 @@
 - macro: write_etc_common
   condition: >
     etc_dir and evt.dir = < and open_write
-    and not proc.name in (shadowutils_binaries, sysdigcloud_binaries, package_mgmt_binaries, ssl_mgmt_binaries, dhcp_binaries, ldconfig.real, ldconfig)
+    and not proc.name in (shadowutils_binaries, sysdigcloud_binaries, package_mgmt_binaries, ssl_mgmt_binaries, dhcp_binaries, ldconfig.real, ldconfig, confd)
     and not proc.pname in (sysdigcloud_binaries)
     and not fd.directory in (/etc/cassandra, /etc/ssl/certs/java)
 
@@ -282,7 +282,7 @@
 
 - rule: Run shell untrusted
   desc: an attempt to spawn a shell by a non-shell program. Exceptions are made for trusted binaries.
-  condition: spawned_process and not container and shell_procs and proc.pname exists and not proc.pname in (cron_binaries, shell_binaries, sshd, sudo, docker_binaries, k8s_binaries, su, tmux, screen, emacs, systemd, login, flock, fbash, nginx, monit, supervisord, dragent, aws, initdb, docker-compose, make, configure, awk, falco, fail2ban-server, apt-get, apt)
+  condition: spawned_process and not container and shell_procs and proc.pname exists and not proc.pname in (cron_binaries, shell_binaries, sshd, sudo, docker_binaries, k8s_binaries, su, tmux, screen, emacs, systemd, login, flock, fbash, nginx, monit, supervisord, dragent, aws, initdb, docker-compose, make, configure, awk, falco, fail2ban-server, apt-get, apt, fleetctl)
   output: "Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline)"
   priority: WARNING
 
