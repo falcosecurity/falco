@@ -204,8 +204,8 @@ else()
 	message(STATUS "Using bundled openssl in '${OPENSSL_BUNDLE_DIR}'")
 
 	ExternalProject_Add(openssl
-		URL "http://download.draios.com/dependencies/openssl-1.0.2d.tar.gz"
-		URL_MD5 "38dd619b2e77cbac69b99f52a053d25a"
+		URL "http://download.draios.com/dependencies/openssl-1.0.2j.tar.gz"
+		URL_MD5 "96322138f0b69e61b7212bc53d5e912b"
 		CONFIGURE_COMMAND ./config shared --prefix=${OPENSSL_INSTALL_DIR}
 		BUILD_COMMAND ${CMD_MAKE}
 		BUILD_IN_SOURCE 1
