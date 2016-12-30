@@ -287,7 +287,12 @@
   priority: WARNING
 
 - macro: trusted_containers
-  condition: (container.image startswith sysdig/agent or container.image startswith sysdig/falco or container.image startswith sysdig/sysdig or container.image startswith gcr.io/google_containers/hyperkube or container.image startswith gcr.io/google_containers/kube-proxy)
+  condition: (container.image startswith sysdig/agent or
+              container.image startswith sysdig/falco or
+              container.image startswith sysdig/sysdig or
+              container.image startswith gcr.io/google_containers/hyperkube or
+              container.image startswith gcr.io/google_containers/kube-proxy or
+              container.image startswith cchh/sysdig)
 
 - rule: File Open by Privileged Container
   desc: Any open by a privileged container. Exceptions are made for known trusted images.
