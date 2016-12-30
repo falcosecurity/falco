@@ -436,7 +436,10 @@ function on_event(evt_, rule_id)
       rule_output_counts.by_name[rule.rule] = rule_output_counts.by_name[rule.rule] + 1
    end
 
-   return rule.rule, rule.priority, rule.output
+   -- Prefix output with '*' so formatting is permissive
+   output = "*"..rule.output
+
+   return rule.rule, rule.priority, output
 end
 
 function print_stats()

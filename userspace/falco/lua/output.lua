@@ -76,6 +76,13 @@ end
 
 function output_event(event, rule, priority, format)
    local level = level_of(priority)
+
+   -- If format starts with a *, remove it, as we're adding our own
+   -- prefix here.
+   if format:sub(1,1) == "*" then
+      format = format:sub(2)
+   end
+
    format = "*%evt.time: "..levels[level+1].." "..format
    if formatters[rule] == nil then
       formatter = formats.formatter(format)
