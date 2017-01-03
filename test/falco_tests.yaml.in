@@ -154,6 +154,14 @@ trace_files: !mux
       - rules/single_rule_enabled_flag.yaml
     trace_file: trace_files/cat_write.scap
 
+  null_output_field:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/null_output_field.yaml
+    trace_file: trace_files/cat_write.scap
+    stdout_contains: "Warning An open was seen .cport=<NA> command=cat /dev/null."
+
   file_output:
     detect: True
     detect_level: WARNING

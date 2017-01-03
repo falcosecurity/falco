@@ -1,0 +1,5 @@
+- rule: open_from_cat
+  desc: A process named cat does an open
+  condition: evt.type=open and proc.name=cat
+  output: "An open was seen (cport=%fd.cport command=%proc.cmdline)"
+  priority: WARNING

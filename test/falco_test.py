@@ -17,6 +17,7 @@ class FalcoTest(Test):
         """
         self.falcodir = self.params.get('falcodir', '/', default=os.path.join(self.basedir, '../build'))
 
+        self.stdout_contains = self.params.get('stdout_contains', '*', default='')
         self.stderr_contains = self.params.get('stderr_contains', '*', default='')
         self.exit_status = self.params.get('exit_status', '*', default=0)
         self.should_detect = self.params.get('detect', '*', default=False)
@@ -203,6 +204,11 @@ class FalcoTest(Test):
             match = re.search(self.stderr_contains, res.stderr)
             if match is None:
                 self.fail("Stderr of falco process did not contain content matching {}".format(self.stderr_contains))
+
+        if self.stdout_contains != '':
+            match = re.search(self.stdout_contains, res.stdout)
+            if match is None:
+                self.fail("Stdout of falco process '{}' did not contain content matching {}".format(res.stdout, self.stdout_contains))
 
         if res.exit_status != self.exit_status:
             self.error("Falco command \"{}\" exited with unexpected return value {} (!= {})".format(
