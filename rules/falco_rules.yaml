@@ -102,7 +102,7 @@
   items: [docker, dockerd, exe]
 
 - list: k8s_binaries
-  items: [hyperkube, skydns, kube2sky]
+  items: [hyperkube, skydns, kube2sky, exechealthz]
 
 - list: http_server_binaries
   items: [nginx, httpd, httpd-foregroun, lighttpd]
