@@ -221,15 +221,25 @@
   output: "File below /etc opened for writing (user=%user.name command=%proc.cmdline file=%fd.name) within pipe installer session"
   priority: INFO
 
+- macro: cmp_cp_by_passwd
+  condition: proc.name in (cmp, cp) and proc.pname=passwd
+
 - rule: Read sensitive file trusted after startup
   desc: an attempt to read any sensitive file (e.g. files containing user/password/authentication information) by a trusted program after startup. Trusted programs might read these files at startup to load initial state, but not afterwards.
   condition: sensitive_files and open_read and server_procs and not proc_is_new and proc.name!="sshd"
   output: "Sensitive file opened for reading by trusted program after startup (user=%user.name command=%proc.cmdline file=%fd.name)"
   priority: WARNING
 
+- list: read_sensitive_file_binaries
+  items: [iptables, ps, lsb_release, check-new-relea, dumpe2fs, accounts-daemon, sshd]
+
 - rule: Read sensitive file untrusted
   desc: an attempt to read any sensitive file (e.g. files containing user/password/authentication information). Exceptions are made for known trusted programs.
-  condition: sensitive_files and open_read and not proc.name in (user_mgmt_binaries, userexec_binaries, package_mgmt_binaries, cron_binaries, iptables, ps, lsb_release, check-new-relea, dumpe2fs, accounts-daemon, shell_binaries, sshd) and not proc.cmdline contains /usr/bin/mandb
+  condition: >
+    sensitive_files and open_read
+    and not proc.name in (user_mgmt_binaries, userexec_binaries, package_mgmt_binaries, cron_binaries, read_sensitive_file_binaries, shell_binaries)
+    and not cmp_cp_by_passwd
+    and not proc.cmdline contains /usr/bin/mandb
   output: "Sensitive file opened for reading by non-trusted program (user=%user.name name=%proc.name command=%proc.cmdline file=%fd.name)"
   priority: WARNING
 
@@ -280,9 +290,17 @@
   output: "Namespace change (setns) by unexpected program (user=%user.name command=%proc.cmdline parent=%proc.pname %container.info)"
   priority: WARNING
 
+- list: known_shell_spawn_binaries
+  items: [
+    sshd, sudo, su, tmux, screen, emacs, systemd, login, flock, fbash,
+    nginx, monit, supervisord, dragent, aws, initdb, docker-compose,
+    make, configure, awk, falco, fail2ban-server, apt-get, apt,
+    fleetctl, logrotate
+    ]
+
 - rule: Run shell untrusted
   desc: an attempt to spawn a shell by a non-shell program. Exceptions are made for trusted binaries.
-  condition: spawned_process and not container and shell_procs and proc.pname exists and not proc.pname in (cron_binaries, shell_binaries, sshd, sudo, docker_binaries, k8s_binaries, su, tmux, screen, emacs, systemd, login, flock, fbash, nginx, monit, supervisord, dragent, aws, initdb, docker-compose, make, configure, awk, falco, fail2ban-server, apt-get, apt, fleetctl)
+  condition: spawned_process and not container and shell_procs and proc.pname exists and not proc.pname in (cron_binaries, shell_binaries, known_shell_spawn_binaries, docker_binaries, k8s_binaries)
   output: "Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline)"
   priority: WARNING
 
