@@ -116,7 +116,11 @@
 # The truncated dpkg-preconfigu is intentional, process names are
 # truncated at the sysdig level.
 - list: package_mgmt_binaries
-  items: [dpkg, dpkg-preconfigu, dnf, rpm, rpmkey, yum, frontend]
+  items: [
+    dpkg, dpkg-preconfigu, dnf, rpm, rpmkey, yum, frontend,
+    apt, apt-get, apt-add-reposit, apt-auto-remova, apt-key,
+    preinst
+    ]
 
 - macro: package_mgmt_procs
   condition: proc.name in (package_mgmt_binaries)
@@ -190,6 +194,22 @@
 - macro: system_users
   condition: user.name in (bin, daemon, games, lp, mail, nobody, sshd, sync, uucp, www-data)
 
+# SPECIAL NOTE: This macro eliminates false positives that result from
+# running python scripts as a part of ansible. However, the condition
+# that the command line contains "ansible" is very
+# permissive. Ideally, you should change this macro to explicitly
+# scope the python scripts to a specific directory (namely, your
+# configured remote_tmp directory).
+- macro: ansible_running_python
+  condition: proc.pname in (python, pypy) and proc.pcmdline contains ansible
+
+- macro: python_running_denyhosts
+  condition: proc.pname=python and proc.pcmdline contains /usr/sbin/denyhosts
+
+# As a part of kernel upgrades, dpkg will spawn a perl script with the
+# name linux-image-N.N. This macro matches that.
+- macro: parent_linux_image_upgrade_script
+  condition: proc.pname startswith linux-image-
 
 ###############
 # General Rules
@@ -204,9 +224,15 @@
 - macro: write_etc_common
   condition: >
     etc_dir and evt.dir = < and open_write
-    and not proc.name in (shadowutils_binaries, sysdigcloud_binaries, package_mgmt_binaries, ssl_mgmt_binaries, dhcp_binaries, ldconfig.real, ldconfig, confd)
+    and not proc.name in (passwd_binaries, shadowutils_binaries, sysdigcloud_binaries,
+                          package_mgmt_binaries, ssl_mgmt_binaries, dhcp_binaries,
+                          ldconfig.real, ldconfig, confd, gpg, insserv,
+                          apparmor_parser, update-mime, tzdata.config, tzdata.postinst,
+                          systemd-machine, debconf-show)
     and not proc.pname in (sysdigcloud_binaries)
     and not fd.directory in (/etc/cassandra, /etc/ssl/certs/java)
+    and not ansible_running_python
+    and not python_running_denyhosts
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc, not in a pipe installer session
@@ -231,7 +257,7 @@
   priority: WARNING
 
 - list: read_sensitive_file_binaries
-  items: [iptables, ps, lsb_release, check-new-relea, dumpe2fs, accounts-daemon, sshd]
+  items: [iptables, ps, lsb_release, check-new-relea, dumpe2fs, accounts-daemon, sshd, vsftpd]
 
 - rule: Read sensitive file untrusted
   desc: an attempt to read any sensitive file (e.g. files containing user/password/authentication information). Exceptions are made for known trusted programs.
@@ -239,6 +265,7 @@
     sensitive_files and open_read
     and not proc.name in (user_mgmt_binaries, userexec_binaries, package_mgmt_binaries, cron_binaries, read_sensitive_file_binaries, shell_binaries)
     and not cmp_cp_by_passwd
+    and not ansible_running_python
     and not proc.cmdline contains /usr/bin/mandb
   output: "Sensitive file opened for reading by non-trusted program (user=%user.name name=%proc.name command=%proc.cmdline file=%fd.name)"
   priority: WARNING
@@ -294,12 +321,12 @@
   items: [
     sshd, sudo, su, tmux, screen, emacs, systemd, login, flock, fbash,
     nginx, monit, supervisord, dragent, aws, initdb, docker-compose,
-    make, configure, awk, falco, fail2ban-server, apt-get, apt,
-    fleetctl, logrotate, ansible
+    make, configure, awk, falco, fail2ban-server, fleetctl,
+    logrotate, ansible, less, adduser, pycompile, py3compile,
+    pyclean, py3clean, pip, pip2, ansible-playboo, man-db,
+    init, pluto, mkinitramfs, unattended-upgr, watch, sysdig,
+    landscape-sysin, nessusd
     ]
-
-- macro: ansible_running_python
-  condition: proc.pname=python and proc.pcmdline contains ansible
 
 - rule: Run shell untrusted
   desc: an attempt to spawn a shell by a non-shell program. Exceptions are made for trusted binaries.
@@ -307,8 +334,9 @@
     spawned_process and not container
     and shell_procs
     and proc.pname exists
-    and not proc.pname in (cron_binaries, shell_binaries, known_shell_spawn_binaries, docker_binaries, k8s_binaries)
+    and not proc.pname in (cron_binaries, shell_binaries, known_shell_spawn_binaries, docker_binaries, k8s_binaries, package_mgmt_binaries)
     and not ansible_running_python
+    and not parent_linux_image_upgrade_script
   output: "Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline pcmdline=%proc.pcmdline)"
   priority: WARNING
 
@@ -348,7 +376,7 @@
 
 - rule: Run shell in container
   desc: a shell was spawned by a non-shell program in a container. Container entrypoints are excluded.
-  condition: spawned_process and container and shell_procs and proc.pname exists and not proc.pname in (shell_binaries, docker_binaries, k8s_binaries, initdb, pg_ctl, awk, apache2, falco, cron)
+  condition: spawned_process and container and shell_procs and proc.pname exists and not proc.pname in (shell_binaries, docker_binaries, k8s_binaries, initdb, pg_ctl, awk, apache2, falco, cron) and not trusted_containers
   output: "Shell spawned in a container other than entrypoint (user=%user.name %container.info shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline)"
   priority: WARNING
 
@@ -381,10 +409,13 @@
   output: "User management binary command run outside of container (user=%user.name command=%proc.cmdline parent=%proc.pname)"
   priority: WARNING
 
+- list: allowed_dev_files
+  items: [/dev/null, /dev/stdin, /dev/stdout, /dev/stderr, /dev/tty, /dev/random, /dev/urandom, /dev/console]
+
 # (we may need to add additional checks against false positives, see: https://bugs.launchpad.net/ubuntu/+source/rkhunter/+bug/86153)
 - rule: Create files below dev
   desc: creating any files below /dev other than known programs that manage devices. Some rootkits hide files in /dev.
-  condition: fd.directory = /dev and (evt.type = creat or (evt.type = open and evt.arg.flags contains O_CREAT)) and proc.name != blkid and not fd.name in (/dev/null,/dev/stdin,/dev/stdout,/dev/stderr,/dev/tty)
+  condition: fd.directory = /dev and (evt.type = creat or (evt.type = open and evt.arg.flags contains O_CREAT)) and proc.name != blkid and not fd.name in (allowed_dev_files)
   output: "File created below /dev by untrusted program (user=%user.name command=%proc.cmdline file=%fd.name)"
   priority: WARNING
 
