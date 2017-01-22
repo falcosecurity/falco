@@ -99,10 +99,13 @@
   items: [setup-backend, dragent, sdchecks]
 
 - list: docker_binaries
-  items: [docker, dockerd, exe]
+  items: [docker, dockerd, exe, docker-compose]
 
 - list: k8s_binaries
   items: [hyperkube, skydns, kube2sky, exechealthz]
+
+- list: lxd_binaries
+  items: [lxd, lxcfs]
 
 - list: http_server_binaries
   items: [nginx, httpd, httpd-foregroun, lighttpd]
@@ -116,7 +119,7 @@
 # The truncated dpkg-preconfigu is intentional, process names are
 # truncated at the sysdig level.
 - list: package_mgmt_binaries
-  items: [dpkg, dpkg-preconfigu, dnf, rpm, rpmkey, yum, frontend]
+  items: [dpkg, dpkg-preconfigu, apt-get, apt, aptitude, dnf, rpm, rpmkey, yum, frontend, update-alternat, unattended-upgr, linux-image-4.4]
 
 - macro: package_mgmt_procs
   condition: proc.name in (package_mgmt_binaries)
@@ -130,16 +133,37 @@
 # A canonical set of processes that run other programs with different
 # privileges or as a different user.
 - list: userexec_binaries
-  items: [sudo, su]
+  items: [sudo, su, critical-stack]
 
 - list: user_mgmt_binaries
   items: [login_binaries, passwd_binaries, shadowutils_binaries]
+
+- list: dev_creation_binaries
+  items: [blkid, cloud-init ]
+
+- list: hids_procs
+  items: [aide, aide.wrapper, update-aide.con, logcheck, syslog-summary]
+
+- list: nids_procs
+  items: [bro, broctl, syslog-summary]
+
+## cacti: perl, php, php5-fpm
+## nrpe
+- list: monitoring_procs
+#  items: [nagios, icinga2, nrpe, perl, php, php5-fpm, npcd]
+  items: [icinga2, nrpe, perl, php, php5-fpm, check_sar_perf.]
+
+- list: orchestration_procs
+  items: [ansible, ansible-playboo, python, sshd]
+
+- list: testing_procs
+  items: [kitchen, command.rb]
 
 - macro: system_procs
   condition: proc.name in (coreutils_binaries, user_mgmt_binaries)
 
 - list: mail_binaries
-  items: [sendmail, sendmail-msp, postfix, procmail, exim4]
+  items: [sendmail, sendmail-msp, postfix, showq, pickup, procmail, exim4]
 
 - macro: sensitive_files
   condition: fd.name startswith /etc and (fd.name in (/etc/shadow, /etc/sudoers, /etc/pam.conf) or fd.directory in (/etc/sudoers.d, /etc/pam.d))
@@ -204,7 +228,7 @@
 - macro: write_etc_common
   condition: >
     etc_dir and evt.dir = < and open_write
-    and not proc.name in (shadowutils_binaries, sysdigcloud_binaries, package_mgmt_binaries, ssl_mgmt_binaries, dhcp_binaries, ldconfig.real, ldconfig, confd)
+    and not proc.name in (shadowutils_binaries, sysdigcloud_binaries, package_mgmt_binaries, ssl_mgmt_binaries, dhcp_binaries, ldconfig.real, ldconfig, confd, insserv, rollerd)
     and not proc.pname in (sysdigcloud_binaries)
     and not fd.directory in (/etc/cassandra, /etc/ssl/certs/java)
 
@@ -237,16 +261,17 @@
   desc: an attempt to read any sensitive file (e.g. files containing user/password/authentication information). Exceptions are made for known trusted programs.
   condition: >
     sensitive_files and open_read
-    and not proc.name in (user_mgmt_binaries, userexec_binaries, package_mgmt_binaries, cron_binaries, read_sensitive_file_binaries, shell_binaries)
+    and not proc.name in (user_mgmt_binaries, userexec_binaries, package_mgmt_binaries, cron_binaries, read_sensitive_file_binaries, shell_binaries, iptables, ps, lsb_release, check-new-relea, dumpe2fs, accounts-daemon, sshd, hids_procs, systemd)
     and not cmp_cp_by_passwd
     and not proc.cmdline contains /usr/bin/mandb
   output: "Sensitive file opened for reading by non-trusted program (user=%user.name name=%proc.name command=%proc.cmdline file=%fd.name)"
   priority: WARNING
 
 # Only let rpm-related programs write to the rpm database
+## Add python for ansible
 - rule: Write below rpm database
   desc: an attempt to write to the rpm database by any non-rpm related program
-  condition: fd.name startswith /var/lib/rpm and open_write and not proc.name in (dnf,rpm,rpmkey,yum)
+  condition: fd.name startswith /var/lib/rpm and open_write and not proc.name in (dnf,rpm,rpmkey,yum,python)
   output: "Rpm database opened for writing by a non-rpm program (command=%proc.cmdline file=%fd.name)"
   priority: WARNING
 
@@ -286,7 +311,7 @@
 
 - rule: Change thread namespace
   desc: an attempt to change a program/thread\'s namespace (commonly done as a part of creating a container) by calling setns.
-  condition: evt.type = setns and not proc.name in (docker_binaries, k8s_binaries, sysdigcloud_binaries, sysdig, nsenter) and not proc.pname in (sysdigcloud_binaries)
+  condition: evt.type = setns and not proc.name in (docker_binaries, k8s_binaries, lxd_binaries, sysdigcloud_binaries, sysdig, nsenter) and not proc.pname in (sysdigcloud_binaries)
   output: "Namespace change (setns) by unexpected program (user=%user.name command=%proc.cmdline parent=%proc.pname %container.info)"
   priority: WARNING
 
@@ -307,7 +332,7 @@
     spawned_process and not container
     and shell_procs
     and proc.pname exists
-    and not proc.pname in (cron_binaries, shell_binaries, known_shell_spawn_binaries, docker_binaries, k8s_binaries)
+    and not proc.pname in (cron_binaries, shell_binaries, known_shell_spawn_binaries, docker_binaries, k8s_binaries, nids_procs, hids_procs)
     and not ansible_running_python
   output: "Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline pcmdline=%proc.pcmdline)"
   priority: WARNING
@@ -348,7 +373,7 @@
 
 - rule: Run shell in container
   desc: a shell was spawned by a non-shell program in a container. Container entrypoints are excluded.
-  condition: spawned_process and container and shell_procs and proc.pname exists and not proc.pname in (shell_binaries, docker_binaries, k8s_binaries, initdb, pg_ctl, awk, apache2, falco, cron)
+  condition: spawned_process and container and shell_procs and proc.pname exists and not proc.pname in (shell_binaries, docker_binaries, k8s_binaries, lxd_binaries, package_mgmt_binaries, hids_procs, nids_procs, monitoring_procs, initdb, pg_ctl, awk, apache2, falco, cron, init, install-info, cloud-init, ifup, mkinitramfs, man-db)
   output: "Shell spawned in a container other than entrypoint (user=%user.name %container.info shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline)"
   priority: WARNING
 
@@ -371,8 +396,8 @@
 # sshd, mail programs attempt to setuid to root even when running as non-root. Excluding here to avoid meaningless FPs
 - rule: Non sudo setuid
   desc: an attempt to change users by calling setuid. sudo/su are excluded. user "root" is also excluded, as setuid calls typically involve dropping privileges.
-  condition: evt.type=setuid and evt.dir=> and not user.name=root and not proc.name in (userexec_binaries, mail_binaries, sshd, dbus-daemon-lau)
-  output: "Unexpected setuid call by non-sudo, non-root program (user=%user.name command=%proc.cmdline uid=%evt.arg.uid)"
+  condition: evt.type=setuid and evt.dir=> and not user.name=root and not proc.name in (userexec_binaries, mail_binaries, sshd, dbus-daemon-lau, ping, ping6)
+  output: "Unexpected setuid call by non-sudo, non-root program (user=%user.name parent=%proc.pname command=%proc.cmdline uid=%evt.arg.uid)"
   priority: WARNING
 
 - rule: User mgmt binaries
@@ -384,7 +409,7 @@
 # (we may need to add additional checks against false positives, see: https://bugs.launchpad.net/ubuntu/+source/rkhunter/+bug/86153)
 - rule: Create files below dev
   desc: creating any files below /dev other than known programs that manage devices. Some rootkits hide files in /dev.
-  condition: fd.directory = /dev and (evt.type = creat or (evt.type = open and evt.arg.flags contains O_CREAT)) and proc.name != blkid and not fd.name in (/dev/null,/dev/stdin,/dev/stdout,/dev/stderr,/dev/tty)
+  condition: fd.directory = /dev and (evt.type = creat or (evt.type = open and evt.arg.flags contains O_CREAT)) and not proc.name in (dev_creation_binaries) and not fd.name in (/dev/null,/dev/stdin,/dev/stdout,/dev/stderr,/dev/tty,/dev/console)
   output: "File created below /dev by untrusted program (user=%user.name command=%proc.cmdline file=%fd.name)"
   priority: WARNING
 
