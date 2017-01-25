@@ -99,6 +99,7 @@ else()
                 CONFIGURE_COMMAND ./configure --disable-maintainer-mode --enable-all-static --disable-dependency-tracking
                 BUILD_COMMAND ${CMD_MAKE} LDFLAGS=-all-static
                 BUILD_IN_SOURCE 1
+		PATCH_COMMAND wget -O jq-1.5-fix-tokenadd.patch https://github.com/stedolan/jq/commit/8eb1367ca44e772963e704a700ef72ae2e12babd.patch && patch -i jq-1.5-fix-tokenadd.patch
                 INSTALL_COMMAND "")
 endif()
 
@@ -204,8 +205,8 @@ else()
 	message(STATUS "Using bundled openssl in '${OPENSSL_BUNDLE_DIR}'")
 
 	ExternalProject_Add(openssl
-		URL "http://download.draios.com/dependencies/openssl-1.0.2d.tar.gz"
-		URL_MD5 "38dd619b2e77cbac69b99f52a053d25a"
+		URL "http://download.draios.com/dependencies/openssl-1.0.2j.tar.gz"
+		URL_MD5 "96322138f0b69e61b7212bc53d5e912b"
 		CONFIGURE_COMMAND ./config shared --prefix=${OPENSSL_INSTALL_DIR}
 		BUILD_COMMAND ${CMD_MAKE}
 		BUILD_IN_SOURCE 1
@@ -235,8 +236,8 @@ else()
 
 	ExternalProject_Add(curl
 		DEPENDS openssl
-		URL "http://download.draios.com/dependencies/curl-7.45.0.tar.bz2"
-		URL_MD5 "62c1a352b28558f25ba6209214beadc8"
+		URL "http://download.draios.com/dependencies/curl-7.52.1.tar.bz2"
+		URL_MD5 "dd014df06ff1d12e173de86873f9f77a"
 		CONFIGURE_COMMAND ./configure ${CURL_SSL_OPTION} --disable-shared --enable-optimize --disable-curldebug --disable-rt --enable-http --disable-ftp --disable-file --disable-ldap --disable-ldaps --disable-rtsp --disable-telnet --disable-tftp --disable-pop3 --disable-imap --disable-smb --disable-smtp --disable-gopher --disable-sspi --disable-ntlm-wb --disable-tls-srp --without-winssl --without-darwinssl --without-polarssl --without-cyassl --without-nss --without-axtls --without-ca-path --without-ca-bundle --without-libmetalink --without-librtmp --without-winidn --without-libidn --without-nghttp2 --without-libssh2
 		BUILD_COMMAND ${CMD_MAKE}
 		BUILD_IN_SOURCE 1
