@@ -200,11 +200,14 @@
 # permissive. Ideally, you should change this macro to explicitly
 # scope the python scripts to a specific directory (namely, your
 # configured remote_tmp directory).
-- macro: ansible_running_python
+- macro: parent_ansible_running_python
   condition: proc.pname in (python, pypy) and proc.pcmdline contains ansible
 
+- macro: ansible_running_python
+  condition: proc.name in (python, pypy) and proc.cmdline contains ansible
+
 - macro: python_running_denyhosts
-  condition: proc.pname=python and proc.pcmdline contains /usr/sbin/denyhosts
+  condition: proc.name=python and (proc.cmdline contains /usr/sbin/denyhosts or proc.cmdline contains /usr/local/bin/denyhosts.py)
 
 # As a part of kernel upgrades, dpkg will spawn a perl script with the
 # name linux-image-N.N. This macro matches that.
@@ -325,7 +328,7 @@
     logrotate, ansible, less, adduser, pycompile, py3compile,
     pyclean, py3clean, pip, pip2, ansible-playboo, man-db,
     init, pluto, mkinitramfs, unattended-upgr, watch, sysdig,
-    landscape-sysin, nessusd
+    landscape-sysin, nessusd, PM2
     ]
 
 - rule: Run shell untrusted
@@ -335,7 +338,7 @@
     and shell_procs
     and proc.pname exists
     and not proc.pname in (cron_binaries, shell_binaries, known_shell_spawn_binaries, docker_binaries, k8s_binaries, package_mgmt_binaries)
-    and not ansible_running_python
+    and not parent_ansible_running_python
     and not parent_linux_image_upgrade_script
   output: "Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline pcmdline=%proc.pcmdline)"
   priority: WARNING
