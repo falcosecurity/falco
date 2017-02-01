@@ -20,5 +20,4 @@ falco:
     - /boot:/host/boot:ro
     - /lib/modules:/host/lib/modules:ro
     - /usr:/host/usr:ro
-    - ${PWD}/../../rules/falco_rules.yaml:/etc/falco_rules.yaml
   tty: true
