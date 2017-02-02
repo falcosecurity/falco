@@ -53,7 +53,7 @@ option(USE_BUNDLED_DEPS "Enable bundled dependencies instead of using the system
 
 #
 # zlib
-
+#
 option(USE_BUNDLED_ZLIB "Enable building of the bundled zlib" ${USE_BUNDLED_DEPS})
 
 if(NOT USE_BUNDLED_ZLIB)
@@ -321,6 +321,13 @@ if(NOT USE_BUNDLED_LIBYAML)
 		message(FATAL_ERROR "Couldn't find system libyaml")
 	endif()
 else()
+	find_path(AUTORECONF_BIN NAMES autoreconf)
+	if(AUTORECONF_BIN)
+		message(STATUS "Found autoreconf: ${AUTORECONF_BIN}")
+	else()
+		message(FATAL_ERROR "Couldn't find system autoreconf. Please install autoreconf before continuing or use system libyaml")
+	endif()
+
 	set(LIBYAML_SRC "${PROJECT_BINARY_DIR}/libyaml-prefix/src/libyaml/src")
 	set(LIBYAML_LIB "${LIBYAML_SRC}/.libs/libyaml.a")
 	ExternalProject_Add(libyaml
@@ -351,6 +358,7 @@ else()
 	set(LYAML_SRC "${PROJECT_BINARY_DIR}/lyaml-prefix/src/lyaml/ext/yaml")
 	set(LYAML_LIB "${LYAML_SRC}/.libs/yaml.a")
 	ExternalProject_Add(lyaml
+		DEPENDS libyaml luajit
 		URL "http://download.draios.com/dependencies/lyaml-release-v6.0.tar.gz"
                 URL_MD5 "dc3494689a0dce7cf44e7a99c72b1f30"
                 BUILD_COMMAND ${CMD_MAKE}
