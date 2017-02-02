@@ -56,6 +56,16 @@ class FalcoTest(Test):
         for rule in self.disabled_rules:
             self.disabled_args = self.disabled_args + "-D " + rule + " "
 
+        self.detect_counts = self.params.get('detect_counts', '*', default=False)
+        if self.detect_counts == False:
+            self.detect_counts = {}
+        else:
+            detect_counts = {}
+            for item in self.detect_counts:
+                for item2 in item:
+                    detect_counts[item2[0]] = item2[1]
+            self.detect_counts = detect_counts
+
         self.rules_warning = self.params.get('rules_warning', '*', default=False)
         if self.rules_warning == False:
             self.rules_warning = sets.Set()
@@ -161,6 +171,23 @@ class FalcoTest(Test):
                     if not events_detected > 0:
                         self.fail("Detected {} events at level {} when should have detected > 0".format(events_detected, level))
 
+    def check_detections_by_rule(self, res):
+        # Get the number of events detected for each rule. Must match the expected counts.
+        match = re.search('Triggered rules by rule name:(.*)', res.stdout, re.DOTALL)
+        if match is None:
+            self.fail("Could not find a block 'Triggered rules by rule name: ...' in falco output")
+
+        triggered_rules = match.group(1)
+
+        for rule, count in self.detect_counts.iteritems():
+            expected_line = '{}: {}'.format(rule, count)
+            match = re.search(expected_line, triggered_rules)
+
+            if match is None:
+                self.fail("Could not find a line '{}' in triggered rule counts '{}'".format(expected_line, triggered_rules))
+            else:
+                self.log.debug("Found expected count for {}: {}".format(rule, match.group()))
+
     def check_outputs(self):
         for output in self.outputs:
             # Open the provided file and match each line against the
@@ -222,6 +249,8 @@ class FalcoTest(Test):
         if len(self.rules_events) > 0:
             self.check_rules_events(res)
         self.check_detections(res)
+        if len(self.detect_counts) > 0:
+            self.check_detections_by_rule(res)
         self.check_json_output(res)
         self.check_outputs()
         pass
