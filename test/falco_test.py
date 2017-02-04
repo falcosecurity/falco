@@ -23,6 +23,8 @@ class FalcoTest(Test):
         self.should_detect = self.params.get('detect', '*', default=False)
         self.trace_file = self.params.get('trace_file', '*')
 
+        self.env = {}
+
         if not os.path.isabs(self.trace_file):
             self.trace_file = os.path.join(self.basedir, self.trace_file)
 
@@ -113,6 +115,20 @@ class FalcoTest(Test):
                     outputs.append(output)
             self.outputs = outputs
 
+        self.disable_tags = self.params.get('disable_tags', '*', default='')
+
+        if self.disable_tags == '':
+            self.disable_tags=[]
+
+        self.run_tags = self.params.get('run_tags', '*', default='')
+
+        if self.run_tags == '':
+            self.run_tags=[]
+
+        self.ruleset = self.params.get('ruleset', '*', default='')
+        if self.ruleset != '':
+            self.env["FALCO_RULESET"] = self.ruleset
+
     def check_rules_warnings(self, res):
 
         found_warning = sets.Set()
@@ -180,13 +196,18 @@ class FalcoTest(Test):
         triggered_rules = match.group(1)
 
         for rule, count in self.detect_counts.iteritems():
-            expected_line = '{}: {}'.format(rule, count)
-            match = re.search(expected_line, triggered_rules)
+            expected = '{}: (\d+)'.format(rule)
+            match = re.search(expected, triggered_rules)
 
             if match is None:
-                self.fail("Could not find a line '{}' in triggered rule counts '{}'".format(expected_line, triggered_rules))
+                actual_count = 0
             else:
-                self.log.debug("Found expected count for {}: {}".format(rule, match.group()))
+                actual_count = int(match.group(1))
+
+            if actual_count != count:
+                self.fail("Different counts for rule {}: expected={}, actual={}".format(rule, count, actual_count))
+            else:
+                self.log.debug("Found expected count for rule {}: {}".format(rule, count))
 
     def check_outputs(self):
         for output in self.outputs:
@@ -223,7 +244,13 @@ class FalcoTest(Test):
         cmd = '{}/userspace/falco/falco {} {} -c {} -e {} -o json_output={} -v'.format(
             self.falcodir, self.rules_args, self.disabled_args, self.conf_file, self.trace_file, self.json_output)
 
-        self.falco_proc = process.SubProcess(cmd)
+        for tag in self.disable_tags:
+            cmd += ' -T {}'.format(tag)
+
+        for tag in self.run_tags:
+            cmd += ' -t {}'.format(tag)
+
+        self.falco_proc = process.SubProcess(cmd, env=self.env)
 
         res = self.falco_proc.run(timeout=180, sig=9)
 
