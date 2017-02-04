@@ -244,6 +244,7 @@
   condition: bin_dir and evt.dir = < and open_write and not package_mgmt_procs
   output: "File below a known binary directory opened for writing (user=%user.name command=%proc.cmdline file=%fd.name)"
   priority: WARNING
+  tags: [filesystem]
 
 - macro: write_etc_common
   condition: >
@@ -263,6 +264,7 @@
   condition: write_etc_common and not proc.sname=fbash
   output: "File below /etc opened for writing (user=%user.name command=%proc.cmdline file=%fd.name)"
   priority: WARNING
+  tags: [filesystem]
 
 # Within a fbash session, the severity is lowered to INFO
 - rule: Write below etc in installer
@@ -270,6 +272,7 @@
   condition: write_etc_common and proc.sname=fbash
   output: "File below /etc opened for writing (user=%user.name command=%proc.cmdline file=%fd.name) within pipe installer session"
   priority: INFO
+  tags: [filesystem]
 
 - macro: cmp_cp_by_passwd
   condition: proc.name in (cmp, cp) and proc.pname=passwd
@@ -279,6 +282,7 @@
   condition: sensitive_files and open_read and server_procs and not proc_is_new and proc.name!="sshd"
   output: "Sensitive file opened for reading by trusted program after startup (user=%user.name command=%proc.cmdline file=%fd.name)"
   priority: WARNING
+  tags: [filesystem]
 
 - list: read_sensitive_file_binaries
   items: [iptables, ps, lsb_release, check-new-relea, dumpe2fs, accounts-daemon, sshd, vsftpd, systemd]
@@ -293,6 +297,7 @@
     and not proc.cmdline contains /usr/bin/mandb
   output: "Sensitive file opened for reading by non-trusted program (user=%user.name name=%proc.name command=%proc.cmdline file=%fd.name)"
   priority: WARNING
+  tags: [filesystem]
 
 # Only let rpm-related programs write to the rpm database
 - rule: Write below rpm database
@@ -300,24 +305,28 @@
   condition: fd.name startswith /var/lib/rpm and open_write and not proc.name in (dnf,rpm,rpmkey,yum) and not ansible_running_python
   output: "Rpm database opened for writing by a non-rpm program (command=%proc.cmdline file=%fd.name)"
   priority: WARNING
+  tags: [filesystem, software_mgmt]
 
 - rule: DB program spawned process
   desc: a database-server related program spawned a new process other than itself. This shouldn\'t occur and is a follow on from some SQL injection attacks.
   condition: proc.pname in (db_server_binaries) and spawned_process and not proc.name in (db_server_binaries)
   output: "Database-related program spawned process other than itself (user=%user.name program=%proc.cmdline parent=%proc.pname)"
   priority: WARNING
+  tags: [process, database]
 
 - rule: Modify binary dirs
   desc: an attempt to modify any file below a set of binary directories.
   condition: bin_dir_rename and modify and not package_mgmt_procs
   output: "File below known binary directory renamed/removed (user=%user.name command=%proc.cmdline operation=%evt.type file=%fd.name %evt.args)"
   priority: WARNING
+  tags: [filesystem]
 
 - rule: Mkdir binary dirs
   desc: an attempt to create a directory below a set of binary directories.
   condition: mkdir and bin_dir_mkdir and not package_mgmt_procs
   output: "Directory below known binary directory created (user=%user.name command=%proc.cmdline directory=%evt.arg.path)"
   priority: WARNING
+  tags: [filesystem]
 
 # Don't load shared objects coming from unexpected places
 # Commenting this out for now--there are lots of shared library
@@ -343,6 +352,7 @@
     and not proc.pname in (sysdigcloud_binaries)
   output: "Namespace change (setns) by unexpected program (user=%user.name command=%proc.cmdline parent=%proc.pname %container.info)"
   priority: WARNING
+  tags: [process]
 
 - list: known_shell_spawn_binaries
   items: [
@@ -369,6 +379,7 @@
     and not parent_linux_image_upgrade_script
   output: "Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline pcmdline=%proc.pcmdline)"
   priority: WARNING
+  tags: [host, shell]
 
 - macro: trusted_containers
   condition: (container.image startswith sysdig/agent or
@@ -383,6 +394,7 @@
   condition: (open_read or open_write) and container and container.privileged=true and not trusted_containers
   output: File opened for read/write by privileged container (user=%user.name command=%proc.cmdline %container.info file=%fd.name)
   priority: WARNING
+  tags: [container, cis]
 
 - macro: sensitive_mount
   condition: (container.mount.dest[/proc*] != "N/A")
@@ -392,6 +404,7 @@
   condition: (open_read or open_write) and container and sensitive_mount and not trusted_containers
   output: File opened for read/write by container mounting sensitive directory (user=%user.name command=%proc.cmdline %container.info file=%fd.name)
   priority: WARNING
+  tags: [container, cis]
 
 # Anything run interactively by root
 # - condition: evt.type != switch and user.name = root and proc.name != sshd and interactive
@@ -403,6 +416,7 @@
   condition: spawned_process and system_users and interactive
   output: "System user ran an interactive command (user=%user.name command=%proc.cmdline)"
   priority: WARNING
+  tags: [users]
 
 - rule: Run shell in container
   desc: a shell was spawned by a non-shell program in a container. Container entrypoints are excluded.
@@ -415,6 +429,7 @@
     and not trusted_containers
   output: "Shell spawned in a container other than entrypoint (user=%user.name %container.info shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline)"
   priority: WARNING
+  tags: [container, shell]
 
 # sockfamily ip is to exclude certain processes (like 'groups') that communicate on unix-domain sockets
 - rule: System procs network activity
@@ -422,6 +437,7 @@
   condition: (fd.sockfamily = ip and system_procs) and (inbound or outbound)
   output: "Known system binary sent/received network traffic (user=%user.name command=%proc.cmdline connection=%fd.name)"
   priority: WARNING
+  tags: [network]
 
 # With the current restriction on system calls handled by falco
 # (e.g. excluding read/write/sendto/recvfrom/etc, this rule won't
@@ -438,12 +454,14 @@
   condition: evt.type=setuid and evt.dir=> and not user.name=root and not proc.name in (userexec_binaries, mail_binaries, sshd, dbus-daemon-lau, ping, ping6, critical-stack-)
   output: "Unexpected setuid call by non-sudo, non-root program (user=%user.name parent=%proc.pname command=%proc.cmdline uid=%evt.arg.uid)"
   priority: WARNING
+  tags: [users]
 
 - rule: User mgmt binaries
   desc: activity by any programs that can manage users, passwords, or permissions. sudo and su are excluded. Activity in containers is also excluded--some containers create custom users on top of a base linux distribution at startup.
   condition: spawned_process and proc.name in (user_mgmt_binaries) and not proc.name in (su, sudo) and not container and not proc.pname in (cron_binaries, systemd, run-parts)
   output: "User management binary command run outside of container (user=%user.name command=%proc.cmdline parent=%proc.pname)"
   priority: WARNING
+  tags: [host, users]
 
 - list: allowed_dev_files
   items: [/dev/null, /dev/stdin, /dev/stdout, /dev/stderr, /dev/tty, /dev/random, /dev/urandom, /dev/console]
@@ -458,6 +476,7 @@
     and not fd.name in (allowed_dev_files)
   output: "File created below /dev by untrusted program (user=%user.name command=%proc.cmdline file=%fd.name)"
   priority: WARNING
+  tags: [filesystem]
 
 # fbash is a small shell script that runs bash, and is suitable for use in curl <curl> | fbash installers.
 - rule: Installer bash starts network server
@@ -465,18 +484,21 @@
   condition: evt.type=listen and proc.sname=fbash
   output: "Unexpected listen call by a process in a fbash session (command=%proc.cmdline)"
   priority: WARNING
+  tags: [network]
 
 - rule: Installer bash starts session
   desc: an attempt by a program in a pipe installer session to start a new session
   condition: evt.type=setsid and proc.sname=fbash
   output: "Unexpected setsid call by a process in fbash session (command=%proc.cmdline)"
   priority: WARNING
+  tags: [process]
 
 - rule: Installer bash non https connection
   desc: an attempt by a program in a pipe installer session to make an outgoing connection on a non-http(s) port
   condition: proc.sname=fbash and outbound and not fd.sport in (80, 443, 53)
   output: "Outbound connection on non-http(s) port by a process in a fbash session (command=%proc.cmdline connection=%fd.name)"
   priority: WARNING
+  tags: [network]
 
 # It'd be nice if we could warn when processes in a fbash session try
 # to download from any nonstandard location? This is probably blocked
@@ -490,6 +512,7 @@
   condition: evt.type=execve and proc.name in (chkconfig, systemctl) and proc.sname=fbash
   output: "Service management program run by process in a fbash session (command=%proc.cmdline)"
   priority: INFO
+  tags: [software_mgmt]
 
 # Notice when processes try to run any package management binary within a fbash session.
 # Note: this is not a WARNING, as you'd expect some package management
@@ -499,6 +522,7 @@
   condition: evt.type=execve and package_mgmt_procs and proc.sname=fbash
   output: "Package management program run by process in a fbash session (command=%proc.cmdline)"
   priority: INFO
+  tags: [software_mgmt]
 
 ###########################
 # Application-Related Rules
