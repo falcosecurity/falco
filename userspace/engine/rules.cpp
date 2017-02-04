@@ -65,42 +65,55 @@ void falco_rules::clear_filters()
 
 int falco_rules::add_filter(lua_State *ls)
 {
-	if (! lua_islightuserdata(ls, -3) ||
-	    ! lua_isstring(ls, -2) ||
+	if (! lua_islightuserdata(ls, -4) ||
+	    ! lua_isstring(ls, -3) ||
+	    ! lua_istable(ls, -2) ||
 	    ! lua_istable(ls, -1))
 	{
 		throw falco_exception("Invalid arguments passed to add_filter()\n");
 	}
 
-	falco_rules *rules = (falco_rules *) lua_topointer(ls, -3);
-	const char *rulec = lua_tostring(ls, -2);
+	falco_rules *rules = (falco_rules *) lua_topointer(ls, -4);
+	const char *rulec = lua_tostring(ls, -3);
 
-	list<uint32_t> evttypes;
+	set<uint32_t> evttypes;
+
+	lua_pushnil(ls);  /* first key */
+	while (lua_next(ls, -3) != 0) {
+                // key is at index -2, value is at index
+                // -1. We want the keys.
+		evttypes.insert(luaL_checknumber(ls, -2));
+
+		// Remove value, keep key for next iteration
+		lua_pop(ls, 1);
+	}
+
+	set<string> tags;
 
 	lua_pushnil(ls);  /* first key */
 	while (lua_next(ls, -2) != 0) {
                 // key is at index -2, value is at index
                 // -1. We want the keys.
-		evttypes.push_back(luaL_checknumber(ls, -2));
+		tags.insert(lua_tostring(ls, -1));
 
 		// Remove value, keep key for next iteration
 		lua_pop(ls, 1);
 	}
 
 	std::string rule = rulec;
-	rules->add_filter(rule, evttypes);
+	rules->add_filter(rule, evttypes, tags);
 
 	return 0;
 }
 
-void falco_rules::add_filter(string &rule, list<uint32_t> &evttypes)
+void falco_rules::add_filter(string &rule, set<uint32_t> &evttypes, set<string> &tags)
 {
 	// While the current rule was being parsed, a sinsp_filter
 	// object was being populated by lua_parser. Grab that filter
 	// and pass it to the engine.
 	sinsp_filter *filter = m_lua_parser->get_filter(true);
 
-	m_engine->add_evttype_filter(rule, evttypes, filter);
+	m_engine->add_evttype_filter(rule, evttypes, tags, filter);
 }
 
 int falco_rules::enable_rule(lua_State *ls)

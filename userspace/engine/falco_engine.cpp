@@ -40,7 +40,8 @@ string lua_print_stats = "print_stats";
 using namespace std;
 
 falco_engine::falco_engine(bool seed_rng)
-	: m_rules(NULL), m_sampling_ratio(1), m_sampling_multiplier(0),
+	: m_rules(NULL), m_next_ruleset_id(0),
+	  m_sampling_ratio(1), m_sampling_multiplier(0),
 	  m_replace_container_info(false)
 {
 	luaopen_lpeg(m_ls);
@@ -107,20 +108,51 @@ void falco_engine::load_rules_file(const string &rules_filename, bool verbose, b
 	load_rules(rules_content, verbose, all_events);
 }
 
-void falco_engine::enable_rule(string &pattern, bool enabled)
+void falco_engine::enable_rule(string &pattern, bool enabled, string *ruleset)
 {
-	m_evttype_filter->enable(pattern, enabled);
+	uint16_t ruleset_id = 0;
+
+	if(ruleset)
+	{
+		ruleset_id = find_ruleset_id(*ruleset);
+	}
+
+	m_evttype_filter->enable(pattern, enabled, ruleset_id);
 }
 
-unique_ptr<falco_engine::rule_result> falco_engine::process_event(sinsp_evt *ev)
+void falco_engine::enable_rule_by_tag(set<string> &tags, bool enabled, string *ruleset)
 {
+	uint16_t ruleset_id = 0;
 
+	if(ruleset)
+	{
+		ruleset_id = find_ruleset_id(*ruleset);
+	}
+
+	m_evttype_filter->enable_tags(tags, enabled, ruleset_id);
+}
+
+uint16_t falco_engine::find_ruleset_id(std::string &ruleset)
+{
+	auto it = m_known_rulesets.find(ruleset);
+
+	if(it == m_known_rulesets.end())
+	{
+		m_known_rulesets[ruleset] = ++m_next_ruleset_id;
+		it = m_known_rulesets.find(ruleset);
+	}
+
+	return it->second;
+}
+
+unique_ptr<falco_engine::rule_result> falco_engine::process_event(sinsp_evt *ev, uint16_t ruleset_id)
+{
 	if(should_drop_evt())
 	{
 		return unique_ptr<struct rule_result>();
 	}
 
-	if(!m_evttype_filter->run(ev))
+	if(!m_evttype_filter->run(ev, ruleset_id))
 	{
 		return unique_ptr<struct rule_result>();
 	}
@@ -182,10 +214,11 @@ void falco_engine::print_stats()
 }
 
 void falco_engine::add_evttype_filter(string &rule,
-				      list<uint32_t> &evttypes,
+				      set<uint32_t> &evttypes,
+				      set<string> &tags,
 				      sinsp_filter* filter)
 {
-	m_evttype_filter->add(rule, evttypes, filter);
+	m_evttype_filter->add(rule, evttypes, tags, filter);
 }
 
 void falco_engine::clear_filters()
