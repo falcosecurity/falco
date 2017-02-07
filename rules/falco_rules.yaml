@@ -219,16 +219,19 @@
 # scope the python scripts to a specific directory (namely, your
 # configured remote_tmp directory).
 - macro: parent_ansible_running_python
-  condition: proc.pname in (python, pypy) and proc.pcmdline contains ansible
+  condition: (proc.pname in (python, pypy) and proc.pcmdline contains ansible)
 
 - macro: ansible_running_python
-  condition: proc.name in (python, pypy) and proc.cmdline contains ansible
+  condition: (proc.name in (python, pypy) and proc.cmdline contains ansible)
 
 - macro: python_running_denyhosts
-  condition: proc.name=python and (proc.cmdline contains /usr/sbin/denyhosts or proc.cmdline contains /usr/local/bin/denyhosts.py)
+  condition: (proc.name=python and (proc.cmdline contains /usr/sbin/denyhosts or proc.cmdline contains /usr/local/bin/denyhosts.py))
+
+- macro: parent_python_running_denyhosts
+  condition: (proc.pname=python and (proc.pcmdline contains /usr/sbin/denyhosts or proc.pcmdline contains /usr/local/bin/denyhosts.py))
 
 - macro: parent_bro_running_python
-  condition: proc.pname=python and proc.cmdline contains /usr/share/broctl
+  condition: (proc.pname=python and proc.cmdline contains /usr/share/broctl)
 
 # As a part of kernel upgrades, dpkg will spawn a perl script with the
 # name linux-image-N.N. This macro matches that.
@@ -366,6 +369,7 @@
                            monitoring_binaries)
     and not parent_ansible_running_python
     and not parent_bro_running_python
+    and not parent_python_running_denyhosts
     and not parent_linux_image_upgrade_script
   output: "Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline pcmdline=%proc.pcmdline)"
   priority: WARNING
@@ -376,6 +380,7 @@
                not container.image startswith sysdig/falco-event-generator) or
               container.image startswith sysdig/sysdig or
               container.image startswith gcr.io/google_containers/hyperkube or
+              container.image startswith quay.io/coreos/flannel or
               container.image startswith gcr.io/google_containers/kube-proxy)
 
 - rule: File Open by Privileged Container
