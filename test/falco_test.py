@@ -23,8 +23,6 @@ class FalcoTest(Test):
         self.should_detect = self.params.get('detect', '*', default=False)
         self.trace_file = self.params.get('trace_file', '*')
 
-        self.env = {}
-
         if not os.path.isabs(self.trace_file):
             self.trace_file = os.path.join(self.basedir, self.trace_file)
 
@@ -124,10 +122,6 @@ class FalcoTest(Test):
 
         if self.run_tags == '':
             self.run_tags=[]
-
-        self.ruleset = self.params.get('ruleset', '*', default='')
-        if self.ruleset != '':
-            self.env["FALCO_RULESET"] = self.ruleset
 
     def check_rules_warnings(self, res):
 
@@ -250,7 +244,7 @@ class FalcoTest(Test):
         for tag in self.run_tags:
             cmd += ' -t {}'.format(tag)
 
-        self.falco_proc = process.SubProcess(cmd, env=self.env)
+        self.falco_proc = process.SubProcess(cmd)
 
         res = self.falco_proc.run(timeout=180, sig=9)
 

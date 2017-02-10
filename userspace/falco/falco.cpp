@@ -133,8 +133,7 @@ std::list<string> cmdline_options;
 uint64_t do_inspect(falco_engine *engine,
 		    falco_outputs *outputs,
 		    sinsp* inspector,
-		    string &stats_filename,
-		    uint16_t ruleset_id)
+		    string &stats_filename)
 {
 	uint64_t num_evts = 0;
 	int32_t res;
@@ -194,7 +193,7 @@ uint64_t do_inspect(falco_engine *engine,
 		// engine, which will match the event against the set
 		// of rules. If a match is found, pass the event to
 		// the outputs.
-		unique_ptr<falco_engine::rule_result> res = engine->process_event(ev, ruleset_id);
+		unique_ptr<falco_engine::rule_result> res = engine->process_event(ev);
 		if(res)
 		{
 			outputs->handle_event(res->evt, res->rule, res->priority, res->format);
@@ -373,18 +372,6 @@ int falco_init(int argc, char **argv)
 		engine = new falco_engine();
 		engine->set_inspector(inspector);
 		engine->set_extra(output_format, replace_container_info);
-		string *ruleset = NULL;
-		string ruleset_env;
-		uint16_t ruleset_id = 0;
-
-		// The ruleset feature is really falco
-		// engine-specific, so we don't advertise it. But it
-		// is possible to specify an alternate ruleset via the environment.
-		if (getenv("FALCO_RULESET") != NULL)
-		{
-			ruleset_env = getenv("FALCO_RULESET");
-			ruleset = &ruleset_env;
-		}
 
 		outputs = new falco_outputs();
 		outputs->set_inspector(inspector);
@@ -454,16 +441,10 @@ int falco_init(int argc, char **argv)
 			throw std::invalid_argument("You can not specify both disabled (-D/-T) and enabled (-t) rules");
 		}
 
-		// If a ruleset was provided, we must first explicitly enable all rules.
-		if(ruleset)
-		{
-			engine->enable_rule(all_rules, true, ruleset);
-		}
-
 		for (auto pattern : disabled_rule_patterns)
 		{
 			falco_logger::log(LOG_INFO, "Disabling rules matching pattern: " + pattern + "\n");
-			engine->enable_rule(pattern, false, ruleset);
+			engine->enable_rule(pattern, false);
 		}
 
 		if(disabled_rule_tags.size() > 0)
@@ -472,7 +453,7 @@ int falco_init(int argc, char **argv)
 			{
 				falco_logger::log(LOG_INFO, "Disabling rules with tag: " + tag + "\n");
 			}
-			engine->enable_rule_by_tag(disabled_rule_tags, false, ruleset);
+			engine->enable_rule_by_tag(disabled_rule_tags, false);
 		}
 
 		if(enabled_rule_tags.size() > 0)
@@ -480,12 +461,12 @@ int falco_init(int argc, char **argv)
 
 			// Since we only want to enable specific
 			// rules, first disable all rules.
-			engine->enable_rule(all_rules, false, ruleset);
+			engine->enable_rule(all_rules, false);
 			for(auto tag : enabled_rule_tags)
 			{
 				falco_logger::log(LOG_INFO, "Enabling rules with tag: " + tag + "\n");
 			}
-			engine->enable_rule_by_tag(enabled_rule_tags, true, ruleset);
+			engine->enable_rule_by_tag(enabled_rule_tags, true);
 		}
 
 		outputs->init(config.m_json_output, config.m_notifications_rate, config.m_notifications_max_burst);
@@ -668,15 +649,10 @@ int falco_init(int argc, char **argv)
 		delete mesos_api;
 		mesos_api = 0;
 
-		if(ruleset)
-		{
-			ruleset_id = engine->find_ruleset_id(*ruleset);
-		}
 		num_evts = do_inspect(engine,
 				      outputs,
 				      inspector,
-				      stats_filename,
-				      ruleset_id);
+				      stats_filename);
 
 		duration = ((double)clock()) / CLOCKS_PER_SEC - duration;
 

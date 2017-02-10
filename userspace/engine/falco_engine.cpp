@@ -56,6 +56,8 @@ falco_engine::falco_engine(bool seed_rng)
 	{
 		srandom((unsigned) getpid());
 	}
+
+	m_default_ruleset_id = find_ruleset_id(m_default_ruleset);
 }
 
 falco_engine::~falco_engine()
@@ -108,38 +110,39 @@ void falco_engine::load_rules_file(const string &rules_filename, bool verbose, b
 	load_rules(rules_content, verbose, all_events);
 }
 
-void falco_engine::enable_rule(string &pattern, bool enabled, string *ruleset)
+void falco_engine::enable_rule(const string &pattern, bool enabled, const string &ruleset)
 {
-	uint16_t ruleset_id = 0;
-
-	if(ruleset)
-	{
-		ruleset_id = find_ruleset_id(*ruleset);
-	}
+	uint16_t ruleset_id = find_ruleset_id(ruleset);
 
 	m_evttype_filter->enable(pattern, enabled, ruleset_id);
 }
 
-void falco_engine::enable_rule_by_tag(set<string> &tags, bool enabled, string *ruleset)
+void falco_engine::enable_rule(const string &pattern, bool enabled)
 {
-	uint16_t ruleset_id = 0;
+	enable_rule(pattern, enabled, m_default_ruleset);
+}
 
-	if(ruleset)
-	{
-		ruleset_id = find_ruleset_id(*ruleset);
-	}
+void falco_engine::enable_rule_by_tag(const set<string> &tags, bool enabled, const string &ruleset)
+{
+	uint16_t ruleset_id = find_ruleset_id(ruleset);
 
 	m_evttype_filter->enable_tags(tags, enabled, ruleset_id);
 }
 
-uint16_t falco_engine::find_ruleset_id(std::string &ruleset)
+void falco_engine::enable_rule_by_tag(const set<string> &tags, bool enabled)
 {
-	auto it = m_known_rulesets.find(ruleset);
+	enable_rule_by_tag(tags, enabled, m_default_ruleset);
+}
 
-	if(it == m_known_rulesets.end())
+uint16_t falco_engine::find_ruleset_id(const std::string &ruleset)
+{
+	auto it = m_known_rulesets.lower_bound(ruleset);
+
+	if(it == m_known_rulesets.end() ||
+	   it->first != ruleset)
 	{
-		m_known_rulesets[ruleset] = ++m_next_ruleset_id;
-		it = m_known_rulesets.find(ruleset);
+		it = m_known_rulesets.emplace_hint(it,
+						   std::make_pair(ruleset, m_next_ruleset_id++));
 	}
 
 	return it->second;
@@ -185,6 +188,11 @@ unique_ptr<falco_engine::rule_result> falco_engine::process_event(sinsp_evt *ev,
 	}
 
 	return res;
+}
+
+unique_ptr<falco_engine::rule_result> falco_engine::process_event(sinsp_evt *ev)
+{
+	return process_event(ev, m_default_ruleset_id);
 }
 
 void falco_engine::describe_rule(string *rule)

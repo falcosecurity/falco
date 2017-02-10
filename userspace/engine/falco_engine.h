@@ -49,17 +49,23 @@ public:
 
 	//
 	// Enable/Disable any rules matching the provided pattern
-	// (regex). If ruleset is non-NULL, enable/disable these
-	// rules in the context of the provided ruleset. The ruleset
-	// can later be passed as an argument to process_event(). This
-	// allows for different sets of rules being active at once.
+	// (regex). When provided, enable/disable these rules in the
+	// context of the provided ruleset. The ruleset (id) can later
+	// be passed as an argument to process_event(). This allows
+	// for different sets of rules being active at once.
 	//
-	void enable_rule(std::string &pattern, bool enabled, std::string *ruleset = NULL);
+	void enable_rule(const std::string &pattern, bool enabled, const std::string &ruleset);
+
+	// Wrapper that assumes the default ruleset
+	void enable_rule(const std::string &pattern, bool enabled);
 
 	//
 	// Enable/Disable any rules with any of the provided tags (set, exact matches only)
 	//
-	void enable_rule_by_tag(std::set<std::string> &tags, bool enabled, std::string *ruleset = NULL);
+	void enable_rule_by_tag(const std::set<std::string> &tags, bool enabled, const std::string &ruleset);
+
+	// Wrapper that assumes the default ruleset
+	void enable_rule_by_tag(const std::set<std::string> &tags, bool enabled);
 
 	struct rule_result {
 		sinsp_evt *evt;
@@ -74,20 +80,25 @@ public:
 	// to enable_rule/enable_rule_by_tag(), you should look up the
 	// ruleset id and pass it to process_event().
 	//
-	uint16_t find_ruleset_id(std::string &ruleset);
+	uint16_t find_ruleset_id(const std::string &ruleset);
 
 	//
 	// Given an event, check it against the set of rules in the
 	// engine and if a matching rule is found, return details on
 	// the rule that matched. If no rule matched, returns NULL.
 	//
-	// If ruleset is non-NULL, use the enabled/disabled status
+	// When ruleset_id is provided, use the enabled/disabled status
 	// associated with the provided ruleset. This is only useful
 	// when you have previously called enable_rule/enable_rule_by_tag
-	// with a non-NULL ruleset.
+	// with a ruleset string.
 	//
 	// the returned rule_result is allocated and must be delete()d.
-	std::unique_ptr<rule_result> process_event(sinsp_evt *ev, uint16_t ruleset_id = 0);
+	std::unique_ptr<rule_result> process_event(sinsp_evt *ev, uint16_t ruleset_id);
+
+	//
+	// Wrapper assuming the default ruleset
+	//
+	std::unique_ptr<rule_result> process_event(sinsp_evt *ev);
 
 	//
 	// Print details on the given rule. If rule is NULL, print
@@ -172,6 +183,8 @@ private:
 	double m_sampling_multiplier;
 
 	std::string m_lua_main_filename = "rule_loader.lua";
+	std::string m_default_ruleset = "falco-default-ruleset";
+	uint32_t m_default_ruleset_id;
 
 	std::string m_extra;
 	bool m_replace_container_info;
