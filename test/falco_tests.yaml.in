@@ -154,6 +154,25 @@ trace_files: !mux
       - rules/single_rule_enabled_flag.yaml
     trace_file: trace_files/cat_write.scap
 
+  disabled_and_enabled_rules_1:
+    exit_status: 1
+    stderr_contains: "Runtime error: You can not specify both disabled .-D/-T. and enabled .-t. rules. Exiting."
+    disable_tags: [a]
+    run_tags: [a]
+    rules_file:
+      - rules/single_rule.yaml
+    trace_file: trace_files/cat_write.scap
+
+  disabled_and_enabled_rules_2:
+    exit_status: 1
+    stderr_contains: "Runtime error: You can not specify both disabled .-D/-T. and enabled .-t. rules. Exiting."
+    disabled_rules:
+      - "open.*"
+    run_tags: [a]
+    rules_file:
+      - rules/single_rule.yaml
+    trace_file: trace_files/cat_write.scap
+
   null_output_field:
     detect: True
     detect_level: WARNING
@@ -200,3 +219,267 @@ trace_files: !mux
       - "Create files below dev": 1
       - "Modify binary dirs": 2
       - "Change thread namespace": 2
+
+  disabled_tags_a:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/tagged_rules.yaml
+    trace_file: trace_files/open-multiple-files.scap
+    disable_tags: [a]
+    detect_counts:
+      - open_1: 0
+      - open_2: 1
+      - open_3: 1
+      - open_4: 0
+      - open_5: 0
+      - open_6: 1
+      - open_7: 0
+      - open_8: 0
+      - open_9: 0
+      - open_10: 0
+      - open_11: 1
+      - open_12: 1
+      - open_13: 1
+
+  disabled_tags_b:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/tagged_rules.yaml
+    trace_file: trace_files/open-multiple-files.scap
+    disable_tags: [b]
+    detect_counts:
+      - open_1: 1
+      - open_2: 0
+      - open_3: 1
+      - open_4: 0
+      - open_5: 1
+      - open_6: 0
+      - open_7: 0
+      - open_8: 0
+      - open_9: 1
+      - open_10: 0
+      - open_11: 1
+      - open_12: 1
+      - open_13: 1
+
+  disabled_tags_c:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/tagged_rules.yaml
+    trace_file: trace_files/open-multiple-files.scap
+    disable_tags: [c]
+    detect_counts:
+      - open_1: 1
+      - open_2: 1
+      - open_3: 0
+      - open_4: 1
+      - open_5: 0
+      - open_6: 0
+      - open_7: 0
+      - open_8: 1
+      - open_9: 0
+      - open_10: 0
+      - open_11: 1
+      - open_12: 1
+      - open_13: 1
+
+  disabled_tags_ab:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/tagged_rules.yaml
+    trace_file: trace_files/open-multiple-files.scap
+    disable_tags: [a, b]
+    detect_counts:
+      - open_1: 0
+      - open_2: 0
+      - open_3: 1
+      - open_4: 0
+      - open_5: 0
+      - open_6: 0
+      - open_7: 0
+      - open_8: 0
+      - open_9: 0
+      - open_10: 0
+      - open_11: 1
+      - open_12: 1
+      - open_13: 1
+
+  disabled_tags_abc:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/tagged_rules.yaml
+    trace_file: trace_files/open-multiple-files.scap
+    disable_tags: [a, b, c]
+    detect_counts:
+      - open_1: 0
+      - open_2: 0
+      - open_3: 0
+      - open_4: 0
+      - open_5: 0
+      - open_6: 0
+      - open_7: 0
+      - open_8: 0
+      - open_9: 0
+      - open_10: 0
+      - open_11: 1
+      - open_12: 1
+      - open_13: 1
+
+  run_tags_a:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/tagged_rules.yaml
+    trace_file: trace_files/open-multiple-files.scap
+    run_tags: [a]
+    detect_counts:
+      - open_1: 1
+      - open_2: 0
+      - open_3: 0
+      - open_4: 1
+      - open_5: 1
+      - open_6: 0
+      - open_7: 1
+      - open_8: 1
+      - open_9: 1
+      - open_10: 1
+      - open_11: 0
+      - open_12: 0
+      - open_13: 0
+
+  run_tags_b:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/tagged_rules.yaml
+    trace_file: trace_files/open-multiple-files.scap
+    run_tags: [b]
+    detect_counts:
+      - open_1: 0
+      - open_2: 1
+      - open_3: 0
+      - open_4: 1
+      - open_5: 0
+      - open_6: 1
+      - open_7: 1
+      - open_8: 1
+      - open_9: 0
+      - open_10: 1
+      - open_11: 0
+      - open_12: 0
+      - open_13: 0
+
+  run_tags_c:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/tagged_rules.yaml
+    trace_file: trace_files/open-multiple-files.scap
+    run_tags: [c]
+    detect_counts:
+      - open_1: 0
+      - open_2: 0
+      - open_3: 1
+      - open_4: 0
+      - open_5: 1
+      - open_6: 1
+      - open_7: 1
+      - open_8: 0
+      - open_9: 1
+      - open_10: 1
+      - open_11: 0
+      - open_12: 0
+      - open_13: 0
+
+  run_tags_ab:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/tagged_rules.yaml
+    trace_file: trace_files/open-multiple-files.scap
+    run_tags: [a, b]
+    detect_counts:
+      - open_1: 1
+      - open_2: 1
+      - open_3: 0
+      - open_4: 1
+      - open_5: 1
+      - open_6: 1
+      - open_7: 1
+      - open_8: 1
+      - open_9: 1
+      - open_10: 1
+      - open_11: 0
+      - open_12: 0
+      - open_13: 0
+
+  run_tags_bc:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/tagged_rules.yaml
+    trace_file: trace_files/open-multiple-files.scap
+    run_tags: [b, c]
+    detect_counts:
+      - open_1: 0
+      - open_2: 1
+      - open_3: 1
+      - open_4: 1
+      - open_5: 1
+      - open_6: 1
+      - open_7: 1
+      - open_8: 1
+      - open_9: 1
+      - open_10: 1
+      - open_11: 0
+      - open_12: 0
+      - open_13: 0
+
+  run_tags_abc:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/tagged_rules.yaml
+    trace_file: trace_files/open-multiple-files.scap
+    run_tags: [a, b, c]
+    detect_counts:
+      - open_1: 1
+      - open_2: 1
+      - open_3: 1
+      - open_4: 1
+      - open_5: 1
+      - open_6: 1
+      - open_7: 1
+      - open_8: 1
+      - open_9: 1
+      - open_10: 1
+      - open_11: 0
+      - open_12: 0
+      - open_13: 0
+
+  run_tags_d:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/tagged_rules.yaml
+    trace_file: trace_files/open-multiple-files.scap
+    run_tags: [d]
+    detect_counts:
+      - open_1: 0
+      - open_2: 0
+      - open_3: 0
+      - open_4: 0
+      - open_5: 0
+      - open_6: 0
+      - open_7: 0
+      - open_8: 0
+      - open_9: 0
+      - open_10: 0
+      - open_11: 1
+      - open_12: 0
+      - open_13: 0
