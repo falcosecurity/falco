@@ -29,7 +29,9 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3 -fno-strict-aliasing -DNDEBUG")
 
 add_definitions(-DPLATFORM_NAME="${CMAKE_SYSTEM_NAME}")
 add_definitions(-DK8S_DISABLE_THREAD)
-add_definitions(-DHAS_CAPTURE)
+if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+	add_definitions(-DHAS_CAPTURE)
+endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 	set(KBUILD_FLAGS "${DRAIOS_DEBUG_FLAGS} ${DRAIOS_FEATURE_FLAGS}")
@@ -46,6 +48,10 @@ set(CMAKE_INSTALL_PREFIX /usr)
 set(CMD_MAKE make)
 
 set(SYSDIG_DIR "${PROJECT_SOURCE_DIR}/../sysdig")
+# make luaJIT work on OS X
+if(APPLE)
+	set(CMAKE_EXE_LINKER_FLAGS "-pagezero_size 10000 -image_base 100000000")
+endif()
 
 include(ExternalProject)
 
@@ -370,7 +376,9 @@ endif()
 install(FILES falco.yaml
 	DESTINATION "${FALCO_ETC_DIR}")
 
-add_subdirectory("${SYSDIG_DIR}/driver" "${PROJECT_BINARY_DIR}/driver")
+if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+	add_subdirectory("${SYSDIG_DIR}/driver" "${PROJECT_BINARY_DIR}/driver")
+endif()
 add_subdirectory("${SYSDIG_DIR}/userspace/libscap" "${PROJECT_BINARY_DIR}/userspace/libscap")
 add_subdirectory("${SYSDIG_DIR}/userspace/libsinsp" "${PROJECT_BINARY_DIR}/userspace/libsinsp")
 
