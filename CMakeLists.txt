@@ -296,13 +296,13 @@ else()
 	set(LPEG_SRC "${PROJECT_BINARY_DIR}/lpeg-prefix/src/lpeg")
 	set(LPEG_LIB "${PROJECT_BINARY_DIR}/lpeg-prefix/src/lpeg/build/lpeg.a")
 	ExternalProject_Add(lpeg
-                DEPENDS luajit
+		DEPENDS luajit
 		URL "http://s3.amazonaws.com/download.draios.com/dependencies/lpeg-1.0.0.tar.gz"
-                URL_MD5 "0aec64ccd13996202ad0c099e2877ece"
-                BUILD_COMMAND LUA_INCLUDE=${LUAJIT_INCLUDE} "${PROJECT_SOURCE_DIR}/scripts/build-lpeg.sh" "${LPEG_SRC}/build"
-                BUILD_IN_SOURCE 1
+		URL_MD5 "0aec64ccd13996202ad0c099e2877ece"
+		BUILD_COMMAND LUA_INCLUDE=${LUAJIT_INCLUDE} "${PROJECT_SOURCE_DIR}/scripts/build-lpeg.sh" "${LPEG_SRC}/build"
+		BUILD_IN_SOURCE 1
 		CONFIGURE_COMMAND ""
-                INSTALL_COMMAND "")
+		INSTALL_COMMAND "")
 endif()
 
 #
@@ -332,11 +332,11 @@ else()
 	set(LIBYAML_LIB "${LIBYAML_SRC}/.libs/libyaml.a")
 	ExternalProject_Add(libyaml
 		URL "http://download.draios.com/dependencies/libyaml-0.1.4.tar.gz"
-                URL_MD5 "4a4bced818da0b9ae7fc8ebc690792a7"
-                BUILD_COMMAND ${CMD_MAKE}
-                BUILD_IN_SOURCE 1
+		URL_MD5 "4a4bced818da0b9ae7fc8ebc690792a7"
+		BUILD_COMMAND ${CMD_MAKE}
+		BUILD_IN_SOURCE 1
 		CONFIGURE_COMMAND ./bootstrap && ./configure
-                INSTALL_COMMAND "")
+		INSTALL_COMMAND "")
 endif()
 
 #
