@@ -301,8 +301,12 @@ if(NOT USE_BUNDLED_LPEG)
 else()
 	set(LPEG_SRC "${PROJECT_BINARY_DIR}/lpeg-prefix/src/lpeg")
 	set(LPEG_LIB "${PROJECT_BINARY_DIR}/lpeg-prefix/src/lpeg/build/lpeg.a")
+	set(LPEG_DEPENDENCIES "")
+	if(USE_BUNDLED_LUAJIT)
+		list(APPEND LPEG_DEPENDENCIES "luajit")
+	endif()
 	ExternalProject_Add(lpeg
-		DEPENDS luajit
+		DEPENDS ${LPEG_DEPENDENCIES}
 		URL "http://s3.amazonaws.com/download.draios.com/dependencies/lpeg-1.0.0.tar.gz"
 		URL_MD5 "0aec64ccd13996202ad0c099e2877ece"
 		BUILD_COMMAND LUA_INCLUDE=${LUAJIT_INCLUDE} "${PROJECT_SOURCE_DIR}/scripts/build-lpeg.sh" "${LPEG_SRC}/build"
@@ -363,8 +367,15 @@ if(NOT USE_BUNDLED_LYAML)
 else()
 	set(LYAML_SRC "${PROJECT_BINARY_DIR}/lyaml-prefix/src/lyaml/ext/yaml")
 	set(LYAML_LIB "${LYAML_SRC}/.libs/yaml.a")
+	set(LYAML_DEPENDENCIES "")
+	if(USE_BUNDLED_LUAJIT)
+		list(APPEND LYAML_DEPENDENCIES "luajit")
+	endif()
+	if(USE_BUNDLED_LIBYAML)
+		list(APPEND LYAML_DEPENDENCIES "libyaml")
+	endif()
 	ExternalProject_Add(lyaml
-		DEPENDS libyaml luajit
+		DEPENDS ${LYAML_DEPENDENCIES}
 		URL "http://download.draios.com/dependencies/lyaml-release-v6.0.tar.gz"
                 URL_MD5 "dc3494689a0dce7cf44e7a99c72b1f30"
                 BUILD_COMMAND ${CMD_MAKE}
