@@ -9,7 +9,7 @@ install:
     - sudo apt-get --force-yes install g++-4.8
     - sudo apt-get install rpm linux-headers-$(uname -r)
     - git clone https://github.com/draios/sysdig.git ../sysdig
-    - sudo apt-get install -y python-pip libvirt-dev jq
+    - sudo apt-get install -y python-pip libvirt-dev jq valgrind
     - cd ..
     - curl -Lo avocado-36.0-tar.gz https://github.com/avocado-framework/avocado/archive/36.0lts.tar.gz
     - tar -zxvf avocado-36.0-tar.gz

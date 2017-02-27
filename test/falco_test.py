@@ -123,6 +123,8 @@ class FalcoTest(Test):
         if self.run_tags == '':
             self.run_tags=[]
 
+        self.valgrind = self.params.get('valgrind', '*', default=False)
+
     def check_rules_warnings(self, res):
 
         found_warning = sets.Set()
@@ -234,8 +236,14 @@ class FalcoTest(Test):
     def test(self):
         self.log.info("Trace file %s", self.trace_file)
 
+        cmd = ''
+
+        if self.valgrind:
+            cmd = 'valgrind --tool=memcheck --leak-check=full --error-exitcode=117 --suppressions={} {}'.format(
+                self.basedir + "/../build/luajit-prefix/src/luajit/src/lj.supp", cmd)
+
         # Run the provided trace file though falco
-        cmd = '{}/userspace/falco/falco {} {} -c {} -e {} -o json_output={} -v'.format(
+        cmd += '{}/userspace/falco/falco {} {} -c {} -e {} -o json_output={} -v'.format(
             self.falcodir, self.rules_args, self.disabled_args, self.conf_file, self.trace_file, self.json_output)
 
         for tag in self.disable_tags:
@@ -257,6 +265,9 @@ class FalcoTest(Test):
             match = re.search(self.stdout_contains, res.stdout)
             if match is None:
                 self.fail("Stdout of falco process '{}' did not contain content matching {}".format(res.stdout, self.stdout_contains))
+
+        if res.exit_status == 117:
+            self.fail("Valgrind returned one or more errors")
 
         if res.exit_status != self.exit_status:
             self.error("Falco command \"{}\" exited with unexpected return value {} (!= {})".format(
