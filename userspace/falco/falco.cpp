@@ -295,8 +295,6 @@ int falco_init(int argc, char **argv)
 				break;
 			case 'e':
 				scap_filename = optarg;
-				k8s_api = new string();
-				mesos_api = new string();
 				break;
 			case 'k':
 				k8s_api = new string(optarg);
