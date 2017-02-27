@@ -24,12 +24,14 @@ along with falco.  If not, see <http://www.gnu.org/licenses/>.
 
 
 sinsp* falco_formats::s_inspector = NULL;
-bool s_json_output = false;
+bool falco_formats::s_json_output = false;
+sinsp_evt_formatter_cache *falco_formats::s_formatters = NULL;
 
 const static struct luaL_reg ll_falco [] =
 {
 	{"formatter", &falco_formats::formatter},
 	{"free_formatter", &falco_formats::free_formatter},
+	{"free_formatters", &falco_formats::free_formatters},
 	{"format_event", &falco_formats::format_event},
 	{NULL,NULL}
 };
@@ -38,6 +40,10 @@ void falco_formats::init(sinsp* inspector, lua_State *ls, bool json_output)
 {
 	s_inspector = inspector;
 	s_json_output = json_output;
+	if(!s_formatters)
+	{
+		s_formatters = new sinsp_evt_formatter_cache(s_inspector);
+	}
 
 	luaL_openlib(ls, "formats", ll_falco, 0);
 }
@@ -73,11 +79,21 @@ int falco_formats::free_formatter(lua_State *ls)
 	return 0;
 }
 
+int falco_formats::free_formatters(lua_State *ls)
+{
+	if(s_formatters)
+	{
+		delete(s_formatters);
+		s_formatters = NULL;
+	}
+	return 0;
+}
+
 int falco_formats::format_event (lua_State *ls)
 {
 	string line;
 
-	if (!lua_islightuserdata(ls, -1) ||
+	if (!lua_isstring(ls, -1) ||
 	    !lua_isstring(ls, -2) ||
 	    !lua_isstring(ls, -3) ||
 	    !lua_islightuserdata(ls, -4)) {
@@ -87,9 +103,19 @@ int falco_formats::format_event (lua_State *ls)
 	sinsp_evt* evt = (sinsp_evt*)lua_topointer(ls, 1);
 	const char *rule = (char *) lua_tostring(ls, 2);
 	const char *level = (char *) lua_tostring(ls, 3);
-	sinsp_evt_formatter* formatter = (sinsp_evt_formatter*)lua_topointer(ls, 4);
+	const char *format = (char *) lua_tostring(ls, 4);
 
-	formatter->tostring(evt, &line);
+	string sformat = format;
+
+	try {
+		s_formatters->tostring(evt, sformat, &line);
+	}
+	catch (sinsp_exception& e)
+	{
+		string err = "Invalid output format '" + sformat + "': '" + string(e.what()) + "'";
+		lua_pushstring(ls, err.c_str());
+		lua_error(ls);
+	}
 
 	// For JSON output, the formatter returned just the output
 	// string containing the format text and values. Use this to

@@ -39,8 +39,13 @@ class falco_formats
 	// falco.free_formatter(formatter)
 	static int free_formatter(lua_State *ls);
 
+	// falco.free_formatters()
+	static int free_formatters(lua_State *ls);
+
 	// formatted_string = falco.format_event(evt, formatter)
 	static int format_event(lua_State *ls);
 
 	static sinsp* s_inspector;
+	static sinsp_evt_formatter_cache *s_formatters;
+	static bool s_json_output;
 };
