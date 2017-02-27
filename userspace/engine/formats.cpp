@@ -81,7 +81,8 @@ int falco_formats::format_event (lua_State *ls)
 	    !lua_isstring(ls, -2) ||
 	    !lua_isstring(ls, -3) ||
 	    !lua_islightuserdata(ls, -4)) {
-		throw falco_exception("Invalid arguments passed to format_event()\n");
+		lua_pushstring(ls, "Invalid arguments passed to format_event()");
+		lua_error(ls);
 	}
 	sinsp_evt* evt = (sinsp_evt*)lua_topointer(ls, 1);
 	const char *rule = (char *) lua_tostring(ls, 2);
