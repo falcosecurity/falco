@@ -49,7 +49,8 @@ int falco_rules::clear_filters(lua_State *ls)
 {
 	if (! lua_islightuserdata(ls, -1))
 	{
-		throw falco_exception("Invalid arguments passed to clear_filters()\n");
+		lua_pushstring(ls, "Invalid arguments passed to clear_filters()");
+		lua_error(ls);
 	}
 
 	falco_rules *rules = (falco_rules *) lua_topointer(ls, -1);
@@ -70,7 +71,8 @@ int falco_rules::add_filter(lua_State *ls)
 	    ! lua_istable(ls, -2) ||
 	    ! lua_istable(ls, -1))
 	{
-		throw falco_exception("Invalid arguments passed to add_filter()\n");
+		lua_pushstring(ls, "Invalid arguments passed to add_filter()");
+		lua_error(ls);
 	}
 
 	falco_rules *rules = (falco_rules *) lua_topointer(ls, -4);
@@ -122,7 +124,8 @@ int falco_rules::enable_rule(lua_State *ls)
 	    ! lua_isstring(ls, -2) ||
 	    ! lua_isnumber(ls, -1))
 	{
-		throw falco_exception("Invalid arguments passed to enable_rule()\n");
+		lua_pushstring(ls, "Invalid arguments passed to enable_rule()");
+		lua_error(ls);
 	}
 
 	falco_rules *rules = (falco_rules *) lua_topointer(ls, -3);
