@@ -433,7 +433,7 @@
     and shell_procs
     and proc.pname exists
     and not proc.pname in (shell_binaries, docker_binaries, k8s_binaries, lxd_binaries, aide_wrapper_binaries, nids_binaries,
-                           monitoring_binaries, gitlab_binaries, initdb, pg_ctl, awk, apache2, falco, cron)
+                           monitoring_binaries, gitlab_binaries, initdb, pg_ctl, awk, apache2, falco, cron, erl_child_setup)
     and not trusted_containers
   output: "Shell spawned in a container other than entrypoint (user=%user.name %container.info shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline)"
   priority: WARNING
