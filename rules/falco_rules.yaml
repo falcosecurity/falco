@@ -157,6 +157,9 @@
 - list: monitoring_binaries
   items: [icinga2, nrpe, npcd, check_sar_perf.]
 
+- list: rabbitmq_binaries
+  items: [erl_child_setup]
+
 - macro: system_procs
   condition: proc.name in (coreutils_binaries, user_mgmt_binaries)
 
@@ -430,7 +433,7 @@
     and shell_procs
     and proc.pname exists
     and not proc.pname in (shell_binaries, docker_binaries, k8s_binaries, lxd_binaries, aide_wrapper_binaries, nids_binaries,
-                           monitoring_binaries, initdb, pg_ctl, awk, apache2, falco, cron)
+                           monitoring_binaries, rabbitmq_binaries, initdb, awk, apache2, falco, cron)
     and not trusted_containers
   output: "Shell spawned in a container other than entrypoint (user=%user.name %container.info shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline)"
   priority: WARNING
