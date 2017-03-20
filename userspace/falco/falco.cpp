@@ -53,6 +53,7 @@ static void signal_callback(int signal)
 static void usage()
 {
     printf(
+	   "falco version " FALCO_VERSION "\n"
 	   "Usage: falco [options]\n\n"
 	   "Options:\n"
 	   " -h, --help                    Print this page\n"
@@ -106,6 +107,7 @@ static void usage()
 	   " -t <tag>                      Only run those rules with a tag=<tag>. Can be specified multiple times.\n"
 	   "                               Can not be specified with -T/-D.\n"
 	   " -v                            Verbose output.\n"
+           " --version                     Print version number.\n"
 	   "\n"
     );
 }
@@ -255,6 +257,7 @@ int falco_init(int argc, char **argv)
 		{"option", required_argument, 0, 'o'},
 		{"print", required_argument, 0, 'p' },
 		{"pidfile", required_argument, 0, 'P' },
+		{"version", no_argument, 0, 0 },
 		{"writefile", required_argument, 0, 'w' },
 
 		{0, 0, 0, 0}
@@ -367,6 +370,13 @@ int falco_init(int argc, char **argv)
 			}
 
 		}
+
+		if(string(long_options[long_index].name) == "version")
+		{
+			printf("falco version %s\n", FALCO_VERSION);
+			return EXIT_SUCCESS;
+		}
+
 
 		inspector = new sinsp();
 		engine = new falco_engine();

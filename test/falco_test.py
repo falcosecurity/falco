@@ -93,9 +93,9 @@ class FalcoTest(Test):
         # module_is_loaded to avoid logging lsmod output to the log.
         lsmod_output = process.system_output("lsmod", verbose=False)
 
-        if linux_modules.parse_lsmod_for_module(lsmod_output, 'sysdig_probe') == {}:
-            self.log.debug("Loading sysdig kernel module")
-            process.run('sudo insmod {}/driver/sysdig-probe.ko'.format(self.falcodir))
+        if linux_modules.parse_lsmod_for_module(lsmod_output, 'falco_probe') == {}:
+            self.log.debug("Loading falco kernel module")
+            process.run('sudo insmod {}/driver/falco-probe.ko'.format(self.falcodir))
 
         self.str_variant = self.trace_file
 
