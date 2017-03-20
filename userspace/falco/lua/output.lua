@@ -24,8 +24,6 @@ mod.levels = levels
 
 local outputs = {}
 
-local formatters = {}
-
 function mod.stdout(level, msg)
    print (msg)
 end
@@ -84,14 +82,8 @@ function output_event(event, rule, priority, format)
    end
 
    format = "*%evt.time: "..levels[level+1].." "..format
-   if formatters[rule] == nil then
-      formatter = formats.formatter(format)
-      formatters[rule] = formatter
-   else
-      formatter = formatters[rule]
-   end
 
-   msg = formats.format_event(event, rule, levels[level+1], formatter)
+   msg = formats.format_event(event, rule, levels[level+1], format)
 
    for index,o in ipairs(outputs) do
       o.output(level, msg, o.config)
@@ -99,11 +91,7 @@ function output_event(event, rule, priority, format)
 end
 
 function output_cleanup()
-   for rule, formatter in pairs(formatters) do
-      formats.free_formatter(formatter)
-   end
-
-   formatters = {}
+   formats.free_formatters()
 end
 
 function add_output(output_name, config)

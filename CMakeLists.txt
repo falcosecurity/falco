@@ -29,7 +29,9 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3 -fno-strict-aliasing -DNDEBUG")
 
 add_definitions(-DPLATFORM_NAME="${CMAKE_SYSTEM_NAME}")
 add_definitions(-DK8S_DISABLE_THREAD)
-add_definitions(-DHAS_CAPTURE)
+if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+	add_definitions(-DHAS_CAPTURE)
+endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 	set(KBUILD_FLAGS "${DRAIOS_DEBUG_FLAGS} ${DRAIOS_FEATURE_FLAGS}")
@@ -46,6 +48,10 @@ set(CMAKE_INSTALL_PREFIX /usr)
 set(CMD_MAKE make)
 
 set(SYSDIG_DIR "${PROJECT_SOURCE_DIR}/../sysdig")
+# make luaJIT work on OS X
+if(APPLE)
+	set(CMAKE_EXE_LINKER_FLAGS "-pagezero_size 10000 -image_base 100000000")
+endif()
 
 include(ExternalProject)
 
@@ -295,14 +301,18 @@ if(NOT USE_BUNDLED_LPEG)
 else()
 	set(LPEG_SRC "${PROJECT_BINARY_DIR}/lpeg-prefix/src/lpeg")
 	set(LPEG_LIB "${PROJECT_BINARY_DIR}/lpeg-prefix/src/lpeg/build/lpeg.a")
+	set(LPEG_DEPENDENCIES "")
+	if(USE_BUNDLED_LUAJIT)
+		list(APPEND LPEG_DEPENDENCIES "luajit")
+	endif()
 	ExternalProject_Add(lpeg
-                DEPENDS luajit
+		DEPENDS ${LPEG_DEPENDENCIES}
 		URL "http://s3.amazonaws.com/download.draios.com/dependencies/lpeg-1.0.0.tar.gz"
-                URL_MD5 "0aec64ccd13996202ad0c099e2877ece"
-                BUILD_COMMAND LUA_INCLUDE=${LUAJIT_INCLUDE} "${PROJECT_SOURCE_DIR}/scripts/build-lpeg.sh" "${LPEG_SRC}/build"
-                BUILD_IN_SOURCE 1
+		URL_MD5 "0aec64ccd13996202ad0c099e2877ece"
+		BUILD_COMMAND LUA_INCLUDE=${LUAJIT_INCLUDE} "${PROJECT_SOURCE_DIR}/scripts/build-lpeg.sh" "${LPEG_SRC}/build"
+		BUILD_IN_SOURCE 1
 		CONFIGURE_COMMAND ""
-                INSTALL_COMMAND "")
+		INSTALL_COMMAND "")
 endif()
 
 #
@@ -332,11 +342,11 @@ else()
 	set(LIBYAML_LIB "${LIBYAML_SRC}/.libs/libyaml.a")
 	ExternalProject_Add(libyaml
 		URL "http://download.draios.com/dependencies/libyaml-0.1.4.tar.gz"
-                URL_MD5 "4a4bced818da0b9ae7fc8ebc690792a7"
-                BUILD_COMMAND ${CMD_MAKE}
-                BUILD_IN_SOURCE 1
+		URL_MD5 "4a4bced818da0b9ae7fc8ebc690792a7"
+		BUILD_COMMAND ${CMD_MAKE}
+		BUILD_IN_SOURCE 1
 		CONFIGURE_COMMAND ./bootstrap && ./configure
-                INSTALL_COMMAND "")
+		INSTALL_COMMAND "")
 endif()
 
 #
@@ -357,8 +367,15 @@ if(NOT USE_BUNDLED_LYAML)
 else()
 	set(LYAML_SRC "${PROJECT_BINARY_DIR}/lyaml-prefix/src/lyaml/ext/yaml")
 	set(LYAML_LIB "${LYAML_SRC}/.libs/yaml.a")
+	set(LYAML_DEPENDENCIES "")
+	if(USE_BUNDLED_LUAJIT)
+		list(APPEND LYAML_DEPENDENCIES "luajit")
+	endif()
+	if(USE_BUNDLED_LIBYAML)
+		list(APPEND LYAML_DEPENDENCIES "libyaml")
+	endif()
 	ExternalProject_Add(lyaml
-		DEPENDS libyaml luajit
+		DEPENDS ${LYAML_DEPENDENCIES}
 		URL "http://download.draios.com/dependencies/lyaml-release-v6.0.tar.gz"
                 URL_MD5 "dc3494689a0dce7cf44e7a99c72b1f30"
                 BUILD_COMMAND ${CMD_MAKE}
@@ -370,7 +387,9 @@ endif()
 install(FILES falco.yaml
 	DESTINATION "${FALCO_ETC_DIR}")
 
-add_subdirectory("${SYSDIG_DIR}/driver" "${PROJECT_BINARY_DIR}/driver")
+if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+	add_subdirectory("${SYSDIG_DIR}/driver" "${PROJECT_BINARY_DIR}/driver")
+endif()
 add_subdirectory("${SYSDIG_DIR}/userspace/libscap" "${PROJECT_BINARY_DIR}/userspace/libscap")
 add_subdirectory("${SYSDIG_DIR}/userspace/libsinsp" "${PROJECT_BINARY_DIR}/userspace/libsinsp")
 

@@ -76,7 +76,7 @@
 
 # dpkg -L login | grep bin | xargs ls -ld | grep -v '^d' | awk '{print $9}' | xargs -L 1 basename | tr "\\n" ","
 - list: login_binaries
-  items: [login, systemd, systemd-logind, su, nologin, faillog, lastlog, newgrp, sg]
+  items: [login, systemd, '"(systemd)"', systemd-logind, su, nologin, faillog, lastlog, newgrp, sg]
 
 # dpkg -L passwd | grep bin | xargs ls -ld | grep -v '^d' | awk '{print $9}' | xargs -L 1 basename | tr "\\n" ","
 - list: passwd_binaries
@@ -112,6 +112,9 @@
 
 - list: db_server_binaries
   items: [mysqld]
+
+- list: gitlab_binaries
+  items: [gitlab-shell, git]
 
 - macro: server_procs
   condition: proc.name in (http_server_binaries, db_server_binaries, docker_binaries, sshd)
@@ -256,7 +259,7 @@
                           package_mgmt_binaries, ssl_mgmt_binaries, dhcp_binaries,
                           ldconfig.real, ldconfig, confd, gpg, insserv,
                           apparmor_parser, update-mime, tzdata.config, tzdata.postinst,
-                          systemd-machine, debconf-show, rollerd, bind9.postinst)
+                          systemd-machine, debconf-show, rollerd, bind9.postinst, sv)
     and not proc.pname in (sysdigcloud_binaries)
     and not fd.directory in (/etc/cassandra, /etc/ssl/certs/java)
     and not ansible_running_python
@@ -365,7 +368,7 @@
     logrotate, ansible, less, adduser, pycompile, py3compile,
     pyclean, py3clean, pip, pip2, ansible-playboo, man-db,
     init, pluto, mkinitramfs, unattended-upgr, watch, sysdig,
-    landscape-sysin, nessusd, PM2, syslog-summary
+    landscape-sysin, nessusd, PM2, syslog-summary, erl_child_setup
     ]
 
 - rule: Run shell untrusted
@@ -430,7 +433,7 @@
     and shell_procs
     and proc.pname exists
     and not proc.pname in (shell_binaries, docker_binaries, k8s_binaries, lxd_binaries, aide_wrapper_binaries, nids_binaries,
-                           monitoring_binaries, initdb, pg_ctl, awk, apache2, falco, cron)
+                           monitoring_binaries, gitlab_binaries, initdb, pg_ctl, awk, apache2, falco, cron, erl_child_setup)
     and not trusted_containers
   output: "Shell spawned in a container other than entrypoint (user=%user.name %container.info shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline)"
   priority: WARNING
@@ -469,7 +472,7 @@
   tags: [host, users]
 
 - list: allowed_dev_files
-  items: [/dev/null, /dev/stdin, /dev/stdout, /dev/stderr, /dev/tty, /dev/random, /dev/urandom, /dev/console]
+  items: [/dev/null, /dev/stdin, /dev/stdout, /dev/stderr, /dev/random, /dev/urandom, /dev/console]
 
 # (we may need to add additional checks against false positives, see: https://bugs.launchpad.net/ubuntu/+source/rkhunter/+bug/86153)
 - rule: Create files below dev
@@ -479,6 +482,7 @@
     (evt.type = creat or (evt.type = open and evt.arg.flags contains O_CREAT))
     and not proc.name in (dev_creation_binaries)
     and not fd.name in (allowed_dev_files)
+    and not fd.name startswith /dev/tty
   output: "File created below /dev by untrusted program (user=%user.name command=%proc.cmdline file=%fd.name)"
   priority: WARNING
   tags: [filesystem]
