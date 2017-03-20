@@ -1,4 +1,38 @@
 trace_files: !mux
+
+  docker_package:
+    package: docker:sysdig/falco:test
+    detect: True
+    detect_level: WARNING
+    rules_file: /host/rules/rule_names_with_spaces.yaml
+    trace_file: /host/traces/cat_write.scap
+    conf_file: /host/conf/falco.yaml
+
+  # This uses a volume mount to overwrite and prevent /usr/sbin/dkms
+  # from being run. As a result, it will force falco-probe-loader to
+  # fall back to loading the driver from ~/.sysdig. Setting
+  # copy_local_driver to True copied the driver to ~/.sysdig, so it
+  # will be available. In this case, we're running live for 5 seconds
+  # just to see if falco can load the driver.
+
+  docker_package_local_driver:
+    package: docker:sysdig/falco:test
+    addl_docker_run_args: -v /dev/null:/usr/sbin/dkms
+    copy_local_driver: True
+    detect: False
+    detect_level: WARNING
+    rules_file: /host/rules/tagged_rules.yaml
+    conf_file: /host/conf/falco.yaml
+    run_duration: 5
+
+  debian_package:
+    package: falco*.deb
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/rule_names_with_spaces.yaml
+    trace_file: trace_files/cat_write.scap
+
   builtin_rules_no_warnings:
     detect: False
     trace_file: trace_files/empty.scap

@@ -4,6 +4,9 @@ import os
 import re
 import json
 import sets
+import glob
+import shutil
+import subprocess
 
 from avocado import Test
 from avocado.utils import process
@@ -21,9 +24,9 @@ class FalcoTest(Test):
         self.stderr_contains = self.params.get('stderr_contains', '*', default='')
         self.exit_status = self.params.get('exit_status', '*', default=0)
         self.should_detect = self.params.get('detect', '*', default=False)
-        self.trace_file = self.params.get('trace_file', '*')
+        self.trace_file = self.params.get('trace_file', '*', default='')
 
-        if not os.path.isabs(self.trace_file):
+        if self.trace_file and not os.path.isabs(self.trace_file):
             self.trace_file = os.path.join(self.basedir, self.trace_file)
 
         self.json_output = self.params.get('json_output', '*', default=False)
@@ -42,6 +45,8 @@ class FalcoTest(Test):
         self.conf_file = self.params.get('conf_file', '*', default=os.path.join(self.basedir, '../falco.yaml'))
         if not os.path.isabs(self.conf_file):
             self.conf_file = os.path.join(self.basedir, self.conf_file)
+
+        self.run_duration = self.params.get('run_duration', '*', default='')
 
         self.disabled_rules = self.params.get('disabled_rules', '*', default='')
 
@@ -89,15 +94,23 @@ class FalcoTest(Test):
             if not isinstance(self.detect_level, list):
                 self.detect_level = [self.detect_level]
 
-        # Doing this in 2 steps instead of simply using
-        # module_is_loaded to avoid logging lsmod output to the log.
-        lsmod_output = process.system_output("lsmod", verbose=False)
+        self.package = self.params.get('package', '*', default='None')
 
-        if linux_modules.parse_lsmod_for_module(lsmod_output, 'falco_probe') == {}:
-            self.log.debug("Loading falco kernel module")
-            process.run('sudo insmod {}/driver/falco-probe.ko'.format(self.falcodir))
+        if self.package == 'None':
+            # Doing this in 2 steps instead of simply using
+            # module_is_loaded to avoid logging lsmod output to the log.
+            lsmod_output = process.system_output("lsmod", verbose=False)
 
-        self.str_variant = self.trace_file
+            if linux_modules.parse_lsmod_for_module(lsmod_output, 'falco_probe') == {}:
+                self.log.debug("Loading falco kernel module")
+                process.run('insmod {}/driver/falco-probe.ko'.format(self.falcodir), sudo=True)
+
+        self.addl_docker_run_args = self.params.get('addl_docker_run_args', '*', default='')
+
+        self.copy_local_driver = self.params.get('copy_local_driver', '*', default=False)
+
+        # Used by possibly_copy_local_driver as well as docker run
+        self.module_dir = os.path.expanduser("~/.sysdig")
 
         self.outputs = self.params.get('outputs', '*', default='')
 
@@ -111,6 +124,10 @@ class FalcoTest(Test):
                     output['file'] = item2[0]
                     output['line'] = item2[1]
                     outputs.append(output)
+                    filedir = os.path.dirname(output['file'])
+                    # Create the parent directory for the trace file if it doesn't exist.
+                    if not os.path.isdir(filedir):
+                        os.makedirs(filedir)
             self.outputs = outputs
 
         self.disable_tags = self.params.get('disable_tags', '*', default='')
@@ -122,6 +139,10 @@ class FalcoTest(Test):
 
         if self.run_tags == '':
             self.run_tags=[]
+
+    def tearDown(self):
+        if self.package != 'None':
+            self.uninstall_package()
 
     def check_rules_warnings(self, res):
 
@@ -231,18 +252,112 @@ class FalcoTest(Test):
                         if not attr in obj:
                             self.fail("Falco JSON object {} does not contain property \"{}\"".format(line, attr))
 
+    def install_package(self):
+
+        if self.package.startswith("docker:"):
+
+            image = self.package.split(":", 1)[1]
+            # Remove an existing falco-test container first. Note we don't check the output--docker rm
+            # doesn't have an -i equivalent.
+            res = process.run("docker rm falco-test", ignore_status=True)
+            rules_dir = os.path.abspath(os.path.join(self.basedir, "./rules"))
+            conf_dir = os.path.abspath(os.path.join(self.basedir, "../"))
+            traces_dir = os.path.abspath(os.path.join(self.basedir, "./trace_files"))
+            self.falco_binary_path = "docker run -i -t --name falco-test --privileged " \
+                                     "-v {}:/host/rules -v {}:/host/conf -v {}:/host/traces " \
+                                     "-v /var/run/docker.sock:/host/var/run/docker.sock " \
+                                     "-v /dev:/host/dev -v /proc:/host/proc:ro -v /boot:/host/boot:ro " \
+                                     "-v /lib/modules:/host/lib/modules:ro -v {}:/root/.sysdig:ro -v " \
+                                     "/usr:/host/usr:ro {} {} falco".format(
+                                         rules_dir, conf_dir, traces_dir,
+                                         self.module_dir, self.addl_docker_run_args, image)
+
+        elif self.package.endswith(".deb"):
+            self.falco_binary_path = '/usr/bin/falco';
+
+            package_glob = "{}/{}".format(self.falcodir, self.package)
+
+            matches = glob.glob(package_glob)
+
+            if len(matches) != 1:
+                self.fail("Package path {} did not match exactly 1 file. Instead it matched: {}", package_glob, ",".join(matches))
+
+            package_path = matches[0]
+
+            cmdline = "dpkg -i {}".format(package_path)
+            self.log.debug("Installing debian package via \"{}\"".format(cmdline))
+            res = process.run(cmdline, timeout=120, sudo=True)
+
+    def uninstall_package(self):
+
+        if self.package.startswith("docker:"):
+            # Remove the falco-test image. Here we *do* check the return value
+            res = process.run("docker rm falco-test")
+
+        elif self.package.endswith(".deb"):
+            cmdline = "dpkg -r falco"
+            self.log.debug("Uninstalling debian package via \"{}\"".format(cmdline))
+            res = process.run(cmdline, timeout=120, sudo=True)
+
+    def possibly_copy_driver(self):
+        # Remove the contents of ~/.sysdig regardless of
+        # copy_local_driver.
+        self.log.debug("Checking for module dir {}".format(self.module_dir))
+        if os.path.isdir(self.module_dir):
+            self.log.info("Removing files below directory {}".format(self.module_dir))
+            for rmfile in glob.glob(self.module_dir + "/*"):
+                self.log.debug("Removing file {}".format(rmfile))
+                os.remove(rmfile)
+
+        if self.copy_local_driver:
+            verstr = subprocess.check_output([self.falco_binary_path, "--version"]).rstrip()
+            self.log.info("verstr {}".format(verstr))
+            falco_version = verstr.split(" ")[2]
+            self.log.info("falco_version {}".format(falco_version))
+            arch = subprocess.check_output(["uname", "-m"]).rstrip()
+            self.log.info("arch {}".format(arch))
+            kernel_release = subprocess.check_output(["uname", "-r"]).rstrip()
+            self.log.info("kernel release {}".format(kernel_release))
+
+            # sysdig-probe-loader has a more comprehensive set of ways to
+            # find the config hash. We only look at /boot/config-<kernel release>
+            md5_output = subprocess.check_output(["md5sum", "/boot/config-{}".format(kernel_release)]).rstrip()
+            config_hash = md5_output.split(" ")[0]
+
+            probe_filename = "falco-probe-{}-{}-{}-{}.ko".format(falco_version, arch, kernel_release, config_hash)
+            driver_path = os.path.join(self.falcodir, "driver", "falco-probe.ko")
+            module_path = os.path.join(self.module_dir, probe_filename)
+            self.log.debug("Copying {} to {}".format(driver_path, module_path))
+            shutil.copyfile(driver_path, module_path)
+
     def test(self):
         self.log.info("Trace file %s", self.trace_file)
 
-        # Run the provided trace file though falco
-        cmd = '{}/userspace/falco/falco {} {} -c {} -e {} -o json_output={} -v'.format(
-            self.falcodir, self.rules_args, self.disabled_args, self.conf_file, self.trace_file, self.json_output)
+        self.falco_binary_path = '{}/userspace/falco/falco'.format(self.falcodir)
+
+        self.possibly_copy_driver()
+
+        if self.package != 'None':
+            # This sets falco_binary_path as a side-effect.
+            self.install_package()
+
+        trace_arg = self.trace_file
+
+        if self.trace_file:
+            trace_arg = "-e {}".format(self.trace_file)
+
+        # Run falco
+        cmd = '{} {} {} -c {} {} -o json_output={} -v'.format(
+            self.falco_binary_path, self.rules_args, self.disabled_args, self.conf_file, trace_arg, self.json_output)
 
         for tag in self.disable_tags:
             cmd += ' -T {}'.format(tag)
 
         for tag in self.run_tags:
             cmd += ' -t {}'.format(tag)
+
+        if self.run_duration:
+            cmd += ' -M {}'.format(self.run_duration)
 
         self.falco_proc = process.SubProcess(cmd)
 
