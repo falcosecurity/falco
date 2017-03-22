@@ -87,6 +87,7 @@ static void usage()
 	   "                               Marathon url is optional and defaults to Mesos address, port 8080.\n"
 	   "                               The API servers can also be specified via the environment variable\n"
 	   "                               FALCO_MESOS_API.\n"
+	   " -M <num_seconds>              Stop collecting after <num_seconds> reached.\n"
 	   " -o, --option <key>=<val>      Set the value of option <key> to <val>. Overrides values in configuration file.\n"
 	   "                               <key> can be a two-part <key>.<subkey>\n"
 	   " -p <output_format>, --print=<output_format>\n"
@@ -135,12 +136,14 @@ std::list<string> cmdline_options;
 uint64_t do_inspect(falco_engine *engine,
 		    falco_outputs *outputs,
 		    sinsp* inspector,
+		    uint64_t duration_to_tot_ns,
 		    string &stats_filename)
 {
 	uint64_t num_evts = 0;
 	int32_t res;
 	sinsp_evt* ev;
 	StatsFileWriter writer;
+	uint64_t duration_start = 0;
 
 	if (stats_filename != "")
 	{
@@ -182,6 +185,17 @@ uint64_t do_inspect(falco_engine *engine,
 			//
 			cerr << "res = " << res << endl;
 			throw sinsp_exception(inspector->getlasterr().c_str());
+		}
+
+		if (duration_start == 0)
+		{
+			duration_start = ev->get_ts();
+		} else if(duration_to_tot_ns > 0)
+		{
+			if(ev->get_ts() - duration_start >= duration_to_tot_ns)
+			{
+				break;
+			}
 		}
 
 		if(!inspector->is_debug_enabled() &&
@@ -234,6 +248,7 @@ int falco_init(int argc, char **argv)
 	string* mesos_api = 0;
 	string output_format = "";
 	bool replace_container_info = false;
+	int duration_to_tot = 0;
 
 	// Used for writing trace files
 	int duration_seconds = 0;
@@ -275,7 +290,7 @@ int falco_init(int argc, char **argv)
 		// Parse the args
 		//
 		while((op = getopt_long(argc, argv,
-                                        "hc:AdD:e:k:K:Ll:m:o:P:p:r:s:T:t:vw:",
+                                        "hc:AdD:e:k:K:Ll:m:M:o:P:p:r:s:T:t:vw:",
                                         long_options, &long_index)) != -1)
 		{
 			switch(op)
@@ -315,6 +330,13 @@ int falco_init(int argc, char **argv)
 				break;
 			case 'm':
 				mesos_api = new string(optarg);
+				break;
+			case 'M':
+				duration_to_tot = atoi(optarg);
+				if(duration_to_tot <= 0)
+				{
+					throw sinsp_exception(string("invalid duration") + optarg);
+				}
 				break;
 			case 'o':
 				cmdline_options.push_back(optarg);
@@ -662,6 +684,7 @@ int falco_init(int argc, char **argv)
 		num_evts = do_inspect(engine,
 				      outputs,
 				      inspector,
+				      uint64_t(duration_to_tot*ONE_SECOND_IN_NS),
 				      stats_filename);
 
 		duration = ((double)clock()) / CLOCKS_PER_SEC - duration;
