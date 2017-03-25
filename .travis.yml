@@ -2,6 +2,9 @@ language: c
 env:
     - BUILD_TYPE=Debug
     - BUILD_TYPE=Release
+sudo: required
+services:
+    - docker
 before_install:
     - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
     - sudo apt-get update
@@ -9,12 +12,12 @@ install:
     - sudo apt-get --force-yes install g++-4.8
     - sudo apt-get install rpm linux-headers-$(uname -r)
     - git clone https://github.com/draios/sysdig.git ../sysdig
-    - sudo apt-get install -y python-pip libvirt-dev jq
+    - sudo apt-get install -y python-pip libvirt-dev jq dkms
     - cd ..
     - curl -Lo avocado-36.0-tar.gz https://github.com/avocado-framework/avocado/archive/36.0lts.tar.gz
     - tar -zxvf avocado-36.0-tar.gz
     - cd avocado-36.0lts
-    - sudo pip install -r requirements-travis.txt
+    - sudo -H pip install -r requirements.txt
     - sudo python setup.py install
     - cd ../falco
 before_script:
@@ -35,7 +38,10 @@ script:
     - cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DDRAIOS_DEBUG_FLAGS="-D_DEBUG -DNDEBUG"
     - make VERBOSE=1
     - make package
-    - cd ..
+    - cp falco*.deb ../docker/local
+    - cd ../docker/local
+    - docker build -t sysdig/falco:test .
+    - cd ../..
     - sudo test/run_regression_tests.sh $TRAVIS_BRANCH
 notifications:
   webhooks:
