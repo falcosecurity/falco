@@ -12,7 +12,7 @@ test/results*.json.*
 userspace/falco/lua/re.lua
 userspace/falco/lua/lpeg.so
 
-docker/event-generator/event-generator
+docker/event-generator/event_generator
 docker/event-generator/mysqld
 docker/event-generator/httpd
 docker/event-generator/sha1sum

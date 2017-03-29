@@ -2,6 +2,44 @@
 
 This file documents all notable changes to Falco. The release numbering uses [semantic versioning](http://semver.org).
 
+## v0.6.0
+
+Released 2016-03-29
+
+### Major Changes
+
+* Add the notion of tagged falco rules. Full documentation for this feature is available on the [wiki](https://github.com/draios/falco/wiki/Falco-Rules#rule-tags). [[#58](https://github.com/draios/falco/issues/58)] [[#59](https://github.com/draios/falco/issues/59)] [[#60](https://github.com/draios/falco/issues/60)] [[#206](https://github.com/draios/falco/pull/206)]
+* Falco now has its own dedicated kernel module. Previously, it would depend on sysdig being installed and would use sysdig's `sysdig-probe` kernel module. This ensures you can upgrade sysdig and falco without kernel driver compatibility problems. More details on the kernel module and its installation are on the [wiki](https://github.com/draios/falco/wiki/Falco-Kernel-Module). [[#215](https://github.com/draios/falco/issues/215)] [[#223](https://github.com/draios/falco/issues/223)] [[#224](https://github.com/draios/falco/pull/224)]
+* When providing multiple rules files by specifying `-r' multiple times, make sure that you can override rules/lists/macros. Previously, a list/macro/rule specified in an earlier file could not be overridden in a later file. [[#176](https://github.com/draios/falco/issues/176)] [[#177](https://github.com/draios/falco/pull/177)]
+* Add example k8s yaml files that show how to run falco as a k8s DaemonSet, and how to run falco-event-generator as a deployment running on one node. [[#222](https://github.com/draios/falco/pull/222)] [[#225](https://github.com/draios/falco/issues/225)] [[#226](https://github.com/draios/falco/pull/226)]
+* Update third party libraries to address security vulnerabilities. [[#182](https://github.com/draios/falco/pull/182)]
+* Falco can now be built on OSX. Like sysdig, on OSX it is limited to reading existing trace files. [[#210](https://github.com/draios/falco/pull/210)]
+
+### Minor Changes
+* Several changes to [falco-event-generator](https://github.com/draios/falco/wiki/Generating-Sample-Events) to improve usability. [[#205](https://github.com/draios/falco/pull/205)]
+* Switch to a formatter cache provided by sysdig code instead of using our own. [[#212](https://github.com/draios/falco/pull/212)]
+* Add automated tests that use locally-built docker images. [[#188](https://github.com/draios/falco/issues/188)]
+
+### Bug Fixes
+
+* Make sure output strings are not truncated when a given %field expression has a NULL value. [[#180](https://github.com/draios/falco/issues/180)] [[#181](https://github.com/draios/falco/pull/181)]
+* Allow ASSERTs when running travisci tests. [[#199](https://github.com/draios/falco/pull/199)]
+* Fix make dependencies for lyaml. [[#204](https://github.com/draios/falco/pull/204)] [[#130](https://github.com/draios/falco/issues/130)]
+* (This was a change in sysdig, but affected falco). Prevent hangs when traversing malformed parent thread state. [[#208](https://github.com/draios/falco/issues/208)]
+
+### Rule Changes
+
+* Add confd as a program that can write files below /etc and fleetctl as a program that can spawn shells. [[#175](https://github.com/draios/falco/pull/175)]
+* Add [exechealthz](https://github.com/kubernetes/contrib/tree/master/exec-healthz), a k8s liveness checking utility, to the list of shell spawners. [[#190](https://github.com/draios/falco/pull/190)]
+* Eliminate FPs related to weekly ubuntu cron jobs. [[#192](https://github.com/draios/falco/pull/192)]
+* Allow shells spawned by ansible, and eliminate FPs when managing machines via ansible. [[#193](https://github.com/draios/falco/pull/193)] [[#196](https://github.com/draios/falco/pull/196)] [[#202](https://github.com/draios/falco/pull/202)]
+* Eliminate FPs related to use of other security products. Thanks to @juju4 for the useful rule updates. [[#200](https://github.com/draios/falco/pull/200)]
+* Add additional possible locations for denyhosts, add [PM2](http://pm2.keymetrics.io/) as a shell spawner. [[#202](https://github.com/draios/falco/pull/202)]
+* Add flanneld as a privileged container, improve grouping for the "x running y" macros, allow denyhosts to spawn shells. [[#207](https://github.com/draios/falco/pull/207)]
+* Handle systemd changing its name to "(systemd)", add sv (part of [runit](http://smarden.org/runit/)) as a program that can write below /etc, allow writing to all `/dev/tty*` files. [[#209](https://github.com/draios/falco/pull/209)]
+* Add erl_child_setup as a shell spawner. Thanks to @dkerwin for the useful rule updates. [[#218](https://github.com/draios/falco/pull/218)]  [[#221](https://github.com/draios/falco/pull/221)]
+* Add support for gitlab omnibus containers/pods. Thanks to @dkerwin for the useful rule updates. [[#220](https://github.com/draios/falco/pull/220)]
+
 ## v0.5.0
 
 Released 2016-12-22

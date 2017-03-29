@@ -1,8 +1,8 @@
 # Sysdig Falco
 
-####Latest release
+#### Latest release
 
-**v0.5.0**
+**v0.6.0**
 Read the [change log](https://github.com/draios/falco/blob/dev/CHANGELOG.md)
 
 Dev Branch: [![Build Status](https://travis-ci.org/draios/falco.svg?branch=dev)](https://travis-ci.org/draios/falco)<br />
@@ -44,7 +44,7 @@ Falco is licensed to you under the [GPL 2.0](./COPYING) open source license.
 
 Contributor License Agreements
 ---
-###Background
+### Background
  As we did for sysdig, we are formalizing the way that we accept contributions of code from the contributing community. We must now ask that contributions to falco be provided subject to the terms and conditions of a [Contributor License Agreement (CLA)](./cla). The CLA comes in two forms, applicable to contributions by individuals, or by legal entities such as corporations and their employees. We recognize that entering into a CLA with us involves real consideration on your part, and we’ve tried to make this process as clear and simple as possible.
 
  We’ve modeled our CLA off of industry standards, such as [the CLA used by Kubernetes](https://github.com/kubernetes/kubernetes/blob/master/CONTRIBUTING.md). Note that this agreement is not a transfer of copyright ownership, this simply is a license agreement for contributions, intended to clarify the intellectual property license granted with contributions from any person or entity. It is for your protection as a contributor as well as the protection of falco; it does not change your rights to use your own contributions for any other purpose.
@@ -57,7 +57,7 @@ Contributor License Agreements
 
 As always, we are grateful for your past and present contributions to falco.
 
-###What do I need to do in order to contribute code?
+### What do I need to do in order to contribute code?
 
 **Individual contributions**: Individuals who wish to make contributions must review the [Individual Contributor License Agreement](./cla/falco_contributor_agreement.txt) and indicate agreement by adding the following line to every GIT commit message:
 

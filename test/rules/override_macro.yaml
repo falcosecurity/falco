@@ -1,0 +1,2 @@
+- macro: is_cat
+  condition: proc.name in (not-cat)

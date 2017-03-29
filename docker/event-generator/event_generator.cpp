@@ -97,6 +97,8 @@ void exfiltration()
 
 	shadow.open("/etc/shadow");
 
+	printf("Reading /etc/shadow and sending to 10.5.2.6:8197...\n");
+
 	if(!shadow.is_open())
 	{
 		fprintf(stderr, "Could not open /etc/shadow for reading: %s", strerror(errno));
@@ -219,7 +221,7 @@ void write_rpm_database() {
 }
 
 void spawn_shell() {
-	printf("Spawning a shell using system()...\n");
+	printf("Spawning a shell to run \"ls > /dev/null\" using system()...\n");
 	int rc;
 
 	if ((rc = system("ls > /dev/null")) != 0)
@@ -259,6 +261,7 @@ void mkdir_binary_dirs() {
 
 void change_thread_namespace() {
 	printf("Calling setns() to change namespaces...\n");
+	printf("NOTE: does not result in a falco notification in containers, unless container run with --privileged or --security-opt seccomp=unconfined\n");
 	// It doesn't matter that the arguments to setns are
 	// bogus. It's the attempt to call it that will trigger the
 	// rule.
@@ -268,6 +271,7 @@ void change_thread_namespace() {
 void system_user_interactive() {
 	pid_t child;
 
+	printf("Forking a child that becomes user=daemon and then tries to run /bin/login...\n");
 	// Fork a child and do everything in the child.
 	if ((child = fork()) == 0)
 	{
@@ -312,6 +316,8 @@ void system_procs_network_activity() {
 
 void non_sudo_setuid() {
 	pid_t child;
+
+	printf("Forking a child that becomes \"daemon\" user and then \"root\"...\n");
 
 	// Fork a child and do everything in the child.
 	if ((child = fork()) == 0)
@@ -367,6 +373,9 @@ map<string, action_t> defined_actions = {{"write_binary_dir", write_binary_dir},
 					 {"user_mgmt_binaries", user_mgmt_binaries},
 					 {"exfiltration", exfiltration}};
 
+// Some actions don't directly result in suspicious behavior. These
+// actions are excluded from the ones run with -a all.
+set<string> exclude_from_all_actions = {"exec_ls", "network_activity"};
 
 void create_symlinks(const char *program)
 {
@@ -394,9 +403,9 @@ void run_actions(map<string, action_t> &actions, int interval, bool once)
 	{
 		for (auto action : actions)
 		{
-			sleep(interval);
 			printf("***Action %s\n", action.first.c_str());
 			action.second();
+			sleep(interval);
 		}
 		if(once)
 		{
@@ -428,7 +437,7 @@ int main(int argc, char **argv)
 	// Parse the args
 	//
 	while((op = getopt_long(argc, argv,
-				"ha:i:l:",
+				"ha:i:l:o",
 				long_options, &long_index)) != -1)
 	{
 		switch(op)
@@ -437,12 +446,16 @@ int main(int argc, char **argv)
 			usage(argv[0]);
 			exit(1);
 		case 'a':
-			if((it = defined_actions.find(optarg)) == defined_actions.end())
+			// "all" is already implied
+			if (strcmp(optarg, "all") != 0)
 			{
-				fprintf(stderr, "No action with name \"%s\" known, exiting.\n", optarg);
-				exit(1);
+				if((it = defined_actions.find(optarg)) == defined_actions.end())
+				{
+					fprintf(stderr, "No action with name \"%s\" known, exiting.\n", optarg);
+					exit(1);
+				}
+				actions.insert(*it);
 			}
-			actions.insert(*it);
 			break;
 		case 'i':
 			interval = atoi(optarg);
@@ -482,7 +495,13 @@ int main(int argc, char **argv)
 
 	if(actions.size() == 0)
 	{
-		actions = defined_actions;
+		for(auto &act : defined_actions)
+		{
+			if(exclude_from_all_actions.find(act.first) == exclude_from_all_actions.end())
+			{
+				actions.insert(act);
+			}
+		}
 	}
 
 	setvbuf(stdout, NULL, _IONBF, 0);

@@ -14,7 +14,9 @@ if(NOT CMAKE_BUILD_TYPE)
 	SET(CMAKE_BUILD_TYPE Release)
 endif()
 
-set(DRAIOS_DEBUG_FLAGS "-D_DEBUG")
+if(NOT DRAIOS_DEBUG_FLAGS)
+	set(DRAIOS_DEBUG_FLAGS "-D_DEBUG")
+endif()
 
 set(CMAKE_C_FLAGS "-Wall -ggdb ${DRAIOS_FEATURE_FLAGS}")
 set(CMAKE_CXX_FLAGS "-Wall -ggdb --std=c++0x ${DRAIOS_FEATURE_FLAGS}")
@@ -27,7 +29,9 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3 -fno-strict-aliasing -DNDEBUG")
 
 add_definitions(-DPLATFORM_NAME="${CMAKE_SYSTEM_NAME}")
 add_definitions(-DK8S_DISABLE_THREAD)
-add_definitions(-DHAS_CAPTURE)
+if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+	add_definitions(-DHAS_CAPTURE)
+endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 	set(KBUILD_FLAGS "${DRAIOS_DEBUG_FLAGS} ${DRAIOS_FEATURE_FLAGS}")
@@ -37,13 +41,17 @@ endif()
 
 set(PACKAGE_NAME "falco")
 set(PROBE_VERSION "${FALCO_VERSION}")
-set(PROBE_NAME "sysdig-probe")
-set(PROBE_DEVICE_NAME "sysdig")
+set(PROBE_NAME "falco-probe")
+set(PROBE_DEVICE_NAME "falco")
 set(CMAKE_INSTALL_PREFIX /usr)
 
 set(CMD_MAKE make)
 
 set(SYSDIG_DIR "${PROJECT_SOURCE_DIR}/../sysdig")
+# make luaJIT work on OS X
+if(APPLE)
+	set(CMAKE_EXE_LINKER_FLAGS "-pagezero_size 10000 -image_base 100000000")
+endif()
 
 include(ExternalProject)
 
@@ -51,7 +59,7 @@ option(USE_BUNDLED_DEPS "Enable bundled dependencies instead of using the system
 
 #
 # zlib
-
+#
 option(USE_BUNDLED_ZLIB "Enable building of the bundled zlib" ${USE_BUNDLED_DEPS})
 
 if(NOT USE_BUNDLED_ZLIB)
@@ -99,6 +107,7 @@ else()
                 CONFIGURE_COMMAND ./configure --disable-maintainer-mode --enable-all-static --disable-dependency-tracking
                 BUILD_COMMAND ${CMD_MAKE} LDFLAGS=-all-static
                 BUILD_IN_SOURCE 1
+		PATCH_COMMAND wget -O jq-1.5-fix-tokenadd.patch https://github.com/stedolan/jq/commit/8eb1367ca44e772963e704a700ef72ae2e12babd.patch && patch -i jq-1.5-fix-tokenadd.patch
                 INSTALL_COMMAND "")
 endif()
 
@@ -204,8 +213,8 @@ else()
 	message(STATUS "Using bundled openssl in '${OPENSSL_BUNDLE_DIR}'")
 
 	ExternalProject_Add(openssl
-		URL "http://download.draios.com/dependencies/openssl-1.0.2d.tar.gz"
-		URL_MD5 "38dd619b2e77cbac69b99f52a053d25a"
+		URL "http://download.draios.com/dependencies/openssl-1.0.2j.tar.gz"
+		URL_MD5 "96322138f0b69e61b7212bc53d5e912b"
 		CONFIGURE_COMMAND ./config shared --prefix=${OPENSSL_INSTALL_DIR}
 		BUILD_COMMAND ${CMD_MAKE}
 		BUILD_IN_SOURCE 1
@@ -235,8 +244,8 @@ else()
 
 	ExternalProject_Add(curl
 		DEPENDS openssl
-		URL "http://download.draios.com/dependencies/curl-7.45.0.tar.bz2"
-		URL_MD5 "62c1a352b28558f25ba6209214beadc8"
+		URL "http://download.draios.com/dependencies/curl-7.52.1.tar.bz2"
+		URL_MD5 "dd014df06ff1d12e173de86873f9f77a"
 		CONFIGURE_COMMAND ./configure ${CURL_SSL_OPTION} --disable-shared --enable-optimize --disable-curldebug --disable-rt --enable-http --disable-ftp --disable-file --disable-ldap --disable-ldaps --disable-rtsp --disable-telnet --disable-tftp --disable-pop3 --disable-imap --disable-smb --disable-smtp --disable-gopher --disable-sspi --disable-ntlm-wb --disable-tls-srp --without-winssl --without-darwinssl --without-polarssl --without-cyassl --without-nss --without-axtls --without-ca-path --without-ca-bundle --without-libmetalink --without-librtmp --without-winidn --without-libidn --without-nghttp2 --without-libssh2
 		BUILD_COMMAND ${CMD_MAKE}
 		BUILD_IN_SOURCE 1
@@ -292,14 +301,18 @@ if(NOT USE_BUNDLED_LPEG)
 else()
 	set(LPEG_SRC "${PROJECT_BINARY_DIR}/lpeg-prefix/src/lpeg")
 	set(LPEG_LIB "${PROJECT_BINARY_DIR}/lpeg-prefix/src/lpeg/build/lpeg.a")
+	set(LPEG_DEPENDENCIES "")
+	if(USE_BUNDLED_LUAJIT)
+		list(APPEND LPEG_DEPENDENCIES "luajit")
+	endif()
 	ExternalProject_Add(lpeg
-                DEPENDS luajit
+		DEPENDS ${LPEG_DEPENDENCIES}
 		URL "http://s3.amazonaws.com/download.draios.com/dependencies/lpeg-1.0.0.tar.gz"
-                URL_MD5 "0aec64ccd13996202ad0c099e2877ece"
-                BUILD_COMMAND LUA_INCLUDE=${LUAJIT_INCLUDE} "${PROJECT_SOURCE_DIR}/scripts/build-lpeg.sh" "${LPEG_SRC}/build"
-                BUILD_IN_SOURCE 1
+		URL_MD5 "0aec64ccd13996202ad0c099e2877ece"
+		BUILD_COMMAND LUA_INCLUDE=${LUAJIT_INCLUDE} "${PROJECT_SOURCE_DIR}/scripts/build-lpeg.sh" "${LPEG_SRC}/build"
+		BUILD_IN_SOURCE 1
 		CONFIGURE_COMMAND ""
-                INSTALL_COMMAND "")
+		INSTALL_COMMAND "")
 endif()
 
 #
@@ -318,15 +331,22 @@ if(NOT USE_BUNDLED_LIBYAML)
 		message(FATAL_ERROR "Couldn't find system libyaml")
 	endif()
 else()
+	find_path(AUTORECONF_BIN NAMES autoreconf)
+	if(AUTORECONF_BIN)
+		message(STATUS "Found autoreconf: ${AUTORECONF_BIN}")
+	else()
+		message(FATAL_ERROR "Couldn't find system autoreconf. Please install autoreconf before continuing or use system libyaml")
+	endif()
+
 	set(LIBYAML_SRC "${PROJECT_BINARY_DIR}/libyaml-prefix/src/libyaml/src")
 	set(LIBYAML_LIB "${LIBYAML_SRC}/.libs/libyaml.a")
 	ExternalProject_Add(libyaml
 		URL "http://download.draios.com/dependencies/libyaml-0.1.4.tar.gz"
-                URL_MD5 "4a4bced818da0b9ae7fc8ebc690792a7"
-                BUILD_COMMAND ${CMD_MAKE}
-                BUILD_IN_SOURCE 1
+		URL_MD5 "4a4bced818da0b9ae7fc8ebc690792a7"
+		BUILD_COMMAND ${CMD_MAKE}
+		BUILD_IN_SOURCE 1
 		CONFIGURE_COMMAND ./bootstrap && ./configure
-                INSTALL_COMMAND "")
+		INSTALL_COMMAND "")
 endif()
 
 #
@@ -347,7 +367,15 @@ if(NOT USE_BUNDLED_LYAML)
 else()
 	set(LYAML_SRC "${PROJECT_BINARY_DIR}/lyaml-prefix/src/lyaml/ext/yaml")
 	set(LYAML_LIB "${LYAML_SRC}/.libs/yaml.a")
+	set(LYAML_DEPENDENCIES "")
+	if(USE_BUNDLED_LUAJIT)
+		list(APPEND LYAML_DEPENDENCIES "luajit")
+	endif()
+	if(USE_BUNDLED_LIBYAML)
+		list(APPEND LYAML_DEPENDENCIES "libyaml")
+	endif()
 	ExternalProject_Add(lyaml
+		DEPENDS ${LYAML_DEPENDENCIES}
 		URL "http://download.draios.com/dependencies/lyaml-release-v6.0.tar.gz"
                 URL_MD5 "dc3494689a0dce7cf44e7a99c72b1f30"
                 BUILD_COMMAND ${CMD_MAKE}
@@ -359,7 +387,9 @@ endif()
 install(FILES falco.yaml
 	DESTINATION "${FALCO_ETC_DIR}")
 
-add_subdirectory("${SYSDIG_DIR}/driver" "${PROJECT_BINARY_DIR}/driver")
+if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+	add_subdirectory("${SYSDIG_DIR}/driver" "${PROJECT_BINARY_DIR}/driver")
+endif()
 add_subdirectory("${SYSDIG_DIR}/userspace/libscap" "${PROJECT_BINARY_DIR}/userspace/libscap")
 add_subdirectory("${SYSDIG_DIR}/userspace/libsinsp" "${PROJECT_BINARY_DIR}/userspace/libsinsp")
 
@@ -385,12 +415,12 @@ set(CPACK_GENERATOR DEB RPM TGZ)
 set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Sysdig <support@sysdig.com>")
 set(CPACK_DEBIAN_PACKAGE_SECTION "utils")
 set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "http://www.sysdig.org")
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "sysdig")
-set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${PROJECT_SOURCE_DIR}/scripts/debian/postinst;${PROJECT_SOURCE_DIR}/scripts/debian/prerm;${PROJECT_SOURCE_DIR}/scripts/debian/postrm")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "dkms (>= 2.1.0.0)")
+set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_BINARY_DIR}/scripts/debian/postinst;${CMAKE_BINARY_DIR}/scripts/debian/prerm;${PROJECT_SOURCE_DIR}/scripts/debian/postrm")
 
 set(CPACK_RPM_PACKAGE_LICENSE "GPLv2")
 set(CPACK_RPM_PACKAGE_URL "http://www.sysdig.org")
-set(CPACK_RPM_PACKAGE_REQUIRES "sysdig")
+set(CPACK_RPM_PACKAGE_REQUIRES "dkms, gcc, make, kernel-devel, perl")
 set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE "${PROJECT_SOURCE_DIR}/scripts/rpm/postinstall")
 set(CPACK_RPM_PRE_UNINSTALL_SCRIPT_FILE "${PROJECT_SOURCE_DIR}/scripts/rpm/preuninstall")
 set(CPACK_RPM_POST_UNINSTALL_SCRIPT_FILE "${PROJECT_SOURCE_DIR}/scripts/rpm/postuninstall")

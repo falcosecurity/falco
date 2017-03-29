@@ -24,6 +24,10 @@ along with falco.  If not, see <http://www.gnu.org/licenses/>.
 falco_common::falco_common()
 {
 	m_ls = lua_open();
+	if(!m_ls)
+	{
+		throw falco_exception("Cannot open lua");
+	}
 	luaL_openlibs(m_ls);
 }
 

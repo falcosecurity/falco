@@ -53,6 +53,7 @@ static void signal_callback(int signal)
 static void usage()
 {
     printf(
+	   "falco version " FALCO_VERSION "\n"
 	   "Usage: falco [options]\n\n"
 	   "Options:\n"
 	   " -h, --help                    Print this page\n"
@@ -60,6 +61,7 @@ static void usage()
 	   " -A                            Monitor all events, including those with EF_DROP_FALCO flag.\n"
 	   " -d, --daemon                  Run as a daemon\n"
 	   " -D <pattern>                  Disable any rules matching the regex <pattern>. Can be specified multiple times.\n"
+	   "                               Can not be specified with -t.\n"
            " -e <events_file>              Read the events from <events_file> (in .scap format) instead of tapping into live.\n"
 	   " -k <url>, --k8s-api=<url>\n"
 	   "                               Enable Kubernetes support by connecting to the API server\n"
@@ -85,6 +87,7 @@ static void usage()
 	   "                               Marathon url is optional and defaults to Mesos address, port 8080.\n"
 	   "                               The API servers can also be specified via the environment variable\n"
 	   "                               FALCO_MESOS_API.\n"
+	   " -M <num_seconds>              Stop collecting after <num_seconds> reached.\n"
 	   " -o, --option <key>=<val>      Set the value of option <key> to <val>. Overrides values in configuration file.\n"
 	   "                               <key> can be a two-part <key>.<subkey>\n"
 	   " -p <output_format>, --print=<output_format>\n"
@@ -100,7 +103,12 @@ static void usage()
 	   "                               Can be specified multiple times to read from multiple files.\n"
 	   " -s <stats_file>               If specified, write statistics related to falco's reading/processing of events\n"
 	   "                               to this file. (Only useful in live mode).\n"
+	   " -T <tag>                      Disable any rules with a tag=<tag>. Can be specified multiple times.\n"
+	   "                               Can not be specified with -t.\n"
+	   " -t <tag>                      Only run those rules with a tag=<tag>. Can be specified multiple times.\n"
+	   "                               Can not be specified with -T/-D.\n"
 	   " -v                            Verbose output.\n"
+           " --version                     Print version number.\n"
 	   "\n"
     );
 }
@@ -128,12 +136,14 @@ std::list<string> cmdline_options;
 uint64_t do_inspect(falco_engine *engine,
 		    falco_outputs *outputs,
 		    sinsp* inspector,
+		    uint64_t duration_to_tot_ns,
 		    string &stats_filename)
 {
 	uint64_t num_evts = 0;
 	int32_t res;
 	sinsp_evt* ev;
 	StatsFileWriter writer;
+	uint64_t duration_start = 0;
 
 	if (stats_filename != "")
 	{
@@ -175,6 +185,17 @@ uint64_t do_inspect(falco_engine *engine,
 			//
 			cerr << "res = " << res << endl;
 			throw sinsp_exception(inspector->getlasterr().c_str());
+		}
+
+		if (duration_start == 0)
+		{
+			duration_start = ev->get_ts();
+		} else if(duration_to_tot_ns > 0)
+		{
+			if(ev->get_ts() - duration_start >= duration_to_tot_ns)
+			{
+				break;
+			}
 		}
 
 		if(!inspector->is_debug_enabled() &&
@@ -227,6 +248,7 @@ int falco_init(int argc, char **argv)
 	string* mesos_api = 0;
 	string output_format = "";
 	bool replace_container_info = false;
+	int duration_to_tot = 0;
 
 	// Used for writing trace files
 	int duration_seconds = 0;
@@ -250,6 +272,7 @@ int falco_init(int argc, char **argv)
 		{"option", required_argument, 0, 'o'},
 		{"print", required_argument, 0, 'p' },
 		{"pidfile", required_argument, 0, 'P' },
+		{"version", no_argument, 0, 0 },
 		{"writefile", required_argument, 0, 'w' },
 
 		{0, 0, 0, 0}
@@ -259,12 +282,15 @@ int falco_init(int argc, char **argv)
 	{
 		set<string> disabled_rule_patterns;
 		string pattern;
+		string all_rules = ".*";
+		set<string> disabled_rule_tags;
+		set<string> enabled_rule_tags;
 
 		//
 		// Parse the args
 		//
 		while((op = getopt_long(argc, argv,
-                                        "hc:AdD:e:k:K:Ll:m:o:P:p:r:s:vw:",
+                                        "hc:AdD:e:k:K:Ll:m:M:o:P:p:r:s:T:t:vw:",
                                         long_options, &long_index)) != -1)
 		{
 			switch(op)
@@ -305,6 +331,13 @@ int falco_init(int argc, char **argv)
 			case 'm':
 				mesos_api = new string(optarg);
 				break;
+			case 'M':
+				duration_to_tot = atoi(optarg);
+				if(duration_to_tot <= 0)
+				{
+					throw sinsp_exception(string("invalid duration") + optarg);
+				}
+				break;
 			case 'o':
 				cmdline_options.push_back(optarg);
 				break;
@@ -339,6 +372,12 @@ int falco_init(int argc, char **argv)
 			case 's':
 				stats_filename = optarg;
 				break;
+			case 'T':
+				disabled_rule_tags.insert(optarg);
+				break;
+			case 't':
+				enabled_rule_tags.insert(optarg);
+				break;
 			case 'v':
 				verbose = true;
 				break;
@@ -353,6 +392,13 @@ int falco_init(int argc, char **argv)
 			}
 
 		}
+
+		if(string(long_options[long_index].name) == "version")
+		{
+			printf("falco version %s\n", FALCO_VERSION);
+			return EXIT_SUCCESS;
+		}
+
 
 		inspector = new sinsp();
 		engine = new falco_engine();
@@ -421,10 +467,38 @@ int falco_init(int argc, char **argv)
 			falco_logger::log(LOG_INFO, "Parsed rules from file " + filename + "\n");
 		}
 
+		// You can't both disable and enable rules
+		if((disabled_rule_patterns.size() + disabled_rule_tags.size() > 0) &&
+		    enabled_rule_tags.size() > 0) {
+			throw std::invalid_argument("You can not specify both disabled (-D/-T) and enabled (-t) rules");
+		}
+
 		for (auto pattern : disabled_rule_patterns)
 		{
 			falco_logger::log(LOG_INFO, "Disabling rules matching pattern: " + pattern + "\n");
 			engine->enable_rule(pattern, false);
+		}
+
+		if(disabled_rule_tags.size() > 0)
+		{
+			for(auto tag : disabled_rule_tags)
+			{
+				falco_logger::log(LOG_INFO, "Disabling rules with tag: " + tag + "\n");
+			}
+			engine->enable_rule_by_tag(disabled_rule_tags, false);
+		}
+
+		if(enabled_rule_tags.size() > 0)
+		{
+
+			// Since we only want to enable specific
+			// rules, first disable all rules.
+			engine->enable_rule(all_rules, false);
+			for(auto tag : enabled_rule_tags)
+			{
+				falco_logger::log(LOG_INFO, "Enabling rules with tag: " + tag + "\n");
+			}
+			engine->enable_rule_by_tag(enabled_rule_tags, true);
 		}
 
 		outputs->init(config.m_json_output, config.m_notifications_rate, config.m_notifications_max_burst);
@@ -610,6 +684,7 @@ int falco_init(int argc, char **argv)
 		num_evts = do_inspect(engine,
 				      outputs,
 				      inspector,
+				      uint64_t(duration_to_tot*ONE_SECOND_IN_NS),
 				      stats_filename);
 
 		duration = ((double)clock()) / CLOCKS_PER_SEC - duration;

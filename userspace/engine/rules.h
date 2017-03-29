@@ -18,7 +18,7 @@ along with falco.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <list>
+#include <set>
 
 #include "sinsp.h"
 
@@ -36,11 +36,13 @@ class falco_rules
 	void describe_rule(string *rule);
 
 	static void init(lua_State *ls);
+	static int clear_filters(lua_State *ls);
 	static int add_filter(lua_State *ls);
 	static int enable_rule(lua_State *ls);
 
  private:
-	void add_filter(string &rule, list<uint32_t> &evttypes);
+	void clear_filters();
+	void add_filter(string &rule, std::set<uint32_t> &evttypes, std::set<string> &tags);
 	void enable_rule(string &rule, bool enabled);
 
 	lua_parser* m_lua_parser;

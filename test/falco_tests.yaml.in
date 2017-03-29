@@ -1,4 +1,38 @@
 trace_files: !mux
+
+  docker_package:
+    package: docker:sysdig/falco:test
+    detect: True
+    detect_level: WARNING
+    rules_file: /host/rules/rule_names_with_spaces.yaml
+    trace_file: /host/traces/cat_write.scap
+    conf_file: /host/conf/falco.yaml
+
+  # This uses a volume mount to overwrite and prevent /usr/sbin/dkms
+  # from being run. As a result, it will force falco-probe-loader to
+  # fall back to loading the driver from ~/.sysdig. Setting
+  # copy_local_driver to True copied the driver to ~/.sysdig, so it
+  # will be available. In this case, we're running live for 5 seconds
+  # just to see if falco can load the driver.
+
+  docker_package_local_driver:
+    package: docker:sysdig/falco:test
+    addl_docker_run_args: -v /dev/null:/usr/sbin/dkms
+    copy_local_driver: True
+    detect: False
+    detect_level: WARNING
+    rules_file: /host/rules/tagged_rules.yaml
+    conf_file: /host/conf/falco.yaml
+    run_duration: 5
+
+  debian_package:
+    package: falco*.deb
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/rule_names_with_spaces.yaml
+    trace_file: trace_files/cat_write.scap
+
   builtin_rules_no_warnings:
     detect: False
     trace_file: trace_files/empty.scap
@@ -95,6 +129,34 @@ trace_files: !mux
       - rules/double_rule.yaml
     trace_file: trace_files/cat_write.scap
 
+  multiple_rules_overriding:
+    detect: False
+    rules_file:
+      - rules/single_rule.yaml
+      - rules/override_rule.yaml
+    trace_file: trace_files/cat_write.scap
+
+  macro_overriding:
+    detect: False
+    rules_file:
+      - rules/single_rule.yaml
+      - rules/override_macro.yaml
+    trace_file: trace_files/cat_write.scap
+
+  list_overriding:
+    detect: False
+    rules_file:
+      - rules/single_rule.yaml
+      - rules/override_list.yaml
+    trace_file: trace_files/cat_write.scap
+
+  nested_list_overriding:
+    detect: False
+    rules_file:
+      - rules/single_rule.yaml
+      - rules/override_nested_list.yaml
+    trace_file: trace_files/cat_write.scap
+
   invalid_rule_output:
     exit_status: 1
     stderr_contains: "Runtime error: Error loading rules:.* Invalid output format 'An open was seen %not_a_real_field': 'invalid formatting token not_a_real_field'. Exiting."
@@ -126,6 +188,33 @@ trace_files: !mux
       - rules/single_rule_enabled_flag.yaml
     trace_file: trace_files/cat_write.scap
 
+  disabled_and_enabled_rules_1:
+    exit_status: 1
+    stderr_contains: "Runtime error: You can not specify both disabled .-D/-T. and enabled .-t. rules. Exiting."
+    disable_tags: [a]
+    run_tags: [a]
+    rules_file:
+      - rules/single_rule.yaml
+    trace_file: trace_files/cat_write.scap
+
+  disabled_and_enabled_rules_2:
+    exit_status: 1
+    stderr_contains: "Runtime error: You can not specify both disabled .-D/-T. and enabled .-t. rules. Exiting."
+    disabled_rules:
+      - "open.*"
+    run_tags: [a]
+    rules_file:
+      - rules/single_rule.yaml
+    trace_file: trace_files/cat_write.scap
+
+  null_output_field:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/null_output_field.yaml
+    trace_file: trace_files/cat_write.scap
+    stdout_contains: "Warning An open was seen .cport=<NA> command=cat /dev/null."
+
   file_output:
     detect: True
     detect_level: WARNING
@@ -145,3 +234,286 @@ trace_files: !mux
     trace_file: trace_files/cat_write.scap
     outputs:
       - /tmp/falco_outputs/program_output.txt: Warning An open was seen
+
+  detect_counts:
+    detect: True
+    detect_level: WARNING
+    trace_file: traces-positive/falco-event-generator.scap
+    detect_counts:
+      - "Write below binary dir": 1
+      - "Read sensitive file untrusted": 3
+      - "Run shell in container": 1
+      - "Write below rpm database": 1
+      - "Write below etc": 1
+      - "System procs network activity": 1
+      - "Mkdir binary dirs": 1
+      - "System user interactive": 1
+      - "DB program spawned process": 1
+      - "Non sudo setuid": 1
+      - "Create files below dev": 1
+      - "Modify binary dirs": 2
+      - "Change thread namespace": 2
+
+  disabled_tags_a:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/tagged_rules.yaml
+    trace_file: trace_files/open-multiple-files.scap
+    disable_tags: [a]
+    detect_counts:
+      - open_1: 0
+      - open_2: 1
+      - open_3: 1
+      - open_4: 0
+      - open_5: 0
+      - open_6: 1
+      - open_7: 0
+      - open_8: 0
+      - open_9: 0
+      - open_10: 0
+      - open_11: 1
+      - open_12: 1
+      - open_13: 1
+
+  disabled_tags_b:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/tagged_rules.yaml
+    trace_file: trace_files/open-multiple-files.scap
+    disable_tags: [b]
+    detect_counts:
+      - open_1: 1
+      - open_2: 0
+      - open_3: 1
+      - open_4: 0
+      - open_5: 1
+      - open_6: 0
+      - open_7: 0
+      - open_8: 0
+      - open_9: 1
+      - open_10: 0
+      - open_11: 1
+      - open_12: 1
+      - open_13: 1
+
+  disabled_tags_c:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/tagged_rules.yaml
+    trace_file: trace_files/open-multiple-files.scap
+    disable_tags: [c]
+    detect_counts:
+      - open_1: 1
+      - open_2: 1
+      - open_3: 0
+      - open_4: 1
+      - open_5: 0
+      - open_6: 0
+      - open_7: 0
+      - open_8: 1
+      - open_9: 0
+      - open_10: 0
+      - open_11: 1
+      - open_12: 1
+      - open_13: 1
+
+  disabled_tags_ab:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/tagged_rules.yaml
+    trace_file: trace_files/open-multiple-files.scap
+    disable_tags: [a, b]
+    detect_counts:
+      - open_1: 0
+      - open_2: 0
+      - open_3: 1
+      - open_4: 0
+      - open_5: 0
+      - open_6: 0
+      - open_7: 0
+      - open_8: 0
+      - open_9: 0
+      - open_10: 0
+      - open_11: 1
+      - open_12: 1
+      - open_13: 1
+
+  disabled_tags_abc:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/tagged_rules.yaml
+    trace_file: trace_files/open-multiple-files.scap
+    disable_tags: [a, b, c]
+    detect_counts:
+      - open_1: 0
+      - open_2: 0
+      - open_3: 0
+      - open_4: 0
+      - open_5: 0
+      - open_6: 0
+      - open_7: 0
+      - open_8: 0
+      - open_9: 0
+      - open_10: 0
+      - open_11: 1
+      - open_12: 1
+      - open_13: 1
+
+  run_tags_a:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/tagged_rules.yaml
+    trace_file: trace_files/open-multiple-files.scap
+    run_tags: [a]
+    detect_counts:
+      - open_1: 1
+      - open_2: 0
+      - open_3: 0
+      - open_4: 1
+      - open_5: 1
+      - open_6: 0
+      - open_7: 1
+      - open_8: 1
+      - open_9: 1
+      - open_10: 1
+      - open_11: 0
+      - open_12: 0
+      - open_13: 0
+
+  run_tags_b:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/tagged_rules.yaml
+    trace_file: trace_files/open-multiple-files.scap
+    run_tags: [b]
+    detect_counts:
+      - open_1: 0
+      - open_2: 1
+      - open_3: 0
+      - open_4: 1
+      - open_5: 0
+      - open_6: 1
+      - open_7: 1
+      - open_8: 1
+      - open_9: 0
+      - open_10: 1
+      - open_11: 0
+      - open_12: 0
+      - open_13: 0
+
+  run_tags_c:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/tagged_rules.yaml
+    trace_file: trace_files/open-multiple-files.scap
+    run_tags: [c]
+    detect_counts:
+      - open_1: 0
+      - open_2: 0
+      - open_3: 1
+      - open_4: 0
+      - open_5: 1
+      - open_6: 1
+      - open_7: 1
+      - open_8: 0
+      - open_9: 1
+      - open_10: 1
+      - open_11: 0
+      - open_12: 0
+      - open_13: 0
+
+  run_tags_ab:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/tagged_rules.yaml
+    trace_file: trace_files/open-multiple-files.scap
+    run_tags: [a, b]
+    detect_counts:
+      - open_1: 1
+      - open_2: 1
+      - open_3: 0
+      - open_4: 1
+      - open_5: 1
+      - open_6: 1
+      - open_7: 1
+      - open_8: 1
+      - open_9: 1
+      - open_10: 1
+      - open_11: 0
+      - open_12: 0
+      - open_13: 0
+
+  run_tags_bc:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/tagged_rules.yaml
+    trace_file: trace_files/open-multiple-files.scap
+    run_tags: [b, c]
+    detect_counts:
+      - open_1: 0
+      - open_2: 1
+      - open_3: 1
+      - open_4: 1
+      - open_5: 1
+      - open_6: 1
+      - open_7: 1
+      - open_8: 1
+      - open_9: 1
+      - open_10: 1
+      - open_11: 0
+      - open_12: 0
+      - open_13: 0
+
+  run_tags_abc:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/tagged_rules.yaml
+    trace_file: trace_files/open-multiple-files.scap
+    run_tags: [a, b, c]
+    detect_counts:
+      - open_1: 1
+      - open_2: 1
+      - open_3: 1
+      - open_4: 1
+      - open_5: 1
+      - open_6: 1
+      - open_7: 1
+      - open_8: 1
+      - open_9: 1
+      - open_10: 1
+      - open_11: 0
+      - open_12: 0
+      - open_13: 0
+
+  run_tags_d:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/tagged_rules.yaml
+    trace_file: trace_files/open-multiple-files.scap
+    run_tags: [d]
+    detect_counts:
+      - open_1: 0
+      - open_2: 0
+      - open_3: 0
+      - open_4: 0
+      - open_5: 0
+      - open_6: 0
+      - open_7: 0
+      - open_8: 0
+      - open_9: 0
+      - open_10: 0
+      - open_11: 1
+      - open_12: 0
+      - open_13: 0
