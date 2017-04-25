@@ -31,7 +31,7 @@ public:
 	//
 	// Initialize the token bucket and start accumulating tokens
 	//
-	void init(uint32_t rate, uint32_t max_tokens);
+	void init(double rate, double max_tokens);
 
 	//
 	// Returns true if a token can be claimed. Also updates
@@ -43,18 +43,18 @@ private:
 	//
 	// The number of tokens generated per second.
 	//
-	uint64_t m_rate;
+	double m_rate;
 
 	//
 	// The maximum number of tokens that can be banked for future
 	// claim()s.
 	//
-	uint64_t m_max_tokens;
+	double m_max_tokens;
 
 	//
 	// The current number of tokens
 	//
-	uint64_t m_tokens;
+	double m_tokens;
 
 	//
 	// The last time claim() was called (or the object was created).
