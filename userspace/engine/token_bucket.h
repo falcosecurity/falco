@@ -37,7 +37,7 @@ public:
 	// Returns true if a token can be claimed. Also updates
 	// internal metrics.
 	//
-	bool claim();
+	bool claim(uint64_t now = 0);
 private:
 
 	//

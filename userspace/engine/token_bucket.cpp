@@ -39,11 +39,15 @@ void token_bucket::init(uint32_t rate, uint32_t max_tokens)
 	m_last_seen = sinsp_utils::get_current_time_ns();
 }
 
-bool token_bucket::claim()
+bool token_bucket::claim(uint64_t now)
 {
 	// Determine the number of tokens gained. Delta between
 	// last_seen and now, divided by the rate.
-	uint64_t now = sinsp_utils::get_current_time_ns();
+	if(now == 0)
+	{
+		now = sinsp_utils::get_current_time_ns();
+	}
+
 	uint64_t tokens_gained = (now - m_last_seen) / (m_rate * 1000000000);
 	m_last_seen = now;
 
