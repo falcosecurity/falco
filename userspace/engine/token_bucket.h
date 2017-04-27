@@ -31,13 +31,20 @@ public:
 	//
 	// Initialize the token bucket and start accumulating tokens
 	//
-	void init(double rate, double max_tokens);
+	void init(double rate, double max_tokens, uint64_t now = 0);
 
 	//
 	// Returns true if a token can be claimed. Also updates
 	// internal metrics.
 	//
 	bool claim(uint64_t now = 0);
+
+	// Return the current number of tokens available
+	double get_tokens();
+
+	// Return the last time someone tried to claim a token.
+	uint64_t get_last_seen();
+
 private:
 
 	//

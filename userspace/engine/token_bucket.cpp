@@ -31,12 +31,18 @@ token_bucket::~token_bucket()
 {
 }
 
-void token_bucket::init(double rate, double max_tokens)
+void token_bucket::init(double rate, double max_tokens, uint64_t now)
 {
 	m_rate = rate;
 	m_max_tokens = max_tokens;
 	m_tokens = max_tokens;
-	m_last_seen = sinsp_utils::get_current_time_ns();
+
+	if(now == 0)
+	{
+		now = sinsp_utils::get_current_time_ns();
+	}
+
+	m_last_seen = now;
 }
 
 bool token_bucket::claim(uint64_t now)
@@ -72,4 +78,14 @@ bool token_bucket::claim(uint64_t now)
 	m_tokens--;
 
 	return true;
+}
+
+double token_bucket::get_tokens()
+{
+	return m_tokens;
+}
+
+uint64_t token_bucket::get_last_seen()
+{
+	return m_last_seen;
 }
