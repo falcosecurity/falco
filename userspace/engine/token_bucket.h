@@ -31,7 +31,7 @@ public:
 	//
 	// Initialize the token bucket and start accumulating tokens
 	//
-	void init(double rate, double max_tokens);
+	void init(double rate, double max_tokens, uint64_t now = 0);
 
 	//
 	// Returns true if a token can be claimed. Also updates
