@@ -73,3 +73,8 @@ bool token_bucket::claim(uint64_t now)
 
 	return true;
 }
+
+double token_bucket::get_tokens()
+{
+	return m_tokens;
+}

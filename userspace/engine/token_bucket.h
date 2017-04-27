@@ -38,6 +38,10 @@ public:
 	// internal metrics.
 	//
 	bool claim(uint64_t now = 0);
+
+	// Return the current number of tokens available
+	double get_tokens();
+
 private:
 
 	//
