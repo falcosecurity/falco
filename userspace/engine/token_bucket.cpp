@@ -48,7 +48,7 @@ bool token_bucket::claim(uint64_t now)
 		now = sinsp_utils::get_current_time_ns();
 	}
 
-	double tokens_gained = (now - m_last_seen) / (m_rate * 1000000000);
+	double tokens_gained = m_rate * ((now - m_last_seen) / (1000000000.0));
 	m_last_seen = now;
 
 	m_tokens += tokens_gained;
