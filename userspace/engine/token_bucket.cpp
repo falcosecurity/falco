@@ -84,3 +84,8 @@ double token_bucket::get_tokens()
 {
 	return m_tokens;
 }
+
+uint64_t token_bucket::get_last_seen()
+{
+	return m_last_seen;
+}

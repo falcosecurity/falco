@@ -42,6 +42,9 @@ public:
 	// Return the current number of tokens available
 	double get_tokens();
 
+	// Return the last time someone tried to claim a token.
+	uint64_t get_last_seen();
+
 private:
 
 	//
