@@ -45,15 +45,15 @@ void token_bucket::init(double rate, double max_tokens, uint64_t now)
 	m_last_seen = now;
 }
 
-bool token_bucket::claim(uint64_t now)
+bool token_bucket::claim()
 {
-	// Determine the number of tokens gained. Delta between
-	// last_seen and now, divided by the rate.
-	if(now == 0)
-	{
-		now = sinsp_utils::get_current_time_ns();
-	}
+	uint64_t now = sinsp_utils::get_current_time_ns();
 
+	return claim(1, now);
+}
+
+bool token_bucket::claim(double tokens, uint64_t now)
+{
 	double tokens_gained = m_rate * ((now - m_last_seen) / (1000000000.0));
 	m_last_seen = now;
 
@@ -68,14 +68,14 @@ bool token_bucket::claim(uint64_t now)
 	}
 
 	//
-	// If tokens is < 1, can't claim.
+	// If m_tokens is < tokens, can't claim.
 	//
-	if(m_tokens < 1)
+	if(m_tokens < tokens)
 	{
 		return false;
 	}
 
-	m_tokens--;
+	m_tokens -= tokens;
 
 	return true;
 }
