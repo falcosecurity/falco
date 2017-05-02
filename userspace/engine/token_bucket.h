@@ -34,10 +34,15 @@ public:
 	void init(double rate, double max_tokens, uint64_t now = 0);
 
 	//
-	// Returns true if a token can be claimed. Also updates
-	// internal metrics.
+	// Try to claim tokens tokens from the token bucket, using a
+	// timestamp of now. Returns true if the tokens could be
+	// claimed. Also updates internal metrics.
 	//
-	bool claim(uint64_t now = 0);
+	bool claim(double tokens, uint64_t now);
+
+	// Simpler version of claim that claims a single token and
+	// uses the current time for now
+	bool claim();
 
 	// Return the current number of tokens available
 	double get_tokens();
