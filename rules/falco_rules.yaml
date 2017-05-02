@@ -114,7 +114,7 @@
   items: [mysqld]
 
 - list: gitlab_binaries
-  items: [gitlab-shell, git]
+  items: [gitlab-shell, gitlab-mon, git]
 
 - macro: server_procs
   condition: proc.name in (http_server_binaries, db_server_binaries, docker_binaries, sshd)
