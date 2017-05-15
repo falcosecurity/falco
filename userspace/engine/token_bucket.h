@@ -31,30 +31,42 @@ public:
 	//
 	// Initialize the token bucket and start accumulating tokens
 	//
-	void init(uint32_t rate, uint32_t max_tokens);
+	void init(double rate, double max_tokens, uint64_t now = 0);
 
 	//
-	// Returns true if a token can be claimed. Also updates
-	// internal metrics.
+	// Try to claim tokens tokens from the token bucket, using a
+	// timestamp of now. Returns true if the tokens could be
+	// claimed. Also updates internal metrics.
 	//
+	bool claim(double tokens, uint64_t now);
+
+	// Simpler version of claim that claims a single token and
+	// uses the current time for now
 	bool claim();
+
+	// Return the current number of tokens available
+	double get_tokens();
+
+	// Return the last time someone tried to claim a token.
+	uint64_t get_last_seen();
+
 private:
 
 	//
 	// The number of tokens generated per second.
 	//
-	uint64_t m_rate;
+	double m_rate;
 
 	//
 	// The maximum number of tokens that can be banked for future
 	// claim()s.
 	//
-	uint64_t m_max_tokens;
+	double m_max_tokens;
 
 	//
 	// The current number of tokens
 	//
-	uint64_t m_tokens;
+	double m_tokens;
 
 	//
 	// The last time claim() was called (or the object was created).
