@@ -426,6 +426,15 @@
   priority: WARNING
   tags: [users]
 
+- rule: Terminal shell in container
+  desc: A shell was spawned by a program in a container with an attached terminal.
+  condition: >
+    spawned_process and container
+    and shell_procs and proc.tty != 0
+  output: "A shell was spawned in a container with an attached terminal (user=%user.name %container.info shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline terminal=%proc.tty)"
+  priority: WARNING
+  tags: [container, shell]
+
 - rule: Run shell in container
   desc: a shell was spawned by a non-shell program in a container. Container entrypoints are excluded.
   condition: >
