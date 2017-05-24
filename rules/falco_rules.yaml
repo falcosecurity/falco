@@ -241,6 +241,9 @@
 - macro: parent_linux_image_upgrade_script
   condition: proc.pname startswith linux-image-
 
+- macro: java_running_sdjagent
+  condition: proc.name=java and proc.cmdline contains sdjagent.jar
+
 ###############
 # General Rules
 ###############
@@ -355,7 +358,9 @@
   condition: >
     evt.type = setns
     and not proc.name in (docker_binaries, k8s_binaries, lxd_binaries, sysdigcloud_binaries, sysdig, nsenter)
+    and not proc.name startswith "runc:"
     and not proc.pname in (sysdigcloud_binaries)
+    and not java_running_sdjagent
   output: "Namespace change (setns) by unexpected program (user=%user.name command=%proc.cmdline parent=%proc.pname %container.info)"
   priority: WARNING
   tags: [process]
