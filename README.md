@@ -29,13 +29,13 @@ One of the questions we often get when we talk about Sysdig Falco is “How does
 
 Documentation
 ---
-[Visit the wiki] (https://github.com/draios/falco/wiki) for full documentation on falco.
+[Visit the wiki](https://github.com/draios/falco/wiki) for full documentation on falco.
 
 Join the Community
 ---
-* Contact the [official mailing list] (https://groups.google.com/forum/#!forum/falco) for support and to talk with other users.
-* Follow us on [Twitter] (https://twitter.com/sysdig) for general falco and sysdig news.
-* This is our [blog] (https://sysdig.com/blog/), where you can find the latest [falco](https://sysdig.com/blog/tag/falco/) posts.
+* Contact the [official mailing list](https://groups.google.com/forum/#!forum/falco) for support and to talk with other users.
+* Follow us on [Twitter](https://twitter.com/sysdig) for general falco and sysdig news.
+* This is our [blog](https://sysdig.com/blog/), where you can find the latest [falco](https://sysdig.com/blog/tag/falco/) posts.
 * Join our [Public Slack](https://sysdig.slack.com) channel for sysdig and falco announcements and discussions.
 
 License Terms
