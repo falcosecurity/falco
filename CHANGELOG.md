@@ -2,6 +2,49 @@
 
 This file documents all notable changes to Falco. The release numbering uses [semantic versioning](http://semver.org).
 
+## v0.7.0
+
+Released 2016-05-30
+
+### Major Changes
+
+* Update the priorities of falco rules to use a wider range of priorities rather than just ERROR/WARNING. More info on the use of priorities in the ruleset can be found [here](https://github.com/draios/falco/wiki/Falco-Rules#rule-priorities). [[#244](https://github.com/draios/falco/pull/244)]
+
+### Minor Changes
+
+None.
+
+### Bug Fixes
+
+* Fix typos in various markdown files. Thanks @sublimino! [[#241](https://github.com/draios/falco/pull/241)]
+
+### Rule Changes
+
+* Add gitlab-mon as a gitlab binary, which allows it to run shells, etc. Thanks @dkerwin! [[#237](https://github.com/draios/falco/pull/237)]
+* A new rule Terminal shell in container" that looks for shells spawned in a container with an attached terminal. [[#242](https://github.com/draios/falco/pull/242)]
+* Fix some FPs related to the sysdig monitor agent. [[#243](https://github.com/draios/falco/pull/243)]
+* Fix some FPs related to stating containers combined with missed events [[#243](https://github.com/draios/falco/pull/243)]
+
+## v0.6.1
+
+Released 2016-05-15
+
+### Major Changes
+
+None
+
+### Minor Changes
+
+* Small changes to token bucket used to throttle falco events [[#234](https://github.com/draios/falco/pull/234)] [[#235](https://github.com/draios/falco/pull/235)] [[#236](https://github.com/draios/falco/pull/236)] [[#238](https://github.com/draios/falco/pull/238)]
+
+### Bug Fixes
+
+* Update the falco driver to work with kernel 4.11 [[#829](https://github.com/draios/sysdig/pull/829)]
+
+### Rule Changes
+
+* Don't allow apache2 to spawn shells in containers [[#231](https://github.com/draios/falco/issues/231)] [[#232](https://github.com/draios/falco/pull/232)]
+
 ## v0.6.0
 
 Released 2016-03-29
