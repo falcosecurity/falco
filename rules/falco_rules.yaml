@@ -246,6 +246,9 @@
 - macro: parent_bro_running_python
   condition: (proc.pname=python and proc.cmdline contains /usr/share/broctl)
 
+- macro: parent_java_running_jenkins
+  condition: (proc.pname=java and proc.pcmdline contains jenkins.war or proc.pcmdline contains /tmp/slave.jar)
+
 # As a part of kernel upgrades, dpkg will spawn a perl script with the
 # name linux-image-N.N. This macro matches that.
 - macro: parent_linux_image_upgrade_script
@@ -399,6 +402,7 @@
     and not parent_bro_running_python
     and not parent_python_running_denyhosts
     and not parent_linux_image_upgrade_script
+    and not parent_java_running_jenkins
   output: "Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline pcmdline=%proc.pcmdline)"
   priority: DEBUG
   tags: [host, shell]
@@ -411,6 +415,12 @@
               container.image startswith gcr.io/google_containers/hyperkube or
               container.image startswith quay.io/coreos/flannel or
               container.image startswith gcr.io/google_containers/kube-proxy)
+
+# These containers are ones that are known to spawn lots of
+# shells. Generally, they are for systems where the container is used
+# as a packaging mechanism more than for a dedicated microservice.
+- macro: shell_spawning_containers
+  condition: (container.image startswith jenkins)
 
 - rule: File Open by Privileged Container
   desc: Any open by a privileged container. Exceptions are made for known trusted images.
@@ -459,6 +469,7 @@
     and not proc.pname in (shell_binaries, docker_binaries, k8s_binaries, lxd_binaries, aide_wrapper_binaries, nids_binaries,
                            monitoring_binaries, gitlab_binaries, initdb, pg_ctl, awk, falco, cron, erl_child_setup)
     and not trusted_containers
+    and not shell_spawning_containers
   output: "Shell spawned in a container other than entrypoint (user=%user.name %container.info shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline)"
   priority: NOTICE
   tags: [container, shell]
