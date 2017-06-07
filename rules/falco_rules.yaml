@@ -275,7 +275,8 @@
                           package_mgmt_binaries, ssl_mgmt_binaries, dhcp_binaries,
                           ldconfig.real, ldconfig, confd, gpg, insserv,
                           apparmor_parser, update-mime, tzdata.config, tzdata.postinst,
-                          systemd-machine, debconf-show, rollerd, bind9.postinst, sv)
+                          systemd-machine, debconf-show, rollerd, bind9.postinst, sv,
+                          urlgrabber-ext-, git-remote-http)
     and not proc.pname in (sysdigcloud_binaries)
     and not fd.directory in (/etc/cassandra, /etc/ssl/certs/java)
     and not ansible_running_python
