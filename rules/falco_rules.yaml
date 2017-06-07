@@ -243,6 +243,9 @@
 - macro: parent_python_running_denyhosts
   condition: (proc.pname=python and (proc.pcmdline contains /usr/sbin/denyhosts or proc.pcmdline contains /usr/local/bin/denyhosts.py))
 
+- macro: parent_python_running_sdchecks
+  condition: (proc.name in (python, python2.7) and (proc.cmdline contains /opt/draios/bin/sdchecks))
+
 - macro: parent_bro_running_python
   condition: (proc.pname=python and proc.cmdline contains /usr/share/broctl)
 
@@ -402,6 +405,7 @@
     and not parent_ansible_running_python
     and not parent_bro_running_python
     and not parent_python_running_denyhosts
+    and not parent_python_running_sdchecks
     and not parent_linux_image_upgrade_script
     and not parent_java_running_jenkins
   output: "Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline pcmdline=%proc.pcmdline)"
