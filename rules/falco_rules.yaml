@@ -386,7 +386,8 @@
     logrotate, ansible, less, adduser, pycompile, py3compile,
     pyclean, py3clean, pip, pip2, ansible-playboo, man-db,
     init, pluto, mkinitramfs, unattended-upgr, watch, sysdig,
-    landscape-sysin, nessusd, PM2, syslog-summary, erl_child_setup
+    landscape-sysin, nessusd, PM2, syslog-summary, erl_child_setup,
+    npm
     ]
 
 - rule: Run shell untrusted
