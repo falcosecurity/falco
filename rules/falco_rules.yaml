@@ -513,7 +513,7 @@
   tags: [host, users]
 
 - list: allowed_dev_files
-  items: [/dev/null, /dev/stdin, /dev/stdout, /dev/stderr, /dev/random, /dev/urandom, /dev/console]
+  items: [/dev/null, /dev/stdin, /dev/stdout, /dev/stderr, /dev/random, /dev/urandom, /dev/console, /dev/kmsg]
 
 # (we may need to add additional checks against false positives, see: https://bugs.launchpad.net/ubuntu/+source/rkhunter/+bug/86153)
 - rule: Create files below dev
