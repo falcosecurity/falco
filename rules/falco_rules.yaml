@@ -107,6 +107,11 @@
 - list: lxd_binaries
   items: [lxd, lxcfs]
 
+# Utility/etc programs known to run on mesos slaves. Truncation
+# intentional.
+- list: mesos_slave_binaries
+  items: [mesos-health-ch, mesos-docker-ex, mesos-agent, mesos-logrotate, mesos-fetcher]
+
 - list: http_server_binaries
   items: [nginx, httpd, httpd-foregroun, lighttpd]
 
@@ -282,7 +287,8 @@
                           dev_creation_binaries,
                           ldconfig.real, ldconfig, confd, gpg, insserv,
                           apparmor_parser, update-mime, tzdata.config, tzdata.postinst,
-                          systemd-machine, debconf-show, rollerd, bind9.postinst, sv)
+                          systemd-machine, debconf-show, rollerd, bind9.postinst, sv,
+                          gen_resolvconf.)
     and not proc.pname in (sysdigcloud_binaries)
     and not fd.directory in (/etc/cassandra, /etc/ssl/certs/java)
     and not ansible_running_python
@@ -394,7 +400,7 @@
     pyclean, py3clean, pip, pip2, ansible-playboo, man-db,
     init, pluto, mkinitramfs, unattended-upgr, watch, sysdig,
     landscape-sysin, nessusd, PM2, syslog-summary, erl_child_setup,
-    npm, cloud-init
+    npm, cloud-init, toybox
     ]
 
 - rule: Run shell untrusted
@@ -405,7 +411,7 @@
     and proc.pname exists
     and not proc.pname in (cron_binaries, shell_binaries, make_binaries, known_shell_spawn_binaries, docker_binaries,
                            k8s_binaries, package_mgmt_binaries, aide_wrapper_binaries, nids_binaries,
-                           monitoring_binaries, gitlab_binaries)
+                           monitoring_binaries, gitlab_binaries, mesos_slave_binaries)
     and not parent_ansible_running_python
     and not parent_bro_running_python
     and not parent_python_running_denyhosts
@@ -475,7 +481,7 @@
     spawned_process and container
     and shell_procs
     and proc.pname exists
-    and not proc.pname in (shell_binaries, docker_binaries, k8s_binaries, lxd_binaries, aide_wrapper_binaries, nids_binaries,
+    and not proc.pname in (shell_binaries, docker_binaries, k8s_binaries, lxd_binaries, mesos_slave_binaries, aide_wrapper_binaries, nids_binaries,
                            monitoring_binaries, gitlab_binaries, initdb, pg_ctl, awk, falco, cron, erl_child_setup)
     and not trusted_containers
     and not shell_spawning_containers
