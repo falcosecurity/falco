@@ -426,6 +426,7 @@
   condition: (container.image startswith sysdig/agent or
               (container.image startswith sysdig/falco and
                not container.image startswith sysdig/falco-event-generator) or
+              container.image startswith quay.io/sysdig or
               container.image startswith sysdig/sysdig or
               container.image startswith gcr.io/google_containers/hyperkube or
               container.image startswith quay.io/coreos/flannel or
