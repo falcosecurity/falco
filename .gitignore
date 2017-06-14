@@ -1,6 +1,7 @@
 /build*
 *~
-test/falco_test.pyc
+*.pyc
+
 test/falco_tests.yaml
 test/traces-negative
 test/traces-positive
