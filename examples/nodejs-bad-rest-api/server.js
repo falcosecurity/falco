@@ -14,7 +14,7 @@ router.get('/', function(req, res) {
 });
 
 router.get('/exec/:cmd', function(req, res) {
-    var ret = child_process.spawnSync(req.params.cmd);
+    var ret = child_process.spawnSync(req.params.cmd, { shell: true});
     res.send(ret.stdout);
 });
 
