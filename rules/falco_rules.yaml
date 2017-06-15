@@ -135,7 +135,7 @@
 - list: deb_binaries
   items: [dpkg, dpkg-preconfigu, apt, apt-get, aptitude,
     frontend, preinst, add-apt-reposit, apt-auto-remova, apt-key,
-    unattended-upgr
+    apt-listchanges, unattended-upgr
     ]
 
 # The truncated dpkg-preconfigu is intentional, process names are
