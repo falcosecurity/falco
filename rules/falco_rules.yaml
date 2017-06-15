@@ -484,7 +484,11 @@
   items: [
     '"bash -c curl -f localhost:$API_PORT/admin/healthcheck"',
     '"sh -c  curl http://localhost:6060/debug/vars>/dev/null"',
-    '"sh -c uname -p 2> /dev/null"'
+    '"sh -c  curl http://localhost:6060/debug/vars>/dev/null "',
+    '"sh -c  pgrep java && exit 0 || exit 1 "',
+    '"sh -c uname -p 2> /dev/null"',
+    '"sh -c  echo healthy "',
+    '"sh -c  echo alive "'
     ]
 
 - rule: Run shell in container
