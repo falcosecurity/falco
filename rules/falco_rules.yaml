@@ -400,7 +400,7 @@
     pyclean, py3clean, pip, pip2, ansible-playboo, man-db,
     init, pluto, mkinitramfs, unattended-upgr, watch, sysdig,
     landscape-sysin, nessusd, PM2, syslog-summary, erl_child_setup,
-    npm, cloud-init, toybox
+    npm, cloud-init, toybox, ceph
     ]
 
 - rule: Run shell untrusted
@@ -483,7 +483,7 @@
     and shell_procs
     and proc.pname exists
     and not proc.pname in (shell_binaries, docker_binaries, k8s_binaries, lxd_binaries, mesos_slave_binaries, aide_wrapper_binaries, nids_binaries,
-                           monitoring_binaries, gitlab_binaries, initdb, pg_ctl, awk, falco, cron, erl_child_setup)
+                           monitoring_binaries, gitlab_binaries, initdb, pg_ctl, awk, falco, cron, erl_child_setup, ceph)
     and not trusted_containers
     and not shell_spawning_containers
   output: "Shell spawned in a container other than entrypoint (user=%user.name %container.info shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline)"
