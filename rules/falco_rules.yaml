@@ -498,7 +498,7 @@
     spawned_process and container
     and shell_procs
     and proc.pname exists
-    and not proc.pname in (shell_binaries, docker_binaries, k8s_binaries, lxd_binaries, mesos_slave_binaries, aide_wrapper_binaries, nids_binaries,
+    and not proc.pname in (shell_binaries, make_binaries, docker_binaries, k8s_binaries, lxd_binaries, mesos_slave_binaries, aide_wrapper_binaries, nids_binaries,
                            monitoring_binaries, gitlab_binaries, initdb, pg_ctl, awk, falco, cron, erl_child_setup, ceph)
     and not trusted_containers
     and not shell_spawning_containers
