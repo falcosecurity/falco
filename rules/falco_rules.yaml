@@ -481,7 +481,11 @@
 # any stable aspect of the software to work with. In this case, we
 # fall back to allowing certain command lines.
 - list: known_container_shell_spawn_cmdlines
-  items: ['"bash -c curl -f localhost:$API_PORT/admin/healthcheck"', '"sh -c  curl http://localhost:6060/debug/vars>/dev/null"']
+  items: [
+    '"bash -c curl -f localhost:$API_PORT/admin/healthcheck"',
+    '"sh -c  curl http://localhost:6060/debug/vars>/dev/null"',
+    '"sh -c uname -p 2> /dev/null"'
+    ]
 
 - rule: Run shell in container
   desc: a shell was spawned by a non-shell program in a container. Container entrypoints are excluded.
