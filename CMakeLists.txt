@@ -43,7 +43,9 @@ set(PACKAGE_NAME "falco")
 set(PROBE_VERSION "${FALCO_VERSION}")
 set(PROBE_NAME "falco-probe")
 set(PROBE_DEVICE_NAME "falco")
-set(CMAKE_INSTALL_PREFIX /usr)
+if (NOT CMAKE_INSTALL_PREFIX)
+	set(CMAKE_INSTALL_PREFIX /usr)
+endif()
 
 set(CMD_MAKE make)
 
