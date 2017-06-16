@@ -17,14 +17,14 @@ traces: !mux
     detect: True
     detect_level: INFO
     detect_counts:
-      - "File Open by Privileged Container": 17
+      - "Launch Privileged Container": 1
 
   container-sensitive-mount:
     trace_file: traces-positive/container-sensitive-mount.scap
     detect: True
     detect_level: INFO
     detect_counts:
-      - "Sensitive Mount by Container": 17
+      - "Launch Sensitive Mount Container": 1
 
   create-files-below-dev:
     trace_file: traces-positive/create-files-below-dev.scap
