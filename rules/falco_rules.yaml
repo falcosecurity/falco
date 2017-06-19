@@ -208,7 +208,7 @@
 - macro: syslog
   condition: fd.name in (/dev/log, /run/systemd/journal/syslog)
 - list: cron_binaries
-  items: [cron, crond]
+  items: [anacron, cron, crond]
 
 # System users that should never log into a system. Consider adding your own
 # service users (e.g. 'apache' or 'mysqld') here.
