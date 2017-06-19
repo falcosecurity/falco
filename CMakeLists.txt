@@ -43,7 +43,9 @@ set(PACKAGE_NAME "falco")
 set(PROBE_VERSION "${FALCO_VERSION}")
 set(PROBE_NAME "falco-probe")
 set(PROBE_DEVICE_NAME "falco")
-set(CMAKE_INSTALL_PREFIX /usr)
+if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+	set(CMAKE_INSTALL_PREFIX /usr CACHE PATH "Default install path" FORCE)
+endif()
 
 set(CMD_MAKE make)
 
@@ -393,9 +395,10 @@ endif()
 add_subdirectory("${SYSDIG_DIR}/userspace/libscap" "${PROJECT_BINARY_DIR}/userspace/libscap")
 add_subdirectory("${SYSDIG_DIR}/userspace/libsinsp" "${PROJECT_BINARY_DIR}/userspace/libsinsp")
 
-add_subdirectory(scripts)
 set(FALCO_SINSP_LIBRARY sinsp)
 set(FALCO_SHARE_DIR ${CMAKE_INSTALL_PREFIX}/share/falco)
+set(FALCO_BIN_DIR ${CMAKE_INSTALL_PREFIX}/bin)
+add_subdirectory(scripts)
 add_subdirectory(userspace/engine)
 add_subdirectory(userspace/falco)
 
