@@ -130,7 +130,7 @@ end
 
 local function terminal (tag)
    -- Rather than trim the whitespace in this way, it would be nicer to exclude it from the capture...
-   return token(V(tag), tag) / function (tok) return { type = tag, value = trim(tok)} end
+   return token(V(tag), tag) / function (tok) val = tok; if tag ~= "String" then val = trim(tok) end; return { type = tag, value = val} end
 end
 
 local function unaryboolop (op, e)
