@@ -574,7 +574,11 @@
     '"sh -c  pgrep java && exit 0 || exit 1 "',
     '"sh -c uname -p 2> /dev/null"',
     '"sh -c  echo healthy "',
-    '"sh -c  echo alive "'
+    '"sh -c  echo alive "',
+    '"sh -c getconf CLK_TCK"',
+    "'sh -c getconf PAGESIZE'",
+    "'sh -c LC_ALL=C LANG=C /sbin/ldconfig -p 2>/dev/null'",
+    "'sh -c stty -a 2>/dev/null'"
     ]
 
 - rule: Run shell in container
@@ -583,10 +587,10 @@
     spawned_process and container
     and shell_procs
     and proc.pname exists
-    and not proc.pname in (shell_binaries, make_binaries, docker_binaries, k8s_binaries,
+    and not proc.pname in (shell_binaries, make_binaries, docker_binaries, k8s_binaries, package_mgmt_binaries,
                            lxd_binaries, mesos_slave_binaries, aide_wrapper_binaries, nids_binaries,
                            monitoring_binaries, gitlab_binaries, initdb, pg_ctl, awk, falco, cron,
-                           erl_child_setup, ceph, PM2)
+                           erl_child_setup, ceph, PM2, pycompile, py3compile)
     and not trusted_containers
     and not shell_spawning_containers
     and not proc.cmdline in (known_container_shell_spawn_cmdlines)
