@@ -578,6 +578,7 @@
     '"sh -c getconf CLK_TCK"',
     "'sh -c getconf PAGESIZE'",
     "'sh -c LC_ALL=C LANG=C /sbin/ldconfig -p 2>/dev/null'",
+    "'sh -c /sbin/ldconfig -p 2>/dev/null'",
     "'sh -c stty -a 2>/dev/null'"
     ]
 
