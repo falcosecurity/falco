@@ -300,8 +300,9 @@
 
 - macro: parent_java_running_jenkins
   condition: >
-    (proc.pname=java and proc.pcmdline contains jenkins.war
-    or proc.pcmdline contains slave.jar)
+    (proc.pname=java and proc.pcmdline contains jenkins.war or
+    proc.pcmdline contains slave.jar or
+    proc.pcmdline contains jenkins-slave)
 
 # As a part of kernel upgrades, dpkg will spawn a perl script with the
 # name linux-image-N.N. This macro matches that.
