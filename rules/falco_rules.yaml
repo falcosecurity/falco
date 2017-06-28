@@ -636,6 +636,7 @@
     not user.name=root and not somebody_becoming_themself
     and not proc.name in (userexec_binaries, mail_binaries, docker_binaries,
     sshd, dbus-daemon-lau, ping, ping6, critical-stack-)
+    and not java_running_sdjagent
   output: >
     Unexpected setuid call by non-sudo, non-root program (user=%user.name parent=%proc.pname
     command=%proc.cmdline uid=%evt.arg.uid)
