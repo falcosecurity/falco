@@ -623,7 +623,8 @@
 
 - macro: somebody_becoming_themself
   condition: ((user.name=nobody and evt.arg.uid=nobody) or
-              (user.name=www-data and evt.arg.uid=www-data))
+              (user.name=www-data and evt.arg.uid=www-data) or
+              (user.name=_apt and evt.arg.uid=_apt))
 
 # sshd, mail programs attempt to setuid to root even when running as non-root. Excluding here to avoid meaningless FPs
 - rule: Non sudo setuid
