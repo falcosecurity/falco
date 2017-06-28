@@ -283,7 +283,7 @@ function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replac
 
       local v = state.macros_by_name[name]
 
-      local ast = compiler.compile_macro(v['condition'], state.lists)
+      local ast = compiler.compile_macro(v['condition'], state.macros, state.lists)
       state.macros[v['macro']] = ast.filter.value
    end
 

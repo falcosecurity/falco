@@ -58,14 +58,15 @@ end
    definition uses another macro).
 
 --]]
-function expand_macros(ast, defs, changed)
 
-   function copy(obj)
-      if type(obj) ~= 'table' then return obj end
-      local res = {}
-      for k, v in pairs(obj) do res[copy(k)] = copy(v) end
-      return res
-   end
+function copy_ast_obj(obj)
+   if type(obj) ~= 'table' then return obj end
+   local res = {}
+   for k, v in pairs(obj) do res[copy_ast_obj(k)] = copy_ast_obj(v) end
+   return res
+end
+
+function expand_macros(ast, defs, changed)
 
    if (ast.type == "Rule") then
       return expand_macros(ast.filter, defs, changed)
@@ -74,7 +75,7 @@ function expand_macros(ast, defs, changed)
          if (defs[ast.value.value] == nil) then
             error("Undefined macro '".. ast.value.value .. "' used in filter.")
          end
-         ast.value = copy(defs[ast.value.value])
+         ast.value = copy_ast_obj(defs[ast.value.value])
          changed = true
 	 return changed
       end
@@ -86,7 +87,7 @@ function expand_macros(ast, defs, changed)
          if (defs[ast.left.value] == nil) then
             error("Undefined macro '".. ast.left.value .. "' used in filter.")
          end
-         ast.left = copy(defs[ast.left.value])
+         ast.left = copy_ast_obj(defs[ast.left.value])
          changed = true
       end
 
@@ -94,7 +95,7 @@ function expand_macros(ast, defs, changed)
          if (defs[ast.right.value] == nil) then
             error("Undefined macro ".. ast.right.value .. " used in filter.")
          end
-         ast.right = copy(defs[ast.right.value])
+         ast.right = copy_ast_obj(defs[ast.right.value])
          changed = true
       end
 
@@ -107,7 +108,7 @@ function expand_macros(ast, defs, changed)
          if (defs[ast.argument.value] == nil) then
             error("Undefined macro ".. ast.argument.value .. " used in filter.")
          end
-         ast.argument = copy(defs[ast.argument.value])
+         ast.argument = copy_ast_obj(defs[ast.argument.value])
          changed = true
       end
       return expand_macros(ast.argument, defs, changed)
@@ -281,7 +282,7 @@ function get_evttypes(name, ast, source)
    return evttypes
 end
 
-function compiler.compile_macro(line, list_defs)
+function compiler.compile_macro(line, macro_defs, list_defs)
 
    for name, items in pairs(list_defs) do
       line = string.gsub(line, name, table.concat(items, ", "))
@@ -298,6 +299,21 @@ function compiler.compile_macro(line, list_defs)
    -- syscalls table. If any are found, return an error.
    if not compiler.all_events then
       check_for_ignored_syscalls_events(ast, 'macro', line)
+   end
+
+   -- Simply as a validation step, try to expand all macros in this
+   -- macro's condition. This changes the ast, so we make a copy
+   -- first.
+   local ast_copy = copy_ast_obj(ast)
+
+   if (ast.type == "Rule") then
+      -- Line is a filter, so expand macro references
+      repeat
+	 expanded  = expand_macros(ast_copy, macro_defs, false)
+      until expanded == false
+
+   else
+      error("Unexpected top-level AST type: "..ast.type)
    end
 
    return ast
