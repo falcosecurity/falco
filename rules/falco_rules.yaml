@@ -154,7 +154,7 @@
   condition: proc.name in (rpm_binaries)
 
 - list: deb_binaries
-  items: [dpkg, dpkg-preconfigu, apt, apt-get, aptitude,
+  items: [dpkg, dpkg-preconfigu, dpkg-reconfigur, apt, apt-get, aptitude,
     frontend, preinst, add-apt-reposit, apt-auto-remova, apt-key,
     apt-listchanges, unattended-upgr
     ]
