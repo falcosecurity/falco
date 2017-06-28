@@ -591,7 +591,7 @@
     and not proc.pname in (shell_binaries, make_binaries, docker_binaries, k8s_binaries, package_mgmt_binaries,
                            lxd_binaries, mesos_slave_binaries, aide_wrapper_binaries, nids_binaries,
                            monitoring_binaries, gitlab_binaries, initdb, pg_ctl, awk, falco, cron,
-                           erl_child_setup, ceph, PM2, pycompile, py3compile, hhvm)
+                           erl_child_setup, ceph, PM2, pycompile, py3compile, hhvm, npm)
     and not trusted_containers
     and not shell_spawning_containers
     and not proc.cmdline in (known_container_shell_spawn_cmdlines)
