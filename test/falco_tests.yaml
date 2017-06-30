@@ -157,6 +157,68 @@ trace_files: !mux
       - rules/override_nested_list.yaml
     trace_file: trace_files/cat_write.scap
 
+  list_substring:
+    detect: False
+    rules_file:
+      - rules/list_substring.yaml
+    trace_file: trace_files/cat_write.scap
+
+  list_sub_front:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/list_sub_front.yaml
+    trace_file: trace_files/cat_write.scap
+
+  list_sub_mid:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/list_sub_mid.yaml
+    trace_file: trace_files/cat_write.scap
+
+  list_sub_end:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/list_sub_end.yaml
+    trace_file: trace_files/cat_write.scap
+
+  list_sub_bare:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/list_sub_bare.yaml
+    trace_file: trace_files/cat_write.scap
+
+  list_sub_whitespace:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/list_sub_whitespace.yaml
+    trace_file: trace_files/cat_write.scap
+
+  list_order:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/list_order.yaml
+    trace_file: trace_files/cat_write.scap
+
+  macro_order:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/macro_order.yaml
+    trace_file: trace_files/cat_write.scap
+
+  rule_order:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/rule_order.yaml
+    trace_file: trace_files/cat_write.scap
+
   invalid_rule_output:
     exit_status: 1
     stderr_contains: "Runtime error: Error loading rules:.* Invalid output format 'An open was seen %not_a_real_field': 'invalid formatting token not_a_real_field'. Exiting."
