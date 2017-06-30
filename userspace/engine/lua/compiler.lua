@@ -325,7 +325,12 @@ end
 function compiler.compile_filter(name, source, macro_defs, list_defs)
 
    for name, items in pairs(list_defs) do
-      source = string.gsub(source, name, table.concat(items, ", "))
+      local begin_name_pat = "^("..name..")([%s(),=])"
+      local mid_name_pat = "([%s(),=])("..name..")([%s(),=])"
+      local end_name_pat = "([%s(),=])("..name..")$"
+      source = string.gsub(source, begin_name_pat, table.concat(items, ", ").."%2")
+      source = string.gsub(source, mid_name_pat, "%1"..table.concat(items, ", ").."%3")
+      source = string.gsub(source, end_name_pat, "%1"..table.concat(items, ", "))
    end
 
    local ast, error_msg = parser.parse_filter(source)
