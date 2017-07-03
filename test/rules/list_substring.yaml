@@ -1,0 +1,8 @@
+- list: my_list
+  items: ['"one string"']
+
+- rule: my_rule
+  desc: my description
+  condition: evt.type=open and fd.name in (file_my_list)
+  output: my output
+  priority: INFO
