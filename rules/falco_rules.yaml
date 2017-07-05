@@ -604,7 +604,7 @@
     and not shell_spawning_containers
     and not proc.cmdline in (known_container_shell_spawn_cmdlines)
   output: >
-    Shell spawned in a container other than entrypoint (user=%user.name %container.info
+    Shell spawned in a container other than entrypoint (user=%user.name %container.info image=%container.image
     shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline)
   priority: NOTICE
   tags: [container, shell]
