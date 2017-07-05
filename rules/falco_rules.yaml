@@ -583,6 +583,8 @@
     '"sh -c LC_ALL=C LANG=C /sbin/ldconfig -p 2>/dev/null"',
     '"sh -c /sbin/ldconfig -p 2>/dev/null"',
     '"sh -c stty -a 2>/dev/null"',
+    '"sh -c node index.js)"',
+    '"sh -c node -e \"require(''nan'')\")"'
     ]
 
 - rule: Run shell in container
