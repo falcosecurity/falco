@@ -134,7 +134,7 @@
 # Utility/etc programs known to run on mesos slaves. Truncation
 # intentional.
 - list: mesos_slave_binaries
-  items: [mesos-health-ch, mesos-docker-ex, mesos-agent, mesos-logrotate, mesos-fetcher]
+  items: [mesos-health-ch, mesos-docker-ex, mesos-agent, mesos-logrotate, mesos-fetcher, mesos-executor]
 
 - list: http_server_binaries
   items: [nginx, httpd, httpd-foregroun, lighttpd]
