@@ -74,6 +74,9 @@
 - list: shell_binaries
   items: [bash, csh, ksh, sh, tcsh, zsh, dash]
 
+- list: shell_mgmt_binaries
+  items: [add-shell, remove-shell]
+
 - macro: shell_procs
   condition: proc.name in (shell_binaries)
 
@@ -332,7 +335,7 @@
     etc_dir and evt.dir = < and open_write
     and not proc.name in (passwd_binaries, shadowutils_binaries, sysdigcloud_binaries,
                           package_mgmt_binaries, ssl_mgmt_binaries, dhcp_binaries,
-                          dev_creation_binaries,
+                          dev_creation_binaries, shell_mgmt_binaries,
                           ldconfig.real, ldconfig, confd, gpg, insserv,
                           apparmor_parser, update-mime, tzdata.config, tzdata.postinst,
                           systemd-machine, debconf-show, rollerd, bind9.postinst, sv,
