@@ -338,8 +338,8 @@
                           dev_creation_binaries, shell_mgmt_binaries,
                           ldconfig.real, ldconfig, confd, gpg, insserv,
                           apparmor_parser, update-mime, tzdata.config, tzdata.postinst,
-                          systemd-machine, debconf-show, rollerd, bind9.postinst, sv,
                           gen_resolvconf.)
+                          systemd, systemd-machine, debconf-show, rollerd, bind9.postinst, sv,
     and not proc.pname in (sysdigcloud_binaries)
     and not fd.directory in (/etc/cassandra, /etc/ssl/certs/java)
     and not ansible_running_python
