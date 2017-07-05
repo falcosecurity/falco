@@ -587,7 +587,8 @@
     '"sh -c /sbin/ldconfig -p 2>/dev/null"',
     '"sh -c stty -a 2>/dev/null"',
     '"sh -c node index.js)"',
-    '"sh -c node -e \"require(''nan'')\")"'
+    '"sh -c node -e \"require(''nan'')\")"',
+    '"sh -c node $NODE_DEBUG_OPTION index.js )"'
     ]
 
 - rule: Run shell in container
