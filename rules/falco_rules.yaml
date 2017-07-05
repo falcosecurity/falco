@@ -193,6 +193,9 @@
 - list: hids_binaries
   items: [aide]
 
+- list: vpn_binaries
+  items: [openvpn]
+
 - list: nids_binaries
   items: [bro, broctl]
 
@@ -387,7 +390,7 @@
   condition: >
     sensitive_files and open_read
     and not proc.name in (user_mgmt_binaries, userexec_binaries, package_mgmt_binaries,
-     cron_binaries, read_sensitive_file_binaries, shell_binaries, hids_binaries)
+     cron_binaries, read_sensitive_file_binaries, shell_binaries, hids_binaries, vpn_binaries)
     and not cmp_cp_by_passwd
     and not ansible_running_python
     and not proc.cmdline contains /usr/bin/mandb
