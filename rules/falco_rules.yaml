@@ -591,6 +591,14 @@
     '"sh -c node $NODE_DEBUG_OPTION index.js )"'
     ]
 
+# This list allows for easy additions to the set of commands allowed
+# to run shells in containers without having to without having to copy
+# and override the entire run shell in container macro. Once
+# https://github.com/draios/falco/issues/255 is fixed this will be a
+# bit easier, as someone could append of any of the existing lists.
+- list: user_known_container_shell_spawn_binaries
+  items: []
+
 - rule: Run shell in container
   desc: a shell was spawned by a non-shell program in a container. Container entrypoints are excluded.
   condition: >
@@ -599,6 +607,7 @@
     and proc.pname exists
     and not proc.pname in (shell_binaries, make_binaries, docker_binaries, k8s_binaries, package_mgmt_binaries,
                            lxd_binaries, mesos_slave_binaries, aide_wrapper_binaries, nids_binaries,
+                           user_known_container_shell_spawn_binaries,
                            monitoring_binaries, gitlab_binaries, initdb, pg_ctl, awk, falco, cron,
                            erl_child_setup, ceph, PM2, pycompile, py3compile, hhvm, npm)
     and not trusted_containers
