@@ -341,7 +341,8 @@
                           dev_creation_binaries, shell_mgmt_binaries,
                           ldconfig.real, ldconfig, confd, gpg, insserv,
                           apparmor_parser, update-mime, tzdata.config, tzdata.postinst,
-                          systemd, systemd-machine, debconf-show, rollerd, bind9.postinst, sv,
+                          systemd, systemd-machine, systemd-sysuser,
+                          debconf-show, rollerd, bind9.postinst, sv,
                           gen_resolvconf., update-ca-certi, certbot)
     and not proc.pname in (sysdigcloud_binaries)
     and not fd.directory in (/etc/cassandra, /etc/ssl/certs/java, /etc/logstash)
