@@ -483,7 +483,7 @@
     pyclean, py3clean, pip, pip2, ansible-playboo, man-db,
     init, pluto, mkinitramfs, unattended-upgr, watch, sysdig,
     landscape-sysin, nessusd, PM2, syslog-summary, erl_child_setup,
-    npm, cloud-init, toybox, ceph, hhvm
+    npm, cloud-init, toybox, ceph, hhvm, certbot
     ]
 
 - rule: Run shell untrusted
