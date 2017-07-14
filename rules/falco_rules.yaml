@@ -345,7 +345,7 @@
                           debconf-show, rollerd, bind9.postinst, sv,
                           gen_resolvconf., update-ca-certi, certbot)
     and not proc.pname in (sysdigcloud_binaries)
-    and not fd.directory in (/etc/cassandra, /etc/ssl/certs/java, /etc/logstash)
+    and not fd.directory in (/etc/cassandra, /etc/ssl/certs/java, /etc/logstash, /etc/nginx/conf.d)
     and not ansible_running_python
     and not python_running_denyhosts
 
