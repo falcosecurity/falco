@@ -589,7 +589,8 @@
     '"sh -c stty -a 2>/dev/null"',
     '"sh -c node index.js)"',
     '"sh -c node -e \"require(''nan'')\")"',
-    '"sh -c node $NODE_DEBUG_OPTION index.js )"'
+    '"sh -c node $NODE_DEBUG_OPTION index.js )"',
+    '"sh -c crontab -l 2"'
     ]
 
 # This list allows for easy additions to the set of commands allowed
