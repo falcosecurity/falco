@@ -301,8 +301,8 @@
 
 - macro: parent_python_running_sdchecks
   condition: >
-    (proc.name in (python, python2.7) and
-    (proc.cmdline contains /opt/draios/bin/sdchecks))
+    (proc.pname in (python, python2.7) and
+    (proc.pcmdline contains /opt/draios/bin/sdchecks))
 
 - macro: parent_bro_running_python
   condition: (proc.pname=python and proc.cmdline contains /usr/share/broctl)
