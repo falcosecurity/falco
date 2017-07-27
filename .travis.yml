@@ -21,7 +21,7 @@ install:
     - sudo python setup.py install
     - cd ../falco
 before_script:
-    - export KERNELDIR=/lib/modules/$(ls /lib/modules | sort | head -1)/build
+    - export KERNELDIR=/lib/modules/$(uname -r)/build
 script:
     - set -e
     - export CC="gcc-4.8"
