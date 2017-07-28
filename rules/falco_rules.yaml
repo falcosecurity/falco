@@ -312,6 +312,24 @@
     (proc.pname=java and proc.pcmdline contains jenkins.war
     or proc.pcmdline contains /tmp/slave.jar)
 
+- macro: parent_java_running_echo
+  condition: (proc.pname=java and proc.cmdline startswith "sh -c echo")
+
+- macro: parent_php_running_git
+  condition: (proc.pname in (php,php5-fpm) and proc.cmdline startswith "sh -c git")
+
+- macro: parent_ruby_running_gcc
+  condition: (proc.pname in (ruby,ruby2.3) and proc.cmdline startswith "sh -c gcc")
+
+- macro: parent_nginx_running_serf
+  condition: (proc.pname=nginx and proc.cmdline startswith "sh -c serf")
+
+- macro: parent_Xvfb_running_xkbcomp
+  condition: (proc.pname=Xvfb and proc.cmdline startswith 'sh -c "/usr/bin/xkbcomp"')
+
+- macro: mysql_image_running_healthcheck
+  condition: container.image=mysql and proc.cmdline="sh -c /healthcheck.sh"
+
 # As a part of kernel upgrades, dpkg will spawn a perl script with the
 # name linux-image-N.N. This macro matches that.
 - macro: parent_linux_image_upgrade_script
@@ -382,7 +400,7 @@
   tags: [filesystem]
 
 - list: read_sensitive_file_binaries
-  items: [iptables, ps, lsb_release, check-new-relea, dumpe2fs, accounts-daemon, sshd, vsftpd, systemd]
+  items: [iptables, ps, lsb_release, check-new-relea, dumpe2fs, accounts-daemon, sshd, vsftpd, systemd, mysql_install_d]
 
 - rule: Read sensitive file untrusted
   desc: >
@@ -483,7 +501,8 @@
     pyclean, py3clean, pip, pip2, ansible-playboo, man-db,
     init, pluto, mkinitramfs, unattended-upgr, watch, sysdig,
     landscape-sysin, nessusd, PM2, syslog-summary, erl_child_setup,
-    npm, cloud-init, toybox, ceph, hhvm, certbot
+    npm, cloud-init, toybox, ceph, hhvm, certbot, mysql_install_d,
+    qualys-cloud-ag, serf
     ]
 
 - rule: Run shell untrusted
@@ -501,6 +520,11 @@
     and not parent_python_running_sdchecks
     and not parent_linux_image_upgrade_script
     and not parent_java_running_jenkins
+    and not parent_java_running_echo
+    and not parent_php_running_git
+    and not parent_ruby_running_gcc
+    and not parent_Xvfb_running_xkbcomp
+    and not parent_nginx_running_serf
   output: >
     Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname
     cmdline=%proc.cmdline pcmdline=%proc.pcmdline)
@@ -587,10 +611,13 @@
     '"sh -c LC_ALL=C LANG=C /sbin/ldconfig -p 2>/dev/null"',
     '"sh -c /sbin/ldconfig -p 2>/dev/null"',
     '"sh -c stty -a 2>/dev/null"',
-    '"sh -c node index.js)"',
+    '"sh -c node index.js"',
+    '"sh -c node index"',
+    '"sh -c node ./src/start.js"',
     '"sh -c node -e \"require(''nan'')\")"',
-    '"sh -c node $NODE_DEBUG_OPTION index.js )"',
-    '"sh -c crontab -l 2"'
+    '"sh -c node $NODE_DEBUG_OPTION index.js "',
+    '"sh -c crontab -l 2"',
+    '"sh -c lsb_release -a"'
     ]
 
 # This list allows for easy additions to the set of commands allowed
@@ -611,9 +638,15 @@
                            lxd_binaries, mesos_slave_binaries, aide_wrapper_binaries, nids_binaries,
                            user_known_container_shell_spawn_binaries,
                            monitoring_binaries, gitlab_binaries, initdb, pg_ctl, awk, falco, cron,
-                           erl_child_setup, ceph, PM2, pycompile, py3compile, hhvm, npm)
+                           erl_child_setup, ceph, PM2, pycompile, py3compile, hhvm, npm, mysql_install_d, serf)
     and not trusted_containers
     and not shell_spawning_containers
+    and not parent_java_running_echo
+    and not parent_php_running_git
+    and not parent_ruby_running_gcc
+    and not parent_Xvfb_running_xkbcomp
+    and not mysql_image_running_healthcheck
+    and not parent_nginx_running_serf
     and not proc.cmdline in (known_container_shell_spawn_cmdlines)
   output: >
     Shell spawned in a container other than entrypoint (user=%user.name %container.info image=%container.image
@@ -644,7 +677,8 @@
 - macro: somebody_becoming_themself
   condition: ((user.name=nobody and evt.arg.uid=nobody) or
               (user.name=www-data and evt.arg.uid=www-data) or
-              (user.name=_apt and evt.arg.uid=_apt))
+              (user.name=_apt and evt.arg.uid=_apt) or
+              (user.name=postfix and evt.arg.uid=postfix))
 
 # sshd, mail programs attempt to setuid to root even when running as non-root. Excluding here to avoid meaningless FPs
 - rule: Non sudo setuid
