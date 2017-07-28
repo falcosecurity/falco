@@ -200,13 +200,19 @@
   items: [bro, broctl]
 
 - list: monitoring_binaries
-  items: [icinga2, nrpe, npcd, check_sar_perf.]
+  items: [icinga2, nrpe, npcd, check_sar_perf., qualys-cloud-ag]
 
 - macro: system_procs
   condition: proc.name in (coreutils_binaries, user_mgmt_binaries)
 
 - list: mail_binaries
   items: [sendmail, sendmail-msp, postfix, procmail, exim4, pickup, showq]
+
+- list: sendmail_config_binaries
+  items: [
+    update_conf, parse_mc, makemap_hash, newaliases, update_mk, update_tlsm4,
+    update_db, update_mc
+    ]
 
 - list: make_binaries
   items: [make, gmake, cmake]
@@ -315,8 +321,11 @@
 - macro: parent_java_running_echo
   condition: (proc.pname=java and proc.cmdline startswith "sh -c echo")
 
-- macro: parent_php_running_git
-  condition: (proc.pname in (php,php5-fpm) and proc.cmdline startswith "sh -c git")
+- macro: parent_php_running_builds
+  condition: >
+    (proc.pname in (php,php5-fpm) and (
+       proc.cmdline startswith "sh -c git" or
+       proc.cmdline startswith "sh -c date"))
 
 - macro: parent_ruby_running_gcc
   condition: (proc.pname in (ruby,ruby2.3) and proc.cmdline startswith "sh -c gcc")
@@ -400,7 +409,10 @@
   tags: [filesystem]
 
 - list: read_sensitive_file_binaries
-  items: [iptables, ps, lsb_release, check-new-relea, dumpe2fs, accounts-daemon, sshd, vsftpd, systemd, mysql_install_d]
+  items: [
+    iptables, ps, lsb_release, check-new-relea, dumpe2fs, accounts-daemon, sshd,
+    vsftpd, systemd, mysql_install_d
+    ]
 
 - rule: Read sensitive file untrusted
   desc: >
@@ -409,7 +421,8 @@
   condition: >
     sensitive_files and open_read
     and not proc.name in (user_mgmt_binaries, userexec_binaries, package_mgmt_binaries,
-     cron_binaries, read_sensitive_file_binaries, shell_binaries, hids_binaries, vpn_binaries)
+     cron_binaries, read_sensitive_file_binaries, shell_binaries, hids_binaries,
+     vpn_binaries, sendmail_config_binaries)
     and not cmp_cp_by_passwd
     and not ansible_running_python
     and not proc.cmdline contains /usr/bin/mandb
@@ -502,7 +515,7 @@
     init, pluto, mkinitramfs, unattended-upgr, watch, sysdig,
     landscape-sysin, nessusd, PM2, syslog-summary, erl_child_setup,
     npm, cloud-init, toybox, ceph, hhvm, certbot, mysql_install_d,
-    qualys-cloud-ag, serf
+    serf
     ]
 
 - rule: Run shell untrusted
@@ -521,7 +534,7 @@
     and not parent_linux_image_upgrade_script
     and not parent_java_running_jenkins
     and not parent_java_running_echo
-    and not parent_php_running_git
+    and not parent_php_running_builds
     and not parent_ruby_running_gcc
     and not parent_Xvfb_running_xkbcomp
     and not parent_nginx_running_serf
@@ -642,7 +655,7 @@
     and not trusted_containers
     and not shell_spawning_containers
     and not parent_java_running_echo
-    and not parent_php_running_git
+    and not parent_php_running_builds
     and not parent_ruby_running_gcc
     and not parent_Xvfb_running_xkbcomp
     and not mysql_image_running_healthcheck
