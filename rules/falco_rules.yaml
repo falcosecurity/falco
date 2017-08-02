@@ -211,7 +211,7 @@
 - list: sendmail_config_binaries
   items: [
     update_conf, parse_mc, makemap_hash, newaliases, update_mk, update_tlsm4,
-    update_db, update_mc
+    update_db, update_mc, ssmtp.postinst
     ]
 
 - list: make_binaries
@@ -370,7 +370,7 @@
                           apparmor_parser, update-mime, tzdata.config, tzdata.postinst,
                           systemd, systemd-machine, systemd-sysuser,
                           debconf-show, rollerd, bind9.postinst, sv,
-                          gen_resolvconf., update-ca-certi, certbot)
+                          gen_resolvconf., update-ca-certi, certbot, runsv)
     and not proc.pname in (sysdigcloud_binaries)
     and not fd.directory in (/etc/cassandra, /etc/ssl/certs/java, /etc/logstash, /etc/nginx/conf.d)
     and not ansible_running_python
@@ -515,7 +515,7 @@
     init, pluto, mkinitramfs, unattended-upgr, watch, sysdig,
     landscape-sysin, nessusd, PM2, syslog-summary, erl_child_setup,
     npm, cloud-init, toybox, ceph, hhvm, certbot, mysql_install_d,
-    serf
+    serf, a2enmod
     ]
 
 - rule: Run shell untrusted
@@ -627,6 +627,7 @@
     '"sh -c node index.js"',
     '"sh -c node index"',
     '"sh -c node ./src/start.js"',
+    '"sh -c node app.js"',
     '"sh -c node -e \"require(''nan'')\")"',
     '"sh -c node $NODE_DEBUG_OPTION index.js "',
     '"sh -c crontab -l 2"',
