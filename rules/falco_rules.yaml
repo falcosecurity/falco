@@ -411,7 +411,7 @@
   condition: sensitive_files and open_read and server_procs and not proc_is_new and proc.name!="sshd"
   output: >
     Sensitive file opened for reading by trusted program after startup (user=%user.name
-    command=%proc.cmdline parent=%proc.pname file=%fd.name)
+    command=%proc.cmdline parent=%proc.pname file=%fd.name parent=%proc.pname gparent=%proc.aname[2]
   priority: WARNING
   tags: [filesystem]
 
@@ -727,7 +727,7 @@
     not proc.pname in (cron_binaries, systemd, run-parts)
   output: >
     User management binary command run outside of container
-    (user=%user.name command=%proc.cmdline parent=%proc.pname)
+    (user=%user.name command=%proc.cmdline parent=%proc.pname gparent=%proc.aname[2])
   priority: NOTICE
   tags: [host, users]
 
