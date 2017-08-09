@@ -1,0 +1,3 @@
+- list: my_list
+  items: [not-cat]
+  append: true
