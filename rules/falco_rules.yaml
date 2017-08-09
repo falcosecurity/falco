@@ -578,6 +578,17 @@
 - macro: sensitive_mount
   condition: (container.mount.dest[/proc*] != "N/A")
 
+# The steps libcontainer performs to set up the root program for a container are:
+# - clone + exec self to a program runc:[0:PARENT]
+# - clone a program runc:[1:CHILD] which sets up all the namespaces
+# - clone a second program runc:[2:INIT] + exec to the root program.
+#   The parent of runc:[2:INIT] is runc:0:PARENT]
+# As soon as 1:CHILD is created, 0:PARENT exits, so there's a race
+#   where at the time 2:INIT execs the root program, 0:PARENT might have
+#   already exited, or might still be around. So we handle both.
+- macro: container_entrypoint
+  condition: (not proc.pname exists or proc.pname=runc:[0:PARENT])
+
 - rule: Launch Sensitive Mount Container
   desc: >
     Detect the initial process started by a container that has a mount from a sensitive host directory
@@ -653,7 +664,7 @@
   condition: >
     spawned_process and container
     and shell_procs
-    and proc.pname exists
+    and not container_entrypoint
     and not proc.pname in (shell_binaries, make_binaries, docker_binaries, k8s_binaries, package_mgmt_binaries,
                            lxd_binaries, mesos_slave_binaries, aide_wrapper_binaries, nids_binaries,
                            user_known_container_shell_spawn_binaries,
