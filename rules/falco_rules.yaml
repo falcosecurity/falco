@@ -181,6 +181,9 @@
 - list: userexec_binaries
   items: [sudo, su]
 
+- list: known_setuid_binaries
+  items: [sshd, dbus-daemon-lau, ping, ping6, critical-stack-]
+
 - list: user_mgmt_binaries
   items: [login_binaries, passwd_binaries, shadowutils_binaries]
 
@@ -705,8 +708,7 @@
   condition: >
     evt.type=setuid and evt.dir=> and
     not user.name=root and not somebody_becoming_themself
-    and not proc.name in (userexec_binaries, mail_binaries, docker_binaries,
-    sshd, dbus-daemon-lau, ping, ping6, critical-stack-, Xvfb)
+    and not proc.name in (known_setuid_binaries, userexec_binaries, mail_binaries, docker_binaries)
     and not java_running_sdjagent
   output: >
     Unexpected setuid call by non-sudo, non-root program (user=%user.name parent=%proc.pname
