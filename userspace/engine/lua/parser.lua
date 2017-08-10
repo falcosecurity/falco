@@ -127,6 +127,7 @@ function trim(s)
    if (type(s) ~= "string") then return s end
   return (s:gsub("^%s*(.-)%s*$", "%1"))
 end
+parser.trim = trim
 
 local function terminal (tag)
    -- Rather than trim the whitespace in this way, it would be nicer to exclude it from the capture...

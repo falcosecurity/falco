@@ -243,6 +243,10 @@ function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replac
 	    state.ordered_rule_names[#state.ordered_rule_names+1] = v['rule']
 	 end
 
+	 -- The output field might be a folded-style, which adds a
+	 -- newline to the end. Remove any trailing newlines.
+	 v['output'] = compiler.trim(v['output'])
+
 	 state.rules_by_name[v['rule']] = v
 
       else
