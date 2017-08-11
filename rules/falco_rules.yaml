@@ -338,6 +338,9 @@
        proc.cmdline startswith "sh -c gcc" or
        proc.cmdline startswith "sh -c if type gcc"))
 
+- macro: parent_node_running_npm
+  condition: proc.pcmdline startswith "node /usr/local/bin/npm"
+
 - macro: parent_nginx_running_serf
   condition: (proc.pname=nginx and proc.cmdline startswith "sh -c serf")
 
@@ -548,6 +551,7 @@
     and not parent_scripting_running_builds
     and not parent_Xvfb_running_xkbcomp
     and not parent_nginx_running_serf
+    and not parent_node_running_npm
   output: >
     Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname
     cmdline=%proc.cmdline pcmdline=%proc.pcmdline)
@@ -684,6 +688,7 @@
     and not mysql_image_running_healthcheck
     and not parent_nginx_running_serf
     and not proc.cmdline in (known_container_shell_spawn_cmdlines)
+    and not parent_node_running_npm
   output: >
     Shell spawned in a container other than entrypoint (user=%user.name %container.info image=%container.image
     shell=%proc.name pcmdline=%proc.pcmdline cmdline=%proc.cmdline)
