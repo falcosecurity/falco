@@ -382,7 +382,8 @@
                           apparmor_parser, update-mime, tzdata.config, tzdata.postinst,
                           systemd, systemd-machine, systemd-sysuser,
                           debconf-show, rollerd, bind9.postinst, sv,
-                          gen_resolvconf., update-ca-certi, certbot, runsv)
+                          gen_resolvconf., update-ca-certi, certbot, runsv,
+                          qualys-cloud-ag)
     and not proc.pname in (sysdigcloud_binaries, sendmail_config_binaries)
     and not fd.directory in (/etc/cassandra, /etc/ssl/certs/java, /etc/logstash,
                              /etc/nginx/conf.d, /etc/container_environment)
