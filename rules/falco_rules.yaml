@@ -279,6 +279,10 @@
 - list: cron_binaries
   items: [anacron, cron, crond]
 
+# https://github.com/liske/needrestart
+- list: needrestart_binaries
+  items: [needrestart, 10-dpkg, 20-rpm, 30-pacman]
+
 # System users that should never log into a system. Consider adding your own
 # service users (e.g. 'apache' or 'mysqld') here.
 - macro: system_users
@@ -533,7 +537,7 @@
     and proc.pname exists
     and not proc.pname in (cron_binaries, shell_binaries, make_binaries, known_shell_spawn_binaries, docker_binaries,
                            k8s_binaries, package_mgmt_binaries, aide_wrapper_binaries, nids_binaries,
-                           monitoring_binaries, gitlab_binaries, mesos_slave_binaries, keepalived_binaries)
+                           monitoring_binaries, gitlab_binaries, mesos_slave_binaries, keepalived_binaries, needrestart_binaries)
     and not parent_ansible_running_python
     and not parent_bro_running_python
     and not parent_python_running_denyhosts
@@ -668,6 +672,7 @@
     and not proc.pname in (shell_binaries, make_binaries, docker_binaries, k8s_binaries, package_mgmt_binaries,
                            lxd_binaries, mesos_slave_binaries, aide_wrapper_binaries, nids_binaries,
                            user_known_container_shell_spawn_binaries,
+                           needrestart_binaries,
                            monitoring_binaries, gitlab_binaries, initdb, pg_ctl, awk, falco, cron,
                            erl_child_setup, ceph, PM2, pycompile, py3compile, hhvm, npm, mysql_install_d, serf,
                            runsv, supervisord, varnishd, crond)
