@@ -134,7 +134,10 @@
 # Utility/etc programs known to run on mesos slaves. Truncation
 # intentional.
 - list: mesos_slave_binaries
-  items: [mesos-health-ch, mesos-docker-ex, mesos-agent, mesos-logrotate, mesos-fetcher, mesos-executor, 3dt]
+  items: [mesos-health-ch, mesos-docker-ex, mesos-agent, mesos-slave, mesos-logrotate, mesos-fetcher, mesos-executor, 3dt]
+
+- list: phusion_passenger_binaries
+  items: [PassengerAgent]
 
 - list: http_server_binaries
   items: [nginx, httpd, httpd-foregroun, lighttpd]
@@ -541,7 +544,9 @@
     and proc.pname exists
     and not proc.pname in (cron_binaries, shell_binaries, make_binaries, known_shell_spawn_binaries, docker_binaries,
                            k8s_binaries, package_mgmt_binaries, aide_wrapper_binaries, nids_binaries,
-                           monitoring_binaries, gitlab_binaries, mesos_slave_binaries, keepalived_binaries, needrestart_binaries)
+                           monitoring_binaries, gitlab_binaries, mesos_slave_binaries,
+                           keepalived_binaries,
+                           needrestart_binaries, phusion_passenger_binaries)
     and not parent_ansible_running_python
     and not parent_bro_running_python
     and not parent_python_running_denyhosts
@@ -678,6 +683,7 @@
                            lxd_binaries, mesos_slave_binaries, aide_wrapper_binaries, nids_binaries,
                            user_known_container_shell_spawn_binaries,
                            needrestart_binaries,
+                           phusion_passenger_binaries,
                            monitoring_binaries, gitlab_binaries, initdb, pg_ctl, awk, falco, cron,
                            erl_child_setup, ceph, PM2, pycompile, py3compile, hhvm, npm, mysql_install_d, serf,
                            runsv, supervisord, varnishd, crond, logrotate)
