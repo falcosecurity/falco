@@ -758,9 +758,10 @@
     Some innocuous commandlines that don't actually change anything are excluded.
   condition: >
     spawned_process and proc.name in (user_mgmt_binaries) and
-    not proc.name in (su, sudo) and not container and
+    not proc.name in (su, sudo, lastlog) and not container and
     not proc.pname in (cron_binaries, systemd, run-parts) and
-    not proc.cmdline startswith "passwd -S"
+    not proc.cmdline startswith "passwd -S" and
+    not proc.cmdline startswith "useradd -D"
   output: >
     User management binary command run outside of container
     (user=%user.name command=%proc.cmdline parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3])
