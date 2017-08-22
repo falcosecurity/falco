@@ -755,10 +755,12 @@
     activity by any programs that can manage users, passwords, or permissions. sudo and su are excluded.
     Activity in containers is also excluded--some containers create custom users on top
     of a base linux distribution at startup.
+    Some innocuous commandlines that don't actually change anything are excluded.
   condition: >
     spawned_process and proc.name in (user_mgmt_binaries) and
     not proc.name in (su, sudo) and not container and
-    not proc.pname in (cron_binaries, systemd, run-parts)
+    not proc.pname in (cron_binaries, systemd, run-parts) and
+    not proc.cmdline startswith "passwd -S"
   output: >
     User management binary command run outside of container
     (user=%user.name command=%proc.cmdline parent=%proc.pname gparent=%proc.aname[2])
