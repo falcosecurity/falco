@@ -531,14 +531,14 @@
 - list: known_shell_spawn_binaries
   items: [
     sshd, sudo, su, tmux, screen, emacs, systemd, login, flock, fbash,
-    nginx, monit, supervisord, dragent, aws, initdb, docker-compose,
+    nginx, monit, supervisord, dragent, aws, awslogs, initdb, docker-compose,
     configure, awk, falco, fail2ban-server, fleetctl,
     logrotate, ansible, less, adduser, pycompile, py3compile,
     pyclean, py3clean, pip, pip2, ansible-playboo, man-db,
     init, pluto, mkinitramfs, unattended-upgr, watch, sysdig,
     landscape-sysin, nessusd, PM2, syslog-summary, erl_child_setup,
     npm, cloud-init, toybox, ceph, hhvm, certbot, mysql_install_d,
-    serf, a2enmod, runsv, supervisord, varnishd
+    serf, a2enmod, runsv, supervisord, varnishd, authconfig
     ]
 
 - rule: Run shell untrusted
