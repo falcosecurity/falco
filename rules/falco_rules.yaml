@@ -377,6 +377,9 @@
   priority: ERROR
   tags: [filesystem]
 
+- list: safe_etc_dirs
+  items: [/etc/cassandra, /etc/ssl/certs/java, /etc/logstash, /etc/nginx/conf.d, /etc/container_environment]
+
 - macro: write_etc_common
   condition: >
     etc_dir and evt.dir = < and open_write
@@ -391,8 +394,7 @@
                           gen_resolvconf., update-ca-certi, certbot, runsv,
                           qualys-cloud-ag)
     and not proc.pname in (sysdigcloud_binaries, sendmail_config_binaries)
-    and not fd.directory in (/etc/cassandra, /etc/ssl/certs/java, /etc/logstash,
-                             /etc/nginx/conf.d, /etc/container_environment)
+    and not fd.directory in (safe_etc_dirs)
     and not fd.name in (/etc/container_environment.sh, /etc/container_environment.json)
     and not ansible_running_python
     and not python_running_denyhosts
