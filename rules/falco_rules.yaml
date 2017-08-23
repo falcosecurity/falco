@@ -387,9 +387,6 @@
 - macro: fluentd_writing_fluentd_conf
   condition: (proc.name=start-fluentd and fd.name=/etc/fluent/fluent.conf)
 
-- macro: locales_postinst_writing_locale_gen
-  condition: (proc.name=locales.postins and fd.name=/etc/locale.gen)
-
 - macro: write_etc_common
   condition: >
     etc_dir and evt.dir = < and open_write
@@ -402,14 +399,13 @@
                           systemd, systemd-machine, systemd-sysuser,
                           debconf-show, rollerd, bind9.postinst, sv,
                           gen_resolvconf., update-ca-certi, certbot, runsv,
-                          qualys-cloud-ag)
+                          qualys-cloud-ag, locales.postins)
     and not proc.pname in (sysdigcloud_binaries, sendmail_config_binaries)
     and not fd.name pmatch (safe_etc_dirs)
     and not fd.name in (/etc/container_environment.sh, /etc/container_environment.json)
     and not ansible_running_python
     and not python_running_denyhosts
     and not fluentd_writing_fluentd_conf
-    and not locales_postinst_writing_locale_gen
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc, not in a pipe installer session
