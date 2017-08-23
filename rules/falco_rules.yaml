@@ -573,7 +573,7 @@
     and not parent_node_running_npm
   output: >
     Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname
-    cmdline=%proc.cmdline pcmdline=%proc.pcmdline)
+    cmdline=%proc.cmdline pcmdline=%proc.pcmdline gparent=%proc.aname[2] ggparent=%proc.aname[3])
   priority: DEBUG
   tags: [host, shell]
 
