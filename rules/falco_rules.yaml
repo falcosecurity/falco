@@ -205,6 +205,9 @@
 - list: vpn_binaries
   items: [openvpn]
 
+- list: nomachine_binaries
+  items: [nxexec, nxnode.bin]
+
 - list: nids_binaries
   items: [bro, broctl]
 
@@ -445,7 +448,7 @@
     sensitive_files and open_read
     and not proc.name in (user_mgmt_binaries, userexec_binaries, package_mgmt_binaries,
      cron_binaries, read_sensitive_file_binaries, shell_binaries, hids_binaries,
-     vpn_binaries, sendmail_config_binaries)
+     vpn_binaries, sendmail_config_binaries, nomachine_binaries)
     and not cmp_cp_by_passwd
     and not ansible_running_python
     and not proc.cmdline contains /usr/bin/mandb
@@ -551,7 +554,7 @@
                            k8s_binaries, package_mgmt_binaries, aide_wrapper_binaries, nids_binaries,
                            monitoring_binaries, gitlab_binaries, mesos_slave_binaries,
                            keepalived_binaries,
-                           needrestart_binaries, phusion_passenger_binaries, chef_binaries)
+                           needrestart_binaries, phusion_passenger_binaries, chef_binaries, nomachine_binaries)
     and not parent_ansible_running_python
     and not parent_bro_running_python
     and not parent_python_running_denyhosts
@@ -690,6 +693,7 @@
                            needrestart_binaries,
                            phusion_passenger_binaries,
                            chef_binaries,
+                           nomachine_binaries,
                            monitoring_binaries, gitlab_binaries, initdb, pg_ctl, awk, falco, cron,
                            erl_child_setup, ceph, PM2, pycompile, py3compile, hhvm, npm, mysql_install_d, serf,
                            runsv, supervisord, varnishd, crond, logrotate)
@@ -742,7 +746,7 @@
   condition: >
     evt.type=setuid and evt.dir=> and
     not user.name=root and not somebody_becoming_themself
-    and not proc.name in (known_setuid_binaries, userexec_binaries, mail_binaries, docker_binaries)
+    and not proc.name in (known_setuid_binaries, userexec_binaries, mail_binaries, docker_binaries, nomachine_binaries)
     and not java_running_sdjagent
   output: >
     Unexpected setuid call by non-sudo, non-root program (user=%user.name parent=%proc.pname
