@@ -222,7 +222,24 @@ function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replac
 	    end
 	 end
 
-	 state.lists_by_name[v['list']] = v
+	 -- Possibly append to an existing list
+	 append = false
+
+	 if v['append'] then
+	    append = v['append']
+	 end
+
+	 if append then
+	    if state.lists_by_name[v['list']] == nil then
+	       error ("List " ..v['list'].. " has 'append' key but no list by that name already exists")
+	    end
+
+	    for i, elem in ipairs(v['items']) do
+	       table.insert(state.lists_by_name[v['list']]['items'], elem)
+	    end
+	 else
+	    state.lists_by_name[v['list']] = v
+	 end
 
       elseif (v['rule']) then
 
@@ -242,6 +259,10 @@ function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replac
 	 if state.rules_by_name[v['rule']] == nil then
 	    state.ordered_rule_names[#state.ordered_rule_names+1] = v['rule']
 	 end
+
+	 -- The output field might be a folded-style, which adds a
+	 -- newline to the end. Remove any trailing newlines.
+	 v['output'] = compiler.trim(v['output'])
 
 	 state.rules_by_name[v['rule']] = v
 

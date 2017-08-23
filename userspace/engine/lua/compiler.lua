@@ -20,6 +20,7 @@ local compiler = {}
 
 compiler.verbose = false
 compiler.all_events = false
+compiler.trim = parser.trim
 
 function compiler.set_verbose(verbose)
    compiler.verbose = verbose

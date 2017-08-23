@@ -579,3 +579,23 @@ trace_files: !mux
       - open_11: 1
       - open_12: 0
       - open_13: 0
+
+  list_append_failure:
+    exit_status: 1
+    stderr_contains: "List my_list has 'append' key but no list by that name already exists. Exiting"
+    rules_file:
+      - rules/list_append_failure.yaml
+    trace_file: trace_files/cat_write.scap
+
+  list_append:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/list_append.yaml
+    trace_file: trace_files/cat_write.scap
+
+  list_append_false:
+    detect: False
+    rules_file:
+      - rules/list_append_false.yaml
+    trace_file: trace_files/cat_write.scap
