@@ -546,7 +546,7 @@
     init, pluto, mkinitramfs, unattended-upgr, watch, sysdig,
     landscape-sysin, nessusd, PM2, syslog-summary, erl_child_setup,
     npm, cloud-init, toybox, ceph, hhvm, certbot, mysql_install_d,
-    serf, a2enmod, runsv, supervisord, varnishd, authconfig
+    serf, a2enmod, runsv, supervisord, varnishd, authconfig, tini
     ]
 
 - rule: Run shell untrusted
