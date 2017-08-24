@@ -397,8 +397,8 @@
 - list: safe_etc_dirs
   items: [/etc/cassandra, /etc/ssl/certs/java, /etc/logstash, /etc/nginx/conf.d, /etc/container_environment]
 
-- macro: fluentd_writing_fluentd_conf
-  condition: (proc.name=start-fluentd and fd.name=/etc/fluent/fluent.conf)
+- macro: fluentd_writing_conf_files
+  condition: (proc.name=start-fluentd and fd.name in (/etc/fluent/fluent.conf, /etc/td-agent/td-agent.conf))
 
 - macro: write_etc_common
   condition: >
@@ -418,7 +418,7 @@
     and not fd.name in (/etc/container_environment.sh, /etc/container_environment.json)
     and not ansible_running_python
     and not python_running_denyhosts
-    and not fluentd_writing_fluentd_conf
+    and not fluentd_writing_conf_files
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc, not in a pipe installer session
