@@ -360,6 +360,12 @@
 - macro: mysql_image_running_healthcheck
   condition: container.image=mysql and proc.cmdline="sh -c /healthcheck.sh"
 
+# Qualys seems to run a variety of shell subprocesses, at various
+# levels. This checks at a few levels without the cost of a full
+# proc.aname, which traverses the full parent heirarchy.
+- macro: run_by_qualys
+  condition: (proc.pname=qualys-cloud-ag or proc.aname[2]=qualys-cloud-ag or proc.aname[3]=qualys-cloud-ag)
+
 # As a part of kernel upgrades, dpkg will spawn a perl script with the
 # name linux-image-N.N. This macro matches that.
 - macro: parent_linux_image_upgrade_script
@@ -435,7 +441,7 @@
   condition: sensitive_files and open_read and server_procs and not proc_is_new and proc.name!="sshd"
   output: >
     Sensitive file opened for reading by trusted program after startup (user=%user.name
-    command=%proc.cmdline parent=%proc.pname file=%fd.name parent=%proc.pname gparent=%proc.aname[2]
+    command=%proc.cmdline parent=%proc.pname file=%fd.name parent=%proc.pname gparent=%proc.aname[2])
   priority: WARNING
   tags: [filesystem]
 
@@ -457,9 +463,10 @@
     and not cmp_cp_by_passwd
     and not ansible_running_python
     and not proc.cmdline contains /usr/bin/mandb
+    and not run_by_qualys
   output: >
     Sensitive file opened for reading by non-trusted program (user=%user.name name=%proc.name
-    command=%proc.cmdline file=%fd.name parent=%proc.pname gparent=%proc.aname[2])
+    command=%proc.cmdline file=%fd.name parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3])
   priority: WARNING
   tags: [filesystem]
 
