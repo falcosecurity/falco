@@ -340,16 +340,19 @@
 - macro: parent_java_running_sbt
   condition: (proc.pname=java and proc.pcmdline contains sbt-launch.jar)
 
+# The crxlsx is a bit different than the other build-like things, but
+# close enough to add here rather than create a separate macro.
 - macro: parent_scripting_running_builds
   condition: >
-    (proc.pname in (php,php5-fpm,python,ruby,ruby2.3,node) and (
+    (proc.pname in (php,php5-fpm,php-fpm7.1,python,ruby,ruby2.3,node) and (
        proc.cmdline startswith "sh -c git" or
        proc.cmdline startswith "sh -c date" or
        proc.cmdline startswith "sh -c /usr/bin/g++" or
        proc.cmdline startswith "sh -c /usr/bin/gcc" or
        proc.cmdline startswith "sh -c gcc" or
        proc.cmdline startswith "sh -c if type gcc" or
-       proc.cmdline startswith "sh -c cd '/var/www/edi/';LC_ALL=en_US.UTF-8 git"))
+       proc.cmdline startswith "sh -c cd '/var/www/edi/';LC_ALL=en_US.UTF-8 git" or
+       proc.cmdline startswith "sh -c /usr/src/app/crxlsx/bin/linux/crxlsx"))
 
 - macro: parent_node_running_npm
   condition: proc.pcmdline startswith "node /usr/local/bin/npm"
