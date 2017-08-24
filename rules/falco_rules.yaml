@@ -687,6 +687,17 @@
 - list: user_known_container_shell_spawn_binaries
   items: []
 
+# This macro allows for easy additions to the set of commands allowed
+# to run shells in containers without having to override the entire
+# rule. Its default value is an expression that always is false, which
+# becomes true when the "not ..." in the rule is applied.
+- macro: user_shell_container_exclusions
+  condition: (evt.num=0)
+
+# Temporarily adding as an example
+- macro: node_running_edi_dynamodb
+  condition: proc.pname=node and proc.pcmdline contains /var/www/edi/process.js
+
 - rule: Run shell in container
   desc: a shell was spawned by a non-shell program in a container. Container entrypoints are excluded.
   condition: >
@@ -712,6 +723,8 @@
     and not parent_nginx_running_serf
     and not proc.cmdline in (known_container_shell_spawn_cmdlines)
     and not parent_node_running_npm
+    and not user_shell_container_exclusions
+    and not node_running_edi_dynamodb
   output: >
     Shell spawned in a container other than entrypoint (user=%user.name %container.info image=%container.image
     shell=%proc.name pcmdline=%proc.pcmdline cmdline=%proc.cmdline)
