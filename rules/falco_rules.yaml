@@ -194,7 +194,7 @@
   items: [login_binaries, passwd_binaries, shadowutils_binaries]
 
 - list: dev_creation_binaries
-  items: [blkid, rename_device]
+  items: [blkid, rename_device, update_engine]
 
 - list: aide_wrapper_binaries
   items: [aide.wrapper, update-aide.con]
