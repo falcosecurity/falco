@@ -369,6 +369,10 @@
 - macro: run_by_qualys
   condition: (proc.pname=qualys-cloud-ag or proc.aname[2]=qualys-cloud-ag or proc.aname[3]=qualys-cloud-ag)
 
+# Chef is similar.
+- macro: run_by_chef
+  condition: (proc.aname[2]=chef_command_wr or proc.aname[3]=chef_command_wr)
+
 # As a part of kernel upgrades, dpkg will spawn a perl script with the
 # name linux-image-N.N. This macro matches that.
 - macro: parent_linux_image_upgrade_script
@@ -583,6 +587,7 @@
     and not parent_nginx_running_serf
     and not parent_node_running_npm
     and not parent_java_running_sbt
+    and not run_by_chef
   output: >
     Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname
     cmdline=%proc.cmdline pcmdline=%proc.pcmdline gparent=%proc.aname[2] ggparent=%proc.aname[3])
@@ -738,7 +743,7 @@
     and not node_running_edi_dynamodb
   output: >
     Shell spawned in a container other than entrypoint (user=%user.name %container.info image=%container.image
-    shell=%proc.name pcmdline=%proc.pcmdline cmdline=%proc.cmdline)
+    shell=%proc.name pcmdline=%proc.pcmdline cmdline=%proc.cmdline parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3])
   priority: NOTICE
   tags: [container, shell]
 
