@@ -783,7 +783,8 @@
               (user.name=www-data and evt.arg.uid=www-data) or
               (user.name=_apt and evt.arg.uid=_apt) or
               (user.name=postfix and evt.arg.uid=postfix) or
-              (user.name=pki-agent and evt.arg.uid=pki-agent))
+              (user.name=pki-agent and evt.arg.uid=pki-agent) or
+              (user.name=pki-acme and evt.arg.uid=pki-acme))
 
 # sshd, mail programs attempt to setuid to root even when running as non-root. Excluding here to avoid meaningless FPs
 - rule: Non sudo setuid
