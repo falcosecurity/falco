@@ -206,7 +206,7 @@
   items: [openvpn]
 
 - list: nomachine_binaries
-  items: [nxexec, nxnode.bin]
+  items: [nxexec, nxnode.bin, nxserver.bin, nxclient.bin]
 
 - list: nids_binaries
   items: [bro, broctl]
@@ -399,7 +399,7 @@
                           systemd, systemd-machine, systemd-sysuser,
                           debconf-show, rollerd, bind9.postinst, sv,
                           gen_resolvconf., update-ca-certi, certbot, runsv,
-                          qualys-cloud-ag, locales.postins)
+                          qualys-cloud-ag, locales.postins, nomachine_binaries)
     and not proc.pname in (sysdigcloud_binaries, sendmail_config_binaries)
     and not fd.name pmatch (safe_etc_dirs)
     and not fd.name in (/etc/container_environment.sh, /etc/container_environment.json)
