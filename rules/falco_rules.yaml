@@ -376,6 +376,12 @@
 - macro: run_by_chef
   condition: (proc.aname[2]=chef_command_wr or proc.aname[3]=chef_command_wr)
 
+- macro: run_by_h2o
+  condition: (proc.pname=perl and proc.aname[2]=h2o)
+
+- macro: run_by_passenger_agent
+  condition: (proc.pname=ruby and proc.aname[2]=PassengerAgent)
+
 # As a part of kernel upgrades, dpkg will spawn a perl script with the
 # name linux-image-N.N. This macro matches that.
 - macro: parent_linux_image_upgrade_script
@@ -744,6 +750,8 @@
     and not parent_node_running_npm
     and not user_shell_container_exclusions
     and not node_running_edi_dynamodb
+    and not run_by_h2o
+    and not run_by_passenger_agent
   output: >
     Shell spawned in a container other than entrypoint (user=%user.name %container.info image=%container.image
     shell=%proc.name pcmdline=%proc.pcmdline cmdline=%proc.cmdline parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3])
