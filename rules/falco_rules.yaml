@@ -337,6 +337,9 @@
 - macro: parent_java_running_echo
   condition: (proc.pname=java and proc.cmdline startswith "sh -c echo")
 
+- macro: parent_java_running_sbt
+  condition: (proc.pname=java and proc.pcmdline contains sbt-launch.jar)
+
 - macro: parent_scripting_running_builds
   condition: >
     (proc.pname in (php,php5-fpm,python,ruby,ruby2.3,node) and (
@@ -579,6 +582,7 @@
     and not parent_Xvfb_running_xkbcomp
     and not parent_nginx_running_serf
     and not parent_node_running_npm
+    and not parent_java_running_sbt
   output: >
     Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname
     cmdline=%proc.cmdline pcmdline=%proc.pcmdline gparent=%proc.aname[2] ggparent=%proc.aname[3])
