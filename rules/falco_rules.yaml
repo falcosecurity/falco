@@ -435,7 +435,7 @@
 - rule: Write below etc
   desc: an attempt to write to any file below /etc, not in a pipe installer session
   condition: write_etc_common and not proc.sname=fbash
-  output: "File below /etc opened for writing (user=%user.name command=%proc.cmdline parent=%proc.pname file=%fd.name)"
+  output: "File below /etc opened for writing (user=%user.name command=%proc.cmdline parent=%proc.pname file=%fd.name name=%proc.name)"
   priority: ERROR
   tags: [filesystem]
 
@@ -485,7 +485,7 @@
     and not run_by_qualys
   output: >
     Sensitive file opened for reading by non-trusted program (user=%user.name name=%proc.name
-    command=%proc.cmdline file=%fd.name parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3])
+    command=%proc.cmdline file=%fd.name parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4])
   priority: WARNING
   tags: [filesystem]
 
@@ -827,7 +827,7 @@
     not proc.cmdline startswith "useradd -D"
   output: >
     User management binary command run outside of container
-    (user=%user.name command=%proc.cmdline parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3])
+    (user=%user.name command=%proc.cmdline parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4])
   priority: NOTICE
   tags: [host, users]
 
