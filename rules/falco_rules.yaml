@@ -644,7 +644,7 @@
 #   where at the time 2:INIT execs the root program, 0:PARENT might have
 #   already exited, or might still be around. So we handle both.
 - macro: container_entrypoint
-  condition: (not proc.pname exists or proc.pname=runc:[0:PARENT])
+  condition: (not proc.pname exists or proc.pname in (runc:[0:PARENT], docker-runc))
 
 - rule: Launch Sensitive Mount Container
   desc: >
