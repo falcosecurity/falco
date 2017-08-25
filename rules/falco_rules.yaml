@@ -208,6 +208,9 @@
 - list: nomachine_binaries
   items: [nxexec, nxnode.bin, nxserver.bin, nxclient.bin]
 
+- list: x2go_binaries
+  items: [x2gosuspend-age, x2goagent]
+
 - list: nids_binaries
   items: [bro, broctl]
 
@@ -570,7 +573,7 @@
     landscape-sysin, nessusd, PM2, syslog-summary, erl_child_setup,
     npm, cloud-init, toybox, ceph, hhvm, certbot, mysql_install_d,
     serf, a2enmod, runsv, supervisord, varnishd, authconfig, tini,
-    x2goagent, timeout
+    timeout
     ]
 
 - rule: Run shell untrusted
@@ -583,7 +586,8 @@
                            k8s_binaries, package_mgmt_binaries, aide_wrapper_binaries, nids_binaries,
                            monitoring_binaries, gitlab_binaries, mesos_slave_binaries,
                            keepalived_binaries,
-                           needrestart_binaries, phusion_passenger_binaries, chef_binaries, nomachine_binaries)
+                           needrestart_binaries, phusion_passenger_binaries, chef_binaries, nomachine_binaries,
+                           x2go_binaries)
     and not parent_ansible_running_python
     and not parent_bro_running_python
     and not parent_python_running_denyhosts
@@ -736,9 +740,10 @@
                            phusion_passenger_binaries,
                            chef_binaries,
                            nomachine_binaries,
+                           x2go_binaries,
                            monitoring_binaries, gitlab_binaries, initdb, pg_ctl, awk, falco, cron,
                            erl_child_setup, ceph, PM2, pycompile, py3compile, hhvm, npm, mysql_install_d, serf,
-                           runsv, supervisord, varnishd, crond, logrotate, x2goagent, timeout, tini,
+                           runsv, supervisord, varnishd, crond, logrotate, timeout, tini,
                            xrdb, xfce4-session)
     and not trusted_containers
     and not shell_spawning_containers
