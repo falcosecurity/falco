@@ -725,7 +725,9 @@
 
 # Temporarily adding as an example
 - macro: node_running_edi_dynamodb
-  condition: proc.pname=node and proc.pcmdline contains /var/www/edi/process.js
+  condition: >
+    (proc.pname=node and (proc.pcmdline contains /var/www/edi/process.js or
+                          proc.pcmdline contains "sh -c /var/www/edi/bin/sftp.sh"))
 
 - rule: Run shell in container
   desc: a shell was spawned by a non-shell program in a container. Container entrypoints are excluded.
