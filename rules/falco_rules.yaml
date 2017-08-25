@@ -573,7 +573,7 @@
     landscape-sysin, nessusd, PM2, syslog-summary, erl_child_setup,
     npm, cloud-init, toybox, ceph, hhvm, certbot, mysql_install_d,
     serf, a2enmod, runsv, supervisord, varnishd, authconfig, tini,
-    timeout
+    timeout, updatedb.findut
     ]
 
 - rule: Run shell untrusted
