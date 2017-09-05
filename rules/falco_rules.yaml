@@ -512,7 +512,8 @@
 # as a packaging mechanism more than for a dedicated microservice.
 - macro: shell_spawning_containers
   condition: (container.image startswith jenkins or
-              container.image startswith gitlab/gitlab-ce)
+              container.image startswith gitlab/gitlab-ce or
+              container.image startswith gitlab/gitlab-ee)
 
 - rule: Launch Privileged Container
   desc: Detect the initial process started in a privileged container. Exceptions are made for known trusted images.
