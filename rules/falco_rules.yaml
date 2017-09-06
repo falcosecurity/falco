@@ -573,7 +573,7 @@
     landscape-sysin, nessusd, PM2, syslog-summary, erl_child_setup,
     npm, cloud-init, toybox, ceph, hhvm, certbot, mysql_install_d,
     serf, a2enmod, runsv, supervisord, varnishd, authconfig, tini,
-    timeout, updatedb.findut
+    timeout, updatedb.findut, mysql_ssl_rsa_s
     ]
 
 - rule: Run shell untrusted
@@ -749,7 +749,7 @@
                            monitoring_binaries, gitlab_binaries, initdb, pg_ctl, awk, falco, cron,
                            erl_child_setup, ceph, PM2, pycompile, py3compile, hhvm, npm, mysql_install_d, serf,
                            runsv, supervisord, varnishd, crond, logrotate, timeout, tini,
-                           xrdb, xfce4-session, weave)
+                           xrdb, xfce4-session, weave, mysql_ssl_rsa_s)
     and not trusted_containers
     and not shell_spawning_containers
     and not parent_java_running_echo
