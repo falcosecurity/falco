@@ -766,7 +766,7 @@
   output: >
     Shell spawned in a container other than entrypoint (user=%user.name %container.info image=%container.image
     shell=%proc.name pcmdline=%proc.pcmdline cmdline=%proc.cmdline parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3])
-  priority: NOTICE
+  priority: DEBUG
   tags: [container, shell]
 
 # sockfamily ip is to exclude certain processes (like 'groups') that communicate on unix-domain sockets
