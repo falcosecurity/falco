@@ -487,6 +487,19 @@
     vsftpd, systemd, mysql_install_d
     ]
 
+# Add conditions to this macro (probably in a separate file,
+# overwriting this macro) to allow for specific combinations of
+# programs accessing sensitive files.
+# fluentd_writing_conf_files is a good example to follow, as it
+# specifies both the program doing the writing as well as the specific
+# files it is allowed to modify.
+#
+# In this file, it just takes one of the macros in the base rule
+# and repeats it.
+
+- macro: user_read_sensitive_file_conditions
+  condition: cmp_cp_by_passwd
+
 - rule: Read sensitive file untrusted
   desc: >
     an attempt to read any sensitive file (e.g. files containing user/password/authentication
@@ -501,6 +514,7 @@
     and not proc.cmdline contains /usr/bin/mandb
     and not run_by_qualys
     and not run_by_chef
+    and not user_read_sensitive_file_conditions
   output: >
     Sensitive file opened for reading by non-trusted program (user=%user.name name=%proc.name
     command=%proc.cmdline file=%fd.name parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4])
