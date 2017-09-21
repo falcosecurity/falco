@@ -303,6 +303,7 @@ if(NOT USE_BUNDLED_LPEG)
 else()
 	set(LPEG_SRC "${PROJECT_BINARY_DIR}/lpeg-prefix/src/lpeg")
 	set(LPEG_LIB "${PROJECT_BINARY_DIR}/lpeg-prefix/src/lpeg/build/lpeg.a")
+	message(STATUS "Using bundled lpeg in '${LPEG_SRC}'")
 	set(LPEG_DEPENDENCIES "")
 	if(USE_BUNDLED_LUAJIT)
 		list(APPEND LPEG_DEPENDENCIES "luajit")
@@ -342,6 +343,7 @@ else()
 
 	set(LIBYAML_SRC "${PROJECT_BINARY_DIR}/libyaml-prefix/src/libyaml/src")
 	set(LIBYAML_LIB "${LIBYAML_SRC}/.libs/libyaml.a")
+	message(STATUS "Using bundled libyaml in '${LIBYAML_SRC}'")
 	ExternalProject_Add(libyaml
 		URL "http://download.draios.com/dependencies/libyaml-0.1.4.tar.gz"
 		URL_MD5 "4a4bced818da0b9ae7fc8ebc690792a7"
@@ -369,6 +371,7 @@ if(NOT USE_BUNDLED_LYAML)
 else()
 	set(LYAML_SRC "${PROJECT_BINARY_DIR}/lyaml-prefix/src/lyaml/ext/yaml")
 	set(LYAML_LIB "${LYAML_SRC}/.libs/yaml.a")
+	message(STATUS "Using bundled lyaml in '${LYAML_SRC}'")
 	set(LYAML_DEPENDENCIES "")
 	if(USE_BUNDLED_LUAJIT)
 		list(APPEND LYAML_DEPENDENCIES "luajit")
