@@ -497,6 +497,7 @@
     and not ansible_running_python
     and not proc.cmdline contains /usr/bin/mandb
     and not run_by_qualys
+    and not run_by_chef
   output: >
     Sensitive file opened for reading by non-trusted program (user=%user.name name=%proc.name
     command=%proc.cmdline file=%fd.name parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4])
