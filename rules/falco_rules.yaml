@@ -412,6 +412,19 @@
 - macro: fluentd_writing_conf_files
   condition: (proc.name=start-fluentd and fd.name in (/etc/fluent/fluent.conf, /etc/td-agent/td-agent.conf))
 
+# Add conditions to this macro (probably in a separate file,
+# overwriting this macro) to allow for specific combinations of
+# programs writing below specific directories below
+# /etc. fluentd_writing_conf_files is a good example to follow, as it
+# specifies both the program doing the writing as well as the specific
+# files it is allowed to modify.
+#
+# In this file, it just takes one of the programs in the base macro
+# and repeats it.
+
+- macro: user_known_write_etc_conditions
+  condition: proc.name=confd
+
 - macro: write_etc_common
   condition: >
     etc_dir and evt.dir = < and open_write
@@ -431,6 +444,7 @@
     and not ansible_running_python
     and not python_running_denyhosts
     and not fluentd_writing_conf_files
+    and not user_known_write_etc_conditions
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc, not in a pipe installer session
