@@ -630,7 +630,8 @@
               container.image startswith sysdig/sysdig or
               container.image startswith gcr.io/google_containers/hyperkube or
               container.image startswith quay.io/coreos/flannel or
-              container.image startswith gcr.io/google_containers/kube-proxy)
+              container.image startswith gcr.io/google_containers/kube-proxy or
+              container.image startswith calico/node)
 
 # These containers are ones that are known to spawn lots of
 # shells. Generally, they are for systems where the container is used
