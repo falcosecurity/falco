@@ -205,6 +205,9 @@
 - list: make_binaries
   items: [make, gmake, cmake]
 
+- list: keepalived_binaries
+  items: [keepalived]
+
 - macro: sensitive_files
   condition: >
     fd.name startswith /etc and
@@ -484,7 +487,7 @@
     and proc.pname exists
     and not proc.pname in (cron_binaries, shell_binaries, make_binaries, known_shell_spawn_binaries, docker_binaries,
                            k8s_binaries, package_mgmt_binaries, aide_wrapper_binaries, nids_binaries,
-                           monitoring_binaries, gitlab_binaries, mesos_slave_binaries)
+                           monitoring_binaries, gitlab_binaries, mesos_slave_binaries, keepalived_binaries)
     and not parent_ansible_running_python
     and not parent_bro_running_python
     and not parent_python_running_denyhosts
