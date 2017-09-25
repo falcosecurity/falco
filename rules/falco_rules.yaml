@@ -384,7 +384,7 @@
   condition: (proc.aname[2]=chef_command_wr or proc.aname[3]=chef_command_wr)
 
 - macro: run_by_adclient
-  condition: (proc.aname[2]=adclient or proc.aname[3]=adclient)
+  condition: (proc.aname[2]=adclient or proc.aname[3]=adclient or proc.aname[4]=adclient)
 
 - macro: run_by_centrify
   condition: (proc.aname[2]=centrify or proc.aname[3]=centrify or proc.aname[4]=centrify)
@@ -445,6 +445,7 @@
                           package_mgmt_binaries, ssl_mgmt_binaries, dhcp_binaries,
                           dev_creation_binaries, shell_mgmt_binaries,
                           sendmail_config_binaries,
+                          sshkit_script_binaries,
                           ldconfig.real, ldconfig, confd, gpg, insserv,
                           apparmor_parser, update-mime, tzdata.config, tzdata.postinst,
                           systemd, systemd-machine, systemd-sysuser,
@@ -460,6 +461,7 @@
     and not fluentd_writing_conf_files
     and not user_known_write_etc_conditions
     and not run_by_centrify
+    and not run_by_adclient
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc, not in a pipe installer session
