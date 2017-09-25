@@ -1,0 +1,12 @@
+- macro: my_macro
+  condition: proc.name=cat
+
+- macro: my_macro
+  append: false
+  condition: proc.name=not-cat
+
+- rule: Open From Cat
+  desc: A process named cat does an open
+  condition: evt.type=open and my_macro
+  output: "An open was seen (command=%proc.cmdline)"
+  priority: WARNING

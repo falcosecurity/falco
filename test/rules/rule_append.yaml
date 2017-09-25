@@ -1,0 +1,9 @@
+- rule: my_rule
+  desc: A process named cat does an open
+  condition: evt.type=open and fd.name=not-a-real-file
+  output: "An open of /dev/null was seen (command=%proc.cmdline)"
+  priority: WARNING
+
+- rule: my_rule
+  append: true
+  condition: or fd.name=/dev/null
