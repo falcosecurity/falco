@@ -448,7 +448,8 @@
                           systemd, systemd-machine, systemd-sysuser,
                           debconf-show, rollerd, bind9.postinst, sv,
                           gen_resolvconf., update-ca-certi, certbot, runsv,
-                          qualys-cloud-ag, locales.postins, nomachine_binaries)
+                          qualys-cloud-ag, locales.postins, nomachine_binaries,
+                          adclient, certutil)
     and not proc.pname in (sysdigcloud_binaries, sendmail_config_binaries, hddtemp.postins)
     and not fd.name pmatch (safe_etc_dirs)
     and not fd.name in (/etc/container_environment.sh, /etc/container_environment.json, /etc/motd, /etc/motd.svc)
@@ -613,7 +614,7 @@
     landscape-sysin, nessusd, PM2, syslog-summary, erl_child_setup,
     npm, cloud-init, toybox, ceph, hhvm, certbot, mysql_install_d,
     serf, a2enmod, runsv, supervisord, varnishd, authconfig, tini,
-    timeout, updatedb.findut, mysql_ssl_rsa_s
+    timeout, updatedb.findut, mysql_ssl_rsa_s, adclient
     ]
 
 - rule: Run shell untrusted
