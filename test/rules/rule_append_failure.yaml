@@ -1,0 +1,3 @@
+- rule: my_rule
+  condition: evt.type=open
+  append: true

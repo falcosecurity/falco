@@ -1,0 +1,3 @@
+- macro: my_macro
+  condition: proc.name=not-cat
+  append: true

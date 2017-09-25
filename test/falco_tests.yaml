@@ -599,3 +599,44 @@ trace_files: !mux
     rules_file:
       - rules/list_append_false.yaml
     trace_file: trace_files/cat_write.scap
+
+  macro_append_failure:
+    exit_status: 1
+    stderr_contains: "Macro my_macro has 'append' key but no macro by that name already exists. Exiting"
+    rules_file:
+      - rules/macro_append_failure.yaml
+    trace_file: trace_files/cat_write.scap
+
+  macro_append:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/macro_append.yaml
+    trace_file: trace_files/cat_write.scap
+
+  macro_append_false:
+    detect: False
+    rules_file:
+      - rules/macro_append_false.yaml
+    trace_file: trace_files/cat_write.scap
+
+  rule_append_failure:
+    exit_status: 1
+    stderr_contains: "Rule my_rule has 'append' key but no rule by that name already exists. Exiting"
+    rules_file:
+      - rules/rule_append_failure.yaml
+    trace_file: trace_files/cat_write.scap
+
+  rule_append:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/rule_append.yaml
+    trace_file: trace_files/cat_write.scap
+
+  rule_append_false:
+    detect: False
+    rules_file:
+      - rules/rule_append_false.yaml
+    trace_file: trace_files/cat_write.scap
+

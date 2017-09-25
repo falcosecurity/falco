@@ -208,7 +208,23 @@ function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replac
 	    end
 	 end
 
-	 state.macros_by_name[v['macro']] = v
+	 -- Possibly append to the condition field of an existing macro
+	 append = false
+
+	 if v['append'] then
+	    append = v['append']
+	 end
+
+	 if append then
+	    if state.macros_by_name[v['macro']] == nil then
+	       error ("Macro " ..v['macro'].. " has 'append' key but no macro by that name already exists")
+	    end
+
+	    state.macros_by_name[v['macro']]['condition'] = state.macros_by_name[v['macro']]['condition'] .. " " .. v['condition']
+
+	 else
+	    state.macros_by_name[v['macro']] = v
+	 end
 
       elseif (v['list']) then
 
@@ -247,25 +263,49 @@ function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replac
 	    error ("Missing name in rule")
 	 end
 
-	 for i, field in ipairs({'condition', 'output', 'desc', 'priority'}) do
-	    if (v[field] == nil) then
-	       error ("Missing "..field.." in rule with name "..v['rule'])
+	 -- Possibly append to the condition field of an existing rule
+	 append = false
+
+	 if v['append'] then
+	    append = v['append']
+	 end
+
+	 if append then
+
+	    -- For append rules, all you need is the condition
+	    for i, field in ipairs({'condition'}) do
+	       if (v[field] == nil) then
+		  error ("Missing "..field.." in rule with name "..v['rule'])
+	       end
 	    end
+
+	    if state.rules_by_name[v['rule']] == nil then
+	       error ("Rule " ..v['rule'].. " has 'append' key but no rule by that name already exists")
+	    end
+
+	    state.rules_by_name[v['rule']]['condition'] = state.rules_by_name[v['rule']]['condition'] .. " " .. v['condition']
+
+	 else
+
+	    for i, field in ipairs({'condition', 'output', 'desc', 'priority'}) do
+	       if (v[field] == nil) then
+		  error ("Missing "..field.." in rule with name "..v['rule'])
+	       end
+	    end
+
+	    -- Note that we can overwrite rules, but the rules are still
+	    -- loaded in the order in which they first appeared,
+	    -- potentially across multiple files.
+	    if state.rules_by_name[v['rule']] == nil then
+	       state.ordered_rule_names[#state.ordered_rule_names+1] = v['rule']
+	    end
+
+	    -- The output field might be a folded-style, which adds a
+	    -- newline to the end. Remove any trailing newlines.
+	    v['output'] = compiler.trim(v['output'])
+
+	    state.rules_by_name[v['rule']] = v
 	 end
-
-	 -- Note that we can overwrite rules, but the rules are still
-	 -- loaded in the order in which they first appeared,
-	 -- potentially across multiple files.
-	 if state.rules_by_name[v['rule']] == nil then
-	    state.ordered_rule_names[#state.ordered_rule_names+1] = v['rule']
-	 end
-
-	 -- The output field might be a folded-style, which adds a
-	 -- newline to the end. Remove any trailing newlines.
-	 v['output'] = compiler.trim(v['output'])
-
-	 state.rules_by_name[v['rule']] = v
-
       else
 	 error ("Unknown rule object: "..table.tostring(v))
       end
