@@ -221,7 +221,7 @@
   condition: proc.name in (coreutils_binaries, user_mgmt_binaries)
 
 - list: mail_binaries
-  items: [sendmail, sendmail-msp, postfix, procmail, exim4, pickup, showq]
+  items: [sendmail, sendmail-msp, postfix, procmail, exim4, pickup, showq, mailq]
 
 - list: sendmail_config_binaries
   items: [
