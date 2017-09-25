@@ -442,7 +442,6 @@
                           package_mgmt_binaries, ssl_mgmt_binaries, dhcp_binaries,
                           dev_creation_binaries, shell_mgmt_binaries,
                           sendmail_config_binaries,
-                          sshkit_script_binaries,
                           ldconfig.real, ldconfig, confd, gpg, insserv,
                           apparmor_parser, update-mime, tzdata.config, tzdata.postinst,
                           systemd, systemd-machine, systemd-sysuser,
@@ -450,7 +449,7 @@
                           gen_resolvconf., update-ca-certi, certbot, runsv,
                           qualys-cloud-ag, locales.postins, nomachine_binaries,
                           adclient, certutil)
-    and not proc.pname in (sysdigcloud_binaries, sendmail_config_binaries, hddtemp.postins)
+    and not proc.pname in (sysdigcloud_binaries, sendmail_config_binaries, hddtemp.postins, sshkit_script_binaries)
     and not fd.name pmatch (safe_etc_dirs)
     and not fd.name in (/etc/container_environment.sh, /etc/container_environment.json, /etc/motd, /etc/motd.svc)
     and not ansible_running_python
