@@ -51,7 +51,20 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 
 	init_cmdline_options(cmdline_options);
 
-	m_rules_filenames.push_back(m_config->get_scalar<string>("rules_file", "/etc/falco_rules.yaml"));
+	list<string> rules_files;
+
+	m_config->get_sequence<list<string>>(rules_files, string("rules_file"));
+
+	for(auto &file : rules_files)
+	{
+		// Here, we only include files that exist
+		struct stat buffer;
+		if(stat(file.c_str(), &buffer) == 0)
+		{
+			m_rules_filenames.push_back(file);
+		}
+	}
+
 	m_json_output = m_config->get_scalar<bool>("json_output", false);
 
 	falco_outputs::output_config file_output;
