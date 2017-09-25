@@ -226,7 +226,7 @@
 - list: sendmail_config_binaries
   items: [
     update_conf, parse_mc, makemap_hash, newaliases, update_mk, update_tlsm4,
-    update_db, update_mc, ssmtp.postinst
+    update_db, update_mc, ssmtp.postinst, smmsp
     ]
 
 - list: make_binaries
