@@ -379,6 +379,9 @@
 - macro: run_by_chef
   condition: (proc.aname[2]=chef_command_wr or proc.aname[3]=chef_command_wr)
 
+- macro: run_by_adclient
+  condition: (proc.aname[2]=adclient or proc.aname[3]=adclient)
+
 - macro: run_by_puppet
   condition: (proc.aname[2]=puppet or proc.aname[3]=puppet)
 
@@ -634,6 +637,7 @@
     and not parent_java_running_sbt
     and not run_by_chef
     and not run_by_puppet
+    and not run_by_adclient
   output: >
     Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname
     cmdline=%proc.cmdline pcmdline=%proc.pcmdline gparent=%proc.aname[2] ggparent=%proc.aname[3])
