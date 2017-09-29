@@ -504,7 +504,7 @@
 - list: read_sensitive_file_binaries
   items: [
     iptables, ps, lsb_release, check-new-relea, dumpe2fs, accounts-daemon, sshd,
-    vsftpd, systemd, mysql_install_d
+    vsftpd, systemd, mysql_install_d, psql
     ]
 
 # Add conditions to this macro (probably in a separate file,
