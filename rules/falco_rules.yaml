@@ -344,6 +344,9 @@
     (proc.pname=java and proc.pcmdline contains jenkins.war
     or proc.pcmdline contains /tmp/slave.jar)
 
+- macro: jenkins_script_sh
+  condition: (proc.pcmdline startswith "script.sh -xe /var/jenkins_home")
+
 - macro: parent_java_running_echo
   condition: (proc.pname=java and proc.cmdline startswith "sh -c echo")
 
@@ -643,6 +646,7 @@
     and not parent_python_running_sdchecks
     and not parent_linux_image_upgrade_script
     and not parent_java_running_jenkins
+    and not jenkins_script_sh
     and not parent_java_running_echo
     and not parent_scripting_running_builds
     and not parent_Xvfb_running_xkbcomp
@@ -823,6 +827,8 @@
     and not node_running_edi_dynamodb
     and not run_by_h2o
     and not run_by_passenger_agent
+    and not parent_java_running_jenkins
+    and not jenkins_script_sh
   output: >
     Shell spawned in a container other than entrypoint (user=%user.name %container.info image=%container.image
     shell=%proc.name pcmdline=%proc.pcmdline cmdline=%proc.cmdline parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3])
