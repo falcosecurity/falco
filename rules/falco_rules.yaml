@@ -211,6 +211,9 @@
 - list: x2go_binaries
   items: [x2gosuspend-age, x2goagent]
 
+- list: xray_rabbitmq_binaries
+  items: ['"1_scheduler"', '"2_scheduler"', '"3_scheduler"', '"4_scheduler"']
+
 - list: nids_binaries
   items: [bro, broctl]
 
@@ -802,6 +805,7 @@
                            chef_binaries,
                            nomachine_binaries,
                            x2go_binaries,
+                           xray_rabbitmq_binaries,
                            monitoring_binaries, gitlab_binaries, initdb, pg_ctl, awk, falco, cron,
                            erl_child_setup, ceph, PM2, pycompile, py3compile, hhvm, npm, mysql_install_d, serf,
                            runsv, supervisord, varnishd, crond, logrotate, timeout, tini,
