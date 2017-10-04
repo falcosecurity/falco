@@ -813,7 +813,7 @@
                            monitoring_binaries, gitlab_binaries, initdb, pg_ctl, awk, falco, cron,
                            erl_child_setup, ceph, PM2, pycompile, py3compile, hhvm, npm, mysql_install_d, serf,
                            runsv, supervisord, varnishd, crond, logrotate, timeout, tini,
-                           xrdb, xfce4-session, weave, mysql_ssl_rsa_s)
+                           xrdb, xfce4-session, weave, mysql_ssl_rsa_s, logdna-agent)
     and not trusted_containers
     and not shell_spawning_containers
     and not parent_java_running_echo
