@@ -365,7 +365,8 @@
        proc.cmdline startswith "sh -c gcc" or
        proc.cmdline startswith "sh -c if type gcc" or
        proc.cmdline startswith "sh -c cd '/var/www/edi/';LC_ALL=en_US.UTF-8 git" or
-       proc.cmdline startswith "sh -c /usr/src/app/crxlsx/bin/linux/crxlsx"))
+       proc.cmdline startswith "sh -c /usr/src/app/crxlsx/bin/linux/crxlsx" or
+       proc.pcmdline="node /opt/nodejs/bin/yarn"))
 
 - macro: parent_node_running_npm
   condition: proc.pcmdline startswith "node /usr/local/bin/npm"
