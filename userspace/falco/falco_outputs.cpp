@@ -105,7 +105,7 @@ void falco_outputs::add_output(output_config oc)
 
 }
 
-void falco_outputs::handle_event(sinsp_evt *ev, string &rule, string &priority, string &format)
+void falco_outputs::handle_event(sinsp_evt *ev, string &rule, falco_common::priority_type priority, string &format)
 {
 	if(!m_notifications_tb.claim())
 	{
@@ -119,10 +119,11 @@ void falco_outputs::handle_event(sinsp_evt *ev, string &rule, string &priority, 
 	{
 		lua_pushlightuserdata(m_ls, ev);
 		lua_pushstring(m_ls, rule.c_str());
-		lua_pushstring(m_ls, priority.c_str());
+		lua_pushstring(m_ls, falco_common::priority_names[priority].c_str());
+		lua_pushnumber(m_ls, priority);
 		lua_pushstring(m_ls, format.c_str());
 
-		if(lua_pcall(m_ls, 4, 0, 0) != 0)
+		if(lua_pcall(m_ls, 5, 0, 0) != 0)
 		{
 			const char* lerr = lua_tostring(m_ls, -1);
 			string err = "Error invoking function output: " + string(lerr);

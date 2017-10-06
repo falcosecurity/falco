@@ -74,6 +74,22 @@ public:
 
 	void set_inspector(sinsp *inspector);
 
+        // Priority levels, as a vector of strings
+	static std::vector<std::string> priority_names;
+
+	// Same as numbers/indices into the above vector
+	enum priority_type
+	{
+		PRIORITY_EMERGENCY = 0,
+		PRIORITY_ALERT = 1,
+		PRIORITY_CRITICAL = 2,
+		PRIORITY_ERROR = 3,
+		PRIORITY_WARNING = 4,
+		PRIORITY_NOTICE = 5,
+		PRIORITY_INFORMATIONAL = 6,
+		PRIORITY_DEBUG = 7
+	};
+
 protected:
 	lua_State *m_ls;
 

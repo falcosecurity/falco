@@ -49,7 +49,7 @@ public:
 	// ev is an event that has matched some rule. Pass the event
 	// to all configured outputs.
 	//
-	void handle_event(sinsp_evt *ev, std::string &rule, std::string &priority, std::string &format);
+	void handle_event(sinsp_evt *ev, std::string &rule, falco_common::priority_type priority, std::string &format);
 
 private:
 	bool m_initialized;

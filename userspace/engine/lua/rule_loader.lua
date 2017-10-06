@@ -58,6 +58,17 @@ function map(f, arr)
    return res
 end
 
+priorities = {"Emergency", "Alert", "Critical", "Error", "Warning", "Notice", "Informational", "Debug"}
+
+local function priority_num_for(s)
+   s = string.lower(s)
+   for i,v in ipairs(priorities) do
+      if (string.find(string.lower(v), "^"..s)) then
+	 return i - 1 -- (numbers start at 0, lua indices start at 1)
+      end
+   end
+   error("Invalid priority level: "..s)
+end
 
 --[[
    Take a filter AST and set it up in the libsinsp runtime, using the filter API.
@@ -171,7 +182,7 @@ function table.tostring( tbl )
 end
 
 
-function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replace_container_info)
+function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replace_container_info, min_priority)
 
    compiler.set_verbose(verbose)
    compiler.set_all_events(all_events)
@@ -293,18 +304,23 @@ function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replac
 	       end
 	    end
 
-	    -- Note that we can overwrite rules, but the rules are still
-	    -- loaded in the order in which they first appeared,
-	    -- potentially across multiple files.
-	    if state.rules_by_name[v['rule']] == nil then
-	       state.ordered_rule_names[#state.ordered_rule_names+1] = v['rule']
+	    -- Convert the priority-as-string to a priority-as-number now
+	    v['priority_num'] = priority_num_for(v['priority'])
+
+	    if v['priority_num'] <= min_priority then
+	       -- Note that we can overwrite rules, but the rules are still
+	       -- loaded in the order in which they first appeared,
+	       -- potentially across multiple files.
+	       if state.rules_by_name[v['rule']] == nil then
+		  state.ordered_rule_names[#state.ordered_rule_names+1] = v['rule']
+	       end
+
+	       -- The output field might be a folded-style, which adds a
+	       -- newline to the end. Remove any trailing newlines.
+	       v['output'] = compiler.trim(v['output'])
+
+	       state.rules_by_name[v['rule']] = v
 	    end
-
-	    -- The output field might be a folded-style, which adds a
-	    -- newline to the end. Remove any trailing newlines.
-	    v['output'] = compiler.trim(v['output'])
-
-	    state.rules_by_name[v['rule']] = v
 	 end
       else
 	 error ("Unknown rule object: "..table.tostring(v))
@@ -504,7 +520,7 @@ function on_event(evt_, rule_id)
    -- Prefix output with '*' so formatting is permissive
    output = "*"..rule.output
 
-   return rule.rule, rule.priority, output
+   return rule.rule, rule.priority_num, output
 end
 
 function print_stats()
