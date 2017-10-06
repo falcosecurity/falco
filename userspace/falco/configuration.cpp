@@ -71,13 +71,17 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 	file_output.name = "file";
 	if (m_config->get_scalar<bool>("file_output", "enabled", false))
 	{
-		string filename;
+		string filename, keep_alive;
 		filename = m_config->get_scalar<string>("file_output", "filename", "");
 		if (filename == string(""))
 		{
 			throw invalid_argument("Error reading config file (" + m_config_file + "): file output enabled but no filename in configuration block");
 		}
 		file_output.options["filename"] = filename;
+
+		keep_alive = m_config->get_scalar<string>("file_output", "keep_alive", "");
+		file_output.options["keep_alive"] = keep_alive;
+
 		m_outputs.push_back(file_output);
 	}
 
@@ -99,13 +103,17 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 	program_output.name = "program";
 	if (m_config->get_scalar<bool>("program_output", "enabled", false))
 	{
-		string program;
+		string program, keep_alive;
 		program = m_config->get_scalar<string>("program_output", "program", "");
 		if (program == string(""))
 		{
 			throw sinsp_exception("Error reading config file (" + m_config_file + "): program output enabled but no program in configuration block");
 		}
 		program_output.options["program"] = program;
+
+		keep_alive = m_config->get_scalar<string>("program_output", "keep_alive", "");
+		program_output.options["keep_alive"] = keep_alive;
+
 		m_outputs.push_back(program_output);
 	}
 

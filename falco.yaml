@@ -53,8 +53,13 @@ outputs:
 syslog_output:
   enabled: true
 
+# If keep_alive is set to true, the file will be opened once and
+# continuously written to, with each output message on its own
+# line. If keep_alive is set to false, the file will be re-opened
+# for each output message.
 file_output:
   enabled: false
+  keep_alive: false
   filename: ./events.txt
 
 stdout_output:
@@ -65,7 +70,15 @@ stdout_output:
 #         program: "jq '{text: .output}' | curl -d @- -X POST https://hooks.slack.com/services/XXX"
 #   - logging (alternate method than syslog):
 #         program: logger -t falco-test
+#   - send over a network connection:
+#         program: nc host.example.com 80
+
+# If keep_alive is set to true, the program will be started once and
+# continuously written to, with each output message on its own
+# line. If keep_alive is set to false, the program will be re-spawned
+# for each output message.
 
 program_output:
   enabled: false
+  keep_alive: false
   program: mail -s "Falco Notification" someone@example.com
