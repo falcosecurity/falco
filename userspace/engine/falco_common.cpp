@@ -21,6 +21,16 @@ along with falco.  If not, see <http://www.gnu.org/licenses/>.
 #include "config_falco_engine.h"
 #include "falco_common.h"
 
+std::vector<std::string> falco_common::priority_names = {
+	"Emergency",
+	"Alert",
+	"Critical",
+	"Error",
+	"Warning",
+	"Notice",
+	"Informational",
+	"Debug"};
+
 falco_common::falco_common()
 {
 	m_ls = lua_open();

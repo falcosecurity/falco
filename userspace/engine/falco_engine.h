@@ -67,10 +67,13 @@ public:
 	// Wrapper that assumes the default ruleset
 	void enable_rule_by_tag(const std::set<std::string> &tags, bool enabled);
 
+	// Only load rules having this priority or more severe.
+	void set_min_priority(falco_common::priority_type priority);
+
 	struct rule_result {
 		sinsp_evt *evt;
 		std::string rule;
-		std::string priority;
+		falco_common::priority_type priority_num;
 		std::string format;
 	};
 
@@ -158,6 +161,7 @@ private:
 	uint16_t m_next_ruleset_id;
 	std::map<string, uint16_t> m_known_rulesets;
 	std::unique_ptr<sinsp_evttype_filter> m_evttype_filter;
+	falco_common::priority_type m_min_priority;
 
 	//
 	// Here's how the sampling ratio and multiplier influence

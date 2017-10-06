@@ -108,6 +108,19 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 	m_notifications_rate = m_config->get_scalar<uint32_t>("outputs", "rate", 1);
 	m_notifications_max_burst = m_config->get_scalar<uint32_t>("outputs", "max_burst", 1000);
 
+	string priority = m_config->get_scalar<string>("priority", "debug");
+	vector<string>::iterator it;
+
+	auto comp = [priority] (string &s) {
+		return (strcasecmp(s.c_str(), priority.c_str()) == 0);
+	};
+
+	if((it = std::find_if(falco_common::priority_names.begin(), falco_common::priority_names.end(), comp)) == falco_common::priority_names.end())
+	{
+		throw invalid_argument("Unknown priority \"" + priority + "\"--must be one of emergency, alert, critical, error, warning, notice, informational, debug");
+	}
+	m_min_priority = (falco_common::priority_type) (it - falco_common::priority_names.begin());
+
 	falco_logger::log_stderr = m_config->get_scalar<bool>("log_stderr", false);
 	falco_logger::log_syslog = m_config->get_scalar<bool>("log_syslog", true);
 }

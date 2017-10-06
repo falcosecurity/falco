@@ -15,6 +15,12 @@ log_syslog: true
 # "alert", "critical", "error", "warning", "notice", "info", "debug".
 log_level: info
 
+# Minimum rule priority level to load and run. All rules having a
+# priority more severe than this level will be loaded/run.  Can be one
+# of "emergency", "alert", "critical", "error", "warning", "notice",
+# "info", "debug".
+priority: debug
+
 # A throttling mechanism implemented as a token bucket limits the
 # rate of falco notifications. This throttling is controlled by the following configuration
 # options:

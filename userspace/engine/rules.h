@@ -24,6 +24,8 @@ along with falco.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "lua_parser.h"
 
+#include "falco_common.h"
+
 class falco_engine;
 
 class falco_rules
@@ -32,7 +34,8 @@ class falco_rules
 	falco_rules(sinsp* inspector, falco_engine *engine, lua_State *ls);
 	~falco_rules();
 	void load_rules(const string &rules_content, bool verbose, bool all_events,
-			std::string &extra, bool replace_container_info);
+			std::string &extra, bool replace_container_info,
+			falco_common::priority_type min_priority);
 	void describe_rule(string *rule);
 
 	static void init(lua_State *ls);

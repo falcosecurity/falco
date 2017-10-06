@@ -212,7 +212,7 @@ uint64_t do_inspect(falco_engine *engine,
 		unique_ptr<falco_engine::rule_result> res = engine->process_event(ev);
 		if(res)
 		{
-			outputs->handle_event(res->evt, res->rule, res->priority, res->format);
+			outputs->handle_event(res->evt, res->rule, res->priority_num, res->format);
 		}
 
 		num_evts++;
@@ -460,6 +460,8 @@ int falco_init(int argc, char **argv)
 		{
 			config.m_rules_filenames = rules_filenames;
 		}
+
+		engine->set_min_priority(config.m_min_priority);
 
 		for (auto filename : config.m_rules_filenames)
 		{

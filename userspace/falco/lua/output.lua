@@ -18,13 +18,9 @@
 
 local mod = {}
 
-levels = {"Emergency", "Alert", "Critical", "Error", "Warning", "Notice", "Informational", "Debug"}
-
-mod.levels = levels
-
 local outputs = {}
 
-function mod.stdout(level, msg)
+function mod.stdout(priority, priority_num, msg)
    print (msg)
 end
 
@@ -41,17 +37,17 @@ function mod.file_validate(options)
 
 end
 
-function mod.file(level, msg, options)
+function mod.file(priority, priority_num, msg, options)
    file = io.open(options.filename, "a+")
    file:write(msg, "\n")
    file:close()
 end
 
-function mod.syslog(level, msg, options)
-   falco.syslog(level, msg)
+function mod.syslog(priority, priority_num, msg, options)
+   falco.syslog(priority_num, msg)
 end
 
-function mod.program(level, msg, options)
+function mod.program(priority, priority_num, msg, options)
    -- XXX Ideally we'd check that the program ran
    -- successfully. However, the luajit we're using returns true even
    -- when the shell can't run the program.
@@ -62,31 +58,19 @@ function mod.program(level, msg, options)
    file:close()
 end
 
-local function level_of(s)
-   s = string.lower(s)
-   for i,v in ipairs(levels) do
-      if (string.find(string.lower(v), "^"..s)) then
-	 return i - 1 -- (syslog levels start at 0, lua indices start at 1)
-      end
-   end
-   error("Invalid severity level: "..s)
-end
-
-function output_event(event, rule, priority, format)
-   local level = level_of(priority)
-
+function output_event(event, rule, priority, priority_num, format)
    -- If format starts with a *, remove it, as we're adding our own
    -- prefix here.
    if format:sub(1,1) == "*" then
       format = format:sub(2)
    end
 
-   format = "*%evt.time: "..levels[level+1].." "..format
+   format = "*%evt.time: "..priority.." "..format
 
-   msg = formats.format_event(event, rule, levels[level+1], format)
+   msg = formats.format_event(event, rule, priority, format)
 
    for index,o in ipairs(outputs) do
-      o.output(level, msg, o.config)
+      o.output(priority, priority_num, msg, o.config)
    end
 end
 
