@@ -384,7 +384,11 @@
 # levels. This checks at a few levels without the cost of a full
 # proc.aname, which traverses the full parent heirarchy.
 - macro: run_by_qualys
-  condition: (proc.pname=qualys-cloud-ag or proc.aname[2]=qualys-cloud-ag or proc.aname[3]=qualys-cloud-ag)
+  condition: >
+    (proc.pname=qualys-cloud-ag or
+     proc.aname[2]=qualys-cloud-ag or
+     proc.aname[3]=qualys-cloud-ag or
+     proc.aname[4]=qualys-cloud-ag)
 
 # Chef is similar.
 - macro: run_by_chef
@@ -432,6 +436,9 @@
 - macro: fluentd_writing_conf_files
   condition: (proc.name=start-fluentd and fd.name in (/etc/fluent/fluent.conf, /etc/td-agent/td-agent.conf))
 
+- macro: qualys_writing_conf_files
+  condition: proc.name=qualys-cloud-ag and fd.name=/etc/qualys/cloud-agent/qagent-log.conf
+
 # Add conditions to this macro (probably in a separate file,
 # overwriting this macro) to allow for specific combinations of
 # programs writing below specific directories below
@@ -469,6 +476,7 @@
     and not user_known_write_etc_conditions
     and not run_by_centrify
     and not run_by_adclient
+    and not qualys_writing_conf_files
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc, not in a pipe installer session
@@ -893,7 +901,8 @@
     not proc.pname in (cron_binaries, systemd, run-parts) and
     not proc.cmdline startswith "passwd -S" and
     not proc.cmdline startswith "useradd -D" and
-    not proc.cmdline startswith "systemd --version"
+    not proc.cmdline startswith "systemd --version" and
+    not run_by_qualys
   output: >
     User management binary command run outside of container
     (user=%user.name command=%proc.cmdline parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4])
