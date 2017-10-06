@@ -1,9 +1,10 @@
 if(NOT DEFINED FALCO_ETC_DIR)
-  set(FALCO_ETC_DIR "/etc")
+  set(FALCO_ETC_DIR "/etc/falco")
 endif()
 
 if(NOT DEFINED FALCO_RULES_DEST_FILENAME)
   set(FALCO_RULES_DEST_FILENAME "falco_rules.yaml")
+  set(FALCO_LOCAL_RULES_DEST_FILENAME "falco_rules.local.yaml")
 endif()
 
 if(DEFINED FALCO_COMPONENT)
@@ -11,9 +12,18 @@ install(FILES falco_rules.yaml
         COMPONENT "${FALCO_COMPONENT}"
 	DESTINATION "${FALCO_ETC_DIR}"
 	RENAME "${FALCO_RULES_DEST_FILENAME}")
+
+install(FILES falco_rules.local.yaml
+        COMPONENT "${FALCO_COMPONENT}"
+	DESTINATION "${FALCO_ETC_DIR}"
+	RENAME "${FALCO_LOCAL_RULES_DEST_FILENAME}")
 else()
 install(FILES falco_rules.yaml
-        DESTINATION "${FALCO_ETC_DIR}"
-        RENAME "${FALCO_RULES_DEST_FILENAME}")
+	DESTINATION "${FALCO_ETC_DIR}"
+	RENAME "${FALCO_RULES_DEST_FILENAME}")
+
+install(FILES falco_rules.local.yaml
+	DESTINATION "${FALCO_ETC_DIR}"
+	RENAME "${FALCO_LOCAL_RULES_DEST_FILENAME}")
 endif()
 

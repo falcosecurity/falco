@@ -1,5 +1,15 @@
-# File containing Falco rules, loaded at startup.
-rules_file: /etc/falco_rules.yaml
+# File(s) containing Falco rules, loaded at startup.
+#
+# falco_rules.yaml ships with the falco package and is overridden with
+# every new software version. falco_rules.local.yaml is only created
+# if it doesn't exist. If you want to customize the set of rules, add
+# your customizations to falco_rules.local.yaml.
+#
+# The files will be read in the order presented here, so make sure if
+# you have overrides they appear in later files.
+rules_file:
+ - /etc/falco/falco_rules.yaml
+ - /etc/falco/falco_rules.local.yaml
 
 # Whether to output events in json or text
 json_output: false

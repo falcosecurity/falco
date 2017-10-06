@@ -7,7 +7,7 @@ if(NOT DEFINED FALCO_VERSION)
 endif()
 
 if(NOT DEFINED FALCO_ETC_DIR)
-	set(FALCO_ETC_DIR "/etc")
+	set(FALCO_ETC_DIR "/etc/falco")
 endif()
 
 if(NOT CMAKE_BUILD_TYPE)
@@ -399,8 +399,8 @@ add_subdirectory("${SYSDIG_DIR}/userspace/libscap" "${PROJECT_BINARY_DIR}/usersp
 add_subdirectory("${SYSDIG_DIR}/userspace/libsinsp" "${PROJECT_BINARY_DIR}/userspace/libsinsp")
 
 set(FALCO_SINSP_LIBRARY sinsp)
-set(FALCO_SHARE_DIR ${CMAKE_INSTALL_PREFIX}/share/falco)
-set(FALCO_BIN_DIR ${CMAKE_INSTALL_PREFIX}/bin)
+set(FALCO_SHARE_DIR share/falco)
+set(FALCO_BIN_DIR bin)
 add_subdirectory(scripts)
 add_subdirectory(userspace/engine)
 add_subdirectory(userspace/falco)
@@ -422,7 +422,7 @@ set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Sysdig <support@sysdig.com>")
 set(CPACK_DEBIAN_PACKAGE_SECTION "utils")
 set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "http://www.sysdig.org")
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "dkms (>= 2.1.0.0)")
-set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_BINARY_DIR}/scripts/debian/postinst;${CMAKE_BINARY_DIR}/scripts/debian/prerm;${PROJECT_SOURCE_DIR}/scripts/debian/postrm")
+set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_BINARY_DIR}/scripts/debian/postinst;${CMAKE_BINARY_DIR}/scripts/debian/prerm;${PROJECT_SOURCE_DIR}/scripts/debian/postrm;${PROJECT_SOURCE_DIR}/cpack/debian/conffiles")
 
 set(CPACK_RPM_PACKAGE_LICENSE "GPLv2")
 set(CPACK_RPM_PACKAGE_URL "http://www.sysdig.org")
