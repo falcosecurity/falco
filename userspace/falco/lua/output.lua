@@ -29,7 +29,7 @@ function mod.file_validate(options)
       error("File output needs to be configured with a valid filename")
    end
 
-   file, err = io.open(options.filename, "a+")
+   local file, err = io.open(options.filename, "a+")
    if file == nil then
       error("Error with file output: "..err)
    end
@@ -38,9 +38,21 @@ function mod.file_validate(options)
 end
 
 function mod.file(priority, priority_num, msg, options)
-   file = io.open(options.filename, "a+")
+   if options.keep_alive == "true" then
+      if file == nil then
+	 file = io.open(options.filename, "a+")
+      end
+   else
+      file = io.open(options.filename, "a+")
+   end
+
    file:write(msg, "\n")
-   file:close()
+
+   if options.keep_alive == nil or
+      options.keep_alive ~= "true" then
+	 file:close()
+	 file = nil
+   end
 end
 
 function mod.syslog(priority, priority_num, msg, options)
@@ -52,10 +64,22 @@ function mod.program(priority, priority_num, msg, options)
    -- successfully. However, the luajit we're using returns true even
    -- when the shell can't run the program.
 
-   file = io.popen(options.program, "w")
+   -- Note: options are all strings
+   if options.keep_alive == "true" then
+      if file == nil then
+	 file = io.popen(options.program, "w")
+      end
+   else
+      file = io.popen(options.program, "w")
+   end
 
    file:write(msg, "\n")
-   file:close()
+
+   if options.keep_alive == nil or
+      options.keep_alive ~= "true" then
+	 file:close()
+	 file = nil
+   end
 end
 
 function output_event(event, rule, priority, priority_num, format)
