@@ -66,6 +66,12 @@ stdout_output:
 #   - logging (alternate method than syslog):
 #         program: logger -t falco-test
 
+# If keep_alive is set to true, the program will be started once and
+# continuously written to, with each output message on its own
+# line. If keep_alive is set to false, the program will be re-spawned
+# for each output message.
+
 program_output:
   enabled: false
+  keep_alive: false
   program: mail -s "Falco Notification" someone@example.com
