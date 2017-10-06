@@ -296,7 +296,7 @@ class FalcoTest(Test):
             res = process.run("docker rm falco-test")
 
         elif self.package.endswith(".deb"):
-            cmdline = "dpkg -r falco"
+            cmdline = "dpkg --purge falco"
             self.log.debug("Uninstalling debian package via \"{}\"".format(cmdline))
             res = process.run(cmdline, timeout=120, sudo=True)
 
