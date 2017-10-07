@@ -107,6 +107,10 @@ static void usage()
 	   "                               Can not be specified with -t.\n"
 	   " -t <tag>                      Only run those rules with a tag=<tag>. Can be specified multiple times.\n"
 	   "                               Can not be specified with -T/-D.\n"
+	   " -U,--unbuffered               Turn off output buffering to configured outputs. This causes every\n"
+	   "                               single line emitted by falco to be flushed, which generates higher CPU\n"
+	   "                               usage but is useful when piping those outputs into another process\n"
+	   "                               or into a script.\n"
 	   " -v                            Verbose output.\n"
            " --version                     Print version number.\n"
 	   "\n"
@@ -256,6 +260,8 @@ int falco_init(int argc, char **argv)
 	int file_limit = 0;
 	unsigned long event_limit = 0L;
 	bool compress = false;
+	bool buffered_outputs = true;
+	bool buffered_cmdline = false;
 
 	// Used for stats
 	uint64_t num_evts;
@@ -272,6 +278,7 @@ int falco_init(int argc, char **argv)
 		{"option", required_argument, 0, 'o'},
 		{"print", required_argument, 0, 'p' },
 		{"pidfile", required_argument, 0, 'P' },
+		{"unbuffered", no_argument, 0, 'U' },
 		{"version", no_argument, 0, 0 },
 		{"writefile", required_argument, 0, 'w' },
 
@@ -290,7 +297,7 @@ int falco_init(int argc, char **argv)
 		// Parse the args
 		//
 		while((op = getopt_long(argc, argv,
-                                        "hc:AdD:e:k:K:Ll:m:M:o:P:p:r:s:T:t:vw:",
+                                        "hc:AdD:e:k:K:Ll:m:M:o:P:p:r:s:T:t:Uvw:",
                                         long_options, &long_index)) != -1)
 		{
 			switch(op)
@@ -378,6 +385,10 @@ int falco_init(int argc, char **argv)
 			case 't':
 				enabled_rule_tags.insert(optarg);
 				break;
+			case 'U':
+				buffered_outputs = false;
+				buffered_cmdline = true;
+				break;
 			case 'v':
 				verbose = true;
 				break;
@@ -463,6 +474,11 @@ int falco_init(int argc, char **argv)
 
 		engine->set_min_priority(config.m_min_priority);
 
+		if(buffered_cmdline)
+		{
+			config.m_buffered_outputs = buffered_outputs;
+		}
+
 		for (auto filename : config.m_rules_filenames)
 		{
 			engine->load_rules_file(filename, verbose, all_events);
@@ -503,7 +519,9 @@ int falco_init(int argc, char **argv)
 			engine->enable_rule_by_tag(enabled_rule_tags, true);
 		}
 
-		outputs->init(config.m_json_output, config.m_notifications_rate, config.m_notifications_max_burst);
+		outputs->init(config.m_json_output,
+			      config.m_notifications_rate, config.m_notifications_max_burst,
+			      config.m_buffered_outputs);
 
 		if(!all_events)
 		{
