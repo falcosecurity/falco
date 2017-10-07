@@ -22,7 +22,8 @@ along with falco.  If not, see <http://www.gnu.org/licenses/>.
 using namespace std;
 
 falco_configuration::falco_configuration()
-	: m_config(NULL)
+	: m_buffered_outputs(true),
+	  m_config(NULL)
 {
 }
 
@@ -141,6 +142,8 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 		throw invalid_argument("Unknown priority \"" + priority + "\"--must be one of emergency, alert, critical, error, warning, notice, informational, debug");
 	}
 	m_min_priority = (falco_common::priority_type) (it - falco_common::priority_names.begin());
+
+	m_buffered_outputs = m_config->get_scalar<bool>("buffered_outputs", true);
 
 	falco_logger::log_stderr = m_config->get_scalar<bool>("log_stderr", false);
 	falco_logger::log_syslog = m_config->get_scalar<bool>("log_syslog", true);

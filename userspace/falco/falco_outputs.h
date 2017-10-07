@@ -41,7 +41,7 @@ public:
 		std::map<std::string, std::string> options;
 	};
 
-	void init(bool json_output, uint32_t rate, uint32_t max_burst);
+	void init(bool json_output, uint32_t rate, uint32_t max_burst, bool buffered);
 
 	void add_output(output_config oc);
 
@@ -56,6 +56,8 @@ private:
 
 	// Rate limits notifications
 	token_bucket m_notifications_tb;
+
+	bool m_buffered;
 
 	std::string m_lua_add_output = "add_output";
 	std::string m_lua_output_event = "output_event";

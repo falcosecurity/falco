@@ -172,6 +172,8 @@ class falco_configuration
 	uint32_t m_notifications_max_burst;
 
 	falco_common::priority_type m_min_priority;
+
+	bool m_buffered_outputs;
  private:
 	void init_cmdline_options(std::list<std::string> &cmdline_options);
 

@@ -20,8 +20,15 @@ local mod = {}
 
 local outputs = {}
 
-function mod.stdout(priority, priority_num, msg)
+function mod.stdout(priority, priority_num, buffered, msg)
+   if buffered == 0 then
+      io.stdout:setvbuf 'no'
+   end
    print (msg)
+end
+
+function mod.stdout_cleanup()
+   io.stdout:flush()
 end
 
 function mod.file_validate(options)
@@ -37,10 +44,13 @@ function mod.file_validate(options)
 
 end
 
-function mod.file(priority, priority_num, msg, options)
+function mod.file(priority, priority_num, buffered, msg, options)
    if options.keep_alive == "true" then
       if file == nil then
 	 file = io.open(options.filename, "a+")
+	 if buffered == 0 then
+	    file:setvbuf 'no'
+	 end
       end
    else
       file = io.open(options.filename, "a+")
@@ -55,11 +65,22 @@ function mod.file(priority, priority_num, msg, options)
    end
 end
 
-function mod.syslog(priority, priority_num, msg, options)
+function mod.file_cleanup()
+   if file ~= nil then
+      file:flush()
+      file:close()
+      file = nil
+   end
+end
+
+function mod.syslog(priority, priority_num, buffered, msg, options)
    falco.syslog(priority_num, msg)
 end
 
-function mod.program(priority, priority_num, msg, options)
+function mod.syslog_cleanup()
+end
+
+function mod.program(priority, priority_num, buffered, msg, options)
    -- XXX Ideally we'd check that the program ran
    -- successfully. However, the luajit we're using returns true even
    -- when the shell can't run the program.
@@ -68,6 +89,9 @@ function mod.program(priority, priority_num, msg, options)
    if options.keep_alive == "true" then
       if file == nil then
 	 file = io.popen(options.program, "w")
+	 if buffered == 0 then
+	    file:setvbuf 'no'
+	 end
       end
    else
       file = io.popen(options.program, "w")
@@ -79,6 +103,14 @@ function mod.program(priority, priority_num, msg, options)
       options.keep_alive ~= "true" then
 	 file:close()
 	 file = nil
+   end
+end
+
+function mod.program_cleanup()
+   if file ~= nil then
+      file:flush()
+      file:close()
+      file = nil
    end
 end
 
@@ -94,15 +126,18 @@ function output_event(event, rule, priority, priority_num, format)
    msg = formats.format_event(event, rule, priority, format)
 
    for index,o in ipairs(outputs) do
-      o.output(priority, priority_num, msg, o.config)
+      o.output(priority, priority_num, o.buffered, msg, o.config)
    end
 end
 
 function output_cleanup()
    formats.free_formatters()
+   for index,o in ipairs(outputs) do
+      o.cleanup()
+   end
 end
 
-function add_output(output_name, config)
+function add_output(output_name, buffered, config)
    if not (type(mod[output_name]) == 'function') then
       error("rule_loader.add_output(): invalid output_name: "..output_name)
    end
@@ -113,7 +148,9 @@ function add_output(output_name, config)
      mod[output_name.."_validate"](config)
    end
 
-   table.insert(outputs, {output = mod[output_name], config=config})
+   table.insert(outputs, {output = mod[output_name],
+			  cleanup = mod[output_name.."_cleanup"],
+			  buffered=buffered, config=config})
 end
 
 return mod
