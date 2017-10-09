@@ -444,7 +444,10 @@
   condition: (proc.name=start-fluentd and fd.name in (/etc/fluent/fluent.conf, /etc/td-agent/td-agent.conf))
 
 - macro: qualys_writing_conf_files
-  condition: proc.name=qualys-cloud-ag and fd.name=/etc/qualys/cloud-agent/qagent-log.conf
+  condition: (proc.name=qualys-cloud-ag and fd.name=/etc/qualys/cloud-agent/qagent-log.conf)
+
+- macro: git_writing_nssdb
+  condition: (proc.cmdline="git-remote-http origin" and fd.directory=/etc/pki/nssdb)
 
 # Add conditions to this macro (probably in a separate file,
 # overwriting this macro) to allow for specific combinations of
@@ -484,6 +487,7 @@
     and not run_by_centrify
     and not run_by_adclient
     and not qualys_writing_conf_files
+    and not git_writing_nssdb
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc, not in a pipe installer session
