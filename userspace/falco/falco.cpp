@@ -111,6 +111,7 @@ static void usage()
 	   "                               single line emitted by falco to be flushed, which generates higher CPU\n"
 	   "                               usage but is useful when piping those outputs into another process\n"
 	   "                               or into a script.\n"
+	   " -V,--validate <rules_file>    Read the contents of the specified rules file and exit\n"
 	   " -v                            Verbose output.\n"
            " --version                     Print version number.\n"
 	   "\n"
@@ -244,6 +245,7 @@ int falco_init(int argc, char **argv)
 	string pidfilename = "/var/run/falco.pid";
 	bool describe_all_rules = false;
 	string describe_rule = "";
+	string validate_rules_file = "";
 	string stats_filename = "";
 	bool verbose = false;
 	bool all_events = false;
@@ -280,6 +282,7 @@ int falco_init(int argc, char **argv)
 		{"pidfile", required_argument, 0, 'P' },
 		{"unbuffered", no_argument, 0, 'U' },
 		{"version", no_argument, 0, 0 },
+		{"validate", required_argument, 0, 0 },
 		{"writefile", required_argument, 0, 'w' },
 
 		{0, 0, 0, 0}
@@ -297,7 +300,7 @@ int falco_init(int argc, char **argv)
 		// Parse the args
 		//
 		while((op = getopt_long(argc, argv,
-                                        "hc:AdD:e:k:K:Ll:m:M:o:P:p:r:s:T:t:Uvw:",
+                                        "hc:AdD:e:k:K:Ll:m:M:o:P:p:r:s:T:t:UvV:w:",
                                         long_options, &long_index)) != -1)
 		{
 			switch(op)
@@ -392,6 +395,9 @@ int falco_init(int argc, char **argv)
 			case 'v':
 				verbose = true;
 				break;
+			case 'V':
+				validate_rules_file = optarg;
+				break;
 			case 'w':
 				outfile = optarg;
 				break;
@@ -454,6 +460,14 @@ int falco_init(int argc, char **argv)
 			}
 		}
 
+		if(validate_rules_file != "")
+		{
+			falco_logger::log(LOG_INFO, "Validating rules file: " + validate_rules_file + "...\n");
+			engine->load_rules_file(validate_rules_file, verbose, all_events);
+			falco_logger::log(LOG_INFO, "Ok\n");
+			goto exit;
+		}
+
 		falco_configuration config;
 		if (conf_filename.size())
 		{
@@ -477,6 +491,11 @@ int falco_init(int argc, char **argv)
 		if(buffered_cmdline)
 		{
 			config.m_buffered_outputs = buffered_outputs;
+		}
+
+		if(config.m_rules_filenames.size() == 0)
+		{
+			throw std::invalid_argument("You must specify at least one rules file via -r or a rules_file entry in falco.yaml");
 		}
 
 		for (auto filename : config.m_rules_filenames)
