@@ -366,7 +366,7 @@
        proc.cmdline startswith "sh -c if type gcc" or
        proc.cmdline startswith "sh -c cd '/var/www/edi/';LC_ALL=en_US.UTF-8 git" or
        proc.cmdline startswith "sh -c /usr/src/app/crxlsx/bin/linux/crxlsx" or
-       proc.pcmdline="node /opt/nodejs/bin/yarn"))
+       proc.pcmdline startswith "node /opt/nodejs/bin/yarn"))
 
 - macro: parent_node_running_npm
   condition: proc.pcmdline startswith "node /usr/local/bin/npm"
@@ -787,7 +787,9 @@
     '"sh -c node -e \"require(''nan'')\")"',
     '"sh -c node $NODE_DEBUG_OPTION index.js "',
     '"sh -c crontab -l 2"',
-    '"sh -c lsb_release -a"'
+    '"sh -c lsb_release -a"',
+    '"sh -c whoami"',
+    '"sh -c node_modules/.bin/bower-installer"'
     ]
 
 # This list allows for easy additions to the set of commands allowed
@@ -829,7 +831,7 @@
                            monitoring_binaries, gitlab_binaries, initdb, pg_ctl, awk, falco, cron,
                            erl_child_setup, ceph, PM2, pycompile, py3compile, hhvm, npm, mysql_install_d, serf,
                            runsv, supervisord, varnishd, crond, logrotate, timeout, tini,
-                           xrdb, xfce4-session, weave, mysql_ssl_rsa_s, logdna-agent, bundle)
+                           xrdb, xfce4-session, weave, mysql_ssl_rsa_s, logdna-agent, bundle, configure)
     and not trusted_containers
     and not shell_spawning_containers
     and not parent_java_running_echo
