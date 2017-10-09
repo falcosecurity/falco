@@ -887,14 +887,23 @@
               (user.name=pki-acme and evt.arg.uid=pki-acme) or
               (user.name=nfsnobody and evt.arg.uid=nfsnobody))
 
+# In containers, the user name might be for a uid that exists in the
+# container but not on the host. (See
+# https://github.com/draios/sysdig/issues/954). So in that case, allow
+# a setuid.
+
+- macro: unknown_user_in_container
+  condition: (user.name="<NA>" and container)
+
 # sshd, mail programs attempt to setuid to root even when running as non-root. Excluding here to avoid meaningless FPs
 - rule: Non sudo setuid
   desc: >
     an attempt to change users by calling setuid. sudo/su are excluded. users "root" and "nobody"
     suing to itself are also excluded, as setuid calls typically involve dropping privileges.
   condition: >
-    evt.type=setuid and evt.dir=> and
-    not user.name=root and not somebody_becoming_themself
+    evt.type=setuid and evt.dir=>
+    and not unknown_user_in_container
+    and not user.name=root and not somebody_becoming_themself
     and not proc.name in (known_setuid_binaries, userexec_binaries, mail_binaries, docker_binaries, nomachine_binaries)
     and not java_running_sdjagent
   output: >
