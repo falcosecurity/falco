@@ -2,9 +2,50 @@
 
 This file documents all notable changes to Falco. The release numbering uses [semantic versioning](http://semver.org).
 
+## v0.8.0
+
+Released 2017-10-10
+
+**Important**: the location for falco's configuration file has moved from `/etc/falco.yaml` to `/etc/falco/falco.yaml`. The default rules file has moved from `/etc/falco_rules.yaml` to `/etc/falco/falco_rules.yaml`. In addition, 0.8.0 has added a _local_ ruls file to `/etc/falco/falco_rules.local.yaml`. See [the documentation](https://github.com/draios/falco/wiki/Falco-Default-and-Local-Rules-Files) for more details.
+
+### Major Changes
+
+* Add the ability to append one list to another list by setting an `append: true` attribute. [[#264](https://github.com/draios/falco/pull/264)]
+* Add the ability to append one macro/rule to another list by setting an `append: true` attribute. [[#277](https://github.com/draios/falco/pull/277)]
+* Ensure that falco rules/config files are preserved across package upgrades/removes if modified. [[#278](https://github.com/draios/falco/pull/278)]
+* Add the notion of a "local" rules file that should contain modifications to the default falco rules file. [[#278](https://github.com/draios/falco/pull/278)]
+* When using json output, separately include the individual templated fields in the json object. [[#282](https://github.com/draios/falco/pull/282)]
+* Add the ability to keep a file/program pipe handle open across rule notifications. [[#283](https://github.com/draios/falco/pull/283)]
+* New argument `-V` validates rules file and immediately exits. [[#286](https://github.com/draios/falco/pull/286)]
+
+### Minor Changes
+
+* Minor updates to falco example programs [[#248](https://github.com/draios/falco/pull/248)] [[#275](https://github.com/draios/falco/pull/275)]
+* Also validate macros at rule parse time. [[#257](https://github.com/draios/falco/pull/257)]
+* Minor README typo fixes [[#276](https://github.com/draios/falco/pull/276)]
+* Add a government CLA (contributor license agreement). [[#263](https://github.com/draios/falco/pull/263)]
+* Add ability to only run rules with a priority >= some threshold [[#281](https://github.com/draios/falco/pull/281)]
+* Add ability to make output channels unbuffered [[#285](https://github.com/draios/falco/pull/285)]
+
+### Bug Fixes
+
+* Fix installation of falco on OSX [[#252](https://github.com/draios/falco/pull/252)]
+* Fix a bug that caused the trailing whitespace of a quoted string to be accidentally removed [[#254](https://github.com/draios/falco/pull/254)]
+* When multiple sets of kernel headers are installed, find the one for the running kernel [[#260](https://github.com/draios/falco/pull/260)]
+* Allow pathnames in rule/macro conditions to contain '.' characters [[#262](https://github.com/draios/falco/pull/262)]
+* Fix a bug where a list named "foo" would be substituted even if it were a substring of a longer word like "my_foo" [[#258](https://github.com/draios/falco/pull/258)]
+* Remove extra trailing newlines from rule output strings [[#265](https://github.com/draios/falco/pull/265)]
+* Improve build pathnames to avoid relative paths when possible [[#284](https://github.com/draios/falco/pull/284)]
+
+### Rule Changes
+
+* Significant changes to default ruleset to address FPs. These changes resulted from hundreds of hours of use in actual customer environments. [[#247](https://github.com/draios/falco/pull/247)] [[#259](https://github.com/draios/falco/pull/259)]
+* Add official gitlab EE docker image to list of known shell spawning images. Thanks @dkerwin! [[#270](https://github.com/draios/falco/pull/270)]
+* Add keepalived to list of shell spawning binaries. Thanks @dkerwin! [[#269](https://github.com/draios/falco/pull/269)]
+
 ## v0.7.0
 
-Released 2016-05-30
+Released 2017-05-30
 
 ### Major Changes
 
@@ -27,7 +68,7 @@ None.
 
 ## v0.6.1
 
-Released 2016-05-15
+Released 2017-05-15
 
 ### Major Changes
 
@@ -47,7 +88,7 @@ None
 
 ## v0.6.0
 
-Released 2016-03-29
+Released 2017-03-29
 
 ### Major Changes
 
