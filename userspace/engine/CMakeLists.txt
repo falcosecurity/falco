@@ -27,5 +27,3 @@ install(DIRECTORY lua
 	DESTINATION "${FALCO_SHARE_DIR}"
 	FILES_MATCHING PATTERN *.lua)
 endif()
-
-add_subdirectory("${PROJECT_SOURCE_DIR}/../falco/rules" "${PROJECT_BINARY_DIR}/rules")
