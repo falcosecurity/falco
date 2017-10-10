@@ -2,6 +2,14 @@
 
 This file documents all notable changes to Falco. The release numbering uses [semantic versioning](http://semver.org).
 
+## v0.8.1
+
+Released 2017-10-10
+
+### Bug Fixes
+
+* Fix packaging to specify correct built-in config file [[#288](https://github.com/draios/falco/pull/288)]
+
 ## v0.8.0
 
 Released 2017-10-10
