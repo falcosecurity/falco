@@ -1,0 +1,12 @@
+- list: my_list
+  items: [cat]
+
+- list: my_list
+  append: false
+  items: [not-cat]
+
+- rule: Open From Cat
+  desc: A process named cat does an open
+  condition: evt.type=open and proc.name in (my_list)
+  output: "An open was seen (command=%proc.cmdline)"
+  priority: WARNING

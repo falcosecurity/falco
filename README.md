@@ -2,7 +2,7 @@
 
 #### Latest release
 
-**v0.7.0**
+**v0.8.0**
 Read the [change log](https://github.com/draios/falco/blob/dev/CHANGELOG.md)
 
 Dev Branch: [![Build Status](https://travis-ci.org/draios/falco.svg?branch=dev)](https://travis-ci.org/draios/falco)<br />
@@ -36,7 +36,7 @@ Join the Community
 * Contact the [official mailing list](https://groups.google.com/forum/#!forum/falco) for support and to talk with other users.
 * Follow us on [Twitter](https://twitter.com/sysdig) for general falco and sysdig news.
 * This is our [blog](https://sysdig.com/blog/), where you can find the latest [falco](https://sysdig.com/blog/tag/falco/) posts.
-* Join our [Public Slack](https://sysdig.slack.com) channel for sysdig and falco announcements and discussions.
+* Join our [Public Slack](https://slack.sysdig.com) channel for sysdig and falco announcements and discussions.
 
 License Terms
 ---
@@ -61,15 +61,27 @@ As always, we are grateful for your past and present contributions to falco.
 
 **Individual contributions**: Individuals who wish to make contributions must review the [Individual Contributor License Agreement](./cla/falco_contributor_agreement.txt) and indicate agreement by adding the following line to every GIT commit message:
 
+```
 falco-CLA-1.0-signed-off-by: Joe Smith <joe.smith@email.com>
+```
 
 Use your real name; pseudonyms or anonymous contributions are not allowed.
 
 **Corporate contributions**: Employees of corporations, members of LLCs or LLPs, or others acting on behalf of a contributing entity, must review the [Corporate Contributor License Agreement](./cla/falco_corp_contributor_agreement.txt), must be an authorized representative of the contributing entity, and indicate agreement to it on behalf of the contributing entity by adding the following lines to every GIT commit message:
 
 ```
- falco-CLA-1.0-contributing-entity: Full Legal Name of Entity
- falco-CLA-1.0-signed-off-by: Joe Smith <joe.smith@email.com>
+falco-CLA-1.0-contributing-entity: Full Legal Name of Entity
+falco-CLA-1.0-signed-off-by: Joe Smith <joe.smith@email.com>
+```
+
+Use a real name of a natural person who is an authorized representative of the contributing entity; pseudonyms or anonymous contributions are not allowed.
+
+**Government contributions**: Employees or officers of the United States Government, must review the [Government Contributor License Agreement](https://github.com/draios/falco/blob/dev/cla/falco_govt_contributor_agreement.txt), must be an authorized representative of the contributing entity, and indicate agreement to it on behalf of the contributing entity by adding the following lines to every GIT commit message:
+
+```
+falco-CLA-1.0-contributing-govt-entity: Full Legal Name of Entity
+falco-CLA-1.0-signed-off-by: Joe Smith <joe.smith@email.com>
+This file is a work of authorship of an employee or officer of the United States Government and is not subject to copyright in the United States under 17 USC 105.
 ```
 
 Use a real name of a natural person who is an authorized representative of the contributing entity; pseudonyms or anonymous contributions are not allowed.

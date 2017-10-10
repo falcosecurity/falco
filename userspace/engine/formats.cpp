@@ -92,6 +92,7 @@ int falco_formats::free_formatters(lua_State *ls)
 int falco_formats::format_event (lua_State *ls)
 {
 	string line;
+	string json_line;
 
 	if (!lua_isstring(ls, -1) ||
 	    !lua_isstring(ls, -2) ||
@@ -109,6 +110,20 @@ int falco_formats::format_event (lua_State *ls)
 
 	try {
 		s_formatters->tostring(evt, sformat, &line);
+
+		if(s_json_output)
+		{
+			s_inspector->set_buffer_format(sinsp_evt::PF_JSON);
+			s_formatters->tostring(evt, sformat, &json_line);
+
+			// The formatted string might have a leading newline. If it does, remove it.
+			if (json_line[0] == '\n')
+			{
+				json_line.erase(0, 1);
+			}
+
+			s_inspector->set_buffer_format(sinsp_evt::PF_NORMAL);
+		}
 	}
 	catch (sinsp_exception& e)
 	{
@@ -117,13 +132,15 @@ int falco_formats::format_event (lua_State *ls)
 		lua_error(ls);
 	}
 
-	// For JSON output, the formatter returned just the output
-	// string containing the format text and values. Use this to
-	// build a more detailed object containing the event time,
-	// rule, severity, full output, and fields.
+	// For JSON output, the formatter returned a json-as-text
+	// object containing all the fields in the original format
+	// message as well as the event time in ns. Use this to build
+	// a more detailed object containing the event time, rule,
+	// severity, full output, and fields.
 	if (s_json_output) {
 		Json::Value event;
 		Json::FastWriter writer;
+		string full_line;
 
 		// Convert the time-as-nanoseconds to a more json-friendly ISO8601.
 		time_t evttime = evt->get_ts()/1000000000;
@@ -138,16 +155,26 @@ int falco_formats::format_event (lua_State *ls)
 		event["time"] = iso8601evttime;
 		event["rule"] = rule;
 		event["priority"] = level;
+		// This is the filled-in output line.
 		event["output"] = line;
 
-		line = writer.write(event);
+		full_line = writer.write(event);
 
 		// Json::FastWriter may add a trailing newline. If it
 		// does, remove it.
-		if (line[line.length()-1] == '\n')
+		if (full_line[full_line.length()-1] == '\n')
 		{
-			line.resize(line.length()-1);
+			full_line.resize(full_line.length()-1);
 		}
+
+		// Cheat-graft the output from the formatter into this
+		// string. Avoids an unnecessary json parse just to
+		// merge the formatted fields at the object level.
+		full_line.pop_back();
+		full_line.append(", \"output_fields\": ");
+		full_line.append(json_line);
+		full_line.append("}");
+		line = full_line;
 	}
 
 	lua_pushstring(ls, line.c_str());

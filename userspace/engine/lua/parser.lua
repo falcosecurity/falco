@@ -127,10 +127,11 @@ function trim(s)
    if (type(s) ~= "string") then return s end
   return (s:gsub("^%s*(.-)%s*$", "%1"))
 end
+parser.trim = trim
 
 local function terminal (tag)
    -- Rather than trim the whitespace in this way, it would be nicer to exclude it from the capture...
-   return token(V(tag), tag) / function (tok) return { type = tag, value = trim(tok)} end
+   return token(V(tag), tag) / function (tok) val = tok; if tag ~= "String" then val = trim(tok) end; return { type = tag, value = val} end
 end
 
 local function unaryboolop (op, e)
@@ -237,7 +238,7 @@ local G = {
   Identifier = V"idStart" * V"idRest"^0;
   Macro = V"idStart" * V"idRest"^0 * -P".";
   Int = digit^1;
-  PathString = (alnum + S'-_/*?')^1;
+  PathString = (alnum + S'.-_/*?')^1;
   Index = V"Int" + V"PathString";
   FieldName = V"Identifier" * (P"." + V"Identifier")^1 * (P"[" * V"Index" * P"]")^-1;
   Name = C(V"Identifier") * -V"idRest";

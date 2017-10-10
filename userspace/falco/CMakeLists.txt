@@ -19,7 +19,7 @@ target_link_libraries(falco
 
 configure_file(config_falco.h.in config_falco.h)
 
-install(TARGETS falco DESTINATION bin)
+install(TARGETS falco DESTINATION ${FALCO_BIN_DIR})
 install(DIRECTORY lua
-	DESTINATION share/falco
+	DESTINATION ${FALCO_SHARE_DIR}
 	FILES_MATCHING PATTERN *.lua)

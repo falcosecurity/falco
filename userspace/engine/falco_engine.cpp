@@ -41,6 +41,7 @@ using namespace std;
 
 falco_engine::falco_engine(bool seed_rng)
 	: m_rules(NULL), m_next_ruleset_id(0),
+	  m_min_priority(falco_common::PRIORITY_DEBUG),
 	  m_sampling_ratio(1), m_sampling_multiplier(0),
 	  m_replace_container_info(false)
 {
@@ -89,7 +90,7 @@ void falco_engine::load_rules(const string &rules_content, bool verbose, bool al
 	bool json_output = false;
 	falco_formats::init(m_inspector, m_ls, json_output);
 
-	m_rules->load_rules(rules_content, verbose, all_events, m_extra, m_replace_container_info);
+	m_rules->load_rules(rules_content, verbose, all_events, m_extra, m_replace_container_info, m_min_priority);
 }
 
 void falco_engine::load_rules_file(const string &rules_filename, bool verbose, bool all_events)
@@ -132,6 +133,11 @@ void falco_engine::enable_rule_by_tag(const set<string> &tags, bool enabled, con
 void falco_engine::enable_rule_by_tag(const set<string> &tags, bool enabled)
 {
 	enable_rule_by_tag(tags, enabled, m_default_ruleset);
+}
+
+void falco_engine::set_min_priority(falco_common::priority_type priority)
+{
+	m_min_priority = priority;
 }
 
 uint16_t falco_engine::find_ruleset_id(const std::string &ruleset)
@@ -178,7 +184,7 @@ unique_ptr<falco_engine::rule_result> falco_engine::process_event(sinsp_evt *ev,
 		res->evt = ev;
 		const char *p =  lua_tostring(m_ls, -3);
 		res->rule = p;
-		res->priority = lua_tostring(m_ls, -2);
+		res->priority_num = (falco_common::priority_type) lua_tonumber(m_ls, -2);
 		res->format = lua_tostring(m_ls, -1);
 		lua_pop(m_ls, 3);
 	}

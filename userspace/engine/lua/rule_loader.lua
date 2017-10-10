@@ -58,6 +58,17 @@ function map(f, arr)
    return res
 end
 
+priorities = {"Emergency", "Alert", "Critical", "Error", "Warning", "Notice", "Informational", "Debug"}
+
+local function priority_num_for(s)
+   s = string.lower(s)
+   for i,v in ipairs(priorities) do
+      if (string.find(string.lower(v), "^"..s)) then
+	 return i - 1 -- (numbers start at 0, lua indices start at 1)
+      end
+   end
+   error("Invalid priority level: "..s)
+end
 
 --[[
    Take a filter AST and set it up in the libsinsp runtime, using the filter API.
@@ -171,7 +182,7 @@ function table.tostring( tbl )
 end
 
 
-function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replace_container_info)
+function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replace_container_info, min_priority)
 
    compiler.set_verbose(verbose)
    compiler.set_all_events(all_events)
@@ -208,7 +219,23 @@ function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replac
 	    end
 	 end
 
-	 state.macros_by_name[v['macro']] = v
+	 -- Possibly append to the condition field of an existing macro
+	 append = false
+
+	 if v['append'] then
+	    append = v['append']
+	 end
+
+	 if append then
+	    if state.macros_by_name[v['macro']] == nil then
+	       error ("Macro " ..v['macro'].. " has 'append' key but no macro by that name already exists")
+	    end
+
+	    state.macros_by_name[v['macro']]['condition'] = state.macros_by_name[v['macro']]['condition'] .. " " .. v['condition']
+
+	 else
+	    state.macros_by_name[v['macro']] = v
+	 end
 
       elseif (v['list']) then
 
@@ -222,7 +249,24 @@ function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replac
 	    end
 	 end
 
-	 state.lists_by_name[v['list']] = v
+	 -- Possibly append to an existing list
+	 append = false
+
+	 if v['append'] then
+	    append = v['append']
+	 end
+
+	 if append then
+	    if state.lists_by_name[v['list']] == nil then
+	       error ("List " ..v['list'].. " has 'append' key but no list by that name already exists")
+	    end
+
+	    for i, elem in ipairs(v['items']) do
+	       table.insert(state.lists_by_name[v['list']]['items'], elem)
+	    end
+	 else
+	    state.lists_by_name[v['list']] = v
+	 end
 
       elseif (v['rule']) then
 
@@ -230,21 +274,54 @@ function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replac
 	    error ("Missing name in rule")
 	 end
 
-	 for i, field in ipairs({'condition', 'output', 'desc', 'priority'}) do
-	    if (v[field] == nil) then
-	       error ("Missing "..field.." in rule with name "..v['rule'])
+	 -- Possibly append to the condition field of an existing rule
+	 append = false
+
+	 if v['append'] then
+	    append = v['append']
+	 end
+
+	 if append then
+
+	    -- For append rules, all you need is the condition
+	    for i, field in ipairs({'condition'}) do
+	       if (v[field] == nil) then
+		  error ("Missing "..field.." in rule with name "..v['rule'])
+	       end
+	    end
+
+	    if state.rules_by_name[v['rule']] == nil then
+	       error ("Rule " ..v['rule'].. " has 'append' key but no rule by that name already exists")
+	    end
+
+	    state.rules_by_name[v['rule']]['condition'] = state.rules_by_name[v['rule']]['condition'] .. " " .. v['condition']
+
+	 else
+
+	    for i, field in ipairs({'condition', 'output', 'desc', 'priority'}) do
+	       if (v[field] == nil) then
+		  error ("Missing "..field.." in rule with name "..v['rule'])
+	       end
+	    end
+
+	    -- Convert the priority-as-string to a priority-as-number now
+	    v['priority_num'] = priority_num_for(v['priority'])
+
+	    if v['priority_num'] <= min_priority then
+	       -- Note that we can overwrite rules, but the rules are still
+	       -- loaded in the order in which they first appeared,
+	       -- potentially across multiple files.
+	       if state.rules_by_name[v['rule']] == nil then
+		  state.ordered_rule_names[#state.ordered_rule_names+1] = v['rule']
+	       end
+
+	       -- The output field might be a folded-style, which adds a
+	       -- newline to the end. Remove any trailing newlines.
+	       v['output'] = compiler.trim(v['output'])
+
+	       state.rules_by_name[v['rule']] = v
 	    end
 	 end
-
-	 -- Note that we can overwrite rules, but the rules are still
-	 -- loaded in the order in which they first appeared,
-	 -- potentially across multiple files.
-	 if state.rules_by_name[v['rule']] == nil then
-	    state.ordered_rule_names[#state.ordered_rule_names+1] = v['rule']
-	 end
-
-	 state.rules_by_name[v['rule']] = v
-
       else
 	 error ("Unknown rule object: "..table.tostring(v))
       end
@@ -283,7 +360,7 @@ function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replac
 
       local v = state.macros_by_name[name]
 
-      local ast = compiler.compile_macro(v['condition'], state.lists)
+      local ast = compiler.compile_macro(v['condition'], state.macros, state.lists)
       state.macros[v['macro']] = ast.filter.value
    end
 
@@ -443,7 +520,7 @@ function on_event(evt_, rule_id)
    -- Prefix output with '*' so formatting is permissive
    output = "*"..rule.output
 
-   return rule.rule, rule.priority, output
+   return rule.rule, rule.priority_num, output
 end
 
 function print_stats()

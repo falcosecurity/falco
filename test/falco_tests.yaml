@@ -129,6 +129,21 @@ trace_files: !mux
       - rules/double_rule.yaml
     trace_file: trace_files/cat_write.scap
 
+  multiple_rules_suppress_info:
+    detect: True
+    detect_level:
+      - WARNING
+      - ERROR
+    priority: WARNING
+    detect_counts:
+      - open_from_cat: 8
+      - exec_from_cat: 1
+      - access_from_cat: 0
+    rules_file:
+      - rules/single_rule.yaml
+      - rules/double_rule.yaml
+    trace_file: trace_files/cat_write.scap
+
   multiple_rules_overriding:
     detect: False
     rules_file:
@@ -155,6 +170,68 @@ trace_files: !mux
     rules_file:
       - rules/single_rule.yaml
       - rules/override_nested_list.yaml
+    trace_file: trace_files/cat_write.scap
+
+  list_substring:
+    detect: False
+    rules_file:
+      - rules/list_substring.yaml
+    trace_file: trace_files/cat_write.scap
+
+  list_sub_front:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/list_sub_front.yaml
+    trace_file: trace_files/cat_write.scap
+
+  list_sub_mid:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/list_sub_mid.yaml
+    trace_file: trace_files/cat_write.scap
+
+  list_sub_end:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/list_sub_end.yaml
+    trace_file: trace_files/cat_write.scap
+
+  list_sub_bare:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/list_sub_bare.yaml
+    trace_file: trace_files/cat_write.scap
+
+  list_sub_whitespace:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/list_sub_whitespace.yaml
+    trace_file: trace_files/cat_write.scap
+
+  list_order:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/list_order.yaml
+    trace_file: trace_files/cat_write.scap
+
+  macro_order:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/macro_order.yaml
+    trace_file: trace_files/cat_write.scap
+
+  rule_order:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/rule_order.yaml
     trace_file: trace_files/cat_write.scap
 
   invalid_rule_output:
@@ -517,3 +594,64 @@ trace_files: !mux
       - open_11: 1
       - open_12: 0
       - open_13: 0
+
+  list_append_failure:
+    exit_status: 1
+    stderr_contains: "List my_list has 'append' key but no list by that name already exists. Exiting"
+    rules_file:
+      - rules/list_append_failure.yaml
+    trace_file: trace_files/cat_write.scap
+
+  list_append:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/list_append.yaml
+    trace_file: trace_files/cat_write.scap
+
+  list_append_false:
+    detect: False
+    rules_file:
+      - rules/list_append_false.yaml
+    trace_file: trace_files/cat_write.scap
+
+  macro_append_failure:
+    exit_status: 1
+    stderr_contains: "Macro my_macro has 'append' key but no macro by that name already exists. Exiting"
+    rules_file:
+      - rules/macro_append_failure.yaml
+    trace_file: trace_files/cat_write.scap
+
+  macro_append:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/macro_append.yaml
+    trace_file: trace_files/cat_write.scap
+
+  macro_append_false:
+    detect: False
+    rules_file:
+      - rules/macro_append_false.yaml
+    trace_file: trace_files/cat_write.scap
+
+  rule_append_failure:
+    exit_status: 1
+    stderr_contains: "Rule my_rule has 'append' key but no rule by that name already exists. Exiting"
+    rules_file:
+      - rules/rule_append_failure.yaml
+    trace_file: trace_files/cat_write.scap
+
+  rule_append:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/rule_append.yaml
+    trace_file: trace_files/cat_write.scap
+
+  rule_append_false:
+    detect: False
+    rules_file:
+      - rules/rule_append_false.yaml
+    trace_file: trace_files/cat_write.scap
+

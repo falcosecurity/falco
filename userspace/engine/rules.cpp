@@ -145,7 +145,8 @@ void falco_rules::enable_rule(string &rule, bool enabled)
 
 void falco_rules::load_rules(const string &rules_content,
 			     bool verbose, bool all_events,
-			     string &extra, bool replace_container_info)
+			     string &extra, bool replace_container_info,
+			     falco_common::priority_type min_priority)
 {
 	lua_getglobal(m_ls, m_lua_load_rules.c_str());
 	if(lua_isfunction(m_ls, -1))
@@ -221,7 +222,8 @@ void falco_rules::load_rules(const string &rules_content,
 		lua_pushboolean(m_ls, (all_events ? 1 : 0));
 		lua_pushstring(m_ls, extra.c_str());
 		lua_pushboolean(m_ls, (replace_container_info ? 1 : 0));
-		if(lua_pcall(m_ls, 6, 0, 0) != 0)
+		lua_pushnumber(m_ls, min_priority);
+		if(lua_pcall(m_ls, 7, 0, 0) != 0)
 		{
 			const char* lerr = lua_tostring(m_ls, -1);
 			string err = "Error loading rules:" + string(lerr);

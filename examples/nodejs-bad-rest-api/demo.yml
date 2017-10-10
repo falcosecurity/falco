@@ -5,7 +5,7 @@ express_server:
   working_dir: /usr/src/app
   command: bash -c "npm install && node server.js"
   ports:
-    - "8080:8080"
+    - "8181:8181"
   volumes:
         - ${PWD}:/usr/src/app
 
