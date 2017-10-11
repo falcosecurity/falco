@@ -513,6 +513,7 @@
     and not qualys_writing_conf_files
     and not git_writing_nssdb
     and not plesk_writing_keys
+    and not run_by_chef
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc, not in a pipe installer session
