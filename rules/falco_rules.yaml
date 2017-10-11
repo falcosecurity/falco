@@ -328,6 +328,9 @@
 - macro: ansible_running_python
   condition: (proc.name in (python, pypy) and proc.cmdline contains ansible)
 
+- macro: parent_beam_running_python
+  condition: proc.pcmdline="python pipeline.py -c conf.json"
+
 - macro: python_running_denyhosts
   condition: >
     (proc.name=python and
@@ -683,6 +686,7 @@
     and not parent_nginx_running_serf
     and not parent_node_running_npm
     and not parent_java_running_sbt
+    and not parent_beam_running_python
     and not run_by_chef
     and not run_by_puppet
     and not run_by_adclient
@@ -861,6 +865,7 @@
     and not run_by_h2o
     and not run_by_passenger_agent
     and not parent_java_running_jenkins
+    and not parent_beam_running_python
     and not jenkins_script_sh
     and not bundle_running_ruby
   output: >
