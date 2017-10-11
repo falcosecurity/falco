@@ -148,6 +148,15 @@
 - list: db_server_binaries
   items: [mysqld]
 
+- list: mysql_mgmt_binaries
+  items: [mysql_install_d, mysql_ssl_rsa_s]
+
+- list: postgres_mgmt_binaries
+  items: [pg_dumpall, pg_ctl]
+
+- list: db_mgmt_binaries
+  items: [mysql_mgmt_binaries, postgres_mgmt_binaries]
+
 - list: gitlab_binaries
   items: [gitlab-shell, gitlab-mon, gitlab-runner-b, git]
 
@@ -643,9 +652,9 @@
     pyclean, py3clean, pip, pip2, ansible-playboo, man-db,
     init, pluto, mkinitramfs, unattended-upgr, watch, sysdig,
     landscape-sysin, nessusd, PM2, syslog-summary, erl_child_setup,
-    npm, cloud-init, toybox, ceph, hhvm, certbot, mysql_install_d,
+    npm, cloud-init, toybox, ceph, hhvm, certbot,
     serf, a2enmod, runsv, supervisord, varnishd, authconfig, tini,
-    timeout, updatedb.findut, mysql_ssl_rsa_s, adclient, systemd-udevd,
+    timeout, updatedb.findut, adclient, systemd-udevd,
     luajit
     ]
 
@@ -660,7 +669,7 @@
                            monitoring_binaries, gitlab_binaries, mesos_slave_binaries,
                            keepalived_binaries,
                            needrestart_binaries, phusion_passenger_binaries, chef_binaries, nomachine_binaries,
-                           x2go_binaries)
+                           x2go_binaries, db_mgmt_binaries)
     and not parent_ansible_running_python
     and not parent_bro_running_python
     and not parent_python_running_denyhosts
@@ -833,10 +842,11 @@
                            nomachine_binaries,
                            x2go_binaries,
                            xray_rabbitmq_binaries,
-                           monitoring_binaries, gitlab_binaries, initdb, pg_ctl, awk, falco, cron,
-                           erl_child_setup, ceph, PM2, pycompile, py3compile, hhvm, npm, mysql_install_d, serf,
+                           db_mgmt_binaries,
+                           monitoring_binaries, gitlab_binaries, initdb, awk, falco, cron,
+                           erl_child_setup, ceph, PM2, pycompile, py3compile, hhvm, npm, serf,
                            runsv, supervisord, varnishd, crond, logrotate, timeout, tini,
-                           xrdb, xfce4-session, weave, mysql_ssl_rsa_s, logdna-agent, bundle, configure, luajit)
+                           xrdb, xfce4-session, weave, logdna-agent, bundle, configure, luajit)
     and not trusted_containers
     and not shell_spawning_containers
     and not parent_java_running_echo
