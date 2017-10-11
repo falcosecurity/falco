@@ -233,7 +233,7 @@
   condition: proc.name in (coreutils_binaries, user_mgmt_binaries)
 
 - list: mail_binaries
-  items: [sendmail, sendmail-msp, postfix, procmail, exim4, pickup, showq, mailq]
+  items: [sendmail, sendmail-msp, postfix, procmail, exim4, pickup, showq, mailq, dovecot]
 
 - list: sendmail_config_binaries
   items: [
@@ -435,6 +435,9 @@
 
 - macro: java_running_sdjagent
   condition: proc.name=java and proc.cmdline contains sdjagent.jar
+
+- macro: parent_dovecot_running_auth
+  condition: (proc.pname=auth and proc.aname[2]=dovecot)
 
 ###############
 # General Rules
@@ -691,6 +694,7 @@
     and not run_by_puppet
     and not run_by_adclient
     and not run_by_centrify
+    and not parent_dovecot_running_auth
   output: >
     Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname
     cmdline=%proc.cmdline pcmdline=%proc.pcmdline gparent=%proc.aname[2] ggparent=%proc.aname[3]
@@ -868,6 +872,7 @@
     and not parent_beam_running_python
     and not jenkins_script_sh
     and not bundle_running_ruby
+    and not parent_dovecot_running_auth
   output: >
     Shell spawned in a container other than entrypoint (user=%user.name %container.info image=%container.image
     shell=%proc.name pcmdline=%proc.pcmdline cmdline=%proc.cmdline parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3])
