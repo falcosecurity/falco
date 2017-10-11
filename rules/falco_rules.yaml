@@ -311,6 +311,9 @@
 - list: sshkit_script_binaries
   items: [10_etc_sudoers., 10_passwd_group]
 
+- list: plesk_binaries
+  items: [sw-engine, sw-engine-fpm, filemng, f2bmng]
+
 # System users that should never log into a system. Consider adding your own
 # service users (e.g. 'apache' or 'mysqld') here.
 - macro: system_users
@@ -464,6 +467,9 @@
 - macro: git_writing_nssdb
   condition: (proc.cmdline="git-remote-http origin" and fd.directory=/etc/pki/nssdb)
 
+- macro: plesk_writing_keys
+  condition: (proc.cmdline in (plesk_binaries) and fd.name startswith /etc/sw/keys)
+
 # Add conditions to this macro (probably in a separate file,
 # overwriting this macro) to allow for specific combinations of
 # programs writing below specific directories below
@@ -503,6 +509,7 @@
     and not run_by_adclient
     and not qualys_writing_conf_files
     and not git_writing_nssdb
+    and not plesk_writing_keys
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc, not in a pipe installer session
@@ -675,7 +682,7 @@
                            monitoring_binaries, gitlab_binaries, mesos_slave_binaries,
                            keepalived_binaries,
                            needrestart_binaries, phusion_passenger_binaries, chef_binaries, nomachine_binaries,
-                           x2go_binaries, db_mgmt_binaries)
+                           x2go_binaries, db_mgmt_binaries, plesk_binaries)
     and not parent_ansible_running_python
     and not parent_bro_running_python
     and not parent_python_running_denyhosts
@@ -851,6 +858,7 @@
                            x2go_binaries,
                            xray_rabbitmq_binaries,
                            db_mgmt_binaries,
+                           plesk_binaries,
                            monitoring_binaries, gitlab_binaries, initdb, awk, falco, cron,
                            erl_child_setup, ceph, PM2, pycompile, py3compile, hhvm, npm, serf,
                            runsv, supervisord, varnishd, crond, logrotate, timeout, tini,
