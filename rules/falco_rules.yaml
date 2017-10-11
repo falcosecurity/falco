@@ -139,6 +139,12 @@
 - list: phusion_passenger_binaries
   items: [PassengerAgent]
 
+# A bit longer to avoid the fairly generic my_init.
+- macro: parent_phusion_passenger_my_init
+  condition: >
+    (proc.pcmdline="my_init -u /sbin/my_init " or
+     proc.pcmdline="my_init -u /sbin/my_init")
+
 - list: chef_binaries
   items: [chef-client]
 
@@ -888,6 +894,7 @@
     and not bundle_running_ruby
     and not parent_dovecot_running_auth
     and not parent_strongswan_running_starter
+    and not parent_phusion_passenger_my_init
   output: >
     Shell spawned in a container other than entrypoint (user=%user.name %container.info image=%container.image
     shell=%proc.name pcmdline=%proc.pcmdline cmdline=%proc.cmdline parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3])
