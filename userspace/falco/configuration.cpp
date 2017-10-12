@@ -22,7 +22,8 @@ along with falco.  If not, see <http://www.gnu.org/licenses/>.
 using namespace std;
 
 falco_configuration::falco_configuration()
-	: m_config(NULL)
+	: m_buffered_outputs(true),
+	  m_config(NULL)
 {
 }
 
@@ -51,20 +52,37 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 
 	init_cmdline_options(cmdline_options);
 
-	m_rules_filenames.push_back(m_config->get_scalar<string>("rules_file", "/etc/falco_rules.yaml"));
+	list<string> rules_files;
+
+	m_config->get_sequence<list<string>>(rules_files, string("rules_file"));
+
+	for(auto &file : rules_files)
+	{
+		// Here, we only include files that exist
+		struct stat buffer;
+		if(stat(file.c_str(), &buffer) == 0)
+		{
+			m_rules_filenames.push_back(file);
+		}
+	}
+
 	m_json_output = m_config->get_scalar<bool>("json_output", false);
 
 	falco_outputs::output_config file_output;
 	file_output.name = "file";
 	if (m_config->get_scalar<bool>("file_output", "enabled", false))
 	{
-		string filename;
+		string filename, keep_alive;
 		filename = m_config->get_scalar<string>("file_output", "filename", "");
 		if (filename == string(""))
 		{
 			throw invalid_argument("Error reading config file (" + m_config_file + "): file output enabled but no filename in configuration block");
 		}
 		file_output.options["filename"] = filename;
+
+		keep_alive = m_config->get_scalar<string>("file_output", "keep_alive", "");
+		file_output.options["keep_alive"] = keep_alive;
+
 		m_outputs.push_back(file_output);
 	}
 
@@ -86,13 +104,17 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 	program_output.name = "program";
 	if (m_config->get_scalar<bool>("program_output", "enabled", false))
 	{
-		string program;
+		string program, keep_alive;
 		program = m_config->get_scalar<string>("program_output", "program", "");
 		if (program == string(""))
 		{
 			throw sinsp_exception("Error reading config file (" + m_config_file + "): program output enabled but no program in configuration block");
 		}
 		program_output.options["program"] = program;
+
+		keep_alive = m_config->get_scalar<string>("program_output", "keep_alive", "");
+		program_output.options["keep_alive"] = keep_alive;
+
 		m_outputs.push_back(program_output);
 	}
 
@@ -107,6 +129,21 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 
 	m_notifications_rate = m_config->get_scalar<uint32_t>("outputs", "rate", 1);
 	m_notifications_max_burst = m_config->get_scalar<uint32_t>("outputs", "max_burst", 1000);
+
+	string priority = m_config->get_scalar<string>("priority", "debug");
+	vector<string>::iterator it;
+
+	auto comp = [priority] (string &s) {
+		return (strcasecmp(s.c_str(), priority.c_str()) == 0);
+	};
+
+	if((it = std::find_if(falco_common::priority_names.begin(), falco_common::priority_names.end(), comp)) == falco_common::priority_names.end())
+	{
+		throw invalid_argument("Unknown priority \"" + priority + "\"--must be one of emergency, alert, critical, error, warning, notice, informational, debug");
+	}
+	m_min_priority = (falco_common::priority_type) (it - falco_common::priority_names.begin());
+
+	m_buffered_outputs = m_config->get_scalar<bool>("buffered_outputs", true);
 
 	falco_logger::log_stderr = m_config->get_scalar<bool>("log_stderr", false);
 	falco_logger::log_syslog = m_config->get_scalar<bool>("log_syslog", true);

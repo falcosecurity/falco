@@ -107,6 +107,11 @@ static void usage()
 	   "                               Can not be specified with -t.\n"
 	   " -t <tag>                      Only run those rules with a tag=<tag>. Can be specified multiple times.\n"
 	   "                               Can not be specified with -T/-D.\n"
+	   " -U,--unbuffered               Turn off output buffering to configured outputs. This causes every\n"
+	   "                               single line emitted by falco to be flushed, which generates higher CPU\n"
+	   "                               usage but is useful when piping those outputs into another process\n"
+	   "                               or into a script.\n"
+	   " -V,--validate <rules_file>    Read the contents of the specified rules file and exit\n"
 	   " -v                            Verbose output.\n"
            " --version                     Print version number.\n"
 	   "\n"
@@ -212,7 +217,7 @@ uint64_t do_inspect(falco_engine *engine,
 		unique_ptr<falco_engine::rule_result> res = engine->process_event(ev);
 		if(res)
 		{
-			outputs->handle_event(res->evt, res->rule, res->priority, res->format);
+			outputs->handle_event(res->evt, res->rule, res->priority_num, res->format);
 		}
 
 		num_evts++;
@@ -240,6 +245,7 @@ int falco_init(int argc, char **argv)
 	string pidfilename = "/var/run/falco.pid";
 	bool describe_all_rules = false;
 	string describe_rule = "";
+	string validate_rules_file = "";
 	string stats_filename = "";
 	bool verbose = false;
 	bool all_events = false;
@@ -256,6 +262,8 @@ int falco_init(int argc, char **argv)
 	int file_limit = 0;
 	unsigned long event_limit = 0L;
 	bool compress = false;
+	bool buffered_outputs = true;
+	bool buffered_cmdline = false;
 
 	// Used for stats
 	uint64_t num_evts;
@@ -272,7 +280,9 @@ int falco_init(int argc, char **argv)
 		{"option", required_argument, 0, 'o'},
 		{"print", required_argument, 0, 'p' },
 		{"pidfile", required_argument, 0, 'P' },
+		{"unbuffered", no_argument, 0, 'U' },
 		{"version", no_argument, 0, 0 },
+		{"validate", required_argument, 0, 0 },
 		{"writefile", required_argument, 0, 'w' },
 
 		{0, 0, 0, 0}
@@ -290,7 +300,7 @@ int falco_init(int argc, char **argv)
 		// Parse the args
 		//
 		while((op = getopt_long(argc, argv,
-                                        "hc:AdD:e:k:K:Ll:m:M:o:P:p:r:s:T:t:vw:",
+                                        "hc:AdD:e:k:K:Ll:m:M:o:P:p:r:s:T:t:UvV:w:",
                                         long_options, &long_index)) != -1)
 		{
 			switch(op)
@@ -378,8 +388,15 @@ int falco_init(int argc, char **argv)
 			case 't':
 				enabled_rule_tags.insert(optarg);
 				break;
+			case 'U':
+				buffered_outputs = false;
+				buffered_cmdline = true;
+				break;
 			case 'v':
 				verbose = true;
+				break;
+			case 'V':
+				validate_rules_file = optarg;
 				break;
 			case 'w':
 				outfile = optarg;
@@ -443,6 +460,14 @@ int falco_init(int argc, char **argv)
 			}
 		}
 
+		if(validate_rules_file != "")
+		{
+			falco_logger::log(LOG_INFO, "Validating rules file: " + validate_rules_file + "...\n");
+			engine->load_rules_file(validate_rules_file, verbose, all_events);
+			falco_logger::log(LOG_INFO, "Ok\n");
+			goto exit;
+		}
+
 		falco_configuration config;
 		if (conf_filename.size())
 		{
@@ -459,6 +484,18 @@ int falco_init(int argc, char **argv)
 		if (rules_filenames.size())
 		{
 			config.m_rules_filenames = rules_filenames;
+		}
+
+		engine->set_min_priority(config.m_min_priority);
+
+		if(buffered_cmdline)
+		{
+			config.m_buffered_outputs = buffered_outputs;
+		}
+
+		if(config.m_rules_filenames.size() == 0)
+		{
+			throw std::invalid_argument("You must specify at least one rules file via -r or a rules_file entry in falco.yaml");
 		}
 
 		for (auto filename : config.m_rules_filenames)
@@ -501,7 +538,9 @@ int falco_init(int argc, char **argv)
 			engine->enable_rule_by_tag(enabled_rule_tags, true);
 		}
 
-		outputs->init(config.m_json_output, config.m_notifications_rate, config.m_notifications_max_burst);
+		outputs->init(config.m_json_output,
+			      config.m_notifications_rate, config.m_notifications_max_burst,
+			      config.m_buffered_outputs);
 
 		if(!all_events)
 		{

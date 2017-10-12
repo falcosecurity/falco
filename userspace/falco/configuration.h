@@ -18,6 +18,9 @@ along with falco.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <yaml-cpp/yaml.h>
 #include <string>
 #include <vector>
@@ -127,6 +130,27 @@ public:
 		}
 	}
 
+	// called with the last variadic arg (where the sequence is expected to be found)
+	template <typename T>
+	void get_sequence(T& ret, const std::string& name)
+	{
+		YAML::Node child_node = m_root[name];
+		if(child_node.IsDefined())
+		{
+			if(child_node.IsSequence())
+			{
+				for(const YAML::Node& item : child_node)
+				{
+					ret.insert(ret.end(), item.as<typename T::value_type>());
+				}
+			}
+			else if(child_node.IsScalar())
+			{
+				ret.insert(ret.end(), child_node.as<typename T::value_type>());
+			}
+		}
+	}
+
 private:
 	YAML::Node m_root;
 };
@@ -146,6 +170,10 @@ class falco_configuration
 	std::vector<falco_outputs::output_config> m_outputs;
 	uint32_t m_notifications_rate;
 	uint32_t m_notifications_max_burst;
+
+	falco_common::priority_type m_min_priority;
+
+	bool m_buffered_outputs;
  private:
 	void init_cmdline_options(std::list<std::string> &cmdline_options);
 

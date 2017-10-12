@@ -74,6 +74,9 @@
 - list: shell_binaries
   items: [bash, csh, ksh, sh, tcsh, zsh, dash]
 
+- list: shell_mgmt_binaries
+  items: [add-shell, remove-shell]
+
 - macro: shell_procs
   condition: proc.name in (shell_binaries)
 
@@ -131,7 +134,13 @@
 # Utility/etc programs known to run on mesos slaves. Truncation
 # intentional.
 - list: mesos_slave_binaries
-  items: [mesos-health-ch, mesos-docker-ex, mesos-agent, mesos-logrotate, mesos-fetcher]
+  items: [mesos-health-ch, mesos-docker-ex, mesos-agent, mesos-slave, mesos-logrotate, mesos-fetcher, mesos-executor, 3dt]
+
+- list: phusion_passenger_binaries
+  items: [PassengerAgent]
+
+- list: chef_binaries
+  items: [chef-client]
 
 - list: http_server_binaries
   items: [nginx, httpd, httpd-foregroun, lighttpd]
@@ -154,7 +163,7 @@
   condition: proc.name in (rpm_binaries)
 
 - list: deb_binaries
-  items: [dpkg, dpkg-preconfigu, apt, apt-get, aptitude,
+  items: [dpkg, dpkg-preconfigu, dpkg-reconfigur, apt, apt-get, aptitude,
     frontend, preinst, add-apt-reposit, apt-auto-remova, apt-key,
     apt-listchanges, unattended-upgr
     ]
@@ -162,7 +171,7 @@
 # The truncated dpkg-preconfigu is intentional, process names are
 # truncated at the sysdig level.
 - list: package_mgmt_binaries
-  items: [rpm_binaries, deb_binaries, update-alternat]
+  items: [rpm_binaries, deb_binaries, update-alternat, gem]
 
 - macro: package_mgmt_procs
   condition: proc.name in (package_mgmt_binaries)
@@ -178,11 +187,14 @@
 - list: userexec_binaries
   items: [sudo, su]
 
+- list: known_setuid_binaries
+  items: [sshd, dbus-daemon-lau, ping, ping6, critical-stack-]
+
 - list: user_mgmt_binaries
   items: [login_binaries, passwd_binaries, shadowutils_binaries]
 
 - list: dev_creation_binaries
-  items: [blkid, rename_device]
+  items: [blkid, rename_device, update_engine]
 
 - list: aide_wrapper_binaries
   items: [aide.wrapper, update-aide.con]
@@ -190,17 +202,35 @@
 - list: hids_binaries
   items: [aide]
 
+- list: vpn_binaries
+  items: [openvpn]
+
+- list: nomachine_binaries
+  items: [nxexec, nxnode.bin, nxserver.bin, nxclient.bin]
+
+- list: x2go_binaries
+  items: [x2gosuspend-age, x2goagent]
+
+- list: xray_rabbitmq_binaries
+  items: ['"1_scheduler"', '"2_scheduler"', '"3_scheduler"', '"4_scheduler"']
+
 - list: nids_binaries
   items: [bro, broctl]
 
 - list: monitoring_binaries
-  items: [icinga2, nrpe, npcd, check_sar_perf.]
+  items: [icinga2, nrpe, npcd, check_sar_perf., qualys-cloud-ag]
 
 - macro: system_procs
   condition: proc.name in (coreutils_binaries, user_mgmt_binaries)
 
 - list: mail_binaries
-  items: [sendmail, sendmail-msp, postfix, procmail, exim4, pickup, showq]
+  items: [sendmail, sendmail-msp, postfix, procmail, exim4, pickup, showq, mailq]
+
+- list: sendmail_config_binaries
+  items: [
+    update_conf, parse_mc, makemap_hash, newaliases, update_mk, update_tlsm4,
+    update_db, update_mc, ssmtp.postinst, mailq
+    ]
 
 - list: make_binaries
   items: [make, gmake, cmake]
@@ -264,6 +294,14 @@
 - list: cron_binaries
   items: [anacron, cron, crond]
 
+# https://github.com/liske/needrestart
+- list: needrestart_binaries
+  items: [needrestart, 10-dpkg, 20-rpm, 30-pacman]
+
+# Possible scripts run by sshkit
+- list: sshkit_script_binaries
+  items: [10_etc_sudoers., 10_passwd_group]
+
 # System users that should never log into a system. Consider adding your own
 # service users (e.g. 'apache' or 'mysqld') here.
 - macro: system_users
@@ -295,8 +333,8 @@
 
 - macro: parent_python_running_sdchecks
   condition: >
-    (proc.name in (python, python2.7) and
-    (proc.cmdline contains /opt/draios/bin/sdchecks))
+    (proc.pname in (python, python2.7) and
+    (proc.pcmdline contains /opt/draios/bin/sdchecks))
 
 - macro: parent_bro_running_python
   condition: (proc.pname=python and proc.cmdline contains /usr/share/broctl)
@@ -305,6 +343,78 @@
   condition: >
     (proc.pname=java and proc.pcmdline contains jenkins.war
     or proc.pcmdline contains /tmp/slave.jar)
+
+- macro: jenkins_script_sh
+  condition: (proc.pcmdline startswith "script.sh -xe /var/jenkins_home")
+
+- macro: parent_java_running_echo
+  condition: (proc.pname=java and proc.cmdline startswith "sh -c echo")
+
+- macro: parent_java_running_sbt
+  condition: (proc.pname=java and proc.pcmdline contains sbt-launch.jar)
+
+# The crxlsx is a bit different than the other build-like things, but
+# close enough to add here rather than create a separate macro.
+- macro: parent_scripting_running_builds
+  condition: >
+    (proc.pname in (php,php5-fpm,php-fpm7.1,python,ruby,ruby2.3,node) and (
+       proc.cmdline startswith "sh -c git" or
+       proc.cmdline startswith "sh -c date" or
+       proc.cmdline startswith "sh -c /usr/bin/g++" or
+       proc.cmdline startswith "sh -c /usr/bin/gcc" or
+       proc.cmdline startswith "sh -c gcc" or
+       proc.cmdline startswith "sh -c if type gcc" or
+       proc.cmdline startswith "sh -c cd '/var/www/edi/';LC_ALL=en_US.UTF-8 git" or
+       proc.cmdline startswith "sh -c /usr/src/app/crxlsx/bin/linux/crxlsx" or
+       proc.pcmdline startswith "node /opt/nodejs/bin/yarn"))
+
+- macro: parent_node_running_npm
+  condition: proc.pcmdline startswith "node /usr/local/bin/npm"
+
+- macro: parent_nginx_running_serf
+  condition: (proc.pname=nginx and proc.cmdline startswith "sh -c serf")
+
+- macro: parent_Xvfb_running_xkbcomp
+  condition: (proc.pname=Xvfb and proc.cmdline startswith 'sh -c "/usr/bin/xkbcomp"')
+
+- macro: mysql_image_running_healthcheck
+  condition: container.image=mysql and proc.cmdline="sh -c /healthcheck.sh"
+
+- macro: bundle_running_ruby
+  condition: >
+    (proc.pname=ruby and (
+     proc.aname[2]=bundle or
+     proc.aname[3]=bundle or
+     proc.aname[4]=bundle))
+
+# Qualys seems to run a variety of shell subprocesses, at various
+# levels. This checks at a few levels without the cost of a full
+# proc.aname, which traverses the full parent heirarchy.
+- macro: run_by_qualys
+  condition: >
+    (proc.pname=qualys-cloud-ag or
+     proc.aname[2]=qualys-cloud-ag or
+     proc.aname[3]=qualys-cloud-ag or
+     proc.aname[4]=qualys-cloud-ag)
+
+# Chef is similar.
+- macro: run_by_chef
+  condition: (proc.aname[2]=chef_command_wr or proc.aname[3]=chef_command_wr)
+
+- macro: run_by_adclient
+  condition: (proc.aname[2]=adclient or proc.aname[3]=adclient or proc.aname[4]=adclient)
+
+- macro: run_by_centrify
+  condition: (proc.aname[2]=centrify or proc.aname[3]=centrify or proc.aname[4]=centrify)
+
+- macro: run_by_puppet
+  condition: (proc.aname[2]=puppet or proc.aname[3]=puppet)
+
+- macro: run_by_h2o
+  condition: (proc.pname=perl and proc.aname[2]=h2o)
+
+- macro: run_by_passenger_agent
+  condition: (proc.pname=ruby and proc.aname[2]=PassengerAgent)
 
 # As a part of kernel upgrades, dpkg will spawn a perl script with the
 # name linux-image-N.N. This macro matches that.
@@ -327,25 +437,62 @@
   priority: ERROR
   tags: [filesystem]
 
+- list: safe_etc_dirs
+  items: [/etc/cassandra, /etc/ssl/certs/java, /etc/logstash, /etc/nginx/conf.d, /etc/container_environment, /etc/hrmconfig]
+
+- macro: fluentd_writing_conf_files
+  condition: (proc.name=start-fluentd and fd.name in (/etc/fluent/fluent.conf, /etc/td-agent/td-agent.conf))
+
+- macro: qualys_writing_conf_files
+  condition: (proc.name=qualys-cloud-ag and fd.name=/etc/qualys/cloud-agent/qagent-log.conf)
+
+- macro: git_writing_nssdb
+  condition: (proc.cmdline="git-remote-http origin" and fd.directory=/etc/pki/nssdb)
+
+# Add conditions to this macro (probably in a separate file,
+# overwriting this macro) to allow for specific combinations of
+# programs writing below specific directories below
+# /etc. fluentd_writing_conf_files is a good example to follow, as it
+# specifies both the program doing the writing as well as the specific
+# files it is allowed to modify.
+#
+# In this file, it just takes one of the programs in the base macro
+# and repeats it.
+
+- macro: user_known_write_etc_conditions
+  condition: proc.name=confd
+
 - macro: write_etc_common
   condition: >
     etc_dir and evt.dir = < and open_write
     and not proc.name in (passwd_binaries, shadowutils_binaries, sysdigcloud_binaries,
                           package_mgmt_binaries, ssl_mgmt_binaries, dhcp_binaries,
-                          dev_creation_binaries,
+                          dev_creation_binaries, shell_mgmt_binaries,
+                          sendmail_config_binaries,
+                          sshkit_script_binaries,
                           ldconfig.real, ldconfig, confd, gpg, insserv,
                           apparmor_parser, update-mime, tzdata.config, tzdata.postinst,
-                          systemd-machine, debconf-show, rollerd, bind9.postinst, sv,
-                          gen_resolvconf.)
-    and not proc.pname in (sysdigcloud_binaries)
-    and not fd.directory in (/etc/cassandra, /etc/ssl/certs/java)
+                          systemd, systemd-machine, systemd-sysuser,
+                          debconf-show, rollerd, bind9.postinst, sv,
+                          gen_resolvconf., update-ca-certi, certbot, runsv,
+                          qualys-cloud-ag, locales.postins, nomachine_binaries,
+                          adclient, certutil, crlutil)
+    and not proc.pname in (sysdigcloud_binaries, sendmail_config_binaries, hddtemp.postins, sshkit_script_binaries)
+    and not fd.name pmatch (safe_etc_dirs)
+    and not fd.name in (/etc/container_environment.sh, /etc/container_environment.json, /etc/motd, /etc/motd.svc)
     and not ansible_running_python
     and not python_running_denyhosts
+    and not fluentd_writing_conf_files
+    and not user_known_write_etc_conditions
+    and not run_by_centrify
+    and not run_by_adclient
+    and not qualys_writing_conf_files
+    and not git_writing_nssdb
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc, not in a pipe installer session
   condition: write_etc_common and not proc.sname=fbash
-  output: "File below /etc opened for writing (user=%user.name command=%proc.cmdline file=%fd.name)"
+  output: "File below /etc opened for writing (user=%user.name command=%proc.cmdline parent=%proc.pname file=%fd.name name=%proc.name gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4])"
   priority: ERROR
   tags: [filesystem]
 
@@ -370,12 +517,28 @@
   condition: sensitive_files and open_read and server_procs and not proc_is_new and proc.name!="sshd"
   output: >
     Sensitive file opened for reading by trusted program after startup (user=%user.name
-    command=%proc.cmdline file=%fd.name)
+    command=%proc.cmdline parent=%proc.pname file=%fd.name parent=%proc.pname gparent=%proc.aname[2])
   priority: WARNING
   tags: [filesystem]
 
 - list: read_sensitive_file_binaries
-  items: [iptables, ps, lsb_release, check-new-relea, dumpe2fs, accounts-daemon, sshd, vsftpd, systemd]
+  items: [
+    iptables, ps, lsb_release, check-new-relea, dumpe2fs, accounts-daemon, sshd,
+    vsftpd, systemd, mysql_install_d, psql
+    ]
+
+# Add conditions to this macro (probably in a separate file,
+# overwriting this macro) to allow for specific combinations of
+# programs accessing sensitive files.
+# fluentd_writing_conf_files is a good example to follow, as it
+# specifies both the program doing the writing as well as the specific
+# files it is allowed to modify.
+#
+# In this file, it just takes one of the macros in the base rule
+# and repeats it.
+
+- macro: user_read_sensitive_file_conditions
+  condition: cmp_cp_by_passwd
 
 - rule: Read sensitive file untrusted
   desc: >
@@ -384,13 +547,17 @@
   condition: >
     sensitive_files and open_read
     and not proc.name in (user_mgmt_binaries, userexec_binaries, package_mgmt_binaries,
-     cron_binaries, read_sensitive_file_binaries, shell_binaries, hids_binaries)
+     cron_binaries, read_sensitive_file_binaries, shell_binaries, hids_binaries,
+     vpn_binaries, sendmail_config_binaries, nomachine_binaries, sshkit_script_binaries)
     and not cmp_cp_by_passwd
     and not ansible_running_python
     and not proc.cmdline contains /usr/bin/mandb
+    and not run_by_qualys
+    and not run_by_chef
+    and not user_read_sensitive_file_conditions
   output: >
     Sensitive file opened for reading by non-trusted program (user=%user.name name=%proc.name
-    command=%proc.cmdline file=%fd.name)
+    command=%proc.cmdline file=%fd.name parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4])
   priority: WARNING
   tags: [filesystem]
 
@@ -470,13 +637,15 @@
 - list: known_shell_spawn_binaries
   items: [
     sshd, sudo, su, tmux, screen, emacs, systemd, login, flock, fbash,
-    nginx, monit, supervisord, dragent, aws, initdb, docker-compose,
+    nginx, monit, supervisord, dragent, aws, awslogs, initdb, docker-compose,
     configure, awk, falco, fail2ban-server, fleetctl,
     logrotate, ansible, less, adduser, pycompile, py3compile,
     pyclean, py3clean, pip, pip2, ansible-playboo, man-db,
     init, pluto, mkinitramfs, unattended-upgr, watch, sysdig,
     landscape-sysin, nessusd, PM2, syslog-summary, erl_child_setup,
-    npm, cloud-init, toybox, ceph
+    npm, cloud-init, toybox, ceph, hhvm, certbot, mysql_install_d,
+    serf, a2enmod, runsv, supervisord, varnishd, authconfig, tini,
+    timeout, updatedb.findut, mysql_ssl_rsa_s, adclient, systemd-udevd
     ]
 
 - rule: Run shell untrusted
@@ -487,16 +656,31 @@
     and proc.pname exists
     and not proc.pname in (cron_binaries, shell_binaries, make_binaries, known_shell_spawn_binaries, docker_binaries,
                            k8s_binaries, package_mgmt_binaries, aide_wrapper_binaries, nids_binaries,
-                           monitoring_binaries, gitlab_binaries, mesos_slave_binaries, keepalived_binaries)
+                           monitoring_binaries, gitlab_binaries, mesos_slave_binaries,
+                           keepalived_binaries,
+                           needrestart_binaries, phusion_passenger_binaries, chef_binaries, nomachine_binaries,
+                           x2go_binaries)
     and not parent_ansible_running_python
     and not parent_bro_running_python
     and not parent_python_running_denyhosts
     and not parent_python_running_sdchecks
     and not parent_linux_image_upgrade_script
     and not parent_java_running_jenkins
+    and not jenkins_script_sh
+    and not parent_java_running_echo
+    and not parent_scripting_running_builds
+    and not parent_Xvfb_running_xkbcomp
+    and not parent_nginx_running_serf
+    and not parent_node_running_npm
+    and not parent_java_running_sbt
+    and not run_by_chef
+    and not run_by_puppet
+    and not run_by_adclient
+    and not run_by_centrify
   output: >
     Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname
-    cmdline=%proc.cmdline pcmdline=%proc.pcmdline)
+    cmdline=%proc.cmdline pcmdline=%proc.pcmdline gparent=%proc.aname[2] ggparent=%proc.aname[3]
+    gggparent=%proc.aname[4] ggggparent=%proc.aname[5])
   priority: DEBUG
   tags: [host, shell]
 
@@ -508,7 +692,8 @@
               container.image startswith sysdig/sysdig or
               container.image startswith gcr.io/google_containers/hyperkube or
               container.image startswith quay.io/coreos/flannel or
-              container.image startswith gcr.io/google_containers/kube-proxy)
+              container.image startswith gcr.io/google_containers/kube-proxy or
+              container.image startswith calico/node)
 
 # These containers are ones that are known to spawn lots of
 # shells. Generally, they are for systems where the container is used
@@ -527,6 +712,20 @@
 
 - macro: sensitive_mount
   condition: (container.mount.dest[/proc*] != "N/A")
+
+# The steps libcontainer performs to set up the root program for a container are:
+# - clone + exec self to a program runc:[0:PARENT]
+# - clone a program runc:[1:CHILD] which sets up all the namespaces
+# - clone a second program runc:[2:INIT] + exec to the root program.
+#   The parent of runc:[2:INIT] is runc:0:PARENT]
+# As soon as 1:CHILD is created, 0:PARENT exits, so there's a race
+#   where at the time 2:INIT execs the root program, 0:PARENT might have
+#   already exited, or might still be around. So we handle both.
+# We also let runc:[1:CHILD] count as the parent process, which can occur
+# when we lose events and lose track of state.
+
+- macro: container_entrypoint
+  condition: (not proc.pname exists or proc.pname in (runc:[0:PARENT], runc:[1:CHILD], docker-runc))
 
 - rule: Launch Sensitive Mount Container
   desc: >
@@ -573,27 +772,90 @@
     '"sh -c  curl http://localhost:6060/debug/vars>/dev/null "',
     '"sh -c  pgrep java && exit 0 || exit 1 "',
     '"sh -c uname -p 2> /dev/null"',
+    '"sh -c uname -s 2>&1"',
+    '"sh -c uname -r 2>&1"',
+    '"sh -c uname -v 2>&1"',
+    '"sh -c uname -a 2>&1"',
+    '"sh -c ruby -v 2>&1"',
     '"sh -c  echo healthy "',
-    '"sh -c  echo alive "'
+    '"sh -c  echo alive "',
+    '"sh -c getconf CLK_TCK"',
+    '"sh -c getconf PAGESIZE"',
+    '"sh -c LC_ALL=C LANG=C /sbin/ldconfig -p 2>/dev/null"',
+    '"sh -c /sbin/ldconfig -p 2>/dev/null"',
+    '"sh -c stty -a 2>/dev/null"',
+    '"sh -c node index.js"',
+    '"sh -c node index"',
+    '"sh -c node ./src/start.js"',
+    '"sh -c node app.js"',
+    '"sh -c node -e \"require(''nan'')\")"',
+    '"sh -c node $NODE_DEBUG_OPTION index.js "',
+    '"sh -c crontab -l 2"',
+    '"sh -c lsb_release -a"',
+    '"sh -c whoami"',
+    '"sh -c node_modules/.bin/bower-installer"'
     ]
+
+# This list allows for easy additions to the set of commands allowed
+# to run shells in containers without having to without having to copy
+# and override the entire run shell in container macro. Once
+# https://github.com/draios/falco/issues/255 is fixed this will be a
+# bit easier, as someone could append of any of the existing lists.
+- list: user_known_container_shell_spawn_binaries
+  items: []
+
+# This macro allows for easy additions to the set of commands allowed
+# to run shells in containers without having to override the entire
+# rule. Its default value is an expression that always is false, which
+# becomes true when the "not ..." in the rule is applied.
+- macro: user_shell_container_exclusions
+  condition: (evt.num=0)
+
+# Temporarily adding as an example
+- macro: node_running_edi_dynamodb
+  condition: >
+    (proc.pname=node and (proc.pcmdline contains /var/www/edi/process.js or
+                          proc.pcmdline contains "sh -c /var/www/edi/bin/sftp.sh"))
 
 - rule: Run shell in container
   desc: a shell was spawned by a non-shell program in a container. Container entrypoints are excluded.
   condition: >
     spawned_process and container
     and shell_procs
-    and proc.pname exists
-    and not proc.pname in (shell_binaries, make_binaries, docker_binaries, k8s_binaries,
+    and not container_entrypoint
+    and not proc.pname in (shell_binaries, make_binaries, docker_binaries, k8s_binaries, package_mgmt_binaries,
                            lxd_binaries, mesos_slave_binaries, aide_wrapper_binaries, nids_binaries,
+                           user_known_container_shell_spawn_binaries,
+                           needrestart_binaries,
+                           phusion_passenger_binaries,
+                           chef_binaries,
+                           nomachine_binaries,
+                           x2go_binaries,
+                           xray_rabbitmq_binaries,
                            monitoring_binaries, gitlab_binaries, initdb, pg_ctl, awk, falco, cron,
-                           erl_child_setup, ceph, PM2)
+                           erl_child_setup, ceph, PM2, pycompile, py3compile, hhvm, npm, mysql_install_d, serf,
+                           runsv, supervisord, varnishd, crond, logrotate, timeout, tini,
+                           xrdb, xfce4-session, weave, mysql_ssl_rsa_s, logdna-agent, bundle, configure)
     and not trusted_containers
     and not shell_spawning_containers
+    and not parent_java_running_echo
+    and not parent_scripting_running_builds
+    and not parent_Xvfb_running_xkbcomp
+    and not mysql_image_running_healthcheck
+    and not parent_nginx_running_serf
     and not proc.cmdline in (known_container_shell_spawn_cmdlines)
+    and not parent_node_running_npm
+    and not user_shell_container_exclusions
+    and not node_running_edi_dynamodb
+    and not run_by_h2o
+    and not run_by_passenger_agent
+    and not parent_java_running_jenkins
+    and not jenkins_script_sh
+    and not bundle_running_ruby
   output: >
-    Shell spawned in a container other than entrypoint (user=%user.name %container.info
-    shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline)
-  priority: NOTICE
+    Shell spawned in a container other than entrypoint (user=%user.name %container.info image=%container.image
+    shell=%proc.name pcmdline=%proc.pcmdline cmdline=%proc.cmdline parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3])
+  priority: DEBUG
   tags: [container, shell]
 
 # sockfamily ip is to exclude certain processes (like 'groups') that communicate on unix-domain sockets
@@ -618,7 +880,20 @@
 
 - macro: somebody_becoming_themself
   condition: ((user.name=nobody and evt.arg.uid=nobody) or
-              (user.name=www-data and evt.arg.uid=www-data))
+              (user.name=www-data and evt.arg.uid=www-data) or
+              (user.name=_apt and evt.arg.uid=_apt) or
+              (user.name=postfix and evt.arg.uid=postfix) or
+              (user.name=pki-agent and evt.arg.uid=pki-agent) or
+              (user.name=pki-acme and evt.arg.uid=pki-acme) or
+              (user.name=nfsnobody and evt.arg.uid=nfsnobody))
+
+# In containers, the user name might be for a uid that exists in the
+# container but not on the host. (See
+# https://github.com/draios/sysdig/issues/954). So in that case, allow
+# a setuid.
+
+- macro: unknown_user_in_container
+  condition: (user.name="<NA>" and container)
 
 # sshd, mail programs attempt to setuid to root even when running as non-root. Excluding here to avoid meaningless FPs
 - rule: Non sudo setuid
@@ -626,10 +901,11 @@
     an attempt to change users by calling setuid. sudo/su are excluded. users "root" and "nobody"
     suing to itself are also excluded, as setuid calls typically involve dropping privileges.
   condition: >
-    evt.type=setuid and evt.dir=> and
-    not user.name=root and not somebody_becoming_themself
-    and not proc.name in (userexec_binaries, mail_binaries, docker_binaries,
-    sshd, dbus-daemon-lau, ping, ping6, critical-stack-)
+    evt.type=setuid and evt.dir=>
+    and not unknown_user_in_container
+    and not user.name=root and not somebody_becoming_themself
+    and not proc.name in (known_setuid_binaries, userexec_binaries, mail_binaries, docker_binaries, nomachine_binaries)
+    and not java_running_sdjagent
   output: >
     Unexpected setuid call by non-sudo, non-root program (user=%user.name parent=%proc.pname
     command=%proc.cmdline uid=%evt.arg.uid)
@@ -641,13 +917,18 @@
     activity by any programs that can manage users, passwords, or permissions. sudo and su are excluded.
     Activity in containers is also excluded--some containers create custom users on top
     of a base linux distribution at startup.
+    Some innocuous commandlines that don't actually change anything are excluded.
   condition: >
     spawned_process and proc.name in (user_mgmt_binaries) and
-    not proc.name in (su, sudo) and not container and
-    not proc.pname in (cron_binaries, systemd, run-parts)
+    not proc.name in (su, sudo, lastlog) and not container and
+    not proc.pname in (cron_binaries, systemd, run-parts) and
+    not proc.cmdline startswith "passwd -S" and
+    not proc.cmdline startswith "useradd -D" and
+    not proc.cmdline startswith "systemd --version" and
+    not run_by_qualys
   output: >
     User management binary command run outside of container
-    (user=%user.name command=%proc.cmdline parent=%proc.pname)
+    (user=%user.name command=%proc.cmdline parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4])
   priority: NOTICE
   tags: [host, users]
 

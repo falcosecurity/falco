@@ -1,5 +1,15 @@
-# File containing Falco rules, loaded at startup.
-rules_file: /etc/falco_rules.yaml
+# File(s) containing Falco rules, loaded at startup.
+#
+# falco_rules.yaml ships with the falco package and is overridden with
+# every new software version. falco_rules.local.yaml is only created
+# if it doesn't exist. If you want to customize the set of rules, add
+# your customizations to falco_rules.local.yaml.
+#
+# The files will be read in the order presented here, so make sure if
+# you have overrides they appear in later files.
+rules_file:
+ - /etc/falco/falco_rules.yaml
+ - /etc/falco/falco_rules.local.yaml
 
 # Whether to output events in json or text
 json_output: false
@@ -14,6 +24,16 @@ log_syslog: true
 # log level of falco's internal logging. Can be one of "emergency",
 # "alert", "critical", "error", "warning", "notice", "info", "debug".
 log_level: info
+
+# Minimum rule priority level to load and run. All rules having a
+# priority more severe than this level will be loaded/run.  Can be one
+# of "emergency", "alert", "critical", "error", "warning", "notice",
+# "info", "debug".
+priority: debug
+
+# Whether or not output to any of the output channels below is
+# buffered. Defaults to true
+buffered_outputs: true
 
 # A throttling mechanism implemented as a token bucket limits the
 # rate of falco notifications. This throttling is controlled by the following configuration
@@ -37,8 +57,13 @@ outputs:
 syslog_output:
   enabled: true
 
+# If keep_alive is set to true, the file will be opened once and
+# continuously written to, with each output message on its own
+# line. If keep_alive is set to false, the file will be re-opened
+# for each output message.
 file_output:
   enabled: false
+  keep_alive: false
   filename: ./events.txt
 
 stdout_output:
@@ -49,7 +74,15 @@ stdout_output:
 #         program: "jq '{text: .output}' | curl -d @- -X POST https://hooks.slack.com/services/XXX"
 #   - logging (alternate method than syslog):
 #         program: logger -t falco-test
+#   - send over a network connection:
+#         program: nc host.example.com 80
+
+# If keep_alive is set to true, the program will be started once and
+# continuously written to, with each output message on its own
+# line. If keep_alive is set to false, the program will be re-spawned
+# for each output message.
 
 program_output:
   enabled: false
+  keep_alive: false
   program: mail -s "Falco Notification" someone@example.com

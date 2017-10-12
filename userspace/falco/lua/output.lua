@@ -18,14 +18,17 @@
 
 local mod = {}
 
-levels = {"Emergency", "Alert", "Critical", "Error", "Warning", "Notice", "Informational", "Debug"}
-
-mod.levels = levels
-
 local outputs = {}
 
-function mod.stdout(level, msg)
+function mod.stdout(priority, priority_num, buffered, msg)
+   if buffered == 0 then
+      io.stdout:setvbuf 'no'
+   end
    print (msg)
+end
+
+function mod.stdout_cleanup()
+   io.stdout:flush()
 end
 
 function mod.file_validate(options)
@@ -33,7 +36,7 @@ function mod.file_validate(options)
       error("File output needs to be configured with a valid filename")
    end
 
-   file, err = io.open(options.filename, "a+")
+   local file, err = io.open(options.filename, "a+")
    if file == nil then
       error("Error with file output: "..err)
    end
@@ -41,60 +44,100 @@ function mod.file_validate(options)
 
 end
 
-function mod.file(level, msg, options)
-   file = io.open(options.filename, "a+")
+function mod.file(priority, priority_num, buffered, msg, options)
+   if options.keep_alive == "true" then
+      if file == nil then
+	 file = io.open(options.filename, "a+")
+	 if buffered == 0 then
+	    file:setvbuf 'no'
+	 end
+      end
+   else
+      file = io.open(options.filename, "a+")
+   end
+
    file:write(msg, "\n")
-   file:close()
+
+   if options.keep_alive == nil or
+      options.keep_alive ~= "true" then
+	 file:close()
+	 file = nil
+   end
 end
 
-function mod.syslog(level, msg, options)
-   falco.syslog(level, msg)
+function mod.file_cleanup()
+   if file ~= nil then
+      file:flush()
+      file:close()
+      file = nil
+   end
 end
 
-function mod.program(level, msg, options)
+function mod.syslog(priority, priority_num, buffered, msg, options)
+   falco.syslog(priority_num, msg)
+end
+
+function mod.syslog_cleanup()
+end
+
+function mod.program(priority, priority_num, buffered, msg, options)
    -- XXX Ideally we'd check that the program ran
    -- successfully. However, the luajit we're using returns true even
    -- when the shell can't run the program.
 
-   file = io.popen(options.program, "w")
+   -- Note: options are all strings
+   if options.keep_alive == "true" then
+      if file == nil then
+	 file = io.popen(options.program, "w")
+	 if buffered == 0 then
+	    file:setvbuf 'no'
+	 end
+      end
+   else
+      file = io.popen(options.program, "w")
+   end
 
    file:write(msg, "\n")
-   file:close()
-end
 
-local function level_of(s)
-   s = string.lower(s)
-   for i,v in ipairs(levels) do
-      if (string.find(string.lower(v), "^"..s)) then
-	 return i - 1 -- (syslog levels start at 0, lua indices start at 1)
-      end
+   if options.keep_alive == nil or
+      options.keep_alive ~= "true" then
+	 file:close()
+	 file = nil
    end
-   error("Invalid severity level: "..s)
 end
 
-function output_event(event, rule, priority, format)
-   local level = level_of(priority)
+function mod.program_cleanup()
+   if file ~= nil then
+      file:flush()
+      file:close()
+      file = nil
+   end
+end
 
+function output_event(event, rule, priority, priority_num, format)
    -- If format starts with a *, remove it, as we're adding our own
    -- prefix here.
    if format:sub(1,1) == "*" then
       format = format:sub(2)
    end
 
-   format = "*%evt.time: "..levels[level+1].." "..format
+   format = "*%evt.time: "..priority.." "..format
 
-   msg = formats.format_event(event, rule, levels[level+1], format)
+   msg = formats.format_event(event, rule, priority, format)
 
    for index,o in ipairs(outputs) do
-      o.output(level, msg, o.config)
+      o.output(priority, priority_num, o.buffered, msg, o.config)
    end
 end
 
 function output_cleanup()
    formats.free_formatters()
+   for index,o in ipairs(outputs) do
+      o.cleanup()
+   end
 end
 
-function add_output(output_name, config)
+function add_output(output_name, buffered, config)
    if not (type(mod[output_name]) == 'function') then
       error("rule_loader.add_output(): invalid output_name: "..output_name)
    end
@@ -105,7 +148,9 @@ function add_output(output_name, config)
      mod[output_name.."_validate"](config)
    end
 
-   table.insert(outputs, {output = mod[output_name], config=config})
+   table.insert(outputs, {output = mod[output_name],
+			  cleanup = mod[output_name.."_cleanup"],
+			  buffered=buffered, config=config})
 end
 
 return mod

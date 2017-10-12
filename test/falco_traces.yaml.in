@@ -149,7 +149,7 @@ traces: !mux
   shell-in-container:
     trace_file: traces-positive/shell-in-container.scap
     detect: True
-    detect_level: NOTICE
+    detect_level: DEBUG
     detect_counts:
       - "Run shell in container": 1
 
