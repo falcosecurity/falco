@@ -474,7 +474,7 @@
   condition: (proc.name=qualys-cloud-ag and fd.name=/etc/qualys/cloud-agent/qagent-log.conf)
 
 - macro: git_writing_nssdb
-  condition: (proc.cmdline="git-remote-http origin" and fd.directory=/etc/pki/nssdb)
+  condition: (proc.name=git-remote-http and fd.directory=/etc/pki/nssdb)
 
 - macro: plesk_writing_keys
   condition: (proc.cmdline in (plesk_binaries) and fd.name startswith /etc/sw/keys)
