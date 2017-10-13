@@ -909,7 +909,7 @@
 # systemd can listen on ports to launch things like sshd on demand
 - rule: System procs network activity
   desc: any network activity performed by system binaries that are not expected to send or receive any network traffic
-  condition: (fd.sockfamily = ip and system_procs) and (inbound or outbound) and not proc.name=systemd
+  condition: (fd.sockfamily = ip and system_procs) and (inbound or outbound) and not proc.name in (systemd, hostid)
   output: >
     Known system binary sent/received network traffic
     (user=%user.name command=%proc.cmdline connection=%fd.name)
