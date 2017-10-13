@@ -777,6 +777,26 @@
   priority: INFO
   tags: [container, cis]
 
+# In a local/user rules file, you could override this macro to
+# explicitly enumerate the container images that you want to run in
+# your environment. In this main falco rules file, there isn't any way
+# to know all the containers that can run, so any container is
+# alllowed, by allowing any image other than a meaningless one. In the
+# overridden macro, the condition would look something like
+# (container.image startswith vendor/container-1 or container.image
+# startswith vendor/container-2 or ...)
+
+- macro: allowed_containers
+  condition: (container.image != dummy-not-allowed-container-image)
+
+- rule: Launch Disallowed Container
+  desc: >
+    Detect the initial process started by a container that is not in a list of allowed containers.
+  condition: evt.type=execve and proc.vpid=1 and container and not allowed_containers
+  output: Container started and not in allowed list (user=%user.name command=%proc.cmdline container=%container.image %container.info)
+  priority: WARNING
+  tags: [container]
+
 # Anything run interactively by root
 # - condition: evt.type != switch and user.name = root and proc.name != sshd and interactive
 #  output: "Interactive root (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
