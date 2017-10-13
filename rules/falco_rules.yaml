@@ -479,6 +479,9 @@
 - macro: plesk_writing_keys
   condition: (proc.cmdline in (plesk_binaries) and fd.name startswith /etc/sw/keys)
 
+- macro: networkmanager_writing_resolv_conf
+  condition: proc.aname[2]=nm-dispatcher and fd.name=/etc/resolv.conf
+
 # Add conditions to this macro (probably in a separate file,
 # overwriting this macro) to allow for specific combinations of
 # programs writing below specific directories below
@@ -519,6 +522,7 @@
     and not qualys_writing_conf_files
     and not git_writing_nssdb
     and not plesk_writing_keys
+    and not networkmanager_writing_resolv_conf
     and not run_by_chef
 
 - rule: Write below etc
