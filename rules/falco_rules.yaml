@@ -123,7 +123,7 @@
   items: [setup-backend, dragent, sdchecks]
 
 - list: docker_binaries
-  items: [docker, dockerd, exe, docker-compose, docker-entrypoi]
+  items: [docker, dockerd, exe, docker-compose, docker-entrypoi, docker-runc-cur]
 
 - list: k8s_binaries
   items: [hyperkube, skydns, kube2sky, exechealthz]
