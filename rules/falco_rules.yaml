@@ -440,6 +440,13 @@
 - macro: run_by_passenger_agent
   condition: (proc.pname=ruby and proc.aname[2]=PassengerAgent)
 
+# Also handles running semi-indirectly via scl
+- macro: run_by_foreman
+  condition: >
+    (user.name=foreman and
+     (proc.pname in (rake, ruby) and proc.aname[5] in (tfm-rake,tfm-ruby)) or
+     (proc.pname=scl and proc.aname[2] in (tfm-rake,tfm-ruby)))
+
 # As a part of kernel upgrades, dpkg will spawn a perl script with the
 # name linux-image-N.N. This macro matches that.
 - macro: parent_linux_image_upgrade_script
@@ -718,6 +725,7 @@
     and not run_by_adclient
     and not run_by_centrify
     and not parent_dovecot_running_auth
+    and not run_by_foreman
   output: >
     Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname
     cmdline=%proc.cmdline pcmdline=%proc.pcmdline gparent=%proc.aname[2] ggparent=%proc.aname[3]
