@@ -458,6 +458,9 @@
 - macro: parent_java_running_confluence
   condition: (proc.pname=java and proc.pcmdline contains "-classpath /opt/atlassian/confluence")
 
+- macro: parent_java_running_tomcat
+  condition: (proc.pname=java and proc.pcmdline contains "-classpath /usr/local/tomcat")
+
 - macro: parent_dovecot_running_auth
   condition: (proc.pname=auth and proc.aname[2]=dovecot)
 
@@ -729,6 +732,7 @@
     and not run_by_centrify
     and not parent_dovecot_running_auth
     and not run_by_foreman
+    and not parent_java_running_tomcat
   output: >
     Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname
     cmdline=%proc.cmdline pcmdline=%proc.pcmdline gparent=%proc.aname[2] ggparent=%proc.aname[3]
@@ -932,6 +936,7 @@
     and not parent_strongswan_running_starter
     and not parent_phusion_passenger_my_init
     and not parent_java_running_confluence
+    and not parent_java_running_tomcat
   output: >
     Shell spawned in a container other than entrypoint (user=%user.name %container.info image=%container.image
     shell=%proc.name pcmdline=%proc.pcmdline cmdline=%proc.cmdline parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3])
