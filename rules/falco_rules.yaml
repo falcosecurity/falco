@@ -920,6 +920,7 @@
     and not container_entrypoint
     and not proc.pname in (shell_binaries, make_binaries, docker_binaries, k8s_binaries, package_mgmt_binaries,
                            lxd_binaries, mesos_slave_binaries, aide_wrapper_binaries, nids_binaries,
+                           cron_binaries,
                            user_known_container_shell_spawn_binaries,
                            needrestart_binaries,
                            phusion_passenger_binaries,
