@@ -137,7 +137,7 @@
   items: [mesos-health-ch, mesos-docker-ex, mesos-agent, mesos-slave, mesos-logrotate, mesos-fetcher, mesos-executor, 3dt]
 
 - list: phusion_passenger_binaries
-  items: [PassengerAgent]
+  items: [PassengerAgent, PassengerWatchd]
 
 # A bit longer to avoid the fairly generic my_init.
 - macro: parent_phusion_passenger_my_init
