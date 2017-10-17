@@ -439,7 +439,8 @@
   condition: (proc.pname=perl and proc.aname[2]=h2o)
 
 - macro: run_by_passenger_agent
-  condition: (proc.pname=ruby and proc.aname[2]=PassengerAgent)
+  condition: ((proc.pname=ruby and proc.aname[2]=PassengerAgent) or
+              proc.pcmdline startswith "ruby /usr/share/passenger/helper-scripts/rack-preloader.rb")
 
 # Also handles running semi-indirectly via scl
 - macro: run_by_foreman
