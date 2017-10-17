@@ -491,7 +491,7 @@
   condition: (proc.name=git-remote-http and fd.directory=/etc/pki/nssdb)
 
 - macro: plesk_writing_keys
-  condition: (proc.cmdline in (plesk_binaries) and fd.name startswith /etc/sw/keys)
+  condition: (proc.name in (plesk_binaries) and fd.name startswith /etc/sw/keys)
 
 - macro: networkmanager_writing_resolv_conf
   condition: proc.aname[2]=nm-dispatcher and fd.name=/etc/resolv.conf
