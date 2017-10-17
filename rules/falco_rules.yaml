@@ -994,9 +994,11 @@
 # container but not on the host. (See
 # https://github.com/draios/sysdig/issues/954). So in that case, allow
 # a setuid.
+#
+# (And for now, even skip the unknown user check. Will add it back once I can check for NULL users reliably.)
 
 - macro: unknown_user_in_container
-  condition: (user.name="<NA>" and container)
+  condition: (container)
 
 # sshd, mail programs attempt to setuid to root even when running as non-root. Excluding here to avoid meaningless FPs
 - rule: Non sudo setuid
