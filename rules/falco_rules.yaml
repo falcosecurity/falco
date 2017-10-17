@@ -455,6 +455,9 @@
 - macro: java_running_sdjagent
   condition: proc.name=java and proc.cmdline contains sdjagent.jar
 
+- macro: parent_java_running_confluence
+  condition: (proc.pname=java and proc.pcmdline contains "-classpath /opt/atlassian/confluence")
+
 - macro: parent_dovecot_running_auth
   condition: (proc.pname=auth and proc.aname[2]=dovecot)
 
@@ -927,6 +930,7 @@
     and not parent_dovecot_running_auth
     and not parent_strongswan_running_starter
     and not parent_phusion_passenger_my_init
+    and not parent_java_running_confluence
   output: >
     Shell spawned in a container other than entrypoint (user=%user.name %container.info image=%container.image
     shell=%proc.name pcmdline=%proc.pcmdline cmdline=%proc.cmdline parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3])
