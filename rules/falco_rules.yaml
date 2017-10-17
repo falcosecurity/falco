@@ -792,13 +792,14 @@
 # explicitly enumerate the container images that you want to run in
 # your environment. In this main falco rules file, there isn't any way
 # to know all the containers that can run, so any container is
-# alllowed, by allowing any image other than a meaningless one. In the
-# overridden macro, the condition would look something like
-# (container.image startswith vendor/container-1 or container.image
-# startswith vendor/container-2 or ...)
+# alllowed, by using a filter that is guaranteed to evaluate to true
+# (the same proc.vpid=1 that's in the Launch Disallowed Container
+# rule). In the overridden macro, the condition would look something
+# like (container.image startswith vendor/container-1 or
+# container.image startswith vendor/container-2 or ...)
 
 - macro: allowed_containers
-  condition: (container.image != dummy-not-allowed-container-image)
+  condition: (proc.vpid=1)
 
 - rule: Launch Disallowed Container
   desc: >
