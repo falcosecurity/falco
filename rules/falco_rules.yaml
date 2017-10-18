@@ -375,6 +375,9 @@
 - macro: parent_cpanm_running_perl
   condition: (proc.pname=perl and proc.aname[2]=cpanm)
 
+- macro: ics_running_java
+  condition: (proc.pname=java and proc.aname[3] in (ics_start.sh,ics_stop.sh))
+
 - macro: jenkins_script_sh
   condition: (proc.pcmdline startswith "script.sh -xe /var/jenkins_home")
 
@@ -966,6 +969,7 @@
     and not parent_java_running_confluence
     and not parent_java_running_tomcat
     and not parent_java_running_install4j
+    and not ics_running_java
   output: >
     Shell spawned in a container other than entrypoint (user=%user.name %container.info image=%container.image
     shell=%proc.name pcmdline=%proc.pcmdline cmdline=%proc.cmdline parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3])
