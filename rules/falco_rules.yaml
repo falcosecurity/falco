@@ -479,6 +479,9 @@
 - macro: parent_dovecot_running_auth
   condition: (proc.pname=auth and proc.aname[2]=dovecot)
 
+- macro: parent_supervise_running_multilog
+  condition: (proc.name=multilog and proc.pname=supervise)
+
 ###############
 # General Rules
 ###############
@@ -556,6 +559,7 @@
     and not networkmanager_writing_resolv_conf
     and not run_by_chef
     and not add_shell_writing_shells_tmp
+    and not parent_supervise_running_multilog
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc, not in a pipe installer session
