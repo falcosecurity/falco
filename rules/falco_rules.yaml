@@ -203,7 +203,7 @@
   items: [sudo, su, suexec]
 
 - list: known_setuid_binaries
-  items: [sshd, dbus-daemon-lau, ping, ping6, critical-stack-, pmmcli, filemng]
+  items: [sshd, dbus-daemon-lau, ping, ping6, critical-stack-, pmmcli, filemng, PassengerAgent]
 
 - list: user_mgmt_binaries
   items: [login_binaries, passwd_binaries, shadowutils_binaries]
