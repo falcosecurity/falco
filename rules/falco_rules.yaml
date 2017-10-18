@@ -875,7 +875,8 @@
     '"sh -c lsb_release -a"',
     '"sh -c whoami"',
     '"sh -c node_modules/.bin/bower-installer"',
-    '"sh -c /bin/hostname -f 2> /dev/null"'
+    '"sh -c /bin/hostname -f 2> /dev/null"',
+    '"sh -c locale -a"'
     ]
 
 - list: known_container_shell_spawn_cmdlines
