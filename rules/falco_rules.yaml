@@ -372,6 +372,9 @@
     (proc.pname=java and proc.pcmdline contains jenkins.war
     or proc.pcmdline contains /tmp/slave.jar)
 
+- macro: parent_cpanm_running_perl
+  condition: (proc.pname=perl and proc.aname[2]=cpanm)
+
 - macro: jenkins_script_sh
   condition: (proc.pcmdline startswith "script.sh -xe /var/jenkins_home")
 
@@ -748,6 +751,7 @@
     and not run_by_foreman
     and not parent_java_running_tomcat
     and not parent_java_running_install4j
+    and not parent_cpanm_running_perl
   output: >
     Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname
     cmdline=%proc.cmdline pcmdline=%proc.pcmdline gparent=%proc.aname[2] ggparent=%proc.aname[3]
