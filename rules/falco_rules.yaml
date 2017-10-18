@@ -565,7 +565,7 @@
   tags: [filesystem]
 
 - macro: cmp_cp_by_passwd
-  condition: proc.name in (cmp, cp) and proc.pname=passwd
+  condition: proc.name in (cmp, cp) and proc.pname in (passwd, run-parts)
 
 - rule: Read sensitive file trusted after startup
   desc: >
