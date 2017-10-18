@@ -712,7 +712,7 @@
     npm, cloud-init, toybox, ceph, hhvm, certbot,
     serf, a2enmod, runsv, supervisord, varnishd, authconfig, tini,
     timeout, updatedb.findut, adclient, systemd-udevd,
-    luajit, uwsgi, cfn-signal
+    luajit, uwsgi, cfn-signal, apache_control_
     ]
 
 - rule: Run shell untrusted
