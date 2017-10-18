@@ -200,7 +200,7 @@
 # A canonical set of processes that run other programs with different
 # privileges or as a different user.
 - list: userexec_binaries
-  items: [sudo, su]
+  items: [sudo, su, suexec]
 
 - list: known_setuid_binaries
   items: [sshd, dbus-daemon-lau, ping, ping6, critical-stack-, pmmcli, filemng]
