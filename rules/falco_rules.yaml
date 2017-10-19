@@ -56,6 +56,10 @@
 - macro: etc_dir
   condition: fd.name startswith /etc
 
+# This detects writes immediately below / or any write anywhere below /root
+- macro: root_dir
+  condition: (fd.directory=/ or fd.name startswith /root)
+
 - macro: ubuntu_so_dirs
   condition: >
     fd.name startswith /lib/x86_64-linux-gnu or
@@ -568,6 +572,13 @@
   desc: an attempt to write to any file below /etc, not in a pipe installer session
   condition: write_etc_common and not proc.sname=fbash
   output: "File below /etc opened for writing (user=%user.name command=%proc.cmdline parent=%proc.pname file=%fd.name name=%proc.name gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4])"
+  priority: ERROR
+  tags: [filesystem]
+
+- rule: Write below root
+  desc: an attempt to write to any file directly below / or /root
+  condition: root_dir and evt.dir = < and open_write
+  output: "File below / or /root opened for writing (user=%user.name command=%proc.cmdline parent=%proc.pname file=%fd.name name=%proc.name)"
   priority: ERROR
   tags: [filesystem]
 
