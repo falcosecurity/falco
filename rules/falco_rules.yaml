@@ -249,7 +249,7 @@
   items: [
     sendmail, sendmail-msp, postfix, procmail, exim4,
     pickup, showq, mailq, dovecot, imap-login, imap,
-    mailmng-core
+    mailmng-core, pop3-login, dovecot-lda
     ]
 
 - list: sendmail_config_binaries
