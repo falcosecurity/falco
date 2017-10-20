@@ -741,7 +741,7 @@
     npm, cloud-init, toybox, ceph, hhvm, certbot,
     serf, a2enmod, runsv, supervisord, varnishd, authconfig, tini,
     timeout, updatedb.findut, adclient, systemd-udevd,
-    luajit, uwsgi, cfn-signal, apache_control_
+    luajit, uwsgi, cfn-signal, apache_control_, beam.smp, paster
     ]
 
 - rule: Run shell untrusted
@@ -976,7 +976,8 @@
                            monitoring_binaries, gitlab_binaries, initdb, awk, falco, cron,
                            erl_child_setup, erlexec, ceph, PM2, pycompile, py3compile, hhvm, npm, serf,
                            runsv, supervisord, varnishd, crond, logrotate, timeout, tini,
-                           xrdb, xfce4-session, weave, logdna-agent, bundle, configure, luajit, nginx)
+                           xrdb, xfce4-session, weave, logdna-agent, bundle, configure, luajit, nginx,
+                           beam.smp, paster)
     and not trusted_containers
     and not shell_spawning_containers
     and not parent_java_running_echo
