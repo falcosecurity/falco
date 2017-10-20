@@ -490,6 +490,9 @@
 - macro: parent_supervise_running_multilog
   condition: (proc.name=multilog and proc.pname=supervise)
 
+- macro: parent_ruby_running_discourse
+  condition: (proc.pcmdline startswith "ruby /var/www/discourse/vendor/bundle/ruby")
+
 - macro: pki_realm_writing_realms
   condition: (proc.cmdline startswith "bash /usr/local/lib/pki/pki-realm" and fd.name startswith /etc/pki/realms)
 
@@ -778,6 +781,7 @@
     and not parent_java_running_tomcat
     and not parent_java_running_install4j
     and not parent_cpanm_running_perl
+    and not parent_ruby_running_discourse
   output: >
     Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname
     cmdline=%proc.cmdline pcmdline=%proc.pcmdline gparent=%proc.aname[2] ggparent=%proc.aname[3]
@@ -997,6 +1001,7 @@
     and not parent_java_running_tomcat
     and not parent_java_running_install4j
     and not ics_running_java
+    and not parent_ruby_running_discourse
   output: >
     Shell spawned in a container other than entrypoint (user=%user.name %container.info image=%container.image
     shell=%proc.name pcmdline=%proc.pcmdline cmdline=%proc.cmdline parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3])
