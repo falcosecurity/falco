@@ -264,10 +264,13 @@
 - list: keepalived_binaries
   items: [keepalived]
 
+- list: sensitive_file_names
+  items: [/etc/shadow, /etc/sudoers, /etc/pam.conf]
+
 - macro: sensitive_files
   condition: >
     fd.name startswith /etc and
-    (fd.name in (/etc/shadow, /etc/sudoers, /etc/pam.conf)
+    (fd.name in (sensitive_file_names)
      or fd.directory in (/etc/sudoers.d, /etc/pam.d))
 
 # Indicates that the process is new. Currently detected using time
