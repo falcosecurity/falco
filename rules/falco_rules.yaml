@@ -332,7 +332,7 @@
   items: [10_etc_sudoers., 10_passwd_group]
 
 - list: plesk_binaries
-  items: [sw-engine, sw-engine-fpm, filemng, f2bmng]
+  items: [sw-engine, sw-engine-fpm, sw-engine-kv, filemng, f2bmng]
 
 # System users that should never log into a system. Consider adding your own
 # service users (e.g. 'apache' or 'mysqld') here.
