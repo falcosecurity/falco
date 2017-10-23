@@ -443,6 +443,12 @@
      proc.aname[3]=qualys-cloud-ag or
      proc.aname[4]=qualys-cloud-ag)
 
+- macro: run_by_sumologic_securefiles
+  condition: >
+    ((proc.cmdline="usermod -a -G sumologic_collector" or
+      proc.cmdline="groupadd sumologic_collector") and
+     (proc.pname=secureFiles.sh and proc.aname[2]=java))
+
 # Chef is similar.
 - macro: run_by_chef
   condition: (proc.aname[2]=chef_command_wr or proc.aname[3]=chef_command_wr)
@@ -1082,7 +1088,8 @@
     not proc.cmdline startswith "passwd -S" and
     not proc.cmdline startswith "useradd -D" and
     not proc.cmdline startswith "systemd --version" and
-    not run_by_qualys
+    not run_by_qualys and
+    not run_by_sumologic_securefiles
   output: >
     User management binary command run outside of container
     (user=%user.name command=%proc.cmdline parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4])
