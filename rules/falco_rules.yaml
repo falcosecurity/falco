@@ -814,7 +814,7 @@
 - rule: Launch Privileged Container
   desc: Detect the initial process started in a privileged container. Exceptions are made for known trusted images.
   condition: evt.type=execve and proc.vpid=1 and container and container.privileged=true and not trusted_containers
-  output: Privileged container started (user=%user.name command=%proc.cmdline %container.info)
+  output: Privileged container started (user=%user.name command=%proc.cmdline %container.info image=%container.image)
   priority: INFO
   tags: [container, cis]
 
@@ -844,7 +844,7 @@
     Detect the initial process started by a container that has a mount from a sensitive host directory
     (i.e. /proc). Exceptions are made for known trusted images.
   condition: evt.type=execve and proc.vpid=1 and container and sensitive_mount and not trusted_containers
-  output: Container with sensitive mount started (user=%user.name command=%proc.cmdline %container.info mounts=%container.mounts)
+  output: Container with sensitive mount started (user=%user.name command=%proc.cmdline %container.info image=%container.image mounts=%container.mounts)
   priority: INFO
   tags: [container, cis]
 
@@ -865,7 +865,7 @@
   desc: >
     Detect the initial process started by a container that is not in a list of allowed containers.
   condition: evt.type=execve and proc.vpid=1 and container and not allowed_containers
-  output: Container started and not in allowed list (user=%user.name command=%proc.cmdline container=%container.image %container.info)
+  output: Container started and not in allowed list (user=%user.name command=%proc.cmdline %container.info image=%container.image)
   priority: WARNING
   tags: [container]
 
