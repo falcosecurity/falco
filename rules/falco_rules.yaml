@@ -517,6 +517,9 @@
 - macro: htpasswd_writing_passwd
   condition: (proc.name=htpasswd and fd.name=/etc/nginx/.htpasswd)
 
+- macro: dmeventd_writing_lvm_archive
+  condition: (proc.name=dmeventd and fd.name startswith /etc/lvm/archive/)
+
 ###############
 # General Rules
 ###############
@@ -597,6 +600,7 @@
     and not parent_supervise_running_multilog
     and not pki_realm_writing_realms
     and not htpasswd_writing_passwd
+    and not dmeventd_writing_lvm_archive
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc, not in a pipe installer session
