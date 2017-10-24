@@ -1087,7 +1087,8 @@
     evt.type=setuid and evt.dir=>
     and not unknown_user_in_container
     and not user.name=root and not somebody_becoming_themself
-    and not proc.name in (known_setuid_binaries, userexec_binaries, mail_binaries, docker_binaries, nomachine_binaries)
+    and not proc.name in (known_setuid_binaries, userexec_binaries, mail_binaries, docker_binaries,
+                          nomachine_binaries, osdetect, nginxmng, sw-engine-fpm)
     and not java_running_sdjagent
   output: >
     Unexpected setuid call by non-sudo, non-root program (user=%user.name parent=%proc.pname
