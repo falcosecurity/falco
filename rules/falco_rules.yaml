@@ -770,7 +770,7 @@
     timeout, updatedb.findut, adclient, systemd-udevd,
     luajit, uwsgi, cfn-signal, apache_control_, beam.smp, paster, postfix-local,
     nginx_control, mailmng-service, web_statistic_e, statistics_coll, install-info,
-    hawkular-metric
+    hawkular-metric, rhsmcertd-worke
     ]
 
 - rule: Run shell untrusted
