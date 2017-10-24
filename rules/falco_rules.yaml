@@ -505,6 +505,9 @@
 - macro: pki_realm_writing_realms
   condition: (proc.cmdline startswith "bash /usr/local/lib/pki/pki-realm" and fd.name startswith /etc/pki/realms)
 
+- macro: htpasswd_writing_passwd
+  condition: (proc.name=htpasswd and fd.name=/etc/nginx/.htpasswd)
+
 ###############
 # General Rules
 ###############
@@ -584,6 +587,7 @@
     and not add_shell_writing_shells_tmp
     and not parent_supervise_running_multilog
     and not pki_realm_writing_realms
+    and not htpasswd_writing_passwd
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc, not in a pipe installer session
