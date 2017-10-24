@@ -388,8 +388,9 @@
 - macro: ics_running_java
   condition: (proc.pname=java and proc.aname[3] in (ics_start.sh,ics_stop.sh))
 
-- macro: jenkins_script_sh
-  condition: (proc.pcmdline startswith "script.sh -xe /var/jenkins_home")
+- macro: jenkins_scripts
+  condition: (proc.pcmdline startswith "script.sh -xe /var/jenkins_home" or
+              proc.cmdline="bash /usr/local/bin/jenkins-slave")
 
 - macro: parent_java_running_echo
   condition: (proc.pname=java and proc.cmdline startswith "sh -c echo")
@@ -779,7 +780,7 @@
     and not parent_linux_image_upgrade_script
     and not parent_java_running_jenkins
     and not proc.cmdline in (known_shell_spawn_cmdlines)
-    and not jenkins_script_sh
+    and not jenkins_scripts
     and not parent_java_running_echo
     and not parent_scripting_running_builds
     and not parent_Xvfb_running_xkbcomp
@@ -1013,7 +1014,7 @@
     and not run_by_passenger_agent
     and not parent_java_running_jenkins
     and not parent_beam_running_python
-    and not jenkins_script_sh
+    and not jenkins_scripts
     and not bundle_running_ruby
     and not parent_dovecot_running_auth
     and not parent_strongswan_running_starter
