@@ -834,6 +834,15 @@
               container.image startswith gcr.io/google_containers/kube-proxy or
               container.image startswith calico/node)
 
+# Add conditions to this macro (probably in a separate file,
+# overwriting this macro) to specify additional containers that are
+# allowed to perform sensitive mounts.
+#
+# In this file, it just takes one of the images in trusted_containers
+# and repeats it.
+- macro: user_sensitive_mount_containers
+  condition: (container.image startswith sysdig/agent)
+
 # These containers are ones that are known to spawn lots of
 # shells. Generally, they are for systems where the container is used
 # as a packaging mechanism more than for a dedicated microservice.
@@ -878,7 +887,11 @@
   desc: >
     Detect the initial process started by a container that has a mount from a sensitive host directory
     (i.e. /proc). Exceptions are made for known trusted images.
-  condition: evt.type=execve and proc.vpid=1 and container and sensitive_mount and not trusted_containers
+  condition: >
+    evt.type=execve and proc.vpid=1 and container
+    and sensitive_mount
+    and not trusted_containers
+    and not user_sensitive_mount_containers
   output: Container with sensitive mount started (user=%user.name command=%proc.cmdline %container.info image=%container.image mounts=%container.mounts)
   priority: INFO
   tags: [container, cis]
