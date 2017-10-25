@@ -1103,11 +1103,8 @@
 # container but not on the host. (See
 # https://github.com/draios/sysdig/issues/954). So in that case, allow
 # a setuid.
-#
-# (And for now, even skip the unknown user check. Will add it back once I can check for NULL users reliably.)
-
-- macro: unknown_user_in_container
-  condition: (container)
+- macro: known_user_in_container
+  condition: (container and user.name != "N/A")
 
 # sshd, mail programs attempt to setuid to root even when running as non-root. Excluding here to avoid meaningless FPs
 - rule: Non sudo setuid
@@ -1116,7 +1113,7 @@
     suing to itself are also excluded, as setuid calls typically involve dropping privileges.
   condition: >
     evt.type=setuid and evt.dir=>
-    and not unknown_user_in_container
+    and (known_user_in_container or not container)
     and not user.name=root and not somebody_becoming_themself
     and not proc.name in (known_setuid_binaries, userexec_binaries, mail_binaries, docker_binaries,
                           nomachine_binaries)
