@@ -442,6 +442,9 @@
      proc.aname[3]=assemble or
      proc.aname[4]=assemble))
 
+- macro: node_running_bitnami
+  condition: proc.pname=node and proc.cmdline startswith "sh -c /opt/bitnami"
+
 # Qualys seems to run a variety of shell subprocesses, at various
 # levels. This checks at a few levels without the cost of a full
 # proc.aname, which traverses the full parent heirarchy.
@@ -812,6 +815,7 @@
     and not parent_cpanm_running_perl
     and not parent_ruby_running_discourse
     and not assemble_running_php
+    and not node_running_bitnami
   output: >
     Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname
     cmdline=%proc.cmdline pcmdline=%proc.pcmdline gparent=%proc.aname[2] ggparent=%proc.aname[3]
@@ -1038,6 +1042,7 @@
     and not ics_running_java
     and not parent_ruby_running_discourse
     and not assemble_running_php
+    and not node_running_bitnami
   output: >
     Shell spawned in a container other than entrypoint (user=%user.name %container.info image=%container.image
     shell=%proc.name pcmdline=%proc.pcmdline cmdline=%proc.cmdline parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3])
