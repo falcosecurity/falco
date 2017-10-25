@@ -467,7 +467,8 @@
 
 # Chef is similar.
 - macro: run_by_chef
-  condition: (proc.aname[2]=chef_command_wr or proc.aname[3]=chef_command_wr)
+  condition: (proc.aname[2]=chef_command_wr or proc.aname[3]=chef_command_wr or
+              proc.aname[2]=chef-client or proc.aname[3]=chef-client)
 
 - macro: run_by_adclient
   condition: (proc.aname[2]=adclient or proc.aname[3]=adclient or proc.aname[4]=adclient)
