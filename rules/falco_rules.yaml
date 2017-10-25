@@ -617,9 +617,18 @@
   priority: ERROR
   tags: [filesystem]
 
+- list: known_root_files
+  items: [/root/.monit.state]
+
+- list: known_root_directories
+  items: [/root/.oracle_jre_usage]
+
 - rule: Write below root
   desc: an attempt to write to any file directly below / or /root
-  condition: root_dir and evt.dir = < and open_write
+  condition: >
+    root_dir and evt.dir = < and open_write
+    and not fd.name in (known_root_files)
+    and not fd.directory in (known_root_directories)
   output: "File below / or /root opened for writing (user=%user.name command=%proc.cmdline parent=%proc.pname file=%fd.name name=%proc.name)"
   priority: ERROR
   tags: [filesystem]
