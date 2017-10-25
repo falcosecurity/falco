@@ -209,7 +209,8 @@
 - list: known_setuid_binaries
   items: [
     sshd, dbus-daemon-lau, ping, ping6, critical-stack-, pmmcli,
-    filemng, PassengerAgent, bwrap
+    filemng, PassengerAgent, bwrap, osdetect, nginxmng, sw-engine-fpm,
+    start-stop-daem
     ]
 
 - list: user_mgmt_binaries
@@ -1111,7 +1112,7 @@
     and not unknown_user_in_container
     and not user.name=root and not somebody_becoming_themself
     and not proc.name in (known_setuid_binaries, userexec_binaries, mail_binaries, docker_binaries,
-                          nomachine_binaries, osdetect, nginxmng, sw-engine-fpm)
+                          nomachine_binaries)
     and not java_running_sdjagent
   output: >
     Unexpected setuid call by non-sudo, non-root program (user=%user.name parent=%proc.pname
