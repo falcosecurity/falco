@@ -364,6 +364,9 @@
     (proc.cmdline contains /usr/sbin/denyhosts or
      proc.cmdline contains /usr/local/bin/denyhosts.py))
 
+- macro: parent_python_running_localstack
+  condition: (proc.pcmdline startswith "python bin/localstack")
+
 - macro: parent_python_running_denyhosts
   condition: >
     (proc.pname=python and
@@ -817,6 +820,7 @@
     and not parent_ruby_running_discourse
     and not assemble_running_php
     and not node_running_bitnami
+    and not parent_python_running_localstack
   output: >
     Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname
     cmdline=%proc.cmdline pcmdline=%proc.pcmdline gparent=%proc.aname[2] ggparent=%proc.aname[3]
@@ -1058,6 +1062,7 @@
     and not parent_ruby_running_discourse
     and not assemble_running_php
     and not node_running_bitnami
+    and not parent_python_running_localstack
   output: >
     Shell spawned in a container other than entrypoint (user=%user.name %container.info image=%container.image
     shell=%proc.name pcmdline=%proc.pcmdline cmdline=%proc.cmdline parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3])
