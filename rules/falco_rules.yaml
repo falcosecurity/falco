@@ -774,7 +774,7 @@
     timeout, updatedb.findut, adclient, systemd-udevd,
     luajit, uwsgi, cfn-signal, apache_control_, beam.smp, paster, postfix-local,
     nginx_control, mailmng-service, web_statistic_e, statistics_coll, install-info,
-    hawkular-metric, rhsmcertd-worke
+    hawkular-metric, rhsmcertd-worke, parted, amuled
     ]
 
 - rule: Run shell untrusted
@@ -970,7 +970,8 @@
     '"sh -c whoami"',
     '"sh -c node_modules/.bin/bower-installer"',
     '"sh -c /bin/hostname -f 2> /dev/null"',
-    '"sh -c locale -a"'
+    '"sh -c locale -a"',
+    '"sh -c  -t -i"'
     ]
 
 - list: known_container_shell_spawn_cmdlines
