@@ -56,6 +56,10 @@
 - macro: etc_dir
   condition: fd.name startswith /etc
 
+# This detects writes immediately below / or any write anywhere below /root
+- macro: root_dir
+  condition: (fd.directory=/ or fd.name startswith /root)
+
 - macro: ubuntu_so_dirs
   condition: >
     fd.name startswith /lib/x86_64-linux-gnu or
@@ -78,7 +82,7 @@
   items: [add-shell, remove-shell]
 
 - macro: shell_procs
-  condition: proc.name in (shell_binaries)
+  condition: (proc.name in (shell_binaries))
 
 - list: coreutils_binaries
   items: [
@@ -123,7 +127,7 @@
   items: [setup-backend, dragent, sdchecks]
 
 - list: docker_binaries
-  items: [docker, dockerd, exe, docker-compose, docker-entrypoi]
+  items: [docker, dockerd, exe, docker-compose, docker-entrypoi, docker-runc-cur]
 
 - list: k8s_binaries
   items: [hyperkube, skydns, kube2sky, exechealthz]
@@ -137,7 +141,13 @@
   items: [mesos-health-ch, mesos-docker-ex, mesos-agent, mesos-slave, mesos-logrotate, mesos-fetcher, mesos-executor, 3dt]
 
 - list: phusion_passenger_binaries
-  items: [PassengerAgent]
+  items: [PassengerAgent, PassengerWatchd]
+
+# A bit longer to avoid the fairly generic my_init.
+- macro: parent_phusion_passenger_my_init
+  condition: >
+    (proc.pcmdline="my_init -u /sbin/my_init " or
+     proc.pcmdline="my_init -u /sbin/my_init")
 
 - list: chef_binaries
   items: [chef-client]
@@ -148,6 +158,15 @@
 - list: db_server_binaries
   items: [mysqld]
 
+- list: mysql_mgmt_binaries
+  items: [mysql_install_d, mysql_ssl_rsa_s]
+
+- list: postgres_mgmt_binaries
+  items: [pg_dumpall, pg_ctl]
+
+- list: db_mgmt_binaries
+  items: [mysql_mgmt_binaries, postgres_mgmt_binaries]
+
 - list: gitlab_binaries
   items: [gitlab-shell, gitlab-mon, gitlab-runner-b, git]
 
@@ -157,7 +176,7 @@
 # The explicit quotes are needed to avoid the - characters being
 # interpreted by the filter expression.
 - list: rpm_binaries
-  items: [dnf, rpm, rpmkey, yum, '"75-system-updat"']
+  items: [dnf, rpm, rpmkey, yum, '"75-system-updat"', rhsmcertd-worke]
 
 - macro: rpm_procs
   condition: proc.name in (rpm_binaries)
@@ -171,7 +190,7 @@
 # The truncated dpkg-preconfigu is intentional, process names are
 # truncated at the sysdig level.
 - list: package_mgmt_binaries
-  items: [rpm_binaries, deb_binaries, update-alternat, gem]
+  items: [rpm_binaries, deb_binaries, update-alternat, gem, pip]
 
 - macro: package_mgmt_procs
   condition: proc.name in (package_mgmt_binaries)
@@ -185,16 +204,20 @@
 # A canonical set of processes that run other programs with different
 # privileges or as a different user.
 - list: userexec_binaries
-  items: [sudo, su]
+  items: [sudo, su, suexec]
 
 - list: known_setuid_binaries
-  items: [sshd, dbus-daemon-lau, ping, ping6, critical-stack-]
+  items: [
+    sshd, dbus-daemon-lau, ping, ping6, critical-stack-, pmmcli,
+    filemng, PassengerAgent, bwrap, osdetect, nginxmng, sw-engine-fpm,
+    start-stop-daem
+    ]
 
 - list: user_mgmt_binaries
   items: [login_binaries, passwd_binaries, shadowutils_binaries]
 
 - list: dev_creation_binaries
-  items: [blkid, rename_device, update_engine]
+  items: [blkid, rename_device, update_engine, sgdisk]
 
 - list: aide_wrapper_binaries
   items: [aide.wrapper, update-aide.con]
@@ -218,13 +241,17 @@
   items: [bro, broctl]
 
 - list: monitoring_binaries
-  items: [icinga2, nrpe, npcd, check_sar_perf., qualys-cloud-ag]
+  items: [icinga2, nrpe, npcd, check_sar_perf., qualys-cloud-ag, S99qualys-cloud]
 
 - macro: system_procs
   condition: proc.name in (coreutils_binaries, user_mgmt_binaries)
 
 - list: mail_binaries
-  items: [sendmail, sendmail-msp, postfix, procmail, exim4, pickup, showq, mailq]
+  items: [
+    sendmail, sendmail-msp, postfix, procmail, exim4,
+    pickup, showq, mailq, dovecot, imap-login, imap,
+    mailmng-core, pop3-login, dovecot-lda
+    ]
 
 - list: sendmail_config_binaries
   items: [
@@ -238,10 +265,13 @@
 - list: keepalived_binaries
   items: [keepalived]
 
+- list: sensitive_file_names
+  items: [/etc/shadow, /etc/sudoers, /etc/pam.conf]
+
 - macro: sensitive_files
   condition: >
     fd.name startswith /etc and
-    (fd.name in (/etc/shadow, /etc/sudoers, /etc/pam.conf)
+    (fd.name in (sensitive_file_names)
      or fd.directory in (/etc/sudoers.d, /etc/pam.d))
 
 # Indicates that the process is new. Currently detected using time
@@ -302,6 +332,9 @@
 - list: sshkit_script_binaries
   items: [10_etc_sudoers., 10_passwd_group]
 
+- list: plesk_binaries
+  items: [sw-engine, sw-engine-fpm, sw-engine-kv, filemng, f2bmng]
+
 # System users that should never log into a system. Consider adding your own
 # service users (e.g. 'apache' or 'mysqld') here.
 - macro: system_users
@@ -319,11 +352,20 @@
 - macro: ansible_running_python
   condition: (proc.name in (python, pypy) and proc.cmdline contains ansible)
 
+- macro: parent_beam_running_python
+  condition: proc.pcmdline="python pipeline.py -c conf.json"
+
+- macro: parent_strongswan_running_starter
+  condition: proc.pcmdline="starter --daemon charon"
+
 - macro: python_running_denyhosts
   condition: >
     (proc.name=python and
     (proc.cmdline contains /usr/sbin/denyhosts or
      proc.cmdline contains /usr/local/bin/denyhosts.py))
+
+- macro: parent_python_running_localstack
+  condition: (proc.pcmdline startswith "python bin/localstack")
 
 - macro: parent_python_running_denyhosts
   condition: >
@@ -344,8 +386,15 @@
     (proc.pname=java and proc.pcmdline contains jenkins.war
     or proc.pcmdline contains /tmp/slave.jar)
 
-- macro: jenkins_script_sh
-  condition: (proc.pcmdline startswith "script.sh -xe /var/jenkins_home")
+- macro: parent_cpanm_running_perl
+  condition: (proc.pname=perl and proc.aname[2]=cpanm)
+
+- macro: ics_running_java
+  condition: (proc.pname=java and proc.aname[3] in (ics_start.sh,ics_stop.sh))
+
+- macro: jenkins_scripts
+  condition: (proc.pcmdline startswith "script.sh -xe /var/jenkins_home" or
+              proc.cmdline="bash /usr/local/bin/jenkins-slave")
 
 - macro: parent_java_running_echo
   condition: (proc.pname=java and proc.cmdline startswith "sh -c echo")
@@ -365,8 +414,11 @@
        proc.cmdline startswith "sh -c gcc" or
        proc.cmdline startswith "sh -c if type gcc" or
        proc.cmdline startswith "sh -c cd '/var/www/edi/';LC_ALL=en_US.UTF-8 git" or
+       proc.cmdline startswith "sh -c /var/www/edi/bin/sftp.sh" or
        proc.cmdline startswith "sh -c /usr/src/app/crxlsx/bin/linux/crxlsx" or
-       proc.pcmdline startswith "node /opt/nodejs/bin/yarn"))
+       proc.pcmdline startswith "node /opt/nodejs/bin/yarn" or
+       proc.pcmdline startswith "node /root/.config/yarn" or
+       proc.pcmdline startswith "node /opt/yarn/bin/yarn.js"))
 
 - macro: parent_node_running_npm
   condition: proc.pcmdline startswith "node /usr/local/bin/npm"
@@ -382,10 +434,20 @@
 
 - macro: bundle_running_ruby
   condition: >
-    (proc.pname=ruby and (
+    ((proc.pname=ruby or proc.pname contains ".rb") and (
      proc.aname[2]=bundle or
      proc.aname[3]=bundle or
      proc.aname[4]=bundle))
+
+- macro: assemble_running_php
+  condition: >
+    (proc.pname=php and (
+     proc.aname[2]=assemble or
+     proc.aname[3]=assemble or
+     proc.aname[4]=assemble))
+
+- macro: node_running_bitnami
+  condition: proc.pname=node and proc.cmdline startswith "sh -c /opt/bitnami"
 
 # Qualys seems to run a variety of shell subprocesses, at various
 # levels. This checks at a few levels without the cost of a full
@@ -397,9 +459,16 @@
      proc.aname[3]=qualys-cloud-ag or
      proc.aname[4]=qualys-cloud-ag)
 
+- macro: run_by_sumologic_securefiles
+  condition: >
+    ((proc.cmdline="usermod -a -G sumologic_collector" or
+      proc.cmdline="groupadd sumologic_collector") and
+     (proc.pname=secureFiles.sh and proc.aname[2]=java))
+
 # Chef is similar.
 - macro: run_by_chef
-  condition: (proc.aname[2]=chef_command_wr or proc.aname[3]=chef_command_wr)
+  condition: (proc.aname[2]=chef_command_wr or proc.aname[3]=chef_command_wr or
+              proc.aname[2]=chef-client or proc.aname[3]=chef-client)
 
 - macro: run_by_adclient
   condition: (proc.aname[2]=adclient or proc.aname[3]=adclient or proc.aname[4]=adclient)
@@ -414,7 +483,15 @@
   condition: (proc.pname=perl and proc.aname[2]=h2o)
 
 - macro: run_by_passenger_agent
-  condition: (proc.pname=ruby and proc.aname[2]=PassengerAgent)
+  condition: ((proc.pname=ruby and proc.aname[2]=PassengerAgent) or
+              proc.pcmdline startswith "ruby /usr/share/passenger/helper-scripts/rack-preloader.rb")
+
+# Also handles running semi-indirectly via scl
+- macro: run_by_foreman
+  condition: >
+    (user.name=foreman and
+     (proc.pname in (rake, ruby, scl) and proc.aname[5] in (tfm-rake,tfm-ruby)) or
+     (proc.pname=scl and proc.aname[2] in (tfm-rake,tfm-ruby)))
 
 # As a part of kernel upgrades, dpkg will spawn a perl script with the
 # name linux-image-N.N. This macro matches that.
@@ -423,6 +500,33 @@
 
 - macro: java_running_sdjagent
   condition: proc.name=java and proc.cmdline contains sdjagent.jar
+
+- macro: parent_java_running_confluence
+  condition: (proc.pname=java and proc.pcmdline contains "-classpath /opt/atlassian/confluence")
+
+- macro: parent_java_running_tomcat
+  condition: (proc.pname=java and proc.pcmdline contains "-classpath /usr/local/tomcat")
+
+- macro: parent_java_running_install4j
+  condition: (proc.pname=java and proc.pcmdline contains "-classpath i4jruntime.jar")
+
+- macro: parent_dovecot_running_auth
+  condition: (proc.pname=auth and proc.aname[2]=dovecot)
+
+- macro: parent_supervise_running_multilog
+  condition: (proc.name=multilog and proc.pname=supervise)
+
+- macro: parent_ruby_running_discourse
+  condition: (proc.pcmdline startswith "ruby /var/www/discourse/vendor/bundle/ruby")
+
+- macro: pki_realm_writing_realms
+  condition: (proc.cmdline startswith "bash /usr/local/lib/pki/pki-realm" and fd.name startswith /etc/pki/realms)
+
+- macro: htpasswd_writing_passwd
+  condition: (proc.name=htpasswd and fd.name=/etc/nginx/.htpasswd)
+
+- macro: dmeventd_writing_lvm_archive
+  condition: (proc.name=dmeventd and fd.name startswith /etc/lvm/archive/)
 
 ###############
 # General Rules
@@ -447,7 +551,16 @@
   condition: (proc.name=qualys-cloud-ag and fd.name=/etc/qualys/cloud-agent/qagent-log.conf)
 
 - macro: git_writing_nssdb
-  condition: (proc.cmdline="git-remote-http origin" and fd.directory=/etc/pki/nssdb)
+  condition: (proc.name=git-remote-http and fd.directory=/etc/pki/nssdb)
+
+- macro: plesk_writing_keys
+  condition: (proc.name in (plesk_binaries) and fd.name startswith /etc/sw/keys)
+
+- macro: networkmanager_writing_resolv_conf
+  condition: proc.aname[2]=nm-dispatcher and fd.name=/etc/resolv.conf
+
+- macro: add_shell_writing_shells_tmp
+  condition: (proc.name=add-shell and fd.name=/etc/shells.tmp)
 
 # Add conditions to this macro (probably in a separate file,
 # overwriting this macro) to allow for specific combinations of
@@ -477,7 +590,7 @@
                           gen_resolvconf., update-ca-certi, certbot, runsv,
                           qualys-cloud-ag, locales.postins, nomachine_binaries,
                           adclient, certutil, crlutil)
-    and not proc.pname in (sysdigcloud_binaries, sendmail_config_binaries, hddtemp.postins, sshkit_script_binaries)
+    and not proc.pname in (sysdigcloud_binaries, sendmail_config_binaries, hddtemp.postins, sshkit_script_binaries, locales.postins)
     and not fd.name pmatch (safe_etc_dirs)
     and not fd.name in (/etc/container_environment.sh, /etc/container_environment.json, /etc/motd, /etc/motd.svc)
     and not ansible_running_python
@@ -488,11 +601,35 @@
     and not run_by_adclient
     and not qualys_writing_conf_files
     and not git_writing_nssdb
+    and not plesk_writing_keys
+    and not networkmanager_writing_resolv_conf
+    and not run_by_chef
+    and not add_shell_writing_shells_tmp
+    and not parent_supervise_running_multilog
+    and not pki_realm_writing_realms
+    and not htpasswd_writing_passwd
+    and not dmeventd_writing_lvm_archive
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc, not in a pipe installer session
   condition: write_etc_common and not proc.sname=fbash
   output: "File below /etc opened for writing (user=%user.name command=%proc.cmdline parent=%proc.pname file=%fd.name name=%proc.name gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4])"
+  priority: ERROR
+  tags: [filesystem]
+
+- list: known_root_files
+  items: [/root/.monit.state]
+
+- list: known_root_directories
+  items: [/root/.oracle_jre_usage]
+
+- rule: Write below root
+  desc: an attempt to write to any file directly below / or /root
+  condition: >
+    root_dir and evt.dir = < and open_write
+    and not fd.name in (known_root_files)
+    and not fd.directory in (known_root_directories)
+  output: "File below / or /root opened for writing (user=%user.name command=%proc.cmdline parent=%proc.pname file=%fd.name name=%proc.name)"
   priority: ERROR
   tags: [filesystem]
 
@@ -507,7 +644,7 @@
   tags: [filesystem]
 
 - macro: cmp_cp_by_passwd
-  condition: proc.name in (cmp, cp) and proc.pname=passwd
+  condition: proc.name in (cmp, cp) and proc.pname in (passwd, run-parts)
 
 - rule: Read sensitive file trusted after startup
   desc: >
@@ -524,7 +661,8 @@
 - list: read_sensitive_file_binaries
   items: [
     iptables, ps, lsb_release, check-new-relea, dumpe2fs, accounts-daemon, sshd,
-    vsftpd, systemd, mysql_install_d, psql
+    vsftpd, systemd, mysql_install_d, psql, screen, debconf-show, sa-update,
+    pam-auth-update
     ]
 
 # Add conditions to this macro (probably in a separate file,
@@ -548,7 +686,8 @@
     sensitive_files and open_read
     and not proc.name in (user_mgmt_binaries, userexec_binaries, package_mgmt_binaries,
      cron_binaries, read_sensitive_file_binaries, shell_binaries, hids_binaries,
-     vpn_binaries, sendmail_config_binaries, nomachine_binaries, sshkit_script_binaries)
+     vpn_binaries, sendmail_config_binaries, nomachine_binaries, sshkit_script_binaries,
+     in.proftpd, mandb)
     and not cmp_cp_by_passwd
     and not ansible_running_python
     and not proc.cmdline contains /usr/bin/mandb
@@ -642,10 +781,13 @@
     logrotate, ansible, less, adduser, pycompile, py3compile,
     pyclean, py3clean, pip, pip2, ansible-playboo, man-db,
     init, pluto, mkinitramfs, unattended-upgr, watch, sysdig,
-    landscape-sysin, nessusd, PM2, syslog-summary, erl_child_setup,
-    npm, cloud-init, toybox, ceph, hhvm, certbot, mysql_install_d,
+    landscape-sysin, nessusd, PM2, syslog-summary, erl_child_setup, erlexec,
+    npm, cloud-init, toybox, ceph, hhvm, certbot,
     serf, a2enmod, runsv, supervisord, varnishd, authconfig, tini,
-    timeout, updatedb.findut, mysql_ssl_rsa_s, adclient, systemd-udevd
+    timeout, updatedb.findut, adclient, systemd-udevd,
+    luajit, uwsgi, cfn-signal, apache_control_, beam.smp, paster, postfix-local,
+    nginx_control, mailmng-service, web_statistic_e, statistics_coll, install-info,
+    hawkular-metric, rhsmcertd-worke, parted, amuled, fluentd
     ]
 
 - rule: Run shell untrusted
@@ -659,24 +801,36 @@
                            monitoring_binaries, gitlab_binaries, mesos_slave_binaries,
                            keepalived_binaries,
                            needrestart_binaries, phusion_passenger_binaries, chef_binaries, nomachine_binaries,
-                           x2go_binaries)
+                           x2go_binaries, db_mgmt_binaries, plesk_binaries)
     and not parent_ansible_running_python
     and not parent_bro_running_python
     and not parent_python_running_denyhosts
     and not parent_python_running_sdchecks
     and not parent_linux_image_upgrade_script
     and not parent_java_running_jenkins
-    and not jenkins_script_sh
+    and not proc.cmdline in (known_shell_spawn_cmdlines)
+    and not jenkins_scripts
     and not parent_java_running_echo
     and not parent_scripting_running_builds
     and not parent_Xvfb_running_xkbcomp
     and not parent_nginx_running_serf
     and not parent_node_running_npm
     and not parent_java_running_sbt
+    and not parent_beam_running_python
+    and not parent_strongswan_running_starter
     and not run_by_chef
     and not run_by_puppet
     and not run_by_adclient
     and not run_by_centrify
+    and not parent_dovecot_running_auth
+    and not run_by_foreman
+    and not parent_java_running_tomcat
+    and not parent_java_running_install4j
+    and not parent_cpanm_running_perl
+    and not parent_ruby_running_discourse
+    and not assemble_running_php
+    and not node_running_bitnami
+    and not parent_python_running_localstack
   output: >
     Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname
     cmdline=%proc.cmdline pcmdline=%proc.pcmdline gparent=%proc.aname[2] ggparent=%proc.aname[3]
@@ -695,6 +849,15 @@
               container.image startswith gcr.io/google_containers/kube-proxy or
               container.image startswith calico/node)
 
+# Add conditions to this macro (probably in a separate file,
+# overwriting this macro) to specify additional containers that are
+# allowed to perform sensitive mounts.
+#
+# In this file, it just takes one of the images in trusted_containers
+# and repeats it.
+- macro: user_sensitive_mount_containers
+  condition: (container.image startswith sysdig/agent)
+
 # These containers are ones that are known to spawn lots of
 # shells. Generally, they are for systems where the container is used
 # as a packaging mechanism more than for a dedicated microservice.
@@ -706,12 +869,20 @@
 - rule: Launch Privileged Container
   desc: Detect the initial process started in a privileged container. Exceptions are made for known trusted images.
   condition: evt.type=execve and proc.vpid=1 and container and container.privileged=true and not trusted_containers
-  output: Privileged container started (user=%user.name command=%proc.cmdline %container.info)
+  output: Privileged container started (user=%user.name command=%proc.cmdline %container.info image=%container.image)
   priority: INFO
   tags: [container, cis]
 
+# For now, only considering a full mount of /etc as
+# sensitive. Ideally, this would also consider all subdirectories
+# below /etc as well, but the globbing mechanism used by sysdig
+# doesn't allow exclusions of a full pattern, only single characters.
 - macro: sensitive_mount
-  condition: (container.mount.dest[/proc*] != "N/A")
+  condition: (container.mount.dest[/proc*] != "N/A" or
+              container.mount.dest[/var/run/docker.sock] != "N/A" or
+              container.mount.dest[/] != "N/A" or
+              container.mount.dest[/etc] != "N/A" or
+              container.mount.dest[/root*] != "N/A")
 
 # The steps libcontainer performs to set up the root program for a container are:
 # - clone + exec self to a program runc:[0:PARENT]
@@ -731,10 +902,35 @@
   desc: >
     Detect the initial process started by a container that has a mount from a sensitive host directory
     (i.e. /proc). Exceptions are made for known trusted images.
-  condition: evt.type=execve and proc.vpid=1 and container and sensitive_mount and not trusted_containers
-  output: Container with sensitive mount started (user=%user.name command=%proc.cmdline %container.info)
+  condition: >
+    evt.type=execve and proc.vpid=1 and container
+    and sensitive_mount
+    and not trusted_containers
+    and not user_sensitive_mount_containers
+  output: Container with sensitive mount started (user=%user.name command=%proc.cmdline %container.info image=%container.image mounts=%container.mounts)
   priority: INFO
   tags: [container, cis]
+
+# In a local/user rules file, you could override this macro to
+# explicitly enumerate the container images that you want to run in
+# your environment. In this main falco rules file, there isn't any way
+# to know all the containers that can run, so any container is
+# alllowed, by using a filter that is guaranteed to evaluate to true
+# (the same proc.vpid=1 that's in the Launch Disallowed Container
+# rule). In the overridden macro, the condition would look something
+# like (container.image startswith vendor/container-1 or
+# container.image startswith vendor/container-2 or ...)
+
+- macro: allowed_containers
+  condition: (proc.vpid=1)
+
+- rule: Launch Disallowed Container
+  desc: >
+    Detect the initial process started by a container that is not in a list of allowed containers.
+  condition: evt.type=execve and proc.vpid=1 and container and not allowed_containers
+  output: Container started and not in allowed list (user=%user.name command=%proc.cmdline %container.info image=%container.image)
+  priority: WARNING
+  tags: [container]
 
 # Anything run interactively by root
 # - condition: evt.type != switch and user.name = root and proc.name != sshd and interactive
@@ -763,22 +959,15 @@
 # work with, and the container name is autogenerated, so there isn't
 # any stable aspect of the software to work with. In this case, we
 # fall back to allowing certain command lines.
-- list: known_container_shell_spawn_cmdlines
+
+- list: known_shell_spawn_cmdlines
   items: [
-    '"bash -c curl -f localhost:$API_PORT/admin/healthcheck"',
-    '"sh -c curl http://localhost:6060/debug/vars>/dev/null "',
-    '"sh -c curl http://localhost:6060/debug/vars>/dev/null"',
-    '"sh -c  curl http://localhost:6060/debug/vars>/dev/null"',
-    '"sh -c  curl http://localhost:6060/debug/vars>/dev/null "',
-    '"sh -c  pgrep java && exit 0 || exit 1 "',
     '"sh -c uname -p 2> /dev/null"',
     '"sh -c uname -s 2>&1"',
     '"sh -c uname -r 2>&1"',
     '"sh -c uname -v 2>&1"',
     '"sh -c uname -a 2>&1"',
     '"sh -c ruby -v 2>&1"',
-    '"sh -c  echo healthy "',
-    '"sh -c  echo alive "',
     '"sh -c getconf CLK_TCK"',
     '"sh -c getconf PAGESIZE"',
     '"sh -c LC_ALL=C LANG=C /sbin/ldconfig -p 2>/dev/null"',
@@ -793,7 +982,23 @@
     '"sh -c crontab -l 2"',
     '"sh -c lsb_release -a"',
     '"sh -c whoami"',
-    '"sh -c node_modules/.bin/bower-installer"'
+    '"sh -c node_modules/.bin/bower-installer"',
+    '"sh -c /bin/hostname -f 2> /dev/null"',
+    '"sh -c locale -a"',
+    '"sh -c  -t -i"'
+    ]
+
+- list: known_container_shell_spawn_cmdlines
+  items: [
+    known_shell_spawn_cmdlines,
+    '"bash -c curl -f localhost:$API_PORT/admin/healthcheck"',
+    '"sh -c curl http://localhost:6060/debug/vars>/dev/null "',
+    '"sh -c curl http://localhost:6060/debug/vars>/dev/null"',
+    '"sh -c  curl http://localhost:6060/debug/vars>/dev/null"',
+    '"sh -c  curl http://localhost:6060/debug/vars>/dev/null "',
+    '"sh -c  pgrep java && exit 0 || exit 1 "',
+    '"sh -c  echo healthy "',
+    '"sh -c  echo alive "'
     ]
 
 # This list allows for easy additions to the set of commands allowed
@@ -825,6 +1030,7 @@
     and not container_entrypoint
     and not proc.pname in (shell_binaries, make_binaries, docker_binaries, k8s_binaries, package_mgmt_binaries,
                            lxd_binaries, mesos_slave_binaries, aide_wrapper_binaries, nids_binaries,
+                           cron_binaries,
                            user_known_container_shell_spawn_binaries,
                            needrestart_binaries,
                            phusion_passenger_binaries,
@@ -832,10 +1038,13 @@
                            nomachine_binaries,
                            x2go_binaries,
                            xray_rabbitmq_binaries,
-                           monitoring_binaries, gitlab_binaries, initdb, pg_ctl, awk, falco, cron,
-                           erl_child_setup, ceph, PM2, pycompile, py3compile, hhvm, npm, mysql_install_d, serf,
+                           db_mgmt_binaries,
+                           plesk_binaries,
+                           monitoring_binaries, gitlab_binaries, initdb, awk, falco, cron,
+                           erl_child_setup, erlexec, ceph, PM2, pycompile, py3compile, hhvm, npm, serf,
                            runsv, supervisord, varnishd, crond, logrotate, timeout, tini,
-                           xrdb, xfce4-session, weave, mysql_ssl_rsa_s, logdna-agent, bundle, configure)
+                           xrdb, xfce4-session, weave, logdna-agent, bundle, configure, luajit, nginx,
+                           beam.smp, paster, postfix-local, hawkular-metric, fluentd)
     and not trusted_containers
     and not shell_spawning_containers
     and not parent_java_running_echo
@@ -850,8 +1059,20 @@
     and not run_by_h2o
     and not run_by_passenger_agent
     and not parent_java_running_jenkins
-    and not jenkins_script_sh
+    and not parent_beam_running_python
+    and not jenkins_scripts
     and not bundle_running_ruby
+    and not parent_dovecot_running_auth
+    and not parent_strongswan_running_starter
+    and not parent_phusion_passenger_my_init
+    and not parent_java_running_confluence
+    and not parent_java_running_tomcat
+    and not parent_java_running_install4j
+    and not ics_running_java
+    and not parent_ruby_running_discourse
+    and not assemble_running_php
+    and not node_running_bitnami
+    and not parent_python_running_localstack
   output: >
     Shell spawned in a container other than entrypoint (user=%user.name %container.info image=%container.image
     shell=%proc.name pcmdline=%proc.pcmdline cmdline=%proc.cmdline parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3])
@@ -862,7 +1083,7 @@
 # systemd can listen on ports to launch things like sshd on demand
 - rule: System procs network activity
   desc: any network activity performed by system binaries that are not expected to send or receive any network traffic
-  condition: (fd.sockfamily = ip and system_procs) and (inbound or outbound) and not proc.name=systemd
+  condition: (fd.sockfamily = ip and system_procs) and (inbound or outbound) and not proc.name in (systemd, hostid)
   output: >
     Known system binary sent/received network traffic
     (user=%user.name command=%proc.cmdline connection=%fd.name)
@@ -891,9 +1112,8 @@
 # container but not on the host. (See
 # https://github.com/draios/sysdig/issues/954). So in that case, allow
 # a setuid.
-
-- macro: unknown_user_in_container
-  condition: (user.name="<NA>" and container)
+- macro: known_user_in_container
+  condition: (container and user.name != "N/A")
 
 # sshd, mail programs attempt to setuid to root even when running as non-root. Excluding here to avoid meaningless FPs
 - rule: Non sudo setuid
@@ -902,9 +1122,10 @@
     suing to itself are also excluded, as setuid calls typically involve dropping privileges.
   condition: >
     evt.type=setuid and evt.dir=>
-    and not unknown_user_in_container
+    and (known_user_in_container or not container)
     and not user.name=root and not somebody_becoming_themself
-    and not proc.name in (known_setuid_binaries, userexec_binaries, mail_binaries, docker_binaries, nomachine_binaries)
+    and not proc.name in (known_setuid_binaries, userexec_binaries, mail_binaries, docker_binaries,
+                          nomachine_binaries)
     and not java_running_sdjagent
   output: >
     Unexpected setuid call by non-sudo, non-root program (user=%user.name parent=%proc.pname
@@ -920,12 +1141,13 @@
     Some innocuous commandlines that don't actually change anything are excluded.
   condition: >
     spawned_process and proc.name in (user_mgmt_binaries) and
-    not proc.name in (su, sudo, lastlog) and not container and
+    not proc.name in (su, sudo, lastlog, nologin, unix_chkpwd) and not container and
     not proc.pname in (cron_binaries, systemd, run-parts) and
     not proc.cmdline startswith "passwd -S" and
     not proc.cmdline startswith "useradd -D" and
     not proc.cmdline startswith "systemd --version" and
-    not run_by_qualys
+    not run_by_qualys and
+    not run_by_sumologic_securefiles
   output: >
     User management binary command run outside of container
     (user=%user.name command=%proc.cmdline parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4])
