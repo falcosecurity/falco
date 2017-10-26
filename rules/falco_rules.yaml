@@ -556,6 +556,10 @@
 - macro: plesk_writing_keys
   condition: (proc.name in (plesk_binaries) and fd.name startswith /etc/sw/keys)
 
+- macro: plesk_install_writing_apache_conf
+  condition: (proc.cmdline startswith "bash -hB /usr/lib/plesk-9.0/services/webserver.apache configure"
+              and fd.name="/etc/apache2/apache2.conf.tmp")
+
 - macro: networkmanager_writing_resolv_conf
   condition: proc.aname[2]=nm-dispatcher and fd.name=/etc/resolv.conf
 
@@ -602,6 +606,7 @@
     and not qualys_writing_conf_files
     and not git_writing_nssdb
     and not plesk_writing_keys
+    and not plesk_install_writing_apache_conf
     and not networkmanager_writing_resolv_conf
     and not run_by_chef
     and not add_shell_writing_shells_tmp
