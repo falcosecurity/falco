@@ -390,6 +390,10 @@
   condition: >
     (proc.pname=java and proc.pcmdline contains "-classpath /usr/share/maven/")
 
+- macro: python_running_es_curator
+  condition: (proc.pcmdline="python -u run_cron.py" and
+              proc.cmdline startswith "sh -c /usr/bin/curator")
+
 - macro: parent_cpanm_running_perl
   condition: (proc.pname=perl and proc.aname[2]=cpanm)
 
@@ -1074,6 +1078,7 @@
     and not run_by_passenger_agent
     and not parent_java_running_jenkins
     and not parent_java_running_maven
+    and not python_running_es_curator
     and not parent_beam_running_python
     and not jenkins_scripts
     and not bundle_running_ruby
