@@ -497,6 +497,9 @@
      (proc.pname in (rake, ruby, scl) and proc.aname[5] in (tfm-rake,tfm-ruby)) or
      (proc.pname=scl and proc.aname[2] in (tfm-rake,tfm-ruby)))
 
+- macro: run_by_openshift
+  condition: proc.aname[2]=es_seed_acl
+
 # As a part of kernel upgrades, dpkg will spawn a perl script with the
 # name linux-image-N.N. This macro matches that.
 - macro: parent_linux_image_upgrade_script
@@ -834,6 +837,7 @@
     and not run_by_centrify
     and not parent_dovecot_running_auth
     and not run_by_foreman
+    and not run_by_openshift
     and not parent_java_running_tomcat
     and not parent_java_running_install4j
     and not parent_cpanm_running_perl
