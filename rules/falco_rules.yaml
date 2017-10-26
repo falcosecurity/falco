@@ -386,6 +386,10 @@
     (proc.pname=java and proc.pcmdline contains jenkins.war
     or proc.pcmdline contains /tmp/slave.jar)
 
+- macro: parent_java_running_maven
+  condition: >
+    (proc.pname=java and proc.pcmdline contains "-classpath /usr/share/maven/")
+
 - macro: parent_cpanm_running_perl
   condition: (proc.pname=perl and proc.aname[2]=cpanm)
 
@@ -1065,6 +1069,7 @@
     and not run_by_h2o
     and not run_by_passenger_agent
     and not parent_java_running_jenkins
+    and not parent_java_running_maven
     and not parent_beam_running_python
     and not jenkins_scripts
     and not bundle_running_ruby
