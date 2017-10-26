@@ -804,7 +804,7 @@
     luajit, uwsgi, cfn-signal, apache_control_, beam.smp, paster, postfix-local,
     nginx_control, mailmng-service, web_statistic_e, statistics_coll, install-info,
     hawkular-metric, rhsmcertd-worke, parted, amuled, fluentd, x2gormforward,
-    parallels_insta
+    parallels_insta, salt-minion
     ]
 
 - rule: Run shell untrusted
