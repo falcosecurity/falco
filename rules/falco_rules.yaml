@@ -138,7 +138,9 @@
 # Utility/etc programs known to run on mesos slaves. Truncation
 # intentional.
 - list: mesos_slave_binaries
-  items: [mesos-health-ch, mesos-docker-ex, mesos-agent, mesos-slave, mesos-logrotate, mesos-fetcher, mesos-executor, 3dt]
+  items: [mesos-health-ch, mesos-docker-ex, mesos-agent, mesos-slave,
+          mesos-logrotate, mesos-fetcher, mesos-executor, 3dt,
+          mesos-journald-]
 
 - list: phusion_passenger_binaries
   items: [PassengerAgent, PassengerWatchd]
