@@ -86,6 +86,12 @@ public:
 	uint16_t find_ruleset_id(const std::string &ruleset);
 
 	//
+	// Given a ruleset, fill in a bitset containing the event
+	// types for which this ruleset can run.
+	//
+	void evttypes_for_ruleset(std::vector<bool> &evttypes, const std::string &ruleset);
+
+	//
 	// Given an event, check it against the set of rules in the
 	// engine and if a matching rule is found, return details on
 	// the rule that matched. If no rule matched, returns NULL.
