@@ -392,6 +392,10 @@
   condition: >
     (proc.pname=java and proc.pcmdline contains "-classpath /usr/share/maven/")
 
+- macro: parent_java_running_appdynamics
+  condition: >
+    (proc.pname=java and proc.pcmdline contains "-jar /opt/appdynamics/")
+
 - macro: python_running_es_curator
   condition: (proc.pcmdline="python -u run_cron.py" and
               proc.cmdline startswith "sh -c /usr/bin/curator")
@@ -846,6 +850,7 @@
     and not run_by_openshift
     and not parent_java_running_tomcat
     and not parent_java_running_install4j
+    and not parent_java_running_appdynamics
     and not parent_cpanm_running_perl
     and not parent_ruby_running_discourse
     and not assemble_running_php
@@ -1080,6 +1085,7 @@
     and not run_by_passenger_agent
     and not parent_java_running_jenkins
     and not parent_java_running_maven
+    and not parent_java_running_appdynamics
     and not python_running_es_curator
     and not parent_beam_running_python
     and not jenkins_scripts
