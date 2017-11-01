@@ -543,7 +543,8 @@
   condition: (proc.name=htpasswd and fd.name=/etc/nginx/.htpasswd)
 
 - macro: dmeventd_writing_lvm_archive
-  condition: (proc.name=dmeventd and fd.name startswith /etc/lvm/archive/)
+  condition: (proc.name=dmeventd and (fd.name startswith /etc/lvm/archive or
+                                      fd.name startswith /etc/lvm/backup))
 
 ###############
 # General Rules
