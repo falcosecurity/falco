@@ -611,7 +611,8 @@
                           debconf-show, rollerd, bind9.postinst, sv,
                           gen_resolvconf., update-ca-certi, certbot, runsv,
                           qualys-cloud-ag, locales.postins, nomachine_binaries,
-                          adclient, certutil, crlutil, pam-auth-update, parallels_insta)
+                          adclient, certutil, crlutil, pam-auth-update, parallels_insta,
+                          openshift-launc)
     and not proc.pname in (sysdigcloud_binaries, sendmail_config_binaries, hddtemp.postins, sshkit_script_binaries, locales.postins)
     and not fd.name pmatch (safe_etc_dirs)
     and not fd.name in (/etc/container_environment.sh, /etc/container_environment.json, /etc/motd, /etc/motd.svc)
