@@ -643,7 +643,7 @@
 - rule: Write below etc
   desc: an attempt to write to any file below /etc, not in a pipe installer session
   condition: write_etc_common and not proc.sname=fbash
-  output: "File below /etc opened for writing (user=%user.name command=%proc.cmdline parent=%proc.pname file=%fd.name name=%proc.name gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4])"
+  output: "File below /etc opened for writing (user=%user.name command=%proc.cmdline parent=%proc.pname pcmdline=%proc.pcmdline file=%fd.name name=%proc.name gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4])"
   priority: ERROR
   tags: [filesystem]
 
@@ -1166,7 +1166,7 @@
                           nomachine_binaries)
     and not java_running_sdjagent
   output: >
-    Unexpected setuid call by non-sudo, non-root program (user=%user.name parent=%proc.pname
+    Unexpected setuid call by non-sudo, non-root program (user=%user.name cur_uid=%user.uid parent=%proc.pname
     command=%proc.cmdline uid=%evt.arg.uid)
   priority: NOTICE
   tags: [users]
