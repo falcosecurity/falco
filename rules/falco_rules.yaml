@@ -255,10 +255,11 @@
     mailmng-core, pop3-login, dovecot-lda
     ]
 
-- list: sendmail_config_binaries
+- list: mail_config_binaries
   items: [
     update_conf, parse_mc, makemap_hash, newaliases, update_mk, update_tlsm4,
-    update_db, update_mc, ssmtp.postinst, mailq
+    update_db, update_mc, ssmtp.postinst, mailq, postalias, postfix.config.,
+    postfix.config, postfix-script
     ]
 
 - list: make_binaries
@@ -603,7 +604,7 @@
     and not proc.name in (passwd_binaries, shadowutils_binaries, sysdigcloud_binaries,
                           package_mgmt_binaries, ssl_mgmt_binaries, dhcp_binaries,
                           dev_creation_binaries, shell_mgmt_binaries,
-                          sendmail_config_binaries,
+                          mail_config_binaries,
                           sshkit_script_binaries,
                           ldconfig.real, ldconfig, confd, gpg, insserv,
                           apparmor_parser, update-mime, tzdata.config, tzdata.postinst,
@@ -613,7 +614,7 @@
                           qualys-cloud-ag, locales.postins, nomachine_binaries,
                           adclient, certutil, crlutil, pam-auth-update, parallels_insta,
                           openshift-launc)
-    and not proc.pname in (sysdigcloud_binaries, sendmail_config_binaries, hddtemp.postins, sshkit_script_binaries, locales.postins)
+    and not proc.pname in (sysdigcloud_binaries, mail_config_binaries, hddtemp.postins, sshkit_script_binaries, locales.postins)
     and not fd.name pmatch (safe_etc_dirs)
     and not fd.name in (/etc/container_environment.sh, /etc/container_environment.json, /etc/motd, /etc/motd.svc)
     and not ansible_running_python
@@ -710,7 +711,7 @@
     sensitive_files and open_read
     and not proc.name in (user_mgmt_binaries, userexec_binaries, package_mgmt_binaries,
      cron_binaries, read_sensitive_file_binaries, shell_binaries, hids_binaries,
-     vpn_binaries, sendmail_config_binaries, nomachine_binaries, sshkit_script_binaries,
+     vpn_binaries, mail_config_binaries, nomachine_binaries, sshkit_script_binaries,
      in.proftpd, mandb)
     and not cmp_cp_by_passwd
     and not ansible_running_python
