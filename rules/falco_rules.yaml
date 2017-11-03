@@ -431,6 +431,7 @@
        proc.cmdline startswith "sh -c cd '/var/www/edi/';LC_ALL=en_US.UTF-8 git" or
        proc.cmdline startswith "sh -c /var/www/edi/bin/sftp.sh" or
        proc.cmdline startswith "sh -c /usr/src/app/crxlsx/bin/linux/crxlsx" or
+       proc.cmdline startswith "sh -c make parent" or
        proc.pcmdline startswith "node /opt/nodejs/bin/yarn" or
        proc.pcmdline startswith "node /root/.config/yarn" or
        proc.pcmdline startswith "node /opt/yarn/bin/yarn.js"))
@@ -813,7 +814,7 @@
     luajit, uwsgi, cfn-signal, apache_control_, beam.smp, paster, postfix-local,
     nginx_control, mailmng-service, web_statistic_e, statistics_coll, install-info,
     hawkular-metric, rhsmcertd-worke, parted, amuled, fluentd, x2gormforward,
-    parallels_insta, salt-minion
+    parallels_insta, salt-minion, dnsmng, update-inetd, pum_worker, awstats_buildst
     ]
 
 - rule: Run shell untrusted
@@ -1005,10 +1006,12 @@
     '"sh -c node index"',
     '"sh -c node ./src/start.js"',
     '"sh -c node app.js"',
+    '"sh -c node -e \"require(''nan'')\""',
     '"sh -c node -e \"require(''nan'')\")"',
     '"sh -c node $NODE_DEBUG_OPTION index.js "',
     '"sh -c crontab -l 2"',
     '"sh -c lsb_release -a"',
+    '"sh -c lsb_release -is 2>/dev/null"',
     '"sh -c whoami"',
     '"sh -c node_modules/.bin/bower-installer"',
     '"sh -c /bin/hostname -f 2> /dev/null"',
