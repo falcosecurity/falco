@@ -398,7 +398,7 @@
     (proc.pname=java and proc.pcmdline contains "-jar /opt/appdynamics/")
 
 - macro: python_running_es_curator
-  condition: (proc.pcmdline="python -u run_cron.py" and
+  condition: (proc.pcmdline startswith "python -u run_cron.py" and
               proc.cmdline startswith "sh -c /usr/bin/curator")
 
 - macro: parent_cpanm_running_perl
