@@ -433,6 +433,7 @@
        proc.cmdline startswith "sh -c /usr/src/app/crxlsx/bin/linux/crxlsx" or
        proc.cmdline startswith "sh -c make parent" or
        proc.pcmdline startswith "node /opt/nodejs/bin/yarn" or
+       proc.pcmdline startswith "node /usr/local/bin/yarn" or
        proc.pcmdline startswith "node /root/.config/yarn" or
        proc.pcmdline startswith "node /opt/yarn/bin/yarn.js"))
 
