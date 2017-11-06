@@ -466,6 +466,9 @@
 - macro: node_running_bitnami
   condition: proc.pname=node and proc.cmdline startswith "sh -c /opt/bitnami"
 
+- macro: node_running_threatstack
+  condition: proc.pcmdline startswith "node /opt/threatstack/node_modules"
+
 # Qualys seems to run a variety of shell subprocesses, at various
 # levels. This checks at a few levels without the cost of a full
 # proc.aname, which traverses the full parent heirarchy.
@@ -819,7 +822,8 @@
     luajit, uwsgi, cfn-signal, apache_control_, beam.smp, paster, postfix-local,
     nginx_control, mailmng-service, web_statistic_e, statistics_coll, install-info,
     hawkular-metric, rhsmcertd-worke, parted, amuled, fluentd, x2gormforward,
-    parallels_insta, salt-minion, dnsmng, update-inetd, pum_worker, awstats_buildst
+    parallels_insta, salt-minion, dnsmng, update-inetd, pum_worker, awstats_buildst,
+    tsvuln
     ]
 
 - rule: Run shell untrusted
@@ -864,6 +868,7 @@
     and not parent_ruby_running_discourse
     and not assemble_running_php
     and not node_running_bitnami
+    and not node_running_threatstack
     and not parent_python_running_localstack
   output: >
     Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname
@@ -1111,6 +1116,7 @@
     and not parent_ruby_running_discourse
     and not assemble_running_php
     and not node_running_bitnami
+    and not node_running_threatstack
     and not parent_python_running_localstack
   output: >
     Shell spawned in a container other than entrypoint (user=%user.name %container.info image=%container.image
