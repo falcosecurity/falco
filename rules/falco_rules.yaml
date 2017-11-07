@@ -444,7 +444,8 @@
   condition: (proc.pcmdline="perl Makefile.PL")
 
 - macro: parent_node_running_npm
-  condition: proc.pcmdline startswith "node /usr/local/bin/npm"
+  condition: (proc.pcmdline startswith "node /usr/local/bin/npm" or
+              proc.pcmdline startswith "node /opt/rh/rh-nodejs6/root/usr/bin/npm")
 
 - macro: parent_nginx_running_serf
   condition: (proc.pname=nginx and proc.cmdline startswith "sh -c serf")
