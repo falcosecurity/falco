@@ -440,6 +440,9 @@
        proc.pcmdline startswith "node /root/.config/yarn" or
        proc.pcmdline startswith "node /opt/yarn/bin/yarn.js"))
 
+- macro: makefile_perl
+  condition: (proc.pcmdline="perl Makefile.PL")
+
 - macro: parent_node_running_npm
   condition: proc.pcmdline startswith "node /usr/local/bin/npm"
 
@@ -862,6 +865,7 @@
     and not jenkins_scripts
     and not parent_java_running_echo
     and not parent_scripting_running_builds
+    and not makefile_perl
     and not parent_Xvfb_running_xkbcomp
     and not parent_nginx_running_serf
     and not parent_node_running_npm
@@ -1105,6 +1109,7 @@
     and not shell_spawning_containers
     and not parent_java_running_echo
     and not parent_scripting_running_builds
+    and not makefile_perl
     and not parent_Xvfb_running_xkbcomp
     and not mysql_image_running_healthcheck
     and not parent_nginx_running_serf
