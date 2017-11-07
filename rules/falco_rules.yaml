@@ -599,6 +599,9 @@
 - macro: duply_writing_exclude_files
   condition: (proc.name=touch and proc.pcmdline startswith "bash /usr/bin/duply" and fd.name startswith "/etc/duply")
 
+- macro: xmlcatalog_writing_files
+  condition: (proc.name=update-xmlcatal and fd.directory=/etc/xml)
+
 # Add conditions to this macro (probably in a separate file,
 # overwriting this macro) to allow for specific combinations of
 # programs writing below specific directories below
@@ -646,6 +649,7 @@
     and not run_by_chef
     and not add_shell_writing_shells_tmp
     and not duply_writing_exclude_files
+    and not xmlcatalog_writing_files
     and not parent_supervise_running_multilog
     and not pki_realm_writing_realms
     and not htpasswd_writing_passwd
