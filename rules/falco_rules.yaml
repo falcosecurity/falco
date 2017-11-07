@@ -263,7 +263,7 @@
     ]
 
 - list: make_binaries
-  items: [make, gmake, cmake]
+  items: [make, gmake, cmake, automake, autom4te, autoheader]
 
 - list: keepalived_binaries
   items: [keepalived]
