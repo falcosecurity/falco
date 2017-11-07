@@ -551,6 +551,9 @@
 - macro: parent_java_running_install4j
   condition: (proc.pname=java and proc.pcmdline contains "-classpath i4jruntime.jar")
 
+- macro: parent_java_running_endeca
+  condition: (proc.pname=java and proc.pcmdline contains "-classpath /opt/endeca/")
+
 - macro: parent_running_datastax
   condition: ((proc.pname=java and proc.pcmdline contains "-jar datastax-agent") or
               (proc.pcmdline startswith "nodetool /opt/dse/bin/"))
@@ -894,6 +897,7 @@
     and not run_by_openshift
     and not parent_java_running_tomcat
     and not parent_java_running_install4j
+    and not parent_java_running_endeca
     and not parent_running_datastax
     and not parent_java_running_appdynamics
     and not parent_cpanm_running_perl
