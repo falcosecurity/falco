@@ -464,7 +464,9 @@
      proc.aname[4]=assemble))
 
 - macro: node_running_bitnami
-  condition: proc.pname=node and proc.cmdline startswith "sh -c /opt/bitnami"
+  condition: (proc.pname=node and
+                (proc.cmdline startswith "sh -c /opt/bitnami" or
+                 proc.cmdline startswith "sh -c bin/redis-server /opt/bitnami"))
 
 - macro: node_running_threatstack
   condition: proc.pcmdline startswith "node /opt/threatstack/node_modules"
