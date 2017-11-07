@@ -722,7 +722,7 @@
   items: [
     iptables, ps, lsb_release, check-new-relea, dumpe2fs, accounts-daemon, sshd,
     vsftpd, systemd, mysql_install_d, psql, screen, debconf-show, sa-update,
-    pam-auth-update, /usr/sbin/spamd
+    pam-auth-update, /usr/sbin/spamd, polkit-agent-he
     ]
 
 # Add conditions to this macro (probably in a separate file,
