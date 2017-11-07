@@ -370,6 +370,9 @@
 - macro: parent_python_running_localstack
   condition: (proc.pcmdline startswith "python bin/localstack")
 
+- macro: parent_python_running_zookeeper
+  condition: (proc.pcmdline startswith "python /usr/local/bin/cub")
+
 - macro: parent_python_running_denyhosts
   condition: >
     (proc.pname=python and
@@ -881,6 +884,7 @@
     and not node_running_bitnami
     and not node_running_threatstack
     and not parent_python_running_localstack
+    and not parent_python_running_zookeeper
   output: >
     Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname
     cmdline=%proc.cmdline pcmdline=%proc.pcmdline gparent=%proc.aname[2] ggparent=%proc.aname[3]
@@ -1129,6 +1133,7 @@
     and not node_running_bitnami
     and not node_running_threatstack
     and not parent_python_running_localstack
+    and not parent_python_running_zookeeper
   output: >
     Shell spawned in a container other than entrypoint (user=%user.name %container.info image=%container.image
     shell=%proc.name pcmdline=%proc.pcmdline cmdline=%proc.cmdline parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3])
