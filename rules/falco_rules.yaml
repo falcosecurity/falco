@@ -373,6 +373,9 @@
 - macro: parent_python_running_zookeeper
   condition: (proc.pcmdline startswith "python /usr/local/bin/cub")
 
+- macro: parent_docker_start_script
+  condition: (proc.pcmdline="start.sh /opt/docker/conf/start.sh")
+
 - macro: parent_python_running_denyhosts
   condition: >
     (proc.pname=python and
@@ -1150,6 +1153,7 @@
     and not node_running_threatstack
     and not parent_python_running_localstack
     and not parent_python_running_zookeeper
+    and not parent_docker_start_script
   output: >
     Shell spawned in a container other than entrypoint (user=%user.name %container.info image=%container.image
     shell=%proc.name pcmdline=%proc.pcmdline cmdline=%proc.cmdline parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3])
