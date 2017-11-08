@@ -461,7 +461,7 @@
 
 - macro: bundle_running_ruby
   condition: >
-    ((proc.pname=ruby or proc.pname contains ".rb") and (
+    ((proc.pname in (ruby,ruby2.1) or proc.pname contains ".rb") and (
      proc.aname[2]=bundle or
      proc.aname[3]=bundle or
      proc.aname[4]=bundle))
