@@ -625,6 +625,10 @@
 - macro: xmlcatalog_writing_files
   condition: (proc.name=update-xmlcatal and fd.directory=/etc/xml)
 
+- macro: datadog_writing_conf
+  condition: (proc.cmdline startswith "python /opt/datadog-agent"
+              and fd.name startswith "/etc/dd-agent")
+
 # Add conditions to this macro (probably in a separate file,
 # overwriting this macro) to allow for specific combinations of
 # programs writing below specific directories below
@@ -678,6 +682,7 @@
     and not htpasswd_writing_passwd
     and not dmeventd_writing_lvm_archive
     and not ovsdb_writing_openvswitch
+    and not datadog_writing_conf
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc, not in a pipe installer session
