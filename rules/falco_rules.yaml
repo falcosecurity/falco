@@ -686,7 +686,10 @@
   items: [/root/.monit.state]
 
 - list: known_root_directories
-  items: [/root/.oracle_jre_usage]
+  items: [/root/.oracle_jre_usage, /root/.java/.userPrefs]
+
+- macro: known_root_conditions
+  condition: (fd.name startswith /root/orcexec.)
 
 - rule: Write below root
   desc: an attempt to write to any file directly below / or /root
@@ -694,6 +697,7 @@
     root_dir and evt.dir = < and open_write
     and not fd.name in (known_root_files)
     and not fd.directory in (known_root_directories)
+    and not known_root_conditions
   output: "File below / or /root opened for writing (user=%user.name command=%proc.cmdline parent=%proc.pname file=%fd.name name=%proc.name)"
   priority: ERROR
   tags: [filesystem]
