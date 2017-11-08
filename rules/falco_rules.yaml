@@ -140,7 +140,8 @@
 - list: mesos_slave_binaries
   items: [mesos-health-ch, mesos-docker-ex, mesos-agent, mesos-slave,
           mesos-logrotate, mesos-fetcher, mesos-executor, 3dt,
-          mesos-journald-]
+          mesos-journald-, '"1_scheduler"', '"2_scheduler"',
+          '"3_scheduler"', '"4_scheduler"']
 
 - list: phusion_passenger_binaries
   items: [PassengerAgent, PassengerWatchd]
@@ -235,9 +236,6 @@
 
 - list: x2go_binaries
   items: [x2gosuspend-age, x2goagent]
-
-- list: xray_rabbitmq_binaries
-  items: ['"1_scheduler"', '"2_scheduler"', '"3_scheduler"', '"4_scheduler"']
 
 - list: nids_binaries
   items: [bro, broctl]
@@ -1115,7 +1113,6 @@
                            chef_binaries,
                            nomachine_binaries,
                            x2go_binaries,
-                           xray_rabbitmq_binaries,
                            db_mgmt_binaries,
                            plesk_binaries,
                            monitoring_binaries, gitlab_binaries, initdb, awk, falco, cron,
