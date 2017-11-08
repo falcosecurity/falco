@@ -242,7 +242,7 @@
   items: [bro, broctl]
 
 - list: monitoring_binaries
-  items: [icinga2, nrpe, npcd, check_sar_perf., qualys-cloud-ag, S99qualys-cloud]
+  items: [icinga2, nrpe, npcd, check_sar_perf., qualys-cloud-ag, S99qualys-cloud, nagios]
 
 - macro: system_procs
   condition: proc.name in (coreutils_binaries, user_mgmt_binaries)
