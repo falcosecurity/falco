@@ -1058,6 +1058,7 @@
     '"sh -c getconf CLK_TCK"',
     '"sh -c getconf PAGESIZE"',
     '"sh -c LC_ALL=C LANG=C /sbin/ldconfig -p 2>/dev/null"',
+    '"sh -c LANG=C /sbin/ldconfig -p 2>/dev/null"',
     '"sh -c /sbin/ldconfig -p 2>/dev/null"',
     '"sh -c stty -a 2>/dev/null"',
     '"sh -c node index.js"',
@@ -1133,7 +1134,7 @@
                            runsv, supervisord, varnishd, crond, logrotate, timeout, tini,
                            xrdb, xfce4-session, weave, logdna-agent, bundle, configure, luajit, nginx,
                            beam.smp, paster, postfix-local, hawkular-metric, fluentd, x2gormforward,
-                           '"[celeryd:"')
+                           '"[celeryd:"', flock)
     and not trusted_containers
     and not shell_spawning_containers
     and not parent_java_running_echo
