@@ -695,7 +695,7 @@
   items: [/root/.monit.state]
 
 - list: known_root_directories
-  items: [/root/.oracle_jre_usage, /root/.java/.userPrefs]
+  items: [/root/.oracle_jre_usage, /root/.java/.userPrefs, /root/.ssh, /root/.cache]
 
 - macro: known_root_conditions
   condition: (fd.name startswith /root/orcexec.)
