@@ -575,6 +575,8 @@
 - macro: dmeventd_writing_lvm_archive
   condition: (proc.name=dmeventd and (fd.name startswith /etc/lvm/archive or
                                       fd.name startswith /etc/lvm/backup))
+- macro: ovsdb_writing_openvswitch
+  condition: (proc.name=ovsdb-server and fd.directory=/etc/openvswitch)
 
 ###############
 # General Rules
@@ -675,6 +677,7 @@
     and not pki_realm_writing_realms
     and not htpasswd_writing_passwd
     and not dmeventd_writing_lvm_archive
+    and not ovsdb_writing_openvswitch
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc, not in a pipe installer session
