@@ -1119,7 +1119,8 @@
                            erl_child_setup, erlexec, ceph, PM2, pycompile, py3compile, hhvm, npm, serf,
                            runsv, supervisord, varnishd, crond, logrotate, timeout, tini,
                            xrdb, xfce4-session, weave, logdna-agent, bundle, configure, luajit, nginx,
-                           beam.smp, paster, postfix-local, hawkular-metric, fluentd, x2gormforward)
+                           beam.smp, paster, postfix-local, hawkular-metric, fluentd, x2gormforward,
+                           '"[celeryd:"')
     and not trusted_containers
     and not shell_spawning_containers
     and not parent_java_running_echo
