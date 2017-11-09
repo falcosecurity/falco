@@ -1180,6 +1180,7 @@
     and not parent_python_running_localstack
     and not parent_python_running_zookeeper
     and not parent_docker_start_script
+    and not parent_java_running_endeca
   output: >
     Shell spawned in a container other than entrypoint (user=%user.name %container.info image=%container.image
     shell=%proc.name pcmdline=%proc.pcmdline cmdline=%proc.cmdline parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3])
