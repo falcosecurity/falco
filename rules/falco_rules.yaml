@@ -1040,6 +1040,7 @@
   condition: >
     spawned_process and container
     and shell_procs and proc.tty != 0
+    and not proc.cmdline in (known_shell_spawn_cmdlines)
   output: >
     A shell was spawned in a container with an attached terminal (user=%user.name %container.info
     shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline terminal=%proc.tty)
