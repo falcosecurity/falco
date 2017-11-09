@@ -410,7 +410,7 @@
   condition: (proc.pname=perl and proc.aname[2]=cpanm)
 
 - macro: ics_running_java
-  condition: (proc.pname=java and proc.aname[3] in (ics_start.sh,ics_stop.sh))
+  condition: (proc.pname=java and proc.aname[3] in (ics_start.sh,ics_stop.sh,ics_status.sh))
 
 - macro: jenkins_scripts
   condition: (proc.pcmdline startswith "script.sh -xe /var/jenkins_home" or
