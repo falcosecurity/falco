@@ -1066,6 +1066,8 @@
     '"sh -c LANG=C /sbin/ldconfig -p 2>/dev/null"',
     '"sh -c /sbin/ldconfig -p 2>/dev/null"',
     '"sh -c stty -a 2>/dev/null"',
+    '"sh -c stty -a < /dev/tty"',
+    '"sh -c stty -g < /dev/tty"',
     '"sh -c node index.js"',
     '"sh -c node index"',
     '"sh -c node ./src/start.js"',
@@ -1080,7 +1082,8 @@
     '"sh -c node_modules/.bin/bower-installer"',
     '"sh -c /bin/hostname -f 2> /dev/null"',
     '"sh -c locale -a"',
-    '"sh -c  -t -i"'
+    '"sh -c  -t -i"',
+    '"sh -c openssl version"'
     ]
 
 - list: known_container_shell_spawn_cmdlines
@@ -1093,7 +1096,8 @@
     '"sh -c  curl http://localhost:6060/debug/vars>/dev/null "',
     '"sh -c  pgrep java && exit 0 || exit 1 "',
     '"sh -c  echo healthy "',
-    '"sh -c  echo alive "'
+    '"sh -c  echo alive "',
+    '"bash /opt/docker/bin/lar"'
     ]
 
 # This list allows for easy additions to the set of commands allowed
