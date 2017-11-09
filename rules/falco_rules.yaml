@@ -324,7 +324,7 @@
   condition: fd.name in (/dev/log, /run/systemd/journal/syslog)
 
 - list: cron_binaries
-  items: [anacron, cron, crond]
+  items: [anacron, cron, crond, crontab]
 
 # https://github.com/liske/needrestart
 - list: needrestart_binaries
