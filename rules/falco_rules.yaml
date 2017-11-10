@@ -642,6 +642,9 @@
   condition: ((proc.name=update-haproxy- or proc.pname=update-haproxy-)
                and fd.name in (/etc/openvpn/client.map, /etc/haproxy/client.map-))
 
+- macro: java_writing_conf
+  condition: (proc.name=java and fd.name=/etc/.java/.systemPrefs/.system.lock)
+
 # Add conditions to this macro (probably in a separate file,
 # overwriting this macro) to allow for specific combinations of
 # programs writing below specific directories below
@@ -698,6 +701,7 @@
     and not datadog_writing_conf
     and not curl_writing_pki_db
     and not haproxy_writing_conf
+    and not java_writing_conf
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc, not in a pipe installer session
