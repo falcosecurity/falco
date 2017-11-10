@@ -553,6 +553,9 @@
 - macro: parent_java_running_endeca
   condition: (proc.pname=java and proc.pcmdline contains "-classpath /opt/endeca/")
 
+- macro: python_mesos_healthcheck
+  condition: (proc.pcmdline startswith "python /mesoshealthcheck.py")
+
 - macro: parent_running_datastax
   condition: ((proc.pname=java and proc.pcmdline contains "-jar datastax-agent") or
               (proc.pcmdline startswith "nodetool /opt/dse/bin/"))
@@ -1181,6 +1184,7 @@
     and not parent_python_running_zookeeper
     and not parent_docker_start_script
     and not parent_java_running_endeca
+    and not python_mesos_healthcheck
   output: >
     Shell spawned in a container other than entrypoint (user=%user.name %container.info image=%container.image
     shell=%proc.name pcmdline=%proc.pcmdline cmdline=%proc.cmdline parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3])
