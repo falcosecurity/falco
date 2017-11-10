@@ -1113,7 +1113,10 @@
     '"sh -c  pgrep java && exit 0 || exit 1 "',
     '"sh -c  echo healthy "',
     '"sh -c  echo alive "',
-    '"bash /opt/docker/bin/lar"'
+    '"bash /opt/docker/bin/lar"',
+    '"bash /opt/docker/bin/irs"',
+    '"bash /opt/docker/bin/brs"',
+    '"bash /opt/docker/bin/hdi"'
     ]
 
 # This list allows for easy additions to the set of commands allowed
