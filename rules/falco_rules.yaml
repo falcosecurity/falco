@@ -569,6 +569,9 @@
 - macro: parent_ruby_running_discourse
   condition: (proc.pcmdline startswith "ruby /var/www/discourse/vendor/bundle/ruby")
 
+- macro: parent_ruby_running_pups
+  condition: (proc.pcmdline startswith "ruby /pups/bin/pups")
+
 - macro: pki_realm_writing_realms
   condition: (proc.cmdline startswith "bash /usr/local/lib/pki/pki-realm" and fd.name startswith /etc/pki/realms)
 
@@ -920,6 +923,7 @@
     and not parent_java_running_appdynamics
     and not parent_cpanm_running_perl
     and not parent_ruby_running_discourse
+    and not parent_ruby_running_pups
     and not assemble_running_php
     and not node_running_bitnami
     and not node_running_threatstack
@@ -1177,6 +1181,7 @@
     and not parent_running_datastax
     and not ics_running_java
     and not parent_ruby_running_discourse
+    and not parent_ruby_running_pups
     and not assemble_running_php
     and not node_running_bitnami
     and not node_running_threatstack
