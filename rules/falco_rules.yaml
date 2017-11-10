@@ -886,7 +886,7 @@
     nginx_control, mailmng-service, web_statistic_e, statistics_coll, install-info,
     hawkular-metric, rhsmcertd-worke, parted, amuled, fluentd, x2gormforward,
     parallels_insta, salt-minion, dnsmng, update-inetd, pum_worker, awstats_buildst,
-    tsvuln, 50plesk-daily, grubby, chkconfig, dracut-install, rhnsd, find
+    tsvuln, 50plesk-daily, grubby, chkconfig, dracut-install, rhnsd, find, consul
     ]
 
 - rule: Run shell untrusted
@@ -1159,7 +1159,7 @@
                            runsv, supervisord, varnishd, crond, logrotate, timeout, tini,
                            xrdb, xfce4-session, weave, logdna-agent, bundle, configure, luajit, nginx,
                            beam.smp, paster, postfix-local, hawkular-metric, fluentd, x2gormforward,
-                           '"[celeryd:"', flock, nsrun)
+                           "[celeryd:", flock, nsrun, consul)
     and not trusted_containers
     and not shell_spawning_containers
     and not parent_java_running_echo
