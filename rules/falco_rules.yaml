@@ -426,7 +426,7 @@
 # close enough to add here rather than create a separate macro.
 - macro: parent_scripting_running_builds
   condition: >
-    (proc.pname in (php,php5-fpm,php-fpm7.1,python,ruby,ruby2.3,ruby2.1,node) and (
+    (proc.pname in (php,php5-fpm,php-fpm7.1,python,ruby,ruby2.3,ruby2.1,node,conda) and (
        proc.cmdline startswith "sh -c git" or
        proc.cmdline startswith "sh -c date" or
        proc.cmdline startswith "sh -c /usr/bin/g++" or
