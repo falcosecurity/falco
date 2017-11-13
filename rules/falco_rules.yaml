@@ -599,6 +599,9 @@
   condition: (proc.cmdline startswith "perl /opt/psa/admin/bin/plesk_agent_manager" or
               proc.pcmdline startswith "perl /opt/psa/admin/bin/plesk_agent_manager")
 
+- macro: parent_ucf_writing_conf
+  condition: (proc.pname=ucf and fd.name startswith "/etc/gconf")
+
 ###############
 # General Rules
 ###############
@@ -718,6 +721,7 @@
     and not curl_writing_pki_db
     and not haproxy_writing_conf
     and not java_writing_conf
+    and not parent_ucf_writing_conf
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc, not in a pipe installer session
