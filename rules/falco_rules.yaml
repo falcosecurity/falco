@@ -663,6 +663,11 @@
 - macro: java_writing_conf
   condition: (proc.name=java and fd.name=/etc/.java/.systemPrefs/.system.lock)
 
+# In some cases dpkg-reconfigur runs commands that modify /etc. Not
+# putting the full set of package management programs yet.
+- macro: dpkg_scripting
+  condition: (proc.aname[2]=dpkg-reconfigur)
+
 # Add conditions to this macro (probably in a separate file,
 # overwriting this macro) to allow for specific combinations of
 # programs writing below specific directories below
@@ -721,6 +726,7 @@
     and not curl_writing_pki_db
     and not haproxy_writing_conf
     and not java_writing_conf
+    and not dpkg_scripting
     and not parent_ucf_writing_conf
 
 - rule: Write below etc
