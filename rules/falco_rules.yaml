@@ -417,6 +417,7 @@
 
 - macro: jenkins_scripts
   condition: (proc.pcmdline startswith "script.sh -xe /var/jenkins_home" or
+              proc.pcmdline startswith "node /jenkins/workspace" or
               proc.cmdline="bash /usr/local/bin/jenkins-slave")
 
 - macro: parent_java_running_echo
@@ -440,6 +441,7 @@
        proc.cmdline startswith "sh -c /var/www/edi/bin/sftp.sh" or
        proc.cmdline startswith "sh -c /usr/src/app/crxlsx/bin/linux/crxlsx" or
        proc.cmdline startswith "sh -c make parent" or
+       proc.cmdline startswith "node /jenkins/tools" or
        proc.pcmdline startswith "node /opt/nodejs/bin/yarn" or
        proc.pcmdline startswith "node /usr/local/bin/yarn" or
        proc.pcmdline startswith "node /root/.config/yarn" or
