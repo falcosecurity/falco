@@ -194,7 +194,7 @@
 # The truncated dpkg-preconfigu is intentional, process names are
 # truncated at the sysdig level.
 - list: package_mgmt_binaries
-  items: [rpm_binaries, deb_binaries, update-alternat, gem, pip]
+  items: [rpm_binaries, deb_binaries, update-alternat, gem, pip, sane-utils.post]
 
 - macro: package_mgmt_procs
   condition: proc.name in (package_mgmt_binaries)
