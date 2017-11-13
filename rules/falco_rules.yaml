@@ -587,6 +587,10 @@
 - macro: ovsdb_writing_openvswitch
   condition: (proc.name=ovsdb-server and fd.directory=/etc/openvswitch)
 
+- macro: perl_running_plesk
+  condition: (proc.cmdline startswith "perl /opt/psa/admin/bin/plesk_agent_manager" or
+              proc.pcmdline startswith "perl /opt/psa/admin/bin/plesk_agent_manager")
+
 ###############
 # General Rules
 ###############
@@ -795,6 +799,7 @@
     and not run_by_qualys
     and not run_by_chef
     and not user_read_sensitive_file_conditions
+    and not perl_running_plesk
   output: >
     Sensitive file opened for reading by non-trusted program (user=%user.name name=%proc.name
     command=%proc.cmdline file=%fd.name parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4])
@@ -942,6 +947,7 @@
     and not node_running_threatstack
     and not parent_python_running_localstack
     and not parent_python_running_zookeeper
+    and not perl_running_plesk
   output: >
     Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname
     cmdline=%proc.cmdline pcmdline=%proc.pcmdline gparent=%proc.aname[2] ggparent=%proc.aname[3]
@@ -1206,6 +1212,7 @@
     and not parent_docker_start_script
     and not parent_java_running_endeca
     and not python_mesos_healthcheck
+    and not perl_running_plesk
   output: >
     Shell spawned in a container other than entrypoint (user=%user.name %container.info image=%container.image
     shell=%proc.name pcmdline=%proc.pcmdline cmdline=%proc.cmdline parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3])
