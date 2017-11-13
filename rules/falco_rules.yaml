@@ -566,6 +566,9 @@
 - macro: parent_supervise_running_multilog
   condition: (proc.name=multilog and proc.pname=supervise)
 
+- macro: supervise_writing_status
+  condition: (proc.name in (supervise,svc) and fd.name startswith "/etc/sb/")
+
 - macro: parent_ruby_running_discourse
   condition: (proc.pcmdline startswith "ruby /var/www/discourse/vendor/bundle/ruby")
 
@@ -694,6 +697,7 @@
     and not duply_writing_exclude_files
     and not xmlcatalog_writing_files
     and not parent_supervise_running_multilog
+    and not supervise_writing_status
     and not pki_realm_writing_realms
     and not htpasswd_writing_passwd
     and not dmeventd_writing_lvm_archive
