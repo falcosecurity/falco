@@ -737,13 +737,24 @@
   tags: [filesystem]
 
 - list: known_root_files
-  items: [/root/.monit.state]
+  items: [/root/.monit.state, /root/.auth_tokens, /root/.bash_history, /root/.aws/credentials,
+          /root/.viminfo.tmp, /root/.lesshst]
 
 - list: known_root_directories
-  items: [/root/.oracle_jre_usage, /root/.java/.userPrefs, /root/.ssh, /root/.cache]
+  items: [/root/.oracle_jre_usage, /root/.java/.userPrefs, /root/.ssh]
 
 - macro: known_root_conditions
-  condition: (fd.name startswith /root/orcexec.)
+  condition: (fd.name startswith /root/orcexec.
+              or fd.name startswith /root/.m2
+              or fd.name startswith /root/.npm
+              or fd.name startswith /root/.pki
+              or fd.name startswith /root/.ivy2
+              or fd.name startswith /root/.config/Cypress
+              or fd.name startswith /root/.config/pulse
+              or fd.name startswith /root/jenkins/workspace
+              or fd.name startswith /root/.jenkins
+              or fd.name startswith /root/.cache
+              or fd.name startswith /root/.sonar)
 
 - rule: Write below root
   desc: an attempt to write to any file directly below / or /root
