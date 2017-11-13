@@ -391,8 +391,11 @@
 
 - macro: parent_java_running_jenkins
   condition: >
-    (proc.pname=java and proc.pcmdline contains jenkins.war
-    or proc.pcmdline contains /tmp/slave.jar)
+    (proc.pname=java and
+     (proc.pcmdline contains jenkins.war or
+      proc.pcmdline contains "-cp /jenkins/maven" or
+      proc.pcmdline contains /tmp/slave.jar or
+      proc.pcmdline contains /mnt/mesos/sandbox/slave.jar))
 
 - macro: parent_java_running_maven
   condition: >
