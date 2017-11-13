@@ -1222,6 +1222,7 @@
     and not parent_java_running_jenkins
     and not parent_java_running_maven
     and not parent_java_running_appdynamics
+    and not parent_java_running_sbt
     and not python_running_es_curator
     and not parent_beam_running_python
     and not jenkins_scripts
