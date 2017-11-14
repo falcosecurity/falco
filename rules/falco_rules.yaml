@@ -421,6 +421,7 @@
 - macro: jenkins_scripts
   condition: (proc.pcmdline startswith "script.sh -xe /var/jenkins_home" or
               proc.pcmdline startswith "node /jenkins/workspace" or
+              proc.pcmdline startswith "python /home/jenkins/workspace" or
               proc.cmdline="bash /usr/local/bin/jenkins-slave")
 
 - macro: parent_java_running_echo
