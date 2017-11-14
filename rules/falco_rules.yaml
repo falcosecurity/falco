@@ -779,10 +779,10 @@
 
 - list: known_root_files
   items: [/root/.monit.state, /root/.auth_tokens, /root/.bash_history, /root/.aws/credentials,
-          /root/.viminfo.tmp, /root/.lesshst]
+          /root/.viminfo.tmp, /root/.lesshst, /root/.bzr.log]
 
 - list: known_root_directories
-  items: [/root/.oracle_jre_usage, /root/.java/.userPrefs, /root/.ssh]
+  items: [/root/.oracle_jre_usage, /root/.ssh]
 
 - macro: known_root_conditions
   condition: (fd.name startswith /root/orcexec.
@@ -795,6 +795,8 @@
               or fd.name startswith /root/jenkins/workspace
               or fd.name startswith /root/.jenkins
               or fd.name startswith /root/.cache
+              or fd.name startswith /root/.sbt
+              or fd.name startswith /root/.java
               or fd.name startswith /root/.sonar)
 
 - rule: Write below root
