@@ -535,7 +535,8 @@
 - macro: run_by_passenger_agent
   condition: ((proc.pname=ruby and proc.aname[2]=PassengerAgent) or
               proc.pcmdline startswith "ruby /usr/share/passenger/helper-scripts/rack-preloader.rb" or
-              proc.pcmdline startswith "ruby /usr/local/bundle/bin/passenger")
+              proc.pcmdline startswith "ruby /usr/local/bundle/bin/passenger" or
+              proc.pcmdline startswith "ruby /usr/local/bin/passenger")
 
 # Also handles running semi-indirectly via scl
 - macro: run_by_foreman
