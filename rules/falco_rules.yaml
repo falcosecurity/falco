@@ -944,7 +944,7 @@
     hawkular-metric, rhsmcertd-worke, parted, amuled, fluentd, x2gormforward,
     parallels_insta, salt-minion, dnsmng, update-inetd, pum_worker, awstats_buildst,
     tsvuln, 50plesk-daily, grubby, chkconfig, dracut-install, rhnsd, find, consul,
-    doxygen, Cypress, consul-template
+    doxygen, Cypress, consul-template, xargs, scl
     ]
 
 - rule: Run shell untrusted
@@ -1226,7 +1226,7 @@
                            beam.smp, paster, postfix-local, hawkular-metric, fluentd, x2gormforward,
                            "[celeryd:", flock, nsrun, consul, migrate-databas, airflow, bootstrap-qmf-l,
                            build-qmf-artif, colormake.pl, doxygen, Cypress, lb-controller, vmtoolsd,
-                           haproxy_reload., curator, consul-template)
+                           haproxy_reload., curator, consul-template, xargs, scl)
     and not trusted_containers
     and not shell_spawning_containers
     and not parent_java_running_echo
