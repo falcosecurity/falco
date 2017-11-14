@@ -616,6 +616,9 @@
 - macro: parent_ucf_writing_conf
   condition: (proc.pname=ucf and fd.name startswith "/etc/gconf")
 
+- macro: consul_template_writing_conf
+  condition: (proc.name=consul-template and fd.name startswith /etc/haproxy)
+
 ###############
 # General Rules
 ###############
@@ -769,6 +772,7 @@
     and not httpd_writing_conf_logs
     and not mysql_writing_conf
     and not openvpn_writing_conf
+    and not consul_template_writing_conf
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc, not in a pipe installer session
