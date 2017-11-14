@@ -787,7 +787,7 @@
 
 - list: known_root_files
   items: [/root/.monit.state, /root/.auth_tokens, /root/.bash_history, /root/.aws/credentials,
-          /root/.viminfo.tmp, /root/.lesshst, /root/.bzr.log]
+          /root/.viminfo.tmp, /root/.lesshst, /root/.bzr.log, /root/.gitconfig.lock]
 
 - list: known_root_directories
   items: [/root/.oracle_jre_usage, /root/.ssh]
