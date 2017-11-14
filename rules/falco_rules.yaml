@@ -472,7 +472,7 @@
   condition: container.image=mysql and proc.cmdline="sh -c /healthcheck.sh"
 
 - macro: parent_rancher_running_healthcheck
-  condition: (proc.pname=healthcheck and proc.aname[2]=tini)
+  condition: (proc.pname=healthcheck and (proc.aname[2]=tini or proc.aname[3]=tini))
 
 - macro: bundle_running_ruby
   condition: >
