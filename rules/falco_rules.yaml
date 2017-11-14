@@ -666,6 +666,9 @@
 - macro: java_writing_conf
   condition: (proc.name=java and fd.name=/etc/.java/.systemPrefs/.system.lock)
 
+- macro: rabbitmq_writing_conf
+  condition: (proc.name=rabbitmq-server and fd.directory=/etc/rabbitmq)
+
 # In some cases dpkg-reconfigur runs commands that modify /etc. Not
 # putting the full set of package management programs yet.
 - macro: dpkg_scripting
@@ -731,6 +734,7 @@
     and not java_writing_conf
     and not dpkg_scripting
     and not parent_ucf_writing_conf
+    and not rabbitmq_writing_conf
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc, not in a pipe installer session
