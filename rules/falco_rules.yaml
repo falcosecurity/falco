@@ -372,6 +372,9 @@
 - macro: parent_python_running_zookeeper
   condition: (proc.pcmdline startswith "python /usr/local/bin/cub")
 
+- macro: parent_python_running_airflow
+  condition: (proc.pname in (python,/usr/bin/python) and proc.cmdline startswith "bash -c airflow")
+
 - macro: parent_docker_start_script
   condition: (proc.pcmdline="start.sh /opt/docker/conf/start.sh")
 
@@ -1000,6 +1003,7 @@
     and not node_running_threatstack
     and not parent_python_running_localstack
     and not parent_python_running_zookeeper
+    and not parent_python_running_airflow
     and not perl_running_plesk
     and not plesk_autoinstaller
   output: >
@@ -1282,6 +1286,7 @@
     and not node_running_threatstack
     and not parent_python_running_localstack
     and not parent_python_running_zookeeper
+    and not parent_python_running_airflow
     and not parent_docker_start_script
     and not parent_java_running_endeca
     and not python_mesos_healthcheck
