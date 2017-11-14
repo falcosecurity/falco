@@ -180,7 +180,7 @@
 # interpreted by the filter expression.
 - list: rpm_binaries
   items: [dnf, rpm, rpmkey, yum, '"75-system-updat"', rhsmcertd-worke, subscription-ma,
-          repoquery, rpmkeys]
+          repoquery, rpmkeys, rpmq]
 
 - macro: rpm_procs
   condition: proc.name in (rpm_binaries)
