@@ -602,6 +602,9 @@
   condition: (proc.cmdline startswith "perl /opt/psa/admin/bin/plesk_agent_manager" or
               proc.pcmdline startswith "perl /opt/psa/admin/bin/plesk_agent_manager")
 
+- macro: plesk_autoinstaller
+  condition: (proc.pname=autoinstaller and proc.aname[2]=sw-engine)
+
 - macro: parent_ucf_writing_conf
   condition: (proc.pname=ucf and fd.name startswith "/etc/gconf")
 
@@ -990,6 +993,7 @@
     and not parent_python_running_localstack
     and not parent_python_running_zookeeper
     and not perl_running_plesk
+    and not plesk_autoinstaller
   output: >
     Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname
     cmdline=%proc.cmdline pcmdline=%proc.pcmdline gparent=%proc.aname[2] ggparent=%proc.aname[3]
