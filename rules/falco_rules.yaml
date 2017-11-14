@@ -1250,7 +1250,7 @@
                            beam.smp, paster, postfix-local, hawkular-metric, fluentd, x2gormforward,
                            "[celeryd:", flock, nsrun, consul, migrate-databas, airflow, bootstrap-qmf-l,
                            build-qmf-artif, colormake.pl, doxygen, Cypress, lb-controller, vmtoolsd,
-                           haproxy_reload., curator, consul-template, xargs, scl)
+                           haproxy_reload., curator, consul-template, xargs, scl, find)
     and not trusted_containers
     and not shell_spawning_containers
     and not parent_java_running_echo
