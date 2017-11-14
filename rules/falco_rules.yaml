@@ -676,6 +676,9 @@
   condition: (proc.name=toolbox.sh and container.image startswith rook/toolbox
               and fd.directory=/etc/ceph)
 
+- macro: php_handlers_writing_conf
+  condition: (proc.name=php_handlers_co and fd.name=/etc/psa/php_versions.json)
+
 # In some cases dpkg-reconfigur runs commands that modify /etc. Not
 # putting the full set of package management programs yet.
 - macro: dpkg_scripting
@@ -743,6 +746,7 @@
     and not parent_ucf_writing_conf
     and not rabbitmq_writing_conf
     and not rook_writing_conf
+    and not php_handlers_writing_conf
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc, not in a pipe installer session
