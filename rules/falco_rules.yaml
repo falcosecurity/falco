@@ -692,6 +692,9 @@
 - macro: mysql_writing_conf
   condition: (proc.name=start-mysql.sh and fd.name startswith /etc/mysql)
 
+- macro: openvpn_writing_conf
+  condition: (proc.name=openvpn and fd.directory=/etc/openvpn)
+
 - macro: php_handlers_writing_conf
   condition: (proc.name=php_handlers_co and fd.name=/etc/psa/php_versions.json)
 
@@ -765,6 +768,7 @@
     and not php_handlers_writing_conf
     and not httpd_writing_conf_logs
     and not mysql_writing_conf
+    and not openvpn_writing_conf
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc, not in a pipe installer session
