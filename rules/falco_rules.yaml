@@ -54,7 +54,7 @@
     evt.arg[1] startswith /usr/sbin/
 
 - macro: etc_dir
-  condition: fd.name startswith /etc
+  condition: fd.name startswith /etc/
 
 # This detects writes immediately below / or any write anywhere below /root
 - macro: root_dir
