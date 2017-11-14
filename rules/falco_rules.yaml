@@ -455,6 +455,9 @@
               proc.pcmdline startswith "node /usr/local/nodejs/bin/npm" or
               proc.pcmdline startswith "node /opt/rh/rh-nodejs6/root/usr/bin/npm")
 
+- macro: parent_npm_running_node
+  condition: (proc.pname=node and proc.aname[2]=npm)
+
 - macro: parent_nginx_running_serf
   condition: (proc.pname=nginx and proc.cmdline startswith "sh -c serf")
 
@@ -973,6 +976,7 @@
     and not parent_Xvfb_running_xkbcomp
     and not parent_nginx_running_serf
     and not parent_node_running_npm
+    and not parent_npm_running_node
     and not parent_java_running_sbt
     and not parent_beam_running_python
     and not parent_strongswan_running_starter
@@ -1250,6 +1254,7 @@
     and not parent_nginx_running_serf
     and not proc.cmdline in (known_container_shell_spawn_cmdlines)
     and not parent_node_running_npm
+    and not parent_npm_running_node
     and not user_shell_container_exclusions
     and not node_running_edi_dynamodb
     and not run_by_h2o
