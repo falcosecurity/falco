@@ -977,7 +977,7 @@
     parallels_insta, salt-minion, dnsmng, update-inetd, pum_worker, awstats_buildst,
     tsvuln, 50plesk-daily, grubby, chkconfig, dracut-install, rhnsd, find, consul,
     doxygen, Cypress, consul-template, xargs, scl, awstats_updatea, sa-update,
-    mysql_upgrade, opkg-cl
+    mysql_upgrade, opkg-cl, vmtoolsd
     ]
 
 - rule: Run shell untrusted
