@@ -663,7 +663,9 @@
   condition: (proc.name=update-xmlcatal and fd.directory=/etc/xml)
 
 - macro: datadog_writing_conf
-  condition: (proc.cmdline startswith "python /opt/datadog-agent"
+  condition: ((proc.cmdline startswith "python /opt/datadog-agent" or
+               proc.cmdline startswith "entrypoint.sh /entrypoint.sh datadog start" or
+               proc.cmdline startswith "agent.py /opt/datadog-agent")
               and fd.name startswith "/etc/dd-agent")
 
 - macro: curl_writing_pki_db
