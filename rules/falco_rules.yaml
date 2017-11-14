@@ -1019,6 +1019,15 @@
 
 # Add conditions to this macro (probably in a separate file,
 # overwriting this macro) to specify additional containers that are
+# trusted and therefore allowed to run privileged.
+#
+# In this file, it just takes one of the images in trusted_containers
+# and repeats it.
+- macro: user_trusted_containers
+  condition: (container.image startswith sysdig/agent)
+
+# Add conditions to this macro (probably in a separate file,
+# overwriting this macro) to specify additional containers that are
 # allowed to perform sensitive mounts.
 #
 # In this file, it just takes one of the images in trusted_containers
@@ -1036,7 +1045,11 @@
 
 - rule: Launch Privileged Container
   desc: Detect the initial process started in a privileged container. Exceptions are made for known trusted images.
-  condition: evt.type=execve and proc.vpid=1 and container and container.privileged=true and not trusted_containers
+  condition: >
+    evt.type=execve and proc.vpid=1 and container
+    and container.privileged=true
+    and not trusted_containers
+    and not user_trusted_containers
   output: Privileged container started (user=%user.name command=%proc.cmdline %container.info image=%container.image)
   priority: INFO
   tags: [container, cis]
