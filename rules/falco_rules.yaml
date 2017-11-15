@@ -624,6 +624,9 @@
 - macro: consul_template_writing_conf
   condition: (proc.name=consul-template and fd.name startswith /etc/haproxy)
 
+- macro: countly_writing_nginx_conf
+  condition: (proc.cmdline startswith "nodejs /opt/countly/bin" and fd.name startswith /etc/nginx)
+
 ###############
 # General Rules
 ###############
@@ -782,6 +785,7 @@
     and not mysql_writing_conf
     and not openvpn_writing_conf
     and not consul_template_writing_conf
+    and not countly_writing_nginx_conf
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc, not in a pipe installer session
