@@ -986,7 +986,7 @@
     parallels_insta, salt-minion, dnsmng, update-inetd, pum_worker, awstats_buildst,
     tsvuln, 50plesk-daily, grubby, chkconfig, dracut-install, rhnsd, find, consul,
     doxygen, Cypress, consul-template, xargs, scl, awstats_updatea, sa-update,
-    mysql_upgrade, opkg-cl, vmtoolsd
+    mysql_upgrade, opkg-cl, vmtoolsd, confd
     ]
 
 - rule: Run shell untrusted
@@ -1287,7 +1287,7 @@
                            "[celeryd:", flock, nsrun, consul, migrate-databas, airflow, bootstrap-qmf-l,
                            build-qmf-artif, colormake.pl, doxygen, Cypress, lb-controller, vmtoolsd,
                            haproxy_reload., curator, consul-template, xargs, scl, find, awstats_updatea,
-                           sa-update, mysql_upgrade, opkg-cl, peer-finder)
+                           sa-update, mysql_upgrade, opkg-cl, peer-finder, confd)
     and not trusted_containers
     and not shell_spawning_containers
     and not parent_java_running_echo
