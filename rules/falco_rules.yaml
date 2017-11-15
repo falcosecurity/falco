@@ -615,6 +615,9 @@
 - macro: plesk_autoinstaller
   condition: (proc.pname=autoinstaller and proc.aname[2]=sw-engine)
 
+- macro: parent_perl_running_openresty
+  condition: (proc.pcmdline startswith "perl /usr/local/openresty/bin")
+
 - macro: parent_ucf_writing_conf
   condition: (proc.pname=ucf and fd.name startswith "/etc/gconf")
 
@@ -1035,6 +1038,7 @@
     and not parent_python_running_airflow
     and not perl_running_plesk
     and not plesk_autoinstaller
+    and not parent_perl_running_openresty
   output: >
     Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname
     cmdline=%proc.cmdline pcmdline=%proc.pcmdline gparent=%proc.aname[2] ggparent=%proc.aname[3]
@@ -1325,6 +1329,7 @@
     and not python_mesos_marathon_scripting
     and not perl_running_plesk
     and not parent_rancher_running_healthcheck
+    and not parent_perl_running_openresty
   output: >
     Shell spawned in a container other than entrypoint (user=%user.name %container.info image=%container.image
     shell=%proc.name pcmdline=%proc.pcmdline cmdline=%proc.cmdline parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3])
