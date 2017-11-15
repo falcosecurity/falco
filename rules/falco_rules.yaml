@@ -446,6 +446,8 @@
        proc.cmdline startswith "sh -c /usr/src/app/crxlsx/bin/linux/crxlsx" or
        proc.cmdline startswith "sh -c make parent" or
        proc.cmdline startswith "node /jenkins/tools" or
+       proc.cmdline startswith "sh -c '/usr/bin/node'" or
+       proc.cmdline startswith "sh -c stty -a |" or
        proc.pcmdline startswith "node /opt/nodejs/bin/yarn" or
        proc.pcmdline startswith "node /usr/local/bin/yarn" or
        proc.pcmdline startswith "node /root/.config/yarn" or
