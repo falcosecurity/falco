@@ -156,10 +156,10 @@
   items: [chef-client]
 
 - list: http_server_binaries
-  items: [nginx, httpd, httpd-foregroun, lighttpd]
+  items: [nginx, httpd, httpd-foregroun, lighttpd, apache, apache2]
 
 - list: db_server_binaries
-  items: [mysqld]
+  items: [mysqld, postgres, sqlplus]
 
 - list: mysql_mgmt_binaries
   items: [mysql_install_d, mysql_ssl_rsa_s]
@@ -169,6 +169,9 @@
 
 - list: db_mgmt_binaries
   items: [mysql_mgmt_binaries, postgres_mgmt_binaries]
+
+- list: nosql_server_binaries
+  items: [couchdb, memcached, redis-server, rabbitmq-server, mongod]
 
 - list: gitlab_binaries
   items: [gitlab-shell, gitlab-mon, gitlab-runner-b, git]
@@ -989,7 +992,84 @@
     mysql_upgrade, opkg-cl, vmtoolsd, confd
     ]
 
+# The binaries in this list and their descendents are *not* allowed
+# spawn shells. This includes the binaries spawning shells directly as
+# well as indirectly. For example, apache -> php/perl for
+# mod_{php,perl} -> some shell is also not allowed, because the shell
+# has apache as an ancestor.
+
+- list: protected_shell_spawning_binaries
+  items: [
+    http_server_binaries, db_server_binaries, nosql_server_binaries, mail_binaries,
+    fluentd, flanneld, splunkd, consul, runsv
+    ]
+
+- macro: parent_java_running_zookeeper
+  condition: (proc.pname=java and proc.pcmdline contains org.apache.zookeeper.server)
+
+- macro: parent_java_running_kafka
+  condition: (proc.pname=java and proc.pcmdline contains kafka.Kafka)
+
+- macro: parent_java_running_elasticsearch
+  condition: (proc.pname=java and proc.pcmdline contains org.elasticsearch.bootstrap.Elasticsearch)
+
+- macro: parent_java_running_activemq
+  condition: (proc.pname=java and proc.pcmdline contains activemq.jar)
+
+- macro: parent_java_running_cassandra
+  condition: (proc.pname=java and proc.pcmdline contains org.apache.cassandra.service.CassandraDaemon)
+
+- macro: parent_java_running_jboss_wildfly
+  condition: (proc.pname=java and proc.pcmdline contains org.jboss)
+
+- macro: parent_java_running_glassfish
+  condition: (proc.pname=java and proc.pcmdline contains com.sun.enterprise.glassfish)
+
+- macro: parent_java_running_hadoop
+  condition: (proc.pname=java and proc.pcmdline contains org.apache.hadoop)
+
+- macro: parent_java_running_tomcat
+  condition: (proc.pname=java and proc.pcmdline contains org.apache.catalina)
+
+- macro: parent_java_running_datastax
+  condition: (proc.pname=java and proc.pcmdline contains com.datastax)
+
+- macro: parent_java_running_sumologic
+  condition: (proc.pname=java and proc.pcmdline contains com.sumologic)
+
+- macro: nginx_starting_nginx
+  condition: (proc.pname=nginx and proc.cmdline contains "/usr/sbin/nginx -c /etc/nginx/nginx.conf")
+
+- macro: protected_shell_spawner
+  condition: >
+    (proc.aname in (protected_shell_spawning_binaries)
+    or parent_java_running_zookeeper
+    or parent_java_running_kafka
+    or parent_java_running_elasticsearch
+    or parent_java_running_activemq
+    or parent_java_running_cassandra
+    or parent_java_running_jboss_wildfly
+    or parent_java_running_glassfish
+    or parent_java_running_hadoop
+    or parent_java_running_tomcat
+    or parent_java_running_datastax)
+    and (not nginx_starting_nginx)
+
 - rule: Run shell untrusted
+  desc: an attempt to spawn a shell below a non-shell application. Specific applications are monitored.
+  condition: >
+    spawned_process
+    and shell_procs
+    and proc.pname exists
+    and protected_shell_spawner
+  output: >
+    Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname
+    cmdline=%proc.cmdline pcmdline=%proc.pcmdline gparent=%proc.aname[2] ggparent=%proc.aname[3]
+    gggparent=%proc.aname[4] ggggparent=%proc.aname[5])
+  priority: DEBUG
+  tags: [shell]
+
+- rule: Run shell untrusted - Old
   desc: an attempt to spawn a shell by a non-shell program. Exceptions are made for trusted binaries.
   condition: >
     spawned_process and not container
@@ -1171,6 +1251,18 @@
   tags: [users]
 
 - rule: Terminal shell in container
+  desc: A shell was used as the entrypoint/exec point into a container with an attached terminal.
+  condition: >
+    spawned_process and container
+    and shell_procs and proc.tty != 0
+    and not proc.pname exists
+  output: >
+    A shell was spawned in a container with an attached terminal (user=%user.name %container.info
+    shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline terminal=%proc.tty)
+  priority: NOTICE
+  tags: [container, shell]
+
+- rule: Terminal shell in container - Old
   desc: A shell was spawned by a program in a container with an attached terminal.
   condition: >
     spawned_process and container
