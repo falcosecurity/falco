@@ -1057,7 +1057,8 @@
     and shell_procs
     and proc.pname exists
     and protected_shell_spawner
-    and not proc.pname in (gitlab_binaries, erl_child_setup)
+    and not proc.pname in (gitlab_binaries, cron_binaries, erl_child_setup, exechealthz, PM2, PassengerWatchd)
+    and not proc.aname in (unicorn_launche)
     and not consul_running_curl
     and not nginx_starting_nginx
   output: >
