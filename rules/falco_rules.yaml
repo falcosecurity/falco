@@ -1062,6 +1062,7 @@
     and shell_procs
     and proc.pname exists
     and protected_shell_spawner
+    and not proc.pname in (gitlab_binaries)
   output: >
     Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname
     cmdline=%proc.cmdline pcmdline=%proc.pcmdline gparent=%proc.aname[2] ggparent=%proc.aname[3]
