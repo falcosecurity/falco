@@ -565,9 +565,6 @@
 - macro: parent_java_running_confluence
   condition: (proc.pname=java and proc.pcmdline contains "-classpath /opt/atlassian/confluence")
 
-- macro: parent_java_running_tomcat
-  condition: (proc.pname=java and proc.pcmdline contains "-classpath /usr/local/tomcat")
-
 - macro: parent_java_running_install4j
   condition: (proc.pname=java and proc.pcmdline contains "-classpath i4jruntime.jar")
 
@@ -1028,9 +1025,6 @@
 - macro: parent_java_running_hadoop
   condition: (proc.pname=java and proc.pcmdline contains org.apache.hadoop)
 
-- macro: parent_java_running_tomcat
-  condition: (proc.pname=java and proc.pcmdline contains org.apache.catalina)
-
 - macro: parent_java_running_datastax
   condition: (proc.pname=java and proc.pcmdline contains com.datastax)
 
@@ -1054,7 +1048,6 @@
     or parent_java_running_jboss_wildfly
     or parent_java_running_glassfish
     or parent_java_running_hadoop
-    or parent_java_running_tomcat
     or parent_java_running_datastax)
     and (not nginx_starting_nginx)
 
