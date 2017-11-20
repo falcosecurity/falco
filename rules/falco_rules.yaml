@@ -1040,6 +1040,9 @@
 - macro: nginx_starting_nginx
   condition: (proc.pname=nginx and proc.cmdline contains "/usr/sbin/nginx -c /etc/nginx/nginx.conf")
 
+- macro: consul_running_curl
+  condition: (proc.pname=consul and proc.cmdline startswith "sh -c curl")
+
 - macro: protected_shell_spawner
   condition: >
     (proc.aname in (protected_shell_spawning_binaries)
@@ -1063,6 +1066,7 @@
     and proc.pname exists
     and protected_shell_spawner
     and not proc.pname in (gitlab_binaries)
+    and not consul_running_curl
   output: >
     Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname
     cmdline=%proc.cmdline pcmdline=%proc.pcmdline gparent=%proc.aname[2] ggparent=%proc.aname[3]
