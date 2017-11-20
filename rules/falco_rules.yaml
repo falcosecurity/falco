@@ -1049,7 +1049,6 @@
     or parent_java_running_glassfish
     or parent_java_running_hadoop
     or parent_java_running_datastax)
-    and (not nginx_starting_nginx)
 
 - rule: Run shell untrusted
   desc: an attempt to spawn a shell below a non-shell application. Specific applications are monitored.
@@ -1058,8 +1057,9 @@
     and shell_procs
     and proc.pname exists
     and protected_shell_spawner
-    and not proc.pname in (gitlab_binaries)
+    and not proc.pname in (gitlab_binaries, erl_child_setup)
     and not consul_running_curl
+    and not nginx_starting_nginx
   output: >
     Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname
     cmdline=%proc.cmdline pcmdline=%proc.pcmdline gparent=%proc.aname[2] ggparent=%proc.aname[3]
