@@ -54,7 +54,7 @@
     evt.arg[1] startswith /usr/sbin/
 
 - macro: etc_dir
-  condition: fd.name startswith /etc
+  condition: fd.name startswith /etc/
 
 # This detects writes immediately below / or any write anywhere below /root
 - macro: root_dir
@@ -180,7 +180,7 @@
 # interpreted by the filter expression.
 - list: rpm_binaries
   items: [dnf, rpm, rpmkey, yum, '"75-system-updat"', rhsmcertd-worke, subscription-ma,
-          repoquery, rpmkeys]
+          repoquery, rpmkeys, rpmq]
 
 - macro: rpm_procs
   condition: proc.name in (rpm_binaries)
@@ -194,7 +194,7 @@
 # The truncated dpkg-preconfigu is intentional, process names are
 # truncated at the sysdig level.
 - list: package_mgmt_binaries
-  items: [rpm_binaries, deb_binaries, update-alternat, gem, pip]
+  items: [rpm_binaries, deb_binaries, update-alternat, gem, pip, sane-utils.post]
 
 - macro: package_mgmt_procs
   condition: proc.name in (package_mgmt_binaries)
@@ -236,7 +236,7 @@
   items: [nxexec, nxnode.bin, nxserver.bin, nxclient.bin]
 
 - list: x2go_binaries
-  items: [x2gosuspend-age, x2goagent]
+  items: [x2gosuspend-age, x2goagent, x2gomountdirs]
 
 - list: nids_binaries
   items: [bro, broctl]
@@ -251,7 +251,7 @@
   items: [
     sendmail, sendmail-msp, postfix, procmail, exim4,
     pickup, showq, mailq, dovecot, imap-login, imap,
-    mailmng-core, pop3-login, dovecot-lda
+    mailmng-core, pop3-login, dovecot-lda, pop3
     ]
 
 - list: mail_config_binaries
@@ -372,6 +372,9 @@
 - macro: parent_python_running_zookeeper
   condition: (proc.pcmdline startswith "python /usr/local/bin/cub")
 
+- macro: parent_python_running_airflow
+  condition: (proc.pname in (python,/usr/bin/python) and proc.cmdline startswith "bash -c airflow")
+
 - macro: parent_docker_start_script
   condition: (proc.pcmdline="start.sh /opt/docker/conf/start.sh")
 
@@ -391,8 +394,11 @@
 
 - macro: parent_java_running_jenkins
   condition: >
-    (proc.pname=java and proc.pcmdline contains jenkins.war
-    or proc.pcmdline contains /tmp/slave.jar)
+    (proc.pname=java and
+     (proc.pcmdline contains jenkins.war or
+      proc.pcmdline contains "-cp /jenkins/maven" or
+      proc.pcmdline contains /tmp/slave.jar or
+      proc.pcmdline contains /mnt/mesos/sandbox/slave.jar))
 
 - macro: parent_java_running_maven
   condition: >
@@ -414,6 +420,8 @@
 
 - macro: jenkins_scripts
   condition: (proc.pcmdline startswith "script.sh -xe /var/jenkins_home" or
+              proc.pcmdline startswith "node /jenkins/workspace" or
+              proc.pcmdline startswith "python /home/jenkins/workspace" or
               proc.cmdline="bash /usr/local/bin/jenkins-slave")
 
 - macro: parent_java_running_echo
@@ -437,6 +445,9 @@
        proc.cmdline startswith "sh -c /var/www/edi/bin/sftp.sh" or
        proc.cmdline startswith "sh -c /usr/src/app/crxlsx/bin/linux/crxlsx" or
        proc.cmdline startswith "sh -c make parent" or
+       proc.cmdline startswith "node /jenkins/tools" or
+       proc.cmdline startswith "sh -c '/usr/bin/node'" or
+       proc.cmdline startswith "sh -c stty -a |" or
        proc.pcmdline startswith "node /opt/nodejs/bin/yarn" or
        proc.pcmdline startswith "node /usr/local/bin/yarn" or
        proc.pcmdline startswith "node /root/.config/yarn" or
@@ -450,6 +461,9 @@
               proc.pcmdline startswith "node /usr/local/nodejs/bin/npm" or
               proc.pcmdline startswith "node /opt/rh/rh-nodejs6/root/usr/bin/npm")
 
+- macro: parent_npm_running_node
+  condition: (proc.pname=node and proc.aname[2]=npm)
+
 - macro: parent_nginx_running_serf
   condition: (proc.pname=nginx and proc.cmdline startswith "sh -c serf")
 
@@ -458,6 +472,9 @@
 
 - macro: mysql_image_running_healthcheck
   condition: container.image=mysql and proc.cmdline="sh -c /healthcheck.sh"
+
+- macro: parent_rancher_running_healthcheck
+  condition: (proc.pname=healthcheck and (proc.aname[2]=tini or proc.aname[3]=tini))
 
 - macro: bundle_running_ruby
   condition: >
@@ -521,7 +538,8 @@
 - macro: run_by_passenger_agent
   condition: ((proc.pname=ruby and proc.aname[2]=PassengerAgent) or
               proc.pcmdline startswith "ruby /usr/share/passenger/helper-scripts/rack-preloader.rb" or
-              proc.pcmdline startswith "ruby /usr/local/bundle/bin/passenger")
+              proc.pcmdline startswith "ruby /usr/local/bundle/bin/passenger" or
+              proc.pcmdline startswith "ruby /usr/local/bin/passenger")
 
 # Also handles running semi-indirectly via scl
 - macro: run_by_foreman
@@ -556,6 +574,9 @@
 - macro: python_mesos_healthcheck
   condition: (proc.pcmdline startswith "python /mesoshealthcheck.py")
 
+- macro: python_mesos_marathon_scripting
+  condition: (proc.pcmdline startswith "python3 /marathon-lb/marathon_lb.py")
+
 - macro: parent_running_datastax
   condition: ((proc.pname=java and proc.pcmdline contains "-jar datastax-agent") or
               (proc.pcmdline startswith "nodetool /opt/dse/bin/"))
@@ -565,6 +586,9 @@
 
 - macro: parent_supervise_running_multilog
   condition: (proc.name=multilog and proc.pname=supervise)
+
+- macro: supervise_writing_status
+  condition: (proc.name in (supervise,svc) and fd.name startswith "/etc/sb/")
 
 - macro: parent_ruby_running_discourse
   condition: (proc.pcmdline startswith "ruby /var/www/discourse/vendor/bundle/ruby")
@@ -583,6 +607,25 @@
                                       fd.name startswith /etc/lvm/backup))
 - macro: ovsdb_writing_openvswitch
   condition: (proc.name=ovsdb-server and fd.directory=/etc/openvswitch)
+
+- macro: perl_running_plesk
+  condition: (proc.cmdline startswith "perl /opt/psa/admin/bin/plesk_agent_manager" or
+              proc.pcmdline startswith "perl /opt/psa/admin/bin/plesk_agent_manager")
+
+- macro: plesk_autoinstaller
+  condition: (proc.pname=autoinstaller and proc.aname[2]=sw-engine)
+
+- macro: parent_perl_running_openresty
+  condition: (proc.pcmdline startswith "perl /usr/local/openresty/bin")
+
+- macro: parent_ucf_writing_conf
+  condition: (proc.pname=ucf and fd.name startswith "/etc/gconf")
+
+- macro: consul_template_writing_conf
+  condition: (proc.name=consul-template and fd.name startswith /etc/haproxy)
+
+- macro: countly_writing_nginx_conf
+  condition: (proc.cmdline startswith "nodejs /opt/countly/bin" and fd.name startswith /etc/nginx)
 
 ###############
 # General Rules
@@ -632,18 +675,47 @@
   condition: (proc.name=update-xmlcatal and fd.directory=/etc/xml)
 
 - macro: datadog_writing_conf
-  condition: (proc.cmdline startswith "python /opt/datadog-agent"
+  condition: ((proc.cmdline startswith "python /opt/datadog-agent" or
+               proc.cmdline startswith "entrypoint.sh /entrypoint.sh datadog start" or
+               proc.cmdline startswith "agent.py /opt/datadog-agent")
               and fd.name startswith "/etc/dd-agent")
 
 - macro: curl_writing_pki_db
   condition: (proc.name=curl and fd.directory=/etc/pki/nssdb)
 
 - macro: haproxy_writing_conf
-  condition: ((proc.name=update-haproxy- or proc.pname=update-haproxy-)
-               and fd.name in (/etc/openvpn/client.map, /etc/haproxy/client.map-))
+  condition: ((proc.name in (update-haproxy-,haproxy_reload.) or proc.pname=update-haproxy-)
+               and fd.name=/etc/openvpn/client.map or fd.directory=/etc/haproxy)
 
 - macro: java_writing_conf
   condition: (proc.name=java and fd.name=/etc/.java/.systemPrefs/.system.lock)
+
+- macro: rabbitmq_writing_conf
+  condition: (proc.name=rabbitmq-server and fd.directory=/etc/rabbitmq)
+
+- macro: rook_writing_conf
+  condition: (proc.name=toolbox.sh and container.image startswith rook/toolbox
+              and fd.directory=/etc/ceph)
+
+- macro: httpd_writing_conf_logs
+  condition: (proc.name=httpd and fd.name startswith /etc/httpd/)
+
+- macro: mysql_writing_conf
+  condition: ((proc.name=start-mysql.sh or proc.pname=start-mysql.sh) and fd.name startswith /etc/mysql)
+
+- macro: openvpn_writing_conf
+  condition: (proc.name=openvpn and fd.directory=/etc/openvpn)
+
+- macro: php_handlers_writing_conf
+  condition: (proc.name=php_handlers_co and fd.name=/etc/psa/php_versions.json)
+
+- macro: cron_sed_writing_temp_file
+  condition: (proc.aname[3]=cron_start.sh and fd.name startswith /etc/security/sed)
+
+# In some cases dpkg-reconfigur runs commands that modify /etc. Not
+# putting the full set of package management programs yet.
+- macro: dpkg_scripting
+  condition: (proc.aname[2] in (dpkg-reconfigur, dpkg-preconfigu))
 
 # Add conditions to this macro (probably in a separate file,
 # overwriting this macro) to allow for specific combinations of
@@ -674,7 +746,7 @@
                           qualys-cloud-ag, locales.postins, nomachine_binaries,
                           adclient, certutil, crlutil, pam-auth-update, parallels_insta,
                           openshift-launc)
-    and not proc.pname in (sysdigcloud_binaries, mail_config_binaries, hddtemp.postins, sshkit_script_binaries, locales.postins)
+    and not proc.pname in (sysdigcloud_binaries, mail_config_binaries, hddtemp.postins, sshkit_script_binaries, locales.postins, deb_binaries)
     and not fd.name pmatch (safe_etc_dirs)
     and not fd.name in (/etc/container_environment.sh, /etc/container_environment.json, /etc/motd, /etc/motd.svc)
     and not ansible_running_python
@@ -694,6 +766,7 @@
     and not duply_writing_exclude_files
     and not xmlcatalog_writing_files
     and not parent_supervise_running_multilog
+    and not supervise_writing_status
     and not pki_realm_writing_realms
     and not htpasswd_writing_passwd
     and not dmeventd_writing_lvm_archive
@@ -702,6 +775,17 @@
     and not curl_writing_pki_db
     and not haproxy_writing_conf
     and not java_writing_conf
+    and not dpkg_scripting
+    and not parent_ucf_writing_conf
+    and not rabbitmq_writing_conf
+    and not rook_writing_conf
+    and not php_handlers_writing_conf
+    and not cron_sed_writing_temp_file
+    and not httpd_writing_conf_logs
+    and not mysql_writing_conf
+    and not openvpn_writing_conf
+    and not consul_template_writing_conf
+    and not countly_writing_nginx_conf
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc, not in a pipe installer session
@@ -711,13 +795,26 @@
   tags: [filesystem]
 
 - list: known_root_files
-  items: [/root/.monit.state]
+  items: [/root/.monit.state, /root/.auth_tokens, /root/.bash_history, /root/.aws/credentials,
+          /root/.viminfo.tmp, /root/.lesshst, /root/.bzr.log, /root/.gitconfig.lock]
 
 - list: known_root_directories
-  items: [/root/.oracle_jre_usage, /root/.java/.userPrefs, /root/.ssh, /root/.cache]
+  items: [/root/.oracle_jre_usage, /root/.ssh]
 
 - macro: known_root_conditions
-  condition: (fd.name startswith /root/orcexec.)
+  condition: (fd.name startswith /root/orcexec.
+              or fd.name startswith /root/.m2
+              or fd.name startswith /root/.npm
+              or fd.name startswith /root/.pki
+              or fd.name startswith /root/.ivy2
+              or fd.name startswith /root/.config/Cypress
+              or fd.name startswith /root/.config/pulse
+              or fd.name startswith /root/jenkins/workspace
+              or fd.name startswith /root/.jenkins
+              or fd.name startswith /root/.cache
+              or fd.name startswith /root/.sbt
+              or fd.name startswith /root/.java
+              or fd.name startswith /root/.sonar)
 
 - rule: Write below root
   desc: an attempt to write to any file directly below / or /root
@@ -791,6 +888,7 @@
     and not run_by_qualys
     and not run_by_chef
     and not user_read_sensitive_file_conditions
+    and not perl_running_plesk
   output: >
     Sensitive file opened for reading by non-trusted program (user=%user.name name=%proc.name
     command=%proc.cmdline file=%fd.name parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4])
@@ -886,7 +984,9 @@
     nginx_control, mailmng-service, web_statistic_e, statistics_coll, install-info,
     hawkular-metric, rhsmcertd-worke, parted, amuled, fluentd, x2gormforward,
     parallels_insta, salt-minion, dnsmng, update-inetd, pum_worker, awstats_buildst,
-    tsvuln, 50plesk-daily, grubby, chkconfig, dracut-install, rhnsd, find, consul
+    tsvuln, 50plesk-daily, grubby, chkconfig, dracut-install, rhnsd, find, consul,
+    doxygen, Cypress, consul-template, xargs, scl, awstats_updatea, sa-update,
+    mysql_upgrade, opkg-cl, vmtoolsd, confd
     ]
 
 - rule: Run shell untrusted
@@ -915,6 +1015,7 @@
     and not parent_Xvfb_running_xkbcomp
     and not parent_nginx_running_serf
     and not parent_node_running_npm
+    and not parent_npm_running_node
     and not parent_java_running_sbt
     and not parent_beam_running_python
     and not parent_strongswan_running_starter
@@ -938,6 +1039,10 @@
     and not node_running_threatstack
     and not parent_python_running_localstack
     and not parent_python_running_zookeeper
+    and not parent_python_running_airflow
+    and not perl_running_plesk
+    and not plesk_autoinstaller
+    and not parent_perl_running_openresty
   output: >
     Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname
     cmdline=%proc.cmdline pcmdline=%proc.pcmdline gparent=%proc.aname[2] ggparent=%proc.aname[3]
@@ -954,7 +1059,17 @@
               container.image startswith gcr.io/google_containers/hyperkube or
               container.image startswith quay.io/coreos/flannel or
               container.image startswith gcr.io/google_containers/kube-proxy or
-              container.image startswith calico/node)
+              container.image startswith calico/node or
+              container.image startswith rook/toolbox)
+
+# Add conditions to this macro (probably in a separate file,
+# overwriting this macro) to specify additional containers that are
+# trusted and therefore allowed to run privileged.
+#
+# In this file, it just takes one of the images in trusted_containers
+# and repeats it.
+- macro: user_trusted_containers
+  condition: (container.image startswith sysdig/agent)
 
 # Add conditions to this macro (probably in a separate file,
 # overwriting this macro) to specify additional containers that are
@@ -975,7 +1090,11 @@
 
 - rule: Launch Privileged Container
   desc: Detect the initial process started in a privileged container. Exceptions are made for known trusted images.
-  condition: evt.type=execve and proc.vpid=1 and container and container.privileged=true and not trusted_containers
+  condition: >
+    evt.type=execve and proc.vpid=1 and container
+    and container.privileged=true
+    and not trusted_containers
+    and not user_trusted_containers
   output: Privileged container started (user=%user.name command=%proc.cmdline %container.info image=%container.image)
   priority: INFO
   tags: [container, cis]
@@ -1116,7 +1235,10 @@
     '"bash /opt/docker/bin/lar"',
     '"bash /opt/docker/bin/irs"',
     '"bash /opt/docker/bin/brs"',
-    '"bash /opt/docker/bin/hdi"'
+    '"bash /opt/docker/bin/hdi"',
+    '"bash /opt/docker/bin/hdi "',
+    '"bash /home/entrypoint.sh"',
+    '"bash /tmp/bootstrap.sh"'
     ]
 
 # This list allows for easy additions to the set of commands allowed
@@ -1162,7 +1284,10 @@
                            runsv, supervisord, varnishd, crond, logrotate, timeout, tini,
                            xrdb, xfce4-session, weave, logdna-agent, bundle, configure, luajit, nginx,
                            beam.smp, paster, postfix-local, hawkular-metric, fluentd, x2gormforward,
-                           "[celeryd:", flock, nsrun, consul)
+                           "[celeryd:", flock, nsrun, consul, migrate-databas, airflow, bootstrap-qmf-l,
+                           build-qmf-artif, colormake.pl, doxygen, Cypress, lb-controller, vmtoolsd,
+                           haproxy_reload., curator, consul-template, xargs, scl, find, awstats_updatea,
+                           sa-update, mysql_upgrade, opkg-cl, peer-finder, confd, aws)
     and not trusted_containers
     and not shell_spawning_containers
     and not parent_java_running_echo
@@ -1173,6 +1298,7 @@
     and not parent_nginx_running_serf
     and not proc.cmdline in (known_container_shell_spawn_cmdlines)
     and not parent_node_running_npm
+    and not parent_npm_running_node
     and not user_shell_container_exclusions
     and not node_running_edi_dynamodb
     and not run_by_h2o
@@ -1180,6 +1306,7 @@
     and not parent_java_running_jenkins
     and not parent_java_running_maven
     and not parent_java_running_appdynamics
+    and not parent_java_running_sbt
     and not python_running_es_curator
     and not parent_beam_running_python
     and not jenkins_scripts
@@ -1199,20 +1326,32 @@
     and not node_running_threatstack
     and not parent_python_running_localstack
     and not parent_python_running_zookeeper
+    and not parent_python_running_airflow
     and not parent_docker_start_script
     and not parent_java_running_endeca
     and not python_mesos_healthcheck
+    and not python_mesos_marathon_scripting
+    and not perl_running_plesk
+    and not parent_rancher_running_healthcheck
+    and not parent_perl_running_openresty
   output: >
     Shell spawned in a container other than entrypoint (user=%user.name %container.info image=%container.image
     shell=%proc.name pcmdline=%proc.pcmdline cmdline=%proc.cmdline parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3])
   priority: DEBUG
   tags: [container, shell]
 
+- macro: login_doing_dns_lookup
+  condition: (proc.name=login and fd.l4proto=udp and fd.sport=53)
+
 # sockfamily ip is to exclude certain processes (like 'groups') that communicate on unix-domain sockets
 # systemd can listen on ports to launch things like sshd on demand
 - rule: System procs network activity
   desc: any network activity performed by system binaries that are not expected to send or receive any network traffic
-  condition: (fd.sockfamily = ip and system_procs) and (inbound or outbound) and not proc.name in (systemd, hostid)
+  condition: >
+    (fd.sockfamily = ip and system_procs)
+    and (inbound or outbound)
+    and not proc.name in (systemd, hostid)
+    and not login_doing_dns_lookup
   output: >
     Known system binary sent/received network traffic
     (user=%user.name command=%proc.cmdline connection=%fd.name)
@@ -1356,172 +1495,6 @@
 # Application-Related Rules
 ###########################
 
-################################################################
-# By default all application-related rules are disabled for
-# performance reasons. Depending on the application(s) you use,
-# uncomment the corresponding rule definitions for
-# application-specific activity monitoring.
-################################################################
+# Moved to application_rules.yaml. Please look there if you want to
+# enable them by adding to falco_rules.local.yaml.
 
-# Elasticsearch ports
-- macro: elasticsearch_cluster_port
-  condition: fd.sport=9300
-- macro: elasticsearch_api_port
-  condition: fd.sport=9200
-- macro: elasticsearch_port
-  condition: elasticsearch_cluster_port or elasticsearch_api_port
-
-# - rule: Elasticsearch unexpected network inbound traffic
-#   desc: inbound network traffic to elasticsearch on a port other than the standard ports
-#   condition: user.name = elasticsearch and inbound and not elasticsearch_port
-#   output: "Inbound network traffic to Elasticsearch on unexpected port (connection=%fd.name)"
-#   priority: WARNING
-
-# - rule: Elasticsearch unexpected network outbound traffic
-#   desc: outbound network traffic from elasticsearch on a port other than the standard ports
-#   condition: user.name = elasticsearch and outbound and not elasticsearch_cluster_port
-#   output: "Outbound network traffic from Elasticsearch on unexpected port (connection=%fd.name)"
-#   priority: WARNING
-
-
-# ActiveMQ ports
-- macro: activemq_cluster_port
-  condition: fd.sport=61616
-- macro: activemq_web_port
-  condition: fd.sport=8161
-- macro: activemq_port
-  condition: activemq_web_port or activemq_cluster_port
-
-# - rule: Activemq unexpected network inbound traffic
-#   desc: inbound network traffic to activemq on a port other than the standard ports
-#   condition: user.name = activemq and inbound and not activemq_port
-#   output: "Inbound network traffic to ActiveMQ on unexpected port (connection=%fd.name)"
-#   priority: WARNING
-
-# - rule: Activemq unexpected network outbound traffic
-#   desc: outbound network traffic from activemq on a port other than the standard ports
-#   condition: user.name = activemq and outbound and not activemq_cluster_port
-#   output: "Outbound network traffic from ActiveMQ on unexpected port (connection=%fd.name)"
-#   priority: WARNING
-
-
-# Cassandra ports
-# https://docs.datastax.com/en/cassandra/2.0/cassandra/security/secureFireWall_r.html
-- macro: cassandra_thrift_client_port
-  condition: fd.sport=9160
-- macro: cassandra_cql_port
-  condition: fd.sport=9042
-- macro: cassandra_cluster_port
-  condition: fd.sport=7000
-- macro: cassandra_ssl_cluster_port
-  condition: fd.sport=7001
-- macro: cassandra_jmx_port
-  condition: fd.sport=7199
-- macro: cassandra_port
-  condition: >
-    cassandra_thrift_client_port or
-    cassandra_cql_port or cassandra_cluster_port or
-    cassandra_ssl_cluster_port or cassandra_jmx_port
-
-# - rule: Cassandra unexpected network inbound traffic
-#   desc: inbound network traffic to cassandra on a port other than the standard ports
-#   condition: user.name = cassandra and inbound and not cassandra_port
-#   output: "Inbound network traffic to Cassandra on unexpected port (connection=%fd.name)"
-#   priority: WARNING
-
-# - rule: Cassandra unexpected network outbound traffic
-#   desc: outbound network traffic from cassandra on a port other than the standard ports
-#   condition: user.name = cassandra and outbound and not (cassandra_ssl_cluster_port or cassandra_cluster_port)
-#   output: "Outbound network traffic from Cassandra on unexpected port (connection=%fd.name)"
-#   priority: WARNING
-
-# Couchdb ports
-# https://github.com/davisp/couchdb/blob/master/etc/couchdb/local.ini
-- macro: couchdb_httpd_port
-  condition: fd.sport=5984
-- macro: couchdb_httpd_ssl_port
-  condition: fd.sport=6984
-# xxx can't tell what clustering ports are used. not writing rules for this
-# yet.
-
-# Fluentd ports
-- macro: fluentd_http_port
-  condition: fd.sport=9880
-- macro: fluentd_forward_port
-  condition: fd.sport=24224
-
-# - rule: Fluentd unexpected network inbound traffic
-#   desc: inbound network traffic to fluentd on a port other than the standard ports
-#   condition: user.name = td-agent and inbound and not (fluentd_forward_port or fluentd_http_port)
-#   output: "Inbound network traffic to Fluentd on unexpected port (connection=%fd.name)"
-#   priority: WARNING
-
-# - rule: Tdagent unexpected network outbound traffic
-#   desc: outbound network traffic from fluentd on a port other than the standard ports
-#   condition: user.name = td-agent and outbound and not fluentd_forward_port
-#   output: "Outbound network traffic from Fluentd on unexpected port (connection=%fd.name)"
-#   priority: WARNING
-
-# Gearman ports
-# http://gearman.org/protocol/
-# - rule: Gearman unexpected network outbound traffic
-#   desc: outbound network traffic from gearman on a port other than the standard ports
-#   condition: user.name = gearman and outbound and outbound and not fd.sport = 4730
-#   output: "Outbound network traffic from Gearman on unexpected port (connection=%fd.name)"
-#   priority: WARNING
-
-# Zookeeper
-- macro: zookeeper_port
-  condition: fd.sport = 2181
-
-# Kafka ports
-# - rule: Kafka unexpected network inbound traffic
-#   desc: inbound network traffic to kafka on a port other than the standard ports
-#   condition: user.name = kafka and inbound and fd.sport != 9092
-#   output: "Inbound network traffic to Kafka on unexpected port (connection=%fd.name)"
-#   priority: WARNING
-
-# Memcached ports
-# - rule: Memcached unexpected network inbound traffic
-#   desc: inbound network traffic to memcached on a port other than the standard ports
-#   condition: user.name = memcached and inbound and fd.sport != 11211
-#   output: "Inbound network traffic to Memcached on unexpected port (connection=%fd.name)"
-#   priority: WARNING
-
-# - rule: Memcached unexpected network outbound traffic
-#   desc: any outbound network traffic from memcached. memcached never initiates outbound connections.
-#   condition: user.name = memcached and outbound
-#   output: "Unexpected Memcached outbound connection (connection=%fd.name)"
-#   priority: WARNING
-
-
-# MongoDB ports
-- macro: mongodb_server_port
-  condition: fd.sport = 27017
-- macro: mongodb_shardserver_port
-  condition: fd.sport = 27018
-- macro: mongodb_configserver_port
-  condition: fd.sport = 27019
-- macro: mongodb_webserver_port
-  condition: fd.sport = 28017
-
-# - rule: Mongodb unexpected network inbound traffic
-#   desc: inbound network traffic to mongodb on a port other than the standard ports
-#   condition: >
-#     user.name = mongodb and inbound and not (mongodb_server_port or
-#     mongodb_shardserver_port or mongodb_configserver_port or mongodb_webserver_port)
-#   output: "Inbound network traffic to MongoDB on unexpected port (connection=%fd.name)"
-#   priority: WARNING
-
-# MySQL ports
-# - rule: Mysql unexpected network inbound traffic
-#   desc: inbound network traffic to mysql on a port other than the standard ports
-#   condition: user.name = mysql and inbound and fd.sport != 3306
-#   output: "Inbound network traffic to MySQL on unexpected port (connection=%fd.name)"
-#   priority: WARNING
-
-# - rule: HTTP server unexpected network inbound traffic
-#   desc: inbound network traffic to a http server program on a port other than the standard ports
-#   condition: proc.name in (http_server_binaries) and inbound and fd.sport != 80 and fd.sport != 443
-#   output: "Inbound network traffic to HTTP Server on unexpected port (connection=%fd.name)"
-#   priority: WARNING
