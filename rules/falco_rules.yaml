@@ -202,6 +202,9 @@
 - macro: package_mgmt_procs
   condition: proc.name in (package_mgmt_binaries)
 
+- macro: run_by_package_mgmt_binaries
+  condition: proc.aname in (package_mgmt_binaries, needrestart)
+
 - list: ssl_mgmt_binaries
   items: [ca-certificates]
 
@@ -1061,6 +1064,7 @@
     and not proc.aname in (unicorn_launche)
     and not consul_running_curl
     and not nginx_starting_nginx
+    and not run_by_package_mgmt_binaries
   output: >
     Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname
     cmdline=%proc.cmdline pcmdline=%proc.pcmdline gparent=%proc.aname[2] ggparent=%proc.aname[3]
