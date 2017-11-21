@@ -1040,6 +1040,12 @@
 - macro: consul_running_curl
   condition: (proc.pname=consul and proc.cmdline startswith "sh -c curl")
 
+- macro: serf_script
+  condition: (proc.cmdline startswith "sh -c serf")
+
+- macro: check_process_status
+  condition: (proc.cmdline startswith "sh -c kill -0 ")
+
 - macro: protected_shell_spawner
   condition: >
     (proc.aname in (protected_shell_spawning_binaries)
@@ -1065,6 +1071,8 @@
     and not consul_running_curl
     and not nginx_starting_nginx
     and not run_by_package_mgmt_binaries
+    and not serf_script
+    and not check_process_status
   output: >
     Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname
     cmdline=%proc.cmdline pcmdline=%proc.pcmdline gparent=%proc.aname[2] ggparent=%proc.aname[3]
