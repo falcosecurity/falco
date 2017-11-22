@@ -1059,6 +1059,10 @@
     or parent_java_running_hadoop
     or parent_java_running_datastax)
 
+# Note that runsv is both in protected_shell_spawner and the
+# exclusions by pname. This means that runsv can itself spawn shells
+# (the ./run and ./finish scripts), but the processes runsv can not
+# spawn shells.
 - rule: Run shell untrusted
   desc: an attempt to spawn a shell below a non-shell application. Specific applications are monitored.
   condition: >
@@ -1068,7 +1072,7 @@
     and protected_shell_spawner
     and not proc.pname in (gitlab_binaries, cron_binaries, erl_child_setup, exechealthz,
                            PM2, PassengerWatchd, c_rehash, svlogd, logrotate, hhvm, serf,
-                           lb-controller)
+                           lb-controller, nvidia-installe, runsv, statsite)
     and not proc.cmdline in (known_shell_spawn_cmdlines)
     and not proc.aname in (unicorn_launche)
     and not consul_running_curl
