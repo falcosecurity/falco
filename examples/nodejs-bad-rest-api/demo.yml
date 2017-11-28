@@ -1,9 +1,7 @@
-# Owned by software vendor, serving install-software.sh.
 express_server:
   container_name: express_server
   image: node:latest
-  working_dir: /usr/src/app
-  command: bash -c "npm install && node server.js"
+  command: bash -c "apt-get -y update && apt-get -y install runit && npm install && runsv /usr/src/app"
   ports:
     - "8181:8181"
   volumes:
