@@ -1163,7 +1163,7 @@
 # when we lose events and lose track of state.
 
 - macro: container_entrypoint
-  condition: (not proc.pname exists or proc.pname in (runc:[0:PARENT], runc:[1:CHILD], docker-runc))
+  condition: (not proc.pname exists or proc.pname in (runc:[0:PARENT], runc:[1:CHILD], docker-runc, exe))
 
 - rule: Launch Sensitive Mount Container
   desc: >
@@ -1216,7 +1216,7 @@
   condition: >
     spawned_process and container
     and shell_procs and proc.tty != 0
-    and (not proc.pname exists or proc.pname startswith "runc:")
+    and container_entrypoint
   output: >
     A shell was spawned in a container with an attached terminal (user=%user.name %container.info
     shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline terminal=%proc.tty)
