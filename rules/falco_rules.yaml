@@ -41,10 +41,10 @@
 
 - macro: bin_dir_mkdir
   condition: >
-    evt.arg[0] startswith /bin/ or
-    evt.arg[0] startswith /sbin/ or
-    evt.arg[0] startswith /usr/bin/ or
-    evt.arg[0] startswith /usr/sbin/
+    (evt.arg[1] startswith /bin/ or
+     evt.arg[1] startswith /sbin/ or
+     evt.arg[1] startswith /usr/bin/ or
+     evt.arg[1] startswith /usr/sbin/)
 
 - macro: bin_dir_rename
   condition: >
@@ -156,10 +156,10 @@
   items: [chef-client]
 
 - list: http_server_binaries
-  items: [nginx, httpd, httpd-foregroun, lighttpd]
+  items: [nginx, httpd, httpd-foregroun, lighttpd, apache, apache2]
 
 - list: db_server_binaries
-  items: [mysqld]
+  items: [mysqld, postgres, sqlplus]
 
 - list: mysql_mgmt_binaries
   items: [mysql_install_d, mysql_ssl_rsa_s]
@@ -169,6 +169,9 @@
 
 - list: db_mgmt_binaries
   items: [mysql_mgmt_binaries, postgres_mgmt_binaries]
+
+- list: nosql_server_binaries
+  items: [couchdb, memcached, redis-server, rabbitmq-server, mongod]
 
 - list: gitlab_binaries
   items: [gitlab-shell, gitlab-mon, gitlab-runner-b, git]
@@ -198,6 +201,9 @@
 
 - macro: package_mgmt_procs
   condition: proc.name in (package_mgmt_binaries)
+
+- macro: run_by_package_mgmt_binaries
+  condition: proc.aname in (package_mgmt_binaries, needrestart)
 
 - list: ssl_mgmt_binaries
   items: [ca-certificates]
@@ -561,9 +567,6 @@
 
 - macro: parent_java_running_confluence
   condition: (proc.pname=java and proc.pcmdline contains "-classpath /opt/atlassian/confluence")
-
-- macro: parent_java_running_tomcat
-  condition: (proc.pname=java and proc.pcmdline contains "-classpath /usr/local/tomcat")
 
 - macro: parent_java_running_install4j
   condition: (proc.pname=java and proc.pcmdline contains "-classpath i4jruntime.jar")
@@ -989,66 +992,104 @@
     mysql_upgrade, opkg-cl, vmtoolsd, confd
     ]
 
-- rule: Run shell untrusted
-  desc: an attempt to spawn a shell by a non-shell program. Exceptions are made for trusted binaries.
+# The binaries in this list and their descendents are *not* allowed
+# spawn shells. This includes the binaries spawning shells directly as
+# well as indirectly. For example, apache -> php/perl for
+# mod_{php,perl} -> some shell is also not allowed, because the shell
+# has apache as an ancestor.
+
+- list: protected_shell_spawning_binaries
+  items: [
+    http_server_binaries, db_server_binaries, nosql_server_binaries, mail_binaries,
+    fluentd, flanneld, splunkd, consul, runsv
+    ]
+
+- macro: parent_java_running_zookeeper
+  condition: (proc.pname=java and proc.pcmdline contains org.apache.zookeeper.server)
+
+- macro: parent_java_running_kafka
+  condition: (proc.pname=java and proc.pcmdline contains kafka.Kafka)
+
+- macro: parent_java_running_elasticsearch
+  condition: (proc.pname=java and proc.pcmdline contains org.elasticsearch.bootstrap.Elasticsearch)
+
+- macro: parent_java_running_activemq
+  condition: (proc.pname=java and proc.pcmdline contains activemq.jar)
+
+- macro: parent_java_running_cassandra
+  condition: (proc.pname=java and proc.pcmdline contains org.apache.cassandra.service.CassandraDaemon)
+
+- macro: parent_java_running_jboss_wildfly
+  condition: (proc.pname=java and proc.pcmdline contains org.jboss)
+
+- macro: parent_java_running_glassfish
+  condition: (proc.pname=java and proc.pcmdline contains com.sun.enterprise.glassfish)
+
+- macro: parent_java_running_hadoop
+  condition: (proc.pname=java and proc.pcmdline contains org.apache.hadoop)
+
+- macro: parent_java_running_datastax
+  condition: (proc.pname=java and proc.pcmdline contains com.datastax)
+
+- macro: parent_java_running_sumologic
+  condition: (proc.pname=java and proc.pcmdline contains com.sumologic)
+
+- macro: nginx_starting_nginx
+  condition: (proc.pname=nginx and proc.cmdline contains "/usr/sbin/nginx -c /etc/nginx/nginx.conf")
+
+- macro: consul_running_curl
+  condition: (proc.pname=consul and proc.cmdline startswith "sh -c curl")
+
+- macro: serf_script
+  condition: (proc.cmdline startswith "sh -c serf")
+
+- macro: check_process_status
+  condition: (proc.cmdline startswith "sh -c kill -0 ")
+
+- macro: protected_shell_spawner
   condition: >
-    spawned_process and not container
+    (proc.aname in (protected_shell_spawning_binaries)
+    or parent_java_running_zookeeper
+    or parent_java_running_kafka
+    or parent_java_running_elasticsearch
+    or parent_java_running_activemq
+    or parent_java_running_cassandra
+    or parent_java_running_jboss_wildfly
+    or parent_java_running_glassfish
+    or parent_java_running_hadoop
+    or parent_java_running_datastax)
+
+# Note that runsv is both in protected_shell_spawner and the
+# exclusions by pname. This means that runsv can itself spawn shells
+# (the ./run and ./finish scripts), but the processes runsv can not
+# spawn shells.
+- rule: Run shell untrusted
+  desc: an attempt to spawn a shell below a non-shell application. Specific applications are monitored.
+  condition: >
+    spawned_process
     and shell_procs
     and proc.pname exists
-    and not proc.pname in (cron_binaries, shell_binaries, make_binaries, known_shell_spawn_binaries, docker_binaries,
-                           k8s_binaries, package_mgmt_binaries, aide_wrapper_binaries, nids_binaries,
-                           monitoring_binaries, gitlab_binaries, mesos_slave_binaries,
-                           keepalived_binaries,
-                           needrestart_binaries, phusion_passenger_binaries, chef_binaries, nomachine_binaries,
-                           x2go_binaries, db_mgmt_binaries, plesk_binaries)
-    and not parent_ansible_running_python
-    and not parent_bro_running_python
-    and not parent_python_running_denyhosts
-    and not parent_python_running_sdchecks
-    and not parent_linux_image_upgrade_script
-    and not parent_java_running_jenkins
+    and protected_shell_spawner
+    and not proc.pname in (shell_binaries, gitlab_binaries, cron_binaries,
+                           erl_child_setup, exechealthz,
+                           PM2, PassengerWatchd, c_rehash, svlogd, logrotate, hhvm, serf,
+                           lb-controller, nvidia-installe, runsv, statsite)
     and not proc.cmdline in (known_shell_spawn_cmdlines)
-    and not jenkins_scripts
-    and not parent_java_running_echo
-    and not parent_scripting_running_builds
-    and not makefile_perl
-    and not parent_Xvfb_running_xkbcomp
-    and not parent_nginx_running_serf
-    and not parent_node_running_npm
-    and not parent_npm_running_node
-    and not parent_java_running_sbt
-    and not parent_beam_running_python
-    and not parent_strongswan_running_starter
-    and not run_by_chef
-    and not run_by_puppet
-    and not run_by_adclient
-    and not run_by_centrify
-    and not parent_dovecot_running_auth
+    and not proc.aname in (unicorn_launche)
+    and not consul_running_curl
+    and not nginx_starting_nginx
+    and not run_by_package_mgmt_binaries
+    and not serf_script
+    and not check_process_status
     and not run_by_foreman
-    and not run_by_openshift
-    and not parent_java_running_tomcat
-    and not parent_java_running_install4j
-    and not parent_java_running_endeca
-    and not parent_running_datastax
-    and not parent_java_running_appdynamics
-    and not parent_cpanm_running_perl
-    and not parent_ruby_running_discourse
-    and not parent_ruby_running_pups
-    and not assemble_running_php
-    and not node_running_bitnami
-    and not node_running_threatstack
-    and not parent_python_running_localstack
-    and not parent_python_running_zookeeper
-    and not parent_python_running_airflow
-    and not perl_running_plesk
-    and not plesk_autoinstaller
-    and not parent_perl_running_openresty
+    and not python_mesos_marathon_scripting
+    and not user_shell_container_exclusions
   output: >
     Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname
     cmdline=%proc.cmdline pcmdline=%proc.pcmdline gparent=%proc.aname[2] ggparent=%proc.aname[3]
     gggparent=%proc.aname[4] ggggparent=%proc.aname[5])
   priority: DEBUG
-  tags: [host, shell]
+  tags: [shell]
 
 - macro: trusted_containers
   condition: (container.image startswith sysdig/agent or
@@ -1122,7 +1163,7 @@
 # when we lose events and lose track of state.
 
 - macro: container_entrypoint
-  condition: (not proc.pname exists or proc.pname in (runc:[0:PARENT], runc:[1:CHILD], docker-runc))
+  condition: (not proc.pname exists or proc.pname in (runc:[0:PARENT], runc:[1:CHILD], docker-runc, exe))
 
 - rule: Launch Sensitive Mount Container
   desc: >
@@ -1171,11 +1212,11 @@
   tags: [users]
 
 - rule: Terminal shell in container
-  desc: A shell was spawned by a program in a container with an attached terminal.
+  desc: A shell was used as the entrypoint/exec point into a container with an attached terminal.
   condition: >
     spawned_process and container
     and shell_procs and proc.tty != 0
-    and not proc.cmdline in (known_shell_spawn_cmdlines)
+    and container_entrypoint
   output: >
     A shell was spawned in a container with an attached terminal (user=%user.name %container.info
     shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline terminal=%proc.tty)
@@ -1261,84 +1302,6 @@
   condition: >
     (proc.pname=node and (proc.pcmdline contains /var/www/edi/process.js or
                           proc.pcmdline contains "sh -c /var/www/edi/bin/sftp.sh"))
-
-- rule: Run shell in container
-  desc: a shell was spawned by a non-shell program in a container. Container entrypoints are excluded.
-  condition: >
-    spawned_process and container
-    and shell_procs
-    and not container_entrypoint
-    and not proc.pname in (shell_binaries, make_binaries, docker_binaries, k8s_binaries, package_mgmt_binaries,
-                           lxd_binaries, mesos_slave_binaries, aide_wrapper_binaries, nids_binaries,
-                           cron_binaries,
-                           user_known_container_shell_spawn_binaries,
-                           needrestart_binaries,
-                           phusion_passenger_binaries,
-                           chef_binaries,
-                           nomachine_binaries,
-                           x2go_binaries,
-                           db_mgmt_binaries,
-                           plesk_binaries,
-                           monitoring_binaries, gitlab_binaries, initdb, awk, falco, cron,
-                           erl_child_setup, erlexec, ceph, PM2, pycompile, py3compile, hhvm, npm, serf,
-                           runsv, supervisord, varnishd, crond, logrotate, timeout, tini,
-                           xrdb, xfce4-session, weave, logdna-agent, bundle, configure, luajit, nginx,
-                           beam.smp, paster, postfix-local, hawkular-metric, fluentd, x2gormforward,
-                           "[celeryd:", flock, nsrun, consul, migrate-databas, airflow, bootstrap-qmf-l,
-                           build-qmf-artif, colormake.pl, doxygen, Cypress, lb-controller, vmtoolsd,
-                           haproxy_reload., curator, consul-template, xargs, scl, find, awstats_updatea,
-                           sa-update, mysql_upgrade, opkg-cl, peer-finder, confd, aws)
-    and not trusted_containers
-    and not shell_spawning_containers
-    and not parent_java_running_echo
-    and not parent_scripting_running_builds
-    and not makefile_perl
-    and not parent_Xvfb_running_xkbcomp
-    and not mysql_image_running_healthcheck
-    and not parent_nginx_running_serf
-    and not proc.cmdline in (known_container_shell_spawn_cmdlines)
-    and not parent_node_running_npm
-    and not parent_npm_running_node
-    and not user_shell_container_exclusions
-    and not node_running_edi_dynamodb
-    and not run_by_h2o
-    and not run_by_passenger_agent
-    and not parent_java_running_jenkins
-    and not parent_java_running_maven
-    and not parent_java_running_appdynamics
-    and not parent_java_running_sbt
-    and not python_running_es_curator
-    and not parent_beam_running_python
-    and not jenkins_scripts
-    and not bundle_running_ruby
-    and not parent_dovecot_running_auth
-    and not parent_strongswan_running_starter
-    and not parent_phusion_passenger_my_init
-    and not parent_java_running_confluence
-    and not parent_java_running_tomcat
-    and not parent_java_running_install4j
-    and not parent_running_datastax
-    and not ics_running_java
-    and not parent_ruby_running_discourse
-    and not parent_ruby_running_pups
-    and not assemble_running_php
-    and not node_running_bitnami
-    and not node_running_threatstack
-    and not parent_python_running_localstack
-    and not parent_python_running_zookeeper
-    and not parent_python_running_airflow
-    and not parent_docker_start_script
-    and not parent_java_running_endeca
-    and not python_mesos_healthcheck
-    and not python_mesos_marathon_scripting
-    and not perl_running_plesk
-    and not parent_rancher_running_healthcheck
-    and not parent_perl_running_openresty
-  output: >
-    Shell spawned in a container other than entrypoint (user=%user.name %container.info image=%container.image
-    shell=%proc.name pcmdline=%proc.pcmdline cmdline=%proc.cmdline parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3])
-  priority: DEBUG
-  tags: [container, shell]
 
 - macro: login_doing_dns_lookup
   condition: (proc.name=login and fd.l4proto=udp and fd.sport=53)

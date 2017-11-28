@@ -319,7 +319,7 @@ trace_files: !mux
     detect_counts:
       - "Write below binary dir": 1
       - "Read sensitive file untrusted": 3
-      - "Run shell in container": 1
+      - "Run shell untrusted": 1
       - "Write below rpm database": 1
       - "Write below etc": 1
       - "System procs network activity": 1

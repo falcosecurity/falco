@@ -50,6 +50,8 @@ void usage(char *program)
 	printf("                                                     then read a sensitive file\n");
 	printf("          write_rpm_database                         Write to files below /var/lib/rpm\n");
 	printf("          spawn_shell                                Run a shell (bash)\n");
+	printf("                                                     Used by spawn_shell_under_httpd below\n");
+	printf("          spawn_shell_under_httpd                    Run a shell (bash) under a httpd process\n");
 	printf("          db_program_spawn_process                   As a database program, try to spawn\n");
 	printf("                                                     another program\n");
 	printf("          modify_binary_dirs                         Modify a file below /bin\n");
@@ -64,7 +66,7 @@ void usage(char *program)
 	printf("          non_sudo_setuid                            Setuid as a non-root user\n");
 	printf("          create_files_below_dev                     Create files below /dev\n");
 	printf("          exec_ls                                    execve() the program ls\n");
-	printf("                                                     (used by user_mgmt_binaries below)\n");
+	printf("                                                     (used by user_mgmt_binaries, db_program_spawn_process)\n");
 	printf("          user_mgmt_binaries                         Become the program \"vipw\", which triggers\n");
 	printf("                                                     rules related to user management programs\n");
 	printf("          exfiltration                               Read /etc/shadow and send it via udp to a\n");
@@ -230,9 +232,14 @@ void spawn_shell() {
 	}
 }
 
+void spawn_shell_under_httpd() {
+	printf("Becoming the program \"httpd\" and then spawning a shell\n");
+	respawn("./httpd", "spawn_shell", "0");
+}
+
 void db_program_spawn_process() {
-	printf("Becoming the program \"mysql\" and then spawning a shell\n");
-	respawn("./mysqld", "spawn_shell", "0");
+	printf("Becoming the program \"mysql\" and then running ls\n");
+	respawn("./mysqld", "exec_ls", "0");
 }
 
 void modify_binary_dirs() {
@@ -360,6 +367,7 @@ map<string, action_t> defined_actions = {{"write_binary_dir", write_binary_dir},
 					 {"read_sensitive_file_after_startup", read_sensitive_file_after_startup},
 					 {"write_rpm_database", write_rpm_database},
 					 {"spawn_shell", spawn_shell},
+					 {"spawn_shell_under_httpd", spawn_shell_under_httpd},
 					 {"db_program_spawn_process", db_program_spawn_process},
 					 {"modify_binary_dirs", modify_binary_dirs},
 					 {"mkdir_binary_dirs", mkdir_binary_dirs},
@@ -375,7 +383,7 @@ map<string, action_t> defined_actions = {{"write_binary_dir", write_binary_dir},
 
 // Some actions don't directly result in suspicious behavior. These
 // actions are excluded from the ones run with -a all.
-set<string> exclude_from_all_actions = {"exec_ls", "network_activity"};
+set<string> exclude_from_all_actions = {"spawn_shell", "exec_ls", "network_activity"};
 
 void create_symlinks(const char *program)
 {

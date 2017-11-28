@@ -43,11 +43,11 @@ traces: !mux
   falco-event-generator:
     trace_file: traces-positive/falco-event-generator.scap
     detect: True
-    detect_level: [ERROR, WARNING, INFO, NOTICE]
+    detect_level: [ERROR, WARNING, INFO, NOTICE, DEBUG]
     detect_counts:
       - "Write below binary dir": 1
       - "Read sensitive file untrusted": 3
-      - "Run shell in container": 1
+      - "Run shell untrusted": 1
       - "Write below rpm database": 1
       - "Write below etc": 1
       - "System procs network activity": 1
@@ -145,13 +145,6 @@ traces: !mux
     detect_level: DEBUG
     detect_counts:
       - "Run shell untrusted": 1
-
-  shell-in-container:
-    trace_file: traces-positive/shell-in-container.scap
-    detect: True
-    detect_level: DEBUG
-    detect_counts:
-      - "Run shell in container": 1
 
   system-binaries-network-activity:
     trace_file: traces-positive/system-binaries-network-activity.scap
