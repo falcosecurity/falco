@@ -1216,7 +1216,7 @@
   condition: >
     spawned_process and container
     and shell_procs and proc.tty != 0
-    and not proc.pname exists
+    and (not proc.pname exists or proc.pname startswith "runc:")
   output: >
     A shell was spawned in a container with an attached terminal (user=%user.name %container.info
     shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline terminal=%proc.tty)
