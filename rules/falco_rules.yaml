@@ -1070,7 +1070,7 @@
     and shell_procs
     and proc.pname exists
     and protected_shell_spawner
-    and not proc.pname in (shell_binaries, gitlab_binaries, cron_binaries,
+    and not proc.pname in (shell_binaries, gitlab_binaries, cron_binaries, user_known_shell_spawn_binaries,
                            erl_child_setup, exechealthz,
                            PM2, PassengerWatchd, c_rehash, svlogd, logrotate, hhvm, serf,
                            lb-controller, nvidia-installe, runsv, statsite)
@@ -1287,7 +1287,7 @@
 # and override the entire run shell in container macro. Once
 # https://github.com/draios/falco/issues/255 is fixed this will be a
 # bit easier, as someone could append of any of the existing lists.
-- list: user_known_container_shell_spawn_binaries
+- list: user_known_shell_spawn_binaries
   items: []
 
 # This macro allows for easy additions to the set of commands allowed
