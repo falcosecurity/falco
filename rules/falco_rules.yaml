@@ -565,6 +565,9 @@
 - macro: java_running_sdjagent
   condition: proc.name=java and proc.cmdline contains sdjagent.jar
 
+- macro: kubelet_running_loopback
+  condition: (proc.pname=kubelet and proc.name=loopback)
+
 - macro: parent_java_running_confluence
   condition: (proc.pname=java and proc.pcmdline contains "-classpath /opt/atlassian/confluence")
 
@@ -965,6 +968,7 @@
     and not proc.name startswith "runc:"
     and not proc.pname in (sysdigcloud_binaries)
     and not java_running_sdjagent
+    and not kubelet_running_loopback
   output: >
     Namespace change (setns) by unexpected program (user=%user.name command=%proc.cmdline
     parent=%proc.pname %container.info)
