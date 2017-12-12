@@ -360,6 +360,9 @@
 - macro: ansible_running_python
   condition: (proc.name in (python, pypy) and proc.cmdline contains ansible)
 
+- macro: chef_running_yum_dump
+  condition: (proc.name=python and proc.cmdline contains yum-dump.py)
+
 - macro: parent_beam_running_python
   condition: proc.pcmdline="python pipeline.py -c conf.json"
 
@@ -527,7 +530,8 @@
 # Chef is similar.
 - macro: run_by_chef
   condition: (proc.aname[2]=chef_command_wr or proc.aname[3]=chef_command_wr or
-              proc.aname[2]=chef-client or proc.aname[3]=chef-client)
+              proc.aname[2]=chef-client or proc.aname[3]=chef-client or
+              proc.name=chef-client)
 
 - macro: run_by_adclient
   condition: (proc.aname[2]=adclient or proc.aname[3]=adclient or proc.aname[4]=adclient)
@@ -909,7 +913,7 @@
 # Only let rpm-related programs write to the rpm database
 - rule: Write below rpm database
   desc: an attempt to write to the rpm database by any non-rpm related program
-  condition: fd.name startswith /var/lib/rpm and open_write and not rpm_procs and not ansible_running_python
+  condition: fd.name startswith /var/lib/rpm and open_write and not rpm_procs and not ansible_running_python and not chef_running_yum_dump
   output: "Rpm database opened for writing by a non-rpm program (command=%proc.cmdline file=%fd.name)"
   priority: ERROR
   tags: [filesystem, software_mgmt]
