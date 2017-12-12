@@ -360,6 +360,9 @@
 - macro: ansible_running_python
   condition: (proc.name in (python, pypy) and proc.cmdline contains ansible)
 
+- macro: chef_running_yum_dump
+  condition: (proc.name=python and proc.cmdline contains yum-dump.py)
+
 - macro: parent_beam_running_python
   condition: proc.pcmdline="python pipeline.py -c conf.json"
 
@@ -527,7 +530,8 @@
 # Chef is similar.
 - macro: run_by_chef
   condition: (proc.aname[2]=chef_command_wr or proc.aname[3]=chef_command_wr or
-              proc.aname[2]=chef-client or proc.aname[3]=chef-client)
+              proc.aname[2]=chef-client or proc.aname[3]=chef-client or
+              proc.name=chef-client)
 
 - macro: run_by_adclient
   condition: (proc.aname[2]=adclient or proc.aname[3]=adclient or proc.aname[4]=adclient)
@@ -564,6 +568,9 @@
 
 - macro: java_running_sdjagent
   condition: proc.name=java and proc.cmdline contains sdjagent.jar
+
+- macro: kubelet_running_loopback
+  condition: (proc.pname=kubelet and proc.name=loopback)
 
 - macro: parent_java_running_confluence
   condition: (proc.pname=java and proc.pcmdline contains "-classpath /opt/atlassian/confluence")
@@ -630,13 +637,16 @@
 - macro: countly_writing_nginx_conf
   condition: (proc.cmdline startswith "nodejs /opt/countly/bin" and fd.name startswith /etc/nginx)
 
+- macro: exe_running_docker_save
+  condition: (container and proc.cmdline startswith "exe /var/lib/docker" and proc.pname in (dockerd, docker))
+
 ###############
 # General Rules
 ###############
 
 - rule: Write below binary dir
   desc: an attempt to write to any file below a set of binary directories
-  condition: bin_dir and evt.dir = < and open_write and not package_mgmt_procs
+  condition: bin_dir and evt.dir = < and open_write and not package_mgmt_procs and not exe_running_docker_save
   output: >
     File below a known binary directory opened for writing (user=%user.name
     command=%proc.cmdline file=%fd.name)
@@ -752,6 +762,7 @@
     and not proc.pname in (sysdigcloud_binaries, mail_config_binaries, hddtemp.postins, sshkit_script_binaries, locales.postins, deb_binaries)
     and not fd.name pmatch (safe_etc_dirs)
     and not fd.name in (/etc/container_environment.sh, /etc/container_environment.json, /etc/motd, /etc/motd.svc)
+    and not exe_running_docker_save    
     and not ansible_running_python
     and not python_running_denyhosts
     and not fluentd_writing_conf_files
@@ -825,6 +836,7 @@
     root_dir and evt.dir = < and open_write
     and not fd.name in (known_root_files)
     and not fd.directory in (known_root_directories)
+    and not exe_running_docker_save
     and not known_root_conditions
   output: "File below / or /root opened for writing (user=%user.name command=%proc.cmdline parent=%proc.pname file=%fd.name name=%proc.name)"
   priority: ERROR
@@ -901,7 +913,7 @@
 # Only let rpm-related programs write to the rpm database
 - rule: Write below rpm database
   desc: an attempt to write to the rpm database by any non-rpm related program
-  condition: fd.name startswith /var/lib/rpm and open_write and not rpm_procs and not ansible_running_python
+  condition: fd.name startswith /var/lib/rpm and open_write and not rpm_procs and not ansible_running_python and not chef_running_yum_dump
   output: "Rpm database opened for writing by a non-rpm program (command=%proc.cmdline file=%fd.name)"
   priority: ERROR
   tags: [filesystem, software_mgmt]
@@ -965,6 +977,7 @@
     and not proc.name startswith "runc:"
     and not proc.pname in (sysdigcloud_binaries)
     and not java_running_sdjagent
+    and not kubelet_running_loopback
   output: >
     Namespace change (setns) by unexpected program (user=%user.name command=%proc.cmdline
     parent=%proc.pname %container.info)
