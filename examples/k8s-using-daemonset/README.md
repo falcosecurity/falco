@@ -40,7 +40,7 @@ program_output:
 You will also need to enable JSON output. Find the `json_output: false` setting in the `falco.yaml` file and change it to read `json_output: true`. Any custom rules for your environment can be added to into the `falco_rules.local.yaml` file and they will be picked up by Falco at start time. You can now create the ConfigMap in Kubernetes. 
 
 ```
-k8s-using-daemonset$ kubectl create configmap falco-config --from-file=k8s-with-rbac/
+k8s-using-daemonset$ kubectl create configmap falco-config --from-file=k8s-with-rbac/falco-config
 configmap "falco-config" created
 k8s-using-daemonset$
 ```
