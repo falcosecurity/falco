@@ -186,7 +186,7 @@
           repoquery, rpmkeys, rpmq]
 
 - macro: rpm_procs
-  condition: proc.name in (rpm_binaries)
+  condition: proc.name in (rpm_binaries) or proc.name in (salt-minion)
 
 - list: deb_binaries
   items: [dpkg, dpkg-preconfigu, dpkg-reconfigur, apt, apt-get, aptitude,
@@ -823,6 +823,7 @@
               or fd.name startswith /root/.ivy2
               or fd.name startswith /root/.config/Cypress
               or fd.name startswith /root/.config/pulse
+              or fd.name startswith /root/.config/configstore
               or fd.name startswith /root/jenkins/workspace
               or fd.name startswith /root/.jenkins
               or fd.name startswith /root/.cache
