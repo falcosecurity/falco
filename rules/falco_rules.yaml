@@ -1015,7 +1015,7 @@
 - list: protected_shell_spawning_binaries
   items: [
     http_server_binaries, db_server_binaries, nosql_server_binaries, mail_binaries,
-    fluentd, flanneld, splunkd, consul, runsv
+    fluentd, flanneld, splunkd, consul, smbd, runsv
     ]
 
 - macro: parent_java_running_zookeeper
