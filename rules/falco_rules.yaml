@@ -637,6 +637,18 @@
 - macro: countly_writing_nginx_conf
   condition: (proc.cmdline startswith "nodejs /opt/countly/bin" and fd.name startswith /etc/nginx)
 
+- list: veritas_binaries
+  items: [vxconfigd, sfcache, vxclustadm, vxdctl, vxprint, vxdmpadm, vxdisk, vxdg, vxassist, vxtune]
+
+- macro: veritas_driver_script
+  condition: (proc.cmdline startswith "perl /opt/VRTSsfmh/bin/mh_driver.pl")
+
+- macro: veritas_progs
+  condition: (proc.name in (veritas_binaries) or veritas_driver_script)
+
+- macro: veritas_writing_config
+  condition: (veritas_progs and fd.name startswith /etc/vx)
+
 - macro: exe_running_docker_save
   condition: (container and proc.cmdline startswith "exe /var/lib/docker" and proc.pname in (dockerd, docker))
 
@@ -905,6 +917,7 @@
     and not run_by_chef
     and not user_read_sensitive_file_conditions
     and not perl_running_plesk
+    and not veritas_driver_script
   output: >
     Sensitive file opened for reading by non-trusted program (user=%user.name name=%proc.name
     command=%proc.cmdline file=%fd.name parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4])
