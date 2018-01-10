@@ -587,6 +587,9 @@
 - macro: python_mesos_marathon_scripting
   condition: (proc.pcmdline startswith "python3 /marathon-lb/marathon_lb.py")
 
+- macro: splunk_running_forwarder
+  condition: (proc.pname=splunkd and proc.cmdline startswith "sh -c /opt/splunkforwarder")
+
 - macro: parent_running_datastax
   condition: ((proc.pname=java and proc.pcmdline contains "-jar datastax-agent") or
               (proc.pcmdline startswith "nodetool /opt/dse/bin/"))
@@ -1124,6 +1127,7 @@
     and not check_process_status
     and not run_by_foreman
     and not python_mesos_marathon_scripting
+    and not splunk_running_forwarder
     and not user_shell_container_exclusions
   output: >
     Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname
