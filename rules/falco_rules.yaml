@@ -1389,6 +1389,9 @@
               (user.name=nfsnobody and evt.arg.uid=nfsnobody) or
               (user.name=postgres and evt.arg.uid=postgres))
 
+- macro: nrpe_becoming_nagios
+  condition: (proc.name=nrpe and evt.arg.uid=nagios)
+
 # In containers, the user name might be for a uid that exists in the
 # container but not on the host. (See
 # https://github.com/draios/sysdig/issues/954). So in that case, allow
@@ -1408,6 +1411,7 @@
     and not proc.name in (known_setuid_binaries, userexec_binaries, mail_binaries, docker_binaries,
                           nomachine_binaries)
     and not java_running_sdjagent
+    and not nrpe_becoming_nagios
   output: >
     Unexpected setuid call by non-sudo, non-root program (user=%user.name cur_uid=%user.uid parent=%proc.pname
     command=%proc.cmdline uid=%evt.arg.uid)
