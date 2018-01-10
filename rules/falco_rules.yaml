@@ -1071,8 +1071,8 @@
 - macro: nginx_starting_nginx
   condition: (proc.pname=nginx and proc.cmdline contains "/usr/sbin/nginx -c /etc/nginx/nginx.conf")
 
-- macro: consul_running_curl
-  condition: (proc.pname=consul and proc.cmdline startswith "sh -c curl")
+- macro: consul_running_net_scripts
+  condition: (proc.pname=consul and (proc.cmdline startswith "sh -c curl" or proc.cmdline startswith "sh -c nc"))
 
 - macro: serf_script
   condition: (proc.cmdline startswith "sh -c serf")
@@ -1110,7 +1110,7 @@
                            lb-controller, nvidia-installe, runsv, statsite)
     and not proc.cmdline in (known_shell_spawn_cmdlines)
     and not proc.aname in (unicorn_launche)
-    and not consul_running_curl
+    and not consul_running_net_scripts
     and not nginx_starting_nginx
     and not run_by_package_mgmt_binaries
     and not serf_script
