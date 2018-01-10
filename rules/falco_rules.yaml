@@ -389,9 +389,10 @@
 
 - macro: parent_python_running_denyhosts
   condition: >
-    (proc.pname=python and
-    (proc.pcmdline contains /usr/sbin/denyhosts or
-     proc.pcmdline contains /usr/local/bin/denyhosts.py))
+    (proc.cmdline startswith "denyhosts.py /usr/bin/denyhosts.py" or
+     (proc.pname=python and
+     (proc.pcmdline contains /usr/sbin/denyhosts or
+      proc.pcmdline contains /usr/local/bin/denyhosts.py)))
 
 - macro: parent_python_running_sdchecks
   condition: >
