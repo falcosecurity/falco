@@ -1139,7 +1139,9 @@
               container.image startswith quay.io/coreos/flannel or
               container.image startswith gcr.io/google_containers/kube-proxy or
               container.image startswith calico/node or
-              container.image startswith rook/toolbox)
+              container.image startswith rook/toolbox or
+              container.image startswith registry.access.redhat.com/openshift3/logging-fluentd or
+              container.image startswith registry.access.redhat.com/openshift3/logging-elasticsearch)
 
 # Add conditions to this macro (probably in a separate file,
 # overwriting this macro) to specify additional containers that are
