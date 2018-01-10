@@ -1371,7 +1371,8 @@
               (user.name=postfix and evt.arg.uid=postfix) or
               (user.name=pki-agent and evt.arg.uid=pki-agent) or
               (user.name=pki-acme and evt.arg.uid=pki-acme) or
-              (user.name=nfsnobody and evt.arg.uid=nfsnobody))
+              (user.name=nfsnobody and evt.arg.uid=nfsnobody) or
+              (user.name=postgres and evt.arg.uid=postgres))
 
 # In containers, the user name might be for a uid that exists in the
 # container but not on the host. (See
