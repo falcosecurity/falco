@@ -612,8 +612,8 @@
 - macro: htpasswd_writing_passwd
   condition: (proc.name=htpasswd and fd.name=/etc/nginx/.htpasswd)
 
-- macro: dmeventd_writing_lvm_archive
-  condition: (proc.name=dmeventd and (fd.name startswith /etc/lvm/archive or
+- macro: lvprogs_writing_lvm_archive
+  condition: (proc.name in (dmeventd,lvcreate) and (fd.name startswith /etc/lvm/archive or
                                       fd.name startswith /etc/lvm/backup))
 - macro: ovsdb_writing_openvswitch
   condition: (proc.name=ovsdb-server and fd.directory=/etc/openvswitch)
@@ -795,7 +795,7 @@
     and not supervise_writing_status
     and not pki_realm_writing_realms
     and not htpasswd_writing_passwd
-    and not dmeventd_writing_lvm_archive
+    and not lvprogs_writing_lvm_archive
     and not ovsdb_writing_openvswitch
     and not datadog_writing_conf
     and not curl_writing_pki_db
