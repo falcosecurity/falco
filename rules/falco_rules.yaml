@@ -932,11 +932,18 @@
   priority: ERROR
   tags: [filesystem, software_mgmt]
 
+- macro: postgres_running_wal_e
+  condition: (proc.pname=postgres and proc.cmdline startswith "sh -c envdir /etc/wal-e.d/env /usr/local/bin/wal-e")
+
 - rule: DB program spawned process
   desc: >
     a database-server related program spawned a new process other than itself.
     This shouldn\'t occur and is a follow on from some SQL injection attacks.
-  condition: proc.pname in (db_server_binaries) and spawned_process and not proc.name in (db_server_binaries)
+  condition: >
+    proc.pname in (db_server_binaries)
+    and spawned_process
+    and not proc.name in (db_server_binaries)
+    and not postgres_running_wal_e
   output: >
     Database-related program spawned process other than itself (user=%user.name
     program=%proc.cmdline parent=%proc.pname)
