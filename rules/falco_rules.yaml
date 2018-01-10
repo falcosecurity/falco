@@ -1074,6 +1074,9 @@
 - macro: consul_running_net_scripts
   condition: (proc.pname=consul and (proc.cmdline startswith "sh -c curl" or proc.cmdline startswith "sh -c nc"))
 
+- macro: consul_running_alert_checks
+  condition: (proc.pname=consul and proc.cmdline startswith "sh -c /bin/consul-alerts")
+
 - macro: serf_script
   condition: (proc.cmdline startswith "sh -c serf")
 
@@ -1111,6 +1114,7 @@
     and not proc.cmdline in (known_shell_spawn_cmdlines)
     and not proc.aname in (unicorn_launche)
     and not consul_running_net_scripts
+    and not consul_running_alert_checks
     and not nginx_starting_nginx
     and not run_by_package_mgmt_binaries
     and not serf_script
