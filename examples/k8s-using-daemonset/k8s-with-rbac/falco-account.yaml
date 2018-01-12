@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: falco-account
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: falco-cluster-role
+rules:
+  - apiGroups: ["extensions",""]
+    resources: ["nodes","namespaces","pods","replicationcontrollers","services","events","configmaps"]
+    verbs: ["get","list","watch"]
+  - nonResourceURLs: ["/healthz", "/healthz/*"]
+    verbs: ["get"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: falco-cluster-role-binding
+  namespace: default
+subjects:
+  - kind: ServiceAccount
+    name: falco-account
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: falco-cluster-role
+  apiGroup: rbac.authorization.k8s.io
