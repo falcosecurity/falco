@@ -1129,6 +1129,7 @@
     and not run_by_foreman
     and not python_mesos_marathon_scripting
     and not splunk_running_forwarder
+    and not postgres_running_wal_e
     and not user_shell_container_exclusions
   output: >
     Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname
