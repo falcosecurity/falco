@@ -78,7 +78,7 @@ else()
         set(ZLIB_INCLUDE "${ZLIB_SRC}")
         set(ZLIB_LIB "${ZLIB_SRC}/libz.a")
         ExternalProject_Add(zlib
-		URL "https://s3.amazonaws.com/download.draios.com/dependencies/zlib-1.2.8.tar.gz"
+		URL "http://s3.amazonaws.com/download.draios.com/dependencies/zlib-1.2.8.tar.gz"
 		URL_MD5 "44d667c142d7cda120332623eab69f40"
 		CONFIGURE_COMMAND "./configure"
 		BUILD_COMMAND ${CMD_MAKE}
@@ -104,7 +104,7 @@ else()
         set(JQ_INCLUDE "${JQ_SRC}")
         set(JQ_LIB "${JQ_SRC}/.libs/libjq.a")
         ExternalProject_Add(jq
-                URL "https://s3.amazonaws.com/download.draios.com/dependencies/jq-1.5.tar.gz"
+                URL "http://s3.amazonaws.com/download.draios.com/dependencies/jq-1.5.tar.gz"
                 URL_MD5 "0933532b086bd8b6a41c1b162b1731f9"
                 CONFIGURE_COMMAND ./configure --disable-maintainer-mode --enable-all-static --disable-dependency-tracking
                 BUILD_COMMAND ${CMD_MAKE} LDFLAGS=-all-static
@@ -134,7 +134,7 @@ else()
 	set(CURSES_LIBRARIES "${CURSES_BUNDLE_DIR}/lib/libncurses.a")
 	message(STATUS "Using bundled ncurses in '${CURSES_BUNDLE_DIR}'")
 	ExternalProject_Add(ncurses
-		URL "https://s3.amazonaws.com/download.draios.com/dependencies/ncurses-6.0-20150725.tgz"
+		URL "http://s3.amazonaws.com/download.draios.com/dependencies/ncurses-6.0-20150725.tgz"
 		URL_MD5 "32b8913312e738d707ae68da439ca1f4"
 		CONFIGURE_COMMAND ./configure --without-cxx --without-cxx-binding --without-ada --without-manpages --without-progs --without-tests --with-terminfo-dirs=/etc/terminfo:/lib/terminfo:/usr/share/terminfo
 		BUILD_COMMAND ${CMD_MAKE}
@@ -161,7 +161,7 @@ else()
 	set(B64_INCLUDE "${B64_SRC}/include")
 	set(B64_LIB "${B64_SRC}/src/libb64.a")
 	ExternalProject_Add(b64
-		URL "https://s3.amazonaws.com/download.draios.com/dependencies/libb64-1.2.src.zip"
+		URL "http://s3.amazonaws.com/download.draios.com/dependencies/libb64-1.2.src.zip"
 		URL_MD5 "a609809408327117e2c643bed91b76c5"
 		CONFIGURE_COMMAND ""
 		BUILD_COMMAND ${CMD_MAKE}
@@ -215,7 +215,7 @@ else()
 	message(STATUS "Using bundled openssl in '${OPENSSL_BUNDLE_DIR}'")
 
 	ExternalProject_Add(openssl
-		URL "https://s3.amazonaws.com/download.draios.com/dependencies/openssl-1.0.2j.tar.gz"
+		URL "http://s3.amazonaws.com/download.draios.com/dependencies/openssl-1.0.2j.tar.gz"
 		URL_MD5 "96322138f0b69e61b7212bc53d5e912b"
 		CONFIGURE_COMMAND ./config shared --prefix=${OPENSSL_INSTALL_DIR}
 		BUILD_COMMAND ${CMD_MAKE}
@@ -246,7 +246,7 @@ else()
 
 	ExternalProject_Add(curl
 		DEPENDS openssl
-		URL "https://s3.amazonaws.com/download.draios.com/dependencies/curl-7.56.0.tar.bz2"
+		URL "http://s3.amazonaws.com/download.draios.com/dependencies/curl-7.56.0.tar.bz2"
 		URL_MD5 "e0caf257103e0c77cee5be7e9ac66ca4"
 		CONFIGURE_COMMAND ./configure ${CURL_SSL_OPTION} --disable-shared --enable-optimize --disable-curldebug --disable-rt --enable-http --disable-ftp --disable-file --disable-ldap --disable-ldaps --disable-rtsp --disable-telnet --disable-tftp --disable-pop3 --disable-imap --disable-smb --disable-smtp --disable-gopher --disable-sspi --disable-ntlm-wb --disable-tls-srp --without-winssl --without-darwinssl --without-polarssl --without-cyassl --without-nss --without-axtls --without-ca-path --without-ca-bundle --without-libmetalink --without-librtmp --without-winidn --without-libidn --without-nghttp2 --without-libssh2 --disable-threaded-resolver
 		BUILD_COMMAND ${CMD_MAKE}
@@ -280,7 +280,7 @@ else()
 	set(LUAJIT_INCLUDE "${LUAJIT_SRC}")
 	set(LUAJIT_LIB "${LUAJIT_SRC}/libluajit.a")
 	ExternalProject_Add(luajit
-		URL "https://s3.amazonaws.com/download.draios.com/dependencies/LuaJIT-2.0.3.tar.gz"
+		URL "http://s3.amazonaws.com/download.draios.com/dependencies/LuaJIT-2.0.3.tar.gz"
 		URL_MD5 "f14e9104be513913810cd59c8c658dc0"
 		CONFIGURE_COMMAND ""
 		BUILD_COMMAND ${CMD_MAKE}
@@ -310,7 +310,7 @@ else()
 	endif()
 	ExternalProject_Add(lpeg
 		DEPENDS ${LPEG_DEPENDENCIES}
-		URL "https://s3.amazonaws.com/download.draios.com/dependencies/lpeg-1.0.0.tar.gz"
+		URL "http://s3.amazonaws.com/download.draios.com/dependencies/lpeg-1.0.0.tar.gz"
 		URL_MD5 "0aec64ccd13996202ad0c099e2877ece"
 		BUILD_COMMAND LUA_INCLUDE=${LUAJIT_INCLUDE} "${PROJECT_SOURCE_DIR}/scripts/build-lpeg.sh" "${LPEG_SRC}/build"
 		BUILD_IN_SOURCE 1
@@ -345,7 +345,7 @@ else()
 	set(LIBYAML_LIB "${LIBYAML_SRC}/.libs/libyaml.a")
 	message(STATUS "Using bundled libyaml in '${LIBYAML_SRC}'")
 	ExternalProject_Add(libyaml
-		URL "https://s3.amazonaws.com/download.draios.com/dependencies/libyaml-0.1.4.tar.gz"
+		URL "http://s3.amazonaws.com/download.draios.com/dependencies/libyaml-0.1.4.tar.gz"
 		URL_MD5 "4a4bced818da0b9ae7fc8ebc690792a7"
 		BUILD_COMMAND ${CMD_MAKE}
 		BUILD_IN_SOURCE 1
@@ -381,7 +381,7 @@ else()
 	endif()
 	ExternalProject_Add(lyaml
 		DEPENDS ${LYAML_DEPENDENCIES}
-		URL "https://s3.amazonaws.com/download.draios.com/dependencies/lyaml-release-v6.0.tar.gz"
+		URL "http://s3.amazonaws.com/download.draios.com/dependencies/lyaml-release-v6.0.tar.gz"
                 URL_MD5 "dc3494689a0dce7cf44e7a99c72b1f30"
                 BUILD_COMMAND ${CMD_MAKE}
                 BUILD_IN_SOURCE 1
