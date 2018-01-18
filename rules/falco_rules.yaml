@@ -818,7 +818,7 @@
     and not countly_writing_nginx_conf
 
 - rule: Write below etc
-  desc: an attempt to write to any file below /etc, not in a pipe installer session
+  desc: an attempt to write to any file below /etc
   condition: write_etc_common and not proc.sname=fbash
   output: "File below /etc opened for writing (user=%user.name command=%proc.cmdline parent=%proc.pname pcmdline=%proc.pcmdline file=%fd.name name=%proc.name gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4])"
   priority: ERROR
@@ -858,16 +858,6 @@
     and not known_root_conditions
   output: "File below / or /root opened for writing (user=%user.name command=%proc.cmdline parent=%proc.pname file=%fd.name name=%proc.name)"
   priority: ERROR
-  tags: [filesystem]
-
-# Within a fbash session, the severity is lowered to INFO
-- rule: Write below etc in installer
-  desc: an attempt to write to any file below /etc, in a pipe installer session
-  condition: write_etc_common and proc.sname=fbash
-  output: >
-    File below /etc opened for writing (user=%user.name command=%proc.cmdline
-    file=%fd.name) within pipe installer session
-  priority: INFO
   tags: [filesystem]
 
 - macro: cmp_cp_by_passwd
@@ -1461,53 +1451,9 @@
   priority: ERROR
   tags: [filesystem]
 
-# fbash is a small shell script that runs bash, and is suitable for use in curl <curl> | fbash installers.
-- rule: Installer bash starts network server
-  desc: an attempt by a program in a pipe installer session to start listening for network connections
-  condition: evt.type=listen and proc.sname=fbash
-  output: "Unexpected listen call by a process in a fbash session (command=%proc.cmdline)"
-  priority: NOTICE
-  tags: [network]
-
-- rule: Installer bash starts session
-  desc: an attempt by a program in a pipe installer session to start a new session
-  condition: evt.type=setsid and proc.sname=fbash
-  output: "Unexpected setsid call by a process in fbash session (command=%proc.cmdline)"
-  priority: NOTICE
-  tags: [process]
-
-- rule: Installer bash non https connection
-  desc: an attempt by a program in a pipe installer session to make an outgoing connection on a non-http(s) port
-  condition: proc.sname=fbash and outbound and not fd.sport in (80, 443, 53)
-  output: >
-    Outbound connection on non-http(s) port by a process in a fbash session
-    (command=%proc.cmdline connection=%fd.name)
-  priority: NOTICE
-  tags: [network]
-
 # It'd be nice if we could warn when processes in a fbash session try
 # to download from any nonstandard location? This is probably blocked
 # on https://github.com/draios/falco/issues/88 though.
-
-# Notice when processes try to run chkconfig/systemctl.... to install a service.
-# Note: this is not a WARNING, as you'd expect some service management
-# as a part of doing the installation.
-- rule: Installer bash manages service
-  desc: an attempt by a program in a pipe installer session to manage a system service (systemd/chkconfig)
-  condition: evt.type=execve and proc.name in (chkconfig, systemctl) and proc.sname=fbash
-  output: "Service management program run by process in a fbash session (command=%proc.cmdline)"
-  priority: INFO
-  tags: [software_mgmt]
-
-# Notice when processes try to run any package management binary within a fbash session.
-# Note: this is not a WARNING, as you'd expect some package management
-# as a part of doing the installation
-- rule: Installer bash runs pkgmgmt program
-  desc: an attempt by a program in a pipe installer session to run a package management binary
-  condition: evt.type=execve and package_mgmt_procs and proc.sname=fbash
-  output: "Package management program run by process in a fbash session (command=%proc.cmdline)"
-  priority: INFO
-  tags: [software_mgmt]
 
 ###########################
 # Application-Related Rules
