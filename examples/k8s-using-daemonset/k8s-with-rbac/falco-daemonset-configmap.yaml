@@ -13,12 +13,13 @@ spec:
         app: demo
         role: security
     spec:
+      serviceAccount: falco-account
       containers:
         - name: falco
           image: sysdig/falco:latest
           securityContext:
             privileged: true
-          args: [ "/usr/bin/falco", "-K", "/var/run/secrets/kubernetes.io/serviceaccount/token", "-k", "https://kubernetes", "-pk", "-o", "json_output=true", "-o", "program_output.enabled=true", "-o",  "program_output.program=jq '{text: .output}' | curl -d @- -X POST https://hooks.slack.com/services/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"]
+          args: [ "/usr/bin/falco", "-K", "/var/run/secrets/kubernetes.io/serviceaccount/token", "-k", "https://kubernetes", "-pk"]
           volumeMounts:
             - mountPath: /host/var/run/docker.sock
               name: docker-socket
@@ -38,6 +39,8 @@ spec:
             - mountPath: /host/usr
               name: usr-fs
               readOnly: true
+            - mountPath: /etc/falco
+              name: falco-config
       volumes:
         - name: docker-socket
           hostPath:
@@ -57,3 +60,6 @@ spec:
         - name: usr-fs
           hostPath:
             path: /usr
+        - name: falco-config
+          configMap:
+            name: falco-config

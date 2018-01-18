@@ -154,6 +154,13 @@ uint16_t falco_engine::find_ruleset_id(const std::string &ruleset)
 	return it->second;
 }
 
+void falco_engine::evttypes_for_ruleset(std::vector<bool> &evttypes, const std::string &ruleset)
+{
+	uint16_t ruleset_id = find_ruleset_id(ruleset);
+
+	return m_evttype_filter->evttypes_for_ruleset(evttypes, ruleset_id);
+}
+
 unique_ptr<falco_engine::rule_result> falco_engine::process_event(sinsp_evt *ev, uint16_t ruleset_id)
 {
 	if(should_drop_evt())

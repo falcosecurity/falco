@@ -43,11 +43,11 @@ traces: !mux
   falco-event-generator:
     trace_file: traces-positive/falco-event-generator.scap
     detect: True
-    detect_level: [ERROR, WARNING, INFO, NOTICE]
+    detect_level: [ERROR, WARNING, INFO, NOTICE, DEBUG]
     detect_counts:
       - "Write below binary dir": 1
       - "Read sensitive file untrusted": 3
-      - "Run shell in container": 1
+      - "Run shell untrusted": 1
       - "Write below rpm database": 1
       - "Write below etc": 1
       - "System procs network activity": 1
@@ -58,44 +58,6 @@ traces: !mux
       - "Create files below dev": 1
       - "Modify binary dirs": 2
       - "Change thread namespace": 2
-
-  installer-fbash-manages-service:
-    trace_file: traces-info/installer-fbash-manages-service.scap
-    detect: True
-    detect_level: INFO
-    detect_counts:
-      - "Installer bash manages service": 4
-
-  installer-bash-non-https-connection:
-    trace_file: traces-positive/installer-bash-non-https-connection.scap
-    detect: True
-    detect_level: NOTICE
-    detect_counts:
-      - "Installer bash non https connection": 1
-
-  installer-fbash-runs-pkgmgmt:
-    trace_file: traces-info/installer-fbash-runs-pkgmgmt.scap
-    detect: True
-    detect_level: [NOTICE, INFO]
-    detect_counts:
-      - "Installer bash runs pkgmgmt program": 4
-      - "Installer bash non https connection": 4
-
-  installer-bash-starts-network-server:
-    trace_file: traces-positive/installer-bash-starts-network-server.scap
-    detect: True
-    detect_level: NOTICE
-    detect_counts:
-      - "Installer bash starts network server": 2
-      - "Installer bash non https connection": 3
-
-  installer-bash-starts-session:
-    trace_file: traces-positive/installer-bash-starts-session.scap
-    detect: True
-    detect_level: NOTICE
-    detect_counts:
-      - "Installer bash starts session": 1
-      - "Installer bash non https connection": 3
 
   mkdir-binary-dirs:
     trace_file: traces-positive/mkdir-binary-dirs.scap
@@ -110,13 +72,6 @@ traces: !mux
     detect_level: ERROR
     detect_counts:
       - "Modify binary dirs": 1
-
-  modify-package-repo-list-installer:
-    trace_file: traces-info/modify-package-repo-list-installer.scap
-    detect: True
-    detect_level: INFO
-    detect_counts:
-      - "Write below etc in installer": 1
 
   non-sudo-setuid:
     trace_file: traces-positive/non-sudo-setuid.scap
@@ -145,13 +100,6 @@ traces: !mux
     detect_level: DEBUG
     detect_counts:
       - "Run shell untrusted": 1
-
-  shell-in-container:
-    trace_file: traces-positive/shell-in-container.scap
-    detect: True
-    detect_level: DEBUG
-    detect_counts:
-      - "Run shell in container": 1
 
   system-binaries-network-activity:
     trace_file: traces-positive/system-binaries-network-activity.scap
@@ -187,13 +135,6 @@ traces: !mux
     detect_level: ERROR
     detect_counts:
       - "Write below etc": 1
-
-  write-etc-installer:
-    trace_file: traces-info/write-etc-installer.scap
-    detect: True
-    detect_level: INFO
-    detect_counts:
-      - "Write below etc in installer": 1
 
   write-rpm-database:
     trace_file: traces-positive/write-rpm-database.scap
