@@ -183,10 +183,10 @@
 # interpreted by the filter expression.
 - list: rpm_binaries
   items: [dnf, rpm, rpmkey, yum, '"75-system-updat"', rhsmcertd-worke, subscription-ma,
-          repoquery, rpmkeys, rpmq]
+          repoquery, rpmkeys, rpmq, yum-cron]
 
 - macro: rpm_procs
-  condition: proc.name in (rpm_binaries)
+  condition: proc.name in (rpm_binaries) or proc.name in (salt-minion)
 
 - list: deb_binaries
   items: [dpkg, dpkg-preconfigu, dpkg-reconfigur, apt, apt-get, aptitude,
@@ -389,9 +389,10 @@
 
 - macro: parent_python_running_denyhosts
   condition: >
-    (proc.pname=python and
-    (proc.pcmdline contains /usr/sbin/denyhosts or
-     proc.pcmdline contains /usr/local/bin/denyhosts.py))
+    (proc.cmdline startswith "denyhosts.py /usr/bin/denyhosts.py" or
+     (proc.pname=python and
+     (proc.pcmdline contains /usr/sbin/denyhosts or
+      proc.pcmdline contains /usr/local/bin/denyhosts.py)))
 
 - macro: parent_python_running_sdchecks
   condition: >
@@ -587,6 +588,9 @@
 - macro: python_mesos_marathon_scripting
   condition: (proc.pcmdline startswith "python3 /marathon-lb/marathon_lb.py")
 
+- macro: splunk_running_forwarder
+  condition: (proc.pname=splunkd and proc.cmdline startswith "sh -c /opt/splunkforwarder")
+
 - macro: parent_running_datastax
   condition: ((proc.pname=java and proc.pcmdline contains "-jar datastax-agent") or
               (proc.pcmdline startswith "nodetool /opt/dse/bin/"))
@@ -612,8 +616,8 @@
 - macro: htpasswd_writing_passwd
   condition: (proc.name=htpasswd and fd.name=/etc/nginx/.htpasswd)
 
-- macro: dmeventd_writing_lvm_archive
-  condition: (proc.name=dmeventd and (fd.name startswith /etc/lvm/archive or
+- macro: lvprogs_writing_lvm_archive
+  condition: (proc.name in (dmeventd,lvcreate) and (fd.name startswith /etc/lvm/archive or
                                       fd.name startswith /etc/lvm/backup))
 - macro: ovsdb_writing_openvswitch
   condition: (proc.name=ovsdb-server and fd.directory=/etc/openvswitch)
@@ -636,6 +640,18 @@
 
 - macro: countly_writing_nginx_conf
   condition: (proc.cmdline startswith "nodejs /opt/countly/bin" and fd.name startswith /etc/nginx)
+
+- list: veritas_binaries
+  items: [vxconfigd, sfcache, vxclustadm, vxdctl, vxprint, vxdmpadm, vxdisk, vxdg, vxassist, vxtune]
+
+- macro: veritas_driver_script
+  condition: (proc.cmdline startswith "perl /opt/VRTSsfmh/bin/mh_driver.pl")
+
+- macro: veritas_progs
+  condition: (proc.name in (veritas_binaries) or veritas_driver_script)
+
+- macro: veritas_writing_config
+  condition: (veritas_progs and fd.name startswith /etc/vx)
 
 - macro: exe_running_docker_save
   condition: (container and proc.cmdline startswith "exe /var/lib/docker" and proc.pname in (dockerd, docker))
@@ -783,7 +799,7 @@
     and not supervise_writing_status
     and not pki_realm_writing_realms
     and not htpasswd_writing_passwd
-    and not dmeventd_writing_lvm_archive
+    and not lvprogs_writing_lvm_archive
     and not ovsdb_writing_openvswitch
     and not datadog_writing_conf
     and not curl_writing_pki_db
@@ -802,14 +818,14 @@
     and not countly_writing_nginx_conf
 
 - rule: Write below etc
-  desc: an attempt to write to any file below /etc, not in a pipe installer session
+  desc: an attempt to write to any file below /etc
   condition: write_etc_common and not proc.sname=fbash
   output: "File below /etc opened for writing (user=%user.name command=%proc.cmdline parent=%proc.pname pcmdline=%proc.pcmdline file=%fd.name name=%proc.name gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4])"
   priority: ERROR
   tags: [filesystem]
 
 - list: known_root_files
-  items: [/root/.monit.state, /root/.auth_tokens, /root/.bash_history, /root/.aws/credentials,
+  items: [/root/.monit.state, /root/.auth_tokens, /root/.bash_history, /root/.ash_history, /root/.aws/credentials,
           /root/.viminfo.tmp, /root/.lesshst, /root/.bzr.log, /root/.gitconfig.lock]
 
 - list: known_root_directories
@@ -823,11 +839,13 @@
               or fd.name startswith /root/.ivy2
               or fd.name startswith /root/.config/Cypress
               or fd.name startswith /root/.config/pulse
+              or fd.name startswith /root/.config/configstore
               or fd.name startswith /root/jenkins/workspace
               or fd.name startswith /root/.jenkins
               or fd.name startswith /root/.cache
               or fd.name startswith /root/.sbt
               or fd.name startswith /root/.java
+              or fd.name startswith /root/.glide
               or fd.name startswith /root/.sonar)
 
 - rule: Write below root
@@ -840,16 +858,6 @@
     and not known_root_conditions
   output: "File below / or /root opened for writing (user=%user.name command=%proc.cmdline parent=%proc.pname file=%fd.name name=%proc.name)"
   priority: ERROR
-  tags: [filesystem]
-
-# Within a fbash session, the severity is lowered to INFO
-- rule: Write below etc in installer
-  desc: an attempt to write to any file below /etc, in a pipe installer session
-  condition: write_etc_common and proc.sname=fbash
-  output: >
-    File below /etc opened for writing (user=%user.name command=%proc.cmdline
-    file=%fd.name) within pipe installer session
-  priority: INFO
   tags: [filesystem]
 
 - macro: cmp_cp_by_passwd
@@ -871,7 +879,8 @@
   items: [
     iptables, ps, lsb_release, check-new-relea, dumpe2fs, accounts-daemon, sshd,
     vsftpd, systemd, mysql_install_d, psql, screen, debconf-show, sa-update,
-    pam-auth-update, /usr/sbin/spamd, polkit-agent-he, lsattr, file
+    pam-auth-update, /usr/sbin/spamd, polkit-agent-he, lsattr, file, sosreport,
+    scxcimservera
     ]
 
 # Add conditions to this macro (probably in a separate file,
@@ -904,6 +913,7 @@
     and not run_by_chef
     and not user_read_sensitive_file_conditions
     and not perl_running_plesk
+    and not veritas_driver_script
   output: >
     Sensitive file opened for reading by non-trusted program (user=%user.name name=%proc.name
     command=%proc.cmdline file=%fd.name parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4])
@@ -918,11 +928,18 @@
   priority: ERROR
   tags: [filesystem, software_mgmt]
 
+- macro: postgres_running_wal_e
+  condition: (proc.pname=postgres and proc.cmdline startswith "sh -c envdir /etc/wal-e.d/env /usr/local/bin/wal-e")
+
 - rule: DB program spawned process
   desc: >
     a database-server related program spawned a new process other than itself.
     This shouldn\'t occur and is a follow on from some SQL injection attacks.
-  condition: proc.pname in (db_server_binaries) and spawned_process and not proc.name in (db_server_binaries)
+  condition: >
+    proc.pname in (db_server_binaries)
+    and spawned_process
+    and not proc.name in (db_server_binaries)
+    and not postgres_running_wal_e
   output: >
     Database-related program spawned process other than itself (user=%user.name
     program=%proc.cmdline parent=%proc.pname)
@@ -1014,7 +1031,7 @@
 - list: protected_shell_spawning_binaries
   items: [
     http_server_binaries, db_server_binaries, nosql_server_binaries, mail_binaries,
-    fluentd, flanneld, splunkd, consul, runsv
+    fluentd, flanneld, splunkd, consul, smbd, runsv
     ]
 
 - macro: parent_java_running_zookeeper
@@ -1050,8 +1067,11 @@
 - macro: nginx_starting_nginx
   condition: (proc.pname=nginx and proc.cmdline contains "/usr/sbin/nginx -c /etc/nginx/nginx.conf")
 
-- macro: consul_running_curl
-  condition: (proc.pname=consul and proc.cmdline startswith "sh -c curl")
+- macro: consul_running_net_scripts
+  condition: (proc.pname=consul and (proc.cmdline startswith "sh -c curl" or proc.cmdline startswith "sh -c nc"))
+
+- macro: consul_running_alert_checks
+  condition: (proc.pname=consul and proc.cmdline startswith "sh -c /bin/consul-alerts")
 
 - macro: serf_script
   condition: (proc.cmdline startswith "sh -c serf")
@@ -1084,18 +1104,22 @@
     and proc.pname exists
     and protected_shell_spawner
     and not proc.pname in (shell_binaries, gitlab_binaries, cron_binaries, user_known_shell_spawn_binaries,
+                           needrestart_binaries,
                            erl_child_setup, exechealthz,
                            PM2, PassengerWatchd, c_rehash, svlogd, logrotate, hhvm, serf,
                            lb-controller, nvidia-installe, runsv, statsite)
     and not proc.cmdline in (known_shell_spawn_cmdlines)
     and not proc.aname in (unicorn_launche)
-    and not consul_running_curl
+    and not consul_running_net_scripts
+    and not consul_running_alert_checks
     and not nginx_starting_nginx
     and not run_by_package_mgmt_binaries
     and not serf_script
     and not check_process_status
     and not run_by_foreman
     and not python_mesos_marathon_scripting
+    and not splunk_running_forwarder
+    and not postgres_running_wal_e
     and not user_shell_container_exclusions
   output: >
     Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname
@@ -1114,7 +1138,10 @@
               container.image startswith quay.io/coreos/flannel or
               container.image startswith gcr.io/google_containers/kube-proxy or
               container.image startswith calico/node or
-              container.image startswith rook/toolbox)
+              container.image startswith rook/toolbox or
+              container.image startswith registry.access.redhat.com/openshift3/logging-fluentd or
+              container.image startswith registry.access.redhat.com/openshift3/logging-elasticsearch or
+              container.image startswith cloudnativelabs/kube-router)
 
 # Add conditions to this macro (probably in a separate file,
 # overwriting this macro) to specify additional containers that are
@@ -1350,7 +1377,11 @@
               (user.name=postfix and evt.arg.uid=postfix) or
               (user.name=pki-agent and evt.arg.uid=pki-agent) or
               (user.name=pki-acme and evt.arg.uid=pki-acme) or
-              (user.name=nfsnobody and evt.arg.uid=nfsnobody))
+              (user.name=nfsnobody and evt.arg.uid=nfsnobody) or
+              (user.name=postgres and evt.arg.uid=postgres))
+
+- macro: nrpe_becoming_nagios
+  condition: (proc.name=nrpe and evt.arg.uid=nagios)
 
 # In containers, the user name might be for a uid that exists in the
 # container but not on the host. (See
@@ -1371,6 +1402,7 @@
     and not proc.name in (known_setuid_binaries, userexec_binaries, mail_binaries, docker_binaries,
                           nomachine_binaries)
     and not java_running_sdjagent
+    and not nrpe_becoming_nagios
   output: >
     Unexpected setuid call by non-sudo, non-root program (user=%user.name cur_uid=%user.uid parent=%proc.pname
     command=%proc.cmdline uid=%evt.arg.uid)
@@ -1419,53 +1451,9 @@
   priority: ERROR
   tags: [filesystem]
 
-# fbash is a small shell script that runs bash, and is suitable for use in curl <curl> | fbash installers.
-- rule: Installer bash starts network server
-  desc: an attempt by a program in a pipe installer session to start listening for network connections
-  condition: evt.type=listen and proc.sname=fbash
-  output: "Unexpected listen call by a process in a fbash session (command=%proc.cmdline)"
-  priority: NOTICE
-  tags: [network]
-
-- rule: Installer bash starts session
-  desc: an attempt by a program in a pipe installer session to start a new session
-  condition: evt.type=setsid and proc.sname=fbash
-  output: "Unexpected setsid call by a process in fbash session (command=%proc.cmdline)"
-  priority: NOTICE
-  tags: [process]
-
-- rule: Installer bash non https connection
-  desc: an attempt by a program in a pipe installer session to make an outgoing connection on a non-http(s) port
-  condition: proc.sname=fbash and outbound and not fd.sport in (80, 443, 53)
-  output: >
-    Outbound connection on non-http(s) port by a process in a fbash session
-    (command=%proc.cmdline connection=%fd.name)
-  priority: NOTICE
-  tags: [network]
-
 # It'd be nice if we could warn when processes in a fbash session try
 # to download from any nonstandard location? This is probably blocked
 # on https://github.com/draios/falco/issues/88 though.
-
-# Notice when processes try to run chkconfig/systemctl.... to install a service.
-# Note: this is not a WARNING, as you'd expect some service management
-# as a part of doing the installation.
-- rule: Installer bash manages service
-  desc: an attempt by a program in a pipe installer session to manage a system service (systemd/chkconfig)
-  condition: evt.type=execve and proc.name in (chkconfig, systemctl) and proc.sname=fbash
-  output: "Service management program run by process in a fbash session (command=%proc.cmdline)"
-  priority: INFO
-  tags: [software_mgmt]
-
-# Notice when processes try to run any package management binary within a fbash session.
-# Note: this is not a WARNING, as you'd expect some package management
-# as a part of doing the installation
-- rule: Installer bash runs pkgmgmt program
-  desc: an attempt by a program in a pipe installer session to run a package management binary
-  condition: evt.type=execve and package_mgmt_procs and proc.sname=fbash
-  output: "Package management program run by process in a fbash session (command=%proc.cmdline)"
-  priority: INFO
-  tags: [software_mgmt]
 
 ###########################
 # Application-Related Rules
