@@ -819,7 +819,7 @@
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc
-  condition: write_etc_common and not proc.sname=fbash
+  condition: write_etc_common
   output: "File below /etc opened for writing (user=%user.name command=%proc.cmdline parent=%proc.pname pcmdline=%proc.pcmdline file=%fd.name name=%proc.name gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4])"
   priority: ERROR
   tags: [filesystem]
@@ -1003,7 +1003,7 @@
 
 - list: known_shell_spawn_binaries
   items: [
-    sshd, sudo, su, tmux, screen, emacs, systemd, login, flock, fbash,
+    sshd, sudo, su, tmux, screen, emacs, systemd, login, flock,
     nginx, monit, supervisord, dragent, aws, awslogs, initdb, docker-compose,
     configure, awk, falco, fail2ban-server, fleetctl,
     logrotate, ansible, less, adduser, pycompile, py3compile,
@@ -1450,10 +1450,6 @@
   output: "File created below /dev by untrusted program (user=%user.name command=%proc.cmdline file=%fd.name)"
   priority: ERROR
   tags: [filesystem]
-
-# It'd be nice if we could warn when processes in a fbash session try
-# to download from any nonstandard location? This is probably blocked
-# on https://github.com/draios/falco/issues/88 though.
 
 ###########################
 # Application-Related Rules
