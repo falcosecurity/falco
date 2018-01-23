@@ -1451,6 +1451,28 @@
   priority: ERROR
   tags: [filesystem]
 
+
+# In a local/user rules file, you could override this macro to
+# explicitly enumerate the container images that you want to allow
+# access to EC2 metadata. In this main falco rules file, there isn't
+# any way to know all the containers that should have access, so any
+# container is alllowed, by repeating the "container" macro. In the
+# overridden macro, the condition would look something like
+# (container.image startswith vendor/container-1 or container.image
+# startswith vendor/container-2 or ...)
+- macro: ec2_metadata_containers
+  condition: container
+
+# On EC2 instances, 169.254.169.254 is a special IP used to fetch
+# metadata about the instance. It may be desirable to prevent access
+# to this IP from containers.
+- rule: Contact EC2 Instance Metadata Service From Container
+  desc: Detect attempts to contact the EC2 Instance Metadata Service from a container
+  condition: outbound and fd.sip="169.254.169.254" and container and not ec2_metadata_containers
+  output: Outbound connection to EC2 instance metadata service (command=%proc.cmdline connection=%fd.name %container.info image=%container.image)
+  priority: NOTICE
+  tags: [network, aws, container]
+
 ###########################
 # Application-Related Rules
 ###########################
