@@ -1314,6 +1314,30 @@
   priority: NOTICE
   tags: [network]
 
+- list: openvpn_udp_ports
+  items: [1194, 1197, 1198, 8080, 9201]
+
+- list: l2tp_udp_ports
+  items: [500, 1701, 4500, 10000]
+
+- list: statsd_ports
+  items: [8125]
+
+- list: expected_udp_ports
+  items: [53, openvpn_udp_ports, l2tp_udp_ports, statsd_ports]
+
+- macro: expected_udp_traffic
+  condition: fd.sport in (expected_udp_ports)
+
+- rule: Unexpected UDP Traffic
+  desc: UDP traffic not on port 53 (DNS) or commonly used VPN Ports
+  condition: (inbound or outbound) and fd.l4proto=udp and not expected_udp_traffic
+  output: >
+    Unexpected UDP Traffic Seen
+    (user=%user.name command=%proc.cmdline connection=%fd.name proto=%fd.l4proto)
+  priority: NOTICE
+  tags: [network]
+
 # With the current restriction on system calls handled by falco
 # (e.g. excluding read/write/sendto/recvfrom/etc, this rule won't
 # trigger).
