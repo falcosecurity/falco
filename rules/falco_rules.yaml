@@ -819,7 +819,7 @@
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc
-  condition: write_etc_common and not proc.sname=fbash
+  condition: write_etc_common
   output: "File below /etc opened for writing (user=%user.name command=%proc.cmdline parent=%proc.pname pcmdline=%proc.pcmdline file=%fd.name name=%proc.name gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4])"
   priority: ERROR
   tags: [filesystem]
@@ -1003,7 +1003,7 @@
 
 - list: known_shell_spawn_binaries
   items: [
-    sshd, sudo, su, tmux, screen, emacs, systemd, login, flock, fbash,
+    sshd, sudo, su, tmux, screen, emacs, systemd, login, flock,
     nginx, monit, supervisord, dragent, aws, awslogs, initdb, docker-compose,
     configure, awk, falco, fail2ban-server, fleetctl,
     logrotate, ansible, less, adduser, pycompile, py3compile,
@@ -1451,9 +1451,52 @@
   priority: ERROR
   tags: [filesystem]
 
-# It'd be nice if we could warn when processes in a fbash session try
-# to download from any nonstandard location? This is probably blocked
-# on https://github.com/draios/falco/issues/88 though.
+
+# In a local/user rules file, you could override this macro to
+# explicitly enumerate the container images that you want to allow
+# access to EC2 metadata. In this main falco rules file, there isn't
+# any way to know all the containers that should have access, so any
+# container is alllowed, by repeating the "container" macro. In the
+# overridden macro, the condition would look something like
+# (container.image startswith vendor/container-1 or container.image
+# startswith vendor/container-2 or ...)
+- macro: ec2_metadata_containers
+  condition: container
+
+# On EC2 instances, 169.254.169.254 is a special IP used to fetch
+# metadata about the instance. It may be desirable to prevent access
+# to this IP from containers.
+- rule: Contact EC2 Instance Metadata Service From Container
+  desc: Detect attempts to contact the EC2 Instance Metadata Service from a container
+  condition: outbound and fd.sip="169.254.169.254" and container and not ec2_metadata_containers
+  output: Outbound connection to EC2 instance metadata service (command=%proc.cmdline connection=%fd.name %container.info image=%container.image)
+  priority: NOTICE
+  tags: [network, aws, container]
+
+# In a local/user rules file, you should override this macro with the
+# IP address of your k8s api server. The IP 1.2.3.4 is a placeholder
+# IP that is not likely to be seen in practice.
+- macro: k8s_api_server
+  condition: (fd.sip="1.2.3.4" and fd.sport=8080)
+
+# In a local/user rules file, list the container images that are
+# allowed to contact the K8s API Server from within a container. This
+# might cover cases where the K8s infrastructure itself is running
+# within a container.
+- macro: k8s_containers
+  condition: >
+    (container.image startswith gcr.io/google_containers/hyperkube-amd64 or
+     container.image startswith gcr.io/google_containers/kube2sky or
+     container.image startswith sysdig/agent or
+     container.image startswith sysdig/falco or
+     container.image startswith sysdig/sysdig)
+
+- rule: Contact K8S API Server From Container
+  desc: Detect attempts to contact the K8S API Server from a container
+  condition: outbound and k8s_api_server and container and not k8s_containers
+  output: Unexpected connection to K8s API Server from container (command=%proc.cmdline %container.info image=%container.image connection=%fd.name)
+  priority: NOTICE
+  tags: [network, k8s, container]
 
 ###########################
 # Application-Related Rules
