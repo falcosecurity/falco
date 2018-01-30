@@ -244,12 +244,16 @@
 
 # Network
 - macro: inbound
-  condition: ((evt.type=listen and evt.dir=>) or (evt.type=accept and evt.dir=<))
+  condition: >
+    ((evt.type in (accept,listen) and evt.dir=<) or
+     (evt.type in (recvfrom,recvmsg) and fd.l4proto = udp and fd.name_changed=true) and
+      (fd.typechar = 4 or fd.typechar = 6))
 
-# Currently sendto is an ignored syscall, otherwise this could also
-# check for (evt.type=sendto and evt.dir=>)
 - macro: outbound
-  condition: evt.type=connect and evt.dir=< and (fd.typechar=4 or fd.typechar=6)
+  condition: >
+    ((evt.type = connect and evt.dir=<) or
+     (evt.type in (sendto,sendmsg) and fd.l4proto = udp and fd.name_changed=true) and
+     (fd.typechar = 4 or fd.typechar = 6))
 
 - macro: ssh_port
   condition: fd.sport=22
