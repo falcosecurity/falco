@@ -826,7 +826,7 @@
 
 - list: known_root_files
   items: [/root/.monit.state, /root/.auth_tokens, /root/.bash_history, /root/.ash_history, /root/.aws/credentials,
-          /root/.viminfo.tmp, /root/.lesshst, /root/.bzr.log, /root/.gitconfig.lock]
+          /root/.viminfo.tmp, /root/.lesshst, /root/.bzr.log, /root/.gitconfig.lock, /root/.babel.json]
 
 - list: known_root_directories
   items: [/root/.oracle_jre_usage, /root/.ssh]
@@ -846,7 +846,8 @@
               or fd.name startswith /root/.sbt
               or fd.name startswith /root/.java
               or fd.name startswith /root/.glide
-              or fd.name startswith /root/.sonar)
+              or fd.name startswith /root/.sonar
+              or fd.name startswith /root/.v8flag)
 
 - rule: Write below root
   desc: an attempt to write to any file directly below / or /root
