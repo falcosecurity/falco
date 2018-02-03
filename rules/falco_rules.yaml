@@ -656,6 +656,9 @@
 - macro: exe_running_docker_save
   condition: (container and proc.cmdline startswith "exe /var/lib/docker" and proc.pname in (dockerd, docker))
 
+- macro: gugent_writing_guestagent_log
+  condition: (proc.name=gugent and fd.name=GuestAgent.log)
+
 ###############
 # General Rules
 ###############
@@ -856,6 +859,7 @@
     and not fd.name in (known_root_files)
     and not fd.directory in (known_root_directories)
     and not exe_running_docker_save
+    and not gugent_writing_guestagent_log
     and not known_root_conditions
   output: "File below / or /root opened for writing (user=%user.name command=%proc.cmdline parent=%proc.pname file=%fd.name name=%proc.name)"
   priority: ERROR
