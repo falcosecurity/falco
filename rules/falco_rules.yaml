@@ -744,6 +744,9 @@
 - macro: cron_sed_writing_temp_file
   condition: (proc.aname[3]=cron_start.sh and fd.name startswith /etc/security/sed)
 
+- macro: cron_start_writing_pam_env
+  condition: (proc.cmdline="bash /usr/sbin/start-cron" and fd.name=/etc/security/pam_env.conf)
+
 # In some cases dpkg-reconfigur runs commands that modify /etc. Not
 # putting the full set of package management programs yet.
 - macro: dpkg_scripting
@@ -814,6 +817,7 @@
     and not rook_writing_conf
     and not php_handlers_writing_conf
     and not cron_sed_writing_temp_file
+    and not cron_start_writing_pam_env
     and not httpd_writing_conf_logs
     and not mysql_writing_conf
     and not openvpn_writing_conf
