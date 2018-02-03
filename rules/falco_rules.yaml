@@ -1083,6 +1083,9 @@
 - macro: nginx_starting_nginx
   condition: (proc.pname=nginx and proc.cmdline contains "/usr/sbin/nginx -c /etc/nginx/nginx.conf")
 
+- macro: nginx_running_aws_s3_cp
+  condition: (proc.pname=nginx and proc.cmdline startswith "sh -c /usr/local/bin/aws s3 cp")
+
 - macro: consul_running_net_scripts
   condition: (proc.pname=consul and (proc.cmdline startswith "sh -c curl" or proc.cmdline startswith "sh -c nc"))
 
@@ -1129,6 +1132,7 @@
     and not consul_running_net_scripts
     and not consul_running_alert_checks
     and not nginx_starting_nginx
+    and not nginx_running_aws_s3_cp
     and not run_by_package_mgmt_binaries
     and not serf_script
     and not check_process_status
