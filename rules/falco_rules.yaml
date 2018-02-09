@@ -297,7 +297,7 @@
   condition: evt.type=connect and evt.dir=< and (fd.typechar=4 or fd.typechar=6)
 
 - macro: ssh_port
-  condition: fd.lport=22
+  condition: fd.sport=22
 
 # Ssh
 - macro: ssh_error_message
@@ -305,6 +305,26 @@
     (evt.arg.data contains "Invalid user" or
     evt.arg.data contains "preauth" or
     evt.arg.data contains "Failed password")
+
+# In a local/user rules file, you could override this macro to
+# enumerate the servers for which ssh connections are allowed. For
+# example, you might have a ssh gateway host for which ssh connections
+# are allowed.
+#
+# In the main falco rules file, there isn't any way to know the
+# specific hosts for which ssh access is allowed, so this macro just
+# repeats ssh_port, which effectively allows ssh from all hosts. In
+# the overridden macro, the condition would look something like
+# "fd.sip="a.b.c.d" or fd.sip="e.f.g.h" or ..."
+- macro: allowed_ssh_hosts
+  condition: ssh_port
+
+- rule: Disallowed SSH Connection
+  desc: Detect any new ssh connection to a host other than those in an allowed group of hosts
+  condition: (outbound or inbound) and ssh_port and not allowed_ssh_hosts
+  output: Disallowed SSH Connection (command=%proc.cmdline connection=%fd.name user=%user.name)
+  priority: NOTICE
+  tags: [network]
 
 # System
 - macro: modules
