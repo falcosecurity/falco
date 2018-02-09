@@ -1538,6 +1538,22 @@
   priority: NOTICE
   tags: [network, k8s, container]
 
+# In a local/user rules file, list the container images that are
+# allowed to contact NodePort services from within a container. This
+# might cover cases where the K8s infrastructure itself is running
+# within a container.
+#
+# By default, all containers are allowed to contact NodePort services.
+- macro: nodeport_containers
+  condition: container
+
+- rule: Unexpected K8s NodePort Connection
+  desc: Detect attempts to use K8s NodePorts from a container
+  condition: (outbound or inbound) and fd.sport >= 30000 and fd.sport <= 32767 and container and not nodeport_containers
+  output: Unexpected K8s NodePort Connection (command=%proc.cmdline connection=%fd.name)
+  priority: NOTICE
+  tags: [network, k8s, container]
+
 ###########################
 # Application-Related Rules
 ###########################
