@@ -1098,7 +1098,7 @@
   condition: (proc.pname=java and proc.pcmdline contains activemq.jar)
 
 - macro: parent_java_running_cassandra
-  condition: (proc.pname=java and proc.pcmdline contains org.apache.cassandra.service.CassandraDaemon)
+  condition: (proc.pname=java and (proc.pcmdline contains "-Dcassandra.config.loader" or proc.pcmdline contains org.apache.cassandra.service.CassandraDaemon))
 
 - macro: parent_java_running_jboss_wildfly
   condition: (proc.pname=java and proc.pcmdline contains org.jboss)
