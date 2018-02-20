@@ -183,7 +183,7 @@
 # interpreted by the filter expression.
 - list: rpm_binaries
   items: [dnf, rpm, rpmkey, yum, '"75-system-updat"', rhsmcertd-worke, subscription-ma,
-          repoquery, rpmkeys, rpmq, yum-cron]
+          repoquery, rpmkeys, rpmq, yum-cron, yum-config-mana]
 
 - macro: rpm_procs
   condition: proc.name in (rpm_binaries) or proc.name in (salt-minion)
@@ -297,7 +297,7 @@
   condition: evt.type=connect and evt.dir=< and (fd.typechar=4 or fd.typechar=6)
 
 - macro: ssh_port
-  condition: fd.lport=22
+  condition: fd.sport=22
 
 # Ssh
 - macro: ssh_error_message
@@ -305,6 +305,26 @@
     (evt.arg.data contains "Invalid user" or
     evt.arg.data contains "preauth" or
     evt.arg.data contains "Failed password")
+
+# In a local/user rules file, you could override this macro to
+# enumerate the servers for which ssh connections are allowed. For
+# example, you might have a ssh gateway host for which ssh connections
+# are allowed.
+#
+# In the main falco rules file, there isn't any way to know the
+# specific hosts for which ssh access is allowed, so this macro just
+# repeats ssh_port, which effectively allows ssh from all hosts. In
+# the overridden macro, the condition would look something like
+# "fd.sip="a.b.c.d" or fd.sip="e.f.g.h" or ..."
+- macro: allowed_ssh_hosts
+  condition: ssh_port
+
+- rule: Disallowed SSH Connection
+  desc: Detect any new ssh connection to a host other than those in an allowed group of hosts
+  condition: (outbound or inbound) and ssh_port and not allowed_ssh_hosts
+  output: Disallowed SSH Connection (command=%proc.cmdline connection=%fd.name user=%user.name)
+  priority: NOTICE
+  tags: [network]
 
 # System
 - macro: modules
@@ -656,6 +676,9 @@
 - macro: exe_running_docker_save
   condition: (container and proc.cmdline startswith "exe /var/lib/docker" and proc.pname in (dockerd, docker))
 
+- macro: gugent_writing_guestagent_log
+  condition: (proc.name=gugent and fd.name=GuestAgent.log)
+
 ###############
 # General Rules
 ###############
@@ -741,6 +764,9 @@
 - macro: cron_sed_writing_temp_file
   condition: (proc.aname[3]=cron_start.sh and fd.name startswith /etc/security/sed)
 
+- macro: cron_start_writing_pam_env
+  condition: (proc.cmdline="bash /usr/sbin/start-cron" and fd.name=/etc/security/pam_env.conf)
+
 # In some cases dpkg-reconfigur runs commands that modify /etc. Not
 # putting the full set of package management programs yet.
 - macro: dpkg_scripting
@@ -811,6 +837,7 @@
     and not rook_writing_conf
     and not php_handlers_writing_conf
     and not cron_sed_writing_temp_file
+    and not cron_start_writing_pam_env
     and not httpd_writing_conf_logs
     and not mysql_writing_conf
     and not openvpn_writing_conf
@@ -826,7 +853,7 @@
 
 - list: known_root_files
   items: [/root/.monit.state, /root/.auth_tokens, /root/.bash_history, /root/.ash_history, /root/.aws/credentials,
-          /root/.viminfo.tmp, /root/.lesshst, /root/.bzr.log, /root/.gitconfig.lock]
+          /root/.viminfo.tmp, /root/.lesshst, /root/.bzr.log, /root/.gitconfig.lock, /root/.babel.json, /root/.localstack]
 
 - list: known_root_directories
   items: [/root/.oracle_jre_usage, /root/.ssh]
@@ -846,7 +873,15 @@
               or fd.name startswith /root/.sbt
               or fd.name startswith /root/.java
               or fd.name startswith /root/.glide
-              or fd.name startswith /root/.sonar)
+              or fd.name startswith /root/.sonar
+              or fd.name startswith /root/.v8flag
+              or fd.name startswith /root/infaagent
+              or fd.name startswith /root/.local/lib/python
+              or fd.name startswith /root/.pm2
+              or fd.name startswith /root/.gnupg
+              or fd.name startswith /root/.pgpass
+              or fd.name startswith /root/.theano
+              or fd.name startswith /root/.nv)
 
 - rule: Write below root
   desc: an attempt to write to any file directly below / or /root
@@ -855,6 +890,7 @@
     and not fd.name in (known_root_files)
     and not fd.directory in (known_root_directories)
     and not exe_running_docker_save
+    and not gugent_writing_guestagent_log
     and not known_root_conditions
   output: "File below / or /root opened for writing (user=%user.name command=%proc.cmdline parent=%proc.pname file=%fd.name name=%proc.name)"
   priority: ERROR
@@ -1067,6 +1103,9 @@
 - macro: nginx_starting_nginx
   condition: (proc.pname=nginx and proc.cmdline contains "/usr/sbin/nginx -c /etc/nginx/nginx.conf")
 
+- macro: nginx_running_aws_s3_cp
+  condition: (proc.pname=nginx and proc.cmdline startswith "sh -c /usr/local/bin/aws s3 cp")
+
 - macro: consul_running_net_scripts
   condition: (proc.pname=consul and (proc.cmdline startswith "sh -c curl" or proc.cmdline startswith "sh -c nc"))
 
@@ -1113,6 +1152,7 @@
     and not consul_running_net_scripts
     and not consul_running_alert_checks
     and not nginx_starting_nginx
+    and not nginx_running_aws_s3_cp
     and not run_by_package_mgmt_binaries
     and not serf_script
     and not check_process_status
@@ -1495,6 +1535,22 @@
   desc: Detect attempts to contact the K8S API Server from a container
   condition: outbound and k8s_api_server and container and not k8s_containers
   output: Unexpected connection to K8s API Server from container (command=%proc.cmdline %container.info image=%container.image connection=%fd.name)
+  priority: NOTICE
+  tags: [network, k8s, container]
+
+# In a local/user rules file, list the container images that are
+# allowed to contact NodePort services from within a container. This
+# might cover cases where the K8s infrastructure itself is running
+# within a container.
+#
+# By default, all containers are allowed to contact NodePort services.
+- macro: nodeport_containers
+  condition: container
+
+- rule: Unexpected K8s NodePort Connection
+  desc: Detect attempts to use K8s NodePorts from a container
+  condition: (outbound or inbound) and fd.sport >= 30000 and fd.sport <= 32767 and container and not nodeport_containers
+  output: Unexpected K8s NodePort Connection (command=%proc.cmdline connection=%fd.name)
   priority: NOTICE
   tags: [network, k8s, container]
 
