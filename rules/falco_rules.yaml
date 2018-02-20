@@ -1020,6 +1020,12 @@
 #     syscall=%evt.type args=%evt.args)
 #   priority: INFO
 
+# This list allows for easy additions to the set of commands allowed
+# to change thread namespace without having to copy and override the
+# entire change thread namespace rule.
+- list: user_known_change_thread_namespace_binaries
+  items: []
+
 - rule: Change thread namespace
   desc: >
     an attempt to change a program/thread\'s namespace (commonly done
@@ -1027,6 +1033,7 @@
   condition: >
     evt.type = setns
     and not proc.name in (docker_binaries, k8s_binaries, lxd_binaries, sysdigcloud_binaries, sysdig, nsenter)
+    and not proc.name in (user_known_change_thread_namespace_binaries)
     and not proc.name startswith "runc:"
     and not proc.pname in (sysdigcloud_binaries)
     and not java_running_sdjagent
