@@ -1004,6 +1004,9 @@
 - macro: postgres_running_wal_e
   condition: (proc.pname=postgres and proc.cmdline startswith "sh -c envdir /etc/wal-e.d/env /usr/local/bin/wal-e")
 
+- macro: redis_running_prepost_scripts
+  condition: (proc.aname[2]=redis-server and (proc.cmdline contains "redis-server.post-up.d" or proc.cmdline contains "redis-server.pre-up.d"))
+
 - macro: rabbitmq_running_scripts
   condition: (proc.pname=beam.smp and (proc.cmdline startswith "sh -c exec ps" or proc.cmdline startswith "sh -c exec inet_gethost"))
 
@@ -1210,6 +1213,7 @@
     and not python_mesos_marathon_scripting
     and not splunk_running_forwarder
     and not postgres_running_wal_e
+    and not redis_running_prepost_scripts
     and not rabbitmq_running_scripts
     and not rabbitmqctl_running_scripts
     and not user_shell_container_exclusions
