@@ -1004,6 +1004,12 @@
 - macro: postgres_running_wal_e
   condition: (proc.pname=postgres and proc.cmdline startswith "sh -c envdir /etc/wal-e.d/env /usr/local/bin/wal-e")
 
+- macro: rabbitmq_running_scripts
+  condition: (proc.pname=beam.smp and (proc.cmdline startswith "sh -c exec ps" or proc.cmdline startswith "sh -c exec inet_gethost"))
+
+- macro: rabbitmqctl_running_scripts
+  condition: (proc.aname[2]=rabbitmqctl and proc.cmdline startswith "sh -c ")
+
 - rule: DB program spawned process
   desc: >
     a database-server related program spawned a new process other than itself.
@@ -1204,6 +1210,8 @@
     and not python_mesos_marathon_scripting
     and not splunk_running_forwarder
     and not postgres_running_wal_e
+    and not rabbitmq_running_scripts
+    and not rabbitmqctl_running_scripts
     and not user_shell_container_exclusions
   output: >
     Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname
