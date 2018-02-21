@@ -677,6 +677,15 @@
 - macro: omsagent_writing_conf
   condition: (proc.name in (omsagent,in_heartbeat_r*) and fd.name startswith /etc/opt/microsoft/omsagent)
 
+- macro: couchdb_writing_conf
+  condition: (proc.name=beam.smp and proc.cmdline contains couchdb and fd.name startswith /etc/couchdb)
+
+- macro: update_texmf_writing_conf
+  condition: (proc.name=update-texmf and fd.name startswith /etc/texmf)
+
+- macro: slapadd_writing_conf
+  condition: (proc.name=slapadd and fd.name startswith /etc/ldap)
+
 - list: veritas_binaries
   items: [vxconfigd, sfcache, vxclustadm, vxdctl, vxprint, vxdmpadm, vxdisk, vxdg, vxassist, vxtune]
 
@@ -862,6 +871,9 @@
     and not countly_writing_nginx_conf
     and not omiagent_writing_conf
     and not omsagent_writing_conf
+    and not couchdb_writing_conf
+    and not update_texmf_writing_conf
+    and not slapadd_writing_conf
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc
