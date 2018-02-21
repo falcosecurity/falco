@@ -58,7 +58,7 @@
 
 # This detects writes immediately below / or any write anywhere below /root
 - macro: root_dir
-  condition: (fd.directory=/ or fd.name startswith /root)
+  condition: ((fd.directory=/ or fd.name startswith /root) and fd.name contains "/")
 
 - macro: ubuntu_so_dirs
   condition: >
