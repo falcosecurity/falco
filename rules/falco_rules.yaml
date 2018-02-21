@@ -646,6 +646,9 @@
   condition: (proc.cmdline startswith "perl /opt/psa/admin/bin/plesk_agent_manager" or
               proc.pcmdline startswith "perl /opt/psa/admin/bin/plesk_agent_manager")
 
+- macro: perl_running_updmap
+  condition: (proc.cmdline startswith "perl /usr/bin/updmap")
+
 - macro: plesk_autoinstaller
   condition: (proc.pname=autoinstaller and proc.aname[2]=sw-engine)
 
@@ -957,6 +960,7 @@
     and not run_by_chef
     and not user_read_sensitive_file_conditions
     and not perl_running_plesk
+    and not perl_running_updmap
     and not veritas_driver_script
   output: >
     Sensitive file opened for reading by non-trusted program (user=%user.name name=%proc.name
