@@ -663,7 +663,7 @@
   condition: (proc.pcmdline startswith "perl /usr/local/openresty/bin")
 
 - macro: parent_ucf_writing_conf
-  condition: (proc.pname=ucf and fd.name startswith "/etc/gconf")
+  condition: (proc.pname=ucf and proc.aname[2]=frontend)
 
 - macro: consul_template_writing_conf
   condition: (proc.name=consul-template and fd.name startswith /etc/haproxy)
