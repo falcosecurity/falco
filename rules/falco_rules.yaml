@@ -694,7 +694,7 @@
   condition: bin_dir and evt.dir = < and open_write and not package_mgmt_procs and not exe_running_docker_save
   output: >
     File below a known binary directory opened for writing (user=%user.name
-    command=%proc.cmdline file=%fd.name)
+    command=%proc.cmdline file=%fd.name parent=%proc.pname pcmdline=%proc.pcmdline gparent=%proc.aname[2])
   priority: ERROR
   tags: [filesystem]
 
