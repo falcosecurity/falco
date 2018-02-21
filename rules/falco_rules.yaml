@@ -786,8 +786,12 @@
 - macro: php_handlers_writing_conf
   condition: (proc.name=php_handlers_co and fd.name=/etc/psa/php_versions.json)
 
-- macro: cron_sed_writing_temp_file
-  condition: (proc.aname[3]=cron_start.sh and fd.name startswith /etc/security/sed)
+- macro: sed_writing_temp_file
+  condition: >
+    ((proc.aname[3]=cron_start.sh and fd.name startswith /etc/security/sed) or
+     (proc.name=sed and (fd.name startswith /etc/apt/sources.list.d/sed or
+                         fd.name startswith /etc/apt/sed or
+                         fd.name startswith /etc/apt/apt.conf.d/sed)))
 
 - macro: cron_start_writing_pam_env
   condition: (proc.cmdline="bash /usr/sbin/start-cron" and fd.name=/etc/security/pam_env.conf)
@@ -862,7 +866,7 @@
     and not rabbitmq_writing_conf
     and not rook_writing_conf
     and not php_handlers_writing_conf
-    and not cron_sed_writing_temp_file
+    and not sed_writing_temp_file
     and not cron_start_writing_pam_env
     and not httpd_writing_conf_logs
     and not mysql_writing_conf
