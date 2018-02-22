@@ -1107,7 +1107,7 @@
 - list: protected_shell_spawning_binaries
   items: [
     http_server_binaries, db_server_binaries, nosql_server_binaries, mail_binaries,
-    fluentd, flanneld, splunkd, consul, smbd, runsv, node
+    fluentd, flanneld, splunkd, consul, smbd, runsv
     ]
 
 - macro: parent_java_running_zookeeper
@@ -1169,7 +1169,8 @@
     or parent_java_running_jboss_wildfly
     or parent_java_running_glassfish
     or parent_java_running_hadoop
-    or parent_java_running_datastax)
+    or parent_java_running_datastax
+    or (proc.pname=node and proc.aname[3]=docker-containe))
 
 # Note that runsv is both in protected_shell_spawner and the
 # exclusions by pname. This means that runsv can itself spawn shells
