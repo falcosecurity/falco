@@ -686,6 +686,20 @@
 - macro: slapadd_writing_conf
   condition: (proc.name=slapadd and fd.name startswith /etc/ldap)
 
+- macro: symantec_writing_conf
+  condition: >
+    ((proc.name=symcfgd and fd.name startswith /etc/symantec) or
+     (proc.name=navdefutil and fd.name=/etc/symc-defutils.conf))
+
+- macro: liveupdate_writing_conf
+  condition: (proc.cmdline startswith "java LiveUpdate" and fd.name in (/etc/liveupdate.conf, /etc/Product.Catalog.JavaLiveUpdate))
+
+- macro: sosreport_writing_files
+  condition: (proc.name=urlgrabber-ext- and proc.aname[3]=sosreport and fd.name startswith /etc/pkt/nssdb)
+
+- macro: semodule_writing_conf
+  condition: (proc.name=semodule and fd.name startswith /etc/selinux)
+
 - list: veritas_binaries
   items: [vxconfigd, sfcache, vxclustadm, vxdctl, vxprint, vxdmpadm, vxdisk, vxdg, vxassist, vxtune]
 
@@ -878,6 +892,10 @@
     and not couchdb_writing_conf
     and not update_texmf_writing_conf
     and not slapadd_writing_conf
+    and not symantec_writing_conf
+    and not liveupdate_writing_conf
+    and not sosreport_writing_files
+    and not semodule_writing_conf
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc
