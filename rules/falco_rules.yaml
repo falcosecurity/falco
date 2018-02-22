@@ -1,10 +1,3 @@
-#############
-# Definitions
-#############
-
-# File actions
-
-
 # Currently disabled as read/write are ignored syscalls. The nearly
 # similar open_write/open_read check for files being opened for
 # reading/writing.
@@ -718,10 +711,6 @@
 - macro: gugent_writing_guestagent_log
   condition: (proc.name=gugent and fd.name=GuestAgent.log)
 
-###############
-# General Rules
-###############
-
 - rule: Write below binary dir
   desc: an attempt to write to any file below a set of binary directories
   condition: bin_dir and evt.dir = < and open_write and not package_mgmt_procs and not exe_running_docker_save
@@ -1063,26 +1052,6 @@
     command=%proc.cmdline directory=%evt.arg.path)
   priority: ERROR
   tags: [filesystem]
-
-# Don't load shared objects coming from unexpected places
-# Commenting this out for now--there are lots of shared library
-# locations below /usr/lib for things like python, perl, etc. We may
-# want to just add /usr/lib to the list, but that is really
-# permissive.
-# - condition: open_read and fd.name contains .so and not (linux_so_dirs)
-#   output: "Loaded .so from unexpected dir (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
-#   priority: WARNING
-
-# Temporarily disabling this rule as it's tripping over https://github.com/draios/sysdig/issues/598
-# - rule: Syscall returns eaccess
-#   desc: >
-#     any system call that returns EACCESS. This is not always a strong
-#      indication of a problem, hence the INFO priority.
-#   condition: evt.res = EACCESS
-#   output: >
-#     System call returned EACCESS (user=%user.name command=%proc.cmdline
-#     syscall=%evt.type args=%evt.args)
-#   priority: INFO
 
 # This list allows for easy additions to the set of commands allowed
 # to change thread namespace without having to copy and override the
@@ -1628,10 +1597,7 @@
   priority: NOTICE
   tags: [network, k8s, container]
 
-###########################
-# Application-Related Rules
-###########################
-
-# Moved to application_rules.yaml. Please look there if you want to
-# enable them by adding to falco_rules.local.yaml.
+# Application rules have moved to application_rules.yaml. Please look
+# there if you want to enable them by adding to
+# falco_rules.local.yaml.
 
