@@ -12,6 +12,9 @@
 - macro: open_read
   condition: (evt.type=open or evt.type=openat) and evt.is_open_read=true and fd.typechar='f' and fd.num>=0
 
+- macro: never_true
+  condition: (evt.num=0)
+
 # In some cases, such as dropped system call events, information about
 # the process name may be missing. For some rules that really depend
 # on the identity of the process performing an action such as opening
@@ -1098,8 +1101,7 @@
 # rule. Its default value is an expression that always is false, which
 # becomes true when the "not ..." in the rule is applied.
 - macro: user_shell_container_exclusions
-  condition: (evt.num=0)
-
+  condition: (never_true)
 
 - macro: login_doing_dns_lookup
   condition: (proc.name=login and fd.l4proto=udp and fd.sport=53)
