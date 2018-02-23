@@ -869,6 +869,24 @@
 - macro: check_process_status
   condition: (proc.cmdline startswith "sh -c kill -0 ")
 
+# In some cases, you may want to consider node processes run directly
+# in containers as protected shell spawners. Examples include using
+# pm2-docker or pm2 start some-app.js --no-daemon-mode as the direct
+# entrypoint of the container, and when the node app is a long-lived
+# server using something like express.
+#
+# However, there are other uses of node related to build pipelines for
+# which node is not really a server but instead a general scripting
+# tool. In these cases, shells are very likely and in these cases you
+# don't want to consider node processes protected shell spawners.
+#
+# We have to choose one of these cases, so we consider node processes
+# as unprotected by default. If you want to consider any node process
+# run in a container as a protected shell spawner, override the below
+# macro to remove the "never_true" clause, which allows it to take effect.
+- macro: possibly_node_in_container
+  condition: (never_true and (proc.pname=node and proc.aname[3]=docker-containe))
+
 - macro: protected_shell_spawner
   condition: >
     (proc.aname in (protected_shell_spawning_binaries)
@@ -881,7 +899,7 @@
     or parent_java_running_glassfish
     or parent_java_running_hadoop
     or parent_java_running_datastax
-    or (proc.pname=node and proc.aname[3]=docker-containe))
+    or possibly_node_in_container)
 
 # Note that runsv is both in protected_shell_spawner and the
 # exclusions by pname. This means that runsv can itself spawn shells
