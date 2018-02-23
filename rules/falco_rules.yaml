@@ -619,6 +619,7 @@
     and not liveupdate_writing_conf
     and not sosreport_writing_files
     and not semodule_writing_conf
+    and not veritas_writing_config
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc
