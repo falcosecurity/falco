@@ -347,13 +347,13 @@ function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replac
 	 if (state.lists[item] == nil) then
 	    items[#items+1] = item
 	 else
-	    for i, exp_item in ipairs(state.lists[item]) do
+	    for i, exp_item in ipairs(state.lists[item].items) do
 	       items[#items+1] = exp_item
 	    end
 	 end
       end
 
-      state.lists[v['list']] = items
+      state.lists[v['list']] = {["items"] = items, ["used"] = false}
    end
 
    for i, name in ipairs(state.ordered_macro_names) do
@@ -361,7 +361,7 @@ function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replac
       local v = state.macros_by_name[name]
 
       local ast = compiler.compile_macro(v['condition'], state.macros, state.lists)
-      state.macros[v['macro']] = ast.filter.value
+      state.macros[v['macro']] = {["ast"] = ast.filter.value, ["used"] = false}
    end
 
    for i, name in ipairs(state.ordered_rule_names) do
@@ -440,6 +440,21 @@ function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replac
 	 formats.free_formatter(formatter)
       else
 	 error ("Unexpected type in load_rule: "..filter_ast.type)
+      end
+   end
+
+   if verbose then
+      -- Print info on any dangling lists or macros that were not used anywhere
+      for name, macro in pairs(state.macros) do
+	 if macro.used == false then
+	    print("Warning: macro "..name.." not refered to by any rule/macro")
+	 end
+      end
+
+      for name, list in pairs(state.lists) do
+	 if list.used == false then
+	    print("Warning: list "..name.." not refered to by any rule/macro/list")
+	 end
       end
    end
 
