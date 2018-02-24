@@ -301,6 +301,81 @@
 - macro: system_users
   condition: user.name in (bin, daemon, games, lp, mail, nobody, sshd, sync, uucp, www-data)
 
+# These macros will be removed soon. Only keeping them to maintain
+# compatiblity with some widely used rules files.
+# Begin Deprecated
+- macro: parent_ansible_running_python
+  condition: (proc.pname in (python, pypy) and proc.pcmdline contains ansible)
+
+- macro: parent_bro_running_python
+  condition: (proc.pname=python and proc.cmdline contains /usr/share/broctl)
+
+- macro: parent_python_running_denyhosts
+  condition: >
+    (proc.cmdline startswith "denyhosts.py /usr/bin/denyhosts.py" or
+     (proc.pname=python and
+     (proc.pcmdline contains /usr/sbin/denyhosts or
+      proc.pcmdline contains /usr/local/bin/denyhosts.py)))
+
+- macro: parent_python_running_sdchecks
+  condition: >
+    (proc.pname in (python, python2.7) and
+    (proc.pcmdline contains /opt/draios/bin/sdchecks))
+
+- macro: parent_linux_image_upgrade_script
+  condition: proc.pname startswith linux-image-
+
+- macro: parent_java_running_echo
+  condition: (proc.pname=java and proc.cmdline startswith "sh -c echo")
+
+- macro: parent_scripting_running_builds
+  condition: >
+    (proc.pname in (php,php5-fpm,php-fpm7.1,python,ruby,ruby2.3,ruby2.1,node,conda) and (
+       proc.cmdline startswith "sh -c git" or
+       proc.cmdline startswith "sh -c date" or
+       proc.cmdline startswith "sh -c /usr/bin/g++" or
+       proc.cmdline startswith "sh -c /usr/bin/gcc" or
+       proc.cmdline startswith "sh -c gcc" or
+       proc.cmdline startswith "sh -c if type gcc" or
+       proc.cmdline startswith "sh -c cd '/var/www/edi/';LC_ALL=en_US.UTF-8 git" or
+       proc.cmdline startswith "sh -c /var/www/edi/bin/sftp.sh" or
+       proc.cmdline startswith "sh -c /usr/src/app/crxlsx/bin/linux/crxlsx" or
+       proc.cmdline startswith "sh -c make parent" or
+       proc.cmdline startswith "node /jenkins/tools" or
+       proc.cmdline startswith "sh -c '/usr/bin/node'" or
+       proc.cmdline startswith "sh -c stty -a |" or
+       proc.pcmdline startswith "node /opt/nodejs/bin/yarn" or
+       proc.pcmdline startswith "node /usr/local/bin/yarn" or
+       proc.pcmdline startswith "node /root/.config/yarn" or
+       proc.pcmdline startswith "node /opt/yarn/bin/yarn.js"))
+
+- macro: parent_Xvfb_running_xkbcomp
+  condition: (proc.pname=Xvfb and proc.cmdline startswith 'sh -c "/usr/bin/xkbcomp"')
+
+- macro: parent_nginx_running_serf
+  condition: (proc.pname=nginx and proc.cmdline startswith "sh -c serf")
+
+- macro: parent_node_running_npm
+  condition: (proc.pcmdline startswith "node /usr/local/bin/npm" or
+              proc.pcmdline startswith "node /usr/local/nodejs/bin/npm" or
+              proc.pcmdline startswith "node /opt/rh/rh-nodejs6/root/usr/bin/npm")
+
+- macro: parent_java_running_sbt
+  condition: (proc.pname=java and proc.pcmdline contains sbt-launch.jar)
+
+- list: known_container_shell_spawn_cmdlines
+  items: []
+
+- list: known_shell_spawn_binaries
+  items: []
+
+- macro: shell_spawning_containers
+  condition: (container.image startswith jenkins or
+              container.image startswith gitlab/gitlab-ce or
+              container.image startswith gitlab/gitlab-ee)
+
+## End Deprecated
+
 - macro: ansible_running_python
   condition: (proc.name in (python, pypy) and proc.cmdline contains ansible)
 
