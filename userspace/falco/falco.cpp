@@ -111,7 +111,8 @@ static void usage()
 	   "                               single line emitted by falco to be flushed, which generates higher CPU\n"
 	   "                               usage but is useful when piping those outputs into another process\n"
 	   "                               or into a script.\n"
-	   " -V,--validate <rules_file>    Read the contents of the specified rules file and exit\n"
+	   " -V,--validate <rules_file>    Read the contents of the specified rules(s) file and exit\n"
+	   "                               Can be specified multiple times to validate multiple files.\n"
 	   " -v                            Verbose output.\n"
            " --version                     Print version number.\n"
 	   "\n"
@@ -245,7 +246,7 @@ int falco_init(int argc, char **argv)
 	string pidfilename = "/var/run/falco.pid";
 	bool describe_all_rules = false;
 	string describe_rule = "";
-	string validate_rules_file = "";
+	list<string> validate_rules_filenames;
 	string stats_filename = "";
 	bool verbose = false;
 	bool all_events = false;
@@ -396,7 +397,7 @@ int falco_init(int argc, char **argv)
 				verbose = true;
 				break;
 			case 'V':
-				validate_rules_file = optarg;
+				validate_rules_filenames.push_back(optarg);
 				break;
 			case 'w':
 				outfile = optarg;
@@ -460,10 +461,17 @@ int falco_init(int argc, char **argv)
 			}
 		}
 
-		if(validate_rules_file != "")
+		if(validate_rules_filenames.size() > 0)
 		{
-			falco_logger::log(LOG_INFO, "Validating rules file: " + validate_rules_file + "...\n");
-			engine->load_rules_file(validate_rules_file, verbose, all_events);
+			falco_logger::log(LOG_INFO, "Validating rules file(s):\n");
+			for(auto file : validate_rules_filenames)
+			{
+				falco_logger::log(LOG_INFO, "   " + file + "\n");
+			}
+			for(auto file : validate_rules_filenames)
+			{
+				engine->load_rules_file(file, verbose, all_events);
+			}
 			falco_logger::log(LOG_INFO, "Ok\n");
 			goto exit;
 		}
