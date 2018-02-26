@@ -76,7 +76,8 @@ function expand_macros(ast, defs, changed)
          if (defs[ast.value.value] == nil) then
             error("Undefined macro '".. ast.value.value .. "' used in filter.")
          end
-         ast.value = copy_ast_obj(defs[ast.value.value])
+	 defs[ast.value.value].used = true
+         ast.value = copy_ast_obj(defs[ast.value.value].ast)
          changed = true
 	 return changed
       end
@@ -88,7 +89,8 @@ function expand_macros(ast, defs, changed)
          if (defs[ast.left.value] == nil) then
             error("Undefined macro '".. ast.left.value .. "' used in filter.")
          end
-         ast.left = copy_ast_obj(defs[ast.left.value])
+	 defs[ast.left.value].used = true
+         ast.left = copy_ast_obj(defs[ast.left.value].ast)
          changed = true
       end
 
@@ -96,7 +98,8 @@ function expand_macros(ast, defs, changed)
          if (defs[ast.right.value] == nil) then
             error("Undefined macro ".. ast.right.value .. " used in filter.")
          end
-         ast.right = copy_ast_obj(defs[ast.right.value])
+	 defs[ast.right.value].used = true
+         ast.right = copy_ast_obj(defs[ast.right.value].ast)
          changed = true
       end
 
@@ -109,7 +112,8 @@ function expand_macros(ast, defs, changed)
          if (defs[ast.argument.value] == nil) then
             error("Undefined macro ".. ast.argument.value .. " used in filter.")
          end
-         ast.argument = copy_ast_obj(defs[ast.argument.value])
+	 defs[ast.argument.value].used = true
+         ast.argument = copy_ast_obj(defs[ast.argument.value].ast)
          changed = true
       end
       return expand_macros(ast.argument, defs, changed)
@@ -283,11 +287,28 @@ function get_evttypes(name, ast, source)
    return evttypes
 end
 
+function compiler.expand_lists_in(source, list_defs)
+
+   for name, def in pairs(list_defs) do
+      local begin_name_pat = "^("..name..")([%s(),=])"
+      local mid_name_pat = "([%s(),=])("..name..")([%s(),=])"
+      local end_name_pat = "([%s(),=])("..name..")$"
+
+      source, subcount1 = string.gsub(source, begin_name_pat, table.concat(def.items, ", ").."%2")
+      source, subcount2 = string.gsub(source, mid_name_pat, "%1"..table.concat(def.items, ", ").."%3")
+      source, subcount3 = string.gsub(source, end_name_pat, "%1"..table.concat(def.items, ", "))
+
+      if (subcount1 + subcount2 + subcount3) > 0 then
+	 def.used = true
+      end
+   end
+
+   return source
+end
+
 function compiler.compile_macro(line, macro_defs, list_defs)
 
-   for name, items in pairs(list_defs) do
-      line = string.gsub(line, name, table.concat(items, ", "))
-   end
+   line = compiler.expand_lists_in(line, list_defs)
 
    local ast, error_msg = parser.parse_filter(line)
 
@@ -325,14 +346,7 @@ end
 --]]
 function compiler.compile_filter(name, source, macro_defs, list_defs)
 
-   for name, items in pairs(list_defs) do
-      local begin_name_pat = "^("..name..")([%s(),=])"
-      local mid_name_pat = "([%s(),=])("..name..")([%s(),=])"
-      local end_name_pat = "([%s(),=])("..name..")$"
-      source = string.gsub(source, begin_name_pat, table.concat(items, ", ").."%2")
-      source = string.gsub(source, mid_name_pat, "%1"..table.concat(items, ", ").."%3")
-      source = string.gsub(source, end_name_pat, "%1"..table.concat(items, ", "))
-   end
+   source = compiler.expand_lists_in(source, list_defs)
 
    local ast, error_msg = parser.parse_filter(source)
 
