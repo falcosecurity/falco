@@ -520,6 +520,9 @@
 - macro: veritas_writing_config
   condition: (veritas_progs and fd.name startswith /etc/vx)
 
+- macro: nginx_writing_conf
+  condition: (proc.name=nginx and fd.name startswith /etc/nginx)
+
 - macro: exe_running_docker_save
   condition: (container and proc.cmdline startswith "exe /var/lib/docker" and proc.pname in (dockerd, docker))
 
@@ -703,6 +706,7 @@
     and not sosreport_writing_files
     and not semodule_writing_conf
     and not veritas_writing_config
+    and not nginx_writing_conf
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc
