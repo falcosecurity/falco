@@ -536,6 +536,9 @@
 - macro: chef_client_writing_conf
   condition: (proc.pcmdline startswith "chef-client /opt/gitlab" and fd.name startswith /etc/gitlab)
 
+- macro: centrify_writing_krb
+  condition: (proc.name in (adjoin,addns) and fd.name startswith /etc/krb5)
+
 - macro: exe_running_docker_save
   condition: (proc.cmdline startswith "exe /var/lib/docker" and proc.pname in (dockerd, docker))
 
@@ -725,6 +728,7 @@
     and not nginx_writing_conf
     and not nginx_writing_certs
     and not chef_client_writing_conf
+    and not centrify_writing_krb
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc
