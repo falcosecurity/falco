@@ -585,8 +585,8 @@
   condition: (proc.name=curl and fd.directory=/etc/pki/nssdb)
 
 - macro: haproxy_writing_conf
-  condition: ((proc.name in (update-haproxy-,haproxy_reload.) or proc.pname=update-haproxy-)
-               and fd.name=/etc/openvpn/client.map or fd.directory=/etc/haproxy)
+  condition: ((proc.name in (update-haproxy-,haproxy_reload.) or proc.pname in (update-haproxy-,haproxy_reload))
+               and (fd.name=/etc/openvpn/client.map or fd.directory=/etc/haproxy or fd.directory=/etc/haproxy/certs))
 
 - macro: java_writing_conf
   condition: (proc.name=java and fd.name=/etc/.java/.systemPrefs/.system.lock)
