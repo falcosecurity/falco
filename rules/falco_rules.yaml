@@ -1094,6 +1094,7 @@
               container.image startswith cloudnativelabs/kube-router or
               container.image startswith "consul:" or
               container.image startswith mesosphere/mesos-slave or
+              container.image startswith istio/proxy_ or
               container.image startswith datadog/docker-dd-agent)
 
 # Add conditions to this macro (probably in a separate file,
