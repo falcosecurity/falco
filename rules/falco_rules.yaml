@@ -507,8 +507,8 @@
     (proc.name=urlgrabber-ext- and proc.aname[3]=sosreport and
      (fd.name startswith /etc/pkt/nssdb or fd.name startswith /etc/pki/nssdb))
 
-- macro: semodule_writing_conf
-  condition: (proc.name=semodule and fd.name startswith /etc/selinux)
+- macro: selinux_writing_conf
+  condition: (proc.name in (semodule,genhomedircon,sefcontext_comp) and fd.name startswith /etc/selinux)
 
 - list: veritas_binaries
   items: [vxconfigd, sfcache, vxclustadm, vxdctl, vxprint, vxdmpadm, vxdisk, vxdg, vxassist, vxtune]
@@ -709,7 +709,7 @@
     and not symantec_writing_conf
     and not liveupdate_writing_conf
     and not sosreport_writing_files
-    and not semodule_writing_conf
+    and not selinux_writing_conf
     and not veritas_writing_config
     and not nginx_writing_conf
     and not chef_client_writing_conf
