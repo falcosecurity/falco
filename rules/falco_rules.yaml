@@ -550,12 +550,20 @@
 - macro: python_running_get_pip
   condition: (proc.cmdline startswith "python get-pip.py")
 
+- macro: python_running_ms_oms
+  condition: (proc.cmdline startswith "python /var/lib/waagent/")
+
 - macro: gugent_writing_guestagent_log
   condition: (proc.name=gugent and fd.name=GuestAgent.log)
 
 - rule: Write below binary dir
   desc: an attempt to write to any file below a set of binary directories
-  condition: bin_dir and evt.dir = < and open_write and not package_mgmt_procs and not exe_running_docker_save and not python_running_get_pip
+  condition: >
+    bin_dir and evt.dir = < and open_write
+    and not package_mgmt_procs
+    and not exe_running_docker_save
+    and not python_running_get_pip
+    and not python_running_ms_oms
   output: >
     File below a known binary directory opened for writing (user=%user.name
     command=%proc.cmdline file=%fd.name parent=%proc.pname pcmdline=%proc.pcmdline gparent=%proc.aname[2])
