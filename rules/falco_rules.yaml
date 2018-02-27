@@ -1055,6 +1055,8 @@
               container.image startswith openshift3/ose-sti-builder or
               container.image startswith registry.access.redhat.com/openshift3/ose-sti-builder or
               container.image startswith cloudnativelabs/kube-router or
+              container.image startswith "consul:" or
+              container.image startswith mesosphere/mesos-slave or
               container.image startswith datadog/docker-dd-agent)
 
 # Add conditions to this macro (probably in a separate file,
