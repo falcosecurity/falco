@@ -1099,6 +1099,7 @@
               container.image startswith rook/toolbox or
               container.image startswith registry.access.redhat.com/openshift3/logging-fluentd or
               container.image startswith registry.access.redhat.com/openshift3/logging-elasticsearch or
+              container.image startswith registry.access.redhat.com/openshift3/metrics-cassandra or
               container.image startswith openshift3/ose-sti-builder or
               container.image startswith registry.access.redhat.com/openshift3/ose-sti-builder or
               container.image startswith cloudnativelabs/kube-router or
