@@ -414,6 +414,11 @@
     (proc.aname[3] startswith omsagent- or
      proc.aname[3] startswith scx-)
 
+- macro: run_by_google_accounts_daemon
+  condition: >
+    (proc.aname[1] startswith google_accounts or
+     proc.aname[2] startswith google_accounts)
+
 # Chef is similar.
 - macro: run_by_chef
   condition: (proc.aname[2]=chef_command_wr or proc.aname[3]=chef_command_wr or
@@ -1341,7 +1346,8 @@
     not run_by_qualys and
     not run_by_sumologic_securefiles and
     not run_by_yum and
-    not run_by_ms_oms
+    not run_by_ms_oms and
+    not run_by_google_accounts_daemon
   output: >
     User management binary command run outside of container
     (user=%user.name command=%proc.cmdline parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4])
