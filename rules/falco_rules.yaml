@@ -525,6 +525,10 @@
 - macro: nginx_writing_conf
   condition: (proc.name=nginx and fd.name startswith /etc/nginx)
 
+- macro: nginx_writing_certs
+  condition: >
+    (((proc.name=openssl and proc.pname=nginx-launch.sh) or proc.name=nginx-launch.sh) and fd.name startswith /etc/nginx/certs)
+
 - macro: chef_client_writing_conf
   condition: (proc.pcmdline startswith "chef-client /opt/gitlab" and fd.name startswith /etc/gitlab)
 
@@ -712,6 +716,7 @@
     and not selinux_writing_conf
     and not veritas_writing_config
     and not nginx_writing_conf
+    and not nginx_writing_certs
     and not chef_client_writing_conf
 
 - rule: Write below etc
