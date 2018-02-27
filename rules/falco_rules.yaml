@@ -503,7 +503,9 @@
   condition: (proc.cmdline startswith "java LiveUpdate" and fd.name in (/etc/liveupdate.conf, /etc/Product.Catalog.JavaLiveUpdate))
 
 - macro: sosreport_writing_files
-  condition: (proc.name=urlgrabber-ext- and proc.aname[3]=sosreport and fd.name startswith /etc/pkt/nssdb)
+  condition: >
+    (proc.name=urlgrabber-ext- and proc.aname[3]=sosreport and
+     (fd.name startswith /etc/pkt/nssdb or fd.name startswith /etc/pki/nssdb))
 
 - macro: semodule_writing_conf
   condition: (proc.name=semodule and fd.name startswith /etc/selinux)
