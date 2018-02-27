@@ -1340,7 +1340,7 @@
   condition: >
     spawned_process and proc.name in (user_mgmt_binaries) and
     not proc.name in (su, sudo, lastlog, nologin, unix_chkpwd) and not container and
-    not proc.pname in (cron_binaries, systemd, run-parts) and
+    not proc.pname in (cron_binaries, systemd, systemd.postins, udev.postinst, run-parts) and
     not proc.cmdline startswith "passwd -S" and
     not proc.cmdline startswith "useradd -D" and
     not proc.cmdline startswith "systemd --version" and
