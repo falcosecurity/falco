@@ -465,6 +465,9 @@
 - macro: perl_running_updmap
   condition: (proc.cmdline startswith "perl /usr/bin/updmap")
 
+- macro: perl_running_centrifydc
+  condition: (proc.cmdline startswith "perl /usr/share/centrifydc")
+
 - macro: parent_ucf_writing_conf
   condition: (proc.pname=ucf and proc.aname[2]=frontend)
 
@@ -834,6 +837,7 @@
     and not perl_running_plesk
     and not perl_running_updmap
     and not veritas_driver_script
+    and not perl_running_centrifydc
   output: >
     Sensitive file opened for reading by non-trusted program (user=%user.name name=%proc.name
     command=%proc.cmdline file=%fd.name parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4])
