@@ -769,6 +769,7 @@
               or fd.name startswith /root/.pgpass
               or fd.name startswith /root/.theano
               or fd.name startswith /root/.gradle
+              or fd.name startswith /root/.ansible
               or fd.name startswith /root/.crashlytics
               or fd.name startswith /root/.nv)
 
