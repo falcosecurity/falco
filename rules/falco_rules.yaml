@@ -496,6 +496,9 @@
 - macro: ms_scx_writing_conf
   condition: (proc.name in (GetLinuxOS.sh) and fd.name startswith /etc/opt/microsoft/scx)
 
+- macro: azure_scripts_writing_conf
+  condition: (proc.pname startswith "bash /var/lib/waagent/" and fd.name startswith /etc/azure)
+
 - macro: azure_networkwatcher_writing_conf
   condition: (proc.name in (NetworkWatcherA) and fd.name=/etc/init.d/AzureNetworkWatcherAgent)
 
@@ -733,6 +736,7 @@
     and not countly_writing_nginx_conf
     and not ms_oms_writing_conf
     and not ms_scx_writing_conf
+    and not azure_scripts_writing_conf
     and not azure_networkwatcher_writing_conf
     and not couchdb_writing_conf
     and not update_texmf_writing_conf
