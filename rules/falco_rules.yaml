@@ -482,11 +482,11 @@
 - macro: countly_writing_nginx_conf
   condition: (proc.cmdline startswith "nodejs /opt/countly/bin" and fd.name startswith /etc/nginx)
 
-- macro: omiagent_writing_conf
-  condition: (proc.name in (omiagent,PerformInventor) and fd.name startswith /etc/opt/omi/conf/)
-
-- macro: omsagent_writing_conf
-  condition: (proc.name in (omsagent,in_heartbeat_r*) and fd.name startswith /etc/opt/microsoft/omsagent)
+- macro: ms_oms_writing_conf
+  condition: >
+    ((proc.name in (omiagent,omsagent,in_heartbeat_r*,omsadmin.sh,PerformInventor)
+      or proc.pname in (omi.postinst,omsconfig.posti,scx.postinst,omsadmin.sh))
+     and (fd.name startswith /etc/opt/omi or fd.name startswith /etc/opt/microsoft/omsagent))
 
 - macro: ms_scx_writing_conf
   condition: (proc.name in (GetLinuxOS.sh) and fd.name startswith /etc/opt/microsoft/scx)
@@ -718,8 +718,7 @@
     and not openvpn_writing_conf
     and not consul_template_writing_conf
     and not countly_writing_nginx_conf
-    and not omiagent_writing_conf
-    and not omsagent_writing_conf
+    and not ms_oms_writing_conf
     and not ms_scx_writing_conf
     and not azure_networkwatcher_writing_conf
     and not couchdb_writing_conf
