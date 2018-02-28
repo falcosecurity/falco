@@ -652,7 +652,7 @@
   condition: ((proc.name=start-mysql.sh or proc.pname=start-mysql.sh) and fd.name startswith /etc/mysql)
 
 - macro: openvpn_writing_conf
-  condition: (proc.name=openvpn and fd.directory=/etc/openvpn)
+  condition: (proc.name in (openvpn,openvpn-entrypo) and fd.name startswith /etc/openvpn)
 
 - macro: php_handlers_writing_conf
   condition: (proc.name=php_handlers_co and fd.name=/etc/psa/php_versions.json)
