@@ -773,10 +773,10 @@
 - list: known_root_files
   items: [/root/.monit.state, /root/.auth_tokens, /root/.bash_history, /root/.ash_history, /root/.aws/credentials,
           /root/.viminfo.tmp, /root/.lesshst, /root/.bzr.log, /root/.gitconfig.lock, /root/.babel.json, /root/.localstack,
-          /root/.node_repl_history, /root/.mongorc.js, /root/.dbshell]
+          /root/.node_repl_history, /root/.mongorc.js, /root/.dbshell, /root/.augeas/history, /root/.rnd]
 
 - list: known_root_directories
-  items: [/root/.oracle_jre_usage, /root/.ssh]
+  items: [/root/.oracle_jre_usage, /root/.ssh, /root/.subversion, /root/.nami]
 
 - macro: known_root_conditions
   condition: (fd.name startswith /root/orcexec.
@@ -804,6 +804,9 @@
               or fd.name startswith /root/.gradle
               or fd.name startswith /root/.ansible
               or fd.name startswith /root/.crashlytics
+              or fd.name startswith /root/.dbus
+              or fd.name startswith /root/.composer
+              or fd.name startswith /root/.gconf
               or fd.name startswith /root/.nv)
 
 - rule: Write below root
