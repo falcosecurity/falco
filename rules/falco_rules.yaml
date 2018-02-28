@@ -557,6 +557,9 @@
     ((proc.pname=cockpit-kube-la or proc.aname[2]=cockpit-kube-la)
      and fd.name startswith /etc/cockpit)
 
+- macro: ipsec_writing_conf
+  condition: (proc.name=start-ipsec.sh and fd.directory=/etc/ipsec)
+
 - macro: exe_running_docker_save
   condition: (proc.cmdline startswith "exe /var/lib/docker" and proc.pname in (dockerd, docker))
 
@@ -756,6 +759,7 @@
     and not chef_client_writing_conf
     and not centrify_writing_krb
     and not cockpit_writing_conf
+    and not ipsec_writing_conf
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc
