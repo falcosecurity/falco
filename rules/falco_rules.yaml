@@ -431,6 +431,9 @@
 - macro: run_by_centrify
   condition: (proc.aname[2]=centrify or proc.aname[3]=centrify or proc.aname[4]=centrify)
 
+- macro: run_by_puppet
+  condition: (proc.aname[2]=puppet or proc.aname[3]=puppet)
+
 # Also handles running semi-indirectly via scl
 - macro: run_by_foreman
   condition: >
