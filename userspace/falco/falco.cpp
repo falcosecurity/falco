@@ -283,7 +283,7 @@ int falco_init(int argc, char **argv)
 		{"pidfile", required_argument, 0, 'P' },
 		{"unbuffered", no_argument, 0, 'U' },
 		{"version", no_argument, 0, 0 },
-		{"validate", required_argument, 0, 0 },
+		{"validate", required_argument, 0, 'V' },
 		{"writefile", required_argument, 0, 'w' },
 
 		{0, 0, 0, 0}
