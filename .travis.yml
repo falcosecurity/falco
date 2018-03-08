@@ -17,6 +17,7 @@ install:
     - curl -Lo avocado-36.0-tar.gz https://github.com/avocado-framework/avocado/archive/36.0lts.tar.gz
     - tar -zxvf avocado-36.0-tar.gz
     - cd avocado-36.0lts
+    - sed -e 's/libvirt-python>=1.2.9/libvirt-python>=1.2.9,<4.1.0/' < requirements.txt  > /tmp/requirements.txt && mv /tmp/requirements.txt ./requirements.txt
     - sudo -H pip install -r requirements.txt
     - sudo python setup.py install
     - cd ../falco
