@@ -86,6 +86,7 @@ traces: !mux
     detect_level: WARNING
     detect_counts:
       - "Read sensitive file untrusted": 1
+      - "Read sensitive file trusted after startup": 1
 
   read-sensitive-file-untrusted:
     trace_file: traces-positive/read-sensitive-file-untrusted.scap
