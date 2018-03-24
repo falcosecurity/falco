@@ -495,7 +495,7 @@
 - macro: ms_oms_writing_conf
   condition: >
     ((proc.name in (omiagent,omsagent,in_heartbeat_r*,omsadmin.sh,PerformInventor)
-      or proc.pname in (omi.postinst,omsconfig.posti,scx.postinst,omsadmin.sh))
+      or proc.pname in (omi.postinst,omsconfig.posti,scx.postinst,omsadmin.sh,omiagent))
      and (fd.name startswith /etc/opt/omi or fd.name startswith /etc/opt/microsoft/omsagent))
 
 - macro: ms_scx_writing_conf
