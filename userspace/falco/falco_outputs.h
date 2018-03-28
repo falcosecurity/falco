@@ -41,7 +41,9 @@ public:
 		std::map<std::string, std::string> options;
 	};
 
-	void init(bool json_output, uint32_t rate, uint32_t max_burst, bool buffered);
+	void init(bool json_output,
+		  bool json_include_output_property,
+		  uint32_t rate, uint32_t max_burst, bool buffered);
 
 	void add_output(output_config oc);
 

@@ -25,6 +25,7 @@ along with falco.  If not, see <http://www.gnu.org/licenses/>.
 
 sinsp* falco_formats::s_inspector = NULL;
 bool falco_formats::s_json_output = false;
+bool falco_formats::s_json_include_output_property = true;
 sinsp_evt_formatter_cache *falco_formats::s_formatters = NULL;
 
 const static struct luaL_reg ll_falco [] =
@@ -36,10 +37,11 @@ const static struct luaL_reg ll_falco [] =
 	{NULL,NULL}
 };
 
-void falco_formats::init(sinsp* inspector, lua_State *ls, bool json_output)
+void falco_formats::init(sinsp* inspector, lua_State *ls, bool json_output, bool json_include_output_property)
 {
 	s_inspector = inspector;
 	s_json_output = json_output;
+	s_json_include_output_property = json_include_output_property;
 	if(!s_formatters)
 	{
 		s_formatters = new sinsp_evt_formatter_cache(s_inspector);
@@ -155,8 +157,12 @@ int falco_formats::format_event (lua_State *ls)
 		event["time"] = iso8601evttime;
 		event["rule"] = rule;
 		event["priority"] = level;
-		// This is the filled-in output line.
-		event["output"] = line;
+
+		if(s_json_include_output_property)
+		{
+			// This is the filled-in output line.
+			event["output"] = line;
+		}
 
 		full_line = writer.write(event);
 

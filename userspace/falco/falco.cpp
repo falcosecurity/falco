@@ -547,6 +547,7 @@ int falco_init(int argc, char **argv)
 		}
 
 		outputs->init(config.m_json_output,
+			      config.m_json_include_output_property,
 			      config.m_notifications_rate, config.m_notifications_max_burst,
 			      config.m_buffered_outputs);
 
