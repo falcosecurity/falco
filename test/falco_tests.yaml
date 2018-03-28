@@ -655,3 +655,12 @@ trace_files: !mux
       - rules/rule_append_false.yaml
     trace_file: trace_files/cat_write.scap
 
+  json_output_no_output_property:
+    json_output: True
+    json_include_output_property: False
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/rule_append.yaml
+    trace_file: trace_files/cat_write.scap
+    stdout_contains: "^(?!.*Warning An open of /dev/null was seen.*)"
