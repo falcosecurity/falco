@@ -67,6 +67,7 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 	}
 
 	m_json_output = m_config->get_scalar<bool>("json_output", false);
+	m_json_include_output_property = m_config->get_scalar<bool>("json_include_output_property", true);
 
 	falco_outputs::output_config file_output;
 	file_output.name = "file";

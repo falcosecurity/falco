@@ -88,7 +88,8 @@ void falco_engine::load_rules(const string &rules_content, bool verbose, bool al
 	// formats.formatter is used, so we can unconditionally set
 	// json_output to false.
 	bool json_output = false;
-	falco_formats::init(m_inspector, m_ls, json_output);
+	bool json_include_output_property = false;
+	falco_formats::init(m_inspector, m_ls, json_output, json_include_output_property);
 
 	m_rules->load_rules(rules_content, verbose, all_events, m_extra, m_replace_container_info, m_min_priority);
 }
