@@ -847,7 +847,7 @@
 
 - rule: Modify binary dirs
   desc: an attempt to modify any file below a set of binary directories.
-  condition: bin_dir_rename and modify and not package_mgmt_procs
+  condition: bin_dir_rename and modify and not package_mgmt_procs and not exe_running_docker_save
   output: >
     File below known binary directory renamed/removed (user=%user.name command=%proc.cmdline
     operation=%evt.type file=%fd.name %evt.args)
@@ -1179,7 +1179,8 @@
     '"sh -c /bin/hostname -f 2> /dev/null"',
     '"sh -c locale -a"',
     '"sh -c  -t -i"',
-    '"sh -c openssl version"'
+    '"sh -c openssl version"',
+    '"sh -c /bin/sh -c ''date +%%s''"'
     ]
 
 # This list allows for easy additions to the set of commands allowed
