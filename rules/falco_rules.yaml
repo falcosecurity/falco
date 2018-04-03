@@ -148,7 +148,8 @@
 # interpreted by the filter expression.
 - list: rpm_binaries
   items: [dnf, rpm, rpmkey, yum, '"75-system-updat"', rhsmcertd-worke, subscription-ma,
-          repoquery, rpmkeys, rpmq, yum-cron, yum-config-mana, yum-debug-dump]
+          repoquery, rpmkeys, rpmq, yum-cron, yum-config-mana, yum-debug-dump,
+          abrt-action-sav, rpmdb_stat]
 
 - macro: rpm_procs
   condition: proc.name in (rpm_binaries) or proc.name in (salt-minion)
@@ -408,6 +409,16 @@
   condition: ((proc.pname=sh and proc.aname[2]=yum) or
               (proc.aname[2]=sh and proc.aname[3]=yum))
 
+- macro: run_by_ms_oms
+  condition: >
+    (proc.aname[3] startswith omsagent- or
+     proc.aname[3] startswith scx-)
+
+- macro: run_by_google_accounts_daemon
+  condition: >
+    (proc.aname[1] startswith google_accounts or
+     proc.aname[2] startswith google_accounts)
+
 # Chef is similar.
 - macro: run_by_chef
   condition: (proc.aname[2]=chef_command_wr or proc.aname[3]=chef_command_wr or
@@ -419,6 +430,9 @@
 
 - macro: run_by_centrify
   condition: (proc.aname[2]=centrify or proc.aname[3]=centrify or proc.aname[4]=centrify)
+
+- macro: run_by_puppet
+  condition: (proc.aname[2]=puppet or proc.aname[3]=puppet)
 
 # Also handles running semi-indirectly via scl
 - macro: run_by_foreman
@@ -464,20 +478,34 @@
 - macro: perl_running_updmap
   condition: (proc.cmdline startswith "perl /usr/bin/updmap")
 
+- macro: perl_running_centrifydc
+  condition: (proc.cmdline startswith "perl /usr/share/centrifydc")
+
 - macro: parent_ucf_writing_conf
   condition: (proc.pname=ucf and proc.aname[2]=frontend)
 
 - macro: consul_template_writing_conf
-  condition: (proc.name=consul-template and fd.name startswith /etc/haproxy)
+  condition: >
+    ((proc.name=consul-template and fd.name startswith /etc/haproxy) or
+     (proc.name=reload.sh and proc.aname[2]=consul-template and fd.name startswith /etc/ssl))
 
 - macro: countly_writing_nginx_conf
   condition: (proc.cmdline startswith "nodejs /opt/countly/bin" and fd.name startswith /etc/nginx)
 
-- macro: omiagent_writing_conf
-  condition: (proc.name in (omiagent,PerformInventor) and fd.name startswith /etc/opt/omi/conf/)
+- macro: ms_oms_writing_conf
+  condition: >
+    ((proc.name in (omiagent,omsagent,in_heartbeat_r*,omsadmin.sh,PerformInventor)
+      or proc.pname in (omi.postinst,omsconfig.posti,scx.postinst,omsadmin.sh,omiagent))
+     and (fd.name startswith /etc/opt/omi or fd.name startswith /etc/opt/microsoft/omsagent))
 
-- macro: omsagent_writing_conf
-  condition: (proc.name in (omsagent,in_heartbeat_r*) and fd.name startswith /etc/opt/microsoft/omsagent)
+- macro: ms_scx_writing_conf
+  condition: (proc.name in (GetLinuxOS.sh) and fd.name startswith /etc/opt/microsoft/scx)
+
+- macro: azure_scripts_writing_conf
+  condition: (proc.pname startswith "bash /var/lib/waagent/" and fd.name startswith /etc/azure)
+
+- macro: azure_networkwatcher_writing_conf
+  condition: (proc.name in (NetworkWatcherA) and fd.name=/etc/init.d/AzureNetworkWatcherAgent)
 
 - macro: couchdb_writing_conf
   condition: (proc.name=beam.smp and proc.cmdline contains couchdb and fd.name startswith /etc/couchdb)
@@ -497,10 +525,12 @@
   condition: (proc.cmdline startswith "java LiveUpdate" and fd.name in (/etc/liveupdate.conf, /etc/Product.Catalog.JavaLiveUpdate))
 
 - macro: sosreport_writing_files
-  condition: (proc.name=urlgrabber-ext- and proc.aname[3]=sosreport and fd.name startswith /etc/pkt/nssdb)
+  condition: >
+    (proc.name=urlgrabber-ext- and proc.aname[3]=sosreport and
+     (fd.name startswith /etc/pkt/nssdb or fd.name startswith /etc/pki/nssdb))
 
-- macro: semodule_writing_conf
-  condition: (proc.name=semodule and fd.name startswith /etc/selinux)
+- macro: selinux_writing_conf
+  condition: (proc.name in (semodule,genhomedircon,sefcontext_comp) and fd.name startswith /etc/selinux)
 
 - list: veritas_binaries
   items: [vxconfigd, sfcache, vxclustadm, vxdctl, vxprint, vxdmpadm, vxdisk, vxdg, vxassist, vxtune]
@@ -514,15 +544,47 @@
 - macro: veritas_writing_config
   condition: (veritas_progs and fd.name startswith /etc/vx)
 
+- macro: nginx_writing_conf
+  condition: (proc.name=nginx and fd.name startswith /etc/nginx)
+
+- macro: nginx_writing_certs
+  condition: >
+    (((proc.name=openssl and proc.pname=nginx-launch.sh) or proc.name=nginx-launch.sh) and fd.name startswith /etc/nginx/certs)
+
+- macro: chef_client_writing_conf
+  condition: (proc.pcmdline startswith "chef-client /opt/gitlab" and fd.name startswith /etc/gitlab)
+
+- macro: centrify_writing_krb
+  condition: (proc.name in (adjoin,addns) and fd.name startswith /etc/krb5)
+
+- macro: cockpit_writing_conf
+  condition: >
+    ((proc.pname=cockpit-kube-la or proc.aname[2]=cockpit-kube-la)
+     and fd.name startswith /etc/cockpit)
+
+- macro: ipsec_writing_conf
+  condition: (proc.name=start-ipsec.sh and fd.directory=/etc/ipsec)
+
 - macro: exe_running_docker_save
-  condition: (container and proc.cmdline startswith "exe /var/lib/docker" and proc.pname in (dockerd, docker))
+  condition: (proc.cmdline startswith "exe /var/lib/docker" and proc.pname in (dockerd, docker))
+
+- macro: python_running_get_pip
+  condition: (proc.cmdline startswith "python get-pip.py")
+
+- macro: python_running_ms_oms
+  condition: (proc.cmdline startswith "python /var/lib/waagent/")
 
 - macro: gugent_writing_guestagent_log
   condition: (proc.name=gugent and fd.name=GuestAgent.log)
 
 - rule: Write below binary dir
   desc: an attempt to write to any file below a set of binary directories
-  condition: bin_dir and evt.dir = < and open_write and not package_mgmt_procs and not exe_running_docker_save
+  condition: >
+    bin_dir and evt.dir = < and open_write
+    and not package_mgmt_procs
+    and not exe_running_docker_save
+    and not python_running_get_pip
+    and not python_running_ms_oms
   output: >
     File below a known binary directory opened for writing (user=%user.name
     command=%proc.cmdline file=%fd.name parent=%proc.pname pcmdline=%proc.pcmdline gparent=%proc.aname[2])
@@ -573,8 +635,8 @@
   condition: (proc.name=curl and fd.directory=/etc/pki/nssdb)
 
 - macro: haproxy_writing_conf
-  condition: ((proc.name in (update-haproxy-,haproxy_reload.) or proc.pname=update-haproxy-)
-               and fd.name=/etc/openvpn/client.map or fd.directory=/etc/haproxy)
+  condition: ((proc.name in (update-haproxy-,haproxy_reload.) or proc.pname in (update-haproxy-,haproxy_reload,haproxy_reload.))
+               and (fd.name=/etc/openvpn/client.map or fd.name startswith /etc/haproxy))
 
 - macro: java_writing_conf
   condition: (proc.name=java and fd.name=/etc/.java/.systemPrefs/.system.lock)
@@ -593,7 +655,7 @@
   condition: ((proc.name=start-mysql.sh or proc.pname=start-mysql.sh) and fd.name startswith /etc/mysql)
 
 - macro: openvpn_writing_conf
-  condition: (proc.name=openvpn and fd.directory=/etc/openvpn)
+  condition: (proc.name in (openvpn,openvpn-entrypo) and fd.name startswith /etc/openvpn)
 
 - macro: php_handlers_writing_conf
   condition: (proc.name=php_handlers_co and fd.name=/etc/psa/php_versions.json)
@@ -642,8 +704,8 @@
                           gen_resolvconf., update-ca-certi, certbot, runsv,
                           qualys-cloud-ag, locales.postins, nomachine_binaries,
                           adclient, certutil, crlutil, pam-auth-update, parallels_insta,
-                          openshift-launc)
-    and not proc.pname in (sysdigcloud_binaries, mail_config_binaries, hddtemp.postins, sshkit_script_binaries, locales.postins, deb_binaries)
+                          openshift-launc, update-rc.d)
+    and not proc.pname in (sysdigcloud_binaries, mail_config_binaries, hddtemp.postins, sshkit_script_binaries, locales.postins, deb_binaries, dhcp_binaries)
     and not fd.name pmatch (safe_etc_dirs)
     and not fd.name in (/etc/container_environment.sh, /etc/container_environment.json, /etc/motd, /etc/motd.svc)
     and not exe_running_docker_save    
@@ -685,30 +747,39 @@
     and not openvpn_writing_conf
     and not consul_template_writing_conf
     and not countly_writing_nginx_conf
-    and not omiagent_writing_conf
-    and not omsagent_writing_conf
+    and not ms_oms_writing_conf
+    and not ms_scx_writing_conf
+    and not azure_scripts_writing_conf
+    and not azure_networkwatcher_writing_conf
     and not couchdb_writing_conf
     and not update_texmf_writing_conf
     and not slapadd_writing_conf
     and not symantec_writing_conf
     and not liveupdate_writing_conf
     and not sosreport_writing_files
-    and not semodule_writing_conf
+    and not selinux_writing_conf
     and not veritas_writing_config
+    and not nginx_writing_conf
+    and not nginx_writing_certs
+    and not chef_client_writing_conf
+    and not centrify_writing_krb
+    and not cockpit_writing_conf
+    and not ipsec_writing_conf
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc
   condition: write_etc_common
-  output: "File below /etc opened for writing (user=%user.name command=%proc.cmdline parent=%proc.pname pcmdline=%proc.pcmdline file=%fd.name name=%proc.name gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4])"
+  output: "File below /etc opened for writing (user=%user.name command=%proc.cmdline parent=%proc.pname pcmdline=%proc.pcmdline file=%fd.name program=%proc.name gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4])"
   priority: ERROR
   tags: [filesystem]
 
 - list: known_root_files
   items: [/root/.monit.state, /root/.auth_tokens, /root/.bash_history, /root/.ash_history, /root/.aws/credentials,
-          /root/.viminfo.tmp, /root/.lesshst, /root/.bzr.log, /root/.gitconfig.lock, /root/.babel.json, /root/.localstack]
+          /root/.viminfo.tmp, /root/.lesshst, /root/.bzr.log, /root/.gitconfig.lock, /root/.babel.json, /root/.localstack,
+          /root/.node_repl_history, /root/.mongorc.js, /root/.dbshell, /root/.augeas/history, /root/.rnd]
 
 - list: known_root_directories
-  items: [/root/.oracle_jre_usage, /root/.ssh]
+  items: [/root/.oracle_jre_usage, /root/.ssh, /root/.subversion, /root/.nami]
 
 - macro: known_root_conditions
   condition: (fd.name startswith /root/orcexec.
@@ -733,6 +804,13 @@
               or fd.name startswith /root/.gnupg
               or fd.name startswith /root/.pgpass
               or fd.name startswith /root/.theano
+              or fd.name startswith /root/.gradle
+              or fd.name startswith /root/.android
+              or fd.name startswith /root/.ansible
+              or fd.name startswith /root/.crashlytics
+              or fd.name startswith /root/.dbus
+              or fd.name startswith /root/.composer
+              or fd.name startswith /root/.gconf
               or fd.name startswith /root/.nv)
 
 - rule: Write below root
@@ -744,7 +822,7 @@
     and not exe_running_docker_save
     and not gugent_writing_guestagent_log
     and not known_root_conditions
-  output: "File below / or /root opened for writing (user=%user.name command=%proc.cmdline parent=%proc.pname file=%fd.name name=%proc.name)"
+  output: "File below / or /root opened for writing (user=%user.name command=%proc.cmdline parent=%proc.pname file=%fd.name program=%proc.name)"
   priority: ERROR
   tags: [filesystem]
 
@@ -768,7 +846,7 @@
     iptables, ps, lsb_release, check-new-relea, dumpe2fs, accounts-daemon, sshd,
     vsftpd, systemd, mysql_install_d, psql, screen, debconf-show, sa-update,
     pam-auth-update, /usr/sbin/spamd, polkit-agent-he, lsattr, file, sosreport,
-    scxcimservera
+    scxcimservera, adclient, rtvscand, cockpit-session
     ]
 
 # Add conditions to this macro (probably in a separate file,
@@ -804,8 +882,9 @@
     and not perl_running_plesk
     and not perl_running_updmap
     and not veritas_driver_script
+    and not perl_running_centrifydc
   output: >
-    Sensitive file opened for reading by non-trusted program (user=%user.name name=%proc.name
+    Sensitive file opened for reading by non-trusted program (user=%user.name program=%proc.name
     command=%proc.cmdline file=%fd.name parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4])
   priority: WARNING
   tags: [filesystem]
@@ -847,7 +926,7 @@
 
 - rule: Modify binary dirs
   desc: an attempt to modify any file below a set of binary directories.
-  condition: bin_dir_rename and modify and not package_mgmt_procs
+  condition: bin_dir_rename and modify and not package_mgmt_procs and not exe_running_docker_save
   output: >
     File below known binary directory renamed/removed (user=%user.name command=%proc.cmdline
     operation=%evt.type file=%fd.name %evt.args)
@@ -976,6 +1055,9 @@
     or parent_java_running_datastax
     or possibly_node_in_container)
 
+- list: mesos_shell_binaries
+  items: [mesos-docker-ex, mesos-slave, mesos-health-ch]
+
 # Note that runsv is both in protected_shell_spawner and the
 # exclusions by pname. This means that runsv can itself spawn shells
 # (the ./run and ./finish scripts), but the processes runsv can not
@@ -989,6 +1071,7 @@
     and protected_shell_spawner
     and not proc.pname in (shell_binaries, gitlab_binaries, cron_binaries, user_known_shell_spawn_binaries,
                            needrestart_binaries,
+                           mesos_shell_binaries,
                            erl_child_setup, exechealthz,
                            PM2, PassengerWatchd, c_rehash, svlogd, logrotate, hhvm, serf,
                            lb-controller, nvidia-installe, runsv, statsite, erlexec)
@@ -1029,7 +1112,14 @@
               container.image startswith rook/toolbox or
               container.image startswith registry.access.redhat.com/openshift3/logging-fluentd or
               container.image startswith registry.access.redhat.com/openshift3/logging-elasticsearch or
-              container.image startswith cloudnativelabs/kube-router)
+              container.image startswith registry.access.redhat.com/openshift3/metrics-cassandra or
+              container.image startswith openshift3/ose-sti-builder or
+              container.image startswith registry.access.redhat.com/openshift3/ose-sti-builder or
+              container.image startswith cloudnativelabs/kube-router or
+              container.image startswith "consul:" or
+              container.image startswith mesosphere/mesos-slave or
+              container.image startswith istio/proxy_ or
+              container.image startswith datadog/docker-dd-agent)
 
 # Add conditions to this macro (probably in a separate file,
 # overwriting this macro) to specify additional containers that are
@@ -1179,7 +1269,9 @@
     '"sh -c /bin/hostname -f 2> /dev/null"',
     '"sh -c locale -a"',
     '"sh -c  -t -i"',
-    '"sh -c openssl version"'
+    '"sh -c openssl version"',
+    '"bash -c id -Gn kafadmin"',
+    '"sh -c /bin/sh -c ''date +%%s''"'
     ]
 
 # This list allows for easy additions to the set of commands allowed
@@ -1272,13 +1364,15 @@
   condition: >
     spawned_process and proc.name in (user_mgmt_binaries) and
     not proc.name in (su, sudo, lastlog, nologin, unix_chkpwd) and not container and
-    not proc.pname in (cron_binaries, systemd, run-parts) and
+    not proc.pname in (cron_binaries, systemd, systemd.postins, udev.postinst, run-parts) and
     not proc.cmdline startswith "passwd -S" and
     not proc.cmdline startswith "useradd -D" and
     not proc.cmdline startswith "systemd --version" and
     not run_by_qualys and
     not run_by_sumologic_securefiles and
-    not run_by_yum
+    not run_by_yum and
+    not run_by_ms_oms and
+    not run_by_google_accounts_daemon
   output: >
     User management binary command run outside of container
     (user=%user.name command=%proc.cmdline parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4])
