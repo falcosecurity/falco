@@ -664,3 +664,10 @@ trace_files: !mux
       - rules/rule_append.yaml
     trace_file: trace_files/cat_write.scap
     stdout_contains: "^(?!.*Warning An open of /dev/null was seen.*)"
+
+  in_operator_netmasks:
+    detect: True
+    detect_level: INFO
+    rules_file:
+      - rules/detect_connect_using_in.yaml
+    trace_file: trace_files/connect_localhost.scap
