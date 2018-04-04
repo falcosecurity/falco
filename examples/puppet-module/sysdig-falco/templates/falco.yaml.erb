@@ -1,3 +1,7 @@
+####
+# THIS FILE MANAGED BY PUPPET. DO NOT MODIFY
+####
+
 # File(s) containing Falco rules, loaded at startup.
 #
 # falco_rules.yaml ships with the falco package and is overridden with
@@ -8,37 +12,33 @@
 # The files will be read in the order presented here, so make sure if
 # you have overrides they appear in later files.
 rules_file:
- - /etc/falco/falco_rules.yaml
- - /etc/falco/falco_rules.local.yaml
+<% Array(@rules_file).each do |file| -%>
+ - <%= file %>
+<% end -%>
 
 # Whether to output events in json or text
-json_output: false
-
-# When using json output, whether or not to include the "output" property
-# itself (e.g. "File below a known binary directory opened for writing
-# (user=root ....") in the json output.
-json_include_output_property: true
+json_output: <%= @json_output %>
 
 # Send information logs to stderr and/or syslog Note these are *not* security
 # notification logs! These are just Falco lifecycle (and possibly error) logs.
-log_stderr: true
-log_syslog: true
+log_stderr: <%= @log_stderr %>
+log_syslog: <%= @log_syslog %>
 
 # Minimum log level to include in logs. Note: these levels are
 # separate from the priority field of rules. This refers only to the
 # log level of falco's internal logging. Can be one of "emergency",
 # "alert", "critical", "error", "warning", "notice", "info", "debug".
-log_level: info
+log_level: <%= @log_level %>
 
 # Minimum rule priority level to load and run. All rules having a
 # priority more severe than this level will be loaded/run.  Can be one
 # of "emergency", "alert", "critical", "error", "warning", "notice",
 # "info", "debug".
-priority: debug
+priority: <%= @priority %>
 
 # Whether or not output to any of the output channels below is
 # buffered. Defaults to true
-buffered_outputs: true
+buffered_outputs: <%= @buffered_outputs %>
 
 # A throttling mechanism implemented as a token bucket limits the
 # rate of falco notifications. This throttling is controlled by the following configuration
@@ -53,26 +53,26 @@ buffered_outputs: true
 # no activity.
 
 outputs:
-  rate: 1
-  max_burst: 1000
+  rate: <%= @outputs_rate %>
+  max_burst: <%= @outputs_max_burst %>
 
 # Where security notifications should go.
 # Multiple outputs can be enabled.
-
+<% unless @syslog_output.nil? -%>
 syslog_output:
-  enabled: true
+  enabled: <%= @syslog_output['enabled'] %>
+<% end -%>
 
 # If keep_alive is set to true, the file will be opened once and
 # continuously written to, with each output message on its own
 # line. If keep_alive is set to false, the file will be re-opened
 # for each output message.
+<% unless @file_output.nil? -%>
 file_output:
-  enabled: false
-  keep_alive: false
-  filename: ./events.txt
-
-stdout_output:
-  enabled: true
+  enabled: <%= @file_output['enabled'] %>
+  keep_alive: <%= @file_output['keep_alive'] %>
+  filename: <%= @file_output['filename'] %>
+<% end -%>
 
 # Possible additional things you might want to do with program output:
 #   - send to a slack webhook:
@@ -87,7 +87,10 @@ stdout_output:
 # line. If keep_alive is set to false, the program will be re-spawned
 # for each output message.
 
+<% unless @program_output.nil? -%>
 program_output:
-  enabled: false
-  keep_alive: false
-  program: mail -s "Falco Notification" someone@example.com
+  enabled: <%= @program_output['enabled'] %>
+  keep_alive: <%= @program_output['keep_alive'] %>
+  program: <%= @program_output['program'] %>
+<% end -%>
+
