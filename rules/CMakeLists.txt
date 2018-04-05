@@ -31,7 +31,9 @@ install(FILES falco_rules.local.yaml
 	RENAME "${FALCO_LOCAL_RULES_DEST_FILENAME}")
 
 install(FILES application_rules.yaml
-	DESTINATION "${FALCO_ETC_DIR}"
+	DESTINATION "/etc/falco/rules.available"
 	RENAME "${FALCO_APP_RULES_DEST_FILENAME}")
+
+install(DIRECTORY DESTINATION "/etc/falco/rules.d")
 endif()
 
