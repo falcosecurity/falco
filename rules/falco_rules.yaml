@@ -932,7 +932,12 @@
   condition: (proc.aname[2]=redis-server and (proc.cmdline contains "redis-server.post-up.d" or proc.cmdline contains "redis-server.pre-up.d"))
 
 - macro: rabbitmq_running_scripts
-  condition: (proc.pname=beam.smp and (proc.cmdline startswith "sh -c exec ps" or proc.cmdline startswith "sh -c exec inet_gethost"))
+  condition: > 
+    (proc.pname=beam.smp and 
+    (proc.cmdline startswith "sh -c exec ps" or 
+     proc.cmdline startswith "sh -c exec inet_gethost" or
+     proc.cmdline= "sh -s unix:cmd" or
+     proc.cmdline= "sh -c exec /bin/sh -s unix:cmd 2>&1")) 
 
 - macro: rabbitmqctl_running_scripts
   condition: (proc.aname[2]=rabbitmqctl and proc.cmdline startswith "sh -c ")
