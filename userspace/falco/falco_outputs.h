@@ -53,6 +53,8 @@ public:
 	//
 	void handle_event(sinsp_evt *ev, std::string &rule, falco_common::priority_type priority, std::string &format);
 
+	void reopen_outputs();
+
 private:
 	bool m_initialized;
 
@@ -64,5 +66,6 @@ private:
 	std::string m_lua_add_output = "add_output";
 	std::string m_lua_output_event = "output_event";
 	std::string m_lua_output_cleanup = "output_cleanup";
+	std::string m_lua_output_reopen = "output_reopen";
 	std::string m_lua_main_filename = "output.lua";
 };

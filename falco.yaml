@@ -66,6 +66,10 @@ syslog_output:
 # continuously written to, with each output message on its own
 # line. If keep_alive is set to false, the file will be re-opened
 # for each output message.
+#
+# Also, the file will be closed and reopened if falco is signaled with
+# SIGUSR1.
+
 file_output:
   enabled: false
   keep_alive: false
@@ -86,7 +90,9 @@ stdout_output:
 # continuously written to, with each output message on its own
 # line. If keep_alive is set to false, the program will be re-spawned
 # for each output message.
-
+#
+# Also, the program will be closed and reopened if falco is signaled with
+# SIGUSR1.
 program_output:
   enabled: false
   keep_alive: false
