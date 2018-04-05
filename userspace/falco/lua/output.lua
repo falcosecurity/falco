@@ -183,9 +183,11 @@ function add_output(output_name, buffered, options)
      mod[output_name.."_validate"](options)
    end
 
-   if options ~= nil then
-      options.buffered = buffered
+   if options == nil then
+      options = {}
    end
+
+   options.buffered = buffered
 
    table.insert(outputs, {output = mod[output_name],
 			  cleanup = mod[output_name.."_cleanup"],
