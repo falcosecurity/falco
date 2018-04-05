@@ -132,7 +132,8 @@ end
 -- object. The by_name index is used for things like describing rules,
 -- and the by_idx index is used to map the relational node index back
 -- to a rule.
-local state = {macros={}, lists={}, filter_ast=nil, rules_by_name={}, macros_by_name={}, lists_by_name={},
+local state = {macros={}, lists={}, filter_ast=nil, rules_by_name={},
+	       skipped_rules_by_name={}, macros_by_name={}, lists_by_name={},
 	       n_rules=0, rules_by_idx={}, ordered_rule_names={}, ordered_macro_names={}, ordered_list_names={}}
 
 local function reset_rules(rules_mgr)
@@ -291,10 +292,12 @@ function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replac
 	    end
 
 	    if state.rules_by_name[v['rule']] == nil then
-	       error ("Rule " ..v['rule'].. " has 'append' key but no rule by that name already exists")
+	       if state.skipped_rules_by_name[v['rule']] == nil then
+		  error ("Rule " ..v['rule'].. " has 'append' key but no rule by that name already exists")
+	       end
+	    else
+	       state.rules_by_name[v['rule']]['condition'] = state.rules_by_name[v['rule']]['condition'] .. " " .. v['condition']
 	    end
-
-	    state.rules_by_name[v['rule']]['condition'] = state.rules_by_name[v['rule']]['condition'] .. " " .. v['condition']
 
 	 else
 
@@ -320,6 +323,8 @@ function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replac
 	       v['output'] = compiler.trim(v['output'])
 
 	       state.rules_by_name[v['rule']] = v
+	    else
+	       state.skipped_rules_by_name[v['rule']] = v
 	    end
 	 end
       else
