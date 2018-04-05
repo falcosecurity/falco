@@ -642,6 +642,14 @@ trace_files: !mux
       - rules/rule_append_failure.yaml
     trace_file: trace_files/cat_write.scap
 
+  rule_append_skipped:
+    detect: False
+    priority: ERROR
+    rules_file:
+      - rules/single_rule.yaml
+      - rules/append_single_rule.yaml
+    trace_file: trace_files/cat_write.scap
+
   rule_append:
     detect: True
     detect_level: WARNING
