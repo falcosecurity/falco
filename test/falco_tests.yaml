@@ -129,6 +129,16 @@ trace_files: !mux
       - rules/double_rule.yaml
     trace_file: trace_files/cat_write.scap
 
+  rules_directory:
+    detect: True
+    detect_level:
+      - WARNING
+      - INFO
+      - ERROR
+    rules_file:
+      - rules/rules_dir
+    trace_file: trace_files/cat_write.scap
+
   multiple_rules_suppress_info:
     detect: True
     detect_level:
