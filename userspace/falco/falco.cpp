@@ -39,12 +39,19 @@ along with falco.  If not, see <http://www.gnu.org/licenses/>.
 #include "statsfilewriter.h"
 
 bool g_terminate = false;
+bool g_reopen_outputs = false;
+
 //
 // Helper functions
 //
 static void signal_callback(int signal)
 {
 	g_terminate = true;
+}
+
+static void reopen_outputs(int signal)
+{
+	g_reopen_outputs = true;
 }
 
 //
@@ -170,6 +177,12 @@ uint64_t do_inspect(falco_engine *engine,
 		res = inspector->next(&ev);
 
 		writer.handle();
+
+		if(g_reopen_outputs)
+		{
+			outputs->reopen_outputs();
+			g_reopen_outputs = false;
+		}
 
 		if (g_terminate)
 		{
@@ -585,6 +598,13 @@ int falco_init(int argc, char **argv)
 		if(signal(SIGTERM, signal_callback) == SIG_ERR)
 		{
 			fprintf(stderr, "An error occurred while setting SIGTERM signal handler.\n");
+			result = EXIT_FAILURE;
+			goto exit;
+		}
+
+		if(signal(SIGUSR1, reopen_outputs) == SIG_ERR)
+		{
+			fprintf(stderr, "An error occurred while setting SIGUSR1 signal handler.\n");
 			result = EXIT_FAILURE;
 			goto exit;
 		}

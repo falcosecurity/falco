@@ -20,8 +20,8 @@ local mod = {}
 
 local outputs = {}
 
-function mod.stdout(priority, priority_num, buffered, msg)
-   if buffered == 0 then
+function mod.stdout(priority, priority_num, msg, options)
+   if options.buffered == 0 then
       io.stdout:setvbuf 'no'
    end
    print (msg)
@@ -29,6 +29,10 @@ end
 
 function mod.stdout_cleanup()
    io.stdout:flush()
+end
+
+-- Note: not actually closing/reopening stdout
+function mod.stdout_reopen(options)
 end
 
 function mod.file_validate(options)
@@ -44,14 +48,18 @@ function mod.file_validate(options)
 
 end
 
-function mod.file(priority, priority_num, buffered, msg, options)
-   if options.keep_alive == "true" then
-      if ffile == nil then
-          ffile = io.open(options.filename, "a+")
-          if buffered == 0 then
-              ffile:setvbuf 'no'
-          end
+function mod.file_open(options)
+   if ffile == nil then
+      ffile = io.open(options.filename, "a+")
+      if options.buffered == 0 then
+	 ffile:setvbuf 'no'
       end
+   end
+end
+
+function mod.file(priority, priority_num, msg, options)
+   if options.keep_alive == "true" then
+      mod.file_open(options)
    else
       ffile = io.open(options.filename, "a+")
    end
@@ -73,26 +81,40 @@ function mod.file_cleanup()
    end
 end
 
-function mod.syslog(priority, priority_num, buffered, msg, options)
+function mod.file_reopen(options)
+   if options.keep_alive == "true" then
+      mod.file_cleanup()
+      mod.file_open(options)
+   end
+end
+
+function mod.syslog(priority, priority_num, msg, options)
    falco.syslog(priority_num, msg)
 end
 
 function mod.syslog_cleanup()
 end
 
-function mod.program(priority, priority_num, buffered, msg, options)
+function mod.syslog_reopen()
+end
+
+function mod.program_open(options)
+   if pfile == nil then
+      pfile = io.popen(options.program, "w")
+      if options.buffered == 0 then
+	 pfile:setvbuf 'no'
+      end
+   end
+end
+
+function mod.program(priority, priority_num, msg, options)
    -- XXX Ideally we'd check that the program ran
    -- successfully. However, the luajit we're using returns true even
    -- when the shell can't run the program.
 
    -- Note: options are all strings
    if options.keep_alive == "true" then
-      if pfile == nil then
-          pfile = io.popen(options.program, "w")
-          if buffered == 0 then
-              pfile:setvbuf 'no'
-          end
-      end
+      mod.program_open(options)
    else
       pfile = io.popen(options.program, "w")
    end
@@ -114,6 +136,13 @@ function mod.program_cleanup()
    end
 end
 
+function mod.program_reopen(options)
+   if options.keep_alive == "true" then
+      mod.program_cleanup()
+      mod.program_open(options)
+   end
+end
+
 function output_event(event, rule, priority, priority_num, format)
    -- If format starts with a *, remove it, as we're adding our own
    -- prefix here.
@@ -126,7 +155,7 @@ function output_event(event, rule, priority, priority_num, format)
    msg = formats.format_event(event, rule, priority, format)
 
    for index,o in ipairs(outputs) do
-      o.output(priority, priority_num, o.buffered, msg, o.config)
+      o.output(priority, priority_num, msg, o.options)
    end
 end
 
@@ -137,20 +166,33 @@ function output_cleanup()
    end
 end
 
-function add_output(output_name, buffered, config)
+function output_reopen()
+   for index,o in ipairs(outputs) do
+      o.reopen(o.options)
+   end
+end
+
+function add_output(output_name, buffered, options)
    if not (type(mod[output_name]) == 'function') then
       error("rule_loader.add_output(): invalid output_name: "..output_name)
    end
 
    -- outputs can optionally define a validation function so that we don't
-   -- find out at runtime (when an event finally matches a rule!) that the config is invalid
+   -- find out at runtime (when an event finally matches a rule!) that the options are invalid
    if (type(mod[output_name.."_validate"]) == 'function') then
-     mod[output_name.."_validate"](config)
+     mod[output_name.."_validate"](options)
    end
+
+   if options == nil then
+      options = {}
+   end
+
+   options.buffered = buffered
 
    table.insert(outputs, {output = mod[output_name],
 			  cleanup = mod[output_name.."_cleanup"],
-			  buffered=buffered, config=config})
+			  reopen = mod[output_name.."_reopen"],
+			  options=options})
 end
 
 return mod
