@@ -46,30 +46,30 @@ end
 
 function mod.file(priority, priority_num, buffered, msg, options)
    if options.keep_alive == "true" then
-      if file == nil then
-	 file = io.open(options.filename, "a+")
-	 if buffered == 0 then
-	    file:setvbuf 'no'
-	 end
+      if ffile == nil then
+          ffile = io.open(options.filename, "a+")
+          if buffered == 0 then
+              ffile:setvbuf 'no'
+          end
       end
    else
-      file = io.open(options.filename, "a+")
+      ffile = io.open(options.filename, "a+")
    end
 
-   file:write(msg, "\n")
+   ffile:write(msg, "\n")
 
    if options.keep_alive == nil or
-      options.keep_alive ~= "true" then
-	 file:close()
-	 file = nil
+          options.keep_alive ~= "true" then
+      ffile:close()
+      ffile = nil
    end
 end
 
 function mod.file_cleanup()
-   if file ~= nil then
-      file:flush()
-      file:close()
-      file = nil
+   if ffile ~= nil then
+      ffile:flush()
+      ffile:close()
+      ffile = nil
    end
 end
 
@@ -87,30 +87,30 @@ function mod.program(priority, priority_num, buffered, msg, options)
 
    -- Note: options are all strings
    if options.keep_alive == "true" then
-      if file == nil then
-	 file = io.popen(options.program, "w")
-	 if buffered == 0 then
-	    file:setvbuf 'no'
-	 end
+      if pfile == nil then
+          pfile = io.popen(options.program, "w")
+          if buffered == 0 then
+              pfile:setvbuf 'no'
+          end
       end
    else
-      file = io.popen(options.program, "w")
+      pfile = io.popen(options.program, "w")
    end
 
-   file:write(msg, "\n")
+   pfile:write(msg, "\n")
 
    if options.keep_alive == nil or
-      options.keep_alive ~= "true" then
-	 file:close()
-	 file = nil
+          options.keep_alive ~= "true" then
+      pfile:close()
+      pfile = nil
    end
 end
 
 function mod.program_cleanup()
-   if file ~= nil then
-      file:flush()
-      file:close()
-      file = nil
+   if pfile ~= nil then
+      pfile:flush()
+      pfile:close()
+      pfile = nil
    end
 end
 
