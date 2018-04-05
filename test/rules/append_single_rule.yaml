@@ -1,0 +1,3 @@
+- rule: open_from_cat
+  append: true
+  condition: and fd.name=/tmp
