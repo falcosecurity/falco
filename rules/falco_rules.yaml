@@ -378,6 +378,10 @@
        proc.pcmdline startswith "node /root/.config/yarn" or
        proc.pcmdline startswith "node /opt/yarn/bin/yarn.js"))
 
+
+- macro: httpd_writing_ssl_conf
+  condition: (proc.pname=run-httpd and proc.cmdline startswith "sed -ri"  and  fd.name startswith /etc/httpd/conf.d/)
+
 - macro: parent_Xvfb_running_xkbcomp
   condition: (proc.pname=Xvfb and proc.cmdline startswith 'sh -c "/usr/bin/xkbcomp"')
 
@@ -793,6 +797,7 @@
     and not centrify_writing_krb
     and not cockpit_writing_conf
     and not ipsec_writing_conf
+    and not httpd_writing_ssl_conf
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc
