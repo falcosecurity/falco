@@ -380,7 +380,7 @@
 
 
 - macro: httpd_writing_ssl_conf
-  condition: (proc.pname=run-httpd and proc.cmdline startswith "sed -ri"  and  (fd.name startswith /etc/httpd/conf.d/ or 
+  condition: (proc.pname=run-httpd and (proc.cmdline startswith "sed -ri" or proc.cmdline startswith "sed -i")  and  (fd.name startswith /etc/httpd/conf.d/ or 
               fd.name startswith /etc/httpd/conf))
 
 - macro: parent_Xvfb_running_xkbcomp
