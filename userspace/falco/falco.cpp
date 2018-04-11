@@ -574,6 +574,7 @@ int falco_init(int argc, char **argv)
 		if(!all_events)
 		{
 			inspector->set_drop_event_flags(EF_DROP_FALCO);
+			inspector->start_dropping_mode(1);
 		}
 
 		if (describe_all_rules)
