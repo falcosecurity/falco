@@ -689,3 +689,13 @@ trace_files: !mux
     rules_file:
       - rules/detect_connect_using_in.yaml
     trace_file: trace_files/connect_localhost.scap
+
+  syscalls:
+    detect: True
+    detect_level: INFO
+    rules_file:
+      - rules/syscalls.yaml
+    detect_counts:
+      - detect_madvise: 2
+      - detect_open: 2
+    trace_file: trace_files/syscall.scap
