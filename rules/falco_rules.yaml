@@ -23,7 +23,7 @@
   condition: (proc.name!="<NA>")
 
 - macro: rename
-  condition: evt.type = rename
+  condition: evt.type in (rename, renameat)
 - macro: mkdir
   condition: evt.type = mkdir
 - macro: remove
