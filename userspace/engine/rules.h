@@ -45,7 +45,7 @@ class falco_rules
 
  private:
 	void clear_filters();
-	void add_filter(string &rule, std::set<uint32_t> &evttypes, std::set<string> &tags);
+	void add_filter(string &rule, std::set<uint32_t> &evttypes, std::set<uint32_t> &syscalls, std::set<string> &tags);
 	void enable_rule(string &rule, bool enabled);
 
 	lua_parser* m_lua_parser;
@@ -57,5 +57,6 @@ class falco_rules
 	string m_lua_ignored_syscalls = "ignored_syscalls";
 	string m_lua_ignored_events = "ignored_events";
 	string m_lua_events = "events";
+	string m_lua_syscalls = "syscalls";
 	string m_lua_describe_rule = "describe_rule";
 };

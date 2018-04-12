@@ -92,6 +92,12 @@ public:
 	void evttypes_for_ruleset(std::vector<bool> &evttypes, const std::string &ruleset);
 
 	//
+	// Given a ruleset, fill in a bitset containing the syscalls
+	// for which this ruleset can run.
+	//
+	void syscalls_for_ruleset(std::vector<bool> &syscalls, const std::string &ruleset);
+
+	//
 	// Given an event, check it against the set of rules in the
 	// engine and if a matching rule is found, return details on
 	// the rule that matched. If no rule matched, returns NULL.
@@ -122,10 +128,11 @@ public:
 
 	//
 	// Add a filter, which is related to the specified set of
-	// event types, to the engine.
+	// event types/syscalls, to the engine.
 	//
 	void add_evttype_filter(std::string &rule,
 				std::set<uint32_t> &evttypes,
+				std::set<uint32_t> &syscalls,
 				std::set<std::string> &tags,
 				sinsp_filter* filter);
 
