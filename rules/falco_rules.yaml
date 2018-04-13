@@ -23,7 +23,7 @@
   condition: (proc.name!="<NA>")
 
 - macro: rename
-  condition: evt.type = rename
+  condition: evt.type in (rename, renameat)
 - macro: mkdir
   condition: evt.type = mkdir
 - macro: remove
@@ -38,6 +38,13 @@
 # File categories
 - macro: bin_dir
   condition: fd.directory in (/bin, /sbin, /usr/bin, /usr/sbin)
+
+- macro: bin_dir_resolved
+  condition: >
+    (evt.abspath startswith /bin/ or
+     evt.abspath startswith /sbin/ or
+     evt.abspath startswith /usr/bin/ or
+     evt.abspath startswith /usr/sbin/)
 
 - macro: bin_dir_mkdir
   condition: >
@@ -926,7 +933,7 @@
 
 - rule: Modify binary dirs
   desc: an attempt to modify any file below a set of binary directories.
-  condition: bin_dir_rename and modify and not package_mgmt_procs and not exe_running_docker_save
+  condition: (bin_dir_rename or bin_dir_resolved) and modify and not package_mgmt_procs and not exe_running_docker_save
   output: >
     File below known binary directory renamed/removed (user=%user.name command=%proc.cmdline
     operation=%evt.type file=%fd.name %evt.args)
