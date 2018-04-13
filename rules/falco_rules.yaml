@@ -245,15 +245,22 @@
 # Network
 - macro: inbound
   condition: >
-    ((evt.type in (accept,listen) and evt.dir=<) or
-     (evt.type in (recvfrom,recvmsg) and fd.l4proto = udp and fd.name_changed=true) and
-      (fd.typechar = 4 or fd.typechar = 6))
+    (((evt.type in (accept,listen) and evt.dir=<) or
+      (evt.type in (recvfrom,recvmsg) and evt.dir=< and
+       fd.l4proto != tcp and fd.connected=false and fd.name_changed=true)) and
+     (fd.typechar = 4 or fd.typechar = 6) and
+     (fd.ip != "0.0.0.0" and fd.net != "127.0.0.0/8") and
+     (evt.rawres >= 0 or evt.res = EINPROGRESS))
 
 - macro: outbound
   condition: >
-    ((evt.type = connect and evt.dir=<) or
-     (evt.type in (sendto,sendmsg) and fd.l4proto = udp and fd.name_changed=true) and
-     (fd.typechar = 4 or fd.typechar = 6))
+    (((evt.type = connect and evt.dir=<) or
+      (evt.type in (sendto,sendmsg) and evt.dir=< and
+       fd.l4proto != tcp and fd.connected=false and fd.name_changed=true)) and
+     (fd.typechar = 4 or fd.typechar = 6) and
+     (fd.ip != "0.0.0.0" and fd.net != "127.0.0.0/8") and
+     (evt.rawres >= 0 or evt.res = EINPROGRESS))
+
 
 - macro: ssh_port
   condition: fd.sport=22
@@ -719,7 +726,7 @@
     and not proc.pname in (sysdigcloud_binaries, mail_config_binaries, hddtemp.postins, sshkit_script_binaries, locales.postins, deb_binaries, dhcp_binaries)
     and not fd.name pmatch (safe_etc_dirs)
     and not fd.name in (/etc/container_environment.sh, /etc/container_environment.json, /etc/motd, /etc/motd.svc)
-    and not exe_running_docker_save    
+    and not exe_running_docker_save
     and not ansible_running_python
     and not python_running_denyhosts
     and not fluentd_writing_conf_files
