@@ -296,22 +296,20 @@ void system_user_interactive() {
 }
 
 void network_activity() {
-	printf("Opening a listening socket on port 8192...\n");
+	printf("Connecting a udp socket to 10.2.3.4:8192...\n");
 	int rc;
 	int sock = socket(PF_INET, SOCK_DGRAM, 0);
 	struct sockaddr_in localhost;
 
 	localhost.sin_family = AF_INET;
 	localhost.sin_port = htons(8192);
-	inet_aton("127.0.0.1", &(localhost.sin_addr));
+	inet_aton("10.2.3.4", &(localhost.sin_addr));
 
-	if((rc = bind(sock, (struct sockaddr *) &localhost, sizeof(localhost))) != 0)
+	if((rc = connect(sock, (struct sockaddr *) &localhost, sizeof(localhost))) != 0)
 	{
 		fprintf(stderr, "Could not bind listening socket to localhost: %s\n", strerror(errno));
 		return;
 	}
-
-	listen(sock, 1);
 
 	close(sock);
 }
