@@ -261,6 +261,16 @@
      (fd.ip != "0.0.0.0" and fd.net != "127.0.0.0/8") and
      (evt.rawres >= 0 or evt.res = EINPROGRESS))
 
+# Very similar to inbound/outbound, but combines the tests together
+# for efficiency.
+- macro: inbound_outbound
+  condition: >
+    (((evt.type in (accept,listen,connect) and evt.dir=<) or
+      (evt.type in (recvfrom,recvmsg,sendto,sendmsg) and evt.dir=< and
+       fd.l4proto != tcp and fd.connected=false and fd.name_changed=true)) and
+     (fd.typechar = 4 or fd.typechar = 6) and
+     (fd.ip != "0.0.0.0" and fd.net != "127.0.0.0/8") and
+     (evt.rawres >= 0 or evt.res = EINPROGRESS))
 
 - macro: ssh_port
   condition: fd.sport=22
@@ -280,7 +290,7 @@
 
 - rule: Disallowed SSH Connection
   desc: Detect any new ssh connection to a host other than those in an allowed group of hosts
-  condition: (outbound or inbound) and ssh_port and not allowed_ssh_hosts
+  condition: (inbound_outbound) and ssh_port and not allowed_ssh_hosts
   output: Disallowed SSH Connection (command=%proc.cmdline connection=%fd.name user=%user.name)
   priority: NOTICE
   tags: [network]
@@ -1316,7 +1326,7 @@
   desc: any network activity performed by system binaries that are not expected to send or receive any network traffic
   condition: >
     (fd.sockfamily = ip and system_procs)
-    and (inbound or outbound)
+    and (inbound_outbound)
     and not proc.name in (systemd, hostid)
     and not login_doing_dns_lookup
   output: >
@@ -1342,7 +1352,7 @@
 
 - rule: Unexpected UDP Traffic
   desc: UDP traffic not on port 53 (DNS) or commonly used VPN Ports
-  condition: (inbound or outbound) and fd.l4proto=udp and not expected_udp_traffic
+  condition: (inbound_outbound) and fd.l4proto=udp and not expected_udp_traffic
   output: >
     Unexpected UDP Traffic Seen
     (user=%user.name command=%proc.cmdline connection=%fd.name proto=%fd.l4proto)
@@ -1499,7 +1509,7 @@
 
 - rule: Unexpected K8s NodePort Connection
   desc: Detect attempts to use K8s NodePorts from a container
-  condition: (outbound or inbound) and fd.sport >= 30000 and fd.sport <= 32767 and container and not nodeport_containers
+  condition: (inbound_outbound) and fd.sport >= 30000 and fd.sport <= 32767 and container and not nodeport_containers
   output: Unexpected K8s NodePort Connection (command=%proc.cmdline connection=%fd.name)
   priority: NOTICE
   tags: [network, k8s, container]
