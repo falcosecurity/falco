@@ -1344,14 +1344,29 @@
 - list: statsd_ports
   items: [8125]
 
+- list: mysql_ports
+  items: [3306]
+
+- list: ntp_ports
+  items: [123]
+
+# 0 is included in the list because some apps connect to an address
+# only to test connectivity.
+#
+# mysql_ports is included becuase some versions of the mysql client
+# will attempt a connect using udp + port 3306 before connecting via
+# tcp + port 3306.
+#
+# 80 is included for the same reason as mysql_ports--some apps do a
+# connect using udp before doing a real connect using tcp.
 - list: expected_udp_ports
-  items: [53, openvpn_udp_ports, l2tp_udp_ports, statsd_ports]
+  items: [0, 53, 80, openvpn_udp_ports, l2tp_udp_ports, statsd_ports, mysql_ports, ntp_ports]
 
 - macro: expected_udp_traffic
-  condition: fd.sport in (expected_udp_ports)
+  condition: fd.port in (expected_udp_ports)
 
 - rule: Unexpected UDP Traffic
-  desc: UDP traffic not on port 53 (DNS) or commonly used VPN Ports
+  desc: UDP traffic not on port 53 (DNS) or other commonly used ports
   condition: (inbound_outbound) and fd.l4proto=udp and not expected_udp_traffic
   output: >
     Unexpected UDP Traffic Seen
