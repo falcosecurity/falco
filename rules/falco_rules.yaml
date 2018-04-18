@@ -244,12 +244,33 @@
 
 # Network
 - macro: inbound
-  condition: ((evt.type=listen and evt.dir=>) or (evt.type=accept and evt.dir=<))
+  condition: >
+    (((evt.type in (accept,listen) and evt.dir=<) or
+      (evt.type in (recvfrom,recvmsg) and evt.dir=< and
+       fd.l4proto != tcp and fd.connected=false and fd.name_changed=true)) and
+     (fd.typechar = 4 or fd.typechar = 6) and
+     (fd.ip != "0.0.0.0" and fd.net != "127.0.0.0/8") and
+     (evt.rawres >= 0 or evt.res = EINPROGRESS))
 
-# Currently sendto is an ignored syscall, otherwise this could also
-# check for (evt.type=sendto and evt.dir=>)
 - macro: outbound
-  condition: evt.type=connect and evt.dir=< and (fd.typechar=4 or fd.typechar=6)
+  condition: >
+    (((evt.type = connect and evt.dir=<) or
+      (evt.type in (sendto,sendmsg) and evt.dir=< and
+       fd.l4proto != tcp and fd.connected=false and fd.name_changed=true)) and
+     (fd.typechar = 4 or fd.typechar = 6) and
+     (fd.ip != "0.0.0.0" and fd.net != "127.0.0.0/8") and
+     (evt.rawres >= 0 or evt.res = EINPROGRESS))
+
+# Very similar to inbound/outbound, but combines the tests together
+# for efficiency.
+- macro: inbound_outbound
+  condition: >
+    (((evt.type in (accept,listen,connect) and evt.dir=<) or
+      (evt.type in (recvfrom,recvmsg,sendto,sendmsg) and evt.dir=< and
+       fd.l4proto != tcp and fd.connected=false and fd.name_changed=true)) and
+     (fd.typechar = 4 or fd.typechar = 6) and
+     (fd.ip != "0.0.0.0" and fd.net != "127.0.0.0/8") and
+     (evt.rawres >= 0 or evt.res = EINPROGRESS))
 
 - macro: ssh_port
   condition: fd.sport=22
@@ -269,7 +290,7 @@
 
 - rule: Disallowed SSH Connection
   desc: Detect any new ssh connection to a host other than those in an allowed group of hosts
-  condition: (outbound or inbound) and ssh_port and not allowed_ssh_hosts
+  condition: (inbound_outbound) and ssh_port and not allowed_ssh_hosts
   output: Disallowed SSH Connection (command=%proc.cmdline connection=%fd.name user=%user.name)
   priority: NOTICE
   tags: [network]
@@ -715,7 +736,7 @@
     and not proc.pname in (sysdigcloud_binaries, mail_config_binaries, hddtemp.postins, sshkit_script_binaries, locales.postins, deb_binaries, dhcp_binaries)
     and not fd.name pmatch (safe_etc_dirs)
     and not fd.name in (/etc/container_environment.sh, /etc/container_environment.json, /etc/motd, /etc/motd.svc)
-    and not exe_running_docker_save    
+    and not exe_running_docker_save
     and not ansible_running_python
     and not python_running_denyhosts
     and not fluentd_writing_conf_files
@@ -1305,12 +1326,51 @@
   desc: any network activity performed by system binaries that are not expected to send or receive any network traffic
   condition: >
     (fd.sockfamily = ip and system_procs)
-    and (inbound or outbound)
+    and (inbound_outbound)
     and not proc.name in (systemd, hostid)
     and not login_doing_dns_lookup
   output: >
     Known system binary sent/received network traffic
     (user=%user.name command=%proc.cmdline connection=%fd.name)
+  priority: NOTICE
+  tags: [network]
+
+- list: openvpn_udp_ports
+  items: [1194, 1197, 1198, 8080, 9201]
+
+- list: l2tp_udp_ports
+  items: [500, 1701, 4500, 10000]
+
+- list: statsd_ports
+  items: [8125]
+
+- list: mysql_ports
+  items: [3306]
+
+- list: ntp_ports
+  items: [123]
+
+# 0 is included in the list because some apps connect to an address
+# only to test connectivity.
+#
+# mysql_ports is included becuase some versions of the mysql client
+# will attempt a connect using udp + port 3306 before connecting via
+# tcp + port 3306.
+#
+# 80 is included for the same reason as mysql_ports--some apps do a
+# connect using udp before doing a real connect using tcp.
+- list: expected_udp_ports
+  items: [0, 53, 80, openvpn_udp_ports, l2tp_udp_ports, statsd_ports, mysql_ports, ntp_ports]
+
+- macro: expected_udp_traffic
+  condition: fd.port in (expected_udp_ports)
+
+- rule: Unexpected UDP Traffic
+  desc: UDP traffic not on port 53 (DNS) or other commonly used ports
+  condition: (inbound_outbound) and fd.l4proto=udp and not expected_udp_traffic
+  output: >
+    Unexpected UDP Traffic Seen
+    (user=%user.name command=%proc.cmdline connection=%fd.name proto=%fd.l4proto)
   priority: NOTICE
   tags: [network]
 
@@ -1464,7 +1524,7 @@
 
 - rule: Unexpected K8s NodePort Connection
   desc: Detect attempts to use K8s NodePorts from a container
-  condition: (outbound or inbound) and fd.sport >= 30000 and fd.sport <= 32767 and container and not nodeport_containers
+  condition: (inbound_outbound) and fd.sport >= 30000 and fd.sport <= 32767 and container and not nodeport_containers
   output: Unexpected K8s NodePort Connection (command=%proc.cmdline connection=%fd.name)
   priority: NOTICE
   tags: [network, k8s, container]
