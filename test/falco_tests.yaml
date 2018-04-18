@@ -699,3 +699,13 @@ trace_files: !mux
       - detect_madvise: 2
       - detect_open: 2
     trace_file: trace_files/syscall.scap
+
+  catchall_order:
+    detect: True
+    detect_level: INFO
+    rules_file:
+      - rules/catchall_order.yaml
+    detect_counts:
+      - open_dev_null: 1
+        dev_null: 0
+    trace_file: trace_files/cat_write.scap
