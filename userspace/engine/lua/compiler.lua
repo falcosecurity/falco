@@ -201,7 +201,7 @@ end
 -- run for all event types/syscalls. (Also, a warning is printed).
 --
 
-function get_evttypes_syscalls(name, ast, source)
+function get_evttypes_syscalls(name, ast, source, warn_evttypes)
 
    local evttypes = {}
    local syscallnums = {}
@@ -276,23 +276,27 @@ function get_evttypes_syscalls(name, ast, source)
    parser.traverse_ast(ast.filter.value, {BinaryRelOp=1, UnaryBoolOp=1} , cb)
 
    if not found_event then
-      io.stderr:write("Rule "..name..": warning (no-evttype):\n")
-      io.stderr:write(source.."\n")
-      io.stderr:write("         did not contain any evt.type restriction, meaning it will run for all event types.\n")
-      io.stderr:write("         This has a significant performance penalty. Consider adding an evt.type restriction if possible.\n")
+      if warn_evttypes == true then
+	 io.stderr:write("Rule "..name..": warning (no-evttype):\n")
+	 io.stderr:write(source.."\n")
+	 io.stderr:write("         did not contain any evt.type restriction, meaning it will run for all event types.\n")
+	 io.stderr:write("         This has a significant performance penalty. Consider adding an evt.type restriction if possible.\n")
+      end
       evttypes = {}
       syscallnums = {}
       evtnames = {}
    end
 
    if found_event_after_not then
-      io.stderr:write("Rule "..name..": warning (trailing-evttype):\n")
-      io.stderr:write(source.."\n")
-      io.stderr:write("         does not have all evt.type restrictions at the beginning of the condition,\n")
-      io.stderr:write("         or uses a negative match (i.e. \"not\"/\"!=\") for some evt.type restriction.\n")
-      io.stderr:write("         This has a performance penalty, as the rule can not be limited to specific event types.\n")
-      io.stderr:write("         Consider moving all evt.type restrictions to the beginning of the rule and/or\n")
-      io.stderr:write("         replacing negative matches with positive matches if possible.\n")
+      if warn_evttypes == true then
+	 io.stderr:write("Rule "..name..": warning (trailing-evttype):\n")
+	 io.stderr:write(source.."\n")
+	 io.stderr:write("         does not have all evt.type restrictions at the beginning of the condition,\n")
+	 io.stderr:write("         or uses a negative match (i.e. \"not\"/\"!=\") for some evt.type restriction.\n")
+	 io.stderr:write("         This has a performance penalty, as the rule can not be limited to specific event types.\n")
+	 io.stderr:write("         Consider moving all evt.type restrictions to the beginning of the rule and/or\n")
+	 io.stderr:write("         replacing negative matches with positive matches if possible.\n")
+      end
       evttypes = {}
       syscallnums = {}
       evtnames = {}
@@ -375,7 +379,7 @@ end
 --[[
    Parses a single filter, then expands macros using passed-in table of definitions. Returns resulting AST.
 --]]
-function compiler.compile_filter(name, source, macro_defs, list_defs)
+function compiler.compile_filter(name, source, macro_defs, list_defs, warn_evttypes)
 
    source = compiler.expand_lists_in(source, list_defs)
 
@@ -402,7 +406,7 @@ function compiler.compile_filter(name, source, macro_defs, list_defs)
       error("Unexpected top-level AST type: "..ast.type)
    end
 
-   evttypes, syscallnums = get_evttypes_syscalls(name, ast, source)
+   evttypes, syscallnums = get_evttypes_syscalls(name, ast, source, warn_evttypes)
 
    return ast, evttypes, syscallnums
 end
