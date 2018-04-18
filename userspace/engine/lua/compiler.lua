@@ -191,19 +191,20 @@ function check_for_ignored_syscalls_events(ast, filter_type, source)
    parser.traverse_ast(ast, {BinaryRelOp=1}, cb)
 end
 
--- Examine the ast and find the event types for which the rule should
--- run. All evt.type references are added as event types up until the
--- first "!=" binary operator or unary not operator. If no event type
--- checks are found afterward in the rule, the rule is considered
--- optimized and is associated with the event type(s).
+-- Examine the ast and find the event types/syscalls for which the
+-- rule should run. All evt.type references are added as event types
+-- up until the first "!=" binary operator or unary not operator. If
+-- no event type checks are found afterward in the rule, the rule is
+-- considered optimized and is associated with the event type(s).
 --
 -- Otherwise, the rule is associated with a 'catchall' category and is
--- run for all event types. (Also, a warning is printed).
+-- run for all event types/syscalls. (Also, a warning is printed).
 --
 
-function get_evttypes(name, ast, source)
+function get_evttypes_syscalls(name, ast, source)
 
    local evttypes = {}
+   local syscallnums = {}
    local evtnames = {}
    local found_event = false
    local found_not = false
@@ -226,17 +227,45 @@ function get_evttypes(name, ast, source)
 	    if node.operator == "in" or node.operator == "pmatch" then
 	       for i, v in ipairs(node.right.elements) do
 		  if v.type == "BareString" then
+
+                     -- The event must be a known event
+                     if events[v.value] == nil and syscalls[v.value] == nil then
+                        error("Unknown event/syscall \""..v.value.."\" in filter: "..source)
+                     end
+
 		     evtnames[v.value] = 1
-		     for id in string.gmatch(events[v.value], "%S+") do
-			evttypes[id] = 1
+		     if events[v.value] ~= nil then
+			for id in string.gmatch(events[v.value], "%S+") do
+			   evttypes[id] = 1
+			end
+		     end
+
+		     if syscalls[v.value] ~= nil then
+			for id in string.gmatch(syscalls[v.value], "%S+") do
+			   syscallnums[id] = 1
+			end
 		     end
 		  end
 	       end
 	    else
 	       if node.right.type == "BareString" then
+
+		  -- The event must be a known event
+		  if events[node.right.value] == nil and syscalls[node.right.value] == nil then
+		     error("Unknown event/syscall \""..node.right.value.."\" in filter: "..source)
+		  end
+
 		  evtnames[node.right.value] = 1
-		  for id in string.gmatch(events[node.right.value], "%S+") do
-		     evttypes[id] = 1
+		  if events[node.right.value] ~= nil then
+		     for id in string.gmatch(events[node.right.value], "%S+") do
+			evttypes[id] = 1
+		     end
+		  end
+
+		  if syscalls[node.right.value] ~= nil then
+		     for id in string.gmatch(syscalls[node.right.value], "%S+") do
+			syscallnums[id] = 1
+		     end
 		  end
 	       end
 	    end
@@ -252,6 +281,7 @@ function get_evttypes(name, ast, source)
       io.stderr:write("         did not contain any evt.type restriction, meaning it will run for all event types.\n")
       io.stderr:write("         This has a significant performance penalty. Consider adding an evt.type restriction if possible.\n")
       evttypes = {}
+      syscallnums = {}
       evtnames = {}
    end
 
@@ -264,6 +294,7 @@ function get_evttypes(name, ast, source)
       io.stderr:write("         Consider moving all evt.type restrictions to the beginning of the rule and/or\n")
       io.stderr:write("         replacing negative matches with positive matches if possible.\n")
       evttypes = {}
+      syscallnums = {}
       evtnames = {}
    end
 
@@ -281,10 +312,10 @@ function get_evttypes(name, ast, source)
    table.sort(evtnames_only)
 
    if compiler.verbose then
-      io.stderr:write("Event types for rule "..name..": "..table.concat(evtnames_only, ",").."\n")
+      io.stderr:write("Event types/Syscalls for rule "..name..": "..table.concat(evtnames_only, ",").."\n")
    end
 
-   return evttypes
+   return evttypes, syscallnums
 end
 
 function compiler.expand_lists_in(source, list_defs)
@@ -371,9 +402,9 @@ function compiler.compile_filter(name, source, macro_defs, list_defs)
       error("Unexpected top-level AST type: "..ast.type)
    end
 
-   evttypes = get_evttypes(name, ast, source)
+   evttypes, syscallnums = get_evttypes_syscalls(name, ast, source)
 
-   return ast, evttypes
+   return ast, evttypes, syscallnums
 end
 
 

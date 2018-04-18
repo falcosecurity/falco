@@ -66,8 +66,9 @@ void falco_rules::clear_filters()
 
 int falco_rules::add_filter(lua_State *ls)
 {
-	if (! lua_islightuserdata(ls, -4) ||
-	    ! lua_isstring(ls, -3) ||
+	if (! lua_islightuserdata(ls, -5) ||
+	    ! lua_isstring(ls, -4) ||
+	    ! lua_istable(ls, -3) ||
 	    ! lua_istable(ls, -2) ||
 	    ! lua_istable(ls, -1))
 	{
@@ -75,16 +76,28 @@ int falco_rules::add_filter(lua_State *ls)
 		lua_error(ls);
 	}
 
-	falco_rules *rules = (falco_rules *) lua_topointer(ls, -4);
-	const char *rulec = lua_tostring(ls, -3);
+	falco_rules *rules = (falco_rules *) lua_topointer(ls, -5);
+	const char *rulec = lua_tostring(ls, -4);
 
 	set<uint32_t> evttypes;
+
+	lua_pushnil(ls);  /* first key */
+	while (lua_next(ls, -4) != 0) {
+                // key is at index -2, value is at index
+                // -1. We want the keys.
+		evttypes.insert(luaL_checknumber(ls, -2));
+
+		// Remove value, keep key for next iteration
+		lua_pop(ls, 1);
+	}
+
+	set<uint32_t> syscalls;
 
 	lua_pushnil(ls);  /* first key */
 	while (lua_next(ls, -3) != 0) {
                 // key is at index -2, value is at index
                 // -1. We want the keys.
-		evttypes.insert(luaL_checknumber(ls, -2));
+		syscalls.insert(luaL_checknumber(ls, -2));
 
 		// Remove value, keep key for next iteration
 		lua_pop(ls, 1);
@@ -95,7 +108,7 @@ int falco_rules::add_filter(lua_State *ls)
 	lua_pushnil(ls);  /* first key */
 	while (lua_next(ls, -2) != 0) {
                 // key is at index -2, value is at index
-                // -1. We want the keys.
+                // -1. We want the values.
 		tags.insert(lua_tostring(ls, -1));
 
 		// Remove value, keep key for next iteration
@@ -103,19 +116,19 @@ int falco_rules::add_filter(lua_State *ls)
 	}
 
 	std::string rule = rulec;
-	rules->add_filter(rule, evttypes, tags);
+	rules->add_filter(rule, evttypes, syscalls, tags);
 
 	return 0;
 }
 
-void falco_rules::add_filter(string &rule, set<uint32_t> &evttypes, set<string> &tags)
+void falco_rules::add_filter(string &rule, set<uint32_t> &evttypes, set<uint32_t> &syscalls, set<string> &tags)
 {
 	// While the current rule was being parsed, a sinsp_filter
 	// object was being populated by lua_parser. Grab that filter
 	// and pass it to the engine.
 	sinsp_filter *filter = m_lua_parser->get_filter(true);
 
-	m_engine->add_evttype_filter(rule, evttypes, tags, filter);
+	m_engine->add_evttype_filter(rule, evttypes, syscalls, tags, filter);
 }
 
 int falco_rules::enable_rule(lua_State *ls)
@@ -182,6 +195,35 @@ void falco_rules::load_rules(const string &rules_content,
 		}
 
 		lua_setglobal(m_ls, m_lua_events.c_str());
+
+		map<string,string> syscalls_by_name;
+		for(uint32_t j = 0; j < PPM_SC_MAX; j++)
+		{
+			auto it = syscalls_by_name.find(stable[j].name);
+
+			if (it == syscalls_by_name.end())
+			{
+				syscalls_by_name[stable[j].name] = to_string(j);
+			}
+			else
+			{
+				string cur = it->second;
+				cur += " ";
+				cur += to_string(j);
+				syscalls_by_name[stable[j].name] = cur;
+			}
+		}
+
+		lua_newtable(m_ls);
+
+		for( auto kv : syscalls_by_name)
+		{
+			lua_pushstring(m_ls, kv.first.c_str());
+			lua_pushstring(m_ls, kv.second.c_str());
+			lua_settable(m_ls, -3);
+		}
+
+		lua_setglobal(m_ls, m_lua_syscalls.c_str());
 
 		// Create a table containing the syscalls/events that
 		// are ignored by the kernel module. load_rules will

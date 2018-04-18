@@ -373,8 +373,8 @@ function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replac
 
       local v = state.rules_by_name[name]
 
-      local filter_ast, evttypes = compiler.compile_filter(v['rule'], v['condition'],
-							   state.macros, state.lists)
+      local filter_ast, evttypes, syscallnums = compiler.compile_filter(v['rule'], v['condition'],
+								     state.macros, state.lists)
 
       if (filter_ast.type == "Rule") then
 	 state.n_rules = state.n_rules + 1
@@ -395,7 +395,7 @@ function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replac
 	 end
 
 	 -- Pass the filter and event types back up
-	 falco_rules.add_filter(rules_mgr, v['rule'], evttypes, v['tags'])
+	 falco_rules.add_filter(rules_mgr, v['rule'], evttypes, syscallnums, v['tags'])
 
 	 -- Rule ASTs are merged together into one big AST, with "OR" between each
 	 -- rule.
