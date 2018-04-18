@@ -213,7 +213,7 @@ class FalcoTest(Test):
         triggered_rules = match.group(1)
 
         for rule, count in self.detect_counts.iteritems():
-            expected = '{}: (\d+)'.format(rule)
+            expected = '\s{}: (\d+)'.format(rule)
             match = re.search(expected, triggered_rules)
 
             if match is None:
