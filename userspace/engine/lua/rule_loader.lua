@@ -373,8 +373,14 @@ function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replac
 
       local v = state.rules_by_name[name]
 
+      warn_evttypes = true
+      if v['warn_evttypes'] ~= nil then
+	 warn_evttypes = v['warn_evttypes']
+      end
+
       local filter_ast, evttypes, syscallnums = compiler.compile_filter(v['rule'], v['condition'],
-								     state.macros, state.lists)
+									state.macros, state.lists,
+									warn_evttypes)
 
       if (filter_ast.type == "Rule") then
 	 state.n_rules = state.n_rules + 1

@@ -1,0 +1,12 @@
+- rule: open_dev_null
+  desc: Any open of the file /dev/null
+  condition: evt.type=open and fd.name=/dev/null
+  output: An open of /dev/null was seen (command=%proc.cmdline evt=%evt.type %evt.args)
+  priority: INFO
+
+- rule: dev_null
+  desc: Anything related to /dev/null
+  condition: fd.name=/dev/null
+  output: Something related to /dev/null was seen (command=%proc.cmdline evt=%evt.type %evt.args)
+  priority: INFO
+  warn_evttypes: false
