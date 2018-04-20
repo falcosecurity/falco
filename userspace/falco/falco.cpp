@@ -151,7 +151,8 @@ uint64_t do_inspect(falco_engine *engine,
 		    falco_outputs *outputs,
 		    sinsp* inspector,
 		    uint64_t duration_to_tot_ns,
-		    string &stats_filename)
+		    string &stats_filename,
+		    bool all_events)
 {
 	uint64_t num_evts = 0;
 	int32_t res;
@@ -218,8 +219,7 @@ uint64_t do_inspect(falco_engine *engine,
 			}
 		}
 
-		if(!inspector->is_debug_enabled() &&
-			ev->get_category() & EC_INTERNAL)
+		if(!ev->falco_consider() && !all_events)
 		{
 			continue;
 		}
@@ -761,7 +761,8 @@ int falco_init(int argc, char **argv)
 				      outputs,
 				      inspector,
 				      uint64_t(duration_to_tot*ONE_SECOND_IN_NS),
-				      stats_filename);
+				      stats_filename,
+				      all_events);
 
 		duration = ((double)clock()) / CLOCKS_PER_SEC - duration;
 
