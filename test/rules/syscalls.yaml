@@ -1,0 +1,11 @@
+- rule: detect_madvise
+  desc: Detect any call to madvise
+  condition: evt.type=madvise and evt.dir=<
+  output: A madvise syscall was seen (command=%proc.cmdline evt=%evt.type)
+  priority: INFO
+
+- rule: detect_open
+  desc: Detect any call to open
+  condition: evt.type=open and evt.dir=< and fd.name=/dev/null
+  output: An open syscall was seen (command=%proc.cmdline evt=%evt.type file=%fd.name)
+  priority: INFO

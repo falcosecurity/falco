@@ -39,12 +39,19 @@ along with falco.  If not, see <http://www.gnu.org/licenses/>.
 #include "statsfilewriter.h"
 
 bool g_terminate = false;
+bool g_reopen_outputs = false;
+
 //
 // Helper functions
 //
 static void signal_callback(int signal)
 {
 	g_terminate = true;
+}
+
+static void reopen_outputs(int signal)
+{
+	g_reopen_outputs = true;
 }
 
 //
@@ -99,8 +106,9 @@ static void usage()
 	   "                               of %%container.info in rule output fields\n"
 	   "                               See the examples section below for more info.\n"
 	   " -P, --pidfile <pid_file>      When run as a daemon, write pid to specified file\n"
-           " -r <rules_file>               Rules file (defaults to value set in configuration file, or /etc/falco_rules.yaml).\n"
-	   "                               Can be specified multiple times to read from multiple files.\n"
+           " -r <rules_file>               Rules file/directory (defaults to value set in configuration file,\n"
+           "                               or /etc/falco_rules.yaml). Can be specified multiple times to read\n"
+           "                               from multiple files/directories.\n"
 	   " -s <stats_file>               If specified, write statistics related to falco's reading/processing of events\n"
 	   "                               to this file. (Only useful in live mode).\n"
 	   " -T <tag>                      Disable any rules with a tag=<tag>. Can be specified multiple times.\n"
@@ -170,6 +178,12 @@ uint64_t do_inspect(falco_engine *engine,
 		res = inspector->next(&ev);
 
 		writer.handle();
+
+		if(g_reopen_outputs)
+		{
+			outputs->reopen_outputs();
+			g_reopen_outputs = false;
+		}
 
 		if (g_terminate)
 		{
@@ -378,7 +392,7 @@ int falco_init(int argc, char **argv)
 				}
 				break;
 			case 'r':
-				rules_filenames.push_back(optarg);
+				falco_configuration::read_rules_file_directory(string(optarg), rules_filenames);
 				break;
 			case 's':
 				stats_filename = optarg;
@@ -503,13 +517,19 @@ int falco_init(int argc, char **argv)
 
 		if(config.m_rules_filenames.size() == 0)
 		{
-			throw std::invalid_argument("You must specify at least one rules file via -r or a rules_file entry in falco.yaml");
+			throw std::invalid_argument("You must specify at least one rules file/directory via -r or a rules_file entry in falco.yaml");
+		}
+
+		falco_logger::log(LOG_DEBUG, "Configured rules filenames:\n");
+		for (auto filename : config.m_rules_filenames)
+		{
+			falco_logger::log(LOG_DEBUG, string("   ") + filename + "\n");
 		}
 
 		for (auto filename : config.m_rules_filenames)
 		{
+			falco_logger::log(LOG_INFO, "Loading rules from file " + filename + ":\n");
 			engine->load_rules_file(filename, verbose, all_events);
-			falco_logger::log(LOG_INFO, "Parsed rules from file " + filename + "\n");
 		}
 
 		// You can't both disable and enable rules
@@ -554,6 +574,7 @@ int falco_init(int argc, char **argv)
 		if(!all_events)
 		{
 			inspector->set_drop_event_flags(EF_DROP_FALCO);
+			inspector->start_dropping_mode(1);
 		}
 
 		if (describe_all_rules)
@@ -585,6 +606,13 @@ int falco_init(int argc, char **argv)
 		if(signal(SIGTERM, signal_callback) == SIG_ERR)
 		{
 			fprintf(stderr, "An error occurred while setting SIGTERM signal handler.\n");
+			result = EXIT_FAILURE;
+			goto exit;
+		}
+
+		if(signal(SIGUSR1, reopen_outputs) == SIG_ERR)
+		{
+			fprintf(stderr, "An error occurred while setting SIGUSR1 signal handler.\n");
 			result = EXIT_FAILURE;
 			goto exit;
 		}

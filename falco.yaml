@@ -1,4 +1,7 @@
-# File(s) containing Falco rules, loaded at startup.
+# File(s) or Directories containing Falco rules, loaded at startup.
+# The name "rules_file" is only for backwards compatibility.
+# If the entry is a file, it will be read directly. If the entry is a directory,
+# every file in that directory will be read, in alphabetical order.
 #
 # falco_rules.yaml ships with the falco package and is overridden with
 # every new software version. falco_rules.local.yaml is only created
@@ -10,6 +13,7 @@
 rules_file:
  - /etc/falco/falco_rules.yaml
  - /etc/falco/falco_rules.local.yaml
+ - /etc/falco/rules.d
 
 # Whether to output events in json or text
 json_output: false
@@ -66,6 +70,10 @@ syslog_output:
 # continuously written to, with each output message on its own
 # line. If keep_alive is set to false, the file will be re-opened
 # for each output message.
+#
+# Also, the file will be closed and reopened if falco is signaled with
+# SIGUSR1.
+
 file_output:
   enabled: false
   keep_alive: false
@@ -86,7 +94,9 @@ stdout_output:
 # continuously written to, with each output message on its own
 # line. If keep_alive is set to false, the program will be re-spawned
 # for each output message.
-
+#
+# Also, the program will be closed and reopened if falco is signaled with
+# SIGUSR1.
 program_output:
   enabled: false
   keep_alive: false

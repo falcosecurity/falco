@@ -129,6 +129,16 @@ trace_files: !mux
       - rules/double_rule.yaml
     trace_file: trace_files/cat_write.scap
 
+  rules_directory:
+    detect: True
+    detect_level:
+      - WARNING
+      - INFO
+      - ERROR
+    rules_file:
+      - rules/rules_dir
+    trace_file: trace_files/cat_write.scap
+
   multiple_rules_suppress_info:
     detect: True
     detect_level:
@@ -642,6 +652,14 @@ trace_files: !mux
       - rules/rule_append_failure.yaml
     trace_file: trace_files/cat_write.scap
 
+  rule_append_skipped:
+    detect: False
+    priority: ERROR
+    rules_file:
+      - rules/single_rule.yaml
+      - rules/append_single_rule.yaml
+    trace_file: trace_files/cat_write.scap
+
   rule_append:
     detect: True
     detect_level: WARNING
@@ -671,3 +689,23 @@ trace_files: !mux
     rules_file:
       - rules/detect_connect_using_in.yaml
     trace_file: trace_files/connect_localhost.scap
+
+  syscalls:
+    detect: True
+    detect_level: INFO
+    rules_file:
+      - rules/syscalls.yaml
+    detect_counts:
+      - detect_madvise: 2
+      - detect_open: 2
+    trace_file: trace_files/syscall.scap
+
+  catchall_order:
+    detect: True
+    detect_level: INFO
+    rules_file:
+      - rules/catchall_order.yaml
+    detect_counts:
+      - open_dev_null: 1
+        dev_null: 0
+    trace_file: trace_files/cat_write.scap
