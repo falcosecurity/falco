@@ -15,6 +15,9 @@
 - macro: never_true
   condition: (evt.num=0)
 
+- macro: always_true
+  condition: (evt.num=>0)
+
 # In some cases, such as dropped system call events, information about
 # the process name may be missing. For some rules that really depend
 # on the identity of the process performing an action such as opening
@@ -1351,9 +1354,15 @@
 # test connectivity. Assuming the udp connect works, they will follow
 # up with a tcp connect that actually sends/receives data.
 #
-# To address this, we'll list the set of ports seen here.
+# With that in mind, we listed a few commonly seen ports here to avoid
+# some false positives. In addition, we make the main rule opt-in, so
+# it's disabled by default.
+
 - list: test_connect_ports
   items: [0, 9, 80, 3306]
+
+- macro: do_unexpected_udp_check
+  condition: (never_true)
 
 - list: expected_udp_ports
   items: [53, openvpn_udp_ports, l2tp_udp_ports, statsd_ports, ntp_ports, test_connect_ports]
@@ -1363,7 +1372,7 @@
 
 - rule: Unexpected UDP Traffic
   desc: UDP traffic not on port 53 (DNS) or other commonly used ports
-  condition: (inbound_outbound) and fd.l4proto=udp and not expected_udp_traffic
+  condition: (inbound_outbound) and do_unexpected_udp_check and fd.l4proto=udp and not expected_udp_traffic
   output: >
     Unexpected UDP Traffic Seen
     (user=%user.name command=%proc.cmdline connection=%fd.name proto=%fd.l4proto evt=%evt.type %evt.args)
