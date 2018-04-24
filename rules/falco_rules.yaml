@@ -39,13 +39,6 @@
 - macro: bin_dir
   condition: fd.directory in (/bin, /sbin, /usr/bin, /usr/sbin)
 
-- macro: bin_dir_resolved
-  condition: >
-    (evt.abspath startswith /bin/ or
-     evt.abspath startswith /sbin/ or
-     evt.abspath startswith /usr/bin/ or
-     evt.abspath startswith /usr/sbin/)
-
 - macro: bin_dir_mkdir
   condition: >
     (evt.arg[1] startswith /bin/ or
@@ -245,18 +238,14 @@
 # Network
 - macro: inbound
   condition: >
-    (((evt.type in (accept,listen) and evt.dir=<) or
-      (evt.type in (recvfrom,recvmsg) and evt.dir=< and
-       fd.l4proto != tcp and fd.connected=false and fd.name_changed=true)) and
+    (((evt.type in (accept,listen) and evt.dir=<)) or
      (fd.typechar = 4 or fd.typechar = 6) and
      (fd.ip != "0.0.0.0" and fd.net != "127.0.0.0/8") and
      (evt.rawres >= 0 or evt.res = EINPROGRESS))
 
 - macro: outbound
   condition: >
-    (((evt.type = connect and evt.dir=<) or
-      (evt.type in (sendto,sendmsg) and evt.dir=< and
-       fd.l4proto != tcp and fd.connected=false and fd.name_changed=true)) and
+    (((evt.type = connect and evt.dir=<)) or
      (fd.typechar = 4 or fd.typechar = 6) and
      (fd.ip != "0.0.0.0" and fd.net != "127.0.0.0/8") and
      (evt.rawres >= 0 or evt.res = EINPROGRESS))
@@ -265,9 +254,7 @@
 # for efficiency.
 - macro: inbound_outbound
   condition: >
-    (((evt.type in (accept,listen,connect) and evt.dir=<) or
-      (evt.type in (recvfrom,recvmsg,sendto,sendmsg) and evt.dir=< and
-       fd.l4proto != tcp and fd.connected=false and fd.name_changed=true)) and
+    (((evt.type in (accept,listen,connect) and evt.dir=<)) or
      (fd.typechar = 4 or fd.typechar = 6) and
      (fd.ip != "0.0.0.0" and fd.net != "127.0.0.0/8") and
      (evt.rawres >= 0 or evt.res = EINPROGRESS))
@@ -940,12 +927,12 @@
   condition: (proc.aname[2]=redis-server and (proc.cmdline contains "redis-server.post-up.d" or proc.cmdline contains "redis-server.pre-up.d"))
 
 - macro: rabbitmq_running_scripts
-  condition: > 
-    (proc.pname=beam.smp and 
-    (proc.cmdline startswith "sh -c exec ps" or 
+  condition: >
+    (proc.pname=beam.smp and
+    (proc.cmdline startswith "sh -c exec ps" or
      proc.cmdline startswith "sh -c exec inet_gethost" or
      proc.cmdline= "sh -s unix:cmd" or
-     proc.cmdline= "sh -c exec /bin/sh -s unix:cmd 2>&1")) 
+     proc.cmdline= "sh -c exec /bin/sh -s unix:cmd 2>&1"))
 
 - macro: rabbitmqctl_running_scripts
   condition: (proc.aname[2]=rabbitmqctl and proc.cmdline startswith "sh -c ")
@@ -967,7 +954,7 @@
 
 - rule: Modify binary dirs
   desc: an attempt to modify any file below a set of binary directories.
-  condition: (bin_dir_rename or bin_dir_resolved) and modify and not package_mgmt_procs and not exe_running_docker_save
+  condition: (bin_dir_rename) and modify and not package_mgmt_procs and not exe_running_docker_save
   output: >
     File below known binary directory renamed/removed (user=%user.name command=%proc.cmdline
     operation=%evt.type file=%fd.name %evt.args)
