@@ -128,6 +128,7 @@ trace_files: !mux
       - rules/single_rule.yaml
       - rules/double_rule.yaml
     trace_file: trace_files/cat_write.scap
+    all_events: True
 
   rules_directory:
     detect: True
@@ -138,6 +139,7 @@ trace_files: !mux
     rules_file:
       - rules/rules_dir
     trace_file: trace_files/cat_write.scap
+    all_events: True
 
   multiple_rules_suppress_info:
     detect: True
@@ -153,6 +155,7 @@ trace_files: !mux
       - rules/single_rule.yaml
       - rules/double_rule.yaml
     trace_file: trace_files/cat_write.scap
+    all_events: True
 
   multiple_rules_overriding:
     detect: False
@@ -699,6 +702,7 @@ trace_files: !mux
       - detect_madvise: 2
       - detect_open: 2
     trace_file: trace_files/syscall.scap
+    all_events: True
 
   catchall_order:
     detect: True
