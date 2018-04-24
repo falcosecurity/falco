@@ -378,6 +378,13 @@
        proc.pcmdline startswith "node /root/.config/yarn" or
        proc.pcmdline startswith "node /opt/yarn/bin/yarn.js"))
 
+
+- macro: httpd_writing_ssl_conf
+  condition: >
+    (proc.pname=run-httpd and
+     (proc.cmdline startswith "sed -ri" or proc.cmdline startswith "sed -i") and
+     (fd.name startswith /etc/httpd/conf.d/ or fd.name startswith /etc/httpd/conf))
+
 - macro: parent_Xvfb_running_xkbcomp
   condition: (proc.pname=Xvfb and proc.cmdline startswith 'sh -c "/usr/bin/xkbcomp"')
 
@@ -793,6 +800,7 @@
     and not centrify_writing_krb
     and not cockpit_writing_conf
     and not ipsec_writing_conf
+    and not httpd_writing_ssl_conf
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc
@@ -932,7 +940,12 @@
   condition: (proc.aname[2]=redis-server and (proc.cmdline contains "redis-server.post-up.d" or proc.cmdline contains "redis-server.pre-up.d"))
 
 - macro: rabbitmq_running_scripts
-  condition: (proc.pname=beam.smp and (proc.cmdline startswith "sh -c exec ps" or proc.cmdline startswith "sh -c exec inet_gethost"))
+  condition: > 
+    (proc.pname=beam.smp and 
+    (proc.cmdline startswith "sh -c exec ps" or 
+     proc.cmdline startswith "sh -c exec inet_gethost" or
+     proc.cmdline= "sh -s unix:cmd" or
+     proc.cmdline= "sh -c exec /bin/sh -s unix:cmd 2>&1")) 
 
 - macro: rabbitmqctl_running_scripts
   condition: (proc.aname[2]=rabbitmqctl and proc.cmdline startswith "sh -c ")
@@ -1344,23 +1357,19 @@
 - list: statsd_ports
   items: [8125]
 
-- list: mysql_ports
-  items: [3306]
-
 - list: ntp_ports
   items: [123]
 
-# 0 is included in the list because some apps connect to an address
-# only to test connectivity.
+# Some applications will connect a udp socket to an address only to
+# test connectivity. Assuming the udp connect works, they will follow
+# up with a tcp connect that actually sends/receives data.
 #
-# mysql_ports is included becuase some versions of the mysql client
-# will attempt a connect using udp + port 3306 before connecting via
-# tcp + port 3306.
-#
-# 80 is included for the same reason as mysql_ports--some apps do a
-# connect using udp before doing a real connect using tcp.
+# To address this, we'll list the set of ports seen here.
+- list: test_connect_ports
+  items: [0, 9, 80, 3306]
+
 - list: expected_udp_ports
-  items: [0, 53, 80, openvpn_udp_ports, l2tp_udp_ports, statsd_ports, mysql_ports, ntp_ports]
+  items: [53, openvpn_udp_ports, l2tp_udp_ports, statsd_ports, ntp_ports, test_connect_ports]
 
 - macro: expected_udp_traffic
   condition: fd.port in (expected_udp_ports)
@@ -1370,7 +1379,7 @@
   condition: (inbound_outbound) and fd.l4proto=udp and not expected_udp_traffic
   output: >
     Unexpected UDP Traffic Seen
-    (user=%user.name command=%proc.cmdline connection=%fd.name proto=%fd.l4proto)
+    (user=%user.name command=%proc.cmdline connection=%fd.name proto=%fd.l4proto evt=%evt.type %evt.args)
   priority: NOTICE
   tags: [network]
 
