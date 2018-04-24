@@ -15,6 +15,9 @@
 - macro: never_true
   condition: (evt.num=0)
 
+- macro: always_true
+  condition: (evt.num=>0)
+
 # In some cases, such as dropped system call events, information about
 # the process name may be missing. For some rules that really depend
 # on the identity of the process performing an action such as opening
@@ -38,13 +41,6 @@
 # File categories
 - macro: bin_dir
   condition: fd.directory in (/bin, /sbin, /usr/bin, /usr/sbin)
-
-- macro: bin_dir_resolved
-  condition: >
-    (evt.abspath startswith /bin/ or
-     evt.abspath startswith /sbin/ or
-     evt.abspath startswith /usr/bin/ or
-     evt.abspath startswith /usr/sbin/)
 
 - macro: bin_dir_mkdir
   condition: >
@@ -245,18 +241,14 @@
 # Network
 - macro: inbound
   condition: >
-    (((evt.type in (accept,listen) and evt.dir=<) or
-      (evt.type in (recvfrom,recvmsg) and evt.dir=< and
-       fd.l4proto != tcp and fd.connected=false and fd.name_changed=true)) and
+    (((evt.type in (accept,listen) and evt.dir=<)) or
      (fd.typechar = 4 or fd.typechar = 6) and
      (fd.ip != "0.0.0.0" and fd.net != "127.0.0.0/8") and
      (evt.rawres >= 0 or evt.res = EINPROGRESS))
 
 - macro: outbound
   condition: >
-    (((evt.type = connect and evt.dir=<) or
-      (evt.type in (sendto,sendmsg) and evt.dir=< and
-       fd.l4proto != tcp and fd.connected=false and fd.name_changed=true)) and
+    (((evt.type = connect and evt.dir=<)) or
      (fd.typechar = 4 or fd.typechar = 6) and
      (fd.ip != "0.0.0.0" and fd.net != "127.0.0.0/8") and
      (evt.rawres >= 0 or evt.res = EINPROGRESS))
@@ -265,9 +257,7 @@
 # for efficiency.
 - macro: inbound_outbound
   condition: >
-    (((evt.type in (accept,listen,connect) and evt.dir=<) or
-      (evt.type in (recvfrom,recvmsg,sendto,sendmsg) and evt.dir=< and
-       fd.l4proto != tcp and fd.connected=false and fd.name_changed=true)) and
+    (((evt.type in (accept,listen,connect) and evt.dir=<)) or
      (fd.typechar = 4 or fd.typechar = 6) and
      (fd.ip != "0.0.0.0" and fd.net != "127.0.0.0/8") and
      (evt.rawres >= 0 or evt.res = EINPROGRESS))
@@ -940,12 +930,12 @@
   condition: (proc.aname[2]=redis-server and (proc.cmdline contains "redis-server.post-up.d" or proc.cmdline contains "redis-server.pre-up.d"))
 
 - macro: rabbitmq_running_scripts
-  condition: > 
-    (proc.pname=beam.smp and 
-    (proc.cmdline startswith "sh -c exec ps" or 
+  condition: >
+    (proc.pname=beam.smp and
+    (proc.cmdline startswith "sh -c exec ps" or
      proc.cmdline startswith "sh -c exec inet_gethost" or
      proc.cmdline= "sh -s unix:cmd" or
-     proc.cmdline= "sh -c exec /bin/sh -s unix:cmd 2>&1")) 
+     proc.cmdline= "sh -c exec /bin/sh -s unix:cmd 2>&1"))
 
 - macro: rabbitmqctl_running_scripts
   condition: (proc.aname[2]=rabbitmqctl and proc.cmdline startswith "sh -c ")
@@ -967,7 +957,7 @@
 
 - rule: Modify binary dirs
   desc: an attempt to modify any file below a set of binary directories.
-  condition: (bin_dir_rename or bin_dir_resolved) and modify and not package_mgmt_procs and not exe_running_docker_save
+  condition: (bin_dir_rename) and modify and not package_mgmt_procs and not exe_running_docker_save
   output: >
     File below known binary directory renamed/removed (user=%user.name command=%proc.cmdline
     operation=%evt.type file=%fd.name %evt.args)
@@ -1364,9 +1354,15 @@
 # test connectivity. Assuming the udp connect works, they will follow
 # up with a tcp connect that actually sends/receives data.
 #
-# To address this, we'll list the set of ports seen here.
+# With that in mind, we listed a few commonly seen ports here to avoid
+# some false positives. In addition, we make the main rule opt-in, so
+# it's disabled by default.
+
 - list: test_connect_ports
   items: [0, 9, 80, 3306]
+
+- macro: do_unexpected_udp_check
+  condition: (never_true)
 
 - list: expected_udp_ports
   items: [53, openvpn_udp_ports, l2tp_udp_ports, statsd_ports, ntp_ports, test_connect_ports]
@@ -1376,7 +1372,7 @@
 
 - rule: Unexpected UDP Traffic
   desc: UDP traffic not on port 53 (DNS) or other commonly used ports
-  condition: (inbound_outbound) and fd.l4proto=udp and not expected_udp_traffic
+  condition: (inbound_outbound) and do_unexpected_udp_check and fd.l4proto=udp and not expected_udp_traffic
   output: >
     Unexpected UDP Traffic Seen
     (user=%user.name command=%proc.cmdline connection=%fd.name proto=%fd.l4proto evt=%evt.type %evt.args)
