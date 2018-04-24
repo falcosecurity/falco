@@ -1,10 +1,3 @@
-#############
-# Definitions
-#############
-
-# File actions
-
-
 # Currently disabled as read/write are ignored syscalls. The nearly
 # similar open_write/open_read check for files being opened for
 # reading/writing.
@@ -19,8 +12,21 @@
 - macro: open_read
   condition: (evt.type=open or evt.type=openat) and evt.is_open_read=true and fd.typechar='f' and fd.num>=0
 
+- macro: never_true
+  condition: (evt.num=0)
+
+- macro: always_true
+  condition: (evt.num=>0)
+
+# In some cases, such as dropped system call events, information about
+# the process name may be missing. For some rules that really depend
+# on the identity of the process performing an action such as opening
+# a file, etc., we require that the process name be known.
+- macro: proc_name_exists
+  condition: (proc.name!="<NA>")
+
 - macro: rename
-  condition: evt.type = rename
+  condition: evt.type in (rename, renameat)
 - macro: mkdir
   condition: evt.type = mkdir
 - macro: remove
@@ -33,9 +39,6 @@
   condition: evt.type = execve and evt.dir=<
 
 # File categories
-- macro: terminal_file_fd
-  condition: fd.name=/dev/ptmx or fd.name startswith /dev/pts
-
 - macro: bin_dir
   condition: fd.directory in (/bin, /sbin, /usr/bin, /usr/sbin)
 
@@ -58,22 +61,7 @@
 
 # This detects writes immediately below / or any write anywhere below /root
 - macro: root_dir
-  condition: (fd.directory=/ or fd.name startswith /root)
-
-- macro: ubuntu_so_dirs
-  condition: >
-    fd.name startswith /lib/x86_64-linux-gnu or
-    fd.name startswith /usr/lib/x86_64-linux-gnu or
-    fd.name startswith /usr/lib/sudo
-
-- macro: centos_so_dirs
-  condition: >
-    fd.name startswith /lib64 or
-    fd.name startswith /usr/lib64 or
-    fd.name startswith /usr/libexec
-
-- macro: linux_so_dirs
-  condition: ubuntu_so_dirs or centos_so_dirs or fd.name=/etc/ld.so.cache
+  condition: ((fd.directory=/ or fd.name startswith /root) and fd.name contains "/")
 
 - list: shell_binaries
   items: [bash, csh, ksh, sh, tcsh, zsh, dash]
@@ -135,26 +123,6 @@
 - list: lxd_binaries
   items: [lxd, lxcfs]
 
-# Utility/etc programs known to run on mesos slaves. Truncation
-# intentional.
-- list: mesos_slave_binaries
-  items: [mesos-health-ch, mesos-docker-ex, mesos-agent, mesos-slave,
-          mesos-logrotate, mesos-fetcher, mesos-executor, 3dt,
-          mesos-journald-, '"1_scheduler"', '"2_scheduler"',
-          '"3_scheduler"', '"4_scheduler"']
-
-- list: phusion_passenger_binaries
-  items: [PassengerAgent, PassengerWatchd]
-
-# A bit longer to avoid the fairly generic my_init.
-- macro: parent_phusion_passenger_my_init
-  condition: >
-    (proc.pcmdline="my_init -u /sbin/my_init " or
-     proc.pcmdline="my_init -u /sbin/my_init")
-
-- list: chef_binaries
-  items: [chef-client]
-
 - list: http_server_binaries
   items: [nginx, httpd, httpd-foregroun, lighttpd, apache, apache2]
 
@@ -165,7 +133,7 @@
   items: [mysql_install_d, mysql_ssl_rsa_s]
 
 - list: postgres_mgmt_binaries
-  items: [pg_dumpall, pg_ctl]
+  items: [pg_dumpall, pg_ctl, pg_lsclusters, pg_ctlcluster]
 
 - list: db_mgmt_binaries
   items: [mysql_mgmt_binaries, postgres_mgmt_binaries]
@@ -183,7 +151,8 @@
 # interpreted by the filter expression.
 - list: rpm_binaries
   items: [dnf, rpm, rpmkey, yum, '"75-system-updat"', rhsmcertd-worke, subscription-ma,
-          repoquery, rpmkeys, rpmq, yum-cron]
+          repoquery, rpmkeys, rpmq, yum-cron, yum-config-mana, yum-debug-dump,
+          abrt-action-sav, rpmdb_stat]
 
 - macro: rpm_procs
   condition: proc.name in (rpm_binaries) or proc.name in (salt-minion)
@@ -191,7 +160,7 @@
 - list: deb_binaries
   items: [dpkg, dpkg-preconfigu, dpkg-reconfigur, apt, apt-get, aptitude,
     frontend, preinst, add-apt-reposit, apt-auto-remova, apt-key,
-    apt-listchanges, unattended-upgr
+    apt-listchanges, unattended-upgr, apt-add-reposit
     ]
 
 # The truncated dpkg-preconfigu is intentional, process names are
@@ -229,9 +198,6 @@
 - list: dev_creation_binaries
   items: [blkid, rename_device, update_engine, sgdisk]
 
-- list: aide_wrapper_binaries
-  items: [aide.wrapper, update-aide.con]
-
 - list: hids_binaries
   items: [aide]
 
@@ -240,15 +206,6 @@
 
 - list: nomachine_binaries
   items: [nxexec, nxnode.bin, nxserver.bin, nxclient.bin]
-
-- list: x2go_binaries
-  items: [x2gosuspend-age, x2goagent, x2gomountdirs]
-
-- list: nids_binaries
-  items: [bro, broctl]
-
-- list: monitoring_binaries
-  items: [icinga2, nrpe, npcd, check_sar_perf., qualys-cloud-ag, S99qualys-cloud, nagios]
 
 - macro: system_procs
   condition: proc.name in (coreutils_binaries, user_mgmt_binaries)
@@ -267,12 +224,6 @@
     postfix.config, postfix-script
     ]
 
-- list: make_binaries
-  items: [make, gmake, cmake, automake, autom4te, autoheader]
-
-- list: keepalived_binaries
-  items: [keepalived]
-
 - list: sensitive_file_names
   items: [/etc/shadow, /etc/sudoers, /etc/pam.conf]
 
@@ -289,26 +240,50 @@
 
 # Network
 - macro: inbound
-  condition: ((evt.type=listen and evt.dir=>) or (evt.type=accept and evt.dir=<))
+  condition: >
+    (((evt.type in (accept,listen) and evt.dir=<)) or
+     (fd.typechar = 4 or fd.typechar = 6) and
+     (fd.ip != "0.0.0.0" and fd.net != "127.0.0.0/8") and
+     (evt.rawres >= 0 or evt.res = EINPROGRESS))
 
-# Currently sendto is an ignored syscall, otherwise this could also
-# check for (evt.type=sendto and evt.dir=>)
 - macro: outbound
-  condition: evt.type=connect and evt.dir=< and (fd.typechar=4 or fd.typechar=6)
+  condition: >
+    (((evt.type = connect and evt.dir=<)) or
+     (fd.typechar = 4 or fd.typechar = 6) and
+     (fd.ip != "0.0.0.0" and fd.net != "127.0.0.0/8") and
+     (evt.rawres >= 0 or evt.res = EINPROGRESS))
+
+# Very similar to inbound/outbound, but combines the tests together
+# for efficiency.
+- macro: inbound_outbound
+  condition: >
+    (((evt.type in (accept,listen,connect) and evt.dir=<)) or
+     (fd.typechar = 4 or fd.typechar = 6) and
+     (fd.ip != "0.0.0.0" and fd.net != "127.0.0.0/8") and
+     (evt.rawres >= 0 or evt.res = EINPROGRESS))
 
 - macro: ssh_port
-  condition: fd.lport=22
+  condition: fd.sport=22
 
-# Ssh
-- macro: ssh_error_message
-  condition: >
-    (evt.arg.data contains "Invalid user" or
-    evt.arg.data contains "preauth" or
-    evt.arg.data contains "Failed password")
+# In a local/user rules file, you could override this macro to
+# enumerate the servers for which ssh connections are allowed. For
+# example, you might have a ssh gateway host for which ssh connections
+# are allowed.
+#
+# In the main falco rules file, there isn't any way to know the
+# specific hosts for which ssh access is allowed, so this macro just
+# repeats ssh_port, which effectively allows ssh from all hosts. In
+# the overridden macro, the condition would look something like
+# "fd.sip="a.b.c.d" or fd.sip="e.f.g.h" or ..."
+- macro: allowed_ssh_hosts
+  condition: ssh_port
 
-# System
-- macro: modules
-  condition: evt.type in (delete_module, init_module)
+- rule: Disallowed SSH Connection
+  desc: Detect any new ssh connection to a host other than those in an allowed group of hosts
+  condition: (inbound_outbound) and ssh_port and not allowed_ssh_hosts
+  output: Disallowed SSH Connection (command=%proc.cmdline connection=%fd.name user=%user.name)
+  priority: NOTICE
+  tags: [network]
 
 # Use this to test whether the event occurred within a container.
 
@@ -325,9 +300,6 @@
   condition: >
     ((proc.aname=sshd and proc.name != sshd) or
     proc.name=systemd-logind or proc.name=login)
-
-- macro: syslog
-  condition: fd.name in (/dev/log, /run/systemd/journal/syslog)
 
 - list: cron_binaries
   items: [anacron, cron, crond, crontab]
@@ -348,44 +320,14 @@
 - macro: system_users
   condition: user.name in (bin, daemon, games, lp, mail, nobody, sshd, sync, uucp, www-data)
 
-# SPECIAL NOTE: This macro eliminates false positives that result from
-# running python scripts as a part of ansible. However, the condition
-# that the command line contains "ansible" is very
-# permissive. Ideally, you should change this macro to explicitly
-# scope the python scripts to a specific directory (namely, your
-# configured remote_tmp directory).
+# These macros will be removed soon. Only keeping them to maintain
+# compatiblity with some widely used rules files.
+# Begin Deprecated
 - macro: parent_ansible_running_python
   condition: (proc.pname in (python, pypy) and proc.pcmdline contains ansible)
 
-- macro: ansible_running_python
-  condition: (proc.name in (python, pypy) and proc.cmdline contains ansible)
-
-- macro: chef_running_yum_dump
-  condition: (proc.name=python and proc.cmdline contains yum-dump.py)
-
-- macro: parent_beam_running_python
-  condition: proc.pcmdline="python pipeline.py -c conf.json"
-
-- macro: parent_strongswan_running_starter
-  condition: proc.pcmdline="starter --daemon charon"
-
-- macro: python_running_denyhosts
-  condition: >
-    (proc.name=python and
-    (proc.cmdline contains /usr/sbin/denyhosts or
-     proc.cmdline contains /usr/local/bin/denyhosts.py))
-
-- macro: parent_python_running_localstack
-  condition: (proc.pcmdline startswith "python bin/localstack")
-
-- macro: parent_python_running_zookeeper
-  condition: (proc.pcmdline startswith "python /usr/local/bin/cub")
-
-- macro: parent_python_running_airflow
-  condition: (proc.pname in (python,/usr/bin/python) and proc.cmdline startswith "bash -c airflow")
-
-- macro: parent_docker_start_script
-  condition: (proc.pcmdline="start.sh /opt/docker/conf/start.sh")
+- macro: parent_bro_running_python
+  condition: (proc.pname=python and proc.cmdline contains /usr/share/broctl)
 
 - macro: parent_python_running_denyhosts
   condition: >
@@ -399,49 +341,12 @@
     (proc.pname in (python, python2.7) and
     (proc.pcmdline contains /opt/draios/bin/sdchecks))
 
-- macro: parent_bro_running_python
-  condition: (proc.pname=python and proc.cmdline contains /usr/share/broctl)
-
-- macro: parent_java_running_jenkins
-  condition: >
-    (proc.pname=java and
-     (proc.pcmdline contains jenkins.war or
-      proc.pcmdline contains "-cp /jenkins/maven" or
-      proc.pcmdline contains /tmp/slave.jar or
-      proc.pcmdline contains /mnt/mesos/sandbox/slave.jar))
-
-- macro: parent_java_running_maven
-  condition: >
-    (proc.pname=java and proc.pcmdline contains "-classpath /usr/share/maven/")
-
-- macro: parent_java_running_appdynamics
-  condition: >
-    (proc.pname=java and proc.pcmdline contains "-jar /opt/appdynamics/")
-
-- macro: python_running_es_curator
-  condition: (proc.pcmdline startswith "python -u run_cron.py" and
-              proc.cmdline startswith "sh -c /usr/bin/curator")
-
-- macro: parent_cpanm_running_perl
-  condition: (proc.pname=perl and proc.aname[2]=cpanm)
-
-- macro: ics_running_java
-  condition: (proc.pname=java and proc.aname[3] in (ics_start.sh,ics_stop.sh,ics_status.sh))
-
-- macro: jenkins_scripts
-  condition: (proc.pcmdline startswith "script.sh -xe /var/jenkins_home" or
-              proc.pcmdline startswith "node /jenkins/workspace" or
-              proc.pcmdline startswith "python /home/jenkins/workspace" or
-              proc.cmdline="bash /usr/local/bin/jenkins-slave")
+- macro: parent_linux_image_upgrade_script
+  condition: proc.pname startswith linux-image-
 
 - macro: parent_java_running_echo
   condition: (proc.pname=java and proc.cmdline startswith "sh -c echo")
 
-- macro: parent_java_running_sbt
-  condition: (proc.pname=java and proc.pcmdline contains sbt-launch.jar)
-
-# The crxlsx is a bit different than the other build-like things, but
-# close enough to add here rather than create a separate macro.
 - macro: parent_scripting_running_builds
   condition: >
     (proc.pname in (php,php5-fpm,php-fpm7.1,python,ruby,ruby2.3,ruby2.1,node,conda) and (
@@ -463,50 +368,51 @@
        proc.pcmdline startswith "node /root/.config/yarn" or
        proc.pcmdline startswith "node /opt/yarn/bin/yarn.js"))
 
-- macro: makefile_perl
-  condition: (proc.pcmdline startswith "perl Makefile.PL")
+
+- macro: httpd_writing_ssl_conf
+  condition: >
+    (proc.pname=run-httpd and
+     (proc.cmdline startswith "sed -ri" or proc.cmdline startswith "sed -i") and
+     (fd.name startswith /etc/httpd/conf.d/ or fd.name startswith /etc/httpd/conf))
+
+- macro: parent_Xvfb_running_xkbcomp
+  condition: (proc.pname=Xvfb and proc.cmdline startswith 'sh -c "/usr/bin/xkbcomp"')
+
+- macro: parent_nginx_running_serf
+  condition: (proc.pname=nginx and proc.cmdline startswith "sh -c serf")
 
 - macro: parent_node_running_npm
   condition: (proc.pcmdline startswith "node /usr/local/bin/npm" or
               proc.pcmdline startswith "node /usr/local/nodejs/bin/npm" or
               proc.pcmdline startswith "node /opt/rh/rh-nodejs6/root/usr/bin/npm")
 
-- macro: parent_npm_running_node
-  condition: (proc.pname=node and proc.aname[2]=npm)
+- macro: parent_java_running_sbt
+  condition: (proc.pname=java and proc.pcmdline contains sbt-launch.jar)
 
-- macro: parent_nginx_running_serf
-  condition: (proc.pname=nginx and proc.cmdline startswith "sh -c serf")
+- list: known_container_shell_spawn_cmdlines
+  items: []
 
-- macro: parent_Xvfb_running_xkbcomp
-  condition: (proc.pname=Xvfb and proc.cmdline startswith 'sh -c "/usr/bin/xkbcomp"')
+- list: known_shell_spawn_binaries
+  items: []
 
-- macro: mysql_image_running_healthcheck
-  condition: container.image=mysql and proc.cmdline="sh -c /healthcheck.sh"
+- macro: shell_spawning_containers
+  condition: (container.image startswith jenkins or
+              container.image startswith gitlab/gitlab-ce or
+              container.image startswith gitlab/gitlab-ee)
 
-- macro: parent_rancher_running_healthcheck
-  condition: (proc.pname=healthcheck and (proc.aname[2]=tini or proc.aname[3]=tini))
+## End Deprecated
 
-- macro: bundle_running_ruby
+- macro: ansible_running_python
+  condition: (proc.name in (python, pypy) and proc.cmdline contains ansible)
+
+- macro: chef_running_yum_dump
+  condition: (proc.name=python and proc.cmdline contains yum-dump.py)
+
+- macro: python_running_denyhosts
   condition: >
-    ((proc.pname in (ruby,ruby2.1) or proc.pname contains ".rb") and (
-     proc.aname[2]=bundle or
-     proc.aname[3]=bundle or
-     proc.aname[4]=bundle))
-
-- macro: assemble_running_php
-  condition: >
-    (proc.pname=php and (
-     proc.aname[2]=assemble or
-     proc.aname[3]=assemble or
-     proc.aname[4]=assemble))
-
-- macro: node_running_bitnami
-  condition: (proc.pname=node and
-                (proc.cmdline startswith "sh -c /opt/bitnami" or
-                 proc.cmdline startswith "sh -c bin/redis-server /opt/bitnami"))
-
-- macro: node_running_threatstack
-  condition: proc.pcmdline startswith "node /opt/threatstack/node_modules"
+    (proc.name=python and
+    (proc.cmdline contains /usr/sbin/denyhosts or
+     proc.cmdline contains /usr/local/bin/denyhosts.py))
 
 # Qualys seems to run a variety of shell subprocesses, at various
 # levels. This checks at a few levels without the cost of a full
@@ -528,6 +434,16 @@
   condition: ((proc.pname=sh and proc.aname[2]=yum) or
               (proc.aname[2]=sh and proc.aname[3]=yum))
 
+- macro: run_by_ms_oms
+  condition: >
+    (proc.aname[3] startswith omsagent- or
+     proc.aname[3] startswith scx-)
+
+- macro: run_by_google_accounts_daemon
+  condition: >
+    (proc.aname[1] startswith google_accounts or
+     proc.aname[2] startswith google_accounts)
+
 # Chef is similar.
 - macro: run_by_chef
   condition: (proc.aname[2]=chef_command_wr or proc.aname[3]=chef_command_wr or
@@ -543,15 +459,6 @@
 - macro: run_by_puppet
   condition: (proc.aname[2]=puppet or proc.aname[3]=puppet)
 
-- macro: run_by_h2o
-  condition: (proc.pname=perl and proc.aname[2]=h2o)
-
-- macro: run_by_passenger_agent
-  condition: ((proc.pname=ruby and proc.aname[2]=PassengerAgent) or
-              proc.pcmdline startswith "ruby /usr/share/passenger/helper-scripts/rack-preloader.rb" or
-              proc.pcmdline startswith "ruby /usr/local/bundle/bin/passenger" or
-              proc.pcmdline startswith "ruby /usr/local/bin/passenger")
-
 # Also handles running semi-indirectly via scl
 - macro: run_by_foreman
   condition: >
@@ -559,31 +466,11 @@
      (proc.pname in (rake, ruby, scl) and proc.aname[5] in (tfm-rake,tfm-ruby)) or
      (proc.pname=scl and proc.aname[2] in (tfm-rake,tfm-ruby)))
 
-- macro: run_by_openshift
-  condition: proc.aname[2]=es_seed_acl
-
-# As a part of kernel upgrades, dpkg will spawn a perl script with the
-# name linux-image-N.N. This macro matches that.
-- macro: parent_linux_image_upgrade_script
-  condition: proc.pname startswith linux-image-
-
 - macro: java_running_sdjagent
   condition: proc.name=java and proc.cmdline contains sdjagent.jar
 
 - macro: kubelet_running_loopback
   condition: (proc.pname=kubelet and proc.name=loopback)
-
-- macro: parent_java_running_confluence
-  condition: (proc.pname=java and proc.pcmdline contains "-classpath /opt/atlassian/confluence")
-
-- macro: parent_java_running_install4j
-  condition: (proc.pname=java and proc.pcmdline contains "-classpath i4jruntime.jar")
-
-- macro: parent_java_running_endeca
-  condition: (proc.pname=java and proc.pcmdline contains "-classpath /opt/endeca/")
-
-- macro: python_mesos_healthcheck
-  condition: (proc.pcmdline startswith "python /mesoshealthcheck.py")
 
 - macro: python_mesos_marathon_scripting
   condition: (proc.pcmdline startswith "python3 /marathon-lb/marathon_lb.py")
@@ -591,24 +478,11 @@
 - macro: splunk_running_forwarder
   condition: (proc.pname=splunkd and proc.cmdline startswith "sh -c /opt/splunkforwarder")
 
-- macro: parent_running_datastax
-  condition: ((proc.pname=java and proc.pcmdline contains "-jar datastax-agent") or
-              (proc.pcmdline startswith "nodetool /opt/dse/bin/"))
-
-- macro: parent_dovecot_running_auth
-  condition: (proc.pname=auth and proc.aname[2]=dovecot)
-
 - macro: parent_supervise_running_multilog
   condition: (proc.name=multilog and proc.pname=supervise)
 
 - macro: supervise_writing_status
   condition: (proc.name in (supervise,svc) and fd.name startswith "/etc/sb/")
-
-- macro: parent_ruby_running_discourse
-  condition: (proc.pcmdline startswith "ruby /var/www/discourse/vendor/bundle/ruby")
-
-- macro: parent_ruby_running_pups
-  condition: (proc.pcmdline startswith "ruby /pups/bin/pups")
 
 - macro: pki_realm_writing_realms
   condition: (proc.cmdline startswith "bash /usr/local/lib/pki/pki-realm" and fd.name startswith /etc/pki/realms)
@@ -626,20 +500,62 @@
   condition: (proc.cmdline startswith "perl /opt/psa/admin/bin/plesk_agent_manager" or
               proc.pcmdline startswith "perl /opt/psa/admin/bin/plesk_agent_manager")
 
-- macro: plesk_autoinstaller
-  condition: (proc.pname=autoinstaller and proc.aname[2]=sw-engine)
+- macro: perl_running_updmap
+  condition: (proc.cmdline startswith "perl /usr/bin/updmap")
 
-- macro: parent_perl_running_openresty
-  condition: (proc.pcmdline startswith "perl /usr/local/openresty/bin")
+- macro: perl_running_centrifydc
+  condition: (proc.cmdline startswith "perl /usr/share/centrifydc")
 
 - macro: parent_ucf_writing_conf
-  condition: (proc.pname=ucf and fd.name startswith "/etc/gconf")
+  condition: (proc.pname=ucf and proc.aname[2]=frontend)
 
 - macro: consul_template_writing_conf
-  condition: (proc.name=consul-template and fd.name startswith /etc/haproxy)
+  condition: >
+    ((proc.name=consul-template and fd.name startswith /etc/haproxy) or
+     (proc.name=reload.sh and proc.aname[2]=consul-template and fd.name startswith /etc/ssl))
 
 - macro: countly_writing_nginx_conf
   condition: (proc.cmdline startswith "nodejs /opt/countly/bin" and fd.name startswith /etc/nginx)
+
+- macro: ms_oms_writing_conf
+  condition: >
+    ((proc.name in (omiagent,omsagent,in_heartbeat_r*,omsadmin.sh,PerformInventor)
+      or proc.pname in (omi.postinst,omsconfig.posti,scx.postinst,omsadmin.sh,omiagent))
+     and (fd.name startswith /etc/opt/omi or fd.name startswith /etc/opt/microsoft/omsagent))
+
+- macro: ms_scx_writing_conf
+  condition: (proc.name in (GetLinuxOS.sh) and fd.name startswith /etc/opt/microsoft/scx)
+
+- macro: azure_scripts_writing_conf
+  condition: (proc.pname startswith "bash /var/lib/waagent/" and fd.name startswith /etc/azure)
+
+- macro: azure_networkwatcher_writing_conf
+  condition: (proc.name in (NetworkWatcherA) and fd.name=/etc/init.d/AzureNetworkWatcherAgent)
+
+- macro: couchdb_writing_conf
+  condition: (proc.name=beam.smp and proc.cmdline contains couchdb and fd.name startswith /etc/couchdb)
+
+- macro: update_texmf_writing_conf
+  condition: (proc.name=update-texmf and fd.name startswith /etc/texmf)
+
+- macro: slapadd_writing_conf
+  condition: (proc.name=slapadd and fd.name startswith /etc/ldap)
+
+- macro: symantec_writing_conf
+  condition: >
+    ((proc.name=symcfgd and fd.name startswith /etc/symantec) or
+     (proc.name=navdefutil and fd.name=/etc/symc-defutils.conf))
+
+- macro: liveupdate_writing_conf
+  condition: (proc.cmdline startswith "java LiveUpdate" and fd.name in (/etc/liveupdate.conf, /etc/Product.Catalog.JavaLiveUpdate))
+
+- macro: sosreport_writing_files
+  condition: >
+    (proc.name=urlgrabber-ext- and proc.aname[3]=sosreport and
+     (fd.name startswith /etc/pkt/nssdb or fd.name startswith /etc/pki/nssdb))
+
+- macro: selinux_writing_conf
+  condition: (proc.name in (semodule,genhomedircon,sefcontext_comp) and fd.name startswith /etc/selinux)
 
 - list: veritas_binaries
   items: [vxconfigd, sfcache, vxclustadm, vxdctl, vxprint, vxdmpadm, vxdisk, vxdg, vxassist, vxtune]
@@ -653,19 +569,50 @@
 - macro: veritas_writing_config
   condition: (veritas_progs and fd.name startswith /etc/vx)
 
-- macro: exe_running_docker_save
-  condition: (container and proc.cmdline startswith "exe /var/lib/docker" and proc.pname in (dockerd, docker))
+- macro: nginx_writing_conf
+  condition: (proc.name=nginx and fd.name startswith /etc/nginx)
 
-###############
-# General Rules
-###############
+- macro: nginx_writing_certs
+  condition: >
+    (((proc.name=openssl and proc.pname=nginx-launch.sh) or proc.name=nginx-launch.sh) and fd.name startswith /etc/nginx/certs)
+
+- macro: chef_client_writing_conf
+  condition: (proc.pcmdline startswith "chef-client /opt/gitlab" and fd.name startswith /etc/gitlab)
+
+- macro: centrify_writing_krb
+  condition: (proc.name in (adjoin,addns) and fd.name startswith /etc/krb5)
+
+- macro: cockpit_writing_conf
+  condition: >
+    ((proc.pname=cockpit-kube-la or proc.aname[2]=cockpit-kube-la)
+     and fd.name startswith /etc/cockpit)
+
+- macro: ipsec_writing_conf
+  condition: (proc.name=start-ipsec.sh and fd.directory=/etc/ipsec)
+
+- macro: exe_running_docker_save
+  condition: (proc.cmdline startswith "exe /var/lib/docker" and proc.pname in (dockerd, docker))
+
+- macro: python_running_get_pip
+  condition: (proc.cmdline startswith "python get-pip.py")
+
+- macro: python_running_ms_oms
+  condition: (proc.cmdline startswith "python /var/lib/waagent/")
+
+- macro: gugent_writing_guestagent_log
+  condition: (proc.name=gugent and fd.name=GuestAgent.log)
 
 - rule: Write below binary dir
   desc: an attempt to write to any file below a set of binary directories
-  condition: bin_dir and evt.dir = < and open_write and not package_mgmt_procs and not exe_running_docker_save
+  condition: >
+    bin_dir and evt.dir = < and open_write
+    and not package_mgmt_procs
+    and not exe_running_docker_save
+    and not python_running_get_pip
+    and not python_running_ms_oms
   output: >
     File below a known binary directory opened for writing (user=%user.name
-    command=%proc.cmdline file=%fd.name)
+    command=%proc.cmdline file=%fd.name parent=%proc.pname pcmdline=%proc.pcmdline gparent=%proc.aname[2])
   priority: ERROR
   tags: [filesystem]
 
@@ -713,8 +660,8 @@
   condition: (proc.name=curl and fd.directory=/etc/pki/nssdb)
 
 - macro: haproxy_writing_conf
-  condition: ((proc.name in (update-haproxy-,haproxy_reload.) or proc.pname=update-haproxy-)
-               and fd.name=/etc/openvpn/client.map or fd.directory=/etc/haproxy)
+  condition: ((proc.name in (update-haproxy-,haproxy_reload.) or proc.pname in (update-haproxy-,haproxy_reload,haproxy_reload.))
+               and (fd.name=/etc/openvpn/client.map or fd.name startswith /etc/haproxy))
 
 - macro: java_writing_conf
   condition: (proc.name=java and fd.name=/etc/.java/.systemPrefs/.system.lock)
@@ -733,13 +680,20 @@
   condition: ((proc.name=start-mysql.sh or proc.pname=start-mysql.sh) and fd.name startswith /etc/mysql)
 
 - macro: openvpn_writing_conf
-  condition: (proc.name=openvpn and fd.directory=/etc/openvpn)
+  condition: (proc.name in (openvpn,openvpn-entrypo) and fd.name startswith /etc/openvpn)
 
 - macro: php_handlers_writing_conf
   condition: (proc.name=php_handlers_co and fd.name=/etc/psa/php_versions.json)
 
-- macro: cron_sed_writing_temp_file
-  condition: (proc.aname[3]=cron_start.sh and fd.name startswith /etc/security/sed)
+- macro: sed_writing_temp_file
+  condition: >
+    ((proc.aname[3]=cron_start.sh and fd.name startswith /etc/security/sed) or
+     (proc.name=sed and (fd.name startswith /etc/apt/sources.list.d/sed or
+                         fd.name startswith /etc/apt/sed or
+                         fd.name startswith /etc/apt/apt.conf.d/sed)))
+
+- macro: cron_start_writing_pam_env
+  condition: (proc.cmdline="bash /usr/sbin/start-cron" and fd.name=/etc/security/pam_env.conf)
 
 # In some cases dpkg-reconfigur runs commands that modify /etc. Not
 # putting the full set of package management programs yet.
@@ -762,6 +716,7 @@
 - macro: write_etc_common
   condition: >
     etc_dir and evt.dir = < and open_write
+    and proc_name_exists
     and not proc.name in (passwd_binaries, shadowutils_binaries, sysdigcloud_binaries,
                           package_mgmt_binaries, ssl_mgmt_binaries, dhcp_binaries,
                           dev_creation_binaries, shell_mgmt_binaries,
@@ -774,11 +729,11 @@
                           gen_resolvconf., update-ca-certi, certbot, runsv,
                           qualys-cloud-ag, locales.postins, nomachine_binaries,
                           adclient, certutil, crlutil, pam-auth-update, parallels_insta,
-                          openshift-launc)
-    and not proc.pname in (sysdigcloud_binaries, mail_config_binaries, hddtemp.postins, sshkit_script_binaries, locales.postins, deb_binaries)
+                          openshift-launc, update-rc.d)
+    and not proc.pname in (sysdigcloud_binaries, mail_config_binaries, hddtemp.postins, sshkit_script_binaries, locales.postins, deb_binaries, dhcp_binaries)
     and not fd.name pmatch (safe_etc_dirs)
     and not fd.name in (/etc/container_environment.sh, /etc/container_environment.json, /etc/motd, /etc/motd.svc)
-    and not exe_running_docker_save    
+    and not exe_running_docker_save
     and not ansible_running_python
     and not python_running_denyhosts
     and not fluentd_writing_conf_files
@@ -810,26 +765,47 @@
     and not rabbitmq_writing_conf
     and not rook_writing_conf
     and not php_handlers_writing_conf
-    and not cron_sed_writing_temp_file
+    and not sed_writing_temp_file
+    and not cron_start_writing_pam_env
     and not httpd_writing_conf_logs
     and not mysql_writing_conf
     and not openvpn_writing_conf
     and not consul_template_writing_conf
     and not countly_writing_nginx_conf
+    and not ms_oms_writing_conf
+    and not ms_scx_writing_conf
+    and not azure_scripts_writing_conf
+    and not azure_networkwatcher_writing_conf
+    and not couchdb_writing_conf
+    and not update_texmf_writing_conf
+    and not slapadd_writing_conf
+    and not symantec_writing_conf
+    and not liveupdate_writing_conf
+    and not sosreport_writing_files
+    and not selinux_writing_conf
+    and not veritas_writing_config
+    and not nginx_writing_conf
+    and not nginx_writing_certs
+    and not chef_client_writing_conf
+    and not centrify_writing_krb
+    and not cockpit_writing_conf
+    and not ipsec_writing_conf
+    and not httpd_writing_ssl_conf
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc
-  condition: write_etc_common and not proc.sname=fbash
-  output: "File below /etc opened for writing (user=%user.name command=%proc.cmdline parent=%proc.pname pcmdline=%proc.pcmdline file=%fd.name name=%proc.name gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4])"
+  condition: write_etc_common
+  output: "File below /etc opened for writing (user=%user.name command=%proc.cmdline parent=%proc.pname pcmdline=%proc.pcmdline file=%fd.name program=%proc.name gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4])"
   priority: ERROR
   tags: [filesystem]
 
 - list: known_root_files
   items: [/root/.monit.state, /root/.auth_tokens, /root/.bash_history, /root/.ash_history, /root/.aws/credentials,
-          /root/.viminfo.tmp, /root/.lesshst, /root/.bzr.log, /root/.gitconfig.lock]
+          /root/.viminfo.tmp, /root/.lesshst, /root/.bzr.log, /root/.gitconfig.lock, /root/.babel.json, /root/.localstack,
+          /root/.node_repl_history, /root/.mongorc.js, /root/.dbshell, /root/.augeas/history, /root/.rnd]
 
 - list: known_root_directories
-  items: [/root/.oracle_jre_usage, /root/.ssh]
+  items: [/root/.oracle_jre_usage, /root/.ssh, /root/.subversion, /root/.nami]
 
 - macro: known_root_conditions
   condition: (fd.name startswith /root/orcexec.
@@ -846,7 +822,22 @@
               or fd.name startswith /root/.sbt
               or fd.name startswith /root/.java
               or fd.name startswith /root/.glide
-              or fd.name startswith /root/.sonar)
+              or fd.name startswith /root/.sonar
+              or fd.name startswith /root/.v8flag
+              or fd.name startswith /root/infaagent
+              or fd.name startswith /root/.local/lib/python
+              or fd.name startswith /root/.pm2
+              or fd.name startswith /root/.gnupg
+              or fd.name startswith /root/.pgpass
+              or fd.name startswith /root/.theano
+              or fd.name startswith /root/.gradle
+              or fd.name startswith /root/.android
+              or fd.name startswith /root/.ansible
+              or fd.name startswith /root/.crashlytics
+              or fd.name startswith /root/.dbus
+              or fd.name startswith /root/.composer
+              or fd.name startswith /root/.gconf
+              or fd.name startswith /root/.nv)
 
 - rule: Write below root
   desc: an attempt to write to any file directly below / or /root
@@ -855,8 +846,9 @@
     and not fd.name in (known_root_files)
     and not fd.directory in (known_root_directories)
     and not exe_running_docker_save
+    and not gugent_writing_guestagent_log
     and not known_root_conditions
-  output: "File below / or /root opened for writing (user=%user.name command=%proc.cmdline parent=%proc.pname file=%fd.name name=%proc.name)"
+  output: "File below / or /root opened for writing (user=%user.name command=%proc.cmdline parent=%proc.pname file=%fd.name program=%proc.name)"
   priority: ERROR
   tags: [filesystem]
 
@@ -880,7 +872,7 @@
     iptables, ps, lsb_release, check-new-relea, dumpe2fs, accounts-daemon, sshd,
     vsftpd, systemd, mysql_install_d, psql, screen, debconf-show, sa-update,
     pam-auth-update, /usr/sbin/spamd, polkit-agent-he, lsattr, file, sosreport,
-    scxcimservera
+    scxcimservera, adclient, rtvscand, cockpit-session
     ]
 
 # Add conditions to this macro (probably in a separate file,
@@ -902,10 +894,11 @@
     information). Exceptions are made for known trusted programs.
   condition: >
     sensitive_files and open_read
+    and proc_name_exists
     and not proc.name in (user_mgmt_binaries, userexec_binaries, package_mgmt_binaries,
      cron_binaries, read_sensitive_file_binaries, shell_binaries, hids_binaries,
      vpn_binaries, mail_config_binaries, nomachine_binaries, sshkit_script_binaries,
-     in.proftpd, mandb, salt-minion)
+     in.proftpd, mandb, salt-minion, postgres_mgmt_binaries)
     and not cmp_cp_by_passwd
     and not ansible_running_python
     and not proc.cmdline contains /usr/bin/mandb
@@ -913,9 +906,11 @@
     and not run_by_chef
     and not user_read_sensitive_file_conditions
     and not perl_running_plesk
+    and not perl_running_updmap
     and not veritas_driver_script
+    and not perl_running_centrifydc
   output: >
-    Sensitive file opened for reading by non-trusted program (user=%user.name name=%proc.name
+    Sensitive file opened for reading by non-trusted program (user=%user.name program=%proc.name
     command=%proc.cmdline file=%fd.name parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4])
   priority: WARNING
   tags: [filesystem]
@@ -930,6 +925,20 @@
 
 - macro: postgres_running_wal_e
   condition: (proc.pname=postgres and proc.cmdline startswith "sh -c envdir /etc/wal-e.d/env /usr/local/bin/wal-e")
+
+- macro: redis_running_prepost_scripts
+  condition: (proc.aname[2]=redis-server and (proc.cmdline contains "redis-server.post-up.d" or proc.cmdline contains "redis-server.pre-up.d"))
+
+- macro: rabbitmq_running_scripts
+  condition: >
+    (proc.pname=beam.smp and
+    (proc.cmdline startswith "sh -c exec ps" or
+     proc.cmdline startswith "sh -c exec inet_gethost" or
+     proc.cmdline= "sh -s unix:cmd" or
+     proc.cmdline= "sh -c exec /bin/sh -s unix:cmd 2>&1"))
+
+- macro: rabbitmqctl_running_scripts
+  condition: (proc.aname[2]=rabbitmqctl and proc.cmdline startswith "sh -c ")
 
 - rule: DB program spawned process
   desc: >
@@ -948,7 +957,7 @@
 
 - rule: Modify binary dirs
   desc: an attempt to modify any file below a set of binary directories.
-  condition: bin_dir_rename and modify and not package_mgmt_procs
+  condition: (bin_dir_rename) and modify and not package_mgmt_procs and not exe_running_docker_save
   output: >
     File below known binary directory renamed/removed (user=%user.name command=%proc.cmdline
     operation=%evt.type file=%fd.name %evt.args)
@@ -964,25 +973,11 @@
   priority: ERROR
   tags: [filesystem]
 
-# Don't load shared objects coming from unexpected places
-# Commenting this out for now--there are lots of shared library
-# locations below /usr/lib for things like python, perl, etc. We may
-# want to just add /usr/lib to the list, but that is really
-# permissive.
-# - condition: open_read and fd.name contains .so and not (linux_so_dirs)
-#   output: "Loaded .so from unexpected dir (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
-#   priority: WARNING
-
-# Temporarily disabling this rule as it's tripping over https://github.com/draios/sysdig/issues/598
-# - rule: Syscall returns eaccess
-#   desc: >
-#     any system call that returns EACCESS. This is not always a strong
-#      indication of a problem, hence the INFO priority.
-#   condition: evt.res = EACCESS
-#   output: >
-#     System call returned EACCESS (user=%user.name command=%proc.cmdline
-#     syscall=%evt.type args=%evt.args)
-#   priority: INFO
+# This list allows for easy additions to the set of commands allowed
+# to change thread namespace without having to copy and override the
+# entire change thread namespace rule.
+- list: user_known_change_thread_namespace_binaries
+  items: []
 
 - rule: Change thread namespace
   desc: >
@@ -991,6 +986,7 @@
   condition: >
     evt.type = setns
     and not proc.name in (docker_binaries, k8s_binaries, lxd_binaries, sysdigcloud_binaries, sysdig, nsenter)
+    and not proc.name in (user_known_change_thread_namespace_binaries)
     and not proc.name startswith "runc:"
     and not proc.pname in (sysdigcloud_binaries)
     and not java_running_sdjagent
@@ -1001,27 +997,6 @@
   priority: NOTICE
   tags: [process]
 
-- list: known_shell_spawn_binaries
-  items: [
-    sshd, sudo, su, tmux, screen, emacs, systemd, login, flock, fbash,
-    nginx, monit, supervisord, dragent, aws, awslogs, initdb, docker-compose,
-    configure, awk, falco, fail2ban-server, fleetctl,
-    logrotate, ansible, less, adduser, pycompile, py3compile,
-    pyclean, py3clean, pip, pip2, ansible-playboo, man-db,
-    init, pluto, mkinitramfs, unattended-upgr, watch, sysdig,
-    landscape-sysin, nessusd, PM2, syslog-summary, erl_child_setup, erlexec,
-    npm, cloud-init, toybox, ceph, hhvm, certbot,
-    serf, a2enmod, runsv, supervisord, varnishd, authconfig, tini,
-    timeout, updatedb.findut, adclient, systemd-udevd,
-    luajit, uwsgi, cfn-signal, apache_control_, beam.smp, paster, postfix-local,
-    nginx_control, mailmng-service, web_statistic_e, statistics_coll, install-info,
-    hawkular-metric, rhsmcertd-worke, parted, amuled, fluentd, x2gormforward,
-    parallels_insta, salt-minion, dnsmng, update-inetd, pum_worker, awstats_buildst,
-    tsvuln, 50plesk-daily, grubby, chkconfig, dracut-install, rhnsd, find, consul,
-    doxygen, Cypress, consul-template, xargs, scl, awstats_updatea, sa-update,
-    mysql_upgrade, opkg-cl, vmtoolsd, confd
-    ]
-
 # The binaries in this list and their descendents are *not* allowed
 # spawn shells. This includes the binaries spawning shells directly as
 # well as indirectly. For example, apache -> php/perl for
@@ -1031,7 +1006,7 @@
 - list: protected_shell_spawning_binaries
   items: [
     http_server_binaries, db_server_binaries, nosql_server_binaries, mail_binaries,
-    fluentd, flanneld, splunkd, consul, smbd, runsv
+    fluentd, flanneld, splunkd, consul, smbd, runsv, PM2
     ]
 
 - macro: parent_java_running_zookeeper
@@ -1047,7 +1022,7 @@
   condition: (proc.pname=java and proc.pcmdline contains activemq.jar)
 
 - macro: parent_java_running_cassandra
-  condition: (proc.pname=java and proc.pcmdline contains org.apache.cassandra.service.CassandraDaemon)
+  condition: (proc.pname=java and (proc.pcmdline contains "-Dcassandra.config.loader" or proc.pcmdline contains org.apache.cassandra.service.CassandraDaemon))
 
 - macro: parent_java_running_jboss_wildfly
   condition: (proc.pname=java and proc.pcmdline contains org.jboss)
@@ -1061,11 +1036,11 @@
 - macro: parent_java_running_datastax
   condition: (proc.pname=java and proc.pcmdline contains com.datastax)
 
-- macro: parent_java_running_sumologic
-  condition: (proc.pname=java and proc.pcmdline contains com.sumologic)
-
 - macro: nginx_starting_nginx
   condition: (proc.pname=nginx and proc.cmdline contains "/usr/sbin/nginx -c /etc/nginx/nginx.conf")
+
+- macro: nginx_running_aws_s3_cp
+  condition: (proc.pname=nginx and proc.cmdline startswith "sh -c /usr/local/bin/aws s3 cp")
 
 - macro: consul_running_net_scripts
   condition: (proc.pname=consul and (proc.cmdline startswith "sh -c curl" or proc.cmdline startswith "sh -c nc"))
@@ -1079,6 +1054,24 @@
 - macro: check_process_status
   condition: (proc.cmdline startswith "sh -c kill -0 ")
 
+# In some cases, you may want to consider node processes run directly
+# in containers as protected shell spawners. Examples include using
+# pm2-docker or pm2 start some-app.js --no-daemon-mode as the direct
+# entrypoint of the container, and when the node app is a long-lived
+# server using something like express.
+#
+# However, there are other uses of node related to build pipelines for
+# which node is not really a server but instead a general scripting
+# tool. In these cases, shells are very likely and in these cases you
+# don't want to consider node processes protected shell spawners.
+#
+# We have to choose one of these cases, so we consider node processes
+# as unprotected by default. If you want to consider any node process
+# run in a container as a protected shell spawner, override the below
+# macro to remove the "never_true" clause, which allows it to take effect.
+- macro: possibly_node_in_container
+  condition: (never_true and (proc.pname=node and proc.aname[3]=docker-containe))
+
 - macro: protected_shell_spawner
   condition: >
     (proc.aname in (protected_shell_spawning_binaries)
@@ -1090,7 +1083,11 @@
     or parent_java_running_jboss_wildfly
     or parent_java_running_glassfish
     or parent_java_running_hadoop
-    or parent_java_running_datastax)
+    or parent_java_running_datastax
+    or possibly_node_in_container)
+
+- list: mesos_shell_binaries
+  items: [mesos-docker-ex, mesos-slave, mesos-health-ch]
 
 # Note that runsv is both in protected_shell_spawner and the
 # exclusions by pname. This means that runsv can itself spawn shells
@@ -1105,14 +1102,16 @@
     and protected_shell_spawner
     and not proc.pname in (shell_binaries, gitlab_binaries, cron_binaries, user_known_shell_spawn_binaries,
                            needrestart_binaries,
+                           mesos_shell_binaries,
                            erl_child_setup, exechealthz,
                            PM2, PassengerWatchd, c_rehash, svlogd, logrotate, hhvm, serf,
-                           lb-controller, nvidia-installe, runsv, statsite)
+                           lb-controller, nvidia-installe, runsv, statsite, erlexec)
     and not proc.cmdline in (known_shell_spawn_cmdlines)
     and not proc.aname in (unicorn_launche)
     and not consul_running_net_scripts
     and not consul_running_alert_checks
     and not nginx_starting_nginx
+    and not nginx_running_aws_s3_cp
     and not run_by_package_mgmt_binaries
     and not serf_script
     and not check_process_status
@@ -1120,6 +1119,9 @@
     and not python_mesos_marathon_scripting
     and not splunk_running_forwarder
     and not postgres_running_wal_e
+    and not redis_running_prepost_scripts
+    and not rabbitmq_running_scripts
+    and not rabbitmqctl_running_scripts
     and not user_shell_container_exclusions
   output: >
     Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname
@@ -1141,7 +1143,14 @@
               container.image startswith rook/toolbox or
               container.image startswith registry.access.redhat.com/openshift3/logging-fluentd or
               container.image startswith registry.access.redhat.com/openshift3/logging-elasticsearch or
-              container.image startswith cloudnativelabs/kube-router)
+              container.image startswith registry.access.redhat.com/openshift3/metrics-cassandra or
+              container.image startswith openshift3/ose-sti-builder or
+              container.image startswith registry.access.redhat.com/openshift3/ose-sti-builder or
+              container.image startswith cloudnativelabs/kube-router or
+              container.image startswith "consul:" or
+              container.image startswith mesosphere/mesos-slave or
+              container.image startswith istio/proxy_ or
+              container.image startswith datadog/docker-dd-agent)
 
 # Add conditions to this macro (probably in a separate file,
 # overwriting this macro) to specify additional containers that are
@@ -1160,14 +1169,6 @@
 # and repeats it.
 - macro: user_sensitive_mount_containers
   condition: (container.image startswith sysdig/agent)
-
-# These containers are ones that are known to spawn lots of
-# shells. Generally, they are for systems where the container is used
-# as a packaging mechanism more than for a dedicated microservice.
-- macro: shell_spawning_containers
-  condition: (container.image startswith jenkins or
-              container.image startswith gitlab/gitlab-ce or
-              container.image startswith gitlab/gitlab-ee)
 
 - rule: Launch Privileged Container
   desc: Detect the initial process started in a privileged container. Exceptions are made for known trusted images.
@@ -1299,27 +1300,9 @@
     '"sh -c /bin/hostname -f 2> /dev/null"',
     '"sh -c locale -a"',
     '"sh -c  -t -i"',
-    '"sh -c openssl version"'
-    ]
-
-- list: known_container_shell_spawn_cmdlines
-  items: [
-    known_shell_spawn_cmdlines,
-    '"bash -c curl -f localhost:$API_PORT/admin/healthcheck"',
-    '"sh -c curl http://localhost:6060/debug/vars>/dev/null "',
-    '"sh -c curl http://localhost:6060/debug/vars>/dev/null"',
-    '"sh -c  curl http://localhost:6060/debug/vars>/dev/null"',
-    '"sh -c  curl http://localhost:6060/debug/vars>/dev/null "',
-    '"sh -c  pgrep java && exit 0 || exit 1 "',
-    '"sh -c  echo healthy "',
-    '"sh -c  echo alive "',
-    '"bash /opt/docker/bin/lar"',
-    '"bash /opt/docker/bin/irs"',
-    '"bash /opt/docker/bin/brs"',
-    '"bash /opt/docker/bin/hdi"',
-    '"bash /opt/docker/bin/hdi "',
-    '"bash /home/entrypoint.sh"',
-    '"bash /tmp/bootstrap.sh"'
+    '"sh -c openssl version"',
+    '"bash -c id -Gn kafadmin"',
+    '"sh -c /bin/sh -c ''date +%%s''"'
     ]
 
 # This list allows for easy additions to the set of commands allowed
@@ -1335,13 +1318,7 @@
 # rule. Its default value is an expression that always is false, which
 # becomes true when the "not ..." in the rule is applied.
 - macro: user_shell_container_exclusions
-  condition: (evt.num=0)
-
-# Temporarily adding as an example
-- macro: node_running_edi_dynamodb
-  condition: >
-    (proc.pname=node and (proc.pcmdline contains /var/www/edi/process.js or
-                          proc.pcmdline contains "sh -c /var/www/edi/bin/sftp.sh"))
+  condition: (never_true)
 
 - macro: login_doing_dns_lookup
   condition: (proc.name=login and fd.l4proto=udp and fd.sport=53)
@@ -1352,12 +1329,53 @@
   desc: any network activity performed by system binaries that are not expected to send or receive any network traffic
   condition: >
     (fd.sockfamily = ip and system_procs)
-    and (inbound or outbound)
+    and (inbound_outbound)
     and not proc.name in (systemd, hostid)
     and not login_doing_dns_lookup
   output: >
     Known system binary sent/received network traffic
     (user=%user.name command=%proc.cmdline connection=%fd.name)
+  priority: NOTICE
+  tags: [network]
+
+- list: openvpn_udp_ports
+  items: [1194, 1197, 1198, 8080, 9201]
+
+- list: l2tp_udp_ports
+  items: [500, 1701, 4500, 10000]
+
+- list: statsd_ports
+  items: [8125]
+
+- list: ntp_ports
+  items: [123]
+
+# Some applications will connect a udp socket to an address only to
+# test connectivity. Assuming the udp connect works, they will follow
+# up with a tcp connect that actually sends/receives data.
+#
+# With that in mind, we listed a few commonly seen ports here to avoid
+# some false positives. In addition, we make the main rule opt-in, so
+# it's disabled by default.
+
+- list: test_connect_ports
+  items: [0, 9, 80, 3306]
+
+- macro: do_unexpected_udp_check
+  condition: (never_true)
+
+- list: expected_udp_ports
+  items: [53, openvpn_udp_ports, l2tp_udp_ports, statsd_ports, ntp_ports, test_connect_ports]
+
+- macro: expected_udp_traffic
+  condition: fd.port in (expected_udp_ports)
+
+- rule: Unexpected UDP Traffic
+  desc: UDP traffic not on port 53 (DNS) or other commonly used ports
+  condition: (inbound_outbound) and do_unexpected_udp_check and fd.l4proto=udp and not expected_udp_traffic
+  output: >
+    Unexpected UDP Traffic Seen
+    (user=%user.name command=%proc.cmdline connection=%fd.name proto=%fd.l4proto evt=%evt.type %evt.args)
   priority: NOTICE
   tags: [network]
 
@@ -1418,13 +1436,15 @@
   condition: >
     spawned_process and proc.name in (user_mgmt_binaries) and
     not proc.name in (su, sudo, lastlog, nologin, unix_chkpwd) and not container and
-    not proc.pname in (cron_binaries, systemd, run-parts) and
+    not proc.pname in (cron_binaries, systemd, systemd.postins, udev.postinst, run-parts) and
     not proc.cmdline startswith "passwd -S" and
     not proc.cmdline startswith "useradd -D" and
     not proc.cmdline startswith "systemd --version" and
     not run_by_qualys and
     not run_by_sumologic_securefiles and
-    not run_by_yum
+    not run_by_yum and
+    not run_by_ms_oms and
+    not run_by_google_accounts_daemon
   output: >
     User management binary command run outside of container
     (user=%user.name command=%proc.cmdline parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4])
@@ -1451,14 +1471,70 @@
   priority: ERROR
   tags: [filesystem]
 
-# It'd be nice if we could warn when processes in a fbash session try
-# to download from any nonstandard location? This is probably blocked
-# on https://github.com/draios/falco/issues/88 though.
 
-###########################
-# Application-Related Rules
-###########################
+# In a local/user rules file, you could override this macro to
+# explicitly enumerate the container images that you want to allow
+# access to EC2 metadata. In this main falco rules file, there isn't
+# any way to know all the containers that should have access, so any
+# container is alllowed, by repeating the "container" macro. In the
+# overridden macro, the condition would look something like
+# (container.image startswith vendor/container-1 or container.image
+# startswith vendor/container-2 or ...)
+- macro: ec2_metadata_containers
+  condition: container
 
-# Moved to application_rules.yaml. Please look there if you want to
-# enable them by adding to falco_rules.local.yaml.
+# On EC2 instances, 169.254.169.254 is a special IP used to fetch
+# metadata about the instance. It may be desirable to prevent access
+# to this IP from containers.
+- rule: Contact EC2 Instance Metadata Service From Container
+  desc: Detect attempts to contact the EC2 Instance Metadata Service from a container
+  condition: outbound and fd.sip="169.254.169.254" and container and not ec2_metadata_containers
+  output: Outbound connection to EC2 instance metadata service (command=%proc.cmdline connection=%fd.name %container.info image=%container.image)
+  priority: NOTICE
+  tags: [network, aws, container]
+
+# In a local/user rules file, you should override this macro with the
+# IP address of your k8s api server. The IP 1.2.3.4 is a placeholder
+# IP that is not likely to be seen in practice.
+- macro: k8s_api_server
+  condition: (fd.sip="1.2.3.4" and fd.sport=8080)
+
+# In a local/user rules file, list the container images that are
+# allowed to contact the K8s API Server from within a container. This
+# might cover cases where the K8s infrastructure itself is running
+# within a container.
+- macro: k8s_containers
+  condition: >
+    (container.image startswith gcr.io/google_containers/hyperkube-amd64 or
+     container.image startswith gcr.io/google_containers/kube2sky or
+     container.image startswith sysdig/agent or
+     container.image startswith sysdig/falco or
+     container.image startswith sysdig/sysdig)
+
+- rule: Contact K8S API Server From Container
+  desc: Detect attempts to contact the K8S API Server from a container
+  condition: outbound and k8s_api_server and container and not k8s_containers
+  output: Unexpected connection to K8s API Server from container (command=%proc.cmdline %container.info image=%container.image connection=%fd.name)
+  priority: NOTICE
+  tags: [network, k8s, container]
+
+# In a local/user rules file, list the container images that are
+# allowed to contact NodePort services from within a container. This
+# might cover cases where the K8s infrastructure itself is running
+# within a container.
+#
+# By default, all containers are allowed to contact NodePort services.
+- macro: nodeport_containers
+  condition: container
+
+- rule: Unexpected K8s NodePort Connection
+  desc: Detect attempts to use K8s NodePorts from a container
+  condition: (inbound_outbound) and fd.sport >= 30000 and fd.sport <= 32767 and container and not nodeport_containers
+  output: Unexpected K8s NodePort Connection (command=%proc.cmdline connection=%fd.name)
+  priority: NOTICE
+  tags: [network, k8s, container]
+
+# Application rules have moved to application_rules.yaml. Please look
+# there if you want to enable them by adding to
+# falco_rules.local.yaml.
 

@@ -16,6 +16,13 @@ You should have received a copy of the GNU General Public License
 along with falco.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <algorithm>
+
+#include <dirent.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
 #include "configuration.h"
 #include "logger.h"
 
@@ -62,11 +69,12 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 		struct stat buffer;
 		if(stat(file.c_str(), &buffer) == 0)
 		{
-			m_rules_filenames.push_back(file);
+			read_rules_file_directory(file, m_rules_filenames);
 		}
 	}
 
 	m_json_output = m_config->get_scalar<bool>("json_output", false);
+	m_json_include_output_property = m_config->get_scalar<bool>("json_include_output_property", true);
 
 	falco_outputs::output_config file_output;
 	file_output.name = "file";
@@ -147,6 +155,70 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 
 	falco_logger::log_stderr = m_config->get_scalar<bool>("log_stderr", false);
 	falco_logger::log_syslog = m_config->get_scalar<bool>("log_syslog", true);
+}
+
+void falco_configuration::read_rules_file_directory(const string &path, list<string> &rules_filenames)
+{
+	struct stat st;
+
+	int rc = stat(path.c_str(), &st);
+
+	if(rc != 0)
+	{
+		std::cerr << "Could not get info on rules file " << path << ": " << strerror(errno) << std::endl;
+		exit(-1);
+	}
+
+	if(st.st_mode & S_IFDIR)
+	{
+		// It's a directory. Read the contents, sort
+		// alphabetically, and add every path to
+		// rules_filenames
+		vector<string> dir_filenames;
+
+		DIR *dir = opendir(path.c_str());
+
+		if(!dir)
+		{
+			std::cerr << "Could not get read contents of directory " << path << ": " << strerror(errno) << std::endl;
+			exit(-1);
+		}
+
+		for (struct dirent *ent = readdir(dir); ent; ent = readdir(dir))
+		{
+			string efile = path + "/" + ent->d_name;
+
+			rc = stat(efile.c_str(), &st);
+
+			if(rc != 0)
+			{
+				std::cerr << "Could not get info on rules file " << efile << ": " << strerror(errno) << std::endl;
+				exit(-1);
+			}
+
+			if(st.st_mode & S_IFREG)
+			{
+				dir_filenames.push_back(efile);
+			}
+		}
+
+		closedir(dir);
+
+		std::sort(dir_filenames.begin(),
+			  dir_filenames.end());
+
+		for (string &ent : dir_filenames)
+		{
+			rules_filenames.push_back(ent);
+		}
+	}
+	else
+	{
+		// Assume it's a file and just add to
+		// rules_filenames. If it can't be opened/etc that
+		// will be reported later..
+		rules_filenames.push_back(path);
+	}
 }
 
 static bool split(const string &str, char delim, pair<string,string> &parts)

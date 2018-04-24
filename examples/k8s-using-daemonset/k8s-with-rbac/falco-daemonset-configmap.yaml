@@ -19,14 +19,12 @@ spec:
           image: sysdig/falco:latest
           securityContext:
             privileged: true
-          args: [ "/usr/bin/falco", "-K", "/var/run/secrets/kubernetes.io/serviceaccount/token", "-k", "https://kubernetes", "-pk"]
+          args: [ "/usr/bin/falco", "-K", "/var/run/secrets/kubernetes.io/serviceaccount/token", "-k", "https://kubernetes.default", "-pk"]
           volumeMounts:
             - mountPath: /host/var/run/docker.sock
               name: docker-socket
-              readOnly: true
             - mountPath: /host/dev
               name: dev-fs
-              readOnly: true
             - mountPath: /host/proc
               name: proc-fs
               readOnly: true

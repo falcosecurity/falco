@@ -30,6 +30,8 @@ class FalcoTest(Test):
             self.trace_file = os.path.join(self.basedir, self.trace_file)
 
         self.json_output = self.params.get('json_output', '*', default=False)
+        self.json_include_output_property = self.params.get('json_include_output_property', '*', default=True)
+        self.all_events = self.params.get('all_events', '*', default=False)
         self.priority = self.params.get('priority', '*', default='debug')
         self.rules_file = self.params.get('rules_file', '*', default=os.path.join(self.basedir, '../rules/falco_rules.yaml'))
 
@@ -212,7 +214,7 @@ class FalcoTest(Test):
         triggered_rules = match.group(1)
 
         for rule, count in self.detect_counts.iteritems():
-            expected = '{}: (\d+)'.format(rule)
+            expected = '\s{}: (\d+)'.format(rule)
             match = re.search(expected, triggered_rules)
 
             if match is None:
@@ -249,7 +251,11 @@ class FalcoTest(Test):
             for line in res.stdout.splitlines():
                 if line.startswith('{'):
                     obj = json.loads(line)
-                    for attr in ['time', 'rule', 'priority', 'output']:
+                    if self.json_include_output_property:
+                        attrs = ['time', 'rule', 'priority', 'output']
+                    else:
+                        attrs = ['time', 'rule', 'priority']
+                    for attr in attrs:
                         if not attr in obj:
                             self.fail("Falco JSON object {} does not contain property \"{}\"".format(line, attr))
 
@@ -348,8 +354,8 @@ class FalcoTest(Test):
             trace_arg = "-e {}".format(self.trace_file)
 
         # Run falco
-        cmd = '{} {} {} -c {} {} -o json_output={} -o priority={} -v'.format(
-            self.falco_binary_path, self.rules_args, self.disabled_args, self.conf_file, trace_arg, self.json_output, self.priority)
+        cmd = '{} {} {} -c {} {} -o json_output={} -o json_include_output_property={} -o priority={} -v'.format(
+            self.falco_binary_path, self.rules_args, self.disabled_args, self.conf_file, trace_arg, self.json_output, self.json_include_output_property, self.priority)
 
         for tag in self.disable_tags:
             cmd += ' -T {}'.format(tag)
@@ -359,6 +365,9 @@ class FalcoTest(Test):
 
         if self.run_duration:
             cmd += ' -M {}'.format(self.run_duration)
+
+        if self.all_events:
+            cmd += ' -A'
 
         self.falco_proc = process.SubProcess(cmd)
 

@@ -52,7 +52,9 @@ falco_outputs::~falco_outputs()
 	}
 }
 
-void falco_outputs::init(bool json_output, uint32_t rate, uint32_t max_burst, bool buffered)
+void falco_outputs::init(bool json_output,
+			 bool json_include_output_property,
+			 uint32_t rate, uint32_t max_burst, bool buffered)
 {
 	// The engine must have been given an inspector by now.
 	if(! m_inspector)
@@ -65,7 +67,7 @@ void falco_outputs::init(bool json_output, uint32_t rate, uint32_t max_burst, bo
 	// Note that falco_formats is added to both the lua state used
 	// by the falco engine as well as the separate lua state used
 	// by falco outputs.
-	falco_formats::init(m_inspector, m_ls, json_output);
+	falco_formats::init(m_inspector, m_ls, json_output, json_include_output_property);
 
 	falco_logger::init(m_ls);
 
@@ -139,4 +141,20 @@ void falco_outputs::handle_event(sinsp_evt *ev, string &rule, falco_common::prio
 		throw falco_exception("No function " + m_lua_output_event + " found in lua compiler module");
 	}
 
+}
+
+void falco_outputs::reopen_outputs()
+{
+	lua_getglobal(m_ls, m_lua_output_reopen.c_str());
+
+	if(!lua_isfunction(m_ls, -1))
+	{
+		throw falco_exception("No function " + m_lua_output_reopen + " found. ");
+	}
+
+	if(lua_pcall(m_ls, 0, 0, 0) != 0)
+	{
+		const char* lerr = lua_tostring(m_ls, -1);
+		throw falco_exception(string(lerr));
+	}
 }

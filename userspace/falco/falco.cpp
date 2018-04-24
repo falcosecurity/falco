@@ -22,6 +22,8 @@ along with falco.  If not, see <http://www.gnu.org/licenses/>.
 #include <fstream>
 #include <set>
 #include <list>
+#include <vector>
+#include <algorithm>
 #include <string>
 #include <signal.h>
 #include <fcntl.h>
@@ -32,6 +34,7 @@ along with falco.  If not, see <http://www.gnu.org/licenses/>.
 #include <sinsp.h>
 
 #include "logger.h"
+#include "utils.h"
 
 #include "configuration.h"
 #include "falco_engine.h"
@@ -39,12 +42,19 @@ along with falco.  If not, see <http://www.gnu.org/licenses/>.
 #include "statsfilewriter.h"
 
 bool g_terminate = false;
+bool g_reopen_outputs = false;
+
 //
 // Helper functions
 //
 static void signal_callback(int signal)
 {
 	g_terminate = true;
+}
+
+static void reopen_outputs(int signal)
+{
+	g_reopen_outputs = true;
 }
 
 //
@@ -99,8 +109,9 @@ static void usage()
 	   "                               of %%container.info in rule output fields\n"
 	   "                               See the examples section below for more info.\n"
 	   " -P, --pidfile <pid_file>      When run as a daemon, write pid to specified file\n"
-           " -r <rules_file>               Rules file (defaults to value set in configuration file, or /etc/falco_rules.yaml).\n"
-	   "                               Can be specified multiple times to read from multiple files.\n"
+           " -r <rules_file>               Rules file/directory (defaults to value set in configuration file,\n"
+           "                               or /etc/falco_rules.yaml). Can be specified multiple times to read\n"
+           "                               from multiple files/directories.\n"
 	   " -s <stats_file>               If specified, write statistics related to falco's reading/processing of events\n"
 	   "                               to this file. (Only useful in live mode).\n"
 	   " -T <tag>                      Disable any rules with a tag=<tag>. Can be specified multiple times.\n"
@@ -111,7 +122,8 @@ static void usage()
 	   "                               single line emitted by falco to be flushed, which generates higher CPU\n"
 	   "                               usage but is useful when piping those outputs into another process\n"
 	   "                               or into a script.\n"
-	   " -V,--validate <rules_file>    Read the contents of the specified rules file and exit\n"
+	   " -V,--validate <rules_file>    Read the contents of the specified rules(s) file and exit\n"
+	   "                               Can be specified multiple times to validate multiple files.\n"
 	   " -v                            Verbose output.\n"
            " --version                     Print version number.\n"
 	   "\n"
@@ -142,7 +154,8 @@ uint64_t do_inspect(falco_engine *engine,
 		    falco_outputs *outputs,
 		    sinsp* inspector,
 		    uint64_t duration_to_tot_ns,
-		    string &stats_filename)
+		    string &stats_filename,
+		    bool all_events)
 {
 	uint64_t num_evts = 0;
 	int32_t res;
@@ -169,6 +182,12 @@ uint64_t do_inspect(falco_engine *engine,
 		res = inspector->next(&ev);
 
 		writer.handle();
+
+		if(g_reopen_outputs)
+		{
+			outputs->reopen_outputs();
+			g_reopen_outputs = false;
+		}
 
 		if (g_terminate)
 		{
@@ -203,8 +222,7 @@ uint64_t do_inspect(falco_engine *engine,
 			}
 		}
 
-		if(!inspector->is_debug_enabled() &&
-			ev->get_category() & EC_INTERNAL)
+		if(!ev->falco_consider() && !all_events)
 		{
 			continue;
 		}
@@ -226,6 +244,47 @@ uint64_t do_inspect(falco_engine *engine,
 	return num_evts;
 }
 
+static void print_all_ignored_events(sinsp *inspector)
+{
+	sinsp_evttables* einfo = inspector->get_event_info_tables();
+	const struct ppm_event_info* etable = einfo->m_event_info;
+	const struct ppm_syscall_desc* stable = einfo->m_syscall_info_table;
+
+	std::set<string> ignored_event_names;
+	for(uint32_t j = 0; j < PPM_EVENT_MAX; j++)
+	{
+		if(!sinsp::falco_consider_evtnum(j))
+		{
+			std::string name = etable[j].name;
+			// Ignore event names NA*
+			if(name.find("NA") != 0)
+			{
+				ignored_event_names.insert(name);
+			}
+		}
+	}
+
+	for(uint32_t j = 0; j < PPM_SC_MAX; j++)
+	{
+		if(!sinsp::falco_consider_syscallid(j))
+		{
+			std::string name = stable[j].name;
+			// Ignore event names NA*
+			if(name.find("NA") != 0)
+			{
+				ignored_event_names.insert(name);
+			}
+		}
+	}
+
+	printf("Ignored Event(s):");
+	for(auto it : ignored_event_names)
+	{
+		printf(" %s", it.c_str());
+	}
+	printf("\n");
+}
+
 //
 // ARGUMENT PARSING AND PROGRAM SETUP
 //
@@ -245,7 +304,7 @@ int falco_init(int argc, char **argv)
 	string pidfilename = "/var/run/falco.pid";
 	bool describe_all_rules = false;
 	string describe_rule = "";
-	string validate_rules_file = "";
+	list<string> validate_rules_filenames;
 	string stats_filename = "";
 	bool verbose = false;
 	bool all_events = false;
@@ -255,6 +314,7 @@ int falco_init(int argc, char **argv)
 	string output_format = "";
 	bool replace_container_info = false;
 	int duration_to_tot = 0;
+	bool print_ignored_events = false;
 
 	// Used for writing trace files
 	int duration_seconds = 0;
@@ -282,8 +342,9 @@ int falco_init(int argc, char **argv)
 		{"pidfile", required_argument, 0, 'P' },
 		{"unbuffered", no_argument, 0, 'U' },
 		{"version", no_argument, 0, 0 },
-		{"validate", required_argument, 0, 0 },
+		{"validate", required_argument, 0, 'V' },
 		{"writefile", required_argument, 0, 'w' },
+		{"ignored-events", no_argument, 0, 'i'},
 
 		{0, 0, 0, 0}
 	};
@@ -300,7 +361,7 @@ int falco_init(int argc, char **argv)
 		// Parse the args
 		//
 		while((op = getopt_long(argc, argv,
-                                        "hc:AdD:e:k:K:Ll:m:M:o:P:p:r:s:T:t:UvV:w:",
+                                        "hc:AdD:e:ik:K:Ll:m:M:o:P:p:r:s:T:t:UvV:w:",
                                         long_options, &long_index)) != -1)
 		{
 			switch(op)
@@ -325,6 +386,9 @@ int falco_init(int argc, char **argv)
 				scap_filename = optarg;
 				k8s_api = new string();
 				mesos_api = new string();
+				break;
+			case 'i':
+				print_ignored_events = true;
 				break;
 			case 'k':
 				k8s_api = new string(optarg);
@@ -377,7 +441,7 @@ int falco_init(int argc, char **argv)
 				}
 				break;
 			case 'r':
-				rules_filenames.push_back(optarg);
+				falco_configuration::read_rules_file_directory(string(optarg), rules_filenames);
 				break;
 			case 's':
 				stats_filename = optarg;
@@ -396,7 +460,7 @@ int falco_init(int argc, char **argv)
 				verbose = true;
 				break;
 			case 'V':
-				validate_rules_file = optarg;
+				validate_rules_filenames.push_back(optarg);
 				break;
 			case 'w':
 				outfile = optarg;
@@ -416,11 +480,19 @@ int falco_init(int argc, char **argv)
 			return EXIT_SUCCESS;
 		}
 
-
 		inspector = new sinsp();
+
+		if(print_ignored_events)
+		{
+			print_all_ignored_events(inspector);
+			delete(inspector);
+			return EXIT_SUCCESS;
+		}
+
 		engine = new falco_engine();
 		engine->set_inspector(inspector);
 		engine->set_extra(output_format, replace_container_info);
+
 
 		outputs = new falco_outputs();
 		outputs->set_inspector(inspector);
@@ -460,10 +532,17 @@ int falco_init(int argc, char **argv)
 			}
 		}
 
-		if(validate_rules_file != "")
+		if(validate_rules_filenames.size() > 0)
 		{
-			falco_logger::log(LOG_INFO, "Validating rules file: " + validate_rules_file + "...\n");
-			engine->load_rules_file(validate_rules_file, verbose, all_events);
+			falco_logger::log(LOG_INFO, "Validating rules file(s):\n");
+			for(auto file : validate_rules_filenames)
+			{
+				falco_logger::log(LOG_INFO, "   " + file + "\n");
+			}
+			for(auto file : validate_rules_filenames)
+			{
+				engine->load_rules_file(file, verbose, all_events);
+			}
 			falco_logger::log(LOG_INFO, "Ok\n");
 			goto exit;
 		}
@@ -495,13 +574,19 @@ int falco_init(int argc, char **argv)
 
 		if(config.m_rules_filenames.size() == 0)
 		{
-			throw std::invalid_argument("You must specify at least one rules file via -r or a rules_file entry in falco.yaml");
+			throw std::invalid_argument("You must specify at least one rules file/directory via -r or a rules_file entry in falco.yaml");
+		}
+
+		falco_logger::log(LOG_DEBUG, "Configured rules filenames:\n");
+		for (auto filename : config.m_rules_filenames)
+		{
+			falco_logger::log(LOG_DEBUG, string("   ") + filename + "\n");
 		}
 
 		for (auto filename : config.m_rules_filenames)
 		{
+			falco_logger::log(LOG_INFO, "Loading rules from file " + filename + ":\n");
 			engine->load_rules_file(filename, verbose, all_events);
-			falco_logger::log(LOG_INFO, "Parsed rules from file " + filename + "\n");
 		}
 
 		// You can't both disable and enable rules
@@ -539,12 +624,14 @@ int falco_init(int argc, char **argv)
 		}
 
 		outputs->init(config.m_json_output,
+			      config.m_json_include_output_property,
 			      config.m_notifications_rate, config.m_notifications_max_burst,
 			      config.m_buffered_outputs);
 
 		if(!all_events)
 		{
 			inspector->set_drop_event_flags(EF_DROP_FALCO);
+			inspector->start_dropping_mode(1);
 		}
 
 		if (describe_all_rules)
@@ -576,6 +663,13 @@ int falco_init(int argc, char **argv)
 		if(signal(SIGTERM, signal_callback) == SIG_ERR)
 		{
 			fprintf(stderr, "An error occurred while setting SIGTERM signal handler.\n");
+			result = EXIT_FAILURE;
+			goto exit;
+		}
+
+		if(signal(SIGUSR1, reopen_outputs) == SIG_ERR)
+		{
+			fprintf(stderr, "An error occurred while setting SIGUSR1 signal handler.\n");
 			result = EXIT_FAILURE;
 			goto exit;
 		}
@@ -724,7 +818,8 @@ int falco_init(int argc, char **argv)
 				      outputs,
 				      inspector,
 				      uint64_t(duration_to_tot*ONE_SECOND_IN_NS),
-				      stats_filename);
+				      stats_filename,
+				      all_events);
 
 		duration = ((double)clock()) / CLOCKS_PER_SEC - duration;
 

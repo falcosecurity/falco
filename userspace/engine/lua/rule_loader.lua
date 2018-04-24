@@ -132,7 +132,8 @@ end
 -- object. The by_name index is used for things like describing rules,
 -- and the by_idx index is used to map the relational node index back
 -- to a rule.
-local state = {macros={}, lists={}, filter_ast=nil, rules_by_name={}, macros_by_name={}, lists_by_name={},
+local state = {macros={}, lists={}, filter_ast=nil, rules_by_name={},
+	       skipped_rules_by_name={}, macros_by_name={}, lists_by_name={},
 	       n_rules=0, rules_by_idx={}, ordered_rule_names={}, ordered_macro_names={}, ordered_list_names={}}
 
 local function reset_rules(rules_mgr)
@@ -291,10 +292,12 @@ function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replac
 	    end
 
 	    if state.rules_by_name[v['rule']] == nil then
-	       error ("Rule " ..v['rule'].. " has 'append' key but no rule by that name already exists")
+	       if state.skipped_rules_by_name[v['rule']] == nil then
+		  error ("Rule " ..v['rule'].. " has 'append' key but no rule by that name already exists")
+	       end
+	    else
+	       state.rules_by_name[v['rule']]['condition'] = state.rules_by_name[v['rule']]['condition'] .. " " .. v['condition']
 	    end
-
-	    state.rules_by_name[v['rule']]['condition'] = state.rules_by_name[v['rule']]['condition'] .. " " .. v['condition']
 
 	 else
 
@@ -320,6 +323,8 @@ function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replac
 	       v['output'] = compiler.trim(v['output'])
 
 	       state.rules_by_name[v['rule']] = v
+	    else
+	       state.skipped_rules_by_name[v['rule']] = v
 	    end
 	 end
       else
@@ -347,13 +352,13 @@ function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replac
 	 if (state.lists[item] == nil) then
 	    items[#items+1] = item
 	 else
-	    for i, exp_item in ipairs(state.lists[item]) do
+	    for i, exp_item in ipairs(state.lists[item].items) do
 	       items[#items+1] = exp_item
 	    end
 	 end
       end
 
-      state.lists[v['list']] = items
+      state.lists[v['list']] = {["items"] = items, ["used"] = false}
    end
 
    for i, name in ipairs(state.ordered_macro_names) do
@@ -361,15 +366,21 @@ function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replac
       local v = state.macros_by_name[name]
 
       local ast = compiler.compile_macro(v['condition'], state.macros, state.lists)
-      state.macros[v['macro']] = ast.filter.value
+      state.macros[v['macro']] = {["ast"] = ast.filter.value, ["used"] = false}
    end
 
    for i, name in ipairs(state.ordered_rule_names) do
 
       local v = state.rules_by_name[name]
 
-      local filter_ast, evttypes = compiler.compile_filter(v['rule'], v['condition'],
-							   state.macros, state.lists)
+      warn_evttypes = true
+      if v['warn_evttypes'] ~= nil then
+	 warn_evttypes = v['warn_evttypes']
+      end
+
+      local filter_ast, evttypes, syscallnums = compiler.compile_filter(v['rule'], v['condition'],
+									state.macros, state.lists,
+									warn_evttypes)
 
       if (filter_ast.type == "Rule") then
 	 state.n_rules = state.n_rules + 1
@@ -390,7 +401,7 @@ function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replac
 	 end
 
 	 -- Pass the filter and event types back up
-	 falco_rules.add_filter(rules_mgr, v['rule'], evttypes, v['tags'])
+	 falco_rules.add_filter(rules_mgr, v['rule'], evttypes, syscallnums, v['tags'])
 
 	 -- Rule ASTs are merged together into one big AST, with "OR" between each
 	 -- rule.
@@ -440,6 +451,21 @@ function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replac
 	 formats.free_formatter(formatter)
       else
 	 error ("Unexpected type in load_rule: "..filter_ast.type)
+      end
+   end
+
+   if verbose then
+      -- Print info on any dangling lists or macros that were not used anywhere
+      for name, macro in pairs(state.macros) do
+	 if macro.used == false then
+	    print("Warning: macro "..name.." not refered to by any rule/macro")
+	 end
+      end
+
+      for name, list in pairs(state.lists) do
+	 if list.used == false then
+	    print("Warning: list "..name.." not refered to by any rule/macro/list")
+	 end
       end
    end
 

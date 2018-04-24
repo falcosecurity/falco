@@ -88,7 +88,8 @@ void falco_engine::load_rules(const string &rules_content, bool verbose, bool al
 	// formats.formatter is used, so we can unconditionally set
 	// json_output to false.
 	bool json_output = false;
-	falco_formats::init(m_inspector, m_ls, json_output);
+	bool json_include_output_property = false;
+	falco_formats::init(m_inspector, m_ls, json_output, json_include_output_property);
 
 	m_rules->load_rules(rules_content, verbose, all_events, m_extra, m_replace_container_info, m_min_priority);
 }
@@ -159,6 +160,13 @@ void falco_engine::evttypes_for_ruleset(std::vector<bool> &evttypes, const std::
 	uint16_t ruleset_id = find_ruleset_id(ruleset);
 
 	return m_evttype_filter->evttypes_for_ruleset(evttypes, ruleset_id);
+}
+
+void falco_engine::syscalls_for_ruleset(std::vector<bool> &syscalls, const std::string &ruleset)
+{
+	uint16_t ruleset_id = find_ruleset_id(ruleset);
+
+	return m_evttype_filter->syscalls_for_ruleset(syscalls, ruleset_id);
 }
 
 unique_ptr<falco_engine::rule_result> falco_engine::process_event(sinsp_evt *ev, uint16_t ruleset_id)
@@ -236,10 +244,11 @@ void falco_engine::print_stats()
 
 void falco_engine::add_evttype_filter(string &rule,
 				      set<uint32_t> &evttypes,
+				      set<uint32_t> &syscalls,
 				      set<string> &tags,
 				      sinsp_filter* filter)
 {
-	m_evttype_filter->add(rule, evttypes, tags, filter);
+	m_evttype_filter->add(rule, evttypes, syscalls, tags, filter);
 }
 
 void falco_engine::clear_filters()

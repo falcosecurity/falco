@@ -128,6 +128,18 @@ trace_files: !mux
       - rules/single_rule.yaml
       - rules/double_rule.yaml
     trace_file: trace_files/cat_write.scap
+    all_events: True
+
+  rules_directory:
+    detect: True
+    detect_level:
+      - WARNING
+      - INFO
+      - ERROR
+    rules_file:
+      - rules/rules_dir
+    trace_file: trace_files/cat_write.scap
+    all_events: True
 
   multiple_rules_suppress_info:
     detect: True
@@ -143,6 +155,7 @@ trace_files: !mux
       - rules/single_rule.yaml
       - rules/double_rule.yaml
     trace_file: trace_files/cat_write.scap
+    all_events: True
 
   multiple_rules_overriding:
     detect: False
@@ -642,6 +655,14 @@ trace_files: !mux
       - rules/rule_append_failure.yaml
     trace_file: trace_files/cat_write.scap
 
+  rule_append_skipped:
+    detect: False
+    priority: ERROR
+    rules_file:
+      - rules/single_rule.yaml
+      - rules/append_single_rule.yaml
+    trace_file: trace_files/cat_write.scap
+
   rule_append:
     detect: True
     detect_level: WARNING
@@ -655,3 +676,40 @@ trace_files: !mux
       - rules/rule_append_false.yaml
     trace_file: trace_files/cat_write.scap
 
+  json_output_no_output_property:
+    json_output: True
+    json_include_output_property: False
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/rule_append.yaml
+    trace_file: trace_files/cat_write.scap
+    stdout_contains: "^(?!.*Warning An open of /dev/null was seen.*)"
+
+  in_operator_netmasks:
+    detect: True
+    detect_level: INFO
+    rules_file:
+      - rules/detect_connect_using_in.yaml
+    trace_file: trace_files/connect_localhost.scap
+
+  syscalls:
+    detect: True
+    detect_level: INFO
+    rules_file:
+      - rules/syscalls.yaml
+    detect_counts:
+      - detect_madvise: 2
+      - detect_open: 2
+    trace_file: trace_files/syscall.scap
+    all_events: True
+
+  catchall_order:
+    detect: True
+    detect_level: INFO
+    rules_file:
+      - rules/catchall_order.yaml
+    detect_counts:
+      - open_dev_null: 1
+        dev_null: 0
+    trace_file: trace_files/cat_write.scap

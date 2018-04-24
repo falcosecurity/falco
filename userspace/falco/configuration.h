@@ -165,8 +165,11 @@ class falco_configuration
 	void init(std::string conf_filename, std::list<std::string> &cmdline_options);
 	void init(std::list<std::string> &cmdline_options);
 
+	static void read_rules_file_directory(const string &path, list<string> &rules_filenames);
+
 	std::list<std::string> m_rules_filenames;
 	bool m_json_output;
+	bool m_json_include_output_property;
 	std::vector<falco_outputs::output_config> m_outputs;
 	uint32_t m_notifications_rate;
 	uint32_t m_notifications_max_burst;
