@@ -398,11 +398,6 @@
 - list: known_shell_spawn_binaries
   items: []
 
-- macro: shell_spawning_containers
-  condition: (container.image startswith jenkins or
-              container.image startswith gitlab/gitlab-ce or
-              container.image startswith gitlab/gitlab-ee)
-
 ## End Deprecated
 
 - macro: ansible_running_python
