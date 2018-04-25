@@ -1369,7 +1369,7 @@
   condition: >
     (fd.sockfamily = ip and system_procs)
     and (inbound_outbound)
-    and not proc.name in (systemd, hostid)
+    and not proc.name in (systemd, hostid, id)
     and not login_doing_dns_lookup
   output: >
     Known system binary sent/received network traffic
