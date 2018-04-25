@@ -166,7 +166,7 @@
 # The truncated dpkg-preconfigu is intentional, process names are
 # truncated at the sysdig level.
 - list: package_mgmt_binaries
-  items: [rpm_binaries, deb_binaries, update-alternat, gem, pip, sane-utils.post, alternatives]
+  items: [rpm_binaries, deb_binaries, update-alternat, gem, pip, sane-utils.post, alternatives, chef-client]
 
 - macro: package_mgmt_procs
   condition: proc.name in (package_mgmt_binaries)
@@ -408,8 +408,8 @@
 - macro: ansible_running_python
   condition: (proc.name in (python, pypy) and proc.cmdline contains ansible)
 
-- macro: chef_running_yum_dump
-  condition: (proc.name=python and proc.cmdline contains yum-dump.py)
+- macro: python_running_chef
+  condition: (proc.name=python and (proc.cmdline contains yum-dump.py or proc.cmdline="python /usr/bin/chef-monitor.py"))
 
 - macro: python_running_denyhosts
   condition: >
@@ -933,7 +933,7 @@
 # Only let rpm-related programs write to the rpm database
 - rule: Write below rpm database
   desc: an attempt to write to the rpm database by any non-rpm related program
-  condition: fd.name startswith /var/lib/rpm and open_write and not rpm_procs and not ansible_running_python and not chef_running_yum_dump
+  condition: fd.name startswith /var/lib/rpm and open_write and not rpm_procs and not ansible_running_python and not python_running_chef
   output: "Rpm database opened for writing by a non-rpm program (command=%proc.cmdline file=%fd.name)"
   priority: ERROR
   tags: [filesystem, software_mgmt]
