@@ -847,7 +847,8 @@
               or fd.name startswith /root/.dbus
               or fd.name startswith /root/.composer
               or fd.name startswith /root/.gconf
-              or fd.name startswith /root/.nv)
+              or fd.name startswith /root/.nv
+              or fd.name startswith /root/.local/share/jupyter)
 
 - rule: Write below root
   desc: an attempt to write to any file directly below / or /root
