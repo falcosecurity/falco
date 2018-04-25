@@ -557,6 +557,11 @@
     (proc.name=urlgrabber-ext- and proc.aname[3]=sosreport and
      (fd.name startswith /etc/pkt/nssdb or fd.name startswith /etc/pki/nssdb))
 
+- macro: pkgmgmt_progs_writing_pki
+  condition: >
+    (proc.name=urlgrabber-ext- and proc.pname in (yum, yum-cron, repoquery) and
+     (fd.name startswith /etc/pkt/nssdb or fd.name startswith /etc/pki/nssdb))
+
 - macro: selinux_writing_conf
   condition: (proc.name in (semodule,genhomedircon,sefcontext_comp) and fd.name startswith /etc/selinux)
 
@@ -795,6 +800,7 @@
     and not ipsec_writing_conf
     and not httpd_writing_ssl_conf
     and not userhelper_writing_etc_security
+    and not pkgmgmt_progs_writing_pki
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc
