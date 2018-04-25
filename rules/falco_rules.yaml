@@ -955,6 +955,9 @@
 - macro: rabbitmqctl_running_scripts
   condition: (proc.aname[2]=rabbitmqctl and proc.cmdline startswith "sh -c ")
 
+- macro: run_by_appdynamics
+  condition: (proc.pname=java and proc.pcmdline startswith "java -jar -Dappdynamics")
+
 - rule: DB program spawned process
   desc: >
     a database-server related program spawned a new process other than itself.
@@ -1137,6 +1140,7 @@
     and not redis_running_prepost_scripts
     and not rabbitmq_running_scripts
     and not rabbitmqctl_running_scripts
+    and not run_by_appdynamics
     and not user_shell_container_exclusions
   output: >
     Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname
