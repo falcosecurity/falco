@@ -543,6 +543,9 @@
 - macro: slapadd_writing_conf
   condition: (proc.name=slapadd and fd.name startswith /etc/ldap)
 
+- macro: openldap_writing_conf
+  condition: (proc.pname=run-openldap.sh and fd.name startswith /etc/openldap)
+
 - macro: symantec_writing_conf
   condition: >
     ((proc.name=symcfgd and fd.name startswith /etc/symantec) or
@@ -804,6 +807,7 @@
     and not userhelper_writing_etc_security
     and not pkgmgmt_progs_writing_pki
     and not brandbot_writing_os_release
+    and not openldap_writing_conf
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc
