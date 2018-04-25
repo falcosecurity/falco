@@ -578,7 +578,7 @@
   condition: (proc.name in (veritas_binaries) or veritas_driver_script)
 
 - macro: veritas_writing_config
-  condition: (veritas_progs and fd.name startswith /etc/vx)
+  condition: (veritas_progs and (fd.name startswith /etc/vx or fd.name startswith /etc/opt/VRTS))
 
 - macro: nginx_writing_conf
   condition: (proc.name=nginx and fd.name startswith /etc/nginx)
