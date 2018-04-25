@@ -1145,7 +1145,7 @@
   output: >
     Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname
     cmdline=%proc.cmdline pcmdline=%proc.pcmdline gparent=%proc.aname[2] ggparent=%proc.aname[3]
-    gggparent=%proc.aname[4] ggggparent=%proc.aname[5])
+    aname[4]=%proc.aname[4] aname[5]=%proc.aname[5] aname[6]=%proc.aname[6] aname[7]=%proc.aname[7])
   priority: DEBUG
   tags: [shell]
 
