@@ -702,6 +702,10 @@
     ((proc.name in (start-mysql.sh, run-mysqld) or proc.pname=start-mysql.sh) and
      (fd.name startswith /etc/mysql or fd.directory=/etc/my.cnf.d))
 
+- macro: redis_writing_conf
+  condition: >
+    (proc.name=run-redis and fd.name=/etc/redis.conf)
+
 - macro: openvpn_writing_conf
   condition: (proc.name in (openvpn,openvpn-entrypo) and fd.name startswith /etc/openvpn)
 
@@ -818,6 +822,7 @@
     and not userhelper_writing_etc_security
     and not pkgmgmt_progs_writing_pki
     and not brandbot_writing_os_release
+    and not redis_writing_conf
     and not openldap_writing_conf
 
 - rule: Write below etc
