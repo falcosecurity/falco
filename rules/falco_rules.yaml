@@ -562,6 +562,9 @@
     (proc.name=urlgrabber-ext- and proc.pname in (yum, yum-cron, repoquery) and
      (fd.name startswith /etc/pkt/nssdb or fd.name startswith /etc/pki/nssdb))
 
+- macro: brandbot_writing_os_release
+  condition: proc.name=brandbot and fd.name=/etc/os-release
+
 - macro: selinux_writing_conf
   condition: (proc.name in (semodule,genhomedircon,sefcontext_comp) and fd.name startswith /etc/selinux)
 
@@ -801,6 +804,7 @@
     and not httpd_writing_ssl_conf
     and not userhelper_writing_etc_security
     and not pkgmgmt_progs_writing_pki
+    and not brandbot_writing_os_release
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc
