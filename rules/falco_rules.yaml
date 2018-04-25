@@ -620,6 +620,9 @@
 - macro: gugent_writing_guestagent_log
   condition: (proc.name=gugent and fd.name=GuestAgent.log)
 
+- macro: dse_writing_tmp
+  condition: (proc.name=dse-entrypoint and fd.name=/root/tmp__)
+
 - rule: Write below binary dir
   desc: an attempt to write to any file below a set of binary directories
   condition: >
@@ -871,6 +874,7 @@
     and not fd.directory in (known_root_directories)
     and not exe_running_docker_save
     and not gugent_writing_guestagent_log
+    and not dse_writing_tmp
     and not known_root_conditions
   output: "File below / or /root opened for writing (user=%user.name command=%proc.cmdline parent=%proc.pname file=%fd.name program=%proc.name)"
   priority: ERROR
