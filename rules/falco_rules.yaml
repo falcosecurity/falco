@@ -698,7 +698,9 @@
   condition: (proc.name=httpd and fd.name startswith /etc/httpd/)
 
 - macro: mysql_writing_conf
-  condition: ((proc.name=start-mysql.sh or proc.pname=start-mysql.sh) and fd.name startswith /etc/mysql)
+  condition: >
+    ((proc.name in (start-mysql.sh, run-mysqld) or proc.pname=start-mysql.sh) and
+     (fd.name startswith /etc/mysql or fd.directory=/etc/my.cnf.d))
 
 - macro: openvpn_writing_conf
   condition: (proc.name in (openvpn,openvpn-entrypo) and fd.name startswith /etc/openvpn)
