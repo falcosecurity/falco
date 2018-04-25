@@ -606,6 +606,11 @@
 - macro: exe_running_docker_save
   condition: (proc.cmdline startswith "exe /var/lib/docker" and proc.pname in (dockerd, docker))
 
+# Ideally we'd have a length check here as well but sysdig
+# filterchecks don't have operators like len()
+- macro: sed_temporary_file
+  condition: (proc.name=sed and fd.name startswith "/etc/sed")
+
 - macro: python_running_get_pip
   condition: (proc.cmdline startswith "python get-pip.py")
 
@@ -746,6 +751,7 @@
     and not proc.pname in (sysdigcloud_binaries, mail_config_binaries, hddtemp.postins, sshkit_script_binaries, locales.postins, deb_binaries, dhcp_binaries)
     and not fd.name pmatch (safe_etc_dirs)
     and not fd.name in (/etc/container_environment.sh, /etc/container_environment.json, /etc/motd, /etc/motd.svc)
+    and not sed_temporary_file
     and not exe_running_docker_save
     and not ansible_running_python
     and not python_running_denyhosts
