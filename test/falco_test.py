@@ -31,6 +31,7 @@ class FalcoTest(Test):
 
         self.json_output = self.params.get('json_output', '*', default=False)
         self.json_include_output_property = self.params.get('json_include_output_property', '*', default=True)
+        self.all_events = self.params.get('all_events', '*', default=False)
         self.priority = self.params.get('priority', '*', default='debug')
         self.rules_file = self.params.get('rules_file', '*', default=os.path.join(self.basedir, '../rules/falco_rules.yaml'))
 
@@ -364,6 +365,9 @@ class FalcoTest(Test):
 
         if self.run_duration:
             cmd += ' -M {}'.format(self.run_duration)
+
+        if self.all_events:
+            cmd += ' -A'
 
         self.falco_proc = process.SubProcess(cmd)
 
