@@ -17,13 +17,16 @@ ADD http://download.draios.com/apt-draios-priority /etc/apt/preferences.d/
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
 	bash-completion \
-	curl \
-	jq \
-	gnupg2 \
 	ca-certificates \
+	curl \
+	gnupg2 \
 	gcc \
 	gcc-5 \
-	gdb && rm -rf /var/lib/apt/lists/*
+	gdb \
+	jq \
+	libc6-dev \
+	libelf-dev \
+ && rm -rf /var/lib/apt/lists/*
 
 # Since our base Debian image ships with GCC 7 which breaks older kernels, revert the
 # default to gcc-5.
