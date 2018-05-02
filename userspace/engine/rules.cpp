@@ -258,6 +258,63 @@ void falco_rules::load_rules(const string &rules_content,
 
 		lua_setglobal(m_ls, m_lua_ignored_syscalls.c_str());
 
+		// Create a table containing all filtercheck names.
+		lua_newtable(m_ls);
+
+		vector<const filter_check_info*> fc_plugins;
+		sinsp::get_filtercheck_fields_info(&fc_plugins);
+
+		for(uint32_t j = 0; j < fc_plugins.size(); j++)
+		{
+			const filter_check_info* fci = fc_plugins[j];
+
+			if(fci->m_flags & filter_check_info::FL_HIDDEN)
+			{
+				continue;
+			}
+
+			for(int32_t k = 0; k < fci->m_nfields; k++)
+			{
+				const filtercheck_field_info* fld = &fci->m_fields[k];
+
+				if(fld->m_flags & EPF_TABLE_ONLY ||
+				   fld->m_flags & EPF_PRINT_ONLY)
+				{
+					continue;
+				}
+
+				// Some filters can work with or without an argument
+				std::set<string> flexible_filters = {
+					"^proc.aname",
+					"^proc.apid"
+				};
+
+				std::list<string> fields;
+				std::string field_base = string("^") + fld->m_name;
+
+				if(fld->m_flags & EPF_REQUIRES_ARGUMENT ||
+				   flexible_filters.find(field_base) != flexible_filters.end())
+				{
+					fields.push_back(field_base + "[%[%.]");
+				}
+
+				if(!(fld->m_flags & EPF_REQUIRES_ARGUMENT) ||
+				   flexible_filters.find(field_base) != flexible_filters.end())
+				{
+					fields.push_back(field_base + "$");
+				}
+
+				for(auto &field : fields)
+				{
+					lua_pushstring(m_ls, field.c_str());
+					lua_pushnumber(m_ls, 1);
+					lua_settable(m_ls, -3);
+				}
+			}
+		}
+
+		lua_setglobal(m_ls, m_lua_defined_filters.c_str());
+
 		lua_pushstring(m_ls, rules_content.c_str());
 		lua_pushlightuserdata(m_ls, this);
 		lua_pushboolean(m_ls, (verbose ? 1 : 0));

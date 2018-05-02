@@ -56,6 +56,7 @@ class falco_rules
 	string m_lua_load_rules = "load_rules";
 	string m_lua_ignored_syscalls = "ignored_syscalls";
 	string m_lua_ignored_events = "ignored_events";
+	string m_lua_defined_filters = "defined_filters";
 	string m_lua_events = "events";
 	string m_lua_syscalls = "syscalls";
 	string m_lua_describe_rule = "describe_rule";
