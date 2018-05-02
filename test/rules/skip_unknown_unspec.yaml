@@ -1,0 +1,5 @@
+- rule: Contains Unknown Event And Unspecified
+  desc: Contains an unknown event
+  condition: proc.nobody=cat
+  output: Never
+  priority: INFO
