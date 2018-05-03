@@ -713,3 +713,30 @@ trace_files: !mux
       - open_dev_null: 1
         dev_null: 0
     trace_file: trace_files/cat_write.scap
+
+  skip_unknown_noevt:
+    detect: False
+    stdout_contains: Skipping rule "Contains Unknown Event And Skipping" that contains unknown filter proc.nobody
+    rules_file:
+      - rules/skip_unknown_evt.yaml
+    trace_file: trace_files/cat_write.scap
+
+  skip_unknown_prefix:
+    detect: False
+    rules_file:
+      - rules/skip_unknown_prefix.yaml
+    trace_file: trace_files/cat_write.scap
+
+  skip_unknown_error:
+    exit_status: 1
+    stderr_contains: Rule "Contains Unknown Event And Not Skipping" contains unknown filter proc.nobody. Exiting.
+    rules_file:
+      - rules/skip_unknown_error.yaml
+    trace_file: trace_files/cat_write.scap
+
+  skip_unknown_unspec_error:
+    exit_status: 1
+    stderr_contains: Rule "Contains Unknown Event And Unspecified" contains unknown filter proc.nobody. Exiting.
+    rules_file:
+      - rules/skip_unknown_unspec.yaml
+    trace_file: trace_files/cat_write.scap
