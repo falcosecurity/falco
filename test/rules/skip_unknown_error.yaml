@@ -1,0 +1,6 @@
+- rule: Contains Unknown Event And Not Skipping
+  desc: Contains an unknown event
+  condition: proc.nobody=cat
+  output: Never
+  skip-if-unknown-filter: false
+  priority: INFO
