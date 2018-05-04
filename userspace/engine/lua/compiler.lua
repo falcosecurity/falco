@@ -322,6 +322,21 @@ function get_evttypes_syscalls(name, ast, source, warn_evttypes)
    return evttypes, syscallnums
 end
 
+function get_filters(ast)
+
+   local filters = {}
+
+   function cb(node)
+      if node.type == "FieldName" then
+	 filters[node.value] = 1
+      end
+   end
+
+   parser.traverse_ast(ast.filter.value, {FieldName=1} , cb)
+
+   return filters
+end
+
 function compiler.expand_lists_in(source, list_defs)
 
    for name, def in pairs(list_defs) do
@@ -408,7 +423,9 @@ function compiler.compile_filter(name, source, macro_defs, list_defs, warn_evtty
 
    evttypes, syscallnums = get_evttypes_syscalls(name, ast, source, warn_evttypes)
 
-   return ast, evttypes, syscallnums
+   filters = get_filters(ast)
+
+   return ast, evttypes, syscallnums, filters
 end
 
 
