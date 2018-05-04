@@ -1110,6 +1110,17 @@
 - macro: possibly_node_in_container
   condition: (never_true and (proc.pname=node and proc.aname[3]=docker-containe))
 
+# Similarly, you may want to consider any shell spawned by apache
+# tomcat as suspect. The famous apache struts attack (CVE-2017-5638)
+# could be exploited to do things like spawn shells.
+#
+# However, many applications *do* use tomcat to run arbitrary shells,
+# as a part of build pipelines, etc.
+#
+# Like for node, we make this case opt-in.
+- macro: possibly_parent_java_running_tomcat
+  condition: (never_true and proc.pname=java and proc.pcmdline contains org.apache.catalina.startup.Bootstrap)
+
 - macro: protected_shell_spawner
   condition: >
     (proc.aname in (protected_shell_spawning_binaries)
@@ -1122,6 +1133,7 @@
     or parent_java_running_glassfish
     or parent_java_running_hadoop
     or parent_java_running_datastax
+    or possibly_parent_java_running_tomcat
     or possibly_node_in_container)
 
 - list: mesos_shell_binaries
