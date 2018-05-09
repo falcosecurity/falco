@@ -17,6 +17,8 @@ ADD http://download.draios.com/apt-draios-priority /etc/apt/preferences.d/
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
 	bash-completion \
+	bc \
+	clang-7 \
 	ca-certificates \
 	curl \
 	gnupg2 \
@@ -26,11 +28,17 @@ RUN apt-get update \
 	jq \
 	libc6-dev \
 	libelf-dev \
+	llvm-7 \
  && rm -rf /var/lib/apt/lists/*
 
 # Since our base Debian image ships with GCC 7 which breaks older kernels, revert the
 # default to gcc-5.
 RUN rm -rf /usr/bin/gcc && ln -s /usr/bin/gcc-5 /usr/bin/gcc
+
+RUN rm -rf /usr/bin/clang \
+ && rm -rf /usr/bin/llc \
+ && ln -s /usr/bin/clang-7 /usr/bin/clang \
+ && ln -s /usr/bin/llc-7 /usr/bin/llc
 
 RUN curl -s https://s3.amazonaws.com/download.draios.com/DRAIOS-GPG-KEY.public | apt-key add - \
  && curl -s -o /etc/apt/sources.list.d/draios.list http://download.draios.com/$FALCO_REPOSITORY/deb/draios.list \
