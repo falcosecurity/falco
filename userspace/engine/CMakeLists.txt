@@ -3,6 +3,7 @@ include_directories("${PROJECT_SOURCE_DIR}/../sysdig/userspace/libscap")
 include_directories("${PROJECT_SOURCE_DIR}/../sysdig/userspace/libsinsp")
 include_directories("${PROJECT_BINARY_DIR}/userspace/engine")
 include_directories("${LUAJIT_INCLUDE}")
+include_directories("${CURL_INCLUDE_DIR}")
 
 add_library(falco_engine STATIC rules.cpp falco_common.cpp falco_engine.cpp token_bucket.cpp formats.cpp)
 
