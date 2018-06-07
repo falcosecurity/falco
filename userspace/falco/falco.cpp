@@ -158,7 +158,7 @@ uint64_t do_inspect(falco_engine *engine,
 		    bool all_events)
 {
 	uint64_t num_evts = 0;
-	int32_t res;
+	int32_t rc;
 	sinsp_evt* ev;
 	StatsFileWriter writer;
 	uint64_t duration_start = 0;
@@ -179,7 +179,7 @@ uint64_t do_inspect(falco_engine *engine,
 	while(1)
 	{
 
-		res = inspector->next(&ev);
+		rc = inspector->next(&ev);
 
 		writer.handle();
 
@@ -193,21 +193,21 @@ uint64_t do_inspect(falco_engine *engine,
 		{
 			break;
 		}
-		else if(res == SCAP_TIMEOUT)
+		else if(rc == SCAP_TIMEOUT)
 		{
 			continue;
 		}
-		else if(res == SCAP_EOF)
+		else if(rc == SCAP_EOF)
 		{
 			break;
 		}
-		else if(res != SCAP_SUCCESS)
+		else if(rc != SCAP_SUCCESS)
 		{
 			//
 			// Event read error.
 			// Notify the chisels that we're exiting, and then die with an error.
 			//
-			cerr << "res = " << res << endl;
+			cerr << "rc = " << rc << endl;
 			throw sinsp_exception(inspector->getlasterr().c_str());
 		}
 
