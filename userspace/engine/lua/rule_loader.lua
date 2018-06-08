@@ -449,6 +449,8 @@ function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replac
 
 	 if (v['enabled'] == false) then
 	    falco_rules.enable_rule(rules_mgr, v['rule'], 0)
+	 else
+	    falco_rules.enable_rule(rules_mgr, v['rule'], 1)
 	 end
 
 	 -- If the format string contains %container.info, replace it
