@@ -652,15 +652,19 @@
 - macro: user_ssh_directory
   condition: (fd.name startswith '/home' and fd.name contains '.ssh')
 
+- macro: mkinitramfs_writing_boot
+  condition: (proc.pname=mkinitramfs and fd.directory=/boot)
+
 - macro: monitored_dir
   condition: >
-    fd.directory in (monitored_directories)
-    or user_ssh_directory
+    (fd.directory in (monitored_directories)
+     or user_ssh_directory)
+    and not mkinitramfs_writing_boot
 
 - rule: Write below monitored dir
   desc: an attempt to write to any file below a set of binary directories
   condition: >
-    monitored_dir and evt.dir = < and open_write
+    evt.dir = < and open_write and monitored_dir
     and not package_mgmt_procs
     and not exe_running_docker_save
     and not python_running_get_pip
