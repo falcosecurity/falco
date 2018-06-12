@@ -25,6 +25,7 @@ RUN apt-get update \
 	gnupg2 \
 	gcc \
 	gcc-5 \
+	gcc-6 \
 	jq \
 	libc6-dev \
 	libelf-dev \
