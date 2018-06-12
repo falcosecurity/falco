@@ -637,6 +637,40 @@
   priority: ERROR
   tags: [filesystem]
 
+# If you'd like to generally monitor a wider set of directories on top
+# of the ones covered by the rule Write below binary dir, you can use
+# the following rule and lists.
+
+- list: monitored_directories
+  items: [/boot, /lib, /lib64, /usr/lib, /usr/local/lib, /usr/local/sbin, /usr/local/bin, /root/.ssh, /etc/cardserver]
+
+# Until https://github.com/draios/sysdig/pull/1153, which fixes
+# https://github.com/draios/sysdig/issues/1152, is widely available,
+# we can't use glob operators to match pathnames. Until then, we do a
+# looser check to match ssh directories.
+# When fixed, we will use "fd.name glob '/home/*/.ssh/*'"
+- macro: user_ssh_directory
+  condition: (fd.name startswith '/home' and fd.name contains '.ssh')
+
+- macro: monitored_dir
+  condition: >
+    fd.directory in (monitored_directories)
+    or user_ssh_directory
+
+- rule: Write below monitored dir
+  desc: an attempt to write to any file below a set of binary directories
+  condition: >
+    monitored_dir and evt.dir = < and open_write
+    and not package_mgmt_procs
+    and not exe_running_docker_save
+    and not python_running_get_pip
+    and not python_running_ms_oms
+  output: >
+    File below a monitored directory opened for writing (user=%user.name
+    command=%proc.cmdline file=%fd.name parent=%proc.pname pcmdline=%proc.pcmdline gparent=%proc.aname[2])
+  priority: ERROR
+  tags: [filesystem]
+
 - list: safe_etc_dirs
   items: [/etc/cassandra, /etc/ssl/certs/java, /etc/logstash, /etc/nginx/conf.d, /etc/container_environment, /etc/hrmconfig]
 
