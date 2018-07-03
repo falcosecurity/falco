@@ -1150,7 +1150,8 @@
               container.image startswith "consul:" or
               container.image startswith mesosphere/mesos-slave or
               container.image startswith istio/proxy_ or
-              container.image startswith datadog/docker-dd-agent)
+              container.image startswith datadog/docker-dd-agent or
+              container.image startswith datadog/agent)
 
 # Add conditions to this macro (probably in a separate file,
 # overwriting this macro) to specify additional containers that are
@@ -1537,4 +1538,3 @@
 # Application rules have moved to application_rules.yaml. Please look
 # there if you want to enable them by adding to
 # falco_rules.local.yaml.
-
