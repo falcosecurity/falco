@@ -570,6 +570,9 @@
     (proc.name=urlgrabber-ext- and proc.pname in (yum, yum-cron, repoquery) and
      (fd.name startswith /etc/pkt/nssdb or fd.name startswith /etc/pki/nssdb))
 
+- macro: update_ca_trust_writing_pki
+  condition: (proc.pname=update-ca-trust and proc.name=trust and fd.name startswith /etc/pki)
+
 - macro: brandbot_writing_os_release
   condition: proc.name=brandbot and fd.name=/etc/os-release
 
@@ -865,6 +868,7 @@
     and not httpd_writing_ssl_conf
     and not userhelper_writing_etc_security
     and not pkgmgmt_progs_writing_pki
+    and not update_ca_trust_writing_pki
     and not brandbot_writing_os_release
     and not redis_writing_conf
     and not openldap_writing_conf
