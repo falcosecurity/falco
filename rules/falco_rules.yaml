@@ -158,7 +158,7 @@
   condition: proc.name in (rpm_binaries) or proc.name in (salt-minion)
 
 - list: deb_binaries
-  items: [dpkg, dpkg-preconfigu, dpkg-reconfigur, apt, apt-get, aptitude,
+  items: [dpkg, dpkg-preconfigu, dpkg-reconfigur, dpkg-divert, apt, apt-get, aptitude,
     frontend, preinst, add-apt-reposit, apt-auto-remova, apt-key,
     apt-listchanges, unattended-upgr, apt-add-reposit
     ]
