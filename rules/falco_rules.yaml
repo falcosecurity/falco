@@ -546,6 +546,9 @@
 - macro: openldap_writing_conf
   condition: (proc.pname=run-openldap.sh and fd.name startswith /etc/openldap)
 
+- macro: ucpagent_writing_conf
+  condition: (proc.name=apiserver and container.image startswith docker/ucp-agent and fd.name=/etc/authorization_config.cfg)
+
 - macro: symantec_writing_conf
   condition: >
     ((proc.name=symcfgd and fd.name startswith /etc/symantec) or
@@ -862,6 +865,7 @@
     and not brandbot_writing_os_release
     and not redis_writing_conf
     and not openldap_writing_conf
+    and not ucpagent_writing_conf
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc
