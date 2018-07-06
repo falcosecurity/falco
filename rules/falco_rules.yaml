@@ -632,6 +632,18 @@
 - macro: dse_writing_tmp
   condition: (proc.name=dse-entrypoint and fd.name=/root/tmp__)
 
+- macro: zap_writing_state
+  condition: (proc.name=java and proc.cmdline contains "jar /zap" and fd.name startswith /root/.ZAP)
+
+- macro: airflow_writing_state
+  condition: (proc.name=airflow and fd.name startswith /root/airflow)
+
+- macro: rpm_writing_root_rpmdb
+  condition: (proc.name=rpm and fd.directory=/root/.rpmdb)
+
+- macro: maven_writing_groovy
+  condition: (proc.name=java and proc.cmdline contains "classpath /usr/local/apache-maven" and fd.name startswith /root/.groovy)
+
 - rule: Write below binary dir
   desc: an attempt to write to any file below a set of binary directories
   condition: >
@@ -932,6 +944,10 @@
     and not exe_running_docker_save
     and not gugent_writing_guestagent_log
     and not dse_writing_tmp
+    and not zap_writing_state
+    and not airflow_writing_state
+    and not rpm_writing_root_rpmdb
+    and not maven_writing_groovy
     and not known_root_conditions
   output: "File below / or /root opened for writing (user=%user.name command=%proc.cmdline parent=%proc.pname file=%fd.name program=%proc.name)"
   priority: ERROR
