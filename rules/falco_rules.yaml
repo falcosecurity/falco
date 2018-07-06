@@ -900,7 +900,7 @@
           /root/.node_repl_history, /root/.mongorc.js, /root/.dbshell, /root/.augeas/history, /root/.rnd]
 
 - list: known_root_directories
-  items: [/root/.oracle_jre_usage, /root/.ssh, /root/.subversion, /root/.nami]
+  items: [/root/.oracle_jre_usage, /root/.ssh, /root/.subversion, /root/.nami, /root/workspace]
 
 - macro: known_root_conditions
   condition: (fd.name startswith /root/orcexec.
@@ -933,7 +933,8 @@
               or fd.name startswith /root/.composer
               or fd.name startswith /root/.gconf
               or fd.name startswith /root/.nv
-              or fd.name startswith /root/.local/share/jupyter)
+              or fd.name startswith /root/.local/share/jupyter
+              or fd.name startswith /root/oradiag_root)
 
 - rule: Write below root
   desc: an attempt to write to any file directly below / or /root
