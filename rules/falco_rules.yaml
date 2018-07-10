@@ -901,10 +901,10 @@
 - list: known_root_files
   items: [/root/.monit.state, /root/.auth_tokens, /root/.bash_history, /root/.ash_history, /root/.aws/credentials,
           /root/.viminfo.tmp, /root/.lesshst, /root/.bzr.log, /root/.gitconfig.lock, /root/.babel.json, /root/.localstack,
-          /root/.node_repl_history, /root/.mongorc.js, /root/.dbshell, /root/.augeas/history, /root/.rnd]
+          /root/.node_repl_history, /root/.mongorc.js, /root/.dbshell, /root/.augeas/history, /root/.rnd, /root/.wget-hsts]
 
 - list: known_root_directories
-  items: [/root/.oracle_jre_usage, /root/.ssh, /root/.subversion, /root/.nami, /root/workspace]
+  items: [/root/.oracle_jre_usage, /root/.ssh, /root/.subversion, /root/.nami]
 
 - macro: known_root_conditions
   condition: (fd.name startswith /root/orcexec.
@@ -938,7 +938,10 @@
               or fd.name startswith /root/.gconf
               or fd.name startswith /root/.nv
               or fd.name startswith /root/.local/share/jupyter
-              or fd.name startswith /root/oradiag_root)
+              or fd.name startswith /root/oradiag_root
+              or fd.name startswith /root/workspace
+              or fd.name startswith /root/jvm
+              or fd.name startswith /root/.node-gyp)
 
 - rule: Write below root
   desc: an attempt to write to any file directly below / or /root
