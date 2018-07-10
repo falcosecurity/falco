@@ -4,7 +4,7 @@ A response engine for Falco that allows to process security events executing pla
 
 ## Architecture
 
-* *[Falco](https://sysdig.com/opensource/falco/)* monitors containers and processes behavior to alert when something outside our policy takes place.
+* *[Falco](https://sysdig.com/opensource/falco/)* monitors containers and processes to alert on unexpected behavior. This is defined through the runtime policy built from multiple rules that define what the system should and shouldn't do.
 * *falco-nats* forwards the alert to a message broker service into a topic compound by `falco.<severity>.<rule_name_slugified>`.
 * *[NATS](https://nats.io/)*, our message broker, delivers the alert to any subscribers to the different topics.
 * *[Kubeless](https://kubeless.io/)*, a FaaS framework that runs in Kubernetes, receives the security events and executes the configured playbooks.
