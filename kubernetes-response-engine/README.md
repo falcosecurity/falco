@@ -1,27 +1,18 @@
 # Kubernetes Response Engine for Sysdig Falco
 
-The goal of this project is to create a response engine for Kubernetes which is
-able to execute playbooks to different types of security threats in our
-cointainer fleet alerted by Falco.
+A response engine for Falco that allows to process security events executing playbooks to respond to security threats.
 
-There are several principles which guides our decisions (in no particular order):
+## Architecture
 
-* Real time responses to a security threat: We need to react as soon as possible.
-* Deployment independence: Each playbook is independent of others.
-* Open Source Software: We want to use and promote OSS.
-* Write rock solid code: Each playbook is tested.
-
-## Alert lifecycle outline
-
-An alert travels by our system, these are the typical stages for an alert:
-
-1. *Falco* detects an alert in one container which belongs to our fleet
-2. *Falco* sends the alert to *NATS* using a topic compound by "falco.<severity>.<rule_name_slugified>"
-3. *NATS* delivers message to its subscribers through *Kubeless* infrastructure
-4. *Kubeless* receives the alert and pass it to inner *Playbook*
-6. *Playbook* performs its inner action: Stopping the container, Sending an alert to Slack ...
+* *[Falco](https://sysdig.com/opensource/falco/)* monitors containers and processes behavior to alert when something outside our policy takes place.
+* *falco-nats* forwards the alert to a message broker service into a topic compound by `falco.<severity>.<rule_name_slugified>`.
+* *[NATS](https://nats.io/)*, our message broker, delivers the alert to any subscribers to the different topics.
+* *[Kubeless](https://kubeless.io/)*, a FaaS framework that runs in Kubernetes, receives the security events and executes the configured playbooks.
 
 ## Glossary
 
-* *Alert*: Falco sends alerts
-* *Playbook*: Each piece of Python code which is run when an alert is received
+* *Security event*: Alert sent by Falco when a configured rule matches the behaviour on that host.
+* *Playbook*: Each piece code executed when an alert is received to respond to that threat in an automated way, some examples include:
+  - sending an alert to Slack
+  - stop the pod killing the container
+  - taint the specific node where the pod is running
