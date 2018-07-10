@@ -171,6 +171,9 @@
 - macro: package_mgmt_procs
   condition: proc.name in (package_mgmt_binaries)
 
+- macro: coreos_write_ssh_dir
+  condition: (proc.name=update-ssh-keys and fd.name startswith /home/core/.ssh)
+
 - macro: run_by_package_mgmt_binaries
   condition: proc.aname in (package_mgmt_binaries, needrestart)
 
@@ -687,6 +690,7 @@
   condition: >
     evt.dir = < and open_write and monitored_dir
     and not package_mgmt_procs
+    and not coreos_write_ssh_dir
     and not exe_running_docker_save
     and not python_running_get_pip
     and not python_running_ms_oms
