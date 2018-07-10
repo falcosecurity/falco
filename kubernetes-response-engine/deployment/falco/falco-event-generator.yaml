@@ -1,0 +1,18 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: falco-event-generator
+  labels:
+    name: falco-event-generator
+    app: demo
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: falco-event-generator
+        app: demo
+    spec:
+      containers:
+      - name: falco-event-generator
+        image: sysdig/falco-event-generator:latest
