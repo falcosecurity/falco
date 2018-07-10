@@ -1271,6 +1271,7 @@
               container.image startswith registry.access.redhat.com/openshift3/metrics-cassandra or
               container.image startswith openshift3/ose-sti-builder or
               container.image startswith registry.access.redhat.com/openshift3/ose-sti-builder or
+              container.image startswith registry.access.redhat.com/openshift3/ose-docker-builder or
               container.image startswith registry.access.redhat.com/openshift3/image-inspector or
               container.image startswith cloudnativelabs/kube-router or
               container.image startswith "consul:" or
