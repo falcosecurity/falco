@@ -9,7 +9,7 @@ Pod as Falco.
 
 ## Configuration
 
-You have a [complete Kubernetes manifest available](https://github.com/draios/falco/tree/kubernetes-response-engine/deployment/falco-daemonset.yaml) for future reading.
+You have a [complete Kubernetes manifest available](https://github.com/draios/falco/tree/kubernetes-response-engine/deployment/falco/falco-daemonset.yaml) for future reading.
 
 Take a look at sidecar container and to the initContainers directive which
 craetes the shared pipe between containers.
