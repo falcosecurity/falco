@@ -11,28 +11,3 @@
 #   tags: [users, container]
 
 # Or override/append to any rule, macro, or list from the Default Rules
-
-- macro: node_app_frontend
-  condition: k8s.ns.name = node-app and k8s.pod.label.role = frontend and k8s.pod.label.app = node-app
-
-- rule: Detect crypto miners using the Stratum protocol
-  desc: Miners typically specify the mining pool to connect to with a URI that begins with 'stratum+tcp'
-  condition: node_app_frontend and spawned_process and container.id != host and proc.cmdline contains stratum+tcp
-  output: Possible miner ran inside a container (command=%proc.cmdline %container.info)
-  priority: CRITICAL
-
-- list: miner_ports
-  items: [
-    3333, 4444, 8333, 7777, 7778, 3357, 
-    3335, 8899, 8888, 5730, 5588, 8118, 
-    6099, 9332, 1
-  ]
-
-- macro: miner_port_connection
-  condition: fd.sport in (miner_ports)
-
-- rule: Detect outbound connections to common miner pool ports
-  desc: Miners typically connect to miner pools on common ports.
-  condition: node_app_frontend and outbound and miner_port_connection
-  output: "Outbound connection to common miner port (command=%proc.cmdline port=%fd.rport %container.info)"
-  priority: CRITICAL
