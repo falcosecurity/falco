@@ -47,7 +47,11 @@ RUN curl -s https://s3.amazonaws.com/download.draios.com/DRAIOS-GPG-KEY.public |
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
-RUN ln -s $SYSDIG_HOST_ROOT/lib/modules /lib/modules
+# Some base images have an empty /lib/modules by default
+# If it's not empty, docker build will fail instead of
+# silently overwriting the existing directory
+RUN rm -df /lib/modules \
+ && ln -s $SYSDIG_HOST_ROOT/lib/modules /lib/modules
 
 COPY ./docker-entrypoint.sh /
 
