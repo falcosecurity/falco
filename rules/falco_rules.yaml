@@ -522,10 +522,14 @@
 - macro: countly_writing_nginx_conf
   condition: (proc.cmdline startswith "nodejs /opt/countly/bin" and fd.name startswith /etc/nginx)
 
+- list: ms_oms_binaries
+  items: [omi.postinst, omsconfig.posti, scx.postinst, omsadmin.sh, omiagent]
+
 - macro: ms_oms_writing_conf
   condition: >
     ((proc.name in (omiagent,omsagent,in_heartbeat_r*,omsadmin.sh,PerformInventor)
-      or proc.pname in (omi.postinst,omsconfig.posti,scx.postinst,omsadmin.sh,omiagent))
+       or proc.pname in (ms_oms_binaries)
+       or proc.aname[2] in (ms_oms_binaries))
      and (fd.name startswith /etc/opt/omi or fd.name startswith /etc/opt/microsoft/omsagent))
 
 - macro: ms_scx_writing_conf
