@@ -152,13 +152,13 @@
 - list: rpm_binaries
   items: [dnf, rpm, rpmkey, yum, '"75-system-updat"', rhsmcertd-worke, subscription-ma,
           repoquery, rpmkeys, rpmq, yum-cron, yum-config-mana, yum-debug-dump,
-          abrt-action-sav, rpmdb_stat]
+          abrt-action-sav, rpmdb_stat, microdnf]
 
 - macro: rpm_procs
   condition: proc.name in (rpm_binaries) or proc.name in (salt-minion)
 
 - list: deb_binaries
-  items: [dpkg, dpkg-preconfigu, dpkg-reconfigur, apt, apt-get, aptitude,
+  items: [dpkg, dpkg-preconfigu, dpkg-reconfigur, dpkg-divert, apt, apt-get, aptitude,
     frontend, preinst, add-apt-reposit, apt-auto-remova, apt-key,
     apt-listchanges, unattended-upgr, apt-add-reposit
     ]
@@ -166,10 +166,13 @@
 # The truncated dpkg-preconfigu is intentional, process names are
 # truncated at the sysdig level.
 - list: package_mgmt_binaries
-  items: [rpm_binaries, deb_binaries, update-alternat, gem, pip, sane-utils.post, alternatives, chef-client]
+  items: [rpm_binaries, deb_binaries, update-alternat, gem, pip, pip3, sane-utils.post, alternatives, chef-client]
 
 - macro: package_mgmt_procs
   condition: proc.name in (package_mgmt_binaries)
+
+- macro: coreos_write_ssh_dir
+  condition: (proc.name=update-ssh-keys and fd.name startswith /home/core/.ssh)
 
 - macro: run_by_package_mgmt_binaries
   condition: proc.aname in (package_mgmt_binaries, needrestart)
@@ -519,10 +522,14 @@
 - macro: countly_writing_nginx_conf
   condition: (proc.cmdline startswith "nodejs /opt/countly/bin" and fd.name startswith /etc/nginx)
 
+- list: ms_oms_binaries
+  items: [omi.postinst, omsconfig.posti, scx.postinst, omsadmin.sh, omiagent]
+
 - macro: ms_oms_writing_conf
   condition: >
     ((proc.name in (omiagent,omsagent,in_heartbeat_r*,omsadmin.sh,PerformInventor)
-      or proc.pname in (omi.postinst,omsconfig.posti,scx.postinst,omsadmin.sh,omiagent))
+       or proc.pname in (ms_oms_binaries)
+       or proc.aname[2] in (ms_oms_binaries))
      and (fd.name startswith /etc/opt/omi or fd.name startswith /etc/opt/microsoft/omsagent))
 
 - macro: ms_scx_writing_conf
@@ -546,6 +553,12 @@
 - macro: openldap_writing_conf
   condition: (proc.pname=run-openldap.sh and fd.name startswith /etc/openldap)
 
+- macro: ucpagent_writing_conf
+  condition: (proc.name=apiserver and container.image startswith docker/ucp-agent and fd.name=/etc/authorization_config.cfg)
+
+- macro: iscsi_writing_conf
+  condition: (proc.name=iscsiadm and fd.name startswith /etc/iscsi)
+
 - macro: symantec_writing_conf
   condition: >
     ((proc.name=symcfgd and fd.name startswith /etc/symantec) or
@@ -563,6 +576,9 @@
   condition: >
     (proc.name=urlgrabber-ext- and proc.pname in (yum, yum-cron, repoquery) and
      (fd.name startswith /etc/pkt/nssdb or fd.name startswith /etc/pki/nssdb))
+
+- macro: update_ca_trust_writing_pki
+  condition: (proc.pname=update-ca-trust and proc.name=trust and fd.name startswith /etc/pki)
 
 - macro: brandbot_writing_os_release
   condition: proc.name=brandbot and fd.name=/etc/os-release
@@ -623,6 +639,18 @@
 - macro: dse_writing_tmp
   condition: (proc.name=dse-entrypoint and fd.name=/root/tmp__)
 
+- macro: zap_writing_state
+  condition: (proc.name=java and proc.cmdline contains "jar /zap" and fd.name startswith /root/.ZAP)
+
+- macro: airflow_writing_state
+  condition: (proc.name=airflow and fd.name startswith /root/airflow)
+
+- macro: rpm_writing_root_rpmdb
+  condition: (proc.name=rpm and fd.directory=/root/.rpmdb)
+
+- macro: maven_writing_groovy
+  condition: (proc.name=java and proc.cmdline contains "classpath /usr/local/apache-maven" and fd.name startswith /root/.groovy)
+
 - rule: Write below binary dir
   desc: an attempt to write to any file below a set of binary directories
   condition: >
@@ -666,6 +694,7 @@
   condition: >
     evt.dir = < and open_write and monitored_dir
     and not package_mgmt_procs
+    and not coreos_write_ssh_dir
     and not exe_running_docker_save
     and not python_running_get_pip
     and not python_running_ms_oms
@@ -742,7 +771,7 @@
 
 - macro: redis_writing_conf
   condition: >
-    (proc.name=run-redis and fd.name=/etc/redis.conf)
+    (proc.name in (run-redis, redis-launcher.) and fd.name=/etc/redis.conf or fd.name startswith /etc/redis)
 
 - macro: openvpn_writing_conf
   condition: (proc.name in (openvpn,openvpn-entrypo) and fd.name startswith /etc/openvpn)
@@ -859,9 +888,12 @@
     and not httpd_writing_ssl_conf
     and not userhelper_writing_etc_security
     and not pkgmgmt_progs_writing_pki
+    and not update_ca_trust_writing_pki
     and not brandbot_writing_os_release
     and not redis_writing_conf
     and not openldap_writing_conf
+    and not ucpagent_writing_conf
+    and not iscsi_writing_conf
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc
@@ -873,7 +905,7 @@
 - list: known_root_files
   items: [/root/.monit.state, /root/.auth_tokens, /root/.bash_history, /root/.ash_history, /root/.aws/credentials,
           /root/.viminfo.tmp, /root/.lesshst, /root/.bzr.log, /root/.gitconfig.lock, /root/.babel.json, /root/.localstack,
-          /root/.node_repl_history, /root/.mongorc.js, /root/.dbshell, /root/.augeas/history, /root/.rnd]
+          /root/.node_repl_history, /root/.mongorc.js, /root/.dbshell, /root/.augeas/history, /root/.rnd, /root/.wget-hsts]
 
 - list: known_root_directories
   items: [/root/.oracle_jre_usage, /root/.ssh, /root/.subversion, /root/.nami]
@@ -909,7 +941,11 @@
               or fd.name startswith /root/.composer
               or fd.name startswith /root/.gconf
               or fd.name startswith /root/.nv
-              or fd.name startswith /root/.local/share/jupyter)
+              or fd.name startswith /root/.local/share/jupyter
+              or fd.name startswith /root/oradiag_root
+              or fd.name startswith /root/workspace
+              or fd.name startswith /root/jvm
+              or fd.name startswith /root/.node-gyp)
 
 - rule: Write below root
   desc: an attempt to write to any file directly below / or /root
@@ -920,6 +956,10 @@
     and not exe_running_docker_save
     and not gugent_writing_guestagent_log
     and not dse_writing_tmp
+    and not zap_writing_state
+    and not airflow_writing_state
+    and not rpm_writing_root_rpmdb
+    and not maven_writing_groovy
     and not known_root_conditions
   output: "File below / or /root opened for writing (user=%user.name command=%proc.cmdline parent=%proc.pname file=%fd.name program=%proc.name)"
   priority: ERROR
@@ -944,7 +984,7 @@
   items: [
     iptables, ps, lsb_release, check-new-relea, dumpe2fs, accounts-daemon, sshd,
     vsftpd, systemd, mysql_install_d, psql, screen, debconf-show, sa-update,
-    pam-auth-update, /usr/sbin/spamd, polkit-agent-he, lsattr, file, sosreport,
+    pam-auth-update, pam-config, /usr/sbin/spamd, polkit-agent-he, lsattr, file, sosreport,
     scxcimservera, adclient, rtvscand, cockpit-session, userhelper, ossec-syscheckd
     ]
 
@@ -992,7 +1032,7 @@
 - rule: Write below rpm database
   desc: an attempt to write to the rpm database by any non-rpm related program
   condition: fd.name startswith /var/lib/rpm and open_write and not rpm_procs and not ansible_running_python and not python_running_chef
-  output: "Rpm database opened for writing by a non-rpm program (command=%proc.cmdline file=%fd.name)"
+  output: "Rpm database opened for writing by a non-rpm program (command=%proc.cmdline file=%fd.name parent=%proc.pname pcmdline=%proc.pcmdline)"
   priority: ERROR
   tags: [filesystem, software_mgmt]
 
@@ -1036,7 +1076,7 @@
   condition: (bin_dir_rename) and modify and not package_mgmt_procs and not exe_running_docker_save
   output: >
     File below known binary directory renamed/removed (user=%user.name command=%proc.cmdline
-    operation=%evt.type file=%fd.name %evt.args)
+    pcmdline=%proc.pcmdline operation=%evt.type file=%fd.name %evt.args)
   priority: ERROR
   tags: [filesystem]
 
@@ -1235,11 +1275,16 @@
               container.image startswith registry.access.redhat.com/openshift3/metrics-cassandra or
               container.image startswith openshift3/ose-sti-builder or
               container.image startswith registry.access.redhat.com/openshift3/ose-sti-builder or
+              container.image startswith registry.access.redhat.com/openshift3/ose-docker-builder or
+              container.image startswith registry.access.redhat.com/openshift3/image-inspector or
               container.image startswith cloudnativelabs/kube-router or
               container.image startswith "consul:" or
               container.image startswith mesosphere/mesos-slave or
               container.image startswith istio/proxy_ or
-              container.image startswith datadog/docker-dd-agent)
+              container.image startswith datadog/docker-dd-agent or
+              container.image startswith datadog/agent or
+              container.image startswith docker/ucp-agent or
+              container.image startswith gliderlabs/logspout)
 
 # Add conditions to this macro (probably in a separate file,
 # overwriting this macro) to specify additional containers that are
