@@ -10,7 +10,7 @@ before_install:
     - sudo apt-get update
 install:
     - sudo apt-get --force-yes install g++-4.8
-    - sudo apt-get install rpm linux-headers-$(uname -r)
+    - sudo apt-get install rpm linux-headers-$(uname -r) libelf-dev
     - git clone https://github.com/draios/sysdig.git ../sysdig
     - sudo apt-get install -y python-pip libvirt-dev jq dkms
     - cd ..

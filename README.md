@@ -2,7 +2,7 @@
 
 #### Latest release
 
-**v0.10.0**
+**v0.11.0**
 Read the [change log](https://github.com/draios/falco/blob/dev/CHANGELOG.md)
 
 Dev Branch: [![Build Status](https://travis-ci.org/draios/falco.svg?branch=dev)](https://travis-ci.org/draios/falco)<br />
@@ -40,6 +40,10 @@ Join the Community
 License Terms
 ---
 Falco is licensed to you under the [GPL 2.0](./COPYING) open source license.
+
+In addition, as a special exception, the copyright holders give permission to link the code of portions of this program with the OpenSSL library under certain conditions as described in each individual source file, and distribute linked combinations including the two.
+
+You must obey the GNU General Public License in all respects for all of the code used other than OpenSSL.  If you modify file(s) with this exception, you may extend this exception to your version of the file(s), but you are not obligated to do so.  If you do not wish to do so, delete this exception statement from your version.
 
 Contributor License Agreements
 ---

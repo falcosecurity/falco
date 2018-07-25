@@ -1,0 +1,8 @@
+- rule: Contains Prefix of Filter
+  desc: Testing matching filter prefixes
+  condition: >
+    evt.type=open and evt.arg.path="foo" and evt.arg[0]="foo"
+    and proc.aname="ls" and proc.aname[1]="ls"
+    and proc.apid=10 and proc.apid[1]=10
+  output: Never
+  priority: INFO

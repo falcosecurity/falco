@@ -275,6 +275,12 @@ function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replac
 	    error ("Missing name in rule")
 	 end
 
+	 -- By default, if a rule's condition refers to an unknown
+	 -- filter like evt.type, etc the loader throws an error.
+	 if v['skip-if-unknown-filter'] == nil then
+	    v['skip-if-unknown-filter'] = false
+	 end
+
 	 -- Possibly append to the condition field of an existing rule
 	 append = false
 
@@ -378,9 +384,34 @@ function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replac
 	 warn_evttypes = v['warn_evttypes']
       end
 
-      local filter_ast, evttypes, syscallnums = compiler.compile_filter(v['rule'], v['condition'],
-									state.macros, state.lists,
-									warn_evttypes)
+      local filter_ast, evttypes, syscallnums, filters = compiler.compile_filter(v['rule'], v['condition'],
+										 state.macros, state.lists,
+										 warn_evttypes)
+
+      -- If a filter in the rule doesn't exist, either skip the rule
+      -- or raise an error, depending on the value of
+      -- skip-if-unknown-filter.
+      for filter, _ in pairs(filters) do
+	 found = false
+
+	 for pat, _ in pairs(defined_filters) do
+	    if string.match(filter, pat) ~= nil then
+	       found = true
+	       break
+	    end
+	 end
+
+	 if not found then
+	    if v['skip-if-unknown-filter'] then
+	       if verbose then
+		  print("Skipping rule \""..v['rule'].."\" that contains unknown filter "..filter)
+	       end
+	       goto next_rule
+	    else
+	       error("Rule \""..v['rule'].."\" contains unknown filter "..filter)
+	    end
+	 end
+      end
 
       if (filter_ast.type == "Rule") then
 	 state.n_rules = state.n_rules + 1
@@ -418,6 +449,8 @@ function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replac
 
 	 if (v['enabled'] == false) then
 	    falco_rules.enable_rule(rules_mgr, v['rule'], 0)
+	 else
+	    falco_rules.enable_rule(rules_mgr, v['rule'], 1)
 	 end
 
 	 -- If the format string contains %container.info, replace it
@@ -452,6 +485,8 @@ function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replac
       else
 	 error ("Unexpected type in load_rule: "..filter_ast.type)
       end
+
+      ::next_rule::
    end
 
    if verbose then

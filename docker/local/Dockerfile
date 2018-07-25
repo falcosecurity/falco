@@ -17,22 +17,35 @@ ADD http://download.draios.com/apt-draios-priority /etc/apt/preferences.d/
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
 	bash-completion \
+	bc \
+	clang-7 \
 	ca-certificates \
 	curl \
 	dkms \
 	gnupg2 \
 	gcc \
 	gcc-5 \
+	gcc-6 \
 	jq \
 	libc6-dev \
 	libelf-dev \
+	llvm-7 \
  && rm -rf /var/lib/apt/lists/*
 
 # Since our base Debian image ships with GCC 7 which breaks older kernels, revert the
 # default to gcc-5.
 RUN rm -rf /usr/bin/gcc && ln -s /usr/bin/gcc-5 /usr/bin/gcc
 
-RUN ln -s $SYSDIG_HOST_ROOT/lib/modules /lib/modules
+RUN rm -rf /usr/bin/clang \
+ && rm -rf /usr/bin/llc \
+ && ln -s /usr/bin/clang-7 /usr/bin/clang \
+ && ln -s /usr/bin/llc-7 /usr/bin/llc
+
+# Some base images have an empty /lib/modules by default
+# If it's not empty, docker build will fail instead of
+# silently overwriting the existing directory
+RUN rm -df /lib/modules \
+ && ln -s $SYSDIG_HOST_ROOT/lib/modules /lib/modules
 
 ADD falco-${FALCO_VERSION}-x86_64.deb /
 RUN dpkg -i /falco-${FALCO_VERSION}-x86_64.deb
