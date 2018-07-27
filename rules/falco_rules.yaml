@@ -181,7 +181,7 @@
   items: [ca-certificates]
 
 - list: dhcp_binaries
-  items: [dhclient, dhclient-script]
+  items: [dhclient, dhclient-script, 11-dhclient]
 
 # A canonical set of processes that run other programs with different
 # privileges or as a different user.
