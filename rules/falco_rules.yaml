@@ -654,6 +654,9 @@
 - macro: maven_writing_groovy
   condition: (proc.name=java and proc.cmdline contains "classpath /usr/local/apache-maven" and fd.name startswith /root/.groovy)
 
+- macro: chef_writing_conf
+  condition: (proc.name=chef-client and fd.name startswith /root/.chef)
+
 - rule: Write below binary dir
   desc: an attempt to write to any file below a set of binary directories
   condition: >
@@ -963,6 +966,7 @@
     and not airflow_writing_state
     and not rpm_writing_root_rpmdb
     and not maven_writing_groovy
+    and not chef_writing_conf
     and not known_root_conditions
   output: "File below / or /root opened for writing (user=%user.name command=%proc.cmdline parent=%proc.pname file=%fd.name program=%proc.name)"
   priority: ERROR
