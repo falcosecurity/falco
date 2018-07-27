@@ -69,6 +69,8 @@ static void usage()
 	   " -h, --help                    Print this page\n"
 	   " -c                            Configuration file (default " FALCO_SOURCE_CONF_FILE ", " FALCO_INSTALL_CONF_FILE ")\n"
 	   " -A                            Monitor all events, including those with EF_DROP_FALCO flag.\n"
+	   " -b, --print-base64            Print data buffers in base64. This is useful for encoding\n"
+	   "                               binary data that needs to be used over media designed to\n"
 	   " -d, --daemon                  Run as a daemon\n"
 	   " -D <pattern>                  Disable any rules matching the regex <pattern>. Can be specified multiple times.\n"
 	   "                               Can not be specified with -t.\n"
@@ -292,6 +294,7 @@ int falco_init(int argc, char **argv)
 {
 	int result = EXIT_SUCCESS;
 	sinsp* inspector = NULL;
+	sinsp_evt::param_fmt event_buffer_format = sinsp_evt::PF_NORMAL;
 	falco_engine *engine = NULL;
 	falco_outputs *outputs = NULL;
 	int op;
@@ -361,7 +364,7 @@ int falco_init(int argc, char **argv)
 		// Parse the args
 		//
 		while((op = getopt_long(argc, argv,
-                                        "hc:AdD:e:ik:K:Ll:m:M:o:P:p:r:s:T:t:UvV:w:",
+                                        "hc:AbdD:e:ik:K:Ll:m:M:o:P:p:r:s:T:t:UvV:w:",
                                         long_options, &long_index)) != -1)
 		{
 			switch(op)
@@ -374,6 +377,9 @@ int falco_init(int argc, char **argv)
 				break;
 			case 'A':
 				all_events = true;
+				break;
+			case 'b':
+				event_buffer_format = sinsp_evt::PF_BASE64;
 				break;
 			case 'd':
 				daemon = true;
@@ -481,6 +487,7 @@ int falco_init(int argc, char **argv)
 		}
 
 		inspector = new sinsp();
+		inspector->set_buffer_format(event_buffer_format);
 
 		if(print_ignored_events)
 		{
