@@ -1267,6 +1267,32 @@
   priority: DEBUG
   tags: [shell]
 
+- macro: allowed_openshift_registry_root
+  condition: >
+    (container.image startswith openshift3/ or
+     container.image startswith registry.access.redhat.com/openshift3/)
+
+# Source: https://docs.openshift.com/enterprise/3.2/install_config/install/disconnected_install.html
+- macro: openshift_image
+  condition: >
+    (allowed_openshift_registry_root and
+      (container.image contains logging-deployment or
+       container.image contains logging-elasticsearch or
+       container.image contains logging-kibana or
+       container.image contains logging-fluentd or
+       container.image contains logging-auth-proxy or
+       container.image contains metrics-deployer or
+       container.image contains metrics-hawkular-metrics or
+       container.image contains metrics-cassandra or
+       container.image contains metrics-heapster or
+       container.image contains ose-haproxy-router or
+       container.image contains ose-deployer or
+       container.image contains ose-sti-builder or
+       container.image contains ose-docker-builder or
+       container.image contains ose-pod or
+       container.image contains ose-docker-registry or
+       container.image contains image-inspector))
+
 - macro: trusted_containers
   condition: (container.image startswith sysdig/agent or
               (container.image startswith sysdig/falco and
@@ -1278,13 +1304,7 @@
               container.image startswith gcr.io/google_containers/kube-proxy or
               container.image startswith calico/node or
               container.image startswith rook/toolbox or
-              container.image startswith registry.access.redhat.com/openshift3/logging-fluentd or
-              container.image startswith registry.access.redhat.com/openshift3/logging-elasticsearch or
-              container.image startswith registry.access.redhat.com/openshift3/metrics-cassandra or
-              container.image startswith openshift3/ose-sti-builder or
-              container.image startswith registry.access.redhat.com/openshift3/ose-sti-builder or
-              container.image startswith registry.access.redhat.com/openshift3/ose-docker-builder or
-              container.image startswith registry.access.redhat.com/openshift3/image-inspector or
+              openshift_image or
               container.image startswith cloudnativelabs/kube-router or
               container.image startswith "consul:" or
               container.image startswith mesosphere/mesos-slave or
