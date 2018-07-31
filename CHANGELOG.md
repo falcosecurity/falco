@@ -2,6 +2,14 @@
 
 This file documents all notable changes to Falco. The release numbering uses [semantic versioning](http://semver.org).
 
+## v0.11.1
+
+Released 2018-07-31
+
+## Bug Fixes
+
+* Fix a problem that caused the kernel module to not load on certain kernel versions [[#397](https://github.com/draios/falco/pull/397)] [[#394](https://github.com/draios/falco/issues/394)]
+
 ## v0.11.0
 
 Released 2018-07-24
