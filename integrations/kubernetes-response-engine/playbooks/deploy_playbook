@@ -1,0 +1,68 @@
+#!/bin/bash
+#
+# Deploys a playbook
+
+set -e
+
+function usage() {
+  cat<<EOF
+Usage: $0 [options]
+
+-p playbook     Playbook to be deployed. Is the script for Kubeless: slack, taint, isolate.
+-e environment  Environment variables for the Kubeless function.  You can pass multiple environment variables passing several -e parameters.
+-t topic        NATS topic to subscribe function. You can bind to multiple topics passing several -t parameters.
+
+You must pass the playbook and at least one topic to subscribe.
+
+Example:
+
+deploy_playbook -r slack -t "falco.error.*" -e SLACK_WEBHOOK_URL=http://foobar.com/...
+EOF
+  exit 1
+}
+
+function join { local IFS="$1"; shift; echo "$*"; }
+
+playbook=""
+environment=()
+topics=()
+
+while getopts "r:e:t:" arg; do
+  case $arg in
+    r)
+      playbook="${OPTARG}"
+      ;;
+    e)
+      environment+=("${OPTARG}")
+      ;;
+    t)
+      topics+=("${OPTARG}")
+      ;;
+    *)
+      usage
+      ;;
+  esac
+done
+
+if [[ "${playbook}" == "" || ${#topics[@]} -eq 0 ]]; then
+  usage
+fi
+
+pipenv lock --requirements | sed '/^-/ d' > requirements.txt
+
+zip "${playbook}".zip -r playbooks/*.py "${playbook}".py
+
+kubeless function deploy  --from-file "${playbook}".zip \
+                          --dependencies requirements.txt \
+                          --env "$(join , ${environment[*]})" \
+                          --runtime python3.6 \
+                          --handler "${playbook}".handler \
+                          falco-"${playbook}"
+
+rm requirements.txt ${playbook}.zip
+
+for index in ${!topics[*]}; do
+  kubeless trigger nats create falco-"${playbook}"-trigger-"${index}" \
+      --function-selector created-by=kubeless,function=falco-${playbook} \
+      --trigger-topic "${topics[$index]}"
+done

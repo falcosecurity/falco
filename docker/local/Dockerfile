@@ -41,10 +41,23 @@ RUN rm -rf /usr/bin/clang \
  && ln -s /usr/bin/clang-7 /usr/bin/clang \
  && ln -s /usr/bin/llc-7 /usr/bin/llc
 
-RUN ln -s $SYSDIG_HOST_ROOT/lib/modules /lib/modules
+# Some base images have an empty /lib/modules by default
+# If it's not empty, docker build will fail instead of
+# silently overwriting the existing directory
+RUN rm -df /lib/modules \
+ && ln -s $SYSDIG_HOST_ROOT/lib/modules /lib/modules
 
 ADD falco-${FALCO_VERSION}-x86_64.deb /
 RUN dpkg -i /falco-${FALCO_VERSION}-x86_64.deb
+
+# debian:unstable head contains binutils 2.31, which generates
+# binaries that are incompatible with kernels < 4.16. So manually
+# forcibly install binutils 2.30-22 instead.
+RUN curl -s -o binutils_2.30-22_amd64.deb http://snapshot.debian.org/archive/debian/20180622T211149Z/pool/main/b/binutils/binutils_2.30-22_amd64.deb \
+ && curl -s -o libbinutils_2.30-22_amd64.deb http://snapshot.debian.org/archive/debian/20180622T211149Z/pool/main/b/binutils/libbinutils_2.30-22_amd64.deb \
+ && curl -s -o binutils-x86-64-linux-gnu_2.30-22_amd64.deb http://snapshot.debian.org/archive/debian/20180622T211149Z/pool/main/b/binutils/binutils-x86-64-linux-gnu_2.30-22_amd64.deb \
+ && curl -s -o binutils-common_2.30-22_amd64.deb http://snapshot.debian.org/archive/debian/20180622T211149Z/pool/main/b/binutils/binutils-common_2.30-22_amd64.deb \
+ && dpkg -i *binutils*.deb
 
 COPY ./docker-entrypoint.sh /
 

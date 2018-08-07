@@ -2,6 +2,53 @@
 
 This file documents all notable changes to Falco. The release numbering uses [semantic versioning](http://semver.org).
 
+## v0.11.1
+
+Released 2018-07-31
+
+## Bug Fixes
+
+* Fix a problem that caused the kernel module to not load on certain kernel versions [[#397](https://github.com/draios/falco/pull/397)] [[#394](https://github.com/draios/falco/issues/394)]
+
+## v0.11.0
+
+Released 2018-07-24
+
+## Major Changes
+
+* **EBPF Support** (Beta): Falco can now read events via an ebpf program loaded into the kernel instead of the `falco-probe` kernel module. Full docs [here](https://github.com/draios/sysdig/wiki/eBPF-(beta)). [[#365](https://github.com/draios/falco/pull/365)]
+
+## Minor Changes
+
+* Rules may now have an `skip-if-unknown-filter` property. If set to true, a rule will be skipped if its condition/output property refers to a filtercheck (e.g. `fd.some-new-attibute`) that is not present in the current falco version. [[#364](https://github.com/draios/falco/pull/364)] [[#345](https://github.com/draios/falco/issues/345)]
+* Small changes to Falco `COPYING` file so github automatically recognizes license [[#380](https://github.com/draios/falco/pull/380)]
+* New example integration showing how to connect Falco with Anchore to dynamically create falco rules based on negative scan results [[#390](https://github.com/draios/falco/pull/390)]
+* New example integration showing how to connect Falco, [nats](https://nats.io/), and K8s to run flexible "playbooks" based on Falco events [[#389](https://github.com/draios/falco/pull/389)]
+
+## Bug Fixes
+
+* Ensure all rules are enabled by default [[#379](https://github.com/draios/falco/pull/379)]
+* Fix libcurl compilation problems [[#374](https://github.com/draios/falco/pull/374)]
+* Add gcc-6 to docker container, which improves compatibility when building kernel module [[#382](https://github.com/draios/falco/pull/382)] [[#371](https://github.com/draios/falco/issues/371)]
+* Ensure the /lib/modules symlink to /host/lib/modules is set correctly [[#392](https://github.com/draios/falco/issues/392)]
+
+## Rule Changes
+
+* Add additional binary writing programs [[#366](https://github.com/draios/falco/pull/366)]
+* Add additional package management programs [[#388](https://github.com/draios/falco/pull/388)] [[#366](https://github.com/draios/falco/pull/366)]
+* Expand write_below_etc handling for additional programs [[#388](https://github.com/draios/falco/pull/388)] [[#366](https://github.com/draios/falco/pull/366)]
+* Expand set of programs allowed to write to `/etc/pki` [[#388](https://github.com/draios/falco/pull/388)]
+* Expand set of root written directories/files [[#388](https://github.com/draios/falco/pull/388)] [[#366](https://github.com/draios/falco/pull/366)]
+* Let pam-config read sensitive files [[#388](https://github.com/draios/falco/pull/388)]
+* Add additional trusted containers: openshift, datadog, docker ucp agent, gliderlabs logspout [[#388](https://github.com/draios/falco/pull/388)]
+* Let coreos update-ssh-keys write to /home/core/.ssh [[#388](https://github.com/draios/falco/pull/388)]
+* Expand coverage for MS OMS [[#388](https://github.com/draios/falco/issues/388)] [[#387](https://github.com/draios/falco/issues/387)]
+* Expand the set of shell spawning programs [[#366](https://github.com/draios/falco/pull/366)]
+* Add additional mysql programs/directories [[#366](https://github.com/draios/falco/pull/366)]
+* Let program `id` open network connections [[#366](https://github.com/draios/falco/pull/366)]
+* Opt-in rule for protecting tomcat shell spawns [[#366](https://github.com/draios/falco/pull/366)]
+* New rule `Write below monitored directory` [[#366](https://github.com/draios/falco/pull/366)]
+
 ## v0.10.0
 
 Released 2018-04-24

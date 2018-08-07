@@ -1,0 +1,8 @@
+apiVersion: "nats.io/v1alpha2"
+kind: "NatsCluster"
+metadata:
+  name: "nats"
+  namespace: "nats-io"
+spec:
+  size: 3
+  version: "1.1.0"
