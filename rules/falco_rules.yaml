@@ -337,6 +337,9 @@
 - macro: container
   condition: container.id != host
 
+- macro: container_started
+  condition: (evt.type = container or (evt.type=execve and evt.dir=< and proc.vpid=1))
+
 - macro: interactive
   condition: >
     ((proc.aname=sshd and proc.name != sshd) or
@@ -1406,7 +1409,7 @@
 - rule: Launch Privileged Container
   desc: Detect the initial process started in a privileged container. Exceptions are made for known trusted images.
   condition: >
-    evt.type=execve and proc.vpid=1 and container
+    container_started and container
     and container.privileged=true
     and not trusted_containers
     and not user_trusted_containers
@@ -1446,7 +1449,7 @@
     Detect the initial process started by a container that has a mount from a sensitive host directory
     (i.e. /proc). Exceptions are made for known trusted images.
   condition: >
-    evt.type=execve and proc.vpid=1 and container
+    container_started and container
     and sensitive_mount
     and not trusted_containers
     and not user_sensitive_mount_containers
@@ -1458,19 +1461,18 @@
 # explicitly enumerate the container images that you want to run in
 # your environment. In this main falco rules file, there isn't any way
 # to know all the containers that can run, so any container is
-# alllowed, by using a filter that is guaranteed to evaluate to true
-# (the same proc.vpid=1 that's in the Launch Disallowed Container
-# rule). In the overridden macro, the condition would look something
-# like (container.image.repository = vendor/container-1 or
+# allowed, by using a filter that is guaranteed to evaluate to true.
+# In the overridden macro, the condition would look something like
+# (container.image.repository = vendor/container-1 or
 # container.image.repository = vendor/container-2 or ...)
 
 - macro: allowed_containers
-  condition: (proc.vpid=1)
+  condition: (container.id exists)
 
 - rule: Launch Disallowed Container
   desc: >
     Detect the initial process started by a container that is not in a list of allowed containers.
-  condition: evt.type=execve and proc.vpid=1 and container and not allowed_containers
+  condition: container_started and container and not allowed_containers
   output: Container started and not in allowed list (user=%user.name command=%proc.cmdline %container.info image=%container.image.repository:%container.image.tag)
   priority: WARNING
   tags: [container]
