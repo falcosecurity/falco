@@ -78,8 +78,10 @@ else()
         set(ZLIB_INCLUDE "${ZLIB_SRC}")
         set(ZLIB_LIB "${ZLIB_SRC}/libz.a")
         ExternalProject_Add(zlib
-		URL "http://s3.amazonaws.com/download.draios.com/dependencies/zlib-1.2.8.tar.gz"
-		URL_MD5 "44d667c142d7cda120332623eab69f40"
+		# START CHANGE for CVE-2016-9840, CVE-2016-9841, CVE-2016-9842, CVE-2016-9843
+		URL "http://s3.amazonaws.com/download.draios.com/dependencies/zlib-1.2.11.tar.gz"
+                URL_MD5 "1c9f62f0778697a09d36121ead88e08e"
+		# END CHANGE for CVE-2016-9840, CVE-2016-9841, CVE-2016-9842, CVE-2016-9843
 		CONFIGURE_COMMAND "./configure"
 		BUILD_COMMAND ${CMD_MAKE}
 		BUILD_IN_SOURCE 1
@@ -215,8 +217,10 @@ else()
 	message(STATUS "Using bundled openssl in '${OPENSSL_BUNDLE_DIR}'")
 
 	ExternalProject_Add(openssl
-		URL "http://s3.amazonaws.com/download.draios.com/dependencies/openssl-1.0.2j.tar.gz"
-		URL_MD5 "96322138f0b69e61b7212bc53d5e912b"
+		# START CHANGE for CVE-2017-3735, CVE-2017-3731, CVE-2017-3737, CVE-2017-3738, CVE-2017-3736
+		URL "http://s3.amazonaws.com/download.draios.com/dependencies/openssl-1.0.2n.tar.gz"
+                URL_MD5 "13bdc1b1d1ff39b6fd42a255e74676a4"
+		# END CHANGE for CVE-2017-3735, CVE-2017-3731, CVE-2017-3737, CVE-2017-3738, CVE-2017-3736
 		CONFIGURE_COMMAND ./config shared --prefix=${OPENSSL_INSTALL_DIR}
 		BUILD_COMMAND ${CMD_MAKE}
 		BUILD_IN_SOURCE 1
@@ -246,8 +250,10 @@ else()
 
 	ExternalProject_Add(curl
 		DEPENDS openssl
-		URL "http://s3.amazonaws.com/download.draios.com/dependencies/curl-7.56.0.tar.bz2"
-		URL_MD5 "e0caf257103e0c77cee5be7e9ac66ca4"
+		# START CHANGE for CVE-2017-8816, CVE-2017-8817, CVE-2017-8818, CVE-2018-1000007
+		URL "http://s3.amazonaws.com/download.draios.com/dependencies/curl-7.60.0.tar.bz2"
+		URL_MD5 "bd2aabf78ded6a9aec8a54532fd6b5d7"
+		# END CHANGE for CVE-2017-8816, CVE-2017-8817, CVE-2017-8818, CVE-2018-1000007
 		CONFIGURE_COMMAND ./configure ${CURL_SSL_OPTION} --disable-shared --enable-optimize --disable-curldebug --disable-rt --enable-http --disable-ftp --disable-file --disable-ldap --disable-ldaps --disable-rtsp --disable-telnet --disable-tftp --disable-pop3 --disable-imap --disable-smb --disable-smtp --disable-gopher --disable-sspi --disable-ntlm-wb --disable-tls-srp --without-winssl --without-darwinssl --without-polarssl --without-cyassl --without-nss --without-axtls --without-ca-path --without-ca-bundle --without-libmetalink --without-librtmp --without-winidn --without-libidn --without-nghttp2 --without-libssh2 --disable-threaded-resolver
 		BUILD_COMMAND ${CMD_MAKE}
 		BUILD_IN_SOURCE 1
