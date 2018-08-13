@@ -39,7 +39,7 @@ string lua_print_stats = "print_stats";
 
 using namespace std;
 
-falco_engine::falco_engine(bool seed_rng)
+falco_engine::falco_engine(bool seed_rng, const std::string& source_dir)
 	: m_rules(NULL), m_next_ruleset_id(0),
 	  m_min_priority(falco_common::PRIORITY_DEBUG),
 	  m_sampling_ratio(1), m_sampling_multiplier(0),
@@ -48,7 +48,7 @@ falco_engine::falco_engine(bool seed_rng)
 	luaopen_lpeg(m_ls);
 	luaopen_yaml(m_ls);
 
-	falco_common::init(m_lua_main_filename.c_str(), FALCO_ENGINE_SOURCE_LUA_DIR);
+	falco_common::init(m_lua_main_filename.c_str(), source_dir.c_str());
 	falco_rules::init(m_ls);
 
 	m_evttype_filter.reset(new sinsp_evttype_filter());
