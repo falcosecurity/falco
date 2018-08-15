@@ -116,6 +116,10 @@ static void usage()
            "                               from multiple files/directories.\n"
 	   " -s <stats_file>               If specified, write statistics related to falco's reading/processing of events\n"
 	   "                               to this file. (Only useful in live mode).\n"
+	   " -S <len>, --snaplen=<len>\n"
+	   "                  		   Capture the first <len> bytes of each I/O buffer.\n"
+	   "                   		   By default, the first 80 bytes are captured. Use this\n"
+	   "                   		   option with caution, it can generate huge trace files.\n"
 	   " -T <tag>                      Disable any rules with a tag=<tag>. Can be specified multiple times.\n"
 	   "                               Can not be specified with -t.\n"
 	   " -t <tag>                      Only run those rules with a tag=<tag>. Can be specified multiple times.\n"
@@ -315,6 +319,7 @@ int falco_init(int argc, char **argv)
 	string* k8s_api_cert = 0;
 	string* mesos_api = 0;
 	string output_format = "";
+	uint32_t snaplen = 0;
 	bool replace_container_info = false;
 	int duration_to_tot = 0;
 	bool print_ignored_events = false;
@@ -343,6 +348,7 @@ int falco_init(int argc, char **argv)
 		{"option", required_argument, 0, 'o'},
 		{"print", required_argument, 0, 'p' },
 		{"pidfile", required_argument, 0, 'P' },
+		{"snaplen", required_argument, 0, 'S' },
 		{"unbuffered", no_argument, 0, 'U' },
 		{"version", no_argument, 0, 0 },
 		{"validate", required_argument, 0, 'V' },
@@ -364,7 +370,7 @@ int falco_init(int argc, char **argv)
 		// Parse the args
 		//
 		while((op = getopt_long(argc, argv,
-                                        "hc:AbdD:e:ik:K:Ll:m:M:o:P:p:r:s:T:t:UvV:w:",
+                                        "hc:AbdD:e:ik:K:Ll:m:M:o:P:p:r:Ss:T:t:UvV:w:",
                                         long_options, &long_index)) != -1)
 		{
 			switch(op)
@@ -449,6 +455,9 @@ int falco_init(int argc, char **argv)
 			case 'r':
 				falco_configuration::read_rules_file_directory(string(optarg), rules_filenames);
 				break;
+			case 'S':
+				snaplen = atoi(optarg);
+				break;
 			case 's':
 				stats_filename = optarg;
 				break;
@@ -488,6 +497,14 @@ int falco_init(int argc, char **argv)
 
 		inspector = new sinsp();
 		inspector->set_buffer_format(event_buffer_format);
+
+		//
+		// If required, set the snaplen
+		//
+		if(snaplen != 0)
+		{
+			inspector->set_snaplen(snaplen);
+		}
 
 		if(print_ignored_events)
 		{
