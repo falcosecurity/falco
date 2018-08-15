@@ -370,7 +370,7 @@ int falco_init(int argc, char **argv)
 		// Parse the args
 		//
 		while((op = getopt_long(argc, argv,
-                                        "hc:AbdD:e:ik:K:Ll:m:M:o:P:p:r:Ss:T:t:UvV:w:",
+                                        "hc:AbdD:e:ik:K:Ll:m:M:o:P:p:r:S:s:T:t:UvV:w:",
                                         long_options, &long_index)) != -1)
 		{
 			switch(op)
