@@ -27,6 +27,7 @@ along with falco.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "rules.h"
 
+#include "config_falco_engine.h"
 #include "falco_common.h"
 
 //
@@ -38,7 +39,7 @@ along with falco.  If not, see <http://www.gnu.org/licenses/>.
 class falco_engine : public falco_common
 {
 public:
-	falco_engine(bool seed_rng=true);
+	falco_engine(bool seed_rng=true, const std::string& rules_dir=FALCO_ENGINE_SOURCE_LUA_DIR);
 	virtual ~falco_engine();
 
 	//
