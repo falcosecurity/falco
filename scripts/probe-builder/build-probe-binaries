@@ -80,6 +80,40 @@ function ubuntu_build {
 	cd $BASEDIR
 }
 
+function rhel_build {
+	URL=$1
+	RPM=$(echo $URL | grep -o '[^/]*$')
+	KERNEL_RELEASE=$(echo $RPM | awk 'match($0, /[^kernel\-(uek\-)?(core\-|devel\-)?].*[^(\.rpm)]/){ print substr($0, RSTART, RLENGTH) }')
+
+	if [ ! -d $KERNEL_RELEASE ]; then
+		mkdir $KERNEL_RELEASE
+	fi
+
+	cd $KERNEL_RELEASE
+
+	if [ ! -f $RPM ]; then
+		echo Downloading $RPM [RHEL and CentOS]
+		wget --timeout=${URL_TIMEOUT} --tries=${RETRY} $URL
+		rpm2cpio $RPM | cpio -idm
+	fi
+
+	NUM_RPM=$(ls kernel-*.rpm -1 | wc -l)
+
+	if [ $NUM_RPM -eq 2 ]; then
+		if [ -f boot/config-$KERNEL_RELEASE ]; then
+			HASH=$(md5sum boot/config-$KERNEL_RELEASE | cut -d' ' -f1)
+		else
+			HASH=$(md5sum lib/modules/$KERNEL_RELEASE/config | cut -d' ' -f1)
+		fi
+		HASH_ORIG=$HASH
+
+    BUILDER_KERNEL_SOURCE=$BASEDIR/$KERNEL_RELEASE
+    BUILDER_KERNELDIR=/usr/src/kernels/$KERNEL_RELEASE
+		build_probe
+	fi
+
+	cd $BASEDIR
+}
 
 #
 # Ubuntu build
@@ -92,4 +126,30 @@ URLS="$($DIR/kernel-crawler.py Ubuntu)"
 for URL in $URLS
 do
   ubuntu_build $URL
+done
+
+#
+# RHEL build
+#
+
+echo Building RHEL
+DIR=$(dirname $(readlink -f $0))
+URLS="$($DIR/kernel-crawler.py CentOS)"
+
+for URL in $URLS
+do
+	rhel_build $URL
+done
+
+#
+# Fedora build
+#
+
+echo Building Fedora
+DIR=$(dirname $(readlink -f $0))
+URLS="$($DIR/kernel-crawler.py Fedora)"
+
+for URL in $URLS
+do
+	rhel_build $URL
 done
