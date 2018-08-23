@@ -1,0 +1,95 @@
+#!/bin/bash
+#
+# This script builds a precompiled version of falco-probe for a bunch of kernels
+# The precompiled binary is then obtained at runtime by sysdig-probe-loader
+# Ideally, the community should expand this stuff with better support
+#
+set -euo pipefail
+
+#
+# For continuous integration log purposes, wget prints its own output to stderr
+# so it can be convenient to redirect it to a file. This can be done directly
+# at runtime.
+#
+
+PROBE_NAME="falco-probe"
+PROBE_VERSION=$1
+BASEDIR=$(pwd)
+ARCH=$(uname -m)
+URL_TIMEOUT=300
+RETRY=10
+
+if [ ! -d $BASEDIR/output ]; then
+	mkdir $BASEDIR/output
+fi
+
+function build_probe {
+	if [ ! -f $BASEDIR/output/$PROBE_NAME-$PROBE_VERSION-$ARCH-$KERNEL_RELEASE-$HASH.ko ] || [ ! -f $BASEDIR/output/$PROBE_NAME-$PROBE_VERSION-$ARCH-$KERNEL_RELEASE-$HASH_ORIG.ko ]; then
+		echo Building $PROBE_NAME-$PROBE_VERSION-$ARCH-$KERNEL_RELEASE-$HASH.ko [${FUNCNAME[1]}]
+
+		docker run --rm --name falco-probe-builder \
+		  -v $BASEDIR/output:/output \
+			-v $BUILDER_KERNEL_SOURCE:/kernel:ro \
+			-e HASH=$HASH \
+			-e KERNELDIR=$BUILDER_KERNELDIR \
+			sysdig/falco-probe-builder:$PROBE_VERSION || true
+	else
+	  echo Skipping $PROBE_NAME-$PROBE_VERSION-$ARCH-$KERNEL_RELEASE-$HASH.ko \(already built\)
+	fi
+}
+
+function ubuntu_build {
+	URL=$1
+	DEB=$(echo $URL | grep -o '[^/]*$')
+	KERNEL_RELEASE_FULL=$(echo $DEB | grep -E -o "[0-9]{1}\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+")		# ex. 3.13.0-24.47
+	KERNEL_RELEASE=$(echo $KERNEL_RELEASE_FULL | grep -E -o "[0-9]{1}\.[0-9]+\.[0-9]+-[0-9]+")	# ex. 3.13.0-24
+	KERNEL_UPDATE=$(echo $KERNEL_RELEASE_FULL | grep -E -o "[0-9]+$")							# ex. 47
+
+	if [ ! -d $KERNEL_RELEASE ]; then
+		mkdir $KERNEL_RELEASE
+	fi
+
+	cd $KERNEL_RELEASE
+
+	if [ ! -d $KERNEL_UPDATE ]; then
+		mkdir $KERNEL_UPDATE
+	fi
+
+	cd $KERNEL_UPDATE
+
+	if [ ! -f $DEB ]; then
+		echo Downloading $DEB [Ubuntu]
+		wget --timeout=${URL_TIMEOUT} --tries=${RETRY} $URL
+		dpkg -x $DEB ./
+	fi
+
+	NUM_DEB=$(ls linux-*.deb -1 | wc -l)
+
+	if [ $NUM_DEB -eq 3 ]; then
+		local KERNEL_FOLDER=$KERNEL_RELEASE
+		KERNEL_RELEASE=$(ls -1 linux-image-* | grep -E -o "[0-9]{1}\.[0-9]+\.[0-9]+-[0-9]+-[a-z]+")
+
+		HASH=$(md5sum boot/config-$KERNEL_RELEASE | cut -d' ' -f1)
+		HASH_ORIG=$HASH
+
+    BUILDER_KERNEL_SOURCE=$BASEDIR/$KERNEL_FOLDER/$KERNEL_UPDATE
+    BUILDER_KERNELDIR=/usr/src/linux-headers-$KERNEL_RELEASE
+		build_probe
+	fi
+
+	cd $BASEDIR
+}
+
+
+#
+# Ubuntu build
+#
+
+echo Building Ubuntu
+DIR=$(dirname $(readlink -f $0))
+URLS="$($DIR/kernel-crawler.py Ubuntu)"
+
+for URL in $URLS
+do
+  ubuntu_build $URL
+done
