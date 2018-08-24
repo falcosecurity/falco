@@ -1,0 +1,17 @@
+#!/bin/bash
+
+set -euo pipefail
+
+. builders/common
+
+#
+# AmazonLinux2 build
+#
+
+echo Building AmazonLinux2
+URLS="$($KERNEL_CRAWLER AmazonLinux2)"
+
+for URL in $URLS
+do
+	rhel_build $URL
+done
