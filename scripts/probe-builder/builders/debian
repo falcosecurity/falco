@@ -1,0 +1,93 @@
+#!/bin/bash
+
+set -euo pipefail
+
+. builders/common
+
+function debian_build {
+	URL=${1}
+	DEB=$(echo ${URL} | grep -o '[^/]*$')
+
+	if [[ ${DEB} == *"kbuild"* ]]; then
+		if [[ ! -d ${BASEDIR}/common-dependencies/debian/kbuild/ ]]; then
+			mkdir -p ${BASEDIR}/common-dependencies/debian/kbuild
+		fi
+		if [ ! -f ${BASEDIR}/common-dependencies/debian/kbuild/${DEB} ]; then
+			echo Downloading ${DEB} [Debian]
+			wget --timeout=${URL_TIMEOUT} --tries=${RETRY} -P ${BASEDIR}/common-dependencies/debian/kbuild ${URL}
+		fi
+		return
+	else
+		KERNEL_RELEASE=$(echo ${DEB} | grep -E -o "[0-9]{1}\.[0-9]+\.[0-9]+(-[0-9]+)?"| head -1)
+		KERNEL_MAJOR=$(echo ${KERNEL_RELEASE} | grep -E -o "[0-9]{1}\.[0-9]+")
+		PACKAGE=$(echo ${DEB} | grep -E -o "(common_[0-9]{1}\.[0-9]+.*amd64|amd64_[0-9]{1}\.[0-9]+.*amd64)" | sed -E 's/(common_|amd64_|_amd64)//g')
+
+		if [[ ! -d ${KERNEL_RELEASE} ]]; then
+			mkdir ${KERNEL_RELEASE}
+		fi
+
+		cd ${KERNEL_RELEASE}
+
+		if [ ! -d ${PACKAGE} ]; then
+			mkdir ${PACKAGE}
+		fi
+
+		cd ${PACKAGE}
+
+		if [ ! -f ${DEB} ]; then
+			echo Downloading ${DEB} [Debian]
+			wget --timeout=${URL_TIMEOUT} --tries=${RETRY} ${URL}
+			dpkg -x ${DEB} ./
+		fi
+	fi
+
+	NUM_DEB=$(ls linux-*.deb -1| grep -v kbuild | wc -l)
+
+	if [[ ${NUM_DEB} -eq 3 ]]; then
+		set +e
+		KBUILD_PACKAGE=$(ls -t ${BASEDIR}/common-dependencies/debian/kbuild | grep  "kbuild\-${KERNEL_MAJOR}" | head -1)
+		set -e
+		if [[ ! -z ${KBUILD_PACKAGE} ]]; then
+			cp ${BASEDIR}/common-dependencies/debian/kbuild/${KBUILD_PACKAGE} .
+			dpkg -x ${KBUILD_PACKAGE} ./
+
+			local KERNEL_FOLDER=${KERNEL_RELEASE}
+			KERNEL_RELEASE=$(ls boot/config-* | sed 's|boot/config-||')
+
+			HASH=$(md5sum boot/config-${KERNEL_RELEASE} | cut -d' ' -f1)
+			HASH_ORIG=${HASH}
+
+			##fix symbolic links
+			unlink ${BASEDIR}/${KERNEL_FOLDER}/${PACKAGE}/lib/modules/${KERNEL_RELEASE}/build
+			ln -s ${BASEDIR}/${KERNEL_FOLDER}/${PACKAGE}/usr/src/linux-headers-${KERNEL_RELEASE} ${BASEDIR}/${KERNEL_FOLDER}/${PACKAGE}/lib/modules/${KERNEL_RELEASE}/build
+
+			common_folder=$(ls ${BASEDIR}/${KERNEL_FOLDER}/${PACKAGE}/usr/src/ | egrep '*common')
+			unlink ${BASEDIR}/${KERNEL_FOLDER}/${PACKAGE}/lib/modules/${KERNEL_RELEASE}/source
+			ln -s ${BASEDIR}/${KERNEL_FOLDER}/${PACKAGE}/usr/src/${common_folder}  ${BASEDIR}/${KERNEL_FOLDER}/${PACKAGE}/lib/modules/${KERNEL_RELEASE}/source
+
+			##hack Makefile
+			sed -i '0,/MAKEARGS.*$/s||MAKEARGS := -C '"/kernel/usr/src/${common_folder}"' O='"/kernel/usr/src/linux-headers-${KERNEL_RELEASE}"'|' ${BASEDIR}/${KERNEL_FOLDER}/${PACKAGE}/usr/src/linux-headers-${KERNEL_RELEASE}/Makefile
+			sed -i 's/@://' ${BASEDIR}/${KERNEL_FOLDER}/${PACKAGE}/usr/src/linux-headers-${KERNEL_RELEASE}/Makefile
+			sed -i 's|$(cmd) %.*$|$(cmd) : all|' ${BASEDIR}/${KERNEL_FOLDER}/${PACKAGE}/usr/src/linux-headers-${KERNEL_RELEASE}/Makefile
+
+			BUILDER_KERNEL_SOURCE=$BASEDIR/$KERNEL_FOLDER/$PACKAGE
+			BUILDER_KERNELDIR=/usr/src/linux-headers-${KERNEL_RELEASE}
+			BUILDER_KERNEL_VERSION=${KERNEL_RELEASE}
+			build_probe
+		fi
+	fi
+
+	cd ${BASEDIR}
+}
+
+#
+# Debian build
+#
+echo Building Debian
+DIR=$(dirname $(readlink -f $0))
+URLS="$($DIR/../kernel-crawler.py Debian)"
+
+for URL in $URLS
+do
+	debian_build $URL
+done
