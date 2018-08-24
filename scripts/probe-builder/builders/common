@@ -8,7 +8,8 @@ export BASEDIR=$(pwd)
 export ARCH=$(uname -m)
 export URL_TIMEOUT=300
 export RETRY=10
-export KERNEL_CRAWLER=$BASEDIR/kernel-crawler.py
+export KERNEL_CRAWLERS=$BASEDIR/kernel-crawlers
+export KERNEL_CRAWLER=$KERNEL_CRAWLERS/kernel-crawler.py
 
 if [ ! -d $BASEDIR/output ]; then
 	mkdir $BASEDIR/output
