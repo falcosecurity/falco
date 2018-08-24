@@ -9,6 +9,9 @@ export ARCH=$(uname -m)
 export URL_TIMEOUT=300
 export RETRY=10
 
+if [ ! -d $BASEDIR/output ]; then
+	mkdir $BASEDIR/output
+fi
 
 function build_probe {
 	if [ ! -f $BASEDIR/output/$PROBE_NAME-$PROBE_VERSION-$ARCH-$KERNEL_RELEASE-$HASH.ko ] || [ ! -f $BASEDIR/output/$PROBE_NAME-$PROBE_VERSION-$ARCH-$KERNEL_RELEASE-$HASH_ORIG.ko ]; then
