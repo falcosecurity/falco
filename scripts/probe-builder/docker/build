@@ -3,17 +3,10 @@
 set -euo pipefail
 
 ARCH="x86_64"
-
 KERNELDIR=/kernel${KERNELDIR}
-KERNEL_VERSION=$(cat ${KERNELDIR}/include/config/kernel.release)
 
-if [ -v DEBIAN ]; then
-  echo "* Reverting changes done to Makefile"
-  echo "* See https://github.com/draios/sysdig/blob/dev/scripts/build-probe-binaries#L433"
-
-  sed -i '0,/MAKEARGS.*$/s||MAKEARGS := -C '"$(echo ${KERNELDIR} | sed  's/amd64/common/g')"' O='"${KERNELDIR}"'|' ${KERNELDIR}/Makefile
-
-  KERNEL_VERSION=$(echo ${KERNELDIR} | cut -d/ -f5 | sed 's/linux-headers-//g')
+if ! [ -n "${KERNEL_VERSION+1}" ] || [ -z "${KERNEL_VERSION}" ]; then
+  KERNEL_VERSION=$(cat ${KERNELDIR}/include/config/kernel.release)
 fi
 
 PROBE_SUFFIX="${FALCO_VERSION}-${ARCH}-${KERNEL_VERSION}-${HASH}"
