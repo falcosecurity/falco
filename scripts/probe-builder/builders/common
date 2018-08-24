@@ -1,0 +1,27 @@
+#!/bin/bash
+
+set -euo pipefail
+
+export PROBE_NAME="falco-probe"
+export PROBE_VERSION=$1
+export BASEDIR=$(pwd)
+export ARCH=$(uname -m)
+export URL_TIMEOUT=300
+export RETRY=10
+
+
+function build_probe {
+	if [ ! -f $BASEDIR/output/$PROBE_NAME-$PROBE_VERSION-$ARCH-$KERNEL_RELEASE-$HASH.ko ] || [ ! -f $BASEDIR/output/$PROBE_NAME-$PROBE_VERSION-$ARCH-$KERNEL_RELEASE-$HASH_ORIG.ko ]; then
+		echo Building $PROBE_NAME-$PROBE_VERSION-$ARCH-$KERNEL_RELEASE-$HASH.ko [${FUNCNAME[1]}]
+
+		docker run --rm --name falco-probe-builder \
+		  -v $BASEDIR/output:/output \
+			-v $BUILDER_KERNEL_SOURCE:/kernel:ro \
+			-e HASH=$HASH \
+			-e KERNELDIR=$BUILDER_KERNELDIR \
+			-e KERNEL_VERSION=$BUILDER_KERNEL_VERSION \
+			sysdig/falco-probe-builder:$PROBE_VERSION || true
+	else
+	  echo Skipping $PROBE_NAME-$PROBE_VERSION-$ARCH-$KERNEL_RELEASE-$HASH.ko \(already built\)
+	fi
+}
