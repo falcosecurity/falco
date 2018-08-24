@@ -52,8 +52,7 @@ function ubuntu_build {
 #
 
 echo Building Ubuntu
-DIR=$(dirname $(readlink -f $0))
-URLS="$($DIR/../kernel-crawler.py Ubuntu)"
+URLS="$($KERNEL_CRAWLER Ubuntu)"
 
 for URL in $URLS
 do

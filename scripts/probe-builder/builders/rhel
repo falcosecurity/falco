@@ -5,11 +5,11 @@ set -euo pipefail
 . builders/common
 
 #
-# Fedora build
+# RHEL build
 #
 
-echo Building Fedora
-URLS="$($KERNEL_CRAWLER Fedora)"
+echo Building RHEL
+URLS="$($KERNEL_CRAWLER CentOS)"
 
 for URL in $URLS
 do

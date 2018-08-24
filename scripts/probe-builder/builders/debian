@@ -84,8 +84,7 @@ function debian_build {
 # Debian build
 #
 echo Building Debian
-DIR=$(dirname $(readlink -f $0))
-URLS="$($DIR/../kernel-crawler.py Debian)"
+URLS="$($KERNEL_CRAWLER Debian)"
 
 for URL in $URLS
 do
