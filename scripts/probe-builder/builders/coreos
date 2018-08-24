@@ -44,10 +44,10 @@ function coreos_build_old {
 	if [ ! -d $DIR_NAME ]; then
 		tar xf $TGZ_NAME
 		cd $DIR_NAME
-		make distclean
+		make distclean || true
 		sed -i "s/^EXTRAVERSION.*/EXTRAVERSION = $EXTRAVERSION/" Makefile
 		cp ../config_orig .config
-		make modules_prepare
+		make modules_prepare || true
 		mv .config ../config
 		cd ..
 	fi
