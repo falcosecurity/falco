@@ -5,46 +5,46 @@ set -euo pipefail
 . builders/common
 
 function ubuntu_build {
-	URL=$1
-	DEB=$(echo $URL | grep -o '[^/]*$')
-	KERNEL_RELEASE_FULL=$(echo $DEB | grep -E -o "[0-9]{1}\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+")		# ex. 3.13.0-24.47
-	KERNEL_RELEASE=$(echo $KERNEL_RELEASE_FULL | grep -E -o "[0-9]{1}\.[0-9]+\.[0-9]+-[0-9]+")	# ex. 3.13.0-24
-	KERNEL_UPDATE=$(echo $KERNEL_RELEASE_FULL | grep -E -o "[0-9]+$")							# ex. 47
+  URL=$1
+  DEB=$(echo $URL | grep -o '[^/]*$')
+  KERNEL_RELEASE_FULL=$(echo $DEB | grep -E -o "[0-9]{1}\.[0-9]+\.[0-9]+-[0-9]+\.[0-9]+")   # ex. 3.13.0-24.47
+  KERNEL_RELEASE=$(echo $KERNEL_RELEASE_FULL | grep -E -o "[0-9]{1}\.[0-9]+\.[0-9]+-[0-9]+")  # ex. 3.13.0-24
+  KERNEL_UPDATE=$(echo $KERNEL_RELEASE_FULL | grep -E -o "[0-9]+$")             # ex. 47
 
-	if [ ! -d $KERNEL_RELEASE ]; then
-		mkdir $KERNEL_RELEASE
-	fi
+  if [ ! -d $KERNEL_RELEASE ]; then
+    mkdir $KERNEL_RELEASE
+  fi
 
-	cd $KERNEL_RELEASE
+  cd $KERNEL_RELEASE
 
-	if [ ! -d $KERNEL_UPDATE ]; then
-		mkdir $KERNEL_UPDATE
-	fi
+  if [ ! -d $KERNEL_UPDATE ]; then
+    mkdir $KERNEL_UPDATE
+  fi
 
-	cd $KERNEL_UPDATE
+  cd $KERNEL_UPDATE
 
-	if [ ! -f $DEB ]; then
-		echo Downloading $DEB [Ubuntu]
-		wget --timeout=${URL_TIMEOUT} --tries=${RETRY} $URL
-		dpkg -x $DEB ./
-	fi
+  if [ ! -f $DEB ]; then
+    echo Downloading $DEB [Ubuntu]
+    wget --timeout=${URL_TIMEOUT} --tries=${RETRY} $URL
+    dpkg -x $DEB ./
+  fi
 
-	NUM_DEB=$(ls linux-*.deb -1 | wc -l)
+  NUM_DEB=$(ls linux-*.deb -1 | wc -l)
 
-	if [ $NUM_DEB -eq 3 ]; then
-		local KERNEL_FOLDER=$KERNEL_RELEASE
-		KERNEL_RELEASE=$(ls -1 linux-image-* | grep -E -o "[0-9]{1}\.[0-9]+\.[0-9]+-[0-9]+-[a-z]+")
+  if [ $NUM_DEB -eq 3 ]; then
+    local KERNEL_FOLDER=$KERNEL_RELEASE
+    KERNEL_RELEASE=$(ls -1 linux-image-* | grep -E -o "[0-9]{1}\.[0-9]+\.[0-9]+-[0-9]+-[a-z]+")
 
-		HASH=$(md5sum boot/config-$KERNEL_RELEASE | cut -d' ' -f1)
-		HASH_ORIG=$HASH
+    HASH=$(md5sum boot/config-$KERNEL_RELEASE | cut -d' ' -f1)
+    HASH_ORIG=$HASH
 
-		BUILDER_KERNEL_SOURCE=$BASEDIR/$KERNEL_FOLDER/$KERNEL_UPDATE
-		BUILDER_KERNELDIR=/usr/src/linux-headers-$KERNEL_RELEASE
-		BUILDER_KERNEL_VERSION=""
-		build_probe
-	fi
+    BUILDER_KERNEL_SOURCE=$BASEDIR/$KERNEL_FOLDER/$KERNEL_UPDATE
+    BUILDER_KERNELDIR=/usr/src/linux-headers-$KERNEL_RELEASE
+    BUILDER_KERNEL_VERSION=""
+    build_probe
+  fi
 
-	cd $BASEDIR
+  cd $BASEDIR
 }
 
 #
@@ -56,5 +56,5 @@ URLS="$($KERNEL_CRAWLER Ubuntu)"
 
 for URL in $URLS
 do
-	ubuntu_build $URL
+  ubuntu_build $URL
 done

@@ -5,65 +5,65 @@ set -euo pipefail
 . builders/common
 
 function boot2docker_build {
-	CONFIGURATION_NAME=$1
-	KERNEL_RELEASE=$2
-	KERNEL_URL=$3
-	KERNEL_CONFIG=$4
-	AUFS_REPO=$5
-	AUFS_BRANCH=$6
-	AUFS_COMMIT=$7
-	TGZ_NAME=$(echo $KERNEL_URL | awk -F"/" '{print $NF }')
-	DIR_NAME=$(echo $TGZ_NAME | sed 's/.tar.xz//')
+  CONFIGURATION_NAME=$1
+  KERNEL_RELEASE=$2
+  KERNEL_URL=$3
+  KERNEL_CONFIG=$4
+  AUFS_REPO=$5
+  AUFS_BRANCH=$6
+  AUFS_COMMIT=$7
+  TGZ_NAME=$(echo $KERNEL_URL | awk -F"/" '{print $NF }')
+  DIR_NAME=$(echo $TGZ_NAME | sed 's/.tar.xz//')
 
-	if [ ! -d $CONFIGURATION_NAME ]; then
-		mkdir $CONFIGURATION_NAME
-	fi
+  if [ ! -d $CONFIGURATION_NAME ]; then
+    mkdir $CONFIGURATION_NAME
+  fi
 
-	cd $CONFIGURATION_NAME
+  cd $CONFIGURATION_NAME
 
-	if [ ! -f $TGZ_NAME ]; then
-		echo Downloading $TGZ_NAME [Boot2Docker]
-		wget --timeout=${URL_TIMEOUT} --tries=${RETRY} $KERNEL_URL
-	fi
+  if [ ! -f $TGZ_NAME ]; then
+    echo Downloading $TGZ_NAME [Boot2Docker]
+    wget --timeout=${URL_TIMEOUT} --tries=${RETRY} $KERNEL_URL
+  fi
 
-	if [ ! -d $DIR_NAME ]; then
-		tar xf $TGZ_NAME
-		cd $DIR_NAME
-		make distclean
-		git clone -b "$AUFS_BRANCH" "$AUFS_REPO" aufs-standalone
-		cd aufs-standalone
-		git checkout -q "$AUFS_COMMIT"
-		cd ..
-		cp -r aufs-standalone/Documentation .
-		cp -r aufs-standalone/fs .
-		cp -r aufs-standalone/include/uapi/linux/aufs_type.h include/uapi/linux/
-		set -e && for patch in \
-			aufs-standalone/aufs*-kbuild.patch \
-			aufs-standalone/aufs*-base.patch \
-			aufs-standalone/aufs*-mmap.patch \
-			aufs-standalone/aufs*-standalone.patch \
-			aufs-standalone/aufs*-loopback.patch \
-		; do \
-	        patch -p1 < "$patch"; \
-		done
-		wget --timeout=${URL_TIMEOUT} --tries=${RETRY} -O .config $KERNEL_CONFIG
-		cp .config ../config-orig
-		make olddefconfig
-		make modules_prepare
-		mv .config ../config
-		cd ..
-	fi
+  if [ ! -d $DIR_NAME ]; then
+    tar xf $TGZ_NAME
+    cd $DIR_NAME
+    make distclean
+    git clone -b "$AUFS_BRANCH" "$AUFS_REPO" aufs-standalone
+    cd aufs-standalone
+    git checkout -q "$AUFS_COMMIT"
+    cd ..
+    cp -r aufs-standalone/Documentation .
+    cp -r aufs-standalone/fs .
+    cp -r aufs-standalone/include/uapi/linux/aufs_type.h include/uapi/linux/
+    set -e && for patch in \
+      aufs-standalone/aufs*-kbuild.patch \
+      aufs-standalone/aufs*-base.patch \
+      aufs-standalone/aufs*-mmap.patch \
+      aufs-standalone/aufs*-standalone.patch \
+      aufs-standalone/aufs*-loopback.patch \
+    ; do \
+          patch -p1 < "$patch"; \
+    done
+    wget --timeout=${URL_TIMEOUT} --tries=${RETRY} -O .config $KERNEL_CONFIG
+    cp .config ../config-orig
+    make olddefconfig
+    make modules_prepare
+    mv .config ../config
+    cd ..
+  fi
 
-	HASH=$(md5sum config | cut -d' ' -f1)
-	HASH_ORIG=$(md5sum config-orig | cut -d' ' -f1)
+  HASH=$(md5sum config | cut -d' ' -f1)
+  HASH_ORIG=$(md5sum config-orig | cut -d' ' -f1)
 
-	cd $BASEDIR
+  cd $BASEDIR
 
   BUILDER_KERNEL_SOURCE=$BASEDIR/$CONFIGURATION_NAME
   BUILDER_KERNELDIR=/$DIR_NAME
   BUILDER_KERNEL_VERSION=""
 
-	build_probe
+  build_probe
 }
 
 #
@@ -71,7 +71,7 @@ function boot2docker_build {
 #
 echo Building boot2docker
 $KERNEL_CRAWLERS/boot2docker-kernel-crawler.py | \
-	while read KERNEL_ARGS
-	do
-		boot2docker_build $KERNEL_ARGS
-	done
+  while read KERNEL_ARGS
+  do
+    boot2docker_build $KERNEL_ARGS
+  done

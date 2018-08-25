@@ -5,116 +5,116 @@ set -euo pipefail
 . builders/common
 
 function coreos_build_old {
-	VERSION_URL=$1
-	VERSION_NUMBER=$2
-	COREOS_DIR="coreos-"$VERSION_NUMBER
+  VERSION_URL=$1
+  VERSION_NUMBER=$2
+  COREOS_DIR="coreos-"$VERSION_NUMBER
 
-	if [ ! -d $COREOS_DIR ]; then
-		mkdir $COREOS_DIR
-	fi
+  if [ ! -d $COREOS_DIR ]; then
+    mkdir $COREOS_DIR
+  fi
 
-	cd $COREOS_DIR
+  cd $COREOS_DIR
 
-	if [ ! -f config_orig ]; then
-		wget --timeout=${URL_TIMEOUT} --tries=${RETRY} ${VERSION_URL}coreos_developer_container.bin.bz2
-		bunzip2 coreos_developer_container.bin.bz2
-		sudo kpartx -asv coreos_developer_container.bin
-		LOOPDEV=$(sudo kpartx -asv coreos_developer_container.bin | cut -d\  -f 3)
-		sudo mkdir /tmp/loop || true
-		sudo mount /dev/mapper/$LOOPDEV /tmp/loop
-		cp /tmp/loop/usr/boot/config-* .
-		sudo umount /tmp/loop
-		sudo kpartx -dv coreos_developer_container.bin
-		rm -rf coreos_developer_container.bin
-		cp config-* config_orig
-	fi
+  if [ ! -f config_orig ]; then
+    wget --timeout=${URL_TIMEOUT} --tries=${RETRY} ${VERSION_URL}coreos_developer_container.bin.bz2
+    bunzip2 coreos_developer_container.bin.bz2
+    sudo kpartx -asv coreos_developer_container.bin
+    LOOPDEV=$(sudo kpartx -asv coreos_developer_container.bin | cut -d\  -f 3)
+    sudo mkdir /tmp/loop || true
+    sudo mount /dev/mapper/$LOOPDEV /tmp/loop
+    cp /tmp/loop/usr/boot/config-* .
+    sudo umount /tmp/loop
+    sudo kpartx -dv coreos_developer_container.bin
+    rm -rf coreos_developer_container.bin
+    cp config-* config_orig
+  fi
 
-	KERNEL_RELEASE=$(ls config-* | sed s/config-//)
-	VANILLA=$(echo $KERNEL_RELEASE | sed s/[-+].*// | sed s/\.0$//)
-	MAJOR=$(echo $KERNEL_RELEASE | head -c1)
-	EXTRAVERSION=$(echo $KERNEL_RELEASE | sed s/[^-+]*//)
-	TGZ_NAME=linux-${VANILLA}.tar.xz
-	DIR_NAME=linux-${VANILLA}
-	KERNEL_URL=https://www.kernel.org/pub/linux/kernel/v${MAJOR}.x/$TGZ_NAME
+  KERNEL_RELEASE=$(ls config-* | sed s/config-//)
+  VANILLA=$(echo $KERNEL_RELEASE | sed s/[-+].*// | sed s/\.0$//)
+  MAJOR=$(echo $KERNEL_RELEASE | head -c1)
+  EXTRAVERSION=$(echo $KERNEL_RELEASE | sed s/[^-+]*//)
+  TGZ_NAME=linux-${VANILLA}.tar.xz
+  DIR_NAME=linux-${VANILLA}
+  KERNEL_URL=https://www.kernel.org/pub/linux/kernel/v${MAJOR}.x/$TGZ_NAME
 
-	if [ ! -f $TGZ_NAME ]; then
-		wget --timeout=${URL_TIMEOUT} --tries=${RETRY} $KERNEL_URL
-	fi
+  if [ ! -f $TGZ_NAME ]; then
+    wget --timeout=${URL_TIMEOUT} --tries=${RETRY} $KERNEL_URL
+  fi
 
-	if [ ! -d $DIR_NAME ]; then
-		tar xf $TGZ_NAME
-		cd $DIR_NAME
-		make distclean || true
-		sed -i "s/^EXTRAVERSION.*/EXTRAVERSION = $EXTRAVERSION/" Makefile
-		cp ../config_orig .config
-		make modules_prepare || true
-		mv .config ../config
-		cd ..
-	fi
+  if [ ! -d $DIR_NAME ]; then
+    tar xf $TGZ_NAME
+    cd $DIR_NAME
+    make distclean || true
+    sed -i "s/^EXTRAVERSION.*/EXTRAVERSION = $EXTRAVERSION/" Makefile
+    cp ../config_orig .config
+    make modules_prepare || true
+    mv .config ../config
+    cd ..
+  fi
 
-	HASH=$(md5sum config | cut -d' ' -f1)
-	HASH_ORIG=$(md5sum config_orig | cut -d' ' -f1)
+  HASH=$(md5sum config | cut -d' ' -f1)
+  HASH_ORIG=$(md5sum config_orig | cut -d' ' -f1)
 
-	cd $BASEDIR
+  cd $BASEDIR
 
   BUILDER_KERNEL_SOURCE=$BASEDIR/$COREOS_DIR
   BUILDER_KERNELDIR=/$DIR_NAME
   BUILDER_KERNEL_VERSION=""
-	build_probe
+  build_probe
 }
 
 function coreos_build_new {
-	VERSION_URL=$1
-	VERSION_NUMBER=$2
-	COREOS_DIR="coreos-"$VERSION_NUMBER
+  VERSION_URL=$1
+  VERSION_NUMBER=$2
+  COREOS_DIR="coreos-"$VERSION_NUMBER
 
-	if [ ! -d $COREOS_DIR ]; then
-		mkdir $COREOS_DIR
-	fi
+  if [ ! -d $COREOS_DIR ]; then
+    mkdir $COREOS_DIR
+  fi
 
-	cd $COREOS_DIR
+  cd $COREOS_DIR
 
-	if [ ! -f coreos_developer_container.bin ]; then
-		wget --timeout=${URL_TIMEOUT} --tries=${RETRY} ${VERSION_URL}coreos_developer_container.bin.bz2
-		bunzip2 coreos_developer_container.bin.bz2
-	fi
+  if [ ! -f coreos_developer_container.bin ]; then
+    wget --timeout=${URL_TIMEOUT} --tries=${RETRY} ${VERSION_URL}coreos_developer_container.bin.bz2
+    bunzip2 coreos_developer_container.bin.bz2
+  fi
 
-	if [ ! -f config_orig ]; then
-		# mount developer container is a very stateful part of this script
-		# the section between mount/unmounting should be kept very small
-		# otherwise if something fails there are many inconsistencies that can happen
-		sudo kpartx -asv coreos_developer_container.bin
-		LOOPDEV=$(sudo kpartx -asv coreos_developer_container.bin | cut -d\  -f 3)
-		sudo mkdir /tmp/loop || true
-		sudo mount /dev/mapper/$LOOPDEV /tmp/loop
+  if [ ! -f config_orig ]; then
+    # mount developer container is a very stateful part of this script
+    # the section between mount/unmounting should be kept very small
+    # otherwise if something fails there are many inconsistencies that can happen
+    sudo kpartx -asv coreos_developer_container.bin
+    LOOPDEV=$(sudo kpartx -asv coreos_developer_container.bin | cut -d\  -f 3)
+    sudo mkdir /tmp/loop || true
+    sudo mount /dev/mapper/$LOOPDEV /tmp/loop
 
-		# Copy kernel headers
-		cp -r /tmp/loop/lib/modules .
+    # Copy kernel headers
+    cp -r /tmp/loop/lib/modules .
 
-		# Copy kernel config
-		rm config* || true
-		cp /tmp/loop/usr/boot/config-* .
-		cp config-* config_orig
-		cp config_orig config
+    # Copy kernel config
+    rm config* || true
+    cp /tmp/loop/usr/boot/config-* .
+    cp config-* config_orig
+    cp config_orig config
 
-		# umount and remove the developer container
-		sudo umount /tmp/loop
-		sudo kpartx -dv coreos_developer_container.bin
-	fi
+    # umount and remove the developer container
+    sudo umount /tmp/loop
+    sudo kpartx -dv coreos_developer_container.bin
+  fi
 
-	# https://groups.google.com/forum/#!topic/coreos-dev/Z8Q7sIy6YwE
-	sed -i 's/CONFIG_INITRAMFS_SOURCE=""/CONFIG_INITRAMFS_SOURCE="bootengine.cpio"\nCONFIG_INITRAMFS_ROOT_UID=0\nCONFIG_INITRAMFS_ROOT_GID=0/' config
-	sed -i 'N;s/\(CONFIG_RD_LZ4=.\)\n\(CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE=\)/\1\nCONFIG_INITRAMFS_COMPRESSION=".gz"\n\2/' config
-	KERNEL_RELEASE=$(ls config-* | sed s/config-//)
-	HASH_ORIG=$(md5sum config_orig | cut -d' ' -f1)
-	HASH=$(md5sum config | cut -d' ' -f1)
+  # https://groups.google.com/forum/#!topic/coreos-dev/Z8Q7sIy6YwE
+  sed -i 's/CONFIG_INITRAMFS_SOURCE=""/CONFIG_INITRAMFS_SOURCE="bootengine.cpio"\nCONFIG_INITRAMFS_ROOT_UID=0\nCONFIG_INITRAMFS_ROOT_GID=0/' config
+  sed -i 'N;s/\(CONFIG_RD_LZ4=.\)\n\(CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE=\)/\1\nCONFIG_INITRAMFS_COMPRESSION=".gz"\n\2/' config
+  KERNEL_RELEASE=$(ls config-* | sed s/config-//)
+  HASH_ORIG=$(md5sum config_orig | cut -d' ' -f1)
+  HASH=$(md5sum config | cut -d' ' -f1)
 
-	BUILDER_KERNEL_SOURCE=$PWD/modules/$KERNEL_RELEASE
+  BUILDER_KERNEL_SOURCE=$PWD/modules/$KERNEL_RELEASE
   BUILDER_KERNELDIR=/build
   BUILDER_KERNEL_VERSION=""
 
-	cd $BASEDIR
-	build_probe
+  cd $BASEDIR
+  build_probe
 
   return
 }
@@ -130,16 +130,16 @@ URLS="$($KERNEL_CRAWLER CoreOS)"
 
 for URL in $URLS
 do
-	set +e
-	eval $(curl -s ${URL}version.txt)
-	if [ ${?} -ne 0 ]; then
-		echo "### Error fetching ${URL}version.txt ###"
-		continue
-	fi
-	set -e
-	if [ $COREOS_BUILD -gt 890 ]; then
-		coreos_build_new $URL $COREOS_VERSION
-	else
-		coreos_build_old $URL $COREOS_VERSION
-	fi
+  set +e
+  eval $(curl -s ${URL}version.txt)
+  if [ ${?} -ne 0 ]; then
+    echo "### Error fetching ${URL}version.txt ###"
+    continue
+  fi
+  set -e
+  if [ $COREOS_BUILD -gt 890 ]; then
+    coreos_build_new $URL $COREOS_VERSION
+  else
+    coreos_build_old $URL $COREOS_VERSION
+  fi
 done

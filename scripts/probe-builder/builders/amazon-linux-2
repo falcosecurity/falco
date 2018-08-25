@@ -13,5 +13,5 @@ URLS="$($KERNEL_CRAWLER AmazonLinux2)"
 
 for URL in $URLS
 do
-	rhel_build $URL
+  rhel_build $URL
 done

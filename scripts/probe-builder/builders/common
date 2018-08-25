@@ -12,58 +12,58 @@ export KERNEL_CRAWLERS=$BASEDIR/kernel-crawlers
 export KERNEL_CRAWLER=$KERNEL_CRAWLERS/kernel-crawler.py
 
 if [ ! -d $BASEDIR/output ]; then
-	mkdir $BASEDIR/output
+  mkdir $BASEDIR/output
 fi
 
 function build_probe {
-	if [ ! -f $BASEDIR/output/$PROBE_NAME-$PROBE_VERSION-$ARCH-$KERNEL_RELEASE-$HASH.ko ] || [ ! -f $BASEDIR/output/$PROBE_NAME-$PROBE_VERSION-$ARCH-$KERNEL_RELEASE-$HASH_ORIG.ko ]; then
-		echo Building $PROBE_NAME-$PROBE_VERSION-$ARCH-$KERNEL_RELEASE-$HASH.ko [${FUNCNAME[1]}]
+  if [ ! -f $BASEDIR/output/$PROBE_NAME-$PROBE_VERSION-$ARCH-$KERNEL_RELEASE-$HASH.ko ] || [ ! -f $BASEDIR/output/$PROBE_NAME-$PROBE_VERSION-$ARCH-$KERNEL_RELEASE-$HASH_ORIG.ko ]; then
+    echo Building $PROBE_NAME-$PROBE_VERSION-$ARCH-$KERNEL_RELEASE-$HASH.ko [${FUNCNAME[1]}]
 
-		docker run --rm --name falco-probe-builder \
-		  -v $BASEDIR/output:/output \
-			-v $BUILDER_KERNEL_SOURCE:/kernel:ro \
-			-e HASH=$HASH \
-			-e HASH_ORIG=$HASH_ORIG \
-			-e KERNELDIR=$BUILDER_KERNELDIR \
-			-e KERNEL_VERSION=$BUILDER_KERNEL_VERSION \
-			sysdig/falco-probe-builder:$PROBE_VERSION || true
-	else
-	  echo Skipping $PROBE_NAME-$PROBE_VERSION-$ARCH-$KERNEL_RELEASE-$HASH.ko \(already built\)
-	fi
+    docker run --rm --name falco-probe-builder \
+      -v $BASEDIR/output:/output \
+      -v $BUILDER_KERNEL_SOURCE:/kernel:ro \
+      -e HASH=$HASH \
+      -e HASH_ORIG=$HASH_ORIG \
+      -e KERNELDIR=$BUILDER_KERNELDIR \
+      -e KERNEL_VERSION=$BUILDER_KERNEL_VERSION \
+      sysdig/falco-probe-builder:$PROBE_VERSION || true
+  else
+    echo Skipping $PROBE_NAME-$PROBE_VERSION-$ARCH-$KERNEL_RELEASE-$HASH.ko \(already built\)
+  fi
 }
 
 function rhel_build {
-	URL=$1
-	RPM=$(echo $URL | grep -o '[^/]*$')
-	KERNEL_RELEASE=$(echo $RPM | awk 'match($0, /[^kernel\-(uek\-)?(core\-|devel\-)?].*[^(\.rpm)]/){ print substr($0, RSTART, RLENGTH) }')
+  URL=$1
+  RPM=$(echo $URL | grep -o '[^/]*$')
+  KERNEL_RELEASE=$(echo $RPM | awk 'match($0, /[^kernel\-(uek\-)?(core\-|devel\-)?].*[^(\.rpm)]/){ print substr($0, RSTART, RLENGTH) }')
 
-	if [ ! -d $KERNEL_RELEASE ]; then
-		mkdir $KERNEL_RELEASE
-	fi
+  if [ ! -d $KERNEL_RELEASE ]; then
+    mkdir $KERNEL_RELEASE
+  fi
 
-	cd $KERNEL_RELEASE
+  cd $KERNEL_RELEASE
 
-	if [ ! -f $RPM ]; then
-		echo Downloading $RPM [RHEL and CentOS]
-		wget --timeout=${URL_TIMEOUT} --tries=${RETRY} $URL
-		rpm2cpio $RPM | cpio -idm
-	fi
+  if [ ! -f $RPM ]; then
+    echo Downloading $RPM [RHEL and CentOS]
+    wget --timeout=${URL_TIMEOUT} --tries=${RETRY} $URL
+    rpm2cpio $RPM | cpio -idm
+  fi
 
-	NUM_RPM=$(ls kernel-*.rpm -1 | wc -l)
+  NUM_RPM=$(ls kernel-*.rpm -1 | wc -l)
 
-	if [ $NUM_RPM -eq 2 ]; then
-		if [ -f boot/config-$KERNEL_RELEASE ]; then
-			HASH=$(md5sum boot/config-$KERNEL_RELEASE | cut -d' ' -f1)
-		else
-			HASH=$(md5sum lib/modules/$KERNEL_RELEASE/config | cut -d' ' -f1)
-		fi
-		HASH_ORIG=$HASH
+  if [ $NUM_RPM -eq 2 ]; then
+    if [ -f boot/config-$KERNEL_RELEASE ]; then
+      HASH=$(md5sum boot/config-$KERNEL_RELEASE | cut -d' ' -f1)
+    else
+      HASH=$(md5sum lib/modules/$KERNEL_RELEASE/config | cut -d' ' -f1)
+    fi
+    HASH_ORIG=$HASH
 
-		BUILDER_KERNEL_SOURCE=$BASEDIR/$KERNEL_RELEASE
-		BUILDER_KERNELDIR=/usr/src/kernels/$KERNEL_RELEASE
-		BUILDER_KERNEL_VERSION=""
-		build_probe
-	fi
+    BUILDER_KERNEL_SOURCE=$BASEDIR/$KERNEL_RELEASE
+    BUILDER_KERNELDIR=/usr/src/kernels/$KERNEL_RELEASE
+    BUILDER_KERNEL_VERSION=""
+    build_probe
+  fi
 
-	cd $BASEDIR
+  cd $BASEDIR
 }
