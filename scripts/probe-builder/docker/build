@@ -24,3 +24,14 @@ if [ ${KERNEL_MAJOR} -ge 4 ] && [ ${KERNEL_MINOR} -ge 14 ]; then
   cp /usr/src/falco-${FALCO_VERSION}/bpf/probe.o \
     ${OUTPUT}/falco-probe-bpf-${PROBE_SUFFIX}.o
 fi
+
+if [ -n "${HASH_ORIG+1}" ] && [ ! -z "${HASH_ORIG}" ] && [ "${HASH}" != "${HASH_ORIG}" ]; then
+  PROBE_SUFFIX="${FALCO_VERSION}-${ARCH}-${KERNEL_VERSION}-${HASH_ORIG}"
+  cp /usr/src/falco-${FALCO_VERSION}/falco-probe.ko \
+    ${OUTPUT}/falco-probe-${PROBE_SUFFIX}.ko
+
+  if [ -e /usr/src/falco-${FALCO_VERSION}/bpf/probe.o ]; then
+    cp /usr/src/falco-${FALCO_VERSION}/bpf/probe.o \
+      ${OUTPUT}/falco-probe-bpf-${PROBE_SUFFIX}.o
+  fi
+fi

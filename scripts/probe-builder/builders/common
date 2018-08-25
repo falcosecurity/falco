@@ -23,6 +23,7 @@ function build_probe {
 		  -v $BASEDIR/output:/output \
 			-v $BUILDER_KERNEL_SOURCE:/kernel:ro \
 			-e HASH=$HASH \
+			-e HASH_ORIG=$HASH_ORIG \
 			-e KERNELDIR=$BUILDER_KERNELDIR \
 			-e KERNEL_VERSION=$BUILDER_KERNEL_VERSION \
 			sysdig/falco-probe-builder:$PROBE_VERSION || true
