@@ -100,3 +100,40 @@ class NetworkIsolatePod:
         pod = alert['output_fields']['k8s.pod.name']
 
         self._k8s_client.add_label_to_pod(pod, 'isolated', 'true')
+
+
+class CreateIncidentInDemisto:
+    def __init__(self, demisto_client):
+        self._demisto_client = demisto_client
+
+    def run(self, alert):
+        incident = {
+            'type': 'Policy Violation',
+            'name': alert['rule'],
+            'details': _output_from_alert(alert),
+            'severity': self._severity_from(alert['priority']),
+            'occurred': alert['time'],
+            'labels': [
+                {'type': 'Brand', 'value': 'Sysdig'},
+                {'type': 'Application', 'value': 'Falco'},
+                {'type': 'container.id', 'value': alert['output_fields']['container.id']},
+                {'type': 'k8s.pod.name', 'value': alert['output_fields']['k8s.pod.name']}
+            ]
+        }
+        self._demisto_client.create_incident(incident)
+
+        return incident
+
+    def _severity_from(self, priority):
+        return self._SEVERITIES.get(priority, 0)
+
+    _SEVERITIES = {
+        'Emergency': 4,
+        'Alert': 4,
+        'Critical': 4,
+        'Error': 3,
+        'Warning': 2,
+        'Notice': 1,
+        'Informational': 5,
+        'Debug': 5,
+    }
