@@ -115,7 +115,27 @@ int falco_formats::format_event (lua_State *ls)
 
 		if(s_json_output)
 		{
-			s_inspector->set_buffer_format(sinsp_evt::PF_JSON);
+			switch(s_inspector->get_buffer_format())
+			{
+				case sinsp_evt::PF_NORMAL:
+					s_inspector->set_buffer_format(sinsp_evt::PF_JSON);
+					break;
+				case sinsp_evt::PF_EOLS:
+					s_inspector->set_buffer_format(sinsp_evt::PF_JSONEOLS);
+					break;
+				case sinsp_evt::PF_HEX:
+					s_inspector->set_buffer_format(sinsp_evt::PF_JSONHEX);
+					break;
+				case sinsp_evt::PF_HEXASCII:
+					s_inspector->set_buffer_format(sinsp_evt::PF_JSONHEXASCII);
+					break;
+				case sinsp_evt::PF_BASE64:
+					s_inspector->set_buffer_format(sinsp_evt::PF_JSONBASE64);
+					break;
+				default:
+					// do nothing
+					break;
+			}
 			s_formatters->tostring(evt, sformat, &json_line);
 
 			// The formatted string might have a leading newline. If it does, remove it.
@@ -123,8 +143,6 @@ int falco_formats::format_event (lua_State *ls)
 			{
 				json_line.erase(0, 1);
 			}
-
-			s_inspector->set_buffer_format(sinsp_evt::PF_NORMAL);
 		}
 	}
 	catch (sinsp_exception& e)
