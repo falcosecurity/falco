@@ -12,7 +12,7 @@ with description(infrastructure.PhantomClient) as self:
             os.environ['PHANTOM_USER'],
             os.environ['PHANTOM_PASSWORD'],
             os.environ['PHANTOM_BASE_URL'],
-            False
+            verify_ssl=False
         )
 
     with it('creates a container in Phantom Server'):
