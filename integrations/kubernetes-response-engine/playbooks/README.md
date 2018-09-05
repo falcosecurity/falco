@@ -199,3 +199,18 @@ $ ./deploy_playbook -p capture -e CAPTURE_DURATION=300 -e AWS_S3_BUCKET=s3://xxx
 In this example, when we detect a shell in a container, we start to collect data
 for 300 seconds. This playbook requires permissions for creating a new pod from
 a Kubeless function.
+
+### Create a container in Phantom
+This playbook creates a container in Phantom
+
+```
+./deploy_playbook -p phantom -t "falco.*.*" -e PHANTOM_USER=user -e PHANTOM_PASSWORD=xxxXxxxX -e PHANTOM_BASE_URL=https://..."
+```
+
+#### Parameters
+* PHANTOM_USER: This is the user used to connect to Phantom
+* PHANTOM_PASSWORD: This is the password used to connect to Phantom
+* PHANTOM_BASE_URL: This is the base URL where your Phantom server lives on. Ensure there's no trailing slash.
+* VERIFY_SSL: Verify SSL certificates for HTTPS requests. By default is enabled.
+
+In this example, when Falco raises any kind of alert, the alert will be created in Phantom.
