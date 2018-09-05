@@ -175,5 +175,6 @@ This playbook creates an incident in Demisto
 
 * DEMISTO_API_KEY: This is the API key used for authenticating against Demisto. Create one under settings -> API keys
 * DEMISTO_BASE_URL: This is the base URL where your Demisto server lives on. Ensure there's no trailing slash.
+* VERIFY_SSL: Verify SSL certificates for HTTPS requests. By default is enabled.
 
 In this example, when Falco raises any kind of alert, the alert will be created in Demisto

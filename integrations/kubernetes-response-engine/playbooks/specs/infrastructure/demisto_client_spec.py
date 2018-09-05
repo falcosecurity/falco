@@ -11,6 +11,7 @@ with description(infrastructure.DemistoClient) as self:
         self.demisto_client = infrastructure.DemistoClient(
             os.environ['DEMISTO_API_KEY'],
             os.environ['DEMISTO_BASE_URL'],
+            verify_ssl=False
         )
 
     with it('creates an incident'):

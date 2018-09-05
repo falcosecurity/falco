@@ -76,15 +76,16 @@ class SlackClient:
 
 
 class DemistoClient:
-    def __init__(self, api_key, base_url):
+    def __init__(self, api_key, base_url, verify_ssl=True):
         self._api_key = api_key
         self._base_url = base_url
+        self._verify_ssl = verify_ssl
 
     def create_incident(self, incident):
         response = requests.post(self._base_url + '/incident',
                                  headers=self._headers(),
                                  data=json.dumps(incident),
-                                 verify=False)
+                                 verify=self._verify_ssl)
 
         if response.status_code != http.HTTPStatus.CREATED:
             raise RuntimeError(response.text)
