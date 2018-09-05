@@ -11,7 +11,8 @@ with description(infrastructure.PhantomClient) as self:
         self.phantom_client = infrastructure.PhantomClient(
             os.environ['PHANTOM_USER'],
             os.environ['PHANTOM_PASSWORD'],
-            os.environ['PHANTOM_BASE_URL']
+            os.environ['PHANTOM_BASE_URL'],
+            False
         )
 
     with it('creates a container in Phantom Server'):
