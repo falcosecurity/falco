@@ -46,7 +46,7 @@ with description(infrastructure.KubernetesClient) as self:
         expect(node.spec.taints[0].key).to(equal('playbooks'))
         expect(node.spec.taints[0].value).to(equal('true'))
 
-    with it('adds labels to a pod'):
+    with it('adds label to a pod'):
         self._create_nginx_pod()
 
         pod = self.kubernetes_client.add_label_to_pod('nginx',
