@@ -137,3 +137,14 @@ class CreateIncidentInDemisto:
         'Informational': 5,
         'Debug': 5,
     }
+
+
+class StartSysdigCaptureForContainer:
+    def __init__(self, k8s_client):
+        self._k8s_client = k8s_client
+
+    def run(self, alert):
+        pod = alert['output_fields']['k8s.pod.name']
+        container_id = alert['output_fields']['container.id']
+
+        self._k8s_client.start_sysdig_capture_for(pod, container_id)
