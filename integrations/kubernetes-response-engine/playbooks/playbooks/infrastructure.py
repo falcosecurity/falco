@@ -14,6 +14,7 @@ class KubernetesClient:
             config.load_incluster_config()
 
         self._v1 = client.CoreV1Api()
+        self._batch_v1 = client.BatchV1Api()
 
     def delete_pod(self, name):
         namespace = self._find_pod_namespace(name)
@@ -64,6 +65,128 @@ class KubernetesClient:
         )
 
         return self._v1.patch_namespaced_pod(name, namespace, body)
+
+    def start_sysdig_capture_for(self, pod_name, event_time, duration_in_seconds):
+        job_name = 'sysdig-capturer-{}-{}'.format(pod_name, event_time)
+
+        node_name = self.find_node_running_pod(pod_name)
+        namespace = self._find_pod_namespace(pod_name)
+        body = self._build_sysdig_capture_job_body(job_name, node_name, duration_in_seconds)
+
+        return self._batch_v1.create_namespaced_job(namespace, body)
+
+    def _build_sysdig_capture_job_body(self, job_name, node_name, duration_in_seconds):
+        return client.V1Job(
+            metadata=client.V1ObjectMeta(
+                name=job_name
+            ),
+            spec=client.V1JobSpec(
+                template=client.V1PodTemplateSpec(
+                    metadata=client.V1ObjectMeta(
+                        name=job_name
+                    ),
+                    spec=client.V1PodSpec(
+                        containers=[client.V1Container(
+                            name='capturer',
+                            image='sysdig/sysdig',
+                            image_pull_policy='Always',
+                            security_context=client.V1SecurityContext(
+                                privileged=True
+                            ),
+                            args=[
+                                'sysdig',
+                                '-S',
+                                '-M', str(duration_in_seconds),
+                                '-pk',
+                                '-z', '-w', '{}.scap.gz'.format(job_name)
+                            ],
+                            volume_mounts=[
+                                client.V1VolumeMount(
+                                    mount_path='/host/var/run/docker.sock',
+                                    name='docker-socket'
+                                ),
+                                client.V1VolumeMount(
+                                    mount_path='/host/dev',
+                                    name='dev-fs'
+                                ),
+                                client.V1VolumeMount(
+                                    mount_path='/host/proc',
+                                    name='proc-fs',
+                                    read_only=True
+                                ),
+                                client.V1VolumeMount(
+                                    mount_path='/host/boot',
+                                    name='boot-fs',
+                                    read_only=True
+                                ),
+                                client.V1VolumeMount(
+                                    mount_path='/host/lib/modules',
+                                    name='lib-modules',
+                                    read_only=True
+                                ),
+                                client.V1VolumeMount(
+                                    mount_path='/host/usr',
+                                    name='usr-fs',
+                                    read_only=True
+                                ),
+                                client.V1VolumeMount(
+                                    mount_path='/dev/shm',
+                                    name='dshm'
+                                )
+                            ]
+                        )],
+                        volumes=[
+                            client.V1Volume(
+                                name='dshm',
+                                empty_dir=client.V1EmptyDirVolumeSource(
+                                    medium='Memory'
+                                )
+                            ),
+                            client.V1Volume(
+                                name='docker-socket',
+                                host_path=client.V1HostPathVolumeSource(
+                                    path='/var/run/docker.sock'
+                                )
+                            ),
+                            client.V1Volume(
+                                name='dev-fs',
+                                host_path=client.V1HostPathVolumeSource(
+
+                                    path='/dev'
+                                )
+                            ),
+                            client.V1Volume(
+                                name='proc-fs',
+                                host_path=client.V1HostPathVolumeSource(
+                                    path='/proc'
+                                )
+                            ),
+
+                            client.V1Volume(
+                                name='boot-fs',
+                                host_path=client.V1HostPathVolumeSource(
+                                    path='/boot'
+                                )
+                            ),
+                            client.V1Volume(
+                                name='lib-modules',
+                                host_path=client.V1HostPathVolumeSource(
+                                    path='/lib/modules'
+                                )
+                            ),
+                            client.V1Volume(
+                                name='usr-fs',
+                                host_path=client.V1HostPathVolumeSource(
+                                    path='/usr'
+                                )
+                            )
+                        ],
+                        node_name=node_name,
+                        restart_policy='Never'
+                    )
+                )
+            )
+        )
 
 
 class SlackClient:

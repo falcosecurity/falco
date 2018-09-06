@@ -1,8 +1,9 @@
 from mamba import description, context, it, before
-from expects import expect, be_false, be_true, start_with, equal, have_key
+from expects import expect, be_false, be_true, start_with, equal, have_key, be_none
 
 import subprocess
 import os.path
+import time
 
 from playbooks import infrastructure
 
@@ -54,6 +55,15 @@ with description(infrastructure.KubernetesClient) as self:
                                                       'true')
 
         expect(pod.metadata.labels).to(have_key('testing', 'true'))
+
+    with it('starts sysdig capture for'):
+        self._create_nginx_pod()
+
+        job = self.kubernetes_client.start_sysdig_capture_for('nginx',
+                                                              int(time.time()),
+                                                              10)
+
+        expect(job).not_to(be_none)
 
     def _create_nginx_pod(self):
         current_directory = os.path.dirname(os.path.realpath(__file__))

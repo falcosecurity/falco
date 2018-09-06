@@ -145,6 +145,6 @@ class StartSysdigCaptureForContainer:
 
     def run(self, alert):
         pod = alert['output_fields']['k8s.pod.name']
-        container_id = alert['output_fields']['container.id']
+        event_time = alert['output_fields']['evt.time']
 
-        self._k8s_client.start_sysdig_capture_for(pod, container_id)
+        self._k8s_client.start_sysdig_capture_for(pod, event_time, 120)
