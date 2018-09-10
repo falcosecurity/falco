@@ -412,7 +412,7 @@ else()
 	set(TBB_INCLUDE "${TBB_SRC}/include/")
 	set(TBB_LIB "${TBB_SRC}/build/lib_release/libtbb.a")
 	ExternalProject_Add(tbb
-		URL "https://github.com/01org/tbb/archive/2018_U5.tar.gz" # FIXME
+		URL "http://s3.amazonaws.com/download.draios.com/dependencies/tbb-2018_U5.tar.gz"
 		URL_MD5 "ff3ae09f8c23892fbc3008c39f78288f"
 		CONFIGURE_COMMAND ""
 		BUILD_COMMAND ${CMD_MAKE} tbb_build_dir=${TBB_SRC}/build tbb_build_prefix=lib extra_inc=big_iron.inc
