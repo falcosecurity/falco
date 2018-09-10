@@ -61,7 +61,10 @@ with description(infrastructure.KubernetesClient) as self:
 
         job = self.kubernetes_client.start_sysdig_capture_for('nginx',
                                                               int(time.time()),
-                                                              10)
+                                                              10,
+                                                              'any s3 bucket',
+                                                              'any aws key id',
+                                                              'any aws secret key')
 
         expect(job).not_to(be_none)
 

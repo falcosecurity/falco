@@ -140,11 +140,21 @@ class CreateIncidentInDemisto:
 
 
 class StartSysdigCaptureForContainer:
-    def __init__(self, k8s_client):
+    def __init__(self, k8s_client, duration_in_seconds, s3_bucket,
+                 aws_access_key_id, aws_secret_access_key):
         self._k8s_client = k8s_client
+        self._duration_in_seconds = duration_in_seconds
+        self._s3_bucket = s3_bucket
+        self._aws_access_key_id = aws_access_key_id
+        self._aws_secret_access_key = aws_secret_access_key
 
     def run(self, alert):
         pod = alert['output_fields']['k8s.pod.name']
         event_time = alert['output_fields']['evt.time']
 
-        self._k8s_client.start_sysdig_capture_for(pod, event_time, 120)
+        self._k8s_client.start_sysdig_capture_for(pod,
+                                                  event_time,
+                                                  self._duration_in_seconds,
+                                                  self._s3_bucket,
+                                                  self._aws_access_key_id,
+                                                  self._aws_secret_access_key)

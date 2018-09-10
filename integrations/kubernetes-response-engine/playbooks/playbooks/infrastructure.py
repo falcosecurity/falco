@@ -66,16 +66,25 @@ class KubernetesClient:
 
         return self._v1.patch_namespaced_pod(name, namespace, body)
 
-    def start_sysdig_capture_for(self, pod_name, event_time, duration_in_seconds):
+    def start_sysdig_capture_for(self, pod_name, event_time,
+                                 duration_in_seconds, s3_bucket,
+                                 aws_access_key_id, aws_secret_access_key):
         job_name = 'sysdig-capturer-{}-{}'.format(pod_name, event_time)
 
         node_name = self.find_node_running_pod(pod_name)
         namespace = self._find_pod_namespace(pod_name)
-        body = self._build_sysdig_capture_job_body(job_name, node_name, duration_in_seconds)
+        body = self._build_sysdig_capture_job_body(job_name,
+                                                   node_name,
+                                                   duration_in_seconds,
+                                                   s3_bucket,
+                                                   aws_access_key_id,
+                                                   aws_secret_access_key)
 
         return self._batch_v1.create_namespaced_job(namespace, body)
 
-    def _build_sysdig_capture_job_body(self, job_name, node_name, duration_in_seconds):
+    def _build_sysdig_capture_job_body(self, job_name, node_name,
+                                       duration_in_seconds, s3_bucket,
+                                       aws_access_key_id, aws_secret_access_key):
         return client.V1Job(
             metadata=client.V1ObjectMeta(
                 name=job_name
@@ -88,17 +97,32 @@ class KubernetesClient:
                     spec=client.V1PodSpec(
                         containers=[client.V1Container(
                             name='capturer',
-                            image='sysdig/sysdig',
+                            image='sysdig/capturer',
                             image_pull_policy='Always',
                             security_context=client.V1SecurityContext(
                                 privileged=True
                             ),
-                            args=[
-                                'sysdig',
-                                '-S',
-                                '-M', str(duration_in_seconds),
-                                '-pk',
-                                '-z', '-w', '{}.scap.gz'.format(job_name)
+                            env=[
+                                client.V1EnvVar(
+                                    name='AWS_S3_BUCKET',
+                                    value=s3_bucket
+                                ),
+                                client.V1EnvVar(
+                                    name='CAPTURE_DURATION',
+                                    value=str(duration_in_seconds)
+                                ),
+                                client.V1EnvVar(
+                                    name='CAPTURE_FILE_NAME',
+                                    value=job_name
+                                ),
+                                client.V1EnvVar(
+                                    name='AWS_ACCESS_KEY_ID',
+                                    value=aws_access_key_id,
+                                ),
+                                client.V1EnvVar(
+                                    name='AWS_SECRET_ACCESS_KEY',
+                                    value=aws_secret_access_key,
+                                )
                             ],
                             volume_mounts=[
                                 client.V1VolumeMount(
