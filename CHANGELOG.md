@@ -2,6 +2,31 @@
 
 This file documents all notable changes to Falco. The release numbering uses [semantic versioning](http://semver.org).
 
+## v0.12.0
+
+Released 2018-09-11
+
+## Major Changes
+
+* Improved IPv6 Support to fully support use of IPv6 addresses in events, connections and filters [[#sysdig/1204](https://github.com/draios/sysdig/pull/1204)]
+
+* Ability to associate connections with dns names: new filterchecks `fd.*ip.name` allow looking up the DNS name for a connection's IP address. This can be used to identify or restrict connections by dns names e.g. `evt.type=connect and fd.sip.name=github.com`. [[#412](https://github.com/draios/falco/pull/412)] [[#sysdig/1213](https://github.com/draios/sysdig/pull/1213)]
+
+* New filterchecks `user.loginuid` and `user.loginname` can be used to match the login uid, which stays consistent across sudo/su. This can be used to find the actual user running a given process [[#sysdig/1189](https://github.com/draios/sysdig/pull/1189)]
+
+## Minor Changes
+
+* Upgrade zlib to 1.2.11, openssl to 1.0.2n, and libcurl to 7.60.0 to address software vulnerabilities [[#402](https://github.com/draios/falco/pull/402)]
+* New `endswith` operator can be used for suffix matching on strings [[#sysdig/1209](https://github.com/draios/sysdig/pull/1209)]
+
+## Bug Fixes
+
+* Better control of specifying location of lua source code [[#406](https://github.com/draios/falco/pull/406)]
+
+## Rule Changes
+
+* None for this release.
+
 ## v0.11.1
 
 Released 2018-07-31
