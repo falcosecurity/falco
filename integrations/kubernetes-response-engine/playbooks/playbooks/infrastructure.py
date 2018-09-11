@@ -69,7 +69,7 @@ class KubernetesClient:
     def start_sysdig_capture_for(self, pod_name, event_time,
                                  duration_in_seconds, s3_bucket,
                                  aws_access_key_id, aws_secret_access_key):
-        job_name = 'sysdig-capturer-{}-{}'.format(pod_name, event_time)
+        job_name = 'sysdig-{}-{}'.format(pod_name, event_time)
 
         node_name = self.find_node_running_pod(pod_name)
         namespace = self._find_pod_namespace(pod_name)
