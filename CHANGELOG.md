@@ -2,6 +2,14 @@
 
 This file documents all notable changes to Falco. The release numbering uses [semantic versioning](http://semver.org).
 
+## v0.12.1
+
+Released 2018-09-11
+
+## Bug Fixes
+
+* Fig regression in libcurl configure script [[#416](https://github.com/draios/falco/pull/416)]
+
 ## v0.12.0
 
 Released 2018-09-11
