@@ -2,7 +2,7 @@
 
 #### Latest release
 
-**v0.11.1**
+**v0.12.0**
 Read the [change log](https://github.com/draios/falco/blob/dev/CHANGELOG.md)
 
 Dev Branch: [![Build Status](https://travis-ci.org/draios/falco.svg?branch=dev)](https://travis-ci.org/draios/falco)<br />
