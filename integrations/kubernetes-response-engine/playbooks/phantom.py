@@ -8,7 +8,7 @@ from playbooks import infrastructure
 
 
 def _to_bool(value):
-    return value in ('yes', 'true', '1')
+    return value.lower() in ('yes', 'true', '1')
 
 
 playbook = playbooks.CreateContainerInPhantom(
