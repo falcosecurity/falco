@@ -251,8 +251,8 @@ else()
 	ExternalProject_Add(curl
 		DEPENDS openssl
 		# START CHANGE for CVE-2017-8816, CVE-2017-8817, CVE-2017-8818, CVE-2018-1000007
-		URL "http://s3.amazonaws.com/download.draios.com/dependencies/curl-7.60.0.tar.bz2"
-		URL_MD5 "bd2aabf78ded6a9aec8a54532fd6b5d7"
+		URL "http://s3.amazonaws.com/download.draios.com/dependencies/curl-7.61.0.tar.bz2"
+		URL_MD5 "31d0a9f48dc796a7db351898a1e5058a"
 		# END CHANGE for CVE-2017-8816, CVE-2017-8817, CVE-2017-8818, CVE-2018-1000007
 		CONFIGURE_COMMAND ./configure ${CURL_SSL_OPTION} --disable-shared --enable-optimize --disable-curldebug --disable-rt --enable-http --disable-ftp --disable-file --disable-ldap --disable-ldaps --disable-rtsp --disable-telnet --disable-tftp --disable-pop3 --disable-imap --disable-smb --disable-smtp --disable-gopher --disable-sspi --disable-ntlm-wb --disable-tls-srp --without-winssl --without-darwinssl --without-polarssl --without-cyassl --without-nss --without-axtls --without-ca-path --without-ca-bundle --without-libmetalink --without-librtmp --without-winidn --without-libidn --without-nghttp2 --without-libssh2 --disable-threaded-resolver
 		BUILD_COMMAND ${CMD_MAKE}
@@ -393,6 +393,32 @@ else()
                 BUILD_IN_SOURCE 1
 		CONFIGURE_COMMAND ./configure --enable-static LIBS=-L../../../libyaml-prefix/src/libyaml/src/.libs CFLAGS=-I../../../libyaml-prefix/src/libyaml/include CPPFLAGS=-I../../../libyaml-prefix/src/libyaml/include LUA_INCLUDE=-I../../../luajit-prefix/src/luajit/src LUA=../../../luajit-prefix/src/luajit/src/luajit
                 INSTALL_COMMAND sh -c "cp -R ${PROJECT_BINARY_DIR}/lyaml-prefix/src/lyaml/lib/* ${PROJECT_SOURCE_DIR}/userspace/engine/lua")
+endif()
+
+option(USE_BUNDLED_TBB "Enable building of the bundled tbb" ${USE_BUNDLED_DEPS})
+if(NOT USE_BUNDLED_TBB)
+	find_path(TBB_INCLUDE tbb.h PATH_SUFFIXES tbb)
+	find_library(TBB_LIB NAMES tbb)
+	if(TBB_INCLUDE AND TBB_LIB)
+		message(STATUS "Found tbb: include: ${TBB_INCLUDE}, lib: ${TBB_LIB}")
+	else()
+		message(FATAL_ERROR "Couldn't find system tbb")
+	endif()
+else()
+	set(TBB_SRC "${PROJECT_BINARY_DIR}/tbb-prefix/src/tbb")
+
+	message(STATUS "Using bundled tbb in '${TBB_SRC}'")
+
+	set(TBB_INCLUDE "${TBB_SRC}/include/")
+	set(TBB_LIB "${TBB_SRC}/build/lib_release/libtbb.a")
+	ExternalProject_Add(tbb
+		URL "http://s3.amazonaws.com/download.draios.com/dependencies/tbb-2018_U5.tar.gz"
+		URL_MD5 "ff3ae09f8c23892fbc3008c39f78288f"
+		CONFIGURE_COMMAND ""
+		BUILD_COMMAND ${CMD_MAKE} tbb_build_dir=${TBB_SRC}/build tbb_build_prefix=lib extra_inc=big_iron.inc
+		BUILD_IN_SOURCE 1
+		BUILD_BYPRODUCTS ${TBB_LIB}
+		INSTALL_COMMAND "")
 endif()
 
 install(FILES falco.yaml
