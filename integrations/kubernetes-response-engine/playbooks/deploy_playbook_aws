@@ -1,0 +1,65 @@
+#!/bin/bash
+#
+# Deploys a playbook
+
+set -e
+
+function usage() {
+  cat<<EOF
+Usage: $0 [options]
+
+-r playbook     Playbook to be deployed. Is the script for Kubeless: slack, taint, isolate.
+-e environment  Environment variables for the Kubeless function.  You can pass multiple environment variables passing several -e parameters.
+
+You must pass the playbook and at least one topic to subscribe.
+
+Example:
+
+deploy_playbook -r slack -t "falco.error.*" -e SLACK_WEBHOOK_URL=http://foobar.com/...
+EOF
+  exit 1
+}
+
+function join { local IFS="$1"; shift; echo "$*"; }
+
+playbook=""
+environment=()
+
+while getopts "r:e:t:" arg; do
+  case $arg in
+    r)
+      playbook="${OPTARG}"
+      ;;
+    e)
+      environment+=("${OPTARG}")
+      ;;
+    *)
+      usage
+      ;;
+  esac
+done
+
+if [[ "${playbook}" == "" ]]; then
+  usage
+fi
+
+pipenv lock --requirements | sed '/^-/ d' > requirements.txt
+
+mkdir -p lambda
+pip install -t lambda -r requirements.txt
+pip install -t lambda  .
+cp "${playbook}".py lambda/
+
+cd lambda
+zip ../"${playbook}".zip  -r *
+cd ..
+
+aws lambda create-function \
+  --function-name falco-"${playbook}" \
+  --runtime python2.7 \
+  --role arn:aws:iam::845151661675:role/iam_for_lambda \
+  --environment Variables={"$(join , ${environment[*]})"} \
+  --handler "${playbook}".handler \
+  --zip-file fileb://./"${playbook}".zip
+
+rm -fr "${playbook}".zip lambda requirements.txt
