@@ -48,7 +48,7 @@ pipenv lock --requirements | sed '/^-/ d' > requirements.txt
 mkdir -p lambda
 pip install -t lambda -r requirements.txt
 pip install -t lambda  .
-cp "${playbook}".py lambda/
+cp functions/"${playbook}".py lambda/
 
 cd lambda
 zip ../"${playbook}".zip  -r *

@@ -197,3 +197,10 @@ class CreateContainerInPhantom(object):
         'Informational': 'low',
         'Debug': 'low',
     }
+
+
+def falco_alert(event):
+    if 'data' in event:
+        return event['data']
+
+    return event

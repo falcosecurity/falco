@@ -27,14 +27,14 @@ import (
 )
 
 func main() {
-	var topic = flag.String("t", "arn:aws:sns:eu-west-1:845151661675:falco-alerts", "The AWS SNS topic ARN")
+	var topic = flag.String("t", "", "The AWS SNS topic ARN")
 	var pipePath = flag.String("f", "/var/run/falco/nats", "The named pipe path")
 
 	log.SetFlags(0)
 	flag.Usage = usage
 	flag.Parse()
 
-	session, err := session.NewSession(&aws.Config{Region: aws.String("eu-west-1")})
+	session, err := session.NewSession(&aws.Config{Region: aws.String(os.Getenv("AWS_DEFAULT_REGION"))})
 	if err != nil {
 		log.Fatal(err)
 	}
