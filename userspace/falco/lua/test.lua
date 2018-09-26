@@ -1,4 +1,4 @@
--- Copyright (C) 2018 Draios inc.
+-- Copyright (C) 2016-2018 Draios Inc dba Sysdig.
 --
 -- This file is part of falco.
 --
