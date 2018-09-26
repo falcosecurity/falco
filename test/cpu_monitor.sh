@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (C) 2018 Draios Inc.
+# Copyright (C) 2016-2018 Draios Inc dba Sysdig.
 #
 # This file is part of falco.
 #
