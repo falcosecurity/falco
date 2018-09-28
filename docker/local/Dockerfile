@@ -1,6 +1,6 @@
 FROM debian:unstable
 
-MAINTAINER Sysdig <support@sysdig.com>
+LABEL maintainer="Sysdig <support@sysdig.com>"
 
 ENV FALCO_VERSION 0.1.1dev
 
