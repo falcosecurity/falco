@@ -30,6 +30,7 @@ RUN apt-get update \
 	libc6-dev \
 	libelf-dev \
 	llvm-7 \
+	xz-utils \
  && rm -rf /var/lib/apt/lists/*
 
 # Since our base Debian image ships with GCC 7 which breaks older kernels, revert the

@@ -1,19 +1,20 @@
 /*
-Copyright (C) 2016 Draios inc.
+Copyright (C) 2016-2018 Draios Inc dba Sysdig.
 
 This file is part of falco.
 
-falco is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License version 2 as
-published by the Free Software Foundation.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-falco is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+    http://www.apache.org/licenses/LICENSE-2.0
 
-You should have received a copy of the GNU General Public License
-along with falco.  If not, see <http://www.gnu.org/licenses/>.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
 */
 
 #include <json/json.h>
@@ -115,7 +116,27 @@ int falco_formats::format_event (lua_State *ls)
 
 		if(s_json_output)
 		{
-			s_inspector->set_buffer_format(sinsp_evt::PF_JSON);
+			switch(s_inspector->get_buffer_format())
+			{
+				case sinsp_evt::PF_NORMAL:
+					s_inspector->set_buffer_format(sinsp_evt::PF_JSON);
+					break;
+				case sinsp_evt::PF_EOLS:
+					s_inspector->set_buffer_format(sinsp_evt::PF_JSONEOLS);
+					break;
+				case sinsp_evt::PF_HEX:
+					s_inspector->set_buffer_format(sinsp_evt::PF_JSONHEX);
+					break;
+				case sinsp_evt::PF_HEXASCII:
+					s_inspector->set_buffer_format(sinsp_evt::PF_JSONHEXASCII);
+					break;
+				case sinsp_evt::PF_BASE64:
+					s_inspector->set_buffer_format(sinsp_evt::PF_JSONBASE64);
+					break;
+				default:
+					// do nothing
+					break;
+			}
 			s_formatters->tostring(evt, sformat, &json_line);
 
 			// The formatted string might have a leading newline. If it does, remove it.
@@ -123,8 +144,6 @@ int falco_formats::format_event (lua_State *ls)
 			{
 				json_line.erase(0, 1);
 			}
-
-			s_inspector->set_buffer_format(sinsp_evt::PF_NORMAL);
 		}
 	}
 	catch (sinsp_exception& e)
