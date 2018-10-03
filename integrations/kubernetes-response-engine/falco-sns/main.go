@@ -17,6 +17,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"flag"
 	"log"
 	"os"
@@ -54,9 +55,20 @@ func main() {
 
 	for scanner.Scan() {
 		msg := []byte(scanner.Text())
+		alert := parseAlert(msg)
 
 		params := &sns.PublishInput{
-			Message:  aws.String(string(msg)),
+			Message: aws.String(string(msg)),
+			MessageAttributes: map[string]*sns.MessageAttributeValue{
+				"priority": &sns.MessageAttributeValue{
+					DataType:    aws.String("String"),
+					StringValue: aws.String(alert.Priority),
+				},
+				"rule": &sns.MessageAttributeValue{
+					DataType:    aws.String("String"),
+					StringValue: aws.String(alert.Rule),
+				},
+			},
 			TopicArn: aws.String(*topic),
 		}
 
@@ -71,4 +83,19 @@ func main() {
 
 func usage() {
 	log.Fatalf("Usage: falco-sns -t topic <subject> <msg> \n")
+}
+
+type parsedAlert struct {
+	Priority string `json:"priority"`
+	Rule     string `json:"rule"`
+}
+
+func parseAlert(alert []byte) *parsedAlert {
+	var result parsedAlert
+	err := json.Unmarshal(alert, &result)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return &result
 }
