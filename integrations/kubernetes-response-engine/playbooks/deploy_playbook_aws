@@ -23,7 +23,7 @@ EOF
 function join { local IFS="$1"; shift; echo "$*"; }
 
 playbook=""
-environment=()
+environment=("KUBECONFIG=kubeconfig" "KUBERNETES_LOAD_KUBE_CONFIG=1")
 
 while getopts "r:e:t:" arg; do
   case $arg in
@@ -48,6 +48,10 @@ pipenv lock --requirements | sed '/^-/ d' > requirements.txt
 mkdir -p lambda
 pip install -t lambda -r requirements.txt
 pip install -t lambda  .
+
+cp kubeconfig lambda/
+cp /usr/local/bin/aws-iam-authenticator lambda/
+
 cp functions/"${playbook}".py lambda/
 
 cd lambda
