@@ -49,8 +49,8 @@ mkdir -p lambda
 pip install -t lambda -r requirements.txt
 pip install -t lambda  .
 
-cp kubeconfig lambda/
-cp /usr/local/bin/aws-iam-authenticator lambda/
+terraform output --state=../deployment/aws/terraform.tfstate kubeconfig_for_lambdas > lambda/kubeconfig
+cp extra/aws-iam-authenticator lambda/
 
 cp functions/"${playbook}".py lambda/
 
@@ -61,7 +61,7 @@ cd ..
 aws lambda create-function \
   --function-name falco-"${playbook}" \
   --runtime python2.7 \
-  --role arn:aws:iam::845151661675:role/iam_for_lambda \
+  --role $(terraform output --state=../deployment/aws/terraform.tfstate iam_for_lambda) \
   --environment Variables={"$(join , ${environment[*]})"} \
   --handler "${playbook}".handler \
   --zip-file fileb://./"${playbook}".zip
