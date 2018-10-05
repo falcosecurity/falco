@@ -1,3 +1,3 @@
-resource "aws_sns_topic" "falco_alerts" {
+resource "aws_sns_topic" "falco-alerts" {
   name = "falco-alerts"
 }
