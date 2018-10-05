@@ -8,7 +8,8 @@ resource "aws_iam_role" "iam_for_lambda" {
     {
       "Action": "sts:AssumeRole",
       "Principal": {
-        "Service": "lambda.amazonaws.com"
+        "Service": "lambda.amazonaws.com",
+        "AWS": "${var.iam-user-arn}"
       },
       "Effect": "Allow",
       "Sid": ""
