@@ -1,19 +1,21 @@
-# Sysdig Falco
+# Falco
 
 #### Latest release
 
 **v0.12.1**
-Read the [change log](https://github.com/draios/falco/blob/dev/CHANGELOG.md)
+Read the [change log](https://github.com/falcosecurity/falco/blob/dev/CHANGELOG.md)
 
 Dev Branch: [![Build Status](https://travis-ci.org/draios/falco.svg?branch=dev)](https://travis-ci.org/draios/falco)<br />
 Master Branch: [![Build Status](https://travis-ci.org/draios/falco.svg?branch=master)](https://travis-ci.org/draios/falco)
 
 ## Overview
-Sysdig Falco is a behavioral activity monitor designed to detect anomalous activity in your applications. Powered by sysdig’s system call capture infrastructure, falco lets you continuously monitor and detect container, application, host, and network activity... all in one place, from one source of data, with one set of rules.
+Falco is a behavioral activity monitor designed to detect anomalous activity in your applications. Powered by [sysdig’s](https://github.com/draios/sysdig) system call capture infrastructure, Falco lets you continuously monitor and detect container, application, host, and network activity... all in one place, from one source of data, with one set of rules.
+
+Falco is hosted by the Cloud Native Computing Foundation (CNCF) as a sandbox level project. If you are an organization that wants to help shape the evolution of technologies that are container-packaged, dynamically-scheduled and microservices-oriented, consider joining the CNCF. For details read the [Falco CNCF project proposal](https://github.com/cncf/toc/tree/master/proposals/falco.adoc).
 
 #### What kind of behaviors can Falco detect?
 
-Falco can detect and alert on any behavior that involves making Linux system calls. Thanks to Sysdig's core decoding and state tracking functionality, falco alerts can be triggered by the use of specific system calls, their arguments, and by properties of the calling process. For example, you can easily detect things like:
+Falco can detect and alert on any behavior that involves making Linux system calls. Falco alerts can be triggered by the use of specific system calls, their arguments, and by properties of the calling process. For example, you can easily detect things like:
 
 - A shell is run inside a container
 - A container is running in privileged mode, or is mounting a sensitive path like `/proc` from the host.
@@ -24,18 +26,18 @@ Falco can detect and alert on any behavior that involves making Linux system cal
 
 #### How Falco Compares to Other Security Tools like SELinux, Auditd, etc.
 
-One of the questions we often get when we talk about Sysdig Falco is “How does it compare to other tools like SELinux, AppArmor, Auditd, etc. that also have security policies?”. We wrote a [blog post](https://sysdig.com/blog/selinux-seccomp-falco-technical-discussion/) comparing Falco to other tools.
+One of the questions we often get when we talk about Falco is “How does it compare to other tools like SELinux, AppArmor, Auditd, etc. that also have security policies?”. We wrote a [blog post](https://sysdig.com/blog/selinux-seccomp-falco-technical-discussion/) comparing Falco to other tools.
 
 
 Documentation
 ---
-[Visit the wiki](https://github.com/draios/falco/wiki) for full documentation on falco.
+[Visit the wiki](https://github.com/falcosecurity/falco/wiki) for full documentation on falco.
 
 Join the Community
 ---
-* Follow us on [Twitter](https://twitter.com/sysdig) for general falco and sysdig news.
-* This is our [blog](https://sysdig.com/blog/), where you can find the latest [falco](https://sysdig.com/blog/tag/falco/) posts.
-* Join our [Public Slack](https://slack.sysdig.com) channel for sysdig and falco announcements and discussions.
+* [Website](https://falco.org) for Falco.
+* We are working on a blog for the Falco project. In the meantime you can find [Falco](https://sysdig.com/blog/tag/falco/) posts over on the Sysdig blog.
+* Join our [Public Slack](https://slack.sysdig.com) channel for open source sysdig and Falco announcements and discussions.
 
 License Terms
 ---
@@ -44,7 +46,7 @@ Falco is licensed to you under the [Apache 2.0](./COPYING) open source license.
 Contributor License Agreements
 ---
 ### Background
- As we did for sysdig, we are formalizing the way that we accept contributions of code from the contributing community. We must now ask that contributions to falco be provided subject to the terms and conditions of a [Contributor License Agreement (CLA)](./cla). The CLA comes in two forms, applicable to contributions by individuals, or by legal entities such as corporations and their employees. We recognize that entering into a CLA with us involves real consideration on your part, and we’ve tried to make this process as clear and simple as possible.
+ We are formalizing the way that we accept contributions of code from the contributing community. We must now ask that contributions to falco be provided subject to the terms and conditions of a [Contributor License Agreement (CLA)](./cla). The CLA comes in two forms, applicable to contributions by individuals, or by legal entities such as corporations and their employees. We recognize that entering into a CLA with us involves real consideration on your part, and we’ve tried to make this process as clear and simple as possible.
 
  We’ve modeled our CLA off of industry standards, such as [the CLA used by Kubernetes](https://github.com/kubernetes/kubernetes/blob/master/CONTRIBUTING.md). Note that this agreement is not a transfer of copyright ownership, this simply is a license agreement for contributions, intended to clarify the intellectual property license granted with contributions from any person or entity. It is for your protection as a contributor as well as the protection of falco; it does not change your rights to use your own contributions for any other purpose.
 
