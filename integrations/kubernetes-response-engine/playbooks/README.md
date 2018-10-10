@@ -162,3 +162,19 @@ Kubernetes.
 
 So as soon as we notice someone wrote under /bin (and additional binaries) or
 /etc, we disconnect that pod. It's like a trap for our attackers.
+
+### Create an incident in Demisto
+
+This playbook creates an incident in Demisto
+
+```
+./deploy_playbook -p demisto -t "falco.*.*" -e DEMISTO_API_KEY=XxXxxXxxXXXx -e DEMISTO_BASE_URL=https://..."
+```
+
+#### Parameters
+
+* DEMISTO_API_KEY: This is the API key used for authenticating against Demisto. Create one under settings -> API keys
+* DEMISTO_BASE_URL: This is the base URL where your Demisto server lives on. Ensure there's no trailing slash.
+* VERIFY_SSL: Verify SSL certificates for HTTPS requests. By default is enabled.
+
+In this example, when Falco raises any kind of alert, the alert will be created in Demisto

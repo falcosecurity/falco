@@ -1,5 +1,6 @@
 import os
 import json
+import http
 
 from kubernetes import client, config
 import requests
@@ -72,3 +73,26 @@ class SlackClient:
     def post_message(self, message):
         requests.post(self._slack_webhook_url,
                       data=json.dumps(message))
+
+
+class DemistoClient:
+    def __init__(self, api_key, base_url, verify_ssl=True):
+        self._api_key = api_key
+        self._base_url = base_url
+        self._verify_ssl = verify_ssl
+
+    def create_incident(self, incident):
+        response = requests.post(self._base_url + '/incident',
+                                 headers=self._headers(),
+                                 data=json.dumps(incident),
+                                 verify=self._verify_ssl)
+
+        if response.status_code != http.HTTPStatus.CREATED:
+            raise RuntimeError(response.text)
+
+    def _headers(self):
+        return {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': self._api_key,
+        }
