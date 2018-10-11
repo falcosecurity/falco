@@ -158,3 +158,42 @@ class StartSysdigCaptureForContainer:
                                                   self._s3_bucket,
                                                   self._aws_access_key_id,
                                                   self._aws_secret_access_key)
+
+
+class CreateContainerInPhantom:
+    def __init__(self, phantom_client):
+        self._phantom_client = phantom_client
+
+    def run(self, alert):
+        container = self._build_container_from(alert)
+        self._phantom_client.create_container(container)
+
+        return container
+
+    def _build_container_from(self, alert):
+        return {
+            'description': _output_from_alert(alert),
+            'name': alert['rule'],
+            'start_time': maya.parse(alert['time']).iso8601(),
+            'severity': self._severity_from(alert['priority']),
+            'label': 'events',
+            'status': 'new',
+            'data': {
+                'container.id': alert['output_fields']['container.id'],
+                'k8s.pod.name': alert['output_fields']['k8s.pod.name'],
+            }
+        }
+
+    def _severity_from(self, priority):
+        return self._SEVERITIES.get(priority, 0)
+
+    _SEVERITIES = {
+        'Emergency': 'high',
+        'Alert': 'high',
+        'Critical': 'high',
+        'Error': 'medium',
+        'Warning': 'medium',
+        'Notice': 'low',
+        'Informational': 'low',
+        'Debug': 'low',
+    }
