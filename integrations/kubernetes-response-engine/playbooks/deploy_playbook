@@ -21,7 +21,11 @@ EOF
   exit 1
 }
 
-function join { local IFS="$1"; shift; echo "$*"; }
+function create_environment_flags {
+  for env in ${environment[*]}; do
+    echo "--env ${env} "
+  done
+}
 
 playbook=""
 environment=()
@@ -54,7 +58,7 @@ zip "${playbook}".zip -r playbooks/*.py "${playbook}".py
 
 kubeless function deploy  --from-file "${playbook}".zip \
                           --dependencies requirements.txt \
-                          --env "$(join , ${environment[*]})" \
+                          $(create_environment_flags ${environment[*]}) \
                           --runtime python3.6 \
                           --handler "${playbook}".handler \
                           falco-"${playbook}"
