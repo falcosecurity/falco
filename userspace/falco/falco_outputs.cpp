@@ -27,8 +27,9 @@ limitations under the License.
 
 using namespace std;
 
-falco_outputs::falco_outputs()
-	: m_initialized(false),
+falco_outputs::falco_outputs(falco_engine *engine)
+	: m_falco_engine(engine),
+	  m_initialized(false),
 	  m_buffered(true)
 {
 
@@ -68,7 +69,7 @@ void falco_outputs::init(bool json_output,
 	// Note that falco_formats is added to both the lua state used
 	// by the falco engine as well as the separate lua state used
 	// by falco outputs.
-	falco_formats::init(m_inspector, m_ls, json_output, json_include_output_property);
+	falco_formats::init(m_inspector, m_falco_engine, m_ls, json_output, json_include_output_property);
 
 	falco_logger::init(m_ls);
 
@@ -112,7 +113,8 @@ void falco_outputs::add_output(output_config oc)
 
 }
 
-void falco_outputs::handle_event(sinsp_evt *ev, string &rule, falco_common::priority_type priority, string &format)
+void falco_outputs::handle_event(gen_event *ev, string &rule, string &source,
+				 falco_common::priority_type priority, string &format)
 {
 	if(!m_notifications_tb.claim())
 	{
@@ -126,11 +128,12 @@ void falco_outputs::handle_event(sinsp_evt *ev, string &rule, falco_common::prio
 	{
 		lua_pushlightuserdata(m_ls, ev);
 		lua_pushstring(m_ls, rule.c_str());
+		lua_pushstring(m_ls, source.c_str());
 		lua_pushstring(m_ls, falco_common::priority_names[priority].c_str());
 		lua_pushnumber(m_ls, priority);
 		lua_pushstring(m_ls, format.c_str());
 
-		if(lua_pcall(m_ls, 5, 0, 0) != 0)
+		if(lua_pcall(m_ls, 6, 0, 0) != 0)
 		{
 			const char* lerr = lua_tostring(m_ls, -1);
 			string err = "Error invoking function output: " + string(lerr);

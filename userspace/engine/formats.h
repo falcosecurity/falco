@@ -27,12 +27,19 @@ extern "C" {
 #include "lauxlib.h"
 }
 
+#include "json_evt.h"
+#include "falco_engine.h"
+
 class sinsp_evt_formatter;
 
 class falco_formats
 {
  public:
-	static void init(sinsp* inspector, lua_State *ls, bool json_output, bool json_include_output_property);
+	static void init(sinsp* inspector,
+			 falco_engine *engine,
+			 lua_State *ls,
+			 bool json_output,
+			 bool json_include_output_property);
 
 	// formatter = falco.formatter(format_string)
 	static int formatter(lua_State *ls);
@@ -47,6 +54,7 @@ class falco_formats
 	static int format_event(lua_State *ls);
 
 	static sinsp* s_inspector;
+	static falco_engine *s_engine;
 	static sinsp_evt_formatter_cache *s_formatters;
 	static bool s_json_output;
 	static bool s_json_include_output_property;
