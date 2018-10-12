@@ -20,4 +20,4 @@ limitations under the License.
 #pragma once
 
 #define FALCO_ENGINE_LUA_DIR "${FALCO_ABSOLUTE_SHARE_DIR}/lua/"
-#define FALCO_ENGINE_SOURCE_LUA_DIR "${PROJECT_SOURCE_DIR}/../falco/userspace/engine/lua/"
+#define FALCO_ENGINE_SOURCE_LUA_DIR "${PROJECT_SOURCE_DIR}/userspace/engine/lua/"
