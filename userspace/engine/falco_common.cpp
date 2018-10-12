@@ -55,7 +55,7 @@ void falco_common::set_inspector(sinsp *inspector)
 	m_inspector = inspector;
 }
 
-void falco_common::init(const char *lua_main_filename, const char *source_dir)
+void falco_common::init(const char *lua_main_filename, const char *alternate_lua_dir)
 {
 	ifstream is;
 	string lua_dir = FALCO_ENGINE_LUA_DIR;
@@ -64,7 +64,7 @@ void falco_common::init(const char *lua_main_filename, const char *source_dir)
 	is.open(lua_main_path);
 	if (!is.is_open())
 	{
-		lua_dir = source_dir;
+		lua_dir = alternate_lua_dir;
 		lua_main_path = lua_dir + lua_main_filename;
 
 		is.open(lua_main_path);
@@ -72,7 +72,7 @@ void falco_common::init(const char *lua_main_filename, const char *source_dir)
 		{
 			throw falco_exception("Could not find Falco Lua entrypoint (tried " +
 					      string(FALCO_ENGINE_LUA_DIR) + lua_main_filename + ", " +
-					      string(source_dir) + lua_main_filename + ")");
+					      string(alternate_lua_dir) + lua_main_filename + ")");
 		}
 	}
 

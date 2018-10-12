@@ -23,7 +23,14 @@ include_directories("${LUAJIT_INCLUDE}")
 include_directories("${NJSON_INCLUDE}")
 include_directories("${CURL_INCLUDE_DIR}")
 
-add_library(falco_engine STATIC rules.cpp falco_common.cpp falco_engine.cpp token_bucket.cpp formats.cpp)
+add_library(falco_engine STATIC
+	rules.cpp
+	falco_common.cpp
+	falco_engine.cpp
+	json_evt.cpp
+	ruleset.cpp
+	token_bucket.cpp
+	formats.cpp)
 
 target_include_directories(falco_engine PUBLIC
 	"${LUAJIT_INCLUDE}"
