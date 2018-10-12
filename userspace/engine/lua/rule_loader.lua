@@ -22,6 +22,7 @@
 
 --]]
 
+local sinsp_rule_utils = require "sinsp_rule_utils"
 local compiler = require "compiler"
 local yaml = require"lyaml"
 
@@ -185,8 +186,6 @@ end
 
 function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replace_container_info, min_priority)
 
-   compiler.set_verbose(verbose)
-   compiler.set_all_events(all_events)
 
    local rules = yaml.load(rules_content)
 
@@ -210,6 +209,11 @@ function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replac
       end
 
       if (v['macro']) then
+
+	 if v['source'] == nil then
+	    v['source'] = "sinsp"
+	 end
+
 	 if state.macros_by_name[v['macro']] == nil then
 	    state.ordered_macro_names[#state.ordered_macro_names+1] = v['macro']
 	 end
@@ -279,6 +283,10 @@ function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replac
 	 -- filter like evt.type, etc the loader throws an error.
 	 if v['skip-if-unknown-filter'] == nil then
 	    v['skip-if-unknown-filter'] = false
+	 end
+
+	 if v['source'] == nil then
+	    v['source'] = "sinsp"
 	 end
 
 	 -- Possibly append to the condition field of an existing rule
@@ -372,6 +380,13 @@ function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replac
       local v = state.macros_by_name[name]
 
       local ast = compiler.compile_macro(v['condition'], state.macros, state.lists)
+
+      if v['source'] == "sinsp" then
+	 if not all_events then
+	    sinsp_rule_utils.check_for_ignored_syscalls_events(ast, 'macro', v['condition'])
+	 end
+      end
+
       state.macros[v['macro']] = {["ast"] = ast.filter.value, ["used"] = false}
    end
 
@@ -384,9 +399,19 @@ function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replac
 	 warn_evttypes = v['warn_evttypes']
       end
 
-      local filter_ast, evttypes, syscallnums, filters = compiler.compile_filter(v['rule'], v['condition'],
-										 state.macros, state.lists,
-										 warn_evttypes)
+      local filter_ast, filters = compiler.compile_filter(v['rule'], v['condition'],
+							  state.macros, state.lists)
+
+      local evtttypes = {}
+      local syscallnums = {}
+
+      if v['source'] == "sinsp" then
+	 if not all_events then
+	    sinsp_rule_utils.check_for_ignored_syscalls_events(filter_ast, 'rule', v['rule'])
+	 end
+
+	 evttypes, syscallnums = sinsp_rule_utils.get_evttypes_syscalls(name, filter_ast, v['condition'], warn_evttypes, verbose)
+      end
 
       -- If a filter in the rule doesn't exist, either skip the rule
       -- or raise an error, depending on the value of
