@@ -136,7 +136,7 @@
   items: [docker, dockerd, exe, docker-compose, docker-entrypoi, docker-runc-cur, docker-current]
 
 - list: k8s_binaries
-  items: [hyperkube, skydns, kube2sky, exechealthz]
+  items: [hyperkube, skydns, kube2sky, exechealthz, weave-net]
 
 - list: lxd_binaries
   items: [lxd, lxcfs]
