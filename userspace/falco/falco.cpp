@@ -41,6 +41,7 @@ limitations under the License.
 #include "falco_engine.h"
 #include "config_falco.h"
 #include "statsfilewriter.h"
+#include "webserver.h"
 
 bool g_terminate = false;
 bool g_reopen_outputs = false;
@@ -346,6 +347,8 @@ int falco_init(int argc, char **argv)
 	uint64_t num_evts;
 	double duration;
 	scap_stats cstats;
+
+	falco_webserver webserver;
 
 	static struct option long_options[] =
 	{
@@ -856,6 +859,13 @@ int falco_init(int argc, char **argv)
 		delete mesos_api;
 		mesos_api = 0;
 
+		if(config.m_webserver_enabled)
+		{
+			falco_logger::log(LOG_INFO, "Starting internal webserver, listening on port " + to_string(config.m_webserver_listen_port) + "\n");
+			webserver.init(&config, engine, outputs);
+			webserver.start();
+		}
+
 		num_evts = do_inspect(engine,
 				      outputs,
 				      inspector,
@@ -881,6 +891,8 @@ int falco_init(int argc, char **argv)
 
 		inspector->close();
 
+		webserver.stop();
+
 		engine->print_stats();
 	}
 	catch(exception &e)
@@ -888,6 +900,8 @@ int falco_init(int argc, char **argv)
 		display_fatal_err("Runtime error: " + string(e.what()) + ". Exiting.\n");
 
 		result = EXIT_FAILURE;
+
+		webserver.stop();
 	}
 
 exit:
