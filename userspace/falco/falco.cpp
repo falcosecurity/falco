@@ -36,6 +36,8 @@ limitations under the License.
 
 #include "logger.h"
 #include "utils.h"
+#include "chisel.h"
+#include "sysdig.h"
 
 #include "configuration.h"
 #include "falco_engine.h"
@@ -102,6 +104,8 @@ static void usage()
 	   "                               ':' or '#' characters in the file name.\n"
 	   " -L                            Show the name and description of all rules and exit.\n"
 	   " -l <rule>                     Show the name and description of the rule with name <rule> and exit.\n"
+	   " --list [<source>]             List all defined fields. If <source> is provided, only list those fields for\n"
+	   "                               the source <source>. Current values for <source> are \"syscall\", \"k8s_audit\"\n"
 	   " -m <url[,marathon_url]>, --mesos-api=<url[,marathon_url]>\n"
 	   "                               Enable Mesos support by connecting to the API server\n"
 	   "                               specified as argument. E.g. \"http://admin:password@127.0.0.1:5050\".\n"
@@ -248,10 +252,10 @@ uint64_t do_inspect(falco_engine *engine,
 		// engine, which will match the event against the set
 		// of rules. If a match is found, pass the event to
 		// the outputs.
-		unique_ptr<falco_engine::rule_result> res = engine->process_event(ev);
+		unique_ptr<falco_engine::rule_result> res = engine->process_sinsp_event(ev);
 		if(res)
 		{
-			outputs->handle_event(res->evt, res->rule, res->priority_num, res->format);
+			outputs->handle_event(res->evt, res->rule, res->source, res->priority_num, res->format);
 		}
 
 		num_evts++;
@@ -301,6 +305,75 @@ static void print_all_ignored_events(sinsp *inspector)
 	printf("\n");
 }
 
+// Must match the value in the zsh tab completion
+#define DESCRIPTION_TEXT_START 16
+
+#define CONSOLE_LINE_LEN 79
+
+static void list_falco_fields(falco_engine *engine)
+{
+	for(auto &chk_field : engine->json_factory().get_fields())
+	{
+		printf("\n----------------------\n");
+		printf("Field Class: %s (%s)\n\n", chk_field.name.c_str(), chk_field.desc.c_str());
+
+		for(auto &field : chk_field.fields)
+		{
+			uint32_t l, m;
+
+			printf("%s", field.name.c_str());
+			uint32_t namelen = field.name.size();
+
+			if(namelen >= DESCRIPTION_TEXT_START)
+			{
+				printf("\n");
+				namelen = 0;
+			}
+
+			for(l = 0; l < DESCRIPTION_TEXT_START - namelen; l++)
+			{
+				printf(" ");
+			}
+
+			size_t desclen = field.desc.size();
+
+			for(l = 0; l < desclen; l++)
+			{
+				if(l % (CONSOLE_LINE_LEN - DESCRIPTION_TEXT_START) == 0 && l != 0)
+				{
+					printf("\n");
+
+					for(m = 0; m < DESCRIPTION_TEXT_START; m++)
+					{
+						printf(" ");
+					}
+				}
+
+				printf("%c", field.desc.at(l));
+			}
+
+			printf("\n");
+		}
+	}
+}
+
+static void list_source_fields(falco_engine *engine, bool verbose, std::string &source)
+{
+	if(source.size() > 0 &&
+	   !(source == "syscall" || source == "k8s_audit"))
+	{
+		throw std::invalid_argument("Value for --list must be \"syscall\" or \"k8s_audit\"");
+	}
+	if(source == "" || source == "syscall")
+	{
+		list_fields(verbose, false);
+	}
+	if(source == "" || source == "k8s_audit")
+	{
+		list_falco_fields(engine);
+	}
+}
+
 //
 // ARGUMENT PARSING AND PROGRAM SETUP
 //
@@ -333,6 +406,8 @@ int falco_init(int argc, char **argv)
 	bool replace_container_info = false;
 	int duration_to_tot = 0;
 	bool print_ignored_events = false;
+	bool list_flds = false;
+	string list_flds_source = "";
 
 	// Used for writing trace files
 	int duration_seconds = 0;
@@ -356,6 +431,7 @@ int falco_init(int argc, char **argv)
 		{"daemon", no_argument, 0, 'd' },
 		{"k8s-api", required_argument, 0, 'k'},
 		{"k8s-api-cert", required_argument, 0, 'K' },
+		{"list", optional_argument, 0},
 		{"mesos-api", required_argument, 0, 'm'},
 		{"option", required_argument, 0, 'o'},
 		{"print", required_argument, 0, 'p' },
@@ -382,7 +458,7 @@ int falco_init(int argc, char **argv)
 		// Parse the args
 		//
 		while((op = getopt_long(argc, argv,
-                                        "hc:AbdD:e:ik:K:Ll:m:M:o:P:p:r:S:s:T:t:UvV:w:",
+                                        "hc:AdD:e:ik:K:Ll:m:M:o:P:p:r:s:T:t:UvV:w:",
                                         long_options, &long_index)) != -1)
 		{
 			switch(op)
@@ -410,6 +486,9 @@ int falco_init(int argc, char **argv)
 				scap_filename = optarg;
 				k8s_api = new string();
 				mesos_api = new string();
+				break;
+			case 'F':
+				list_flds = optarg;
 				break;
 			case 'i':
 				print_ignored_events = true;
@@ -495,16 +574,27 @@ int falco_init(int argc, char **argv)
 			case '?':
 				result = EXIT_FAILURE;
 				goto exit;
+
+			case 0:
+				if(string(long_options[long_index].name) == "version")
+				{
+					printf("falco version %s\n", FALCO_VERSION);
+					return EXIT_SUCCESS;
+				}
+				else if (string(long_options[long_index].name) == "list")
+				{
+					list_flds = true;
+					if(optarg != NULL)
+					{
+						list_flds_source = optarg;
+					}
+				}
+				break;
+
 			default:
 				break;
 			}
 
-		}
-
-		if(string(long_options[long_index].name) == "version")
-		{
-			printf("falco version %s\n", FALCO_VERSION);
-			return EXIT_SUCCESS;
 		}
 
 		inspector = new sinsp();
@@ -529,8 +619,13 @@ int falco_init(int argc, char **argv)
 		engine->set_inspector(inspector);
 		engine->set_extra(output_format, replace_container_info);
 
+		if(list_flds)
+		{
+			list_source_fields(engine, verbose, list_flds_source);
+			return EXIT_SUCCESS;
+		}
 
-		outputs = new falco_outputs();
+		outputs = new falco_outputs(engine);
 		outputs->set_inspector(inspector);
 
 		// Some combinations of arguments are not allowed.
