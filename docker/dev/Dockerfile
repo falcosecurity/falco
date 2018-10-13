@@ -1,6 +1,6 @@
 FROM debian:unstable
 
-MAINTAINER Sysdig <support@sysdig.com>
+LABEL maintainer="Sysdig <support@sysdig.com>"
 
 ENV FALCO_REPOSITORY dev
 
