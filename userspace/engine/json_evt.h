@@ -209,6 +209,9 @@ public:
 	// Extract the value of the provided query parameter
 	static std::string index_query_param(const nlohmann::json &j, std::string &field, std::string &idx);
 
+	// Return true if an object in the provided array has a name property with idx as value
+	static std::string index_has_name(const nlohmann::json &j, std::string &field, std::string &idx);
+
 	// Return whether the ith container (or any container, if an
 	// index is not specified) is run privileged.
 	static std::string index_privileged(const nlohmann::json &j, std::string &field, std::string &idx);
@@ -218,6 +221,11 @@ public:
 
 	// Index to the ith value from the provided array. If no index is provided, return the entire array as a string.
 	static std::string index_generic(const nlohmann::json &j, std::string &field, std::string &idx);
+
+	// Index to the ith value from the provided array, and select
+	// the property which is the last component of the provided
+	// field.
+	static std::string index_select(const nlohmann::json &j, std::string &field, std::string &idx);
 };
 
 class json_event_filter : public gen_event_filter

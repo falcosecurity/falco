@@ -23,6 +23,7 @@ if(NOT DEFINED FALCO_RULES_DEST_FILENAME)
   set(FALCO_RULES_DEST_FILENAME "falco_rules.yaml")
   set(FALCO_LOCAL_RULES_DEST_FILENAME "falco_rules.local.yaml")
   set(FALCO_APP_RULES_DEST_FILENAME "application_rules.yaml")
+  set(FALCO_K8S_AUDIT_RULES_DEST_FILENAME "k8s_audit_rules.yaml")
 endif()
 
 if(DEFINED FALCO_COMPONENT)
@@ -46,6 +47,10 @@ install(FILES falco_rules.yaml
 install(FILES falco_rules.local.yaml
 	DESTINATION "${FALCO_ETC_DIR}"
 	RENAME "${FALCO_LOCAL_RULES_DEST_FILENAME}")
+
+install(FILES k8s_audit_rules.yaml
+	DESTINATION "${FALCO_ETC_DIR}"
+	RENAME "${FALCO_K8S_AUDIT_RULES_DEST_FILENAME}")
 
 install(FILES application_rules.yaml
 	DESTINATION "/etc/falco/rules.available"
