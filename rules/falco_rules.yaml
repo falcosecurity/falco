@@ -170,7 +170,7 @@
 - list: rpm_binaries
   items: [dnf, rpm, rpmkey, yum, '"75-system-updat"', rhsmcertd-worke, subscription-ma,
           repoquery, rpmkeys, rpmq, yum-cron, yum-config-mana, yum-debug-dump,
-          abrt-action-sav, rpmdb_stat, microdnf]
+          abrt-action-sav, rpmdb_stat, microdnf, rhn_check, yumdb]
 
 - macro: rpm_procs
   condition: proc.name in (rpm_binaries) or proc.name in (salt-minion)
@@ -199,7 +199,7 @@
   items: [ca-certificates]
 
 - list: dhcp_binaries
-  items: [dhclient, dhclient-script]
+  items: [dhclient, dhclient-script, 11-dhclient]
 
 # A canonical set of processes that run other programs with different
 # privileges or as a different user.
@@ -361,6 +361,11 @@
   condition: >
     (proc.pname in (python, python2.7) and
     (proc.pcmdline contains /opt/draios/bin/sdchecks))
+
+- macro: python_running_sdchecks
+  condition: >
+    (proc.name in (python, python2.7) and
+    (proc.cmdline contains /opt/draios/bin/sdchecks))
 
 - macro: parent_linux_image_upgrade_script
   condition: proc.pname startswith linux-image-
@@ -529,6 +534,9 @@
 - macro: perl_running_centrifydc
   condition: (proc.cmdline startswith "perl /usr/share/centrifydc")
 
+- macro: runuser_reading_pam
+  condition: (proc.name=runuser and fd.directory=/etc/pam.d)
+
 - macro: parent_ucf_writing_conf
   condition: (proc.pname=ucf and proc.aname[2]=frontend)
 
@@ -668,6 +676,9 @@
 
 - macro: maven_writing_groovy
   condition: (proc.name=java and proc.cmdline contains "classpath /usr/local/apache-maven" and fd.name startswith /root/.groovy)
+
+- macro: chef_writing_conf
+  condition: (proc.name=chef-client and fd.name startswith /root/.chef)
 
 - rule: Write below binary dir
   desc: an attempt to write to any file below a set of binary directories
@@ -978,6 +989,7 @@
     and not airflow_writing_state
     and not rpm_writing_root_rpmdb
     and not maven_writing_groovy
+    and not chef_writing_conf
     and not known_root_conditions
   output: "File below / or /root opened for writing (user=%user.name command=%proc.cmdline parent=%proc.pname file=%fd.name program=%proc.name)"
   priority: ERROR
@@ -1040,6 +1052,7 @@
     and not perl_running_updmap
     and not veritas_driver_script
     and not perl_running_centrifydc
+    and not runuser_reading_pam
   output: >
     Sensitive file opened for reading by non-trusted program (user=%user.name program=%proc.name
     command=%proc.cmdline file=%fd.name parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4])
@@ -1123,6 +1136,7 @@
     and not proc.name in (user_known_change_thread_namespace_binaries)
     and not proc.name startswith "runc:"
     and not proc.pname in (sysdigcloud_binaries)
+    and not python_running_sdchecks
     and not java_running_sdjagent
     and not kubelet_running_loopback
   output: >
@@ -1277,6 +1291,32 @@
   priority: DEBUG
   tags: [shell]
 
+- macro: allowed_openshift_registry_root
+  condition: >
+    (container.image startswith openshift3/ or
+     container.image startswith registry.access.redhat.com/openshift3/)
+
+# Source: https://docs.openshift.com/enterprise/3.2/install_config/install/disconnected_install.html
+- macro: openshift_image
+  condition: >
+    (allowed_openshift_registry_root and
+      (container.image contains logging-deployment or
+       container.image contains logging-elasticsearch or
+       container.image contains logging-kibana or
+       container.image contains logging-fluentd or
+       container.image contains logging-auth-proxy or
+       container.image contains metrics-deployer or
+       container.image contains metrics-hawkular-metrics or
+       container.image contains metrics-cassandra or
+       container.image contains metrics-heapster or
+       container.image contains ose-haproxy-router or
+       container.image contains ose-deployer or
+       container.image contains ose-sti-builder or
+       container.image contains ose-docker-builder or
+       container.image contains ose-pod or
+       container.image contains ose-docker-registry or
+       container.image contains image-inspector))
+
 - macro: trusted_containers
   condition: (container.image startswith sysdig/agent or
               (container.image startswith sysdig/falco and
@@ -1288,13 +1328,7 @@
               container.image startswith gcr.io/google_containers/kube-proxy or
               container.image startswith calico/node or
               container.image startswith rook/toolbox or
-              container.image startswith registry.access.redhat.com/openshift3/logging-fluentd or
-              container.image startswith registry.access.redhat.com/openshift3/logging-elasticsearch or
-              container.image startswith registry.access.redhat.com/openshift3/metrics-cassandra or
-              container.image startswith openshift3/ose-sti-builder or
-              container.image startswith registry.access.redhat.com/openshift3/ose-sti-builder or
-              container.image startswith registry.access.redhat.com/openshift3/ose-docker-builder or
-              container.image startswith registry.access.redhat.com/openshift3/image-inspector or
+              openshift_image or
               container.image startswith cloudnativelabs/kube-router or
               container.image startswith "consul:" or
               container.image startswith mesosphere/mesos-slave or
