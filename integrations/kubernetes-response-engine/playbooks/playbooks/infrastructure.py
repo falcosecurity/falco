@@ -243,3 +243,25 @@ class DemistoClient:
             'Accept': 'application/json',
             'Authorization': self._api_key,
         }
+
+
+class PhantomClient:
+    def __init__(self, user, password, base_url, verify_ssl=True):
+        self._user = user
+        self._password = password
+        self._base_url = base_url
+        self._verify_ssl = verify_ssl
+
+    def create_container(self, container):
+        response = requests.post(self._base_url + '/rest/container',
+                                 data=json.dumps(container),
+                                 auth=(self._user, self._password),
+                                 verify=self._verify_ssl)
+
+        response_as_json = response.json()
+        if 'success' in response_as_json:
+            result = container.copy()
+            result['id'] = response_as_json['id']
+            return result
+
+        raise RuntimeError(response_as_json['message'])
