@@ -265,7 +265,8 @@ local G = {
           symb("contains") / "contains" +
           symb("icontains") / "icontains" +
           symb("glob") / "glob" +
-          symb("startswith") / "startswith";
+          symb("startswith") / "startswith" +
+          symb("endswith") / "endswith";
   InOp = kw("in") / "in";
   PmatchOp = kw("pmatch") / "pmatch";
   UnaryBoolOp = kw("not") / "not";
