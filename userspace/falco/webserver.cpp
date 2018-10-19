@@ -36,13 +36,16 @@ k8s_audit_handler::~k8s_audit_handler()
 {
 }
 
-bool k8s_audit_handler::accept_uploaded_data(std::string &post_data, std::string &errstr)
+bool k8s_audit_handler::accept_data(falco_engine *engine,
+				    falco_outputs *outputs,
+				    std::string &data,
+				    std::string &errstr)
 {
 	std::list<json_event> jevts;
 	json j;
 
 	try {
-		j = nlohmann::json::parse(post_data);
+		j = json::parse(data);
 	}
 	catch (json::parse_error& e)
 	{
@@ -50,7 +53,7 @@ bool k8s_audit_handler::accept_uploaded_data(std::string &post_data, std::string
 		return false;
 	}
 
-	if(!m_engine->parse_k8s_audit_json(j, jevts))
+	if(!engine->parse_k8s_audit_json(j, jevts))
 	{
 		errstr = string("Data not recognized as a k8s audit event");
 		return false;
@@ -59,12 +62,12 @@ bool k8s_audit_handler::accept_uploaded_data(std::string &post_data, std::string
 	for(auto &jev : jevts)
 	{
 		std::unique_ptr<falco_engine::rule_result> res;
-		res = m_engine->process_k8s_audit_event(&jev);
+		res = engine->process_k8s_audit_event(&jev);
 
 		if(res)
 		{
 			try {
-				m_outputs->handle_event(res->evt, res->rule,
+				outputs->handle_event(res->evt, res->rule,
 							res->source, res->priority_num,
 							res->format);
 			}
@@ -79,6 +82,12 @@ bool k8s_audit_handler::accept_uploaded_data(std::string &post_data, std::string
 
 	return true;
 }
+
+bool k8s_audit_handler::accept_uploaded_data(std::string &post_data, std::string &errstr)
+{
+	return k8s_audit_handler::accept_data(m_engine, m_outputs, post_data, errstr);
+}
+
 
 bool k8s_audit_handler::handleGet(CivetServer *server, struct mg_connection *conn)
 {

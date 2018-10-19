@@ -34,6 +34,10 @@ public:
 	bool handleGet(CivetServer *server, struct mg_connection *conn);
 	bool handlePost(CivetServer *server, struct mg_connection *conn);
 
+	static bool accept_data(falco_engine *engine,
+				falco_outputs *outputs,
+				std::string &post_data, std::string &errstr);
+
 private:
 	falco_engine *m_engine;
 	falco_outputs *m_outputs;

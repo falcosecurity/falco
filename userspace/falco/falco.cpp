@@ -85,7 +85,8 @@ static void usage()
 	   " -d, --daemon                  Run as a daemon\n"
 	   " -D <pattern>                  Disable any rules matching the regex <pattern>. Can be specified multiple times.\n"
 	   "                               Can not be specified with -t.\n"
-           " -e <events_file>              Read the events from <events_file> (in .scap format) instead of tapping into live.\n"
+	   " -e <events_file>              Read the events from <events_file> (in .scap format for sinsp events, or jsonl for\n"
+	   "                               k8s audit events) instead of tapping into live.\n"
 	   " -k <url>, --k8s-api=<url>\n"
 	   "                               Enable Kubernetes support by connecting to the API server\n"
       	   "                               specified as argument. E.g. \"http://admin:password@127.0.0.1:8080\".\n"
@@ -165,6 +166,35 @@ static void display_fatal_err(const string &msg)
 
 // Splitting into key=value or key.subkey=value will be handled by configuration class.
 std::list<string> cmdline_options;
+
+// Read a jsonl file containing k8s audit events and pass each to the engine.
+void read_k8s_audit_trace_file(falco_engine *engine,
+			       falco_outputs *outputs,
+			       string &trace_filename)
+{
+	ifstream ifs(trace_filename);
+
+	uint64_t line_num = 0;
+
+	while(ifs)
+	{
+		string line, errstr;
+
+		getline(ifs, line);
+		line_num++;
+
+		if(line == "")
+		{
+			continue;
+		}
+
+		if(!k8s_audit_handler::accept_data(engine, outputs, line, errstr))
+		{
+			falco_logger::log(LOG_ERR, "Could not read k8s audit event line #" + to_string(line_num) + ", \"" + line + "\": " + errstr + ", stopping");
+			return;
+		}
+	}
+}
 
 //
 // Event processing loop
@@ -386,7 +416,8 @@ int falco_init(int argc, char **argv)
 	falco_outputs *outputs = NULL;
 	int op;
 	int long_index = 0;
-	string scap_filename;
+	string trace_filename;
+	bool trace_is_scap = true;
 	string conf_filename;
 	string outfile;
 	list<string> rules_filenames;
@@ -419,7 +450,6 @@ int falco_init(int argc, char **argv)
 	bool buffered_cmdline = false;
 
 	// Used for stats
-	uint64_t num_evts;
 	double duration;
 	scap_stats cstats;
 
@@ -483,7 +513,7 @@ int falco_init(int argc, char **argv)
 				disabled_rule_patterns.insert(pattern);
 				break;
 			case 'e':
-				scap_filename = optarg;
+				trace_filename = optarg;
 				k8s_api = new string();
 				mesos_api = new string();
 				break;
@@ -812,9 +842,46 @@ int falco_init(int argc, char **argv)
 			goto exit;
 		}
 
-		if (scap_filename.size())
+		if (trace_filename.size())
 		{
-			inspector->open(scap_filename);
+			// Try to open the trace file as a sysdig
+			// capture file first.
+			try {
+				inspector->open(trace_filename);
+				falco_logger::log(LOG_INFO, "Reading system call events from file: " + trace_filename + "\n");
+			}
+			catch(sinsp_exception &e)
+			{
+				trace_is_scap=false;
+			}
+
+			if(!trace_is_scap)
+			{
+				try {
+					string line;
+					nlohmann::json j;
+
+					// Note we only temporarily open the file here.
+					// The read file read loop will be later.
+					ifstream ifs(trace_filename);
+					getline(ifs, line);
+					j = nlohmann::json::parse(line);
+
+					falco_logger::log(LOG_INFO, "Reading k8s audit events from file: " + trace_filename + "\n");
+				}
+				catch (nlohmann::json::parse_error& e)
+				{
+					fprintf(stderr, "Trace filename %s not recognized as system call events or k8s audit events\n", trace_filename.c_str());
+					result = EXIT_FAILURE;
+					goto exit;
+				}
+				catch (exception &e)
+				{
+					fprintf(stderr, "Could not open trace filename %s for reading: %s\n", trace_filename.c_str(), e.what());
+					result = EXIT_FAILURE;
+					goto exit;
+				}
+			}
 		}
 		else
 		{
@@ -822,7 +889,7 @@ int falco_init(int argc, char **argv)
 			{
 				inspector->open(200);
 			}
-			catch(sinsp_exception e)
+			catch(sinsp_exception &e)
 			{
 				if(system("modprobe " PROBE_NAME " > /dev/null 2> /dev/null"))
 				{
@@ -954,41 +1021,51 @@ int falco_init(int argc, char **argv)
 		delete mesos_api;
 		mesos_api = 0;
 
-		if(config.m_webserver_enabled)
+		if(trace_filename.empty() && config.m_webserver_enabled)
 		{
 			falco_logger::log(LOG_INFO, "Starting internal webserver, listening on port " + to_string(config.m_webserver_listen_port) + "\n");
 			webserver.init(&config, engine, outputs);
 			webserver.start();
 		}
 
-		num_evts = do_inspect(engine,
-				      outputs,
-				      inspector,
-				      uint64_t(duration_to_tot*ONE_SECOND_IN_NS),
-				      stats_filename,
-				      all_events);
-
-		duration = ((double)clock()) / CLOCKS_PER_SEC - duration;
-
-		inspector->get_capture_stats(&cstats);
-
-		if(verbose)
+		if(!trace_filename.empty() && !trace_is_scap)
 		{
-			fprintf(stderr, "Driver Events:%" PRIu64 "\nDriver Drops:%" PRIu64 "\n",
-				cstats.n_evts,
-				cstats.n_drops);
+			read_k8s_audit_trace_file(engine,
+						  outputs,
+						  trace_filename);
+		}
+		else
+		{
+			uint64_t num_evts;
 
-			fprintf(stderr, "Elapsed time: %.3lf, Captured Events: %" PRIu64 ", %.2lf eps\n",
-				duration,
-				num_evts,
-				num_evts / duration);
+			num_evts = do_inspect(engine,
+					      outputs,
+					      inspector,
+					      uint64_t(duration_to_tot*ONE_SECOND_IN_NS),
+					      stats_filename,
+					      all_events);
+
+			duration = ((double)clock()) / CLOCKS_PER_SEC - duration;
+
+			inspector->get_capture_stats(&cstats);
+
+			if(verbose)
+			{
+				fprintf(stderr, "Driver Events:%" PRIu64 "\nDriver Drops:%" PRIu64 "\n",
+					cstats.n_evts,
+					cstats.n_drops);
+
+				fprintf(stderr, "Elapsed time: %.3lf, Captured Events: %" PRIu64 ", %.2lf eps\n",
+					duration,
+					num_evts,
+					num_evts / duration);
+			}
+
 		}
 
 		inspector->close();
-
-		webserver.stop();
-
 		engine->print_stats();
+		webserver.stop();
 	}
 	catch(exception &e)
 	{
