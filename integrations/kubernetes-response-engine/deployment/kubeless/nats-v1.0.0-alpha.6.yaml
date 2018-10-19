@@ -38,7 +38,6 @@ subjects:
   namespace: kubeless
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
-description: CRD object for NATS trigger type
 kind: CustomResourceDefinition
 metadata:
   name: natstriggers.kubeless.io

@@ -75,4 +75,4 @@ with description(infrastructure.KubernetesClient) as self:
                                      'support',
                                      'deployment.yaml')
 
-        subprocess.run(['kubectl', 'create', '-f', pod_manifesto])
+        subprocess.call(['kubectl', 'create', '-f', pod_manifesto])
