@@ -1,4 +1,26 @@
 ---
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    kubeless: nats-trigger-controller
+  name: nats-trigger-controller
+  namespace: kubeless
+spec:
+  selector:
+    matchLabels:
+      kubeless: nats-trigger-controller
+  template:
+    metadata:
+      labels:
+        kubeless: nats-trigger-controller
+    spec:
+      containers:
+      - image: bitnami/nats-trigger-controller:v1.0.0-alpha.8
+        imagePullPolicy: IfNotPresent
+        name: nats-trigger-controller
+      serviceAccountName: controller-acct
+---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
@@ -38,7 +60,6 @@ subjects:
   namespace: kubeless
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
-description: CRD object for NATS trigger type
 kind: CustomResourceDefinition
 metadata:
   name: natstriggers.kubeless.io
@@ -50,25 +71,3 @@ spec:
     singular: natstrigger
   scope: Namespaced
   version: v1beta1
----
-apiVersion: apps/v1beta1
-kind: Deployment
-metadata:
-  labels:
-    kubeless: nats-trigger-controller
-  name: nats-trigger-controller
-  namespace: kubeless
-spec:
-  selector:
-    matchLabels:
-      kubeless: nats-trigger-controller
-  template:
-    metadata:
-      labels:
-        kubeless: nats-trigger-controller
-    spec:
-      containers:
-      - image: bitnami/nats-trigger-controller:v1.0.0-alpha.6
-        imagePullPolicy: IfNotPresent
-        name: nats-trigger-controller
-      serviceAccountName: controller-acct
