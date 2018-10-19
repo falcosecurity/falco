@@ -1,12 +1,12 @@
 import os
 import json
-import http
+from six.moves import http_client
 
 from kubernetes import client, config
 import requests
 
 
-class KubernetesClient:
+class KubernetesClient(object):
     def __init__(self):
         if 'KUBERNETES_LOAD_KUBE_CONFIG' in os.environ:
             config.load_kube_config()
@@ -213,7 +213,7 @@ class KubernetesClient:
         )
 
 
-class SlackClient:
+class SlackClient(object):
     def __init__(self, slack_webhook_url):
         self._slack_webhook_url = slack_webhook_url
 
@@ -222,7 +222,7 @@ class SlackClient:
                       data=json.dumps(message))
 
 
-class DemistoClient:
+class DemistoClient(object):
     def __init__(self, api_key, base_url, verify_ssl=True):
         self._api_key = api_key
         self._base_url = base_url
@@ -234,7 +234,7 @@ class DemistoClient:
                                  data=json.dumps(incident),
                                  verify=self._verify_ssl)
 
-        if response.status_code != http.HTTPStatus.CREATED:
+        if response.status_code != http_client.CREATED:
             raise RuntimeError(response.text)
 
     def _headers(self):
@@ -245,7 +245,7 @@ class DemistoClient:
         }
 
 
-class PhantomClient:
+class PhantomClient(object):
     def __init__(self, user, password, base_url, verify_ssl=True):
         self._user = user
         self._password = password

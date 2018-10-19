@@ -1,7 +1,7 @@
 import maya
 
 
-class DeletePod:
+class DeletePod(object):
     def __init__(self, k8s_client):
         self._k8s_client = k8s_client
 
@@ -11,7 +11,7 @@ class DeletePod:
         self._k8s_client.delete_pod(pod_name)
 
 
-class AddMessageToSlack:
+class AddMessageToSlack(object):
     def __init__(self, slack_client):
         self._slack_client = slack_client
 
@@ -78,7 +78,7 @@ def _output_from_alert(alert):
     return output[priority_plus_whitespace_length:]
 
 
-class TaintNode:
+class TaintNode(object):
     def __init__(self, k8s_client, key, value, effect):
         self._k8s_client = k8s_client
         self._key = key
@@ -92,7 +92,7 @@ class TaintNode:
         self._k8s_client.taint_node(node, self._key, self._value, self._effect)
 
 
-class NetworkIsolatePod:
+class NetworkIsolatePod(object):
     def __init__(self, k8s_client):
         self._k8s_client = k8s_client
 
@@ -102,7 +102,7 @@ class NetworkIsolatePod:
         self._k8s_client.add_label_to_pod(pod, 'isolated', 'true')
 
 
-class CreateIncidentInDemisto:
+class CreateIncidentInDemisto(object):
     def __init__(self, demisto_client):
         self._demisto_client = demisto_client
 
@@ -139,7 +139,7 @@ class CreateIncidentInDemisto:
     }
 
 
-class StartSysdigCaptureForContainer:
+class StartSysdigCaptureForContainer(object):
     def __init__(self, k8s_client, duration_in_seconds, s3_bucket,
                  aws_access_key_id, aws_secret_access_key):
         self._k8s_client = k8s_client
@@ -160,7 +160,7 @@ class StartSysdigCaptureForContainer:
                                                   self._aws_secret_access_key)
 
 
-class CreateContainerInPhantom:
+class CreateContainerInPhantom(object):
     def __init__(self, phantom_client):
         self._phantom_client = phantom_client
 
