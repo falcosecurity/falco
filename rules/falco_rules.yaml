@@ -141,9 +141,6 @@
 - list: lxd_binaries
   items: [lxd, lxcfs]
 
-- list: lxd_binaries
-  items: [lxd, lxcfs]
-
 - list: http_server_binaries
   items: [nginx, httpd, httpd-foregroun, lighttpd, apache, apache2]
 
@@ -220,26 +217,11 @@
   items: [login_binaries, passwd_binaries, shadowutils_binaries]
 
 - list: dev_creation_binaries
-
   items: [blkid, rename_device, update_engine, sgdisk]
 
 - list: hids_binaries
   items: [aide, aide.wrapper, update-aide.con, logcheck, syslog-summary, osqueryd, ossec-syscheckd]
 
-- list: nids_procs
-  items: [bro, broctl, syslog-summary]
-
-## cacti: perl, php, php5-fpm
-## nrpe
-- list: monitoring_procs
-#  items: [nagios, icinga2, nrpe, perl, php, php5-fpm, npcd]
-  items: [icinga2, nrpe, perl, php, php5-fpm, check_sar_perf.]
-
-- list: orchestration_procs
-  items: [ansible, ansible-playboo, python, sshd]
-
-- list: testing_procs
-  items: [kitchen, command.rb]
 - list: vpn_binaries
   items: [openvpn]
 
@@ -1078,7 +1060,6 @@
   tags: [filesystem]
 
 # Only let rpm-related programs write to the rpm database
-## Add python for ansible
 - rule: Write below rpm database
   desc: an attempt to write to the rpm database by any non-rpm related program
   condition: fd.name startswith /var/lib/rpm and open_write and not rpm_procs and not ansible_running_python and not python_running_chef
