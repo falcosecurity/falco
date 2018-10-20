@@ -1,19 +1,20 @@
 /*
-Copyright (C) 2016 Draios inc.
+Copyright (C) 2016-2018 Draios Inc dba Sysdig.
 
 This file is part of falco.
 
-falco is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License version 2 as
-published by the Free Software Foundation.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-falco is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+    http://www.apache.org/licenses/LICENSE-2.0
 
-You should have received a copy of the GNU General Public License
-along with falco.  If not, see <http://www.gnu.org/licenses/>.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
 */
 
 #include <cstddef>
@@ -31,20 +32,30 @@ token_bucket::~token_bucket()
 {
 }
 
-void token_bucket::init(uint32_t rate, uint32_t max_tokens)
+void token_bucket::init(double rate, double max_tokens, uint64_t now)
 {
 	m_rate = rate;
 	m_max_tokens = max_tokens;
 	m_tokens = max_tokens;
-	m_last_seen = sinsp_utils::get_current_time_ns();
+
+	if(now == 0)
+	{
+		now = sinsp_utils::get_current_time_ns();
+	}
+
+	m_last_seen = now;
 }
 
 bool token_bucket::claim()
 {
-	// Determine the number of tokens gained. Delta between
-	// last_seen and now, divided by the rate.
 	uint64_t now = sinsp_utils::get_current_time_ns();
-	uint64_t tokens_gained = (now - m_last_seen) / (m_rate * 1000000000);
+
+	return claim(1, now);
+}
+
+bool token_bucket::claim(double tokens, uint64_t now)
+{
+	double tokens_gained = m_rate * ((now - m_last_seen) / (1000000000.0));
 	m_last_seen = now;
 
 	m_tokens += tokens_gained;
@@ -58,14 +69,24 @@ bool token_bucket::claim()
 	}
 
 	//
-	// If tokens is < 1, can't claim.
+	// If m_tokens is < tokens, can't claim.
 	//
-	if(m_tokens < 1)
+	if(m_tokens < tokens)
 	{
 		return false;
 	}
 
-	m_tokens--;
+	m_tokens -= tokens;
 
 	return true;
+}
+
+double token_bucket::get_tokens()
+{
+	return m_tokens;
+}
+
+uint64_t token_bucket::get_last_seen()
+{
+	return m_last_seen;
 }

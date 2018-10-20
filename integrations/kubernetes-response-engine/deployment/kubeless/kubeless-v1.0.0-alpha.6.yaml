@@ -1,0 +1,366 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: controller-acct
+  namespace: kubeless
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: kubeless-controller-deployer
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - services
+  - configmaps
+  verbs:
+  - create
+  - get
+  - delete
+  - list
+  - update
+  - patch
+- apiGroups:
+  - apps
+  - extensions
+  resources:
+  - deployments
+  verbs:
+  - create
+  - get
+  - delete
+  - list
+  - update
+  - patch
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - list
+  - delete
+- apiGroups:
+  - ""
+  resourceNames:
+  - kubeless-registry-credentials
+  resources:
+  - secrets
+  verbs:
+  - get
+- apiGroups:
+  - kubeless.io
+  resources:
+  - functions
+  - httptriggers
+  - cronjobtriggers
+  verbs:
+  - get
+  - list
+  - watch
+  - update
+  - delete
+- apiGroups:
+  - batch
+  resources:
+  - cronjobs
+  - jobs
+  verbs:
+  - create
+  - get
+  - delete
+  - deletecollection
+  - list
+  - update
+  - patch
+- apiGroups:
+  - autoscaling
+  resources:
+  - horizontalpodautoscalers
+  verbs:
+  - create
+  - get
+  - delete
+  - list
+  - update
+  - patch
+- apiGroups:
+  - apiextensions.k8s.io
+  resources:
+  - customresourcedefinitions
+  verbs:
+  - get
+  - list
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - alertmanagers
+  - prometheuses
+  - servicemonitors
+  verbs:
+  - '*'
+- apiGroups:
+  - extensions
+  resources:
+  - ingresses
+  verbs:
+  - create
+  - get
+  - list
+  - update
+  - delete
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: kubeless-controller-deployer
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kubeless-controller-deployer
+subjects:
+- kind: ServiceAccount
+  name: controller-acct
+  namespace: kubeless
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: functions.kubeless.io
+spec:
+  group: kubeless.io
+  names:
+    kind: Function
+    plural: functions
+    singular: function
+  scope: Namespaced
+  version: v1beta1
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: httptriggers.kubeless.io
+spec:
+  group: kubeless.io
+  names:
+    kind: HTTPTrigger
+    plural: httptriggers
+    singular: httptrigger
+  scope: Namespaced
+  version: v1beta1
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: cronjobtriggers.kubeless.io
+spec:
+  group: kubeless.io
+  names:
+    kind: CronJobTrigger
+    plural: cronjobtriggers
+    singular: cronjobtrigger
+  scope: Namespaced
+  version: v1beta1
+---
+apiVersion: v1
+data:
+  builder-image: kubeless/function-image-builder:v1.0.0-alpha.6
+  builder-image-secret: ""
+  deployment: '{}'
+  enable-build-step: "false"
+  function-registry-tls-verify: "true"
+  ingress-enabled: "false"
+  provision-image: kubeless/unzip@sha256:f162c062973cca05459834de6ed14c039d45df8cdb76097f50b028a1621b3697
+  provision-image-secret: ""
+  runtime-images: |-
+    [
+      {
+        "ID": "python",
+        "compiled": false,
+        "versions": [
+          {
+            "name": "python27",
+            "version": "2.7",
+            "runtimeImage": "kubeless/python@sha256:07cfb0f3d8b6db045dc317d35d15634d7be5e436944c276bf37b1c630b03add8",
+            "initImage": "python:2.7"
+          },
+          {
+            "name": "python34",
+            "version": "3.4",
+            "runtimeImage": "kubeless/python@sha256:f19640c547a3f91dbbfb18c15b5e624029b4065c1baf2892144e07c36f0a7c8f",
+            "initImage": "python:3.4"
+          },
+          {
+            "name": "python36",
+            "version": "3.6",
+            "runtimeImage": "kubeless/python@sha256:0c9f8f727d42625a4e25230cfe612df7488b65f283e7972f84108d87e7443d72",
+            "initImage": "python:3.6"
+          }
+        ],
+        "depName": "requirements.txt",
+        "fileNameSuffix": ".py"
+      },
+      {
+        "ID": "nodejs",
+        "compiled": false,
+        "versions": [
+          {
+            "name": "node6",
+            "version": "6",
+            "runtimeImage": "kubeless/nodejs@sha256:013facddb0f66c150844192584d823d7dfb2b5b8d79fd2ae98439c86685da657",
+            "initImage": "node:6.10"
+          },
+          {
+            "name": "node8",
+            "version": "8",
+            "runtimeImage": "kubeless/nodejs@sha256:b155d7e20e333044b60009c12a25a97c84eed610f2a3d9d314b47449dbdae0e5",
+            "initImage": "node:8"
+          }
+        ],
+        "depName": "package.json",
+        "fileNameSuffix": ".js"
+      },
+      {
+        "ID": "nodejs_distroless",
+        "compiled": false,
+        "versions": [
+          {
+            "name": "node8",
+            "version": "8",
+            "runtimeImage": "henrike42/kubeless/runtimes/nodejs/distroless:0.0.2",
+            "initImage": "node:8"
+          }
+        ],
+        "depName": "package.json",
+        "fileNameSuffix": ".js"
+      },
+      {
+        "ID": "ruby",
+        "compiled": false,
+        "versions": [
+          {
+            "name": "ruby24",
+            "version": "2.4",
+            "runtimeImage": "kubeless/ruby@sha256:01665f1a32fe4fab4195af048627857aa7b100e392ae7f3e25a44bd296d6f105",
+            "initImage": "bitnami/ruby:2.4"
+          }
+        ],
+        "depName": "Gemfile",
+        "fileNameSuffix": ".rb"
+      },
+      {
+        "ID": "php",
+        "compiled": false,
+        "versions": [
+          {
+            "name": "php72",
+            "version": "7.2",
+            "runtimeImage": "kubeless/php@sha256:9b86066b2640bedcd88acb27f43dfaa2b338f0d74d9d91131ea781402f7ec8ec",
+            "initImage": "composer:1.6"
+          }
+        ],
+        "depName": "composer.json",
+        "fileNameSuffix": ".php"
+      },
+      {
+        "ID": "go",
+        "compiled": true,
+        "versions": [
+          {
+            "name": "go1.10",
+            "version": "1.10",
+            "runtimeImage": "kubeless/go@sha256:e2fd49f09b6ff8c9bac6f1592b3119ea74237c47e2955a003983e08524cb3ae5",
+            "initImage": "kubeless/go-init@sha256:983b3f06452321a2299588966817e724d1a9c24be76cf1b12c14843efcdff502"
+          }
+        ],
+        "depName": "Gopkg.toml",
+        "fileNameSuffix": ".go"
+      },
+      {
+        "ID": "dotnetcore",
+        "compiled": true,
+        "versions": [
+          {
+            "name": "dotnetcore2.0",
+            "version": "2.0",
+            "runtimeImage": "allantargino/kubeless-dotnetcore@sha256:1699b07d9fc0276ddfecc2f823f272d96fd58bbab82d7e67f2fd4982a95aeadc",
+            "initImage": "allantargino/aspnetcore-build@sha256:0d60f845ff6c9c019362a68b87b3920f3eb2d32f847f2d75e4d190cc0ce1d81c"
+          }
+        ],
+        "depName": "project.csproj",
+        "fileNameSuffix": ".cs"
+      },
+      {
+        "ID": "java",
+        "compiled": true,
+        "versions": [
+          {
+            "name": "java1.8",
+            "version": "1.8",
+            "runtimeImage": "kubeless/java@sha256:debf9502545f4c0e955eb60fabb45748c5d98ed9365c4a508c07f38fc7fefaac",
+            "initImage": "kubeless/java-init@sha256:7e5e4376d3ab76c336d4830c9ed1b7f9407415feca49b8c2bf013e279256878f"
+          }
+        ],
+        "depName": "pom.xml",
+        "fileNameSuffix": ".java"
+      },
+      {
+         "ID": "ballerina",
+         "compiled": true,
+         "versions": [
+           {
+              "name": "ballerina0.975.0",
+              "version": "0.975.0",
+              "runtimeImage": "kubeless/ballerina@sha256:83e51423972f4b0d6b419bee0b4afb3bb87d2bf1b604ebc4366c430e7cc28a35",
+              "initImage": "kubeless/ballerina-init@sha256:05857ce439a7e290f9d86f8cb38ea3b574670c0c0e91af93af06686fa21ecf4f"
+           }
+         ],
+         "depName": "",
+         "fileNameSuffix": ".bal"
+      }
+    ]
+  service-type: ClusterIP
+kind: ConfigMap
+metadata:
+  name: kubeless-config
+  namespace: kubeless
+---
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    kubeless: controller
+  name: kubeless-controller-manager
+  namespace: kubeless
+spec:
+  selector:
+    matchLabels:
+      kubeless: controller
+  template:
+    metadata:
+      labels:
+        kubeless: controller
+    spec:
+      containers:
+      - env:
+        - name: KUBELESS_INGRESS_ENABLED
+          valueFrom:
+            configMapKeyRef:
+              key: ingress-enabled
+              name: kubeless-config
+        - name: KUBELESS_SERVICE_TYPE
+          valueFrom:
+            configMapKeyRef:
+              key: service-type
+              name: kubeless-config
+        - name: KUBELESS_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: KUBELESS_CONFIG
+          value: kubeless-config
+        image: bitnami/kubeless-controller-manager:v1.0.0-alpha.6
+        imagePullPolicy: IfNotPresent
+        name: kubeless-controller-manager
+      serviceAccountName: controller-acct

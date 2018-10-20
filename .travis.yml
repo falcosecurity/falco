@@ -1,41 +1,58 @@
+#
+# Copyright (C) 2016-2018 Draios Inc dba Sysdig.
+#
+# This file is part of falco .
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 language: c
 env:
     - BUILD_TYPE=Debug
     - BUILD_TYPE=Release
+sudo: required
+services:
+    - docker
 before_install:
     - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
     - sudo apt-get update
 install:
     - sudo apt-get --force-yes install g++-4.8
-    - sudo apt-get install rpm linux-headers-$(uname -r)
+    - sudo apt-get install rpm linux-headers-$(uname -r) libelf-dev
     - git clone https://github.com/draios/sysdig.git ../sysdig
-    - sudo apt-get install -y python-pip libvirt-dev jq
+    - sudo apt-get install -y python-pip libvirt-dev jq dkms
     - cd ..
     - curl -Lo avocado-36.0-tar.gz https://github.com/avocado-framework/avocado/archive/36.0lts.tar.gz
     - tar -zxvf avocado-36.0-tar.gz
     - cd avocado-36.0lts
-    - sudo pip install -r requirements-travis.txt
+    - sed -e 's/libvirt-python>=1.2.9/libvirt-python>=1.2.9,<4.1.0/' < requirements.txt  > /tmp/requirements.txt && mv /tmp/requirements.txt ./requirements.txt
+    - sudo -H pip install -r requirements.txt
     - sudo python setup.py install
     - cd ../falco
 before_script:
-    - export KERNELDIR=/lib/modules/$(ls /lib/modules | sort | head -1)/build
+    - export KERNELDIR=/lib/modules/$(uname -r)/build
 script:
     - set -e
     - export CC="gcc-4.8"
     - export CXX="g++-4.8"
-    - wget https://s3.amazonaws.com/download.draios.com/dependencies/cmake-3.3.2.tar.gz
-    - tar -xzf cmake-3.3.2.tar.gz
-    - cd cmake-3.3.2
-    - ./bootstrap --prefix=/usr
-    - make
-    - sudo make install
-    - cd ..
     - mkdir build
     - cd build
-    - cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+    - cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DDRAIOS_DEBUG_FLAGS="-D_DEBUG -DNDEBUG"
     - make VERBOSE=1
     - make package
-    - cd ..
+    - cp falco*.deb ../docker/local
+    - cd ../docker/local
+    - docker build -t sysdig/falco:test .
+    - cd ../..
     - sudo test/run_regression_tests.sh $TRAVIS_BRANCH
 notifications:
   webhooks:

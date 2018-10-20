@@ -1,0 +1,63 @@
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: falco
+  labels:
+    name: falco-daemonset
+    app: demo
+spec:
+  template:
+    metadata:
+      labels:
+        name: falco
+        app: demo
+        role: security
+    spec:
+      serviceAccount: falco-account
+      containers:
+        - name: falco
+          image: sysdig/falco:latest
+          securityContext:
+            privileged: true
+          args: [ "/usr/bin/falco", "-K", "/var/run/secrets/kubernetes.io/serviceaccount/token", "-k", "https://kubernetes.default", "-pk"]
+          volumeMounts:
+            - mountPath: /host/var/run/docker.sock
+              name: docker-socket
+            - mountPath: /host/dev
+              name: dev-fs
+            - mountPath: /host/proc
+              name: proc-fs
+              readOnly: true
+            - mountPath: /host/boot
+              name: boot-fs
+              readOnly: true
+            - mountPath: /host/lib/modules
+              name: lib-modules
+              readOnly: true
+            - mountPath: /host/usr
+              name: usr-fs
+              readOnly: true
+            - mountPath: /etc/falco
+              name: falco-config
+      volumes:
+        - name: docker-socket
+          hostPath:
+            path: /var/run/docker.sock
+        - name: dev-fs
+          hostPath:
+            path: /dev
+        - name: proc-fs
+          hostPath:
+            path: /proc
+        - name: boot-fs
+          hostPath:
+            path: /boot
+        - name: lib-modules
+          hostPath:
+            path: /lib/modules
+        - name: usr-fs
+          hostPath:
+            path: /usr
+        - name: falco-config
+          configMap:
+            name: falco-config

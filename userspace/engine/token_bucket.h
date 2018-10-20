@@ -1,19 +1,20 @@
 /*
-Copyright (C) 2016 Draios inc.
+Copyright (C) 2016-2018 Draios Inc dba Sysdig.
 
 This file is part of falco.
 
-falco is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License version 2 as
-published by the Free Software Foundation.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-falco is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+    http://www.apache.org/licenses/LICENSE-2.0
 
-You should have received a copy of the GNU General Public License
-along with falco.  If not, see <http://www.gnu.org/licenses/>.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
 */
 
 #pragma once
@@ -31,30 +32,42 @@ public:
 	//
 	// Initialize the token bucket and start accumulating tokens
 	//
-	void init(uint32_t rate, uint32_t max_tokens);
+	void init(double rate, double max_tokens, uint64_t now = 0);
 
 	//
-	// Returns true if a token can be claimed. Also updates
-	// internal metrics.
+	// Try to claim tokens tokens from the token bucket, using a
+	// timestamp of now. Returns true if the tokens could be
+	// claimed. Also updates internal metrics.
 	//
+	bool claim(double tokens, uint64_t now);
+
+	// Simpler version of claim that claims a single token and
+	// uses the current time for now
 	bool claim();
+
+	// Return the current number of tokens available
+	double get_tokens();
+
+	// Return the last time someone tried to claim a token.
+	uint64_t get_last_seen();
+
 private:
 
 	//
 	// The number of tokens generated per second.
 	//
-	uint64_t m_rate;
+	double m_rate;
 
 	//
 	// The maximum number of tokens that can be banked for future
 	// claim()s.
 	//
-	uint64_t m_max_tokens;
+	double m_max_tokens;
 
 	//
 	// The current number of tokens
 	//
-	uint64_t m_tokens;
+	double m_tokens;
 
 	//
 	// The last time claim() was called (or the object was created).

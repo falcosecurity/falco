@@ -1,23 +1,27 @@
 /*
-Copyright (C) 2016 Draios inc.
+Copyright (C) 2016-2018 Draios Inc dba Sysdig.
 
 This file is part of falco.
 
-falco is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License version 2 as
-published by the Free Software Foundation.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-falco is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+    http://www.apache.org/licenses/LICENSE-2.0
 
-You should have received a copy of the GNU General Public License
-along with falco.  If not, see <http://www.gnu.org/licenses/>.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
 */
 
 #pragma once
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <yaml-cpp/yaml.h>
 #include <string>
 #include <vector>
@@ -127,6 +131,27 @@ public:
 		}
 	}
 
+	// called with the last variadic arg (where the sequence is expected to be found)
+	template <typename T>
+	void get_sequence(T& ret, const std::string& name)
+	{
+		YAML::Node child_node = m_root[name];
+		if(child_node.IsDefined())
+		{
+			if(child_node.IsSequence())
+			{
+				for(const YAML::Node& item : child_node)
+				{
+					ret.insert(ret.end(), item.as<typename T::value_type>());
+				}
+			}
+			else if(child_node.IsScalar())
+			{
+				ret.insert(ret.end(), child_node.as<typename T::value_type>());
+			}
+		}
+	}
+
 private:
 	YAML::Node m_root;
 };
@@ -141,11 +166,18 @@ class falco_configuration
 	void init(std::string conf_filename, std::list<std::string> &cmdline_options);
 	void init(std::list<std::string> &cmdline_options);
 
+	static void read_rules_file_directory(const string &path, list<string> &rules_filenames);
+
 	std::list<std::string> m_rules_filenames;
 	bool m_json_output;
+	bool m_json_include_output_property;
 	std::vector<falco_outputs::output_config> m_outputs;
 	uint32_t m_notifications_rate;
 	uint32_t m_notifications_max_burst;
+
+	falco_common::priority_type m_min_priority;
+
+	bool m_buffered_outputs;
  private:
 	void init_cmdline_options(std::list<std::string> &cmdline_options);
 

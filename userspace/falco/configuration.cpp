@@ -1,20 +1,28 @@
 /*
-Copyright (C) 2016 Draios inc.
+Copyright (C) 2016-2018 Draios Inc dba Sysdig.
 
 This file is part of falco.
 
-falco is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License version 2 as
-published by the Free Software Foundation.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-falco is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+    http://www.apache.org/licenses/LICENSE-2.0
 
-You should have received a copy of the GNU General Public License
-along with falco.  If not, see <http://www.gnu.org/licenses/>.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
 */
+
+#include <algorithm>
+
+#include <dirent.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "configuration.h"
 #include "logger.h"
@@ -22,7 +30,8 @@ along with falco.  If not, see <http://www.gnu.org/licenses/>.
 using namespace std;
 
 falco_configuration::falco_configuration()
-	: m_config(NULL)
+	: m_buffered_outputs(true),
+	  m_config(NULL)
 {
 }
 
@@ -51,20 +60,38 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 
 	init_cmdline_options(cmdline_options);
 
-	m_rules_filenames.push_back(m_config->get_scalar<string>("rules_file", "/etc/falco_rules.yaml"));
+	list<string> rules_files;
+
+	m_config->get_sequence<list<string>>(rules_files, string("rules_file"));
+
+	for(auto &file : rules_files)
+	{
+		// Here, we only include files that exist
+		struct stat buffer;
+		if(stat(file.c_str(), &buffer) == 0)
+		{
+			read_rules_file_directory(file, m_rules_filenames);
+		}
+	}
+
 	m_json_output = m_config->get_scalar<bool>("json_output", false);
+	m_json_include_output_property = m_config->get_scalar<bool>("json_include_output_property", true);
 
 	falco_outputs::output_config file_output;
 	file_output.name = "file";
 	if (m_config->get_scalar<bool>("file_output", "enabled", false))
 	{
-		string filename;
+		string filename, keep_alive;
 		filename = m_config->get_scalar<string>("file_output", "filename", "");
 		if (filename == string(""))
 		{
 			throw invalid_argument("Error reading config file (" + m_config_file + "): file output enabled but no filename in configuration block");
 		}
 		file_output.options["filename"] = filename;
+
+		keep_alive = m_config->get_scalar<string>("file_output", "keep_alive", "");
+		file_output.options["keep_alive"] = keep_alive;
+
 		m_outputs.push_back(file_output);
 	}
 
@@ -86,13 +113,17 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 	program_output.name = "program";
 	if (m_config->get_scalar<bool>("program_output", "enabled", false))
 	{
-		string program;
+		string program, keep_alive;
 		program = m_config->get_scalar<string>("program_output", "program", "");
 		if (program == string(""))
 		{
 			throw sinsp_exception("Error reading config file (" + m_config_file + "): program output enabled but no program in configuration block");
 		}
 		program_output.options["program"] = program;
+
+		keep_alive = m_config->get_scalar<string>("program_output", "keep_alive", "");
+		program_output.options["keep_alive"] = keep_alive;
+
 		m_outputs.push_back(program_output);
 	}
 
@@ -108,8 +139,87 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 	m_notifications_rate = m_config->get_scalar<uint32_t>("outputs", "rate", 1);
 	m_notifications_max_burst = m_config->get_scalar<uint32_t>("outputs", "max_burst", 1000);
 
+	string priority = m_config->get_scalar<string>("priority", "debug");
+	vector<string>::iterator it;
+
+	auto comp = [priority] (string &s) {
+		return (strcasecmp(s.c_str(), priority.c_str()) == 0);
+	};
+
+	if((it = std::find_if(falco_common::priority_names.begin(), falco_common::priority_names.end(), comp)) == falco_common::priority_names.end())
+	{
+		throw invalid_argument("Unknown priority \"" + priority + "\"--must be one of emergency, alert, critical, error, warning, notice, informational, debug");
+	}
+	m_min_priority = (falco_common::priority_type) (it - falco_common::priority_names.begin());
+
+	m_buffered_outputs = m_config->get_scalar<bool>("buffered_outputs", true);
+
 	falco_logger::log_stderr = m_config->get_scalar<bool>("log_stderr", false);
 	falco_logger::log_syslog = m_config->get_scalar<bool>("log_syslog", true);
+}
+
+void falco_configuration::read_rules_file_directory(const string &path, list<string> &rules_filenames)
+{
+	struct stat st;
+
+	int rc = stat(path.c_str(), &st);
+
+	if(rc != 0)
+	{
+		std::cerr << "Could not get info on rules file " << path << ": " << strerror(errno) << std::endl;
+		exit(-1);
+	}
+
+	if(st.st_mode & S_IFDIR)
+	{
+		// It's a directory. Read the contents, sort
+		// alphabetically, and add every path to
+		// rules_filenames
+		vector<string> dir_filenames;
+
+		DIR *dir = opendir(path.c_str());
+
+		if(!dir)
+		{
+			std::cerr << "Could not get read contents of directory " << path << ": " << strerror(errno) << std::endl;
+			exit(-1);
+		}
+
+		for (struct dirent *ent = readdir(dir); ent; ent = readdir(dir))
+		{
+			string efile = path + "/" + ent->d_name;
+
+			rc = stat(efile.c_str(), &st);
+
+			if(rc != 0)
+			{
+				std::cerr << "Could not get info on rules file " << efile << ": " << strerror(errno) << std::endl;
+				exit(-1);
+			}
+
+			if(st.st_mode & S_IFREG)
+			{
+				dir_filenames.push_back(efile);
+			}
+		}
+
+		closedir(dir);
+
+		std::sort(dir_filenames.begin(),
+			  dir_filenames.end());
+
+		for (string &ent : dir_filenames)
+		{
+			rules_filenames.push_back(ent);
+		}
+	}
+	else
+	{
+		// Assume it's a file and just add to
+		// rules_filenames. If it can't be opened/etc that
+		// will be reported later..
+		rules_filenames.push_back(path);
+	}
 }
 
 static bool split(const string &str, char delim, pair<string,string> &parts)

@@ -1,19 +1,20 @@
 /*
-Copyright (C) 2016 Draios inc.
+Copyright (C) 2016-2018 Draios Inc dba Sysdig.
 
 This file is part of falco.
 
-falco is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License version 2 as
-published by the Free Software Foundation.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-falco is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+    http://www.apache.org/licenses/LICENSE-2.0
 
-You should have received a copy of the GNU General Public License
-along with falco.  If not, see <http://www.gnu.org/licenses/>.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
 */
 
 #pragma once
@@ -31,7 +32,7 @@ class sinsp_evt_formatter;
 class falco_formats
 {
  public:
-	static void init(sinsp* inspector, lua_State *ls, bool json_output);
+	static void init(sinsp* inspector, lua_State *ls, bool json_output, bool json_include_output_property);
 
 	// formatter = falco.formatter(format_string)
 	static int formatter(lua_State *ls);
@@ -39,8 +40,14 @@ class falco_formats
 	// falco.free_formatter(formatter)
 	static int free_formatter(lua_State *ls);
 
+	// falco.free_formatters()
+	static int free_formatters(lua_State *ls);
+
 	// formatted_string = falco.format_event(evt, formatter)
 	static int format_event(lua_State *ls);
 
 	static sinsp* s_inspector;
+	static sinsp_evt_formatter_cache *s_formatters;
+	static bool s_json_output;
+	static bool s_json_include_output_property;
 };

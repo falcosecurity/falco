@@ -1,0 +1,162 @@
+#
+# Copyright (C) 2016-2018 Draios Inc dba Sysdig.
+#
+# This file is part of falco.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+has_json_output: !mux
+  yes:
+    json_output: True
+  no:
+    json_output: False
+
+traces: !mux
+  change-thread-namespace:
+    trace_file: traces-positive/change-thread-namespace.scap
+    detect: True
+    detect_level: NOTICE
+    detect_counts:
+      - "Change thread namespace": 2
+
+  container-privileged:
+    trace_file: traces-positive/container-privileged.scap
+    detect: True
+    detect_level: INFO
+    detect_counts:
+      - "Launch Privileged Container": 1
+
+  container-sensitive-mount:
+    trace_file: traces-positive/container-sensitive-mount.scap
+    detect: True
+    detect_level: INFO
+    detect_counts:
+      - "Launch Sensitive Mount Container": 1
+
+  create-files-below-dev:
+    trace_file: traces-positive/create-files-below-dev.scap
+    detect: True
+    detect_level: ERROR
+    detect_counts:
+      - "Create files below dev": 1
+
+  db-program-spawned-process:
+    trace_file: traces-positive/db-program-spawned-process.scap
+    detect: True
+    detect_level: NOTICE
+    detect_counts:
+      - "DB program spawned process": 1
+
+  falco-event-generator:
+    trace_file: traces-positive/falco-event-generator.scap
+    detect: True
+    detect_level: [ERROR, WARNING, INFO, NOTICE, DEBUG]
+    detect_counts:
+      - "Write below binary dir": 1
+      - "Read sensitive file untrusted": 3
+      - "Run shell untrusted": 1
+      - "Write below rpm database": 1
+      - "Write below etc": 1
+      - "System procs network activity": 1
+      - "Mkdir binary dirs": 1
+      - "System user interactive": 1
+      - "DB program spawned process": 1
+      - "Non sudo setuid": 1
+      - "Create files below dev": 1
+      - "Modify binary dirs": 2
+      - "Change thread namespace": 2
+
+  mkdir-binary-dirs:
+    trace_file: traces-positive/mkdir-binary-dirs.scap
+    detect: True
+    detect_level: ERROR
+    detect_counts:
+      - "Mkdir binary dirs": 1
+
+  modify-binary-dirs:
+    trace_file: traces-positive/modify-binary-dirs.scap
+    detect: True
+    detect_level: ERROR
+    detect_counts:
+      - "Modify binary dirs": 1
+
+  non-sudo-setuid:
+    trace_file: traces-positive/non-sudo-setuid.scap
+    detect: True
+    detect_level: NOTICE
+    detect_counts:
+      - "Non sudo setuid": 1
+
+  read-sensitive-file-after-startup:
+    trace_file: traces-positive/read-sensitive-file-after-startup.scap
+    detect: True
+    detect_level: WARNING
+    detect_counts:
+      - "Read sensitive file untrusted": 1
+      - "Read sensitive file trusted after startup": 1
+
+  read-sensitive-file-untrusted:
+    trace_file: traces-positive/read-sensitive-file-untrusted.scap
+    detect: True
+    detect_level: WARNING
+    detect_counts:
+      - "Read sensitive file untrusted": 1
+
+  run-shell-untrusted:
+    trace_file: traces-positive/run-shell-untrusted.scap
+    detect: True
+    detect_level: DEBUG
+    detect_counts:
+      - "Run shell untrusted": 1
+
+  system-binaries-network-activity:
+    trace_file: traces-positive/system-binaries-network-activity.scap
+    detect: True
+    detect_level: NOTICE
+    detect_counts:
+      - "System procs network activity": 1
+
+  system-user-interactive:
+    trace_file: traces-positive/system-user-interactive.scap
+    detect: True
+    detect_level: INFO
+    detect_counts:
+      - "System user interactive": 1
+
+  user-mgmt-binaries:
+    trace_file: traces-positive/user-mgmt-binaries.scap
+    detect: True
+    detect_level: NOTICE
+    detect_counts:
+      - "User mgmt binaries": 1
+
+  write-binary-dir:
+    trace_file: traces-positive/write-binary-dir.scap
+    detect: True
+    detect_level: ERROR
+    detect_counts:
+      - "Write below binary dir": 4
+
+  write-etc:
+    trace_file: traces-positive/write-etc.scap
+    detect: True
+    detect_level: ERROR
+    detect_counts:
+      - "Write below etc": 1
+
+  write-rpm-database:
+    trace_file: traces-positive/write-rpm-database.scap
+    detect: True
+    detect_level: ERROR
+    detect_counts:
+      - "Write below rpm database": 1

@@ -1,0 +1,96 @@
+####
+# THIS FILE MANAGED BY PUPPET. DO NOT MODIFY
+####
+
+# File(s) containing Falco rules, loaded at startup.
+#
+# falco_rules.yaml ships with the falco package and is overridden with
+# every new software version. falco_rules.local.yaml is only created
+# if it doesn't exist. If you want to customize the set of rules, add
+# your customizations to falco_rules.local.yaml.
+#
+# The files will be read in the order presented here, so make sure if
+# you have overrides they appear in later files.
+rules_file:
+<% Array(@rules_file).each do |file| -%>
+ - <%= file %>
+<% end -%>
+
+# Whether to output events in json or text
+json_output: <%= @json_output %>
+
+# Send information logs to stderr and/or syslog Note these are *not* security
+# notification logs! These are just Falco lifecycle (and possibly error) logs.
+log_stderr: <%= @log_stderr %>
+log_syslog: <%= @log_syslog %>
+
+# Minimum log level to include in logs. Note: these levels are
+# separate from the priority field of rules. This refers only to the
+# log level of falco's internal logging. Can be one of "emergency",
+# "alert", "critical", "error", "warning", "notice", "info", "debug".
+log_level: <%= @log_level %>
+
+# Minimum rule priority level to load and run. All rules having a
+# priority more severe than this level will be loaded/run.  Can be one
+# of "emergency", "alert", "critical", "error", "warning", "notice",
+# "info", "debug".
+priority: <%= @priority %>
+
+# Whether or not output to any of the output channels below is
+# buffered. Defaults to true
+buffered_outputs: <%= @buffered_outputs %>
+
+# A throttling mechanism implemented as a token bucket limits the
+# rate of falco notifications. This throttling is controlled by the following configuration
+# options:
+#  - rate: the number of tokens (i.e. right to send a notification)
+#    gained per second. Defaults to 1.
+#  - max_burst: the maximum number of tokens outstanding. Defaults to 1000.
+#
+# With these defaults, falco could send up to 1000 notifications after
+# an initial quiet period, and then up to 1 notification per second
+# afterward. It would gain the full burst back after 1000 seconds of
+# no activity.
+
+outputs:
+  rate: <%= @outputs_rate %>
+  max_burst: <%= @outputs_max_burst %>
+
+# Where security notifications should go.
+# Multiple outputs can be enabled.
+<% unless @syslog_output.nil? -%>
+syslog_output:
+  enabled: <%= @syslog_output['enabled'] %>
+<% end -%>
+
+# If keep_alive is set to true, the file will be opened once and
+# continuously written to, with each output message on its own
+# line. If keep_alive is set to false, the file will be re-opened
+# for each output message.
+<% unless @file_output.nil? -%>
+file_output:
+  enabled: <%= @file_output['enabled'] %>
+  keep_alive: <%= @file_output['keep_alive'] %>
+  filename: <%= @file_output['filename'] %>
+<% end -%>
+
+# Possible additional things you might want to do with program output:
+#   - send to a slack webhook:
+#         program: "jq '{text: .output}' | curl -d @- -X POST https://hooks.slack.com/services/XXX"
+#   - logging (alternate method than syslog):
+#         program: logger -t falco-test
+#   - send over a network connection:
+#         program: nc host.example.com 80
+
+# If keep_alive is set to true, the program will be started once and
+# continuously written to, with each output message on its own
+# line. If keep_alive is set to false, the program will be re-spawned
+# for each output message.
+
+<% unless @program_output.nil? -%>
+program_output:
+  enabled: <%= @program_output['enabled'] %>
+  keep_alive: <%= @program_output['keep_alive'] %>
+  program: <%= @program_output['program'] %>
+<% end -%>
+

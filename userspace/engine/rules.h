@@ -1,28 +1,31 @@
 /*
-Copyright (C) 2016 Draios inc.
+Copyright (C) 2016-2018 Draios Inc dba Sysdig.
 
 This file is part of falco.
 
-falco is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License version 2 as
-published by the Free Software Foundation.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-falco is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+    http://www.apache.org/licenses/LICENSE-2.0
 
-You should have received a copy of the GNU General Public License
-along with falco.  If not, see <http://www.gnu.org/licenses/>.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
 */
 
 #pragma once
 
-#include <list>
+#include <set>
 
 #include "sinsp.h"
 
 #include "lua_parser.h"
+
+#include "falco_common.h"
 
 class falco_engine;
 
@@ -32,7 +35,8 @@ class falco_rules
 	falco_rules(sinsp* inspector, falco_engine *engine, lua_State *ls);
 	~falco_rules();
 	void load_rules(const string &rules_content, bool verbose, bool all_events,
-			std::string &extra, bool replace_container_info);
+			std::string &extra, bool replace_container_info,
+			falco_common::priority_type min_priority);
 	void describe_rule(string *rule);
 
 	static void init(lua_State *ls);
@@ -42,7 +46,7 @@ class falco_rules
 
  private:
 	void clear_filters();
-	void add_filter(string &rule, list<uint32_t> &evttypes);
+	void add_filter(string &rule, std::set<uint32_t> &evttypes, std::set<uint32_t> &syscalls, std::set<string> &tags);
 	void enable_rule(string &rule, bool enabled);
 
 	lua_parser* m_lua_parser;
@@ -53,6 +57,8 @@ class falco_rules
 	string m_lua_load_rules = "load_rules";
 	string m_lua_ignored_syscalls = "ignored_syscalls";
 	string m_lua_ignored_events = "ignored_events";
+	string m_lua_defined_filters = "defined_filters";
 	string m_lua_events = "events";
+	string m_lua_syscalls = "syscalls";
 	string m_lua_describe_rule = "describe_rule";
 };

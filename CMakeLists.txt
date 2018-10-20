@@ -1,3 +1,20 @@
+#
+# Copyright (C) 2016-2018 Draios Inc dba Sysdig.
+#
+# This file is part of falco .
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 cmake_minimum_required(VERSION 2.8.2)
 
 project(falco)
@@ -7,14 +24,16 @@ if(NOT DEFINED FALCO_VERSION)
 endif()
 
 if(NOT DEFINED FALCO_ETC_DIR)
-	set(FALCO_ETC_DIR "/etc")
+	set(FALCO_ETC_DIR "/etc/falco")
 endif()
 
 if(NOT CMAKE_BUILD_TYPE)
 	SET(CMAKE_BUILD_TYPE Release)
 endif()
 
-set(DRAIOS_DEBUG_FLAGS "-D_DEBUG")
+if(NOT DRAIOS_DEBUG_FLAGS)
+	set(DRAIOS_DEBUG_FLAGS "-D_DEBUG")
+endif()
 
 set(CMAKE_C_FLAGS "-Wall -ggdb ${DRAIOS_FEATURE_FLAGS}")
 set(CMAKE_CXX_FLAGS "-Wall -ggdb --std=c++0x ${DRAIOS_FEATURE_FLAGS}")
@@ -27,7 +46,9 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3 -fno-strict-aliasing -DNDEBUG")
 
 add_definitions(-DPLATFORM_NAME="${CMAKE_SYSTEM_NAME}")
 add_definitions(-DK8S_DISABLE_THREAD)
-add_definitions(-DHAS_CAPTURE)
+if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+	add_definitions(-DHAS_CAPTURE)
+endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 	set(KBUILD_FLAGS "${DRAIOS_DEBUG_FLAGS} ${DRAIOS_FEATURE_FLAGS}")
@@ -37,13 +58,19 @@ endif()
 
 set(PACKAGE_NAME "falco")
 set(PROBE_VERSION "${FALCO_VERSION}")
-set(PROBE_NAME "sysdig-probe")
-set(PROBE_DEVICE_NAME "sysdig")
-set(CMAKE_INSTALL_PREFIX /usr)
+set(PROBE_NAME "falco-probe")
+set(PROBE_DEVICE_NAME "falco")
+if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+	set(CMAKE_INSTALL_PREFIX /usr CACHE PATH "Default install path" FORCE)
+endif()
 
 set(CMD_MAKE make)
 
 set(SYSDIG_DIR "${PROJECT_SOURCE_DIR}/../sysdig")
+# make luaJIT work on OS X
+if(APPLE)
+	set(CMAKE_EXE_LINKER_FLAGS "-pagezero_size 10000 -image_base 100000000")
+endif()
 
 include(ExternalProject)
 
@@ -51,7 +78,7 @@ option(USE_BUNDLED_DEPS "Enable bundled dependencies instead of using the system
 
 #
 # zlib
-
+#
 option(USE_BUNDLED_ZLIB "Enable building of the bundled zlib" ${USE_BUNDLED_DEPS})
 
 if(NOT USE_BUNDLED_ZLIB)
@@ -68,8 +95,10 @@ else()
         set(ZLIB_INCLUDE "${ZLIB_SRC}")
         set(ZLIB_LIB "${ZLIB_SRC}/libz.a")
         ExternalProject_Add(zlib
-		URL "http://download.draios.com/dependencies/zlib-1.2.8.tar.gz"
-		URL_MD5 "44d667c142d7cda120332623eab69f40"
+		# START CHANGE for CVE-2016-9840, CVE-2016-9841, CVE-2016-9842, CVE-2016-9843
+		URL "http://s3.amazonaws.com/download.draios.com/dependencies/zlib-1.2.11.tar.gz"
+                URL_MD5 "1c9f62f0778697a09d36121ead88e08e"
+		# END CHANGE for CVE-2016-9840, CVE-2016-9841, CVE-2016-9842, CVE-2016-9843
 		CONFIGURE_COMMAND "./configure"
 		BUILD_COMMAND ${CMD_MAKE}
 		BUILD_IN_SOURCE 1
@@ -94,7 +123,7 @@ else()
         set(JQ_INCLUDE "${JQ_SRC}")
         set(JQ_LIB "${JQ_SRC}/.libs/libjq.a")
         ExternalProject_Add(jq
-                URL "http://download.draios.com/dependencies/jq-1.5.tar.gz"
+                URL "http://s3.amazonaws.com/download.draios.com/dependencies/jq-1.5.tar.gz"
                 URL_MD5 "0933532b086bd8b6a41c1b162b1731f9"
                 CONFIGURE_COMMAND ./configure --disable-maintainer-mode --enable-all-static --disable-dependency-tracking
                 BUILD_COMMAND ${CMD_MAKE} LDFLAGS=-all-static
@@ -124,7 +153,7 @@ else()
 	set(CURSES_LIBRARIES "${CURSES_BUNDLE_DIR}/lib/libncurses.a")
 	message(STATUS "Using bundled ncurses in '${CURSES_BUNDLE_DIR}'")
 	ExternalProject_Add(ncurses
-		URL "http://download.draios.com/dependencies/ncurses-6.0-20150725.tgz"
+		URL "http://s3.amazonaws.com/download.draios.com/dependencies/ncurses-6.0-20150725.tgz"
 		URL_MD5 "32b8913312e738d707ae68da439ca1f4"
 		CONFIGURE_COMMAND ./configure --without-cxx --without-cxx-binding --without-ada --without-manpages --without-progs --without-tests --with-terminfo-dirs=/etc/terminfo:/lib/terminfo:/usr/share/terminfo
 		BUILD_COMMAND ${CMD_MAKE}
@@ -151,7 +180,7 @@ else()
 	set(B64_INCLUDE "${B64_SRC}/include")
 	set(B64_LIB "${B64_SRC}/src/libb64.a")
 	ExternalProject_Add(b64
-		URL "http://download.draios.com/dependencies/libb64-1.2.src.zip"
+		URL "http://s3.amazonaws.com/download.draios.com/dependencies/libb64-1.2.src.zip"
 		URL_MD5 "a609809408327117e2c643bed91b76c5"
 		CONFIGURE_COMMAND ""
 		BUILD_COMMAND ${CMD_MAKE}
@@ -205,8 +234,10 @@ else()
 	message(STATUS "Using bundled openssl in '${OPENSSL_BUNDLE_DIR}'")
 
 	ExternalProject_Add(openssl
-		URL "http://download.draios.com/dependencies/openssl-1.0.2j.tar.gz"
-		URL_MD5 "96322138f0b69e61b7212bc53d5e912b"
+		# START CHANGE for CVE-2017-3735, CVE-2017-3731, CVE-2017-3737, CVE-2017-3738, CVE-2017-3736
+		URL "http://s3.amazonaws.com/download.draios.com/dependencies/openssl-1.0.2n.tar.gz"
+                URL_MD5 "13bdc1b1d1ff39b6fd42a255e74676a4"
+		# END CHANGE for CVE-2017-3735, CVE-2017-3731, CVE-2017-3737, CVE-2017-3738, CVE-2017-3736
 		CONFIGURE_COMMAND ./config shared --prefix=${OPENSSL_INSTALL_DIR}
 		BUILD_COMMAND ${CMD_MAKE}
 		BUILD_IN_SOURCE 1
@@ -236,9 +267,11 @@ else()
 
 	ExternalProject_Add(curl
 		DEPENDS openssl
-		URL "http://download.draios.com/dependencies/curl-7.52.1.tar.bz2"
-		URL_MD5 "dd014df06ff1d12e173de86873f9f77a"
-		CONFIGURE_COMMAND ./configure ${CURL_SSL_OPTION} --disable-shared --enable-optimize --disable-curldebug --disable-rt --enable-http --disable-ftp --disable-file --disable-ldap --disable-ldaps --disable-rtsp --disable-telnet --disable-tftp --disable-pop3 --disable-imap --disable-smb --disable-smtp --disable-gopher --disable-sspi --disable-ntlm-wb --disable-tls-srp --without-winssl --without-darwinssl --without-polarssl --without-cyassl --without-nss --without-axtls --without-ca-path --without-ca-bundle --without-libmetalink --without-librtmp --without-winidn --without-libidn --without-nghttp2 --without-libssh2
+		# START CHANGE for CVE-2017-8816, CVE-2017-8817, CVE-2017-8818, CVE-2018-1000007
+		URL "http://s3.amazonaws.com/download.draios.com/dependencies/curl-7.61.0.tar.bz2"
+		URL_MD5 "31d0a9f48dc796a7db351898a1e5058a"
+		# END CHANGE for CVE-2017-8816, CVE-2017-8817, CVE-2017-8818, CVE-2018-1000007
+		CONFIGURE_COMMAND ./configure ${CURL_SSL_OPTION} --disable-shared --enable-optimize --disable-curldebug --disable-rt --enable-http --disable-ftp --disable-file --disable-ldap --disable-ldaps --disable-rtsp --disable-telnet --disable-tftp --disable-pop3 --disable-imap --disable-smb --disable-smtp --disable-gopher --disable-sspi --disable-ntlm-wb --disable-tls-srp --without-winssl --without-darwinssl --without-polarssl --without-cyassl --without-nss --without-axtls --without-ca-path --without-ca-bundle --without-libmetalink --without-librtmp --without-winidn --without-libidn --without-nghttp2 --without-libssh2 --disable-threaded-resolver
 		BUILD_COMMAND ${CMD_MAKE}
 		BUILD_IN_SOURCE 1
 		INSTALL_COMMAND "")
@@ -270,7 +303,7 @@ else()
 	set(LUAJIT_INCLUDE "${LUAJIT_SRC}")
 	set(LUAJIT_LIB "${LUAJIT_SRC}/libluajit.a")
 	ExternalProject_Add(luajit
-		URL "http://download.draios.com/dependencies/LuaJIT-2.0.3.tar.gz"
+		URL "http://s3.amazonaws.com/download.draios.com/dependencies/LuaJIT-2.0.3.tar.gz"
 		URL_MD5 "f14e9104be513913810cd59c8c658dc0"
 		CONFIGURE_COMMAND ""
 		BUILD_COMMAND ${CMD_MAKE}
@@ -293,14 +326,19 @@ if(NOT USE_BUNDLED_LPEG)
 else()
 	set(LPEG_SRC "${PROJECT_BINARY_DIR}/lpeg-prefix/src/lpeg")
 	set(LPEG_LIB "${PROJECT_BINARY_DIR}/lpeg-prefix/src/lpeg/build/lpeg.a")
+	message(STATUS "Using bundled lpeg in '${LPEG_SRC}'")
+	set(LPEG_DEPENDENCIES "")
+	if(USE_BUNDLED_LUAJIT)
+		list(APPEND LPEG_DEPENDENCIES "luajit")
+	endif()
 	ExternalProject_Add(lpeg
-                DEPENDS luajit
+		DEPENDS ${LPEG_DEPENDENCIES}
 		URL "http://s3.amazonaws.com/download.draios.com/dependencies/lpeg-1.0.0.tar.gz"
-                URL_MD5 "0aec64ccd13996202ad0c099e2877ece"
-                BUILD_COMMAND LUA_INCLUDE=${LUAJIT_INCLUDE} "${PROJECT_SOURCE_DIR}/scripts/build-lpeg.sh" "${LPEG_SRC}/build"
-                BUILD_IN_SOURCE 1
+		URL_MD5 "0aec64ccd13996202ad0c099e2877ece"
+		BUILD_COMMAND LUA_INCLUDE=${LUAJIT_INCLUDE} "${PROJECT_SOURCE_DIR}/scripts/build-lpeg.sh" "${LPEG_SRC}/build"
+		BUILD_IN_SOURCE 1
 		CONFIGURE_COMMAND ""
-                INSTALL_COMMAND "")
+		INSTALL_COMMAND "")
 endif()
 
 #
@@ -319,15 +357,23 @@ if(NOT USE_BUNDLED_LIBYAML)
 		message(FATAL_ERROR "Couldn't find system libyaml")
 	endif()
 else()
+	find_path(AUTORECONF_BIN NAMES autoreconf)
+	if(AUTORECONF_BIN)
+		message(STATUS "Found autoreconf: ${AUTORECONF_BIN}")
+	else()
+		message(FATAL_ERROR "Couldn't find system autoreconf. Please install autoreconf before continuing or use system libyaml")
+	endif()
+
 	set(LIBYAML_SRC "${PROJECT_BINARY_DIR}/libyaml-prefix/src/libyaml/src")
 	set(LIBYAML_LIB "${LIBYAML_SRC}/.libs/libyaml.a")
+	message(STATUS "Using bundled libyaml in '${LIBYAML_SRC}'")
 	ExternalProject_Add(libyaml
-		URL "http://download.draios.com/dependencies/libyaml-0.1.4.tar.gz"
-                URL_MD5 "4a4bced818da0b9ae7fc8ebc690792a7"
-                BUILD_COMMAND ${CMD_MAKE}
-                BUILD_IN_SOURCE 1
+		URL "http://s3.amazonaws.com/download.draios.com/dependencies/libyaml-0.1.4.tar.gz"
+		URL_MD5 "4a4bced818da0b9ae7fc8ebc690792a7"
+		BUILD_COMMAND ${CMD_MAKE}
+		BUILD_IN_SOURCE 1
 		CONFIGURE_COMMAND ./bootstrap && ./configure
-                INSTALL_COMMAND "")
+		INSTALL_COMMAND "")
 endif()
 
 #
@@ -348,8 +394,17 @@ if(NOT USE_BUNDLED_LYAML)
 else()
 	set(LYAML_SRC "${PROJECT_BINARY_DIR}/lyaml-prefix/src/lyaml/ext/yaml")
 	set(LYAML_LIB "${LYAML_SRC}/.libs/yaml.a")
+	message(STATUS "Using bundled lyaml in '${LYAML_SRC}'")
+	set(LYAML_DEPENDENCIES "")
+	if(USE_BUNDLED_LUAJIT)
+		list(APPEND LYAML_DEPENDENCIES "luajit")
+	endif()
+	if(USE_BUNDLED_LIBYAML)
+		list(APPEND LYAML_DEPENDENCIES "libyaml")
+	endif()
 	ExternalProject_Add(lyaml
-		URL "http://download.draios.com/dependencies/lyaml-release-v6.0.tar.gz"
+		DEPENDS ${LYAML_DEPENDENCIES}
+		URL "http://s3.amazonaws.com/download.draios.com/dependencies/lyaml-release-v6.0.tar.gz"
                 URL_MD5 "dc3494689a0dce7cf44e7a99c72b1f30"
                 BUILD_COMMAND ${CMD_MAKE}
                 BUILD_IN_SOURCE 1
@@ -357,16 +412,48 @@ else()
                 INSTALL_COMMAND sh -c "cp -R ${PROJECT_BINARY_DIR}/lyaml-prefix/src/lyaml/lib/* ${PROJECT_SOURCE_DIR}/userspace/engine/lua")
 endif()
 
+option(USE_BUNDLED_TBB "Enable building of the bundled tbb" ${USE_BUNDLED_DEPS})
+if(NOT USE_BUNDLED_TBB)
+	find_path(TBB_INCLUDE tbb.h PATH_SUFFIXES tbb)
+	find_library(TBB_LIB NAMES tbb)
+	if(TBB_INCLUDE AND TBB_LIB)
+		message(STATUS "Found tbb: include: ${TBB_INCLUDE}, lib: ${TBB_LIB}")
+	else()
+		message(FATAL_ERROR "Couldn't find system tbb")
+	endif()
+else()
+	set(TBB_SRC "${PROJECT_BINARY_DIR}/tbb-prefix/src/tbb")
+
+	message(STATUS "Using bundled tbb in '${TBB_SRC}'")
+
+	set(TBB_INCLUDE "${TBB_SRC}/include/")
+	set(TBB_LIB "${TBB_SRC}/build/lib_release/libtbb.a")
+	ExternalProject_Add(tbb
+		URL "http://s3.amazonaws.com/download.draios.com/dependencies/tbb-2018_U5.tar.gz"
+		URL_MD5 "ff3ae09f8c23892fbc3008c39f78288f"
+		CONFIGURE_COMMAND ""
+		BUILD_COMMAND ${CMD_MAKE} tbb_build_dir=${TBB_SRC}/build tbb_build_prefix=lib extra_inc=big_iron.inc
+		BUILD_IN_SOURCE 1
+		BUILD_BYPRODUCTS ${TBB_LIB}
+		INSTALL_COMMAND "")
+endif()
+
 install(FILES falco.yaml
 	DESTINATION "${FALCO_ETC_DIR}")
 
-add_subdirectory("${SYSDIG_DIR}/driver" "${PROJECT_BINARY_DIR}/driver")
+add_subdirectory(rules)
+
+if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+	add_subdirectory("${SYSDIG_DIR}/driver" "${PROJECT_BINARY_DIR}/driver")
+endif()
 add_subdirectory("${SYSDIG_DIR}/userspace/libscap" "${PROJECT_BINARY_DIR}/userspace/libscap")
 add_subdirectory("${SYSDIG_DIR}/userspace/libsinsp" "${PROJECT_BINARY_DIR}/userspace/libsinsp")
 
-add_subdirectory(scripts)
 set(FALCO_SINSP_LIBRARY sinsp)
-set(FALCO_SHARE_DIR ${CMAKE_INSTALL_PREFIX}/share/falco)
+set(FALCO_SHARE_DIR share/falco)
+set(FALCO_ABSOLUTE_SHARE_DIR "${CMAKE_INSTALL_PREFIX}/${FALCO_SHARE_DIR}")
+set(FALCO_BIN_DIR bin)
+add_subdirectory(scripts)
 add_subdirectory(userspace/engine)
 add_subdirectory(userspace/falco)
 
@@ -386,12 +473,12 @@ set(CPACK_GENERATOR DEB RPM TGZ)
 set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Sysdig <support@sysdig.com>")
 set(CPACK_DEBIAN_PACKAGE_SECTION "utils")
 set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "http://www.sysdig.org")
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "sysdig")
-set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${PROJECT_SOURCE_DIR}/scripts/debian/postinst;${PROJECT_SOURCE_DIR}/scripts/debian/prerm;${PROJECT_SOURCE_DIR}/scripts/debian/postrm")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "dkms (>= 2.1.0.0)")
+set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_BINARY_DIR}/scripts/debian/postinst;${CMAKE_BINARY_DIR}/scripts/debian/prerm;${PROJECT_SOURCE_DIR}/scripts/debian/postrm;${PROJECT_SOURCE_DIR}/cpack/debian/conffiles")
 
-set(CPACK_RPM_PACKAGE_LICENSE "GPLv2")
+set(CPACK_RPM_PACKAGE_LICENSE "Apache v2.0")
 set(CPACK_RPM_PACKAGE_URL "http://www.sysdig.org")
-set(CPACK_RPM_PACKAGE_REQUIRES "sysdig")
+set(CPACK_RPM_PACKAGE_REQUIRES "dkms, gcc, make, kernel-devel, perl")
 set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE "${PROJECT_SOURCE_DIR}/scripts/rpm/postinstall")
 set(CPACK_RPM_PRE_UNINSTALL_SCRIPT_FILE "${PROJECT_SOURCE_DIR}/scripts/rpm/preuninstall")
 set(CPACK_RPM_POST_UNINSTALL_SCRIPT_FILE "${PROJECT_SOURCE_DIR}/scripts/rpm/postuninstall")

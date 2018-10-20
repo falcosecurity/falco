@@ -1,25 +1,25 @@
---
--- Copyright (C) 2016 Draios inc.
+-- Copyright (C) 2016-2018 Draios Inc dba Sysdig.
 --
 -- This file is part of falco.
 --
--- falco is free software; you can redistribute it and/or modify
--- it under the terms of the GNU General Public License version 2 as
--- published by the Free Software Foundation.
+-- Licensed under the Apache License, Version 2.0 (the "License");
+-- you may not use this file except in compliance with the License.
+-- You may obtain a copy of the License at
 --
--- falco is distributed in the hope that it will be useful,
--- but WITHOUT ANY WARRANTY; without even the implied warranty of
--- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
--- GNU General Public License for more details.
+--     http://www.apache.org/licenses/LICENSE-2.0
 --
--- You should have received a copy of the GNU General Public License
--- along with falco.  If not, see <http://www.gnu.org/licenses/>.
+-- Unless required by applicable law or agreed to in writing, software
+-- distributed under the License is distributed on an "AS IS" BASIS,
+-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+-- See the License for the specific language governing permissions and
+-- limitations under the License.
 
 local parser = require("parser")
 local compiler = {}
 
 compiler.verbose = false
 compiler.all_events = false
+compiler.trim = parser.trim
 
 function compiler.set_verbose(verbose)
    compiler.verbose = verbose
@@ -58,14 +58,15 @@ end
    definition uses another macro).
 
 --]]
-function expand_macros(ast, defs, changed)
 
-   function copy(obj)
-      if type(obj) ~= 'table' then return obj end
-      local res = {}
-      for k, v in pairs(obj) do res[copy(k)] = copy(v) end
-      return res
-   end
+function copy_ast_obj(obj)
+   if type(obj) ~= 'table' then return obj end
+   local res = {}
+   for k, v in pairs(obj) do res[copy_ast_obj(k)] = copy_ast_obj(v) end
+   return res
+end
+
+function expand_macros(ast, defs, changed)
 
    if (ast.type == "Rule") then
       return expand_macros(ast.filter, defs, changed)
@@ -74,7 +75,8 @@ function expand_macros(ast, defs, changed)
          if (defs[ast.value.value] == nil) then
             error("Undefined macro '".. ast.value.value .. "' used in filter.")
          end
-         ast.value = copy(defs[ast.value.value])
+	 defs[ast.value.value].used = true
+         ast.value = copy_ast_obj(defs[ast.value.value].ast)
          changed = true
 	 return changed
       end
@@ -86,7 +88,8 @@ function expand_macros(ast, defs, changed)
          if (defs[ast.left.value] == nil) then
             error("Undefined macro '".. ast.left.value .. "' used in filter.")
          end
-         ast.left = copy(defs[ast.left.value])
+	 defs[ast.left.value].used = true
+         ast.left = copy_ast_obj(defs[ast.left.value].ast)
          changed = true
       end
 
@@ -94,7 +97,8 @@ function expand_macros(ast, defs, changed)
          if (defs[ast.right.value] == nil) then
             error("Undefined macro ".. ast.right.value .. " used in filter.")
          end
-         ast.right = copy(defs[ast.right.value])
+	 defs[ast.right.value].used = true
+         ast.right = copy_ast_obj(defs[ast.right.value].ast)
          changed = true
       end
 
@@ -107,7 +111,8 @@ function expand_macros(ast, defs, changed)
          if (defs[ast.argument.value] == nil) then
             error("Undefined macro ".. ast.argument.value .. " used in filter.")
          end
-         ast.argument = copy(defs[ast.argument.value])
+	 defs[ast.argument.value].used = true
+         ast.argument = copy_ast_obj(defs[ast.argument.value].ast)
          changed = true
       end
       return expand_macros(ast.argument, defs, changed)
@@ -185,19 +190,20 @@ function check_for_ignored_syscalls_events(ast, filter_type, source)
    parser.traverse_ast(ast, {BinaryRelOp=1}, cb)
 end
 
--- Examine the ast and find the event types for which the rule should
--- run. All evt.type references are added as event types up until the
--- first "!=" binary operator or unary not operator. If no event type
--- checks are found afterward in the rule, the rule is considered
--- optimized and is associated with the event type(s).
+-- Examine the ast and find the event types/syscalls for which the
+-- rule should run. All evt.type references are added as event types
+-- up until the first "!=" binary operator or unary not operator. If
+-- no event type checks are found afterward in the rule, the rule is
+-- considered optimized and is associated with the event type(s).
 --
 -- Otherwise, the rule is associated with a 'catchall' category and is
--- run for all event types. (Also, a warning is printed).
+-- run for all event types/syscalls. (Also, a warning is printed).
 --
 
-function get_evttypes(name, ast, source)
+function get_evttypes_syscalls(name, ast, source, warn_evttypes)
 
    local evttypes = {}
+   local syscallnums = {}
    local evtnames = {}
    local found_event = false
    local found_not = false
@@ -220,17 +226,45 @@ function get_evttypes(name, ast, source)
 	    if node.operator == "in" or node.operator == "pmatch" then
 	       for i, v in ipairs(node.right.elements) do
 		  if v.type == "BareString" then
+
+                     -- The event must be a known event
+                     if events[v.value] == nil and syscalls[v.value] == nil then
+                        error("Unknown event/syscall \""..v.value.."\" in filter: "..source)
+                     end
+
 		     evtnames[v.value] = 1
-		     for id in string.gmatch(events[v.value], "%S+") do
-			evttypes[id] = 1
+		     if events[v.value] ~= nil then
+			for id in string.gmatch(events[v.value], "%S+") do
+			   evttypes[id] = 1
+			end
+		     end
+
+		     if syscalls[v.value] ~= nil then
+			for id in string.gmatch(syscalls[v.value], "%S+") do
+			   syscallnums[id] = 1
+			end
 		     end
 		  end
 	       end
 	    else
 	       if node.right.type == "BareString" then
+
+		  -- The event must be a known event
+		  if events[node.right.value] == nil and syscalls[node.right.value] == nil then
+		     error("Unknown event/syscall \""..node.right.value.."\" in filter: "..source)
+		  end
+
 		  evtnames[node.right.value] = 1
-		  for id in string.gmatch(events[node.right.value], "%S+") do
-		     evttypes[id] = 1
+		  if events[node.right.value] ~= nil then
+		     for id in string.gmatch(events[node.right.value], "%S+") do
+			evttypes[id] = 1
+		     end
+		  end
+
+		  if syscalls[node.right.value] ~= nil then
+		     for id in string.gmatch(syscalls[node.right.value], "%S+") do
+			syscallnums[id] = 1
+		     end
 		  end
 	       end
 	    end
@@ -241,23 +275,29 @@ function get_evttypes(name, ast, source)
    parser.traverse_ast(ast.filter.value, {BinaryRelOp=1, UnaryBoolOp=1} , cb)
 
    if not found_event then
-      io.stderr:write("Rule "..name..": warning (no-evttype):\n")
-      io.stderr:write(source.."\n")
-      io.stderr:write("         did not contain any evt.type restriction, meaning it will run for all event types.\n")
-      io.stderr:write("         This has a significant performance penalty. Consider adding an evt.type restriction if possible.\n")
+      if warn_evttypes == true then
+	 io.stderr:write("Rule "..name..": warning (no-evttype):\n")
+	 io.stderr:write(source.."\n")
+	 io.stderr:write("         did not contain any evt.type restriction, meaning it will run for all event types.\n")
+	 io.stderr:write("         This has a significant performance penalty. Consider adding an evt.type restriction if possible.\n")
+      end
       evttypes = {}
+      syscallnums = {}
       evtnames = {}
    end
 
    if found_event_after_not then
-      io.stderr:write("Rule "..name..": warning (trailing-evttype):\n")
-      io.stderr:write(source.."\n")
-      io.stderr:write("         does not have all evt.type restrictions at the beginning of the condition,\n")
-      io.stderr:write("         or uses a negative match (i.e. \"not\"/\"!=\") for some evt.type restriction.\n")
-      io.stderr:write("         This has a performance penalty, as the rule can not be limited to specific event types.\n")
-      io.stderr:write("         Consider moving all evt.type restrictions to the beginning of the rule and/or\n")
-      io.stderr:write("         replacing negative matches with positive matches if possible.\n")
+      if warn_evttypes == true then
+	 io.stderr:write("Rule "..name..": warning (trailing-evttype):\n")
+	 io.stderr:write(source.."\n")
+	 io.stderr:write("         does not have all evt.type restrictions at the beginning of the condition,\n")
+	 io.stderr:write("         or uses a negative match (i.e. \"not\"/\"!=\") for some evt.type restriction.\n")
+	 io.stderr:write("         This has a performance penalty, as the rule can not be limited to specific event types.\n")
+	 io.stderr:write("         Consider moving all evt.type restrictions to the beginning of the rule and/or\n")
+	 io.stderr:write("         replacing negative matches with positive matches if possible.\n")
+      end
       evttypes = {}
+      syscallnums = {}
       evtnames = {}
    end
 
@@ -275,17 +315,49 @@ function get_evttypes(name, ast, source)
    table.sort(evtnames_only)
 
    if compiler.verbose then
-      io.stderr:write("Event types for rule "..name..": "..table.concat(evtnames_only, ",").."\n")
+      io.stderr:write("Event types/Syscalls for rule "..name..": "..table.concat(evtnames_only, ",").."\n")
    end
 
-   return evttypes
+   return evttypes, syscallnums
 end
 
-function compiler.compile_macro(line, list_defs)
+function get_filters(ast)
 
-   for name, items in pairs(list_defs) do
-      line = string.gsub(line, name, table.concat(items, ", "))
+   local filters = {}
+
+   function cb(node)
+      if node.type == "FieldName" then
+	 filters[node.value] = 1
+      end
    end
+
+   parser.traverse_ast(ast.filter.value, {FieldName=1} , cb)
+
+   return filters
+end
+
+function compiler.expand_lists_in(source, list_defs)
+
+   for name, def in pairs(list_defs) do
+      local begin_name_pat = "^("..name..")([%s(),=])"
+      local mid_name_pat = "([%s(),=])("..name..")([%s(),=])"
+      local end_name_pat = "([%s(),=])("..name..")$"
+
+      source, subcount1 = string.gsub(source, begin_name_pat, table.concat(def.items, ", ").."%2")
+      source, subcount2 = string.gsub(source, mid_name_pat, "%1"..table.concat(def.items, ", ").."%3")
+      source, subcount3 = string.gsub(source, end_name_pat, "%1"..table.concat(def.items, ", "))
+
+      if (subcount1 + subcount2 + subcount3) > 0 then
+	 def.used = true
+      end
+   end
+
+   return source
+end
+
+function compiler.compile_macro(line, macro_defs, list_defs)
+
+   line = compiler.expand_lists_in(line, list_defs)
 
    local ast, error_msg = parser.parse_filter(line)
 
@@ -300,17 +372,30 @@ function compiler.compile_macro(line, list_defs)
       check_for_ignored_syscalls_events(ast, 'macro', line)
    end
 
+   -- Simply as a validation step, try to expand all macros in this
+   -- macro's condition. This changes the ast, so we make a copy
+   -- first.
+   local ast_copy = copy_ast_obj(ast)
+
+   if (ast.type == "Rule") then
+      -- Line is a filter, so expand macro references
+      repeat
+	 expanded  = expand_macros(ast_copy, macro_defs, false)
+      until expanded == false
+
+   else
+      error("Unexpected top-level AST type: "..ast.type)
+   end
+
    return ast
 end
 
 --[[
    Parses a single filter, then expands macros using passed-in table of definitions. Returns resulting AST.
 --]]
-function compiler.compile_filter(name, source, macro_defs, list_defs)
+function compiler.compile_filter(name, source, macro_defs, list_defs, warn_evttypes)
 
-   for name, items in pairs(list_defs) do
-      source = string.gsub(source, name, table.concat(items, ", "))
-   end
+   source = compiler.expand_lists_in(source, list_defs)
 
    local ast, error_msg = parser.parse_filter(source)
 
@@ -335,9 +420,11 @@ function compiler.compile_filter(name, source, macro_defs, list_defs)
       error("Unexpected top-level AST type: "..ast.type)
    end
 
-   evttypes = get_evttypes(name, ast, source)
+   evttypes, syscallnums = get_evttypes_syscalls(name, ast, source, warn_evttypes)
 
-   return ast, evttypes
+   filters = get_filters(ast)
+
+   return ast, evttypes, syscallnums, filters
 end
 
 

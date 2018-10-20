@@ -1,19 +1,19 @@
---
--- Copyright (C) 2016 Draios inc.
+-- Copyright (C) 2016-2018 Draios Inc dba Sysdig.
 --
 -- This file is part of falco.
 --
--- falco is free software; you can redistribute it and/or modify
--- it under the terms of the GNU General Public License version 2 as
--- published by the Free Software Foundation.
+-- Licensed under the Apache License, Version 2.0 (the "License");
+-- you may not use this file except in compliance with the License.
+-- You may obtain a copy of the License at
 --
--- falco is distributed in the hope that it will be useful,
--- but WITHOUT ANY WARRANTY; without even the implied warranty of
--- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
--- GNU General Public License for more details.
+--     http://www.apache.org/licenses/LICENSE-2.0
 --
--- You should have received a copy of the GNU General Public License
--- along with falco.  If not, see <http://www.gnu.org/licenses/>.
+-- Unless required by applicable law or agreed to in writing, software
+-- distributed under the License is distributed on an "AS IS" BASIS,
+-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+-- See the License for the specific language governing permissions and
+-- limitations under the License.
+--
 
 --[[
    Falco grammar and parser.
@@ -127,10 +127,11 @@ function trim(s)
    if (type(s) ~= "string") then return s end
   return (s:gsub("^%s*(.-)%s*$", "%1"))
 end
+parser.trim = trim
 
 local function terminal (tag)
    -- Rather than trim the whitespace in this way, it would be nicer to exclude it from the capture...
-   return token(V(tag), tag) / function (tok) return { type = tag, value = trim(tok)} end
+   return token(V(tag), tag) / function (tok) val = tok; if tag ~= "String" then val = trim(tok) end; return { type = tag, value = val} end
 end
 
 local function unaryboolop (op, e)
@@ -237,7 +238,7 @@ local G = {
   Identifier = V"idStart" * V"idRest"^0;
   Macro = V"idStart" * V"idRest"^0 * -P".";
   Int = digit^1;
-  PathString = (alnum + S'-_/*?')^1;
+  PathString = (alnum + S'.-_/*?')^1;
   Index = V"Int" + V"PathString";
   FieldName = V"Identifier" * (P"." + V"Identifier")^1 * (P"[" * V"Index" * P"]")^-1;
   Name = C(V"Identifier") * -V"idRest";
@@ -264,7 +265,8 @@ local G = {
           symb("contains") / "contains" +
           symb("icontains") / "icontains" +
           symb("glob") / "glob" +
-          symb("startswith") / "startswith";
+          symb("startswith") / "startswith" +
+          symb("endswith") / "endswith";
   InOp = kw("in") / "in";
   PmatchOp = kw("pmatch") / "pmatch";
   UnaryBoolOp = kw("not") / "not";

@@ -1,0 +1,110 @@
+#
+# Copyright (C) 2016-2018 Draios Inc dba Sysdig.
+#
+# This file is part of falco.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+- macro: open_read
+  condition: (evt.type=open or evt.type=openat) and evt.is_open_read=true and fd.typechar='f'
+
+- rule: open_1
+  desc: open one
+  condition: open_read and fd.name=/tmp/file-1
+  output: Open one (file=%fd.name)
+  priority: WARNING
+  tags: [a]
+
+- rule: open_2
+  desc: open two
+  condition: open_read and fd.name=/tmp/file-2
+  output: Open two (file=%fd.name)
+  priority: WARNING
+  tags: [b]
+
+- rule: open_3
+  desc: open three
+  condition: open_read and fd.name=/tmp/file-3
+  output: Open three (file=%fd.name)
+  priority: WARNING
+  tags: [c]
+
+- rule: open_4
+  desc: open four
+  condition: open_read and fd.name=/tmp/file-4
+  output: Open four (file=%fd.name)
+  priority: WARNING
+  tags: [a, b]
+
+- rule: open_5
+  desc: open file
+  condition: open_read and fd.name=/tmp/file-5
+  output: Open file (file=%fd.name)
+  priority: WARNING
+  tags: [a, c]
+
+- rule: open_6
+  desc: open six
+  condition: open_read and fd.name=/tmp/file-6
+  output: Open six (file=%fd.name)
+  priority: WARNING
+  tags: [b, c]
+
+- rule: open_7
+  desc: open seven
+  condition: open_read and fd.name=/tmp/file-7
+  output: Open seven (file=%fd.name)
+  priority: WARNING
+  tags: [a, b, c]
+
+- rule: open_8
+  desc: open eight
+  condition: open_read and fd.name=/tmp/file-8
+  output: Open eight (file=%fd.name)
+  priority: WARNING
+  tags: [b, a]
+
+- rule: open_9
+  desc: open nine
+  condition: open_read and fd.name=/tmp/file-9
+  output: Open nine (file=%fd.name)
+  priority: WARNING
+  tags: [c, a]
+
+- rule: open_10
+  desc: open ten
+  condition: open_read and fd.name=/tmp/file-10
+  output: Open ten (file=%fd.name)
+  priority: WARNING
+  tags: [b, c, a]
+
+- rule: open_11
+  desc: open eleven
+  condition: open_read and fd.name=/tmp/file-11
+  output: Open eleven (file=%fd.name)
+  priority: WARNING
+  tags: [d]
+
+- rule: open_12
+  desc: open twelve
+  condition: open_read and fd.name=/tmp/file-12
+  output: Open twelve (file=%fd.name)
+  priority: WARNING
+  tags: []
+
+- rule: open_13
+  desc: open thirteen
+  condition: open_read and fd.name=/tmp/file-13
+  output: Open thirteen (file=%fd.name)
+  priority: WARNING
+

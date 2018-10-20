@@ -1,8 +1,23 @@
 #!/bin/bash
-
+#
+# Copyright (C) 2016-2018 Draios Inc dba Sysdig.
+#
+# This file is part of falco.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 SCRIPT=$(readlink -f $0)
 SCRIPTDIR=$(dirname $SCRIPT)
-MULT_FILE=$SCRIPTDIR/falco_tests.yaml
 BRANCH=$1
 
 function download_trace_files() {
@@ -19,56 +34,59 @@ function prepare_multiplex_fileset() {
 
     dir=$1
     detect=$2
-    detect_level=$3
-    json_output=$4
 
     for trace in $SCRIPTDIR/$dir/*.scap ; do
 	[ -e "$trace" ] || continue
 	NAME=`basename $trace .scap`
-	cat << EOF >> $MULT_FILE
-  $NAME-detect-$detect-json-$json_output:
+
+	# falco_traces.yaml might already have an entry for this trace
+	# file, with specific detection levels and counts. If so, skip
+	# it. Otherwise, add a generic entry showing whether or not to
+	# detect anything.
+	grep -q "$NAME:" $SCRIPTDIR/falco_traces.yaml && continue
+
+	cat << EOF >> $SCRIPTDIR/falco_traces.yaml
+  $NAME:
     detect: $detect
-    detect_level: $detect_level
+    detect_level: WARNING
     trace_file: $trace
-    json_output: $json_output
 EOF
     done
 }
 
 function prepare_multiplex_file() {
-    cp $SCRIPTDIR/falco_tests.yaml.in $MULT_FILE
+    cp $SCRIPTDIR/falco_traces.yaml.in $SCRIPTDIR/falco_traces.yaml
 
-    prepare_multiplex_fileset traces-positive True WARNING False
-    prepare_multiplex_fileset traces-negative False WARNING True
-    prepare_multiplex_fileset traces-info True INFO False
+    prepare_multiplex_fileset traces-positive True
+    prepare_multiplex_fileset traces-negative False
+    prepare_multiplex_fileset traces-info True
 
-    prepare_multiplex_fileset traces-positive True WARNING True
-    prepare_multiplex_fileset traces-info True INFO True
-
-    echo "Contents of $MULT_FILE:"
-    cat $MULT_FILE
+    echo "Contents of $SCRIPTDIR/falco_traces.yaml:"
+    cat $SCRIPTDIR/falco_traces.yaml
 }
-
-function run_tests() {
-    rm -rf /tmp/falco_outputs
-    mkdir /tmp/falco_outputs
-    CMD="avocado run --multiplex $MULT_FILE --job-results-dir $SCRIPTDIR/job-results -- $SCRIPTDIR/falco_test.py"
-    echo "Running: $CMD"
-    $CMD
-    TEST_RC=$?
-}
-
 
 function print_test_failure_details() {
     echo "Showing full job logs for any tests that failed:"
     jq '.tests[] | select(.status != "PASS") | .logfile' $SCRIPTDIR/job-results/latest/results.json  | xargs cat
 }
 
+function run_tests() {
+    rm -rf /tmp/falco_outputs
+    mkdir /tmp/falco_outputs
+    TEST_RC=0
+    for mult in $SCRIPTDIR/falco_traces.yaml $SCRIPTDIR/falco_tests.yaml; do
+	CMD="avocado run --multiplex $mult --job-results-dir $SCRIPTDIR/job-results -- $SCRIPTDIR/falco_test.py"
+	echo "Running: $CMD"
+	$CMD
+	RC=$?
+	TEST_RC=$((TEST_RC+$RC))
+	if [ $RC -ne 0 ]; then
+	    print_test_failure_details
+	fi
+    done
+}
+
 download_trace_files
 prepare_multiplex_file
 run_tests
-if [ $TEST_RC -ne 0 ]; then
-   print_test_failure_details
-fi
-
 exit $TEST_RC
