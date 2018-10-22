@@ -16,7 +16,7 @@ spec:
       serviceAccount: falco-account
       containers:
         - name: falco
-          image: sysdig/falco:latest
+          image: falcosecurity/falco:latest
           securityContext:
             privileged: true
           args: [ "/usr/bin/falco", "-K", "/var/run/secrets/kubernetes.io/serviceaccount/token", "-k", "https://kubernetes.default", "-pk"]
