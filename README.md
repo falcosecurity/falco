@@ -5,8 +5,8 @@
 **v0.12.1**
 Read the [change log](https://github.com/falcosecurity/falco/blob/dev/CHANGELOG.md)
 
-Dev Branch: [![Build Status](https://travis-ci.org/draios/falco.svg?branch=dev)](https://travis-ci.org/draios/falco)<br />
-Master Branch: [![Build Status](https://travis-ci.org/draios/falco.svg?branch=master)](https://travis-ci.org/draios/falco)
+Dev Branch: [![Build Status](https://travis-ci.org/falcosecurity/falco.svg?branch=dev)](https://travis-ci.org/falcosecurity/falco)<br />
+Master Branch: [![Build Status](https://travis-ci.org/falcosecurity/falco.svg?branch=master)](https://travis-ci.org/falcosecurity/falco)
 
 ## Overview
 Falco is a behavioral activity monitor designed to detect anomalous activity in your applications. Powered by [sysdig’s](https://github.com/draios/sysdig) system call capture infrastructure, Falco lets you continuously monitor and detect container, application, host, and network activity... all in one place, from one source of data, with one set of rules.
@@ -77,7 +77,7 @@ falco-CLA-1.0-signed-off-by: Joe Smith <joe.smith@email.com>
 
 Use a real name of a natural person who is an authorized representative of the contributing entity; pseudonyms or anonymous contributions are not allowed.
 
-**Government contributions**: Employees or officers of the United States Government, must review the [Government Contributor License Agreement](https://github.com/draios/falco/blob/dev/cla/falco_govt_contributor_agreement.txt), must be an authorized representative of the contributing entity, and indicate agreement to it on behalf of the contributing entity by adding the following lines to every GIT commit message:
+**Government contributions**: Employees or officers of the United States Government, must review the [Government Contributor License Agreement](https://github.com/falcosecurity/falco/blob/dev/cla/falco_govt_contributor_agreement.txt), must be an authorized representative of the contributing entity, and indicate agreement to it on behalf of the contributing entity by adding the following lines to every GIT commit message:
 
 ```
 falco-CLA-1.0-contributing-govt-entity: Full Legal Name of Entity
