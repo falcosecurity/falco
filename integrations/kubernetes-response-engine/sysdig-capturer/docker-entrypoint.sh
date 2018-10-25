@@ -11,5 +11,8 @@ done
 
 /usr/bin/sysdig-probe-loader
 
-sysdig -S -M $CAPTURE_DURATION -pk -z -w $CAPTURE_FILE_NAME.scap.gz
-s3cmd --access_key=$AWS_ACCESS_KEY_ID --secret_key=$AWS_SECRET_ACCESS_KEY put $CAPTURE_FILE_NAME.scap.gz $AWS_S3_BUCKET
+sysdig -S -M $CAPTURE_DURATION -pk -z -w /captures/$CAPTURE_FILE_NAME.scap.gz
+
+s3cmd --access_key=$AWS_ACCESS_KEY_ID \
+      --secret_key=$AWS_SECRET_ACCESS_KEY \
+      put /captures/$CAPTURE_FILE_NAME.scap.gz $AWS_S3_BUCKET
