@@ -158,9 +158,9 @@
      ka.req.configmap.obj contains "password" or
      ka.req.configmap.obj contains "passphrase")
 
-- rule: Configmap contains private credentials
+- rule: Create/Modify Configmap With Private Credentials
   desc: >
-     Detect configmap operations with map containing a private credential (aws key, password, etc.)
+     Detect creating/modifying a configmap containing a private credential (aws key, password, etc.)
   condition: kevt and configmap and modify and contains_private_credentials
   output: K8s configmap with private credential (user=%ka.user.name verb=%ka.verb configmap=%ka.req.configmap.name config=%ka.req.configmap.obj)
   priority: WARNING
@@ -168,7 +168,7 @@
   tags: [k8s]
 
 # Corresponds to K8s CIS Benchmark, 1.1.1.
-- rule: Anonymous request allowed
+- rule: Anonymous Request Allowed
   desc: >
     Detect any request made by the anonymous user that was allowed
   condition: kevt and ka.user.name=system:anonymous and ka.auth.decision!=reject and not health_endpoint
@@ -199,7 +199,7 @@
 - list: allowed_namespaces
   items: [kube-system, kube-public, default]
 
-- rule: Create Disallowed namespace
+- rule: Create Disallowed Namespace
   desc: Detect any attempt to create a namespace outside of a set of known namespaces
   condition: kevt and namespace and create and not ka.target.name in (allowed_namespaces)
   output: Disallowed namespace created (user=%ka.user.name ns=%ka.target.name)
@@ -208,7 +208,7 @@
   tags: [k8s]
 
 # Detect any new pod created in the kube-system namespace
-- rule: Pod Created in kube namespace
+- rule: Pod Created in Kube Namespace
   desc: Detect any attempt to create a pod in the kube-system or kube-public namespaces
   condition: kevt and pod and create and ka.target.namespace in (kube-system, kube-public)
   output: Pod created in kube namespace (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image)
@@ -217,7 +217,7 @@
   tags: [k8s]
 
 # Detect creating a service account in the kube-system/kube-public namespace
-- rule: Service Account Created in kube namespace
+- rule: Service Account Created in Kube Namespace
   desc: Detect any attempt to create a serviceaccount in the kube-system or kube-public namespaces
   condition: kevt and serviceaccount and create and ka.target.namespace in (kube-system, kube-public)
   output: Service account created in kube namespace (user=%ka.user.name serviceaccount=%ka.target.name ns=%ka.target.namespace)
@@ -238,7 +238,7 @@
 
 # Detect any attempt to create a ClusterRoleBinding to the cluster-admin user
 # (exapand this to any built-in cluster role that does "sensitive" things)
-- rule: Attach to cluster-admin role
+- rule: Attach to cluster-admin Role
   desc: Detect any attempt to create a ClusterRoleBinding to the cluster-admin user
   condition: kevt and clusterrolebinding and create and ka.req.binding.role=cluster-admin
   output: Cluster Role Binding to cluster-admin role (user=%ka.user.name subject=%ka.req.binding.subjects)
@@ -246,7 +246,7 @@
   source: k8s_audit
   tags: [k8s]
 
-- rule: ClusterRole with Wildcard Created
+- rule: ClusterRole With Wildcard Created
   desc: Detect any attempt to create a Role/ClusterRole with wildcard resources or verbs
   condition: kevt and (role or clusterrole) and create and (ka.req.role.rules.resources contains '"*"' or ka.req.role.rules.verbs contains '"*"')
   output: Created Role/ClusterRole with wildcard (user=%ka.user.name role=%ka.target.name rules=%ka.req.role.rules)
@@ -262,15 +262,15 @@
      ka.req.role.rules.verbs contains delete or
      ka.req.role.rules.verbs contains deletecollection)
 
-- rule: ClusterRole with Write Privileges Created
+- rule: ClusterRole With Write Privileges Created
   desc: Detect any attempt to create a Role/ClusterRole that can perform write-related actions
   condition: kevt and (role or clusterrole) and create and writable_verbs
   output: Created Role/ClusterRole with write privileges (user=%ka.user.name role=%ka.target.name rules=%ka.req.role.rules)
-  priority: WARNING
+  priority: NOTICE
   source: k8s_audit
   tags: [k8s]
 
-- rule: ClusterRole with Pod Exec Created
+- rule: ClusterRole With Pod Exec Created
   desc: Detect any attempt to create a Role/ClusterRole that can exec to pods
   condition: kevt and (role or clusterrole) and create and ka.req.role.rules.resources contains "pods/exec"
   output: Created Role/ClusterRole with pod exec privileges (user=%ka.user.name role=%ka.target.name rules=%ka.req.role.rules)
@@ -327,7 +327,7 @@
   source: k8s_audit
   tags: [k8s]
 
-- rule: K8s Configmap Deleted
+- rule: K8s ConfigMap Deleted
   desc: Detect any attempt to delete a configmap
   condition: (kactivity and delete and configmap and response_successful)
   output: K8s ConfigMap Deleted (user=%ka.user.name configmap=%ka.target.name ns=%ka.target.namespace resp=%ka.response.code decision=%ka.auth.decision reason=%ka.auth.reason)
