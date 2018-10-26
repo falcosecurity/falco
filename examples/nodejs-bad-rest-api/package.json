@@ -2,6 +2,6 @@
     "name": "bad-rest-api",
     "main": "server.js",
     "dependencies": {
-	"express": "~4.0.0"
+        "express": "~4.16.0"
     }
 }
