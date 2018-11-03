@@ -31,9 +31,9 @@ playbook=""
 environment=()
 topics=()
 
-while getopts "r:e:t:" arg; do
+while getopts "p:e:t:" arg; do
   case $arg in
-    r)
+    p)
       playbook="${OPTARG}"
       ;;
     e)
