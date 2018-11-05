@@ -30,6 +30,7 @@ RUN apt-get update \
 	libc6-dev \
 	libelf-dev \
 	llvm-7 \
+	netcat \
 	xz-utils \
  && rm -rf /var/lib/apt/lists/*
 
