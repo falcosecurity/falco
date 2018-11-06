@@ -8,7 +8,7 @@ function usage() {
   cat<<EOF
 Usage: $0 [options]
 
--r playbook             Playbook to be deployed. Is the script for Kubeless: slack, taint, isolate.
+-p playbook             Playbook to be deployed. Is the script for Kubeless: slack, taint, isolate.
 -e environment          Environment variables for the Kubeless function.  You can pass multiple environment variables passing several -e parameters.
 -k kubernetes_cluster   Kubernetes cluster from aws eks list-clusters where function will be applied.
 
@@ -16,7 +16,7 @@ You must pass the playbook and at least one topic to subscribe.
 
 Example:
 
-deploy_playbook -r slack -t "falco.error.*" -e SLACK_WEBHOOK_URL=http://foobar.com/... -k sysdig_eks
+deploy_playbook -p slack -t "falco.error.*" -e SLACK_WEBHOOK_URL=http://foobar.com/... -k sysdig_eks
 EOF
   exit 1
 }
@@ -29,7 +29,7 @@ eks_cluster="${EKS_CLUSTER}"
 
 while getopts "r:e:t:" arg; do
   case $arg in
-    r)
+    p)
       playbook="${OPTARG}"
       ;;
     e)

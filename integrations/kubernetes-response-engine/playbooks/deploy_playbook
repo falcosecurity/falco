@@ -16,7 +16,7 @@ You must pass the playbook and at least one topic to subscribe.
 
 Example:
 
-deploy_playbook -r slack -t "falco.error.*" -e SLACK_WEBHOOK_URL=http://foobar.com/...
+deploy_playbook -p slack -t "falco.error.*" -e SLACK_WEBHOOK_URL=http://foobar.com/...
 EOF
   exit 1
 }
