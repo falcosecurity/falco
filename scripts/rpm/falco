@@ -1,3 +1,5 @@
+#!/bin/sh
+
 #
 # Copyright (C) 2016-2018 Draios Inc dba Sysdig.
 #
@@ -16,7 +18,6 @@
 # limitations under the License.
 #
 
-#!/bin/sh
 #
 # falco syscall monitoring agent
 #
