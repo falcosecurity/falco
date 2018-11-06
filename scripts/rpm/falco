@@ -53,6 +53,9 @@ start() {
     # [ -f $config ] || exit 6
     echo -n $"Starting $prog: "
     daemon $exec --daemon --pidfile=$pidfile
+    if [ ! -d /sys/module/falco_probe ]; then
+        /sbin/modprobe falco-probe || return $?
+    fi
     retval=$?
     echo
     [ $retval -eq 0 ] && touch $lockfile
@@ -64,6 +67,7 @@ stop() {
     killproc -p $pidfile
     retval=$?
     echo
+    /sbin/rmmod falco-probe
     [ $retval -eq 0 ] && rm -f $lockfile
     return $retval
 }
