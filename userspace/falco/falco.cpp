@@ -44,6 +44,8 @@ limitations under the License.
 
 bool g_terminate = false;
 bool g_reopen_outputs = false;
+bool g_restart = false;
+bool g_daemonized = false;
 
 //
 // Helper functions
@@ -56,6 +58,11 @@ static void signal_callback(int signal)
 static void reopen_outputs(int signal)
 {
 	g_reopen_outputs = true;
+}
+
+static void restart_falco(int signal)
+{
+	g_restart = true;
 }
 
 //
@@ -196,8 +203,9 @@ uint64_t do_inspect(falco_engine *engine,
 			g_reopen_outputs = false;
 		}
 
-		if (g_terminate)
+		if (g_terminate || g_restart)
 		{
+			falco_logger::log(LOG_INFO, "SIGHUP Received, restarting...\n");
 			break;
 		}
 		else if(rc == SCAP_TIMEOUT)
@@ -699,6 +707,13 @@ int falco_init(int argc, char **argv)
 			goto exit;
 		}
 
+		if(signal(SIGHUP, restart_falco) == SIG_ERR)
+		{
+			fprintf(stderr, "An error occurred while setting SIGHUP signal handler.\n");
+			result = EXIT_FAILURE;
+			goto exit;
+		}
+
 		if (scap_filename.size())
 		{
 			inspector->open(scap_filename);
@@ -721,7 +736,7 @@ int falco_init(int argc, char **argv)
 
 		// If daemonizing, do it here so any init errors will
 		// be returned in the foreground process.
-		if (daemon) {
+		if (daemon && !g_daemonized) {
 			pid_t pid, sid;
 
 			pid = fork();
@@ -772,6 +787,8 @@ int falco_init(int argc, char **argv)
 			open("/dev/null", O_RDONLY);
 			open("/dev/null", O_RDWR);
 			open("/dev/null", O_RDWR);
+
+			g_daemonized = true;
 		}
 
 		if(outfile != "")
@@ -887,5 +904,15 @@ exit:
 //
 int main(int argc, char **argv)
 {
-	return falco_init(argc, argv);
+	int rc;
+
+	// g_restart will cause the falco loop to exit, but we
+	// should reload everything and start over.
+	while((rc = falco_init(argc, argv)) == EXIT_SUCCESS && g_restart)
+	{
+		g_restart = false;
+		optind = 1;
+	}
+
+	return rc;
 }
