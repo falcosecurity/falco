@@ -1,0 +1,4 @@
+.terraform/*
+.terraform.*
+terraform.*
+*.yaml

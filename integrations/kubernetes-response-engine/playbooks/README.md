@@ -33,7 +33,7 @@ trigger.
 
 * -p: The playbook to deploy, it must match with the top-level script. In this
     example *slack.py* that contains the wiring between playbooks and Kubeless
-    functions
+    functions.
 
 * -e: Sets configuration settings for Playbook. In this case the URL where we
     have to post messages. You can specify multiple *-e* flags.
@@ -214,3 +214,15 @@ This playbook creates a container in Phantom
 * VERIFY_SSL: Verify SSL certificates for HTTPS requests. By default is enabled.
 
 In this example, when Falco raises any kind of alert, the alert will be created in Phantom.
+
+## Deploying playbooks to AWS Lambda
+
+You can deploy functions to AWS Lambda using the `./deploy_playbook_aws` script.
+
+### Parameters
+
+* -p: The playbook to deploy, it must match with the top-level script.
+
+* -e: Sets configuration settings for Playbook. You can specify multiple *-e* flags.
+
+* -k: EKS cluster name against playbook is going to connect via K8s API.

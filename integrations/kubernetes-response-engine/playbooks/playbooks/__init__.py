@@ -1,3 +1,4 @@
+import json
 import maya
 
 
@@ -197,3 +198,13 @@ class CreateContainerInPhantom(object):
         'Informational': 'low',
         'Debug': 'low',
     }
+
+
+def falco_alert(event):
+    if 'data' in event:
+        return event['data']
+
+    if 'Records' in event:
+        return json.loads(event['Records'][0]['Sns']['Message'])
+
+    return event
