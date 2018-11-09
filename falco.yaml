@@ -31,6 +31,7 @@
 rules_file:
  - /etc/falco/falco_rules.yaml
  - /etc/falco/falco_rules.local.yaml
+ - /etc/falco/k8s_audit_rules.yaml
  - /etc/falco/rules.d
 
 # Whether to output events in json or text
