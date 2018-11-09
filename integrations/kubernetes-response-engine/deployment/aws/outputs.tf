@@ -1,7 +1,7 @@
 locals {
   patch_for_aws_auth = <<CONFIGMAPAWSAUTH
     - rolearn: ${aws_iam_role.iam-for-lambda.arn}\n
-     username: kubernetes-admin\n
+     username: kubernetes-response-engine\n
      groups:\n
        - system:masters
 CONFIGMAPAWSAUTH
