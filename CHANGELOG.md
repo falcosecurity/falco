@@ -2,6 +2,36 @@
 
 This file documents all notable changes to Falco. The release numbering uses [semantic versioning](http://semver.org).
 
+## v0.13.0
+
+Released 2018-11-09
+
+## Major Changes
+
+* **Support for K8s Audit Events** : Falco now supports [K8s Audit Events](https://kubernetes.io/docs/tasks/debug-application-cluster/audit/#audit-backends) as a second stream of events in addition to syscalls. For full details on the feature, see the [wiki](https://github.com/falcosecurity/falco/wiki/K8s-Audit-Event-Support).
+
+* Transparent Config/Rule Reloading: On SIGHUP, Falco will now reload all config files/rules files and start processing new events. Allows rules changes without having to restart falco [[#457](https://github.com/falcosecurity/falco/pull/457)] [[#432](https://github.com/falcosecurity/falco/issues/432)]
+
+## Minor Changes
+
+* The reference integration of falco into a action engine now supports aws actions like lambda, etc. [[#460](https://github.com/falcosecurity/falco/pull/460)]
+
+* Add netcat to falco docker images, which allows easier integration of program outputs to external servers [[#456](https://github.com/falcosecurity/falco/pull/456)] [[#433](https://github.com/falcosecurity/falco/issues/433)]
+
+## Bug Fixes
+
+* Links cleanup related to the draios/falco -> falcosecurity/falco move [[#447](https://github.com/falcosecurity/falco/pull/447)]
+
+* Properly load/unload kernel module when the falco service is started/stopped [[#459](https://github.com/falcosecurity/falco/pull/459)] [[#418](https://github.com/falcosecurity/falco/issues/418)]
+
+## Rule Changes
+
+* Better coverage (e.g. reduced FPs) for critical stack, hids systems, ufw, cloud-init, etc. [[#445](https://github.com/falcosecurity/falco/pull/445)]
+
+* New rules `Launch Package Management Process in Container`, `Netcat Remote Code Execution in Container`, and `Lauch Suspicious Network Tool in Container` look for running various suspicious programs in a container. [[#461](https://github.com/falcosecurity/falco/pull/461)]
+
+* Misc changes to address false positives in GKE, Istio, etc. [[#455](https://github.com/falcosecurity/falco/pull/455)] [[#439](https://github.com/falcosecurity/falco/issues/439)]
+
 ## v0.12.1
 
 Released 2018-09-11
