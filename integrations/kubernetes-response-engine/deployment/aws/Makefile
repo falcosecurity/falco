@@ -1,4 +1,4 @@
-all: rbac create configure
+deploy: rbac create configure
 
 rbac:
 	kubectl apply -f ../cluster-role.yaml
