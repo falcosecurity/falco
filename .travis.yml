@@ -15,7 +15,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-language: c
+language: cpp
+compiler: gcc
 env:
     - BUILD_TYPE=Debug
     - BUILD_TYPE=Release
@@ -23,10 +24,8 @@ sudo: required
 services:
     - docker
 before_install:
-    - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
     - sudo apt-get update
 install:
-    - sudo apt-get --force-yes install g++-4.8
     - sudo apt-get install rpm linux-headers-$(uname -r) libelf-dev
     - git clone https://github.com/draios/sysdig.git ../sysdig
     - sudo apt-get install -y python-pip libvirt-dev jq dkms
@@ -42,8 +41,6 @@ before_script:
     - export KERNELDIR=/lib/modules/$(uname -r)/build
 script:
     - set -e
-    - export CC="gcc-4.8"
-    - export CXX="g++-4.8"
     - mkdir build
     - cd build
     - cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DDRAIOS_DEBUG_FLAGS="-D_DEBUG -DNDEBUG"
