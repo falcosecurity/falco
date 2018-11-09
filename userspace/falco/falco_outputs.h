@@ -19,8 +19,13 @@ limitations under the License.
 
 #pragma once
 
+#include <memory>
+
+#include "gen_filter.h"
+#include "json_evt.h"
 #include "falco_common.h"
 #include "token_bucket.h"
+#include "falco_engine.h"
 
 //
 // This class acts as the primary interface between a program and the
@@ -31,7 +36,7 @@ limitations under the License.
 class falco_outputs : public falco_common
 {
 public:
-	falco_outputs();
+	falco_outputs(falco_engine *engine);
 	virtual ~falco_outputs();
 
 	// The way to refer to an output (file, syslog, stdout,
@@ -52,11 +57,15 @@ public:
 	// ev is an event that has matched some rule. Pass the event
 	// to all configured outputs.
 	//
-	void handle_event(sinsp_evt *ev, std::string &rule, falco_common::priority_type priority, std::string &format);
+	void handle_event(gen_event *ev, std::string &rule, std::string &source,
+			  falco_common::priority_type priority, std::string &format);
 
 	void reopen_outputs();
 
 private:
+
+	falco_engine *m_falco_engine;
+
 	bool m_initialized;
 
 	// Rate limits notifications

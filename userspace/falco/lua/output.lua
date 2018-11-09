@@ -142,16 +142,20 @@ function mod.program_reopen(options)
    end
 end
 
-function output_event(event, rule, priority, priority_num, format)
+function output_event(event, rule, source, priority, priority_num, format)
    -- If format starts with a *, remove it, as we're adding our own
    -- prefix here.
    if format:sub(1,1) == "*" then
       format = format:sub(2)
    end
 
-   format = "*%evt.time: "..priority.." "..format
+   if source == "syscall" then
+      format = "*%evt.time: "..priority.." "..format
+   else
+      format = "*%jevt.time: "..priority.." "..format
+   end
 
-   msg = formats.format_event(event, rule, priority, format)
+   msg = formats.format_event(event, rule, source, priority, format)
 
    for index,o in ipairs(outputs) do
       o.output(priority, priority_num, msg, o.options)

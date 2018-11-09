@@ -31,14 +31,20 @@ const static struct luaL_reg ll_falco_rules [] =
 {
 	{"clear_filters", &falco_rules::clear_filters},
 	{"add_filter", &falco_rules::add_filter},
+	{"add_k8s_audit_filter", &falco_rules::add_k8s_audit_filter},
 	{"enable_rule", &falco_rules::enable_rule},
 	{NULL,NULL}
 };
 
-falco_rules::falco_rules(sinsp* inspector, falco_engine *engine, lua_State *ls)
-	: m_inspector(inspector), m_engine(engine), m_ls(ls)
+falco_rules::falco_rules(sinsp* inspector,
+			 falco_engine *engine,
+			 lua_State *ls)
+	: m_inspector(inspector),
+	  m_engine(engine),
+	  m_ls(ls)
 {
-	m_lua_parser = new lua_parser(inspector, m_ls);
+	m_sinsp_lua_parser = new lua_parser(engine->sinsp_factory(), m_ls, "filter");
+	m_json_lua_parser = new lua_parser(engine->json_factory(), m_ls, "k8s_audit_filter");
 }
 
 void falco_rules::init(lua_State *ls)
@@ -122,14 +128,55 @@ int falco_rules::add_filter(lua_State *ls)
 	return 0;
 }
 
+int falco_rules::add_k8s_audit_filter(lua_State *ls)
+{
+	if (! lua_islightuserdata(ls, -3) ||
+	    ! lua_isstring(ls, -2) ||
+	    ! lua_istable(ls, -1))
+	{
+		lua_pushstring(ls, "Invalid arguments passed to add_k8s_audit_filter()");
+		lua_error(ls);
+	}
+
+	falco_rules *rules = (falco_rules *) lua_topointer(ls, -3);
+	const char *rulec = lua_tostring(ls, -2);
+
+	set<string> tags;
+
+	lua_pushnil(ls);  /* first key */
+	while (lua_next(ls, -2) != 0) {
+                // key is at index -2, value is at index
+                // -1. We want the values.
+		tags.insert(lua_tostring(ls, -1));
+
+		// Remove value, keep key for next iteration
+		lua_pop(ls, 1);
+	}
+
+	std::string rule = rulec;
+	rules->add_k8s_audit_filter(rule, tags);
+
+	return 0;
+}
+
 void falco_rules::add_filter(string &rule, set<uint32_t> &evttypes, set<uint32_t> &syscalls, set<string> &tags)
 {
 	// While the current rule was being parsed, a sinsp_filter
 	// object was being populated by lua_parser. Grab that filter
 	// and pass it to the engine.
-	sinsp_filter *filter = m_lua_parser->get_filter(true);
+	sinsp_filter *filter = (sinsp_filter *) m_sinsp_lua_parser->get_filter(true);
 
-	m_engine->add_evttype_filter(rule, evttypes, syscalls, tags, filter);
+	m_engine->add_sinsp_filter(rule, evttypes, syscalls, tags, filter);
+}
+
+void falco_rules::add_k8s_audit_filter(string &rule, set<string> &tags)
+{
+	// While the current rule was being parsed, a sinsp_filter
+	// object was being populated by lua_parser. Grab that filter
+	// and pass it to the engine.
+	json_event_filter *filter = (json_event_filter *) m_json_lua_parser->get_filter(true);
+
+	m_engine->add_k8s_audit_filter(rule, tags, filter);
 }
 
 int falco_rules::enable_rule(lua_State *ls)
@@ -314,8 +361,20 @@ void falco_rules::load_rules(const string &rules_content,
 			}
 		}
 
+		for(auto &chk_field : m_engine->json_factory().get_fields())
+		{
+			for(auto &field : chk_field.fields)
+			{
+				lua_pushstring(m_ls, field.name.c_str());
+				lua_pushnumber(m_ls, 1);
+				lua_settable(m_ls, -3);
+			}
+		}
+
 		lua_setglobal(m_ls, m_lua_defined_filters.c_str());
 
+		lua_pushlightuserdata(m_ls, m_sinsp_lua_parser);
+		lua_pushlightuserdata(m_ls, m_json_lua_parser);
 		lua_pushstring(m_ls, rules_content.c_str());
 		lua_pushlightuserdata(m_ls, this);
 		lua_pushboolean(m_ls, (verbose ? 1 : 0));
@@ -323,10 +382,10 @@ void falco_rules::load_rules(const string &rules_content,
 		lua_pushstring(m_ls, extra.c_str());
 		lua_pushboolean(m_ls, (replace_container_info ? 1 : 0));
 		lua_pushnumber(m_ls, min_priority);
-		if(lua_pcall(m_ls, 7, 0, 0) != 0)
+		if(lua_pcall(m_ls, 9, 0, 0) != 0)
 		{
 			const char* lerr = lua_tostring(m_ls, -1);
-			string err = "Error loading rules:" + string(lerr);
+			string err = "Error loading rules: " + string(lerr);
 			throw falco_exception(err);
 		}
 	} else {
@@ -360,6 +419,7 @@ void falco_rules::describe_rule(std::string *rule)
 
 falco_rules::~falco_rules()
 {
-	delete m_lua_parser;
+	delete m_sinsp_lua_parser;
+	delete m_json_lua_parser;
 }
 

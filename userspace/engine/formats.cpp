@@ -25,6 +25,7 @@ limitations under the License.
 
 
 sinsp* falco_formats::s_inspector = NULL;
+falco_engine *falco_formats::s_engine = NULL;
 bool falco_formats::s_json_output = false;
 bool falco_formats::s_json_include_output_property = true;
 sinsp_evt_formatter_cache *falco_formats::s_formatters = NULL;
@@ -38,9 +39,14 @@ const static struct luaL_reg ll_falco [] =
 	{NULL,NULL}
 };
 
-void falco_formats::init(sinsp* inspector, lua_State *ls, bool json_output, bool json_include_output_property)
+void falco_formats::init(sinsp* inspector,
+			 falco_engine *engine,
+			 lua_State *ls,
+			 bool json_output,
+			 bool json_include_output_property)
 {
 	s_inspector = inspector;
+	s_engine = engine;
 	s_json_output = json_output;
 	s_json_include_output_property = json_include_output_property;
 	if(!s_formatters)
@@ -53,14 +59,29 @@ void falco_formats::init(sinsp* inspector, lua_State *ls, bool json_output, bool
 
 int falco_formats::formatter(lua_State *ls)
 {
-	string format = luaL_checkstring(ls, 1);
-	sinsp_evt_formatter* formatter;
+	string source = luaL_checkstring(ls, -2);
+	string format = luaL_checkstring(ls, -1);
+
 	try
 	{
-		formatter = new sinsp_evt_formatter(s_inspector, format);
-		lua_pushlightuserdata(ls, formatter);
+		if(source == "syscall")
+		{
+			sinsp_evt_formatter* formatter;
+			formatter = new sinsp_evt_formatter(s_inspector, format);
+			lua_pushlightuserdata(ls, formatter);
+		}
+		else
+		{
+			json_event_formatter *formatter;
+			formatter = new json_event_formatter(s_engine->json_factory(), format);
+			lua_pushlightuserdata(ls, formatter);
+		}
 	}
 	catch(sinsp_exception& e)
+	{
+		luaL_error(ls, "Invalid output format '%s': '%s'", format.c_str(), e.what());
+	}
+	catch(falco_exception& e)
 	{
 		luaL_error(ls, "Invalid output format '%s': '%s'", format.c_str(), e.what());
 	}
@@ -70,14 +91,25 @@ int falco_formats::formatter(lua_State *ls)
 
 int falco_formats::free_formatter(lua_State *ls)
 {
-	if (!lua_islightuserdata(ls, -1))
+	if (!lua_islightuserdata(ls, -1) ||
+	    !lua_isstring(ls, -2))
+
 	{
 		luaL_error(ls, "Invalid argument passed to free_formatter");
 	}
 
-	sinsp_evt_formatter *formatter = (sinsp_evt_formatter *) lua_topointer(ls, 1);
+	string source = luaL_checkstring(ls, -2);
 
-	delete(formatter);
+	if(source == "syscall")
+	{
+		sinsp_evt_formatter *formatter = (sinsp_evt_formatter *) lua_topointer(ls, -1);
+		delete(formatter);
+	}
+	else
+	{
+		json_event_formatter *formatter = (json_event_formatter *) lua_topointer(ls, -1);
+		delete(formatter);
+	}
 
 	return 0;
 }
@@ -100,57 +132,64 @@ int falco_formats::format_event (lua_State *ls)
 	if (!lua_isstring(ls, -1) ||
 	    !lua_isstring(ls, -2) ||
 	    !lua_isstring(ls, -3) ||
-	    !lua_islightuserdata(ls, -4)) {
+	    !lua_isstring(ls, -4) ||
+	    !lua_islightuserdata(ls, -5)) {
 		lua_pushstring(ls, "Invalid arguments passed to format_event()");
 		lua_error(ls);
 	}
-	sinsp_evt* evt = (sinsp_evt*)lua_topointer(ls, 1);
+	gen_event* evt = (gen_event*)lua_topointer(ls, 1);
 	const char *rule = (char *) lua_tostring(ls, 2);
-	const char *level = (char *) lua_tostring(ls, 3);
-	const char *format = (char *) lua_tostring(ls, 4);
+	const char *source = (char *) lua_tostring(ls, 3);
+	const char *level = (char *) lua_tostring(ls, 4);
+	const char *format = (char *) lua_tostring(ls, 5);
 
 	string sformat = format;
 
-	try {
-		s_formatters->tostring(evt, sformat, &line);
+	if(strcmp(source, "syscall") == 0)
+	{
+		try {
+			s_formatters->tostring((sinsp_evt *) evt, sformat, &line);
 
-		if(s_json_output)
-		{
-			switch(s_inspector->get_buffer_format())
+			if(s_json_output)
 			{
-				case sinsp_evt::PF_NORMAL:
-					s_inspector->set_buffer_format(sinsp_evt::PF_JSON);
-					break;
-				case sinsp_evt::PF_EOLS:
-					s_inspector->set_buffer_format(sinsp_evt::PF_JSONEOLS);
-					break;
-				case sinsp_evt::PF_HEX:
-					s_inspector->set_buffer_format(sinsp_evt::PF_JSONHEX);
-					break;
-				case sinsp_evt::PF_HEXASCII:
-					s_inspector->set_buffer_format(sinsp_evt::PF_JSONHEXASCII);
-					break;
-				case sinsp_evt::PF_BASE64:
-					s_inspector->set_buffer_format(sinsp_evt::PF_JSONBASE64);
-					break;
-				default:
-					// do nothing
-					break;
-			}
-			s_formatters->tostring(evt, sformat, &json_line);
+				s_inspector->set_buffer_format(sinsp_evt::PF_JSON);
+				s_formatters->tostring((sinsp_evt *) evt, sformat, &json_line);
 
-			// The formatted string might have a leading newline. If it does, remove it.
-			if (json_line[0] == '\n')
-			{
-				json_line.erase(0, 1);
+				// The formatted string might have a leading newline. If it does, remove it.
+				if (json_line[0] == '\n')
+				{
+					json_line.erase(0, 1);
+				}
+
+				s_inspector->set_buffer_format(sinsp_evt::PF_NORMAL);
 			}
 		}
+		catch (sinsp_exception& e)
+		{
+			string err = "Invalid output format '" + sformat + "': '" + string(e.what()) + "'";
+			lua_pushstring(ls, err.c_str());
+			lua_error(ls);
+		}
 	}
-	catch (sinsp_exception& e)
+	else
 	{
-		string err = "Invalid output format '" + sformat + "': '" + string(e.what()) + "'";
-		lua_pushstring(ls, err.c_str());
-		lua_error(ls);
+		try {
+
+			json_event_formatter formatter(s_engine->json_factory(), sformat);
+
+			line = formatter.tostring((json_event *) evt);
+
+			if(s_json_output)
+			{
+				json_line = formatter.tojson((json_event *) evt);
+			}
+		}
+		catch (exception &e)
+		{
+			string err = "Invalid output format '" + sformat + "': '" + string(e.what()) + "'";
+			lua_pushstring(ls, err.c_str());
+			lua_error(ls);
+		}
 	}
 
 	// For JSON output, the formatter returned a json-as-text

@@ -17,16 +17,26 @@ limitations under the License.
 
 */
 
+// Gen filtering TODO
+//  - DONE Clean up use/sharing of factories amongst engine-related classes.
+//  - DONE Fix outputs to actually use factories
+//  - Review gen_filter apis to see if they have only the required interfaces
+//  - Fix json filterchecks to split json and evt.time filterchecks.
+
 #pragma once
 
 #include <string>
 #include <memory>
 #include <set>
 
+#include <nlohmann/json.hpp>
+
 #include "sinsp.h"
 #include "filter.h"
 
+#include "json_evt.h"
 #include "rules.h"
+#include "ruleset.h"
 
 #include "config_falco_engine.h"
 #include "falco_common.h"
@@ -40,7 +50,7 @@ limitations under the License.
 class falco_engine : public falco_common
 {
 public:
-	falco_engine(bool seed_rng=true, const std::string& rules_dir=FALCO_ENGINE_SOURCE_LUA_DIR);
+	falco_engine(bool seed_rng=true, const std::string& alternate_lua_dir=FALCO_ENGINE_SOURCE_LUA_DIR);
 	virtual ~falco_engine();
 
 	//
@@ -72,13 +82,6 @@ public:
 	// Only load rules having this priority or more severe.
 	void set_min_priority(falco_common::priority_type priority);
 
-	struct rule_result {
-		sinsp_evt *evt;
-		std::string rule;
-		falco_common::priority_type priority_num;
-		std::string format;
-	};
-
 	//
 	// Return the ruleset id corresponding to this ruleset name,
 	// creating a new one if necessary. If you provide any ruleset
@@ -86,36 +89,6 @@ public:
 	// ruleset id and pass it to process_event().
 	//
 	uint16_t find_ruleset_id(const std::string &ruleset);
-
-	//
-	// Given a ruleset, fill in a bitset containing the event
-	// types for which this ruleset can run.
-	//
-	void evttypes_for_ruleset(std::vector<bool> &evttypes, const std::string &ruleset);
-
-	//
-	// Given a ruleset, fill in a bitset containing the syscalls
-	// for which this ruleset can run.
-	//
-	void syscalls_for_ruleset(std::vector<bool> &syscalls, const std::string &ruleset);
-
-	//
-	// Given an event, check it against the set of rules in the
-	// engine and if a matching rule is found, return details on
-	// the rule that matched. If no rule matched, returns NULL.
-	//
-	// When ruleset_id is provided, use the enabled/disabled status
-	// associated with the provided ruleset. This is only useful
-	// when you have previously called enable_rule/enable_rule_by_tag
-	// with a ruleset string.
-	//
-	// the returned rule_result is allocated and must be delete()d.
-	std::unique_ptr<rule_result> process_event(sinsp_evt *ev, uint16_t ruleset_id);
-
-	//
-	// Wrapper assuming the default ruleset
-	//
-	std::unique_ptr<rule_result> process_event(sinsp_evt *ev);
 
 	//
 	// Print details on the given rule. If rule is NULL, print
@@ -127,16 +100,6 @@ public:
 	// Print statistics on how many events matched each rule.
 	//
 	void print_stats();
-
-	//
-	// Add a filter, which is related to the specified set of
-	// event types/syscalls, to the engine.
-	//
-	void add_evttype_filter(std::string &rule,
-				std::set<uint32_t> &evttypes,
-				std::set<uint32_t> &syscalls,
-				std::set<std::string> &tags,
-				sinsp_filter* filter);
 
 	// Clear all existing filters.
 	void clear_filters();
@@ -163,7 +126,98 @@ public:
 	//
 	void set_extra(string &extra, bool replace_container_info);
 
+	// **Methods Related to k8s audit log events, which are
+	// **represented as json objects.
+	struct rule_result {
+		gen_event *evt;
+		std::string rule;
+		std::string source;
+		falco_common::priority_type priority_num;
+		std::string format;
+	};
+
+	//
+	// Given a raw json object, return a list of k8s audit event
+	// objects that represent the object. This method handles
+	// things such as EventList splitting.
+	//
+	// Returns true if the json object was recognized as a k8s
+	// audit event(s), false otherwise.
+	//
+	bool parse_k8s_audit_json(nlohmann::json &j, std::list<json_event> &evts);
+
+	//
+	// Given an event, check it against the set of rules in the
+	// engine and if a matching rule is found, return details on
+	// the rule that matched. If no rule matched, returns NULL.
+	//
+	// When ruleset_id is provided, use the enabled/disabled status
+	// associated with the provided ruleset. This is only useful
+	// when you have previously called enable_rule/enable_rule_by_tag
+	// with a ruleset string.
+	//
+	// the returned rule_result is allocated and must be delete()d.
+	std::unique_ptr<rule_result> process_k8s_audit_event(json_event *ev, uint16_t ruleset_id);
+
+	//
+	// Wrapper assuming the default ruleset
+	//
+	std::unique_ptr<rule_result> process_k8s_audit_event(json_event *ev);
+
+	//
+	// Add a k8s_audit filter to the engine
+	//
+	void add_k8s_audit_filter(std::string &rule,
+				  std::set<std::string> &tags,
+				  json_event_filter* filter);
+
+	// **Methods Related to Sinsp Events e.g system calls
+	//
+	// Given a ruleset, fill in a bitset containing the event
+	// types for which this ruleset can run.
+	//
+	void evttypes_for_ruleset(std::vector<bool> &evttypes, const std::string &ruleset);
+
+	//
+	// Given a ruleset, fill in a bitset containing the syscalls
+	// for which this ruleset can run.
+	//
+	void syscalls_for_ruleset(std::vector<bool> &syscalls, const std::string &ruleset);
+
+	//
+	// Given an event, check it against the set of rules in the
+	// engine and if a matching rule is found, return details on
+	// the rule that matched. If no rule matched, returns NULL.
+	//
+	// When ruleset_id is provided, use the enabled/disabled status
+	// associated with the provided ruleset. This is only useful
+	// when you have previously called enable_rule/enable_rule_by_tag
+	// with a ruleset string.
+	//
+	// the returned rule_result is allocated and must be delete()d.
+	std::unique_ptr<rule_result> process_sinsp_event(sinsp_evt *ev, uint16_t ruleset_id);
+
+	//
+	// Wrapper assuming the default ruleset
+	//
+	std::unique_ptr<rule_result> process_sinsp_event(sinsp_evt *ev);
+
+	//
+	// Add a filter, which is related to the specified set of
+	// event types/syscalls, to the engine.
+	//
+	void add_sinsp_filter(std::string &rule,
+			      std::set<uint32_t> &evttypes,
+			      std::set<uint32_t> &syscalls,
+			      std::set<std::string> &tags,
+			      sinsp_filter* filter);
+
+	sinsp_filter_factory &sinsp_factory();
+	json_event_filter_factory &json_factory();
+
 private:
+
+	static nlohmann::json::json_pointer k8s_audit_time;
 
 	//
 	// Determine whether the given event should be matched at all
@@ -171,12 +225,16 @@ private:
 	// ratio/multiplier.
 	//
 	inline bool should_drop_evt();
+	shared_ptr<sinsp_filter_factory> m_sinsp_factory;
+	shared_ptr<json_event_filter_factory> m_json_factory;
 
 	falco_rules *m_rules;
 	uint16_t m_next_ruleset_id;
 	std::map<string, uint16_t> m_known_rulesets;
-	std::unique_ptr<sinsp_evttype_filter> m_evttype_filter;
 	falco_common::priority_type m_min_priority;
+
+	std::unique_ptr<falco_sinsp_ruleset> m_sinsp_rules;
+	std::unique_ptr<falco_ruleset> m_k8s_audit_rules;
 
 	//
 	// Here's how the sampling ratio and multiplier influence
