@@ -1770,7 +1770,7 @@
   priority: ERROR
   tags: [process]
 
-- rule: Netcat Remote Code Execution
+- rule: Netcat Remote Code Execution in Container
   desc: Netcat Program runs inside container that allows remote code execution
   condition: >
     spawned_process and container and
@@ -1783,12 +1783,12 @@
   priority: WARNING
   tags: [network, process]
 
-- rule: Lauch Suspicious Network Tool
+- rule: Lauch Suspicious Network Tool in Container
   desc: Detect network tools launched inside container
   condition: >
     spawned_process and container and network_tool_procs
   output: >
-    Network tool launched (user=%user.name
+    Network tool launched in container (user=%user.name
     command=%proc.cmdline container_id=%container.id container_name=%container.name image=%container.image)
   priority: NOTICE
   tags: [network, process]
