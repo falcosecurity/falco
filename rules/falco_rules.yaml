@@ -1733,12 +1733,12 @@
   condition: proc.name in (network_tool_binaries)
 
 # Container is supposed to be immutable. Package management should be done in building the image.
-- rule: Launch Package Management Process
-  desc: Package management process ran insdie container
+- rule: Launch Package Management Process in Container
+  desc: Package management process ran inside container
   condition: >
     spawned_process and container and user.name != "_apt" and package_mgmt_procs and not package_mgmt_ancestor_procs
   output: >
-    Package management process launched (user=%user.name
+    Package management process launched in container (user=%user.name
     command=%proc.cmdline container_id=%container.id container_name=%container.name image=%container.image)
   priority: ERROR
   tags: [process]
