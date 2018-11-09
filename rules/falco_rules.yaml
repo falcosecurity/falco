@@ -136,7 +136,7 @@
   items: [docker, dockerd, exe, docker-compose, docker-entrypoi, docker-runc-cur, docker-current]
 
 - list: k8s_binaries
-  items: [hyperkube, skydns, kube2sky, exechealthz, weave-net]
+  items: [hyperkube, skydns, kube2sky, exechealthz, weave-net, loopback, bridge]
 
 - list: lxd_binaries
   items: [lxd, lxcfs]
@@ -585,6 +585,9 @@
 - macro: iscsi_writing_conf
   condition: (proc.name=iscsiadm and fd.name startswith /etc/iscsi)
 
+- macro: istio_writing_conf
+  condition: (proc.name=pilot-agent and fd.name startswith /etc/istio)
+
 - macro: symantec_writing_conf
   condition: >
     ((proc.name=symcfgd and fd.name startswith /etc/symantec) or
@@ -680,6 +683,9 @@
 - macro: chef_writing_conf
   condition: (proc.name=chef-client and fd.name startswith /root/.chef)
 
+- macro: kubectl_writing_state
+  condition: (proc.name=kubectl and fd.name startswith /root/.kube)
+
 - rule: Write below binary dir
   desc: an attempt to write to any file below a set of binary directories
   condition: >
@@ -709,6 +715,13 @@
 - macro: user_ssh_directory
   condition: (fd.name startswith '/home' and fd.name contains '.ssh')
 
+# google_accounts_(daemon)
+- macro: google_accounts_daemon_writing_ssh
+  condition: (proc.name=google_accounts and user_ssh_directory)
+
+- macro: cloud_init_writing_ssh
+  condition: (proc.name=cloud-init and user_ssh_directory)
+
 - macro: mkinitramfs_writing_boot
   condition: (proc.pname in (mkinitramfs, update-initramf) and fd.directory=/boot)
 
@@ -727,6 +740,8 @@
     and not exe_running_docker_save
     and not python_running_get_pip
     and not python_running_ms_oms
+    and not google_accounts_daemon_writing_ssh
+    and not cloud_init_writing_ssh
   output: >
     File below a monitored directory opened for writing (user=%user.name
     command=%proc.cmdline file=%fd.name parent=%proc.pname pcmdline=%proc.pcmdline gparent=%proc.aname[2])
@@ -823,6 +838,9 @@
 - macro: dpkg_scripting
   condition: (proc.aname[2] in (dpkg-reconfigur, dpkg-preconfigu))
 
+- macro: ufw_writing_conf
+  condition: proc.name=ufw and fd.directory=/etc/ufw
+
 # Add conditions to this macro (probably in a separate file,
 # overwriting this macro) to allow for specific combinations of
 # programs writing below specific directories below
@@ -852,7 +870,7 @@
                           gen_resolvconf., update-ca-certi, certbot, runsv,
                           qualys-cloud-ag, locales.postins, nomachine_binaries,
                           adclient, certutil, crlutil, pam-auth-update, parallels_insta,
-                          openshift-launc, update-rc.d, ufw, cloud-init)
+                          openshift-launc, update-rc.d)
     and not proc.pname in (sysdigcloud_binaries, mail_config_binaries, hddtemp.postins, sshkit_script_binaries, locales.postins, deb_binaries, dhcp_binaries)
     and not fd.name pmatch (safe_etc_dirs)
     and not fd.name in (/etc/container_environment.sh, /etc/container_environment.json, /etc/motd, /etc/motd.svc)
@@ -923,6 +941,8 @@
     and not openldap_writing_conf
     and not ucpagent_writing_conf
     and not iscsi_writing_conf
+    and not istio_writing_conf
+    and not ufw_writing_conf
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc
@@ -934,7 +954,7 @@
 - list: known_root_files
   items: [/root/.monit.state, /root/.auth_tokens, /root/.bash_history, /root/.ash_history, /root/.aws/credentials,
           /root/.viminfo.tmp, /root/.lesshst, /root/.bzr.log, /root/.gitconfig.lock, /root/.babel.json, /root/.localstack,
-          /root/.node_repl_history, /root/.mongorc.js, /root/.dbshell, /root/.augeas/history, /root/.rnd, /root/.wget-hsts]
+          /root/.node_repl_history, /root/.mongorc.js, /root/.dbshell, /root/.augeas/history, /root/.rnd, /root/.wget-hsts, /health]
 
 - list: known_root_directories
   items: [/root/.oracle_jre_usage, /root/.ssh, /root/.subversion, /root/.nami]
@@ -990,6 +1010,7 @@
     and not rpm_writing_root_rpmdb
     and not maven_writing_groovy
     and not chef_writing_conf
+    and not kubectl_writing_state
     and not known_root_conditions
   output: "File below / or /root opened for writing (user=%user.name command=%proc.cmdline parent=%proc.pname file=%fd.name program=%proc.name)"
   priority: ERROR
@@ -1374,6 +1395,7 @@
 - macro: sensitive_mount
   condition: (container.mount.dest[/proc*] != "N/A" or
               container.mount.dest[/var/run/docker.sock] != "N/A" or
+              container.mount.dest[/var/lib/kubelet*] != "N/A" or
               container.mount.dest[/] != "N/A" or
               container.mount.dest[/etc] != "N/A" or
               container.mount.dest[/root*] != "N/A")
