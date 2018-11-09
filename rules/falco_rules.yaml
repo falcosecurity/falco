@@ -204,7 +204,7 @@
 # A canonical set of processes that run other programs with different
 # privileges or as a different user.
 - list: userexec_binaries
-  items: [sudo, su, suexec]
+  items: [sudo, su, suexec, critical-stack]
 
 - list: known_setuid_binaries
   items: [
@@ -220,7 +220,7 @@
   items: [blkid, rename_device, update_engine, sgdisk]
 
 - list: hids_binaries
-  items: [aide]
+  items: [aide, aide.wrapper, update-aide.con, logcheck, syslog-summary, osqueryd, ossec-syscheckd]
 
 - list: vpn_binaries
   items: [openvpn]
@@ -242,7 +242,7 @@
   items: [
     update_conf, parse_mc, makemap_hash, newaliases, update_mk, update_tlsm4,
     update_db, update_mc, ssmtp.postinst, mailq, postalias, postfix.config.,
-    postfix.config, postfix-script
+    postfix.config, postfix-script, postconf
     ]
 
 - list: sensitive_file_names
@@ -852,7 +852,7 @@
                           gen_resolvconf., update-ca-certi, certbot, runsv,
                           qualys-cloud-ag, locales.postins, nomachine_binaries,
                           adclient, certutil, crlutil, pam-auth-update, parallels_insta,
-                          openshift-launc, update-rc.d)
+                          openshift-launc, update-rc.d, ufw, cloud-init)
     and not proc.pname in (sysdigcloud_binaries, mail_config_binaries, hddtemp.postins, sshkit_script_binaries, locales.postins, deb_binaries, dhcp_binaries)
     and not fd.name pmatch (safe_etc_dirs)
     and not fd.name in (/etc/container_environment.sh, /etc/container_environment.json, /etc/motd, /etc/motd.svc)
