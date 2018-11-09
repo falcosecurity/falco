@@ -42,7 +42,7 @@ This starts the following containers:
 Run the following commands to execute arbitrary commands like 'ls', 'pwd', etc:
 
 ```
-$ curl http://localhost:8080/api/exec/ls
+$ curl http://localhost:8181/api/exec/ls
 
 demo.yml
 node_modules
@@ -52,7 +52,7 @@ server.js
 ```
 
 ```
-$ curl http://localhost:8080/api/exec/pwd
+$ curl http://localhost:8181/api/exec/pwd
 
 .../examples/nodejs-bad-rest-api
 ```

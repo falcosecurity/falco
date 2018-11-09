@@ -1,20 +1,19 @@
---
--- Copyright (C) 2016 Draios inc.
+-- Copyright (C) 2016-2018 Draios Inc dba Sysdig.
 --
 -- This file is part of falco.
 --
--- falco is free software; you can redistribute it and/or modify
--- it under the terms of the GNU General Public License version 2 as
--- published by the Free Software Foundation.
+-- Licensed under the Apache License, Version 2.0 (the "License");
+-- you may not use this file except in compliance with the License.
+-- You may obtain a copy of the License at
 --
--- falco is distributed in the hope that it will be useful,
--- but WITHOUT ANY WARRANTY; without even the implied warranty of
--- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
--- GNU General Public License for more details.
+--     http://www.apache.org/licenses/LICENSE-2.0
 --
--- You should have received a copy of the GNU General Public License
--- along with falco.  If not, see <http://www.gnu.org/licenses/>.
-
+-- Unless required by applicable law or agreed to in writing, software
+-- distributed under the License is distributed on an "AS IS" BASIS,
+-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+-- See the License for the specific language governing permissions and
+-- limitations under the License.
+--
 
 local mod = {}
 
@@ -143,16 +142,20 @@ function mod.program_reopen(options)
    end
 end
 
-function output_event(event, rule, priority, priority_num, format)
+function output_event(event, rule, source, priority, priority_num, format)
    -- If format starts with a *, remove it, as we're adding our own
    -- prefix here.
    if format:sub(1,1) == "*" then
       format = format:sub(2)
    end
 
-   format = "*%evt.time: "..priority.." "..format
+   if source == "syscall" then
+      format = "*%evt.time: "..priority.." "..format
+   else
+      format = "*%jevt.time: "..priority.." "..format
+   end
 
-   msg = formats.format_event(event, rule, priority, format)
+   msg = formats.format_event(event, rule, source, priority, format)
 
    for index,o in ipairs(outputs) do
       o.output(priority, priority_num, msg, o.options)

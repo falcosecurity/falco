@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: falco
-          image: sysdig/falco:latest
+          image: falcosecurity/falco:latest
           securityContext:
             privileged: true
           args: [ "/usr/bin/falco", "-K", "/var/run/secrets/kubernetes.io/serviceaccount/token", "-k", "https://kubernetes.default", "-pk", "-o", "json_output=true", "-o", "program_output.enabled=true", "-o",  "program_output.program=jq '{text: .output}' | curl -d @- -X POST https://hooks.slack.com/services/see_your_slack_team/apps_settings_for/a_webhook_url"]

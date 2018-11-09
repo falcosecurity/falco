@@ -8,6 +8,8 @@ mamba = "*"
 expects = "*"
 doublex = "*"
 doublex-expects = "==0.7.0rc2"
+six = "*"
+playbooks = {path = "."}
 
 [packages]
 kubernetes = "*"
@@ -16,4 +18,4 @@ requests = "*"
 maya = "*"
 
 [requires]
-python_version = "3.6"
+python_version = "*"

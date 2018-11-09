@@ -1,19 +1,19 @@
---
--- Copyright (C) 2016 Draios inc.
+-- Copyright (C) 2016-2018 Draios Inc dba Sysdig.
 --
 -- This file is part of falco.
 --
--- falco is free software; you can redistribute it and/or modify
--- it under the terms of the GNU General Public License version 2 as
--- published by the Free Software Foundation.
+-- Licensed under the Apache License, Version 2.0 (the "License");
+-- you may not use this file except in compliance with the License.
+-- You may obtain a copy of the License at
 --
--- falco is distributed in the hope that it will be useful,
--- but WITHOUT ANY WARRANTY; without even the implied warranty of
--- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
--- GNU General Public License for more details.
+--     http://www.apache.org/licenses/LICENSE-2.0
 --
--- You should have received a copy of the GNU General Public License
--- along with falco.  If not, see <http://www.gnu.org/licenses/>.
+-- Unless required by applicable law or agreed to in writing, software
+-- distributed under the License is distributed on an "AS IS" BASIS,
+-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+-- See the License for the specific language governing permissions and
+-- limitations under the License.
+--
 
 --[[
    Compile and install falco rules.
@@ -22,6 +22,7 @@
 
 --]]
 
+local sinsp_rule_utils = require "sinsp_rule_utils"
 local compiler = require "compiler"
 local yaml = require"lyaml"
 
@@ -73,7 +74,7 @@ end
 --[[
    Take a filter AST and set it up in the libsinsp runtime, using the filter API.
 --]]
-local function install_filter(node, parent_bool_op)
+local function install_filter(node, filter_api_lib, lua_parser, parent_bool_op)
    local t = node.type
 
    if t == "BinaryBoolOp" then
@@ -82,34 +83,34 @@ local function install_filter(node, parent_bool_op)
       -- never necessary when we have identical successive operators. so we
       -- avoid it as a runtime performance optimization.
       if (not(node.operator == parent_bool_op)) then
-	 filter.nest() -- io.write("(")
+	 filter_api_lib.nest(lua_parser) -- io.write("(")
       end
 
-      install_filter(node.left, node.operator)
-      filter.bool_op(node.operator) -- io.write(" "..node.operator.." ")
-      install_filter(node.right, node.operator)
+      install_filter(node.left, filter_api_lib, lua_parser, node.operator)
+      filter_api_lib.bool_op(lua_parser, node.operator) -- io.write(" "..node.operator.." ")
+      install_filter(node.right, filter_api_lib, lua_parser, node.operator)
 
       if (not (node.operator == parent_bool_op)) then
-	 filter.unnest() -- io.write(")")
+	 filter_api_lib.unnest(lua_parser) -- io.write(")")
       end
 
    elseif t == "UnaryBoolOp" then
-      filter.nest() --io.write("(")
-      filter.bool_op(node.operator) -- io.write(" "..node.operator.." ")
-      install_filter(node.argument)
-      filter.unnest() -- io.write(")")
+      filter_api_lib.nest(lua_parser) --io.write("(")
+      filter_api_lib.bool_op(lua_parser, node.operator) -- io.write(" "..node.operator.." ")
+      install_filter(node.argument, filter_api_lib, lua_parser)
+      filter_api_lib.unnest(lua_parser) -- io.write(")")
 
    elseif t == "BinaryRelOp" then
       if (node.operator == "in" or node.operator == "pmatch") then
 	 elements = map(function (el) return el.value end, node.right.elements)
-	 filter.rel_expr(node.left.value, node.operator, elements, node.index)
+	 filter_api_lib.rel_expr(lua_parser, node.left.value, node.operator, elements, node.index)
       else
-	 filter.rel_expr(node.left.value, node.operator, node.right.value, node.index)
+	 filter_api_lib.rel_expr(lua_parser, node.left.value, node.operator, node.right.value, node.index)
       end
       -- io.write(node.left.value.." "..node.operator.." "..node.right.value)
 
    elseif t == "UnaryRelOp"  then
-      filter.rel_expr(node.argument.value, node.operator, node.index)
+      filter_api_lib.rel_expr(lua_parser, node.argument.value, node.operator, node.index)
       --io.write(node.argument.value.." "..node.operator)
 
    else
@@ -183,10 +184,15 @@ function table.tostring( tbl )
 end
 
 
-function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replace_container_info, min_priority)
-
-   compiler.set_verbose(verbose)
-   compiler.set_all_events(all_events)
+function load_rules(sinsp_lua_parser,
+		    json_lua_parser,
+		    rules_content,
+		    rules_mgr,
+		    verbose,
+		    all_events,
+		    extra,
+		    replace_container_info,
+		    min_priority)
 
    local rules = yaml.load(rules_content)
 
@@ -210,6 +216,11 @@ function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replac
       end
 
       if (v['macro']) then
+
+	 if v['source'] == nil then
+	    v['source'] = "syscall"
+	 end
+
 	 if state.macros_by_name[v['macro']] == nil then
 	    state.ordered_macro_names[#state.ordered_macro_names+1] = v['macro']
 	 end
@@ -279,6 +290,10 @@ function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replac
 	 -- filter like evt.type, etc the loader throws an error.
 	 if v['skip-if-unknown-filter'] == nil then
 	    v['skip-if-unknown-filter'] = false
+	 end
+
+	 if v['source'] == nil then
+	    v['source'] = "syscall"
 	 end
 
 	 -- Possibly append to the condition field of an existing rule
@@ -372,6 +387,13 @@ function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replac
       local v = state.macros_by_name[name]
 
       local ast = compiler.compile_macro(v['condition'], state.macros, state.lists)
+
+      if v['source'] == "syscall" then
+	 if not all_events then
+	    sinsp_rule_utils.check_for_ignored_syscalls_events(ast, 'macro', v['condition'])
+	 end
+      end
+
       state.macros[v['macro']] = {["ast"] = ast.filter.value, ["used"] = false}
    end
 
@@ -384,9 +406,19 @@ function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replac
 	 warn_evttypes = v['warn_evttypes']
       end
 
-      local filter_ast, evttypes, syscallnums, filters = compiler.compile_filter(v['rule'], v['condition'],
-										 state.macros, state.lists,
-										 warn_evttypes)
+      local filter_ast, filters = compiler.compile_filter(v['rule'], v['condition'],
+							  state.macros, state.lists)
+
+      local evtttypes = {}
+      local syscallnums = {}
+
+      if v['source'] == "syscall" then
+	 if not all_events then
+	    sinsp_rule_utils.check_for_ignored_syscalls_events(filter_ast, 'rule', v['rule'])
+	 end
+
+	 evttypes, syscallnums = sinsp_rule_utils.get_evttypes_syscalls(name, filter_ast, v['condition'], warn_evttypes, verbose)
+      end
 
       -- If a filter in the rule doesn't exist, either skip the rule
       -- or raise an error, depending on the value of
@@ -425,14 +457,19 @@ function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replac
 	 -- event.
 	 mark_relational_nodes(filter_ast.filter.value, state.n_rules)
 
-	 install_filter(filter_ast.filter.value)
-
 	 if (v['tags'] == nil) then
 	    v['tags'] = {}
 	 end
+	 if v['source'] == "syscall" then
+	    install_filter(filter_ast.filter.value, filter, sinsp_lua_parser)
+	    -- Pass the filter and event types back up
+	    falco_rules.add_filter(rules_mgr, v['rule'], evttypes, syscallnums, v['tags'])
 
-	 -- Pass the filter and event types back up
-	 falco_rules.add_filter(rules_mgr, v['rule'], evttypes, syscallnums, v['tags'])
+	 elseif v['source'] == "k8s_audit" then
+	    install_filter(filter_ast.filter.value, k8s_audit_filter, json_lua_parser)
+
+	    falco_rules.add_k8s_audit_filter(rules_mgr, v['rule'], v['tags'])
+	 end
 
 	 -- Rule ASTs are merged together into one big AST, with "OR" between each
 	 -- rule.
@@ -480,8 +517,8 @@ function load_rules(rules_content, rules_mgr, verbose, all_events, extra, replac
 	 -- Ensure that the output field is properly formatted by
 	 -- creating a formatter from it. Any error will be thrown
 	 -- up to the top level.
-	 formatter = formats.formatter(v['output'])
-	 formats.free_formatter(formatter)
+	 formatter = formats.formatter(v['source'], v['output'])
+	 formats.free_formatter(v['source'], formatter)
       else
 	 error ("Unexpected type in load_rule: "..filter_ast.type)
       end
@@ -557,7 +594,7 @@ end
 
 local rule_output_counts = {total=0, by_priority={}, by_name={}}
 
-function on_event(evt_, rule_id)
+function on_event(rule_id)
 
    if state.rules_by_idx[rule_id] == nil then
       error ("rule_loader.on_event(): event with invalid rule_id: ", rule_id)

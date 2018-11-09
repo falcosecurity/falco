@@ -1,3 +1,20 @@
+#
+# Copyright (C) 2016-2018 Draios Inc dba Sysdig.
+#
+# This file is part of falco .
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 cmake_minimum_required(VERSION 2.8.2)
 
 project(falco)
@@ -118,6 +135,32 @@ endif()
 set(JSONCPP_SRC "${SYSDIG_DIR}/userspace/libsinsp/third-party/jsoncpp")
 set(JSONCPP_INCLUDE "${JSONCPP_SRC}")
 set(JSONCPP_LIB_SRC "${JSONCPP_SRC}/jsoncpp.cpp")
+
+#
+# nlohmann-json
+#
+option(USE_BUNDLED_NJSON "Enable building of the bundled nlohmann-json" ${USE_BUNDLED_DEPS})
+
+if(NOT USE_BUNDLED_NJSON)
+	find_path(NJSON_INCLUDE json.hpp PATH_SUFFIXES nlohmann)
+	if(NJSON_INCLUDE)
+		message(STATUS "Found nlohmann-json: include: ${NJSON_INCLUDE}")
+	else()
+		message(FATAL_ERROR "Couldn't find system nlohmann-json")
+	endif()
+else()
+	# No distinction needed for windows. The implementation is
+	# solely in json.hpp.
+	set(NJSON_SRC "${PROJECT_BINARY_DIR}/njson-prefix/src/njson")
+	message(STATUS "Using bundled nlohmann-json in '${NJSON_SRC}'")
+	set(NJSON_INCLUDE "${NJSON_SRC}/single_include")
+	ExternalProject_Add(njson
+		URL "http://download.draios.com/dependencies/njson-3.3.0.tar.gz"
+		URL_MD5 "e26760e848656a5da400662e6c5d999a"
+		CONFIGURE_COMMAND ""
+		BUILD_COMMAND ""
+		INSTALL_COMMAND "")
+endif()
 
 #
 # curses
@@ -421,6 +464,40 @@ else()
 		INSTALL_COMMAND "")
 endif()
 
+#
+# civetweb
+#
+option(USE_BUNDLED_CIVETWEB "Enable building of the bundled civetweb" ${USE_BUNDLED_DEPS})
+
+if(NOT USE_BUNDLED_CIVETWEB)
+	find_library(CIVETWEB_LIB NAMES civetweb)
+	if(CIVETWEB_LIB)
+		message(STATUS "Found civetweb: lib: ${CIVETWEB_LIB}")
+	else()
+		message(FATAL_ERROR "Couldn't find system civetweb")
+	endif()
+else()
+	set(CIVETWEB_SRC "${PROJECT_BINARY_DIR}/civetweb-prefix/src/civetweb/")
+	set(CIVETWEB_LIB "${CIVETWEB_SRC}/install/lib/libcivetweb.a")
+	set(CIVETWEB_INCLUDE_DIR "${CIVETWEB_SRC}/install/include")
+	message(STATUS "Using bundled civetweb in '${CIVETWEB_SRC}'")
+	set(CIVETWEB_DEPENDENCIES "")
+	if(USE_BUNDLED_OPENSSL)
+	 	list(APPEND CIVETWEB_DEPENDENCIES "openssl")
+	endif()
+	ExternalProject_Add(civetweb
+		DEPENDS ${CIVETWEB_DEPENDENCIES}
+		URL "http://s3.amazonaws.com/download.draios.com/dependencies/civetweb-1.11.tar.gz"
+                URL_MD5 "b6d2175650a27924bccb747cbe084cd4"
+		CONFIGURE_COMMAND ${CMAKE_COMMAND} -E make_directory ${CIVETWEB_SRC}/install/lib
+		          COMMAND ${CMAKE_COMMAND} -E make_directory ${CIVETWEB_SRC}/install/include
+                BUILD_IN_SOURCE 1
+                BUILD_COMMAND ${CMD_MAKE} COPT="-DNO_FILES" WITH_CPP=1
+		INSTALL_COMMAND ${CMD_MAKE} install-lib install-headers PREFIX=${CIVETWEB_SRC}/install WITH_CPP=1)
+endif()
+
+
+
 install(FILES falco.yaml
 	DESTINATION "${FALCO_ETC_DIR}")
 
@@ -459,7 +536,7 @@ set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "http://www.sysdig.org")
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "dkms (>= 2.1.0.0)")
 set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_BINARY_DIR}/scripts/debian/postinst;${CMAKE_BINARY_DIR}/scripts/debian/prerm;${PROJECT_SOURCE_DIR}/scripts/debian/postrm;${PROJECT_SOURCE_DIR}/cpack/debian/conffiles")
 
-set(CPACK_RPM_PACKAGE_LICENSE "GPLv2")
+set(CPACK_RPM_PACKAGE_LICENSE "Apache v2.0")
 set(CPACK_RPM_PACKAGE_URL "http://www.sysdig.org")
 set(CPACK_RPM_PACKAGE_REQUIRES "dkms, gcc, make, kernel-devel, perl")
 set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE "${PROJECT_SOURCE_DIR}/scripts/rpm/postinstall")

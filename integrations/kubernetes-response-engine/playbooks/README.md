@@ -33,7 +33,7 @@ trigger.
 
 * -p: The playbook to deploy, it must match with the top-level script. In this
     example *slack.py* that contains the wiring between playbooks and Kubeless
-    functions
+    functions.
 
 * -e: Sets configuration settings for Playbook. In this case the URL where we
     have to post messages. You can specify multiple *-e* flags.
@@ -162,3 +162,67 @@ Kubernetes.
 
 So as soon as we notice someone wrote under /bin (and additional binaries) or
 /etc, we disconnect that pod. It's like a trap for our attackers.
+
+### Create an incident in Demisto
+
+This playbook creates an incident in Demisto
+
+```
+./deploy_playbook -p demisto -t "falco.*.*" -e DEMISTO_API_KEY=XxXxxXxxXXXx -e DEMISTO_BASE_URL=https://..."
+```
+
+#### Parameters
+
+* DEMISTO_API_KEY: This is the API key used for authenticating against Demisto. Create one under settings -> API keys
+* DEMISTO_BASE_URL: This is the base URL where your Demisto server lives on. Ensure there's no trailing slash.
+* VERIFY_SSL: Verify SSL certificates for HTTPS requests. By default is enabled.
+
+In this example, when Falco raises any kind of alert, the alert will be created in Demisto
+
+### Start a capture using Sysdig
+
+This playbook starts to capture information about pod using sysdig and uploads
+to a s3 bucket.
+
+```
+$ ./deploy_playbook -p capture -e CAPTURE_DURATION=300 -e AWS_S3_BUCKET=s3://xxxxxxx -e AWS_ACCESS_KEY_ID=xxxxXXXxxXXxXX -e AWS_SECRET_ACCESS_KEY=xxXxXXxxxxXXX -t "falco.notice.terminal_shell_in_container"
+```
+
+#### Parameters:
+* CAPTURE_DURATION: Captures data for this duration in seconds. By default is
+  120 seconds (2 minutes)
+* AWS_S3_BUCKET: This is the bucket where data is going to be uploaded. Jobs
+  starts with sysdig- prefix and contain pod name and time where event starts.
+* AWS_ACCESS_KEY_ID: This is the Amazon access key id.
+* AWS_SECRET_ACCESS_KEY: This is the Amazon secret access key.
+
+In this example, when we detect a shell in a container, we start to collect data
+for 300 seconds. This playbook requires permissions for creating a new pod from
+a Kubeless function.
+
+### Create a container in Phantom
+This playbook creates a container in Phantom
+
+```
+./deploy_playbook -p phantom -t "falco.*.*" -e PHANTOM_USER=user -e PHANTOM_PASSWORD=xxxXxxxX -e PHANTOM_BASE_URL=https://..."
+```
+
+#### Parameters
+* PHANTOM_USER: This is the user used to connect to Phantom
+* PHANTOM_PASSWORD: This is the password used to connect to Phantom
+* PHANTOM_BASE_URL: This is the base URL where your Phantom server lives on. Ensure there's no trailing slash.
+* VERIFY_SSL: Verify SSL certificates for HTTPS requests. By default is enabled.
+
+In this example, when Falco raises any kind of alert, the alert will be created in Phantom.
+
+## Deploying playbooks to AWS Lambda
+
+You can deploy functions to AWS Lambda using the `./deploy_playbook_aws` script.
+
+### Parameters
+
+* -p: The playbook to deploy, it must match with the top-level script.
+
+* -e: Sets configuration settings for Playbook. You can specify multiple *-e* flags.
+
+* -k: EKS cluster name against playbook is going to connect via K8s API.

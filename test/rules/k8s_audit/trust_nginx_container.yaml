@@ -1,0 +1,3 @@
+- list: trusted_k8s_containers
+  items: [nginx]
+  append: true

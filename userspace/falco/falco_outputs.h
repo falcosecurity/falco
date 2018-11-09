@@ -1,25 +1,31 @@
 /*
-Copyright (C) 2016 Draios inc.
+Copyright (C) 2016-2018 Draios Inc dba Sysdig.
 
 This file is part of falco.
 
-falco is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License version 2 as
-published by the Free Software Foundation.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-falco is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+    http://www.apache.org/licenses/LICENSE-2.0
 
-You should have received a copy of the GNU General Public License
-along with falco.  If not, see <http://www.gnu.org/licenses/>.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
 */
 
 #pragma once
 
+#include <memory>
+
+#include "gen_filter.h"
+#include "json_evt.h"
 #include "falco_common.h"
 #include "token_bucket.h"
+#include "falco_engine.h"
 
 //
 // This class acts as the primary interface between a program and the
@@ -30,7 +36,7 @@ along with falco.  If not, see <http://www.gnu.org/licenses/>.
 class falco_outputs : public falco_common
 {
 public:
-	falco_outputs();
+	falco_outputs(falco_engine *engine);
 	virtual ~falco_outputs();
 
 	// The way to refer to an output (file, syslog, stdout,
@@ -51,11 +57,15 @@ public:
 	// ev is an event that has matched some rule. Pass the event
 	// to all configured outputs.
 	//
-	void handle_event(sinsp_evt *ev, std::string &rule, falco_common::priority_type priority, std::string &format);
+	void handle_event(gen_event *ev, std::string &rule, std::string &source,
+			  falco_common::priority_type priority, std::string &format);
 
 	void reopen_outputs();
 
 private:
+
+	falco_engine *m_falco_engine;
+
 	bool m_initialized;
 
 	// Rate limits notifications

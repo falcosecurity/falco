@@ -1,7 +1,7 @@
 express_server:
   container_name: express_server
   image: node:latest
-  command: bash -c "apt-get -y update && apt-get -y install runit && npm install && runsv /usr/src/app"
+  command: bash -c "apt-get -y update && apt-get -y install runit && cd /usr/src/app && npm install && runsv /usr/src/app"
   ports:
     - "8181:8181"
   volumes:

@@ -1,0 +1,465 @@
+#
+# Copyright (C) 2016-2018 Draios Inc dba Sysdig.
+#
+# This file is part of falco.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+trace_files: !mux
+
+  user_outside_allowed_set:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+      - ./rules/k8s_audit/allow_namespace_foo.yaml
+    detect_counts:
+      - Disallowed K8s User: 1
+    trace_file: trace_files/k8s_audit/some-user_creates_namespace_foo.json
+
+  user_in_allowed_set:
+    detect: False
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+      - ./rules/k8s_audit/allow_namespace_foo.yaml
+      - ./rules/k8s_audit/allow_user_some-user.yaml
+      - ./rules/k8s_audit/disallow_kactivity.yaml
+    trace_file: trace_files/k8s_audit/some-user_creates_namespace_foo.json
+
+  create_disallowed_pod:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+      - ./rules/k8s_audit/allow_only_apache_container.yaml
+    detect_counts:
+      - Create Disallowed Pod: 1
+    trace_file: trace_files/k8s_audit/create_nginx_pod_unprivileged.json
+
+  create_allowed_pod:
+    detect: False
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+      - ./rules/k8s_audit/allow_nginx_container.yaml
+    trace_file: trace_files/k8s_audit/create_nginx_pod_unprivileged.json
+
+  create_privileged_pod:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+    detect_counts:
+      - Create Privileged Pod: 1
+    trace_file: trace_files/k8s_audit/create_nginx_pod_privileged.json
+
+  create_privileged_2nd_container_pod:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+    detect_counts:
+      - Create Privileged Pod: 1
+    trace_file: trace_files/k8s_audit/create_nginx_pod_privileged_2nd_container.json
+
+  create_privileged_trusted_pod:
+    detect: False
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+      - ./rules/k8s_audit/trust_nginx_container.yaml
+    trace_file: trace_files/k8s_audit/create_nginx_pod_privileged.json
+
+  create_unprivileged_pod:
+    detect: False
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+    trace_file: trace_files/k8s_audit/create_nginx_pod_unprivileged.json
+
+  create_unprivileged_trusted_pod:
+    detect: False
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+      - ./rules/k8s_audit/trust_nginx_container.yaml
+    trace_file: trace_files/k8s_audit/create_nginx_pod_unprivileged.json
+
+  create_sensitive_mount_pod:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+    detect_counts:
+      - Create Sensitive Mount Pod: 1
+    trace_file: trace_files/k8s_audit/create_nginx_pod_sensitive_mount.json
+
+  create_sensitive_mount_2nd_container_pod:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+    detect_counts:
+      - Create Sensitive Mount Pod: 1
+    trace_file: trace_files/k8s_audit/create_nginx_pod_sensitive_mount_2nd_container.json
+
+  create_sensitive_mount_trusted_pod:
+    detect: False
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+      - ./rules/k8s_audit/trust_nginx_container.yaml
+    trace_file: trace_files/k8s_audit/create_nginx_pod_sensitive_mount.json
+
+  create_unsensitive_mount_pod:
+    detect: False
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+    trace_file: trace_files/k8s_audit/create_nginx_pod_unsensitive_mount.json
+
+  create_unsensitive_mount_trusted_pod:
+    detect: False
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+      - ./rules/k8s_audit/trust_nginx_container.yaml
+    trace_file: trace_files/k8s_audit/create_nginx_pod_unsensitive_mount.json
+
+  create_hostnetwork_pod:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+    detect_counts:
+      - Create HostNetwork Pod: 1
+    trace_file: trace_files/k8s_audit/create_nginx_pod_hostnetwork.json
+
+  create_hostnetwork_trusted_pod:
+    detect: False
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+      - ./rules/k8s_audit/trust_nginx_container.yaml
+    trace_file: trace_files/k8s_audit/create_nginx_pod_hostnetwork.json
+
+  create_nohostnetwork_pod:
+    detect: False
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+    trace_file: trace_files/k8s_audit/create_nginx_pod_nohostnetwork.json
+
+  create_nohostnetwork_trusted_pod:
+    detect: False
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+      - ./rules/k8s_audit/trust_nginx_container.yaml
+    trace_file: trace_files/k8s_audit/create_nginx_pod_nohostnetwork.json
+
+  create_nodeport_service:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+      - ./rules/k8s_audit/disallow_kactivity.yaml
+    detect_counts:
+      - Create NodePort Service: 1
+    trace_file: trace_files/k8s_audit/create_nginx_service_nodeport.json
+
+  create_nonodeport_service:
+    detect: False
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+      - ./rules/k8s_audit/disallow_kactivity.yaml
+    trace_file: trace_files/k8s_audit/create_nginx_service_nonodeport.json
+
+  create_configmap_private_creds:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+      - ./rules/k8s_audit/disallow_kactivity.yaml
+    detect_counts:
+      - Create/Modify Configmap With Private Credentials: 6
+    trace_file: trace_files/k8s_audit/create_configmap_sensitive_values.json
+
+  create_configmap_no_private_creds:
+    detect: False
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+      - ./rules/k8s_audit/disallow_kactivity.yaml
+    trace_file: trace_files/k8s_audit/create_configmap_no_sensitive_values.json
+
+  anonymous_user:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+    detect_counts:
+      - Anonymous Request Allowed: 1
+    trace_file: trace_files/k8s_audit/anonymous_creates_namespace_foo.json
+
+  pod_exec:
+    detect: True
+    detect_level: NOTICE
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+    detect_counts:
+      - Attach/Exec Pod: 1
+    trace_file: trace_files/k8s_audit/exec_pod.json
+
+  pod_attach:
+    detect: True
+    detect_level: NOTICE
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+    detect_counts:
+      - Attach/Exec Pod: 1
+    trace_file: trace_files/k8s_audit/attach_pod.json
+
+  namespace_outside_allowed_set:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+      - ./rules/k8s_audit/allow_user_some-user.yaml
+    detect_counts:
+      - Create Disallowed Namespace: 1
+    trace_file: trace_files/k8s_audit/some-user_creates_namespace_foo.json
+
+  namespace_in_allowed_set:
+    detect: False
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+      - ./rules/k8s_audit/allow_namespace_foo.yaml
+      - ./rules/k8s_audit/disallow_kactivity.yaml
+    trace_file: trace_files/k8s_audit/minikube_creates_namespace_foo.json
+
+  create_pod_in_kube_system_namespace:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+    detect_counts:
+      - Pod Created in Kube Namespace: 1
+    trace_file: trace_files/k8s_audit/create_pod_kube_system_namespace.json
+
+  create_pod_in_kube_public_namespace:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+    detect_counts:
+      - Pod Created in Kube Namespace: 1
+    trace_file: trace_files/k8s_audit/create_pod_kube_public_namespace.json
+
+  create_serviceaccount_in_kube_system_namespace:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+    detect_counts:
+      - Service Account Created in Kube Namespace: 1
+    trace_file: trace_files/k8s_audit/create_serviceaccount_kube_system_namespace.json
+
+  create_serviceaccount_in_kube_public_namespace:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+    detect_counts:
+      - Service Account Created in Kube Namespace: 1
+    trace_file: trace_files/k8s_audit/create_serviceaccount_kube_public_namespace.json
+
+  system_clusterrole_deleted:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+    detect_counts:
+      - System ClusterRole Modified/Deleted: 1
+    trace_file: trace_files/k8s_audit/delete_cluster_role_kube_aggregator.json
+
+  system_clusterrole_modified:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+    detect_counts:
+      - System ClusterRole Modified/Deleted: 1
+    trace_file: trace_files/k8s_audit/modify_cluster_role_node_problem_detector.json
+
+  attach_cluster_admin_role:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+    detect_counts:
+      - Attach to cluster-admin Role: 1
+    trace_file: trace_files/k8s_audit/attach_cluster_admin_role.json
+
+  create_cluster_role_wildcard_resources:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+    detect_counts:
+      - ClusterRole With Wildcard Created: 1
+    trace_file: trace_files/k8s_audit/create_cluster_role_wildcard_resources.json
+
+  create_cluster_role_wildcard_verbs:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+    detect_counts:
+      - ClusterRole With Wildcard Created: 1
+    trace_file: trace_files/k8s_audit/create_cluster_role_wildcard_verbs.json
+
+  create_writable_cluster_role:
+    detect: True
+    detect_level: NOTICE
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+    detect_counts:
+      - ClusterRole With Write Privileges Created: 1
+    trace_file: trace_files/k8s_audit/create_cluster_role_write_privileges.json
+
+  create_pod_exec_cluster_role:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+    detect_counts:
+      - ClusterRole With Pod Exec Created: 1
+    trace_file: trace_files/k8s_audit/create_cluster_role_pod_exec.json
+
+  create_deployment:
+    detect: True
+    detect_level: INFO
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+    detect_counts:
+      - K8s Deployment Created: 1
+    trace_file: trace_files/k8s_audit/create_deployment.json
+
+  delete_deployment:
+    detect: True
+    detect_level: INFO
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+    detect_counts:
+      - K8s Deployment Deleted: 1
+    trace_file: trace_files/k8s_audit/delete_deployment.json
+
+  create_service:
+    detect: True
+    detect_level: INFO
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+    detect_counts:
+      - K8s Service Created: 1
+    trace_file: trace_files/k8s_audit/create_service.json
+
+  delete_service:
+    detect: True
+    detect_level: INFO
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+    detect_counts:
+      - K8s Service Deleted: 1
+    trace_file: trace_files/k8s_audit/delete_service.json
+
+  create_configmap:
+    detect: True
+    detect_level: INFO
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+    detect_counts:
+      - K8s ConfigMap Created: 1
+    trace_file: trace_files/k8s_audit/create_configmap.json
+
+  delete_configmap:
+    detect: True
+    detect_level: INFO
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+    detect_counts:
+      - K8s ConfigMap Deleted: 1
+    trace_file: trace_files/k8s_audit/delete_configmap.json
+
+  create_namespace:
+    detect: True
+    detect_level: INFO
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+      - ./rules/k8s_audit/allow_namespace_foo.yaml
+      - ./rules/k8s_audit/allow_user_some-user.yaml
+    detect_counts:
+      - K8s Namespace Created: 1
+    trace_file: trace_files/k8s_audit/some-user_creates_namespace_foo.json
+
+  delete_namespace:
+    detect: True
+    detect_level: INFO
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+    detect_counts:
+      - K8s Namespace Deleted: 1
+    trace_file: trace_files/k8s_audit/delete_namespace_foo.json
+
+  create_serviceaccount:
+    detect: True
+    detect_level: INFO
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+    detect_counts:
+      - K8s Serviceaccount Created: 1
+    trace_file: trace_files/k8s_audit/create_serviceaccount.json
+
+  delete_serviceaccount:
+    detect: True
+    detect_level: INFO
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+    detect_counts:
+      - K8s Serviceaccount Deleted: 1
+    trace_file: trace_files/k8s_audit/delete_serviceaccount.json
+
+  create_clusterrole:
+    detect: True
+    detect_level: INFO
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+    detect_counts:
+      - K8s Role/Clusterrole Created: 1
+    trace_file: trace_files/k8s_audit/create_clusterrole.json
+
+  delete_clusterrole:
+    detect: True
+    detect_level: INFO
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+    detect_counts:
+      - K8s Role/Clusterrole Deleted: 1
+    trace_file: trace_files/k8s_audit/delete_clusterrole.json
+
+  create_clusterrolebinding:
+    detect: True
+    detect_level: INFO
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+    detect_counts:
+      - K8s Role/Clusterrolebinding Created: 1
+    trace_file: trace_files/k8s_audit/create_clusterrolebinding.json
+
+  delete_clusterrolebinding:
+    detect: True
+    detect_level: INFO
+    rules_file:
+      - ../rules/k8s_audit_rules.yaml
+    detect_counts:
+      - K8s Role/Clusterrolebinding Deleted: 1
+    trace_file: trace_files/k8s_audit/delete_clusterrolebinding.json

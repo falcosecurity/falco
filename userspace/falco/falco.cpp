@@ -1,19 +1,20 @@
 /*
-Copyright (C) 2016 Draios inc.
+Copyright (C) 2016-2018 Draios Inc dba Sysdig.
 
 This file is part of falco.
 
-falco is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License version 2 as
-published by the Free Software Foundation.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-falco is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+    http://www.apache.org/licenses/LICENSE-2.0
 
-You should have received a copy of the GNU General Public License
-along with falco.  If not, see <http://www.gnu.org/licenses/>.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
 */
 
 #define __STDC_FORMAT_MACROS
@@ -35,14 +36,19 @@ along with falco.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "logger.h"
 #include "utils.h"
+#include "chisel.h"
+#include "sysdig.h"
 
 #include "configuration.h"
 #include "falco_engine.h"
 #include "config_falco.h"
 #include "statsfilewriter.h"
+#include "webserver.h"
 
 bool g_terminate = false;
 bool g_reopen_outputs = false;
+bool g_restart = false;
+bool g_daemonized = false;
 
 //
 // Helper functions
@@ -57,6 +63,11 @@ static void reopen_outputs(int signal)
 	g_reopen_outputs = true;
 }
 
+static void restart_falco(int signal)
+{
+	g_restart = true;
+}
+
 //
 // Program help
 //
@@ -69,10 +80,13 @@ static void usage()
 	   " -h, --help                    Print this page\n"
 	   " -c                            Configuration file (default " FALCO_SOURCE_CONF_FILE ", " FALCO_INSTALL_CONF_FILE ")\n"
 	   " -A                            Monitor all events, including those with EF_DROP_FALCO flag.\n"
+	   " -b, --print-base64            Print data buffers in base64. This is useful for encoding\n"
+	   "                               binary data that needs to be used over media designed to\n"
 	   " -d, --daemon                  Run as a daemon\n"
 	   " -D <pattern>                  Disable any rules matching the regex <pattern>. Can be specified multiple times.\n"
 	   "                               Can not be specified with -t.\n"
-           " -e <events_file>              Read the events from <events_file> (in .scap format) instead of tapping into live.\n"
+	   " -e <events_file>              Read the events from <events_file> (in .scap format for sinsp events, or jsonl for\n"
+	   "                               k8s audit events) instead of tapping into live.\n"
 	   " -k <url>, --k8s-api=<url>\n"
 	   "                               Enable Kubernetes support by connecting to the API server\n"
       	   "                               specified as argument. E.g. \"http://admin:password@127.0.0.1:8080\".\n"
@@ -91,6 +105,8 @@ static void usage()
 	   "                               ':' or '#' characters in the file name.\n"
 	   " -L                            Show the name and description of all rules and exit.\n"
 	   " -l <rule>                     Show the name and description of the rule with name <rule> and exit.\n"
+	   " --list [<source>]             List all defined fields. If <source> is provided, only list those fields for\n"
+	   "                               the source <source>. Current values for <source> are \"syscall\", \"k8s_audit\"\n"
 	   " -m <url[,marathon_url]>, --mesos-api=<url[,marathon_url]>\n"
 	   "                               Enable Mesos support by connecting to the API server\n"
 	   "                               specified as argument. E.g. \"http://admin:password@127.0.0.1:5050\".\n"
@@ -114,6 +130,10 @@ static void usage()
            "                               from multiple files/directories.\n"
 	   " -s <stats_file>               If specified, write statistics related to falco's reading/processing of events\n"
 	   "                               to this file. (Only useful in live mode).\n"
+	   " -S <len>, --snaplen=<len>\n"
+	   "                  		   Capture the first <len> bytes of each I/O buffer.\n"
+	   "                   		   By default, the first 80 bytes are captured. Use this\n"
+	   "                   		   option with caution, it can generate huge trace files.\n"
 	   " -T <tag>                      Disable any rules with a tag=<tag>. Can be specified multiple times.\n"
 	   "                               Can not be specified with -t.\n"
 	   " -t <tag>                      Only run those rules with a tag=<tag>. Can be specified multiple times.\n"
@@ -146,6 +166,35 @@ static void display_fatal_err(const string &msg)
 
 // Splitting into key=value or key.subkey=value will be handled by configuration class.
 std::list<string> cmdline_options;
+
+// Read a jsonl file containing k8s audit events and pass each to the engine.
+void read_k8s_audit_trace_file(falco_engine *engine,
+			       falco_outputs *outputs,
+			       string &trace_filename)
+{
+	ifstream ifs(trace_filename);
+
+	uint64_t line_num = 0;
+
+	while(ifs)
+	{
+		string line, errstr;
+
+		getline(ifs, line);
+		line_num++;
+
+		if(line == "")
+		{
+			continue;
+		}
+
+		if(!k8s_audit_handler::accept_data(engine, outputs, line, errstr))
+		{
+			falco_logger::log(LOG_ERR, "Could not read k8s audit event line #" + to_string(line_num) + ", \"" + line + "\": " + errstr + ", stopping");
+			return;
+		}
+	}
+}
 
 //
 // Event processing loop
@@ -189,8 +238,9 @@ uint64_t do_inspect(falco_engine *engine,
 			g_reopen_outputs = false;
 		}
 
-		if (g_terminate)
+		if (g_terminate || g_restart)
 		{
+			falco_logger::log(LOG_INFO, "SIGHUP Received, restarting...\n");
 			break;
 		}
 		else if(rc == SCAP_TIMEOUT)
@@ -232,10 +282,10 @@ uint64_t do_inspect(falco_engine *engine,
 		// engine, which will match the event against the set
 		// of rules. If a match is found, pass the event to
 		// the outputs.
-		unique_ptr<falco_engine::rule_result> res = engine->process_event(ev);
+		unique_ptr<falco_engine::rule_result> res = engine->process_sinsp_event(ev);
 		if(res)
 		{
-			outputs->handle_event(res->evt, res->rule, res->priority_num, res->format);
+			outputs->handle_event(res->evt, res->rule, res->source, res->priority_num, res->format);
 		}
 
 		num_evts++;
@@ -285,6 +335,75 @@ static void print_all_ignored_events(sinsp *inspector)
 	printf("\n");
 }
 
+// Must match the value in the zsh tab completion
+#define DESCRIPTION_TEXT_START 16
+
+#define CONSOLE_LINE_LEN 79
+
+static void list_falco_fields(falco_engine *engine)
+{
+	for(auto &chk_field : engine->json_factory().get_fields())
+	{
+		printf("\n----------------------\n");
+		printf("Field Class: %s (%s)\n\n", chk_field.name.c_str(), chk_field.desc.c_str());
+
+		for(auto &field : chk_field.fields)
+		{
+			uint32_t l, m;
+
+			printf("%s", field.name.c_str());
+			uint32_t namelen = field.name.size();
+
+			if(namelen >= DESCRIPTION_TEXT_START)
+			{
+				printf("\n");
+				namelen = 0;
+			}
+
+			for(l = 0; l < DESCRIPTION_TEXT_START - namelen; l++)
+			{
+				printf(" ");
+			}
+
+			size_t desclen = field.desc.size();
+
+			for(l = 0; l < desclen; l++)
+			{
+				if(l % (CONSOLE_LINE_LEN - DESCRIPTION_TEXT_START) == 0 && l != 0)
+				{
+					printf("\n");
+
+					for(m = 0; m < DESCRIPTION_TEXT_START; m++)
+					{
+						printf(" ");
+					}
+				}
+
+				printf("%c", field.desc.at(l));
+			}
+
+			printf("\n");
+		}
+	}
+}
+
+static void list_source_fields(falco_engine *engine, bool verbose, std::string &source)
+{
+	if(source.size() > 0 &&
+	   !(source == "syscall" || source == "k8s_audit"))
+	{
+		throw std::invalid_argument("Value for --list must be \"syscall\" or \"k8s_audit\"");
+	}
+	if(source == "" || source == "syscall")
+	{
+		list_fields(verbose, false);
+	}
+	if(source == "" || source == "k8s_audit")
+	{
+		list_falco_fields(engine);
+	}
+}
+
 //
 // ARGUMENT PARSING AND PROGRAM SETUP
 //
@@ -292,11 +411,13 @@ int falco_init(int argc, char **argv)
 {
 	int result = EXIT_SUCCESS;
 	sinsp* inspector = NULL;
+	sinsp_evt::param_fmt event_buffer_format = sinsp_evt::PF_NORMAL;
 	falco_engine *engine = NULL;
 	falco_outputs *outputs = NULL;
 	int op;
 	int long_index = 0;
-	string scap_filename;
+	string trace_filename;
+	bool trace_is_scap = true;
 	string conf_filename;
 	string outfile;
 	list<string> rules_filenames;
@@ -312,9 +433,12 @@ int falco_init(int argc, char **argv)
 	string* k8s_api_cert = 0;
 	string* mesos_api = 0;
 	string output_format = "";
+	uint32_t snaplen = 0;
 	bool replace_container_info = false;
 	int duration_to_tot = 0;
 	bool print_ignored_events = false;
+	bool list_flds = false;
+	string list_flds_source = "";
 
 	// Used for writing trace files
 	int duration_seconds = 0;
@@ -326,9 +450,10 @@ int falco_init(int argc, char **argv)
 	bool buffered_cmdline = false;
 
 	// Used for stats
-	uint64_t num_evts;
 	double duration;
 	scap_stats cstats;
+
+	falco_webserver webserver;
 
 	static struct option long_options[] =
 	{
@@ -336,10 +461,12 @@ int falco_init(int argc, char **argv)
 		{"daemon", no_argument, 0, 'd' },
 		{"k8s-api", required_argument, 0, 'k'},
 		{"k8s-api-cert", required_argument, 0, 'K' },
+		{"list", optional_argument, 0},
 		{"mesos-api", required_argument, 0, 'm'},
 		{"option", required_argument, 0, 'o'},
 		{"print", required_argument, 0, 'p' },
 		{"pidfile", required_argument, 0, 'P' },
+		{"snaplen", required_argument, 0, 'S' },
 		{"unbuffered", no_argument, 0, 'U' },
 		{"version", no_argument, 0, 0 },
 		{"validate", required_argument, 0, 'V' },
@@ -375,6 +502,9 @@ int falco_init(int argc, char **argv)
 			case 'A':
 				all_events = true;
 				break;
+			case 'b':
+				event_buffer_format = sinsp_evt::PF_BASE64;
+				break;
 			case 'd':
 				daemon = true;
 				break;
@@ -383,9 +513,12 @@ int falco_init(int argc, char **argv)
 				disabled_rule_patterns.insert(pattern);
 				break;
 			case 'e':
-				scap_filename = optarg;
+				trace_filename = optarg;
 				k8s_api = new string();
 				mesos_api = new string();
+				break;
+			case 'F':
+				list_flds = optarg;
 				break;
 			case 'i':
 				print_ignored_events = true;
@@ -443,6 +576,9 @@ int falco_init(int argc, char **argv)
 			case 'r':
 				falco_configuration::read_rules_file_directory(string(optarg), rules_filenames);
 				break;
+			case 'S':
+				snaplen = atoi(optarg);
+				break;
 			case 's':
 				stats_filename = optarg;
 				break;
@@ -468,19 +604,39 @@ int falco_init(int argc, char **argv)
 			case '?':
 				result = EXIT_FAILURE;
 				goto exit;
+
+			case 0:
+				if(string(long_options[long_index].name) == "version")
+				{
+					printf("falco version %s\n", FALCO_VERSION);
+					return EXIT_SUCCESS;
+				}
+				else if (string(long_options[long_index].name) == "list")
+				{
+					list_flds = true;
+					if(optarg != NULL)
+					{
+						list_flds_source = optarg;
+					}
+				}
+				break;
+
 			default:
 				break;
 			}
 
 		}
 
-		if(string(long_options[long_index].name) == "version")
-		{
-			printf("falco version %s\n", FALCO_VERSION);
-			return EXIT_SUCCESS;
-		}
-
 		inspector = new sinsp();
+		inspector->set_buffer_format(event_buffer_format);
+
+		//
+		// If required, set the snaplen
+		//
+		if(snaplen != 0)
+		{
+			inspector->set_snaplen(snaplen);
+		}
 
 		if(print_ignored_events)
 		{
@@ -493,8 +649,13 @@ int falco_init(int argc, char **argv)
 		engine->set_inspector(inspector);
 		engine->set_extra(output_format, replace_container_info);
 
+		if(list_flds)
+		{
+			list_source_fields(engine, verbose, list_flds_source);
+			return EXIT_SUCCESS;
+		}
 
-		outputs = new falco_outputs();
+		outputs = new falco_outputs(engine);
 		outputs->set_inspector(inspector);
 
 		// Some combinations of arguments are not allowed.
@@ -674,9 +835,53 @@ int falco_init(int argc, char **argv)
 			goto exit;
 		}
 
-		if (scap_filename.size())
+		if(signal(SIGHUP, restart_falco) == SIG_ERR)
 		{
-			inspector->open(scap_filename);
+			fprintf(stderr, "An error occurred while setting SIGHUP signal handler.\n");
+			result = EXIT_FAILURE;
+			goto exit;
+		}
+
+		if (trace_filename.size())
+		{
+			// Try to open the trace file as a sysdig
+			// capture file first.
+			try {
+				inspector->open(trace_filename);
+				falco_logger::log(LOG_INFO, "Reading system call events from file: " + trace_filename + "\n");
+			}
+			catch(sinsp_exception &e)
+			{
+				trace_is_scap=false;
+			}
+
+			if(!trace_is_scap)
+			{
+				try {
+					string line;
+					nlohmann::json j;
+
+					// Note we only temporarily open the file here.
+					// The read file read loop will be later.
+					ifstream ifs(trace_filename);
+					getline(ifs, line);
+					j = nlohmann::json::parse(line);
+
+					falco_logger::log(LOG_INFO, "Reading k8s audit events from file: " + trace_filename + "\n");
+				}
+				catch (nlohmann::json::parse_error& e)
+				{
+					fprintf(stderr, "Trace filename %s not recognized as system call events or k8s audit events\n", trace_filename.c_str());
+					result = EXIT_FAILURE;
+					goto exit;
+				}
+				catch (exception &e)
+				{
+					fprintf(stderr, "Could not open trace filename %s for reading: %s\n", trace_filename.c_str(), e.what());
+					result = EXIT_FAILURE;
+					goto exit;
+				}
+			}
 		}
 		else
 		{
@@ -684,7 +889,7 @@ int falco_init(int argc, char **argv)
 			{
 				inspector->open(200);
 			}
-			catch(sinsp_exception e)
+			catch(sinsp_exception &e)
 			{
 				if(system("modprobe " PROBE_NAME " > /dev/null 2> /dev/null"))
 				{
@@ -696,7 +901,7 @@ int falco_init(int argc, char **argv)
 
 		// If daemonizing, do it here so any init errors will
 		// be returned in the foreground process.
-		if (daemon) {
+		if (daemon && !g_daemonized) {
 			pid_t pid, sid;
 
 			pid = fork();
@@ -747,6 +952,8 @@ int falco_init(int argc, char **argv)
 			open("/dev/null", O_RDONLY);
 			open("/dev/null", O_RDWR);
 			open("/dev/null", O_RDWR);
+
+			g_daemonized = true;
 		}
 
 		if(outfile != "")
@@ -814,38 +1021,59 @@ int falco_init(int argc, char **argv)
 		delete mesos_api;
 		mesos_api = 0;
 
-		num_evts = do_inspect(engine,
-				      outputs,
-				      inspector,
-				      uint64_t(duration_to_tot*ONE_SECOND_IN_NS),
-				      stats_filename,
-				      all_events);
-
-		duration = ((double)clock()) / CLOCKS_PER_SEC - duration;
-
-		inspector->get_capture_stats(&cstats);
-
-		if(verbose)
+		if(trace_filename.empty() && config.m_webserver_enabled)
 		{
-			fprintf(stderr, "Driver Events:%" PRIu64 "\nDriver Drops:%" PRIu64 "\n",
-				cstats.n_evts,
-				cstats.n_drops);
+			falco_logger::log(LOG_INFO, "Starting internal webserver, listening on port " + to_string(config.m_webserver_listen_port) + "\n");
+			webserver.init(&config, engine, outputs);
+			webserver.start();
+		}
 
-			fprintf(stderr, "Elapsed time: %.3lf, Captured Events: %" PRIu64 ", %.2lf eps\n",
-				duration,
-				num_evts,
-				num_evts / duration);
+		if(!trace_filename.empty() && !trace_is_scap)
+		{
+			read_k8s_audit_trace_file(engine,
+						  outputs,
+						  trace_filename);
+		}
+		else
+		{
+			uint64_t num_evts;
+
+			num_evts = do_inspect(engine,
+					      outputs,
+					      inspector,
+					      uint64_t(duration_to_tot*ONE_SECOND_IN_NS),
+					      stats_filename,
+					      all_events);
+
+			duration = ((double)clock()) / CLOCKS_PER_SEC - duration;
+
+			inspector->get_capture_stats(&cstats);
+
+			if(verbose)
+			{
+				fprintf(stderr, "Driver Events:%" PRIu64 "\nDriver Drops:%" PRIu64 "\n",
+					cstats.n_evts,
+					cstats.n_drops);
+
+				fprintf(stderr, "Elapsed time: %.3lf, Captured Events: %" PRIu64 ", %.2lf eps\n",
+					duration,
+					num_evts,
+					num_evts / duration);
+			}
+
 		}
 
 		inspector->close();
-
 		engine->print_stats();
+		webserver.stop();
 	}
 	catch(exception &e)
 	{
 		display_fatal_err("Runtime error: " + string(e.what()) + ". Exiting.\n");
 
 		result = EXIT_FAILURE;
+
+		webserver.stop();
 	}
 
 exit:
@@ -862,5 +1090,15 @@ exit:
 //
 int main(int argc, char **argv)
 {
-	return falco_init(argc, argv);
+	int rc;
+
+	// g_restart will cause the falco loop to exit, but we
+	// should reload everything and start over.
+	while((rc = falco_init(argc, argv)) == EXIT_SUCCESS && g_restart)
+	{
+		g_restart = false;
+		optind = 1;
+	}
+
+	return rc;
 }

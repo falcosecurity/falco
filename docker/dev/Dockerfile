@@ -1,6 +1,6 @@
 FROM debian:unstable
 
-MAINTAINER Sysdig <support@sysdig.com>
+LABEL maintainer="Sysdig <support@sysdig.com>"
 
 ENV FALCO_REPOSITORY dev
 
@@ -21,6 +21,7 @@ RUN apt-get update \
 	clang-7 \
 	ca-certificates \
 	curl \
+	dkms \
 	gnupg2 \
 	gcc \
 	gcc-5 \
@@ -30,6 +31,8 @@ RUN apt-get update \
 	libc6-dev \
 	libelf-dev \
 	llvm-7 \
+	netcat \
+	xz-utils \
  && rm -rf /var/lib/apt/lists/*
 
 # Since our base Debian image ships with GCC 7 which breaks older kernels, revert the
