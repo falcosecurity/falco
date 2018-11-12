@@ -1,7 +1,7 @@
 deploy: rbac create configure
 
 rbac:
-	kubectl apply -f ../cluster-role.yaml
+	kubectl apply -f cluster-role.yaml
 	kubectl apply -f cluster-role-binding.yaml
 
 create:
@@ -14,4 +14,4 @@ configure:
 clean:
 	terraform destroy -force
 	kubectl delete -f cluster-role-binding.yaml
-	kubectl delete -f ../cluster-role.yaml
+	kubectl delete -f cluster-role.yaml
