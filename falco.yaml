@@ -109,6 +109,8 @@ webserver:
   enabled: true
   listen_port: 8765
   k8s_audit_endpoint: /k8s_audit
+  ssl_enabled: false
+  ssl_certificate: /etc/falco/falco.pem
 
 # Possible additional things you might want to do with program output:
 #   - send to a slack webhook:

@@ -18,3 +18,4 @@ docker/event-generator/mysqld
 docker/event-generator/httpd
 docker/event-generator/sha1sum
 docker/event-generator/vipw
+.vscode/*
