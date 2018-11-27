@@ -37,19 +37,26 @@ falco_outputs::falco_outputs(falco_engine *engine)
 
 falco_outputs::~falco_outputs()
 {
+	// Note: The assert()s in this destructor were previously places where
+	//       exceptions were thrown.  C++11 doesn't allow destructors to
+	//       emit exceptions; if they're thrown, they'll trigger a call
+	//       to 'terminate()'.  To maintain similar behavior, the exceptions
+	//       were replace with calls to 'assert()'
 	if(m_initialized)
 	{
 		lua_getglobal(m_ls, m_lua_output_cleanup.c_str());
 
 		if(!lua_isfunction(m_ls, -1))
 		{
-			throw falco_exception("No function " + m_lua_output_cleanup + " found. ");
+			falco_logger::log(LOG_ERR, std::string("No function ") + m_lua_output_cleanup + " found. ");
+			assert(nullptr == "Missing lua cleanup function in ~falco_outputs");
 		}
 
 		if(lua_pcall(m_ls, 0, 0, 0) != 0)
 		{
 			const char* lerr = lua_tostring(m_ls, -1);
-			throw falco_exception(string(lerr));
+			falco_logger::log(LOG_ERR, std::string("lua_pcall failed, err: ") + lerr);
+			assert(nullptr == "lua_pcall failed in ~falco_outputs");
 		}
 	}
 }
