@@ -1,7 +1,6 @@
 deploy:
 	kubectl apply -f nats/
 	kubectl apply -f kubeless/
-	kubectl apply -f network-policy.yaml
 	kubectl apply -f .
 
 clean:

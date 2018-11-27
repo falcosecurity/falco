@@ -1,3 +1,7 @@
+resource "aws_iam_user" "kubernetes-response-engine-user" {
+  name = "kubernetes_response_engine"
+}
+
 resource "aws_iam_role" "iam-for-lambda" {
   name = "iam_for_lambda"
 
@@ -9,7 +13,7 @@ resource "aws_iam_role" "iam-for-lambda" {
       "Action": "sts:AssumeRole",
       "Principal": {
         "Service": "lambda.amazonaws.com",
-        "AWS": "${var.iam-user-arn}"
+        "AWS": "${aws_iam_user.kubernetes-response-engine-user.arn}"
       },
       "Effect": "Allow",
       "Sid": ""

@@ -1,4 +1,4 @@
 .terraform/*
 .terraform.*
 terraform.*
-*.yaml
+aws-auth-patch.yml
