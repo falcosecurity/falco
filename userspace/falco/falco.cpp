@@ -559,7 +559,7 @@ int falco_init(int argc, char **argv)
 				}
 				else if(string(optarg) == "k" || string(optarg) == "kubernetes")
 				{
-					output_format = "k8s.pod=%k8s.pod.name container=%container.id";
+					output_format = "k8s.ns=%k8s.ns.name k8s.pod=%k8s.pod.name container=%container.id";
 					replace_container_info = true;
 				}
 				else if(string(optarg) == "m" || string(optarg) == "mesos")
