@@ -841,6 +841,10 @@
 - macro: ufw_writing_conf
   condition: proc.name=ufw and fd.directory=/etc/ufw
 
+- macro: calico_writing_conf
+  condition: >
+    (proc.name = calico-node and fd.name startswith /etc/calico)
+    
 # Add conditions to this macro (probably in a separate file,
 # overwriting this macro) to allow for specific combinations of
 # programs writing below specific directories below
@@ -943,6 +947,7 @@
     and not iscsi_writing_conf
     and not istio_writing_conf
     and not ufw_writing_conf
+    and not calico_writing_conf
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc
