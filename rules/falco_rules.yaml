@@ -638,7 +638,7 @@
   condition: (veritas_progs and (fd.name startswith /etc/vx or fd.name startswith /etc/opt/VRTS or fd.name startswith /etc/vom))
 
 - macro: nginx_writing_conf
-  condition: (proc.name=nginx and fd.name startswith /etc/nginx)
+  condition: (proc.name in (nginx,nginx-ingress-c) and fd.name startswith /etc/nginx)
 
 - macro: nginx_writing_certs
   condition: >
@@ -849,7 +849,7 @@
   condition: (proc.aname[2] in (dpkg-reconfigur, dpkg-preconfigu))
 
 - macro: ufw_writing_conf
-  condition: proc.name=ufw and fd.directory=/etc/ufw
+  condition: (proc.name=ufw and fd.directory=/etc/ufw)
 
 - macro: calico_writing_conf
   condition: >
