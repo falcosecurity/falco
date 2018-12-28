@@ -178,16 +178,22 @@
 - list: deb_binaries
   items: [dpkg, dpkg-preconfigu, dpkg-reconfigur, dpkg-divert, apt, apt-get, aptitude,
     frontend, preinst, add-apt-reposit, apt-auto-remova, apt-key,
-    apt-listchanges, unattended-upgr, apt-add-reposit
+    apt-listchanges, unattended-upgr, apt-add-reposit, apt-config, apt-cache
     ]
 
 # The truncated dpkg-preconfigu is intentional, process names are
 # truncated at the sysdig level.
 - list: package_mgmt_binaries
-  items: [rpm_binaries, deb_binaries, update-alternat, gem, pip, pip3, sane-utils.post, alternatives, chef-client]
+  items: [rpm_binaries, deb_binaries, update-alternat, gem, pip, pip3, sane-utils.post, alternatives, chef-client, apk]
 
 - macro: package_mgmt_procs
   condition: proc.name in (package_mgmt_binaries)
+
+- macro: package_mgmt_ancestor_procs
+  condition: proc.pname in (package_mgmt_binaries) or
+             proc.aname[2] in (package_mgmt_binaries) or
+             proc.aname[3] in (package_mgmt_binaries) or
+             proc.aname[4] in (package_mgmt_binaries)
 
 - macro: coreos_write_ssh_dir
   condition: (proc.name=update-ssh-keys and fd.name startswith /home/core/.ssh)
@@ -1746,6 +1752,46 @@
   output: Unexpected K8s NodePort Connection (command=%proc.cmdline connection=%fd.name)
   priority: NOTICE
   tags: [network, k8s, container]
+
+- list: network_tool_binaries
+  items: [nc, ncat, nmap]
+
+- macro: network_tool_procs
+  condition: proc.name in (network_tool_binaries)
+
+# Container is supposed to be immutable. Package management should be done in building the image.
+- rule: Launch Package Management Process in Container
+  desc: Package management process ran inside container
+  condition: >
+    spawned_process and container and user.name != "_apt" and package_mgmt_procs and not package_mgmt_ancestor_procs
+  output: >
+    Package management process launched in container (user=%user.name
+    command=%proc.cmdline container_id=%container.id container_name=%container.name image=%container.image)
+  priority: ERROR
+  tags: [process]
+
+- rule: Netcat Remote Code Execution in Container
+  desc: Netcat Program runs inside container that allows remote code execution
+  condition: >
+    spawned_process and container and
+    ((proc.name = "nc" and (proc.args contains "-e" or proc.args contains "-c")) or
+     (proc.name = "ncat" and (proc.args contains "--sh-exec" or proc.args contains "--exec"))
+    )
+  output: >
+    Netcat runs inside container that allows remote code execution (user=%user.name
+    command=%proc.cmdline container_id=%container.id container_name=%container.name image=%container.image)
+  priority: WARNING
+  tags: [network, process]
+
+- rule: Lauch Suspicious Network Tool in Container
+  desc: Detect network tools launched inside container
+  condition: >
+    spawned_process and container and network_tool_procs
+  output: >
+    Network tool launched in container (user=%user.name
+    command=%proc.cmdline container_id=%container.id container_name=%container.name image=%container.image)
+  priority: NOTICE
+  tags: [network, process]
 
 # Application rules have moved to application_rules.yaml. Please look
 # there if you want to enable them by adding to
