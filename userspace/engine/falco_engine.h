@@ -53,6 +53,9 @@ public:
 	falco_engine(bool seed_rng=true, const std::string& alternate_lua_dir=FALCO_ENGINE_SOURCE_LUA_DIR);
 	virtual ~falco_engine();
 
+	// Print to stdout (using printf) a description of each field supported by this engine.
+	void list_fields(bool names_only=false);
+
 	//
 	// Load rules either directly or from a filename.
 	//
