@@ -215,7 +215,12 @@ function load_rules(sinsp_lua_parser,
 	 error ("Unexpected element of type " ..type(v)..". Each element should be a yaml associative array.")
       end
 
-      if (v['macro']) then
+      if (v['required_engine_version']) then
+	 if falco_rules.engine_version(rules_mgr) < v['required_engine_version'] then
+	    error("Rules require engine version "..v['required_engine_version']..", but engine version is "..falco_rules.engine_version(rules_mgr))
+	 end
+
+      elseif (v['macro']) then
 
 	 if v['source'] == nil then
 	    v['source'] = "syscall"
