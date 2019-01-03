@@ -16,7 +16,7 @@
 # limitations under the License.
 #
 
-- required_engine_version: 2
+- required_engine_version: 9999999
 
 - list: cat_binaries
   items: [cat]
