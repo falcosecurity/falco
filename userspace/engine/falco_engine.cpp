@@ -23,6 +23,7 @@ limitations under the License.
 #include <fstream>
 
 #include "falco_engine.h"
+#include "falco_engine_version.h"
 #include "config_falco_engine.h"
 
 #include "formats.h"
@@ -74,6 +75,11 @@ falco_engine::~falco_engine()
 	{
 		delete m_rules;
 	}
+}
+
+uint32_t falco_engine::engine_version()
+{
+	return (uint32_t) FALCO_ENGINE_VERSION;
 }
 
 #define DESCRIPTION_TEXT_START 16
