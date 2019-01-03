@@ -48,7 +48,7 @@ script:
     - make package
     - cp falco*.deb ../docker/local
     - cd ../docker/local
-    - docker build -t sysdig/falco:test .
+    - docker build -t falcosecurity/falco:test .
     - cd ../..
     - sudo test/run_regression_tests.sh $TRAVIS_BRANCH
 notifications:
