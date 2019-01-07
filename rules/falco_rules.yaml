@@ -494,8 +494,13 @@
      (proc.pname in (rake, ruby, scl) and proc.aname[5] in (tfm-rake,tfm-ruby)) or
      (proc.pname=scl and proc.aname[2] in (tfm-rake,tfm-ruby)))
 
+# This macro may not suffice in case of containerized Sysdig Agent,
+# considering combining it with java_in_agent_container
 - macro: java_running_sdjagent
-  condition: proc.name=java and proc.cmdline contains sdjagent.jar
+  condition: (proc.name=java and proc.cmdline contains sdjagent.jar)
+
+- macro: java_in_agent_container
+  condition: (proc.name=java and container.image startswith sysdig/agent)
 
 - macro: kubelet_running_loopback
   condition: (proc.pname=kubelet and proc.name=loopback)
@@ -1171,6 +1176,7 @@
     and not proc.pname in (sysdigcloud_binaries)
     and not python_running_sdchecks
     and not java_running_sdjagent
+    and not java_in_agent_container
     and not kubelet_running_loopback
   output: >
     Namespace change (setns) by unexpected program (user=%user.name command=%proc.cmdline
@@ -1640,6 +1646,7 @@
     and not proc.name in (known_setuid_binaries, userexec_binaries, mail_binaries, docker_binaries,
                           nomachine_binaries)
     and not java_running_sdjagent
+    and not java_in_agent_container
     and not nrpe_becoming_nagios
   output: >
     Unexpected setuid call by non-sudo, non-root program (user=%user.name cur_uid=%user.uid parent=%proc.pname
