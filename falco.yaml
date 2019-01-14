@@ -60,8 +60,8 @@ log_level: info
 priority: debug
 
 # Whether or not output to any of the output channels below is
-# buffered. Defaults to true
-buffered_outputs: true
+# buffered. Defaults to false
+buffered_outputs: false
 
 # A throttling mechanism implemented as a token bucket limits the
 # rate of falco notifications. This throttling is controlled by the following configuration
