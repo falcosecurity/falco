@@ -4,7 +4,7 @@ This directory gives you the required YAML files to stand up Sysdig Falco on Kub
 
 The two options are provided to deploy a Daemon Set:
 - `k8s-with-rbac` - This directory provides a definition to deploy a Daemon Set on Kubernetes with RBAC enabled.
-- `k8s-without-rbac` - This directory provides a definition to deploy a Daemon Set on Kubernetes without RBAC enabled. 
+- `k8s-without-rbac` - This directory provides a definition to deploy a Daemon Set on Kubernetes without RBAC enabled. **This method is deprecated in favor of RBAC-based installs, and won't be updated going forward.**
 
 Also provided:
 - `falco-event-generator-deployment.yaml` - A Kubernetes Deployment to generate sample events. This is useful for testing, but note it will generate a large number of events.
@@ -21,11 +21,20 @@ clusterrolebinding "falco-cluster-role-binding" created
 k8s-using-daemonset$
 ```
 
+We also create a service that allows other services to reach the embedded webserver in falco, which listens on https port 8765:
+
+```
+k8s-using-daemonset$ kubectl create -f k8s-with-rbac/falco-service.yaml
+service/falco-service created
+k8s-using-daemonset$
+```
+
 The Daemon Set also relies on a Kubernetes ConfigMap to store the Falco configuration and make the configuration available to the Falco Pods. This allows you to manage custom configuration without rebuilding and redeploying the underlying Pods. In order to create the ConfigMap you'll need to first need to copy the required configuration from their location in this GitHub repo to the `k8s-with-rbac/falco-config/` directory. Any modification of the configuration should be performed on these copies rather than the original files.
 
 ```
 k8s-using-daemonset$ cp ../../falco.yaml k8s-with-rbac/falco-config/
 k8s-using-daemonset$ cp ../../rules/falco_rules.* k8s-with-rbac/falco-config/
+k8s-using-daemonset$ cp ../../rules/k8s_audit_rules.yaml k8s-with-rbac/falco-config/
 ```
 
 If you want to send Falco alerts to a Slack channel, you'll want to modify the `falco.yaml` file to point to your Slack webhook. For more information on getting a webhook URL for your Slack team, refer to the [Slack documentation](https://api.slack.com/incoming-webhooks). Add the below to the bottom of the `falco.yaml` config file you just copied to enable Slack messages.
@@ -54,7 +63,7 @@ k8s-using-daemonset$
 ```
 
 
-## Deploying to Kubernetes without RBAC enabled
+## Deploying to Kubernetes without RBAC enabled (**Deprecated**)
 
 If you are running Kubernetes with Legacy Authorization enabled, you can use `kubectl` to deploy the Daemon Set provided in the `k8s-without-rbac` directory. The example provides the ability to post messages to a Slack channel via a webhook. For more information on getting a webhook URL for your Slack team, refer to the [Slack documentation](https://api.slack.com/incoming-webhooks). Modify the [`args`](https://github.com/draios/falco/blob/dev/examples/k8s-using-daemonset/falco-daemonset.yaml#L21) passed to the Falco container to point to the appropriate URL for your webhook.
 
