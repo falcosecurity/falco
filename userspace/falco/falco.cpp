@@ -458,6 +458,7 @@ int falco_init(int argc, char **argv)
 	static struct option long_options[] =
 	{
 		{"help", no_argument, 0, 'h' },
+		{"print-base64", no_argument, 0, 'b'},
 		{"daemon", no_argument, 0, 'd' },
 		{"k8s-api", required_argument, 0, 'k'},
 		{"k8s-api-cert", required_argument, 0, 'K' },
@@ -488,7 +489,7 @@ int falco_init(int argc, char **argv)
 		// Parse the args
 		//
 		while((op = getopt_long(argc, argv,
-                                        "hc:AdD:e:ik:K:Ll:m:M:o:P:p:r:s:T:t:UvV:w:",
+                                        "hc:AbdD:e:F:ik:K:Ll:m:M:o:P:p:r:S:s:T:t:UvV:w:",
                                         long_options, &long_index)) != -1)
 		{
 			switch(op)
@@ -559,7 +560,7 @@ int falco_init(int argc, char **argv)
 				}
 				else if(string(optarg) == "k" || string(optarg) == "kubernetes")
 				{
-					output_format = "k8s.pod=%k8s.pod.name container=%container.id";
+					output_format = "k8s.ns=%k8s.ns.name k8s.pod=%k8s.pod.name container=%container.id";
 					replace_container_info = true;
 				}
 				else if(string(optarg) == "m" || string(optarg) == "mesos")

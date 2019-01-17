@@ -234,6 +234,11 @@ bool falco_ruleset::run(gen_event *evt, uint32_t etag, uint16_t ruleset)
 
 void falco_ruleset::event_tags_for_ruleset(vector<bool> &evttypes, uint16_t ruleset)
 {
+	if(m_rulesets.size() < (size_t) ruleset + 1)
+	{
+		return;
+	}
+
 	return m_rulesets[ruleset]->event_tags_for_ruleset(evttypes);
 }
 
@@ -314,7 +319,7 @@ void falco_sinsp_ruleset::evttypes_for_ruleset(vector<bool> &evttypes, uint16_t 
 	{
 		uint32_t etag = evttype_to_event_tag(etype);
 
-		if(event_tags[etag])
+		if(etag < event_tags.size() && event_tags[etag])
 		{
 			evttypes[etype] = true;
 		}
@@ -333,7 +338,7 @@ void falco_sinsp_ruleset::syscalls_for_ruleset(vector<bool> &syscalls, uint16_t 
 	{
 		uint32_t etag = evttype_to_event_tag(syscallid);
 
-		if(event_tags[etag])
+		if(etag < event_tags.size() && event_tags[etag])
 		{
 			syscalls[syscallid] = true;
 		}

@@ -19,6 +19,8 @@ cmake_minimum_required(VERSION 2.8.2)
 
 project(falco)
 
+option(BUILD_WARNINGS_AS_ERRORS "Enable building with -Wextra -Werror flags")
+
 if(NOT DEFINED FALCO_VERSION)
 	set(FALCO_VERSION "0.1.1dev")
 endif()
@@ -35,8 +37,15 @@ if(NOT DRAIOS_DEBUG_FLAGS)
 	set(DRAIOS_DEBUG_FLAGS "-D_DEBUG")
 endif()
 
-set(CMAKE_C_FLAGS "-Wall -ggdb ${DRAIOS_FEATURE_FLAGS}")
-set(CMAKE_CXX_FLAGS "-Wall -ggdb --std=c++0x ${DRAIOS_FEATURE_FLAGS}")
+set(CMAKE_COMMON_FLAGS "-Wall -ggdb ${DRAIOS_FEATURE_FLAGS}")
+
+if(BUILD_WARNINGS_AS_ERRORS)
+	set(CMAKE_SUPPRESSED_WARNINGS "-Wno-unused-parameter -Wno-missing-field-initializers -Wno-sign-compare -Wno-type-limits -Wno-implicit-fallthrough -Wno-format-truncation")
+	set(CMAKE_COMMON_FLAGS "${CMAKE_COMMON_FLAGS} -Wextra -Werror ${CMAKE_SUPPRESSED_WARNINGS}")
+endif()
+
+set(CMAKE_C_FLAGS "${CMAKE_COMMON_FLAGS}")
+set(CMAKE_CXX_FLAGS "--std=c++0x ${CMAKE_COMMON_FLAGS}")
 
 set(CMAKE_C_FLAGS_DEBUG "${DRAIOS_DEBUG_FLAGS}")
 set(CMAKE_CXX_FLAGS_DEBUG "${DRAIOS_DEBUG_FLAGS}")

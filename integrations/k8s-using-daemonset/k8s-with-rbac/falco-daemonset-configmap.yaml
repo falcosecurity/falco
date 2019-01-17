@@ -1,16 +1,15 @@
 apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
-  name: falco
+  name: falco-daemonset
   labels:
-    name: falco-daemonset
-    app: demo
+    app: falco-example
+    role: security
 spec:
   template:
     metadata:
       labels:
-        name: falco
-        app: demo
+        app: falco-example
         role: security
     spec:
       serviceAccount: falco-account

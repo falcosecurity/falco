@@ -493,24 +493,26 @@ function load_rules(sinsp_lua_parser,
 	 -- If the format string contains %container.info, replace it
 	 -- with extra. Otherwise, add extra onto the end of the format
 	 -- string.
-	 if string.find(v['output'], "%container.info", nil, true) ~= nil then
+	 if v['source'] == "syscall" then
+	    if string.find(v['output'], "%container.info", nil, true) ~= nil then
 
-	    -- There may not be any extra, or we're not supposed
-	    -- to replace it, in which case we use the generic
-	    -- "%container.name (id=%container.id)"
-	    if replace_container_info == false then
-	       v['output'] = string.gsub(v['output'], "%%container.info", "%%container.name (id=%%container.id)")
+	       -- There may not be any extra, or we're not supposed
+	       -- to replace it, in which case we use the generic
+	       -- "%container.name (id=%container.id)"
+	       if replace_container_info == false then
+		  v['output'] = string.gsub(v['output'], "%%container.info", "%%container.name (id=%%container.id)")
+		  if extra ~= "" then
+		     v['output'] = v['output'].." "..extra
+		  end
+	       else
+		  safe_extra = string.gsub(extra, "%%", "%%%%")
+		  v['output'] = string.gsub(v['output'], "%%container.info", safe_extra)
+	       end
+	    else
+	       -- Just add the extra to the end
 	       if extra ~= "" then
 		  v['output'] = v['output'].." "..extra
 	       end
-	    else
-	       safe_extra = string.gsub(extra, "%%", "%%%%")
-	       v['output'] = string.gsub(v['output'], "%%container.info", safe_extra)
-	    end
-	 else
-	    -- Just add the extra to the end
-	    if extra ~= "" then
-	       v['output'] = v['output'].." "..extra
 	    end
 	 end
 

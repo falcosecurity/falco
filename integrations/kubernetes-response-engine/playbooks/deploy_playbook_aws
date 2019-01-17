@@ -16,7 +16,7 @@ You must pass the playbook and at least one topic to subscribe.
 
 Example:
 
-deploy_playbook -p slack -t "falco.error.*" -e SLACK_WEBHOOK_URL=http://foobar.com/... -k sysdig_eks
+deploy_playbook -p slack -e SLACK_WEBHOOK_URL=http://foobar.com/... -k sysdig_eks
 EOF
   exit 1
 }
@@ -27,7 +27,7 @@ playbook=""
 environment=("KUBECONFIG=kubeconfig" "KUBERNETES_LOAD_KUBE_CONFIG=1")
 eks_cluster="${EKS_CLUSTER}"
 
-while getopts "r:e:t:" arg; do
+while getopts "p:e:k:" arg; do
   case $arg in
     p)
       playbook="${OPTARG}"
