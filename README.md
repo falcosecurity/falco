@@ -6,7 +6,7 @@
 Read the [change log](https://github.com/falcosecurity/falco/blob/dev/CHANGELOG.md)
 
 Dev Branch: [![Build Status](https://travis-ci.org/falcosecurity/falco.svg?branch=dev)](https://travis-ci.org/falcosecurity/falco)<br />
-Master Branch: [![Build Status](https://travis-ci.org/falcosecurity/falco.svg?branch=master)](https://travis-ci.org/falcosecurity/falco)
+Master Branch: [![Build Status](https://travis-ci.org/falcosecurity/falco.svg?branch=master)](https://travis-ci.org/falcosecurity/falco)<br />
 CII Best Practices: [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/2317/badge)](https://bestpractices.coreinfrastructure.org/projects/2317)
 
 
