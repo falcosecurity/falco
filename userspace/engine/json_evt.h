@@ -42,6 +42,17 @@ public:
 
 	uint64_t get_ts();
 
+	inline uint16_t get_source()
+	{
+		return ESRC_K8S_AUDIT;
+	}
+
+	inline uint16_t get_type()
+	{
+		// All k8s audit events have the single tag "1". - see falco_engine::process_k8s_audit_event
+		return 1;
+	}
+
 protected:
 	nlohmann::json m_jevt;
 
@@ -275,10 +286,11 @@ public:
 	std::string tostring(json_event *ev);
 	std::string tojson(json_event *ev);
 
+	void resolve_tokens(json_event *ev, std::list<std::pair<std::string,std::string>> &resolved);
+
 private:
 	void parse_format();
 
-	void resolve_tokens(json_event *ev, std::list<std::pair<std::string,std::string>> &resolved);
 
 	// A format token is either a combination of a filtercheck
 	// name (ka.value) and filtercheck object as key, or an empty
