@@ -31,7 +31,7 @@ Run the following commands to fill in the template file with the ClusterIP ip ad
 
 ```
 FALCO_SERVICE_CLUSTERIP=$(kubectl get service falco-service -o=jsonpath={.spec.clusterIP}) envsubst < webhook-config.yaml.in > webhook-config.yaml
-ssh -i $(minikube ssh-key) docker@$(minikube ip) sudo bash /tmp/k8s_audit_config/apiserver-config.patch.sh
+minikube ssh sudo bash /tmp/k8s_audit_config/apiserver-config.patch.sh
 ```
 
 K8s audit events will then be routed to the falco daemonset within the cluster, which you can observe via `kubectl logs -f $(kubectl get pods -l app=falco-example -o jsonpath={.items[0].metadata.name})`.
