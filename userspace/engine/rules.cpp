@@ -33,6 +33,7 @@ const static struct luaL_reg ll_falco_rules [] =
 	{"add_filter", &falco_rules::add_filter},
 	{"add_k8s_audit_filter", &falco_rules::add_k8s_audit_filter},
 	{"enable_rule", &falco_rules::enable_rule},
+	{"engine_version", &falco_rules::engine_version},
 	{NULL,NULL}
 };
 
@@ -202,6 +203,21 @@ int falco_rules::enable_rule(lua_State *ls)
 void falco_rules::enable_rule(string &rule, bool enabled)
 {
 	m_engine->enable_rule(rule, enabled);
+}
+
+int falco_rules::engine_version(lua_State *ls)
+{
+	if (! lua_islightuserdata(ls, -1))
+	{
+		lua_pushstring(ls, "Invalid arguments passed to engine_version()");
+		lua_error(ls);
+	}
+
+	falco_rules *rules = (falco_rules *) lua_topointer(ls, -1);
+
+	lua_pushnumber(ls, rules->m_engine->engine_version());
+
+	return 1;
 }
 
 void falco_rules::load_rules(const string &rules_content,

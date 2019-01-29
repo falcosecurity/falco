@@ -16,6 +16,8 @@
 # limitations under the License.
 #
 
+- required_engine_version: 2
+
 ################################################################
 # By default all application-related rules are disabled for
 # performance reasons. Depending on the application(s) you use,

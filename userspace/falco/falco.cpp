@@ -114,6 +114,7 @@ static void usage()
 	   "                               The API servers can also be specified via the environment variable\n"
 	   "                               FALCO_MESOS_API.\n"
 	   " -M <num_seconds>              Stop collecting after <num_seconds> reached.\n"
+	   " -N                            When used with --list, only print field names.\n"
 	   " -o, --option <key>=<val>      Set the value of option <key> to <val>. Overrides values in configuration file.\n"
 	   "                               <key> can be a two-part <key>.<subkey>\n"
 	   " -p <output_format>, --print=<output_format>\n"
@@ -335,59 +336,7 @@ static void print_all_ignored_events(sinsp *inspector)
 	printf("\n");
 }
 
-// Must match the value in the zsh tab completion
-#define DESCRIPTION_TEXT_START 16
-
-#define CONSOLE_LINE_LEN 79
-
-static void list_falco_fields(falco_engine *engine)
-{
-	for(auto &chk_field : engine->json_factory().get_fields())
-	{
-		printf("\n----------------------\n");
-		printf("Field Class: %s (%s)\n\n", chk_field.name.c_str(), chk_field.desc.c_str());
-
-		for(auto &field : chk_field.fields)
-		{
-			uint32_t l, m;
-
-			printf("%s", field.name.c_str());
-			uint32_t namelen = field.name.size();
-
-			if(namelen >= DESCRIPTION_TEXT_START)
-			{
-				printf("\n");
-				namelen = 0;
-			}
-
-			for(l = 0; l < DESCRIPTION_TEXT_START - namelen; l++)
-			{
-				printf(" ");
-			}
-
-			size_t desclen = field.desc.size();
-
-			for(l = 0; l < desclen; l++)
-			{
-				if(l % (CONSOLE_LINE_LEN - DESCRIPTION_TEXT_START) == 0 && l != 0)
-				{
-					printf("\n");
-
-					for(m = 0; m < DESCRIPTION_TEXT_START; m++)
-					{
-						printf(" ");
-					}
-				}
-
-				printf("%c", field.desc.at(l));
-			}
-
-			printf("\n");
-		}
-	}
-}
-
-static void list_source_fields(falco_engine *engine, bool verbose, std::string &source)
+static void list_source_fields(falco_engine *engine, bool verbose, bool names_only, std::string &source)
 {
 	if(source.size() > 0 &&
 	   !(source == "syscall" || source == "k8s_audit"))
@@ -396,11 +345,11 @@ static void list_source_fields(falco_engine *engine, bool verbose, std::string &
 	}
 	if(source == "" || source == "syscall")
 	{
-		list_fields(verbose, false);
+		list_fields(verbose, false, names_only);
 	}
 	if(source == "" || source == "k8s_audit")
 	{
-		list_falco_fields(engine);
+		engine->list_fields(names_only);
 	}
 }
 
@@ -428,6 +377,7 @@ int falco_init(int argc, char **argv)
 	list<string> validate_rules_filenames;
 	string stats_filename = "";
 	bool verbose = false;
+	bool names_only = false;
 	bool all_events = false;
 	string* k8s_api = 0;
 	string* k8s_api_cert = 0;
@@ -489,7 +439,7 @@ int falco_init(int argc, char **argv)
 		// Parse the args
 		//
 		while((op = getopt_long(argc, argv,
-                                        "hc:AbdD:e:F:ik:K:Ll:m:M:o:P:p:r:S:s:T:t:UvV:w:",
+                                        "hc:AbdD:e:F:ik:K:Ll:m:M:No:P:p:r:S:s:T:t:UvV:w:",
                                         long_options, &long_index)) != -1)
 		{
 			switch(op)
@@ -545,6 +495,9 @@ int falco_init(int argc, char **argv)
 				{
 					throw sinsp_exception(string("invalid duration") + optarg);
 				}
+				break;
+			case 'N':
+				names_only = true;
 				break;
 			case 'o':
 				cmdline_options.push_back(optarg);
@@ -652,7 +605,7 @@ int falco_init(int argc, char **argv)
 
 		if(list_flds)
 		{
-			list_source_fields(engine, verbose, list_flds_source);
+			list_source_fields(engine, verbose, names_only, list_flds_source);
 			return EXIT_SUCCESS;
 		}
 

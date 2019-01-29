@@ -23,6 +23,7 @@ limitations under the License.
 #include <fstream>
 
 #include "falco_engine.h"
+#include "falco_engine_version.h"
 #include "config_falco_engine.h"
 
 #include "formats.h"
@@ -73,6 +74,71 @@ falco_engine::~falco_engine()
 	if (m_rules)
 	{
 		delete m_rules;
+	}
+}
+
+uint32_t falco_engine::engine_version()
+{
+	return (uint32_t) FALCO_ENGINE_VERSION;
+}
+
+#define DESCRIPTION_TEXT_START 16
+
+#define CONSOLE_LINE_LEN 79
+
+void falco_engine::list_fields(bool names_only)
+{
+	for(auto &chk_field : json_factory().get_fields())
+	{
+		if(!names_only)
+		{
+			printf("\n----------------------\n");
+			printf("Field Class: %s (%s)\n\n", chk_field.name.c_str(), chk_field.desc.c_str());
+		}
+
+		for(auto &field : chk_field.fields)
+		{
+			uint32_t l, m;
+
+			printf("%s", field.name.c_str());
+
+			if(names_only)
+			{
+				printf("\n");
+				continue;
+			}
+			uint32_t namelen = field.name.size();
+
+			if(namelen >= DESCRIPTION_TEXT_START)
+			{
+				printf("\n");
+				namelen = 0;
+			}
+
+			for(l = 0; l < DESCRIPTION_TEXT_START - namelen; l++)
+			{
+				printf(" ");
+			}
+
+			size_t desclen = field.desc.size();
+
+			for(l = 0; l < desclen; l++)
+			{
+				if(l % (CONSOLE_LINE_LEN - DESCRIPTION_TEXT_START) == 0 && l != 0)
+				{
+					printf("\n");
+
+					for(m = 0; m < DESCRIPTION_TEXT_START; m++)
+					{
+						printf(" ");
+					}
+				}
+
+				printf("%c", field.desc.at(l));
+			}
+
+			printf("\n");
+		}
 	}
 }
 

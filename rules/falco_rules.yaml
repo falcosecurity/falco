@@ -16,6 +16,16 @@
 # limitations under the License.
 #
 
+# See xxx for details on falco engine and rules versioning. Currently,
+# this specific rules file is compatible with engine version 0
+# (e.g. falco releases <= 0.13.1), so we'll keep the
+# required_engine_version lines commented out, so maintain
+# compatibility with older falco releases. With the first incompatible
+# change to this rules file, we'll uncomment this line and set it to
+# the falco engine version in use at the time.
+#
+#- required_engine_version: 2
+
 # Currently disabled as read/write are ignored syscalls. The nearly
 # similar open_write/open_read check for files being opened for
 # reading/writing.
