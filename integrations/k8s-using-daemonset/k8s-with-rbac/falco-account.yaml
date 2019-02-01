@@ -15,7 +15,7 @@ metadata:
     role: security
 rules:
   - apiGroups: ["extensions",""]
-    resources: ["nodes","namespaces","pods","replicationcontrollers","services","events","configmaps"]
+    resources: ["nodes","namespaces","pods","replicationcontrollers","replicasets","services","daemonsets","deployments","events","configmaps"]
     verbs: ["get","list","watch"]
   - nonResourceURLs: ["/healthz", "/healthz/*"]
     verbs: ["get"]
