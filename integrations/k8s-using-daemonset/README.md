@@ -58,7 +58,7 @@ Now that we have the requirements for our Daemon Set in place, we can create our
 
 ```
 k8s-using-daemonset$ kubectl create -f k8s-with-rbac/falco-daemonset-configmap.yaml 
-daemonset "falco" created
+daemonset.extensions "falco-daemonset" created
 k8s-using-daemonset$
 ```
 
@@ -78,14 +78,13 @@ In order to test that Falco is working correctly, you can launch a shell in a Po
 
 ```
 k8s-using-daemonset$ kubectl get pods
-NAME          READY     STATUS    RESTARTS   AGE
-falco-74htl   1/1       Running   0          13h
-falco-fqz2m   1/1       Running   0          13h
-falco-sgjfx   1/1       Running   0          13h
-k8s-using-daemonset$ kubectl exec -it falco-74htl bash
-root@falco-74htl:/# exit
-k8s-using-daemonset$ kubectl logs falco-74htl
-{"output":"17:48:58.590038385: Notice A shell was spawned in a container with an attached terminal (user=root k8s.pod=falco-74htl container=a98c2aa8e670 shell=bash parent=<NA> cmdline=bash  terminal=34816)","priority":"Notice","rule":"Terminal shell in container","time":"2017-12-20T17:48:58.590038385Z", "output_fields": {"container.id":"a98c2aa8e670","evt.time":1513792138590038385,"k8s.pod.name":"falco-74htl","proc.cmdline":"bash ","proc.name":"bash","proc.pname":null,"proc.tty":34816,"user.name":"root"}}
+NAME                    READY     STATUS    RESTARTS   AGE
+falco-daemonset-b695d   1/1       Running   0          2d
+falco-daemonset-n8q2v   1/1       Running   0          2d
+k8s-using-daemonset$ kubectl exec -it falco-daemonset-b695d bash
+root@falco-daemonset-b695d:/# exit
+k8s-using-daemonset$ kubectl logs falco-daemonset-b695d
+07:16:09.217866519: Error File below known binary directory renamed/removed (user=root command=event_generator pcmdline=<NA> operation=rename file=<NA> res=0 oldpath=/bin/true newpath=/bin/true.event-generator-sh ) k8s.ns=default k8s.pod=falco-event-generator-deployment-645444689b-j6mth container=0e67aad65846 k8s.ns=default k8s.pod=falco-event-generator-deployment-645444689b-j6mth container=0e67aad65846
 k8s-using-daemonset$
 ``` 
 
