@@ -46,6 +46,9 @@ spec:
             - mountPath: /host/etc/
               name: etc-fs
               readOnly: true
+            - mountPath: /etc/localtime
+              name: etc-localtime
+              readOnly: true
             - mountPath: /etc/falco
               name: falco-config
       volumes:
@@ -70,6 +73,9 @@ spec:
         - name: etc-fs
           hostPath:
             path: /etc
+        - name: etc-localtime
+          hostPath:
+            path: /etc/localtime
         - name: falco-config
           configMap:
             name: falco-config

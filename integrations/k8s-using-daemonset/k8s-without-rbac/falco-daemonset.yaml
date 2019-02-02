@@ -36,6 +36,9 @@ spec:
             - mountPath: /host/usr
               name: usr-fs
               readOnly: true
+            - mountPath: /etc/localtime
+              name: etc-localtime
+              readOnly: true
       volumes:
         - name: docker-socket
           hostPath:
@@ -55,3 +58,6 @@ spec:
         - name: usr-fs
           hostPath:
             path: /usr
+        - name: etc-localtime
+          hostPath:
+            path: /etc/localtime
