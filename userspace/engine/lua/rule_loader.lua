@@ -195,10 +195,11 @@ function load_rules(sinsp_lua_parser,
 		    min_priority)
 
    local rules = yaml.load(rules_content)
+   local required_engine_version = 0
 
    if rules == nil then
       -- An empty rules file is acceptable
-      return
+      return required_engine_version
    end
 
    if type(rules) ~= "table" then
@@ -216,6 +217,7 @@ function load_rules(sinsp_lua_parser,
       end
 
       if (v['required_engine_version']) then
+	 required_engine_version = v['required_engine_version']
 	 if falco_rules.engine_version(rules_mgr) < v['required_engine_version'] then
 	    error("Rules require engine version "..v['required_engine_version']..", but engine version is "..falco_rules.engine_version(rules_mgr))
 	 end
@@ -549,6 +551,8 @@ function load_rules(sinsp_lua_parser,
    end
 
    io.flush()
+
+   return required_engine_version
 end
 
 local rule_fmt = "%-50s %s"
