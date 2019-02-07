@@ -69,6 +69,13 @@ public:
 	void load_rules(const std::string &rules_content, bool verbose, bool all_events);
 
 	//
+	// Identical to above, but also returns the required engine version for the file/content.
+	// (If no required engine version is specified, returns 0).
+	//
+	void load_rules_file(const std::string &rules_filename, bool verbose, bool all_events, uint64_t &required_engine_version);
+	void load_rules(const std::string &rules_content, bool verbose, bool all_events, uint64_t &required_engine_version);
+
+	//
 	// Enable/Disable any rules matching the provided pattern
 	// (regex). When provided, enable/disable these rules in the
 	// context of the provided ruleset. The ruleset (id) can later

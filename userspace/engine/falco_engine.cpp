@@ -144,6 +144,13 @@ void falco_engine::list_fields(bool names_only)
 
 void falco_engine::load_rules(const string &rules_content, bool verbose, bool all_events)
 {
+	uint64_t dummy;
+
+	return load_rules(rules_content, verbose, all_events, dummy);
+}
+
+void falco_engine::load_rules(const string &rules_content, bool verbose, bool all_events, uint64_t &required_engine_version)
+{
 	// The engine must have been given an inspector by now.
 	if(! m_inspector)
 	{
@@ -171,10 +178,17 @@ void falco_engine::load_rules(const string &rules_content, bool verbose, bool al
 	bool json_include_output_property = false;
 	falco_formats::init(m_inspector, this, m_ls, json_output, json_include_output_property);
 
-	m_rules->load_rules(rules_content, verbose, all_events, m_extra, m_replace_container_info, m_min_priority);
+	m_rules->load_rules(rules_content, verbose, all_events, m_extra, m_replace_container_info, m_min_priority, required_engine_version);
 }
 
 void falco_engine::load_rules_file(const string &rules_filename, bool verbose, bool all_events)
+{
+	uint64_t dummy;
+
+	return load_rules_file(rules_filename, verbose, all_events, dummy);
+}
+
+void falco_engine::load_rules_file(const string &rules_filename, bool verbose, bool all_events, uint64_t &required_engine_version)
 {
 	ifstream is;
 
@@ -189,7 +203,7 @@ void falco_engine::load_rules_file(const string &rules_filename, bool verbose, b
 	string rules_content((istreambuf_iterator<char>(is)),
 			     istreambuf_iterator<char>());
 
-	load_rules(rules_content, verbose, all_events);
+	load_rules(rules_content, verbose, all_events, required_engine_version);
 }
 
 void falco_engine::enable_rule(const string &pattern, bool enabled, const string &ruleset)

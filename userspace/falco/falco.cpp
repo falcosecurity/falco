@@ -28,6 +28,7 @@ limitations under the License.
 #include <string>
 #include <signal.h>
 #include <fcntl.h>
+#include <sys/utsname.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <getopt.h>
@@ -135,6 +136,8 @@ static void usage()
 	   "                  		   Capture the first <len> bytes of each I/O buffer.\n"
 	   "                   		   By default, the first 80 bytes are captured. Use this\n"
 	   "                   		   option with caution, it can generate huge trace files.\n"
+	   " --support                     Print support information including version, rules files used, etc.\n"
+	   "                               and exit.\n"
 	   " -T <tag>                      Disable any rules with a tag=<tag>. Can be specified multiple times.\n"
 	   "                               Can not be specified with -t.\n"
 	   " -t <tag>                      Only run those rules with a tag=<tag>. Can be specified multiple times.\n"
@@ -195,6 +198,15 @@ void read_k8s_audit_trace_file(falco_engine *engine,
 			return;
 		}
 	}
+}
+
+static std::string read_file(std::string filename)
+{
+	std::ifstream t(filename);
+	std::string str((std::istreambuf_iterator<char>(t)),
+			std::istreambuf_iterator<char>());
+
+	return str;
 }
 
 //
@@ -389,6 +401,7 @@ int falco_init(int argc, char **argv)
 	bool print_ignored_events = false;
 	bool list_flds = false;
 	string list_flds_source = "";
+	bool print_support = false;
 
 	// Used for writing trace files
 	int duration_seconds = 0;
@@ -398,6 +411,7 @@ int falco_init(int argc, char **argv)
 	bool compress = false;
 	bool buffered_outputs = true;
 	bool buffered_cmdline = false;
+	std::map<string,uint64_t> required_engine_versions;
 
 	// Used for stats
 	double duration;
@@ -418,6 +432,7 @@ int falco_init(int argc, char **argv)
 		{"print", required_argument, 0, 'p' },
 		{"pidfile", required_argument, 0, 'P' },
 		{"snaplen", required_argument, 0, 'S' },
+		{"support", no_argument, 0},
 		{"unbuffered", no_argument, 0, 'U' },
 		{"version", no_argument, 0, 0 },
 		{"validate", required_argument, 0, 'V' },
@@ -573,6 +588,10 @@ int falco_init(int argc, char **argv)
 						list_flds_source = optarg;
 					}
 				}
+				else if (string(long_options[long_index].name) == "support")
+				{
+					print_support = true;
+				}
 				break;
 
 			default:
@@ -701,7 +720,10 @@ int falco_init(int argc, char **argv)
 		for (auto filename : config.m_rules_filenames)
 		{
 			falco_logger::log(LOG_INFO, "Loading rules from file " + filename + ":\n");
-			engine->load_rules_file(filename, verbose, all_events);
+			uint64_t required_engine_version;
+
+			engine->load_rules_file(filename, verbose, all_events, required_engine_version);
+			required_engine_versions[filename] = required_engine_version;
 		}
 
 		// You can't both disable and enable rules
@@ -736,6 +758,49 @@ int falco_init(int argc, char **argv)
 				falco_logger::log(LOG_INFO, "Enabling rules with tag: " + tag + "\n");
 			}
 			engine->enable_rule_by_tag(enabled_rule_tags, true);
+		}
+
+		if(print_support)
+		{
+			nlohmann::json support;
+			struct utsname sysinfo;
+			std::string cmdline;
+
+			if(uname(&sysinfo) != 0)
+			{
+				throw std::runtime_error(string("Could not uname() to find system info: %s\n") + strerror(errno));
+			}
+
+			for(char **arg = argv; *arg; arg++)
+			{
+				if(cmdline.size() > 0)
+				{
+					cmdline += " ";
+				}
+				cmdline += *arg;
+			}
+
+			support["version"] = FALCO_VERSION;
+			support["system_info"]["sysname"] = sysinfo.sysname;
+			support["system_info"]["nodename"] = sysinfo.nodename;
+			support["system_info"]["release"] = sysinfo.release;
+			support["system_info"]["version"] = sysinfo.version;
+			support["system_info"]["machine"] = sysinfo.machine;
+			support["cmdline"] = cmdline;
+			support["config"] = read_file(conf_filename);
+			support["rules_files"] = nlohmann::json::array();
+			for(auto filename : config.m_rules_filenames)
+			{
+				nlohmann::json finfo;
+				finfo["name"] = filename;
+				nlohmann::json variant;
+				variant["required_engine_version"] = required_engine_versions[filename];
+				variant["content"] = read_file(filename);
+				finfo["variants"].push_back(variant);
+				support["rules_files"].push_back(finfo);
+			}
+			printf("%s\n", support.dump().c_str());
+			goto exit;
 		}
 
 		outputs->init(config.m_json_output,
