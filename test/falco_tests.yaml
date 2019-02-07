@@ -18,7 +18,7 @@
 trace_files: !mux
 
   docker_package:
-    package: docker:sysdig/falco:test
+    package: docker:falcosecurity/falco:test
     detect: True
     detect_level: WARNING
     rules_file: /host/rules/rule_names_with_spaces.yaml
@@ -33,7 +33,7 @@ trace_files: !mux
   # just to see if falco can load the driver.
 
   docker_package_local_driver:
-    package: docker:sysdig/falco:test
+    package: docker:falcosecurity/falco:test
     addl_docker_run_args: -v /dev/null:/usr/sbin/dkms
     copy_local_driver: True
     detect: False
@@ -763,4 +763,11 @@ trace_files: !mux
     stderr_contains: Rule "Contains Unknown Event And Unspecified" contains unknown filter proc.nobody. Exiting.
     rules_file:
       - rules/skip_unknown_unspec.yaml
+    trace_file: trace_files/cat_write.scap
+
+  engine_version_mismatch:
+    exit_status: 1
+    stderr_contains: Rules require engine version 9999999, but engine version is
+    rules_file:
+      - rules/engine_version_mismatch.yaml
     trace_file: trace_files/cat_write.scap

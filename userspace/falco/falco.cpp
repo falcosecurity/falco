@@ -28,6 +28,7 @@ limitations under the License.
 #include <string>
 #include <signal.h>
 #include <fcntl.h>
+#include <sys/utsname.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <getopt.h>
@@ -114,6 +115,7 @@ static void usage()
 	   "                               The API servers can also be specified via the environment variable\n"
 	   "                               FALCO_MESOS_API.\n"
 	   " -M <num_seconds>              Stop collecting after <num_seconds> reached.\n"
+	   " -N                            When used with --list, only print field names.\n"
 	   " -o, --option <key>=<val>      Set the value of option <key> to <val>. Overrides values in configuration file.\n"
 	   "                               <key> can be a two-part <key>.<subkey>\n"
 	   " -p <output_format>, --print=<output_format>\n"
@@ -134,6 +136,8 @@ static void usage()
 	   "                  		   Capture the first <len> bytes of each I/O buffer.\n"
 	   "                   		   By default, the first 80 bytes are captured. Use this\n"
 	   "                   		   option with caution, it can generate huge trace files.\n"
+	   " --support                     Print support information including version, rules files used, etc.\n"
+	   "                               and exit.\n"
 	   " -T <tag>                      Disable any rules with a tag=<tag>. Can be specified multiple times.\n"
 	   "                               Can not be specified with -t.\n"
 	   " -t <tag>                      Only run those rules with a tag=<tag>. Can be specified multiple times.\n"
@@ -194,6 +198,15 @@ void read_k8s_audit_trace_file(falco_engine *engine,
 			return;
 		}
 	}
+}
+
+static std::string read_file(std::string filename)
+{
+	std::ifstream t(filename);
+	std::string str((std::istreambuf_iterator<char>(t)),
+			std::istreambuf_iterator<char>());
+
+	return str;
 }
 
 //
@@ -335,59 +348,7 @@ static void print_all_ignored_events(sinsp *inspector)
 	printf("\n");
 }
 
-// Must match the value in the zsh tab completion
-#define DESCRIPTION_TEXT_START 16
-
-#define CONSOLE_LINE_LEN 79
-
-static void list_falco_fields(falco_engine *engine)
-{
-	for(auto &chk_field : engine->json_factory().get_fields())
-	{
-		printf("\n----------------------\n");
-		printf("Field Class: %s (%s)\n\n", chk_field.name.c_str(), chk_field.desc.c_str());
-
-		for(auto &field : chk_field.fields)
-		{
-			uint32_t l, m;
-
-			printf("%s", field.name.c_str());
-			uint32_t namelen = field.name.size();
-
-			if(namelen >= DESCRIPTION_TEXT_START)
-			{
-				printf("\n");
-				namelen = 0;
-			}
-
-			for(l = 0; l < DESCRIPTION_TEXT_START - namelen; l++)
-			{
-				printf(" ");
-			}
-
-			size_t desclen = field.desc.size();
-
-			for(l = 0; l < desclen; l++)
-			{
-				if(l % (CONSOLE_LINE_LEN - DESCRIPTION_TEXT_START) == 0 && l != 0)
-				{
-					printf("\n");
-
-					for(m = 0; m < DESCRIPTION_TEXT_START; m++)
-					{
-						printf(" ");
-					}
-				}
-
-				printf("%c", field.desc.at(l));
-			}
-
-			printf("\n");
-		}
-	}
-}
-
-static void list_source_fields(falco_engine *engine, bool verbose, std::string &source)
+static void list_source_fields(falco_engine *engine, bool verbose, bool names_only, std::string &source)
 {
 	if(source.size() > 0 &&
 	   !(source == "syscall" || source == "k8s_audit"))
@@ -396,11 +357,11 @@ static void list_source_fields(falco_engine *engine, bool verbose, std::string &
 	}
 	if(source == "" || source == "syscall")
 	{
-		list_fields(verbose, false);
+		list_fields(verbose, false, names_only);
 	}
 	if(source == "" || source == "k8s_audit")
 	{
-		list_falco_fields(engine);
+		engine->list_fields(names_only);
 	}
 }
 
@@ -428,6 +389,7 @@ int falco_init(int argc, char **argv)
 	list<string> validate_rules_filenames;
 	string stats_filename = "";
 	bool verbose = false;
+	bool names_only = false;
 	bool all_events = false;
 	string* k8s_api = 0;
 	string* k8s_api_cert = 0;
@@ -439,6 +401,7 @@ int falco_init(int argc, char **argv)
 	bool print_ignored_events = false;
 	bool list_flds = false;
 	string list_flds_source = "";
+	bool print_support = false;
 
 	// Used for writing trace files
 	int duration_seconds = 0;
@@ -448,6 +411,7 @@ int falco_init(int argc, char **argv)
 	bool compress = false;
 	bool buffered_outputs = true;
 	bool buffered_cmdline = false;
+	std::map<string,uint64_t> required_engine_versions;
 
 	// Used for stats
 	double duration;
@@ -468,6 +432,7 @@ int falco_init(int argc, char **argv)
 		{"print", required_argument, 0, 'p' },
 		{"pidfile", required_argument, 0, 'P' },
 		{"snaplen", required_argument, 0, 'S' },
+		{"support", no_argument, 0},
 		{"unbuffered", no_argument, 0, 'U' },
 		{"version", no_argument, 0, 0 },
 		{"validate", required_argument, 0, 'V' },
@@ -489,7 +454,7 @@ int falco_init(int argc, char **argv)
 		// Parse the args
 		//
 		while((op = getopt_long(argc, argv,
-                                        "hc:AbdD:e:F:ik:K:Ll:m:M:o:P:p:r:S:s:T:t:UvV:w:",
+                                        "hc:AbdD:e:F:ik:K:Ll:m:M:No:P:p:r:S:s:T:t:UvV:w:",
                                         long_options, &long_index)) != -1)
 		{
 			switch(op)
@@ -545,6 +510,9 @@ int falco_init(int argc, char **argv)
 				{
 					throw sinsp_exception(string("invalid duration") + optarg);
 				}
+				break;
+			case 'N':
+				names_only = true;
 				break;
 			case 'o':
 				cmdline_options.push_back(optarg);
@@ -620,6 +588,10 @@ int falco_init(int argc, char **argv)
 						list_flds_source = optarg;
 					}
 				}
+				else if (string(long_options[long_index].name) == "support")
+				{
+					print_support = true;
+				}
 				break;
 
 			default:
@@ -652,7 +624,7 @@ int falco_init(int argc, char **argv)
 
 		if(list_flds)
 		{
-			list_source_fields(engine, verbose, list_flds_source);
+			list_source_fields(engine, verbose, names_only, list_flds_source);
 			return EXIT_SUCCESS;
 		}
 
@@ -748,7 +720,10 @@ int falco_init(int argc, char **argv)
 		for (auto filename : config.m_rules_filenames)
 		{
 			falco_logger::log(LOG_INFO, "Loading rules from file " + filename + ":\n");
-			engine->load_rules_file(filename, verbose, all_events);
+			uint64_t required_engine_version;
+
+			engine->load_rules_file(filename, verbose, all_events, required_engine_version);
+			required_engine_versions[filename] = required_engine_version;
 		}
 
 		// You can't both disable and enable rules
@@ -783,6 +758,49 @@ int falco_init(int argc, char **argv)
 				falco_logger::log(LOG_INFO, "Enabling rules with tag: " + tag + "\n");
 			}
 			engine->enable_rule_by_tag(enabled_rule_tags, true);
+		}
+
+		if(print_support)
+		{
+			nlohmann::json support;
+			struct utsname sysinfo;
+			std::string cmdline;
+
+			if(uname(&sysinfo) != 0)
+			{
+				throw std::runtime_error(string("Could not uname() to find system info: %s\n") + strerror(errno));
+			}
+
+			for(char **arg = argv; *arg; arg++)
+			{
+				if(cmdline.size() > 0)
+				{
+					cmdline += " ";
+				}
+				cmdline += *arg;
+			}
+
+			support["version"] = FALCO_VERSION;
+			support["system_info"]["sysname"] = sysinfo.sysname;
+			support["system_info"]["nodename"] = sysinfo.nodename;
+			support["system_info"]["release"] = sysinfo.release;
+			support["system_info"]["version"] = sysinfo.version;
+			support["system_info"]["machine"] = sysinfo.machine;
+			support["cmdline"] = cmdline;
+			support["config"] = read_file(conf_filename);
+			support["rules_files"] = nlohmann::json::array();
+			for(auto filename : config.m_rules_filenames)
+			{
+				nlohmann::json finfo;
+				finfo["name"] = filename;
+				nlohmann::json variant;
+				variant["required_engine_version"] = required_engine_versions[filename];
+				variant["content"] = read_file(filename);
+				finfo["variants"].push_back(variant);
+				support["rules_files"].push_back(finfo);
+			}
+			printf("%s\n", support.dump().c_str());
+			goto exit;
 		}
 
 		outputs->init(config.m_json_output,
@@ -1024,7 +1042,8 @@ int falco_init(int argc, char **argv)
 
 		if(trace_filename.empty() && config.m_webserver_enabled)
 		{
-			falco_logger::log(LOG_INFO, "Starting internal webserver, listening on port " + to_string(config.m_webserver_listen_port) + "\n");
+			std::string ssl_option = (config.m_webserver_ssl_enabled ? " (SSL)" : "");
+			falco_logger::log(LOG_INFO, "Starting internal webserver, listening on port " + to_string(config.m_webserver_listen_port) + ssl_option + "\n");
 			webserver.init(&config, engine, outputs);
 			webserver.start();
 		}

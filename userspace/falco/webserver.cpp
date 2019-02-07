@@ -189,9 +189,19 @@ void falco_webserver::start()
 	}
 
 	std::vector<std::string> cpp_options = {
-		"listening_ports", to_string(m_config->m_webserver_listen_port),
 		"num_threads", to_string(1)
 	};
+
+	if (m_config->m_webserver_ssl_enabled)
+	{
+		cpp_options.push_back("listening_ports");
+		cpp_options.push_back(to_string(m_config->m_webserver_listen_port) + "s");
+		cpp_options.push_back("ssl_certificate");
+		cpp_options.push_back(m_config->m_webserver_ssl_certificate);
+	} else {
+		cpp_options.push_back("listening_ports");
+		cpp_options.push_back(to_string(m_config->m_webserver_listen_port));
+	}
 
 	try {
 		m_server = make_unique<CivetServer>(cpp_options);

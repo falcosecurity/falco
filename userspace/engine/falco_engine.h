@@ -53,11 +53,27 @@ public:
 	falco_engine(bool seed_rng=true, const std::string& alternate_lua_dir=FALCO_ENGINE_SOURCE_LUA_DIR);
 	virtual ~falco_engine();
 
+	// A given engine has a version which identifies the fields
+	// and rules file format it supports. This version will change
+	// any time the code that handles rules files, expression
+	// fields, etc, changes.
+	static uint32_t engine_version();
+
+	// Print to stdout (using printf) a description of each field supported by this engine.
+	void list_fields(bool names_only=false);
+
 	//
 	// Load rules either directly or from a filename.
 	//
 	void load_rules_file(const std::string &rules_filename, bool verbose, bool all_events);
 	void load_rules(const std::string &rules_content, bool verbose, bool all_events);
+
+	//
+	// Identical to above, but also returns the required engine version for the file/content.
+	// (If no required engine version is specified, returns 0).
+	//
+	void load_rules_file(const std::string &rules_filename, bool verbose, bool all_events, uint64_t &required_engine_version);
+	void load_rules(const std::string &rules_content, bool verbose, bool all_events, uint64_t &required_engine_version);
 
 	//
 	// Enable/Disable any rules matching the provided pattern

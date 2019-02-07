@@ -505,6 +505,92 @@ else()
 		INSTALL_COMMAND ${CMD_MAKE} install-lib install-headers PREFIX=${CIVETWEB_SRC}/install WITH_CPP=1)
 endif()
 
+option(USE_BUNDLED_CARES "Enable building of the bundled c-ares" ${USE_BUNDLED_DEPS})
+if(NOT USE_BUNDLED_CARES)
+	find_path(CARES_INCLUDE NAMES cares/ares.h)
+	find_library(CARES_LIB NAMES libcares.a)
+	if(CARES_INCLUDE AND CARES_LIB)
+		message(STATUS "Found c-ares: include: ${CARES_INCLUDE}, lib: ${CARES_LIB}")
+	else()
+		message(FATAL_ERROR "Couldn't find system c-ares")
+	endif()
+else()
+	set(CARES_SRC "${PROJECT_BINARY_DIR}/c-ares-prefix/src/c-ares")
+	message(STATUS "Using bundled c-ares in '${CARES_SRC}'")
+	set(CARES_INCLUDE "${CARES_SRC}/target/include")
+	set(CARES_LIB "${CARES_SRC}/target/lib/libcares.a")
+	ExternalProject_Add(c-ares
+		URL "https://download.sysdig.com/dependencies/c-ares-1.13.0.tar.gz"
+		URL_MD5 "d2e010b43537794d8bedfb562ae6bba2"
+		CONFIGURE_COMMAND ./configure --prefix=${CARES_SRC}/target
+		BUILD_COMMAND ${CMD_MAKE}
+		BUILD_IN_SOURCE 1
+		BUILD_BYPRODUCTS ${CARES_INCLUDE} ${CARES_LIB}
+		INSTALL_COMMAND ${CMD_MAKE} install)
+endif()
+
+option(USE_BUNDLED_PROTOBUF "Enable building of the bundled protobuf" ${USE_BUNDLED_DEPS})
+if(NOT USE_BUNDLED_PROTOBUF)
+	find_program(PROTOC NAMES protoc)
+	find_path(PROTOBUF_INCLUDE NAMES google/protobuf/message.h)
+	find_library(PROTOBUF_LIB NAMES libprotobuf.a)
+	if(PROTOC AND PROTOBUF_INCLUDE AND PROTOBUF_LIB)
+		message(STATUS "Found protobuf: compiler: ${PROTOC}, include: ${PROTOBUF_INCLUDE}, lib: ${PROTOBUF_LIB}")
+	else()
+		message(FATAL_ERROR "Couldn't find system protobuf")
+	endif()
+else()
+	set(PROTOBUF_SRC "${PROJECT_BINARY_DIR}/protobuf-prefix/src/protobuf")
+	message(STATUS "Using bundled protobuf in '${PROTOBUF_SRC}'")
+	set(PROTOC "${PROTOBUF_SRC}/target/bin/protoc")
+	set(PROTOBUF_INCLUDE "${PROTOBUF_SRC}/target/include")
+	set(PROTOBUF_LIB "${PROTOBUF_SRC}/target/lib/libprotobuf.a")
+	ExternalProject_Add(protobuf
+		DEPENDS openssl zlib
+		URL "https://github.com/google/protobuf/releases/download/v3.5.0/protobuf-cpp-3.5.0.tar.gz"
+		URL_MD5 "e4ba8284a407712168593e79e6555eb2"
+		# TODO what if using system zlib?
+		CONFIGURE_COMMAND /usr/bin/env CPPFLAGS=-I${ZLIB_INCLUDE} LDFLAGS=-L${ZLIB_SRC} ./configure --with-zlib --prefix=${PROTOBUF_SRC}/target
+		BUILD_COMMAND ${CMD_MAKE}
+		BUILD_IN_SOURCE 1
+		BUILD_BYPRODUCTS ${PROTOC} ${PROTOBUF_INCLUDE} ${PROTOBUF_LIB}
+		# TODO s390x support
+		INSTALL_COMMAND make install)
+endif()
+
+option(USE_BUNDLED_GRPC "Enable building of the bundled grpc" ${USE_BUNDLED_DEPS})
+if(NOT USE_BUNDLED_GRPC)
+	find_path(GRPC_INCLUDE grpc++/impl/codegen/rpc_method.h)
+	find_library(GRPC_LIB NAMES libgrpc_unsecure.a)
+	find_library(GRPCPP_LIB NAMES libgrpc++_unsecure.a)
+	if(GRPC_INCLUDE AND GRPC_LIB AND GRPCPP_LIB)
+		message(STATUS "Found grpc: include: ${GRPC_INCLUDE}, C lib: ${GRPC_LIB}, C++ lib: ${GRPC_PP_LIB}")
+	else()
+		message(FATAL_ERROR "Couldn't find system grpc")
+	endif()
+else()
+	set(GRPC_SRC "${PROJECT_BINARY_DIR}/grpc-prefix/src/grpc")
+	message(STATUS "Using bundled grpc in '${GRPC_SRC}'")
+	set(GRPC_INCLUDE "${GRPC_SRC}/include")
+	set(GRPC_LIB "${GRPC_SRC}/libs/opt/libgrpc_unsecure.a")
+	set(GRPCPP_LIB "${GRPC_SRC}/libs/opt/libgrpc++_unsecure.a")
+
+	get_filename_component(PROTOC_DIR ${PROTOC} DIRECTORY)
+
+	ExternalProject_Add(grpc
+		DEPENDS protobuf zlib c-ares
+		URL "http://download.draios.com/dependencies/grpc-1.8.1.tar.gz"
+		URL_MD5 "2fc42c182a0ed1b48ad77397f76bb3bc"
+		CONFIGURE_COMMAND ""
+		# TODO what if using system openssl, protobuf or cares?
+		BUILD_COMMAND HAS_SYSTEM_ZLIB=false LDFLAGS=-static PATH=${PROTOC_DIR}:$ENV{PATH} PKG_CONFIG_PATH=${OPENSSL_BUNDLE_DIR}:${PROTOBUF_SRC}:${CARES_SRC} make grpc_cpp_plugin static_cxx static_c
+		BUILD_IN_SOURCE 1
+		BUILD_BYPRODUCTS ${GRPC_LIB} ${GRPCPP_LIB}
+		# TODO s390x support
+		# TODO what if using system zlib
+		PATCH_COMMAND rm -rf third_party/zlib && ln -s ${ZLIB_SRC} third_party/zlib && wget https://download.sysdig.com/dependencies/grpc-1.1.4-Makefile.patch && patch < grpc-1.1.4-Makefile.patch
+		INSTALL_COMMAND "")
+endif()
 
 
 install(FILES falco.yaml

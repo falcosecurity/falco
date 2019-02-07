@@ -33,6 +33,7 @@ const static struct luaL_reg ll_falco_rules [] =
 	{"add_filter", &falco_rules::add_filter},
 	{"add_k8s_audit_filter", &falco_rules::add_k8s_audit_filter},
 	{"enable_rule", &falco_rules::enable_rule},
+	{"engine_version", &falco_rules::engine_version},
 	{NULL,NULL}
 };
 
@@ -204,10 +205,26 @@ void falco_rules::enable_rule(string &rule, bool enabled)
 	m_engine->enable_rule(rule, enabled);
 }
 
+int falco_rules::engine_version(lua_State *ls)
+{
+	if (! lua_islightuserdata(ls, -1))
+	{
+		lua_pushstring(ls, "Invalid arguments passed to engine_version()");
+		lua_error(ls);
+	}
+
+	falco_rules *rules = (falco_rules *) lua_topointer(ls, -1);
+
+	lua_pushnumber(ls, rules->m_engine->engine_version());
+
+	return 1;
+}
+
 void falco_rules::load_rules(const string &rules_content,
 			     bool verbose, bool all_events,
 			     string &extra, bool replace_container_info,
-			     falco_common::priority_type min_priority)
+			     falco_common::priority_type min_priority,
+			     uint64_t &required_engine_version)
 {
 	lua_getglobal(m_ls, m_lua_load_rules.c_str());
 	if(lua_isfunction(m_ls, -1))
@@ -382,12 +399,15 @@ void falco_rules::load_rules(const string &rules_content,
 		lua_pushstring(m_ls, extra.c_str());
 		lua_pushboolean(m_ls, (replace_container_info ? 1 : 0));
 		lua_pushnumber(m_ls, min_priority);
-		if(lua_pcall(m_ls, 9, 0, 0) != 0)
+		if(lua_pcall(m_ls, 9, 1, 0) != 0)
 		{
 			const char* lerr = lua_tostring(m_ls, -1);
 			string err = "Error loading rules: " + string(lerr);
 			throw falco_exception(err);
 		}
+
+		required_engine_version = lua_tonumber(m_ls, -1);
+		lua_pop(m_ls, 1);
 	} else {
 		throw falco_exception("No function " + m_lua_load_rules + " found in lua rule module");
 	}

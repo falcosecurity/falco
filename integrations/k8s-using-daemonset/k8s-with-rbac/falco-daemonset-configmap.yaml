@@ -18,6 +18,13 @@ spec:
           image: falcosecurity/falco:latest
           securityContext:
             privileged: true
+# Uncomment the 3 lines below to enable eBPF support for Falco.
+# This allows Falco to run on Google COS.
+# Leave blank for the default probe location, or set to the path
+# of a precompiled probe.
+#          env:
+#          - name: SYSDIG_BPF_PROBE
+#            value: ""
           args: [ "/usr/bin/falco", "-K", "/var/run/secrets/kubernetes.io/serviceaccount/token", "-k", "https://kubernetes.default", "-pk"]
           volumeMounts:
             - mountPath: /host/var/run/docker.sock
@@ -35,6 +42,9 @@ spec:
               readOnly: true
             - mountPath: /host/usr
               name: usr-fs
+              readOnly: true
+            - mountPath: /host/etc/
+              name: etc-fs
               readOnly: true
             - mountPath: /etc/falco
               name: falco-config
@@ -57,6 +67,9 @@ spec:
         - name: usr-fs
           hostPath:
             path: /usr
+        - name: etc-fs
+          hostPath:
+            path: /etc
         - name: falco-config
           configMap:
             name: falco-config

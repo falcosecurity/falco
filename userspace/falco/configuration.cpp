@@ -34,6 +34,7 @@ falco_configuration::falco_configuration()
 	  m_webserver_enabled(false),
 	  m_webserver_listen_port(8765),
 	  m_webserver_k8s_audit_endpoint("/k8s_audit"),
+	  m_webserver_ssl_enabled(false),
 	  m_config(NULL)
 {
 }
@@ -162,7 +163,9 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 
 	m_webserver_enabled = m_config->get_scalar<bool>("webserver", "enabled", false);
 	m_webserver_listen_port = m_config->get_scalar<uint32_t>("webserver", "listen_port", 8765);
-	m_webserver_k8s_audit_endpoint = m_config->get_scalar<string>("websever", "k8s_audit_endpoint", "/k8s_audit");
+	m_webserver_k8s_audit_endpoint = m_config->get_scalar<string>("webserver", "k8s_audit_endpoint", "/k8s_audit");
+	m_webserver_ssl_enabled = m_config->get_scalar<bool>("webserver", "ssl_enabled", false);
+	m_webserver_ssl_certificate = m_config->get_scalar<string>("webserver", "ssl_certificate","/etc/falco/falco.pem");
 }
 
 void falco_configuration::read_rules_file_directory(const string &path, list<string> &rules_filenames)

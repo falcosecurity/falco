@@ -23,6 +23,7 @@ limitations under the License.
 #include <fstream>
 
 #include "falco_engine.h"
+#include "falco_engine_version.h"
 #include "config_falco_engine.h"
 
 #include "formats.h"
@@ -76,7 +77,79 @@ falco_engine::~falco_engine()
 	}
 }
 
+uint32_t falco_engine::engine_version()
+{
+	return (uint32_t) FALCO_ENGINE_VERSION;
+}
+
+#define DESCRIPTION_TEXT_START 16
+
+#define CONSOLE_LINE_LEN 79
+
+void falco_engine::list_fields(bool names_only)
+{
+	for(auto &chk_field : json_factory().get_fields())
+	{
+		if(!names_only)
+		{
+			printf("\n----------------------\n");
+			printf("Field Class: %s (%s)\n\n", chk_field.name.c_str(), chk_field.desc.c_str());
+		}
+
+		for(auto &field : chk_field.fields)
+		{
+			uint32_t l, m;
+
+			printf("%s", field.name.c_str());
+
+			if(names_only)
+			{
+				printf("\n");
+				continue;
+			}
+			uint32_t namelen = field.name.size();
+
+			if(namelen >= DESCRIPTION_TEXT_START)
+			{
+				printf("\n");
+				namelen = 0;
+			}
+
+			for(l = 0; l < DESCRIPTION_TEXT_START - namelen; l++)
+			{
+				printf(" ");
+			}
+
+			size_t desclen = field.desc.size();
+
+			for(l = 0; l < desclen; l++)
+			{
+				if(l % (CONSOLE_LINE_LEN - DESCRIPTION_TEXT_START) == 0 && l != 0)
+				{
+					printf("\n");
+
+					for(m = 0; m < DESCRIPTION_TEXT_START; m++)
+					{
+						printf(" ");
+					}
+				}
+
+				printf("%c", field.desc.at(l));
+			}
+
+			printf("\n");
+		}
+	}
+}
+
 void falco_engine::load_rules(const string &rules_content, bool verbose, bool all_events)
+{
+	uint64_t dummy;
+
+	return load_rules(rules_content, verbose, all_events, dummy);
+}
+
+void falco_engine::load_rules(const string &rules_content, bool verbose, bool all_events, uint64_t &required_engine_version)
 {
 	// The engine must have been given an inspector by now.
 	if(! m_inspector)
@@ -105,10 +178,17 @@ void falco_engine::load_rules(const string &rules_content, bool verbose, bool al
 	bool json_include_output_property = false;
 	falco_formats::init(m_inspector, this, m_ls, json_output, json_include_output_property);
 
-	m_rules->load_rules(rules_content, verbose, all_events, m_extra, m_replace_container_info, m_min_priority);
+	m_rules->load_rules(rules_content, verbose, all_events, m_extra, m_replace_container_info, m_min_priority, required_engine_version);
 }
 
 void falco_engine::load_rules_file(const string &rules_filename, bool verbose, bool all_events)
+{
+	uint64_t dummy;
+
+	return load_rules_file(rules_filename, verbose, all_events, dummy);
+}
+
+void falco_engine::load_rules_file(const string &rules_filename, bool verbose, bool all_events, uint64_t &required_engine_version)
 {
 	ifstream is;
 
@@ -123,7 +203,7 @@ void falco_engine::load_rules_file(const string &rules_filename, bool verbose, b
 	string rules_content((istreambuf_iterator<char>(is)),
 			     istreambuf_iterator<char>());
 
-	load_rules(rules_content, verbose, all_events);
+	load_rules(rules_content, verbose, all_events, required_engine_version);
 }
 
 void falco_engine::enable_rule(const string &pattern, bool enabled, const string &ruleset)

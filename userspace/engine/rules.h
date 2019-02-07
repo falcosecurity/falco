@@ -41,7 +41,8 @@ class falco_rules
 	~falco_rules();
 	void load_rules(const string &rules_content, bool verbose, bool all_events,
 			std::string &extra, bool replace_container_info,
-			falco_common::priority_type min_priority);
+			falco_common::priority_type min_priority,
+			uint64_t &required_engine_version);
 	void describe_rule(string *rule);
 
 	static void init(lua_State *ls);
@@ -49,6 +50,7 @@ class falco_rules
 	static int add_filter(lua_State *ls);
 	static int add_k8s_audit_filter(lua_State *ls);
 	static int enable_rule(lua_State *ls);
+	static int engine_version(lua_State *ls);
 
  private:
 	void clear_filters();
