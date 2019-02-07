@@ -278,6 +278,7 @@ std::string json_event_filter_check::extract(json_event *evt)
 }
 
 std::string jevt_filter_check::s_jevt_time_field = "jevt.time";
+std::string jevt_filter_check::s_jevt_time_iso_8601_field = "jevt.time.iso8601";
 std::string jevt_filter_check::s_jevt_rawtime_field = "jevt.rawtime";
 std::string jevt_filter_check::s_jevt_value_field = "jevt.value";
 std::string jevt_filter_check::s_jevt_obj_field = "jevt.obj";
@@ -288,6 +289,7 @@ jevt_filter_check::jevt_filter_check()
 		  "generic ways to access json events",
 		  {
 			  {s_jevt_time_field, "json event timestamp as a string that includes the nanosecond part"},
+			  {s_jevt_time_iso_8601_field, "json event timestamp in ISO 8601 format, including nanoseconds and time zone offset (in UTC)"},
 			  {s_jevt_rawtime_field, "absolute event timestamp, i.e. nanoseconds from epoch."},
 			  {s_jevt_value_field, "General way to access single property from json object. The syntax is [<json pointer expression>]. The property is returned as a string"},
 			  {s_jevt_obj_field, "The entire json object, stringified"}
@@ -301,6 +303,12 @@ jevt_filter_check::~jevt_filter_check()
 
 int32_t jevt_filter_check::parse_field_name(const char *str, bool alloc_state, bool needed_for_filtering)
 {
+	if(strncmp(s_jevt_time_iso_8601_field.c_str(), str, s_jevt_time_iso_8601_field.size()) == 0)
+	{
+		m_field = s_jevt_time_iso_8601_field;
+		return s_jevt_time_iso_8601_field.size();
+	}
+
 	if(strncmp(s_jevt_time_field.c_str(), str, s_jevt_time_field.size()) == 0)
 	{
 		m_field = s_jevt_time_field;
@@ -358,6 +366,12 @@ uint8_t* jevt_filter_check::extract(gen_event *evt, uint32_t* len, bool sanitize
 	else if(m_field == s_jevt_time_field)
 	{
 		sinsp_utils::ts_to_string(evt->get_ts(), &m_tstr, false, true);
+		*len = m_tstr.size();
+		return (uint8_t *) m_tstr.c_str();
+	}
+	else if(m_field == s_jevt_time_iso_8601_field)
+	{
+		sinsp_utils::ts_to_iso_8601(evt->get_ts(), &m_tstr);
 		*len = m_tstr.size();
 		return (uint8_t *) m_tstr.c_str();
 	}

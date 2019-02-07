@@ -34,6 +34,11 @@ rules_file:
  - /etc/falco/k8s_audit_rules.yaml
  - /etc/falco/rules.d
 
+# If true, the times displayed in log messages and output messages
+# will be in ISO 8601. By default, times are displayed in the local
+# time zone, as governed by /etc/localtime.
+time_format_iso_8601: false
+
 # Whether to output events in json or text
 json_output: false
 

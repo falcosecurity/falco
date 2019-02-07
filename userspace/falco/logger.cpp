@@ -30,10 +30,16 @@ const static struct luaL_reg ll_falco [] =
 };
 
 int falco_logger::level = LOG_INFO;
+bool falco_logger::time_format_iso_8601 = false;
 
 void falco_logger::init(lua_State *ls)
 {
 	luaL_openlib(ls, "falco", ll_falco, 0);
+}
+
+void falco_logger::set_time_format_iso_8601(bool val)
+{
+	falco_logger::time_format_iso_8601 = val;
 }
 
 void falco_logger::set_level(string &level)
@@ -123,9 +129,18 @@ void falco_logger::log(int priority, const string msg)
 		}
 
 		std::time_t result = std::time(nullptr);
-		string tstr = std::asctime(std::localtime(&result));
-		tstr = tstr.substr(0, 24);// remove trailling newline
-		fprintf(stderr, "%s: %s", tstr.c_str(), copy.c_str());
+		if(falco_logger::time_format_iso_8601)
+		{
+			char buf[sizeof "YYYY-MM-DDTHH:MM:SS-0000"];
+			strftime(buf, sizeof(buf), "%FT%T%z", std::gmtime(&result));
+			fprintf(stderr, "%s: %s", buf, msg.c_str());
+		}
+		else
+		{
+			string tstr = std::asctime(std::localtime(&result));
+			tstr = tstr.substr(0, 24);// remove trailling newline
+			fprintf(stderr, "%s: %s", tstr.c_str(), msg.c_str());
+		}
 	}
 }
 

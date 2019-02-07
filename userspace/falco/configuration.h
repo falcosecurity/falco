@@ -205,6 +205,7 @@ class falco_configuration
 	falco_common::priority_type m_min_priority;
 
 	bool m_buffered_outputs;
+	bool m_time_format_iso_8601;
 
 	bool m_webserver_enabled;
 	uint32_t m_webserver_listen_port;

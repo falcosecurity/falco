@@ -31,6 +31,7 @@ using namespace std;
 
 falco_configuration::falco_configuration()
 	: m_buffered_outputs(false),
+	  m_time_format_iso_8601(false),
 	  m_webserver_enabled(false),
 	  m_webserver_listen_port(8765),
 	  m_webserver_k8s_audit_endpoint("/k8s_audit"),
@@ -173,6 +174,7 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 	m_min_priority = (falco_common::priority_type) (it - falco_common::priority_names.begin());
 
 	m_buffered_outputs = m_config->get_scalar<bool>("buffered_outputs", false);
+	m_time_format_iso_8601 = m_config->get_scalar<bool>("time_format_iso_8601", false);
 
 	falco_logger::log_stderr = m_config->get_scalar<bool>("log_stderr", false);
 	falco_logger::log_syslog = m_config->get_scalar<bool>("log_syslog", true);
