@@ -520,7 +520,7 @@ else()
 	set(CARES_INCLUDE "${CARES_SRC}/target/include")
 	set(CARES_LIB "${CARES_SRC}/target/lib/libcares.a")
 	ExternalProject_Add(c-ares
-		URL "https://download.sysdig.com/dependencies/c-ares-1.13.0.tar.gz"
+		URL "http://download.sysdig.com/dependencies/c-ares-1.13.0.tar.gz"
 		URL_MD5 "d2e010b43537794d8bedfb562ae6bba2"
 		CONFIGURE_COMMAND ./configure --prefix=${CARES_SRC}/target
 		BUILD_COMMAND ${CMD_MAKE}
@@ -547,7 +547,7 @@ else()
 	set(PROTOBUF_LIB "${PROTOBUF_SRC}/target/lib/libprotobuf.a")
 	ExternalProject_Add(protobuf
 		DEPENDS openssl zlib
-		URL "https://github.com/google/protobuf/releases/download/v3.5.0/protobuf-cpp-3.5.0.tar.gz"
+		URL "http://github.com/google/protobuf/releases/download/v3.5.0/protobuf-cpp-3.5.0.tar.gz"
 		URL_MD5 "e4ba8284a407712168593e79e6555eb2"
 		# TODO what if using system zlib?
 		CONFIGURE_COMMAND /usr/bin/env CPPFLAGS=-I${ZLIB_INCLUDE} LDFLAGS=-L${ZLIB_SRC} ./configure --with-zlib --prefix=${PROTOBUF_SRC}/target
