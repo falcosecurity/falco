@@ -142,6 +142,16 @@ function mod.program_reopen(options)
    end
 end
 
+function mod.http(priority, priority_num, msg, options)
+   c_outputs.handle_http(options.url, msg)
+end
+
+function mod.http_cleanup()
+end
+
+function mod.http_reopen()
+end
+
 function output_event(event, rule, source, priority, priority_num, format)
    -- If format starts with a *, remove it, as we're adding our own
    -- prefix here.

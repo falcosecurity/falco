@@ -131,6 +131,22 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 		m_outputs.push_back(program_output);
 	}
 
+	falco_outputs::output_config http_output;
+	http_output.name = "http";
+	if (m_config->get_scalar<bool>("http_output", "enabled", false))
+	{
+		string url;
+		url = m_config->get_scalar<string>("http_output", "url", "");
+
+		if (url == string(""))
+		{
+			throw sinsp_exception("Error reading config file (" + m_config_file + "): http output enabled but no url in configuration block");
+		}
+		http_output.options["url"] = url;
+
+		m_outputs.push_back(http_output);
+	}
+
 	if (m_outputs.size() == 0)
 	{
 		throw invalid_argument("Error reading config file (" + m_config_file + "): No outputs configured. Please configure at least one output file output enabled but no filename in configuration block");
