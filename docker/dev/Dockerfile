@@ -24,11 +24,12 @@ RUN apt-get update \
 	dkms \
 	gnupg2 \
 	gcc \
-	gcc-6 \
 	gdb \
 	jq \
 	libc6-dev \
+	libcilkrts5 \
 	libelf-dev \
+	libubsan0 \
 	llvm-7 \
 	netcat \
 	xz-utils \
