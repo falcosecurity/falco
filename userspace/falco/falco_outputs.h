@@ -21,6 +21,12 @@ limitations under the License.
 
 #include <memory>
 
+extern "C" {
+#include "lua.h"
+#include "lualib.h"
+#include "lauxlib.h"
+}
+
 #include "gen_filter.h"
 #include "json_evt.h"
 #include "falco_common.h"
@@ -61,6 +67,8 @@ public:
 			  falco_common::priority_type priority, std::string &format);
 
 	void reopen_outputs();
+
+	static int handle_http(lua_State *ls);
 
 private:
 

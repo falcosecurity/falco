@@ -138,3 +138,7 @@ program_output:
   enabled: false
   keep_alive: false
   program: mail -s "Falco Notification" someone@example.com
+
+http_output:
+  enabled: false
+  url: http://some.url

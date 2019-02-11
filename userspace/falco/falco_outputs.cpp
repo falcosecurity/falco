@@ -27,6 +27,12 @@ limitations under the License.
 
 using namespace std;
 
+const static struct luaL_reg ll_falco_outputs [] =
+{
+	{"handle_http", &falco_outputs::handle_http},
+	{NULL,NULL}
+};
+
 falco_outputs::falco_outputs(falco_engine *engine)
 	: m_falco_engine(engine),
 	  m_initialized(false),
@@ -79,6 +85,8 @@ void falco_outputs::init(bool json_output,
 	falco_formats::init(m_inspector, m_falco_engine, m_ls, json_output, json_include_output_property);
 
 	falco_logger::init(m_ls);
+
+	luaL_openlib(m_ls, "c_outputs", ll_falco_outputs, 0);
 
 	m_notifications_tb.init(rate, max_burst);
 
@@ -168,4 +176,43 @@ void falco_outputs::reopen_outputs()
 		const char* lerr = lua_tostring(m_ls, -1);
 		throw falco_exception(string(lerr));
 	}
+}
+
+int falco_outputs::handle_http(lua_State *ls)
+{
+	CURL *curl = NULL;
+	CURLcode res = CURLE_FAILED_INIT;
+	struct curl_slist *slist1;
+	slist1 = NULL;
+
+	if (!lua_isstring(ls, -1) ||
+	    !lua_isstring(ls, -2)) 
+	{
+		lua_pushstring(ls, "Invalid arguments passed to handle_http()");
+		lua_error(ls);
+	}
+
+	string url = (char *) lua_tostring(ls, 1);
+	string msg = (char *) lua_tostring(ls, 2);
+
+	curl = curl_easy_init();
+	if(curl) 
+	{
+		slist1 = curl_slist_append(slist1, "Content-Type: application/json");
+		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, slist1);
+		curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, msg.c_str());
+		curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, -1L);
+
+		res = curl_easy_perform(curl);
+
+		if(res != CURLE_OK) {
+			falco_logger::log(LOG_ERR,"libcurl error: " + string(curl_easy_strerror(res)));
+		}
+		curl_easy_cleanup(curl);
+		curl = NULL;
+		curl_slist_free_all(slist1);
+  		slist1 = NULL;
+	}
+	return 1;
 }
