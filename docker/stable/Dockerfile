@@ -81,6 +81,11 @@ RUN curl -s https://s3.amazonaws.com/download.draios.com/DRAIOS-GPG-KEY.public |
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
+# Change the falco config within the container to enable ISO 8601
+# output.
+RUN sed -e 's/time_format_iso_8601: false/time_format_iso_8601: true/' < /etc/falco/falco.yaml > /etc/falco/falco.yaml.new \
+ && mv /etc/falco/falco.yaml.new /etc/falco/falco.yaml
+
 # Some base images have an empty /lib/modules by default
 # If it's not empty, docker build will fail instead of
 # silently overwriting the existing directory
