@@ -2,7 +2,8 @@
 
 IFS=''
 
-FILENAME="/etc/kubernetes/manifests/kube-apiserver.yaml"
+FILENAME=${1:-/etc/kubernetes/manifests/kube-apiserver.yaml}
+VARIANT=${2:-minikube}
 
 if grep audit-webhook-config-file $FILENAME ; then
     echo audit-webhook patch already applied
@@ -12,23 +13,31 @@ fi
 TMPFILE="/tmp/kube-apiserver.yaml.patched"
 rm -f "$TMPFILE"
 
+APISERVER_PREFIX="    -"
+APISERVER_LINE="- kube-apiserver"
+
+if [ $VARIANT == "kops" ]; then
+    APISERVER_PREFIX="     "
+    APISERVER_LINE="/usr/local/bin/kube-apiserver"
+fi
+
 while read LINE
 do
     echo "$LINE" >> "$TMPFILE"
     case "$LINE" in
-        *"- kube-apiserver"*)
-            echo "    - --audit-log-path=/tmp/k8s_audit_config/audit.log" >> "$TMPFILE"
-            echo "    - --audit-policy-file=/tmp/k8s_audit_config/audit-policy.yaml" >> "$TMPFILE"
-            echo "    - --audit-webhook-config-file=/tmp/k8s_audit_config/webhook-config.yaml" >> "$TMPFILE"
-            echo "    - --audit-webhook-batch-max-wait=5s" >> "$TMPFILE"
+        *$APISERVER_LINE*)
+            echo "$APISERVER_PREFIX --audit-log-path=/var/lib/k8s_audit/audit.log" >> "$TMPFILE"
+            echo "$APISERVER_PREFIX --audit-policy-file=/var/lib/k8s_audit/audit-policy.yaml" >> "$TMPFILE"
+            echo "$APISERVER_PREFIX --audit-webhook-config-file=/var/lib/k8s_audit/webhook-config.yaml" >> "$TMPFILE"
+            echo "$APISERVER_PREFIX --audit-webhook-batch-max-wait=5s" >> "$TMPFILE"
             ;;
         *"volumeMounts:"*)
-            echo "    - mountPath: /tmp/k8s_audit_config/" >> "$TMPFILE"
+            echo "    - mountPath: /var/lib/k8s_audit/" >> "$TMPFILE"
             echo "      name: data" >> "$TMPFILE"
             ;;
         *"volumes:"*)
             echo "  - hostPath:" >> "$TMPFILE"
-            echo "      path: /tmp/k8s_audit_config" >> "$TMPFILE"
+            echo "      path: /var/lib/k8s_audit" >> "$TMPFILE"
             echo "    name: data" >> "$TMPFILE"
             ;;
 
