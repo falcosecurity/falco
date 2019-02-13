@@ -26,13 +26,29 @@ RUN apt-get update \
 	gcc \
 	jq \
 	libc6-dev \
-	libcilkrts5 \
 	libelf-dev \
-	libubsan0 \
 	llvm-7 \
 	netcat \
 	xz-utils \
  && rm -rf /var/lib/apt/lists/*
+
+# gcc 6 is no longer included in debian unstable, but we need it to
+# build kernel modules on the default debian-based ami used by
+# kops. So grab copies we've saved from debian snapshots with the
+# prefix https://snapshot.debian.org/archive/debian/20170517T033514Z
+# or so.
+
+RUN curl -o cpp-6_6.3.0-18_amd64.deb https://s3.amazonaws.com/download.draios.com/dependencies/gcc-6-debs/cpp-6_6.3.0-18_amd64.deb \
+    && curl -o gcc-6-base_6.3.0-18_amd64.deb https://s3.amazonaws.com/download.draios.com/dependencies/gcc-6-debs/gcc-6-base_6.3.0-18_amd64.deb \
+    && curl -o gcc-6_6.3.0-18_amd64.deb https://s3.amazonaws.com/download.draios.com/dependencies/gcc-6-debs/gcc-6_6.3.0-18_amd64.deb \
+    && curl -o libasan3_6.3.0-18_amd64.deb https://s3.amazonaws.com/download.draios.com/dependencies/gcc-6-debs/libasan3_6.3.0-18_amd64.deb \
+    && curl -o libcilkrts5_6.3.0-18_amd64.deb https://s3.amazonaws.com/download.draios.com/dependencies/gcc-6-debs/libcilkrts5_6.3.0-18_amd64.deb \
+    && curl -o libgcc-6-dev_6.3.0-18_amd64.deb https://s3.amazonaws.com/download.draios.com/dependencies/gcc-6-debs/libgcc-6-dev_6.3.0-18_amd64.deb \
+    && curl -o libubsan0_6.3.0-18_amd64.deb https://s3.amazonaws.com/download.draios.com/dependencies/gcc-6-debs/libubsan0_6.3.0-18_amd64.deb \
+    && curl -o libmpfr4_3.1.3-2_amd64.deb https://s3.amazonaws.com/download.draios.com/dependencies/gcc-6-debs/libmpfr4_3.1.3-2_amd64.deb \
+    && curl -o libisl15_0.18-1_amd64.deb https://s3.amazonaws.com/download.draios.com/dependencies/gcc-6-debs/libisl15_0.18-1_amd64.deb \
+    && dpkg -i cpp-6_6.3.0-18_amd64.deb gcc-6-base_6.3.0-18_amd64.deb gcc-6_6.3.0-18_amd64.deb libasan3_6.3.0-18_amd64.deb libcilkrts5_6.3.0-18_amd64.deb libgcc-6-dev_6.3.0-18_amd64.deb libubsan0_6.3.0-18_amd64.deb libmpfr4_3.1.3-2_amd64.deb libisl15_0.18-1_amd64.deb \
+    && rm -f cpp-6_6.3.0-18_amd64.deb gcc-6-base_6.3.0-18_amd64.deb gcc-6_6.3.0-18_amd64.deb libasan3_6.3.0-18_amd64.deb libcilkrts5_6.3.0-18_amd64.deb libgcc-6-dev_6.3.0-18_amd64.deb libubsan0_6.3.0-18_amd64.deb libmpfr4_3.1.3-2_amd64.deb libisl15_0.18-1_amd64.deb
 
 # gcc 5 is no longer included in debian unstable, but we need it to
 # build centos kernels, which are 3.x based and explicitly want a gcc
