@@ -1,12 +1,12 @@
-# falco
+# Falco
 
 #### Table of Contents
 
 1. [Overview](#overview)
 2. [Module Description - What the module does and why it is useful](#module-description)
-3. [Setup - The basics of getting started with falco](#setup)
-    * [What falco affects](#what-falco-affects)
-    * [Beginning with falco](#beginning-with-falco)
+3. [Setup - The basics of getting started with Falco](#setup)
+    * [What Falco affects](#what-falco-affects)
+    * [Beginning with Falco](#beginning-with-falco)
 4. [Usage - Configuration options and additional functionality](#usage)
 5. [Reference - An under-the-hood peek at what the module is doing and how](#reference)
 5. [Limitations - OS compatibility, etc.](#limitations)
@@ -14,11 +14,11 @@
 
 ## Overview
 
-Sysdig Falco is a behavioral activity monitor designed to detect anomalous activity in your applications. Powered by sysdig’s system call capture infrastructure, falco lets you continuously monitor and detect container, application, host, and network activity... all in one place, from one source of data, with one set of rules.
+Sysdig Falco is a behavioral activity monitor designed to detect anomalous activity in your applications. Powered by sysdig’s system call capture infrastructure, Falco lets you continuously monitor and detect container, application, host, and network activity... all in one place, from one source of data, with one set of rules.
 
 #### What kind of behaviors can Falco detect?
 
-Falco can detect and alert on any behavior that involves making Linux system calls. Thanks to Sysdig's core decoding and state tracking functionality, falco alerts can be triggered by the use of specific system calls, their arguments, and by properties of the calling process. For example, you can easily detect things like:
+Falco can detect and alert on any behavior that involves making Linux system calls. Thanks to Sysdig's core decoding and state tracking functionality, Falco alerts can be triggered by the use of specific system calls, their arguments, and by properties of the calling process. For example, you can easily detect things like:
 
 - A shell is run inside a container
 - A container is running in privileged mode, or is mounting a sensitive path like `/proc` from the host.
@@ -29,17 +29,17 @@ Falco can detect and alert on any behavior that involves making Linux system cal
 
 ## Module Description
 
-This module configures falco as a systemd service. You configure falco
+This module configures Falco as a systemd service. You configure Falco
 to send its notifications to one or more output channels (syslog,
 files, programs).
 
 ## Setup
 
-### What falco affects
+### What Falco affects
 
 This module affects the following:
 
-* The main falco configuration file `/etc/falco/falco.yaml`, including
+* The main Falco configuration file `/etc/falco/falco.yaml`, including
 ** Output format (JSON vs plain text)
 ** Log level
 ** Rule priority level to run
@@ -47,9 +47,9 @@ This module affects the following:
 ** Output throttling
 ** Output channels (syslog, file, program)
 
-### Beginning with falco
+### Beginning with Falco
 
-To have Puppet install falco with the default parameters, declare the falco class:
+To have Puppet install Falco with the default parameters, declare the Falco class:
 
 ``` puppet
 class { 'falco': }
@@ -57,9 +57,9 @@ class { 'falco': }
 
 When you declare this class with the default options, the module:
 
-* Installs the appropriate falco software package and installs the falco-probe kernel module for your operating system.
+* Installs the appropriate Falco software package and installs the falco-probe kernel module for your operating system.
 * Creates the required configuration file `/etc/falco/falco.yaml`. By default only syslog output is enabled.
-* Starts the falco service.
+* Starts the Falco service.
 
 ## Usage
 
@@ -101,12 +101,12 @@ class { 'falco':
 
 #### Class: `falco`
 
-Guides the basic setup and installation of falco on your system.
+Guides the basic setup and installation of Falco on your system.
 
 When this class is declared with the default options, Puppet:
 
-* Installs the appropriate falco software package and installs the falco-probe kernel module for your operating system.
-* Creates the required configuration file `/etc/falco/falco.yaml`. By default only syslog output is enabled.
+* Installs the appropriate Falco software package and installs the falco-probe kernel module for your operating system.
+* Creates the required configuration file `/etc/Falco/falco.yaml`. By default only syslog output is enabled.
 * Starts the falco service.
 
 You can simply declare the default `falco` class:
@@ -117,7 +117,7 @@ class { 'falco': }
 
 ###### `rules_file`
 
-An array of files for falco to load. Order matters--the first file listed will be loaded first.
+An array of files for Falco to load. Order matters--the first file listed will be loaded first.
 
 Default: `['/etc/falco/falco_rules.yaml', '/etc/falco/falco_rules.local.yaml']`
 
@@ -129,15 +129,15 @@ Default: `false`
 
 ##### `log_stderr`
 
-Send falco's logs to stderr. Note: this is not notifications, this is
-logs from the falco daemon itself.
+Send Falco's logs to stderr. Note: this is not notifications, this is
+logs from the Falco daemon itself.
 
 Default: `false`
 
 ##### `log_syslog`
 
-Send falco's logs to syslog. Note: this is not notifications, this is
-logs from the falco daemon itself.
+Send Falco's logs to syslog. Note: this is not notifications, this is
+logs from the Falco daemon itself.
 
 Default: `true`
 
@@ -145,7 +145,7 @@ Default: `true`
 
 Minimum log level to include in logs. Note: these levels are
 separate from the priority field of rules. This refers only to the
-log level of falco's internal logging. Can be one of "emergency",
+log level of Falco's internal logging. Can be one of "emergency",
 "alert", "critical", "error", "warning", "notice", "info", "debug".
 
 Default: `info`
@@ -169,7 +169,7 @@ Default: `true`
 ##### `outputs_rate`/`outputs_max_burst`
 
 A throttling mechanism implemented as a token bucket limits the
-rate of falco notifications. This throttling is controlled by the following configuration
+rate of Falco notifications. This throttling is controlled by the following configuration
 options:
 
 * `outputs_rate`: the number of tokens (i.e. right to send a notification)
@@ -234,8 +234,8 @@ class { 'falco':
 
 ## Limitations
 
-The module works where falco works as a daemonized service (generally, Linux only).
+The module works where Falco works as a daemonized service (generally, Linux only).
 
 ## Development
 
-For more information on Sysdig Falco, visit our [github](https://github.com/draios/falco) or [web site](https://sysdig.com/opensource/falco/).
+For more information on Sysdig Falco, visit our [github](https://github.com/falcosecurity/falco) or [web site](https://sysdig.com/opensource/falco/).

@@ -1,14 +1,28 @@
 {
   "name": "sysdig-falco",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": "sysdig",
   "summary": "Sysdig Falco: Behavioral Activity Monitoring With Container Support",
-  "license": "Apache v2.0",
-  "source": "https://github.com/draios/falco",
-  "project_page": "https://github.com/draios/falco",
-  "issues_url": "https://github.com/draios/falco/issues",
+  "license": "Apache-2.0",
+  "source": "https://github.com/falcosecurity/falco",
+  "project_page": "https://github.com/falcosecurity/falco",
+  "issues_url": "https://github.com/falcosecurity/falco/issues",
   "dependencies": [
-    {"name":"puppetlabs-stdlib","version_requirement":">= 1.0.0"}
+    {
+      "name": "puppetlabs-stdlib",
+      "version_requirement": ">= 1.0.0"
+    },
+    {
+      "name": "puppetlabs/apt",
+      "version_requirement": ">= 1.0.0"
+    },
+    {
+      "name": "stahnma/epel",
+      "version_requirement": ">= 1.0.0"
+    },
+    {
+      "name": "rodjek-logrotate",
+      "version_requirement": ">= 1.0.0"
+    }
   ]
 }
-
