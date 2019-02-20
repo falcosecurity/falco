@@ -32,6 +32,7 @@ k8s-using-daemonset$
 The Daemon Set also relies on a Kubernetes ConfigMap to store the Falco configuration and make the configuration available to the Falco Pods. This allows you to manage custom configuration without rebuilding and redeploying the underlying Pods. In order to create the ConfigMap you'll need to first need to copy the required configuration from their location in this GitHub repo to the `k8s-with-rbac/falco-config/` directory (please note that you will need to create the /falco-config directory). Any modification of the configuration should be performed on these copies rather than the original files.
 
 ```
+k8s-using-daemonset$ mkdir -p k8s-with-rbac/falco-config
 k8s-using-daemonset$ cp ../../falco.yaml k8s-with-rbac/falco-config/
 k8s-using-daemonset$ cp ../../rules/falco_rules.* k8s-with-rbac/falco-config/
 k8s-using-daemonset$ cp ../../rules/k8s_audit_rules.yaml k8s-with-rbac/falco-config/
@@ -70,6 +71,24 @@ If you are running Kubernetes with Legacy Authorization enabled, you can use `ku
 ```
 k8s-using-daemonset$ kubectl create -f k8s-without-rbac/falco-daemonset.yaml
 ```
+
+When running falco via a container, you might see error messages like the following:
+```
+mkdir: cannot create directory '/lib/modules/3.10.0-693.el7.centos.test.x86_64/kernel/extra': Read-only file system
+cp: cannot create regular file '/lib/modules/3.10.0-693.el7.centos.test.x86_64/kernel/extra/falco-probe.ko.xz': No such file or directory
+```
+
+These error messages are innocuous, but if you would like to remove them you can change the /host/lib/modules mount to read-write, by doing below change in `k8s-with-rbac/falco
+daemonset-configmap.yaml`:
+
+```
+             - mountPath: /host/lib/modules
+               name: lib-modules
+-              readOnly: true
++              #readOnly: true
+```
+
+However, note that this will result in the `falco-probe.ko.xz` file being saved to `/lib/modules` on the host, even after the falco container is removed.
 
 
 ## Verifying the installation
