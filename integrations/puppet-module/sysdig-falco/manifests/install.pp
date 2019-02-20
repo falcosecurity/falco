@@ -3,13 +3,13 @@ class falco::install inherits falco {
   case $::osfamily {
     'Debian': {
       apt::source { 'sysdig':
-        location          => 'http://download.draios.com/stable/deb',
-        release           => 'stable-$(ARCH)/',
-        repos             => '',
-        required_packages => 'debian-keyring debian-archive-keyring',
-        key               => 'EC51E8C4',
-        key_source        => 'https://s3.amazonaws.com/download.draios.com/DRAIOS-GPG-KEY.public',
-        include_src       => false,
+        location => 'http://download.draios.com/stable/deb',
+        release  => 'stable-$(ARCH)/',
+        repos    => '',
+        key      => {
+          source => 'https://s3.amazonaws.com/download.draios.com/DRAIOS-GPG-KEY.public',
+          id     => 'D27A72F32D867DF9300A241574490FD6EC51E8C4'
+        },
       }
 
       ensure_packages(["linux-headers-${::kernelrelease}"])
@@ -48,8 +48,8 @@ class falco::install inherits falco {
 
   if ($::falco::file_output != undef) {
     logrotate::rule { 'falco_output':
-      path          => $::falco::file_output['filename'],
-      rotate        => '5',
+      path          => $::falco::file_output[filename],
+      rotate        => 5,
       rotate_every  => 'day',
       size          => '1M',
       missingok     => true,

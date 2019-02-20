@@ -2,6 +2,7 @@
 class falco::config inherits falco {
   file { '/etc/falco/falco.yaml':
     ensure  => file,
+    require => Class['falco::install'],
     notify  => Service['falco'],
     owner   => 'root',
     group   => 'root',
