@@ -137,7 +137,7 @@ webserver:
 program_output:
   enabled: false
   keep_alive: false
-  program: mail -s "Falco Notification" someone@example.com
+  program: "jq '{text: .output}' | curl -d @- -X POST https://hooks.slack.com/services/XXX"
 
 http_output:
   enabled: false
