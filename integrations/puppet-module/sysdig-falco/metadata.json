@@ -7,22 +7,28 @@
   "source": "https://github.com/falcosecurity/falco",
   "project_page": "https://github.com/falcosecurity/falco",
   "issues_url": "https://github.com/falcosecurity/falco/issues",
+  "requirements": [
+    {
+      "name": "puppet",
+      "version_requirement": ">= 4.7.0 < 6.0.0"
+    }
+  ],
   "dependencies": [
     {
       "name": "puppetlabs-apt",
-      "version_requirement": ">= 2.4.0 < 3.0.0"
+      "version_requirement": ">= 4.5.1 < 4.6.0"
     },
     {
       "name": "stahnma/epel",
-      "version_requirement": ">= 1.3.1 < 2.0.0"
+      "version_requirement": ">= 1.3.1 < 1.4.0"
     },
     {
-      "name": "rodjek-logrotate",
-      "version_requirement": ">= 1.1.1 < 2.0.0"
+      "name": "puppet-logrotate",
+      "version_requirement": ">= 3.1.0 < 3.2.0"
     },
     {
       "name": "puppetlabs/stdlib",
-      "version_requirement": ">= 3.0.0 < 5.0.0"
+      "version_requirement": ">= 4.25.1 < 5.0.0"
     }
   ]
 }
