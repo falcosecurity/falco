@@ -1,4 +1,0 @@
-.terraform/*
-.terraform.*
-terraform.*
-aws-auth-patch.yml
