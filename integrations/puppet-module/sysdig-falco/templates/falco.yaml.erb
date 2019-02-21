@@ -2,7 +2,28 @@
 # THIS FILE MANAGED BY PUPPET. DO NOT MODIFY
 ####
 
-# File(s) containing Falco rules, loaded at startup.
+#
+# Copyright (C) 2016-2018 Draios Inc dba Sysdig.
+#
+# This file is part of falco .
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+# File(s) or Directories containing Falco rules, loaded at startup.
+# The name "rules_file" is only for backwards compatibility.
+# If the entry is a file, it will be read directly. If the entry is a directory,
+# every file in that directory will be read, in alphabetical order.
 #
 # falco_rules.yaml ships with the falco package and is overridden with
 # every new software version. falco_rules.local.yaml is only created
@@ -18,6 +39,11 @@ rules_file:
 
 # Whether to output events in json or text
 json_output: <%= @json_output %>
+
+# When using json output, whether or not to include the "output" property
+# itself (e.g. "File below a known binary directory opened for writing
+# (user=root ....") in the json output.
+json_include_output_property: <%= @json_include_output_property %>
 
 # Send information logs to stderr and/or syslog Note these are *not* security
 # notification logs! These are just Falco lifecycle (and possibly error) logs.
@@ -37,7 +63,7 @@ log_level: <%= @log_level %>
 priority: <%= @priority %>
 
 # Whether or not output to any of the output channels below is
-# buffered. Defaults to true
+# buffered. Defaults to false
 buffered_outputs: <%= @buffered_outputs %>
 
 # A throttling mechanism implemented as a token bucket limits the
@@ -58,6 +84,7 @@ outputs:
 
 # Where security notifications should go.
 # Multiple outputs can be enabled.
+
 <% unless @syslog_output.nil? -%>
 syslog_output:
   enabled: <%= @syslog_output['enabled'] %>
@@ -67,11 +94,40 @@ syslog_output:
 # continuously written to, with each output message on its own
 # line. If keep_alive is set to false, the file will be re-opened
 # for each output message.
+#
+# Also, the file will be closed and reopened if falco is signaled with
+# SIGUSR1.
+
 <% unless @file_output.nil? -%>
 file_output:
   enabled: <%= @file_output['enabled'] %>
   keep_alive: <%= @file_output['keep_alive'] %>
   filename: <%= @file_output['filename'] %>
+<% end -%>
+
+<% unless @stdout_output.nil? -%>
+stdout_output:
+  enabled: <%= @stdout_output['enabled'] %>
+<% end -%>
+
+# Falco contains an embedded webserver that can be used to accept K8s
+# Audit Events. These config options control the behavior of that
+# webserver. (By default, the webserver is disabled).
+#
+# The ssl_certificate is a combination SSL Certificate and corresponding
+# key contained in a single file. You can generate a key/cert as follows:
+#
+# $ openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out certificate.pem
+# $ cat certificate.pem key.pem > falco.pem
+# $ sudo cp falco.pem /etc/falco/falco.pem
+
+<% unless @webserver.nil? -%>
+webserver:
+  enabled: <%= @webserver['enabled'] %>
+  listen_port: <%= @webserver['listen_port'] %>
+  k8s_audit_endpoint: <%= @webserver['k8s_audit_endpoint'] %>
+  ssl_enabled: <%= @webserver['ssl_enabled'] %>
+  ssl_certificate: <%= @webserver['ssl_certificate'] %>
 <% end -%>
 
 # Possible additional things you might want to do with program output:
@@ -86,6 +142,9 @@ file_output:
 # continuously written to, with each output message on its own
 # line. If keep_alive is set to false, the program will be re-spawned
 # for each output message.
+#
+# Also, the program will be closed and reopened if falco is signaled with
+# SIGUSR1.
 
 <% unless @program_output.nil? -%>
 program_output:
@@ -94,3 +153,8 @@ program_output:
   program: <%= @program_output['program'] %>
 <% end -%>
 
+<% unless @http_output.nil? -%>
+http_output:
+  enabled: <%= @http_output['enabled'] %>
+  url: <%= @http_output['url'] %>
+<% end -%>
