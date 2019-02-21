@@ -23,7 +23,7 @@
 
 - macro: is_cat
   condition: proc.name in (cat_binaries)
-  
+
 - rule: open_from_cat
   desc: A process named cat does an open
   condition: evt.type=open and is_cat

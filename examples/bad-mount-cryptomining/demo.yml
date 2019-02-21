@@ -26,8 +26,8 @@ services:
       - ${PWD}/attacker_files:/usr/share/nginx/html
       - ${PWD}/attacker-nginx.conf:/etc/nginx/conf.d/default.conf
     depends_on:
-      - "falco"      
-  
+      - "falco"
+
   falco:
     image: sysdig/falco:latest
     privileged: true

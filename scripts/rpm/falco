@@ -26,15 +26,15 @@
 #
 
 ### BEGIN INIT INFO
-# Provides: 
-# Required-Start: 
-# Required-Stop: 
-# Should-Start: 
-# Should-Stop: 
-# Default-Start: 
-# Default-Stop: 
-# Short-Description: 
-# Description:      
+# Provides:
+# Required-Start:
+# Required-Stop:
+# Should-Start:
+# Should-Stop:
+# Default-Start:
+# Default-Stop:
+# Short-Description:
+# Description:
 ### END INIT INFO
 
 # Source function library.

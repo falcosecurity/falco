@@ -186,7 +186,7 @@ int falco_outputs::handle_http(lua_State *ls)
 	slist1 = NULL;
 
 	if (!lua_isstring(ls, -1) ||
-	    !lua_isstring(ls, -2)) 
+	    !lua_isstring(ls, -2))
 	{
 		lua_pushstring(ls, "Invalid arguments passed to handle_http()");
 		lua_error(ls);
@@ -196,7 +196,7 @@ int falco_outputs::handle_http(lua_State *ls)
 	string msg = (char *) lua_tostring(ls, 2);
 
 	curl = curl_easy_init();
-	if(curl) 
+	if(curl)
 	{
 		slist1 = curl_slist_append(slist1, "Content-Type: application/json");
 		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, slist1);
