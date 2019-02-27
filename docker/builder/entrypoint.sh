@@ -16,7 +16,7 @@ if [ ! -e $CMAKE_DIR ]; then
     cd $BUILD_DIR
     mkdir -p $BUILD_DIR/cmake
     wget -nv https://s3.amazonaws.com/download.draios.com/dependencies/cmake-3.3.2.tar.gz
-    tar -C $CMAKE_DIR --strip-components 1 -xzf cmake-3.3.2.tar.gz 
+    tar -C $CMAKE_DIR --strip-components 1 -xzf cmake-3.3.2.tar.gz
     cd $CMAKE_DIR
     ./bootstrap --system-curl
     make -j$MAKE_JOBS

@@ -1,6 +1,6 @@
 # Example Kubernetes Daemon Sets for Sysdig Falco
 
-This directory gives you the required YAML files to stand up Sysdig Falco on Kubernetes as a Daemon Set. This will result in a Falco Pod being deployed to each node, and thus the ability to monitor any running containers for abnormal behavior. 
+This directory gives you the required YAML files to stand up Sysdig Falco on Kubernetes as a Daemon Set. This will result in a Falco Pod being deployed to each node, and thus the ability to monitor any running containers for abnormal behavior.
 
 The two options are provided to deploy a Daemon Set:
 - `k8s-with-rbac` - This directory provides a definition to deploy a Daemon Set on Kubernetes with RBAC enabled.
@@ -47,7 +47,7 @@ program_output:
   program: "jq '{text: .output}' | curl -d @- -X POST https://hooks.slack.com/services/see_your_slack_team/apps_settings_for/a_webhook_url"
 ```
 
-You will also need to enable JSON output. Find the `json_output: false` setting in the `falco.yaml` file and change it to read `json_output: true`. Any custom rules for your environment can be added to into the `falco_rules.local.yaml` file and they will be picked up by Falco at start time. You can now create the ConfigMap in Kubernetes. 
+You will also need to enable JSON output. Find the `json_output: false` setting in the `falco.yaml` file and change it to read `json_output: true`. Any custom rules for your environment can be added to into the `falco_rules.local.yaml` file and they will be picked up by Falco at start time. You can now create the ConfigMap in Kubernetes.
 
 ```
 k8s-using-daemonset$ kubectl create configmap falco-config --from-file=k8s-with-rbac/falco-config
@@ -58,7 +58,7 @@ k8s-using-daemonset$
 Now that we have the requirements for our Daemon Set in place, we can create our Daemon Set.
 
 ```
-k8s-using-daemonset$ kubectl create -f k8s-with-rbac/falco-daemonset-configmap.yaml 
+k8s-using-daemonset$ kubectl create -f k8s-with-rbac/falco-daemonset-configmap.yaml
 daemonset "falco" created
 k8s-using-daemonset$
 ```
@@ -106,9 +106,9 @@ root@falco-74htl:/# exit
 k8s-using-daemonset$ kubectl logs falco-74htl
 {"output":"17:48:58.590038385: Notice A shell was spawned in a container with an attached terminal (user=root k8s.pod=falco-74htl container=a98c2aa8e670 shell=bash parent=<NA> cmdline=bash  terminal=34816)","priority":"Notice","rule":"Terminal shell in container","time":"2017-12-20T17:48:58.590038385Z", "output_fields": {"container.id":"a98c2aa8e670","evt.time":1513792138590038385,"k8s.pod.name":"falco-74htl","proc.cmdline":"bash ","proc.name":"bash","proc.pname":null,"proc.tty":34816,"user.name":"root"}}
 k8s-using-daemonset$
-``` 
+```
 
-Alternatively, you can deploy the [Falco Event Generator](https://github.com/draios/falco/wiki/Generating-Sample-Events) deployement to have events automatically generated. Please note that this Deployment will generate a large number of events. 
+Alternatively, you can deploy the [Falco Event Generator](https://github.com/draios/falco/wiki/Generating-Sample-Events) deployement to have events automatically generated. Please note that this Deployment will generate a large number of events.
 
 ```
 k8s-using-daemonset$ kubectl create -f falco-event-generator-deployment.yaml \
@@ -116,5 +116,5 @@ k8s-using-daemonset$ kubectl create -f falco-event-generator-deployment.yaml \
 && kubectl delete -f falco-event-generator-deployment.yaml
 deployment "falco-event-generator-deployment" created
 deployment "falco-event-generator-deployment" deleted
-k8s-using-daemonset$ 
+k8s-using-daemonset$
 ```
