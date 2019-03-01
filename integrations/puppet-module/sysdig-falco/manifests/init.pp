@@ -29,11 +29,13 @@ class falco (
   $service_enable               = $falco::params::service_enable,
   $service_restart              = $falco::params::service_restart,
 ) inherits falco::params {
+
+  class { 'falco::repo': }
+  -> class { 'falco::install': }
+  -> class { 'falco::config': }
+  ~> class { 'falco::service': }
+
   contain falco::install
   contain falco::config
-  contain falco::service
 
-  Class['::falco::install']
-  -> Class['::falco::config']
-  ~> Class['::falco::service']
 }
