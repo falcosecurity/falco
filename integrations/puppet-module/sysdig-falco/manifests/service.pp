@@ -16,9 +16,5 @@ class falco::service inherits falco {
     enable     => $falco::service_enable,
     hasstatus  => true,
     hasrestart => $falco::service_restart,
-    require    => [
-      Class['falco::install'],
-      Class['falco::config'],
-    ]
   }
 }
