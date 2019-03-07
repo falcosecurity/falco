@@ -22,6 +22,7 @@ include_directories("${PROJECT_BINARY_DIR}/userspace/engine")
 include_directories("${LUAJIT_INCLUDE}")
 include_directories("${NJSON_INCLUDE}")
 include_directories("${CURL_INCLUDE_DIR}")
+include_directories("${TBB_INCLUDE_DIR}")
 
 add_library(falco_engine STATIC
 	rules.cpp
