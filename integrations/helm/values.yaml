@@ -1,0 +1,130 @@
+# Default values for falco.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+image: falcosecurity/falco:latest
+
+service:
+  port: 8765
+
+config:
+
+  # Whether to output events in json or text
+
+  json_output: false
+
+  # When using json output, whether or not to include the "output" property
+  # itself (e.g. "File below a known binary directory opened for writing
+  # (user=root ....") in the json output.
+
+  json_include_output_property: true
+
+  # Send information logs to stderr and/or syslog Note these are *not* security
+  # notification logs! These are just Falco lifecycle (and possibly error) logs.
+
+  log_stderr: true
+  log_syslog: true
+
+  # Minimum log level to include in logs. Note: these levels are
+  # separate from the priority field of rules. This refers only to the
+  # log level of falco's internal logging. Can be one of "emergency",
+  # "alert", "critical", "error", "warning", "notice", "info", "debug".
+
+  log_level: info
+
+  # Minimum rule priority level to load and run. All rules having a
+  # priority more severe than this level will be loaded/run.  Can be one
+  # of "emergency", "alert", "critical", "error", "warning", "notice",
+  # "info", "debug".
+
+  priority: debug
+
+  # Whether or not output to any of the output channels below is
+  # buffered. Defaults to false
+
+  buffered_outputs: false
+
+  # A throttling mechanism implemented as a token bucket limits the
+  # rate of falco notifications. This throttling is controlled by the following configuration
+  # options:
+  #  - rate: the number of tokens (i.e. right to send a notification)
+  #    gained per second. Defaults to 1.
+  #  - max_burst: the maximum number of tokens outstanding. Defaults to 1000.
+  #
+  # With these defaults, falco could send up to 1000 notifications after
+  # an initial quiet period, and then up to 1 notification per second
+  # afterward. It would gain the full burst back after 1000 seconds of
+  # no activity.
+
+  outputs:
+    rate: 1
+    max_burst: 1000
+
+  # Where security notifications should go.
+  # Multiple outputs can be enabled.
+
+  syslog_output:
+      enabled: true
+
+  # If keep_alive is set to true, the file will be opened once and
+  # continuously written to, with each output message on its own
+  # line. If keep_alive is set to false, the file will be re-opened
+  # for each output message.
+  #
+  # Also, the file will be closed and reopened if falco is signaled with
+  # SIGUSR1.
+
+  file_output:
+    enabled: false
+    keep_alive: false
+    filename: ./events.txt
+
+  stdout_output:
+    enabled: true
+
+  # Falco contains an embedded webserver that can be used to accept K8s
+  # Audit Events. These config options control the behavior of that
+  # webserver. (By default, the webserver is disabled).
+  #
+  # The ssl_certificate is a combination SSL Certificate and corresponding
+  # key contained in a single file. You can generate a key/cert as follows:
+  #
+  # $ openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out certificate.pem
+  # $ cat certificate.pem key.pem > falco.pem
+  # $ sudo cp falco.pem /etc/falco/falco.pem
+
+  webserver:
+    enabled: true
+    listen_port: 8765
+    k8s_audit_endpoint: /k8s_audit
+    ssl_enabled: false
+    ssl_certificate: /etc/falco/falco.pem
+
+  # Possible additional things you might want to do with program output:
+  #   - send to a slack webhook:
+  #         program: "jq '{text: .output}' | curl -d @- -X POST https://hooks.slack.com/services/XXX"
+  #   - logging (alternate method than syslog):
+  #         program: logger -t falco-test
+  #   - send over a network connection:
+  #         program: nc host.example.com 80
+
+  # If keep_alive is set to true, the program will be started once and
+  # continuously written to, with each output message on its own
+  # line. If keep_alive is set to false, the program will be re-spawned
+  # for each output message.
+  #
+  # Also, the program will be closed and reopened if falco is signaled with
+  # SIGUSR1.
+
+  program_output:
+    enabled: false
+    keep_alive: false
+    program: "jq '{text: .output}' | curl -d @- -X POST https://hooks.slack.com/services/see_your_slack_team/apps_settings_for/a_webhook_url"
+
+resources: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

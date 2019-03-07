@@ -1,0 +1,13 @@
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: {{ template "falco.fullname" . }}
+  labels:
+    app: {{ template "falco.name" . }}
+    role: security
+rules:
+  - apiGroups: ["extensions",""]
+    resources: ["nodes","namespaces","pods","replicationcontrollers","replicasets","services","daemonsets","deployments","events","configmaps"]
+    verbs: ["get","list","watch"]
+  - nonResourceURLs: ["/healthz", "/healthz/*"]
+    verbs: ["get"]
