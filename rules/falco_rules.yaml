@@ -808,6 +808,10 @@
                proc.cmdline startswith "agent.py /opt/datadog-agent")
               and fd.name startswith "/etc/dd-agent")
 
+- macro: rancher_writing_conf
+  condition: (proc.name in (lib-controller,rancher-dns,healthcheck,rancher-metadat)
+              and fd.name startswith "/etc/haproxy")
+
 - macro: curl_writing_pki_db
   condition: (proc.name=curl and fd.directory=/etc/pki/nssdb)
 
@@ -976,6 +980,7 @@
     and not calico_writing_conf
     and not prometheus_conf_writing_conf
     and not openshift_writing_conf
+    and not rancher_writing_conf
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc
