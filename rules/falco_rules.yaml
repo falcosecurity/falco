@@ -709,6 +709,12 @@
 - macro: kubectl_writing_state
   condition: (proc.name=kubectl and fd.name startswith /root/.kube)
 
+- macro: java_running_cassandra
+  condition: (proc.name=java and proc.cmdline contains "cassandra.jar")
+
+- macro: cassandra_writing_state
+  condition: (java_running_cassandra and fd.directory=/root/.cassandra)
+
 - rule: Write below binary dir
   desc: an attempt to write to any file below a set of binary directories
   condition: >
@@ -1047,6 +1053,7 @@
     and not maven_writing_groovy
     and not chef_writing_conf
     and not kubectl_writing_state
+    and not cassandra_writing_state
     and not known_root_conditions
   output: "File below / or /root opened for writing (user=%user.name command=%proc.cmdline parent=%proc.pname file=%fd.name program=%proc.name)"
   priority: ERROR
