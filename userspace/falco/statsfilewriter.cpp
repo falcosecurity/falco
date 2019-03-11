@@ -42,7 +42,7 @@ StatsFileWriter::~StatsFileWriter()
 	m_output.close();
 }
 
-bool StatsFileWriter::init(sinsp *inspector, string &filename, uint32_t interval_sec, string &errstr)
+bool StatsFileWriter::init(sinsp *inspector, string &filename, uint32_t interval_msec, string &errstr)
 {
 	struct itimerval timer;
 	struct sigaction handler;
@@ -60,8 +60,8 @@ bool StatsFileWriter::init(sinsp *inspector, string &filename, uint32_t interval
 		return false;
 	}
 
-	timer.it_value.tv_sec = interval_sec;
-	timer.it_value.tv_usec = 0;
+	timer.it_value.tv_sec = 0;
+	timer.it_value.tv_usec = interval_msec * 1000;
 	timer.it_interval = timer.it_value;
 	if (setitimer(ITIMER_REAL, &timer, NULL) == -1)
 	{

@@ -132,6 +132,9 @@ static void usage()
            "                               from multiple files/directories.\n"
 	   " -s <stats_file>               If specified, write statistics related to falco's reading/processing of events\n"
 	   "                               to this file. (Only useful in live mode).\n"
+	   " --stats_interval <msec>       When using -s <stats_file>, write statistics every <msec> ms.\n"
+	   "                               (This uses signals, so don't recommend intervals below 200 ms)\n"
+	   "                               defaults to 5000 (5 seconds)\n"
 	   " -S <len>, --snaplen=<len>\n"
 	   "                  		   Capture the first <len> bytes of each I/O buffer.\n"
 	   "                   		   By default, the first 80 bytes are captured. Use this\n"
@@ -217,6 +220,7 @@ uint64_t do_inspect(falco_engine *engine,
 		    sinsp* inspector,
 		    uint64_t duration_to_tot_ns,
 		    string &stats_filename,
+		    uint64_t stats_interval,
 		    bool all_events)
 {
 	uint64_t num_evts = 0;
@@ -229,7 +233,7 @@ uint64_t do_inspect(falco_engine *engine,
 	{
 		string errstr;
 
-		if (!writer.init(inspector, stats_filename, 5, errstr))
+		if (!writer.init(inspector, stats_filename, stats_interval, errstr))
 		{
 			throw falco_exception(errstr);
 		}
@@ -388,6 +392,7 @@ int falco_init(int argc, char **argv)
 	string describe_rule = "";
 	list<string> validate_rules_filenames;
 	string stats_filename = "";
+	uint64_t stats_interval = 5000;
 	bool verbose = false;
 	bool names_only = false;
 	bool all_events = false;
@@ -432,6 +437,7 @@ int falco_init(int argc, char **argv)
 		{"print", required_argument, 0, 'p' },
 		{"pidfile", required_argument, 0, 'P' },
 		{"snaplen", required_argument, 0, 'S' },
+		{"stats_interval", required_argument, 0},
 		{"support", no_argument, 0},
 		{"unbuffered", no_argument, 0, 'U' },
 		{"version", no_argument, 0, 0 },
@@ -587,6 +593,10 @@ int falco_init(int argc, char **argv)
 					{
 						list_flds_source = optarg;
 					}
+				}
+				else if (string(long_options[long_index].name) == "stats_interval")
+				{
+					stats_interval = atoi(optarg);
 				}
 				else if (string(long_options[long_index].name) == "support")
 				{
@@ -1063,6 +1073,7 @@ int falco_init(int argc, char **argv)
 					      inspector,
 					      uint64_t(duration_to_tot*ONE_SECOND_IN_NS),
 					      stats_filename,
+					      stats_interval,
 					      all_events);
 
 			duration = ((double)clock()) / CLOCKS_PER_SEC - duration;

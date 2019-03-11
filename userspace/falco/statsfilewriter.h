@@ -35,7 +35,7 @@ public:
 
 	// Returns success as bool. On false fills in errstr.
 	bool init(sinsp *inspector, std::string &filename,
-		  uint32_t interval_sec,
+		  uint32_t interval_msec,
 		  string &errstr);
 
 	// Should be called often (like for each event in a sinsp
