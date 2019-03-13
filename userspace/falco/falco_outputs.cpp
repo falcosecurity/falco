@@ -36,7 +36,8 @@ const static struct luaL_reg ll_falco_outputs [] =
 falco_outputs::falco_outputs(falco_engine *engine)
 	: m_falco_engine(engine),
 	  m_initialized(false),
-	  m_buffered(true)
+	  m_buffered(true),
+	  m_json_output(false)
 {
 
 }
@@ -76,6 +77,8 @@ void falco_outputs::init(bool json_output,
 	{
 		throw falco_exception("No inspector provided");
 	}
+
+	m_json_output = json_output;
 
 	falco_common::init(m_lua_main_filename.c_str(), FALCO_SOURCE_LUA_DIR);
 
@@ -158,6 +161,81 @@ void falco_outputs::handle_event(gen_event *ev, string &rule, string &source,
 	else
 	{
 		throw falco_exception("No function " + m_lua_output_event + " found in lua compiler module");
+	}
+
+}
+
+void falco_outputs::handle_msg(uint64_t now,
+			       falco_common::priority_type priority,
+			       std::string &msg,
+			       std::string &rule,
+			       std::map<std::string,std::string> &output_fields)
+{
+	std::string full_msg;
+
+	if(m_json_output)
+	{
+		nlohmann::json jmsg;
+
+		// Convert the time-as-nanoseconds to a more json-friendly ISO8601.
+		time_t evttime = now/1000000000;
+		char time_sec[20]; // sizeof "YYYY-MM-DDTHH:MM:SS"
+		char time_ns[12]; // sizeof ".sssssssssZ"
+		string iso8601evttime;
+
+		strftime(time_sec, sizeof(time_sec), "%FT%T", gmtime(&evttime));
+		snprintf(time_ns, sizeof(time_ns), ".%09luZ", now % 1000000000);
+		iso8601evttime = time_sec;
+		iso8601evttime += time_ns;
+
+		jmsg["output"] = msg;
+		jmsg["priority"] = "Critical";
+		jmsg["rule"] = rule;
+		jmsg["time"] = iso8601evttime;
+		jmsg["output_fields"] = output_fields;
+
+		full_msg = jmsg.dump();
+	}
+	else
+	{
+		std::string timestr;
+		bool first = true;
+
+		sinsp_utils::ts_to_string(now, &timestr, false, true);
+		full_msg = timestr + ": " + falco_common::priority_names[LOG_CRIT] + " " + msg + "(";
+		for(auto &pair : output_fields)
+		{
+			if(first)
+			{
+				first = false;
+			}
+			else
+			{
+				full_msg += " ";
+			}
+			full_msg += pair.first + "=" + pair.second;
+		}
+		full_msg += ")";
+	}
+
+	lua_getglobal(m_ls, m_lua_output_msg.c_str());
+
+	if(lua_isfunction(m_ls, -1))
+	{
+		lua_pushstring(m_ls, full_msg.c_str());
+		lua_pushstring(m_ls, falco_common::priority_names[priority].c_str());
+		lua_pushnumber(m_ls, priority);
+
+		if(lua_pcall(m_ls, 3, 0, 0) != 0)
+		{
+			const char* lerr = lua_tostring(m_ls, -1);
+			string err = "Error invoking function output: " + string(lerr);
+			throw falco_exception(err);
+		}
+	}
+	else
+	{
+		throw falco_exception("No function " + m_lua_output_msg + " found in lua compiler module");
 	}
 
 }
