@@ -133,22 +133,47 @@ public:
 
 	// called with the last variadic arg (where the sequence is expected to be found)
 	template <typename T>
-	void get_sequence(T& ret, const std::string& name)
+	void get_sequence_from_node(T& ret, const YAML::Node &node)
 	{
-		YAML::Node child_node = m_root[name];
-		if(child_node.IsDefined())
+		if(node.IsDefined())
 		{
-			if(child_node.IsSequence())
+			if(node.IsSequence())
 			{
-				for(const YAML::Node& item : child_node)
+				for(const YAML::Node& item : node)
 				{
 					ret.insert(ret.end(), item.as<typename T::value_type>());
 				}
 			}
-			else if(child_node.IsScalar())
+			else if(node.IsScalar())
 			{
-				ret.insert(ret.end(), child_node.as<typename T::value_type>());
+				ret.insert(ret.end(), node.as<typename T::value_type>());
 			}
+		}
+	}
+
+	// called with the last variadic arg (where the sequence is expected to be found)
+	template <typename T>
+	void get_sequence(T& ret, const std::string& name)
+	{
+		return get_sequence_from_node<T>(ret, m_root[name]);
+	}
+
+	// called with the last variadic arg (where the sequence is expected to be found)
+	template <typename T>
+		void get_sequence(T& ret, const std::string& key, const std::string &subkey)
+	{
+		try
+		{
+			auto node = m_root[key];
+			if (node.IsDefined())
+			{
+				return get_sequence_from_node<T>(ret, node[subkey]);
+			}
+		}
+		catch (const YAML::BadConversion& ex)
+		{
+			std::cerr << "Cannot read config file (" + m_path + "): wrong type at key " + key + "\n";
+			throw;
 		}
 	}
 
