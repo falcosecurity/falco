@@ -26,8 +26,10 @@ limitations under the License.
 #include <string>
 #include <vector>
 #include <list>
+#include <set>
 #include <iostream>
 
+#include "event_drops.h"
 #include "falco_outputs.h"
 
 class yaml_configuration
@@ -209,6 +211,10 @@ class falco_configuration
 	std::string m_webserver_k8s_audit_endpoint;
 	bool m_webserver_ssl_enabled;
 	std::string m_webserver_ssl_certificate;
+	std::set<syscall_evt_drop_mgr::action> m_syscall_evt_drop_actions;
+	double m_syscall_evt_drop_rate;
+	double m_syscall_evt_drop_max_burst;
+
 
  private:
 	void init_cmdline_options(std::list<std::string> &cmdline_options);

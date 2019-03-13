@@ -40,6 +40,7 @@ limitations under the License.
 #include "chisel.h"
 #include "sysdig.h"
 
+#include "event_drops.h"
 #include "configuration.h"
 #include "falco_engine.h"
 #include "config_falco.h"
@@ -218,16 +219,25 @@ static std::string read_file(std::string filename)
 uint64_t do_inspect(falco_engine *engine,
 		    falco_outputs *outputs,
 		    sinsp* inspector,
+		    falco_configuration &config,
+		    syscall_evt_drop_mgr &sdropmgr,
 		    uint64_t duration_to_tot_ns,
 		    string &stats_filename,
 		    uint64_t stats_interval,
-		    bool all_events)
+		    bool all_events,
+		    int &result)
 {
 	uint64_t num_evts = 0;
 	int32_t rc;
 	sinsp_evt* ev;
 	StatsFileWriter writer;
 	uint64_t duration_start = 0;
+
+	sdropmgr.init(inspector,
+		  outputs,
+		  config.m_syscall_evt_drop_actions,
+		  config.m_syscall_evt_drop_rate,
+		  config.m_syscall_evt_drop_max_burst);
 
 	if (stats_filename != "")
 	{
@@ -287,6 +297,12 @@ uint64_t do_inspect(falco_engine *engine,
 			{
 				break;
 			}
+		}
+
+		if(!sdropmgr.process_event(ev))
+		{
+			result = EXIT_FAILURE;
+			break;
 		}
 
 		if(!ev->falco_consider() && !all_events)
@@ -379,6 +395,7 @@ int falco_init(int argc, char **argv)
 	sinsp_evt::param_fmt event_buffer_format = sinsp_evt::PF_NORMAL;
 	falco_engine *engine = NULL;
 	falco_outputs *outputs = NULL;
+	syscall_evt_drop_mgr sdropmgr;
 	int op;
 	int long_index = 0;
 	string trace_filename;
@@ -1071,10 +1088,13 @@ int falco_init(int argc, char **argv)
 			num_evts = do_inspect(engine,
 					      outputs,
 					      inspector,
+					      config,
+					      sdropmgr,
 					      uint64_t(duration_to_tot*ONE_SECOND_IN_NS),
 					      stats_filename,
 					      stats_interval,
-					      all_events);
+					      all_events,
+					      result);
 
 			duration = ((double)clock()) / CLOCKS_PER_SEC - duration;
 
@@ -1096,6 +1116,7 @@ int falco_init(int argc, char **argv)
 
 		inspector->close();
 		engine->print_stats();
+		sdropmgr.print_stats();
 		webserver.stop();
 	}
 	catch(exception &e)

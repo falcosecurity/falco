@@ -182,6 +182,41 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 	m_webserver_k8s_audit_endpoint = m_config->get_scalar<string>("webserver", "k8s_audit_endpoint", "/k8s_audit");
 	m_webserver_ssl_enabled = m_config->get_scalar<bool>("webserver", "ssl_enabled", false);
 	m_webserver_ssl_certificate = m_config->get_scalar<string>("webserver", "ssl_certificate","/etc/falco/falco.pem");
+
+	std::list<string> syscall_event_drop_acts;
+	m_config->get_sequence(syscall_event_drop_acts, "syscall_event_drops", "actions");
+
+	for(std::string &act : syscall_event_drop_acts)
+	{
+		if(act == "ignore")
+		{
+			m_syscall_evt_drop_actions.insert(syscall_evt_drop_mgr::ACT_IGNORE);
+		}
+		else if (act == "log")
+		{
+			m_syscall_evt_drop_actions.insert(syscall_evt_drop_mgr::ACT_LOG);
+		}
+		else if (act == "alert")
+		{
+			m_syscall_evt_drop_actions.insert(syscall_evt_drop_mgr::ACT_ALERT);
+		}
+		else if (act == "exit")
+		{
+			m_syscall_evt_drop_actions.insert(syscall_evt_drop_mgr::ACT_EXIT);
+		}
+		else
+		{
+			throw invalid_argument("Error reading config file (" + m_config_file + "): syscall event drop action " + act + " must be one of \"ignore\", \"log\", \"alert\", or \"exit\"");
+		}
+	}
+
+	if(m_syscall_evt_drop_actions.empty())
+	{
+		m_syscall_evt_drop_actions.insert(syscall_evt_drop_mgr::ACT_IGNORE);
+	}
+
+	m_syscall_evt_drop_rate = m_config->get_scalar<double>("syscall_event_drops", "rate", 0.3333);
+	m_syscall_evt_drop_max_burst = m_config->get_scalar<double>("syscall_event_drops", "max_burst", 10);
 }
 
 void falco_configuration::read_rules_file_directory(const string &path, list<string> &rules_filenames)

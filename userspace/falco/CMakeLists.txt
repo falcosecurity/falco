@@ -36,6 +36,7 @@ add_executable(falco
 	configuration.cpp
 	logger.cpp
 	falco_outputs.cpp
+	event_drops.cpp
 	statsfilewriter.cpp
 	falco.cpp
 	"${PROJECT_SOURCE_DIR}/../sysdig/userspace/sysdig/fields_info.cpp"
