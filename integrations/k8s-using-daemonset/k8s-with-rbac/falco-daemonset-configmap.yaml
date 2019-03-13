@@ -25,7 +25,7 @@ spec:
 #          env:
 #          - name: SYSDIG_BPF_PROBE
 #            value: ""
-          args: [ "/usr/bin/falco", "-K", "/var/run/secrets/kubernetes.io/serviceaccount/token", "-k", "https://kubernetes.default", "-pk"]
+          args: [ "/usr/bin/falco", "-K", "/var/run/secrets/kubernetes.io/serviceaccount/token", "-k", "https://$(KUBERNETES_SERVICE_HOST)", "-pk"]
           volumeMounts:
             - mountPath: /host/var/run/docker.sock
               name: docker-socket
