@@ -93,22 +93,39 @@ int falco_logger::syslog(lua_State *ls) {
 bool falco_logger::log_stderr = true;
 bool falco_logger::log_syslog = true;
 
-void falco_logger::log(int priority, const string msg) {
+void falco_logger::log(int priority, const string msg)
+{
 
 	if(priority > falco_logger::level)
 	{
 		return;
 	}
 
-	if (falco_logger::log_syslog) {
-		::syslog(priority, "%s", msg.c_str());
+	string copy = msg;
+
+	if (falco_logger::log_syslog)
+	{
+		// Syslog output should not have any trailing newline
+		if(copy.back() == '\n')
+		{
+			copy.pop_back();
+		}
+
+		::syslog(priority, "%s", copy.c_str());
 	}
 
-	if (falco_logger::log_stderr) {
+	if (falco_logger::log_stderr)
+	{
+		// log output should always have a trailing newline
+		if(copy.back() != '\n')
+		{
+			copy.push_back('\n');
+		}
+
 		std::time_t result = std::time(nullptr);
 		string tstr = std::asctime(std::localtime(&result));
 		tstr = tstr.substr(0, 24);// remove trailling newline
-		fprintf(stderr, "%s: %s", tstr.c_str(), msg.c_str());
+		fprintf(stderr, "%s: %s", tstr.c_str(), copy.c_str());
 	}
 }
 
