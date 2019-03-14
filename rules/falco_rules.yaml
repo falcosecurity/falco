@@ -1126,7 +1126,12 @@
 # Only let rpm-related programs write to the rpm database
 - rule: Write below rpm database
   desc: an attempt to write to the rpm database by any non-rpm related program
-  condition: fd.name startswith /var/lib/rpm and open_write and not rpm_procs and not ansible_running_python and not python_running_chef
+  condition: >
+    fd.name startswith /var/lib/rpm and open_write
+    and not rpm_procs
+    and not ansible_running_python
+    and not python_running_chef
+    and not exe_running_docker_save
   output: "Rpm database opened for writing by a non-rpm program (command=%proc.cmdline file=%fd.name parent=%proc.pname pcmdline=%proc.pcmdline)"
   priority: ERROR
   tags: [filesystem, software_mgmt]
