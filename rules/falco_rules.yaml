@@ -619,6 +619,9 @@
 - macro: liveupdate_writing_conf
   condition: (proc.cmdline startswith "java LiveUpdate" and fd.name in (/etc/liveupdate.conf, /etc/Product.Catalog.JavaLiveUpdate))
 
+- macro: rancher_agent
+  condition: (proc.name = agent and container.image.repository = rancher/agent)
+
 - macro: sosreport_writing_files
   condition: >
     (proc.name=urlgrabber-ext- and proc.aname[3]=sosreport and
@@ -817,6 +820,13 @@
                proc.cmdline startswith "agent.py /opt/datadog-agent")
               and fd.name startswith "/etc/dd-agent")
 
+- macro: rancher_writing_conf
+  condition: (container.image.repository in (rancher_images)
+              and proc.name in (lib-controller,rancher-dns,healthcheck,rancher-metadat)
+              and (fd.name startswith "/etc/haproxy" or 
+                   fd.name startswith "/etc/rancher-dns")
+             )
+
 - macro: curl_writing_pki_db
   condition: (proc.name=curl and fd.directory=/etc/pki/nssdb)
 
@@ -985,6 +995,7 @@
     and not calico_writing_conf
     and not prometheus_conf_writing_conf
     and not openshift_writing_conf
+    and not rancher_writing_conf
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc
@@ -1219,6 +1230,7 @@
     and not python_running_sdchecks
     and not java_running_sdjagent
     and not kubelet_running_loopback
+    and not rancher_agent
   output: >
     Namespace change (setns) by unexpected program (user=%user.name command=%proc.cmdline
     parent=%proc.pname %container.info)
@@ -1410,6 +1422,12 @@
               container.image.repository in (trusted_images) or
               container.image.repository startswith istio/proxy_ or
               container.image.repository startswith quay.io/sysdig)
+
+- list: rancher_images
+  items: [
+    rancher/network-manager, rancher/dns, rancher/agent, 
+    rancher/lb-service-haproxy, rancher/metadata, rancher/healthcheck
+  ]
 
 # Add conditions to this macro (probably in a separate file,
 # overwriting this macro) to specify additional containers that are
