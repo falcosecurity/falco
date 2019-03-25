@@ -885,7 +885,7 @@
     (proc.name = calico-node and fd.name startswith /etc/calico)
 
 - macro: prometheus_conf_writing_conf
-  condition: (proc.name=prometheus-conf and fd.directory=/etc/prometheus/config_out)
+  condition: (proc.name=prometheus-conf and fd.name startswith /etc/prometheus/config_out)
 
 - macro: openshift_writing_conf
   condition: (proc.name=oc and fd.name=/etc/origin/node/node.kubeconfig)
