@@ -47,7 +47,8 @@ public:
 		  falco_outputs *outputs,
 		  std::set<action> &actions,
 		  double rate,
-		  double max_tokens);
+		  double max_tokens,
+		  bool simulate_drops);
 
 	// Call this for every event. The class will take care of
 	// periodically measuring the scap stats, looking for syscall
@@ -71,6 +72,7 @@ protected:
 	token_bucket m_bucket;
 	uint64_t m_next_check_ts;
 	scap_stats m_last_stats;
+	bool m_simulate_drops;
 };
 
 

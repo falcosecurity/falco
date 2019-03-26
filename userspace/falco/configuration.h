@@ -215,6 +215,9 @@ class falco_configuration
 	double m_syscall_evt_drop_rate;
 	double m_syscall_evt_drop_max_burst;
 
+	// Only used for testing
+	bool m_syscall_evt_simulate_drops;
+
 
  private:
 	void init_cmdline_options(std::list<std::string> &cmdline_options);

@@ -217,6 +217,8 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 
 	m_syscall_evt_drop_rate = m_config->get_scalar<double>("syscall_event_drops", "rate", 0.3333);
 	m_syscall_evt_drop_max_burst = m_config->get_scalar<double>("syscall_event_drops", "max_burst", 10);
+
+	m_syscall_evt_simulate_drops = m_config->get_scalar<bool>("syscall_event_drops", "simulate_drops", false);
 }
 
 void falco_configuration::read_rules_file_directory(const string &path, list<string> &rules_filenames)

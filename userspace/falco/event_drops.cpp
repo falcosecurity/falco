@@ -24,7 +24,8 @@ syscall_evt_drop_mgr::syscall_evt_drop_mgr()
 	  m_num_actions(0),
 	  m_inspector(NULL),
 	  m_outputs(NULL),
-	  m_next_check_ts(0)
+	  m_next_check_ts(0),
+	  m_simulate_drops(false)
 {
 }
 
@@ -33,10 +34,11 @@ syscall_evt_drop_mgr::~syscall_evt_drop_mgr()
 }
 
 void syscall_evt_drop_mgr::init(sinsp *inspector,
-			falco_outputs *outputs,
-			std::set<action> &actions,
-			double rate,
-			double max_tokens)
+				falco_outputs *outputs,
+				std::set<action> &actions,
+				double rate,
+				double max_tokens,
+				bool simulate_drops)
 {
 	m_inspector = inspector;
 	m_outputs = outputs;
@@ -44,6 +46,8 @@ void syscall_evt_drop_mgr::init(sinsp *inspector,
 	m_bucket.init(rate, max_tokens);
 
 	m_inspector->get_capture_stats(&m_last_stats);
+
+	m_simulate_drops = simulate_drops;
 }
 
 bool syscall_evt_drop_mgr::process_event(sinsp_evt *evt)
@@ -66,6 +70,12 @@ bool syscall_evt_drop_mgr::process_event(sinsp_evt *evt)
 		delta.n_drops = stats.n_drops - m_last_stats.n_drops;
 
 		m_last_stats = stats;
+
+		if(m_simulate_drops)
+		{
+			falco_logger::log(LOG_INFO, "Simulating syscall event drop");
+			delta.n_drops++;
+		}
 
 		if(delta.n_drops > 0)
 		{
