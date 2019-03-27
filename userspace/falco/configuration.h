@@ -26,8 +26,10 @@ limitations under the License.
 #include <string>
 #include <vector>
 #include <list>
+#include <set>
 #include <iostream>
 
+#include "event_drops.h"
 #include "falco_outputs.h"
 
 class yaml_configuration
@@ -133,22 +135,47 @@ public:
 
 	// called with the last variadic arg (where the sequence is expected to be found)
 	template <typename T>
-	void get_sequence(T& ret, const std::string& name)
+	void get_sequence_from_node(T& ret, const YAML::Node &node)
 	{
-		YAML::Node child_node = m_root[name];
-		if(child_node.IsDefined())
+		if(node.IsDefined())
 		{
-			if(child_node.IsSequence())
+			if(node.IsSequence())
 			{
-				for(const YAML::Node& item : child_node)
+				for(const YAML::Node& item : node)
 				{
 					ret.insert(ret.end(), item.as<typename T::value_type>());
 				}
 			}
-			else if(child_node.IsScalar())
+			else if(node.IsScalar())
 			{
-				ret.insert(ret.end(), child_node.as<typename T::value_type>());
+				ret.insert(ret.end(), node.as<typename T::value_type>());
 			}
+		}
+	}
+
+	// called with the last variadic arg (where the sequence is expected to be found)
+	template <typename T>
+	void get_sequence(T& ret, const std::string& name)
+	{
+		return get_sequence_from_node<T>(ret, m_root[name]);
+	}
+
+	// called with the last variadic arg (where the sequence is expected to be found)
+	template <typename T>
+		void get_sequence(T& ret, const std::string& key, const std::string &subkey)
+	{
+		try
+		{
+			auto node = m_root[key];
+			if (node.IsDefined())
+			{
+				return get_sequence_from_node<T>(ret, node[subkey]);
+			}
+		}
+		catch (const YAML::BadConversion& ex)
+		{
+			std::cerr << "Cannot read config file (" + m_path + "): wrong type at key " + key + "\n";
+			throw;
 		}
 	}
 
@@ -184,6 +211,13 @@ class falco_configuration
 	std::string m_webserver_k8s_audit_endpoint;
 	bool m_webserver_ssl_enabled;
 	std::string m_webserver_ssl_certificate;
+	std::set<syscall_evt_drop_mgr::action> m_syscall_evt_drop_actions;
+	double m_syscall_evt_drop_rate;
+	double m_syscall_evt_drop_max_burst;
+
+	// Only used for testing
+	bool m_syscall_evt_simulate_drops;
+
 
  private:
 	void init_cmdline_options(std::list<std::string> &cmdline_options);

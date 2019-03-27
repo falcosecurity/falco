@@ -771,3 +771,72 @@ trace_files: !mux
     rules_file:
       - rules/engine_version_mismatch.yaml
     trace_file: trace_files/cat_write.scap
+
+  monitor_syscall_drops_none:
+    exit_status: 0
+    rules_file:
+      - rules/single_rule.yaml
+    conf_file: confs/drops_none.yaml
+    trace_file: trace_files/ping_sendto.scap
+    stderr_not_contains:
+      - "event drop detected: 9 occurrences"
+      - "num times actions taken: 9"
+      - "Falco internal: syscall event drop"
+    stdout_not_contains:
+      - "Falco internal: syscall event drop"
+
+  monitor_syscall_drops_ignore:
+    exit_status: 0
+    rules_file:
+      - rules/single_rule.yaml
+    conf_file: confs/drops_ignore.yaml
+    trace_file: trace_files/ping_sendto.scap
+    stderr_contains:
+      - "event drop detected: 9 occurrences"
+      - "num times actions taken: 9"
+    stderr_not_contains:
+      - "Falco internal: syscall event drop"
+    stdout_not_contains:
+      - "Falco internal: syscall event drop"
+
+  monitor_syscall_drops_log:
+    exit_status: 0
+    rules_file:
+      - rules/single_rule.yaml
+    conf_file: confs/drops_log.yaml
+    trace_file: trace_files/ping_sendto.scap
+    stderr_contains:
+      - "event drop detected: 9 occurrences"
+      - "num times actions taken: 9"
+      - "Falco internal: syscall event drop"
+    stdout_not_contains:
+      - "Falco internal: syscall event drop"
+
+  monitor_syscall_drops_alert:
+    exit_status: 0
+    rules_file:
+      - rules/single_rule.yaml
+    conf_file: confs/drops_alert.yaml
+    trace_file: trace_files/ping_sendto.scap
+    stderr_contains:
+      - "event drop detected: 9 occurrences"
+      - "num times actions taken: 9"
+    stderr_not_contains:
+      - "Falco internal: syscall event drop"
+    stdout_contains:
+      - "Falco internal: syscall event drop"
+
+  monitor_syscall_drops_exit:
+    exit_status: 1
+    rules_file:
+      - rules/single_rule.yaml
+    conf_file: confs/drops_exit.yaml
+    trace_file: trace_files/ping_sendto.scap
+    stderr_contains:
+      - "event drop detected: 1 occurrences"
+      - "num times actions taken: 1"
+      - "Falco internal: syscall event drop"
+      - "Exiting."
+    stdout_not_contains:
+      - "Falco internal: syscall event drop"
+

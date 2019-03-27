@@ -172,6 +172,12 @@ function output_event(event, rule, source, priority, priority_num, format)
    end
 end
 
+function output_msg(msg, priority, priority_num)
+   for index,o in ipairs(outputs) do
+      o.output(priority, priority_num, msg, o.options)
+   end
+end
+
 function output_cleanup()
    formats.free_formatters()
    for index,o in ipairs(outputs) do

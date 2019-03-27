@@ -37,7 +37,31 @@ class FalcoTest(Test):
         self.falcodir = self.params.get('falcodir', '/', default=os.path.join(self.basedir, '../build'))
 
         self.stdout_contains = self.params.get('stdout_contains', '*', default='')
+
+        if not isinstance(self.stdout_contains, list):
+            self.stdout_contains = [self.stdout_contains]
+
         self.stderr_contains = self.params.get('stderr_contains', '*', default='')
+
+        if not isinstance(self.stderr_contains, list):
+            self.stderr_contains = [self.stderr_contains]
+
+        self.stdout_not_contains = self.params.get('stdout_not_contains', '*', default='')
+
+        if not isinstance(self.stdout_not_contains, list):
+            if self.stdout_not_contains == '':
+                self.stdout_not_contains = []
+            else:
+                self.stdout_not_contains = [self.stdout_not_contains]
+
+        self.stderr_not_contains = self.params.get('stderr_not_contains', '*', default='')
+
+        if not isinstance(self.stderr_not_contains, list):
+            if self.stderr_not_contains == '':
+                self.stderr_not_contains = []
+            else:
+                self.stderr_not_contains = [self.stderr_not_contains]
+
         self.exit_status = self.params.get('exit_status', '*', default=0)
         self.should_detect = self.params.get('detect', '*', default=False)
         self.trace_file = self.params.get('trace_file', '*', default='')
@@ -389,15 +413,25 @@ class FalcoTest(Test):
 
         res = self.falco_proc.run(timeout=180, sig=9)
 
-        if self.stderr_contains != '':
-            match = re.search(self.stderr_contains, res.stderr)
+        for pattern in self.stderr_contains:
+            match = re.search(pattern, res.stderr)
             if match is None:
-                self.fail("Stderr of falco process did not contain content matching {}".format(self.stderr_contains))
+                self.fail("Stderr of falco process did not contain content matching {}".format(pattern))
 
-        if self.stdout_contains != '':
-            match = re.search(self.stdout_contains, res.stdout)
+        for pattern in self.stdout_contains:
+            match = re.search(pattern, res.stdout)
             if match is None:
-                self.fail("Stdout of falco process '{}' did not contain content matching {}".format(res.stdout, self.stdout_contains))
+                self.fail("Stdout of falco process '{}' did not contain content matching {}".format(res.stdout, pattern))
+
+        for pattern in self.stderr_not_contains:
+            match = re.search(pattern, res.stderr)
+            if match is not None:
+                self.fail("Stderr of falco process contained content matching {} when it should have not".format(pattern))
+
+        for pattern in self.stdout_not_contains:
+            match = re.search(pattern, res.stdout)
+            if match is not None:
+                self.fail("Stdout of falco process '{}' did contain content matching {} when it should have not".format(res.stdout, pattern))
 
         if res.exit_status != self.exit_status:
             self.error("Falco command \"{}\" exited with unexpected return value {} (!= {})".format(
