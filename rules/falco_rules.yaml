@@ -763,6 +763,15 @@
      or user_ssh_directory)
     and not mkinitramfs_writing_boot
 
+# Add conditions to this macro (probably in a separate file,
+# overwriting this macro) to allow for specific combinations of
+# programs writing below monitored directories.
+#
+# Its default value is an expression that always is false, which
+# becomes true when the "not ..." in the rule is applied.
+- macro: user_known_write_monitored_dir_conditions
+  condition: (never_true)
+
 - rule: Write below monitored dir
   desc: an attempt to write to any file below a set of binary directories
   condition: >
@@ -774,6 +783,7 @@
     and not python_running_ms_oms
     and not google_accounts_daemon_writing_ssh
     and not cloud_init_writing_ssh
+    and not user_known_write_monitored_dir_conditions
   output: >
     File below a monitored directory opened for writing (user=%user.name
     command=%proc.cmdline file=%fd.name parent=%proc.pname pcmdline=%proc.pcmdline gparent=%proc.aname[2])
