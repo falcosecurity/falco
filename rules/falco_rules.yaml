@@ -710,7 +710,7 @@
   condition: (proc.name=chef-client and fd.name startswith /root/.chef)
 
 - macro: kubectl_writing_state
-  condition: (proc.name=kubectl and fd.name startswith /root/.kube)
+  condition: (proc.name in (kubectl,oc) and fd.name startswith /root/.kube)
 
 - macro: java_running_cassandra
   condition: (proc.name=java and proc.cmdline contains "cassandra.jar")
