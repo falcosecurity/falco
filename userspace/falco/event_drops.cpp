@@ -50,7 +50,7 @@ void syscall_evt_drop_mgr::init(sinsp *inspector,
 	m_simulate_drops = simulate_drops;
 }
 
-bool syscall_evt_drop_mgr::process_event(sinsp_evt *evt)
+bool syscall_evt_drop_mgr::process_event(sinsp *inspector, sinsp_evt *evt)
 {
 	if(m_next_check_ts == 0)
 	{
@@ -65,9 +65,14 @@ bool syscall_evt_drop_mgr::process_event(sinsp_evt *evt)
 
 		m_inspector->get_capture_stats(&stats);
 
-		// NOTE: only computing delta for interesting stats (evts/drops)
 		delta.n_evts = stats.n_evts - m_last_stats.n_evts;
 		delta.n_drops = stats.n_drops - m_last_stats.n_drops;
+		delta.n_drops_buffer = stats.n_drops_buffer - m_last_stats.n_drops_buffer;
+		delta.n_drops_pf = stats.n_drops_pf - m_last_stats.n_drops_pf;
+		delta.n_drops_bug = stats.n_drops_bug - m_last_stats.n_drops_bug;
+		delta.n_preemptions = stats.n_preemptions - m_last_stats.n_preemptions;
+		delta.n_suppressed = stats.n_suppressed - m_last_stats.n_suppressed;
+		delta.n_tids_suppressed = stats.n_tids_suppressed - m_last_stats.n_tids_suppressed;
 
 		m_last_stats = stats;
 
@@ -87,7 +92,7 @@ bool syscall_evt_drop_mgr::process_event(sinsp_evt *evt)
 			{
 				m_num_actions++;
 
-				return perform_actions(evt->get_ts(), delta);
+				return perform_actions(evt->get_ts(), delta, inspector->is_bpf_enabled());
 			}
 			else
 			{
@@ -106,7 +111,7 @@ void syscall_evt_drop_mgr::print_stats()
 	fprintf(stderr, "   - num times actions taken: %lu\n", m_num_actions);
 }
 
-bool syscall_evt_drop_mgr::perform_actions(uint64_t now, scap_stats &delta)
+bool syscall_evt_drop_mgr::perform_actions(uint64_t now, scap_stats &delta, bool bpf_enabled)
 {
 	std::string rule = "Falco internal: syscall event drop";
 	std::string msg = rule + ". " + std::to_string(delta.n_drops) + " system calls dropped in last second.";
@@ -115,6 +120,10 @@ bool syscall_evt_drop_mgr::perform_actions(uint64_t now, scap_stats &delta)
 
 	output_fields["n_evts"] = std::to_string(delta.n_evts);
 	output_fields["n_drops"] = std::to_string(delta.n_drops);
+	output_fields["n_drops_buffer"] = std::to_string(delta.n_drops_buffer);
+	output_fields["n_drops_pf"] = std::to_string(delta.n_drops_pf);
+	output_fields["n_drops_bug"] = std::to_string(delta.n_drops_bug);
+	output_fields["ebpf_enabled"] = std::to_string(bpf_enabled);
 	bool should_exit = false;
 
 	for(auto &act : m_actions)

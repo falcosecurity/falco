@@ -300,7 +300,7 @@ uint64_t do_inspect(falco_engine *engine,
 			}
 		}
 
-		if(!sdropmgr.process_event(ev))
+		if(!sdropmgr.process_event(inspector, ev))
 		{
 			result = EXIT_FAILURE;
 			break;

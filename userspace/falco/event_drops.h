@@ -55,14 +55,14 @@ public:
 	// event drops, and performing any actions.
 	//
 	// Returns whether event processing should continue or stop (with an error).
-	bool process_event(sinsp_evt *evt);
+	bool process_event(sinsp *inspector, sinsp_evt *evt);
 
 	void print_stats();
 
 protected:
 
 	// Perform all configured actions.
-	bool perform_actions(uint64_t now, scap_stats &delta);
+	bool perform_actions(uint64_t now, scap_stats &delta, bool bpf_enabled);
 
 	uint64_t m_num_syscall_evt_drops;
 	uint64_t m_num_actions;
