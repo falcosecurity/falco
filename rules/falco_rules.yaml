@@ -182,8 +182,11 @@
           repoquery, rpmkeys, rpmq, yum-cron, yum-config-mana, yum-debug-dump,
           abrt-action-sav, rpmdb_stat, microdnf, rhn_check, yumdb]
 
+- list: openscap_rpm_binaries
+  items: [probe_rpminfo, probe_rpmverify, probe_rpmverifyfile, probe_rpmverifypackage]
+
 - macro: rpm_procs
-  condition: proc.name in (rpm_binaries) or proc.name in (salt-minion)
+  condition: proc.name in (rpm_binaries, openscap_rpm_binaries) or proc.name in (salt-minion)
 
 - list: deb_binaries
   items: [dpkg, dpkg-preconfigu, dpkg-reconfigur, dpkg-divert, apt, apt-get, aptitude,
