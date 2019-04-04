@@ -904,7 +904,7 @@
   condition: (proc.name=prometheus-conf and fd.name startswith /etc/prometheus/config_out)
 
 - macro: openshift_writing_conf
-  condition: (proc.name=oc and fd.name=/etc/origin/node/node.kubeconfig)
+  condition: (proc.name=oc and fd.name startswith /etc/origin/node)
 
 # Add conditions to this macro (probably in a separate file,
 # overwriting this macro) to allow for specific combinations of
