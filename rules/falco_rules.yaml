@@ -143,7 +143,7 @@
   items: [setup-backend, dragent, sdchecks]
 
 - list: docker_binaries
-  items: [docker, dockerd, exe, docker-compose, docker-entrypoi, docker-runc-cur, docker-current]
+  items: [docker, dockerd, exe, docker-compose, docker-entrypoi, docker-runc-cur, docker-current, dockerd-current]
 
 - list: k8s_binaries
   items: [hyperkube, skydns, kube2sky, exechealthz, weave-net, loopback, bridge, openshift-sdn]
@@ -182,8 +182,11 @@
           repoquery, rpmkeys, rpmq, yum-cron, yum-config-mana, yum-debug-dump,
           abrt-action-sav, rpmdb_stat, microdnf, rhn_check, yumdb]
 
+- list: openscap_rpm_binaries
+  items: [probe_rpminfo, probe_rpmverify, probe_rpmverifyfile, probe_rpmverifypackage]
+
 - macro: rpm_procs
-  condition: proc.name in (rpm_binaries) or proc.name in (salt-minion)
+  condition: proc.name in (rpm_binaries, openscap_rpm_binaries) or proc.name in (salt-minion)
 
 - list: deb_binaries
   items: [dpkg, dpkg-preconfigu, dpkg-reconfigur, dpkg-divert, apt, apt-get, aptitude,
@@ -901,7 +904,7 @@
   condition: (proc.name=prometheus-conf and fd.name startswith /etc/prometheus/config_out)
 
 - macro: openshift_writing_conf
-  condition: (proc.name=oc and fd.name=/etc/origin/node/node.kubeconfig)
+  condition: (proc.name=oc and fd.name startswith /etc/origin/node)
 
 # Add conditions to this macro (probably in a separate file,
 # overwriting this macro) to allow for specific combinations of
@@ -1236,7 +1239,8 @@
     as a part of creating a container) by calling setns.
   condition: >
     evt.type = setns
-    and not proc.name in (docker_binaries, k8s_binaries, lxd_binaries, sysdigcloud_binaries, sysdig, nsenter, calico)
+    and not proc.name in (docker_binaries, k8s_binaries, lxd_binaries, sysdigcloud_binaries,
+                          sysdig, nsenter, calico, oci-umount)
     and not proc.name in (user_known_change_thread_namespace_binaries)
     and not proc.name startswith "runc:"
     and not proc.pname in (sysdigcloud_binaries)
