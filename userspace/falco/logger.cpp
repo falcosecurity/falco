@@ -132,13 +132,31 @@ void falco_logger::log(int priority, const string msg)
 		if(falco_logger::time_format_iso_8601)
 		{
 			char buf[sizeof "YYYY-MM-DDTHH:MM:SS-0000"];
-			strftime(buf, sizeof(buf), "%FT%T%z", std::gmtime(&result));
-			fprintf(stderr, "%s: %s", buf, msg.c_str());
+			struct tm *gtm = std::gmtime(&result);
+			if(gtm == NULL ||
+			   (strftime(buf, sizeof(buf), "%FT%T%z", gtm) == 0))
+			{
+				sprintf(buf, "N/A");
+			}
+			else
+			{
+				fprintf(stderr, "%s: %s", buf, msg.c_str());
+			}
 		}
 		else
 		{
-			string tstr = std::asctime(std::localtime(&result));
-			tstr = tstr.substr(0, 24);// remove trailling newline
+			struct tm *ltm = std::localtime(&result);
+			char *atime = (ltm ? std::asctime(ltm) : NULL);
+			string tstr;
+			if(atime)
+			{
+				tstr = atime;
+				tstr = tstr.substr(0, 24);// remove trailling newline
+			}
+			else
+			{
+				tstr = "N/A";
+			}
 			fprintf(stderr, "%s: %s", tstr.c_str(), msg.c_str());
 		}
 	}
