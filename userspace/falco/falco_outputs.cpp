@@ -37,7 +37,8 @@ falco_outputs::falco_outputs(falco_engine *engine)
 	: m_falco_engine(engine),
 	  m_initialized(false),
 	  m_buffered(true),
-	  m_json_output(false)
+	  m_json_output(false),
+	  m_time_format_iso_8601(false)
 {
 
 }
@@ -70,7 +71,8 @@ falco_outputs::~falco_outputs()
 
 void falco_outputs::init(bool json_output,
 			 bool json_include_output_property,
-			 uint32_t rate, uint32_t max_burst, bool buffered)
+			 uint32_t rate, uint32_t max_burst, bool buffered,
+			 bool time_format_iso_8601)
 {
 	// The engine must have been given an inspector by now.
 	if(! m_inspector)
@@ -94,13 +96,14 @@ void falco_outputs::init(bool json_output,
 	m_notifications_tb.init(rate, max_burst);
 
 	m_buffered = buffered;
+	m_time_format_iso_8601 = time_format_iso_8601;
 
 	m_initialized = true;
 }
 
 void falco_outputs::add_output(output_config oc)
 {
-	uint8_t nargs = 2;
+	uint8_t nargs = 3;
 	lua_getglobal(m_ls, m_lua_add_output.c_str());
 
 	if(!lua_isfunction(m_ls, -1))
@@ -109,11 +112,12 @@ void falco_outputs::add_output(output_config oc)
 	}
 	lua_pushstring(m_ls, oc.name.c_str());
 	lua_pushnumber(m_ls, (m_buffered ? 1 : 0));
+	lua_pushnumber(m_ls, (m_time_format_iso_8601 ? 1 : 0));
 
 	// If we have options, build up a lua table containing them
 	if (oc.options.size())
 	{
-		nargs = 3;
+		nargs = 4;
 		lua_createtable(m_ls, 0, oc.options.size());
 
 		for (auto it = oc.options.cbegin(); it != oc.options.cend(); ++it)

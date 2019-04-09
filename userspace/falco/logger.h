@@ -33,6 +33,8 @@ class falco_logger
  public:
 	static void init(lua_State *ls);
 
+	static void set_time_format_iso_8601(bool val);
+
 	// Will throw exception if level is unknown.
 	static void set_level(string &level);
 
@@ -44,4 +46,5 @@ class falco_logger
 	static int level;
 	static bool log_stderr;
 	static bool log_syslog;
+	static bool time_format_iso_8601;
 };

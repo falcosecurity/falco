@@ -159,10 +159,26 @@ function output_event(event, rule, source, priority, priority_num, format)
       format = format:sub(2)
    end
 
+   -- time_format_iso_8601 will be the same for all output channels
+   time_format_iso_8601 = 0
+
+   for index,o in ipairs(outputs) do
+      time_format_iso_8601 = o.options.time_format_iso_8601
+      break
+   end
+
    if source == "syscall" then
-      format = "*%evt.time: "..priority.." "..format
+      if time_format_iso_8601 == 1 then
+	 format = "*%evt.time.iso8601: "..priority.." "..format
+      else
+	 format = "*%evt.time: "..priority.." "..format
+      end
    else
-      format = "*%jevt.time: "..priority.." "..format
+      if time_format_iso_8601 == 1 then
+	 format = "*%jevt.time.iso8601: "..priority.." "..format
+      else
+	 format = "*%jevt.time: "..priority.." "..format
+      end
    end
 
    msg = formats.format_event(event, rule, source, priority, format)
@@ -191,7 +207,7 @@ function output_reopen()
    end
 end
 
-function add_output(output_name, buffered, options)
+function add_output(output_name, buffered, time_format_iso_8601, options)
    if not (type(mod[output_name]) == 'function') then
       error("rule_loader.add_output(): invalid output_name: "..output_name)
    end
@@ -207,6 +223,7 @@ function add_output(output_name, buffered, options)
    end
 
    options.buffered = buffered
+   options.time_format_iso_8601 = time_format_iso_8601
 
    table.insert(outputs, {output = mod[output_name],
 			  cleanup = mod[output_name.."_cleanup"],

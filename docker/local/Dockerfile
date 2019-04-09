@@ -83,6 +83,11 @@ RUN rm -df /lib/modules \
 ADD falco-${FALCO_VERSION}-x86_64.deb /
 RUN dpkg -i /falco-${FALCO_VERSION}-x86_64.deb
 
+# Change the falco config within the container to enable ISO 8601
+# output.
+RUN sed -e 's/time_format_iso_8601: false/time_format_iso_8601: true/' < /etc/falco/falco.yaml > /etc/falco/falco.yaml.new \
+ && mv /etc/falco/falco.yaml.new /etc/falco/falco.yaml
+
 # debian:unstable head contains binutils 2.31, which generates
 # binaries that are incompatible with kernels < 4.16. So manually
 # forcibly install binutils 2.30-22 instead.
