@@ -1873,8 +1873,8 @@
   condition: >
     spawned_process and container and network_tool_procs
   output: >
-    Network tool launched in container (user=%user.name
-    command=%proc.cmdline container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
+    Network tool launched in container (user=%user.name command=%proc.cmdline parent_process=%proc.pname
+    container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
   priority: NOTICE
   tags: [network, process, mitre_discovery, mitre_exfiltration]
 
