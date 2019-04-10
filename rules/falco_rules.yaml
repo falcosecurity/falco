@@ -282,7 +282,7 @@
     ]
 
 - list: sensitive_file_names
-  items: [/etc/shadow, /etc/sudoers, /etc/pam.conf]
+  items: [/etc/shadow, /etc/sudoers, /etc/pam.conf, /etc/security/pwquality.conf]
 
 - macro: sensitive_files
   condition: >
@@ -1319,7 +1319,7 @@
     Sensitive file opened for reading by non-trusted program (user=%user.name program=%proc.name
     command=%proc.cmdline file=%fd.name parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4])
   priority: WARNING
-  tags: [filesystem, mitre_credential_access]
+  tags: [filesystem, mitre_credential_access, mitre_discovery]
 
 # Only let rpm-related programs write to the rpm database
 - rule: Write below rpm database
@@ -2059,7 +2059,7 @@
   tags: [network, k8s, container, mitre_port_knocking]
 
 - list: network_tool_binaries
-  items: [nc, ncat, nmap, dig]
+  items: [nc, ncat, nmap, dig, netstat, tcpdump, tshark]
 
 - macro: network_tool_procs
   condition: proc.name in (network_tool_binaries)
