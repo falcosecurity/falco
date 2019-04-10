@@ -329,6 +329,32 @@
   priority: NOTICE
   tags: [network, mitre_remote_service]
 
+- list: user_context_files
+  items: [.bashrc, .bash_profile]
+
+- rule: Modify User Context
+  desc: Detect attempt to modify .bashrc file or .bash_profile file
+  condition: >
+    open_write and fd.filename in (user_context_files)
+  output: >
+    .bash_profile or .bashrc has been modified (user=%user.name process=%proc.cmdline file=%fd.name
+    container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
+  priority:
+    WARNING
+  tag: [file, mitre_persistence]
+
+- rule: Schedule Cron Jobs in Container
+  desc: Detect cron jobs scheduled in container
+  condition: >
+    ((open_write and fd.name startswith /etc/cron) or
+     (spawned_process and proc.name = "crontab")) and container
+  output: >
+    Cron jobs were scheduled to run inside container (user=%user.name process=%proc.cmdline
+    file=%fd.name container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
+  priority:
+    NOTICE
+  tag: [file, mitre_persistence]
+
 # Use this to test whether the event occurred within a container.
 
 # When displaying container information in the output field, use
@@ -1110,7 +1136,7 @@
     Sensitive file opened for reading by trusted program after startup (user=%user.name
     command=%proc.cmdline parent=%proc.pname file=%fd.name parent=%proc.pname gparent=%proc.aname[2])
   priority: WARNING
-  tags: [filesystem, Credential Access]
+  tags: [filesystem, mitre_credential_access]
 
 - list: read_sensitive_file_binaries
   items: [
