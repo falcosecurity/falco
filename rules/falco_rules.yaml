@@ -337,7 +337,7 @@
   condition: >
     open_write and fd.filename in (user_context_files)
   output: >
-    .bash_profile or .bashrc has been modified (user=%user.name process=%proc.cmdline file=%fd.name
+    .bash_profile or .bashrc has been modified (user=%user.name command=%proc.cmdline file=%fd.name
     container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
   priority:
     WARNING
@@ -349,7 +349,7 @@
     ((open_write and fd.name startswith /etc/cron) or
      (spawned_process and proc.name = "crontab")) and container
   output: >
-    Cron jobs were scheduled to run inside container (user=%user.name process=%proc.cmdline
+    Cron jobs were scheduled to run inside container (user=%user.name command=%proc.cmdline
     file=%fd.name container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
   priority:
     NOTICE
@@ -1941,7 +1941,7 @@
   condition: >
     (spawned_process and proc.name in (shred, rm) and proc.args contains "bash_history")
   output: >
-    Bash history has been deleted (user=%user.name process=%proc.cmdline
+    Bash history has been deleted (user=%user.name command=%proc.cmdline
     container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
   priority:
     WARNING
