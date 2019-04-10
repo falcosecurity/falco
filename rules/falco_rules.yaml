@@ -2182,10 +2182,14 @@
     NOTICE
   tag: [process, mitre_persistence]
 
+- list: exclude_hidden_directories
+  items: [/root/.cassandra]
+  
 - rule: Create hidden files or directories
   desc: Detect hidden files or directories created
   condition: >
-    ((open_write and evt.arg.flags contains "O_CREAT" and fd.name contains "/.") or 
+    ((open_write and evt.arg.flags contains "O_CREAT" and 
+      fd.name contains "/." and not fd.name pmatch (exclude_hidden_directories)) or 
      (mkdir and evt.arg.path contains "/.")) 
   output: >
     Hidden file or directory created (user=%user.name command=%proc.cmdline 
