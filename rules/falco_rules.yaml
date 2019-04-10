@@ -1912,12 +1912,12 @@
 
 - macro: private_key_or_password
   condition: >
-    (proc.args contains "BEGIN PRIVATE" or
-     proc.args contains "BEGIN RSA PRIVATE" or
-     proc.args contains "BEGIN DSA PRIVATE" or
-     proc.args contains "BEGIN EC PRIVATE" or
-     proc.args contains "pass" or
-     proc.args contains "ssh"
+    (proc.args icontains "BEGIN PRIVATE" or
+     proc.args icontains "BEGIN RSA PRIVATE" or
+     proc.args icontains "BEGIN DSA PRIVATE" or
+     proc.args icontains "BEGIN EC PRIVATE" or
+     proc.args icontains "pass" or
+     proc.args icontains "ssh"
     )
 
 - rule: Search Private Keys or Passwords
