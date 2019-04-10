@@ -137,7 +137,7 @@
     shadowconfig, grpck, pwunconv, grpconv, pwck,
     groupmod, vipw, pwconv, useradd, newusers, cppw, chpasswd, usermod,
     groupadd, groupdel, grpunconv, chgpasswd, userdel, chage, chsh,
-    gpasswd, chfn, expiry, passwd, vigr, cpgr
+    gpasswd, chfn, expiry, passwd, vigr, cpgr, adduser, addgroup, deluser, delgroup
     ]
 
 # repoquery -l shadow-utils | grep bin | xargs ls -ld | grep -v '^d' |
@@ -2158,6 +2158,42 @@
   priority:
     WARNING
   tag: [process, mitre_defense_evation]
+
+- rule: User Management Command Execution
+  desc: Detect user management command execution
+  condition: spawned_process and proc.name in (passwd_binaries)
+  output: >
+    User management command executed (user=%user.name command=%proc.cmdline
+    container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
+  priority:
+    NOTICE
+  tag: [process, mitre_persistence]
+
+- rule: Set Setuid or Setgid bit
+  desc: >
+    When the setuid or setgid bits are set for an application,
+    this means that the application will run with the privileges of the owning user or group respectively.
+    Detect setuid or setgid bits set via chmod
+  condition: spawned_process and proc.name = "chmod" and (proc.args contains "+s" or proc.args contains "4777")
+  output: >
+    Setuid or setgid bit is set via chmod (user=%user.name command=%proc.cmdline
+    container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
+  priority:
+    NOTICE
+  tag: [process, mitre_persistence]
+
+- rule: Create hidden files or directories
+  desc: Detect hidden files or directories created
+  condition: >
+    ((open_write and evt.arg.flags contains "O_CREAT" and 
+      (fd.name startswith "." or fd.name contains "/.")) or 
+     (mkdir and (evt.arg.path startswith "." or evt.arg.path contains "/."))) 
+  output: >
+    Hidden file or directory created (user=%user.name command=%proc.cmdline 
+    file=%fd.name container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
+  priority:
+    NOTICE
+  tag: [file, mitre_persistence]
 
 # Application rules have moved to application_rules.yaml. Please look
 # there if you want to enable them by adding to
