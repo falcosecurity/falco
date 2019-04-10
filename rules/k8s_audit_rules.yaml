@@ -48,8 +48,7 @@
 # explicitly enumerate the container images that you want to run in
 # your environment. In this main falco rules file, there isn't any way
 # to know all the containers that can run, so any container is
-# alllowed, by using a filter that is guaranteed to evaluate to true
-# (the event time existing). In the overridden macro, the condition
+# allowed, by using the always_true macro. In the overridden macro, the condition
 # would look something like (ka.req.container.image.repository=my-repo/my-image)
 - macro: allowed_k8s_containers
   condition: (jevt.rawtime exists)
@@ -108,31 +107,10 @@
   source: k8s_audit
   tags: [k8s]
 
-- list: trusted_k8s_containers
-  items: [sysdig/agent, sysdig/falco, quay.io/coreos/flannel, calico/node, rook/toolbox,
-    gcr.io/google_containers/hyperkube, gcr.io/google_containers/kube-proxy,
-    openshift3/ose-sti-builder,
-    registry.access.redhat.com/openshift3/logging-fluentd,
-    registry.access.redhat.com/openshift3/logging-elasticsearch,
-    registry.access.redhat.com/openshift3/metrics-cassandra,
-    registry.access.redhat.com/openshift3/ose-sti-builder,
-    registry.access.redhat.com/openshift3/ose-docker-builder,
-    registry.access.redhat.com/openshift3/image-inspector,
-    registry.access.redhat.com/sematext/sematext-agent-docker,
-    registry.access.redhat.com/sematext/agent,
-    registry.access.redhat.com/sematext/logagent,
-    cloudnativelabs/kube-router, istio/proxy,
-    datadog/docker-dd-agent, datadog/agent,
-    docker/ucp-agent,
-    gliderlabs/logspout
-    sematext/agent
-    sematext/logagent
-    sematext/sematext-agent-docker]
-
 - rule: Create Privileged Pod
   desc: >
     Detect an attempt to start a pod with a privileged container
-  condition: kevt and pod and kcreate and ka.req.container.privileged=true and not ka.req.container.image.repository in (trusted_k8s_containers)
+  condition: kevt and pod and kcreate and ka.req.container.privileged=true and not ka.req.container.image.repository in (privileged_images)
   output: Pod started with privileged container (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image)
   priority: WARNING
   source: k8s_audit
@@ -150,7 +128,7 @@
   desc: >
     Detect an attempt to start a pod with a volume from a sensitive host directory (i.e. /proc).
     Exceptions are made for known trusted images.
-  condition: kevt and pod and kcreate and sensitive_vol_mount and not ka.req.container.image.repository in (trusted_k8s_containers)
+  condition: kevt and pod and kcreate and sensitive_vol_mount and not ka.req.container.image.repository in (sensitive_mount_images)
   output: Pod started with sensitive mount (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image mounts=%jevt.value[/requestObject/spec/volumes])
   priority: WARNING
   source: k8s_audit
@@ -159,7 +137,7 @@
 # Corresponds to K8s CIS Benchmark 1.7.4
 - rule: Create HostNetwork Pod
   desc: Detect an attempt to start a pod using the host network.
-  condition: kevt and pod and kcreate and ka.req.container.host_network=true and not ka.req.container.image.repository in (trusted_k8s_containers)
+  condition: kevt and pod and kcreate and ka.req.container.host_network=true and not ka.req.container.image.repository in (hostnetwork_images)
   output: Pod started using host network (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image)
   priority: WARNING
   source: k8s_audit
