@@ -2185,9 +2185,8 @@
 - rule: Create hidden files or directories
   desc: Detect hidden files or directories created
   condition: >
-    ((open_write and evt.arg.flags contains "O_CREAT" and 
-      (fd.name startswith "." or fd.name contains "/.")) or 
-     (mkdir and (evt.arg.path startswith "." or evt.arg.path contains "/."))) 
+    ((open_write and evt.arg.flags contains "O_CREAT" and fd.name contains "/.") or 
+     (mkdir and evt.arg.path contains "/.")) 
   output: >
     Hidden file or directory created (user=%user.name command=%proc.cmdline 
     file=%fd.name container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
