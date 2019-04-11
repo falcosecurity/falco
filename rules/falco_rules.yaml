@@ -346,6 +346,57 @@
   priority: NOTICE
   tags: [network, mitre_remote_service]
 
+# These rules and supporting macros are more of an example for how to
+# use the fd.*ip and fd.*ip.name fields to match connection
+# information against ips, netmasks, and complete domain names.
+#
+# To use this rule, you should modify consider_all_outbound_conns and
+# populate allowed_{source,destination}_{ipaddrs,networks,domains} with the
+# values that make sense for your environment.
+- macro: consider_all_outbound_conns
+  condition: (never_true)
+
+# Note that this can be either individual IPs or netmasks
+- list: allowed_destination_ipaddrs
+  items: ['"127.0.0.1"', '"8.8.8.8"']
+
+- list: allowed_destination_networks
+  items: ['"127.0.0.1/8"']
+
+- list: allowed_destination_domains
+  items: [google.com, www.yahoo.com]
+
+- rule: Unexpected outbound connection destination
+  desc: Detect any outbound connection to a destination outside of an allowed set of ips, networks, or domain names
+  condition: >
+    consider_all_outbound_conns and outbound and not
+    ((fd.sip in (allowed_destination_ipaddrs)) or
+     (fd.snet in (allowed_destination_networks)) or
+     (fd.sip.name in (allowed_destination_domains)))
+  output: Disallowed outbound connection destination (command=%proc.cmdline connection=%fd.name user=%user.name)
+  priority: NOTICE
+  tags: [network]
+
+- list: allowed_source_ipaddrs
+  items: ['"127.0.0.1"']
+
+- list: allowed_source_networks
+  items: ['"127.0.0.1/8"', '"10.0.0.0/8"']
+
+- list: allowed_source_domains
+  items: [google.com]
+
+- rule: Unexpected outbound connection source
+  desc: Detect any outbound connection from a source outside of an allowed set of ips, networks, or domain names
+  condition: >
+    consider_all_outbound_conns and outbound and not
+    ((fd.cip in (allowed_source_ipaddrs)) or
+     (fd.cnet in (allowed_source_networks)) or
+     (fd.cip.name in (allowed_source_domains)))
+  output: Disallowed outbound connection source (command=%proc.cmdline connection=%fd.name user=%user.name)
+  priority: NOTICE
+  tags: [network]
+
 - list: bash_config_filenames
   items: [.bashrc, .bash_profile, .bash_login, .bash_logout, .inputrc, .profile]
 
