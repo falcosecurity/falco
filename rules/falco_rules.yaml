@@ -374,6 +374,28 @@
     WARNING
   tag: [file, mitre_persistence]
 
+# This rule is not enabled by default, as there are many legitimate
+# readers of shell config files. If you want to enable it, modify the
+# following macro.
+
+- macro: consider_shell_config_reads
+  condition: (never_true)
+
+- rule: Read Shell Configuration File
+  desc: Detect attempts to read shell configuration files by non-shell programs
+  condition: >
+    open_read and
+    consider_shell_config_reads and
+    (fd.filename in (shell_config_filenames) or
+     fd.name in (shell_config_files) or
+     fd.directory in (shell_config_directories)) and
+    (not proc.name in (shell_binaries))
+  output: >
+    a shell configuration file was read by a non-shell program (user=%user.name command=%proc.cmdline file=%fd.name)
+  priority:
+    WARNING
+  tag: [file, mitre_discovery]
+
 - rule: Schedule Cron Jobs in Container
   desc: Detect cron jobs scheduled in container
   condition: >
