@@ -17,6 +17,13 @@
 #
 - required_engine_version: 2
 
+# Like always_true/always_false, but works with k8s audit events
+- macro: k8s_audit_always_true
+  condition: (jevt.rawtime exists)
+
+- macro: k8s_audit_never_true
+  condition: (jevt.rawtime=0)
+
 # Generally only consider audit events once the response has completed
 - list: k8s_audit_stages
   items: ["ResponseComplete"]
@@ -51,7 +58,7 @@
 # allowed, by using the always_true macro. In the overridden macro, the condition
 # would look something like (ka.req.container.image.repository=my-repo/my-image)
 - macro: allowed_k8s_containers
-  condition: (jevt.rawtime exists)
+  condition: (k8s_audit_always_true)
 
 - macro: response_successful
   condition: (ka.response.code startswith 2)
@@ -285,7 +292,7 @@
 # represent a stream of activity for a cluster. If you wish to disable
 # these events, modify the following macro.
 - macro: consider_activity_events
-  condition: (jevt.rawtime exists)
+  condition: (k8s_audit_always_true)
 
 - macro: kactivity
   condition: (kevt and consider_activity_events)
@@ -407,7 +414,7 @@
 # following macro.
 #  condition: (jevt.rawtime exists)
 - macro: consider_all_events
-  condition: (not jevt.rawtime exists)
+  condition: (k8s_audit_never_true)
 
 - macro: kall
   condition: (kevt and consider_all_events)
