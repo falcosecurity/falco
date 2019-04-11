@@ -1924,7 +1924,7 @@
   desc: >
     Detect grep private keys or passwords activity.
   condition: >
-    (spawned_process and
+    (spawned_process and container and
      ((grep_commands and private_key_or_password) or
       (proc.name = "find" and (proc.args contains "id_rsa" or proc.args contains "id_dsa")))
     )
