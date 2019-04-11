@@ -44,7 +44,7 @@
   condition: (evt.num=0)
 
 - macro: always_true
-  condition: (evt.num=>0)
+  condition: (evt.num>=0)
 
 # In some cases, such as dropped system call events, information about
 # the process name may be missing. For some rules that really depend
