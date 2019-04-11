@@ -2215,11 +2215,14 @@
 - list: exclude_hidden_directories
   items: [/root/.cassandra]
 
+- macro: check_container_only
+  condition: (never_true or container)
+
 - rule: Create Hidden Files or Directories
   desc: Detect hidden files or directories created
   condition: >
-    ((mkdir and container and evt.arg.path contains "/.") or
-     (open_write and container and evt.arg.flags contains "O_CREAT" and
+    ((mkdir and check_container_only and evt.arg.path contains "/.") or
+     (open_write and check_container_only and evt.arg.flags contains "O_CREAT" and
       fd.name contains "/." and not fd.name pmatch (exclude_hidden_directories)))
   output: >
     Hidden file or directory created (user=%user.name command=%proc.cmdline
