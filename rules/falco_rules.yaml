@@ -371,7 +371,7 @@
 # based on the context and whether or not -pk/-pm/-pc was specified on
 # the command line.
 - macro: container
-  condition: container.id != host
+  condition: (container.id != host)
 
 - macro: container_started
   condition: >
