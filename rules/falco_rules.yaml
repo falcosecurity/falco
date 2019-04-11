@@ -1945,6 +1945,24 @@
   priority: NOTICE
   tags: [network, process, mitre_discovery, mitre_exfiltration]
 
+# This rule is not enabled by default, as there are legitimate use
+# cases for these tools on hosts. If you want to enable it, modify the
+# following macro.
+- macro: consider_network_tools_on_host
+  condition: (never_true)
+
+- rule: Launch Suspicious Network Tool on Host
+  desc: Detect network tools launched on the host
+  condition: >
+    spawned_process and
+    not container and
+    consider_network_tools_on_host and
+    network_tool_procs
+  output: >
+    Network tool launched on host (user=%user.name command=%proc.cmdline parent_process=%proc.pname)
+  priority: NOTICE
+  tags: [network, process, mitre_discovery, mitre_exfiltration]
+
 - list: grep_binaries
   items: [grep, egre, fgrep]
 
