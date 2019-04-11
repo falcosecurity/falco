@@ -2157,7 +2157,7 @@
   items: [/var/log, /dev/log]
 
 - list: log_files
-  items: [auth.log, secure, kern.log, cron, user.log, dpkg.log, last.log, yum.log, access_log, mysql.log, mysqld.log]
+  items: [syslog, auth.log, secure, kern.log, cron, user.log, dpkg.log, last.log, yum.log, access_log, mysql.log, mysqld.log]
 
 - macro: access_log_files
   condition: (fd.directory pmatch (log_directories) or fd.filename in (log_files))
