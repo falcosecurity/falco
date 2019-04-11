@@ -336,16 +336,40 @@
   priority: NOTICE
   tags: [network, mitre_remote_service]
 
-- list: user_context_files
-  items: [.bashrc, .bash_profile]
+- list: bash_config_filenames
+  items: [.bashrc, .bash_profile, .bash_login, .bash_logout, .inputrc, .profile]
 
-- rule: Modify User Context
-  desc: Detect attempt to modify .bashrc file or .bash_profile file
+- list: bash_config_files
+  items: [/etc/profile, /etc/bashrc]
+
+# Covers both csh and tcsh
+- list: csh_config_filenames
+  items: [.cshrc, .login, .logout, .history, .tcshrc, .cshdirs]
+
+- list: csh_config_files
+  items: [/etc/csh.cshrc, /etc/csh.login]
+
+- list: zsh_config_filenames
+  items: [.zshenv, .zprofile, .zshrc, .zlogin, .zlogout]
+
+- list: shell_config_filenames
+  items: [bash_config_filenames, csh_config_filenames, zsh_config_filenames]
+
+- list: shell_config_files
+  items: [bash_config_files, csh_config_files]
+
+- list: shell_config_directories
+  items: [/etc/zsh]
+
+- rule: Modify Shell Configuration File
+  desc: Detect attempt to modify shell configuration files
   condition: >
-    open_write and fd.filename in (user_context_files)
+    open_write and
+    (fd.filename in (shell_config_filenames) or
+     fd.name in (shell_config_files) or
+     fd.directory in (shell_config_directories))
   output: >
-    .bash_profile or .bashrc has been modified (user=%user.name command=%proc.cmdline file=%fd.name
-    container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
+    a shell configuration file has been modified (user=%user.name command=%proc.cmdline file=%fd.name)
   priority:
     WARNING
   tag: [file, mitre_persistence]
