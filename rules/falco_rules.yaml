@@ -2215,7 +2215,7 @@
 - list: exclude_hidden_directories
   items: [/root/.cassandra]
 
-- rule: Create hidden files or directories
+- rule: Create Hidden Files or Directories
   desc: Detect hidden files or directories created
   condition: >
     ((mkdir and container and evt.arg.path contains "/.") or
