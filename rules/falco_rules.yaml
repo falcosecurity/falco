@@ -398,7 +398,7 @@
   tags: [network]
 
 - list: bash_config_filenames
-  items: [.bashrc, .bash_profile, .bash_login, .bash_logout, .inputrc, .profile]
+  items: [.bashrc, .bash_profile, .bash_history, .bash_login, .bash_logout, .inputrc, .profile]
 
 - list: bash_config_files
   items: [/etc/profile, /etc/bashrc]
