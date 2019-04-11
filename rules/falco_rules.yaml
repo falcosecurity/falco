@@ -458,15 +458,11 @@
     WARNING
   tag: [file, mitre_discovery]
 
-- macro: only_check_container
-  condition: (always_true and container)
-
 - rule: Schedule Cron Jobs
   desc: Detect cron jobs scheduled in container
   condition: >
-    (((open_write and fd.name startswith /etc/cron) or
-      (spawned_process and proc.name = "crontab")) and
-     only_check_container)
+    ((open_write and fd.name startswith /etc/cron) or
+     (spawned_process and proc.name = "crontab"))
   output: >
     Cron jobs were scheduled to run inside container (user=%user.name command=%proc.cmdline
     file=%fd.name container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
@@ -2157,6 +2153,41 @@
     WARNING
   tags: [process, mitre_credential_access]
 
+- list: log_directories
+  items: [/var/log, /dev/log]
+
+- list: log_files
+  items: [auth.log, secure, kern.log, cron, user.log, dpkg.log, last.log, yum.log, access_log, mysql.log, mysqld.log]
+
+- macro: access_log_files
+  condition: (fd.directory pmatch (log_directories) or fd.filename in (log_files))
+
+- rule: Clear Log Activities
+  desc: Detect clearing of critical log files
+  condition: >
+    ((open_write and access_log_files and evt.arg.flags contains "O_TRUNC") or
+     (remove and access_log_files))
+  output: >
+    Log files were removed (user=%user.name command=%proc.cmdline file=%fd.name)
+  priority:
+    WARNING
+  tags: [file, mitre_defense_evasion]
+
+- list: data_remove_commands
+  items: [shred, mkfs, mke2fs]
+
+- macro: clear_data_procs
+  condition: (proc.name in (data_remove_commands))
+
+- rule: Remove Data from Disk
+  desc: Detect process running to clear data from disk
+  condition: spawned_process and clear_data_procs
+  output: >
+    Data has been removed from disk (user=%user.name command=%proc.cmdline file=%fd.name)
+  priority:
+    WARNING
+  tags: [process, mitre_persistence]
+
 - rule: Delete Bash History
   desc: Detect bash history deletetion
   condition: >
@@ -2167,16 +2198,6 @@
   priority:
     WARNING
   tag: [process, mitre_defense_evation]
-
-- rule: User Management Command Execution
-  desc: Detect user management command execution
-  condition: spawned_process and proc.name in (passwd_binaries)
-  output: >
-    User management command executed (user=%user.name command=%proc.cmdline
-    container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
-  priority:
-    NOTICE
-  tag: [process, mitre_persistence]
 
 - rule: Set Setuid or Setgid bit
   desc: >
