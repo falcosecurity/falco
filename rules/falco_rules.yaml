@@ -40,6 +40,9 @@
 - macro: open_read
   condition: (evt.type=open or evt.type=openat) and evt.is_open_read=true and fd.typechar='f' and fd.num>=0
 
+- macro: open_directory
+  condition: (evt.type=open or evt.type=openat) and evt.is_open_read=true and fd.typechar='d' and fd.num>=0
+
 - macro: never_true
   condition: (evt.num=0)
 
@@ -93,6 +96,13 @@
 
 - list: shell_binaries
   items: [bash, csh, ksh, sh, tcsh, zsh, dash]
+
+- list: ssh_binaries
+  items: [
+    sshd, sftp-server, ssh-agent,
+    ssh, scp, sftp,
+    ssh-keygen, ssh-keysign, ssh-keyscan, ssh-add
+    ]
 
 - list: shell_mgmt_binaries
   items: [add-shell, remove-shell]
@@ -874,6 +884,25 @@
     command=%proc.cmdline file=%fd.name parent=%proc.pname pcmdline=%proc.pcmdline gparent=%proc.aname[2])
   priority: ERROR
   tags: [filesystem, mitre_persistence]
+
+# This rule is disabled by default as many system management tools
+# like ansible, etc can read these files/paths. Enable it using this macro.
+
+- macro: consider_ssh_reads
+  condition: (never_true)
+
+- rule: Read ssh information
+  desc: Any attempt to read files below ssh directories by non-ssh programs
+  condition: >
+    (consider_ssh_reads and
+     (open_read or open_directory) and
+     (user_ssh_directory or fd.name startswith /root/.ssh) and
+     (not proc.name in (ssh_binaries)))
+  output: >
+    ssh-related file/directory read by non-ssh program (user=%user.name
+    command=%proc.cmdline file=%fd.name parent=%proc.pname pcmdline=%proc.pcmdline)
+  priority: ERROR
+  tags: [filesystem, mitre_discovery]
 
 - list: safe_etc_dirs
   items: [/etc/cassandra, /etc/ssl/certs/java, /etc/logstash, /etc/nginx/conf.d, /etc/container_environment, /etc/hrmconfig]
