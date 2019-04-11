@@ -1741,6 +1741,23 @@
   priority: NOTICE
   tags: [network, mitre_exfiltration]
 
+# When filled in, this should look something like:
+# (proc.env contains "HTTP_PROXY=http://my.http.proxy.com ")
+# The trailing space is intentional so avoid matching on prefixes of
+# the actual proxy.
+- macro: allowed_ssh_proxy_env
+  condition: (always_true)
+
+- rule: Program run with disallowed http proxy env
+  desc: An attempt to run a program with a disallowed HTTP_PROXY environment variable
+  condition: >
+    spawned_process and not allowed_ssh_proxy_env and proc.env icontains HTTP_PROXY
+  output: >
+    Program run with disallowed HTTP_PROXY environment variable
+    (user=%user.name command=%proc.cmdline env=%proc.env parent=%proc.pname)
+  priority: NOTICE
+  tags: [host, users]
+
 # In some environments, any attempt by a interpreted program (perl,
 # python, ruby, etc) to listen for incoming connections or perform
 # outgoing connections might be suspicious. These rules are not
