@@ -172,6 +172,13 @@
 - list: gitlab_binaries
   items: [gitlab-shell, gitlab-mon, gitlab-runner-b, git]
 
+- list: interpreted_binaries
+  items: [lua, node, perl, perl5, perl6, php, python, python2, python3, ruby, tcl]
+
+- macro: interpreted_procs
+  condition: >
+    (proc.name in (interpreted_binaries))
+
 - macro: server_procs
   condition: proc.name in (http_server_binaries, db_server_binaries, docker_binaries, sshd)
 
@@ -1655,6 +1662,40 @@
     and not login_doing_dns_lookup
   output: >
     Known system binary sent/received network traffic
+    (user=%user.name command=%proc.cmdline connection=%fd.name)
+  priority: NOTICE
+  tags: [network, mitre_exfiltration]
+
+# In some environments, any attempt by a interpreted program (perl,
+# python, ruby, etc) to listen for incoming connections or perform
+# outgoing connections might be suspicious. These rules are not
+# enabled by default, but you can modify the following macros to
+# enable them.
+
+- macro: consider_interpreted_inbound
+  condition: (never_true)
+
+- macro: consider_interpreted_outbound
+  condition: (never_true)
+
+- rule: Interpreted procs inbound network activity
+  desc: Any inbound network activity performed by any interpreted program (perl, python, ruby, etc.)
+  condition: >
+    (inbound and consider_interpreted_inbound
+     and interpreted_procs)
+  output: >
+    Interpreted program received/listened for network traffic
+    (user=%user.name command=%proc.cmdline connection=%fd.name)
+  priority: NOTICE
+  tags: [network, mitre_exfiltration]
+
+- rule: Interpreted procs outbound network activity
+  desc: Any outbound network activity performed by any interpreted program (perl, python, ruby, etc.)
+  condition: >
+    (outbound and consider_interpreted_outbound
+     and interpreted_procs)
+  output: >
+    Interpreted program performed outgoing network connection
     (user=%user.name command=%proc.cmdline connection=%fd.name)
   priority: NOTICE
   tags: [network, mitre_exfiltration]
