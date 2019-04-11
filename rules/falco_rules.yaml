@@ -458,11 +458,15 @@
     WARNING
   tag: [file, mitre_discovery]
 
-- rule: Schedule Cron Jobs in Container
+- macro: only_check_container
+  condition: (always_true and container)
+
+- rule: Schedule Cron Jobs
   desc: Detect cron jobs scheduled in container
   condition: >
-    ((open_write and fd.name startswith /etc/cron) or
-     (spawned_process and proc.name = "crontab")) and container
+    (((open_write and fd.name startswith /etc/cron) or
+      (spawned_process and proc.name = "crontab")) and
+     only_check_container)
   output: >
     Cron jobs were scheduled to run inside container (user=%user.name command=%proc.cmdline
     file=%fd.name container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
@@ -2059,7 +2063,7 @@
   tags: [network, k8s, container, mitre_port_knocking]
 
 - list: network_tool_binaries
-  items: [nc, ncat, nmap, dig, netstat, tcpdump, tshark]
+  items: [nc, ncat, nmap, dig, netstat, tcpdump, tshark, ngrep]
 
 - macro: network_tool_procs
   condition: proc.name in (network_tool_binaries)
@@ -2122,14 +2126,19 @@
 - macro: grep_commands
   condition: (proc.name in (grep_binaries))
 
+- macro: grep_more
+  condition: (never_true)
+
 - macro: private_key_or_password
   condition: >
     (proc.args icontains "BEGIN PRIVATE" or
      proc.args icontains "BEGIN RSA PRIVATE" or
      proc.args icontains "BEGIN DSA PRIVATE" or
      proc.args icontains "BEGIN EC PRIVATE" or
-     proc.args icontains "pass" or
-     proc.args icontains "ssh"
+     (grep_more and
+      (proc.args icontains " pass " or
+       proc.args icontains " ssh " or
+       proc.args icontains " user "))
     )
 
 - rule: Search Private Keys or Passwords
@@ -2151,10 +2160,10 @@
 - rule: Delete Bash History
   desc: Detect bash history deletetion
   condition: >
-    (spawned_process and proc.name in (shred, rm) and proc.args contains "bash_history")
+    ((spawned_process and proc.name in (shred, rm, mv) and proc.args contains "bash_history") or
+     (open_write and fd.name contains "bash_history" and evt.arg.flags contains "O_TRUNC"))
   output: >
-    Bash history has been deleted (user=%user.name command=%proc.cmdline
-    container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
+    Bash history has been deleted (user=%user.name command=%proc.cmdline file=%fd.name %container.info)
   priority:
     WARNING
   tag: [process, mitre_defense_evation]
@@ -2184,15 +2193,15 @@
 
 - list: exclude_hidden_directories
   items: [/root/.cassandra]
-  
+
 - rule: Create hidden files or directories
   desc: Detect hidden files or directories created
   condition: >
     ((mkdir and container and evt.arg.path contains "/.") or
-     (open_write and container and evt.arg.flags contains "O_CREAT" and 
+     (open_write and container and evt.arg.flags contains "O_CREAT" and
       fd.name contains "/." and not fd.name pmatch (exclude_hidden_directories)))
   output: >
-    Hidden file or directory created (user=%user.name command=%proc.cmdline 
+    Hidden file or directory created (user=%user.name command=%proc.cmdline
     file=%fd.name container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
   priority:
     NOTICE
