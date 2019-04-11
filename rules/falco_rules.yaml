@@ -459,12 +459,12 @@
   tag: [file, mitre_discovery]
 
 - rule: Schedule Cron Jobs
-  desc: Detect cron jobs scheduled in container
+  desc: Detect cron jobs scheduled
   condition: >
     ((open_write and fd.name startswith /etc/cron) or
      (spawned_process and proc.name = "crontab"))
   output: >
-    Cron jobs were scheduled to run inside container (user=%user.name command=%proc.cmdline
+    Cron jobs were scheduled to run (user=%user.name command=%proc.cmdline
     file=%fd.name container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
   priority:
     NOTICE
@@ -2122,6 +2122,7 @@
 - macro: grep_commands
   condition: (proc.name in (grep_binaries))
 
+# a less restrictive search for things that might be passwords/ssh/user etc.
 - macro: grep_more
   condition: (never_true)
 
@@ -2160,36 +2161,35 @@
   items: [syslog, auth.log, secure, kern.log, cron, user.log, dpkg.log, last.log, yum.log, access_log, mysql.log, mysqld.log]
 
 - macro: access_log_files
-  condition: (fd.directory pmatch (log_directories) or fd.filename in (log_files))
+  condition: (fd.directory in (log_directories) or fd.filename in (log_files))
 
 - rule: Clear Log Activities
   desc: Detect clearing of critical log files
   condition: >
-    ((open_write and access_log_files and evt.arg.flags contains "O_TRUNC") or
-     (remove and access_log_files))
+    open_write and access_log_files and evt.arg.flags contains "O_TRUNC"
   output: >
-    Log files were removed (user=%user.name command=%proc.cmdline file=%fd.name)
+    Log files were tampered (user=%user.name command=%proc.cmdline file=%fd.name)
   priority:
     WARNING
   tags: [file, mitre_defense_evasion]
 
 - list: data_remove_commands
-  items: [shred, mkfs, mke2fs]
+  items: [shred, mkfs, mke2fs, dd]
 
 - macro: clear_data_procs
   condition: (proc.name in (data_remove_commands))
 
-- rule: Remove Data from Disk
-  desc: Detect process running to clear data from disk
+- rule: Remove Bulk Data from Disk
+  desc: Detect process running to clear bulk data from disk
   condition: spawned_process and clear_data_procs
   output: >
-    Data has been removed from disk (user=%user.name command=%proc.cmdline file=%fd.name)
+    Bulk data has been removed from disk (user=%user.name command=%proc.cmdline file=%fd.name)
   priority:
     WARNING
   tags: [process, mitre_persistence]
 
 - rule: Delete Bash History
-  desc: Detect bash history deletetion
+  desc: Detect bash history deletion
   condition: >
     ((spawned_process and proc.name in (shred, rm, mv) and proc.args contains "bash_history") or
      (open_write and fd.name contains "bash_history" and evt.arg.flags contains "O_TRUNC"))
@@ -2215,14 +2215,15 @@
 - list: exclude_hidden_directories
   items: [/root/.cassandra]
 
-- macro: check_container_only
-  condition: (never_true or container)
+# To use this rule, you should modify consider_hidden_file_creation.
+- macro: consider_hidden_file_creation
+  condition: (never_true)
 
 - rule: Create Hidden Files or Directories
   desc: Detect hidden files or directories created
   condition: >
-    ((mkdir and check_container_only and evt.arg.path contains "/.") or
-     (open_write and check_container_only and evt.arg.flags contains "O_CREAT" and
+    ((mkdir and consider_hidden_file_creation and evt.arg.path contains "/.") or
+     (open_write and consider_hidden_file_creation and evt.arg.flags contains "O_CREAT" and
       fd.name contains "/." and not fd.name pmatch (exclude_hidden_directories)))
   output: >
     Hidden file or directory created (user=%user.name command=%proc.cmdline
