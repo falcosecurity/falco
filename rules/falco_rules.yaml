@@ -1799,10 +1799,19 @@
 - macro: allowed_ssh_proxy_env
   condition: (always_true)
 
+- list: http_proxy_binaries
+  items: [curl, wget]
+
+- macro: http_proxy_procs
+  condition: (proc.name in (http_proxy_binaries))
+
 - rule: Program run with disallowed http proxy env
   desc: An attempt to run a program with a disallowed HTTP_PROXY environment variable
   condition: >
-    spawned_process and not allowed_ssh_proxy_env and proc.env icontains HTTP_PROXY
+    spawned_process and
+    http_proxy_procs and
+    not allowed_ssh_proxy_env and
+    proc.env icontains HTTP_PROXY
   output: >
     Program run with disallowed HTTP_PROXY environment variable
     (user=%user.name command=%proc.cmdline env=%proc.env parent=%proc.pname)
