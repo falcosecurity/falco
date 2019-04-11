@@ -18,19 +18,55 @@
 - required_engine_version: 2
 
 - macro: psp_enabled
-  condition: (always_true)
+  condition: (k8s_audit_always_true)
 
 - list: psp_images
   items: {{ p.image_list }}
 
 - macro: psp_container
   condition: (psp_enabled and kevt and pod and kcreate and ka.req.container.image.repository in (psp_images))
+{% if ! p.privileged  %}
 
 - rule: PSP Validation Failure Privileged
   desc: >
-    Detect a psp validation failure for privileged pod condition
-  condition: psp_container and ka.req.container.privileged != {{ p.privileged }}
-  output: Pod Security Policy {{ p.policy_name }} validation failure for privileged condition (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image)
+    Detect a psp validation failure for its privileged condition
+  condition: psp_container and ka.req.container.privileged=true
+  output: Pod Security Policy {{ p.policy_name }} validation failure for its privileged condition (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image)
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
+{% endif %}
+{% if ! p.host_pid %}
+
+- rule: PSP Validation Failure HostPid
+  desc: >
+    Detect a psp validation failure for its hostpid condition
+  condition: psp_container and ka.req.container.hostpid=true
+  output: Pod Security Policy {{ p.policy_name }} validation failure for its hostpid condition (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image)
+  priority: WARNING
+  source: k8s_audit
+  tags: [k8s-psp]
+{% endif %}
+{% if ! p.host_ipc %}
+
+- rule: PSP Validation Failure HostIPC
+  desc: >
+    Detect a psp validation failure for its hostipc condition
+  condition: psp_container and ka.req.container.hostipc=true
+  output: Pod Security Policy {{ p.policy_name }} validation failure for its hostipc condition (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image)
+  priority: WARNING
+  source: k8s_audit
+  tags: [k8s-psp]
+{% endif %}
+{% if ! p.host_network %}
+
+- rule: PSP Validation Failure HostNetwork
+  desc: >
+    Detect a psp validation failure for its hostnetwork condition
+  condition: psp_container and ka.req.container.host_network=true
+  output: Pod Security Policy {{ p.policy_name }} validation failure for its hostnetwork condition (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image)
+  priority: WARNING
+  source: k8s_audit
+  tags: [k8s-psp]
+{% endif %}
+
