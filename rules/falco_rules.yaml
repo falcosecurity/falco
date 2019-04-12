@@ -40,11 +40,14 @@
 - macro: open_read
   condition: (evt.type=open or evt.type=openat) and evt.is_open_read=true and fd.typechar='f' and fd.num>=0
 
+- macro: open_directory
+  condition: (evt.type=open or evt.type=openat) and evt.is_open_read=true and fd.typechar='d' and fd.num>=0
+
 - macro: never_true
   condition: (evt.num=0)
 
 - macro: always_true
-  condition: (evt.num=>0)
+  condition: (evt.num>=0)
 
 # In some cases, such as dropped system call events, information about
 # the process name may be missing. For some rules that really depend
@@ -93,6 +96,13 @@
 
 - list: shell_binaries
   items: [bash, csh, ksh, sh, tcsh, zsh, dash]
+
+- list: ssh_binaries
+  items: [
+    sshd, sftp-server, ssh-agent,
+    ssh, scp, sftp,
+    ssh-keygen, ssh-keysign, ssh-keyscan, ssh-add
+    ]
 
 - list: shell_mgmt_binaries
   items: [add-shell, remove-shell]
@@ -171,6 +181,13 @@
 
 - list: gitlab_binaries
   items: [gitlab-shell, gitlab-mon, gitlab-runner-b, git]
+
+- list: interpreted_binaries
+  items: [lua, node, perl, perl5, perl6, php, python, python2, python3, ruby, tcl]
+
+- macro: interpreted_procs
+  condition: >
+    (proc.name in (interpreted_binaries))
 
 - macro: server_procs
   condition: proc.name in (http_server_binaries, db_server_binaries, docker_binaries, sshd)
@@ -329,19 +346,117 @@
   priority: NOTICE
   tags: [network, mitre_remote_service]
 
-- list: user_context_files
-  items: [.bashrc, .bash_profile]
+# These rules and supporting macros are more of an example for how to
+# use the fd.*ip and fd.*ip.name fields to match connection
+# information against ips, netmasks, and complete domain names.
+#
+# To use this rule, you should modify consider_all_outbound_conns and
+# populate allowed_{source,destination}_{ipaddrs,networks,domains} with the
+# values that make sense for your environment.
+- macro: consider_all_outbound_conns
+  condition: (never_true)
 
-- rule: Modify User Context
-  desc: Detect attempt to modify .bashrc file or .bash_profile file
+# Note that this can be either individual IPs or netmasks
+- list: allowed_destination_ipaddrs
+  items: ['"127.0.0.1"', '"8.8.8.8"']
+
+- list: allowed_destination_networks
+  items: ['"127.0.0.1/8"']
+
+- list: allowed_destination_domains
+  items: [google.com, www.yahoo.com]
+
+- rule: Unexpected outbound connection destination
+  desc: Detect any outbound connection to a destination outside of an allowed set of ips, networks, or domain names
   condition: >
-    open_write and fd.filename in (user_context_files)
+    consider_all_outbound_conns and outbound and not
+    ((fd.sip in (allowed_destination_ipaddrs)) or
+     (fd.snet in (allowed_destination_networks)) or
+     (fd.sip.name in (allowed_destination_domains)))
+  output: Disallowed outbound connection destination (command=%proc.cmdline connection=%fd.name user=%user.name)
+  priority: NOTICE
+  tags: [network]
+
+- list: allowed_source_ipaddrs
+  items: ['"127.0.0.1"']
+
+- list: allowed_source_networks
+  items: ['"127.0.0.1/8"', '"10.0.0.0/8"']
+
+- list: allowed_source_domains
+  items: [google.com]
+
+- rule: Unexpected outbound connection source
+  desc: Detect any outbound connection from a source outside of an allowed set of ips, networks, or domain names
+  condition: >
+    consider_all_outbound_conns and outbound and not
+    ((fd.cip in (allowed_source_ipaddrs)) or
+     (fd.cnet in (allowed_source_networks)) or
+     (fd.cip.name in (allowed_source_domains)))
+  output: Disallowed outbound connection source (command=%proc.cmdline connection=%fd.name user=%user.name)
+  priority: NOTICE
+  tags: [network]
+
+- list: bash_config_filenames
+  items: [.bashrc, .bash_profile, .bash_history, .bash_login, .bash_logout, .inputrc, .profile]
+
+- list: bash_config_files
+  items: [/etc/profile, /etc/bashrc]
+
+# Covers both csh and tcsh
+- list: csh_config_filenames
+  items: [.cshrc, .login, .logout, .history, .tcshrc, .cshdirs]
+
+- list: csh_config_files
+  items: [/etc/csh.cshrc, /etc/csh.login]
+
+- list: zsh_config_filenames
+  items: [.zshenv, .zprofile, .zshrc, .zlogin, .zlogout]
+
+- list: shell_config_filenames
+  items: [bash_config_filenames, csh_config_filenames, zsh_config_filenames]
+
+- list: shell_config_files
+  items: [bash_config_files, csh_config_files]
+
+- list: shell_config_directories
+  items: [/etc/zsh]
+
+- rule: Modify Shell Configuration File
+  desc: Detect attempt to modify shell configuration files
+  condition: >
+    open_write and
+    (fd.filename in (shell_config_filenames) or
+     fd.name in (shell_config_files) or
+     fd.directory in (shell_config_directories)) and
+    not proc.name in (shell_binaries)
   output: >
-    .bash_profile or .bashrc has been modified (user=%user.name command=%proc.cmdline file=%fd.name
-    container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
+    a shell configuration file has been modified (user=%user.name command=%proc.cmdline file=%fd.name)
   priority:
     WARNING
   tag: [file, mitre_persistence]
+
+# This rule is not enabled by default, as there are many legitimate
+# readers of shell config files. If you want to enable it, modify the
+# following macro.
+
+- macro: consider_shell_config_reads
+  condition: (never_true)
+
+- rule: Read Shell Configuration File
+  desc: Detect attempts to read shell configuration files by non-shell programs
+  condition: >
+    open_read and
+    consider_shell_config_reads and
+    (fd.filename in (shell_config_filenames) or
+     fd.name in (shell_config_files) or
+     fd.directory in (shell_config_directories)) and
+    (not proc.name in (shell_binaries))
+  output: >
+    a shell configuration file was read by a non-shell program (user=%user.name command=%proc.cmdline file=%fd.name)
+  priority:
+    WARNING
+  tag: [file, mitre_discovery]
 
 - rule: Schedule Cron Jobs in Container
   desc: Detect cron jobs scheduled in container
@@ -364,7 +479,7 @@
 # based on the context and whether or not -pk/-pm/-pc was specified on
 # the command line.
 - macro: container
-  condition: container.id != host
+  condition: (container.id != host)
 
 - macro: container_started
   condition: >
@@ -822,6 +937,25 @@
   priority: ERROR
   tags: [filesystem, mitre_persistence]
 
+# This rule is disabled by default as many system management tools
+# like ansible, etc can read these files/paths. Enable it using this macro.
+
+- macro: consider_ssh_reads
+  condition: (never_true)
+
+- rule: Read ssh information
+  desc: Any attempt to read files below ssh directories by non-ssh programs
+  condition: >
+    (consider_ssh_reads and
+     (open_read or open_directory) and
+     (user_ssh_directory or fd.name startswith /root/.ssh) and
+     (not proc.name in (ssh_binaries)))
+  output: >
+    ssh-related file/directory read by non-ssh program (user=%user.name
+    command=%proc.cmdline file=%fd.name parent=%proc.pname pcmdline=%proc.pcmdline)
+  priority: ERROR
+  tags: [filesystem, mitre_discovery]
+
 - list: safe_etc_dirs
   items: [/etc/cassandra, /etc/ssl/certs/java, /etc/logstash, /etc/nginx/conf.d, /etc/container_environment, /etc/hrmconfig]
 
@@ -865,7 +999,7 @@
 - macro: rancher_writing_conf
   condition: (container.image.repository in (rancher_images)
               and proc.name in (lib-controller,rancher-dns,healthcheck,rancher-metadat)
-              and (fd.name startswith "/etc/haproxy" or 
+              and (fd.name startswith "/etc/haproxy" or
                    fd.name startswith "/etc/rancher-dns")
              )
 
@@ -1468,7 +1602,7 @@
 
 - list: rancher_images
   items: [
-    rancher/network-manager, rancher/dns, rancher/agent, 
+    rancher/network-manager, rancher/dns, rancher/agent,
     rancher/lb-service-haproxy, rancher/metadata, rancher/healthcheck
   ]
 
@@ -1649,12 +1783,72 @@
 - rule: System procs network activity
   desc: any network activity performed by system binaries that are not expected to send or receive any network traffic
   condition: >
-    (fd.sockfamily = ip and system_procs)
+    (fd.sockfamily = ip and (system_procs or proc.name in (shell_binaries)))
     and (inbound_outbound)
     and not proc.name in (systemd, hostid, id)
     and not login_doing_dns_lookup
   output: >
     Known system binary sent/received network traffic
+    (user=%user.name command=%proc.cmdline connection=%fd.name)
+  priority: NOTICE
+  tags: [network, mitre_exfiltration]
+
+# When filled in, this should look something like:
+# (proc.env contains "HTTP_PROXY=http://my.http.proxy.com ")
+# The trailing space is intentional so avoid matching on prefixes of
+# the actual proxy.
+- macro: allowed_ssh_proxy_env
+  condition: (always_true)
+
+- list: http_proxy_binaries
+  items: [curl, wget]
+
+- macro: http_proxy_procs
+  condition: (proc.name in (http_proxy_binaries))
+
+- rule: Program run with disallowed http proxy env
+  desc: An attempt to run a program with a disallowed HTTP_PROXY environment variable
+  condition: >
+    spawned_process and
+    http_proxy_procs and
+    not allowed_ssh_proxy_env and
+    proc.env icontains HTTP_PROXY
+  output: >
+    Program run with disallowed HTTP_PROXY environment variable
+    (user=%user.name command=%proc.cmdline env=%proc.env parent=%proc.pname)
+  priority: NOTICE
+  tags: [host, users]
+
+# In some environments, any attempt by a interpreted program (perl,
+# python, ruby, etc) to listen for incoming connections or perform
+# outgoing connections might be suspicious. These rules are not
+# enabled by default, but you can modify the following macros to
+# enable them.
+
+- macro: consider_interpreted_inbound
+  condition: (never_true)
+
+- macro: consider_interpreted_outbound
+  condition: (never_true)
+
+- rule: Interpreted procs inbound network activity
+  desc: Any inbound network activity performed by any interpreted program (perl, python, ruby, etc.)
+  condition: >
+    (inbound and consider_interpreted_inbound
+     and interpreted_procs)
+  output: >
+    Interpreted program received/listened for network traffic
+    (user=%user.name command=%proc.cmdline connection=%fd.name)
+  priority: NOTICE
+  tags: [network, mitre_exfiltration]
+
+- rule: Interpreted procs outbound network activity
+  desc: Any outbound network activity performed by any interpreted program (perl, python, ruby, etc.)
+  condition: >
+    (outbound and consider_interpreted_outbound
+     and interpreted_procs)
+  output: >
+    Interpreted program performed outgoing network connection
     (user=%user.name command=%proc.cmdline connection=%fd.name)
   priority: NOTICE
   tags: [network, mitre_exfiltration]
@@ -1901,6 +2095,24 @@
   output: >
     Network tool launched in container (user=%user.name command=%proc.cmdline parent_process=%proc.pname
     container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
+  priority: NOTICE
+  tags: [network, process, mitre_discovery, mitre_exfiltration]
+
+# This rule is not enabled by default, as there are legitimate use
+# cases for these tools on hosts. If you want to enable it, modify the
+# following macro.
+- macro: consider_network_tools_on_host
+  condition: (never_true)
+
+- rule: Launch Suspicious Network Tool on Host
+  desc: Detect network tools launched on the host
+  condition: >
+    spawned_process and
+    not container and
+    consider_network_tools_on_host and
+    network_tool_procs
+  output: >
+    Network tool launched on host (user=%user.name command=%proc.cmdline parent_process=%proc.pname)
   priority: NOTICE
   tags: [network, process, mitre_discovery, mitre_exfiltration]
 
