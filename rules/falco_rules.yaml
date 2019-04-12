@@ -865,6 +865,25 @@
 - macro: cassandra_writing_state
   condition: (java_running_cassandra and fd.directory=/root/.cassandra)
 
+- list: repository_files
+  items: [sources.list]
+
+- list: repository_directories
+  items: [/etc/apt/sources.list.d, /etc/yum.repos.d]
+
+- macro: access_repositories
+  condition: (fd.filename in (repository_files) or fd.directory in (repository_directories))
+
+- rule: Update Package Repository
+  desc: Detect package repositories get updated
+  condition: >
+    open_write and access_repositories and not package_mgmt_procs
+  output: >
+    Repository files get updated (user=%user.name command=%proc.cmdline file=%fd.name)
+  priority:
+    NOTICE
+  tags: [filesystem, mitre_persistence]
+
 - rule: Write below binary dir
   desc: an attempt to write to any file below a set of binary directories
   condition: >
