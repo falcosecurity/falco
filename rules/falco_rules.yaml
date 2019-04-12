@@ -458,9 +458,13 @@
     WARNING
   tag: [file, mitre_discovery]
 
+- macro: consider_all_cron_jobs
+  condition: (never_true)
+
 - rule: Schedule Cron Jobs
   desc: Detect cron jobs scheduled
   condition: >
+    consider_all_cron_jobs and
     ((open_write and fd.name startswith /etc/cron) or
      (spawned_process and proc.name = "crontab"))
   output: >
@@ -2218,12 +2222,15 @@
     WARNING
   tag: [process, mitre_defense_evation]
 
+- macro: consider_all_chmods
+  condition: (never_true)
+
 - rule: Set Setuid or Setgid bit
   desc: >
     When the setuid or setgid bits are set for an application,
     this means that the application will run with the privileges of the owning user or group respectively.
     Detect setuid or setgid bits set via chmod
-  condition: spawned_process and proc.name = "chmod" and (proc.args contains "+s" or proc.args contains "4777")
+  condition: consider_all_chmods and spawned_process and proc.name = "chmod" and (proc.args contains "+s" or proc.args contains "4777")
   output: >
     Setuid or setgid bit is set via chmod (user=%user.name command=%proc.cmdline
     container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
