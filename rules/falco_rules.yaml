@@ -137,7 +137,7 @@
     shadowconfig, grpck, pwunconv, grpconv, pwck,
     groupmod, vipw, pwconv, useradd, newusers, cppw, chpasswd, usermod,
     groupadd, groupdel, grpunconv, chgpasswd, userdel, chage, chsh,
-    gpasswd, chfn, expiry, passwd, vigr, cpgr
+    gpasswd, chfn, expiry, passwd, vigr, cpgr, adduser, addgroup, deluser, delgroup
     ]
 
 # repoquery -l shadow-utils | grep bin | xargs ls -ld | grep -v '^d' |
@@ -282,7 +282,7 @@
     ]
 
 - list: sensitive_file_names
-  items: [/etc/shadow, /etc/sudoers, /etc/pam.conf]
+  items: [/etc/shadow, /etc/sudoers, /etc/pam.conf, /etc/security/pwquality.conf]
 
 - macro: sensitive_files
   condition: >
@@ -458,13 +458,17 @@
     WARNING
   tag: [file, mitre_discovery]
 
-- rule: Schedule Cron Jobs in Container
-  desc: Detect cron jobs scheduled in container
+- macro: consider_all_cron_jobs
+  condition: (never_true)
+
+- rule: Schedule Cron Jobs
+  desc: Detect cron jobs scheduled
   condition: >
+    consider_all_cron_jobs and
     ((open_write and fd.name startswith /etc/cron) or
-     (spawned_process and proc.name = "crontab")) and container
+     (spawned_process and proc.name = "crontab"))
   output: >
-    Cron jobs were scheduled to run inside container (user=%user.name command=%proc.cmdline
+    Cron jobs were scheduled to run (user=%user.name command=%proc.cmdline
     file=%fd.name container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
   priority:
     NOTICE
@@ -864,6 +868,25 @@
 
 - macro: cassandra_writing_state
   condition: (java_running_cassandra and fd.directory=/root/.cassandra)
+
+- list: repository_files
+  items: [sources.list]
+
+- list: repository_directories
+  items: [/etc/apt/sources.list.d, /etc/yum.repos.d]
+
+- macro: access_repositories
+  condition: (fd.filename in (repository_files) or fd.directory in (repository_directories))
+
+- rule: Update Package Repository
+  desc: Detect package repositories get updated
+  condition: >
+    open_write and access_repositories and not package_mgmt_procs
+  output: >
+    Repository files get updated (user=%user.name command=%proc.cmdline file=%fd.name)
+  priority:
+    NOTICE
+  tags: [filesystem, mitre_persistence]
 
 - rule: Write below binary dir
   desc: an attempt to write to any file below a set of binary directories
@@ -1319,7 +1342,7 @@
     Sensitive file opened for reading by non-trusted program (user=%user.name program=%proc.name
     command=%proc.cmdline file=%fd.name parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4])
   priority: WARNING
-  tags: [filesystem, mitre_credential_access]
+  tags: [filesystem, mitre_credential_access, mitre_discovery]
 
 # Only let rpm-related programs write to the rpm database
 - rule: Write below rpm database
@@ -2059,7 +2082,7 @@
   tags: [network, k8s, container, mitre_port_knocking]
 
 - list: network_tool_binaries
-  items: [nc, ncat, nmap, dig]
+  items: [nc, ncat, nmap, dig, netstat, tcpdump, tshark, ngrep]
 
 - macro: network_tool_procs
   condition: proc.name in (network_tool_binaries)
@@ -2122,21 +2145,27 @@
 - macro: grep_commands
   condition: (proc.name in (grep_binaries))
 
+# a less restrictive search for things that might be passwords/ssh/user etc.
+- macro: grep_more
+  condition: (never_true)
+
 - macro: private_key_or_password
   condition: >
     (proc.args icontains "BEGIN PRIVATE" or
      proc.args icontains "BEGIN RSA PRIVATE" or
      proc.args icontains "BEGIN DSA PRIVATE" or
      proc.args icontains "BEGIN EC PRIVATE" or
-     proc.args icontains "pass" or
-     proc.args icontains "ssh"
+     (grep_more and
+      (proc.args icontains " pass " or
+       proc.args icontains " ssh " or
+       proc.args icontains " user "))
     )
 
 - rule: Search Private Keys or Passwords
   desc: >
     Detect grep private keys or passwords activity.
   condition: >
-    (spawned_process and container and
+    (spawned_process and
      ((grep_commands and private_key_or_password) or
       (proc.name = "find" and (proc.args contains "id_rsa" or proc.args contains "id_dsa")))
     )
@@ -2148,16 +2177,86 @@
     WARNING
   tags: [process, mitre_credential_access]
 
-- rule: Delete Bash History
-  desc: Detect bash history deletetion
+- list: log_directories
+  items: [/var/log, /dev/log]
+
+- list: log_files
+  items: [syslog, auth.log, secure, kern.log, cron, user.log, dpkg.log, last.log, yum.log, access_log, mysql.log, mysqld.log]
+
+- macro: access_log_files
+  condition: (fd.directory in (log_directories) or fd.filename in (log_files))
+
+- rule: Clear Log Activities
+  desc: Detect clearing of critical log files
   condition: >
-    (spawned_process and proc.name in (shred, rm) and proc.args contains "bash_history")
+    open_write and access_log_files and evt.arg.flags contains "O_TRUNC"
   output: >
-    Bash history has been deleted (user=%user.name command=%proc.cmdline
-    container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
+    Log files were tampered (user=%user.name command=%proc.cmdline file=%fd.name)
+  priority:
+    WARNING
+  tags: [file, mitre_defense_evasion]
+
+- list: data_remove_commands
+  items: [shred, mkfs, mke2fs]
+
+- macro: clear_data_procs
+  condition: (proc.name in (data_remove_commands))
+
+- rule: Remove Bulk Data from Disk
+  desc: Detect process running to clear bulk data from disk
+  condition: spawned_process and clear_data_procs
+  output: >
+    Bulk data has been removed from disk (user=%user.name command=%proc.cmdline file=%fd.name)
+  priority:
+    WARNING
+  tags: [process, mitre_persistence]
+
+- rule: Delete Bash History
+  desc: Detect bash history deletion
+  condition: >
+    ((spawned_process and proc.name in (shred, rm, mv) and proc.args contains "bash_history") or
+     (open_write and fd.name contains "bash_history" and evt.arg.flags contains "O_TRUNC"))
+  output: >
+    Bash history has been deleted (user=%user.name command=%proc.cmdline file=%fd.name %container.info)
   priority:
     WARNING
   tag: [process, mitre_defense_evation]
+
+- macro: consider_all_chmods
+  condition: (never_true)
+
+- rule: Set Setuid or Setgid bit
+  desc: >
+    When the setuid or setgid bits are set for an application,
+    this means that the application will run with the privileges of the owning user or group respectively.
+    Detect setuid or setgid bits set via chmod
+  condition: consider_all_chmods and spawned_process and proc.name = "chmod" and (proc.args contains "+s" or proc.args contains "4777")
+  output: >
+    Setuid or setgid bit is set via chmod (user=%user.name command=%proc.cmdline
+    container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
+  priority:
+    NOTICE
+  tag: [process, mitre_persistence]
+
+- list: exclude_hidden_directories
+  items: [/root/.cassandra]
+
+# To use this rule, you should modify consider_hidden_file_creation.
+- macro: consider_hidden_file_creation
+  condition: (never_true)
+
+- rule: Create Hidden Files or Directories
+  desc: Detect hidden files or directories created
+  condition: >
+    ((mkdir and consider_hidden_file_creation and evt.arg.path contains "/.") or
+     (open_write and consider_hidden_file_creation and evt.arg.flags contains "O_CREAT" and
+      fd.name contains "/." and not fd.name pmatch (exclude_hidden_directories)))
+  output: >
+    Hidden file or directory created (user=%user.name command=%proc.cmdline
+    file=%fd.name container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
+  priority:
+    NOTICE
+  tag: [file, mitre_persistence]
 
 # Application rules have moved to application_rules.yaml. Please look
 # there if you want to enable them by adding to
