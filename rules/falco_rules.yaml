@@ -357,43 +357,46 @@
   condition: (never_true)
 
 # Note that this can be either individual IPs or netmasks
-- list: allowed_destination_ipaddrs
+- list: allowed_outbound_destination_ipaddrs
   items: ['"127.0.0.1"', '"8.8.8.8"']
 
-- list: allowed_destination_networks
+- list: allowed_outbound_destination_networks
   items: ['"127.0.0.1/8"']
 
-- list: allowed_destination_domains
+- list: allowed_outbound_destination_domains
   items: [google.com, www.yahoo.com]
 
 - rule: Unexpected outbound connection destination
   desc: Detect any outbound connection to a destination outside of an allowed set of ips, networks, or domain names
   condition: >
     consider_all_outbound_conns and outbound and not
-    ((fd.sip in (allowed_destination_ipaddrs)) or
-     (fd.snet in (allowed_destination_networks)) or
-     (fd.sip.name in (allowed_destination_domains)))
+    ((fd.sip in (allowed_outbound_destination_ipaddrs)) or
+     (fd.snet in (allowed_outbound_destination_networks)) or
+     (fd.sip.name in (allowed_outbound_destination_domains)))
   output: Disallowed outbound connection destination (command=%proc.cmdline connection=%fd.name user=%user.name)
   priority: NOTICE
   tags: [network]
 
-- list: allowed_source_ipaddrs
+- macro: consider_all_inbound_conns
+  condition: (never_true)
+
+- list: allowed_inbound_source_ipaddrs
   items: ['"127.0.0.1"']
 
-- list: allowed_source_networks
+- list: allowed_inbound_source_networks
   items: ['"127.0.0.1/8"', '"10.0.0.0/8"']
 
-- list: allowed_source_domains
+- list: allowed_inbound_source_domains
   items: [google.com]
 
-- rule: Unexpected outbound connection source
-  desc: Detect any outbound connection from a source outside of an allowed set of ips, networks, or domain names
+- rule: Unexpected inbound connection source
+  desc: Detect any inbound connection from a source outside of an allowed set of ips, networks, or domain names
   condition: >
-    consider_all_outbound_conns and outbound and not
-    ((fd.cip in (allowed_source_ipaddrs)) or
-     (fd.cnet in (allowed_source_networks)) or
-     (fd.cip.name in (allowed_source_domains)))
-  output: Disallowed outbound connection source (command=%proc.cmdline connection=%fd.name user=%user.name)
+    consider_all_inbound_conns and inbound and not
+    ((fd.cip in (allowed_inbound_source_ipaddrs)) or
+     (fd.cnet in (allowed_inbound_source_networks)) or
+     (fd.cip.name in (allowed_inbound_source_domains)))
+  output: Disallowed inbound connection source (command=%proc.cmdline connection=%fd.name user=%user.name)
   priority: NOTICE
   tags: [network]
 
@@ -2082,7 +2085,7 @@
   tags: [network, k8s, container, mitre_port_knocking]
 
 - list: network_tool_binaries
-  items: [nc, ncat, nmap, dig, netstat, tcpdump, tshark, ngrep]
+  items: [nc, ncat, nmap, dig, tcpdump, tshark, ngrep]
 
 - macro: network_tool_procs
   condition: proc.name in (network_tool_binaries)
