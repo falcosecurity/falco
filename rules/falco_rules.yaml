@@ -1783,7 +1783,7 @@
 - rule: System procs network activity
   desc: any network activity performed by system binaries that are not expected to send or receive any network traffic
   condition: >
-    (fd.sockfamily = ip and proc.name in (system_binaries, shell_binaries))
+    (fd.sockfamily = ip and (system_procs or proc.name in (shell_binaries)))
     and (inbound_outbound)
     and not proc.name in (systemd, hostid, id)
     and not login_doing_dns_lookup
