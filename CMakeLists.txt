@@ -244,8 +244,8 @@ else()
 	# Once the next version of yaml-cpp is released (first version not requiring
 	# boost), we can switch to that and no longer pull from github.
 	ExternalProject_Add(yamlcpp
-		GIT_REPOSITORY "https://github.com/jbeder/yaml-cpp.git"
-		GIT_TAG "7d2873ce9f2202ea21b6a8c5ecbc9fe38032c229"
+		URL "https://s3.amazonaws.com/download.draios.com/dependencies/yaml-cpp-yaml-cpp-0.6.2.tar.gz"
+		URL_MD5 "5b943e9af0060d0811148b037449ef82"
 		BUILD_IN_SOURCE 1
 		INSTALL_COMMAND "")
 endif()
