@@ -79,12 +79,12 @@
   source: k8s_audit
   tags: [k8s-psp]
 {% endif %}
-{% if p.allowed_volume_types != "" %}
+{% if p.allowed_volume_types|length > 0 %}
 
 - rule: PSP Validation Failure Volume Types
   desc: >
     Detect a psp validation failure for a volume type outside of the allowed set
-  condition: psp_container and not ka.req.volume_types.within[{{ p.allowed_volume_types }}]=true
+  condition: psp_container and not ka.req.volume_types.within[{{ p.allowed_volume_types|join(',') }}]=true
   output: Pod Security Policy {{ p.policy_name }} validation failure--volume type outside of allowed set {{ p.allowed_volume_types }} (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
