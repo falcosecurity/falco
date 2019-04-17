@@ -89,9 +89,8 @@ private:
 	token_bucket m_notifications_tb;
 
 	bool m_buffered;
-	bool m_time_format_iso_8601;
-
 	bool m_json_output;
+	bool m_time_format_iso_8601;
 
 	std::string m_lua_add_output = "add_output";
 	std::string m_lua_output_event = "output_event";
