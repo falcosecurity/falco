@@ -239,6 +239,11 @@ public:
 	// the property which is the last component of the provided
 	// field.
 	static std::string index_select(const nlohmann::json &j, std::string &field, std::string &idx);
+
+	// Return whether all hostPorts specified in the provided
+	// container array are within the ranges specified in the
+	// provided key.
+	static std::string check_host_port_within(const nlohmann::json &j, std::string &field, std::string &idx);
 };
 
 class json_event_filter : public gen_event_filter

@@ -623,6 +623,88 @@ std::string k8s_audit_filter_check::check_hostpath_vols(const json &j, std::stri
 	return string("false");
 }
 
+std::string k8s_audit_filter_check::check_host_port_within(const json &j, std::string &field, std::string &idx)
+{
+	std::vector<std::string> allowed_pairs = sinsp_split(idx, ',');
+	std::list<std::pair<int64_t,int64_t>> allowed_ports;
+
+	for(auto &pair : allowed_pairs)
+	{
+		size_t pos = pair.find_first_of(':');
+
+		if(pos != std::string::npos)
+		{
+			int64_t imin, imax;
+			std::string min = pair.substr(0, pos);
+			std::string max = pair.substr(pos+1);
+			std::string::size_type ptr;
+
+			imin = std::stoll(min, &ptr);
+
+			if(ptr != min.length())
+			{
+				return string("false");
+			}
+
+			imax = std::stoll(max, &ptr);
+
+			if(ptr != max.length())
+			{
+				return string("false");
+			}
+
+			allowed_ports.push_back(std::make_pair(imin, imax));
+		}
+	}
+
+	for(auto &container : j)
+	{
+		nlohmann::json ports = container["ports"];
+
+		for(auto &cport : ports)
+		{
+			int64_t port;
+
+			if(cport.find("hostPort") != cport.end())
+			{
+				port = cport.at("hostPort");
+			}
+			else if (cport.find("containerPort") != cport.end())
+			{
+				// When hostNetwork is true, this will match the host port.
+				port = cport.at("containerPort");
+			}
+			else
+			{
+				// Shouldn't expect to see a port
+				// object with neither hostPort nor
+				// containerPort. Return false.
+				return string("false");
+			}
+
+			bool match = false;
+
+			for(auto &p : allowed_ports)
+			{
+				if(port >= p.first &&
+				   port <= p.second)
+				{
+					match = true;
+					break;
+				}
+			}
+
+			if(!match)
+			{
+				return string("false");
+			}
+		}
+	}
+
+	return string("true");
+}
+
+
 k8s_audit_filter_check::k8s_audit_filter_check()
 {
 	m_info = {"ka",
@@ -648,7 +730,10 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 		   {"ka.req.configmap.obj", "If the request object refers to a configmap, the entire configmap object"},
 		   {"ka.req.container.image", "When the request object refers to a container, the container's images. Can be indexed (e.g. ka.req.container.image[0]). Without any index, returns the first image", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.req.container.image.repository", "The same as req.container.image, but only the repository part (e.g. sysdig/falco)", IDX_ALLOWED, IDX_NUMERIC},
+		   {"ka.req.container.host_ipc", "When the request object refers to a container, the value of the hostIPC flag."},
 		   {"ka.req.container.host_network", "When the request object refers to a container, the value of the hostNetwork flag."},
+		   {"ka.req.container.host_pid", "When the request object refers to a container, the value of the hostPID flag."},
+		   {"ka.req.container.host_port.within", "When the request object refers to a container, return true if all containers' hostPort values are within the list of provided min/max pairs. Example: ka.req.container.host_port.within[100:110,200:220] returns true if all containers' hostPort values are within the range 100:110 (inclusive) or 200:220 (inclusive).", a::IDX_REQUIRED, a::IDX_KEY},
 		   {"ka.req.container.privileged", "When the request object refers to a container, whether or not any container is run privileged. With an index, return whether or not the ith container is run privileged.", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.req.role.rules", "When the request object refers to a role/cluster role, the rules associated with the role"},
 		   {"ka.req.role.rules.apiGroups", "When the request object refers to a role/cluster role, the api groups associated with the role's rules. With an index, return only the api groups from the ith rule. Without an index, return all api groups concatenated", IDX_ALLOWED, IDX_NUMERIC},
@@ -686,8 +771,11 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 			{"ka.req.configmap.obj", {"/requestObject/data"_json_pointer}},
 			{"ka.req.container.image", {"/requestObject/spec/containers"_json_pointer, index_image}},
 			{"ka.req.container.image.repository", {"/requestObject/spec/containers"_json_pointer, index_image}},
+			{"ka.req.container.host_ipc", {"/requestObject/spec/hostIPC"_json_pointer}},
 			{"ka.req.container.host_network", {"/requestObject/spec/hostNetwork"_json_pointer}},
+			{"ka.req.container.host_pid", {"/requestObject/spec/hostPID"_json_pointer}},
 			{"ka.req.container.privileged", {"/requestObject/spec/containers"_json_pointer, index_privileged}},
+			{"ka.req.container.host_port.within", {"/requestObject/spec/containers"_json_pointer, check_host_port_within},
 			{"ka.req.role.rules", {"/requestObject/rules"_json_pointer}},
 			{"ka.req.role.rules.apiGroups", {"/requestObject/rules"_json_pointer, index_select}},
 			{"ka.req.role.rules.nonResourceURLs", {"/requestObject/rules"_json_pointer, index_select}},
