@@ -241,8 +241,6 @@ else()
 	message(STATUS "Using bundled yaml-cpp in '${YAMLCPP_SRC}'")
 	set(YAMLCPP_LIB "${YAMLCPP_SRC}/libyaml-cpp.a")
 	set(YAMLCPP_INCLUDE_DIR "${YAMLCPP_SRC}/include")
-	# Once the next version of yaml-cpp is released (first version not requiring
-	# boost), we can switch to that and no longer pull from github.
 	ExternalProject_Add(yamlcpp
 		URL "https://s3.amazonaws.com/download.draios.com/dependencies/yaml-cpp-yaml-cpp-0.6.2.tar.gz"
 		URL_MD5 "5b943e9af0060d0811148b037449ef82"
