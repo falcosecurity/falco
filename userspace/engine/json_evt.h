@@ -232,6 +232,9 @@ public:
 	// Return whether or not a hostpath mount exists matching the provided index.
 	static std::string check_hostpath_vols(const nlohmann::json &j, std::string &field, std::string &idx);
 
+	// Return whether or not a volume type is outside the provided set
+	static std::string check_volume_types(const nlohmann::json &j, std::string &field, std::string &idx);
+
 	// Index to the ith value from the provided array. If no index is provided, return the entire array as a string.
 	static std::string index_generic(const nlohmann::json &j, std::string &field, std::string &idx);
 

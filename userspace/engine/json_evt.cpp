@@ -623,6 +623,37 @@ std::string k8s_audit_filter_check::check_hostpath_vols(const json &j, std::stri
 	return string("false");
 }
 
+std::string k8s_audit_filter_check::check_volume_types(const json &j, std::string &field, std::string &idx)
+{
+	std::set<std::string> allowed_volume_types;
+	std::istringstream f(idx);
+	std::string ts;
+
+	while(getline(f, ts, ','))
+	{
+		allowed_volume_types.insert(ts);
+	}
+
+	for(auto &vol : j)
+	{
+		for (auto it = vol.begin(); it != vol.end(); ++it)
+		{
+			// Any key other than "name" represents a volume type
+			if(it.key() == "name")
+			{
+				continue;
+			}
+
+			if(allowed_volume_types.find(it.key()) == allowed_volume_types.end())
+			{
+				return string("false");
+			}
+		}
+	}
+
+	return string("true");
+}
+
 std::string k8s_audit_filter_check::check_host_port_within(const json &j, std::string &field, std::string &idx)
 {
 	std::vector<std::string> allowed_pairs = sinsp_split(idx, ',');
@@ -743,6 +774,7 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 		   {"ka.req.service.type", "When the request object refers to a service, the service type"},
 		   {"ka.req.service.ports", "When the request object refers to a service, the service's ports. Can be indexed (e.g. ka.req.service.ports[0]). Without any index, returns all ports", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.req.volume.hostpath", "If the request object contains volume definitions, whether or not a hostPath volume exists that mounts the specified path from the host (...hostpath[/etc]=true if a volume mounts /etc from the host). The index can be a glob, in which case all volumes are considered to find any path matching the specified glob (...hostpath[/usr/*] would match either /usr/local or /usr/bin)", IDX_REQUIRED, IDX_KEY},
+		   {"ka.req.volume_types.within", "If the request object contains volume definitions, return whether all volume types are in the provided set. Example: ka.req.volume_types.within[configMap,downwardAPI] returns true if the only volume types used are either configMap or downwardAPI", a::IDX_REQUIRED, a::IDX_KEY}
 		   {"ka.resp.name", "The response object name"},
 		   {"ka.response.code", "The response code"},
 		   {"ka.response.reason", "The response reason (usually present only for failures)"},
@@ -784,6 +816,7 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 			{"ka.req.service.type", {"/requestObject/spec/type"_json_pointer}},
 			{"ka.req.service.ports", {"/requestObject/spec/ports"_json_pointer, index_generic}},
 			{"ka.req.volume.hostpath", {"/requestObject/spec/volumes"_json_pointer, check_hostpath_vols}},
+			{"ka.req.volume_types.within", {"/requestObject/spec/volumes"_json_pointer, check_volume_types}},
 			{"ka.resp.name", {"/responseObject/metadata/name"_json_pointer}},
 			{"ka.response.code", {"/responseStatus/code"_json_pointer}},
 			{"ka.response.reason", {"/responseStatus/reason"_json_pointer}},
