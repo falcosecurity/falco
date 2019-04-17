@@ -6,9 +6,13 @@ import jinja2
 
 p = {}
 
-p['policy_name'] = "Mysql psp"
-p['image_list'] = "[mysql]"
-p['privileged'] = "True"
+p['policy_name'] = "Nginx psp"
+p['image_list'] = "[nginx]"
+p['allow_privileged'] = True
+p['allow_host_pid'] = True
+p['allow_host_ipc'] = True
+p['allow_host_network'] = True
+p['host_network_ports'] = "10:20"
 
 yaml_str = ""
 
