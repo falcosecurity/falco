@@ -607,32 +607,56 @@ std::string k8s_audit_filter_check::index_privileged(const json &j, std::string 
 
 std::string k8s_audit_filter_check::check_hostpath_vols(const json &j, std::string &field, std::string &idx)
 {
+	uint64_t num_volumes = 0;
+	uint64_t num_volumes_match = 0;
+	std::set<std::string> paths;
+
+	split_string_set(idx, ',', paths);
 
 	nlohmann::json::json_pointer jpath = "/hostPath/path"_json_pointer;
 
 	for(auto &vol : j)
 	{
-		string path = vol.value(jpath, "N/A");
-
-		if(sinsp_utils::glob_match(idx.c_str(), path.c_str()))
+		// The volume must be a hostPath volume to consider it
+		if(vol.find("hostPath") != vol.end())
 		{
-			return string("true");
+			num_volumes++;
+
+			string hostpath = vol.value(jpath, "N/A");
+
+			for(auto &path : paths)
+			{
+				if(sinsp_utils::glob_match(path.c_str(), hostpath.c_str()))
+				{
+					fprintf(stderr, "%s matches %s\n", path.c_str(), hostpath.c_str());
+					num_volumes_match++;
+					break;
+				}
+			}
 		}
 	}
 
+	fprintf(stderr, "num=%u match=%u\n", num_volumes, num_volumes_match);
+	if(field == "ka.req.volume.any_hostpath" ||
+	   field == "ka.req.volume.hostpath")
+	{
+		return string((num_volumes_match > 0 ? "true" : "false"));
+	}
+
+	if(field == "ka.req.volume.all_hostpath")
+	{
+		return string(((num_volumes_match == num_volumes) ? "true" : "false"));
+	}
+
+	// Shouldn't occur
 	return string("false");
 }
 
 std::string k8s_audit_filter_check::check_volume_types(const json &j, std::string &field, std::string &idx)
 {
 	std::set<std::string> allowed_volume_types;
-	std::istringstream f(idx);
-	std::string ts;
 
-	while(getline(f, ts, ','))
-	{
-		allowed_volume_types.insert(ts);
-	}
+	split_string_set(idx, ',', allowed_volume_types);
 
 	for(auto &vol : j)
 	{
@@ -735,6 +759,16 @@ std::string k8s_audit_filter_check::check_host_port_within(const json &j, std::s
 	return string("true");
 }
 
+void k8s_audit_filter_check::split_string_set(const std::string &str, const char delim, std::set<std::string> &items)
+{
+	std::istringstream f(str);
+	std::string ts;
+
+	while(getline(f, ts, delim))
+	{
+		items.insert(ts);
+	}
+}
 
 k8s_audit_filter_check::k8s_audit_filter_check()
 {
@@ -773,7 +807,9 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 		   {"ka.req.role.rules.resources", "When the request object refers to a role/cluster role, the resources associated with the role's rules. With an index, return only the resources from the ith rule. Without an index, return all resources concatenated", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.req.service.type", "When the request object refers to a service, the service type"},
 		   {"ka.req.service.ports", "When the request object refers to a service, the service's ports. Can be indexed (e.g. ka.req.service.ports[0]). Without any index, returns all ports", IDX_ALLOWED, IDX_NUMERIC},
-		   {"ka.req.volume.hostpath", "If the request object contains volume definitions, whether or not a hostPath volume exists that mounts the specified path from the host (...hostpath[/etc]=true if a volume mounts /etc from the host). The index can be a glob, in which case all volumes are considered to find any path matching the specified glob (...hostpath[/usr/*] would match either /usr/local or /usr/bin)", IDX_REQUIRED, IDX_KEY},
+		   {"ka.req.volume.any_hostpath", "If the request object contains volume definitions, whether or not a hostPath volume exists that mounts the specified path(s) from the host (...hostpath[/etc]=true if a volume mounts /etc from the host). Multiple paths can be specified, separated by commas. The index can be a glob, in which case all volumes are considered to find any path matching the specified glob (...hostpath[/usr/*] would match either /usr/local or /usr/bin)", a::IDX_REQUIRED, a::IDX_KEY},
+		   {"ka.req.volume.all_hostpath", "If the request object contains volume definitions, whether or not all hostPath volumes mount only the specified path(s) from the host (...hostpath[/etc]=true if a volume mounts /etc from the host). Multiple paths can be specified, separated by commas. The index can be a glob, in which case all volumes are considered to find any path matching the specified glob (...hostpath[/usr/*] would match either /usr/local or /usr/bin)", a::IDX_REQUIRED, a::IDX_KEY},
+		   {"ka.req.volume.hostpath", "An alias for ka.req.volume.any_hostpath", a::IDX_REQUIRED, a::IDX_KEY},
 		   {"ka.req.volume_types.within", "If the request object contains volume definitions, return whether all volume types are in the provided set. Example: ka.req.volume_types.within[configMap,downwardAPI] returns true if the only volume types used are either configMap or downwardAPI", a::IDX_REQUIRED, a::IDX_KEY}
 		   {"ka.resp.name", "The response object name"},
 		   {"ka.response.code", "The response code"},
@@ -815,7 +851,9 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 			{"ka.req.role.rules.verbs", {"/requestObject/rules"_json_pointer, index_select}},
 			{"ka.req.service.type", {"/requestObject/spec/type"_json_pointer}},
 			{"ka.req.service.ports", {"/requestObject/spec/ports"_json_pointer, index_generic}},
-			{"ka.req.volume.hostpath", {"/requestObject/spec/volumes"_json_pointer, check_hostpath_vols}},
+			{"ka.req.volume.any_hostpath", {"/requestObject/spec/volumes"_json_pointer, check_hostpath_vols}},
+			{"ka.req.volume.all_hostpath", {"/requestObject/spec/volumes"_json_pointer, check_hostpath_vols}},
+                        {"ka.req.volume.hostpath", {"/requestObject/spec/volumes"_json_pointer, check_hostpath_vols}},
 			{"ka.req.volume_types.within", {"/requestObject/spec/volumes"_json_pointer, check_volume_types}},
 			{"ka.resp.name", {"/responseObject/metadata/name"_json_pointer}},
 			{"ka.response.code", {"/responseStatus/code"_json_pointer}},

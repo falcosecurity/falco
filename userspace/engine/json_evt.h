@@ -229,7 +229,7 @@ public:
 	// index is not specified) is run privileged.
 	static std::string index_privileged(const nlohmann::json &j, std::string &field, std::string &idx);
 
-	// Return whether or not a hostpath mount exists matching the provided index.
+	// Helper used by above hostpath methods
 	static std::string check_hostpath_vols(const nlohmann::json &j, std::string &field, std::string &idx);
 
 	// Return whether or not a volume type is outside the provided set
@@ -247,6 +247,10 @@ public:
 	// container array are within the ranges specified in the
 	// provided key.
 	static std::string check_host_port_within(const nlohmann::json &j, std::string &field, std::string &idx);
+
+private:
+	// Split a string on delim populating the provided set
+	static void split_string_set(const std::string &str, const char delim, std::set<std::string> &items);
 };
 
 class json_event_filter : public gen_event_filter
