@@ -13,7 +13,8 @@ p['allow_host_pid'] = True
 p['allow_host_ipc'] = True
 p['allow_host_network'] = True
 p['host_network_ports'] = ""
-p['allowed_volume_types'] = ["configMap", "downwardAPI", "emptyDir", "persistentVolumeClaim", "secret", "projected"]
+p['allowed_volume_types'] = []
+p['allowed_host_paths'] = []
 
 yaml_str = ""
 

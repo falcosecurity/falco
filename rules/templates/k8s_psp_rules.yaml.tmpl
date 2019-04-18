@@ -91,4 +91,19 @@
   tags: [k8s-psp]
 {% endif %}
 
+{% if p.allowed_host_paths|length > 0 %}
+
+- macro: psp_allowed_host_paths
+  condition: (ka.req.volume.all_hostpath[{{ p.allowed_host_paths|join(',') }},{{ p.allowed_host_paths|join('*,') }}*] = true)
+
+- rule: PSP Validation Failure Host Paths
+  desc: >
+    Detect a psp validation failure for a hostPath volume with a path outside of the allowed set
+  condition: psp_container and ka.req.volume_types.within[hostPath]=true and not psp_allowed_host_paths
+  output: Pod Security Policy {{ p.policy_name }} validation failure--hostPath volume mounting path outside of allowed set {{ p.allowed_host_paths }} (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
+  priority: WARNING
+  source: k8s_audit
+  tags: [k8s-psp]
+{% endif %}
+
 
