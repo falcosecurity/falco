@@ -599,7 +599,9 @@ endif()
 install(FILES falco.yaml
 	DESTINATION "${FALCO_ETC_DIR}")
 
+add_subdirectory(test)
 add_subdirectory(rules)
+add_subdirectory(docker)
 
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
 	add_subdirectory("${SYSDIG_DIR}/driver" "${PROJECT_BINARY_DIR}/driver")

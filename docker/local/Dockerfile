@@ -2,7 +2,8 @@ FROM debian:unstable
 
 LABEL maintainer="Sysdig <support@sysdig.com>"
 
-ENV FALCO_VERSION 0.1.1dev
+ARG FALCO_VERSION=0.1.1dev
+ENV FALCO_VERSION ${FALCO_VERSION}
 
 LABEL RUN="docker run -i -t -v /var/run/docker.sock:/host/var/run/docker.sock -v /dev:/host/dev -v /proc:/host/proc:ro -v /boot:/host/boot:ro -v /lib/modules:/host/lib/modules:ro -v /usr:/host/usr:ro --name NAME IMAGE"
 
@@ -96,6 +97,11 @@ RUN curl -s -o binutils_2.30-22_amd64.deb http://snapshot.debian.org/archive/deb
  && curl -s -o binutils-x86-64-linux-gnu_2.30-22_amd64.deb http://snapshot.debian.org/archive/debian/20180622T211149Z/pool/main/b/binutils/binutils-x86-64-linux-gnu_2.30-22_amd64.deb \
  && curl -s -o binutils-common_2.30-22_amd64.deb http://snapshot.debian.org/archive/debian/20180622T211149Z/pool/main/b/binutils/binutils-common_2.30-22_amd64.deb \
  && dpkg -i *binutils*.deb
+
+# The local container also copies some test trace files and
+# corresponding rules that are used when running regression tests.
+COPY rules/*.yaml /rules/
+COPY traces/*.scap /traces/
 
 COPY ./docker-entrypoint.sh /
 
