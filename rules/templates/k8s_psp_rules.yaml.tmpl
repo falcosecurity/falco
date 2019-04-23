@@ -106,4 +106,19 @@
   tags: [k8s-psp]
 {% endif %}
 
+{% if p.allowed_flexvolume_drivers|length > 0 %}
+
+- macro: psp_allowed_flexvolume_drivers
+  condition: (ka.req.volume.all_flexvolume_drivers[{{ p.allowed_flexvolume_drivers|join(',') }}] = true)
+
+- rule: PSP Validation Failure Flexvolume Drivers
+  desc: >
+    Detect a psp validation failure for a FlexVolume driver outside of the allowed set
+  condition: psp_container and not psp_allowed_flexvolume_drivers
+  output: Pod Security Policy {{ p.policy_name }} validation failure--Flexvolume driver outside of allowed set {{ p.allowed_flexvolume_drivers }} (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
+  priority: WARNING
+  source: k8s_audit
+  tags: [k8s-psp]
+{% endif %}
+
 
