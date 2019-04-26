@@ -84,6 +84,8 @@ static void usage()
 	   " -A                            Monitor all events, including those with EF_DROP_FALCO flag.\n"
 	   " -b, --print-base64            Print data buffers in base64. This is useful for encoding\n"
 	   "                               binary data that needs to be used over media designed to\n"
+	   " --cri <path>                  Path to CRI socket for container meatadata\n"
+	   "                               Use the specified socket to fetch data from a CRI-compatible runtime\n"
 	   " -d, --daemon                  Run as a daemon\n"
 	   " -D <pattern>                  Disable any rules matching the regex <pattern>. Can be specified multiple times.\n"
 	   "                               Can not be specified with -t.\n"
@@ -425,6 +427,7 @@ int falco_init(int argc, char **argv)
 	bool list_flds = false;
 	string list_flds_source = "";
 	bool print_support = false;
+	string cri_socket_path;
 
 	// Used for writing trace files
 	int duration_seconds = 0;
@@ -604,6 +607,10 @@ int falco_init(int argc, char **argv)
 					printf("falco version %s\n", FALCO_VERSION);
 					return EXIT_SUCCESS;
 				}
+				else if (string(long_options[long_index].name) == "cri")
+				{
+					cri_socket_path = optarg;
+				}
 				else if (string(long_options[long_index].name) == "list")
 				{
 					list_flds = true;
@@ -630,6 +637,12 @@ int falco_init(int argc, char **argv)
 
 		inspector = new sinsp();
 		inspector->set_buffer_format(event_buffer_format);
+
+		// If required, set the CRI path
+		if(!cri_socket_path.empty())
+		{
+			inspector->set_cri_socket_path(cri_socket_path);
+		}
 
 		//
 		// If required, set the snaplen
