@@ -16,17 +16,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+set -euo pipefail
+
 SCRIPT=$(readlink -f $0)
 SCRIPTDIR=$(dirname $SCRIPT)
-BRANCH=$1
+BUILD_DIR=$1
+BRANCH=${2:-none}
+
+TRACE_DIR=$BUILD_DIR/test
+
+mkdir -p $TRACE_DIR
 
 function download_trace_files() {
     echo "branch=$BRANCH"
     for TRACE in traces-positive traces-negative traces-info ; do
-	rm -rf $SCRIPTDIR/$TRACE
-	curl -fso $SCRIPTDIR/$TRACE.zip https://s3.amazonaws.com/download.draios.com/falco-tests/$TRACE-$BRANCH.zip || curl -fso $SCRIPTDIR/$TRACE.zip https://s3.amazonaws.com/download.draios.com/falco-tests/$TRACE.zip &&
-	unzip -d $SCRIPTDIR $SCRIPTDIR/$TRACE.zip &&
-	rm -rf $SCRIPTDIR/$TRACE.zip
+	if [ ! -e $TRACE_DIR/$TRACE ]; then
+	    if [ $BRANCH != "none" ]; then
+		curl -fso $TRACE_DIR/$TRACE.zip https://s3.amazonaws.com/download.draios.com/falco-tests/$TRACE-$BRANCH.zip
+	    else
+		curl -fso $TRACE_DIR/$TRACE.zip https://s3.amazonaws.com/download.draios.com/falco-tests/$TRACE.zip
+	    fi
+	    unzip -d $TRACE_DIR $TRACE_DIR/$TRACE.zip
+	    rm -rf $TRACE_DIR/$TRACE.zip
+	fi
     done
 }
 
@@ -35,7 +47,7 @@ function prepare_multiplex_fileset() {
     dir=$1
     detect=$2
 
-    for trace in $SCRIPTDIR/$dir/*.scap ; do
+    for trace in $TRACE_DIR/$dir/*.scap ; do
 	[ -e "$trace" ] || continue
 	NAME=`basename $trace .scap`
 
@@ -73,9 +85,12 @@ function print_test_failure_details() {
 function run_tests() {
     rm -rf /tmp/falco_outputs
     mkdir /tmp/falco_outputs
+    # If we got this far, we can undo set -e, as we're watching the
+    # return status when running avocado.
+    set +e
     TEST_RC=0
-    for mult in $SCRIPTDIR/falco_traces.yaml $SCRIPTDIR/falco_tests.yaml $SCRIPTDIR/falco_k8s_audit_tests.yaml; do
-	CMD="avocado run --multiplex $mult --job-results-dir $SCRIPTDIR/job-results -- $SCRIPTDIR/falco_test.py"
+    for mult in $SCRIPTDIR/falco_traces.yaml $SCRIPTDIR/falco_tests.yaml $SCRIPTDIR/falco_tests_package.yaml $SCRIPTDIR/falco_k8s_audit_tests.yaml; do
+	CMD="avocado run --mux-yaml $mult --job-results-dir $SCRIPTDIR/job-results -- $SCRIPTDIR/falco_test.py"
 	echo "Running: $CMD"
 	$CMD
 	RC=$?
