@@ -916,6 +916,7 @@ int falco_init(int argc, char **argv)
 			}
 			catch(sinsp_exception &e)
 			{
+				falco_logger::log(LOG_DEBUG, "Could not read trace file \"" + trace_filename + "\": " + string(e.what()));
 				trace_is_scap=false;
 			}
 
