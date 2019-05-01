@@ -203,7 +203,7 @@
   items: [probe_rpminfo, probe_rpmverify, probe_rpmverifyfile, probe_rpmverifypackage]
 
 - macro: rpm_procs
-  condition: proc.name in (rpm_binaries, openscap_rpm_binaries) or proc.name in (salt-minion)
+  condition: (proc.name in (rpm_binaries, openscap_rpm_binaries) or proc.name in (salt-minion))
 
 - list: deb_binaries
   items: [dpkg, dpkg-preconfigu, dpkg-reconfigur, dpkg-divert, apt, apt-get, aptitude,
@@ -983,7 +983,7 @@
   tags: [filesystem, mitre_discovery]
 
 - list: safe_etc_dirs
-  items: [/etc/cassandra, /etc/ssl/certs/java, /etc/logstash, /etc/nginx/conf.d, /etc/container_environment, /etc/hrmconfig]
+  items: [/etc/cassandra, /etc/ssl/certs/java, /etc/logstash, /etc/nginx/conf.d, /etc/container_environment, /etc/hrmconfig, /etc/fluent/configs.d]
 
 - macro: fluentd_writing_conf_files
   condition: (proc.name=start-fluentd and fd.name in (/etc/fluent/fluent.conf, /etc/td-agent/td-agent.conf))
@@ -1028,6 +1028,13 @@
               and (fd.name startswith "/etc/haproxy" or
                    fd.name startswith "/etc/rancher-dns")
              )
+
+- macro: jboss_in_container_writing_passwd
+  condition: >
+    ((proc.cmdline="run-java.sh /opt/jboss/container/java/run/run-java.sh"
+      or proc.cmdline="run-java.sh /opt/run-java/run-java.sh")
+     and container
+     and fd.name=/etc/passwd)
 
 - macro: curl_writing_pki_db
   condition: (proc.name=curl and fd.directory=/etc/pki/nssdb)
@@ -1198,6 +1205,7 @@
     and not prometheus_conf_writing_conf
     and not openshift_writing_conf
     and not rancher_writing_conf
+    and not jboss_in_container_writing_passwd
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc
