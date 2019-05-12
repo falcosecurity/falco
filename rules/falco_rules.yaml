@@ -95,7 +95,7 @@
   condition: ((fd.directory=/ or fd.name startswith /root) and fd.name contains "/")
 
 - list: shell_binaries
-  items: [bash, csh, ksh, sh, tcsh, zsh, dash]
+  items: [ash, bash, csh, ksh, sh, tcsh, zsh, dash]
 
 - list: ssh_binaries
   items: [
