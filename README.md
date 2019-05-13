@@ -2,7 +2,7 @@
 
 #### Latest release
 
-**v0.14.0**
+**v0.15.0**
 Read the [change log](https://github.com/falcosecurity/falco/blob/dev/CHANGELOG.md)
 
 Dev Branch: [![Build Status](https://travis-ci.org/falcosecurity/falco.svg?branch=dev)](https://travis-ci.org/falcosecurity/falco)<br />
