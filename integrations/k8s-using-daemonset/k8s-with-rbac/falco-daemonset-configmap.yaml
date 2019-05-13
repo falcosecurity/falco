@@ -25,10 +25,12 @@ spec:
 #          env:
 #          - name: SYSDIG_BPF_PROBE
 #            value: ""
-          args: [ "/usr/bin/falco", "-K", "/var/run/secrets/kubernetes.io/serviceaccount/token", "-k", "https://$(KUBERNETES_SERVICE_HOST)", "-pk"]
+          args: [ "/usr/bin/falco", "--cri", "/host/run/containerd/containerd.sock", "-K", "/var/run/secrets/kubernetes.io/serviceaccount/token", "-k", "https://$(KUBERNETES_SERVICE_HOST)", "-pk"]
           volumeMounts:
             - mountPath: /host/var/run/docker.sock
               name: docker-socket
+            - mountPath: /host/run/containerd/containerd.sock
+              name: containerd-socket
             - mountPath: /host/dev
               name: dev-fs
             - mountPath: /host/proc
@@ -52,6 +54,9 @@ spec:
         - name: docker-socket
           hostPath:
             path: /var/run/docker.sock
+        - name: containerd-socket
+          hostPath:
+            path: /run/containerd/containerd.sock
         - name: dev-fs
           hostPath:
             path: /dev
