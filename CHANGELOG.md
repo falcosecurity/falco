@@ -47,7 +47,7 @@ Released 2019-05-13
 
 ## Rule Changes
 
-* **Tag rules using Mitre Attack Framework**: Add tags for all relevant rules linking them to the [MITRE Attack Framework](https://attack.mitre.org)]. We have an associated [blog post](https://sysdig.com/blog/mitre-attck-framework-for-container-runtime-security-with-sysdig-falco/). [[#575](https://github.com/falcosecurity/falco/pull/575)] [[#578](https://github.com/falcosecurity/falco/pull/578)]
+* **Tag rules using Mitre Attack Framework**: Add tags for all relevant rules linking them to the [MITRE Attack Framework](https://attack.mitre.org). We have an associated [blog post](https://sysdig.com/blog/mitre-attck-framework-for-container-runtime-security-with-sysdig-falco/). [[#575](https://github.com/falcosecurity/falco/pull/575)] [[#578](https://github.com/falcosecurity/falco/pull/578)]
 
 * New rules for additional use cases: New rules `Schedule Cron Jobs`, `Update Package Repository`, `Remove Bulk Data from Disk`, `Set Setuid or Setgid bit`, `Detect bash history deletion`, `Create Hidden Files or Directories` look for additional common follow-on activity you might see from an attacker. [[#578](https://github.com/falcosecurity/falco/pull/578)] [[#580](https://github.com/falcosecurity/falco/pull/580)]
 
