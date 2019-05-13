@@ -18,10 +18,12 @@ spec:
           image: falcosecurity/falco:latest
           securityContext:
             privileged: true
-          args: [ "/usr/bin/falco", "-K", "/var/run/secrets/kubernetes.io/serviceaccount/token", "-k", "https://kubernetes.default", "-pk", "-o", "json_output=true", "-o", "program_output.enabled=true", "-o",  "program_output.program=jq '{text: .output}' | curl -d @- -X POST https://hooks.slack.com/services/see_your_slack_team/apps_settings_for/a_webhook_url"]
+          args: [ "/usr/bin/falco", "--cri", "/host/run/containerd/containerd.sock", "-K", "/var/run/secrets/kubernetes.io/serviceaccount/token", "-k", "https://kubernetes.default", "-pk", "-o", "json_output=true", "-o", "program_output.enabled=true", "-o",  "program_output.program=jq '{text: .output}' | curl -d @- -X POST https://hooks.slack.com/services/see_your_slack_team/apps_settings_for/a_webhook_url"]
           volumeMounts:
             - mountPath: /host/var/run/docker.sock
               name: docker-socket
+            - mountPath: /host/run/containerd/containerd.sock
+              name: containerd-socket
             - mountPath: /host/dev
               name: dev-fs
             - mountPath: /host/proc
@@ -40,6 +42,9 @@ spec:
         - name: docker-socket
           hostPath:
             path: /var/run/docker.sock
+        - name: containerd-socket
+          hostPath:
+            path: /run/containerd/containerd.sock
         - name: dev-fs
           hostPath:
             path: /dev

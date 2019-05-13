@@ -241,11 +241,9 @@ else()
 	message(STATUS "Using bundled yaml-cpp in '${YAMLCPP_SRC}'")
 	set(YAMLCPP_LIB "${YAMLCPP_SRC}/libyaml-cpp.a")
 	set(YAMLCPP_INCLUDE_DIR "${YAMLCPP_SRC}/include")
-	# Once the next version of yaml-cpp is released (first version not requiring
-	# boost), we can switch to that and no longer pull from github.
 	ExternalProject_Add(yamlcpp
-		GIT_REPOSITORY "https://github.com/jbeder/yaml-cpp.git"
-		GIT_TAG "7d2873ce9f2202ea21b6a8c5ecbc9fe38032c229"
+		URL "https://s3.amazonaws.com/download.draios.com/dependencies/yaml-cpp-yaml-cpp-0.6.2.tar.gz"
+		URL_MD5 "5b943e9af0060d0811148b037449ef82"
 		BUILD_IN_SOURCE 1
 		INSTALL_COMMAND "")
 endif()
@@ -449,10 +447,10 @@ endif()
 
 option(USE_BUNDLED_TBB "Enable building of the bundled tbb" ${USE_BUNDLED_DEPS})
 if(NOT USE_BUNDLED_TBB)
-	find_path(TBB_INCLUDE tbb.h PATH_SUFFIXES tbb)
+	find_path(TBB_INCLUDE_DIR tbb.h PATH_SUFFIXES tbb)
 	find_library(TBB_LIB NAMES tbb)
-	if(TBB_INCLUDE AND TBB_LIB)
-		message(STATUS "Found tbb: include: ${TBB_INCLUDE}, lib: ${TBB_LIB}")
+	if(TBB_INCLUDE_DIR AND TBB_LIB)
+		message(STATUS "Found tbb: include: ${TBB_INCLUDE_DIR}, lib: ${TBB_LIB}")
 	else()
 		message(FATAL_ERROR "Couldn't find system tbb")
 	endif()
@@ -461,7 +459,7 @@ else()
 
 	message(STATUS "Using bundled tbb in '${TBB_SRC}'")
 
-	set(TBB_INCLUDE "${TBB_SRC}/include/")
+	set(TBB_INCLUDE_DIR "${TBB_SRC}/include/")
 	set(TBB_LIB "${TBB_SRC}/build/lib_release/libtbb.a")
 	ExternalProject_Add(tbb
 		URL "http://s3.amazonaws.com/download.draios.com/dependencies/tbb-2018_U5.tar.gz"
@@ -568,12 +566,17 @@ if(NOT USE_BUNDLED_GRPC)
 	else()
 		message(FATAL_ERROR "Couldn't find system grpc")
 	endif()
+	find_program(GRPC_CPP_PLUGIN grpc_cpp_plugin)
+	if(NOT GRPC_CPP_PLUGIN)
+		message(FATAL_ERROR "System grpc_cpp_plugin not found")
+	endif()
 else()
 	set(GRPC_SRC "${PROJECT_BINARY_DIR}/grpc-prefix/src/grpc")
 	message(STATUS "Using bundled grpc in '${GRPC_SRC}'")
 	set(GRPC_INCLUDE "${GRPC_SRC}/include")
 	set(GRPC_LIB "${GRPC_SRC}/libs/opt/libgrpc_unsecure.a")
 	set(GRPCPP_LIB "${GRPC_SRC}/libs/opt/libgrpc++_unsecure.a")
+	set(GRPC_CPP_PLUGIN "${GRPC_SRC}/bins/opt/grpc_cpp_plugin")
 
 	get_filename_component(PROTOC_DIR ${PROTOC} DIRECTORY)
 
@@ -596,7 +599,9 @@ endif()
 install(FILES falco.yaml
 	DESTINATION "${FALCO_ETC_DIR}")
 
+add_subdirectory(test)
 add_subdirectory(rules)
+add_subdirectory(docker)
 
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
 	add_subdirectory("${SYSDIG_DIR}/driver" "${PROJECT_BINARY_DIR}/driver")

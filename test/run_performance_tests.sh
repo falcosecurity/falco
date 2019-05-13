@@ -206,7 +206,7 @@ function run_juttle_examples() {
     docker-compose -f dc-juttle-engine.yml -f aws-cloudwatch/dc-aws-cloudwatch.yml -f elastic-newstracker/dc-elastic.yml -f github-tutorial/dc-elastic.yml -f nginx_logs/dc-nginx-logs.yml -f postgres-diskstats/dc-postgres.yml -f cadvisor-influx/dc-cadvisor-influx.yml up -d
     sleep 120
     docker-compose -f dc-juttle-engine.yml -f aws-cloudwatch/dc-aws-cloudwatch.yml -f elastic-newstracker/dc-elastic.yml -f github-tutorial/dc-elastic.yml -f nginx_logs/dc-nginx-logs.yml -f postgres-diskstats/dc-postgres.yml -f cadvisor-influx/dc-cadvisor-influx.yml stop
-    docker-compose -f dc-juttle-engine.yml -f aws-cloudwatch/dc-aws-cloudwatch.yml -f elastic-newstracker/dc-elastic.yml -f github-tutorial/dc-elastic.yml -f nginx_logs/dc-nginx-logs.yml -f postgres-diskstats/dc-postgres.yml -f cadvisor-influx/dc-cadvisor-influx.yml rm -fv    
+    docker-compose -f dc-juttle-engine.yml -f aws-cloudwatch/dc-aws-cloudwatch.yml -f elastic-newstracker/dc-elastic.yml -f github-tutorial/dc-elastic.yml -f nginx_logs/dc-nginx-logs.yml -f postgres-diskstats/dc-postgres.yml -f cadvisor-influx/dc-cadvisor-influx.yml rm -fv
     popd
 }
 

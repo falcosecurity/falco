@@ -27,10 +27,18 @@ limitations under the License.
 
 using namespace std;
 
+const static struct luaL_reg ll_falco_outputs [] =
+{
+	{"handle_http", &falco_outputs::handle_http},
+	{NULL,NULL}
+};
+
 falco_outputs::falco_outputs(falco_engine *engine)
 	: m_falco_engine(engine),
 	  m_initialized(false),
-	  m_buffered(true)
+	  m_buffered(true),
+	  m_json_output(false),
+	  m_time_format_iso_8601(false)
 {
 
 }
@@ -63,13 +71,16 @@ falco_outputs::~falco_outputs()
 
 void falco_outputs::init(bool json_output,
 			 bool json_include_output_property,
-			 uint32_t rate, uint32_t max_burst, bool buffered)
+			 uint32_t rate, uint32_t max_burst, bool buffered,
+			 bool time_format_iso_8601)
 {
 	// The engine must have been given an inspector by now.
 	if(! m_inspector)
 	{
 		throw falco_exception("No inspector provided");
 	}
+
+	m_json_output = json_output;
 
 	falco_common::init(m_lua_main_filename.c_str(), FALCO_SOURCE_LUA_DIR);
 
@@ -80,16 +91,19 @@ void falco_outputs::init(bool json_output,
 
 	falco_logger::init(m_ls);
 
+	luaL_openlib(m_ls, "c_outputs", ll_falco_outputs, 0);
+
 	m_notifications_tb.init(rate, max_burst);
 
 	m_buffered = buffered;
+	m_time_format_iso_8601 = time_format_iso_8601;
 
 	m_initialized = true;
 }
 
 void falco_outputs::add_output(output_config oc)
 {
-	uint8_t nargs = 2;
+	uint8_t nargs = 3;
 	lua_getglobal(m_ls, m_lua_add_output.c_str());
 
 	if(!lua_isfunction(m_ls, -1))
@@ -98,11 +112,12 @@ void falco_outputs::add_output(output_config oc)
 	}
 	lua_pushstring(m_ls, oc.name.c_str());
 	lua_pushnumber(m_ls, (m_buffered ? 1 : 0));
+	lua_pushnumber(m_ls, (m_time_format_iso_8601 ? 1 : 0));
 
 	// If we have options, build up a lua table containing them
 	if (oc.options.size())
 	{
-		nargs = 3;
+		nargs = 4;
 		lua_createtable(m_ls, 0, oc.options.size());
 
 		for (auto it = oc.options.cbegin(); it != oc.options.cend(); ++it)
@@ -154,6 +169,81 @@ void falco_outputs::handle_event(gen_event *ev, string &rule, string &source,
 
 }
 
+void falco_outputs::handle_msg(uint64_t now,
+			       falco_common::priority_type priority,
+			       std::string &msg,
+			       std::string &rule,
+			       std::map<std::string,std::string> &output_fields)
+{
+	std::string full_msg;
+
+	if(m_json_output)
+	{
+		nlohmann::json jmsg;
+
+		// Convert the time-as-nanoseconds to a more json-friendly ISO8601.
+		time_t evttime = now/1000000000;
+		char time_sec[20]; // sizeof "YYYY-MM-DDTHH:MM:SS"
+		char time_ns[12]; // sizeof ".sssssssssZ"
+		string iso8601evttime;
+
+		strftime(time_sec, sizeof(time_sec), "%FT%T", gmtime(&evttime));
+		snprintf(time_ns, sizeof(time_ns), ".%09luZ", now % 1000000000);
+		iso8601evttime = time_sec;
+		iso8601evttime += time_ns;
+
+		jmsg["output"] = msg;
+		jmsg["priority"] = "Critical";
+		jmsg["rule"] = rule;
+		jmsg["time"] = iso8601evttime;
+		jmsg["output_fields"] = output_fields;
+
+		full_msg = jmsg.dump();
+	}
+	else
+	{
+		std::string timestr;
+		bool first = true;
+
+		sinsp_utils::ts_to_string(now, &timestr, false, true);
+		full_msg = timestr + ": " + falco_common::priority_names[LOG_CRIT] + " " + msg + "(";
+		for(auto &pair : output_fields)
+		{
+			if(first)
+			{
+				first = false;
+			}
+			else
+			{
+				full_msg += " ";
+			}
+			full_msg += pair.first + "=" + pair.second;
+		}
+		full_msg += ")";
+	}
+
+	lua_getglobal(m_ls, m_lua_output_msg.c_str());
+
+	if(lua_isfunction(m_ls, -1))
+	{
+		lua_pushstring(m_ls, full_msg.c_str());
+		lua_pushstring(m_ls, falco_common::priority_names[priority].c_str());
+		lua_pushnumber(m_ls, priority);
+
+		if(lua_pcall(m_ls, 3, 0, 0) != 0)
+		{
+			const char* lerr = lua_tostring(m_ls, -1);
+			string err = "Error invoking function output: " + string(lerr);
+			throw falco_exception(err);
+		}
+	}
+	else
+	{
+		throw falco_exception("No function " + m_lua_output_msg + " found in lua compiler module");
+	}
+
+}
+
 void falco_outputs::reopen_outputs()
 {
 	lua_getglobal(m_ls, m_lua_output_reopen.c_str());
@@ -168,4 +258,43 @@ void falco_outputs::reopen_outputs()
 		const char* lerr = lua_tostring(m_ls, -1);
 		throw falco_exception(string(lerr));
 	}
+}
+
+int falco_outputs::handle_http(lua_State *ls)
+{
+	CURL *curl = NULL;
+	CURLcode res = CURLE_FAILED_INIT;
+	struct curl_slist *slist1;
+	slist1 = NULL;
+
+	if (!lua_isstring(ls, -1) ||
+	    !lua_isstring(ls, -2))
+	{
+		lua_pushstring(ls, "Invalid arguments passed to handle_http()");
+		lua_error(ls);
+	}
+
+	string url = (char *) lua_tostring(ls, 1);
+	string msg = (char *) lua_tostring(ls, 2);
+
+	curl = curl_easy_init();
+	if(curl)
+	{
+		slist1 = curl_slist_append(slist1, "Content-Type: application/json");
+		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, slist1);
+		curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, msg.c_str());
+		curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, -1L);
+
+		res = curl_easy_perform(curl);
+
+		if(res != CURLE_OK) {
+			falco_logger::log(LOG_ERR,"libcurl error: " + string(curl_easy_strerror(res)));
+		}
+		curl_easy_cleanup(curl);
+		curl = NULL;
+		curl_slist_free_all(slist1);
+  		slist1 = NULL;
+	}
+	return 1;
 }

@@ -1,0 +1,71 @@
+void setBuildStatus(String context, String message, String state) {
+    step([
+	  $class: "GitHubCommitStatusSetter",
+	  reposSource: [$class: "ManuallyEnteredRepositorySource", url: "https://github.com/falcosecurity/falco"],
+	  contextSource: [$class: "ManuallyEnteredCommitContextSource", context: context],
+	  errorHandlers: [[$class: "ChangingBuildStatusErrorHandler", result: "UNSTABLE"]],
+	  statusResultSource: [ $class: "ConditionalStatusResultSource", results: [[$class: "AnyBuildResult", message: message, state: state]] ]
+	  ]);
+}
+
+pipeline {
+	agent { label "agent-docker-builder" }
+	stages {
+	    stage("Check out dependencies") {
+		steps {
+		    dir("falco") {
+			checkout([$class: "GitSCM",
+				  branches: [[name: "refs/heads/"+env.BRANCH_NAME]],
+				  doGenerateSubmoduleConfigurations: false,
+				  extensions: [],
+				  submoduleCfg: [],
+				  userRemoteConfigs: [[credentialsId: "github-jenkins-user-token", url: "https://github.com/draios/falco"]]])
+			    }
+		    dir("sysdig") {
+			checkout([$class: "GitSCM",
+				  branches: [[name: "dev"]],
+				  doGenerateSubmoduleConfigurations: false,
+				  extensions: [],
+				  submoduleCfg: [],
+				  userRemoteConfigs: [[credentialsId: "github-jenkins-user-token", url: "https://github.com/draios/sysdig"]]])
+			    }
+		}
+	    }
+	    stage("Build") {
+		steps {
+		    script{
+			sh("./falco/scripts/jenkins/build-pipeline/build.sh")
+		    }
+		}
+		post {
+		    success {
+			setBuildStatus("Build", "Build Successful", "SUCCESS")
+		    }
+		    failure {
+			setBuildStatus("Build", "Build Failed", "FAILURE")
+		    }
+		}
+	    }
+	    stage("Run tests") {
+		steps {
+		    script{
+			sh("./falco/scripts/jenkins/build-pipeline/run-tests.sh")
+		    }
+		}
+		post {
+		    success {
+			setBuildStatus("Run tests", "All tests passed", "SUCCESS")
+		    }
+		    failure {
+			setBuildStatus("Run tests", "One or more tests failed", "FAILURE")
+		    }
+		}
+	    }
+	}
+	post {
+		always {
+			cleanWs()
+		}
+	}
+}
+

@@ -40,6 +40,7 @@ limitations under the License.
 #include "chisel.h"
 #include "sysdig.h"
 
+#include "event_drops.h"
 #include "configuration.h"
 #include "falco_engine.h"
 #include "config_falco.h"
@@ -83,6 +84,8 @@ static void usage()
 	   " -A                            Monitor all events, including those with EF_DROP_FALCO flag.\n"
 	   " -b, --print-base64            Print data buffers in base64. This is useful for encoding\n"
 	   "                               binary data that needs to be used over media designed to\n"
+	   " --cri <path>                  Path to CRI socket for container metadata\n"
+	   "                               Use the specified socket to fetch data from a CRI-compatible runtime\n"
 	   " -d, --daemon                  Run as a daemon\n"
 	   " -D <pattern>                  Disable any rules matching the regex <pattern>. Can be specified multiple times.\n"
 	   "                               Can not be specified with -t.\n"
@@ -132,6 +135,9 @@ static void usage()
            "                               from multiple files/directories.\n"
 	   " -s <stats_file>               If specified, write statistics related to falco's reading/processing of events\n"
 	   "                               to this file. (Only useful in live mode).\n"
+	   " --stats_interval <msec>       When using -s <stats_file>, write statistics every <msec> ms.\n"
+	   "                               (This uses signals, so don't recommend intervals below 200 ms)\n"
+	   "                               defaults to 5000 (5 seconds)\n"
 	   " -S <len>, --snaplen=<len>\n"
 	   "                  		   Capture the first <len> bytes of each I/O buffer.\n"
 	   "                   		   By default, the first 80 bytes are captured. Use this\n"
@@ -215,9 +221,13 @@ static std::string read_file(std::string filename)
 uint64_t do_inspect(falco_engine *engine,
 		    falco_outputs *outputs,
 		    sinsp* inspector,
+		    falco_configuration &config,
+		    syscall_evt_drop_mgr &sdropmgr,
 		    uint64_t duration_to_tot_ns,
 		    string &stats_filename,
-		    bool all_events)
+		    uint64_t stats_interval,
+		    bool all_events,
+		    int &result)
 {
 	uint64_t num_evts = 0;
 	int32_t rc;
@@ -225,11 +235,18 @@ uint64_t do_inspect(falco_engine *engine,
 	StatsFileWriter writer;
 	uint64_t duration_start = 0;
 
+	sdropmgr.init(inspector,
+		      outputs,
+		      config.m_syscall_evt_drop_actions,
+		      config.m_syscall_evt_drop_rate,
+		      config.m_syscall_evt_drop_max_burst,
+		      config.m_syscall_evt_simulate_drops);
+
 	if (stats_filename != "")
 	{
 		string errstr;
 
-		if (!writer.init(inspector, stats_filename, 5, errstr))
+		if (!writer.init(inspector, stats_filename, stats_interval, errstr))
 		{
 			throw falco_exception(errstr);
 		}
@@ -283,6 +300,12 @@ uint64_t do_inspect(falco_engine *engine,
 			{
 				break;
 			}
+		}
+
+		if(!sdropmgr.process_event(inspector, ev))
+		{
+			result = EXIT_FAILURE;
+			break;
 		}
 
 		if(!ev->falco_consider() && !all_events)
@@ -375,6 +398,7 @@ int falco_init(int argc, char **argv)
 	sinsp_evt::param_fmt event_buffer_format = sinsp_evt::PF_NORMAL;
 	falco_engine *engine = NULL;
 	falco_outputs *outputs = NULL;
+	syscall_evt_drop_mgr sdropmgr;
 	int op;
 	int long_index = 0;
 	string trace_filename;
@@ -388,6 +412,7 @@ int falco_init(int argc, char **argv)
 	string describe_rule = "";
 	list<string> validate_rules_filenames;
 	string stats_filename = "";
+	uint64_t stats_interval = 5000;
 	bool verbose = false;
 	bool names_only = false;
 	bool all_events = false;
@@ -402,6 +427,7 @@ int falco_init(int argc, char **argv)
 	bool list_flds = false;
 	string list_flds_source = "";
 	bool print_support = false;
+	string cri_socket_path;
 
 	// Used for writing trace files
 	int duration_seconds = 0;
@@ -432,13 +458,14 @@ int falco_init(int argc, char **argv)
 		{"print", required_argument, 0, 'p' },
 		{"pidfile", required_argument, 0, 'P' },
 		{"snaplen", required_argument, 0, 'S' },
+		{"stats_interval", required_argument, 0},
 		{"support", no_argument, 0},
 		{"unbuffered", no_argument, 0, 'U' },
 		{"version", no_argument, 0, 0 },
 		{"validate", required_argument, 0, 'V' },
 		{"writefile", required_argument, 0, 'w' },
 		{"ignored-events", no_argument, 0, 'i'},
-
+		{"cri", required_argument, 0},
 		{0, 0, 0, 0}
 	};
 
@@ -580,6 +607,10 @@ int falco_init(int argc, char **argv)
 					printf("falco version %s\n", FALCO_VERSION);
 					return EXIT_SUCCESS;
 				}
+				else if (string(long_options[long_index].name) == "cri")
+				{
+					cri_socket_path = optarg;
+				}
 				else if (string(long_options[long_index].name) == "list")
 				{
 					list_flds = true;
@@ -587,6 +618,10 @@ int falco_init(int argc, char **argv)
 					{
 						list_flds_source = optarg;
 					}
+				}
+				else if (string(long_options[long_index].name) == "stats_interval")
+				{
+					stats_interval = atoi(optarg);
 				}
 				else if (string(long_options[long_index].name) == "support")
 				{
@@ -602,6 +637,12 @@ int falco_init(int argc, char **argv)
 
 		inspector = new sinsp();
 		inspector->set_buffer_format(event_buffer_format);
+
+		// If required, set the CRI path
+		if(!cri_socket_path.empty())
+		{
+			inspector->set_cri_socket_path(cri_socket_path);
+		}
 
 		//
 		// If required, set the snaplen
@@ -685,12 +726,15 @@ int falco_init(int argc, char **argv)
 		if (conf_filename.size())
 		{
 			config.init(conf_filename, cmdline_options);
+			falco_logger::set_time_format_iso_8601(config.m_time_format_iso_8601);
+
 			// log after config init because config determines where logs go
 			falco_logger::log(LOG_INFO, "Falco initialized with configuration file " + conf_filename + "\n");
 		}
 		else
 		{
 			config.init(cmdline_options);
+			falco_logger::set_time_format_iso_8601(config.m_time_format_iso_8601);
 			falco_logger::log(LOG_INFO, "Falco initialized. No configuration file found, proceeding with defaults\n");
 		}
 
@@ -806,7 +850,8 @@ int falco_init(int argc, char **argv)
 		outputs->init(config.m_json_output,
 			      config.m_json_include_output_property,
 			      config.m_notifications_rate, config.m_notifications_max_burst,
-			      config.m_buffered_outputs);
+			      config.m_buffered_outputs,
+			      config.m_time_format_iso_8601);
 
 		if(!all_events)
 		{
@@ -871,6 +916,7 @@ int falco_init(int argc, char **argv)
 			}
 			catch(sinsp_exception &e)
 			{
+				falco_logger::log(LOG_DEBUG, "Could not read trace file \"" + trace_filename + "\": " + string(e.what()));
 				trace_is_scap=false;
 			}
 
@@ -1061,9 +1107,13 @@ int falco_init(int argc, char **argv)
 			num_evts = do_inspect(engine,
 					      outputs,
 					      inspector,
+					      config,
+					      sdropmgr,
 					      uint64_t(duration_to_tot*ONE_SECOND_IN_NS),
 					      stats_filename,
-					      all_events);
+					      stats_interval,
+					      all_events,
+					      result);
 
 			duration = ((double)clock()) / CLOCKS_PER_SEC - duration;
 
@@ -1085,6 +1135,7 @@ int falco_init(int argc, char **argv)
 
 		inspector->close();
 		engine->print_stats();
+		sdropmgr.print_stats();
 		webserver.stop();
 	}
 	catch(exception &e)

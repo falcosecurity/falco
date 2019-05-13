@@ -1,0 +1,11 @@
+syscall_event_drops:
+  actions:
+    - log
+  rate: .03333
+  max_burst: 10
+  simulate_drops: true
+
+stdout_output:
+  enabled: true
+
+log_stderr: true

@@ -34,16 +34,45 @@ class FalcoTest(Test):
         """
         Load the sysdig kernel module if not already loaded.
         """
-        self.falcodir = self.params.get('falcodir', '/', default=os.path.join(self.basedir, '../build'))
+        build_type = "Release"
+        if 'BUILD_TYPE' in os.environ:
+            build_type = os.environ['BUILD_TYPE']
+
+        build_dir = os.path.join('/build', build_type)
+        self.falcodir = self.params.get('falcodir', '/', default=os.path.join(self.basedir, build_dir))
 
         self.stdout_contains = self.params.get('stdout_contains', '*', default='')
+
+        if not isinstance(self.stdout_contains, list):
+            self.stdout_contains = [self.stdout_contains]
+
         self.stderr_contains = self.params.get('stderr_contains', '*', default='')
+
+        if not isinstance(self.stderr_contains, list):
+            self.stderr_contains = [self.stderr_contains]
+
+        self.stdout_not_contains = self.params.get('stdout_not_contains', '*', default='')
+
+        if not isinstance(self.stdout_not_contains, list):
+            if self.stdout_not_contains == '':
+                self.stdout_not_contains = []
+            else:
+                self.stdout_not_contains = [self.stdout_not_contains]
+
+        self.stderr_not_contains = self.params.get('stderr_not_contains', '*', default='')
+
+        if not isinstance(self.stderr_not_contains, list):
+            if self.stderr_not_contains == '':
+                self.stderr_not_contains = []
+            else:
+                self.stderr_not_contains = [self.stderr_not_contains]
+
         self.exit_status = self.params.get('exit_status', '*', default=0)
         self.should_detect = self.params.get('detect', '*', default=False)
         self.trace_file = self.params.get('trace_file', '*', default='')
 
         if self.trace_file and not os.path.isabs(self.trace_file):
-            self.trace_file = os.path.join(self.basedir, self.trace_file)
+            self.trace_file = os.path.join(build_dir, "test", self.trace_file)
 
         self.json_output = self.params.get('json_output', '*', default=False)
         self.json_include_output_property = self.params.get('json_include_output_property', '*', default=True)
@@ -86,8 +115,8 @@ class FalcoTest(Test):
         else:
             detect_counts = {}
             for item in self.detect_counts:
-                for item2 in item:
-                    detect_counts[item2[0]] = item2[1]
+                for key, value in item.items():
+                    detect_counts[key] = value
             self.detect_counts = detect_counts
 
         self.rules_warning = self.params.get('rules_warning', '*', default=False)
@@ -115,15 +144,6 @@ class FalcoTest(Test):
 
         self.package = self.params.get('package', '*', default='None')
 
-        if self.package == 'None':
-            # Doing this in 2 steps instead of simply using
-            # module_is_loaded to avoid logging lsmod output to the log.
-            lsmod_output = process.system_output("lsmod", verbose=False)
-
-            if linux_modules.parse_lsmod_for_module(lsmod_output, 'falco_probe') == {}:
-                self.log.debug("Loading falco kernel module")
-                process.run('insmod {}/driver/falco-probe.ko'.format(self.falcodir), sudo=True)
-
         self.addl_docker_run_args = self.params.get('addl_docker_run_args', '*', default='')
 
         self.copy_local_driver = self.params.get('copy_local_driver', '*', default=False)
@@ -138,10 +158,10 @@ class FalcoTest(Test):
         else:
             outputs = []
             for item in self.outputs:
-                for item2 in item:
+                for key, value in item.items():
                     output = {}
-                    output['file'] = item2[0]
-                    output['line'] = item2[1]
+                    output['file'] = key
+                    output['line'] = value
                     outputs.append(output)
                     filedir = os.path.dirname(output['file'])
                     # Create the parent directory for the trace file if it doesn't exist.
@@ -158,6 +178,8 @@ class FalcoTest(Test):
 
         if self.run_tags == '':
             self.run_tags=[]
+
+        self.time_iso_8601 = self.params.get('time_iso_8601', '*', default=False)
 
     def tearDown(self):
         if self.package != 'None':
@@ -283,16 +305,15 @@ class FalcoTest(Test):
             # Remove an existing falco-test container first. Note we don't check the output--docker rm
             # doesn't have an -i equivalent.
             res = process.run("docker rm falco-test", ignore_status=True)
+
             rules_dir = os.path.abspath(os.path.join(self.basedir, "./rules"))
             conf_dir = os.path.abspath(os.path.join(self.basedir, "../"))
             traces_dir = os.path.abspath(os.path.join(self.basedir, "./trace_files"))
-            self.falco_binary_path = "docker run -i -t --name falco-test --privileged " \
-                                     "-v {}:/host/rules -v {}:/host/conf -v {}:/host/traces " \
+            self.falco_binary_path = "docker run --rm --name falco-test --privileged " \
                                      "-v /var/run/docker.sock:/host/var/run/docker.sock " \
                                      "-v /dev:/host/dev -v /proc:/host/proc:ro -v /boot:/host/boot:ro " \
                                      "-v /lib/modules:/host/lib/modules:ro -v {}:/root/.sysdig:ro -v " \
                                      "/usr:/host/usr:ro {} {} falco".format(
-                                         rules_dir, conf_dir, traces_dir,
                                          self.module_dir, self.addl_docker_run_args, image)
 
         elif self.package.endswith(".deb"):
@@ -311,11 +332,31 @@ class FalcoTest(Test):
             self.log.debug("Installing debian package via \"{}\"".format(cmdline))
             res = process.run(cmdline, timeout=120, sudo=True)
 
+        elif self.package.endswith(".rpm"):
+            self.falco_binary_path = '/usr/bin/falco';
+
+            package_glob = "{}/{}".format(self.falcodir, self.package)
+
+            matches = glob.glob(package_glob)
+
+            if len(matches) != 1:
+                self.fail("Package path {} did not match exactly 1 file. Instead it matched: {}", package_glob, ",".join(matches))
+
+            package_path = matches[0]
+
+            cmdline = "rpm -i --nodeps --noscripts {}".format(package_path)
+            self.log.debug("Installing centos package via \"{}\"".format(cmdline))
+            res = process.run(cmdline, timeout=120, sudo=True)
+
     def uninstall_package(self):
 
         if self.package.startswith("docker:"):
-            # Remove the falco-test image. Here we *do* check the return value
-            res = process.run("docker rm falco-test")
+            self.log.debug("Nothing to do, docker run with --rm")
+
+        elif self.package.endswith(".rpm"):
+            cmdline = "rpm -e --noscripts --nodeps falco"
+            self.log.debug("Uninstalling centos package via \"{}\"".format(cmdline))
+            res = process.run(cmdline, timeout=120, sudo=True)
 
         elif self.package.endswith(".deb"):
             cmdline = "dpkg --purge falco"
@@ -385,19 +426,32 @@ class FalcoTest(Test):
         if self.all_events:
             cmd += ' -A'
 
+        if self.time_iso_8601:
+            cmd += ' -o time_format_iso_8601=true'
+
         self.falco_proc = process.SubProcess(cmd)
 
         res = self.falco_proc.run(timeout=180, sig=9)
 
-        if self.stderr_contains != '':
-            match = re.search(self.stderr_contains, res.stderr)
+        for pattern in self.stderr_contains:
+            match = re.search(pattern, res.stderr)
             if match is None:
-                self.fail("Stderr of falco process did not contain content matching {}".format(self.stderr_contains))
+                self.fail("Stderr of falco process did not contain content matching {}".format(pattern))
 
-        if self.stdout_contains != '':
-            match = re.search(self.stdout_contains, res.stdout)
+        for pattern in self.stdout_contains:
+            match = re.search(pattern, res.stdout)
             if match is None:
-                self.fail("Stdout of falco process '{}' did not contain content matching {}".format(res.stdout, self.stdout_contains))
+                self.fail("Stdout of falco process '{}' did not contain content matching {}".format(res.stdout, pattern))
+
+        for pattern in self.stderr_not_contains:
+            match = re.search(pattern, res.stderr)
+            if match is not None:
+                self.fail("Stderr of falco process contained content matching {} when it should have not".format(pattern))
+
+        for pattern in self.stdout_not_contains:
+            match = re.search(pattern, res.stdout)
+            if match is not None:
+                self.fail("Stdout of falco process '{}' did contain content matching {} when it should have not".format(res.stdout, pattern))
 
         if res.exit_status != self.exit_status:
             self.error("Falco command \"{}\" exited with unexpected return value {} (!= {})".format(

@@ -2,7 +2,8 @@ FROM debian:unstable
 
 LABEL maintainer="Sysdig <support@sysdig.com>"
 
-ENV FALCO_VERSION 0.1.1dev
+ARG FALCO_VERSION=0.1.1dev
+ENV FALCO_VERSION ${FALCO_VERSION}
 
 LABEL RUN="docker run -i -t -v /var/run/docker.sock:/host/var/run/docker.sock -v /dev:/host/dev -v /proc:/host/proc:ro -v /boot:/host/boot:ro -v /lib/modules:/host/lib/modules:ro -v /usr:/host/usr:ro --name NAME IMAGE"
 
@@ -26,13 +27,29 @@ RUN apt-get update \
 	gcc \
 	jq \
 	libc6-dev \
-	libcilkrts5 \
 	libelf-dev \
-	libubsan0 \
 	llvm-7 \
 	netcat \
 	xz-utils \
  && rm -rf /var/lib/apt/lists/*
+
+# gcc 6 is no longer included in debian unstable, but we need it to
+# build kernel modules on the default debian-based ami used by
+# kops. So grab copies we've saved from debian snapshots with the
+# prefix https://snapshot.debian.org/archive/debian/20170517T033514Z
+# or so.
+
+RUN curl -o cpp-6_6.3.0-18_amd64.deb https://s3.amazonaws.com/download.draios.com/dependencies/gcc-6-debs/cpp-6_6.3.0-18_amd64.deb \
+    && curl -o gcc-6-base_6.3.0-18_amd64.deb https://s3.amazonaws.com/download.draios.com/dependencies/gcc-6-debs/gcc-6-base_6.3.0-18_amd64.deb \
+    && curl -o gcc-6_6.3.0-18_amd64.deb https://s3.amazonaws.com/download.draios.com/dependencies/gcc-6-debs/gcc-6_6.3.0-18_amd64.deb \
+    && curl -o libasan3_6.3.0-18_amd64.deb https://s3.amazonaws.com/download.draios.com/dependencies/gcc-6-debs/libasan3_6.3.0-18_amd64.deb \
+    && curl -o libcilkrts5_6.3.0-18_amd64.deb https://s3.amazonaws.com/download.draios.com/dependencies/gcc-6-debs/libcilkrts5_6.3.0-18_amd64.deb \
+    && curl -o libgcc-6-dev_6.3.0-18_amd64.deb https://s3.amazonaws.com/download.draios.com/dependencies/gcc-6-debs/libgcc-6-dev_6.3.0-18_amd64.deb \
+    && curl -o libubsan0_6.3.0-18_amd64.deb https://s3.amazonaws.com/download.draios.com/dependencies/gcc-6-debs/libubsan0_6.3.0-18_amd64.deb \
+    && curl -o libmpfr4_3.1.3-2_amd64.deb https://s3.amazonaws.com/download.draios.com/dependencies/gcc-6-debs/libmpfr4_3.1.3-2_amd64.deb \
+    && curl -o libisl15_0.18-1_amd64.deb https://s3.amazonaws.com/download.draios.com/dependencies/gcc-6-debs/libisl15_0.18-1_amd64.deb \
+    && dpkg -i cpp-6_6.3.0-18_amd64.deb gcc-6-base_6.3.0-18_amd64.deb gcc-6_6.3.0-18_amd64.deb libasan3_6.3.0-18_amd64.deb libcilkrts5_6.3.0-18_amd64.deb libgcc-6-dev_6.3.0-18_amd64.deb libubsan0_6.3.0-18_amd64.deb libmpfr4_3.1.3-2_amd64.deb libisl15_0.18-1_amd64.deb \
+    && rm -f cpp-6_6.3.0-18_amd64.deb gcc-6-base_6.3.0-18_amd64.deb gcc-6_6.3.0-18_amd64.deb libasan3_6.3.0-18_amd64.deb libcilkrts5_6.3.0-18_amd64.deb libgcc-6-dev_6.3.0-18_amd64.deb libubsan0_6.3.0-18_amd64.deb libmpfr4_3.1.3-2_amd64.deb libisl15_0.18-1_amd64.deb
 
 # gcc 5 is no longer included in debian unstable, but we need it to
 # build centos kernels, which are 3.x based and explicitly want a gcc
@@ -67,14 +84,25 @@ RUN rm -df /lib/modules \
 ADD falco-${FALCO_VERSION}-x86_64.deb /
 RUN dpkg -i /falco-${FALCO_VERSION}-x86_64.deb
 
+# Change the falco config within the container to enable ISO 8601
+# output.
+RUN sed -e 's/time_format_iso_8601: false/time_format_iso_8601: true/' < /etc/falco/falco.yaml > /etc/falco/falco.yaml.new \
+ && mv /etc/falco/falco.yaml.new /etc/falco/falco.yaml
+
 # debian:unstable head contains binutils 2.31, which generates
 # binaries that are incompatible with kernels < 4.16. So manually
 # forcibly install binutils 2.30-22 instead.
-RUN curl -s -o binutils_2.30-22_amd64.deb http://snapshot.debian.org/archive/debian/20180622T211149Z/pool/main/b/binutils/binutils_2.30-22_amd64.deb \
- && curl -s -o libbinutils_2.30-22_amd64.deb http://snapshot.debian.org/archive/debian/20180622T211149Z/pool/main/b/binutils/libbinutils_2.30-22_amd64.deb \
- && curl -s -o binutils-x86-64-linux-gnu_2.30-22_amd64.deb http://snapshot.debian.org/archive/debian/20180622T211149Z/pool/main/b/binutils/binutils-x86-64-linux-gnu_2.30-22_amd64.deb \
- && curl -s -o binutils-common_2.30-22_amd64.deb http://snapshot.debian.org/archive/debian/20180622T211149Z/pool/main/b/binutils/binutils-common_2.30-22_amd64.deb \
- && dpkg -i *binutils*.deb
+RUN curl -s -o binutils_2.30-22_amd64.deb https://s3.amazonaws.com/download.draios.com/dependencies/binutils_2.30-22_amd64.deb \
+ && curl -s -o libbinutils_2.30-22_amd64.deb https://s3.amazonaws.com/download.draios.com/dependencies/libbinutils_2.30-22_amd64.deb \
+ && curl -s -o binutils-x86-64-linux-gnu_2.30-22_amd64.deb https://s3.amazonaws.com/download.draios.com/dependencies/binutils-x86-64-linux-gnu_2.30-22_amd64.deb \
+ && curl -s -o binutils-common_2.30-22_amd64.deb https://s3.amazonaws.com/download.draios.com/dependencies/binutils-common_2.30-22_amd64.deb \
+ && dpkg -i *binutils*.deb \
+ && rm -f *binutils*.deb
+
+# The local container also copies some test trace files and
+# corresponding rules that are used when running regression tests.
+COPY rules/*.yaml /rules/
+COPY traces/*.scap /traces/
 
 COPY ./docker-entrypoint.sh /
 

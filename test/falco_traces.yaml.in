@@ -34,14 +34,14 @@ traces: !mux
     detect: True
     detect_level: INFO
     detect_counts:
-      - "Launch Privileged Container": 1
+      - "Launch Privileged Container": 3
 
   container-sensitive-mount:
     trace_file: traces-positive/container-sensitive-mount.scap
     detect: True
     detect_level: INFO
     detect_counts:
-      - "Launch Sensitive Mount Container": 1
+      - "Launch Sensitive Mount Container": 3
 
   create-files-below-dev:
     trace_file: traces-positive/create-files-below-dev.scap

@@ -200,6 +200,7 @@ public:
 private:
 
 	static std::string s_jevt_time_field;
+	static std::string s_jevt_time_iso_8601_field;
 	static std::string s_jevt_rawtime_field;
 	static std::string s_jevt_obj_field;
 	static std::string s_jevt_value_field;

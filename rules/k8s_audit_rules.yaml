@@ -34,7 +34,7 @@
 
 # If you wish to restrict activity to a specific set of users, override/append to this list.
 - list: allowed_k8s_users
-  items: ["minikube", "minikube-user"]
+  items: ["minikube", "minikube-user", "kubelet", "kops"]
 
 - rule: Disallowed K8s User
   desc: Detect any k8s operation by users outside of an allowed set of users.

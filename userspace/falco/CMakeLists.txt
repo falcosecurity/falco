@@ -24,6 +24,7 @@ include_directories("${PROJECT_SOURCE_DIR}/../sysdig/userspace/sysdig")
 include_directories("${PROJECT_SOURCE_DIR}/userspace/engine")
 include_directories("${PROJECT_BINARY_DIR}/userspace/falco")
 include_directories("${CURL_INCLUDE_DIR}")
+include_directories("${TBB_INCLUDE_DIR}")
 include_directories("${NJSON_INCLUDE}")
 include_directories("${YAMLCPP_INCLUDE_DIR}")
 include_directories("${CIVETWEB_INCLUDE_DIR}")
@@ -35,6 +36,7 @@ add_executable(falco
 	configuration.cpp
 	logger.cpp
 	falco_outputs.cpp
+	event_drops.cpp
 	statsfilewriter.cpp
 	falco.cpp
 	"${PROJECT_SOURCE_DIR}/../sysdig/userspace/sysdig/fields_info.cpp"

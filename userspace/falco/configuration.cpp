@@ -31,6 +31,7 @@ using namespace std;
 
 falco_configuration::falco_configuration()
 	: m_buffered_outputs(false),
+	  m_time_format_iso_8601(false),
 	  m_webserver_enabled(false),
 	  m_webserver_listen_port(8765),
 	  m_webserver_k8s_audit_endpoint("/k8s_audit"),
@@ -131,6 +132,22 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 		m_outputs.push_back(program_output);
 	}
 
+	falco_outputs::output_config http_output;
+	http_output.name = "http";
+	if (m_config->get_scalar<bool>("http_output", "enabled", false))
+	{
+		string url;
+		url = m_config->get_scalar<string>("http_output", "url", "");
+
+		if (url == string(""))
+		{
+			throw sinsp_exception("Error reading config file (" + m_config_file + "): http output enabled but no url in configuration block");
+		}
+		http_output.options["url"] = url;
+
+		m_outputs.push_back(http_output);
+	}
+
 	if (m_outputs.size() == 0)
 	{
 		throw invalid_argument("Error reading config file (" + m_config_file + "): No outputs configured. Please configure at least one output file output enabled but no filename in configuration block");
@@ -157,6 +174,7 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 	m_min_priority = (falco_common::priority_type) (it - falco_common::priority_names.begin());
 
 	m_buffered_outputs = m_config->get_scalar<bool>("buffered_outputs", false);
+	m_time_format_iso_8601 = m_config->get_scalar<bool>("time_format_iso_8601", false);
 
 	falco_logger::log_stderr = m_config->get_scalar<bool>("log_stderr", false);
 	falco_logger::log_syslog = m_config->get_scalar<bool>("log_syslog", true);
@@ -166,6 +184,43 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 	m_webserver_k8s_audit_endpoint = m_config->get_scalar<string>("webserver", "k8s_audit_endpoint", "/k8s_audit");
 	m_webserver_ssl_enabled = m_config->get_scalar<bool>("webserver", "ssl_enabled", false);
 	m_webserver_ssl_certificate = m_config->get_scalar<string>("webserver", "ssl_certificate","/etc/falco/falco.pem");
+
+	std::list<string> syscall_event_drop_acts;
+	m_config->get_sequence(syscall_event_drop_acts, "syscall_event_drops", "actions");
+
+	for(std::string &act : syscall_event_drop_acts)
+	{
+		if(act == "ignore")
+		{
+			m_syscall_evt_drop_actions.insert(syscall_evt_drop_mgr::ACT_IGNORE);
+		}
+		else if (act == "log")
+		{
+			m_syscall_evt_drop_actions.insert(syscall_evt_drop_mgr::ACT_LOG);
+		}
+		else if (act == "alert")
+		{
+			m_syscall_evt_drop_actions.insert(syscall_evt_drop_mgr::ACT_ALERT);
+		}
+		else if (act == "exit")
+		{
+			m_syscall_evt_drop_actions.insert(syscall_evt_drop_mgr::ACT_EXIT);
+		}
+		else
+		{
+			throw invalid_argument("Error reading config file (" + m_config_file + "): syscall event drop action " + act + " must be one of \"ignore\", \"log\", \"alert\", or \"exit\"");
+		}
+	}
+
+	if(m_syscall_evt_drop_actions.empty())
+	{
+		m_syscall_evt_drop_actions.insert(syscall_evt_drop_mgr::ACT_IGNORE);
+	}
+
+	m_syscall_evt_drop_rate = m_config->get_scalar<double>("syscall_event_drops", "rate", 0.3333);
+	m_syscall_evt_drop_max_burst = m_config->get_scalar<double>("syscall_event_drops", "max_burst", 10);
+
+	m_syscall_evt_simulate_drops = m_config->get_scalar<bool>("syscall_event_drops", "simulate_drops", false);
 }
 
 void falco_configuration::read_rules_file_directory(const string &path, list<string> &rules_filenames)

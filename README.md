@@ -62,6 +62,8 @@ As always, we are grateful for your past and present contributions to falco.
 
 ### What do I need to do in order to contribute code?
 
+At first, you need do all changes based on dev branch not master branch.
+
 **Individual contributions**: Individuals who wish to make contributions must review the [Individual Contributor License Agreement](./cla/falco_contributor_agreement.txt) and indicate agreement by adding the following line to every GIT commit message:
 
 ```

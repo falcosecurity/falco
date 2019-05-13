@@ -20,6 +20,13 @@ limitations under the License.
 #pragma once
 
 #include <memory>
+#include <map>
+
+extern "C" {
+#include "lua.h"
+#include "lualib.h"
+#include "lauxlib.h"
+}
 
 #include "gen_filter.h"
 #include "json_evt.h"
@@ -49,7 +56,8 @@ public:
 
 	void init(bool json_output,
 		  bool json_include_output_property,
-		  uint32_t rate, uint32_t max_burst, bool buffered);
+		  uint32_t rate, uint32_t max_burst, bool buffered,
+		  bool time_format_iso_8601);
 
 	void add_output(output_config oc);
 
@@ -60,7 +68,16 @@ public:
 	void handle_event(gen_event *ev, std::string &rule, std::string &source,
 			  falco_common::priority_type priority, std::string &format);
 
+	// Send a generic message to all outputs. Not necessarily associated with any event.
+	void handle_msg(uint64_t now,
+			falco_common::priority_type priority,
+			std::string &msg,
+			std::string &rule,
+			std::map<std::string,std::string> &output_fields);
+
 	void reopen_outputs();
+
+	static int handle_http(lua_State *ls);
 
 private:
 
@@ -72,9 +89,12 @@ private:
 	token_bucket m_notifications_tb;
 
 	bool m_buffered;
+	bool m_json_output;
+	bool m_time_format_iso_8601;
 
 	std::string m_lua_add_output = "add_output";
 	std::string m_lua_output_event = "output_event";
+	std::string m_lua_output_msg = "output_msg";
 	std::string m_lua_output_cleanup = "output_cleanup";
 	std::string m_lua_output_reopen = "output_reopen";
 	std::string m_lua_main_filename = "output.lua";
