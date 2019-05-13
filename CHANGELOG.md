@@ -2,6 +2,76 @@
 
 This file documents all notable changes to Falco. The release numbering uses [semantic versioning](http://semver.org).
 
+## v0.15.0
+
+Released 2019-05-13
+
+## Major Changes
+
+* **Actions and alerts for dropped events**: Falco can now take actions, including sending alerts/logging messages, and/or even exiting Falco, when it detects dropped system call events. [[#561](https://github.com/falcosecurity/falco/pull/561)] [[#571](https://github.com/falcosecurity/falco/pull/571)]
+
+* **Support for Containerd/CRI-O**: Falco now supports containerd/cri-o containers. [[#585](https://github.com/falcosecurity/falco/pull/585)] [[#591](https://github.com/falcosecurity/falco/pull/591)] [[#599](https://github.com/falcosecurity/falco/pull/599)] [[#sysdig/1376](https://github.com/draios/sysdig/pull/1376)] [[#sysdig/1310](https://github.com/draios/sysdig/pull/1310)]
+
+* **Perform docker metadata fetches asynchronously**: When new containers are discovered, fetch metadata about the container asynchronously, which should significantly reduce the likelihood of dropped system call events. [[#sysdig/1326](https://github.com/draios/sysdig/pull/1326)] [[#550](https://github.com/falcosecurity/falco/pull/550)] [[#570](https://github.com/falcosecurity/falco/pull/570)]
+
+* Better syscall event performance: improve algorithm for reading system call events from kernel module to handle busy event streams [[#sysdig/1372](https://github.com/draios/sysdig/pull/1372)]
+
+* HTTP Output: Falco can now send alerts to http endpoints directly without having to use curl. [[#523](https://github.com/falcosecurity/falco/pull/523)]
+
+* Move Kubernetes Response Engine to own repo: The Kubernetes Response Engine is now in its [own github repository](https://github.com/falcosecurity/kubernetes-response-engine). [[#539](https://github.com/falcosecurity/falco/pull/539)]
+
+* Updated Puppet Module: An all-new puppet module compatible with puppet 4 with a smoother installation process and updated package links. [[#537](https://github.com/falcosecurity/falco/pull/537)] [[#543](https://github.com/falcosecurity/falco/pull/543)] [[#546](https://github.com/falcosecurity/falco/pull/546)]
+
+* RHEL-based falco image: Provide dockerfiles that use RHEL 7 as the base image instead of debian:unstable. [[#544](https://github.com/falcosecurity/falco/pull/544)]
+
+
+## Minor Changes
+
+* ISO-8601 Timestamps: Add the ability to write timestamps in ISO-8601 w/ UTC, and use this format by default when running falco in a container [[#518](https://github.com/falcosecurity/falco/pull/518)]
+
+* Docker-based builder/tester: You can now build Falco using the [falco-builder](https://falco.org/docs/source/#build-using-falco-builder-container) docker image, and run regression tests using the [falco-tester](https://falco.org/docs/source/#test-using-falco-tester-container) docker image. [[#522](https://github.com/falcosecurity/falco/pull/522)] [[#584](https://github.com/falcosecurity/falco/pull/584)]
+
+* Several small docs changes to improve clarity and readibility [[#524](https://github.com/falcosecurity/falco/pull/524)] [[#540](https://github.com/falcosecurity/falco/pull/540)] [[#541](https://github.com/falcosecurity/falco/pull/541)] [[#542](https://github.com/falcosecurity/falco/pull/542)]
+
+* Add instructions on how to enable K8s Audit Logging for kops [[#535](https://github.com/falcosecurity/falco/pull/535)]
+
+* Add a "stale issue" bot that marks and eventually closes old issues with no activity [[#548](https://github.com/falcosecurity/falco/pull/548)]
+
+* Improvements to sample K8s daemonset/service/etc files [[#562](https://github.com/falcosecurity/falco/pull/562)]
+
+## Bug Fixes
+
+* Fix regression that broke json output [[#581](https://github.com/falcosecurity/falco/pull/581)]
+
+* Fix errors when building via docker from MacOS [[#582](https://github.com/falcosecurity/falco/pull/582)]
+
+## Rule Changes
+
+* **Tag rules using Mitre Attack Framework**: Add tags for all relevant rules linking them to the [MITRE Attack Framework](https://attack.mitre.org). We have an associated [blog post](https://sysdig.com/blog/mitre-attck-framework-for-container-runtime-security-with-sysdig-falco/). [[#575](https://github.com/falcosecurity/falco/pull/575)] [[#578](https://github.com/falcosecurity/falco/pull/578)]
+
+* New rules for additional use cases: New rules `Schedule Cron Jobs`, `Update Package Repository`, `Remove Bulk Data from Disk`, `Set Setuid or Setgid bit`, `Detect bash history deletion`, `Create Hidden Files or Directories` look for additional common follow-on activity you might see from an attacker. [[#578](https://github.com/falcosecurity/falco/pull/578)] [[#580](https://github.com/falcosecurity/falco/pull/580)]
+
+* Allow docker's "exe" (usually part of docker save/load) to write to many filesystem locations [[#552](https://github.com/falcosecurity/falco/pull/552)]
+
+* Let puppet write below /etc [[#563](https://github.com/falcosecurity/falco/pull/563)
+
+* Add new `user_known_write_root_conditions`, `user_known_non_sudo_setuid_conditions`, and `user_known_write_monitored_dir_conditions` macros to allow those rules to be easily customized in user rules files [[#563](https://github.com/falcosecurity/falco/pull/563)] [[#566](https://github.com/falcosecurity/falco/pull/566)]
+
+* Better coverage and exceptions for rancher [[#559](https://github.com/falcosecurity/falco/pull/559)]
+
+* Allow prometheus to write to its conf directory under etc [[#564](https://github.com/falcosecurity/falco/pull/564)]
+
+* Better coverage and exceptions for openshift/related tools [[#567](https://github.com/falcosecurity/falco/pull/567)] [[#573](https://github.com/falcosecurity/falco/pull/573)]
+
+* Better coverage for cassandra/kubelet/kops to reduce FPs [[#551](https://github.com/falcosecurity/falco/pull/551)]
+
+* Better coverage for docker, openscap to reduce FPs [[#573](https://github.com/falcosecurity/falco/pull/573)]
+
+* Better coverage for fluentd/jboss to reduce FPs [[#590](https://github.com/falcosecurity/falco/pull/590)]
+
+* Add `ash` (Alpine Linux-related shell) as a shell binary [[#597](https://github.com/falcosecurity/falco/pull/597)]
+
+
 ## v0.14.0
 
 Released 2019-02-06
