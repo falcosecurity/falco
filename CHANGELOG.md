@@ -10,7 +10,7 @@ Released 2019-05-13
 
 * **Actions and alerts for dropped events**: Falco can now take actions, including sending alerts/logging messages, and/or even exiting Falco, when it detects dropped system call events. [[#561](https://github.com/falcosecurity/falco/pull/561)] [[#571](https://github.com/falcosecurity/falco/pull/571)]
 
-* **Support for Containerd/CRI-O**: Falco now supports containerd/cri-o containers. [[#585](https://github.com/falcosecurity/falco/pull/585)] [[#591](https://github.com/falcosecurity/falco/pull/591)] [[#599](https://github.com/falcosecurity/falco/pull/599)] [[#sysdig/1376](https://github.com/draios/sysdig/pull/1376)] [[#sysdig/1310](https://github.com/draios/sysdig/pull/1310)]
+* **Support for Containerd/CRI-O**: Falco now supports containerd/cri-o containers. [[#585](https://github.com/falcosecurity/falco/pull/585)] [[#591](https://github.com/falcosecurity/falco/pull/591)] [[#599](https://github.com/falcosecurity/falco/pull/599)] [[#sysdig/1376](https://github.com/draios/sysdig/pull/1376)] [[#sysdig/1310](https://github.com/draios/sysdig/pull/1310)] [[#sysdig/1399](https://github.com/draios/sysdig/pull/1399)]
 
 * **Perform docker metadata fetches asynchronously**: When new containers are discovered, fetch metadata about the container asynchronously, which should significantly reduce the likelihood of dropped system call events. [[#sysdig/1326](https://github.com/draios/sysdig/pull/1326)] [[#550](https://github.com/falcosecurity/falco/pull/550)] [[#570](https://github.com/falcosecurity/falco/pull/570)]
 
