@@ -104,3 +104,18 @@ FALCO_SERVICE_CLUSTERIP=$(kubectl get service falco-service -o=jsonpath={.spec.c
 ### Observe K8s audit events at falco
 
 K8s audit events will then be routed to the falco daemonset within the cluster, which you can observe via `kubectl logs -f $(kubectl get pods -l app=falco-example -o jsonpath={.items[0].metadata.name})`.
+
+## K8s 1.13 + Local Log File Instructions
+
+If you want to use a mix of AuditSink for remote audit events as well as a local audit log file, you can run enable-k8s-audit.sh with the "dynamic-log" argument e.g. `bash ./enable-k8s-audit.sh <variant> dynamic+log`. This will enable dynamic audit logs as well as a static audit log to a local file. Its output looks like this:
+
+```
+***Copying apiserver config patch script to apiserver...
+apiserver-config.patch.sh                                                                          100% 2211   662.9KB/s   00:00
+***Copying audit policy file to apiserver...
+audit-policy.yaml                                                                                  100% 2519   847.7KB/s   00:00
+***Modifying k8s apiserver config (will result in apiserver restarting)...
+***Done!
+```
+
+The audit log will be available on the apiserver host at `/var/lib/k8s_audit/audit.log`.

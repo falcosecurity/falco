@@ -34,6 +34,11 @@ if [ $AUDIT_TYPE == "static" ]; then
     scp -i $SSH_KEY webhook-config.yaml $SSH_USER@$APISERVER_HOST:/var/lib/k8s_audit
 fi
 
+if [ $AUDIT_TYPE == "dynamic+log" ]; then
+    echo "***Copying audit policy file to apiserver..."
+    scp -i $SSH_KEY audit-policy.yaml $SSH_USER@$APISERVER_HOST:/var/lib/k8s_audit
+fi
+
 echo "***Modifying k8s apiserver config (will result in apiserver restarting)..."
 
 ssh -i $SSH_KEY $SSH_USER@$APISERVER_HOST "sudo bash /var/lib/k8s_audit/apiserver-config.patch.sh $MANIFEST $VARIANT $AUDIT_TYPE"
