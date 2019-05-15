@@ -2096,7 +2096,7 @@
   items: [nc, ncat, nmap, dig, tcpdump, tshark, ngrep]
 
 - macro: network_tool_procs
-  condition: proc.name in (network_tool_binaries)
+  condition: (proc.name in (network_tool_binaries))
 
 # Container is supposed to be immutable. Package management should be done in building the image.
 - rule: Launch Package Management Process in Container
@@ -2268,6 +2268,22 @@
   priority:
     NOTICE
   tag: [file, mitre_persistence]
+
+- list: remote_file_copy_binaries
+  items: [rsync, scp, sftp, dcp]
+
+- macro: remote_file_copy_procs
+  condition: (proc.name in (remote_File_copy_binaries))
+
+- rule: Launch Remote File Copy Tools in Container
+  desc: Detect remote file copy tools launched in container
+  condition: >
+    spawned_process and container and remote_file_copy_procs
+  output: >
+    Remote file copy tool launched in container (user=%user.name command=%proc.cmdline parent_process=%proc.pname
+    container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
+  priority: NOTICE
+  tags: [network, process, mitre_lateral_movement, mitre_exfiltration]
 
 # Application rules have moved to application_rules.yaml. Please look
 # there if you want to enable them by adding to
