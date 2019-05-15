@@ -4,10 +4,18 @@ IFS=''
 
 FILENAME=${1:-/etc/kubernetes/manifests/kube-apiserver.yaml}
 VARIANT=${2:-minikube}
+AUDIT_TYPE=${3:-static}
 
-if grep audit-webhook-config-file $FILENAME ; then
-    echo audit-webhook patch already applied
-    exit 0
+if [ $AUDIT_TYPE == "static" ]; then
+    if grep audit-webhook-config-file $FILENAME ; then
+	echo audit-webhook patch already applied
+	exit 0
+    fi
+else
+    if grep audit-dynamic-configuration $FILENAME ; then
+	echo audit-dynamic-configuration patch already applied
+	exit 0
+    fi
 fi
 
 TMPFILE="/tmp/kube-apiserver.yaml.patched"
@@ -26,19 +34,29 @@ do
     echo "$LINE" >> "$TMPFILE"
     case "$LINE" in
         *$APISERVER_LINE*)
-            echo "$APISERVER_PREFIX --audit-log-path=/var/lib/k8s_audit/audit.log" >> "$TMPFILE"
-            echo "$APISERVER_PREFIX --audit-policy-file=/var/lib/k8s_audit/audit-policy.yaml" >> "$TMPFILE"
-            echo "$APISERVER_PREFIX --audit-webhook-config-file=/var/lib/k8s_audit/webhook-config.yaml" >> "$TMPFILE"
-            echo "$APISERVER_PREFIX --audit-webhook-batch-max-wait=5s" >> "$TMPFILE"
+	    if [ $AUDIT_TYPE == "static" ]; then
+		echo "$APISERVER_PREFIX --audit-log-path=/var/lib/k8s_audit/audit.log" >> "$TMPFILE"
+		echo "$APISERVER_PREFIX --audit-policy-file=/var/lib/k8s_audit/audit-policy.yaml" >> "$TMPFILE"
+		echo "$APISERVER_PREFIX --audit-webhook-config-file=/var/lib/k8s_audit/webhook-config.yaml" >> "$TMPFILE"
+		echo "$APISERVER_PREFIX --audit-webhook-batch-max-wait=5s" >> "$TMPFILE"
+	    else
+		echo "$APISERVER_PREFIX --audit-dynamic-configuration" >> "$TMPFILE"
+		echo "$APISERVER_PREFIX --feature-gates=DynamicAuditing=true" >> "$TMPFILE"
+		echo "$APISERVER_PREFIX --runtime-config=auditregistration.k8s.io/v1alpha1=true" >> "$TMPFILE"
+	    fi
             ;;
         *"volumeMounts:"*)
-            echo "    - mountPath: /var/lib/k8s_audit/" >> "$TMPFILE"
-            echo "      name: data" >> "$TMPFILE"
+	    if [ $AUDIT_TYPE == "static" ]; then
+		echo "    - mountPath: /var/lib/k8s_audit/" >> "$TMPFILE"
+		echo "      name: data" >> "$TMPFILE"
+	    fi
             ;;
         *"volumes:"*)
-            echo "  - hostPath:" >> "$TMPFILE"
-            echo "      path: /var/lib/k8s_audit" >> "$TMPFILE"
-            echo "    name: data" >> "$TMPFILE"
+	    if [ $AUDIT_TYPE == "static" ]; then
+		echo "  - hostPath:" >> "$TMPFILE"
+		echo "      path: /var/lib/k8s_audit" >> "$TMPFILE"
+		echo "    name: data" >> "$TMPFILE"
+	    fi
             ;;
 
     esac
