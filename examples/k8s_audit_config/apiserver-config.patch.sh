@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -euo pipefail
+
 IFS=''
 
 FILENAME=${1:-/etc/kubernetes/manifests/kube-apiserver.yaml}
@@ -34,25 +36,28 @@ do
     echo "$LINE" >> "$TMPFILE"
     case "$LINE" in
         *$APISERVER_LINE*)
-	    if [ $AUDIT_TYPE == "static" ]; then
+	    if [[ ($AUDIT_TYPE == "static" || $AUDIT_TYPE == "dynamic+log") ]]; then
 		echo "$APISERVER_PREFIX --audit-log-path=/var/lib/k8s_audit/audit.log" >> "$TMPFILE"
 		echo "$APISERVER_PREFIX --audit-policy-file=/var/lib/k8s_audit/audit-policy.yaml" >> "$TMPFILE"
-		echo "$APISERVER_PREFIX --audit-webhook-config-file=/var/lib/k8s_audit/webhook-config.yaml" >> "$TMPFILE"
-		echo "$APISERVER_PREFIX --audit-webhook-batch-max-wait=5s" >> "$TMPFILE"
-	    else
+		if [[ $AUDIT_TYPE == "static" ]]; then
+		    echo "$APISERVER_PREFIX --audit-webhook-config-file=/var/lib/k8s_audit/webhook-config.yaml" >> "$TMPFILE"
+		    echo "$APISERVER_PREFIX --audit-webhook-batch-max-wait=5s" >> "$TMPFILE"
+		fi
+	    fi
+	    if [[ ($AUDIT_TYPE == "dynamic" || $AUDIT_TYPE == "dynamic+log") ]]; then
 		echo "$APISERVER_PREFIX --audit-dynamic-configuration" >> "$TMPFILE"
 		echo "$APISERVER_PREFIX --feature-gates=DynamicAuditing=true" >> "$TMPFILE"
 		echo "$APISERVER_PREFIX --runtime-config=auditregistration.k8s.io/v1alpha1=true" >> "$TMPFILE"
 	    fi
             ;;
         *"volumeMounts:"*)
-	    if [ $AUDIT_TYPE == "static" ]; then
+	    if [[ ($AUDIT_TYPE == "static" || $AUDIT_TYPE == "dynamic+log") ]]; then
 		echo "    - mountPath: /var/lib/k8s_audit/" >> "$TMPFILE"
 		echo "      name: data" >> "$TMPFILE"
 	    fi
             ;;
         *"volumes:"*)
-	    if [ $AUDIT_TYPE == "static" ]; then
+	    if [[ ($AUDIT_TYPE == "static" || $AUDIT_TYPE == "dynamic+log") ]]; then
 		echo "  - hostPath:" >> "$TMPFILE"
 		echo "      path: /var/lib/k8s_audit" >> "$TMPFILE"
 		echo "    name: data" >> "$TMPFILE"
