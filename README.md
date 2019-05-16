@@ -33,7 +33,7 @@ One of the questions we often get when we talk about Falco is “How does it com
 
 Documentation
 ---
-[Visit the wiki](https://github.com/falcosecurity/falco/wiki) for full documentation on falco.
+[Visit the Falco documentation website](https://falco.org/docs/) for full documentation.
 
 Join the Community
 ---
