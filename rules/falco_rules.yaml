@@ -1100,6 +1100,9 @@
 - macro: openshift_writing_conf
   condition: (proc.name=oc and fd.name startswith /etc/origin/node)
 
+- macro: etcd_manager_updating_dns
+  condition: (container and proc.name=etcd-manager and fd.name=/etc/hosts)
+
 # Add conditions to this macro (probably in a separate file,
 # overwriting this macro) to allow for specific combinations of
 # programs writing below specific directories below
@@ -1207,6 +1210,7 @@
     and not openshift_writing_conf
     and not rancher_writing_conf
     and not jboss_in_container_writing_passwd
+    and not etcd_manager_updating_dns
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc
