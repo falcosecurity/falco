@@ -176,7 +176,16 @@ void falco_ruleset::add(string &name,
 
 void falco_ruleset::enable(const string &pattern, bool enabled, uint16_t ruleset)
 {
-	regex re(pattern);
+	regex re;
+	bool match_using_regex = true;
+
+	try {
+		re.assign(pattern);
+	}
+	catch (std::regex_error e)
+	{
+		match_using_regex = false;
+	}
 
 	while (m_rulesets.size() < (size_t) ruleset + 1)
 	{
@@ -185,7 +194,16 @@ void falco_ruleset::enable(const string &pattern, bool enabled, uint16_t ruleset
 
 	for(const auto &val : m_filters)
 	{
-		if (regex_match(val.first, re))
+		bool matches;
+		if(match_using_regex)
+		{
+			matches = regex_match(val.first, re);
+		}
+		else
+		{
+			matches = (val.first.find(pattern) != string::npos);
+		}
+		if (matches)
 		{
 			if(enabled)
 			{
