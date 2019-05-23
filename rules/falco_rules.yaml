@@ -2114,7 +2114,7 @@
   condition: >
     spawned_process and container and
     ((proc.name = "nc" and (proc.args contains "-e" or proc.args contains "-c")) or
-     (proc.name = "ncat" and (proc.args contains "--sh-exec" or proc.args contains "--exec"))
+     (proc.name = "ncat" and (proc.args contains "--sh-exec" or proc.args contains "--exec" or proc.args contains "-e" or proc.args contains "-c"))
     )
   output: >
     Netcat runs inside container that allows remote code execution (user=%user.name
@@ -2151,7 +2151,7 @@
   tags: [network, process, mitre_discovery, mitre_exfiltration]
 
 - list: grep_binaries
-  items: [grep, egre, fgrep]
+  items: [grep, egrep, fgrep]
 
 - macro: grep_commands
   condition: (proc.name in (grep_binaries))
