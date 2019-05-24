@@ -1,8 +1,9 @@
 # Introduction
 
-This page describes how to get K8s Audit Logging working with Falco for either K8s 1.11, using static audit policies/sinks, or 1.13, with dynamic audit policies/sinks using AuditSink objects.
+This page describes how to get [Kubernetes Auditing](https://kubernetes.io/docs/tasks/debug-application-cluster/audit) working with Falco.
+Either using static audit backends in Kubernetes 1.11, or in Kubernetes 1.13 with dynamic sink which configures webhook backends through an AuditSink API object.
 
-## K8s 1.11 Instructions
+## Instructions for Kubernetes 1.11
 
 The main steps are:
 
@@ -56,7 +57,7 @@ $
 
 K8s audit events will then be routed to the falco daemonset within the cluster, which you can observe via `kubectl logs -f $(kubectl get pods -l app=falco-example -o jsonpath={.items[0].metadata.name})`.
 
-## K8s 1.13 Instructions
+## Instructions for Kubernetes 1.13
 
 The main steps are:
 
