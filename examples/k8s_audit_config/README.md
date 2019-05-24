@@ -3,6 +3,20 @@ Either using static audit backends in Kubernetes 1.11, or in Kubernetes 1.13 wit
 
 <!-- toc -->
 
+- [Instructions for Kubernetes 1.11](#instructions-for-kubernetes-111)
+  * [Deploy Falco to your Kubernetes cluster](#deploy-falco-to-your-kubernetes-cluster)
+  * [Define your audit policy and webhook configuration](#define-your-audit-policy-and-webhook-configuration)
+  * [Restart the API Server to enable Audit Logging](#restart-the-api-server-to-enable-audit-logging)
+  * [Observe Kubernetes audit events at falco](#observe-kubernetes-audit-events-at-falco)
+- [Instructions for Kubernetes 1.13](#instructions-for-kubernetes-113)
+  * [Deploy Falco to your Kubernetes cluster](#deploy-falco-to-your-kubernetes-cluster-1)
+  * [Restart the API Server to enable Audit Logging](#restart-the-api-server-to-enable-audit-logging-1)
+  * [Deploy AuditSink objects](#deploy-auditsink-objects)
+  * [Observe Kubernetes audit events at falco](#observe-kubernetes-audit-events-at-falco-1)
+- [Instructions for Kubernetes 1.13 with dynamic webhook and local log file](#instructions-for-kubernetes-113-with-dynamic-webhook-and-local-log-file)
+
+<!-- tocstop -->
+
 ## Instructions for Kubernetes 1.11
 
 The main steps are:
