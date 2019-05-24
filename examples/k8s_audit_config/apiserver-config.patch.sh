@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 set -euo pipefail
 
@@ -8,13 +8,13 @@ FILENAME=${1:-/etc/kubernetes/manifests/kube-apiserver.yaml}
 VARIANT=${2:-minikube}
 AUDIT_TYPE=${3:-static}
 
-if [ $AUDIT_TYPE == "static" ]; then
-    if grep audit-webhook-config-file $FILENAME ; then
+if [ "$AUDIT_TYPE" == "static" ]; then
+    if grep audit-webhook-config-file "$FILENAME" ; then
 	echo audit-webhook patch already applied
 	exit 0
     fi
 else
-    if grep audit-dynamic-configuration $FILENAME ; then
+    if grep audit-dynamic-configuration "$FILENAME" ; then
 	echo audit-dynamic-configuration patch already applied
 	exit 0
     fi
@@ -26,12 +26,12 @@ rm -f "$TMPFILE"
 APISERVER_PREFIX="    -"
 APISERVER_LINE="- kube-apiserver"
 
-if [ $VARIANT == "kops" ]; then
+if [ "$VARIANT" == "kops" ]; then
     APISERVER_PREFIX="     "
     APISERVER_LINE="/usr/local/bin/kube-apiserver"
 fi
 
-while read LINE
+while read -r LINE
 do
     echo "$LINE" >> "$TMPFILE"
     case "$LINE" in
