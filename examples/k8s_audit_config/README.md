@@ -1,29 +1,29 @@
-# Introduction
-
 This page describes how to get [Kubernetes Auditing](https://kubernetes.io/docs/tasks/debug-application-cluster/audit) working with Falco.
 Either using static audit backends in Kubernetes 1.11, or in Kubernetes 1.13 with dynamic sink which configures webhook backends through an AuditSink API object.
+
+<!-- toc -->
 
 ## Instructions for Kubernetes 1.11
 
 The main steps are:
 
-1. Deploy Falco to your K8s cluster
+1. Deploy Falco to your Kubernetes cluster
 1. Define your audit policy and webhook configuration
 1. Restart the API Server to enable Audit Logging
-1. Observe K8s audit events at falco
+1. Observe Kubernetes audit events at falco
 
-### Deploy Falco to your K8s cluster
+### Deploy Falco to your Kubernetes cluster
 
-Follow the [K8s Using Daemonset](../../integrations/k8s-using-daemonset/README.md) instructions to create a falco service account, service, configmap, and daemonset.
+Follow the [Kubernetes Using Daemonset](../../integrations/k8s-using-daemonset/README.md) instructions to create a falco service account, service, configmap, and daemonset.
 
 ### Define your audit policy and webhook configuration
 
-The files in this directory can be used to configure k8s audit logging. The relevant files are:
+The files in this directory can be used to configure Kubernetes audit logging. The relevant files are:
 
-* [audit-policy.yaml](./audit-policy.yaml): The k8s audit log configuration we used to create the rules in [k8s_audit_rules.yaml](../../rules/k8s_audit_rules.yaml).
-* [webhook-config.yaml.in](./webhook-config.yaml.in): A (templated) webhook configuration that sends audit events to an ip associated with the falco service, port 8765. It is templated in that the *actual* ip is defined in an environment variable `FALCO_SERVICE_CLUSTERIP`, which can be plugged in using a program like `envsubst`.
+* [audit-policy.yaml](./audit-policy.yaml): The Kubernetes audit log configuration we used to create the rules in [k8s_audit_rules.yaml](../../rules/k8s_audit_rules.yaml).
+* [webhook-config.yaml.in](./webhook-config.yaml.in): A (templated) webhook configuration that sends audit events to an ip associated with the falco service, port 8765. It is templated in that the *actual* IP is defined in an environment variable `FALCO_SERVICE_CLUSTERIP`, which can be plugged in using a program like `envsubst`.
 
-Run the following to fill in the template file with the ClusterIP ip address you created with the `falco-service` service above. Although services like `falco-service.default.svc.cluster.local` can not be resolved from the kube-apiserver container within the minikube vm (they're run as pods but not *really* a part of the cluster), the ClusterIPs associated with those services are routable.
+Run the following to fill in the template file with the `ClusterIP` IP address you created with the `falco-service` service above. Although services like `falco-service.default.svc.cluster.local` can not be resolved from the kube-apiserver container within the minikube vm (they're run as pods but not *really* a part of the cluster), the `ClusterIP`s associated with those services are routable.
 
 ```
 FALCO_SERVICE_CLUSTERIP=$(kubectl get service falco-service -o=jsonpath={.spec.clusterIP}) envsubst < webhook-config.yaml.in > webhook-config.yaml
@@ -35,10 +35,10 @@ A script [enable-k8s-audit.sh](./enable-k8s-audit.sh) performs the necessary ste
 
 It is run as `bash ./enable-k8s-audit.sh <variant> static`. `<variant>` can be one of the following:
 
-* "minikube"
-* "kops"
+* `minikube`
+* `kops`
 
-When running with variant="kops", you must either modify the script to specify the kops apiserver hostname or set it via the environment: `APISERVER_HOST=api.my-kops-cluster.com bash ./enable-k8s-audit.sh kops`
+When running with `variant` equal to `kops`, you must either modify the script to specify the kops apiserver hostname or set it via the environment: `APISERVER_HOST=api.my-kops-cluster.com bash ./enable-k8s-audit.sh kops`
 
 Its output looks like this:
 
@@ -53,22 +53,22 @@ webhook-config.yaml                                                             
 ***Done!
 $
 ```
-### Observe K8s audit events at falco
+### Observe Kubernetes audit events at falco
 
-K8s audit events will then be routed to the falco daemonset within the cluster, which you can observe via `kubectl logs -f $(kubectl get pods -l app=falco-example -o jsonpath={.items[0].metadata.name})`.
+Kubernetes audit events will then be routed to the falco daemonset within the cluster, which you can observe via `kubectl logs -f $(kubectl get pods -l app=falco-example -o jsonpath={.items[0].metadata.name})`.
 
 ## Instructions for Kubernetes 1.13
 
 The main steps are:
 
-1. Deploy Falco to your K8s cluster
-1. Restart the API Server to enable Audit Logging
-1. Deploy the AuditSink object for your audit policy and webhook configuration
-1. Observe K8s audit events at falco
+1. Deploy Falco to your Kubernetes cluster
+2. Restart the API Server to enable Audit Logging
+3. Deploy the AuditSink object for your audit policy and webhook configuration
+4. Observe Kubernetes audit events at falco
 
-### Deploy Falco to your K8s cluster
+### Deploy Falco to your Kubernetes cluster
 
-Follow the [K8s Using Daemonset](../../integrations/k8s-using-daemonset/README.md) instructions to create a falco service account, service, configmap, and daemonset.
+Follow the [Kubernetes Using Daemonset](../../integrations/k8s-using-daemonset/README.md) instructions to create a Falco service account, service, configmap, and daemonset.
 
 ### Restart the API Server to enable Audit Logging
 
@@ -76,10 +76,10 @@ A script [enable-k8s-audit.sh](./enable-k8s-audit.sh) performs the necessary ste
 
 It is run as `bash ./enable-k8s-audit.sh <variant> dynamic`. `<variant>` can be one of the following:
 
-* "minikube"
-* "kops"
+* `minikube`
+* `kops`
 
-When running with variant="kops", you must either modify the script to specify the kops apiserver hostname or set it via the environment: `APISERVER_HOST=api.my-kops-cluster.com bash ./enable-k8s-audit.sh kops`
+When running with `variant` equal to `kops`, you must either modify the script to specify the kops apiserver hostname or set it via the environment: `APISERVER_HOST=api.my-kops-cluster.com bash ./enable-k8s-audit.sh kops`
 
 Its output looks like this:
 
@@ -94,21 +94,21 @@ $
 
 ### Deploy AuditSink objects
 
-[audit-sink.yaml.in](./audit-sink.yaml.in), in this directory, is a template audit sink configuration that defines the dynamic audit policy and webhook to route k8s audit events to Falco.
+[audit-sink.yaml.in](./audit-sink.yaml.in), in this directory, is a template audit sink configuration that defines the dynamic audit policy and webhook to route Kubernetes audit events to Falco.
 
-Run the following to fill in the template file with the ClusterIP ip address you created with the `falco-service` service above. Although services like `falco-service.default.svc.cluster.local` can not be resolved from the kube-apiserver container within the minikube vm (they're run as pods but not *really* a part of the cluster), the ClusterIPs associated with those services are routable.
+Run the following to fill in the template file with the `ClusterIP` IP address you created with the `falco-service` service above. Although services like `falco-service.default.svc.cluster.local` can not be resolved from the kube-apiserver container within the minikube vm (they're run as pods but not *really* a part of the cluster), the ClusterIPs associated with those services are routable.
 
 ```
 FALCO_SERVICE_CLUSTERIP=$(kubectl get service falco-service -o=jsonpath={.spec.clusterIP}) envsubst < audit-sink.yaml.in > audit-sink.yaml
 ```
 
-### Observe K8s audit events at falco
+### Observe Kubernetes audit events at falco
 
-K8s audit events will then be routed to the falco daemonset within the cluster, which you can observe via `kubectl logs -f $(kubectl get pods -l app=falco-example -o jsonpath={.items[0].metadata.name})`.
+Kubernetes audit events will then be routed to the falco daemonset within the cluster, which you can observe via `kubectl logs -f $(kubectl get pods -l app=falco-example -o jsonpath={.items[0].metadata.name})`.
 
-## K8s 1.13 + Local Log File Instructions
+## Instructions for Kubernetes 1.13 with dynamic webhook and local log file
 
-If you want to use a mix of AuditSink for remote audit events as well as a local audit log file, you can run enable-k8s-audit.sh with the "dynamic+log" argument e.g. `bash ./enable-k8s-audit.sh <variant> dynamic+log`. This will enable dynamic audit logs as well as a static audit log to a local file. Its output looks like this:
+If you want to use a mix of `AuditSink` for remote audit events as well as a local audit log file, you can run `enable-k8s-audit.sh` with the `"dynamic+log"` argument e.g. `bash ./enable-k8s-audit.sh <variant> dynamic+log`. This will enable dynamic audit logs as well as a static audit log to a local file. Its output looks like this:
 
 ```
 ***Copying apiserver config patch script to apiserver...
