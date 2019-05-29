@@ -69,6 +69,9 @@
 - macro: spawned_process
   condition: evt.type = execve and evt.dir=<
 
+- macro: create_symlink
+  condition: evt.type in (symlink, symlinkat) and evt.dir=<
+
 # File categories
 - macro: bin_dir
   condition: fd.directory in (/bin, /sbin, /usr/bin, /usr/sbin)
@@ -283,6 +286,9 @@
 
 - list: sensitive_file_names
   items: [/etc/shadow, /etc/sudoers, /etc/pam.conf, /etc/security/pwquality.conf]
+
+- list: sensitive_directory_names
+  items: [/, /etc, /etc/, /root, /root/]
 
 - macro: sensitive_files
   condition: >
@@ -2291,6 +2297,16 @@
   priority: NOTICE
   tags: [network, process, mitre_lateral_movement, mitre_exfiltration]
 
+
+- rule: create symlink over sensitive files
+  desc: Detect symlink created over sensitive files
+  condition: >
+    create_symlink and
+    (evt.arg.target in (sensitive_file_names) or evt.arg.target in (sensitive_directory_names))
+  output: >
+    Symlinks created over senstivie files (user=%user.name command=%proc.cmdline target=%evt.arg.target linkpath=%evt.arg.linkpath parent_process=%proc.pname)
+  priority: NOTICE
+  tags: [file, mitre_exfiltration]
 # Application rules have moved to application_rules.yaml. Please look
 # there if you want to enable them by adding to
 # falco_rules.local.yaml.
