@@ -643,7 +643,8 @@
 - macro: run_by_google_accounts_daemon
   condition: >
     (proc.aname[1] startswith google_accounts or
-     proc.aname[2] startswith google_accounts)
+     proc.aname[2] startswith google_accounts or
+     proc.aname[3] startswith google_accounts)
 
 # Chef is similar.
 - macro: run_by_chef
@@ -1343,6 +1344,7 @@
     and not proc.cmdline contains /usr/bin/mandb
     and not run_by_qualys
     and not run_by_chef
+    and not run_by_google_accounts_daemon
     and not user_read_sensitive_file_conditions
     and not perl_running_plesk
     and not perl_running_updmap
@@ -2122,7 +2124,7 @@
   priority: WARNING
   tags: [network, process, mitre_execution]
 
-- rule: Lauch Suspicious Network Tool in Container
+- rule: Launch Suspicious Network Tool in Container
   desc: Detect network tools launched inside container
   condition: >
     spawned_process and container and network_tool_procs
