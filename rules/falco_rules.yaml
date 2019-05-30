@@ -886,6 +886,9 @@
 - list: known_istio_files
   items: [/healthready, /healthliveness]
 
+- macro: calico_writing_state
+  condition: (proc.name=kube-controller and fd.name startswith /status.json and k8s.pod.name startswith calico)
+
 - list: repository_files
   items: [sources.list]
 
@@ -1304,6 +1307,7 @@
     and not kubectl_writing_state
     and not cassandra_writing_state
     and not galley_writing_state
+    and not calico_writing_state
     and not known_root_conditions
     and not user_known_write_root_conditions
   output: "File below / or /root opened for writing (user=%user.name command=%proc.cmdline parent=%proc.pname file=%fd.name program=%proc.name)"
