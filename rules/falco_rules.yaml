@@ -2316,7 +2316,7 @@
   tags: [network, process, mitre_lateral_movement, mitre_exfiltration]
 
 
-- rule: create symlink over sensitive files
+- rule: Create Symlink Over Sensitive Files
   desc: Detect symlink created over sensitive files
   condition: >
     create_symlink and
