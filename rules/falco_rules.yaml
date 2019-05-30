@@ -879,6 +879,13 @@
 - macro: cassandra_writing_state
   condition: (java_running_cassandra and fd.directory=/root/.cassandra)
 
+# Istio
+- macro: galley_writing_state
+  condition: (proc.name=galley and fd.name in (known_istio_files))
+
+- list: known_istio_files
+  items: [/healthready, /healthliveness]
+
 - list: repository_files
   items: [sources.list]
 
@@ -1296,6 +1303,7 @@
     and not chef_writing_conf
     and not kubectl_writing_state
     and not cassandra_writing_state
+    and not galley_writing_state
     and not known_root_conditions
     and not user_known_write_root_conditions
   output: "File below / or /root opened for writing (user=%user.name command=%proc.cmdline parent=%proc.pname file=%fd.name program=%proc.name)"
