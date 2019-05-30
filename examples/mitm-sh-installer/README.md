@@ -1,4 +1,4 @@
-#Demo of falco with man-in-the-middle attacks on installation scripts
+# Demo of falco with man-in-the-middle attacks on installation scripts
 
 For context, see the corresponding [blog post](http://sysdig.com/blog/making-curl-to-bash-safer) for this demo.
 
