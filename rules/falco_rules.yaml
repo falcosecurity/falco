@@ -1116,6 +1116,9 @@
 - macro: openshift_writing_conf
   condition: (proc.name=oc and fd.name startswith /etc/origin/node)
 
+- macro: keepalived_writing_conf
+  condition: (proc.name=keepalived and fd.name=/etc/keepalived/keepalived.conf)
+
 - macro: etcd_manager_updating_dns
   condition: (container and proc.name=etcd-manager and fd.name=/etc/hosts)
 
@@ -1224,6 +1227,7 @@
     and not calico_writing_conf
     and not prometheus_conf_writing_conf
     and not openshift_writing_conf
+    and not keepalived_writing_conf
     and not rancher_writing_conf
     and not jboss_in_container_writing_passwd
     and not etcd_manager_updating_dns
