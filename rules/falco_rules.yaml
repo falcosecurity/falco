@@ -815,7 +815,7 @@
   condition: (veritas_progs and (fd.name startswith /etc/vx or fd.name startswith /etc/opt/VRTS or fd.name startswith /etc/vom))
 
 - macro: nginx_writing_conf
-  condition: (proc.name in (nginx,nginx-ingress-c) and fd.name startswith /etc/nginx)
+  condition: (proc.name in (nginx,nginx-ingress-c,nginx-ingress) and fd.name startswith /etc/nginx)
 
 - macro: nginx_writing_certs
   condition: >
@@ -1114,7 +1114,7 @@
   condition: (proc.name=prometheus-conf and fd.name startswith /etc/prometheus/config_out)
 
 - macro: openshift_writing_conf
-  condition: (proc.name=oc and fd.name startswith /etc/origin/node)
+  condition: (proc.name=oc and (fd.name startswith /etc/origin/node or fd.name startswith /etc/sysconfig/origin-node))
 
 - macro: keepalived_writing_conf
   condition: (proc.name=keepalived and fd.name=/etc/keepalived/keepalived.conf)
@@ -1464,7 +1464,7 @@
     and not proc.name in (docker_binaries, k8s_binaries, lxd_binaries, sysdigcloud_binaries,
                           sysdig, nsenter, calico, oci-umount)
     and not proc.name in (user_known_change_thread_namespace_binaries)
-    and not proc.name startswith "runc:"
+    and not proc.name startswith "runc"
     and not proc.cmdline startswith "containerd"
     and not proc.pname in (sysdigcloud_binaries)
     and not python_running_sdchecks
@@ -2007,6 +2007,7 @@
     and not somebody_becoming_themself
     and not proc.name in (known_setuid_binaries, userexec_binaries, mail_binaries, docker_binaries,
                           nomachine_binaries)
+    and not proc.name startswith "runc:"
     and not java_running_sdjagent
     and not nrpe_becoming_nagios
     and not user_known_non_sudo_setuid_conditions
