@@ -33,6 +33,7 @@ One of the questions we often get when we talk about Falco is “How does Falco 
 
 Documentation
 ---
+
 See [Falco Documentation](https://falco.org/docs/) to quickly get started using Falco.
 
 Join the Community
