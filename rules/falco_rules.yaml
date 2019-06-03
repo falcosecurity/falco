@@ -1041,7 +1041,7 @@
 
 - macro: rancher_writing_conf
   condition: (container.image.repository in (rancher_images)
-              and proc.name in (lib-controller,rancher-dns,healthcheck,rancher-metadat)
+              and proc.name in (lb-controller,rancher-dns,healthcheck,rancher-metadat)
               and (fd.name startswith "/etc/haproxy" or
                    fd.name startswith "/etc/rancher-dns")
              )
