@@ -61,6 +61,10 @@ public:
 	// enable_tags.
 	void enable_tags(const std::set<std::string> &tags, bool enabled, uint16_t ruleset = 0);
 
+
+	// Return the number of falco rules enabled for the provided ruleset
+	uint64_t num_rules_for_ruleset(uint16_t ruleset = 0);
+
 	// Match all filters against the provided event.
 	bool run(gen_event *evt, uint32_t etag, uint16_t ruleset = 0);
 
@@ -89,11 +93,15 @@ private:
 		void add_filter(filter_wrapper *wrap);
 		void remove_filter(filter_wrapper *wrap);
 
+		uint64_t num_filters();
+
 		bool run(gen_event *evt, uint32_t etag);
 
 		void event_tags_for_ruleset(std::vector<bool> &event_tags);
 
 	private:
+		uint64_t m_num_filters;
+
 		// Maps from event tag to a list of filters. There can
 		// be multiple filters for a given event tag.
 		std::vector<std::list<filter_wrapper *> *> m_filter_by_event_tag;

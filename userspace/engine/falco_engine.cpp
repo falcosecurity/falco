@@ -251,6 +251,14 @@ uint16_t falco_engine::find_ruleset_id(const std::string &ruleset)
 	return it->second;
 }
 
+uint64_t falco_engine::num_rules_for_ruleset(const std::string &ruleset)
+{
+	uint16_t ruleset_id = find_ruleset_id(ruleset);
+
+	return m_sinsp_rules->num_rules_for_ruleset(ruleset_id) +
+		m_k8s_audit_rules->num_rules_for_ruleset(ruleset_id);
+}
+
 void falco_engine::evttypes_for_ruleset(std::vector<bool> &evttypes, const std::string &ruleset)
 {
 	uint16_t ruleset_id = find_ruleset_id(ruleset);

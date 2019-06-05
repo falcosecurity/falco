@@ -107,6 +107,11 @@ public:
 	uint16_t find_ruleset_id(const std::string &ruleset);
 
 	//
+	// Return the number of falco rules enabled for the provided ruleset
+	//
+	uint64_t num_rules_for_ruleset(const std::string &ruleset);
+
+	//
 	// Print details on the given rule. If rule is NULL, print
 	// details on all rules.
 	//
