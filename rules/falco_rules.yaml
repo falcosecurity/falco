@@ -879,6 +879,16 @@
 - macro: cassandra_writing_state
   condition: (java_running_cassandra and fd.directory=/root/.cassandra)
 
+# Istio
+- macro: galley_writing_state
+  condition: (proc.name=galley and fd.name in (known_istio_files))
+
+- list: known_istio_files
+  items: [/healthready, /healthliveness]
+
+- macro: calico_writing_state
+  condition: (proc.name=kube-controller and fd.name startswith /status.json and k8s.pod.name startswith calico)
+
 - list: repository_files
   items: [sources.list]
 
@@ -1106,6 +1116,9 @@
 - macro: openshift_writing_conf
   condition: (proc.name=oc and fd.name startswith /etc/origin/node)
 
+- macro: keepalived_writing_conf
+  condition: (proc.name=keepalived and fd.name=/etc/keepalived/keepalived.conf)
+
 - macro: etcd_manager_updating_dns
   condition: (container and proc.name=etcd-manager and fd.name=/etc/hosts)
 
@@ -1214,6 +1227,7 @@
     and not calico_writing_conf
     and not prometheus_conf_writing_conf
     and not openshift_writing_conf
+    and not keepalived_writing_conf
     and not rancher_writing_conf
     and not jboss_in_container_writing_passwd
     and not etcd_manager_updating_dns
@@ -1296,6 +1310,8 @@
     and not chef_writing_conf
     and not kubectl_writing_state
     and not cassandra_writing_state
+    and not galley_writing_state
+    and not calico_writing_state
     and not known_root_conditions
     and not user_known_write_root_conditions
   output: "File below / or /root opened for writing (user=%user.name command=%proc.cmdline parent=%proc.pname file=%fd.name program=%proc.name)"
@@ -1449,6 +1465,7 @@
                           sysdig, nsenter, calico, oci-umount)
     and not proc.name in (user_known_change_thread_namespace_binaries)
     and not proc.name startswith "runc:"
+    and not proc.cmdline startswith "containerd"
     and not proc.pname in (sysdigcloud_binaries)
     and not python_running_sdchecks
     and not java_running_sdjagent
