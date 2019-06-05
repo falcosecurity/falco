@@ -528,7 +528,7 @@
 # compatiblity with some widely used rules files.
 # Begin Deprecated
 - macro: parent_ansible_running_python
-  condition: (proc.pname in (python, pypy) and proc.pcmdline contains ansible)
+  condition: (proc.pname in (python, pypy, python3) and proc.pcmdline contains ansible)
 
 - macro: parent_bro_running_python
   condition: (proc.pname=python and proc.cmdline contains /usr/share/broctl)
@@ -610,7 +610,7 @@
 ## End Deprecated
 
 - macro: ansible_running_python
-  condition: (proc.name in (python, pypy) and proc.cmdline contains ansible)
+  condition: (proc.name in (python, pypy, python3) and proc.cmdline contains ansible)
 
 - macro: python_running_chef
   condition: (proc.name=python and (proc.cmdline contains yum-dump.py or proc.cmdline="python /usr/bin/chef-monitor.py"))
