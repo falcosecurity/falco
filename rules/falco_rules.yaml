@@ -69,6 +69,9 @@
 - macro: spawned_process
   condition: evt.type = execve and evt.dir=<
 
+- macro: create_symlink
+  condition: evt.type in (symlink, symlinkat) and evt.dir=<
+
 # File categories
 - macro: bin_dir
   condition: fd.directory in (/bin, /sbin, /usr/bin, /usr/sbin)
@@ -283,6 +286,9 @@
 
 - list: sensitive_file_names
   items: [/etc/shadow, /etc/sudoers, /etc/pam.conf, /etc/security/pwquality.conf]
+
+- list: sensitive_directory_names
+  items: [/, /etc, /etc/, /root, /root/]
 
 - macro: sensitive_files
   condition: >
@@ -643,7 +649,8 @@
 - macro: run_by_google_accounts_daemon
   condition: >
     (proc.aname[1] startswith google_accounts or
-     proc.aname[2] startswith google_accounts)
+     proc.aname[2] startswith google_accounts or
+     proc.aname[3] startswith google_accounts)
 
 # Chef is similar.
 - macro: run_by_chef
@@ -1099,6 +1106,9 @@
 - macro: openshift_writing_conf
   condition: (proc.name=oc and fd.name startswith /etc/origin/node)
 
+- macro: etcd_manager_updating_dns
+  condition: (container and proc.name=etcd-manager and fd.name=/etc/hosts)
+
 # Add conditions to this macro (probably in a separate file,
 # overwriting this macro) to allow for specific combinations of
 # programs writing below specific directories below
@@ -1206,6 +1216,7 @@
     and not openshift_writing_conf
     and not rancher_writing_conf
     and not jboss_in_container_writing_passwd
+    and not etcd_manager_updating_dns
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc
@@ -1343,6 +1354,7 @@
     and not proc.cmdline contains /usr/bin/mandb
     and not run_by_qualys
     and not run_by_chef
+    and not run_by_google_accounts_daemon
     and not user_read_sensitive_file_conditions
     and not perl_running_plesk
     and not perl_running_updmap
@@ -2122,7 +2134,7 @@
   priority: WARNING
   tags: [network, process, mitre_execution]
 
-- rule: Lauch Suspicious Network Tool in Container
+- rule: Launch Suspicious Network Tool in Container
   desc: Detect network tools launched inside container
   condition: >
     spawned_process and container and network_tool_procs
@@ -2285,6 +2297,16 @@
   priority: NOTICE
   tags: [network, process, mitre_lateral_movement, mitre_exfiltration]
 
+
+- rule: create symlink over sensitive files
+  desc: Detect symlink created over sensitive files
+  condition: >
+    create_symlink and
+    (evt.arg.target in (sensitive_file_names) or evt.arg.target in (sensitive_directory_names))
+  output: >
+    Symlinks created over senstivie files (user=%user.name command=%proc.cmdline target=%evt.arg.target linkpath=%evt.arg.linkpath parent_process=%proc.pname)
+  priority: NOTICE
+  tags: [file, mitre_exfiltration]
 # Application rules have moved to application_rules.yaml. Please look
 # there if you want to enable them by adding to
 # falco_rules.local.yaml.
