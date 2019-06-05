@@ -815,7 +815,7 @@
   condition: (veritas_progs and (fd.name startswith /etc/vx or fd.name startswith /etc/opt/VRTS or fd.name startswith /etc/vom))
 
 - macro: nginx_writing_conf
-  condition: (proc.name in (nginx,nginx-ingress-c) and fd.name startswith /etc/nginx)
+  condition: (proc.name in (nginx,nginx-ingress-c,nginx-ingress) and fd.name startswith /etc/nginx)
 
 - macro: nginx_writing_certs
   condition: >
@@ -1041,7 +1041,7 @@
 
 - macro: rancher_writing_conf
   condition: (container.image.repository in (rancher_images)
-              and proc.name in (lib-controller,rancher-dns,healthcheck,rancher-metadat)
+              and proc.name in (lb-controller,rancher-dns,healthcheck,rancher-metadat)
               and (fd.name startswith "/etc/haproxy" or
                    fd.name startswith "/etc/rancher-dns")
              )
@@ -1464,7 +1464,7 @@
     and not proc.name in (docker_binaries, k8s_binaries, lxd_binaries, sysdigcloud_binaries,
                           sysdig, nsenter, calico, oci-umount)
     and not proc.name in (user_known_change_thread_namespace_binaries)
-    and not proc.name startswith "runc:"
+    and not proc.name startswith "runc"
     and not proc.cmdline startswith "containerd"
     and not proc.pname in (sysdigcloud_binaries)
     and not python_running_sdchecks
@@ -2007,6 +2007,7 @@
     and not somebody_becoming_themself
     and not proc.name in (known_setuid_binaries, userexec_binaries, mail_binaries, docker_binaries,
                           nomachine_binaries)
+    and not proc.name startswith "runc:"
     and not java_running_sdjagent
     and not nrpe_becoming_nagios
     and not user_known_non_sudo_setuid_conditions
@@ -2316,7 +2317,7 @@
   tags: [network, process, mitre_lateral_movement, mitre_exfiltration]
 
 
-- rule: create symlink over sensitive files
+- rule: Create Symlink Over Sensitive Files
   desc: Detect symlink created over sensitive files
   condition: >
     create_symlink and
