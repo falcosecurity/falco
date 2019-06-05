@@ -1,0 +1,4 @@
+jobs:
+- job: hello
+  steps:
+  - bash: echo "Just testing"
