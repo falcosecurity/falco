@@ -1,8 +1,8 @@
 <!--  Thanks for sending a pull request!  Here are some tips for you:
 
-1. If this is your first time, please read our contributor guidelines in the CONTRIBUTING.md file and learn how to compile Falco from source here: https://falco.org/docs/source/
+1. If this is your first time, please read our contributor guidelines in the [CONTRIBUTING.md](CONTRIBUTING.md) file and learn how to compile Falco from source [here](https://falco.org/docs/source).
 2. Please label this pull request according to what type of issue you are addressing.
-5. Please add a Release note!
+5. Please add a release note!
 6. If the PR is unfinished while opening it specify a wip in the title before the actual title, for example, "wip: my awesome feature"
 -->
 
@@ -15,13 +15,12 @@
 > /kind documentation
 > /kind failing-test
 > /kind feature
-> /kind flake
+> /kind flaky-test
 
 > If contributing rules or changes to rules, please make sure to uncomment the appropriate kind
-based on if the rule is new or a change to an existing rule
 
-> /kind rule-updated
-> /kind rule-created
+> /kind rule/update
+> /kind rule/create
 
 **Any specific area of the project related to this PR?**
 
@@ -35,9 +34,9 @@ based on if the rule is new or a change to an existing rule
 
 **Which issue(s) this PR fixes**:
 <!--
-*Automatically closes linked issue when PR is merged.
+Automatically closes linked issue when PR is merged.
 Usage: `Fixes #<issue number>`, or `Fixes (paste link of issue)`.
-_If PR is about `failing-tests or flakes`, please post the related issues/tests in a comment and do not use `Fixes`_*
+If PR is `kind/failing-tests` or `kind/flaky-test`, please post the related issues/tests in a comment and do not use `Fixes`.
 -->
 Fixes #
 
@@ -47,7 +46,8 @@ Fixes #
 <!--
 If no, just write "NONE" in the release-note block below.
 If yes, a release note is required:
-Enter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string "action required".
+Enter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string "action required:".
+For example, `action required: change the API interface of the rule engine`.
 -->
 ```release-note
 
