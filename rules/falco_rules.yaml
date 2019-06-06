@@ -815,7 +815,7 @@
   condition: (veritas_progs and (fd.name startswith /etc/vx or fd.name startswith /etc/opt/VRTS or fd.name startswith /etc/vom))
 
 - macro: nginx_writing_conf
-  condition: (proc.name in (nginx,nginx-ingress-c,nginx-ingress) and fd.name startswith /etc/nginx)
+  condition: (proc.name in (nginx,nginx-ingress-c,nginx-ingress) and (fd.name startswith /etc/nginx or fd.name startswith /etc/ingress-controller))
 
 - macro: nginx_writing_certs
   condition: >
@@ -1040,11 +1040,13 @@
               and fd.name startswith "/etc/dd-agent")
 
 - macro: rancher_writing_conf
-  condition: (container.image.repository in (rancher_images)
-              and proc.name in (lb-controller,rancher-dns,healthcheck,rancher-metadat)
-              and (fd.name startswith "/etc/haproxy" or
-                   fd.name startswith "/etc/rancher-dns")
-             )
+  condition: (((proc.name=healthcheck and container.image.repository contains "rancher/healthcheck") or
+               (proc.name=lb-controller and container.image.repository contains "rancher/lb-service-haproxy") or
+               (proc.name=rancher-dns and container.image.repository contains "rancher/dns")) and 
+              (fd.name startswith "/etc/haproxy" or fd.name startswith "/etc/rancher-dns"))
+
+- macro: rancher_writing_root
+  condition: (proc.name=rancher-metadat and container.image.repository contains "rancher/metadata" and fd.name startswith "/answers.json")
 
 - macro: jboss_in_container_writing_passwd
   condition: >
@@ -1312,6 +1314,7 @@
     and not cassandra_writing_state
     and not galley_writing_state
     and not calico_writing_state
+    and not rancher_writing_root
     and not known_root_conditions
     and not user_known_write_root_conditions
   output: "File below / or /root opened for writing (user=%user.name command=%proc.cmdline parent=%proc.pname file=%fd.name program=%proc.name)"
