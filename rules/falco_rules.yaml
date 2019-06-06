@@ -815,7 +815,7 @@
   condition: (veritas_progs and (fd.name startswith /etc/vx or fd.name startswith /etc/opt/VRTS or fd.name startswith /etc/vom))
 
 - macro: nginx_writing_conf
-  condition: (proc.name in (nginx,nginx-ingress-c,nginx-ingress) and fd.name startswith /etc/nginx)
+  condition: (proc.name in (nginx,nginx-ingress-c,nginx-ingress) and (fd.name startswith /etc/nginx or fd.name startswith /etc/ingress-controller))
 
 - macro: nginx_writing_certs
   condition: >
