@@ -1039,9 +1039,9 @@
                proc.cmdline startswith "agent.py /opt/datadog-agent")
               and fd.name startswith "/etc/dd-agent")
 
-# TODO: have a better way to identify the image repo (public vs internal)
 - macro: rancher_writing_conf
-  condition: (proc.name in (lb-controller,rancher-dns,rancher-metadat)
+  condition: ((proc.name in (lb-controller,rancher-dns,rancher-metadat) or
+               (proc.name=healthcheck and container.image.repository contains "rancher/healthcheck"))
               and (fd.name startswith "/etc/haproxy" or
                    fd.name startswith "/etc/rancher-dns")
              )
