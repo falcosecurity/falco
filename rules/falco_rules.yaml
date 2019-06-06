@@ -781,7 +781,10 @@
   condition: (proc.cmdline startswith "java LiveUpdate" and fd.name in (/etc/liveupdate.conf, /etc/Product.Catalog.JavaLiveUpdate))
 
 - macro: rancher_agent
-  condition: (proc.name = agent and container.image.repository = rancher/agent)
+  condition: (proc.name=agent and container.image.repository contains "rancher/agent")
+
+- macro: rancher_network_manager
+  condition: (proc.name=rancher-bridge and container.image.repository contains "rancher/network-manager")
 
 - macro: sosreport_writing_files
   condition: >
@@ -1040,13 +1043,16 @@
               and fd.name startswith "/etc/dd-agent")
 
 - macro: rancher_writing_conf
-  condition: (((proc.name=healthcheck and container.image.repository contains "rancher/healthcheck") or
-               (proc.name=lb-controller and container.image.repository contains "rancher/lb-service-haproxy") or
-               (proc.name=rancher-dns and container.image.repository contains "rancher/dns")) and 
+  condition: ((proc.name in (healthcheck, lb-controller, rancher-dns)) and
+              (container.image.repository contains "rancher/healthcheck" or
+               container.image.repository contains "rancher/lb-service-haproxy" or
+               container.image.repository contains "rancher/dns") and
               (fd.name startswith "/etc/haproxy" or fd.name startswith "/etc/rancher-dns"))
 
 - macro: rancher_writing_root
-  condition: (proc.name=rancher-metadat and container.image.repository contains "rancher/metadata" and fd.name startswith "/answers.json")
+  condition: (proc.name=rancher-metadat and
+              (container.image.repository contains "rancher/metadata" or container.image.repository contains "rancher/lb-service-haproxy") and
+              fd.name startswith "/answers.json")
 
 - macro: jboss_in_container_writing_passwd
   condition: >
@@ -1474,6 +1480,7 @@
     and not java_running_sdjagent
     and not kubelet_running_loopback
     and not rancher_agent
+    and not rancher_network_manager
   output: >
     Namespace change (setns) by unexpected program (user=%user.name command=%proc.cmdline
     parent=%proc.pname %container.info)
