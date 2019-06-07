@@ -41,6 +41,7 @@ falco_ruleset::~falco_ruleset()
 }
 
 falco_ruleset::ruleset_filters::ruleset_filters()
+	: m_num_filters(0)
 {
 }
 
@@ -58,10 +59,14 @@ falco_ruleset::ruleset_filters::~ruleset_filters()
 
 void falco_ruleset::ruleset_filters::add_filter(filter_wrapper *wrap)
 {
+
+	bool added = false;
+
 	for(uint32_t etag = 0; etag < wrap->event_tags.size(); etag++)
 	{
 		if(wrap->event_tags[etag])
 		{
+			added = true;
 			if(m_filter_by_event_tag.size() <= etag)
 			{
 				m_filter_by_event_tag.resize(etag+1);
@@ -75,10 +80,17 @@ void falco_ruleset::ruleset_filters::add_filter(filter_wrapper *wrap)
 			m_filter_by_event_tag[etag]->push_back(wrap);
 		}
 	}
+
+	if(added)
+	{
+		m_num_filters++;
+	}
 }
 
 void falco_ruleset::ruleset_filters::remove_filter(filter_wrapper *wrap)
 {
+	bool removed = false;
+
 	for(uint32_t etag = 0; etag < wrap->event_tags.size(); etag++)
 	{
 		if(wrap->event_tags[etag])
@@ -88,22 +100,38 @@ void falco_ruleset::ruleset_filters::remove_filter(filter_wrapper *wrap)
 				list<filter_wrapper *> *l = m_filter_by_event_tag[etag];
 				if(l)
 				{
-					l->erase(remove(l->begin(),
-							l->end(),
-							wrap),
-						 l->end());
+					auto it = remove(l->begin(),
+							 l->end(),
+							 wrap);
 
-					if(l->size() == 0)
+					if(it != l->end())
 					{
-						delete l;
-						m_filter_by_event_tag[etag] = NULL;
+						removed = true;
+
+						l->erase(it,
+							l->end());
+
+						if(l->size() == 0)
+						{
+							delete l;
+							m_filter_by_event_tag[etag] = NULL;
+						}
 					}
 				}
 			}
 		}
 	}
+
+	if(removed)
+	{
+		m_num_filters--;
+	}
 }
 
+uint64_t falco_ruleset::ruleset_filters::num_filters()
+{
+	return m_num_filters;
+}
 
 bool falco_ruleset::ruleset_filters::run(gen_event *evt, uint32_t etag)
 {
@@ -176,7 +204,16 @@ void falco_ruleset::add(string &name,
 
 void falco_ruleset::enable(const string &pattern, bool enabled, uint16_t ruleset)
 {
-	regex re(pattern);
+	regex re;
+	bool match_using_regex = true;
+
+	try {
+		re.assign(pattern);
+	}
+	catch (std::regex_error e)
+	{
+		match_using_regex = false;
+	}
 
 	while (m_rulesets.size() < (size_t) ruleset + 1)
 	{
@@ -185,7 +222,16 @@ void falco_ruleset::enable(const string &pattern, bool enabled, uint16_t ruleset
 
 	for(const auto &val : m_filters)
 	{
-		if (regex_match(val.first, re))
+		bool matches;
+		if(match_using_regex)
+		{
+			matches = regex_match(val.first, re);
+		}
+		else
+		{
+			matches = (val.first.find(pattern) != string::npos);
+		}
+		if (matches)
 		{
 			if(enabled)
 			{
@@ -220,6 +266,16 @@ void falco_ruleset::enable_tags(const set<string> &tags, bool enabled, uint16_t 
 			}
 		}
 	}
+}
+
+uint64_t falco_ruleset::num_rules_for_ruleset(uint16_t ruleset)
+{
+	while (m_rulesets.size() < (size_t) ruleset + 1)
+	{
+		m_rulesets.push_back(new ruleset_filters());
+	}
+
+	return m_rulesets[ruleset]->num_filters();
 }
 
 bool falco_ruleset::run(gen_event *evt, uint32_t etag, uint16_t ruleset)
