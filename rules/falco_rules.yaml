@@ -1054,6 +1054,11 @@
               (container.image.repository contains "rancher/metadata" or container.image.repository contains "rancher/lb-service-haproxy") and
               fd.name startswith "/answers.json")
 
+- macro: checkpoint_writing_state
+  condition: (proc.name=checkpoint and
+              container.image.repository contains "coreos/pod-checkpointer" and
+              fd.name startswith "/etc/kubernetes")
+
 - macro: jboss_in_container_writing_passwd
   condition: >
     ((proc.cmdline="run-java.sh /opt/jboss/container/java/run/run-java.sh"
@@ -1237,6 +1242,7 @@
     and not openshift_writing_conf
     and not keepalived_writing_conf
     and not rancher_writing_conf
+    and not checkpoint_writing_state
     and not jboss_in_container_writing_passwd
     and not etcd_manager_updating_dns
 
