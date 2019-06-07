@@ -30,6 +30,7 @@ RUN apt-get update \
 	llvm-7 \
 	netcat \
 	xz-utils \
+	libssl-dev \
  && rm -rf /var/lib/apt/lists/*
 
 # gcc 6 is no longer included in debian unstable, but we need it to
