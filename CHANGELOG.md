@@ -2,7 +2,7 @@
 
 This file documents all notable changes to Falco. The release numbering uses [semantic versioning](http://semver.org).
 
-## v0.15.0
+## v0.15.1
 
 Released 2019-06-07
 
