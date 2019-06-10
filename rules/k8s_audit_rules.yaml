@@ -117,7 +117,7 @@
 - rule: Create Privileged Pod
   desc: >
     Detect an attempt to start a pod with a privileged container
-  condition: kevt and pod and kcreate and ka.req.container.privileged=true and not ka.req.container.image.repository in (privileged_images)
+  condition: kevt and pod and kcreate and ka.req.container.privileged=true and not ka.req.container.image.repository in (falco_privileged_images)
   output: Pod started with privileged container (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image)
   priority: WARNING
   source: k8s_audit
@@ -135,7 +135,7 @@
   desc: >
     Detect an attempt to start a pod with a volume from a sensitive host directory (i.e. /proc).
     Exceptions are made for known trusted images.
-  condition: kevt and pod and kcreate and sensitive_vol_mount and not ka.req.container.image.repository in (sensitive_mount_images)
+  condition: kevt and pod and kcreate and sensitive_vol_mount and not ka.req.container.image.repository in (falco_sensitive_mount_images)
   output: Pod started with sensitive mount (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image mounts=%jevt.value[/requestObject/spec/volumes])
   priority: WARNING
   source: k8s_audit
@@ -144,7 +144,7 @@
 # Corresponds to K8s CIS Benchmark 1.7.4
 - rule: Create HostNetwork Pod
   desc: Detect an attempt to start a pod using the host network.
-  condition: kevt and pod and kcreate and ka.req.container.host_network=true and not ka.req.container.image.repository in (hostnetwork_images)
+  condition: kevt and pod and kcreate and ka.req.container.host_network=true and not ka.req.container.image.repository in (falco_hostnetwork_images)
   output: Pod started using host network (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image)
   priority: WARNING
   source: k8s_audit
