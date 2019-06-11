@@ -4,6 +4,8 @@
   - [Code of Conduct](#code-of-conduct)
   - [Issues](#issues)
     - [Triage issues](#triage-issues)
+      - [More about labels](#more-about-labels)
+    - [Slack](#slack)
   - [Pull Requests](#pull-requests)
   - [Developer Certificate Of Origin](#developer-certificate-of-origin)
 
@@ -26,11 +28,11 @@ The best way to get **involved** in the project is through issues, you can help 
 
 - Issues triaging: participating in the discussion and adding details to open issues is always a good thing,
 sometimes issues need to be verified, you could be the one writing a test case to fix a bug!
-- Helping to resolve the issue: You can help in getting it fixed in many ways, more often by opening a pull request.
+- Helping to resolve the issue: you can help in getting it fixed in many ways, more often by opening a pull request.
 
 ### Triage issues
 
-We need help in categorizing issues. Thus any help is welcomed!
+We need help in categorizing issues. Thus any help is welcome!
 
 When you triage an issue, you:
 
@@ -38,13 +40,43 @@ When you triage an issue, you:
 
 * quickly close it by correctly answering a question
 
-* point the reporter to a resource answering the issue
+* point the reporter to a resource or documentation answering the issue
 
 * tag it via labels, projects, or milestones
 
-* take ownership submitting a PR for it, at your discretion
+* take ownership submitting a PR for it, in case you want 😇
 
-Any other discussion, and **support requests** should go through the `#falco` channel in the Sysdig slack, join [here](https://slack.sysdig.com).
+#### More about labels
+
+These guidelines are not set in stone and are subject to change.
+
+Anyway a `kind/*` label for any issue is mandatory.
+
+This is the current [label set](https://github.com/falcosecurity/falco/labels) we have.
+
+You can use commands - eg., `/label <some-label>` to add (or remove) labels or manually do it.
+
+The commands available are the following ones:
+
+```
+/[remove-](area|kind|priority|triage|label)
+```
+
+Some examples:
+
+* `/area rules`
+* `/remove-area rules`
+* `/kind kernel-module`
+* `/label good-first-issue`
+* `/triage duplicate`
+* `/triage unresolved`
+* `/triage not-reproducible`
+* `/triage support`
+* ...
+
+### Slack
+
+Other discussion, and **support requests** should go through the `#falco` channel in the Sysdig slack, please join [here](https://slack.sysdig.com).
 
 ## Pull Requests
 
@@ -61,10 +93,8 @@ Once your reviewer is happy, they will say `/lgtm` which will apply the
 `lgtm` label, and will apply the `approved` label if they are an
 [owner](/OWNERS).
 
-
 Your PR will be automatically merged once it has the `lgtm` and `approved`
 labels, does not have any `do-not-merge/*` labels, and all status checks (eg., rebase, tests, DCO) are positive.
-
 
 ## Developer Certificate Of Origin
 
@@ -72,10 +102,14 @@ The [Developer Certificate of Origin (DCO)](https://developercertificate.org/) i
 
 Contributors to the Falco project sign-off that they adhere to these requirements by adding a `Signed-off-by` line to commit messages.
 
+```
 This is my commit message
 
 Signed-off-by: John Poiana <jpoiana@falco.org>
+```
 
 Git even has a `-s` command line option to append this automatically to your commit message:
 
+```
 $ git commit -s -m 'This is my commit message'
+```
