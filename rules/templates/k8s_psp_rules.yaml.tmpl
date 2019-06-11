@@ -170,3 +170,37 @@
   source: k8s_audit
   tags: [k8s-psp]
 {% endif %}
+
+{% if p.must_run_as_users|length > 0 %}
+
+- macro: psp_allowed_run_as_users
+  condition: (
+{% for range in p.must_run_as_users %}
+    {% if not loop.first %}  and{% endif %} (ka.req.sec_ctx.runAsUser >= {{ range[0] }} and ka.req.sec_ctx.runAsUser <= {{ range[1] }})
+{% endfor %}
+  )
+
+- rule: PSP Validation Failure runAsUser
+  desc: >
+    Detect a psp validation failure for a runAsUser outside of the allowed set
+  condition: psp_container and not psp_allowed_run_as_users
+  output: Pod Security Policy {{ p.policy_name }} validation failure--runAsUser outside of allowed set. runAsUser set: "{{ p.must_run_as_users }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
+  priority: WARNING
+  source: k8s_audit
+  tags: [k8s-psp]
+{% endif %}
+
+{% if p.must_run_as_users|length > 0 %}
+
+- macro: psp_allowed_run_as_non_root
+  condition: (ka.req.sec_ctx.runAsUser != 0)
+
+- rule: PSP Validation Failure runAsNonRoot
+  desc: >
+    Detect a psp validation failure for a non-zero runAsUser when MustRunAsNonRoot is set
+  condition: psp_container and not psp_allowed_run_as_non_root
+  output: Pod Security Policy {{ p.policy_name }} validation failure--non-zero runAsUser when MustRunAsNonRoot is set (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
+  priority: WARNING
+  source: k8s_audit
+  tags: [k8s-psp]
+{% endif %}
