@@ -605,6 +605,44 @@ std::string k8s_audit_filter_check::index_privileged(const json &j, std::string 
 	return (privileged ? string("true") : string("false"));
 }
 
+std::string k8s_audit_filter_check::index_read_write_fs(const json &j, std::string &field, std::string &idx)
+{
+	nlohmann::json::json_pointer jread_only = "/securityContext/readOnlyRootFilesystem"_json_pointer;
+
+	bool read_write_fs = false;
+
+	if(!idx.empty())
+	{
+		try {
+			read_write_fs = !j[stoi(idx)].at(jread_only);
+		}
+		catch(json::out_of_range &e)
+		{
+			// If not specified, assume read/write
+			read_write_fs = true;
+		}
+	}
+	else
+	{
+		for(auto &container : j)
+		{
+			try {
+				if(!container.at(jread_only))
+				{
+					read_write_fs = true;
+				}
+			}
+			catch(json::out_of_range &e)
+			{
+				// If not specified, assume read/write
+				read_write_fs = true;
+			}
+		}
+	}
+
+	return (read_write_fs ? string("true") : string("false"));
+}
+
 std::string k8s_audit_filter_check::check_hostpath_vols(const json &j, std::string &field, std::string &idx)
 {
 	uint64_t num_volumes = 0;
@@ -628,7 +666,6 @@ std::string k8s_audit_filter_check::check_hostpath_vols(const json &j, std::stri
 			{
 				if(sinsp_utils::glob_match(path.c_str(), hostpath.c_str()))
 				{
-					fprintf(stderr, "%s matches %s\n", path.c_str(), hostpath.c_str());
 					num_volumes_match++;
 					break;
 				}
@@ -636,7 +673,6 @@ std::string k8s_audit_filter_check::check_hostpath_vols(const json &j, std::stri
 		}
 	}
 
-	fprintf(stderr, "num=%u match=%u\n", num_volumes, num_volumes_match);
 	if(field == "ka.req.volume.any_hostpath" ||
 	   field == "ka.req.volume.hostpath")
 	{
