@@ -15,6 +15,8 @@ p['allow_host_network'] = True
 p['host_network_ports'] = ""
 p['allowed_volume_types'] = []
 p['allowed_host_paths'] = []
+p['must_run_fs_groups'] = []
+p['may_run_fs_groups'] = []
 
 yaml_str = ""
 

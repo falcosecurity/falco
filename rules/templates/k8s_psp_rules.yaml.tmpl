@@ -121,4 +121,44 @@
   tags: [k8s-psp]
 {% endif %}
 
+{% if p.must_run_fs_groups|length > 0 or p.may_run_fs_groups|length > 0 %}
+
+- macro: psp_fs_group_must_run_matches
+{%- if p.must_run_fs_groups|length > 0 %}
+  condition: (
+{% for group in p.must_run_fs_groups %}
+    {% if not loop.first %}  and {% endif %} (ka.req.sec_ctx.fsGroup >= {{ group[0] }} and ka.req.sec_ctx.fsGroup <= {{ group[1] }})
+{% endfor %}
+  )
+{% else %}
+
+  condition: (k8s_audit_always_true)
+{% endif %}
+
+- macro: psp_fs_group_may_run_matches
+{%- if p.may_run_fs_groups|length > 0 %}
+  condition: ( ka.req.sec_ctx.fsGroup == "N/A" or (
+{% for group in p.may_run_fs_groups %}
+    {% if not loop.first %}  and{% endif %} (ka.req.sec_ctx.fsGroup >= {{ group[0] }} and ka.req.sec_ctx.fsGroup <= {{ group[1] }})
+{% endfor %}
+  ))
+{% else %}
+
+  condition: (k8s_audit_always_true)
+{% endif %}
+
+- macro: psp_allowed_fs_group
+  condition: (psp_fs_group_must_run_matches and psp_fs_group_may_run_matches)
+
+- rule: PSP Validation Failure fsGroup
+  desc: >
+    Detect a psp validation failure for a fsGroup gid outside of the allowed set
+  condition: psp_container and not psp_allowed_fs_group
+  output: Pod Security Policy {{ p.policy_name }} validation failure--fsGroup outside of allowed set. mustRun set: "{{ p.must_run_fs_groups }}" mayRun set: "{{ p.may_run_fs_groups }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
+  priority: WARNING
+  source: k8s_audit
+  tags: [k8s-psp]
+{% endif %}
+
+
 
