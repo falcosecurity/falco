@@ -229,6 +229,10 @@ public:
 	// index is not specified) is run privileged.
 	static std::string index_privileged(const nlohmann::json &j, std::string &field, std::string &idx);
 
+	// Return whether the ith container (or any container, if an
+	// index is not specified) is run without a readOnlyFileSystem annotation
+	static std::string index_read_write_fs(const nlohmann::json &j, std::string &field, std::string &idx);
+
 	// Helper used by above hostpath methods
 	static std::string check_hostpath_vols(const nlohmann::json &j, std::string &field, std::string &idx);
 
