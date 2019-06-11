@@ -160,5 +160,13 @@
   tags: [k8s-psp]
 {% endif %}
 
-
-
+{% if p.read_only_root_filesystem %}
+- rule: PSP Validation Failure readOnlyRootFilesystem
+  desc: >
+    Detect a psp validation failure for a readOnlyRootFilesystem pod
+  condition: psp_container and ka.req.container.read_write_fs=true
+  output: Pod Security Policy {{ p.policy_name }} validation failure--pod without readOnlyRootFilesystem=true (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
+  priority: WARNING
+  source: k8s_audit
+  tags: [k8s-psp]
+{% endif %}

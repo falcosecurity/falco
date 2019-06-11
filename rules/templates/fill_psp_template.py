@@ -17,6 +17,7 @@ p['allowed_volume_types'] = []
 p['allowed_host_paths'] = []
 p['must_run_fs_groups'] = []
 p['may_run_fs_groups'] = []
+p['read_only_root_filesystem'] = True
 
 yaml_str = ""
 
