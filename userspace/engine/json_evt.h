@@ -215,6 +215,26 @@ public:
 
 	json_event_filter_check *allocate_new();
 
+	// Utility functions to parse comma-separated pairs of numbers
+	// and check numeric values against the ranges. Returns true
+	// if the range could be parsed successfully, false otherwise.
+	static bool parse_value_ranges(const std::string &idx_range,
+				       std::list<std::pair<int64_t,int64_t>> &ranges);
+
+	static bool check_value_range(const int64_t &val, std::list<std::pair<int64_t,int64_t>> &ranges);
+
+	// For each item in the provided array, extract an (int64)
+	// value using ptr. Then check if it is within all ranges in
+	// ranges. If require_values is value, an item is allowed to
+	// *not* have a value for the provided pointer.
+	static bool check_value_range_array(const nlohmann::json &jarray,
+					    nlohmann::json::json_pointer &ptr,
+					    std::list<std::pair<int64_t,int64_t>> &ranges,
+					    bool require_values);
+
+	// Return true if every item in the (json) array has the provided property
+	static bool array_has_ptr_val(const nlohmann::json &j, nlohmann::json::json_pointer &ptr, std::string &idx);
+
 	// Index to the appropriate container and/or remove any repo,
 	// port, and tag from the provided image name.
 	static std::string index_image(const nlohmann::json &j, std::string &field, std::string &idx);
@@ -232,6 +252,24 @@ public:
 	// Return whether the ith container (or any container, if an
 	// index is not specified) is run without a readOnlyFileSystem annotation
 	static std::string index_read_write_fs(const nlohmann::json &j, std::string &field, std::string &idx);
+
+	// Return whether all containers in the provided container
+	// array specify a runAsUser
+	static std::string index_run_as_user_defined(const nlohmann::json &j, std::string &field, std::string &idx);
+
+	// Return whether all runAsUsers specified in the provided
+	// container array are within the ranges specified in the
+	// provided key.
+	static std::string check_run_as_user_within(const nlohmann::json &j, std::string &field, std::string &idx);
+
+	// Return whether all containers in the provided container
+	// array specify a runAsGroup
+	static std::string index_run_as_group_defined(const nlohmann::json &j, std::string &field, std::string &idx);
+
+	// Return whether all runAsGroups specified in the provided
+	// container array are within the ranges specified in the
+	// provided key.
+	static std::string check_run_as_group_within(const nlohmann::json &j, std::string &field, std::string &idx);
 
 	// Helper used by above hostpath methods
 	static std::string check_hostpath_vols(const nlohmann::json &j, std::string &field, std::string &idx);

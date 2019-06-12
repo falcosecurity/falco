@@ -68,13 +68,15 @@
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
-{% elif p.host_network_ports != "" %}
+{% endif %}
+
+{% if p.host_network_ports_str != "" %}
 
 - rule: PSP Validation Failure HostNetwork Ports
   desc: >
     Detect a psp validation failure for a hostnetwork port outside of the allowed set
-  condition: psp_container and not ka.req.container.host_port.within[{{ p.host_network_ports }}]=true
-  output: Pod Security Policy {{ p.policy_name }} validation failure--hostnetwork port outside of allowed set {{ p.host_network_ports }} (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
+  condition: psp_container and not ka.req.container.host_port.within[{{ p.host_network_ports_str }}]=true
+  output: Pod Security Policy {{ p.policy_name }} validation failure--hostnetwork port outside of allowed set {{ p.host_network_ports_str }} (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
@@ -124,7 +126,7 @@
 {% if p.must_run_fs_groups|length > 0 or p.may_run_fs_groups|length > 0 %}
 
 - macro: psp_fs_group_must_run_matches
-{%- if p.must_run_fs_groups|length > 0 %}
+{% if p.must_run_fs_groups|length > 0 %}
   condition: (
 {% for group in p.must_run_fs_groups %}
     {% if not loop.first %}  and {% endif %} (ka.req.sec_ctx.fsGroup >= {{ group[0] }} and ka.req.sec_ctx.fsGroup <= {{ group[1] }})
@@ -136,7 +138,7 @@
 {% endif %}
 
 - macro: psp_fs_group_may_run_matches
-{%- if p.may_run_fs_groups|length > 0 %}
+{% if p.may_run_fs_groups|length > 0 %}
   condition: ( ka.req.sec_ctx.fsGroup == "N/A" or (
 {% for group in p.may_run_fs_groups %}
     {% if not loop.first %}  and{% endif %} (ka.req.sec_ctx.fsGroup >= {{ group[0] }} and ka.req.sec_ctx.fsGroup <= {{ group[1] }})
@@ -147,14 +149,14 @@
   condition: (k8s_audit_always_true)
 {% endif %}
 
-- macro: psp_allowed_fs_group
+- macro: psp_fs_group
   condition: (psp_fs_group_must_run_matches and psp_fs_group_may_run_matches)
 
 - rule: PSP Validation Failure fsGroup
   desc: >
     Detect a psp validation failure for a fsGroup gid outside of the allowed set
-  condition: psp_container and not psp_allowed_fs_group
-  output: Pod Security Policy {{ p.policy_name }} validation failure--fsGroup outside of allowed set. mustRun set: "{{ p.must_run_fs_groups }}" mayRun set: "{{ p.may_run_fs_groups }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
+  condition: psp_container and not psp_fs_group
+  output: Pod Security Policy {{ p.policy_name }} validation failure--fsGroup outside of allowed set. mustRun set: "{{ p.must_run_fs_groups_str }}" mayRun set: "{{ p.may_run_fs_groups_str }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
@@ -173,33 +175,95 @@
 
 {% if p.must_run_as_users|length > 0 %}
 
-- macro: psp_allowed_run_as_users
-  condition: (
+- macro: psp_run_as_users_sec_ctx
+  condition: ( ka.req.sec_ctx.runAsUser != "N/A" and
 {% for range in p.must_run_as_users %}
     {% if not loop.first %}  and{% endif %} (ka.req.sec_ctx.runAsUser >= {{ range[0] }} and ka.req.sec_ctx.runAsUser <= {{ range[1] }})
 {% endfor %}
   )
 
+- macro: psp_run_as_users_pod_spec
+  condition: (ka.req.container.runAsUser.within[{{ p.must_run_as_users_str }}])
+
+- macro: psp_run_as_users
+  condition: (psp_run_as_users_sec_ctx or (ka.req.container.runAsUser.defined and psp_run_as_users_pod_spec))
+
 - rule: PSP Validation Failure runAsUser
   desc: >
     Detect a psp validation failure for a runAsUser outside of the allowed set
-  condition: psp_container and not psp_allowed_run_as_users
-  output: Pod Security Policy {{ p.policy_name }} validation failure--runAsUser outside of allowed set. runAsUser set: "{{ p.must_run_as_users }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
+  condition: psp_container and not psp_run_as_users
+  output: Pod Security Policy {{ p.policy_name }} validation failure--runAsUser outside of allowed set. runAsUser set: "{{ p.must_run_as_users_str }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
 {% endif %}
 
-{% if p.must_run_as_users|length > 0 %}
+{% if p.must_run_as_non_root %}
 
-- macro: psp_allowed_run_as_non_root
-  condition: (ka.req.sec_ctx.runAsUser != 0)
+- macro: psp_run_as_non_root_sec_ctx
+  condition: (ka.req.sec_ctx.runAsUser != "N/A" and ka.req.sec_ctx.runAsUser != 0)
+
+- macro: psp_run_as_non_root_pod_spec
+  condition: (ka.req.container.runAsUser.within[0:0])
+
+- macro: psp_run_as_non_root
+  condition: (psp_run_as_non_root_sec_ctx or (ka.req.container.runAsUser.defined and psp_run_as_non_root_pod_spec))
 
 - rule: PSP Validation Failure runAsNonRoot
   desc: >
     Detect a psp validation failure for a non-zero runAsUser when MustRunAsNonRoot is set
-  condition: psp_container and not psp_allowed_run_as_non_root
+  condition: psp_container and not psp_run_as_non_root
   output: Pod Security Policy {{ p.policy_name }} validation failure--non-zero runAsUser when MustRunAsNonRoot is set (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
+  priority: WARNING
+  source: k8s_audit
+  tags: [k8s-psp]
+{% endif %}
+
+{% if p.must_run_as_groups|length > 0 %}
+
+- macro: psp_must_run_as_groups_sec_ctx
+  condition: ( ka.req.sec_ctx.runAsGroup != "N/A" and
+{% for range in p.must_run_as_groups %}
+    {% if not loop.first %}  and{% endif %} (ka.req.sec_ctx.runAsGroup >= {{ range[0] }} and ka.req.sec_ctx.runAsGroup <= {{ range[1] }})
+{% endfor %}
+  )
+
+- macro: psp_must_run_as_groups_pod_spec
+  condition: (ka.req.container.runAsGroup.within[{{ p.must_run_as_groups_str }}])
+
+- macro: psp_must_run_as_groups
+  condition: (psp_must_run_as_groups_sec_ctx or (ka.req.container.runAsGroup.defined and psp_must_run_as_groups_pod_spec))
+
+- rule: PSP Validation Failure runAsGroup
+  desc: >
+    Detect a psp validation failure for a runAsGroup outside of the MustRunAs allowed set
+  condition: psp_container and not psp_must_run_as_groups
+  output: Pod Security Policy {{ p.policy_name }} validation failure--runAsGroup outside of the MustRunAs allowed set. runAsGroup MustRunAs set: "{{ p.must_run_as_groups_str }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
+  priority: WARNING
+  source: k8s_audit
+  tags: [k8s-psp]
+{% endif %}
+
+{% if p.may_run_as_groups|length > 0 %}
+
+- macro: psp_may_run_as_groups_sec_ctx
+  condition: ( ka.req.sec_ctx.runAsGroup != "N/A" and
+{% for range in p.may_run_as_groups %}
+    {% if not loop.first %}  and{% endif %} (ka.req.sec_ctx.runAsGroup >= {{ range[0] }} and ka.req.sec_ctx.runAsGroup <= {{ range[1] }})
+{% endfor %}
+  )
+
+- macro: psp_may_run_as_groups_pod_spec
+  condition: (ka.req.container.runAsGroup.within[{{ p.may_run_as_groups_str }}])
+
+- macro: psp_may_run_as_groups
+  condition: (psp_may_run_as_groups_sec_ctx or (psp_may_run_as_groups_pod_spec))
+
+- rule: PSP Validation Failure runAsGroup
+  desc: >
+    Detect a psp validation failure for a runAsGroup outside of the MayRunAs allowed set
+  condition: psp_container and not psp_may_run_as_groups
+  output: Pod Security Policy {{ p.policy_name }} validation failure--runAsGroup outside of the MayRunAs allowed set. runAsGroup MayRunAs set: "{{ p.may_run_as_groups_str }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]

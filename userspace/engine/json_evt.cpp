@@ -643,6 +643,54 @@ std::string k8s_audit_filter_check::index_read_write_fs(const json &j, std::stri
 	return (read_write_fs ? string("true") : string("false"));
 }
 
+std::string k8s_audit_filter_check::check_run_as_user_within(const json &j, std::string &field, std::string &idx)
+{
+	nlohmann::json::json_pointer jrun_as = "/securityContext/RunAsUser"_json_pointer;
+	std::list<std::pair<int64_t,int64_t>> allowed_uids;
+
+	if(!parse_value_ranges(idx, allowed_uids))
+	{
+		return string("false");
+	}
+
+	return (check_value_range_array(j, jrun_as, allowed_uids, false) ?
+		string("true") :
+		string("false"));
+}
+
+std::string k8s_audit_filter_check::index_run_as_user_defined(const json &j, std::string &field, std::string &idx)
+{
+	nlohmann::json::json_pointer jrun_as = "/securityContext/RunAsUser"_json_pointer;
+
+	return (array_has_ptr_val(j, jrun_as, idx) ?
+		string("true") :
+		string("false"));
+}
+
+std::string k8s_audit_filter_check::check_run_as_group_within(const json &j, std::string &field, std::string &idx)
+{
+	nlohmann::json::json_pointer jrun_as = "/securityContext/RunAsGroup"_json_pointer;
+	std::list<std::pair<int64_t,int64_t>> allowed_uids;
+
+	if(!parse_value_ranges(idx, allowed_uids))
+	{
+		return string("false");
+	}
+
+	return (check_value_range_array(j, jrun_as, allowed_uids, false) ?
+		string("true") :
+		string("false"));
+}
+
+std::string k8s_audit_filter_check::index_run_as_group_defined(const json &j, std::string &field, std::string &idx)
+{
+	nlohmann::json::json_pointer jrun_as = "/securityContext/RunAsGroup"_json_pointer;
+
+	return (array_has_ptr_val(j, jrun_as, idx) ?
+		string("true") :
+		string("false"));
+}
+
 std::string k8s_audit_filter_check::check_hostpath_vols(const json &j, std::string &field, std::string &idx)
 {
 	uint64_t num_volumes = 0;
@@ -714,12 +762,12 @@ std::string k8s_audit_filter_check::check_volume_types(const json &j, std::strin
 	return string("true");
 }
 
-std::string k8s_audit_filter_check::check_host_port_within(const json &j, std::string &field, std::string &idx)
+bool k8s_audit_filter_check::parse_value_ranges(const std::string &idx_range,
+						std::list<std::pair<int64_t,int64_t>> &ranges)
 {
-	std::vector<std::string> allowed_pairs = sinsp_split(idx, ',');
-	std::list<std::pair<int64_t,int64_t>> allowed_ports;
+	std::vector<std::string> pairs = sinsp_split(idx_range, ',');
 
-	for(auto &pair : allowed_pairs)
+	for(auto &pair : pairs)
 	{
 		size_t pos = pair.find_first_of(':');
 
@@ -734,18 +782,99 @@ std::string k8s_audit_filter_check::check_host_port_within(const json &j, std::s
 
 			if(ptr != min.length())
 			{
-				return string("false");
+				return false;
 			}
 
 			imax = std::stoll(max, &ptr);
 
 			if(ptr != max.length())
 			{
-				return string("false");
+				return false;
 			}
 
-			allowed_ports.push_back(std::make_pair(imin, imax));
+			ranges.push_back(std::make_pair(imin, imax));
 		}
+	}
+
+	return true;
+}
+
+bool k8s_audit_filter_check::check_value_range(const int64_t &val, std::list<std::pair<int64_t,int64_t>> &ranges)
+{
+	for(auto &p : ranges)
+	{
+		if(val < p.first &&
+		   val > p.second)
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
+bool k8s_audit_filter_check::check_value_range_array(const nlohmann::json &jarray,
+						     nlohmann::json::json_pointer &ptr,
+						     std::list<std::pair<int64_t,int64_t>> &ranges,
+						     bool require_values)
+{
+	for(auto &item : jarray)
+	{
+		try {
+			int64_t val = item.at(ptr);
+			if(!check_value_range(val, ranges))
+			{
+				return false;
+			}
+		}
+		catch(json::out_of_range &e)
+		{
+			if(require_values)
+			{
+				return false;
+			}
+		}
+	}
+
+	return true;
+}
+
+bool k8s_audit_filter_check::array_has_ptr_val(const json &j, nlohmann::json::json_pointer &ptr, std::string &idx)
+{
+	if(!idx.empty())
+	{
+		try {
+			string val = j[stoi(idx)].at(ptr);
+		}
+		catch(json::out_of_range &e)
+		{
+			return false;
+		}
+	}
+	else
+	{
+		for(auto &container : j)
+		{
+			try {
+				string val = container.at(ptr);
+			}
+			catch(json::out_of_range &e)
+			{
+				return false;
+			}
+		}
+	}
+
+	return true;
+}
+
+std::string k8s_audit_filter_check::check_host_port_within(const json &j, std::string &field, std::string &idx)
+{
+	std::list<std::pair<int64_t,int64_t>> allowed_ports;
+
+	if(!parse_value_ranges(idx, allowed_ports))
+	{
+		return string("false");
 	}
 
 	for(auto &container : j)
@@ -773,19 +902,7 @@ std::string k8s_audit_filter_check::check_host_port_within(const json &j, std::s
 				return string("false");
 			}
 
-			bool match = false;
-
-			for(auto &p : allowed_ports)
-			{
-				if(port >= p.first &&
-				   port <= p.second)
-				{
-					match = true;
-					break;
-				}
-			}
-
-			if(!match)
+			if(!check_value_range(port, allowed_ports))
 			{
 				return string("false");
 			}
@@ -834,9 +951,13 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 		   {"ka.req.container.host_ipc", "When the request object refers to a container, the value of the hostIPC flag."},
 		   {"ka.req.container.host_network", "When the request object refers to a container, the value of the hostNetwork flag."},
 		   {"ka.req.container.host_pid", "When the request object refers to a container, the value of the hostPID flag."},
-		   {"ka.req.container.host_port.within", "When the request object refers to a container, return true if all containers' hostPort values are within the list of provided min/max pairs. Example: ka.req.container.host_port.within[100:110,200:220] returns true if all containers' hostPort values are within the range 100:110 (inclusive) or 200:220 (inclusive).", a::IDX_REQUIRED, a::IDX_KEY},
+		   {"ka.req.container.host_port.within", "When the request object refers to a container, return true if all containers' hostPort values are within the list of provided min/max pairs. Example: ka.req.container.host_port.within[100:110,200:220] returns true if all containers' hostPort values are within the range 100:110 (inclusive) and 200:220 (inclusive).", a::IDX_REQUIRED, a::IDX_KEY},
 		   {"ka.req.container.privileged", "When the request object refers to a container, whether or not any container is run privileged. With an index, return whether or not the ith container is run privileged.", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.req.container.read_write_fs", "When the request object refers to a container, whether or not any container is missing a readOnlyRootFilesystem annotation. With an index, return whether or not the ith container is missing a readOnlyRootFilesystem annotation.", a::IDX_ALLOWED, a::IDX_NUMERIC},
+		   {"ka.req.container.runAsUser.defined", "When the request object refers to a container, return true if all containers specify a runAsUser. With an index, return whether or not the ith container specifies a runAsUser.", a::IDX_ALLOWED, a::IDX_NUMERIC},
+		   {"ka.req.container.runAsUser.within", "When the request object refers to a container, return true if all containers' runAsUser values are within the list of provided min/max pairs. Example: ka.req.container.runAsUser.within[100:110,200:220] returns true if all containers' runAsUser values are within the range 100:110 (inclusive) and 200:220 (inclusive).", a::IDX_ALLOWED, a::IDX_NUMERIC},
+		   {"ka.req.container.runAsGroup.defined", "When the request object refers to a container, return true if all containers specify a runAsGroup. With an index, return whether or not the ith container specifies a runAsGroup.", a::IDX_ALLOWED, a::IDX_NUMERIC},
+		   {"ka.req.container.runAsGroup.within", "When the request object refers to a container, return true if all containers' runAsGroup values are within the list of provided min/max pairs. Example: ka.req.container.runAsGroup.within[100:110,200:220] returns true if all containers' runAsGroup values are within the range 100:110 (inclusive) and 200:220 (inclusive).", a::IDX_ALLOWED, a::IDX_NUMERIC},
 		   {"ka.req.role.rules", "When the request object refers to a role/cluster role, the rules associated with the role"},
 		   {"ka.req.role.rules.apiGroups", "When the request object refers to a role/cluster role, the api groups associated with the role's rules. With an index, return only the api groups from the ith rule. Without an index, return all api groups concatenated", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.req.role.rules.nonResourceURLs", "When the request object refers to a role/cluster role, the non resource urls associated with the role's rules. With an index, return only the non resource urls from the ith rule. Without an index, return all non resource urls concatenated", IDX_ALLOWED, IDX_NUMERIC},
@@ -882,15 +1003,20 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 			{"ka.req.container.host_ipc", {"/requestObject/spec/hostIPC"_json_pointer}},
 			{"ka.req.container.host_network", {"/requestObject/spec/hostNetwork"_json_pointer}},
 			{"ka.req.container.host_pid", {"/requestObject/spec/hostPID"_json_pointer}},
-			{"ka.req.container.privileged", {"/requestObject/spec/containers"_json_pointer, index_privileged}},
 			{"ka.req.container.host_port.within", {"/requestObject/spec/containers"_json_pointer, check_host_port_within},
+			{"ka.req.container.privileged", {"/requestObject/spec/containers"_json_pointer, index_privileged}},
 			{"ka.req.container.read_write_fs", {"/requestObject/spec/containers"_json_pointer, index_read_write_fs}},
+			{"ka.req.container.runAsUser.defined", {"/requestObject/spec/containers"_json_pointer, index_run_as_user_defined}},
+			{"ka.req.container.runAsUser.within", {"/requestObject/spec/containers"_json_pointer, check_run_as_user_within}},
+			{"ka.req.container.runAsGroup.defined", {"/requestObject/spec/containers"_json_pointer, index_run_as_group_defined}},
+			{"ka.req.container.runAsGroup.within", {"/requestObject/spec/containers"_json_pointer, check_run_as_group_within}}
 			{"ka.req.role.rules", {"/requestObject/rules"_json_pointer}},
 			{"ka.req.role.rules.apiGroups", {"/requestObject/rules"_json_pointer, index_select}},
 			{"ka.req.role.rules.nonResourceURLs", {"/requestObject/rules"_json_pointer, index_select}},
 			{"ka.req.role.rules.resources", {"/requestObject/rules"_json_pointer, index_select}},
 			{"ka.req.sec_ctx.fsGroup", {"/requestObject/spec/securityContext/fsGroup"_json_pointer}},
 			{"ka.req.sec_ctx.runAsUser", {"/requestObject/spec/securityContext/runAsUser"_json_pointer}},
+			{"ka.req.sec_ctx.runAsGroup", {"/requestObject/spec/securityContext/runAsGroup"_json_pointer}},
 			{"ka.req.role.rules.verbs", {"/requestObject/rules"_json_pointer, index_select}},
 			{"ka.req.service.type", {"/requestObject/spec/type"_json_pointer}},
 			{"ka.req.service.ports", {"/requestObject/spec/ports"_json_pointer, index_generic}},
