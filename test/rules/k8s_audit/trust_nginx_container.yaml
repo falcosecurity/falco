@@ -1,3 +1,11 @@
-- list: trusted_k8s_containers
+- list: falco_sensitive_mount_images
+  items: [nginx]
+  append: true
+
+- list: falco_privileged_images
+  items: [nginx]
+  append: true
+
+- list: falco_hostnetwork_images
   items: [nginx]
   append: true

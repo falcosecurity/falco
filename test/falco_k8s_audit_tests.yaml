@@ -21,6 +21,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/allow_namespace_foo.yaml
     detect_counts:
@@ -30,6 +31,7 @@ trace_files: !mux
   user_in_allowed_set:
     detect: False
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/allow_namespace_foo.yaml
       - ./rules/k8s_audit/allow_user_some-user.yaml
@@ -40,6 +42,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/allow_only_apache_container.yaml
     detect_counts:
@@ -49,6 +52,7 @@ trace_files: !mux
   create_allowed_pod:
     detect: False
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/allow_nginx_container.yaml
     trace_file: trace_files/k8s_audit/create_nginx_pod_unprivileged.json
@@ -57,6 +61,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - Create Privileged Pod: 1
@@ -66,6 +71,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - Create Privileged Pod: 1
@@ -74,6 +80,7 @@ trace_files: !mux
   create_privileged_trusted_pod:
     detect: False
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/trust_nginx_container.yaml
     trace_file: trace_files/k8s_audit/create_nginx_pod_privileged.json
@@ -81,12 +88,14 @@ trace_files: !mux
   create_unprivileged_pod:
     detect: False
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
     trace_file: trace_files/k8s_audit/create_nginx_pod_unprivileged.json
 
   create_unprivileged_trusted_pod:
     detect: False
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/trust_nginx_container.yaml
     trace_file: trace_files/k8s_audit/create_nginx_pod_unprivileged.json
@@ -95,6 +104,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - Create Sensitive Mount Pod: 1
@@ -104,6 +114,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - Create Sensitive Mount Pod: 1
@@ -112,6 +123,7 @@ trace_files: !mux
   create_sensitive_mount_trusted_pod:
     detect: False
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/trust_nginx_container.yaml
     trace_file: trace_files/k8s_audit/create_nginx_pod_sensitive_mount.json
@@ -119,12 +131,14 @@ trace_files: !mux
   create_unsensitive_mount_pod:
     detect: False
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
     trace_file: trace_files/k8s_audit/create_nginx_pod_unsensitive_mount.json
 
   create_unsensitive_mount_trusted_pod:
     detect: False
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/trust_nginx_container.yaml
     trace_file: trace_files/k8s_audit/create_nginx_pod_unsensitive_mount.json
@@ -133,6 +147,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - Create HostNetwork Pod: 1
@@ -141,6 +156,7 @@ trace_files: !mux
   create_hostnetwork_trusted_pod:
     detect: False
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/trust_nginx_container.yaml
     trace_file: trace_files/k8s_audit/create_nginx_pod_hostnetwork.json
@@ -148,12 +164,14 @@ trace_files: !mux
   create_nohostnetwork_pod:
     detect: False
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
     trace_file: trace_files/k8s_audit/create_nginx_pod_nohostnetwork.json
 
   create_nohostnetwork_trusted_pod:
     detect: False
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/trust_nginx_container.yaml
     trace_file: trace_files/k8s_audit/create_nginx_pod_nohostnetwork.json
@@ -162,6 +180,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/disallow_kactivity.yaml
     detect_counts:
@@ -171,6 +190,7 @@ trace_files: !mux
   create_nonodeport_service:
     detect: False
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/disallow_kactivity.yaml
     trace_file: trace_files/k8s_audit/create_nginx_service_nonodeport.json
@@ -179,6 +199,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/disallow_kactivity.yaml
     detect_counts:
@@ -188,6 +209,7 @@ trace_files: !mux
   create_configmap_no_private_creds:
     detect: False
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/disallow_kactivity.yaml
     trace_file: trace_files/k8s_audit/create_configmap_no_sensitive_values.json
@@ -196,6 +218,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - Anonymous Request Allowed: 1
@@ -205,6 +228,7 @@ trace_files: !mux
     detect: True
     detect_level: NOTICE
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - Attach/Exec Pod: 1
@@ -214,6 +238,7 @@ trace_files: !mux
     detect: True
     detect_level: NOTICE
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - Attach/Exec Pod: 1
@@ -223,6 +248,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/allow_user_some-user.yaml
     detect_counts:
@@ -232,6 +258,7 @@ trace_files: !mux
   namespace_in_allowed_set:
     detect: False
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/allow_namespace_foo.yaml
       - ./rules/k8s_audit/disallow_kactivity.yaml
@@ -241,6 +268,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - Pod Created in Kube Namespace: 1
@@ -250,6 +278,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - Pod Created in Kube Namespace: 1
@@ -259,6 +288,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - Service Account Created in Kube Namespace: 1
@@ -268,6 +298,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - Service Account Created in Kube Namespace: 1
@@ -277,6 +308,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - System ClusterRole Modified/Deleted: 1
@@ -286,6 +318,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - System ClusterRole Modified/Deleted: 1
@@ -295,6 +328,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - Attach to cluster-admin Role: 1
@@ -304,6 +338,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - ClusterRole With Wildcard Created: 1
@@ -313,6 +348,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - ClusterRole With Wildcard Created: 1
@@ -322,6 +358,7 @@ trace_files: !mux
     detect: True
     detect_level: NOTICE
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - ClusterRole With Write Privileges Created: 1
@@ -331,6 +368,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - ClusterRole With Pod Exec Created: 1
@@ -340,6 +378,7 @@ trace_files: !mux
     detect: True
     detect_level: INFO
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - K8s Deployment Created: 1
@@ -349,6 +388,7 @@ trace_files: !mux
     detect: True
     detect_level: INFO
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - K8s Deployment Deleted: 1
@@ -358,6 +398,7 @@ trace_files: !mux
     detect: True
     detect_level: INFO
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - K8s Service Created: 1
@@ -367,6 +408,7 @@ trace_files: !mux
     detect: True
     detect_level: INFO
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - K8s Service Deleted: 1
@@ -376,6 +418,7 @@ trace_files: !mux
     detect: True
     detect_level: INFO
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - K8s ConfigMap Created: 1
@@ -385,6 +428,7 @@ trace_files: !mux
     detect: True
     detect_level: INFO
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - K8s ConfigMap Deleted: 1
@@ -394,6 +438,7 @@ trace_files: !mux
     detect: True
     detect_level: INFO
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/allow_namespace_foo.yaml
       - ./rules/k8s_audit/allow_user_some-user.yaml
@@ -405,6 +450,7 @@ trace_files: !mux
     detect: True
     detect_level: INFO
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - K8s Namespace Deleted: 1
@@ -414,6 +460,7 @@ trace_files: !mux
     detect: True
     detect_level: INFO
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - K8s Serviceaccount Created: 1
@@ -423,6 +470,7 @@ trace_files: !mux
     detect: True
     detect_level: INFO
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - K8s Serviceaccount Deleted: 1
@@ -432,6 +480,7 @@ trace_files: !mux
     detect: True
     detect_level: INFO
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - K8s Role/Clusterrole Created: 1
@@ -441,6 +490,7 @@ trace_files: !mux
     detect: True
     detect_level: INFO
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - K8s Role/Clusterrole Deleted: 1
@@ -450,6 +500,7 @@ trace_files: !mux
     detect: True
     detect_level: INFO
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - K8s Role/Clusterrolebinding Created: 1
@@ -459,6 +510,7 @@ trace_files: !mux
     detect: True
     detect_level: INFO
     rules_file:
+      - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - K8s Role/Clusterrolebinding Deleted: 1
