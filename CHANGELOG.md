@@ -2,6 +2,26 @@
 
 This file documents all notable changes to Falco. The release numbering uses [semantic versioning](http://semver.org).
 
+## v0.15.2
+
+Released 2019-06-12
+
+## Major Changes
+
+* New documentation and process handling around issues and pull requests. [[#644](https://github.com/falcosecurity/falco/pull/644)] [[#659](https://github.com/falcosecurity/falco/pull/659)] [[#664](https://github.com/falcosecurity/falco/pull/664)] [[#665](https://github.com/falcosecurity/falco/pull/665)]
+
+## Minor Changes
+
+* None.
+
+## Bug Fixes
+
+* Fix compilation of eBPF programs on COS (used by GKE) [[#sysdig/1431](https://github.com/draios/sysdig/pull/1431)]
+
+## Rule Changes
+
+* Rework exceptions lists for `Create Privileged Pod`, `Create Sensitive Mount Pod`, `Launch Sensitive Mount Container`, `Launch Privileged Container` rules to use separate specific lists rather than a single "Trusted Containers" list. [[#651](https://github.com/falcosecurity/falco/pull/651)]
+
 ## v0.15.1
 
 Released 2019-06-07
