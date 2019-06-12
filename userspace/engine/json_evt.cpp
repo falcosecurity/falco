@@ -965,6 +965,7 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 		   {"ka.req.role.rules.resources", "When the request object refers to a role/cluster role, the resources associated with the role's rules. With an index, return only the resources from the ith rule. Without an index, return all resources concatenated", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.req.sec_ctx.fsGroup", "When the request object refers to a pod, the fsGroup gid specified by the security context."},
 		   {"ka.req.sec_ctx.runAsUser", "When the request object refers to a pod, the runAsUser uid specified by the security context."},
+		   {"ka.req.sec_ctx.runAsGroup", "When the request object refers to a pod, the runAsGroup gid specified by the security context."},
 		   {"ka.req.service.type", "When the request object refers to a service, the service type"},
 		   {"ka.req.service.ports", "When the request object refers to a service, the service's ports. Can be indexed (e.g. ka.req.service.ports[0]). Without any index, returns all ports", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.req.volume.any_hostpath", "If the request object contains volume definitions, whether or not a hostPath volume exists that mounts the specified path(s) from the host (...hostpath[/etc]=true if a volume mounts /etc from the host). Multiple paths can be specified, separated by commas. The index can be a glob, in which case all volumes are considered to find any path matching the specified glob (...hostpath[/usr/*] would match either /usr/local or /usr/bin)", a::IDX_REQUIRED, a::IDX_KEY},
