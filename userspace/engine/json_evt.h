@@ -271,6 +271,11 @@ public:
 	// provided key.
 	static std::string check_run_as_group_within(const nlohmann::json &j, std::string &field, std::string &idx);
 
+	// Return whether all supplementalGroups specified in the provided
+	// gid array are within the range specified in the
+	// provided key.
+	static std::string check_supplemental_groups_within(const nlohmann::json &j, std::string &field, std::string &idx);
+
 	// Helper used by above hostpath methods
 	static std::string check_hostpath_vols(const nlohmann::json &j, std::string &field, std::string &idx);
 

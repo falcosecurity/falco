@@ -682,6 +682,26 @@ std::string k8s_audit_filter_check::check_run_as_group_within(const json &j, std
 		string("false"));
 }
 
+std::string k8s_audit_filter_check::check_supplemental_groups_within(const json &j, std::string &field, std::string &idx)
+{
+	std::list<std::pair<int64_t,int64_t>> allowed_gids;
+
+	if(!parse_value_ranges(idx, allowed_gids))
+	{
+		return string("false");
+	}
+
+	for(auto &gid : j)
+	{
+		if(!check_value_range(gid, allowed_gids))
+		{
+			return string("false");
+		}
+	}
+
+	return string("true");
+}
+
 std::string k8s_audit_filter_check::index_run_as_group_defined(const json &j, std::string &field, std::string &idx)
 {
 	nlohmann::json::json_pointer jrun_as = "/securityContext/RunAsGroup"_json_pointer;
@@ -955,9 +975,9 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 		   {"ka.req.container.privileged", "When the request object refers to a container, whether or not any container is run privileged. With an index, return whether or not the ith container is run privileged.", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.req.container.read_write_fs", "When the request object refers to a container, whether or not any container is missing a readOnlyRootFilesystem annotation. With an index, return whether or not the ith container is missing a readOnlyRootFilesystem annotation.", a::IDX_ALLOWED, a::IDX_NUMERIC},
 		   {"ka.req.container.runAsUser.defined", "When the request object refers to a container, return true if all containers specify a runAsUser. With an index, return whether or not the ith container specifies a runAsUser.", a::IDX_ALLOWED, a::IDX_NUMERIC},
-		   {"ka.req.container.runAsUser.within", "When the request object refers to a container, return true if all containers' runAsUser values are within the list of provided min/max pairs. Example: ka.req.container.runAsUser.within[100:110,200:220] returns true if all containers' runAsUser values are within the range 100:110 (inclusive) and 200:220 (inclusive).", a::IDX_ALLOWED, a::IDX_NUMERIC},
+		   {"ka.req.container.runAsUser.within", "When the request object refers to a container, return true if all containers' runAsUser values are within the list of provided min/max pairs. Example: ka.req.container.runAsUser.within[100:110,200:220] returns true if all containers' runAsUser values are within the range 100:110 (inclusive) and 200:220 (inclusive).", a::IDX_ALLOWED, a::IDX_KEY},
 		   {"ka.req.container.runAsGroup.defined", "When the request object refers to a container, return true if all containers specify a runAsGroup. With an index, return whether or not the ith container specifies a runAsGroup.", a::IDX_ALLOWED, a::IDX_NUMERIC},
-		   {"ka.req.container.runAsGroup.within", "When the request object refers to a container, return true if all containers' runAsGroup values are within the list of provided min/max pairs. Example: ka.req.container.runAsGroup.within[100:110,200:220] returns true if all containers' runAsGroup values are within the range 100:110 (inclusive) and 200:220 (inclusive).", a::IDX_ALLOWED, a::IDX_NUMERIC},
+		   {"ka.req.container.runAsGroup.within", "When the request object refers to a container, return true if all containers' runAsGroup values are within the list of provided min/max pairs. Example: ka.req.container.runAsGroup.within[100:110,200:220] returns true if all containers' runAsGroup values are within the range 100:110 (inclusive) and 200:220 (inclusive).", a::IDX_ALLOWED, a::IDX_KEY},
 		   {"ka.req.role.rules", "When the request object refers to a role/cluster role, the rules associated with the role"},
 		   {"ka.req.role.rules.apiGroups", "When the request object refers to a role/cluster role, the api groups associated with the role's rules. With an index, return only the api groups from the ith rule. Without an index, return all api groups concatenated", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.req.role.rules.nonResourceURLs", "When the request object refers to a role/cluster role, the non resource urls associated with the role's rules. With an index, return only the non resource urls from the ith rule. Without an index, return all non resource urls concatenated", IDX_ALLOWED, IDX_NUMERIC},
@@ -966,6 +986,8 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 		   {"ka.req.sec_ctx.fsGroup", "When the request object refers to a pod, the fsGroup gid specified by the security context."},
 		   {"ka.req.sec_ctx.runAsUser", "When the request object refers to a pod, the runAsUser uid specified by the security context."},
 		   {"ka.req.sec_ctx.runAsGroup", "When the request object refers to a pod, the runAsGroup gid specified by the security context."},
+		   {"ka.req.sec_ctx.supplementalGroups", "When the request object refers to a pod, the supplementalGroup gids specified by the security context."},
+		   {"ka.req.sec_ctx.supplementalGroups.within", "When the request object refers to a pod, return true if all gids in supplementalGroups are within the provided range. For example, ka.req.sec_ctx.supplementalGroups.within[10:20] returns true if every gid in supplementalGroups is within 10 and 20.", a::IDX_REQUIRED, a::IDX_KEY},
 		   {"ka.req.service.type", "When the request object refers to a service, the service type"},
 		   {"ka.req.service.ports", "When the request object refers to a service, the service's ports. Can be indexed (e.g. ka.req.service.ports[0]). Without any index, returns all ports", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.req.volume.any_hostpath", "If the request object contains volume definitions, whether or not a hostPath volume exists that mounts the specified path(s) from the host (...hostpath[/etc]=true if a volume mounts /etc from the host). Multiple paths can be specified, separated by commas. The index can be a glob, in which case all volumes are considered to find any path matching the specified glob (...hostpath[/usr/*] would match either /usr/local or /usr/bin)", a::IDX_REQUIRED, a::IDX_KEY},
@@ -1018,6 +1040,8 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 			{"ka.req.sec_ctx.fsGroup", {"/requestObject/spec/securityContext/fsGroup"_json_pointer}},
 			{"ka.req.sec_ctx.runAsUser", {"/requestObject/spec/securityContext/runAsUser"_json_pointer}},
 			{"ka.req.sec_ctx.runAsGroup", {"/requestObject/spec/securityContext/runAsGroup"_json_pointer}},
+			{"ka.req.sec_ctx.supplementalGroups", {"/requestObject/spec/securityContext/supplementalGroups"_json_pointer}},
+			{"ka.req.sec_ctx.supplementalGroups.within", {"/requestObject/spec/securityContext/supplementalGroups"_json_pointer, check_supplemental_groups_within}},
 			{"ka.req.role.rules.verbs", {"/requestObject/rules"_json_pointer, index_select}},
 			{"ka.req.service.type", {"/requestObject/spec/type"_json_pointer}},
 			{"ka.req.service.ports", {"/requestObject/spec/ports"_json_pointer, index_generic}},

@@ -22,6 +22,8 @@ p['must_run_as_non_root'] = True
 p['must_run_as_groups'] = [[1,2],[5,6]]
 p['may_run_as_groups'] = [[3,4],[7,8]]
 p['read_only_root_filesystem'] = True
+p['must_run_supplemental_groups'] = [[101,201],[22,32]]
+p['may_run_supplemental_groups'] = [[876,900],[300,400]]
 
 # These are derived from the above
 p['host_network_ports_str'] = ",".join(['{}:{}'.format(pair[0],pair[1]) for pair in p['host_network_ports']])
@@ -30,6 +32,8 @@ p['may_run_fs_groups_str'] = ",".join(['{}:{}'.format(pair[0],pair[1]) for pair 
 p['must_run_as_users_str'] = ",".join(['{}:{}'.format(pair[0],pair[1]) for pair in p['must_run_as_users']])
 p['must_run_as_groups_str'] = ",".join(['{}:{}'.format(pair[0],pair[1]) for pair in p['must_run_as_groups']])
 p['may_run_as_groups_str'] = ",".join(['{}:{}'.format(pair[0],pair[1]) for pair in p['may_run_as_groups']])
+p['must_run_supplemental_groups_str'] = ",".join(['{}:{}'.format(pair[0],pair[1]) for pair in p['must_run_supplemental_groups']])
+p['may_run_supplemental_groups_str'] = ",".join(['{}:{}'.format(pair[0],pair[1]) for pair in p['may_run_supplemental_groups']])
 
 yaml_str = ""
 
