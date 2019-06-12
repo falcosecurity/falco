@@ -319,3 +319,15 @@
   source: k8s_audit
   tags: [k8s-psp]
 {% endif %}
+
+{% if p.allowed_capabilities|length > 0 %} %}
+
+- rule: PSP Validation Failure Allowed Capabilities
+  desc: >
+    Detect a psp validation failure for Allowed Capabilities
+  condition: psp_container and not ka.req.sec_ctx.allowedCapabilities.within[{{ p.allowed_capabilities|join(',') }}]
+  output: Pod Security Policy {{ p.policy_name }} validation failure--pod with capabilities outside of allowed set "{{ p.allowed_capabilities|join(',') }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
+  priority: WARNING
+  source: k8s_audit
+  tags: [k8s-psp]
+{% endif %}

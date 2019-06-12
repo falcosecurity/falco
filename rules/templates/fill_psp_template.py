@@ -25,6 +25,7 @@ p['read_only_root_filesystem'] = True
 p['must_run_supplemental_groups'] = [[101,201],[22,32]]
 p['may_run_supplemental_groups'] = [[876,900],[300,400]]
 p['allow_privilege_escalation'] = False
+p['allowed_capabilities'] = ["my-cap"]
 
 # These are derived from the above
 p['host_network_ports_str'] = ",".join(['{}:{}'.format(pair[0],pair[1]) for pair in p['host_network_ports']])

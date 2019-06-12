@@ -764,6 +764,23 @@ std::string k8s_audit_filter_check::check_volume_types(const json &j, std::strin
 	return string("true");
 }
 
+std::string k8s_audit_filter_check::check_allowed_capabilities(const json &j, std::string &field, std::string &idx)
+{
+	std::set<std::string> allowed_capabilities;
+
+	split_string_set(idx, ',', allowed_capabilities);
+
+	for(auto &cap : j)
+	{
+		if(allowed_capabilities.find(cap) == allowed_capabilities.end())
+		{
+			return string("false");
+		}
+	}
+
+	return string("true");
+}
+
 bool k8s_audit_filter_check::parse_value_ranges(const std::string &idx_range,
 						std::list<std::pair<int64_t,int64_t>> &ranges)
 {
@@ -1004,6 +1021,7 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 		   {"ka.req.sec_ctx.supplementalGroups", "When the request object refers to a pod, the supplementalGroup gids specified by the security context."},
 		   {"ka.req.sec_ctx.supplementalGroups.within", "When the request object refers to a pod, return true if all gids in supplementalGroups are within the provided range. For example, ka.req.sec_ctx.supplementalGroups.within[10:20] returns true if every gid in supplementalGroups is within 10 and 20.", a::IDX_REQUIRED, a::IDX_KEY},
 		   {"ka.req.sec_ctx.allowPrivilegeEscalation", "When the request object refers to a pod, the value of the allowPrivilegeEscalation flag specified by the security context."},
+		   {"ka.req.sec_ctx.allowedCapabilities.within", "When the request object refers to a pod, whether the set of allowed capabilities is within the provided list. For example, ka.req.sec_ctx.allowedCapabilities.within[CAP_KILL] would only allow pods to add the CAP_KILL capability and no other capability", a::IDX_REQUIRED, a::IDX_KEY},
 		   {"ka.req.service.type", "When the request object refers to a service, the service type"},
 		   {"ka.req.service.ports", "When the request object refers to a service, the service's ports. Can be indexed (e.g. ka.req.service.ports[0]). Without any index, returns all ports", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.req.volume.any_hostpath", "If the request object contains volume definitions, whether or not a hostPath volume exists that mounts the specified path(s) from the host (...hostpath[/etc]=true if a volume mounts /etc from the host). Multiple paths can be specified, separated by commas. The index can be a glob, in which case all volumes are considered to find any path matching the specified glob (...hostpath[/usr/*] would match either /usr/local or /usr/bin)", a::IDX_REQUIRED, a::IDX_KEY},
@@ -1060,6 +1078,7 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 			{"ka.req.sec_ctx.supplementalGroups", {"/requestObject/spec/securityContext/supplementalGroups"_json_pointer}},
 			{"ka.req.sec_ctx.supplementalGroups.within", {"/requestObject/spec/securityContext/supplementalGroups"_json_pointer, check_supplemental_groups_within}},
 			{"ka.req.sec_ctx.allowPrivilegeEscalation", {"/requestObject/spec/securityContext/allowPrivilegeEscalation"_json_pointer}},
+			{"ka.req.sec_ctx.allowedCapabilities.within", {"/requestObject/spec/securityContext/allowedCapabilities"_json_pointer, check_allowed_capabilities}},
 			{"ka.req.role.rules.verbs", {"/requestObject/rules"_json_pointer, index_select}},
 			{"ka.req.service.type", {"/requestObject/spec/type"_json_pointer}},
 			{"ka.req.service.ports", {"/requestObject/spec/ports"_json_pointer, index_generic}},
