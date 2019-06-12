@@ -221,19 +221,24 @@ public:
 	static bool parse_value_ranges(const std::string &idx_range,
 				       std::list<std::pair<int64_t,int64_t>> &ranges);
 
-	static bool check_value_range(const int64_t &val, std::list<std::pair<int64_t,int64_t>> &ranges);
+	static bool check_value_range(const int64_t &val, const std::list<std::pair<int64_t,int64_t>> &ranges);
 
 	// For each item in the provided array, extract an (int64)
 	// value using ptr. Then check if it is within all ranges in
 	// ranges. If require_values is value, an item is allowed to
 	// *not* have a value for the provided pointer.
 	static bool check_value_range_array(const nlohmann::json &jarray,
-					    nlohmann::json::json_pointer &ptr,
-					    std::list<std::pair<int64_t,int64_t>> &ranges,
+					    const nlohmann::json::json_pointer &ptr,
+					    const std::list<std::pair<int64_t,int64_t>> &ranges,
 					    bool require_values);
 
 	// Return true if every item in the (json) array has the provided property
-	static bool array_has_ptr_val(const nlohmann::json &j, nlohmann::json::json_pointer &ptr, std::string &idx);
+	static bool array_has_ptr_val(const nlohmann::json &j, const nlohmann::json::json_pointer &ptr, const std::string &idx);
+
+	// Extract a bool value from every item in the provided array
+	// (or the idxth item if non-zero). Return true if any
+	// extracted value is true.
+	static bool array_get_bool_vals(const nlohmann::json &j, const nlohmann::json::json_pointer &ptr, const std::string &idx);
 
 	// Index to the appropriate container and/or remove any repo,
 	// port, and tag from the provided image name.
@@ -248,6 +253,10 @@ public:
 	// Return whether the ith container (or any container, if an
 	// index is not specified) is run privileged.
 	static std::string index_privileged(const nlohmann::json &j, std::string &field, std::string &idx);
+
+	// Return whether the ith container (or any container, if an
+	// index is not specified) has allowPrivilegeEscalation=true
+	static std::string index_allow_privilege_escalation(const nlohmann::json &j, std::string &field, std::string &idx);
 
 	// Return whether the ith container (or any container, if an
 	// index is not specified) is run without a readOnlyFileSystem annotation

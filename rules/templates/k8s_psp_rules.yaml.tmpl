@@ -307,3 +307,15 @@
   source: k8s_audit
   tags: [k8s-psp]
 {% endif %}
+
+{% if not p.allow_privilege_escalation %}
+
+- rule: PSP Validation Failure Allow Privilege Escalation
+  desc: >
+    Detect a psp validation failure for allowPrivilegeEscalation
+  condition: psp_container and (ka.req.container.privileged=true or ka.req.sec_ctx.allowPrivilegeEscalation=true)
+  output: Pod Security Policy {{ p.policy_name }} validation failure--pod with allowPrivilegeEscalation=true (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
+  priority: WARNING
+  source: k8s_audit
+  tags: [k8s-psp]
+{% endif %}

@@ -573,36 +573,18 @@ std::string k8s_audit_filter_check::index_privileged(const json &j, std::string 
 {
 	nlohmann::json::json_pointer jpriv = "/securityContext/privileged"_json_pointer;
 
-	bool privileged = false;
+	return (array_get_bool_vals(j, jpriv, idx) ?
+		string("true") :
+		string("false"));
+}
 
-	if(!idx.empty())
-	{
-		try
-		{
-			privileged = j[stoi(idx)].at(jpriv);
-		}
-		catch(json::out_of_range &e)
-		{
-		}
-	}
-	else
-	{
-		for(auto &container : j)
-		{
-			try
-			{
-				if(container.at(jpriv))
-				{
-					privileged = true;
-				}
-			}
-			catch(json::out_of_range &e)
-			{
-			}
-		}
-	}
+std::string k8s_audit_filter_check::index_allow_privilege_escalation(const json &j, std::string &field, std::string &idx)
+{
+	nlohmann::json::json_pointer jpriv = "/securityContext/allowPrivilegeEscalation"_json_pointer;
 
-	return (privileged ? string("true") : string("false"));
+	return (array_get_bool_vals(j, jpriv, idx) ?
+		string("true") :
+		string("false"));
 }
 
 std::string k8s_audit_filter_check::index_read_write_fs(const json &j, std::string &field, std::string &idx)
@@ -819,7 +801,7 @@ bool k8s_audit_filter_check::parse_value_ranges(const std::string &idx_range,
 	return true;
 }
 
-bool k8s_audit_filter_check::check_value_range(const int64_t &val, std::list<std::pair<int64_t,int64_t>> &ranges)
+bool k8s_audit_filter_check::check_value_range(const int64_t &val, const std::list<std::pair<int64_t,int64_t>> &ranges)
 {
 	for(auto &p : ranges)
 	{
@@ -834,8 +816,8 @@ bool k8s_audit_filter_check::check_value_range(const int64_t &val, std::list<std
 }
 
 bool k8s_audit_filter_check::check_value_range_array(const nlohmann::json &jarray,
-						     nlohmann::json::json_pointer &ptr,
-						     std::list<std::pair<int64_t,int64_t>> &ranges,
+						     const nlohmann::json::json_pointer &ptr,
+						     const std::list<std::pair<int64_t,int64_t>> &ranges,
 						     bool require_values)
 {
 	for(auto &item : jarray)
@@ -859,7 +841,7 @@ bool k8s_audit_filter_check::check_value_range_array(const nlohmann::json &jarra
 	return true;
 }
 
-bool k8s_audit_filter_check::array_has_ptr_val(const json &j, nlohmann::json::json_pointer &ptr, std::string &idx)
+bool k8s_audit_filter_check::array_has_ptr_val(const json &j, const nlohmann::json::json_pointer &ptr, const std::string &idx)
 {
 	if(!idx.empty())
 	{
@@ -886,6 +868,38 @@ bool k8s_audit_filter_check::array_has_ptr_val(const json &j, nlohmann::json::js
 	}
 
 	return true;
+}
+
+bool k8s_audit_filter_check::array_get_bool_vals(const json &j, const json::json_pointer &ptr, const std::string &idx)
+{
+	bool val = false;
+
+	if(!idx.empty())
+	{
+		try {
+			val = j[stoi(idx)].at(ptr);
+		}
+		catch(json::out_of_range &e)
+		{
+		}
+	}
+	else
+	{
+		for(auto &item : j)
+		{
+			try {
+				if(item.at(ptr))
+				{
+					val = true;
+				}
+			}
+			catch(json::out_of_range &e)
+			{
+			}
+		}
+	}
+
+	return val;
 }
 
 std::string k8s_audit_filter_check::check_host_port_within(const json &j, std::string &field, std::string &idx)
@@ -973,6 +987,7 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 		   {"ka.req.container.host_pid", "When the request object refers to a container, the value of the hostPID flag."},
 		   {"ka.req.container.host_port.within", "When the request object refers to a container, return true if all containers' hostPort values are within the list of provided min/max pairs. Example: ka.req.container.host_port.within[100:110,200:220] returns true if all containers' hostPort values are within the range 100:110 (inclusive) and 200:220 (inclusive).", a::IDX_REQUIRED, a::IDX_KEY},
 		   {"ka.req.container.privileged", "When the request object refers to a container, whether or not any container is run privileged. With an index, return whether or not the ith container is run privileged.", IDX_ALLOWED, IDX_NUMERIC},
+		   {"ka.req.container.allowPrivilegeEscalation", "When the request object refers to a container, whether or not any container has allowPrivilegeEscalation=true. With an index, return whether or not the ith container has allowPrivilegeEscalation=true.", a::IDX_ALLOWED, a::IDX_NUMERIC},
 		   {"ka.req.container.read_write_fs", "When the request object refers to a container, whether or not any container is missing a readOnlyRootFilesystem annotation. With an index, return whether or not the ith container is missing a readOnlyRootFilesystem annotation.", a::IDX_ALLOWED, a::IDX_NUMERIC},
 		   {"ka.req.container.runAsUser.defined", "When the request object refers to a container, return true if all containers specify a runAsUser. With an index, return whether or not the ith container specifies a runAsUser.", a::IDX_ALLOWED, a::IDX_NUMERIC},
 		   {"ka.req.container.runAsUser.within", "When the request object refers to a container, return true if all containers' runAsUser values are within the list of provided min/max pairs. Example: ka.req.container.runAsUser.within[100:110,200:220] returns true if all containers' runAsUser values are within the range 100:110 (inclusive) and 200:220 (inclusive).", a::IDX_ALLOWED, a::IDX_KEY},
@@ -988,6 +1003,7 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 		   {"ka.req.sec_ctx.runAsGroup", "When the request object refers to a pod, the runAsGroup gid specified by the security context."},
 		   {"ka.req.sec_ctx.supplementalGroups", "When the request object refers to a pod, the supplementalGroup gids specified by the security context."},
 		   {"ka.req.sec_ctx.supplementalGroups.within", "When the request object refers to a pod, return true if all gids in supplementalGroups are within the provided range. For example, ka.req.sec_ctx.supplementalGroups.within[10:20] returns true if every gid in supplementalGroups is within 10 and 20.", a::IDX_REQUIRED, a::IDX_KEY},
+		   {"ka.req.sec_ctx.allowPrivilegeEscalation", "When the request object refers to a pod, the value of the allowPrivilegeEscalation flag specified by the security context."},
 		   {"ka.req.service.type", "When the request object refers to a service, the service type"},
 		   {"ka.req.service.ports", "When the request object refers to a service, the service's ports. Can be indexed (e.g. ka.req.service.ports[0]). Without any index, returns all ports", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.req.volume.any_hostpath", "If the request object contains volume definitions, whether or not a hostPath volume exists that mounts the specified path(s) from the host (...hostpath[/etc]=true if a volume mounts /etc from the host). Multiple paths can be specified, separated by commas. The index can be a glob, in which case all volumes are considered to find any path matching the specified glob (...hostpath[/usr/*] would match either /usr/local or /usr/bin)", a::IDX_REQUIRED, a::IDX_KEY},
@@ -1028,6 +1044,7 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 			{"ka.req.container.host_pid", {"/requestObject/spec/hostPID"_json_pointer}},
 			{"ka.req.container.host_port.within", {"/requestObject/spec/containers"_json_pointer, check_host_port_within},
 			{"ka.req.container.privileged", {"/requestObject/spec/containers"_json_pointer, index_privileged}},
+			{"ka.req.container.allowPrivilegeEscalation", {"/requestObject/spec/containers"_json_pointer, index_allow_privilege_escalation}},
 			{"ka.req.container.read_write_fs", {"/requestObject/spec/containers"_json_pointer, index_read_write_fs}},
 			{"ka.req.container.runAsUser.defined", {"/requestObject/spec/containers"_json_pointer, index_run_as_user_defined}},
 			{"ka.req.container.runAsUser.within", {"/requestObject/spec/containers"_json_pointer, check_run_as_user_within}},
@@ -1042,6 +1059,7 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 			{"ka.req.sec_ctx.runAsGroup", {"/requestObject/spec/securityContext/runAsGroup"_json_pointer}},
 			{"ka.req.sec_ctx.supplementalGroups", {"/requestObject/spec/securityContext/supplementalGroups"_json_pointer}},
 			{"ka.req.sec_ctx.supplementalGroups.within", {"/requestObject/spec/securityContext/supplementalGroups"_json_pointer, check_supplemental_groups_within}},
+			{"ka.req.sec_ctx.allowPrivilegeEscalation", {"/requestObject/spec/securityContext/allowPrivilegeEscalation"_json_pointer}},
 			{"ka.req.role.rules.verbs", {"/requestObject/rules"_json_pointer, index_select}},
 			{"ka.req.service.type", {"/requestObject/spec/type"_json_pointer}},
 			{"ka.req.service.ports", {"/requestObject/spec/ports"_json_pointer, index_generic}},
