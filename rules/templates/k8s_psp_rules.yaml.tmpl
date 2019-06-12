@@ -129,7 +129,7 @@
 {% if p.must_run_fs_groups|length > 0 %}
   condition: (
 {% for group in p.must_run_fs_groups %}
-    {% if not loop.first %}  and {% endif %} (ka.req.sec_ctx.fsGroup >= {{ group[0] }} and ka.req.sec_ctx.fsGroup <= {{ group[1] }})
+    {% if not loop.first %}  and {% endif %} (ka.req.sec_ctx.fs_group >= {{ group[0] }} and ka.req.sec_ctx.fs_group <= {{ group[1] }})
 {% endfor %}
   )
 {% else %}
@@ -139,9 +139,9 @@
 
 - macro: psp_fs_group_may_run_matches
 {% if p.may_run_fs_groups|length > 0 %}
-  condition: ( ka.req.sec_ctx.fsGroup == "N/A" or (
+  condition: ( ka.req.sec_ctx.fs_group == "N/A" or (
 {% for group in p.may_run_fs_groups %}
-    {% if not loop.first %}  and{% endif %} (ka.req.sec_ctx.fsGroup >= {{ group[0] }} and ka.req.sec_ctx.fsGroup <= {{ group[1] }})
+    {% if not loop.first %}  and{% endif %} (ka.req.sec_ctx.fs_group >= {{ group[0] }} and ka.req.sec_ctx.fs_group <= {{ group[1] }})
 {% endfor %}
   ))
 {% else %}
@@ -176,17 +176,17 @@
 {% if p.must_run_as_users|length > 0 %}
 
 - macro: psp_run_as_users_sec_ctx
-  condition: ( ka.req.sec_ctx.runAsUser != "N/A" and
+  condition: ( ka.req.sec_ctx.run_as_user != "N/A" and
 {% for range in p.must_run_as_users %}
-    {% if not loop.first %}  and{% endif %} (ka.req.sec_ctx.runAsUser >= {{ range[0] }} and ka.req.sec_ctx.runAsUser <= {{ range[1] }})
+    {% if not loop.first %}  and{% endif %} (ka.req.sec_ctx.run_as_user >= {{ range[0] }} and ka.req.sec_ctx.run_as_user <= {{ range[1] }})
 {% endfor %}
   )
 
 - macro: psp_run_as_users_pod_spec
-  condition: (ka.req.container.runAsUser.within[{{ p.must_run_as_users_str }}])
+  condition: (ka.req.container.run_as_user.within[{{ p.must_run_as_users_str }}])
 
 - macro: psp_run_as_users
-  condition: (psp_run_as_users_sec_ctx or (ka.req.container.runAsUser.defined and psp_run_as_users_pod_spec))
+  condition: (psp_run_as_users_sec_ctx or (ka.req.container.run_as_user.defined and psp_run_as_users_pod_spec))
 
 - rule: PSP Validation Failure runAsUser
   desc: >
@@ -201,13 +201,13 @@
 {% if p.must_run_as_non_root %}
 
 - macro: psp_run_as_non_root_sec_ctx
-  condition: (ka.req.sec_ctx.runAsUser != "N/A" and ka.req.sec_ctx.runAsUser != 0)
+  condition: (ka.req.sec_ctx.run_as_user != "N/A" and ka.req.sec_ctx.run_as_user != 0)
 
 - macro: psp_run_as_non_root_pod_spec
-  condition: (ka.req.container.runAsUser.within[0:0])
+  condition: (ka.req.container.run_as_user.within[0:0])
 
 - macro: psp_run_as_non_root
-  condition: (psp_run_as_non_root_sec_ctx or (ka.req.container.runAsUser.defined and psp_run_as_non_root_pod_spec))
+  condition: (psp_run_as_non_root_sec_ctx or (ka.req.container.run_as_user.defined and psp_run_as_non_root_pod_spec))
 
 - rule: PSP Validation Failure runAsNonRoot
   desc: >
@@ -222,17 +222,17 @@
 {% if p.must_run_as_groups|length > 0 %}
 
 - macro: psp_must_run_as_groups_sec_ctx
-  condition: ( ka.req.sec_ctx.runAsGroup != "N/A" and
+  condition: ( ka.req.sec_ctx.run_as_group != "N/A" and
 {% for range in p.must_run_as_groups %}
-    {% if not loop.first %}  and{% endif %} (ka.req.sec_ctx.runAsGroup >= {{ range[0] }} and ka.req.sec_ctx.runAsGroup <= {{ range[1] }})
+    {% if not loop.first %}  and{% endif %} (ka.req.sec_ctx.run_as_group >= {{ range[0] }} and ka.req.sec_ctx.run_as_group <= {{ range[1] }})
 {% endfor %}
   )
 
 - macro: psp_must_run_as_groups_pod_spec
-  condition: (ka.req.container.runAsGroup.within[{{ p.must_run_as_groups_str }}])
+  condition: (ka.req.container.run_as_group.within[{{ p.must_run_as_groups_str }}])
 
 - macro: psp_must_run_as_groups
-  condition: (psp_must_run_as_groups_sec_ctx or (ka.req.container.runAsGroup.defined and psp_must_run_as_groups_pod_spec))
+  condition: (psp_must_run_as_groups_sec_ctx or (ka.req.container.run_as_group.defined and psp_must_run_as_groups_pod_spec))
 
 - rule: PSP Validation Failure runAsGroup
   desc: >
@@ -247,14 +247,14 @@
 {% if p.may_run_as_groups|length > 0 %}
 
 - macro: psp_may_run_as_groups_sec_ctx
-  condition: ( ka.req.sec_ctx.runAsGroup != "N/A" and
+  condition: ( ka.req.sec_ctx.run_as_group != "N/A" and
 {% for range in p.may_run_as_groups %}
-    {% if not loop.first %}  and{% endif %} (ka.req.sec_ctx.runAsGroup >= {{ range[0] }} and ka.req.sec_ctx.runAsGroup <= {{ range[1] }})
+    {% if not loop.first %}  and{% endif %} (ka.req.sec_ctx.run_as_group >= {{ range[0] }} and ka.req.sec_ctx.run_as_group <= {{ range[1] }})
 {% endfor %}
   )
 
 - macro: psp_may_run_as_groups_pod_spec
-  condition: (ka.req.container.runAsGroup.within[{{ p.may_run_as_groups_str }}])
+  condition: (ka.req.container.run_as_group.within[{{ p.may_run_as_groups_str }}])
 
 - macro: psp_may_run_as_groups
   condition: (psp_may_run_as_groups_sec_ctx or (psp_may_run_as_groups_pod_spec))
@@ -275,7 +275,7 @@
 {% if p.must_run_supplemental_groups|length > 0 %}
   condition: (
 {% for group in p.must_run_supplemental_groups %}
-    {% if not loop.first %}  and {% endif %} (ka.req.sec_ctx.supplementalGroups.within[{{ group[0] }}:{{ group[1] }}])
+    {% if not loop.first %}  and {% endif %} (ka.req.sec_ctx.supplemental_groups.within[{{ group[0] }}:{{ group[1] }}])
 {% endfor %}
   )
 {% else %}
@@ -285,9 +285,9 @@
 
 - macro: psp_supplemental_group_may_run_matches
 {% if p.may_run_supplemental_groups|length > 0 %}
-  condition: ( ka.req.sec_ctx.supplementalGroups == "N/A" or (
+  condition: ( ka.req.sec_ctx.supplemental_groups == "N/A" or (
 {% for group in p.may_run_supplemental_groups %}
-    {% if not loop.first %}  and{% endif %} (ka.req.sec_ctx.supplementalGroups.within[{{ group[0] }}:{{ group[1] }}])
+    {% if not loop.first %}  and{% endif %} (ka.req.sec_ctx.supplemental_groups.within[{{ group[0] }}:{{ group[1] }}])
 {% endfor %}
   ))
 {% else %}
@@ -313,7 +313,7 @@
 - rule: PSP Validation Failure Allow Privilege Escalation
   desc: >
     Detect a psp validation failure for allowPrivilegeEscalation
-  condition: psp_container and (ka.req.container.privileged=true or ka.req.sec_ctx.allowPrivilegeEscalation=true)
+  condition: psp_container and ka.req.sec_ctx.allow_privilege_escalation=true
   output: Pod Security Policy {{ p.policy_name }} validation failure--pod with allowPrivilegeEscalation=true (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
@@ -325,7 +325,7 @@
 - rule: PSP Validation Failure Allowed Capabilities
   desc: >
     Detect a psp validation failure for Allowed Capabilities
-  condition: psp_container and not ka.req.sec_ctx.allowedCapabilities.within[{{ p.allowed_capabilities|join(',') }}]
+  condition: psp_container and not ka.req.sec_ctx.allowed_capabilities.within[{{ p.allowed_capabilities|join(',') }}]
   output: Pod Security Policy {{ p.policy_name }} validation failure--pod with capabilities outside of allowed set "{{ p.allowed_capabilities|join(',') }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
@@ -337,8 +337,8 @@
 - rule: PSP Validation Failure Allowed Proc Mount Types
   desc: >
     Detect a psp validation failure for Allowed Proc Mount Types
-  condition: psp_container and not ka.req.sec_ctx.procMount in ({{ p.allowed_proc_mount_types|join(',') }})
-  output: Pod Security Policy {{ p.policy_name }} validation failure--pod with proc mount %ka.req.sec_ctx.procMount outside of allowed set "{{ p.allowed_proc_mount_types|join(',') }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
+  condition: psp_container and not ka.req.sec_ctx.proc_mount in ({{ p.allowed_proc_mount_types|join(',') }})
+  output: Pod Security Policy {{ p.policy_name }} validation failure--pod with proc mount %ka.req.sec_ctx.proc_mount outside of allowed set "{{ p.allowed_proc_mount_types|join(',') }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
