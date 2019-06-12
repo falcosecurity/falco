@@ -59,7 +59,7 @@
 - macro: rename
   condition: evt.type in (rename, renameat)
 - macro: mkdir
-  condition: evt.type = mkdir
+  condition: evt.type in (mkdir, mkdirat)
 - macro: remove
   condition: evt.type in (rmdir, unlink, unlinkat)
 
@@ -348,7 +348,7 @@
 - rule: Disallowed SSH Connection
   desc: Detect any new ssh connection to a host other than those in an allowed group of hosts
   condition: (inbound_outbound) and ssh_port and not allowed_ssh_hosts
-  output: Disallowed SSH Connection (command=%proc.cmdline connection=%fd.name user=%user.name)
+  output: Disallowed SSH Connection (command=%proc.cmdline connection=%fd.name user=%user.name container_id=%container.id image=%container.image.repository)
   priority: NOTICE
   tags: [network, mitre_remote_service]
 
@@ -379,7 +379,7 @@
     ((fd.sip in (allowed_outbound_destination_ipaddrs)) or
      (fd.snet in (allowed_outbound_destination_networks)) or
      (fd.sip.name in (allowed_outbound_destination_domains)))
-  output: Disallowed outbound connection destination (command=%proc.cmdline connection=%fd.name user=%user.name)
+  output: Disallowed outbound connection destination (command=%proc.cmdline connection=%fd.name user=%user.name container_id=%container.id image=%container.image.repository)
   priority: NOTICE
   tags: [network]
 
@@ -402,7 +402,7 @@
     ((fd.cip in (allowed_inbound_source_ipaddrs)) or
      (fd.cnet in (allowed_inbound_source_networks)) or
      (fd.cip.name in (allowed_inbound_source_domains)))
-  output: Disallowed inbound connection source (command=%proc.cmdline connection=%fd.name user=%user.name)
+  output: Disallowed inbound connection source (command=%proc.cmdline connection=%fd.name user=%user.name container_id=%container.id image=%container.image.repository)
   priority: NOTICE
   tags: [network]
 
@@ -440,7 +440,7 @@
      fd.directory in (shell_config_directories)) and
     not proc.name in (shell_binaries)
   output: >
-    a shell configuration file has been modified (user=%user.name command=%proc.cmdline file=%fd.name)
+    a shell configuration file has been modified (user=%user.name command=%proc.cmdline file=%fd.name container_id=%container.id image=%container.image.repository)
   priority:
     WARNING
   tag: [file, mitre_persistence]
@@ -462,7 +462,7 @@
      fd.directory in (shell_config_directories)) and
     (not proc.name in (shell_binaries))
   output: >
-    a shell configuration file was read by a non-shell program (user=%user.name command=%proc.cmdline file=%fd.name)
+    a shell configuration file was read by a non-shell program (user=%user.name command=%proc.cmdline file=%fd.name container_id=%container.id image=%container.image.repository)
   priority:
     WARNING
   tag: [file, mitre_discovery]
@@ -906,7 +906,7 @@
   condition: >
     open_write and access_repositories and not package_mgmt_procs
   output: >
-    Repository files get updated (user=%user.name command=%proc.cmdline file=%fd.name)
+    Repository files get updated (user=%user.name command=%proc.cmdline file=%fd.name container_id=%container.id image=%container.image.repository)
   priority:
     NOTICE
   tags: [filesystem, mitre_persistence]
@@ -921,7 +921,7 @@
     and not python_running_ms_oms
   output: >
     File below a known binary directory opened for writing (user=%user.name
-    command=%proc.cmdline file=%fd.name parent=%proc.pname pcmdline=%proc.pcmdline gparent=%proc.aname[2])
+    command=%proc.cmdline file=%fd.name parent=%proc.pname pcmdline=%proc.pcmdline gparent=%proc.aname[2] container_id=%container.id image=%container.image.repository)
   priority: ERROR
   tags: [filesystem, mitre_persistence]
 
@@ -979,7 +979,7 @@
     and not user_known_write_monitored_dir_conditions
   output: >
     File below a monitored directory opened for writing (user=%user.name
-    command=%proc.cmdline file=%fd.name parent=%proc.pname pcmdline=%proc.pcmdline gparent=%proc.aname[2])
+    command=%proc.cmdline file=%fd.name parent=%proc.pname pcmdline=%proc.pcmdline gparent=%proc.aname[2] container_id=%container.id image=%container.image.repository)
   priority: ERROR
   tags: [filesystem, mitre_persistence]
 
@@ -998,7 +998,7 @@
      (not proc.name in (ssh_binaries)))
   output: >
     ssh-related file/directory read by non-ssh program (user=%user.name
-    command=%proc.cmdline file=%fd.name parent=%proc.pname pcmdline=%proc.pcmdline)
+    command=%proc.cmdline file=%fd.name parent=%proc.pname pcmdline=%proc.pcmdline container_id=%container.id image=%container.image.repository)
   priority: ERROR
   tags: [filesystem, mitre_discovery]
 
@@ -1249,7 +1249,7 @@
 - rule: Write below etc
   desc: an attempt to write to any file below /etc
   condition: write_etc_common
-  output: "File below /etc opened for writing (user=%user.name command=%proc.cmdline parent=%proc.pname pcmdline=%proc.pcmdline file=%fd.name program=%proc.name gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4])"
+  output: "File below /etc opened for writing (user=%user.name command=%proc.cmdline parent=%proc.pname pcmdline=%proc.pcmdline file=%fd.name program=%proc.name gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4] container_id=%container.id image=%container.image.repository)"
   priority: ERROR
   tags: [filesystem, mitre_persistence]
 
@@ -1329,7 +1329,7 @@
     and not rancher_writing_root
     and not known_root_conditions
     and not user_known_write_root_conditions
-  output: "File below / or /root opened for writing (user=%user.name command=%proc.cmdline parent=%proc.pname file=%fd.name program=%proc.name)"
+  output: "File below / or /root opened for writing (user=%user.name command=%proc.cmdline parent=%proc.pname file=%fd.name program=%proc.name container_id=%container.id image=%container.image.repository)"
   priority: ERROR
   tags: [filesystem, mitre_persistence]
 
@@ -1344,7 +1344,7 @@
   condition: sensitive_files and open_read and server_procs and not proc_is_new and proc.name!="sshd"
   output: >
     Sensitive file opened for reading by trusted program after startup (user=%user.name
-    command=%proc.cmdline parent=%proc.pname file=%fd.name parent=%proc.pname gparent=%proc.aname[2])
+    command=%proc.cmdline parent=%proc.pname file=%fd.name parent=%proc.pname gparent=%proc.aname[2] container_id=%container.id image=%container.image.repository)
   priority: WARNING
   tags: [filesystem, mitre_credential_access]
 
@@ -1394,7 +1394,7 @@
     and not runuser_reading_pam
   output: >
     Sensitive file opened for reading by non-trusted program (user=%user.name program=%proc.name
-    command=%proc.cmdline file=%fd.name parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4])
+    command=%proc.cmdline file=%fd.name parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4] container_id=%container.id image=%container.image.repository)
   priority: WARNING
   tags: [filesystem, mitre_credential_access, mitre_discovery]
 
@@ -1407,7 +1407,7 @@
     and not ansible_running_python
     and not python_running_chef
     and not exe_running_docker_save
-  output: "Rpm database opened for writing by a non-rpm program (command=%proc.cmdline file=%fd.name parent=%proc.pname pcmdline=%proc.pcmdline)"
+  output: "Rpm database opened for writing by a non-rpm program (command=%proc.cmdline file=%fd.name parent=%proc.pname pcmdline=%proc.pcmdline container_id=%container.id image=%container.image.repository)"
   priority: ERROR
   tags: [filesystem, software_mgmt, mitre_persistence]
 
@@ -1442,7 +1442,7 @@
     and not postgres_running_wal_e
   output: >
     Database-related program spawned process other than itself (user=%user.name
-    program=%proc.cmdline parent=%proc.pname)
+    program=%proc.cmdline parent=%proc.pname container_id=%container.id image=%container.image.repository)
   priority: NOTICE
   tags: [process, database, mitre_execution]
 
@@ -1451,7 +1451,7 @@
   condition: (bin_dir_rename) and modify and not package_mgmt_procs and not exe_running_docker_save
   output: >
     File below known binary directory renamed/removed (user=%user.name command=%proc.cmdline
-    pcmdline=%proc.pcmdline operation=%evt.type file=%fd.name %evt.args)
+    pcmdline=%proc.pcmdline operation=%evt.type file=%fd.name %evt.args container_id=%container.id image=%container.image.repository)
   priority: ERROR
   tags: [filesystem, mitre_persistence]
 
@@ -1460,7 +1460,7 @@
   condition: mkdir and bin_dir_mkdir and not package_mgmt_procs
   output: >
     Directory below known binary directory created (user=%user.name
-    command=%proc.cmdline directory=%evt.arg.path)
+    command=%proc.cmdline directory=%evt.arg.path container_id=%container.id image=%container.image.repository)
   priority: ERROR
   tags: [filesystem, mitre_persistence]
 
@@ -1489,7 +1489,7 @@
     and not rancher_network_manager
   output: >
     Namespace change (setns) by unexpected program (user=%user.name command=%proc.cmdline
-    parent=%proc.pname %container.info)
+    parent=%proc.pname %container.info container_id=%container.id image=%container.image.repository)
   priority: NOTICE
   tags: [process]
 
@@ -1635,35 +1635,37 @@
   output: >
     Shell spawned by untrusted binary (user=%user.name shell=%proc.name parent=%proc.pname
     cmdline=%proc.cmdline pcmdline=%proc.pcmdline gparent=%proc.aname[2] ggparent=%proc.aname[3]
-    aname[4]=%proc.aname[4] aname[5]=%proc.aname[5] aname[6]=%proc.aname[6] aname[7]=%proc.aname[7])
+    aname[4]=%proc.aname[4] aname[5]=%proc.aname[5] aname[6]=%proc.aname[6] aname[7]=%proc.aname[7] container_id=%container.id image=%container.image.repository)
   priority: DEBUG
   tags: [shell, mitre_execution]
 
 - macro: allowed_openshift_registry_root
   condition: >
     (container.image.repository startswith openshift3/ or
+     container.image.repository startswith registry.redhat.io/openshift3/ or
      container.image.repository startswith registry.access.redhat.com/openshift3/)
 
 # Source: https://docs.openshift.com/enterprise/3.2/install_config/install/disconnected_install.html
 - macro: openshift_image
   condition: >
     (allowed_openshift_registry_root and
-      (container.image.repository contains logging-deployment or
-       container.image.repository contains logging-elasticsearch or
-       container.image.repository contains logging-kibana or
-       container.image.repository contains logging-fluentd or
-       container.image.repository contains logging-auth-proxy or
-       container.image.repository contains metrics-deployer or
-       container.image.repository contains metrics-hawkular-metrics or
-       container.image.repository contains metrics-cassandra or
-       container.image.repository contains metrics-heapster or
-       container.image.repository contains ose-haproxy-router or
-       container.image.repository contains ose-deployer or
-       container.image.repository contains ose-sti-builder or
-       container.image.repository contains ose-docker-builder or
-       container.image.repository contains ose-pod or
-       container.image.repository contains ose-docker-registry or
-       container.image.repository contains image-inspector))
+      (container.image.repository endswith /logging-deployment or
+       container.image.repository endswith /logging-elasticsearch or
+       container.image.repository endswith /logging-kibana or
+       container.image.repository endswith /logging-fluentd or
+       container.image.repository endswith /logging-auth-proxy or
+       container.image.repository endswith /metrics-deployer or
+       container.image.repository endswith /metrics-hawkular-metrics or
+       container.image.repository endswith /metrics-cassandra or
+       container.image.repository endswith /metrics-heapster or
+       container.image.repository endswith /ose-haproxy-router or
+       container.image.repository endswith /ose-deployer or
+       container.image.repository endswith /ose-sti-builder or
+       container.image.repository endswith /ose-docker-builder or
+       container.image.repository endswith /ose-pod or
+       container.image.repository endswith /ose-node or
+       container.image.repository endswith /ose-docker-registry or
+       container.image.repository endswith /image-inspector))
 
 # These images are allowed both to run with --privileged and to mount
 # sensitive paths from the host filesystem.
@@ -1687,10 +1689,10 @@
 # In this file, it just takes one of the images in trusted_containers
 # and repeats it.
 - macro: user_trusted_containers
-  condition: (container.image.repository=sysdig/agent)
+  condition: (container.image.repository = docker.io/sysdig/agent)
 
 - list: sematext_images
-  items: [sematext/sematext-agent-docker, sematext/agent, sematext/logagent,
+  items: [docker.io/sematext/sematext-agent-docker, docker.io/sematext/agent, docker.io/sematext/logagent,
           registry.access.redhat.com/sematext/sematext-agent-docker,
           registry.access.redhat.com/sematext/agent,
           registry.access.redhat.com/sematext/logagent]
@@ -1698,10 +1700,10 @@
 # These container images are allowed to run with --privileged
 - list: falco_privileged_images
   items: [
-    sysdig/agent, sysdig/falco, sysdig/sysdig,
-    gcr.io/google_containers/kube-proxy, calico/node,
-    rook/toolbox, cloudnativelabs/kube-router, mesosphere/mesos-slave,
-    docker/ucp-agent, sematext_images
+    docker.io/sysdig/agent, docker.io/sysdig/falco, docker.io/sysdig/sysdig,
+    gcr.io/google_containers/kube-proxy, docker.io/calico/node,
+    docker.io/rook/toolbox, docker.io/cloudnativelabs/kube-router, docker.io/mesosphere/mesos-slave,
+    docker.io/docker/ucp-agent, sematext_images
     ]
 
 - macro: falco_privileged_containers
@@ -1719,8 +1721,7 @@
 # In this file, it just takes one of the images in falco_privileged_images
 # and repeats it.
 - macro: user_privileged_containers
-  condition: (container.image.repository=sysdig/agent)
-
+  condition: (container.image.repository = docker.io/sysdig/agent)
 
 - list: rancher_images
   items: [
@@ -1732,11 +1733,11 @@
 # host filesystem.
 - list: falco_sensitive_mount_images
   items: [
-    sysdig/agent, sysdig/falco, sysdig/sysdig,
+    docker.io/sysdig/agent, docker.io/sysdig/falco, docker.io/sysdig/sysdig,
     gcr.io/google_containers/hyperkube,
-    gcr.io/google_containers/kube-proxy, calico/node,
-    rook/toolbox, cloudnativelabs/kube-router, consul,
-    datadog/docker-dd-agent, datadog/agent, docker/ucp-agent, gliderlabs/logspout
+    gcr.io/google_containers/kube-proxy, docker.io/calico/node,
+    docker.io/rook/toolbox, docker.io/cloudnativelabs/kube-router, docker.io/consul,
+    docker.io/datadog/docker-dd-agent, docker.io/datadog/agent, docker.io/docker/ucp-agent, docker.io/gliderlabs/logspout
     ]
 
 - macro: falco_sensitive_mount_containers
@@ -1756,7 +1757,7 @@
 # In this file, it just takes one of the images in falco_sensitive_mount_images
 # and repeats it.
 - macro: user_sensitive_mount_containers
-  condition: (container.image.repository=sysdig/agent)
+  condition: (container.image.repository = docker.io/sysdig/agent)
 
 - rule: Launch Privileged Container
   desc: Detect the initial process started in a privileged container. Exceptions are made for known trusted images.
@@ -1837,7 +1838,7 @@
 - rule: System user interactive
   desc: an attempt to run interactive commands by a system (i.e. non-login) user
   condition: spawned_process and system_users and interactive
-  output: "System user ran an interactive command (user=%user.name command=%proc.cmdline)"
+  output: "System user ran an interactive command (user=%user.name command=%proc.cmdline container_id=%container.id image=%container.image.repository)"
   priority: INFO
   tags: [users, mitre_remote_access_tools]
 
@@ -1849,7 +1850,7 @@
     and container_entrypoint
   output: >
     A shell was spawned in a container with an attached terminal (user=%user.name %container.info
-    shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline terminal=%proc.tty)
+    shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline terminal=%proc.tty container_id=%container.id image=%container.image.repository)
   priority: NOTICE
   tags: [container, shell, mitre_execution]
 
@@ -1923,7 +1924,7 @@
     and not login_doing_dns_lookup
   output: >
     Known system binary sent/received network traffic
-    (user=%user.name command=%proc.cmdline connection=%fd.name)
+    (user=%user.name command=%proc.cmdline connection=%fd.name container_id=%container.id image=%container.image.repository)
   priority: NOTICE
   tags: [network, mitre_exfiltration]
 
@@ -1949,7 +1950,7 @@
     proc.env icontains HTTP_PROXY
   output: >
     Program run with disallowed HTTP_PROXY environment variable
-    (user=%user.name command=%proc.cmdline env=%proc.env parent=%proc.pname)
+    (user=%user.name command=%proc.cmdline env=%proc.env parent=%proc.pname container_id=%container.id image=%container.image.repository)
   priority: NOTICE
   tags: [host, users]
 
@@ -1972,7 +1973,7 @@
      and interpreted_procs)
   output: >
     Interpreted program received/listened for network traffic
-    (user=%user.name command=%proc.cmdline connection=%fd.name)
+    (user=%user.name command=%proc.cmdline connection=%fd.name container_id=%container.id image=%container.image.repository)
   priority: NOTICE
   tags: [network, mitre_exfiltration]
 
@@ -1983,7 +1984,7 @@
      and interpreted_procs)
   output: >
     Interpreted program performed outgoing network connection
-    (user=%user.name command=%proc.cmdline connection=%fd.name)
+    (user=%user.name command=%proc.cmdline connection=%fd.name container_id=%container.id image=%container.image.repository)
   priority: NOTICE
   tags: [network, mitre_exfiltration]
 
@@ -2024,7 +2025,7 @@
   condition: (inbound_outbound) and do_unexpected_udp_check and fd.l4proto=udp and not expected_udp_traffic
   output: >
     Unexpected UDP Traffic Seen
-    (user=%user.name command=%proc.cmdline connection=%fd.name proto=%fd.l4proto evt=%evt.type %evt.args)
+    (user=%user.name command=%proc.cmdline connection=%fd.name proto=%fd.l4proto evt=%evt.type %evt.args container_id=%container.id image=%container.image.repository)
   priority: NOTICE
   tags: [network, mitre_exfiltration]
 
@@ -2084,7 +2085,7 @@
     and not user_known_non_sudo_setuid_conditions
   output: >
     Unexpected setuid call by non-sudo, non-root program (user=%user.name cur_uid=%user.uid parent=%proc.pname
-    command=%proc.cmdline uid=%evt.arg.uid)
+    command=%proc.cmdline uid=%evt.arg.uid container_id=%container.id image=%container.image.repository)
   priority: NOTICE
   tags: [users, mitre_privilege_escalation]
 
@@ -2128,7 +2129,7 @@
     and not proc.name in (dev_creation_binaries)
     and not fd.name in (allowed_dev_files)
     and not fd.name startswith /dev/tty
-  output: "File created below /dev by untrusted program (user=%user.name command=%proc.cmdline file=%fd.name)"
+  output: "File created below /dev by untrusted program (user=%user.name command=%proc.cmdline file=%fd.name container_id=%container.id image=%container.image.repository)"
   priority: ERROR
   tags: [filesystem, mitre_persistence]
 
@@ -2189,7 +2190,7 @@
 - rule: Unexpected K8s NodePort Connection
   desc: Detect attempts to use K8s NodePorts from a container
   condition: (inbound_outbound) and fd.sport >= 30000 and fd.sport <= 32767 and container and not nodeport_containers
-  output: Unexpected K8s NodePort Connection (command=%proc.cmdline connection=%fd.name)
+  output: Unexpected K8s NodePort Connection (command=%proc.cmdline connection=%fd.name container_id=%container.id image=%container.image.repository)
   priority: NOTICE
   tags: [network, k8s, container, mitre_port_knocking]
 
@@ -2299,12 +2300,19 @@
 - macro: access_log_files
   condition: (fd.directory in (log_directories) or fd.filename in (log_files))
 
+# a placeholder for whitelist log files that could be cleared. Recommend the macro as (fd.name startswith "/var/log/app1*")
+- macro: allowed_clear_log_files
+  condition: (never_true)
+
 - rule: Clear Log Activities
   desc: Detect clearing of critical log files
   condition: >
-    open_write and access_log_files and evt.arg.flags contains "O_TRUNC"
+    open_write and
+    access_log_files and
+    evt.arg.flags contains "O_TRUNC" and
+    not allowed_clear_log_files
   output: >
-    Log files were tampered (user=%user.name command=%proc.cmdline file=%fd.name)
+    Log files were tampered (user=%user.name command=%proc.cmdline file=%fd.name container_id=%container.id image=%container.image.repository)
   priority:
     WARNING
   tags: [file, mitre_defense_evasion]
@@ -2319,7 +2327,7 @@
   desc: Detect process running to clear bulk data from disk
   condition: spawned_process and clear_data_procs
   output: >
-    Bulk data has been removed from disk (user=%user.name command=%proc.cmdline file=%fd.name)
+    Bulk data has been removed from disk (user=%user.name command=%proc.cmdline file=%fd.name container_id=%container.id image=%container.image.repository)
   priority:
     WARNING
   tags: [process, mitre_persistence]
@@ -2386,7 +2394,6 @@
     container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
   priority: NOTICE
   tags: [network, process, mitre_lateral_movement, mitre_exfiltration]
-
 
 - rule: Create Symlink Over Sensitive Files
   desc: Detect symlink created over sensitive files
