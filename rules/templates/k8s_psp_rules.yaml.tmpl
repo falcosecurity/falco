@@ -129,7 +129,7 @@
 {% if length(must_run_fs_groups) > 0 %}
   condition: (
 {% for group in must_run_fs_groups %}
-    {% if not loop.first %}  and {% endif %} (ka.req.sec_ctx.fs_group >= {{ group.0 }} and ka.req.sec_ctx.fs_group <= {{ group.1 }})
+    {% if not loop.is_first %}  and {% endif %} (ka.req.sec_ctx.fs_group >= {{ group.0 }} and ka.req.sec_ctx.fs_group <= {{ group.1 }})
 {% endfor %}
   )
 {% else %}
@@ -141,7 +141,7 @@
 {% if length(may_run_fs_groups) > 0 %}
   condition: ( ka.req.sec_ctx.fs_group == "N/A" or (
 {% for group in may_run_fs_groups %}
-    {% if not loop.first %}  and{% endif %} (ka.req.sec_ctx.fs_group >= {{ group.0 }} and ka.req.sec_ctx.fs_group <= {{ group.1 }})
+    {% if not loop.is_first %}  and{% endif %} (ka.req.sec_ctx.fs_group >= {{ group.0 }} and ka.req.sec_ctx.fs_group <= {{ group.1 }})
 {% endfor %}
   ))
 {% else %}
@@ -178,7 +178,7 @@
 - macro: psp_run_as_users_sec_ctx
   condition: ( ka.req.sec_ctx.run_as_user != "N/A" and
 {% for range in must_run_as_users %}
-    {% if not loop.first %}  and{% endif %} (ka.req.sec_ctx.run_as_user >= {{ range.0 }} and ka.req.sec_ctx.run_as_user <= {{ range.1 }})
+    {% if not loop.is_first %}  and{% endif %} (ka.req.sec_ctx.run_as_user >= {{ range.0 }} and ka.req.sec_ctx.run_as_user <= {{ range.1 }})
 {% endfor %}
   )
 
@@ -224,7 +224,7 @@
 - macro: psp_must_run_as_groups_sec_ctx
   condition: ( ka.req.sec_ctx.run_as_group != "N/A" and
 {% for range in must_run_as_groups %}
-    {% if not loop.first %}  and{% endif %} (ka.req.sec_ctx.run_as_group >= {{ range.0 }} and ka.req.sec_ctx.run_as_group <= {{ range.1 }})
+    {% if not loop.is_first %}  and{% endif %} (ka.req.sec_ctx.run_as_group >= {{ range.0 }} and ka.req.sec_ctx.run_as_group <= {{ range.1 }})
 {% endfor %}
   )
 
@@ -249,7 +249,7 @@
 - macro: psp_may_run_as_groups_sec_ctx
   condition: ( ka.req.sec_ctx.run_as_group != "N/A" and
 {% for range in may_run_as_groups %}
-    {% if not loop.first %}  and{% endif %} (ka.req.sec_ctx.run_as_group >= {{ range.0 }} and ka.req.sec_ctx.run_as_group <= {{ range.1 }})
+    {% if not loop.is_first %}  and{% endif %} (ka.req.sec_ctx.run_as_group >= {{ range.0 }} and ka.req.sec_ctx.run_as_group <= {{ range.1 }})
 {% endfor %}
   )
 
@@ -275,7 +275,7 @@
 {% if length(must_run_supplemental_groups) > 0 %}
   condition: (
 {% for group in must_run_supplemental_groups %}
-    {% if not loop.first %}  and {% endif %} (ka.req.sec_ctx.supplemental_groups.within[{{ group.0 }}:{{ group.1 }}])
+    {% if not loop.is_first %}  and {% endif %} (ka.req.sec_ctx.supplemental_groups.within[{{ group.0 }}:{{ group.1 }}])
 {% endfor %}
   )
 {% else %}
@@ -287,7 +287,7 @@
 {% if length(may_run_supplemental_groups) > 0 %}
   condition: ( ka.req.sec_ctx.supplemental_groups == "N/A" or (
 {% for group in may_run_supplemental_groups %}
-    {% if not loop.first %}  and{% endif %} (ka.req.sec_ctx.supplemental_groups.within[{{ group.0 }}:{{ group.1 }}])
+    {% if not loop.is_first %}  and{% endif %} (ka.req.sec_ctx.supplemental_groups.within[{{ group.0 }}:{{ group.1 }}])
 {% endfor %}
   ))
 {% else %}

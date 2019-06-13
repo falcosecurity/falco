@@ -22,6 +22,7 @@ limitations under the License.
 #include <string>
 
 #include <yaml-cpp/yaml.h>
+#include <nlohmann/json.hpp>
 
 #pragma once
 
@@ -44,54 +45,23 @@ private:
 
 	typedef std::list<std::pair<int64_t, int64_t>> ranges_t;
 
+	// This holds all the data sent to the template engine. It's
+	// filled in while parsing the psp yaml.
+	nlohmann::json m_params;
+
+	void init_params(nlohmann::json &params);
+
 	// Given a yaml node that should be a sequence of objects with
 	// min and max properties, populate the provided list of
 	// pairs. Throws falco_exception on error.
-	void parse_ranges(const YAML::Node &node, ranges_t &ranges);
+	void parse_ranges(const YAML::Node &node, nlohmann::json &params, const std::string &key);
 
-	void parse_sequence(const YAML::Node &node, std::string &items);
+	void parse_sequence(const YAML::Node &node, nlohmann::json &params, const std::string &key);
 
         // Load the provided psp, populating this object with template
         // params. Throws falco_exception on error.
 	void load_yaml(const std::string &psp_yaml);
 
-	// The name of this PSP, taken from metadata -> name.
-	std::string m_policy_name;
-
-	// The list of images for which this PSP should be considered
-	std::list<std::string> m_image_list;
-
-	bool m_allow_privileged;
-	bool m_allow_host_pid;
-	bool m_allow_host_ipc;
-	bool m_allow_host_network;
-
-	std::list<std::pair<int64_t, int64_t>> m_host_network_ports;
-
-	std::string m_allowed_volume_types;
-
-        std::string m_allowed_host_paths;
-
-        std::string m_allowed_flexvolume_drivers;
-
-	std::list<std::pair<int64_t, int64_t>> m_must_run_fs_groups;
-	std::list<std::pair<int64_t, int64_t>> m_may_run_fs_groups;
-
-	std::list<std::pair<int64_t, int64_t>> m_must_run_as_users;
-	bool m_must_run_as_non_root;
-
-	std::list<std::pair<int64_t, int64_t>> m_must_run_as_groups;
-	std::list<std::pair<int64_t, int64_t>> m_may_run_as_groups;
-
-	bool m_read_only_root_filesystem;
-
-	std::list<std::pair<int64_t, int64_t>> m_must_run_supplemental_groups;
-	std::list<std::pair<int64_t, int64_t>> m_may_run_supplemental_groups;
-
-	bool m_allow_privilege_escalation;
-
-	std::string m_allowed_capabilities;
-	std::string m_allowed_proc_mount_types;
 };
 
 };

@@ -17,7 +17,7 @@ limitations under the License.
 
 */
 
-#include "inja/inja.hpp"
+#include <inja/inja.hpp>
 
 #include "falco_common.h"
 #include "k8s_psp.h"
@@ -25,13 +25,6 @@ limitations under the License.
 using namespace falco;
 
 k8s_psp_converter::k8s_psp_converter()
-	: m_allow_privileged(true),
-	  m_allow_host_pid(true),
-	  m_allow_host_ipc(true),
-	  m_allow_host_network(true),
-	  m_must_run_as_non_root(false),
-	  m_read_only_root_filesystem(false),
-	  m_allow_privilege_escalation(true)
 {
 }
 
@@ -43,36 +36,8 @@ std::string k8s_psp_converter::generate_rules(const std::string &psp_yaml, const
 {
 	load_yaml(psp_yaml);
 
-	nlohmann::json data;
-
-	data["policy_name"] = m_policy_name;
-	data["image_list"] = "[nginx]";
-	data["allow_privileged"] = m_allow_privileged;
-	data["allow_host_pid"] = m_allow_host_pid;
-	data["allow_host_ipc"] = m_allow_host_ipc;
-	data["allow_host_network"] = m_allow_host_network;
-
-	data["host_network_ports"] = m_host_network_ports;
-	data["allowed_volume_types"] = m_allowed_volume_types;
-	data["allowed_flexvolume_drivers"] = m_allowed_flexvolume_drivers;
-	data["allowed_host_paths"] = m_allowed_host_paths;
-
-	data["must_run_fs_groups"] = m_must_run_fs_groups;
-	data["may_run_fs_groups"] = m_may_run_fs_groups;
-	data["must_run_as_users"] = m_must_run_as_users;
-	data["must_run_as_non_root"] = m_must_run_as_non_root;
-	data["must_run_as_groups"] = m_must_run_as_groups;
-	data["may_run_as_groups"] = m_may_run_as_groups;
-
-	data["read_only_root_filesystem"] = m_read_only_root_filesystem;
-	data["must_run_supplemental_groups"] = m_must_run_supplemental_groups;
-	data["may_run_supplemental_groups"] = m_may_run_supplemental_groups;
-	data["allow_privilege_escalation"] = m_allow_privilege_escalation;
-	data["allowed_capabilities"] = m_allowed_capabilities;
-	data["allowed_proc_mount_types"] = m_allowed_proc_mount_types;
-
 	try {
-		return inja::render(rules_template, data);
+		return inja::render(rules_template, m_params);
 	}
 	catch (const std::runtime_error &ex)
 	{
@@ -80,34 +45,67 @@ std::string k8s_psp_converter::generate_rules(const std::string &psp_yaml, const
 	}
 }
 
-void k8s_psp_converter::parse_ranges(const YAML::Node &node, ranges_t &ranges)
+void k8s_psp_converter::parse_ranges(const YAML::Node &node, nlohmann::json &params, const std::string &key)
 {
 	for(auto &range : node)
 	{
-		m_host_network_ports.push_back(std::make_pair(range["min"].as<int64_t>(),
-							      range["max"].as<int64_t>()));
+		params[key].push_back(std::make_pair(range["min"].as<int64_t>(),
+						      range["max"].as<int64_t>()));
 	}
 }
 
-void k8s_psp_converter::parse_sequence(const YAML::Node &node, std::string &items)
+void k8s_psp_converter::parse_sequence(const YAML::Node &node, nlohmann::json &params, const std::string &key)
 {
 	bool first = true;
+
+	std::string ret;
 
 	for(auto &item : node)
 	{
 		if(!first)
 		{
-			items += ",";
+			ret += ",";
 		}
 		first = false;
-		items += item.as<std::string>();
+		ret += item.as<std::string>();
 	}
+
+	params[key] = ret;
+}
+
+void k8s_psp_converter::init_params(nlohmann::json &params)
+{
+	params.clear();
+	params["policy_name"] = "unknown";
+	params["image_list"] = "[]";
+	params["allow_privileged"] = true;
+	params["allow_host_pid"] = true;
+	params["allow_host_ipc"] = true;
+	params["allow_host_network"] = true;
+	params["host_network_ports"] = nlohmann::json::array();
+	params["allowed_volume_types"] = "";
+	params["allowed_flexvolume_drivers"] = "";
+	params["allowed_host_paths"] = "";
+	params["must_run_fs_groups"] = nlohmann::json::array();
+	params["may_run_fs_groups"] = nlohmann::json::array();
+	params["must_run_as_users"] = nlohmann::json::array();
+	params["must_run_as_non_root"] = false;
+	params["must_run_as_groups"] = nlohmann::json::array();
+	params["may_run_as_groups"] = nlohmann::json::array();
+	params["read_only_root_filesystem"] = false;
+	params["must_run_supplemental_groups"] = nlohmann::json::array();
+	params["may_run_supplemental_groups"] = nlohmann::json::array();
+	params["allow_privilege_escalation"] = true;
+	params["allowed_capabilities"] = "";
+	params["allowed_proc_mount_types"] = "";
 }
 
 void k8s_psp_converter::load_yaml(const std::string &psp_yaml)
 {
 	try
 	{
+		init_params(m_params);
+
 		YAML::Node root = YAML::Load(psp_yaml);
 
 		if(!root["kind"] || root["kind"].as<std::string>() != "PodSecurityPolicy")
@@ -127,7 +125,9 @@ void k8s_psp_converter::load_yaml(const std::string &psp_yaml)
 			throw falco_exception("PSP Yaml Document does not have metadata: name");
 		}
 
-		m_policy_name = metadata["name"].as<std::string>();
+		m_params["policy_name"] = metadata["name"].as<std::string>();
+		// XXX/mstemm fill in
+		m_params["image_list"] = "[nginx]";
 
 		if(!root["spec"])
 		{
@@ -138,32 +138,32 @@ void k8s_psp_converter::load_yaml(const std::string &psp_yaml)
 
 		if(spec["privileged"])
 		{
-			m_allow_privileged = spec["privileged"].as<bool>();
+			m_params["allow_privileged"] = spec["privileged"].as<bool>();
 		}
 
-		if(spec["hostPid"])
+		if(spec["hostPID"])
 		{
-			m_allow_host_pid = spec["hostPid"].as<bool>();
+			m_params["allow_host_pid"] = spec["hostPID"].as<bool>();
 		}
 
 		if(spec["hostIPC"])
 		{
-			m_allow_host_ipc = spec["hostIPC"].as<bool>();
+			m_params["allow_host_ipc"] = spec["hostIPC"].as<bool>();
 		}
 
 		if(spec["hostNetwork"])
 		{
-			m_allow_host_network = spec["hostNetwork"].as<bool>();
+			m_params["allow_host_network"] = spec["hostNetwork"].as<bool>();
 		}
 
 		if(spec["hostPorts"])
 		{
-			parse_ranges(spec["hostPorts"], m_host_network_ports);
+			parse_ranges(spec["hostPorts"], m_params, "host_network_ports");
 		}
 
 		if(spec["volumes"])
 		{
-			parse_sequence(spec["volumes"], m_allowed_volume_types);
+			parse_sequence(spec["volumes"], m_params, "allowed_volume_types");
 		}
 
 		if(spec["allowedHostPaths"])
@@ -173,17 +173,17 @@ void k8s_psp_converter::load_yaml(const std::string &psp_yaml)
 			{
 				if(!first)
 				{
-					m_allowed_host_paths += ",";
+					m_params["allowed_host_paths"] += ",";
 				}
 				first = false;
 
 				// Adding non-wildcard and wildcard versions of path
-				m_allowed_host_paths += hostpath["pathPrefix"].as<std::string>();
+				m_params["allowed_host_paths"] += hostpath["pathPrefix"].as<std::string>();
 
-				m_allowed_host_paths += ",";
+				m_params["allowed_host_paths"] += ",";
 
-				m_allowed_host_paths += hostpath["pathPrefix"].as<std::string>();
-				m_allowed_host_paths += "*";
+				m_params["allowed_host_paths"] += hostpath["pathPrefix"].as<std::string>();
+				m_params["allowed_host_paths"] += "*";
 			}
 		}
 
@@ -194,12 +194,12 @@ void k8s_psp_converter::load_yaml(const std::string &psp_yaml)
 			{
 				if(!first)
 				{
-					m_allowed_flexvolume_drivers += ",";
+					m_params["allowed_flexvolume_drivers"] += ",";
 				}
 				first = false;
 
 				// Adding non-wildcard and wildcard versions of path
-				m_allowed_flexvolume_drivers += volume["driver"].as<std::string>();
+				m_params["allowed_flexvolume_drivers"] += volume["driver"].as<std::string>();
 			}
 		}
 
@@ -209,11 +209,11 @@ void k8s_psp_converter::load_yaml(const std::string &psp_yaml)
 
 			if(rule == "MustRunAs")
 			{
-				parse_ranges(spec["fsGroup"]["ranges"], m_must_run_fs_groups);
+				parse_ranges(spec["fsGroup"]["ranges"], m_params, "must_run_fs_groups");
 			}
 			else if(rule == "MayRunAs")
 			{
-				parse_ranges(spec["fsGroup"]["ranges"], m_may_run_fs_groups);
+				parse_ranges(spec["fsGroup"]["ranges"], m_params, "may_run_fs_groups");
 			}
 			else
 			{
@@ -227,11 +227,11 @@ void k8s_psp_converter::load_yaml(const std::string &psp_yaml)
 
 			if(rule == "MustRunAs")
 			{
-				parse_ranges(spec["fsGroup"]["ranges"], m_must_run_fs_groups);
+				parse_ranges(spec["fsGroup"]["ranges"], m_params, "must_run_as_users");
 			}
 			else if (rule == "MustRunAsNonRoot")
 			{
-				m_must_run_as_non_root = true;
+				m_params["must_run_as_non_root"] = true;
 			}
 		}
 
@@ -241,11 +241,11 @@ void k8s_psp_converter::load_yaml(const std::string &psp_yaml)
 
 			if(rule == "MustRunAs")
 			{
-				parse_ranges(spec["runAsGroup"]["ranges"], m_must_run_as_groups);
+				parse_ranges(spec["runAsGroup"]["ranges"], m_params, "must_run_as_groups");
 			}
 			else if(rule == "MayRunAs")
 			{
-				parse_ranges(spec["runAsGroup"]["ranges"], m_may_run_as_groups);
+				parse_ranges(spec["runAsGroup"]["ranges"], m_params, "may_run_as_groups");
 			}
 			else
 			{
@@ -255,7 +255,7 @@ void k8s_psp_converter::load_yaml(const std::string &psp_yaml)
 
 		if(spec["readOnlyRootFilesystem"])
 		{
-			m_read_only_root_filesystem = spec["readOnlyRootFilesystem"].as<bool>();
+			m_params["read_only_root_filesystem"] = spec["readOnlyRootFilesystem"].as<bool>();
 		}
 
 		if(spec["supplementalGroups"])
@@ -264,11 +264,11 @@ void k8s_psp_converter::load_yaml(const std::string &psp_yaml)
 
 			if(rule == "MustRunAs")
 			{
-				parse_ranges(spec["supplementalGroups"]["ranges"], m_must_run_as_groups);
+				parse_ranges(spec["supplementalGroups"]["ranges"], m_params, "must_run_as_groups");
 			}
 			else if(rule == "MayRunAs")
 			{
-				parse_ranges(spec["supplementalGroups"]["ranges"], m_may_run_as_groups);
+				parse_ranges(spec["supplementalGroups"]["ranges"], m_params, "may_run_as_groups");
 			}
 			else
 			{
@@ -278,17 +278,17 @@ void k8s_psp_converter::load_yaml(const std::string &psp_yaml)
 
 		if(spec["allowPrivilegeEscalation"])
 		{
-			m_allow_privilege_escalation = spec["allowPrivilegeEscalation"].as<bool>();
+			m_params["allow_privilege_escalation"] = spec["allowPrivilegeEscalation"].as<bool>();
 		}
 
 		if(spec["allowedCapabilities"])
 		{
-			parse_sequence(spec["allowedCapabilities"], m_allowed_capabilities);
+			parse_sequence(spec["allowedCapabilities"], m_params, "allowed_capabilities");
 		}
 
 		if(spec["allowedProcMountTypes"])
 		{
-			parse_sequence(spec["allowedProcMountTypes"], m_allowed_proc_mount_types);
+			parse_sequence(spec["allowedProcMountTypes"], m_params, "allowed_proc_mount_types");
 		}
 	}
 	catch (const std::invalid_argument &ex)
