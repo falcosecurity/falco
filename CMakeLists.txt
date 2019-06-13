@@ -551,6 +551,26 @@ else()
 		INSTALL_COMMAND ${CMD_MAKE} install)
 endif()
 
+option(USE_BUNDLED_INJA "Enable building of the bundled inja" ${USE_BUNDLED_DEPS})
+if(NOT USE_BUNDLED_INJA)
+	find_path(INJA_INCLUDE inja.hpp PATH_SUFFIXES inja)
+	if(INJA_INCLUDE)
+		message(STATUS "Found inja: include: ${INJA_INCLUDE}")
+	else()
+		message(FATAL_ERROR "Couldn't find system inja")
+	endif()
+else()
+	set(INJA_SRC "${PROJECT_BINARY_DIR}/inja-prefix/src/inja")
+	message(STATUS "Using bundled inja in '${INJA_SRC}'")
+	set(INJA_INCLUDE "${INJA_SRC}/single_include")
+	ExternalProject_Add(inja
+		URL "https://github.com/pantor/inja/archive/v2.1.0.tar.gz"
+		URL_MD5 "eea698f12cb2ce48bcadda7629e5aa62"
+		CONFIGURE_COMMAND ""
+		BUILD_COMMAND ""
+		INSTALL_COMMAND "")
+endif()
+
 option(USE_BUNDLED_PROTOBUF "Enable building of the bundled protobuf" ${USE_BUNDLED_DEPS})
 if(NOT USE_BUNDLED_PROTOBUF)
 	find_program(PROTOC NAMES protoc)

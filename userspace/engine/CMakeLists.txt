@@ -32,6 +32,7 @@ set(FALCO_ENGINE_SOURCE_FILES
 add_library(falco_engine STATIC ${FALCO_ENGINE_SOURCE_FILES})
 
 target_include_directories(falco_engine PUBLIC
+	"${INJA_INCLUDE}"
 	"${LUAJIT_INCLUDE}"
 	"${NJSON_INCLUDE}"
 	"${YAMLCPP_INCLUDE_DIR}"
