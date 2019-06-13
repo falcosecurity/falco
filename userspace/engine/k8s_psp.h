@@ -38,7 +38,7 @@ public:
 	k8s_psp_converter();
 	virtual ~k8s_psp_converter();
 
-	std::string generate_rules(const std::string &psp_yaml);
+	std::string generate_rules(const std::string &psp_yaml, const std::string &rules_template);
 
 private:
 
@@ -49,7 +49,7 @@ private:
 	// pairs. Throws falco_exception on error.
 	void parse_ranges(const YAML::Node &node, ranges_t &ranges);
 
-	void parse_sequence(const YAML::Node &node, std::list<std::string> &items);
+	void parse_sequence(const YAML::Node &node, std::string &items);
 
         // Load the provided psp, populating this object with template
         // params. Throws falco_exception on error.
@@ -68,9 +68,11 @@ private:
 
 	std::list<std::pair<int64_t, int64_t>> m_host_network_ports;
 
-	std::list<std::string> m_allowed_volume_types;
+	std::string m_allowed_volume_types;
 
-	std::list<std::string> m_allowed_host_paths;
+        std::string m_allowed_host_paths;
+
+        std::string m_allowed_flexvolume_drivers;
 
 	std::list<std::pair<int64_t, int64_t>> m_must_run_fs_groups;
 	std::list<std::pair<int64_t, int64_t>> m_may_run_fs_groups;
@@ -88,8 +90,8 @@ private:
 
 	bool m_allow_privilege_escalation;
 
-	std::list<std::string> m_allowed_capabilities;
-	std::list<std::string> m_allowed_proc_mount_types;
+	std::string m_allowed_capabilities;
+	std::string m_allowed_proc_mount_types;
 };
 
 };

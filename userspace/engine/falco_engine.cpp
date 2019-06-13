@@ -206,9 +206,9 @@ void falco_engine::load_rules_file(const string &rules_filename, bool verbose, b
 	load_rules(rules_content, verbose, all_events, required_engine_version);
 }
 
-std::string falco_engine::k8s_psp_to_falco_rules(const std::string &psp_yaml)
+std::string falco_engine::k8s_psp_to_falco_rules(const std::string &psp_yaml, const std::string &rules_template)
 {
-	return m_psp_converter.generate_rules(psp_yaml);
+	return m_psp_converter.generate_rules(psp_yaml, rules_template);
 }
 
 void falco_engine::enable_rule(const string &substring, bool enabled, const string &ruleset)

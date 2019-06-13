@@ -828,10 +828,17 @@ int falco_init(int argc, char **argv)
 			falco_logger::log(LOG_INFO, "Loading K8s PSP from file " + psp_path + ", generating rules, and loading rules:\n");
 			std::string psp_yaml;
 			std::string psp_rules;
+			std::string rules_template;
 			uint64_t required_engine_version;
 
+			// XXX/mstemm hard-coding template file for now
+			string path = "/mnt/sf_mstemm/work/src/falco/rules/templates/k8s_psp_rules.yaml.tmpl";
+			rules_template = read_file(path);
+
 			psp_yaml = read_file(psp_path);
-			psp_rules = engine->k8s_psp_to_falco_rules(psp_yaml);
+			psp_rules = engine->k8s_psp_to_falco_rules(psp_yaml, rules_template);
+
+			falco_logger::log(LOG_INFO, "Rules from template: " + psp_rules);
 
 			engine->load_rules(psp_rules, verbose, all_events, required_engine_version);
 

@@ -39,11 +39,45 @@ k8s_psp_converter::~k8s_psp_converter()
 {
 }
 
-std::string k8s_psp_converter::generate_rules(const std::string &psp_yaml)
+std::string k8s_psp_converter::generate_rules(const std::string &psp_yaml, const std::string &rules_template)
 {
 	load_yaml(psp_yaml);
 
-	return "";
+	nlohmann::json data;
+
+	data["policy_name"] = m_policy_name;
+	data["image_list"] = "[nginx]";
+	data["allow_privileged"] = m_allow_privileged;
+	data["allow_host_pid"] = m_allow_host_pid;
+	data["allow_host_ipc"] = m_allow_host_ipc;
+	data["allow_host_network"] = m_allow_host_network;
+
+	data["host_network_ports"] = m_host_network_ports;
+	data["allowed_volume_types"] = m_allowed_volume_types;
+	data["allowed_flexvolume_drivers"] = m_allowed_flexvolume_drivers;
+	data["allowed_host_paths"] = m_allowed_host_paths;
+
+	data["must_run_fs_groups"] = m_must_run_fs_groups;
+	data["may_run_fs_groups"] = m_may_run_fs_groups;
+	data["must_run_as_users"] = m_must_run_as_users;
+	data["must_run_as_non_root"] = m_must_run_as_non_root;
+	data["must_run_as_groups"] = m_must_run_as_groups;
+	data["may_run_as_groups"] = m_may_run_as_groups;
+
+	data["read_only_root_filesystem"] = m_read_only_root_filesystem;
+	data["must_run_supplemental_groups"] = m_must_run_supplemental_groups;
+	data["may_run_supplemental_groups"] = m_may_run_supplemental_groups;
+	data["allow_privilege_escalation"] = m_allow_privilege_escalation;
+	data["allowed_capabilities"] = m_allowed_capabilities;
+	data["allowed_proc_mount_types"] = m_allowed_proc_mount_types;
+
+	try {
+		return inja::render(rules_template, data);
+	}
+	catch (const std::runtime_error &ex)
+	{
+		throw falco_exception(string("Could not render rules template: ") + ex.what());
+	}
 }
 
 void k8s_psp_converter::parse_ranges(const YAML::Node &node, ranges_t &ranges)
@@ -55,11 +89,18 @@ void k8s_psp_converter::parse_ranges(const YAML::Node &node, ranges_t &ranges)
 	}
 }
 
-void k8s_psp_converter::parse_sequence(const YAML::Node &node, std::list<std::string> &items)
+void k8s_psp_converter::parse_sequence(const YAML::Node &node, std::string &items)
 {
+	bool first = true;
+
 	for(auto &item : node)
 	{
-		items.push_back(item.as<std::string>());
+		if(!first)
+		{
+			items += ",";
+		}
+		first = false;
+		items += item.as<std::string>();
 	}
 }
 
@@ -93,7 +134,7 @@ void k8s_psp_converter::load_yaml(const std::string &psp_yaml)
 			throw falco_exception("PSP Yaml Document does not have spec property");
 		}
 
-		auto spec = root["metadata"];
+		auto spec = root["spec"];
 
 		if(spec["privileged"])
 		{
@@ -127,9 +168,38 @@ void k8s_psp_converter::load_yaml(const std::string &psp_yaml)
 
 		if(spec["allowedHostPaths"])
 		{
+			bool first = true;
 			for(const auto &hostpath : spec["allowedHostPaths"])
 			{
-				m_allowed_host_paths.push_back(hostpath["pathPrefix"].as<std::string>());
+				if(!first)
+				{
+					m_allowed_host_paths += ",";
+				}
+				first = false;
+
+				// Adding non-wildcard and wildcard versions of path
+				m_allowed_host_paths += hostpath["pathPrefix"].as<std::string>();
+
+				m_allowed_host_paths += ",";
+
+				m_allowed_host_paths += hostpath["pathPrefix"].as<std::string>();
+				m_allowed_host_paths += "*";
+			}
+		}
+
+		if(spec["allowedFlexVolumes"])
+		{
+			bool first = true;
+			for(const auto &volume : spec["allowedFlexVolumes"])
+			{
+				if(!first)
+				{
+					m_allowed_flexvolume_drivers += ",";
+				}
+				first = false;
+
+				// Adding non-wildcard and wildcard versions of path
+				m_allowed_flexvolume_drivers += volume["driver"].as<std::string>();
 			}
 		}
 
