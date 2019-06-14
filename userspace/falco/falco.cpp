@@ -102,6 +102,8 @@ static void usage()
 	   " --psp <psp yaml file>         Read the provided file containing a K8s Pod Security Policy (PSP) specification,\n"
 	   "                               generate a rules file that can be used to detect potential violations of the PSP,\n"
 	   "                               and load the rules.\n"
+	   " --psp_save [<path>]           With --psp, save the resulting rules file to the provided path. If no <path> is\n"
+	   "                               provided, a .rules suffix is added to the psp yaml path and used as the path\n"
 	   " -k <url>, --k8s-api <url>\n"
 	   "                               Enable Kubernetes support by connecting to the API server specified as argument.\n"
        "                               E.g. \"http://admin:password@127.0.0.1:8080\".\n"
@@ -433,6 +435,8 @@ int falco_init(int argc, char **argv)
 	bool print_support = false;
 	string cri_socket_path;
 	string psp_path;
+	string psp_rules_path;
+	bool psp_save_rules;
 	set<string> disable_sources;
 	bool disable_syscall = false;
 	bool disable_k8s_audit = false;
@@ -455,6 +459,8 @@ int falco_init(int argc, char **argv)
 
 	static struct option long_options[] =
 	{
+		{"psp", required_argument, 0},
+		{"psp_save", optional_argument, 0},
 		{"cri", required_argument, 0},
         {"daemon", no_argument, 0, 'd'},
         {"disable-source", required_argument, 0},
@@ -635,6 +641,14 @@ int falco_init(int argc, char **argv)
 				else if (string(long_options[long_index].name) == "psp")
 				{
 					psp_path = optarg;
+				}
+				else if (string(long_options[long_index].name) == "psp_save")
+				{
+					psp_save_rules = true;
+					if(optarg != NULL)
+					{
+						psp_rules_path = optarg;
+					}
 				}
 				else if (string(long_options[long_index].name) == "stats_interval")
 				{
@@ -838,7 +852,19 @@ int falco_init(int argc, char **argv)
 			psp_yaml = read_file(psp_path);
 			psp_rules = engine->k8s_psp_to_falco_rules(psp_yaml, rules_template);
 
-			falco_logger::log(LOG_INFO, "Rules from template: " + psp_rules);
+			falco_logger::log(LOG_DEBUG, "Rules from template: " + psp_rules);
+
+			if(psp_save_rules)
+			{
+				if(psp_rules_path.empty())
+				{
+					psp_rules_path = psp_path + ".rules";
+				}
+				falco_logger::log(LOG_INFO, "Saving resulting rules to " + psp_rules_path + "\n");
+
+				std::ofstream out(psp_rules_path);
+				out << psp_rules;
+			}
 
 			engine->load_rules(psp_rules, verbose, all_events, required_engine_version);
 
