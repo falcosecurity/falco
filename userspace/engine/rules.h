@@ -21,6 +21,7 @@ limitations under the License.
 
 #include <set>
 #include <memory>
+#include <regex>
 
 #include "sinsp.h"
 #include "filter.h"
@@ -57,13 +58,14 @@ class falco_rules
 	void add_filter(string &rule, std::set<uint32_t> &evttypes, std::set<uint32_t> &syscalls, std::set<string> &tags);
 	void add_k8s_audit_filter(string &rule, std::set<string> &tags);
 	void enable_rule(string &rule, bool enabled);
+	std::string get_context(const std::string &content, uint64_t line, uint64_t column);
 
 	lua_parser* m_sinsp_lua_parser;
 	lua_parser* m_json_lua_parser;
 	sinsp* m_inspector;
 	falco_engine *m_engine;
 	lua_State* m_ls;
-
+	std::regex m_err_linecol_re;
 	string m_lua_load_rules = "load_rules";
 	string m_lua_ignored_syscalls = "ignored_syscalls";
 	string m_lua_ignored_events = "ignored_events";

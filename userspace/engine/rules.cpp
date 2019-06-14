@@ -17,6 +17,8 @@ limitations under the License.
 
 */
 
+#include <sstream>
+
 #include "rules.h"
 #include "logger.h"
 
@@ -42,7 +44,8 @@ falco_rules::falco_rules(sinsp* inspector,
 			 lua_State *ls)
 	: m_inspector(inspector),
 	  m_engine(engine),
-	  m_ls(ls)
+	  m_ls(ls),
+	  m_err_linecol_re("^(\\d+):(\\d+)")
 {
 	m_sinsp_lua_parser = new lua_parser(engine->sinsp_factory(), m_ls, "filter");
 	m_json_lua_parser = new lua_parser(engine->json_factory(), m_ls, "k8s_audit_filter");
@@ -203,6 +206,32 @@ int falco_rules::enable_rule(lua_State *ls)
 void falco_rules::enable_rule(string &rule, bool enabled)
 {
 	m_engine->enable_rule(rule, enabled);
+}
+
+std::string falco_rules::get_context(const std::string &content, uint64_t lineno, uint64_t colno)
+{
+	istringstream ctx(content);
+	std::string line;
+	std::string ret;
+
+	ret += "---\n";
+	for(uint32_t i=1; ctx && i<=lineno;  i++)
+	{
+		getline(ctx, line);
+		if(i > (lineno-3))
+		{
+			ret += line + "\n";
+		}
+	}
+
+	for(uint32_t j=1; j<colno; j++)
+	{
+		ret += " ";
+	}
+	ret += "^\n";
+	ret += "---\n";
+
+	return ret;
 }
 
 int falco_rules::engine_version(lua_State *ls)
@@ -428,7 +457,20 @@ void falco_rules::load_rules(const string &rules_content,
 		if(lua_pcall(m_ls, 9, 1, 0) != 0)
 		{
 			const char* lerr = lua_tostring(m_ls, -1);
+
 			string err = "Error loading rules: " + string(lerr);
+
+			// The lua error might start with a line
+			// number and column number. If it does, add
+			// context to the error.
+			std::smatch match;
+			string lerr_str = lerr;
+			if(regex_search(lerr_str, match, m_err_linecol_re) && match.size() > 1)
+			{
+				err += "\n";
+				err += get_context(rules_content, atoi(match.str(1).c_str()), atoi(match.str(2).c_str()));
+			}
+
 			throw falco_exception(err);
 		}
 
