@@ -264,11 +264,11 @@ void k8s_psp_converter::load_yaml(const std::string &psp_yaml)
 
 		if(spec["runAsUser"])
 		{
-			std::string rule = spec["fsGroup"]["rule"].as<std::string>();
+			std::string rule = spec["runAsUser"]["rule"].as<std::string>();
 
 			if(rule == "MustRunAs")
 			{
-				m_params["must_run_as_users"] = parse_ranges(spec["fsGroup"]["ranges"]);
+				m_params["must_run_as_users"] = parse_ranges(spec["runAsUser"]["ranges"]);
 			}
 			else if (rule == "MustRunAsNonRoot")
 			{

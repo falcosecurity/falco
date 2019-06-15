@@ -133,15 +133,17 @@
 #########################################
 - macro: psp_fs_group_must_run_matches
 {% if length(must_run_fs_groups) > 0 %}  condition: >
-    (
-      {% for group in must_run_fs_groups %}{% if not loop.is_first %}  and {% endif %} (ka.req.sec_ctx.fs_group >= {{ group.min }} and ka.req.sec_ctx.fs_group <= {{ group.max }}){% endfor %}
+    ({% for group in must_run_fs_groups %}
+      {% if not loop.is_first %} and {% endif %}(ka.req.sec_ctx.fs_group >= {{ group.min }} and ka.req.sec_ctx.fs_group <= {{ group.max }}){% endfor %}
     )
 {% else %}  condition: (k8s_audit_always_true)
 {% endif %}
 - macro: psp_fs_group_may_run_matches
 {% if length(may_run_fs_groups) > 0 %}  condition: >
-    ( ka.req.sec_ctx.fs_group == "N/A" or
-      ({% for group in may_run_fs_groups %}{% if not loop.is_first %}  and{% endif %} (ka.req.sec_ctx.fs_group >= {{ group.min }} and ka.req.sec_ctx.fs_group <= {{ group.max }}){% endfor %})
+    (ka.req.sec_ctx.fs_group == "N/A" or
+     ({% for group in may_run_fs_groups %}
+      {% if not loop.is_first %} and {% endif %}(ka.req.sec_ctx.fs_group >= {{ group.min }} and ka.req.sec_ctx.fs_group <= {{ group.max }}){% endfor %})
+     )
     )
 {% else %}  condition: (k8s_audit_always_true)
 {% endif %}
@@ -156,9 +158,10 @@
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
-{% endif %}
-
-{% if read_only_root_filesystem %}
+{% endif %}{% if read_only_root_filesystem %}
+#########################################
+# Rule for PSP readOnlyRootFilesystem property
+#########################################
 - rule: PSP Validation Failure readOnlyRootFilesystem
   desc: >
     Detect a psp validation failure for a readOnlyRootFilesystem pod
@@ -167,19 +170,17 @@
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
-{% endif %}
-
-{% if length(must_run_as_users) > 0 %}
-
+{% endif %}{% if length(must_run_as_users) > 0 %}
+#########################################
+# Rule for PSP runAsUser property
+#########################################
 - macro: psp_run_as_users_sec_ctx
-  condition: ( ka.req.sec_ctx.run_as_user != "N/A" and
-{% for range in must_run_as_users %}
-    {% if not loop.is_first %}  and{% endif %} (ka.req.sec_ctx.run_as_user >= {{ range.min }} and ka.req.sec_ctx.run_as_user <= {{ range.max }})
-{% endfor %}
+  condition: ( ka.req.sec_ctx.run_as_user != "N/A" and{% for range in must_run_as_users %}
+    {% if not loop.is_first %}  and{% endif %} (ka.req.sec_ctx.run_as_user >= {{ range.min }} and ka.req.sec_ctx.run_as_user <= {{ range.max }}){% endfor %}
   )
 
 - macro: psp_run_as_users_pod_spec
-  condition: (ka.req.container.run_as_user.within[{{ must_run_as_users }}])
+  condition: (ka.req.container.run_as_user.within[{{ rjoin(",", must_run_as_users) }}])
 
 - macro: psp_run_as_users
   condition: (psp_run_as_users_sec_ctx or (ka.req.container.run_as_user.defined and psp_run_as_users_pod_spec))
