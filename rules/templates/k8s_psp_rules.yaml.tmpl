@@ -26,7 +26,9 @@
 - macro: psp_container
   condition: (psp_enabled and kevt and pod and kcreate and ka.req.container.image.repository in (psp_images))
 {% if not allow_privileged  %}
-
+#########################################
+# Rule for PSP privileged property
+#########################################
 - rule: PSP Validation Failure Privileged
   desc: >
     Detect a psp validation failure for a privileged pod
@@ -35,10 +37,11 @@
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
-{% endif %}
-{% if not allow_host_pid %}
-
-- rule: PSP Validation Failure HostPid
+{% endif %}{% if not allow_host_pid %}
+#########################################
+# Rule for PSP hostPID property
+#########################################
+- rule: PSP Validation Failure HostPID
   desc: >
     Detect a psp validation failure for a hostPID pod
   condition: psp_container and ka.req.container.host_pid=true
@@ -46,9 +49,10 @@
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
-{% endif %}
-{% if not allow_host_ipc %}
-
+{% endif %}{% if not allow_host_ipc %}
+#########################################
+# Rule for PSP hostIPC property
+#########################################
 - rule: PSP Validation Failure HostIPC
   desc: >
     Detect a psp validation failure for a hostIPC pod
@@ -57,9 +61,10 @@
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
-{% endif %}
-{% if not allow_host_network %}
-
+{% endif %}{% if not allow_host_network %}
+#########################################
+# Rule for PSP hostNetwork property
+#########################################
 - rule: PSP Validation Failure HostNetwork
   desc: >
     Detect a psp validation failure for a hostnetwork pod
@@ -68,87 +73,78 @@
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
-{% endif %}
-
-{% if host_network_ports != "" %}
-
+{% endif %}{% if length(host_network_ports) > 0 %}
+#########################################
+# Rule for PSP hostPorts ranges
+#########################################
 - rule: PSP Validation Failure HostNetwork Ports
   desc: >
     Detect a psp validation failure for a hostnetwork port outside of the allowed set
-  condition: psp_container and not ka.req.container.host_port.within[{{ host_network_ports }}]=true
-  output: Pod Security Policy {{ policy_name }} validation failure--hostnetwork port outside of allowed set {{ host_network_ports }} (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
+  condition: psp_container and not ka.req.container.host_port.within[{{ rjoin(",", host_network_ports) }}]=true
+  output: Pod Security Policy {{ policy_name }} validation failure--hostnetwork port outside of allowed ranges [{{ rjoin(",", host_network_ports) }}] (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
-{% endif %}
-{% if allowed_volume_types != "" %}
-
+{% endif %}{% if length(allowed_volume_types) > 0 %}
+#########################################
+# Rule for PSP volumes property
+#########################################
 - rule: PSP Validation Failure Volume Types
   desc: >
     Detect a psp validation failure for a volume type outside of the allowed set
-  condition: psp_container and not ka.req.volume_types.within[{{ allowed_volume_types }}]=true
-  output: Pod Security Policy {{ policy_name }} validation failure--volume type outside of allowed set {{ allowed_volume_types }} (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
+  condition: psp_container and not ka.req.volume_types.within[{{ join(",", allowed_volume_types) }}]=true
+  output: Pod Security Policy {{ policy_name }} validation failure--volume type outside of allowed set {{ join(",", allowed_volume_types) }} (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
-{% endif %}
-
-{% if allowed_host_paths != "" %}
-
+{% endif %}{% if length(allowed_host_paths) > 0 %}
+#########################################
+# Rule for PSP allowedHostPaths property
+#########################################
 - macro: psp_allowed_host_paths
-  condition: (ka.req.volume.all_hostpath[{{ allowed_host_paths }}] = true)
+  condition: (ka.req.volume.all_hostpath[{{ join(",", allowed_host_paths) }}] = true)
 
 - rule: PSP Validation Failure Host Paths
   desc: >
     Detect a psp validation failure for a hostPath volume with a path outside of the allowed set
   condition: psp_container and ka.req.volume_types.within[hostPath]=true and not psp_allowed_host_paths
-  output: Pod Security Policy {{ policy_name }} validation failure--hostPath volume mounting path outside of allowed set {{ allowed_host_paths }} (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
+  output: Pod Security Policy {{ policy_name }} validation failure--hostPath volume mounting path outside of allowed set {{ join(",", allowed_host_paths) }} (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
-{% endif %}
-
-{% if allowed_flexvolume_drivers != "" %}
-
+{% endif %}{% if length(allowed_flexvolume_drivers) > 0 %}
+#########################################
+# Rule for PSP allowedFlexVolumes property
+#########################################
 - macro: psp_allowed_flexvolume_drivers
-  condition: (ka.req.volume.all_flexvolume_drivers[{{ allowed_flexvolume_drivers }}] = true)
+  condition: (ka.req.volume.all_flexvolume_drivers[{{ join(",", allowed_flexvolume_drivers) }}] = true)
 
 - rule: PSP Validation Failure Flexvolume Drivers
   desc: >
     Detect a psp validation failure for a FlexVolume driver outside of the allowed set
   condition: psp_container and not psp_allowed_flexvolume_drivers
-  output: Pod Security Policy {{ policy_name }} validation failure--Flexvolume driver outside of allowed set {{ allowed_flexvolume_drivers }} (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
+  output: Pod Security Policy {{ policy_name }} validation failure--Flexvolume driver outside of allowed set {{ join(",", allowed_flexvolume_drivers) }} (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
-{% endif %}
-
-{% if length(must_run_fs_groups) > 0 or length(may_run_fs_groups) > 0 %}
-
+{% endif %}{% if length(must_run_fs_groups) > 0 or length(may_run_fs_groups) > 0 %}
+#########################################
+# Rule for PSP fsGroup property
+#########################################
 - macro: psp_fs_group_must_run_matches
-{% if length(must_run_fs_groups) > 0 %}
-  condition: (
-{% for group in must_run_fs_groups %}
-    {% if not loop.is_first %}  and {% endif %} (ka.req.sec_ctx.fs_group >= {{ group.0 }} and ka.req.sec_ctx.fs_group <= {{ group.1 }})
-{% endfor %}
-  )
-{% else %}
-
-  condition: (k8s_audit_always_true)
+{% if length(must_run_fs_groups) > 0 %}  condition: >
+    (
+      {% for group in must_run_fs_groups %}{% if not loop.is_first %}  and {% endif %} (ka.req.sec_ctx.fs_group >= {{ group.min }} and ka.req.sec_ctx.fs_group <= {{ group.max }}){% endfor %}
+    )
+{% else %}  condition: (k8s_audit_always_true)
 {% endif %}
-
 - macro: psp_fs_group_may_run_matches
-{% if length(may_run_fs_groups) > 0 %}
-  condition: ( ka.req.sec_ctx.fs_group == "N/A" or (
-{% for group in may_run_fs_groups %}
-    {% if not loop.is_first %}  and{% endif %} (ka.req.sec_ctx.fs_group >= {{ group.0 }} and ka.req.sec_ctx.fs_group <= {{ group.1 }})
-{% endfor %}
-  ))
-{% else %}
-
-  condition: (k8s_audit_always_true)
+{% if length(may_run_fs_groups) > 0 %}  condition: >
+    ( ka.req.sec_ctx.fs_group == "N/A" or
+      ({% for group in may_run_fs_groups %}{% if not loop.is_first %}  and{% endif %} (ka.req.sec_ctx.fs_group >= {{ group.min }} and ka.req.sec_ctx.fs_group <= {{ group.max }}){% endfor %})
+    )
+{% else %}  condition: (k8s_audit_always_true)
 {% endif %}
-
 - macro: psp_fs_group
   condition: (psp_fs_group_must_run_matches and psp_fs_group_may_run_matches)
 
@@ -178,7 +174,7 @@
 - macro: psp_run_as_users_sec_ctx
   condition: ( ka.req.sec_ctx.run_as_user != "N/A" and
 {% for range in must_run_as_users %}
-    {% if not loop.is_first %}  and{% endif %} (ka.req.sec_ctx.run_as_user >= {{ range.0 }} and ka.req.sec_ctx.run_as_user <= {{ range.1 }})
+    {% if not loop.is_first %}  and{% endif %} (ka.req.sec_ctx.run_as_user >= {{ range.min }} and ka.req.sec_ctx.run_as_user <= {{ range.max }})
 {% endfor %}
   )
 
@@ -224,7 +220,7 @@
 - macro: psp_must_run_as_groups_sec_ctx
   condition: ( ka.req.sec_ctx.run_as_group != "N/A" and
 {% for range in must_run_as_groups %}
-    {% if not loop.is_first %}  and{% endif %} (ka.req.sec_ctx.run_as_group >= {{ range.0 }} and ka.req.sec_ctx.run_as_group <= {{ range.1 }})
+    {% if not loop.is_first %}  and{% endif %} (ka.req.sec_ctx.run_as_group >= {{ range.min }} and ka.req.sec_ctx.run_as_group <= {{ range.max }})
 {% endfor %}
   )
 
@@ -249,7 +245,7 @@
 - macro: psp_may_run_as_groups_sec_ctx
   condition: ( ka.req.sec_ctx.run_as_group != "N/A" and
 {% for range in may_run_as_groups %}
-    {% if not loop.is_first %}  and{% endif %} (ka.req.sec_ctx.run_as_group >= {{ range.0 }} and ka.req.sec_ctx.run_as_group <= {{ range.1 }})
+    {% if not loop.is_first %}  and{% endif %} (ka.req.sec_ctx.run_as_group >= {{ range.min }} and ka.req.sec_ctx.run_as_group <= {{ range.max }})
 {% endfor %}
   )
 
@@ -275,7 +271,7 @@
 {% if length(must_run_supplemental_groups) > 0 %}
   condition: (
 {% for group in must_run_supplemental_groups %}
-    {% if not loop.is_first %}  and {% endif %} (ka.req.sec_ctx.supplemental_groups.within[{{ group.0 }}:{{ group.1 }}])
+    {% if not loop.is_first %}  and {% endif %} (ka.req.sec_ctx.supplemental_groups.within[{{ group.min }}:{{ group.max }}])
 {% endfor %}
   )
 {% else %}
@@ -287,7 +283,7 @@
 {% if length(may_run_supplemental_groups) > 0 %}
   condition: ( ka.req.sec_ctx.supplemental_groups == "N/A" or (
 {% for group in may_run_supplemental_groups %}
-    {% if not loop.is_first %}  and{% endif %} (ka.req.sec_ctx.supplemental_groups.within[{{ group.0 }}:{{ group.1 }}])
+    {% if not loop.is_first %}  and{% endif %} (ka.req.sec_ctx.supplemental_groups.within[{{ group.min }}:{{ group.max }}])
 {% endfor %}
   ))
 {% else %}
@@ -320,25 +316,25 @@
   tags: [k8s-psp]
 {% endif %}
 
-{% if allowed_capabilities != "" %}
+{% if length(allowed_capabilities) > 0 %}
 
 - rule: PSP Validation Failure Allowed Capabilities
   desc: >
     Detect a psp validation failure for Allowed Capabilities
-  condition: psp_container and not ka.req.sec_ctx.allowed_capabilities.within[{{ allowed_capabilities }}]
-  output: Pod Security Policy {{ policy_name }} validation failure--pod with capabilities outside of allowed set "{{ allowed_capabilities }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
+  condition: psp_container and not ka.req.sec_ctx.allowed_capabilities.within[{{ join(",", allowed_capabilities) }}]
+  output: Pod Security Policy {{ policy_name }} validation failure--pod with capabilities outside of allowed set "{{ join(",", allowed_capabilities) }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
 {% endif %}
 
-{% if allowed_proc_mount_types != "" %}
+{% if length(allowed_proc_mount_types) > 0 %}
 
 - rule: PSP Validation Failure Allowed Proc Mount Types
   desc: >
     Detect a psp validation failure for Allowed Proc Mount Types
-  condition: psp_container and not ka.req.sec_ctx.proc_mount in ({{ allowed_proc_mount_types }})
-  output: Pod Security Policy {{ policy_name }} validation failure--pod with proc mount %ka.req.sec_ctx.proc_mount outside of allowed set "{{ allowed_proc_mount_types }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
+  condition: psp_container and not ka.req.sec_ctx.proc_mount in ({{ join(",", allowed_proc_mount_types) }})
+  output: Pod Security Policy {{ policy_name }} validation failure--pod with proc mount %ka.req.sec_ctx.proc_mount outside of allowed set "{{ join(",", allowed_proc_mount_types) }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]

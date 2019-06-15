@@ -51,12 +51,9 @@ private:
 
 	void init_params(nlohmann::json &params);
 
-	// Given a yaml node that should be a sequence of objects with
-	// min and max properties, populate the provided list of
-	// pairs. Throws falco_exception on error.
-	void parse_ranges(const YAML::Node &node, nlohmann::json &params, const std::string &key);
+	nlohmann::json parse_ranges(const YAML::Node &node);
 
-	void parse_sequence(const YAML::Node &node, nlohmann::json &params, const std::string &key);
+	nlohmann::json parse_sequence(const YAML::Node &node);
 
         // Load the provided psp, populating this object with template
         // params. Throws falco_exception on error.

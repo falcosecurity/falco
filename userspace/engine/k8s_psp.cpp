@@ -32,12 +32,64 @@ k8s_psp_converter::~k8s_psp_converter()
 {
 }
 
+static std::string ranges_join(inja::Arguments& args)
+{
+	std::string delim = *(args.at(0));
+	const nlohmann::json *ranges = args.at(1);
+
+	std::string ret;
+	bool first = true;
+
+	for(auto &range : *ranges)
+	{
+		if(!first)
+		{
+			ret += delim;
+		}
+		first = false;
+
+		ret += range["min"];
+		ret += ":";
+		ret += range["max"];
+	}
+
+	return ret;
+}
+
+static std::string items_join(inja::Arguments& args)
+{
+	std::string delim = *(args.at(0));
+	const nlohmann::json *items = args.at(1);
+
+	std::string ret;
+	bool first = true;
+
+	for(auto &item : *items)
+	{
+		if(!first)
+		{
+			ret += delim;
+		}
+		first = false;
+
+		ret += item;
+	}
+
+	return ret;
+}
+
 std::string k8s_psp_converter::generate_rules(const std::string &psp_yaml, const std::string &rules_template)
 {
 	load_yaml(psp_yaml);
 
 	try {
-		return inja::render(rules_template, m_params);
+		inja::Environment env;
+
+		env.add_callback("rjoin", 2, ranges_join);
+		env.add_callback("join", 2, items_join);
+		env.set_line_statement("DO_NOT_USE_LINE_STATEMENTS");
+
+		return env.render(rules_template, m_params);
 	}
 	catch (const std::runtime_error &ex)
 	{
@@ -45,32 +97,32 @@ std::string k8s_psp_converter::generate_rules(const std::string &psp_yaml, const
 	}
 }
 
-void k8s_psp_converter::parse_ranges(const YAML::Node &node, nlohmann::json &params, const std::string &key)
+nlohmann::json k8s_psp_converter::parse_ranges(const YAML::Node &node)
 {
+	nlohmann::json ret = nlohmann::json::array();
+
 	for(auto &range : node)
 	{
-		params[key].push_back(std::make_pair(range["min"].as<int64_t>(),
-						      range["max"].as<int64_t>()));
+		nlohmann::json r;
+		r["min"] = range["min"].as<string>();
+		r["max"] = range["max"].as<string>();
+
+		ret.push_back(r);
 	}
+
+	return ret;
 }
 
-void k8s_psp_converter::parse_sequence(const YAML::Node &node, nlohmann::json &params, const std::string &key)
+nlohmann::json k8s_psp_converter::parse_sequence(const YAML::Node &node)
 {
-	bool first = true;
-
-	std::string ret;
+	nlohmann::json ret = nlohmann::json::array();
 
 	for(auto &item : node)
 	{
-		if(!first)
-		{
-			ret += ",";
-		}
-		first = false;
-		ret += item.as<std::string>();
+		ret.push_back(item.as<std::string>());
 	}
 
-	params[key] = ret;
+	return ret;
 }
 
 void k8s_psp_converter::init_params(nlohmann::json &params)
@@ -83,9 +135,9 @@ void k8s_psp_converter::init_params(nlohmann::json &params)
 	params["allow_host_ipc"] = true;
 	params["allow_host_network"] = true;
 	params["host_network_ports"] = nlohmann::json::array();
-	params["allowed_volume_types"] = "";
-	params["allowed_flexvolume_drivers"] = "";
-	params["allowed_host_paths"] = "";
+	params["allowed_volume_types"] = nlohmann::json::array();
+	params["allowed_flexvolume_drivers"] = nlohmann::json::array();
+	params["allowed_host_paths"] = nlohmann::json::array();
 	params["must_run_fs_groups"] = nlohmann::json::array();
 	params["may_run_fs_groups"] = nlohmann::json::array();
 	params["must_run_as_users"] = nlohmann::json::array();
@@ -96,8 +148,8 @@ void k8s_psp_converter::init_params(nlohmann::json &params)
 	params["must_run_supplemental_groups"] = nlohmann::json::array();
 	params["may_run_supplemental_groups"] = nlohmann::json::array();
 	params["allow_privilege_escalation"] = true;
-	params["allowed_capabilities"] = "";
-	params["allowed_proc_mount_types"] = "";
+	params["allowed_capabilities"] = nlohmann::json::array();
+	params["allowed_proc_mount_types"] = nlohmann::json::array();
 }
 
 void k8s_psp_converter::load_yaml(const std::string &psp_yaml)
@@ -158,49 +210,38 @@ void k8s_psp_converter::load_yaml(const std::string &psp_yaml)
 
 		if(spec["hostPorts"])
 		{
-			parse_ranges(spec["hostPorts"], m_params, "host_network_ports");
+			m_params["host_network_ports"] = parse_ranges(spec["hostPorts"]);
 		}
 
 		if(spec["volumes"])
 		{
-			parse_sequence(spec["volumes"], m_params, "allowed_volume_types");
+			m_params["allowed_volume_types"] = parse_sequence(spec["volumes"]);
 		}
 
 		if(spec["allowedHostPaths"])
 		{
-			bool first = true;
+			nlohmann::json items;
 			for(const auto &hostpath : spec["allowedHostPaths"])
 			{
-				if(!first)
-				{
-					m_params["allowed_host_paths"] += ",";
-				}
-				first = false;
-
 				// Adding non-wildcard and wildcard versions of path
-				m_params["allowed_host_paths"] += hostpath["pathPrefix"].as<std::string>();
+				std::string path = hostpath["pathPrefix"].as<std::string>();
+			        items.push_back(path);
 
-				m_params["allowed_host_paths"] += ",";
-
-				m_params["allowed_host_paths"] += hostpath["pathPrefix"].as<std::string>();
-				m_params["allowed_host_paths"] += "*";
+				path += "*";
+			        items.push_back(path);
 			}
+
+			m_params["allowed_host_paths"] = items;
 		}
 
 		if(spec["allowedFlexVolumes"])
 		{
-			bool first = true;
+			nlohmann::json items;
 			for(const auto &volume : spec["allowedFlexVolumes"])
 			{
-				if(!first)
-				{
-					m_params["allowed_flexvolume_drivers"] += ",";
-				}
-				first = false;
-
-				// Adding non-wildcard and wildcard versions of path
-				m_params["allowed_flexvolume_drivers"] += volume["driver"].as<std::string>();
+				items.push_back(volume["driver"].as<std::string>());
 			}
+			m_params["allowed_flexvolume_drivers"] = items;
 		}
 
 		if(spec["fsGroup"])
@@ -209,11 +250,11 @@ void k8s_psp_converter::load_yaml(const std::string &psp_yaml)
 
 			if(rule == "MustRunAs")
 			{
-				parse_ranges(spec["fsGroup"]["ranges"], m_params, "must_run_fs_groups");
+				m_params["must_run_fs_groups"] = parse_ranges(spec["fsGroup"]["ranges"]);
 			}
 			else if(rule == "MayRunAs")
 			{
-				parse_ranges(spec["fsGroup"]["ranges"], m_params, "may_run_fs_groups");
+				m_params["may_run_fs_groups"] = parse_ranges(spec["fsGroup"]["ranges"]);
 			}
 			else
 			{
@@ -227,7 +268,7 @@ void k8s_psp_converter::load_yaml(const std::string &psp_yaml)
 
 			if(rule == "MustRunAs")
 			{
-				parse_ranges(spec["fsGroup"]["ranges"], m_params, "must_run_as_users");
+				m_params["must_run_as_users"] = parse_ranges(spec["fsGroup"]["ranges"]);
 			}
 			else if (rule == "MustRunAsNonRoot")
 			{
@@ -241,11 +282,11 @@ void k8s_psp_converter::load_yaml(const std::string &psp_yaml)
 
 			if(rule == "MustRunAs")
 			{
-				parse_ranges(spec["runAsGroup"]["ranges"], m_params, "must_run_as_groups");
+				m_params["must_run_as_groups"] = parse_ranges(spec["runAsGroup"]["ranges"]);
 			}
 			else if(rule == "MayRunAs")
 			{
-				parse_ranges(spec["runAsGroup"]["ranges"], m_params, "may_run_as_groups");
+				m_params["may_run_as_groups"] = parse_ranges(spec["runAsGroup"]["ranges"]);
 			}
 			else
 			{
@@ -264,11 +305,11 @@ void k8s_psp_converter::load_yaml(const std::string &psp_yaml)
 
 			if(rule == "MustRunAs")
 			{
-				parse_ranges(spec["supplementalGroups"]["ranges"], m_params, "must_run_as_groups");
+				m_params["may_run_as_groups"] = parse_ranges(spec["supplementalGroups"]["ranges"]);
 			}
 			else if(rule == "MayRunAs")
 			{
-				parse_ranges(spec["supplementalGroups"]["ranges"], m_params, "may_run_as_groups");
+				m_params["may_run_as_groups"] = parse_ranges(spec["supplementalGroups"]["ranges"]);
 			}
 			else
 			{
@@ -283,12 +324,12 @@ void k8s_psp_converter::load_yaml(const std::string &psp_yaml)
 
 		if(spec["allowedCapabilities"])
 		{
-			parse_sequence(spec["allowedCapabilities"], m_params, "allowed_capabilities");
+			m_params["allowed_capabilities"] = parse_sequence(spec["allowedCapabilities"]);
 		}
 
 		if(spec["allowedProcMountTypes"])
 		{
-			parse_sequence(spec["allowedProcMountTypes"], m_params, "allowed_proc_mount_types");
+			m_params["allowed_proc_mount_types"] = parse_sequence(spec["allowedProcMountTypes"]);
 		}
 	}
 	catch (const std::invalid_argument &ex)
