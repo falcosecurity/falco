@@ -305,11 +305,11 @@ void k8s_psp_converter::load_yaml(const std::string &psp_yaml)
 
 			if(rule == "MustRunAs")
 			{
-				m_params["may_run_as_groups"] = parse_ranges(spec["supplementalGroups"]["ranges"]);
+				m_params["must_run_supplemental_groups"] = parse_ranges(spec["supplementalGroups"]["ranges"]);
 			}
 			else if(rule == "MayRunAs")
 			{
-				m_params["may_run_as_groups"] = parse_ranges(spec["supplementalGroups"]["ranges"]);
+				m_params["may_run_supplemental_groups"] = parse_ranges(spec["supplementalGroups"]["ranges"]);
 			}
 			else
 			{

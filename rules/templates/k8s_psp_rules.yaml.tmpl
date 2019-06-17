@@ -172,7 +172,7 @@
   tags: [k8s-psp]
 {% endif %}{% if length(must_run_as_users) > 0 %}
 #########################################
-# Rule for PSP runAsUser property
+# Rule for PSP runAsUser property: MustRunAs + list of uids
 #########################################
 - macro: psp_run_as_users_sec_ctx
   condition: ( ka.req.sec_ctx.run_as_user != "N/A" and{% for range in must_run_as_users %}
@@ -193,10 +193,10 @@
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
-{% endif %}
-
-{% if must_run_as_non_root %}
-
+{% endif %}{% if must_run_as_non_root %}
+#########################################
+# Rule for PSP runAsUser property: MustRunAsNonRoot
+#########################################
 - macro: psp_run_as_non_root_sec_ctx
   condition: (ka.req.sec_ctx.run_as_user != "N/A" and ka.req.sec_ctx.run_as_user != 0)
 
@@ -214,10 +214,10 @@
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
-{% endif %}
-
-{% if length(must_run_as_groups) > 0 %}
-
+{% endif %}{% if length(must_run_as_groups) > 0 %}
+#########################################
+# Rule for PSP runAsGroup property: MustRunAs + list of gids
+#########################################
 - macro: psp_must_run_as_groups_sec_ctx
   condition: ( ka.req.sec_ctx.run_as_group != "N/A" and
 {% for range in must_run_as_groups %}
@@ -239,15 +239,13 @@
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
-{% endif %}
-
-{% if length(may_run_as_groups) > 0 %}
-
+{% endif %}{% if length(may_run_as_groups) > 0 %}
+#########################################
+# Rule for PSP runAsGroup property: MayRunAs + list of gids
+#########################################
 - macro: psp_may_run_as_groups_sec_ctx
-  condition: ( ka.req.sec_ctx.run_as_group != "N/A" and
-{% for range in may_run_as_groups %}
-    {% if not loop.is_first %}  and{% endif %} (ka.req.sec_ctx.run_as_group >= {{ range.min }} and ka.req.sec_ctx.run_as_group <= {{ range.max }})
-{% endfor %}
+  condition: ( ka.req.sec_ctx.run_as_group != "N/A" and{% for range in may_run_as_groups %}
+    {% if not loop.is_first %}  and{% endif %} (ka.req.sec_ctx.run_as_group >= {{ range.min }} and ka.req.sec_ctx.run_as_group <= {{ range.max }}){% endfor %}
   )
 
 - macro: psp_may_run_as_groups_pod_spec
@@ -264,34 +262,24 @@
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
-{% endif %}
-
-{% if length(must_run_supplemental_groups) > 0 or length(may_run_supplemental_groups) > 0 %}
-
+{% endif %}{% if length(must_run_supplemental_groups) > 0 or length(may_run_supplemental_groups) > 0 %}
+#########################################
+# Rule for PSP supplementalGroups property: MustRunAs/MayRunAs + list of gids
+#########################################
 - macro: psp_supplemental_group_must_run_matches
-{% if length(must_run_supplemental_groups) > 0 %}
-  condition: (
-{% for group in must_run_supplemental_groups %}
-    {% if not loop.is_first %}  and {% endif %} (ka.req.sec_ctx.supplemental_groups.within[{{ group.min }}:{{ group.max }}])
-{% endfor %}
-  )
-{% else %}
-
-  condition: (k8s_audit_always_true)
+{% if length(must_run_supplemental_groups) > 0 %}  condition: >
+    ({% for group in must_run_supplemental_groups %}
+     {% if not loop.is_first %} and {% endif %}(ka.req.sec_ctx.supplemental_groups.within[{{ group.min }}:{{ group.max }}]){% endfor %}
+    )
+{% else %}  condition: (k8s_audit_always_true)
 {% endif %}
-
 - macro: psp_supplemental_group_may_run_matches
-{% if length(may_run_supplemental_groups) > 0 %}
-  condition: ( ka.req.sec_ctx.supplemental_groups == "N/A" or (
-{% for group in may_run_supplemental_groups %}
-    {% if not loop.is_first %}  and{% endif %} (ka.req.sec_ctx.supplemental_groups.within[{{ group.min }}:{{ group.max }}])
-{% endfor %}
-  ))
-{% else %}
-
-  condition: (k8s_audit_always_true)
+{% if length(may_run_supplemental_groups) > 0 %}  condition: >
+    (ka.req.sec_ctx.supplemental_groups == "N/A" or ({% for group in may_run_supplemental_groups %}
+     {% if not loop.is_first %} and {% endif %}(ka.req.sec_ctx.supplemental_groups.within[{{ group.min }}:{{ group.max }}]){% endfor %})
+    )
+{% else %}  condition: (k8s_audit_always_true)
 {% endif %}
-
 - macro: psp_supplemental_group
   condition: (psp_supplemental_group_must_run_matches and psp_supplemental_group_may_run_matches)
 
@@ -303,10 +291,10 @@
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
-{% endif %}
-
-{% if not allow_privilege_escalation %}
-
+{% endif %}{% if not allow_privilege_escalation %}
+#########################################
+# Rule for PSP allowPrivilegeEscalation property
+#########################################
 - rule: PSP Validation Failure Allow Privilege Escalation
   desc: >
     Detect a psp validation failure for allowPrivilegeEscalation
@@ -315,10 +303,10 @@
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
-{% endif %}
-
-{% if length(allowed_capabilities) > 0 %}
-
+{% endif %}{% if length(allowed_capabilities) > 0 %}
+#########################################
+# Rule for PSP allowedCapabilities property
+#########################################
 - rule: PSP Validation Failure Allowed Capabilities
   desc: >
     Detect a psp validation failure for Allowed Capabilities
@@ -327,10 +315,10 @@
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
-{% endif %}
-
-{% if length(allowed_proc_mount_types) > 0 %}
-
+{% endif %}{% if length(allowed_proc_mount_types) > 0 %}
+#########################################
+# Rule for PSP allowedProcMountTypes property
+#########################################
 - rule: PSP Validation Failure Allowed Proc Mount Types
   desc: >
     Detect a psp validation failure for Allowed Proc Mount Types
