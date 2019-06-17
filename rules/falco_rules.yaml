@@ -1677,12 +1677,12 @@
 - list: trusted_images
   items: []
 
-# NOTE: This list is only provided for backwards compatibility with
+# NOTE: This macro is only provided for backwards compatibility with
 # older local falco rules files that may have been appending to
-# trusted_containers. To make customizations, it's better to add containers to
-# user_trusted_containers, user_priivleged_containers or user_sensitive_mount_containers.
-- list: trusted_containers
-  items: []
+# trusted_images. To make customizations, it's better to add containers to
+# user_trusted_containers, user_privileged_containers or user_sensitive_mount_containers.
+- macro: trusted_containers
+  condition: (container.image.repository in (trusted_images))
 
 # Add conditions to this macro (probably in a separate file,
 # overwriting this macro) to specify additional containers that are
