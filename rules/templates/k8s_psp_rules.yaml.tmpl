@@ -140,9 +140,9 @@
 {% endif %}
 - macro: psp_fs_group_may_run_matches
 {% if length(may_run_fs_groups) > 0 %}  condition: >
-    (ka.req.sec_ctx.fs_group == "N/A" or
+    (ka.req.sec_ctx.fs_group = "N/A" or
      ({% for group in may_run_fs_groups %}
-      {% if not loop.is_first %} and {% endif %}(ka.req.sec_ctx.fs_group >= {{ group.min }} and ka.req.sec_ctx.fs_group <= {{ group.max }}){% endfor %})
+      {% if not loop.is_first %} and {% endif %}(ka.req.sec_ctx.fs_group >= {{ group.min }} and ka.req.sec_ctx.fs_group <= {{ group.max }}){% endfor %}
      )
     )
 {% else %}  condition: (k8s_audit_always_true)
@@ -154,7 +154,7 @@
   desc: >
     Detect a psp validation failure for a fsGroup gid outside of the allowed set
   condition: psp_container and not psp_fs_group
-  output: Pod Security Policy {{ policy_name }} validation failure--fsGroup outside of allowed set. mustRun set: "{{ must_run_fs_groups }}" mayRun set: "{{ may_run_fs_groups }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
+  output: Pod Security Policy {{ policy_name }} validation failure--fsGroup outside of allowed set. mustRun set="{{ must_run_fs_groups }}" mayRun set="{{ may_run_fs_groups }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
@@ -175,21 +175,22 @@
 # Rule for PSP runAsUser property: MustRunAs + list of uids
 #########################################
 - macro: psp_run_as_users_sec_ctx
-  condition: ( ka.req.sec_ctx.run_as_user != "N/A" and{% for range in must_run_as_users %}
-    {% if not loop.is_first %}  and{% endif %} (ka.req.sec_ctx.run_as_user >= {{ range.min }} and ka.req.sec_ctx.run_as_user <= {{ range.max }}){% endfor %}
-  )
+  condition: >
+    ( ka.req.sec_ctx.run_as_user != "N/A" and{% for range in must_run_as_users %}
+     {% if not loop.is_first %}  and{% endif %} (ka.req.sec_ctx.run_as_user >= {{ range.min }} and ka.req.sec_ctx.run_as_user <= {{ range.max }}){% endfor %}
+    )
 
 - macro: psp_run_as_users_pod_spec
-  condition: (ka.req.container.run_as_user.within[{{ rjoin(",", must_run_as_users) }}])
+  condition: (ka.req.container.run_as_user.within[{{ rjoin(",", must_run_as_users) }}]=true)
 
 - macro: psp_run_as_users
-  condition: (psp_run_as_users_sec_ctx or (ka.req.container.run_as_user.defined and psp_run_as_users_pod_spec))
+  condition: (psp_run_as_users_sec_ctx or (ka.req.container.run_as_user.defined=true and psp_run_as_users_pod_spec))
 
 - rule: PSP Validation Failure runAsUser
   desc: >
     Detect a psp validation failure for a runAsUser outside of the allowed set
   condition: psp_container and not psp_run_as_users
-  output: Pod Security Policy {{ policy_name }} validation failure--runAsUser outside of allowed set. runAsUser set: "{{ must_run_as_users }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
+  output: Pod Security Policy {{ policy_name }} validation failure--runAsUser outside of allowed set. runAsUser set="{{ must_run_as_users }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
@@ -201,7 +202,7 @@
   condition: (ka.req.sec_ctx.run_as_user != "N/A" and ka.req.sec_ctx.run_as_user != 0)
 
 - macro: psp_run_as_non_root_pod_spec
-  condition: (ka.req.container.run_as_user.within[0:0])
+  condition: (ka.req.container.run_as_user.within[0:0]=true)
 
 - macro: psp_run_as_non_root
   condition: (psp_run_as_non_root_sec_ctx or (ka.req.container.run_as_user.defined and psp_run_as_non_root_pod_spec))
@@ -226,7 +227,7 @@
   )
 
 - macro: psp_must_run_as_groups_pod_spec
-  condition: (ka.req.container.run_as_group.within[{{ must_run_as_groups }}])
+  condition: (ka.req.container.run_as_group.within[{{ must_run_as_groups }}]=true)
 
 - macro: psp_must_run_as_groups
   condition: (psp_must_run_as_groups_sec_ctx or (ka.req.container.run_as_group.defined and psp_must_run_as_groups_pod_spec))
@@ -235,7 +236,7 @@
   desc: >
     Detect a psp validation failure for a runAsGroup outside of the MustRunAs allowed set
   condition: psp_container and not psp_must_run_as_groups
-  output: Pod Security Policy {{ policy_name }} validation failure--runAsGroup outside of the MustRunAs allowed set. runAsGroup MustRunAs set: "{{ must_run_as_groups }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
+  output: Pod Security Policy {{ policy_name }} validation failure--runAsGroup outside of the MustRunAs allowed set. runAsGroup MustRunAs set="{{ must_run_as_groups }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
@@ -249,7 +250,7 @@
   )
 
 - macro: psp_may_run_as_groups_pod_spec
-  condition: (ka.req.container.run_as_group.within[{{ may_run_as_groups }}])
+  condition: (ka.req.container.run_as_group.within[{{ may_run_as_groups }}]=true)
 
 - macro: psp_may_run_as_groups
   condition: (psp_may_run_as_groups_sec_ctx or (psp_may_run_as_groups_pod_spec))
@@ -258,7 +259,7 @@
   desc: >
     Detect a psp validation failure for a runAsGroup outside of the MayRunAs allowed set
   condition: psp_container and not psp_may_run_as_groups
-  output: Pod Security Policy {{ policy_name }} validation failure--runAsGroup outside of the MayRunAs allowed set. runAsGroup MayRunAs set: "{{ may_run_as_groups }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
+  output: Pod Security Policy {{ policy_name }} validation failure--runAsGroup outside of the MayRunAs allowed set. runAsGroup MayRunAs set="{{ may_run_as_groups }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
@@ -269,14 +270,14 @@
 - macro: psp_supplemental_group_must_run_matches
 {% if length(must_run_supplemental_groups) > 0 %}  condition: >
     ({% for group in must_run_supplemental_groups %}
-     {% if not loop.is_first %} and {% endif %}(ka.req.sec_ctx.supplemental_groups.within[{{ group.min }}:{{ group.max }}]){% endfor %}
+     {% if not loop.is_first %} and {% endif %}(ka.req.sec_ctx.supplemental_groups.within[{{ group.min }}:{{ group.max }}]=true){% endfor %}
     )
 {% else %}  condition: (k8s_audit_always_true)
 {% endif %}
 - macro: psp_supplemental_group_may_run_matches
 {% if length(may_run_supplemental_groups) > 0 %}  condition: >
-    (ka.req.sec_ctx.supplemental_groups == "N/A" or ({% for group in may_run_supplemental_groups %}
-     {% if not loop.is_first %} and {% endif %}(ka.req.sec_ctx.supplemental_groups.within[{{ group.min }}:{{ group.max }}]){% endfor %})
+    (ka.req.sec_ctx.supplemental_groups = "N/A" or ({% for group in may_run_supplemental_groups %}
+     {% if not loop.is_first %} and {% endif %}(ka.req.sec_ctx.supplemental_groups.within[{{ group.min }}:{{ group.max }}]=true){% endfor %})
     )
 {% else %}  condition: (k8s_audit_always_true)
 {% endif %}
@@ -287,7 +288,7 @@
   desc: >
     Detect a psp validation failure for a supplementalGroups gid outside of the allowed set
   condition: psp_container and not psp_supplemental_group
-  output: Pod Security Policy {{ policy_name }} validation failure--supplementalGroups outside of allowed set. mustRun set: "{{ must_run_supplemental_groups }}" mayRun set: "{{ may_run_supplemental_groups }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
+  output: Pod Security Policy {{ policy_name }} validation failure--supplementalGroups outside of allowed set. mustRun set="{{ must_run_supplemental_groups }}" mayRun set="{{ may_run_supplemental_groups }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
@@ -310,7 +311,7 @@
 - rule: PSP Validation Failure Allowed Capabilities
   desc: >
     Detect a psp validation failure for Allowed Capabilities
-  condition: psp_container and not ka.req.sec_ctx.allowed_capabilities.within[{{ join(",", allowed_capabilities) }}]
+  condition: psp_container and not ka.req.sec_ctx.allowed_capabilities.within[{{ join(",", allowed_capabilities) }}]=true
   output: Pod Security Policy {{ policy_name }} validation failure--pod with capabilities outside of allowed set "{{ join(",", allowed_capabilities) }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
