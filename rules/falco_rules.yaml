@@ -1677,6 +1677,10 @@
 - list: trusted_images
   items: []
 
+# Backport compatibility
+- list: trusted_containers
+  items: []
+
 # Add conditions to this macro (probably in a separate file,
 # overwriting this macro) to specify additional containers that are
 # trusted and therefore allowed to run privileged *and* with sensitive
