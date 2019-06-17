@@ -1677,7 +1677,10 @@
 - list: trusted_images
   items: []
 
-# Backport compatibility
+# NOTE: This list is only provided for backwards compatibility with
+# older local falco rules files that may have been appending to
+# trusted_containers. To make customizations, it's better to add containers to
+# user_trusted_containers, user_priivleged_containers or user_sensitive_mount_containers.
 - list: trusted_containers
   items: []
 
