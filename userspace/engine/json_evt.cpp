@@ -738,6 +738,35 @@ std::string k8s_audit_filter_check::check_hostpath_vols(const json &j, std::stri
 	return string("false");
 }
 
+std::string k8s_audit_filter_check::check_flexvolume_vols(const json &j, std::string &field, std::string &idx)
+{
+	uint64_t num_volumes = 0;
+	uint64_t num_volumes_match = 0;
+	std::set<std::string> drivers;
+
+	split_string_set(idx, ',', drivers);
+
+	nlohmann::json::json_pointer jpath = "/flexVolume/driver"_json_pointer;
+
+	for(auto &vol : j)
+	{
+		// The volume must be a hostPath volume to consider it
+		if(vol.find("flexVolume") != vol.end())
+		{
+			num_volumes++;
+
+			string driver = vol.value(jpath, "N/A");
+
+			if(drivers.find(driver) != drivers.end())
+			{
+				num_volumes_match++;
+			}
+		}
+	}
+
+	return string((num_volumes == num_volumes_match ? "true" : "false"));
+}
+
 std::string k8s_audit_filter_check::check_volume_types(const json &j, std::string &field, std::string &idx)
 {
 	std::set<std::string> allowed_volume_types;
@@ -1028,7 +1057,7 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 		   {"ka.req.volume.any_hostpath", "If the request object contains volume definitions, whether or not a hostPath volume exists that mounts the specified path(s) from the host (...hostpath[/etc]=true if a volume mounts /etc from the host). Multiple paths can be specified, separated by commas. The index can be a glob, in which case all volumes are considered to find any path matching the specified glob (...hostpath[/usr/*] would match either /usr/local or /usr/bin)", a::IDX_REQUIRED, a::IDX_KEY},
 		   {"ka.req.volume.all_hostpath", "If the request object contains volume definitions, whether or not all hostPath volumes mount only the specified path(s) from the host (...hostpath[/etc]=true if a volume mounts /etc from the host). Multiple paths can be specified, separated by commas. The index can be a glob, in which case all volumes are considered to find any path matching the specified glob (...hostpath[/usr/*] would match either /usr/local or /usr/bin)", a::IDX_REQUIRED, a::IDX_KEY},
 		   {"ka.req.volume.hostpath", "An alias for ka.req.volume.any_hostpath", a::IDX_REQUIRED, a::IDX_KEY},
-		   {"ka.req.volume.all_flexvolume_drivers", "If the request object contains volume definitions, whether or not all Flexvolume drivers are in the provided set. Multiple drivers can be specified, separated by commas."},
+		   {"ka.req.volume.all_flexvolume_drivers", "If the request object contains volume definitions, whether or not all Flexvolume drivers are in the provided set. Multiple drivers can be specified, separated by commas. For example, ka.req.volume.all_flexvolume_drivers[some-driver] returns true if all flexvolume volumes use only the driver called some-driver.", a::IDX_REQUIRED, a::IDX_KEY},
 		   {"ka.req.volume_types.within", "If the request object contains volume definitions, return whether all volume types are in the provided set. Example: ka.req.volume_types.within[configMap,downwardAPI] returns true if the only volume types used are either configMap or downwardAPI", a::IDX_REQUIRED, a::IDX_KEY}
 		   {"ka.resp.name", "The response object name"},
 		   {"ka.response.code", "The response code"},
@@ -1087,6 +1116,7 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 			{"ka.req.volume.any_hostpath", {"/requestObject/spec/volumes"_json_pointer, check_hostpath_vols}},
 			{"ka.req.volume.all_hostpath", {"/requestObject/spec/volumes"_json_pointer, check_hostpath_vols}},
                         {"ka.req.volume.hostpath", {"/requestObject/spec/volumes"_json_pointer, check_hostpath_vols}},
+			{"ka.req.volume.all_flexvolume_drivers", {"/requestObject/spec/volumes"_json_pointer, check_flexvolume_vols}},
 			{"ka.req.volume_types.within", {"/requestObject/spec/volumes"_json_pointer, check_volume_types}},
 			{"ka.resp.name", {"/responseObject/metadata/name"_json_pointer}},
 			{"ka.response.code", {"/responseStatus/code"_json_pointer}},
