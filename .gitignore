@@ -12,6 +12,8 @@ test/results*.json.*
 
 userspace/falco/lua/re.lua
 userspace/falco/lua/lpeg.so
+userspace/engine/lua/lyaml
+userspace/engine/lua/lyaml.lua
 
 docker/event-generator/event_generator
 docker/event-generator/mysqld
