@@ -1,6 +1,6 @@
 apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
 metadata:
-  name: no_privileged
+  name: no_host_pid
 spec:
   hostPID: false
