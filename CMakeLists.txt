@@ -79,7 +79,6 @@ if(NOT SYSDIG_DIR)
 	set(SYSDIG_DIR "${PROJECT_SOURCE_DIR}/../sysdig")
 endif()
 
-
 # make luaJIT work on OS X
 if(APPLE)
 	set(CMAKE_EXE_LINKER_FLAGS "-pagezero_size 10000 -image_base 100000000")
@@ -382,7 +381,6 @@ endif()
 # Libyaml
 #
 option(USE_BUNDLED_LIBYAML "Enable building of the bundled libyaml" ${USE_BUNDLED_DEPS})
-
 if(NOT USE_BUNDLED_LIBYAML)
 	# Note: to distinguish libyaml.a and yaml.a we specify a full
 	# file name here, so you'll have to arrange for static
@@ -402,6 +400,7 @@ else()
 	endif()
 
 	set(LIBYAML_SRC "${PROJECT_BINARY_DIR}/libyaml-prefix/src/libyaml/src")
+	set(LIBYAML_INCLUDE "${PROJECT_BINARY_DIR}/libyaml-prefix/src/libyaml/include")
 	set(LIBYAML_LIB "${LIBYAML_SRC}/.libs/libyaml.a")
 	message(STATUS "Using bundled libyaml in '${LIBYAML_SRC}'")
 	ExternalProject_Add(libyaml
@@ -417,7 +416,6 @@ endif()
 # lyaml
 #
 option(USE_BUNDLED_LYAML "Enable building of the bundled lyaml" ${USE_BUNDLED_DEPS})
-
 if(NOT USE_BUNDLED_LYAML)
 	# Note: to distinguish libyaml.a and yaml.a we specify a full
 	# file name here, so you'll have to arrange for static
@@ -439,14 +437,15 @@ else()
 	if(USE_BUNDLED_LIBYAML)
 		list(APPEND LYAML_DEPENDENCIES "libyaml")
 	endif()
+
 	ExternalProject_Add(lyaml
 		DEPENDS ${LYAML_DEPENDENCIES}
 		URL "http://s3.amazonaws.com/download.draios.com/dependencies/lyaml-release-v6.0.tar.gz"
-                URL_MD5 "dc3494689a0dce7cf44e7a99c72b1f30"
-                BUILD_COMMAND ${CMD_MAKE}
-                BUILD_IN_SOURCE 1
-		CONFIGURE_COMMAND ./configure --enable-static LIBS=-L../../../libyaml-prefix/src/libyaml/src/.libs CFLAGS=-I../../../libyaml-prefix/src/libyaml/include CPPFLAGS=-I../../../libyaml-prefix/src/libyaml/include LUA_INCLUDE=-I../../../luajit-prefix/src/luajit/src LUA=../../../luajit-prefix/src/luajit/src/luajit
-                INSTALL_COMMAND sh -c "cp -R ${PROJECT_BINARY_DIR}/lyaml-prefix/src/lyaml/lib/* ${PROJECT_SOURCE_DIR}/userspace/engine/lua")
+		URL_MD5 "dc3494689a0dce7cf44e7a99c72b1f30"
+		BUILD_COMMAND ${CMD_MAKE}
+		BUILD_IN_SOURCE 1
+		CONFIGURE_COMMAND ./configure --enable-static LIBS=-L${LIBYAML_SRC}/.libs CFLAGS=-I${LIBYAML_INCLUDE} CPPFLAGS=-I${LIBYAML_INCLUDE} LUA_INCLUDE=-I${LUAJIT_INCLUDE} LUA=${LUAJIT_SRC}/luajit
+		INSTALL_COMMAND sh -c "cp -R ${PROJECT_BINARY_DIR}/lyaml-prefix/src/lyaml/lib/* ${PROJECT_SOURCE_DIR}/userspace/engine/lua")
 endif()
 
 option(USE_BUNDLED_TBB "Enable building of the bundled tbb" ${USE_BUNDLED_DEPS})
