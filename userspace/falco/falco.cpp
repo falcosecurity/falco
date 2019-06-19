@@ -436,7 +436,7 @@ int falco_init(int argc, char **argv)
 	string cri_socket_path;
 	string psp_path;
 	string psp_rules_path;
-	bool psp_save_rules;
+	bool psp_save_rules = false;
 	set<string> disable_sources;
 	bool disable_syscall = false;
 	bool disable_k8s_audit = false;
