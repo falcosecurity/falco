@@ -15,16 +15,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-- required_engine_version: 2
+- required_engine_version: 4
+
+- macro: psp_always_true
+  condition: (jevt.rawtime exists)
+
+- macro: psp_never_true
+  condition: (jevt.rawtime=0)
 
 - macro: psp_enabled
-  condition: (k8s_audit_always_true)
+  condition: (psp_always_true)
 
 - list: psp_images
   items: {{ image_list }}
 
+- macro: psp_kevt
+  condition: (jevt.value[/stage] in ("ResponseComplete"))
+
+- macro: psp_pod
+  condition: (ka.target.resource=pods and not ka.target.subresource exists)
+
 - macro: psp_container
-  condition: (psp_enabled and kevt and pod and kcreate and ka.req.container.image.repository in (psp_images))
+  condition: (psp_enabled and psp_kevt and psp_pod and ka.verb=create and ka.req.container.image.repository in (psp_images))
 {% if not allow_privileged  %}
 #########################################
 # Rule for PSP privileged property
@@ -136,7 +148,7 @@
     ({% for group in must_run_fs_groups %}
       {% if not loop.is_first %} and {% endif %}(ka.req.sec_ctx.fs_group >= {{ group.min }} and ka.req.sec_ctx.fs_group <= {{ group.max }}){% endfor %}
     )
-{% else %}  condition: (k8s_audit_always_true)
+{% else %}  condition: (psp_always_true)
 {% endif %}
 - macro: psp_fs_group_may_run_matches
 {% if length(may_run_fs_groups) > 0 %}  condition: >
@@ -145,7 +157,7 @@
       {% if not loop.is_first %} and {% endif %}(ka.req.sec_ctx.fs_group >= {{ group.min }} and ka.req.sec_ctx.fs_group <= {{ group.max }}){% endfor %}
      )
     )
-{% else %}  condition: (k8s_audit_always_true)
+{% else %}  condition: (psp_always_true)
 {% endif %}
 - macro: psp_fs_group
   condition: (psp_fs_group_must_run_matches and psp_fs_group_may_run_matches)
@@ -272,14 +284,14 @@
     ({% for group in must_run_supplemental_groups %}
      {% if not loop.is_first %} and {% endif %}(ka.req.sec_ctx.supplemental_groups.within[{{ group.min }}:{{ group.max }}]=true){% endfor %}
     )
-{% else %}  condition: (k8s_audit_always_true)
+{% else %}  condition: (psp_always_true)
 {% endif %}
 - macro: psp_supplemental_group_may_run_matches
 {% if length(may_run_supplemental_groups) > 0 %}  condition: >
     (ka.req.sec_ctx.supplemental_groups = "N/A" or ({% for group in may_run_supplemental_groups %}
      {% if not loop.is_first %} and {% endif %}(ka.req.sec_ctx.supplemental_groups.within[{{ group.min }}:{{ group.max }}]=true){% endfor %})
     )
-{% else %}  condition: (k8s_audit_always_true)
+{% else %}  condition: (psp_always_true)
 {% endif %}
 - macro: psp_supplemental_group
   condition: (psp_supplemental_group_must_run_matches and psp_supplemental_group_may_run_matches)
