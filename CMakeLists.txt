@@ -75,7 +75,8 @@ endif()
 
 set(CMD_MAKE make)
 
-set(SYSDIG_DIR "${PROJECT_SOURCE_DIR}/../sysdig")
+option(SYSDIG_DIR “Set the path to the Sysdig source” “${PROJECT_SOURCE_DIR}/../sysdig”)
+
 # make luaJIT work on OS X
 if(APPLE)
 	set(CMAKE_EXE_LINKER_FLAGS "-pagezero_size 10000 -image_base 100000000")
