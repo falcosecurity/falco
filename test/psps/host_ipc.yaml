@@ -1,0 +1,6 @@
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: no_host_ipc
+spec:
+  hostIPC: false
