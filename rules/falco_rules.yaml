@@ -159,7 +159,7 @@
   items: [docker, dockerd, exe, docker-compose, docker-entrypoi, docker-runc-cur, docker-current, dockerd-current]
 
 - list: k8s_binaries
-  items: [hyperkube, skydns, kube2sky, exechealthz, weave-net, loopback, bridge, openshift-sdn]
+  items: [hyperkube, skydns, kube2sky, exechealthz, weave-net, loopback, bridge, openshift-sdn, openshift]
 
 - list: lxd_binaries
   items: [lxd, lxcfs]
@@ -243,7 +243,7 @@
 # A canonical set of processes that run other programs with different
 # privileges or as a different user.
 - list: userexec_binaries
-  items: [sudo, su, suexec, critical-stack]
+  items: [sudo, su, suexec, critical-stack, dzdo]
 
 - list: known_setuid_binaries
   items: [
@@ -1470,6 +1470,12 @@
 - list: user_known_change_thread_namespace_binaries
   items: []
 
+- list: network_plugin_binaries
+  items: [aws-cni, azure-vnet]
+
+- macro: calico_node
+  condition: (container.image.repository endswith calico/node and proc.name=calico-node)
+
 - rule: Change thread namespace
   desc: >
     an attempt to change a program/thread\'s namespace (commonly done
@@ -1477,7 +1483,7 @@
   condition: >
     evt.type = setns
     and not proc.name in (docker_binaries, k8s_binaries, lxd_binaries, sysdigcloud_binaries,
-                          sysdig, nsenter, calico, oci-umount)
+                          sysdig, nsenter, calico, oci-umount, network_plugin_binaries)
     and not proc.name in (user_known_change_thread_namespace_binaries)
     and not proc.name startswith "runc"
     and not proc.cmdline startswith "containerd"
@@ -1487,6 +1493,7 @@
     and not kubelet_running_loopback
     and not rancher_agent
     and not rancher_network_manager
+    and not calico_node
   output: >
     Namespace change (setns) by unexpected program (user=%user.name command=%proc.cmdline
     parent=%proc.pname %container.info container_id=%container.id image=%container.image.repository)
