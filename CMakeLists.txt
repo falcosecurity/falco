@@ -75,7 +75,10 @@ endif()
 
 set(CMD_MAKE make)
 
-option(SYSDIG_DIR “Set the path to the Sysdig source” “${PROJECT_SOURCE_DIR}/../sysdig”)
+if(NOT SYSDIG_DIR)
+	set(SYSDIG_DIR "${PROJECT_SOURCE_DIR}/../sysdig")
+endif()
+
 
 # make luaJIT work on OS X
 if(APPLE)
