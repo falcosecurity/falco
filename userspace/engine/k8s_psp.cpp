@@ -256,9 +256,13 @@ void k8s_psp_converter::load_yaml(const std::string &psp_yaml)
 			{
 				m_params["may_run_fs_groups"] = parse_ranges(spec["fsGroup"]["ranges"]);
 			}
+			else if(rule == "RunAsAny")
+			{
+				// Do nothing, any allowed
+			}
 			else
 			{
-				throw std::invalid_argument("fsGroup rule \"" + rule + "\" was not one of MustRunAs/MayRunAs");
+				throw std::invalid_argument("fsGroup rule \"" + rule + "\" was not one of MustRunAs/MayRunAs/RunAsAny");
 			}
 		}
 
@@ -274,6 +278,14 @@ void k8s_psp_converter::load_yaml(const std::string &psp_yaml)
 			{
 				m_params["must_run_as_non_root"] = true;
 			}
+			else if(rule == "RunAsAny")
+			{
+				// Do nothing, any allowed
+			}
+			else
+			{
+				throw std::invalid_argument("runAsUser rule \"" + rule + "\" was not one of MustRunAs/MustRunAsNonRoot/RunAsAny");
+			}
 		}
 
 		if(spec["runAsGroup"])
@@ -288,9 +300,13 @@ void k8s_psp_converter::load_yaml(const std::string &psp_yaml)
 			{
 				m_params["may_run_as_groups"] = parse_ranges(spec["runAsGroup"]["ranges"]);
 			}
+			else if(rule == "RunAsAny")
+			{
+				// Do nothing, any allowed
+			}
 			else
 			{
-				throw std::invalid_argument("runAsGroup rule \"" + rule + "\" was not one of MustRunAs/MayRunAs");
+				throw std::invalid_argument("runAsGroup rule \"" + rule + "\" was not one of MustRunAs/MayRunAs/RunAsAny");
 			}
 		}
 
@@ -311,9 +327,13 @@ void k8s_psp_converter::load_yaml(const std::string &psp_yaml)
 			{
 				m_params["may_run_supplemental_groups"] = parse_ranges(spec["supplementalGroups"]["ranges"]);
 			}
+			else if(rule == "RunAsAny")
+			{
+				// Do nothing, any allowed
+			}
 			else
 			{
-				throw std::invalid_argument("supplementalGroups rule \"" + rule + "\" was not one of MustRunAs/MayRunAs");
+				throw std::invalid_argument("supplementalGroups rule \"" + rule + "\" was not one of MustRunAs/MayRunAs/RunAsAny");
 			}
 		}
 
