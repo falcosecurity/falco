@@ -735,11 +735,19 @@ std::string k8s_audit_filter_check::check_hostpath_vols(const json &j, std::stri
 	uint64_t num_volumes_match = 0;
 	std::set<std::string> paths;
 
+	if(j.find("volumes") == j.end())
+	{
+		// No volumes, matches
+		return string("true");
+	}
+
+	const nlohmann::json &vols = j["volumes"];
+
 	split_string_set(idx, ',', paths);
 
 	nlohmann::json::json_pointer jpath = "/hostPath/path"_json_pointer;
 
-	for(auto &vol : j)
+	for(auto &vol : vols)
 	{
 		// The volume must be a hostPath volume to consider it
 		if(vol.find("hostPath") != vol.end())
@@ -780,11 +788,19 @@ std::string k8s_audit_filter_check::check_flexvolume_vols(const json &j, std::st
 	uint64_t num_volumes_match = 0;
 	std::set<std::string> drivers;
 
+	if(j.find("volumes") == j.end())
+	{
+		// No volumes, matches
+		return string("true");
+	}
+
+	const nlohmann::json &vols = j["volumes"];
+
 	split_string_set(idx, ',', drivers);
 
 	nlohmann::json::json_pointer jpath = "/flexVolume/driver"_json_pointer;
 
-	for(auto &vol : j)
+	for(auto &vol : vols)
 	{
 		// The volume must be a hostPath volume to consider it
 		if(vol.find("flexVolume") != vol.end())
@@ -807,9 +823,17 @@ std::string k8s_audit_filter_check::check_volume_types(const json &j, std::strin
 {
 	std::set<std::string> allowed_volume_types;
 
+	if(j.find("volumes") == j.end())
+	{
+		// No volumes, matches
+		return string("true");
+	}
+
+	const nlohmann::json &vols = j["volumes"];
+
 	split_string_set(idx, ',', allowed_volume_types);
 
-	for(auto &vol : j)
+	for(auto &vol : vols)
 	{
 		for (auto it = vol.begin(); it != vol.end(); ++it)
 		{
@@ -995,6 +1019,12 @@ std::string k8s_audit_filter_check::check_host_port_within(const json &j, std::s
 
 	for(auto &container : j)
 	{
+		if(container.find("ports") == container.end())
+		{
+			// This container doesn't have any ports, so it matches all ranges
+			continue;
+		}
+
 		nlohmann::json ports = container["ports"];
 
 		for(auto &cport : ports)
@@ -1149,11 +1179,11 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 			{"ka.req.role.rules.verbs", {"/requestObject/rules"_json_pointer, index_select}},
 			{"ka.req.service.type", {"/requestObject/spec/type"_json_pointer}},
 			{"ka.req.service.ports", {"/requestObject/spec/ports"_json_pointer, index_generic}},
-			{"ka.req.volume.any_hostpath", {"/requestObject/spec/volumes"_json_pointer, check_hostpath_vols}},
-			{"ka.req.volume.all_hostpath", {"/requestObject/spec/volumes"_json_pointer, check_hostpath_vols}},
-                        {"ka.req.volume.hostpath", {"/requestObject/spec/volumes"_json_pointer, check_hostpath_vols}},
-			{"ka.req.volume.all_flexvolume_drivers", {"/requestObject/spec/volumes"_json_pointer, check_flexvolume_vols}},
-			{"ka.req.volume_types.within", {"/requestObject/spec/volumes"_json_pointer, check_volume_types}},
+			{"ka.req.volume.any_hostpath", {"/requestObject/spec"_json_pointer, check_hostpath_vols}},
+			{"ka.req.volume.all_hostpath", {"/requestObject/spec"_json_pointer, check_hostpath_vols}},
+                        {"ka.req.volume.hostpath", {"/requestObject/spec"_json_pointer, check_hostpath_vols}},
+			{"ka.req.volume.all_flexvolume_drivers", {"/requestObject/spec"_json_pointer, check_flexvolume_vols}},
+			{"ka.req.volume_types.within", {"/requestObject/spec"_json_pointer, check_volume_types}},
 			{"ka.resp.name", {"/responseObject/metadata/name"_json_pointer}},
 			{"ka.response.code", {"/responseStatus/code"_json_pointer}},
 			{"ka.response.reason", {"/responseStatus/reason"_json_pointer}},
