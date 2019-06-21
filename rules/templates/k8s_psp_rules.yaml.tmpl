@@ -79,7 +79,7 @@
 #########################################
 - rule: PSP Validation Failure HostNetwork
   desc: >
-    Detect a psp validation failure for a hostnetwork pod
+    Detect a psp validation failure for a hostNetwork pod
   condition: psp_container and ka.req.container.host_network=true
   output: Pod Security Policy {{ policy_name }} validation failure--pod with hostnetwork=true (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
