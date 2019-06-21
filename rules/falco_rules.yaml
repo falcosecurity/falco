@@ -311,13 +311,17 @@
      (fd.ip != "0.0.0.0" and fd.net != "127.0.0.0/8") and
      (evt.rawres >= 0 or evt.res = EINPROGRESS))
 
+# RFC1918 addresses were assigned for private network usage
+- list: rfc_1918_addresses
+  items: ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
+
 - macro: outbound
   condition: >
     (((evt.type = connect and evt.dir=<) or
       (evt.type in (sendto,sendmsg) and evt.dir=< and
        fd.l4proto != tcp and fd.connected=false and fd.name_changed=true)) and
      (fd.typechar = 4 or fd.typechar = 6) and
-     (fd.ip != "0.0.0.0" and fd.net != "127.0.0.0/8") and
+     (fd.ip != "0.0.0.0" and fd.net != "127.0.0.0/8" and (not fd.snet in rfc_1918_addresses) and
      (evt.rawres >= 0 or evt.res = EINPROGRESS))
 
 # Very similar to inbound/outbound, but combines the tests together
@@ -1149,7 +1153,7 @@
   condition: proc.name=confd
 
 # This is a placeholder for user to extend the whitelist for write below etc rule
-- macro: user_know_write_below_etc_activities
+- macro: user_known_write_below_etc_activities
   condition: (never_true)
 
 - macro: write_etc_common
@@ -1249,7 +1253,7 @@
     and not checkpoint_writing_state
     and not jboss_in_container_writing_passwd
     and not etcd_manager_updating_dns
-    and not user_know_write_below_etc_activities
+    and not user_known_write_below_etc_activities
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc
@@ -1480,7 +1484,7 @@
 - list: user_known_change_thread_namespace_binaries
   items: []
 
-- macro: user_know_change_thread_namespace_activities
+- macro: user_known_change_thread_namespace_activities
   condition: (never_true)
 
 - list: network_plugin_binaries
@@ -1511,7 +1515,7 @@
     and not rancher_network_manager
     and not calico_node
     and not weaveworks_scope
-    and not user_know_change_thread_namespace_activities
+    and not user_known_change_thread_namespace_activities
   output: >
     Namespace change (setns) by unexpected program (user=%user.name command=%proc.cmdline
     parent=%proc.pname %container.info container_id=%container.id image=%container.image.repository)
