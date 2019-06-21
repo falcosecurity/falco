@@ -43,3 +43,12 @@ trace_files: !mux
     rules_file: []
     psp_file: psps/host_ipc.yaml
     trace_file: trace_files/psp/host_ipc.json
+
+  host_network:
+    detect: True
+    detect_level: WARNING
+    detect_counts:
+      - "PSP Validation Failure HostNetwork": 1
+    rules_file: []
+    psp_file: psps/host_network.yaml
+    trace_file: trace_files/psp/host_network.json
