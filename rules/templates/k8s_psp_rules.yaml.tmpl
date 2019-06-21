@@ -116,7 +116,7 @@
 - macro: psp_allowed_host_paths
   condition: (ka.req.volume.all_hostpath[{{ join(",", allowed_host_paths) }}] = true)
 
-- rule: PSP Validation Failure Host Paths
+- rule: PSP Validation Failure Allowed Host Paths
   desc: >
     Detect a psp validation failure for a hostPath volume with a path outside of the allowed set
   condition: psp_container and ka.req.volume_types.within[hostPath]=true and not psp_allowed_host_paths
