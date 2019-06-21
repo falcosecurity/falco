@@ -79,3 +79,12 @@ trace_files: !mux
     rules_file: []
     psp_file: psps/allowed_host_paths.yaml
     trace_file: trace_files/psp/mount_etc_using_host_path.json
+
+  allowed_flex_volumes:
+    detect: True
+    detect_level: WARNING
+    detect_counts:
+      - "PSP Validation Failure Flexvolume Drivers": 1
+    rules_file: []
+    psp_file: psps/flex_volumes.yaml
+    trace_file: trace_files/psp/flex_volumes.json
