@@ -606,8 +606,13 @@ add_subdirectory(test)
 add_subdirectory(rules)
 add_subdirectory(docker)
 
+# Add path for custom CMake modules used to build dependencies from Sysdig (libscap, libsinsp)
+list(APPEND CMAKE_MODULE_PATH
+	"${SYSDIG_DIR}/cmake/modules")
+
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
 	add_subdirectory("${SYSDIG_DIR}/driver" "${PROJECT_BINARY_DIR}/driver")
+	include(FindMakedev)
 endif()
 add_subdirectory("${SYSDIG_DIR}/userspace/libscap" "${PROJECT_BINARY_DIR}/userspace/libscap")
 add_subdirectory("${SYSDIG_DIR}/userspace/libsinsp" "${PROJECT_BINARY_DIR}/userspace/libsinsp")
