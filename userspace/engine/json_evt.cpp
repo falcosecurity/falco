@@ -205,6 +205,36 @@ void json_event_filter_check::add_filter_value(const char *str, uint32_t len, ui
 	m_values.push_back(string(str));
 }
 
+bool json_event_filter_check::compare_numeric(const std::string &value)
+{
+	try {
+		int64_t nvalue = std::stoi(value);
+		int64_t nval0 = std::stoi(m_values[0]);
+
+		switch(m_cmpop)
+		{
+		case CO_LT:
+			return (nvalue < nval0);
+			break;
+		case CO_LE:
+			return (nvalue <= nval0);
+			break;
+		case CO_GT:
+			return (nvalue > nval0);
+			break;
+		case CO_GE:
+			return (nvalue >= nval0);
+			break;
+		default:
+			return false;
+		}
+	}
+	catch(std::invalid_argument &e)
+	{
+		return false;
+	}
+}
+
 bool json_event_filter_check::compare(gen_event *evt)
 {
 	json_event *jevt = (json_event *)evt;
@@ -234,6 +264,12 @@ bool json_event_filter_check::compare(gen_event *evt)
 			}
 		}
 		return false;
+		break;
+	case CO_LT:
+	case CO_LE:
+	case CO_GT:
+	case CO_GE:
+		return compare_numeric(value);
 		break;
 	case CO_EXISTS:
 		// Any non-empty, non-"<NA>" value is ok

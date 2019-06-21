@@ -103,6 +103,7 @@ public:
 
 	virtual int32_t parse_field_name(const char* str, bool alloc_state, bool needed_for_filtering);
 	void add_filter_value(const char* str, uint32_t len, uint32_t i = 0 );
+	bool compare_numeric(const std::string &value);
 	bool compare(gen_event *evt);
 	virtual uint8_t* extract(gen_event *evt, uint32_t* len, bool sanitize_strings = true);
 
