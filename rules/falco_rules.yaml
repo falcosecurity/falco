@@ -1690,6 +1690,7 @@
        container.image.repository endswith /ose-pod or
        container.image.repository endswith /ose-node or
        container.image.repository endswith /ose-docker-registry or
+       container.image.repository endswith /prometheus-node-exporter or
        container.image.repository endswith /image-inspector))
 
 # These images are allowed both to run with --privileged and to mount
