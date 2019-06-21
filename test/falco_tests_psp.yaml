@@ -17,7 +17,7 @@
 #
 trace_files: !mux
 
-  privileged:
+  privileged_detect:
     detect: True
     detect_level: WARNING
     detect_counts:
@@ -26,7 +26,13 @@ trace_files: !mux
     psp_file: psps/privileged.yaml
     trace_file: trace_files/psp/privileged.json
 
-  host_pid:
+  privileged_no_detect:
+    detect: False
+    rules_file: []
+    psp_file: psps/privileged.yaml
+    trace_file: trace_files/psp/create_vanilla_nginx_deployment.json
+
+  host_pid_detect:
     detect: True
     detect_level: WARNING
     detect_counts:
@@ -35,7 +41,13 @@ trace_files: !mux
     psp_file: psps/host_pid.yaml
     trace_file: trace_files/psp/host_pid.json
 
-  host_ipc:
+  host_pid_no_detect:
+    detect: False
+    rules_file: []
+    psp_file: psps/host_pid.yaml
+    trace_file: trace_files/psp/create_vanilla_nginx_deployment.json
+
+  host_ipc_detect:
     detect: True
     detect_level: WARNING
     detect_counts:
@@ -44,7 +56,13 @@ trace_files: !mux
     psp_file: psps/host_ipc.yaml
     trace_file: trace_files/psp/host_ipc.json
 
-  host_network:
+  host_ipc_no_detect:
+    detect: False
+    rules_file: []
+    psp_file: psps/host_ipc.yaml
+    trace_file: trace_files/psp/create_vanilla_nginx_deployment.json
+
+  host_network_detect:
     detect: True
     detect_level: WARNING
     detect_counts:
@@ -53,7 +71,13 @@ trace_files: !mux
     psp_file: psps/host_network.yaml
     trace_file: trace_files/psp/host_network.json
 
-  host_network_ports:
+  host_network_no_detect:
+    detect: False
+    rules_file: []
+    psp_file: psps/host_network.yaml
+    trace_file: trace_files/psp/create_vanilla_nginx_deployment.json
+
+  host_network_ports_detect:
     detect: True
     detect_level: WARNING
     detect_counts:
@@ -62,7 +86,13 @@ trace_files: !mux
     psp_file: psps/host_network_ports.yaml
     trace_file: trace_files/psp/host_network_ports.json
 
-  volumes:
+  host_network_ports_no_detect:
+    detect: False
+    rules_file: []
+    psp_file: psps/host_network_ports.yaml
+    trace_file: trace_files/psp/create_vanilla_nginx_deployment.json
+
+  volumes_detect:
     detect: True
     detect_level: WARNING
     detect_counts:
@@ -71,7 +101,13 @@ trace_files: !mux
     psp_file: psps/volumes.yaml
     trace_file: trace_files/psp/mount_etc_using_host_path.json
 
-  allowed_host_paths:
+  volumes_no_detect:
+    detect: False
+    rules_file: []
+    psp_file: psps/volumes.yaml
+    trace_file: trace_files/psp/create_vanilla_nginx_deployment.json
+
+  allowed_host_paths_detect:
     detect: True
     detect_level: WARNING
     detect_counts:
@@ -80,7 +116,13 @@ trace_files: !mux
     psp_file: psps/allowed_host_paths.yaml
     trace_file: trace_files/psp/mount_etc_using_host_path.json
 
-  allowed_flex_volumes:
+  allowed_host_paths_no_detect:
+    detect: False
+    rules_file: []
+    psp_file: psps/allowed_host_paths.yaml
+    trace_file: trace_files/psp/create_vanilla_nginx_deployment.json
+
+  allowed_flex_volumes_detect:
     detect: True
     detect_level: WARNING
     detect_counts:
@@ -89,6 +131,12 @@ trace_files: !mux
     psp_file: psps/flex_volumes.yaml
     trace_file: trace_files/psp/flex_volumes.json
 
+  allowed_flex_volumes_no_detect:
+    detect: False
+    rules_file: []
+    psp_file: psps/flex_volumes.yaml
+    trace_file: trace_files/psp/create_vanilla_nginx_deployment.json
+
   fs_group_must_run_as_with_unset:
     detect: True
     detect_level: WARNING
@@ -96,7 +144,7 @@ trace_files: !mux
       - "PSP Validation Failure fsGroup": 1
     rules_file: []
     psp_file: psps/fs_group_must_run_as.yaml
-    trace_file: trace_files/psp/fs_group_unset.json
+    trace_file: trace_files/psp/create_vanilla_nginx_deployment.json
 
   fs_group_must_run_as:
     detect: True
@@ -120,11 +168,32 @@ trace_files: !mux
     detect: False
     rules_file: []
     psp_file: psps/fs_group_may_run_as.yaml
-    trace_file: trace_files/psp/fs_group_unset.json
+    trace_file: trace_files/psp/create_vanilla_nginx_deployment.json
 
   fs_group_run_as_any:
     detect: False
     rules_file: []
     psp_file: psps/fs_group_run_as_any.yaml
     trace_file: trace_files/psp/fs_group.json
+
+  fs_group_run_as_any_with_unset:
+    detect: False
+    rules_file: []
+    psp_file: psps/fs_group_run_as_any.yaml
+    trace_file: trace_files/psp/create_vanilla_nginx_deployment.json
+
+  read_only_root_fs_detect:
+    detect: True
+    detect_level: WARNING
+    detect_counts:
+      - "PSP Validation Failure readOnlyRootFilesystem": 1
+    rules_file: []
+    psp_file: psps/read_only_root_fs.yaml
+    trace_file: trace_files/psp/create_vanilla_nginx_deployment.json
+
+  read_only_root_fs_no_detect:
+    detect: False
+    rules_file: []
+    psp_file: psps/read_only_root_fs.yaml
+    trace_file: trace_files/psp/read_only_root_fs.json
 
