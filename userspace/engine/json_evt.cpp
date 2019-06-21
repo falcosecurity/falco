@@ -851,7 +851,7 @@ bool k8s_audit_filter_check::check_value_range(const int64_t &val, const std::li
 {
 	for(auto &p : ranges)
 	{
-		if(val < p.first &&
+		if(val < p.first ||
 		   val > p.second)
 		{
 			return false;
