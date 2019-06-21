@@ -152,7 +152,7 @@
 {% endif %}
 - macro: psp_fs_group_may_run_matches
 {% if length(may_run_fs_groups) > 0 %}  condition: >
-    (ka.req.sec_ctx.fs_group = "N/A" or
+    (ka.req.sec_ctx.fs_group = "<NA>" or
      ({% for group in may_run_fs_groups %}
       {% if not loop.is_first %} and {% endif %}(ka.req.sec_ctx.fs_group >= {{ group.min }} and ka.req.sec_ctx.fs_group <= {{ group.max }}){% endfor %}
      )
@@ -188,7 +188,7 @@
 #########################################
 - macro: psp_run_as_users_sec_ctx
   condition: >
-    ( ka.req.sec_ctx.run_as_user != "N/A" and{% for range in must_run_as_users %}
+    ( ka.req.sec_ctx.run_as_user != "<NA>" and{% for range in must_run_as_users %}
      {% if not loop.is_first %}  and{% endif %} (ka.req.sec_ctx.run_as_user >= {{ range.min }} and ka.req.sec_ctx.run_as_user <= {{ range.max }}){% endfor %}
     )
 
@@ -211,7 +211,7 @@
 # Rule for PSP runAsUser property: MustRunAsNonRoot
 #########################################
 - macro: psp_run_as_non_root_sec_ctx
-  condition: (ka.req.sec_ctx.run_as_user != "N/A" and ka.req.sec_ctx.run_as_user != 0)
+  condition: (ka.req.sec_ctx.run_as_user != "<NA>" and ka.req.sec_ctx.run_as_user != 0)
 
 - macro: psp_run_as_non_root_pod_spec
   condition: (ka.req.container.run_as_user.within[0:0]=true)
@@ -232,7 +232,7 @@
 # Rule for PSP runAsGroup property: MustRunAs + list of gids
 #########################################
 - macro: psp_must_run_as_groups_sec_ctx
-  condition: ( ka.req.sec_ctx.run_as_group != "N/A" and
+  condition: ( ka.req.sec_ctx.run_as_group != "<NA>" and
 {% for range in must_run_as_groups %}
     {% if not loop.is_first %}  and{% endif %} (ka.req.sec_ctx.run_as_group >= {{ range.min }} and ka.req.sec_ctx.run_as_group <= {{ range.max }})
 {% endfor %}
@@ -257,7 +257,7 @@
 # Rule for PSP runAsGroup property: MayRunAs + list of gids
 #########################################
 - macro: psp_may_run_as_groups_sec_ctx
-  condition: ( ka.req.sec_ctx.run_as_group != "N/A" and{% for range in may_run_as_groups %}
+  condition: ( ka.req.sec_ctx.run_as_group != "<NA>" and{% for range in may_run_as_groups %}
     {% if not loop.is_first %}  and{% endif %} (ka.req.sec_ctx.run_as_group >= {{ range.min }} and ka.req.sec_ctx.run_as_group <= {{ range.max }}){% endfor %}
   )
 
@@ -288,7 +288,7 @@
 {% endif %}
 - macro: psp_supplemental_group_may_run_matches
 {% if length(may_run_supplemental_groups) > 0 %}  condition: >
-    (ka.req.sec_ctx.supplemental_groups = "N/A" or ({% for group in may_run_supplemental_groups %}
+    (ka.req.sec_ctx.supplemental_groups = "<NA>" or ({% for group in may_run_supplemental_groups %}
      {% if not loop.is_first %} and {% endif %}(ka.req.sec_ctx.supplemental_groups.within[{{ group.min }}:{{ group.max }}]=true){% endfor %})
     )
 {% else %}  condition: (psp_always_true)
