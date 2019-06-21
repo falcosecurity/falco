@@ -88,3 +88,13 @@ trace_files: !mux
     rules_file: []
     psp_file: psps/flex_volumes.yaml
     trace_file: trace_files/psp/flex_volumes.json
+
+  fs_group_must_run_as:
+    detect: True
+    detect_level: WARNING
+    detect_counts:
+      - "PSP Validation Failure fsGroup": 1
+    rules_file: []
+    psp_file: psps/fs_group_must_run_as.yaml
+    trace_file: trace_files/psp/fs_group.json
+
