@@ -69,4 +69,13 @@ trace_files: !mux
       - "PSP Validation Failure Volume Types": 1
     rules_file: []
     psp_file: psps/volumes.yaml
-    trace_file: trace_files/psp/volumes.json
+    trace_file: trace_files/psp/mount_etc_using_host_path.json
+
+  allowed_host_paths:
+    detect: True
+    detect_level: WARNING
+    detect_counts:
+      - "PSP Validation Failure Allowed Host Paths": 1
+    rules_file: []
+    psp_file: psps/allowed_host_paths.yaml
+    trace_file: trace_files/psp/mount_etc_using_host_path.json
