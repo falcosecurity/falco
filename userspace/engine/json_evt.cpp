@@ -676,6 +676,21 @@ std::string k8s_audit_filter_check::check_run_as_user_within(const json &j, std:
 		string("false"));
 }
 
+std::string k8s_audit_filter_check::check_run_as_user_any_within(const json &j, std::string &field, std::string &idx)
+{
+	nlohmann::json::json_pointer jrun_as = "/securityContext/RunAsUser"_json_pointer;
+	std::list<std::pair<int64_t,int64_t>> allowed_uids;
+
+	if(!parse_value_ranges(idx, allowed_uids))
+	{
+		return string("false");
+	}
+
+	return (check_value_range_any_array(j, jrun_as, allowed_uids) ?
+		string("true") :
+		string("false"));
+}
+
 std::string k8s_audit_filter_check::index_run_as_user_defined(const json &j, std::string &field, std::string &idx)
 {
 	nlohmann::json::json_pointer jrun_as = "/securityContext/RunAsUser"_json_pointer;
@@ -947,6 +962,28 @@ bool k8s_audit_filter_check::check_value_range_array(const nlohmann::json &jarra
 	return true;
 }
 
+bool k8s_audit_filter_check::check_value_range_any_array(const nlohmann::json &jarray,
+							 const nlohmann::json::json_pointer &ptr,
+							 const std::list<std::pair<int64_t,int64_t>> &ranges)
+{
+	for(auto &item : jarray)
+	{
+		try {
+			int64_t val = item.at(ptr);
+			if(check_value_range(val, ranges))
+			{
+				return true;
+			}
+		}
+		catch(json::out_of_range &e)
+		{
+			// Do nothing, it just doesn't match the range
+		}
+	}
+
+	return false;
+}
+
 bool k8s_audit_filter_check::array_has_ptr_val(const json &j, const nlohmann::json::json_pointer &ptr, const std::string &idx)
 {
 	if(!idx.empty())
@@ -1103,6 +1140,7 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 		   {"ka.req.container.read_write_fs", "When the request object refers to a container, whether or not any container is missing a readOnlyRootFilesystem annotation. With an index, return whether or not the ith container is missing a readOnlyRootFilesystem annotation.", a::IDX_ALLOWED, a::IDX_NUMERIC},
 		   {"ka.req.container.run_as_user.defined", "When the request object refers to a container, return true if all containers specify a runAsUser. With an index, return whether or not the ith container specifies a runAsUser.", a::IDX_ALLOWED, a::IDX_NUMERIC},
 		   {"ka.req.container.run_as_user.within", "When the request object refers to a container, return true if all containers' runAsUser values are within the list of provided min/max pairs. Example: ka.req.container.runAsUser.within[100:110,200:220] returns true if all containers' runAsUser values are within the range 100:110 (inclusive) and 200:220 (inclusive).", a::IDX_ALLOWED, a::IDX_KEY},
+		   {"ka.req.container.run_as_user.any_within", "When the request object refers to a container, return true if any containers' runAsUser values are within the list of provided min/max pairs. Example: ka.req.container.run_as_user.any_within[100:110,200:220] returns true if any containers' runAsUser values are within the range 100:110 (inclusive) and 200:220 (inclusive).", a::IDX_ALLOWED, a::IDX_KEY},
 		   {"ka.req.container.run_as_group.defined", "When the request object refers to a container, return true if all containers specify a runAsGroup. With an index, return whether or not the ith container specifies a runAsGroup.", a::IDX_ALLOWED, a::IDX_NUMERIC},
 		   {"ka.req.container.run_as_group.within", "When the request object refers to a container, return true if all containers' runAsGroup values are within the list of provided min/max pairs. Example: ka.req.container.run_as_group.within[100:110,200:220] returns true if all containers' runAsGroup values are within the range 100:110 (inclusive) and 200:220 (inclusive).", a::IDX_ALLOWED, a::IDX_KEY},
 		   {"ka.req.role.rules", "When the request object refers to a role/cluster role, the rules associated with the role"},
@@ -1162,6 +1200,7 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 			{"ka.req.container.read_write_fs", {"/requestObject/spec/containers"_json_pointer, index_read_write_fs}},
 			{"ka.req.container.run_as_user.defined", {"/requestObject/spec/containers"_json_pointer, index_run_as_user_defined}},
 			{"ka.req.container.run_as_user.within", {"/requestObject/spec/containers"_json_pointer, check_run_as_user_within}},
+			{"ka.req.container.run_as_user.any_within", {"/requestObject/spec/containers"_json_pointer, check_run_as_user_any_within}},
 			{"ka.req.container.run_as_group.defined", {"/requestObject/spec/containers"_json_pointer, index_run_as_group_defined}},
 			{"ka.req.container.run_as_group.within", {"/requestObject/spec/containers"_json_pointer, check_run_as_group_within}}
 			{"ka.req.role.rules", {"/requestObject/rules"_json_pointer}},

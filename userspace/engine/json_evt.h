@@ -233,6 +233,13 @@ public:
 					    const std::list<std::pair<int64_t,int64_t>> &ranges,
 					    bool require_values);
 
+	// For each item in the provided array, extract an (int64)
+	// value using ptr. Then check if any item matches the ranges in
+	// ranges.
+	static bool check_value_range_any_array(const nlohmann::json &jarray,
+						const nlohmann::json::json_pointer &ptr,
+						const std::list<std::pair<int64_t,int64_t>> &ranges);
+
 	// Return true if every item in the (json) array has the provided property
 	static bool array_has_ptr_val(const nlohmann::json &j, const nlohmann::json::json_pointer &ptr, const std::string &idx);
 
@@ -271,6 +278,11 @@ public:
 	// container array are within the ranges specified in the
 	// provided key.
 	static std::string check_run_as_user_within(const nlohmann::json &j, std::string &field, std::string &idx);
+
+	// Return whether any runAsUsers specified in the provided
+	// container array are within the ranges specified in the
+	// provided key.
+	static std::string check_run_as_user_any_within(const nlohmann::json &j, std::string &field, std::string &idx);
 
 	// Return whether all containers in the provided container
 	// array specify a runAsGroup
