@@ -1149,6 +1149,7 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 		   {"ka.req.role.rules.verbs", "When the request object refers to a role/cluster role, the verbs associated with the role's rules. With an index, return only the verbs from the ith rule. Without an index, return all verbs concatenated", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.req.role.rules.resources", "When the request object refers to a role/cluster role, the resources associated with the role's rules. With an index, return only the resources from the ith rule. Without an index, return all resources concatenated", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.req.sec_ctx.fs_group", "When the request object refers to a pod, the fsGroup gid specified by the security context."},
+                   // XXX/mstemm Try getting rid of these and replace with a new field that looks at the union of security context and per-container values, and also assumes a value of 0 if neither is specified.
 		   {"ka.req.sec_ctx.run_as_user", "When the request object refers to a pod, the runAsUser uid specified by the security context."},
 		   {"ka.req.sec_ctx.run_as_group", "When the request object refers to a pod, the runAsGroup gid specified by the security context."},
 		   {"ka.req.sec_ctx.supplemental_groups", "When the request object refers to a pod, the supplementalGroup gids specified by the security context."},
