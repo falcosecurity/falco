@@ -214,15 +214,15 @@
   condition: (ka.req.sec_ctx.run_as_user != "<NA>" and ka.req.sec_ctx.run_as_user != 0)
 
 - macro: psp_run_as_non_root_pod_spec
-  condition: (ka.req.container.run_as_user.within[0:0]=true)
+  condition: (ka.req.container.run_as_user.any_within[0:0]=false)
 
 - macro: psp_run_as_non_root
-  condition: (psp_run_as_non_root_sec_ctx or (ka.req.container.run_as_user.defined and psp_run_as_non_root_pod_spec))
+  condition: (psp_run_as_non_root_sec_ctx or (ka.req.container.run_as_user.defined=true))
 
 - rule: PSP Validation Failure runAsNonRoot
   desc: >
     Detect a psp validation failure for a non-zero runAsUser when MustRunAsNonRoot is set
-  condition: psp_container and not psp_run_as_non_root
+  condition: psp_container and psp_run_as_non_root
   output: Pod Security Policy {{ policy_name }} validation failure--non-zero runAsUser when MustRunAsNonRoot is set (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
@@ -242,7 +242,7 @@
   condition: (ka.req.container.run_as_group.within[{{ must_run_as_groups }}]=true)
 
 - macro: psp_must_run_as_groups
-  condition: (psp_must_run_as_groups_sec_ctx or (ka.req.container.run_as_group.defined and psp_must_run_as_groups_pod_spec))
+  condition: (psp_must_run_as_groups_sec_ctx or (ka.req.container.run_as_group.defined=true and psp_must_run_as_groups_pod_spec))
 
 - rule: PSP Validation Failure runAsGroup
   desc: >

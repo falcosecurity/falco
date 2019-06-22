@@ -1,0 +1,10 @@
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: user_must_run_as_30
+spec:
+  runAsUser:
+    rule: "MustRunAs"
+    ranges:
+      - min: 30
+        max: 40
