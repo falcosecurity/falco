@@ -22,7 +22,7 @@ set(FALCO_TESTS_SOURCES
 set(FALCO_TESTED_LIBRARIES
     falco_engine)
 
-option(FALCO_BUILD_TESTS "Determines whether to build tests." OFF)
+option(FALCO_BUILD_TESTS "Determines whether to build tests." ON)
 
 if(FALCO_BUILD_TESTS)
     enable_testing()
