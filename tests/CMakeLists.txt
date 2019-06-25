@@ -16,7 +16,8 @@
 # limitations under the License.
 #
 set(FALCO_TESTS_SOURCES
-    test_base.cpp)
+    test_base.cpp
+    engine/test_ruleset.cpp)
 
 set(FALCO_TESTED_LIBRARIES
     falco_engine)
@@ -31,11 +32,23 @@ if(FALCO_BUILD_TESTS)
 
 	add_executable(falco_test ${FALCO_TESTS_SOURCES})
 
-	target_link_libraries(falco_test PUBLIC ${FALCO_TESTED_LIBRARIES} catch)
+    target_link_libraries(falco_test PUBLIC ${FALCO_TESTED_LIBRARIES} catch)
+    target_include_directories(falco_test PUBLIC
+        "${SYSDIG_DIR}/userspace/libsinsp/third-party/jsoncpp"
+        "${SYSDIG_DIR}/userspace/libscap"
+        "${SYSDIG_DIR}/userspace/libsinsp"
+        "${LUAJIT_INCLUDE}"
+        "${NJSON_INCLUDE}"
+        "${CURL_INCLUDE_DIR}"
+        "${TBB_INCLUDE_DIR}"
+        "${LUAJIT_INCLUDE}"
+        "${NJSON_INCLUDE}"
+        "${PROJECT_SOURCE_DIR}/userspace/engine"
+    )
 
 	include(CTest)
 	include(Catch)
 	catch_discover_tests(falco_test)
 
-	add_custom_target(tests COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS falco_test)
+    add_custom_target(tests COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS falco_test)
 endif()
