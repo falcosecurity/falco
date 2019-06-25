@@ -15,9 +15,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-include_directories("${PROJECT_SOURCE_DIR}/../sysdig/userspace/libsinsp/third-party/jsoncpp")
-include_directories("${PROJECT_SOURCE_DIR}/../sysdig/userspace/libscap")
-include_directories("${PROJECT_SOURCE_DIR}/../sysdig/userspace/libsinsp")
+include_directories("${SYSDIG_DIR}/userspace/libsinsp/third-party/jsoncpp")
+include_directories("${SYSDIG_DIR}/userspace/libscap")
+include_directories("${SYSDIG_DIR}/userspace/libsinsp")
 include_directories("${PROJECT_BINARY_DIR}/userspace/engine")
 include_directories("${LUAJIT_INCLUDE}")
 include_directories("${NJSON_INCLUDE}")
