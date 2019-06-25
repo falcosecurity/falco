@@ -1,0 +1,10 @@
+# This coding convention's solely goal is to approximately match the current code style.
+# It MUST not be intended in any other way until a real and definitive coding convention is put in.
+---
+BreakBeforeBraces: GNU
+ColumnLimit: 0
+IndentWidth: 4
+Language: Cpp
+SpaceBeforeParens: Never
+Standard: Auto
+UseTab: Always
