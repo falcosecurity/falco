@@ -16,8 +16,7 @@
 # limitations under the License.
 #
 set(FALCO_TESTS_SOURCES
-    TestBase.cpp
-    engine/TestEngineProva.cpp)
+    TestBase.cpp)
 
 set(FALCO_TESTED_LIBRARIES
     falco_engine)
