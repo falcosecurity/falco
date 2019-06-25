@@ -610,6 +610,10 @@ add_subdirectory(docker)
 list(APPEND CMAKE_MODULE_PATH
 	"${SYSDIG_DIR}/cmake/modules")
 
+# Add path for custom CMake modules
+list(APPEND CMAKE_MODULE_PATH
+	"${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
+
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
 	add_subdirectory("${SYSDIG_DIR}/driver" "${PROJECT_BINARY_DIR}/driver")
 	include(FindMakedev)
@@ -624,6 +628,7 @@ set(FALCO_BIN_DIR bin)
 add_subdirectory(scripts)
 add_subdirectory(userspace/engine)
 add_subdirectory(userspace/falco)
+add_subdirectory(tests)
 
 
 set(CPACK_PACKAGE_NAME "${PACKAGE_NAME}")
