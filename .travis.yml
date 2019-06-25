@@ -36,6 +36,7 @@ script:
     - cd build
     - docker run --user $(id -u):$(id -g) -v /etc/passwd:/etc/passwd:ro -e MAKE_JOBS=4 -v $TRAVIS_BUILD_DIR/..:/source -v $TRAVIS_BUILD_DIR/build:/build falcosecurity/falco-builder cmake
     - docker run --user $(id -u):$(id -g) -v /etc/passwd:/etc/passwd:ro -e MAKE_JOBS=4 -v $TRAVIS_BUILD_DIR/..:/source -v $TRAVIS_BUILD_DIR/build:/build falcosecurity/falco-builder package
+    - docker run --user $(id -u):$(id -g) -v /etc/passwd:/etc/passwd:ro -e MAKE_JOBS=1 -v $TRAVIS_BUILD_DIR/..:/source -v $TRAVIS_BUILD_DIR/build:/build falcosecurity/falco-builder tests
     - docker run -v /boot:/boot:ro -v /var/run/docker.sock:/var/run/docker.sock -v /etc/passwd:/etc/passwd:ro -e MAKE_JOBS=4 -v $TRAVIS_BUILD_DIR/..:/source -v $TRAVIS_BUILD_DIR/build:/build falcosecurity/falco-tester
 notifications:
   webhooks:
