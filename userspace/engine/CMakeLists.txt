@@ -45,7 +45,6 @@ target_link_libraries(falco_engine
   "${LPEG_LIB}"
   "${LYAML_LIB}"
   "${LIBYAML_LIB}")
-#   --coverage) # todo: enable only if coverage enabled
 
 configure_file(config_falco_engine.h.in config_falco_engine.h)
 
