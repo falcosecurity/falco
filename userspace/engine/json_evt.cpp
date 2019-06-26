@@ -803,26 +803,143 @@ std::string k8s_audit_filter_check::check_run_as_user_any_within(const json &j, 
 
 std::string k8s_audit_filter_check::index_has_run_as_group(const json &j, std::string &field, std::string &idx)
 {
+	static json::json_pointer run_as_group = "/securityContext/runAsGroup"_json_pointer;
+
+	try {
+		auto val = j.at(run_as_group);
+
+		// Would have thrown exception, so value exists
+		return string("true");
+	}
+	catch(json::out_of_range &e)
+	{
+		// Continue to examining container array
+	}
+
+	try {
+		for(auto &container : j.at("containers"))
+		{
+			try {
+				auto val = container.at(run_as_group);
+
+				// Would have thrown exception, so value exists
+				return string("true");
+			}
+			catch(json::out_of_range &e)
+			{
+				// Try next container
+			}
+		}
+	}
+	catch(json::out_of_range &e)
+	{
+		// no containers, pass through
+	}
+
 	return string("false");
 }
 
 std::string k8s_audit_filter_check::index_run_as_group(const json &j, std::string &field, std::string &idx)
 {
-	return string("");
+	static json::json_pointer run_as_group = "/securityContext/runAsGroup"_json_pointer;
+
+	// Prefer the security context over any container's runAsGroup
+	try {
+		return j.at(run_as_group);
+	}
+	catch(json::out_of_range &e)
+	{
+		// Continue to per-container indexing
+	}
+
+	uint64_t uidx = 0;
+	if(idx.empty())
+	{
+		try {
+			uidx = stoi(idx);
+		}
+		catch(std::invalid_argument &e)
+		{
+			uidx = 0;
+		}
+	}
+
+	try {
+		return j.at("containers")[uidx].at(run_as_group);
+	}
+	catch(json::out_of_range &e)
+	{
+		return string("0");
+	}
 }
 
 void k8s_audit_filter_check::get_all_run_as_groups(const json &j, std::set<int64_t> &uids)
 {
+	uids.clear();
+
+	static json::json_pointer run_as_group = "/securityContext/runAsGroup"_json_pointer;
+
+	// Prefer the security context over any container's runAsGroup
+	try {
+		int64_t uid = j.at(run_as_group);
+		uids.insert(uid);
+		return;
+	}
+	catch(json::out_of_range &e)
+	{
+		// Continue to per-container indexing
+	}
+
+	try {
+		for(auto &container : j.at("containers"))
+		{
+			try {
+				int64_t uid = container.at(run_as_group);
+				uids.insert(uid);
+			}
+			catch(json::out_of_range &e)
+			{
+				// This container has no runAsGroup, assume 0
+				uids.insert(0);
+			}
+		}
+	}
+	catch(json::out_of_range &e)
+	{
+		// No containers at all
+		uids.insert(0);
+	}
 }
 
 std::string k8s_audit_filter_check::check_run_as_group_within(const json &j, std::string &field, std::string &idx)
 {
-	return string("true");
+	std::list<std::pair<int64_t,int64_t>> allowed_uids;
+	std::set<int64_t> all_run_as_groups;
+
+	if(!parse_value_ranges(idx, allowed_uids))
+	{
+		return string("false");
+	}
+
+	get_all_run_as_groups(j, all_run_as_groups);
+
+	return (check_value_range_set(all_run_as_groups, allowed_uids) ? string("true") : string("false"));
 }
 
 std::string k8s_audit_filter_check::check_run_as_group_any_within(const json &j, std::string &field, std::string &idx)
 {
-	return string("true");
+	std::list<std::pair<int64_t,int64_t>> allowed_uids;
+	std::set<int64_t> all_run_as_groups;
+
+	if(!parse_value_ranges(idx, allowed_uids))
+	{
+		return string("false");
+	}
+
+	get_all_run_as_groups(j, all_run_as_groups);
+
+	return (check_value_range_any_set(all_run_as_groups, allowed_uids) ? string("true") : string("false"));
+
 }
 
 std::string k8s_audit_filter_check::check_supplemental_groups_within(const json &j, std::string &field, std::string &idx)
