@@ -295,3 +295,58 @@ trace_files: !mux
     rules_file: []
     psp_file: psps/user_must_run_as_non_root.yaml
     trace_file: trace_files/psp/run_as_user_1000_sec_ctx_0_container.json
+
+  group_must_run_as_with_unset:
+    detect: True
+    detect_level: WARNING
+    detect_counts:
+      - "PSP Validation Failure runAsGroup": 1
+    rules_file: []
+    psp_file: psps/group_must_run_as.yaml
+    trace_file: trace_files/psp/create_vanilla_nginx_deployment.json
+
+  group_must_run_as_detect:
+    detect: True
+    detect_level: WARNING
+    detect_counts:
+      - "PSP Validation Failure runAsGroup": 1
+    rules_file: []
+    psp_file: psps/group_must_run_as.yaml
+    trace_file: trace_files/psp/run_as_group_1000_container.json
+
+  group_must_run_as_not_detect:
+    detect: False
+    rules_file: []
+    psp_file: psps/group_must_run_as.yaml
+    trace_file: trace_files/psp/run_as_group_30_container.json
+
+  group_must_run_as_detect_sec_ctx:
+    detect: True
+    detect_level: WARNING
+    detect_counts:
+      - "PSP Validation Failure runAsGroup": 1
+    rules_file: []
+    psp_file: psps/group_must_run_as.yaml
+    trace_file: trace_files/psp/run_as_group_1000_sec_ctx.json
+
+  group_must_run_as_not_detect_sec_ctx:
+    detect: False
+    rules_file: []
+    psp_file: psps/group_must_run_as.yaml
+    trace_file: trace_files/psp/run_as_group_30_sec_ctx.json
+
+  group_must_run_as_detect_both:
+    detect: True
+    detect_level: WARNING
+    detect_counts:
+      - "PSP Validation Failure runAsGroup": 1
+    rules_file: []
+    psp_file: psps/group_must_run_as.yaml
+    trace_file: trace_files/psp/run_as_group_1000_sec_ctx_30_container.json
+
+  group_must_run_as_not_detect_both:
+    detect: False
+    rules_file: []
+    psp_file: psps/group_must_run_as.yaml
+    trace_file: trace_files/psp/run_as_group_30_sec_ctx_1000_container.json
+
