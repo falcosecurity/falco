@@ -663,23 +663,37 @@ std::string k8s_audit_filter_check::index_read_write_fs(const json &j, std::stri
 
 std::string k8s_audit_filter_check::index_has_run_as_user(const json &j, std::string &field, std::string &idx)
 {
-	if(j.find("/securityContext/RunAsUser"_json_pointer) != j.end())
-	{
+	static json::json_pointer run_as_user = "/securityContext/runAsUser"_json_pointer;
+
+	try {
+		auto val = j.at(run_as_user);
+
+		// Would have thrown exception, so value exists
 		return string("true");
+	}
+	catch(json::out_of_range &e)
+	{
+		// Continue to examining container array
 	}
 
 	try {
 		for(auto &container : j.at("containers"))
 		{
-			if(container.find("runAsUser") != container.end())
-			{
+			try {
+				auto val = container.at(run_as_user);
+
+				// Would have thrown exception, so value exists
 				return string("true");
+			}
+			catch(json::out_of_range &e)
+			{
+				// Try next container
 			}
 		}
 	}
 	catch(json::out_of_range &e)
 	{
-		// pass through
+		// no containers, pass through
 	}
 
 	return string("false");
@@ -687,9 +701,11 @@ std::string k8s_audit_filter_check::index_has_run_as_user(const json &j, std::st
 
 std::string k8s_audit_filter_check::index_run_as_user(const json &j, std::string &field, std::string &idx)
 {
+	static json::json_pointer run_as_user = "/securityContext/runAsUser"_json_pointer;
+
 	// Prefer the security context over any container's runAsUser
 	try {
-		return j.at("/securityContext/RunAsUser"_json_pointer);
+		return j.at(run_as_user);
 	}
 	catch(json::out_of_range &e)
 	{
@@ -709,7 +725,7 @@ std::string k8s_audit_filter_check::index_run_as_user(const json &j, std::string
 	}
 
 	try {
-		return j.at("containers")[uidx].at("runAsUser");
+		return j.at("containers")[uidx].at(run_as_user);
 	}
 	catch(json::out_of_range &e)
 	{
@@ -721,16 +737,12 @@ void k8s_audit_filter_check::get_all_run_as_users(const json &j, std::set<int64_
 {
 	uids.clear();
 
+	static json::json_pointer run_as_user = "/securityContext/runAsUser"_json_pointer;
+
 	// Prefer the security context over any container's runAsUser
 	try {
-		std::string uid_str = j.at("/securityContext/RunAsUser"_json_pointer);
-		try {
-			uids.insert(stoi(uid_str));
-		}
-		catch(std::invalid_argument &e)
-		{
-			uids.insert(0);
-		}
+		int64_t uid = j.at(run_as_user);
+		uids.insert(uid);
 		return;
 	}
 	catch(json::out_of_range &e)
@@ -741,27 +753,33 @@ void k8s_audit_filter_check::get_all_run_as_users(const json &j, std::set<int64_
 	try {
 		for(auto &container : j.at("containers"))
 		{
-			std::string uid_str = container.at("runAsUser");
 			try {
-				uids.insert(stoi(uid_str));
+				int64_t uid = container.at(run_as_user);
+				uids.insert(uid);
 			}
-			catch(std::invalid_argument &e)
+			catch(json::out_of_range &e)
 			{
+				// This container has no runAsUser, assume 0
 				uids.insert(0);
 			}
 		}
 	}
 	catch(json::out_of_range &e)
 	{
+		// No containers at all
 		uids.insert(0);
 	}
 }
 
 std::string k8s_audit_filter_check::check_run_as_user_within(const json &j, std::string &field, std::string &idx)
 {
-	nlohmann::json::json_pointer jrun_as = "/securityContext/RunAsUser"_json_pointer;
 	std::list<std::pair<int64_t,int64_t>> allowed_uids;
 	std::set<int64_t> all_run_as_users;
+
+	if(!parse_value_ranges(idx, allowed_uids))
+	{
+		return string("false");
+	}
 
 	get_all_run_as_users(j, all_run_as_users);
 
@@ -770,9 +788,13 @@ std::string k8s_audit_filter_check::check_run_as_user_within(const json &j, std:
 
 std::string k8s_audit_filter_check::check_run_as_user_any_within(const json &j, std::string &field, std::string &idx)
 {
-	nlohmann::json::json_pointer jrun_as = "/securityContext/RunAsUser"_json_pointer;
 	std::list<std::pair<int64_t,int64_t>> allowed_uids;
 	std::set<int64_t> all_run_as_users;
+
+	if(!parse_value_ranges(idx, allowed_uids))
+	{
+		return string("false");
+	}
 
 	get_all_run_as_users(j, all_run_as_users);
 

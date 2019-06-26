@@ -189,7 +189,7 @@
 - rule: PSP Validation Failure runAsUser
   desc: >
     Detect a psp validation failure for a runAsUser outside of the allowed set
-  condition: psp_container and ka.req.container.run_as_user.within[{{ join(",", must_run_as_users) }}]=false
+  condition: psp_container and ka.req.container.run_as_user.within[{{ rjoin(",", must_run_as_users) }}]=false
   output: Pod Security Policy {{ policy_name }} validation failure--runAsUser outside of allowed set. runAsUser set="{{ must_run_as_users }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
@@ -213,7 +213,7 @@
 - rule: PSP Validation Failure runAsGroup
   desc: >
     Detect a psp validation failure for a runAsGroup outside of the MustRunAs allowed set
-  condition: psp_container and ka.req.container.run_as_group.within[{{ join(",", must_run_as_groups) }}]=false
+  condition: psp_container and ka.req.container.run_as_group.within[{{ rjoin(",", must_run_as_groups) }}]=false
   output: Pod Security Policy {{ policy_name }} validation failure--runAsGroup outside of the MustRunAs allowed set. runAsGroup MustRunAs set="{{ must_run_as_groups }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
@@ -225,7 +225,7 @@
 - rule: PSP Validation Failure runAsGroup
   desc: >
     Detect a psp validation failure for a runAsGroup outside of the MayRunAs allowed set
-  condition: psp_container and (ka.req.container.has_run_as_group=true and ka.req.container.run_as_group.within[{{ join(",", may_run_as_groups) }}]=false)
+  condition: psp_container and (ka.req.container.has_run_as_group=true and ka.req.container.run_as_group.within[{{ rjoin(",", may_run_as_groups) }}]=false)
   output: Pod Security Policy {{ policy_name }} validation failure--runAsGroup outside of the MayRunAs allowed set. runAsGroup MayRunAs set="{{ may_run_as_groups }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
