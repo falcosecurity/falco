@@ -661,58 +661,146 @@ std::string k8s_audit_filter_check::index_read_write_fs(const json &j, std::stri
 	return (read_write_fs ? string("true") : string("false"));
 }
 
+std::string k8s_audit_filter_check::index_has_run_as_user(const json &j, std::string &field, std::string &idx)
+{
+	if(j.find("/securityContext/RunAsUser"_json_pointer) != j.end())
+	{
+		return string("true");
+	}
+
+	try {
+		for(auto &container : j.at("containers"))
+		{
+			if(container.find("runAsUser") != container.end())
+			{
+				return string("true");
+			}
+		}
+	}
+	catch(json::out_of_range &e)
+	{
+		// pass through
+	}
+
+	return string("false");
+}
+
+std::string k8s_audit_filter_check::index_run_as_user(const json &j, std::string &field, std::string &idx)
+{
+	// Prefer the security context over any container's runAsUser
+	try {
+		return j.at("/securityContext/RunAsUser"_json_pointer);
+	}
+	catch(json::out_of_range &e)
+	{
+		// Continue to per-container indexing
+	}
+
+	uint64_t uidx = 0;
+	if(idx.empty())
+	{
+		try {
+			uidx = stoi(idx);
+		}
+		catch(std::invalid_argument &e)
+		{
+			uidx = 0;
+		}
+	}
+
+	try {
+		return j.at("containers")[uidx].at("runAsUser");
+	}
+	catch(json::out_of_range &e)
+	{
+		return string("0");
+	}
+}
+
+void k8s_audit_filter_check::get_all_run_as_users(const json &j, std::set<int64_t> &uids)
+{
+	uids.clear();
+
+	// Prefer the security context over any container's runAsUser
+	try {
+		std::string uid_str = j.at("/securityContext/RunAsUser"_json_pointer);
+		try {
+			uids.insert(stoi(uid_str));
+		}
+		catch(std::invalid_argument &e)
+		{
+			uids.insert(0);
+		}
+		return;
+	}
+	catch(json::out_of_range &e)
+	{
+		// Continue to per-container indexing
+	}
+
+	try {
+		for(auto &container : j.at("containers"))
+		{
+			std::string uid_str = container.at("runAsUser");
+			try {
+				uids.insert(stoi(uid_str));
+			}
+			catch(std::invalid_argument &e)
+			{
+				uids.insert(0);
+			}
+		}
+	}
+	catch(json::out_of_range &e)
+	{
+		uids.insert(0);
+	}
+}
+
 std::string k8s_audit_filter_check::check_run_as_user_within(const json &j, std::string &field, std::string &idx)
 {
 	nlohmann::json::json_pointer jrun_as = "/securityContext/RunAsUser"_json_pointer;
 	std::list<std::pair<int64_t,int64_t>> allowed_uids;
+	std::set<int64_t> all_run_as_users;
 
-	if(!parse_value_ranges(idx, allowed_uids))
-	{
-		return string("false");
-	}
+	get_all_run_as_users(j, all_run_as_users);
 
-	return (check_value_range_array(j, jrun_as, allowed_uids, false) ?
-		string("true") :
-		string("false"));
+	return (check_value_range_set(all_run_as_users, allowed_uids) ? string("true") : string("false"));
 }
 
 std::string k8s_audit_filter_check::check_run_as_user_any_within(const json &j, std::string &field, std::string &idx)
 {
 	nlohmann::json::json_pointer jrun_as = "/securityContext/RunAsUser"_json_pointer;
 	std::list<std::pair<int64_t,int64_t>> allowed_uids;
+	std::set<int64_t> all_run_as_users;
 
-	if(!parse_value_ranges(idx, allowed_uids))
-	{
-		return string("false");
-	}
+	get_all_run_as_users(j, all_run_as_users);
 
-	return (check_value_range_any_array(j, jrun_as, allowed_uids) ?
-		string("true") :
-		string("false"));
+	return (check_value_range_any_set(all_run_as_users, allowed_uids) ? string("true") : string("false"));
 }
 
-std::string k8s_audit_filter_check::index_run_as_user_defined(const json &j, std::string &field, std::string &idx)
+std::string k8s_audit_filter_check::index_has_run_as_group(const json &j, std::string &field, std::string &idx)
 {
-	nlohmann::json::json_pointer jrun_as = "/securityContext/RunAsUser"_json_pointer;
+	return string("false");
+}
 
-	return (array_has_ptr_val(j, jrun_as, idx) ?
-		string("true") :
-		string("false"));
+std::string k8s_audit_filter_check::index_run_as_group(const json &j, std::string &field, std::string &idx)
+{
+	return string("");
+}
+
+void k8s_audit_filter_check::get_all_run_as_groups(const json &j, std::set<int64_t> &uids)
+{
 }
 
 std::string k8s_audit_filter_check::check_run_as_group_within(const json &j, std::string &field, std::string &idx)
 {
-	nlohmann::json::json_pointer jrun_as = "/securityContext/RunAsGroup"_json_pointer;
-	std::list<std::pair<int64_t,int64_t>> allowed_uids;
+	return string("true");
+}
 
-	if(!parse_value_ranges(idx, allowed_uids))
-	{
-		return string("false");
-	}
-
-	return (check_value_range_array(j, jrun_as, allowed_uids, false) ?
-		string("true") :
-		string("false"));
+std::string k8s_audit_filter_check::check_run_as_group_any_within(const json &j, std::string &field, std::string &idx)
+{
+	return string("true");
 }
 
 std::string k8s_audit_filter_check::check_supplemental_groups_within(const json &j, std::string &field, std::string &idx)
@@ -733,15 +821,6 @@ std::string k8s_audit_filter_check::check_supplemental_groups_within(const json 
 	}
 
 	return string("true");
-}
-
-std::string k8s_audit_filter_check::index_run_as_group_defined(const json &j, std::string &field, std::string &idx)
-{
-	nlohmann::json::json_pointer jrun_as = "/securityContext/RunAsGroup"_json_pointer;
-
-	return (array_has_ptr_val(j, jrun_as, idx) ?
-		string("true") :
-		string("false"));
 }
 
 std::string k8s_audit_filter_check::check_hostpath_vols(const json &j, std::string &field, std::string &idx)
@@ -962,55 +1041,32 @@ bool k8s_audit_filter_check::check_value_range_array(const nlohmann::json &jarra
 	return true;
 }
 
-bool k8s_audit_filter_check::check_value_range_any_array(const nlohmann::json &jarray,
-							 const nlohmann::json::json_pointer &ptr,
-							 const std::list<std::pair<int64_t,int64_t>> &ranges)
+bool k8s_audit_filter_check::check_value_range_set(std::set<int64_t> &items,
+						   const std::list<std::pair<int64_t,int64_t>> &ranges)
 {
-	for(auto &item : jarray)
+	for(auto &item : items)
 	{
-		try {
-			int64_t val = item.at(ptr);
-			if(check_value_range(val, ranges))
-			{
-				return true;
-			}
-		}
-		catch(json::out_of_range &e)
-		{
-			// Do nothing, it just doesn't match the range
-		}
-	}
-
-	return false;
-}
-
-bool k8s_audit_filter_check::array_has_ptr_val(const json &j, const nlohmann::json::json_pointer &ptr, const std::string &idx)
-{
-	if(!idx.empty())
-	{
-		try {
-			string val = j[stoi(idx)].at(ptr);
-		}
-		catch(json::out_of_range &e)
+		if(!check_value_range(item, ranges))
 		{
 			return false;
 		}
 	}
-	else
+
+	return true;
+}
+
+bool k8s_audit_filter_check::check_value_range_any_set(std::set<int64_t> &items,
+						       const std::list<std::pair<int64_t,int64_t>> &ranges)
+{
+	for(auto &item : items)
 	{
-		for(auto &container : j)
+		if(check_value_range(item, ranges))
 		{
-			try {
-				string val = container.at(ptr);
-			}
-			catch(json::out_of_range &e)
-			{
-				return false;
-			}
+			return true;
 		}
 	}
 
-	return true;
+	return false;
 }
 
 bool k8s_audit_filter_check::array_get_bool_vals(const json &j, const json::json_pointer &ptr, const std::string &idx)
@@ -1138,20 +1194,20 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 		   {"ka.req.container.privileged", "When the request object refers to a container, whether or not any container is run privileged. With an index, return whether or not the ith container is run privileged.", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.req.container.allow_privilege_escalation", "When the request object refers to a container, whether or not any container has allowPrivilegeEscalation=true. With an index, return whether or not the ith container has allowPrivilegeEscalation=true.", a::IDX_ALLOWED, a::IDX_NUMERIC},
 		   {"ka.req.container.read_write_fs", "When the request object refers to a container, whether or not any container is missing a readOnlyRootFilesystem annotation. With an index, return whether or not the ith container is missing a readOnlyRootFilesystem annotation.", a::IDX_ALLOWED, a::IDX_NUMERIC},
-		   {"ka.req.container.run_as_user.defined", "When the request object refers to a container, return true if all containers specify a runAsUser. With an index, return whether or not the ith container specifies a runAsUser.", a::IDX_ALLOWED, a::IDX_NUMERIC},
-		   {"ka.req.container.run_as_user.within", "When the request object refers to a container, return true if all containers' runAsUser values are within the list of provided min/max pairs. Example: ka.req.container.runAsUser.within[100:110,200:220] returns true if all containers' runAsUser values are within the range 100:110 (inclusive) and 200:220 (inclusive).", a::IDX_ALLOWED, a::IDX_KEY},
-		   {"ka.req.container.run_as_user.any_within", "When the request object refers to a container, return true if any containers' runAsUser values are within the list of provided min/max pairs. Example: ka.req.container.run_as_user.any_within[100:110,200:220] returns true if any containers' runAsUser values are within the range 100:110 (inclusive) and 200:220 (inclusive).", a::IDX_ALLOWED, a::IDX_KEY},
-		   {"ka.req.container.run_as_group.defined", "When the request object refers to a container, return true if all containers specify a runAsGroup. With an index, return whether or not the ith container specifies a runAsGroup.", a::IDX_ALLOWED, a::IDX_NUMERIC},
-		   {"ka.req.container.run_as_group.within", "When the request object refers to a container, return true if all containers' runAsGroup values are within the list of provided min/max pairs. Example: ka.req.container.run_as_group.within[100:110,200:220] returns true if all containers' runAsGroup values are within the range 100:110 (inclusive) and 200:220 (inclusive).", a::IDX_ALLOWED, a::IDX_KEY},
+		   {"ka.req.container.has_run_as_user", "When the request object refers to a container, whether a runAsUser is specified either in the security context or in any container's spec"},
+		   {"ka.req.container.run_as_user", "When the request object refers to a container, the user id that will be used for the container's entrypoint. Both the security context's runAsUser and the container's runAsUser are considered, with the security context taking precedence, and defaulting to uid 0 if neither are specified. With an index, return the uid for the ith container. With no index, returns the uid for the first container", a::IDX_ALLOWED, a::IDX_NUMERIC},
+		   {"ka.req.container.run_as_user.within", "When the request object refers to a container, return true if all containers' uid values (see .run_as_user) are within the list of provided min/max pairs. Example: ka.req.container.run_as_user.within[100:110,200:220] returns true if all containers' uid values are within the range 100:110 (inclusive) and 200:220 (inclusive).", a::IDX_ALLOWED, a::IDX_KEY},
+		   {"ka.req.container.run_as_user.any_within", "When the request object refers to a container, return true if any containers' uid values (see .run_as_user) are within the list of provided min/max pairs. Example: ka.req.container.run_as_user.any_within[100:110,200:220] returns true if any containers' uid values are within the range 100:110 (inclusive) and 200:220 (inclusive).", a::IDX_ALLOWED, a::IDX_KEY},
+		   {"ka.req.container.has_run_as_group", "When the request object refers to a container, whether a runAsGroup is specified either in the security context or in any container's spec"},
+		   {"ka.req.container.run_as_group", "When the request object refers to a container, the group id that will be used for the container's entrypoint. Both the security context's runAsGroup and the container's runAsGroup are considered, with the security context taking precedence, and defaulting to gid 0 if neither are specified. With an index, return the gid for the ith container. With no index, returns the gid for first container", a::IDX_ALLOWED, a::IDX_NUMERIC},
+		   {"ka.req.container.run_as_group.within", "When the request object refers to a container, return true if all containers' gid values (see .run_as_group) are within the list of provided min/max pairs. Example: ka.req.container.run_as_group.within[100:110,200:220] returns true if all containers' gid values are within the range 100:110 (inclusive) and 200:220 (inclusive).", a::IDX_ALLOWED, a::IDX_KEY},
+		   {"ka.req.container.run_as_group.any_within", "When the request object refers to a container, return true if any containers' gid values (see .run_as_group) are within the list of provided min/max pairs. Example: ka.req.container.run_as_group.any_within[100:110,200:220] returns true if any containers' gid values are within the range 100:110 (inclusive) and 200:220 (inclusive).", a::IDX_ALLOWED, a::IDX_KEY},
 		   {"ka.req.role.rules", "When the request object refers to a role/cluster role, the rules associated with the role"},
 		   {"ka.req.role.rules.apiGroups", "When the request object refers to a role/cluster role, the api groups associated with the role's rules. With an index, return only the api groups from the ith rule. Without an index, return all api groups concatenated", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.req.role.rules.nonResourceURLs", "When the request object refers to a role/cluster role, the non resource urls associated with the role's rules. With an index, return only the non resource urls from the ith rule. Without an index, return all non resource urls concatenated", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.req.role.rules.verbs", "When the request object refers to a role/cluster role, the verbs associated with the role's rules. With an index, return only the verbs from the ith rule. Without an index, return all verbs concatenated", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.req.role.rules.resources", "When the request object refers to a role/cluster role, the resources associated with the role's rules. With an index, return only the resources from the ith rule. Without an index, return all resources concatenated", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.req.sec_ctx.fs_group", "When the request object refers to a pod, the fsGroup gid specified by the security context."},
-                   // XXX/mstemm Try getting rid of these and replace with a new field that looks at the union of security context and per-container values, and also assumes a value of 0 if neither is specified.
-		   {"ka.req.sec_ctx.run_as_user", "When the request object refers to a pod, the runAsUser uid specified by the security context."},
-		   {"ka.req.sec_ctx.run_as_group", "When the request object refers to a pod, the runAsGroup gid specified by the security context."},
 		   {"ka.req.sec_ctx.supplemental_groups", "When the request object refers to a pod, the supplementalGroup gids specified by the security context."},
 		   {"ka.req.sec_ctx.supplemental_groups.within", "When the request object refers to a pod, return true if all gids in supplementalGroups are within the provided range. For example, ka.req.sec_ctx.supplemental_groups.within[10:20] returns true if every gid in supplementalGroups is within 10 and 20.", a::IDX_REQUIRED, a::IDX_KEY},
 		   {"ka.req.sec_ctx.allow_privilege_escalation", "When the request object refers to a pod, the value of the allowPrivilegeEscalation flag specified by the security context."},
@@ -1199,11 +1255,14 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 			{"ka.req.container.privileged", {"/requestObject/spec/containers"_json_pointer, index_privileged}},
 			{"ka.req.container.allow_privilege_escalation", {"/requestObject/spec/containers"_json_pointer, index_allow_privilege_escalation}},
 			{"ka.req.container.read_write_fs", {"/requestObject/spec/containers"_json_pointer, index_read_write_fs}},
-			{"ka.req.container.run_as_user.defined", {"/requestObject/spec/containers"_json_pointer, index_run_as_user_defined}},
-			{"ka.req.container.run_as_user.within", {"/requestObject/spec/containers"_json_pointer, check_run_as_user_within}},
-			{"ka.req.container.run_as_user.any_within", {"/requestObject/spec/containers"_json_pointer, check_run_as_user_any_within}},
-			{"ka.req.container.run_as_group.defined", {"/requestObject/spec/containers"_json_pointer, index_run_as_group_defined}},
-			{"ka.req.container.run_as_group.within", {"/requestObject/spec/containers"_json_pointer, check_run_as_group_within}}
+			{"ka.req.container.has_run_as_user", {"/requestObject/spec"_json_pointer, index_has_run_as_user}},
+			{"ka.req.container.run_as_user", {"/requestObject/spec"_json_pointer, index_run_as_user}},
+			{"ka.req.container.run_as_user.within", {"/requestObject/spec"_json_pointer, check_run_as_user_within}},
+			{"ka.req.container.run_as_user.any_within", {"/requestObject/spec"_json_pointer, check_run_as_user_any_within}},
+			{"ka.req.container.has_run_as_group", {"/requestObject/spec"_json_pointer, index_has_run_as_group}},
+			{"ka.req.container.run_as_group", {"/requestObject/spec"_json_pointer, index_run_as_group}},
+			{"ka.req.container.run_as_group.within", {"/requestObject/spec"_json_pointer, check_run_as_group_within}},
+			{"ka.req.container.run_as_group.any_within", {"/requestObject/spec"_json_pointer, check_run_as_group_any_within}},
 			{"ka.req.role.rules", {"/requestObject/rules"_json_pointer}},
 			{"ka.req.role.rules.apiGroups", {"/requestObject/rules"_json_pointer, index_select}},
 			{"ka.req.role.rules.nonResourceURLs", {"/requestObject/rules"_json_pointer, index_select}},

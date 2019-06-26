@@ -224,6 +224,12 @@ public:
 
 	static bool check_value_range(const int64_t &val, const std::list<std::pair<int64_t,int64_t>> &ranges);
 
+	static bool check_value_range_set(std::set<int64_t> &items,
+					  const std::list<std::pair<int64_t,int64_t>> &ranges);
+
+	static bool check_value_range_any_set(std::set<int64_t> &items,
+					      const std::list<std::pair<int64_t,int64_t>> &ranges);
+
 	// For each item in the provided array, extract an (int64)
 	// value using ptr. Then check if it is within all ranges in
 	// ranges. If require_values is value, an item is allowed to
@@ -239,9 +245,6 @@ public:
 	static bool check_value_range_any_array(const nlohmann::json &jarray,
 						const nlohmann::json::json_pointer &ptr,
 						const std::list<std::pair<int64_t,int64_t>> &ranges);
-
-	// Return true if every item in the (json) array has the provided property
-	static bool array_has_ptr_val(const nlohmann::json &j, const nlohmann::json::json_pointer &ptr, const std::string &idx);
 
 	// Extract a bool value from every item in the provided array
 	// (or the idxth item if non-zero). Return true if any
@@ -270,28 +273,45 @@ public:
 	// index is not specified) is run without a readOnlyFileSystem annotation
 	static std::string index_read_write_fs(const nlohmann::json &j, std::string &field, std::string &idx);
 
-	// Return whether all containers in the provided container
-	// array specify a runAsUser
-	static std::string index_run_as_user_defined(const nlohmann::json &j, std::string &field, std::string &idx);
+	// Return whether or not a runAsUser is specified, either in the security context or for any container.
+	static std::string index_has_run_as_user(const nlohmann::json &j, std::string &field, std::string &idx);
 
-	// Return whether all runAsUsers specified in the provided
-	// container array are within the ranges specified in the
-	// provided key.
+	// Return the uid used by the ith (default 0) container's
+	// entrypoint, using either the security context or container
+	// runAsUser.
+	static std::string index_run_as_user(const nlohmann::json &j, std::string &field, std::string &idx);
+
+	// Return all uids used by all container's entrypoints, using
+	// either the security context or container runAsUser.
+	static void get_all_run_as_users(const nlohmann::json &j, std::set<int64_t> &uids);
+
+	// Return whether all uids (see inex_run_as_user) are within
+	// the ranges specified in the provided key.
 	static std::string check_run_as_user_within(const nlohmann::json &j, std::string &field, std::string &idx);
 
-	// Return whether any runAsUsers specified in the provided
-	// container array are within the ranges specified in the
-	// provided key.
+	// Return whether any uids (see inex_run_as_user) are within
+	// the ranges specified in the provided key.
 	static std::string check_run_as_user_any_within(const nlohmann::json &j, std::string &field, std::string &idx);
 
-	// Return whether all containers in the provided container
-	// array specify a runAsGroup
-	static std::string index_run_as_group_defined(const nlohmann::json &j, std::string &field, std::string &idx);
+	// Return whether or not a runAsGroup is specified, either in the security context or for any container.
+	static std::string index_has_run_as_group(const nlohmann::json &j, std::string &field, std::string &idx);
 
-	// Return whether all runAsGroups specified in the provided
-	// container array are within the ranges specified in the
-	// provided key.
+	// Return the gid used by the ith (default 0) container's
+	// entrypoint, using either the security context or container
+	// runAsGroup.
+	static std::string index_run_as_group(const nlohmann::json &j, std::string &field, std::string &idx);
+
+	// Return all gids used by all container's entrypoints, using
+	// either the security context or container runAsGroup.
+	static void get_all_run_as_groups(const nlohmann::json &j, std::set<int64_t> &gids);
+
+	// Return whether all gids (see inex_run_as_group) are within
+	// the ranges specified in the provided key.
 	static std::string check_run_as_group_within(const nlohmann::json &j, std::string &field, std::string &idx);
+
+	// Return whether any gids (see inex_run_as_group) are within
+	// the ranges specified in the provided key.
+	static std::string check_run_as_group_any_within(const nlohmann::json &j, std::string &field, std::string &idx);
 
 	// Return whether all supplementalGroups specified in the provided
 	// gid array are within the range specified in the
