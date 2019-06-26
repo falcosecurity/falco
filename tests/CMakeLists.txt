@@ -17,7 +17,7 @@
 #
 set(FALCO_TESTS_SOURCES
     test_base.cpp
-    engine/test_ruleset.cpp)
+    engine/test_token_bucket.cpp)
 
 set(FALCO_TESTED_LIBRARIES
     falco_engine)
