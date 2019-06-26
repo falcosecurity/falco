@@ -219,7 +219,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Validation Failure runAsUser": 1
+      - "PSP Validation Failure runAsNonRoot": 1
     rules_file: []
     psp_file: psps/user_must_run_as_non_root.yaml
     trace_file: trace_files/psp/run_as_user_0_container.json
