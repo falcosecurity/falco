@@ -249,7 +249,7 @@
 - rule: PSP Validation Failure supplementalGroups MayRunAs
   desc: >
     Detect a psp validation failure for a supplementalGroups outside of the MayRunAs allowed set
-  condition: psp_container and (ka.req.container.supplemental_groups exists and ka.req.container.supplemental_groups.within[{{ rjoin(",", may_run_supplemental_groups) }}]=false)
+  condition: psp_container and (ka.req.sec_ctx.supplemental_groups exists and ka.req.sec_ctx.supplemental_groups.within[{{ rjoin(",", may_run_supplemental_groups) }}]=false)
   output: Pod Security Policy {{ policy_name }} validation failure--supplementalGroups outside of the MayRunAs allowed set. supplementalGroups MayRunAs set="{{ may_run_supplemental_groups }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
