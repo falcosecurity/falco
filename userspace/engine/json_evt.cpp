@@ -946,17 +946,27 @@ std::string k8s_audit_filter_check::check_supplemental_groups_within(const json 
 {
 	std::list<std::pair<int64_t,int64_t>> allowed_gids;
 
+	static json::json_pointer supplemental_groups = "/securityContext/supplementalGroups"_json_pointer;
+
 	if(!parse_value_ranges(idx, allowed_gids))
 	{
 		return string("false");
 	}
 
-	for(auto &gid : j)
-	{
-		if(!check_value_range(gid, allowed_gids))
+	try {
+
+		for(auto &gid : j.at(supplemental_groups))
 		{
-			return string("false");
+			if(!check_value_range(gid, allowed_gids))
+			{
+				return string("false");
+			}
 		}
+	}
+	catch(json::out_of_range &e)
+	{
+		// No groups, so can't be within
+		return string("false");
 	}
 
 	return string("true");
@@ -1407,11 +1417,9 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 			{"ka.req.role.rules.nonResourceURLs", {"/requestObject/rules"_json_pointer, index_select}},
 			{"ka.req.role.rules.resources", {"/requestObject/rules"_json_pointer, index_select}},
 			{"ka.req.sec_ctx.fs_group", {"/requestObject/spec/securityContext/fsGroup"_json_pointer}},
-			{"ka.req.sec_ctx.run_as_user", {"/requestObject/spec/securityContext/runAsUser"_json_pointer}},
-			{"ka.req.sec_ctx.run_as_group", {"/requestObject/spec/securityContext/runAsGroup"_json_pointer}},
+			{"ka.req.sec_ctx.allow_privilege_escalation", {"/requestObject/spec/securityContext/allowPrivilegeEscalation"_json_pointer}},
 			{"ka.req.sec_ctx.supplemental_groups", {"/requestObject/spec/securityContext/supplementalGroups"_json_pointer}},
 			{"ka.req.sec_ctx.supplemental_groups.within", {"/requestObject/spec/securityContext/supplementalGroups"_json_pointer, check_supplemental_groups_within}},
-			{"ka.req.sec_ctx.allow_privilege_escalation", {"/requestObject/spec/securityContext/allowPrivilegeEscalation"_json_pointer}},
 			{"ka.req.sec_ctx.allowed_capabilities.within", {"/requestObject/spec/securityContext/allowedCapabilities"_json_pointer, check_allowed_capabilities}},
 			{"ka.req.sec_ctx.proc_mount", {"/requestObject/spec/securityContext/procMount"_json_pointer}},
 			{"ka.req.role.rules.verbs", {"/requestObject/rules"_json_pointer, index_select}},

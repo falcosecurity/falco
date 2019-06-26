@@ -230,32 +230,27 @@
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
-{% endif %}{% if length(must_run_supplemental_groups) > 0 or length(may_run_supplemental_groups) > 0 %}
+{% endif %}{% if length(must_run_supplemental_groups) > 0 %}
 #########################################
-# Rule for PSP supplementalGroups property: MustRunAs/MayRunAs + list of gids
+# Rule for PSP supplementalGroups property: MustRunAs + list of gids
 #########################################
-- macro: psp_supplemental_group_must_run_matches
-{% if length(must_run_supplemental_groups) > 0 %}  condition: >
-    ({% for group in must_run_supplemental_groups %}
-     {% if not loop.is_first %} and {% endif %}(ka.req.sec_ctx.supplemental_groups.within[{{ group.min }}:{{ group.max }}]=true){% endfor %}
-    )
-{% else %}  condition: (psp_always_true)
-{% endif %}
-- macro: psp_supplemental_group_may_run_matches
-{% if length(may_run_supplemental_groups) > 0 %}  condition: >
-    (ka.req.sec_ctx.supplemental_groups = "<NA>" or ({% for group in may_run_supplemental_groups %}
-     {% if not loop.is_first %} and {% endif %}(ka.req.sec_ctx.supplemental_groups.within[{{ group.min }}:{{ group.max }}]=true){% endfor %})
-    )
-{% else %}  condition: (psp_always_true)
-{% endif %}
-- macro: psp_supplemental_group
-  condition: (psp_supplemental_group_must_run_matches and psp_supplemental_group_may_run_matches)
-
-- rule: PSP Validation Failure supplementalGroups
+- rule: PSP Validation Failure supplementalGroups MustRunAs
   desc: >
-    Detect a psp validation failure for a supplementalGroups gid outside of the allowed set
-  condition: psp_container and not psp_supplemental_group
-  output: Pod Security Policy {{ policy_name }} validation failure--supplementalGroups outside of allowed set. mustRun set="{{ must_run_supplemental_groups }}" mayRun set="{{ may_run_supplemental_groups }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
+    Detect a psp validation failure for supplementalGroups outside of the MustRunAs allowed set
+  condition: psp_container and ka.req.sec_ctx.supplemental_groups.within[{{ rjoin(",", must_run_supplemental_groups) }}]=false
+  output: Pod Security Policy {{ policy_name }} validation failure--supplementalGroups outside of the MustRunAs allowed set. supplementalGroups MustRunAs set="{{ must_run_supplemental_groups }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
+  priority: WARNING
+  source: k8s_audit
+  tags: [k8s-psp]
+{% endif %}{% if length(may_run_supplemental_groups) > 0 %}
+#########################################
+# Rule for PSP supplementalGroups property: MayRunAs + list of gids
+#########################################
+- rule: PSP Validation Failure supplementalGroups MayRunAs
+  desc: >
+    Detect a psp validation failure for a supplementalGroups outside of the MayRunAs allowed set
+  condition: psp_container and (ka.req.container.supplemental_groups exists and ka.req.container.supplemental_groups.within[{{ rjoin(",", may_run_supplemental_groups) }}]=false)
+  output: Pod Security Policy {{ policy_name }} validation failure--supplementalGroups outside of the MayRunAs allowed set. supplementalGroups MayRunAs set="{{ may_run_supplemental_groups }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
