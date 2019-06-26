@@ -401,3 +401,44 @@ trace_files: !mux
     psp_file: psps/group_may_run_as.yaml
     trace_file: trace_files/psp/run_as_group_30_sec_ctx_1000_container.json
 
+  supplemental_groups_must_run_as_with_unset:
+    detect: True
+    detect_level: WARNING
+    detect_counts:
+      - "PSP Validation Failure supplementalGroups MustRunAs": 1
+    rules_file: []
+    psp_file: psps/supplemental_groups_must_run_as_30_40.yaml
+    trace_file: trace_files/psp/create_vanilla_nginx_deployment.json
+
+  supplemental_groups_must_run_as_no_overlap:
+    detect: True
+    detect_level: WARNING
+    detect_counts:
+      - "PSP Validation Failure supplementalGroups MustRunAs": 1
+    rules_file: []
+    psp_file: psps/supplemental_groups_must_run_as_30_40.yaml
+    trace_file: trace_files/psp/supplemental_groups_10_20.json
+
+  supplemental_groups_must_run_as_partial_overlap:
+    detect: True
+    detect_level: WARNING
+    detect_counts:
+      - "PSP Validation Failure supplementalGroups MustRunAs": 1
+    rules_file: []
+    psp_file: psps/supplemental_groups_must_run_as_30_40_10_15.yaml
+    trace_file: trace_files/psp/supplemental_groups_10_20.json
+
+  supplemental_groups_must_run_as_overlap:
+    detect: False
+    rules_file: []
+    psp_file: psps/supplemental_groups_must_run_as_10_20.yaml
+    trace_file: trace_files/psp/supplemental_groups_10_20.json
+
+  supplemental_groups_must_run_as_overlap_multiple_ranges:
+    detect: False
+    rules_file: []
+    psp_file: psps/supplemental_groups_must_run_as_10_40_10_20.yaml
+    trace_file: trace_files/psp/supplemental_groups_10_20.json
+
+
+
