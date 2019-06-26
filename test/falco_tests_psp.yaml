@@ -300,7 +300,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Validation Failure runAsGroup": 1
+      - "PSP Validation Failure runAsGroup MustRunAs": 1
     rules_file: []
     psp_file: psps/group_must_run_as.yaml
     trace_file: trace_files/psp/create_vanilla_nginx_deployment.json
@@ -309,7 +309,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Validation Failure runAsGroup": 1
+      - "PSP Validation Failure runAsGroup MustRunAs": 1
     rules_file: []
     psp_file: psps/group_must_run_as.yaml
     trace_file: trace_files/psp/run_as_group_1000_container.json
@@ -324,7 +324,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Validation Failure runAsGroup": 1
+      - "PSP Validation Failure runAsGroup MustRunAs": 1
     rules_file: []
     psp_file: psps/group_must_run_as.yaml
     trace_file: trace_files/psp/run_as_group_1000_sec_ctx.json
@@ -339,7 +339,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Validation Failure runAsGroup": 1
+      - "PSP Validation Failure runAsGroup MustRunAs": 1
     rules_file: []
     psp_file: psps/group_must_run_as.yaml
     trace_file: trace_files/psp/run_as_group_1000_sec_ctx_30_container.json
@@ -360,7 +360,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Validation Failure runAsGroup": 1
+      - "PSP Validation Failure runAsGroup MayRunAs": 1
     rules_file: []
     psp_file: psps/group_may_run_as.yaml
     trace_file: trace_files/psp/run_as_group_1000_container.json
@@ -375,7 +375,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Validation Failure runAsGroup": 1
+      - "PSP Validation Failure runAsGroup MayRunAs": 1
     rules_file: []
     psp_file: psps/group_may_run_as.yaml
     trace_file: trace_files/psp/run_as_group_1000_sec_ctx.json
@@ -390,7 +390,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Validation Failure runAsGroup": 1
+      - "PSP Validation Failure runAsGroup MayRunAs": 1
     rules_file: []
     psp_file: psps/group_may_run_as.yaml
     trace_file: trace_files/psp/run_as_group_1000_sec_ctx_30_container.json

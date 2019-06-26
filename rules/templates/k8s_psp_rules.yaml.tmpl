@@ -210,7 +210,7 @@
 #########################################
 # Rule for PSP runAsGroup property: MustRunAs + list of gids
 #########################################
-- rule: PSP Validation Failure runAsGroup
+- rule: PSP Validation Failure runAsGroup MustRunAs
   desc: >
     Detect a psp validation failure for a runAsGroup outside of the MustRunAs allowed set
   condition: psp_container and ka.req.container.run_as_group.within[{{ rjoin(",", must_run_as_groups) }}]=false
@@ -222,7 +222,7 @@
 #########################################
 # Rule for PSP runAsGroup property: MayRunAs + list of gids
 #########################################
-- rule: PSP Validation Failure runAsGroup
+- rule: PSP Validation Failure runAsGroup MayRunAs
   desc: >
     Detect a psp validation failure for a runAsGroup outside of the MayRunAs allowed set
   condition: psp_container and (ka.req.container.has_run_as_group=true and ka.req.container.run_as_group.within[{{ rjoin(",", may_run_as_groups) }}]=false)
