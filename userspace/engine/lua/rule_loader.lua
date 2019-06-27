@@ -433,10 +433,32 @@ function load_rules(sinsp_lua_parser,
       for filter, _ in pairs(filters) do
 	 found = false
 
-	 for pat, _ in pairs(defined_filters) do
-	    if string.match(filter, pat) ~= nil then
-	       found = true
-	       break
+	 if defined_noarg_filters[filter] ~= nil then
+	    found = true
+	 else
+	    bracket_idx = string.find(filter, "[", 1, true)
+
+	    if bracket_idx ~= nil then
+	       subfilter = string.sub(filter, 1, bracket_idx-1)
+
+	       if defined_arg_filters[subfilter] ~= nil then
+		  found = true
+	       end
+	    end
+
+	    if not found then
+	       dot_idx = string.find(filter, ".", 1, true)
+
+	       while dot_idx ~= nil do
+		  subfilter = string.sub(filter, 1, dot_idx-1)
+
+		  if defined_arg_filters[subfilter] ~= nil then
+		     found = true
+		     break
+		  end
+
+		  dot_idx = string.find(filter, ".", dot_idx+1, true)
+	       end
 	    end
 	 end
 
