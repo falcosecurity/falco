@@ -323,11 +323,11 @@ void falco_rules::load_rules(const string &rules_content,
 
 		lua_setglobal(m_ls, m_lua_ignored_syscalls.c_str());
 
-		// Create a table containing all filtercheck names.
-		lua_newtable(m_ls);
-
 		vector<const filter_check_info*> fc_plugins;
 		sinsp::get_filtercheck_fields_info(&fc_plugins);
+
+		set<string> no_argument_filters;
+		set<string> argument_filters;
 
 		for(uint32_t j = 0; j < fc_plugins.size(); j++)
 		{
@@ -350,45 +350,71 @@ void falco_rules::load_rules(const string &rules_content,
 
 				// Some filters can work with or without an argument
 				std::set<string> flexible_filters = {
-					"^proc.aname",
-					"^proc.apid"
+					"proc.aname",
+					"proc.apid"
 				};
 
-				std::list<string> fields;
-				std::string field_base = string("^") + fld->m_name;
-
 				if(fld->m_flags & EPF_REQUIRES_ARGUMENT ||
-				   flexible_filters.find(field_base) != flexible_filters.end())
+				   flexible_filters.find(fld->m_name) != flexible_filters.end())
 				{
-					fields.push_back(field_base + "[%[%.]");
+					argument_filters.insert(fld->m_name);
 				}
 
 				if(!(fld->m_flags & EPF_REQUIRES_ARGUMENT) ||
-				   flexible_filters.find(field_base) != flexible_filters.end())
+				   flexible_filters.find(fld->m_name) != flexible_filters.end())
 				{
-					fields.push_back(field_base + "$");
-				}
-
-				for(auto &field : fields)
-				{
-					lua_pushstring(m_ls, field.c_str());
-					lua_pushnumber(m_ls, 1);
-					lua_settable(m_ls, -3);
+					no_argument_filters.insert(fld->m_name);
 				}
 			}
 		}
 
 		for(auto &chk_field : m_engine->json_factory().get_fields())
 		{
-			for(auto &field : chk_field.fields)
+			for(auto &field : chk_field.m_fields)
 			{
-				lua_pushstring(m_ls, field.name.c_str());
-				lua_pushnumber(m_ls, 1);
-				lua_settable(m_ls, -3);
+				switch(field.m_idx_mode)
+				{
+				case json_event_filter_check::IDX_REQUIRED:
+					argument_filters.insert(field.m_name);
+					break;
+				case json_event_filter_check::IDX_ALLOWED:
+					argument_filters.insert(field.m_name);
+					no_argument_filters.insert(field.m_name);
+					break;
+				case json_event_filter_check::IDX_NONE:
+					no_argument_filters.insert(field.m_name);
+					break;
+				default:
+					break;
+				}
 			}
 		}
 
-		lua_setglobal(m_ls, m_lua_defined_filters.c_str());
+		// Create tables containing all filtercheck
+		// names. They are split into names that require
+		// arguments and ones that do not.
+
+		lua_newtable(m_ls);
+
+		for(auto &field : argument_filters)
+		{
+			lua_pushstring(m_ls, field.c_str());
+			lua_pushnumber(m_ls, 1);
+			lua_settable(m_ls, -3);
+		}
+
+		lua_setglobal(m_ls, m_lua_defined_arg_filters.c_str());
+
+		lua_newtable(m_ls);
+
+		for(auto &field : no_argument_filters)
+		{
+			lua_pushstring(m_ls, field.c_str());
+			lua_pushnumber(m_ls, 1);
+			lua_settable(m_ls, -3);
+		}
+
+		lua_setglobal(m_ls, m_lua_defined_noarg_filters.c_str());
 
 		lua_pushlightuserdata(m_ls, m_sinsp_lua_parser);
 		lua_pushlightuserdata(m_ls, m_json_lua_parser);
