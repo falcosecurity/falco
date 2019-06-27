@@ -514,3 +514,24 @@ trace_files: !mux
     rules_file: []
     psp_file: psps/allowed_capabilities.yaml
     trace_file: trace_files/psp/capability_add_sys_nice.json
+
+  allowed_proc_mount_types_detect:
+    detect: True
+    detect_level: WARNING
+    detect_counts:
+      - "PSP Validation Failure Allowed Proc Mount Types": 1
+    rules_file: []
+    psp_file: psps/allowed_proc_mount_types.yaml
+    trace_file: trace_files/psp/proc_mount_type_unmasked.json
+
+  allowed_proc_mount_types_no_detect:
+    detect: False
+    rules_file: []
+    psp_file: psps/allowed_proc_mount_types.yaml
+    trace_file: trace_files/psp/create_vanilla_nginx_deployment.json
+
+  allowed_proc_mount_types_match:
+    detect: False
+    rules_file: []
+    psp_file: psps/allowed_proc_mount_types.yaml
+    trace_file: trace_files/psp/proc_mount_type_default.json
