@@ -21,15 +21,13 @@ limitations under the License.
 
 using namespace Catch::literals;
 
-TEST_CASE("token bucket ctor", "[token_bucket]")
-{
-}
-
-TEST_CASE("token bucket init", "[token_bucket]")
+TEST_CASE("token bucket default ctor", "[token_bucket]")
 {
     auto tb = new token_bucket();
 
-    SECTION("at specific time")
+    REQUIRE(tb->get_tokens() == 1);
+
+    SECTION("initialising with specific time, rate 2 tokens/sec")
     {
 	auto max = 2.0;
 	uint64_t now = 1;
@@ -37,38 +35,39 @@ TEST_CASE("token bucket init", "[token_bucket]")
 	REQUIRE(tb->get_last_seen() == now);
 	REQUIRE(tb->get_tokens() == max);
     }
-
-    SECTION("at current time")
-    {
-	// auto max = 2.0;
-	// tb->init(1.0, max, 0);
-	// REQUIRE(tb->get_last_seen() == );
-	// REQUIRE(tb->get_tokens() == max);
-    }
 }
 
-TEST_CASE("token bucket claim", "[token_bucket]")
+TEST_CASE("token bucket ctor with custom timer", "[token_bucket]")
+{
+    auto t = []() -> uint64_t { return 22; };
+    auto tb = new token_bucket(t);
+
+    REQUIRE(tb->get_tokens() == 1);
+    REQUIRE(tb->get_last_seen() == 22);
+}
+
+TEST_CASE("token bucket with 2 tokens/sec rate, max 10 tokens", "[token_bucket]")
 {
     auto tb = new token_bucket();
-    tb->init(2.0, 10.0, 1);
+    tb->init(2.0, 10, 1);
 
-    SECTION("...")
+    SECTION("claiming 5 tokens")
     {
-	bool claimed = tb->claim(5.0, 1000000001);
+	bool claimed = tb->claim(5, 1000000001);
 	REQUIRE(tb->get_last_seen() == 1000000001);
 	REQUIRE(tb->get_tokens() == 5.0_a);
 	REQUIRE(claimed);
 
-	SECTION("xxx")
+	SECTION("claiming all the 7 remaining tokens")
 	{
-	    bool claimed = tb->claim(7.0, 2000000001);
+	    bool claimed = tb->claim(7, 2000000001);
 	    REQUIRE(tb->get_last_seen() == 2000000001);
 	    REQUIRE(tb->get_tokens() == 0.0_a);
 	    REQUIRE(claimed);
 
-	    SECTION(";;;")
+	    SECTION("claiming 1 token more than the 2 available fails")
 	    {
-		bool claimed = tb->claim(3.0, 3000000001);
+		bool claimed = tb->claim(3, 3000000001);
 		REQUIRE(tb->get_last_seen() == 3000000001);
 		REQUIRE(tb->get_tokens() == 2.0_a);
 		REQUIRE_FALSE(claimed);
