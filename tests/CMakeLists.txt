@@ -3,52 +3,46 @@
 #
 # This file is part of falco .
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License"); you may not
+# use this file except in compliance with the License. You may obtain a copy of
+# the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations under
+# the License.
 #
-set(FALCO_TESTS_SOURCES
-    test_base.cpp
-    engine/test_token_bucket.cpp)
+set(FALCO_TESTS_SOURCES test_base.cpp engine/test_token_bucket.cpp)
 
-set(FALCO_TESTED_LIBRARIES
-    falco_engine)
+set(FALCO_TESTED_LIBRARIES falco_engine)
 
 option(FALCO_BUILD_TESTS "Determines whether to build tests." ON)
 
 if(FALCO_BUILD_TESTS)
-    enable_testing()
-    if(NOT TARGET catch)
-        include(FindCatch)
-    endif()
+  enable_testing()
+  if(NOT TARGET catch)
+    include(DownloadCatch)
+  endif()
 
-	add_executable(falco_test ${FALCO_TESTS_SOURCES})
+  if(NOT TARGET fakeit)
+    include(DownloadFakeIt)
+  endif()
 
-    target_link_libraries(falco_test PUBLIC ${FALCO_TESTED_LIBRARIES} catch)
-    target_include_directories(falco_test PUBLIC
-        "${SYSDIG_DIR}/userspace/libsinsp/third-party/jsoncpp"
-        "${SYSDIG_DIR}/userspace/libscap"
-        "${SYSDIG_DIR}/userspace/libsinsp"
-        "${LUAJIT_INCLUDE}"
-        "${NJSON_INCLUDE}"
-        "${CURL_INCLUDE_DIR}"
-        "${TBB_INCLUDE_DIR}"
-        "${LUAJIT_INCLUDE}"
-        "${NJSON_INCLUDE}"
-        "${PROJECT_SOURCE_DIR}/userspace/engine"
-    )
+  add_executable(falco_test ${FALCO_TESTS_SOURCES})
 
-	include(CTest)
-	include(Catch)
-	catch_discover_tests(falco_test)
+  target_link_libraries(falco_test PUBLIC ${FALCO_TESTED_LIBRARIES})
+  target_include_directories(
+    falco_test
+    PUBLIC "${CATCH2_INCLUDE}"
+           "${FAKEIT_INCLUDE}"
+           "${PROJECT_SOURCE_DIR}/userspace/engine")
 
-    add_custom_target(tests COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS falco_test)
+  include(CTest)
+  include(Catch)
+  catch_discover_tests(falco_test)
+
+  add_custom_target(tests COMMAND ${CMAKE_CTEST_COMMAND} DEPENDS falco_test)
 endif()
