@@ -1096,17 +1096,28 @@ std::string k8s_audit_filter_check::check_volume_types(const json &j, std::strin
 	return string("true");
 }
 
-std::string k8s_audit_filter_check::check_allowed_capabilities(const json &j, std::string &field, std::string &idx)
+std::string k8s_audit_filter_check::check_added_capabilities(const json &j, std::string &field, std::string &idx)
 {
-	std::set<std::string> allowed_capabilities;
+	std::set<std::string> added_capabilities;
 
-	split_string_set(idx, ',', allowed_capabilities);
+	static json::json_pointer capabilities_add = "/securityContext/capabilities/add"_json_pointer;
 
-	for(auto &cap : j)
+	split_string_set(idx, ',', added_capabilities);
+
+	for(auto &container : j)
 	{
-		if(allowed_capabilities.find(cap) == allowed_capabilities.end())
+		try {
+			for(auto &cap : container.at(capabilities_add))
+			{
+				if(added_capabilities.find(cap) == added_capabilities.end())
+				{
+					return string("false");
+				}
+			}
+		}
+		catch(json::out_of_range &e)
 		{
-			return string("false");
+			// No added capabilities, so is considered within the set
 		}
 	}
 
@@ -1359,7 +1370,7 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 		   {"ka.req.sec_ctx.fs_group", "When the request object refers to a pod, the fsGroup gid specified by the security context."},
 		   {"ka.req.sec_ctx.supplemental_groups", "When the request object refers to a pod, the supplementalGroup gids specified by the security context."},
 		   {"ka.req.sec_ctx.supplemental_groups.within", "When the request object refers to a pod, return true if all gids in supplementalGroups are within the provided range. For example, ka.req.sec_ctx.supplemental_groups.within[10:20] returns true if every gid in supplementalGroups is within 10 and 20.", a::IDX_REQUIRED, a::IDX_KEY},
-		   {"ka.req.sec_ctx.allowed_capabilities.within", "When the request object refers to a pod, whether the set of allowed capabilities is within the provided list. For example, ka.req.sec_ctx.allowed_capabilities.within[CAP_KILL] would only allow pods to add the CAP_KILL capability and no other capability", a::IDX_REQUIRED, a::IDX_KEY},
+		   {"ka.req.sec_ctx.added_capabilities.within", "When the request object refers to a pod, whether the set of added capabilities in the security context is within the provided list. For example, ka.req.sec_ctx.added_capabilities.within[CAP_KILL] would only allow pods to add the CAP_KILL capability and no other capability", a::IDX_REQUIRED, a::IDX_KEY},
 		   {"ka.req.sec_ctx.proc_mount", "When the request object refers to a pod, the procMount type specified by the security context."},
 		   {"ka.req.service.type", "When the request object refers to a service, the service type"},
 		   {"ka.req.service.ports", "When the request object refers to a service, the service's ports. Can be indexed (e.g. ka.req.service.ports[0]). Without any index, returns all ports", IDX_ALLOWED, IDX_NUMERIC},
@@ -1418,7 +1429,7 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 			{"ka.req.sec_ctx.fs_group", {"/requestObject/spec/securityContext/fsGroup"_json_pointer}},
 			{"ka.req.sec_ctx.supplemental_groups", {"/requestObject/spec/securityContext/supplementalGroups"_json_pointer}},
 			{"ka.req.sec_ctx.supplemental_groups.within", {"/requestObject/spec/securityContext/supplementalGroups"_json_pointer, check_supplemental_groups_within}},
-			{"ka.req.sec_ctx.allowed_capabilities.within", {"/requestObject/spec/securityContext/allowedCapabilities"_json_pointer, check_allowed_capabilities}},
+			{"ka.req.sec_ctx.added_capabilities.within", {"/requestObject/spec/containers"_json_pointer, check_added_capabilities}},
 			{"ka.req.sec_ctx.proc_mount", {"/requestObject/spec/securityContext/procMount"_json_pointer}},
 			{"ka.req.role.rules.verbs", {"/requestObject/rules"_json_pointer, index_select}},
 			{"ka.req.service.type", {"/requestObject/spec/type"_json_pointer}},

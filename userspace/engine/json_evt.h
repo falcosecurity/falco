@@ -327,8 +327,8 @@ public:
 	// Return whether or not a volume type is outside the provided set
 	static std::string check_volume_types(const nlohmann::json &j, std::string &field, std::string &idx);
 
-	// Return whether or not a capability is outside the provided set
-	static std::string check_allowed_capabilities(const nlohmann::json &j, std::string &field, std::string &idx);
+	// Return whether or not the set of added capabilities is outside the provided set
+	static std::string check_added_capabilities(const nlohmann::json &j, std::string &field, std::string &idx);
 
 	// Index to the ith value from the provided array. If no index is provided, return the entire array as a string.
 	static std::string index_generic(const nlohmann::json &j, std::string &field, std::string &idx);
