@@ -942,6 +942,34 @@ std::string k8s_audit_filter_check::check_run_as_group_any_within(const json &j,
 
 }
 
+std::string k8s_audit_filter_check::check_proc_mount_within(const json &j, std::string &field, std::string &idx)
+{
+	std::set<std::string> allowed_proc_mount_types;
+
+	static json::json_pointer proc_mount = "/securityContext/procMount"_json_pointer;
+
+	split_string_set(idx, ',', allowed_proc_mount_types);
+
+	for(auto &container : j)
+	{
+		try {
+			for(auto &mnt_type : container.at(proc_mount))
+			{
+				if(allowed_proc_mount_types.find(mnt_type) == allowed_proc_mount_types.end())
+				{
+					return string("false");
+				}
+			}
+		}
+		catch(json::out_of_range &e)
+		{
+			// No procMount, so is considered within the set
+		}
+	}
+
+	return string("true");
+}
+
 std::string k8s_audit_filter_check::check_supplemental_groups_within(const json &j, std::string &field, std::string &idx)
 {
 	std::list<std::pair<int64_t,int64_t>> allowed_gids;
@@ -1362,6 +1390,7 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 		   {"ka.req.container.run_as_group", "When the request object refers to a container, the group id that will be used for the container's entrypoint. Both the security context's runAsGroup and the container's runAsGroup are considered, with the security context taking precedence, and defaulting to gid 0 if neither are specified. With an index, return the gid for the ith container. With no index, returns the gid for first container", a::IDX_ALLOWED, a::IDX_NUMERIC},
 		   {"ka.req.container.run_as_group.within", "When the request object refers to a container, return true if all containers' gid values (see .run_as_group) are within the list of provided min/max pairs. Example: ka.req.container.run_as_group.within[100:110,200:220] returns true if all containers' gid values are within the range 100:110 (inclusive) and 200:220 (inclusive).", a::IDX_ALLOWED, a::IDX_KEY},
 		   {"ka.req.container.run_as_group.any_within", "When the request object refers to a container, return true if any containers' gid values (see .run_as_group) are within the list of provided min/max pairs. Example: ka.req.container.run_as_group.any_within[100:110,200:220] returns true if any containers' gid values are within the range 100:110 (inclusive) and 200:220 (inclusive).", a::IDX_ALLOWED, a::IDX_KEY},
+		   {"ka.req.container.proc_mount.within", "When the request object refers to a container, whether the procMount types specified for all containers are within the provided set. Example: ka.req.container.proc_mount.within[Unmasked,Default] returns true if all containers' procMount values are \"Unmasked\" or \"Default\".", a::IDX_ALLOWED, a::IDX_KEY},
 		   {"ka.req.role.rules", "When the request object refers to a role/cluster role, the rules associated with the role"},
 		   {"ka.req.role.rules.apiGroups", "When the request object refers to a role/cluster role, the api groups associated with the role's rules. With an index, return only the api groups from the ith rule. Without an index, return all api groups concatenated", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.req.role.rules.nonResourceURLs", "When the request object refers to a role/cluster role, the non resource urls associated with the role's rules. With an index, return only the non resource urls from the ith rule. Without an index, return all non resource urls concatenated", IDX_ALLOWED, IDX_NUMERIC},
@@ -1371,7 +1400,6 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 		   {"ka.req.sec_ctx.supplemental_groups", "When the request object refers to a pod, the supplementalGroup gids specified by the security context."},
 		   {"ka.req.sec_ctx.supplemental_groups.within", "When the request object refers to a pod, return true if all gids in supplementalGroups are within the provided range. For example, ka.req.sec_ctx.supplemental_groups.within[10:20] returns true if every gid in supplementalGroups is within 10 and 20.", a::IDX_REQUIRED, a::IDX_KEY},
 		   {"ka.req.sec_ctx.added_capabilities.within", "When the request object refers to a pod, whether the set of added capabilities in the security context is within the provided list. For example, ka.req.sec_ctx.added_capabilities.within[CAP_KILL] would only allow pods to add the CAP_KILL capability and no other capability", a::IDX_REQUIRED, a::IDX_KEY},
-		   {"ka.req.sec_ctx.proc_mount", "When the request object refers to a pod, the procMount type specified by the security context."},
 		   {"ka.req.service.type", "When the request object refers to a service, the service type"},
 		   {"ka.req.service.ports", "When the request object refers to a service, the service's ports. Can be indexed (e.g. ka.req.service.ports[0]). Without any index, returns all ports", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.req.volume.any_hostpath", "If the request object contains volume definitions, whether or not a hostPath volume exists that mounts the specified path(s) from the host (...hostpath[/etc]=true if a volume mounts /etc from the host). Multiple paths can be specified, separated by commas. The index can be a glob, in which case all volumes are considered to find any path matching the specified glob (...hostpath[/usr/*] would match either /usr/local or /usr/bin)", a::IDX_REQUIRED, a::IDX_KEY},
@@ -1422,6 +1450,7 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 			{"ka.req.container.run_as_group", {"/requestObject/spec"_json_pointer, index_run_as_group}},
 			{"ka.req.container.run_as_group.within", {"/requestObject/spec"_json_pointer, check_run_as_group_within}},
 			{"ka.req.container.run_as_group.any_within", {"/requestObject/spec"_json_pointer, check_run_as_group_any_within}},
+			{"ka.req.container.proc_mount.within", {"/requestObject/spec/containers"_json_pointer, check_proc_mount_within}},
 			{"ka.req.role.rules", {"/requestObject/rules"_json_pointer}},
 			{"ka.req.role.rules.apiGroups", {"/requestObject/rules"_json_pointer, index_select}},
 			{"ka.req.role.rules.nonResourceURLs", {"/requestObject/rules"_json_pointer, index_select}},
@@ -1430,7 +1459,6 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 			{"ka.req.sec_ctx.supplemental_groups", {"/requestObject/spec/securityContext/supplementalGroups"_json_pointer}},
 			{"ka.req.sec_ctx.supplemental_groups.within", {"/requestObject/spec/securityContext/supplementalGroups"_json_pointer, check_supplemental_groups_within}},
 			{"ka.req.sec_ctx.added_capabilities.within", {"/requestObject/spec/containers"_json_pointer, check_added_capabilities}},
-			{"ka.req.sec_ctx.proc_mount", {"/requestObject/spec/securityContext/procMount"_json_pointer}},
 			{"ka.req.role.rules.verbs", {"/requestObject/rules"_json_pointer, index_select}},
 			{"ka.req.service.type", {"/requestObject/spec/type"_json_pointer}},
 			{"ka.req.service.ports", {"/requestObject/spec/ports"_json_pointer, index_generic}},

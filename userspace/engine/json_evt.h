@@ -309,6 +309,10 @@ public:
 	// the ranges specified in the provided key.
 	static std::string check_run_as_group_within(const nlohmann::json &j, std::string &field, std::string &idx);
 
+	// Return whether all proc mounts across all containers are
+	// within the values in the provided key.
+	static std::string check_proc_mount_within(const nlohmann::json &j, std::string &field, std::string &idx);
+
 	// Return whether any gids (see inex_run_as_group) are within
 	// the ranges specified in the provided key.
 	static std::string check_run_as_group_any_within(const nlohmann::json &j, std::string &field, std::string &idx);

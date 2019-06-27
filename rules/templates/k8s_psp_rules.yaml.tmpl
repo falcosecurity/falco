@@ -290,8 +290,8 @@
 - rule: PSP Validation Failure Allowed Proc Mount Types
   desc: >
     Detect a psp validation failure for Allowed Proc Mount Types
-  condition: psp_container and not ka.req.sec_ctx.proc_mount in ({{ join(",", allowed_proc_mount_types) }})
-  output: Pod Security Policy {{ policy_name }} validation failure--pod with proc mount %ka.req.sec_ctx.proc_mount outside of allowed set "{{ join(",", allowed_proc_mount_types) }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
+  condition: psp_container and ka.req.container.proc_mount.within[{{ join(",", allowed_proc_mount_types) }}]=false
+  output: Pod Security Policy {{ policy_name }} validation failure--pod with proc mounts outside of allowed set "{{ join(",", allowed_proc_mount_types) }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
