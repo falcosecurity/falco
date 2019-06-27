@@ -93,21 +93,21 @@ void falco_engine::list_fields(bool names_only)
 		if(!names_only)
 		{
 			printf("\n----------------------\n");
-			printf("Field Class: %s (%s)\n\n", chk_field.name.c_str(), chk_field.desc.c_str());
+			printf("Field Class: %s (%s)\n\n", chk_field.m_name.c_str(), chk_field.m_desc.c_str());
 		}
 
-		for(auto &field : chk_field.fields)
+		for(auto &field : chk_field.m_fields)
 		{
 			uint32_t l, m;
 
-			printf("%s", field.name.c_str());
+			printf("%s", field.m_name.c_str());
 
 			if(names_only)
 			{
 				printf("\n");
 				continue;
 			}
-			uint32_t namelen = field.name.size();
+			uint32_t namelen = field.m_name.size();
 
 			if(namelen >= DESCRIPTION_TEXT_START)
 			{
@@ -120,7 +120,7 @@ void falco_engine::list_fields(bool names_only)
 				printf(" ");
 			}
 
-			size_t desclen = field.desc.size();
+			size_t desclen = field.m_desc.size();
 
 			for(l = 0; l < desclen; l++)
 			{
@@ -134,7 +134,7 @@ void falco_engine::list_fields(bool names_only)
 					}
 				}
 
-				printf("%c", field.desc.at(l));
+				printf("%c", field.m_desc.at(l));
 			}
 
 			printf("\n");

@@ -62,19 +62,40 @@ protected:
 class json_event_filter_check : public gen_event_filter_check
 {
 public:
+	enum index_mode {
+		IDX_REQUIRED,
+		IDX_ALLOWED,
+		IDX_NONE
+	};
+
+	enum index_type {
+		IDX_KEY,
+		IDX_NUMERIC
+	};
 
 	// A struct describing a single filtercheck field ("ka.user")
 	struct field_info {
-		std::string name;
-		std::string desc;
+		std::string m_name;
+		std::string m_desc;
+
+		index_mode m_idx_mode;
+		index_type m_idx_type;
+		// The variants allow for brace-initialization either
+		// with just the name/desc or additionally with index
+		// information
+		field_info();
+		field_info(std::string name, std::string desc);
+		field_info(std::string name, std::string desc, index_mode mode);
+		field_info(std::string name, std::string desc, index_mode mode, index_type itype);
+		virtual ~field_info();
 	};
 
 	// A struct describing a group of filtercheck fields ("ka")
 	struct check_info {
-		std::string name;
-		std::string desc;
+		std::string m_name;
+		std::string m_desc;
 
-		std::list<field_info> fields;
+		std::list<field_info> m_fields;
 	};
 
 	json_event_filter_check();
@@ -115,28 +136,12 @@ protected:
 	typedef std::function<std::string (const nlohmann::json &, std::string &field, std::string &idx)> format_t;
 
 	struct alias {
-
-		// Whether this alias requires an index, allows an
-		// index, or should not have an index.
-		enum index_mode {
-			IDX_REQUIRED,
-			IDX_ALLOWED,
-			IDX_NONE
-		};
-
-		enum index_type {
-			IDX_KEY,
-			IDX_NUMERIC
-		};
-
 		// The variants allow for brace-initialization either
 		// with just the pointer or with both the pointer and
 		// a format function.
 		alias();
 	        alias(nlohmann::json::json_pointer ptr);
 	        alias(nlohmann::json::json_pointer ptr, format_t format);
-	        alias(nlohmann::json::json_pointer ptr, format_t format, index_mode mode);
-	        alias(nlohmann::json::json_pointer ptr, format_t format, index_mode mode, index_type itype);
 		virtual ~alias();
 
 		// A json pointer used to extract a referenced value
@@ -149,10 +154,6 @@ protected:
 		// indexing, searches, etc.) or string reformatting to
 		// trim unnecessary parts of the value.
 		format_t m_format;
-
-		index_mode m_idx_mode;
-
-		index_type m_idx_type;
 	};
 
 	// This map defines the aliases defined by this filter check
