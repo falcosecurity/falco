@@ -1,0 +1,8 @@
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: allow_capability_sys_nice
+spec:
+  allowedCapabilities:
+    - SYS_NICE
+
