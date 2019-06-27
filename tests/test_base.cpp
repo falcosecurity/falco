@@ -16,7 +16,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #define CATCH_CONFIG_MAIN
+#define CATCH_CONFIG_CONSOLE_WIDTH 300
 #include <catch.hpp>
 
-TEST_CASE( "1: All test cases reside in other .cpp files (empty)", "[multi-file:1]" ) {
+TEST_CASE("all test cases reside in other .cpp files (empty)", "[multi-file:1]")
+{
 }
