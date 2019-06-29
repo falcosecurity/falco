@@ -152,16 +152,35 @@ end
 function compiler.expand_lists_in(source, list_defs)
 
    for name, def in pairs(list_defs) do
-      local begin_name_pat = "^("..name..")([%s(),=])"
-      local mid_name_pat = "([%s(),=])("..name..")([%s(),=])"
-      local end_name_pat = "([%s(),=])("..name..")$"
 
-      source, subcount1 = string.gsub(source, begin_name_pat, table.concat(def.items, ", ").."%2")
-      source, subcount2 = string.gsub(source, mid_name_pat, "%1"..table.concat(def.items, ", ").."%3")
-      source, subcount3 = string.gsub(source, end_name_pat, "%1"..table.concat(def.items, ", "))
+      local bpos = string.find(source, name, 1, true)
 
-      if (subcount1 + subcount2 + subcount3) > 0 then
+      while bpos ~= nil do
 	 def.used = true
+
+	 local epos = bpos + string.len(name)
+
+	 -- The characters surrounding the name must be delimiters of beginning/end of string
+	 if (bpos == 1 or string.match(string.sub(source, bpos-1, bpos-1), "[%s(),=]")) and (epos > string.len(source) or string.match(string.sub(source, epos, epos), "[%s(),=]")) then
+	    new_source = ""
+
+	    if bpos > 1 then
+	       new_source = new_source..string.sub(source, 1, bpos-1)
+	    end
+
+	    sub = table.concat(def.items, ", ")
+
+	    new_source = new_source..sub
+
+	    if epos <= string.len(source) then
+	       new_source = new_source..string.sub(source, epos, string.len(source))
+	    end
+
+	    source = new_source
+	    bpos = bpos + (string.len(sub)-string.len(name))
+	 end
+
+	 bpos = string.find(source, name, bpos+1, true)
       end
    end
 
