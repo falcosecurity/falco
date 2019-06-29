@@ -59,17 +59,13 @@ function map(f, arr)
    return res
 end
 
-priorities = {"Emergency", "Alert", "Critical", "Error", "Warning", "Notice", "Informational", "Debug"}
 
-local function priority_num_for(s)
-   s = string.lower(s)
-   for i,v in ipairs(priorities) do
-      if (string.find(string.lower(v), "^"..s)) then
-	 return i - 1 -- (numbers start at 0, lua indices start at 1)
-      end
-   end
-   error("Invalid priority level: "..s)
-end
+-- Permissive for case and for common abbreviations.
+priorities = {
+   Emergency=0, Alert=1, Critical=2, Error=3, Warning=4, Notice=5, Informational=5, Debug=7,
+   EMERGENCY=0, ALERT=1, CRITICAL=2, ERROR=3, WARNING=4, NOTICE=5, INFORMATIONAL=5, DEBUG=7,
+   INFO=5
+}
 
 --[[
    Take a filter AST and set it up in the libsinsp runtime, using the filter API.
@@ -336,7 +332,11 @@ function load_rules(sinsp_lua_parser,
 	    end
 
 	    -- Convert the priority-as-string to a priority-as-number now
-	    v['priority_num'] = priority_num_for(v['priority'])
+	    v['priority_num'] = priorities[v['priority']]
+
+	    if v['priority_num'] == nil then
+	       error("Invalid priority level: "..v['priority'])
+	    end
 
 	    if v['priority_num'] <= min_priority then
 	       -- Note that we can overwrite rules, but the rules are still
