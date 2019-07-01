@@ -19,8 +19,8 @@
 
 > If contributing rules or changes to rules, please make sure to uncomment the appropriate kind
 
-> /kind rule/update
-> /kind rule/create
+> /kind rule-update
+> /kind rule-create
 
 **Any specific area of the project related to this PR?**
 
