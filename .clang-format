@@ -1,10 +1,16 @@
-# This coding convention's solely goal is to approximately match the current code style.
-# It MUST not be intended in any other way until a real and definitive coding convention is put in.
 ---
-BreakBeforeBraces: GNU
-ColumnLimit: 0
-IndentWidth: 4
 Language: Cpp
+BasedOnStyle: LLVM
+AccessModifierOffset: -8
+BreakBeforeBraces: Allman
+BreakConstructorInitializers: AfterColon
+ColumnLimit: 0
+ConstructorInitializerIndentWidth: 8
+ContinuationIndentWidth: 8
+DerivePointerAlignment: true
+IndentWidth: 8
+SortIncludes: false
+SpaceAfterTemplateKeyword: false
+SpaceBeforeCtorInitializerColon: false
 SpaceBeforeParens: Never
-Standard: Auto
 UseTab: Always
