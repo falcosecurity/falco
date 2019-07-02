@@ -22,8 +22,6 @@ limitations under the License.
 #include <cstdint>
 #include <functional>
 
-using token_timer = std::function<uint64_t()>;
-
 // A simple token bucket that accumulates tokens at a fixed rate and allows
 // for limited bursting in the form of "banked" tokens.
 class token_bucket
