@@ -75,3 +75,9 @@ TEST_CASE("token bucket with 2 tokens/sec rate, max 10 tokens", "[token_bucket]"
 	}
     }
 }
+
+TEST_CASE("token bucket default initialization", "[token_bucket]")
+{
+    token_bucket tb;
+    REQUIRE(tb.get_tokens() == 1);
+}
