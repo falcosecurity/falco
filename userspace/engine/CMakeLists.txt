@@ -14,15 +14,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-include_directories("${SYSDIG_DIR}/userspace/libsinsp/third-party/jsoncpp")
-include_directories("${SYSDIG_DIR}/userspace/libscap")
-include_directories("${SYSDIG_DIR}/userspace/libsinsp")
-include_directories("${PROJECT_BINARY_DIR}/userspace/engine")
-include_directories("${LUAJIT_INCLUDE}")
-include_directories("${NJSON_INCLUDE}")
-include_directories("${CURL_INCLUDE_DIR}")
-include_directories("${TBB_INCLUDE_DIR}")
 
 set(FALCO_ENGINE_SOURCE_FILES
 	rules.cpp
@@ -38,7 +29,13 @@ add_library(falco_engine STATIC ${FALCO_ENGINE_SOURCE_FILES})
 target_include_directories(falco_engine PUBLIC
 	"${LUAJIT_INCLUDE}"
 	"${NJSON_INCLUDE}"
-	"${PROJECT_BINARY_DIR}/userspace/engine")
+	"${CURL_INCLUDE_DIR}"
+	"${TBB_INCLUDE_DIR}"
+	"${SYSDIG_DIR}/userspace/libsinsp/third-party/jsoncpp"
+	"${SYSDIG_DIR}/userspace/libscap"
+	"${SYSDIG_DIR}/userspace/libsinsp"
+	"${PROJECT_BINARY_DIR}/userspace/engine"
+	)
 
 target_link_libraries(falco_engine
   "${FALCO_SINSP_LIBRARY}"
