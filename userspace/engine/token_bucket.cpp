@@ -24,14 +24,15 @@ limitations under the License.
 #include "token_bucket.h"
 #include "utils.h"
 
-token_bucket::token_bucket() : token_bucket(sinsp_utils::get_current_time_ns)
+token_bucket::token_bucket():
+	token_bucket(sinsp_utils::get_current_time_ns)
 {
 }
 
 token_bucket::token_bucket(std::function<uint64_t()> timer)
 {
-    m_timer = timer;
-    init(1, 1);
+	m_timer = timer;
+	init(1, 1);
 }
 
 token_bucket::~token_bucket()
@@ -40,51 +41,51 @@ token_bucket::~token_bucket()
 
 void token_bucket::init(double rate, double max_tokens, uint64_t now)
 {
-    m_rate = rate;
-    m_max_tokens = max_tokens;
-    m_tokens = max_tokens;
-    m_last_seen = now == 0 ? m_timer() : now;
+	m_rate = rate;
+	m_max_tokens = max_tokens;
+	m_tokens = max_tokens;
+	m_last_seen = now == 0 ? m_timer() : now;
 }
 
 bool token_bucket::claim()
 {
-    return claim(1, m_timer());
+	return claim(1, m_timer());
 }
 
 bool token_bucket::claim(double tokens, uint64_t now)
 {
-    double tokens_gained = m_rate * ((now - m_last_seen) / (1000000000.0));
-    m_last_seen = now;
+	double tokens_gained = m_rate * ((now - m_last_seen) / (1000000000.0));
+	m_last_seen = now;
 
-    m_tokens += tokens_gained;
+	m_tokens += tokens_gained;
 
-    //
-    // Cap at max_tokens
-    //
-    if(m_tokens > m_max_tokens)
+	//
+	// Cap at max_tokens
+	//
+	if(m_tokens > m_max_tokens)
 	{
-	    m_tokens = m_max_tokens;
+		m_tokens = m_max_tokens;
 	}
 
-    //
-    // If m_tokens is < tokens, can't claim.
-    //
-    if(m_tokens < tokens)
+	//
+	// If m_tokens is < tokens, can't claim.
+	//
+	if(m_tokens < tokens)
 	{
-	    return false;
+		return false;
 	}
 
-    m_tokens -= tokens;
+	m_tokens -= tokens;
 
-    return true;
+	return true;
 }
 
 double token_bucket::get_tokens()
 {
-    return m_tokens;
+	return m_tokens;
 }
 
 uint64_t token_bucket::get_last_seen()
 {
-    return m_last_seen;
+	return m_last_seen;
 }
