@@ -613,7 +613,7 @@ function load_rules(sinsp_lua_parser,
 	 formatter = formats.formatter(v['source'], v['output'])
 	 formats.free_formatter(v['source'], formatter)
       else
-	 error ("Unexpected type in load_rule: "..filter_ast.type)
+	 return false, indices[i], 1, "Unexpected type in load_rule: "..filter_ast.type
       end
 
       ::next_rule::
