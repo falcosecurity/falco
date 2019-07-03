@@ -65,7 +65,6 @@ class falco_rules
 	sinsp* m_inspector;
 	falco_engine *m_engine;
 	lua_State* m_ls;
-	std::regex m_err_linecol_re;
 	string m_lua_load_rules = "load_rules";
 	string m_lua_ignored_syscalls = "ignored_syscalls";
 	string m_lua_ignored_events = "ignored_events";

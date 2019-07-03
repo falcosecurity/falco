@@ -44,8 +44,7 @@ falco_rules::falco_rules(sinsp* inspector,
 			 lua_State *ls)
 	: m_inspector(inspector),
 	  m_engine(engine),
-	  m_ls(ls),
-	  m_err_linecol_re("^(\\d+):(\\d+)")
+	  m_ls(ls)
 {
 	m_sinsp_lua_parser = new lua_parser(engine->sinsp_factory(), m_ls, "filter");
 	m_json_lua_parser = new lua_parser(engine->json_factory(), m_ls, "k8s_audit_filter");
@@ -214,11 +213,10 @@ std::string falco_rules::get_context(const std::string &content, uint64_t lineno
 	std::string line;
 	std::string ret;
 
-	ret += "---\n";
 	for(uint32_t i=1; ctx && i<=lineno;  i++)
 	{
 		getline(ctx, line);
-		if(i > (lineno-3))
+		if((lineno - i) < 3)
 		{
 			ret += line + "\n";
 		}
@@ -229,7 +227,6 @@ std::string falco_rules::get_context(const std::string &content, uint64_t lineno
 		ret += " ";
 	}
 	ret += "^\n";
-	ret += "---\n";
 
 	return ret;
 }
@@ -454,28 +451,41 @@ void falco_rules::load_rules(const string &rules_content,
 		lua_pushstring(m_ls, extra.c_str());
 		lua_pushboolean(m_ls, (replace_container_info ? 1 : 0));
 		lua_pushnumber(m_ls, min_priority);
-		if(lua_pcall(m_ls, 9, 1, 0) != 0)
+		if(lua_pcall(m_ls, 9, 4, 0) != 0)
 		{
 			const char* lerr = lua_tostring(m_ls, -1);
 
 			string err = "Error loading rules: " + string(lerr);
 
-			// The lua error might start with a line
-			// number and column number. If it does, add
-			// context to the error.
-			std::smatch match;
-			string lerr_str = lerr;
-			if(regex_search(lerr_str, match, m_err_linecol_re) && match.size() > 1)
+			throw falco_exception(err);
+		}
+
+		// Either returns (true, required_engine_version), or (false, row, col, error string)
+		bool successful = lua_toboolean(m_ls, -4);
+
+		if(successful)
+		{
+			required_engine_version = lua_tonumber(m_ls, -3);
+		}
+		else
+		{
+			int line = lua_tonumber(m_ls, -3);
+			int col = lua_tonumber(m_ls, -2);
+			std::string err = lua_tostring(m_ls, -1);
+
+			// If the line/columns are >= 0, use them to
+			// extract meaninful context from the result.
+			if(line >= 1 && col >= 1)
 			{
 				err += "\n";
-				err += get_context(rules_content, atoi(match.str(1).c_str()), atoi(match.str(2).c_str()));
+				err += get_context(rules_content, line, col);
 			}
 
 			throw falco_exception(err);
 		}
 
-		required_engine_version = lua_tonumber(m_ls, -1);
-		lua_pop(m_ls, 1);
+		lua_pop(m_ls, 4);
+
 	} else {
 		throw falco_exception("No function " + m_lua_load_rules + " found in lua rule module");
 	}

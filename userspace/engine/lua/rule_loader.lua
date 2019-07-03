@@ -190,16 +190,32 @@ function load_rules(sinsp_lua_parser,
 		    replace_container_info,
 		    min_priority)
 
-   local rules = yaml.load(rules_content)
    local required_engine_version = 0
+
+   local status, rules = pcall(yaml.load, rules_content)
+
+   if status == false then
+      local pat = "^([%d]+):([%d]+): "
+      -- rules is actually an error string
+
+      local row = 0
+      local col = 0
+
+      row, col = string.match(rules, pat)
+      if row ~= nil and col ~= nil then
+	 rules = string.gsub(rules, pat, "")
+      end
+
+      return false, row, col, rules
+   end
 
    if rules == nil then
       -- An empty rules file is acceptable
-      return required_engine_version
+      return true, required_engine_version
    end
 
    if type(rules) ~= "table" then
-      error("Rules content \""..rules_content.."\" is not yaml")
+      return false, 1, 1, "Rules content is not yaml"
    end
 
    -- Iterate over yaml list. In this pass, all we're doing is
@@ -574,7 +590,7 @@ function load_rules(sinsp_lua_parser,
 
    io.flush()
 
-   return required_engine_version
+   return true, required_engine_version
 end
 
 local rule_fmt = "%-50s %s"
