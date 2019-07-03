@@ -40,6 +40,7 @@ if(FALCO_BUILD_TESTS)
            "${FAKEIT_INCLUDE}"
            "${PROJECT_SOURCE_DIR}/userspace/engine")
 
+  include(CMakeParseArguments)
   include(CTest)
   include(Catch)
   catch_discover_tests(falco_test)

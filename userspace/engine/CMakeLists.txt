@@ -15,6 +15,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+if(NOT SYSDIG_DIR)
+	set(SYSDIG_DIR "${PROJECT_SOURCE_DIR}/../sysdig")
+endif()
+
 set(FALCO_ENGINE_SOURCE_FILES
 	rules.cpp
 	falco_common.cpp

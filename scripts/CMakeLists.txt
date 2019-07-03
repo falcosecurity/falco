@@ -18,6 +18,10 @@
 configure_file(debian/postinst.in debian/postinst)
 configure_file(debian/prerm.in debian/prerm)
 
+if(NOT SYSDIG_DIR)
+	set(SYSDIG_DIR "${PROJECT_SOURCE_DIR}/../sysdig")
+endif()
+
 file(COPY "${PROJECT_SOURCE_DIR}/scripts/debian/falco"
 	DESTINATION "${PROJECT_BINARY_DIR}/scripts/debian")
 
