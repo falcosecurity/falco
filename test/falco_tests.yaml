@@ -238,6 +238,26 @@ trace_files: !mux
       - rules/endswith.yaml
     trace_file: trace_files/cat_write.scap
 
+  invalid_not_yaml:
+    exit_status: 1
+    stdout_is: |+
+      Rules content is not yaml
+      This is not yaml
+      ^
+    validate_rules_file:
+      - rules/invalid_not_yaml.yaml
+    trace_file: trace_files/cat_write.scap
+
+  invalid_yaml_parse_error:
+    exit_status: 1
+    stdout_is: |+
+      mapping values are not allowed in this context
+      this : is : not : yaml
+             ^
+    validate_rules_file:
+      - rules/invalid_yaml_parse_error.yaml
+    trace_file: trace_files/cat_write.scap
+
   invalid_rule_output:
     exit_status: 1
     stderr_contains: "Runtime error: Error loading rules:.* Invalid output format 'An open was seen %not_a_real_field': 'invalid formatting token not_a_real_field'. Exiting."
