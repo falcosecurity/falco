@@ -15,8 +15,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+if(NOT SYSDIG_DIR)
+	set(SYSDIG_DIR "${PROJECT_SOURCE_DIR}/../sysdig")
+endif()
 
-configure_file("${PROJECT_SOURCE_DIR}/../sysdig/userspace/sysdig/config_sysdig.h.in" config_sysdig.h)
+configure_file("${SYSDIG_DIR}/userspace/sysdig/config_sysdig.h.in" config_sysdig.h)
 
 add_executable(falco
 	configuration.cpp
@@ -25,7 +28,7 @@ add_executable(falco
 	event_drops.cpp
 	statsfilewriter.cpp
 	falco.cpp
-	"${PROJECT_SOURCE_DIR}/../sysdig/userspace/sysdig/fields_info.cpp"
+	"${SYSDIG_DIR}/userspace/sysdig/fields_info.cpp"
 	webserver.cpp)
 
 target_include_directories(falco PUBLIC
@@ -39,7 +42,7 @@ target_include_directories(falco PUBLIC
 
 target_link_libraries(falco falco_engine sinsp)
 target_link_libraries(falco
-        "${LIBYAML_LIB}"
+	"${LIBYAML_LIB}"
 	"${YAMLCPP_LIB}"
 	"${CIVETWEB_LIB}")
 
