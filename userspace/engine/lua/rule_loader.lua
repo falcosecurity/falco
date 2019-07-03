@@ -379,7 +379,7 @@ function load_rules(sinsp_lua_parser,
 
 	    if state.rules_by_name[v['rule']] == nil then
 	       if state.skipped_rules_by_name[v['rule']] == nil then
-		  error ("Rule " ..v['rule'].. " has 'append' key but no rule by that name already exists")
+		  return false, indices[i], 1, "Rule " ..v['rule'].. " has 'append' key but no rule by that name already exists"
 	       end
 	    else
 	       state.rules_by_name[v['rule']]['condition'] = state.rules_by_name[v['rule']]['condition'] .. " " .. v['condition']

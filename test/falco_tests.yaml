@@ -358,6 +358,16 @@ trace_files: !mux
       - rules/list_append_failure.yaml
     trace_file: trace_files/cat_write.scap
 
+  invalid_rule_append_dangling:
+    exit_status: 1
+    stdout_is: |+
+      Rule my_rule has 'append' key but no rule by that name already exists
+      - rule: my_rule
+      ^
+    validate_rules_file:
+      - rules/rule_append_failure.yaml
+    trace_file: trace_files/cat_write.scap
+
   invalid_missing_rule_name:
     exit_status: 1
     stdout_is: |+
@@ -791,7 +801,7 @@ trace_files: !mux
 
   rule_append_failure:
     exit_status: 1
-    stderr_contains: "Rule my_rule has 'append' key but no rule by that name already exists. Exiting"
+    stderr_contains: "Rule my_rule has 'append' key but no rule by that name already exists"
     rules_file:
       - rules/rule_append_failure.yaml
     trace_file: trace_files/cat_write.scap
