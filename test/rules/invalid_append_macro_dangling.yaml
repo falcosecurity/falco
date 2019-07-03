@@ -1,0 +1,3 @@
+- macro: dangling append
+  condition: and evt.type=execve
+  append: true

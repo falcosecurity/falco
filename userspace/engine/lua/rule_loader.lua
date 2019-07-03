@@ -179,6 +179,30 @@ function table.tostring( tbl )
   return "{" .. table.concat( result, "," ) .. "}"
 end
 
+function find_indices(rules_content)
+   -- To provide context when iterating over the objects in the list,
+   -- record the line numbers of all top-level objects in the
+   -- file. This doesn't actually use a yaml parser but simply looks
+   -- for lines starting with '-'.
+   indices = {}
+
+   line = 1
+   if string.sub(rules_content, 1, 1) == '-' then
+      indices[#indices+1] = line
+   end
+
+   pos = string.find(rules_content, "\n", 1, true)
+
+   while pos ~= nil do
+      line = line + 1
+      if string.sub(rules_content, pos+1, pos+1) == '-' then
+	 indices[#indices+1] = line
+      end
+      pos = string.find(rules_content, "\n", pos+1, true)
+   end
+
+   return indices
+end
 
 function load_rules(sinsp_lua_parser,
 		    json_lua_parser,
@@ -218,6 +242,16 @@ function load_rules(sinsp_lua_parser,
       return false, 1, 1, "Rules content is not yaml"
    end
 
+   -- Look for non-numeric indices--implies that document is not array
+   -- of objects.
+   for key, val in pairs(rules) do
+      if type(key) ~= "number" then
+	 return false, 1, 1, "Rules content is not yaml array of objects"
+      end
+   end
+
+   indices = find_indices(rules_content)
+
    -- Iterate over yaml list. In this pass, all we're doing is
    -- populating the set of rules, macros, and lists. We're not
    -- expanding/compiling anything yet. All that will happen in a
@@ -225,16 +259,24 @@ function load_rules(sinsp_lua_parser,
    for i,v in ipairs(rules) do
 
       if (not (type(v) == "table")) then
-	 error ("Unexpected element of type " ..type(v)..". Each element should be a yaml associative array.")
+	 return false, indices[i], 1, "Unexpected element of type " ..type(v)..". Each element should be a yaml associative array."
       end
 
       if (v['required_engine_version']) then
 	 required_engine_version = v['required_engine_version']
+	 if type(required_engine_version) ~= "number" then
+	    return false, indices[i], 1, "Value of required_engine_version must be a number"
+	 end
+
 	 if falco_rules.engine_version(rules_mgr) < v['required_engine_version'] then
-	    error("Rules require engine version "..v['required_engine_version']..", but engine version is "..falco_rules.engine_version(rules_mgr))
+	    return false, indices[i], 1, "Rules require engine version "..v['required_engine_version']..", but engine version is "..falco_rules.engine_version(rules_mgr)
 	 end
 
       elseif (v['macro']) then
+
+	 if (v['macro'] == nil or type(v['macro']) == "table") then
+	    return false, indices[i], 3, "Macro name is empty"
+	 end
 
 	 if v['source'] == nil then
 	    v['source'] = "syscall"
@@ -244,9 +286,9 @@ function load_rules(sinsp_lua_parser,
 	    state.ordered_macro_names[#state.ordered_macro_names+1] = v['macro']
 	 end
 
-	 for i, field in ipairs({'condition'}) do
+	 for j, field in ipairs({'condition'}) do
 	    if (v[field] == nil) then
-	       error ("Missing "..field.." in macro with name "..v['macro'])
+	       return false, indices[i], 3, "Macro must have property "..field
 	    end
 	 end
 
@@ -259,7 +301,7 @@ function load_rules(sinsp_lua_parser,
 
 	 if append then
 	    if state.macros_by_name[v['macro']] == nil then
-	       error ("Macro " ..v['macro'].. " has 'append' key but no macro by that name already exists")
+	       return false, indices[i], 1, "Macro " ..v['macro'].. " has 'append' key but no macro by that name already exists"
 	    end
 
 	    state.macros_by_name[v['macro']]['condition'] = state.macros_by_name[v['macro']]['condition'] .. " " .. v['condition']
@@ -270,13 +312,17 @@ function load_rules(sinsp_lua_parser,
 
       elseif (v['list']) then
 
+	 if (v['list'] == nil or type(v['list']) == "table") then
+	    return false, indices[i], 3, "List name is empty"
+	 end
+
 	 if state.lists_by_name[v['list']] == nil then
 	    state.ordered_list_names[#state.ordered_list_names+1] = v['list']
 	 end
 
-	 for i, field in ipairs({'items'}) do
+	 for j, field in ipairs({'items'}) do
 	    if (v[field] == nil) then
-	       error ("Missing "..field.." in list with name "..v['list'])
+	       return false, indices[i], 3, "List must have property "..field
 	    end
 	 end
 
@@ -289,10 +335,10 @@ function load_rules(sinsp_lua_parser,
 
 	 if append then
 	    if state.lists_by_name[v['list']] == nil then
-	       error ("List " ..v['list'].. " has 'append' key but no list by that name already exists")
+	       return false, indices[i], 1, "List " ..v['list'].. " has 'append' key but no list by that name already exists"
 	    end
 
-	    for i, elem in ipairs(v['items']) do
+	    for j, elem in ipairs(v['items']) do
 	       table.insert(state.lists_by_name[v['list']]['items'], elem)
 	    end
 	 else
@@ -302,7 +348,7 @@ function load_rules(sinsp_lua_parser,
       elseif (v['rule']) then
 
 	 if (v['rule'] == nil or type(v['rule']) == "table") then
-	    error ("Missing name in rule")
+	    return false, indices[i], 3, "Rule name is empty"
 	 end
 
 	 -- By default, if a rule's condition refers to an unknown
@@ -325,9 +371,9 @@ function load_rules(sinsp_lua_parser,
 	 if append then
 
 	    -- For append rules, all you need is the condition
-	    for i, field in ipairs({'condition'}) do
+	    for j, field in ipairs({'condition'}) do
 	       if (v[field] == nil) then
-		  error ("Missing "..field.." in rule with name "..v['rule'])
+		  return false, indices[i], 3, "Rule must have property "..field
 	       end
 	    end
 
@@ -341,9 +387,9 @@ function load_rules(sinsp_lua_parser,
 
 	 else
 
-	    for i, field in ipairs({'condition', 'output', 'desc', 'priority'}) do
+	    for j, field in ipairs({'condition', 'output', 'desc', 'priority'}) do
 	       if (v[field] == nil) then
-		  error ("Missing "..field.." in rule with name "..v['rule'])
+		  return false, indices[i], 3, "Rule must have property "..field
 	       end
 	    end
 
@@ -372,7 +418,7 @@ function load_rules(sinsp_lua_parser,
 	    end
 	 end
       else
-	 error ("Unknown rule object: "..table.tostring(v))
+	 return false, indices[i], 1, "Unknown rule object: "..table.tostring(v)
       end
    end
 

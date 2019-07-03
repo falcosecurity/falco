@@ -1,0 +1,4 @@
+- rule: no output rule
+  desc: some desc
+  condition: evt.type=fork
+  priority: INFO
