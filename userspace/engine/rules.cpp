@@ -216,9 +216,10 @@ std::string falco_rules::get_context(const std::string &content, uint64_t lineno
 	for(uint32_t i=1; ctx && i<=lineno;  i++)
 	{
 		getline(ctx, line);
-		if((lineno - i) < 3)
+		if(i == lineno)
 		{
 			ret += line + "\n";
+			break;
 		}
 	}
 
