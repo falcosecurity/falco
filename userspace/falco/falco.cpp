@@ -723,7 +723,7 @@ int falco_init(int argc, char **argv)
 				}
 				catch(falco_exception &e)
 				{
-					printf("%s%s", prefix.c_str(), e.what());
+					printf("%s%s\n", prefix.c_str(), e.what());
 					throw;
 				}
 				printf("%sOk\n", prefix.c_str());

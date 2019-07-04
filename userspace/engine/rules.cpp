@@ -227,7 +227,7 @@ std::string falco_rules::get_context(const std::string &content, uint64_t lineno
 	{
 		ret += " ";
 	}
-	ret += "^\n";
+	ret += "^";
 
 	return ret;
 }
