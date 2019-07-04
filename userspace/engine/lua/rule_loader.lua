@@ -455,7 +455,11 @@ function load_rules(sinsp_lua_parser,
 
       local v = state.macros_by_name[name]
 
-      local ast = compiler.compile_macro(v['condition'], state.macros, state.lists)
+      local status, ast = compiler.compile_macro(v['condition'], state.macros, state.lists)
+
+      if status == false then
+	 return false, indices[i], 1, ast
+      end
 
       if v['source'] == "syscall" then
 	 if not all_events then
@@ -475,8 +479,12 @@ function load_rules(sinsp_lua_parser,
 	 warn_evttypes = v['warn_evttypes']
       end
 
-      local filter_ast, filters = compiler.compile_filter(v['rule'], v['condition'],
-							  state.macros, state.lists)
+      local status, filter_ast, filters = compiler.compile_filter(v['rule'], v['condition'],
+								  state.macros, state.lists)
+
+      if status == false then
+	 return false, indices[i], 1, filter_ast
+      end
 
       local evtttypes = {}
       local syscallnums = {}
