@@ -361,7 +361,7 @@ trace_files: !mux
   invalid_rule_append_dangling:
     exit_status: 1
     stdout_is: |+
-      Rule my_rule has 'append' key but no list by that name already exists
+      Rule my_rule has 'append' key but no rule by that name already exists
       - rule: my_rule
       ^
     validate_rules_file:
