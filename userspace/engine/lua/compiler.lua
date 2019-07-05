@@ -62,12 +62,12 @@ function expand_macros(ast, defs, changed)
    elseif ast.type == "Filter" then
       if (ast.value.type == "Macro") then
          if (defs[ast.value.value] == nil) then
-            error("Undefined macro '".. ast.value.value .. "' used in filter.")
+	    return false, "Undefined macro '".. ast.value.value .. "' used in filter."
          end
 	 defs[ast.value.value].used = true
          ast.value = copy_ast_obj(defs[ast.value.value].ast)
          changed = true
-	 return changed
+	 return true, changed
       end
       return expand_macros(ast.value, defs, changed)
 
@@ -75,7 +75,7 @@ function expand_macros(ast, defs, changed)
 
       if (ast.left.type == "Macro") then
          if (defs[ast.left.value] == nil) then
-            error("Undefined macro '".. ast.left.value .. "' used in filter.")
+	    return false, "Undefined macro '".. ast.left.value .. "' used in filter."
          end
 	 defs[ast.left.value].used = true
          ast.left = copy_ast_obj(defs[ast.left.value].ast)
@@ -84,21 +84,27 @@ function expand_macros(ast, defs, changed)
 
       if (ast.right.type == "Macro") then
          if (defs[ast.right.value] == nil) then
-            error("Undefined macro ".. ast.right.value .. " used in filter.")
+	    return false, "Undefined macro ".. ast.right.value .. " used in filter."
          end
 	 defs[ast.right.value].used = true
          ast.right = copy_ast_obj(defs[ast.right.value].ast)
          changed = true
       end
 
-      local changed_left = expand_macros(ast.left, defs, false)
-      local changed_right = expand_macros(ast.right, defs, false)
-      return changed or changed_left or changed_right
+      local status, changed_left = expand_macros(ast.left, defs, false)
+      if status == false then
+	 return false, changed_left
+      end
+      local status, changed_right = expand_macros(ast.right, defs, false)
+      if status == false then
+	 return false, changed_right
+      end
+      return true, changed or changed_left or changed_right
 
    elseif ast.type == "UnaryBoolOp" then
       if (ast.argument.type == "Macro") then
          if (defs[ast.argument.value] == nil) then
-            error("Undefined macro ".. ast.argument.value .. " used in filter.")
+	    return false, "Undefined macro ".. ast.argument.value .. " used in filter."
          end
 	 defs[ast.argument.value].used = true
          ast.argument = copy_ast_obj(defs[ast.argument.value].ast)
@@ -106,7 +112,7 @@ function expand_macros(ast, defs, changed)
       end
       return expand_macros(ast.argument, defs, changed)
    end
-   return changed
+   return true, changed
 end
 
 function get_macros(ast, set)
@@ -195,7 +201,7 @@ function compiler.compile_macro(line, macro_defs, list_defs)
 
    if (error_msg) then
       msg = "Compilation error when compiling \""..line.."\": ".. error_msg
-      error(msg)
+      return false, msg
    end
 
    -- Simply as a validation step, try to expand all macros in this
@@ -206,14 +212,18 @@ function compiler.compile_macro(line, macro_defs, list_defs)
    if (ast.type == "Rule") then
       -- Line is a filter, so expand macro references
       repeat
-	 expanded  = expand_macros(ast_copy, macro_defs, false)
+	 status, expanded = expand_macros(ast_copy, macro_defs, false)
+	 if status == false then
+	    msg = "Compilation error when compiling \""..line.."\": ".. expanded
+	    return false, msg
+	 end
       until expanded == false
 
    else
-      error("Unexpected top-level AST type: "..ast.type)
+      return false, "Unexpected top-level AST type: "..ast.type
    end
 
-   return ast
+   return true, ast
 end
 
 --[[
@@ -227,22 +237,25 @@ function compiler.compile_filter(name, source, macro_defs, list_defs)
 
    if (error_msg) then
       msg = "Compilation error when compiling \""..source.."\": "..error_msg
-      error(msg)
+      return false, msg
    end
 
    if (ast.type == "Rule") then
       -- Line is a filter, so expand macro references
       repeat
-	 expanded  = expand_macros(ast, macro_defs, false)
+	 status, expanded  = expand_macros(ast, macro_defs, false)
+	 if status == false then
+	    return false, expanded
+	 end
       until expanded == false
 
    else
-      error("Unexpected top-level AST type: "..ast.type)
+      return false, "Unexpected top-level AST type: "..ast.type
    end
 
    filters = get_filters(ast)
 
-   return ast, filters
+   return true, ast, filters
 end
 
 

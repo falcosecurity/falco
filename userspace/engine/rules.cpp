@@ -425,15 +425,30 @@ void falco_rules::load_rules(const string &rules_content,
 		lua_pushstring(m_ls, extra.c_str());
 		lua_pushboolean(m_ls, (replace_container_info ? 1 : 0));
 		lua_pushnumber(m_ls, min_priority);
-		if(lua_pcall(m_ls, 9, 1, 0) != 0)
+		if(lua_pcall(m_ls, 9, 2, 0) != 0)
 		{
 			const char* lerr = lua_tostring(m_ls, -1);
+
 			string err = "Error loading rules: " + string(lerr);
+
 			throw falco_exception(err);
 		}
 
-		required_engine_version = lua_tonumber(m_ls, -1);
-		lua_pop(m_ls, 1);
+		// Either returns (true, required_engine_version), or (false, error string)
+		bool successful = lua_toboolean(m_ls, -2);
+
+		if(successful)
+		{
+			required_engine_version = lua_tonumber(m_ls, -1);
+		}
+		else
+		{
+			std::string err = lua_tostring(m_ls, -1);
+			throw falco_exception(err);
+		}
+
+		lua_pop(m_ls, 4);
+
 	} else {
 		throw falco_exception("No function " + m_lua_load_rules + " found in lua rule module");
 	}
