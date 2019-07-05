@@ -207,31 +207,6 @@ void falco_rules::enable_rule(string &rule, bool enabled)
 	m_engine->enable_rule(rule, enabled);
 }
 
-std::string falco_rules::get_context(const std::string &content, uint64_t lineno, uint64_t colno)
-{
-	istringstream ctx(content);
-	std::string line;
-	std::string ret;
-
-	for(uint32_t i=1; ctx && i<=lineno;  i++)
-	{
-		getline(ctx, line);
-		if(i == lineno)
-		{
-			ret += line + "\n";
-			break;
-		}
-	}
-
-	for(uint32_t j=1; j<colno; j++)
-	{
-		ret += " ";
-	}
-	ret += "^";
-
-	return ret;
-}
-
 int falco_rules::engine_version(lua_State *ls)
 {
 	if (! lua_islightuserdata(ls, -1))
@@ -452,7 +427,7 @@ void falco_rules::load_rules(const string &rules_content,
 		lua_pushstring(m_ls, extra.c_str());
 		lua_pushboolean(m_ls, (replace_container_info ? 1 : 0));
 		lua_pushnumber(m_ls, min_priority);
-		if(lua_pcall(m_ls, 9, 4, 0) != 0)
+		if(lua_pcall(m_ls, 9, 2, 0) != 0)
 		{
 			const char* lerr = lua_tostring(m_ls, -1);
 
@@ -461,27 +436,16 @@ void falco_rules::load_rules(const string &rules_content,
 			throw falco_exception(err);
 		}
 
-		// Either returns (true, required_engine_version), or (false, row, col, error string)
-		bool successful = lua_toboolean(m_ls, -4);
+		// Either returns (true, required_engine_version), or (false, error string)
+		bool successful = lua_toboolean(m_ls, -2);
 
 		if(successful)
 		{
-			required_engine_version = lua_tonumber(m_ls, -3);
+			required_engine_version = lua_tonumber(m_ls, -1);
 		}
 		else
 		{
-			int line = lua_tonumber(m_ls, -3);
-			int col = lua_tonumber(m_ls, -2);
 			std::string err = lua_tostring(m_ls, -1);
-
-			// If the line/columns are >= 0, use them to
-			// extract meaninful context from the result.
-			if(line >= 1 && col >= 1)
-			{
-				err += "\n";
-				err += get_context(rules_content, line, col);
-			}
-
 			throw falco_exception(err);
 		}
 

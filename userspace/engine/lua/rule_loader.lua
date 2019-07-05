@@ -179,29 +179,70 @@ function table.tostring( tbl )
   return "{" .. table.concat( result, "," ) .. "}"
 end
 
-function find_indices(rules_content)
-   -- To provide context when iterating over the objects in the list,
-   -- record the line numbers of all top-level objects in the
-   -- file. This doesn't actually use a yaml parser but simply looks
-   -- for lines starting with '-'.
+-- Split rules_content by lines and also remember the line numbers for
+-- each top -level object. Returns a table of lines and a table of
+-- line numbers for objects.
+
+function split_lines(rules_content)
+   lines = {}
    indices = {}
 
-   line = 1
-   if string.sub(rules_content, 1, 1) == '-' then
-      indices[#indices+1] = line
-   end
-
+   idx = 1
+   last_pos = 1
    pos = string.find(rules_content, "\n", 1, true)
 
    while pos ~= nil do
-      line = line + 1
-      if string.sub(rules_content, pos+1, pos+1) == '-' then
-	 indices[#indices+1] = line
+      line = string.sub(rules_content, last_pos, pos-1)
+      if line ~= "" then
+	 lines[#lines+1] = line
+	 if string.sub(line, 1, 1) == '-' then
+	    indices[#indices+1] = idx
+	 end
+
+	 idx = idx + 1
       end
+
+      last_pos = pos+1
       pos = string.find(rules_content, "\n", pos+1, true)
    end
 
-   return indices
+   if last_pos < string.len(rules_content) then
+      line = string.sub(rules_content, last_pos)
+      lines[#lines+1] = line
+      if string.sub(line, 1, 1) == '-' then
+	 indices[#indices+1] = idx
+      end
+
+      idx = idx + 1
+   end
+
+   -- Add a final index for last line in document
+   indices[#indices+1] = idx
+
+   return lines, indices
+end
+
+function get_context(rules_lines, row, num_lines)
+
+   local ret = "---\n"
+
+   idx = row
+   while (idx < (row + num_lines) and idx <= #rules_lines) do
+      ret = ret..rules_lines[idx].."\n"
+      idx = idx + 1
+   end
+
+   ret = ret.."---"
+
+   return ret
+
+end
+
+function build_error(rules_lines, row, num_lines, err)
+
+   local ret = err.."\n"..get_context(rules_lines, row, num_lines)
+
+   return ret
 end
 
 function load_rules(sinsp_lua_parser,
@@ -215,6 +256,8 @@ function load_rules(sinsp_lua_parser,
 		    min_priority)
 
    local required_engine_version = 0
+
+   local lines, indices = split_lines(rules_content)
 
    local status, rules = pcall(yaml.load, rules_content)
 
@@ -230,7 +273,10 @@ function load_rules(sinsp_lua_parser,
 	 rules = string.gsub(rules, pat, "")
       end
 
-      return false, row, col, rules
+      row = tonumber(row)
+      col = tonumber(col)
+
+      return false, build_error(lines, row, 3, rules)
    end
 
    if rules == nil then
@@ -239,18 +285,16 @@ function load_rules(sinsp_lua_parser,
    end
 
    if type(rules) ~= "table" then
-      return false, 1, 1, "Rules content is not yaml"
+      return false, build_error(lines, 1, 1, "Rules content is not yaml")
    end
 
    -- Look for non-numeric indices--implies that document is not array
    -- of objects.
    for key, val in pairs(rules) do
       if type(key) ~= "number" then
-	 return false, 1, 1, "Rules content is not yaml array of objects"
+	 return false, build_error(lines, 1, 1, "Rules content is not yaml array of objects")
       end
    end
-
-   indices = find_indices(rules_content)
 
    -- Iterate over yaml list. In this pass, all we're doing is
    -- populating the set of rules, macros, and lists. We're not
@@ -259,23 +303,23 @@ function load_rules(sinsp_lua_parser,
    for i,v in ipairs(rules) do
 
       if (not (type(v) == "table")) then
-	 return false, indices[i], 1, "Unexpected element of type " ..type(v)..". Each element should be a yaml associative array."
+	 return false, build_error(lines, indices[i], (indices[i+1]-indices[i]), "Unexpected element of type " ..type(v)..". Each element should be a yaml associative array.")
       end
 
       if (v['required_engine_version']) then
 	 required_engine_version = v['required_engine_version']
 	 if type(required_engine_version) ~= "number" then
-	    return false, indices[i], 1, "Value of required_engine_version must be a number"
+	    return false, build_error(lines, indices[i], (indices[i+1]-indices[i]), "Value of required_engine_version must be a number")
 	 end
 
 	 if falco_rules.engine_version(rules_mgr) < v['required_engine_version'] then
-	    return false, indices[i], 1, "Rules require engine version "..v['required_engine_version']..", but engine version is "..falco_rules.engine_version(rules_mgr)
+	    return false, build_error(lines, indices[i], (indices[i+1]-indices[i]), "Rules require engine version "..v['required_engine_version']..", but engine version is "..falco_rules.engine_version(rules_mgr))
 	 end
 
       elseif (v['macro']) then
 
 	 if (v['macro'] == nil or type(v['macro']) == "table") then
-	    return false, indices[i], 3, "Macro name is empty"
+	    return false, build_error(lines, indices[i], (indices[i+1]-indices[i]), "Macro name is empty")
 	 end
 
 	 if v['source'] == nil then
@@ -288,7 +332,7 @@ function load_rules(sinsp_lua_parser,
 
 	 for j, field in ipairs({'condition'}) do
 	    if (v[field] == nil) then
-	       return false, indices[i], 3, "Macro must have property "..field
+	       return false, build_error(lines, indices[i], (indices[i+1]-indices[i]), "Macro must have property "..field)
 	    end
 	 end
 
@@ -301,7 +345,7 @@ function load_rules(sinsp_lua_parser,
 
 	 if append then
 	    if state.macros_by_name[v['macro']] == nil then
-	       return false, indices[i], 1, "Macro " ..v['macro'].. " has 'append' key but no macro by that name already exists"
+	       return false, build_error(lines, indices[i], (indices[i+1]-indices[i]), "Macro " ..v['macro'].. " has 'append' key but no macro by that name already exists")
 	    end
 
 	    state.macros_by_name[v['macro']]['condition'] = state.macros_by_name[v['macro']]['condition'] .. " " .. v['condition']
@@ -313,7 +357,7 @@ function load_rules(sinsp_lua_parser,
       elseif (v['list']) then
 
 	 if (v['list'] == nil or type(v['list']) == "table") then
-	    return false, indices[i], 3, "List name is empty"
+	    return false, build_error(lines, indices[i], (indices[i+1]-indices[i]), "List name is empty")
 	 end
 
 	 if state.lists_by_name[v['list']] == nil then
@@ -322,7 +366,7 @@ function load_rules(sinsp_lua_parser,
 
 	 for j, field in ipairs({'items'}) do
 	    if (v[field] == nil) then
-	       return false, indices[i], 3, "List must have property "..field
+	       return false, build_error(lines, indices[i], (indices[i+1]-indices[i]), "List must have property "..field)
 	    end
 	 end
 
@@ -335,7 +379,7 @@ function load_rules(sinsp_lua_parser,
 
 	 if append then
 	    if state.lists_by_name[v['list']] == nil then
-	       return false, indices[i], 1, "List " ..v['list'].. " has 'append' key but no list by that name already exists"
+	       return false, build_error(lines, indices[i], (indices[i+1]-indices[i]), "List " ..v['list'].. " has 'append' key but no list by that name already exists")
 	    end
 
 	    for j, elem in ipairs(v['items']) do
@@ -348,7 +392,7 @@ function load_rules(sinsp_lua_parser,
       elseif (v['rule']) then
 
 	 if (v['rule'] == nil or type(v['rule']) == "table") then
-	    return false, indices[i], 3, "Rule name is empty"
+	    return false, build_error(lines, indices[i], (indices[i+1]-indices[i]), "Rule name is empty")
 	 end
 
 	 -- By default, if a rule's condition refers to an unknown
@@ -373,13 +417,13 @@ function load_rules(sinsp_lua_parser,
 	    -- For append rules, all you need is the condition
 	    for j, field in ipairs({'condition'}) do
 	       if (v[field] == nil) then
-		  return false, indices[i], 3, "Rule must have property "..field
+		  return false, build_error(lines, indices[i], (indices[i+1]-indices[i]), "Rule must have property "..field)
 	       end
 	    end
 
 	    if state.rules_by_name[v['rule']] == nil then
 	       if state.skipped_rules_by_name[v['rule']] == nil then
-		  return false, indices[i], 1, "Rule " ..v['rule'].. " has 'append' key but no rule by that name already exists"
+		  return false, build_error(lines, indices[i], (indices[i+1]-indices[i]), "Rule " ..v['rule'].. " has 'append' key but no rule by that name already exists")
 	       end
 	    else
 	       state.rules_by_name[v['rule']]['condition'] = state.rules_by_name[v['rule']]['condition'] .. " " .. v['condition']
@@ -389,7 +433,7 @@ function load_rules(sinsp_lua_parser,
 
 	    for j, field in ipairs({'condition', 'output', 'desc', 'priority'}) do
 	       if (v[field] == nil) then
-		  return false, indices[i], 3, "Rule must have property "..field
+		  return false, build_error(lines, indices[i], (indices[i+1]-indices[i]), "Rule must have property "..field)
 	       end
 	    end
 
@@ -418,7 +462,7 @@ function load_rules(sinsp_lua_parser,
 	    end
 	 end
       else
-	 return false, indices[i], 1, "Unknown rule object: "..table.tostring(v)
+	 return false, build_error(lines, indices[i], (indices[i+1]-indices[i]), "Unknown rule object: "..table.tostring(v))
       end
    end
 
@@ -458,7 +502,7 @@ function load_rules(sinsp_lua_parser,
       local status, ast = compiler.compile_macro(v['condition'], state.macros, state.lists)
 
       if status == false then
-	 return false, indices[i], 1, ast
+	 return false, build_error(lines, indices[i], (indices[i+1]-indices[i]), ast)
       end
 
       if v['source'] == "syscall" then
@@ -483,7 +527,7 @@ function load_rules(sinsp_lua_parser,
 								  state.macros, state.lists)
 
       if status == false then
-	 return false, indices[i], 1, filter_ast
+	 return false, build_error(lines, indices[i], (indices[i+1]-indices[i]), filter_ast)
       end
 
       local evtttypes = {}
@@ -621,7 +665,7 @@ function load_rules(sinsp_lua_parser,
 	 formatter = formats.formatter(v['source'], v['output'])
 	 formats.free_formatter(v['source'], formatter)
       else
-	 return false, indices[i], 1, "Unexpected type in load_rule: "..filter_ast.type
+	 return false, build_error(lines, indices[i], (indices[i+1]-indices[i]), "Unexpected type in load_rule: "..filter_ast.type)
       end
 
       ::next_rule::
