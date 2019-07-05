@@ -238,6 +238,199 @@ trace_files: !mux
       - rules/endswith.yaml
     trace_file: trace_files/cat_write.scap
 
+  invalid_not_yaml:
+    exit_status: 1
+    stdout_is: |+
+      Rules content is not yaml
+      ---
+      This is not yaml
+      ---
+    validate_rules_file:
+      - rules/invalid_not_yaml.yaml
+    trace_file: trace_files/cat_write.scap
+
+  invalid_not_array:
+    exit_status: 1
+    stdout_is: |+
+      Rules content is not yaml array of objects
+      ---
+      foo: bar
+      ---
+    validate_rules_file:
+      - rules/invalid_not_array.yaml
+    trace_file: trace_files/cat_write.scap
+
+  invalid_array_item_not_object:
+    exit_status: 1
+    stdout_is: |+
+      Unexpected element of type string. Each element should be a yaml associative array.
+      ---
+      - foo
+      ---
+    validate_rules_file:
+      - rules/invalid_array_item_not_object.yaml
+    trace_file: trace_files/cat_write.scap
+
+  invalid_unexpected object:
+    exit_status: 1
+    stdout_is: |+
+      Unknown rule object: {foo="bar"}
+      ---
+      - foo: bar
+      ---
+    validate_rules_file:
+      - rules/invalid_unexpected_object.yaml
+    trace_file: trace_files/cat_write.scap
+
+  invalid_engine_version_not_number:
+    exit_status: 1
+    stdout_is: |+
+      Value of required_engine_version must be a number
+      ---
+      - required_engine_version: not-a-number
+      ---
+    validate_rules_file:
+      - rules/invalid_engine_version_not_number.yaml
+    trace_file: trace_files/cat_write.scap
+
+  invalid_yaml_parse_error:
+    exit_status: 1
+    stdout_is: |+
+      mapping values are not allowed in this context
+      ---
+      this : is : not : yaml
+      ---
+    validate_rules_file:
+      - rules/invalid_yaml_parse_error.yaml
+    trace_file: trace_files/cat_write.scap
+
+  invalid_list_without_items:
+    exit_status: 1
+    stdout_is: |+
+      List must have property items
+      ---
+      - list: bad_list
+        no_items: foo
+      ---
+    validate_rules_file:
+      - rules/invalid_list_without_items.yaml
+    trace_file: trace_files/cat_write.scap
+
+  invalid_macro_without_condition:
+    exit_status: 1
+    stdout_is: |+
+      Macro must have property condition
+      ---
+      - macro: bad_macro
+        nope: 1
+      ---
+    validate_rules_file:
+      - rules/invalid_macro_without_condition.yaml
+    trace_file: trace_files/cat_write.scap
+
+  invalid_rule_without_output:
+    exit_status: 1
+    stdout_is: |+
+      Rule must have property output
+      ---
+      - rule: no output rule
+        desc: some desc
+        condition: evt.type=fork
+        priority: INFO
+      ---
+    validate_rules_file:
+      - rules/invalid_rule_without_output.yaml
+    trace_file: trace_files/cat_write.scap
+
+  invalid_append_rule_without_condition:
+    exit_status: 1
+    stdout_is: |+
+      Rule must have property condition
+      ---
+      - rule: no condition rule
+        append: true
+      ---
+    validate_rules_file:
+      - rules/invalid_append_rule_without_condition.yaml
+    trace_file: trace_files/cat_write.scap
+
+  invalid_append_macro_dangling:
+    exit_status: 1
+    stdout_is: |+
+      Macro dangling append has 'append' key but no macro by that name already exists
+      ---
+      - macro: dangling append
+        condition: and evt.type=execve
+        append: true
+      ---
+    validate_rules_file:
+      - rules/invalid_append_macro_dangling.yaml
+    trace_file: trace_files/cat_write.scap
+
+  invalid_list_append_dangling:
+    exit_status: 1
+    stdout_is: |+
+      List my_list has 'append' key but no list by that name already exists
+      ---
+      - list: my_list
+        items: [not-cat]
+        append: true
+      ---
+    validate_rules_file:
+      - rules/list_append_failure.yaml
+    trace_file: trace_files/cat_write.scap
+
+  invalid_rule_append_dangling:
+    exit_status: 1
+    stdout_is: |+
+      Rule my_rule has 'append' key but no rule by that name already exists
+      ---
+      - rule: my_rule
+        condition: evt.type=open
+        append: true
+      ---
+    validate_rules_file:
+      - rules/rule_append_failure.yaml
+    trace_file: trace_files/cat_write.scap
+
+  invalid_missing_rule_name:
+    exit_status: 1
+    stdout_is: |+
+      Rule name is empty
+      ---
+      - rule:
+        desc: some desc
+        condition: evt.type=execve
+        output: some output
+      ---
+    validate_rules_file:
+      - rules/invalid_missing_rule_name.yaml
+    trace_file: trace_files/cat_write.scap
+
+  invalid_missing_list_name:
+    exit_status: 1
+    stdout_is: |+
+      List name is empty
+      ---
+      - list:
+        items: [foo]
+      ---
+    validate_rules_file:
+      - rules/invalid_missing_list_name.yaml
+    trace_file: trace_files/cat_write.scap
+
+  invalid_missing_macro_name:
+    exit_status: 1
+    stdout_is: |+
+      Macro name is empty
+      ---
+      - macro:
+        condition: evt.type=execve
+      ---
+    validate_rules_file:
+      - rules/invalid_missing_macro_name.yaml
+    trace_file: trace_files/cat_write.scap
+
   invalid_rule_output:
     exit_status: 1
     stderr_contains: "Runtime error: Error loading rules:.* Invalid output format 'An open was seen %not_a_real_field': 'invalid formatting token not_a_real_field'. Exiting."
@@ -601,7 +794,7 @@ trace_files: !mux
 
   list_append_failure:
     exit_status: 1
-    stderr_contains: "List my_list has 'append' key but no list by that name already exists. Exiting"
+    stderr_contains: "List my_list has 'append' key but no list by that name already exists"
     rules_file:
       - rules/list_append_failure.yaml
     trace_file: trace_files/cat_write.scap
@@ -621,7 +814,7 @@ trace_files: !mux
 
   macro_append_failure:
     exit_status: 1
-    stderr_contains: "Macro my_macro has 'append' key but no macro by that name already exists. Exiting"
+    stderr_contains: "Macro my_macro has 'append' key but no macro by that name already exists"
     rules_file:
       - rules/macro_append_failure.yaml
     trace_file: trace_files/cat_write.scap
@@ -641,7 +834,7 @@ trace_files: !mux
 
   rule_append_failure:
     exit_status: 1
-    stderr_contains: "Rule my_rule has 'append' key but no rule by that name already exists. Exiting"
+    stderr_contains: "Rule my_rule has 'append' key but no rule by that name already exists"
     rules_file:
       - rules/rule_append_failure.yaml
     trace_file: trace_files/cat_write.scap
