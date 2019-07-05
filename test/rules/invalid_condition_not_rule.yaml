@@ -1,0 +1,5 @@
+- rule: condition not rule
+  condition:
+  desc: some desc
+  output: some output
+  priority: INFO

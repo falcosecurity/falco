@@ -1,0 +1,6 @@
+- macro: bad_macro
+  nope: 1
+
+- macro: good_macro
+  condition: evt.type=execve
+
