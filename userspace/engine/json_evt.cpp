@@ -19,8 +19,8 @@ limitations under the License.
 
 #include <ctype.h>
 
-#include "utils.h"
 #include "uri.h"
+#include "utils.h"
 
 #include "falco_common.h"
 #include "json_evt.h"
@@ -30,7 +30,6 @@ using namespace std;
 
 json_event::json_event()
 {
-
 }
 
 json_event::~json_event()
@@ -60,7 +59,7 @@ std::string json_event_filter_check::def_format(const json &j, std::string &fiel
 
 std::string json_event_filter_check::json_as_string(const json &j)
 {
-	if (j.type() == json::value_t::string)
+	if(j.type() == json::value_t::string)
 	{
 		return j;
 	}
@@ -70,32 +69,35 @@ std::string json_event_filter_check::json_as_string(const json &j)
 	}
 }
 
-json_event_filter_check::field_info::field_info()
-	: m_idx_mode(IDX_NONE), m_idx_type(IDX_NUMERIC)
+json_event_filter_check::field_info::field_info():
+	m_idx_mode(IDX_NONE), m_idx_type(IDX_NUMERIC)
 {
 }
 
 json_event_filter_check::field_info::field_info(std::string name,
-						std::string desc)
-	: m_name(name), m_desc(desc),
-	  m_idx_mode(IDX_NONE), m_idx_type(IDX_NUMERIC)
+						std::string desc):
+	m_name(name),
+	m_desc(desc),
+	m_idx_mode(IDX_NONE), m_idx_type(IDX_NUMERIC)
 {
 }
 
 json_event_filter_check::field_info::field_info(std::string name,
 						std::string desc,
-						index_mode mode)
-	: m_name(name), m_desc(desc),
-	  m_idx_mode(mode), m_idx_type(IDX_NUMERIC)
+						index_mode mode):
+	m_name(name),
+	m_desc(desc),
+	m_idx_mode(mode), m_idx_type(IDX_NUMERIC)
 {
 }
 
 json_event_filter_check::field_info::field_info(std::string name,
 						std::string desc,
 						index_mode mode,
-						index_type itype)
-	: m_name(name), m_desc(desc),
-	  m_idx_mode(mode), m_idx_type(itype)
+						index_type itype):
+	m_name(name),
+	m_desc(desc),
+	m_idx_mode(mode), m_idx_type(itype)
 {
 }
 
@@ -107,14 +109,15 @@ json_event_filter_check::alias::alias()
 {
 }
 
-json_event_filter_check::alias::alias(nlohmann::json::json_pointer ptr)
-	: m_jptr(ptr), m_format(def_format)
+json_event_filter_check::alias::alias(nlohmann::json::json_pointer ptr):
+	m_jptr(ptr), m_format(def_format)
 {
 }
 
 json_event_filter_check::alias::alias(nlohmann::json::json_pointer ptr,
-				      format_t format)
-	: m_jptr(ptr), m_format(format)
+				      format_t format):
+	m_jptr(ptr),
+	m_format(format)
 {
 }
 
@@ -122,8 +125,8 @@ json_event_filter_check::alias::~alias()
 {
 }
 
-json_event_filter_check::json_event_filter_check()
-	: m_format(def_format)
+json_event_filter_check::json_event_filter_check():
+	m_format(def_format)
 {
 }
 
@@ -150,7 +153,7 @@ int32_t json_event_filter_check::parse_field_name(const char *str, bool alloc_st
 
 		// What follows the match must not be alphanumeric or a dot
 		if(strncmp(info.m_name.c_str(), str, info.m_name.size()) == 0 &&
-		   !isalnum((int) str[info.m_name.size()]) &&
+		   !isalnum((int)str[info.m_name.size()]) &&
 		   str[info.m_name.size()] != '.' &&
 		   info.m_name.size() > match_len)
 		{
@@ -169,7 +172,7 @@ int32_t json_event_filter_check::parse_field_name(const char *str, bool alloc_st
 
 				if(end != NULL)
 				{
-					m_idx = string(start, end-start);
+					m_idx = string(start, end - start);
 				}
 
 				idx_len = (end - start + 2);
@@ -197,14 +200,14 @@ int32_t json_event_filter_check::parse_field_name(const char *str, bool alloc_st
 	return match_len + idx_len;
 }
 
-void json_event_filter_check::add_filter_value(const char* str, uint32_t len, uint32_t i)
+void json_event_filter_check::add_filter_value(const char *str, uint32_t len, uint32_t i)
 {
 	m_values.push_back(string(str));
 }
 
 bool json_event_filter_check::compare(gen_event *evt)
 {
-	json_event *jevt = (json_event *) evt;
+	json_event *jevt = (json_event *)evt;
 
 	std::string value = extract(jevt);
 
@@ -225,7 +228,7 @@ bool json_event_filter_check::compare(gen_event *evt)
 	case CO_IN:
 		for(auto &val : m_values)
 		{
-			if (value == val)
+			if(value == val)
 			{
 				return true;
 			}
@@ -268,11 +271,12 @@ json_event_filter_check::check_info &json_event_filter_check::get_fields()
 	return m_info;
 }
 
-uint8_t* json_event_filter_check::extract(gen_event *evt, uint32_t* len, bool sanitize_strings)
+uint8_t *json_event_filter_check::extract(gen_event *evt, uint32_t *len, bool sanitize_strings)
 {
-	json_event *jevt = (json_event *) evt;
+	json_event *jevt = (json_event *)evt;
 
-	try {
+	try
+	{
 		const json &j = jevt->jevt().at(m_jptr);
 
 		// Only format when the value was actually found in
@@ -286,7 +290,7 @@ uint8_t* json_event_filter_check::extract(gen_event *evt, uint32_t* len, bool sa
 
 	*len = m_tstr.size();
 
-	return (uint8_t *) m_tstr.c_str();
+	return (uint8_t *)m_tstr.c_str();
 }
 
 std::string json_event_filter_check::extract(json_event *evt)
@@ -299,7 +303,7 @@ std::string json_event_filter_check::extract(json_event *evt)
 
 	if(res != NULL)
 	{
-		ret.assign((const char *) res, len);
+		ret.assign((const char *)res, len);
 	}
 
 	return ret;
@@ -315,18 +319,15 @@ jevt_filter_check::jevt_filter_check()
 {
 	m_info = {"jevt",
 		  "generic ways to access json events",
-		  {
-			  {s_jevt_time_field, "json event timestamp as a string that includes the nanosecond part"},
-			  {s_jevt_time_iso_8601_field, "json event timestamp in ISO 8601 format, including nanoseconds and time zone offset (in UTC)"},
-			  {s_jevt_rawtime_field, "absolute event timestamp, i.e. nanoseconds from epoch."},
-			  {s_jevt_value_field, "General way to access single property from json object. The syntax is [<json pointer expression>]. The property is returned as a string", IDX_REQUIRED, IDX_KEY},
-			  {s_jevt_obj_field, "The entire json object, stringified"}
-		  }};
+		  {{s_jevt_time_field, "json event timestamp as a string that includes the nanosecond part"},
+		   {s_jevt_time_iso_8601_field, "json event timestamp in ISO 8601 format, including nanoseconds and time zone offset (in UTC)"},
+		   {s_jevt_rawtime_field, "absolute event timestamp, i.e. nanoseconds from epoch."},
+		   {s_jevt_value_field, "General way to access single property from json object. The syntax is [<json pointer expression>]. The property is returned as a string", IDX_REQUIRED, IDX_KEY},
+		   {s_jevt_obj_field, "The entire json object, stringified"}}};
 }
 
 jevt_filter_check::~jevt_filter_check()
 {
-
 }
 
 int32_t jevt_filter_check::parse_field_name(const char *str, bool alloc_state, bool needed_for_filtering)
@@ -360,55 +361,56 @@ int32_t jevt_filter_check::parse_field_name(const char *str, bool alloc_state, b
 		const char *end;
 
 		// What follows must be [<json pointer expression>]
-		if (*(str + s_jevt_value_field.size()) != '[' ||
-		    ((end = strchr(str + 1, ']')) == NULL))
+		if(*(str + s_jevt_value_field.size()) != '[' ||
+		   ((end = strchr(str + 1, ']')) == NULL))
 
 		{
 			throw falco_exception(string("Could not parse filtercheck field \"") + str + "\". Did not have expected format with 'jevt.value[<json pointer>]'");
 		}
 
-		try {
-			m_jptr = json::json_pointer(string(str + (s_jevt_value_field.size()+1), (end-str-(s_jevt_value_field.size()+1))));
+		try
+		{
+			m_jptr = json::json_pointer(string(str + (s_jevt_value_field.size() + 1), (end - str - (s_jevt_value_field.size() + 1))));
 		}
-		catch (json::parse_error& e)
+		catch(json::parse_error &e)
 		{
 			throw falco_exception(string("Could not parse filtercheck field \"") + str + "\". Invalid json selector (" + e.what() + ")");
 		}
 
 		// The +1 accounts for the closing ']'
-		m_field = string(str, end-str + 1);
+		m_field = string(str, end - str + 1);
 		return (end - str + 1);
 	}
 
 	return 0;
 }
 
-uint8_t* jevt_filter_check::extract(gen_event *evt, uint32_t* len, bool sanitize_stings)
+uint8_t *jevt_filter_check::extract(gen_event *evt, uint32_t *len, bool sanitize_stings)
 {
 	if(m_field == s_jevt_rawtime_field)
 	{
 		m_tstr = to_string(evt->get_ts());
 		*len = m_tstr.size();
-		return (uint8_t *) m_tstr.c_str();
+		return (uint8_t *)m_tstr.c_str();
 	}
 	else if(m_field == s_jevt_time_field)
 	{
 		sinsp_utils::ts_to_string(evt->get_ts(), &m_tstr, false, true);
 		*len = m_tstr.size();
-		return (uint8_t *) m_tstr.c_str();
+		return (uint8_t *)m_tstr.c_str();
 	}
 	else if(m_field == s_jevt_time_iso_8601_field)
 	{
 		sinsp_utils::ts_to_iso_8601(evt->get_ts(), &m_tstr);
 		*len = m_tstr.size();
-		return (uint8_t *) m_tstr.c_str();
+		return (uint8_t *)m_tstr.c_str();
 	}
 	else if(m_field == s_jevt_obj_field)
 	{
-		json_event *jevt = (json_event *) evt;
+		json_event *jevt = (json_event *)evt;
 		m_tstr = jevt->jevt().dump();
 		*len = m_tstr.size();
-		return (uint8_t *) m_tstr.c_str();
+		return (uint8_t *)m_tstr.c_str();
 	}
 
 	return json_event_filter_check::extract(evt, len, sanitize_stings);
@@ -418,7 +420,7 @@ json_event_filter_check *jevt_filter_check::allocate_new()
 {
 	jevt_filter_check *chk = new jevt_filter_check();
 
-	return (json_event_filter_check *) chk;
+	return (json_event_filter_check *)chk;
 }
 
 std::string k8s_audit_filter_check::index_image(const json &j, std::string &field, std::string &idx)
@@ -427,8 +429,9 @@ std::string k8s_audit_filter_check::index_image(const json &j, std::string &fiel
 
 	string image;
 
-	try {
-		image  = j[idx_num].at("image");
+	try
+	{
+		image = j[idx_num].at("image");
 	}
 	catch(json::out_of_range &e)
 	{
@@ -470,7 +473,6 @@ std::string k8s_audit_filter_check::index_has_name(const json &j, std::string &f
 	return string("false");
 }
 
-
 std::string k8s_audit_filter_check::index_query_param(const json &j, std::string &field, std::string &idx)
 {
 	string uri = j;
@@ -489,7 +491,7 @@ std::string k8s_audit_filter_check::index_query_param(const json &j, std::string
 	{
 		std::vector<std::string> param_parts = sinsp_split(part, '=');
 
-		if(param_parts.size() == 2 && uri::decode(param_parts[0], true)==idx)
+		if(param_parts.size() == 2 && uri::decode(param_parts[0], true) == idx)
 		{
 			return uri::decode(param_parts[1]);
 		}
@@ -497,7 +499,6 @@ std::string k8s_audit_filter_check::index_query_param(const json &j, std::string
 
 	return string("<NA>");
 }
-
 
 std::string k8s_audit_filter_check::index_generic(const json &j, std::string &field, std::string &idx)
 {
@@ -511,7 +512,8 @@ std::string k8s_audit_filter_check::index_generic(const json &j, std::string &fi
 	{
 		uint64_t idx_num = (idx.empty() ? 0 : stoi(idx));
 
-		try {
+		try
+		{
 			item = j[idx_num];
 		}
 		catch(json::out_of_range &e)
@@ -529,7 +531,7 @@ std::string k8s_audit_filter_check::index_select(const json &j, std::string &fie
 
 	// Use the suffix of the field to determine which property to
 	// select from each object.
-	std::string prop = field.substr(field.find_last_of(".")+1);
+	std::string prop = field.substr(field.find_last_of(".") + 1);
 
 	std::string ret;
 
@@ -542,7 +544,8 @@ std::string k8s_audit_filter_check::index_select(const json &j, std::string &fie
 				ret += " ";
 			}
 
-			try {
+			try
+			{
 				ret += json_event_filter_check::json_as_string(obj.at(prop));
 			}
 			catch(json::out_of_range &e)
@@ -553,7 +556,8 @@ std::string k8s_audit_filter_check::index_select(const json &j, std::string &fie
 	}
 	else
 	{
-		try {
+		try
+		{
 			ret = j[stoi(idx)].at(prop);
 		}
 		catch(json::out_of_range &e)
@@ -573,7 +577,8 @@ std::string k8s_audit_filter_check::index_privileged(const json &j, std::string 
 
 	if(!idx.empty())
 	{
-		try {
+		try
+		{
 			privileged = j[stoi(idx)].at(jpriv);
 		}
 		catch(json::out_of_range &e)
@@ -584,7 +589,8 @@ std::string k8s_audit_filter_check::index_privileged(const json &j, std::string 
 	{
 		for(auto &container : j)
 		{
-			try {
+			try
+			{
 				if(container.at(jpriv))
 				{
 					privileged = true;
@@ -621,42 +627,40 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 {
 	m_info = {"ka",
 		  "Access K8s Audit Log Events",
-		  {
-			  {"ka.auditid", "The unique id of the audit event"},
-			  {"ka.stage", "Stage of the request (e.g. RequestReceived, ResponseComplete, etc.)"},
-			  {"ka.auth.decision", "The authorization decision"},
-			  {"ka.auth.reason", "The authorization reason"},
-			  {"ka.user.name", "The user name performing the request"},
-			  {"ka.user.groups", "The groups to which the user belongs"},
-			  {"ka.impuser.name", "The impersonated user name"},
-			  {"ka.verb", "The action being performed"},
-			  {"ka.uri", "The request URI as sent from client to server"},
-			  {"ka.uri.param", "The value of a given query parameter in the uri (e.g. when uri=/foo?key=val, ka.uri.param[key] is val).", IDX_REQUIRED, IDX_KEY},
-			  {"ka.target.name", "The target object name"},
-			  {"ka.target.namespace", "The target object namespace"},
-			  {"ka.target.resource", "The target object resource"},
-			  {"ka.target.subresource", "The target object subresource"},
-			  {"ka.req.binding.subjects", "When the request object refers to a cluster role binding, the subject (e.g. account/users) being linked by the binding"},
-			  {"ka.req.binding.subject.has_name", "When the request object refers to a cluster role binding, return true if a subject with the provided name exists", IDX_REQUIRED, IDX_KEY},
-			  {"ka.req.binding.role", "When the request object refers to a cluster role binding, the role being linked by the binding"},
-			  {"ka.req.configmap.name", "If the request object refers to a configmap, the configmap name"},
-			  {"ka.req.configmap.obj", "If the request object refers to a configmap, the entire configmap object"},
-			  {"ka.req.container.image", "When the request object refers to a container, the container's images. Can be indexed (e.g. ka.req.container.image[0]). Without any index, returns the first image", IDX_ALLOWED, IDX_NUMERIC},
-			  {"ka.req.container.image.repository", "The same as req.container.image, but only the repository part (e.g. sysdig/falco)", IDX_ALLOWED, IDX_NUMERIC},
-			  {"ka.req.container.host_network", "When the request object refers to a container, the value of the hostNetwork flag."},
-			  {"ka.req.container.privileged", "When the request object refers to a container, whether or not any container is run privileged. With an index, return whether or not the ith container is run privileged.", IDX_ALLOWED, IDX_NUMERIC},
-			  {"ka.req.role.rules", "When the request object refers to a role/cluster role, the rules associated with the role"},
-			  {"ka.req.role.rules.apiGroups", "When the request object refers to a role/cluster role, the api groups associated with the role's rules. With an index, return only the api groups from the ith rule. Without an index, return all api groups concatenated", IDX_ALLOWED, IDX_NUMERIC},
-			  {"ka.req.role.rules.nonResourceURLs", "When the request object refers to a role/cluster role, the non resource urls associated with the role's rules. With an index, return only the non resource urls from the ith rule. Without an index, return all non resource urls concatenated", IDX_ALLOWED, IDX_NUMERIC},
-			  {"ka.req.role.rules.verbs", "When the request object refers to a role/cluster role, the verbs associated with the role's rules. With an index, return only the verbs from the ith rule. Without an index, return all verbs concatenated", IDX_ALLOWED, IDX_NUMERIC},
-			  {"ka.req.role.rules.resources", "When the request object refers to a role/cluster role, the resources associated with the role's rules. With an index, return only the resources from the ith rule. Without an index, return all resources concatenated", IDX_ALLOWED, IDX_NUMERIC},
-			  {"ka.req.service.type", "When the request object refers to a service, the service type"},
-			  {"ka.req.service.ports", "When the request object refers to a service, the service's ports. Can be indexed (e.g. ka.req.service.ports[0]). Without any index, returns all ports", IDX_ALLOWED, IDX_NUMERIC},
-			  {"ka.req.volume.hostpath", "If the request object contains volume definitions, whether or not a hostPath volume exists that mounts the specified path from the host (...hostpath[/etc]=true if a volume mounts /etc from the host). The index can be a glob, in which case all volumes are considered to find any path matching the specified glob (...hostpath[/usr/*] would match either /usr/local or /usr/bin)", IDX_REQUIRED, IDX_KEY},
-			  {"ka.resp.name", "The response object name"},
-			  {"ka.response.code", "The response code"},
-			  {"ka.response.reason", "The response reason (usually present only for failures)"}
-		  }};
+		  {{"ka.auditid", "The unique id of the audit event"},
+		   {"ka.stage", "Stage of the request (e.g. RequestReceived, ResponseComplete, etc.)"},
+		   {"ka.auth.decision", "The authorization decision"},
+		   {"ka.auth.reason", "The authorization reason"},
+		   {"ka.user.name", "The user name performing the request"},
+		   {"ka.user.groups", "The groups to which the user belongs"},
+		   {"ka.impuser.name", "The impersonated user name"},
+		   {"ka.verb", "The action being performed"},
+		   {"ka.uri", "The request URI as sent from client to server"},
+		   {"ka.uri.param", "The value of a given query parameter in the uri (e.g. when uri=/foo?key=val, ka.uri.param[key] is val).", IDX_REQUIRED, IDX_KEY},
+		   {"ka.target.name", "The target object name"},
+		   {"ka.target.namespace", "The target object namespace"},
+		   {"ka.target.resource", "The target object resource"},
+		   {"ka.target.subresource", "The target object subresource"},
+		   {"ka.req.binding.subjects", "When the request object refers to a cluster role binding, the subject (e.g. account/users) being linked by the binding"},
+		   {"ka.req.binding.subject.has_name", "When the request object refers to a cluster role binding, return true if a subject with the provided name exists", IDX_REQUIRED, IDX_KEY},
+		   {"ka.req.binding.role", "When the request object refers to a cluster role binding, the role being linked by the binding"},
+		   {"ka.req.configmap.name", "If the request object refers to a configmap, the configmap name"},
+		   {"ka.req.configmap.obj", "If the request object refers to a configmap, the entire configmap object"},
+		   {"ka.req.container.image", "When the request object refers to a container, the container's images. Can be indexed (e.g. ka.req.container.image[0]). Without any index, returns the first image", IDX_ALLOWED, IDX_NUMERIC},
+		   {"ka.req.container.image.repository", "The same as req.container.image, but only the repository part (e.g. sysdig/falco)", IDX_ALLOWED, IDX_NUMERIC},
+		   {"ka.req.container.host_network", "When the request object refers to a container, the value of the hostNetwork flag."},
+		   {"ka.req.container.privileged", "When the request object refers to a container, whether or not any container is run privileged. With an index, return whether or not the ith container is run privileged.", IDX_ALLOWED, IDX_NUMERIC},
+		   {"ka.req.role.rules", "When the request object refers to a role/cluster role, the rules associated with the role"},
+		   {"ka.req.role.rules.apiGroups", "When the request object refers to a role/cluster role, the api groups associated with the role's rules. With an index, return only the api groups from the ith rule. Without an index, return all api groups concatenated", IDX_ALLOWED, IDX_NUMERIC},
+		   {"ka.req.role.rules.nonResourceURLs", "When the request object refers to a role/cluster role, the non resource urls associated with the role's rules. With an index, return only the non resource urls from the ith rule. Without an index, return all non resource urls concatenated", IDX_ALLOWED, IDX_NUMERIC},
+		   {"ka.req.role.rules.verbs", "When the request object refers to a role/cluster role, the verbs associated with the role's rules. With an index, return only the verbs from the ith rule. Without an index, return all verbs concatenated", IDX_ALLOWED, IDX_NUMERIC},
+		   {"ka.req.role.rules.resources", "When the request object refers to a role/cluster role, the resources associated with the role's rules. With an index, return only the resources from the ith rule. Without an index, return all resources concatenated", IDX_ALLOWED, IDX_NUMERIC},
+		   {"ka.req.service.type", "When the request object refers to a service, the service type"},
+		   {"ka.req.service.ports", "When the request object refers to a service, the service's ports. Can be indexed (e.g. ka.req.service.ports[0]). Without any index, returns all ports", IDX_ALLOWED, IDX_NUMERIC},
+		   {"ka.req.volume.hostpath", "If the request object contains volume definitions, whether or not a hostPath volume exists that mounts the specified path from the host (...hostpath[/etc]=true if a volume mounts /etc from the host). The index can be a glob, in which case all volumes are considered to find any path matching the specified glob (...hostpath[/usr/*] would match either /usr/local or /usr/bin)", IDX_REQUIRED, IDX_KEY},
+		   {"ka.resp.name", "The response object name"},
+		   {"ka.response.code", "The response code"},
+		   {"ka.response.reason", "The response reason (usually present only for failures)"}}};
 
 	{
 		m_aliases = {
@@ -693,21 +697,19 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 			{"ka.req.volume.hostpath", {"/requestObject/spec/volumes"_json_pointer, check_hostpath_vols}},
 			{"ka.resp.name", {"/responseObject/metadata/name"_json_pointer}},
 			{"ka.response.code", {"/responseStatus/code"_json_pointer}},
-			{"ka.response.reason", {"/responseStatus/reason"_json_pointer}}
-		};
+			{"ka.response.reason", {"/responseStatus/reason"_json_pointer}}};
 	}
 }
 
 k8s_audit_filter_check::~k8s_audit_filter_check()
 {
-
 }
 
 json_event_filter_check *k8s_audit_filter_check::allocate_new()
 {
 	k8s_audit_filter_check *chk = new k8s_audit_filter_check();
 
-	return (json_event_filter_check *) chk;
+	return (json_event_filter_check *)chk;
 }
 
 json_event_filter::json_event_filter()
@@ -762,9 +764,9 @@ std::list<json_event_filter_check::check_info> &json_event_filter_factory::get_f
 	return m_info;
 }
 
-json_event_formatter::json_event_formatter(json_event_filter_factory &json_factory, std::string &format)
-	: m_format(format),
-	  m_json_factory(json_factory)
+json_event_formatter::json_event_formatter(json_event_filter_factory &json_factory, std::string &format):
+	m_format(format),
+	m_json_factory(json_factory)
 {
 	parse_format();
 }
@@ -777,7 +779,7 @@ std::string json_event_formatter::tostring(json_event *ev)
 {
 	std::string ret;
 
-	std::list<std::pair<std::string,std::string>> resolved;
+	std::list<std::pair<std::string, std::string>> resolved;
 
 	resolve_tokens(ev, resolved);
 
@@ -793,7 +795,7 @@ std::string json_event_formatter::tojson(json_event *ev)
 {
 	nlohmann::json ret;
 
-	std::list<std::pair<std::string,std::string>> resolved;
+	std::list<std::pair<std::string, std::string>> resolved;
 
 	resolve_tokens(ev, resolved);
 
@@ -828,11 +830,11 @@ void json_event_formatter::parse_format()
 		{
 			// Skip the %
 			tformat.erase(0, 1);
-			json_event_filter_check *chk = (json_event_filter_check *) m_json_factory.new_filtercheck(tformat.c_str());
+			json_event_filter_check *chk = (json_event_filter_check *)m_json_factory.new_filtercheck(tformat.c_str());
 
 			if(!chk)
 			{
-				throw falco_exception(string ("Could not parse format string \"") + m_format + "\": unknown filtercheck field " + tformat);
+				throw falco_exception(string("Could not parse format string \"") + m_format + "\": unknown filtercheck field " + tformat);
 			}
 
 			size = chk->parsed_size();
@@ -852,7 +854,7 @@ void json_event_formatter::parse_format()
 			// Empty fields are only allowed at the beginning of the string
 			if(m_tokens.size() > 0)
 			{
-				throw falco_exception(string ("Could not parse format string \"" + m_format + "\": empty filtercheck field"));
+				throw falco_exception(string("Could not parse format string \"" + m_format + "\": empty filtercheck field"));
 			}
 			continue;
 		}
@@ -864,7 +866,7 @@ void json_event_formatter::parse_format()
 	}
 }
 
-void json_event_formatter::resolve_tokens(json_event *ev, std::list<std::pair<std::string,std::string>> &resolved)
+void json_event_formatter::resolve_tokens(json_event *ev, std::list<std::pair<std::string, std::string>> &resolved)
 {
 	for(auto tok : m_tokens)
 	{
