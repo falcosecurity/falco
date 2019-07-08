@@ -24,7 +24,7 @@
 # change to this rules file, we'll uncomment this line and set it to
 # the falco engine version in use at the time.
 #
-#- required_engine_version: 2
+- required_engine_version: 4
 
 # Currently disabled as read/write are ignored syscalls. The nearly
 # similar open_write/open_read check for files being opened for
@@ -2118,6 +2118,15 @@
 - macro: user_known_non_sudo_setuid_conditions
   condition: user.name=root
 
+# Various probes may be necessary to manage and orchestrate containers and
+# these probes should be excepted out of certain rules.
+# See https://github.com/falcosecurity/falco/issues/310
+- macro: is_container_probe
+  condition: >
+    (proc.is_container_healthcheck=true or
+    proc.is_container_liveness_probe=true or
+    proc.is_container_readiness_probe=true)
+
 # sshd, mail programs attempt to setuid to root even when running as non-root. Excluding here to avoid meaningless FPs
 - rule: Non sudo setuid
   desc: >
@@ -2134,6 +2143,7 @@
     and not java_running_sdjagent
     and not nrpe_becoming_nagios
     and not user_known_non_sudo_setuid_conditions
+    and not is_container_probe
   output: >
     Unexpected setuid call by non-sudo, non-root program (user=%user.name cur_uid=%user.uid parent=%proc.pname
     command=%proc.cmdline uid=%evt.arg.uid container_id=%container.id image=%container.image.repository)
