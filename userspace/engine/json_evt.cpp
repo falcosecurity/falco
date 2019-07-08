@@ -660,7 +660,8 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 		   {"ka.req.volume.hostpath", "If the request object contains volume definitions, whether or not a hostPath volume exists that mounts the specified path from the host (...hostpath[/etc]=true if a volume mounts /etc from the host). The index can be a glob, in which case all volumes are considered to find any path matching the specified glob (...hostpath[/usr/*] would match either /usr/local or /usr/bin)", IDX_REQUIRED, IDX_KEY},
 		   {"ka.resp.name", "The response object name"},
 		   {"ka.response.code", "The response code"},
-		   {"ka.response.reason", "The response reason (usually present only for failures)"}}};
+		   {"ka.response.reason", "The response reason (usually present only for failures)"},
+		   {"ka.useragent", "The useragent of the client who made the request to the apiserver"}}};
 
 	{
 		m_aliases = {
@@ -697,7 +698,8 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 			{"ka.req.volume.hostpath", {"/requestObject/spec/volumes"_json_pointer, check_hostpath_vols}},
 			{"ka.resp.name", {"/responseObject/metadata/name"_json_pointer}},
 			{"ka.response.code", {"/responseStatus/code"_json_pointer}},
-			{"ka.response.reason", {"/responseStatus/reason"_json_pointer}}};
+			{"ka.response.reason", {"/responseStatus/reason"_json_pointer}},
+			{"ka.useragent", {"/userAgent"_json_pointer}}};
 	}
 }
 
