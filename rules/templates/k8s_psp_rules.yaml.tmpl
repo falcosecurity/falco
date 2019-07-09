@@ -52,6 +52,9 @@
 - macro: psp_container
   condition: (psp_enabled and container.image.repository in (psp_images))
 
+- macro: psp_open_write
+  condition: (evt.type=open or evt.type=openat) and evt.is_open_write=true and fd.typechar='f' and fd.num>=0
+
 {% if not allow_privileged  %}
 #########################################
 # Rule(s) for PSP privileged property
@@ -198,7 +201,7 @@
 #########################################
 # Rule(s) for PSP readOnlyRootFilesystem property
 #########################################
-- rule: PSP Violation (readOnlyRootFilesystem)
+- rule: PSP Violation (readOnlyRootFilesystem) K8s Audit
   desc: >
     Detect a psp validation failure for a readOnlyRootFilesystem pod using k8s audit logs
   condition: psp_ka_container and ka.req.container.read_write_fs=true
@@ -206,11 +209,22 @@
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
+
+- rule: PSP Violation (readOnlyRootFilesystem) System Activity
+  desc: >
+    Detect a psp validation failure for a readOnlyRootFilesystem pod using syscalls
+  condition: psp_container and psp_open_write
+  output: >
+    Pod Security Policy {{ policy_name }} validation failure--write in container with readOnlyRootFilesystem=true
+    (user=%user.name command=%proc.cmdline file=%fd.name parent=%proc.pname container_id=%container.id image=%container.image.repository)
+  priority: WARNING
+  source: syscall
+  tags: [k8s-psp]
 {% endif %}{% if length(must_run_as_users) > 0 %}
 #########################################
 # Rule(s) for PSP runAsUser property: MustRunAs + list of uids
 #########################################
-- rule: PSP Violation (runAsUser=MustRunAs)
+- rule: PSP Violation (runAsUser=MustRunAs) K8s Audit
   desc: >
     Detect a psp validation failure for a runAsUser outside of the allowed set using k8s audit logs
   condition: psp_ka_container and ka.req.container.run_as_user.within[{{ rjoin(",", must_run_as_users) }}]=false
@@ -218,29 +232,68 @@
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
+
+- macro: psp_allowed_uids
+  condition: >
+   (
+     {% for group in must_run_as_users %}{% if not loop.is_first %} or {% endif %}(user.uid >= {{ group.min }} and user.uid <= {{ group.max }}){% endfor %}
+   )
+
+- rule: PSP Violation (runAsUser=MustRunAs) System Activity
+  desc: >
+    Detect a psp validation failure for a runAsUser outside of the allowed set using syscalls
+  condition: psp_container and evt.type in (execve, setuid) and evt.dir=< and not psp_allowed_uids
+  output: Pod Security Policy {{ policy_name }} validation failure--runAsUser outside of allowed set. runAsUser set="{{ must_run_as_users }}" (command=%proc.cmdline uid=%user.uid container_id=%container.id image=%container.image.repository)
+  priority: WARNING
+  source: syscall
+  tags: [k8s-psp]
 {% endif %}{% if must_run_as_non_root %}
 #########################################
 # Rule(s) for PSP runAsUser property: MustRunAsNonRoot
 #########################################
-- rule: PSP Violation (runAsUser=MustRunAsNonRoot)
+- rule: PSP Violation (runAsUser=MustRunAsNonRoot) K8s Audit
   desc: >
-    Detect a psp validation failure for a non-zero runAsUser when MustRunAsNonRoot is set using k8s audit logs
+    Detect a psp validation failure for a uid=0 runAsUser when MustRunAsNonRoot is set using k8s audit logs
   condition: psp_ka_container and ka.req.container.run_as_user.any_within[0:0]=true
   output: Pod Security Policy {{ policy_name }} validation failure--uid 0 runAsUser when MustRunAsNonRoot is set (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
+
+- rule: PSP Violation (runAsUser=MustRunAsNonRoot) System Activity
+  desc: >
+    Detect a psp validation failure for a uid=0 user when MustRunAsNonRoot is set using syscalls
+  condition: psp_container and evt.type in (execve, setuid) and evt.dir=< and user.uid=0
+  output: Pod Security Policy {{ policy_name }} validation failure--root user when MustRunAsNonRoot is set (command=%proc.cmdline uid=%user.uid container_id=%container.id image=%container.image.repository)
+  priority: WARNING
+  source: syscall
+  tags: [k8s-psp]
 {% endif %}{% if length(must_run_as_groups) > 0 %}
 #########################################
 # Rule(s) for PSP runAsGroup property: MustRunAs + list of gids
 #########################################
-- rule: PSP Violation (runAsGroup=MustRunAs)
+- rule: PSP Violation (runAsGroup=MustRunAs) K8s Audit
   desc: >
     Detect a psp validation failure for a runAsGroup outside of the MustRunAs allowed set using k8s audit logs
   condition: psp_ka_container and ka.req.container.run_as_group.within[{{ rjoin(",", must_run_as_groups) }}]=false
   output: Pod Security Policy {{ policy_name }} validation failure--runAsGroup outside of the MustRunAs allowed set. runAsGroup MustRunAs set="{{ must_run_as_groups }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
+  tags: [k8s-psp]
+
+- macro: psp_allowed_gids
+  condition: >
+   (
+     {% for group in must_run_as_groups %}{% if not loop.is_first %} or {% endif %}(group.gid >= {{ group.min }} and group.gid <= {{ group.max }}){% endfor %}
+   )
+
+- rule: PSP Violation (runAsGroup=MustRunAs) System Activity
+  desc: >
+    Detect a psp validation failure for a runAsGroup outside of the allowed set using syscalls
+  condition: psp_container and evt.type in (execve, setgid) and evt.dir=< and not psp_allowed_gids
+  output: Pod Security Policy {{ policy_name }} validation failure--runAsGroup outside of allowed set. runAsGroup set="{{ must_run_as_groups }}" (command=%proc.cmdline user=%user.uid gid=%group.gid container_id=%container.id image=%container.image.repository)
+  priority: WARNING
+  source: syscall
   tags: [k8s-psp]
 {% endif %}{% if length(may_run_as_groups) > 0 %}
 #########################################
