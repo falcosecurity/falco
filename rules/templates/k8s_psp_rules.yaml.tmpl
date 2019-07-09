@@ -17,131 +17,155 @@
 #
 - required_engine_version: 4
 
-- macro: psp_always_true
-  condition: (jevt.rawtime exists)
-
-- macro: psp_never_true
-  condition: (jevt.rawtime=0)
-
-- macro: psp_enabled
-  condition: (psp_always_true)
-
 - list: psp_images
   items: {{ image_list }}
+
+# K8s audit specific macros here
+- macro: psp_ka_always_true
+  condition: (jevt.rawtime exists)
+
+- macro: psp_ka_never_true
+  condition: (jevt.rawtime=0)
+
+- macro: psp_ka_enabled
+  condition: (psp_ka_always_true)
 
 - macro: psp_kevt
   condition: (jevt.value[/stage] in ("ResponseComplete"))
 
-- macro: psp_pod
+- macro: psp_ka_pod
   condition: (ka.target.resource=pods and not ka.target.subresource exists)
 
+- macro: psp_ka_container
+  condition: (psp_ka_enabled and psp_kevt and psp_ka_pod and ka.verb=create and ka.req.container.image.repository in (psp_images))
+
+# syscall audit specific macros here
+- macro: psp_always_true
+  condition: (evt.num>=0)
+
+- macro: psp_never_true
+  condition: (evt.num=0)
+
+- macro: psp_enabled
+  condition: (psp_always_true)
+
 - macro: psp_container
-  condition: (psp_enabled and psp_kevt and psp_pod and ka.verb=create and ka.req.container.image.repository in (psp_images))
+  condition: (psp_enabled and container.image.repository in (psp_images))
+
 {% if not allow_privileged  %}
 #########################################
-# Rule for PSP privileged property
+# Rule(s) for PSP privileged property
 #########################################
-- rule: PSP Validation Failure Privileged
+- rule: PSP Violation (privileged) K8s Audit
   desc: >
-    Detect a psp validation failure for a privileged pod
-  condition: psp_container and ka.req.container.privileged=true
+    Detect a psp validation failure for a privileged pod using k8s audit logs
+  condition: psp_ka_container and ka.req.container.privileged=true
   output: Pod Security Policy {{ policy_name }} validation failure--pod with privileged=true (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
+
+- rule: PSP Violation (privileged) System Activity
+  desc: Detect a psp validation failure for a privileged pod using syscalls
+  condition: psp_container and evt.type=container and container.privileged=true
+  output: Pod Security Policy {{ policy_name }} validation failure--container with privileged=true created (user=%user.name command=%proc.cmdline %container.info image=%container.image.repository:%container.image.tag)
+  priority: WARNING
+  source: syscall
+  tags: [k8s-psp]
+
 {% endif %}{% if not allow_host_pid %}
 #########################################
-# Rule for PSP hostPID property
+# Rule(s) for PSP hostPID property
 #########################################
-- rule: PSP Validation Failure HostPID
+- rule: PSP Violation (hostPID)
   desc: >
-    Detect a psp validation failure for a hostPID pod
-  condition: psp_container and ka.req.container.host_pid=true
+    Detect a psp validation failure for a hostPID pod using k8s audit logs
+  condition: psp_ka_container and ka.req.container.host_pid=true
   output: Pod Security Policy {{ policy_name }} validation failure--pod with hostpid=true (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
 {% endif %}{% if not allow_host_ipc %}
 #########################################
-# Rule for PSP hostIPC property
+# Rule(s) for PSP hostIPC property
 #########################################
-- rule: PSP Validation Failure HostIPC
+- rule: PSP Violation (hostIPC)
   desc: >
-    Detect a psp validation failure for a hostIPC pod
-  condition: psp_container and ka.req.container.host_ipc=true
+    Detect a psp validation failure for a hostIPC pod using k8s audit logs
+  condition: psp_ka_container and ka.req.container.host_ipc=true
   output: Pod Security Policy {{ policy_name }} validation failure--pod with hostipc=true (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
 {% endif %}{% if not allow_host_network %}
 #########################################
-# Rule for PSP hostNetwork property
+# Rule(s) for PSP hostNetwork property
 #########################################
-- rule: PSP Validation Failure HostNetwork
+- rule: PSP Violation (hostNetwork)
   desc: >
-    Detect a psp validation failure for a hostNetwork pod
-  condition: psp_container and ka.req.container.host_network=true
+    Detect a psp validation failure for a hostNetwork pod using k8s audit logs
+  condition: psp_ka_container and ka.req.container.host_network=true
   output: Pod Security Policy {{ policy_name }} validation failure--pod with hostnetwork=true (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
 {% endif %}{% if length(host_network_ports) > 0 %}
 #########################################
-# Rule for PSP hostPorts ranges
+# Rule(s) for PSP hostPorts ranges
 #########################################
-- rule: PSP Validation Failure HostNetwork Ports
+- rule: PSP Violation (hostPorts)
   desc: >
-    Detect a psp validation failure for a hostnetwork port outside of the allowed set
-  condition: psp_container and not ka.req.container.host_port.within[{{ rjoin(",", host_network_ports) }}]=true
+    Detect a psp validation failure for a hostnetwork port outside of the allowed set using k8s audit logs
+  condition: psp_ka_container and not ka.req.container.host_port.within[{{ rjoin(",", host_network_ports) }}]=true
   output: Pod Security Policy {{ policy_name }} validation failure--hostnetwork port outside of allowed ranges [{{ rjoin(",", host_network_ports) }}] (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
 {% endif %}{% if length(allowed_volume_types) > 0 %}
 #########################################
-# Rule for PSP volumes property
+# Rule(s) for PSP volumes property
 #########################################
-- rule: PSP Validation Failure Volume Types
+- rule: PSP Violation (volumes)
   desc: >
-    Detect a psp validation failure for a volume type outside of the allowed set
-  condition: psp_container and not ka.req.volume_types.within[{{ join(",", allowed_volume_types) }}]=true
+    Detect a psp validation failure for a volume type outside of the allowed set using k8s audit logs
+  condition: psp_ka_container and not ka.req.volume_types.within[{{ join(",", allowed_volume_types) }}]=true
   output: Pod Security Policy {{ policy_name }} validation failure--volume type outside of allowed set {{ join(",", allowed_volume_types) }} (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
 {% endif %}{% if length(allowed_host_paths) > 0 %}
 #########################################
-# Rule for PSP allowedHostPaths property
+# Rule(s) for PSP allowedHostPaths property
 #########################################
 - macro: psp_allowed_host_paths
   condition: (ka.req.volume.all_hostpath[{{ join(",", allowed_host_paths) }}] = true)
 
-- rule: PSP Validation Failure Allowed Host Paths
+- rule: PSP Violation (allowedHostPaths)
   desc: >
-    Detect a psp validation failure for a hostPath volume with a path outside of the allowed set
-  condition: psp_container and ka.req.volume_types.within[hostPath]=true and not psp_allowed_host_paths
+    Detect a psp validation failure for a hostPath volume with a path outside of the allowed set using k8s audit logs
+  condition: psp_ka_container and ka.req.volume_types.within[hostPath]=true and not psp_allowed_host_paths
   output: Pod Security Policy {{ policy_name }} validation failure--hostPath volume mounting path outside of allowed set {{ join(",", allowed_host_paths) }} (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
 {% endif %}{% if length(allowed_flexvolume_drivers) > 0 %}
 #########################################
-# Rule for PSP allowedFlexVolumes property
+# Rule(s) for PSP allowedFlexVolumes property
 #########################################
 - macro: psp_allowed_flexvolume_drivers
   condition: (ka.req.volume.all_flexvolume_drivers[{{ join(",", allowed_flexvolume_drivers) }}] = true)
 
-- rule: PSP Validation Failure Flexvolume Drivers
+- rule: PSP Violation (allowedFlexVolumes)
   desc: >
-    Detect a psp validation failure for a FlexVolume driver outside of the allowed set
-  condition: psp_container and not psp_allowed_flexvolume_drivers
+    Detect a psp validation failure for a FlexVolume driver outside of the allowed set using k8s audit logs
+  condition: psp_ka_container and not psp_allowed_flexvolume_drivers
   output: Pod Security Policy {{ policy_name }} validation failure--Flexvolume driver outside of allowed set {{ join(",", allowed_flexvolume_drivers) }} (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
 {% endif %}{% if length(must_run_fs_groups) > 0 or length(may_run_fs_groups) > 0 %}
 #########################################
-# Rule for PSP fsGroup property
+# Rule(s) for PSP fsGroup property
 #########################################
 - macro: psp_fs_group_must_run_matches
 {% if length(must_run_fs_groups) > 0 %}  condition: >
@@ -162,135 +186,135 @@
 - macro: psp_fs_group
   condition: (psp_fs_group_must_run_matches and psp_fs_group_may_run_matches)
 
-- rule: PSP Validation Failure fsGroup
+- rule: PSP Violation (fsGroup)
   desc: >
-    Detect a psp validation failure for a fsGroup gid outside of the allowed set
-  condition: psp_container and not psp_fs_group
+    Detect a psp validation failure for a fsGroup gid outside of the allowed set using k8s audit logs
+  condition: psp_ka_container and not psp_fs_group
   output: Pod Security Policy {{ policy_name }} validation failure--fsGroup outside of allowed set. mustRun set="{{ must_run_fs_groups }}" mayRun set="{{ may_run_fs_groups }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
 {% endif %}{% if read_only_root_filesystem %}
 #########################################
-# Rule for PSP readOnlyRootFilesystem property
+# Rule(s) for PSP readOnlyRootFilesystem property
 #########################################
-- rule: PSP Validation Failure readOnlyRootFilesystem
+- rule: PSP Violation (readOnlyRootFilesystem)
   desc: >
-    Detect a psp validation failure for a readOnlyRootFilesystem pod
-  condition: psp_container and ka.req.container.read_write_fs=true
+    Detect a psp validation failure for a readOnlyRootFilesystem pod using k8s audit logs
+  condition: psp_ka_container and ka.req.container.read_write_fs=true
   output: Pod Security Policy {{ policy_name }} validation failure--pod without readOnlyRootFilesystem=true (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
 {% endif %}{% if length(must_run_as_users) > 0 %}
 #########################################
-# Rule for PSP runAsUser property: MustRunAs + list of uids
+# Rule(s) for PSP runAsUser property: MustRunAs + list of uids
 #########################################
-- rule: PSP Validation Failure runAsUser
+- rule: PSP Violation (runAsUser=MustRunAs)
   desc: >
-    Detect a psp validation failure for a runAsUser outside of the allowed set
-  condition: psp_container and ka.req.container.run_as_user.within[{{ rjoin(",", must_run_as_users) }}]=false
+    Detect a psp validation failure for a runAsUser outside of the allowed set using k8s audit logs
+  condition: psp_ka_container and ka.req.container.run_as_user.within[{{ rjoin(",", must_run_as_users) }}]=false
   output: Pod Security Policy {{ policy_name }} validation failure--runAsUser outside of allowed set. runAsUser set="{{ must_run_as_users }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
 {% endif %}{% if must_run_as_non_root %}
 #########################################
-# Rule for PSP runAsUser property: MustRunAsNonRoot
+# Rule(s) for PSP runAsUser property: MustRunAsNonRoot
 #########################################
-- rule: PSP Validation Failure runAsNonRoot
+- rule: PSP Violation (runAsUser=MustRunAsNonRoot)
   desc: >
-    Detect a psp validation failure for a non-zero runAsUser when MustRunAsNonRoot is set
-  condition: psp_container and ka.req.container.run_as_user.any_within[0:0]=true
+    Detect a psp validation failure for a non-zero runAsUser when MustRunAsNonRoot is set using k8s audit logs
+  condition: psp_ka_container and ka.req.container.run_as_user.any_within[0:0]=true
   output: Pod Security Policy {{ policy_name }} validation failure--uid 0 runAsUser when MustRunAsNonRoot is set (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
 {% endif %}{% if length(must_run_as_groups) > 0 %}
 #########################################
-# Rule for PSP runAsGroup property: MustRunAs + list of gids
+# Rule(s) for PSP runAsGroup property: MustRunAs + list of gids
 #########################################
-- rule: PSP Validation Failure runAsGroup MustRunAs
+- rule: PSP Violation (runAsGroup=MustRunAs)
   desc: >
-    Detect a psp validation failure for a runAsGroup outside of the MustRunAs allowed set
-  condition: psp_container and ka.req.container.run_as_group.within[{{ rjoin(",", must_run_as_groups) }}]=false
+    Detect a psp validation failure for a runAsGroup outside of the MustRunAs allowed set using k8s audit logs
+  condition: psp_ka_container and ka.req.container.run_as_group.within[{{ rjoin(",", must_run_as_groups) }}]=false
   output: Pod Security Policy {{ policy_name }} validation failure--runAsGroup outside of the MustRunAs allowed set. runAsGroup MustRunAs set="{{ must_run_as_groups }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
 {% endif %}{% if length(may_run_as_groups) > 0 %}
 #########################################
-# Rule for PSP runAsGroup property: MayRunAs + list of gids
+# Rule(s) for PSP runAsGroup property: MayRunAs + list of gids
 #########################################
-- rule: PSP Validation Failure runAsGroup MayRunAs
+- rule: PSP Violation (runAsGroup=MayRunAs)
   desc: >
-    Detect a psp validation failure for a runAsGroup outside of the MayRunAs allowed set
-  condition: psp_container and (ka.req.container.has_run_as_group=true and ka.req.container.run_as_group.within[{{ rjoin(",", may_run_as_groups) }}]=false)
+    Detect a psp validation failure for a runAsGroup outside of the MayRunAs allowed set using k8s audit logs
+  condition: psp_ka_container and (ka.req.container.has_run_as_group=true and ka.req.container.run_as_group.within[{{ rjoin(",", may_run_as_groups) }}]=false)
   output: Pod Security Policy {{ policy_name }} validation failure--runAsGroup outside of the MayRunAs allowed set. runAsGroup MayRunAs set="{{ may_run_as_groups }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
 {% endif %}{% if length(must_run_supplemental_groups) > 0 %}
 #########################################
-# Rule for PSP supplementalGroups property: MustRunAs + list of gids
+# Rule(s) for PSP supplementalGroups property: MustRunAs + list of gids
 #########################################
-- rule: PSP Validation Failure supplementalGroups MustRunAs
+- rule: PSP Violation (supplementalGroups=MustRunAs)
   desc: >
-    Detect a psp validation failure for supplementalGroups outside of the MustRunAs allowed set
-  condition: psp_container and ka.req.sec_ctx.supplemental_groups.within[{{ rjoin(",", must_run_supplemental_groups) }}]=false
+    Detect a psp validation failure for supplementalGroups outside of the MustRunAs allowed set using k8s audit logs
+  condition: psp_ka_container and ka.req.sec_ctx.supplemental_groups.within[{{ rjoin(",", must_run_supplemental_groups) }}]=false
   output: Pod Security Policy {{ policy_name }} validation failure--supplementalGroups outside of the MustRunAs allowed set. supplementalGroups MustRunAs set="{{ must_run_supplemental_groups }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
 {% endif %}{% if length(may_run_supplemental_groups) > 0 %}
 #########################################
-# Rule for PSP supplementalGroups property: MayRunAs + list of gids
+# Rule(s) for PSP supplementalGroups property: MayRunAs + list of gids
 #########################################
-- rule: PSP Validation Failure supplementalGroups MayRunAs
+- rule: PSP Violation (supplementalGroups=MayRunAs)
   desc: >
-    Detect a psp validation failure for a supplementalGroups outside of the MayRunAs allowed set
-  condition: psp_container and (ka.req.sec_ctx.supplemental_groups exists and ka.req.sec_ctx.supplemental_groups.within[{{ rjoin(",", may_run_supplemental_groups) }}]=false)
+    Detect a psp validation failure for a supplementalGroups outside of the MayRunAs allowed set using k8s audit logs
+  condition: psp_ka_container and (ka.req.sec_ctx.supplemental_groups exists and ka.req.sec_ctx.supplemental_groups.within[{{ rjoin(",", may_run_supplemental_groups) }}]=false)
   output: Pod Security Policy {{ policy_name }} validation failure--supplementalGroups outside of the MayRunAs allowed set. supplementalGroups MayRunAs set="{{ may_run_supplemental_groups }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
 {% endif %}{% if not allow_privilege_escalation %}
 #########################################
-# Rule for PSP allowPrivilegeEscalation property
+# Rule(s) for PSP allowPrivilegeEscalation property
 #########################################
 
 - macro: psp_allow_privilege_escalation
   condition: (ka.req.container.allow_privilege_escalation=true or
               ka.req.container.privileged=true)
 
-- rule: PSP Validation Failure allowPrivilegeEscalation
+- rule: PSP Violation (allowPrivilegeEscalation)
   desc: >
-    Detect a psp validation failure for allowPrivilegeEscalation
-  condition: psp_container and psp_allow_privilege_escalation
+    Detect a psp validation failure for allowPrivilegeEscalation using k8s audit logs
+  condition: psp_ka_container and psp_allow_privilege_escalation
   output: Pod Security Policy {{ policy_name }} validation failure--pod with privileged=true or allowPrivilegeEscalation=true (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
 {% endif %}{% if length(allowed_capabilities) > 0 %}
 #########################################
-# Rule for PSP allowedCapabilities property
+# Rule(s) for PSP allowedCapabilities property
 #########################################
-- rule: PSP Validation Failure Allowed Capabilities
+- rule: PSP Violation (allowedCapabilities)
   desc: >
-    Detect a psp validation failure for Allowed Capabilities
-  condition: psp_container and ka.req.sec_ctx.added_capabilities.within[{{ join(",", allowed_capabilities) }}]=false
+    Detect a psp validation failure for Allowed Capabilities using k8s audit logs
+  condition: psp_ka_container and ka.req.sec_ctx.added_capabilities.within[{{ join(",", allowed_capabilities) }}]=false
   output: Pod Security Policy {{ policy_name }} validation failure--pod added capabilities outside of allowed set "{{ join(",", allowed_capabilities) }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
   tags: [k8s-psp]
 {% endif %}{% if length(allowed_proc_mount_types) > 0 %}
 #########################################
-# Rule for PSP allowedProcMountTypes property
+# Rule(s) for PSP allowedProcMountTypes property
 #########################################
-- rule: PSP Validation Failure Allowed Proc Mount Types
+- rule: PSP Violation (allowedProcMountTypes)
   desc: >
-    Detect a psp validation failure for Allowed Proc Mount Types
-  condition: psp_container and ka.req.container.proc_mount.within[{{ join(",", allowed_proc_mount_types) }}]=false
+    Detect a psp validation failure for Allowed Proc Mount Types using k8s audit logs
+  condition: psp_ka_container and ka.req.container.proc_mount.within[{{ join(",", allowed_proc_mount_types) }}]=false
   output: Pod Security Policy {{ policy_name }} validation failure--pod with proc mounts outside of allowed set "{{ join(",", allowed_proc_mount_types) }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace image=%ka.req.container.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit

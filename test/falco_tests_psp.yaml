@@ -17,14 +17,24 @@
 #
 trace_files: !mux
 
-  privileged_detect:
+  privileged_detect_k8s_audit:
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Validation Failure Privileged": 1
+      - "PSP Violation (privileged) K8s Audit": 1
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/privileged.yaml
     trace_file: trace_files/psp/privileged.json
+
+  privileged_detect_syscall:
+    detect: True
+    detect_level: WARNING
+    detect_counts:
+      - "PSP Violation (privileged) System Activity": 1
+    rules_file: []
+    psp_file: psps/privileged.yaml
+    trace_file: trace_files/psp/privileged.scap
 
   privileged_no_detect:
     detect: False
@@ -36,7 +46,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Validation Failure HostPID": 1
+      - "PSP Violation (hostPID)": 1
     rules_file: []
     psp_file: psps/host_pid.yaml
     trace_file: trace_files/psp/host_pid.json
@@ -51,7 +61,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Validation Failure HostIPC": 1
+      - "PSP Violation (hostIPC)": 1
     rules_file: []
     psp_file: psps/host_ipc.yaml
     trace_file: trace_files/psp/host_ipc.json
@@ -66,7 +76,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Validation Failure HostNetwork": 1
+      - "PSP Violation (hostNetwork)": 1
     rules_file: []
     psp_file: psps/host_network.yaml
     trace_file: trace_files/psp/host_network.json
@@ -81,7 +91,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Validation Failure HostNetwork Ports": 1
+      - "PSP Violation (hostPorts)": 1
     rules_file: []
     psp_file: psps/host_network_ports.yaml
     trace_file: trace_files/psp/host_network_ports.json
@@ -96,7 +106,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Validation Failure Volume Types": 1
+      - "PSP Violation (volumes)": 1
     rules_file: []
     psp_file: psps/volumes.yaml
     trace_file: trace_files/psp/mount_etc_using_host_path.json
@@ -111,7 +121,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Validation Failure Allowed Host Paths": 1
+      - "PSP Violation (allowedHostPaths)": 1
     rules_file: []
     psp_file: psps/allowed_host_paths.yaml
     trace_file: trace_files/psp/mount_etc_using_host_path.json
@@ -126,7 +136,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Validation Failure Flexvolume Drivers": 1
+      - "PSP Violation (allowedFlexVolumes)": 1
     rules_file: []
     psp_file: psps/flex_volumes.yaml
     trace_file: trace_files/psp/flex_volumes.json
@@ -141,7 +151,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Validation Failure fsGroup": 1
+      - "PSP Violation (fsGroup)": 1
     rules_file: []
     psp_file: psps/fs_group_must_run_as.yaml
     trace_file: trace_files/psp/create_vanilla_nginx_deployment.json
@@ -150,7 +160,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Validation Failure fsGroup": 1
+      - "PSP Violation (fsGroup)": 1
     rules_file: []
     psp_file: psps/fs_group_must_run_as.yaml
     trace_file: trace_files/psp/fs_group.json
@@ -159,7 +169,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Validation Failure fsGroup": 1
+      - "PSP Violation fsGroup": 1
     rules_file: []
     psp_file: psps/fs_group_may_run_as.yaml
     trace_file: trace_files/psp/fs_group.json
@@ -186,7 +196,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Validation Failure readOnlyRootFilesystem": 1
+      - "PSP Violation (readOnlyRootFilesystem)": 1
     rules_file: []
     psp_file: psps/read_only_root_fs.yaml
     trace_file: trace_files/psp/create_vanilla_nginx_deployment.json
@@ -201,7 +211,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Validation Failure runAsUser": 1
+      - "PSP Violation (runAsUser=MustRunAs)": 1
     rules_file: []
     psp_file: psps/user_must_run_as.yaml
     trace_file: trace_files/psp/create_vanilla_nginx_deployment.json
@@ -210,7 +220,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Validation Failure runAsUser": 1
+      - "PSP Violation (runAsUser=MustRunAs)": 1
     rules_file: []
     psp_file: psps/user_must_run_as.yaml
     trace_file: trace_files/psp/run_as_user_1000_container.json
@@ -225,7 +235,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Validation Failure runAsUser": 1
+      - "PSP Violation (runAsUser=MustRunAs)": 1
     rules_file: []
     psp_file: psps/user_must_run_as.yaml
     trace_file: trace_files/psp/run_as_user_1000_sec_ctx.json
@@ -240,7 +250,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Validation Failure runAsUser": 1
+      - "PSP Violation (runAsUser=MustRunAs)": 1
     rules_file: []
     psp_file: psps/user_must_run_as.yaml
     trace_file: trace_files/psp/run_as_user_1000_sec_ctx_30_container.json
@@ -255,7 +265,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Validation Failure runAsNonRoot": 1
+      - "PSP Violation (runAsUser=MustRunAsNonRoot)": 1
     rules_file: []
     psp_file: psps/user_must_run_as_non_root.yaml
     trace_file: trace_files/psp/run_as_user_0_container.json
@@ -270,7 +280,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Validation Failure runAsNonRoot": 1
+      - "PSP Violation (runAsUser=MustRunAsNonRoot)": 1
     rules_file: []
     psp_file: psps/user_must_run_as_non_root.yaml
     trace_file: trace_files/psp/run_as_user_0_sec_ctx.json
@@ -285,7 +295,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Validation Failure runAsNonRoot": 1
+      - "PSP Violation (runAsUser=MustRunAsNonRoot)": 1
     rules_file: []
     psp_file: psps/user_must_run_as_non_root.yaml
     trace_file: trace_files/psp/run_as_user_0_sec_ctx_1000_container.json
@@ -300,7 +310,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Validation Failure runAsGroup MustRunAs": 1
+      - "PSP Violation (runAsGroup=MustRunAs)": 1
     rules_file: []
     psp_file: psps/group_must_run_as.yaml
     trace_file: trace_files/psp/create_vanilla_nginx_deployment.json
@@ -309,7 +319,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Validation Failure runAsGroup MustRunAs": 1
+      - "PSP Violation (runAsGroup=MustRunAs)": 1
     rules_file: []
     psp_file: psps/group_must_run_as.yaml
     trace_file: trace_files/psp/run_as_group_1000_container.json
@@ -324,7 +334,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Validation Failure runAsGroup MustRunAs": 1
+      - "PSP Violation (runAsGroup=MustRunAs)": 1
     rules_file: []
     psp_file: psps/group_must_run_as.yaml
     trace_file: trace_files/psp/run_as_group_1000_sec_ctx.json
@@ -339,7 +349,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Validation Failure runAsGroup MustRunAs": 1
+      - "PSP Violation (runAsGroup=MustRunAs)": 1
     rules_file: []
     psp_file: psps/group_must_run_as.yaml
     trace_file: trace_files/psp/run_as_group_1000_sec_ctx_30_container.json
@@ -360,7 +370,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Validation Failure runAsGroup MayRunAs": 1
+      - "PSP Violation (runAsGroup=MayRunAs)": 1
     rules_file: []
     psp_file: psps/group_may_run_as.yaml
     trace_file: trace_files/psp/run_as_group_1000_container.json
@@ -375,7 +385,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Validation Failure runAsGroup MayRunAs": 1
+      - "PSP Violation (runAsGroup=MayRunAs)": 1
     rules_file: []
     psp_file: psps/group_may_run_as.yaml
     trace_file: trace_files/psp/run_as_group_1000_sec_ctx.json
@@ -390,7 +400,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Validation Failure runAsGroup MayRunAs": 1
+      - "PSP Violation (runAsGroup=MayRunAs)": 1
     rules_file: []
     psp_file: psps/group_may_run_as.yaml
     trace_file: trace_files/psp/run_as_group_1000_sec_ctx_30_container.json
@@ -405,7 +415,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Validation Failure supplementalGroups MustRunAs": 1
+      - "PSP Violation (supplementalGroups=MustRunAs)": 1
     rules_file: []
     psp_file: psps/supplemental_groups_must_run_as_30_40.yaml
     trace_file: trace_files/psp/create_vanilla_nginx_deployment.json
@@ -414,7 +424,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Validation Failure supplementalGroups MustRunAs": 1
+      - "PSP Violation (supplementalGroups=MustRunAs)": 1
     rules_file: []
     psp_file: psps/supplemental_groups_must_run_as_30_40.yaml
     trace_file: trace_files/psp/supplemental_groups_10_20.json
@@ -423,7 +433,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Validation Failure supplementalGroups MustRunAs": 1
+      - "PSP Violation (supplementalGroups=MustRunAs)": 1
     rules_file: []
     psp_file: psps/supplemental_groups_must_run_as_30_40_10_15.yaml
     trace_file: trace_files/psp/supplemental_groups_10_20.json
@@ -450,7 +460,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Validation Failure supplementalGroups MayRunAs": 1
+      - "PSP Violation (supplementalGroups=MayRunAs)": 1
     rules_file: []
     psp_file: psps/supplemental_groups_may_run_as_30_40.yaml
     trace_file: trace_files/psp/supplemental_groups_10_20.json
@@ -459,7 +469,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Validation Failure supplementalGroups MayRunAs": 1
+      - "PSP Violation (supplementalGroups=MayRunAs)": 1
     rules_file: []
     psp_file: psps/supplemental_groups_may_run_as_30_40_10_15.yaml
     trace_file: trace_files/psp/supplemental_groups_10_20.json
@@ -480,7 +490,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Validation Failure allowPrivilegeEscalation": 1
+      - "PSP Violation (allowPrivilegeEscalation)": 1
     rules_file: []
     psp_file: psps/privilege_escalation.yaml
     trace_file: trace_files/psp/privileged.json
@@ -489,7 +499,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Validation Failure allowPrivilegeEscalation": 1
+      - "PSP Violation (allowPrivilegeEscalation)": 1
     rules_file: []
     psp_file: psps/privilege_escalation.yaml
     trace_file: trace_files/psp/privilege_escalation.json
@@ -498,7 +508,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Validation Failure Allowed Capabilities": 1
+      - "PSP Violation (allowedCapabilities)": 1
     rules_file: []
     psp_file: psps/allowed_capabilities.yaml
     trace_file: trace_files/psp/capability_add_sys_time.json
@@ -519,7 +529,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Validation Failure Allowed Proc Mount Types": 1
+      - "PSP Violation (allowedProcMountTypes)": 1
     rules_file: []
     psp_file: psps/allowed_proc_mount_types.yaml
     trace_file: trace_files/psp/proc_mount_type_unmasked.json
