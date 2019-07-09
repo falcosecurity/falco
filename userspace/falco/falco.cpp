@@ -817,7 +817,7 @@ int falco_init(int argc, char **argv)
 			config.m_buffered_outputs = buffered_outputs;
 		}
 
-		if(config.m_rules_filenames.size() == 0)
+		if(config.m_rules_filenames.size() == 0 && psp_path == "")
 		{
 			throw std::invalid_argument("You must specify at least one rules file/directory via -r or a rules_file entry in falco.yaml");
 		}
