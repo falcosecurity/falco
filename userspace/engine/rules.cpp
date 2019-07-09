@@ -17,6 +17,7 @@ limitations under the License.
 
 */
 
+
 #include "rules.h"
 #include "logger.h"
 
@@ -195,7 +196,20 @@ int falco_rules::enable_rule(lua_State *ls)
 	std::string rule = rulec;
 	bool enabled = (lua_tonumber(ls, -1) ? true : false);
 
-	rules->enable_rule(rule, enabled);
+	// Escape any regex special characters in the rule name
+	std::string sanitized = rule;
+
+	std::string escape_chars = R"($\.*+?()[]{}|^)";
+
+	size_t pos = sanitized.find_first_of(escape_chars);
+
+	while (pos != std::string::npos)
+	{
+		sanitized.insert(pos, "\\");
+		pos = sanitized.find_first_of(escape_chars, pos+2);
+	}
+
+	rules->enable_rule(sanitized, enabled);
 
 	return 0;
 }
