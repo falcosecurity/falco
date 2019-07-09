@@ -33,12 +33,14 @@ trace_files: !mux
     detect_counts:
       - "PSP Violation (privileged) System Activity": 1
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/privileged.yaml
     trace_file: trace_files/psp/privileged.scap
 
   privileged_no_detect:
     detect: False
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/privileged.yaml
     trace_file: trace_files/psp/create_vanilla_nginx_deployment.json
 
@@ -48,12 +50,14 @@ trace_files: !mux
     detect_counts:
       - "PSP Violation (hostPID)": 1
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/host_pid.yaml
     trace_file: trace_files/psp/host_pid.json
 
   host_pid_no_detect:
     detect: False
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/host_pid.yaml
     trace_file: trace_files/psp/create_vanilla_nginx_deployment.json
 
@@ -63,12 +67,14 @@ trace_files: !mux
     detect_counts:
       - "PSP Violation (hostIPC)": 1
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/host_ipc.yaml
     trace_file: trace_files/psp/host_ipc.json
 
   host_ipc_no_detect:
     detect: False
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/host_ipc.yaml
     trace_file: trace_files/psp/create_vanilla_nginx_deployment.json
 
@@ -78,12 +84,14 @@ trace_files: !mux
     detect_counts:
       - "PSP Violation (hostNetwork)": 1
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/host_network.yaml
     trace_file: trace_files/psp/host_network.json
 
   host_network_no_detect:
     detect: False
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/host_network.yaml
     trace_file: trace_files/psp/create_vanilla_nginx_deployment.json
 
@@ -93,12 +101,14 @@ trace_files: !mux
     detect_counts:
       - "PSP Violation (hostPorts)": 1
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/host_network_ports.yaml
     trace_file: trace_files/psp/host_network_ports.json
 
   host_network_ports_no_detect:
     detect: False
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/host_network_ports.yaml
     trace_file: trace_files/psp/create_vanilla_nginx_deployment.json
 
@@ -108,12 +118,14 @@ trace_files: !mux
     detect_counts:
       - "PSP Violation (volumes)": 1
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/volumes.yaml
     trace_file: trace_files/psp/mount_etc_using_host_path.json
 
   volumes_no_detect:
     detect: False
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/volumes.yaml
     trace_file: trace_files/psp/create_vanilla_nginx_deployment.json
 
@@ -123,12 +135,14 @@ trace_files: !mux
     detect_counts:
       - "PSP Violation (allowedHostPaths)": 1
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/allowed_host_paths.yaml
     trace_file: trace_files/psp/mount_etc_using_host_path.json
 
   allowed_host_paths_no_detect:
     detect: False
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/allowed_host_paths.yaml
     trace_file: trace_files/psp/create_vanilla_nginx_deployment.json
 
@@ -138,12 +152,14 @@ trace_files: !mux
     detect_counts:
       - "PSP Violation (allowedFlexVolumes)": 1
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/flex_volumes.yaml
     trace_file: trace_files/psp/flex_volumes.json
 
   allowed_flex_volumes_no_detect:
     detect: False
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/flex_volumes.yaml
     trace_file: trace_files/psp/create_vanilla_nginx_deployment.json
 
@@ -153,6 +169,7 @@ trace_files: !mux
     detect_counts:
       - "PSP Violation (fsGroup)": 1
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/fs_group_must_run_as.yaml
     trace_file: trace_files/psp/create_vanilla_nginx_deployment.json
 
@@ -162,6 +179,7 @@ trace_files: !mux
     detect_counts:
       - "PSP Violation (fsGroup)": 1
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/fs_group_must_run_as.yaml
     trace_file: trace_files/psp/fs_group.json
 
@@ -169,26 +187,30 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Violation fsGroup": 1
+      - "PSP Violation (fsGroup)": 1
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/fs_group_may_run_as.yaml
     trace_file: trace_files/psp/fs_group.json
 
   fs_group_may_run_as_with_unset:
     detect: False
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/fs_group_may_run_as.yaml
     trace_file: trace_files/psp/create_vanilla_nginx_deployment.json
 
   fs_group_run_as_any:
     detect: False
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/fs_group_run_as_any.yaml
     trace_file: trace_files/psp/fs_group.json
 
   fs_group_run_as_any_with_unset:
     detect: False
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/fs_group_run_as_any.yaml
     trace_file: trace_files/psp/create_vanilla_nginx_deployment.json
 
@@ -198,12 +220,14 @@ trace_files: !mux
     detect_counts:
       - "PSP Violation (readOnlyRootFilesystem)": 1
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/read_only_root_fs.yaml
     trace_file: trace_files/psp/create_vanilla_nginx_deployment.json
 
   read_only_root_fs_no_detect:
     detect: False
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/read_only_root_fs.yaml
     trace_file: trace_files/psp/read_only_root_fs.json
 
@@ -213,6 +237,7 @@ trace_files: !mux
     detect_counts:
       - "PSP Violation (runAsUser=MustRunAs)": 1
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/user_must_run_as.yaml
     trace_file: trace_files/psp/create_vanilla_nginx_deployment.json
 
@@ -222,12 +247,14 @@ trace_files: !mux
     detect_counts:
       - "PSP Violation (runAsUser=MustRunAs)": 1
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/user_must_run_as.yaml
     trace_file: trace_files/psp/run_as_user_1000_container.json
 
   user_must_run_as_not_detect:
     detect: False
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/user_must_run_as.yaml
     trace_file: trace_files/psp/run_as_user_30_container.json
 
@@ -237,12 +264,14 @@ trace_files: !mux
     detect_counts:
       - "PSP Violation (runAsUser=MustRunAs)": 1
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/user_must_run_as.yaml
     trace_file: trace_files/psp/run_as_user_1000_sec_ctx.json
 
   user_must_run_as_not_detect_sec_ctx:
     detect: False
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/user_must_run_as.yaml
     trace_file: trace_files/psp/run_as_user_30_sec_ctx.json
 
@@ -252,12 +281,14 @@ trace_files: !mux
     detect_counts:
       - "PSP Violation (runAsUser=MustRunAs)": 1
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/user_must_run_as.yaml
     trace_file: trace_files/psp/run_as_user_1000_sec_ctx_30_container.json
 
   user_must_run_as_not_detect_both:
     detect: False
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/user_must_run_as.yaml
     trace_file: trace_files/psp/run_as_user_30_sec_ctx_1000_container.json
 
@@ -267,12 +298,14 @@ trace_files: !mux
     detect_counts:
       - "PSP Violation (runAsUser=MustRunAsNonRoot)": 1
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/user_must_run_as_non_root.yaml
     trace_file: trace_files/psp/run_as_user_0_container.json
 
   user_must_run_as_non_root_no_detect:
     detect: False
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/user_must_run_as_non_root.yaml
     trace_file: trace_files/psp/run_as_user_1000_container.json
 
@@ -282,12 +315,14 @@ trace_files: !mux
     detect_counts:
       - "PSP Violation (runAsUser=MustRunAsNonRoot)": 1
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/user_must_run_as_non_root.yaml
     trace_file: trace_files/psp/run_as_user_0_sec_ctx.json
 
   user_must_run_as_non_root_no_detect_sec_ctx:
     detect: False
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/user_must_run_as_non_root.yaml
     trace_file: trace_files/psp/run_as_user_1000_sec_ctx.json
 
@@ -297,12 +332,14 @@ trace_files: !mux
     detect_counts:
       - "PSP Violation (runAsUser=MustRunAsNonRoot)": 1
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/user_must_run_as_non_root.yaml
     trace_file: trace_files/psp/run_as_user_0_sec_ctx_1000_container.json
 
   user_must_run_as_non_root_no_detect_both:
     detect: False
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/user_must_run_as_non_root.yaml
     trace_file: trace_files/psp/run_as_user_1000_sec_ctx_0_container.json
 
@@ -312,6 +349,7 @@ trace_files: !mux
     detect_counts:
       - "PSP Violation (runAsGroup=MustRunAs)": 1
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/group_must_run_as.yaml
     trace_file: trace_files/psp/create_vanilla_nginx_deployment.json
 
@@ -321,12 +359,14 @@ trace_files: !mux
     detect_counts:
       - "PSP Violation (runAsGroup=MustRunAs)": 1
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/group_must_run_as.yaml
     trace_file: trace_files/psp/run_as_group_1000_container.json
 
   group_must_run_as_not_detect:
     detect: False
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/group_must_run_as.yaml
     trace_file: trace_files/psp/run_as_group_30_container.json
 
@@ -336,12 +376,14 @@ trace_files: !mux
     detect_counts:
       - "PSP Violation (runAsGroup=MustRunAs)": 1
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/group_must_run_as.yaml
     trace_file: trace_files/psp/run_as_group_1000_sec_ctx.json
 
   group_must_run_as_not_detect_sec_ctx:
     detect: False
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/group_must_run_as.yaml
     trace_file: trace_files/psp/run_as_group_30_sec_ctx.json
 
@@ -351,18 +393,21 @@ trace_files: !mux
     detect_counts:
       - "PSP Violation (runAsGroup=MustRunAs)": 1
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/group_must_run_as.yaml
     trace_file: trace_files/psp/run_as_group_1000_sec_ctx_30_container.json
 
   group_must_run_as_not_detect_both:
     detect: False
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/group_must_run_as.yaml
     trace_file: trace_files/psp/run_as_group_30_sec_ctx_1000_container.json
 
   group_may_run_as_with_unset:
     detect: False
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/group_may_run_as.yaml
     trace_file: trace_files/psp/create_vanilla_nginx_deployment.json
 
@@ -372,12 +417,14 @@ trace_files: !mux
     detect_counts:
       - "PSP Violation (runAsGroup=MayRunAs)": 1
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/group_may_run_as.yaml
     trace_file: trace_files/psp/run_as_group_1000_container.json
 
   group_may_run_as_not_detect:
     detect: False
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/group_may_run_as.yaml
     trace_file: trace_files/psp/run_as_group_30_container.json
 
@@ -387,12 +434,14 @@ trace_files: !mux
     detect_counts:
       - "PSP Violation (runAsGroup=MayRunAs)": 1
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/group_may_run_as.yaml
     trace_file: trace_files/psp/run_as_group_1000_sec_ctx.json
 
   group_may_run_as_not_detect_sec_ctx:
     detect: False
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/group_may_run_as.yaml
     trace_file: trace_files/psp/run_as_group_30_sec_ctx.json
 
@@ -402,12 +451,14 @@ trace_files: !mux
     detect_counts:
       - "PSP Violation (runAsGroup=MayRunAs)": 1
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/group_may_run_as.yaml
     trace_file: trace_files/psp/run_as_group_1000_sec_ctx_30_container.json
 
   group_may_run_as_not_detect_both:
     detect: False
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/group_may_run_as.yaml
     trace_file: trace_files/psp/run_as_group_30_sec_ctx_1000_container.json
 
@@ -417,6 +468,7 @@ trace_files: !mux
     detect_counts:
       - "PSP Violation (supplementalGroups=MustRunAs)": 1
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/supplemental_groups_must_run_as_30_40.yaml
     trace_file: trace_files/psp/create_vanilla_nginx_deployment.json
 
@@ -426,6 +478,7 @@ trace_files: !mux
     detect_counts:
       - "PSP Violation (supplementalGroups=MustRunAs)": 1
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/supplemental_groups_must_run_as_30_40.yaml
     trace_file: trace_files/psp/supplemental_groups_10_20.json
 
@@ -435,24 +488,28 @@ trace_files: !mux
     detect_counts:
       - "PSP Violation (supplementalGroups=MustRunAs)": 1
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/supplemental_groups_must_run_as_30_40_10_15.yaml
     trace_file: trace_files/psp/supplemental_groups_10_20.json
 
   supplemental_groups_must_run_as_overlap:
     detect: False
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/supplemental_groups_must_run_as_10_20.yaml
     trace_file: trace_files/psp/supplemental_groups_10_20.json
 
   supplemental_groups_must_run_as_overlap_multiple_ranges:
     detect: False
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/supplemental_groups_must_run_as_10_40_10_20.yaml
     trace_file: trace_files/psp/supplemental_groups_10_20.json
 
   supplemental_groups_may_run_as_with_unset:
     detect: False
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/supplemental_groups_may_run_as_30_40.yaml
     trace_file: trace_files/psp/create_vanilla_nginx_deployment.json
 
@@ -462,6 +519,7 @@ trace_files: !mux
     detect_counts:
       - "PSP Violation (supplementalGroups=MayRunAs)": 1
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/supplemental_groups_may_run_as_30_40.yaml
     trace_file: trace_files/psp/supplemental_groups_10_20.json
 
@@ -471,18 +529,21 @@ trace_files: !mux
     detect_counts:
       - "PSP Violation (supplementalGroups=MayRunAs)": 1
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/supplemental_groups_may_run_as_30_40_10_15.yaml
     trace_file: trace_files/psp/supplemental_groups_10_20.json
 
   supplemental_groups_may_run_as_overlap:
     detect: False
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/supplemental_groups_may_run_as_10_20.yaml
     trace_file: trace_files/psp/supplemental_groups_10_20.json
 
   supplemental_groups_may_run_as_overlap_multiple_ranges:
     detect: False
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/supplemental_groups_may_run_as_10_40_10_20.yaml
     trace_file: trace_files/psp/supplemental_groups_10_20.json
 
@@ -492,6 +553,7 @@ trace_files: !mux
     detect_counts:
       - "PSP Violation (allowPrivilegeEscalation)": 1
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/privilege_escalation.yaml
     trace_file: trace_files/psp/privileged.json
 
@@ -501,6 +563,7 @@ trace_files: !mux
     detect_counts:
       - "PSP Violation (allowPrivilegeEscalation)": 1
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/privilege_escalation.yaml
     trace_file: trace_files/psp/privilege_escalation.json
 
@@ -510,18 +573,21 @@ trace_files: !mux
     detect_counts:
       - "PSP Violation (allowedCapabilities)": 1
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/allowed_capabilities.yaml
     trace_file: trace_files/psp/capability_add_sys_time.json
 
   allowed_capabilities_no_detect:
     detect: False
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/allowed_capabilities.yaml
     trace_file: trace_files/psp/create_vanilla_nginx_deployment.json
 
   allowed_capabilities_match:
     detect: False
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/allowed_capabilities.yaml
     trace_file: trace_files/psp/capability_add_sys_nice.json
 
@@ -531,17 +597,20 @@ trace_files: !mux
     detect_counts:
       - "PSP Violation (allowedProcMountTypes)": 1
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/allowed_proc_mount_types.yaml
     trace_file: trace_files/psp/proc_mount_type_unmasked.json
 
   allowed_proc_mount_types_no_detect:
     detect: False
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/allowed_proc_mount_types.yaml
     trace_file: trace_files/psp/create_vanilla_nginx_deployment.json
 
   allowed_proc_mount_types_match:
     detect: False
     rules_file: []
+    conf_file: confs/psp.yaml
     psp_file: psps/allowed_proc_mount_types.yaml
     trace_file: trace_files/psp/proc_mount_type_default.json

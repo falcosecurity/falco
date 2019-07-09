@@ -172,7 +172,7 @@
     ({% for group in must_run_fs_groups %}
       {% if not loop.is_first %} and {% endif %}(ka.req.sec_ctx.fs_group >= {{ group.min }} and ka.req.sec_ctx.fs_group <= {{ group.max }}){% endfor %}
     )
-{% else %}  condition: (psp_always_true)
+{% else %}  condition: (psp_ka_always_true)
 {% endif %}
 - macro: psp_fs_group_may_run_matches
 {% if length(may_run_fs_groups) > 0 %}  condition: >
@@ -181,7 +181,7 @@
       {% if not loop.is_first %} and {% endif %}(ka.req.sec_ctx.fs_group >= {{ group.min }} and ka.req.sec_ctx.fs_group <= {{ group.max }}){% endfor %}
      )
     )
-{% else %}  condition: (psp_always_true)
+{% else %}  condition: (psp_ka_always_true)
 {% endif %}
 - macro: psp_fs_group
   condition: (psp_fs_group_must_run_matches and psp_fs_group_may_run_matches)
