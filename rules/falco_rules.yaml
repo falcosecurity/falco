@@ -1740,7 +1740,7 @@
     docker.io/sysdig/agent, docker.io/sysdig/falco, docker.io/sysdig/sysdig,
     gcr.io/google_containers/kube-proxy, docker.io/calico/node,
     docker.io/rook/toolbox, docker.io/cloudnativelabs/kube-router, docker.io/mesosphere/mesos-slave,
-    docker.io/docker/ucp-agent, sematext_images
+    docker.io/docker/ucp-agent, sematext_images, k8s.gcr.io/kube-proxy
     ]
 
 - macro: falco_privileged_containers
@@ -2253,7 +2253,7 @@
   condition: >
     spawned_process and container and
     ((proc.name = "nc" and (proc.args contains "-e" or proc.args contains "-c")) or
-     (proc.name = "ncat" and (proc.args contains "--sh-exec" or proc.args contains "--exec" or proc.args contains "-e " 
+     (proc.name = "ncat" and (proc.args contains "--sh-exec" or proc.args contains "--exec" or proc.args contains "-e "
                               or proc.args contains "-c " or proc.args contains "--lua-exec"))
     )
   output: >
