@@ -9,8 +9,33 @@ cat <<EOF
 Hello, this is the Falco builder.
 
 How to use.
-    * ...
-    * ...
+
+    The default commands for the Falco builder image reports usage and environment info.
+    * docker run falcosecurity/falco-builder
+    * docker run falcosecurity/falco-builder usage
+
+    It supports bash sessions.
+    * docker run -ti falcosecurity/falco-builder bash
+
+    To build Falco it needs:
+    - a bind-mount on the source directory (ie., the directory containing falco and sysdig source as siblings)
+
+    Optionally, you can also bind-mount the build directory.
+
+    * docker run -v $PWD/..:/source -v $PWD/build:/build -ti falcosecurity/falco-builder cmake
+    * docker run -v $PWD/..:/source -v $PWD/build:/build -ti falcosecurity/falco-builder [<cmake-target-x>, ..., <cmake-target-y>]
+
+How to build.
+    * cd docker/builder && DOCKER_BUILDKIT=1 docker build -t falcosecurity/falco-builder .
+
+    In case you want to customise the builder at build time the following build arguments are provided:
+    - BUILD_TYPE                whether you want a "release" or "debug" build (defaults to "release").
+    - BUILD_DRIVER              whether to build the driver or not (defaults to "OFF")
+    - BUILD_BPF                 whether to build the BPF driver or not (defaults to "OFF")
+    - BUILD_WARNINGS_AS_ERRORS  whether to intend warnings as errors or not (defaults to "ON")
+    - MAKE_JOBS                 the number of jobs to use during make (defaults to "4")
+
+    It is possible to change these at runtime (in the container) since environment variables with the same names are provided.
 
 Environment.
     * ${gccversion}
