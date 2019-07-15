@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+
+set -eu -o pipefail
+
+SOURCE_DIR=/source
+BUILD_DIR=/build
+CMD=${1:-usage}
+shift
+
+case "$CMD" in
+"cmake")
+    if [ ! -d "$SOURCE_DIR/sysdig" ]; then
+        echo "Missing sysdig source." >&2
+        exit 1
+    fi
+    if [ ! -d "$SOURCE_DIR/falco" ]; then
+        echo "Missing falco source." >&2
+        exit 1
+    fi
+    mkdir -p "$BUILD_DIR/$BUILD_TYPE"
+    cd "$BUILD_DIR/$BUILD_TYPE"
+    cmake \
+    -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DBUILD_DRIVER="$BUILD_DRIVER" \
+    -DBUILD_BPF="$BUILD_BPF" \
+    -DBUILD_WARNINGS_AS_ERRORS="$BUILD_WARNINGS_AS_ERRORS" \
+    "$SOURCE_DIR/falco"
+    exit "$(printf '%d\n' $?)"
+    ;;
+"bash")
+    CMD=/bin/bash
+    ;& # fallthrough
+"usage")
+    exec "$CMD" "$@"
+    ;;
+*)
+    cd "$BUILD_DIR/$BUILD_TYPE"
+    make -j"$MAKE_JOBS" "$CMD"
+    ;;
+esac
