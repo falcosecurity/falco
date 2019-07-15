@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+gccversion=$(gcc --version | head -n1)
+cppversion=$(g++ -dM -E -x c++ /dev/null | grep -F __cplusplus | cut -d' ' -f3)
+cmakeversion=$(cmake --version | head -n1)
+dockerversion=$(docker --version)
+
+cat <<EOF
+Hello, this is the Falco builder.
+
+How to use.
+    * ...
+    * ...
+
+Environment.
+    * ${gccversion}
+    * cplusplus ${cppversion}
+    * ${cmakeversion}
+    * ${dockerversion}
+EOF
