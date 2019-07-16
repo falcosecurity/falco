@@ -21,10 +21,6 @@ project(falco)
 
 option(BUILD_WARNINGS_AS_ERRORS "Enable building with -Wextra -Werror flags")
 
-if(NOT DEFINED FALCO_VERSION)
-	set(FALCO_VERSION "0.1.1dev")
-endif()
-
 if(NOT DEFINED FALCO_ETC_DIR)
 	set(FALCO_ETC_DIR "/etc/falco")
 endif()
@@ -77,6 +73,30 @@ set(CMD_MAKE make)
 
 if(NOT SYSDIG_DIR)
 	set(SYSDIG_DIR "${PROJECT_SOURCE_DIR}/../sysdig")
+endif()
+
+# Add path for custom CMake modules
+list(APPEND CMAKE_MODULE_PATH
+	"${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
+
+# Add path for custom CMake modules used to build dependencies from Sysdig (libscap, libsinsp)
+list(APPEND CMAKE_MODULE_PATH
+	"${SYSDIG_DIR}/cmake/modules")
+
+# Create the falco version variable according to git index
+if(NOT DEFINED FALCO_VERSION)
+	include(GetGitRevisionDescription)
+	git_get_exact_tag(FALCO_TAG)
+	if(NOT FALCO_TAG)
+		git_describe(FALCO_VERSION "--always")
+		git_local_changes(FALCO_CHANGES)
+		if(FALCO_CHANGES STREQUAL "DIRTY")
+			string(TOLOWER "${FALCO_CHANGES}" FALCO_CHANGES)
+			set(FALCO_VERSION "${FALCO_VERSION}-${FALCO_CHANGES}")
+		endif()
+	else()
+		set(FALCO_VERSION "${FALCO_TAG}")
+	endif()
 endif()
 
 # make luaJIT work on OS X
@@ -605,14 +625,6 @@ install(FILES falco.yaml
 add_subdirectory(test)
 add_subdirectory(rules)
 add_subdirectory(docker)
-
-# Add path for custom CMake modules used to build dependencies from Sysdig (libscap, libsinsp)
-list(APPEND CMAKE_MODULE_PATH
-	"${SYSDIG_DIR}/cmake/modules")
-
-# Add path for custom CMake modules
-list(APPEND CMAKE_MODULE_PATH
-	"${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
 
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
 	add_subdirectory("${SYSDIG_DIR}/driver" "${PROJECT_BINARY_DIR}/driver")
