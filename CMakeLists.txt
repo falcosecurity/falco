@@ -84,7 +84,7 @@ list(APPEND CMAKE_MODULE_PATH
 	"${SYSDIG_DIR}/cmake/modules")
 
 # Create the falco version variable according to git index
-if(NOT DEFINED FALCO_VERSION)
+if(NOT FALCO_VERSION)
 	include(GetGitRevisionDescription)
 	git_get_exact_tag(FALCO_TAG)
 	if(NOT FALCO_TAG)
