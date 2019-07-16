@@ -25,6 +25,7 @@ case "$CMD" in
     -DBUILD_DRIVER="$BUILD_DRIVER" \
     -DBUILD_BPF="$BUILD_BPF" \
     -DBUILD_WARNINGS_AS_ERRORS="$BUILD_WARNINGS_AS_ERRORS" \
+    -DFALCO_VERSION="$FALCO_VERSION" \
     "$SOURCE_DIR/falco"
     exit "$(printf '%d\n' $?)"
     ;;

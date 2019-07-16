@@ -76,7 +76,7 @@ static void restart_falco(int signal)
 static void usage()
 {
     printf(
-	   "Falco version is " FALCO_VERSION "\n"
+	   "Falco version: " FALCO_VERSION "\n"
 	   "Usage: falco [options]\n\n"
 	   "Options:\n"
 	   " -h, --help                    Print this page\n"
@@ -604,7 +604,7 @@ int falco_init(int argc, char **argv)
 			case 0:
 				if(string(long_options[long_index].name) == "version")
 				{
-					printf("falco version %s\n", FALCO_VERSION);
+					printf("Falco version: %s\n", FALCO_VERSION);
 					return EXIT_SUCCESS;
 				}
 				else if (string(long_options[long_index].name) == "cri")
