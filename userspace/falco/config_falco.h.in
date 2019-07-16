@@ -19,7 +19,7 @@ limitations under the License.
 
 #pragma once
 
-#define FALCO_VERSION "${FALCO_VERSION}"
+#define FALCO_VERSION "@FALCO_VERSION@"
 
 #define FALCO_LUA_DIR "${CMAKE_INSTALL_PREFIX}/${FALCO_SHARE_DIR}/lua/"
 #define FALCO_SOURCE_DIR "${PROJECT_SOURCE_DIR}"

@@ -76,7 +76,7 @@ static void restart_falco(int signal)
 static void usage()
 {
     printf(
-	   "falco version " FALCO_VERSION "\n"
+	   "Falco version is " FALCO_VERSION "\n"
 	   "Usage: falco [options]\n\n"
 	   "Options:\n"
 	   " -h, --help                    Print this page\n"
