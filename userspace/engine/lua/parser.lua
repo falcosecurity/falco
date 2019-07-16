@@ -152,22 +152,6 @@ local function rel (left, sep, right)
    return left * sep * right / function(e1, op, e2) return { type = "BinaryRelOp", operator = op, left = e1, right = e2 } end
 end
 
-local function fix_str (str)
-  str = string.gsub(str, "\\a", "\a")
-  str = string.gsub(str, "\\b", "\b")
-  str = string.gsub(str, "\\f", "\f")
-  str = string.gsub(str, "\\n", "\n")
-  str = string.gsub(str, "\\r", "\r")
-  str = string.gsub(str, "\\t", "\t")
-  str = string.gsub(str, "\\v", "\v")
-  str = string.gsub(str, "\\\n", "\n")
-  str = string.gsub(str, "\\\r", "\n")
-  str = string.gsub(str, "\\'", "'")
-  str = string.gsub(str, '\\"', '"')
-  str = string.gsub(str, '\\\\', '\\')
-  return str
-end
-
 -- grammar
 
 
@@ -243,7 +227,7 @@ local G = {
           (digit^1 * V"Expo");
   Number = C(V"Hex" + V"Float" + V"Int") /
            function (n) return tonumber(n) end;
-  String = (P'"' * C(((P'\\' * P(1)) + (P(1) - P'"'))^0) * P'"' +  P"'" * C(((P"\\" * P(1)) + (P(1) - P"'"))^0) * P"'")  / function (s) return fix_str(s) end;
+  String = (P'"' * C(((P'\\' * P(1)) + (P(1) - P'"'))^0) * P'"' +  P"'" * C(((P"\\" * P(1)) + (P(1) - P"'"))^0) * P"'");
   BareString = C(((P(1) - S' (),='))^1);
 
   OrOp = kw("or") / "or";

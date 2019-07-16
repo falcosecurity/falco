@@ -15,23 +15,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-include_directories("${PROJECT_SOURCE_DIR}/../sysdig/userspace/libsinsp/third-party/jsoncpp")
-include_directories("${LUAJIT_INCLUDE}")
+if(NOT SYSDIG_DIR)
+	set(SYSDIG_DIR "${PROJECT_SOURCE_DIR}/../sysdig")
+endif()
 
-include_directories("${PROJECT_SOURCE_DIR}/../sysdig/userspace/libscap")
-include_directories("${PROJECT_SOURCE_DIR}/../sysdig/userspace/libsinsp")
-include_directories("${PROJECT_SOURCE_DIR}/../sysdig/userspace/sysdig")
-include_directories("${PROJECT_SOURCE_DIR}/userspace/engine")
-include_directories("${PROJECT_BINARY_DIR}/userspace/falco")
-include_directories("${PROJECT_BINARY_DIR}/driver/src")
-include_directories("${CURL_INCLUDE_DIR}")
-include_directories("${TBB_INCLUDE_DIR}")
-include_directories("${NJSON_INCLUDE}")
-include_directories("${YAMLCPP_INCLUDE_DIR}")
-include_directories("${CIVETWEB_INCLUDE_DIR}")
-include_directories("${DRAIOS_DEPENDENCIES_DIR}/yaml-${DRAIOS_YAML_VERSION}/target/include")
-
-configure_file("${PROJECT_SOURCE_DIR}/../sysdig/userspace/sysdig/config_sysdig.h.in" config_sysdig.h)
+configure_file("${SYSDIG_DIR}/userspace/sysdig/config_sysdig.h.in" config_sysdig.h)
 
 add_executable(falco
 	configuration.cpp
@@ -40,12 +28,21 @@ add_executable(falco
 	event_drops.cpp
 	statsfilewriter.cpp
 	falco.cpp
-	"${PROJECT_SOURCE_DIR}/../sysdig/userspace/sysdig/fields_info.cpp"
+	"${SYSDIG_DIR}/userspace/sysdig/fields_info.cpp"
 	webserver.cpp)
+
+target_include_directories(falco PUBLIC
+	"${SYSDIG_DIR}/userspace/sysdig"
+	"${PROJECT_SOURCE_DIR}/userspace/engine"
+	"${PROJECT_BINARY_DIR}/userspace/falco"
+	"${PROJECT_BINARY_DIR}/driver/src"
+	"${YAMLCPP_INCLUDE_DIR}"
+	"${CIVETWEB_INCLUDE_DIR}"
+	"${DRAIOS_DEPENDENCIES_DIR}/yaml-${DRAIOS_YAML_VERSION}/target/include")
 
 target_link_libraries(falco falco_engine sinsp)
 target_link_libraries(falco
-        "${LIBYAML_LIB}"
+	"${LIBYAML_LIB}"
 	"${YAMLCPP_LIB}"
 	"${CIVETWEB_LIB}")
 

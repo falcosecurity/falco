@@ -1,7 +1,7 @@
 #
 # Copyright (C) 2016-2018 Draios Inc dba Sysdig.
 #
-# This file is part of falco .
+# This file is part of falco.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,21 +15,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-configure_file(debian/postinst.in debian/postinst)
-configure_file(debian/prerm.in debian/prerm)
 
-if(NOT SYSDIG_DIR)
-	set(SYSDIG_DIR "${PROJECT_SOURCE_DIR}/../sysdig")
-endif()
+- required_engine_version: not-a-number
 
-file(COPY "${PROJECT_SOURCE_DIR}/scripts/debian/falco"
-	DESTINATION "${PROJECT_BINARY_DIR}/scripts/debian")
+- list: cat_binaries
+  items: [cat]
 
-file(COPY "${PROJECT_SOURCE_DIR}/scripts/rpm/falco"
-	DESTINATION "${PROJECT_BINARY_DIR}/scripts/rpm")
+- list: cat_capable_binaries
+  items: [cat_binaries]
 
-if(CMAKE_SYSTEM_NAME MATCHES "Linux")
-	install(PROGRAMS ${SYSDIG_DIR}/scripts/sysdig-probe-loader
-		DESTINATION ${FALCO_BIN_DIR}
-		RENAME falco-probe-loader)
-endif()
+- macro: is_cat
+  condition: proc.name in (cat_capable_binaries)
+
+- rule: open_from_cat
+  desc: A process named cat does an open
+  condition: evt.type=open and is_cat
+  output: "An open was seen (command=%proc.cmdline)"
+  priority: WARNING

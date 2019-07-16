@@ -20,6 +20,7 @@ limitations under the License.
 #pragma once
 
 #include <cstdint>
+#include <functional>
 
 // A simple token bucket that accumulates tokens at a fixed rate and allows
 // for limited bursting in the form of "banked" tokens.
@@ -27,6 +28,7 @@ class token_bucket
 {
 public:
 	token_bucket();
+	token_bucket(std::function<uint64_t()> timer);
 	virtual ~token_bucket();
 
 	//
@@ -52,6 +54,7 @@ public:
 	uint64_t get_last_seen();
 
 private:
+	std::function<uint64_t()> m_timer;
 
 	//
 	// The number of tokens generated per second.
@@ -75,4 +78,3 @@ private:
 	//
 	uint64_t m_last_seen;
 };
-

@@ -18,13 +18,20 @@ limitations under the License.
 */
 
 #include <cstddef>
+#include <functional>
 #include <sys/time.h>
 
-#include "utils.h"
 #include "token_bucket.h"
+#include "utils.h"
 
-token_bucket::token_bucket()
+token_bucket::token_bucket():
+	token_bucket(sinsp_utils::get_current_time_ns)
 {
+}
+
+token_bucket::token_bucket(std::function<uint64_t()> timer)
+{
+	m_timer = timer;
 	init(1, 1);
 }
 
@@ -37,20 +44,12 @@ void token_bucket::init(double rate, double max_tokens, uint64_t now)
 	m_rate = rate;
 	m_max_tokens = max_tokens;
 	m_tokens = max_tokens;
-
-	if(now == 0)
-	{
-		now = sinsp_utils::get_current_time_ns();
-	}
-
-	m_last_seen = now;
+	m_last_seen = now == 0 ? m_timer() : now;
 }
 
 bool token_bucket::claim()
 {
-	uint64_t now = sinsp_utils::get_current_time_ns();
-
-	return claim(1, now);
+	return claim(1, m_timer());
 }
 
 bool token_bucket::claim(double tokens, uint64_t now)

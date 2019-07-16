@@ -75,7 +75,10 @@ endif()
 
 set(CMD_MAKE make)
 
-set(SYSDIG_DIR "${PROJECT_SOURCE_DIR}/../sysdig")
+if(NOT SYSDIG_DIR)
+	set(SYSDIG_DIR "${PROJECT_SOURCE_DIR}/../sysdig")
+endif()
+
 # make luaJIT work on OS X
 if(APPLE)
 	set(CMAKE_EXE_LINKER_FLAGS "-pagezero_size 10000 -image_base 100000000")
@@ -304,7 +307,7 @@ else()
 		URL "http://s3.amazonaws.com/download.draios.com/dependencies/curl-7.61.0.tar.bz2"
 		URL_MD5 "31d0a9f48dc796a7db351898a1e5058a"
 		# END CHANGE for CVE-2017-8816, CVE-2017-8817, CVE-2017-8818, CVE-2018-1000007
-		CONFIGURE_COMMAND ./configure ${CURL_SSL_OPTION} --disable-shared --enable-optimize --disable-curldebug --disable-rt --enable-http --disable-ftp --disable-file --disable-ldap --disable-ldaps --disable-rtsp --disable-telnet --disable-tftp --disable-pop3 --disable-imap --disable-smb --disable-smtp --disable-gopher --disable-sspi --disable-ntlm-wb --disable-tls-srp --without-winssl --without-darwinssl --without-polarssl --without-cyassl --without-nss --without-axtls --without-ca-path --without-ca-bundle --without-libmetalink --without-librtmp --without-winidn --without-libidn --without-nghttp2 --without-libssh2 --disable-threaded-resolver
+		CONFIGURE_COMMAND ./configure ${CURL_SSL_OPTION} --disable-shared --enable-optimize --disable-curldebug --disable-rt --enable-http --disable-ftp --disable-file --disable-ldap --disable-ldaps --disable-rtsp --disable-telnet --disable-tftp --disable-pop3 --disable-imap --disable-smb --disable-smtp --disable-gopher --disable-sspi --disable-ntlm-wb --disable-tls-srp --without-winssl --without-darwinssl --without-polarssl --without-cyassl --without-nss --without-axtls --without-ca-path --without-ca-bundle --without-libmetalink --without-librtmp --without-winidn --without-libidn2 --without-libpsl --without-nghttp2 --without-libssh2 --disable-threaded-resolver --without-brotli
 		BUILD_COMMAND ${CMD_MAKE}
 		BUILD_IN_SOURCE 1
 		INSTALL_COMMAND "")
@@ -378,7 +381,6 @@ endif()
 # Libyaml
 #
 option(USE_BUNDLED_LIBYAML "Enable building of the bundled libyaml" ${USE_BUNDLED_DEPS})
-
 if(NOT USE_BUNDLED_LIBYAML)
 	# Note: to distinguish libyaml.a and yaml.a we specify a full
 	# file name here, so you'll have to arrange for static
@@ -398,6 +400,7 @@ else()
 	endif()
 
 	set(LIBYAML_SRC "${PROJECT_BINARY_DIR}/libyaml-prefix/src/libyaml/src")
+	set(LIBYAML_INCLUDE "${PROJECT_BINARY_DIR}/libyaml-prefix/src/libyaml/include")
 	set(LIBYAML_LIB "${LIBYAML_SRC}/.libs/libyaml.a")
 	message(STATUS "Using bundled libyaml in '${LIBYAML_SRC}'")
 	ExternalProject_Add(libyaml
@@ -413,7 +416,6 @@ endif()
 # lyaml
 #
 option(USE_BUNDLED_LYAML "Enable building of the bundled lyaml" ${USE_BUNDLED_DEPS})
-
 if(NOT USE_BUNDLED_LYAML)
 	# Note: to distinguish libyaml.a and yaml.a we specify a full
 	# file name here, so you'll have to arrange for static
@@ -435,14 +437,15 @@ else()
 	if(USE_BUNDLED_LIBYAML)
 		list(APPEND LYAML_DEPENDENCIES "libyaml")
 	endif()
+
 	ExternalProject_Add(lyaml
 		DEPENDS ${LYAML_DEPENDENCIES}
 		URL "http://s3.amazonaws.com/download.draios.com/dependencies/lyaml-release-v6.0.tar.gz"
-                URL_MD5 "dc3494689a0dce7cf44e7a99c72b1f30"
-                BUILD_COMMAND ${CMD_MAKE}
-                BUILD_IN_SOURCE 1
-		CONFIGURE_COMMAND ./configure --enable-static LIBS=-L../../../libyaml-prefix/src/libyaml/src/.libs CFLAGS=-I../../../libyaml-prefix/src/libyaml/include CPPFLAGS=-I../../../libyaml-prefix/src/libyaml/include LUA_INCLUDE=-I../../../luajit-prefix/src/luajit/src LUA=../../../luajit-prefix/src/luajit/src/luajit
-                INSTALL_COMMAND sh -c "cp -R ${PROJECT_BINARY_DIR}/lyaml-prefix/src/lyaml/lib/* ${PROJECT_SOURCE_DIR}/userspace/engine/lua")
+		URL_MD5 "dc3494689a0dce7cf44e7a99c72b1f30"
+		BUILD_COMMAND ${CMD_MAKE}
+		BUILD_IN_SOURCE 1
+		CONFIGURE_COMMAND ./configure --enable-static LIBS=-L${LIBYAML_SRC}/.libs CFLAGS=-I${LIBYAML_INCLUDE} CPPFLAGS=-I${LIBYAML_INCLUDE} LUA_INCLUDE=-I${LUAJIT_INCLUDE} LUA=${LUAJIT_SRC}/luajit
+		INSTALL_COMMAND sh -c "cp -R ${PROJECT_BINARY_DIR}/lyaml-prefix/src/lyaml/lib/* ${PROJECT_SOURCE_DIR}/userspace/engine/lua")
 endif()
 
 option(USE_BUNDLED_TBB "Enable building of the bundled tbb" ${USE_BUNDLED_DEPS})
@@ -586,7 +589,7 @@ else()
 		URL_MD5 "2fc42c182a0ed1b48ad77397f76bb3bc"
 		CONFIGURE_COMMAND ""
 		# TODO what if using system openssl, protobuf or cares?
-		BUILD_COMMAND HAS_SYSTEM_ZLIB=false LDFLAGS=-static PATH=${PROTOC_DIR}:$ENV{PATH} PKG_CONFIG_PATH=${OPENSSL_BUNDLE_DIR}:${PROTOBUF_SRC}:${CARES_SRC} make grpc_cpp_plugin static_cxx static_c
+		BUILD_COMMAND sh -c "CFLAGS=-Wno-implicit-fallthrough CXXFLAGS=\"-Wno-ignored-qualifiers -Wno-stringop-truncation\" HAS_SYSTEM_ZLIB=false LDFLAGS=-static PATH=${PROTOC_DIR}:$ENV{PATH} PKG_CONFIG_PATH=${OPENSSL_BUNDLE_DIR}:${PROTOBUF_SRC}:${CARES_SRC} make grpc_cpp_plugin static_cxx static_c"
 		BUILD_IN_SOURCE 1
 		BUILD_BYPRODUCTS ${GRPC_LIB} ${GRPCPP_LIB}
 		# TODO s390x support
@@ -603,8 +606,17 @@ add_subdirectory(test)
 add_subdirectory(rules)
 add_subdirectory(docker)
 
+# Add path for custom CMake modules used to build dependencies from Sysdig (libscap, libsinsp)
+list(APPEND CMAKE_MODULE_PATH
+	"${SYSDIG_DIR}/cmake/modules")
+
+# Add path for custom CMake modules
+list(APPEND CMAKE_MODULE_PATH
+	"${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
+
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
 	add_subdirectory("${SYSDIG_DIR}/driver" "${PROJECT_BINARY_DIR}/driver")
+	include(FindMakedev)
 endif()
 add_subdirectory("${SYSDIG_DIR}/userspace/libscap" "${PROJECT_BINARY_DIR}/userspace/libscap")
 add_subdirectory("${SYSDIG_DIR}/userspace/libsinsp" "${PROJECT_BINARY_DIR}/userspace/libsinsp")
@@ -616,6 +628,7 @@ set(FALCO_BIN_DIR bin)
 add_subdirectory(scripts)
 add_subdirectory(userspace/engine)
 add_subdirectory(userspace/falco)
+add_subdirectory(tests)
 
 
 set(CPACK_PACKAGE_NAME "${PACKAGE_NAME}")
