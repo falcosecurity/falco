@@ -6,7 +6,7 @@ cmakeversion=$(cmake --version | head -n1)
 dockerversion=$(docker --version)
 
 cat <<EOF
-Hello, this is the Falco builder.
+Hello, this is the Falco builder container.
 
 How to use.
 
