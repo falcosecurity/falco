@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+cat <<EOF
+Hello, this is the Falco tester container.
+
+How to use.
+
+    ...
+
+How to build.
+
+    ...
+
+Environment.
+
+    * ...
+EOF
