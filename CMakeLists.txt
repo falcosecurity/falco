@@ -70,7 +70,7 @@ endif()
 set(CMD_MAKE make)
 
 if(NOT SYSDIG_DIR)
-	set(SYSDIG_DIR "${PROJECT_SOURCE_DIR}/../sysdig")
+	get_filename_component(SYSDIG_DIR "${PROJECT_SOURCE_DIR}/../sysdig" REALPATH)
 endif()
 
 # Add path for custom CMake modules
