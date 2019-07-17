@@ -1,17 +1,14 @@
 FROM centos:7
 
-ENV FALCO_VERSION 0.1.1dev
-ENV BUILD_TYPE Release
+ENV FALCO_VERSION=
+ENV BUILD_TYPE=release
 
-RUN yum -y install epel-release && \
-    yum -y install \
-      python-pip \
-      docker \
-      jq \
-      unzip
+RUN yum -y install epel-release && yum clean all -y && \
+    yum -y install python-pip docker jq unzip && yum clean all -y
 
 RUN pip install avocado-framework avocado-framework-plugin-varianter-yaml-to-mux
 
-COPY entrypoint.sh /
+COPY ./root /
 
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["entrypoint"]
+CMD ["usage"]
