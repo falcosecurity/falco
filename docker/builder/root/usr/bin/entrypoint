@@ -11,10 +11,10 @@ shift
 BUILD_TYPE=$(echo "$BUILD_TYPE" | tr "[:upper:]" "[:lower:]")
 case "$BUILD_TYPE" in
 "debug")
-;;
+    ;;
 *)
-BUILD_TYPE="release"
-;;
+    BUILD_TYPE="release"
+    ;;
 esac
 
 case "$CMD" in

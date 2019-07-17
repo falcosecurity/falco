@@ -34,13 +34,7 @@ RUN source scl_source enable devtoolset-7 && \
     make install && \
     rm -rf /tmp/cmake-${CMAKE_VERSION}
 
-RUN cd /tmp && \
-    curl -L https://get.docker.com/builds/Linux/x86_64/docker-${DOCKER_VERSION}.tgz | tar xz; \
-    mv docker/docker /usr/local/bin/docker && \
-    chmod +x /usr/local/bin/docker && \
-    rm -rf /tmp/docker
-
-# Note: Needs a fix into CMakeLists.txt # gcc gcc-c++
+# fixme: deps needs a fix into CMakeLists.txt
 RUN yum -y install libyaml-devel
 
 RUN yum clean all -y
