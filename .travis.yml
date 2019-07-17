@@ -33,7 +33,7 @@ install:
     - pushd ../sysdig && (git checkout "${BRANCH}" || exit 0) && echo "Using sysdig branch:" $(git rev-parse --abbrev-ref HEAD) && popd
 script:
     - mkdir build
-    - ./hack/build.sh "${TRAVIS_BUILD_DIR}/.." "${TRAVIS_BUILD_DIR}/build" "falcosecurity/falco-builder:chore-travis"
+    - ./hack/build.sh "${TRAVIS_BUILD_DIR}/.." "${TRAVIS_BUILD_DIR}/build"
 notifications:
   webhooks:
     urls:
