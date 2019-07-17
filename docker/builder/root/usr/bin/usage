@@ -26,6 +26,10 @@ How to use.
     * docker run -v $PWD/..:/source -v $PWD/build:/build -ti falcosecurity/falco-builder cmake
     * docker run -v $PWD/..:/source -v $PWD/build:/build -ti falcosecurity/falco-builder [<cmake-target-x>, ..., <cmake-target-y>]
 
+    Eg.,
+    * docker run -v $PWD/..:/source -v $PWD/build:/build -ti falcosecurity/falco-builder tests
+    * docker run -v $PWD/..:/source -v $PWD/build:/build -ti falcosecurity/falco-builder install
+
 How to build.
 
     * cd docker/builder && DOCKER_BUILDKIT=1 docker build -t falcosecurity/falco-builder .
