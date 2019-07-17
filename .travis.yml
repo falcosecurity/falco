@@ -18,8 +18,8 @@
 language: cpp
 compiler: gcc
 env:
-    - BUILD_TYPE=Debug
-    - BUILD_TYPE=Release
+    - BUILD_TYPE=debug
+    - BUILD_TYPE=release
 sudo: required
 services:
     - docker
