@@ -7,6 +7,16 @@ BUILD_DIR=/build
 CMD=${1:-usage}
 shift
 
+# Build type can be "debug" or "release", fallbacks to "release" by default
+BUILD_TYPE=$(echo "$BUILD_TYPE" | tr "[:upper:]" "[:lower:]")
+case "$BUILD_TYPE" in
+"debug")
+;;
+*)
+BUILD_TYPE="release"
+;;
+esac
+
 case "$CMD" in
 "cmake")
     # Check that source directory contains Falco and Sysdig
@@ -18,15 +28,6 @@ case "$CMD" in
         echo "Missing falco source." >&2
         exit 1
     fi
-    # Build type can be "debug" or "release", fallbacks to "release" by default
-    BUILD_TYPE=$(echo "$BUILD_TYPE" | tr "[:upper:]" "[:lower:]")
-    case "$BUILD_TYPE" in
-    "debug")
-    ;;
-    *)
-    BUILD_TYPE="release"
-    ;;
-    esac
     # Prepare build directory
     mkdir -p "$BUILD_DIR/$BUILD_TYPE"
     cd "$BUILD_DIR/$BUILD_TYPE"
@@ -48,6 +49,10 @@ case "$CMD" in
     exec "$CMD" "$@"
     ;;
 *)
+    if [ ! -d "$BUILD_DIR/$BUILD_TYPE" ]; then
+        echo "Missing $BUILD_DIR/$BUILD_TYPE directory: run cmake."
+        exit 1
+    fi
     cd "$BUILD_DIR/$BUILD_TYPE"
     make -j"$MAKE_JOBS" "$CMD"
     ;;
