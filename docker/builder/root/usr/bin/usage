@@ -3,7 +3,6 @@
 gccversion=$(gcc --version | head -n1)
 cppversion=$(g++ -dM -E -x c++ /dev/null | grep -F __cplusplus | cut -d' ' -f3)
 cmakeversion=$(cmake --version | head -n1)
-dockerversion=$(docker --version)
 
 cat <<EOF
 Hello, this is the Falco builder container.
@@ -14,7 +13,7 @@ How to use.
     * docker run falcosecurity/falco-builder
     * docker run falcosecurity/falco-builder usage
 
-    It supports bash sessions.
+    It supports bash.
     * docker run -ti falcosecurity/falco-builder bash
 
     To build Falco it needs:
@@ -23,12 +22,12 @@ How to use.
     Optionally, you can also bind-mount the build directory.
     So, you can execute it from the Falco root directory as follows.
 
-    * docker run -v $PWD/..:/source -v $PWD/build:/build -ti falcosecurity/falco-builder cmake
-    * docker run -v $PWD/..:/source -v $PWD/build:/build -ti falcosecurity/falco-builder [<cmake-target-x>, ..., <cmake-target-y>]
+    * docker run -v $PWD/..:/source -v $PWD/build:/build falcosecurity/falco-builder cmake
+    * docker run -v $PWD/..:/source -v $PWD/build:/build falcosecurity/falco-builder [<cmake-target-x>, ..., <cmake-target-y>]
 
     Eg.,
-    * docker run -v $PWD/..:/source -v $PWD/build:/build -ti falcosecurity/falco-builder tests
-    * docker run -v $PWD/..:/source -v $PWD/build:/build -ti falcosecurity/falco-builder install
+    * docker run -v $PWD/..:/source -v $PWD/build:/build falcosecurity/falco-builder tests
+    * docker run -v $PWD/..:/source -v $PWD/build:/build falcosecurity/falco-builder install
 
 How to build.
 
@@ -49,5 +48,4 @@ Environment.
     * ${gccversion}
     * cplusplus ${cppversion}
     * ${cmakeversion}
-    * ${dockerversion}
 EOF
