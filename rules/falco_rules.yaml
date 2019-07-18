@@ -111,7 +111,7 @@
   items: [add-shell, remove-shell]
 
 - macro: shell_procs
-  condition: (proc.name in (shell_binaries))
+  condition: proc.name in (shell_binaries)
 
 - list: coreutils_binaries
   items: [
