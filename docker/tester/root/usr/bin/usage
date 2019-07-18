@@ -1,17 +1,38 @@
 #!/usr/bin/env bash
 
+pythonversion=$(python -c 'import sys; version=sys.version_info[:3]; print("{0}.{1}.{2}".format(*version))')
+pipversion=$(pip --version | cut -d' ' -f 1,2,5,6)
+dockerversion=$(docker --version)
+
 cat <<EOF
 Hello, this is the Falco tester container.
 
 How to use.
 
-    ...
+    The default commands for the Falco tester image reports usage and environment info.
+    * docker run falcosecurity/falco-tester
+    * docker run falcosecurity/falco-tester usage
+
+    It supports bash.
+    * docker run -ti falcosecurity/falco-tester:chore-travis bash
+
+    To run Falco regression tests you need to provide:
+    - the docker socket
+    - the boot directory
+    - the source directory
+    - the directory where Falco has been built
+    - the environment variable FALCO_VARIABLE set to the value obtained during the Falco's build
+
+    Assuming you are running it from the Falco root directory, you can run it as follows.
+    * docker run -v /boot:/boot:ro -v /var/run/docker.sock:/var/run/docker.sock -v $PWD/..:/source -v $PWD/build:/build -e FALCO_VERSION=<current_falco_version> falcosecurity/falco-tester test
 
 How to build.
 
-    ...
+    * cd docker/builder && DOCKER_BUILDKIT=1 docker build -t falcosecurity/falco-tester .
 
 Environment.
 
-    * ...
+    * python ${pythonversion}
+    * ${pipversion}
+    * ${dockerversion}
 EOF

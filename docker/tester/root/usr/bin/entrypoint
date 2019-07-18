@@ -27,13 +27,14 @@ case "$CMD" in
         echo "Missing Falco version." >&2
         exit 1
     fi
-    if [ ! -f "$BUILD_DIR/$BUILD_TYPE/falco-$FALCO_VERSION-x86_64.deb" ]; then
+    PACKAGE="$BUILD_DIR/$BUILD_TYPE/falco-$FALCO_VERSION-x86_64.deb"
+    if [ ! -f "$PACKAGE" ]; then
         echo "Package(s) not found." >&2
         exit 1
     fi
     DOCKER_IMAGE_NAME="falcosecurity/falco:test"
     echo "Building local docker image $DOCKER_IMAGE_NAME from latest debian package..."
-    cp "$BUILD_DIR/$BUILD_TYPE/falco-$FALCO_VERSION-x86_64.deb" $BUILD_DIR/$BUILD_TYPE/docker/local
+    cp "$PACKAGE" $BUILD_DIR/$BUILD_TYPE/docker/local
     cd $BUILD_DIR/$BUILD_TYPE/docker/local
     docker build --build-arg FALCO_VERSION="$FALCO_VERSION" -t "$DOCKER_IMAGE_NAME" .
 
