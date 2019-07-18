@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+ #!/usr/bin/env python
 #
 # Copyright (C) 2016-2018 Draios Inc dba Sysdig.
 #
@@ -34,9 +34,10 @@ class FalcoTest(Test):
         """
         Load the sysdig kernel module if not already loaded.
         """
-        build_type = "Release"
+        build_type = "release"
         if 'BUILD_TYPE' in os.environ:
-            build_type = os.environ['BUILD_TYPE']
+            build_type = os.environ['BUILD_TYPE'].lower()
+            build_type = "debug" if build_type == "debug" else "release"
 
         build_dir = os.path.join('/build', build_type)
         self.falcodir = self.params.get('falcodir', '/', default=os.path.join(self.basedir, build_dir))
