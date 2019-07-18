@@ -1,7 +1,8 @@
 FROM centos:7
 
 LABEL name="falcosecurity/falco-builder"
-LABEL usage="docker run -v /etc/passwd:/etc/passwd:ro -v $PWD/..:/source -v $PWD/build:/build falcosecurity/falco-builder"
+LABEL usage="docker run -v $PWD/..:/source -v $PWD/build:/build falcosecurity/falco-builder cmake"
+LABEL maintainer="opensource@sysdig.com"
 
 ARG BUILD_TYPE=release
 ARG BUILD_DRIVER=OFF
