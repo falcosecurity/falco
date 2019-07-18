@@ -34,10 +34,3 @@ install:
 script:
     - mkdir build
     - ./hack/build.sh "${TRAVIS_BUILD_DIR}/.." "${TRAVIS_BUILD_DIR}/build"
-notifications:
-  webhooks:
-    urls:
-    # - https://webhooks.gitter.im/e/fdbc2356fb0ea2f15033
-    on_success: change
-    on_failure: always
-    on_start: never
