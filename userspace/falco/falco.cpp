@@ -915,6 +915,63 @@ int falco_init(int argc, char **argv)
 			goto exit;
 		}
 
+		// If daemonizing, do it here so any init errors will
+		// be returned in the foreground process.
+		if (daemon && !g_daemonized) {
+			pid_t pid, sid;
+
+			pid = fork();
+			if (pid < 0) {
+				// error
+				falco_logger::log(LOG_ERR, "Could not fork. Exiting.\n");
+				result = EXIT_FAILURE;
+				goto exit;
+			} else if (pid > 0) {
+				// parent. Write child pid to pidfile and exit
+				std::ofstream pidfile;
+				pidfile.open(pidfilename);
+
+				if (!pidfile.good())
+				{
+					falco_logger::log(LOG_ERR, "Could not write pid to pid file " + pidfilename + ". Exiting.\n");
+					result = EXIT_FAILURE;
+					goto exit;
+				}
+				pidfile << pid;
+				pidfile.close();
+				goto exit;
+			}
+			// if here, child.
+
+			// Become own process group.
+			sid = setsid();
+			if (sid < 0) {
+				falco_logger::log(LOG_ERR, "Could not set session id. Exiting.\n");
+				result = EXIT_FAILURE;
+				goto exit;
+			}
+
+			// Set umask so no files are world anything or group writable.
+			umask(027);
+
+			// Change working directory to '/'
+			if ((chdir("/")) < 0) {
+				falco_logger::log(LOG_ERR, "Could not change working directory to '/'. Exiting.\n");
+				result = EXIT_FAILURE;
+				goto exit;
+			}
+
+			// Close stdin, stdout, stderr and reopen to /dev/null
+			close(0);
+			close(1);
+			close(2);
+			open("/dev/null", O_RDONLY);
+			open("/dev/null", O_RDWR);
+			open("/dev/null", O_RDWR);
+
+			g_daemonized = true;
+		}
+
 		if (trace_filename.size())
 		{
 			// Try to open the trace file as a sysdig
@@ -977,63 +1034,6 @@ int falco_init(int argc, char **argv)
 		if(!all_events)
 		{
 			inspector->start_dropping_mode(1);
-		}
-
-		// If daemonizing, do it here so any init errors will
-		// be returned in the foreground process.
-		if (daemon && !g_daemonized) {
-			pid_t pid, sid;
-
-			pid = fork();
-			if (pid < 0) {
-				// error
-				falco_logger::log(LOG_ERR, "Could not fork. Exiting.\n");
-				result = EXIT_FAILURE;
-				goto exit;
-			} else if (pid > 0) {
-				// parent. Write child pid to pidfile and exit
-				std::ofstream pidfile;
-				pidfile.open(pidfilename);
-
-				if (!pidfile.good())
-				{
-					falco_logger::log(LOG_ERR, "Could not write pid to pid file " + pidfilename + ". Exiting.\n");
-					result = EXIT_FAILURE;
-					goto exit;
-				}
-				pidfile << pid;
-				pidfile.close();
-				goto exit;
-			}
-			// if here, child.
-
-			// Become own process group.
-			sid = setsid();
-			if (sid < 0) {
-				falco_logger::log(LOG_ERR, "Could not set session id. Exiting.\n");
-				result = EXIT_FAILURE;
-				goto exit;
-			}
-
-			// Set umask so no files are world anything or group writable.
-			umask(027);
-
-			// Change working directory to '/'
-			if ((chdir("/")) < 0) {
-				falco_logger::log(LOG_ERR, "Could not change working directory to '/'. Exiting.\n");
-				result = EXIT_FAILURE;
-				goto exit;
-			}
-
-			// Close stdin, stdout, stderr and reopen to /dev/null
-			close(0);
-			close(1);
-			close(2);
-			open("/dev/null", O_RDONLY);
-			open("/dev/null", O_RDWR);
-			open("/dev/null", O_RDWR);
-
-			g_daemonized = true;
 		}
 
 		if(outfile != "")
