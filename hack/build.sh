@@ -12,9 +12,7 @@ docker run --user "$(id -u)":"$(id -g)" -v /etc/passwd:/etc/passwd:ro -e BUILD_T
 docker run --user "$(id -u)":"$(id -g)" -v /etc/passwd:/etc/passwd:ro -e BUILD_TYPE="$BUILD_TYPE" -v "$SOURCE_DIR":/source -v "$BUILD_DIR":/build "$FALCOBUILDER_IMAGE" tests
 
 # Deduct currently built version
-CURRENT_FALCO_VERSION=$(docker run -v "$BUILD_DIR":/build -ti "$FALCOBUILDER_IMAGE" bash -c "./build/$BUILD_TYPE/userspace/falco/falco --version" | cut -d' ' -f3)
-# CURRENT_FALCO_VERSION="${CURRENT_FALCO_VERSION#"${CURRENT_FALCO_VERSION%%[![:space:]]*}"}"
-# CURRENT_FALCO_VERSION="${CURRENT_FALCO_VERSION%"${CURRENT_FALCO_VERSION##*[![:space:]]}"}"
+CURRENT_FALCO_VERSION=$(docker run -v "$BUILD_DIR":/build "$FALCOBUILDER_IMAGE" bash -c "./build/$BUILD_TYPE/userspace/falco/falco --version" | cut -d' ' -f3 | tr -d '\r')
 
 # Execute regression tests
 docker run \
@@ -25,4 +23,4 @@ docker run \
     -v "$BUILD_DIR":/build \
     -e BUILD_TYPE="$BUILD_TYPE" \
     -e FALCO_VERSION="$CURRENT_FALCO_VERSION" \
-    "$FALCOTESTER_IMAGE"
+    "$FALCOTESTER_IMAGE" test
