@@ -19,6 +19,14 @@ cmake_minimum_required(VERSION 2.8.2)
 
 project(falco)
 
+if(NOT SYSDIG_DIR)
+  get_filename_component(SYSDIG_DIR "${PROJECT_SOURCE_DIR}/../sysdig" REALPATH)
+endif()
+
+# Custom CMake modules
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
+list(APPEND CMAKE_MODULE_PATH "${SYSDIG_DIR}/cmake/modules")
+
 option(BUILD_WARNINGS_AS_ERRORS "Enable building with -Wextra -Werror flags")
 
 if(NOT DEFINED FALCO_ETC_DIR)
@@ -59,6 +67,29 @@ if(CMAKE_SYSTEM_NAME MATCHES "Linux")
 	add_definitions(-DHAS_CAPTURE)
 endif()
 
+# Create the falco version variable according to git index
+if(NOT FALCO_VERSION)
+  include(GetGitRevisionDescription)
+  git_get_exact_tag(FALCO_TAG)
+  if(NOT FALCO_TAG)
+    git_describe(FALCO_VERSION "--always")
+    git_local_changes(FALCO_CHANGES)
+    if(FALCO_CHANGES STREQUAL "DIRTY")
+      string(TOLOWER "${FALCO_CHANGES}" FALCO_CHANGES)
+      set(FALCO_VERSION "${FALCO_VERSION}.${FALCO_CHANGES}")
+    endif()
+    set(FALCO_VERSION "0.${FALCO_VERSION}")
+  else()
+    set(FALCO_VERSION "${FALCO_TAG}")
+    string(REGEX
+           REPLACE "^v([0-9]+)(\\.[0-9]+)(\\.[0-9]+)?"
+                   "\\1\\2\\3"
+                   FALCO_VERSION
+                   ${FALCO_VERSION})
+  endif()
+endif()
+message(STATUS "Falco version is ${FALCO_VERSION}")
+
 set(PACKAGE_NAME "falco")
 set(PROBE_VERSION "${FALCO_VERSION}")
 set(PROBE_NAME "falco-probe")
@@ -68,34 +99,6 @@ if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 endif()
 
 set(CMD_MAKE make)
-
-if(NOT SYSDIG_DIR)
-	get_filename_component(SYSDIG_DIR "${PROJECT_SOURCE_DIR}/../sysdig" REALPATH)
-endif()
-
-# Add path for custom CMake modules
-list(APPEND CMAKE_MODULE_PATH
-	"${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
-
-# Add path for custom CMake modules used to build dependencies from Sysdig (libscap, libsinsp)
-list(APPEND CMAKE_MODULE_PATH
-	"${SYSDIG_DIR}/cmake/modules")
-
-# Create the falco version variable according to git index
-if(NOT FALCO_VERSION)
-	include(GetGitRevisionDescription)
-	git_get_exact_tag(FALCO_TAG)
-	if(NOT FALCO_TAG)
-		git_describe(FALCO_VERSION "--always")
-		git_local_changes(FALCO_CHANGES)
-		if(FALCO_CHANGES STREQUAL "DIRTY")
-			string(TOLOWER "${FALCO_CHANGES}" FALCO_CHANGES)
-			set(FALCO_VERSION "${FALCO_VERSION}-${FALCO_CHANGES}")
-		endif()
-	else()
-		set(FALCO_VERSION "${FALCO_TAG}")
-	endif()
-endif()
 
 # make luaJIT work on OS X
 if(APPLE)
