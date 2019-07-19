@@ -1,4 +1,4 @@
-FROM centos:7
+FROM fedora:28
 
 LABEL name="falcosecurity/falco-tester"
 LABEL usage="docker run -v /boot:/boot:ro -v /var/run/docker.sock:/var/run/docker.sock -v $PWD/..:/source -v $PWD/build:/build -e FALCO_VERSION=<current_falco_version> --name <name> falcosecurity/falco-tester test"
@@ -7,10 +7,8 @@ LABEL maintainer="opensource@sysdig.com"
 ENV FALCO_VERSION=
 ENV BUILD_TYPE=release
 
-RUN yum -y install epel-release && yum clean all -y && \
-    yum -y install python-pip docker jq unzip && yum clean all -y
-
-RUN pip install avocado-framework avocado-framework-plugin-varianter-yaml-to-mux
+RUN curl https://avocado-project.org/data/repos/avocado-fedora.repo -o /etc/yum.repos.d/avocado.repo && \
+    dnf install -y docker jq unzip python2-avocado python2-avocado-plugins-varianter-yaml-to-mux && dnf clean all
 
 COPY ./root /
 
