@@ -2341,12 +2341,16 @@
 - macro: allowed_clear_log_files
   condition: (never_true)
 
+- macro: trusted_logging_images
+  condition: (container.image.repository endswith "splunk/fluentd-hec")
+
 - rule: Clear Log Activities
   desc: Detect clearing of critical log files
   condition: >
     open_write and
     access_log_files and
     evt.arg.flags contains "O_TRUNC" and
+    not trusted_logging_images and
     not allowed_clear_log_files
   output: >
     Log files were tampered (user=%user.name command=%proc.cmdline file=%fd.name container_id=%container.id image=%container.image.repository)
