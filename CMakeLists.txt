@@ -88,7 +88,7 @@ if(NOT FALCO_VERSION)
                    ${FALCO_VERSION})
   endif()
 endif()
-message(STATUS "Falco version is ${FALCO_VERSION}")
+message(STATUS "Falco version: ${FALCO_VERSION}")
 
 set(PACKAGE_NAME "falco")
 set(PROBE_VERSION "${FALCO_VERSION}")
