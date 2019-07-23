@@ -36,9 +36,7 @@ RUN source scl_source enable devtoolset-7 && \
     rm -rf /tmp/cmake-${CMAKE_VERSION}
 
 # fixme: deps needs a fix into CMakeLists.txt
-RUN yum -y install libyaml-devel
-
-RUN yum clean all -y
+RUN yum -y install libyaml-devel && yum clean all -y
 
 COPY ./root /
 
