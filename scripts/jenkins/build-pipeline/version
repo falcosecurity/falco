@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+set -eu -o pipefail
+
+BUILD_DIR="${WORKSPACE}/build"
+FALCOBUILDER_IMAGE="falcosecurity/falco-builder:chore-travis"
+
+rm -rf "$BUILD_DIR"
+mkdir "$BUILD_DIR"
+
+CMAKE_CMD="docker run -u $(id -u):$(id -g) -v /etc/passwd:/etc/passwd:ro -v $WORKSPACE:/source -v $BUILD_DIR:/build -a stdout -a stderr $FALCOBUILDER_IMAGE cmake"
+
+FALCO_VERSION=$($CMAKE_CMD | grep -oP "Falco version: v?\K(\d+)\.[a-z0-9]{1,7}(\.[a-z0-9]+)?" || echo "UNKNOWN")
+
+if [ "$FALCO_VERSION" == "UNKNOWN" ]; then
+    >&2 echo "Unknown version."
+    exit 1
+fi
+
+echo "$FALCO_VERSION.$((2700+BUILD_NUMBER))"
