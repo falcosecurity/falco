@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+set -eu -o pipefail
+
+if [ $# -eq 0 ]; then
+    >&2 echo "Missing arguments."
+    exit 1
+fi
+if [ -z "$1" ]; then
+    >&2 echo "Missing version."
+    exit 1
+fi
+if [ "$1" == "UNKNOWN" ]; then
+    >&2 echo "Unknown version."
+    exit 1
+fi
+
+FALCO_VERSION=$1
+BUILD_DIR="${WORKSPACE}/build"
+FALCOBUILDER_IMAGE="falcosecurity/falco-builder:chore-travis"
+
+rm -rf "$BUILD_DIR"
+mkdir "$BUILD_DIR"
+
+docker run -u "$(id -u):$(id -g)" -v /etc/passwd:/etc/passwd:ro -e FALCO_VERSION="$FALCO_VERSION" -v "$WORKSPACE":/source -v "$BUILD_DIR":/build "$FALCOBUILDER_IMAGE" cmake
+docker run -u "$(id -u):$(id -g)" -v /etc/passwd:/etc/passwd:ro -e FALCO_VERSION="$FALCO_VERSION" -v $"$WORKSPACE":/source -v "$BUILD_DIR":/build "$FALCOBUILDER_IMAGE" package
