@@ -9,8 +9,10 @@ shift
 
 # Build type can be "debug" or "release", fallbacks to "release" by default
 BUILD_TYPE=$(echo "$BUILD_TYPE" | tr "[:upper:]" "[:lower:]")
+DRAIOS_DEBUG_FLAGS=
 case "$BUILD_TYPE" in
 "debug")
+    DRAIOS_DEBUG_FLAGS="-D_DEBUG -DNDEBUG"
     ;;
 *)
     BUILD_TYPE="release"
@@ -39,6 +41,7 @@ case "$CMD" in
     -DBUILD_BPF="$BUILD_BPF" \
     -DBUILD_WARNINGS_AS_ERRORS="$BUILD_WARNINGS_AS_ERRORS" \
     -DFALCO_VERSION="$FALCO_VERSION" \
+    -DDRAIOS_DEBUG_FLAGS="$DRAIOS_DEBUG_FLAGS" \
     "$SOURCE_DIR/falco"
     exit "$(printf '%d\n' $?)"
     ;;
