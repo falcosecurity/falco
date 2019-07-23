@@ -1775,7 +1775,7 @@
     gcr.io/google_containers/kube-proxy, docker.io/calico/node,
     docker.io/rook/toolbox, docker.io/cloudnativelabs/kube-router, docker.io/consul,
     docker.io/datadog/docker-dd-agent, docker.io/datadog/agent, docker.io/docker/ucp-agent, docker.io/gliderlabs/logspout,
-    docker.io/netdata/netdata
+    docker.io/netdata/netdata, docker.io/google/cadvisor
     ]
 
 - macro: falco_sensitive_mount_containers
