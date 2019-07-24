@@ -63,8 +63,9 @@ end
 -- Permissive for case and for common abbreviations.
 priorities = {
    Emergency=0, Alert=1, Critical=2, Error=3, Warning=4, Notice=5, Informational=5, Debug=7,
+   emergency=0, alert=1, critical=2, error=3, warning=4, notice=5, informational=5, debug=7,
    EMERGENCY=0, ALERT=1, CRITICAL=2, ERROR=3, WARNING=4, NOTICE=5, INFORMATIONAL=5, DEBUG=7,
-   INFO=5
+   INFO=5, info=5
 }
 
 --[[
