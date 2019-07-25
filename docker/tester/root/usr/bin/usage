@@ -16,7 +16,7 @@ How to use.
     * docker run falcosecurity/falco-tester usage
 
     It supports bash.
-    * docker run -ti falcosecurity/falco-tester:chore-travis bash
+    * docker run -ti falcosecurity/falco-tester bash
 
     To run Falco regression tests you need to provide:
     - the docker socket

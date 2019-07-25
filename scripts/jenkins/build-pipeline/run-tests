@@ -17,7 +17,7 @@ fi
 
 FALCO_VERSION=$1
 BUILD_DIR="${WORKSPACE}/build"
-FALCOTESTER_IMAGE="falcosecurity/falco-tester:chore-travis"
+FALCOTESTER_IMAGE="falcosecurity/falco-tester"
 
 docker run \
     -v /boot:/boot:ro \

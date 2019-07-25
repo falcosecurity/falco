@@ -3,7 +3,7 @@
 set -eu -o pipefail
 
 BUILD_DIR="${WORKSPACE}/build"
-FALCOBUILDER_IMAGE="falcosecurity/falco-builder:chore-travis"
+FALCOBUILDER_IMAGE="falcosecurity/falco-builder"
 
 rm -rf "$BUILD_DIR"
 mkdir "$BUILD_DIR"
