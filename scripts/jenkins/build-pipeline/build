@@ -19,6 +19,8 @@ FALCO_VERSION=$1
 BUILD_DIR="${WORKSPACE}/build"
 FALCOBUILDER_IMAGE="falcosecurity/falco-builder"
 
+docker pull $FALCOBUILDER_IMAGE
+
 rm -rf "$BUILD_DIR"
 mkdir "$BUILD_DIR"
 

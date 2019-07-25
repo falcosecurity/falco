@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 
+# Do not add "x"
 set -eu -o pipefail
 
 BUILD_DIR="${WORKSPACE}/build"
 FALCOBUILDER_IMAGE="falcosecurity/falco-builder"
+
+docker pull $FALCOBUILDER_IMAGE > /dev/null
 
 rm -rf "$BUILD_DIR"
 mkdir "$BUILD_DIR"
