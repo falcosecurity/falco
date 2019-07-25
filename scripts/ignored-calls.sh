@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 #
 # Copyright (C) 2016-2018 Draios Inc dba Sysdig.
 #
@@ -15,8 +16,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-#!/bin/bash
 
 cat ../sysdig/userspace/libscap/syscall_info_table.c | grep EF_DROP_FALCO | sed -e 's/.*\"\(.*\)\".*/\1/'  | sort > ignored_syscall_info_table.txt
 cat ../sysdig/driver/event_table.c | grep EF_DROP_FALCO | sed -e 's/[^\"]*\"\([^\"]*\)\".*/\1/' | sort | uniq > ignored_driver_event_table.txt
