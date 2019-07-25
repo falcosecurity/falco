@@ -4,8 +4,8 @@ set -xeuo pipefail
 
 SOURCE_DIR=$1
 BUILD_DIR=$2
-FALCOBUILDER_IMAGE="falcosecurity/falco-builder:chore-travis"
-FALCOTESTER_IMAGE="falcosecurity/falco-tester:chore-travis"
+FALCOBUILDER_IMAGE="falcosecurity/falco-builder"
+FALCOTESTER_IMAGE="falcosecurity/falco-tester"
 
 docker run --user "$(id -u)":"$(id -g)" -v /etc/passwd:/etc/passwd:ro -e BUILD_TYPE="$BUILD_TYPE" -v "$SOURCE_DIR":/source -v "$BUILD_DIR":/build "$FALCOBUILDER_IMAGE" cmake
 docker run --user "$(id -u)":"$(id -g)" -v /etc/passwd:/etc/passwd:ro -e BUILD_TYPE="$BUILD_TYPE" -v "$SOURCE_DIR":/source -v "$BUILD_DIR":/build "$FALCOBUILDER_IMAGE" package
