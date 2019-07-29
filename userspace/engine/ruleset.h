@@ -24,7 +24,6 @@ limitations under the License.
 #include <vector>
 #include <list>
 #include <map>
-#include <regex>
 
 #include "sinsp.h"
 #include "filter.h"
@@ -48,9 +47,9 @@ public:
         // specifying unnecessarily large rulesets will result in
         // unnecessarily large vectors.
 
-	// Find those rules matching the provided pattern and set
+	// Find those rules matching the provided substring and set
 	// their enabled status to enabled.
-	void enable(const std::string &pattern, bool enabled, uint16_t ruleset = 0);
+	void enable(const std::string &substring, bool enabled, uint16_t ruleset = 0);
 
 	// Find those rules that have a tag in the set of tags and set
 	// their enabled status to enabled. Note that the enabled

@@ -76,16 +76,16 @@ public:
 	void load_rules(const std::string &rules_content, bool verbose, bool all_events, uint64_t &required_engine_version);
 
 	//
-	// Enable/Disable any rules matching the provided pattern
-	// (regex). When provided, enable/disable these rules in the
+	// Enable/Disable any rules matching the provided substring.
+	// When provided, enable/disable these rules in the
 	// context of the provided ruleset. The ruleset (id) can later
 	// be passed as an argument to process_event(). This allows
 	// for different sets of rules being active at once.
 	//
-	void enable_rule(const std::string &pattern, bool enabled, const std::string &ruleset);
+	void enable_rule(const std::string &substring, bool enabled, const std::string &ruleset);
 
 	// Wrapper that assumes the default ruleset
-	void enable_rule(const std::string &pattern, bool enabled);
+	void enable_rule(const std::string &substring, bool enabled);
 
 	//
 	// Enable/Disable any rules with any of the provided tags (set, exact matches only)
