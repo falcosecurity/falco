@@ -77,6 +77,7 @@ public:
 
 	//
 	// Enable/Disable any rules matching the provided substring.
+	// If the substring is "", all rules are enabled/disabled.
 	// When provided, enable/disable these rules in the
 	// context of the provided ruleset. The ruleset (id) can later
 	// be passed as an argument to process_event(). This allows

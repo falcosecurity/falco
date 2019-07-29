@@ -213,7 +213,7 @@ void falco_ruleset::enable(const string &substring, bool enabled, uint16_t rules
 	{
 		bool matches;
 
-		matches = (val.first.find(substring) != string::npos);
+		matches = (substring == "" || (val.first.find(substring) != string::npos));
 
 		if (matches)
 		{

@@ -87,7 +87,7 @@ static void usage()
 	   " --cri <path>                  Path to CRI socket for container metadata\n"
 	   "                               Use the specified socket to fetch data from a CRI-compatible runtime\n"
 	   " -d, --daemon                  Run as a daemon\n"
-	   " -D <pattern>                  Disable any rules matching the regex <pattern>. Can be specified multiple times.\n"
+	   " -D <substring>                Disable any rules with names having the substring <substring>. Can be specified multiple times.\n"
 	   "                               Can not be specified with -t.\n"
 	   " -e <events_file>              Read the events from <events_file> (in .scap format for sinsp events, or jsonl for\n"
 	   "                               k8s audit events) instead of tapping into live.\n"
@@ -471,9 +471,9 @@ int falco_init(int argc, char **argv)
 
 	try
 	{
-		set<string> disabled_rule_patterns;
-		string pattern;
-		string all_rules = ".*";
+		set<string> disabled_rule_substrings;
+		string substring;
+		string all_rules = "";
 		set<string> disabled_rule_tags;
 		set<string> enabled_rule_tags;
 
@@ -502,8 +502,8 @@ int falco_init(int argc, char **argv)
 				daemon = true;
 				break;
 			case 'D':
-				pattern = optarg;
-				disabled_rule_patterns.insert(pattern);
+				substring = optarg;
+				disabled_rule_substrings.insert(substring);
 				break;
 			case 'e':
 				trace_filename = optarg;
@@ -781,15 +781,15 @@ int falco_init(int argc, char **argv)
 		}
 
 		// You can't both disable and enable rules
-		if((disabled_rule_patterns.size() + disabled_rule_tags.size() > 0) &&
+		if((disabled_rule_substrings.size() + disabled_rule_tags.size() > 0) &&
 		    enabled_rule_tags.size() > 0) {
 			throw std::invalid_argument("You can not specify both disabled (-D/-T) and enabled (-t) rules");
 		}
 
-		for (auto pattern : disabled_rule_patterns)
+		for (auto substring : disabled_rule_substrings)
 		{
-			falco_logger::log(LOG_INFO, "Disabling rules matching pattern: " + pattern + "\n");
-			engine->enable_rule(pattern, false);
+			falco_logger::log(LOG_INFO, "Disabling rules matching substring: " + substring + "\n");
+			engine->enable_rule(substring, false);
 		}
 
 		if(disabled_rule_tags.size() > 0)
