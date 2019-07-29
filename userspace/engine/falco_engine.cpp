@@ -206,17 +206,17 @@ void falco_engine::load_rules_file(const string &rules_filename, bool verbose, b
 	load_rules(rules_content, verbose, all_events, required_engine_version);
 }
 
-void falco_engine::enable_rule(const string &pattern, bool enabled, const string &ruleset)
+void falco_engine::enable_rule(const string &substring, bool enabled, const string &ruleset)
 {
 	uint16_t ruleset_id = find_ruleset_id(ruleset);
 
-	m_sinsp_rules->enable(pattern, enabled, ruleset_id);
-	m_k8s_audit_rules->enable(pattern, enabled, ruleset_id);
+	m_sinsp_rules->enable(substring, enabled, ruleset_id);
+	m_k8s_audit_rules->enable(substring, enabled, ruleset_id);
 }
 
-void falco_engine::enable_rule(const string &pattern, bool enabled)
+void falco_engine::enable_rule(const string &substring, bool enabled)
 {
-	enable_rule(pattern, enabled, m_default_ruleset);
+	enable_rule(substring, enabled, m_default_ruleset);
 }
 
 void falco_engine::enable_rule_by_tag(const set<string> &tags, bool enabled, const string &ruleset)
