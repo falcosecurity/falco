@@ -19,7 +19,7 @@ configure_file(debian/postinst.in debian/postinst)
 configure_file(debian/prerm.in debian/prerm)
 
 if(NOT SYSDIG_DIR)
-	set(SYSDIG_DIR "${PROJECT_SOURCE_DIR}/../sysdig")
+	get_filename_component(SYSDIG_DIR "${PROJECT_SOURCE_DIR}/../sysdig" REALPATH)
 endif()
 
 file(COPY "${PROJECT_SOURCE_DIR}/scripts/debian/falco"
