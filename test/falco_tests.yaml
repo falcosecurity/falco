@@ -456,13 +456,13 @@ trace_files: !mux
       - open_from_cat
     trace_file: trace_files/cat_write.scap
 
-  disabled_rules_using_regex:
+  disabled_rules_using_substring:
     detect: False
     rules_file:
       - rules/empty_rules.yaml
       - rules/single_rule.yaml
     disabled_rules:
-      - "open.*"
+      - "open_from"
     trace_file: trace_files/cat_write.scap
 
   disabled_rules_using_enabled_flag:
