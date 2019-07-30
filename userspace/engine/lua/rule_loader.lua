@@ -225,9 +225,8 @@ function split_lines(rules_content)
    return lines, indices
 end
 
-function get_context(rules_lines, row, num_lines)
-
-   local ret = "---\n"
+function get_orig_yaml_obj(rules_lines, row, num_lines)
+   local ret = ""
 
    idx = row
    while (idx < (row + num_lines) and idx <= #rules_lines) do
@@ -235,16 +234,17 @@ function get_context(rules_lines, row, num_lines)
       idx = idx + 1
    end
 
-   ret = ret.."---"
-
    return ret
-
 end
 
 function build_error(rules_lines, row, num_lines, err)
+   local ret = err.."\n---\n"..get_orig_yaml_obj(rules_lines, row, num_lines).."---"
 
-   local ret = err.."\n"..get_context(rules_lines, row, num_lines)
+   return ret
+end
 
+function build_error_with_context(ctx, err)
+   local ret = err.."\n---\n"..ctx.."---"
    return ret
 end
 
@@ -305,24 +305,29 @@ function load_rules(sinsp_lua_parser,
    -- second pass
    for i,v in ipairs(rules) do
 
+      -- Save back the original object as it appeared in the file. Will be used to provide context.
+      local context = get_orig_yaml_obj(lines, indices[i], (indices[i+1]-indices[i]))
+
       if (not (type(v) == "table")) then
-	 return false, build_error(lines, indices[i], (indices[i+1]-indices[i]), "Unexpected element of type " ..type(v)..". Each element should be a yaml associative array.")
+	 return false, build_error_with_context(context, "Unexpected element of type " ..type(v)..". Each element should be a yaml associative array.")
       end
+
+      v['context'] = context
 
       if (v['required_engine_version']) then
 	 required_engine_version = v['required_engine_version']
 	 if type(required_engine_version) ~= "number" then
-	    return false, build_error(lines, indices[i], (indices[i+1]-indices[i]), "Value of required_engine_version must be a number")
+	    return false, build_error_with_context(v['context'], "Value of required_engine_version must be a number")
 	 end
 
 	 if falco_rules.engine_version(rules_mgr) < v['required_engine_version'] then
-	    return false, build_error(lines, indices[i], (indices[i+1]-indices[i]), "Rules require engine version "..v['required_engine_version']..", but engine version is "..falco_rules.engine_version(rules_mgr))
+	    return false, build_error_with_context(v['context'], "Rules require engine version "..v['required_engine_version']..", but engine version is "..falco_rules.engine_version(rules_mgr))
 	 end
 
       elseif (v['macro']) then
 
 	 if (v['macro'] == nil or type(v['macro']) == "table") then
-	    return false, build_error(lines, indices[i], (indices[i+1]-indices[i]), "Macro name is empty")
+	    return false, build_error_with_context(v['context'], "Macro name is empty")
 	 end
 
 	 if v['source'] == nil then
@@ -330,12 +335,12 @@ function load_rules(sinsp_lua_parser,
 	 end
 
 	 if state.macros_by_name[v['macro']] == nil then
-	    state.ordered_macro_names[#state.ordered_macro_names+1] = {["idx"]=i, ["name"]=v['macro']}
+	    state.ordered_macro_names[#state.ordered_macro_names+1] = v['macro']
 	 end
 
 	 for j, field in ipairs({'condition'}) do
 	    if (v[field] == nil) then
-	       return false, build_error(lines, indices[i], (indices[i+1]-indices[i]), "Macro must have property "..field)
+	       return false, build_error_with_context(v['context'], "Macro must have property "..field)
 	    end
 	 end
 
@@ -348,10 +353,13 @@ function load_rules(sinsp_lua_parser,
 
 	 if append then
 	    if state.macros_by_name[v['macro']] == nil then
-	       return false, build_error(lines, indices[i], (indices[i+1]-indices[i]), "Macro " ..v['macro'].. " has 'append' key but no macro by that name already exists")
+	       return false, build_error_with_context(v['context'], "Macro " ..v['macro'].. " has 'append' key but no macro by that name already exists")
 	    end
 
 	    state.macros_by_name[v['macro']]['condition'] = state.macros_by_name[v['macro']]['condition'] .. " " .. v['condition']
+
+	    -- Add the current object to the context of the base macro
+	    state.macros_by_name[v['macro']]['context'] = state.macros_by_name[v['macro']]['context'].."\n"..v['context']
 
 	 else
 	    state.macros_by_name[v['macro']] = v
@@ -360,7 +368,7 @@ function load_rules(sinsp_lua_parser,
       elseif (v['list']) then
 
 	 if (v['list'] == nil or type(v['list']) == "table") then
-	    return false, build_error(lines, indices[i], (indices[i+1]-indices[i]), "List name is empty")
+	    return false, build_error_with_context(v['context'], "List name is empty")
 	 end
 
 	 if state.lists_by_name[v['list']] == nil then
@@ -369,7 +377,7 @@ function load_rules(sinsp_lua_parser,
 
 	 for j, field in ipairs({'items'}) do
 	    if (v[field] == nil) then
-	       return false, build_error(lines, indices[i], (indices[i+1]-indices[i]), "List must have property "..field)
+	       return false, build_error_with_context(v['context'], "List must have property "..field)
 	    end
 	 end
 
@@ -382,7 +390,7 @@ function load_rules(sinsp_lua_parser,
 
 	 if append then
 	    if state.lists_by_name[v['list']] == nil then
-	       return false, build_error(lines, indices[i], (indices[i+1]-indices[i]), "List " ..v['list'].. " has 'append' key but no list by that name already exists")
+	       return false, build_error_with_context(v['context'], "List " ..v['list'].. " has 'append' key but no list by that name already exists")
 	    end
 
 	    for j, elem in ipairs(v['items']) do
@@ -395,7 +403,7 @@ function load_rules(sinsp_lua_parser,
       elseif (v['rule']) then
 
 	 if (v['rule'] == nil or type(v['rule']) == "table") then
-	    return false, build_error(lines, indices[i], (indices[i+1]-indices[i]), "Rule name is empty")
+	    return false, build_error_with_context(v['context'], "Rule name is empty")
 	 end
 
 	 -- By default, if a rule's condition refers to an unknown
@@ -420,23 +428,26 @@ function load_rules(sinsp_lua_parser,
 	    -- For append rules, all you need is the condition
 	    for j, field in ipairs({'condition'}) do
 	       if (v[field] == nil) then
-		  return false, build_error(lines, indices[i], (indices[i+1]-indices[i]), "Rule must have property "..field)
+		  return false, build_error_with_context(v['context'], "Rule must have property "..field)
 	       end
 	    end
 
 	    if state.rules_by_name[v['rule']] == nil then
 	       if state.skipped_rules_by_name[v['rule']] == nil then
-		  return false, build_error(lines, indices[i], (indices[i+1]-indices[i]), "Rule " ..v['rule'].. " has 'append' key but no rule by that name already exists")
+		  return false, build_error_with_context(v['context'], "Rule " ..v['rule'].. " has 'append' key but no rule by that name already exists")
 	       end
 	    else
 	       state.rules_by_name[v['rule']]['condition'] = state.rules_by_name[v['rule']]['condition'] .. " " .. v['condition']
+
+	    -- Add the current object to the context of the base rule
+	       state.rules_by_name[v['rule']]['context'] = state.rules_by_name[v['rule']]['context'].."\n"..v['context']
 	    end
 
 	 else
 
 	    for j, field in ipairs({'condition', 'output', 'desc', 'priority'}) do
 	       if (v[field] == nil) then
-		  return false, build_error(lines, indices[i], (indices[i+1]-indices[i]), "Rule must have property "..field)
+		  return false, build_error_with_context(v['context'], "Rule must have property "..field)
 	       end
 	    end
 
@@ -452,7 +463,7 @@ function load_rules(sinsp_lua_parser,
 	       -- loaded in the order in which they first appeared,
 	       -- potentially across multiple files.
 	       if state.rules_by_name[v['rule']] == nil then
-		  state.ordered_rule_names[#state.ordered_rule_names+1] = {["idx"]=i, ["name"]=v['rule']}
+		  state.ordered_rule_names[#state.ordered_rule_names+1] = v['rule']
 	       end
 
 	       -- The output field might be a folded-style, which adds a
@@ -465,7 +476,10 @@ function load_rules(sinsp_lua_parser,
 	    end
 	 end
       else
-	 return false, build_error(lines, indices[i], (indices[i+1]-indices[i]), "Unknown rule object: "..table.tostring(v))
+	 -- Remove the context from the table, so the table is exactly what was parsed
+	 local context = v['context']
+	 v['context'] = nil
+	 return false, build_error_with_context(context, "Unknown rule object: "..table.tostring(v))
       end
    end
 
@@ -498,17 +512,14 @@ function load_rules(sinsp_lua_parser,
       state.lists[v['list']] = {["items"] = items, ["used"] = false}
    end
 
-   for _, obj in ipairs(state.ordered_macro_names) do
-
-      local i = obj["idx"]
-      local name = obj["name"]
+   for _, name in ipairs(state.ordered_macro_names) do
 
       local v = state.macros_by_name[name]
 
       local status, ast = compiler.compile_macro(v['condition'], state.macros, state.lists)
 
       if status == false then
-	 return false, build_error(lines, indices[i], (indices[i+1]-indices[i]), ast)
+	 return false, build_error_with_context(v['context'], ast)
       end
 
       if v['source'] == "syscall" then
@@ -520,10 +531,7 @@ function load_rules(sinsp_lua_parser,
       state.macros[v['macro']] = {["ast"] = ast.filter.value, ["used"] = false}
    end
 
-   for _, obj in ipairs(state.ordered_rule_names) do
-
-      local i = obj["idx"]
-      local name = obj["name"]
+   for _, name in ipairs(state.ordered_rule_names) do
 
       local v = state.rules_by_name[name]
 
@@ -536,7 +544,7 @@ function load_rules(sinsp_lua_parser,
 								  state.macros, state.lists)
 
       if status == false then
-	 return false, build_error(lines, indices[i], (indices[i+1]-indices[i]), filter_ast)
+	 return false, build_error_with_context(v['context'], filter_ast)
       end
 
       local evtttypes = {}
@@ -674,7 +682,7 @@ function load_rules(sinsp_lua_parser,
 	 formatter = formats.formatter(v['source'], v['output'])
 	 formats.free_formatter(v['source'], formatter)
       else
-	 return false, build_error(lines, indices[i], (indices[i+1]-indices[i]), "Unexpected type in load_rule: "..filter_ast.type)
+	 return false, build_error_with_context(v['context'], "Unexpected type in load_rule: "..filter_ast.type)
       end
 
       ::next_rule::
