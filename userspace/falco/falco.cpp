@@ -55,6 +55,8 @@ bool g_reopen_outputs = false;
 bool g_restart = false;
 bool g_daemonized = false;
 
+std::string module(PROBE_NAME);
+
 //
 // Helper functions
 //
@@ -216,6 +218,74 @@ static std::string read_file(std::string filename)
 	return str;
 }
 
+static bool has_module(bool verbose, bool loaded = false)
+{
+	// Comparing considering underscores (95) equal to dashes (45), and viceversa
+	std::function<bool(const char &, const char &)> comparator = [](const char &a, const char &b) {
+		return a == b || (a == 45 && b == 95) || (b == 95 && a == 45);
+	};
+
+	std::string filename("/proc/modules");
+	std::ifstream modules(filename);
+	std::string line;
+
+	// todo > check for errors on ifstream
+
+	while(std::getline(modules, line))
+	{
+		bool shorter = module.length() <= line.length();
+		if(shorter && std::equal(module.begin(), module.end(), line.begin(), comparator))
+		{
+			auto result = true;
+			std::istringstream iss(line);
+			std::vector<std::string> cols(std::istream_iterator<std::string>{iss}, std::istream_iterator<std::string>());
+
+			// Optionally check the module's number of instances - ie., whether it is loaded or not
+			auto ninstances = cols.at(2);
+			if(loaded)
+			{
+				result = result && std::stoi(ninstances) > 0;
+			}
+
+			// Check the module's load state
+			auto state = cols.at(4);
+			std::transform(state.begin(), state.end(), state.begin(), ::tolower);
+			result = result && (state == "live");
+
+			if(verbose)
+			{
+				falco_logger::log(LOG_INFO, "Kernel moduleninsta" + ninstances + "\n");
+				falco_logger::log(LOG_INFO, "Kernel module load state: " + state + "\n");
+			}
+
+			// Check the module's taint state
+			// See https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/panic.c#n351
+			if(cols.size() > 6)
+			{
+				auto taint = cols.at(6);
+
+				auto died = taint.find("D") == std::string::npos;
+				auto warn = taint.find("W") == std::string::npos;
+				auto unloaded = taint.find("R") == std::string::npos;
+				if(verbose)
+				{
+					taint.erase(0, taint.find_first_not_of('('));
+					taint.erase(taint.find_last_not_of(')') + 1);
+					falco_logger::log(LOG_INFO, "Kernel module taint state: " + taint + "\n");
+				}
+
+				result = result && !died && !warn && !unloaded;
+			}
+
+			return result;
+		}
+	}
+
+	modules.close();
+
+	return false;
+}
+
 //
 // Event processing loop
 //
@@ -271,7 +341,7 @@ uint64_t do_inspect(falco_engine *engine,
 
 		if (g_terminate || g_restart)
 		{
-			falco_logger::log(LOG_INFO, "SIGHUP Received, restarting...\n");
+			falco_logger::log(LOG_INFO, "SIGHUP received, restarting...\n");
 			break;
 		}
 		else if(rc == SCAP_TIMEOUT)
@@ -1068,6 +1138,19 @@ int falco_init(int argc, char **argv)
 			if (disable_k8s_audit) {
 				open_f = open_cb;
 			}
+			
+			// Check that the kernel module is present at startup, otherwise try to add it
+			if(!has_module(verbose))
+			{
+				falco_logger::log(LOG_ERR, "Module not found. Trying to load it ...\n");
+				if(system("modprobe " PROBE_NAME " > /dev/null 2> /dev/null"))
+				{
+					// todo > fallback to a custom directory where to look for the module - ie., `modprobe -d build/driver`
+					falco_logger::log(LOG_ERR, "Unable to load the driver. Exiting.\n");
+					result = EXIT_FAILURE;
+					goto exit;
+				}
+			}
 
 			try
 			{
@@ -1075,10 +1158,6 @@ int falco_init(int argc, char **argv)
 			}
 			catch(sinsp_exception &e)
 			{
-				if(system("modprobe " PROBE_NAME " > /dev/null 2> /dev/null"))
-				{
-					falco_logger::log(LOG_ERR, "Unable to load the driver. Exiting.\n");
-				}
 				rethrow_exception(current_exception());
 			}
 		}
@@ -1189,11 +1268,11 @@ int falco_init(int argc, char **argv)
 
 			if(verbose)
 			{
-				fprintf(stderr, "Driver Events:%" PRIu64 "\nDriver Drops:%" PRIu64 "\n",
+				fprintf(stdout, "Driver events: %" PRIu64 "\nDriver drops: %" PRIu64 "\n",
 					cstats.n_evts,
 					cstats.n_drops);
 
-				fprintf(stderr, "Elapsed time: %.3lf, Captured Events: %" PRIu64 ", %.2lf eps\n",
+				fprintf(stdout, "Elapsed time: %.3lf\nCaptured events: %" PRIu64 "\nEps: %.2lf\n",
 					duration,
 					num_evts,
 					num_evts / duration);
