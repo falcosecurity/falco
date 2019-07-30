@@ -196,7 +196,9 @@ function split_lines(rules_content)
       line = string.sub(rules_content, last_pos, pos-1)
       if line ~= "" then
 	 lines[#lines+1] = line
-	 if string.sub(line, 1, 1) == '-' then
+	 if string.len(line) >= 3 and string.sub(line, 1, 3) == "---" then
+	    -- Document marker, skip
+         elseif string.sub(line, 1, 1) == '-' then
 	    indices[#indices+1] = idx
 	 end
 
@@ -328,7 +330,7 @@ function load_rules(sinsp_lua_parser,
 	 end
 
 	 if state.macros_by_name[v['macro']] == nil then
-	    state.ordered_macro_names[#state.ordered_macro_names+1] = v['macro']
+	    state.ordered_macro_names[#state.ordered_macro_names+1] = {["idx"]=i, ["name"]=v['macro']}
 	 end
 
 	 for j, field in ipairs({'condition'}) do
@@ -450,7 +452,7 @@ function load_rules(sinsp_lua_parser,
 	       -- loaded in the order in which they first appeared,
 	       -- potentially across multiple files.
 	       if state.rules_by_name[v['rule']] == nil then
-		  state.ordered_rule_names[#state.ordered_rule_names+1] = v['rule']
+		  state.ordered_rule_names[#state.ordered_rule_names+1] = {["idx"]=i, ["name"]=v['rule']}
 	       end
 
 	       -- The output field might be a folded-style, which adds a
@@ -496,7 +498,10 @@ function load_rules(sinsp_lua_parser,
       state.lists[v['list']] = {["items"] = items, ["used"] = false}
    end
 
-   for i, name in ipairs(state.ordered_macro_names) do
+   for _, obj in ipairs(state.ordered_macro_names) do
+
+      local i = obj["idx"]
+      local name = obj["name"]
 
       local v = state.macros_by_name[name]
 
@@ -515,7 +520,10 @@ function load_rules(sinsp_lua_parser,
       state.macros[v['macro']] = {["ast"] = ast.filter.value, ["used"] = false}
    end
 
-   for i, name in ipairs(state.ordered_rule_names) do
+   for _, obj in ipairs(state.ordered_rule_names) do
+
+      local i = obj["idx"]
+      local name = obj["name"]
 
       local v = state.rules_by_name[name]
 
