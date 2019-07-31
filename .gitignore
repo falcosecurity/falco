@@ -3,10 +3,12 @@
 *.pyc
 
 test/falco_tests.yaml
+test/falco_traces.yaml
 test/traces-negative
 test/traces-positive
 test/traces-info
 test/job-results
+test/build
 test/.phoronix-test-suite
 test/results*.json.*
 test/build
