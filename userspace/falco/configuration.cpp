@@ -221,10 +221,13 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 	m_syscall_evt_drop_max_burst = m_config->get_scalar<double>("syscall_event_drops", "max_burst", 10);
 
 	m_module_check_frequency = m_config->get_scalar<uint64_t>("module_check", "frequency", 10);
+	if(m_module_check_frequency < 10) {
+		throw invalid_argument("Module check frequency must be higher than 10 seconds");
+	}
 	m_module_check_max_consecutive_failures = m_config->get_scalar<int>("module_check", "max_consecutive_failures", 3);
 	m_module_check_backoff_max_attempts = m_config->get_scalar<int>("module_check", "backoff", "max_attempts", 5);
-	m_module_check_backoff_init_delay = m_config->get_scalar<int>("module_check", "backoff", "init_delay", 100);
-	m_module_check_backoff_max_delay = m_config->get_scalar<int>("module_check", "backoff", "max_delay", 3000);
+	m_module_check_backoff_init_delay = m_config->get_scalar<uint64_t>("module_check", "backoff", "init_delay", 100);
+	m_module_check_backoff_max_delay = m_config->get_scalar<uint64_t>("module_check", "backoff", "max_delay", 3000);
 
 	m_syscall_evt_simulate_drops = m_config->get_scalar<bool>("syscall_event_drops", "simulate_drops", false);
 }

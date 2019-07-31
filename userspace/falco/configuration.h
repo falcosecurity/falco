@@ -260,8 +260,8 @@ class falco_configuration
 	uint64_t m_module_check_frequency;
 	int m_module_check_max_consecutive_failures;
 	int m_module_check_backoff_max_attempts;
-	int m_module_check_backoff_init_delay;
-	int m_module_check_backoff_max_delay;
+	uint64_t m_module_check_backoff_init_delay;
+	uint64_t m_module_check_backoff_max_delay;
 
 	// Only used for testing
 	bool m_syscall_evt_simulate_drops;
