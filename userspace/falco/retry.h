@@ -26,8 +26,6 @@ limitations under the License.
 
 namespace utils
 {
-constexpr int64_t max_backoff_ms = 3000; // 3 seconds
-
 template<
 	typename Predicate,
 	typename Callable,
@@ -37,7 +35,8 @@ template<
 	// require that Predicate is actually a Predicate
 	std::enable_if_t<std::is_convertible<std::result_of_t<Predicate &(R)>, bool>::value, int> = 0>
 R retry(int max_retries,
-	int64_t initial_delay_ms,
+	uint64_t initial_delay_ms,
+	uint64_t max_backoff_ms,
 	Predicate &&retriable,
 	Callable &&callable,
 	Args &&... args)
@@ -45,7 +44,7 @@ R retry(int max_retries,
 	int retries = 0;
 	while(true)
 	{
-		falco_logger::log(LOG_INFO, "Retry # " + std::to_string(retries) + "\n");
+		falco_logger::log(LOG_INFO, "Retry no.: " + std::to_string(retries) + "\n");
 		bool result = callable(std::forward<Args>(args)...);
 
 		if(!retriable(result))
