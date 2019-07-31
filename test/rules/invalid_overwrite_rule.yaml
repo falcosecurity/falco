@@ -1,0 +1,6 @@
+- rule: some rule
+  desc: some desc
+  condition: bar
+  output: some output
+  priority: INFO
+  append: false
