@@ -16,7 +16,7 @@
 # limitations under the License.
 
 if(NOT SYSDIG_DIR)
-	set(SYSDIG_DIR "${PROJECT_SOURCE_DIR}/../sysdig")
+	get_filename_component(SYSDIG_DIR "${PROJECT_SOURCE_DIR}/../sysdig" REALPATH)
 endif()
 
 set(FALCO_ENGINE_SOURCE_FILES
