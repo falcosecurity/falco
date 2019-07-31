@@ -1412,6 +1412,12 @@
   priority: WARNING
   tags: [filesystem, mitre_credential_access, mitre_discovery]
 
+- macro: amazon_linux_running_python_yum
+  condition: >
+    (proc.name = python and
+     proc.pcmdline = "python -m amazon_linux_extras system_motd" and
+     proc.cmdline startswith "python -c import yum;")
+
 # Only let rpm-related programs write to the rpm database
 - rule: Write below rpm database
   desc: an attempt to write to the rpm database by any non-rpm related program
@@ -1421,6 +1427,7 @@
     and not ansible_running_python
     and not python_running_chef
     and not exe_running_docker_save
+    and not amazon_linux_running_python_yum
   output: "Rpm database opened for writing by a non-rpm program (command=%proc.cmdline file=%fd.name parent=%proc.pname pcmdline=%proc.pcmdline container_id=%container.id image=%container.image.repository)"
   priority: ERROR
   tags: [filesystem, software_mgmt, mitre_persistence]
