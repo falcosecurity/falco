@@ -133,6 +133,47 @@ public:
 		}
 	}
 
+	/**
+	* Get a scalar value defined inside a 3 level nested structure like:
+	* file_output:
+	*   enabled: true
+	*   filename: output_file.txt
+	*
+	* get_scalar<bool>("file_output", "enabled", false)
+	*/
+	template<typename T>
+	const T get_scalar(const std::string& key, const std::string& subkey, const std::string& subsubkey, const T& default_value)
+	{
+		try
+		{
+			auto node = m_root[key][subkey][subsubkey];
+			if (node.IsDefined())
+			{
+				return node.as<T>();
+			}
+		}
+		catch (const YAML::BadConversion& ex)
+		{
+			std::cerr << "Cannot read config file (" + m_path + "): wrong type at key " + key + "\n";
+			throw;
+		}
+
+		return default_value;
+	}
+
+	/**
+	 * Set the second-level node identified by key[key][subkey] to value.
+	 */
+	template<typename T>
+	void set_scalar(const std::string& key, const std::string& subkey, const std::string& subsubkey, const T& value)
+	{
+		auto node = m_root;
+		if (node.IsDefined())
+		{
+			node[key][subkey][subsubkey] = value;
+		}
+	}
+
 	// called with the last variadic arg (where the sequence is expected to be found)
 	template <typename T>
 	void get_sequence_from_node(T& ret, const YAML::Node &node)
