@@ -20,7 +20,7 @@ cmake_minimum_required(VERSION 3.3.2)
 project(falco)
 
 if(NOT SYSDIG_DIR)
-  get_filename_component(SYSDIG_DIR "${PROJECT_SOURCE_DIR}/../sysdig" REALPATH)
+	get_filename_component(SYSDIG_DIR "${PROJECT_SOURCE_DIR}/../sysdig" REALPATH)
 endif()
 
 # Custom CMake modules
@@ -53,7 +53,7 @@ if(BUILD_WARNINGS_AS_ERRORS)
 endif()
 
 set(CMAKE_C_FLAGS "${CMAKE_COMMON_FLAGS}")
-set(CMAKE_CXX_FLAGS "--std=c++0x ${CMAKE_COMMON_FLAGS}")
+set(CMAKE_CXX_FLAGS "--std=c++14 ${CMAKE_COMMON_FLAGS}")
 
 set(CMAKE_C_FLAGS_DEBUG "${DRAIOS_DEBUG_FLAGS}")
 set(CMAKE_CXX_FLAGS_DEBUG "${DRAIOS_DEBUG_FLAGS}")
