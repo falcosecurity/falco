@@ -88,6 +88,14 @@ syscall_event_drops:
   rate: .03333
   max_burst: 10
 
+module_check:
+  frequency: 10
+  max_consecutive_failures: 3
+  backoff:
+    max_attempts: 5
+    init_delay: 100
+    max_delay: 3000
+
 # A throttling mechanism implemented as a token bucket limits the
 # rate of falco notifications. This throttling is controlled by the following configuration
 # options:
