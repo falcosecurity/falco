@@ -24,7 +24,7 @@ limitations under the License.
 
 namespace utils
 {
-std::string db("/tmp/modules"); // fixme > change into /proc/modules
+std::string db("/proc/modules");
 std::string module(PROBE_NAME);
 
 static auto has_module(bool verbose, bool strict)
@@ -97,13 +97,24 @@ static auto has_module(bool verbose, bool strict)
 	return false;
 }
 
-static auto ins_module(bool has_module)
+static auto ins_module()
+{
+	if(system("modprobe " PROBE_NAME " > /dev/null 2> /dev/null"))
+	{
+		// todo > fallback to a custom directory where to look for the module using `modprobe -d build/driver`
+		falco_logger::log(LOG_ERR, "Unable to load the module.\n");
+		return false;
+	}
+	return true;
+}
+
+static auto module_predicate(bool has_module)
 {
 	if(has_module)
 	{
 		return false;
 	}
-	// todo > try to reinsert module here, return has_module() result
-	return true;
+	// Retry only when we have been not able to insert the module
+	return !ins_module();
 }
 } // namespace utils
