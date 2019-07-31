@@ -2,6 +2,36 @@
 
 This file documents all notable changes to Falco. The release numbering uses [semantic versioning](http://semver.org).
 
+## v0.17.0
+
+Released 2019-07-31
+
+## Major Changes
+
+* **The set of supported platforms has changed**. Switch to a reorganized builder image that uses Centos 7 as a base. As a result, falco is no longer supported on Centos 6. The other supported platforms should remain the same [[#719](https://github.com/falcosecurity/falco/pull/719)]
+
+## Minor Changes
+
+* When enabling rules within the falco engine, use rule substrings instead of regexes. [[#743](https://github.com/falcosecurity/falco/pull/743)]
+
+* Additional improvements to the handling and display of rules validation errors [[#744](https://github.com/falcosecurity/falco/pull/744)] [[#747](https://github.com/falcosecurity/falco/pull/747)]
+
+## Bug Fixes
+
+* Fix a problem that would cause prevent container metadata lookups when falco was daemonized [[#731](https://github.com/falcosecurity/falco/pull/731)]
+
+* Allow rule priorites to be expressed as lowercase and a mix of lower/uppercase [[#737](https://github.com/falcosecurity/falco/pull/737)]
+
+## Rule Changes
+
+* Fix a parentheses bug with the `shell_procs` macro [[#728](https://github.com/falcosecurity/falco/pull/728)]
+
+* Allow additional containers to mount sensitive host paths [[#733](https://github.com/falcosecurity/falco/pull/733)] [[#736](https://github.com/falcosecurity/falco/pull/736)]
+
+* Allow additional containers to truncate log files [[#733](https://github.com/falcosecurity/falco/pull/733)]
+
+* Fix false positives with the `Write below root` rule on GKE [[#739](https://github.com/falcosecurity/falco/pull/739)]
+
 ## v0.16.0
 
 Released 2019-07-12
