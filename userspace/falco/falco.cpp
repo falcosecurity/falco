@@ -47,6 +47,9 @@ limitations under the License.
 #include "config_falco.h"
 #include "statsfilewriter.h"
 #include "webserver.h"
+#include "timing.h"
+#include "retry.h"
+#include "module_utils.cpp"
 
 typedef function<void(sinsp* inspector)> open_t;
 
@@ -54,8 +57,6 @@ bool g_terminate = false;
 bool g_reopen_outputs = false;
 bool g_restart = false;
 bool g_daemonized = false;
-
-std::string module(PROBE_NAME);
 
 //
 // Helper functions
@@ -218,74 +219,6 @@ static std::string read_file(std::string filename)
 	return str;
 }
 
-static bool has_module(bool verbose, bool loaded = false)
-{
-	// Comparing considering underscores (95) equal to dashes (45), and viceversa
-	std::function<bool(const char &, const char &)> comparator = [](const char &a, const char &b) {
-		return a == b || (a == 45 && b == 95) || (b == 95 && a == 45);
-	};
-
-	std::string filename("/proc/modules");
-	std::ifstream modules(filename);
-	std::string line;
-
-	// todo > check for errors on ifstream
-
-	while(std::getline(modules, line))
-	{
-		bool shorter = module.length() <= line.length();
-		if(shorter && std::equal(module.begin(), module.end(), line.begin(), comparator))
-		{
-			auto result = true;
-			std::istringstream iss(line);
-			std::vector<std::string> cols(std::istream_iterator<std::string>{iss}, std::istream_iterator<std::string>());
-
-			// Optionally check the module's number of instances - ie., whether it is loaded or not
-			auto ninstances = cols.at(2);
-			if(loaded)
-			{
-				result = result && std::stoi(ninstances) > 0;
-			}
-
-			// Check the module's load state
-			auto state = cols.at(4);
-			std::transform(state.begin(), state.end(), state.begin(), ::tolower);
-			result = result && (state == "live");
-
-			if(verbose)
-			{
-				falco_logger::log(LOG_INFO, "Kernel moduleninsta" + ninstances + "\n");
-				falco_logger::log(LOG_INFO, "Kernel module load state: " + state + "\n");
-			}
-
-			// Check the module's taint state
-			// See https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/panic.c#n351
-			if(cols.size() > 6)
-			{
-				auto taint = cols.at(6);
-
-				auto died = taint.find("D") == std::string::npos;
-				auto warn = taint.find("W") == std::string::npos;
-				auto unloaded = taint.find("R") == std::string::npos;
-				if(verbose)
-				{
-					taint.erase(0, taint.find_first_not_of('('));
-					taint.erase(taint.find_last_not_of(')') + 1);
-					falco_logger::log(LOG_INFO, "Kernel module taint state: " + taint + "\n");
-				}
-
-				result = result && !died && !warn && !unloaded;
-			}
-
-			return result;
-		}
-	}
-
-	modules.close();
-
-	return false;
-}
-
 //
 // Event processing loop
 //
@@ -326,7 +259,7 @@ uint64_t do_inspect(falco_engine *engine,
 	//
 	// Loop through the events
 	//
-	while(1)
+	while(true)
 	{
 
 		rc = inspector->next(&ev);
@@ -1140,7 +1073,7 @@ int falco_init(int argc, char **argv)
 			}
 			
 			// Check that the kernel module is present at startup, otherwise try to add it
-			if(!has_module(verbose))
+			if(!utils::has_module(verbose, false))
 			{
 				falco_logger::log(LOG_ERR, "Module not found. Trying to load it ...\n");
 				if(system("modprobe " PROBE_NAME " > /dev/null 2> /dev/null"))
@@ -1249,9 +1182,39 @@ int falco_init(int argc, char **argv)
 		}
 		else
 		{
-			uint64_t num_evts;
+			utils::timer t;
+			t.reset();
 
-			num_evts = do_inspect(engine,
+			uint64_t interval = 10; // seconds
+			auto count = 0;
+			auto stop_after = 3;
+			auto max_attempts = 5;
+			auto initial_delay = 100; // milliseconds
+
+			// Module check
+			while(true)
+			{
+				// Every <interval> seconds
+				if(t.seconds_elapsed() > interval) {
+					// Check module is present and loaded with exponential backoff (eg., 100, 200, 400, ...)
+					// When module is missing or unloaded, try to insert it
+					// Retries at most <max_attempts> times
+					// Stops early if module is found
+					auto found = utils::retry(max_attempts, initial_delay, utils::ins_module, utils::has_module, verbose, true);
+
+					// Count how many intervals the module is missing, reset when found
+					count = found ? 0 : count + 1;
+					// Stop falco if module is missing from <count * stop_after> checks
+					if (count >= stop_after) {
+						result = EXIT_FAILURE;
+						goto exit;
+					}
+					// Reset timer
+					t.reset();
+				}
+			}
+
+			uint64_t num_evts = do_inspect(engine,
 					      outputs,
 					      inspector,
 					      config,
