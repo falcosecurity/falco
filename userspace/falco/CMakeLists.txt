@@ -27,6 +27,7 @@ add_executable(falco
 	falco_outputs.cpp
 	event_drops.cpp
 	statsfilewriter.cpp
+	timer.cpp
 	falco.cpp
 	"${SYSDIG_DIR}/userspace/sysdig/fields_info.cpp"
 	webserver.cpp)
@@ -49,15 +50,10 @@ target_link_libraries(falco
 configure_file(config_falco.h.in config_falco.h)
 
 add_custom_command(TARGET falco
-	COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/verify_engine_fields.sh ${CMAKE_SOURCE_DIR}
+	COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/verify_engine_fields ${CMAKE_SOURCE_DIR}
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	COMMENT "Comparing engine fields checksum in falco_engine.h to actual fields"
 	)
-
-# add_custom_target(verify_engine_fields
-# 	DEPENDS verify_engine_fields.sh falco_engine.h)
-
-# add_dependencies(verify_engine_fields falco)
 
 install(TARGETS falco DESTINATION ${FALCO_BIN_DIR})
 install(DIRECTORY lua
