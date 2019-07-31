@@ -47,7 +47,7 @@ limitations under the License.
 #include "config_falco.h"
 #include "statsfilewriter.h"
 #include "webserver.h"
-#include "timing.h"
+#include "timer.h"
 #include "retry.h"
 #include "module_utils.cpp"
 
@@ -231,6 +231,7 @@ uint64_t do_inspect(falco_engine *engine,
 		    string &stats_filename,
 		    uint64_t stats_interval,
 		    bool all_events,
+			bool verbose,
 		    int &result)
 {
 	uint64_t num_evts = 0;
@@ -256,11 +257,40 @@ uint64_t do_inspect(falco_engine *engine,
 		}
 	}
 
+	// Module check settings
+	utils::timer t;
+	t.reset();
+
+	uint64_t frequency = config.m_module_check_frequency;
+	auto num_failures = 0;
+	auto max_failures = config.m_module_check_max_consecutive_failures;
+	auto max_attempts = config.m_module_check_backoff_max_attempts;
+	auto ini_delay = config.m_module_check_backoff_init_delay;
+	auto max_delay = config.m_module_check_backoff_max_delay;
+
 	//
 	// Loop through the events
 	//
 	while(true)
 	{
+		// Check module every x seconds
+		if(t.seconds_elapsed() > frequency) {
+			// Check module is present and loaded with exponential backoff (eg., 100, 200, 400, ...)
+			// When module is missing or unloaded, try to insert it
+			// Retries at most <max_attempts> times
+			// Stops early if module is found
+			auto found = utils::retry(max_attempts, ini_delay, max_delay, utils::module_predicate, utils::has_module, verbose, true);
+
+			// Count how many intervals the module is missing, reset counter when module has been found
+			num_failures = found ? 0 : num_failures + 1;
+			// Stop falco if module is missing from <count * stop_after> checks
+			if (num_failures >= max_failures) {
+				result = EXIT_FAILURE;
+				break;
+			}
+			// Reset timer
+			t.reset();
+		}
 
 		rc = inspector->next(&ev);
 
@@ -1076,10 +1106,8 @@ int falco_init(int argc, char **argv)
 			if(!utils::has_module(verbose, false))
 			{
 				falco_logger::log(LOG_ERR, "Module not found. Trying to load it ...\n");
-				if(system("modprobe " PROBE_NAME " > /dev/null 2> /dev/null"))
+				if(!utils::ins_module())
 				{
-					// todo > fallback to a custom directory where to look for the module - ie., `modprobe -d build/driver`
-					falco_logger::log(LOG_ERR, "Unable to load the driver. Exiting.\n");
 					result = EXIT_FAILURE;
 					goto exit;
 				}
@@ -1182,38 +1210,6 @@ int falco_init(int argc, char **argv)
 		}
 		else
 		{
-			utils::timer t;
-			t.reset();
-
-			uint64_t interval = 10; // seconds
-			auto count = 0;
-			auto stop_after = 3;
-			auto max_attempts = 5;
-			auto initial_delay = 100; // milliseconds
-
-			// Module check
-			while(true)
-			{
-				// Every <interval> seconds
-				if(t.seconds_elapsed() > interval) {
-					// Check module is present and loaded with exponential backoff (eg., 100, 200, 400, ...)
-					// When module is missing or unloaded, try to insert it
-					// Retries at most <max_attempts> times
-					// Stops early if module is found
-					auto found = utils::retry(max_attempts, initial_delay, utils::ins_module, utils::has_module, verbose, true);
-
-					// Count how many intervals the module is missing, reset when found
-					count = found ? 0 : count + 1;
-					// Stop falco if module is missing from <count * stop_after> checks
-					if (count >= stop_after) {
-						result = EXIT_FAILURE;
-						goto exit;
-					}
-					// Reset timer
-					t.reset();
-				}
-			}
-
 			uint64_t num_evts = do_inspect(engine,
 					      outputs,
 					      inspector,
@@ -1223,6 +1219,7 @@ int falco_init(int argc, char **argv)
 					      stats_filename,
 					      stats_interval,
 					      all_events,
+						  verbose,
 					      result);
 
 			duration = ((double)clock()) / CLOCKS_PER_SEC - duration;
