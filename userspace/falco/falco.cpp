@@ -257,8 +257,15 @@ uint64_t do_inspect(falco_engine *engine,
 	//
 	while(1)
 	{
-
-		rc = inspector->next(&ev);
+    try {
+      rc = inspector->next(&ev);
+    } catch(sinsp_exception& e) {
+      string err = "Error handling inspector event: ";
+      err.append(e.what());
+      err.append("\n");
+      falco_logger::log(LOG_ERR, err);
+      continue;
+    }
 
 		writer.handle();
 
