@@ -80,7 +80,6 @@ buffered_outputs: false
 # The rate at which log/alert messages are emitted is governed by a
 # token bucket. The rate corresponds to one message every 30 seconds
 # with a burst of 10 messages.
-
 syscall_event_drops:
   actions:
     - log
@@ -88,6 +87,13 @@ syscall_event_drops:
   rate: .03333
   max_burst: 10
 
+# Options to configure the kernel module check.
+# Falco uses a kernel module to obtain the info to match against the rules.
+# In order to correctly behave it needs to ensure that the kernel module is always present and well behaving.
+# The following options configure:
+# the frequency it should check for the kernel module
+# the maximum number of consecutive failures after which it should stop
+# the exponential backoff mechanism it have to use to check for the module and eventally to try to re-insert it automatically.
 module_check:
   frequency: 10
   max_consecutive_failures: 3
@@ -107,14 +113,12 @@ module_check:
 # an initial quiet period, and then up to 1 notification per second
 # afterward. It would gain the full burst back after 1000 seconds of
 # no activity.
-
 outputs:
   rate: 1
   max_burst: 1000
 
 # Where security notifications should go.
 # Multiple outputs can be enabled.
-
 syslog_output:
   enabled: true
 
@@ -125,7 +129,6 @@ syslog_output:
 #
 # Also, the file will be closed and reopened if falco is signaled with
 # SIGUSR1.
-
 file_output:
   enabled: false
   keep_alive: false
@@ -144,7 +147,6 @@ stdout_output:
 # $ openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out certificate.pem
 # $ cat certificate.pem key.pem > falco.pem
 # $ sudo cp falco.pem /etc/falco/falco.pem
-
 webserver:
   enabled: true
   listen_port: 8765
