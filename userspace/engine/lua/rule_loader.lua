@@ -225,7 +225,23 @@ function split_lines(rules_content)
    return lines, indices
 end
 
-function get_orig_yaml_obj(rules_lines, row, num_lines)
+function get_orig_yaml_obj(rules_lines, row)
+   local ret = ""
+
+   idx = row
+   while (idx <= #rules_lines) do
+      ret = ret..rules_lines[idx].."\n"
+      idx = idx + 1
+
+      if idx > #rules_lines or rules_lines[idx] == "" or string.sub(rules_lines[idx], 1, 1) == '-' then
+	 break
+      end
+   end
+
+   return ret
+end
+
+function get_lines(rules_lines, row, num_lines)
    local ret = ""
 
    idx = row
@@ -238,7 +254,7 @@ function get_orig_yaml_obj(rules_lines, row, num_lines)
 end
 
 function build_error(rules_lines, row, num_lines, err)
-   local ret = err.."\n---\n"..get_orig_yaml_obj(rules_lines, row, num_lines).."---"
+   local ret = err.."\n---\n"..get_lines(rules_lines, row, num_lines).."---"
 
    return ret
 end
@@ -248,65 +264,19 @@ function build_error_with_context(ctx, err)
    return ret
 end
 
-function load_rules(sinsp_lua_parser,
-		    json_lua_parser,
-		    rules_content,
-		    rules_mgr,
-		    verbose,
-		    all_events,
-		    extra,
-		    replace_container_info,
-		    min_priority)
-
-   local required_engine_version = 0
-
-   local lines, indices = split_lines(rules_content)
-
-   local status, rules = pcall(yaml.load, rules_content)
-
-   if status == false then
-      local pat = "^([%d]+):([%d]+): "
-      -- rules is actually an error string
-
-      local row = 0
-      local col = 0
-
-      row, col = string.match(rules, pat)
-      if row ~= nil and col ~= nil then
-	 rules = string.gsub(rules, pat, "")
-      end
-
-      row = tonumber(row)
-      col = tonumber(col)
-
-      return false, build_error(lines, row, 3, rules)
-   end
-
-   if rules == nil then
-      -- An empty rules file is acceptable
-      return true, required_engine_version
-   end
-
-   if type(rules) ~= "table" then
-      return false, build_error(lines, 1, 1, "Rules content is not yaml")
-   end
-
-   -- Look for non-numeric indices--implies that document is not array
-   -- of objects.
-   for key, val in pairs(rules) do
-      if type(key) ~= "number" then
-	 return false, build_error(lines, 1, 1, "Rules content is not yaml array of objects")
-      end
-   end
+function load_rules_doc(rules_mgr, doc, load_state)
 
    -- Iterate over yaml list. In this pass, all we're doing is
    -- populating the set of rules, macros, and lists. We're not
    -- expanding/compiling anything yet. All that will happen in a
    -- second pass
-   for i,v in ipairs(rules) do
+   for i,v in ipairs(doc) do
+
+      load_state.cur_item_idx = load_state.cur_item_idx + 1
 
       -- Save back the original object as it appeared in the file. Will be used to provide context.
-      local context = get_orig_yaml_obj(lines, indices[i], (indices[i+1]-indices[i]))
+      local context = get_orig_yaml_obj(load_state.lines,
+					load_state.indices[load_state.cur_item_idx])
 
       if (not (type(v) == "table")) then
 	 return false, build_error_with_context(context, "Unexpected element of type " ..type(v)..". Each element should be a yaml associative array.")
@@ -315,8 +285,8 @@ function load_rules(sinsp_lua_parser,
       v['context'] = context
 
       if (v['required_engine_version']) then
-	 required_engine_version = v['required_engine_version']
-	 if type(required_engine_version) ~= "number" then
+	 load_state.required_engine_version = v['required_engine_version']
+	 if type(load_state.required_engine_version) ~= "number" then
 	    return false, build_error_with_context(v['context'], "Value of required_engine_version must be a number")
 	 end
 
@@ -458,7 +428,7 @@ function load_rules(sinsp_lua_parser,
 	       error("Invalid priority level: "..v['priority'])
 	    end
 
-	    if v['priority_num'] <= min_priority then
+	    if v['priority_num'] <= load_state.min_priority then
 	       -- Note that we can overwrite rules, but the rules are still
 	       -- loaded in the order in which they first appeared,
 	       -- potentially across multiple files.
@@ -483,7 +453,74 @@ function load_rules(sinsp_lua_parser,
       end
    end
 
-   -- We've now loaded all the rules, macros, and list. Now
+   return true, ""
+end
+
+function load_rules(sinsp_lua_parser,
+		    json_lua_parser,
+		    rules_content,
+		    rules_mgr,
+		    verbose,
+		    all_events,
+		    extra,
+		    replace_container_info,
+		    min_priority)
+
+   local load_state = {lines={}, indices={}, cur_item_idx=0, min_priority=min_priority, required_engine_version=0}
+
+   load_state.lines, load_state.indices = split_lines(rules_content)
+
+   local status, docs = pcall(yaml.load, rules_content, { all = true })
+
+   if status == false then
+      local pat = "^([%d]+):([%d]+): "
+      -- docs is actually an error string
+
+      local row = 0
+      local col = 0
+
+      row, col = string.match(docs, pat)
+      if row ~= nil and col ~= nil then
+	 docs = string.gsub(docs, pat, "")
+      end
+
+      row = tonumber(row)
+      col = tonumber(col)
+
+      return false, build_error(load_state.lines, row, 3, docs)
+   end
+
+   if docs == nil then
+      -- An empty rules file is acceptable
+      return true, load_state.required_engine_version
+   end
+
+   if type(docs) ~= "table" then
+      return false, build_error(load_state.lines, 1, 1, "Rules content is not yaml")
+   end
+
+   for docidx, doc in ipairs(docs) do
+
+      if type(doc) ~= "table" then
+	 return false, build_error(load_state.lines, 1, 1, "Rules content is not yaml")
+      end
+
+      -- Look for non-numeric indices--implies that document is not array
+      -- of objects.
+      for key, val in pairs(doc) do
+	 if type(key) ~= "number" then
+	    return false, build_error(load_state.lines, 1, 1, "Rules content is not yaml array of objects")
+	 end
+      end
+
+      res, errstr = load_rules_doc(rules_mgr, doc, load_state)
+
+      if not res then
+	 return res, errstr
+      end
+   end
+
+   -- We've now loaded all the rules, macros, and lists. Now
    -- compile/expand the rules, macros, and lists. We use
    -- ordered_rule_{lists,macros,names} to compile them in the order
    -- in which they appeared in the file(s).
@@ -705,7 +742,7 @@ function load_rules(sinsp_lua_parser,
 
    io.flush()
 
-   return true, required_engine_version
+   return true, load_state.required_engine_version
 end
 
 local rule_fmt = "%-50s %s"
