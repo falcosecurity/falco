@@ -53,7 +53,16 @@ bool k8s_audit_handler::accept_data(falco_engine *engine,
 		return false;
 	}
 
-	if(!engine->parse_k8s_audit_json(j, jevts))
+	bool ok;
+	try
+	{
+		ok = engine->parse_k8s_audit_json(j, jevts);
+	}
+	catch(json::type_error &e)
+	{
+		ok = false;
+	}
+	if(!ok)
 	{
 		errstr = string("Data not recognized as a k8s audit event");
 		return false;
