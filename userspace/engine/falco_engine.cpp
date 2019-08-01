@@ -365,46 +365,54 @@ unique_ptr<falco_engine::rule_result> falco_engine::process_k8s_audit_event(json
 
 bool falco_engine::parse_k8s_audit_json(nlohmann::json &j, std::list<json_event> &evts)
 {
-	// If the Kind is EventList, split it into individual events.
-	if(j.value("kind", "<NA>") == "EventList")
+	// Note that nlohmann::basic_json::value can throw  nlohmann::basic_json::type_error (302, 306)
+	try
 	{
-		for(auto &je : j["items"])
+		// If the kind is EventList, split it into individual events
+		if(j.value("kind", "<NA>") == "EventList")
+		{
+			for(auto &je : j["items"])
+			{
+				evts.emplace_back();
+				je["kind"] = "Event";
+
+				uint64_t ns = 0;
+				if(!sinsp_utils::parse_iso_8601_utc_string(je.value(k8s_audit_time, "<NA>"), ns))
+				{
+					return false;
+				}
+
+				std::string tmp;
+				sinsp_utils::ts_to_string(ns, &tmp, false, true);
+
+				evts.back().set_jevt(je, ns);
+			}
+
+			return true;
+		}
+		else if(j.value("kind", "<NA>") == "Event")
 		{
 			evts.emplace_back();
-			je["kind"] = "Event";
-
 			uint64_t ns = 0;
-			if(!sinsp_utils::parse_iso_8601_utc_string(je.value(k8s_audit_time, "<NA>"), ns))
+			if(!sinsp_utils::parse_iso_8601_utc_string(j.value(k8s_audit_time, "<NA>"), ns))
 			{
 				return false;
 			}
 
-			std::string tmp;
-			sinsp_utils::ts_to_string(ns, &tmp, false, true);
-
-			evts.back().set_jevt(je, ns);
+			evts.back().set_jevt(j, ns);
+			return true;
 		}
-
-		return true;
-	}
-	else if(j.value("kind", "<NA>") == "Event")
-	{
-		evts.emplace_back();
-		uint64_t ns = 0;
-		if(!sinsp_utils::parse_iso_8601_utc_string(j.value(k8s_audit_time, "<NA>"), ns))
+		else
 		{
 			return false;
 		}
-
-
-		evts.back().set_jevt(j, ns);
-		return true;
 	}
-	else
+	catch(exception &e)
 	{
+		// Propagate the exception
+		rethrow_exception(current_exception());
 		return false;
 	}
-
 }
 
 unique_ptr<falco_engine::rule_result> falco_engine::process_k8s_audit_event(json_event *ev)
