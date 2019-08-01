@@ -1,0 +1,13 @@
+---
+- rule: some rule
+  desc: some desc
+  condition: evt.type=open
+  output: some output
+  priority: INFO
+---
+- rule: some rule
+  desc: some desc
+  condition: bar
+  output: some output
+  priority: INFO
+  append: false
