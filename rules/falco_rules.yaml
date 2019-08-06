@@ -2469,6 +2469,103 @@
     Symlinks created over senstivie files (user=%user.name command=%proc.cmdline target=%evt.arg.target linkpath=%evt.arg.linkpath parent_process=%proc.pname)
   priority: NOTICE
   tags: [file, mitre_exfiltration]
+
+- list: miner_ports
+  items: [
+        25, 3333, 3334, 3335, 3336, 3357, 4444,
+        5555, 5556, 5588, 5730, 6099, 6666, 7777,
+        7778, 8000, 8001, 8008, 8080, 8118, 8333,
+        8888, 8899, 9332, 9999, 14433, 14444,
+        45560, 45700
+    ]
+
+- list: miner_domains
+  items: [
+      "asia1.ethpool.org","ca.minexmr.com",
+      "cn.stratum.slushpool.com","de.minexmr.com",
+      "eth-ar.dwarfpool.com","eth-asia.dwarfpool.com",
+      "eth-asia1.nanopool.org","eth-au.dwarfpool.com",
+      "eth-au1.nanopool.org","eth-br.dwarfpool.com",
+      "eth-cn.dwarfpool.com","eth-cn2.dwarfpool.com",
+      "eth-eu.dwarfpool.com","eth-eu1.nanopool.org",
+      "eth-eu2.nanopool.org","eth-hk.dwarfpool.com",
+      "eth-jp1.nanopool.org","eth-ru.dwarfpool.com",
+      "eth-ru2.dwarfpool.com","eth-sg.dwarfpool.com",
+      "eth-us-east1.nanopool.org","eth-us-west1.nanopool.org",
+      "eth-us.dwarfpool.com","eth-us2.dwarfpool.com",
+      "eu.stratum.slushpool.com","eu1.ethermine.org",
+      "eu1.ethpool.org","fr.minexmr.com",
+      "mine.moneropool.com","mine.xmrpool.net",
+      "pool.minexmr.com","pool.monero.hashvault.pro",
+      "pool.supportxmr.com","sg.minexmr.com",
+      "sg.stratum.slushpool.com","stratum-eth.antpool.com",
+      "stratum-ltc.antpool.com","stratum-zec.antpool.com",
+      "stratum.antpool.com","us-east.stratum.slushpool.com",
+      "us1.ethermine.org","us1.ethpool.org",
+      "us2.ethermine.org","us2.ethpool.org",
+      "xmr-asia1.nanopool.org","xmr-au1.nanopool.org",
+      "xmr-eu1.nanopool.org","xmr-eu2.nanopool.org",
+      "xmr-jp1.nanopool.org","xmr-us-east1.nanopool.org",
+      "xmr-us-west1.nanopool.org","xmr.crypto-pool.fr",
+      "xmr.pool.minergate.com"
+      ]
+
+- list: https_miner_domains
+  items: [
+    "ca.minexmr.com",
+    "cn.stratum.slushpool.com",
+    "de.minexmr.com",
+    "fr.minexmr.com",
+    "mine.moneropool.com",
+    "mine.xmrpool.net",
+    "pool.minexmr.com",
+    "sg.minexmr.com",
+    "stratum-eth.antpool.com",
+    "stratum-ltc.antpool.com",
+    "stratum-zec.antpool.com",
+    "stratum.antpool.com",
+    "xmr.crypto-pool.fr"
+  ]
+
+- list: http_miner_domains
+  items: [
+    "ca.minexmr.com",
+    "de.minexmr.com",
+    "fr.minexmr.com",
+    "mine.moneropool.com",
+    "mine.xmrpool.net",
+    "pool.minexmr.com",
+    "sg.minexmr.com",
+    "xmr.crypto-pool.fr"
+  ]
+
+# Add rule based on crypto mining IOCs
+- macro: minerpool_https
+  condition: (fd.sport="443" and fd.sip.name in (https_miner_domains))
+
+- macro: minerpool_http
+  condition: (fd.sport="80" and fd.sip.name in (http_miner_domains))
+
+- macro: minerpool_other
+  condition: (fd.sport in (miner_ports) and fd.sip.name in (miner_domains))
+
+- macro: net_miner_pool
+  condition: (outbound and ((minerpool_http) or (minerpool_https) or (minerpool_other)))
+
+- rule: Detect outbound connections to common miner pool ports
+  desc: Miners typically connect to miner pools on common ports.
+  condition: net_miner_pool
+  output: Outbound connection to IP/Port flagged by cryptoioc.ch (command=%proc.cmdline port=%fd.rport ip=%fd.rip container=%container.info image=%container.image.repository)
+  priority: CRITICAL
+  tags: [network, mitre_execution]
+
+- rule: Detect crypto miners using the Stratum protocol
+  desc: Miners typically specify the mining pool to connect to with a URI that begins with 'stratum+tcp'
+  condition: spawned_process and proc.cmdline contains "stratum+tcp"
+  output: Possible miner running (command=%proc.cmdline container=%container.info image=%container.image.repository)
+  priority: CRITICAL
+  tags: [process, mitre_execution]
+
 # Application rules have moved to application_rules.yaml. Please look
 # there if you want to enable them by adding to
 # falco_rules.local.yaml.
