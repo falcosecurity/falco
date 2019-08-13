@@ -908,12 +908,15 @@
 - macro: access_repositories
   condition: (fd.filename in (repository_files) or fd.directory in (repository_directories))
 
+- macro: modify_repositories
+  condition: (evt.arg.newpath pmatch (repository_directories))
+
 - rule: Update Package Repository
   desc: Detect package repositories get updated
   condition: >
-    open_write and access_repositories and not package_mgmt_procs
+    ((open_write and access_repositories) or (modify and modify_repositories)) and not package_mgmt_procs
   output: >
-    Repository files get updated (user=%user.name command=%proc.cmdline file=%fd.name container_id=%container.id image=%container.image.repository)
+    Repository files get updated (user=%user.name command=%proc.cmdline file=%fd.name newpath=%evt.arg.newpath container_id=%container.id image=%container.image.repository)
   priority:
     NOTICE
   tags: [filesystem, mitre_persistence]
@@ -2440,12 +2443,14 @@
 - rule: Create Hidden Files or Directories
   desc: Detect hidden files or directories created
   condition: >
-    ((mkdir and consider_hidden_file_creation and evt.arg.path contains "/.") or
-     (open_write and consider_hidden_file_creation and evt.arg.flags contains "O_CREAT" and
-      fd.name contains "/." and not fd.name pmatch (exclude_hidden_directories)))
+    (consider_hidden_file_creation and (
+      (modify and evt.arg.newpath contains "/.") or
+      (mkdir and evt.arg.path contains "/.") or
+      (open_write and evt.arg.flags contains "O_CREAT" and fd.name contains "/." and not fd.name pmatch (exclude_hidden_directories)))
+    )
   output: >
     Hidden file or directory created (user=%user.name command=%proc.cmdline
-    file=%fd.name container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
+    file=%fd.name newpath=%evt.arg.newpath container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
   priority:
     NOTICE
   tag: [file, mitre_persistence]
