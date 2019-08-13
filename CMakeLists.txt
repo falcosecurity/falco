@@ -91,7 +91,12 @@ endif()
 message(STATUS "Falco version: ${FALCO_VERSION}")
 
 set(PACKAGE_NAME "falco")
+
+# This is to respect $FALCO_VERSION as the source of truth while building
+# Falco, the BPF object, and vendoring libscap libsinsp from Sysdig
 set(PROBE_VERSION "${FALCO_VERSION}")
+set(SYSDIG_VERSION "${FALCO_VERSION}")
+
 set(PROBE_NAME "falco-probe")
 set(PROBE_DEVICE_NAME "falco")
 if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
