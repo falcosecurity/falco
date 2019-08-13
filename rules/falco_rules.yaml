@@ -72,6 +72,9 @@
 - macro: create_symlink
   condition: evt.type in (symlink, symlinkat) and evt.dir=<
 
+- macro: chmod
+  condition: evt.type in (chmod, fchmod, fchmodat)
+
 # File categories
 - macro: bin_dir
   condition: fd.directory in (/bin, /sbin, /usr/bin, /usr/sbin)
@@ -2416,10 +2419,10 @@
     When the setuid or setgid bits are set for an application,
     this means that the application will run with the privileges of the owning user or group respectively.
     Detect setuid or setgid bits set via chmod
-  condition: consider_all_chmods and spawned_process and proc.name = "chmod" and (proc.args contains "+s" or proc.args contains "4777")
+  condition: consider_all_chmods and chmod and (evt.arg.mode contains "S_ISUID" or evt.arg.mode contains "S_ISGID")
   output: >
-    Setuid or setgid bit is set via chmod (user=%user.name command=%proc.cmdline
-    container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
+    Setuid or setgid bit is set via chmod (fd=%evt.arg.fd filename=%evt.arg.filename mode=%evt.arg.mode user=%user.name
+    command=%proc.cmdline container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
   priority:
     NOTICE
   tag: [process, mitre_persistence]
