@@ -1,11 +1,12 @@
 approvers:
-  - leodido
   - fntlnz
+  - kris-nova
+  - leodido
   - mstemm
 reviewers:
-  - leodido
   - fntlnz
-  - mfdii
   - kaizhe
+  - kris-nova
+  - leodido
+  - mfdii
   - mstemm
-
