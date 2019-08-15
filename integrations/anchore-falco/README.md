@@ -18,7 +18,7 @@ For running this integration you will need:
 
 This integration uses the [same environment variables that anchore-cli](https://github.com/anchore/anchore-cli#configuring-the-anchore-cli):
 
-* ANCHORE_CLI_USER: The user used to conect to anchore-engine. By default is ```admin```
+* ANCHORE_CLI_USER: The user used to connect to anchore-engine. By default is ```admin```
 * ANCHORE_CLI_PASS: The password used to connect to anchore-engine.
 * ANCHORE_CLI_URL: The url where anchore-engine listens. Make sure does not end with a slash. By default is ```http://localhost:8228/v1```
 * ANCHORE_CLI_SSL_VERIFY: Flag for enabling if HTTP client verifies SSL. By default is ```true```
@@ -81,7 +81,7 @@ So you can run directly with Docker:
 
 ```
 docker run --rm -e ANCHORE_CLI_USER=<user-for-custom-anchore-engine> \
-                -e ANCHORE_CLI_PASS=<passsword-for-user-for-custom-anchore-engine> \
+                -e ANCHORE_CLI_PASS=<password-for-user-for-custom-anchore-engine> \
                 -e ANCHORE_CLI_URL=http://<custom-anchore-engine-host>:8228/v1 \
                 sysdig/anchore-falco
 ```
