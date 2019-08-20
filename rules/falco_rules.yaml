@@ -72,6 +72,9 @@
 - macro: create_symlink
   condition: evt.type in (symlink, symlinkat) and evt.dir=<
 
+- macro: chmod
+  condition: (evt.type in (chmod, fchmod, fchmodat) and evt.dir=<)
+
 # File categories
 - macro: bin_dir
   condition: fd.directory in (/bin, /sbin, /usr/bin, /usr/sbin)
@@ -905,12 +908,15 @@
 - macro: access_repositories
   condition: (fd.filename in (repository_files) or fd.directory in (repository_directories))
 
+- macro: modify_repositories
+  condition: (evt.arg.newpath pmatch (repository_directories))
+
 - rule: Update Package Repository
   desc: Detect package repositories get updated
   condition: >
-    open_write and access_repositories and not package_mgmt_procs
+    ((open_write and access_repositories) or (modify and modify_repositories)) and not package_mgmt_procs
   output: >
-    Repository files get updated (user=%user.name command=%proc.cmdline file=%fd.name container_id=%container.id image=%container.image.repository)
+    Repository files get updated (user=%user.name command=%proc.cmdline file=%fd.name newpath=%evt.arg.newpath container_id=%container.id image=%container.image.repository)
   priority:
     NOTICE
   tags: [filesystem, mitre_persistence]
@@ -2409,17 +2415,20 @@
   tag: [process, mitre_defense_evation]
 
 - macro: consider_all_chmods
-  condition: (never_true)
+  condition: (always_true)
+
+- list: user_known_chmod_applications
+  items: []
 
 - rule: Set Setuid or Setgid bit
   desc: >
     When the setuid or setgid bits are set for an application,
     this means that the application will run with the privileges of the owning user or group respectively.
     Detect setuid or setgid bits set via chmod
-  condition: consider_all_chmods and spawned_process and proc.name = "chmod" and (proc.args contains "+s" or proc.args contains "4777")
+  condition: consider_all_chmods and chmod and (evt.arg.mode contains "S_ISUID" or evt.arg.mode contains "S_ISGID") and not proc.cmdline in (user_known_chmod_applications)
   output: >
-    Setuid or setgid bit is set via chmod (user=%user.name command=%proc.cmdline
-    container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
+    Setuid or setgid bit is set via chmod (fd=%evt.arg.fd filename=%evt.arg.filename mode=%evt.arg.mode user=%user.name
+    command=%proc.cmdline container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
   priority:
     NOTICE
   tag: [process, mitre_persistence]
@@ -2434,12 +2443,14 @@
 - rule: Create Hidden Files or Directories
   desc: Detect hidden files or directories created
   condition: >
-    ((mkdir and consider_hidden_file_creation and evt.arg.path contains "/.") or
-     (open_write and consider_hidden_file_creation and evt.arg.flags contains "O_CREAT" and
-      fd.name contains "/." and not fd.name pmatch (exclude_hidden_directories)))
+    (consider_hidden_file_creation and (
+      (modify and evt.arg.newpath contains "/.") or
+      (mkdir and evt.arg.path contains "/.") or
+      (open_write and evt.arg.flags contains "O_CREAT" and fd.name contains "/." and not fd.name pmatch (exclude_hidden_directories)))
+    )
   output: >
     Hidden file or directory created (user=%user.name command=%proc.cmdline
-    file=%fd.name container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
+    file=%fd.name newpath=%evt.arg.newpath container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
   priority:
     NOTICE
   tag: [file, mitre_persistence]

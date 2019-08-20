@@ -44,16 +44,31 @@ bool k8s_audit_handler::accept_data(falco_engine *engine,
 	std::list<json_event> jevts;
 	json j;
 
-	try {
+	try
+	{
 		j = json::parse(data);
 	}
-	catch (json::parse_error& e)
+	catch(json::parse_error &e)
+	{
+		errstr = string("Could not parse data: ") + e.what();
+		return false;
+	}
+	catch(json::out_of_range &e)
 	{
 		errstr = string("Could not parse data: ") + e.what();
 		return false;
 	}
 
-	if(!engine->parse_k8s_audit_json(j, jevts))
+	bool ok;
+	try
+	{
+		ok = engine->parse_k8s_audit_json(j, jevts);
+	}
+	catch(json::type_error &e)
+	{
+		ok = false;
+	}
+	if(!ok)
 	{
 		errstr = string("Data not recognized as a k8s audit event");
 		return false;

@@ -134,7 +134,7 @@ else()
         set(ZLIB_LIB "${ZLIB_SRC}/libz.a")
         ExternalProject_Add(zlib
 		# START CHANGE for CVE-2016-9840, CVE-2016-9841, CVE-2016-9842, CVE-2016-9843
-		URL "http://s3.amazonaws.com/download.draios.com/dependencies/zlib-1.2.11.tar.gz"
+		URL "https://s3.amazonaws.com/download.draios.com/dependencies/zlib-1.2.11.tar.gz"
                 URL_MD5 "1c9f62f0778697a09d36121ead88e08e"
 		# END CHANGE for CVE-2016-9840, CVE-2016-9841, CVE-2016-9842, CVE-2016-9843
 		CONFIGURE_COMMAND "./configure"
@@ -161,7 +161,7 @@ else()
         set(JQ_INCLUDE "${JQ_SRC}")
         set(JQ_LIB "${JQ_SRC}/.libs/libjq.a")
         ExternalProject_Add(jq
-                URL "http://s3.amazonaws.com/download.draios.com/dependencies/jq-1.5.tar.gz"
+                URL "https://s3.amazonaws.com/download.draios.com/dependencies/jq-1.5.tar.gz"
                 URL_MD5 "0933532b086bd8b6a41c1b162b1731f9"
                 CONFIGURE_COMMAND ./configure --disable-maintainer-mode --enable-all-static --disable-dependency-tracking
                 BUILD_COMMAND ${CMD_MAKE} LDFLAGS=-all-static
@@ -193,7 +193,7 @@ else()
 	message(STATUS "Using bundled nlohmann-json in '${NJSON_SRC}'")
 	set(NJSON_INCLUDE "${NJSON_SRC}/single_include")
 	ExternalProject_Add(njson
-		URL "http://download.draios.com/dependencies/njson-3.3.0.tar.gz"
+		URL "https://s3.amazonaws.com/download.draios.com/dependencies/njson-3.3.0.tar.gz"
 		URL_MD5 "e26760e848656a5da400662e6c5d999a"
 		CONFIGURE_COMMAND ""
 		BUILD_COMMAND ""
@@ -217,7 +217,7 @@ else()
 	set(CURSES_LIBRARIES "${CURSES_BUNDLE_DIR}/lib/libncurses.a")
 	message(STATUS "Using bundled ncurses in '${CURSES_BUNDLE_DIR}'")
 	ExternalProject_Add(ncurses
-		URL "http://s3.amazonaws.com/download.draios.com/dependencies/ncurses-6.0-20150725.tgz"
+		URL "https://s3.amazonaws.com/download.draios.com/dependencies/ncurses-6.0-20150725.tgz"
 		URL_MD5 "32b8913312e738d707ae68da439ca1f4"
 		CONFIGURE_COMMAND ./configure --without-cxx --without-cxx-binding --without-ada --without-manpages --without-progs --without-tests --with-terminfo-dirs=/etc/terminfo:/lib/terminfo:/usr/share/terminfo
 		BUILD_COMMAND ${CMD_MAKE}
@@ -244,7 +244,7 @@ else()
 	set(B64_INCLUDE "${B64_SRC}/include")
 	set(B64_LIB "${B64_SRC}/src/libb64.a")
 	ExternalProject_Add(b64
-		URL "http://s3.amazonaws.com/download.draios.com/dependencies/libb64-1.2.src.zip"
+		URL "https://s3.amazonaws.com/download.draios.com/dependencies/libb64-1.2.src.zip"
 		URL_MD5 "a609809408327117e2c643bed91b76c5"
 		CONFIGURE_COMMAND ""
 		BUILD_COMMAND ${CMD_MAKE}
@@ -297,7 +297,7 @@ else()
 
 	ExternalProject_Add(openssl
 		# START CHANGE for CVE-2017-3735, CVE-2017-3731, CVE-2017-3737, CVE-2017-3738, CVE-2017-3736
-		URL "http://s3.amazonaws.com/download.draios.com/dependencies/openssl-1.0.2n.tar.gz"
+		URL "https://s3.amazonaws.com/download.draios.com/dependencies/openssl-1.0.2n.tar.gz"
                 URL_MD5 "13bdc1b1d1ff39b6fd42a255e74676a4"
 		# END CHANGE for CVE-2017-3735, CVE-2017-3731, CVE-2017-3737, CVE-2017-3738, CVE-2017-3736
 		CONFIGURE_COMMAND ./config shared --prefix=${OPENSSL_INSTALL_DIR}
@@ -330,7 +330,7 @@ else()
 	ExternalProject_Add(curl
 		DEPENDS openssl
 		# START CHANGE for CVE-2017-8816, CVE-2017-8817, CVE-2017-8818, CVE-2018-1000007
-		URL "http://s3.amazonaws.com/download.draios.com/dependencies/curl-7.61.0.tar.bz2"
+		URL "https://s3.amazonaws.com/download.draios.com/dependencies/curl-7.61.0.tar.bz2"
 		URL_MD5 "31d0a9f48dc796a7db351898a1e5058a"
 		# END CHANGE for CVE-2017-8816, CVE-2017-8817, CVE-2017-8818, CVE-2018-1000007
 		CONFIGURE_COMMAND ./configure ${CURL_SSL_OPTION} --disable-shared --enable-optimize --disable-curldebug --disable-rt --enable-http --disable-ftp --disable-file --disable-ldap --disable-ldaps --disable-rtsp --disable-telnet --disable-tftp --disable-pop3 --disable-imap --disable-smb --disable-smtp --disable-gopher --disable-sspi --disable-ntlm-wb --disable-tls-srp --without-winssl --without-darwinssl --without-polarssl --without-cyassl --without-nss --without-axtls --without-ca-path --without-ca-bundle --without-libmetalink --without-librtmp --without-winidn --without-libidn2 --without-libpsl --without-nghttp2 --without-libssh2 --disable-threaded-resolver --without-brotli
@@ -365,7 +365,7 @@ else()
 	set(LUAJIT_INCLUDE "${LUAJIT_SRC}")
 	set(LUAJIT_LIB "${LUAJIT_SRC}/libluajit.a")
 	ExternalProject_Add(luajit
-		URL "http://s3.amazonaws.com/download.draios.com/dependencies/LuaJIT-2.0.3.tar.gz"
+		URL "https://s3.amazonaws.com/download.draios.com/dependencies/LuaJIT-2.0.3.tar.gz"
 		URL_MD5 "f14e9104be513913810cd59c8c658dc0"
 		CONFIGURE_COMMAND ""
 		BUILD_COMMAND ${CMD_MAKE}
@@ -395,7 +395,7 @@ else()
 	endif()
 	ExternalProject_Add(lpeg
 		DEPENDS ${LPEG_DEPENDENCIES}
-		URL "http://s3.amazonaws.com/download.draios.com/dependencies/lpeg-1.0.0.tar.gz"
+		URL "https://s3.amazonaws.com/download.draios.com/dependencies/lpeg-1.0.0.tar.gz"
 		URL_MD5 "0aec64ccd13996202ad0c099e2877ece"
 		BUILD_COMMAND LUA_INCLUDE=${LUAJIT_INCLUDE} "${PROJECT_SOURCE_DIR}/scripts/build-lpeg.sh" "${LPEG_SRC}/build"
 		BUILD_IN_SOURCE 1
@@ -430,7 +430,7 @@ else()
 	set(LIBYAML_LIB "${LIBYAML_SRC}/.libs/libyaml.a")
 	message(STATUS "Using bundled libyaml in '${LIBYAML_SRC}'")
 	ExternalProject_Add(libyaml
-		URL "http://s3.amazonaws.com/download.draios.com/dependencies/libyaml-0.1.4.tar.gz"
+		URL "https://s3.amazonaws.com/download.draios.com/dependencies/libyaml-0.1.4.tar.gz"
 		URL_MD5 "4a4bced818da0b9ae7fc8ebc690792a7"
 		BUILD_COMMAND ${CMD_MAKE}
 		BUILD_IN_SOURCE 1
@@ -466,7 +466,7 @@ else()
 
 	ExternalProject_Add(lyaml
 		DEPENDS ${LYAML_DEPENDENCIES}
-		URL "http://s3.amazonaws.com/download.draios.com/dependencies/lyaml-release-v6.0.tar.gz"
+		URL "https://s3.amazonaws.com/download.draios.com/dependencies/lyaml-release-v6.0.tar.gz"
 		URL_MD5 "dc3494689a0dce7cf44e7a99c72b1f30"
 		BUILD_COMMAND ${CMD_MAKE}
 		BUILD_IN_SOURCE 1
@@ -491,7 +491,7 @@ else()
 	set(TBB_INCLUDE_DIR "${TBB_SRC}/include/")
 	set(TBB_LIB "${TBB_SRC}/build/lib_release/libtbb.a")
 	ExternalProject_Add(tbb
-		URL "http://s3.amazonaws.com/download.draios.com/dependencies/tbb-2018_U5.tar.gz"
+		URL "https://s3.amazonaws.com/download.draios.com/dependencies/tbb-2018_U5.tar.gz"
 		URL_MD5 "ff3ae09f8c23892fbc3008c39f78288f"
 		CONFIGURE_COMMAND ""
 		BUILD_COMMAND ${CMD_MAKE} tbb_build_dir=${TBB_SRC}/build tbb_build_prefix=lib extra_inc=big_iron.inc
@@ -523,7 +523,7 @@ else()
 	endif()
 	ExternalProject_Add(civetweb
 		DEPENDS ${CIVETWEB_DEPENDENCIES}
-		URL "http://s3.amazonaws.com/download.draios.com/dependencies/civetweb-1.11.tar.gz"
+		URL "https://s3.amazonaws.com/download.draios.com/dependencies/civetweb-1.11.tar.gz"
                 URL_MD5 "b6d2175650a27924bccb747cbe084cd4"
 		CONFIGURE_COMMAND ${CMAKE_COMMAND} -E make_directory ${CIVETWEB_SRC}/install/lib
 		          COMMAND ${CMAKE_COMMAND} -E make_directory ${CIVETWEB_SRC}/install/include
@@ -611,7 +611,7 @@ else()
 
 	ExternalProject_Add(grpc
 		DEPENDS protobuf zlib c-ares
-		URL "http://download.draios.com/dependencies/grpc-1.8.1.tar.gz"
+		URL "https://s3.amazonaws.com/download.draios.com/dependencies/grpc-1.8.1.tar.gz"
 		URL_MD5 "2fc42c182a0ed1b48ad77397f76bb3bc"
 		CONFIGURE_COMMAND ""
 		# TODO what if using system openssl, protobuf or cares?
