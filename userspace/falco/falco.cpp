@@ -26,6 +26,7 @@ limitations under the License.
 #include <vector>
 #include <algorithm>
 #include <string>
+#include <functional>
 #include <signal.h>
 #include <fcntl.h>
 #include <sys/utsname.h>
@@ -46,6 +47,8 @@ limitations under the License.
 #include "config_falco.h"
 #include "statsfilewriter.h"
 #include "webserver.h"
+
+typedef function<void(sinsp* inspector)> open_t;
 
 bool g_terminate = false;
 bool g_reopen_outputs = false;
@@ -91,7 +94,7 @@ static void usage()
 	   "                               Disable a specific event source.\n"
 	   "                               Available event sources are: syscall, k8s_audit.\n"
 	   "                               It can be passed multiple times.\n"
-	   "                               ....\n"
+	   "                               Can not disable both the event sources.\n"
 	   " -D <substring>                Disable any rules with names having the substring <substring>. Can be specified multiple times.\n"
 	   "                               Can not be specified with -t.\n"
 	   " -e <events_file>              Read the events from <events_file> (in .scap format for sinsp events, or jsonl for\n"
@@ -128,17 +131,15 @@ static void usage()
 	   "                               With -pk or -pkubernetes will use a kubernetes-friendly format.\n"
 	   "                               With -pm or -pmesos will use a mesos-friendly format.\n"
 	   "                               Additionally, specifying -pc/-pk/-pm will change the interpretation\n"
-	   "                               of %%container.info in rule output fields\n"
-	   "                               See the examples section below for more info.\n"
+	   "                               of %%container.info in rule output fields.\n"
 	   " -P, --pidfile <pid_file>      When run as a daemon, write pid to specified file\n"
-       " -r <rules_file>               Rules file/directory (defaults to value set in configuration file,\n"
-       "                               or /etc/falco_rules.yaml). Can be specified multiple times to read\n"
-       "                               from multiple files/directories.\n"
+       " -r <rules_file>               Rules file/directory (defaults to value set in configuration file, or /etc/falco_rules.yaml).\n"
+       "                               Can be specified multiple times to read from multiple files/directories.\n"
 	   " -s <stats_file>               If specified, write statistics related to falco's reading/processing of events\n"
 	   "                               to this file. (Only useful in live mode).\n"
 	   " --stats_interval <msec>       When using -s <stats_file>, write statistics every <msec> ms.\n"
-	   "                               (This uses signals, so don't recommend intervals below 200 ms)\n"
-	   "                               defaults to 5000 (5 seconds)\n"
+	   "                               This uses signals, so don't recommend intervals below 200 ms.\n"
+	   "                               Defaults to 5000 (5 seconds).\n"
 	   " -S <len>, --snaplen <len>\n"
 	   "                               Capture the first <len> bytes of each I/O buffer.\n"
 	   "                               By default, the first 80 bytes are captured. Use this\n"
@@ -429,6 +430,8 @@ int falco_init(int argc, char **argv)
 	bool print_support = false;
 	string cri_socket_path;
 	set<string> disable_sources;
+	bool disable_syscall = false;
+	bool disable_k8s_audit = false;
 
 	// Used for writing trace files
 	int duration_seconds = 0;
@@ -692,6 +695,11 @@ int falco_init(int argc, char **argv)
 					continue;
 				}
 				++it;
+			}
+			disable_syscall = disable_sources.count("syscall") > 0;
+			disable_k8s_audit = disable_sources.count("k8s_audit") > 0;
+			if (disable_syscall && disable_k8s_audit) {
+				throw std::invalid_argument("The event source \"syscall\" and \"k8s_audit\" can not be disabled together");
 			}
 		}
 
@@ -998,7 +1006,7 @@ int falco_init(int argc, char **argv)
 			g_daemonized = true;
 		}
 
-		if (trace_filename.size())
+		if(trace_filename.size())
 		{
 			// Try to open the trace file as a sysdig
 			// capture file first.
@@ -1127,7 +1135,7 @@ int falco_init(int argc, char **argv)
 		delete mesos_api;
 		mesos_api = 0;
 
-		if(trace_filename.empty() && config.m_webserver_enabled)
+		if(trace_filename.empty() && config.m_webserver_enabled && !disable_k8s_audit)
 		{
 			std::string ssl_option = (config.m_webserver_ssl_enabled ? " (SSL)" : "");
 			falco_logger::log(LOG_INFO, "Starting internal webserver, listening on port " + to_string(config.m_webserver_listen_port) + ssl_option + "\n");
