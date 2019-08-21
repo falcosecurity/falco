@@ -1050,9 +1050,28 @@ int falco_init(int argc, char **argv)
 		}
 		else
 		{
+			open_t open_cb = [](sinsp* inspector) {
+				inspector->open();
+			};
+			open_t open_nodriver_cb = [](sinsp* inspector) {
+				inspector->open_nodriver();
+			};
+			open_t open_f;
+
+			// Default mode: both event sources enabled
+			if (!disable_syscall && !disable_k8s_audit) {
+				open_f = open_cb;
+			}
+			if (disable_syscall) {
+				open_f = open_nodriver_cb;
+			}
+			if (disable_k8s_audit) {
+				open_f = open_cb;
+			}
+
 			try
 			{
-				inspector->open(200);
+				open_f(inspector);
 			}
 			catch(sinsp_exception &e)
 			{
@@ -1060,7 +1079,7 @@ int falco_init(int argc, char **argv)
 				{
 					falco_logger::log(LOG_ERR, "Unable to load the driver. Exiting.\n");
 				}
-				inspector->open();
+				open_f(inspector);
 			}
 		}
 
