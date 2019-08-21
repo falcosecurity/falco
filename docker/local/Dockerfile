@@ -16,22 +16,32 @@ RUN cp /etc/skel/.bashrc /root && cp /etc/skel/.profile /root
 ADD http://download.draios.com/apt-draios-priority /etc/apt/preferences.d/
 
 RUN apt-get update \
- && apt-get install -y --no-install-recommends \
-	bash-completion \
-	bc \
-	clang-7 \
-	ca-certificates \
-	curl \
-	dkms \
-	gnupg2 \
-	gcc \
-	jq \
-	libc6-dev \
-	libelf-dev \
-	llvm-7 \
-	netcat \
-	xz-utils \
- && rm -rf /var/lib/apt/lists/*
+   && apt-get install -y --no-install-recommends \
+   bash-completion \
+   bc \
+   clang-7 \
+   ca-certificates \
+   curl \
+   dkms \
+   gnupg2 \
+   gcc \
+   jq \
+   libc6-dev \
+   libelf-dev \
+   llvm-7 \
+   netcat \
+   xz-utils \
+   libmpc3 \
+   binutils \
+   libgomp1 \
+   libitm1 \
+   libatomic1 \
+   liblsan0 \
+   libtsan0 \
+   libmpx2 \
+   libquadmath0 \
+   libcc1-0 \
+   && rm -rf /var/lib/apt/lists/*
 
 # gcc 6 is no longer included in debian unstable, but we need it to
 # build kernel modules on the default debian-based ami used by
