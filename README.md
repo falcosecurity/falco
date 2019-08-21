@@ -52,9 +52,9 @@ Join the Community
 Office hours
 ---
 
-Falco has weekly office hour style meetings where we plan our work on the project. You can get a Google calendar invite by joining the mailing list. It will automatically be sent.
+Falco has bi-weekly office hour style meetings where we plan our work on the project. You can get a Google calendar invite by joining the mailing list. It will automatically be sent.
 
-Wednesdays at 8am Pacific on [Zoom](sysdig.zoom.us/j/213235330).
+Wednesdays at 8am Pacific on [Zoom](https://sysdig.zoom.us/j/213235330).
 
 License Terms
 ---
