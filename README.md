@@ -45,14 +45,28 @@ See [Falco Documentation](https://falco.org/docs/) to quickly get started using 
 
 Join the Community
 ---
-* [Join the mailing list](http://bit.ly/2Mu0wXA) for news and a Google calendar invite for our Falco open source meetings. Note: this is the only way to get a calendar invite for our open meetings.
 * [Website](https://falco.org) for Falco.
 * Join our [Public Slack](https://slack.sysdig.com) channel for open source Sysdig and Falco announcements and discussions.
 
 Office hours
 ---
 
-Falco has bi-weekly office hour style meetings where we plan our work on the project. You can get a Google calendar invite by joining the mailing list. It will automatically be sent.
+Falco has bi-weekly "office hours" which is an open call to discuss Falco from a user perspective. These happen on opposite weeks of Repo planning calls. 
+
+> Are you using Falco? Do you have have ideas for things to do with Falco? How can Falco be better?
+
+Note: We are in the process of curating an open Falco mailing list and Calendar via the CNCF. Stay tuned for detail.
+
+Wednesdays at 8am Pacific on [Zoom](https://sysdig.zoom.us/j/213235330).
+
+Repo planning 
+--- 
+
+Falco has bi-weekly planning meetings which is an open call to discuss upcoming Falco releases, and assign open GitHub issues to engineers. These happen on opposite weeks of office hours calls. 
+
+> Do you want to contribute to Falco? Are you interested in working on Falco? Do you want to fix something or make something better?
+
+Note: We are in the process of curating an open Falco mailing list and Calendar via the CNCF. Stay tuned for detail.
 
 Wednesdays at 8am Pacific on [Zoom](https://sysdig.zoom.us/j/213235330).
 
