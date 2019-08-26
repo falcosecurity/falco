@@ -57,8 +57,23 @@ The motivation behind this proposal is to design a new output implementation tha
 
 ## Design Details
 
+```mermaid
+sequenceDiagram
+    Syscall input ->> Bob: Hello Bob, how are you?
+    K8S audit input ->> Bob: Hello Bob, how are you?
+    Falco engine ->> Bob: Hello Bob, how are you?
+
+    Bob-->>John: How about you John?
+    Bob--x Alice: I am good thanks!
+    Bob-x John: I am good thanks!
+    Note right of John: Bob thinks a long<br/>long time, so long<br/>that the text does<br/>not fit on a row.
+
+    Bob-->Alice: Checking with John...
+    Alice->John: Yes... John, how are you?
 ```
-# Overview
+
+```
+Overview
 
 The `FalcoOutputService` service defines the Emit RPC call
 that is used to do a bidirectional stream of events between the output server and Falco.
@@ -105,8 +120,8 @@ message Output {
 
 message Response {
   string id = 1;
-  string message = 2;
-  bool errored = 3;
+  int32 code = 2;
+  string message = 3;
 }
 ```
 
