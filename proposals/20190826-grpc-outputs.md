@@ -2,9 +2,18 @@
 
 <!-- toc -->
 
+- [Summary](#summary)
+- [Motivation](#motivation)
+  * [Goals](#goals)
+  * [Non-Goals](#non-goals)
+- [Proposal](#proposal)
+- [Design Details](#design-details)
+
+<!-- tocstop -->
+
 ## Summary
 
-We intend to build a gRPC interface to allow users receive and consume the alerts regarding the violated rul.
+We intend to build a simple gRPC contract and SDKs - eg., [falco#](https://github.com/falcosecurity/falco/issues/785) - to allow users receive and consume the alerts regarding the violated rules.
 
 ## Motivation
 
@@ -44,6 +53,61 @@ The motivation behind this proposal is to design a new output implementation tha
 
 ## Proposal
 
+
+
 ## Design Details
+
+```
+# Overview
+
+The `FalcoOutputService` service defines the Emit RPC call
+that is used to do a bidirectional stream of events between the output server and Falco.
+
+The `Output` message is the logical representation of the output model,
+it contains all the elements that Falco emits in an output along with the
+definitions for priorities and sources. It is given as an input to the Emit RPC call.
+
+The `Response` message is the logical representation of the response to an Emit
+RPC call, it contains a message and the information on wether the server returned an error
+while handling the provided `Output`.
+
+The `Output` and `Response` messages are enriched with an unique identifier that is needed
+because of the asynchronous nature of the streams in order to correlate them.
+
+service FalcoOutputService {
+  rpc Emit (stream Output) returns (stream Response);
+}
+
+message Output {
+  string id = 1;
+  Timestamp time = 2;
+  enum Priority {
+    EMERGENCY = 0;
+    ALERT = 1;
+    CRITICAL = 2;
+    ERROR = 3;
+    WARNING = 4;
+    NOTICE = 5;
+    INFORMATIONAL = 6;
+    DEBUG = 7;
+  }
+  Priority priority = 3;
+  enum Source {
+    SYSCALL = 0;
+    K8S_AUDIT = 1;
+  }
+  Source source = 4;
+  string rule = 5;
+  string format = 6;
+  string output = 7;
+  map<string, string> output_fields = 8;
+}
+
+message Response {
+  string id = 1;
+  string message = 2;
+  bool errored = 3;
+}
+```
 
 ---
