@@ -34,13 +34,11 @@ class FalcoTest(Test):
         """
         Load the sysdig kernel module if not already loaded.
         """
-        build_type = "release"
-        if 'BUILD_TYPE' in os.environ:
-            build_type = os.environ['BUILD_TYPE'].lower()
-            build_type = "debug" if build_type == "debug" else "release"
+        build_dir = "/build"
+        if 'BUILD_DIR' in os.environ:
+            build_dir = os.environ['BUILD_DIR']
 
-        build_dir = os.path.join('/build', build_type)
-        self.falcodir = self.params.get('falcodir', '/', default=os.path.join(self.basedir, build_dir))
+        self.falcodir = self.params.get('falcodir', '/', default=build_dir)
 
         self.stdout_is = self.params.get('stdout_is', '*', default='')
         self.stderr_is = self.params.get('stderr_is', '*', default='')
