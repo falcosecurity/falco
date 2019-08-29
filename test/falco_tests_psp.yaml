@@ -503,10 +503,7 @@ trace_files: !mux
     trace_file: trace_files/psp/run_as_group_30_sec_ctx_1000_container.json
 
   supplemental_groups_must_run_as_with_unset:
-    detect: True
-    detect_level: WARNING
-    detect_counts:
-      - "PSP Violation (supplementalGroups=MustRunAs)": 1
+    detect: False
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/supplemental_groups_must_run_as_30_40.yaml

@@ -993,8 +993,8 @@ std::string k8s_audit_filter_check::check_supplemental_groups_within(const json 
 	}
 	catch(json::out_of_range &e)
 	{
-		// No groups, so can't be within
-		return string("false");
+		// No groups, so not within
+		return string("true");
 	}
 
 	return string("true");
@@ -1006,33 +1006,30 @@ std::string k8s_audit_filter_check::check_hostpath_vols(const json &j, std::stri
 	uint64_t num_volumes_match = 0;
 	std::set<std::string> paths;
 
-	if(j.find("volumes") == j.end())
+	if(j.find("volumes") != j.end())
 	{
-		// No volumes, matches
-		return string("true");
-	}
+		const nlohmann::json &vols = j["volumes"];
 
-	const nlohmann::json &vols = j["volumes"];
+		split_string_set(idx, ',', paths);
 
-	split_string_set(idx, ',', paths);
+		nlohmann::json::json_pointer jpath = "/hostPath/path"_json_pointer;
 
-	nlohmann::json::json_pointer jpath = "/hostPath/path"_json_pointer;
-
-	for(auto &vol : vols)
-	{
-		// The volume must be a hostPath volume to consider it
-		if(vol.find("hostPath") != vol.end())
+		for(auto &vol : vols)
 		{
-			num_volumes++;
-
-			string hostpath = vol.value(jpath, "N/A");
-
-			for(auto &path : paths)
+			// The volume must be a hostPath volume to consider it
+			if(vol.find("hostPath") != vol.end())
 			{
-				if(sinsp_utils::glob_match(path.c_str(), hostpath.c_str()))
+				num_volumes++;
+
+				string hostpath = vol.value(jpath, "N/A");
+
+				for(auto &path : paths)
 				{
-					num_volumes_match++;
-					break;
+					if(sinsp_utils::glob_match(path.c_str(), hostpath.c_str()))
+					{
+						num_volumes_match++;
+						break;
+					}
 				}
 			}
 		}
@@ -1096,7 +1093,7 @@ std::string k8s_audit_filter_check::check_volume_types(const json &j, std::strin
 
 	if(j.find("volumes") == j.end())
 	{
-		// No volumes, matches
+		// No volumes, so no volumes within the set in the index
 		return string("true");
 	}
 
@@ -1457,7 +1454,7 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 			{"ka.req.role.rules.resources", {"/requestObject/rules"_json_pointer, index_select}},
 			{"ka.req.sec_ctx.fs_group", {"/requestObject/spec/securityContext/fsGroup"_json_pointer}},
 			{"ka.req.sec_ctx.supplemental_groups", {"/requestObject/spec/securityContext/supplementalGroups"_json_pointer}},
-			{"ka.req.sec_ctx.supplemental_groups.within", {"/requestObject/spec/securityContext/supplementalGroups"_json_pointer, check_supplemental_groups_within}},
+			{"ka.req.sec_ctx.supplemental_groups.within", {"/requestObject/spec"_json_pointer, check_supplemental_groups_within}},
 			{"ka.req.sec_ctx.added_capabilities.within", {"/requestObject/spec/containers"_json_pointer, check_added_capabilities}},
 			{"ka.req.role.rules.verbs", {"/requestObject/rules"_json_pointer, index_select}},
 			{"ka.req.service.type", {"/requestObject/spec/type"_json_pointer}},

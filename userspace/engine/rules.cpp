@@ -195,22 +195,7 @@ int falco_rules::enable_rule(lua_State *ls)
 	std::string rule = rulec;
 	bool enabled = (lua_tonumber(ls, -1) ? true : false);
 
-	// Escape any regex special characters in the rule name
-	std::string sanitized;
-
-	try {
-		std::regex escape_chars { R"([$\.*+?()[\]{}|^])" };
-
-		sanitized = std::regex_replace(rule, escape_chars, R"(\$&)" );
-	}
-	catch (std::regex_error &e)
-	{
-		std::string error = string("Can't escape chars from rule name: ") + e.what();
-		lua_pushstring(ls, error.c_str());
-		lua_error(ls);
-	}
-
-	rules->enable_rule(sanitized, enabled);
+	rules->enable_rule(rule, enabled);
 
 	return 0;
 }

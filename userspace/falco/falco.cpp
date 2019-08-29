@@ -459,8 +459,6 @@ int falco_init(int argc, char **argv)
 
 	static struct option long_options[] =
 	{
-		{"psp", required_argument, 0},
-		{"psp_save", optional_argument, 0},
 		{"cri", required_argument, 0},
         {"daemon", no_argument, 0, 'd'},
         {"disable-source", required_argument, 0},
@@ -473,6 +471,7 @@ int falco_init(int argc, char **argv)
         {"option", required_argument, 0, 'o'},
         {"pidfile", required_argument, 0, 'P'},
 	{"psp", required_argument, 0},
+	{"psp_save", optional_argument, 0},
         {"print-base64", no_argument, 0, 'b'},
         {"print", required_argument, 0, 'p'},
         {"snaplen", required_argument, 0, 'S'},

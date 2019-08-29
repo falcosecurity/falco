@@ -93,10 +93,13 @@ class FalcoTest(Test):
             if not isinstance(self.validate_rules_file, list):
                 self.validate_rules_file = [self.validate_rules_file]
 
-        self.psp_file = self.params.get('psp_file', '*', default='')
+        self.psp_file = self.params.get('psp_file', '*', default=False)
 
-        if not isinstance(self.psp_file, list):
-            self.psp_file = [self.psp_file]
+        if self.psp_file == False:
+            self.psp_file = []
+        else:
+            if not isinstance(self.psp_file, list):
+                self.psp_file = [self.psp_file]
 
         self.rules_args = ""
 
