@@ -92,7 +92,7 @@ function run_tests() {
     for mult in $SCRIPTDIR/falco_traces.yaml $SCRIPTDIR/falco_tests.yaml $SCRIPTDIR/falco_tests_package.yaml $SCRIPTDIR/falco_k8s_audit_tests.yaml; do
 	CMD="avocado run --mux-yaml $mult --job-results-dir $SCRIPTDIR/job-results -- $SCRIPTDIR/falco_test.py"
 	echo "Running: $CMD"
-	$CMD
+	BUILD_DIR=${BUILD_DIR} $CMD
 	RC=$?
 	TEST_RC=$((TEST_RC+$RC))
 	if [ $RC -ne 0 ]; then
