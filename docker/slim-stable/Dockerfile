@@ -1,6 +1,6 @@
 FROM ubuntu:18.04
 
-LABEL maintainer="Sysdig <support@sysdig.com>"
+LABEL maintainer="opensource@sysdig.com"
 
 ENV FALCO_REPOSITORY stable
 
