@@ -30,7 +30,7 @@ template<
 	typename Predicate,
 	typename Callable,
 	typename... Args,
-	// figure out what the callable returns
+	// figure out the callable return type
 	typename R = std::decay_t<std::result_of_t<Callable &(Args...)>>,
 	// require that Predicate is actually a Predicate
 	std::enable_if_t<std::is_convertible<std::result_of_t<Predicate &(R)>, bool>::value, int> = 0>
@@ -64,6 +64,7 @@ R retry(int max_retries,
 		std::ostringstream message;
 		message << "Waiting " << delay << "ms ... \n";
 		falco_logger::log(LOG_INFO, message.str());
+		// Blocking for `delay` ms
 		std::this_thread::sleep_for(std::chrono::milliseconds(delay));
 		retries++;
 	}

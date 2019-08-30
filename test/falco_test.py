@@ -40,6 +40,8 @@ class FalcoTest(Test):
             build_type = "debug" if build_type == "debug" else "release"
 
         build_dir = os.path.join('/build', build_type)
+        if not os.path.exists(build_dir):
+            build_dir = '../build'
         self.falcodir = self.params.get('falcodir', '/', default=os.path.join(self.basedir, build_dir))
 
         self.stdout_is = self.params.get('stdout_is', '*', default='')

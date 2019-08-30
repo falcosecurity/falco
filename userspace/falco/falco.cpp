@@ -258,8 +258,10 @@ uint64_t do_inspect(falco_engine *engine,
 	}
 
 	// Module check settings
-	utils::timer t;
-	t.reset();
+	// utils::timer t;
+	// t.reset();
+
+	uint64_t now = 0;
 
 	uint64_t frequency = config.m_module_check_frequency;
 	auto num_failures = 0;
@@ -273,24 +275,24 @@ uint64_t do_inspect(falco_engine *engine,
 	//
 	while(true)
 	{
-		// Check module every x seconds
-		if(t.seconds_elapsed() > frequency) {
-			// Check module is present and loaded with exponential backoff (eg., 100, 200, 400, ...)
-			// When module is missing or unloaded, try to insert it
-			// Retries at most <max_attempts> times
-			// Stops early if module is found
-			auto found = utils::retry(max_attempts, ini_delay, max_delay, utils::module_predicate, utils::has_module, verbose, true);
+		// // Check module every x seconds
+		// if(t.seconds_elapsed() > frequency) {
+		// 	// Check module is present and loaded with exponential backoff (eg., 100, 200, 400, ...)
+		// 	// When module is missing or unloaded, try to insert it
+		// 	// Retries at most <max_attempts> times
+		// 	// Stops early if module is found
+		// 	auto found = utils::retry(max_attempts, ini_delay, max_delay, utils::module_predicate, utils::has_module, verbose, true);
 
-			// Count how many intervals the module is missing, reset counter when module has been found
-			num_failures = found ? 0 : num_failures + 1;
-			// Stop falco if module is missing from <count * stop_after> checks
-			if (num_failures >= max_failures) {
-				result = EXIT_FAILURE;
-				break;
-			}
-			// Reset timer
-			t.reset();
-		}
+		// 	// Count how many intervals the module is missing, reset counter when module has been found
+		// 	num_failures = found ? 0 : num_failures + 1;
+		// 	// Stop falco if module is missing from <count * stop_after> checks
+		// 	if (num_failures >= max_failures) {
+		// 		result = EXIT_FAILURE;
+		// 		break;
+		// 	}
+		// 	// Reset timer
+		// 	t.reset();
+		// }
 
 		rc = inspector->next(&ev);
 
@@ -325,15 +327,35 @@ uint64_t do_inspect(falco_engine *engine,
 			throw sinsp_exception(inspector->getlasterr().c_str());
 		}
 
-		if (duration_start == 0)
+		if(duration_start == 0)
 		{
 			duration_start = ev->get_ts();
-		} else if(duration_to_tot_ns > 0)
+		}
+		else if(duration_to_tot_ns > 0)
 		{
 			if(ev->get_ts() - duration_start >= duration_to_tot_ns)
 			{
 				break;
 			}
+		}
+
+		if((ev->get_ts() - now) >= (frequency*ONE_SECOND_IN_NS))
+		{
+			// Check module is present and loaded with exponential backoff (eg., 100, 200, 400, ...)
+			// When module is missing or unloaded, try to insert it
+			// Retries at most <max_attempts> times
+			// Stops early if module is found
+			auto found = utils::retry(max_attempts, ini_delay, max_delay, utils::module_predicate, utils::has_module, verbose, true);
+
+			// Count how many intervals the module is missing, reset counter when module has been found
+			num_failures = found ? 0 : num_failures + 1;
+			// Stop falco if module is missing from <count * stop_after> checks
+			if (num_failures >= max_failures) {
+				result = EXIT_FAILURE;
+				break;
+			}
+			// Reset
+			now = ev->get_ts();
 		}
 
 		if(!sdropmgr.process_event(inspector, ev))
