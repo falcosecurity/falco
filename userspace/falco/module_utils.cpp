@@ -46,6 +46,7 @@ static bool has_module(bool verbose, bool strict)
 			if(!strict)
 			{
 				falco_logger::log(LOG_INFO, "Kernel module found: true (not strict)\n");
+				modules.close();
 				return result;
 			}
 
@@ -88,6 +89,7 @@ static bool has_module(bool verbose, bool strict)
 				}
 			}
 
+			modules.close();
 			return result;
 		}
 	}
