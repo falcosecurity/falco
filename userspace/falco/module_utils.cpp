@@ -18,16 +18,15 @@ limitations under the License.
 
 #include "config_falco.h"
 #include "logger.h"
+#include "module_utils.h"
 
 #include <fstream>
 #include <functional>
 
 namespace utils
 {
-std::string db("/proc/modules");
-std::string module(PROBE_NAME);
 
-static bool has_module(bool verbose, bool strict)
+bool has_module(bool verbose, bool strict)
 {
 	// Comparing considering underscores (95) equal to dashes (45), and viceversa
 	std::function<bool(const char &, const char &)> comparator = [](const char &a, const char &b) {
@@ -60,7 +59,7 @@ static bool has_module(bool verbose, bool strict)
 			// Check the module's load state
 			auto state = cols.at(4);
 			std::transform(state.begin(), state.end(), state.begin(), ::tolower);
-			result = result && (state == "live");
+			result = result && (state == module_state_live);
 
 			if(verbose)
 			{
@@ -69,13 +68,12 @@ static bool has_module(bool verbose, bool strict)
 			}
 
 			// Check the module's taint state
-			// See https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/kernel/panic.c#n351
 			if(cols.size() > 6)
 			{
 				auto taint = cols.at(6);
-				auto died = taint.find("D") != std::string::npos;
-				auto warn = taint.find("W") != std::string::npos;
-				auto unloaded = taint.find("R") != std::string::npos;
+				auto died = taint.find(taint_die) != std::string::npos;
+				auto warn = taint.find(taint_warn) != std::string::npos;
+				auto unloaded = taint.find(taint_forced_rmmod) != std::string::npos;
 				result = result && !died && !warn && !unloaded;
 
 				if(verbose)
@@ -99,7 +97,7 @@ static bool has_module(bool verbose, bool strict)
 	return false;
 }
 
-static bool ins_module()
+bool ins_module()
 {
 	if(system("modprobe " PROBE_NAME " > /dev/null 2> /dev/null"))
 	{
@@ -110,7 +108,7 @@ static bool ins_module()
 	return true;
 }
 
-static bool module_predicate(bool has_module)
+bool module_predicate(bool has_module)
 {
 	if(has_module)
 	{

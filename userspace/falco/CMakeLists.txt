@@ -28,6 +28,7 @@ add_executable(falco
 	event_drops.cpp
 	statsfilewriter.cpp
 	timer.cpp
+	module_utils.cpp
 	falco.cpp
 	"${SYSDIG_DIR}/userspace/sysdig/fields_info.cpp"
 	webserver.cpp)

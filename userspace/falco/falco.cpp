@@ -49,7 +49,7 @@ limitations under the License.
 #include "webserver.h"
 #include "timer.h"
 #include "retry.h"
-#include "module_utils.cpp"
+#include "module_utils.h"
 
 typedef function<void(sinsp* inspector)> open_t;
 
