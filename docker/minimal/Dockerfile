@@ -1,5 +1,7 @@
 FROM ubuntu:18.04 as ubuntu
 
+LABEL maintainer="opensource@sysdig.com"
+
 ARG FALCO_VERSION=0.17.0
 
 ENV FALCO_VERSION=${FALCO_VERSION}

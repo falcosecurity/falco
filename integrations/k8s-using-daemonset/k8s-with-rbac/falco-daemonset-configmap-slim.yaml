@@ -25,7 +25,11 @@ spec:
           #  - name: FALCO_PROBE_URL
           #    value:
           #  - name: FALCO_PROBE_REPO
-          #    value: "https://s3.amazonaws.com/download.draios.com/stable/sysdig-probe-binaries/"   
+          #    value: "https://s3.amazonaws.com/download.draios.com/stable/sysdig-probe-binaries/"
+          volumeMounts:
+            - mountPath: /host/boot
+              name: boot-fs
+              readOnly: true
       containers:
         - name: falco
           image: falcosecurity/falco-minimal:latest

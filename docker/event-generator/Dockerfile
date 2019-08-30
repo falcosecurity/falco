@@ -1,4 +1,5 @@
 FROM alpine:latest
+LABEL maintainer="opensource@sysdig.com"
 RUN apk add --no-cache bash g++
 COPY ./event_generator.cpp /usr/local/bin
 RUN mkdir -p /var/lib/rpm
