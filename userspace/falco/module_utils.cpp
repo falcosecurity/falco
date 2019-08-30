@@ -27,7 +27,7 @@ namespace utils
 std::string db("/proc/modules");
 std::string module(PROBE_NAME);
 
-static auto has_module(bool verbose, bool strict)
+static bool has_module(bool verbose, bool strict)
 {
 	// Comparing considering underscores (95) equal to dashes (45), and viceversa
 	std::function<bool(const char &, const char &)> comparator = [](const char &a, const char &b) {
@@ -97,7 +97,7 @@ static auto has_module(bool verbose, bool strict)
 	return false;
 }
 
-static auto ins_module()
+static bool ins_module()
 {
 	if(system("modprobe " PROBE_NAME " > /dev/null 2> /dev/null"))
 	{
@@ -108,7 +108,7 @@ static auto ins_module()
 	return true;
 }
 
-static auto module_predicate(bool has_module)
+static bool module_predicate(bool has_module)
 {
 	if(has_module)
 	{

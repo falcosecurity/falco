@@ -25,6 +25,14 @@ limitations under the License.
 #include "falco_engine.h"
 #include "falco_outputs.h"
 
+#if __cplusplus < 201402L
+template<typename T, typename... Ts>
+std::unique_ptr<T> make_unique(Ts&&... params)
+{
+  return std::unique_ptr<T>(new T(std::forward<Ts>(params)...));
+}
+#endif
+
 class k8s_audit_handler : public CivetHandler
 {
 public:

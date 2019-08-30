@@ -24,6 +24,19 @@ limitations under the License.
 #include <iostream>
 #include <thread>
 
+#if __cplusplus < 201402L
+template< class T >
+using decay_t = typename decay<T>::type;
+
+template< bool B, class T = void >
+using enable_if_t = typename enable_if<B,T>::type;
+#endif
+
+#if __cplusplus != 201402L || __cplusplus != 201703L
+template< class F, class... ArgTypes>
+using result_of_t = typename result_of<F, ArgTypes...>::type;
+#endif
+
 namespace utils
 {
 template<
@@ -31,9 +44,9 @@ template<
 	typename Callable,
 	typename... Args,
 	// figure out the callable return type
-	typename R = std::decay_t<std::result_of_t<Callable &(Args...)>>,
+	typename R = decay_t<result_of_t<Callable &(Args...)>>,
 	// require that Predicate is actually a Predicate
-	std::enable_if_t<std::is_convertible<std::result_of_t<Predicate &(R)>, bool>::value, int> = 0>
+	enable_if_t<std::is_convertible<result_of_t<Predicate &(R)>, bool>::value, int> = 0>
 R retry(int max_retries,
 	uint64_t initial_delay_ms,
 	uint64_t max_backoff_ms,
