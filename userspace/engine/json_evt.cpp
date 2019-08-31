@@ -52,9 +52,46 @@ uint64_t json_event::get_ts()
 	return m_event_ts;
 }
 
-std::string json_event_filter_check::def_format(const json &j, std::string &field, std::string &idx)
+std::string json_event_filter_check::no_value = "<NA>";
+
+json_event_filter_check::values_t &def_extract(const nlohmann::json &, std::string &field)
 {
-	return json_as_string(j);
+	json_event_filter_check::values_t values;
+
+	// Only add to evalues when the value was actually found in
+	// the object.
+	if(j.is_array())
+	{
+		for(auto &item : j)
+		{
+			values.push_back(json_as_string(j));
+		}
+	}
+	else
+	{
+		values.push_back(json_as_string(j));
+	}
+
+	return values;
+}
+
+json_event_filter_check::values_t &json_event_filter_check::def_index(const values_t &values, std::string &field, std::string &idx)
+{
+	// The default index function only knows how to index by numeric values
+	uint64_t idx_num = (idx.empty() ? 0 : stoi(idx));
+
+	values_t new_values;
+
+	if(idx_num < values.size())
+	{
+		new_values.push_back(values.at(idx));
+	}
+	else
+	{
+		new_values.push_back(json_event_filter_check::no_value);
+	}
+
+	return new_values;
 }
 
 std::string json_event_filter_check::json_as_string(const json &j)
@@ -110,14 +147,26 @@ json_event_filter_check::alias::alias()
 }
 
 json_event_filter_check::alias::alias(nlohmann::json::json_pointer ptr):
-	m_jptr(ptr), m_format(def_format)
+	m_jptr(ptr),
+	m_extract(def_extract),
+	m_index(def_index)
 {
 }
 
 json_event_filter_check::alias::alias(nlohmann::json::json_pointer ptr,
-				      format_t format):
+				      extract_t extract)
 	m_jptr(ptr),
-	m_format(format)
+	m_extract(extract),
+	m_index(def_index)
+{
+}
+
+json_event_filter_check::alias::alias(nlohmann::json::json_pointer ptr,
+				      extract_t extract,
+				      index_t index)
+	m_jptr(ptr),
+	m_extract(extract),
+	m_index(index)
 {
 }
 
@@ -126,7 +175,8 @@ json_event_filter_check::alias::~alias()
 }
 
 json_event_filter_check::json_event_filter_check():
-	m_format(def_format)
+	m_extract(def_extract),
+	m_index(def_index)
 {
 }
 
@@ -239,41 +289,56 @@ bool json_event_filter_check::compare(gen_event *evt)
 {
 	json_event *jevt = (json_event *)evt;
 
-	std::string value = extract(jevt);
+	const extracted_values_t *evalues = extract(jevt);
+	values_list_t::iterator it;
+	values_list_t itvals;
 
 	switch(m_cmpop)
 	{
 	case CO_EQ:
-		return (value == m_values[0]);
+		return evalues->second == m_values;
 		break;
 	case CO_NE:
-		return (value != m_values[0]);
+		return evalues->second != m_values;
 		break;
 	case CO_CONTAINS:
-		return (value.find(m_values[0]) != string::npos);
+		it = std::set_intersection(evalues->second.begin(), evalues->second.end(),
+					   m_values.begin(), m_values.end());
+		itvals.resize(it-itvals.begin());
+
+		return (itvals.size() == m_values.size());
 		break;
 	case CO_STARTSWITH:
-		return (value.compare(0, m_values[0].size(), m_values[0]) == 0);
+		return (evalues->first.size() == 1 &&
+			m_values.size() == 1 &&
+			evalues->first.compare(0, m_values[0].size(), m_values[0]) == 0);
 		break;
 	case CO_IN:
-		for(auto &val : m_values)
-		{
-			if(value == val)
-			{
-				return true;
-			}
-		}
-		return false;
+		it = std::set_intersection(evalues->second.begin(), evalues->second.end(),
+					   m_values.begin(), m_values.end());
+		itvals.resize(it-itvals.begin());
+
+		return (itvals.size() == evalues->second.size());
+		break;
+	case CO_INTERSECTS:
+		it = std::set_intersection(evalues->second.begin(), evalues->second.end(),
+					   m_values.begin(), m_values.end());
+		itvals.resize(it-itvals.begin());
+
+		return (itvals.size() > 0);
 		break;
 	case CO_LT:
 	case CO_LE:
 	case CO_GT:
 	case CO_GE:
-		return compare_numeric(value);
+		return (evalues->first.size() == 1 &&
+			m_values.size() == 1 &&
+			compare_numeric(evalues->first.at(0)));
+		return
 		break;
 	case CO_EXISTS:
-		// Any non-empty, non-"<NA>" value is ok
-		return (value != "" && value != "<NA>");
+		return (evalues->size() == 1 &&
+			(evalues->first.at(0) != "" && evalues->first.at(0) != json_event_filter_check::no_value));
 		break;
 	default:
 		throw falco_exception("filter error: unsupported comparison operator");
@@ -315,34 +380,29 @@ uint8_t *json_event_filter_check::extract(gen_event *evt, uint32_t *len, bool sa
 	{
 		const json &j = jevt->jevt().at(m_jptr);
 
-		// Only format when the value was actually found in
-		// the object.
-		m_tstr = m_format(j, m_field, m_idx);
+		m_evalues.first = m_extract(j, m_field);
+
+		if(! m_idx.empty())
+		{
+			m_evalues.first = m_index(m_evalues.first, m_field, m_idx);
+		}
+
+		// Now populate the values set with the distinct
+		// values from the vector
+		for(auto &str : m_evalues.first)
+		{
+			m_evalues.second.insert(str);
+		}
 	}
 	catch(json::out_of_range &e)
 	{
-		m_tstr = "<NA>";
+		m_evalues.first.push_back(json_event_filter_check::no_value);
+		m_evalues.second.insert(json_event_filter_check::no_value);
 	}
 
-	*len = m_tstr.size();
+	*len = sizeof(m_evalues);
 
-	return (uint8_t *)m_tstr.c_str();
-}
-
-std::string json_event_filter_check::extract(json_event *evt)
-{
-	uint8_t *res;
-	uint32_t len;
-	std::string ret;
-
-	res = extract(evt, &len, true);
-
-	if(res != NULL)
-	{
-		ret.assign((const char *)res, len);
-	}
-
-	return ret;
+	return (uint8_t *)&m_evalues;
 }
 
 std::string jevt_filter_check::s_jevt_time_field = "jevt.time";
@@ -459,58 +519,52 @@ json_event_filter_check *jevt_filter_check::allocate_new()
 	return (json_event_filter_check *)chk;
 }
 
-std::string k8s_audit_filter_check::index_image(const json &j, std::string &field, std::string &idx)
+json_event_filter_check::values_t &k8s_audit_filter_check::extract_images(const json &j, std::string &field)
 {
-	uint64_t idx_num = (idx.empty() ? 0 : stoi(idx));
-
-	string image;
+	values_t vals;
 
 	try
 	{
-		image = j[idx_num].at("image");
+		for(auto &spec : j)
+		{
+			std::string image = j.at("image");
+
+			// If the filtercheck ends with .repository, we want only the
+			// repo name from the image.
+			std::string suffix = ".repository";
+			if(suffix.size() <= field.size() &&
+			   std::equal(suffix.rbegin(), suffix.rend(), field.rbegin()))
+			{
+				std::string hostname, port, name, tag, digest;
+
+				sinsp_utils::split_container_image(image,
+								   hostname,
+								   port,
+								   name,
+								   tag,
+								   digest,
+								   false);
+				vals.push_back(name);
+			}
+			else
+			{
+				vals.push_back(image);
+			}
+		}
 	}
 	catch(json::out_of_range &e)
 	{
-		return string("<NA>");
-	}
-
-	// If the filtercheck ends with .repository, we want only the
-	// repo name from the image.
-	std::string suffix = ".repository";
-	if(suffix.size() <= field.size() &&
-	   std::equal(suffix.rbegin(), suffix.rend(), field.rbegin()))
-	{
-		std::string hostname, port, name, tag, digest;
-
-		sinsp_utils::split_container_image(image,
-						   hostname,
-						   port,
-						   name,
-						   tag,
-						   digest,
-						   false);
-
-		return name;
+		vals.clear();
+		vals.push_back(json_event_filter_check::no_value);
 	}
 
 	return image;
 }
 
-std::string k8s_audit_filter_check::index_has_name(const json &j, std::string &field, std::string &idx)
+json_event_filter_check::values_t &extract_query_params(const nlohmann::json &j, std::string &field)
 {
-	for(auto &subject : j)
-	{
-		if(subject.value("name", "N/A") == idx)
-		{
-			return string("true");
-		}
-	}
+	json_event_filter_check::values_t vals;
 
-	return string("false");
-}
-
-std::string k8s_audit_filter_check::index_query_param(const json &j, std::string &field, std::string &idx)
-{
 	string uri = j;
 	std::vector<std::string> uri_parts, query_parts;
 
@@ -518,22 +572,40 @@ std::string k8s_audit_filter_check::index_query_param(const json &j, std::string
 
 	if(uri_parts.size() != 2)
 	{
-		return string("<NA>");
+		vals.push_back(json_event_filter_check::no_value);
+		return vals;
 	}
 
 	query_parts = sinsp_split(uri_parts[1], '&');
 
 	for(auto &part : query_parts)
 	{
-		std::vector<std::string> param_parts = sinsp_split(part, '=');
+		vals.push_back(part);
+	}
+
+	return vals;
+}
+
+
+json_event_filter_check::values_t & k8s_audit_filter_check::index_query_param(const values_t &values,
+									      std::string &field,
+									      std::string &idx)
+{
+	json_event_filter_check::values_t vals;
+
+	for(auto &str : values)
+	{
+		std::vector<std::string> param_parts = sinsp_split(str, '=');
 
 		if(param_parts.size() == 2 && uri::decode(param_parts[0], true) == idx)
 		{
-			return uri::decode(param_parts[1]);
+			vals.push_back(param_parts[1]);
+			return vals;
 		}
 	}
 
-	return string("<NA>");
+	vals.push_back(no_value);
+	return vals;
 }
 
 std::string k8s_audit_filter_check::index_generic(const json &j, std::string &field, std::string &idx)
@@ -554,7 +626,7 @@ std::string k8s_audit_filter_check::index_generic(const json &j, std::string &fi
 		}
 		catch(json::out_of_range &e)
 		{
-			return string("<NA>");
+			return string(json_event_filter_check::no_value);
 		}
 	}
 
@@ -1366,11 +1438,10 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 		   {"ka.target.resource", "The target object resource"},
 		   {"ka.target.subresource", "The target object subresource"},
 		   {"ka.req.binding.subjects", "When the request object refers to a cluster role binding, the subject (e.g. account/users) being linked by the binding"},
-		   {"ka.req.binding.subject.has_name", "When the request object refers to a cluster role binding, return true if a subject with the provided name exists", IDX_REQUIRED, IDX_KEY},
 		   {"ka.req.binding.role", "When the request object refers to a cluster role binding, the role being linked by the binding"},
 		   {"ka.req.configmap.name", "If the request object refers to a configmap, the configmap name"},
 		   {"ka.req.configmap.obj", "If the request object refers to a configmap, the entire configmap object"},
-		   {"ka.req.container.image", "When the request object refers to a container, the container's images. Can be indexed (e.g. ka.req.container.image[0]). Without any index, returns the first image", IDX_ALLOWED, IDX_NUMERIC},
+		   {"ka.req.container.image", "When the request object refers to a container, the container's images. Can be indexed (e.g. ka.req.container.image[0]). Without any index, returns all images for all containers", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.req.container.image.repository", "The same as req.container.image, but only the repository part (e.g. sysdig/falco)", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.req.container.host_ipc", "When the request object refers to a container, the value of the hostIPC flag."},
 		   {"ka.req.container.host_network", "When the request object refers to a container, the value of the hostNetwork flag."},
@@ -1420,18 +1491,17 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 			{"ka.impuser.name", {"/impersonatedUser/username"_json_pointer}},
 			{"ka.verb", {"/verb"_json_pointer}},
 			{"ka.uri", {"/requestURI"_json_pointer}},
-			{"ka.uri.param", {"/requestURI"_json_pointer, index_query_param}},
+			{"ka.uri.param", {"/requestURI"_json_pointer, extract_query_params, index_query_param}},
 			{"ka.target.name", {"/objectRef/name"_json_pointer}},
 			{"ka.target.namespace", {"/objectRef/namespace"_json_pointer}},
 			{"ka.target.resource", {"/objectRef/resource"_json_pointer}},
 			{"ka.target.subresource", {"/objectRef/subresource"_json_pointer}},
 			{"ka.req.binding.subjects", {"/requestObject/subjects"_json_pointer}},
-			{"ka.req.binding.subject.has_name", {"/requestObject/subjects"_json_pointer, index_has_name}},
 			{"ka.req.binding.role", {"/requestObject/roleRef/name"_json_pointer}},
 			{"ka.req.configmap.name", {"/objectRef/name"_json_pointer}},
 			{"ka.req.configmap.obj", {"/requestObject/data"_json_pointer}},
-			{"ka.req.container.image", {"/requestObject/spec/containers"_json_pointer, index_image}},
-			{"ka.req.container.image.repository", {"/requestObject/spec/containers"_json_pointer, index_image}},
+			{"ka.req.container.image", {"/requestObject/spec/containers"_json_pointer, extract_images}},
+			{"ka.req.container.image.repository", {"/requestObject/spec/containers"_json_pointer, extract_images}},
 			{"ka.req.container.host_ipc", {"/requestObject/spec/hostIPC"_json_pointer}},
 			{"ka.req.container.host_network", {"/requestObject/spec/hostNetwork"_json_pointer}},
 			{"ka.req.container.host_pid", {"/requestObject/spec/hostPID"_json_pointer}},
@@ -1642,7 +1712,28 @@ void json_event_formatter::resolve_tokens(json_event *ev, std::list<std::pair<st
 	{
 		if(tok.check)
 		{
-			resolved.push_back(std::make_pair(tok.check->field(), tok.check->extract(ev)));
+			const json_event_filter_check::extracted_values_t *evals = tok.check->extract(ev);
+
+			std::string res_str = json_event_filter_check::no_value;
+			if(evals->first.size() == 1)
+			{
+				res_str = evals->first.at(0);
+			}
+			else if (evals->first.size() > 1)
+			{
+				res_str = "(";
+				for(auto &val : evals->first)
+				{
+					if(res_str != "(")
+					{
+						res_str += ",";
+					}
+					res_str += val;
+				}
+				res_str += ")";
+			}
+
+			resolved.push_back(std::make_pair(tok.check->field(), res_str));
 		}
 		else
 		{

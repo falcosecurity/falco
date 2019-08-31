@@ -101,10 +101,18 @@ public:
 	json_event_filter_check();
 	virtual ~json_event_filter_check();
 
+	static std::string no_value;
+
 	virtual int32_t parse_field_name(const char* str, bool alloc_state, bool needed_for_filtering);
 	void add_filter_value(const char* str, uint32_t len, uint32_t i = 0 );
 	bool compare_numeric(const std::string &value);
 	bool compare(gen_event *evt);
+
+	typedef std::vector<std::string> values_t;
+	typedef set::set<std::string> values_set_t;
+	typedef std::pair<values_t, values_set_t> extracted_values_t;
+
+	// This always returns a const extracted_values_t *. The pointer points to m_evalues;
 	virtual uint8_t* extract(gen_event *evt, uint32_t* len, bool sanitize_strings = true);
 
 	// Simpler version that returns a string
@@ -126,7 +134,6 @@ public:
 
 protected:
 
-	static std::string def_format(const nlohmann::json &j, std::string &field, std::string &idx);
 	static std::string json_as_string(const nlohmann::json &j);
 
 	// Subclasses can define field names that act as aliases for
@@ -134,7 +141,21 @@ protected:
 	// jevt.value[/user/username]. This struct represents one of
 	// those aliases.
 
-	typedef std::function<std::string (const nlohmann::json &, std::string &field, std::string &idx)> format_t;
+	// In addition to the value extracted by json_pointer, an
+	// alias might define an additional function to extract
+	// values. An example is grabbing a property from an array of
+	// objects e.g. [{"name": "foo"}, {"name": "bar"}] --> ["foo",
+	// "bar"]
+
+	typedef std::function<values_t &(const nlohmann::json &, std::string &field)> extract_t;
+	static values_t &def_format(const nlohmann::json &j, std::string &field);
+
+	// An alias might also define a custom function to index
+	// values e.g. looking up values by a string key instead of
+	// aindex. It modifies the provided array of values, keeping
+	// the desired values in the array.
+	typedef std::function<values_t &(const values_t &values, std::string &field, std::string &idx)> index_t;
+	static values_t &def_index(const values_t &values, std::string &field, std::string &idx);
 
 	struct alias {
 		// The variants allow for brace-initialization either
@@ -142,19 +163,16 @@ protected:
 		// a format function.
 		alias();
 	        alias(nlohmann::json::json_pointer ptr);
-	        alias(nlohmann::json::json_pointer ptr, format_t format);
+	        alias(nlohmann::json::json_pointer ptr, extract_t extract);
+	        alias(nlohmann::json::json_pointer ptr, extract_t extract, index_t index);
 		virtual ~alias();
 
 		// A json pointer used to extract a referenced value
 		// from a json object.
 		nlohmann::json::json_pointer m_jptr;
 
-		// A function that given the referenced value selected
-		// above, formats and returns the appropriate string. This
-		// function might do further selection (e.g. array
-		// indexing, searches, etc.) or string reformatting to
-		// trim unnecessary parts of the value.
-		format_t m_format;
+		extract_t m_extract;
+		index_t m_index;
 	};
 
 	// This map defines the aliases defined by this filter check
@@ -184,7 +202,15 @@ protected:
 
 private:
 
-	std::vector<std::string> m_values;
+	// All values specified on the right hand side of the operator
+	// e.g. "ka.ns in ("one","two","three"), m_values has ("one",
+	// "two", "three")
+	values_set_t m_values;
+
+	// All values extracted from the object by the field e.g. for
+	// a field ka.req.container.image returns all container images
+	// for all pods within a request.
+	extracted_values_t m_evalues;
 };
 
 class jevt_filter_check : public json_event_filter_check
