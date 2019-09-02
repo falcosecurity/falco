@@ -20,6 +20,15 @@ if(NOT SYSDIG_DIR)
 endif()
 
 configure_file("${SYSDIG_DIR}/userspace/sysdig/config_sysdig.h.in" config_sysdig.h)
+add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/falco_output.grpc.pb.cc
+	${CMAKE_CURRENT_BINARY_DIR}/falco_output.grpc.pb.h
+	${CMAKE_CURRENT_BINARY_DIR}/falco_output.pb.cc
+	${CMAKE_CURRENT_BINARY_DIR}/falco_output.pb.h
+	COMMENT "Generate gRPC code for falco_output"
+	DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/falco_output.proto
+	COMMAND ${PROTOC} -I ${CMAKE_CURRENT_SOURCE_DIR} --cpp_out=. ${CMAKE_CURRENT_SOURCE_DIR}/falco_output.proto
+	COMMAND ${PROTOC} -I ${CMAKE_CURRENT_SOURCE_DIR} --grpc_out=. --plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN} ${CMAKE_CURRENT_SOURCE_DIR}/falco_output.proto
+	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 add_executable(falco
 	configuration.cpp
@@ -29,7 +38,10 @@ add_executable(falco
 	statsfilewriter.cpp
 	falco.cpp
 	"${SYSDIG_DIR}/userspace/sysdig/fields_info.cpp"
-	webserver.cpp)
+	webserver.cpp
+	grpc_server.cpp
+	${CMAKE_CURRENT_BINARY_DIR}/falco_output.grpc.pb.cc
+	${CMAKE_CURRENT_BINARY_DIR}/falco_output.pb.cc)
 
 target_include_directories(falco PUBLIC
 	"${SYSDIG_DIR}/userspace/sysdig"
@@ -38,10 +50,18 @@ target_include_directories(falco PUBLIC
 	"${PROJECT_BINARY_DIR}/driver/src"
 	"${YAMLCPP_INCLUDE_DIR}"
 	"${CIVETWEB_INCLUDE_DIR}"
+	"${GRPC_INCLUDE}"
+	"${PROTOBUF_INCLUDE}"
+	"${CMAKE_CURRENT_BINARY_DIR}"
 	"${DRAIOS_DEPENDENCIES_DIR}/yaml-${DRAIOS_YAML_VERSION}/target/include")
+
+
 
 target_link_libraries(falco falco_engine sinsp)
 target_link_libraries(falco
+	"${GRPCPP_LIB}"
+	"${GRPC_LIB}"
+	"${PROTOBUF_LIB}"
 	"${LIBYAML_LIB}"
 	"${YAMLCPP_LIB}"
 	"${CIVETWEB_LIB}")
