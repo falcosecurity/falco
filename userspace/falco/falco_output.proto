@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+service FalcoOutputService {
+  rpc Subscribe(FalcoOutputRequest) returns (stream FalcoOutputResponse);
+}
+
+message FalcoOutputRequest {
+}
+
+message FalcoOutputResponse {
+  string id = 1;
+  google.protobuf.Timestamp time = 2;
+  enum Priority {
+    EMERGENCY = 0;
+    ALERT = 1;
+    CRITICAL = 2;
+    ERROR = 3;
+    WARNING = 4;
+    NOTICE = 5;
+    INFORMATIONAL = 6;
+    DEBUG = 7;
+  }
+  Priority priority = 3;
+  enum Source {
+    SYSCALL = 0;
+    K8S_AUDIT = 1;
+  }
+  Source source = 4;
+  string rule = 5;
+  string format = 6;
+  string output = 7;
+  map<string, string> output_fields = 8;
+}
