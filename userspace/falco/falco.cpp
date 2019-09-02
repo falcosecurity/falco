@@ -47,6 +47,7 @@ limitations under the License.
 #include "config_falco.h"
 #include "statsfilewriter.h"
 #include "webserver.h"
+#include "grpc_server.h"
 
 typedef function<void(sinsp* inspector)> open_t;
 
@@ -1161,6 +1162,10 @@ int falco_init(int argc, char **argv)
 			webserver.init(&config, engine, outputs);
 			webserver.start();
 		}
+
+		// grpc server
+		// TODO: this is blocking now, not what we want, falco must go on. Just an experiment for now.
+		start_grpc_server(5060, 1);
 
 		if(!trace_filename.empty() && !trace_is_scap)
 		{
