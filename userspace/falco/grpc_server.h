@@ -63,4 +63,49 @@ private:
 
 void start_grpc_server(std::string server_address, int threadiness);
 
+class request_context_base
+{
+public:
+	request_context_base() = default;
+	~request_context_base() = default;
 
+	std::unique_ptr<grpc::ServerContext> m_srv_ctx;
+	enum : char
+	{
+		UNKNOWN = 0,
+		REQUEST,
+		WRITE,
+		FINISH
+	} m_state = UNKNOWN;
+	virtual void start(falco_grpc_server* srv) = 0;
+	virtual void process(falco_grpc_server* srv) = 0;
+	virtual void end(falco_grpc_server* srv, bool isError) = 0;
+};
+
+//
+// Template class to handle streaming responses
+//
+template<class Request, class Response>
+class request_stream_context : public request_context_base
+{
+public:
+	request_stream_context():
+		m_process_func(nullptr),
+		m_request_func(nullptr){};
+	~request_stream_context() = default;
+
+	// Pointer to function that does actual processing
+	void (falco_grpc_server::*m_process_func)(const stream_context&, const Request&, Response&);
+
+	// Pointer to function that requests the system to start processing given requests
+	void (falco_output_service::AsyncService::*m_request_func)(grpc::ServerContext*, Request*, grpc::ServerAsyncWriter<Response>*, grpc::CompletionQueue*, grpc::ServerCompletionQueue*, void*);
+
+	void start(falco_grpc_server* srv);
+	void process(falco_grpc_server* srv);
+	void end(falco_grpc_server* srv, bool isError);
+
+private:
+	std::unique_ptr<grpc::ServerAsyncWriter<Response>> m_res_writer;
+	std::unique_ptr<stream_context> m_stream_ctx;
+	Request m_req;
+};
