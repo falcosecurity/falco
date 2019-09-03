@@ -39,10 +39,10 @@ private:
 class stream_context : public context
 {
 public:
-	stream_context(grpc::ServerContext* ctx): context(ctx) {}
+	stream_context(grpc::ServerContext* ctx):
+		context(ctx){};
 	~stream_context() = default;
 
-private:
 	enum : char
 	{
 		STREAMING = 1,
