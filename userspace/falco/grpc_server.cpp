@@ -24,6 +24,8 @@ limitations under the License.
 #include <grpc++/grpc++.h>
 #endif
 
+#include <unistd.h> // sleep
+
 #include "grpc_server.h"
 #include "grpc_context.h"
 
@@ -113,9 +115,16 @@ void falco_grpc_server_impl::subscribe(const stream_context& ctx, const falco_ou
 	else
 	{
 		// Start (or continue) streaming
-		// ctx.m_status == stream_context::STREAMING
-	}
 
+		// ctx.m_status == stream_context::STREAMING
+
+		// todo > do we want batching?
+
+		res.set_source(source::SYSCALL);
+		res.set_rule("regola 1");
+
+		ctx.m_has_more = false;
+	}
 	// todo > print/store statistics
 }
 
@@ -175,6 +184,32 @@ void falco_grpc_server::run()
 	}
 
 	while(is_running())
+	{
+		sleep(1);
+	}
+
+	stop();
+}
+
+void falco_grpc_server::stop()
+{
+	m_server->Shutdown();
+	m_completion_queue->Shutdown();
+
+	// todo > log "waiting for the server threads to complete"
+
+	for(std::thread& t : m_threads)
+	{
+		t.join();
+	}
+	m_threads.clear();
+
+	// todo > log "all server threads complete"
+
+	// Ignore remaining events
+	void* ignore_tag = nullptr;
+	bool ignore_ok = false;
+	while(m_completion_queue->Next(&ignore_tag, &ignore_ok))
 	{
 	}
 }

@@ -49,6 +49,7 @@ public:
 
 	void thread_process(int thread_index);
 	void run();
+	void stop();
 
 	falco_output_service::AsyncService m_svc;
 	std::unique_ptr<grpc::ServerCompletionQueue> m_completion_queue;
@@ -58,7 +59,6 @@ private:
 	std::string m_server_addr;
 	int m_threadiness = 0;
 	std::vector<std::thread> m_threads;
-
 };
 
 void start_grpc_server(std::string server_address, int threadiness);
