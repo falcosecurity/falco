@@ -1165,7 +1165,7 @@ int falco_init(int argc, char **argv)
 
 		// grpc server
 		// TODO: this is blocking now, not what we want, falco must go on. Just an experiment for now.
-		start_grpc_server(5060, 1);
+		start_grpc_server("0.0.0.0:5060", 1);
 
 		if(!trace_filename.empty() && !trace_is_scap)
 		{
