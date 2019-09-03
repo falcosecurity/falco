@@ -39,6 +39,7 @@ add_executable(falco
 	falco.cpp
 	"${SYSDIG_DIR}/userspace/sysdig/fields_info.cpp"
 	webserver.cpp
+	grpc_context.cpp
 	grpc_server.cpp
 	${CMAKE_CURRENT_BINARY_DIR}/falco_output.grpc.pb.cc
 	${CMAKE_CURRENT_BINARY_DIR}/falco_output.pb.cc)
