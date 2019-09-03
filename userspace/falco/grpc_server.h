@@ -25,39 +25,42 @@ limitations under the License.
 #include "falco_output.pb.h"
 #include "grpc_context.h"
 
-class grpc_server_impl
+class falco_grpc_server_impl
 {
 public:
-	grpc_server_impl() = default;
-	~grpc_server_impl() = default;
+	falco_grpc_server_impl() = default;
+	~falco_grpc_server_impl() = default;
 
 protected:
 	bool is_running();
 
-	void subscribe_handler(const stream_context& ctx, falco_output_request req, falco_output_response res);
+	void subscribe(const stream_context& ctx, const falco_output_request& req, falco_output_response& res);
 };
 
-class grpc_server : public grpc_server_impl
+class falco_grpc_server : public falco_grpc_server_impl
 {
 public:
-	grpc_server(std::string server_addr, int threadiness):
+	falco_grpc_server(std::string server_addr, int threadiness):
 		m_server_addr(server_addr),
 		m_threadiness(threadiness)
 	{
 	}
-	virtual ~grpc_server() = default;
+	virtual ~falco_grpc_server() = default;
 
 	void thread_process(int thread_index);
 	void run();
-	void subscribe_handler(const stream_context& ctx, falco_output_request req, falco_output_response res);
+
+	falco_output_service::AsyncService m_svc;
+	std::unique_ptr<grpc::ServerCompletionQueue> m_completion_queue;
 
 private:
-	// falco_output_service::AsyncService falco_output_svc;
 	std::unique_ptr<grpc::Server> m_server;
 	std::string m_server_addr;
 	int m_threadiness = 0;
-	std::unique_ptr<grpc::ServerCompletionQueue> m_completion_queue;
 	std::vector<std::thread> m_threads;
+
 };
 
 void start_grpc_server(std::string server_address, int threadiness);
+
+
