@@ -20,6 +20,7 @@ limitations under the License.
 
 #include <thread>
 #include <string>
+#include <atomic>
 
 #include "falco_output.grpc.pb.h"
 #include "falco_output.pb.h"
@@ -35,6 +36,9 @@ protected:
 	bool is_running();
 
 	void subscribe(const stream_context& ctx, const falco_output_request& req, falco_output_response& res);
+
+private:
+	std::atomic<bool> m_stop{false};
 };
 
 class falco_grpc_server : public falco_grpc_server_impl
