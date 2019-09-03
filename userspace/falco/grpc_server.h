@@ -18,6 +18,13 @@ limitations under the License.
 
 #pragma once
 
+#include <thread>
+#include <string>
+
+#include "falco_output.grpc.pb.h"
+#include "falco_output.pb.h"
+#include "grpc_context.h"
+
 class grpc_server_impl
 {
 public:
@@ -26,6 +33,31 @@ public:
 
 protected:
 	bool is_running();
+
+	void subscribe_handler(const stream_context& ctx, falco_output_request req, falco_output_response res);
 };
 
-bool start_grpc_server(unsigned short port, int threadiness);
+class grpc_server : public grpc_server_impl
+{
+public:
+	grpc_server(std::string server_addr, int threadiness):
+		m_server_addr(server_addr),
+		m_threadiness(threadiness)
+	{
+	}
+	virtual ~grpc_server() = default;
+
+	void thread_process(int thread_index);
+	void run();
+	void subscribe_handler(const stream_context& ctx, falco_output_request req, falco_output_response res);
+
+private:
+	// falco_output_service::AsyncService falco_output_svc;
+	std::unique_ptr<grpc::Server> m_server;
+	std::string m_server_addr;
+	int m_threadiness = 0;
+	std::unique_ptr<grpc::ServerCompletionQueue> m_completion_queue;
+	std::vector<std::thread> m_threads;
+};
+
+void start_grpc_server(std::string server_address, int threadiness);
