@@ -3,7 +3,7 @@ syntax = "proto3";
 import "google/protobuf/timestamp.proto";
 
 service falco_output_service {
-  rpc Subscribe(falco_output_request) returns (stream falco_output_response);
+  rpc subscribe(falco_output_request) returns (stream falco_output_response);
 }
 
 message falco_output_request {
