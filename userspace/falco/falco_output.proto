@@ -2,32 +2,34 @@ syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
 
-service FalcoOutputService {
-  rpc Subscribe(FalcoOutputRequest) returns (stream FalcoOutputResponse);
+service falco_output_service {
+  rpc Subscribe(falco_output_request) returns (stream falco_output_response);
 }
 
-message FalcoOutputRequest {
+message falco_output_request {
 }
 
-message FalcoOutputResponse {
+enum priority {
+  EMERGENCY = 0;
+  ALERT = 1;
+  CRITICAL = 2;
+  ERROR = 3;
+  WARNING = 4;
+  NOTICE = 5;
+  INFORMATIONAL = 6;
+  DEBUG = 7;
+}
+
+enum source {
+  SYSCALL = 0;
+  K8S_AUDIT = 1;
+}
+
+message falco_output_response {
   string id = 1;
   google.protobuf.Timestamp time = 2;
-  enum Priority {
-    EMERGENCY = 0;
-    ALERT = 1;
-    CRITICAL = 2;
-    ERROR = 3;
-    WARNING = 4;
-    NOTICE = 5;
-    INFORMATIONAL = 6;
-    DEBUG = 7;
-  }
-  Priority priority = 3;
-  enum Source {
-    SYSCALL = 0;
-    K8S_AUDIT = 1;
-  }
-  Source source = 4;
+  priority priority = 3;
+  source source = 4;
   string rule = 5;
   string format = 6;
   string output = 7;
