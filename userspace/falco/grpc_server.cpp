@@ -119,9 +119,16 @@ void falco_grpc_server_impl::subscribe(const stream_context& ctx, const falco_ou
 		// ctx.m_status == stream_context::STREAMING
 
 		// todo > do we want batching?
-		sleep(15);
+		std::stringstream ss;
+		int c = 0;
+		int i = 9;
+		while(c < i)
+		{
+			ss << std::to_string(c);
+			c++;
+		}
 		res.set_source(source::SYSCALL);
-		res.set_rule("rule X");
+		res.set_rule(ss.str());
 
 		ctx.m_has_more = true;
 	}
