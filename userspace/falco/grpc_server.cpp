@@ -119,6 +119,7 @@ void falco_grpc_server_impl::subscribe(const stream_context& ctx, const falco_ou
 		// ctx.m_status == stream_context::STREAMING
 
 		// todo > do we want batching?
+<<<<<<< HEAD
 		std::stringstream ss;
 		int c = 0;
 		int i = 9;
@@ -129,7 +130,13 @@ void falco_grpc_server_impl::subscribe(const stream_context& ctx, const falco_ou
 		}
 		res.set_source(source::SYSCALL);
 		res.set_rule(ss.str());
+=======
+>>>>>>> new(userspace/falco): grpc server event bus queue
 
+		if(!m_event_queue.try_pop(res))
+		{
+			// TODO: log that we've not been able to pop?
+		}
 		ctx.m_has_more = true;
 	}
 	// todo > print/store statistics
@@ -260,8 +267,9 @@ void falco_grpc_server::stop()
 	}
 }
 
-void start_grpc_server(std::string server_address, int threadiness)
+bool start_grpc_server(std::string server_address, int threadiness, falco_output_response_cq& output_event_queue)
 {
-	falco_grpc_server srv(server_address, threadiness);
+	falco_grpc_server srv(server_address, threadiness, output_event_queue);
 	srv.run();
+	return true;
 }
