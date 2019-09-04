@@ -59,9 +59,56 @@ protected:
 	uint64_t m_event_ts;
 };
 
+// A class representing an extracted value or a value on the rhs of a
+// filter_check. This intentionally doesn't use the same types as
+// ppm_events_public.h to take advantage of actual classes instead of
+// lower-level pointers pointing to syscall events and to allow for
+// efficient set comparisons.
+
+class json_event_value
+{
+public:
+	enum param_type {
+		JT_STRING,
+		JT_INT64,
+		JT_INT64_PAIR
+	};
+
+	json_event_value();
+	json_event_value(const std::string &val);
+	virtual ~json_event_value();
+
+	param_type ptype();
+
+	bool operator==(const json_event_value &val) const;
+	bool operator<(const json_event_value &val) const;
+	bool operator>(const json_event_value &val) const;
+
+	// Only meaningful for string types
+	bool startswith(const json_event_value &val) const;
+
+	// Only meaningful when this.m_type is PT_INT64 and vals all
+	// have type JT_INT64_PAIR.
+	bool match_ranges(const std::set<json_event_value> &vals) const;
+
+private:
+	param_type m_type;
+
+	static bool parse_as_pair_int64(std::pair<int64_t,int64_t> &pairval, const std::string &val);
+	static bool parse_as_int64(int64_t &intval, const std::string &val);
+
+	// The number of possible types is small so far, so sticking
+	// with separate vars
+
+	std::string m_stringval;
+	int64_t m_intval;
+	std::pair<int64,int64> m_pairval;
+};
+
 class json_event_filter_check : public gen_event_filter_check
 {
 public:
+
 	enum index_mode {
 		IDX_REQUIRED,
 		IDX_ALLOWED,
@@ -80,6 +127,7 @@ public:
 
 		index_mode m_idx_mode;
 		index_type m_idx_type;
+
 		// The variants allow for brace-initialization either
 		// with just the name/desc or additionally with index
 		// information
@@ -105,11 +153,10 @@ public:
 
 	virtual int32_t parse_field_name(const char* str, bool alloc_state, bool needed_for_filtering);
 	void add_filter_value(const char* str, uint32_t len, uint32_t i = 0 );
-	bool compare_numeric(const std::string &value);
 	bool compare(gen_event *evt);
 
-	typedef std::vector<std::string> values_t;
-	typedef set::set<std::string> values_set_t;
+	typedef std::vector<json_event_value> values_t;
+	typedef set::set<json_event_value> values_set_t;
 	typedef std::pair<values_t, values_set_t> extracted_values_t;
 
 	// This always returns a const extracted_values_t *. The pointer points to m_evalues;
@@ -148,7 +195,12 @@ protected:
 	// "bar"]
 
 	typedef std::function<values_t &(const nlohmann::json &, std::string &field)> extract_t;
-	static values_t &def_format(const nlohmann::json &j, std::string &field);
+	static values_t &def_extract(const nlohmann::json &j, std::string &field);
+
+	// Initial extraction using the list of pointers in
+	// ptrs. Iterates over array elements between pointers if
+	// found.
+	values_t &initial_extract(const nlohmann::json &root, const std::list<nlohmann::json::json_ptr> &ptrs);
 
 	// An alias might also define a custom function to index
 	// values e.g. looking up values by a string key instead of
@@ -162,14 +214,21 @@ protected:
 		// with just the pointer or with both the pointer and
 		// a format function.
 		alias();
-	        alias(nlohmann::json::json_pointer ptr);
-	        alias(nlohmann::json::json_pointer ptr, extract_t extract);
-	        alias(nlohmann::json::json_pointer ptr, extract_t extract, index_t index);
+	        alias(std::list<nlohmann::json::json_pointer> ptrs);
+	        alias(std::list<nlohmann::json::json_pointer> ptrs, extract_t extract);
+	        alias(std::list<nlohmann::json::json_pointer> ptrs, extract_t extract, index_t index);
+
 		virtual ~alias();
 
 		// A json pointer used to extract a referenced value
-		// from a json object.
-		nlohmann::json::json_pointer m_jptr;
+		// from a json object. The pointers are applied in
+		// order. After applying a pointer, if the resulting
+		// object is an array, each array member is considered
+		// for subsequent json pointers.
+		//
+		// This allows for "plucking" items out of an array
+		// selected by an earlier json pointer.
+		std::list<nlohmann::json::json_pointer> m_jptrs;
 
 		extract_t m_extract;
 		index_t m_index;
@@ -191,8 +250,9 @@ protected:
 	// e.g. ka.value[idx]. This holds the index.
 	std::string m_idx;
 
-	// The actual json pointer value to use to extract from events.
-	nlohmann::json::json_pointer m_jptr;
+	// The actual json pointer value to use to extract from
+	// events. See alias struct for usage.
+	std::list<nlohmann::json::json_pointer> m_jptrs;
 
 	// Temporary storage to hold extracted value
 	std::string m_tstr;
