@@ -119,19 +119,6 @@ void falco_grpc_server_impl::subscribe(const stream_context& ctx, const falco_ou
 		// ctx.m_status == stream_context::STREAMING
 
 		// todo > do we want batching?
-<<<<<<< HEAD
-		std::stringstream ss;
-		int c = 0;
-		int i = 9;
-		while(c < i)
-		{
-			ss << std::to_string(c);
-			c++;
-		}
-		res.set_source(source::SYSCALL);
-		res.set_rule(ss.str());
-=======
->>>>>>> new(userspace/falco): grpc server event bus queue
 
 		if(!m_event_queue.try_pop(res))
 		{
