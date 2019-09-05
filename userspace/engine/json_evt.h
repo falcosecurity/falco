@@ -87,10 +87,6 @@ public:
 	// Only meaningful for string types
 	bool startswith(const json_event_value &val) const;
 
-	// Only meaningful when this.m_type is PT_INT64 and vals all
-	// have type JT_INT64_PAIR.
-	bool match_ranges(const std::set<json_event_value> &vals) const;
-
 private:
 	param_type m_type;
 
@@ -102,7 +98,7 @@ private:
 
 	std::string m_stringval;
 	int64_t m_intval;
-	std::pair<int64,int64> m_pairval;
+	std::pair<int64_t,int64_t> m_pairval;
 };
 
 class json_event_filter_check : public gen_event_filter_check
@@ -156,7 +152,7 @@ public:
 	bool compare(gen_event *evt);
 
 	typedef std::vector<json_event_value> values_t;
-	typedef set::set<json_event_value> values_set_t;
+	typedef std::set<json_event_value> values_set_t;
 	typedef std::pair<values_t, values_set_t> extracted_values_t;
 
 	// This always returns a const extracted_values_t *. The pointer points to m_evalues;
@@ -188,35 +184,27 @@ protected:
 	// jevt.value[/user/username]. This struct represents one of
 	// those aliases.
 
-	// In addition to the value extracted by json_pointer, an
-	// alias might define an additional function to extract
-	// values. An example is grabbing a property from an array of
-	// objects e.g. [{"name": "foo"}, {"name": "bar"}] --> ["foo",
-	// "bar"]
-
-	typedef std::function<values_t &(const nlohmann::json &, std::string &field)> extract_t;
-	static values_t &def_extract(const nlohmann::json &j, std::string &field);
-
-	// Initial extraction using the list of pointers in
-	// ptrs. Iterates over array elements between pointers if
-	// found.
-	values_t &initial_extract(const nlohmann::json &root, const std::list<nlohmann::json::json_ptr> &ptrs);
+	// An alias might define an alternative function to extract
+	// values instead of using a json pointer. An example is
+	// ka.uri.param, which parses the query string to extract
+	// key=value parameters.
+	typedef std::function<void (const nlohmann::json &, values_t &values, std::string &field)> extract_t;
 
 	// An alias might also define a custom function to index
 	// values e.g. looking up values by a string key instead of
 	// aindex. It modifies the provided array of values, keeping
 	// the desired values in the array.
-	typedef std::function<values_t &(const values_t &values, std::string &field, std::string &idx)> index_t;
-	static values_t &def_index(const values_t &values, std::string &field, std::string &idx);
+	typedef std::function<void (values_t &values, std::string &field, std::string &idx)> index_t;
 
 	struct alias {
 		// The variants allow for brace-initialization either
 		// with just the pointer or with both the pointer and
 		// a format function.
 		alias();
-	        alias(std::list<nlohmann::json::json_pointer> ptrs);
-	        alias(std::list<nlohmann::json::json_pointer> ptrs, extract_t extract);
-	        alias(std::list<nlohmann::json::json_pointer> ptrs, extract_t extract, index_t index);
+	        alias(std::list<nlohmann::json::json_pointer> &ptrs);
+	        alias(std::list<nlohmann::json::json_pointer> &ptrs, index_t index);
+	        alias(extract_t extract);
+	        alias(extract_t extract, index_t index);
 
 		virtual ~alias();
 
@@ -257,10 +245,18 @@ protected:
 	// Temporary storage to hold extracted value
 	std::string m_tstr;
 
-	// Reformatting function
-	format_t m_format;
-
 private:
+
+	// The default extraction function uses the list of pointers
+	// in m_jptrs. Iterates over array elements between pointers if
+	// found.
+	values_t &def_extract(const nlohmann::json &j,
+			      const std::list<nlohmann::json::json_pointer> &ptrs,
+			      std::list<nlohmann::json::json_pointer>::iterator &it);
+
+
+	// The default indexing function handles array indexing by numeric value.
+	values_t &def_index(const values_t &values, std::string &idx);
 
 	// All values specified on the right hand side of the operator
 	// e.g. "ka.ns in ("one","two","three"), m_values has ("one",
@@ -302,140 +298,25 @@ public:
 
 	json_event_filter_check *allocate_new();
 
-	// Utility functions to parse comma-separated pairs of numbers
-	// and check numeric values against the ranges. Returns true
-	// if the range could be parsed successfully, false otherwise.
-	static bool parse_value_ranges(const std::string &idx_range,
-				       std::list<std::pair<int64_t,int64_t>> &ranges);
+	// Extract all images/image repositories from the provided containers
+	static values_t &extract_images(const nlohmann::json &j, std::string &field);
 
-	static bool check_value_range(const int64_t &val, const std::list<std::pair<int64_t,int64_t>> &ranges);
+	// Extract all query parameters
+	static values_t &extract_query_params(const nlohmann::json &j, std::string &field);
 
-	static bool check_value_range_set(std::set<int64_t> &items,
-					  const std::list<std::pair<int64_t,int64_t>> &ranges);
+	// Extract some property from the set of rules in the request object
+	static values_t &extract_rule_attrs(const nlohmann::json &j, std::string &field);
 
-	static bool check_value_range_any_set(std::set<int64_t> &items,
-					      const std::list<std::pair<int64_t,int64_t>> &ranges);
+	// Extract the volume types from volumes in the request object
+	static values_t &extract_volume_types(const nlohmann::json &j, std::string &field);
 
-	// For each item in the provided array, extract an (int64)
-	// value using ptr. Then check if it is within all ranges in
-	// ranges. If require_values is value, an item is allowed to
-	// *not* have a value for the provided pointer.
-	static bool check_value_range_array(const nlohmann::json &jarray,
-					    const nlohmann::json::json_pointer &ptr,
-					    const std::list<std::pair<int64_t,int64_t>> &ranges,
-					    bool require_values);
+	// Extract all hostPort values from containers in the request object
+	static values_t &extract_host_port(const nlohmann::json &j, std::string &field);
 
-	// For each item in the provided array, extract an (int64)
-	// value using ptr. Then check if any item matches the ranges in
-	// ranges.
-	static bool check_value_range_any_array(const nlohmann::json &jarray,
-						const nlohmann::json::json_pointer &ptr,
-						const std::list<std::pair<int64_t,int64_t>> &ranges);
-
-	// Extract a bool value from every item in the provided array
-	// (or the idxth item if non-zero). Return true if any
-	// extracted value is true.
-	static bool array_get_bool_vals(const nlohmann::json &j, const nlohmann::json::json_pointer &ptr, const std::string &idx);
-
-	// Index to the appropriate container and/or remove any repo,
-	// port, and tag from the provided image name.
-	static std::string index_image(const nlohmann::json &j, std::string &field, std::string &idx);
-
-	// Extract the value of the provided query parameter
-	static std::string index_query_param(const nlohmann::json &j, std::string &field, std::string &idx);
-
-	// Return true if an object in the provided array has a name property with idx as value
-	static std::string index_has_name(const nlohmann::json &j, std::string &field, std::string &idx);
-
-	// Return whether the ith container (or any container, if an
-	// index is not specified) is run privileged.
-	static std::string index_privileged(const nlohmann::json &j, std::string &field, std::string &idx);
-
-	// Return whether the ith container (or any container, if an
-	// index is not specified) has allowPrivilegeEscalation=true
-	static std::string index_allow_privilege_escalation(const nlohmann::json &j, std::string &field, std::string &idx);
-
-	// Return whether the ith container (or any container, if an
-	// index is not specified) is run without a readOnlyFileSystem annotation
-	static std::string index_read_write_fs(const nlohmann::json &j, std::string &field, std::string &idx);
-
-	// Return whether or not a runAsUser is specified, either in the security context or for any container.
-	static std::string index_has_run_as_user(const nlohmann::json &j, std::string &field, std::string &idx);
-
-	// Return the uid used by the ith (default 0) container's
-	// entrypoint, using either the security context or container
-	// runAsUser.
-	static std::string index_run_as_user(const nlohmann::json &j, std::string &field, std::string &idx);
-
-	// Return all uids used by all container's entrypoints, using
-	// either the security context or container runAsUser.
-	static void get_all_run_as_users(const nlohmann::json &j, std::set<int64_t> &uids);
-
-	// Return whether all uids (see inex_run_as_user) are within
-	// the ranges specified in the provided key.
-	static std::string check_run_as_user_within(const nlohmann::json &j, std::string &field, std::string &idx);
-
-	// Return whether any uids (see inex_run_as_user) are within
-	// the ranges specified in the provided key.
-	static std::string check_run_as_user_any_within(const nlohmann::json &j, std::string &field, std::string &idx);
-
-	// Return whether or not a runAsGroup is specified, either in the security context or for any container.
-	static std::string index_has_run_as_group(const nlohmann::json &j, std::string &field, std::string &idx);
-
-	// Return the gid used by the ith (default 0) container's
-	// entrypoint, using either the security context or container
-	// runAsGroup.
-	static std::string index_run_as_group(const nlohmann::json &j, std::string &field, std::string &idx);
-
-	// Return all gids used by all container's entrypoints, using
-	// either the security context or container runAsGroup.
-	static void get_all_run_as_groups(const nlohmann::json &j, std::set<int64_t> &gids);
-
-	// Return whether all gids (see inex_run_as_group) are within
-	// the ranges specified in the provided key.
-	static std::string check_run_as_group_within(const nlohmann::json &j, std::string &field, std::string &idx);
-
-	// Return whether all proc mounts across all containers are
-	// within the values in the provided key.
-	static std::string check_proc_mount_within(const nlohmann::json &j, std::string &field, std::string &idx);
-
-	// Return whether any gids (see inex_run_as_group) are within
-	// the ranges specified in the provided key.
-	static std::string check_run_as_group_any_within(const nlohmann::json &j, std::string &field, std::string &idx);
-
-	// Return whether all supplementalGroups specified in the provided
-	// gid array are within the range specified in the
-	// provided key.
-	static std::string check_supplemental_groups_within(const nlohmann::json &j, std::string &field, std::string &idx);
-
-	// Helper used by above hostpath methods
-	static std::string check_hostpath_vols(const nlohmann::json &j, std::string &field, std::string &idx);
-
-	// Returns true if all flexVolume volumes have a driver in the provided set of drivers
-	static std::string check_flexvolume_vols(const nlohmann::json &j, std::string &field, std::string &idx);
-
-	// Return whether or not a volume type is outside the provided set
-	static std::string check_volume_types(const nlohmann::json &j, std::string &field, std::string &idx);
-
-	// Return whether or not the set of added capabilities is outside the provided set
-	static std::string check_added_capabilities(const nlohmann::json &j, std::string &field, std::string &idx);
-
-	// Index to the ith value from the provided array. If no index is provided, return the entire array as a string.
-	static std::string index_generic(const nlohmann::json &j, std::string &field, std::string &idx);
-
-	// Index to the ith value from the provided array, and select
-	// the property which is the last component of the provided
-	// field.
-	static std::string index_select(const nlohmann::json &j, std::string &field, std::string &idx);
-
-	// Return whether all hostPorts specified in the provided
-	// container array are within the ranges specified in the
-	// provided key.
-	static std::string check_host_port_within(const nlohmann::json &j, std::string &field, std::string &idx);
-
-private:
-	// Split a string on delim populating the provided set
-	static void split_string_set(const std::string &str, const char delim, std::set<std::string> &items);
+	// Look up the value of the provided query parameter
+	static values_t &index_query_param(const values_t &values,
+					   std::string &field,
+					   std::string &idx);
 };
 
 class json_event_filter : public gen_event_filter

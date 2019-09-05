@@ -56,7 +56,7 @@ json_event_value::json_event_value()
 {
 }
 
-virtual ~json_event_value::json_event_value()
+json_event_value::~json_event_value()
 {
 }
 
@@ -75,6 +75,112 @@ json_event_value::json_event_value(const std::string &val)
 		m_stringval = val;
 		m_type = JT_STRING;
 	}
+}
+
+bool json_event_value::operator==(const json_event_value &val) const
+{
+	// A JT_INT64 can be compared to a JT_INT64_PAIR. The value
+	// must be within the range specified by the pair.
+	if(m_type == JT_INT64 &&
+	   val.m_type == JT_INT64_PAIR)
+	{
+		return (m_intval >= val.m_pairval.first &&
+			m_intval <= val.m_pairval.second);
+	}
+	else if(m_type != val.m_type)
+	{
+		return false;
+	}
+
+	switch(m_type)
+	{
+	case JT_STRING:
+		return (m_stringval == val.m_stringval);
+		break;
+	case JT_INT64:
+		return (m_intval == val.m_intval);
+		break;
+	case JT_INT64_PAIR:
+		return (m_pairval == val.m_pairval);
+		break;
+	default:
+		return false;
+	}
+}
+
+bool json_event_value::operator<(const json_event_value &val) const
+{
+	// This shouldn't be called when the types differ, but just in
+	// case, use m_type for initial ordering.
+	if(m_type != val.m_type)
+	{
+		return (m_type < val.m_type);
+	}
+
+	switch(m_type)
+	{
+	case JT_STRING:
+		return (m_stringval < val.m_stringval);
+		break;
+	case JT_INT64:
+		return (m_intval < val.m_intval);
+		break;
+	case JT_INT64_PAIR:
+		if(m_pairval.first != val.m_pairval.first)
+		{
+			return (m_pairval.first < val.m_pairval.first);
+		}
+		else
+		{
+			return (m_pairval.second < val.m_pairval.second);
+		}
+		break;
+	default:
+		return false;
+	}
+}
+
+bool json_event_value::operator>(const json_event_value &val) const
+{
+	// This shouldn't be called when the types differ, but just in
+	// case, use m_type for initial ordering.
+	if(m_type != val.m_type)
+	{
+		return (m_type < val.m_type);
+	}
+
+	switch(m_type)
+	{
+	case JT_STRING:
+		return (m_stringval > val.m_stringval);
+		break;
+	case JT_INT64:
+		return (m_intval > val.m_intval);
+		break;
+	case JT_INT64_PAIR:
+		if(m_pairval.first != val.m_pairval.first)
+		{
+			return (m_pairval.first > val.m_pairval.first);
+		}
+		else
+		{
+			return (m_pairval.second > val.m_pairval.second);
+		}
+		break;
+	default:
+		return false;
+	}
+}
+
+bool json_event_value::startswith(const json_event_value &val) const
+{
+	if(m_type == JT_STRING &&
+	   val.m_type == JT_STRING)
+	{
+		return m_stringval.compare(0, val.m_stringval.size(), val.m_stringval);
+	}
+
+	return false;
 }
 
 bool json_event_value::parse_as_pair_int64(std::pair<int64_t,int64_t> &pairval, const std::string &val)
@@ -97,7 +203,7 @@ bool json_event_value::parse_as_int64(int64_t &intval, const std::string &val)
 
 		intval = std::stoll(val, &ptr);
 
-		if(ptr != min.length())
+		if(ptr != val.length())
 		{
 			return false;
 		}
@@ -110,149 +216,17 @@ bool json_event_value::parse_as_int64(int64_t &intval, const std::string &val)
 	return true;
 }
 
-bool json_event_value::operator==(const json_event_value &val) const
-{
-	// A JT_INT64 can be compared to a JT_INT64_PAIR. The value
-	// must be within the range specified by the pair.
-	if(this.m_type == JT_INT64 &&
-	   val.m_type == JT_INT64_PAIR)
-	{
-		return (this.m_intval >= val.m_pairval.first &&
-			this.m_intval <= val.m_pairval.second);
-	}
-	else if(this.m_type != val.m_type)
-	{
-		return false;
-	}
-
-	switch(m_type)
-	{
-	case JT_STRING:
-		return (this.m_stringval == val.m_stringval);
-		break;
-	case JT_INT64:
-		return (this.m_intval == val.m_intval);
-		break;
-	case JT_INT64_PAIR:
-		return (this.m_pairval == val.m_pairval);
-		break;
-	default:
-		return false;
-	}
-}
-
-bool json_event_value::operator<(const json_event_value &val) const
-{
-	// This shouldn't be called when the types differ, but just in
-	// case, use m_type for initial ordering.
-	if(this.m_type != val.m_type)
-	{
-		return (this.m_type < val.m_type);
-	}
-
-	switch(m_type)
-	{
-	case JT_STRING:
-		return (this.m_stringval < val.m_stringval);
-		break;
-	case JT_INT64:
-		return (this.m_intval < val.m_intval);
-		break;
-	case JT_INT64_PAIR:
-		if(this.m_pairval.first != val.m_pairval.first)
-		{
-			return (this.m_pairval.first < val.m_pairval.first);
-		}
-		else
-		{
-			return (this.m_pairval.second < val.m_pairval.second);
-		}
-		break;
-	default:
-		return false;
-	}
-}
-
-bool json_event_value::operator>(const json_event_value &val) const
-{
-	// This shouldn't be called when the types differ, but just in
-	// case, use m_type for initial ordering.
-	if(this.m_type != val.m_type)
-	{
-		return (this.m_type < val.m_type);
-	}
-
-	switch(m_type)
-	{
-	case JT_STRING:
-		return (this.m_stringval > val.m_stringval);
-		break;
-	case JT_INT64:
-		return (this.m_intval > val.m_intval);
-		break;
-	case JT_INT64_PAIR:
-		if(this.m_pairval.first != val.m_pairval.first)
-		{
-			return (this.m_pairval.first > val.m_pairval.first);
-		}
-		else
-		{
-			return (this.m_pairval.second > val.m_pairval.second);
-		}
-		break;
-	default:
-		return false;
-	}
-}
-
-bool json_event_value::startswith(const json_event_value &val)
-{
-	if(this.m_type == JT_STRING &&
-	   val.m_type == JT_STRING)
-	{
-		return this.m_stringval.compare(0, val.m_stringval.size(), val.m_stringval);
-	}
-
-	return false;
-}
-
-bool json_event_value::match_ranges(const std::set<json_event_value> &vals)
-{
-	if(this.m_type == JT_INT64)
-	{
-		return std::find(vals.first(), vals.last(), *this) != vals.end();
-	}
-
-	return false;
-}
-
 std::string json_event_filter_check::no_value = "<NA>";
 
-json_event_filter_check::values_t &def_extract(const nlohmann::json &j, std::string &field)
+// XXX/mstemm fix this
+bool json_event_filter_check::def_extract(const nlohmann::json &root,
+					  json_event_filter_check::values_t values,
+					  const std::list<nlohmann::json::json_pointer> &ptrs,
+					  std::list<nlohmann::json::json_pointer>::iterator &it)
 {
-	json_event_filter_check::values_t values;
+	try {
+		const json &j = root.at(*it);
 
-	if(j.is_array())
-	{
-		for(auto &item : j)
-		{
-			values.emplace_back(json_as_string(j));
-		}
-	}
-	else
-	{
-		values.emplace_back(json_as_string(j));
-	}
-
-	return values;
-}
-
-values_t &json_event_filter_check::initial_extract(const nlohmann::json &root, const std::list<nlohmann::json::json_ptr> &ptrs)
-{
-	json_event_filter_check::values_t values;
-
-	if(ptrs.empty())
-	{
 		if(root.is_array())
 		{
 			for(auto &item : root)
@@ -268,24 +242,41 @@ values_t &json_event_filter_check::initial_extract(const nlohmann::json &root, c
 	else
 	{
 		try {
-			json_event_filter_check::values_t subvalues;
 
-			const json &j = root.at(ptrs.front());
 
-			subvalues = initial_extract(j, ptrs.next());
-			values.insert(values.end(), subvalues.begin(), subvalues.end());
-		}
-		catch(json::out_of_range &e)
-		{
-			values.clear();
-			return values;
+			if(j.is_array())
+			{
+				for(auto &item : root)
+				{
+					if(!def_extract(item, values, ptrs, ++it))
+					{
+						return false;
+					}
+				}
+				else
+				{
+
+					if(!def_extract(j, values, ptrs, ++it))
+				{
+					return false;
+					values.clear();
+					values.push_back(json_event_filter_check::no_value);
+					return false;
+				}
+			}
+			catch(json::out_of_range &e)
+			{
+				values.clear();
+				values.push_back(json_event_filter_check::no_value);
+				return false;
+			}
 		}
 	}
 
-	return values;
+	return true;
 }
 
-json_event_filter_check::values_t &json_event_filter_check::def_index(const values_t &values, std::string &field, std::string &idx)
+void json_event_filter_check::def_index(json_event_filter_check::values_t &values, std::string &idx)
 {
 	// The default index function only knows how to index by numeric values
 	uint64_t idx_num = (idx.empty() ? 0 : stoi(idx));
@@ -294,14 +285,14 @@ json_event_filter_check::values_t &json_event_filter_check::def_index(const valu
 
 	if(idx_num < values.size())
 	{
-		new_values.emplace_back(values.at(idx));
+		new_values.emplace_back(values.at(idx_num));
 	}
 	else
 	{
 		new_values.emplace_back(json_event_filter_check::no_value);
 	}
 
-	return new_values;
+	values = new_values;
 }
 
 std::string json_event_filter_check::json_as_string(const json &j)
@@ -318,8 +309,7 @@ std::string json_event_filter_check::json_as_string(const json &j)
 
 json_event_filter_check::field_info::field_info():
 	m_idx_mode(IDX_NONE),
-	m_idx_type(IDX_NUMERIC),
-	m_type(JT_STRING)
+	m_idx_type(IDX_NUMERIC)
 {
 }
 
@@ -328,8 +318,7 @@ json_event_filter_check::field_info::field_info(std::string name,
 	m_name(name),
 	m_desc(desc),
 	m_idx_mode(IDX_NONE),
-	m_idx_type(IDX_NUMERIC),
-	m_type(JT_STRING)
+	m_idx_type(IDX_NUMERIC)
 {
 }
 
@@ -339,8 +328,7 @@ json_event_filter_check::field_info::field_info(std::string name,
 	m_name(name),
 	m_desc(desc),
 	m_idx_mode(mode),
-	m_idx_type(IDX_NUMERIC),
-	m_type(JT_STRING)
+	m_idx_type(IDX_NUMERIC)
 {
 }
 
@@ -351,21 +339,7 @@ json_event_filter_check::field_info::field_info(std::string name,
 	m_name(name),
 	m_desc(desc),
 	m_idx_mode(mode),
-	m_idx_type(itype),
-	m_type(JT_STRING)
-{
-}
-
-json_event_filter_check::field_info::field_info(std::string name,
-						std::string desc,
-						index_mode mode,
-						index_type itype,
-						param_type ptype):
-	m_name(name),
-	m_desc(desc),
-	m_idx_mode(mode),
-	m_idx_type(itype),
-	m_type(ptype)
+	m_idx_type(itype)
 {
 }
 
@@ -377,25 +351,26 @@ json_event_filter_check::alias::alias()
 {
 }
 
-json_event_filter_check::alias::alias(std::list<nlohmann::json::json_ptr> ptrs,
-	m_jptrs(ptrs),
-	m_extract(def_extract),
-	m_index(def_index)
+json_event_filter_check::alias::alias(std::list<nlohmann::json::json_pointer> &ptrs) :
+	m_jptrs(ptrs)
 {
 }
 
-json_event_filter_check::alias::alias(std::list<nlohmann::json::json_ptr> ptrs,
-				      extract_t extract)
+json_event_filter_check::alias::alias(std::list<nlohmann::json::json_pointer> &ptrs,
+				      index_t index) :
 	m_jptrs(ptrs),
-	m_extract(extract),
-	m_index(def_index)
+	m_index(index)
 {
 }
 
-json_event_filter_check::alias::alias(std::list<nlohmann::json::json_ptr> ptrs,
-				      extract_t extract,
-				      index_t index)
-	m_jptrs(ptrs),
+json_event_filter_check::alias::alias(extract_t extract) :
+	m_extract(extract)
+{
+}
+
+json_event_filter_check::alias::alias(extract_t extract,
+				      index_t index) :
+
 	m_extract(extract),
 	m_index(index)
 {
@@ -405,9 +380,7 @@ json_event_filter_check::alias::~alias()
 {
 }
 
-json_event_filter_check::json_event_filter_check():
-	m_extract(def_extract),
-	m_index(def_index)
+json_event_filter_check::json_event_filter_check()
 {
 }
 
@@ -438,9 +411,16 @@ int32_t json_event_filter_check::parse_field_name(const char *str, bool alloc_st
 		   str[info.m_name.size()] != '.' &&
 		   info.m_name.size() > match_len)
 		{
-o			m_jptrs = al.m_jptrs;
+			m_jptrs = al.m_jptrs;
 			m_field = info.m_name;
-			m_format = al.m_format;
+			if(al.m_index)
+			{
+				m_index = al.m_index;
+			}
+			if(al.m_extract)
+			{
+				m_extract = al.m_extract;
+			}
 			m_type = al.m_type;
 			match_len = info.m_name.size();
 
@@ -516,32 +496,18 @@ bool json_event_filter_check::compare(gen_event *evt)
 			evalues->first.at(0).startswith(m_values[0]));
 		break;
 	case CO_IN:
-		if(evalues->first.size() == 1)
-		{
-			return evalues->first.begin().match_ranges(m_values);
-		}
-		else
-		{
-			it = std::set_intersection(evalues->second.begin(), evalues->second.end(),
-						   m_values.begin(), m_values.end());
-			itvals.resize(it-itvals.begin());
+		it = std::set_intersection(evalues->second.begin(), evalues->second.end(),
+					   m_values.begin(), m_values.end());
+		itvals.resize(it-itvals.begin());
 
-			return (itvals.size() == evalues->second.size());
-		}
+		return (itvals.size() == evalues->second.size());
 		break;
 	case CO_INTERSECTS:
-		if(evalues->first.size() == 1)
-		{
-			return evalues->first.at(0).match_ranges(m_values);
-		}
-		else
-		{
-			it = std::set_intersection(evalues->second.begin(), evalues->second.end(),
-						   m_values.begin(), m_values.end());
-			itvals.resize(it-itvals.begin());
+		it = std::set_intersection(evalues->second.begin(), evalues->second.end(),
+					   m_values.begin(), m_values.end());
+		itvals.resize(it-itvals.begin());
 
-			return (itvals.size() > 0);
-		}
+		return (itvals.size() > 0);
 		break;
 	case CO_LT:
 		return (evalues->first.size() == 1 &&
@@ -607,26 +573,40 @@ uint8_t *json_event_filter_check::extract(gen_event *evt, uint32_t *len, bool sa
 {
 	json_event *jevt = (json_event *)evt;
 
-	m_evalues.first = initial_extract(jevt->jevt(), m_jptrs);
-
-	for(auto &val : m_evalues)
+	try
 	{
-		json_event_filter_check::values_t subvalues;
+		if(m_extract)
+		{
+			m_evalues.first = m_extract(j, m_field);
+		}
+		else
+		{
+			m_evalues.first = def_extract(j, m_jptrs, m_jptrs.begin());
+		}
 
-		subvalues = m_extract(j, m_field);
-		m_evalues.first.insert(m_evalues.first.end(), subvalues.begin(), subvalues.end());
+		if(! m_idx.empty())
+		{
+			if(m_index)
+			{
+				m_evalues.first = m_index(m_evalues.first, m_field, m_idx);
+			}
+			else
+			{
+				m_evalues.first = def_index(m_evalues.first, m_idx);
+			}
+		}
+
+		// Now populate the values set with the distinct
+		// values from the vector
+		for(auto &str : m_evalues.first)
+		{
+			m_evalues.second.insert(str);
+		}
 	}
-
-	if(! m_idx.empty())
+	catch(json::out_of_range &e)
 	{
-		m_evalues.first = m_index(m_evalues.first, m_field, m_idx);
-	}
-
-	// Now populate the values set with the distinct
-	// values from the vector
-	for(auto &str : m_evalues.first)
-	{
-		m_evalues.second.insert(str);
+		m_evalues.first.push_back(json_event_filter_check::no_value);
+		m_evalues.second.insert(json_event_filter_check::no_value);
 	}
 
 	*len = sizeof(m_evalues);
@@ -748,13 +728,17 @@ json_event_filter_check *jevt_filter_check::allocate_new()
 	return (json_event_filter_check *)chk;
 }
 
-json_event_filter_check::values_t &k8s_audit_filter_check::extract_images(const json &j, std::string &field)
+void k8s_audit_filter_check::extract_images(const json &j,
+					    json_event_filter_check::values_t &values,
+					    std::string &field)
 {
-	values_t vals;
+	static json::json_pointer containers_ptr = "/requestObject/spec/containers"_json_pointer;
 
 	try
 	{
-		for(auto &spec : j)
+		const json containers = j.at(containers_ptr);
+
+		for(auto &spec : containers)
 		{
 			std::string image = j.at("image");
 
@@ -773,826 +757,118 @@ json_event_filter_check::values_t &k8s_audit_filter_check::extract_images(const 
 								   tag,
 								   digest,
 								   false);
-				vals.push_back(name);
+				values.push_back(name);
 			}
 			else
 			{
-				vals.push_back(image);
+				values.push_back(image);
 			}
 		}
 	}
 	catch(json::out_of_range &e)
 	{
-		vals.clear();
-		vals.push_back(json_event_filter_check::no_value);
+		values.clear();
+		values.push_back(json_event_filter_check::no_value);
 	}
-
-	return vals;
 }
 
-json_event_filter_check::values_t &extract_query_params(const nlohmann::json &j, std::string &field)
+void k8s_audit_filter_check::extract_query_params(const nlohmann::json &j,
+						  json_event_filter_check::values_t &values,
+						  std::string &field)
 {
-	json_event_filter_check::values_t vals;
+	static json::json_pointer request_uri_ptr = "/requestURI"_json_pointer;
 
-	string uri = j;
-	std::vector<std::string> uri_parts, query_parts;
+	try {
+		string uri = j.at(request_uri_ptr);
 
-	uri_parts = sinsp_split(uri, '?');
+		std::vector<std::string> uri_parts, query_parts;
 
-	if(uri_parts.size() != 2)
-	{
-		vals.push_back(json_event_filter_check::no_value);
-		return vals;
-	}
+		uri_parts = sinsp_split(uri, '?');
 
-	query_parts = sinsp_split(uri_parts[1], '&');
-
-	for(auto &part : query_parts)
-	{
-		vals.push_back(part);
-	}
-
-	return vals;
-}
-
-
-json_event_filter_check::values_t & k8s_audit_filter_check::index_query_param(const values_t &values,
-									      std::string &field,
-									      std::string &idx)
-{
-	json_event_filter_check::values_t vals;
-
-	for(auto &str : values)
-	{
-		std::vector<std::string> param_parts = sinsp_split(str, '=');
-
-		if(param_parts.size() == 2 && uri::decode(param_parts[0], true) == idx)
+		if(uri_parts.size() != 2)
 		{
-			vals.push_back(param_parts[1]);
-			return vals;
+			values.push_back(json_event_filter_check::no_value);
+			return;
 		}
-	}
 
-	vals.push_back(no_value);
-	return vals;
+		query_parts = sinsp_split(uri_parts[1], '&');
+
+		for(auto &part : query_parts)
+		{
+			values.push_back(part);
+		}
+
+	}
+	catch(json::out_of_range &e)
+	{
+		values.clear();
+		values.push_back(json_event_filter_check::no_value);
+	}
 }
 
-std::string k8s_audit_filter_check::index_generic(const json &j, std::string &field, std::string &idx)
+
+void k8s_audit_filter_check::extract_rule_attrs(const json &j,
+						json_event_filter_check::values_t &values,
+						std::string &field)
 {
-	json item;
-
-	if(idx.empty())
-	{
-		item = j;
-	}
-	else
-	{
-		uint64_t idx_num = (idx.empty() ? 0 : stoi(idx));
-
-		try
-		{
-			item = j[idx_num];
-		}
-		catch(json::out_of_range &e)
-		{
-			return string(json_event_filter_check::no_value);
-		}
-	}
-
-	return json_event_filter_check::json_as_string(item);
-}
-
-std::string k8s_audit_filter_check::index_select(const json &j, std::string &field, std::string &idx)
-{
-	json item;
+	static json::json_pointer rules_ptr = "/requestObject/rules"_json_pointer;
 
 	// Use the suffix of the field to determine which property to
 	// select from each object.
 	std::string prop = field.substr(field.find_last_of(".") + 1);
 
-	std::string ret;
-
-	if(idx.empty())
+	try
 	{
-		for(auto &obj : j)
-		{
-			if(ret != "")
-			{
-				ret += " ";
-			}
+		const json rules = j.at(rules_ptr);
 
-			try
-			{
-				ret += json_event_filter_check::json_as_string(obj.at(prop));
-			}
-			catch(json::out_of_range &e)
-			{
-				ret += "N/A";
-			}
-		}
-	}
-	else
-	{
-		try
-		{
-			ret = j[stoi(idx)].at(prop);
-		}
-		catch(json::out_of_range &e)
-		{
-			ret = "N/A";
-		}
-	}
-
-	return ret;
-}
-
-std::string k8s_audit_filter_check::index_privileged(const json &j, std::string &field, std::string &idx)
-{
-	nlohmann::json::json_pointer jpriv = "/securityContext/privileged"_json_pointer;
-
-	return (array_get_bool_vals(j, jpriv, idx) ?
-		string("true") :
-		string("false"));
-}
-
-std::string k8s_audit_filter_check::index_allow_privilege_escalation(const json &j, std::string &field, std::string &idx)
-{
-	nlohmann::json::json_pointer jpriv = "/securityContext/allowPrivilegeEscalation"_json_pointer;
-
-	return (array_get_bool_vals(j, jpriv, idx) ?
-		string("true") :
-		string("false"));
-}
-
-std::string k8s_audit_filter_check::index_read_write_fs(const json &j, std::string &field, std::string &idx)
-{
-	nlohmann::json::json_pointer jread_only = "/securityContext/readOnlyRootFilesystem"_json_pointer;
-
-	bool read_write_fs = false;
-
-	if(!idx.empty())
-	{
-		try {
-			read_write_fs = !j[stoi(idx)].at(jread_only);
-		}
-		catch(json::out_of_range &e)
-		{
-			// If not specified, assume read/write
-			read_write_fs = true;
-		}
-	}
-	else
-	{
-		for(auto &container : j)
-		{
-			try {
-				if(!container.at(jread_only))
-				{
-					read_write_fs = true;
-				}
-			}
-			catch(json::out_of_range &e)
-			{
-				// If not specified, assume read/write
-				read_write_fs = true;
-			}
-		}
-	}
-
-	return (read_write_fs ? string("true") : string("false"));
-}
-
-std::string k8s_audit_filter_check::index_has_run_as_user(const json &j, std::string &field, std::string &idx)
-{
-	static json::json_pointer run_as_user = "/securityContext/runAsUser"_json_pointer;
-
-	try {
-		auto val = j.at(run_as_user);
-
-		// Would have thrown exception, so value exists
-		return string("true");
+		values.push_back(rules.at(prop));
 	}
 	catch(json::out_of_range &e)
 	{
-		// Continue to examining container array
-	}
-
-	try {
-		for(auto &container : j.at("containers"))
-		{
-			try {
-				auto val = container.at(run_as_user);
-
-				// Would have thrown exception, so value exists
-				return string("true");
-			}
-			catch(json::out_of_range &e)
-			{
-				// Try next container
-			}
-		}
-	}
-	catch(json::out_of_range &e)
-	{
-		// no containers, pass through
-	}
-
-	return string("false");
-}
-
-std::string k8s_audit_filter_check::index_run_as_user(const json &j, std::string &field, std::string &idx)
-{
-	static json::json_pointer run_as_user = "/securityContext/runAsUser"_json_pointer;
-
-	// Prefer the security context over any container's runAsUser
-	try {
-		return j.at(run_as_user);
-	}
-	catch(json::out_of_range &e)
-	{
-		// Continue to per-container indexing
-	}
-
-	uint64_t uidx = 0;
-	if(idx.empty())
-	{
-		try {
-			uidx = stoi(idx);
-		}
-		catch(std::invalid_argument &e)
-		{
-			uidx = 0;
-		}
-	}
-
-	try {
-		return j.at("containers")[uidx].at(run_as_user);
-	}
-	catch(json::out_of_range &e)
-	{
-		return string("0");
+		values.clear();
+		values.push_back(json_event_filter_check::no_value);
 	}
 }
 
-void k8s_audit_filter_check::get_all_run_as_users(const json &j, std::set<int64_t> &uids)
+void k8s_audit_filter_check::extract_volume_types(const json &j,
+						  json_event_filter_check::values_t &values,
+						  std::string &field)
 {
-	uids.clear();
-
-	static json::json_pointer run_as_user = "/securityContext/runAsUser"_json_pointer;
-
-	// Prefer the security context over any container's runAsUser
-	try {
-		int64_t uid = j.at(run_as_user);
-		uids.insert(uid);
-		return;
-	}
-	catch(json::out_of_range &e)
-	{
-		// Continue to per-container indexing
-	}
-
-	try {
-		for(auto &container : j.at("containers"))
-		{
-			try {
-				int64_t uid = container.at(run_as_user);
-				uids.insert(uid);
-			}
-			catch(json::out_of_range &e)
-			{
-				// This container has no runAsUser, assume 0
-				uids.insert(0);
-			}
-		}
-	}
-	catch(json::out_of_range &e)
-	{
-		// No containers at all
-		uids.insert(0);
-	}
-}
-
-std::string k8s_audit_filter_check::check_run_as_user_within(const json &j, std::string &field, std::string &idx)
-{
-	std::list<std::pair<int64_t,int64_t>> allowed_uids;
-	std::set<int64_t> all_run_as_users;
-
-	if(!parse_value_ranges(idx, allowed_uids))
-	{
-		return string("false");
-	}
-
-	get_all_run_as_users(j, all_run_as_users);
-
-	return (check_value_range_set(all_run_as_users, allowed_uids) ? string("true") : string("false"));
-}
-
-std::string k8s_audit_filter_check::check_run_as_user_any_within(const json &j, std::string &field, std::string &idx)
-{
-	std::list<std::pair<int64_t,int64_t>> allowed_uids;
-	std::set<int64_t> all_run_as_users;
-
-	if(!parse_value_ranges(idx, allowed_uids))
-	{
-		return string("false");
-	}
-
-	get_all_run_as_users(j, all_run_as_users);
-
-	return (check_value_range_any_set(all_run_as_users, allowed_uids) ? string("true") : string("false"));
-}
-
-std::string k8s_audit_filter_check::index_has_run_as_group(const json &j, std::string &field, std::string &idx)
-{
-	static json::json_pointer run_as_group = "/securityContext/runAsGroup"_json_pointer;
-
-	try {
-		auto val = j.at(run_as_group);
-
-		// Would have thrown exception, so value exists
-		return string("true");
-	}
-	catch(json::out_of_range &e)
-	{
-		// Continue to examining container array
-	}
-
-	try {
-		for(auto &container : j.at("containers"))
-		{
-			try {
-				auto val = container.at(run_as_group);
-
-				// Would have thrown exception, so value exists
-				return string("true");
-			}
-			catch(json::out_of_range &e)
-			{
-				// Try next container
-			}
-		}
-	}
-	catch(json::out_of_range &e)
-	{
-		// no containers, pass through
-	}
-
-	return string("false");
-}
-
-std::string k8s_audit_filter_check::index_run_as_group(const json &j, std::string &field, std::string &idx)
-{
-	static json::json_pointer run_as_group = "/securityContext/runAsGroup"_json_pointer;
-
-	// Prefer the security context over any container's runAsGroup
-	try {
-		return j.at(run_as_group);
-	}
-	catch(json::out_of_range &e)
-	{
-		// Continue to per-container indexing
-	}
-
-	uint64_t uidx = 0;
-	if(idx.empty())
-	{
-		try {
-			uidx = stoi(idx);
-		}
-		catch(std::invalid_argument &e)
-		{
-			uidx = 0;
-		}
-	}
-
-	try {
-		return j.at("containers")[uidx].at(run_as_group);
-	}
-	catch(json::out_of_range &e)
-	{
-		return string("0");
-	}
-}
-
-void k8s_audit_filter_check::get_all_run_as_groups(const json &j, std::set<int64_t> &uids)
-{
-	uids.clear();
-
-	static json::json_pointer run_as_group = "/securityContext/runAsGroup"_json_pointer;
-
-	// Prefer the security context over any container's runAsGroup
-	try {
-		int64_t uid = j.at(run_as_group);
-		uids.insert(uid);
-		return;
-	}
-	catch(json::out_of_range &e)
-	{
-		// Continue to per-container indexing
-	}
-
-	try {
-		for(auto &container : j.at("containers"))
-		{
-			try {
-				int64_t uid = container.at(run_as_group);
-				uids.insert(uid);
-			}
-			catch(json::out_of_range &e)
-			{
-				// This container has no runAsGroup, assume 0
-				uids.insert(0);
-			}
-		}
-	}
-	catch(json::out_of_range &e)
-	{
-		// No containers at all
-		uids.insert(0);
-	}
-}
-
-std::string k8s_audit_filter_check::check_run_as_group_within(const json &j, std::string &field, std::string &idx)
-{
-	std::list<std::pair<int64_t,int64_t>> allowed_uids;
-	std::set<int64_t> all_run_as_groups;
-
-	if(!parse_value_ranges(idx, allowed_uids))
-	{
-		return string("false");
-	}
-
-	get_all_run_as_groups(j, all_run_as_groups);
-
-	return (check_value_range_set(all_run_as_groups, allowed_uids) ? string("true") : string("false"));
-}
-
-std::string k8s_audit_filter_check::check_run_as_group_any_within(const json &j, std::string &field, std::string &idx)
-{
-	std::list<std::pair<int64_t,int64_t>> allowed_uids;
-	std::set<int64_t> all_run_as_groups;
-
-	if(!parse_value_ranges(idx, allowed_uids))
-	{
-		return string("false");
-	}
-
-	get_all_run_as_groups(j, all_run_as_groups);
-
-	return (check_value_range_any_set(all_run_as_groups, allowed_uids) ? string("true") : string("false"));
-
-}
-
-std::string k8s_audit_filter_check::check_proc_mount_within(const json &j, std::string &field, std::string &idx)
-{
-	std::set<std::string> allowed_proc_mount_types;
-
-	static json::json_pointer proc_mount = "/securityContext/procMount"_json_pointer;
-
-	split_string_set(idx, ',', allowed_proc_mount_types);
-
-	for(auto &container : j)
-	{
-		try {
-			for(auto &mnt_type : container.at(proc_mount))
-			{
-				if(allowed_proc_mount_types.find(mnt_type) == allowed_proc_mount_types.end())
-				{
-					return string("false");
-				}
-			}
-		}
-		catch(json::out_of_range &e)
-		{
-			// No procMount, so is considered within the set
-		}
-	}
-
-	return string("true");
-}
-
-std::string k8s_audit_filter_check::check_supplemental_groups_within(const json &j, std::string &field, std::string &idx)
-{
-	std::list<std::pair<int64_t,int64_t>> allowed_gids;
-
-	static json::json_pointer supplemental_groups = "/securityContext/supplementalGroups"_json_pointer;
-
-	if(!parse_value_ranges(idx, allowed_gids))
-	{
-		return string("false");
-	}
+	static json::json_pointer volumes_ptr = "/requestObject/spec/volumes"_json_pointer;
 
 	try {
 
-		for(auto &gid : j.at(supplemental_groups))
-		{
-			if(!check_value_range(gid, allowed_gids))
-			{
-				return string("false");
-			}
-		}
-	}
-	catch(json::out_of_range &e)
-	{
-		// No groups, so not within
-		return string("true");
-	}
-
-	return string("true");
-}
-
-std::string k8s_audit_filter_check::check_hostpath_vols(const json &j, std::string &field, std::string &idx)
-{
-	uint64_t num_volumes = 0;
-	uint64_t num_volumes_match = 0;
-	std::set<std::string> paths;
-
-	if(j.find("volumes") != j.end())
-	{
-		const nlohmann::json &vols = j["volumes"];
-
-		split_string_set(idx, ',', paths);
-
-		nlohmann::json::json_pointer jpath = "/hostPath/path"_json_pointer;
+		const nlohmann::json &vols = j.at(volumes_ptr);
 
 		for(auto &vol : vols)
 		{
-			// The volume must be a hostPath volume to consider it
-			if(vol.find("hostPath") != vol.end())
+			for (auto it = vol.begin(); it != vol.end(); ++it)
 			{
-				num_volumes++;
-
-				string hostpath = vol.value(jpath, "N/A");
-
-				for(auto &path : paths)
+				// Any key other than "name" represents a volume type
+				if(it.key() != "name")
 				{
-					if(sinsp_utils::glob_match(path.c_str(), hostpath.c_str()))
-					{
-						num_volumes_match++;
-						break;
-					}
+					values.push_back(it.key());
 				}
 			}
 		}
 	}
-
-	if(field == "ka.req.volume.any_hostpath" ||
-	   field == "ka.req.volume.hostpath")
+	catch(json::out_of_range &e)
 	{
-		return string((num_volumes_match > 0 ? "true" : "false"));
+		values.clear();
+		values.push_back(json_event_filter_check::no_value);
 	}
-
-	if(field == "ka.req.volume.all_hostpath")
-	{
-		return string(((num_volumes_match == num_volumes) ? "true" : "false"));
-	}
-
-	// Shouldn't occur
-	return string("false");
 }
 
-std::string k8s_audit_filter_check::check_flexvolume_vols(const json &j, std::string &field, std::string &idx)
+void k8s_audit_filter_check::extract_host_port(const json &j,
+					       json_event_filter_check::values_t &values,
+					       std::string &field)
 {
-	uint64_t num_volumes = 0;
-	uint64_t num_volumes_match = 0;
-	std::set<std::string> drivers;
-
-	if(j.find("volumes") == j.end())
-	{
-		// No volumes, matches
-		return string("true");
-	}
-
-	const nlohmann::json &vols = j["volumes"];
-
-	split_string_set(idx, ',', drivers);
-
-	nlohmann::json::json_pointer jpath = "/flexVolume/driver"_json_pointer;
-
-	for(auto &vol : vols)
-	{
-		// The volume must be a hostPath volume to consider it
-		if(vol.find("flexVolume") != vol.end())
-		{
-			num_volumes++;
-
-			string driver = vol.value(jpath, "N/A");
-
-			if(drivers.find(driver) != drivers.end())
-			{
-				num_volumes_match++;
-			}
-		}
-	}
-
-	return string((num_volumes == num_volumes_match ? "true" : "false"));
-}
-
-std::string k8s_audit_filter_check::check_volume_types(const json &j, std::string &field, std::string &idx)
-{
-	std::set<std::string> allowed_volume_types;
-
-	if(j.find("volumes") == j.end())
-	{
-		// No volumes, so no volumes within the set in the index
-		return string("true");
-	}
-
-	const nlohmann::json &vols = j["volumes"];
-
-	split_string_set(idx, ',', allowed_volume_types);
-
-	for(auto &vol : vols)
-	{
-		for (auto it = vol.begin(); it != vol.end(); ++it)
-		{
-			// Any key other than "name" represents a volume type
-			if(it.key() == "name")
-			{
-				continue;
-			}
-
-			if(allowed_volume_types.find(it.key()) == allowed_volume_types.end())
-			{
-				return string("false");
-			}
-		}
-	}
-
-	return string("true");
-}
-
-std::string k8s_audit_filter_check::check_added_capabilities(const json &j, std::string &field, std::string &idx)
-{
-	std::set<std::string> added_capabilities;
-
-	static json::json_pointer capabilities_add = "/securityContext/capabilities/add"_json_pointer;
-
-	split_string_set(idx, ',', added_capabilities);
-
-	for(auto &container : j)
-	{
-		try {
-			for(auto &cap : container.at(capabilities_add))
-			{
-				if(added_capabilities.find(cap) == added_capabilities.end())
-				{
-					return string("false");
-				}
-			}
-		}
-		catch(json::out_of_range &e)
-		{
-			// No added capabilities, so is considered within the set
-		}
-	}
-
-	return string("true");
-}
-
-bool k8s_audit_filter_check::parse_value_ranges(const std::string &idx_range,
-						std::list<std::pair<int64_t,int64_t>> &ranges)
-{
-	std::vector<std::string> pairs = sinsp_split(idx_range, ',');
-
-	for(auto &pair : pairs)
-	{
-		size_t pos = pair.find_first_of(':');
-
-		if(pos != std::string::npos)
-		{
-			int64_t imin, imax;
-			std::string min = pair.substr(0, pos);
-			std::string max = pair.substr(pos+1);
-			std::string::size_type ptr;
-
-			imin = std::stoll(min, &ptr);
-
-			if(ptr != min.length())
-			{
-				return false;
-			}
-
-			imax = std::stoll(max, &ptr);
-
-			if(ptr != max.length())
-			{
-				return false;
-			}
-
-			ranges.push_back(std::make_pair(imin, imax));
-		}
-	}
-
-	return true;
-}
-
-bool k8s_audit_filter_check::check_value_range(const int64_t &val, const std::list<std::pair<int64_t,int64_t>> &ranges)
-{
-	for(auto &p : ranges)
-	{
-		if(val < p.first ||
-		   val > p.second)
-		{
-			return false;
-		}
-	}
-
-	return true;
-}
-
-bool k8s_audit_filter_check::check_value_range_array(const nlohmann::json &jarray,
-						     const nlohmann::json::json_pointer &ptr,
-						     const std::list<std::pair<int64_t,int64_t>> &ranges,
-						     bool require_values)
-{
-	for(auto &item : jarray)
-	{
-		try {
-			int64_t val = item.at(ptr);
-			if(!check_value_range(val, ranges))
-			{
-				return false;
-			}
-		}
-		catch(json::out_of_range &e)
-		{
-			if(require_values)
-			{
-				return false;
-			}
-		}
-	}
-
-	return true;
-}
-
-bool k8s_audit_filter_check::check_value_range_set(std::set<int64_t> &items,
-						   const std::list<std::pair<int64_t,int64_t>> &ranges)
-{
-	for(auto &item : items)
-	{
-		if(!check_value_range(item, ranges))
-		{
-			return false;
-		}
-	}
-
-	return true;
-}
-
-bool k8s_audit_filter_check::check_value_range_any_set(std::set<int64_t> &items,
-						       const std::list<std::pair<int64_t,int64_t>> &ranges)
-{
-	for(auto &item : items)
-	{
-		if(check_value_range(item, ranges))
-		{
-			return true;
-		}
-	}
-
-	return false;
-}
-
-bool k8s_audit_filter_check::array_get_bool_vals(const json &j, const json::json_pointer &ptr)
-{
-	bool val = false;
-
-	if(!idx.empty())
-	{
-		try {
-			val = j[stoi(idx)].at(ptr);
-		}
-		catch(json::out_of_range &e)
-		{
-		}
-	}
-	else
-	{
-		for(auto &item : j)
-		{
-			try {
-				if(item.at(ptr))
-				{
-					val = true;
-				}
-			}
-			catch(json::out_of_range &e)
-			{
-			}
-		}
-	}
-
-	return val;
-}
-
-json_event_filter_check::values_t &k8s_audit_filter_check::extract_host_port(const json &j, std::string &field)
-{
-	values_t vals;
+	static json::json_pointer containers_ptr = "/requestObject/spec/containers"_json_pointer;
 
 	try {
-		for(auto &container : j)
+		const json containers = j.at(containers_ptr);
+
+		for(auto &container : containers)
 		{
 			if(container.find("ports") == container.end())
 			{
@@ -1605,34 +881,43 @@ json_event_filter_check::values_t &k8s_audit_filter_check::extract_host_port(con
 			{
 				if(cport.find("hostPort") != cport.end())
 				{
-					vals.emplace_back(cport.at("hostPort"));
+					values.emplace_back(cport.at("hostPort"));
 				}
 				else if (cport.find("containerPort") != cport.end())
 				{
 					// When hostNetwork is true, this will match the host port.
-					vals.emplace_back(cport.at("containerPort"));
+					values.emplace_back(cport.at("containerPort"));
 				}
 			}
 		}
 	}
 	catch(json::out_of_range &e)
 	{
-		vals.clear();
-		vals.push_back(json_event_filter_check::no_value);
+		values.clear();
+		values.push_back(json_event_filter_check::no_value);
 	}
-
-	return vals;
 }
 
-void k8s_audit_filter_check::split_string_set(const std::string &str, const char delim, std::set<std::string> &items)
+void k8s_audit_filter_check::index_query_param(values_t &values,
+					       std::string &field,
+					       std::string &idx)
 {
-	std::istringstream f(str);
-	std::string ts;
+	values_t new_values;
 
-	while(getline(f, ts, delim))
+	for(auto &str : values)
 	{
-		items.insert(ts);
+		std::vector<std::string> param_parts = sinsp_split(str, '=');
+
+		if(param_parts.size() == 2 && uri::decode(param_parts[0], true) == idx)
+		{
+			new_values.push_back(param_parts[1]);
+			values = new_values;
+			return;
+		}
 	}
+
+	new_values.push_back(no_value);
+	values = new_values;
 }
 
 k8s_audit_filter_check::k8s_audit_filter_check()
@@ -1666,15 +951,8 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 		   {"ka.req.container.privileged", "When the request object refers to a container, whether or not any container is run privileged. With an index, return whether or not the ith container is run privileged.", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.req.container.allow_privilege_escalation", "When the request object refers to a container, whether or not any container has allowPrivilegeEscalation=true. With an index, return whether or not the ith container has allowPrivilegeEscalation=true.", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.req.container.read_write_fs", "When the request object refers to a container, whether or not any container is missing a readOnlyRootFilesystem annotation. With an index, return whether or not the ith container is missing a readOnlyRootFilesystem annotation.", IDX_ALLOWED, IDX_NUMERIC},
-		   {"ka.req.container.has_run_as_user", "When the request object refers to a container, whether a runAsUser is specified either in the security context or in any container's spec"},
-		   {"ka.req.container.run_as_user", "When the request object refers to a container, the user id that will be used for the container's entrypoint. Both the security context's runAsUser and the container's runAsUser are considered, with the security context taking precedence, and defaulting to uid 0 if neither are specified. With an index, return the uid for the ith container. With no index, returns the uid for the first container", IDX_ALLOWED, IDX_NUMERIC},
-		   {"ka.req.container.run_as_user.within", "When the request object refers to a container, return true if all containers' uid values (see .run_as_user) are within the list of provided min/max pairs. Example: ka.req.container.run_as_user.within[100:110,200:220] returns true if all containers' uid values are within the range 100:110 (inclusive) and 200:220 (inclusive).", IDX_ALLOWED, IDX_KEY},
-		   {"ka.req.container.run_as_user.any_within", "When the request object refers to a container, return true if any containers' uid values (see .run_as_user) are within the list of provided min/max pairs. Example: ka.req.container.run_as_user.any_within[100:110,200:220] returns true if any containers' uid values are within the range 100:110 (inclusive) and 200:220 (inclusive).", IDX_ALLOWED, IDX_KEY},
-		   {"ka.req.container.has_run_as_group", "When the request object refers to a container, whether a runAsGroup is specified either in the security context or in any container's spec"},
+		   {"ka.req.container.run_as_user", "When the request object refers to a container, the user id that will be used for the container's entrypoint. Both the security context's runAsUser and the container's runAsUser are considered, with the security context taking precedence, and defaulting to uid 0 if neither are specified. With an index, return the uid for the ith container. With no index, returns the uids for all containers", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.req.container.run_as_group", "When the request object refers to a container, the group id that will be used for the container's entrypoint. Both the security context's runAsGroup and the container's runAsGroup are considered, with the security context taking precedence, and defaulting to gid 0 if neither are specified. With an index, return the gid for the ith container. With no index, returns the gid for first container", IDX_ALLOWED, IDX_NUMERIC},
-		   {"ka.req.container.run_as_group.within", "When the request object refers to a container, return true if all containers' gid values (see .run_as_group) are within the list of provided min/max pairs. Example: ka.req.container.run_as_group.within[100:110,200:220] returns true if all containers' gid values are within the range 100:110 (inclusive) and 200:220 (inclusive).", IDX_ALLOWED, IDX_KEY},
-		   {"ka.req.container.run_as_group.any_within", "When the request object refers to a container, return true if any containers' gid values (see .run_as_group) are within the list of provided min/max pairs. Example: ka.req.container.run_as_group.any_within[100:110,200:220] returns true if any containers' gid values are within the range 100:110 (inclusive) and 200:220 (inclusive).", IDX_ALLOWED, IDX_KEY},
-		   {"ka.req.container.proc_mount.within", "When the request object refers to a container, whether the procMount types specified for all containers are within the provided set. Example: ka.req.container.proc_mount.within[Unmasked,Default] returns true if all containers' procMount values are \"Unmasked\" or \"Default\".", IDX_ALLOWED, IDX_KEY},
 		   {"ka.req.role.rules", "When the request object refers to a role/cluster role, the rules associated with the role"},
 		   {"ka.req.role.rules.apiGroups", "When the request object refers to a role/cluster role, the api groups associated with the role's rules. With an index, return only the api groups from the ith rule. Without an index, return all api groups concatenated", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.req.role.rules.nonResourceURLs", "When the request object refers to a role/cluster role, the non resource urls associated with the role's rules. With an index, return only the non resource urls from the ith rule. Without an index, return all non resource urls concatenated", IDX_ALLOWED, IDX_NUMERIC},
@@ -1682,15 +960,12 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 		   {"ka.req.role.rules.resources", "When the request object refers to a role/cluster role, the resources associated with the role's rules. With an index, return only the resources from the ith rule. Without an index, return all resources concatenated", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.req.sec_ctx.fs_group", "When the request object refers to a pod, the fsGroup gid specified by the security context."},
 		   {"ka.req.sec_ctx.supplemental_groups", "When the request object refers to a pod, the supplementalGroup gids specified by the security context."},
-		   {"ka.req.sec_ctx.supplemental_groups.within", "When the request object refers to a pod, return true if all gids in supplementalGroups are within the provided range. For example, ka.req.sec_ctx.supplemental_groups.within[10:20] returns true if every gid in supplementalGroups is within 10 and 20.", IDX_REQUIRED, IDX_KEY},
-		   {"ka.req.sec_ctx.added_capabilities.within", "When the request object refers to a pod, whether the set of added capabilities in the security context is within the provided list. For example, ka.req.sec_ctx.added_capabilities.within[CAP_KILL] would only allow pods to add the CAP_KILL capability and no other capability", IDX_REQUIRED, IDX_KEY},
+		   {"ka.req.sec_ctx.added_capabilities", "When the request object refers to a pod, all capabilities to add when running the container."},
 		   {"ka.req.service.type", "When the request object refers to a service, the service type"},
 		   {"ka.req.service.ports", "When the request object refers to a service, the service's ports. Can be indexed (e.g. ka.req.service.ports[0]). Without any index, returns all ports", IDX_ALLOWED, IDX_NUMERIC},
-		   {"ka.req.volume.any_hostpath", "If the request object contains volume definitions, whether or not a hostPath volume exists that mounts the specified path(s) from the host (...hostpath[/etc]=true if a volume mounts /etc from the host). Multiple paths can be specified, separated by commas. The index can be a glob, in which case all volumes are considered to find any path matching the specified glob (...hostpath[/usr/*] would match either /usr/local or /usr/bin)", IDX_REQUIRED, IDX_KEY},
-		   {"ka.req.volume.all_hostpath", "If the request object contains volume definitions, whether or not all hostPath volumes mount only the specified path(s) from the host (...hostpath[/etc]=true if a volume mounts /etc from the host). Multiple paths can be specified, separated by commas. The index can be a glob, in which case all volumes are considered to find any path matching the specified glob (...hostpath[/usr/*] would match either /usr/local or /usr/bin)", IDX_REQUIRED, IDX_KEY},
-		   {"ka.req.volume.hostpath", "An alias for ka.req.volume.any_hostpath", IDX_REQUIRED, IDX_KEY},
-		   {"ka.req.volume.all_flexvolume_drivers", "If the request object contains volume definitions, whether or not all Flexvolume drivers are in the provided set. Multiple drivers can be specified, separated by commas. For example, ka.req.volume.all_flexvolume_drivers[some-driver] returns true if all flexvolume volumes use only the driver called some-driver.", IDX_REQUIRED, IDX_KEY},
-		   {"ka.req.volume_types.within", "If the request object contains volume definitions, return whether all volume types are in the provided set. Example: ka.req.volume_types.within[configMap,downwardAPI] returns true if the only volume types used are either configMap or downwardAPI", IDX_REQUIRED, IDX_KEY},
+		   {"ka.req.volume.hostpath", "All hostPath paths specified for all volume types", IDX_REQUIRED, IDX_KEY},
+		   {"ka.req.volume.flexvolume_drivers", "When the request object refers to a pod, all flexvolume drivers used by volumes created with the pod"},
+		   {"ka.req.volume.volume_types", "When the request object refers to a pod, all volume types used by volumes created with the pod"},
 		   {"ka.resp.name", "The response object name"},
 		   {"ka.response.code", "The response code"},
 		   {"ka.response.reason", "The response reason (usually present only for failures)"},
@@ -1698,62 +973,53 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 
 	{
 		m_aliases = {
-			{"ka.auditid", {"/auditID"_json_pointer}},
-			{"ka.stage", {"/stage"_json_pointer}},
-			{"ka.auth.decision", {"/annotations/authorization.k8s.io~1decision"_json_pointer}},
-			{"ka.auth.reason", {"/annotations/authorization.k8s.io~1reason"_json_pointer}},
-			{"ka.user.name", {"/user/username"_json_pointer}},
-			{"ka.user.groups", {"/user/groups"_json_pointer}},
-			{"ka.impuser.name", {"/impersonatedUser/username"_json_pointer}},
-			{"ka.verb", {"/verb"_json_pointer}},
-			{"ka.uri", {"/requestURI"_json_pointer}},
-			{"ka.uri.param", {"/requestURI"_json_pointer, extract_query_params, index_query_param}},
-			{"ka.target.name", {"/objectRef/name"_json_pointer}},
-			{"ka.target.namespace", {"/objectRef/namespace"_json_pointer}},
-			{"ka.target.resource", {"/objectRef/resource"_json_pointer}},
-			{"ka.target.subresource", {"/objectRef/subresource"_json_pointer}},
-			{"ka.req.binding.subjects", {"/requestObject/subjects"_json_pointer}},
-			{"ka.req.binding.role", {"/requestObject/roleRef/name"_json_pointer}},
-			{"ka.req.configmap.name", {"/objectRef/name"_json_pointer}},
-			{"ka.req.configmap.obj", {"/requestObject/data"_json_pointer}},
-			{"ka.req.container.image", {"/requestObject/spec/containers"_json_pointer, extract_images}},
-			{"ka.req.container.image.repository", {"/requestObject/spec/containers"_json_pointer, extract_images}},
-			{"ka.req.container.host_ipc", {"/requestObject/spec/hostIPC"_json_pointer}},
-			{"ka.req.container.host_network", {"/requestObject/spec/hostNetwork"_json_pointer}},
-			{"ka.req.container.host_pid", {"/requestObject/spec/hostPID"_json_pointer}},
-			{"ka.req.container.host_port", {"/requestObject/spec/containers"_json_pointer, extract_host_port}},
-			{"ka.req.container.privileged", {"/requestObject/spec/containers"_json_pointer, extract_privileged}},
-			{"ka.req.container.allow_privilege_escalation", {"/requestObject/spec/containers"_json_pointer, index_allow_privilege_escalation}},
-			{"ka.req.container.read_write_fs", {"/requestObject/spec/containers"_json_pointer, index_read_write_fs}},
-			{"ka.req.container.has_run_as_user", {"/requestObject/spec"_json_pointer, index_has_run_as_user}},
-			{"ka.req.container.run_as_user", {"/requestObject/spec"_json_pointer, index_run_as_user}},
-			{"ka.req.container.run_as_user.within", {"/requestObject/spec"_json_pointer, check_run_as_user_within}},
-			{"ka.req.container.run_as_user.any_within", {"/requestObject/spec"_json_pointer, check_run_as_user_any_within}},
-			{"ka.req.container.has_run_as_group", {"/requestObject/spec"_json_pointer, index_has_run_as_group}},
-			{"ka.req.container.run_as_group", {"/requestObject/spec"_json_pointer, index_run_as_group}},
-			{"ka.req.container.run_as_group.within", {"/requestObject/spec"_json_pointer, check_run_as_group_within}},
-			{"ka.req.container.run_as_group.any_within", {"/requestObject/spec"_json_pointer, check_run_as_group_any_within}},
-			{"ka.req.container.proc_mount.within", {"/requestObject/spec/containers"_json_pointer, check_proc_mount_within}},
-			{"ka.req.role.rules", {"/requestObject/rules"_json_pointer}},
-			{"ka.req.role.rules.apiGroups", {"/requestObject/rules"_json_pointer, index_select}},
-			{"ka.req.role.rules.nonResourceURLs", {"/requestObject/rules"_json_pointer, index_select}},
-			{"ka.req.role.rules.resources", {"/requestObject/rules"_json_pointer, index_select}},
-			{"ka.req.sec_ctx.fs_group", {"/requestObject/spec/securityContext/fsGroup"_json_pointer}},
-			{"ka.req.sec_ctx.supplemental_groups", {"/requestObject/spec/securityContext/supplementalGroups"_json_pointer}},
-			{"ka.req.sec_ctx.supplemental_groups.within", {"/requestObject/spec"_json_pointer, check_supplemental_groups_within}},
-			{"ka.req.sec_ctx.added_capabilities.within", {"/requestObject/spec/containers"_json_pointer, check_added_capabilities}},
-			{"ka.req.role.rules.verbs", {"/requestObject/rules"_json_pointer, index_select}},
-			{"ka.req.service.type", {"/requestObject/spec/type"_json_pointer}},
-			{"ka.req.service.ports", {"/requestObject/spec/ports"_json_pointer, index_generic}},
-			{"ka.req.volume.any_hostpath", {"/requestObject/spec"_json_pointer, check_hostpath_vols}},
-			{"ka.req.volume.all_hostpath", {"/requestObject/spec"_json_pointer, check_hostpath_vols}},
-                        {"ka.req.volume.hostpath", {"/requestObject/spec"_json_pointer, check_hostpath_vols}},
-			{"ka.req.volume.all_flexvolume_drivers", {"/requestObject/spec"_json_pointer, check_flexvolume_vols}},
-			{"ka.req.volume_types.within", {"/requestObject/spec"_json_pointer, check_volume_types}},
-			{"ka.resp.name", {"/responseObject/metadata/name"_json_pointer}},
-			{"ka.response.code", {"/responseStatus/code"_json_pointer}},
-			{"ka.response.reason", {"/responseStatus/reason"_json_pointer}},
-			{"ka.useragent", {"/userAgent"_json_pointer}}};
+			{"ka.auditid", {{"/auditID"_json_pointer}}},
+			{"ka.stage", {{"/stage"_json_pointer}}},
+			{"ka.auth.decision", {{"/annotations/authorization.k8s.io~1decision"_json_pointer}}},
+			{"ka.auth.reason", {{"/annotations/authorization.k8s.io~1reason"_json_pointer}}},
+			{"ka.user.name", {{"/user/username"_json_pointer}}},
+			{"ka.user.groups", {{"/user/groups"_json_pointer}}},
+			{"ka.impuser.name", {{"/impersonatedUser/username"_json_pointer}}},
+			{"ka.verb", {{"/verb"_json_pointer}}},
+			{"ka.uri", {{"/requestURI"_json_pointer}}},
+			{"ka.uri.param", {extract_query_params, index_query_param}},
+			{"ka.target.name", {{"/objectRef/name"_json_pointer}}},
+			{"ka.target.namespace", {{"/objectRef/namespace"_json_pointer}}},
+			{"ka.target.resource", {{"/objectRef/resource"_json_pointer}}},
+			{"ka.target.subresource", {{"/objectRef/subresource"_json_pointer}}},
+			{"ka.req.binding.subjects", {{"/requestObject/subjects"_json_pointer}}},
+			{"ka.req.binding.role", {{"/requestObject/roleRef/name"_json_pointer}}},
+			{"ka.req.configmap.name", {{"/objectRef/name"_json_pointer}}},
+			{"ka.req.configmap.obj", {{"/requestObject/data"_json_pointer}}},
+			{"ka.req.container.image", {extract_images}},
+			{"ka.req.container.image.repository", {extract_images}},
+			{"ka.req.container.host_ipc", {{"/requestObject/spec/hostIPC"_json_pointer}}},
+			{"ka.req.container.host_network", {{"/requestObject/spec/hostNetwork"_json_pointer}}},
+			{"ka.req.container.host_pid", {{"/requestObject/spec/hostPID"_json_pointer}}},
+			{"ka.req.container.host_port", {extract_host_port}},
+			{"ka.req.container.privileged", {{"/requestObject/spec/containers"_json_pointer, "/securityContext/privileged"_json_pointer}}},
+			{"ka.req.container.allow_privilege_escalation", {{"/requestObject/spec/containers"_json_pointer, "/securityContext/allowPrivilegeEscalation"_json_pointer}}},
+			{"ka.req.container.read_write_fs", {{"/requestObject/spec/containers"_json_pointer, "/securityContext/readOnlyRootFilesystem"_json_pointer}}},
+			{"ka.req.container.run_as_user", {{"/requestObject/spec"_json_pointer, "/securityContext/runAsUser"_json_pointer}}},
+			{"ka.req.container.run_as_group", {{"/requestObject/spec"_json_pointer, "/securityContext/runAsGroup"_json_pointer}}},
+			{"ka.req.container.proc_mount", {{"/requestObject/spec/containers"_json_pointer, "/securityContext/procMount"_json_pointer}}},
+			{"ka.req.role.rules", {{"/requestObject/rules"_json_pointer}}},
+			{"ka.req.role.rules.apiGroups", {extract_rule_attrs}},
+			{"ka.req.role.rules.nonResourceURLs", {extract_rule_attrs}},
+			{"ka.req.role.rules.verbs", {extract_rule_attrs}},
+			{"ka.req.role.rules.resources", {extract_rule_attrs}},
+			{"ka.req.sec_ctx.fs_group", {{"/requestObject/spec/securityContext/fsGroup"_json_pointer}}},
+			{"ka.req.sec_ctx.supplemental_groups", {{"/requestObject/spec/securityContext/supplementalGroups"_json_pointer}}},
+			{"ka.req.sec_ctx.added_capabilities", {{"/requestObject/spec/containers"_json_pointer, "/securityContext/capabilities/add"_json_pointer}}},
+			{"ka.req.service.type", {{"/requestObject/spec/type"_json_pointer}}},
+			{"ka.req.service.ports", {{"/requestObject/spec/ports"_json_pointer}}},
+                        {"ka.req.volume.hostpath", {{"/requestObject/spec"_json_pointer, "/volumes"_json_pointer, "/hostPath"_json_pointer}}},
+			{"ka.req.volume.flexvolume_drivers", {{"/requestObject/spec"_json_pointer, "/volumes"_json_pointer, "/flexVolume/driver"_json_pointer}}},
+			{"ka.req.volume_types", {extract_volume_types}},
+			{"ka.resp.name", {{"/responseObject/metadata/name"_json_pointer}}},
+			{"ka.response.code", {{"/responseStatus/code"_json_pointer}}},
+			{"ka.response.reason", {{"/responseStatus/reason"_json_pointer}}},
+			{"ka.useragent", {{"/userAgent"_json_pointer}}}};
 	}
 }
 
