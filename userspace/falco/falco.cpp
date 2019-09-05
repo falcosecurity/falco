@@ -1173,8 +1173,12 @@ int falco_init(int argc, char **argv)
 		// grpc server
 		falco_output_response_cq output_event_queue;
 
+		// TODO(fntlnz,leodido): when we want to spawn multiple threads we need to have a queue per thread, or implement
+		// different queuing mechanisms, round robin, fanout? What we want to achieve?
+		int threadiness = 1; // TODO(fntlnz, leodido): make this configurable
+
 		// TODO(fntlnz): do any handling, make sure we handle signals in the GRPC server and we clean it gracefully
-		std::thread grpc_server_thread (start_grpc_server, "0.0.0.0:5060", 1, std::ref(output_event_queue)); 
+		std::thread grpc_server_thread (start_grpc_server, "0.0.0.0:5060", threadiness, std::ref(output_event_queue)); 
 
 		if(!trace_filename.empty() && !trace_is_scap)
 		{
