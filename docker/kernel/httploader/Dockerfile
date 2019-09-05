@@ -2,10 +2,9 @@ FROM golang:alpine AS build
 
 RUN apk --no-cache add build-base git bzr mercurial gcc ca-certificates
 
-ADD ./cmd /src/cmd
-ADD ./pkg /src/pkg
-ADD ./go.mod /src/go.mod
-ADD ./go.sum /src/
+COPY ./pkg /src/pkg/
+COPY ./cmd /src/cmd/
+COPY ./go.mod ./go.sum /src/
 
 RUN cd /src && CGO_ENABLED=0 GOOS=linux go build -a -o httploader -ldflags '-extldflags "-static"' cmd/httploader/main.go
 
