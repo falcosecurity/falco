@@ -7,6 +7,8 @@ service falco_output_service {
 }
 
 message falco_output_request {
+  string duration = 1; // TODO(leodido, fntlnz): not handled yet but keeping for reference.
+  bool keepalive = 2;
 }
 
 enum priority {
