@@ -84,7 +84,7 @@ void request_stream_context<falco_output_request, falco_output_response>::end(fa
 
 		// Complete the processing
 		falco_output_response res;
-		(srv->*m_process_func)(*m_stream_ctx, m_req, res);
+		(srv->*m_process_func)(*m_stream_ctx, m_req, res); // subscribe()
 	}
 	else
 	{
@@ -117,16 +117,15 @@ void falco_grpc_server_impl::subscribe(const stream_context& ctx, const falco_ou
 	{
 		// Start (or continue) streaming
 		// ctx.m_status == stream_context::STREAMING
-
 		// todo > do we want batching?
-
+	dequeue:
 		if(!m_event_queue.try_pop(res))
 		{
-			// TODO: log that we've not been able to pop?
+			// TODO: backoff mechanism that does has more false
+			goto dequeue;
 		}
 		ctx.m_has_more = true;
 	}
-	// todo > print/store statistics
 }
 
 void falco_grpc_server::thread_process(int thread_index)
