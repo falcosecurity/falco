@@ -117,14 +117,16 @@ void falco_grpc_server_impl::subscribe(const stream_context& ctx, const falco_ou
 	{
 		// Start (or continue) streaming
 		// ctx.m_status == stream_context::STREAMING
-		// todo > do we want batching?
-	dequeue:
-		if(!m_event_queue.try_pop(res))
+		if(m_event_queue.try_pop(res) && !req.keepalive())
 		{
-			// TODO: backoff mechanism that does has more false
-			goto dequeue;
+			ctx.m_has_more = true;
+			return;
 		}
-		ctx.m_has_more = true;
+		while(!m_event_queue.try_pop(res) && req.keepalive())
+		{
+		}
+
+		ctx.m_has_more = req.keepalive();
 	}
 }
 
