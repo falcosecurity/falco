@@ -194,7 +194,7 @@ void falco_grpc_server::run()
 
 	while(is_running())
 	{
-		sleep(1);
+		sleep(1); // todo > do we want to sleep here?
 	}
 
 	stop();
@@ -223,9 +223,9 @@ void falco_grpc_server::stop()
 	}
 }
 
-bool start_grpc_server(std::string server_address, int threadiness, falco_output_response_cq& output_event_queue)
+bool start_grpc_server(std::string server_address, int threadiness)
 {
-	falco_grpc_server srv(server_address, threadiness, output_event_queue);
+	falco_grpc_server srv(server_address, threadiness);
 	srv.run();
 	return true;
 }

@@ -28,8 +28,7 @@ limitations under the License.
 class falco_grpc_server : public falco_grpc_server_impl
 {
 public:
-	falco_grpc_server(std::string server_addr, int threadiness, falco_output_response_cq& m_event_queue):
-		falco_grpc_server_impl(m_event_queue),
+	falco_grpc_server(std::string server_addr, int threadiness):
 		m_server_addr(server_addr),
 		m_threadiness(threadiness)
 	{
@@ -50,7 +49,7 @@ private:
 	std::vector<std::thread> m_threads;
 };
 
-bool start_grpc_server(std::string server_address, int threadiness, falco_output_response_cq& output_event_queue);
+bool start_grpc_server(std::string server_address, int threadiness);
 
 class request_context_base
 {
