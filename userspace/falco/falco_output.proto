@@ -33,7 +33,6 @@ message falco_output_response {
   priority priority = 3;
   source source = 4;
   string rule = 5;
-  string format = 6;
-  string output = 7;
-  map<string, string> output_fields = 8;
+  string output = 6;
+  map<string, string> output_fields = 7;
 }
