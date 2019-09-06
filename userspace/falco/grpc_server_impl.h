@@ -20,25 +20,15 @@ limitations under the License.
 
 #include <atomic>
 
-#include "tbb/concurrent_queue.h"
+#include "falco_output_queue.h"
 #include "falco_output.grpc.pb.h"
-#include "falco_output.pb.h"
 #include "grpc_context.h"
-
-typedef tbb::concurrent_queue<falco_output_response> falco_output_response_cq;
 
 class falco_grpc_server_impl
 {
 public:
 	falco_grpc_server_impl() = default;
 	~falco_grpc_server_impl() = default;
-
-	falco_output_response_cq& m_event_queue;
-
-	falco_grpc_server_impl(falco_output_response_cq& event_queue):
-		m_event_queue(event_queue)
-	{
-	}
 
 protected:
 	bool is_running();
