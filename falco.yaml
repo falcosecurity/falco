@@ -167,3 +167,10 @@ program_output:
 http_output:
   enabled: false
   url: http://some.url
+
+grpc:
+  enabled: true
+  bind_address: "0.0.0.0:5060"
+
+grpc_output:
+  enabled: true
