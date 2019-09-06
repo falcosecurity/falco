@@ -49,6 +49,7 @@ limitations under the License.
 #include "statsfilewriter.h"
 #include "webserver.h"
 #include "grpc_server.h"
+#include "falco_output_queue.h"
 
 typedef function<void(sinsp* inspector)> open_t;
 
@@ -230,7 +231,6 @@ uint64_t do_inspect(falco_engine *engine,
 			string &stats_filename,
 			uint64_t stats_interval,
 			bool all_events,
-			falco_output_response_cq &output_event_queue,
 			int &result)
 {
 	uint64_t num_evts = 0;
@@ -326,11 +326,6 @@ uint64_t do_inspect(falco_engine *engine,
 		if(res)
 		{
 			outputs->handle_event(res->evt, res->rule, res->source, res->priority_num, res->format);
-
-			// TODO(fntlnz): integrate this with the output handle event logic, for now we just want to test the threads
-			falco_output_response grpcres = falco_output_response();
-			grpcres.set_rule(res->rule);
-			output_event_queue.push(grpcres);
 		}
 
 		num_evts++;
@@ -1171,14 +1166,13 @@ int falco_init(int argc, char **argv)
 		}
 
 		// grpc server
-		falco_output_response_cq output_event_queue;
 
 		// TODO(fntlnz,leodido): when we want to spawn multiple threads we need to have a queue per thread, or implement
 		// different queuing mechanisms, round robin, fanout? What we want to achieve?
 		int threadiness = 1; // TODO(fntlnz, leodido): make this configurable
 
 		// TODO(fntlnz): do any handling, make sure we handle signals in the GRPC server and we clean it gracefully
-		std::thread grpc_server_thread (start_grpc_server, "0.0.0.0:5060", threadiness, std::ref(output_event_queue)); 
+		std::thread grpc_server_thread (start_grpc_server, "0.0.0.0:5060", threadiness);
 
 		if(!trace_filename.empty() && !trace_is_scap)
 		{
@@ -1199,7 +1193,6 @@ int falco_init(int argc, char **argv)
 					      stats_filename,
 					      stats_interval,
 					      all_events,
-						  output_event_queue,
 					      result);
 
 			duration = ((double)clock()) / CLOCKS_PER_SEC - duration;
