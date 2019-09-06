@@ -46,8 +46,8 @@ public:
 	falco_outputs(falco_engine *engine);
 	virtual ~falco_outputs();
 
-	// The way to refer to an output (file, syslog, stdout,
-	// etc). An output has a name and set of options.
+	// The way to refer to an output (file, syslog, stdout, etc.)
+	// An output has a name and set of options.
 	struct output_config
 	{
 		std::string name;
@@ -78,6 +78,7 @@ public:
 	void reopen_outputs();
 
 	static int handle_http(lua_State *ls);
+	static int handle_grpc(lua_State *ls);
 
 private:
 

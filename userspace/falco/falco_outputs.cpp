@@ -24,12 +24,14 @@ limitations under the License.
 
 #include "formats.h"
 #include "logger.h"
+#include "falco_output_queue.h"
 
 using namespace std;
 
 const static struct luaL_reg ll_falco_outputs [] =
 {
 	{"handle_http", &falco_outputs::handle_http},
+	{"handle_grpc", &falco_outputs::handle_grpc},
 	{NULL,NULL}
 };
 
@@ -206,7 +208,7 @@ void falco_outputs::handle_msg(uint64_t now,
 		bool first = true;
 
 		sinsp_utils::ts_to_string(now, &timestr, false, true);
-		full_msg = timestr + ": " + falco_common::priority_names[LOG_CRIT] + " " + msg + "(";
+		full_msg = timestr + ": " + falco_common::priority_names[LOG_CRIT] + " " + msg + " (";
 		for(auto &pair : output_fields)
 		{
 			if(first)
@@ -296,5 +298,40 @@ int falco_outputs::handle_http(lua_State *ls)
 		curl_slist_free_all(slist1);
   		slist1 = NULL;
 	}
+	return 1;
+}
+
+int falco_outputs::handle_grpc(lua_State *ls)
+{
+	// fixme > check parameters later
+	// if(!lua_isstring(ls, -1) ||
+	//    !lua_isstring(ls, -2))
+	// {
+	// 	lua_pushstring(ls, "Invalid arguments passed to handle_grpc()");
+	// 	lua_error(ls);
+	// }
+
+	enum source source;
+	if(!source_Parse((char *)lua_tostring(ls, 3), &source))
+	{
+		lua_pushstring(ls, "Unknown source passed to to handle_grpc()");
+		lua_error(ls);
+	}
+
+	enum priority priority;
+	if(!priority_Parse((char *)lua_tostring(ls, 4), &priority))
+	{
+		lua_pushstring(ls, "Unknown priority passed to to handle_grpc()");
+		lua_error(ls);
+	}
+
+	falco_output_response grpc_res = falco_output_response();
+	grpc_res.set_rule((char *)lua_tostring(ls, 2));
+	grpc_res.set_source(source);
+	grpc_res.set_priority(priority);
+	grpc_res.set_output((char *)lua_tostring(ls, 6));
+
+	falco_output_queue::get().queue().push(grpc_res);
+
 	return 1;
 }
