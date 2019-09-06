@@ -732,7 +732,8 @@ bool jevt_filter_check::extract_values(json_event *jevt)
 	else if (m_field == s_jevt_value_field)
 	{
 		try {
-			tstr = jevt->jevt().at(m_idx_ptr);
+			const json &j = jevt->jevt().at(m_idx_ptr);
+			tstr = json_as_string(j);
 		}
 		catch(json::out_of_range &e)
 		{
