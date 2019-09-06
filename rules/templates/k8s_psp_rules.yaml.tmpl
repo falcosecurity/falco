@@ -165,11 +165,11 @@
 # Rule(s) for PSP fsGroup property
 #########################################
 - macro: psp_fs_group_must_run_matches
-{% if length(must_run_fs_groups) > 0 %}  condition: ka.req.pod.fs_group in (must_run_fs_groups)
+{% if length(must_run_fs_groups) > 0 %}  condition: ka.req.pod.fs_group in ({{ join(",", must_run_fs_groups) }})
 {% else %}  condition: (psp_ka_always_true)
 {% endif %}
 - macro: psp_fs_group_may_run_matches
-{% if length(may_run_fs_groups) > 0 %}  condition: ka.req.pod.fs_group in (may_run_fs_groups)
+{% if length(may_run_fs_groups) > 0 %}  condition: ka.req.pod.fs_group in ({{ join(",", may_run_fs_groups) }})
 {% else %}  condition: (psp_ka_always_true)
 {% endif %}
 - macro: psp_fs_group
@@ -213,7 +213,7 @@
 - rule: PSP Violation (runAsUser=MustRunAs) K8s Audit
   desc: >
     Detect a psp validation failure for a runAsUser outside of the allowed set using k8s audit logs
-  condition: psp_ka_container and not (ka.req.pod.run_as_user in ({{ join(",", must_run_as_users) }}) and ka.req.pod.containers.run_as_user in ({{ join(",", must_run_as_users) }}))
+  condition: psp_ka_container and not (ka.req.pod.containers.eff_run_as_user in ({{ join(",", must_run_as_users) }}))
   output: Pod Security Policy {{ policy_name }} validation failure--runAsUser outside of allowed set. runAsUser set="{{ must_run_as_users }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace images=%ka.req.pod.containers.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
@@ -240,7 +240,7 @@
 - rule: PSP Violation (runAsUser=MustRunAsNonRoot) K8s Audit
   desc: >
     Detect a psp validation failure for a uid=0 runAsUser when MustRunAsNonRoot is set using k8s audit logs
-  condition: psp_ka_container and (ka.req.pod.run_as_user has ("0:0") or ka.req.pod.containers.run_as_user has ("0:0"))
+  condition: psp_ka_container and (ka.req.pod.containers.eff_run_as_user has ("0:0"))
   output: Pod Security Policy {{ policy_name }} validation failure--uid 0 runAsUser when MustRunAsNonRoot is set (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace images=%ka.req.pod.containers.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
@@ -261,7 +261,7 @@
 - rule: PSP Violation (runAsGroup=MustRunAs) K8s Audit
   desc: >
     Detect a psp validation failure for a runAsGroup outside of the MustRunAs allowed set using k8s audit logs
-  condition: psp_ka_container and not (ka.req.pod.run_as_group in ({{ join(",", must_run_as_groups) }}) and ka.req.pod.containers.run_as_group in ({{ join(",", must_run_as_groups) }}))
+  condition: psp_ka_container and not (ka.req.pod.containers.eff_run_as_group in ({{ join(",", must_run_as_groups) }}))
   output: Pod Security Policy {{ policy_name }} validation failure--runAsGroup outside of the MustRunAs allowed set. runAsGroup MustRunAs set="{{ must_run_as_groups }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace images=%ka.req.pod.containers.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit
@@ -288,7 +288,7 @@
 - rule: PSP Violation (runAsGroup=MayRunAs)
   desc: >
     Detect a psp validation failure for a runAsGroup outside of the MayRunAs allowed set using k8s audit logs
-  condition: psp_ka_container and not (ka.req.pod.run_as_group in ({{ join(",", may_run_as_groups) }}) and ka.req.pod.containers.run_as_group in ({{ join(",", may_run_as_groups) }}))
+  condition: psp_ka_container and not ka.req.pod.containers.eff_run_as_group in ({{ join(",", may_run_as_groups) }}) and not (ka.req.pod.containers.run_as_group in ("<NA>") and ka.req.pod.run_as_group="<NA>")
   output: Pod Security Policy {{ policy_name }} validation failure--runAsGroup outside of the MayRunAs allowed set. runAsGroup MayRunAs set="{{ may_run_as_groups }}" (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace images=%ka.req.pod.containers.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit

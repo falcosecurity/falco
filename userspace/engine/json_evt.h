@@ -76,6 +76,7 @@ public:
 
 	json_event_value();
 	json_event_value(const std::string &val);
+	json_event_value(int64_t val);
 	virtual ~json_event_value();
 
 	param_type ptype() const;
@@ -179,6 +180,7 @@ public:
 
 	// Subclasses or extraction functions can call this method to add each extracted value.
 	void add_extracted_value(const std::string &val);
+	void add_extracted_value_num(int64_t val);
 
 	// After calling extract, you can call extracted_values to get
 	// the values extracted from an event.
@@ -327,6 +329,11 @@ public:
 	// Extract all hostPort values from containers in the request object
 	static bool extract_host_port(const nlohmann::json &j,
 				      json_event_filter_check &jchk);
+
+	// Using both the pod and container security contexts, extract
+	// the uid/gid that will be used for each container.
+	static bool extract_effective_run_as(const nlohmann::json &j,
+					     json_event_filter_check &jchk);
 };
 
 class json_event_filter : public gen_event_filter

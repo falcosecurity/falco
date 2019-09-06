@@ -77,6 +77,12 @@ json_event_value::json_event_value(const std::string &val)
 	}
 }
 
+json_event_value::json_event_value(int64_t val) :
+	m_type(JT_INT64),
+	m_intval(val)
+{
+}
+
 json_event_value::param_type json_event_value::ptype() const
 {
 	return m_type;
@@ -110,6 +116,12 @@ bool json_event_value::operator==(const json_event_value &val) const
 		return (m_intval >= val.m_pairval.first &&
 			m_intval <= val.m_pairval.second);
 	}
+	else if(m_type == JT_INT64_PAIR &&
+		val.m_type == JT_INT64)
+	{
+		return (val.m_intval >= m_pairval.first &&
+			val.m_intval <= m_pairval.second);
+	}
 	else if(m_type != val.m_type)
 	{
 		return false;
@@ -138,9 +150,17 @@ bool json_event_value::operator!=(const json_event_value &val) const
 
 bool json_event_value::operator<(const json_event_value &val) const
 {
-	// This shouldn't be called when the types differ, but just in
-	// case, use m_type for initial ordering.
-	if(m_type != val.m_type)
+	if(m_type == JT_INT64 &&
+	   val.m_type == JT_INT64_PAIR)
+	{
+		return (m_intval < val.m_pairval.first);
+	}
+	else if(m_type == JT_INT64_PAIR &&
+		val.m_type == JT_INT64)
+	{
+		return (m_pairval.second < val.m_intval);
+	}
+	else if(m_type != val.m_type)
 	{
 		return (m_type < val.m_type);
 	}
@@ -276,7 +296,7 @@ bool json_event_filter_check::def_extract(const nlohmann::json &root,
 		{
 			for(auto &item : j)
 			{
-				if(!def_extract(item, ptrs, ++it))
+				if(!def_extract(item, ptrs, std::next(it, 1)))
 				{
 					return false;
 				}
@@ -458,6 +478,7 @@ bool json_event_filter_check::compare(gen_event *evt)
 	json_event *jevt = (json_event *)evt;
 
 	uint32_t len;
+
 	const extracted_values_t *evalues = (const extracted_values_t *) extract(jevt, &len);
 	values_set_t setvals;
 
@@ -480,10 +501,14 @@ bool json_event_filter_check::compare(gen_event *evt)
 			evalues->first.at(0).contains(*(m_values.begin())));
 		break;
 	case CO_IN:
-		std::set_intersection(evalues->second.begin(), evalues->second.end(),
-				      m_values.begin(), m_values.end(),
-				      std::inserter(setvals, setvals.begin()));
-		return (setvals.size() == evalues->second.size());
+		for(auto &item : evalues->second)
+		{
+			if(m_values.find(item) == m_values.end())
+			{
+				return false;
+			}
+		}
+		return true;
 		break;
 	case CO_INTERSECTS:
 		std::set_intersection(evalues->second.begin(), evalues->second.end(),
@@ -492,10 +517,14 @@ bool json_event_filter_check::compare(gen_event *evt)
 		return (setvals.size() > 0);
 		break;
 	case CO_HAS:
-		std::set_intersection(evalues->second.begin(), evalues->second.end(),
-				      m_values.begin(), m_values.end(),
-				      std::inserter(setvals, setvals.begin()));
-		return (setvals.size() == m_values.size());
+		for(auto &item : m_values)
+		{
+			if(evalues->second.find(item) == evalues->second.end())
+			{
+				return false;
+			}
+		}
+		return true;
 		break;
 	case CO_LT:
 		return (evalues->first.size() == 1 &&
@@ -561,6 +590,12 @@ void json_event_filter_check::add_extracted_value(const std::string &str)
 {
 	m_evalues.first.emplace_back(json_event_value(str));
 	m_evalues.second.emplace(json_event_value(str));
+}
+
+void json_event_filter_check::add_extracted_value_num(int64_t val)
+{
+	m_evalues.first.emplace_back(json_event_value(val));
+	m_evalues.second.emplace(json_event_value(val));
 }
 
 uint8_t *json_event_filter_check::extract(gen_event *evt, uint32_t *len, bool sanitize_strings)
@@ -766,7 +801,7 @@ bool k8s_audit_filter_check::extract_images(const json &j,
 
 	try
 	{
-		const json containers = j.at(containers_ptr);
+		const json &containers = j.at(containers_ptr);
 
 		for(auto &container : containers)
 		{
@@ -854,7 +889,7 @@ bool k8s_audit_filter_check::extract_rule_attrs(const json &j,
 
 	try
 	{
-		const json rules = j.at(rules_ptr);
+		const json &rules = j.at(rules_ptr);
 
 		jchk.add_extracted_value(rules.at(prop));
 	}
@@ -900,7 +935,7 @@ bool k8s_audit_filter_check::extract_host_port(const json &j,
 	static json::json_pointer containers_ptr = "/requestObject/spec/containers"_json_pointer;
 
 	try {
-		const json containers = j.at(containers_ptr);
+		const json &containers = j.at(containers_ptr);
 
 		for(auto &container : containers)
 		{
@@ -923,6 +958,54 @@ bool k8s_audit_filter_check::extract_host_port(const json &j,
 					jchk.add_extracted_value(json_as_string(cport.at("containerPort")));
 				}
 			}
+		}
+	}
+	catch(json::out_of_range &e)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+bool k8s_audit_filter_check::extract_effective_run_as(const json &j,
+						      json_event_filter_check &jchk)
+{
+	static json::json_pointer spec_ptr = "/requestObject/spec"_json_pointer;
+	static json::json_pointer containers_ptr = "/containers"_json_pointer;
+	static json::json_pointer run_as_user_ptr = "/securityContext/runAsUser"_json_pointer;
+	static json::json_pointer run_as_group_ptr = "/securityContext/runAsGroup"_json_pointer;
+
+	try {
+		const json &spec = j.at(spec_ptr);
+
+		int64_t pod_id;
+
+		if(jchk.field() == "ka.req.pod.containers.eff_run_as_user")
+		{
+			pod_id = spec.value(run_as_user_ptr, 0);
+		}
+		else
+		{
+			pod_id = spec.value(run_as_group_ptr, 0);
+		}
+
+		const json &containers = spec.at(containers_ptr);
+
+		for(auto container : containers)
+		{
+			int64_t container_id;
+
+			if(jchk.field() == "ka.req.pod.containers.eff_run_as_user")
+			{
+				container_id = container.value(run_as_user_ptr, pod_id);
+			}
+			else
+			{
+				container_id = container.value(run_as_group_ptr, pod_id);
+			}
+
+			jchk.add_extracted_value_num(container_id);
 		}
 	}
 	catch(json::out_of_range &e)
@@ -967,8 +1050,10 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 		   {"ka.req.pod.containers.read_only_fs", "When the request object refers to a pod, the value of the readOnlyRootFilesystem flag for all containers", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.req.pod.run_as_user", "When the request object refers to a pod, the runAsUser uid specified in the security context for the pod. See ....containers.run_as_user for the runAsUser for individual containers"},
 		   {"ka.req.pod.containers.run_as_user", "When the request object refers to a pod, the runAsUser uid for all containers", IDX_ALLOWED, IDX_NUMERIC},
+		   {"ka.req.pod.containers.eff_run_as_user", "When the request object refers to a pod, the initial uid that will be used for all containers. This combines information from both the pod and container security contexts and uses 0 if no uid is specified", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.req.pod.run_as_group", "When the request object refers to a pod, the runAsGroup gid specified in the security context for the pod. See ....containers.run_as_group for the runAsGroup for individual containers"},
 		   {"ka.req.pod.containers.run_as_group", "When the request object refers to a pod, the runAsGroup gid for all containers", IDX_ALLOWED, IDX_NUMERIC},
+		   {"ka.req.pod.containers.eff_run_as_group", "When the request object refers to a pod, the initial gid that will be used for all containers. This combines information from both the pod and container security contexts and uses 0 if no gid is specified", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.req.pod.containers.proc_mount", "When the request object refers to a pod, the procMount types for all containers", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.req.role.rules", "When the request object refers to a role/cluster role, the rules associated with the role"},
 		   {"ka.req.role.rules.apiGroups", "When the request object refers to a role/cluster role, the api groups associated with the role's rules", IDX_ALLOWED, IDX_NUMERIC},
@@ -1019,8 +1104,10 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 			{"ka.req.pod.containers.read_only_fs", {{"/requestObject/spec/containers"_json_pointer, "/securityContext/readOnlyRootFilesystem"_json_pointer}}},
 			{"ka.req.pod.run_as_user", {{"/requestObject/spec/securityContext/runAsUser"_json_pointer}}},
 			{"ka.req.pod.containers.run_as_user", {{"/requestObject/spec/containers"_json_pointer, "/securityContext/runAsGroup"_json_pointer}}},
+			{"ka.req.pod.containers.eff_run_as_user", {extract_effective_run_as}},
 			{"ka.req.pod.run_as_group", {{"/requestObject/spec/securityContext/runAsGroup"_json_pointer}}},
 			{"ka.req.pod.containers.run_as_group", {{"/requestObject/spec/containers"_json_pointer, "/securityContext/runAsGroup"_json_pointer}}},
+			{"ka.req.pod.containers.eff_run_as_group", {extract_effective_run_as}},
 			{"ka.req.pod.containers.proc_mount", {{"/requestObject/spec/containers"_json_pointer, "/securityContext/procMount"_json_pointer}}},
 			{"ka.req.role.rules", {{"/requestObject/rules"_json_pointer}}},
 			{"ka.req.role.rules.apiGroups", {extract_rule_attrs}},

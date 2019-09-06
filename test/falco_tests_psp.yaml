@@ -303,14 +303,14 @@ trace_files: !mux
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/user_must_run_as.yaml
-    trace_file: trace_files/psp/run_as_user_1000_sec_ctx_30_container.json
+    trace_file: trace_files/psp/run_as_user_30_sec_ctx_1000_container.json
 
   user_must_run_as_not_detect_both:
     detect: False
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/user_must_run_as.yaml
-    trace_file: trace_files/psp/run_as_user_30_sec_ctx_1000_container.json
+    trace_file: trace_files/psp/run_as_user_1000_sec_ctx_30_container.json
 
   user_must_run_as_non_root_detect:
     detect: True
@@ -364,14 +364,14 @@ trace_files: !mux
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/user_must_run_as_non_root.yaml
-    trace_file: trace_files/psp/run_as_user_0_sec_ctx_1000_container.json
+    trace_file: trace_files/psp/run_as_user_1000_sec_ctx_0_container.json
 
   user_must_run_as_non_root_no_detect_both:
     detect: False
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/user_must_run_as_non_root.yaml
-    trace_file: trace_files/psp/run_as_user_1000_sec_ctx_0_container.json
+    trace_file: trace_files/psp/run_as_user_0_sec_ctx_1000_container.json
 
   group_must_run_as_with_unset:
     detect: True
@@ -435,14 +435,14 @@ trace_files: !mux
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/group_must_run_as.yaml
-    trace_file: trace_files/psp/run_as_group_1000_sec_ctx_30_container.json
+    trace_file: trace_files/psp/run_as_group_30_sec_ctx_1000_container.json
 
   group_must_run_as_not_detect_both:
     detect: False
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/group_must_run_as.yaml
-    trace_file: trace_files/psp/run_as_group_30_sec_ctx_1000_container.json
+    trace_file: trace_files/psp/run_as_group_1000_sec_ctx_30_container.json
 
   group_may_run_as_with_unset:
     detect: False
@@ -493,17 +493,20 @@ trace_files: !mux
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/group_may_run_as.yaml
-    trace_file: trace_files/psp/run_as_group_1000_sec_ctx_30_container.json
+    trace_file: trace_files/psp/run_as_group_30_sec_ctx_1000_container.json
 
   group_may_run_as_not_detect_both:
     detect: False
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/group_may_run_as.yaml
-    trace_file: trace_files/psp/run_as_group_30_sec_ctx_1000_container.json
+    trace_file: trace_files/psp/run_as_group_1000_sec_ctx_30_container.json
 
   supplemental_groups_must_run_as_with_unset:
-    detect: False
+    detect: True
+    detect_level: WARNING
+    detect_counts:
+      - "PSP Violation (supplementalGroups=MustRunAs)": 1
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/supplemental_groups_must_run_as_30_40.yaml
