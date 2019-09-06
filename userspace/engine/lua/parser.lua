@@ -194,8 +194,7 @@ local G = {
 
   RelationalExpression =
      rel(terminal "FieldName", V"RelOp", V"Value") +
-     rel(terminal "FieldName", V"InOp", V"InList") +
-     rel(terminal "FieldName", V"PmatchOp", V"InList") +
+     rel(terminal "FieldName", V"SetOp", V"InList") +
      V"PrimaryExp";
 
   PrimaryExp = symb("(") * V"Filter" * symb(")");
@@ -246,8 +245,10 @@ local G = {
           symb("glob") / "glob" +
           symb("startswith") / "startswith" +
           symb("endswith") / "endswith";
-  InOp = kw("in") / "in";
-  PmatchOp = kw("pmatch") / "pmatch";
+  SetOp = kw("in") / "in" +
+          kw("has") / "has" +
+          kw("contains") / "contains";
+          kw("pmatch") / "pmatch";
   UnaryBoolOp = kw("not") / "not";
   ExistsOp = kw("exists") / "exists";
 

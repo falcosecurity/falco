@@ -78,14 +78,18 @@ public:
 	json_event_value(const std::string &val);
 	virtual ~json_event_value();
 
-	param_type ptype();
+	param_type ptype() const;
+
+	std::string as_string() const;
 
 	bool operator==(const json_event_value &val) const;
+	bool operator!=(const json_event_value &val) const;
 	bool operator<(const json_event_value &val) const;
 	bool operator>(const json_event_value &val) const;
 
 	// Only meaningful for string types
 	bool startswith(const json_event_value &val) const;
+	bool contains(const json_event_value &val) const;
 
 private:
 	param_type m_type;
@@ -151,15 +155,8 @@ public:
 	void add_filter_value(const char* str, uint32_t len, uint32_t i = 0 );
 	bool compare(gen_event *evt);
 
-	typedef std::vector<json_event_value> values_t;
-	typedef std::set<json_event_value> values_set_t;
-	typedef std::pair<values_t, values_set_t> extracted_values_t;
-
 	// This always returns a const extracted_values_t *. The pointer points to m_evalues;
-	virtual uint8_t* extract(gen_event *evt, uint32_t* len, bool sanitize_strings = true);
-
-	// Simpler version that returns a string
-	std::string extract(json_event *evt);
+	uint8_t* extract(gen_event *evt, uint32_t* len, bool sanitize_strings = true) final;
 
 	const std::string &field();
 	const std::string &idx();
@@ -175,7 +172,19 @@ public:
 	//
 	virtual json_event_filter_check *allocate_new() = 0;
 
+	// Subclasses or extraction functions can call this method to add each extracted value.
+	void add_extracted_value(const std::string &val);
+
+	// After calling extract, you can call extracted_values to get
+	// the values extracted from an event.
+	typedef std::vector<json_event_value> values_t;
+	const values_t &extracted_values();
+
 protected:
+
+	// Subclasses can override this method, calling
+	// add_extracted_value to add extracted values.
+	virtual bool extract_values(json_event *jevt);
 
 	static std::string json_as_string(const nlohmann::json &j);
 
@@ -188,23 +197,15 @@ protected:
 	// values instead of using a json pointer. An example is
 	// ka.uri.param, which parses the query string to extract
 	// key=value parameters.
-	typedef std::function<void (const nlohmann::json &, values_t &values, std::string &field)> extract_t;
-
-	// An alias might also define a custom function to index
-	// values e.g. looking up values by a string key instead of
-	// aindex. It modifies the provided array of values, keeping
-	// the desired values in the array.
-	typedef std::function<void (values_t &values, std::string &field, std::string &idx)> index_t;
+	typedef std::function<bool (const nlohmann::json &, json_event_filter_check &jchk)> extract_t;
 
 	struct alias {
 		// The variants allow for brace-initialization either
-		// with just the pointer or with both the pointer and
-		// a format function.
+		// with just the pointer list or with a custom
+		// extraction function.
 		alias();
-	        alias(std::list<nlohmann::json::json_pointer> &ptrs);
-	        alias(std::list<nlohmann::json::json_pointer> &ptrs, index_t index);
+	        alias(std::list<nlohmann::json::json_pointer> ptrs);
 	        alias(extract_t extract);
-	        alias(extract_t extract, index_t index);
 
 		virtual ~alias();
 
@@ -219,7 +220,6 @@ protected:
 		std::list<nlohmann::json::json_pointer> m_jptrs;
 
 		extract_t m_extract;
-		index_t m_index;
 	};
 
 	// This map defines the aliases defined by this filter check
@@ -238,25 +238,24 @@ protected:
 	// e.g. ka.value[idx]. This holds the index.
 	std::string m_idx;
 
-	// The actual json pointer value to use to extract from
-	// events. See alias struct for usage.
-	std::list<nlohmann::json::json_pointer> m_jptrs;
-
-	// Temporary storage to hold extracted value
-	std::string m_tstr;
-
 private:
+	typedef std::set<json_event_value> values_set_t;
+	typedef std::pair<values_t, values_set_t> extracted_values_t;
 
 	// The default extraction function uses the list of pointers
 	// in m_jptrs. Iterates over array elements between pointers if
 	// found.
-	values_t &def_extract(const nlohmann::json &j,
-			      const std::list<nlohmann::json::json_pointer> &ptrs,
-			      std::list<nlohmann::json::json_pointer>::iterator &it);
+	bool def_extract(const nlohmann::json &j,
+			 const std::list<nlohmann::json::json_pointer> &ptrs,
+			 std::list<nlohmann::json::json_pointer>::iterator it);
 
+	// The actual json pointer value to use to extract from
+	// events. See alias struct for usage.
+	std::list<nlohmann::json::json_pointer> m_jptrs;
 
-	// The default indexing function handles array indexing by numeric value.
-	values_t &def_index(const values_t &values, std::string &idx);
+	// Theextraction function to use. May not be defined, in which
+	// case the default function is used.
+	extract_t m_extract;
 
 	// All values specified on the right hand side of the operator
 	// e.g. "ka.ns in ("one","two","three"), m_values has ("one",
@@ -275,13 +274,19 @@ public:
 	jevt_filter_check();
 	virtual ~jevt_filter_check();
 
-	int32_t parse_field_name(const char* str, bool alloc_state, bool needed_for_filtering);
-
-	virtual uint8_t* extract(gen_event *evt, uint32_t* len, bool sanitize_strings = true);
+        int32_t parse_field_name(const char* str, bool alloc_state, bool needed_for_filtering) final;
 
 	json_event_filter_check *allocate_new();
 
+protected:
+
+	bool extract_values(json_event *jevt) final;
+
 private:
+
+	// When the field is jevt_value, a json pointer representing
+	// the index in m_idx
+	nlohmann::json::json_pointer m_idx_ptr;
 
 	static std::string s_jevt_time_field;
 	static std::string s_jevt_time_iso_8601_field;
@@ -299,24 +304,24 @@ public:
 	json_event_filter_check *allocate_new();
 
 	// Extract all images/image repositories from the provided containers
-	static values_t &extract_images(const nlohmann::json &j, std::string &field);
+	static bool extract_images(const nlohmann::json &j,
+				   json_event_filter_check &jchk);
 
 	// Extract all query parameters
-	static values_t &extract_query_params(const nlohmann::json &j, std::string &field);
+	static bool extract_query_param(const nlohmann::json &j,
+					json_event_filter_check &jchk);
 
 	// Extract some property from the set of rules in the request object
-	static values_t &extract_rule_attrs(const nlohmann::json &j, std::string &field);
+	static bool extract_rule_attrs(const nlohmann::json &j,
+				       json_event_filter_check &jchk);
 
 	// Extract the volume types from volumes in the request object
-	static values_t &extract_volume_types(const nlohmann::json &j, std::string &field);
+	static bool extract_volume_types(const nlohmann::json &j,
+					 json_event_filter_check &jchk);
 
 	// Extract all hostPort values from containers in the request object
-	static values_t &extract_host_port(const nlohmann::json &j, std::string &field);
-
-	// Look up the value of the provided query parameter
-	static values_t &index_query_param(const values_t &values,
-					   std::string &field,
-					   std::string &idx);
+	static bool extract_host_port(const nlohmann::json &j,
+				      json_event_filter_check &jchk);
 };
 
 class json_event_filter : public gen_event_filter

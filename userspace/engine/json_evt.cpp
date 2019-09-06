@@ -77,6 +77,29 @@ json_event_value::json_event_value(const std::string &val)
 	}
 }
 
+json_event_value::param_type json_event_value::ptype() const
+{
+	return m_type;
+}
+
+std::string json_event_value::as_string() const
+{
+	switch(m_type)
+	{
+	case JT_STRING:
+		return m_stringval;
+		break;
+	case JT_INT64:
+		return std::to_string(m_intval);
+		break;
+	case JT_INT64_PAIR:
+		return std::to_string(m_pairval.first) + ":" + std::to_string(m_pairval.second);
+		break;
+	default:
+		return json_event_filter_check::no_value;
+	}
+}
+
 bool json_event_value::operator==(const json_event_value &val) const
 {
 	// A JT_INT64 can be compared to a JT_INT64_PAIR. The value
@@ -106,6 +129,11 @@ bool json_event_value::operator==(const json_event_value &val) const
 	default:
 		return false;
 	}
+}
+
+bool json_event_value::operator!=(const json_event_value &val) const
+{
+	return !operator==(val);
 }
 
 bool json_event_value::operator<(const json_event_value &val) const
@@ -177,7 +205,18 @@ bool json_event_value::startswith(const json_event_value &val) const
 	if(m_type == JT_STRING &&
 	   val.m_type == JT_STRING)
 	{
-		return m_stringval.compare(0, val.m_stringval.size(), val.m_stringval);
+		return (m_stringval.compare(0, val.m_stringval.size(), val.m_stringval) == 0);
+	}
+
+	return false;
+}
+
+bool json_event_value::contains(const json_event_value &val) const
+{
+	if(m_type == JT_STRING &&
+	   val.m_type == JT_STRING)
+	{
+		return (m_stringval.find(val.m_stringval) != string::npos);
 	}
 
 	return false;
@@ -218,81 +257,40 @@ bool json_event_value::parse_as_int64(int64_t &intval, const std::string &val)
 
 std::string json_event_filter_check::no_value = "<NA>";
 
-// XXX/mstemm fix this
 bool json_event_filter_check::def_extract(const nlohmann::json &root,
-					  json_event_filter_check::values_t values,
 					  const std::list<nlohmann::json::json_pointer> &ptrs,
-					  std::list<nlohmann::json::json_pointer>::iterator &it)
+					  std::list<nlohmann::json::json_pointer>::iterator it)
 {
+	if(it == ptrs.end())
+	{
+		add_extracted_value(json_as_string(root));
+		return true;
+	}
+
 	try {
 		const json &j = root.at(*it);
 
-		if(root.is_array())
+		if(j.is_array())
 		{
-			for(auto &item : root)
+			for(auto &item : j)
 			{
-				values.emplace_back(json_as_string(item));
+				if(!def_extract(item, ptrs, ++it))
+				{
+					return false;
+				}
 			}
 		}
 		else
 		{
-			values.emplace_back(json_as_string(root));
+			add_extracted_value(json_as_string(j));
 		}
 	}
-	else
+	catch(json::out_of_range &e)
 	{
-		try {
-
-
-			if(j.is_array())
-			{
-				for(auto &item : root)
-				{
-					if(!def_extract(item, values, ptrs, ++it))
-					{
-						return false;
-					}
-				}
-				else
-				{
-
-					if(!def_extract(j, values, ptrs, ++it))
-				{
-					return false;
-					values.clear();
-					values.push_back(json_event_filter_check::no_value);
-					return false;
-				}
-			}
-			catch(json::out_of_range &e)
-			{
-				values.clear();
-				values.push_back(json_event_filter_check::no_value);
-				return false;
-			}
-		}
+		return false;
 	}
 
 	return true;
-}
-
-void json_event_filter_check::def_index(json_event_filter_check::values_t &values, std::string &idx)
-{
-	// The default index function only knows how to index by numeric values
-	uint64_t idx_num = (idx.empty() ? 0 : stoi(idx));
-
-	values_t new_values;
-
-	if(idx_num < values.size())
-	{
-		new_values.emplace_back(values.at(idx_num));
-	}
-	else
-	{
-		new_values.emplace_back(json_event_filter_check::no_value);
-	}
-
-	values = new_values;
 }
 
 std::string json_event_filter_check::json_as_string(const json &j)
@@ -351,28 +349,13 @@ json_event_filter_check::alias::alias()
 {
 }
 
-json_event_filter_check::alias::alias(std::list<nlohmann::json::json_pointer> &ptrs) :
+json_event_filter_check::alias::alias(std::list<nlohmann::json::json_pointer> ptrs) :
 	m_jptrs(ptrs)
-{
-}
-
-json_event_filter_check::alias::alias(std::list<nlohmann::json::json_pointer> &ptrs,
-				      index_t index) :
-	m_jptrs(ptrs),
-	m_index(index)
 {
 }
 
 json_event_filter_check::alias::alias(extract_t extract) :
 	m_extract(extract)
-{
-}
-
-json_event_filter_check::alias::alias(extract_t extract,
-				      index_t index) :
-
-	m_extract(extract),
-	m_index(index)
 {
 }
 
@@ -413,15 +396,11 @@ int32_t json_event_filter_check::parse_field_name(const char *str, bool alloc_st
 		{
 			m_jptrs = al.m_jptrs;
 			m_field = info.m_name;
-			if(al.m_index)
-			{
-				m_index = al.m_index;
-			}
+
 			if(al.m_extract)
 			{
 				m_extract = al.m_extract;
 			}
-			m_type = al.m_type;
 			match_len = info.m_name.size();
 
 			const char *start = str + m_field.size();
@@ -464,16 +443,21 @@ int32_t json_event_filter_check::parse_field_name(const char *str, bool alloc_st
 
 void json_event_filter_check::add_filter_value(const char *str, uint32_t len, uint32_t i)
 {
-	m_values.push_back(string(str));
+	m_values.insert(string(str));
+}
+
+const json_event_filter_check::values_t &json_event_filter_check::extracted_values()
+{
+	return m_evalues.first;
 }
 
 bool json_event_filter_check::compare(gen_event *evt)
 {
 	json_event *jevt = (json_event *)evt;
 
-	const extracted_values_t *evalues = extract(jevt);
-	values_list_t::iterator it;
-	values_list_t itvals;
+	uint32_t len;
+	const extracted_values_t *evalues = (const extracted_values_t *) extract(jevt, &len);
+	values_set_t setvals;
 
 	switch(m_cmpop)
 	{
@@ -483,58 +467,60 @@ bool json_event_filter_check::compare(gen_event *evt)
 	case CO_NE:
 		return evalues->second != m_values;
 		break;
-	case CO_CONTAINS:
-		it = std::set_intersection(evalues->second.begin(), evalues->second.end(),
-					   m_values.begin(), m_values.end());
-		itvals.resize(it-itvals.begin());
-
-		return (itvals.size() == m_values.size());
-		break;
 	case CO_STARTSWITH:
 		return (evalues->first.size() == 1 &&
 			m_values.size() == 1 &&
-			evalues->first.at(0).startswith(m_values[0]));
+			evalues->first.at(0).startswith(*(m_values.begin())));
+		break;
+	case CO_CONTAINS:
+		return (evalues->first.size() == 1 &&
+			m_values.size() == 1 &&
+			evalues->first.at(0).contains(*(m_values.begin())));
 		break;
 	case CO_IN:
-		it = std::set_intersection(evalues->second.begin(), evalues->second.end(),
-					   m_values.begin(), m_values.end());
-		itvals.resize(it-itvals.begin());
-
-		return (itvals.size() == evalues->second.size());
+		std::set_intersection(evalues->second.begin(), evalues->second.end(),
+				      m_values.begin(), m_values.end(),
+				      std::inserter(setvals, setvals.begin()));
+		return (setvals.size() == evalues->second.size());
 		break;
 	case CO_INTERSECTS:
-		it = std::set_intersection(evalues->second.begin(), evalues->second.end(),
-					   m_values.begin(), m_values.end());
-		itvals.resize(it-itvals.begin());
-
-		return (itvals.size() > 0);
+		std::set_intersection(evalues->second.begin(), evalues->second.end(),
+				      m_values.begin(), m_values.end(),
+				      std::inserter(setvals, setvals.begin()));
+		return (setvals.size() > 0);
+		break;
+	case CO_HAS:
+		std::set_intersection(evalues->second.begin(), evalues->second.end(),
+				      m_values.begin(), m_values.end(),
+				      std::inserter(setvals, setvals.begin()));
+		return (setvals.size() == m_values.size());
 		break;
 	case CO_LT:
 		return (evalues->first.size() == 1 &&
 			m_values.size() == 1 &&
-			evalues->first.at(0).m_type == m_values.at(0).m_type &&
-			evalues->first.at(0) < m_values.at(0));
+			evalues->first.at(0).ptype() == m_values.begin()->ptype() &&
+			evalues->first.at(0) < *(m_values.begin()));
 		break;
 	case CO_LE:
 		return (evalues->first.size() == 1 &&
 			m_values.size() == 1 &&
-			evalues->first.at(0).m_type == m_values.at(0).m_type &&
-			(evalues->first.at(0) < m_values.at(0) ||
-			 evalues->first.at(0) == m_values.at(0)));
+			evalues->first.at(0).ptype() == m_values.begin()->ptype() &&
+			(evalues->first.at(0) < *(m_values.begin()) ||
+			 evalues->first.at(0) == *(m_values.begin())));
 	case CO_GT:
 		return (evalues->first.size() == 1 &&
 			m_values.size() == 1 &&
-			evalues->first.at(0).m_type == m_values.at(0).m_type &&
-			evalues->first.at(0) > m_values.at(0));
+			evalues->first.at(0).ptype() == m_values.begin()->ptype() &&
+			evalues->first.at(0) > *(m_values.begin()));
 	case CO_GE:
 		return (evalues->first.size() == 1 &&
 			m_values.size() == 1 &&
-			evalues->first.at(0).m_type == m_values.at(0).m_type &&
-			(evalues->first.at(0) > m_values.at(0) ||
-			 evalues->first.at(0) == m_values.at(0)));
+			evalues->first.at(0).ptype() == m_values.begin()->ptype() &&
+			(evalues->first.at(0) > *(m_values.begin()) ||
+			 evalues->first.at(0) == *(m_values.begin())));
 		break;
 	case CO_EXISTS:
-		return (evalues->size() == 1 &&
+		return (evalues->first.size() == 1 &&
 			(evalues->first.at(0) != json_event_filter_check::no_value));
 		break;
 	default:
@@ -569,49 +555,80 @@ json_event_filter_check::check_info &json_event_filter_check::get_fields()
 	return m_info;
 }
 
+void json_event_filter_check::add_extracted_value(const std::string &str)
+{
+	m_evalues.first.emplace_back(json_event_value(str));
+	m_evalues.second.emplace(json_event_value(str));
+}
+
 uint8_t *json_event_filter_check::extract(gen_event *evt, uint32_t *len, bool sanitize_strings)
 {
-	json_event *jevt = (json_event *)evt;
+	m_evalues.first.clear();
+	m_evalues.second.clear();
 
+	if (!extract_values((json_event *) evt))
+	{
+		m_evalues.first.clear();
+		m_evalues.second.clear();
+		add_extracted_value(no_value);
+	}
+
+	*len = sizeof(m_evalues);
+	return (uint8_t *)&m_evalues;
+}
+
+bool json_event_filter_check::extract_values(json_event *jevt)
+{
 	try
 	{
 		if(m_extract)
 		{
-			m_evalues.first = m_extract(j, m_field);
+			if(!m_extract(jevt->jevt(), *this))
+			{
+				return false;
+			}
 		}
 		else
 		{
-			m_evalues.first = def_extract(j, m_jptrs, m_jptrs.begin());
-		}
-
-		if(! m_idx.empty())
-		{
-			if(m_index)
+			if (!def_extract(jevt->jevt(), m_jptrs, m_jptrs.begin()))
 			{
-				m_evalues.first = m_index(m_evalues.first, m_field, m_idx);
+				return false;
 			}
-			else
-			{
-				m_evalues.first = def_index(m_evalues.first, m_idx);
-			}
-		}
 
-		// Now populate the values set with the distinct
-		// values from the vector
-		for(auto &str : m_evalues.first)
-		{
-			m_evalues.second.insert(str);
+			if(! m_idx.empty())
+			{
+				// The default only knows how to index by numeric indices
+				try {
+					std::string::size_type ptr;
+					std::string::size_type idx_num = std::stoll(m_idx, &ptr);
+
+					if(ptr != m_idx.length())
+					{
+						return false;
+					}
+
+					if(idx_num >= m_evalues.first.size())
+					{
+						return false;
+					}
+
+					values_t new_values;
+					new_values.push_back(m_evalues.first.at(idx_num));
+					m_evalues.first = new_values;
+				}
+				catch (std::invalid_argument &e)
+				{
+					return false;
+				}
+			}
 		}
 	}
 	catch(json::out_of_range &e)
 	{
-		m_evalues.first.push_back(json_event_filter_check::no_value);
-		m_evalues.second.insert(json_event_filter_check::no_value);
+		return false;
 	}
 
-	*len = sizeof(m_evalues);
-
-	return (uint8_t *)&m_evalues;
+	return true;
 }
 
 std::string jevt_filter_check::s_jevt_time_field = "jevt.time";
@@ -675,50 +692,60 @@ int32_t jevt_filter_check::parse_field_name(const char *str, bool alloc_state, b
 
 		try
 		{
-			m_jptr = json::json_pointer(string(str + (s_jevt_value_field.size() + 1), (end - str - (s_jevt_value_field.size() + 1))));
+			m_idx = string(str + (s_jevt_value_field.size() + 1), (end - str - (s_jevt_value_field.size() + 1)));
+			m_idx_ptr = json::json_pointer(m_idx);
 		}
 		catch(json::parse_error &e)
 		{
 			throw falco_exception(string("Could not parse filtercheck field \"") + str + "\". Invalid json selector (" + e.what() + ")");
 		}
 
+		m_field = s_jevt_value_field;
+
 		// The +1 accounts for the closing ']'
-		m_field = string(str, end - str + 1);
 		return (end - str + 1);
 	}
 
 	return 0;
 }
 
-uint8_t *jevt_filter_check::extract(gen_event *evt, uint32_t *len, bool sanitize_stings)
+bool jevt_filter_check::extract_values(json_event *jevt)
 {
+	std::string tstr;
+
 	if(m_field == s_jevt_rawtime_field)
 	{
-		m_tstr = to_string(evt->get_ts());
-		*len = m_tstr.size();
-		return (uint8_t *)m_tstr.c_str();
+		tstr = to_string(jevt->get_ts());
 	}
 	else if(m_field == s_jevt_time_field)
 	{
-		sinsp_utils::ts_to_string(evt->get_ts(), &m_tstr, false, true);
-		*len = m_tstr.size();
-		return (uint8_t *)m_tstr.c_str();
+		sinsp_utils::ts_to_string(jevt->get_ts(), &tstr, false, true);
 	}
 	else if(m_field == s_jevt_time_iso_8601_field)
 	{
-		sinsp_utils::ts_to_iso_8601(evt->get_ts(), &m_tstr);
-		*len = m_tstr.size();
-		return (uint8_t *)m_tstr.c_str();
+		sinsp_utils::ts_to_iso_8601(jevt->get_ts(), &tstr);
 	}
 	else if(m_field == s_jevt_obj_field)
 	{
-		json_event *jevt = (json_event *)evt;
-		m_tstr = jevt->jevt().dump();
-		*len = m_tstr.size();
-		return (uint8_t *)m_tstr.c_str();
+		tstr = jevt->jevt().dump();
+	}
+	else if (m_field == s_jevt_value_field)
+	{
+		try {
+			tstr = jevt->jevt().at(m_idx_ptr);
+		}
+		catch(json::out_of_range &e)
+		{
+			return false;
+		}
+	}
+	else
+	{
+		return false;
 	}
 
-	return json_event_filter_check::extract(evt, len, sanitize_stings);
+	add_extracted_value(tstr);
+	return true;
 }
 
 json_event_filter_check *jevt_filter_check::allocate_new()
@@ -728,9 +755,8 @@ json_event_filter_check *jevt_filter_check::allocate_new()
 	return (json_event_filter_check *)chk;
 }
 
-void k8s_audit_filter_check::extract_images(const json &j,
-					    json_event_filter_check::values_t &values,
-					    std::string &field)
+bool k8s_audit_filter_check::extract_images(const json &j,
+					    json_event_filter_check &jchk)
 {
 	static json::json_pointer containers_ptr = "/requestObject/spec/containers"_json_pointer;
 
@@ -738,15 +764,15 @@ void k8s_audit_filter_check::extract_images(const json &j,
 	{
 		const json containers = j.at(containers_ptr);
 
-		for(auto &spec : containers)
+		for(auto &container : containers)
 		{
-			std::string image = j.at("image");
+			std::string image = container.at("image");
 
 			// If the filtercheck ends with .repository, we want only the
 			// repo name from the image.
 			std::string suffix = ".repository";
-			if(suffix.size() <= field.size() &&
-			   std::equal(suffix.rbegin(), suffix.rend(), field.rbegin()))
+			if(suffix.size() <= jchk.field().size() &&
+			   std::equal(suffix.rbegin(), suffix.rend(), jchk.field().rbegin()))
 			{
 				std::string hostname, port, name, tag, digest;
 
@@ -757,87 +783,91 @@ void k8s_audit_filter_check::extract_images(const json &j,
 								   tag,
 								   digest,
 								   false);
-				values.push_back(name);
+				jchk.add_extracted_value(name);
 			}
 			else
 			{
-				values.push_back(image);
+				jchk.add_extracted_value(image);
 			}
 		}
 	}
 	catch(json::out_of_range &e)
 	{
-		values.clear();
-		values.push_back(json_event_filter_check::no_value);
+		return false;
 	}
+
+	return true;
 }
 
-void k8s_audit_filter_check::extract_query_params(const nlohmann::json &j,
-						  json_event_filter_check::values_t &values,
-						  std::string &field)
+bool k8s_audit_filter_check::extract_query_param(const nlohmann::json &j,
+						 json_event_filter_check &jchk)
 {
 	static json::json_pointer request_uri_ptr = "/requestURI"_json_pointer;
 
+	string uri;
+	std::vector<std::string> uri_parts, query_parts;
+
 	try {
-		string uri = j.at(request_uri_ptr);
-
-		std::vector<std::string> uri_parts, query_parts;
-
-		uri_parts = sinsp_split(uri, '?');
-
-		if(uri_parts.size() != 2)
-		{
-			values.push_back(json_event_filter_check::no_value);
-			return;
-		}
-
-		query_parts = sinsp_split(uri_parts[1], '&');
-
-		for(auto &part : query_parts)
-		{
-			values.push_back(part);
-		}
-
+		uri = j.at(request_uri_ptr);
 	}
 	catch(json::out_of_range &e)
 	{
-		values.clear();
-		values.push_back(json_event_filter_check::no_value);
+		return false;
 	}
+
+	uri_parts = sinsp_split(uri, '?');
+
+	if(uri_parts.size() != 2)
+	{
+		return false;
+	}
+
+	query_parts = sinsp_split(uri_parts[1], '&');
+
+	for(auto &part : query_parts)
+	{
+		std::vector<std::string> param_parts = sinsp_split(part, '=');
+
+		if(param_parts.size() == 2 && uri::decode(param_parts[0], true) == jchk.idx())
+		{
+			jchk.add_extracted_value(param_parts[1]);
+			return true;
+		}
+	}
+
+	return false;
 }
 
 
-void k8s_audit_filter_check::extract_rule_attrs(const json &j,
-						json_event_filter_check::values_t &values,
-						std::string &field)
+bool k8s_audit_filter_check::extract_rule_attrs(const json &j,
+						json_event_filter_check &jchk)
 {
 	static json::json_pointer rules_ptr = "/requestObject/rules"_json_pointer;
 
 	// Use the suffix of the field to determine which property to
 	// select from each object.
-	std::string prop = field.substr(field.find_last_of(".") + 1);
+	std::string prop = jchk.field().substr(jchk.field().find_last_of(".") + 1);
 
 	try
 	{
 		const json rules = j.at(rules_ptr);
 
-		values.push_back(rules.at(prop));
+		jchk.add_extracted_value(rules.at(prop));
 	}
 	catch(json::out_of_range &e)
 	{
-		values.clear();
-		values.push_back(json_event_filter_check::no_value);
+		return false;
 	}
+
+	return true;
 }
 
-void k8s_audit_filter_check::extract_volume_types(const json &j,
-						  json_event_filter_check::values_t &values,
-						  std::string &field)
+bool k8s_audit_filter_check::extract_volume_types(const json &j,
+						  json_event_filter_check &jchk)
 {
 	static json::json_pointer volumes_ptr = "/requestObject/spec/volumes"_json_pointer;
 
 	try {
-
 		const nlohmann::json &vols = j.at(volumes_ptr);
 
 		for(auto &vol : vols)
@@ -847,21 +877,21 @@ void k8s_audit_filter_check::extract_volume_types(const json &j,
 				// Any key other than "name" represents a volume type
 				if(it.key() != "name")
 				{
-					values.push_back(it.key());
+					jchk.add_extracted_value(it.key());
 				}
 			}
 		}
 	}
 	catch(json::out_of_range &e)
 	{
-		values.clear();
-		values.push_back(json_event_filter_check::no_value);
+		return false;
 	}
+
+	return true;
 }
 
-void k8s_audit_filter_check::extract_host_port(const json &j,
-					       json_event_filter_check::values_t &values,
-					       std::string &field)
+bool k8s_audit_filter_check::extract_host_port(const json &j,
+					       json_event_filter_check &jchk)
 {
 	static json::json_pointer containers_ptr = "/requestObject/spec/containers"_json_pointer;
 
@@ -881,43 +911,22 @@ void k8s_audit_filter_check::extract_host_port(const json &j,
 			{
 				if(cport.find("hostPort") != cport.end())
 				{
-					values.emplace_back(cport.at("hostPort"));
+					jchk.add_extracted_value(cport.at("hostPort"));
 				}
 				else if (cport.find("containerPort") != cport.end())
 				{
 					// When hostNetwork is true, this will match the host port.
-					values.emplace_back(cport.at("containerPort"));
+					jchk.add_extracted_value(cport.at("containerPort"));
 				}
 			}
 		}
 	}
 	catch(json::out_of_range &e)
 	{
-		values.clear();
-		values.push_back(json_event_filter_check::no_value);
-	}
-}
-
-void k8s_audit_filter_check::index_query_param(values_t &values,
-					       std::string &field,
-					       std::string &idx)
-{
-	values_t new_values;
-
-	for(auto &str : values)
-	{
-		std::vector<std::string> param_parts = sinsp_split(str, '=');
-
-		if(param_parts.size() == 2 && uri::decode(param_parts[0], true) == idx)
-		{
-			new_values.push_back(param_parts[1]);
-			values = new_values;
-			return;
-		}
+		return false;
 	}
 
-	new_values.push_back(no_value);
-	values = new_values;
+	return true;
 }
 
 k8s_audit_filter_check::k8s_audit_filter_check()
@@ -982,7 +991,7 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 			{"ka.impuser.name", {{"/impersonatedUser/username"_json_pointer}}},
 			{"ka.verb", {{"/verb"_json_pointer}}},
 			{"ka.uri", {{"/requestURI"_json_pointer}}},
-			{"ka.uri.param", {extract_query_params, index_query_param}},
+			{"ka.uri.param", {extract_query_param}},
 			{"ka.target.name", {{"/objectRef/name"_json_pointer}}},
 			{"ka.target.namespace", {{"/objectRef/namespace"_json_pointer}}},
 			{"ka.target.resource", {{"/objectRef/resource"_json_pointer}}},
@@ -1015,7 +1024,7 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 			{"ka.req.service.ports", {{"/requestObject/spec/ports"_json_pointer}}},
                         {"ka.req.volume.hostpath", {{"/requestObject/spec"_json_pointer, "/volumes"_json_pointer, "/hostPath"_json_pointer}}},
 			{"ka.req.volume.flexvolume_drivers", {{"/requestObject/spec"_json_pointer, "/volumes"_json_pointer, "/flexVolume/driver"_json_pointer}}},
-			{"ka.req.volume_types", {extract_volume_types}},
+			{"ka.req.volume.volume_types", {extract_volume_types}},
 			{"ka.resp.name", {{"/responseObject/metadata/name"_json_pointer}}},
 			{"ka.response.code", {{"/responseStatus/code"_json_pointer}}},
 			{"ka.response.reason", {{"/responseStatus/reason"_json_pointer}}},
@@ -1194,23 +1203,28 @@ void json_event_formatter::resolve_tokens(json_event *ev, std::list<std::pair<st
 	{
 		if(tok.check)
 		{
-			const json_event_filter_check::extracted_values_t *evals = tok.check->extract(ev);
+			uint32_t len;
+
+			(void) tok.check->extract(ev, &len);
+
+			const json_event_filter_check::values_t &evals =
+				tok.check->extracted_values();
 
 			std::string res_str = json_event_filter_check::no_value;
-			if(evals->first.size() == 1)
+			if(evals.size() == 1)
 			{
-				res_str = evals->first.at(0);
+				res_str = evals.at(0).as_string();
 			}
-			else if (evals->first.size() > 1)
+			else if (evals.size() > 1)
 			{
 				res_str = "(";
-				for(auto &val : evals->first)
+				for(auto &val : evals)
 				{
 					if(res_str != "(")
 					{
 						res_str += ",";
 					}
-					res_str += val;
+					res_str += val.as_string();
 				}
 				res_str += ")";
 			}

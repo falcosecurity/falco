@@ -21,6 +21,7 @@ limitations under the License.
 
 #include "falco_common.h"
 #include "k8s_psp.h"
+#include "json_evt.h"
 
 using namespace falco;
 
@@ -211,11 +212,19 @@ void k8s_psp_converter::load_yaml(const std::string &psp_yaml)
 		if(spec["hostPorts"])
 		{
 			m_params["host_network_ports"] = parse_ranges(spec["hostPorts"]);
+
+			// no_value is also allowed to account for
+			// containers that do not have a hostPort
+			m_params["host_network_ports"].push_back(json_event_filter_check::no_value);
 		}
 
 		if(spec["volumes"])
 		{
 			m_params["allowed_volume_types"] = parse_sequence(spec["volumes"]);
+
+			// no_value is also allowed to account for
+			// containers that do not have any volumes
+			m_params["allowed_volume_types"].push_back(json_event_filter_check::no_value);
 		}
 
 		if(spec["allowedHostPaths"])
@@ -224,6 +233,7 @@ void k8s_psp_converter::load_yaml(const std::string &psp_yaml)
 			for(const auto &hostpath : spec["allowedHostPaths"])
 			{
 				// Adding non-wildcard and wildcard versions of path
+				// XXX/mstemm I think I'll need to add a path type to json_event_value
 				std::string path = hostpath["pathPrefix"].as<std::string>();
 			        items.push_back(path);
 
@@ -232,6 +242,10 @@ void k8s_psp_converter::load_yaml(const std::string &psp_yaml)
 			}
 
 			m_params["allowed_host_paths"] = items;
+
+			// no_value is also allowed to account for
+			// containers that do not have any host path volumes
+			m_params["allowed_host_paths"].push_back(json_event_filter_check::no_value);
 		}
 
 		if(spec["allowedFlexVolumes"])
@@ -242,6 +256,10 @@ void k8s_psp_converter::load_yaml(const std::string &psp_yaml)
 				items.push_back(volume["driver"].as<std::string>());
 			}
 			m_params["allowed_flexvolume_drivers"] = items;
+
+			// no_value is also allowed to account for
+			// containers that do not have any flexvolume drivers
+			m_params["allowed_flexvolume_drivers"].push_back(json_event_filter_check::no_value);
 		}
 
 		if(spec["fsGroup"])
@@ -251,10 +269,16 @@ void k8s_psp_converter::load_yaml(const std::string &psp_yaml)
 			if(rule == "MustRunAs")
 			{
 				m_params["must_run_fs_groups"] = parse_ranges(spec["fsGroup"]["ranges"]);
+
+				// *Not* adding no_value, as a fsGroup must be specified.
 			}
 			else if(rule == "MayRunAs")
 			{
 				m_params["may_run_fs_groups"] = parse_ranges(spec["fsGroup"]["ranges"]);
+
+				// no_value is also allowed as not specifying a group is allowed
+				m_params["may_run_fs_groups"].push_back(json_event_filter_check::no_value);
+
 			}
 			else if(rule == "RunAsAny")
 			{
@@ -273,6 +297,8 @@ void k8s_psp_converter::load_yaml(const std::string &psp_yaml)
 			if(rule == "MustRunAs")
 			{
 				m_params["must_run_as_users"] = parse_ranges(spec["runAsUser"]["ranges"]);
+
+				// *Not* adding no_value, as a uid must be specified
 			}
 			else if (rule == "MustRunAsNonRoot")
 			{
@@ -295,10 +321,15 @@ void k8s_psp_converter::load_yaml(const std::string &psp_yaml)
 			if(rule == "MustRunAs")
 			{
 				m_params["must_run_as_groups"] = parse_ranges(spec["runAsGroup"]["ranges"]);
+
+				// *Not* adding no_value, as a gid must be specified
 			}
 			else if(rule == "MayRunAs")
 			{
 				m_params["may_run_as_groups"] = parse_ranges(spec["runAsGroup"]["ranges"]);
+
+				// no_value is also allowed as not specifying a group is allowed
+				m_params["may_run_as_groups"].push_back(json_event_filter_check::no_value);
 			}
 			else if(rule == "RunAsAny")
 			{
@@ -322,10 +353,15 @@ void k8s_psp_converter::load_yaml(const std::string &psp_yaml)
 			if(rule == "MustRunAs")
 			{
 				m_params["must_run_supplemental_groups"] = parse_ranges(spec["supplementalGroups"]["ranges"]);
+
+				// *Not* adding no_value, as a gid must be specified
 			}
 			else if(rule == "MayRunAs")
 			{
 				m_params["may_run_supplemental_groups"] = parse_ranges(spec["supplementalGroups"]["ranges"]);
+
+				// no_value is also allowed as not specifying a group is allowed
+				m_params["may_run_supplemental_groups"].push_back(json_event_filter_check::no_value);
 			}
 			else if(rule == "RunAsAny")
 			{
@@ -345,11 +381,17 @@ void k8s_psp_converter::load_yaml(const std::string &psp_yaml)
 		if(spec["allowedCapabilities"])
 		{
 			m_params["allowed_capabilities"] = parse_sequence(spec["allowedCapabilities"]);
+
+			// no_value is also allowed as a container may not add any additional capabilities
+			m_params["allowed_capabilities"].push_back(json_event_filter_check::no_value);
 		}
 
 		if(spec["allowedProcMountTypes"])
 		{
 			m_params["allowed_proc_mount_types"] = parse_sequence(spec["allowedProcMountTypes"]);
+
+			// no_value is also allowed as a container may not have any proc mount types
+			m_params["allowed_proc_mount_types"].push_back(json_event_filter_check::no_value);
 		}
 	}
 	catch (const std::invalid_argument &ex)
