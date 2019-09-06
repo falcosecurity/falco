@@ -20,40 +20,10 @@ limitations under the License.
 
 #include <thread>
 #include <string>
-#include <atomic>
+
 #include <queue>
 
-#include "tbb/concurrent_queue.h"
-
-#include "falco_output.grpc.pb.h"
-#include "falco_output.pb.h"
-#include "grpc_context.h"
-
-using namespace tbb;
-
-typedef concurrent_queue<falco_output_response> falco_output_response_cq;
-
-class falco_grpc_server_impl
-{
-public:
-	falco_grpc_server_impl() = default;
-	~falco_grpc_server_impl() = default;
-
-	falco_output_response_cq& m_event_queue;
-
-	falco_grpc_server_impl(falco_output_response_cq& event_queue):
-		m_event_queue(event_queue)
-	{
-	}
-
-protected:
-	bool is_running();
-
-	void subscribe(const stream_context& ctx, const falco_output_request& req, falco_output_response& res);
-
-private:
-	std::atomic<bool> m_stop{false};
-};
+#include "grpc_server_impl.h"
 
 class falco_grpc_server : public falco_grpc_server_impl
 {
@@ -64,7 +34,6 @@ public:
 		m_threadiness(threadiness)
 	{
 	}
-
 	virtual ~falco_grpc_server() = default;
 
 	void thread_process(int thread_index);

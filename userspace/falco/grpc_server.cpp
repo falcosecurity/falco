@@ -96,39 +96,7 @@ void request_stream_context<falco_output_request, falco_output_response>::end(fa
 	start(srv);
 }
 
-bool falco_grpc_server_impl::is_running()
-{
-	if(m_stop)
-	{
-		return false;
-	}
-	return true;
-}
 
-void falco_grpc_server_impl::subscribe(const stream_context& ctx, const falco_output_request& req, falco_output_response& res)
-{
-	if(ctx.m_status == stream_context::SUCCESS || ctx.m_status == stream_context::ERROR)
-	{
-		// todo > logic
-
-		ctx.m_stream = nullptr;
-	}
-	else
-	{
-		// Start (or continue) streaming
-		// ctx.m_status == stream_context::STREAMING
-		if(m_event_queue.try_pop(res) && !req.keepalive())
-		{
-			ctx.m_has_more = true;
-			return;
-		}
-		while(!m_event_queue.try_pop(res) && req.keepalive())
-		{
-		}
-
-		ctx.m_has_more = req.keepalive();
-	}
-}
 
 void falco_grpc_server::thread_process(int thread_index)
 {
