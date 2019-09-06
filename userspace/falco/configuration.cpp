@@ -148,6 +148,14 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 		m_outputs.push_back(http_output);
 	}
 
+	falco_outputs::output_config grpc_output;
+	grpc_output.name = "grpc";
+	if(m_config->get_scalar<bool>("grpc_output", "enabled", false))
+	{
+		// todo > grpc_output is enabled but we should constraint it to the grpc server being enabled too
+		m_outputs.push_back(grpc_output);
+	}
+
 	if (m_outputs.size() == 0)
 	{
 		throw invalid_argument("Error reading config file (" + m_config_file + "): No outputs configured. Please configure at least one output file output enabled but no filename in configuration block");

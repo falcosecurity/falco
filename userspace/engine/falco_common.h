@@ -75,7 +75,7 @@ public:
 
 	void set_inspector(sinsp *inspector);
 
-        // Priority levels, as a vector of strings
+    // Priority levels, as a vector of strings
 	static std::vector<std::string> priority_names;
 
 	// Same as numbers/indices into the above vector
