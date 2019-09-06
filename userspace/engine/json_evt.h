@@ -109,16 +109,22 @@ class json_event_filter_check : public gen_event_filter_check
 {
 public:
 
+	static std::string no_value;
+
 	enum index_mode {
-		IDX_REQUIRED,
+		IDX_REQUIRED = 0,
 		IDX_ALLOWED,
 		IDX_NONE
 	};
 
+	static std::vector<std::string> s_index_mode_strs;
+
 	enum index_type {
-		IDX_KEY,
+		IDX_KEY = 0,
 		IDX_NUMERIC
 	};
+
+	static std::vector<std::string> s_index_type_strs;
 
 	// A struct describing a single filtercheck field ("ka.user")
 	struct field_info {
@@ -142,14 +148,13 @@ public:
 	struct check_info {
 		std::string m_name;
 		std::string m_desc;
+		std::string m_class_info;
 
 		std::list<field_info> m_fields;
 	};
 
 	json_event_filter_check();
 	virtual ~json_event_filter_check();
-
-	static std::string no_value;
 
 	virtual int32_t parse_field_name(const char* str, bool alloc_state, bool needed_for_filtering);
 	void add_filter_value(const char* str, uint32_t len, uint32_t i = 0 );

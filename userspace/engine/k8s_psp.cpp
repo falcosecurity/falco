@@ -33,30 +33,6 @@ k8s_psp_converter::~k8s_psp_converter()
 {
 }
 
-static std::string ranges_join(inja::Arguments& args)
-{
-	std::string delim = *(args.at(0));
-	const nlohmann::json *ranges = args.at(1);
-
-	std::string ret;
-	bool first = true;
-
-	for(auto &range : *ranges)
-	{
-		if(!first)
-		{
-			ret += delim;
-		}
-		first = false;
-
-		ret += range["min"];
-		ret += ":";
-		ret += range["max"];
-	}
-
-	return ret;
-}
-
 static std::string items_join(inja::Arguments& args)
 {
 	std::string delim = *(args.at(0));
@@ -73,7 +49,9 @@ static std::string items_join(inja::Arguments& args)
 		}
 		first = false;
 
+		ret += "\"";
 		ret += item;
+		ret += "\"";
 	}
 
 	return ret;
@@ -86,7 +64,6 @@ std::string k8s_psp_converter::generate_rules(const std::string &psp_yaml, const
 	try {
 		inja::Environment env;
 
-		env.add_callback("rjoin", 2, ranges_join);
 		env.add_callback("join", 2, items_join);
 		env.set_line_statement("DO_NOT_USE_LINE_STATEMENTS");
 
@@ -98,17 +75,27 @@ std::string k8s_psp_converter::generate_rules(const std::string &psp_yaml, const
 	}
 }
 
-nlohmann::json k8s_psp_converter::parse_ranges(const YAML::Node &node)
+nlohmann::json k8s_psp_converter::parse_ranges(const YAML::Node &node, bool create_objs)
 {
 	nlohmann::json ret = nlohmann::json::array();
 
 	for(auto &range : node)
 	{
-		nlohmann::json r;
-		r["min"] = range["min"].as<string>();
-		r["max"] = range["max"].as<string>();
+		if(create_objs)
+		{
+			nlohmann::json r;
+			r["min"] = range["min"].as<string>();
+			r["max"] = range["max"].as<string>();
+			ret.push_back(r);
+		}
+		else
+		{
+			std::string r = range["min"].as<string>() +
+				":" +
+				range["max"].as<string>();
 
-		ret.push_back(r);
+			ret.push_back(r);
+		}
 	}
 
 	return ret;
@@ -142,8 +129,10 @@ void k8s_psp_converter::init_params(nlohmann::json &params)
 	params["must_run_fs_groups"] = nlohmann::json::array();
 	params["may_run_fs_groups"] = nlohmann::json::array();
 	params["must_run_as_users"] = nlohmann::json::array();
+	params["must_run_as_users_objs"] = nlohmann::json::array();
 	params["must_run_as_non_root"] = false;
 	params["must_run_as_groups"] = nlohmann::json::array();
+	params["must_run_as_groups_objs"] = nlohmann::json::array();
 	params["may_run_as_groups"] = nlohmann::json::array();
 	params["read_only_root_filesystem"] = false;
 	params["must_run_supplemental_groups"] = nlohmann::json::array();
@@ -298,6 +287,9 @@ void k8s_psp_converter::load_yaml(const std::string &psp_yaml)
 			{
 				m_params["must_run_as_users"] = parse_ranges(spec["runAsUser"]["ranges"]);
 
+				bool create_objs=true;
+				m_params["must_run_as_users_objs"] = parse_ranges(spec["runAsUser"]["ranges"], create_objs);
+
 				// *Not* adding no_value, as a uid must be specified
 			}
 			else if (rule == "MustRunAsNonRoot")
@@ -321,6 +313,9 @@ void k8s_psp_converter::load_yaml(const std::string &psp_yaml)
 			if(rule == "MustRunAs")
 			{
 				m_params["must_run_as_groups"] = parse_ranges(spec["runAsGroup"]["ranges"]);
+
+				bool create_objs=true;
+				m_params["must_run_as_groups_objs"] = parse_ranges(spec["runAsGroup"]["ranges"], create_objs);
 
 				// *Not* adding no_value, as a gid must be specified
 			}

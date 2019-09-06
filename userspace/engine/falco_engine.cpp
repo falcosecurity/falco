@@ -86,6 +86,28 @@ uint32_t falco_engine::engine_version()
 
 #define CONSOLE_LINE_LEN 79
 
+static void wrap_text(const std::string &str, uint32_t initial_pos, uint32_t indent, uint32_t line_len)
+{
+	size_t len = str.size();
+
+	for(uint32_t l = 0; l < len; l++)
+	{
+		if(l % (line_len - indent) == 0 && l != 0)
+		{
+			printf("\n");
+
+			for(uint32_t m = 0; m < indent; m++)
+			{
+				printf(" ");
+			}
+		}
+
+		printf("%c", str.at(l));
+	}
+
+	printf("\n");
+}
+
 void falco_engine::list_fields(bool names_only)
 {
 	for(auto &chk_field : json_factory().get_fields())
@@ -94,12 +116,15 @@ void falco_engine::list_fields(bool names_only)
 		{
 			printf("\n----------------------\n");
 			printf("Field Class: %s (%s)\n\n", chk_field.m_name.c_str(), chk_field.m_desc.c_str());
+			if(chk_field.m_class_info != "")
+			{
+				wrap_text(chk_field.m_class_info, 0, 0, CONSOLE_LINE_LEN);
+				printf("\n");
+			}
 		}
 
 		for(auto &field : chk_field.m_fields)
 		{
-			uint32_t l, m;
-
 			printf("%s", field.m_name.c_str());
 
 			if(names_only)
@@ -115,29 +140,28 @@ void falco_engine::list_fields(bool names_only)
 				namelen = 0;
 			}
 
-			for(l = 0; l < DESCRIPTION_TEXT_START - namelen; l++)
+			for(uint32_t l = 0; l < DESCRIPTION_TEXT_START - namelen; l++)
 			{
 				printf(" ");
 			}
 
-			size_t desclen = field.m_desc.size();
-
-			for(l = 0; l < desclen; l++)
+			std::string desc = field.m_desc;
+			switch(field.m_idx_mode)
 			{
-				if(l % (CONSOLE_LINE_LEN - DESCRIPTION_TEXT_START) == 0 && l != 0)
-				{
-					printf("\n");
+			case json_event_filter_check::IDX_REQUIRED:
+			case json_event_filter_check::IDX_ALLOWED:
+				desc += " (";
+				desc += json_event_filter_check::s_index_mode_strs[field.m_idx_mode];
+				desc += ", ";
+				desc += json_event_filter_check::s_index_type_strs[field.m_idx_type];
+				desc += ")";
+				break;
+			case json_event_filter_check::IDX_NONE:
+			default:
+				break;
+			};
 
-					for(m = 0; m < DESCRIPTION_TEXT_START; m++)
-					{
-						printf(" ");
-					}
-				}
-
-				printf("%c", field.m_desc.at(l));
-			}
-
-			printf("\n");
+			wrap_text(desc, namelen, DESCRIPTION_TEXT_START, CONSOLE_LINE_LEN);
 		}
 	}
 }

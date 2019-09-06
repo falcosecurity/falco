@@ -51,7 +51,7 @@ private:
 
 	void init_params(nlohmann::json &params);
 
-	nlohmann::json parse_ranges(const YAML::Node &node);
+	nlohmann::json parse_ranges(const YAML::Node &node, bool create_objs=false);
 
 	nlohmann::json parse_sequence(const YAML::Node &node);
 
