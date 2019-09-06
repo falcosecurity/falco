@@ -32,9 +32,14 @@ public:
 		return instance;
 	}
 
-	falco_output_response_cq queue()
+	bool try_pop(falco_output_response& res)
 	{
-		return m_queue;
+		return m_queue.try_pop(res);
+	}
+
+	void push(falco_output_response& res)
+	{
+		m_queue.push(res);
 	}
 
 private:

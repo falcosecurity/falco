@@ -37,15 +37,14 @@ void falco_grpc_server_impl::subscribe(const stream_context& ctx, const falco_ou
 	}
 	else
 	{
-		auto m_event_queue = falco_output_queue::get().queue();
 		// Start (or continue) streaming
 		// ctx.m_status == stream_context::STREAMING
-		if(m_event_queue.try_pop(res) && !req.keepalive())
+		if(falco_output_queue::get().try_pop(res) && !req.keepalive())
 		{
 			ctx.m_has_more = true;
 			return;
 		}
-		while(!m_event_queue.try_pop(res) && req.keepalive())
+		while(!falco_output_queue::get().try_pop(res) && req.keepalive())
 		{
 		}
 
