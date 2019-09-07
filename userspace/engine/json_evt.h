@@ -29,6 +29,7 @@ limitations under the License.
 
 #include <nlohmann/json.hpp>
 
+#include "prefix_search.h"
 #include "gen_filter.h"
 
 class json_event : public gen_event
@@ -135,6 +136,8 @@ public:
 		index_mode m_idx_mode;
 		index_type m_idx_type;
 
+		bool m_uses_paths;
+
 		// The variants allow for brace-initialization either
 		// with just the name/desc or additionally with index
 		// information
@@ -142,6 +145,7 @@ public:
 		field_info(std::string name, std::string desc);
 		field_info(std::string name, std::string desc, index_mode mode);
 		field_info(std::string name, std::string desc, index_mode mode, index_type itype);
+		field_info(std::string name, std::string desc, index_mode mode, index_type itype, bool uses_paths);
 		virtual ~field_info();
 	};
 
@@ -273,6 +277,11 @@ private:
 	// a field ka.req.container.image returns all container images
 	// for all pods within a request.
 	extracted_values_t m_evalues;
+
+	// If true, this filtercheck works on paths, which enables
+	// some extra bookkeeping to allow for path prefix searches.
+	bool m_uses_paths;
+	path_prefix_search m_prefix_search;
 };
 
 class jevt_filter_check : public json_event_filter_check

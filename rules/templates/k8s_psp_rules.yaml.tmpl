@@ -143,7 +143,7 @@
 - rule: PSP Violation (allowedHostPaths)
   desc: >
     Detect a psp validation failure for a hostPath volume with a path outside of the allowed set using k8s audit logs
-  condition: psp_ka_container and not ka.req.pod.volumes.hostpath in ({{ join(",", allowed_host_paths) }})
+  condition: psp_ka_container and not ka.req.pod.volumes.hostpath pmatch ({{ join(",", allowed_host_paths) }})
   output: Pod Security Policy {{ policy_name }} validation failure--hostPath volume mounting path outside of allowed set {{ join(",", allowed_host_paths) }} (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace images=%ka.req.pod.containers.image spec=%jevt.value[/requestObject/spec])
   priority: WARNING
   source: k8s_audit

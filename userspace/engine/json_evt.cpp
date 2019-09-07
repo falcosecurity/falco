@@ -329,7 +329,8 @@ std::string json_event_filter_check::json_as_string(const json &j)
 
 json_event_filter_check::field_info::field_info():
 	m_idx_mode(IDX_NONE),
-	m_idx_type(IDX_NUMERIC)
+	m_idx_type(IDX_NUMERIC),
+	m_uses_paths(false)
 {
 }
 
@@ -338,7 +339,8 @@ json_event_filter_check::field_info::field_info(std::string name,
 	m_name(name),
 	m_desc(desc),
 	m_idx_mode(IDX_NONE),
-	m_idx_type(IDX_NUMERIC)
+	m_idx_type(IDX_NUMERIC),
+	m_uses_paths(false)
 {
 }
 
@@ -348,7 +350,8 @@ json_event_filter_check::field_info::field_info(std::string name,
 	m_name(name),
 	m_desc(desc),
 	m_idx_mode(mode),
-	m_idx_type(IDX_NUMERIC)
+	m_idx_type(IDX_NUMERIC),
+	m_uses_paths(false)
 {
 }
 
@@ -359,7 +362,21 @@ json_event_filter_check::field_info::field_info(std::string name,
 	m_name(name),
 	m_desc(desc),
 	m_idx_mode(mode),
-	m_idx_type(itype)
+	m_idx_type(itype),
+	m_uses_paths(false)
+{
+}
+
+json_event_filter_check::field_info::field_info(std::string name,
+						std::string desc,
+						index_mode mode,
+						index_type itype,
+						bool uses_paths):
+	m_name(name),
+	m_desc(desc),
+	m_idx_mode(mode),
+	m_idx_type(itype),
+	m_uses_paths(uses_paths)
 {
 }
 
@@ -407,6 +424,8 @@ int32_t json_event_filter_check::parse_field_name(const char *str, bool alloc_st
 		{
 			throw falco_exception("Could not find alias for field name " + info.m_name);
 		}
+
+		m_uses_paths = info.m_uses_paths;
 
 		auto &al = m_aliases[info.m_name];
 
@@ -510,6 +529,19 @@ bool json_event_filter_check::compare(gen_event *evt)
 		}
 		return true;
 		break;
+	case CO_PMATCH:
+		for(auto &item : evalues->second)
+		{
+			if(item.as_string() != no_value)
+			{
+				if(!m_prefix_search.match(item.as_string().c_str()))
+				{
+					return false;
+				}
+			}
+		}
+		return true;
+		break;
 	case CO_INTERSECTS:
 		std::set_intersection(evalues->second.begin(), evalues->second.end(),
 				      m_values.begin(), m_values.end(),
@@ -590,6 +622,11 @@ void json_event_filter_check::add_extracted_value(const std::string &str)
 {
 	m_evalues.first.emplace_back(json_event_value(str));
 	m_evalues.second.emplace(json_event_value(str));
+
+	if(m_uses_paths)
+	{
+		m_prefix_search.add_search_path(str);
+	}
 }
 
 void json_event_filter_check::add_extracted_value_num(int64_t val)
@@ -1065,7 +1102,7 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 		   {"ka.req.pod.containers.add_capabilities", "When the request object refers to a pod, all capabilities to add when running the container.", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.req.service.type", "When the request object refers to a service, the service type"},
 		   {"ka.req.service.ports", "When the request object refers to a service, the service's ports", IDX_ALLOWED, IDX_NUMERIC},
-		   {"ka.req.pod.volumes.hostpath", "When the request object refers to a pod, all hostPath paths specified for all volumes", IDX_ALLOWED, IDX_NUMERIC},
+		   {"ka.req.pod.volumes.hostpath", "When the request object refers to a pod, all hostPath paths specified for all volumes", IDX_ALLOWED, IDX_NUMERIC, true},
 		   {"ka.req.pod.volumes.flexvolume_driver", "When the request object refers to a pod, all flexvolume drivers specified for all volumes", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.req.pod.volumes.volume_type", "When the request object refers to a pod, all volume types for all volumes", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.resp.name", "The response object name"},
@@ -1119,8 +1156,8 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 			{"ka.req.pod.containers.add_capabilities", {{"/requestObject/spec/containers"_json_pointer, "/securityContext/capabilities/add"_json_pointer}}},
 			{"ka.req.service.type", {{"/requestObject/spec/type"_json_pointer}}},
 			{"ka.req.service.ports", {{"/requestObject/spec/ports"_json_pointer}}},
-                        {"ka.req.pod.volumes.hostpath", {{"/requestObject/spec/containers"_json_pointer, "/volumes"_json_pointer, "/hostPath"_json_pointer}}},
-			{"ka.req.pod.volumes.flexvolume_driver", {{"/requestObject/spec/containers"_json_pointer, "/volumes"_json_pointer, "/flexVolume/driver"_json_pointer}}},
+                        {"ka.req.pod.volumes.hostpath", {{"/requestObject/spec/volumes"_json_pointer, "/hostPath"_json_pointer}}},
+			{"ka.req.pod.volumes.flexvolume_driver", {{"/requestObject/spec/volumes"_json_pointer, "/flexVolume/driver"_json_pointer}}},
 			{"ka.req.pod.volumes.volume_type", {extract_volume_types}},
 			{"ka.resp.name", {{"/responseObject/metadata/name"_json_pointer}}},
 			{"ka.response.code", {{"/responseStatus/code"_json_pointer}}},

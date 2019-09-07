@@ -247,7 +247,7 @@ local G = {
           symb("endswith") / "endswith";
   SetOp = kw("in") / "in" +
           kw("has") / "has" +
-          kw("contains") / "contains";
+          kw("contains") / "contains" +
           kw("pmatch") / "pmatch";
   UnaryBoolOp = kw("not") / "not";
   ExistsOp = kw("exists") / "exists";
