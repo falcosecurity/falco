@@ -222,24 +222,18 @@ bool json_event_value::operator>(const json_event_value &val) const
 
 bool json_event_value::startswith(const json_event_value &val) const
 {
-	if(m_type == JT_STRING &&
-	   val.m_type == JT_STRING)
-	{
-		return (m_stringval.compare(0, val.m_stringval.size(), val.m_stringval) == 0);
-	}
+	std::string str = as_string();
+	std::string valstr = val.as_string();
 
-	return false;
+	return (str.compare(0, valstr.size(), valstr) == 0);
 }
 
 bool json_event_value::contains(const json_event_value &val) const
 {
-	if(m_type == JT_STRING &&
-	   val.m_type == JT_STRING)
-	{
-		return (m_stringval.find(val.m_stringval) != string::npos);
-	}
+	std::string str = as_string();
+	std::string valstr = val.as_string();
 
-	return false;
+	return (str.find(valstr) != string::npos);
 }
 
 bool json_event_value::parse_as_pair_int64(std::pair<int64_t,int64_t> &pairval, const std::string &val)
@@ -549,14 +543,14 @@ bool json_event_filter_check::compare(gen_event *evt)
 		return (setvals.size() > 0);
 		break;
 	case CO_HAS:
-		for(auto &item : m_values)
+		for(auto &item : evalues->second)
 		{
-			if(evalues->second.find(item) == evalues->second.end())
+			if(m_values.find(item) != m_values.end())
 			{
-				return false;
+				return true;
 			}
 		}
-		return true;
+		return false;
 		break;
 	case CO_LT:
 		return (evalues->first.size() == 1 &&
@@ -928,7 +922,16 @@ bool k8s_audit_filter_check::extract_rule_attrs(const json &j,
 	{
 		const json &rules = j.at(rules_ptr);
 
-		jchk.add_extracted_value(rules.at(prop));
+		for (auto &rule : rules)
+		{
+			if(rule.find(prop) != rule.end())
+			{
+				for (auto &item : rule.at(prop))
+				{
+					jchk.add_extracted_value(json_as_string(item));
+				}
+			}
+		}
 	}
 	catch(json::out_of_range &e)
 	{
@@ -1156,7 +1159,7 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 			{"ka.req.pod.containers.add_capabilities", {{"/requestObject/spec/containers"_json_pointer, "/securityContext/capabilities/add"_json_pointer}}},
 			{"ka.req.service.type", {{"/requestObject/spec/type"_json_pointer}}},
 			{"ka.req.service.ports", {{"/requestObject/spec/ports"_json_pointer}}},
-                        {"ka.req.pod.volumes.hostpath", {{"/requestObject/spec/volumes"_json_pointer, "/hostPath"_json_pointer}}},
+                        {"ka.req.pod.volumes.hostpath", {{"/requestObject/spec/volumes"_json_pointer, "/hostPath/path"_json_pointer}}},
 			{"ka.req.pod.volumes.flexvolume_driver", {{"/requestObject/spec/volumes"_json_pointer, "/flexVolume/driver"_json_pointer}}},
 			{"ka.req.pod.volumes.volume_type", {extract_volume_types}},
 			{"ka.resp.name", {{"/responseObject/metadata/name"_json_pointer}}},

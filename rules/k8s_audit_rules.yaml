@@ -255,7 +255,7 @@
 
 - rule: ClusterRole With Wildcard Created
   desc: Detect any attempt to create a Role/ClusterRole with wildcard resources or verbs
-  condition: kevt and (role or clusterrole) and kcreate and (ka.req.role.rules.resources contains '"*"' or ka.req.role.rules.verbs contains '"*"')
+  condition: kevt and (role or clusterrole) and kcreate and (ka.req.role.rules.resources has ("*") or ka.req.role.rules.verbs has ("*"))
   output: Created Role/ClusterRole with wildcard (user=%ka.user.name role=%ka.target.name rules=%ka.req.role.rules)
   priority: WARNING
   source: k8s_audit
