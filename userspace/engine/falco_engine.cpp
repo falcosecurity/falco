@@ -20,6 +20,7 @@ limitations under the License.
 #include <fstream>
 
 #include "falco_engine.h"
+#include "falco_utils.h"
 #include "falco_engine_version.h"
 #include "config_falco_engine.h"
 
@@ -91,12 +92,15 @@ void falco_engine::list_fields(bool names_only)
 		{
 			printf("\n----------------------\n");
 			printf("Field Class: %s (%s)\n\n", chk_field.m_name.c_str(), chk_field.m_desc.c_str());
+			if(chk_field.m_class_info != "")
+			{
+				std::string str = falco::utils::wrap_text(chk_field.m_class_info, 0, 0, CONSOLE_LINE_LEN);
+				printf("%s\n", str.c_str());
+			}
 		}
 
 		for(auto &field : chk_field.m_fields)
 		{
-			uint32_t l, m;
-
 			printf("%s", field.m_name.c_str());
 
 			if(names_only)
@@ -112,29 +116,29 @@ void falco_engine::list_fields(bool names_only)
 				namelen = 0;
 			}
 
-			for(l = 0; l < DESCRIPTION_TEXT_START - namelen; l++)
+			for(uint32_t l = 0; l < DESCRIPTION_TEXT_START - namelen; l++)
 			{
 				printf(" ");
 			}
 
-			size_t desclen = field.m_desc.size();
-
-			for(l = 0; l < desclen; l++)
+			std::string desc = field.m_desc;
+			switch(field.m_idx_mode)
 			{
-				if(l % (CONSOLE_LINE_LEN - DESCRIPTION_TEXT_START) == 0 && l != 0)
-				{
-					printf("\n");
+			case json_event_filter_check::IDX_REQUIRED:
+			case json_event_filter_check::IDX_ALLOWED:
+				desc += " (";
+				desc += json_event_filter_check::s_index_mode_strs[field.m_idx_mode];
+				desc += ", ";
+				desc += json_event_filter_check::s_index_type_strs[field.m_idx_type];
+				desc += ")";
+				break;
+			case json_event_filter_check::IDX_NONE:
+			default:
+				break;
+			};
 
-					for(m = 0; m < DESCRIPTION_TEXT_START; m++)
-					{
-						printf(" ");
-					}
-				}
-
-				printf("%c", field.m_desc.at(l));
-			}
-
-			printf("\n");
+			std::string str = falco::utils::wrap_text(desc, namelen, DESCRIPTION_TEXT_START, CONSOLE_LINE_LEN);
+			printf("%s\n", str.c_str());
 		}
 	}
 }
