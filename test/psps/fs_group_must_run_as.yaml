@@ -1,0 +1,12 @@
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  annotations:
+    falco-rules-psp-images: "[nginx]"
+  name: fs_group_must_run_as_30
+spec:
+  fsGroup:
+    rule: "MustRunAs"
+    ranges:
+      - min: 30
+        max: 40

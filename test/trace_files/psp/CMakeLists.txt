@@ -1,7 +1,6 @@
-add_subdirectory(k8s_audit)
-add_subdirectory(psp)
 # Note: list of traces is created at cmake time, not build time
 file(GLOB test_trace_files
+	"${CMAKE_CURRENT_SOURCE_DIR}/*.json"
 	"${CMAKE_CURRENT_SOURCE_DIR}/*.scap")
 
 foreach(trace_file_path ${test_trace_files})

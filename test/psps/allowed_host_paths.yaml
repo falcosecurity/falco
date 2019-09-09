@@ -1,0 +1,11 @@
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  annotations:
+    falco-rules-psp-images: "[nginx]"
+  name: only_mount_host_usr
+spec:
+  allowedHostPaths:
+    - pathPrefix: /usr
+      readOnly: true
+
