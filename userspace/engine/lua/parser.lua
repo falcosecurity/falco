@@ -192,8 +192,7 @@ local G = {
 
   RelationalExpression =
      rel(terminal "FieldName", V"RelOp", V"Value") +
-     rel(terminal "FieldName", V"InOp", V"InList") +
-     rel(terminal "FieldName", V"PmatchOp", V"InList") +
+     rel(terminal "FieldName", V"SetOp", V"InList") +
      V"PrimaryExp";
 
   PrimaryExp = symb("(") * V"Filter" * symb(")");
@@ -214,8 +213,9 @@ local G = {
   Identifier = V"idStart" * V"idRest"^0;
   Macro = V"idStart" * V"idRest"^0 * -P".";
   Int = digit^1;
-  PathString = (alnum + S'.-_/*?')^1;
-  Index = V"Int" + V"PathString";
+  PathString = (alnum + S',.-_/*?')^1;
+  PortRangeString = (V"Int" + S":,")^1;
+  Index = V"PortRangeString" + V"Int" + V"PathString";
   FieldName = V"Identifier" * (P"." + V"Identifier")^1 * (P"[" * V"Index" * P"]")^-1;
   Name = C(V"Identifier") * -V"idRest";
   Hex = (P("0x") + P("0X")) * xdigit^1;
@@ -243,8 +243,9 @@ local G = {
           symb("glob") / "glob" +
           symb("startswith") / "startswith" +
           symb("endswith") / "endswith";
-  InOp = kw("in") / "in";
-  PmatchOp = kw("pmatch") / "pmatch";
+  SetOp = kw("in") / "in" +
+          kw("intersects") / "intersects" +
+          kw("pmatch") / "pmatch";
   UnaryBoolOp = kw("not") / "not";
   ExistsOp = kw("exists") / "exists";
 

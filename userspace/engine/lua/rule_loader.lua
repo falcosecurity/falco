@@ -96,7 +96,9 @@ local function install_filter(node, filter_api_lib, lua_parser, parent_bool_op)
       filter_api_lib.unnest(lua_parser) -- io.write(")")
 
    elseif t == "BinaryRelOp" then
-      if (node.operator == "in" or node.operator == "pmatch") then
+      if (node.operator == "in" or
+          node.operator == "intersects" or
+	  node.operator == "pmatch") then
 	 elements = map(function (el) return el.value end, node.right.elements)
 	 filter_api_lib.rel_expr(lua_parser, node.left.value, node.operator, elements, node.index)
       else
