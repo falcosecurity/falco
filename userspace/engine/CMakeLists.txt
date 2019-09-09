@@ -22,6 +22,7 @@ set(FALCO_ENGINE_SOURCE_FILES
 	rules.cpp
 	falco_common.cpp
 	falco_engine.cpp
+	falco_utils.cpp
 	json_evt.cpp
 	ruleset.cpp
 	token_bucket.cpp
