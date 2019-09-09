@@ -1,0 +1,165 @@
+#
+# Copyright (C) 2016-2018 Draios Inc dba Sysdig.
+#
+# This file is part of falco .
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+# File(s) or Directories containing Falco rules, loaded at startup.
+# The name "rules_file" is only for backwards compatibility.
+# If the entry is a file, it will be read directly. If the entry is a directory,
+# every file in that directory will be read, in alphabetical order.
+#
+# falco_rules.yaml ships with the falco package and is overridden with
+# every new software version. falco_rules.local.yaml is only created
+# if it doesn't exist. If you want to customize the set of rules, add
+# your customizations to falco_rules.local.yaml.
+#
+# The files will be read in the order presented here, so make sure if
+# you have overrides they appear in later files.
+rules_file: []
+
+# If true, the times displayed in log messages and output messages
+# will be in ISO 8601. By default, times are displayed in the local
+# time zone, as governed by /etc/localtime.
+time_format_iso_8601: false
+
+# Whether to output events in json or text
+json_output: false
+
+# When using json output, whether or not to include the "output" property
+# itself (e.g. "File below a known binary directory opened for writing
+# (user=root ....") in the json output.
+json_include_output_property: true
+
+# Send information logs to stderr and/or syslog Note these are *not* security
+# notification logs! These are just Falco lifecycle (and possibly error) logs.
+log_stderr: true
+log_syslog: true
+
+# Minimum log level to include in logs. Note: these levels are
+# separate from the priority field of rules. This refers only to the
+# log level of falco's internal logging. Can be one of "emergency",
+# "alert", "critical", "error", "warning", "notice", "info", "debug".
+log_level: info
+
+# Minimum rule priority level to load and run. All rules having a
+# priority more severe than this level will be loaded/run.  Can be one
+# of "emergency", "alert", "critical", "error", "warning", "notice",
+# "info", "debug".
+priority: debug
+
+# Whether or not output to any of the output channels below is
+# buffered. Defaults to false
+buffered_outputs: false
+
+# Falco uses a shared buffer between the kernel and userspace to pass
+# system call information. When falco detects that this buffer is
+# full and system calls have been dropped, it can take one or more of
+# the following actions:
+#   - "ignore": do nothing. If an empty list is provided, ignore is assumed.
+#   - "log": log a CRITICAL message noting that the buffer was full.
+#   - "alert": emit a falco alert noting that the buffer was full.
+#   - "exit": exit falco with a non-zero rc.
+#
+# The rate at which log/alert messages are emitted is governed by a
+# token bucket. The rate corresponds to one message every 30 seconds
+# with a burst of 10 messages.
+
+syscall_event_drops:
+  actions:
+    - log
+    - alert
+  rate: .03333
+  max_burst: 10
+
+# A throttling mechanism implemented as a token bucket limits the
+# rate of falco notifications. This throttling is controlled by the following configuration
+# options:
+#  - rate: the number of tokens (i.e. right to send a notification)
+#    gained per second. Defaults to 1.
+#  - max_burst: the maximum number of tokens outstanding. Defaults to 1000.
+#
+# With these defaults, falco could send up to 1000 notifications after
+# an initial quiet period, and then up to 1 notification per second
+# afterward. It would gain the full burst back after 1000 seconds of
+# no activity.
+
+outputs:
+  rate: 1
+  max_burst: 1000
+
+# Where security notifications should go.
+# Multiple outputs can be enabled.
+
+syslog_output:
+  enabled: true
+
+# If keep_alive is set to true, the file will be opened once and
+# continuously written to, with each output message on its own
+# line. If keep_alive is set to false, the file will be re-opened
+# for each output message.
+#
+# Also, the file will be closed and reopened if falco is signaled with
+# SIGUSR1.
+
+file_output:
+  enabled: false
+  keep_alive: false
+  filename: ./events.txt
+
+stdout_output:
+  enabled: true
+
+# Falco contains an embedded webserver that can be used to accept K8s
+# Audit Events. These config options control the behavior of that
+# webserver. (By default, the webserver is disabled).
+#
+# The ssl_certificate is a combination SSL Certificate and corresponding
+# key contained in a single file. You can generate a key/cert as follows:
+#
+# $ openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out certificate.pem
+# $ cat certificate.pem key.pem > falco.pem
+# $ sudo cp falco.pem /etc/falco/falco.pem
+
+webserver:
+  enabled: true
+  listen_port: 8765
+  k8s_audit_endpoint: /k8s_audit
+  ssl_enabled: false
+  ssl_certificate: /etc/falco/falco.pem
+
+# Possible additional things you might want to do with program output:
+#   - send to a slack webhook:
+#         program: "jq '{text: .output}' | curl -d @- -X POST https://hooks.slack.com/services/XXX"
+#   - logging (alternate method than syslog):
+#         program: logger -t falco-test
+#   - send over a network connection:
+#         program: nc host.example.com 80
+
+# If keep_alive is set to true, the program will be started once and
+# continuously written to, with each output message on its own
+# line. If keep_alive is set to false, the program will be re-spawned
+# for each output message.
+#
+# Also, the program will be closed and reopened if falco is signaled with
+# SIGUSR1.
+program_output:
+  enabled: false
+  keep_alive: false
+  program: "jq '{text: .output}' | curl -d @- -X POST https://hooks.slack.com/services/XXX"
+
+http_output:
+  enabled: false
+  url: http://some.url

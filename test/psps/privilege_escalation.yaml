@@ -1,0 +1,8 @@
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  annotations:
+    falco-rules-psp-images: "[nginx]"
+  name: no_privileged
+spec:
+  allowPrivilegeEscalation: false

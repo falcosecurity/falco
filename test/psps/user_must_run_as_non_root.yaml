@@ -1,0 +1,9 @@
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  annotations:
+    falco-rules-psp-images: "[nginx]"
+  name: user_must_run_as_non_root
+spec:
+  runAsUser:
+    rule: "MustRunAsNonRoot"
