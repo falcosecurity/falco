@@ -1,6 +1,8 @@
 apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
 metadata:
+  annotations:
+    falco-rules-psp-images: [nginx]
   name: allow_capability_sys_nice
 spec:
   allowedCapabilities:

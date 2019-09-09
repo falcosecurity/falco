@@ -117,7 +117,7 @@ void k8s_psp_converter::init_params(nlohmann::json &params)
 {
 	params.clear();
 	params["policy_name"] = "unknown";
-	params["image_list"] = "[]";
+	params["image_list"] = nlohmann::json::array();
 	params["allow_privileged"] = true;
 	params["allow_host_pid"] = true;
 	params["allow_host_ipc"] = true;
@@ -168,8 +168,21 @@ void k8s_psp_converter::load_yaml(const std::string &psp_yaml)
 		}
 
 		m_params["policy_name"] = metadata["name"].as<std::string>();
-		// XXX/mstemm fill in
-		m_params["image_list"] = "[nginx]";
+
+		// The generated rules need a set of images for which
+		// to scope the rules. A annotation with the key
+		// "falco-rules-psp-images" provides the list of images.
+
+		if(!metadata["annotations"] ||
+		   !metadata["annotations"]["falco-rules-psp-images"])
+		{
+			throw falco_exception("PSP Yaml Document does not have an annotation \"falco-rules-psp-images\" that lists the images for which the generated rules should apply");
+		}
+
+		for(const auto &image : metadata["annotations"]["falco-rules-psp-images"])
+		{
+			m_params["image_list"].push_back(image.as<std::string>());
+		}
 
 		if(!root["spec"])
 		{
