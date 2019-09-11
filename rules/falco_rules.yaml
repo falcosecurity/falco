@@ -331,7 +331,9 @@
 # for efficiency.
 - macro: inbound_outbound
   condition: >
-    (((evt.type in (accept,listen,connect) and evt.dir=<)) or
+    (((evt.type in (accept,listen,connect) and evt.dir=<) or
+      (evt.type in (recvfrom,recvmsg,sendto,sendmsg) and evt.dir=< and
+       fd.l4proto != tcp and fd.connected=false and fd.name_changed=true)) and
      (fd.typechar = 4 or fd.typechar = 6) and
      (fd.ip != "0.0.0.0" and fd.net != "127.0.0.0/8") and
      (evt.rawres >= 0 or evt.res = EINPROGRESS))
@@ -2580,4 +2582,3 @@
 # Application rules have moved to application_rules.yaml. Please look
 # there if you want to enable them by adding to
 # falco_rules.local.yaml.
-
