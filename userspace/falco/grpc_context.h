@@ -24,6 +24,9 @@ limitations under the License.
 #include <grpc++/grpc++.h>
 #endif
 
+const std::string meta_session = "session_id";
+const std::string meta_request = "request_id";
+
 class context
 {
 public:
