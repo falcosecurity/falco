@@ -16,12 +16,29 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+#include <sstream>
+
 #include "grpc_context.h"
 
 context::context(grpc::ServerContext* ctx):
 	m_ctx(ctx)
 {
-	// todo: set thread-specific prefix "[session id][request id]"
+	std::string session_id;
+	std::string request_id;
+
+	get_metadata(meta_session, session_id);
+	get_metadata(meta_session, request_id);
+
+	std::stringstream meta;
+	if(!session_id.empty())
+	{
+		meta << "[sid=" << session_id << "]";
+	}
+
+	if(!request_id.empty())
+	{
+		meta << "[rid=" << request_id << "]";
+	}
 }
 
 void context::get_metadata(std::string key, std::string& val)
