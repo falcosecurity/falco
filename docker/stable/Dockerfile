@@ -27,6 +27,7 @@ RUN apt-get update \
 	jq \
 	libc6-dev \
 	libelf-dev \
+	libmpx2 \
 	llvm-7 \
 	netcat \
 	xz-utils \
