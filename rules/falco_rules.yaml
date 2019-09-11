@@ -335,7 +335,7 @@
       (evt.type in (recvfrom,recvmsg,sendto,sendmsg) and evt.dir=< and
        fd.l4proto != tcp and fd.connected=false and fd.name_changed=true)) and
      (fd.typechar = 4 or fd.typechar = 6) and
-     (fd.ip != "0.0.0.0" and fd.net != "127.0.0.0/8") and
+     (fd.ip != "0.0.0.0" and fd.net != "127.0.0.0/8" and (not fd.snet in (rfc_1918_addresses)) and
      (evt.rawres >= 0 or evt.res = EINPROGRESS))
 
 - macro: ssh_port
