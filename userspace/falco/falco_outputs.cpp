@@ -301,6 +301,7 @@ int falco_outputs::handle_http(lua_State *ls)
 	return 1;
 }
 
+// TODO(fntlnz, leodido): verify if this works with k8s_audit as source
 int falco_outputs::handle_grpc(lua_State *ls)
 {
 	// TODO(fntlnz, leodido): do the checks and make sure all the fields are sent
@@ -325,12 +326,26 @@ int falco_outputs::handle_grpc(lua_State *ls)
 	// 	lua_pushstring(ls, "Unknown priority passed to to handle_grpc()");
 	// 	lua_error(ls);
 	// }
-
+	
 	falco_output_response grpc_res = falco_output_response();
-	grpc_res.set_rule((char *)lua_tostring(ls, 2));
+	
 	// grpc_res.set_source(source);
 	// grpc_res.set_priority(priority);
+
+	// rule
+	grpc_res.set_rule((char *)lua_tostring(ls, 2));
+
+	// output
 	grpc_res.set_output((char *)lua_tostring(ls, 6));
+
+	// output fields
+	auto& fields = *grpc_res.mutable_output_fields();
+
+	lua_pushnil(ls);
+	while (lua_next(ls, 7) != 0) {
+		fields[lua_tostring(ls, -2)] = lua_tostring(ls, -1);
+		lua_pop(ls, 1);
+	}
 
 	falco_output_queue::get().push(grpc_res);
 
