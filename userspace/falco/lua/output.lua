@@ -19,7 +19,7 @@ local mod = {}
 
 local outputs = {}
 
-function mod.stdout(event, rule, source, priority, priority_num, msg, options)
+function mod.stdout(event, rule, source, priority, priority_num, msg, format, options)
    mod.stdout_message(priority, priority_num, msg, outputs)
 end
 
@@ -59,7 +59,7 @@ function mod.file_open(options)
    end
 end
 
-function mod.file(event, rule, source, priority, priority_num, msg, options)
+function mod.file(event, rule, source, priority, priority_num, msg, format, options)
    mod.file_message(priority, priority_num, msg, options)
 end
 
@@ -93,7 +93,7 @@ function mod.file_reopen(options)
    end
 end
 
-function mod.syslog(event, rule, source, priority, priority_num, msg, options)
+function mod.syslog(event, rule, source, priority, priority_num, msg, format, options)
    mod.syslog_message(priority, priority_num, msg, options)
 end
 
@@ -116,7 +116,7 @@ function mod.program_open(options)
    end
 end
 
-function mod.program(event, rule, source, priority, priority_num, msg, options)
+function mod.program(event, rule, source, priority, priority_num, msg, format, options)
    mod.program_message(priority, priority_num, msg, options)
 end
 
@@ -155,7 +155,7 @@ function mod.program_reopen(options)
    end
 end
 
-function mod.http(event, rule, source, priority, priority_num, msg, options)
+function mod.http(event, rule, source, priority, priority_num, msg, format, options)
    mod.http_message(priority, priority_num, msg, options)
 end
 
@@ -169,8 +169,9 @@ end
 function mod.http_reopen()
 end
 
-function mod.grpc(event, rule, source, priority, priority_num, msg, options)
-   c_outputs.handle_grpc(event, rule, source, priority, priority_num, msg, options)
+function mod.grpc(event, rule, source, priority, priority_num, msg, format, options)
+   fields = formats.resolve_tokens(event, source, format)
+   c_outputs.handle_grpc(event, rule, source, priority, priority_num, msg, fields, options)
 end
 
 function mod.grpc_message(priority, priority_num, msg, options)
@@ -215,7 +216,7 @@ function output_event(event, rule, source, priority, priority_num, format)
    msg = formats.format_event(event, rule, source, priority, format)
 
    for index, o in ipairs(outputs) do
-      o.output(event, rule, source, priority, priority_num, msg, o.options)
+      o.output(event, rule, source, priority, priority_num, msg, format, o.options)
    end
 end
 
