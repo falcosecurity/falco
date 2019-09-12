@@ -36,6 +36,7 @@ const static struct luaL_reg ll_falco [] =
 	{"free_formatter", &falco_formats::free_formatter},
 	{"free_formatters", &falco_formats::free_formatters},
 	{"format_event", &falco_formats::format_event},
+	{"resolve_tokens", &falco_formats::resolve_tokens},
 	{NULL,NULL}
 };
 
@@ -265,3 +266,34 @@ int falco_formats::format_event (lua_State *ls)
 	return 1;
 }
 
+
+
+int falco_formats::resolve_tokens(lua_State *ls)
+{
+	if (!lua_isstring(ls, -1) ||
+	    !lua_isstring(ls, -2)) {
+		lua_pushstring(ls, "Invalid arguments passed to resolve_tokens()");
+		lua_error(ls);
+	}
+	gen_event* evt = (gen_event*)lua_topointer(ls, 1);
+	const char *source = (char *) lua_tostring(ls, 2); // TODO(fntlnz, leodido): do we need this one?
+	const char *format = (char *) lua_tostring(ls, 3);
+	string sformat = format;
+
+
+	map<string,string> values;
+
+	s_formatters->resolve_tokens((sinsp_evt *)evt, sformat, values);
+
+	lua_newtable(ls);
+	int top = lua_gettop(ls);
+	for (std::map<string, string>::iterator it = values.begin(); it != values.end(); ++it) {
+		const char* key = it->first.c_str();
+		const char* value = it->second.c_str();
+		lua_pushlstring(ls, key, it->first.size());
+		lua_pushlstring(ls, value, it->second.size());
+		lua_settable(ls, top);
+	}
+
+	return 1;
+}
