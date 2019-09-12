@@ -19,7 +19,7 @@ compiler: gcc
 env:
     - BUILD_TYPE=debug
     - BUILD_TYPE=release
-sudo: required
+dist: xenial
 services:
     - docker
 before_install:
