@@ -21,12 +21,12 @@ limitations under the License.
 
 #include "config_falco.h"
 
-
 #include "formats.h"
 #include "logger.h"
 #include "falco_output_queue.h"
 
 using namespace std;
+using namespace falco::output;
 
 const static struct luaL_reg ll_falco_outputs [] =
 {
@@ -304,6 +304,7 @@ int falco_outputs::handle_http(lua_State *ls)
 // TODO(fntlnz, leodido): verify if this works with k8s_audit as source
 int falco_outputs::handle_grpc(lua_State *ls)
 {
+	response grpc_res = response();
 	// TODO(fntlnz, leodido): do the checks and make sure all the fields are sent
 	// fixme > check parameters later
 	// if(!lua_isstring(ls, -1) ||
@@ -313,36 +314,32 @@ int falco_outputs::handle_grpc(lua_State *ls)
 	// 	lua_error(ls);
 	// }
 
-	// enum source source;
-	// if(!source_Parse((char *)lua_tostring(ls, 3), &source))
-	// {
-	// 	lua_pushstring(ls, "Unknown source passed to to handle_grpc()");
-	// 	lua_error(ls);
-	// }
-
-	// enum priority priority;
-	// if(!priority_Parse((char *)lua_tostring(ls, 4), &priority))
-	// {
-	// 	lua_pushstring(ls, "Unknown priority passed to to handle_grpc()");
-	// 	lua_error(ls);
-	// }
-	
-	falco_output_response grpc_res = falco_output_response();
-	
-	// grpc_res.set_source(source);
-	// grpc_res.set_priority(priority);
+	// todo(leodido, fntlnz) > pass the ID (?)
+	// grpc_res.set_id("...");
 
 	// rule
 	grpc_res.set_rule((char *)lua_tostring(ls, 2));
 
+	
+
+	// priority
+	priority p = priority::EMERGENCY;
+	string pstr = (char *)lua_tostring(ls, 4);
+	if(!priority_Parse(pstr, &p))
+	{
+		lua_pushstring(ls, "Unknown priority passed to to handle_grpc()");
+		lua_error(ls);
+	}
+	grpc_res.set_priority(p);
+
 	// output
-	grpc_res.set_output((char *)lua_tostring(ls, 6));
+	grpc_res.set_output((char *)lua_tostring(ls, 5));
 
 	// output fields
 	auto& fields = *grpc_res.mutable_output_fields();
 
 	lua_pushnil(ls);
-	while (lua_next(ls, 7) != 0) {
+	while (lua_next(ls, 6) != 0) {
 		fields[lua_tostring(ls, -2)] = lua_tostring(ls, -1);
 		lua_pop(ls, 1);
 	}
