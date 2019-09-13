@@ -17,6 +17,8 @@ limitations under the License.
 
 */
 
+#include <google/protobuf/util/time_util.h>
+
 #include "falco_outputs.h"
 
 #include "config_falco.h"
@@ -305,12 +307,12 @@ int falco_outputs::handle_http(lua_State *ls)
 int falco_outputs::handle_grpc(lua_State *ls)
 {
 	// check parameters
-	if(!lua_istable(ls, -1) ||
-	   !lua_istable(ls, -2) ||
-	   !lua_isstring(ls, -3) ||
-	   !lua_isstring(ls, -4) ||
-	   !lua_isstring(ls, -5) ||
-	   !lua_isstring(ls, -6))
+	if(!lua_isuserdata(ls, 1) ||
+	   !lua_isstring(ls, 2) ||
+	   !lua_isstring(ls, 3) ||
+	   !lua_isstring(ls, 4) ||
+	   !lua_isstring(ls, 5) ||
+	   !lua_istable(ls, 6))
 	{
 		lua_pushstring(ls, "Invalid arguments passed to handle_grpc()");
 		lua_error(ls);
@@ -318,8 +320,10 @@ int falco_outputs::handle_grpc(lua_State *ls)
 
 	response grpc_res = response();
 
-	// todo(leodido, fntlnz) > pass the ID (?)
-	// grpc_res.set_id("...");
+	// time
+	gen_event* evt = (gen_event*)lua_topointer(ls, 1);
+	auto& timestamp = *grpc_res.mutable_time();
+	timestamp = google::protobuf::util::TimeUtil::NanosecondsToTimestamp(evt->get_ts());
 
 	// rule
 	grpc_res.set_rule((char *)lua_tostring(ls, 2));
