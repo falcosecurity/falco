@@ -21,7 +21,9 @@ limitations under the License.
 #include "falco_output.pb.h"
 #include "tbb/concurrent_queue.h"
 
-typedef tbb::concurrent_queue<falco_output_response> falco_output_response_cq;
+using namespace falco::output;
+
+typedef tbb::concurrent_queue<response> falco_output_response_cq;
 
 class falco_output_queue
 {
@@ -32,12 +34,12 @@ public:
 		return instance;
 	}
 
-	bool try_pop(falco_output_response& res)
+	bool try_pop(response& res)
 	{
 		return m_queue.try_pop(res);
 	}
 
-	void push(falco_output_response& res)
+	void push(response& res)
 	{
 		m_queue.push(res);
 	}

@@ -27,7 +27,7 @@ bool falco_grpc_server_impl::is_running()
 	return true;
 }
 
-void falco_grpc_server_impl::subscribe(const stream_context& ctx, const falco_output_request& req, falco_output_response& res)
+void falco_grpc_server_impl::subscribe(const stream_context& ctx, const request& req, response& res)
 {
 	if(ctx.m_status == stream_context::SUCCESS || ctx.m_status == stream_context::ERROR)
 	{

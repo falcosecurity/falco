@@ -39,7 +39,7 @@ public:
 	void run();
 	void stop();
 
-	falco_output_service::AsyncService m_svc;
+	service::AsyncService m_svc;
 	std::unique_ptr<grpc::ServerCompletionQueue> m_completion_queue;
 
 private:
@@ -86,7 +86,7 @@ public:
 	void (falco_grpc_server::*m_process_func)(const stream_context&, const Request&, Response&);
 
 	// Pointer to function that requests the system to start processing given requests
-	void (falco_output_service::AsyncService::*m_request_func)(grpc::ServerContext*, Request*, grpc::ServerAsyncWriter<Response>*, grpc::CompletionQueue*, grpc::ServerCompletionQueue*, void*);
+	void (service::AsyncService::*m_request_func)(grpc::ServerContext*, Request*, grpc::ServerAsyncWriter<Response>*, grpc::CompletionQueue*, grpc::ServerCompletionQueue*, void*);
 
 	void start(falco_grpc_server* srv);
 	void process(falco_grpc_server* srv);

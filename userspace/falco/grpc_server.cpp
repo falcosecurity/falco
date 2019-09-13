@@ -28,12 +28,12 @@ limitations under the License.
 #include "grpc_context.h"
 
 template<>
-void request_stream_context<falco_output_request, falco_output_response>::start(falco_grpc_server* srv)
+void request_stream_context<request, response>::start(falco_grpc_server* srv)
 {
 	m_state = request_context_base::REQUEST;
 	m_srv_ctx.reset(new grpc::ServerContext);
 	auto srvctx = m_srv_ctx.get();
-	m_res_writer.reset(new grpc::ServerAsyncWriter<falco_output_response>(srvctx));
+	m_res_writer.reset(new grpc::ServerAsyncWriter<response>(srvctx));
 	m_stream_ctx.reset();
 	m_req.Clear();
 
@@ -42,7 +42,7 @@ void request_stream_context<falco_output_request, falco_output_response>::start(
 }
 
 template<>
-void request_stream_context<falco_output_request, falco_output_response>::process(falco_grpc_server* srv)
+void request_stream_context<request, response>::process(falco_grpc_server* srv)
 {
 	// When it is the 1st process call
 	if(m_state == request_context_base::REQUEST)
@@ -52,7 +52,7 @@ void request_stream_context<falco_output_request, falco_output_response>::proces
 	}
 
 	// Processing
-	falco_output_response res;
+	response res;
 	(srv->*m_process_func)(*m_stream_ctx, m_req, res);
 
 	// When there still are more responses to stream
@@ -71,7 +71,7 @@ void request_stream_context<falco_output_request, falco_output_response>::proces
 }
 
 template<>
-void request_stream_context<falco_output_request, falco_output_response>::end(falco_grpc_server* srv, bool isError)
+void request_stream_context<request, response>::end(falco_grpc_server* srv, bool isError)
 {
 	if(m_stream_ctx)
 	{
@@ -83,7 +83,7 @@ void request_stream_context<falco_output_request, falco_output_response>::end(fa
 		}
 
 		// Complete the processing
-		falco_output_response res;
+		response res;
 		(srv->*m_process_func)(*m_stream_ctx, m_req, res); // subscribe()
 	}
 	else
@@ -95,8 +95,6 @@ void request_stream_context<falco_output_request, falco_output_response>::end(fa
 
 	start(srv);
 }
-
-
 
 void falco_grpc_server::thread_process(int thread_index)
 {
@@ -164,7 +162,7 @@ void falco_grpc_server::thread_process(int thread_index)
 	for(request_stream_context<REQ, RESP> & ctx : RPC##_contexts)                   \
 	{                                                                               \
 		ctx.m_process_func = &falco_grpc_server::IMPL;                          \
-		ctx.m_request_func = &falco_output_service::AsyncService::Request##RPC; \
+		ctx.m_request_func = &service::AsyncService::Request##RPC; \
 		ctx.start(this);                                                        \
 	}
 
@@ -183,7 +181,7 @@ void falco_grpc_server::run()
 	falco_logger::log(LOG_INFO, "Starting gRPC webserver at " + m_server_addr + "\n");
 
 	int context_count = m_threadiness * 1; // todo > 10 or 100?
-	PROCESS_STREAM(falco_output_request, falco_output_response, subscribe, subscribe, context_count)
+	PROCESS_STREAM(request, response, subscribe, subscribe, context_count)
 
 	m_threads.resize(m_threadiness);
 	int thread_idx = 0;
