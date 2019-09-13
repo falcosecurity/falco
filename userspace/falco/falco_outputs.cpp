@@ -304,15 +304,19 @@ int falco_outputs::handle_http(lua_State *ls)
 // TODO(fntlnz, leodido): verify if this works with k8s_audit as source
 int falco_outputs::handle_grpc(lua_State *ls)
 {
+	// check parameters
+	if(!lua_istable(ls, -1) ||
+	   !lua_istable(ls, -2) ||
+	   !lua_isstring(ls, -3) ||
+	   !lua_isstring(ls, -4) ||
+	   !lua_isstring(ls, -5) ||
+	   !lua_isstring(ls, -6))
+	{
+		lua_pushstring(ls, "Invalid arguments passed to handle_grpc()");
+		lua_error(ls);
+	}
+
 	response grpc_res = response();
-	// TODO(fntlnz, leodido): do the checks and make sure all the fields are sent
-	// fixme > check parameters later
-	// if(!lua_isstring(ls, -1) ||
-	//    !lua_isstring(ls, -2))
-	// {
-	// 	lua_pushstring(ls, "Invalid arguments passed to handle_grpc()");
-	// 	lua_error(ls);
-	// }
 
 	// todo(leodido, fntlnz) > pass the ID (?)
 	// grpc_res.set_id("...");
