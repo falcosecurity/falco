@@ -1,6 +1,6 @@
-## CNCF Community Code of Conduct v1.0
+# CNCF Community Code of Conduct v1.0
 
-### Contributor Code of Conduct
+## Contributor Code of Conduct
 
 As contributors and maintainers of this project, and in the interest of fostering
 an open and welcoming community, we pledge to respect all people who contribute
@@ -32,8 +32,7 @@ Conduct may be permanently removed from the project team.
 This code of conduct applies both within project spaces and in public spaces
 when an individual is representing the project or its community.
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be reported by contacting a CNCF project maintainer, Sarah Novotny <sarahnovotny@google.com>, and/or Dan Kohn <dan@linuxfoundation.org>.
+Instances of abusive, harassing, or otherwise unacceptable behavior may be reported by contacting a CNCF project maintainer, [Sarah Novotny](mailto:sarahnovotny@google.com), and/or [Dan Kohn](mailto:dan@linuxfoundation.org).
 
-This Code of Conduct is adapted from the Contributor Covenant
-(http://contributor-covenant.org), version 1.2.0, available at
+This Code of Conduct is adapted from the [Contributor Covenant](http://contributor-covenant.org), version 1.2.0, available at
 http://contributor-covenant.org/version/1/2/0/
