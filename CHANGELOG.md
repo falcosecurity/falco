@@ -192,7 +192,7 @@ Released 2019-05-13
 
 ## Major Changes
 
-* **Actions and alerts for dropped events**: Falco can now take actions, including sending alerts/logging messages, and/or even exiting Falco, when it detects dropped system call events. [[#561](https://github.com/falcosecurity/falco/pull/561)] [[#571](https://github.com/falcosecurity/falco/pull/571)]
+* **Actions and alerts for dropped events**: Falco can now take actions, including sending alerts/logging messages, and/or even exiting Falco, when it detects dropped system call events. Fixes CVE 2019-8339. [[#561](https://github.com/falcosecurity/falco/pull/561)] [[#571](https://github.com/falcosecurity/falco/pull/571)]
 
 * **Support for Containerd/CRI-O**: Falco now supports containerd/cri-o containers. [[#585](https://github.com/falcosecurity/falco/pull/585)] [[#591](https://github.com/falcosecurity/falco/pull/591)] [[#599](https://github.com/falcosecurity/falco/pull/599)] [[#sysdig/1376](https://github.com/draios/sysdig/pull/1376)] [[#sysdig/1310](https://github.com/draios/sysdig/pull/1310)] [[#sysdig/1399](https://github.com/draios/sysdig/pull/1399)]
 
@@ -254,7 +254,6 @@ Released 2019-05-13
 * Better coverage for fluentd/jboss to reduce FPs [[#590](https://github.com/falcosecurity/falco/pull/590)]
 
 * Add `ash` (Alpine Linux-related shell) as a shell binary [[#597](https://github.com/falcosecurity/falco/pull/597)]
-
 
 ## v0.14.0
 
