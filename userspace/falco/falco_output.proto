@@ -53,11 +53,12 @@ enum source {
 }
 
 message response {
-  string id = 1;
-  google.protobuf.Timestamp time = 2;
-  priority priority = 3;
-  source source = 4;
-  string rule = 5;
-  string output = 6;
-  map<string, string> output_fields = 7;
+  google.protobuf.Timestamp time = 1;
+  priority priority = 2;
+  source source = 3;
+  string rule = 4;
+  string output = 5;
+  map<string, string> output_fields = 6;
 }
+
+// todo: investigate outputting tags
