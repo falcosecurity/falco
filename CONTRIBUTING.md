@@ -12,7 +12,7 @@
 ## Code of Conduct
 
 Falco has a
-[Code of Conduct](CODE_OF_CONDUCT)
+[Code of Conduct](CODE_OF_CONDUCT.md)
 to which all contributors must adhere, please read it before interacting with the repository or the community in any way.
 
 ## Issues
@@ -87,7 +87,7 @@ need a kind, make sure to specify the appropriate one by typing `/kind <KIND>`.
 
 The list of labels is [here](https://github.com/falcosecurity/falco/labels).
 
-Also feel free to suggest a reviewer with `/assign @theirname`.
+Also feel free to suggest a reviewer with `/cc @theirname`, or to assign an assignee using `/assign @nickname`.
 
 Once your reviewer is happy, they will say `/lgtm` which will apply the
 `lgtm` label, and will apply the `approved` label if they are an
