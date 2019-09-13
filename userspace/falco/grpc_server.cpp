@@ -157,22 +157,59 @@ void falco_grpc_server::thread_process(int thread_index)
 //
 // Create array of contexts and start processing streaming RPC request.
 //
-#define PROCESS_STREAM(REQ, RESP, RPC, IMPL, CONTEXT_COUNT)                             \
-	std::vector<request_stream_context<REQ, RESP>> RPC##_contexts(CONTEXT_COUNT);   \
-	for(request_stream_context<REQ, RESP> & ctx : RPC##_contexts)                   \
-	{                                                                               \
-		ctx.m_process_func = &falco_grpc_server::IMPL;                          \
-		ctx.m_request_func = &service::AsyncService::Request##RPC; \
-		ctx.start(this);                                                        \
+#define PROCESS_STREAM(REQ, RESP, RPC, IMPL, CONTEXT_COUNT)                           \
+	std::vector<request_stream_context<REQ, RESP>> RPC##_contexts(CONTEXT_COUNT); \
+	for(request_stream_context<REQ, RESP> & ctx : RPC##_contexts)                 \
+	{                                                                             \
+		ctx.m_process_func = &falco_grpc_server::IMPL;                        \
+		ctx.m_request_func = &service::AsyncService::Request##RPC;            \
+		ctx.start(this);                                                      \
 	}
+
+// todo(fntlnz, leodido) > cleanup this part (paths from config, read, includes)
+#include <sstream>
+#include <fstream>
+#include <iostream>
+
+void read(const std::string& filename, std::string& data)
+{
+	std::ifstream file(filename.c_str(), std::ios::in);
+
+	if(file.is_open())
+	{
+		std::stringstream ss;
+		ss << file.rdbuf();
+
+		file.close();
+
+		data = ss.str();
+	}
+
+	return;
+}
 
 void falco_grpc_server::run()
 {
+	string private_key;
+	string cert_chain;
+	string root_certs;
+
+	read("/tmp/server.crt", cert_chain);
+	read("/tmp/server.key", private_key);
+	read("/tmp/ca.crt", root_certs);
+
+	grpc::SslServerCredentialsOptions::PemKeyCertPair cert_pair{private_key, cert_chain};
+
+	grpc::SslServerCredentialsOptions ssl_opts(GRPC_SSL_REQUEST_AND_REQUIRE_CLIENT_CERTIFICATE_AND_VERIFY);
+	ssl_opts.pem_root_certs = root_certs;
+	ssl_opts.pem_key_cert_pairs.push_back(cert_pair);
+
 	// Setup server
 	grpc::ServerBuilder builder;
 	// Listen on the given address without any authentication mechanism.
-	builder.AddListeningPort(m_server_addr, grpc::InsecureServerCredentials());
+	builder.AddListeningPort(m_server_addr, grpc::SslServerCredentials(ssl_opts));
 	builder.RegisterService(&m_svc);
+
 	// builder.SetMaxSendMessageSize(GRPC_MAX_MESSAGE_SIZE);     // testing max message size?
 	// builder.SetMaxReceiveMessageSize(GRPC_MAX_MESSAGE_SIZE);  // testing max message size?
 
