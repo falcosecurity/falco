@@ -171,7 +171,7 @@ end
 
 function mod.grpc(event, rule, source, priority, priority_num, msg, format, options)
    fields = formats.resolve_tokens(event, source, format)
-   c_outputs.handle_grpc(event, rule, source, priority, priority_num, msg, fields, options)
+   c_outputs.handle_grpc(event, rule, source, priority, msg, fields, options)
 end
 
 function mod.grpc_message(priority, priority_num, msg, options)
