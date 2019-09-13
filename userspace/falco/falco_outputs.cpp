@@ -320,7 +320,15 @@ int falco_outputs::handle_grpc(lua_State *ls)
 	// rule
 	grpc_res.set_rule((char *)lua_tostring(ls, 2));
 
-	
+	// source
+	source s = source::SYSCALL;
+	string sstr = (char *)lua_tostring(ls, 3);
+	if(!source_Parse(sstr, &s))
+	{
+		lua_pushstring(ls, "Unknown source passed to to handle_grpc()");
+		lua_error(ls);
+	}
+	grpc_res.set_source(s);
 
 	// priority
 	priority p = priority::EMERGENCY;
