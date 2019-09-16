@@ -169,7 +169,7 @@ http_output:
   url: http://some.url
 
 grpc:
-  enabled: true
+  enabled: false
   bind_address: "0.0.0.0:5060"
   threadiness: 8
   private_key: ""

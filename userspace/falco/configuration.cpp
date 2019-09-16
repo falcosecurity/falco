@@ -159,9 +159,8 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 	falco_outputs::output_config grpc_output;
 	grpc_output.name = "grpc";
 	// gRPC output is enabled only if gRPC server is enabled too
-	if(m_config->get_scalar<bool>("grpc_output", "enabled", false) && m_grpc_enabled)
+	if(m_config->get_scalar<bool>("grpc_output", "enabled", true) && m_grpc_enabled)
 	{
-		// todo >
 		m_outputs.push_back(grpc_output);
 	}
 
