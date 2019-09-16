@@ -150,7 +150,7 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 
 	m_grpc_enabled = m_config->get_scalar<bool>("grpc", "enabled", false);
 	m_grpc_bind_address = m_config->get_scalar<string>("grpc", "bind_address", "0.0.0.0:5060");
-	m_grpc_threadiness = m_config->get_scalar<uint32_t>("grpc", "threadiness", 8);
+	m_grpc_threadiness = m_config->get_scalar<uint32_t>("grpc", "threadiness", 8); // todo > limit it to avoid overshubscription? std::thread::hardware_concurrency()
 	// todo(fntlnz,leodido) > chose correct paths
 	m_grpc_private_key = m_config->get_scalar<string>("grpc", "private_key", "");
 	m_grpc_cert_chain = m_config->get_scalar<string>("grpc", "cert_chain", "");

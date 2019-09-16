@@ -51,6 +51,8 @@ limitations under the License.
 #include "grpc_server.h"
 #include "falco_output_queue.h"
 
+#include <future>
+
 typedef function<void(sinsp* inspector)> open_t;
 
 bool g_terminate = false;
@@ -272,7 +274,12 @@ uint64_t do_inspect(falco_engine *engine,
 			g_reopen_outputs = false;
 		}
 
-		if (g_terminate || g_restart)
+		if(g_terminate)
+		{
+			falco_logger::log(LOG_INFO, "SIGINT received, exiting...\n");
+			break;
+		}
+		else if (g_restart)
 		{
 			falco_logger::log(LOG_INFO, "SIGHUP Received, restarting...\n");
 			break;
@@ -1166,13 +1173,18 @@ int falco_init(int argc, char **argv)
 		}
 
 		// grpc server
-
-		// TODO(fntlnz,leodido): when we want to spawn multiple threads we need to have a queue per thread, or implement
-		// different queuing mechanisms, round robin, fanout? What we want to achieve?
-		int threadiness = 1; // TODO(fntlnz, leodido): make this configurable
-
-		// TODO(fntlnz): do any handling, make sure we handle signals in the GRPC server and we clean it gracefully
-		std::thread grpc_server_thread (start_grpc_server, "0.0.0.0:5060", threadiness);
+		std::thread grpc_server_thread;
+		falco_grpc_server grpc_server(config.m_grpc_bind_address, config.m_grpc_threadiness);
+		if(config.m_grpc_enabled)
+		{
+			// TODO(fntlnz,leodido): when we want to spawn multiple threads we need to have a queue per thread, or implement
+			// different queuing mechanisms, round robin, fanout? What we want to achieve?
+			// TODO(fntlnz, leodido): make sure we clean it gracefully
+			// grpc_server_thread = std::thread(start_grpc_server, config.m_grpc_bind_address, config.m_grpc_threadiness);
+			grpc_server_thread = std::thread([&grpc_server] {
+				grpc_server.run();
+			});
+		}
 
 		if(!trace_filename.empty() && !trace_is_scap)
 		{
@@ -1217,6 +1229,7 @@ int falco_init(int argc, char **argv)
 		engine->print_stats();
 		sdropmgr.print_stats();
 		webserver.stop();
+		grpc_server.shutdown();
 	}
 	catch(exception &e)
 	{
