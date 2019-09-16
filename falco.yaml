@@ -172,9 +172,9 @@ grpc:
   enabled: false
   bind_address: "0.0.0.0:5060"
   threadiness: 8
-  private_key: ""
-  cert_chain: ""
-  root_certs: ""
+  private_key: "/etc/falco/certs/server.key"
+  cert_chain: "/etc/falco/certs/server.crt"
+  root_certs: "/etc/falco/certs/ca.crt"
 
 grpc_output:
   enabled: true

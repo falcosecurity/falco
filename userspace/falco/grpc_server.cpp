@@ -188,10 +188,13 @@ void read(const std::string& filename, std::string& data)
 	return;
 }
 
-void falco_grpc_server::init(std::string server_addr, int threadiness)
+void falco_grpc_server::init(std::string server_addr, int threadiness, std::string private_key, std::string cert_chain, std::string root_certs)
 {
 	m_server_addr = server_addr;
 	m_threadiness = threadiness;
+	m_private_key = private_key;
+	m_cert_chain = cert_chain;
+	m_root_certs = root_certs;
 }
 
 void falco_grpc_server::run()
@@ -200,9 +203,9 @@ void falco_grpc_server::run()
 	string cert_chain;
 	string root_certs;
 
-	read("/tmp/server.crt", cert_chain);
-	read("/tmp/server.key", private_key);
-	read("/tmp/ca.crt", root_certs);
+	read(m_cert_chain, cert_chain);
+	read(m_private_key, private_key);
+	read(m_root_certs, root_certs);
 
 	grpc::SslServerCredentialsOptions::PemKeyCertPair cert_pair{private_key, cert_chain};
 
@@ -265,11 +268,4 @@ void falco_grpc_server::stop()
 	while(m_completion_queue->Next(&ignore_tag, &ignore_ok))
 	{
 	}
-}
-
-bool start_grpc_server(std::string server_address, int threadiness)
-{
-	falco_grpc_server srv(server_address, threadiness);
-	srv.run();
-	return true;
 }
