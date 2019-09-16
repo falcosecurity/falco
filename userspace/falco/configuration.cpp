@@ -29,20 +29,20 @@ limitations under the License.
 
 using namespace std;
 
-falco_configuration::falco_configuration()
-	: m_buffered_outputs(false),
-	  m_time_format_iso_8601(false),
-	  m_webserver_enabled(false),
-	  m_webserver_listen_port(8765),
-	  m_webserver_k8s_audit_endpoint("/k8s_audit"),
-	  m_webserver_ssl_enabled(false),
-	  m_config(NULL)
+falco_configuration::falco_configuration():
+	m_buffered_outputs(false),
+	m_time_format_iso_8601(false),
+	m_webserver_enabled(false),
+	m_webserver_listen_port(8765),
+	m_webserver_k8s_audit_endpoint("/k8s_audit"),
+	m_webserver_ssl_enabled(false),
+	m_config(NULL)
 {
 }
 
 falco_configuration::~falco_configuration()
 {
-	if (m_config)
+	if(m_config)
 	{
 		delete m_config;
 	}
@@ -84,11 +84,11 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 
 	falco_outputs::output_config file_output;
 	file_output.name = "file";
-	if (m_config->get_scalar<bool>("file_output", "enabled", false))
+	if(m_config->get_scalar<bool>("file_output", "enabled", false))
 	{
 		string filename, keep_alive;
 		filename = m_config->get_scalar<string>("file_output", "filename", "");
-		if (filename == string(""))
+		if(filename == string(""))
 		{
 			throw invalid_argument("Error reading config file (" + m_config_file + "): file output enabled but no filename in configuration block");
 		}
@@ -102,25 +102,25 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 
 	falco_outputs::output_config stdout_output;
 	stdout_output.name = "stdout";
-	if (m_config->get_scalar<bool>("stdout_output", "enabled", false))
+	if(m_config->get_scalar<bool>("stdout_output", "enabled", false))
 	{
 		m_outputs.push_back(stdout_output);
 	}
 
 	falco_outputs::output_config syslog_output;
 	syslog_output.name = "syslog";
-	if (m_config->get_scalar<bool>("syslog_output", "enabled", false))
+	if(m_config->get_scalar<bool>("syslog_output", "enabled", false))
 	{
 		m_outputs.push_back(syslog_output);
 	}
 
 	falco_outputs::output_config program_output;
 	program_output.name = "program";
-	if (m_config->get_scalar<bool>("program_output", "enabled", false))
+	if(m_config->get_scalar<bool>("program_output", "enabled", false))
 	{
 		string program, keep_alive;
 		program = m_config->get_scalar<string>("program_output", "program", "");
-		if (program == string(""))
+		if(program == string(""))
 		{
 			throw sinsp_exception("Error reading config file (" + m_config_file + "): program output enabled but no program in configuration block");
 		}
@@ -134,12 +134,12 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 
 	falco_outputs::output_config http_output;
 	http_output.name = "http";
-	if (m_config->get_scalar<bool>("http_output", "enabled", false))
+	if(m_config->get_scalar<bool>("http_output", "enabled", false))
 	{
 		string url;
 		url = m_config->get_scalar<string>("http_output", "url", "");
 
-		if (url == string(""))
+		if(url == string(""))
 		{
 			throw sinsp_exception("Error reading config file (" + m_config_file + "): http output enabled but no url in configuration block");
 		}
@@ -148,15 +148,24 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 		m_outputs.push_back(http_output);
 	}
 
+	m_grpc_enabled = m_config->get_scalar<bool>("grpc", "enabled", false);
+	m_grpc_bind_address = m_config->get_scalar<string>("grpc", "bind_address", "0.0.0.0:5060");
+	m_grpc_threadiness = m_config->get_scalar<uint32_t>("grpc", "threadiness", 8);
+	// todo(fntlnz,leodido) > chose correct paths
+	m_grpc_private_key = m_config->get_scalar<string>("grpc", "private_key", "");
+	m_grpc_cert_chain = m_config->get_scalar<string>("grpc", "cert_chain", "");
+	m_grpc_root_certs = m_config->get_scalar<string>("grpc", "root_certs", "");
+
 	falco_outputs::output_config grpc_output;
 	grpc_output.name = "grpc";
-	if(m_config->get_scalar<bool>("grpc_output", "enabled", false))
+	// gRPC output is enabled only if gRPC server is enabled too
+	if(m_config->get_scalar<bool>("grpc_output", "enabled", false) && m_grpc_enabled)
 	{
-		// todo > grpc_output is enabled but we should constraint it to the grpc server being enabled too
+		// todo >
 		m_outputs.push_back(grpc_output);
 	}
 
-	if (m_outputs.size() == 0)
+	if(m_outputs.size() == 0)
 	{
 		throw invalid_argument("Error reading config file (" + m_config_file + "): No outputs configured. Please configure at least one output file output enabled but no filename in configuration block");
 	}
@@ -171,7 +180,7 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 	string priority = m_config->get_scalar<string>("priority", "debug");
 	vector<string>::iterator it;
 
-	auto comp = [priority] (string &s) {
+	auto comp = [priority](string &s) {
 		return (strcasecmp(s.c_str(), priority.c_str()) == 0);
 	};
 
@@ -179,7 +188,7 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 	{
 		throw invalid_argument("Unknown priority \"" + priority + "\"--must be one of emergency, alert, critical, error, warning, notice, informational, debug");
 	}
-	m_min_priority = (falco_common::priority_type) (it - falco_common::priority_names.begin());
+	m_min_priority = (falco_common::priority_type)(it - falco_common::priority_names.begin());
 
 	m_buffered_outputs = m_config->get_scalar<bool>("buffered_outputs", false);
 	m_time_format_iso_8601 = m_config->get_scalar<bool>("time_format_iso_8601", false);
@@ -191,7 +200,7 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 	m_webserver_listen_port = m_config->get_scalar<uint32_t>("webserver", "listen_port", 8765);
 	m_webserver_k8s_audit_endpoint = m_config->get_scalar<string>("webserver", "k8s_audit_endpoint", "/k8s_audit");
 	m_webserver_ssl_enabled = m_config->get_scalar<bool>("webserver", "ssl_enabled", false);
-	m_webserver_ssl_certificate = m_config->get_scalar<string>("webserver", "ssl_certificate","/etc/falco/falco.pem");
+	m_webserver_ssl_certificate = m_config->get_scalar<string>("webserver", "ssl_certificate", "/etc/falco/falco.pem");
 
 	std::list<string> syscall_event_drop_acts;
 	m_config->get_sequence(syscall_event_drop_acts, "syscall_event_drops", "actions");
@@ -202,15 +211,15 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 		{
 			m_syscall_evt_drop_actions.insert(syscall_evt_drop_mgr::ACT_IGNORE);
 		}
-		else if (act == "log")
+		else if(act == "log")
 		{
 			m_syscall_evt_drop_actions.insert(syscall_evt_drop_mgr::ACT_LOG);
 		}
-		else if (act == "alert")
+		else if(act == "alert")
 		{
 			m_syscall_evt_drop_actions.insert(syscall_evt_drop_mgr::ACT_ALERT);
 		}
-		else if (act == "exit")
+		else if(act == "exit")
 		{
 			m_syscall_evt_drop_actions.insert(syscall_evt_drop_mgr::ACT_EXIT);
 		}
@@ -258,7 +267,7 @@ void falco_configuration::read_rules_file_directory(const string &path, list<str
 			exit(-1);
 		}
 
-		for (struct dirent *ent = readdir(dir); ent; ent = readdir(dir))
+		for(struct dirent *ent = readdir(dir); ent; ent = readdir(dir))
 		{
 			string efile = path + "/" + ent->d_name;
 
@@ -281,7 +290,7 @@ void falco_configuration::read_rules_file_directory(const string &path, list<str
 		std::sort(dir_filenames.begin(),
 			  dir_filenames.end());
 
-		for (string &ent : dir_filenames)
+		for(string &ent : dir_filenames)
 		{
 			rules_filenames.push_back(ent);
 		}
@@ -295,11 +304,12 @@ void falco_configuration::read_rules_file_directory(const string &path, list<str
 	}
 }
 
-static bool split(const string &str, char delim, pair<string,string> &parts)
+static bool split(const string &str, char delim, pair<string, string> &parts)
 {
 	size_t pos;
 
-	if ((pos = str.find_first_of(delim)) == string::npos) {
+	if((pos = str.find_first_of(delim)) == string::npos)
+	{
 		return false;
 	}
 	parts.first = str.substr(0, pos);
@@ -318,16 +328,20 @@ void falco_configuration::init_cmdline_options(list<string> &cmdline_options)
 
 void falco_configuration::set_cmdline_option(const string &opt)
 {
-	pair<string,string> keyval;
-	pair<string,string> subkey;
+	pair<string, string> keyval;
+	pair<string, string> subkey;
 
-	if (! split(opt, '=', keyval)) {
+	if(!split(opt, '=', keyval))
+	{
 		throw invalid_argument("Error parsing config option \"" + opt + "\". Must be of the form key=val or key.subkey=val");
 	}
 
-	if (split(keyval.first, '.', subkey)) {
+	if(split(keyval.first, '.', subkey))
+	{
 		m_config->set_scalar(subkey.first, subkey.second, keyval.second);
-	} else {
+	}
+	else
+	{
 		m_config->set_scalar(keyval.first, keyval.second);
 	}
 }
