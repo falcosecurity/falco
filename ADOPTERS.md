@@ -1,6 +1,6 @@
 # Adopters
 
-This is a list of production adopters of OPA (in alphabetical order):
+This is a list of production adopters of Falco (in alphabetical order):
 
 * [Booz Allen Hamilton](https://www.boozallen.com/) - BAH leverages Falco as part of their Kubernetes environment to verify that work loads behave as they did in their CD DevSecOps pipelines. BAH offers a solution to internal developers to easily build DevSecOps pipelines for projects. This makes it easy for developers to incorporate Security principles early on in the development cycle. In production, Falco is used to verify that the code the developer ships does not violate any of the production security requirements. BAH [are speaking at Kubecon NA 2019](https://kccncna19.sched.com/event/UaWr/building-reusable-devsecops-pipelines-on-a-secure-kubernetes-platform-steven-terrana-booz-allen-hamilton-michael-ducy-sysdig) on their use of Falco.
 
