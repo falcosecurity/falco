@@ -60,5 +60,3 @@ message response {
   string output = 5;
   map<string, string> output_fields = 6;
 }
-
-// todo: investigate outputting tags

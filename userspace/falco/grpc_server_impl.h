@@ -39,8 +39,6 @@ protected:
 
 	void subscribe(const stream_context& ctx, const request& req, response& res);
 
-
-
 private:
 	std::atomic<bool> m_stop{false};
 };
