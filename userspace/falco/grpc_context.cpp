@@ -29,16 +29,23 @@ context::context(grpc::ServerContext* ctx):
 	get_metadata(meta_session, session_id);
 	get_metadata(meta_session, request_id);
 
+	bool has_meta = false;
 	std::stringstream meta;
 	if(!session_id.empty())
 	{
 		meta << "[sid=" << session_id << "]";
+		has_meta = true;
 	}
-
 	if(!request_id.empty())
 	{
 		meta << "[rid=" << request_id << "]";
+		has_meta = true;
 	}
+	if(has_meta)
+	{
+		meta << " ";
+	}
+	m_prefix = meta.str();
 }
 
 void context::get_metadata(std::string key, std::string& val)

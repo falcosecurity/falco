@@ -18,6 +18,8 @@ limitations under the License.
 
 #pragma once
 
+#include <string>
+
 #ifdef GRPC_INCLUDE_IS_GRPCPP
 #include <grpcpp/grpcpp.h>
 #else
@@ -37,6 +39,7 @@ public:
 
 private:
 	grpc::ServerContext* m_ctx = nullptr;
+	std::string m_prefix;
 };
 
 class stream_context : public context
