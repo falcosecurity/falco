@@ -51,3 +51,8 @@ void falco_grpc_server_impl::subscribe(const stream_context& ctx, const request&
 		ctx.m_has_more = req.keepalive();
 	}
 }
+
+void falco_grpc_server_impl::shutdown()
+{
+	m_stop = true;
+}

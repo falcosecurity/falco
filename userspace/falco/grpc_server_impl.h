@@ -32,10 +32,14 @@ public:
 	falco_grpc_server_impl() = default;
 	~falco_grpc_server_impl() = default;
 
+	void shutdown();
+
 protected:
 	bool is_running();
 
 	void subscribe(const stream_context& ctx, const request& req, response& res);
+
+
 
 private:
 	std::atomic<bool> m_stop{false};
