@@ -28,6 +28,9 @@ limitations under the License.
 class falco_grpc_server : public falco_grpc_server_impl
 {
 public:
+	falco_grpc_server()
+	{
+	}
 	falco_grpc_server(std::string server_addr, int threadiness):
 		m_server_addr(server_addr),
 		m_threadiness(threadiness)
@@ -35,6 +38,7 @@ public:
 	}
 	virtual ~falco_grpc_server() = default;
 
+	void init(std::string server_addr, int threadiness);
 	void thread_process(int thread_index);
 	void run();
 	void stop();
