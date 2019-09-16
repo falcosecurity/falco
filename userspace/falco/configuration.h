@@ -45,12 +45,12 @@ public:
 		{
 			m_root = YAML::LoadFile(path);
 		}
-		catch (const YAML::BadFile& ex)
+		catch(const YAML::BadFile& ex)
 		{
 			std::cerr << "Error reading config file (" + path + "): " + ex.what() + "\n";
 			throw;
 		}
-		catch (const YAML::ParserException& ex)
+		catch(const YAML::ParserException& ex)
 		{
 			std::cerr << "Cannot read config file (" + path + "): " + ex.what() + "\n";
 			throw;
@@ -66,11 +66,12 @@ public:
 		try
 		{
 			auto node = m_root[key];
-			if (node.IsDefined())
+			if(node.IsDefined())
 			{
 				return node.as<T>();
 			}
-		} catch (const YAML::BadConversion& ex)
+		}
+		catch(const YAML::BadConversion& ex)
 		{
 			std::cerr << "Cannot read config file (" + m_path + "): wrong type at key " + key + "\n";
 			throw;
@@ -83,10 +84,10 @@ public:
 	 * Set the top-level node identified by key to value
 	 */
 	template<typename T>
-	void set_scalar(const std::string &key, const T& value)
+	void set_scalar(const std::string& key, const T& value)
 	{
 		auto node = m_root;
-		if (node.IsDefined())
+		if(node.IsDefined())
 		{
 			node[key] = value;
 		}
@@ -106,12 +107,12 @@ public:
 		try
 		{
 			auto node = m_root[key][subkey];
-			if (node.IsDefined())
+			if(node.IsDefined())
 			{
 				return node.as<T>();
 			}
 		}
-		catch (const YAML::BadConversion& ex)
+		catch(const YAML::BadConversion& ex)
 		{
 			std::cerr << "Cannot read config file (" + m_path + "): wrong type at key " + key + "\n";
 			throw;
@@ -127,15 +128,15 @@ public:
 	void set_scalar(const std::string& key, const std::string& subkey, const T& value)
 	{
 		auto node = m_root;
-		if (node.IsDefined())
+		if(node.IsDefined())
 		{
 			node[key][subkey] = value;
 		}
 	}
 
 	// called with the last variadic arg (where the sequence is expected to be found)
-	template <typename T>
-	void get_sequence_from_node(T& ret, const YAML::Node &node)
+	template<typename T>
+	void get_sequence_from_node(T& ret, const YAML::Node& node)
 	{
 		if(node.IsDefined())
 		{
@@ -154,25 +155,25 @@ public:
 	}
 
 	// called with the last variadic arg (where the sequence is expected to be found)
-	template <typename T>
+	template<typename T>
 	void get_sequence(T& ret, const std::string& name)
 	{
 		return get_sequence_from_node<T>(ret, m_root[name]);
 	}
 
 	// called with the last variadic arg (where the sequence is expected to be found)
-	template <typename T>
-		void get_sequence(T& ret, const std::string& key, const std::string &subkey)
+	template<typename T>
+	void get_sequence(T& ret, const std::string& key, const std::string& subkey)
 	{
 		try
 		{
 			auto node = m_root[key];
-			if (node.IsDefined())
+			if(node.IsDefined())
 			{
 				return get_sequence_from_node<T>(ret, node[subkey]);
 			}
 		}
-		catch (const YAML::BadConversion& ex)
+		catch(const YAML::BadConversion& ex)
 		{
 			std::cerr << "Cannot read config file (" + m_path + "): wrong type at key " + key + "\n";
 			throw;
@@ -183,17 +184,16 @@ private:
 	YAML::Node m_root;
 };
 
-
 class falco_configuration
 {
- public:
+public:
 	falco_configuration();
 	virtual ~falco_configuration();
 
-	void init(std::string conf_filename, std::list<std::string> &cmdline_options);
-	void init(std::list<std::string> &cmdline_options);
+	void init(std::string conf_filename, std::list<std::string>& cmdline_options);
+	void init(std::list<std::string>& cmdline_options);
 
-	static void read_rules_file_directory(const string &path, list<string> &rules_filenames);
+	static void read_rules_file_directory(const string& path, list<string>& rules_filenames);
 
 	std::list<std::string> m_rules_filenames;
 	bool m_json_output;
@@ -207,6 +207,13 @@ class falco_configuration
 	bool m_buffered_outputs;
 	bool m_time_format_iso_8601;
 
+	bool m_grpc_enabled;
+	int m_grpc_threadiness;
+	std::string m_grpc_bind_address;
+	std::string m_grpc_private_key;
+	std::string m_grpc_cert_chain;
+	std::string m_grpc_root_certs;
+
 	bool m_webserver_enabled;
 	uint32_t m_webserver_listen_port;
 	std::string m_webserver_k8s_audit_endpoint;
@@ -219,9 +226,8 @@ class falco_configuration
 	// Only used for testing
 	bool m_syscall_evt_simulate_drops;
 
-
- private:
-	void init_cmdline_options(std::list<std::string> &cmdline_options);
+private:
+	void init_cmdline_options(std::list<std::string>& cmdline_options);
 
 	/**
 	 * Given a <key>=<value> specifier, set the appropriate option
@@ -229,8 +235,7 @@ class falco_configuration
 	 * characters for nesting. Currently only 1- or 2- level keys
 	 * are supported and only scalar values are supported.
 	 */
-	void set_cmdline_option(const std::string &spec);
+	void set_cmdline_option(const std::string& spec);
 
 	yaml_configuration* m_config;
 };
-
