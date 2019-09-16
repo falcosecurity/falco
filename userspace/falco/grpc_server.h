@@ -31,14 +31,17 @@ public:
 	falco_grpc_server()
 	{
 	}
-	falco_grpc_server(std::string server_addr, int threadiness):
+	falco_grpc_server(std::string server_addr, int threadiness, std::string private_key, std::string cert_chain, std::string root_certs):
 		m_server_addr(server_addr),
-		m_threadiness(threadiness)
+		m_threadiness(threadiness),
+		m_private_key(private_key),
+		m_cert_chain(cert_chain),
+		m_root_certs(root_certs)
 	{
 	}
 	virtual ~falco_grpc_server() = default;
 
-	void init(std::string server_addr, int threadiness);
+	void init(std::string server_addr, int threadiness, std::string private_key, std::string cert_chain, std::string root_certs);
 	void thread_process(int thread_index);
 	void run();
 	void stop();
@@ -47,13 +50,15 @@ public:
 	std::unique_ptr<grpc::ServerCompletionQueue> m_completion_queue;
 
 private:
-	std::unique_ptr<grpc::Server> m_server;
 	std::string m_server_addr;
-	int m_threadiness = 0;
+	int m_threadiness;
+	std::string m_private_key;
+	std::string m_cert_chain;
+	std::string m_root_certs;
+
+	std::unique_ptr<grpc::Server> m_server;
 	std::vector<std::thread> m_threads;
 };
-
-bool start_grpc_server(std::string server_address, int threadiness);
 
 class request_context_base
 {
