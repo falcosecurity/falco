@@ -1,0 +1,10 @@
+# Adopters
+
+This is a list of production adopters of OPA (in alphabetical order):
+
+* [Booz Allen Hamilton](https://www.boozallen.com/) - BAH leverages Falco as part of their Kubernetes environment to verify that work loads behave as they did in their CD DevSecOps pipelines. BAH offers a solution to internal developers to easily build DevSecOps pipelines for projects. This makes it easy for developers to incorporate Security principles early on in the development cycle. In production, Falco is used to verify that the code the developer ships does not violate any of the production security requirements. BAH [are speaking at Kubecon NA 2019](https://kccncna19.sched.com/event/UaWr/building-reusable-devsecops-pipelines-on-a-secure-kubernetes-platform-steven-terrana-booz-allen-hamilton-michael-ducy-sysdig) on their use of Falco.
+
+* [Preferral](https://www.preferral.com) - Preferral is a HIPAA-compliant platform for Referral Management and Online Referral Forms. Preferral streamlines the referral process for patients, specialists and their referral partners. By automating the referral process, referring practices spend less time on the phone, manual efforts are eliminated, and patients get the right care from the right specialist. Preferral leverages Falco to provide a Host Intrusion Detection System to meet their HIPPA compliance requirements. 
+  * https://hipaa.preferral.com/01-preferral_hipaa_compliance/
+
+* [Sumo Logic](https://www.sumologic.com/) - Sumo Logic provides a SaaS based log aggregation service that provides dashboards and applications to easily identify and analyze problems in your application and infrastructure. Sumo Logic provides native integrations for many CNCF projects, such as Falco, that allows end users to easily collect Falco events and analyze Falco events on DecSecOps focused dashboards. 
