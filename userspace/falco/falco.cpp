@@ -34,7 +34,6 @@ limitations under the License.
 #include <unistd.h>
 #include <getopt.h>
 
-
 #include <sinsp.h>
 
 #include "logger.h"
@@ -279,7 +278,7 @@ uint64_t do_inspect(falco_engine *engine,
 		}
 		else if (g_restart)
 		{
-			falco_logger::log(LOG_INFO, "SIGHUP Received, restarting...\n");
+			falco_logger::log(LOG_INFO, "SIGHUP received, restarting...\n");
 			break;
 		}
 		else if(rc == SCAP_TIMEOUT)
@@ -1239,7 +1238,8 @@ int falco_init(int argc, char **argv)
 		result = EXIT_FAILURE;
 
 		webserver.stop();
-		if (grpc_server_thread.joinable()) {
+		if(grpc_server_thread.joinable())
+		{
 			grpc_server.shutdown();
 			grpc_server_thread.join();
 		}

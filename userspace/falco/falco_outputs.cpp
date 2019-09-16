@@ -303,7 +303,6 @@ int falco_outputs::handle_http(lua_State *ls)
 	return 1;
 }
 
-// TODO(fntlnz, leodido): verify if this works with k8s_audit as source
 int falco_outputs::handle_grpc(lua_State *ls)
 {
 	// check parameters

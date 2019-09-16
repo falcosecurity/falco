@@ -267,7 +267,6 @@ int falco_formats::format_event (lua_State *ls)
 }
 
 
-
 int falco_formats::resolve_tokens(lua_State *ls)
 {
 	if (!lua_isstring(ls, -1) ||
@@ -275,11 +274,9 @@ int falco_formats::resolve_tokens(lua_State *ls)
 		lua_pushstring(ls, "Invalid arguments passed to resolve_tokens()");
 		lua_error(ls);
 	}
-	gen_event* evt = (gen_event*)lua_topointer(ls, 1);
-	const char *source = (char *) lua_tostring(ls, 2); // TODO(fntlnz, leodido): do we need this one?
-	const char *format = (char *) lua_tostring(ls, 3);
+	gen_event* evt = (gen_event*) lua_topointer(ls, 1);
+	const char *format = (char *) lua_tostring(ls, 2);
 	string sformat = format;
-
 
 	map<string,string> values;
 

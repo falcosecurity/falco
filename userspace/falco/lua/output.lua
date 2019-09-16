@@ -170,7 +170,7 @@ function mod.http_reopen()
 end
 
 function mod.grpc(event, rule, source, priority, priority_num, msg, format, options)
-   fields = formats.resolve_tokens(event, source, format)
+   fields = formats.resolve_tokens(event, format)
    c_outputs.handle_grpc(event, rule, source, priority, msg, fields, options)
 end
 
