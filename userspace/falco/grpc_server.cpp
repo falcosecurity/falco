@@ -22,7 +22,6 @@ limitations under the License.
 #include <grpc++/grpc++.h>
 #endif
 #include <signal.h> // pthread_sigmask
-#include <unistd.h> // sleep, _exit
 
 #include "logger.h"
 #include "grpc_server.h"
@@ -189,28 +188,14 @@ void read(const std::string& filename, std::string& data)
 	return;
 }
 
-extern "C" void handle_signal(int signum)
+void falco_grpc_server::init(std::string server_addr, int threadiness)
 {
-	// todo > print "Got signal << sigenum << : exiting...");
-	// exit(1);
+	m_server_addr = server_addr;
+	m_threadiness = threadiness;
 }
 
 void falco_grpc_server::run()
 {
-	// Handle SIGHUP and SIGINT in the main process.
-	// Not in the spawned threads.
-	// sigset_t set;
-	// sigemptyset(&set);
-	// sigaddset(&set, SIGTERM);
-	// // sigaddset(&set, SIGHUP); // todo > SIGHUP should restart Falco, what to do?
-	// sigaddset(&set, SIGINT);
-	// pthread_sigmask(SIG_UNBLOCK, &set, nullptr);
-
-	// struct sigaction action;
-	// action.sa_handler = handle_signal;
-	// sigaction(SIGHUP, &action, nullptr);
-	// sigaction(SIGINT, &action, nullptr);
-
 	string private_key;
 	string cert_chain;
 	string root_certs;
@@ -254,7 +239,6 @@ void falco_grpc_server::run()
 
 	while(is_running())
 	{
-		sleep(1); // todo > do we want to sleep here?
 	}
 
 	stop();

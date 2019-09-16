@@ -51,8 +51,6 @@ limitations under the License.
 #include "grpc_server.h"
 #include "falco_output_queue.h"
 
-#include <future>
-
 typedef function<void(sinsp* inspector)> open_t;
 
 bool g_terminate = false;
@@ -458,6 +456,8 @@ int falco_init(int argc, char **argv)
 	scap_stats cstats;
 
 	falco_webserver webserver;
+	falco_grpc_server grpc_server;
+	std::thread grpc_server_thread;
 
 	static struct option long_options[] =
 	{
@@ -1173,14 +1173,11 @@ int falco_init(int argc, char **argv)
 		}
 
 		// grpc server
-		std::thread grpc_server_thread;
-		falco_grpc_server grpc_server(config.m_grpc_bind_address, config.m_grpc_threadiness);
 		if(config.m_grpc_enabled)
 		{
 			// TODO(fntlnz,leodido): when we want to spawn multiple threads we need to have a queue per thread, or implement
 			// different queuing mechanisms, round robin, fanout? What we want to achieve?
-			// TODO(fntlnz, leodido): make sure we clean it gracefully
-			// grpc_server_thread = std::thread(start_grpc_server, config.m_grpc_bind_address, config.m_grpc_threadiness);
+			grpc_server.init(config.m_grpc_bind_address, config.m_grpc_threadiness);
 			grpc_server_thread = std::thread([&grpc_server] {
 				grpc_server.run();
 			});
@@ -1229,7 +1226,11 @@ int falco_init(int argc, char **argv)
 		engine->print_stats();
 		sdropmgr.print_stats();
 		webserver.stop();
-		grpc_server.shutdown();
+		if(grpc_server_thread.joinable())
+		{
+			grpc_server.shutdown();
+			grpc_server_thread.join();
+		}
 	}
 	catch(exception &e)
 	{
@@ -1238,6 +1239,10 @@ int falco_init(int argc, char **argv)
 		result = EXIT_FAILURE;
 
 		webserver.stop();
+		if (grpc_server_thread.joinable()) {
+			grpc_server.shutdown();
+			grpc_server_thread.join();
+		}
 	}
 
 exit:
