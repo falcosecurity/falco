@@ -21,8 +21,8 @@ limitations under the License.
 #else
 #include <grpc++/grpc++.h>
 #endif
-#include <signal.h>   // pthread_sigmask
-#include <unistd.h>   // sleep, _exit
+#include <signal.h> // pthread_sigmask
+#include <unistd.h> // sleep, _exit
 
 #include "logger.h"
 #include "grpc_server.h"
@@ -99,11 +99,11 @@ void request_stream_context<request, response>::end(falco_grpc_server* srv, bool
 
 void falco_grpc_server::thread_process(int thread_index)
 {
-	// TODO: is this right? That's what we want?
 	// Tell pthread to not handle termination signals in the current thread
 	sigset_t set;
 	sigemptyset(&set);
-	sigaddset(&set, SIGHUP);
+	sigaddset(&set, SIGTERM);
+	// sigaddset(&set, SIGHUP); // todo > SIGHUP should restart Falco, what to do?
 	sigaddset(&set, SIGINT);
 	pthread_sigmask(SIG_BLOCK, &set, nullptr);
 
@@ -191,23 +191,25 @@ void read(const std::string& filename, std::string& data)
 
 extern "C" void handle_signal(int signum)
 {
-    // todo > print "Got signal << sigenum << : exiting...");
-	exit(1);
+	// todo > print "Got signal << sigenum << : exiting...");
+	// exit(1);
 }
 
 void falco_grpc_server::run()
 {
 	// Handle SIGHUP and SIGINT in the main process.
 	// Not in the spawned threads.
-    sigset_t set;
-    sigemptyset(&set);
-    sigaddset(&set, SIGHUP);
-    sigaddset(&set, SIGINT);
-    pthread_sigmask(SIG_UNBLOCK, &set, nullptr);
-	struct sigaction action;
-	action.sa_handler = handle_signal;
-	sigaction(SIGHUP, &action, nullptr);
-	sigaction(SIGINT, &action, nullptr);
+	// sigset_t set;
+	// sigemptyset(&set);
+	// sigaddset(&set, SIGTERM);
+	// // sigaddset(&set, SIGHUP); // todo > SIGHUP should restart Falco, what to do?
+	// sigaddset(&set, SIGINT);
+	// pthread_sigmask(SIG_UNBLOCK, &set, nullptr);
+
+	// struct sigaction action;
+	// action.sa_handler = handle_signal;
+	// sigaction(SIGHUP, &action, nullptr);
+	// sigaction(SIGINT, &action, nullptr);
 
 	string private_key;
 	string cert_chain;
@@ -236,7 +238,11 @@ void falco_grpc_server::run()
 	m_server = builder.BuildAndStart();
 	falco_logger::log(LOG_INFO, "Starting gRPC webserver at " + m_server_addr + "\n");
 
-	int context_count = m_threadiness * 1; // todo > 10 or 100?
+	// Create context for server threads
+	// The number of contexts is multiple of the number of threads
+	// This defines the number of simultaneous completion queue requests of the same type (service::AsyncService::Request##RPC)
+	// For this approach to be sufficient falco_grpc_server::IMPL have to be fast
+	int context_count = m_threadiness * 10;
 	PROCESS_STREAM(request, response, subscribe, subscribe, context_count)
 
 	m_threads.resize(m_threadiness);
