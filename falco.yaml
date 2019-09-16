@@ -172,6 +172,9 @@ grpc:
   enabled: true
   bind_address: "0.0.0.0:5060"
   threadiness: 8
+  private_key: ""
+  cert_chain: ""
+  root_certs: ""
 
 grpc_output:
   enabled: true
