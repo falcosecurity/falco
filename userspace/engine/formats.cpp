@@ -269,8 +269,8 @@ int falco_formats::format_event (lua_State *ls)
 
 int falco_formats::resolve_tokens(lua_State *ls)
 {
-	if (!lua_isstring(ls, -1) ||
-	    !lua_isstring(ls, -2)) {
+	if (!lua_isuserdata(ls, 1) ||
+	    !lua_isstring(ls, 2)) {
 		lua_pushstring(ls, "Invalid arguments passed to resolve_tokens()");
 		lua_error(ls);
 	}

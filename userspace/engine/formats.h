@@ -53,6 +53,7 @@ class falco_formats
 	// formatted_string = falco.format_event(evt, formatter)
 	static int format_event(lua_State *ls);
 
+	// resolve_tokens = falco.resolve_tokens(evt, formatter)
 	static int resolve_tokens(lua_State *ls);
 
 	static sinsp* s_inspector;
