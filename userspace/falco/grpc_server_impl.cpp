@@ -44,11 +44,11 @@ void falco_grpc_server_impl::subscribe(const stream_context& ctx, const request&
 			ctx.m_has_more = true;
 			return;
 		}
-		while(!falco_output_queue::get().try_pop(res) && req.keepalive())
+		while(is_running() && !falco_output_queue::get().try_pop(res) && req.keepalive())
 		{
 		}
 
-		ctx.m_has_more = req.keepalive();
+		ctx.m_has_more = !is_running() ? false : req.keepalive();
 	}
 }
 
