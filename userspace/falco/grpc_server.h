@@ -21,8 +21,6 @@ limitations under the License.
 #include <thread>
 #include <string>
 
-#include <queue>
-
 #include "grpc_server_impl.h"
 
 class falco_grpc_server : public falco_grpc_server_impl
