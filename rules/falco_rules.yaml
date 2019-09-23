@@ -2356,7 +2356,8 @@
   condition: (never_true)
 
 - macro: trusted_logging_images
-  condition: (container.image.repository endswith "splunk/fluentd-hec")
+  condition: (container.image.repository endswith "splunk/fluentd-hec" or
+              container.image.repository endswith "fluent/fluentd-kubernetes-daemonset")
 
 - rule: Clear Log Activities
   desc: Detect clearing of critical log files
