@@ -265,17 +265,15 @@ int falco_formats::format_event (lua_State *ls)
 	return 1;
 }
 
-#include <iostream>
-
 int falco_formats::resolve_tokens(lua_State *ls)
 {
-	// if(!lua_isstring(ls, -1) ||
-	//    !lua_isstring(ls, -2) ||
-	//    !lua_islightuserdata(ls, -3))
-	// {
-	// 	lua_pushstring(ls, "Invalid arguments passed to resolve_tokens()");
-	// 	lua_error(ls);
-	// }
+	if(!lua_isstring(ls, -1) ||
+	   !lua_isstring(ls, -2) ||
+	   !lua_islightuserdata(ls, -3))
+	{
+		lua_pushstring(ls, "Invalid arguments passed to resolve_tokens()");
+		lua_error(ls);
+	}
 	gen_event *evt = (gen_event *)lua_topointer(ls, 1);
 	string source = luaL_checkstring(ls, 2);
 	const char *format = (char *)lua_tostring(ls, 3);
@@ -292,19 +290,15 @@ int falco_formats::resolve_tokens(lua_State *ls)
 		json_event_formatter json_formatter(s_engine->json_factory(), sformat);
 		values = json_formatter.tomap((json_event*) evt);
 	}
+	// todo(leodido, fntlnz) > check explicitly for k8s_audit, otherwise throw exception
 
 	lua_newtable(ls);
-	int top = lua_gettop(ls);
-	for(map<string, string>::iterator it = values.begin(); it != values.end(); ++it)
+	for(auto const& v : values)
 	{
-		std::cout << it->first << ":"<< it->second << ", ";
-		const char *key = it->first.c_str();
-		const char *value = it->second.c_str();
-		lua_pushlstring(ls, key, it->first.size());
-		lua_pushlstring(ls, value, it->second.size());
-		lua_settable(ls, top);
+		lua_pushstring(ls, v.first.c_str());
+		lua_pushstring(ls, v.second.c_str());
+		lua_settable(ls, -3);
 	}
-	std::cout << std::endl;
 
 	return 1;
 }

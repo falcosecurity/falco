@@ -306,16 +306,17 @@ int falco_outputs::handle_http(lua_State *ls)
 int falco_outputs::handle_grpc(lua_State *ls)
 {
 	// check parameters
-	// if(!lua_isuserdata(ls, 1) ||
-	//    !lua_isstring(ls, 2) ||
-	//    !lua_isstring(ls, 3) ||
-	//    !lua_isstring(ls, 4) ||
-	//    !lua_isstring(ls, 5) ||
-	//    !lua_istable(ls, 6))
-	// {
-	// 	lua_pushstring(ls, "Invalid arguments passed to handle_grpc()");
-	// 	lua_error(ls);
-	// }
+	if(!lua_islightuserdata(ls, -7) ||
+	   !lua_isstring(ls, -6) ||
+	   !lua_isstring(ls, -5) ||
+	   !lua_isstring(ls, -4) ||
+	   !lua_isstring(ls, -3) ||
+	   !lua_istable(ls, -2) ||
+	   !lua_istable(ls, -1))
+	{
+		lua_pushstring(ls, "Invalid arguments passed to handle_grpc()");
+		lua_error(ls);
+	}
 
 	response grpc_res = response();
 
@@ -353,11 +354,12 @@ int falco_outputs::handle_grpc(lua_State *ls)
 	// output fields
 	auto& fields = *grpc_res.mutable_output_fields();
 
-	lua_pushnil(ls);
+	lua_pushnil(ls); // so that lua_next removes it from stack and puts (k, v) on it
 	while (lua_next(ls, 6) != 0) {
 		fields[lua_tostring(ls, -2)] = lua_tostring(ls, -1);
-		lua_pop(ls, 1);
+		lua_pop(ls, 1); // remove value, keep key for lua_next
 	}
+	lua_pop(ls, 1); // pop table
 
 	falco_output_queue::get().push(grpc_res);
 

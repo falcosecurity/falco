@@ -216,16 +216,6 @@ function output_event(event, rule, source, priority, priority_num, format)
 
    msg = formats.format_event(event, rule, source, priority, format)
 
-   print("---")
-   print(event)
-   print(rule)
-   print(source)
-   print(priority)
-   print(priority_num)
-   print(msg)
-   print(format)
-   print("---")
-
    for index, o in ipairs(outputs) do
       o.output(event, rule, source, priority, priority_num, msg, format, o.options)
    end
