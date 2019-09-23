@@ -287,6 +287,7 @@ public:
 
 	std::string tostring(json_event *ev);
 	std::string tojson(json_event *ev);
+	std::map<std::string, std::string> tomap(json_event *ev);
 
 	void resolve_tokens(json_event *ev, std::list<std::pair<std::string,std::string>> &resolved);
 

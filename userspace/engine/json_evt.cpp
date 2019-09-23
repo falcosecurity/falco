@@ -796,6 +796,7 @@ std::string json_event_formatter::tostring(json_event *ev)
 std::string json_event_formatter::tojson(json_event *ev)
 {
 	nlohmann::json ret;
+	// todo(leodido, fntlnz) > assign tomap() result to ret (implicit conversion using = operator)
 
 	std::list<std::pair<std::string, std::string>> resolved;
 
@@ -806,11 +807,35 @@ std::string json_event_formatter::tojson(json_event *ev)
 		// Only include the fields and not the raw text blocks.
 		if(!res.first.empty())
 		{
+			// todo(leodido, fntlnz) > do we want "<NA>" rather than empty res.second values?
 			ret[res.first] = res.second;
 		}
 	}
 
 	return ret.dump();
+}
+
+std::map<std::string, std::string> json_event_formatter::tomap(json_event *ev)
+{
+	std::map<std::string, std::string> ret;
+	std::list<std::pair<std::string, std::string>> res;
+
+	resolve_tokens(ev, res);
+
+	for(auto &r : res)
+	{
+		// Only include the fields and not the raw text blocks.
+		if(!r.first.empty())
+		{
+			if(r.second.empty())
+			{
+				r.second = "<NA>";
+			}
+			ret.insert(r);
+		}
+	}
+
+	return ret;
 }
 
 void json_event_formatter::parse_format()
