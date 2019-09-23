@@ -306,16 +306,16 @@ int falco_outputs::handle_http(lua_State *ls)
 int falco_outputs::handle_grpc(lua_State *ls)
 {
 	// check parameters
-	if(!lua_isuserdata(ls, 1) ||
-	   !lua_isstring(ls, 2) ||
-	   !lua_isstring(ls, 3) ||
-	   !lua_isstring(ls, 4) ||
-	   !lua_isstring(ls, 5) ||
-	   !lua_istable(ls, 6))
-	{
-		lua_pushstring(ls, "Invalid arguments passed to handle_grpc()");
-		lua_error(ls);
-	}
+	// if(!lua_isuserdata(ls, 1) ||
+	//    !lua_isstring(ls, 2) ||
+	//    !lua_isstring(ls, 3) ||
+	//    !lua_isstring(ls, 4) ||
+	//    !lua_isstring(ls, 5) ||
+	//    !lua_istable(ls, 6))
+	// {
+	// 	lua_pushstring(ls, "Invalid arguments passed to handle_grpc()");
+	// 	lua_error(ls);
+	// }
 
 	response grpc_res = response();
 

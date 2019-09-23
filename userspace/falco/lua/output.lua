@@ -170,13 +170,14 @@ function mod.http_reopen()
 end
 
 function mod.grpc(event, rule, source, priority, priority_num, msg, format, options)
-   fields = formats.resolve_tokens(event, format)
+   fields = formats.resolve_tokens(event, source, format)
    c_outputs.handle_grpc(event, rule, source, priority, msg, fields, options)
 end
 
 function mod.grpc_message(priority, priority_num, msg, options)
    -- todo
 end
+
 
 function mod.grpc_cleanup()
 end
@@ -214,6 +215,16 @@ function output_event(event, rule, source, priority, priority_num, format)
    end
 
    msg = formats.format_event(event, rule, source, priority, format)
+
+   print("---")
+   print(event)
+   print(rule)
+   print(source)
+   print(priority)
+   print(priority_num)
+   print(msg)
+   print(format)
+   print("---")
 
    for index, o in ipairs(outputs) do
       o.output(event, rule, source, priority, priority_num, msg, format, o.options)
