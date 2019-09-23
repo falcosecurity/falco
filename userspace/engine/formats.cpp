@@ -20,7 +20,6 @@ limitations under the License.
 #include <json/json.h>
 
 #include "formats.h"
-#include "logger.h"
 #include "falco_engine.h"
 
 
@@ -266,31 +265,46 @@ int falco_formats::format_event (lua_State *ls)
 	return 1;
 }
 
+#include <iostream>
 
 int falco_formats::resolve_tokens(lua_State *ls)
 {
-	if (!lua_isuserdata(ls, 1) ||
-	    !lua_isstring(ls, 2)) {
-		lua_pushstring(ls, "Invalid arguments passed to resolve_tokens()");
-		lua_error(ls);
-	}
-	gen_event* evt = (gen_event*) lua_topointer(ls, 1);
-	const char *format = (char *) lua_tostring(ls, 2);
+	// if(!lua_isstring(ls, -1) ||
+	//    !lua_isstring(ls, -2) ||
+	//    !lua_islightuserdata(ls, -3))
+	// {
+	// 	lua_pushstring(ls, "Invalid arguments passed to resolve_tokens()");
+	// 	lua_error(ls);
+	// }
+	gen_event *evt = (gen_event *)lua_topointer(ls, 1);
+	string source = luaL_checkstring(ls, 2);
+	const char *format = (char *)lua_tostring(ls, 3);
 	string sformat = format;
 
-	map<string,string> values;
-
-	s_formatters->resolve_tokens((sinsp_evt *)evt, sformat, values);
+	map<string, string> values;
+	if(source == "syscall")
+	{
+		s_formatters->resolve_tokens((sinsp_evt *)evt, sformat, values);
+	}
+	// k8s_audit
+	else
+	{
+		json_event_formatter json_formatter(s_engine->json_factory(), sformat);
+		values = json_formatter.tomap((json_event*) evt);
+	}
 
 	lua_newtable(ls);
 	int top = lua_gettop(ls);
-	for (std::map<string, string>::iterator it = values.begin(); it != values.end(); ++it) {
-		const char* key = it->first.c_str();
-		const char* value = it->second.c_str();
+	for(map<string, string>::iterator it = values.begin(); it != values.end(); ++it)
+	{
+		std::cout << it->first << ":"<< it->second << ", ";
+		const char *key = it->first.c_str();
+		const char *value = it->second.c_str();
 		lua_pushlstring(ls, key, it->first.size());
 		lua_pushlstring(ls, value, it->second.size());
 		lua_settable(ls, top);
 	}
+	std::cout << std::endl;
 
 	return 1;
 }
