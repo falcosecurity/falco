@@ -19,7 +19,7 @@ limitations under the License.
 #pragma once
 
 #include <atomic>
-#include "falco_output.grpc.pb.h"
+#include "output.grpc.pb.h"
 #include "grpc_context.h"
 
 namespace falco
