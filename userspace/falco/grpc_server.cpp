@@ -33,7 +33,7 @@ void falco::grpc::request_stream_context<falco::output::request, falco::output::
 	m_state = request_context_base::REQUEST;
 	m_srv_ctx.reset(new ::grpc::ServerContext);
 	auto srvctx = m_srv_ctx.get();
-	m_res_writer.reset(new ::grpc::ServerAsyncWriter<response>(srvctx));
+	m_res_writer.reset(new ::grpc::ServerAsyncWriter<output::response>(srvctx));
 	m_stream_ctx.reset();
 	m_req.Clear();
 	auto cq = srv->m_completion_queue.get();
@@ -51,7 +51,7 @@ void falco::grpc::request_stream_context<falco::output::request, falco::output::
 	}
 
 	// Processing
-	response res;
+	output::response res;
 	(srv->*m_process_func)(*m_stream_ctx, m_req, res);
 
 	// When there still are more responses to stream
@@ -77,7 +77,7 @@ void falco::grpc::request_stream_context<falco::output::request, falco::output::
 		m_stream_ctx->m_status = errored ? stream_context::ERROR : stream_context::SUCCESS;
 
 		// Complete the processing
-		response res;
+		output::response res;
 		(srv->*m_process_func)(*m_stream_ctx, m_req, res); // subscribe()
 	}
 
@@ -136,13 +136,13 @@ void falco::grpc::server::thread_process(int thread_index)
 //
 // Create array of contexts and start processing streaming RPC request.
 //
-#define PROCESS_STREAM(REQ, RESP, RPC, IMPL, CONTEXT_COUNT)                           \
-	std::vector<request_stream_context<REQ, RESP>> RPC##_contexts(CONTEXT_COUNT); \
-	for(request_stream_context<REQ, RESP> & ctx : RPC##_contexts)                 \
-	{                                                                             \
-		ctx.m_process_func = &server::IMPL;                                   \
-		ctx.m_request_func = &service::AsyncService::Request##RPC;            \
-		ctx.start(this);                                                      \
+#define REGISTER_STREAM(REQ, RESP, RPC, IMPL, CONTEXT_NUM)                          \
+	std::vector<request_stream_context<REQ, RESP>> RPC##_contexts(CONTEXT_NUM); \
+	for(request_stream_context<REQ, RESP> & ctx : RPC##_contexts)               \
+	{                                                                           \
+		ctx.m_process_func = &server::IMPL;                                 \
+		ctx.m_request_func = &output::service::AsyncService::Request##RPC;  \
+		ctx.start(this);                                                    \
 	}
 
 void falco::grpc::server::init(std::string server_addr, int threadiness, std::string private_key, std::string cert_chain, std::string root_certs)
@@ -170,25 +170,19 @@ void falco::grpc::server::run()
 	ssl_opts.pem_root_certs = root_certs;
 	ssl_opts.pem_key_cert_pairs.push_back(cert_pair);
 
-	// Setup server
 	::grpc::ServerBuilder builder;
-	// Listen on the given address without any authentication mechanism.
 	builder.AddListeningPort(m_server_addr, ::grpc::SslServerCredentials(ssl_opts));
 	builder.RegisterService(&m_svc);
-
-	// builder.SetMaxSendMessageSize(GRPC_MAX_MESSAGE_SIZE);     // testing max message size?
-	// builder.SetMaxReceiveMessageSize(GRPC_MAX_MESSAGE_SIZE);  // testing max message size?
 
 	m_completion_queue = builder.AddCompletionQueue();
 	m_server = builder.BuildAndStart();
 	falco_logger::log(LOG_INFO, "Starting gRPC server at " + m_server_addr + "\n");
 
-	// Create context for server threads
 	// The number of contexts is multiple of the number of threads
 	// This defines the number of simultaneous completion queue requests of the same type (service::AsyncService::Request##RPC)
 	// For this approach to be sufficient server::IMPL have to be fast
-	int context_count = m_threadiness * 10;
-	PROCESS_STREAM(request, response, subscribe, subscribe, context_count)
+	int context_num = m_threadiness * 10;
+	REGISTER_STREAM(output::request, output::response, subscribe, subscribe, context_num)
 
 	m_threads.resize(m_threadiness);
 	int thread_idx = 0;

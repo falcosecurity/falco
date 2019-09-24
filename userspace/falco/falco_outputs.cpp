@@ -329,9 +329,9 @@ int falco_outputs::handle_grpc(lua_State *ls)
 	grpc_res.set_rule((char *)lua_tostring(ls, 2));
 
 	// source
-	source s = source::SYSCALL;
+	falco::schema::source s = falco::schema::source::SYSCALL;
 	string sstr = (char *)lua_tostring(ls, 3);
-	if(!source_Parse(sstr, &s))
+	if(!falco::schema::source_Parse(sstr, &s))
 	{
 		lua_pushstring(ls, "Unknown source passed to to handle_grpc()");
 		lua_error(ls);
@@ -339,9 +339,9 @@ int falco_outputs::handle_grpc(lua_State *ls)
 	grpc_res.set_source(s);
 
 	// priority
-	priority p = priority::EMERGENCY;
+	falco::schema::priority p = falco::schema::priority::EMERGENCY;
 	string pstr = (char *)lua_tostring(ls, 4);
-	if(!priority_Parse(pstr, &p))
+	if(!falco::schema::priority_Parse(pstr, &p))
 	{
 		lua_pushstring(ls, "Unknown priority passed to to handle_grpc()");
 		lua_error(ls);
@@ -361,7 +361,7 @@ int falco_outputs::handle_grpc(lua_State *ls)
 	}
 	lua_pop(ls, 1); // pop table
 
-	falco_output_queue::get().push(grpc_res);
+	falco::output::queue::get().push(grpc_res);
 
 	return 1;
 }

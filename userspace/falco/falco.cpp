@@ -48,7 +48,6 @@ limitations under the License.
 #include "statsfilewriter.h"
 #include "webserver.h"
 #include "grpc_server.h"
-#include "falco_output_queue.h"
 
 typedef function<void(sinsp* inspector)> open_t;
 

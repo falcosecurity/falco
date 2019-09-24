@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
+import "schema.proto";
 
 package falco.output;
 
@@ -9,54 +10,17 @@ service service {
 }
 
 message request {
-  string duration = 1; // TODO(leodido, fntlnz): not handled yet but keeping for reference.
-  bool keepalive = 2;
-}
-
-enum priority {
-  option allow_alias = true;
-  EMERGENCY = 0;
-  emergency = 0;
-  Emergency = 0;
-  ALERT = 1;
-  alert = 1;
-  Alert = 1;
-  CRITICAL = 2;
-  critical = 2;
-  Critical = 2;
-  ERROR = 3;
-  error = 3;
-  Error = 3;
-  WARNING = 4;
-  warning = 4;
-  Warning = 4;
-  NOTICE = 5;
-  notice = 5;
-  Notice = 5;
-  INFORMATIONAL = 6;
-  informational = 6;
-  Informational = 6;
-  DEBUG = 7;
-  debug = 7;
-  Debug = 7;
-}
-
-enum source {
-  option allow_alias = true;
-  SYSCALL = 0;
-  syscall = 0;
-  Syscall = 0;
-  K8S_AUDIT = 1;
-  k8s_audit = 1;
-  K8s_audit = 1;
-  K8S_audit = 1;
+  bool keepalive = 1;
+  // string duration = 2; // TODO(leodido, fntlnz): not handled yet but keeping for reference.
+  // repeated string tags = 3; // TODO(leodido, fntlnz): not handled yet but keeping for reference.
 }
 
 message response {
   google.protobuf.Timestamp time = 1;
-  priority priority = 2;
-  source source = 3;
+  falco.schema.priority priority = 2;
+  falco.schema.source source = 3;
   string rule = 4;
   string output = 5;
   map<string, string> output_fields = 6;
+  repeated string tags = 7;
 }

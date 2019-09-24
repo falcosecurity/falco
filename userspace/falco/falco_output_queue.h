@@ -21,16 +21,18 @@ limitations under the License.
 #include "falco_output.pb.h"
 #include "tbb/concurrent_queue.h"
 
-using namespace falco::output;
+namespace falco
+{
+namespace output
+{
+typedef tbb::concurrent_queue<response> response_cq;
 
-typedef tbb::concurrent_queue<response> falco_output_response_cq;
-
-class falco_output_queue
+class queue
 {
 public:
-	static falco_output_queue& get()
+	static queue& get()
 	{
-		static falco_output_queue instance;
+		static queue instance;
 		return instance;
 	}
 
@@ -45,14 +47,16 @@ public:
 	}
 
 private:
-	falco_output_queue()
+	queue()
 	{
 	}
 
-	falco_output_response_cq m_queue;
+	response_cq m_queue;
 
 	// We can use the better technique of deleting the methods we don't want.
 public:
-	falco_output_queue(falco_output_queue const&) = delete;
-	void operator=(falco_output_queue const&) = delete;
+	queue(queue const&) = delete;
+	void operator=(queue const&) = delete;
 };
+} // namespace output
+} // namespace falco

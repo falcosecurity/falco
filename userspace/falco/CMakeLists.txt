@@ -20,13 +20,16 @@ if(NOT SYSDIG_DIR)
 endif()
 
 configure_file("${SYSDIG_DIR}/userspace/sysdig/config_sysdig.h.in" config_sysdig.h)
+
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/falco_output.grpc.pb.cc
 	${CMAKE_CURRENT_BINARY_DIR}/falco_output.grpc.pb.h
 	${CMAKE_CURRENT_BINARY_DIR}/falco_output.pb.cc
 	${CMAKE_CURRENT_BINARY_DIR}/falco_output.pb.h
+	${CMAKE_CURRENT_BINARY_DIR}/schema.pb.cc
+	${CMAKE_CURRENT_BINARY_DIR}/schema.pb.h
 	COMMENT "Generate gRPC code for falco_output"
 	DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/falco_output.proto
-	COMMAND ${PROTOC} -I ${CMAKE_CURRENT_SOURCE_DIR} --cpp_out=. ${CMAKE_CURRENT_SOURCE_DIR}/falco_output.proto
+	COMMAND ${PROTOC} -I ${CMAKE_CURRENT_SOURCE_DIR} --cpp_out=. ${CMAKE_CURRENT_SOURCE_DIR}/falco_output.proto ${CMAKE_CURRENT_SOURCE_DIR}/schema.proto
 	COMMAND ${PROTOC} -I ${CMAKE_CURRENT_SOURCE_DIR} --grpc_out=. --plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN} ${CMAKE_CURRENT_SOURCE_DIR}/falco_output.proto
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
@@ -44,7 +47,8 @@ add_executable(falco
 	grpc_server.cpp
 	utils.cpp
 	${CMAKE_CURRENT_BINARY_DIR}/falco_output.grpc.pb.cc
-	${CMAKE_CURRENT_BINARY_DIR}/falco_output.pb.cc)
+	${CMAKE_CURRENT_BINARY_DIR}/falco_output.pb.cc
+	${CMAKE_CURRENT_BINARY_DIR}/schema.pb.cc)
 
 target_include_directories(falco PUBLIC
 	"${SYSDIG_DIR}/userspace/sysdig"
