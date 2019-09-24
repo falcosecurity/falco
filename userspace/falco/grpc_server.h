@@ -27,13 +27,13 @@ namespace falco
 {
 namespace grpc
 {
-class falco_grpc_server : public falco_grpc_server_impl
+class server : public server_impl
 {
 public:
-	falco_grpc_server()
+	server()
 	{
 	}
-	falco_grpc_server(std::string server_addr, int threadiness, std::string private_key, std::string cert_chain, std::string root_certs):
+	server(std::string server_addr, int threadiness, std::string private_key, std::string cert_chain, std::string root_certs):
 		m_server_addr(server_addr),
 		m_threadiness(threadiness),
 		m_private_key(private_key),
@@ -41,7 +41,7 @@ public:
 		m_root_certs(root_certs)
 	{
 	}
-	virtual ~falco_grpc_server() = default;
+	virtual ~server() = default;
 
 	void init(std::string server_addr, int threadiness, std::string private_key, std::string cert_chain, std::string root_certs);
 	void thread_process(int thread_index);
@@ -76,9 +76,9 @@ public:
 		WRITE,
 		FINISH
 	} m_state = UNKNOWN;
-	virtual void start(falco_grpc_server* srv) = 0;
-	virtual void process(falco_grpc_server* srv) = 0;
-	virtual void end(falco_grpc_server* srv, bool isError) = 0;
+	virtual void start(server* srv) = 0;
+	virtual void process(server* srv) = 0;
+	virtual void end(server* srv, bool isError) = 0;
 };
 
 //
@@ -94,14 +94,14 @@ public:
 	~request_stream_context() = default;
 
 	// Pointer to function that does actual processing
-	void (falco_grpc_server::*m_process_func)(const stream_context&, const Request&, Response&);
+	void (server::*m_process_func)(const stream_context&, const Request&, Response&);
 
 	// Pointer to function that requests the system to start processing given requests
 	void (service::AsyncService::*m_request_func)(::grpc::ServerContext*, Request*, ::grpc::ServerAsyncWriter<Response>*, ::grpc::CompletionQueue*, ::grpc::ServerCompletionQueue*, void*);
 
-	void start(falco_grpc_server* srv);
-	void process(falco_grpc_server* srv);
-	void end(falco_grpc_server* srv, bool isError);
+	void start(server* srv);
+	void process(server* srv);
+	void end(server* srv, bool isError);
 
 private:
 	std::unique_ptr<::grpc::ServerAsyncWriter<Response>> m_res_writer;
