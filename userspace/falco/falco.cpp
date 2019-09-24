@@ -455,7 +455,7 @@ int falco_init(int argc, char **argv)
 	scap_stats cstats;
 
 	falco_webserver webserver;
-	falco_grpc_server grpc_server;
+	falco::grpc::falco_grpc_server grpc_server;
 	std::thread grpc_server_thread;
 
 	static struct option long_options[] =

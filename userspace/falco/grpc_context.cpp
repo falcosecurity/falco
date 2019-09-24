@@ -20,7 +20,7 @@ limitations under the License.
 
 #include "grpc_context.h"
 
-context::context(grpc::ServerContext* ctx):
+falco::grpc::context::context(::grpc::ServerContext* ctx):
 	m_ctx(ctx)
 {
 	std::string session_id;
@@ -48,9 +48,9 @@ context::context(grpc::ServerContext* ctx):
 	m_prefix = meta.str();
 }
 
-void context::get_metadata(std::string key, std::string& val)
+void falco::grpc::context::context::get_metadata(std::string key, std::string& val)
 {
-	const std::multimap<grpc::string_ref, grpc::string_ref>& client_metadata = m_ctx->client_metadata();
+	const std::multimap<::grpc::string_ref, ::grpc::string_ref>& client_metadata = m_ctx->client_metadata();
 	auto it = client_metadata.find(key);
 	if(it != client_metadata.end())
 	{

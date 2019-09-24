@@ -25,14 +25,15 @@ limitations under the License.
 #include "logger.h"
 #include "grpc_server.h"
 #include "grpc_context.h"
+#include "utils.h"
 
 template<>
-void request_stream_context<request, response>::start(falco_grpc_server* srv)
+void falco::grpc::request_stream_context<falco::output::request, falco::output::response>::start(falco_grpc_server* srv)
 {
 	m_state = request_context_base::REQUEST;
-	m_srv_ctx.reset(new grpc::ServerContext);
+	m_srv_ctx.reset(new ::grpc::ServerContext);
 	auto srvctx = m_srv_ctx.get();
-	m_res_writer.reset(new grpc::ServerAsyncWriter<response>(srvctx));
+	m_res_writer.reset(new ::grpc::ServerAsyncWriter<response>(srvctx));
 	m_stream_ctx.reset();
 	m_req.Clear();
 	auto cq = srv->m_completion_queue.get();
@@ -40,7 +41,7 @@ void request_stream_context<request, response>::start(falco_grpc_server* srv)
 }
 
 template<>
-void request_stream_context<request, response>::process(falco_grpc_server* srv)
+void falco::grpc::request_stream_context<falco::output::request, falco::output::response>::process(falco_grpc_server* srv)
 {
 	// When it is the 1st process call
 	if(m_state == request_context_base::REQUEST)
@@ -64,12 +65,12 @@ void request_stream_context<request, response>::process(falco_grpc_server* srv)
 		// Communicate to the gRPC runtime that we have finished.
 		// The memory address of `this` instance uniquely identifies the event.
 		m_state = request_context_base::FINISH;
-		m_res_writer->Finish(grpc::Status::OK, this);
+		m_res_writer->Finish(::grpc::Status::OK, this);
 	}
 }
 
 template<>
-void request_stream_context<request, response>::end(falco_grpc_server* srv, bool errored)
+void falco::grpc::request_stream_context<falco::output::request, falco::output::response>::end(falco_grpc_server* srv, bool errored)
 {
 	if(m_stream_ctx)
 	{
@@ -83,7 +84,7 @@ void request_stream_context<request, response>::end(falco_grpc_server* srv, bool
 	start(srv);
 }
 
-void falco_grpc_server::thread_process(int thread_index)
+void falco::grpc::falco_grpc_server::thread_process(int thread_index)
 {
 
 	void* tag = nullptr;
@@ -144,29 +145,7 @@ void falco_grpc_server::thread_process(int thread_index)
 		ctx.start(this);                                                      \
 	}
 
-// todo(fntlnz, leodido) > cleanup this part (paths from config, read, includes)
-#include <sstream>
-#include <fstream>
-#include <iostream>
-
-void read(const std::string& filename, std::string& data)
-{
-	std::ifstream file(filename.c_str(), std::ios::in);
-
-	if(file.is_open())
-	{
-		std::stringstream ss;
-		ss << file.rdbuf();
-
-		file.close();
-
-		data = ss.str();
-	}
-
-	return;
-}
-
-void falco_grpc_server::init(std::string server_addr, int threadiness, std::string private_key, std::string cert_chain, std::string root_certs)
+void falco::grpc::falco_grpc_server::init(std::string server_addr, int threadiness, std::string private_key, std::string cert_chain, std::string root_certs)
 {
 	m_server_addr = server_addr;
 	m_threadiness = threadiness;
@@ -175,26 +154,26 @@ void falco_grpc_server::init(std::string server_addr, int threadiness, std::stri
 	m_root_certs = root_certs;
 }
 
-void falco_grpc_server::run()
+void falco::grpc::falco_grpc_server::run()
 {
 	string private_key;
 	string cert_chain;
 	string root_certs;
 
-	read(m_cert_chain, cert_chain);
-	read(m_private_key, private_key);
-	read(m_root_certs, root_certs);
+	falco::utils::read(m_cert_chain, cert_chain);
+	falco::utils::read(m_private_key, private_key);
+	falco::utils::read(m_root_certs, root_certs);
 
-	grpc::SslServerCredentialsOptions::PemKeyCertPair cert_pair{private_key, cert_chain};
+	::grpc::SslServerCredentialsOptions::PemKeyCertPair cert_pair{private_key, cert_chain};
 
-	grpc::SslServerCredentialsOptions ssl_opts(GRPC_SSL_REQUEST_AND_REQUIRE_CLIENT_CERTIFICATE_AND_VERIFY);
+	::grpc::SslServerCredentialsOptions ssl_opts(GRPC_SSL_REQUEST_AND_REQUIRE_CLIENT_CERTIFICATE_AND_VERIFY);
 	ssl_opts.pem_root_certs = root_certs;
 	ssl_opts.pem_key_cert_pairs.push_back(cert_pair);
 
 	// Setup server
-	grpc::ServerBuilder builder;
+	::grpc::ServerBuilder builder;
 	// Listen on the given address without any authentication mechanism.
-	builder.AddListeningPort(m_server_addr, grpc::SslServerCredentials(ssl_opts));
+	builder.AddListeningPort(m_server_addr, ::grpc::SslServerCredentials(ssl_opts));
 	builder.RegisterService(&m_svc);
 
 	// builder.SetMaxSendMessageSize(GRPC_MAX_MESSAGE_SIZE);     // testing max message size?
@@ -225,7 +204,7 @@ void falco_grpc_server::run()
 	stop();
 }
 
-void falco_grpc_server::stop()
+void falco::grpc::falco_grpc_server::stop()
 {
 	falco_logger::log(LOG_INFO, "Shutting down gRPC server. Waiting until external connections are closed by clients\n");
 	m_server->Shutdown();

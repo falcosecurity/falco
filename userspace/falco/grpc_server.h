@@ -23,6 +23,10 @@ limitations under the License.
 
 #include "grpc_server_impl.h"
 
+namespace falco
+{
+namespace grpc
+{
 class falco_grpc_server : public falco_grpc_server_impl
 {
 public:
@@ -45,7 +49,7 @@ public:
 	void stop();
 
 	service::AsyncService m_svc;
-	std::unique_ptr<grpc::ServerCompletionQueue> m_completion_queue;
+	std::unique_ptr<::grpc::ServerCompletionQueue> m_completion_queue;
 
 private:
 	std::string m_server_addr;
@@ -54,7 +58,7 @@ private:
 	std::string m_cert_chain;
 	std::string m_root_certs;
 
-	std::unique_ptr<grpc::Server> m_server;
+	std::unique_ptr<::grpc::Server> m_server;
 	std::vector<std::thread> m_threads;
 };
 
@@ -64,7 +68,7 @@ public:
 	request_context_base() = default;
 	~request_context_base() = default;
 
-	std::unique_ptr<grpc::ServerContext> m_srv_ctx;
+	std::unique_ptr<::grpc::ServerContext> m_srv_ctx;
 	enum : char
 	{
 		UNKNOWN = 0,
@@ -93,14 +97,16 @@ public:
 	void (falco_grpc_server::*m_process_func)(const stream_context&, const Request&, Response&);
 
 	// Pointer to function that requests the system to start processing given requests
-	void (service::AsyncService::*m_request_func)(grpc::ServerContext*, Request*, grpc::ServerAsyncWriter<Response>*, grpc::CompletionQueue*, grpc::ServerCompletionQueue*, void*);
+	void (service::AsyncService::*m_request_func)(::grpc::ServerContext*, Request*, ::grpc::ServerAsyncWriter<Response>*, ::grpc::CompletionQueue*, ::grpc::ServerCompletionQueue*, void*);
 
 	void start(falco_grpc_server* srv);
 	void process(falco_grpc_server* srv);
 	void end(falco_grpc_server* srv, bool isError);
 
 private:
-	std::unique_ptr<grpc::ServerAsyncWriter<Response>> m_res_writer;
+	std::unique_ptr<::grpc::ServerAsyncWriter<Response>> m_res_writer;
 	std::unique_ptr<stream_context> m_stream_ctx;
 	Request m_req;
 };
+} // namespace grpc
+} // namespace falco

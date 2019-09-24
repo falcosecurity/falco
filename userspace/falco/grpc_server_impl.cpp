@@ -18,7 +18,7 @@ limitations under the License.
 
 #include "grpc_server_impl.h"
 
-bool falco_grpc_server_impl::is_running()
+bool falco::grpc::falco_grpc_server_impl::is_running()
 {
 	if(m_stop)
 	{
@@ -27,7 +27,7 @@ bool falco_grpc_server_impl::is_running()
 	return true;
 }
 
-void falco_grpc_server_impl::subscribe(const stream_context& ctx, const request& req, response& res)
+void falco::grpc::falco_grpc_server_impl::subscribe(const stream_context& ctx, const output::request& req, output::response& res)
 {
 	if(ctx.m_status == stream_context::SUCCESS || ctx.m_status == stream_context::ERROR)
 	{
@@ -52,7 +52,7 @@ void falco_grpc_server_impl::subscribe(const stream_context& ctx, const request&
 	}
 }
 
-void falco_grpc_server_impl::shutdown()
+void falco::grpc::falco_grpc_server_impl::shutdown()
 {
 	m_stop = true;
 }

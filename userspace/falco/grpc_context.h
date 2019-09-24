@@ -26,26 +26,31 @@ limitations under the License.
 #include <grpc++/grpc++.h>
 #endif
 
+namespace falco
+{
+namespace grpc
+{
+
 const std::string meta_session = "session_id";
 const std::string meta_request = "request_id";
 
 class context
 {
 public:
-	context(grpc::ServerContext* ctx);
+	context(::grpc::ServerContext* ctx);
 	~context() = default;
 
 	void get_metadata(std::string key, std::string& val);
 
 private:
-	grpc::ServerContext* m_ctx = nullptr;
+	::grpc::ServerContext* m_ctx = nullptr;
 	std::string m_prefix;
 };
 
 class stream_context : public context
 {
 public:
-	stream_context(grpc::ServerContext* ctx):
+	stream_context(::grpc::ServerContext* ctx):
 		context(ctx){};
 	~stream_context() = default;
 
@@ -60,3 +65,5 @@ public:
 	// Are there more responses to stream?
 	mutable bool m_has_more = false;
 };
+} // namespace grpc
+} // namespace falco
