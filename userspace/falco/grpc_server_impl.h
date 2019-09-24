@@ -28,11 +28,11 @@ namespace falco
 {
 namespace grpc
 {
-class falco_grpc_server_impl
+class server_impl
 {
 public:
-	falco_grpc_server_impl() = default;
-	~falco_grpc_server_impl() = default;
+	server_impl() = default;
+	~server_impl() = default;
 
 	void shutdown();
 

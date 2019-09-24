@@ -28,7 +28,7 @@ limitations under the License.
 #include "utils.h"
 
 template<>
-void falco::grpc::request_stream_context<falco::output::request, falco::output::response>::start(falco_grpc_server* srv)
+void falco::grpc::request_stream_context<falco::output::request, falco::output::response>::start(server* srv)
 {
 	m_state = request_context_base::REQUEST;
 	m_srv_ctx.reset(new ::grpc::ServerContext);
@@ -41,7 +41,7 @@ void falco::grpc::request_stream_context<falco::output::request, falco::output::
 }
 
 template<>
-void falco::grpc::request_stream_context<falco::output::request, falco::output::response>::process(falco_grpc_server* srv)
+void falco::grpc::request_stream_context<falco::output::request, falco::output::response>::process(server* srv)
 {
 	// When it is the 1st process call
 	if(m_state == request_context_base::REQUEST)
@@ -70,7 +70,7 @@ void falco::grpc::request_stream_context<falco::output::request, falco::output::
 }
 
 template<>
-void falco::grpc::request_stream_context<falco::output::request, falco::output::response>::end(falco_grpc_server* srv, bool errored)
+void falco::grpc::request_stream_context<falco::output::request, falco::output::response>::end(server* srv, bool errored)
 {
 	if(m_stream_ctx)
 	{
@@ -84,7 +84,7 @@ void falco::grpc::request_stream_context<falco::output::request, falco::output::
 	start(srv);
 }
 
-void falco::grpc::falco_grpc_server::thread_process(int thread_index)
+void falco::grpc::server::thread_process(int thread_index)
 {
 
 	void* tag = nullptr;
@@ -140,12 +140,12 @@ void falco::grpc::falco_grpc_server::thread_process(int thread_index)
 	std::vector<request_stream_context<REQ, RESP>> RPC##_contexts(CONTEXT_COUNT); \
 	for(request_stream_context<REQ, RESP> & ctx : RPC##_contexts)                 \
 	{                                                                             \
-		ctx.m_process_func = &falco_grpc_server::IMPL;                        \
+		ctx.m_process_func = &server::IMPL;                                   \
 		ctx.m_request_func = &service::AsyncService::Request##RPC;            \
 		ctx.start(this);                                                      \
 	}
 
-void falco::grpc::falco_grpc_server::init(std::string server_addr, int threadiness, std::string private_key, std::string cert_chain, std::string root_certs)
+void falco::grpc::server::init(std::string server_addr, int threadiness, std::string private_key, std::string cert_chain, std::string root_certs)
 {
 	m_server_addr = server_addr;
 	m_threadiness = threadiness;
@@ -154,7 +154,7 @@ void falco::grpc::falco_grpc_server::init(std::string server_addr, int threadine
 	m_root_certs = root_certs;
 }
 
-void falco::grpc::falco_grpc_server::run()
+void falco::grpc::server::run()
 {
 	string private_key;
 	string cert_chain;
@@ -181,12 +181,12 @@ void falco::grpc::falco_grpc_server::run()
 
 	m_completion_queue = builder.AddCompletionQueue();
 	m_server = builder.BuildAndStart();
-	falco_logger::log(LOG_INFO, "Starting gRPC webserver at " + m_server_addr + "\n");
+	falco_logger::log(LOG_INFO, "Starting gRPC server at " + m_server_addr + "\n");
 
 	// Create context for server threads
 	// The number of contexts is multiple of the number of threads
 	// This defines the number of simultaneous completion queue requests of the same type (service::AsyncService::Request##RPC)
-	// For this approach to be sufficient falco_grpc_server::IMPL have to be fast
+	// For this approach to be sufficient server::IMPL have to be fast
 	int context_count = m_threadiness * 10;
 	PROCESS_STREAM(request, response, subscribe, subscribe, context_count)
 
@@ -194,17 +194,17 @@ void falco::grpc::falco_grpc_server::run()
 	int thread_idx = 0;
 	for(std::thread& thread : m_threads)
 	{
-		thread = std::thread(&falco_grpc_server::thread_process, this, thread_idx++);
+		thread = std::thread(&server::thread_process, this, thread_idx++);
 	}
 
-	while(falco_grpc_server_impl::is_running())
+	while(server_impl::is_running())
 	{
 		sleep(1);
 	}
 	stop();
 }
 
-void falco::grpc::falco_grpc_server::stop()
+void falco::grpc::server::stop()
 {
 	falco_logger::log(LOG_INFO, "Shutting down gRPC server. Waiting until external connections are closed by clients\n");
 	m_server->Shutdown();
@@ -228,5 +228,5 @@ void falco::grpc::falco_grpc_server::stop()
 	{
 	}
 
-	falco_logger::log(LOG_INFO, "gRPC shutdown is now complete\n");
+	falco_logger::log(LOG_INFO, "Shutting down gRPC server complete\n");
 }
