@@ -42,6 +42,7 @@ add_executable(falco
 	grpc_context.cpp
 	grpc_server_impl.cpp
 	grpc_server.cpp
+	utils.cpp
 	${CMAKE_CURRENT_BINARY_DIR}/falco_output.grpc.pb.cc
 	${CMAKE_CURRENT_BINARY_DIR}/falco_output.pb.cc)
 
