@@ -17,6 +17,7 @@ limitations under the License.
 */
 
 #include "grpc_server_impl.h"
+#include "falco_output_queue.h"
 
 bool falco::grpc::server_impl::is_running()
 {
@@ -39,12 +40,12 @@ void falco::grpc::server_impl::subscribe(const stream_context& ctx, const output
 	{
 		// Start (or continue) streaming
 		// ctx.m_status == stream_context::STREAMING
-		if(falco_output_queue::get().try_pop(res) && !req.keepalive())
+		if(output::queue::get().try_pop(res) && !req.keepalive())
 		{
 			ctx.m_has_more = true;
 			return;
 		}
-		while(is_running() && !falco_output_queue::get().try_pop(res) && req.keepalive())
+		while(is_running() && !output::queue::get().try_pop(res) && req.keepalive())
 		{
 		}
 

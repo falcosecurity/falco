@@ -48,7 +48,7 @@ public:
 	void run();
 	void stop();
 
-	service::AsyncService m_svc;
+	output::service::AsyncService m_svc;
 	std::unique_ptr<::grpc::ServerCompletionQueue> m_completion_queue;
 
 private:
@@ -97,7 +97,7 @@ public:
 	void (server::*m_process_func)(const stream_context&, const Request&, Response&);
 
 	// Pointer to function that requests the system to start processing given requests
-	void (service::AsyncService::*m_request_func)(::grpc::ServerContext*, Request*, ::grpc::ServerAsyncWriter<Response>*, ::grpc::CompletionQueue*, ::grpc::ServerCompletionQueue*, void*);
+	void (output::service::AsyncService::*m_request_func)(::grpc::ServerContext*, Request*, ::grpc::ServerAsyncWriter<Response>*, ::grpc::CompletionQueue*, ::grpc::ServerCompletionQueue*, void*);
 
 	void start(server* srv);
 	void process(server* srv);
