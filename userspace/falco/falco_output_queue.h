@@ -18,7 +18,7 @@ limitations under the License.
 
 #pragma once
 
-#include "falco_output.pb.h"
+#include "output.pb.h"
 #include "tbb/concurrent_queue.h"
 
 namespace falco

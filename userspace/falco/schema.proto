@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package falco.schema;
 
+option go_package = "github.com/falcosecurity/client-go/pkg/api/schema";
+
 enum priority {
   option allow_alias = true;
   EMERGENCY = 0;

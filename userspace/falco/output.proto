@@ -5,6 +5,8 @@ import "schema.proto";
 
 package falco.output;
 
+option go_package = "github.com/falcosecurity/client-go/pkg/api/output";
+
 service service {
   rpc subscribe(request) returns (stream response);
 }
