@@ -290,7 +290,6 @@ int falco_formats::resolve_tokens(lua_State *ls)
 		json_event_formatter json_formatter(s_engine->json_factory(), sformat);
 		values = json_formatter.tomap((json_event*) evt);
 	}
-	// todo(leodido, fntlnz) > check explicitly for k8s_audit, otherwise throw exception
 
 	lua_newtable(ls);
 	for(auto const& v : values)
