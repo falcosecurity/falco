@@ -2,15 +2,14 @@
 
 <!-- toc -->
 
-- [gRPC Falco Output](#grpc-falco-output)
-  - [Summary](#summary)
-  - [Motivation](#motivation)
-    - [Goals](#goals)
-    - [Non-Goals](#non-goals)
-  - [Proposal](#proposal)
-    - [Use cases](#use-cases)
-    - [Diagrams](#diagrams)
-    - [Design Details](#design-details)
+- [Summary](#summary)
+- [Motivation](#motivation)
+  * [Goals](#goals)
+  * [Non-Goals](#non-goals)
+- [Proposal](#proposal)
+  * [Use cases](#use-cases)
+  * [Diagrams](#diagrams)
+  * [Design Details](#design-details)
 
 <!-- tocstop -->
 
