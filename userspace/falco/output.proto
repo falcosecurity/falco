@@ -7,16 +7,24 @@ package falco.output;
 
 option go_package = "github.com/falcosecurity/client-go/pkg/api/output";
 
+// The `subscribe` service defines the RPC call
+// to perform an output `request` which will lead to obtain an output `response`.
 service service {
   rpc subscribe(request) returns (stream response);
 }
 
+// The `request` message is the logical representation of the request model.
+// It is the input of the `subscribe` service.
+// It is used to configure the kind of subscription to the gRPC streaming server.
 message request {
   bool keepalive = 1;
   // string duration = 2; // TODO(leodido, fntlnz): not handled yet but keeping for reference.
   // repeated string tags = 3; // TODO(leodido, fntlnz): not handled yet but keeping for reference.
 }
 
+// The `response` message is the logical representation of the output model.
+// It contains all the elements that Falco emits in an output along with the
+// definitions for priorities and source.
 message response {
   google.protobuf.Timestamp time = 1;
   falco.schema.priority priority = 2;

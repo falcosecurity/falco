@@ -31,7 +31,7 @@ enum priority {
   debug = 7;
   Debug = 7;
 }
-  
+
 enum source {
   option allow_alias = true;
   SYSCALL = 0;
