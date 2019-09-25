@@ -27,6 +27,15 @@ limitations under the License.
 #include "grpc_context.h"
 #include "utils.h"
 
+#define REGISTER_STREAM(req, res, svc, rpc, impl, num)                                  \
+	std::vector<request_stream_context<req, res>> rpc##_contexts(num);         \
+	for(request_stream_context<req, res> & ctx : rpc##_contexts)               \
+	{                                                                          \
+		ctx.m_process_func = &server::impl;                                \
+		ctx.m_request_func = &svc::AsyncService::Request##rpc; \
+		ctx.start(this);                                                   \
+	}
+
 template<>
 void falco::grpc::request_stream_context<falco::output::request, falco::output::response>::start(server* srv)
 {
@@ -52,7 +61,7 @@ void falco::grpc::request_stream_context<falco::output::request, falco::output::
 
 	// Processing
 	output::response res;
-	(srv->*m_process_func)(*m_stream_ctx, m_req, res);
+	(srv->*m_process_func)(*m_stream_ctx, m_req, res); // subscribe()
 
 	// When there still are more responses to stream
 	if(m_stream_ctx->m_has_more)
@@ -86,14 +95,12 @@ void falco::grpc::request_stream_context<falco::output::request, falco::output::
 
 void falco::grpc::server::thread_process(int thread_index)
 {
-
 	void* tag = nullptr;
 	bool event_read_success = false;
 	while(m_completion_queue->Next(&tag, &event_read_success))
 	{
 		if(tag == nullptr)
 		{
-			// TODO: empty tag returned, log "completion queue with empty tag"
 			continue;
 		}
 
@@ -105,7 +112,6 @@ void falco::grpc::server::thread_process(int thread_index)
 		{
 			if(ctx->m_state != request_context_base::REQUEST)
 			{
-				// todo > log "server completion queue failed to read event for tag `tag`"
 				// End the context with error
 				ctx->end(this, true);
 			}
@@ -127,23 +133,10 @@ void falco::grpc::server::thread_process(int thread_index)
 			break;
 		default:
 			// todo > log "unkown completion queue event"
-			// todo > abort?
 			break;
 		}
 	}
 }
-
-//
-// Create array of contexts and start processing streaming RPC request.
-//
-#define REGISTER_STREAM(REQ, RESP, RPC, IMPL, CONTEXT_NUM)                          \
-	std::vector<request_stream_context<REQ, RESP>> RPC##_contexts(CONTEXT_NUM); \
-	for(request_stream_context<REQ, RESP> & ctx : RPC##_contexts)               \
-	{                                                                           \
-		ctx.m_process_func = &server::IMPL;                                 \
-		ctx.m_request_func = &output::service::AsyncService::Request##RPC;  \
-		ctx.start(this);                                                    \
-	}
 
 void falco::grpc::server::init(std::string server_addr, int threadiness, std::string private_key, std::string cert_chain, std::string root_certs)
 {
@@ -182,7 +175,9 @@ void falco::grpc::server::run()
 	// This defines the number of simultaneous completion queue requests of the same type (service::AsyncService::Request##RPC)
 	// For this approach to be sufficient server::IMPL have to be fast
 	int context_num = m_threadiness * 10;
-	REGISTER_STREAM(output::request, output::response, subscribe, subscribe, context_num)
+	REGISTER_STREAM(output::request, output::response, output::service, subscribe, subscribe, context_num)
+
+	// register_stream<output::request, output::response>(subscribe, context_num)
 
 	m_threads.resize(m_threadiness);
 	int thread_idx = 0;

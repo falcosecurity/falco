@@ -170,12 +170,14 @@ function mod.http_reopen()
 end
 
 function mod.grpc(event, rule, source, priority, priority_num, msg, format, options)
-   fields = formats.resolve_tokens(event, source, format)
-   c_outputs.handle_grpc(event, rule, source, priority, msg, fields, options)
+   if options.enabled == true then
+      fields = formats.resolve_tokens(event, source, format)
+      c_outputs.handle_grpc(event, rule, source, priority, msg, fields, options)
+   end
 end
 
 function mod.grpc_message(priority, priority_num, msg, options)
-   -- todo
+   -- todo(fntlnz, leodido) > gRPC does not support subscribing to dropped events yet
 end
 
 

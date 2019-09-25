@@ -60,9 +60,8 @@ public:
 		SUCCESS,
 		ERROR
 	} m_status = STREAMING;
-	// Request-specific stream data
-	mutable void* m_stream = nullptr;
-	// Are there more responses to stream?
+
+	mutable void* m_stream = nullptr; // todo(fntlnz, leodido) > useful in the future
 	mutable bool m_has_more = false;
 };
 } // namespace grpc

@@ -32,14 +32,11 @@ void falco::grpc::server_impl::subscribe(const stream_context& ctx, const output
 {
 	if(ctx.m_status == stream_context::SUCCESS || ctx.m_status == stream_context::ERROR)
 	{
-		// todo > logic
-
 		ctx.m_stream = nullptr;
 	}
 	else
 	{
-		// Start (or continue) streaming
-		// ctx.m_status == stream_context::STREAMING
+		// Streaming
 		if(output::queue::get().try_pop(res) && !req.keepalive())
 		{
 			ctx.m_has_more = true;
