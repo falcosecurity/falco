@@ -2,6 +2,27 @@
 
 This file documents all notable changes to Falco. The release numbering uses [semantic versioning](http://semver.org).
 
+## v0.17.1
+
+Released 2019-09-26
+
+## Major Changes
+
+* Same as v0.17.0
+
+## Minor Changes
+
+* Same as v0.17.0
+
+## Bug Fixes
+
+* All in v0.17.0
+* Fix a build problem for pre-built kernel probes. [[draios/sysdig#1471](https://github.com/draios/sysdig/pull/1471)]
+
+## Rule Changes
+
+* Same as v0.17.0
+
 ## v0.17.0
 
 Released 2019-07-31
@@ -735,13 +756,13 @@ All of these changes result in dramatically reduced CPU usage. Here are some com
 * Sysdig Cloud Kubernetes Demo: Starts a kubernetes environment using docker with apache and wordpress instances + synthetic workloads.
 * [Juttle-engine examples](https://github.com/juttle/juttle-engine/blob/master/examples/README.md) : Several elasticsearch, node.js, logstash, mysql, postgres, influxdb instances run under docker-compose.
 
-| Workload | 0.2.0 CPU Usage | 0.3.0 CPU Usage |
-|----------| --------------- | ----------------|
-| pts/apache | 24% | 7% |
-| pts/dbench | 70% | 5% |
-| Kubernetes-Demo (Running) | 6% | 2% |
-| Kubernetes-Demo (During Teardown) | 15% | 3% |
-| Juttle-examples | 3% | 1% |
+| Workload                          | 0.2.0 CPU Usage | 0.3.0 CPU Usage |
+| --------------------------------- | --------------- | --------------- |
+| pts/apache                        | 24%             | 7%              |
+| pts/dbench                        | 70%             | 5%              |
+| Kubernetes-Demo (Running)         | 6%              | 2%              |
+| Kubernetes-Demo (During Teardown) | 15%             | 3%              |
+| Juttle-examples                   | 3%              | 1%              |
 
 As a part of these changes, falco now prefers rule conditions that have at least one `evt.type=` operator, at the beginning of the condition, before any negative operators (i.e. `not` or `!=`). If a condition does not have any `evt.type=` operator, falco will log a warning like:
 
