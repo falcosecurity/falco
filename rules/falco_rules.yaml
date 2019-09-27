@@ -2415,6 +2415,13 @@
     WARNING
   tag: [process, mitre_defense_evation]
 
+# This rule is deprecated and will/should never be triggered. Keep it here for backport compatibility.
+- rule: Delete Bash History
+  desc: Detect bash history deletion
+  condition: >
+    ((spawned_process and proc.name in (shred, rm, mv) and proc.args contains "bash_history") or 
+     (open_write and fd.name contains "bash_history" and evt.arg.flags contains "O_TRUNC"))
+
 - macro: consider_all_chmods
   condition: (always_true)
 
