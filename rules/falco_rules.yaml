@@ -2416,6 +2416,7 @@
   tag: [process, mitre_defense_evation]
 
 # This rule is deprecated and will/should never be triggered. Keep it here for backport compatibility.
+# Rule Delete or rename shell history is the preferred rule to use now.
 - rule: Delete Bash History
   desc: Detect bash history deletion
   condition: >
