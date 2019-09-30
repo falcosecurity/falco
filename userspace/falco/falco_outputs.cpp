@@ -57,7 +57,6 @@ falco_outputs::~falco_outputs()
 	if(m_initialized)
 	{
 		lua_getglobal(m_ls, m_lua_output_cleanup.c_str());
-
 		if(!lua_isfunction(m_ls, -1))
 		{
 			falco_logger::log(LOG_ERR, std::string("No function ") + m_lua_output_cleanup + " found. ");
@@ -148,8 +147,8 @@ void falco_outputs::handle_event(gen_event *ev, string &rule, string &source,
 		return;
 	}
 
+	std::lock_guard<std::mutex> guard(m_ls_semaphore);
 	lua_getglobal(m_ls, m_lua_output_event.c_str());
-
 	if(lua_isfunction(m_ls, -1))
 	{
 		lua_pushlightuserdata(m_ls, ev);
@@ -170,7 +169,6 @@ void falco_outputs::handle_event(gen_event *ev, string &rule, string &source,
 	{
 		throw falco_exception("No function " + m_lua_output_event + " found in lua compiler module");
 	}
-
 }
 
 void falco_outputs::handle_msg(uint64_t now,
@@ -226,8 +224,8 @@ void falco_outputs::handle_msg(uint64_t now,
 		full_msg += ")";
 	}
 
+	std::lock_guard<std::mutex> guard(m_ls_semaphore);
 	lua_getglobal(m_ls, m_lua_output_msg.c_str());
-
 	if(lua_isfunction(m_ls, -1))
 	{
 		lua_pushstring(m_ls, full_msg.c_str());
@@ -251,7 +249,6 @@ void falco_outputs::handle_msg(uint64_t now,
 void falco_outputs::reopen_outputs()
 {
 	lua_getglobal(m_ls, m_lua_output_reopen.c_str());
-
 	if(!lua_isfunction(m_ls, -1))
 	{
 		throw falco_exception("No function " + m_lua_output_reopen + " found. ");
@@ -271,8 +268,8 @@ int falco_outputs::handle_http(lua_State *ls)
 	struct curl_slist *slist1;
 	slist1 = NULL;
 
-	if (!lua_isstring(ls, -1) ||
-	    !lua_isstring(ls, -2))
+	if(!lua_isstring(ls, -1) ||
+	   !lua_isstring(ls, -2))
 	{
 		lua_pushstring(ls, "Invalid arguments passed to handle_http()");
 		lua_error(ls);
@@ -298,7 +295,7 @@ int falco_outputs::handle_http(lua_State *ls)
 		curl_easy_cleanup(curl);
 		curl = NULL;
 		curl_slist_free_all(slist1);
-  		slist1 = NULL;
+		slist1 = NULL;
 	}
 	return 1;
 }
