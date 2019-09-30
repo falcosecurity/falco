@@ -287,8 +287,8 @@ unique_ptr<falco_engine::rule_result> falco_engine::process_sinsp_event(sinsp_ev
 
 	unique_ptr<struct rule_result> res(new rule_result());
 
+	std::lock_guard<std::mutex> guard(m_ls_semaphore);
 	lua_getglobal(m_ls, lua_on_event.c_str());
-
 	if(lua_isfunction(m_ls, -1))
 	{
 		lua_pushnumber(m_ls, ev->get_check_id());
@@ -335,8 +335,8 @@ unique_ptr<falco_engine::rule_result> falco_engine::process_k8s_audit_event(json
 
 	unique_ptr<struct rule_result> res(new rule_result());
 
+	std::lock_guard<std::mutex> guard(m_ls_semaphore);
 	lua_getglobal(m_ls, lua_on_event.c_str());
-
 	if(lua_isfunction(m_ls, -1))
 	{
 		lua_pushnumber(m_ls, ev->get_check_id());
