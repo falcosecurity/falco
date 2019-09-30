@@ -27,7 +27,7 @@ falco::grpc::context::context(::grpc::ServerContext* ctx):
 	std::string request_id;
 
 	get_metadata(meta_session, session_id);
-	get_metadata(meta_session, request_id);
+	get_metadata(meta_request, request_id);
 
 	bool has_meta = false;
 	std::stringstream meta;
