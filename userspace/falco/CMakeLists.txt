@@ -47,7 +47,7 @@ add_executable(
 add_dependencies(falco civetweb)
 
 if(USE_BUNDLED_DEPS)
-add_dependencies(falco yamlcpp)
+  add_dependencies(falco yamlcpp)
 endif()
 
 target_include_directories(

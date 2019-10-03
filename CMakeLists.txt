@@ -72,16 +72,77 @@ if(NOT FALCO_VERSION)
   include(GetGitRevisionDescription)
   git_get_exact_tag(FALCO_TAG)
   if(NOT FALCO_TAG)
-    git_describe(FALCO_VERSION "--always")
-    git_local_changes(FALCO_CHANGES)
-    if(FALCO_CHANGES STREQUAL "DIRTY")
-      string(TOLOWER "${FALCO_CHANGES}" FALCO_CHANGES)
-      set(FALCO_VERSION "${FALCO_VERSION}.${FALCO_CHANGES}")
+    # Obtain the nearest tag
+    git_describe(FALCO_VERSION "--abbrev=0") # suppress the long format
+    # Obtain the git commit
+    git_describe(FALCO_VERSION_BUILD "--abbrev=7")
+    string(FIND "${FALCO_VERSION_BUILD}" "g" FALCO_VERSION_BUILD_START)
+    if(FALCO_VERSION_BUILD_START GREATER 0)
+      math(EXPR FALCO_VERSION_BUILD_START "${FALCO_VERSION_BUILD_START}+1")
+      string(SUBSTRING "${FALCO_VERSION_BUILD}"
+                       "${FALCO_VERSION_BUILD_START}"
+                       7
+                       FALCO_VERSION_BUILD)
+      # Check whether there are uncommitted changes or not
+      git_local_changes(FALCO_CHANGES)
+      if(FALCO_CHANGES STREQUAL "DIRTY")
+        string(TOLOWER "${FALCO_CHANGES}" FALCO_CHANGES)
+        set(FALCO_VERSION_BUILD "${FALCO_VERSION_BUILD}.${FALCO_CHANGES}")
+      endif()
     endif()
-    set(FALCO_VERSION "0.${FALCO_VERSION}")
+    # Add build metadata part (semver 2)
+    set(FALCO_VERSION "${FALCO_VERSION}+${FALCO_VERSION_BUILD}")
   else()
     set(FALCO_VERSION "${FALCO_TAG}")
-    string(REGEX REPLACE "^v([0-9]+)(\\.[0-9]+)(\\.[0-9]+)?" "\\1\\2\\3" FALCO_VERSION ${FALCO_VERSION})
+    # Remove the starting "v" in case there is one
+    string(REGEX
+           REPLACE "^v(.*)"
+                   "\\1"
+                   FALCO_VERSION
+                   "${FALCO_TAG}")
+  endif()
+  # Populate partial version variables
+  string(
+    REGEX
+    MATCH
+      "^(0|[1-9][0-9]*)"
+      FALCO_VERSION_MAJOR
+      "${FALCO_VERSION}")
+  string(
+    REGEX
+    REPLACE
+      "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\..*"
+      "\\2"
+      FALCO_VERSION_MINOR
+      "${FALCO_VERSION}")
+  string(
+    REGEX
+    REPLACE
+      "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*).*"
+      "\\3"
+      FALCO_VERSION_PATCH
+      "${FALCO_VERSION}")
+  string(
+    REGEX
+    REPLACE
+      "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)-((0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*)\\.(0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*)*).*"
+      "\\4"
+      FALCO_VERSION_PRERELEASE
+      "${FALCO_VERSION}")
+  if(FALCO_VERSION_PRERELEASE STREQUAL "${FALCO_VERSION}")
+    set(FALCO_VERSION_PRERELEASE "")
+  endif()
+  if(NOT FALCO_VERSION_BUILD)
+  string(
+    REGEX
+    REPLACE
+      ".*\\+([0-9a-zA-Z-]+(\\.[0-9a-zA-Z-]+)*)"
+      "\\1"
+      FALCO_VERSION_BUILD
+      "${FALCO_VERSION}")
+  endif()
+  if(FALCO_VERSION_BUILD STREQUAL "${FALCO_VERSION}")
+    set(FALCO_VERSION_BUILD "")
   endif()
 endif()
 message(STATUS "Falco version: ${FALCO_VERSION}")
@@ -240,6 +301,7 @@ include(sysdig)
 # Installation
 install(FILES falco.yaml DESTINATION "${FALCO_ETC_DIR}")
 
+# Coverage
 include(Coverage)
 
 # Tests
