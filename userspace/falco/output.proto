@@ -16,6 +16,9 @@ service service {
 // The `request` message is the logical representation of the request model.
 // It is the input of the `subscribe` service.
 // It is used to configure the kind of subscription to the gRPC streaming server.
+//
+// By default the request asks to the server to only receive the accumulated events.
+// In case you want to wait indefinitely for new events to come set the keepalive option to true.
 message request {
   bool keepalive = 1;
   // string duration = 2; // TODO(leodido, fntlnz): not handled yet but keeping for reference.
