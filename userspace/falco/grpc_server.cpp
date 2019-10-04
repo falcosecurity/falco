@@ -22,15 +22,14 @@ limitations under the License.
 
 #include "logger.h"
 #include "grpc_server.h"
+#include "grpc_request_context.h"
 #include "grpc_context.h"
 #include "utils.h"
 #include "banned.h"
 
-// todo(leodido) > remove this macro doing only one REGISTER macro (only the context typeschange and they inherit from a base class)
-
 #define REGISTER_STREAM(req, res, svc, rpc, impl, num)                     \
-	std::vector<request_stream_context<req, res>> rpc##_contexts(num); \
-	for(request_stream_context<req, res> & c : rpc##_contexts)         \
+	std::vector<request_stream_context<svc, req, res>> rpc##_contexts(num); \
+	for(request_stream_context<svc, req, res> & c : rpc##_contexts)         \
 	{                                                                  \
 		c.m_process_func = &server::impl;                          \
 		c.m_request_func = &svc::AsyncService::Request##rpc;       \
@@ -38,108 +37,13 @@ limitations under the License.
 	}
 
 #define REGISTER_UNARY(req, res, svc, rpc, impl, num)                \
-	std::vector<request_context<req, res>> rpc##_contexts(num);  \
-	for(request_context<req, res> & c : rpc##_contexts)          \
+	std::vector<request_context<svc, req, res>> rpc##_contexts(num);  \
+	for(request_context<svc, req, res> & c : rpc##_contexts)          \
 	{                                                            \
 		c.m_process_func = &server::impl;                    \
 		c.m_request_func = &svc::AsyncService::Request##rpc; \
 		c.start(this);                                       \
 	}
-
-namespace falco
-{
-namespace grpc
-{
-
-template<>
-void request_stream_context<falco::output::request, falco::output::response>::start(server* srv)
-{
-	m_state = request_context_base::REQUEST;
-	m_srv_ctx.reset(new ::grpc::ServerContext);
-	auto srvctx = m_srv_ctx.get();
-	m_res_writer.reset(new ::grpc::ServerAsyncWriter<output::response>(srvctx));
-	m_stream_ctx.reset();
-	m_req.Clear();
-	auto cq = srv->m_completion_queue.get();
-	(srv->m_svc.*m_request_func)(srvctx, &m_req, m_res_writer.get(), cq, cq, this);
-}
-
-template<>
-void request_stream_context<falco::output::request, falco::output::response>::process(server* srv)
-{
-	// When it is the 1st process call
-	if(m_state == request_context_base::REQUEST)
-	{
-		m_state = request_context_base::WRITE;
-		m_stream_ctx.reset(new stream_context(m_srv_ctx.get()));
-	}
-
-	// Processing
-	output::response res;
-	(srv->*m_process_func)(*m_stream_ctx, m_req, res); // subscribe()
-
-	// When there still are more responses to stream
-	if(m_stream_ctx->m_has_more)
-	{
-		m_res_writer->Write(res, this);
-	}
-	// No more responses to stream
-	else
-	{
-		// Communicate to the gRPC runtime that we have finished.
-		// The memory address of `this` instance uniquely identifies the event.
-		m_state = request_context_base::FINISH;
-		m_res_writer->Finish(::grpc::Status::OK, this);
-	}
-}
-
-template<>
-void request_stream_context<falco::output::request, falco::output::response>::end(server* srv, bool errored)
-{
-	if(m_stream_ctx)
-	{
-		m_stream_ctx->m_status = errored ? stream_context::ERROR : stream_context::SUCCESS;
-
-		// Complete the processing
-		output::response res;
-		(srv->*m_process_func)(*m_stream_ctx, m_req, res); // subscribe()
-	}
-
-	start(srv);
-}
-} // namespace grpc
-} // namespace falco
-
-template<>
-void falco::grpc::request_context<falco::version::service, falco::version::request, falco::version::response>::start(server* srv)
-{
-	m_state = request_context_base::REQUEST;
-	m_srv_ctx.reset(new ::grpc::ServerContext);
-	auto srvctx = m_srv_ctx.get();
-	m_res_writer.reset(new ::grpc::ServerAsyncWriter<version::response>(srvctx));
-	m_req.Clear();
-	// auto cq = srv->m_completion_queue.get();
-	// fixme(leodido) > m_svc is output::service not version::service
-	// (srv->m_svc.*m_request_func)(srvctx, &m_req, m_res_writer.get(), cq, cq, this);
-}
-
-template<>
-void falco::grpc::request_context<falco::version::service, falco::version::request, falco::version::response>::process(server* srv)
-{
-	version::response res;
-	(srv->*m_process_func)(m_srv_ctx.get(), m_req, res);
-	// Done
-	m_state = request_context_base::FINISH;
-	m_res_writer->Write(res, this);
-	m_res_writer->Finish(::grpc::Status::OK, this);
-}
-
-template<>
-void falco::grpc::request_context<falco::version::service, falco::version::request, falco::version::response>::end(server* srv, bool errored)
-{
-	// todo(leodido) > what to do when errored is true?
-	start(srv);
-}
 
 void falco::grpc::server::thread_process(int thread_index)
 {
@@ -225,7 +129,7 @@ void falco::grpc::server::run()
 	// For this approach to be sufficient server::IMPL have to be fast
 	int context_num = m_threadiness * 10;
 
-	// REGISTER_UNARY(version::request, version::response, version::service, version, version, context_num)
+	//REGISTER_UNARY(version::request, version::response, version::service, version, version, context_num)
 	REGISTER_STREAM(output::request, output::response, output::service, subscribe, subscribe, context_num)
 
 	m_threads.resize(m_threadiness);
