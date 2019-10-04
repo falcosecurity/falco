@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package falco;
+package falco.version;
 
 option go_package = "github.com/falcosecurity/client-go/pkg/api/version";
 
@@ -10,11 +10,14 @@ service service {
   rpc version(request) returns (response);
 }
 
+// The `request` message is an empty one.
 message request
 {
-  // empty message
 }
 
+// The `response` message contains the version of Falco.
+// It provides the whole version as a string and also
+// its parts as per semver 2.0 specification (https://semver.org).
 message response
 {
   string version = 1;
