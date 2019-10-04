@@ -50,6 +50,7 @@ add_executable(
   webserver.cpp
   grpc_context.cpp
   grpc_server_impl.cpp
+  grpc_request_context.cpp
   grpc_server.cpp
   utils.cpp
   ${CMAKE_CURRENT_BINARY_DIR}/version.grpc.pb.cc
@@ -57,6 +58,8 @@ add_executable(
   ${CMAKE_CURRENT_BINARY_DIR}/output.grpc.pb.cc
   ${CMAKE_CURRENT_BINARY_DIR}/output.pb.cc
   ${CMAKE_CURRENT_BINARY_DIR}/schema.pb.cc)
+
+add_dependencies(falco civetweb)
 
 if(USE_BUNDLED_DEPS)
   add_dependencies(falco yamlcpp)
