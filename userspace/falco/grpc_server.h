@@ -47,12 +47,10 @@ public:
 	void run();
 	void stop();
 
-	// fixme(leodido) > wny the output::service:: ..?
-	output::service::AsyncService m_svc;
-	std::unique_ptr<::grpc::ServerCompletionQueue> m_completion_queue;
+	output::service::AsyncService m_output_svc;
+	version::service::AsyncService m_version_svc;
 
-	// version::service::AsyncService m_version_svc;
-	// std::unique_ptr<::grpc::ServerCompletionQueue> m_version_completion_queue;
+	std::unique_ptr<::grpc::ServerCompletionQueue> m_completion_queue;
 
 private:
 	std::string m_server_addr;

@@ -33,7 +33,7 @@ void request_stream_context<falco::output::service, falco::output::request, falc
 	m_stream_ctx.reset();
 	m_req.Clear();
 	auto cq = srv->m_completion_queue.get();
-	(srv->m_svc.*m_request_func)(srvctx, &m_req, m_res_writer.get(), cq, cq, this);
+	(srv->m_output_svc.*m_request_func)(srvctx, &m_req, m_res_writer.get(), cq, cq, this);
 }
 
 template<>
@@ -86,22 +86,20 @@ void falco::grpc::request_context<falco::version::service, falco::version::reque
 	m_state = request_context_base::REQUEST;
 	m_srv_ctx.reset(new ::grpc::ServerContext);
 	auto srvctx = m_srv_ctx.get();
-	m_res_writer.reset(new ::grpc::ServerAsyncWriter<version::response>(srvctx));
+	m_res_writer.reset(new ::grpc::ServerAsyncResponseWriter<version::response>(srvctx));
 	m_req.Clear();
-	// auto cq = srv->m_completion_queue.get();
-	// fixme(leodido) > m_svc is output::service not version::service
-	// (srv->m_svc.*m_request_func)(srvctx, &m_req, m_res_writer.get(), cq, cq, this);
+	auto cq = srv->m_completion_queue.get();
+	(srv->m_version_svc.*m_request_func)(srvctx, &m_req, m_res_writer.get(), cq, cq, this);
 }
 
 template<>
 void falco::grpc::request_context<falco::version::service, falco::version::request, falco::version::response>::process(server* srv)
 {
 	version::response res;
-	(srv->*m_process_func)(m_srv_ctx.get(), m_req, res);
+	(srv->*m_process_func)(m_srv_ctx.get(), m_req, res); // version()
 	// Done
 	m_state = request_context_base::FINISH;
-	m_res_writer->Write(res, this);
-	m_res_writer->Finish(::grpc::Status::OK, this);
+	m_res_writer->Finish(res, ::grpc::Status::OK, this);
 }
 
 template<>

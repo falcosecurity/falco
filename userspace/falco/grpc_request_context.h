@@ -93,7 +93,7 @@ public:
 	void end(server* srv, bool isError);
 
 private:
-	std::unique_ptr<::grpc::ServerAsyncWriter<Response>> m_res_writer;
+	std::unique_ptr<::grpc::ServerAsyncResponseWriter<Response>> m_res_writer;
 	Request m_req;
 };
 } // namespace grpc
