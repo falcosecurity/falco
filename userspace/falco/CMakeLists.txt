@@ -15,10 +15,22 @@ configure_file("${SYSDIG_SOURCE_DIR}/userspace/sysdig/config_sysdig.h.in" config
 
 add_custom_command(
   OUTPUT
-    ${CMAKE_CURRENT_BINARY_DIR}/output.grpc.pb.cc ${CMAKE_CURRENT_BINARY_DIR}/output.grpc.pb.h
-    ${CMAKE_CURRENT_BINARY_DIR}/output.pb.cc ${CMAKE_CURRENT_BINARY_DIR}/output.pb.h
-    ${CMAKE_CURRENT_BINARY_DIR}/schema.pb.cc ${CMAKE_CURRENT_BINARY_DIR}/schema.pb.h
-  COMMENT "Generate gRPC code"
+    ${CMAKE_CURRENT_BINARY_DIR}/version.grpc.pb.cc
+    ${CMAKE_CURRENT_BINARY_DIR}/version.grpc.pb.h
+    ${CMAKE_CURRENT_BINARY_DIR}/version.pb.cc
+    ${CMAKE_CURRENT_BINARY_DIR}/version.pb.h
+    ${CMAKE_CURRENT_BINARY_DIR}/output.grpc.pb.cc
+    ${CMAKE_CURRENT_BINARY_DIR}/output.grpc.pb.h
+    ${CMAKE_CURRENT_BINARY_DIR}/output.pb.cc
+    ${CMAKE_CURRENT_BINARY_DIR}/output.pb.h
+    ${CMAKE_CURRENT_BINARY_DIR}/schema.pb.cc
+    ${CMAKE_CURRENT_BINARY_DIR}/schema.pb.h
+  COMMENT "Generate gRPC version API"
+  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/version.proto
+  COMMAND ${PROTOC} -I ${CMAKE_CURRENT_SOURCE_DIR} --cpp_out=. ${CMAKE_CURRENT_SOURCE_DIR}/version.proto
+  COMMAND ${PROTOC} -I ${CMAKE_CURRENT_SOURCE_DIR} --grpc_out=. --plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN}
+          ${CMAKE_CURRENT_SOURCE_DIR}/version.proto
+  COMMENT "Generate gRPC outputs API"
   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/output.proto
   COMMAND ${PROTOC} -I ${CMAKE_CURRENT_SOURCE_DIR} --cpp_out=. ${CMAKE_CURRENT_SOURCE_DIR}/output.proto
           ${CMAKE_CURRENT_SOURCE_DIR}/schema.proto
@@ -40,11 +52,11 @@ add_executable(
   grpc_server_impl.cpp
   grpc_server.cpp
   utils.cpp
+  ${CMAKE_CURRENT_BINARY_DIR}/version.grpc.pb.cc
+  ${CMAKE_CURRENT_BINARY_DIR}/version.pb.cc
   ${CMAKE_CURRENT_BINARY_DIR}/output.grpc.pb.cc
   ${CMAKE_CURRENT_BINARY_DIR}/output.pb.cc
   ${CMAKE_CURRENT_BINARY_DIR}/schema.pb.cc)
-
-add_dependencies(falco civetweb)
 
 if(USE_BUNDLED_DEPS)
   add_dependencies(falco yamlcpp)
