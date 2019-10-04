@@ -15,8 +15,6 @@ limitations under the License.
 */
 
 #pragma once
-#include <string>
-#include <regex>
 
 #define FALCO_VERSION "@FALCO_VERSION@"
 #define FALCO_VERSION_MAJOR "@FALCO_VERSION_MAJOR@"
