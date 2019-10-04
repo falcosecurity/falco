@@ -67,20 +67,33 @@ set(CMAKE_CXX_FLAGS_DEBUG "${DRAIOS_DEBUG_FLAGS}")
 set(CMAKE_C_FLAGS_RELEASE "-O3 -fno-strict-aliasing -DNDEBUG")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -fno-strict-aliasing -DNDEBUG")
 
+add_definitions(-DPLATFORM_NAME="${CMAKE_SYSTEM_NAME}")
+add_definitions(-DK8S_DISABLE_THREAD)
+if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+  add_definitions(-DHAS_CAPTURE)
+endif()
+
+# Retrieve git ref and commit hash
+include(GetGitRevisionDescription)
+get_git_head_revision(FALCO_REF FALCO_HASH)
+
 # Create the falco version variable according to git index
 if(NOT FALCO_VERSION)
-  include(GetGitRevisionDescription)
+  string(STRIP "${FALCO_HASH}" FALCO_HASH)
+  # Try to obtain the exact git tag
   git_get_exact_tag(FALCO_TAG)
   if(NOT FALCO_TAG)
-    # Obtain the nearest tag
-    git_describe(FALCO_VERSION "--abbrev=0") # suppress the long format
-    # Obtain the git commit
-    git_describe(FALCO_VERSION_BUILD "--abbrev=7")
-    string(FIND "${FALCO_VERSION_BUILD}" "g" FALCO_VERSION_BUILD_START)
-    if(FALCO_VERSION_BUILD_START GREATER 0)
-      math(EXPR FALCO_VERSION_BUILD_START "${FALCO_VERSION_BUILD_START}+1")
-      string(SUBSTRING "${FALCO_VERSION_BUILD}"
-                       "${FALCO_VERSION_BUILD_START}"
+    # Obtain the closest tag
+    git_describe(FALCO_VERSION "--abbrev=0" "--tags") # suppress the long format
+    # Fallback version
+    if(FALCO_VERSION MATCHES "NOTFOUND$")
+      set(FALCO_VERSION "0.0.0")
+    endif()
+    # TODO(leodido) > Construct the prerelease part (semver 2) Construct the
+    # Build metadata part (semver 2)
+    if(NOT FALCO_HASH MATCHES "NOTFOUND$")
+      string(SUBSTRING "${FALCO_HASH}"
+                       0
                        7
                        FALCO_VERSION_BUILD)
       # Check whether there are uncommitted changes or not
@@ -90,9 +103,12 @@ if(NOT FALCO_VERSION)
         set(FALCO_VERSION_BUILD "${FALCO_VERSION_BUILD}.${FALCO_CHANGES}")
       endif()
     endif()
-    # Add build metadata part (semver 2)
-    set(FALCO_VERSION "${FALCO_VERSION}+${FALCO_VERSION_BUILD}")
+    # Append the build metadata part (semver 2)
+    if(FALCO_VERSION_BUILD)
+      set(FALCO_VERSION "${FALCO_VERSION}+${FALCO_VERSION_BUILD}")
+    endif()
   else()
+    # A tag has been found: use it as the Falco version
     set(FALCO_VERSION "${FALCO_TAG}")
     # Remove the starting "v" in case there is one
     string(REGEX
@@ -101,27 +117,22 @@ if(NOT FALCO_VERSION)
                    FALCO_VERSION
                    "${FALCO_TAG}")
   endif()
+  # TODO(leodido) > ensure Falco version is semver before extracting parts
   # Populate partial version variables
-  string(
-    REGEX
-    MATCH
-      "^(0|[1-9][0-9]*)"
-      FALCO_VERSION_MAJOR
-      "${FALCO_VERSION}")
-  string(
-    REGEX
-    REPLACE
-      "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\..*"
-      "\\2"
-      FALCO_VERSION_MINOR
-      "${FALCO_VERSION}")
-  string(
-    REGEX
-    REPLACE
-      "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*).*"
-      "\\3"
-      FALCO_VERSION_PATCH
-      "${FALCO_VERSION}")
+  string(REGEX MATCH
+               "^(0|[1-9][0-9]*)"
+               FALCO_VERSION_MAJOR
+               "${FALCO_VERSION}")
+  string(REGEX
+         REPLACE "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\..*"
+                 "\\2"
+                 FALCO_VERSION_MINOR
+                 "${FALCO_VERSION}")
+  string(REGEX
+         REPLACE "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*).*"
+                 "\\3"
+                 FALCO_VERSION_PATCH
+                 "${FALCO_VERSION}")
   string(
     REGEX
     REPLACE
@@ -133,13 +144,11 @@ if(NOT FALCO_VERSION)
     set(FALCO_VERSION_PRERELEASE "")
   endif()
   if(NOT FALCO_VERSION_BUILD)
-  string(
-    REGEX
-    REPLACE
-      ".*\\+([0-9a-zA-Z-]+(\\.[0-9a-zA-Z-]+)*)"
-      "\\1"
-      FALCO_VERSION_BUILD
-      "${FALCO_VERSION}")
+    string(REGEX
+           REPLACE ".*\\+([0-9a-zA-Z-]+(\\.[0-9a-zA-Z-]+)*)"
+                   "\\1"
+                   FALCO_VERSION_BUILD
+                   "${FALCO_VERSION}")
   endif()
   if(FALCO_VERSION_BUILD STREQUAL "${FALCO_VERSION}")
     set(FALCO_VERSION_BUILD "")

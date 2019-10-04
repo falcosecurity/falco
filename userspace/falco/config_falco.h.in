@@ -16,6 +16,8 @@ limitations under the License.
 
 #pragma once
 
+#define FALCO_BRANCH "@FALCO_REF@"
+#define FALCO_HASH "@FALCO_HASH@"
 #define FALCO_VERSION "@FALCO_VERSION@"
 #define FALCO_VERSION_MAJOR "@FALCO_VERSION_MAJOR@"
 #define FALCO_VERSION_MINOR "@FALCO_VERSION_MINOR@"
