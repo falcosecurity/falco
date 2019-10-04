@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+#include "config_falco.h"
 #include "grpc_server_impl.h"
 #include "falco_output_queue.h"
 
@@ -46,6 +47,16 @@ void falco::grpc::server_impl::subscribe(const stream_context& ctx, const output
 
 		ctx.m_has_more = !is_running() ? false : req.keepalive();
 	}
+}
+
+void falco::grpc::server_impl::version(const context& ctx, const version::request&, version::response& res)
+{
+	res.set_version(FALCO_VERSION);
+	res.set_major(std::stoi(FALCO_VERSION_MAJOR));
+	res.set_minor(std::stoi(FALCO_VERSION_MINOR));
+	res.set_patch(std::stoi(FALCO_VERSION_PATCH));
+	res.set_prerelease(FALCO_VERSION_PRERELEASE);
+	res.set_build(FALCO_VERSION_BUILD);
 }
 
 void falco::grpc::server_impl::shutdown()
