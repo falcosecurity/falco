@@ -25,13 +25,24 @@ limitations under the License.
 #include "grpc_context.h"
 #include "utils.h"
 
-#define REGISTER_STREAM(req, res, svc, rpc, impl, num)                                  \
-	std::vector<request_stream_context<req, res>> rpc##_contexts(num);         \
-	for(request_stream_context<req, res> & ctx : rpc##_contexts)               \
-	{                                                                          \
-		ctx.m_process_func = &server::impl;                                \
-		ctx.m_request_func = &svc::AsyncService::Request##rpc; \
-		ctx.start(this);                                                   \
+// todo(leodido) > remove this macro doing only one REGISTER macro (only the context typeschange and they inherit from a base class)
+
+#define REGISTER_STREAM(req, res, svc, rpc, impl, num)                     \
+	std::vector<request_stream_context<req, res>> rpc##_contexts(num); \
+	for(request_stream_context<req, res> & c : rpc##_contexts)         \
+	{                                                                  \
+		c.m_process_func = &server::impl;                          \
+		c.m_request_func = &svc::AsyncService::Request##rpc;       \
+		c.start(this);                                             \
+	}
+
+#define REGISTER_UNARY(req, res, svc, rpc, impl, num)                \
+	std::vector<request_context<req, res>> rpc##_contexts(num);  \
+	for(request_context<req, res> & c : rpc##_contexts)          \
+	{                                                            \
+		c.m_process_func = &server::impl;                    \
+		c.m_request_func = &svc::AsyncService::Request##rpc; \
+		c.start(this);                                       \
 	}
 
 namespace falco
@@ -97,6 +108,37 @@ void request_stream_context<falco::output::request, falco::output::response>::en
 }
 } // namespace grpc
 } // namespace falco
+
+template<>
+void falco::grpc::request_context<falco::version::service, falco::version::request, falco::version::response>::start(server* srv)
+{
+	m_state = request_context_base::REQUEST;
+	m_srv_ctx.reset(new ::grpc::ServerContext);
+	auto srvctx = m_srv_ctx.get();
+	m_res_writer.reset(new ::grpc::ServerAsyncWriter<version::response>(srvctx));
+	m_req.Clear();
+	// auto cq = srv->m_completion_queue.get();
+	// fixme(leodido) > m_svc is output::service not version::service
+	// (srv->m_svc.*m_request_func)(srvctx, &m_req, m_res_writer.get(), cq, cq, this);
+}
+
+template<>
+void falco::grpc::request_context<falco::version::service, falco::version::request, falco::version::response>::process(server* srv)
+{
+	version::response res;
+	(srv->*m_process_func)(m_srv_ctx.get(), m_req, res);
+	// Done
+	m_state = request_context_base::FINISH;
+	m_res_writer->Write(res, this);
+	m_res_writer->Finish(::grpc::Status::OK, this);
+}
+
+template<>
+void falco::grpc::request_context<falco::version::service, falco::version::request, falco::version::response>::end(server* srv, bool errored)
+{
+	// todo(leodido) > what to do when errored is true?
+	start(srv);
+}
 
 void falco::grpc::server::thread_process(int thread_index)
 {
@@ -171,6 +213,7 @@ void falco::grpc::server::run()
 	::grpc::ServerBuilder builder;
 	builder.AddListeningPort(m_server_addr, ::grpc::SslServerCredentials(ssl_opts));
 	builder.RegisterService(&m_svc);
+	// fixme(leodido) > register various services ...
 
 	m_completion_queue = builder.AddCompletionQueue();
 	m_server = builder.BuildAndStart();
@@ -180,9 +223,9 @@ void falco::grpc::server::run()
 	// This defines the number of simultaneous completion queue requests of the same type (service::AsyncService::Request##RPC)
 	// For this approach to be sufficient server::IMPL have to be fast
 	int context_num = m_threadiness * 10;
-	REGISTER_STREAM(output::request, output::response, output::service, subscribe, subscribe, context_num)
 
-	// register_stream<output::request, output::response>(subscribe, context_num)
+	// REGISTER_UNARY(version::request, version::response, version::service, version, version, context_num)
+	REGISTER_STREAM(output::request, output::response, output::service, subscribe, subscribe, context_num)
 
 	m_threads.resize(m_threadiness);
 	int thread_idx = 0;
