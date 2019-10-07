@@ -50,6 +50,8 @@ Please remove the leading whitespace before the `/kind <>` you uncommented.
 
 > /area tests
 
+> /area proposals
+
 <!--
 Please remove the leading whitespace before the `/area <>` you uncommented.
 -->
