@@ -1,7 +1,5 @@
 /*
-Copyright (C) 2018 Draios inc.
-
-This file is part of falco.
+Copyright (C) 2019 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,7 +12,6 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
 */
 
 #pragma once
@@ -62,19 +59,22 @@ protected:
 class json_event_filter_check : public gen_event_filter_check
 {
 public:
-	enum index_mode {
+	enum index_mode
+	{
 		IDX_REQUIRED,
 		IDX_ALLOWED,
 		IDX_NONE
 	};
 
-	enum index_type {
+	enum index_type
+	{
 		IDX_KEY,
 		IDX_NUMERIC
 	};
 
 	// A struct describing a single filtercheck field ("ka.user")
-	struct field_info {
+	struct field_info
+	{
 		std::string m_name;
 		std::string m_desc;
 
@@ -91,7 +91,8 @@ public:
 	};
 
 	// A struct describing a group of filtercheck fields ("ka")
-	struct check_info {
+	struct check_info
+	{
 		std::string m_name;
 		std::string m_desc;
 
@@ -101,10 +102,10 @@ public:
 	json_event_filter_check();
 	virtual ~json_event_filter_check();
 
-	virtual int32_t parse_field_name(const char* str, bool alloc_state, bool needed_for_filtering);
-	void add_filter_value(const char* str, uint32_t len, uint32_t i = 0 );
+	virtual int32_t parse_field_name(const char *str, bool alloc_state, bool needed_for_filtering);
+	void add_filter_value(const char *str, uint32_t len, uint32_t i = 0);
 	bool compare(gen_event *evt);
-	virtual uint8_t* extract(gen_event *evt, uint32_t* len, bool sanitize_strings = true);
+	virtual uint8_t *extract(gen_event *evt, uint32_t *len, bool sanitize_strings = true);
 
 	// Simpler version that returns a string
 	std::string extract(json_event *evt);
@@ -124,7 +125,6 @@ public:
 	virtual json_event_filter_check *allocate_new() = 0;
 
 protected:
-
 	static std::string def_format(const nlohmann::json &j, std::string &field, std::string &idx);
 	static std::string json_as_string(const nlohmann::json &j);
 
@@ -133,15 +133,16 @@ protected:
 	// jevt.value[/user/username]. This struct represents one of
 	// those aliases.
 
-	typedef std::function<std::string (const nlohmann::json &, std::string &field, std::string &idx)> format_t;
+	typedef std::function<std::string(const nlohmann::json &, std::string &field, std::string &idx)> format_t;
 
-	struct alias {
+	struct alias
+	{
 		// The variants allow for brace-initialization either
 		// with just the pointer or with both the pointer and
 		// a format function.
 		alias();
-	        alias(nlohmann::json::json_pointer ptr);
-	        alias(nlohmann::json::json_pointer ptr, format_t format);
+		alias(nlohmann::json::json_pointer ptr);
+		alias(nlohmann::json::json_pointer ptr, format_t format);
 		virtual ~alias();
 
 		// A json pointer used to extract a referenced value
@@ -182,7 +183,6 @@ protected:
 	format_t m_format;
 
 private:
-
 	std::vector<std::string> m_values;
 };
 
@@ -192,14 +192,13 @@ public:
 	jevt_filter_check();
 	virtual ~jevt_filter_check();
 
-	int32_t parse_field_name(const char* str, bool alloc_state, bool needed_for_filtering);
+	int32_t parse_field_name(const char *str, bool alloc_state, bool needed_for_filtering);
 
-	virtual uint8_t* extract(gen_event *evt, uint32_t* len, bool sanitize_strings = true);
+	virtual uint8_t *extract(gen_event *evt, uint32_t *len, bool sanitize_strings = true);
 
 	json_event_filter_check *allocate_new();
 
 private:
-
 	static std::string s_jevt_time_field;
 	static std::string s_jevt_time_iso_8601_field;
 	static std::string s_jevt_rawtime_field;
@@ -252,7 +251,6 @@ public:
 	std::set<std::string> m_tags;
 };
 
-
 class json_event_filter_factory : public gen_event_filter_factory
 {
 public:
@@ -271,7 +269,6 @@ public:
 private:
 	std::list<std::shared_ptr<json_event_filter_check>> m_defined_checks;
 	std::list<json_event_filter_check::check_info> m_info;
-
 };
 
 // Unlike the other classes, this does not inherit from a shared class
@@ -289,11 +286,10 @@ public:
 	std::string tojson(json_event *ev);
 	std::map<std::string, std::string> tomap(json_event *ev);
 
-	void resolve_tokens(json_event *ev, std::list<std::pair<std::string,std::string>> &resolved);
+	void resolve_tokens(json_event *ev, std::list<std::pair<std::string, std::string>> &resolved);
 
 private:
 	void parse_format();
-
 
 	// A format token is either a combination of a filtercheck
 	// name (ka.value) and filtercheck object as key, or an empty
@@ -320,6 +316,3 @@ private:
 	// All the filterchecks required to resolve tokens in the format string
 	json_event_filter_factory &m_json_factory;
 };
-
-
-
