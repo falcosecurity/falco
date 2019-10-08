@@ -445,7 +445,8 @@
     (fd.filename in (shell_config_filenames) or
      fd.name in (shell_config_files) or
      fd.directory in (shell_config_directories)) and
-    not proc.name in (shell_binaries)
+    not proc.name in (shell_binaries) and
+    not exe_running_docker_untar
   output: >
     a shell configuration file has been modified (user=%user.name command=%proc.cmdline file=%fd.name container_id=%container.id image=%container.image.repository)
   priority:
@@ -848,6 +849,9 @@
 - macro: exe_running_docker_save
   condition: (proc.cmdline startswith "exe /var/lib/docker" and proc.pname in (dockerd, docker))
 
+- macro: exe_running_docker_untar
+  condition: (proc.exeline startswith "docker-untar /var/lib/docker" and proc.pname in (dockerd, docker))
+
 # Ideally we'd have a length check here as well but sysdig
 # filterchecks don't have operators like len()
 - macro: sed_temporary_file
@@ -914,7 +918,7 @@
 - rule: Update Package Repository
   desc: Detect package repositories get updated
   condition: >
-    ((open_write and access_repositories) or (modify and modify_repositories)) and not package_mgmt_procs
+    ((open_write and access_repositories) or (modify and modify_repositories)) and not package_mgmt_procs and not exe_running_docker_untar
   output: >
     Repository files get updated (user=%user.name command=%proc.cmdline file=%fd.name newpath=%evt.arg.newpath container_id=%container.id image=%container.image.repository)
   priority:
@@ -2439,7 +2443,7 @@
     When the setuid or setgid bits are set for an application,
     this means that the application will run with the privileges of the owning user or group respectively.
     Detect setuid or setgid bits set via chmod
-  condition: consider_all_chmods and chmod and (evt.arg.mode contains "S_ISUID" or evt.arg.mode contains "S_ISGID") and not proc.cmdline in (user_known_chmod_applications)
+  condition: consider_all_chmods and chmod and (evt.arg.mode contains "S_ISUID" or evt.arg.mode contains "S_ISGID") and not proc.cmdline in (user_known_chmod_applications) and not exe_running_docker_untar
   output: >
     Setuid or setgid bit is set via chmod (fd=%evt.arg.fd filename=%evt.arg.filename mode=%evt.arg.mode user=%user.name
     command=%proc.cmdline container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
