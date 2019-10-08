@@ -1,7 +1,5 @@
 /*
-Copyright (C) 2018 Draios inc.
-
-This file is part of falco.
+Copyright (C) 2019 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,7 +12,6 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
 */
 
 #include <stdio.h>
@@ -27,8 +24,8 @@ limitations under the License.
 using json = nlohmann::json;
 using namespace std;
 
-k8s_audit_handler::k8s_audit_handler(falco_engine *engine, falco_outputs *outputs)
-	: m_engine(engine), m_outputs(outputs)
+k8s_audit_handler::k8s_audit_handler(falco_engine *engine, falco_outputs *outputs):
+	m_engine(engine), m_outputs(outputs)
 {
 }
 
@@ -81,10 +78,11 @@ bool k8s_audit_handler::accept_data(falco_engine *engine,
 
 		if(res)
 		{
-			try {
+			try
+			{
 				outputs->handle_event(res->evt, res->rule,
-							res->source, res->priority_num,
-							res->format);
+						      res->source, res->priority_num,
+						      res->format);
 			}
 			catch(falco_exception &e)
 			{
@@ -103,7 +101,6 @@ bool k8s_audit_handler::accept_uploaded_data(std::string &post_data, std::string
 	return k8s_audit_handler::accept_data(m_engine, m_outputs, post_data, errstr);
 }
 
-
 bool k8s_audit_handler::handleGet(CivetServer *server, struct mg_connection *conn)
 {
 	mg_send_http_error(conn, 405, "GET method not allowed");
@@ -115,14 +112,15 @@ bool k8s_audit_handler::handleGet(CivetServer *server, struct mg_connection *con
 // unguarded initialization of c++ string from buffer.
 static void get_post_data(struct mg_connection *conn, std::string &postdata)
 {
-        mg_lock_connection(conn);
-        char buf[2048];
-        int r = mg_read(conn, buf, sizeof(buf));
-        while (r > 0) {
-                postdata.append(buf, r);
-                r = mg_read(conn, buf, sizeof(buf));
-        }
-        mg_unlock_connection(conn);
+	mg_lock_connection(conn);
+	char buf[2048];
+	int r = mg_read(conn, buf, sizeof(buf));
+	while(r > 0)
+	{
+		postdata.append(buf, r);
+		r = mg_read(conn, buf, sizeof(buf));
+	}
+	mg_unlock_connection(conn);
 }
 
 bool k8s_audit_handler::handlePost(CivetServer *server, struct mg_connection *conn)
@@ -156,8 +154,8 @@ bool k8s_audit_handler::handlePost(CivetServer *server, struct mg_connection *co
 	return true;
 }
 
-falco_webserver::falco_webserver()
-	: m_config(NULL)
+falco_webserver::falco_webserver():
+	m_config(NULL)
 {
 }
 
@@ -175,10 +173,10 @@ void falco_webserver::init(falco_configuration *config,
 	m_outputs = outputs;
 }
 
-template<typename T, typename ...Args>
-std::unique_ptr<T> make_unique( Args&& ...args )
+template<typename T, typename... Args>
+std::unique_ptr<T> make_unique(Args &&... args)
 {
-    return std::unique_ptr<T>( new T( std::forward<Args>(args)... ) );
+	return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
 
 void falco_webserver::start()
@@ -204,24 +202,26 @@ void falco_webserver::start()
 	}
 
 	std::vector<std::string> cpp_options = {
-		"num_threads", to_string(1)
-	};
+		"num_threads", to_string(1)};
 
-	if (m_config->m_webserver_ssl_enabled)
+	if(m_config->m_webserver_ssl_enabled)
 	{
 		cpp_options.push_back("listening_ports");
 		cpp_options.push_back(to_string(m_config->m_webserver_listen_port) + "s");
 		cpp_options.push_back("ssl_certificate");
 		cpp_options.push_back(m_config->m_webserver_ssl_certificate);
-	} else {
+	}
+	else
+	{
 		cpp_options.push_back("listening_ports");
 		cpp_options.push_back(to_string(m_config->m_webserver_listen_port));
 	}
 
-	try {
+	try
+	{
 		m_server = make_unique<CivetServer>(cpp_options);
 	}
-	catch (CivetException &e)
+	catch(CivetException &e)
 	{
 		throw falco_exception(std::string("Could not create embedded webserver: ") + e.what());
 	}

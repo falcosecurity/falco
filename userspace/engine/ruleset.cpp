@@ -1,7 +1,5 @@
 /*
-Copyright (C) 2018 Draios inc.
-
-This file is part of falco.
+Copyright (C) 2019 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,7 +12,6 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
 */
 
 #include "ruleset.h"
@@ -40,8 +37,8 @@ falco_ruleset::~falco_ruleset()
 	m_filters.clear();
 }
 
-falco_ruleset::ruleset_filters::ruleset_filters()
-	: m_num_filters(0)
+falco_ruleset::ruleset_filters::ruleset_filters():
+	m_num_filters(0)
 {
 }
 
@@ -69,7 +66,7 @@ void falco_ruleset::ruleset_filters::add_filter(filter_wrapper *wrap)
 			added = true;
 			if(m_filter_by_event_tag.size() <= etag)
 			{
-				m_filter_by_event_tag.resize(etag+1);
+				m_filter_by_event_tag.resize(etag + 1);
 			}
 
 			if(!m_filter_by_event_tag[etag])
@@ -109,7 +106,7 @@ void falco_ruleset::ruleset_filters::remove_filter(filter_wrapper *wrap)
 						removed = true;
 
 						l->erase(it,
-							l->end());
+							 l->end());
 
 						if(l->size() == 0)
 						{
@@ -142,11 +139,12 @@ bool falco_ruleset::ruleset_filters::run(gen_event *evt, uint32_t etag)
 
 	list<filter_wrapper *> *filters = m_filter_by_event_tag[etag];
 
-	if (!filters) {
+	if(!filters)
+	{
 		return false;
 	}
 
-	for (auto &wrap : *filters)
+	for(auto &wrap : *filters)
 	{
 		if(wrap->filter->run(evt))
 		{
@@ -181,13 +179,13 @@ void falco_ruleset::add(string &name,
 
 	for(auto &etag : event_tags)
 	{
-		wrap->event_tags.resize(etag+1);
+		wrap->event_tags.resize(etag + 1);
 		wrap->event_tags[etag] = true;
 	}
 
-	m_filters.insert(pair<string,filter_wrapper *>(name, wrap));
+	m_filters.insert(pair<string, filter_wrapper *>(name, wrap));
 
-	for(const auto &tag: tags)
+	for(const auto &tag : tags)
 	{
 		auto it = m_filter_by_event_tag.lower_bound(tag);
 
@@ -195,7 +193,7 @@ void falco_ruleset::add(string &name,
 		   it->first != tag)
 		{
 			it = m_filter_by_event_tag.emplace_hint(it,
-							  make_pair(tag, list<filter_wrapper*>()));
+								make_pair(tag, list<filter_wrapper *>()));
 		}
 
 		it->second.push_back(wrap);
@@ -204,7 +202,7 @@ void falco_ruleset::add(string &name,
 
 void falco_ruleset::enable(const string &substring, bool enabled, uint16_t ruleset)
 {
-	while (m_rulesets.size() < (size_t) ruleset + 1)
+	while(m_rulesets.size() < (size_t)ruleset + 1)
 	{
 		m_rulesets.push_back(new ruleset_filters());
 	}
@@ -215,7 +213,7 @@ void falco_ruleset::enable(const string &substring, bool enabled, uint16_t rules
 
 		matches = (substring == "" || (val.first.find(substring) != string::npos));
 
-		if (matches)
+		if(matches)
 		{
 			if(enabled)
 			{
@@ -231,7 +229,7 @@ void falco_ruleset::enable(const string &substring, bool enabled, uint16_t rules
 
 void falco_ruleset::enable_tags(const set<string> &tags, bool enabled, uint16_t ruleset)
 {
-	while (m_rulesets.size() < (size_t) ruleset + 1)
+	while(m_rulesets.size() < (size_t)ruleset + 1)
 	{
 		m_rulesets.push_back(new ruleset_filters());
 	}
@@ -254,7 +252,7 @@ void falco_ruleset::enable_tags(const set<string> &tags, bool enabled, uint16_t 
 
 uint64_t falco_ruleset::num_rules_for_ruleset(uint16_t ruleset)
 {
-	while (m_rulesets.size() < (size_t) ruleset + 1)
+	while(m_rulesets.size() < (size_t)ruleset + 1)
 	{
 		m_rulesets.push_back(new ruleset_filters());
 	}
@@ -264,7 +262,7 @@ uint64_t falco_ruleset::num_rules_for_ruleset(uint16_t ruleset)
 
 bool falco_ruleset::run(gen_event *evt, uint32_t etag, uint16_t ruleset)
 {
-	if(m_rulesets.size() < (size_t) ruleset + 1)
+	if(m_rulesets.size() < (size_t)ruleset + 1)
 	{
 		return false;
 	}
@@ -274,7 +272,7 @@ bool falco_ruleset::run(gen_event *evt, uint32_t etag, uint16_t ruleset)
 
 void falco_ruleset::event_tags_for_ruleset(vector<bool> &evttypes, uint16_t ruleset)
 {
-	if(m_rulesets.size() < (size_t) ruleset + 1)
+	if(m_rulesets.size() < (size_t)ruleset + 1)
 	{
 		return;
 	}
@@ -294,7 +292,7 @@ void falco_sinsp_ruleset::add(string &name,
 			      set<uint32_t> &evttypes,
 			      set<uint32_t> &syscalls,
 			      set<string> &tags,
-			      sinsp_filter* filter)
+			      sinsp_filter *filter)
 {
 	set<uint32_t> event_tags;
 
@@ -302,28 +300,28 @@ void falco_sinsp_ruleset::add(string &name,
 	{
 		// If no evttypes or syscalls are specified, the filter is
 		// enabled for all evttypes/syscalls.
-		for(uint32_t i=0; i < PPM_EVENT_MAX; i++)
+		for(uint32_t i = 0; i < PPM_EVENT_MAX; i++)
 		{
 			evttypes.insert(i);
 		}
 
-		for(uint32_t i=0; i < PPM_SC_MAX; i++)
+		for(uint32_t i = 0; i < PPM_SC_MAX; i++)
 		{
 			syscalls.insert(i);
 		}
 	}
 
-	for(auto evttype: evttypes)
+	for(auto evttype : evttypes)
 	{
 		event_tags.insert(evttype_to_event_tag(evttype));
 	}
 
-	for(auto syscallid: syscalls)
+	for(auto syscallid : syscalls)
 	{
 		event_tags.insert(syscall_to_event_tag(syscallid));
 	}
 
-	falco_ruleset::add(name, tags, event_tags, (gen_event_filter *) filter);
+	falco_ruleset::add(name, tags, event_tags, (gen_event_filter *)filter);
 }
 
 bool falco_sinsp_ruleset::run(sinsp_evt *evt, uint16_t ruleset)
@@ -344,7 +342,7 @@ bool falco_sinsp_ruleset::run(sinsp_evt *evt, uint16_t ruleset)
 		etag = evttype_to_event_tag(etype);
 	}
 
-	return falco_ruleset::run((gen_event*) evt, etag, ruleset);
+	return falco_ruleset::run((gen_event *)evt, etag, ruleset);
 }
 
 void falco_sinsp_ruleset::evttypes_for_ruleset(vector<bool> &evttypes, uint16_t ruleset)
@@ -353,7 +351,7 @@ void falco_sinsp_ruleset::evttypes_for_ruleset(vector<bool> &evttypes, uint16_t 
 
 	event_tags_for_ruleset(event_tags, ruleset);
 
-	evttypes.assign(PPM_EVENT_MAX+1, false);
+	evttypes.assign(PPM_EVENT_MAX + 1, false);
 
 	for(uint32_t etype = 0; etype < PPM_EVENT_MAX; etype++)
 	{
@@ -372,7 +370,7 @@ void falco_sinsp_ruleset::syscalls_for_ruleset(vector<bool> &syscalls, uint16_t 
 
 	event_tags_for_ruleset(event_tags, ruleset);
 
-	syscalls.assign(PPM_EVENT_MAX+1, false);
+	syscalls.assign(PPM_EVENT_MAX + 1, false);
 
 	for(uint32_t syscallid = 0; syscallid < PPM_SC_MAX; syscallid++)
 	{
@@ -392,6 +390,5 @@ uint32_t falco_sinsp_ruleset::evttype_to_event_tag(uint32_t evttype)
 
 uint32_t falco_sinsp_ruleset::syscall_to_event_tag(uint32_t syscallid)
 {
-	return PPM_EVENT_MAX+1+syscallid;
+	return PPM_EVENT_MAX + 1 + syscallid;
 }
-
