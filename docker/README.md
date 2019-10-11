@@ -26,5 +26,5 @@ The goal of these container images is to reduce the size of the underlying Falco
 ### Init Containers
 These container images allow for the delivery of the kernel module or eBPF probe either via HTTP or via a container image.
  - `kernel/linuxkit`: Multistage Dockerfile to build a Falco kernel module for Linuxkit (Docker Desktop). Generates an alpine based container image with the kernel module, and `insmod` as the container `CMD`.  
- - `kernel/httploader`: Multistage Dockerfile to build a Go based application to download (via HTTPS) and load a Falco kernel module. The resulting container image can be ran as an `initContainer` to load the Falco module before Falco starts.
+ - `kernel/probeloader`: Multistage Dockerfile to build a Go based application to download (via HTTPS) and load a Falco kernel module. The resulting container image can be ran as an `initContainer` to load the Falco module before Falco starts.
 
