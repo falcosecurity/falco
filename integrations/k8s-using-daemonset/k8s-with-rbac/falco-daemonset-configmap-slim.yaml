@@ -14,17 +14,16 @@ spec:
     spec:
       serviceAccount: falco-account
       initContainers:
-        - name: httploader
-          image: falcosecurity/httploader:latest
-          command: ['/httploader']
+        - name: probeloader
+          image: falcosecurity/probeloader:latest
           securityContext:
             privileged: true
           #env:
-          #  - name: FALCO_VERSION
+          #  - name: FALCOCTL_FALCO_VERSION
           #    value: 0.17.0
-          #  - name: FALCO_PROBE_URL
+          #  - name: FALCOCTL_FALCO_PROBE_URL
           #    value:
-          #  - name: FALCO_PROBE_REPO
+          #  - name: FALCOCTL_FALCO_PROBE_REPO
           #    value: "https://s3.amazonaws.com/download.draios.com/stable/sysdig-probe-binaries/"
           volumeMounts:
             - mountPath: /host/boot
@@ -32,7 +31,7 @@ spec:
               readOnly: true
       containers:
         - name: falco
-          image: falcosecurity/falco-minimal:latest
+          image: falcosecurity/falco:0.17.1-slim
           securityContext:
             privileged: true
 # Uncomment the 3 lines below to enable eBPF support for Falco.
