@@ -15,9 +15,9 @@ COPY --from=ksrc /kernel-dev.tar /
 COPY --from=falco /usr/src/falco-${FALCO_VERSION} /usr/src/falco-${FALCO_VERSION}
 
 RUN apk add --no-cache --update \
-    build-base gcc abuild binutils \
-    bc \
-    autoconf && \
+  build-base gcc abuild binutils \
+  bc \
+  autoconf && \
   export KERNELVER=`uname -r  | cut -d '-' -f 1`  && \
   export KERNELDIR=/usr/src/linux-headers-${KERNEL_VERSION}-linuxkit/ && \
   tar xf /kernel-dev.tar && \
@@ -27,9 +27,9 @@ RUN apk add --no-cache --update \
   cd /usr/src/falco-${FALCO_VERSION} && \
   make && \
   apk del \
-    build-base gcc abuild binutils \
-    bc \
-    autoconf
+  build-base gcc abuild binutils \
+  bc \
+  autoconf
 
 FROM alpine:${ALPINE_VERSION}
 ARG FALCO_VERSION=0.17.0
