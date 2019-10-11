@@ -1,5 +1,5 @@
 FROM golang:1.13-alpine AS build
-ARG FALCOCTL_REF=feat/probe-installer
+ARG FALCOCTL_REF=2be3df92edbac668284fe5c165ccb5bd6bf4e869
 
 RUN apk --no-cache add build-base git gcc ca-certificates
 
