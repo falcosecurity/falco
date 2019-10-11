@@ -2,7 +2,7 @@ FROM ubuntu:18.04 as ubuntu
 
 LABEL maintainer="opensource@sysdig.com"
 
-ARG FALCO_VERSION=0.17.0
+ARG FALCO_VERSION=0.17.1
 
 ENV FALCO_VERSION=${FALCO_VERSION}
 
@@ -10,7 +10,7 @@ WORKDIR /
 
 ADD https://s3.amazonaws.com/download.draios.com/stable/tgz/x86_64/falco-${FALCO_VERSION}-x86_64.tar.gz /
 
-# ADD will downnload from URL and unntar
+# ADD will download from URL and unntar
 RUN apt-get update && \
     apt-get install -y  binutils && \
     # curl -O https://s3.amazonaws.com/download.draios.com/stable/tgz/x86_64/falco-${FALCO_VERSION}-x86_64.tar.gz && \
