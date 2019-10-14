@@ -21,7 +21,10 @@ import json
 import sets
 import glob
 import shutil
+import stat
 import subprocess
+import sys
+import urllib
 
 from avocado import Test
 from avocado.utils import process
@@ -39,7 +42,8 @@ class FalcoTest(Test):
 
         self.falcodir = self.params.get('falcodir', '/', default=build_dir)
 
-        self.psp_conv_path = os.path.join(build_dir, "tools", "psp_conv", "falco-psp-conv")
+        self.psp_conv_path = os.path.join(build_dir, "falcoctl")
+        self.psp_conv_url = "https://github.com/falcosecurity/falcoctl/releases/download/0.0.2/falcoctl-0.0.2-linux-amd64"
 
         self.stdout_is = self.params.get('stdout_is', '*', default='')
         self.stderr_is = self.params.get('stderr_is', '*', default='')
@@ -435,7 +439,14 @@ class FalcoTest(Test):
 
         # Possibly run psp converter
         if self.psp_file != "":
-            conv_cmd = '{} --psp {} --rules {}'.format(
+
+            if not os.path.isfile(self.psp_conv_path):
+                self.log.info("Downloading {} to {}".format(self.psp_conv_url, self.psp_conv_path))
+
+                urllib.urlretrieve(self.psp_conv_url, self.psp_conv_path)
+                os.chmod(self.psp_conv_path, stat.S_IEXEC)
+
+            conv_cmd = '{} convert psp --psp-path {} --rules-path {}'.format(
                 self.psp_conv_path, os.path.join(self.basedir, self.psp_file), self.psp_rules_file)
 
             conv_proc = process.SubProcess(conv_cmd)
