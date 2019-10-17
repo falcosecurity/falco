@@ -333,6 +333,10 @@ public:
 	static bool extract_rule_attrs(const nlohmann::json &j,
 				       json_event_filter_check &jchk);
 
+	// Determine if the provided path matches any volumes host path.
+	static bool check_volumes_hostpath(const nlohmann::json &j,
+					   json_event_filter_check &jchk);
+
 	// Extract the volume types from volumes in the request object
 	static bool extract_volume_types(const nlohmann::json &j,
 					 json_event_filter_check &jchk);
@@ -345,6 +349,17 @@ public:
 	// the uid/gid that will be used for each container.
 	static bool extract_effective_run_as(const nlohmann::json &j,
 					     json_event_filter_check &jchk);
+
+	// These are only used for compatibility with older rules files
+
+	// Always return the string "N/A"
+	static bool always_return_na(const nlohmann::json &j,
+				     json_event_filter_check &jchk);
+
+
+	// Return true if any container has privileged=true
+	static bool extract_any_privileged(const nlohmann::json &j,
+					   json_event_filter_check &jchk);
 };
 
 class json_event_filter : public gen_event_filter

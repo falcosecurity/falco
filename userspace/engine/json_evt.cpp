@@ -868,6 +868,13 @@ bool k8s_audit_filter_check::extract_images(const json &j,
 			{
 				jchk.add_extracted_value(image);
 			}
+
+			if(jchk.field() == "ka.req.container.image" ||
+			   jchk.field() == "ka.req.container.image.repository")
+			{
+				// Stop at the first container
+				break;
+			}
 		}
 	}
 	catch(json::out_of_range &e)
@@ -946,6 +953,51 @@ bool k8s_audit_filter_check::extract_rule_attrs(const json &j,
 	{
 		return false;
 	}
+
+	return true;
+}
+
+bool k8s_audit_filter_check::check_volumes_hostpath(const json &j,
+						    json_event_filter_check &jchk)
+{
+	static json::json_pointer volumes_ptr = "/requestObject/spec/volumes"_json_pointer;
+
+	try
+	{
+		const nlohmann::json &vols = j.at(volumes_ptr);
+
+		for(auto &vol : vols)
+		{
+			auto it = vol.find("hostPath");
+			if(it != vol.end())
+			{
+				// If the index key ends with a *, do
+				// a prefix match. Otherwise, compare
+				// for equality.
+
+				if(jchk.idx().back() == '*')
+				{
+					if(jchk.idx().compare(0, jchk.idx().size() - 1, *it) == 0)
+					{
+						jchk.add_extracted_value(string("true"));
+					}
+				}
+				else
+				{
+					if(jchk.idx() == *it)
+					{
+						jchk.add_extracted_value(string("true"));
+					}
+				}
+			}
+		}
+	}
+	catch(json::out_of_range &e)
+	{
+		return false;
+	}
+
+	jchk.add_extracted_value(string("false"));
 
 	return true;
 }
@@ -1065,6 +1117,52 @@ bool k8s_audit_filter_check::extract_effective_run_as(const json &j,
 	return true;
 }
 
+bool k8s_audit_filter_check::always_return_na(const json &j,
+					      json_event_filter_check &jchk)
+{
+	jchk.add_extracted_value(string("true"));
+
+	return true;
+}
+
+bool k8s_audit_filter_check::extract_any_privileged(const json &j,
+						    json_event_filter_check &jchk)
+{
+	static json::json_pointer containers_ptr = "/requestObject/spec/containers"_json_pointer;
+	static json::json_pointer privileged_ptr = "/securityContext/privileged"_json_pointer;
+
+	try
+	{
+		const json &containers = j.at(containers_ptr);
+
+		for(auto &container : containers)
+		{
+			bool privileged = false;
+			try
+			{
+				privileged = container.at(privileged_ptr);
+			}
+			catch(json::out_of_range &e)
+			{
+				// No-op
+			}
+
+			if(privileged)
+			{
+				jchk.add_extracted_value(string("true"));
+				return true;
+			}
+		}
+	}
+	catch(json::out_of_range &e)
+	{
+		return false;
+	}
+
+	jchk.add_extracted_value(string("false"));
+	return true;
+}
+
 k8s_audit_filter_check::k8s_audit_filter_check()
 {
 	m_info = {"ka",
@@ -1086,15 +1184,20 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 		   {"ka.target.subresource", "The target object subresource"},
 		   {"ka.req.binding.subjects", "When the request object refers to a cluster role binding, the subject (e.g. account/users) being linked by the binding"},
 		   {"ka.req.binding.role", "When the request object refers to a cluster role binding, the role being linked by the binding"},
+		   {"ka.req.binding.subject.has_name", "Deprecated, always returns \"N/A\". Only provided for backwards compatibility", IDX_REQUIRED, IDX_KEY},
 		   {"ka.req.configmap.name", "If the request object refers to a configmap, the configmap name"},
 		   {"ka.req.configmap.obj", "If the request object refers to a configmap, the entire configmap object"},
 		   {"ka.req.pod.containers.image", "When the request object refers to a pod, the container's images.", IDX_ALLOWED, IDX_NUMERIC},
+		   {"ka.req.container.image", "Deprecated by ka.req.pod.containers.image. Returns the image of the first container only"},
 		   {"ka.req.pod.containers.image.repository", "The same as req.container.image, but only the repository part (e.g. sysdig/falco).", IDX_ALLOWED, IDX_NUMERIC},
+		   {"ka.req.container.image.repository", "Deprecated by ka.req.pod.containers.image.repository. Returns the repository of the first container only"},
 		   {"ka.req.pod.host_ipc", "When the request object refers to a pod, the value of the hostIPC flag."},
 		   {"ka.req.pod.host_network", "When the request object refers to a pod, the value of the hostNetwork flag."},
+		   {"ka.req.container.host_network", "Deprecated alias for ka.req.pod.host_network"},
 		   {"ka.req.pod.host_pid", "When the request object refers to a pod, the value of the hostPID flag."},
 		   {"ka.req.pod.containers.host_port", "When the request object refers to a pod, all container's hostPort values.", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.req.pod.containers.privileged", "When the request object refers to a pod, the value of the privileged flag for all containers.", IDX_ALLOWED, IDX_NUMERIC},
+		   {"ka.req.container.privileged", "Deprecated by ka.req.pod.containers.privileged. Returns true if any container has privileged=true"},
 		   {"ka.req.pod.containers.allow_privilege_escalation", "When the request object refers to a pod, the value of the allowPrivilegeEscalation flag for all containers", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.req.pod.containers.read_only_fs", "When the request object refers to a pod, the value of the readOnlyRootFilesystem flag for all containers", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.req.pod.run_as_user", "When the request object refers to a pod, the runAsUser uid specified in the security context for the pod. See ....containers.run_as_user for the runAsUser for individual containers"},
@@ -1115,6 +1218,7 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 		   {"ka.req.service.type", "When the request object refers to a service, the service type"},
 		   {"ka.req.service.ports", "When the request object refers to a service, the service's ports", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.req.pod.volumes.hostpath", "When the request object refers to a pod, all hostPath paths specified for all volumes", IDX_ALLOWED, IDX_NUMERIC, true},
+		   {"ka.req.volume.hostpath", "Deprecated by ka.req.pod.volumes.hostpath. Return true if the provided (host) path prefix is used by any volume", IDX_ALLOWED, IDX_KEY},
 		   {"ka.req.pod.volumes.flexvolume_driver", "When the request object refers to a pod, all flexvolume drivers specified for all volumes", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.req.pod.volumes.volume_type", "When the request object refers to a pod, all volume types for all volumes", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.resp.name", "The response object name"},
@@ -1140,15 +1244,20 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 			{"ka.target.subresource", {{"/objectRef/subresource"_json_pointer}}},
 			{"ka.req.binding.subjects", {{"/requestObject/subjects"_json_pointer}}},
 			{"ka.req.binding.role", {{"/requestObject/roleRef/name"_json_pointer}}},
+			{"ka.req.binding.subject.has_name", {always_return_na}},
 			{"ka.req.configmap.name", {{"/objectRef/name"_json_pointer}}},
 			{"ka.req.configmap.obj", {{"/requestObject/data"_json_pointer}}},
 			{"ka.req.pod.containers.image", {extract_images}},
+			{"ka.req.container.image", {extract_images}},
 			{"ka.req.pod.containers.image.repository", {extract_images}},
+			{"ka.req.container.image.repository", {extract_images}},
 			{"ka.req.pod.host_ipc", {{"/requestObject/spec/hostIPC"_json_pointer}}},
 			{"ka.req.pod.host_network", {{"/requestObject/spec/hostNetwork"_json_pointer}}},
+			{"ka.req.container.host_network", {{"/requestObject/spec/hostNetwork"_json_pointer}}},
 			{"ka.req.pod.host_pid", {{"/requestObject/spec/hostPID"_json_pointer}}},
 			{"ka.req.pod.containers.host_port", {extract_host_port}},
 			{"ka.req.pod.containers.privileged", {{"/requestObject/spec/containers"_json_pointer, "/securityContext/privileged"_json_pointer}}},
+			{"ka.req.container.privileged", {extract_any_privileged}},
 			{"ka.req.pod.containers.allow_privilege_escalation", {{"/requestObject/spec/containers"_json_pointer, "/securityContext/allowPrivilegeEscalation"_json_pointer}}},
 			{"ka.req.pod.containers.read_only_fs", {{"/requestObject/spec/containers"_json_pointer, "/securityContext/readOnlyRootFilesystem"_json_pointer}}},
 			{"ka.req.pod.run_as_user", {{"/requestObject/spec/securityContext/runAsUser"_json_pointer}}},
@@ -1168,7 +1277,8 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 			{"ka.req.pod.containers.add_capabilities", {{"/requestObject/spec/containers"_json_pointer, "/securityContext/capabilities/add"_json_pointer}}},
 			{"ka.req.service.type", {{"/requestObject/spec/type"_json_pointer}}},
 			{"ka.req.service.ports", {{"/requestObject/spec/ports"_json_pointer}}},
-                        {"ka.req.pod.volumes.hostpath", {{"/requestObject/spec/volumes"_json_pointer, "/hostPath/path"_json_pointer}}},
+			{"ka.req.pod.volumes.hostpath", {{"/requestObject/spec/volumes"_json_pointer, "/hostPath/path"_json_pointer}}},
+			{"ka.req.volume.hostpath", {check_volumes_hostpath}},
 			{"ka.req.pod.volumes.flexvolume_driver", {{"/requestObject/spec/volumes"_json_pointer, "/flexVolume/driver"_json_pointer}}},
 			{"ka.req.pod.volumes.volume_type", {extract_volume_types}},
 			{"ka.resp.name", {{"/responseObject/metadata/name"_json_pointer}}},
