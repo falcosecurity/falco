@@ -3,6 +3,6 @@ kind: PodSecurityPolicy
 metadata:
   annotations:
     falco-rules-psp-images: "[nginx]"
-  name: no_privileged
+  name: no_privilege_escalation
 spec:
   allowPrivilegeEscalation: false

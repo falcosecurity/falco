@@ -3,7 +3,7 @@ kind: PodSecurityPolicy
 metadata:
   annotations:
     falco-rules-psp-images: "[nginx]"
-  name: supplemental_groups_must_run_as_30
+  name: supplemental_groups_must_run_as_30_10
 spec:
   supplementalGroups:
     rule: "MustRunAs"
