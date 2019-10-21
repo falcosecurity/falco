@@ -43,7 +43,7 @@ class FalcoTest(Test):
         self.falcodir = self.params.get('falcodir', '/', default=build_dir)
 
         self.psp_conv_path = os.path.join(build_dir, "falcoctl")
-        self.psp_conv_url = "https://github.com/falcosecurity/falcoctl/releases/download/0.0.2/falcoctl-0.0.2-linux-amd64"
+        self.psp_conv_url = "https://github.com/falcosecurity/falcoctl/releases/download/v0.0.3/falcoctl-0.0.3-linux-amd64"
 
         self.stdout_is = self.params.get('stdout_is', '*', default='')
         self.stderr_is = self.params.get('stderr_is', '*', default='')

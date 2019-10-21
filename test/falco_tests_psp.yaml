@@ -21,7 +21,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Violation (privileged) K8s Audit": 1
+      - "PSP no_privileged Violation (privileged) K8s Audit": 1
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/privileged.yaml
@@ -31,7 +31,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Violation (privileged) System Activity": 1
+      - "PSP no_privileged Violation (privileged) System Activity": 1
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/privileged.yaml
@@ -48,7 +48,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Violation (hostPID)": 1
+      - "PSP no_host_pid Violation (hostPID)": 1
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/host_pid.yaml
@@ -65,7 +65,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Violation (hostIPC)": 1
+      - "PSP no_host_ipc Violation (hostIPC)": 1
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/host_ipc.yaml
@@ -82,7 +82,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Violation (hostNetwork)": 1
+      - "PSP no_host_network Violation (hostNetwork)": 1
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/host_network.yaml
@@ -99,7 +99,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Violation (hostPorts)": 1
+      - "PSP host_ports_100_200_only Violation (hostPorts)": 1
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/host_network_ports.yaml
@@ -116,7 +116,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Violation (volumes)": 1
+      - "PSP only_secret_volumes Violation (volumes)": 1
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/volumes.yaml
@@ -133,7 +133,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Violation (allowedHostPaths)": 1
+      - "PSP only_mount_host_usr Violation (allowedHostPaths)": 1
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/allowed_host_paths.yaml
@@ -150,7 +150,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Violation (allowedFlexVolumes)": 1
+      - "PSP only_lvm_cifs_flex_volumes Violation (allowedFlexVolumes)": 1
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/flex_volumes.yaml
@@ -167,7 +167,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Violation (fsGroup)": 1
+      - "PSP fs_group_must_run_as_30 Violation (fsGroup)": 1
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/fs_group_must_run_as.yaml
@@ -177,7 +177,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Violation (fsGroup)": 1
+      - "PSP fs_group_must_run_as_30 Violation (fsGroup)": 1
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/fs_group_must_run_as.yaml
@@ -187,7 +187,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Violation (fsGroup)": 1
+      - "PSP fs_group_may_run_as_30 Violation (fsGroup)": 1
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/fs_group_may_run_as.yaml
@@ -218,7 +218,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Violation (readOnlyRootFilesystem) K8s Audit": 1
+      - "PSP read_only_root_fs Violation (readOnlyRootFilesystem) K8s Audit": 1
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/read_only_root_fs.yaml
@@ -228,7 +228,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Violation (readOnlyRootFilesystem) System Activity": 1
+      - "PSP read_only_root_fs Violation (readOnlyRootFilesystem) System Activity": 1
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/read_only_root_fs.yaml
@@ -245,7 +245,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Violation (runAsUser=MustRunAs) K8s Audit": 1
+      - "PSP user_must_run_as_30 Violation (runAsUser=MustRunAs) K8s Audit": 1
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/user_must_run_as.yaml
@@ -255,7 +255,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Violation (runAsUser=MustRunAs) K8s Audit": 1
+      - "PSP user_must_run_as_30 Violation (runAsUser=MustRunAs) K8s Audit": 1
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/user_must_run_as.yaml
@@ -265,7 +265,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Violation (runAsUser=MustRunAs) System Activity": 1
+      - "PSP user_must_run_as_30 Violation (runAsUser=MustRunAs) System Activity": 1
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/user_must_run_as.yaml
@@ -282,7 +282,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Violation (runAsUser=MustRunAs) K8s Audit": 1
+      - "PSP user_must_run_as_30 Violation (runAsUser=MustRunAs) K8s Audit": 1
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/user_must_run_as.yaml
@@ -299,7 +299,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Violation (runAsUser=MustRunAs) K8s Audit": 1
+      - "PSP user_must_run_as_30 Violation (runAsUser=MustRunAs) K8s Audit": 1
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/user_must_run_as.yaml
@@ -316,7 +316,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Violation (runAsUser=MustRunAsNonRoot) K8s Audit": 1
+      - "PSP user_must_run_as_non_root Violation (runAsUser=MustRunAsNonRoot) K8s Audit": 1
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/user_must_run_as_non_root.yaml
@@ -326,7 +326,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Violation (runAsUser=MustRunAsNonRoot) System Activity": 1
+      - "PSP user_must_run_as_non_root Violation (runAsUser=MustRunAsNonRoot) System Activity": 1
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/user_must_run_as_non_root.yaml
@@ -343,7 +343,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Violation (runAsUser=MustRunAsNonRoot) K8s Audit": 1
+      - "PSP user_must_run_as_non_root Violation (runAsUser=MustRunAsNonRoot) K8s Audit": 1
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/user_must_run_as_non_root.yaml
@@ -360,7 +360,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Violation (runAsUser=MustRunAsNonRoot) K8s Audit": 1
+      - "PSP user_must_run_as_non_root Violation (runAsUser=MustRunAsNonRoot) K8s Audit": 1
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/user_must_run_as_non_root.yaml
@@ -377,7 +377,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Violation (runAsGroup=MustRunAs) K8s Audit": 1
+      - "PSP group_must_run_as_30 Violation (runAsGroup=MustRunAs) K8s Audit": 1
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/group_must_run_as.yaml
@@ -387,7 +387,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Violation (runAsGroup=MustRunAs) K8s Audit": 1
+      - "PSP group_must_run_as_30 Violation (runAsGroup=MustRunAs) K8s Audit": 1
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/group_must_run_as.yaml
@@ -397,7 +397,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Violation (runAsGroup=MustRunAs) System Activity": 1
+      - "PSP group_must_run_as_30 Violation (runAsGroup=MustRunAs) System Activity": 1
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/group_must_run_as.yaml
@@ -414,7 +414,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Violation (runAsGroup=MustRunAs) K8s Audit": 1
+      - "PSP group_must_run_as_30 Violation (runAsGroup=MustRunAs) K8s Audit": 1
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/group_must_run_as.yaml
@@ -431,7 +431,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Violation (runAsGroup=MustRunAs) K8s Audit": 1
+      - "PSP group_must_run_as_30 Violation (runAsGroup=MustRunAs) K8s Audit": 1
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/group_must_run_as.yaml
@@ -455,7 +455,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Violation (runAsGroup=MayRunAs)": 1
+      - "PSP group_may_run_as_30 Violation (runAsGroup=MayRunAs)": 1
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/group_may_run_as.yaml
@@ -472,7 +472,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Violation (runAsGroup=MayRunAs)": 1
+      - "PSP group_may_run_as_30 Violation (runAsGroup=MayRunAs)": 1
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/group_may_run_as.yaml
@@ -489,7 +489,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Violation (runAsGroup=MayRunAs)": 1
+      - "PSP group_may_run_as_30 Violation (runAsGroup=MayRunAs)": 1
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/group_may_run_as.yaml
@@ -506,7 +506,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Violation (supplementalGroups=MustRunAs)": 1
+      - "PSP supplemental_groups_must_run_as_30 Violation (supplementalGroups=MustRunAs)": 1
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/supplemental_groups_must_run_as_30_40.yaml
@@ -516,7 +516,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Violation (supplementalGroups=MustRunAs)": 1
+      - "PSP supplemental_groups_must_run_as_30 Violation (supplementalGroups=MustRunAs)": 1
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/supplemental_groups_must_run_as_30_40.yaml
@@ -526,7 +526,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Violation (supplementalGroups=MustRunAs)": 1
+      - "PSP supplemental_groups_must_run_as_30_10 Violation (supplementalGroups=MustRunAs)": 1
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/supplemental_groups_must_run_as_30_40_10_15.yaml
@@ -557,7 +557,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Violation (supplementalGroups=MayRunAs)": 1
+      - "PSP supplemental_groups_may_run_as_30 Violation (supplementalGroups=MayRunAs)": 1
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/supplemental_groups_may_run_as_30_40.yaml
@@ -567,7 +567,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Violation (supplementalGroups=MayRunAs)": 1
+      - "PSP supplemental_groups_may_run_as_30_10 Violation (supplementalGroups=MayRunAs)": 1
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/supplemental_groups_may_run_as_30_40_10_15.yaml
@@ -591,7 +591,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Violation (allowPrivilegeEscalation)": 1
+      - "PSP no_privilege_escalation Violation (allowPrivilegeEscalation)": 1
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/privilege_escalation.yaml
@@ -601,7 +601,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Violation (allowedCapabilities)": 1
+      - "PSP allow_capability_sys_nice Violation (allowedCapabilities)": 1
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/allowed_capabilities.yaml
@@ -625,7 +625,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     detect_counts:
-      - "PSP Violation (allowedProcMountTypes)": 1
+      - "PSP allow_default_proc_mount_type Violation (allowedProcMountTypes)": 1
     rules_file: []
     conf_file: confs/psp.yaml
     psp_file: psps/allowed_proc_mount_types.yaml
