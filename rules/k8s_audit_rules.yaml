@@ -39,8 +39,9 @@
   condition: (jevt.value[/stage]=ResponseStarted)
 
 # If you wish to restrict activity to a specific set of users, override/append to this list.
+# users created by kops are included
 - list: allowed_k8s_users
-  items: ["minikube", "minikube-user", "kubelet", "kops"]
+  items: ["minikube", "minikube-user", "kubelet", "kops", "admin", "kube", "kube-proxy"]
 
 - rule: Disallowed K8s User
   desc: Detect any k8s operation by users outside of an allowed set of users.
