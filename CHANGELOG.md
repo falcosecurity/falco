@@ -29,19 +29,19 @@ Released 2019-07-31
 
 ## Major Changes
 
-* **The set of supported platforms has changed**. Switch to a reorganized builder image that uses Centos 7 as a base. As a result, falco is no longer supported on Centos 6. The other supported platforms should remain the same [[#719](https://github.com/falcosecurity/falco/pull/719)]
+* **The set of supported platforms has changed**. Switch to a reorganized builder image that uses Centos 7 as a base. As a result, Falco is no longer supported on Centos 6. The other supported platforms should remain the same [[#719](https://github.com/falcosecurity/falco/pull/719)]
 
 ## Minor Changes
 
-* When enabling rules within the falco engine, use rule substrings instead of regexes. [[#743](https://github.com/falcosecurity/falco/pull/743)]
+* When enabling rules within the Falco engine, use rule substrings instead of regexes. [[#743](https://github.com/falcosecurity/falco/pull/743)]
 
 * Additional improvements to the handling and display of rules validation errors [[#744](https://github.com/falcosecurity/falco/pull/744)] [[#747](https://github.com/falcosecurity/falco/pull/747)]
 
 ## Bug Fixes
 
-* Fix a problem that would cause prevent container metadata lookups when falco was daemonized [[#731](https://github.com/falcosecurity/falco/pull/731)]
+* Fix a problem that would cause prevent container metadata lookups when Falco was daemonized [[#731](https://github.com/falcosecurity/falco/pull/731)]
 
-* Allow rule priorites to be expressed as lowercase and a mix of lower/uppercase [[#737](https://github.com/falcosecurity/falco/pull/737)]
+* Allow rule priorities to be expressed as lowercase and a mix of lower/uppercase [[#737](https://github.com/falcosecurity/falco/pull/737)]
 
 ## Rule Changes
 
@@ -59,9 +59,9 @@ Released 2019-07-12
 
 ## Major Changes
 
-* Clean up error reporting to provide more meaningful error messages along with context when loading rules files. When run with -V, the results of the validation ("OK" or error message) are sent to standard output. [[#708](https://github.com/falcosecurity/falco/pull/708)]
+* Clean up error reporting to provide more meaningful error messages along with context when loading rules files. When running with -V, the results of the validation ("OK" or error message) are sent to standard output. [[#708](https://github.com/falcosecurity/falco/pull/708)]
 
-* Improve rule loading performance by optimizing lua parsing paths to avoid expensive pattern matches. [[#694](https://github.com/falcosecurity/falco/pull/694)]
+* Improve rule loading performance by optimizing Lua parsing paths to avoid expensive pattern matches. [[#694](https://github.com/falcosecurity/falco/pull/694)]
 
 * Bump falco engine version to 4 to reflect new fields `ka.useragent`, others. [[#710](https://github.com/falcosecurity/falco/pull/710)] [[#681](https://github.com/falcosecurity/falco/pull/681)]
 
@@ -75,9 +75,9 @@ Released 2019-07-12
 
 * Add clang formatter for C++ syntax formatting. [[#701](https://github.com/falcosecurity/falco/pull/701)] [[#689](https://github.com/falcosecurity/falco/pull/689)]
 
-* Partial changes towards lua syntax formatting. No particular formatting enforced yet, though. [[#718](https://github.com/falcosecurity/falco/pull/718)]
+* Partial changes towards Lua syntax formatting. No particular formatting enforced yet, though. [[#718](https://github.com/falcosecurity/falco/pull/718)]
 
-* Partial changes towards yaml syntax formatting. No particular formatting enforced yet, though. [[#714](https://github.com/falcosecurity/falco/pull/714)]
+* Partial changes towards YAML syntax formatting. No particular formatting enforced yet, though. [[#714](https://github.com/falcosecurity/falco/pull/714)]
 
 * Add cmake syntax formatting. [[#703](https://github.com/falcosecurity/falco/pull/703)]
 
@@ -99,13 +99,13 @@ Released 2019-07-12
 
 * Allow k8s.gcr.io/kube-proxy image to run privileged. [[#717](https://github.com/falcosecurity/falco/pull/717)]
 
-* Add runc to the list of possible container entrypoint parents. [[#712](https://github.com/falcosecurity/falco/pull/712)]
+* Add runs to the list of possible container entry point parents. [[#712](https://github.com/falcosecurity/falco/pull/712)]
 
 * Skip Source RFC 1918 addresses when considering outbound connections. [[#685](https://github.com/falcosecurity/falco/pull/685)]
 
 * Add additional `user_XXX` placeholder macros to allow for easy customization of rule exceptions. [[#685](https://github.com/falcosecurity/falco/pull/685)]
 
-* Let weaveworks programs change namespaces. [[#685](https://github.com/falcosecurity/falco/pull/685)]
+* Let weave works programs change namespaces. [[#685](https://github.com/falcosecurity/falco/pull/685)]
 
 * Add additional openshift images. [[#685](https://github.com/falcosecurity/falco/pull/685)]
 
@@ -117,7 +117,7 @@ Released 2019-07-12
 
 * Add back trusted_containers list for backport compatibility [[#675](https://github.com/falcosecurity/falco/pull/675)]
 
-* Add mkdirat as a syscall for mkdir operations. [[#667](https://github.com/falcosecurity/falco/pull/667)]
+* Add moderate as a syscall for media operations. [[#667](https://github.com/falcosecurity/falco/pull/667)]
 
 * Add container id/repository to rules that can work with containers. [[#667](https://github.com/falcosecurity/falco/pull/667)]
 
@@ -219,15 +219,15 @@ Released 2019-05-13
 
 * **Perform docker metadata fetches asynchronously**: When new containers are discovered, fetch metadata about the container asynchronously, which should significantly reduce the likelihood of dropped system call events. [[#sysdig/1326](https://github.com/draios/sysdig/pull/1326)] [[#550](https://github.com/falcosecurity/falco/pull/550)] [[#570](https://github.com/falcosecurity/falco/pull/570)]
 
-* Better syscall event performance: improve algorithm for reading system call events from kernel module to handle busy event streams [[#sysdig/1372](https://github.com/draios/sysdig/pull/1372)]
+* Better syscall event performance: improve the algorithm for reading system call events from the kernel module to handle busy event streams [[#sysdig/1372](https://github.com/draios/sysdig/pull/1372)]
 
-* HTTP Output: Falco can now send alerts to http endpoints directly without having to use curl. [[#523](https://github.com/falcosecurity/falco/pull/523)]
+* HTTP Output: Falco can now send alerts to HTTP endpoints directly without having to use curl. [[#523](https://github.com/falcosecurity/falco/pull/523)]
 
-* Move Kubernetes Response Engine to own repo: The Kubernetes Response Engine is now in its [own github repository](https://github.com/falcosecurity/kubernetes-response-engine). [[#539](https://github.com/falcosecurity/falco/pull/539)]
+* Move Kubernetes Response Engine to own repo: The Kubernetes Response Engine is now in its [own GitHub repository](https://github.com/falcosecurity/kubernetes-response-engine). [[#539](https://github.com/falcosecurity/falco/pull/539)]
 
 * Updated Puppet Module: An all-new puppet module compatible with puppet 4 with a smoother installation process and updated package links. [[#537](https://github.com/falcosecurity/falco/pull/537)] [[#543](https://github.com/falcosecurity/falco/pull/543)] [[#546](https://github.com/falcosecurity/falco/pull/546)]
 
-* RHEL-based falco image: Provide dockerfiles that use RHEL 7 as the base image instead of debian:unstable. [[#544](https://github.com/falcosecurity/falco/pull/544)]
+* RHEL-based Falco image: Provide docker files that use RHEL 7 as the base image instead of debian: unstable. [[#544](https://github.com/falcosecurity/falco/pull/544)]
 
 
 ## Minor Changes
@@ -270,7 +270,7 @@ Released 2019-05-13
 
 * Better coverage for cassandra/kubelet/kops to reduce FPs [[#551](https://github.com/falcosecurity/falco/pull/551)]
 
-* Better coverage for docker, openscap to reduce FPs [[#573](https://github.com/falcosecurity/falco/pull/573)]
+* Better coverage for docker, open cap to reduce FPs [[#573](https://github.com/falcosecurity/falco/pull/573)]
 
 * Better coverage for fluentd/jboss to reduce FPs [[#590](https://github.com/falcosecurity/falco/pull/590)]
 
@@ -282,13 +282,13 @@ Released 2019-02-06
 
 ## Major Changes
 
-* Rules versioning support: The falco engine and executable now have an *engine version* that represents the fields they support. Similarly, rules files have an optional *required_engine_version: NNN* object that names the minimum engine version required to read that rules file. Any time the engine adds new fields, event sources, etc, the engine version will be incremented, and any time a rules file starts using new fields, event sources, etc, the required engine version will be incremented. [[#492](https://github.com/falcosecurity/falco/pull/492)]
+* Rules versioning support: The Falco engine and executable now have an *engine version* that represents the fields they support. Similarly, rules files have an optional *required_engine_version: NNN* object that names the minimum engine version required to read that rules file. Any time the engine adds new fields, event sources, etc, the engine version will be incremented, and any time a rules file starts using new fields, event sources, etc, the required engine version will be incremented. [[#492](https://github.com/falcosecurity/falco/pull/492)]
 
 * Allow SSL for K8s audit endpoint/embedded webserver [[#471](https://github.com/falcosecurity/falco/pull/471)]
 
-* Add stale issues bot that automatically flags old github issues as stale after 60 days of inactivity and closes issues after 67 days of inactivity. [[#500](https://github.com/falcosecurity/falco/pull/500)]
+* Add stale issues bot that automatically flags old GitHub issues as stale after 60 days of inactivity and closes issues after 67 days of inactivity. [[#500](https://github.com/falcosecurity/falco/pull/500)]
 
-* Support bundle: When run with `--support`, falco will print a json object containing necessary information like falco version, command line, operating system information, and falco rules files contents. This could be useful when reporting issues. [[#517](https://github.com/falcosecurity/falco/pull/517)]
+* Support bundle: When running with `--support`, Falco will print a json object containing necessary information like falco version, command line, operating system information, and falco rules files contents. This could be useful when reporting issues. [[#517](https://github.com/falcosecurity/falco/pull/517)]
 
 ## Minor Changes
 
@@ -298,7 +298,7 @@ Released 2019-02-06
 
 * Fix kernel module builds when running on centos as a container by installing gcc 5 by hand instead of directly from debian/unstable. [[#501](https://github.com/falcosecurity/falco/pull/501)]
 
-* Mount `/etc` when running as a container, which allows container to build kernel module/ebpf program on COS/Minikube. [[#475](https://github.com/falcosecurity/falco/pull/475)]
+* Mount `/etc` when running as a container, which allows the container to build kernel module/ebpf program on COS/Minikube. [[#475](https://github.com/falcosecurity/falco/pull/475)]
 
 * Improved way to specify the source of generic event objects [[#480](https://github.com/falcosecurity/falco/pull/480)]
 
@@ -341,7 +341,7 @@ Released 2019-01-16
 
 * Ensure `-pc`/`-pk` only apply to syscall rules and not k8s_audit rules [[#495](https://github.com/falcosecurity/falco/pull/495)]
 
-* Fix a potential crash that could occur when using the falco engine and rulesets [[#468](https://github.com/falcosecurity/falco/pull/468)]
+* Fix a potential crash that could occur when using the Falco engine and rulesets [[#468](https://github.com/falcosecurity/falco/pull/468)]
 
 * Fix a regression where format output options were mistakenly removed [[#485](https://github.com/falcosecurity/falco/pull/485)]
 
@@ -351,7 +351,7 @@ Released 2019-01-16
 
 * Fix FPs related to `apt-config`/`apt-cache`, `apk` [[#490](https://github.com/falcosecurity/falco/pull/490)]
 
-* New rules `Launch Package Management Process in Container`, `Netcat Remote Code Execution in Container`, `Lauch Suspicious Network Tool in Container` look for host-level network tools like `netcat`, package management tools like `apt-get`, or network tool binaries being run in a container. [[#490](https://github.com/falcosecurity/falco/pull/490)]
+* New rules `Launch Package Management Process in Container`, `Netcat Remote Code Execution in Container`, `Launch Suspicious Network Tool in Container` look for host-level network tools like `netcat`, package management tools like `apt-get`, or network tool binaries being run in a container. [[#490](https://github.com/falcosecurity/falco/pull/490)]
 
 * Fix the `inbound` and `outbound` macros so they work with sendto/recvfrom/sendmsg/recvmsg. [[#470](https://github.com/falcosecurity/falco/pull/470)]
 
@@ -364,15 +364,15 @@ Released 2018-11-09
 
 ## Major Changes
 
-* **Support for K8s Audit Events** : Falco now supports [K8s Audit Events](https://kubernetes.io/docs/tasks/debug-application-cluster/audit/#audit-backends) as a second stream of events in addition to syscalls. For full details on the feature, see the [wiki](https://github.com/falcosecurity/falco/wiki/K8s-Audit-Event-Support).
+* **Support for K8s Audit Events **: Falco now supports [K8s Audit Events](https://kubernetes.io/docs/tasks/debug-application-cluster/audit/#audit-backends) as a second stream of events in addition to syscalls. For full details on the feature, see the [wiki](https://github.com/falcosecurity/falco/wiki/K8s-Audit-Event-Support).
 
-* Transparent Config/Rule Reloading: On SIGHUP, Falco will now reload all config files/rules files and start processing new events. Allows rules changes without having to restart falco [[#457](https://github.com/falcosecurity/falco/pull/457)] [[#432](https://github.com/falcosecurity/falco/issues/432)]
+* Transparent Config/Rule Reloading: On SIGHUP, Falco will now reload all config files/rules files and start processing new events. Allows rules changes without having to restart Falco [[#457](https://github.com/falcosecurity/falco/pull/457)] [[#432](https://github.com/falcosecurity/falco/issues/432)]
 
 ## Minor Changes
 
-* The reference integration of falco into a action engine now supports aws actions like lambda, etc. [[#460](https://github.com/falcosecurity/falco/pull/460)]
+* The reference integration of Falco into an action engine now supports aws actions like lambda, etc. [[#460](https://github.com/falcosecurity/falco/pull/460)]
 
-* Add netcat to falco docker images, which allows easier integration of program outputs to external servers [[#456](https://github.com/falcosecurity/falco/pull/456)] [[#433](https://github.com/falcosecurity/falco/issues/433)]
+* Add netcat to Falco docker images, which allows easier integration of program outputs to external servers [[#456](https://github.com/falcosecurity/falco/pull/456)] [[#433](https://github.com/falcosecurity/falco/issues/433)]
 
 ## Bug Fixes
 
@@ -382,9 +382,9 @@ Released 2018-11-09
 
 ## Rule Changes
 
-* Better coverage (e.g. reduced FPs) for critical stack, hids systems, ufw, cloud-init, etc. [[#445](https://github.com/falcosecurity/falco/pull/445)]
+* Better coverage (e.g. reduced FPs) for the critical stack, hids systems, ufw, cloud-init, etc. [[#445](https://github.com/falcosecurity/falco/pull/445)]
 
-* New rules `Launch Package Management Process in Container`, `Netcat Remote Code Execution in Container`, and `Lauch Suspicious Network Tool in Container` look for running various suspicious programs in a container. [[#461](https://github.com/falcosecurity/falco/pull/461)]
+* New rules `Launch Package Management Process in Container`, `Netcat Remote Code Execution in Container`, and `Launch Suspicious Network Tool in Container` look for running various suspicious programs in a container. [[#461](https://github.com/falcosecurity/falco/pull/461)]
 
 * Misc changes to address false positives in GKE, Istio, etc. [[#455](https://github.com/falcosecurity/falco/pull/455)] [[#439](https://github.com/falcosecurity/falco/issues/439)]
 
@@ -415,7 +415,7 @@ Released 2018-09-11
 
 ## Bug Fixes
 
-* Better control of specifying location of lua source code [[#406](https://github.com/draios/falco/pull/406)]
+* Better control of specifying the location of lua source code [[#406](https://github.com/draios/falco/pull/406)]
 
 ## Rule Changes
 
@@ -439,7 +439,7 @@ Released 2018-07-24
 
 ## Minor Changes
 
-* Rules may now have an `skip-if-unknown-filter` property. If set to true, a rule will be skipped if its condition/output property refers to a filtercheck (e.g. `fd.some-new-attibute`) that is not present in the current falco version. [[#364](https://github.com/draios/falco/pull/364)] [[#345](https://github.com/draios/falco/issues/345)]
+* Rules may now have a `skip-if-unknown-filter` property. If set to true, a rule will be skipped if its condition/output property refers to a filter check (e.g. `fd.some-new-attibute`) that is not present in the current falco version. [[#364](https://github.com/draios/falco/pull/364)] [[#345](https://github.com/draios/falco/issues/345)]
 * Small changes to Falco `COPYING` file so github automatically recognizes license [[#380](https://github.com/draios/falco/pull/380)]
 * New example integration showing how to connect Falco with Anchore to dynamically create falco rules based on negative scan results [[#390](https://github.com/draios/falco/pull/390)]
 * New example integration showing how to connect Falco, [nats](https://nats.io/), and K8s to run flexible "playbooks" based on Falco events [[#389](https://github.com/draios/falco/pull/389)]
@@ -516,7 +516,7 @@ Released 2018-01-18
 
 ### Bug Fixes
 
-* Fix driver incompatibility problems with some linux kernel versions that can disable pagefault tracepoints [[#sysdig/1034](https://github.com/draios/sysdig/pull/1034)]
+* Fix driver incompatibility problems with some Linux kernel versions that can disable page fault tracepoints [[#sysdig/1034](https://github.com/draios/sysdig/pull/1034)]
 * Fix OSX Build incompatibility with latest version of libcurl [[#291](https://github.com/draios/falco/pull/291)]
 
 ### Minor Changes
@@ -563,7 +563,7 @@ Released 2017-10-10
 
 ### Bug Fixes
 
-* Fix installation of falco on OSX [[#252](https://github.com/draios/falco/pull/252)]
+* Fix installation of Falco on OSX [[#252](https://github.com/draios/falco/pull/252)]
 * Fix a bug that caused the trailing whitespace of a quoted string to be accidentally removed [[#254](https://github.com/draios/falco/pull/254)]
 * When multiple sets of kernel headers are installed, find the one for the running kernel [[#260](https://github.com/draios/falco/pull/260)]
 * Allow pathnames in rule/macro conditions to contain '.' characters [[#262](https://github.com/draios/falco/pull/262)]
@@ -574,8 +574,8 @@ Released 2017-10-10
 ### Rule Changes
 
 * Significant changes to default ruleset to address FPs. These changes resulted from hundreds of hours of use in actual customer environments. [[#247](https://github.com/draios/falco/pull/247)] [[#259](https://github.com/draios/falco/pull/259)]
-* Add official gitlab EE docker image to list of known shell spawning images. Thanks @dkerwin! [[#270](https://github.com/draios/falco/pull/270)]
-* Add keepalived to list of shell spawning binaries. Thanks @dkerwin! [[#269](https://github.com/draios/falco/pull/269)]
+* Add official gitlab EE docker image to list of known shell spawning images. Thanks, @dkerwin! [[#270](https://github.com/draios/falco/pull/270)]
+* Add keepalived to list of shell spawning binaries. Thanks, @dkerwin! [[#269](https://github.com/draios/falco/pull/269)]
 
 ## v0.7.0
 
@@ -583,7 +583,7 @@ Released 2017-05-30
 
 ### Major Changes
 
-* Update the priorities of falco rules to use a wider range of priorities rather than just ERROR/WARNING. More info on the use of priorities in the ruleset can be found [here](https://github.com/draios/falco/wiki/Falco-Rules#rule-priorities). [[#244](https://github.com/draios/falco/pull/244)]
+* Update the priorities of Falco rules to use a wider range of priorities rather than just ERROR/WARNING. More info on the use of priorities in the ruleset can be found [here](https://github.com/draios/falco/wiki/Falco-Rules#rule-priorities). [[#244](https://github.com/draios/falco/pull/244)]
 
 ### Minor Changes
 
@@ -595,8 +595,8 @@ None.
 
 ### Rule Changes
 
-* Add gitlab-mon as a gitlab binary, which allows it to run shells, etc. Thanks @dkerwin! [[#237](https://github.com/draios/falco/pull/237)]
-* A new rule Terminal shell in container" that looks for shells spawned in a container with an attached terminal. [[#242](https://github.com/draios/falco/pull/242)]
+* Add gitlab-mon as a gitlab binary, which allows it to run shells, etc. Thanks, @dkerwin! [[#237](https://github.com/draios/falco/pull/237)]
+* A new rule Terminal shell in a container" that looks for shells spawned in a container with an attached terminal. [[#242](https://github.com/draios/falco/pull/242)]
 * Fix some FPs related to the sysdig monitor agent. [[#243](https://github.com/draios/falco/pull/243)]
 * Fix some FPs related to stating containers combined with missed events [[#243](https://github.com/draios/falco/pull/243)]
 
@@ -614,7 +614,7 @@ None
 
 ### Bug Fixes
 
-* Update the falco driver to work with kernel 4.11 [[#829](https://github.com/draios/sysdig/pull/829)]
+* Update the Falco driver to work with kernel 4.11 [[#829](https://github.com/draios/sysdig/pull/829)]
 
 ### Rule Changes
 
@@ -626,10 +626,10 @@ Released 2017-03-29
 
 ### Major Changes
 
-* Add the notion of tagged falco rules. Full documentation for this feature is available on the [wiki](https://github.com/draios/falco/wiki/Falco-Rules#rule-tags). [[#58](https://github.com/draios/falco/issues/58)] [[#59](https://github.com/draios/falco/issues/59)] [[#60](https://github.com/draios/falco/issues/60)] [[#206](https://github.com/draios/falco/pull/206)]
-* Falco now has its own dedicated kernel module. Previously, it would depend on sysdig being installed and would use sysdig's `sysdig-probe` kernel module. This ensures you can upgrade sysdig and falco without kernel driver compatibility problems. More details on the kernel module and its installation are on the [wiki](https://github.com/draios/falco/wiki/Falco-Kernel-Module). [[#215](https://github.com/draios/falco/issues/215)] [[#223](https://github.com/draios/falco/issues/223)] [[#224](https://github.com/draios/falco/pull/224)]
+* Add the notion of tagged Falco rules. Full documentation for this feature is available on the [wiki](https://github.com/draios/falco/wiki/Falco-Rules#rule-tags). [[#58](https://github.com/draios/falco/issues/58)] [[#59](https://github.com/draios/falco/issues/59)] [[#60](https://github.com/draios/falco/issues/60)] [[#206](https://github.com/draios/falco/pull/206)]
+* Falco now has its dedicated kernel module. Previously, it would depend on system being installed and would use sysdig's `sysdig-probe` kernel module. This ensures you can upgrade sysdig and falco without kernel driver compatibility problems. More details on the kernel module and its installation are on the [wiki](https://github.com/draios/falco/wiki/Falco-Kernel-Module). [[#215](https://github.com/draios/falco/issues/215)] [[#223](https://github.com/draios/falco/issues/223)] [[#224](https://github.com/draios/falco/pull/224)]
 * When providing multiple rules files by specifying `-r' multiple times, make sure that you can override rules/lists/macros. Previously, a list/macro/rule specified in an earlier file could not be overridden in a later file. [[#176](https://github.com/draios/falco/issues/176)] [[#177](https://github.com/draios/falco/pull/177)]
-* Add example k8s yaml files that show how to run falco as a k8s DaemonSet, and how to run falco-event-generator as a deployment running on one node. [[#222](https://github.com/draios/falco/pull/222)] [[#225](https://github.com/draios/falco/issues/225)] [[#226](https://github.com/draios/falco/pull/226)]
+* Add example k8s yaml files that show how to run Falco as a k8s DaemonSet, and how to run Falco-event-generator as a deployment running on one node. [[#222](https://github.com/draios/falco/pull/222)] [[#225](https://github.com/draios/falco/issues/225)] [[#226](https://github.com/draios/falco/pull/226)]
 * Update third party libraries to address security vulnerabilities. [[#182](https://github.com/draios/falco/pull/182)]
 * Falco can now be built on OSX. Like sysdig, on OSX it is limited to reading existing trace files. [[#210](https://github.com/draios/falco/pull/210)]
 
@@ -643,7 +643,7 @@ Released 2017-03-29
 * Make sure output strings are not truncated when a given %field expression has a NULL value. [[#180](https://github.com/draios/falco/issues/180)] [[#181](https://github.com/draios/falco/pull/181)]
 * Allow ASSERTs when running travisci tests. [[#199](https://github.com/draios/falco/pull/199)]
 * Fix make dependencies for lyaml. [[#204](https://github.com/draios/falco/pull/204)] [[#130](https://github.com/draios/falco/issues/130)]
-* (This was a change in sysdig, but affected falco). Prevent hangs when traversing malformed parent thread state. [[#208](https://github.com/draios/falco/issues/208)]
+* (This was a change in sysdig, but affected Falco). Prevent hangs when traversing malformed parent thread state. [[#208](https://github.com/draios/falco/issues/208)]
 
 ### Rule Changes
 
@@ -654,7 +654,7 @@ Released 2017-03-29
 * Eliminate FPs related to use of other security products. Thanks to @juju4 for the useful rule updates. [[#200](https://github.com/draios/falco/pull/200)]
 * Add additional possible locations for denyhosts, add [PM2](http://pm2.keymetrics.io/) as a shell spawner. [[#202](https://github.com/draios/falco/pull/202)]
 * Add flanneld as a privileged container, improve grouping for the "x running y" macros, allow denyhosts to spawn shells. [[#207](https://github.com/draios/falco/pull/207)]
-* Handle systemd changing its name to "(systemd)", add sv (part of [runit](http://smarden.org/runit/)) as a program that can write below /etc, allow writing to all `/dev/tty*` files. [[#209](https://github.com/draios/falco/pull/209)]
+* Handle system changing its name to "(systemd)", add sv (part of [runit](http://smarden.org/runit/)) as a program that can write below /etc, allow writing to all `/dev/tty*` files. [[#209](https://github.com/draios/falco/pull/209)]
 * Add erl_child_setup as a shell spawner. Thanks to @dkerwin for the useful rule updates. [[#218](https://github.com/draios/falco/pull/218)]  [[#221](https://github.com/draios/falco/pull/221)]
 * Add support for gitlab omnibus containers/pods. Thanks to @dkerwin for the useful rule updates. [[#220](https://github.com/draios/falco/pull/220)]
 
@@ -666,12 +666,12 @@ Starting with this release, we're adding a new section "Rule Changes" devoted to
 
 ### Major Changes
 
-* Cache event formatting objects so they are not re-created for every falco notification. This can result in significant speedups when the ruleset results in lots of notifications. [[#158](https://github.com/draios/falco/pull/158)]
+* Cache event formatting objects so they are not re-created for every Falco notification. This can result in significant speedups when the ruleset results in lots of notifications. [[#158](https://github.com/draios/falco/pull/158)]
 * Falco notifications are now throttled by a token bucket, preventing a flood of notifications when many events match a rule. Controlled by the `outputs, rate` and `outputs, max_burst` options. [[#161](https://github.com/draios/falco/pull/161)]
 
 ### Minor Changes
 
-* When run from a container, you can provide the environment variable `SYSDIG_SKIP_LOAD` to skip the process of building/loading the kernel module. Thanks @carlsverre for the fix. [[#145](https://github.com/draios/falco/pull/145)]
+* When running from a container, you can provide the environment variable `SYSDIG_SKIP_LOAD` to skip the process of building/loading the kernel module. Thanks, @carlsverre for the fix. [[#145](https://github.com/draios/falco/pull/145)]
 * Fully implement `USE_BUNDLED_DEPS` within CMakeFiles so you can build with external third-party libraries. [[#147](https://github.com/draios/falco/pull/147)]
 * Improve error messages that result when trying to load a rule with a malformed `output:` attribute [[#150](https://github.com/draios/falco/pull/150)] [[#151](https://github.com/draios/falco/pull/151)]
 * Add the ability to write event capture statistics to a file via the `-s <statsfile>` option. [[#155](https://github.com/draios/falco/pull/155)]
@@ -685,7 +685,7 @@ Starting with this release, we're adding a new section "Rule Changes" devoted to
 ### Rule Changes
 
 * Add DNF as non-alerting for RPM and package management. Thanks @djcross for the fix. [[#153](https://github.com/draios/falco/pull/153)]
-* Make `google_containers/kube-proxy` a trusted image, affecting the File Open by Privileged Container/Sensitive Mount by Container rules. [[#159](https://github.com/draios/falco/pull/159)]
+* Make `google_containers/Kube-proxy` a trusted image, affecting the File Open by Privileged Container/Sensitive Mount by Container rules. [[#159](https://github.com/draios/falco/pull/159)]
 * Add fail2ban-server as a program that can spawn shells. Thanks @jcoetzee for the fix. [[#168](https://github.com/draios/falco/pull/168)]
 * Add systemd as a program that can access sensitive files. Thanks @jcoetzee for the fix. [[#169](https://github.com/draios/falco/pull/169)]
 * Add apt/apt-get as programs that can spawn shells. Thanks @jcoetzee for the fix. [[#170](https://github.com/draios/falco/pull/170)]
@@ -718,11 +718,11 @@ As falco depends heavily on sysdig, many changes here were actually made to sysd
 
 * Add an event generator program that simulates suspicious activity that can be detected by falco. This is also available as a docker image [[sysdig/falco-event-generator](https://hub.docker.com/r/sysdig/falco-event-generator/)]. [[#113](https://github.com/draios/falco/pull/113)] [[#132](https://github.com/draios/falco/pull/132)]
 * Changed rule names to be human readable [[#116](https://github.com/draios/falco/pull/116)]
-* Add Copyright notice to all source files [[#126](https://github.com/draios/falco/pull/126)]
+* Add the Copyright notice to all source files [[#126](https://github.com/draios/falco/pull/126)]
 * Changes to docker images to make it easier to massage JSON output for webhooks [[#133](https://github.com/draios/falco/pull/133)]
-* When run with `-v`, print statistics on the number of events processed and dropped [[#139](https://github.com/draios/falco/pull/139)]
+* When running with `-v`, print statistics on the number of events processed and dropped [[#139](https://github.com/draios/falco/pull/139)]
 * Add ability to write trace files with `-w`. This can be useful to write a trace file in parallel with live event monitoring so you can reproduce it later. [[#140](https://github.com/draios/falco/pull/140)]
-* All rules can now take an optional `enabled` flag. With `enabled: false`, a rule will not be loaded or run against events. By default all rules are enabled [[#119](https://github.com/draios/falco/pull/119)]
+* All rules can now take an optional `enabled` flag. With `enabled: false`, a rule will not be loaded or run against events. By default, all rules are enabled [[#119](https://github.com/draios/falco/pull/119)]
 
 ### Bug Fixes
 
@@ -741,20 +741,20 @@ Released 2016-08-05
 
 ### Major Changes
 
-Significantly improved performance, involving changes in the falco and sysdig repositories:
+Significantly improved performance, involving changes in the Falco and system repositories:
 
 * Reordering a rule condition's operators to put likely-to-fail operators at the beginning and expensive operators at the end. [[#95](https://github.com/draios/falco/pull/95/)] [[#104](https://github.com/draios/falco/pull/104/)]
 * Adding the ability to perform x in (a, b, c, ...) as a single set membership test instead of individual comparisons between x=a, x=b, etc. [[#624](https://github.com/draios/sysdig/pull/624)] [[#98](https://github.com/draios/falco/pull/98/)]
 * Avoid unnecessary string manipulations. [[#625](https://github.com/draios/sysdig/pull/625)]
-* Using `startswith` as a string comparison operator when possible. [[#623](https://github.com/draios/sysdig/pull/623)]
+* Using `starts with` as a string comparison operator when possible. [[#623](https://github.com/draios/sysdig/pull/623)]
 * Use `is_open_read`/`is_open_write` when possible instead of searching through open flags. [[#610](https://github.com/draios/sysdig/pull/610)]
 * Group rules by event type, which allows for an initial filter using event type before going through each rule's condition. [[#627](https://github.com/draios/sysdig/pull/627)] [[#101](https://github.com/draios/falco/pull/101/)]
 
 All of these changes result in dramatically reduced CPU usage. Here are some comparisons between 0.2.0 and 0.3.0 for the following workloads:
 
-* [Phoronix](http://www.phoronix-test-suite.com/)'s `pts/apache` and `pts/dbench` tests.
-* Sysdig Cloud Kubernetes Demo: Starts a kubernetes environment using docker with apache and wordpress instances + synthetic workloads.
-* [Juttle-engine examples](https://github.com/juttle/juttle-engine/blob/master/examples/README.md) : Several elasticsearch, node.js, logstash, mysql, postgres, influxdb instances run under docker-compose.
+* [Phoronix](http://www.phoronix-test-suite.com/)'s `pts/apache` and `pts/bench` tests.
+* Sysdig Cloud Kubernetes Demo: Starts a Kubernetes environment using docker with apache and Wordpress instances + synthetic workloads.
+* [Juttle-engine examples](https://github.com/juttle/juttle-engine/blob/master/examples/README.md) : Several elastic search, node.js, logstash, MySQL, Postgres, influxdb instances run under docker-compose.
 
 | Workload                          | 0.2.0 CPU Usage | 0.3.0 CPU Usage |
 | --------------------------------- | --------------- | --------------- |
@@ -764,48 +764,47 @@ All of these changes result in dramatically reduced CPU usage. Here are some com
 | Kubernetes-Demo (During Teardown) | 15%             | 3%              |
 | Juttle-examples                   | 3%              | 1%              |
 
-As a part of these changes, falco now prefers rule conditions that have at least one `evt.type=` operator, at the beginning of the condition, before any negative operators (i.e. `not` or `!=`). If a condition does not have any `evt.type=` operator, falco will log a warning like:
+As a part of these changes, Falco now prefers rule conditions that have at least one `evt.type=` operator, at the beginning of the condition, before any negative operators (i.e. `not` or `!=`). If a condition does not have any `evt.type=` operator, Falco will log a warning like:
 
 ```
-Rule no_evttype: warning (no-evttype):
+Rule no_evttype: warning (no-type):
 proc.name=foo
      did not contain any evt.type restriction, meaning it will run for all event types.
      This has a significant performance penalty. Consider adding an evt.type restriction if possible.
 ```
 
-If a rule has a `evt.type` operator in the later portion of the condition, falco will log a warning like:
+If a rule has an `evt.type` the operator in the latter portion of the condition, Falco will log a warning like:
 
 ```
-Rule evttype_not_equals: warning (trailing-evttype):
+Rule evttype_not_equals: warning (trailing-type):
 evt.type!=execve
      does not have all evt.type restrictions at the beginning of the condition,
      or uses a negative match (i.e. "not"/"!=") for some evt.type restriction.
      This has a performance penalty, as the rule can not be limited to specific event types.
-     Consider moving all evt.type restrictions to the beginning of the rule and/or
-     replacing negative matches with positive matches if possible.
+     Consider moving all evt.type restrictions to the beginning of the rule and/or replacing negative matches with positive matches if possible.
 ```
 
 
 ### Minor Changes
 
 * Several sets of rule cleanups to reduce false positives. [[#95](https://github.com/draios/falco/pull/95/)]
-* Add example of how falco can detect abuse of a badly designed REST API. [[#97](https://github.com/draios/falco/pull/97/)]
-* Add a new output type "program" that writes a formatted event to a configurable program. Each notification results in one invocation of the program. A common use of this output type would be to send an email for every falco notification. [[#105](https://github.com/draios/falco/pull/105/)] [[#99](https://github.com/draios/falco/issues/99)]
-* Add the ability to run falco on all events, including events that are flagged with `EF_DROP_FALCO`. (These events are high-volume, low-value events that are ignored by default to improve performance). [[#107](https://github.com/draios/falco/pull/107/)] [[#102](https://github.com/draios/falco/issues/102)]
+* Add example of how Falco can detect abuse of a badly designed REST API. [[#97](https://github.com/draios/falco/pull/97/)]
+* Add a new output type "program" that writes a formatted event to a configurable program. Each notification results in one invocation of the program. A common use of this output type would be to send an email for every Falco notification. [[#105](https://github.com/draios/falco/pull/105/)] [[#99](https://github.com/draios/falco/issues/99)]
+* Add the ability to run Falco on all events, including events that are flagged with `EF_DROP_FALCO`. (These events are high-volume, low-value events that are ignored by default to improve performance). [[#107](https://github.com/draios/falco/pull/107/)] [[#102](https://github.com/draios/falco/issues/102)]
 
 ### Bug Fixes
 
-* Add third-party jq library now that sysdig requires it. [[#96](https://github.com/draios/falco/pull/96/)]
+* Add third-party js library now that system requires it. [[#96](https://github.com/draios/falco/pull/96/)]
 
 ## v0.2.0
 
 Released 2016-06-09
 
-For full handling of setsid system calls and session id tracking using `proc.sname`, falco requires a sysdig version >= 0.10.0.
+For full handling of setsid system calls and session-id tracking using `proc.sname`, Falco requires a system version >= 0.10.0.
 
 ### Major Changes
 
-- Add TravisCI regression tests. Testing involves a variety of positive, negative, and informational trace files with both plain and json output. [[#76](https://github.com/draios/falco/pull/76)] [[#83](https://github.com/draios/falco/pull/83)]
+- Add TravisCI regression tests. Testing involves a variety of positive, negative, and informational trace files with both plain and JSON output. [[#76](https://github.com/draios/falco/pull/76)] [[#83](https://github.com/draios/falco/pull/83)]
 - Fairly big rework of ruleset to improve coverage, reduce false positives, and handle installation environments effectively [[#83](https://github.com/draios/falco/pull/83)] [[#87](https://github.com/draios/falco/pull/87)]
 - Not directly a code change, but mentioning it here--the Wiki has now been populated with an initial set of articles, migrating content from the README and adding detail when necessary. [[#90](https://github.com/draios/falco/pull/90)]
 
@@ -824,4 +823,4 @@ Released 2016-05-17
 
 ### Major Changes
 
-- Initial release. Subsequent releases will have "Major Changes", "Minor Changes", and "Bug Fixes" sections, with links to github issues/pull requests as appropriate.
+- Initial release. Subsequent releases will have "Major Changes", "Minor Changes", and "Bug Fixes" sections, with links to GitHub issues/pull requests as appropriate.
