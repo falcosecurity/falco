@@ -644,3 +644,23 @@ trace_files: !mux
     conf_file: confs/psp.yaml
     psp_file: psps/allowed_proc_mount_types.yaml
     trace_file: trace_files/psp/proc_mount_type_default.json
+
+  psp_name_with_dashes:
+    detect: True
+    detect_level: WARNING
+    detect_counts:
+      - "PSP no_privileged Violation (privileged) System Activity": 1
+    rules_file: []
+    conf_file: confs/psp.yaml
+    psp_file: psps/privileged_name_with_dashes.yaml
+    trace_file: trace_files/psp/privileged.scap
+
+  psp_name_with_spaces:
+    detect: True
+    detect_level: WARNING
+    detect_counts:
+      - "PSP no_privileged Violation (privileged) System Activity": 1
+    rules_file: []
+    conf_file: confs/psp.yaml
+    psp_file: psps/privileged_name_with_spaces.yaml
+    trace_file: trace_files/psp/privileged.scap
