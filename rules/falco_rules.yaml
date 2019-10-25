@@ -898,6 +898,9 @@
 - macro: calico_writing_state
   condition: (proc.name=kube-controller and fd.name startswith /status.json and k8s.pod.name startswith calico)
 
+- macro: calico_writing_envvars
+  condition: (proc.name=start_runit and fd.name startswith "/etc/envvars" and container.image.repository endswith "calico/node")
+
 - list: repository_files
   items: [sources.list]
 
@@ -1251,6 +1254,7 @@
     and not istio_writing_conf
     and not ufw_writing_conf
     and not calico_writing_conf
+    and not calico_writing_envvars
     and not prometheus_conf_writing_conf
     and not openshift_writing_conf
     and not keepalived_writing_conf
@@ -1750,7 +1754,7 @@
 - list: falco_privileged_images
   items: [
     docker.io/sysdig/agent, docker.io/sysdig/falco, docker.io/sysdig/sysdig,
-    gcr.io/google_containers/kube-proxy, docker.io/calico/node,
+    gcr.io/google_containers/kube-proxy, docker.io/calico/node, quay.io/calico/node,
     docker.io/rook/toolbox, docker.io/cloudnativelabs/kube-router, docker.io/mesosphere/mesos-slave,
     docker.io/docker/ucp-agent, sematext_images, k8s.gcr.io/kube-proxy
     ]
