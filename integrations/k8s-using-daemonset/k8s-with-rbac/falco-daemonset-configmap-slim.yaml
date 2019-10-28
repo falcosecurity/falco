@@ -20,7 +20,7 @@ spec:
             privileged: true
           #env:
           #  - name: FALCOCTL_FALCO_VERSION
-          #    value: 0.17.0
+          #    value: 0.18.0
           #  - name: FALCOCTL_FALCO_PROBE_URL
           #    value:
           #  - name: FALCOCTL_FALCO_PROBE_REPO
@@ -31,7 +31,7 @@ spec:
               readOnly: true
       containers:
         - name: falco
-          image: falcosecurity/falco:0.17.1-slim
+          image: falcosecurity/falco:0.18.0-slim
           securityContext:
             privileged: true
 # Uncomment the 3 lines below to enable eBPF support for Falco.
