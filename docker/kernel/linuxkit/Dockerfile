@@ -1,13 +1,13 @@
 ARG ALPINE_VERSION=3.10
 ARG KERNEL_VERSION=4.9.184
-ARG FALCO_VERSION=0.17.0
+ARG FALCO_VERSION=0.18.0
 
 FROM linuxkit/kernel:${KERNEL_VERSION} AS ksrc
 FROM falcosecurity/falco-minimal:${FALCO_VERSION} as falco
 FROM alpine:${ALPINE_VERSION} AS probe-build
 LABEL maintainer="opensource@sysdig.com"
 ARG KERNEL_VERSION=4.9.184
-ARG FALCO_VERSION=0.17.0
+ARG FALCO_VERSION=0.18.0
 ENV FALCO_VERSION=${FALCO_VERSION}
 ENV KERNEL_VERSION=${KERNEL_VERSION}
 
@@ -32,7 +32,7 @@ RUN apk add --no-cache --update \
   autoconf
 
 FROM alpine:${ALPINE_VERSION}
-ARG FALCO_VERSION=0.17.0
+ARG FALCO_VERSION=0.18.0
 ENV FALCO_VERSION=${FALCO_VERSION}
 COPY --from=probe-build /usr/src/falco-${FALCO_VERSION}/falco-probe.ko /
 CMD ["insmod","/falco-probe.ko"] 
