@@ -444,7 +444,7 @@ void falco_rules::load_rules(const string &rules_content,
 			throw falco_exception(err);
 		}
 
-		lua_pop(m_ls, 4);
+		lua_pop(m_ls, 2);
 
 	} else {
 		throw falco_exception("No function " + m_lua_load_rules + " found in lua rule module");
