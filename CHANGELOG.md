@@ -29,6 +29,7 @@ Released 2019-10-28
 * add explicit dependency between tests and catch2 header file. [[#879](https://github.com/falcosecurity/falco/pull/879)]
 * fix: stable dockerfile libgcc-6-dev dependencies [[#830](https://github.com/falcosecurity/falco/pull/830)]
 * fix: build dependencies for the local dockerfile [[#782](https://github.com/falcosecurity/falco/pull/782)]
+* fix: a crash bug that could result from reading more than ~6 rules files [[#906](https://github.com/falcosecurity/falco/issues/906)] [[#907](https://github.com/falcosecurity/falco/pull/907)]
   
 ### Rule Changes
 
