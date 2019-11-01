@@ -76,7 +76,7 @@ Some examples:
 
 ### Slack
 
-Other discussion, and **support requests** should go through the `#falco` channel in the Sysdig slack, please join [here](https://slack.sysdig.com).
+Other discussion, and **support requests** should go through the `#falco` channel in the open source slack, please join [here](https://slack.sysdig.com).
 
 ## Pull Requests
 
