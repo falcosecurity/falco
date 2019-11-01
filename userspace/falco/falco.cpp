@@ -82,7 +82,7 @@ static void usage()
 	   "Options:\n"
 	   " -h, --help                    Print this page\n"
 	   " -c                            Configuration file (default " FALCO_SOURCE_CONF_FILE ", " FALCO_INSTALL_CONF_FILE ")\n"
-	   " -A                            Monitor all events, including those with EF_DROP_FALCO flag.\n"
+	   " -A                            Monitor all events, including those with EF_DROP_SIMPLE_CONS flag.\n"
 	   " -b, --print-base64            Print data buffers in base64.\n"
 	   "                               This is useful for encoding binary data that needs to be used over media designed to.\n"
 	   " --cri <path>                  Path to CRI socket for container metadata.\n"
@@ -312,7 +312,7 @@ uint64_t do_inspect(falco_engine *engine,
 			break;
 		}
 
-		if(!ev->falco_consider() && !all_events)
+		if(!ev->simple_comsumer_consider() && !all_events)
 		{
 			continue;
 		}
@@ -343,7 +343,7 @@ static void print_all_ignored_events(sinsp *inspector)
 	std::set<string> ignored_event_names;
 	for(uint32_t j = 0; j < PPM_EVENT_MAX; j++)
 	{
-		if(!sinsp::falco_consider_evtnum(j))
+		if(!sinsp::simple_comsumer_consider_evtnum(j))
 		{
 			std::string name = etable[j].name;
 			// Ignore event names NA*
@@ -356,7 +356,7 @@ static void print_all_ignored_events(sinsp *inspector)
 
 	for(uint32_t j = 0; j < PPM_SC_MAX; j++)
 	{
-		if(!sinsp::falco_consider_syscallid(j))
+		if(!sinsp::simple_comsumer_consider_syscallid(j))
 		{
 			std::string name = stable[j].name;
 			// Ignore event names NA*
@@ -904,7 +904,7 @@ int falco_init(int argc, char **argv)
 
 		if(!all_events)
 		{
-			inspector->set_drop_event_flags(EF_DROP_FALCO);
+			inspector->set_drop_event_flags(EF_DROP_SIMPLE_CONS);
 		}
 
 		if (describe_all_rules)
