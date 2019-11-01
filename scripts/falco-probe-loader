@@ -1,8 +1,6 @@
-#!/bin/bash
 #
-# Copyright (C) 2013-2018 Draios Inc dba Sysdig.
+# Copyright (C) 2019 The Falco Authors.
 #
-# This file is part of sysdig .
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,9 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-#
-# Simple script that desperately tries to load sysdig-probe looking
-# for it in a bunch of ways. Convenient when running sysdig inside
+# Simple script that desperately tries to load the kernel instrumentation by 
+# looking for it in a bunch of ways. Convenient when running falco inside
 # a container or in other weird environments.
 #
 
