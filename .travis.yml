@@ -28,8 +28,7 @@ install:
     - export BRANCH=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)
     - sudo apt-get install rpm linux-headers-$(uname -r) libelf-dev
     - git clone https://github.com/draios/sysdig.git ../sysdig
-    # if available, use the branch with the same name in sysdig
-    - pushd ../sysdig && (git checkout "${BRANCH}" || exit 0) && echo "Using sysdig branch:" $(git rev-parse --abbrev-ref HEAD) && popd
+    - pushd ../sysdig && (git checkout "${BRANCH}" || exit 0) && echo "Using branch:" $(git rev-parse --abbrev-ref HEAD) && popd
 script:
     - mkdir build
     - ./scripts/build "${TRAVIS_BUILD_DIR}/.." "${TRAVIS_BUILD_DIR}/build"

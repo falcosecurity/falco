@@ -14,7 +14,7 @@ CII Best Practices: [![CII Best Practices](https://bestpractices.coreinfrastruct
 
 ---
 
-Falco is a behavioral activity monitor designed to detect anomalous activity in your applications. Powered by [sysdig’s](https://github.com/draios/sysdig) system call capture infrastructure, Falco lets you continuously monitor and detect container, application, host, and network activity—all in one place—from one source of data, with one set of rules.
+Falco is a behavioral activity monitor designed to detect anomalous activity in your applications. Falco audits a system at the most fundamental level, the kernel. Falco then enriches this data with other input streams such as container runtime metrics, and Kubernetes metrics. Falco lets you continuously monitor and detect container, application, host, and network activity—all in one place—from one source of data, with one set of rules.
 
 Falco is hosted by the Cloud Native Computing Foundation (CNCF) as a sandbox level project. If you are an organization that wants to help shape the evolution of technologies that are container-packaged, dynamically-scheduled and microservices-oriented, consider joining the CNCF. For details read the [Falco CNCF project proposal](https://github.com/cncf/toc/tree/master/proposals/falco.adoc).
 
@@ -47,7 +47,7 @@ Join the Community
 ---
 * [Join the mailing list](http://bit.ly/2Mu0wXA) for news and a Google calendar invite for our Falco open source meetings. Note: this is the only way to get a calendar invite for our open meetings.
 * [Website](https://falco.org) for Falco.
-* Join our [Public Slack](https://slack.sysdig.com) channel for open source Sysdig and Falco announcements and discussions.
+* Join our [Open Source Slack](https://slack.sysdig.com) channel for open source Sysdig and Falco announcements and discussions.
 
 Office hours
 ---
