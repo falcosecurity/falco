@@ -643,7 +643,7 @@ add_subdirectory(userspace/falco)
 add_subdirectory(tests)
 
 set(CPACK_PACKAGE_NAME "${PACKAGE_NAME}")
-set(CPACK_PACKAGE_VENDOR "Sysdig Inc.")
+set(CPACK_PACKAGE_VENDOR "Cloud Native Computing Foundation (CNCF) cncf.io.")
 set(CPACK_PACKAGE_CONTACT "opensource@sysdig.com")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Falco - Container Native Runtime Security")
 set(CPACK_PACKAGE_DESCRIPTION_FILE "${PROJECT_SOURCE_DIR}/scripts/description.txt")
