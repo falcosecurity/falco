@@ -28,7 +28,6 @@ file(COPY "${PROJECT_SOURCE_DIR}/scripts/rpm/falco"
 	DESTINATION "${PROJECT_BINARY_DIR}/scripts/rpm")
 
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
-	install(PROGRAMS ${SYSDIG_DIR}/scripts/sysdig-probe-loader
-		DESTINATION ${FALCO_BIN_DIR}
-		RENAME falco-probe-loader)
+	install(PROGRAMS ${PROJECT_BINARY_DIR}/scripts/falco-probe-loader
+		DESTINATION ${FALCO_BIN_DIR})
 endif()

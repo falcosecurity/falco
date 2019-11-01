@@ -296,7 +296,7 @@ void falco_rules::load_rules(const string &rules_content,
 
 		for(uint32_t j = 0; j < PPM_EVENT_MAX; j++)
 		{
-			if(etable[j].flags & EF_DROP_FALCO)
+			if(etable[j].flags & EF_DROP_SIMPLE_CONS)
 			{
 				lua_pushstring(m_ls, etable[j].name);
 				lua_pushnumber(m_ls, 1);
@@ -310,7 +310,7 @@ void falco_rules::load_rules(const string &rules_content,
 
 		for(uint32_t j = 0; j < PPM_SC_MAX; j++)
 		{
-			if(stable[j].flags & EF_DROP_FALCO)
+			if(stable[j].flags & EF_DROP_SIMPLE_CONS)
 			{
 				lua_pushstring(m_ls, stable[j].name);
 				lua_pushnumber(m_ls, 1);
