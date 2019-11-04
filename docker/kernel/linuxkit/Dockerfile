@@ -3,7 +3,7 @@ ARG KERNEL_VERSION=4.9.184
 ARG FALCO_VERSION=0.18.0
 
 FROM linuxkit/kernel:${KERNEL_VERSION} AS ksrc
-FROM falcosecurity/falco-minimal:${FALCO_VERSION} as falco
+FROM falcosecurity/falco:${FALCO_VERSION}-minimal as falco
 FROM alpine:${ALPINE_VERSION} AS probe-build
 LABEL maintainer="opensource@sysdig.com"
 ARG KERNEL_VERSION=4.9.184
