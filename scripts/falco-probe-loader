@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Simple script that desperately tries to load the kernel instrumentation by 
+# Simple script that desperately tries to load the kernel instrumentation by
 # looking for it in a bunch of ways. Convenient when running falco inside
 # a container or in other weird environments.
 #
@@ -73,18 +73,18 @@ get_kernel_config() {
 	elif [ -f "/boot/config-${KERNEL_RELEASE}" ]; then
 		echo "Found kernel config at /boot/config-${KERNEL_RELEASE}"
 		KERNEL_CONFIG_PATH=/boot/config-${KERNEL_RELEASE}
-	elif [ ! -z "${SYSDIG_HOST_ROOT}" ] && [ -f "${SYSDIG_HOST_ROOT}/boot/config-${KERNEL_RELEASE}" ]; then
-		echo "Found kernel config at ${SYSDIG_HOST_ROOT}/boot/config-${KERNEL_RELEASE}"
-		KERNEL_CONFIG_PATH="${SYSDIG_HOST_ROOT}/boot/config-${KERNEL_RELEASE}"
+	elif [ ! -z "${HOST_ROOT}" ] && [ -f "${HOST_ROOT}/boot/config-${KERNEL_RELEASE}" ]; then
+		echo "Found kernel config at ${HOST_ROOT}/boot/config-${KERNEL_RELEASE}"
+		KERNEL_CONFIG_PATH="${HOST_ROOT}/boot/config-${KERNEL_RELEASE}"
 	elif [ -f "/usr/lib/ostree-boot/config-${KERNEL_RELEASE}" ]; then
 		echo "Found kernel config at /usr/lib/ostree-boot/config-${KERNEL_RELEASE}"
 		KERNEL_CONFIG_PATH="/usr/lib/ostree-boot/config-${KERNEL_RELEASE}"
-	elif [ ! -z "${SYSDIG_HOST_ROOT}" ] && [ -f "${SYSDIG_HOST_ROOT}/usr/lib/ostree-boot/config-${KERNEL_RELEASE}" ]; then
-		echo "Found kernel config at ${SYSDIG_HOST_ROOT}/usr/lib/ostree-boot/config-${KERNEL_RELEASE}"
-		KERNEL_CONFIG_PATH="${SYSDIG_HOST_ROOT}/usr/lib/ostree-boot/config-${KERNEL_RELEASE}"
+	elif [ ! -z "${HOST_ROOT}" ] && [ -f "${HOST_ROOT}/usr/lib/ostree-boot/config-${KERNEL_RELEASE}" ]; then
+		echo "Found kernel config at ${HOST_ROOT}/usr/lib/ostree-boot/config-${KERNEL_RELEASE}"
+		KERNEL_CONFIG_PATH="${HOST_ROOT}/usr/lib/ostree-boot/config-${KERNEL_RELEASE}"
 	elif [ -f /lib/modules/${KERNEL_RELEASE}/config ]; then
 		# this code works both for native host and agent container assuming that
-		# Dockerfile sets up the desired symlink /lib/modules -> $SYSDIG_HOST_ROOT/lib/modules
+		# Dockerfile sets up the desired symlink /lib/modules -> $HOST_ROOT/lib/modules
 		echo "Found kernel config at /lib/modules/${KERNEL_RELEASE}/config"
 		KERNEL_CONFIG_PATH="/lib/modules/${KERNEL_RELEASE}/config"
 	fi
@@ -208,17 +208,17 @@ load_bpf_probe() {
 
 	get_kernel_config
 
-	if [ ! -z "${SYSDIG_HOST_ROOT}" ] && [ -f "${SYSDIG_HOST_ROOT}/etc/os-release" ]; then
-		. "${SYSDIG_HOST_ROOT}/etc/os-release"
+	if [ ! -z "${HOST_ROOT}" ] && [ -f "${HOST_ROOT}/etc/os-release" ]; then
+		. "${HOST_ROOT}/etc/os-release"
 
 		if [ "${ID}" == "cos" ]; then
 			COS=1
 		fi
 	fi
 
-	if [ ! -z "${SYSDIG_HOST_ROOT}" ] && [ -f "${SYSDIG_HOST_ROOT}/etc/VERSION" ]; then
+	if [ ! -z "${HOST_ROOT}" ] && [ -f "${HOST_ROOT}/etc/VERSION" ]; then
 		MINIKUBE=1
-		MINIKUBE_VERSION="$(cat ${SYSDIG_HOST_ROOT}/etc/VERSION)"
+		MINIKUBE_VERSION="$(cat ${HOST_ROOT}/etc/VERSION)"
 	fi
 
 	local BPF_PROBE_FILENAME="${BPF_PROBE_NAME}-${FALCO_VERSION}-${ARCH}-${KERNEL_RELEASE}-${HASH}.o"
@@ -227,7 +227,7 @@ load_bpf_probe() {
 
 	        local BPF_KERNEL_SOURCES_URL=""
 		local STRIP_COMPONENTS=1
-		
+
 	        customize_kernel_build() {
 		    if [ -n "${KERNEL_EXTRA_VERSION}" ]; then
 			sed -i "s/LOCALVERSION=\"\"/LOCALVERSION=\"${KERNEL_EXTRA_VERSION}\"/" .config
