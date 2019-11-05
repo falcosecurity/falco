@@ -312,7 +312,7 @@ uint64_t do_inspect(falco_engine *engine,
 			break;
 		}
 
-		if(!ev->simple_comsumer_consider() && !all_events)
+		if(!ev->simple_consumer_consider() && !all_events)
 		{
 			continue;
 		}
@@ -343,7 +343,7 @@ static void print_all_ignored_events(sinsp *inspector)
 	std::set<string> ignored_event_names;
 	for(uint32_t j = 0; j < PPM_EVENT_MAX; j++)
 	{
-		if(!sinsp::simple_comsumer_consider_evtnum(j))
+		if(!sinsp::simple_consumer_consider_evtnum(j))
 		{
 			std::string name = etable[j].name;
 			// Ignore event names NA*
@@ -356,7 +356,7 @@ static void print_all_ignored_events(sinsp *inspector)
 
 	for(uint32_t j = 0; j < PPM_SC_MAX; j++)
 	{
-		if(!sinsp::simple_comsumer_consider_syscallid(j))
+		if(!sinsp::simple_consumer_consider_syscallid(j))
 		{
 			std::string name = stable[j].name;
 			// Ignore event names NA*
