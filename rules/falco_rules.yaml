@@ -2599,3 +2599,9 @@
 # there if you want to enable them by adding to
 # falco_rules.local.yaml.
 
+- rule: The docker client is executed in a container
+  desc: Detect a k8s client tool executed inside a container
+  condition: spawned_process and container and proc.name in (k8s_client_binaries)
+  output: "Docker or kubernetes client executed in container (user=%user.name %container.info parent=%proc.pname cmdline=%proc.cmdline)"
+  priority: WARNING
+  tags: [container, mitre_execution]
