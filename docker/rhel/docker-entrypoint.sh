@@ -18,16 +18,14 @@
 
 # set -e
 
-# Set the SYSDIG_SKIP_LOAD variable to skip loading the sysdig kernel module
+# Set the SKIP_MODULE_LOAD variable to skip loading the sysdig kernel module
 
-if [[ -z "${SYSDIG_SKIP_LOAD}" ]]; then
+if [[ -z "${SKIP_MODULE_LOAD}" ]]; then
     echo "* Setting up /usr/src links from host"
 
     for i in "$HOST_ROOT/usr/src"/*
     do
-        if [ -f "$i" ]; then
-            ln -s "$i" "/usr/src/$i"
-        fi
+        ln -s "$i" "/usr/src/$i"
     done
 
     /usr/bin/falco-probe-loader
