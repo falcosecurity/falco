@@ -9,7 +9,7 @@ express_server:
 
 falco:
   container_name: falco
-  image: sysdig/falco:latest
+  image: falcosecurity/falco:latest
   privileged: true
   volumes:
     - /var/run/docker.sock:/host/var/run/docker.sock

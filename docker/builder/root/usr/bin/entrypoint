@@ -21,7 +21,7 @@ esac
 
 case "$CMD" in
 "cmake")
-    # Check that source directory contains Falco and Sysdig
+    # Check that source directory contains Falco and sysdig
     if [ ! -d "$SOURCE_DIR/sysdig" ]; then
         echo "Missing sysdig source." >&2
         exit 1

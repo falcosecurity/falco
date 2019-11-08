@@ -1,6 +1,6 @@
 # Create Falco rule from Anchore policy result
 
-This integration creates a rule for Sysdig Falco based on Anchore policy result.
+This integration creates a rule for Falco based on Anchore policy result.
 So that when we will try to run an image which has a ```stop``` final action result
 in Anchore, Falco will alert us.
 
