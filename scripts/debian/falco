@@ -26,7 +26,7 @@
 #                    driven by system calls with support for containers.
 ### END INIT INFO
 
-# Author: Sysdig <support@sysdig.com>
+# Author: The Falco Authors <opensource@sysdig.com>
 
 # Do NOT "set -e"
 

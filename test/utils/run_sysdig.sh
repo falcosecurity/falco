@@ -16,7 +16,7 @@
 # limitations under the License.
 #
 
-# Run sysdig excluding all events that aren't used by falco and also
+# Run sysdig excluding all events that aren't used by Falco and also
 # excluding other high-volume events that aren't essential. This
 # results in smaller trace files.
 

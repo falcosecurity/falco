@@ -47,7 +47,7 @@ Join the Community
 ---
 * [Join the mailing list](http://bit.ly/2Mu0wXA) for news and a Google calendar invite for our Falco open source meetings. Note: this is the only way to get a calendar invite for our open meetings.
 * [Website](https://falco.org) for Falco.
-* Join our [Open Source Slack](https://slack.sysdig.com) channel for open source Sysdig and Falco announcements and discussions.
+* Join our [Public Slack](https://slack.sysdig.com) channel for Falco announcements and discussions.
 
 Office hours
 ---

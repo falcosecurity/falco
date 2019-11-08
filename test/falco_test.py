@@ -34,7 +34,7 @@ class FalcoTest(Test):
 
     def setUp(self):
         """
-        Load the sysdig kernel module if not already loaded.
+        Load the kernel module if not already loaded.
         """
         build_dir = "/build"
         if 'BUILD_DIR' in os.environ:
@@ -410,7 +410,7 @@ class FalcoTest(Test):
             kernel_release = subprocess.check_output(["uname", "-r"]).rstrip()
             self.log.info("kernel release {}".format(kernel_release))
 
-            # sysdig-probe-loader has a more comprehensive set of ways to
+            # falco-probe-loader has a more comprehensive set of ways to
             # find the config hash. We only look at /boot/config-<kernel release>
             md5_output = subprocess.check_output(["md5sum", "/boot/config-{}".format(kernel_release)]).rstrip()
             config_hash = md5_output.split(" ")[0]
