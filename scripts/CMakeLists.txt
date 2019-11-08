@@ -28,6 +28,6 @@ file(COPY "${PROJECT_SOURCE_DIR}/scripts/rpm/falco"
 	DESTINATION "${PROJECT_BINARY_DIR}/scripts/rpm")
 
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
-	install(PROGRAMS ${PROJECT_BINARY_DIR}/scripts/falco-probe-loader
+	install(PROGRAMS ${PROJECT_SOURCE_DIR}/scripts/falco-probe-loader
 		DESTINATION ${FALCO_BIN_DIR})
 endif()
