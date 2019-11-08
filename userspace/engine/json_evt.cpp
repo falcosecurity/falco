@@ -1189,7 +1189,7 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 		   {"ka.req.configmap.obj", "If the request object refers to a configmap, the entire configmap object"},
 		   {"ka.req.pod.containers.image", "When the request object refers to a pod, the container's images.", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.req.container.image", "Deprecated by ka.req.pod.containers.image. Returns the image of the first container only"},
-		   {"ka.req.pod.containers.image.repository", "The same as req.container.image, but only the repository part (e.g. sysdig/falco).", IDX_ALLOWED, IDX_NUMERIC},
+		   {"ka.req.pod.containers.image.repository", "The same as req.container.image, but only the repository part (e.g. falcosecurity/falco).", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.req.container.image.repository", "Deprecated by ka.req.pod.containers.image.repository. Returns the repository of the first container only"},
 		   {"ka.req.pod.host_ipc", "When the request object refers to a pod, the value of the hostIPC flag."},
 		   {"ka.req.pod.host_network", "When the request object refers to a pod, the value of the hostNetwork flag."},
