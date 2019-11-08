@@ -187,7 +187,7 @@ load_kernel_probe() {
 	fi
 
 	local URL
-	URL=$(echo "${SYSDIG_PROBE_URL}/${SYSDIG_REPOSITORY}/sysdig-probe-binaries/${FALCO_PROBE_FILENAME}" | sed s/+/%2B/g)
+	URL=$(echo "${PROBE_URL}/${PACKAGES_REPOSITORY}/sysdig-probe-binaries/${FALCO_PROBE_FILENAME}" | sed s/+/%2B/g)
 
 	echo "* Trying to download precompiled module from ${URL}"
 	if curl --create-dirs "${FALCO_PROBE_CURL_OPTIONS}" -o "${HOME}/.falco/${FALCO_PROBE_FILENAME}" "${URL}"; then
@@ -195,7 +195,7 @@ load_kernel_probe() {
 		insmod "${HOME}/.falco/${FALCO_PROBE_FILENAME}"
 		exit $?
 	else
-		echo "Download failed, consider compiling your own ${PROBE_NAME} and loading it or getting in touch with the sysdig community"
+		echo "Download failed, consider compiling your own ${PROBE_NAME} and loading it or getting in touch with the Falco community"
 		exit 1
 	fi
 }
@@ -282,7 +282,7 @@ load_bpf_probe() {
 			BPF_KERNEL_SOURCES_URL="http://mirrors.edge.kernel.org/pub/linux/kernel/v${kernel_version_major}.x/linux-${kernel_version}.tar.gz"
 		fi
 
-		if [ -n "${SYSDIG_BPF_USE_LOCAL_KERNEL_SOURCES}" ]; then
+		if [ -n "${BPF_USE_LOCAL_KERNEL_SOURCES}" ]; then
 		        local -r kernel_version_major=$(uname -r | cut -d. -f1)
 			local -r kernel_version=$(uname -r | cut -d- -f1)
 			KERNEL_EXTRA_VERSION="-$(uname -r | cut -d- -f2)"
@@ -333,7 +333,7 @@ load_bpf_probe() {
 
 	if [ ! -f "${HOME}/.falco/${BPF_PROBE_FILENAME}" ]; then
 		local URL
-		URL=$(echo "${SYSDIG_PROBE_URL}/${SYSDIG_REPOSITORY}/sysdig-probe-binaries/${BPF_PROBE_FILENAME}" | sed s/+/%2B/g)
+		URL=$(echo "${PROBE_URL}/${PACKAGES_REPOSITORY}/sysdig-probe-binaries/${BPF_PROBE_FILENAME}" | sed s/+/%2B/g)
 
 		echo "* Trying to download precompiled BPF probe from ${URL}"
 
@@ -363,8 +363,8 @@ load_bpf_probe() {
 ARCH=$(uname -m)
 KERNEL_RELEASE=$(uname -r)
 SCRIPT_NAME=$(basename "${0}")
-SYSDIG_PROBE_URL=${SYSDIG_PROBE_URL:-https://s3.amazonaws.com/download.draios.com}
-if [ -n "$SYSDIG_PROBE_INSECURE_DOWNLOAD" ]
+PROBE_URL=${PROBE_URL:-https://s3.amazonaws.com/download.draios.com}
+if [ -n "$PROBE_INSECURE_DOWNLOAD" ]
 then
 	FALCO_PROBE_CURL_OPTIONS=-fsSk
 else
@@ -376,12 +376,12 @@ if [[ $# -ge 1 ]]; then
 	MAX_RMMOD_WAIT=$1
 fi
 
-if [ -z "${SYSDIG_REPOSITORY}" ]; then
-	SYSDIG_REPOSITORY="stable"
+if [ -z "${PACKAGES_REPOSITORY}" ]; then
+	PACKAGES_REPOSITORY="stable"
 fi
 
 if [ "${SCRIPT_NAME}" = "falco-probe-loader" ]; then
-        if [ -z "$SYSDIG_VERSION" ]; then
+        if [ -z "$FALCO_VERSION" ]; then
 	    FALCO_VERSION=$(falco --version | cut -d' ' -f3)
 	fi
 	PROBE_NAME="falco-probe"
@@ -402,7 +402,7 @@ if ! hash curl > /dev/null 2>&1; then
 	exit 1
 fi
 
-if [ -v SYSDIG_BPF_PROBE ] || [ "${1}" = "bpf" ]; then
+if [ -v BPF_PROBE ] || [ "${1}" = "bpf" ]; then
 	load_bpf_probe
 else
 	load_kernel_probe
