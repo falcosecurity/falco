@@ -23,7 +23,7 @@ spec:
 # Leave blank for the default probe location, or set to the path
 # of a precompiled probe.
 #          env:
-#          - name: SYSDIG_BPF_PROBE
+#          - name: BPF_PROBE
 #            value: ""
           args: [ "/usr/bin/falco", "--cri", "/host/run/containerd/containerd.sock", "-K", "/var/run/secrets/kubernetes.io/serviceaccount/token", "-k", "https://$(KUBERNETES_SERVICE_HOST)", "-pk"]
           volumeMounts:

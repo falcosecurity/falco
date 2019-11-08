@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Based on a [blog post](https://sysdig.com/blog/detecting-cryptojacking/) we wrote, this example shows how an overly permissive container environment can be exploited to install cryptomining software and how use of the exploit can be detected using Sysdig Falco.
+Based on a [blog post](https://sysdig.com/blog/detecting-cryptojacking/) we wrote, this example shows how an overly permissive container environment can be exploited to install cryptomining software and how use of the exploit can be detected using Falco.
 
 Although the exploit in the blog post involved modifying the cron configuration on the host filesystem, in this example we keep the host filesystem untouched. Instead, we have a container play the role of the "host", and set up everything using [docker-compose](https://docs.docker.com/compose/) and [docker-in-docker](https://hub.docker.com/_/docker/).
 

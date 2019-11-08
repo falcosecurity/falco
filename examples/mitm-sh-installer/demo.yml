@@ -38,7 +38,7 @@ attacker_botnet_master:
 # Owned by client, detects attack by attacker
 falco:
   container_name: falco
-  image: sysdig/falco:latest
+  image: falcosecurity/falco:latest
   privileged: true
   volumes:
     - /var/run/docker.sock:/host/var/run/docker.sock

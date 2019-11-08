@@ -18,7 +18,7 @@
 
 # set -e
 
-# Set the SKIP_MODULE_LOAD variable to skip loading the sysdig kernel module
+# Set the SKIP_MODULE_LOAD variable to skip loading the kernel module
 
 if [[ -z "${SKIP_MODULE_LOAD}" ]]; then
     echo "* Setting up /usr/src links from host"

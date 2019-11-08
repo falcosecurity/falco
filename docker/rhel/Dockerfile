@@ -1,12 +1,12 @@
 FROM registry.access.redhat.com/rhel7
 
-MAINTAINER Sysdig Support Team <support@sysdig.com>
+LABEL maintainer="opensource@sysdig.com"
 
 ### Atomic/OpenShift Labels - https://github.com/projectatomic/ContainerApplicationGenericLabels
 LABEL name="falco" \
-    vendor="Sysdig" \
+    vendor="falcosecurity" \
     url="http://falco.org/" \
-    summary="Container Native runtime security" \
+    summary="Container native runtime security" \
     description="Falco is an open source project for intrusion and abnormality detection for Cloud Native platforms." \
     run='docker run -d --name falco --restart always --privileged --net host --pid host -v /var/run/docker.sock:/host/var/run/docker.sock -v /dev:/host/dev -v /proc:/host/proc:ro -v /boot:/host/boot:ro -v /lib/modules:/host/lib/modules:ro -v /usr:/host/usr:ro -v /etc:/host/etc:ro --shm-size=350m registry.connect.redhat.com/sysdig/falco'
 

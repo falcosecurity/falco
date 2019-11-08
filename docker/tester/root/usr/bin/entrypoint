@@ -38,7 +38,7 @@ case "$CMD" in
     cd $BUILD_DIR/$BUILD_TYPE/docker/local
     docker build --build-arg FALCO_VERSION="$FALCO_VERSION" -t "$DOCKER_IMAGE_NAME" .
 
-    # Check that source directory contains Falco and Sysdig
+    # Check that source directory contains Falco and sysdig
     if [ ! -d "$SOURCE_DIR/falco/test" ]; then
         echo "Missing $SOURCE_DIR/falco/test directory." >&2
         exit 1
