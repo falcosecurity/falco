@@ -146,6 +146,12 @@ void falco_outputs::handle_event(gen_event *ev, string &rule, string &source,
 
 	std::lock_guard<std::mutex> guard(m_ls_semaphore);
 	lua_getglobal(m_ls, m_lua_output_event.c_str());
+	char hostname[1024];
+	int err = gethostname(hostname, sizeof(hostname));
+	if(err != 0){
+		string err = "Failed to get hostname";
+		throw falco_exception(err);
+	}
 	if(lua_isfunction(m_ls, -1))
 	{
 		lua_pushlightuserdata(m_ls, ev);
@@ -154,8 +160,9 @@ void falco_outputs::handle_event(gen_event *ev, string &rule, string &source,
 		lua_pushstring(m_ls, falco_common::priority_names[priority].c_str());
 		lua_pushnumber(m_ls, priority);
 		lua_pushstring(m_ls, format.c_str());
+		lua_pushstring(m_ls, hostname);
 
-		if(lua_pcall(m_ls, 6, 0, 0) != 0)
+		if(lua_pcall(m_ls, 7, 0, 0) != 0)
 		{
 			const char* lerr = lua_tostring(m_ls, -1);
 			string err = "Error invoking function output: " + string(lerr);
@@ -300,12 +307,13 @@ int falco_outputs::handle_http(lua_State *ls)
 int falco_outputs::handle_grpc(lua_State *ls)
 {
 	// check parameters
-	if(!lua_islightuserdata(ls, -7) ||
+	if(!lua_islightuserdata(ls, -8) ||
+	   !lua_isstring(ls, -7) ||
 	   !lua_isstring(ls, -6) ||
 	   !lua_isstring(ls, -5) ||
 	   !lua_isstring(ls, -4) ||
-	   !lua_isstring(ls, -3) ||
-	   !lua_istable(ls, -2) ||
+	   !lua_istable(ls, -3) ||
+	   !lua_isstring(ls, -2) ||
 	   !lua_istable(ls, -1))
 	{
 		lua_pushstring(ls, "Invalid arguments passed to handle_grpc()");
@@ -354,6 +362,9 @@ int falco_outputs::handle_grpc(lua_State *ls)
 		lua_pop(ls, 1); // remove value, keep key for lua_next
 	}
 	lua_pop(ls, 1); // pop table
+
+	// hostname
+	grpc_res.set_hostname((char* )lua_tostring(ls, 7));
 
 	falco::output::queue::get().push(grpc_res);
 
