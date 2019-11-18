@@ -324,6 +324,10 @@ bool json_event_filter_check::def_extract(const nlohmann::json &root,
 	{
 		return false;
 	}
+	catch(json::type_error &e)
+	{
+		return false;
+	}
 
 	return true;
 }
@@ -704,6 +708,10 @@ bool json_event_filter_check::extract_values(json_event *jevt)
 	{
 		return false;
 	}
+	catch(json::type_error &e)
+	{
+		return false;
+	}
 
 	return true;
 }
@@ -817,6 +825,10 @@ bool jevt_filter_check::extract_values(json_event *jevt)
 		{
 			return false;
 		}
+		catch(json::type_error &e)
+		{
+			return false;
+		}
 	}
 	else
 	{
@@ -881,6 +893,10 @@ bool k8s_audit_filter_check::extract_images(const json &j,
 	{
 		return false;
 	}
+	catch(json::type_error &e)
+	{
+		return false;
+	}
 
 	return true;
 }
@@ -897,6 +913,10 @@ bool k8s_audit_filter_check::extract_query_param(const nlohmann::json &j,
 		uri = j.at(request_uri_ptr);
 	}
 	catch(json::out_of_range &e)
+	{
+		return false;
+	}
+	catch(json::type_error &e)
 	{
 		return false;
 	}
@@ -953,6 +973,10 @@ bool k8s_audit_filter_check::extract_rule_attrs(const json &j,
 	{
 		return false;
 	}
+	catch(json::type_error &e)
+	{
+		return false;
+	}
 
 	return true;
 }
@@ -996,6 +1020,10 @@ bool k8s_audit_filter_check::check_volumes_hostpath(const json &j,
 	{
 		return false;
 	}
+	catch(json::type_error &e)
+	{
+		return false;
+	}
 
 	jchk.add_extracted_value(string("false"));
 
@@ -1023,6 +1051,10 @@ bool k8s_audit_filter_check::extract_volume_types(const json &j,
 		}
 	}
 	catch(json::out_of_range &e)
+	{
+		return false;
+	}
+	catch(json::type_error &e)
 	{
 		return false;
 	}
@@ -1062,6 +1094,10 @@ bool k8s_audit_filter_check::extract_host_port(const json &j,
 		}
 	}
 	catch(json::out_of_range &e)
+	{
+		return false;
+	}
+	catch(json::type_error &e)
 	{
 		return false;
 	}
@@ -1113,6 +1149,10 @@ bool k8s_audit_filter_check::extract_effective_run_as(const json &j,
 	{
 		return false;
 	}
+	catch(json::type_error &e)
+	{
+		return false;
+	}
 
 	return true;
 }
@@ -1146,6 +1186,10 @@ bool k8s_audit_filter_check::extract_any_privileged(const json &j,
 			{
 				// No-op
 			}
+			catch(json::type_error &e)
+			{
+				return false;
+			}
 
 			if(privileged)
 			{
@@ -1155,6 +1199,10 @@ bool k8s_audit_filter_check::extract_any_privileged(const json &j,
 		}
 	}
 	catch(json::out_of_range &e)
+	{
+		return false;
+	}
+	catch(json::type_error &e)
 	{
 		return false;
 	}
