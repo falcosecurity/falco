@@ -35,5 +35,6 @@ message response {
   string rule = 4;
   string output = 5;
   map<string, string> output_fields = 6;
-  // repeated string tags = 7; // TODO(leodido,fntlnz): tags not supported yet, keeping for reference
+  string hostname = 7;
+  // repeated string tags = 8; // TODO(leodido,fntlnz): tags not supported yet, keeping for reference
 }
