@@ -124,7 +124,7 @@
 
 - macro: sensitive_vol_mount
   condition: >
-    (ka.req.pod.volumes.hostpath intersects (/proc, /var/run/docker.sock, /, /etc, /root, /var/run/crio/crio.sock, /home))
+    (ka.req.pod.volumes.hostpath intersects (/proc, /var/run/docker.sock, /, /etc, /root, /var/run/crio/crio.sock, /home/admin))
 
 - rule: Create Sensitive Mount Pod
   desc: >
