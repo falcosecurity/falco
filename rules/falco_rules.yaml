@@ -1836,7 +1836,7 @@
               container.mount.dest[/var/lib/kubelet] != "N/A" or
               container.mount.dest[/var/lib/kubelet/pki] != "N/A" or
               container.mount.dest[/] != "N/A" or
-              container.mount.dest[/home*] != "N/A" or
+              container.mount.dest[/home/admin] != "N/A" or
               container.mount.dest[/etc] != "N/A" or
               container.mount.dest[/etc/kubernetes] != "N/A" or # static pod path
               container.mount.dest[/etc/kubernetes/manifests] != "N/A" or # static pod path
