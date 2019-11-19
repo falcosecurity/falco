@@ -1832,10 +1832,14 @@
 - macro: sensitive_mount
   condition: (container.mount.dest[/proc*] != "N/A" or
               container.mount.dest[/var/run/docker.sock] != "N/A" or
+              container.mount.dest[/var/run/crio/crio.sock] != "N/A" or
               container.mount.dest[/var/lib/kubelet] != "N/A" or
               container.mount.dest[/var/lib/kubelet/pki] != "N/A" or
               container.mount.dest[/] != "N/A" or
+              container.mount.dest[/home*] != "N/A" or
               container.mount.dest[/etc] != "N/A" or
+              container.mount.dest[/etc/kubernetes] != "N/A" or # static pod path
+              container.mount.dest[/etc/kubernetes/manifests] != "N/A" or # static pod path
               container.mount.dest[/root*] != "N/A")
 
 # The steps libcontainer performs to set up the root program for a container are:

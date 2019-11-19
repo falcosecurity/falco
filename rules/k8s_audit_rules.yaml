@@ -1,4 +1,4 @@
-#
+
 # Copyright (C) 2019 The Falco Authors.
 #
 #
@@ -125,7 +125,7 @@
 
 - macro: sensitive_vol_mount
   condition: >
-    (ka.req.pod.volumes.hostpath intersects (/proc, /var/run/docker.sock, /, /etc, /root))
+    (ka.req.pod.volumes.hostpath intersects (/proc, /var/run/docker.sock, /, /etc, /root, /var/run/crio/crio.sock, /home))
 
 - rule: Create Sensitive Mount Pod
   desc: >
