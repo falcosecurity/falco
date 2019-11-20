@@ -146,16 +146,18 @@ void falco_outputs::handle_event(gen_event *ev, string &rule, string &source,
 
 	std::lock_guard<std::mutex> guard(m_ls_semaphore);
 	lua_getglobal(m_ls, m_lua_output_event.c_str());
-	char hostname[256];
+	std::string hostname;
 	char* env_hostname = getenv("FALCO_GRPC_HOSTNAME");
 	if(env_hostname == NULL){
-		int err = gethostname(hostname, sizeof(hostname));
+		char c_hostname[256];
+		int err = gethostname(c_hostname, 256);
 		if(err != 0){
 			string err = "Failed to get hostname";
 			throw falco_exception(err);
 		}
+		hostname = c_hostname;
 	}else{
-		strcpy(hostname, env_hostname);
+		hostname = env_hostname;
 	}
 	if(lua_isfunction(m_ls, -1))
 	{
@@ -165,7 +167,7 @@ void falco_outputs::handle_event(gen_event *ev, string &rule, string &source,
 		lua_pushstring(m_ls, falco_common::priority_names[priority].c_str());
 		lua_pushnumber(m_ls, priority);
 		lua_pushstring(m_ls, format.c_str());
-		lua_pushstring(m_ls, hostname);
+		lua_pushstring(m_ls, hostname.c_str());
 
 		if(lua_pcall(m_ls, 7, 0, 0) != 0)
 		{
