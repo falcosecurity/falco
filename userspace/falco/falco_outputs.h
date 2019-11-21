@@ -54,7 +54,7 @@ public:
 	void init(bool json_output,
 		  bool json_include_output_property,
 		  uint32_t rate, uint32_t max_burst, bool buffered,
-		  bool time_format_iso_8601);
+		  bool time_format_iso_8601, std::string hostname);
 
 	void add_output(output_config oc);
 
@@ -89,6 +89,7 @@ private:
 	bool m_buffered;
 	bool m_json_output;
 	bool m_time_format_iso_8601;
+	std::string m_hostname;
 
 	std::string m_lua_add_output = "add_output";
 	std::string m_lua_output_event = "output_event";
