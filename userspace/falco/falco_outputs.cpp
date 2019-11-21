@@ -39,7 +39,8 @@ falco_outputs::falco_outputs(falco_engine *engine)
 	  m_initialized(false),
 	  m_buffered(true),
 	  m_json_output(false),
-	  m_time_format_iso_8601(false)
+	  m_time_format_iso_8601(false),
+	  m_hostname("")
 {
 
 }
@@ -72,7 +73,7 @@ falco_outputs::~falco_outputs()
 void falco_outputs::init(bool json_output,
 			 bool json_include_output_property,
 			 uint32_t rate, uint32_t max_burst, bool buffered,
-			 bool time_format_iso_8601)
+			 bool time_format_iso_8601, string hostname)
 {
 	// The engine must have been given an inspector by now.
 	if(! m_inspector)
@@ -97,6 +98,7 @@ void falco_outputs::init(bool json_output,
 
 	m_buffered = buffered;
 	m_time_format_iso_8601 = time_format_iso_8601;
+	m_hostname = hostname;
 
 	m_initialized = true;
 }
@@ -146,19 +148,7 @@ void falco_outputs::handle_event(gen_event *ev, string &rule, string &source,
 
 	std::lock_guard<std::mutex> guard(m_ls_semaphore);
 	lua_getglobal(m_ls, m_lua_output_event.c_str());
-	std::string hostname;
-	char* env_hostname = getenv("FALCO_GRPC_HOSTNAME");
-	if(env_hostname == NULL){
-		char c_hostname[256];
-		int err = gethostname(c_hostname, 256);
-		if(err != 0){
-			string err = "Failed to get hostname";
-			throw falco_exception(err);
-		}
-		hostname = c_hostname;
-	}else{
-		hostname = env_hostname;
-	}
+
 	if(lua_isfunction(m_ls, -1))
 	{
 		lua_pushlightuserdata(m_ls, ev);
@@ -167,7 +157,7 @@ void falco_outputs::handle_event(gen_event *ev, string &rule, string &source,
 		lua_pushstring(m_ls, falco_common::priority_names[priority].c_str());
 		lua_pushnumber(m_ls, priority);
 		lua_pushstring(m_ls, format.c_str());
-		lua_pushstring(m_ls, hostname.c_str());
+		lua_pushstring(m_ls, m_hostname.c_str());
 
 		if(lua_pcall(m_ls, 7, 0, 0) != 0)
 		{
