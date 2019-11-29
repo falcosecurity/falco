@@ -568,8 +568,8 @@ else()
 	set(PROTOBUF_LIB "${PROTOBUF_SRC}/target/lib/libprotobuf.a")
 	ExternalProject_Add(protobuf
 		DEPENDS openssl zlib
-		URL "https://github.com/google/protobuf/releases/download/v3.5.0/protobuf-cpp-3.5.0.tar.gz"
-		URL_MD5 "e4ba8284a407712168593e79e6555eb2"
+		URL "https://github.com/protocolbuffers/protobuf/releases/download/v3.8.0/protobuf-cpp-3.8.0.tar.gz"
+		URL_MD5 "9054bb5571905a28b3ae787d1d6cf8de"
 		# TODO what if using system zlib?
 		CONFIGURE_COMMAND /usr/bin/env CPPFLAGS=-I${ZLIB_INCLUDE} LDFLAGS=-L${ZLIB_SRC} ./configure --with-zlib --prefix=${PROTOBUF_SRC}/target
 		BUILD_COMMAND ${CMD_MAKE}
@@ -617,8 +617,8 @@ endif()
 
 		ExternalProject_Add(grpc
 		DEPENDS protobuf zlib c-ares openssl
-		URL "https://github.com/grpc/grpc/archive/v1.8.1.tar.gz"
-		URL_MD5 "2fc42c182a0ed1b48ad77397f76bb3bc"
+		URL "https://github.com/grpc/grpc/archive/v1.25.0.tar.gz"
+		URL_MD5 "3a875f7b3f0e3bdd3a603500bcef3d41"
 		CONFIGURE_COMMAND ""
 		# TODO what if using system openssl, protobuf or cares?
 		BUILD_COMMAND CFLAGS=-Wno-implicit-fallthrough HAS_SYSTEM_ZLIB=false LDFLAGS=-static PATH=${PROTOC_DIR}:$ENV{PATH} PKG_CONFIG_PATH=${OPENSSL_BUNDLE_DIR}:${PROTOBUF_SRC}:${CARES_SRC} PKG_CONFIG=${PKG_CONFIG_EXECUTABLE} make grpc_cpp_plugin static_cxx static_c
@@ -626,7 +626,7 @@ endif()
 		BUILD_BYPRODUCTS ${GRPC_LIB} ${GRPCPP_LIB}
 		# TODO s390x support
 		# TODO what if using system zlib
-		PATCH_COMMAND rm -rf third_party/zlib && ln -s ${ZLIB_SRC} third_party/zlib && curl -L https://download.sysdig.com/dependencies/grpc-1.8.1-Makefile.patch | patch
+		PATCH_COMMAND rm -rf third_party/zlib && ln -s ${ZLIB_SRC} third_party/zlib && patch -p1 < ${PROJECT_SOURCE_DIR}/cmake/patch/grpc-1.25.0-Makefile.patch
 		INSTALL_COMMAND "")
 	endif()
 
