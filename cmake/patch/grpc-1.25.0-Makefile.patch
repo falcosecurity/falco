@@ -1,8 +1,8 @@
 diff --git a/Makefile b/Makefile
-index dd4ced8112..d6abccda82 100644
+index 8fd7044dd9..428da4c6c5 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -839,6 +839,7 @@ ifneq ($(LDFLAGS_PROTOBUF_PKG_CONFIG),)
+@@ -852,6 +852,7 @@ ifneq ($(LDFLAGS_PROTOBUF_PKG_CONFIG),)
  LDFLAGS_PROTOBUF_PKG_CONFIG += $(shell $(PKG_CONFIG) --libs-only-L protobuf | sed s/L/Wl,-rpath,/)
  endif
  endif
@@ -10,3 +10,15 @@ index dd4ced8112..d6abccda82 100644
  else
  PC_LIBS_GRPCXX = -lprotobuf
  endif
+diff --git a/templates/Makefile.template b/templates/Makefile.template
+index 8063bd4771..eac629d1c7 100644
+--- a/templates/Makefile.template
++++ b/templates/Makefile.template
+@@ -749,6 +749,7 @@
+   LDFLAGS_PROTOBUF_PKG_CONFIG += $(shell $(PKG_CONFIG) --libs-only-L protobuf | sed s/L/Wl,-rpath,/)
+   endif
+   endif
++  LDFLAGS := $(LDFLAGS_PROTOBUF_PKG_CONFIG) $(LDFLAGS)
+   else
+   PC_LIBS_GRPCXX = -lprotobuf
+   endif
