@@ -2436,7 +2436,7 @@
   condition: (always_true)
 
 - list: user_known_chmod_applications
-  items: [hyperkube]
+  items: [hyperkube, kubelet]
 
 - rule: Set Setuid or Setgid bit
   desc: >
