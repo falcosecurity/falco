@@ -2214,6 +2214,27 @@
   priority: NOTICE
   tags: [network, aws, container, mitre_discovery]
 
+# In a local/user rules file, you could override this macro to
+# explicitly enumerate the container images that you want to allow
+# access to GCE metadata. In this main falco rules file, there isn't
+# any way to know all the containers that should have access, so any
+# container is alllowed, by repeating the "container" macro. In the
+# overridden macro, the condition would look something like
+# (container.image.repository = vendor/container-1 or
+# container.image.repository = vendor/container-2 or ...)
+- macro: gce_metadata_containers
+  condition: container
+
+# On GCE instances, 169.254.169.254 is a special IP used to fetch
+# metadata about the instance. It may be desirable to prevent access
+# to this IP from containers.
+- rule: Contact GCE Instance Metadata Service From Container
+  desc: Detect attempts to contact the GCE Instance Metadata Service from a container
+  condition: outbound and fd.sip="169.254.169.254" and container and not gce_metadata_containers
+  output: Outbound connection to GCE instance metadata service (command=%proc.cmdline connection=%fd.name %container.info image=%container.image.repository:%container.image.tag)
+  priority: NOTICE
+  tags: [network, gcp, container, mitre_discovery]
+
 # In a local/user rules file, you should override this macro with the
 # IP address of your k8s api server. The IP 1.2.3.4 is a placeholder
 # IP that is not likely to be seen in practice.
