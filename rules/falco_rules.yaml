@@ -2255,7 +2255,13 @@
 - macro: network_tool_procs
   condition: (proc.name in (network_tool_binaries))
 
-- macro: user_known_package_manager_in_container_conditions
+# In a local/user rules file, create a condition that matches legitimate uses
+# of a package management process inside a container.
+#
+# For example:
+# - macro: user_known_package_manager_in_container
+#   condition: proc.cmdline="dpkg -l"
+- macro: user_known_package_manager_in_container
   condition: (never_true)
 
 # Container is supposed to be immutable. Package management should be done in building the image.
@@ -2267,7 +2273,7 @@
     and user.name != "_apt"
     and package_mgmt_procs
     and not package_mgmt_ancestor_procs
-    and not user_known_package_manager_in_container_conditions
+    and not user_known_package_manager_in_container
   output: >
     Package management process launched in container (user=%user.name
     command=%proc.cmdline container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
