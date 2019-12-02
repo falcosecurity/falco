@@ -2214,26 +2214,25 @@
   priority: NOTICE
   tags: [network, aws, container, mitre_discovery]
 
-# In a local/user rules file, you could override this macro to
-# explicitly enumerate the container images that you want to allow
-# access to GCE metadata. In this main falco rules file, there isn't
-# any way to know all the containers that should have access, so any
-# container is alllowed, by repeating the "container" macro. In the
-# overridden macro, the condition would look something like
-# (container.image.repository = vendor/container-1 or
-# container.image.repository = vendor/container-2 or ...)
+
+# This rule is not enabled by default, since this rule is for GCP only.
+# If you want to enable this rule, overwrite the first macro,
+# And you can filter the container that you want to allow access to metadata by overwriting the second macro.
+- macro: consider_gce_metadata_access
+  condition: (never_true)
+
 - macro: gce_metadata_containers
-  condition: container
+  condition: (k8s.ns.name = "kube-system")
 
 # On GCE instances, 169.254.169.254 is a special IP used to fetch
-# metadata about the instance. It may be desirable to prevent access
-# to this IP from containers.
+# metadata about the instance. The metadata could be used to get credentials by attackers.
 - rule: Contact GCE Instance Metadata Service From Container
   desc: Detect attempts to contact the GCE Instance Metadata Service from a container
-  condition: outbound and fd.sip="169.254.169.254" and container and not gce_metadata_containers
+  condition: outbound and fd.sip="169.254.169.254" and container and consider_gce_metadata_access and not gce_metadata_containers
   output: Outbound connection to GCE instance metadata service (command=%proc.cmdline connection=%fd.name %container.info image=%container.image.repository:%container.image.tag)
   priority: NOTICE
   tags: [network, gcp, container, mitre_discovery]
+
 
 # In a local/user rules file, you should override this macro with the
 # IP address of your k8s api server. The IP 1.2.3.4 is a placeholder
