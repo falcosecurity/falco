@@ -2645,7 +2645,25 @@
   output: "Docker or kubernetes client executed in container (user=%user.name %container.info parent=%proc.pname cmdline=%proc.cmdline)"
   priority: WARNING
   tags: [container, mitre_execution]
+
+
+# This rule is not enabled by default, as there are legitimate use
+# cases for raw packet. If you want to enable it, modify the
+# following macro.
+- macro: consider_raw_packet_creation
+  condition: (never_true)
+
+- list: raw_packet_binaries
+  items: []
+
+- rule: Raw packet was created in a container
+  desc: Detect new raw packets in a container. raw packets could be used to do ARP Spoofing by attacker.
+  condition: evt.type=socket and evt.arg[0]=AF_PACKET and container and not proc.name in (raw_packet_binaries)
+  output: Raw packet was created in a container (user=%user.name command=%proc.cmdline container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
+  priority: NOTICE
+  tags: [network, mitre_discovery]
   
+
 # Application rules have moved to application_rules.yaml. Please look
 # there if you want to enable them by adding to
 # falco_rules.local.yaml.
