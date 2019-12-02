@@ -1838,8 +1838,8 @@
               container.mount.dest[/] != "N/A" or
               container.mount.dest[/home/admin] != "N/A" or
               container.mount.dest[/etc] != "N/A" or
-              container.mount.dest[/etc/kubernetes] != "N/A" or # static pod path
-              container.mount.dest[/etc/kubernetes/manifests] != "N/A" or # static pod path
+              container.mount.dest[/etc/kubernetes] != "N/A" or
+              container.mount.dest[/etc/kubernetes/manifests] != "N/A" or
               container.mount.dest[/root*] != "N/A")
 
 # The steps libcontainer performs to set up the root program for a container are:
