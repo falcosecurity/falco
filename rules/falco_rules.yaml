@@ -1266,7 +1266,9 @@
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc
-  condition: write_etc_common
+  condition: >
+    write_etc_common
+    and not exe_running_docker_save
   output: "File below /etc opened for writing (user=%user.name command=%proc.cmdline parent=%proc.pname pcmdline=%proc.pcmdline file=%fd.name program=%proc.name gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4] container_id=%container.id image=%container.image.repository)"
   priority: ERROR
   tags: [filesystem, mitre_persistence]
