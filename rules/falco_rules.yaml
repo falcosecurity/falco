@@ -924,7 +924,7 @@
     and not package_mgmt_procs
     and not exe_running_docker_save
   output: >
-    Repository files get updated (user=%user.name command=%proc.cmdline parent=%proc.pname pcmdline=%proc.pcmdline file=%fd.name newpath=%evt.arg.newpath container_id=%container.id image=%container.image.repository)
+    Repository files get updated (user=%user.name command=%proc.cmdline pcmdline=%proc.pcmdline file=%fd.name newpath=%evt.arg.newpath container_id=%container.id image=%container.image.repository)
   priority:
     NOTICE
   tags: [filesystem, mitre_persistence]
