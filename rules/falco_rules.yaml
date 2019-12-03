@@ -2650,15 +2650,15 @@
 # This rule is not enabled by default, as there are legitimate use
 # cases for raw packet. If you want to enable it, modify the
 # following macro.
-- macro: consider_raw_packet_creation
+- macro: consider_raw_packet_communication
   condition: (never_true)
 
-- list: raw_packet_binaries
+- list: user_known_raw_packet_binaries
   items: []
 
-- rule: Raw packet was created in a container
-  desc: Detect new raw packets in a container. raw packets could be used to do ARP Spoofing by attacker.
-  condition: evt.type=socket and evt.arg[0]=AF_PACKET and container and not proc.name in (raw_packet_binaries)
+- rule: Raw packet created in container
+  desc: Detect new raw packets at the device driver (OSI Layer 2) level in a container. raw packets could be used to do ARP Spoofing by attacker.
+  condition: consider_raw_packet_communication and evt.type=socket and evt.arg[0] in (AF_PACKET, PF_PACKET) and container and not proc.name in (user_known_raw_packet_binaries)
   output: Raw packet was created in a container (user=%user.name command=%proc.cmdline container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
   priority: NOTICE
   tags: [network, mitre_discovery]
