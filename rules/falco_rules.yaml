@@ -845,7 +845,10 @@
   condition: (proc.name=start-ipsec.sh and fd.directory=/etc/ipsec)
 
 - macro: exe_running_docker_save
-  condition: (proc.cmdline startswith "exe /var/lib/docker" and proc.pname in (dockerd, docker))
+  condition: >
+    proc.name = "exe"
+    and proc.cmdline contains "/var/lib/docker"
+    and proc.pname in (dockerd, docker)
 
 # Ideally we'd have a length check here as well but sysdig
 # filterchecks don't have operators like len()
