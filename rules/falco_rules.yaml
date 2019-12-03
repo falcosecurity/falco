@@ -2215,23 +2215,23 @@
   tags: [network, aws, container, mitre_discovery]
 
 
-# This rule is not enabled by default, since this rule is for GCP only.
+# This rule is not enabled by default, since this rule is for cloud environment(GCP, AWS and Azure) only.
 # If you want to enable this rule, overwrite the first macro,
 # And you can filter the container that you want to allow access to metadata by overwriting the second macro.
-- macro: consider_gce_metadata_access
+- macro: consider_metadata_access
   condition: (never_true)
 
-- macro: gce_metadata_containers
+- macro: user_known_metadata_access
   condition: (k8s.ns.name = "kube-system")
 
-# On GCE instances, 169.254.169.254 is a special IP used to fetch
+# On GCP, AWS and Azure, 169.254.169.254 is a special IP used to fetch
 # metadata about the instance. The metadata could be used to get credentials by attackers.
-- rule: Contact GCE Instance Metadata Service From Container
-  desc: Detect attempts to contact the GCE Instance Metadata Service from a container
-  condition: outbound and fd.sip="169.254.169.254" and container and consider_gce_metadata_access and not gce_metadata_containers
-  output: Outbound connection to GCE instance metadata service (command=%proc.cmdline connection=%fd.name %container.info image=%container.image.repository:%container.image.tag)
+- rule: Contact Cloud Instance Metadata Service From Container
+  desc: Detect attempts to contact the Cloud Instance Metadata Service from a container
+  condition: outbound and fd.sip="169.254.169.254" and container and consider_metadata_access and not user_known_metadata_access
+  output: Outbound connection to cloud instance metadata service (command=%proc.cmdline connection=%fd.name %container.info image=%container.image.repository:%container.image.tag)
   priority: NOTICE
-  tags: [network, gcp, container, mitre_discovery]
+  tags: [network, container, mitre_discovery]
 
 
 # In a local/user rules file, you should override this macro with the
