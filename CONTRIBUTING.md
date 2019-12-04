@@ -8,7 +8,7 @@
     - [Slack](#slack)
   - [Pull Requests](#pull-requests)
     - [Commit convention](#commit-convention)
-      - [`rule:` type](#rule-type)
+      - [Rule type](#rule-type)
   - [Developer Certificate Of Origin](#developer-certificate-of-origin)
 
 ## Code of Conduct
@@ -103,7 +103,7 @@ labels, does not have any `do-not-merge/*` labels, and all status checks (eg., r
 As commit convention, we adopt [Conventional Commits v1.0.0](https://www.conventionalcommits.org/en/v1.0.0/), we have an history
 of commits that do not adopt the convention but any new commit must follow it to be eligible for merge.
 
-#### `rule:` type
+#### Rule type
 
 Besides the classic types, we adopt a type for rules, `rule(<scope>):`.
 Example:
