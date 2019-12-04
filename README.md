@@ -41,25 +41,40 @@ One of the questions we often get when we talk about Falco is “How does Falco 
 
 Documentation
 ---
+
 See [Falco Documentation](https://falco.org/docs/) to quickly get started using Falco.
 
 Join the Community
 ---
-* [Join the mailing list](http://bit.ly/2Mu0wXA) for news and a Google calendar invite for our Falco open source meetings. Note: this is the only way to get a calendar invite for our open meetings.
+
+* [Join the mailing list](https://lists.cncf.io/g/cncf-falco-dev/) for news and a Google calendar invite for our Falco open source meetings. Note: this is the only way to get a calendar invite for our open meetings.
 * [Website](https://falco.org) for Falco.
 * Join our [Public Slack](https://slack.sysdig.com) channel for Falco announcements and discussions.
 
-Office hours
+Community call
 ---
 
-Falco has bi-weekly office hour style meetings where we plan our work on the project. You can get a Google calendar invite by joining the mailing list. It will automatically be sent.
+> Are you using Falco? Do you have have ideas for things to do with Falco? How can Falco be better?
 
-Wednesdays at 8am Pacific on [Zoom](https://sysdig.zoom.us/j/213235330).
+Falco has bi-weekly [community](https://github.com/falcosecurity/community) call which is an open call to discuss Falco from a user perspective. These happen on opposite weeks of Repo planning calls.
+
+[Wednesdays at 8am Pacific](https://lists.cncf.io/g/cncf-falco-dev/calendar) on [Zoom](https://sysdig.zoom.us/j/213235330).
+
+Repo planning
+---
+
+> Do you want to contribute to Falco? Are you interested in working on Falco? Do you want to fix something or make something better?
+
+Falco has bi-weekly planning meetings which is an open call to discuss upcoming Falco releases, and assign open GitHub issues to engineers. These happen on opposite weeks of office hours calls.
+
+[Wednesdays at 8am Pacific](https://lists.cncf.io/g/cncf-falco-dev/calendar) on [Zoom](https://sysdig.zoom.us/j/213235330).
 
 License Terms
 ---
+
 Falco is licensed to you under the [Apache 2.0](./COPYING) open source license.
 
 Contributing
 ---
+
 See the [CONTRIBUTING.md](./CONTRIBUTING.md).
