@@ -7,6 +7,8 @@
       - [More about labels](#more-about-labels)
     - [Slack](#slack)
   - [Pull Requests](#pull-requests)
+    - [Commit convention](#commit-convention)
+      - [`rule:` type](#rule-type)
   - [Developer Certificate Of Origin](#developer-certificate-of-origin)
 
 ## Code of Conduct
@@ -95,6 +97,29 @@ Once your reviewer is happy, they will say `/lgtm` which will apply the
 
 Your PR will be automatically merged once it has the `lgtm` and `approved`
 labels, does not have any `do-not-merge/*` labels, and all status checks (eg., rebase, tests, DCO) are positive.
+
+### Commit convention
+
+As commit convention, we adopt [Conventional Commits v1.0.0](https://www.conventionalcommits.org/en/v1.0.0/), we have an history
+of commits that do not adopt the convention but any new commit must follow it to be eligible for merge.
+
+#### `rule:` type
+
+Besides the classic types, we adopt a type for rules, `rule(<scope>):`.
+Example:
+
+```
+rule(Write below monitored dir): make sure monitored dirs are monitored.
+```
+
+Each rule change must be on its own commit, if a change to a macro is done while changing a rule they can go together but only one rule per commit must happen.
+
+If you are changing only a macro, the commit will look like this:
+
+```
+rule(macro user_known_write_monitored_dir_conditions): make sure conditions are great
+```
+
 
 ## Developer Certificate Of Origin
 
