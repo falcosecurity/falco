@@ -2646,13 +2646,15 @@
 - list: k8s_client_binaries
   items: [docker, kubectl, crictl]
 
+# You can overwrite this macro to avoid false positives.
+# (The default value is a condition for Kubernetes Cluster on GCP) 
 - macro: user_known_k8s_client_container
-  condition: (k8s.ns.name = "kube-system")
+  condition: (k8s.ns.name="kube-system" and container.image.repository=k8s.gcr.io/fluentd-gcp-scaler)
   
 - rule: The docker client is executed in a container
   desc: Detect a k8s client tool executed inside a container
   condition: spawned_process and container and not user_known_k8s_client_container and proc.name in (k8s_client_binaries)
-  output: "Docker or kubernetes client executed in container (user=%user.name %container.info parent=%proc.pname cmdline=%proc.cmdline)"
+  output: "Docker or kubernetes client executed in container (user=%user.name %container.info parent=%proc.pname cmdline=%proc.cmdline image=%container.image.repository:%container.image.tag)"
   priority: WARNING
   tags: [container, mitre_execution]
 
