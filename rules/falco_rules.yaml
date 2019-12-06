@@ -2646,8 +2646,8 @@
 - list: k8s_client_binaries
   items: [docker, kubectl, crictl]
 
-# You can overwrite this macro to avoid false positives.
-# (The default value is a condition for Kubernetes Cluster on GCP) 
+# Whitelist for known docker client binaries run inside container
+# - k8s.gcr.io/fluentd-gcp-scaler in GCP/GKE 
 - macro: user_known_k8s_client_container
   condition: (k8s.ns.name="kube-system" and container.image.repository=k8s.gcr.io/fluentd-gcp-scaler)
   
