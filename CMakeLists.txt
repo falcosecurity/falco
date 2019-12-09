@@ -18,6 +18,8 @@ cmake_minimum_required(VERSION 3.3.2)
 
 project(falco)
 
+option(FALCO_Coverage "Build test suite with coverage information" OFF)
+
 if(NOT SYSDIG_DIR)
   get_filename_component(SYSDIG_DIR "${PROJECT_SOURCE_DIR}/../sysdig" REALPATH)
 endif()
@@ -632,6 +634,18 @@ endif()
 
 install(FILES falco.yaml
 	DESTINATION "${FALCO_ETC_DIR}")
+
+if(FALCO_Coverage)
+    if (NOT (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")))
+        message(FATAL_ERROR "FALCO_Coverage requires GCC or Clang.")
+    endif()
+
+    message(STATUS "Building with coverage information")
+    add_compile_options(-g --coverage)
+    set(CMAKE_SHARED_LINKER_FLAGS "--coverage ${CMAKE_SHARED_LINKER_FLAGS}")
+    set(CMAKE_EXE_LINKER_FLAGS "--coverage ${CMAKE_EXE_LINKER_FLAGS}")
+endif()
+
 
 add_subdirectory(test)
 add_subdirectory(rules)
