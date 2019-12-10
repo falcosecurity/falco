@@ -637,7 +637,7 @@ install(FILES falco.yaml
 
 if(FALCO_COVERAGE)
     if (NOT (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")))
-        message(FATAL_ERROR "FALCO_Coverage requires GCC or Clang.")
+        message(FATAL_ERROR "FALCO_COVERAGE requires GCC or Clang.")
     endif()
 
     message(STATUS "Building with coverage information")
