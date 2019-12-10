@@ -433,8 +433,6 @@ bool falco_engine::parse_k8s_audit_json(nlohmann::json &j, std::list<json_event>
 	}
 	catch(exception &e)
 	{
-		// Propagate the exception
-		rethrow_exception(current_exception());
 		return false;
 	}
 }
