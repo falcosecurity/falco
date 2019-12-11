@@ -18,8 +18,6 @@ cmake_minimum_required(VERSION 3.3.2)
 
 project(falco)
 
-option(FALCO_COVERAGE "Build test suite with coverage information" OFF)
-
 if(NOT SYSDIG_DIR)
   get_filename_component(SYSDIG_DIR "${PROJECT_SOURCE_DIR}/../sysdig" REALPATH)
 endif()
@@ -101,17 +99,9 @@ endif()
 
 set(CMD_MAKE make)
 
-# # make luaJIT work on OS X
-# if(APPLE)
-# 	set(CMAKE_EXE_LINKER_FLAGS "-pagezero_size 10000 -image_base 100000000")
-# endif()
-
 include(ExternalProject)
 
-#
 # zlib
-#
-
 find_path(ZLIB_INCLUDE zlib.h PATH_SUFFIXES zlib)
 find_library(ZLIB_LIB NAMES z)
 if(ZLIB_INCLUDE AND ZLIB_LIB)
@@ -120,10 +110,7 @@ else()
 	message(FATAL_ERROR "Couldn't find system zlib")
 endif()
 
-#
 # jq
-#
-
 find_path(JQ_INCLUDE jq.h PATH_SUFFIXES jq)
 find_library(JQ_LIB NAMES jq)
 if(JQ_INCLUDE AND JQ_LIB)
@@ -136,10 +123,7 @@ set(JSONCPP_SRC "${SYSDIG_DIR}/userspace/libsinsp/third-party/jsoncpp")
 set(JSONCPP_INCLUDE "${JSONCPP_SRC}")
 set(JSONCPP_LIB_SRC "${JSONCPP_SRC}/jsoncpp.cpp")
 
-#
 # nlohmann-json
-#
-
 set(NJSON_SRC "${PROJECT_BINARY_DIR}/njson-prefix/src/njson")
 message(STATUS "Using bundled nlohmann-json in '${NJSON_SRC}'")
 set(NJSON_INCLUDE "${NJSON_SRC}/single_include")
@@ -150,18 +134,14 @@ ExternalProject_Add(njson
 	BUILD_COMMAND ""
 	INSTALL_COMMAND "")
 
-#
 # curses
-#
 # we pull this in because libsinsp won't build without it
 set(CURSES_NEED_NCURSES TRUE)
 find_package(Curses REQUIRED)
 message(STATUS "Found ncurses: include: ${CURSES_INCLUDE_DIR}, lib: ${CURSES_LIBRARIES}")
 
 
-#
 # libb64
-#
 set(B64_SRC "${PROJECT_BINARY_DIR}/b64-prefix/src/b64")
 message(STATUS "Using bundled b64 in '${B64_SRC}'")
 set(B64_INCLUDE "${B64_SRC}/include")
@@ -174,10 +154,7 @@ ExternalProject_Add(b64
 	BUILD_IN_SOURCE 1
 	INSTALL_COMMAND "")
 
-#
 # yamlcpp
-#
-
 find_path(YAMLCPP_INCLUDE_DIR NAMES yaml-cpp/yaml.h)
 find_library(YAMLCPP_LIB NAMES yaml-cpp)
 if(YAMLCPP_INCLUDE_DIR AND YAMLCPP_LIB)
@@ -186,10 +163,7 @@ else()
 	message(FATAL_ERROR "Couldn't find system yamlcpp")
 endif()
 
-
-#
 # OpenSSL
-#
 find_package(OpenSSL REQUIRED)
 message(STATUS "Found OpenSSL: include: ${OPENSSL_INCLUDE_DIR}, lib: ${OPENSSL_LIBRARIES}")
 
@@ -200,15 +174,11 @@ else()
 	message(STATUS "Found openssl binary: ${OPENSSL_BINARY}")
 endif()
 
-#
 # libcurl
-#
 find_package(CURL REQUIRED)
 message(STATUS "Found CURL: include: ${CURL_INCLUDE_DIR}, lib: ${CURL_LIBRARIES}")
 
-#
 # LuaJIT
-#
 set(LUAJIT_SRC "${PROJECT_BINARY_DIR}/luajit-prefix/src/luajit/src")
 message(STATUS "Using bundled LuaJIT in '${LUAJIT_SRC}'")
 set(LUAJIT_INCLUDE "${LUAJIT_SRC}")
@@ -221,9 +191,7 @@ ExternalProject_Add(luajit
 	BUILD_IN_SOURCE 1
 	INSTALL_COMMAND "")
 
-#
 # Lpeg
-#
 set(LPEG_SRC "${PROJECT_BINARY_DIR}/lpeg-prefix/src/lpeg")
 set(LPEG_LIB "${PROJECT_BINARY_DIR}/lpeg-prefix/src/lpeg/build/lpeg.a")
 message(STATUS "Using bundled lpeg in '${LPEG_SRC}'")
@@ -239,9 +207,7 @@ ExternalProject_Add(lpeg
 	CONFIGURE_COMMAND ""
 	INSTALL_COMMAND "")
 
-#
-# Libyaml
-#
+# libyaml
 find_library(LIBYAML_LIB NAMES libyaml.so)
 if(LIBYAML_LIB)
 	message(STATUS "Found libyaml: lib: ${LIBYAML_LIB}")
@@ -249,9 +215,7 @@ else()
 	message(FATAL_ERROR "Couldn't find system libyaml")
 endif()
 
-#
 # lyaml
-#
 set(LYAML_SRC "${PROJECT_BINARY_DIR}/lyaml-prefix/src/lyaml/ext/yaml")
 set(LYAML_LIB "${LYAML_SRC}/.libs/yaml.a")
 message(STATUS "Using bundled lyaml in '${LYAML_SRC}'")
@@ -268,9 +232,7 @@ ExternalProject_Add(lyaml
 	INSTALL_COMMAND sh -c "cp -R ${PROJECT_BINARY_DIR}/lyaml-prefix/src/lyaml/lib/* ${PROJECT_SOURCE_DIR}/userspace/engine/lua")
 
 
-#
 # Intel TBB
-#
 set(TBB_SRC "${PROJECT_BINARY_DIR}/tbb-prefix/src/tbb")
 
 message(STATUS "Using bundled tbb in '${TBB_SRC}'")
@@ -278,7 +240,7 @@ message(STATUS "Using bundled tbb in '${TBB_SRC}'")
 set(TBB_INCLUDE_DIR "${TBB_SRC}/include/")
 set(TBB_LIB "${TBB_SRC}/build/lib_release/libtbb.a")
 ExternalProject_Add(tbb
-	URL "https://s3.amazonaws.com/download.draios.com/dependencies/tbb-2018_U5.tar.gz"
+	URL "https://github.com/intel/tbb/archive/2018_U5.tar.gz"
 	URL_MD5 "ff3ae09f8c23892fbc3008c39f78288f"
 	CONFIGURE_COMMAND ""
 	BUILD_COMMAND ${CMD_MAKE} tbb_build_dir=${TBB_SRC}/build tbb_build_prefix=lib extra_inc=big_iron.inc
@@ -287,33 +249,22 @@ ExternalProject_Add(tbb
 	INSTALL_COMMAND "")
 
 
-#
 # civetweb
-#
 set(CIVETWEB_SRC "${PROJECT_BINARY_DIR}/civetweb-prefix/src/civetweb/")
 set(CIVETWEB_LIB "${CIVETWEB_SRC}/install/lib/libcivetweb.a")
 set(CIVETWEB_INCLUDE_DIR "${CIVETWEB_SRC}/install/include")
 message(STATUS "Using bundled civetweb in '${CIVETWEB_SRC}'")
-set(CIVETWEB_DEPENDENCIES "")
-# if(USE_BUNDLED_OPENSSL)
-# 	list(APPEND CIVETWEB_DEPENDENCIES "openssl")
-# endif()
-# TODO(fntlnz): add openssl here
-# pkg-config openssl --cflags --libs
-# >> -lssl -lcrypto 
+
 ExternalProject_Add(civetweb
-	DEPENDS ${CIVETWEB_DEPENDENCIES}
-	URL "https://s3.amazonaws.com/download.draios.com/dependencies/civetweb-1.11.tar.gz"
+	URL "https://github.com/civetweb/civetweb/archive/v1.11.tar.gz"
 			URL_MD5 "b6d2175650a27924bccb747cbe084cd4"
 	CONFIGURE_COMMAND ${CMAKE_COMMAND} -E make_directory ${CIVETWEB_SRC}/install/lib
 				COMMAND ${CMAKE_COMMAND} -E make_directory ${CIVETWEB_SRC}/install/include
 			BUILD_IN_SOURCE 1
 			BUILD_COMMAND ${CMD_MAKE} COPT="-DNO_FILES" WITH_CPP=1
-	INSTALL_COMMAND ${CMD_MAKE} install-lib install-headers PREFIX=${CIVETWEB_SRC}/install WITH_CPP=1)
+	INSTALL_COMMAND ${CMD_MAKE} install-lib install-headers PREFIX=${CIVETWEB_SRC}/install "WITH_CPP=1 OPENSSL_API_1_1")
 
-#
 # c-ares
-#
 find_path(CARES_INCLUDE NAMES ares.h)
 find_library(CARES_LIB NAMES libcares.so)
 if(CARES_INCLUDE AND CARES_LIB)
@@ -323,9 +274,7 @@ else()
 endif()
 
 
-#
 # protobuf
-#
 find_program(PROTOC NAMES protoc)
 find_path(PROTOBUF_INCLUDE NAMES google/protobuf/message.h)
 find_library(PROTOBUF_LIB NAMES libprotobuf.so)
@@ -335,35 +284,15 @@ else()
 	message(FATAL_ERROR "Couldn't find system protobuf")
 endif()
 
-
-
-#
 # gRPC
-#
-find_path(GRPCXX_INCLUDE NAMES grpc++/grpc++.h)
-if(GRPCXX_INCLUDE)
-	set(GRPC_INCLUDE ${GRPCXX_INCLUDE})
-else()
-	find_path(GRPCPP_INCLUDE NAMES grpcpp/grpcpp.h)
-	set(GRPC_INCLUDE ${GRPCPP_INCLUDE})
-	add_definitions(-DGRPC_INCLUDE_IS_GRPCPP=1)
-endif()
-find_library(GRPC_LIB NAMES grpc)
-find_library(GRPCPP_LIB NAMES grpc++)
-if(GRPC_INCLUDE AND GRPC_LIB AND GRPCPP_LIB)
-	message(STATUS "Found grpc: include: ${GRPC_INCLUDE}, C lib: ${GRPC_LIB}, C++ lib: ${GRPCPP_LIB}")
-else()
-	message(FATAL_ERROR "Couldn't find system grpc")
-endif()
-find_program(GRPC_CPP_PLUGIN grpc_cpp_plugin)
-if(NOT GRPC_CPP_PLUGIN)
-	message(FATAL_ERROR "System grpc_cpp_plugin not found")
-endif()
+include(FindGRPC)
 
-
+# Installation
 install(FILES falco.yaml
 	DESTINATION "${FALCO_ETC_DIR}")
 
+# Tests coverage
+option(FALCO_COVERAGE "Build test suite with coverage information" OFF)
 if(FALCO_COVERAGE)
     if (NOT (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")))
         message(FATAL_ERROR "FALCO_COVERAGE requires GCC or Clang.")
@@ -376,52 +305,35 @@ if(FALCO_COVERAGE)
 endif()
 
 
+# Tests
 add_subdirectory(test)
+
+# Rules
 add_subdirectory(rules)
+
+# Dockerfiles
 add_subdirectory(docker)
 
-if(CMAKE_SYSTEM_NAME MATCHES "Linux")
-	add_subdirectory("${SYSDIG_DIR}/driver" "${PROJECT_BINARY_DIR}/driver")
-	include(FindMakedev)
-endif()
+# Driver
+add_subdirectory("${SYSDIG_DIR}/driver" "${PROJECT_BINARY_DIR}/driver")
+include(FindMakedev)
+
+# libscap
 add_subdirectory("${SYSDIG_DIR}/userspace/libscap" "${PROJECT_BINARY_DIR}/userspace/libscap")
+
+# libsinsp
 add_subdirectory("${SYSDIG_DIR}/userspace/libsinsp" "${PROJECT_BINARY_DIR}/userspace/libsinsp")
 
+# shared build variables
 set(FALCO_SINSP_LIBRARY sinsp)
 set(FALCO_SHARE_DIR share/falco)
 set(FALCO_ABSOLUTE_SHARE_DIR "${CMAKE_INSTALL_PREFIX}/${FALCO_SHARE_DIR}")
 set(FALCO_BIN_DIR bin)
+
 add_subdirectory(scripts)
 add_subdirectory(userspace/engine)
 add_subdirectory(userspace/falco)
 add_subdirectory(tests)
 
-set(CPACK_PACKAGE_NAME "${PACKAGE_NAME}")
-set(CPACK_PACKAGE_VENDOR "Cloud Native Computing Foundation (CNCF) cncf.io.")
-set(CPACK_PACKAGE_CONTACT "opensource@sysdig.com")
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Falco - Container Native Runtime Security")
-set(CPACK_PACKAGE_DESCRIPTION_FILE "${PROJECT_SOURCE_DIR}/scripts/description.txt")
-set(CPACK_PACKAGE_VERSION "${FALCO_VERSION}")
-set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${CMAKE_SYSTEM_PROCESSOR}")
-set(CPACK_PROJECT_CONFIG_FILE "${PROJECT_SOURCE_DIR}/CMakeCPackOptions.cmake")
-set(CPACK_STRIP_FILES "ON")
-set(CPACK_PACKAGE_RELOCATABLE "OFF")
-
-set(CPACK_GENERATOR DEB RPM TGZ)
-
-set(CPACK_DEBIAN_PACKAGE_SECTION "utils")
-set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "amd64")
-set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "https://www.falco.org")
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "dkms (>= 2.1.0.0)")
-set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_BINARY_DIR}/scripts/debian/postinst;${CMAKE_BINARY_DIR}/scripts/debian/prerm;${PROJECT_SOURCE_DIR}/scripts/debian/postrm;${PROJECT_SOURCE_DIR}/cpack/debian/conffiles")
-
-set(CPACK_RPM_PACKAGE_LICENSE "Apache v2.0")
-set(CPACK_RPM_PACKAGE_URL "https://www.falco.org")
-set(CPACK_RPM_PACKAGE_REQUIRES "dkms, gcc, make, kernel-devel, perl")
-set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE "${PROJECT_SOURCE_DIR}/scripts/rpm/postinstall")
-set(CPACK_RPM_PRE_UNINSTALL_SCRIPT_FILE "${PROJECT_SOURCE_DIR}/scripts/rpm/preuninstall")
-set(CPACK_RPM_POST_UNINSTALL_SCRIPT_FILE "${PROJECT_SOURCE_DIR}/scripts/rpm/postuninstall")
-set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION /usr/src /usr/share/man /usr/share/man/man8 /etc /usr /usr/bin /usr/share /etc/rc.d /etc/rc.d/init.d)
-set(CPACK_RPM_PACKAGE_RELOCATABLE "OFF")
-
-include(CPack)
+# packages configuration
+include(CPackConfig)
