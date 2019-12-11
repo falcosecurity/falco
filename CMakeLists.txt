@@ -193,6 +193,13 @@ endif()
 find_package(OpenSSL REQUIRED)
 message(STATUS "Found OpenSSL: include: ${OPENSSL_INCLUDE_DIR}, lib: ${OPENSSL_LIBRARIES}")
 
+find_program (OPENSSL_BINARY openssl)
+if(NOT OPENSSL_BINARY)
+	message(FATAL_ERROR "Couldn't find the openssl command line in PATH")
+else()
+	message(STATUS "Found openssl binary: ${OPENSSL_BINARY}")
+endif()
+
 #
 # libcurl
 #
@@ -257,7 +264,7 @@ ExternalProject_Add(lyaml
 	URL_MD5 "dc3494689a0dce7cf44e7a99c72b1f30"
 	BUILD_COMMAND ${CMD_MAKE}
 	BUILD_IN_SOURCE 1
-	CONFIGURE_COMMAND ./configure --enable-static LIBS=-L${LIBYAML_SRC}/.libs CFLAGS=-I${LIBYAML_INCLUDE} CPPFLAGS=-I${LIBYAML_INCLUDE} LUA_INCLUDE=-I${LUAJIT_INCLUDE} LUA=${LUAJIT_SRC}/luajit
+	CONFIGURE_COMMAND ./configure --enable-static LIBS=-lyaml LUA_INCLUDE=-I${LUAJIT_INCLUDE} LUA=${LUAJIT_SRC}/luajit
 	INSTALL_COMMAND sh -c "cp -R ${PROJECT_BINARY_DIR}/lyaml-prefix/src/lyaml/lib/* ${PROJECT_SOURCE_DIR}/userspace/engine/lua")
 
 
@@ -291,6 +298,9 @@ set(CIVETWEB_DEPENDENCIES "")
 # if(USE_BUNDLED_OPENSSL)
 # 	list(APPEND CIVETWEB_DEPENDENCIES "openssl")
 # endif()
+# TODO(fntlnz): add openssl here
+# pkg-config openssl --cflags --libs
+# >> -lssl -lcrypto 
 ExternalProject_Add(civetweb
 	DEPENDS ${CIVETWEB_DEPENDENCIES}
 	URL "https://s3.amazonaws.com/download.draios.com/dependencies/civetweb-1.11.tar.gz"

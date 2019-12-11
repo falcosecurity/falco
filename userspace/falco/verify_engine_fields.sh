@@ -3,7 +3,7 @@
 set -euo pipefail
 
 SOURCE_DIR=$1
-OPENSSL=../../openssl-prefix/src/openssl/target/bin/openssl
+OPENSSL=$2
 
 if ! command -v ${OPENSSL} version > /dev/null 2>&1; then
     echo "No openssl command at ${OPENSSL}"

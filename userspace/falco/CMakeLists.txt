@@ -75,7 +75,7 @@ target_link_libraries(falco
 configure_file(config_falco.h.in config_falco.h)
 
 add_custom_command(TARGET falco
-	COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/verify_engine_fields.sh ${CMAKE_SOURCE_DIR}
+	COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/verify_engine_fields.sh ${CMAKE_SOURCE_DIR} ${OPENSSL_BINARY}
 	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	COMMENT "Comparing engine fields checksum in falco_engine.h to actual fields"
 	)
