@@ -25,7 +25,7 @@ services:
 before_install:
     - sudo apt update -y
 install:
-    - sudo apt install libssl-dev libyaml-dev libncurses-dev libc-ares-dev libprotobuf-dev jq -y
+    - sudo apt install libssl-dev libyaml-dev libncurses-dev libc-ares-dev libprotobuf-dev libjq-dev -y
     - export BRANCH=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)
     - sudo apt-get install rpm linux-headers-$(uname -r) libelf-dev
     - git clone https://github.com/draios/sysdig.git ../sysdig
