@@ -111,14 +111,9 @@ else()
 endif()
 
 # jq
-find_path(JQ_INCLUDE jq.h PATH_SUFFIXES jq)
-find_library(JQ_LIB NAMES jq)
-if(JQ_INCLUDE AND JQ_LIB)
-	message(STATUS "Found jq: include: ${JQ_INCLUDE}, lib: ${JQ_LIB}")
-else()
-	message(FATAL_ERROR "Couldn't find system jq")
-endif()
+include(FindJQ)
 
+# jsoncpp
 set(JSONCPP_SRC "${SYSDIG_DIR}/userspace/libsinsp/third-party/jsoncpp")
 set(JSONCPP_INCLUDE "${JSONCPP_SRC}")
 set(JSONCPP_LIB_SRC "${JSONCPP_SRC}/jsoncpp.cpp")
@@ -155,13 +150,7 @@ ExternalProject_Add(b64
 	INSTALL_COMMAND "")
 
 # yamlcpp
-find_path(YAMLCPP_INCLUDE_DIR NAMES yaml-cpp/yaml.h)
-find_library(YAMLCPP_LIB NAMES yaml-cpp)
-if(YAMLCPP_INCLUDE_DIR AND YAMLCPP_LIB)
-	message(STATUS "Found yamlcpp: include: ${YAMLCPP_INCLUDE_DIR}, lib: ${YAMLCPP_LIB}")
-else()
-	message(FATAL_ERROR "Couldn't find system yamlcpp")
-endif()
+include(FindYamlCpp)
 
 # OpenSSL
 find_package(OpenSSL REQUIRED)
@@ -275,14 +264,7 @@ endif()
 
 
 # protobuf
-find_program(PROTOC NAMES protoc)
-find_path(PROTOBUF_INCLUDE NAMES google/protobuf/message.h)
-find_library(PROTOBUF_LIB NAMES libprotobuf.so)
-if(PROTOC AND PROTOBUF_INCLUDE AND PROTOBUF_LIB)
-	message(STATUS "Found protobuf: compiler: ${PROTOC}, include: ${PROTOBUF_INCLUDE}, lib: ${PROTOBUF_LIB}")
-else()
-	message(FATAL_ERROR "Couldn't find system protobuf")
-endif()
+include(FindProtobuf)
 
 # gRPC
 include(FindGRPC)
