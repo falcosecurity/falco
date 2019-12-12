@@ -22,8 +22,6 @@
 
 > /kind feature
 
-> /kind flaky-test
-
 > If contributing rules or changes to rules, please make sure to also uncomment one of the following line:
 
 > /kind rule-update
