@@ -38,6 +38,8 @@ RUN source scl_source enable devtoolset-7 llvm-toolset-7 && \
 # fixme: deps needs a fix into CMakeLists.txt
 RUN yum -y install libyaml-devel && yum clean all -y
 
+RUN yum -y install ncurses-devel openssl-devel libcurl-devel c-ares-devel zlib-devel openssl
+
 COPY ./root /
 
 # DTS
