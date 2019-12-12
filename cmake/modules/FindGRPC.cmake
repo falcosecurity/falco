@@ -15,6 +15,7 @@ option(BUILD_STATIC_GRPC
        "Build a static version of gRPC (useful for building in Operating Systems that don't have the gRPC package)" OFF)
 
 if(NOT BUILD_STATIC_GRPC)
+  # todo(fntlnz, leodido): check that gRPC version is greater or equal than 1.8.0
   find_path(GRPCXX_INCLUDE NAMES grpc++/grpc++.h)
   if(GRPCXX_INCLUDE)
     set(GRPC_INCLUDE ${GRPCXX_INCLUDE})
@@ -56,6 +57,7 @@ else()
     CONFIGURE_COMMAND ""
     BUILD_COMMAND
       CFLAGS=-Wno-implicit-fallthrough
+      PKG_CONFIG_PATH=${PROTOBUF_SRC}
       PKG_CONFIG=${PKG_CONFIG_EXECUTABLE}
       make
       grpc_cpp_plugin
