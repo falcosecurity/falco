@@ -32,7 +32,6 @@ install:
     - pushd ../sysdig && (git checkout "${BRANCH}" || exit 0) && echo "Using branch:" $(git rev-parse --abbrev-ref HEAD) && popd
 script:
     - mkdir build
-    - cmake ..
-    - make -j4 falco
+    - pushd build && cmake .. && make -j4 falco && popd
     # todo(fntlnz): execute tests and regression tests at this point
     #- ./scripts/build "${TRAVIS_BUILD_DIR}/.." "${TRAVIS_BUILD_DIR}/build"
