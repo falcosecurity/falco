@@ -291,19 +291,7 @@ include(FindGRPC)
 install(FILES falco.yaml
 	DESTINATION "${FALCO_ETC_DIR}")
 
-# Tests coverage
-option(FALCO_COVERAGE "Build test suite with coverage information" OFF)
-if(FALCO_COVERAGE)
-    if (NOT (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")))
-        message(FATAL_ERROR "FALCO_COVERAGE requires GCC or Clang.")
-    endif()
-
-    message(STATUS "Building with coverage information")
-    add_compile_options(-g --coverage)
-    set(CMAKE_SHARED_LINKER_FLAGS "--coverage ${CMAKE_SHARED_LINKER_FLAGS}")
-    set(CMAKE_EXE_LINKER_FLAGS "--coverage ${CMAKE_EXE_LINKER_FLAGS}")
-endif()
-
+include(Coverage)
 
 # Tests
 add_subdirectory(test)
