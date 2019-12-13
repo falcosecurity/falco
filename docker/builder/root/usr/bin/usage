@@ -3,6 +3,7 @@
 gccversion=$(gcc --version | head -n1)
 cppversion=$(g++ -dM -E -x c++ /dev/null | grep -F __cplusplus | cut -d' ' -f3)
 cmakeversion=$(cmake --version | head -n1)
+clangversion=$(clang --version | head -n1)
 
 cat <<EOF
 Hello, this is the Falco builder container.
@@ -48,4 +49,5 @@ Environment.
     * ${gccversion}
     * cplusplus ${cppversion}
     * ${cmakeversion}
+    * ${clangversion}
 EOF
