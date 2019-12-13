@@ -19,7 +19,7 @@ ENV MAKE_JOBS=${MAKE_JOBS}
 ENV FALCO_VERSION=${FALCO_VERSION}
 
 ARG DOCKER_VERSION=1.11.0
-ARG CMAKE_VERSION=3.5.0
+ARG CMAKE_VERSION=3.5.1
 
 RUN yum -y install centos-release-scl && \
     INSTALL_PKGS="devtoolset-7-gcc devtoolset-7-gcc-c++ devtoolset-7-toolchain devtoolset-7-libstdc++-devel devtoolset-7-elfutils-libelf-devel llvm-toolset-7 glibc-static autoconf automake libtool createrepo expect git which libcurl-devel zlib-devel rpm-build" && \
@@ -35,10 +35,7 @@ RUN source scl_source enable devtoolset-7 llvm-toolset-7 && \
     make install && \
     rm -rf /tmp/cmake-${CMAKE_VERSION}
 
-# fixme: deps needs a fix into CMakeLists.txt
-RUN yum -y install libyaml-devel && yum clean all -y
-
-RUN yum -y install ncurses-devel openssl-devel libcurl-devel c-ares-devel zlib-devel openssl
+RUN yum -y install libyaml-devel ncurses-devel openssl-devel libcurl-devel c-ares-devel openssl && yum clean all -y
 
 COPY ./root /
 
