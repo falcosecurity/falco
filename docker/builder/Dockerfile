@@ -22,11 +22,11 @@ ARG DOCKER_VERSION=1.11.0
 ARG CMAKE_VERSION=3.5.0
 
 RUN yum -y install centos-release-scl && \
-    INSTALL_PKGS="devtoolset-7-gcc devtoolset-7-gcc-c++ devtoolset-7-toolchain devtoolset-7-libstdc++-devel devtoolset-7-elfutils-libelf-devel glibc-static autoconf automake libtool createrepo expect git which libcurl-devel zlib-devel rpm-build" && \
+    INSTALL_PKGS="devtoolset-7-gcc devtoolset-7-gcc-c++ devtoolset-7-toolchain devtoolset-7-libstdc++-devel devtoolset-7-elfutils-libelf-devel llvm-toolset-7 glibc-static autoconf automake libtool createrepo expect git which libcurl-devel zlib-devel rpm-build" && \
     yum -y install --setopt=tsflags=nodocs $INSTALL_PKGS && \
     rpm -V $INSTALL_PKGS
 
-RUN source scl_source enable devtoolset-7 && \
+RUN source scl_source enable devtoolset-7 llvm-toolset-7 && \
     cd /tmp && \
     curl -L https://github.com/kitware/cmake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}.tar.gz | tar xz; \
     cd cmake-${CMAKE_VERSION} && \
