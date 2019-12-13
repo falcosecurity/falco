@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-cmake_minimum_required(VERSION 3.3.2)
+cmake_minimum_required(VERSION 3.5.1)
 
 project(falco)
 
@@ -27,6 +27,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
 list(APPEND CMAKE_MODULE_PATH "${SYSDIG_DIR}/cmake/modules")
 
 option(BUILD_WARNINGS_AS_ERRORS "Enable building with -Wextra -Werror flags")
+option(USE_BUNDLED_DEPS "Enable bundled dependencies instead of using the system ones" OFF)
 
 if(NOT DEFINED FALCO_ETC_DIR)
 	set(FALCO_ETC_DIR "/etc/falco")
@@ -101,17 +102,8 @@ set(CMD_MAKE make)
 
 include(ExternalProject)
 
-# zlib
-find_path(ZLIB_INCLUDE zlib.h PATH_SUFFIXES zlib)
-find_library(ZLIB_LIB NAMES z)
-if(ZLIB_INCLUDE AND ZLIB_LIB)
-	message(STATUS "Found zlib: include: ${ZLIB_INCLUDE}, lib: ${ZLIB_LIB}")
-else()
-	message(FATAL_ERROR "Couldn't find system zlib")
-endif()
-
 # jq
-include(FindJQ)
+include(jq)
 
 # jsoncpp
 set(JSONCPP_SRC "${SYSDIG_DIR}/userspace/libsinsp/third-party/jsoncpp")
@@ -149,8 +141,8 @@ ExternalProject_Add(b64
 	BUILD_IN_SOURCE 1
 	INSTALL_COMMAND "")
 
-# yamlcpp
-include(FindYamlCpp)
+# yaml-cpp
+include(yaml-cpp)
 
 # OpenSSL
 find_package(OpenSSL REQUIRED)
@@ -164,8 +156,7 @@ else()
 endif()
 
 # libcurl
-find_package(CURL REQUIRED)
-message(STATUS "Found CURL: include: ${CURL_INCLUDE_DIR}, lib: ${CURL_LIBRARIES}")
+include(cURL)
 
 # LuaJIT
 set(LUAJIT_SRC "${PROJECT_BINARY_DIR}/luajit-prefix/src/luajit/src")
@@ -254,6 +245,7 @@ ExternalProject_Add(civetweb
 	INSTALL_COMMAND ${CMD_MAKE} install-lib install-headers PREFIX=${CIVETWEB_SRC}/install "WITH_CPP=1 OPENSSL_API_1_1")
 
 # c-ares
+# TODO(fntlnz, leodido): c-ares is only needed for grpc? In case remove here!
 find_path(CARES_INCLUDE NAMES ares.h)
 find_library(CARES_LIB NAMES libcares.so)
 if(CARES_INCLUDE AND CARES_LIB)
@@ -262,12 +254,8 @@ else()
 	message(FATAL_ERROR "Couldn't find system c-ares")
 endif()
 
-
-# protobuf
-include(FindProtobuf)
-
 # gRPC
-include(FindGRPC)
+include(gRPC)
 
 # Installation
 install(FILES falco.yaml
