@@ -2281,7 +2281,7 @@
   tags: [network, k8s, container, mitre_port_knocking]
 
 - list: network_tool_binaries
-  items: [nc, ncat, nmap, dig, tcpdump, tshark, ngrep]
+  items: [nc, ncat, nmap, dig, tcpdump, tshark, ngrep, telnet, ssh, mitmproxy, socat]
 
 - macro: network_tool_procs
   condition: (proc.name in (network_tool_binaries))
