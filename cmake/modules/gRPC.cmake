@@ -11,15 +11,21 @@
 # specific language governing permissions and limitations under the License.
 #
 
-option(BUILD_STATIC_GRPC
+option(USE_BUNDLED_DEPS
        "Build a static version of gRPC (useful for building in Operating Systems that don't have the gRPC package)" OFF)
 
-if(NOT BUILD_STATIC_GRPC)
+if(NOT USE_BUNDLED_DEPS)
 
   # zlib
   include(FindZLIB)
   set(ZLIB_INCLUDE "${ZLIB_INCLUDE_DIRS}")
   set(ZLIB_LIB "${ZLIB_LIBRARIES}")
+
+  if(ZLIB_INCLUDE AND ZLIB_LIB)
+    message(STATUS "Found zlib: ${PROTOC}, include: ${PROTOBUF_INCLUDE}, lib: ${PROTOBUF_LIB}")
+  else()
+    message(FATAL_ERROR "Couldn't find system protobuf")
+  endif()
 
   # protobuf
   find_program(PROTOC NAMES protoc)
@@ -32,9 +38,8 @@ if(NOT BUILD_STATIC_GRPC)
   else()
     message(FATAL_ERROR "Couldn't find system protobuf")
   endif()
-  
-  # gRPC
-  # todo(fntlnz, leodido): check that gRPC version is greater or equal than 1.8.0
+
+  # gRPC todo(fntlnz, leodido): check that gRPC version is greater or equal than 1.8.0
   find_path(GRPCXX_INCLUDE NAMES grpc++/grpc++.h)
   if(GRPCXX_INCLUDE)
     set(GRPC_INCLUDE ${GRPCXX_INCLUDE})
@@ -63,41 +68,54 @@ else()
   endif()
   message(STATUS "Found pkg-config executable: ${PKG_CONFIG_EXECUTABLE}")
   set(GRPC_SRC "${PROJECT_BINARY_DIR}/grpc-prefix/src/grpc")
-  message(STATUS "Using bundled grpc in '${GRPC_SRC}'")
   set(GRPC_INCLUDE "${GRPC_SRC}/include")
   set(GRPC_LIB "${GRPC_SRC}/libs/opt/libgrpc.a")
   set(GRPCPP_LIB "${GRPC_SRC}/libs/opt/libgrpc++.a")
   set(GRPC_CPP_PLUGIN "${GRPC_SRC}/bins/opt/grpc_cpp_plugin")
-  # we tell gRPC to compile protobuf for us because
-  # when a gRPC package is not available, like on CentOS,
-  # it's very likely that protobuf will be very outdated
+
+  # we tell gRPC to compile protobuf for us because when a gRPC package is not available, like on CentOS, it's very
+  # likely that protobuf will be very outdated
   set(PROTOBUF_INCLUDE "${GRPC_SRC}/third_party/protobuf/src")
   set(PROTOC "${PROTOBUF_INCLUDE}/protoc")
   set(PROTOBUF_LIB "${PROTOBUF_INCLUDE}/.libs/libprotobuf.a")
-  # we tell gRPC to compile zlib for us because
-  # when a gRPC package is not available, like on CentOS,
-  # it's very likely that zlib will be very outdated
+  # we tell gRPC to compile zlib for us because when a gRPC package is not available, like on CentOS, it's very likely
+  # that zlib will be very outdated
   set(ZLIB_INCLUDE "${GRPC_SRC}/third_party/zlib")
   set(ZLIB_LIB "${ZLIB_INCLUDE}/libz.a")
-  # get_filename_component(PROTOC_DIR ${PROTOC} PATH)
+
+  message(STATUS "Using bundled gRPC in '${GRPC_SRC}'")
+  message(
+    STATUS
+      "Bundled gRPC comes with ---> protobuf: compiler: ${PROTOC}, include: ${PROTOBUF_INCLUDE}, lib: ${PROTOBUF_LIB}")
+  message(STATUS "Bundled gRPC comes with ---> zlib: include: ${ZLIB_INCLUDE}, lib: ${ZLIB_LIB}}")
+  message(STATUS "Bundled gRPC comes with ---> grpC cpp plugin: include: ${GRPC_CPP_PLUGIN}")
+
+  get_filename_component(PROTOC_DIR ${PROTOC} PATH)
+
+  include(ProcessorCount)
+  ProcessorCount(N)
+  if(NOT N EQUAL 0)
+    set(GRPC_BUILD_FLAGS -j${N})
+  endif()
+
+  # "cd ${ZLIB_INCLUDE} && ./configure && make"
   ExternalProject_Add(
     grpc
     GIT_REPOSITORY https://github.com/grpc/grpc.git
-    GIT_TAG v1.25.0
+    GIT_TAG v1.8.1
     GIT_SUBMODULES ""
-    BUILD_COMMAND
-      CFLAGS=-Wno-implicit-fallthrough
-      LDFLAGS=-static
-      HAS_SYSTEM_ZLIB=false
-      HAS_SYSTEM_PROTOBUF=false
-      HAS_SYSTEM_CARES=false
-      CONFIGURE_COMMAND sh  -c "cd ${ZLIB_INCLUDE} && ./configure && make"
-      make
-      grpc_cpp_plugin
-      static_cxx
-      static_c
     BUILD_IN_SOURCE 1
     BUILD_BYPRODUCTS ${GRPC_LIB} ${GRPCPP_LIB}
-    INSTALL_COMMAND "")
-
+    INSTALL_COMMAND ""
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND
+      CFLAGS=-Wno-implicit-fallthrough
+      HAS_SYSTEM_ZLIB=false
+      HAS_SYSTEM_PROTOBUF=false
+      LDFLAGS=-static
+      PATH=${PROTOC_DIR}:$ENV{PATH}
+      make ${GRPC_BUILD_FLAGS}
+      grpc_cpp_plugin
+      static_cxx
+      static_c)
 endif()
