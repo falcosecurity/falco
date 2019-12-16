@@ -1544,9 +1544,9 @@
     an attempt to change a program/thread\'s namespace (commonly done
     as a part of creating a container) by calling setns.
   condition: >
-    evt.type = setns
-    and not proc.name in (docker_binaries, k8s_binaries, lxd_binaries, sysdigcloud_binaries,
-                          sysdig, nsenter, calico, oci-umount, cilium-cni, network_plugin_binaries)
+    evt.type=setns and evt.dir=<
+    and not (container.id=host and proc.name in (docker_binaries, k8s_binaries, lxd_binaries, nsenter))
+    and not proc.name in (sysdigcloud_binaries, sysdig, calico, oci-umount, cilium-cni, network_plugin_binaries)
     and not proc.name in (user_known_change_thread_namespace_binaries)
     and not proc.name startswith "runc"
     and not proc.cmdline startswith "containerd"
@@ -1561,9 +1561,9 @@
     and not user_known_change_thread_namespace_activities
   output: >
     Namespace change (setns) by unexpected program (user=%user.name command=%proc.cmdline
-    parent=%proc.pname %container.info container_id=%container.id image=%container.image.repository)
+    parent=%proc.pname %container.info container_id=%container.id image=%container.image.repository:%container.image.tag)
   priority: NOTICE
-  tags: [process]
+  tags: [process, mitre_privilege_escalation, mitre_lateral_movement]
 
 # The binaries in this list and their descendents are *not* allowed
 # spawn shells. This includes the binaries spawning shells directly as
