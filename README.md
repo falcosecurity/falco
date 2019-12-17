@@ -84,7 +84,7 @@ Security
 
 ### Security Audit
 
-A third party security audit was performed by Cure53, you can see the full report [here](./SECURITY_AUDIT.pdf).
+A third party security audit was performed by Cure53, you can see the full report [here](./audits/SECURITY_AUDIT_2019_07.pdf).
 
 ### Reporting security vulnerabilities
 Please report security vulnerabilities following the community process documented [here](https://github.com/falcosecurity/.github/blob/master/SECURITY.md).
