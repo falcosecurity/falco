@@ -11,20 +11,14 @@
 # specific language governing permissions and limitations under the License.
 #
 
-option(USE_BUNDLED_DEPS
-       "Build a static version of gRPC (useful for building in Operating Systems that don't have the gRPC package)" OFF)
-
 if(NOT USE_BUNDLED_DEPS)
-
   # zlib
   include(FindZLIB)
   set(ZLIB_INCLUDE "${ZLIB_INCLUDE_DIRS}")
   set(ZLIB_LIB "${ZLIB_LIBRARIES}")
 
   if(ZLIB_INCLUDE AND ZLIB_LIB)
-    message(STATUS "Found zlib: ${PROTOC}, include: ${PROTOBUF_INCLUDE}, lib: ${PROTOBUF_LIB}")
-  else()
-    message(FATAL_ERROR "Couldn't find system protobuf")
+    message(STATUS "Found zlib: include: ${ZLIB_INCLUDE}, lib: ${ZLIB_LIB}")
   endif()
 
   # protobuf
@@ -93,11 +87,7 @@ else()
 
   get_filename_component(PROTOC_DIR ${PROTOC} PATH)
 
-  include(ProcessorCount)
-  ProcessorCount(N)
-  if(NOT N EQUAL 0)
-    set(GRPC_BUILD_FLAGS -j${N})
-  endif()
+  set(GRPC_BUILD_FLAGS ${PROCESSOUR_COUNT_MAKE_FLAG})
 
   # "cd ${ZLIB_INCLUDE} && ./configure && make"
   ExternalProject_Add(
@@ -115,7 +105,8 @@ else()
       HAS_SYSTEM_PROTOBUF=false
       LDFLAGS=-static
       PATH=${PROTOC_DIR}:$ENV{PATH}
-      make ${GRPC_BUILD_FLAGS}
+      make
+      ${GRPC_BUILD_FLAGS}
       grpc_cpp_plugin
       static_cxx
       static_c)
