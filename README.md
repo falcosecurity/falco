@@ -78,3 +78,13 @@ Contributing
 ---
 
 See the [CONTRIBUTING.md](./CONTRIBUTING.md).
+
+Security
+---
+
+### Security Audit
+
+A third party security audit was performed by Cure53, you can see the full report [here](./SECURITY_AUDIT.pdf).
+
+### Reporting security vulnerabilities
+Please report security vulnerabilities following the community process documented [here](https://github.com/falcosecurity/.github/blob/master/SECURITY.md).
