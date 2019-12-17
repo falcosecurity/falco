@@ -69,19 +69,20 @@ else()
   message(STATUS "Found pkg-config executable: ${PKG_CONFIG_EXECUTABLE}")
   set(GRPC_SRC "${PROJECT_BINARY_DIR}/grpc-prefix/src/grpc")
   set(GRPC_INCLUDE "${GRPC_SRC}/include")
-  set(GRPC_LIB "${GRPC_SRC}/libs/opt/libgrpc.a")
-  set(GRPCPP_LIB "${GRPC_SRC}/libs/opt/libgrpc++.a")
+  set(GRPC_LIBS_ABSOLUTE "${GRPC_SRC}/libs/opt")
+  set(GRPC_LIB "${GRPC_LIBS_ABSOLUTE}/libgrpc.a")
+  set(GRPCPP_LIB "${GRPC_LIBS_ABSOLUTE}/libgrpc++.a")
   set(GRPC_CPP_PLUGIN "${GRPC_SRC}/bins/opt/grpc_cpp_plugin")
 
   # we tell gRPC to compile protobuf for us because when a gRPC package is not available, like on CentOS, it's very
   # likely that protobuf will be very outdated
   set(PROTOBUF_INCLUDE "${GRPC_SRC}/third_party/protobuf/src")
   set(PROTOC "${PROTOBUF_INCLUDE}/protoc")
-  set(PROTOBUF_LIB "${PROTOBUF_INCLUDE}/.libs/libprotobuf.a")
+  set(PROTOBUF_LIB "${GRPC_LIBS_ABSOLUTE}/protobuf/libprotobuf.a")
   # we tell gRPC to compile zlib for us because when a gRPC package is not available, like on CentOS, it's very likely
   # that zlib will be very outdated
   set(ZLIB_INCLUDE "${GRPC_SRC}/third_party/zlib")
-  set(ZLIB_LIB "${ZLIB_INCLUDE}/libz.a")
+  set(ZLIB_LIB "${GRPC_LIBS_ABSOLUTE}/libz.a")
 
   message(STATUS "Using bundled gRPC in '${GRPC_SRC}'")
   message(
