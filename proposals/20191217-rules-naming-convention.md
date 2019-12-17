@@ -10,6 +10,9 @@
   * [Use cases](#use-cases)
   * [Diagrams](#diagrams)
   * [Design Details](#design-details)
+    + [Rule](#rule)
+    + [Macro](#macro)
+    + [List](#list)
 
 <!-- tocstop -->
 
