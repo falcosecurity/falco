@@ -25,7 +25,7 @@ if [[ -z "${SKIP_MODULE_LOAD}" ]]; then
 
     for i in "$HOST_ROOT/usr/src"/*
     do
-	base=$(basename $i)
+        base=$(basename $i)
         ln -s "$i" "/usr/src/$base"
     done
 
