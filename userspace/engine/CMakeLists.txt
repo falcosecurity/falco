@@ -14,10 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if(NOT SYSDIG_DIR)
-	set(SYSDIG_DIR "${PROJECT_SOURCE_DIR}/../sysdig")
-endif()
-
 set(FALCO_ENGINE_SOURCE_FILES
 	rules.cpp
 	falco_common.cpp
@@ -29,15 +25,16 @@ set(FALCO_ENGINE_SOURCE_FILES
 	formats.cpp)
 
 add_library(falco_engine STATIC ${FALCO_ENGINE_SOURCE_FILES})
+add_dependencies(falco_engine njson lyaml lpeg)
 
 target_include_directories(falco_engine PUBLIC
 	"${LUAJIT_INCLUDE}"
 	"${NJSON_INCLUDE}"
 	"${CURL_INCLUDE_DIR}"
 	"${TBB_INCLUDE_DIR}"
-	"${SYSDIG_DIR}/userspace/libsinsp/third-party/jsoncpp"
-	"${SYSDIG_DIR}/userspace/libscap"
-	"${SYSDIG_DIR}/userspace/libsinsp"
+	"${SYSDIG_SOURCE_DIR}/userspace/libsinsp/third-party/jsoncpp"
+	"${SYSDIG_SOURCE_DIR}/userspace/libscap"
+	"${SYSDIG_SOURCE_DIR}/userspace/libsinsp"
 	"${PROJECT_BINARY_DIR}/userspace/engine"
 	)
 
