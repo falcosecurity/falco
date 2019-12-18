@@ -23,7 +23,7 @@ We want to help people from the community to contribute to falco rules. It will 
 
 ### Goals
 
-People will have to follow the naming conventions rules when introducing new falco rules, macros and lists.
+People will have to follow the naming conventions rules when introducing new Falco rules, macros and lists.
 
 ### Non-Goals
 
