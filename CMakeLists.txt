@@ -106,11 +106,6 @@ include(ExternalProject)
 # jq
 include(jq)
 
-# jsoncpp
-set(JSONCPP_SRC "${SYSDIG_DIR}/userspace/libsinsp/third-party/jsoncpp")
-set(JSONCPP_INCLUDE "${JSONCPP_SRC}")
-set(JSONCPP_LIB_SRC "${JSONCPP_SRC}/jsoncpp.cpp")
-
 # nlohmann-json
 set(NJSON_SRC "${PROJECT_BINARY_DIR}/njson-prefix/src/njson")
 message(STATUS "Using bundled nlohmann-json in '${NJSON_SRC}'")
@@ -278,6 +273,9 @@ add_subdirectory(rules)
 
 # Dockerfiles
 add_subdirectory(docker)
+
+# # Clang format add_custom_target( format COMMAND clang-format --style=file -i $<TARGET_PROPERTY:falco,SOURCES> COMMENT
+# "Formatting ..." VERBATIM)
 
 # shared build variables
 set(FALCO_SINSP_LIBRARY sinsp)
