@@ -25,7 +25,8 @@ if [[ -z "${SKIP_MODULE_LOAD}" ]]; then
 
     for i in "$HOST_ROOT/usr/src"/*
     do
-        ln -s "$i" "/usr/src/$i"
+	base=$(basename $i)
+        ln -s "$i" "/usr/src/$base"
     done
 
     /usr/bin/falco-probe-loader
