@@ -10,6 +10,9 @@
   * [Use cases](#use-cases)
   * [Diagrams](#diagrams)
   * [Design Details](#design-details)
+    + [Rule](#rule)
+    + [Macro](#macro)
+    + [List](#list)
 
 <!-- tocstop -->
 
@@ -27,7 +30,7 @@ People will have to follow the naming conventions rules when introducing new Fal
 
 ### Non-Goals
 
-There will be no intention to cover Falco syntax in this proposal.
+There will be no intention to cover Falco rule syntax in this proposal.
 
 ## Proposal
 
