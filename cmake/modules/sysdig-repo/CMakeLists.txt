@@ -27,8 +27,8 @@ endif()
 
 ExternalProject_Add(
   sysdig
-  GIT_REPOSITORY https://github.com/draios/sysdig.git
-  GIT_TAG ${SYSDIG_VERSION}
+  URL "https://github.com/draios/sysdig/archive/${SYSDIG_VERSION}.tar.gz"
+  URL_HASH SHA256=bd09607aa8beb863db07e695863f7dc543e2d39e7153005759d26a340ff66fa5
   CONFIGURE_COMMAND ""
   BUILD_COMMAND ""
   INSTALL_COMMAND ""
