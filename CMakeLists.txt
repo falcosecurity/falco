@@ -15,24 +15,24 @@ cmake_minimum_required(VERSION 3.5.1)
 project(falco)
 
 option(USE_BUNDLED_DEPS "Bundle hard to find dependencies into the Falco binary" OFF)
+option(BUILD_WARNINGS_AS_ERRORS "Enable building with -Wextra -Werror flags" OFF)
+option(USE_BUNDLED_DEPS "Enable bundled dependencies instead of using the system ones" OFF)
 
+# Make flag for parallel processing
 include(ProcessorCount)
 processorcount(PROCESSOR_COUNT)
 if(NOT PROCESSOR_COUNT EQUAL 0)
   set(PROCESSOUR_COUNT_MAKE_FLAG -j${PROCESSOR_COUNT})
 endif()
 
-# if(NOT SYSDIG_DIR) get_filename_component(SYSDIG_DIR "${PROJECT_SOURCE_DIR}/../sysdig" REALPATH) endif()
-
 # Custom CMake modules
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
-list(APPEND CMAKE_MODULE_PATH "${SYSDIG_DIR}/cmake/modules")
 
-option(BUILD_WARNINGS_AS_ERRORS "Enable building with -Wextra -Werror flags")
-option(USE_BUNDLED_DEPS "Enable bundled dependencies instead of using the system ones" OFF)
+# GNU standard installation directories' definitions
+include(GNUInstallDirs)
 
 if(NOT DEFINED FALCO_ETC_DIR)
-  set(FALCO_ETC_DIR "/etc/falco")
+  set(FALCO_ETC_DIR "${CMAKE_INSTALL_FULL_SYSCONFDIR}/falco")
 endif()
 
 if(NOT DRAIOS_DEBUG_FLAGS)
@@ -65,7 +65,6 @@ set(CMAKE_CXX_FLAGS_DEBUG "${DRAIOS_DEBUG_FLAGS}")
 set(CMAKE_C_FLAGS_RELEASE "-O3 -fno-strict-aliasing -DNDEBUG")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -fno-strict-aliasing -DNDEBUG")
 
-add_definitions(-DPLATFORM_NAME="${CMAKE_SYSTEM_NAME}")
 add_definitions(-DK8S_DISABLE_THREAD)
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
   add_definitions(-DHAS_CAPTURE)
