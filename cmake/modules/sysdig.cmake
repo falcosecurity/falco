@@ -13,7 +13,15 @@
 
 set(SYSDIG_WORKING_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/sysdig-repo")
 set(SYSDIG_REPO_DIR "${CMAKE_BINARY_DIR}/sysdig-repo")
-execute_process(COMMAND "${CMAKE_COMMAND}" -B ${SYSDIG_REPO_DIR} WORKING_DIRECTORY "${SYSDIG_WORKING_DIR}")
+
+file(MAKE_DIRECTORY ${SYSDIG_REPO_DIR})
+# cd /path/to/build && cmake /path/to/source
+execute_process(COMMAND "${CMAKE_COMMAND}" ${SYSDIG_WORKING_DIR} WORKING_DIRECTORY ${SYSDIG_REPO_DIR})
+
+# todo(leodido, fntlnz) > use the following one when CMake version will be >= 3.13
+
+# execute_process(COMMAND "${CMAKE_COMMAND}" -B ${SYSDIG_REPO_DIR} WORKING_DIRECTORY "${SYSDIG_WORKING_DIR}")
+
 execute_process(COMMAND "${CMAKE_COMMAND}" --build . WORKING_DIRECTORY "${SYSDIG_REPO_DIR}")
 set(SYSDIG_SOURCE_DIR "${SYSDIG_REPO_DIR}/sysdig-prefix/src/sysdig")
 
@@ -31,3 +39,7 @@ add_subdirectory("${SYSDIG_SOURCE_DIR}/userspace/libscap" "${PROJECT_BINARY_DIR}
 # Add libsinsp directory
 add_subdirectory("${SYSDIG_SOURCE_DIR}/userspace/libsinsp" "${PROJECT_BINARY_DIR}/userspace/libsinsp")
 add_dependencies(sinsp tbb b64 luajit)
+
+if(USE_BUNDLED_DEPS)
+  add_dependencies(scap grpc curl jq)
+endif()
