@@ -21,6 +21,15 @@ if(NOT USE_BUNDLED_DEPS)
     message(STATUS "Found zlib: include: ${ZLIB_INCLUDE}, lib: ${ZLIB_LIB}")
   endif()
 
+  # c-ares
+  find_path(CARES_INCLUDE NAMES ares.h)
+  find_library(CARES_LIB NAMES libcares.so)
+  if(CARES_INCLUDE AND CARES_LIB)
+    message(STATUS "Found c-ares: include: ${CARES_INCLUDE}, lib: ${CARES_LIB}")
+  else()
+    message(FATAL_ERROR "Couldn't find system c-ares")
+  endif()
+
   # protobuf
   find_program(PROTOC NAMES protoc)
   find_path(PROTOBUF_INCLUDE NAMES google/protobuf/message.h)
@@ -55,7 +64,9 @@ if(NOT USE_BUNDLED_DEPS)
   if(NOT GRPC_CPP_PLUGIN)
     message(FATAL_ERROR "System grpc_cpp_plugin not found")
   endif()
+
 else()
+
   find_package(PkgConfig)
   if(NOT PKG_CONFIG_FOUND)
     message(FATAL_ERROR "pkg-config binary not found")
@@ -89,12 +100,11 @@ else()
 
   set(GRPC_BUILD_FLAGS ${PROCESSOUR_COUNT_MAKE_FLAG})
 
-  # "cd ${ZLIB_INCLUDE} && ./configure && make"
   ExternalProject_Add(
     grpc
     GIT_REPOSITORY https://github.com/grpc/grpc.git
     GIT_TAG v1.8.1
-    GIT_SUBMODULES ""
+    GIT_SUBMODULES "third_party/protobuf third_party/zlib third_party/cares/cares"
     BUILD_IN_SOURCE 1
     BUILD_BYPRODUCTS ${GRPC_LIB} ${GRPCPP_LIB}
     INSTALL_COMMAND ""
