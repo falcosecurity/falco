@@ -18,6 +18,9 @@ option(USE_BUNDLED_DEPS "Bundle hard to find dependencies into the Falco binary"
 option(BUILD_WARNINGS_AS_ERRORS "Enable building with -Wextra -Werror flags" OFF)
 option(USE_BUNDLED_DEPS "Enable bundled dependencies instead of using the system ones" OFF)
 
+# Elapsed time
+# set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CMAKE_COMMAND} -E time") # TODO(fntlnz, leodido): add a flag to enable this
+
 # Make flag for parallel processing
 include(ProcessorCount)
 processorcount(PROCESSOR_COUNT)
@@ -243,16 +246,6 @@ ExternalProject_Add(
   BUILD_IN_SOURCE 1
   BUILD_COMMAND ${CMD_MAKE} COPT="-DNO_FILES" WITH_CPP=1
   INSTALL_COMMAND ${CMD_MAKE} install-lib install-headers PREFIX=${CIVETWEB_SRC}/install "WITH_CPP=1 OPENSSL_API_1_1")
-
-# c-ares
-# TODO(fntlnz, leodido): c-ares is only needed for grpc? In case remove here!
-find_path(CARES_INCLUDE NAMES ares.h)
-find_library(CARES_LIB NAMES libcares.so)
-if(CARES_INCLUDE AND CARES_LIB)
-  message(STATUS "Found c-ares: include: ${CARES_INCLUDE}, lib: ${CARES_LIB}")
-else()
-  message(FATAL_ERROR "Couldn't find system c-ares")
-endif()
 
 # gRPC
 include(gRPC)
