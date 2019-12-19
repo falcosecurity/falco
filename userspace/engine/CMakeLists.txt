@@ -38,6 +38,7 @@ target_include_directories(falco_engine PUBLIC
 	"${SYSDIG_DIR}/userspace/libsinsp/third-party/jsoncpp"
 	"${SYSDIG_DIR}/userspace/libscap"
 	"${SYSDIG_DIR}/userspace/libsinsp"
+	"${SYSDIG_DIR}/userspace/userspace-common/src"
 	"${PROJECT_BINARY_DIR}/userspace/engine"
 	)
 
