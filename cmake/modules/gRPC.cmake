@@ -66,12 +66,6 @@ if(NOT USE_BUNDLED_DEPS)
   endif()
 
 else()
-
-  find_package(PkgConfig)
-  if(NOT PKG_CONFIG_FOUND)
-    message(FATAL_ERROR "pkg-config binary not found")
-  endif()
-  message(STATUS "Found pkg-config executable: ${PKG_CONFIG_EXECUTABLE}")
   set(GRPC_SRC "${PROJECT_BINARY_DIR}/grpc-prefix/src/grpc")
   set(GRPC_INCLUDE "${GRPC_SRC}/include")
   set(GRPC_LIBS_ABSOLUTE "${GRPC_SRC}/libs/opt")
