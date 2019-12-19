@@ -68,11 +68,6 @@ set(CMAKE_CXX_FLAGS_DEBUG "${DRAIOS_DEBUG_FLAGS}")
 set(CMAKE_C_FLAGS_RELEASE "-O3 -fno-strict-aliasing -DNDEBUG")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -fno-strict-aliasing -DNDEBUG")
 
-add_definitions(-DK8S_DISABLE_THREAD)
-if(CMAKE_SYSTEM_NAME MATCHES "Linux")
-  add_definitions(-DHAS_CAPTURE)
-endif()
-
 # Create the falco version variable according to git index
 if(NOT FALCO_VERSION)
   include(GetGitRevisionDescription)

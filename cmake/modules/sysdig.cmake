@@ -35,6 +35,8 @@ set(JSONCPP_LIB_SRC "${JSONCPP_SRC}/jsoncpp.cpp")
 add_subdirectory("${SYSDIG_SOURCE_DIR}/driver" "${PROJECT_BINARY_DIR}/driver")
 
 # Add libscap directory
+add_definitions(-D_GNU_SOURCE)
+add_definitions(-DHAS_CAPTURE)
 add_subdirectory("${SYSDIG_SOURCE_DIR}/userspace/libscap" "${PROJECT_BINARY_DIR}/userspace/libscap")
 
 # Add libsinsp directory
