@@ -11,19 +11,20 @@
 # specific language governing permissions and limitations under the License.
 #
 
-set(SYSDIG_WORKING_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/sysdig-repo")
-set(SYSDIG_REPO_DIR "${CMAKE_BINARY_DIR}/sysdig-repo")
+set(SYSDIG_CMAKE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/sysdig-repo")
+set(SYSDIG_CMAKE_WORKING_DIR "${CMAKE_BINARY_DIR}/sysdig-repo")
 
-file(MAKE_DIRECTORY ${SYSDIG_REPO_DIR})
+file(MAKE_DIRECTORY ${SYSDIG_CMAKE_WORKING_DIR})
 # cd /path/to/build && cmake /path/to/source
-execute_process(COMMAND "${CMAKE_COMMAND}" ${SYSDIG_WORKING_DIR} WORKING_DIRECTORY ${SYSDIG_REPO_DIR})
+execute_process(COMMAND "${CMAKE_COMMAND}" ${SYSDIG_CMAKE_SOURCE_DIR} WORKING_DIRECTORY ${SYSDIG_CMAKE_WORKING_DIR})
 
 # todo(leodido, fntlnz) > use the following one when CMake version will be >= 3.13
 
-# execute_process(COMMAND "${CMAKE_COMMAND}" -B ${SYSDIG_REPO_DIR} WORKING_DIRECTORY "${SYSDIG_WORKING_DIR}")
+# execute_process(COMMAND "${CMAKE_COMMAND}" -B ${SYSDIG_CMAKE_WORKING_DIR} WORKING_DIRECTORY
+# "${SYSDIG_CMAKE_SOURCE_DIR}")
 
-execute_process(COMMAND "${CMAKE_COMMAND}" --build . WORKING_DIRECTORY "${SYSDIG_REPO_DIR}")
-set(SYSDIG_SOURCE_DIR "${SYSDIG_REPO_DIR}/sysdig-prefix/src/sysdig")
+execute_process(COMMAND "${CMAKE_COMMAND}" --build . WORKING_DIRECTORY "${SYSDIG_CMAKE_WORKING_DIR}")
+set(SYSDIG_SOURCE_DIR "${SYSDIG_CMAKE_WORKING_DIR}/sysdig-prefix/src/sysdig")
 
 # jsoncpp
 set(JSONCPP_SRC "${SYSDIG_SOURCE_DIR}/userspace/libsinsp/third-party/jsoncpp")
