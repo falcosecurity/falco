@@ -44,6 +44,12 @@ add_executable(
   ${CMAKE_CURRENT_BINARY_DIR}/output.pb.cc
   ${CMAKE_CURRENT_BINARY_DIR}/schema.pb.cc)
 
+add_dependencies(falco civetweb)
+
+if(USE_BUNDLED_DEPS)
+add_dependencies(falco yamlcpp)
+endif()
+
 target_include_directories(
   falco
   PUBLIC
@@ -58,9 +64,10 @@ target_include_directories(
     "${CMAKE_CURRENT_BINARY_DIR}"
     "${DRAIOS_DEPENDENCIES_DIR}/yaml-${DRAIOS_YAML_VERSION}/target/include")
 
-target_link_libraries(falco falco_engine sinsp)
 target_link_libraries(
   falco
+  falco_engine
+  sinsp
   "${GRPCPP_LIB}"
   "${GRPC_LIB}"
   "${PROTOBUF_LIB}"
