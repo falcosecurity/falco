@@ -177,8 +177,6 @@ int falco_formats::format_event (lua_State *ls)
 				{
 					json_line.erase(0, 1);
 				}
-
-				s_inspector->set_buffer_format(sinsp_evt::PF_NORMAL);
 			}
 		}
 		catch (sinsp_exception& e)
