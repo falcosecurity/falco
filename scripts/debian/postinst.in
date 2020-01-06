@@ -42,7 +42,26 @@ case "$1" in
 	;;
 esac
 
-if [ -x "/etc/init.d/$NAME" ]; then
-        update-rc.d $NAME defaults >/dev/null
+if test "@CPACK_SYSTEMD_FOUND@" -eq 1 ; then
+    # This will only remove masks created by d-s-h on package removal.
+    deb-systemd-helper unmask @CPACK_PACKAGE_NAME@.service >/dev/null || true
+    # was-enabled defaults to true, so new installations run enable.
+    if deb-systemd-helper --quiet was-enabled @CPACK_PACKAGE_NAME@.service; then
+        # Enables the unit on first installation, creates new
+        # symlinks on upgrades if the unit file has changed.
+        deb-systemd-helper enable @CPACK_PACKAGE_NAME@.service >/dev/null || true
+    else
+        # Update the statefile to add new symlinks (if any), which need to be
+        # cleaned up on purge. Also remove old symlinks.
+        deb-systemd-helper update-state @CPACK_PACKAGE_NAME@.service >/dev/null || true
+    fi
+    if [ -d /run/systemd/system ]; then
+        systemctl --system daemon-reload >/dev/null || true
+        deb-systemd-invoke start @CPACK_PACKAGE_NAME@.service >/dev/null || true
+    fi
+else
+    if [ -x "/etc/init.d/$NAME" ]; then
+	update-rc.d $NAME defaults >/dev/null
+	invoke-rc.d $NAME start || exit $?
+    fi
 fi
-
