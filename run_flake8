@@ -17,9 +17,9 @@ function main(){
     source ${VENV_NAME}/bin/activate
     pushd ${SCRIPT_DIR}
     popd
-    python -m pip install flake8
+    python3 -m pip install flake8
     rm -f ${REPORT_FILENAME} # delete report if existing
-    python -m flake8 --exit-zero --tee --output-file=${REPORT_FILENAME} --count --max-line-length=110 ${SCRIPT_DIR}/ 
+    python3 -m flake8 --exit-zero --tee --output-file=${REPORT_FILENAME} --count --max-line-length=110 ${SCRIPT_DIR}/ 
     echo "Successfully ran tool. Turning off verbose output"
     set +x
     set +e
