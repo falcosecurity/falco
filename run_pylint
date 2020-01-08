@@ -17,7 +17,6 @@ function main(){
     source ${VENV_NAME}/bin/activate
     pushd ${SCRIPT_DIR}
     # pylint needs packages to be present to see if they import
-    ./update_requirements
     popd
     python -m pip install pylint
     rm -f ${REPORT_FILENAME} # delete report if existing
