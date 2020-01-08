@@ -22,7 +22,7 @@ function main(){
     python -m pip install pylint
     rm -f ${REPORT_FILENAME} # delete report if existing
     #ideally we should scan python files in test or code in falco tree
-    python -m pylint --rcfile=${SCRIPT_DIR}/pylintrc ${SCRIPT_DIR}/ ${SCRIPT_DIR}/test| tee ${REPORT_FILENAME}
+    python -m pylint --rcfile=${SCRIPT_DIR}/pylintrc ${SCRIPT_DIR}/ | tee ${REPORT_FILENAME}
     echo "Successfully ran tool. Turning off verbose output"
     set +x
     set +e
