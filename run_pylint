@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Output commands and exit upon any command failure
+set -x
+set -e
+VENV_NAME="venv_$(basename $0)" # Use script name to generate local venv
+REPORT_FILENAME=report_pylint.txt
+function main(){
+    # Get script directory
+    SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+    # Save current venv for later
+    old_venv=$VIRTUAL_ENV
+    if [ ! -d "${VENV_NAME}" ] ; then
+        # only create if not present (optimization)
+        virtualenv "${VENV_NAME}"
+    fi
+    source ${VENV_NAME}/bin/activate
+    pushd ${SCRIPT_DIR}
+    # pylint needs packages to be present to see if they import
+    ./update_requirements
+    popd
+    python -m pip install pylint
+    rm -f ${REPORT_FILENAME} # delete report if existing
+    #ideally we should scan python files in test or code in falco tree
+    python -m pylint --rcfile=${SCRIPT_DIR}/pylintrc ${SCRIPT_DIR}/ ${SCRIPT_DIR}/test| tee ${REPORT_FILENAME}
+    echo "Successfully ran tool. Turning off verbose output"
+    set +x
+    set +e
+    # Restore previous venv if it was set
+    if [ ! -z ${old_venv} ] ; then
+        echo "Restoring previous venv activation..."
+        source ${old_venv}/bin/activate
+    fi
+}
+
+main "$@"
