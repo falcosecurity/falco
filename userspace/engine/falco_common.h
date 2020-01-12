@@ -1,7 +1,5 @@
 /*
-Copyright (C) 2016-2018 Draios Inc dba Sysdig.
-
-This file is part of falco.
+Copyright (C) 2019 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,13 +12,13 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
 */
 
 #pragma once
 
 #include <string>
 #include <exception>
+#include <mutex>
 
 extern "C" {
 #include "lua.h"
@@ -75,7 +73,7 @@ public:
 
 	void set_inspector(sinsp *inspector);
 
-        // Priority levels, as a vector of strings
+    // Priority levels, as a vector of strings
 	static std::vector<std::string> priority_names;
 
 	// Same as numbers/indices into the above vector
@@ -94,11 +92,10 @@ public:
 protected:
 	lua_State *m_ls;
 
+	std::mutex m_ls_semaphore;
+
 	sinsp *m_inspector;
 
 private:
 	void add_lua_path(std::string &path);
 };
-
-
-

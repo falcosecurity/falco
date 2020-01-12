@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2016-2018 Draios Inc dba Sysdig.
+# Copyright (C) 2016-2018 The Falco Authors..
 #
 # This file is part of falco.
 #
@@ -86,6 +86,15 @@ trace_files: !mux
       - rules/rule_names_with_spaces.yaml
     trace_file: trace_files/cat_write.scap
 
+  rule_names_with_regex_chars:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/rule_names_with_regex_chars.yaml
+    detect_counts:
+      - 'Open From Cat ($\.*+?()[]{}|^)': 8
+    trace_file: trace_files/cat_write.scap
+
   multiple_rules_first_empty:
     detect: True
     detect_level: WARNING
@@ -103,6 +112,18 @@ trace_files: !mux
     trace_file: trace_files/cat_write.scap
 
   multiple_rules:
+    detect: True
+    detect_level:
+      - WARNING
+      - INFO
+      - ERROR
+    rules_file:
+      - rules/single_rule.yaml
+      - rules/double_rule.yaml
+    trace_file: trace_files/cat_write.scap
+    all_events: True
+
+  multiple_docs:
     detect: True
     detect_level:
       - WARNING
@@ -393,6 +414,148 @@ trace_files: !mux
       - rules/rule_append_failure.yaml
     trace_file: trace_files/cat_write.scap
 
+  invalid_overwrite_macro:
+    exit_status: 1
+    stdout_contains: |+
+      .*invalid_base_macro.yaml: Ok
+      .*invalid_overwrite_macro.yaml: Compilation error when compiling "foo": Undefined macro 'foo' used in filter.
+      ---
+      - macro: some macro
+        condition: foo
+        append: false
+      ---
+    validate_rules_file:
+      - rules/invalid_base_macro.yaml
+      - rules/invalid_overwrite_macro.yaml
+    trace_file: trace_files/cat_write.scap
+
+  invalid_append_macro:
+    exit_status: 1
+    stdout_contains: |+
+      .*invalid_base_macro.yaml: Ok
+      .*invalid_append_macro.yaml: Compilation error when compiling "evt.type=execve foo": 17: syntax error, unexpected 'foo', expecting 'or', 'and'
+      ---
+      - macro: some macro
+        condition: evt.type=execve
+
+      - macro: some macro
+        condition: foo
+        append: true
+      ---
+    validate_rules_file:
+      - rules/invalid_base_macro.yaml
+      - rules/invalid_append_macro.yaml
+    trace_file: trace_files/cat_write.scap
+
+  invalid_overwrite_macro_multiple_docs:
+    exit_status: 1
+    stdout_is: |+
+      Compilation error when compiling "foo": Undefined macro 'foo' used in filter.
+      ---
+      - macro: some macro
+        condition: foo
+        append: false
+      ---
+    validate_rules_file:
+      - rules/invalid_overwrite_macro_multiple_docs.yaml
+    trace_file: trace_files/cat_write.scap
+
+  invalid_append_macro_multiple_docs:
+    exit_status: 1
+    stdout_is: |+
+      Compilation error when compiling "evt.type=execve foo": 17: syntax error, unexpected 'foo', expecting 'or', 'and'
+      ---
+      - macro: some macro
+        condition: evt.type=execve
+
+      - macro: some macro
+        condition: foo
+        append: true
+      ---
+    validate_rules_file:
+      - rules/invalid_append_macro_multiple_docs.yaml
+    trace_file: trace_files/cat_write.scap
+
+  invalid_overwrite_rule:
+    exit_status: 1
+    stdout_contains: |+
+      .*invalid_base_rule.yaml: Ok
+      .*invalid_overwrite_rule.yaml: Undefined macro 'bar' used in filter.
+      ---
+      - rule: some rule
+        desc: some desc
+        condition: bar
+        output: some output
+        priority: INFO
+        append: false
+      ---
+    validate_rules_file:
+      - rules/invalid_base_rule.yaml
+      - rules/invalid_overwrite_rule.yaml
+    trace_file: trace_files/cat_write.scap
+
+  invalid_append_rule:
+    exit_status: 1
+    stdout_contains: |+
+      .*invalid_base_rule.yaml: Ok
+      .*invalid_append_rule.yaml: Compilation error when compiling "evt.type=open bar": 15: syntax error, unexpected 'bar', expecting 'or', 'and'
+      ---
+      - rule: some rule
+        desc: some desc
+        condition: evt.type=open
+        output: some output
+        priority: INFO
+
+      - rule: some rule
+        desc: some desc
+        condition: bar
+        output: some output
+        priority: INFO
+        append: true
+      ---
+    validate_rules_file:
+      - rules/invalid_base_rule.yaml
+      - rules/invalid_append_rule.yaml
+    trace_file: trace_files/cat_write.scap
+
+  invalid_overwrite_rule_multiple_docs:
+    exit_status: 1
+    stdout_is: |+
+      Undefined macro 'bar' used in filter.
+      ---
+      - rule: some rule
+        desc: some desc
+        condition: bar
+        output: some output
+        priority: INFO
+        append: false
+      ---
+    validate_rules_file:
+      - rules/invalid_overwrite_rule_multiple_docs.yaml
+    trace_file: trace_files/cat_write.scap
+
+  invalid_append_rule_multiple_docs:
+    exit_status: 1
+    stdout_contains: |+
+      Compilation error when compiling "evt.type=open bar": 15: syntax error, unexpected 'bar', expecting 'or', 'and'
+      ---
+      - rule: some rule
+        desc: some desc
+        condition: evt.type=open
+        output: some output
+        priority: INFO
+
+      - rule: some rule
+        desc: some desc
+        condition: bar
+        output: some output
+        priority: INFO
+        append: true
+      ---
+    validate_rules_file:
+      - rules/invalid_append_rule_multiple_docs.yaml
+    trace_file: trace_files/cat_write.scap
+
   invalid_missing_rule_name:
     exit_status: 1
     stdout_is: |+
@@ -447,13 +610,13 @@ trace_files: !mux
       - open_from_cat
     trace_file: trace_files/cat_write.scap
 
-  disabled_rules_using_regex:
+  disabled_rules_using_substring:
     detect: False
     rules_file:
       - rules/empty_rules.yaml
       - rules/single_rule.yaml
     disabled_rules:
-      - "open.*"
+      - "open_from"
     trace_file: trace_files/cat_write.scap
 
   disabled_rules_using_enabled_flag:

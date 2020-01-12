@@ -1,6 +1,4 @@
--- Copyright (C) 2018 Draios inc.
---
--- This file is part of falco.
+-- Copyright (C) 2019 The Falco Authors.
 --
 -- Licensed under the Apache License, Version 2.0 (the "License");
 -- you may not use this file except in compliance with the License.
@@ -38,7 +36,9 @@ function sinsp_rule_utils.check_for_ignored_syscalls_events(ast, filter_type, so
 	 (node.left.value == "evt.type" or
 	  node.left.value == "syscall.type") then
 
-	    if node.operator == "in" or node.operator == "pmatch" then
+	    if (node.operator == "in" or
+		node.operator == "intersects" or
+	        node.operator == "pmatch") then
 	       for i, v in ipairs(node.right.elements) do
 		  if v.type == "BareString" then
 		     if node.left.value == "evt.type" then
@@ -96,7 +96,9 @@ function sinsp_rule_utils.get_evttypes_syscalls(name, ast, source, warn_evttypes
 	    if found_not then
 	       found_event_after_not = true
 	    end
-	    if node.operator == "in" or node.operator == "pmatch" then
+	    if (node.operator == "in" or
+                node.operator == "intersects" or
+                node.operator == "pmatch") then
 	       for i, v in ipairs(node.right.elements) do
 		  if v.type == "BareString" then
 

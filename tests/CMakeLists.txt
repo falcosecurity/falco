@@ -1,7 +1,6 @@
 #
-# Copyright (C) 2016-2019 Draios Inc dba Sysdig.
+# Copyright (C) 2019 The Falco Authors.
 #
-# This file is part of falco .
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not
 # use this file except in compliance with the License. You may obtain a copy of
@@ -15,7 +14,7 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 #
-set(FALCO_TESTS_SOURCES test_base.cpp engine/test_token_bucket.cpp)
+set(FALCO_TESTS_SOURCES test_base.cpp engine/test_token_bucket.cpp falco/test_webserver.cpp)
 
 set(FALCO_TESTED_LIBRARIES falco_engine)
 
@@ -38,7 +37,11 @@ if(FALCO_BUILD_TESTS)
     falco_test
     PUBLIC "${CATCH2_INCLUDE}"
            "${FAKEIT_INCLUDE}"
-           "${PROJECT_SOURCE_DIR}/userspace/engine")
+           "${PROJECT_SOURCE_DIR}/userspace/engine"
+           "${YAMLCPP_INCLUDE_DIR}"
+           "${CIVETWEB_INCLUDE_DIR}"
+           "${PROJECT_SOURCE_DIR}/userspace/falco")
+  add_dependencies(falco_test catch2)
 
   include(CMakeParseArguments)
   include(CTest)

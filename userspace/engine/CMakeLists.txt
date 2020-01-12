@@ -1,7 +1,6 @@
 #
-# Copyright (C) 2016-2018 Draios Inc dba Sysdig.
+# Copyright (C) 2019 The Falco Authors.
 #
-# This file is part of falco .
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,6 +22,7 @@ set(FALCO_ENGINE_SOURCE_FILES
 	rules.cpp
 	falco_common.cpp
 	falco_engine.cpp
+	falco_utils.cpp
 	json_evt.cpp
 	ruleset.cpp
 	token_bucket.cpp

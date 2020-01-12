@@ -1,7 +1,6 @@
 #
-# Copyright (C) 2016-2018 Draios Inc dba Sysdig.
+# Copyright (C) 2019 The Falco Authors.
 #
-# This file is part of falco .
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,32 +14,42 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-cmake_minimum_required(VERSION 2.8.2)
+cmake_minimum_required(VERSION 3.3.2)
 
 project(falco)
 
-option(BUILD_WARNINGS_AS_ERRORS "Enable building with -Wextra -Werror flags")
+option(FALCO_COVERAGE "Build test suite with coverage information" OFF)
 
-if(NOT DEFINED FALCO_VERSION)
-	set(FALCO_VERSION "0.1.1dev")
+if(NOT SYSDIG_DIR)
+  get_filename_component(SYSDIG_DIR "${PROJECT_SOURCE_DIR}/../sysdig" REALPATH)
 endif()
+
+# Custom CMake modules
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
+list(APPEND CMAKE_MODULE_PATH "${SYSDIG_DIR}/cmake/modules")
+
+option(BUILD_WARNINGS_AS_ERRORS "Enable building with -Wextra -Werror flags")
 
 if(NOT DEFINED FALCO_ETC_DIR)
 	set(FALCO_ETC_DIR "/etc/falco")
-endif()
-
-if(NOT CMAKE_BUILD_TYPE)
-	SET(CMAKE_BUILD_TYPE Release)
 endif()
 
 if(NOT DRAIOS_DEBUG_FLAGS)
 	set(DRAIOS_DEBUG_FLAGS "-D_DEBUG")
 endif()
 
+string(TOLOWER "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYPE)
+if (CMAKE_BUILD_TYPE STREQUAL "debug")
+	set(KBUILD_FLAGS "${DRAIOS_DEBUG_FLAGS} ${DRAIOS_FEATURE_FLAGS}")
+else()
+	set(CMAKE_BUILD_TYPE "release")
+	set(KBUILD_FLAGS "${DRAIOS_FEATURE_FLAGS}")
+endif()
+
 set(CMAKE_COMMON_FLAGS "-Wall -ggdb ${DRAIOS_FEATURE_FLAGS}")
 
 if(BUILD_WARNINGS_AS_ERRORS)
-	set(CMAKE_SUPPRESSED_WARNINGS "-Wno-unused-parameter -Wno-missing-field-initializers -Wno-sign-compare -Wno-type-limits -Wno-implicit-fallthrough -Wno-format-truncation")
+	set(CMAKE_SUPPRESSED_WARNINGS "-Wno-unused-parameter -Wno-unused-variable -Wno-unused-but-set-variable -Wno-missing-field-initializers -Wno-sign-compare -Wno-type-limits -Wno-implicit-fallthrough -Wno-format-truncation")
 	set(CMAKE_COMMON_FLAGS "${CMAKE_COMMON_FLAGS} -Wextra -Werror ${CMAKE_SUPPRESSED_WARNINGS}")
 endif()
 
@@ -59,11 +68,28 @@ if(CMAKE_SYSTEM_NAME MATCHES "Linux")
 	add_definitions(-DHAS_CAPTURE)
 endif()
 
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-	set(KBUILD_FLAGS "${DRAIOS_DEBUG_FLAGS} ${DRAIOS_FEATURE_FLAGS}")
-else()
-	set(KBUILD_FLAGS "${DRAIOS_FEATURE_FLAGS}")
+# Create the falco version variable according to git index
+if(NOT FALCO_VERSION)
+  include(GetGitRevisionDescription)
+  git_get_exact_tag(FALCO_TAG)
+  if(NOT FALCO_TAG)
+    git_describe(FALCO_VERSION "--always")
+    git_local_changes(FALCO_CHANGES)
+    if(FALCO_CHANGES STREQUAL "DIRTY")
+      string(TOLOWER "${FALCO_CHANGES}" FALCO_CHANGES)
+      set(FALCO_VERSION "${FALCO_VERSION}.${FALCO_CHANGES}")
+    endif()
+    set(FALCO_VERSION "0.${FALCO_VERSION}")
+  else()
+    set(FALCO_VERSION "${FALCO_TAG}")
+    string(REGEX
+           REPLACE "^v([0-9]+)(\\.[0-9]+)(\\.[0-9]+)?"
+                   "\\1\\2\\3"
+                   FALCO_VERSION
+                   ${FALCO_VERSION})
+  endif()
 endif()
+message(STATUS "Falco version: ${FALCO_VERSION}")
 
 set(PACKAGE_NAME "falco")
 set(PROBE_VERSION "${FALCO_VERSION}")
@@ -74,10 +100,6 @@ if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 endif()
 
 set(CMD_MAKE make)
-
-if(NOT SYSDIG_DIR)
-	set(SYSDIG_DIR "${PROJECT_SOURCE_DIR}/../sysdig")
-endif()
 
 # make luaJIT work on OS X
 if(APPLE)
@@ -108,7 +130,7 @@ else()
         set(ZLIB_LIB "${ZLIB_SRC}/libz.a")
         ExternalProject_Add(zlib
 		# START CHANGE for CVE-2016-9840, CVE-2016-9841, CVE-2016-9842, CVE-2016-9843
-		URL "http://s3.amazonaws.com/download.draios.com/dependencies/zlib-1.2.11.tar.gz"
+		URL "https://s3.amazonaws.com/download.draios.com/dependencies/zlib-1.2.11.tar.gz"
                 URL_MD5 "1c9f62f0778697a09d36121ead88e08e"
 		# END CHANGE for CVE-2016-9840, CVE-2016-9841, CVE-2016-9842, CVE-2016-9843
 		CONFIGURE_COMMAND "./configure"
@@ -135,12 +157,12 @@ else()
         set(JQ_INCLUDE "${JQ_SRC}")
         set(JQ_LIB "${JQ_SRC}/.libs/libjq.a")
         ExternalProject_Add(jq
-                URL "http://s3.amazonaws.com/download.draios.com/dependencies/jq-1.5.tar.gz"
+                URL "https://s3.amazonaws.com/download.draios.com/dependencies/jq-1.5.tar.gz"
                 URL_MD5 "0933532b086bd8b6a41c1b162b1731f9"
                 CONFIGURE_COMMAND ./configure --disable-maintainer-mode --enable-all-static --disable-dependency-tracking
                 BUILD_COMMAND ${CMD_MAKE} LDFLAGS=-all-static
                 BUILD_IN_SOURCE 1
-		PATCH_COMMAND wget -O jq-1.5-fix-tokenadd.patch https://github.com/stedolan/jq/commit/8eb1367ca44e772963e704a700ef72ae2e12babd.patch && patch -i jq-1.5-fix-tokenadd.patch
+                PATCH_COMMAND curl -L https://github.com/stedolan/jq/commit/8eb1367ca44e772963e704a700ef72ae2e12babd.patch | patch
                 INSTALL_COMMAND "")
 endif()
 
@@ -167,7 +189,7 @@ else()
 	message(STATUS "Using bundled nlohmann-json in '${NJSON_SRC}'")
 	set(NJSON_INCLUDE "${NJSON_SRC}/single_include")
 	ExternalProject_Add(njson
-		URL "http://download.draios.com/dependencies/njson-3.3.0.tar.gz"
+		URL "https://s3.amazonaws.com/download.draios.com/dependencies/njson-3.3.0.tar.gz"
 		URL_MD5 "e26760e848656a5da400662e6c5d999a"
 		CONFIGURE_COMMAND ""
 		BUILD_COMMAND ""
@@ -191,7 +213,7 @@ else()
 	set(CURSES_LIBRARIES "${CURSES_BUNDLE_DIR}/lib/libncurses.a")
 	message(STATUS "Using bundled ncurses in '${CURSES_BUNDLE_DIR}'")
 	ExternalProject_Add(ncurses
-		URL "http://s3.amazonaws.com/download.draios.com/dependencies/ncurses-6.0-20150725.tgz"
+		URL "https://s3.amazonaws.com/download.draios.com/dependencies/ncurses-6.0-20150725.tgz"
 		URL_MD5 "32b8913312e738d707ae68da439ca1f4"
 		CONFIGURE_COMMAND ./configure --without-cxx --without-cxx-binding --without-ada --without-manpages --without-progs --without-tests --with-terminfo-dirs=/etc/terminfo:/lib/terminfo:/usr/share/terminfo
 		BUILD_COMMAND ${CMD_MAKE}
@@ -218,7 +240,7 @@ else()
 	set(B64_INCLUDE "${B64_SRC}/include")
 	set(B64_LIB "${B64_SRC}/src/libb64.a")
 	ExternalProject_Add(b64
-		URL "http://s3.amazonaws.com/download.draios.com/dependencies/libb64-1.2.src.zip"
+		URL "https://s3.amazonaws.com/download.draios.com/dependencies/libb64-1.2.src.zip"
 		URL_MD5 "a609809408327117e2c643bed91b76c5"
 		CONFIGURE_COMMAND ""
 		BUILD_COMMAND ${CMD_MAKE}
@@ -271,7 +293,7 @@ else()
 
 	ExternalProject_Add(openssl
 		# START CHANGE for CVE-2017-3735, CVE-2017-3731, CVE-2017-3737, CVE-2017-3738, CVE-2017-3736
-		URL "http://s3.amazonaws.com/download.draios.com/dependencies/openssl-1.0.2n.tar.gz"
+		URL "https://s3.amazonaws.com/download.draios.com/dependencies/openssl-1.0.2n.tar.gz"
                 URL_MD5 "13bdc1b1d1ff39b6fd42a255e74676a4"
 		# END CHANGE for CVE-2017-3735, CVE-2017-3731, CVE-2017-3737, CVE-2017-3738, CVE-2017-3736
 		CONFIGURE_COMMAND ./config shared --prefix=${OPENSSL_INSTALL_DIR}
@@ -304,7 +326,7 @@ else()
 	ExternalProject_Add(curl
 		DEPENDS openssl
 		# START CHANGE for CVE-2017-8816, CVE-2017-8817, CVE-2017-8818, CVE-2018-1000007
-		URL "http://s3.amazonaws.com/download.draios.com/dependencies/curl-7.61.0.tar.bz2"
+		URL "https://s3.amazonaws.com/download.draios.com/dependencies/curl-7.61.0.tar.bz2"
 		URL_MD5 "31d0a9f48dc796a7db351898a1e5058a"
 		# END CHANGE for CVE-2017-8816, CVE-2017-8817, CVE-2017-8818, CVE-2018-1000007
 		CONFIGURE_COMMAND ./configure ${CURL_SSL_OPTION} --disable-shared --enable-optimize --disable-curldebug --disable-rt --enable-http --disable-ftp --disable-file --disable-ldap --disable-ldaps --disable-rtsp --disable-telnet --disable-tftp --disable-pop3 --disable-imap --disable-smb --disable-smtp --disable-gopher --disable-sspi --disable-ntlm-wb --disable-tls-srp --without-winssl --without-darwinssl --without-polarssl --without-cyassl --without-nss --without-axtls --without-ca-path --without-ca-bundle --without-libmetalink --without-librtmp --without-winidn --without-libidn2 --without-libpsl --without-nghttp2 --without-libssh2 --disable-threaded-resolver --without-brotli
@@ -339,7 +361,7 @@ else()
 	set(LUAJIT_INCLUDE "${LUAJIT_SRC}")
 	set(LUAJIT_LIB "${LUAJIT_SRC}/libluajit.a")
 	ExternalProject_Add(luajit
-		URL "http://s3.amazonaws.com/download.draios.com/dependencies/LuaJIT-2.0.3.tar.gz"
+		URL "https://s3.amazonaws.com/download.draios.com/dependencies/LuaJIT-2.0.3.tar.gz"
 		URL_MD5 "f14e9104be513913810cd59c8c658dc0"
 		CONFIGURE_COMMAND ""
 		BUILD_COMMAND ${CMD_MAKE}
@@ -369,7 +391,7 @@ else()
 	endif()
 	ExternalProject_Add(lpeg
 		DEPENDS ${LPEG_DEPENDENCIES}
-		URL "http://s3.amazonaws.com/download.draios.com/dependencies/lpeg-1.0.0.tar.gz"
+		URL "https://s3.amazonaws.com/download.draios.com/dependencies/lpeg-1.0.0.tar.gz"
 		URL_MD5 "0aec64ccd13996202ad0c099e2877ece"
 		BUILD_COMMAND LUA_INCLUDE=${LUAJIT_INCLUDE} "${PROJECT_SOURCE_DIR}/scripts/build-lpeg.sh" "${LPEG_SRC}/build"
 		BUILD_IN_SOURCE 1
@@ -404,7 +426,7 @@ else()
 	set(LIBYAML_LIB "${LIBYAML_SRC}/.libs/libyaml.a")
 	message(STATUS "Using bundled libyaml in '${LIBYAML_SRC}'")
 	ExternalProject_Add(libyaml
-		URL "http://s3.amazonaws.com/download.draios.com/dependencies/libyaml-0.1.4.tar.gz"
+		URL "https://s3.amazonaws.com/download.draios.com/dependencies/libyaml-0.1.4.tar.gz"
 		URL_MD5 "4a4bced818da0b9ae7fc8ebc690792a7"
 		BUILD_COMMAND ${CMD_MAKE}
 		BUILD_IN_SOURCE 1
@@ -440,7 +462,7 @@ else()
 
 	ExternalProject_Add(lyaml
 		DEPENDS ${LYAML_DEPENDENCIES}
-		URL "http://s3.amazonaws.com/download.draios.com/dependencies/lyaml-release-v6.0.tar.gz"
+		URL "https://s3.amazonaws.com/download.draios.com/dependencies/lyaml-release-v6.0.tar.gz"
 		URL_MD5 "dc3494689a0dce7cf44e7a99c72b1f30"
 		BUILD_COMMAND ${CMD_MAKE}
 		BUILD_IN_SOURCE 1
@@ -465,7 +487,7 @@ else()
 	set(TBB_INCLUDE_DIR "${TBB_SRC}/include/")
 	set(TBB_LIB "${TBB_SRC}/build/lib_release/libtbb.a")
 	ExternalProject_Add(tbb
-		URL "http://s3.amazonaws.com/download.draios.com/dependencies/tbb-2018_U5.tar.gz"
+		URL "https://s3.amazonaws.com/download.draios.com/dependencies/tbb-2018_U5.tar.gz"
 		URL_MD5 "ff3ae09f8c23892fbc3008c39f78288f"
 		CONFIGURE_COMMAND ""
 		BUILD_COMMAND ${CMD_MAKE} tbb_build_dir=${TBB_SRC}/build tbb_build_prefix=lib extra_inc=big_iron.inc
@@ -497,7 +519,7 @@ else()
 	endif()
 	ExternalProject_Add(civetweb
 		DEPENDS ${CIVETWEB_DEPENDENCIES}
-		URL "http://s3.amazonaws.com/download.draios.com/dependencies/civetweb-1.11.tar.gz"
+		URL "https://s3.amazonaws.com/download.draios.com/dependencies/civetweb-1.11.tar.gz"
                 URL_MD5 "b6d2175650a27924bccb747cbe084cd4"
 		CONFIGURE_COMMAND ${CMAKE_COMMAND} -E make_directory ${CIVETWEB_SRC}/install/lib
 		          COMMAND ${CMAKE_COMMAND} -E make_directory ${CIVETWEB_SRC}/install/include
@@ -548,8 +570,8 @@ else()
 	set(PROTOBUF_LIB "${PROTOBUF_SRC}/target/lib/libprotobuf.a")
 	ExternalProject_Add(protobuf
 		DEPENDS openssl zlib
-		URL "https://github.com/google/protobuf/releases/download/v3.5.0/protobuf-cpp-3.5.0.tar.gz"
-		URL_MD5 "e4ba8284a407712168593e79e6555eb2"
+		URL "https://github.com/protocolbuffers/protobuf/releases/download/v3.8.0/protobuf-cpp-3.8.0.tar.gz"
+		URL_MD5 "9054bb5571905a28b3ae787d1d6cf8de"
 		# TODO what if using system zlib?
 		CONFIGURE_COMMAND /usr/bin/env CPPFLAGS=-I${ZLIB_INCLUDE} LDFLAGS=-L${ZLIB_SRC} ./configure --with-zlib --prefix=${PROTOBUF_SRC}/target
 		BUILD_COMMAND ${CMD_MAKE}
@@ -559,60 +581,75 @@ else()
 		INSTALL_COMMAND make install)
 endif()
 
-option(USE_BUNDLED_GRPC "Enable building of the bundled grpc" ${USE_BUNDLED_DEPS})
-if(NOT USE_BUNDLED_GRPC)
-	find_path(GRPC_INCLUDE grpc++/impl/codegen/rpc_method.h)
-	find_library(GRPC_LIB NAMES libgrpc_unsecure.a)
-	find_library(GRPCPP_LIB NAMES libgrpc++_unsecure.a)
-	if(GRPC_INCLUDE AND GRPC_LIB AND GRPCPP_LIB)
-		message(STATUS "Found grpc: include: ${GRPC_INCLUDE}, C lib: ${GRPC_LIB}, C++ lib: ${GRPC_PP_LIB}")
+	option(USE_BUNDLED_GRPC "Enable building of the bundled grpc" ${USE_BUNDLED_DEPS})
+	if(NOT USE_BUNDLED_GRPC)
+		find_path(GRPCXX_INCLUDE NAMES grpc++/grpc++.h)
+		if(GRPCXX_INCLUDE)
+			set(GRPC_INCLUDE ${GRPCXX_INCLUDE})
+		else()
+			find_path(GRPCPP_INCLUDE NAMES grpcpp/grpcpp.h)
+			set(GRPC_INCLUDE ${GRPCPP_INCLUDE})
+			add_definitions(-DGRPC_INCLUDE_IS_GRPCPP=1)
+		endif()
+		find_library(GRPC_LIB NAMES grpc)
+		find_library(GRPCPP_LIB NAMES grpc++)
+		if(GRPC_INCLUDE AND GRPC_LIB AND GRPCPP_LIB)
+			message(STATUS "Found grpc: include: ${GRPC_INCLUDE}, C lib: ${GRPC_LIB}, C++ lib: ${GRPCPP_LIB}")
+		else()
+			message(FATAL_ERROR "Couldn't find system grpc")
+		endif()
+		find_program(GRPC_CPP_PLUGIN grpc_cpp_plugin)
+		if(NOT GRPC_CPP_PLUGIN)
+			message(FATAL_ERROR "System grpc_cpp_plugin not found")
+		endif()
 	else()
-		message(FATAL_ERROR "Couldn't find system grpc")
-	endif()
-	find_program(GRPC_CPP_PLUGIN grpc_cpp_plugin)
-	if(NOT GRPC_CPP_PLUGIN)
-		message(FATAL_ERROR "System grpc_cpp_plugin not found")
-	endif()
-else()
-	set(GRPC_SRC "${PROJECT_BINARY_DIR}/grpc-prefix/src/grpc")
-	message(STATUS "Using bundled grpc in '${GRPC_SRC}'")
-	set(GRPC_INCLUDE "${GRPC_SRC}/include")
-	set(GRPC_LIB "${GRPC_SRC}/libs/opt/libgrpc_unsecure.a")
-	set(GRPCPP_LIB "${GRPC_SRC}/libs/opt/libgrpc++_unsecure.a")
-	set(GRPC_CPP_PLUGIN "${GRPC_SRC}/bins/opt/grpc_cpp_plugin")
+		find_package(PkgConfig)
+		if(NOT PKG_CONFIG_FOUND)
+			message(FATAL_ERROR "pkg-config binary not found")
+		endif()
+		message(STATUS "Found pkg-config executable: ${PKG_CONFIG_EXECUTABLE}")
+		set(GRPC_SRC "${PROJECT_BINARY_DIR}/grpc-prefix/src/grpc")
+		message(STATUS "Using bundled grpc in '${GRPC_SRC}'")
+		set(GRPC_INCLUDE "${GRPC_SRC}/include")
+		set(GRPC_LIB "${GRPC_SRC}/libs/opt/libgrpc.a")
+		set(GRPCPP_LIB "${GRPC_SRC}/libs/opt/libgrpc++.a")
+		set(GRPC_CPP_PLUGIN "${GRPC_SRC}/bins/opt/grpc_cpp_plugin")
 
-	get_filename_component(PROTOC_DIR ${PROTOC} DIRECTORY)
+		get_filename_component(PROTOC_DIR ${PROTOC} PATH)
 
-	ExternalProject_Add(grpc
-		DEPENDS protobuf zlib c-ares
-		URL "http://download.draios.com/dependencies/grpc-1.8.1.tar.gz"
-		URL_MD5 "2fc42c182a0ed1b48ad77397f76bb3bc"
+		ExternalProject_Add(grpc
+		DEPENDS protobuf zlib c-ares openssl
+		URL "https://github.com/grpc/grpc/archive/v1.25.0.tar.gz"
+		URL_MD5 "3a875f7b3f0e3bdd3a603500bcef3d41"
 		CONFIGURE_COMMAND ""
 		# TODO what if using system openssl, protobuf or cares?
-		BUILD_COMMAND sh -c "CFLAGS=-Wno-implicit-fallthrough CXXFLAGS=\"-Wno-ignored-qualifiers -Wno-stringop-truncation\" HAS_SYSTEM_ZLIB=false LDFLAGS=-static PATH=${PROTOC_DIR}:$ENV{PATH} PKG_CONFIG_PATH=${OPENSSL_BUNDLE_DIR}:${PROTOBUF_SRC}:${CARES_SRC} make grpc_cpp_plugin static_cxx static_c"
+		BUILD_COMMAND CFLAGS=-Wno-implicit-fallthrough HAS_SYSTEM_ZLIB=false LDFLAGS=-static PATH=${PROTOC_DIR}:$ENV{PATH} PKG_CONFIG_PATH=${OPENSSL_BUNDLE_DIR}:${PROTOBUF_SRC}:${CARES_SRC} PKG_CONFIG=${PKG_CONFIG_EXECUTABLE} make grpc_cpp_plugin static_cxx static_c
 		BUILD_IN_SOURCE 1
 		BUILD_BYPRODUCTS ${GRPC_LIB} ${GRPCPP_LIB}
 		# TODO s390x support
 		# TODO what if using system zlib
-		PATCH_COMMAND rm -rf third_party/zlib && ln -s ${ZLIB_SRC} third_party/zlib && wget https://download.sysdig.com/dependencies/grpc-1.1.4-Makefile.patch && patch < grpc-1.1.4-Makefile.patch
+		PATCH_COMMAND rm -rf third_party/zlib && ln -s ${ZLIB_SRC} third_party/zlib && patch -p1 < ${PROJECT_SOURCE_DIR}/cmake/patch/grpc-1.25.0-Makefile.patch
 		INSTALL_COMMAND "")
-endif()
-
+	endif()
 
 install(FILES falco.yaml
 	DESTINATION "${FALCO_ETC_DIR}")
 
+if(FALCO_COVERAGE)
+    if (NOT (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")))
+        message(FATAL_ERROR "FALCO_COVERAGE requires GCC or Clang.")
+    endif()
+
+    message(STATUS "Building with coverage information")
+    add_compile_options(-g --coverage)
+    set(CMAKE_SHARED_LINKER_FLAGS "--coverage ${CMAKE_SHARED_LINKER_FLAGS}")
+    set(CMAKE_EXE_LINKER_FLAGS "--coverage ${CMAKE_EXE_LINKER_FLAGS}")
+endif()
+
+
 add_subdirectory(test)
 add_subdirectory(rules)
 add_subdirectory(docker)
-
-# Add path for custom CMake modules used to build dependencies from Sysdig (libscap, libsinsp)
-list(APPEND CMAKE_MODULE_PATH
-	"${SYSDIG_DIR}/cmake/modules")
-
-# Add path for custom CMake modules
-list(APPEND CMAKE_MODULE_PATH
-	"${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
 
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
 	add_subdirectory("${SYSDIG_DIR}/driver" "${PROJECT_BINARY_DIR}/driver")
@@ -630,10 +667,10 @@ add_subdirectory(userspace/engine)
 add_subdirectory(userspace/falco)
 add_subdirectory(tests)
 
-
 set(CPACK_PACKAGE_NAME "${PACKAGE_NAME}")
-set(CPACK_PACKAGE_VENDOR "Sysdig Inc.")
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "falco, a system-level activity monitoring tool")
+set(CPACK_PACKAGE_VENDOR "Cloud Native Computing Foundation (CNCF) cncf.io.")
+set(CPACK_PACKAGE_CONTACT "opensource@sysdig.com")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Falco - Container Native Runtime Security")
 set(CPACK_PACKAGE_DESCRIPTION_FILE "${PROJECT_SOURCE_DIR}/scripts/description.txt")
 set(CPACK_PACKAGE_VERSION "${FALCO_VERSION}")
 set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${CMAKE_SYSTEM_PROCESSOR}")
@@ -643,19 +680,19 @@ set(CPACK_PACKAGE_RELOCATABLE "OFF")
 
 set(CPACK_GENERATOR DEB RPM TGZ)
 
-set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Sysdig <support@sysdig.com>")
 set(CPACK_DEBIAN_PACKAGE_SECTION "utils")
-set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "http://www.sysdig.org")
+set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "amd64")
+set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "https://www.falco.org")
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "dkms (>= 2.1.0.0)")
 set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "${CMAKE_BINARY_DIR}/scripts/debian/postinst;${CMAKE_BINARY_DIR}/scripts/debian/prerm;${PROJECT_SOURCE_DIR}/scripts/debian/postrm;${PROJECT_SOURCE_DIR}/cpack/debian/conffiles")
 
 set(CPACK_RPM_PACKAGE_LICENSE "Apache v2.0")
-set(CPACK_RPM_PACKAGE_URL "http://www.sysdig.org")
+set(CPACK_RPM_PACKAGE_URL "https://www.falco.org")
 set(CPACK_RPM_PACKAGE_REQUIRES "dkms, gcc, make, kernel-devel, perl")
 set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE "${PROJECT_SOURCE_DIR}/scripts/rpm/postinstall")
 set(CPACK_RPM_PRE_UNINSTALL_SCRIPT_FILE "${PROJECT_SOURCE_DIR}/scripts/rpm/preuninstall")
 set(CPACK_RPM_POST_UNINSTALL_SCRIPT_FILE "${PROJECT_SOURCE_DIR}/scripts/rpm/postuninstall")
-set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION /usr/src /usr/share/man /usr/share/man/man8 /etc /usr /usr/bin /usr/share /etc/rc.d /etc/rc.d/init.d )
+set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION /usr/src /usr/share/man /usr/share/man/man8 /etc /usr /usr/bin /usr/share /etc/rc.d /etc/rc.d/init.d)
 set(CPACK_RPM_PACKAGE_RELOCATABLE "OFF")
 
 include(CPack)

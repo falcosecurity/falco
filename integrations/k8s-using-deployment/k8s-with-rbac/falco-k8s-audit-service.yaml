@@ -1,0 +1,13 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: falco-k8s-audit
+  labels:
+    app: falco-k8s-audit
+    role: security
+spec:
+  selector:
+    app: falco-k8s-audit
+  ports:
+  - protocol: TCP
+    port: 8765

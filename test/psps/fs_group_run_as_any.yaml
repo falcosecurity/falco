@@ -1,0 +1,10 @@
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  annotations:
+    falco-rules-psp-images: "[nginx]"
+  name: fs_group_run_as_any
+spec:
+  fsGroup:
+    rule: "RunAsAny"
+

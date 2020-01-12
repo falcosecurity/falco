@@ -1,7 +1,5 @@
 /*
-Copyright (C) 2016-2018 Draios Inc dba Sysdig.
-
-This file is part of falco.
+Copyright (C) 2019 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,22 +12,25 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
 */
+
+#include <google/protobuf/util/time_util.h>
 
 #include "falco_outputs.h"
 
 #include "config_falco.h"
 
-
 #include "formats.h"
 #include "logger.h"
+#include "falco_output_queue.h"
 
 using namespace std;
+using namespace falco::output;
 
 const static struct luaL_reg ll_falco_outputs [] =
 {
 	{"handle_http", &falco_outputs::handle_http},
+	{"handle_grpc", &falco_outputs::handle_grpc},
 	{NULL,NULL}
 };
 
@@ -38,7 +39,8 @@ falco_outputs::falco_outputs(falco_engine *engine)
 	  m_initialized(false),
 	  m_buffered(true),
 	  m_json_output(false),
-	  m_time_format_iso_8601(false)
+	  m_time_format_iso_8601(false),
+	  m_hostname("")
 {
 
 }
@@ -53,7 +55,6 @@ falco_outputs::~falco_outputs()
 	if(m_initialized)
 	{
 		lua_getglobal(m_ls, m_lua_output_cleanup.c_str());
-
 		if(!lua_isfunction(m_ls, -1))
 		{
 			falco_logger::log(LOG_ERR, std::string("No function ") + m_lua_output_cleanup + " found. ");
@@ -72,7 +73,7 @@ falco_outputs::~falco_outputs()
 void falco_outputs::init(bool json_output,
 			 bool json_include_output_property,
 			 uint32_t rate, uint32_t max_burst, bool buffered,
-			 bool time_format_iso_8601)
+			 bool time_format_iso_8601, string hostname)
 {
 	// The engine must have been given an inspector by now.
 	if(! m_inspector)
@@ -97,6 +98,7 @@ void falco_outputs::init(bool json_output,
 
 	m_buffered = buffered;
 	m_time_format_iso_8601 = time_format_iso_8601;
+	m_hostname = hostname;
 
 	m_initialized = true;
 }
@@ -144,6 +146,7 @@ void falco_outputs::handle_event(gen_event *ev, string &rule, string &source,
 		return;
 	}
 
+	std::lock_guard<std::mutex> guard(m_ls_semaphore);
 	lua_getglobal(m_ls, m_lua_output_event.c_str());
 
 	if(lua_isfunction(m_ls, -1))
@@ -154,8 +157,9 @@ void falco_outputs::handle_event(gen_event *ev, string &rule, string &source,
 		lua_pushstring(m_ls, falco_common::priority_names[priority].c_str());
 		lua_pushnumber(m_ls, priority);
 		lua_pushstring(m_ls, format.c_str());
+		lua_pushstring(m_ls, m_hostname.c_str());
 
-		if(lua_pcall(m_ls, 6, 0, 0) != 0)
+		if(lua_pcall(m_ls, 7, 0, 0) != 0)
 		{
 			const char* lerr = lua_tostring(m_ls, -1);
 			string err = "Error invoking function output: " + string(lerr);
@@ -166,7 +170,6 @@ void falco_outputs::handle_event(gen_event *ev, string &rule, string &source,
 	{
 		throw falco_exception("No function " + m_lua_output_event + " found in lua compiler module");
 	}
-
 }
 
 void falco_outputs::handle_msg(uint64_t now,
@@ -206,7 +209,7 @@ void falco_outputs::handle_msg(uint64_t now,
 		bool first = true;
 
 		sinsp_utils::ts_to_string(now, &timestr, false, true);
-		full_msg = timestr + ": " + falco_common::priority_names[LOG_CRIT] + " " + msg + "(";
+		full_msg = timestr + ": " + falco_common::priority_names[LOG_CRIT] + " " + msg + " (";
 		for(auto &pair : output_fields)
 		{
 			if(first)
@@ -222,8 +225,8 @@ void falco_outputs::handle_msg(uint64_t now,
 		full_msg += ")";
 	}
 
+	std::lock_guard<std::mutex> guard(m_ls_semaphore);
 	lua_getglobal(m_ls, m_lua_output_msg.c_str());
-
 	if(lua_isfunction(m_ls, -1))
 	{
 		lua_pushstring(m_ls, full_msg.c_str());
@@ -247,7 +250,6 @@ void falco_outputs::handle_msg(uint64_t now,
 void falco_outputs::reopen_outputs()
 {
 	lua_getglobal(m_ls, m_lua_output_reopen.c_str());
-
 	if(!lua_isfunction(m_ls, -1))
 	{
 		throw falco_exception("No function " + m_lua_output_reopen + " found. ");
@@ -267,8 +269,8 @@ int falco_outputs::handle_http(lua_State *ls)
 	struct curl_slist *slist1;
 	slist1 = NULL;
 
-	if (!lua_isstring(ls, -1) ||
-	    !lua_isstring(ls, -2))
+	if(!lua_isstring(ls, -1) ||
+	   !lua_isstring(ls, -2))
 	{
 		lua_pushstring(ls, "Invalid arguments passed to handle_http()");
 		lua_error(ls);
@@ -294,7 +296,74 @@ int falco_outputs::handle_http(lua_State *ls)
 		curl_easy_cleanup(curl);
 		curl = NULL;
 		curl_slist_free_all(slist1);
-  		slist1 = NULL;
+		slist1 = NULL;
 	}
+	return 1;
+}
+
+int falco_outputs::handle_grpc(lua_State *ls)
+{
+	// check parameters
+	if(!lua_islightuserdata(ls, -8) ||
+	   !lua_isstring(ls, -7) ||
+	   !lua_isstring(ls, -6) ||
+	   !lua_isstring(ls, -5) ||
+	   !lua_isstring(ls, -4) ||
+	   !lua_istable(ls, -3) ||
+	   !lua_isstring(ls, -2) ||
+	   !lua_istable(ls, -1))
+	{
+		lua_pushstring(ls, "Invalid arguments passed to handle_grpc()");
+		lua_error(ls);
+	}
+
+	response grpc_res = response();
+
+	// time
+	gen_event* evt = (gen_event*)lua_topointer(ls, 1);
+	auto& timestamp = *grpc_res.mutable_time();
+	timestamp = google::protobuf::util::TimeUtil::NanosecondsToTimestamp(evt->get_ts());
+
+	// rule
+	grpc_res.set_rule((char *)lua_tostring(ls, 2));
+
+	// source
+	falco::schema::source s = falco::schema::source::SYSCALL;
+	string sstr = (char *)lua_tostring(ls, 3);
+	if(!falco::schema::source_Parse(sstr, &s))
+	{
+		lua_pushstring(ls, "Unknown source passed to to handle_grpc()");
+		lua_error(ls);
+	}
+	grpc_res.set_source(s);
+
+	// priority
+	falco::schema::priority p = falco::schema::priority::EMERGENCY;
+	string pstr = (char *)lua_tostring(ls, 4);
+	if(!falco::schema::priority_Parse(pstr, &p))
+	{
+		lua_pushstring(ls, "Unknown priority passed to to handle_grpc()");
+		lua_error(ls);
+	}
+	grpc_res.set_priority(p);
+
+	// output
+	grpc_res.set_output((char *)lua_tostring(ls, 5));
+
+	// output fields
+	auto& fields = *grpc_res.mutable_output_fields();
+
+	lua_pushnil(ls); // so that lua_next removes it from stack and puts (k, v) on it
+	while (lua_next(ls, 6) != 0) {
+		fields[lua_tostring(ls, -2)] = lua_tostring(ls, -1);
+		lua_pop(ls, 1); // remove value, keep key for lua_next
+	}
+	lua_pop(ls, 1); // pop table
+
+	// hostname
+	grpc_res.set_hostname((char* )lua_tostring(ls, 7));
+
+	falco::output::queue::get().push(grpc_res);
+
 	return 1;
 }

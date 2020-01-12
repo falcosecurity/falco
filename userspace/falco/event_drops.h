@@ -1,7 +1,5 @@
 /*
-Copyright (C) 2016-2019 Draios Inc dba Sysdig.
-
-This file is part of falco.
+Copyright (C) 2019 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,7 +12,6 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
 */
 #pragma once
 
@@ -29,7 +26,6 @@ limitations under the License.
 class syscall_evt_drop_mgr
 {
 public:
-
 	// The possible actions that this class can take upon
 	// detecting a syscall event drop.
 	enum action
@@ -60,7 +56,6 @@ public:
 	void print_stats();
 
 protected:
-
 	// Perform all configured actions.
 	bool perform_actions(uint64_t now, scap_stats &delta, bool bpf_enabled);
 
@@ -74,5 +69,3 @@ protected:
 	scap_stats m_last_stats;
 	bool m_simulate_drops;
 };
-
-

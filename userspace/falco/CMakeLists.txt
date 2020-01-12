@@ -1,7 +1,6 @@
 #
-# Copyright (C) 2016-2018 Draios Inc dba Sysdig.
+# Copyright (C) 2019 The Falco Authors.
 #
-# This file is part of falco .
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,6 +20,18 @@ endif()
 
 configure_file("${SYSDIG_DIR}/userspace/sysdig/config_sysdig.h.in" config_sysdig.h)
 
+add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/output.grpc.pb.cc
+	${CMAKE_CURRENT_BINARY_DIR}/output.grpc.pb.h
+	${CMAKE_CURRENT_BINARY_DIR}/output.pb.cc
+	${CMAKE_CURRENT_BINARY_DIR}/output.pb.h
+	${CMAKE_CURRENT_BINARY_DIR}/schema.pb.cc
+	${CMAKE_CURRENT_BINARY_DIR}/schema.pb.h
+	COMMENT "Generate gRPC code"
+	DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/output.proto
+	COMMAND ${PROTOC} -I ${CMAKE_CURRENT_SOURCE_DIR} --cpp_out=. ${CMAKE_CURRENT_SOURCE_DIR}/output.proto ${CMAKE_CURRENT_SOURCE_DIR}/schema.proto
+	COMMAND ${PROTOC} -I ${CMAKE_CURRENT_SOURCE_DIR} --grpc_out=. --plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN} ${CMAKE_CURRENT_SOURCE_DIR}/output.proto
+	WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
 add_executable(falco
 	configuration.cpp
 	logger.cpp
@@ -29,7 +40,14 @@ add_executable(falco
 	statsfilewriter.cpp
 	falco.cpp
 	"${SYSDIG_DIR}/userspace/sysdig/fields_info.cpp"
-	webserver.cpp)
+	webserver.cpp
+	grpc_context.cpp
+	grpc_server_impl.cpp
+	grpc_server.cpp
+	utils.cpp
+	${CMAKE_CURRENT_BINARY_DIR}/output.grpc.pb.cc
+	${CMAKE_CURRENT_BINARY_DIR}/output.pb.cc
+	${CMAKE_CURRENT_BINARY_DIR}/schema.pb.cc)
 
 target_include_directories(falco PUBLIC
 	"${SYSDIG_DIR}/userspace/sysdig"
@@ -38,10 +56,18 @@ target_include_directories(falco PUBLIC
 	"${PROJECT_BINARY_DIR}/driver/src"
 	"${YAMLCPP_INCLUDE_DIR}"
 	"${CIVETWEB_INCLUDE_DIR}"
+	"${GRPC_INCLUDE}"
+	"${PROTOBUF_INCLUDE}"
+	"${CMAKE_CURRENT_BINARY_DIR}"
 	"${DRAIOS_DEPENDENCIES_DIR}/yaml-${DRAIOS_YAML_VERSION}/target/include")
+
+
 
 target_link_libraries(falco falco_engine sinsp)
 target_link_libraries(falco
+	"${GRPCPP_LIB}"
+	"${GRPC_LIB}"
+	"${PROTOBUF_LIB}"
 	"${LIBYAML_LIB}"
 	"${YAMLCPP_LIB}"
 	"${CIVETWEB_LIB}")
