@@ -59,7 +59,8 @@ Now that we have the requirements for our Daemon Set in place, we can create our
 
 ```
 k8s-using-daemonset$ kubectl create -f k8s-with-rbac/falco-daemonset-configmap.yaml
-daemonset "falco" created
+daemonset.extensions "falco-daemonset" created
+
 k8s-using-daemonset$
 ```
 
