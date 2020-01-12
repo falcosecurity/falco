@@ -1,7 +1,5 @@
 /*
-Copyright (C) 2016-2018 Draios Inc dba Sysdig.
-
-This file is part of falco.
+Copyright (C) 2019 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,7 +12,6 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
 */
 
 #include "rules.h"
@@ -299,7 +296,7 @@ void falco_rules::load_rules(const string &rules_content,
 
 		for(uint32_t j = 0; j < PPM_EVENT_MAX; j++)
 		{
-			if(etable[j].flags & EF_DROP_FALCO)
+			if(etable[j].flags & EF_DROP_SIMPLE_CONS)
 			{
 				lua_pushstring(m_ls, etable[j].name);
 				lua_pushnumber(m_ls, 1);
@@ -313,7 +310,7 @@ void falco_rules::load_rules(const string &rules_content,
 
 		for(uint32_t j = 0; j < PPM_SC_MAX; j++)
 		{
-			if(stable[j].flags & EF_DROP_FALCO)
+			if(stable[j].flags & EF_DROP_SIMPLE_CONS)
 			{
 				lua_pushstring(m_ls, stable[j].name);
 				lua_pushnumber(m_ls, 1);
@@ -447,7 +444,7 @@ void falco_rules::load_rules(const string &rules_content,
 			throw falco_exception(err);
 		}
 
-		lua_pop(m_ls, 4);
+		lua_pop(m_ls, 2);
 
 	} else {
 		throw falco_exception("No function " + m_lua_load_rules + " found in lua rule module");

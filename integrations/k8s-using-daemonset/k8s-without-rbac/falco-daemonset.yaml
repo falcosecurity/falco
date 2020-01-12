@@ -26,6 +26,7 @@ spec:
               name: containerd-socket
             - mountPath: /host/dev
               name: dev-fs
+              readOnly: true
             - mountPath: /host/proc
               name: proc-fs
               readOnly: true

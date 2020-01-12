@@ -1,7 +1,6 @@
 #
-# Copyright (C) 2016-2018 Draios Inc dba Sysdig.
+# Copyright (C) 2019 The Falco Authors.
 #
-# This file is part of falco .
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,9 +17,9 @@
 language: cpp
 compiler: gcc
 env:
-    - BUILD_TYPE=Debug
-    - BUILD_TYPE=Release
-sudo: required
+    - BUILD_TYPE=debug
+    - BUILD_TYPE=release
+dist: xenial
 services:
     - docker
 before_install:
@@ -29,19 +28,7 @@ install:
     - export BRANCH=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)
     - sudo apt-get install rpm linux-headers-$(uname -r) libelf-dev
     - git clone https://github.com/draios/sysdig.git ../sysdig
-    # if available, use the branch with the same name in sysdig
-    - pushd ../sysdig && (git checkout "${BRANCH}" || exit 0) && echo "Using sysdig branch:" $(git rev-parse --abbrev-ref HEAD) && popd
+    - pushd ../sysdig && (git checkout "${BRANCH}" || exit 0) && echo "Using branch:" $(git rev-parse --abbrev-ref HEAD) && popd
 script:
     - mkdir build
-    - cd build
-    - docker run --user $(id -u):$(id -g) -v /etc/passwd:/etc/passwd:ro -e MAKE_JOBS=4 -v $TRAVIS_BUILD_DIR/..:/source -v $TRAVIS_BUILD_DIR/build:/build falcosecurity/falco-builder cmake
-    - docker run --user $(id -u):$(id -g) -v /etc/passwd:/etc/passwd:ro -e MAKE_JOBS=4 -v $TRAVIS_BUILD_DIR/..:/source -v $TRAVIS_BUILD_DIR/build:/build falcosecurity/falco-builder package
-    - docker run --user $(id -u):$(id -g) -v /etc/passwd:/etc/passwd:ro -e MAKE_JOBS=1 -v $TRAVIS_BUILD_DIR/..:/source -v $TRAVIS_BUILD_DIR/build:/build falcosecurity/falco-builder tests
-    - docker run -v /boot:/boot:ro -v /var/run/docker.sock:/var/run/docker.sock -v /etc/passwd:/etc/passwd:ro -e MAKE_JOBS=4 -v $TRAVIS_BUILD_DIR/..:/source -v $TRAVIS_BUILD_DIR/build:/build falcosecurity/falco-tester
-notifications:
-  webhooks:
-    urls:
-#      - https://webhooks.gitter.im/e/fdbc2356fb0ea2f15033
-    on_success: change
-    on_failure: always
-    on_start: never
+    - ./scripts/build "${TRAVIS_BUILD_DIR}/.." "${TRAVIS_BUILD_DIR}/build"

@@ -1,7 +1,5 @@
 /*
-Copyright (C) 2018 Draios inc.
-
-This file is part of falco.
+Copyright (C) 2019 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,7 +12,6 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
 */
 
 #pragma once
@@ -24,7 +21,6 @@ limitations under the License.
 #include <vector>
 #include <list>
 #include <map>
-#include <regex>
 
 #include "sinsp.h"
 #include "filter.h"
@@ -48,9 +44,9 @@ public:
         // specifying unnecessarily large rulesets will result in
         // unnecessarily large vectors.
 
-	// Find those rules matching the provided pattern and set
+	// Find those rules matching the provided substring and set
 	// their enabled status to enabled.
-	void enable(const std::string &pattern, bool enabled, uint16_t ruleset = 0);
+	void enable(const std::string &substring, bool enabled, uint16_t ruleset = 0);
 
 	// Find those rules that have a tag in the set of tags and set
 	// their enabled status to enabled. Note that the enabled

@@ -1,0 +1,11 @@
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  annotations:
+    falco-rules-psp-images: "[nginx]"
+  name: host_ports_100_200_only
+spec:
+  hostNetwork: true
+  hostPorts:
+    - min: 100
+      max: 200

@@ -1,7 +1,6 @@
 #
-# Copyright (C) 2016-2018 Draios Inc dba Sysdig.
+# Copyright (C) 2019 The Falco Authors.
 #
-# This file is part of falco.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,6 +15,68 @@
 # limitations under the License.
 #
 trace_files: !mux
+
+  compat_engine_v4_create_disallowed_pod:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - ../rules/falco_rules.yaml
+      - ./rules/k8s_audit/engine_v4_k8s_audit_rules.yaml
+      - ./rules/k8s_audit/engine_v4/allow_only_apache_container.yaml
+    detect_counts:
+      - Create Disallowed Pod: 1
+    trace_file: trace_files/k8s_audit/create_nginx_pod_unprivileged.json
+
+  compat_engine_v4_create_allowed_pod:
+    detect: False
+    rules_file:
+      - ../rules/falco_rules.yaml
+      - ./rules/k8s_audit/engine_v4_k8s_audit_rules.yaml
+      - ./rules/k8s_audit/engine_v4/allow_nginx_container.yaml
+    trace_file: trace_files/k8s_audit/create_nginx_pod_unprivileged.json
+
+  compat_engine_v4_create_privileged_pod:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - ../rules/falco_rules.yaml
+      - ./rules/k8s_audit/engine_v4_k8s_audit_rules.yaml
+    detect_counts:
+      - Create Privileged Pod: 1
+    trace_file: trace_files/k8s_audit/create_nginx_pod_privileged.json
+
+  compat_engine_v4_create_privileged_trusted_pod:
+    detect: False
+    rules_file:
+      - ../rules/falco_rules.yaml
+      - ./rules/k8s_audit/engine_v4_k8s_audit_rules.yaml
+      - ./rules/k8s_audit/trust_nginx_container.yaml
+    trace_file: trace_files/k8s_audit/create_nginx_pod_privileged.json
+
+  compat_engine_v4_create_unprivileged_pod:
+    detect: False
+    rules_file:
+      - ../rules/falco_rules.yaml
+      - ./rules/k8s_audit/engine_v4_k8s_audit_rules.yaml
+    trace_file: trace_files/k8s_audit/create_nginx_pod_unprivileged.json
+
+  compat_engine_v4_create_hostnetwork_pod:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - ../rules/falco_rules.yaml
+      - ./rules/k8s_audit/engine_v4_k8s_audit_rules.yaml
+    detect_counts:
+      - Create HostNetwork Pod: 1
+    trace_file: trace_files/k8s_audit/create_nginx_pod_hostnetwork.json
+
+  compat_engine_v4_create_hostnetwork_trusted_pod:
+    detect: False
+    rules_file:
+      - ../rules/falco_rules.yaml
+      - ./rules/k8s_audit/engine_v4_k8s_audit_rules.yaml
+      - ./rules/k8s_audit/trust_nginx_container.yaml
+    trace_file: trace_files/k8s_audit/create_nginx_pod_hostnetwork.json
 
   user_outside_allowed_set:
     detect: True

@@ -15,7 +15,7 @@ CUR_CHECKSUM=$(grep FALCO_FIELDS_CHECKSUM ${SOURCE_DIR}/userspace/engine/falco_e
 
 
 if [ $NEW_CHECKSUM != $CUR_CHECKSUM ]; then
-    echo "Set of fields supported by falco/sysdig libraries has changed (new checksum $NEW_CHECKSUM != old checksum $CUR_CHECKSUM)."
+    echo "Set of fields supported has changed (new checksum $NEW_CHECKSUM != old checksum $CUR_CHECKSUM)."
     echo "Update checksum and/or version in falco_engine_version.h."
     exit 1
 fi

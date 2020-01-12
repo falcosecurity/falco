@@ -1,7 +1,7 @@
+#!/usr/bin/env bash
 #
-# Copyright (C) 2016-2018 Draios Inc dba Sysdig.
+# Copyright (C) 2019 The Falco Authors.
 #
-# This file is part of falco.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,11 +16,9 @@
 # limitations under the License.
 #
 
-#!/bin/bash
-
-cat ../sysdig/userspace/libscap/syscall_info_table.c | grep EF_DROP_FALCO | sed -e 's/.*\"\(.*\)\".*/\1/'  | sort > ignored_syscall_info_table.txt
-cat ../sysdig/driver/event_table.c | grep EF_DROP_FALCO | sed -e 's/[^\"]*\"\([^\"]*\)\".*/\1/' | sort | uniq > ignored_driver_event_table.txt
-cat ../sysdig/userspace/libscap/event_table.c | grep EF_DROP_FALCO | sed -e 's/[^\"]*\"\([^\"]*\)\".*/\1/' | sort | uniq > ignored_userspace_event_table.txt
+cat ../sysdig/userspace/libscap/syscall_info_table.c | grep EF_DROP_SIMPLE_CONS | sed -e 's/.*\"\(.*\)\".*/\1/'  | sort > ignored_syscall_info_table.txt
+cat ../sysdig/driver/event_table.c | grep EF_DROP_SIMPLE_CONS | sed -e 's/[^\"]*\"\([^\"]*\)\".*/\1/' | sort | uniq > ignored_driver_event_table.txt
+cat ../sysdig/userspace/libscap/event_table.c | grep EF_DROP_SIMPLE_CONS | sed -e 's/[^\"]*\"\([^\"]*\)\".*/\1/' | sort | uniq > ignored_userspace_event_table.txt
 
 
 diff -up ignored_driver_event_table.txt ignored_userspace_event_table.txt

@@ -1,0 +1,32 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: falco-k8s-audit
+  labels:
+    app: falco-k8s-audit
+    role: security
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: falco-k8s-audit
+  template:
+    metadata:
+      labels:
+        app: falco-k8s-audit
+        role: security
+    spec:
+      serviceAccount: falco-account
+      containers:
+        - name: falco
+          image: falcosecurity/falco:latest
+          securityContext:
+            privileged: true
+          args: [ "/usr/bin/falco", "--disable-source", "syscall", "-K", "/var/run/secrets/kubernetes.io/serviceaccount/token", "-k", "https://$(KUBERNETES_SERVICE_HOST)", "-pk"]
+          volumeMounts:
+            - mountPath: /etc/falco
+              name: falco-config
+      volumes:
+        - name: falco-config
+          configMap:
+            name: falco-config
