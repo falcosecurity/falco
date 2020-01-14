@@ -1,5 +1,6 @@
 version: 2
 jobs:
+  # generic ubuntu build
   build:
     docker:
       - image: ubuntu:bionic
@@ -25,3 +26,27 @@ jobs:
             pushd build
             make tests
             popd
+  # build using our own builder base image
+  builder:
+    docker:
+      - image: falcosecurity/falco-builder:dynamic-build # todo(fntlnz): replace this with the actual image once PR #968 is merged
+    steps:
+      - checkout
+      - run:
+          name: prepare project
+          command: cmake
+      - persist_to_workspace:
+          root: .
+          paths:
+            - build/*
+  # execute integration tests based on the build results coming from the "builder" job
+  integration:
+    docker:
+      - image: falcosecurity/falco-tester:latest
+    steps:
+      - checkout
+      - attach_workspace:
+          at: build
+      - run:
+          name: prepare project
+          command: cmake
