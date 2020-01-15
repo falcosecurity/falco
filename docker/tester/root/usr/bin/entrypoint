@@ -24,7 +24,11 @@ case "$CMD" in
         exit 1
     fi
     if [ -z "$FALCO_VERSION" ]; then
-        echo "Missing Falco version." >&2
+        echo "Automatically figuring out Falco version."
+        FALCO_VERSION=$($BUILD_DIR/$BUILD_TYPE/userspace/falco/falco --version | cut -d' ' -f3 | tr -d '\r')
+    fi
+    if [ -z "$FALCO_VERSION" ]; then
+        echo "Falco version cannot be guessed, please provide it with the FALCO_VERSION environment variable." >&2
         exit 1
     fi
     PACKAGE="$BUILD_DIR/$BUILD_TYPE/falco-$FALCO_VERSION-x86_64.deb"

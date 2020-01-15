@@ -59,17 +59,20 @@ jobs:
   # execute integration tests based on the build results coming from the "build/centos7" job
   "tests/integration":
     docker:
-      - image: falcosecurity/falco-tester:latest
+      - image: falcosecurity/falco-tester:dynamic-builds # todo(fntlnz): replace this with the actual image once PR #968 is merged
+        environment:
+          SOURCE_DIR: "/source"
+          BUILD_DIR: "/build"
+          BUILD_TYPE: "release"
     steps:
+      - setup_remote_docker
       - checkout:
           path: /source/falco
       - attach_workspace:
           at: /
       - run:
           name: execute integration tests
-          command: |
-            ls -la /
-            ls -la /build
+          command: /usr/bin/entrypoint test
 workflows:
   version: 2
   build_and_test:
