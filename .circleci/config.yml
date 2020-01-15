@@ -1,6 +1,7 @@
 version: 2
 jobs:
   # build using ubuntu LTS
+  # This build is dynamic, most dependencies are taken from the OS
   "build/ubuntu-bionic":
     docker:
       - image: ubuntu:bionic
@@ -23,7 +24,7 @@ jobs:
           name: build
           command: |
             pushd build
-            make -j all
+            make -j4 all
             popd
       - run:
           name: run unit tests
@@ -32,6 +33,7 @@ jobs:
             make tests
             popd
   # build using our own builder base image using centos 7
+  # This build is static, dependencies are bundled in the falco binary
   "build/centos7":
     docker:
       - image: falcosecurity/falco-builder:dynamic-builds # todo(fntlnz): replace this with the actual image once PR #968 is merged
@@ -42,8 +44,14 @@ jobs:
           name: prepare project
           command: /usr/bin/entrypoint cmake
       - run:
-          name: prepare project
+          name: build
           command: /usr/bin/entrypoint all
+      - run:
+          name: build packages
+          command: /usr/bin/entrypoint package
+      - run:
+          name: run unit tests
+          command: /usr/bin/entrypoint package
       - persist_to_workspace:
           root: /
           paths:
@@ -56,7 +64,7 @@ jobs:
       - checkout:
           path: /source/falco
       - attach_workspace:
-          at: /build
+          at: /
       - run:
           name: execute integration tests
           command: |
