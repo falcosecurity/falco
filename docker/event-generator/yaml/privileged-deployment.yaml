@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: privileged-deployment
+  namespace: falco-event-generator
+  labels:
+    app.kubernetes.io/name: privileged-deployment
+    app.kubernetes.io/part-of: falco-event-generator
+    falco.rules: Create-Privileged-Pod
+    message: Creating-deployment-with-privileged-true-pod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: privileged-busybox
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: privileged-busybox
+        app.kubernetes.io/part-of: falco-event-generator
+    spec:
+      containers:
+        - securityContext:
+            privileged: true
+          name: busybox
+          image: busybox
+          command: ["/bin/sh", "-c", "while true; do echo sleeping; sleep 3600; done"]

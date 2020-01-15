@@ -1,0 +1,17 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: pod-exec-role
+  namespace: falco-event-generator
+  labels:
+    app.kubernetes.io/name: pod-exec-role
+    app.kubernetes.io/part-of: falco-event-generator
+    falco.rules: ClusterRole-With-Pod-Exec-Created
+    message: Creating-role-that-can-exec-to-pods
+rules:
+- apiGroups:
+    - ""
+  resources:
+    - "pods/exec"
+  verbs:
+    - get
