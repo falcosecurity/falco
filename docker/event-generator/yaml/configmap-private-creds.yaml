@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: private-creds-configmap
+  namespace: falco-event-generator
+  labels:
+    app.kubernetes.io/name: private-creds-configmap
+    app.kubernetes.io/part-of: falco-event-generator
+    falco.rules: Create.Modify-Configmap-With-Private-Credentials
+    message: Creating-configmap-with-private-credentials
+data:
+  ui.properties: |
+    color.good=purple
+    color.bad=yellow
+    allow.textmode=true
+    password=some_secret_password
