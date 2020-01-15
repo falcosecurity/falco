@@ -55,9 +55,9 @@ jobs:
           name: build packages
           command: /usr/bin/entrypoint package
       - persist_to_workspace:
-          root: /
+          root: /build
           paths:
-            - build
+            - release
       - run:
           command: |
             mkdir -p /tmp/packages
@@ -66,6 +66,7 @@ jobs:
             cp /build/release/*.rpm /tmp/packages
       - store_artifacts:
           path: /tmp/packages
+          destination: /packages
   # execute integration tests based on the build results coming from the "build/centos7" job
   "tests/integration":
     docker:
@@ -79,7 +80,7 @@ jobs:
       - checkout:
           path: /source/falco
       - attach_workspace:
-          at: /
+          at: /build
       - run:
           name: execute integration tests
           command: /usr/bin/entrypoint test
