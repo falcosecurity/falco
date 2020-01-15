@@ -1,7 +1,7 @@
 version: 2
 jobs:
-  # generic ubuntu build
-  build:
+  # build using ubuntu LTS
+  "build/ubuntu-bionic":
     docker:
       - image: ubuntu:bionic
     steps:
@@ -13,12 +13,17 @@ jobs:
           name: install dependencies
           command: apt install libssl-dev libyaml-dev libncurses-dev libc-ares-dev libprotobuf-dev protobuf-compiler libjq-dev libyaml-cpp-dev libgrpc++-dev protobuf-compiler-grpc rpm linux-headers-$(uname -r) libelf-dev cmake build-essential libcurl4-openssl-dev -y
       - run:
-          name: build all
+          name: prepare project
           command: |
             mkdir build
             pushd build
             cmake ..
-            make -j4 all
+            popd
+      - run:
+          name: build
+          command: |
+            pushd build
+            make -j all
             popd
       - run:
           name: run unit tests
@@ -26,27 +31,43 @@ jobs:
             pushd build
             make tests
             popd
-  # build using our own builder base image
-  builder:
+  # build using our own builder base image using centos 7
+  "build/centos7":
     docker:
-      - image: falcosecurity/falco-builder:dynamic-build # todo(fntlnz): replace this with the actual image once PR #968 is merged
+      - image: falcosecurity/falco-builder:dynamic-builds # todo(fntlnz): replace this with the actual image once PR #968 is merged
     steps:
-      - checkout
+      - checkout:
+          path: /source/falco
       - run:
           name: prepare project
-          command: cmake
+          command: /usr/bin/entrypoint cmake
+      - run:
+          name: prepare project
+          command: /usr/bin/entrypoint all
       - persist_to_workspace:
-          root: .
+          root: /
           paths:
-            - build/*
-  # execute integration tests based on the build results coming from the "builder" job
-  integration:
+            - build
+  # execute integration tests based on the build results coming from the "build/centos7" job
+  "tests/integration":
     docker:
       - image: falcosecurity/falco-tester:latest
     steps:
-      - checkout
+      - checkout:
+          path: /source/falco
       - attach_workspace:
-          at: build
+          at: /build
       - run:
-          name: prepare project
-          command: cmake
+          name: execute integration tests
+          command: |
+            ls -la /
+            ls -la /build
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - "build/ubuntu-bionic"
+      - "build/centos7"
+      - "tests/integration":
+          requires:
+            - "build/centos7"
