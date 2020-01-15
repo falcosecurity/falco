@@ -25,7 +25,7 @@ limitations under the License.
 #include <cstdlib>
 #include <unistd.h>
 #include <getopt.h>
-#include <sys/errno.h>
+#include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
@@ -146,7 +146,7 @@ void read(const char *filename)
 	open_file(filename, "r");
 }
 
-uid_t become_user(const char *user)
+void become_user(const char *user)
 {
 	struct passwd *pw;
 	pw = getpwnam(user);
