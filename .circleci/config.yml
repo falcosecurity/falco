@@ -37,6 +37,8 @@ jobs:
   "build/centos7":
     docker:
       - image: falcosecurity/falco-builder:dynamic-builds # todo(fntlnz): replace this with the actual image once PR #968 is merged
+        environment:
+          BUILD_TYPE: "release"
     steps:
       - checkout:
           path: /source/falco
@@ -47,15 +49,23 @@ jobs:
           name: build
           command: /usr/bin/entrypoint all
       - run:
-          name: build packages
-          command: /usr/bin/entrypoint package
-      - run:
           name: run unit tests
+          command: /usr/bin/entrypoint tests
+      - run:
+          name: build packages
           command: /usr/bin/entrypoint package
       - persist_to_workspace:
           root: /
           paths:
             - build
+      - run:
+          command: |
+            mkdir -p /tmp/packages
+            cp /build/release/*.deb /tmp/packages
+            cp /build/release/*.tar.gz /tmp/packages
+            cp /build/release/*.rpm /tmp/packages
+      - store_artifacts:
+          path: /tmp/packages
   # execute integration tests based on the build results coming from the "build/centos7" job
   "tests/integration":
     docker:
