@@ -240,7 +240,7 @@ ExternalProject_Add(
   COMMAND ${CMAKE_COMMAND} -E make_directory ${CIVETWEB_SRC}/install/include
   BUILD_IN_SOURCE 1
   BUILD_COMMAND ${CMD_MAKE} COPT="-DNO_FILES" WITH_CPP=1
-  INSTALL_COMMAND ${CMD_MAKE} install-lib install-headers PREFIX=${CIVETWEB_SRC}/install "WITH_CPP=1 OPENSSL_API_1_1")
+  INSTALL_COMMAND ${CMD_MAKE} COPT="-DNO_FILES" install-lib install-headers PREFIX=${CIVETWEB_SRC}/install "WITH_CPP=1")
 
 # gRPC
 include(gRPC)
