@@ -39,7 +39,6 @@ jobs:
       - image: falcosecurity/falco-builder:dynamic-builds # todo(fntlnz): replace this with the actual image once PR #968 is merged
         environment:
           BUILD_TYPE: "release"
-          MAKE_JOBS: "1"
     steps:
       - checkout:
           path: /source/falco

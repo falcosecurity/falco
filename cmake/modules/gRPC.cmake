@@ -92,8 +92,6 @@ else()
 
   get_filename_component(PROTOC_DIR ${PROTOC} PATH)
 
-  set(GRPC_BUILD_FLAGS ${PROCESSOUR_COUNT_MAKE_FLAG})
-
   ExternalProject_Add(
     grpc
     GIT_REPOSITORY https://github.com/grpc/grpc.git
@@ -110,7 +108,6 @@ else()
       LDFLAGS=-static
       PATH=${PROTOC_DIR}:$ENV{PATH}
       make
-      ${GRPC_BUILD_FLAGS}
       grpc_cpp_plugin
       static_cxx
       static_c)
