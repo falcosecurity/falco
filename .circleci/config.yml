@@ -24,7 +24,7 @@ jobs:
           name: build
           command: |
             pushd build
-            make -j4 all
+            make -j2 all
             popd
       - run:
           name: run unit tests
