@@ -24,7 +24,7 @@ jobs:
           name: build
           command: |
             pushd build
-            make -j2 all
+            make -j4 all
             popd
       - run:
           name: run unit tests
@@ -39,6 +39,7 @@ jobs:
       - image: falcosecurity/falco-builder:dynamic-builds # todo(fntlnz): replace this with the actual image once PR #968 is merged
         environment:
           BUILD_TYPE: "release"
+          MAKE_JOBS: "2"
     steps:
       - checkout:
           path: /source/falco
