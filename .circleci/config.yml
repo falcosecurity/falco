@@ -1,6 +1,6 @@
 version: 2
 jobs:
-  # build using ubuntu LTS
+  # Build using ubuntu LTS
   # This build is dynamic, most dependencies are taken from the OS
   "build/ubuntu-bionic":
     docker:
@@ -8,13 +8,13 @@ jobs:
     steps:
       - checkout
       - run:
-          name: update base image
+          name: Update base image
           command: apt update -y
       - run:
-          name: install dependencies
+          name: Install dependencies
           command: apt install libssl-dev libyaml-dev libncurses-dev libc-ares-dev libprotobuf-dev protobuf-compiler libjq-dev libyaml-cpp-dev libgrpc++-dev protobuf-compiler-grpc rpm linux-headers-$(uname -r) libelf-dev cmake build-essential libcurl4-openssl-dev -y
       - run:
-          name: prepare project
+          name: Prepare project
           command: |
             mkdir build
             pushd build
@@ -32,7 +32,7 @@ jobs:
             pushd build
             make tests
             popd
-  # build using our own builder base image using centos 7
+  # Build using our own builder base image using centos 7
   # This build is static, dependencies are bundled in the falco binary
   "build/centos7":
     docker:
@@ -43,23 +43,23 @@ jobs:
       - checkout:
           path: /source/falco
       - run:
-          name: prepare project
+          name: Prepare project
           command: /usr/bin/entrypoint cmake
       - run:
-          name: build
+          name: Build
           command: /usr/bin/entrypoint all
       - run:
-          name: run unit tests
+          name: Run unit tests
           command: /usr/bin/entrypoint tests
       - run:
-          name: build packages
+          name: Build packages
           command: /usr/bin/entrypoint package
       - persist_to_workspace:
           root: /build
           paths:
             - release
       - run:
-          name: prepare artifacts
+          name: Prepare artifacts
           command: |
             mkdir -p /tmp/packages
             cp /build/release/*.deb /tmp/packages
@@ -68,7 +68,7 @@ jobs:
       - store_artifacts:
           path: /tmp/packages
           destination: /packages
-  # execute integration tests based on the build results coming from the "build/centos7" job
+  # Execute integration tests based on the build results coming from the "build/centos7" job
   "tests/integration":
     docker:
       - image: falcosecurity/falco-tester:dynamic-builds # todo(fntlnz): replace this with the actual image once PR #968 is merged
@@ -83,7 +83,7 @@ jobs:
       - attach_workspace:
           at: /build
       - run:
-          name: execute integration tests
+          name: Execute integration tests
           command: /usr/bin/entrypoint test
 workflows:
   version: 2
