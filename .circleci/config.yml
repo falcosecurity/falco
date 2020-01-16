@@ -59,6 +59,7 @@ jobs:
           paths:
             - release
       - run:
+          name: prepare artifacts
           command: |
             mkdir -p /tmp/packages
             cp /build/release/*.deb /tmp/packages
