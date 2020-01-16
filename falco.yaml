@@ -28,10 +28,10 @@
 # The files will be read in the order presented here, so make sure if
 # you have overrides they appear in later files.
 rules_file:
- - /etc/falco/falco_rules.yaml
- - /etc/falco/falco_rules.local.yaml
- - /etc/falco/k8s_audit_rules.yaml
- - /etc/falco/rules.d
+  - /etc/falco/falco_rules.yaml
+  - /etc/falco/falco_rules.local.yaml
+  - /etc/falco/k8s_audit_rules.yaml
+  - /etc/falco/rules.d
 
 # If true, the times displayed in log messages and output messages
 # will be in ISO 8601. By default, times are displayed in the local
@@ -127,7 +127,7 @@ stdout_output:
 
 # Falco contains an embedded webserver that can be used to accept K8s
 # Audit Events. These config options control the behavior of that
-# webserver. (By default, the webserver is disabled).
+# webserver. (By default, the webserver is enabled).
 #
 # The ssl_certificate is a combination SSL Certificate and corresponding
 # key contained in a single file. You can generate a key/cert as follows:
