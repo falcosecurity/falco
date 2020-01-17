@@ -16,7 +16,6 @@ project(falco)
 
 option(USE_BUNDLED_DEPS "Bundle hard to find dependencies into the Falco binary" OFF)
 option(BUILD_WARNINGS_AS_ERRORS "Enable building with -Wextra -Werror flags" OFF)
-option(USE_BUNDLED_DEPS "Enable bundled dependencies instead of using the system ones" OFF)
 
 # Elapsed time
 # set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CMAKE_COMMAND} -E time") # TODO(fntlnz, leodido): add a flag to enable this
@@ -116,7 +115,8 @@ ExternalProject_Add(
   BUILD_COMMAND ""
   INSTALL_COMMAND "")
 
-# curses we pull this in because libsinsp won't build without it
+# curses
+# We pull this in because libsinsp won't build without it
 set(CURSES_NEED_NCURSES TRUE)
 find_package(Curses REQUIRED)
 message(STATUS "Found ncurses: include: ${CURSES_INCLUDE_DIR}, lib: ${CURSES_LIBRARIES}")
@@ -141,7 +141,6 @@ include(yaml-cpp)
 # OpenSSL
 find_package(OpenSSL REQUIRED)
 message(STATUS "Found OpenSSL: include: ${OPENSSL_INCLUDE_DIR}, lib: ${OPENSSL_LIBRARIES}")
-
 find_program(OPENSSL_BINARY openssl)
 if(NOT OPENSSL_BINARY)
   message(FATAL_ERROR "Couldn't find the openssl command line in PATH")
@@ -172,7 +171,6 @@ set(LPEG_LIB "${PROJECT_BINARY_DIR}/lpeg-prefix/src/lpeg/build/lpeg.a")
 message(STATUS "Using bundled lpeg in '${LPEG_SRC}'")
 set(LPEG_DEPENDENCIES "")
 list(APPEND LPEG_DEPENDENCIES "luajit")
-
 ExternalProject_Add(
   lpeg
   DEPENDS ${LPEG_DEPENDENCIES}
@@ -197,7 +195,6 @@ set(LYAML_LIB "${LYAML_SRC}/.libs/yaml.a")
 message(STATUS "Using bundled lyaml in '${LYAML_SRC}'")
 set(LYAML_DEPENDENCIES "")
 list(APPEND LYAML_DEPENDENCIES "luajit")
-
 ExternalProject_Add(
   lyaml
   DEPENDS ${LYAML_DEPENDENCIES}
@@ -231,7 +228,6 @@ set(CIVETWEB_SRC "${PROJECT_BINARY_DIR}/civetweb-prefix/src/civetweb/")
 set(CIVETWEB_LIB "${CIVETWEB_SRC}/install/lib/libcivetweb.a")
 set(CIVETWEB_INCLUDE_DIR "${CIVETWEB_SRC}/install/include")
 message(STATUS "Using bundled civetweb in '${CIVETWEB_SRC}'")
-
 ExternalProject_Add(
   civetweb
   URL "https://github.com/civetweb/civetweb/archive/v1.11.tar.gz"
@@ -262,10 +258,10 @@ add_subdirectory(rules)
 # Dockerfiles
 add_subdirectory(docker)
 
-# # Clang format add_custom_target( format COMMAND clang-format --style=file -i $<TARGET_PROPERTY:falco,SOURCES> COMMENT
-# "Formatting ..." VERBATIM)
+# Clang format
+# add_custom_target(format COMMAND clang-format --style=file -i $<TARGET_PROPERTY:falco,SOURCES> COMMENT "Formatting ..." VERBATIM)
 
-# shared build variables
+# Shared build variables
 set(FALCO_SINSP_LIBRARY sinsp)
 set(FALCO_SHARE_DIR share/falco)
 set(FALCO_ABSOLUTE_SHARE_DIR "${CMAKE_INSTALL_PREFIX}/${FALCO_SHARE_DIR}")
@@ -276,5 +272,5 @@ add_subdirectory(userspace/engine)
 add_subdirectory(userspace/falco)
 add_subdirectory(tests)
 
-# packages configuration
+# Packages configuration
 include(CPackConfig)
