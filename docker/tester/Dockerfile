@@ -8,7 +8,7 @@ ENV FALCO_VERSION=
 ENV BUILD_TYPE=release
 
 RUN curl https://avocado-project.org/data/repos/avocado-fedora.repo -o /etc/yum.repos.d/avocado.repo && \
-    dnf install -y docker findutils jq unzip python2-avocado python2-avocado-plugins-varianter-yaml-to-mux compat-openssl10 && dnf clean all
+    dnf install -y docker findutils jq unzip python2-avocado python2-avocado-plugins-varianter-yaml-to-mux && dnf clean all
 
 COPY ./root /
 
