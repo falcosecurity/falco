@@ -1,4 +1,4 @@
-FROM centos:7
+FROM centos:8
 
 LABEL name="falcosecurity/falco-builder"
 LABEL usage="docker run -v $PWD/..:/source -v $PWD/build:/build falcosecurity/falco-builder cmake"
@@ -18,31 +18,12 @@ ENV BUILD_WARNINGS_AS_ERRORS=${BUILD_WARNINGS_AS_ERRORS}
 ENV MAKE_JOBS=${MAKE_JOBS}
 ENV FALCO_VERSION=${FALCO_VERSION}
 
-ARG DOCKER_VERSION=1.11.0
-ARG CMAKE_VERSION=3.5.1
-
-RUN yum -y install centos-release-scl && \
-    INSTALL_PKGS="devtoolset-7-gcc devtoolset-7-gcc-c++ devtoolset-7-toolchain devtoolset-7-libstdc++-devel devtoolset-7-elfutils-libelf-devel llvm-toolset-7 glibc-static autoconf automake libtool createrepo expect git which libcurl-devel zlib-devel rpm-build" && \
-    yum -y install --setopt=tsflags=nodocs $INSTALL_PKGS && \
-    rpm -V $INSTALL_PKGS
-
-RUN source scl_source enable devtoolset-7 llvm-toolset-7 && \
-    cd /tmp && \
-    curl -L https://github.com/kitware/cmake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}.tar.gz | tar xz; \
-    cd cmake-${CMAKE_VERSION} && \
-    ./bootstrap --system-curl && \
-    make -j${MAKE_JOBS} && \
-    make install && \
-    rm -rf /tmp/cmake-${CMAKE_VERSION}
-
-RUN yum -y install libyaml-devel ncurses-devel openssl-devel libcurl-devel c-ares-devel openssl && yum clean all -y
+RUN dnf update -y
+RUN dnf install 'dnf-command(config-manager)' -y
+RUN dnf config-manager --set-enabled PowerTools -y
+RUN dnf install -y gcc gcc-c++ clang llvm git make which libcurl-devel zlib-devel rpm-build libyaml-devel openssl-devel cmake ncurses-devel c-ares-devel autoconf automake libtool createrepo expect which glibc-static libstdc++-static elfutils-libelf-devel -y
 
 COPY ./root /
-
-# DTS
-ENV BASH_ENV=/usr/bin/scl_enable \
-    ENV=/usr/bin/scl_enable \
-    PROMPT_COMMAND=". /usr/bin/scl_enable"
 
 ENTRYPOINT ["entrypoint"]
 CMD ["usage"]
