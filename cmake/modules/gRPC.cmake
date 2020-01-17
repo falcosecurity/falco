@@ -88,14 +88,14 @@ else()
     STATUS
       "Bundled gRPC comes with ---> protobuf: compiler: ${PROTOC}, include: ${PROTOBUF_INCLUDE}, lib: ${PROTOBUF_LIB}")
   message(STATUS "Bundled gRPC comes with ---> zlib: include: ${ZLIB_INCLUDE}, lib: ${ZLIB_LIB}}")
-  message(STATUS "Bundled gRPC comes with ---> grpC cpp plugin: include: ${GRPC_CPP_PLUGIN}")
+  message(STATUS "Bundled gRPC comes with ---> gRPC cpp plugin: include: ${GRPC_CPP_PLUGIN}")
 
   get_filename_component(PROTOC_DIR ${PROTOC} PATH)
 
   ExternalProject_Add(
     grpc
     GIT_REPOSITORY https://github.com/grpc/grpc.git
-    GIT_TAG v1.8.1
+    GIT_TAG v1.26.0
     GIT_SUBMODULES "third_party/protobuf third_party/zlib third_party/cares/cares"
     BUILD_IN_SOURCE 1
     BUILD_BYPRODUCTS ${GRPC_LIB} ${GRPCPP_LIB}
@@ -105,10 +105,10 @@ else()
       CFLAGS=-Wno-implicit-fallthrough
       HAS_SYSTEM_ZLIB=false
       HAS_SYSTEM_PROTOBUF=false
-      LDFLAGS=-static
+      HAS_SYSTEM_CARES=false
       PATH=${PROTOC_DIR}:$ENV{PATH}
       make
-      grpc_cpp_plugin
       static_cxx
-      static_c)
+      static_c
+      grpc_cpp_plugin)
 endif()
