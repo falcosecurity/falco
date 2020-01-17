@@ -49,7 +49,7 @@ case "$CMD" in
     fi
     echo "Running regression tests ..."
     cd $SOURCE_DIR/falco/test
-    bash run_regression_tests.sh $BUILD_DIR/$BUILD_TYPE
+    ./run_regression_tests.sh $BUILD_DIR/$BUILD_TYPE
     docker rmi "$DOCKER_IMAGE_NAME" || true
     ;;
 "bash")
