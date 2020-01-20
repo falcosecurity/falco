@@ -36,7 +36,7 @@ jobs:
   # This build is static, dependencies are bundled in the falco binary
   "build/centos8":
     docker:
-      - image: falcosecurity/falco-builder:dynamic-builds # todo(fntlnz): replace this with the actual image once PR #968 is merged
+      - image: falcosecurity/falco-builder:latest
         environment:
           BUILD_TYPE: "release"
     steps:
@@ -72,7 +72,7 @@ jobs:
   # Execute integration tests based on the build results coming from the "build/centos8" job
   "tests/integration":
     docker:
-      - image: falcosecurity/falco-tester:dynamic-builds # todo(fntlnz): replace this with the actual image once PR #968 is merged
+      - image: falcosecurity/falco-tester:latest
         environment:
           SOURCE_DIR: "/source"
           BUILD_DIR: "/build"
