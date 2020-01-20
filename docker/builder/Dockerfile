@@ -20,7 +20,7 @@ ENV FALCO_VERSION=${FALCO_VERSION}
 
 # build toolchain
 RUN yum -y install centos-release-scl && \
-    INSTALL_PKGS="devtoolset-7-gcc devtoolset-7-gcc-c++ devtoolset-7-toolchain devtoolset-7-libstdc++-devel devtoolset-7-elfutils-libelf-devel glibc-static autoconf automake libtool createrepo expect git which libcurl-devel zlib-devel rpm-build libyaml-devel" && \
+    INSTALL_PKGS="devtoolset-7-gcc devtoolset-7-gcc-c++ devtoolset-7-toolchain devtoolset-7-libstdc++-devel devtoolset-7-elfutils-libelf-devel glibc-static autoconf automake libtool createrepo expect git which libcurl-devel zlib-devel ncurses-devel rpm-build libyaml-devel" && \
     yum -y install --setopt=tsflags=nodocs $INSTALL_PKGS && \
     rpm -V $INSTALL_PKGS
 
@@ -33,9 +33,6 @@ RUN source scl_source enable devtoolset-7 && \
     make -j${MAKE_JOBS} && \
     make install && \
     rm -rf /tmp/cmake-${CMAKE_VERSION}
-
-# build dependencies
-RUN yum -y install ncurses-devel libcurl-devel c-ares-devel -y
 
 COPY ./root /
 
