@@ -13,10 +13,11 @@ else()
   set(OPENSSL_INCLUDE_DIR "${PROJECT_BINARY_DIR}/openssl-prefix/src/openssl/include")
   set(OPENSSL_LIBRARY_SSL "${OPENSSL_INSTALL_DIR}/lib/libssl.a")
   set(OPENSSL_LIBRARY_CRYPTO "${OPENSSL_INSTALL_DIR}/lib/libcrypto.a")
+  set(OPENSSL_BINARY "${OPENSSL_INSTALL_DIR}/bin/openssl")
 
   message(STATUS "Using bundled openssl in '${OPENSSL_BUNDLE_DIR}'")
 
-  externalproject_add(
+  ExternalProject_Add(
     openssl
     # START CHANGE for CVE-2017-3735, CVE-2017-3731, CVE-2017-3737, CVE-2017-3738, CVE-2017-3736
     URL "https://s3.amazonaws.com/download.draios.com/dependencies/openssl-1.0.2n.tar.gz"
