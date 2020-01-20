@@ -18,11 +18,18 @@ else()
   set(CURL_BUNDLE_DIR "${PROJECT_BINARY_DIR}/curl-prefix/src/curl")
   set(CURL_INCLUDE_DIR "${CURL_BUNDLE_DIR}/include/")
   set(CURL_LIBRARIES "${CURL_BUNDLE_DIR}/lib/.libs/libcurl.a")
-  set(CURL_SSL_OPTION "--with-ssl")
-  message(STATUS "Using bundled curl in '${CURL_BUNDLE_DIR}'")
 
-  ExternalProject_Add(
+  if(NOT USE_BUNDLED_OPENSSL)
+    set(CURL_SSL_OPTION "--with-ssl")
+  else()
+    set(CURL_SSL_OPTION "--with-ssl=${OPENSSL_INSTALL_DIR}")
+    message(STATUS "Using bundled curl in '${CURL_BUNDLE_DIR}'")
+    message(STATUS "Using SSL for curl in '${CURL_SSL_OPTION}'")
+  endif()
+
+  externalproject_add(
     curl
+    DEPENDS openssl
     # START CHANGE for CVE-2017-8816, CVE-2017-8817, CVE-2017-8818, CVE-2018-1000007
     URL "https://s3.amazonaws.com/download.draios.com/dependencies/curl-7.61.0.tar.bz2"
     URL_MD5 "31d0a9f48dc796a7db351898a1e5058a"
