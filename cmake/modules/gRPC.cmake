@@ -107,10 +107,8 @@ else()
     BUILD_BYPRODUCTS ${GRPC_LIB} ${GRPCPP_LIB}
     INSTALL_COMMAND ""
     CONFIGURE_COMMAND ""
-    PATCH_COMMAND patch -p1 < ${PROJECT_SOURCE_DIR}/cmake/patch/grpc-1.25.0-Makefile.patch
     BUILD_COMMAND
       CFLAGS=-Wno-implicit-fallthrough
-      LDFLAGS=-static
       HAS_SYSTEM_ZLIB=false
       HAS_SYSTEM_PROTOBUF=false
       HAS_SYSTEM_CARES=false
