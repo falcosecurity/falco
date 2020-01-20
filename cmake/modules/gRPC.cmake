@@ -66,6 +66,11 @@ if(NOT USE_BUNDLED_DEPS)
   endif()
 
 else()
+  find_package(PkgConfig)
+    if(NOT PKG_CONFIG_FOUND)
+      message(FATAL_ERROR "pkg-config binary not found")
+  endif()
+  message(STATUS "Found pkg-config executable: ${PKG_CONFIG_EXECUTABLE}")
   set(GRPC_SRC "${PROJECT_BINARY_DIR}/grpc-prefix/src/grpc")
   set(GRPC_INCLUDE "${GRPC_SRC}/include")
   set(GRPC_LIBS_ABSOLUTE "${GRPC_SRC}/libs/opt")
@@ -86,26 +91,31 @@ else()
   message(STATUS "Using bundled gRPC in '${GRPC_SRC}'")
   message(
     STATUS
-      "Bundled gRPC comes with ---> protobuf: compiler: ${PROTOC}, include: ${PROTOBUF_INCLUDE}, lib: ${PROTOBUF_LIB}")
-  message(STATUS "Bundled gRPC comes with ---> zlib: include: ${ZLIB_INCLUDE}, lib: ${ZLIB_LIB}}")
-  message(STATUS "Bundled gRPC comes with ---> gRPC cpp plugin: include: ${GRPC_CPP_PLUGIN}")
+      "Bundled gRPC comes with protobuf: compiler: ${PROTOC}, include: ${PROTOBUF_INCLUDE}, lib: ${PROTOBUF_LIB}")
+  message(STATUS "Bundled gRPC comes with zlib: include: ${ZLIB_INCLUDE}, lib: ${ZLIB_LIB}}")
+  message(STATUS "Bundled gRPC comes with gRPC C++ plugin: include: ${GRPC_CPP_PLUGIN}")
 
   get_filename_component(PROTOC_DIR ${PROTOC} PATH)
 
   ExternalProject_Add(
     grpc
+    DEPENDS openssl
     GIT_REPOSITORY https://github.com/grpc/grpc.git
-    GIT_TAG v1.26.0
+    GIT_TAG v1.25.0
     GIT_SUBMODULES "third_party/protobuf third_party/zlib third_party/cares/cares"
     BUILD_IN_SOURCE 1
     BUILD_BYPRODUCTS ${GRPC_LIB} ${GRPCPP_LIB}
     INSTALL_COMMAND ""
     CONFIGURE_COMMAND ""
+    PATCH_COMMAND patch -p1 < ${PROJECT_SOURCE_DIR}/cmake/patch/grpc-1.25.0-Makefile.patch
     BUILD_COMMAND
       CFLAGS=-Wno-implicit-fallthrough
+      LDFLAGS=-static
       HAS_SYSTEM_ZLIB=false
       HAS_SYSTEM_PROTOBUF=false
       HAS_SYSTEM_CARES=false
+      PKG_CONFIG_PATH=${OPENSSL_BUNDLE_DIR}
+      PKG_CONFIG=${PKG_CONFIG_EXECUTABLE}
       PATH=${PROTOC_DIR}:$ENV{PATH}
       make
       static_cxx
