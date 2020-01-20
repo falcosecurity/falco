@@ -14,6 +14,12 @@
 set(SYSDIG_CMAKE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/sysdig-repo")
 set(SYSDIG_CMAKE_WORKING_DIR "${CMAKE_BINARY_DIR}/sysdig-repo")
 
+# this needs to be here at the top
+if(USE_BUNDLED_DEPS)
+  # explicitly force this dependency to use the system OpenSSL
+  set(USE_BUNDLED_OPENSSL ON)
+endif()
+
 file(MAKE_DIRECTORY ${SYSDIG_CMAKE_WORKING_DIR})
 # cd /path/to/build && cmake /path/to/source
 execute_process(COMMAND "${CMAKE_COMMAND}" ${SYSDIG_CMAKE_SOURCE_DIR} WORKING_DIRECTORY ${SYSDIG_CMAKE_WORKING_DIR})
@@ -48,6 +54,4 @@ set(CREATE_TEST_TARGETS OFF)
 
 if(USE_BUNDLED_DEPS)
   add_dependencies(scap grpc curl jq)
-  # explicitly force this dependency to use the system OpenSSL
-  set(USE_BUNDLED_OPENSSL ON)
 endif()
