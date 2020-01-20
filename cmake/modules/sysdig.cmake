@@ -43,12 +43,11 @@ add_subdirectory("${SYSDIG_SOURCE_DIR}/userspace/libscap" "${PROJECT_BINARY_DIR}
 add_subdirectory("${SYSDIG_SOURCE_DIR}/userspace/libsinsp" "${PROJECT_BINARY_DIR}/userspace/libsinsp")
 add_dependencies(sinsp tbb b64 luajit)
 
-# explicitly force this dependency to use the system OpenSSL
-set(USE_BUNDLED_OPENSSL OFF)
-
 # explicitly disable the tests of this dependency
 set(CREATE_TEST_TARGETS OFF)
 
 if(USE_BUNDLED_DEPS)
   add_dependencies(scap grpc curl jq)
+  # explicitly force this dependency to use the system OpenSSL
+  set(USE_BUNDLED_OPENSSL ON)
 endif()
