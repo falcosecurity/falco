@@ -39,7 +39,6 @@ case "$CMD" in
     -DFALCO_VERSION="$FALCO_VERSION" \
     -DDRAIOS_DEBUG_FLAGS="$DRAIOS_DEBUG_FLAGS" \
     -DUSE_BUNDLED_DEPS=ON \
-    -DUSE_BUNDLED_OPENSSL=OFF \
     "$SOURCE_DIR/falco"
     exit "$(printf '%d\n' $?)"
     ;;
