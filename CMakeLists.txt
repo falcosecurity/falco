@@ -139,14 +139,7 @@ ExternalProject_Add(
 include(yaml-cpp)
 
 # OpenSSL
-find_package(OpenSSL REQUIRED)
-message(STATUS "Found OpenSSL: include: ${OPENSSL_INCLUDE_DIR}, lib: ${OPENSSL_LIBRARIES}")
-find_program(OPENSSL_BINARY openssl)
-if(NOT OPENSSL_BINARY)
-  message(FATAL_ERROR "Couldn't find the openssl command line in PATH")
-else()
-  message(STATUS "Found openssl binary: ${OPENSSL_BINARY}")
-endif()
+include(OpenSSL)
 
 # libcurl
 include(cURL)
