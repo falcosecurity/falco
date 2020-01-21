@@ -1,4 +1,4 @@
-<p align="center"><img src="brand/primary-logo.png" width="360"></p>
+<p align="center"><img src="primary-logo.png" width="360"></p>
 <p align="center"><b>Cloud Native Runtime Security.</b></p>
 
 # Falco Branding Guidelines
