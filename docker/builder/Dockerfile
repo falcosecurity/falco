@@ -20,12 +20,12 @@ ENV FALCO_VERSION=${FALCO_VERSION}
 
 # build toolchain
 RUN yum -y install centos-release-scl && \
-    INSTALL_PKGS="devtoolset-7-gcc devtoolset-7-gcc-c++ devtoolset-7-toolchain devtoolset-7-libstdc++-devel devtoolset-7-elfutils-libelf-devel glibc-static autoconf automake libtool createrepo expect git which libcurl-devel zlib-devel ncurses-devel rpm-build libyaml-devel" && \
+    INSTALL_PKGS="devtoolset-7-gcc devtoolset-7-gcc-c++ devtoolset-7-toolchain devtoolset-7-libstdc++-devel devtoolset-7-elfutils-libelf-devel llvm-toolset-7 glibc-static autoconf automake libtool createrepo expect git which libcurl-devel zlib-devel ncurses-devel rpm-build libyaml-devel" && \
     yum -y install --setopt=tsflags=nodocs $INSTALL_PKGS && \
     rpm -V $INSTALL_PKGS
 
 ARG CMAKE_VERSION=3.5.1
-RUN source scl_source enable devtoolset-7 && \
+RUN source scl_source enable devtoolset-7 llvm-toolset-7 && \
     cd /tmp && \
     curl -L https://github.com/kitware/cmake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}.tar.gz | tar xz; \
     cd cmake-${CMAKE_VERSION} && \
