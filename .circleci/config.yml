@@ -34,7 +34,7 @@ jobs:
             popd
   # Build using our own builder base image using centos 7
   # This build is static, dependencies are bundled in the falco binary
-  "build/centos8":
+  "build/centos7":
     docker:
       - image: falcosecurity/falco-builder:latest
         environment:
@@ -69,7 +69,7 @@ jobs:
       - store_artifacts:
           path: /tmp/packages
           destination: /packages
-  # Execute integration tests based on the build results coming from the "build/centos8" job
+  # Execute integration tests based on the build results coming from the "build/centos7" job
   "tests/integration":
     docker:
       - image: falcosecurity/falco-tester:latest
@@ -89,7 +89,7 @@ workflows:
   build_and_test:
     jobs:
       - "build/ubuntu-bionic"
-      - "build/centos8"
+      - "build/centos7"
       - "tests/integration":
           requires:
-            - "build/centos8"
+            - "build/centos7"
