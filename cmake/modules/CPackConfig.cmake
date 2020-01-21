@@ -21,10 +21,11 @@ set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
 
 set(CPACK_RPM_PACKAGE_LICENSE "Apache v2.0")
 set(CPACK_RPM_PACKAGE_URL "https://www.falco.org")
-set(CPACK_RPM_PACKAGE_REQUIRES "dkms, gcc, make, kernel-devel, perl")
+set(CPACK_RPM_PACKAGE_REQUIRES "dkms, kernel-devel, libyaml, ncurses")
 set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE "${PROJECT_SOURCE_DIR}/scripts/rpm/postinstall")
 set(CPACK_RPM_PRE_UNINSTALL_SCRIPT_FILE "${PROJECT_SOURCE_DIR}/scripts/rpm/preuninstall")
 set(CPACK_RPM_POST_UNINSTALL_SCRIPT_FILE "${PROJECT_SOURCE_DIR}/scripts/rpm/postuninstall")
+set(CPACK_RPM_PACKAGE_VERSION "${FALCO_VERSION}")
 set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST_ADDITION
     /usr/src
     /usr/share/man
