@@ -21,8 +21,8 @@ The Falco logo is Apache 2 licensed and free to use in media and publication for
 
 ### What is Falco?
 
-Falco is a Runtime Security project originally built by Sysdig, Inc.
-Falco was donated to the CNCF in October 2018.
+Falco is a Runtime Security project originally created by Sysdig, Inc.
+Falco was contributed to the CNCF in October 2018.
 The CNCF now owns The Falco Project.
 
 ### What is Runtime Security?
@@ -46,6 +46,12 @@ These other input streams come from various input streams such as the Docker soc
 At runtime, Falco will reason about these events and assert them against security rules.
 Based on the violation, and Falco's configuration an alert is triggered which can start events downstream.
 
+### Benefits of using Falco
+
+ - **Strengthen Security** Create security rules driven by a context-rich and flexible engine to define unexpected application behavior.
+ - **Reduce Risk** Immediately respond to policy violation alerts by plugging Falco into your current security response workflows and processes.
+ - **Leverage up-to-date Rules** Alert using community-sourced detections of malicious activity and CVE exploits.
+                                 
 ### Writing about Falco
 
 #### Yes
