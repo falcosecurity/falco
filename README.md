@@ -1,7 +1,9 @@
-<p><img align="right" src="https://github.com/falcosecurity/falco-website/raw/master/themes/falco-fresh/static/images/favicon.png" width="64px"/></p>
-<p></p>
+<p align="center"><img src="https://raw.githubusercontent.com/falcosecurity/community/master/logo/primary-logo.png" width="360"></p>
+<p align="center"><b>Cloud Native Runtime Security.</b></p>
 
-# Falco
+<hr>
+
+# The Falco Project
 
 #### Latest release
 
