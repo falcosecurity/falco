@@ -2,7 +2,7 @@ FROM ubuntu:18.04 as ubuntu
 
 LABEL maintainer="opensource@sysdig.com"
 
-ARG FALCO_VERSION=0.18.0
+ARG FALCO_VERSION=0.19.0
 
 ENV FALCO_VERSION=${FALCO_VERSION}
 
@@ -30,7 +30,7 @@ COPY --from=ubuntu /lib/x86_64-linux-gnu/libanl.so.1 \
     /lib/x86_64-linux-gnu/libnss_files.so.2 /lib/x86_64-linux-gnu/libnss_nis.so.2 \
     /lib/x86_64-linux-gnu/libpthread.so.0 /lib/x86_64-linux-gnu/librt.so.1 \
     /lib/x86_64-linux-gnu/libz.so.1 \
-    /lib/x86_64-linux-gnu/ 
+    /lib/x86_64-linux-gnu/
 
 COPY --from=ubuntu /usr/lib/x86_64-linux-gnu/libstdc++.so.6 \
     /usr/lib/x86_64-linux-gnu/libstdc++.so.6
