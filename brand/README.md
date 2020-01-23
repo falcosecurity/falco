@@ -21,16 +21,16 @@ The Falco logo is Apache 2 licensed and free to use in media and publication for
 
 ### What is Falco?
 
-Falco is a Runtime Security project originally created by Sysdig, Inc.
+Falco is a runtime security project originally created by Sysdig, Inc.
 Falco was contributed to the CNCF in October 2018.
 The CNCF now owns The Falco Project.
 
 ### What is Runtime Security?
 
-Runtime Security refers to an approach to securing a computer system.
-With Runtime Security an operator deploys **both** prevention tooling (access control, policy enforcement, etc) along side detection tooling (systems observability, anomaly detection, etc).
-Runtime Security is the practice of using detection tooling to detect unwanted behavior, such that it can then be prevented using prevention techniques.
-Runtime Security is a last line of defense, and useful in scenarios where prevention tooling either was unaware of an exploit or attack vector, or when defective applications are ran in even the most secure environment.
+Runtime security refers to an approach to preventing unwanted activity on a computer system. 
+With runtime security an operator deploys **both** prevention tooling (access control, policy enforcement, etc) along side detection tooling (systems observability, anomaly detection, etc).
+Runtime security is the practice of using detection tooling to detect unwanted behavior, such that it can then be prevented using prevention techniques.
+Runtime security is a holistic approach to defense, and useful in scenarios where prevention tooling either was unaware of an exploit or attack vector, or when defective applications are ran in even the most secure environment.
 
 ### What does Falco do?
 
@@ -40,42 +40,57 @@ If a rule has been violated, Falco triggers an alert.
 
 ### How does Falco work?
 
-Falco uses eBPF (or on older systems a kernel module) to trace syscall events in the kernel.
+Falco traces kernel events and reports information about the system calls being executed at runtime.
+Falco leverages the extended berkley packet filter (eBPF) which is a kernel feature implemented for dynamic crash-resilient and secure code execution in the kernel. 
 Falco enriches these kernel events with information about containers running on the system.
-These other input streams come from various input streams such as the Docker socket, the Kubernetes API server, and the Kubernetes audit log.
-At runtime, Falco will reason about these events and assert them against security rules.
-Based on the violation, and Falco's configuration an alert is triggered which can start events downstream.
+Falco also can consume signals from other input streams such as the containerd socket, the Kubernetes API server and the Kubernetes audit log.
+At runtime, Falco will reason about these events and assert them against configured security rules.
+Based on the severity of a violation an alert is triggered.
+These alerts are configurable and extensible, for instance sending a notification or [plumbing through to other projects like Prometheus](https://github.com/falcosecurity/falco-exporter). 
 
 ### Benefits of using Falco
 
  - **Strengthen Security** Create security rules driven by a context-rich and flexible engine to define unexpected application behavior.
  - **Reduce Risk** Immediately respond to policy violation alerts by plugging Falco into your current security response workflows and processes.
  - **Leverage up-to-date Rules** Alert using community-sourced detections of malicious activity and CVE exploits.
+    
+### Falco and securing Kubernetes
+
+Securing Kubernetes requires putting controls in place to detect unexpected behavior that could be malicious or harmful to a cluster or application(s). 
+
+Examples of malicious behavior include: 
+
+ - Exploits of unpatched and new vulnerabilities in applications or Kubernetes itself. 
+ - Insecure configurations in applications or Kubernetes itself. 
+ - Leaked or weak credentials or secret material.
+ - Insider threats from adjacent applications running at the same layer. 
+
+Falco is capable of [consuming the Kubernetes audit logs](https://kubernetes.io/docs/tasks/debug-application-cluster/falco/#use-falco-to-collect-audit-events).
+By adding Kubernetes application context, and Kubernetes audit logs teams can understand who did what.
                                  
 ### Writing about Falco
 
-#### Yes
+##### Yes
 
 Notice the capitalization of the following terms.
 
  - The Falco Project
  - Falco
- - Runtime Security
 
-#### No
+##### No
 
  - falco
  - the falco project
  - the Falco project
- - runtime security 
 
 ### Encouraged Phrasing
 
 Below are phrases that the project has reviewed, and found to be effective ways of messaging Falco's value add.
+Even when processes are in place for vulnerability scanning and implementing pod security and network policies, not every risk will be addressed. You still need mechanisms to confirm these security barriers are effective, help configure them, and provide with a last line of defense when they fail.
 
 ##### Falco as a factory
 
-This term refers to the concept that Falco is a stateless processing engine. A large amount of data comes into the engine, but maticulously crafted security alerts come out.
+This term refers to the concept that Falco is a stateless processing engine. A large amount of data comes into the engine, but meticulously crafted security alerts come out.
 
 ##### The engine that powers...
 
@@ -86,15 +101,10 @@ Falco ultimately is a security engine. It reasons about signals coming from a sy
 This refers to an event that occurs with something unsual, concerning, or odd occurs.
 We can associate anomalies with unwanted behavior, and alert in their presence.
 
-###### Detection tooling
+##### Detection tooling
 
 Falco does not prevent unwanted behavior.
 Falco however alerts when unusual behavior occurs.
 This is commonly referred to as **detection** or **forensics**.
 
-### Key benefits
 
- - Complimentary to prevention tooling
- - Last line of defense against new exploits and attack vectors
- - Last line of defense against malicious applications, or vulnerable applications
- 
