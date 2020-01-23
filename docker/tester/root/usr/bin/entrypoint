@@ -30,9 +30,11 @@ build_image() {
     DOCKER_IMAGE_NAME="falcosecurity/falco:test-${PACKAGE_TYPE}"
     echo "Building local docker image $DOCKER_IMAGE_NAME from latest ${PACKAGE_TYPE} package..."
 
-    mkdir -p /packages
-    cp "$PACKAGE" /packages
-    docker build -f "/runners/$PACKAGE_TYPE.Dockerfile" --build-arg FALCO_VERSION="$FALCO_VERSION" -t "$DOCKER_IMAGE_NAME" /packages
+    mkdir -p /runner-rootfs
+    cp "$PACKAGE" /runner-rootfs
+    cp -R "$SOURCE_DIR/falco/test/rules" /runner-rootfs
+    cp -R "$SOURCE_DIR/falco/test/trace_files" /runner-rootfs
+    docker build -f "/runners/$PACKAGE_TYPE.Dockerfile" --build-arg FALCO_VERSION="$FALCO_VERSION" -t "$DOCKER_IMAGE_NAME" /runner-rootfs
 }
 
 clean_image() {
