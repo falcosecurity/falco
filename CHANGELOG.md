@@ -12,6 +12,7 @@ Released on 2020-01-23
 * instead of crashing, now falco will report the error when an internal error occurs while handling an event to be inspected. the log line will be of type error and will contain the string `error handling inspector event` [[#746](https://github.com/falcosecurity/falco/pull/746)]
 * build: bump grpc to 1.25.0 [[#939](https://github.com/falcosecurity/falco/pull/939)]
 * build: (most of) dependencies are bundled dynamically (by default) [[#968](https://github.com/falcosecurity/falco/pull/968)]
+* test: integration tests now can run on different distributions via docker containers, for now CentOS 7 and Ubuntu 18.04 with respective rpm and deb packages [[#1012](https://github.com/falcosecurity/falco/pull/1012)]
 
 ### Minor Changes
 
