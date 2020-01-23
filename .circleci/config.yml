@@ -21,13 +21,13 @@ jobs:
             cmake ..
             popd
       - run:
-          name: build
+          name: Build
           command: |
             pushd build
             make -j4 all
             popd
       - run:
-          name: run unit tests
+          name: Run unit tests
           command: |
             pushd build
             make tests
