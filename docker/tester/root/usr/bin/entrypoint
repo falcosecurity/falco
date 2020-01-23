@@ -43,24 +43,21 @@ clean_image() {
 
 case "$CMD" in
 "test")
-    if [ ! -d "$BUILD_DIR/$BUILD_TYPE/docker/local" ]; then
-        echo "Missing $BUILD_DIR/$BUILD_TYPE/docker/local directory." >&2
-        exit 1
-    fi
     if [ -z "$FALCO_VERSION" ]; then
         echo "Automatically figuring out Falco version."
-        FALCO_VERSION=$($BUILD_DIR/$BUILD_TYPE/userspace/falco/falco --version | cut -d' ' -f3 | tr -d '\r')
+        FALCO_VERSION=$("$BUILD_DIR/$BUILD_TYPE/userspace/falco/falco" --version | cut -d' ' -f3 | tr -d '\r')
+        echo "Falco version: $FALCO_VERSION"
     fi
     if [ -z "$FALCO_VERSION" ]; then
         echo "Falco version cannot be guessed, please provide it with the FALCO_VERSION environment variable." >&2
         exit 1
     fi
-    
+
     # build docker images
     build_image "$BUILD_DIR" "$BUILD_TYPE" "$FALCO_VERSION" "deb"
     build_image "$BUILD_DIR" "$BUILD_TYPE" "$FALCO_VERSION" "rpm"
 
-    # check that source directory contains Falco and sysdig
+    # check that source directory contains Falco
     if [ ! -d "$SOURCE_DIR/falco/test" ]; then
         echo "Missing $SOURCE_DIR/falco/test directory." >&2
         exit 1
@@ -68,7 +65,7 @@ case "$CMD" in
 
     # run tests
     echo "Running regression tests ..."
-    cd `$SOURCE_DIR/falco/test`
+    cd "$SOURCE_DIR/falco/test"
     ./run_regression_tests.sh "$BUILD_DIR/$BUILD_TYPE"
 
     # clean docker images
