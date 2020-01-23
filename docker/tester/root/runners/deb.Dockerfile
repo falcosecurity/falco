@@ -15,11 +15,6 @@ RUN dpkg -i /falco-${FALCO_VERSION}-x86_64.deb
 RUN sed -e 's/time_format_iso_8601: false/time_format_iso_8601: true/' < /etc/falco/falco.yaml > /etc/falco/falco.yaml.new \
     && mv /etc/falco/falco.yaml.new /etc/falco/falco.yaml
 
-# # The local container also copies some test trace files and
-# # corresponding rules that are used when running regression tests.
-# COPY source/testrules/*.yaml /rules/
-# COPY traces/*.scap /traces/
-
 VOLUME ["/rules"]
 VOLUME ["/traces"]
 
