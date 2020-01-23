@@ -1,6 +1,6 @@
 FROM ubuntu:18.04 as ubuntu
 
-LABEL maintainer="opensource@sysdig.com"
+LABEL maintainer="cncf-falco-dev@lists.cncf.io"
 
 ARG FALCO_VERSION=0.19.0
 
