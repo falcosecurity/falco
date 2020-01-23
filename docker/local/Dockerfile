@@ -1,7 +1,7 @@
 FROM debian:unstable
 
 LABEL usage="docker run -i -t -v /var/run/docker.sock:/host/var/run/docker.sock -v /dev:/host/dev -v /proc:/host/proc:ro -v /boot:/host/boot:ro -v /lib/modules:/host/lib/modules:ro -v /usr:/host/usr:ro --name NAME IMAGE"
-LABEL maintainer="opensource@sysdig.com"
+LABEL maintainer="cncf-falco-dev@lists.cncf.io"
 
 ARG FALCO_VERSION=
 RUN test -n FALCO_VERSION
