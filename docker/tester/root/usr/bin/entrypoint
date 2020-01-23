@@ -17,6 +17,30 @@ case "$BUILD_TYPE" in
     ;;
 esac
 
+build_image() {
+    BUILD_DIR=$1
+    BUILD_TYPE=$2
+    FALCO_VERSION=$3
+    PACKAGE_TYPE=$4
+    PACKAGE="$BUILD_DIR/$BUILD_TYPE/falco-$FALCO_VERSION-x86_64.${PACKAGE_TYPE}"
+    if [ ! -f "$PACKAGE" ]; then
+        echo "Package not found: ${PACKAGE}." >&2
+        exit 1
+    fi
+    DOCKER_IMAGE_NAME="falcosecurity/falco:test-${PACKAGE_TYPE}"
+    echo "Building local docker image $DOCKER_IMAGE_NAME from latest ${PACKAGE_TYPE} package..."
+
+    mkdir -p /packages
+    cp "$PACKAGE" /packages
+    docker build -f "/runners/$PACKAGE_TYPE.Dockerfile" --build-arg FALCO_VERSION="$FALCO_VERSION" -t "$DOCKER_IMAGE_NAME" /packages
+}
+
+clean_image() {
+    PACKAGE_TYPE=$1
+    DOCKER_IMAGE_NAME="falcosecurity/falco:test-${PACKAGE_TYPE}"
+    docker rmi -f "$DOCKER_IMAGE_NAME"
+}
+
 case "$CMD" in
 "test")
     if [ ! -d "$BUILD_DIR/$BUILD_TYPE/docker/local" ]; then
@@ -58,27 +82,3 @@ case "$CMD" in
     exec "$CMD" "$@"
     ;;
 esac
-
-build_image() {
-    BUILD_DIR=$1
-    BUILD_TYPE=$2
-    FALCO_VERSION=$3
-    PACKAGE_TYPE=$4
-    PACKAGE="$BUILD_DIR/$BUILD_TYPE/falco-$FALCO_VERSION-x86_64.${PACKAGE_TYPE}"
-    if [ ! -f "$PACKAGE" ]; then
-        echo "Package not found: ${PACKAGE}." >&2
-        exit 1
-    fi
-    DOCKER_IMAGE_NAME="falcosecurity/falco:test-${PACKAGE_TYPE}"
-    echo "Building local docker image $DOCKER_IMAGE_NAME from latest ${PACKAGE_TYPE} package..."
-
-    mkdir -p /packages
-    cp "$PACKAGE" /packages
-    docker build -f "/runners/$PACKAGE_TYPE.Dockerfile" --build-arg FALCO_VERSION="$FALCO_VERSION" -t "$DOCKER_IMAGE_NAME" /packages
-}
-
-clean_image() {
-    PACKAGE_TYPE=$1
-    DOCKER_IMAGE_NAME="falcosecurity/falco:test-${PACKAGE_TYPE}"
-    docker rmi -f "$DOCKER_IMAGE_NAME"
-}
