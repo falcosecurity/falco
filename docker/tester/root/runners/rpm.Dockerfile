@@ -16,7 +16,7 @@ RUN yum install -y /falco-${FALCO_VERSION}-x86_64.rpm
 RUN sed -e 's/time_format_iso_8601: false/time_format_iso_8601: true/' < /etc/falco/falco.yaml > /etc/falco/falco.yaml.new \
     && mv /etc/falco/falco.yaml.new /etc/falco/falco.yaml
 
-VOLUME ["/rules"]
-VOLUME ["/traces"]
+COPY rules/*.yaml /rules/
+COPY trace_files/*.scap /traces/
 
 CMD ["/usr/bin/falco"]
