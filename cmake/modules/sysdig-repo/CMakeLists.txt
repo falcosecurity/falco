@@ -18,11 +18,10 @@ include(ExternalProject)
 
 # The sysdig git reference (branch name, commit hash, or tag)
 
-# set(SYSDIG_VERSION falco/${FALCO_VERSION_MAJOR}.${FALCO_VERSION_MINOR}.${FALCO_VERSION_PATCH}")
-
-# todo(leodido, fntlnz) > use this line above when FALCO_VERSION variable is ok (PR 872)
+# To update sysdig version for the next release, change the default below
+# In case you want to test against another sysdig version just pass the variable - ie., `cmake -DSYSDIG_VERSION=dev ..`
 if(NOT SYSDIG_VERSION)
-  set(SYSDIG_VERSION "dev")
+  set(SYSDIG_VERSION "146a431edf95829ac11bfd9c85ba3ef08789bffe")
 endif()
 
 ExternalProject_Add(
