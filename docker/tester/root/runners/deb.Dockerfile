@@ -6,7 +6,7 @@ RUN test -n FALCO_VERSION
 ENV FALCO_VERSION ${FALCO_VERSION}
 
 RUN apt update -y
-RUN apt install dkms -y
+RUN apt install dkms libyaml-0-2 -y
 
 ADD falco-${FALCO_VERSION}-x86_64.deb /
 RUN dpkg -i /falco-${FALCO_VERSION}-x86_64.deb
