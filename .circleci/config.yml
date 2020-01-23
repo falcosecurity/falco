@@ -72,7 +72,7 @@ jobs:
   # Execute integration tests based on the build results coming from the "build/centos7" job
   "tests/integration":
     docker:
-      - image: falcosecurity/falco-tester:refactor-images # todo: restore this to latest after pushing it once this pr is merged
+      - image: falcosecurity/falco-tester:latest
         environment:
           SOURCE_DIR: "/source"
           BUILD_DIR: "/build"
