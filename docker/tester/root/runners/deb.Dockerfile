@@ -5,6 +5,9 @@ ARG FALCO_VERSION=
 RUN test -n FALCO_VERSION
 ENV FALCO_VERSION ${FALCO_VERSION}
 
+RUN apt update -y
+RUN apt install dkms -y
+
 ADD falco-${FALCO_VERSION}-x86_64.deb /
 RUN dpkg -i /falco-${FALCO_VERSION}-x86_64.deb
 
