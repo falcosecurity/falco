@@ -1,6 +1,6 @@
 [Unit]
 Description=Falco: Container Native Runtime Security
- 
+
 [Service]
 Type=simple
 User=root
@@ -21,10 +21,10 @@ RestrictRealtime=true
 RestrictAddressFamilies=~AF_PACKET
 SystemCallFilter=~@debug @mount @cpu-emulation @obsolete @privileged
 # FIXME!
-#   PANIC: unprotected error in call to Lua API (runtime code generation failed, restricted kernel?)
-#   ?https://www.freelists.org/post/luajit/luajit-crashes-with-grsec-kernel,1
-#MemoryDenyWriteExecute=true
-#PrivateMounts=true
- 
+# PANIC: unprotected error in call to Lua API (runtime code generation failed, restricted kernel?)
+# https://www.freelists.org/post/luajit/luajit-crashes-with-grsec-kernel,1
+# MemoryDenyWriteExecute=true
+# PrivateMounts=true
+
 [Install]
 WantedBy=multi-user.target
