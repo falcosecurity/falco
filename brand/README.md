@@ -108,3 +108,35 @@ Falco however alerts when unusual behavior occurs.
 This is commonly referred to as **detection** or **forensics**.
 
 
+---
+
+# Glossary 
+
+#### Probe
+
+Used to describe the `.o` object that would be dynamically loaded into the kernel as a secure and stable (e)BPF probe. 
+This is one option used to pass kernel events up to userspace for Falco to consume.
+Sometimes this word is incorrectly used to refer to a `module`.
+
+#### Module
+
+Used to describe the `.ko` object that would be loaded into the kernel as a potentially risky kernel module.
+This is one option used to pass kernel events up to userspace for Falco to consume.
+Sometimes this word is incorrectly used to refer to a `probe`.
+
+#### Driver (deprecated)
+
+An older, more generalized term for a `module` or `probe`. We discourage the use of this word as a project.
+
+#### Falco
+
+The name of the project, and also the name of [the main engine](https://github.com/falcosecurity/falco) that the rest of the project is built on.
+
+#### Sysdig, Inc
+
+The name of the company that originally created The Falco Project, and later donated to the CNCF.
+
+#### sysdig 
+
+A [CLI tool](https://github.com/draios/sysdig) used to evaluate kernel system events at runtime. 
+
