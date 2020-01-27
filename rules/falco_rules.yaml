@@ -450,7 +450,7 @@
     a shell configuration file has been modified (user=%user.name command=%proc.cmdline pcmdline=%proc.pcmdline file=%fd.name container_id=%container.id image=%container.image.repository)
   priority:
     WARNING
-  tag: [file, mitre_persistence]
+  tags: [file, mitre_persistence]
 
 # This rule is not enabled by default, as there are many legitimate
 # readers of shell config files. If you want to enable it, modify the
@@ -472,7 +472,7 @@
     a shell configuration file was read by a non-shell program (user=%user.name command=%proc.cmdline file=%fd.name container_id=%container.id image=%container.image.repository)
   priority:
     WARNING
-  tag: [file, mitre_discovery]
+  tags: [file, mitre_discovery]
 
 - macro: consider_all_cron_jobs
   condition: (never_true)
@@ -488,7 +488,7 @@
     file=%fd.name container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
   priority:
     NOTICE
-  tag: [file, mitre_persistence]
+  tags: [file, mitre_persistence]
 
 # Use this to test whether the event occurred within a container.
 
@@ -2480,7 +2480,7 @@
     Shell history had been deleted or renamed (user=%user.name type=%evt.type command=%proc.cmdline fd.name=%fd.name name=%evt.arg.name path=%evt.arg.path oldpath=%evt.arg.oldpath %container.info)
   priority:
     WARNING
-  tag: [process, mitre_defense_evation]
+  tags: [process, mitre_defense_evation]
 
 # This rule is deprecated and will/should never be triggered. Keep it here for backport compatibility.
 # Rule Delete or rename shell history is the preferred rule to use now.
@@ -2493,7 +2493,7 @@
     Shell history had been deleted or renamed (user=%user.name type=%evt.type command=%proc.cmdline fd.name=%fd.name name=%evt.arg.name path=%evt.arg.path oldpath=%evt.arg.oldpath %container.info)
   priority:
     WARNING
-  tag: [process, mitre_defense_evation]
+  tags: [process, mitre_defense_evation]
 
 - macro: consider_all_chmods
   condition: (always_true)
@@ -2515,7 +2515,7 @@
     command=%proc.cmdline container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
   priority:
     NOTICE
-  tag: [process, mitre_persistence]
+  tags: [process, mitre_persistence]
 
 - list: exclude_hidden_directories
   items: [/root/.cassandra]
@@ -2537,7 +2537,7 @@
     file=%fd.name newpath=%evt.arg.newpath container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
   priority:
     NOTICE
-  tag: [file, mitre_persistence]
+  tags: [file, mitre_persistence]
 
 - list: remote_file_copy_binaries
   items: [rsync, scp, sftp, dcp]
