@@ -364,11 +364,34 @@ unique_ptr<falco_engine::rule_result> falco_engine::process_k8s_audit_event(json
 	return res;
 }
 
-bool falco_engine::parse_k8s_audit_json(nlohmann::json &j, std::list<json_event> &evts)
+bool falco_engine::parse_k8s_audit_json(nlohmann::json &j, std::list<json_event> &evts, bool top)
 {
 	// Note that nlohmann::basic_json::value can throw  nlohmann::basic_json::type_error (302, 306)
 	try
 	{
+		// If the object is an array, call parse_k8s_audit_json again for each item.
+		if(j.is_array())
+		{
+			if(top)
+			{
+				for(auto &item : j)
+				{
+					// Note we only handle a single top level array, to
+					// avoid excessive recursion.
+					if(! parse_k8s_audit_json(item, evts, false))
+					{
+						return false;
+					}
+				}
+
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+
 		// If the kind is EventList, split it into individual events
 		if(j.value("kind", "<NA>") == "EventList")
 		{
@@ -410,8 +433,6 @@ bool falco_engine::parse_k8s_audit_json(nlohmann::json &j, std::list<json_event>
 	}
 	catch(exception &e)
 	{
-		// Propagate the exception
-		rethrow_exception(current_exception());
 		return false;
 	}
 }

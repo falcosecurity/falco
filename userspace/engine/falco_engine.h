@@ -163,7 +163,7 @@ public:
 	// Returns true if the json object was recognized as a k8s
 	// audit event(s), false otherwise.
 	//
-	bool parse_k8s_audit_json(nlohmann::json &j, std::list<json_event> &evts);
+	bool parse_k8s_audit_json(nlohmann::json &j, std::list<json_event> &evts, bool top=true);
 
 	//
 	// Given an event, check it against the set of rules in the

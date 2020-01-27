@@ -19,5 +19,6 @@ if [ $1 = 0 ]; then
 	/sbin/service falco stop > /dev/null 2>&1
 	/sbin/chkconfig --del falco
 fi
-
-dkms remove -m falco -v %{version} --all --rpm_safe_upgrade
+rpm_v=%{version}
+mod_version=${rpm_v//_/-}
+dkms remove -m falco -v $mod_version --all --rpm_safe_upgrade

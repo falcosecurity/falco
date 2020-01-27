@@ -1,0 +1,95 @@
+version: 2
+jobs:
+  # Build using ubuntu LTS
+  # This build is dynamic, most dependencies are taken from the OS
+  "build/ubuntu-bionic":
+    docker:
+      - image: ubuntu:bionic
+    steps:
+      - checkout
+      - run:
+          name: Update base image
+          command: apt update -y
+      - run:
+          name: Install dependencies
+          command: apt install libssl-dev libyaml-dev libncurses-dev libc-ares-dev libprotobuf-dev protobuf-compiler libjq-dev libyaml-cpp-dev libgrpc++-dev protobuf-compiler-grpc rpm linux-headers-$(uname -r) libelf-dev cmake build-essential libcurl4-openssl-dev -y
+      - run:
+          name: Prepare project
+          command: |
+            mkdir build
+            pushd build
+            cmake ..
+            popd
+      - run:
+          name: Build
+          command: |
+            pushd build
+            make -j4 all
+            popd
+      - run:
+          name: Run unit tests
+          command: |
+            pushd build
+            make tests
+            popd
+  # Build using our own builder base image using centos 7
+  # This build is static, dependencies are bundled in the falco binary
+  "build/centos7":
+    docker:
+      - image: falcosecurity/falco-builder:latest
+        environment:
+          BUILD_TYPE: "release"
+    steps:
+      - checkout:
+          path: /source/falco
+      - run:
+          name: Prepare project
+          command: /usr/bin/entrypoint cmake
+      - run:
+          name: Build
+          command: /usr/bin/entrypoint all
+      - run:
+          name: Run unit tests
+          command: /usr/bin/entrypoint tests
+      - run:
+          name: Build packages
+          command: /usr/bin/entrypoint package
+      - persist_to_workspace:
+          root: /
+          paths:
+            - build/release
+            - source
+      - run:
+          name: Prepare artifacts
+          command: |
+            mkdir -p /tmp/packages
+            cp /build/release/*.deb /tmp/packages
+            cp /build/release/*.tar.gz /tmp/packages
+            cp /build/release/*.rpm /tmp/packages
+      - store_artifacts:
+          path: /tmp/packages
+          destination: /packages
+  # Execute integration tests based on the build results coming from the "build/centos7" job
+  "tests/integration":
+    docker:
+      - image: falcosecurity/falco-tester:latest
+        environment:
+          SOURCE_DIR: "/source"
+          BUILD_DIR: "/build"
+          BUILD_TYPE: "release"
+    steps:
+      - setup_remote_docker
+      - attach_workspace:
+          at: /
+      - run:
+          name: Execute integration tests
+          command: /usr/bin/entrypoint test
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - "build/ubuntu-bionic"
+      - "build/centos7"
+      - "tests/integration":
+          requires:
+            - "build/centos7"

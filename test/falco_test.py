@@ -333,14 +333,11 @@ class FalcoTest(Test):
             # doesn't have an -i equivalent.
             res = process.run("docker rm falco-test", ignore_status=True)
 
-            rules_dir = os.path.abspath(os.path.join(self.basedir, "./rules"))
-            conf_dir = os.path.abspath(os.path.join(self.basedir, "../"))
-            traces_dir = os.path.abspath(os.path.join(self.basedir, "./trace_files"))
             self.falco_binary_path = "docker run --rm --name falco-test --privileged " \
                                      "-v /var/run/docker.sock:/host/var/run/docker.sock " \
                                      "-v /dev:/host/dev -v /proc:/host/proc:ro -v /boot:/host/boot:ro " \
-                                     "-v /lib/modules:/host/lib/modules:ro -v {}:/root/.sysdig:ro -v " \
-                                     "/usr:/host/usr:ro {} {} falco".format(
+                                     "-v /lib/modules:/host/lib/modules:ro -v {}:/root/.sysdig:ro " \
+                                     "-v /usr:/host/usr:ro {} {} falco".format(
                                          self.module_dir, self.addl_docker_run_args, image)
 
         elif self.package.endswith(".deb"):

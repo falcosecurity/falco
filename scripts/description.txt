@@ -1,1 +1,1 @@
-Falco is an open source project for intrusion and abnormality detection for Cloud Native platforms such as Kubernetes, Mesosphere, and Cloud Foundry. Detect abnormal application behavior. Alert via Slack, Fluentd, NATS, and more. Protect your platform by taking action through serverless (FaaS) frameworks, or other automation.
+Falco, the open source cloud-native runtime security project, is the defacto Kubernetes threat detection engine. Falco detects unexpected application behavior and alerts on threats at runtime.
