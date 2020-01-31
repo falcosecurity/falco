@@ -1156,6 +1156,9 @@
 - macro: automount_using_mtab
   condition: (proc.pname = automount and fd.name startswith /etc/mtab)
 
+- macro: mcafee_writing_cma_d
+  condition: (proc.name=macompatsvc and fd.directory=/etc/cma.d)
+
 # Add conditions to this macro (probably in a separate file,
 # overwriting this macro) to allow for specific combinations of
 # programs writing below specific directories below
@@ -1273,6 +1276,7 @@
     and not etcd_manager_updating_dns
     and not user_known_write_below_etc_activities
     and not automount_using_mtab
+    and not mcafee_writing_cma_d
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc
