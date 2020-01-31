@@ -1159,6 +1159,13 @@
 - macro: mcafee_writing_cma_d
   condition: (proc.name=macompatsvc and fd.directory=/etc/cma.d)
 
+- macro: avinetworks_supervisor_writing_ssh
+  condition: >
+    (proc.cmdline="se_supervisor.p /opt/avi/scripts/se_supervisor.py -d" and
+      (fd.name startswith /etc/ssh/known_host_ or
+       fd.name startswith /etc/ssh/ssh_monitor_config_ or
+       fd.name startswith /etc/ssh/ssh_config_))
+
 # Add conditions to this macro (probably in a separate file,
 # overwriting this macro) to allow for specific combinations of
 # programs writing below specific directories below
@@ -1277,6 +1284,7 @@
     and not user_known_write_below_etc_activities
     and not automount_using_mtab
     and not mcafee_writing_cma_d
+    and not avinetworks_supervisor_writing_ssh
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc
