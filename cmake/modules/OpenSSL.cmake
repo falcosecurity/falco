@@ -14,6 +14,7 @@ else()
   set(OPENSSL_LIBRARY_SSL "${OPENSSL_INSTALL_DIR}/lib/libssl.a")
   set(OPENSSL_LIBRARY_CRYPTO "${OPENSSL_INSTALL_DIR}/lib/libcrypto.a")
   set(OPENSSL_BINARY "${OPENSSL_INSTALL_DIR}/bin/openssl")
+  set(USE_BUNDLED_OPENSSL ON)
 
   message(STATUS "Using bundled openssl in '${OPENSSL_BUNDLE_DIR}'")
 

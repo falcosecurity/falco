@@ -22,7 +22,14 @@ build_image() {
     BUILD_TYPE=$2
     FALCO_VERSION=$3
     PACKAGE_TYPE=$4
-    PACKAGE="$BUILD_DIR/$BUILD_TYPE/falco-$FALCO_VERSION-x86_64.${PACKAGE_TYPE}"
+
+    arch=$(uname -i)
+    if [ "$arch" == 'x86_64' ];then
+        PACKAGE="$BUILD_DIR/$BUILD_TYPE/falco-$FALCO_VERSION-x86_64.${PACKAGE_TYPE}"
+    elif [ "$arch" == 'ppc64le' ];then
+        PACKAGE="$BUILD_DIR/$BUILD_TYPE/falco-$FALCO_VERSION-ppc64le.${PACKAGE_TYPE}"
+    fi
+
     if [ ! -f "$PACKAGE" ]; then
         echo "Package not found: ${PACKAGE}." >&2
         exit 1

@@ -24,11 +24,26 @@ if(NOT SYSDIG_VERSION)
   set(SYSDIG_VERSION "146a431edf95829ac11bfd9c85ba3ef08789bffe")
 endif()
 
-ExternalProject_Add(
-  sysdig
-  URL "https://github.com/draios/sysdig/archive/${SYSDIG_VERSION}.tar.gz"
-  # URL_HASH SHA256=bd09607aa8beb863db07e695863f7dc543e2d39e7153005759d26a340ff66fa5
-  CONFIGURE_COMMAND ""
-  BUILD_COMMAND ""
-  INSTALL_COMMAND ""
-  TEST_COMMAND "")
+if("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64")
+    ExternalProject_Add(
+    sysdig
+    URL "https://github.com/draios/sysdig/archive/${SYSDIG_VERSION}.tar.gz"
+    # URL_HASH SHA256=bd09607aa8beb863db07e695863f7dc543e2d39e7153005759d26a340ff66fa5
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND ""
+    TEST_COMMAND "")
+elseif("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "ppc64le")
+
+    set(SYSDIG_SOURCE_DIR "${CMAKE_BINARY_DIR}/sysdig-prefix/src/sysdig")
+
+    ExternalProject_Add(
+    sysdig
+    URL "https://github.com/draios/sysdig/archive/${SYSDIG_VERSION}.tar.gz"
+    # URL_HASH SHA256=bd09607aa8beb863db07e695863f7dc543e2d39e7153005759d26a340ff66fa5
+    PATCH_COMMAND sed -i "s/luaL_reg/luaL_Reg/g" ${SYSDIG_SOURCE_DIR}/userspace/libsinsp/chisel.cpp && sed -i "s/luaL_reg/luaL_Reg/g" ${SYSDIG_SOURCE_DIR}/userspace/libsinsp/lua_parser.cpp && sed -i "s/luaL_getn/lua_objlen /g" ${SYSDIG_SOURCE_DIR}/userspace/libsinsp/lua_parser_api.cpp
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND ""
+    TEST_COMMAND "")
+endif()

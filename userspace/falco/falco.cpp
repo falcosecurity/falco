@@ -295,16 +295,32 @@ uint64_t do_inspect(falco_engine *engine,
 			throw sinsp_exception(inspector->getlasterr().c_str());
 		}
 
-		if (duration_start == 0)
-		{
-			duration_start = ev->get_ts();
-		} else if(duration_to_tot_ns > 0)
-		{
-			if(ev->get_ts() - duration_start >= duration_to_tot_ns)
+                #if defined(__x86_64__)
+			if (duration_start == 0)
 			{
-				break;
+				duration_start = ev->get_ts();
+			} else if(duration_to_tot_ns > 0)
+			{
+				if(ev->get_ts() - duration_start >= duration_to_tot_ns)
+				{
+					break;
+				}
 			}
-		}
+		#elif defined(__PPC64__)
+			// On ppc64le platform ,In case of else condition as (duration_to_tot_ns>0) returns true(expected as false),when duration_to_tot_ns = 0.
+			// This happens due to optimisation(-O3) set as compilation flag in falco/CMakeList.txt file.
+			// So swap the conditions in if/else.
+			if(duration_to_tot_ns > 0)
+                        {
+				if(ev->get_ts() - duration_start >= duration_to_tot_ns)
+				{
+					break;
+				}
+			} else if (duration_start == 0)
+			{
+				duration_start = ev->get_ts();
+			}
+		#endif
 
 		if(!sdropmgr.process_event(inspector, ev))
 		{

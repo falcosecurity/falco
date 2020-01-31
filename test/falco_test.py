@@ -25,6 +25,7 @@ import stat
 import subprocess
 import sys
 import urllib
+import platform
 
 from avocado import Test
 from avocado.utils import process
@@ -348,7 +349,7 @@ class FalcoTest(Test):
             matches = glob.glob(package_glob)
 
             if len(matches) != 1:
-                self.fail("Package path {} did not match exactly 1 file. Instead it matched: {}", package_glob, ",".join(matches))
+                self.fail("Package path {} did not match exactly 1 file. Instead it matched: {}".format(package_glob, ",".join(matches)))
 
             package_path = matches[0]
 
@@ -364,7 +365,7 @@ class FalcoTest(Test):
             matches = glob.glob(package_glob)
 
             if len(matches) != 1:
-                self.fail("Package path {} did not match exactly 1 file. Instead it matched: {}", package_glob, ",".join(matches))
+                self.fail("Package path {} did not match exactly 1 file. Instead it matched: {}".format(package_glob, ",".join(matches)))
 
             package_path = matches[0]
 
@@ -426,8 +427,13 @@ class FalcoTest(Test):
         self.possibly_copy_driver()
 
         if self.package != 'None':
-            # This sets falco_binary_path as a side-effect.
-            self.install_package()
+            #As per https://github.com/falcosecurity/falco/issues/982, skipping the docker_package test cases
+            #due to falcobuilder/falco-tester container, old kernel versions module build issue(gcc-6/5 dependecy) on ppc64le platform
+            if platform.machine() == 'ppc64le' and self.package.startswith("docker:"):
+                return
+            else:
+                # This sets falco_binary_path as a side-effect.
+                self.install_package()
 
         trace_arg = self.trace_file
 

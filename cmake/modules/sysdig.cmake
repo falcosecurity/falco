@@ -22,7 +22,12 @@ endif()
 
 file(MAKE_DIRECTORY ${SYSDIG_CMAKE_WORKING_DIR})
 # cd /path/to/build && cmake /path/to/source
-execute_process(COMMAND "${CMAKE_COMMAND}" ${SYSDIG_CMAKE_SOURCE_DIR} WORKING_DIRECTORY ${SYSDIG_CMAKE_WORKING_DIR})
+
+if("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "x86_64")
+    execute_process(COMMAND "${CMAKE_COMMAND}" ${SYSDIG_CMAKE_SOURCE_DIR} WORKING_DIRECTORY ${SYSDIG_CMAKE_WORKING_DIR})
+elseif("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "ppc64le")
+    execute_process(COMMAND "${CMAKE_COMMAND}" "-DSYSDIG_VERSION=dev" ${SYSDIG_CMAKE_SOURCE_DIR} WORKING_DIRECTORY ${SYSDIG_CMAKE_WORKING_DIR})
+endif()
 
 # todo(leodido, fntlnz) > use the following one when CMake version will be >= 3.13
 
