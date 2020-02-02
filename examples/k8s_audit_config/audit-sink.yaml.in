@@ -13,4 +13,4 @@ spec:
       qps: 10
       burst: 15
     clientConfig:
-      url: "http://$FALCO_SERVICE_CLUSTERIP:8765/k8s_audit"
+      url: "http://$FALCO_SERVICE_CLUSTERIP:8765/k8s-audit"
