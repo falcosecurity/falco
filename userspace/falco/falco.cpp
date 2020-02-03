@@ -45,6 +45,7 @@ limitations under the License.
 #include "statsfilewriter.h"
 #include "webserver.h"
 #include "grpc_server.h"
+#include "banned.h"
 
 typedef function<void(sinsp* inspector)> open_t;
 
@@ -895,7 +896,7 @@ int falco_init(int argc, char **argv)
 			printf("%s\n", support.dump().c_str());
 			goto exit;
 		}
-		
+
 		// read hostname
 		string hostname;
 		if(char* env_hostname = getenv("FALCO_GRPC_HOSTNAME"))

@@ -15,6 +15,7 @@ limitations under the License.
 */
 
 #include "event_drops.h"
+#include "banned.h"
 
 syscall_evt_drop_mgr::syscall_evt_drop_mgr():
 	m_num_syscall_evt_drops(0),

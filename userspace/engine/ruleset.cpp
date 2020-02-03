@@ -15,6 +15,7 @@ limitations under the License.
 */
 
 #include "ruleset.h"
+#include "banned.h"
 
 using namespace std;
 

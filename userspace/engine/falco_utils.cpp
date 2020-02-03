@@ -18,6 +18,7 @@ limitations under the License.
 */
 
 #include "falco_utils.h"
+#include "banned.h"
 
 namespace falco
 {
