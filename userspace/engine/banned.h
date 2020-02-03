@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2019 The Falco Authors
+Copyright (C) 2019 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,22 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#include "utils.h"
-#include "banned.h"
+#pragma once
 
-void falco::utils::read(const std::string& filename, std::string& data)
-{
-	std::ifstream file(filename.c_str(), std::ios::in);
+// BAN macro defines `function` as an invalid token that says using
+// the function is banned. This throws a compile time error when the
+// function is used.
+#define BAN(function) using_##function##_is_banned
 
-	if(file.is_open())
-	{
-		std::stringstream ss;
-		ss << file.rdbuf();
-
-		file.close();
-
-		data = ss.str();
-	}
-
-	return;
-}
+#undef strcpy
+#define strcpy(a, b) BAN(strcpy)

@@ -21,6 +21,7 @@ limitations under the License.
 
 #include "falco_common.h"
 #include "json_evt.h"
+#include "banned.h"
 
 using json = nlohmann::json;
 using namespace std;

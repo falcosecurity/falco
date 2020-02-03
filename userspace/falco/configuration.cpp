@@ -23,6 +23,7 @@ limitations under the License.
 
 #include "configuration.h"
 #include "logger.h"
+#include "banned.h"
 
 using namespace std;
 

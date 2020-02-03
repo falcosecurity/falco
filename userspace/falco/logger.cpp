@@ -19,6 +19,7 @@ limitations under the License.
 #include "chisel_api.h"
 
 #include "falco_common.h"
+#include "banned.h"
 
 const static struct luaL_reg ll_falco [] =
 {
@@ -158,5 +159,3 @@ void falco_logger::log(int priority, const string msg)
 		}
 	}
 }
-
-

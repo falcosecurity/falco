@@ -32,6 +32,7 @@ extern "C" {
 }
 
 #include "utils.h"
+#include "banned.h"
 
 
 string lua_on_event = "on_event";

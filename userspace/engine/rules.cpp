@@ -24,6 +24,8 @@ extern "C" {
 }
 
 #include "falco_engine.h"
+#include "banned.h"
+
 const static struct luaL_reg ll_falco_rules [] =
 {
 	{"clear_filters", &falco_rules::clear_filters},
@@ -480,4 +482,3 @@ falco_rules::~falco_rules()
 	delete m_sinsp_lua_parser;
 	delete m_json_lua_parser;
 }
-

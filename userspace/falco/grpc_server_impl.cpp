@@ -16,6 +16,7 @@ limitations under the License.
 
 #include "grpc_server_impl.h"
 #include "falco_output_queue.h"
+#include "banned.h"
 
 bool falco::grpc::server_impl::is_running()
 {
