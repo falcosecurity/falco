@@ -8,11 +8,9 @@
 #### Latest release
 
 **v0.19.0**
-Read the [change log](https://github.com/falcosecurity/falco/blob/dev/CHANGELOG.md)
+Read the [change log](CHANGELOG.md)
 
-Dev Branch: [![Build Status](https://travis-ci.com/falcosecurity/falco.svg?branch=dev)](https://travis-ci.com/falcosecurity/falco)<br />
-Master Branch: [![Build Status](https://travis-ci.com/falcosecurity/falco.svg?branch=master)](https://travis-ci.com/falcosecurity/falco)<br />
-CII Best Practices: [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/2317/badge)](https://bestpractices.coreinfrastructure.org/projects/2317)
+[![Build Status](https://img.shields.io/circleci/build/github/falcosecurity/falco/master?style=for-the-badge)](https://circleci.com/gh/falcosecurity/falco) [![CII Best Practices Summary](https://img.shields.io/cii/summary/2317?label=CCI%20Best%20Practices&style=for-the-badge)](https://bestpractices.coreinfrastructure.org/projects/2317) [![GitHub](https://img.shields.io/github/license/falcosecurity/falco?style=for-the-badge)](COPYING)
 
 ---
 
@@ -49,7 +47,7 @@ See [Falco Documentation](https://falco.org/docs/) to quickly get started using 
 Join the Community
 ---
 
-To get involved with The Falco Project please visit [the community repository](https://github.com/falcosecurity/community) to find more. 
+To get involved with The Falco Project please visit [the community repository](https://github.com/falcosecurity/community) to find more.
 
 License Terms
 ---
