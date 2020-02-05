@@ -131,12 +131,8 @@ void falco_logger::log(int priority, const string msg)
 		{
 			char buf[sizeof "YYYY-MM-DDTHH:MM:SS-0000"];
 			struct tm *gtm = std::gmtime(&result);
-			if(gtm == NULL ||
-			   (strftime(buf, sizeof(buf), "%FT%T%z", gtm) == 0))
-			{
-				sprintf(buf, "N/A");
-			}
-			else
+			if(gtm != NULL &&
+			   (strftime(buf, sizeof(buf), "%FT%T%z", gtm) != 0))
 			{
 				fprintf(stderr, "%s: %s", buf, msg.c_str());
 			}
