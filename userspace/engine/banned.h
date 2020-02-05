@@ -23,3 +23,24 @@ limitations under the License.
 
 #undef strcpy
 #define strcpy(a, b) BAN(strcpy)
+
+#undef vsprintf
+#define vsprintf(a, b, c) BAN(vsprintf)
+
+#undef sprintf
+#define sprintf(a, b, ...) BAN(sprintf)
+
+#undef strcat
+#define strcat(a, b) BAN(strcat)
+
+#undef strncat
+#define strncat(a, b, c) BAN(strncat)
+
+#undef strncpy
+#define strncpy(a, b, c) BAN(strncpy)
+
+#undef swprintf
+#define swprintf(a, b, c, ...) BAN(swprintf)
+
+#undef vswprintf
+#define vswprintf(a, b, c, d) BAN(vswprintf)
