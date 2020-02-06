@@ -1248,7 +1248,7 @@ int falco_init(int argc, char **argv)
 	}
 	catch(exception &e)
 	{
-		display_fatal_err("Runtime error: " + string(e.what()) + ". Exiting.\n");
+		display_fatal_err("runtime error: " + string(e.what()) + ".\n");
 
 		result = EXIT_FAILURE;
 

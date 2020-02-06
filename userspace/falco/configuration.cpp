@@ -87,7 +87,7 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 		filename = m_config->get_scalar<string>("file_output", "filename", "");
 		if(filename == string(""))
 		{
-			throw invalid_argument("Error reading config file (" + m_config_file + "): file output enabled but no filename in configuration block");
+			throw logic_error("error reading config file (" + m_config_file + "): file output enabled but no filename in configuration block");
 		}
 		file_output.options["filename"] = filename;
 
@@ -119,7 +119,7 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 		program = m_config->get_scalar<string>("program_output", "program", "");
 		if(program == string(""))
 		{
-			throw sinsp_exception("Error reading config file (" + m_config_file + "): program output enabled but no program in configuration block");
+			throw logic_error("error reading config file (" + m_config_file + "): program output enabled but no program path in configuration block");
 		}
 		program_output.options["program"] = program;
 
@@ -138,7 +138,7 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 
 		if(url == string(""))
 		{
-			throw sinsp_exception("Error reading config file (" + m_config_file + "): http output enabled but no url in configuration block");
+			throw logic_error("error reading config file (" + m_config_file + "): http output enabled but no URL in configuration block");
 		}
 		http_output.options["url"] = url;
 
@@ -148,6 +148,10 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 	m_grpc_enabled = m_config->get_scalar<bool>("grpc", "enabled", false);
 	m_grpc_bind_address = m_config->get_scalar<string>("grpc", "bind_address", "0.0.0.0:5060");
 	m_grpc_threadiness = m_config->get_scalar<uint32_t>("grpc", "threadiness", 8); // todo > limit it to avoid overshubscription? std::thread::hardware_concurrency()
+	if(m_grpc_threadiness == 0)
+	{
+		throw logic_error("error reading config file (" + m_config_file +"): gRPC threadiness must be greater than 0");
+	}
 	m_grpc_private_key = m_config->get_scalar<string>("grpc", "private_key", "/etc/falco/certs/server.key");
 	m_grpc_cert_chain = m_config->get_scalar<string>("grpc", "cert_chain", "/etc/falco/certs/server.crt");
 	m_grpc_root_certs = m_config->get_scalar<string>("grpc", "root_certs", "/etc/falco/certs/ca.crt");
@@ -162,7 +166,7 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 
 	if(m_outputs.size() == 0)
 	{
-		throw invalid_argument("Error reading config file (" + m_config_file + "): No outputs configured. Please configure at least one output file output enabled but no filename in configuration block");
+		throw logic_error("error reading config file (" + m_config_file + "): please configure at least one output");
 	}
 
 	string log_level = m_config->get_scalar<string>("log_level", "info");
@@ -181,7 +185,7 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 
 	if((it = std::find_if(falco_common::priority_names.begin(), falco_common::priority_names.end(), comp)) == falco_common::priority_names.end())
 	{
-		throw invalid_argument("Unknown priority \"" + priority + "\"--must be one of emergency, alert, critical, error, warning, notice, informational, debug");
+		throw logic_error("error reading config file (" + m_config_file + "): unknown priority \"" + priority + "\", it must be one of emergency, alert, critical, error, warning, notice, informational, debug");
 	}
 	m_min_priority = (falco_common::priority_type)(it - falco_common::priority_names.begin());
 
@@ -220,7 +224,7 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 		}
 		else
 		{
-			throw invalid_argument("Error reading config file (" + m_config_file + "): syscall event drop action " + act + " must be one of \"ignore\", \"log\", \"alert\", or \"exit\"");
+			throw logic_error("error reading config file (" + m_config_file + "): syscall event drop action " + act + " must be one of \"ignore\", \"log\", \"alert\", or \"exit\"");
 		}
 	}
 
@@ -328,7 +332,7 @@ void falco_configuration::set_cmdline_option(const string &opt)
 
 	if(!split(opt, '=', keyval))
 	{
-		throw invalid_argument("Error parsing config option \"" + opt + "\". Must be of the form key=val or key.subkey=val");
+		throw logic_error("error parsing config option \"" + opt + "\", it must be of the form key=val or key.subkey=val");
 	}
 
 	if(split(keyval.first, '.', subkey))
