@@ -193,7 +193,6 @@ public:
 	const values_t &extracted_values();
 
 protected:
-
 	// Subclasses can override this method, calling
 	// add_extracted_value to add extracted values.
 	virtual bool extract_values(json_event *jevt);
@@ -293,7 +292,7 @@ public:
 	jevt_filter_check();
 	virtual ~jevt_filter_check();
 
-        int32_t parse_field_name(const char* str, bool alloc_state, bool needed_for_filtering) final;
+	int32_t parse_field_name(const char* str, bool alloc_state, bool needed_for_filtering) final;
 
 	json_event_filter_check *allocate_new();
 
