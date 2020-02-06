@@ -32,11 +32,14 @@ void falco::grpc::server_impl::subscribe(const stream_context& ctx, const output
 {
 	if(ctx.m_status == stream_context::SUCCESS || ctx.m_status == stream_context::ERROR)
 	{
+		// todo(leodido) > log "status=ctx->m_status, stream=ctx->m_stream"
 		ctx.m_stream = nullptr;
 	}
 	else
 	{
-		// Streaming
+		// Start or continue streaming
+		// todo(leodido) > check for m_status == stream_context::STREAMING?
+		// todo(leodido) > set m_stream
 		if(output::queue::get().try_pop(res) && !req.keepalive())
 		{
 			ctx.m_has_more = true;
@@ -52,12 +55,18 @@ void falco::grpc::server_impl::subscribe(const stream_context& ctx, const output
 
 void falco::grpc::server_impl::version(const context& ctx, const version::request&, version::response& res)
 {
-	res.set_version(FALCO_VERSION);
-	res.set_major(std::stoi(FALCO_VERSION_MAJOR));
-	res.set_minor(std::stoi(FALCO_VERSION_MINOR));
-	res.set_patch(std::stoi(FALCO_VERSION_PATCH));
-	res.set_prerelease(FALCO_VERSION_PRERELEASE);
-	res.set_build(FALCO_VERSION_BUILD);
+	auto& build = *res.mutable_build();
+	build = FALCO_VERSION_BUILD;
+
+	auto& prerelease = *res.mutable_prerelease();
+	prerelease = FALCO_VERSION_PRERELEASE;
+
+	auto& version = *res.mutable_version();
+	version = FALCO_VERSION;
+
+	res.set_major(FALCO_VERSION_MAJOR);
+	res.set_minor(FALCO_VERSION_MINOR);
+	res.set_patch(FALCO_VERSION_PATCH);
 }
 
 void falco::grpc::server_impl::shutdown()
