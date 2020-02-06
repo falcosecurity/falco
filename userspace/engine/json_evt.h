@@ -282,7 +282,8 @@ private:
 
 	// If true, this filtercheck works on paths, which enables
 	// some extra bookkeeping to allow for path prefix searches.
-	bool m_uses_paths;
+	bool m_uses_paths = false;
+
 	path_prefix_search m_prefix_search;
 };
 
