@@ -23,26 +23,25 @@ limitations under the License.
 #include "logger.h"
 #include "grpc_server.h"
 #include "grpc_request_context.h"
-#include "grpc_context.h"
 #include "utils.h"
 #include "banned.h"
 
-#define REGISTER_STREAM(req, res, svc, rpc, impl, num)                     \
+#define REGISTER_STREAM(req, res, svc, rpc, impl, num)                          \
 	std::vector<request_stream_context<svc, req, res>> rpc##_contexts(num); \
 	for(request_stream_context<svc, req, res> & c : rpc##_contexts)         \
-	{                                                                  \
-		c.m_process_func = &server::impl;                          \
-		c.m_request_func = &svc::AsyncService::Request##rpc;       \
-		c.start(this);                                             \
+	{                                                                       \
+		c.m_process_func = &server::impl;                               \
+		c.m_request_func = &svc::AsyncService::Request##rpc;            \
+		c.start(this);                                                  \
 	}
 
-#define REGISTER_UNARY(req, res, svc, rpc, impl, num)                \
-	std::vector<request_context<svc, req, res>> rpc##_contexts(num);  \
-	for(request_context<svc, req, res> & c : rpc##_contexts)          \
-	{                                                            \
-		c.m_process_func = &server::impl;                    \
-		c.m_request_func = &svc::AsyncService::Request##rpc; \
-		c.start(this);                                       \
+#define REGISTER_UNARY(req, res, svc, rpc, impl, num)                    \
+	std::vector<request_context<svc, req, res>> rpc##_contexts(num); \
+	for(request_context<svc, req, res> & c : rpc##_contexts)         \
+	{                                                                \
+		c.m_process_func = &server::impl;                        \
+		c.m_request_func = &svc::AsyncService::Request##rpc;     \
+		c.start(this);                                           \
 	}
 
 void falco::grpc::server::thread_process(int thread_index)
