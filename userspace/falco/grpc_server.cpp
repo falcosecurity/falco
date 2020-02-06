@@ -51,17 +51,22 @@ void falco::grpc::server::thread_process(int thread_index)
 	{
 		if(tag == nullptr)
 		{
+			// todo(leodido) > log error "server completion queue error: empty tag"
 			continue;
 		}
 
 		// Obtain the context for a given tag
 		request_context_base* ctx = static_cast<request_context_base*>(tag);
 
+		// todo(leodido) > log "next event: tag=tag, read_success=event_read_success, state=ctx->m_state"
+
 		// When event has not been read successfully
 		if(!event_read_success)
 		{
 			if(ctx->m_state != request_context_base::REQUEST)
 			{
+				// todo(leodido) > log error "server completion queue failing to read: tag=tag"
+
 				// End the context with error
 				ctx->end(this, true);
 			}
@@ -74,17 +79,19 @@ void falco::grpc::server::thread_process(int thread_index)
 		case request_context_base::REQUEST:
 			// Completion of m_request_func
 		case request_context_base::WRITE:
-			// Completion of ServerAsyncWriter::Write()
+			// Completion of Write()
 			ctx->process(this);
 			break;
 		case request_context_base::FINISH:
-			// Completion of ServerAsyncWriter::Finish()
+			// Completion of Finish()
 			ctx->end(this, false);
 			break;
 		default:
-			// todo > log "unkown completion queue event"
+			// todo(leodido) > log error "unkown completion queue event: tag=tag, state=ctx->m_state"
 			break;
 		}
+
+		// todo(leodido) > log "thread completed: index=thread_index"
 	}
 }
 
@@ -126,22 +133,24 @@ void falco::grpc::server::run()
 	// This defines the number of simultaneous completion queue requests of the same type (service::AsyncService::Request##RPC)
 	// For this approach to be sufficient server::IMPL have to be fast
 	int context_num = m_threadiness * 10;
+	// todo(leodido) > take a look at thread_stress_test.cc into grpc repository
 
 	REGISTER_UNARY(version::request, version::response, version::service, version, version, context_num)
 	REGISTER_STREAM(output::request, output::response, output::service, subscribe, subscribe, context_num)
 
-	// todo(leodido, fntlnz) > do we need to size thrediness to context_num * number of registered services here? eg., context_num * 2
 	m_threads.resize(m_threadiness);
 	int thread_idx = 0;
 	for(std::thread& thread : m_threads)
 	{
 		thread = std::thread(&server::thread_process, this, thread_idx++);
 	}
+	// todo(leodido) > log "gRPC server running: threadiness=m_threads.size()"
 
 	while(server_impl::is_running())
 	{
 		sleep(1);
 	}
+	// todo(leodido) > log "stopping gRPC server"
 	stop();
 }
 
@@ -161,7 +170,7 @@ void falco::grpc::server::stop()
 	}
 	m_threads.clear();
 
-	falco_logger::log(LOG_INFO, "Ignoring all the remaining gRPC events\n");
+	falco_logger::log(LOG_INFO, "Draining all the remaining gRPC events\n");
 	// Ignore remaining events
 	void* ignore_tag = nullptr;
 	bool ignore_ok = false;
