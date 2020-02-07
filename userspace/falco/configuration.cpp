@@ -87,7 +87,7 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 		filename = m_config->get_scalar<string>("file_output", "filename", "");
 		if(filename == string(""))
 		{
-			throw logic_error("error reading config file (" + m_config_file + "): file output enabled but no filename in configuration block");
+			throw logic_error("Error reading config file (" + m_config_file + "): file output enabled but no filename in configuration block");
 		}
 		file_output.options["filename"] = filename;
 
@@ -119,7 +119,7 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 		program = m_config->get_scalar<string>("program_output", "program", "");
 		if(program == string(""))
 		{
-			throw logic_error("error reading config file (" + m_config_file + "): program output enabled but no program path in configuration block");
+			throw logic_error("Error reading config file (" + m_config_file + "): program output enabled but no program in configuration block");
 		}
 		program_output.options["program"] = program;
 
@@ -138,7 +138,7 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 
 		if(url == string(""))
 		{
-			throw logic_error("error reading config file (" + m_config_file + "): http output enabled but no URL in configuration block");
+			throw logic_error("Error reading config file (" + m_config_file + "): http output enabled but no url in configuration block");
 		}
 		http_output.options["url"] = url;
 
@@ -166,7 +166,7 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 
 	if(m_outputs.size() == 0)
 	{
-		throw logic_error("error reading config file (" + m_config_file + "): please configure at least one output");
+		throw logic_error("Error reading config file (" + m_config_file + "): No outputs configured. Please configure at least one output file output enabled but no filename in configuration block");
 	}
 
 	string log_level = m_config->get_scalar<string>("log_level", "info");
@@ -185,7 +185,7 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 
 	if((it = std::find_if(falco_common::priority_names.begin(), falco_common::priority_names.end(), comp)) == falco_common::priority_names.end())
 	{
-		throw logic_error("error reading config file (" + m_config_file + "): unknown priority \"" + priority + "\", it must be one of emergency, alert, critical, error, warning, notice, informational, debug");
+		throw logic_error("Unknown priority \"" + priority + "\"--must be one of emergency, alert, critical, error, warning, notice, informational, debug");
 	}
 	m_min_priority = (falco_common::priority_type)(it - falco_common::priority_names.begin());
 
@@ -224,7 +224,7 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 		}
 		else
 		{
-			throw logic_error("error reading config file (" + m_config_file + "): syscall event drop action " + act + " must be one of \"ignore\", \"log\", \"alert\", or \"exit\"");
+			throw logic_error("Error reading config file (" + m_config_file + "): syscall event drop action " + act + " must be one of \"ignore\", \"log\", \"alert\", or \"exit\"");
 		}
 	}
 
@@ -332,7 +332,7 @@ void falco_configuration::set_cmdline_option(const string &opt)
 
 	if(!split(opt, '=', keyval))
 	{
-		throw logic_error("error parsing config option \"" + opt + "\", it must be of the form key=val or key.subkey=val");
+		throw logic_error("Error parsing config option \"" + opt + "\". Must be of the form key=val or key.subkey=val");
 	}
 
 	if(split(keyval.first, '.', subkey))

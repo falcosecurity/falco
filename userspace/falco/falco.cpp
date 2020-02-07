@@ -895,7 +895,7 @@ int falco_init(int argc, char **argv)
 			printf("%s\n", support.dump().c_str());
 			goto exit;
 		}
-		
+
 		// read hostname
 		string hostname;
 		if(char* env_hostname = getenv("FALCO_GRPC_HOSTNAME"))
@@ -1248,7 +1248,7 @@ int falco_init(int argc, char **argv)
 	}
 	catch(exception &e)
 	{
-		display_fatal_err("runtime error: " + string(e.what()) + ".\n");
+		display_fatal_err("Runtime error: " + string(e.what()) + ". Exiting.\n");
 
 		result = EXIT_FAILURE;
 
