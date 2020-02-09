@@ -1,4 +1,4 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: falco-daemonset
@@ -6,6 +6,10 @@ metadata:
     app: falco-example
     role: security
 spec:
+  selector:
+    matchLabels:
+      app: falco-example
+      role: security
   template:
     metadata:
       labels:
