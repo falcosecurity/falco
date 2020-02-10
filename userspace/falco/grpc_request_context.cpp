@@ -33,7 +33,12 @@ void request_stream_context<falco::output::service, falco::output::request, falc
 	m_stream_ctx.reset();
 	m_req.Clear();
 	auto cq = srv->m_completion_queue.get();
-	// todo(leodido) > log "calling m_request_func: tag=this, state=m_state"
+	// m_stream_ctx->m_stream = this; // todo(leodido) > evaluate
+	gpr_log(
+		GPR_DEBUG,
+		"request_stream_context<outputs>::%s -> m_request_func: tag=%p, state=request",
+		__func__,
+		this);
 	(srv->m_output_svc.*m_request_func)(srvctx, &m_req, m_res_writer.get(), cq, cq, this);
 }
 
@@ -48,13 +53,25 @@ void request_stream_context<falco::output::service, falco::output::request, falc
 	}
 
 	// Processing
+	gpr_log(
+		GPR_DEBUG,
+		"request_stream_context<outputs>::%s -> m_process_func: tag=%p, state=%s",
+		__func__,
+		this,
+		m_state == request_context_base::REQUEST ? "request" : m_state == request_context_base::WRITE ? "write" : m_state == request_context_base::FINISH ? "finish" : "unknown");
+
 	output::response res;
 	(srv->*m_process_func)(*m_stream_ctx, m_req, res); // subscribe()
 
 	// When there are still more responses to stream
 	if(m_stream_ctx->m_has_more)
 	{
-		// todo(leodido) > log "write: tag=this, state=m_state"
+		gpr_log(
+			GPR_DEBUG,
+			"request_stream_context<outputs>::%s -> write: tag=%p, state=%s",
+			__func__,
+			this,
+			m_state == request_context_base::REQUEST ? "request" : m_state == request_context_base::WRITE ? "write" : m_state == request_context_base::FINISH ? "finish" : "unknown");
 		m_res_writer->Write(res, this);
 	}
 	// No more responses to stream
@@ -63,7 +80,12 @@ void request_stream_context<falco::output::service, falco::output::request, falc
 		// Communicate to the gRPC runtime that we have finished.
 		// The memory address of "this" instance uniquely identifies the event.
 		m_state = request_context_base::FINISH;
-		// todo(leodido) > log "finish: tag=this, state=m_state"
+		gpr_log(
+			GPR_DEBUG,
+			"request_stream_context<outputs>::%s -> finish: tag=%p, state=finish",
+			__func__,
+			this);
+
 		m_res_writer->Finish(::grpc::Status::OK, this);
 	}
 }
@@ -75,7 +97,13 @@ void request_stream_context<falco::output::service, falco::output::request, falc
 	{
 		if(errored)
 		{
-			// todo(leodido) > log error "error streaming: tag=this, state=m_state, stream=m_stream_ctx->m_stream"
+			gpr_log(
+				GPR_ERROR,
+				"request_stream_context<outputs>::%s -> error streaming: tag=%p, state=%s, stream=%s",
+				__func__,
+				this,
+				m_state == request_context_base::REQUEST ? "request" : m_state == request_context_base::WRITE ? "write" : m_state == request_context_base::FINISH ? "finish" : "unknown",
+				m_stream_ctx->m_stream);
 		}
 		m_stream_ctx->m_status = errored ? stream_context::ERROR : stream_context::SUCCESS;
 
@@ -90,7 +118,12 @@ void request_stream_context<falco::output::service, falco::output::request, falc
 		// So, `m_stream_ctx` is null because it is set into the `process()` function.
 		// The stream haven't started.
 
-		// todo(leodido) > log error "ending streaming: tag=this, state=m_state, stream=null"
+		gpr_log(
+			GPR_ERROR,
+			"%s -> ending streaming: tag=%p, state=%s, stream=never started",
+			__func__,
+			this,
+			m_state == request_context_base::REQUEST ? "request" : m_state == request_context_base::WRITE ? "write" : m_state == request_context_base::FINISH ? "finish" : "unknown");
 	}
 
 	// Ask to start processing requests
@@ -109,12 +142,24 @@ void falco::grpc::request_context<falco::version::service, falco::version::reque
 	// Request to start processing given requests.
 	// Using "this" - ie., the memory address of this context - as the tag that uniquely identifies the request.
 	// In this way, different contexts can serve different requests concurrently.
+	gpr_log(
+		GPR_DEBUG,
+		"request_context<version>::%s -> m_request_func: tag=%p, state=request",
+		__func__,
+		this);
 	(srv->m_version_svc.*m_request_func)(srvctx, &m_req, m_res_writer.get(), cq, cq, this);
 }
 
 template<>
 void falco::grpc::request_context<falco::version::service, falco::version::request, falco::version::response>::process(server* srv)
 {
+	gpr_log(
+		GPR_DEBUG,
+		"request_context<version>::%s -> m_process_func: tag=%p, state=%s",
+		__func__,
+		this,
+		m_state == request_context_base::REQUEST ? "request" : m_state == request_context_base::WRITE ? "write" : m_state == request_context_base::FINISH ? "finish" : "unknown");
+
 	version::response res;
 	(srv->*m_process_func)(m_srv_ctx.get(), m_req, res);
 
@@ -128,7 +173,16 @@ template<>
 void falco::grpc::request_context<falco::version::service, falco::version::request, falco::version::response>::end(server* srv, bool errored)
 {
 	// todo(leodido) > handle processing errors here
-	
+	if(errored)
+	{
+		gpr_log(
+			GPR_ERROR,
+			"request_context<version>::%s -> error replying: tag=%p, state=%s",
+			__func__,
+			this,
+			m_state == request_context_base::REQUEST ? "request" : m_state == request_context_base::WRITE ? "write" : m_state == request_context_base::FINISH ? "finish" : "unknown");
+	}
+
 	// Ask to start processing requests
 	start(srv);
 }
