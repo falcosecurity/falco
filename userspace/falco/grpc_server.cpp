@@ -103,7 +103,14 @@ void falco::grpc::server::init(std::string server_addr, int threadiness, std::st
 	m_private_key = private_key;
 	m_cert_chain = cert_chain;
 	m_root_certs = root_certs;
+
+	// todo(leodido) > enable only when BUILD_TYPE is DEBUG?
+	gpr_set_log_verbosity(GPR_LOG_SEVERITY_DEBUG);
+	// gpr_set_log_function(test_callback);
+	gpr_log_verbosity_init();
 }
+
+// static void test_callback(gpr_log_func_args* args){};
 
 void falco::grpc::server::run()
 {
