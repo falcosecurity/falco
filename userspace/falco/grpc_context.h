@@ -40,7 +40,6 @@ public:
 
 	void get_metadata(std::string key, std::string& val);
 
-private:
 	::grpc::ServerContext* m_ctx = nullptr;
 	std::string m_prefix;
 };
@@ -52,14 +51,14 @@ public:
 		context(ctx){};
 	~stream_context() = default;
 
-	enum : char
+	enum status : char
 	{
 		STREAMING = 1,
 		SUCCESS,
 		ERROR
 	} m_status = STREAMING;
 
-	mutable void* m_stream = nullptr; // todo(fntlnz, leodido) > useful in the future
+	mutable void* m_stream = nullptr; // todo(fntlnz, leodido) > useful in the future (request-specific stream data)
 	mutable bool m_has_more = false;
 };
 
