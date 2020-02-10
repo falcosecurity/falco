@@ -30,16 +30,21 @@ bool falco::grpc::server_impl::is_running()
 
 void falco::grpc::server_impl::subscribe(const stream_context& ctx, const output::request& req, output::response& res)
 {
+	gpr_log(GPR_DEBUG, "prefix=%s", ctx.m_prefix.c_str());
+
 	if(ctx.m_status == stream_context::SUCCESS || ctx.m_status == stream_context::ERROR)
 	{
-		// todo(leodido) > log "status=ctx->m_status, stream=ctx->m_stream"
+		// Entering here when the streaming completed (request_context_base::FINISH)
+		// context m_status == stream_context::SUCCESS when the gRPC server shutdown the context
+		// context m_status == stream_context::ERROR when the gRPC client shutdown the context
+		gpr_log(GPR_DEBUG, "status=%s, stream=%s", ctx.m_status == stream_context::SUCCESS ? "success" : "error", ctx.m_stream);
 		ctx.m_stream = nullptr;
 	}
 	else
 	{
-		// Start or continue streaming
-		// todo(leodido) > check for m_status == stream_context::STREAMING?
-		// todo(leodido) > set m_stream
+		// Start or continue streaming (m_status == stream_context::STREAMING)
+		gpr_log(GPR_DEBUG, "status=streaming, stream=%s", ctx.m_stream);
+		// note(leodido) > set request-specific data on m_stream here, in case it is needed
 		if(output::queue::get().try_pop(res) && !req.keepalive())
 		{
 			ctx.m_has_more = true;
@@ -53,8 +58,10 @@ void falco::grpc::server_impl::subscribe(const stream_context& ctx, const output
 	}
 }
 
-void falco::grpc::server_impl::version(const context& ctx, const version::request&, version::response& res)
+void falco::grpc::server_impl::version(const context& ctx, const version::request& req, version::response& res)
 {
+	gpr_log(GPR_DEBUG, "prefix=%s", ctx.m_prefix.c_str());
+
 	auto& build = *res.mutable_build();
 	build = FALCO_VERSION_BUILD;
 
