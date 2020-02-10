@@ -52,21 +52,34 @@ void falco::grpc::server::thread_process(int thread_index)
 	{
 		if(tag == nullptr)
 		{
-			// todo(leodido) > log error "server completion queue error: empty tag"
+			gpr_log(
+				GPR_ERROR,
+				"server::%s -> server completion queue error: tag=(empty)",
+				__func__);
 			continue;
 		}
 
 		// Obtain the context for a given tag
 		request_context_base* ctx = static_cast<request_context_base*>(tag);
 
-		// todo(leodido) > log "next event: tag=tag, read_success=event_read_success, state=ctx->m_state"
+		gpr_log(
+			GPR_DEBUG,
+			"server::%s -> next event: tag=%p, read success=%s, state=%s",
+			__func__,
+			tag,
+			event_read_success ? "true" : "false",
+			ctx->m_state == request_context_base::REQUEST ? "request" : ctx->m_state == request_context_base::WRITE ? "write" : ctx->m_state == request_context_base::FINISH ? "finish" : "unknown");
 
 		// When event has not been read successfully
 		if(!event_read_success)
 		{
 			if(ctx->m_state != request_context_base::REQUEST)
 			{
-				// todo(leodido) > log error "server completion queue failing to read: tag=tag"
+				gpr_log(
+					GPR_ERROR,
+					"server::%s -> server completion queue failing to read: tag=%p",
+					__func__,
+					tag);
 
 				// End the context with error
 				ctx->end(this, true);
@@ -88,11 +101,21 @@ void falco::grpc::server::thread_process(int thread_index)
 			ctx->end(this, false);
 			break;
 		default:
-			// todo(leodido) > log error "unkown completion queue event: tag=tag, state=ctx->m_state"
+			gpr_log(
+				GPR_ERROR,
+				"server::%s -> unkown completion queue event: tag=%p, state=%s",
+				__func__,
+				tag,
+				ctx->m_state == request_context_base::REQUEST ? "request" : ctx->m_state == request_context_base::WRITE ? "write" : ctx->m_state == request_context_base::FINISH ? "finish" : "unknown");
 			break;
 		}
 
-		// todo(leodido) > log "thread completed: index=thread_index"
+		gpr_log(
+			GPR_DEBUG,
+			"server::%s -> thread completed: tag=%p, index=%d",
+			__func__,
+			tag,
+			thread_index);
 	}
 }
 
