@@ -172,7 +172,6 @@ void falco::grpc::request_context<falco::version::service, falco::version::reque
 template<>
 void falco::grpc::request_context<falco::version::service, falco::version::request, falco::version::response>::end(server* srv, bool errored)
 {
-	// todo(leodido) > handle processing errors here
 	if(errored)
 	{
 		gpr_log(
