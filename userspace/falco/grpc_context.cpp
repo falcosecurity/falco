@@ -28,21 +28,14 @@ falco::grpc::context::context(::grpc::ServerContext* ctx):
 	get_metadata(meta_session, session_id);
 	get_metadata(meta_request, request_id);
 
-	bool has_meta = false;
 	std::stringstream meta;
 	if(!session_id.empty())
 	{
-		meta << "[sid=" << session_id << "]";
-		has_meta = true;
+		meta << "sid=" << session_id << "";
 	}
 	if(!request_id.empty())
 	{
-		meta << "[rid=" << request_id << "]";
-		has_meta = true;
-	}
-	if(has_meta)
-	{
-		meta << " ";
+		meta << ", rid=" << request_id << "";
 	}
 	m_prefix = meta.str();
 }
