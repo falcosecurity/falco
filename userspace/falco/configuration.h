@@ -195,6 +195,7 @@ public:
 	std::list<std::string> m_rules_filenames;
 	bool m_json_output;
 	bool m_json_include_output_property;
+	std::string m_log_level;
 	std::vector<falco_outputs::output_config> m_outputs;
 	uint32_t m_notifications_rate;
 	uint32_t m_notifications_max_burst;

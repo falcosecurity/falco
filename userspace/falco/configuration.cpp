@@ -170,9 +170,9 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 		throw logic_error("Error reading config file (" + m_config_file + "): No outputs configured. Please configure at least one output file output enabled but no filename in configuration block");
 	}
 
-	string log_level = m_config->get_scalar<string>("log_level", "info");
+	m_log_level = m_config->get_scalar<string>("log_level", "info");
 
-	falco_logger::set_level(log_level);
+	falco_logger::set_level(m_log_level);
 
 	m_notifications_rate = m_config->get_scalar<uint32_t>("outputs", "rate", 1);
 	m_notifications_max_burst = m_config->get_scalar<uint32_t>("outputs", "max_burst", 1000);
