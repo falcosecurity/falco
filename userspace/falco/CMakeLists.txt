@@ -25,18 +25,26 @@ add_custom_command(
     ${CMAKE_CURRENT_BINARY_DIR}/output.pb.h
     ${CMAKE_CURRENT_BINARY_DIR}/schema.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/schema.pb.h
+    ${CMAKE_CURRENT_BINARY_DIR}/grpc.pb.cc
+    ${CMAKE_CURRENT_BINARY_DIR}/grpc.pb.h
+
   COMMENT "Generate gRPC version API"
   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/version.proto
   COMMAND ${PROTOC} -I ${CMAKE_CURRENT_SOURCE_DIR} --cpp_out=. ${CMAKE_CURRENT_SOURCE_DIR}/version.proto
   COMMAND ${PROTOC} -I ${CMAKE_CURRENT_SOURCE_DIR} --grpc_out=. --plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN}
           ${CMAKE_CURRENT_SOURCE_DIR}/version.proto
+
   COMMENT "Generate gRPC outputs API"
-  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/output.proto
+  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/output.proto ${CMAKE_CURRENT_SOURCE_DIR}/schema.proto
   COMMAND ${PROTOC} -I ${CMAKE_CURRENT_SOURCE_DIR} --cpp_out=. ${CMAKE_CURRENT_SOURCE_DIR}/output.proto
           ${CMAKE_CURRENT_SOURCE_DIR}/schema.proto
   COMMAND ${PROTOC} -I ${CMAKE_CURRENT_SOURCE_DIR} --grpc_out=. --plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN}
           ${CMAKE_CURRENT_SOURCE_DIR}/output.proto
-  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+
+  COMMENT "Generate gRPC context API"
+  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/grpc.proto
+  COMMAND ${PROTOC} -I ${CMAKE_CURRENT_SOURCE_DIR} --cpp_out=. ${CMAKE_CURRENT_SOURCE_DIR}/grpc.proto)
 
 add_executable(
   falco
@@ -57,7 +65,8 @@ add_executable(
   ${CMAKE_CURRENT_BINARY_DIR}/version.pb.cc
   ${CMAKE_CURRENT_BINARY_DIR}/output.grpc.pb.cc
   ${CMAKE_CURRENT_BINARY_DIR}/output.pb.cc
-  ${CMAKE_CURRENT_BINARY_DIR}/schema.pb.cc)
+  ${CMAKE_CURRENT_BINARY_DIR}/schema.pb.cc
+  ${CMAKE_CURRENT_BINARY_DIR}/grpc.pb.cc)
 
 add_dependencies(falco civetweb)
 
