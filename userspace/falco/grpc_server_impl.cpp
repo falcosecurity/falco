@@ -28,7 +28,7 @@ bool falco::grpc::server_impl::is_running()
 	return true;
 }
 
-void falco::grpc::server_impl::subscribe(const stream_context& ctx, const output::request& req, output::response& res)
+void falco::grpc::server_impl::outputs_impl(const stream_context& ctx, const outputs::request& req, outputs::response& res)
 {
 	std::string client = ctx.m_ctx->peer();
 	if(ctx.m_status == stream_status::SUCCESS || ctx.m_status == stream_status::ERROR)
@@ -58,12 +58,12 @@ void falco::grpc::server_impl::subscribe(const stream_context& ctx, const output
 			stream_status_Name(ctx.m_status).c_str(),
 			ctx.m_stream);
 		// note(leodido) > set request-specific data on m_stream here, in case it is needed
-		if(output::queue::get().try_pop(res) && !req.keepalive())
+		if(outputs::queue::get().try_pop(res) && !req.keepalive())
 		{
 			ctx.m_has_more = true;
 			return;
 		}
-		while(is_running() && !output::queue::get().try_pop(res) && req.keepalive())
+		while(is_running() && !outputs::queue::get().try_pop(res) && req.keepalive())
 		{
 		}
 
@@ -71,7 +71,7 @@ void falco::grpc::server_impl::subscribe(const stream_context& ctx, const output
 	}
 }
 
-void falco::grpc::server_impl::version(const context& ctx, const version::request& req, version::response& res)
+void falco::grpc::server_impl::version_impl(const context& ctx, const version::request& req, version::response& res)
 {
 	std::string client = ctx.m_ctx->peer();
 	gpr_log(GPR_DEBUG, "server_impl::%s -> replying: %s, client=%s", __func__, ctx.m_prefix.c_str(), client.c_str());

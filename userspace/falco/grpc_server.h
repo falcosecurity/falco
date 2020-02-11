@@ -37,7 +37,7 @@ public:
 	void run();
 	void stop();
 
-	output::service::AsyncService m_output_svc;
+	outputs::service::AsyncService m_outputs_svc;
 	version::service::AsyncService m_version_svc;
 
 	std::unique_ptr<::grpc::ServerCompletionQueue> m_completion_queue;

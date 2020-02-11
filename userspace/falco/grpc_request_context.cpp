@@ -24,12 +24,12 @@ namespace grpc
 {
 
 template<>
-void request_stream_context<falco::output::service, falco::output::request, falco::output::response>::start(server* srv)
+void request_stream_context<falco::outputs::service, falco::outputs::request, falco::outputs::response>::start(server* srv)
 {
 	m_state = request_state::REQUEST;
 	m_srv_ctx.reset(new ::grpc::ServerContext);
 	auto srvctx = m_srv_ctx.get();
-	m_res_writer.reset(new ::grpc::ServerAsyncWriter<output::response>(srvctx));
+	m_res_writer.reset(new ::grpc::ServerAsyncWriter<outputs::response>(srvctx));
 	m_stream_ctx.reset();
 	m_req.Clear();
 	auto cq = srv->m_completion_queue.get();
@@ -40,11 +40,11 @@ void request_stream_context<falco::output::service, falco::output::request, falc
 		__func__,
 		this,
 		request_state_Name(m_state).c_str());
-	(srv->m_output_svc.*m_request_func)(srvctx, &m_req, m_res_writer.get(), cq, cq, this);
+	(srv->m_outputs_svc.*m_request_func)(srvctx, &m_req, m_res_writer.get(), cq, cq, this);
 }
 
 template<>
-void request_stream_context<falco::output::service, falco::output::request, falco::output::response>::process(server* srv)
+void request_stream_context<falco::outputs::service, falco::outputs::request, falco::outputs::response>::process(server* srv)
 {
 	// When it is the 1st process call
 	if(m_state == request_state::REQUEST)
@@ -61,8 +61,9 @@ void request_stream_context<falco::output::service, falco::output::request, falc
 		this,
 		request_state_Name(m_state).c_str());
 
-	output::response res;
-	(srv->*m_process_func)(*m_stream_ctx, m_req, res); // subscribe()
+	outputs::response res;
+	// fixme(leodido) > srv->m_outputs_svc?
+	(srv->*m_process_func)(*m_stream_ctx, m_req, res); // outputs()
 
 	// When there are still more responses to stream
 	if(m_stream_ctx->m_has_more)
@@ -92,7 +93,7 @@ void request_stream_context<falco::output::service, falco::output::request, falc
 }
 
 template<>
-void request_stream_context<falco::output::service, falco::output::request, falco::output::response>::end(server* srv, bool errored)
+void request_stream_context<falco::outputs::service, falco::outputs::request, falco::outputs::response>::end(server* srv, bool errored)
 {
 	if(m_stream_ctx)
 	{
@@ -109,8 +110,8 @@ void request_stream_context<falco::output::service, falco::output::request, falc
 		m_stream_ctx->m_status = errored ? stream_status::ERROR : stream_status::SUCCESS;
 
 		// Complete the processing
-		output::response res;
-		(srv->*m_process_func)(*m_stream_ctx, m_req, res); // subscribe()
+		outputs::response res;
+		(srv->*m_process_func)(*m_stream_ctx, m_req, res); // outputs()
 	}
 	else
 	{

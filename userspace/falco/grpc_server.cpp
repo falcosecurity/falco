@@ -169,7 +169,7 @@ void falco::grpc::server::run()
 
 	::grpc::ServerBuilder builder;
 	builder.AddListeningPort(m_server_addr, ::grpc::SslServerCredentials(ssl_opts));
-	builder.RegisterService(&m_output_svc);
+	builder.RegisterService(&m_outputs_svc);
 	builder.RegisterService(&m_version_svc);
 
 	m_completion_queue = builder.AddCompletionQueue();
@@ -182,8 +182,8 @@ void falco::grpc::server::run()
 	int context_num = m_threadiness * 10;
 	// todo(leodido) > take a look at thread_stress_test.cc into grpc repository
 
-	REGISTER_UNARY(version::request, version::response, version::service, version, version, context_num)
-	REGISTER_STREAM(output::request, output::response, output::service, subscribe, subscribe, context_num)
+	REGISTER_UNARY(version::request, version::response, version::service, version, version_impl, context_num)
+	REGISTER_STREAM(outputs::request, outputs::response, outputs::service, outputs, outputs_impl, context_num)
 
 	m_threads.resize(m_threadiness);
 	int thread_idx = 0;

@@ -26,9 +26,8 @@ limitations under the License.
 #include "banned.h"
 
 using namespace std;
-using namespace falco::output;
 
-const static struct luaL_reg ll_falco_outputs [] =
+const static struct luaL_reg ll_falco_outputs[] =
 {
 	{"handle_http", &falco_outputs::handle_http},
 	{"handle_grpc", &falco_outputs::handle_grpc},
@@ -316,7 +315,7 @@ int falco_outputs::handle_grpc(lua_State *ls)
 		lua_error(ls);
 	}
 
-	response grpc_res = response();
+	falco::outputs::response grpc_res = falco::outputs::response();
 
 	// time
 	gen_event *evt = (gen_event *)lua_topointer(ls, 1);
@@ -366,7 +365,7 @@ int falco_outputs::handle_grpc(lua_State *ls)
 	auto host = grpc_res.mutable_hostname();
 	*host = (char *)lua_tostring(ls, 7);
 
-	falco::output::queue::get().push(grpc_res);
+	falco::outputs::queue::get().push(grpc_res);
 
 	return 1;
 }

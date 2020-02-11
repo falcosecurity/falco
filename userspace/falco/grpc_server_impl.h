@@ -17,7 +17,7 @@ limitations under the License.
 #pragma once
 
 #include <atomic>
-#include "output.grpc.pb.h"
+#include "outputs.grpc.pb.h"
 #include "version.grpc.pb.h"
 #include "grpc_context.h"
 
@@ -36,9 +36,9 @@ public:
 protected:
 	bool is_running();
 
-	void subscribe(const stream_context& ctx, const output::request& req, output::response& res);
+	void outputs_impl(const stream_context& ctx, const outputs::request& req, outputs::response& res);
 
-	void version(const context& ctx, const version::request& req, version::response& res);
+	void version_impl(const context& ctx, const version::request& req, version::response& res);
 
 private:
 	std::atomic<bool> m_stop{false};
