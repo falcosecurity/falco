@@ -76,7 +76,7 @@ bool syscall_evt_drop_mgr::process_event(sinsp *inspector, sinsp_evt *evt)
 
 		if(m_simulate_drops)
 		{
-			falco_logger::log(LOG_INFO, "Simulating syscall event drop");
+			falco_logger::log(LOG_INFO, "Simulating syscall event drop\n");
 			delta.n_drops++;
 		}
 
@@ -94,7 +94,7 @@ bool syscall_evt_drop_mgr::process_event(sinsp *inspector, sinsp_evt *evt)
 			}
 			else
 			{
-				falco_logger::log(LOG_DEBUG, "Syscall event drop but token bucket depleted, skipping actions");
+				falco_logger::log(LOG_DEBUG, "Syscall event drop but token bucket depleted, skipping actions\n");
 			}
 		}
 	}
@@ -156,7 +156,7 @@ bool syscall_evt_drop_mgr::perform_actions(uint64_t now, scap_stats &delta, bool
 	if(should_exit)
 	{
 		falco_logger::log(LOG_CRIT, msg);
-		falco_logger::log(LOG_CRIT, "Exiting.");
+		falco_logger::log(LOG_CRIT, "Exiting.\n");
 		return false;
 	}
 

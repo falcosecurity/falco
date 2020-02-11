@@ -57,7 +57,7 @@ falco_outputs::~falco_outputs()
 		lua_getglobal(m_ls, m_lua_output_cleanup.c_str());
 		if(!lua_isfunction(m_ls, -1))
 		{
-			falco_logger::log(LOG_ERR, std::string("No function ") + m_lua_output_cleanup + " found. ");
+			falco_logger::log(LOG_ERR, std::string("No function ") + m_lua_output_cleanup + " found.\n");
 			assert(nullptr == "Missing lua cleanup function in ~falco_outputs");
 		}
 
