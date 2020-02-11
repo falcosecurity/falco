@@ -128,29 +128,28 @@ void falco::grpc::server::init(std::string server_addr, std::string private_key,
 	m_cert_chain = cert_chain;
 	m_root_certs = root_certs;
 
-	if(log_level == "info")
+	falco::schema::priority logging_level = falco::schema::INFORMATIONAL;
+	falco::schema::priority_Parse(log_level, &logging_level);
+	switch(logging_level)
 	{
-		gpr_set_log_verbosity(GPR_LOG_SEVERITY_INFO);
-	}
-	else if(log_level == "debug")
-	{
-		gpr_set_log_verbosity(GPR_LOG_SEVERITY_DEBUG);
-	}
-	else if(log_level == "error")
-	{
+	case falco::schema::ERROR:
 		gpr_set_log_verbosity(GPR_LOG_SEVERITY_ERROR);
-	}
-	else
-	{
-		// defaulting to INFO severity for severities unknown to gRPC logging mechanism
+		break;
+	case falco::schema::DEBUG:
+		gpr_set_log_verbosity(GPR_LOG_SEVERITY_DEBUG);
+		break;
+	case falco::schema::INFORMATIONAL:
+	default:
+		// note > info will always enter here since it is != from "informational"
 		gpr_set_log_verbosity(GPR_LOG_SEVERITY_INFO);
+		break;
 	}
 
-	// gpr_set_log_function(test_callback);
+	// gpr_set_log_function(custom_log);
 	gpr_log_verbosity_init();
 }
 
-// static void test_callback(gpr_log_func_args* args){};
+// static void custom_log(gpr_log_func_args* args){};
 
 void falco::grpc::server::run()
 {
@@ -208,7 +207,7 @@ void falco::grpc::server::stop()
 	m_server->Shutdown();
 	m_completion_queue->Shutdown();
 
-	gpr_log(GPR_INFO, "gRPC server shutting down: waiting for the gRPC threads to complete");
+	gpr_log(GPR_DEBUG, "gRPC server shutting down: waiting for the gRPC threads to complete");
 	for(std::thread& t : m_threads)
 	{
 		if(t.joinable())
@@ -218,7 +217,7 @@ void falco::grpc::server::stop()
 	}
 	m_threads.clear();
 
-	gpr_log(GPR_INFO, "gRPC server shutting down: draining all the remaining gRPC events");
+	gpr_log(GPR_DEBUG, "gRPC server shutting down: draining all the remaining gRPC events");
 	// Ignore remaining events
 	void* ignore_tag = nullptr;
 	bool ignore_ok = false;
