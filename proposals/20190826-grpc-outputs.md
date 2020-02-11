@@ -1,15 +1,16 @@
-# gRPC Falco Output
+# gRPC Falco Outputs
 
 <!-- toc -->
 
-- [Summary](#summary)
-- [Motivation](#motivation)
-  * [Goals](#goals)
-  * [Non-Goals](#non-goals)
-- [Proposal](#proposal)
-  * [Use cases](#use-cases)
-  * [Diagrams](#diagrams)
-  * [Design Details](#design-details)
+- [gRPC Falco Outputs](#grpc-falco-outputs)
+  - [Summary](#summary)
+  - [Motivation](#motivation)
+    - [Goals](#goals)
+    - [Non-Goals](#non-goals)
+  - [Proposal](#proposal)
+    - [Use cases](#use-cases)
+    - [Diagrams](#diagrams)
+    - [Design Details](#design-details)
 
 <!-- tocstop -->
 
@@ -77,18 +78,18 @@ syntax = "proto3";
 import "google/protobuf/timestamp.proto";
 import "schema.proto";
 
-package falco.output;
+package falco.outputs;
 
-option go_package = "github.com/falcosecurity/client-go/pkg/api/output";
+option go_package = "github.com/falcosecurity/client-go/pkg/api/outputs";
 
-// The `subscribe` service defines the RPC call
+// The `outputs` service defines a server-streaming RPC call
 // to perform an output `request` which will lead to obtain an output `response`.
 service service {
-  rpc subscribe(request) returns (stream response);
+  rpc outputs(request) returns (stream response);
 }
 
 // The `request` message is the logical representation of the request model.
-// It is the input of the `subscribe` service.
+// It is the input of the `outputs` service.
 // It is used to configure the kind of subscription to the gRPC streaming server.
 message request {
   bool keepalive = 1;
