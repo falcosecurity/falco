@@ -31,7 +31,7 @@ bool falco::grpc::server_impl::is_running()
 void falco::grpc::server_impl::subscribe(const stream_context& ctx, const output::request& req, output::response& res)
 {
 	std::string client = ctx.m_ctx->peer();
-	if(ctx.m_status == stream_context::SUCCESS || ctx.m_status == stream_context::ERROR)
+	if(ctx.m_status == stream_status::SUCCESS || ctx.m_status == stream_status::ERROR)
 	{
 		// Entering here when the streaming completed (request_context_base::FINISH)
 		// context m_status == stream_context::SUCCESS when the gRPC server shutdown the context
@@ -42,7 +42,7 @@ void falco::grpc::server_impl::subscribe(const stream_context& ctx, const output
 			__func__,
 			ctx.m_prefix.c_str(),
 			client.c_str(),
-			ctx.m_status == stream_context::SUCCESS ? "success" : "error",
+			stream_status_Name(ctx.m_status).c_str(),
 			ctx.m_stream);
 		ctx.m_stream = nullptr;
 	}
@@ -51,10 +51,11 @@ void falco::grpc::server_impl::subscribe(const stream_context& ctx, const output
 		// Start or continue streaming (m_status == stream_context::STREAMING)
 		gpr_log(
 			GPR_DEBUG,
-			"server_impl::%s -> start or continue streaming: %s, client=%s, status=streaming, stream=%p",
+			"server_impl::%s -> start or continue streaming: %s, client=%s, status=%s, stream=%p",
 			__func__,
 			ctx.m_prefix.c_str(),
 			client.c_str(),
+			stream_status_Name(ctx.m_status).c_str(),
 			ctx.m_stream);
 		// note(leodido) > set request-specific data on m_stream here, in case it is needed
 		if(output::queue::get().try_pop(res) && !req.keepalive())

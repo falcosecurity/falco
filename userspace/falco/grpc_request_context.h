@@ -32,13 +32,8 @@ public:
 	~request_context_base() = default;
 
 	std::unique_ptr<::grpc::ServerContext> m_srv_ctx;
-	enum : char
-	{
-		UNKNOWN = 0,
-		REQUEST,
-		WRITE,
-		FINISH
-	} m_state = UNKNOWN;
+	request_state m_state = request_state::UNKNOWN;
+
 	virtual void start(server* srv) = 0;
 	virtual void process(server* srv) = 0;
 	virtual void end(server* srv, bool isError) = 0;

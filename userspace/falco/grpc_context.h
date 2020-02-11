@@ -24,6 +24,8 @@ limitations under the License.
 #include <grpc++/grpc++.h>
 #endif
 
+#include "grpc.pb.h"
+
 namespace falco
 {
 namespace grpc
@@ -51,12 +53,7 @@ public:
 		context(ctx){};
 	~stream_context() = default;
 
-	enum status : char
-	{
-		STREAMING = 1,
-		SUCCESS,
-		ERROR
-	} m_status = STREAMING;
+	stream_status m_status = stream_status::STREAMING;
 
 	mutable void* m_stream = nullptr; // todo(fntlnz, leodido) > useful in the future (request-specific stream data)
 	mutable bool m_has_more = false;

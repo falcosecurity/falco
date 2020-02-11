@@ -69,12 +69,12 @@ void falco::grpc::server::thread_process(int thread_index)
 			__func__,
 			tag,
 			event_read_success ? "true" : "false",
-			ctx->m_state == request_context_base::REQUEST ? "request" : ctx->m_state == request_context_base::WRITE ? "write" : ctx->m_state == request_context_base::FINISH ? "finish" : "unknown");
+			request_state_Name(ctx->m_state).c_str());
 
 		// When event has not been read successfully
 		if(!event_read_success)
 		{
-			if(ctx->m_state != request_context_base::REQUEST)
+			if(ctx->m_state != request_state::REQUEST)
 			{
 				gpr_log(
 					GPR_ERROR,
@@ -91,13 +91,13 @@ void falco::grpc::server::thread_process(int thread_index)
 		// Process the event
 		switch(ctx->m_state)
 		{
-		case request_context_base::REQUEST:
+		case request_state::REQUEST:
 			// Completion of m_request_func
-		case request_context_base::WRITE:
+		case request_state::WRITE:
 			// Completion of Write()
 			ctx->process(this);
 			break;
-		case request_context_base::FINISH:
+		case request_state::FINISH:
 			// Completion of Finish()
 			ctx->end(this, false);
 			break;
@@ -107,7 +107,7 @@ void falco::grpc::server::thread_process(int thread_index)
 				"server::%s -> unkown completion queue event: tag=%p, state=%s",
 				__func__,
 				tag,
-				ctx->m_state == request_context_base::REQUEST ? "request" : ctx->m_state == request_context_base::WRITE ? "write" : ctx->m_state == request_context_base::FINISH ? "finish" : "unknown");
+				request_state_Name(ctx->m_state).c_str());
 			break;
 		}
 

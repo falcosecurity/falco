@@ -26,7 +26,7 @@ namespace grpc
 template<>
 void request_stream_context<falco::output::service, falco::output::request, falco::output::response>::start(server* srv)
 {
-	m_state = request_context_base::REQUEST;
+	m_state = request_state::REQUEST;
 	m_srv_ctx.reset(new ::grpc::ServerContext);
 	auto srvctx = m_srv_ctx.get();
 	m_res_writer.reset(new ::grpc::ServerAsyncWriter<output::response>(srvctx));
@@ -36,9 +36,10 @@ void request_stream_context<falco::output::service, falco::output::request, falc
 	// m_stream_ctx->m_stream = this; // todo(leodido) > save the tag - ie., this - into the stream?
 	gpr_log(
 		GPR_DEBUG,
-		"request_stream_context<outputs>::%s -> m_request_func: tag=%p, state=request",
+		"request_stream_context<outputs>::%s -> m_request_func: tag=%p, state=%s",
 		__func__,
-		this);
+		this,
+		request_state_Name(m_state).c_str());
 	(srv->m_output_svc.*m_request_func)(srvctx, &m_req, m_res_writer.get(), cq, cq, this);
 }
 
@@ -46,9 +47,9 @@ template<>
 void request_stream_context<falco::output::service, falco::output::request, falco::output::response>::process(server* srv)
 {
 	// When it is the 1st process call
-	if(m_state == request_context_base::REQUEST)
+	if(m_state == request_state::REQUEST)
 	{
-		m_state = request_context_base::WRITE;
+		m_state = request_state::WRITE;
 		m_stream_ctx.reset(new stream_context(m_srv_ctx.get()));
 	}
 
@@ -58,7 +59,7 @@ void request_stream_context<falco::output::service, falco::output::request, falc
 		"request_stream_context<outputs>::%s -> m_process_func: tag=%p, state=%s",
 		__func__,
 		this,
-		m_state == request_context_base::REQUEST ? "request" : m_state == request_context_base::WRITE ? "write" : m_state == request_context_base::FINISH ? "finish" : "unknown");
+		request_state_Name(m_state).c_str());
 
 	output::response res;
 	(srv->*m_process_func)(*m_stream_ctx, m_req, res); // subscribe()
@@ -71,7 +72,7 @@ void request_stream_context<falco::output::service, falco::output::request, falc
 			"request_stream_context<outputs>::%s -> write: tag=%p, state=%s",
 			__func__,
 			this,
-			m_state == request_context_base::REQUEST ? "request" : m_state == request_context_base::WRITE ? "write" : m_state == request_context_base::FINISH ? "finish" : "unknown");
+			request_state_Name(m_state).c_str());
 		m_res_writer->Write(res, this);
 	}
 	// No more responses to stream
@@ -79,7 +80,7 @@ void request_stream_context<falco::output::service, falco::output::request, falc
 	{
 		// Communicate to the gRPC runtime that we have finished.
 		// The memory address of "this" instance uniquely identifies the event.
-		m_state = request_context_base::FINISH;
+		m_state = request_state::FINISH;
 		gpr_log(
 			GPR_DEBUG,
 			"request_stream_context<outputs>::%s -> finish: tag=%p, state=finish",
@@ -102,10 +103,10 @@ void request_stream_context<falco::output::service, falco::output::request, falc
 				"request_stream_context<outputs>::%s -> error streaming: tag=%p, state=%s, stream=%p",
 				__func__,
 				this,
-				m_state == request_context_base::REQUEST ? "request" : m_state == request_context_base::WRITE ? "write" : m_state == request_context_base::FINISH ? "finish" : "unknown",
+				request_state_Name(m_state).c_str(),
 				m_stream_ctx->m_stream);
 		}
-		m_stream_ctx->m_status = errored ? stream_context::ERROR : stream_context::SUCCESS;
+		m_stream_ctx->m_status = errored ? stream_status::ERROR : stream_status::SUCCESS;
 
 		// Complete the processing
 		output::response res;
@@ -123,7 +124,7 @@ void request_stream_context<falco::output::service, falco::output::request, falc
 			"%s -> ending streaming: tag=%p, state=%s, stream=never started",
 			__func__,
 			this,
-			m_state == request_context_base::REQUEST ? "request" : m_state == request_context_base::WRITE ? "write" : m_state == request_context_base::FINISH ? "finish" : "unknown");
+			request_state_Name(m_state).c_str());
 	}
 
 	// Ask to start processing requests
@@ -133,7 +134,7 @@ void request_stream_context<falco::output::service, falco::output::request, falc
 template<>
 void falco::grpc::request_context<falco::version::service, falco::version::request, falco::version::response>::start(server* srv)
 {
-	m_state = request_context_base::REQUEST;
+	m_state = request_state::REQUEST;
 	m_srv_ctx.reset(new ::grpc::ServerContext);
 	auto srvctx = m_srv_ctx.get();
 	m_res_writer.reset(new ::grpc::ServerAsyncResponseWriter<version::response>(srvctx));
@@ -144,9 +145,10 @@ void falco::grpc::request_context<falco::version::service, falco::version::reque
 	// In this way, different contexts can serve different requests concurrently.
 	gpr_log(
 		GPR_DEBUG,
-		"request_context<version>::%s -> m_request_func: tag=%p, state=request",
+		"request_context<version>::%s -> m_request_func: tag=%p, state=%s",
 		__func__,
-		this);
+		this,
+		request_state_Name(m_state).c_str());
 	(srv->m_version_svc.*m_request_func)(srvctx, &m_req, m_res_writer.get(), cq, cq, this);
 }
 
@@ -158,13 +160,13 @@ void falco::grpc::request_context<falco::version::service, falco::version::reque
 		"request_context<version>::%s -> m_process_func: tag=%p, state=%s",
 		__func__,
 		this,
-		m_state == request_context_base::REQUEST ? "request" : m_state == request_context_base::WRITE ? "write" : m_state == request_context_base::FINISH ? "finish" : "unknown");
+		request_state_Name(m_state).c_str());
 
 	version::response res;
 	(srv->*m_process_func)(m_srv_ctx.get(), m_req, res);
 
 	// Notify the gRPC runtime that this processing is done
-	m_state = request_context_base::FINISH;
+	m_state = request_state::FINISH;
 	// Using "this"- ie., the memory address of this context - to uniquely identify the event.
 	m_res_writer->Finish(res, ::grpc::Status::OK, this);
 }
@@ -179,7 +181,7 @@ void falco::grpc::request_context<falco::version::service, falco::version::reque
 			"request_context<version>::%s -> error replying: tag=%p, state=%s",
 			__func__,
 			this,
-			m_state == request_context_base::REQUEST ? "request" : m_state == request_context_base::WRITE ? "write" : m_state == request_context_base::FINISH ? "finish" : "unknown");
+			request_state_Name(m_state).c_str());
 	}
 
 	// Ask to start processing requests
