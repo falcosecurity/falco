@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package falco.grpc;
+
+enum stream_status {
+    STREAMING = 0;
+    SUCCESS = 1;
+    ERROR = 2;
+}
+
+enum request_state {
+    UNKNOWN = 0;
+    REQUEST = 1;
+    WRITE = 2;
+    FINISH = 3;
+}
