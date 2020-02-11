@@ -29,20 +29,10 @@ namespace grpc
 class server : public server_impl
 {
 public:
-	server()
-	{
-	}
-	server(std::string server_addr, int threadiness, std::string private_key, std::string cert_chain, std::string root_certs):
-		m_server_addr(server_addr),
-		m_threadiness(threadiness),
-		m_private_key(private_key),
-		m_cert_chain(cert_chain),
-		m_root_certs(root_certs)
-	{
-	}
+	server() = default;
 	virtual ~server() = default;
 
-	void init(std::string server_addr, int threadiness, std::string private_key, std::string cert_chain, std::string root_certs);
+	void init(std::string server_addr, std::string private_key, std::string cert_chain, std::string root_certs, int threadiness, std::string log_level);
 	void thread_process(int thread_index);
 	void run();
 	void stop();

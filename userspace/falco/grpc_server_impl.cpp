@@ -38,7 +38,7 @@ void falco::grpc::server_impl::subscribe(const stream_context& ctx, const output
 		// context m_status == stream_context::ERROR when the gRPC client shutdown the context
 		gpr_log(
 			GPR_DEBUG,
-			"server_impl::%s -> streaming done: %s, client=%s, status=%s, stream=%s",
+			"server_impl::%s -> streaming done: %s, client=%s, status=%s, stream=%p",
 			__func__,
 			ctx.m_prefix.c_str(),
 			client.c_str(),
@@ -51,7 +51,7 @@ void falco::grpc::server_impl::subscribe(const stream_context& ctx, const output
 		// Start or continue streaming (m_status == stream_context::STREAMING)
 		gpr_log(
 			GPR_DEBUG,
-			"server_impl::%s -> start or continue streaming: %s, client=%s, status=streaming, stream=%s",
+			"server_impl::%s -> start or continue streaming: %s, client=%s, status=streaming, stream=%p",
 			__func__,
 			ctx.m_prefix.c_str(),
 			client.c_str(),

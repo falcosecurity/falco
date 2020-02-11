@@ -33,7 +33,7 @@ void request_stream_context<falco::output::service, falco::output::request, falc
 	m_stream_ctx.reset();
 	m_req.Clear();
 	auto cq = srv->m_completion_queue.get();
-	// m_stream_ctx->m_stream = this; // todo(leodido) > evaluate
+	// m_stream_ctx->m_stream = this; // todo(leodido) > save the tag - ie., this - into the stream?
 	gpr_log(
 		GPR_DEBUG,
 		"request_stream_context<outputs>::%s -> m_request_func: tag=%p, state=request",
@@ -99,7 +99,7 @@ void request_stream_context<falco::output::service, falco::output::request, falc
 		{
 			gpr_log(
 				GPR_ERROR,
-				"request_stream_context<outputs>::%s -> error streaming: tag=%p, state=%s, stream=%s",
+				"request_stream_context<outputs>::%s -> error streaming: tag=%p, state=%s, stream=%p",
 				__func__,
 				this,
 				m_state == request_context_base::REQUEST ? "request" : m_state == request_context_base::WRITE ? "write" : m_state == request_context_base::FINISH ? "finish" : "unknown",

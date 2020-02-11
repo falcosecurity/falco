@@ -14,13 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+#include <unistd.h>
+
 #ifdef GRPC_INCLUDE_IS_GRPCPP
 #include <grpcpp/grpcpp.h>
 #else
 #include <grpc++/grpc++.h>
 #endif
 
-#include "logger.h"
 #include "grpc_server.h"
 #include "grpc_request_context.h"
 #include "utils.h"
@@ -119,7 +120,7 @@ void falco::grpc::server::thread_process(int thread_index)
 	}
 }
 
-void falco::grpc::server::init(std::string server_addr, int threadiness, std::string private_key, std::string cert_chain, std::string root_certs)
+void falco::grpc::server::init(std::string server_addr, std::string private_key, std::string cert_chain, std::string root_certs, int threadiness, std::string log_level)
 {
 	m_server_addr = server_addr;
 	m_threadiness = threadiness;
@@ -127,8 +128,24 @@ void falco::grpc::server::init(std::string server_addr, int threadiness, std::st
 	m_cert_chain = cert_chain;
 	m_root_certs = root_certs;
 
-	// todo(leodido) > enable only when BUILD_TYPE is DEBUG?
-	gpr_set_log_verbosity(GPR_LOG_SEVERITY_DEBUG);
+	if(log_level == "info")
+	{
+		gpr_set_log_verbosity(GPR_LOG_SEVERITY_INFO);
+	}
+	else if(log_level == "debug")
+	{
+		gpr_set_log_verbosity(GPR_LOG_SEVERITY_DEBUG);
+	}
+	else if(log_level == "error")
+	{
+		gpr_set_log_verbosity(GPR_LOG_SEVERITY_ERROR);
+	}
+	else
+	{
+		// defaulting to INFO severity for severities unknown to gRPC logging mechanism
+		gpr_set_log_verbosity(GPR_LOG_SEVERITY_INFO);
+	}
+
 	// gpr_set_log_function(test_callback);
 	gpr_log_verbosity_init();
 }
@@ -137,9 +154,9 @@ void falco::grpc::server::init(std::string server_addr, int threadiness, std::st
 
 void falco::grpc::server::run()
 {
-	string private_key;
-	string cert_chain;
-	string root_certs;
+	std::string private_key;
+	std::string cert_chain;
+	std::string root_certs;
 
 	falco::utils::read(m_cert_chain, cert_chain);
 	falco::utils::read(m_private_key, private_key);
@@ -158,7 +175,7 @@ void falco::grpc::server::run()
 
 	m_completion_queue = builder.AddCompletionQueue();
 	m_server = builder.BuildAndStart();
-	falco_logger::log(LOG_INFO, "Starting gRPC server at " + m_server_addr + "\n");
+	gpr_log(GPR_INFO, "gRPC server starting: address=%s", m_server_addr.c_str());
 
 	// The number of contexts is multiple of the number of threads
 	// This defines the number of simultaneous completion queue requests of the same type (service::AsyncService::Request##RPC)
@@ -175,23 +192,23 @@ void falco::grpc::server::run()
 	{
 		thread = std::thread(&server::thread_process, this, thread_idx++);
 	}
-	// todo(leodido) > log "gRPC server running: threadiness=m_threads.size()"
+	gpr_log(GPR_INFO, "gRPC server running: threadiness=%zu", m_threads.size());
 
 	while(server_impl::is_running())
 	{
 		sleep(1);
 	}
-	// todo(leodido) > log "stopping gRPC server"
+	gpr_log(GPR_INFO, "gRPC server stopping");
 	stop();
 }
 
 void falco::grpc::server::stop()
 {
-	falco_logger::log(LOG_INFO, "Shutting down gRPC server. Waiting until external connections are closed by clients\n");
+	gpr_log(GPR_INFO, "gRPC server shutting down");
 	m_server->Shutdown();
 	m_completion_queue->Shutdown();
 
-	falco_logger::log(LOG_INFO, "Waiting for the gRPC threads to complete\n");
+	gpr_log(GPR_INFO, "gRPC server shutting down: waiting for the gRPC threads to complete");
 	for(std::thread& t : m_threads)
 	{
 		if(t.joinable())
@@ -201,7 +218,7 @@ void falco::grpc::server::stop()
 	}
 	m_threads.clear();
 
-	falco_logger::log(LOG_INFO, "Draining all the remaining gRPC events\n");
+	gpr_log(GPR_INFO, "gRPC server shutting down: draining all the remaining gRPC events");
 	// Ignore remaining events
 	void* ignore_tag = nullptr;
 	bool ignore_ok = false;
@@ -209,5 +226,5 @@ void falco::grpc::server::stop()
 	{
 	}
 
-	falco_logger::log(LOG_INFO, "Shutting down gRPC server complete\n");
+	gpr_log(GPR_INFO, "gRPC server shutting down: done");
 }
