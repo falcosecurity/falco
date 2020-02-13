@@ -9,6 +9,8 @@
   - [Pull Requests](#pull-requests)
     - [Commit convention](#commit-convention)
       - [Rule type](#rule-type)
+  - [Coding Guidelines](#coding-guidelines)
+    - [C++](#c)
   - [Developer Certificate Of Origin](#developer-certificate-of-origin)
 
 ## Code of Conduct
@@ -120,6 +122,13 @@ If you are changing only a macro, the commit will look like this:
 rule(macro user_known_write_monitored_dir_conditions): make sure conditions are great
 ```
 
+## Coding Guidelines
+
+### C++
+
+* File `userspace/engine/banned.h` defines some functions as invalid tokens. These functions are not allowed to be used in the codebase. Whenever creating a new cpp file, include the `"banned.h"` headers. This ensures that the banned functions are not compiled.
+
+  A complete list of banned functions can be found [here](./userspace/engine/banned.h).
 
 ## Developer Certificate Of Origin
 
