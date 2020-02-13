@@ -23,7 +23,7 @@ limitations under the License.
 #include "formats.h"
 #include "logger.h"
 #include "falco_output_queue.h"
-#include "banned.h"
+#include "banned.h" // This raises a compilation error when certain functions are used
 
 using namespace std;
 using namespace falco::output;

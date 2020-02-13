@@ -23,7 +23,7 @@ limitations under the License.
 
 #include "configuration.h"
 #include "logger.h"
-#include "banned.h"
+#include "banned.h" // This raises a compilation error when certain functions are used
 
 using namespace std;
 

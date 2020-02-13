@@ -17,7 +17,7 @@ limitations under the License.
 #include <sstream>
 
 #include "grpc_context.h"
-#include "banned.h"
+#include "banned.h" // This raises a compilation error when certain functions are used
 
 falco::grpc::context::context(::grpc::ServerContext* ctx):
 	m_ctx(ctx)

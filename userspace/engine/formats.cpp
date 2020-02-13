@@ -18,7 +18,7 @@ limitations under the License.
 
 #include "formats.h"
 #include "falco_engine.h"
-#include "banned.h"
+#include "banned.h" // This raises a compilation error when certain functions are used
 
 
 sinsp* falco_formats::s_inspector = NULL;

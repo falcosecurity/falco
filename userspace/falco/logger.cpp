@@ -19,7 +19,7 @@ limitations under the License.
 #include "chisel_api.h"
 
 #include "falco_common.h"
-#include "banned.h"
+#include "banned.h" // This raises a compilation error when certain functions are used
 
 const static struct luaL_reg ll_falco [] =
 {

@@ -20,7 +20,7 @@ limitations under the License.
 
 #include "token_bucket.h"
 #include "utils.h"
-#include "banned.h"
+#include "banned.h" // This raises a compilation error when certain functions are used
 
 token_bucket::token_bucket():
 	token_bucket(sinsp_utils::get_current_time_ns)
