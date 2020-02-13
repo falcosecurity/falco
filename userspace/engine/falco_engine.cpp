@@ -32,7 +32,7 @@ extern "C" {
 }
 
 #include "utils.h"
-#include "banned.h"
+#include "banned.h" // This raises a compilation error when certain functions are used
 
 
 string lua_on_event = "on_event";

@@ -18,7 +18,7 @@ limitations under the License.
 
 #include "config_falco_engine.h"
 #include "falco_common.h"
-#include "banned.h"
+#include "banned.h" // This raises a compilation error when certain functions are used
 
 std::vector<std::string> falco_common::priority_names = {
 	"Emergency",

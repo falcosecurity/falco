@@ -24,7 +24,7 @@ limitations under the License.
 #include "grpc_server.h"
 #include "grpc_context.h"
 #include "utils.h"
-#include "banned.h"
+#include "banned.h" // This raises a compilation error when certain functions are used
 
 #define REGISTER_STREAM(req, res, svc, rpc, impl, num)                                  \
 	std::vector<request_stream_context<req, res>> rpc##_contexts(num);         \

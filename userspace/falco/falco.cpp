@@ -45,7 +45,7 @@ limitations under the License.
 #include "statsfilewriter.h"
 #include "webserver.h"
 #include "grpc_server.h"
-#include "banned.h"
+#include "banned.h" // This raises a compilation error when certain functions are used
 
 typedef function<void(sinsp* inspector)> open_t;
 

@@ -24,7 +24,7 @@ extern "C" {
 }
 
 #include "falco_engine.h"
-#include "banned.h"
+#include "banned.h" // This raises a compilation error when certain functions are used
 
 const static struct luaL_reg ll_falco_rules [] =
 {
