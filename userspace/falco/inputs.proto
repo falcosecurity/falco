@@ -1,13 +1,21 @@
 syntax = "proto3";
 
-import "event.proto";
+// import "event.proto";
+
+import "google/protobuf/any.proto";
 
 package falco.inputs;
 
 option go_package = "github.com/falcosecurity/client-go/pkg/api/inputs";
 
+// service service { rpc input(request) returns (response); }
+
+// message request { repeated falco.event.event data = 1; }
+
+// message response {};
+
 service service { rpc input(request) returns (response); }
 
-message request { repeated falco.event.event data = 1; }
+message request { repeated google.protobuf.Any events = 1; }
 
 message response {};
