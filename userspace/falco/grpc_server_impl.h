@@ -19,6 +19,7 @@ limitations under the License.
 #include <atomic>
 #include "outputs.grpc.pb.h"
 #include "version.grpc.pb.h"
+#include "inputs.grpc.pb.h"
 #include "grpc_context.h"
 
 namespace falco
@@ -39,6 +40,8 @@ protected:
 	void outputs_impl(const stream_context& ctx, const outputs::request& req, outputs::response& res);
 
 	void version_impl(const context& ctx, const version::request& req, version::response& res);
+
+	void input_impl(const context& ctx, const inputs::request& req, inputs::response& res);
 
 private:
 	std::atomic<bool> m_stop{false};

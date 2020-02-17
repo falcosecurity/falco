@@ -90,6 +90,13 @@ void falco::grpc::server_impl::version_impl(const context& ctx, const version::r
 	res.set_patch(FALCO_VERSION_PATCH);
 }
 
+void falco::grpc::server_impl::input_impl(const context& ctx, const inputs::request& req, inputs::response& res)
+{
+	std::string client = ctx.m_ctx->peer();
+	gpr_log(GPR_DEBUG, "server_impl::%s -> replying: %s, client=%s", __func__, ctx.m_prefix.c_str(), client.c_str());
+	// todo(leodido) > implement
+}
+
 void falco::grpc::server_impl::shutdown()
 {
 	m_stop = true;

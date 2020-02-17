@@ -39,6 +39,7 @@ public:
 
 	outputs::service::AsyncService m_outputs_svc;
 	version::service::AsyncService m_version_svc;
+	inputs::service::AsyncService m_inputs_svc;
 
 	std::unique_ptr<::grpc::ServerCompletionQueue> m_completion_queue;
 
