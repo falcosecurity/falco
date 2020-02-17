@@ -18,7 +18,8 @@ option(USE_BUNDLED_DEPS "Bundle hard to find dependencies into the Falco binary"
 option(BUILD_WARNINGS_AS_ERRORS "Enable building with -Wextra -Werror flags" OFF)
 
 # Elapsed time
-# set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CMAKE_COMMAND} -E time") # TODO(fntlnz, leodido): add a flag to enable this
+# TODO(fntlnz, leodido): add a flag to enable this
+# set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CMAKE_COMMAND} -E time")
 
 # Make flag for parallel processing
 include(ProcessorCount)
@@ -48,6 +49,7 @@ else()
   set(CMAKE_BUILD_TYPE "release")
   set(KBUILD_FLAGS "${DRAIOS_FEATURE_FLAGS}")
 endif()
+message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
 set(CMAKE_COMMON_FLAGS "-Wall -ggdb ${DRAIOS_FEATURE_FLAGS}")
 
