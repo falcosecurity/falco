@@ -189,5 +189,62 @@ void falco::grpc::request_context<falco::version::service, falco::version::reque
 	start(srv);
 }
 
+template<>
+void falco::grpc::request_context<falco::inputs::service, falco::inputs::request, falco::inputs::response>::start(server* srv)
+{
+	m_state = request_state::REQUEST;
+	m_srv_ctx.reset(new ::grpc::ServerContext);
+	auto srvctx = m_srv_ctx.get();
+	m_res_writer.reset(new ::grpc::ServerAsyncResponseWriter<inputs::response>(srvctx));
+	m_req.Clear();
+	auto cq = srv->m_completion_queue.get();
+	// Request to start processing given requests.
+	// Using "this" - ie., the memory address of this context - as the tag that uniquely identifies the request.
+	// In this way, different contexts can serve different requests concurrently.
+	gpr_log(
+		GPR_DEBUG,
+		"request_context<inputs>::%s -> m_request_func: tag=%p, state=%s",
+		__func__,
+		this,
+		request_state_Name(m_state).c_str());
+	(srv->m_inputs_svc.*m_request_func)(srvctx, &m_req, m_res_writer.get(), cq, cq, this);
+}
+
+template<>
+void falco::grpc::request_context<falco::inputs::service, falco::inputs::request, falco::inputs::response>::process(server* srv)
+{
+	gpr_log(
+		GPR_DEBUG,
+		"request_context<inputs>::%s -> m_process_func: tag=%p, state=%s",
+		__func__,
+		this,
+		request_state_Name(m_state).c_str());
+
+	inputs::response res;
+	(srv->*m_process_func)(m_srv_ctx.get(), m_req, res);
+
+	// Notify the gRPC runtime that this processing is done
+	m_state = request_state::FINISH;
+	// Using "this"- ie., the memory address of this context - to uniquely identify the event.
+	m_res_writer->Finish(res, ::grpc::Status::OK, this);
+}
+
+template<>
+void falco::grpc::request_context<falco::inputs::service, falco::inputs::request, falco::inputs::response>::end(server* srv, bool errored)
+{
+	if(errored)
+	{
+		gpr_log(
+			GPR_ERROR,
+			"request_context<inputs>::%s -> error replying: tag=%p, state=%s",
+			__func__,
+			this,
+			request_state_Name(m_state).c_str());
+	}
+
+	// Ask to start processing requests
+	start(srv);
+}
+
 } // namespace grpc
 } // namespace falco
