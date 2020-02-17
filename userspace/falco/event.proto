@@ -1,0 +1,159 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+package falco.event;
+
+// note > from ppm_events_public.h
+// (ppm_param_type)
+enum param_type {
+  PT_NONE = 0;
+  PT_INT8 = 1;
+  PT_INT16 = 2;
+  PT_INT32 = 3;
+  PT_INT64 = 4;
+  PT_UINT8 = 5;
+  PT_UINT16 = 6;
+  PT_UINT32 = 7;
+  PT_UINT64 = 8;
+  PT_CHARBUF = 9; // A printable buffer of bytes, NULL terminated
+  PT_BYTEBUF = 10; // A raw buffer of bytes not suitable for printing
+  PT_ERRNO = 11; // This is an INT4; but will be interpreted as an error code
+  PT_SOCKADDR = 12; // A sockaddr structure, 1byte family + data
+  PT_SOCKTUPLE = 13; // A sockaddr tuple,1byte family + 12byte data + 12byte data
+  PT_FD = 14;        // An fd, 64bit
+  PT_PID = 15;    // A pid/tid, 64bit
+  PT_FDLIST = 16; // A list of fds, 16bit count + count * (64bit fd + 16bit flags)
+  PT_FSPATH = 17; // A string containing a relative or absolute file system path, null terminated
+  PT_SYSCALLID = 18; // A 16bit system call ID that can be used as a key for the g_syscall_info_table table
+  PT_SIGTYPE = 19; // An 8bit signal number
+  PT_RELTIME = 20; // A relative time. Seconds * 10^9  + nanoseconds, 64bit
+  PT_ABSTIME = 21; // An absolute time interval. Seconds from epoch * 10^9 + nanoseconds, 64bit
+  PT_PORT = 22;   // A TCP/UDP port, 2 bytes
+  PT_L4PROTO = 23;    // A 1 byte IP protocol type
+  PT_SOCKFAMILY = 24; // A 1 byte socket family
+  PT_BOOL = 25;       // A boolean value, 4 bytes
+  PT_IPV4ADDR = 26;   // A 4 byte raw IPv4 address
+  PT_DYN = 27; // Type can vary depending on the context (used for filter fields like evt.rawarg)
+  PT_FLAGS8 = 28; // This is an UINT8; but will be interpreted as 8 bit flags
+  PT_FLAGS16 = 29;     // This is an UINT6; but will be interpreted as 16 bit flags
+  PT_FLAGS32 = 30;     // This is an UINT2; but will be interpreted as 32 bit flags
+  PT_UID = 31;         // This is an UINT2; MAX_UINT32 will be interpreted as no value
+  PT_GID = 32; // This is an UINT2; MAX_UINT32 will be interpreted as no value
+  PT_DOUBLE = 33; // This is a double precision floating point number
+  PT_SIGSET = 34; // sigset_t (only the lower UINT32 of it)
+  PT_CHARBUFARRAY = 35; // Pointer to an array of strings exported by the user events decoder, 64bit (internal use only)
+  PT_CHARBUF_PAIR_ARRAY = 36; // Pointer to an array of string pairs, exported by the user events decoder, 64bit (internal use only)
+  PT_IPV4NET = 37;           // An IPv4 network
+  PT_IPV6ADDR = 38; // A 16 byte raw IPv6 address
+  PT_IPV6NET = 39;  // An IPv6 network
+  PT_IPADDR = 40;   // Either an IPv4 or IPv6 address; the length indicateswhich one it is
+  PT_IPNET = 41; // Either an IPv4 or IPv6 network; the length indicates which one it is
+  PT_MODE = 42;      // A 32 bit bitmask to represent file modes
+  PT_MAX = 43; // Array size
+};
+
+// note > ppm_events_public.h
+// (ppm_event_flags)
+enum event_flags {
+  EF_NONE = 0;
+  EF_CREATES_FD = 1;            // this event creates an FD (e.g. open)
+  EF_DESTROYS_FD = 2;           // this event destroys an FD (e.g. close)
+  EF_USES_FD = 4;               // this event operates on an FD
+  EF_READS_FROM_FD = 8;         // this event reads data from an FD
+  EF_WRITES_TO_FD = 16;         // this event writes data to an FD
+  EF_MODIFIES_STATE = 32;       // this event causes the machine state to change and should not be dropped by the filtering engine
+  EF_UNUSED = 64;               // this event is not used
+  EF_WAITS = 128;               // this event reads data from an FD
+  EF_SKIPPARSERESET = 256;      // this event shouldn't pollute the parser lastevent state tracker
+  EF_OLD_VERSION = 512;         // this event is kept for backward compatibility
+  EF_DROP_SIMPLE_CONS = 1024;   // this event can be skipped by consumers that privilege low overhead to full event capture
+}
+
+// todo(leodido) > complete
+// https://github.com/draios/sysdig/blob/master/driver/ppm_events_public.h
+// (ppm_event_type)
+enum event_type {
+  PPME_GENERIC_E = 0;
+  PPME_GENERIC_X = 1;
+}
+
+// todo(leodido) > complete
+// https://github.com/draios/sysdig/blob/master/driver/ppm_events_public.h
+// (ppm_event_category)
+enum event_category {
+  EC_UNKNOWN = 0;
+  EC_OTHER = 1;
+  EC_FILE = 2;
+}
+
+message parameter {
+  string name = 1;
+  uint32 value = 2;
+}
+
+message parameter_info {
+  string name = 1;     // parameter name, e.g. 'size'
+  param_type type = 2; // parameter type, e.g. 'uint16', 'string'
+  // print_format fmt = 3;
+  // ? info = 4;
+}
+
+message ppm_event {
+  string name = 1;
+  event_category category = 2; // event category, e.g. 'file, 'net'
+  uint32 flags = 3;
+  uint32 nparams = 4;       // number of parameters in the parameters array
+  repeated parameter_info params = 5;
+}
+
+message scap_event {
+  google.protobuf.Timestamp ts = 1;
+  uint64 tid = 2;
+  event_type type = 3;
+  uint32 nparams = 4;
+}
+
+enum command_category {
+  CAT_NONE = 0;
+  CAT_CONTAINER = 1;
+  CAT_HEALTHCHECK = 2;
+  CAT_LIVENESS_PROBE = 3;
+  CAT_READINESS_PROBE = 4;
+}
+
+// note > threadinfo.h
+message thread_info {
+  uint64 tid = 1; // id of this thread
+  uint64 pid = 2; // id of the process containing this thread
+  uint64 ptid = 3; // id of the process that started this thread
+  uint64 sid = 4; // session id of the process containing this thread
+  string comm = 5; // name of the process containing this thread, e.g. "top"
+  string exe = 6; // name of the process containing this thread from argv[0], e.g. "/bin/top"
+  string exepath = 7; // full executable path of the process containing this thread, e.g. "/bin/top"
+  string cwd = 8; // working directory of the process containing this thread
+  repeated string env = 9; // values of all environment variables for the process containing this thread
+  repeated string args = 10; // command line arguments, e.g., -d1
+  // string container_id = 11;
+  // ...
+  command_category category = 12;
+}
+
+// note > event.h
+message event {
+  scap_event evt = 1;
+  uint32 cpuid = 2;
+  event_flags flags = 3; // fixme(leodido) > should this be a uint32?
+  ppm_event info = 4;
+  string params = 5;
+  thread_info tinfo = 6;
+  // fdinfo = 7
+  uint32 iosize = 8;
+
+
+  // bool fdinfo_name_changed = 9;
+  // int64 fd_num = 10;
+  // uint32 num_params = 11;
+  // map<uint32, string> param_name = 12;
+  // map<uint32, string> param_value = 13;
+}

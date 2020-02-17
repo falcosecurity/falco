@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+import "event.proto";
+
+package falco.inputs;
+
+option go_package = "github.com/falcosecurity/client-go/pkg/api/inputs";
+
+service service { rpc input(request) returns (response); }
+
+message request { repeated falco.event.event data = 1; }
+
+message response {};
