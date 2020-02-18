@@ -1,0 +1,22 @@
+diff --git a/userspace/libscap/scap.c b/userspace/libscap/scap.c
+index 59b04e0a..bdc311cb 100644
+--- a/userspace/libscap/scap.c
++++ b/userspace/libscap/scap.c
+@@ -52,7 +52,7 @@ limitations under the License.
+ //#define NDEBUG
+ #include <assert.h>
+ 
+-static const char *SYSDIG_BPF_PROBE_ENV = "SYSDIG_BPF_PROBE";
++static const char *SYSDIG_BPF_PROBE_ENV = "FALCO_BPF_PROBE";
+ 
+ //
+ // Probe version string size
+@@ -171,7 +171,7 @@ scap_t* scap_open_live_int(char *error, int32_t *rc,
+ 				return NULL;
+ 			}
+ 
+-			snprintf(buf, sizeof(buf), "%s/.sysdig/%s-bpf.o", home, PROBE_NAME);
++			snprintf(buf, sizeof(buf), "%s/.falco/%s-bpf.o", home, PROBE_NAME);
+ 			bpf_probe = buf;
+ 		}
+ 	}
