@@ -350,7 +350,7 @@ load_bpf_probe() {
 			echo "**********************************************************"
 		fi
 
-		echo "* BPF probe located, it's now possible to start sysdig"
+		echo "* BPF probe located, it's now possible to start falco"
 
 		ln -sf "${HOME}/.falco/${BPF_PROBE_FILENAME}" "${HOME}/.falco/${BPF_PROBE_NAME}.o"
 		exit $?
@@ -402,7 +402,7 @@ if ! hash curl > /dev/null 2>&1; then
 	exit 1
 fi
 
-if [ -v BPF_PROBE ] || [ "${1}" = "bpf" ]; then
+if [ -v FALCO_BPF_PROBE ] || [ "${1}" = "bpf" ]; then
 	load_bpf_probe
 else
 	load_kernel_probe
