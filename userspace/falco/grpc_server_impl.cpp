@@ -30,7 +30,7 @@ bool falco::grpc::server_impl::is_running()
 
 void falco::grpc::server_impl::outputs_impl(const stream_context& ctx, const outputs::request& req, outputs::response& res)
 {
-	std::string client = ctx.m_ctx->peer();
+	std::string client = ctx.peer();
 	if(ctx.m_status == stream_status::SUCCESS || ctx.m_status == stream_status::ERROR)
 	{
 		// Entering here when the streaming completed (request_context_base::FINISH)
@@ -73,8 +73,7 @@ void falco::grpc::server_impl::outputs_impl(const stream_context& ctx, const out
 
 void falco::grpc::server_impl::version_impl(const context& ctx, const version::request& req, version::response& res)
 {
-	std::string client = ctx.m_ctx->peer();
-	gpr_log(GPR_DEBUG, "server_impl::%s -> replying: %s, client=%s", __func__, ctx.m_prefix.c_str(), client.c_str());
+	gpr_log(GPR_DEBUG, "server_impl::%s -> replying: %s, client=%s", __func__, ctx.m_prefix.c_str(), ctx.peer().c_str());
 
 	auto& build = *res.mutable_build();
 	build = FALCO_VERSION_BUILD;
@@ -92,9 +91,14 @@ void falco::grpc::server_impl::version_impl(const context& ctx, const version::r
 
 void falco::grpc::server_impl::input_impl(const context& ctx, const inputs::request& req, inputs::response& res)
 {
-	std::string client = ctx.m_ctx->peer();
+	std::string client = ctx.peer();
 	gpr_log(GPR_DEBUG, "server_impl::%s -> replying: %s, client=%s", __func__, ctx.m_prefix.c_str(), client.c_str());
 	// todo(leodido) > implement
+	// retrieve metadata
+	// if type = K8S_AUDIT
+	// ...
+	// if type = SYSCALL
+	// ...
 }
 
 void falco::grpc::server_impl::shutdown()
