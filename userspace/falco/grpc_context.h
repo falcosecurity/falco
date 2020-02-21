@@ -41,9 +41,14 @@ public:
 	~context() = default;
 
 	void get_metadata(std::string key, std::string& val);
+	std::string peer() const;
 
+	std::string m_prefix; // todo(leodido) > making this read only?
+
+private:
+	std::string m_session_id;
+	std::string m_request_id;
 	::grpc::ServerContext* m_ctx = nullptr;
-	std::string m_prefix;
 };
 
 class stream_context : public context

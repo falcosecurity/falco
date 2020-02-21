@@ -62,8 +62,7 @@ void request_stream_context<falco::outputs::service, falco::outputs::request, fa
 		request_state_Name(m_state).c_str());
 
 	outputs::response res;
-	// fixme(leodido) > srv->m_outputs_svc?
-	(srv->*m_process_func)(*m_stream_ctx, m_req, res); // outputs()
+	(srv->*m_process_func)(*m_stream_ctx, m_req, res); // outputs_impl()
 
 	// When there are still more responses to stream
 	if(m_stream_ctx->m_has_more)
@@ -163,7 +162,9 @@ void falco::grpc::request_context<falco::version::service, falco::version::reque
 		this,
 		request_state_Name(m_state).c_str());
 
+	// Create empty response
 	version::response res;
+	// Call version service implementation
 	(srv->*m_process_func)(m_srv_ctx.get(), m_req, res);
 
 	// Notify the gRPC runtime that this processing is done

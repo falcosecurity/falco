@@ -22,25 +22,29 @@ limitations under the License.
 falco::grpc::context::context(::grpc::ServerContext* ctx):
 	m_ctx(ctx)
 {
-	std::string session_id;
-	std::string request_id;
-
-	get_metadata(meta_session, session_id);
-	get_metadata(meta_request, request_id);
+	get_metadata(meta_session, m_session_id);
+	get_metadata(meta_request, m_request_id);
 
 	std::stringstream meta;
-	if(!session_id.empty())
+	if(!m_session_id.empty())
 	{
-		meta << "sid=" << session_id << "";
+		ctx->AddInitialMetadata(meta_session, m_session_id);
+		meta << "sid=" << m_session_id << "";
 	}
-	if(!request_id.empty())
+	if(!m_request_id.empty())
 	{
-		meta << ", rid=" << request_id << "";
+		ctx->AddInitialMetadata(meta_request, m_request_id);
+		meta << ", rid=" << m_request_id << "";
 	}
 	m_prefix = meta.str();
 }
 
-void falco::grpc::context::context::get_metadata(std::string key, std::string& val)
+std::string falco::grpc::context::peer() const
+{
+	return m_ctx->peer();
+}
+
+void falco::grpc::context::get_metadata(std::string key, std::string& val)
 {
 	const std::multimap<::grpc::string_ref, ::grpc::string_ref>& client_metadata = m_ctx->client_metadata();
 	auto it = client_metadata.find(key);
