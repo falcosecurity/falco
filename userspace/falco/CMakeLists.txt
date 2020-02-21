@@ -33,26 +33,27 @@ add_custom_command(
     ${CMAKE_CURRENT_BINARY_DIR}/schema.pb.h
     ${CMAKE_CURRENT_BINARY_DIR}/grpc.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/grpc.pb.h
-  COMMENT "Generate gRPC version API"
+  COMMENT "Generate gRPC API"
+  # version API
   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/version.proto
   COMMAND ${PROTOC} -I ${CMAKE_CURRENT_SOURCE_DIR} --cpp_out=. ${CMAKE_CURRENT_SOURCE_DIR}/version.proto
   COMMAND ${PROTOC} -I ${CMAKE_CURRENT_SOURCE_DIR} --grpc_out=. --plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN}
           ${CMAKE_CURRENT_SOURCE_DIR}/version.proto
-  COMMENT "Generate gRPC outputs API"
+  # outputs API
   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/outputs.proto ${CMAKE_CURRENT_SOURCE_DIR}/schema.proto
   COMMAND ${PROTOC} -I ${CMAKE_CURRENT_SOURCE_DIR} --cpp_out=. ${CMAKE_CURRENT_SOURCE_DIR}/outputs.proto
           ${CMAKE_CURRENT_SOURCE_DIR}/schema.proto
   COMMAND ${PROTOC} -I ${CMAKE_CURRENT_SOURCE_DIR} --grpc_out=. --plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN}
           ${CMAKE_CURRENT_SOURCE_DIR}/outputs.proto
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-  COMMENT "Generate gRPC inputs API"
+  # inputs API
   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/inputs.proto ${CMAKE_CURRENT_SOURCE_DIR}/event.proto
   COMMAND ${PROTOC} -I ${CMAKE_CURRENT_SOURCE_DIR} --cpp_out=. ${CMAKE_CURRENT_SOURCE_DIR}/inputs.proto
           ${CMAKE_CURRENT_SOURCE_DIR}/event.proto
   COMMAND ${PROTOC} -I ${CMAKE_CURRENT_SOURCE_DIR} --grpc_out=. --plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN}
           ${CMAKE_CURRENT_SOURCE_DIR}/inputs.proto
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-  COMMENT "Generate gRPC context API"
+  # context API
   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/grpc.proto
   COMMAND ${PROTOC} -I ${CMAKE_CURRENT_SOURCE_DIR} --cpp_out=. ${CMAKE_CURRENT_SOURCE_DIR}/grpc.proto)
 

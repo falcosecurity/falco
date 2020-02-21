@@ -16,7 +16,7 @@ set(SYSDIG_CMAKE_WORKING_DIR "${CMAKE_BINARY_DIR}/sysdig-repo")
 
 # this needs to be here at the top
 if(USE_BUNDLED_DEPS)
-  # explicitly force this dependency to use the system OpenSSL
+  # explicitly force this dependency to use the bundled OpenSSL
   set(USE_BUNDLED_OPENSSL ON)
 endif()
 
