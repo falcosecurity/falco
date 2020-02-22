@@ -22,7 +22,7 @@ endif()
 
 file(MAKE_DIRECTORY ${SYSDIG_CMAKE_WORKING_DIR})
 # cd /path/to/build && cmake /path/to/source
-execute_process(COMMAND "${CMAKE_COMMAND}" ${SYSDIG_CMAKE_SOURCE_DIR} WORKING_DIRECTORY ${SYSDIG_CMAKE_WORKING_DIR})
+execute_process(COMMAND "${CMAKE_COMMAND}" -DSYSDIG_VERSION=${SYSDIG_VERSION} ${SYSDIG_CMAKE_SOURCE_DIR} WORKING_DIRECTORY ${SYSDIG_CMAKE_WORKING_DIR})
 
 # todo(leodido, fntlnz) > use the following one when CMake version will be >= 3.13
 

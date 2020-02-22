@@ -22,12 +22,13 @@ include(ExternalProject)
 # In case you want to test against another sysdig version just pass the variable - ie., `cmake -DSYSDIG_VERSION=dev ..`
 if(NOT SYSDIG_VERSION)
   set(SYSDIG_VERSION "146a431edf95829ac11bfd9c85ba3ef08789bffe")
+  set(SYSDIG_CHECKSUM "SHA256=6e477ac5fe9d3110b870bd4495f01541373a008c375a1934a2d1c46798b6bad6")
 endif()
 
 ExternalProject_Add(
   sysdig
   URL "https://github.com/draios/sysdig/archive/${SYSDIG_VERSION}.tar.gz"
-  # URL_HASH SHA256=bd09607aa8beb863db07e695863f7dc543e2d39e7153005759d26a340ff66fa5
+  URL_HASH "${SYSDIG_CHECKSUM}"
   CONFIGURE_COMMAND ""
   BUILD_COMMAND ""
   INSTALL_COMMAND ""
