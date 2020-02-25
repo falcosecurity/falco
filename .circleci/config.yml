@@ -84,6 +84,18 @@ jobs:
       - run:
           name: Execute integration tests
           command: /usr/bin/entrypoint test
+  # Publish the packages
+  "publish/packages":
+    docker:
+      - image: docker.bintray.io/jfrog/jfrog-cli-go:latest
+    steps:
+      - attach_workspace:
+          at: /
+      - run:
+          name: Publish deb
+          command: |
+            FALCO_VERSION=$(./build/userspace/falco/falco --version | awk '{print $3;}')
+            jfrog bt u ./build/release/falco-${FALCO_VERSION}.deb falcosecurity/deb/falco/${FALCO_VERSION} --deb bionic/main/amd64 --user poiana --key ${BINTRAY_SECRET} --publish
 workflows:
   version: 2
   build_and_test:
@@ -91,5 +103,9 @@ workflows:
       - "build/ubuntu-bionic"
       - "build/centos7"
       - "tests/integration":
+          requires:
+            - "build/centos7"
+      - "publish/packages":
+          context: falco
           requires:
             - "build/centos7"
