@@ -2645,11 +2645,12 @@
   condition: (fd.sport in (miner_ports) and fd.sip.name in (miner_domains))
 
 - macro: net_miner_pool
-  condition: (evt.type in (sendto, sendmsg) and evt.dir=< and ((minerpool_http) or (minerpool_https) or (minerpool_other)))
+  condition: (evt.type in (sendto, sendmsg) and evt.dir=< and (fd.net != "127.0.0.0/8" and not fd.snet in (rfc_1918_addresses)) and ((minerpool_http) or (minerpool_https) or (minerpool_other)))
 
 - rule: Detect outbound connections to common miner pool ports
   desc: Miners typically connect to miner pools on common ports.
   condition: net_miner_pool
+  enabled: false
   output: Outbound connection to IP/Port flagged by cryptoioc.ch (command=%proc.cmdline port=%fd.rport ip=%fd.rip container=%container.info image=%container.image.repository)
   priority: CRITICAL
   tags: [network, mitre_execution]
