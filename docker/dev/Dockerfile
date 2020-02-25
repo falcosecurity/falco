@@ -1,6 +1,6 @@
 FROM debian:unstable
 
-LABEL maintainer="opensource@sysdig.com"
+LABEL maintainer="cncf-falco-dev@lists.cncf.io"
 
 ENV FALCO_REPOSITORY dev
 

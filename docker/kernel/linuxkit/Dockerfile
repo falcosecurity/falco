@@ -5,7 +5,7 @@ ARG FALCO_VERSION=0.20.0
 FROM linuxkit/kernel:${KERNEL_VERSION} AS ksrc
 FROM falcosecurity/falco:${FALCO_VERSION}-minimal as falco
 FROM alpine:${ALPINE_VERSION} AS probe-build
-LABEL maintainer="opensource@sysdig.com"
+LABEL maintainer="cncf-falco-dev@lists.cncf.io"
 ARG KERNEL_VERSION=4.9.184
 ARG FALCO_VERSION=0.20.0
 ENV FALCO_VERSION=${FALCO_VERSION}
