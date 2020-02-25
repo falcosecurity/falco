@@ -26,7 +26,7 @@
 #                    driven by system calls with support for containers.
 ### END INIT INFO
 
-# Author: The Falco Authors <opensource@sysdig.com>
+# Author: The Falco Authors <cncf-falco-dev@lists.cncf.io>
 
 # Do NOT "set -e"
 

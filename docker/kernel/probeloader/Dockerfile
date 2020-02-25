@@ -12,7 +12,7 @@ RUN go mod vendor
 RUN CGO_ENABLED=0 GOOS=linux go build -a -o falcoctl -ldflags '-extldflags "-static"' .
 
 FROM scratch
-LABEL maintainer="opensource@sysdig.com"
+LABEL maintainer="cncf-falco-dev@lists.cncf.io"
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=build /falcoctl/falcoctl /falcoctl
 CMD ["/falcoctl", "install", "probe"]
