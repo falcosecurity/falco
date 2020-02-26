@@ -689,7 +689,7 @@ trace_files: !mux
       - "Non sudo setuid": 1
       - "Create files below dev": 1
       - "Modify binary dirs": 2
-      - "Change thread namespace": 2
+      - "Change thread namespace": 1
 
   disabled_tags_a:
     detect: True
