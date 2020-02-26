@@ -48,6 +48,7 @@ else()
   set(CMAKE_BUILD_TYPE "release")
   set(KBUILD_FLAGS "${DRAIOS_FEATURE_FLAGS}")
 endif()
+message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
 set(CMAKE_COMMON_FLAGS "-Wall -ggdb ${DRAIOS_FEATURE_FLAGS}")
 
