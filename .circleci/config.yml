@@ -101,6 +101,28 @@ jobs:
       - store_artifacts:
           path: /tmp/packages
           destination: /packages
+  # Debug build using our own builder base image using centos 7
+  # This build is static, dependencies are bundled in the falco binary
+  "build/centos7-debug":
+    docker:
+      - image: falcosecurity/falco-builder:latest
+        environment:
+          BUILD_TYPE: "debug"
+    steps:
+      - checkout:
+          path: /source/falco
+      - run:
+          name: Prepare project
+          command: /usr/bin/entrypoint cmake
+      - run:
+          name: Build
+          command: /usr/bin/entrypoint all
+      - run:
+          name: Run unit tests
+          command: /usr/bin/entrypoint tests
+      - run:
+          name: Build packages
+          command: /usr/bin/entrypoint package
   # Execute integration tests based on the build results coming from the "build/centos7" job
   "tests/integration":
     docker:
@@ -157,6 +179,7 @@ workflows:
       - "build/ubuntu-bionic"
       - "build/ubuntu-bionic-debug"
       - "build/centos7"
+      - "build/centos7-debug"
       - "tests/integration":
           requires:
             - "build/centos7"
