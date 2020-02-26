@@ -132,9 +132,9 @@ workflows:
           filters:
             branches:
               only:
-                - new/circleci-bintray-publish-packages # todo > change into master
+                - master
           requires:
-            - "build/centos7" # todo > depend on tests/integration
+            - "tests/integration"
   release:
     jobs:
       - "build/centos7":
