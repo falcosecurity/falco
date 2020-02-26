@@ -32,6 +32,38 @@ jobs:
             pushd build
             make tests
             popd
+  # Debug build using ubuntu LTS
+  # This build is dynamic, most dependencies are taken from the OS
+  "build/ubuntu-bionic-debug":
+    docker:
+      - image: ubuntu:bionic
+    steps:
+      - checkout
+      - run:
+          name: Update base image
+          command: apt update -y
+      - run:
+          name: Install dependencies
+          command: apt install libssl-dev libyaml-dev libncurses-dev libc-ares-dev libprotobuf-dev protobuf-compiler libjq-dev libyaml-cpp-dev libgrpc++-dev protobuf-compiler-grpc rpm linux-headers-$(uname -r) libelf-dev cmake build-essential libcurl4-openssl-dev -y
+      - run:
+          name: Prepare project
+          command: |
+            mkdir build
+            pushd build
+            cmake -DCMAKE_BUILD_TYPE=debug ..
+            popd
+      - run:
+          name: Build
+          command: |
+            pushd build
+            make -j4 all
+            popd
+      - run:
+          name: Run unit tests
+          command: |
+            pushd build
+            make tests
+            popd
   # Build using our own builder base image using centos 7
   # This build is static, dependencies are bundled in the falco binary
   "build/centos7":
@@ -123,6 +155,7 @@ workflows:
   build_and_test:
     jobs:
       - "build/ubuntu-bionic"
+      - "build/ubuntu-bionic-debug"
       - "build/centos7"
       - "tests/integration":
           requires:
