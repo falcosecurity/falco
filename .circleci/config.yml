@@ -94,8 +94,9 @@ jobs:
       - run:
           name: Publish deb
           command: |
-            FALCO_VERSION=$(./build/userspace/falco/falco --version | awk '{print $3;}')
-            jfrog bt u ./build/release/falco-${FALCO_VERSION}.deb falcosecurity/deb/falco/${FALCO_VERSION} --deb bionic/main/amd64 --user poiana --key ${BINTRAY_SECRET} --publish
+            FALCO_VERSION=$(/build/userspace/falco/falco --version | awk '{print $3;}')
+            jfrog bt u /build/release/falco-${FALCO_VERSION}.deb falcosecurity/deb/falco-dev/${FALCO_VERSION} --deb bionic/main/amd64 --user poiana --key ${BINTRAY_SECRET} --publish
+            jfrog bt u /build/release/falco-${FALCO_VERSION}.deb falcosecurity/deb/falco-dev/${FALCO_VERSION} --deb xenial/main/amd64 --user poiana --key ${BINTRAY_SECRET} --publish
 workflows:
   version: 2
   build_and_test:
