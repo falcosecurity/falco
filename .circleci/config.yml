@@ -85,7 +85,7 @@ jobs:
           name: Execute integration tests
           command: /usr/bin/entrypoint test
   # Publish the packages
-  "publish/packages":
+  "publish/packages-dev":
     docker:
       - image: docker.bintray.io/jfrog/jfrog-cli-go:latest
     steps:
@@ -101,6 +101,23 @@ jobs:
           command: |
             FALCO_VERSION=$(sed -e 's/^"//' -e 's/"$//' <<< $(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3))
             jfrog bt u /build/release/falco-${FALCO_VERSION}-x86_64.rpm falcosecurity/rpm-dev/falco/${FALCO_VERSION} --user poiana --key ${BINTRAY_SECRET} --publish
+  # Publish the packages
+  "publish/packages":
+    docker:
+      - image: docker.bintray.io/jfrog/jfrog-cli-go:latest
+    steps:
+      - attach_workspace:
+          at: /
+      - run:
+          name: Publish deb
+          command: |
+            FALCO_VERSION=$(sed -e 's/^"//' -e 's/"$//' <<< $(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3))
+            jfrog bt u /build/release/falco-${FALCO_VERSION}-x86_64.deb falcosecurity/deb/falco/${FALCO_VERSION} stable/ --deb stable/main/amd64 --user poiana --key ${BINTRAY_SECRET} --publish
+      - run:
+          name: Publish rpm
+          command: |
+            FALCO_VERSION=$(sed -e 's/^"//' -e 's/"$//' <<< $(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3))
+            jfrog bt u /build/release/falco-${FALCO_VERSION}-x86_64.rpm falcosecurity/rpm/falco/${FALCO_VERSION} --user poiana --key ${BINTRAY_SECRET} --publish
 workflows:
   version: 2
   build_and_test:
@@ -110,11 +127,28 @@ workflows:
       - "tests/integration":
           requires:
             - "build/centos7"
-      - "publish/packages":
+      - "publish/packages-dev":
           context: falco
           filters:
             branches:
               only:
-                - new/circleci-bintray-publish-packages
+                - new/circleci-bintray-publish-packages # todo > change into master
+          requires:
+            - "build/centos7" # todo > depend on tests/integration
+  release:
+    jobs:
+      - "build/centos7":
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
+      - "publish/packages":
+          context: falco
           requires:
             - "build/centos7"
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
