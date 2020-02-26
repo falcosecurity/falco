@@ -97,6 +97,12 @@ jobs:
             FALCO_VERSION=$(sed -e 's/^"//' -e 's/"$//' <<< $(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3))
             jfrog bt u /build/release/falco-${FALCO_VERSION}-x86_64.deb falcosecurity/deb/falco-dev/${FALCO_VERSION} bionic/ --deb bionic/main/amd64 --user poiana --key ${BINTRAY_SECRET} --publish
             jfrog bt u /build/release/falco-${FALCO_VERSION}-x86_64.deb falcosecurity/deb/falco-dev/${FALCO_VERSION} xenial/ --deb xenial/main/amd64 --user poiana --key ${BINTRAY_SECRET} --publish
+            jfrog bt u /build/release/falco-${FALCO_VERSION}-x86_64.deb falcosecurity/deb/falco-dev/${FALCO_VERSION} buster/ --deb buster/main/amd64 --user poiana --key ${BINTRAY_SECRET} --publish
+            jfrog bt u /build/release/falco-${FALCO_VERSION}-x86_64.deb falcosecurity/deb/falco-dev/${FALCO_VERSION} sid/ --deb sid/main/amd64 --user poiana --key ${BINTRAY_SECRET} --publish
+            jfrog bt u /build/release/falco-${FALCO_VERSION}-x86_64.deb falcosecurity/deb/falco-dev/${FALCO_VERSION} stretch/ --deb stretch/main/amd64 --user poiana --key ${BINTRAY_SECRET} --publish
+          name: Publish rpm
+            FALCO_VERSION=$(sed -e 's/^"//' -e 's/"$//' <<< $(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3))
+            jfrog bt u /build/release/falco-${FALCO_VERSION}-x86_64.rpm falcosecurity/rpm/falco-dev/${FALCO_VERSION} --user poiana --key ${BINTRAY_SECRET} --publish
 workflows:
   version: 2
   build_and_test:
