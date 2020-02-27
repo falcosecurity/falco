@@ -155,6 +155,11 @@ jobs:
           command: |
             FALCO_VERSION=$(sed -e 's/^"//' -e 's/"$//' <<< $(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3))
             jfrog bt u /build/release/falco-${FALCO_VERSION}-x86_64.rpm falcosecurity/rpm-dev/falco/${FALCO_VERSION} --user poiana --key ${BINTRAY_SECRET} --publish
+      - run:
+          name: Publish tgz
+          command: |
+            FALCO_VERSION=$(sed -e 's/^"//' -e 's/"$//' <<< $(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3))
+            jfrog bt u /build/release/falco-${FALCO_VERSION}-x86_64.tar.gz falcosecurity/bin-dev/falco/${FALCO_VERSION} x86_64/ --user poiana --key ${BINTRAY_SECRET} --publish
   # Publish the packages
   "publish/packages":
     docker:
@@ -172,6 +177,11 @@ jobs:
           command: |
             FALCO_VERSION=$(sed -e 's/^"//' -e 's/"$//' <<< $(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3))
             jfrog bt u /build/release/falco-${FALCO_VERSION}-x86_64.rpm falcosecurity/rpm/falco/${FALCO_VERSION} --user poiana --key ${BINTRAY_SECRET} --publish
+      - run:
+        name: Publish tgz
+        command: |
+          FALCO_VERSION=$(sed -e 's/^"//' -e 's/"$//' <<< $(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3))
+          jfrog bt u /build/release/falco-${FALCO_VERSION}-x86_64.tar.gz falcosecurity/bin/falco/${FALCO_VERSION} x86_64/ --user poiana --key ${BINTRAY_SECRET} --publish
 workflows:
   version: 2
   build_and_test:
