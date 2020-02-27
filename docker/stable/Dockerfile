@@ -2,9 +2,7 @@ FROM debian:stable
 
 LABEL maintainer="cncf-falco-dev@lists.cncf.io"
 
-ENV FALCO_REPOSITORY stable
-
-LABEL RUN="docker run -i -t -v /var/run/docker.sock:/host/var/run/docker.sock -v /dev:/host/dev -v /proc:/host/proc:ro -v /boot:/host/boot:ro -v /lib/modules:/host/lib/modules:ro -v /usr:/host/usr:ro --name NAME IMAGE"
+LABEL usage="docker run -i -t -v /var/run/docker.sock:/host/var/run/docker.sock -v /dev:/host/dev -v /proc:/host/proc:ro -v /boot:/host/boot:ro -v /lib/modules:/host/lib/modules:ro -v /usr:/host/usr:ro --name NAME IMAGE"
 
 ENV HOST_ROOT /host
 
@@ -91,7 +89,7 @@ RUN sed -e 's/time_format_iso_8601: false/time_format_iso_8601: true/' < /etc/fa
 RUN rm -df /lib/modules \
 	&& ln -s $HOST_ROOT/lib/modules /lib/modules
 
-# debian:unstable head contains binutils 2.31, which generates
+# debian:stable head contains binutils 2.31, which generates
 # binaries that are incompatible with kernels < 4.16. So manually
 # forcibly install binutils 2.30-22 instead.
 RUN curl -L -o binutils_2.30-22_amd64.deb https://dl.bintray.com/falcosecurity/dependencies/binutils_2.30-22_amd64.deb \
