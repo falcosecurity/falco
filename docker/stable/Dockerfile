@@ -75,8 +75,8 @@ RUN rm -rf /usr/bin/clang \
 	&& ln -s /usr/bin/clang-7 /usr/bin/clang \
 	&& ln -s /usr/bin/llc-7 /usr/bin/llc
 
-RUN curl -s https://s3.amazonaws.com/download.draios.com/DRAIOS-GPG-KEY.public | apt-key add - \
-	&& curl -s -o /etc/apt/sources.list.d/draios.list http://download.draios.com/$FALCO_REPOSITORY/deb/draios.list \
+RUN curl -s https://falco.org/repo/falcosecurity-3672BA8F.asc | apt-key add - \
+	&& echo "deb https://dl.bintray.com/falcosecurity/deb stable main" | tee -a /etc/apt/sources.list.d/ falcosecurity.list \
 	&& apt-get update \
 	&& apt-get install -y --no-install-recommends falco \
 	&& apt-get clean \
