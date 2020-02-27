@@ -23,8 +23,8 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/*
 
 RUN curl -s https://falco.org/repo/falcosecurity-3672BA8F.asc | apt-key add - \
-  && echo "deb https://dl.bintray.com/falcosecurity/deb-dev stable main" | tee -a /etc/apt/sources.list.d/ falcosecurity.list \
-  && apt-get update \
+  && echo "deb https://dl.bintray.com/falcosecurity/deb-dev stable main" | tee -a /etc/apt/sources.list.d/falcosecurity.list \
+  && apt-get update -y \
   && apt-get install -y --no-install-recommends falco \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
