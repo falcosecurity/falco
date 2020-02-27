@@ -160,6 +160,15 @@ jobs:
           command: |
             FALCO_VERSION=$(sed -e 's/^"//' -e 's/"$//' <<< $(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3))
             jfrog bt u /build/release/falco-${FALCO_VERSION}-x86_64.tar.gz falcosecurity/bin-dev/falco/${FALCO_VERSION} x86_64/ --user poiana --key ${BINTRAY_SECRET} --publish
+  # Publish docker packages
+  "publish/docker-dev":
+    steps:
+      - run: Publish slim-dev
+        command: echo "slim-dev"
+      - run: Publish minimal-dev
+        command: echo "minimal-dev"
+      - run: Publish dev
+        command: echo "dev"
   # Publish the packages
   "publish/packages":
     docker:
@@ -182,6 +191,15 @@ jobs:
           command: |
             FALCO_VERSION=$(sed -e 's/^"//' -e 's/"$//' <<< $(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3))
             jfrog bt u /build/release/falco-${FALCO_VERSION}-x86_64.tar.gz falcosecurity/bin/falco/${FALCO_VERSION} x86_64/ --user poiana --key ${BINTRAY_SECRET} --publish
+  # Publish docker packages
+  "publish/docker":
+    steps:
+      - run: Publish slim
+        command: echo "slim"
+      - run: Publish minimal
+        command: echo "minimal"
+      - run: Publish stable
+        command: echo "stable"
 workflows:
   version: 2
   build_and_test:
@@ -201,6 +219,13 @@ workflows:
                 - master
           requires:
             - "tests/integration"
+      - "publish/docker-dev":
+          filters:
+            branches:
+              only:
+                - master
+          requires:
+            - "publish/packages-dev"
   release:
     jobs:
       - "build/centos7":
@@ -213,6 +238,14 @@ workflows:
           context: falco
           requires:
             - "build/centos7"
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
+      - "publish/docker":
+          requires:
+            - "publish/packages"
           filters:
             tags:
               only: /.*/
