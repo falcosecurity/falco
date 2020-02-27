@@ -2,7 +2,7 @@ FROM registry.access.redhat.com/rhel7
 
 LABEL maintainer="cncf-falco-dev@lists.cncf.io"
 
-### Atomic/OpenShift Labels - https://github.com/projectatomic/ContainerApplicationGenericLabels
+## Atomic/OpenShift Labels - https://github.com/projectatomic/ContainerApplicationGenericLabels
 LABEL name="falco"
 LABEL vendor="falcosecurity"
 LABEL url="http://falco.org"
@@ -24,9 +24,9 @@ RUN rpm --import https://falco.org/repo/falcosecurity-3672BA8F.asc && \
     yum -y update-minimal --disablerepo "*" --enablerepo ${REPOLIST} --setopt=tsflags=nodocs \
     --security --sec-severity=Important --sec-severity=Critical && \
     yum -y install --disablerepo "*" --enablerepo ${REPOLIST} --setopt=tsflags=nodocs ${INSTALL_PKGS} && \
-    ### help file markdown to man conversion
+    ## help file markdown to man conversion
     go-md2man -in /tmp/help.md -out /help.1 && \
-    ### we delete everything on /usr/src/kernels otherwise it messes up docker-entrypoint.sh
+    ## we delete everything on /usr/src/kernels otherwise it messes up docker-entrypoint.sh
     rm -fr /usr/src/kernels && \
     rm -df /lib/modules && ln -s $HOST_ROOT/lib/modules /lib/modules && \
     yum clean all
