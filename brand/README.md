@@ -28,7 +28,7 @@ The CNCF now owns The Falco Project.
 ### What is Runtime Security?
 
 Runtime security refers to an approach to preventing unwanted activity on a computer system. 
-With runtime security an operator deploys **both** prevention tooling (access control, policy enforcement, etc) along side detection tooling (systems observability, anomaly detection, etc).
+With runtime security, an operator deploys **both** prevention tooling (access control, policy enforcement, etc) along side detection tooling (systems observability, anomaly detection, etc).
 Runtime security is the practice of using detection tooling to detect unwanted behavior, such that it can then be prevented using prevention techniques.
 Runtime security is a holistic approach to defense, and useful in scenarios where prevention tooling either was unaware of an exploit or attack vector, or when defective applications are ran in even the most secure environment.
 
