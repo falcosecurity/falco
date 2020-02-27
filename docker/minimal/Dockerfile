@@ -8,14 +8,13 @@ ENV FALCO_VERSION=${FALCO_VERSION}
 
 WORKDIR /
 
-ADD https://s3.amazonaws.com/download.draios.com/stable/tgz/x86_64/falco-${FALCO_VERSION}-x86_64.tar.gz /
+ADD https://bintray.com/api/ui/download/falcosecurity/bin/x86_64/falco-${FALCO_VERSION}-x86_64.tar.gz /
 
-# ADD will download from URL and unntar
 RUN apt-get update && \
     apt-get install -y libyaml-0-2 binutils && \
-    # curl -O https://s3.amazonaws.com/download.draios.com/stable/tgz/x86_64/falco-${FALCO_VERSION}-x86_64.tar.gz && \
-    tar xfzv falco-${FALCO_VERSION}-x86_64.tar.gz && \
-    rm -f falco-${FALCO_VERSION}-x86_64.tar.gz && \
+    gzip -d falco-${FALCO_VERSION}-x86_64.tar.gz && \
+    tar xfzv falco-${FALCO_VERSION}-x86_64.tar && \
+    rm -f falco-${FALCO_VERSION}-x86_64.tar && \
     mv falco-${FALCO_VERSION}-x86_64 falco && \
     strip falco/usr/bin/falco && \
     apt-get clean && \
