@@ -138,6 +138,31 @@ jobs:
       - run:
           name: Execute integration tests
           command: /usr/bin/entrypoint test
+  # Sign rpm packages
+  "rpm/sign":
+    docker:
+      - image: falcosecurity/falco-builder:latest
+    steps:
+      - attach_workspace:
+          at: /
+      - run:
+          name: Install rpmsign
+          command: |
+            yum update -y
+            yum install rpm-sign -y
+      - run:
+          name: Sign rpm
+          command: |
+            echo "%_signature gpg" > ~/.rpmmacros
+            echo "%_gpg_name  Falcosecurity Package Signing" >> ~/.rpmmacros
+            cd /build/release/
+            echo $GPG_KEY | base64 -d | gpg --import
+            rpm --addsign *.rpm
+            test "$(rpm -qpi *.rpm | awk '/Signature/' | grep -i none | wc -l)" -eq 0
+      - persist_to_workspace:
+          root: /
+          paths:
+            - build/release/*.rpm
   # Publish the packages
   "publish/packages-dev":
     docker:
@@ -232,6 +257,14 @@ workflows:
       - "tests/integration":
           requires:
             - "build/centos7"
+      - "rpm/sign":
+          context: falco
+          filters:
+            branches:
+              only:
+                - new/circleci-bintray-publish-packages
+          requires:
+            - "tests/integration"
       - "publish/packages-dev":
           context: falco
           filters:
@@ -240,6 +273,7 @@ workflows:
                 - new/circleci-bintray-publish-packages
           requires:
             - "tests/integration"
+            - "rpm/sign"
       - "publish/docker-dev":
           filters:
             branches:
