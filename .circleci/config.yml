@@ -156,9 +156,11 @@ jobs:
             echo "%_signature gpg" > ~/.rpmmacros
             echo "%_gpg_name  Falcosecurity Package Signing" >> ~/.rpmmacros
             cd /build/release/
-            echo "#!/usr/bin/expect -f" > sign
-            echo "spawn rpmsign --addsign *.rpm" >> sign
-            echo "send -- '\n'" >> sign
+            echo '#!/usr/bin/expect -f' > sign
+            echo 'spawn rpmsign --addsign {*}$argv' >> sign
+            echo 'expect -exact "Enter pass phrase: "' >> sign
+            echo 'send -- "\n"' >> sign
+            echo 'expect eof' >> sign
             chmod +x sign
             echo $GPG_KEY | base64 -d | gpg --import
             ./sign
