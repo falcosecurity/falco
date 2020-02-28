@@ -70,3 +70,12 @@ A third party security audit was performed by Cure53, you can see the full repor
 
 ### Reporting security vulnerabilities
 Please report security vulnerabilities following the community process documented [here](https://github.com/falcosecurity/.github/blob/master/SECURITY.md).
+
+Versions
+---
+
+|        | development                                                                                                            | stable                                                                                                         |
+|--------|------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------|
+| rpm    | ![rpm-dev](https://img.shields.io/bintray/v/falcosecurity/rpm-dev/falco?label=Falco&color=%2300aec7&style=flat-square) | ![rpm](https://img.shields.io/bintray/v/falcosecurity/rpm/falco?label=Falco&color=%23005763&style=flat-square) |
+| deb    | ![deb-dev](https://img.shields.io/bintray/v/falcosecurity/deb-dev/falco?label=Falco&color=%2300aec7&style=flat-square) | ![deb](https://img.shields.io/bintray/v/falcosecurity/deb/falco?label=Falco&color=%23005763&style=flat-square) |
+| binary | ![bin-dev](https://img.shields.io/bintray/v/falcosecurity/bin-dev/falco?label=Falco&color=%2300aec7&style=flat-square) | ![bin](https://img.shields.io/bintray/v/falcosecurity/bin/falco?label=Falco&color=%23005763&style=flat-square) |
