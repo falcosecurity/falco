@@ -201,17 +201,25 @@ jobs:
   # Publish docker packages
   "publish/docker-dev":
     docker:
-      - image: buildpack-deps:bionic
+      - image: docker:stable
     steps:
+      - checkout
+      - setup_remote_docker
       - run:
-          name: Publish slim-dev
-          command: echo "slim-dev"
+          name: Build and publish slim-dev
+          command: |
+            docker build --build-arg VERSION_BUCKET=deb-dev -t falcosecurity/falco:master-slim docker/slim
+            docker push falcosecurity/falco:master-slim
       - run:
-          name: Publish minimal-dev
-          command: echo "minimal-dev"
+          name: Build and publish minimal-dev
+          command: |
+            docker build --build-arg VERSION_BUCKET=bin-dev -t falcosecurity/falco:master-minimal docker/minimal
+            docker push falcosecurity/falco:master-minimal
       - run:
-          name: Publish dev
-          command: echo "dev"
+          name: Build and publish dev
+          command: |
+            docker build --build-arg VERSION_BUCKET=deb-dev -t falcosecurity/falco:master docker/dev
+            docker push falcosecurity/falco:master
   # Publish the packages
   "publish/packages":
     docker:
@@ -244,17 +252,31 @@ jobs:
   # Publish docker packages
   "publish/docker":
     docker:
-      - image: buildpack-deps:trusty
+      - image: docker:stable
     steps:
+      - checkout
+      - setup_remote_docker
       - run:
-          name: Publish slim
-          command: echo "slim"
+          name: Build and publish slim
+          command: |
+            docker build --build-arg VERSION_BUCKET=deb -t "falcosecurity/falco:${CIRCLE_TAG}-slim" docker/slim
+            docker tag "falcosecurity/falco:${CIRCLE_TAG}-slim" falcosecurity/falco:latest-slim
+            docker push "falcosecurity/falco:${CIRCLE_TAG}-slim"
+            docker push "falcosecurity/falco:latest-slim"
       - run:
-          name: Publish minimal
-          command: echo "minimal"
+          name: Build and publish minimal
+          command: |
+            docker build --build-arg VERSION_BUCKET=bin -t "falcosecurity/falco:${CIRCLE_TAG}-minimal" docker/minimal
+            docker tag "falcosecurity/falco:${CIRCLE_TAG}-minimal" falcosecurity/falco:latest-minimal
+            docker push "falcosecurity/falco:${CIRCLE_TAG}-minimal"
+            docker push "falcosecurity/falco:latest-minimal"
       - run:
-          name: Publish stable
-          command: echo "stable"
+          name: Build and publish stable
+          command: |
+            docker build --build-arg VERSION_BUCKET=deb -t "falcosecurity/falco:${CIRCLE_TAG}" docker/stable
+            docker tag "falcosecurity/falco:${CIRCLE_TAG}" falcosecurity/falco:latest
+            docker push "falcosecurity/falco:${CIRCLE_TAG}"
+            docker push "falcosecurity/falco:latest"
 workflows:
   version: 2
   build_and_test:
