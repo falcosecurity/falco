@@ -209,16 +209,19 @@ jobs:
           name: Build and publish slim-dev
           command: |
             docker build --build-arg VERSION_BUCKET=deb-dev -t falcosecurity/falco:master-slim docker/slim
+            echo ${DOCKERHUB_SECRET} | docker login -u ${DOCKERHUB_USER} --password-stdin
             docker push falcosecurity/falco:master-slim
       - run:
           name: Build and publish minimal-dev
           command: |
             docker build --build-arg VERSION_BUCKET=bin-dev -t falcosecurity/falco:master-minimal docker/minimal
+            echo ${DOCKERHUB_SECRET} | docker login -u ${DOCKERHUB_USER} --password-stdin
             docker push falcosecurity/falco:master-minimal
       - run:
           name: Build and publish dev
           command: |
             docker build --build-arg VERSION_BUCKET=deb-dev -t falcosecurity/falco:master docker/stable
+            echo ${DOCKERHUB_SECRET} | docker login -u ${DOCKERHUB_USER} --password-stdin
             docker push falcosecurity/falco:master
   # Publish the packages
   "publish/packages":
@@ -261,6 +264,7 @@ jobs:
           command: |
             docker build --build-arg VERSION_BUCKET=deb -t "falcosecurity/falco:${CIRCLE_TAG}-slim" docker/slim
             docker tag "falcosecurity/falco:${CIRCLE_TAG}-slim" falcosecurity/falco:latest-slim
+            echo ${DOCKERHUB_SECRET} | docker login -u ${DOCKERHUB_USER} --password-stdin
             docker push "falcosecurity/falco:${CIRCLE_TAG}-slim"
             docker push "falcosecurity/falco:latest-slim"
       - run:
@@ -268,6 +272,7 @@ jobs:
           command: |
             docker build --build-arg VERSION_BUCKET=bin -t "falcosecurity/falco:${CIRCLE_TAG}-minimal" docker/minimal
             docker tag "falcosecurity/falco:${CIRCLE_TAG}-minimal" falcosecurity/falco:latest-minimal
+            echo ${DOCKERHUB_SECRET} | docker login -u ${DOCKERHUB_USER} --password-stdin
             docker push "falcosecurity/falco:${CIRCLE_TAG}-minimal"
             docker push "falcosecurity/falco:latest-minimal"
       - run:
@@ -275,6 +280,7 @@ jobs:
           command: |
             docker build --build-arg VERSION_BUCKET=deb -t "falcosecurity/falco:${CIRCLE_TAG}" docker/stable
             docker tag "falcosecurity/falco:${CIRCLE_TAG}" falcosecurity/falco:latest
+            echo ${DOCKERHUB_SECRET} | docker login -u ${DOCKERHUB_USER} --password-stdin
             docker push "falcosecurity/falco:${CIRCLE_TAG}"
             docker push "falcosecurity/falco:latest"
 workflows:
@@ -305,6 +311,7 @@ workflows:
           requires:
             - "rpm/sign"
       - "publish/docker-dev":
+          context: falco
           filters:
             branches:
               only:
@@ -338,6 +345,7 @@ workflows:
             branches:
               ignore: /.*/
       - "publish/docker":
+          context: falco
           requires:
             - "publish/packages"
           filters:
