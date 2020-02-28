@@ -163,7 +163,7 @@ jobs:
             echo 'expect eof' >> sign
             chmod +x sign
             echo $GPG_KEY | base64 -d | gpg --import
-            ./sign
+            ./sign *.rpm
             test "$(rpm -qpi *.rpm | awk '/Signature/' | grep -i none | wc -l)" -eq 0
       - persist_to_workspace:
           root: /
@@ -218,7 +218,7 @@ jobs:
       - run:
           name: Build and publish dev
           command: |
-            docker build --build-arg VERSION_BUCKET=deb-dev -t falcosecurity/falco:master docker/dev
+            docker build --build-arg VERSION_BUCKET=deb-dev -t falcosecurity/falco:master docker/stable
             docker push falcosecurity/falco:master
   # Publish the packages
   "publish/packages":
