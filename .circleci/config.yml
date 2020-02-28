@@ -156,8 +156,12 @@ jobs:
             echo "%_signature gpg" > ~/.rpmmacros
             echo "%_gpg_name  Falcosecurity Package Signing" >> ~/.rpmmacros
             cd /build/release/
+            echo "#!/usr/bin/expect -f" > sign
+            echo "spawn rpmsign --addsign *.rpm" >> sign
+            echo "send -- '\n'" >> sign
+            chmod +x sign
             echo $GPG_KEY | base64 -d | gpg --import
-            rpm --addsign *.rpm
+            ./sign
             test "$(rpm -qpi *.rpm | awk '/Signature/' | grep -i none | wc -l)" -eq 0
       - persist_to_workspace:
           root: /
