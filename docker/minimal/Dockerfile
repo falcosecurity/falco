@@ -3,12 +3,14 @@ FROM ubuntu:18.04 as ubuntu
 LABEL maintainer="cncf-falco-dev@lists.cncf.io"
 
 ARG FALCO_VERSION=0.20.0
+ARG VERSION_BUCKET=bin
 
 ENV FALCO_VERSION=${FALCO_VERSION}
+ENV VERSION_BUCKET=${VERSION_BUCKET}
 
 WORKDIR /
 
-ADD https://bintray.com/api/ui/download/falcosecurity/bin/x86_64/falco-${FALCO_VERSION}-x86_64.tar.gz /
+ADD https://bintray.com/api/ui/download/falcosecurity/${VERSION_BUCKET}/x86_64/falco-${FALCO_VERSION}-x86_64.tar.gz /
 
 RUN apt-get update && \
     apt-get install -y libyaml-0-2 binutils && \
