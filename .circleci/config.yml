@@ -293,7 +293,7 @@ workflows:
           filters:
             branches:
               only:
-                - new/circleci-bintray-publish-packages # master
+                - master
           requires:
             - "tests/integration"
       - "publish/packages-dev":
@@ -301,7 +301,7 @@ workflows:
           filters:
             branches:
               only:
-                - new/circleci-bintray-publish-packages # master
+                - master
           requires:
             - "rpm/sign"
       - "publish/docker-dev":
