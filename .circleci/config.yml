@@ -203,6 +203,8 @@ jobs:
     docker:
       - image: docker:stable
     steps:
+      - attach_workspace:
+          at: /
       - checkout
       - setup_remote_docker
       - run:
@@ -214,7 +216,8 @@ jobs:
       - run:
           name: Build and publish minimal-dev
           command: |
-            docker build --build-arg VERSION_BUCKET=bin-dev -t falcosecurity/falco:master-minimal docker/minimal
+            FALCO_VERSION=$(sed -e 's/^"//' -e 's/"$//' <<< $(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3))
+            docker build --build-arg VERSION_BUCKET=bin-dev FALCO_VERSION=${FALCO_VERSION} -t falcosecurity/falco:master-minimal docker/minimal
             echo ${DOCKERHUB_SECRET} | docker login -u ${DOCKERHUB_USER} --password-stdin
             docker push falcosecurity/falco:master-minimal
       - run:
@@ -257,6 +260,8 @@ jobs:
     docker:
       - image: docker:stable
     steps:
+      - attach_workspace:
+          at: /
       - checkout
       - setup_remote_docker
       - run:
@@ -270,7 +275,8 @@ jobs:
       - run:
           name: Build and publish minimal
           command: |
-            docker build --build-arg VERSION_BUCKET=bin -t "falcosecurity/falco:${CIRCLE_TAG}-minimal" docker/minimal
+            FALCO_VERSION=$(sed -e 's/^"//' -e 's/"$//' <<< $(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3))
+            docker build --build-arg VERSION_BUCKET=bin FALCO_VERSION=${FALCO_VERSION} -t "falcosecurity/falco:${CIRCLE_TAG}-minimal" docker/minimal
             docker tag "falcosecurity/falco:${CIRCLE_TAG}-minimal" falcosecurity/falco:latest-minimal
             echo ${DOCKERHUB_SECRET} | docker login -u ${DOCKERHUB_USER} --password-stdin
             docker push "falcosecurity/falco:${CIRCLE_TAG}-minimal"
