@@ -2009,6 +2009,7 @@
     and (inbound_outbound)
     and not proc.name in (known_system_procs_network_activity_binaries)
     and not login_doing_dns_lookup
+    and not user_expected_system_procs_network_activity_conditions
   output: >
     Known system binary sent/received network traffic
     (user=%user.name command=%proc.cmdline connection=%fd.name container_id=%container.id image=%container.image.repository)
@@ -2019,6 +2020,13 @@
 # expected to communicate on the network.
 - list: known_system_procs_network_activity_binaries
   items: [systemd, hostid, id]
+
+# This macro allows specifying conditions under which a system binary
+# is allowed to communicate on the network. For instance, only specific
+# proc.cmdline values could be allowed to be more granular in what is
+# allowed.
+- macro: user_expected_system_procs_network_activity_conditions
+  condition: (never_true)
 
 # When filled in, this should look something like:
 # (proc.env contains "HTTP_PROXY=http://my.http.proxy.com ")
