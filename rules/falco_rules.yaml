@@ -2007,13 +2007,18 @@
   condition: >
     (fd.sockfamily = ip and (system_procs or proc.name in (shell_binaries)))
     and (inbound_outbound)
-    and not proc.name in (systemd, hostid, id)
+    and not proc.name in (known_system_procs_network_activity_binaries)
     and not login_doing_dns_lookup
   output: >
     Known system binary sent/received network traffic
     (user=%user.name command=%proc.cmdline connection=%fd.name container_id=%container.id image=%container.image.repository)
   priority: NOTICE
   tags: [network, mitre_exfiltration]
+
+# This list allows easily whitelisting system proc names that are
+# expected to communicate on the network.
+- list: known_system_procs_network_activity_binaries
+  items: [systemd, hostid, id]
 
 # When filled in, this should look something like:
 # (proc.env contains "HTTP_PROXY=http://my.http.proxy.com ")
