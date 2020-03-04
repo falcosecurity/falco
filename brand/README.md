@@ -124,9 +124,9 @@ Used to describe the `.ko` object that would be loaded into the kernel as a pote
 This is one option used to pass kernel events up to userspace for Falco to consume.
 Sometimes this word is incorrectly used to refer to a `probe`.
 
-#### Driver (deprecated)
+#### Driver 
 
-An older, more generalized term for a `module` or `probe`. We discourage the use of this word as a project.
+The global term for the software that sends events from the kernel. Such as the eBPF `probe` or the `kernel module`.
 
 #### Falco
 
