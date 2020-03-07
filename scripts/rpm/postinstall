@@ -1,7 +1,6 @@
 #
-# Copyright (C) 2016-2018 Draios Inc dba Sysdig.
+# Copyright (C) 2019 The Falco Authors.
 #
-# This file is part of falco.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,11 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-dkms add -m falco -v %{version} --rpm_safe_upgrade
+rpm_v=%{version}
+mod_version=${rpm_v//_/-}
+dkms add -m falco -v $mod_version --rpm_safe_upgrade
 if [ `uname -r | grep -c "BOOT"` -eq 0 ] && [ -e /lib/modules/`uname -r`/build/include ]; then
-	dkms build -m falco -v %{version}
-	dkms install --force -m falco -v %{version}
+	dkms build -m falco -v $mod_version
+	dkms install --force -m falco -v $mod_version
 elif [ `uname -r | grep -c "BOOT"` -gt 0 ]; then
 	echo -e ""
 	echo -e "Module build for the currently running kernel was skipped since you"

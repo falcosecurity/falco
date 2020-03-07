@@ -1,6 +1,6 @@
-# Example Kubernetes Daemon Sets for Sysdig Falco
+# Example Kubernetes Daemon Sets for Falco
 
-This directory gives you the required YAML files to stand up Sysdig Falco on Kubernetes as a Daemon Set. This will result in a Falco Pod being deployed to each node, and thus the ability to monitor any running containers for abnormal behavior.
+This directory gives you the required YAML files to stand up Falco on Kubernetes as a Daemon Set. This will result in a Falco Pod being deployed to each node, and thus the ability to monitor any running containers for abnormal behavior.
 
 The two options are provided to deploy a Daemon Set:
 - `k8s-with-rbac` - This directory provides a definition to deploy a Daemon Set on Kubernetes with RBAC enabled.

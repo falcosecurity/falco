@@ -1,7 +1,5 @@
 /*
-Copyright (C) 2016-2018 Draios Inc dba Sysdig.
-
-This file is part of falco.
+Copyright (C) 2019 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,7 +12,6 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
 */
 
 // Gen filtering TODO
@@ -76,16 +73,17 @@ public:
 	void load_rules(const std::string &rules_content, bool verbose, bool all_events, uint64_t &required_engine_version);
 
 	//
-	// Enable/Disable any rules matching the provided pattern
-	// (regex). When provided, enable/disable these rules in the
+	// Enable/Disable any rules matching the provided substring.
+	// If the substring is "", all rules are enabled/disabled.
+	// When provided, enable/disable these rules in the
 	// context of the provided ruleset. The ruleset (id) can later
 	// be passed as an argument to process_event(). This allows
 	// for different sets of rules being active at once.
 	//
-	void enable_rule(const std::string &pattern, bool enabled, const std::string &ruleset);
+	void enable_rule(const std::string &substring, bool enabled, const std::string &ruleset);
 
 	// Wrapper that assumes the default ruleset
-	void enable_rule(const std::string &pattern, bool enabled);
+	void enable_rule(const std::string &substring, bool enabled);
 
 	//
 	// Enable/Disable any rules with any of the provided tags (set, exact matches only)
@@ -165,7 +163,7 @@ public:
 	// Returns true if the json object was recognized as a k8s
 	// audit event(s), false otherwise.
 	//
-	bool parse_k8s_audit_json(nlohmann::json &j, std::list<json_event> &evts);
+	bool parse_k8s_audit_json(nlohmann::json &j, std::list<json_event> &evts, bool top=true);
 
 	//
 	// Given an event, check it against the set of rules in the

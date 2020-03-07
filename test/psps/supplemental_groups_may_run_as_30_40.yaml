@@ -1,0 +1,12 @@
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  annotations:
+    falco-rules-psp-images: "[nginx]"
+  name: supplemental_groups_may_run_as_30
+spec:
+  supplementalGroups:
+    rule: "MayRunAs"
+    ranges:
+      - min: 30
+        max: 40

@@ -1,7 +1,5 @@
 /*
-Copyright (C) 2016-2018 Draios Inc dba Sysdig.
-
-This file is part of falco.
+Copyright (C) 2019 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,13 +12,13 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
 */
 
 #include <fstream>
 
 #include "config_falco_engine.h"
 #include "falco_common.h"
+#include "banned.h" // This raises a compilation error when certain functions are used
 
 std::vector<std::string> falco_common::priority_names = {
 	"Emergency",
@@ -120,4 +118,3 @@ void falco_common::add_lua_path(string &path)
 
 	lua_pop(m_ls, 1);
 }
-

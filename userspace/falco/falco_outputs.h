@@ -1,7 +1,5 @@
 /*
-Copyright (C) 2016-2018 Draios Inc dba Sysdig.
-
-This file is part of falco.
+Copyright (C) 2019 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,7 +12,6 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
 */
 
 #pragma once
@@ -46,8 +43,8 @@ public:
 	falco_outputs(falco_engine *engine);
 	virtual ~falco_outputs();
 
-	// The way to refer to an output (file, syslog, stdout,
-	// etc). An output has a name and set of options.
+	// The way to refer to an output (file, syslog, stdout, etc.)
+	// An output has a name and set of options.
 	struct output_config
 	{
 		std::string name;
@@ -57,7 +54,7 @@ public:
 	void init(bool json_output,
 		  bool json_include_output_property,
 		  uint32_t rate, uint32_t max_burst, bool buffered,
-		  bool time_format_iso_8601);
+		  bool time_format_iso_8601, std::string hostname);
 
 	void add_output(output_config oc);
 
@@ -78,6 +75,7 @@ public:
 	void reopen_outputs();
 
 	static int handle_http(lua_State *ls);
+	static int handle_grpc(lua_State *ls);
 
 private:
 
@@ -91,6 +89,7 @@ private:
 	bool m_buffered;
 	bool m_json_output;
 	bool m_time_format_iso_8601;
+	std::string m_hostname;
 
 	std::string m_lua_add_output = "add_output";
 	std::string m_lua_output_event = "output_event";

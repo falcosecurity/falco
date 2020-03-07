@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+
+set -eu -o pipefail
+
+SOURCE_DIR=/source
+BUILD_DIR=/build
+CMD=${1:-usage}
+shift
+
+# Build type can be "debug" or "release", fallbacks to "release" by default
+BUILD_TYPE=$(echo "$BUILD_TYPE" | tr "[:upper:]" "[:lower:]")
+DRAIOS_DEBUG_FLAGS=
+case "$BUILD_TYPE" in
+"debug")
+    DRAIOS_DEBUG_FLAGS="-D_DEBUG -DNDEBUG"
+    ;;
+*)
+    BUILD_TYPE="release"
+    ;;
+esac
+
+case "$CMD" in
+"cmake")
+    # Check that source directory contains Falco
+    if [ ! -d "$SOURCE_DIR/falco" ]; then
+        echo "Missing falco source." >&2
+        exit 1
+    fi
+    # Prepare build directory
+    mkdir -p "$BUILD_DIR/$BUILD_TYPE"
+    cd "$BUILD_DIR/$BUILD_TYPE"
+
+    cmake \
+    -DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DBUILD_DRIVER="$BUILD_DRIVER" \
+    -DBUILD_BPF="$BUILD_BPF" \
+    -DBUILD_WARNINGS_AS_ERRORS="$BUILD_WARNINGS_AS_ERRORS" \
+    -DFALCO_VERSION="$FALCO_VERSION" \
+    -DDRAIOS_DEBUG_FLAGS="$DRAIOS_DEBUG_FLAGS" \
+    -DUSE_BUNDLED_DEPS=ON \
+    "$SOURCE_DIR/falco"
+    exit "$(printf '%d\n' $?)"
+    ;;
+"bash")
+    CMD=/bin/bash
+    ;& # fallthrough
+"usage")
+    exec "$CMD" "$@"
+    ;;
+*)
+    if [ ! -d "$BUILD_DIR/$BUILD_TYPE" ]; then
+        echo "Missing $BUILD_DIR/$BUILD_TYPE directory: run cmake."
+        exit 1
+    fi
+    cd "$BUILD_DIR/$BUILD_TYPE"
+    make -j"$MAKE_JOBS" "$CMD"
+    ;;
+esac

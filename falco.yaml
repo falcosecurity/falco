@@ -1,7 +1,6 @@
 #
-# Copyright (C) 2016-2018 Draios Inc dba Sysdig.
+# Copyright (C) 2019 The Falco Authors.
 #
-# This file is part of falco .
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -29,10 +28,10 @@
 # The files will be read in the order presented here, so make sure if
 # you have overrides they appear in later files.
 rules_file:
- - /etc/falco/falco_rules.yaml
- - /etc/falco/falco_rules.local.yaml
- - /etc/falco/k8s_audit_rules.yaml
- - /etc/falco/rules.d
+  - /etc/falco/falco_rules.yaml
+  - /etc/falco/falco_rules.local.yaml
+  - /etc/falco/k8s_audit_rules.yaml
+  - /etc/falco/rules.d
 
 # If true, the times displayed in log messages and output messages
 # will be in ISO 8601. By default, times are displayed in the local
@@ -128,7 +127,7 @@ stdout_output:
 
 # Falco contains an embedded webserver that can be used to accept K8s
 # Audit Events. These config options control the behavior of that
-# webserver. (By default, the webserver is disabled).
+# webserver. (By default, the webserver is enabled).
 #
 # The ssl_certificate is a combination SSL Certificate and corresponding
 # key contained in a single file. You can generate a key/cert as follows:
@@ -168,3 +167,21 @@ http_output:
   enabled: false
   url: http://some.url
 
+# gRPC server configuration.
+# The gRPC server is secure by default (mutual TLS) so you need to generate certificates and update their paths here.
+# By default the gRPC server is off.
+# You can configure the address to bind and expose it.
+# By modifying the threadiness configuration you can fine-tune the number of threads (and context) it will use.
+grpc:
+  enabled: false
+  bind_address: "0.0.0.0:5060"
+  threadiness: 8
+  private_key: "/etc/falco/certs/server.key"
+  cert_chain: "/etc/falco/certs/server.crt"
+  root_certs: "/etc/falco/certs/ca.crt"
+
+# gRPC output service.
+# By default it is off.
+# By enabling this all the output events will be kept in memory until you read them with a gRPC client.
+grpc_output:
+  enabled: false

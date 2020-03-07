@@ -1,7 +1,5 @@
 /*
-Copyright (C) 2016-2018 Draios Inc dba Sysdig.
-
-This file is part of falco.
+Copyright (C) 2019 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,7 +12,6 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
 */
 
 #include <cstdlib>
@@ -23,6 +20,7 @@ limitations under the License.
 #include <fstream>
 
 #include "falco_engine.h"
+#include "falco_utils.h"
 #include "falco_engine_version.h"
 #include "config_falco_engine.h"
 
@@ -34,6 +32,7 @@ extern "C" {
 }
 
 #include "utils.h"
+#include "banned.h" // This raises a compilation error when certain functions are used
 
 
 string lua_on_event = "on_event";
@@ -94,12 +93,15 @@ void falco_engine::list_fields(bool names_only)
 		{
 			printf("\n----------------------\n");
 			printf("Field Class: %s (%s)\n\n", chk_field.m_name.c_str(), chk_field.m_desc.c_str());
+			if(chk_field.m_class_info != "")
+			{
+				std::string str = falco::utils::wrap_text(chk_field.m_class_info, 0, 0, CONSOLE_LINE_LEN);
+				printf("%s\n", str.c_str());
+			}
 		}
 
 		for(auto &field : chk_field.m_fields)
 		{
-			uint32_t l, m;
-
 			printf("%s", field.m_name.c_str());
 
 			if(names_only)
@@ -115,29 +117,29 @@ void falco_engine::list_fields(bool names_only)
 				namelen = 0;
 			}
 
-			for(l = 0; l < DESCRIPTION_TEXT_START - namelen; l++)
+			for(uint32_t l = 0; l < DESCRIPTION_TEXT_START - namelen; l++)
 			{
 				printf(" ");
 			}
 
-			size_t desclen = field.m_desc.size();
-
-			for(l = 0; l < desclen; l++)
+			std::string desc = field.m_desc;
+			switch(field.m_idx_mode)
 			{
-				if(l % (CONSOLE_LINE_LEN - DESCRIPTION_TEXT_START) == 0 && l != 0)
-				{
-					printf("\n");
+			case json_event_filter_check::IDX_REQUIRED:
+			case json_event_filter_check::IDX_ALLOWED:
+				desc += " (";
+				desc += json_event_filter_check::s_index_mode_strs[field.m_idx_mode];
+				desc += ", ";
+				desc += json_event_filter_check::s_index_type_strs[field.m_idx_type];
+				desc += ")";
+				break;
+			case json_event_filter_check::IDX_NONE:
+			default:
+				break;
+			};
 
-					for(m = 0; m < DESCRIPTION_TEXT_START; m++)
-					{
-						printf(" ");
-					}
-				}
-
-				printf("%c", field.m_desc.at(l));
-			}
-
-			printf("\n");
+			std::string str = falco::utils::wrap_text(desc, namelen, DESCRIPTION_TEXT_START, CONSOLE_LINE_LEN);
+			printf("%s\n", str.c_str());
 		}
 	}
 }
@@ -206,17 +208,17 @@ void falco_engine::load_rules_file(const string &rules_filename, bool verbose, b
 	load_rules(rules_content, verbose, all_events, required_engine_version);
 }
 
-void falco_engine::enable_rule(const string &pattern, bool enabled, const string &ruleset)
+void falco_engine::enable_rule(const string &substring, bool enabled, const string &ruleset)
 {
 	uint16_t ruleset_id = find_ruleset_id(ruleset);
 
-	m_sinsp_rules->enable(pattern, enabled, ruleset_id);
-	m_k8s_audit_rules->enable(pattern, enabled, ruleset_id);
+	m_sinsp_rules->enable(substring, enabled, ruleset_id);
+	m_k8s_audit_rules->enable(substring, enabled, ruleset_id);
 }
 
-void falco_engine::enable_rule(const string &pattern, bool enabled)
+void falco_engine::enable_rule(const string &substring, bool enabled)
 {
-	enable_rule(pattern, enabled, m_default_ruleset);
+	enable_rule(substring, enabled, m_default_ruleset);
 }
 
 void falco_engine::enable_rule_by_tag(const set<string> &tags, bool enabled, const string &ruleset)
@@ -287,8 +289,8 @@ unique_ptr<falco_engine::rule_result> falco_engine::process_sinsp_event(sinsp_ev
 
 	unique_ptr<struct rule_result> res(new rule_result());
 
+	std::lock_guard<std::mutex> guard(m_ls_semaphore);
 	lua_getglobal(m_ls, lua_on_event.c_str());
-
 	if(lua_isfunction(m_ls, -1))
 	{
 		lua_pushnumber(m_ls, ev->get_check_id());
@@ -335,8 +337,8 @@ unique_ptr<falco_engine::rule_result> falco_engine::process_k8s_audit_event(json
 
 	unique_ptr<struct rule_result> res(new rule_result());
 
+	std::lock_guard<std::mutex> guard(m_ls_semaphore);
 	lua_getglobal(m_ls, lua_on_event.c_str());
-
 	if(lua_isfunction(m_ls, -1))
 	{
 		lua_pushnumber(m_ls, ev->get_check_id());
@@ -363,48 +365,77 @@ unique_ptr<falco_engine::rule_result> falco_engine::process_k8s_audit_event(json
 	return res;
 }
 
-bool falco_engine::parse_k8s_audit_json(nlohmann::json &j, std::list<json_event> &evts)
+bool falco_engine::parse_k8s_audit_json(nlohmann::json &j, std::list<json_event> &evts, bool top)
 {
-	// If the Kind is EventList, split it into individual events.
-	if(j.value("kind", "<NA>") == "EventList")
+	// Note that nlohmann::basic_json::value can throw  nlohmann::basic_json::type_error (302, 306)
+	try
 	{
-		for(auto &je : j["items"])
+		// If the object is an array, call parse_k8s_audit_json again for each item.
+		if(j.is_array())
+		{
+			if(top)
+			{
+				for(auto &item : j)
+				{
+					// Note we only handle a single top level array, to
+					// avoid excessive recursion.
+					if(! parse_k8s_audit_json(item, evts, false))
+					{
+						return false;
+					}
+				}
+
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+
+		// If the kind is EventList, split it into individual events
+		if(j.value("kind", "<NA>") == "EventList")
+		{
+			for(auto &je : j["items"])
+			{
+				evts.emplace_back();
+				je["kind"] = "Event";
+
+				uint64_t ns = 0;
+				if(!sinsp_utils::parse_iso_8601_utc_string(je.value(k8s_audit_time, "<NA>"), ns))
+				{
+					return false;
+				}
+
+				std::string tmp;
+				sinsp_utils::ts_to_string(ns, &tmp, false, true);
+
+				evts.back().set_jevt(je, ns);
+			}
+
+			return true;
+		}
+		else if(j.value("kind", "<NA>") == "Event")
 		{
 			evts.emplace_back();
-			je["kind"] = "Event";
-
 			uint64_t ns = 0;
-			if(!sinsp_utils::parse_iso_8601_utc_string(je.value(k8s_audit_time, "<NA>"), ns))
+			if(!sinsp_utils::parse_iso_8601_utc_string(j.value(k8s_audit_time, "<NA>"), ns))
 			{
 				return false;
 			}
 
-			std::string tmp;
-			sinsp_utils::ts_to_string(ns, &tmp, false, true);
-
-			evts.back().set_jevt(je, ns);
+			evts.back().set_jevt(j, ns);
+			return true;
 		}
-
-		return true;
-	}
-	else if(j.value("kind", "<NA>") == "Event")
-	{
-		evts.emplace_back();
-		uint64_t ns = 0;
-		if(!sinsp_utils::parse_iso_8601_utc_string(j.value(k8s_audit_time, "<NA>"), ns))
+		else
 		{
 			return false;
 		}
-
-
-		evts.back().set_jevt(j, ns);
-		return true;
 	}
-	else
+	catch(exception &e)
 	{
 		return false;
 	}
-
 }
 
 unique_ptr<falco_engine::rule_result> falco_engine::process_k8s_audit_event(json_event *ev)

@@ -1,0 +1,361 @@
+version: 2
+jobs:
+  # Build using ubuntu LTS
+  # This build is dynamic, most dependencies are taken from the OS
+  "build/ubuntu-bionic":
+    docker:
+      - image: ubuntu:bionic
+    steps:
+      - checkout
+      - run:
+          name: Update base image
+          command: apt update -y
+      - run:
+          name: Install dependencies
+          command: apt install libssl-dev libyaml-dev libncurses-dev libc-ares-dev libprotobuf-dev protobuf-compiler libjq-dev libyaml-cpp-dev libgrpc++-dev protobuf-compiler-grpc rpm linux-headers-$(uname -r) libelf-dev cmake build-essential libcurl4-openssl-dev -y
+      - run:
+          name: Prepare project
+          command: |
+            mkdir build
+            pushd build
+            cmake ..
+            popd
+      - run:
+          name: Build
+          command: |
+            pushd build
+            make -j4 all
+            popd
+      - run:
+          name: Run unit tests
+          command: |
+            pushd build
+            make tests
+            popd
+  # Debug build using ubuntu LTS
+  # This build is dynamic, most dependencies are taken from the OS
+  "build/ubuntu-bionic-debug":
+    docker:
+      - image: ubuntu:bionic
+    steps:
+      - checkout
+      - run:
+          name: Update base image
+          command: apt update -y
+      - run:
+          name: Install dependencies
+          command: apt install libssl-dev libyaml-dev libncurses-dev libc-ares-dev libprotobuf-dev protobuf-compiler libjq-dev libyaml-cpp-dev libgrpc++-dev protobuf-compiler-grpc rpm linux-headers-$(uname -r) libelf-dev cmake build-essential libcurl4-openssl-dev -y
+      - run:
+          name: Prepare project
+          command: |
+            mkdir build
+            pushd build
+            cmake -DCMAKE_BUILD_TYPE=debug ..
+            popd
+      - run:
+          name: Build
+          command: |
+            pushd build
+            make -j4 all
+            popd
+      - run:
+          name: Run unit tests
+          command: |
+            pushd build
+            make tests
+            popd
+  # Build using our own builder base image using centos 7
+  # This build is static, dependencies are bundled in the falco binary
+  "build/centos7":
+    docker:
+      - image: falcosecurity/falco-builder:latest
+        environment:
+          BUILD_TYPE: "release"
+    steps:
+      - checkout:
+          path: /source/falco
+      - run:
+          name: Prepare project
+          command: /usr/bin/entrypoint cmake
+      - run:
+          name: Build
+          command: /usr/bin/entrypoint all
+      - run:
+          name: Run unit tests
+          command: /usr/bin/entrypoint tests
+      - run:
+          name: Build packages
+          command: /usr/bin/entrypoint package
+      - persist_to_workspace:
+          root: /
+          paths:
+            - build/release
+            - source
+      - run:
+          name: Prepare artifacts
+          command: |
+            mkdir -p /tmp/packages
+            cp /build/release/*.deb /tmp/packages
+            cp /build/release/*.tar.gz /tmp/packages
+            cp /build/release/*.rpm /tmp/packages
+      - store_artifacts:
+          path: /tmp/packages
+          destination: /packages
+  # Debug build using our own builder base image using centos 7
+  # This build is static, dependencies are bundled in the falco binary
+  "build/centos7-debug":
+    docker:
+      - image: falcosecurity/falco-builder:latest
+        environment:
+          BUILD_TYPE: "debug"
+    steps:
+      - checkout:
+          path: /source/falco
+      - run:
+          name: Prepare project
+          command: /usr/bin/entrypoint cmake
+      - run:
+          name: Build
+          command: /usr/bin/entrypoint all
+      - run:
+          name: Run unit tests
+          command: /usr/bin/entrypoint tests
+      - run:
+          name: Build packages
+          command: /usr/bin/entrypoint package
+  # Execute integration tests based on the build results coming from the "build/centos7" job
+  "tests/integration":
+    docker:
+      - image: falcosecurity/falco-tester:latest
+        environment:
+          SOURCE_DIR: "/source"
+          BUILD_DIR: "/build"
+          BUILD_TYPE: "release"
+    steps:
+      - setup_remote_docker
+      - attach_workspace:
+          at: /
+      - run:
+          name: Execute integration tests
+          command: /usr/bin/entrypoint test
+  # Sign rpm packages
+  "rpm/sign":
+    docker:
+      - image: falcosecurity/falco-builder:latest
+    steps:
+      - attach_workspace:
+          at: /
+      - run:
+          name: Install rpmsign
+          command: |
+            yum update -y
+            yum install rpm-sign -y
+      - run:
+          name: Sign rpm
+          command: |
+            echo "%_signature gpg" > ~/.rpmmacros
+            echo "%_gpg_name  Falcosecurity Package Signing" >> ~/.rpmmacros
+            cd /build/release/
+            echo '#!/usr/bin/expect -f' > sign
+            echo 'spawn rpmsign --addsign {*}$argv' >> sign
+            echo 'expect -exact "Enter pass phrase: "' >> sign
+            echo 'send -- "\n"' >> sign
+            echo 'expect eof' >> sign
+            chmod +x sign
+            echo $GPG_KEY | base64 -d | gpg --import
+            ./sign *.rpm
+            test "$(rpm -qpi *.rpm | awk '/Signature/' | grep -i none | wc -l)" -eq 0
+      - persist_to_workspace:
+          root: /
+          paths:
+            - build/release/*.rpm
+  # Publish the packages
+  "publish/packages-dev":
+    docker:
+      - image: docker.bintray.io/jfrog/jfrog-cli-go:latest
+    steps:
+      - attach_workspace:
+          at: /
+      - run:
+          name: Create versions
+          command: |
+            FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
+            jfrog bt vc falcosecurity/deb-dev/falco/${FALCO_VERSION} --desc="Falco (master)" --github-rel-notes=CHANGELOG.md --released=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z") --vcs-tag=${CIRCLE_SHA1} --user poiana --key ${BINTRAY_SECRET}
+            jfrog bt vc falcosecurity/rpm-dev/falco/${FALCO_VERSION} --desc="Falco (master)" --github-rel-notes=CHANGELOG.md --released=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z") --vcs-tag=${CIRCLE_SHA1} --user poiana --key ${BINTRAY_SECRET}
+            jfrog bt vc falcosecurity/bin-dev/falco/${FALCO_VERSION} --desc="Falco (master)" --github-rel-notes=CHANGELOG.md --released=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z") --vcs-tag=${CIRCLE_SHA1} --user poiana --key ${BINTRAY_SECRET}
+      - run:
+          name: Publish deb-dev
+          command: |
+            FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
+            jfrog bt u /build/release/falco-${FALCO_VERSION}-x86_64.deb falcosecurity/deb-dev/falco/${FALCO_VERSION} stable/ --deb stable/main/amd64 --user poiana --key ${BINTRAY_SECRET} --publish
+      - run:
+          name: Publish rpm-dev
+          command: |
+            FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
+            jfrog bt u /build/release/falco-${FALCO_VERSION}-x86_64.rpm falcosecurity/rpm-dev/falco/${FALCO_VERSION} --user poiana --key ${BINTRAY_SECRET} --publish
+      - run:
+          name: Publish tgz-dev
+          command: |
+            FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
+            jfrog bt u /build/release/falco-${FALCO_VERSION}-x86_64.tar.gz falcosecurity/bin-dev/falco/${FALCO_VERSION} x86_64/ --user poiana --key ${BINTRAY_SECRET} --publish
+  # Publish docker packages
+  "publish/docker-dev":
+    docker:
+      - image: docker:stable
+    steps:
+      - attach_workspace:
+          at: /
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Build and publish slim-dev
+          command: |
+            docker build --build-arg VERSION_BUCKET=deb-dev -t falcosecurity/falco:master-slim docker/slim
+            echo ${DOCKERHUB_SECRET} | docker login -u ${DOCKERHUB_USER} --password-stdin
+            docker push falcosecurity/falco:master-slim
+      - run:
+          name: Build and publish minimal-dev
+          command: |
+            FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
+            docker build --build-arg VERSION_BUCKET=bin-dev --build-arg FALCO_VERSION=${FALCO_VERSION} -t falcosecurity/falco:master-minimal docker/minimal
+            echo ${DOCKERHUB_SECRET} | docker login -u ${DOCKERHUB_USER} --password-stdin
+            docker push falcosecurity/falco:master-minimal
+      - run:
+          name: Build and publish dev
+          command: |
+            docker build --build-arg VERSION_BUCKET=deb-dev -t falcosecurity/falco:master docker/stable
+            echo ${DOCKERHUB_SECRET} | docker login -u ${DOCKERHUB_USER} --password-stdin
+            docker push falcosecurity/falco:master
+  # Publish the packages
+  "publish/packages":
+    docker:
+      - image: docker.bintray.io/jfrog/jfrog-cli-go:latest
+    steps:
+      - attach_workspace:
+          at: /
+      - run:
+          name: Create versions
+          command: |
+            FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
+            jfrog bt vc falcosecurity/deb/falco/${FALCO_VERSION} --desc="Falco (${CIRCLE_TAG})" --github-tag-rel-notes --released=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z") --vcs-tag=${CIRCLE_TAG}
+            jfrog bt vc falcosecurity/rpm/falco/${FALCO_VERSION} --desc="Falco (${CIRCLE_TAG})" --github-tag-rel-notes --released=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z") --vcs-tag=${CIRCLE_TAG}
+            jfrog bt vc falcosecurity/bin/falco/${FALCO_VERSION} --desc="Falco (${CIRCLE_TAG})" --github-tag-rel-notes --released=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z") --vcs-tag=${CIRCLE_TAG}
+      - run:
+          name: Publish deb
+          command: |
+            FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
+            jfrog bt u /build/release/falco-${FALCO_VERSION}-x86_64.deb falcosecurity/deb/falco/${FALCO_VERSION} stable/ --deb stable/main/amd64 --user poiana --key ${BINTRAY_SECRET} --publish --labels="falco","security","cncf","kubernetes"
+      - run:
+          name: Publish rpm
+          command: |
+            FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
+            jfrog bt u /build/release/falco-${FALCO_VERSION}-x86_64.rpm falcosecurity/rpm/falco/${FALCO_VERSION} --user poiana --key ${BINTRAY_SECRET} --publish
+      - run:
+          name: Publish tgz
+          command: |
+            FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
+            jfrog bt u /build/release/falco-${FALCO_VERSION}-x86_64.tar.gz falcosecurity/bin/falco/${FALCO_VERSION} x86_64/ --user poiana --key ${BINTRAY_SECRET} --publish
+  # Publish docker packages
+  "publish/docker":
+    docker:
+      - image: docker:stable
+    steps:
+      - attach_workspace:
+          at: /
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Build and publish slim
+          command: |
+            docker build --build-arg VERSION_BUCKET=deb -t "falcosecurity/falco:${CIRCLE_TAG}-slim" docker/slim
+            docker tag "falcosecurity/falco:${CIRCLE_TAG}-slim" falcosecurity/falco:latest-slim
+            echo ${DOCKERHUB_SECRET} | docker login -u ${DOCKERHUB_USER} --password-stdin
+            docker push "falcosecurity/falco:${CIRCLE_TAG}-slim"
+            docker push "falcosecurity/falco:latest-slim"
+      - run:
+          name: Build and publish minimal
+          command: |
+            FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
+            docker build --build-arg VERSION_BUCKET=bin --build-arg FALCO_VERSION=${FALCO_VERSION} -t "falcosecurity/falco:${CIRCLE_TAG}-minimal" docker/minimal
+            docker tag "falcosecurity/falco:${CIRCLE_TAG}-minimal" falcosecurity/falco:latest-minimal
+            echo ${DOCKERHUB_SECRET} | docker login -u ${DOCKERHUB_USER} --password-stdin
+            docker push "falcosecurity/falco:${CIRCLE_TAG}-minimal"
+            docker push "falcosecurity/falco:latest-minimal"
+      - run:
+          name: Build and publish stable
+          command: |
+            docker build --build-arg VERSION_BUCKET=deb -t "falcosecurity/falco:${CIRCLE_TAG}" docker/stable
+            docker tag "falcosecurity/falco:${CIRCLE_TAG}" falcosecurity/falco:latest
+            echo ${DOCKERHUB_SECRET} | docker login -u ${DOCKERHUB_USER} --password-stdin
+            docker push "falcosecurity/falco:${CIRCLE_TAG}"
+            docker push "falcosecurity/falco:latest"
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - "build/ubuntu-bionic"
+      - "build/ubuntu-bionic-debug"
+      - "build/centos7"
+      - "build/centos7-debug"
+      - "tests/integration":
+          requires:
+            - "build/centos7"
+      - "rpm/sign":
+          context: falco
+          filters:
+            branches:
+              only:
+                - master
+          requires:
+            - "tests/integration"
+      - "publish/packages-dev":
+          context: falco
+          filters:
+            branches:
+              only:
+                - master
+          requires:
+            - "rpm/sign"
+      - "publish/docker-dev":
+          context: falco
+          filters:
+            branches:
+              only:
+                - master
+          requires:
+            - "publish/packages-dev"
+  release:
+    jobs:
+      - "build/centos7":
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
+      - "rpm/sign":
+          context: falco
+          requires:
+            - "build/centos7"
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
+      - "publish/packages":
+          context: falco
+          requires:
+            - "rpm/sign"
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
+      - "publish/docker":
+          context: falco
+          requires:
+            - "publish/packages"
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/

@@ -1,7 +1,5 @@
 /*
-Copyright (C) 2016-2018 Draios Inc dba Sysdig.
-
-This file is part of falco.
+Copyright (C) 2019 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,14 +12,13 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
 */
 
 #include <json/json.h>
 
 #include "formats.h"
-#include "logger.h"
 #include "falco_engine.h"
+#include "banned.h" // This raises a compilation error when certain functions are used
 
 
 sinsp* falco_formats::s_inspector = NULL;
@@ -36,6 +33,7 @@ const static struct luaL_reg ll_falco [] =
 	{"free_formatter", &falco_formats::free_formatter},
 	{"free_formatters", &falco_formats::free_formatters},
 	{"format_event", &falco_formats::format_event},
+	{"resolve_tokens", &falco_formats::resolve_tokens},
 	{NULL,NULL}
 };
 
@@ -148,11 +146,13 @@ int falco_formats::format_event (lua_State *ls)
 	if(strcmp(source, "syscall") == 0)
 	{
 		try {
+			// This is "output"
 			s_formatters->tostring((sinsp_evt *) evt, sformat, &line);
 
 			if(s_json_output)
 			{
-				switch(s_inspector->get_buffer_format())
+				sinsp_evt::param_fmt cur_fmt = s_inspector->get_buffer_format();
+				switch(cur_fmt)
 				{
 					case sinsp_evt::PF_NORMAL:
 						s_inspector->set_buffer_format(sinsp_evt::PF_JSON);
@@ -173,6 +173,7 @@ int falco_formats::format_event (lua_State *ls)
 						// do nothing
 						break;
 				}
+				// This is output fields
 				s_formatters->tostring((sinsp_evt *) evt, sformat, &json_line);
 
 				// The formatted string might have a leading newline. If it does, remove it.
@@ -180,8 +181,7 @@ int falco_formats::format_event (lua_State *ls)
 				{
 					json_line.erase(0, 1);
 				}
-
-				s_inspector->set_buffer_format(sinsp_evt::PF_NORMAL);
+				s_inspector->set_buffer_format(cur_fmt);
 			}
 		}
 		catch (sinsp_exception& e)
@@ -265,3 +265,39 @@ int falco_formats::format_event (lua_State *ls)
 	return 1;
 }
 
+int falco_formats::resolve_tokens(lua_State *ls)
+{
+	if(!lua_isstring(ls, -1) ||
+	   !lua_isstring(ls, -2) ||
+	   !lua_islightuserdata(ls, -3))
+	{
+		lua_pushstring(ls, "Invalid arguments passed to resolve_tokens()");
+		lua_error(ls);
+	}
+	gen_event *evt = (gen_event *)lua_topointer(ls, 1);
+	string source = luaL_checkstring(ls, 2);
+	const char *format = (char *)lua_tostring(ls, 3);
+	string sformat = format;
+
+	map<string, string> values;
+	if(source == "syscall")
+	{
+		s_formatters->resolve_tokens((sinsp_evt *)evt, sformat, values);
+	}
+	// k8s_audit
+	else
+	{
+		json_event_formatter json_formatter(s_engine->json_factory(), sformat);
+		values = json_formatter.tomap((json_event*) evt);
+	}
+
+	lua_newtable(ls);
+	for(auto const& v : values)
+	{
+		lua_pushstring(ls, v.first.c_str());
+		lua_pushstring(ls, v.second.c_str());
+		lua_settable(ls, -3);
+	}
+
+	return 1;
+}

@@ -1,7 +1,6 @@
 #
-# Copyright (C) 2016-2018 Draios Inc dba Sysdig.
+# Copyright (C) 2019 The Falco Authors.
 #
-# This file is part of falco.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,18 +16,18 @@
 #
 trace_files: !mux
 
-  docker_package:
-    package: docker:falcosecurity/falco:test
+  docker_deb_package:
+    package: docker:falcosecurity/falco:test-deb
     detect: True
     detect_level: WARNING
     rules_file: /rules/rule_names_with_spaces.yaml
     trace_file: /traces/cat_write.scap
     conf_file: /etc/falco/falco.yaml
 
-  centos_package:
-    package: falco*.rpm
+  docker_rpm_package:
+    package: docker:falcosecurity/falco:test-rpm
     detect: True
     detect_level: WARNING
-    rules_file:
-      - rules/rule_names_with_spaces.yaml
-    trace_file: trace_files/cat_write.scap
+    rules_file: /rules/rule_names_with_spaces.yaml
+    trace_file: /traces/cat_write.scap
+    conf_file: /etc/falco/falco.yaml

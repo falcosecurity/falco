@@ -1,17 +1,18 @@
-FROM centos:7
+FROM fedora:31
 
-ENV FALCO_VERSION 0.1.1dev
-ENV BUILD_TYPE Release
+LABEL name="falcosecurity/falco-tester"
+LABEL usage="docker run -v /boot:/boot:ro -v /var/run/docker.sock:/var/run/docker.sock -v $PWD/..:/source -v $PWD/build:/build -e FALCO_VERSION=<current_falco_version> --name <name> falcosecurity/falco-tester test"
+LABEL maintainer="cncf-falco-dev@lists.cncf.io"
 
-RUN yum -y install epel-release && \
-    yum -y install \
-      python-pip \
-      docker \
-      jq \
-      unzip
+ENV FALCO_VERSION=
+ENV BUILD_TYPE=release
 
-RUN pip install avocado-framework avocado-framework-plugin-varianter-yaml-to-mux
+RUN dnf install -y python2-pip python2 docker findutils jq unzip && dnf clean all
+ENV PATH="/root/.local/bin/:${PATH}"
+RUN pip2 install --user avocado-framework==69.0
+RUN pip2 install --user avocado-framework-plugin-varianter-yaml-to-mux==69.0
 
-COPY entrypoint.sh /
+COPY ./root /
 
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["entrypoint"]
+CMD ["usage"]

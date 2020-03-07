@@ -29,7 +29,7 @@ services:
       - "falco"
 
   falco:
-    image: sysdig/falco:latest
+    image: falcosecurity/falco:latest
     privileged: true
     volumes:
       - docker-socket:/host/var/run

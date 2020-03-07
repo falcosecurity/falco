@@ -1,7 +1,6 @@
 #
-# Copyright (C) 2016-2018 Draios Inc dba Sysdig.
+# Copyright (C) 2019 The Falco Authors.
 #
-# This file is part of falco.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,5 +19,6 @@ if [ $1 = 0 ]; then
 	/sbin/service falco stop > /dev/null 2>&1
 	/sbin/chkconfig --del falco
 fi
-
-dkms remove -m falco -v %{version} --all --rpm_safe_upgrade
+rpm_v=%{version}
+mod_version=${rpm_v//_/-}
+dkms remove -m falco -v $mod_version --all --rpm_safe_upgrade

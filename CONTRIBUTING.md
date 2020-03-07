@@ -7,12 +7,16 @@
       - [More about labels](#more-about-labels)
     - [Slack](#slack)
   - [Pull Requests](#pull-requests)
+    - [Commit convention](#commit-convention)
+      - [Rule type](#rule-type)
+  - [Coding Guidelines](#coding-guidelines)
+    - [C++](#c)
   - [Developer Certificate Of Origin](#developer-certificate-of-origin)
 
 ## Code of Conduct
 
 Falco has a
-[Code of Conduct](CODE_OF_CONDUCT)
+[Code of Conduct](CODE_OF_CONDUCT.md)
 to which all contributors must adhere, please read it before interacting with the repository or the community in any way.
 
 ## Issues
@@ -76,7 +80,7 @@ Some examples:
 
 ### Slack
 
-Other discussion, and **support requests** should go through the `#falco` channel in the Sysdig slack, please join [here](https://slack.sysdig.com).
+Other discussion, and **support requests** should go through the `#falco` channel in the open source slack, please join [here](https://slack.sysdig.com).
 
 ## Pull Requests
 
@@ -87,7 +91,7 @@ need a kind, make sure to specify the appropriate one by typing `/kind <KIND>`.
 
 The list of labels is [here](https://github.com/falcosecurity/falco/labels).
 
-Also feel free to suggest a reviewer with `/assign @theirname`.
+Also feel free to suggest a reviewer with `/cc @theirname`, or to assign an assignee using `/assign @nickname`.
 
 Once your reviewer is happy, they will say `/lgtm` which will apply the
 `lgtm` label, and will apply the `approved` label if they are an
@@ -95,6 +99,36 @@ Once your reviewer is happy, they will say `/lgtm` which will apply the
 
 Your PR will be automatically merged once it has the `lgtm` and `approved`
 labels, does not have any `do-not-merge/*` labels, and all status checks (eg., rebase, tests, DCO) are positive.
+
+### Commit convention
+
+As commit convention, we adopt [Conventional Commits v1.0.0](https://www.conventionalcommits.org/en/v1.0.0/), we have an history
+of commits that do not adopt the convention but any new commit must follow it to be eligible for merge.
+
+#### Rule type
+
+Besides the classic types, we adopt a type for rules, `rule(<scope>):`.
+Example:
+
+```
+rule(Write below monitored dir): make sure monitored dirs are monitored.
+```
+
+Each rule change must be on its own commit, if a change to a macro is done while changing a rule they can go together but only one rule per commit must happen.
+
+If you are changing only a macro, the commit will look like this:
+
+```
+rule(macro user_known_write_monitored_dir_conditions): make sure conditions are great
+```
+
+## Coding Guidelines
+
+### C++
+
+* File `userspace/engine/banned.h` defines some functions as invalid tokens. These functions are not allowed to be used in the codebase. Whenever creating a new cpp file, include the `"banned.h"` headers. This ensures that the banned functions are not compiled.
+
+  A complete list of banned functions can be found [here](./userspace/engine/banned.h).
 
 ## Developer Certificate Of Origin
 

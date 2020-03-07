@@ -1,7 +1,5 @@
 /*
-Copyright (C) 2018 Draios inc.
-
-This file is part of falco.
+Copyright (C) 2019 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,7 +12,6 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
 */
 
 #include <ctype.h>
@@ -24,6 +21,7 @@ limitations under the License.
 
 #include "falco_common.h"
 #include "json_evt.h"
+#include "banned.h" // This raises a compilation error when certain functions are used
 
 using json = nlohmann::json;
 using namespace std;
@@ -52,9 +50,287 @@ uint64_t json_event::get_ts()
 	return m_event_ts;
 }
 
-std::string json_event_filter_check::def_format(const json &j, std::string &field, std::string &idx)
+json_event_value::json_event_value()
 {
-	return json_as_string(j);
+}
+
+json_event_value::~json_event_value()
+{
+}
+
+json_event_value::json_event_value(const std::string &val)
+{
+	if(parse_as_pair_int64(m_pairval, val))
+	{
+		m_type = JT_INT64_PAIR;
+	}
+	else if (parse_as_int64(m_intval, val))
+	{
+		m_type = JT_INT64;
+	}
+	else
+	{
+		m_stringval = val;
+		m_type = JT_STRING;
+	}
+}
+
+json_event_value::json_event_value(int64_t val) :
+	m_type(JT_INT64),
+	m_intval(val)
+{
+}
+
+json_event_value::param_type json_event_value::ptype() const
+{
+	return m_type;
+}
+
+std::string json_event_value::as_string() const
+{
+	switch(m_type)
+	{
+	case JT_STRING:
+		return m_stringval;
+		break;
+	case JT_INT64:
+		return std::to_string(m_intval);
+		break;
+	case JT_INT64_PAIR:
+		return std::to_string(m_pairval.first) + ":" + std::to_string(m_pairval.second);
+		break;
+	default:
+		return json_event_filter_check::no_value;
+	}
+}
+
+// This operator allows for somewhat-flexible comparisons between
+// numeric values and ranges. A numeric value and range are considered
+// "equal" if the value falls within the range. Otherwise, the value
+// types must match and be equal.
+
+bool json_event_value::operator==(const json_event_value &val) const
+{
+	// A JT_INT64 can be compared to a JT_INT64_PAIR. The value
+	// must be within the range specified by the pair.
+	if(m_type == JT_INT64 &&
+	   val.m_type == JT_INT64_PAIR)
+	{
+		return (m_intval >= val.m_pairval.first &&
+			m_intval <= val.m_pairval.second);
+	}
+	else if(m_type == JT_INT64_PAIR &&
+		val.m_type == JT_INT64)
+	{
+		return (val.m_intval >= m_pairval.first &&
+			val.m_intval <= m_pairval.second);
+	}
+	else if(m_type != val.m_type)
+	{
+		return false;
+	}
+
+	switch(m_type)
+	{
+	case JT_STRING:
+		return (m_stringval == val.m_stringval);
+		break;
+	case JT_INT64:
+		return (m_intval == val.m_intval);
+		break;
+	case JT_INT64_PAIR:
+		return (m_pairval == val.m_pairval);
+		break;
+	default:
+		return false;
+	}
+}
+
+bool json_event_value::operator!=(const json_event_value &val) const
+{
+	return !operator==(val);
+}
+
+// This operator allows for somewhat-flexible comparisons between
+// numeric values and ranges, or two ranges, and allows for ordering
+// values in a set. In practice, a set of values will all have the
+// same type, but it will be possible to check for set membership
+// between a value and a set of ranges.
+//
+// A numeric value is less than a range if the value is below the
+// lower part of the range. A range A is less than another range B if
+// the beginning of A is less than the beginning of B. If A and B
+// start at the same value, then the end of the ranges are used
+// instead.
+//
+// For other types, the values are simply compared and for mixed
+// types, the event types are considered.
+//
+bool json_event_value::operator<(const json_event_value &val) const
+{
+	if(m_type == JT_INT64 &&
+	   val.m_type == JT_INT64_PAIR)
+	{
+		return (m_intval < val.m_pairval.first);
+	}
+	else if(m_type == JT_INT64_PAIR &&
+		val.m_type == JT_INT64)
+	{
+		return (m_pairval.second < val.m_intval);
+	}
+	else if(m_type != val.m_type)
+	{
+		return (m_type < val.m_type);
+	}
+
+	switch(m_type)
+	{
+	case JT_STRING:
+		return (m_stringval < val.m_stringval);
+		break;
+	case JT_INT64:
+		return (m_intval < val.m_intval);
+		break;
+	case JT_INT64_PAIR:
+		if(m_pairval.first != val.m_pairval.first)
+		{
+			return (m_pairval.first < val.m_pairval.first);
+		}
+		else
+		{
+			return (m_pairval.second < val.m_pairval.second);
+		}
+		break;
+	default:
+		return false;
+	}
+}
+
+// See operator< for details. The only thing that changes is the
+// comparisons for numeric value and range, or two ranges.
+bool json_event_value::operator>(const json_event_value &val) const
+{
+	// This shouldn't be called when the types differ, but just in
+	// case, use m_type for initial ordering.
+	if(m_type != val.m_type)
+	{
+		return (m_type < val.m_type);
+	}
+
+	switch(m_type)
+	{
+	case JT_STRING:
+		return (m_stringval > val.m_stringval);
+		break;
+	case JT_INT64:
+		return (m_intval > val.m_intval);
+		break;
+	case JT_INT64_PAIR:
+		if(m_pairval.first != val.m_pairval.first)
+		{
+			return (m_pairval.first > val.m_pairval.first);
+		}
+		else
+		{
+			return (m_pairval.second > val.m_pairval.second);
+		}
+		break;
+	default:
+		return false;
+	}
+}
+
+bool json_event_value::startswith(const json_event_value &val) const
+{
+	std::string str = as_string();
+	std::string valstr = val.as_string();
+
+	return (str.compare(0, valstr.size(), valstr) == 0);
+}
+
+bool json_event_value::contains(const json_event_value &val) const
+{
+	std::string str = as_string();
+	std::string valstr = val.as_string();
+
+	return (str.find(valstr) != string::npos);
+}
+
+bool json_event_value::parse_as_pair_int64(std::pair<int64_t,int64_t> &pairval, const std::string &val)
+{
+	size_t pos = val.find_first_of(':');
+	if(pos != std::string::npos &&
+	   json_event_value::parse_as_int64(pairval.first, val.substr(0, pos)) &&
+	   json_event_value::parse_as_int64(pairval.second, val.substr(pos+1)))
+	{
+		return true;
+	}
+
+	return false;
+}
+
+bool json_event_value::parse_as_int64(int64_t &intval, const std::string &val)
+{
+	try {
+		std::string::size_type ptr;
+
+		intval = std::stoll(val, &ptr);
+
+		if(ptr != val.length())
+		{
+			return false;
+		}
+	}
+	catch (std::invalid_argument &e)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+std::string json_event_filter_check::no_value = "<NA>";
+std::vector<std::string> json_event_filter_check::s_index_mode_strs = {"IDX_REQUIRED", "IDX_ALLOWED", "IDX_NONE"};
+std::vector<std::string> json_event_filter_check::s_index_type_strs = {"IDX_KEY", "IDX_NUMERIC"};
+
+bool json_event_filter_check::def_extract(const nlohmann::json &root,
+					  const std::list<nlohmann::json::json_pointer> &ptrs,
+					  std::list<nlohmann::json::json_pointer>::iterator it)
+{
+	if(it == ptrs.end())
+	{
+		add_extracted_value(json_as_string(root));
+		return true;
+	}
+
+	try {
+		const json &j = root.at(*it);
+
+		if(j.is_array())
+		{
+			for(auto &item : j)
+			{
+				if(!def_extract(item, ptrs, std::next(it, 1)))
+				{
+					return false;
+				}
+			}
+		}
+		else
+		{
+			add_extracted_value(json_as_string(j));
+		}
+	}
+	catch(json::out_of_range &e)
+	{
+		return false;
+	}
+	catch(json::type_error &e)
+	{
+		return false;
+	}
+
+	return true;
 }
 
 std::string json_event_filter_check::json_as_string(const json &j)
@@ -70,7 +346,9 @@ std::string json_event_filter_check::json_as_string(const json &j)
 }
 
 json_event_filter_check::field_info::field_info():
-	m_idx_mode(IDX_NONE), m_idx_type(IDX_NUMERIC)
+	m_idx_mode(IDX_NONE),
+	m_idx_type(IDX_NUMERIC),
+	m_uses_paths(false)
 {
 }
 
@@ -78,7 +356,9 @@ json_event_filter_check::field_info::field_info(std::string name,
 						std::string desc):
 	m_name(name),
 	m_desc(desc),
-	m_idx_mode(IDX_NONE), m_idx_type(IDX_NUMERIC)
+	m_idx_mode(IDX_NONE),
+	m_idx_type(IDX_NUMERIC),
+	m_uses_paths(false)
 {
 }
 
@@ -87,7 +367,9 @@ json_event_filter_check::field_info::field_info(std::string name,
 						index_mode mode):
 	m_name(name),
 	m_desc(desc),
-	m_idx_mode(mode), m_idx_type(IDX_NUMERIC)
+	m_idx_mode(mode),
+	m_idx_type(IDX_NUMERIC),
+	m_uses_paths(false)
 {
 }
 
@@ -97,7 +379,22 @@ json_event_filter_check::field_info::field_info(std::string name,
 						index_type itype):
 	m_name(name),
 	m_desc(desc),
-	m_idx_mode(mode), m_idx_type(itype)
+	m_idx_mode(mode),
+	m_idx_type(itype),
+	m_uses_paths(false)
+{
+}
+
+json_event_filter_check::field_info::field_info(std::string name,
+						std::string desc,
+						index_mode mode,
+						index_type itype,
+						bool uses_paths):
+	m_name(name),
+	m_desc(desc),
+	m_idx_mode(mode),
+	m_idx_type(itype),
+	m_uses_paths(uses_paths)
 {
 }
 
@@ -109,15 +406,13 @@ json_event_filter_check::alias::alias()
 {
 }
 
-json_event_filter_check::alias::alias(nlohmann::json::json_pointer ptr):
-	m_jptr(ptr), m_format(def_format)
+json_event_filter_check::alias::alias(std::list<nlohmann::json::json_pointer> ptrs) :
+	m_jptrs(ptrs)
 {
 }
 
-json_event_filter_check::alias::alias(nlohmann::json::json_pointer ptr,
-				      format_t format):
-	m_jptr(ptr),
-	m_format(format)
+json_event_filter_check::alias::alias(extract_t extract) :
+	m_extract(extract)
 {
 }
 
@@ -125,8 +420,7 @@ json_event_filter_check::alias::~alias()
 {
 }
 
-json_event_filter_check::json_event_filter_check():
-	m_format(def_format)
+json_event_filter_check::json_event_filter_check()
 {
 }
 
@@ -149,6 +443,8 @@ int32_t json_event_filter_check::parse_field_name(const char *str, bool alloc_st
 			throw falco_exception("Could not find alias for field name " + info.m_name);
 		}
 
+		m_uses_paths = info.m_uses_paths;
+
 		auto &al = m_aliases[info.m_name];
 
 		// What follows the match must not be alphanumeric or a dot
@@ -157,9 +453,13 @@ int32_t json_event_filter_check::parse_field_name(const char *str, bool alloc_st
 		   str[info.m_name.size()] != '.' &&
 		   info.m_name.size() > match_len)
 		{
-			m_jptr = al.m_jptr;
+			m_jptrs = al.m_jptrs;
 			m_field = info.m_name;
-			m_format = al.m_format;
+
+			if(al.m_extract)
+			{
+				m_extract = al.m_extract;
+			}
 			match_len = info.m_name.size();
 
 			const char *start = str + m_field.size();
@@ -202,43 +502,88 @@ int32_t json_event_filter_check::parse_field_name(const char *str, bool alloc_st
 
 void json_event_filter_check::add_filter_value(const char *str, uint32_t len, uint32_t i)
 {
-	m_values.push_back(string(str));
+	m_values.insert(string(str));
+}
+
+const json_event_filter_check::values_t &json_event_filter_check::extracted_values()
+{
+	return m_evalues.first;
 }
 
 bool json_event_filter_check::compare(gen_event *evt)
 {
-	json_event *jevt = (json_event *)evt;
+	auto jevt = (json_event *)evt;
 
-	std::string value = extract(jevt);
+	uint32_t len;
+
+	auto evalues = (const extracted_values_t *) extract(jevt, &len);
+	values_set_t setvals;
 
 	switch(m_cmpop)
 	{
 	case CO_EQ:
-		return (value == m_values[0]);
-		break;
+		return evalues->second == m_values;
 	case CO_NE:
-		return (value != m_values[0]);
-		break;
-	case CO_CONTAINS:
-		return (value.find(m_values[0]) != string::npos);
-		break;
+		return evalues->second != m_values;
 	case CO_STARTSWITH:
-		return (value.compare(0, m_values[0].size(), m_values[0]) == 0);
-		break;
+		return (evalues->first.size() == 1 &&
+			m_values.size() == 1 &&
+			evalues->first.at(0).startswith(*(m_values.begin())));
+	case CO_CONTAINS:
+		return (evalues->first.size() == 1 &&
+			m_values.size() == 1 &&
+			evalues->first.at(0).contains(*(m_values.begin())));
 	case CO_IN:
-		for(auto &val : m_values)
+		for(auto &item : evalues->second)
 		{
-			if(value == val)
+			if(m_values.find(item) == m_values.end())
 			{
-				return true;
+				return false;
 			}
 		}
-		return false;
-		break;
+		return true;
+	case CO_PMATCH:
+		for(auto &item : evalues->second)
+		{
+			if(item.as_string() != no_value)
+			{
+				if(!m_prefix_search.match(item.as_string().c_str()))
+				{
+					return false;
+				}
+			}
+		}
+		return true;
+	case CO_INTERSECTS:
+		std::set_intersection(evalues->second.begin(), evalues->second.end(),
+				      m_values.begin(), m_values.end(),
+				      std::inserter(setvals, setvals.begin()));
+		return (!setvals.empty());
+	case CO_LT:
+		return (evalues->first.size() == 1 &&
+			m_values.size() == 1 &&
+			evalues->first.at(0).ptype() == m_values.begin()->ptype() &&
+			evalues->first.at(0) < *(m_values.begin()));
+	case CO_LE:
+		return (evalues->first.size() == 1 &&
+			m_values.size() == 1 &&
+			evalues->first.at(0).ptype() == m_values.begin()->ptype() &&
+			(evalues->first.at(0) < *(m_values.begin()) ||
+			 evalues->first.at(0) == *(m_values.begin())));
+	case CO_GT:
+		return (evalues->first.size() == 1 &&
+			m_values.size() == 1 &&
+			evalues->first.at(0).ptype() == m_values.begin()->ptype() &&
+			evalues->first.at(0) > *(m_values.begin()));
+	case CO_GE:
+		return (evalues->first.size() == 1 &&
+			m_values.size() == 1 &&
+			evalues->first.at(0).ptype() == m_values.begin()->ptype() &&
+			(evalues->first.at(0) > *(m_values.begin()) ||
+			 evalues->first.at(0) == *(m_values.begin())));
 	case CO_EXISTS:
-		// Any non-empty, non-"<NA>" value is ok
-		return (value != "" && value != "<NA>");
-		break;
+		return (evalues->first.size() == 1 &&
+			(evalues->first.at(0) != json_event_filter_check::no_value));
 	default:
 		throw falco_exception("filter error: unsupported comparison operator");
 	}
@@ -271,42 +616,95 @@ json_event_filter_check::check_info &json_event_filter_check::get_fields()
 	return m_info;
 }
 
+void json_event_filter_check::add_extracted_value(const std::string &str)
+{
+	m_evalues.first.emplace_back(json_event_value(str));
+	m_evalues.second.emplace(json_event_value(str));
+
+	if(m_uses_paths)
+	{
+		m_prefix_search.add_search_path(str);
+	}
+}
+
+void json_event_filter_check::add_extracted_value_num(int64_t val)
+{
+	m_evalues.first.emplace_back(json_event_value(val));
+	m_evalues.second.emplace(json_event_value(val));
+}
+
 uint8_t *json_event_filter_check::extract(gen_event *evt, uint32_t *len, bool sanitize_strings)
 {
-	json_event *jevt = (json_event *)evt;
+	m_evalues.first.clear();
+	m_evalues.second.clear();
 
+	if (!extract_values((json_event *) evt))
+	{
+		m_evalues.first.clear();
+		m_evalues.second.clear();
+		add_extracted_value(no_value);
+	}
+
+	*len = sizeof(m_evalues);
+	return (uint8_t *)&m_evalues;
+}
+
+bool json_event_filter_check::extract_values(json_event *jevt)
+{
 	try
 	{
-		const json &j = jevt->jevt().at(m_jptr);
+		if(m_extract)
+		{
+			if(!m_extract(jevt->jevt(), *this))
+			{
+				return false;
+			}
+		}
+		else
+		{
+			if (!def_extract(jevt->jevt(), m_jptrs, m_jptrs.begin()))
+			{
+				return false;
+			}
 
-		// Only format when the value was actually found in
-		// the object.
-		m_tstr = m_format(j, m_field, m_idx);
+			if(! m_idx.empty())
+			{
+				// The default only knows how to index by numeric indices
+				try {
+					std::string::size_type ptr;
+					std::string::size_type idx_num = std::stoll(m_idx, &ptr);
+
+					if(ptr != m_idx.length())
+					{
+						return false;
+					}
+
+					if(idx_num >= m_evalues.first.size())
+					{
+						return false;
+					}
+
+					values_t new_values;
+					new_values.push_back(m_evalues.first.at(idx_num));
+					m_evalues.first = new_values;
+				}
+				catch (std::invalid_argument &e)
+				{
+					return false;
+				}
+			}
+		}
 	}
 	catch(json::out_of_range &e)
 	{
-		m_tstr = "<NA>";
+		return false;
 	}
-
-	*len = m_tstr.size();
-
-	return (uint8_t *)m_tstr.c_str();
-}
-
-std::string json_event_filter_check::extract(json_event *evt)
-{
-	uint8_t *res;
-	uint32_t len;
-	std::string ret;
-
-	res = extract(evt, &len, true);
-
-	if(res != NULL)
+	catch(json::type_error &e)
 	{
-		ret.assign((const char *)res, len);
+		return false;
 	}
 
-	return ret;
+	return true;
 }
 
 std::string jevt_filter_check::s_jevt_time_field = "jevt.time";
@@ -319,6 +717,7 @@ jevt_filter_check::jevt_filter_check()
 {
 	m_info = {"jevt",
 		  "generic ways to access json events",
+		  "",
 		  {{s_jevt_time_field, "json event timestamp as a string that includes the nanosecond part"},
 		   {s_jevt_time_iso_8601_field, "json event timestamp in ISO 8601 format, including nanoseconds and time zone offset (in UTC)"},
 		   {s_jevt_rawtime_field, "absolute event timestamp, i.e. nanoseconds from epoch."},
@@ -370,50 +769,65 @@ int32_t jevt_filter_check::parse_field_name(const char *str, bool alloc_state, b
 
 		try
 		{
-			m_jptr = json::json_pointer(string(str + (s_jevt_value_field.size() + 1), (end - str - (s_jevt_value_field.size() + 1))));
+			m_idx = string(str + (s_jevt_value_field.size() + 1), (end - str - (s_jevt_value_field.size() + 1)));
+			m_idx_ptr = json::json_pointer(m_idx);
 		}
 		catch(json::parse_error &e)
 		{
 			throw falco_exception(string("Could not parse filtercheck field \"") + str + "\". Invalid json selector (" + e.what() + ")");
 		}
 
+		m_field = s_jevt_value_field;
+
 		// The +1 accounts for the closing ']'
-		m_field = string(str, end - str + 1);
 		return (end - str + 1);
 	}
 
 	return 0;
 }
 
-uint8_t *jevt_filter_check::extract(gen_event *evt, uint32_t *len, bool sanitize_stings)
+bool jevt_filter_check::extract_values(json_event *jevt)
 {
+	std::string tstr;
+
 	if(m_field == s_jevt_rawtime_field)
 	{
-		m_tstr = to_string(evt->get_ts());
-		*len = m_tstr.size();
-		return (uint8_t *)m_tstr.c_str();
+		tstr = to_string(jevt->get_ts());
 	}
 	else if(m_field == s_jevt_time_field)
 	{
-		sinsp_utils::ts_to_string(evt->get_ts(), &m_tstr, false, true);
-		*len = m_tstr.size();
-		return (uint8_t *)m_tstr.c_str();
+		sinsp_utils::ts_to_string(jevt->get_ts(), &tstr, false, true);
 	}
 	else if(m_field == s_jevt_time_iso_8601_field)
 	{
-		sinsp_utils::ts_to_iso_8601(evt->get_ts(), &m_tstr);
-		*len = m_tstr.size();
-		return (uint8_t *)m_tstr.c_str();
+		sinsp_utils::ts_to_iso_8601(jevt->get_ts(), &tstr);
 	}
 	else if(m_field == s_jevt_obj_field)
 	{
-		json_event *jevt = (json_event *)evt;
-		m_tstr = jevt->jevt().dump();
-		*len = m_tstr.size();
-		return (uint8_t *)m_tstr.c_str();
+		tstr = jevt->jevt().dump();
+	}
+	else if (m_field == s_jevt_value_field)
+	{
+		try {
+			const json &j = jevt->jevt().at(m_idx_ptr);
+			tstr = json_as_string(j);
+		}
+		catch(json::out_of_range &e)
+		{
+			return false;
+		}
+		catch(json::type_error &e)
+		{
+			return false;
+		}
+	}
+	else
+	{
+		return false;
 	}
 
-	return json_event_filter_check::extract(evt, len, sanitize_stings);
+	add_extracted_value(tstr);
+	return true;
 }
 
 json_event_filter_check *jevt_filter_check::allocate_new()
@@ -423,66 +837,86 @@ json_event_filter_check *jevt_filter_check::allocate_new()
 	return (json_event_filter_check *)chk;
 }
 
-std::string k8s_audit_filter_check::index_image(const json &j, std::string &field, std::string &idx)
+bool k8s_audit_filter_check::extract_images(const json &j,
+					    json_event_filter_check &jchk)
 {
-	uint64_t idx_num = (idx.empty() ? 0 : stoi(idx));
-
-	string image;
+	static json::json_pointer containers_ptr = "/requestObject/spec/containers"_json_pointer;
 
 	try
 	{
-		image = j[idx_num].at("image");
+		const json &containers = j.at(containers_ptr);
+
+		for(auto &container : containers)
+		{
+			std::string image = container.at("image");
+
+			// If the filtercheck ends with .repository, we want only the
+			// repo name from the image.
+			std::string suffix = ".repository";
+			if(suffix.size() <= jchk.field().size() &&
+			   std::equal(suffix.rbegin(), suffix.rend(), jchk.field().rbegin()))
+			{
+				std::string hostname, port, name, tag, digest;
+
+				sinsp_utils::split_container_image(image,
+								   hostname,
+								   port,
+								   name,
+								   tag,
+								   digest,
+								   false);
+				jchk.add_extracted_value(name);
+			}
+			else
+			{
+				jchk.add_extracted_value(image);
+			}
+
+			if(jchk.field() == "ka.req.container.image" ||
+			   jchk.field() == "ka.req.container.image.repository")
+			{
+				// Stop at the first container
+				break;
+			}
+		}
 	}
 	catch(json::out_of_range &e)
 	{
-		return string("<NA>");
+		return false;
 	}
-
-	// If the filtercheck ends with .repository, we want only the
-	// repo name from the image.
-	std::string suffix = ".repository";
-	if(suffix.size() <= field.size() &&
-	   std::equal(suffix.rbegin(), suffix.rend(), field.rbegin()))
+	catch(json::type_error &e)
 	{
-		std::string hostname, port, name, tag, digest;
-
-		sinsp_utils::split_container_image(image,
-						   hostname,
-						   port,
-						   name,
-						   tag,
-						   digest,
-						   false);
-
-		return name;
+		return false;
 	}
 
-	return image;
+	return true;
 }
 
-std::string k8s_audit_filter_check::index_has_name(const json &j, std::string &field, std::string &idx)
+bool k8s_audit_filter_check::extract_query_param(const nlohmann::json &j,
+						 json_event_filter_check &jchk)
 {
-	for(auto &subject : j)
-	{
-		if(subject.value("name", "N/A") == idx)
-		{
-			return string("true");
-		}
-	}
+	static json::json_pointer request_uri_ptr = "/requestURI"_json_pointer;
 
-	return string("false");
-}
-
-std::string k8s_audit_filter_check::index_query_param(const json &j, std::string &field, std::string &idx)
-{
-	string uri = j;
+	string uri;
 	std::vector<std::string> uri_parts, query_parts;
+
+	try {
+		uri = j.at(request_uri_ptr);
+	}
+	catch(json::out_of_range &e)
+	{
+		return false;
+	}
+	catch(json::type_error &e)
+	{
+		return false;
+	}
 
 	uri_parts = sinsp_split(uri, '?');
 
 	if(uri_parts.size() != 2)
 	{
-		return string("<NA>");
+		return false;
 	}
 
 	query_parts = sinsp_split(uri_parts[1], '&');
@@ -491,142 +925,288 @@ std::string k8s_audit_filter_check::index_query_param(const json &j, std::string
 	{
 		std::vector<std::string> param_parts = sinsp_split(part, '=');
 
-		if(param_parts.size() == 2 && uri::decode(param_parts[0], true) == idx)
+		if(param_parts.size() == 2 && uri::decode(param_parts[0], true) == jchk.idx())
 		{
-			return uri::decode(param_parts[1]);
+			jchk.add_extracted_value(param_parts[1]);
+			return true;
 		}
 	}
 
-	return string("<NA>");
+	return false;
 }
 
-std::string k8s_audit_filter_check::index_generic(const json &j, std::string &field, std::string &idx)
+
+bool k8s_audit_filter_check::extract_rule_attrs(const json &j,
+						json_event_filter_check &jchk)
 {
-	json item;
-
-	if(idx.empty())
-	{
-		item = j;
-	}
-	else
-	{
-		uint64_t idx_num = (idx.empty() ? 0 : stoi(idx));
-
-		try
-		{
-			item = j[idx_num];
-		}
-		catch(json::out_of_range &e)
-		{
-			return string("<NA>");
-		}
-	}
-
-	return json_event_filter_check::json_as_string(item);
-}
-
-std::string k8s_audit_filter_check::index_select(const json &j, std::string &field, std::string &idx)
-{
-	json item;
+	static json::json_pointer rules_ptr = "/requestObject/rules"_json_pointer;
 
 	// Use the suffix of the field to determine which property to
 	// select from each object.
-	std::string prop = field.substr(field.find_last_of(".") + 1);
+	std::string prop = jchk.field().substr(jchk.field().find_last_of(".") + 1);
 
-	std::string ret;
-
-	if(idx.empty())
+	try
 	{
-		for(auto &obj : j)
+		const json &rules = j.at(rules_ptr);
+
+		for (auto &rule : rules)
 		{
-			if(ret != "")
+			if(rule.find(prop) != rule.end())
 			{
-				ret += " ";
-			}
-
-			try
-			{
-				ret += json_event_filter_check::json_as_string(obj.at(prop));
-			}
-			catch(json::out_of_range &e)
-			{
-				ret += "N/A";
-			}
-		}
-	}
-	else
-	{
-		try
-		{
-			ret = j[stoi(idx)].at(prop);
-		}
-		catch(json::out_of_range &e)
-		{
-			ret = "N/A";
-		}
-	}
-
-	return ret;
-}
-
-std::string k8s_audit_filter_check::index_privileged(const json &j, std::string &field, std::string &idx)
-{
-	nlohmann::json::json_pointer jpriv = "/securityContext/privileged"_json_pointer;
-
-	bool privileged = false;
-
-	if(!idx.empty())
-	{
-		try
-		{
-			privileged = j[stoi(idx)].at(jpriv);
-		}
-		catch(json::out_of_range &e)
-		{
-		}
-	}
-	else
-	{
-		for(auto &container : j)
-		{
-			try
-			{
-				if(container.at(jpriv))
+				for (auto &item : rule.at(prop))
 				{
-					privileged = true;
+					jchk.add_extracted_value(json_as_string(item));
 				}
 			}
-			catch(json::out_of_range &e)
+		}
+	}
+	catch(json::out_of_range &e)
+	{
+		return false;
+	}
+	catch(json::type_error &e)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+bool k8s_audit_filter_check::check_volumes_hostpath(const json &j,
+						    json_event_filter_check &jchk)
+{
+	static json::json_pointer volumes_ptr = "/requestObject/spec/volumes"_json_pointer;
+
+	try
+	{
+		const nlohmann::json &vols = j.at(volumes_ptr);
+
+		for(auto &vol : vols)
+		{
+			auto it = vol.find("hostPath");
+			if(it != vol.end())
 			{
+				// If the index key ends with a *, do
+				// a prefix match. Otherwise, compare
+				// for equality.
+
+				if(jchk.idx().back() == '*')
+				{
+					if(jchk.idx().compare(0, jchk.idx().size() - 1, *it) == 0)
+					{
+						jchk.add_extracted_value(string("true"));
+					}
+				}
+				else
+				{
+					if(jchk.idx() == *it)
+					{
+						jchk.add_extracted_value(string("true"));
+					}
+				}
 			}
 		}
 	}
-
-	return (privileged ? string("true") : string("false"));
-}
-
-std::string k8s_audit_filter_check::check_hostpath_vols(const json &j, std::string &field, std::string &idx)
-{
-
-	nlohmann::json::json_pointer jpath = "/hostPath/path"_json_pointer;
-
-	for(auto &vol : j)
+	catch(json::out_of_range &e)
 	{
-		string path = vol.value(jpath, "N/A");
-
-		if(sinsp_utils::glob_match(idx.c_str(), path.c_str()))
-		{
-			return string("true");
-		}
+		return false;
+	}
+	catch(json::type_error &e)
+	{
+		return false;
 	}
 
-	return string("false");
+	jchk.add_extracted_value(string("false"));
+
+	return true;
+}
+
+bool k8s_audit_filter_check::extract_volume_types(const json &j,
+						  json_event_filter_check &jchk)
+{
+	static json::json_pointer volumes_ptr = "/requestObject/spec/volumes"_json_pointer;
+
+	try {
+		const nlohmann::json &vols = j.at(volumes_ptr);
+
+		for(auto &vol : vols)
+		{
+			for (auto it = vol.begin(); it != vol.end(); ++it)
+			{
+				// Any key other than "name" represents a volume type
+				if(it.key() != "name")
+				{
+					jchk.add_extracted_value(it.key());
+				}
+			}
+		}
+	}
+	catch(json::out_of_range &e)
+	{
+		return false;
+	}
+	catch(json::type_error &e)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+bool k8s_audit_filter_check::extract_host_port(const json &j,
+					       json_event_filter_check &jchk)
+{
+	static json::json_pointer containers_ptr = "/requestObject/spec/containers"_json_pointer;
+
+	try {
+		const json &containers = j.at(containers_ptr);
+
+		for(auto &container : containers)
+		{
+			if(container.find("ports") == container.end())
+			{
+				continue;
+			}
+
+			nlohmann::json ports = container["ports"];
+
+			for(auto &cport : ports)
+			{
+				if(cport.find("hostPort") != cport.end())
+				{
+					jchk.add_extracted_value(json_as_string(cport.at("hostPort")));
+				}
+				else if (cport.find("containerPort") != cport.end())
+				{
+					// When hostNetwork is true, this will match the host port.
+					jchk.add_extracted_value(json_as_string(cport.at("containerPort")));
+				}
+			}
+		}
+	}
+	catch(json::out_of_range &e)
+	{
+		return false;
+	}
+	catch(json::type_error &e)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+bool k8s_audit_filter_check::extract_effective_run_as(const json &j,
+						      json_event_filter_check &jchk)
+{
+	static json::json_pointer spec_ptr = "/requestObject/spec"_json_pointer;
+	static json::json_pointer containers_ptr = "/containers"_json_pointer;
+	static json::json_pointer run_as_user_ptr = "/securityContext/runAsUser"_json_pointer;
+	static json::json_pointer run_as_group_ptr = "/securityContext/runAsGroup"_json_pointer;
+
+	try {
+		const json &spec = j.at(spec_ptr);
+
+		int64_t pod_id;
+
+		if(jchk.field() == "ka.req.pod.containers.eff_run_as_user")
+		{
+			pod_id = spec.value(run_as_user_ptr, 0);
+		}
+		else
+		{
+			pod_id = spec.value(run_as_group_ptr, 0);
+		}
+
+		const json &containers = spec.at(containers_ptr);
+
+		for(auto container : containers)
+		{
+			int64_t container_id;
+
+			if(jchk.field() == "ka.req.pod.containers.eff_run_as_user")
+			{
+				container_id = container.value(run_as_user_ptr, pod_id);
+			}
+			else
+			{
+				container_id = container.value(run_as_group_ptr, pod_id);
+			}
+
+			jchk.add_extracted_value_num(container_id);
+		}
+	}
+	catch(json::out_of_range &e)
+	{
+		return false;
+	}
+	catch(json::type_error &e)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+bool k8s_audit_filter_check::always_return_na(const json &j,
+					      json_event_filter_check &jchk)
+{
+	jchk.add_extracted_value(string("true"));
+
+	return true;
+}
+
+bool k8s_audit_filter_check::extract_any_privileged(const json &j,
+						    json_event_filter_check &jchk)
+{
+	static json::json_pointer containers_ptr = "/requestObject/spec/containers"_json_pointer;
+	static json::json_pointer privileged_ptr = "/securityContext/privileged"_json_pointer;
+
+	try
+	{
+		const json &containers = j.at(containers_ptr);
+
+		for(auto &container : containers)
+		{
+			bool privileged = false;
+			try
+			{
+				privileged = container.at(privileged_ptr);
+			}
+			catch(json::out_of_range &e)
+			{
+				// No-op
+			}
+			catch(json::type_error &e)
+			{
+				return false;
+			}
+
+			if(privileged)
+			{
+				jchk.add_extracted_value(string("true"));
+				return true;
+			}
+		}
+	}
+	catch(json::out_of_range &e)
+	{
+		return false;
+	}
+	catch(json::type_error &e)
+	{
+		return false;
+	}
+
+	jchk.add_extracted_value(string("false"));
+	return true;
 }
 
 k8s_audit_filter_check::k8s_audit_filter_check()
 {
 	m_info = {"ka",
 		  "Access K8s Audit Log Events",
+		  "Fields with an IDX_ALLOWED annotation can be indexed (e.g. ka.req.containers.image[k] returns the image for the kth container). The index is optional--without any index the field returns values for all items. The index must be numeric with an IDX_NUMERIC annotation, and can be any string with an IDX_KEY annotation. Fields with an IDX_REQUIRED annotation require an index.",
 		  {{"ka.auditid", "The unique id of the audit event"},
 		   {"ka.stage", "Stage of the request (e.g. RequestReceived, ResponseComplete, etc.)"},
 		   {"ka.auth.decision", "The authorization decision"},
@@ -642,22 +1222,44 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 		   {"ka.target.resource", "The target object resource"},
 		   {"ka.target.subresource", "The target object subresource"},
 		   {"ka.req.binding.subjects", "When the request object refers to a cluster role binding, the subject (e.g. account/users) being linked by the binding"},
-		   {"ka.req.binding.subject.has_name", "When the request object refers to a cluster role binding, return true if a subject with the provided name exists", IDX_REQUIRED, IDX_KEY},
 		   {"ka.req.binding.role", "When the request object refers to a cluster role binding, the role being linked by the binding"},
+		   {"ka.req.binding.subject.has_name", "Deprecated, always returns \"N/A\". Only provided for backwards compatibility", IDX_REQUIRED, IDX_KEY},
 		   {"ka.req.configmap.name", "If the request object refers to a configmap, the configmap name"},
 		   {"ka.req.configmap.obj", "If the request object refers to a configmap, the entire configmap object"},
-		   {"ka.req.container.image", "When the request object refers to a container, the container's images. Can be indexed (e.g. ka.req.container.image[0]). Without any index, returns the first image", IDX_ALLOWED, IDX_NUMERIC},
-		   {"ka.req.container.image.repository", "The same as req.container.image, but only the repository part (e.g. sysdig/falco)", IDX_ALLOWED, IDX_NUMERIC},
-		   {"ka.req.container.host_network", "When the request object refers to a container, the value of the hostNetwork flag."},
-		   {"ka.req.container.privileged", "When the request object refers to a container, whether or not any container is run privileged. With an index, return whether or not the ith container is run privileged.", IDX_ALLOWED, IDX_NUMERIC},
+		   {"ka.req.pod.containers.image", "When the request object refers to a pod, the container's images.", IDX_ALLOWED, IDX_NUMERIC},
+		   {"ka.req.container.image", "Deprecated by ka.req.pod.containers.image. Returns the image of the first container only"},
+		   {"ka.req.pod.containers.image.repository", "The same as req.container.image, but only the repository part (e.g. falcosecurity/falco).", IDX_ALLOWED, IDX_NUMERIC},
+		   {"ka.req.container.image.repository", "Deprecated by ka.req.pod.containers.image.repository. Returns the repository of the first container only"},
+		   {"ka.req.pod.host_ipc", "When the request object refers to a pod, the value of the hostIPC flag."},
+		   {"ka.req.pod.host_network", "When the request object refers to a pod, the value of the hostNetwork flag."},
+		   {"ka.req.container.host_network", "Deprecated alias for ka.req.pod.host_network"},
+		   {"ka.req.pod.host_pid", "When the request object refers to a pod, the value of the hostPID flag."},
+		   {"ka.req.pod.containers.host_port", "When the request object refers to a pod, all container's hostPort values.", IDX_ALLOWED, IDX_NUMERIC},
+		   {"ka.req.pod.containers.privileged", "When the request object refers to a pod, the value of the privileged flag for all containers.", IDX_ALLOWED, IDX_NUMERIC},
+		   {"ka.req.container.privileged", "Deprecated by ka.req.pod.containers.privileged. Returns true if any container has privileged=true"},
+		   {"ka.req.pod.containers.allow_privilege_escalation", "When the request object refers to a pod, the value of the allowPrivilegeEscalation flag for all containers", IDX_ALLOWED, IDX_NUMERIC},
+		   {"ka.req.pod.containers.read_only_fs", "When the request object refers to a pod, the value of the readOnlyRootFilesystem flag for all containers", IDX_ALLOWED, IDX_NUMERIC},
+		   {"ka.req.pod.run_as_user", "When the request object refers to a pod, the runAsUser uid specified in the security context for the pod. See ....containers.run_as_user for the runAsUser for individual containers"},
+		   {"ka.req.pod.containers.run_as_user", "When the request object refers to a pod, the runAsUser uid for all containers", IDX_ALLOWED, IDX_NUMERIC},
+		   {"ka.req.pod.containers.eff_run_as_user", "When the request object refers to a pod, the initial uid that will be used for all containers. This combines information from both the pod and container security contexts and uses 0 if no uid is specified", IDX_ALLOWED, IDX_NUMERIC},
+		   {"ka.req.pod.run_as_group", "When the request object refers to a pod, the runAsGroup gid specified in the security context for the pod. See ....containers.run_as_group for the runAsGroup for individual containers"},
+		   {"ka.req.pod.containers.run_as_group", "When the request object refers to a pod, the runAsGroup gid for all containers", IDX_ALLOWED, IDX_NUMERIC},
+		   {"ka.req.pod.containers.eff_run_as_group", "When the request object refers to a pod, the initial gid that will be used for all containers. This combines information from both the pod and container security contexts and uses 0 if no gid is specified", IDX_ALLOWED, IDX_NUMERIC},
+		   {"ka.req.pod.containers.proc_mount", "When the request object refers to a pod, the procMount types for all containers", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.req.role.rules", "When the request object refers to a role/cluster role, the rules associated with the role"},
-		   {"ka.req.role.rules.apiGroups", "When the request object refers to a role/cluster role, the api groups associated with the role's rules. With an index, return only the api groups from the ith rule. Without an index, return all api groups concatenated", IDX_ALLOWED, IDX_NUMERIC},
-		   {"ka.req.role.rules.nonResourceURLs", "When the request object refers to a role/cluster role, the non resource urls associated with the role's rules. With an index, return only the non resource urls from the ith rule. Without an index, return all non resource urls concatenated", IDX_ALLOWED, IDX_NUMERIC},
-		   {"ka.req.role.rules.verbs", "When the request object refers to a role/cluster role, the verbs associated with the role's rules. With an index, return only the verbs from the ith rule. Without an index, return all verbs concatenated", IDX_ALLOWED, IDX_NUMERIC},
-		   {"ka.req.role.rules.resources", "When the request object refers to a role/cluster role, the resources associated with the role's rules. With an index, return only the resources from the ith rule. Without an index, return all resources concatenated", IDX_ALLOWED, IDX_NUMERIC},
+		   {"ka.req.role.rules.apiGroups", "When the request object refers to a role/cluster role, the api groups associated with the role's rules", IDX_ALLOWED, IDX_NUMERIC},
+		   {"ka.req.role.rules.nonResourceURLs", "When the request object refers to a role/cluster role, the non resource urls associated with the role's rules", IDX_ALLOWED, IDX_NUMERIC},
+		   {"ka.req.role.rules.verbs", "When the request object refers to a role/cluster role, the verbs associated with the role's rules", IDX_ALLOWED, IDX_NUMERIC},
+		   {"ka.req.role.rules.resources", "When the request object refers to a role/cluster role, the resources associated with the role's rules", IDX_ALLOWED, IDX_NUMERIC},
+		   {"ka.req.pod.fs_group", "When the request object refers to a pod, the fsGroup gid specified by the security context."},
+		   {"ka.req.pod.supplemental_groups", "When the request object refers to a pod, the supplementalGroup gids specified by the security context."},
+		   {"ka.req.pod.containers.add_capabilities", "When the request object refers to a pod, all capabilities to add when running the container.", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.req.service.type", "When the request object refers to a service, the service type"},
-		   {"ka.req.service.ports", "When the request object refers to a service, the service's ports. Can be indexed (e.g. ka.req.service.ports[0]). Without any index, returns all ports", IDX_ALLOWED, IDX_NUMERIC},
-		   {"ka.req.volume.hostpath", "If the request object contains volume definitions, whether or not a hostPath volume exists that mounts the specified path from the host (...hostpath[/etc]=true if a volume mounts /etc from the host). The index can be a glob, in which case all volumes are considered to find any path matching the specified glob (...hostpath[/usr/*] would match either /usr/local or /usr/bin)", IDX_REQUIRED, IDX_KEY},
+		   {"ka.req.service.ports", "When the request object refers to a service, the service's ports", IDX_ALLOWED, IDX_NUMERIC},
+		   {"ka.req.pod.volumes.hostpath", "When the request object refers to a pod, all hostPath paths specified for all volumes", IDX_ALLOWED, IDX_NUMERIC, true},
+		   {"ka.req.volume.hostpath", "Deprecated by ka.req.pod.volumes.hostpath. Return true if the provided (host) path prefix is used by any volume", IDX_ALLOWED, IDX_KEY},
+		   {"ka.req.pod.volumes.flexvolume_driver", "When the request object refers to a pod, all flexvolume drivers specified for all volumes", IDX_ALLOWED, IDX_NUMERIC},
+		   {"ka.req.pod.volumes.volume_type", "When the request object refers to a pod, all volume types for all volumes", IDX_ALLOWED, IDX_NUMERIC},
 		   {"ka.resp.name", "The response object name"},
 		   {"ka.response.code", "The response code"},
 		   {"ka.response.reason", "The response reason (usually present only for failures)"},
@@ -665,41 +1267,63 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 
 	{
 		m_aliases = {
-			{"ka.auditid", {"/auditID"_json_pointer}},
-			{"ka.stage", {"/stage"_json_pointer}},
-			{"ka.auth.decision", {"/annotations/authorization.k8s.io~1decision"_json_pointer}},
-			{"ka.auth.reason", {"/annotations/authorization.k8s.io~1reason"_json_pointer}},
-			{"ka.user.name", {"/user/username"_json_pointer}},
-			{"ka.user.groups", {"/user/groups"_json_pointer}},
-			{"ka.impuser.name", {"/impersonatedUser/username"_json_pointer}},
-			{"ka.verb", {"/verb"_json_pointer}},
-			{"ka.uri", {"/requestURI"_json_pointer}},
-			{"ka.uri.param", {"/requestURI"_json_pointer, index_query_param}},
-			{"ka.target.name", {"/objectRef/name"_json_pointer}},
-			{"ka.target.namespace", {"/objectRef/namespace"_json_pointer}},
-			{"ka.target.resource", {"/objectRef/resource"_json_pointer}},
-			{"ka.target.subresource", {"/objectRef/subresource"_json_pointer}},
-			{"ka.req.binding.subjects", {"/requestObject/subjects"_json_pointer}},
-			{"ka.req.binding.subject.has_name", {"/requestObject/subjects"_json_pointer, index_has_name}},
-			{"ka.req.binding.role", {"/requestObject/roleRef/name"_json_pointer}},
-			{"ka.req.configmap.name", {"/objectRef/name"_json_pointer}},
-			{"ka.req.configmap.obj", {"/requestObject/data"_json_pointer}},
-			{"ka.req.container.image", {"/requestObject/spec/containers"_json_pointer, index_image}},
-			{"ka.req.container.image.repository", {"/requestObject/spec/containers"_json_pointer, index_image}},
-			{"ka.req.container.host_network", {"/requestObject/spec/hostNetwork"_json_pointer}},
-			{"ka.req.container.privileged", {"/requestObject/spec/containers"_json_pointer, index_privileged}},
-			{"ka.req.role.rules", {"/requestObject/rules"_json_pointer}},
-			{"ka.req.role.rules.apiGroups", {"/requestObject/rules"_json_pointer, index_select}},
-			{"ka.req.role.rules.nonResourceURLs", {"/requestObject/rules"_json_pointer, index_select}},
-			{"ka.req.role.rules.resources", {"/requestObject/rules"_json_pointer, index_select}},
-			{"ka.req.role.rules.verbs", {"/requestObject/rules"_json_pointer, index_select}},
-			{"ka.req.service.type", {"/requestObject/spec/type"_json_pointer}},
-			{"ka.req.service.ports", {"/requestObject/spec/ports"_json_pointer, index_generic}},
-			{"ka.req.volume.hostpath", {"/requestObject/spec/volumes"_json_pointer, check_hostpath_vols}},
-			{"ka.resp.name", {"/responseObject/metadata/name"_json_pointer}},
-			{"ka.response.code", {"/responseStatus/code"_json_pointer}},
-			{"ka.response.reason", {"/responseStatus/reason"_json_pointer}},
-			{"ka.useragent", {"/userAgent"_json_pointer}}};
+			{"ka.auditid", {{"/auditID"_json_pointer}}},
+			{"ka.stage", {{"/stage"_json_pointer}}},
+			{"ka.auth.decision", {{"/annotations/authorization.k8s.io~1decision"_json_pointer}}},
+			{"ka.auth.reason", {{"/annotations/authorization.k8s.io~1reason"_json_pointer}}},
+			{"ka.user.name", {{"/user/username"_json_pointer}}},
+			{"ka.user.groups", {{"/user/groups"_json_pointer}}},
+			{"ka.impuser.name", {{"/impersonatedUser/username"_json_pointer}}},
+			{"ka.verb", {{"/verb"_json_pointer}}},
+			{"ka.uri", {{"/requestURI"_json_pointer}}},
+			{"ka.uri.param", {extract_query_param}},
+			{"ka.target.name", {{"/objectRef/name"_json_pointer}}},
+			{"ka.target.namespace", {{"/objectRef/namespace"_json_pointer}}},
+			{"ka.target.resource", {{"/objectRef/resource"_json_pointer}}},
+			{"ka.target.subresource", {{"/objectRef/subresource"_json_pointer}}},
+			{"ka.req.binding.subjects", {{"/requestObject/subjects"_json_pointer}}},
+			{"ka.req.binding.role", {{"/requestObject/roleRef/name"_json_pointer}}},
+			{"ka.req.binding.subject.has_name", {always_return_na}},
+			{"ka.req.configmap.name", {{"/objectRef/name"_json_pointer}}},
+			{"ka.req.configmap.obj", {{"/requestObject/data"_json_pointer}}},
+			{"ka.req.pod.containers.image", {extract_images}},
+			{"ka.req.container.image", {extract_images}},
+			{"ka.req.pod.containers.image.repository", {extract_images}},
+			{"ka.req.container.image.repository", {extract_images}},
+			{"ka.req.pod.host_ipc", {{"/requestObject/spec/hostIPC"_json_pointer}}},
+			{"ka.req.pod.host_network", {{"/requestObject/spec/hostNetwork"_json_pointer}}},
+			{"ka.req.container.host_network", {{"/requestObject/spec/hostNetwork"_json_pointer}}},
+			{"ka.req.pod.host_pid", {{"/requestObject/spec/hostPID"_json_pointer}}},
+			{"ka.req.pod.containers.host_port", {extract_host_port}},
+			{"ka.req.pod.containers.privileged", {{"/requestObject/spec/containers"_json_pointer, "/securityContext/privileged"_json_pointer}}},
+			{"ka.req.container.privileged", {extract_any_privileged}},
+			{"ka.req.pod.containers.allow_privilege_escalation", {{"/requestObject/spec/containers"_json_pointer, "/securityContext/allowPrivilegeEscalation"_json_pointer}}},
+			{"ka.req.pod.containers.read_only_fs", {{"/requestObject/spec/containers"_json_pointer, "/securityContext/readOnlyRootFilesystem"_json_pointer}}},
+			{"ka.req.pod.run_as_user", {{"/requestObject/spec/securityContext/runAsUser"_json_pointer}}},
+			{"ka.req.pod.containers.run_as_user", {{"/requestObject/spec/containers"_json_pointer, "/securityContext/runAsGroup"_json_pointer}}},
+			{"ka.req.pod.containers.eff_run_as_user", {extract_effective_run_as}},
+			{"ka.req.pod.run_as_group", {{"/requestObject/spec/securityContext/runAsGroup"_json_pointer}}},
+			{"ka.req.pod.containers.run_as_group", {{"/requestObject/spec/containers"_json_pointer, "/securityContext/runAsGroup"_json_pointer}}},
+			{"ka.req.pod.containers.eff_run_as_group", {extract_effective_run_as}},
+			{"ka.req.pod.containers.proc_mount", {{"/requestObject/spec/containers"_json_pointer, "/securityContext/procMount"_json_pointer}}},
+			{"ka.req.role.rules", {{"/requestObject/rules"_json_pointer}}},
+			{"ka.req.role.rules.apiGroups", {extract_rule_attrs}},
+			{"ka.req.role.rules.nonResourceURLs", {extract_rule_attrs}},
+			{"ka.req.role.rules.verbs", {extract_rule_attrs}},
+			{"ka.req.role.rules.resources", {extract_rule_attrs}},
+			{"ka.req.pod.fs_group", {{"/requestObject/spec/securityContext/fsGroup"_json_pointer}}},
+			{"ka.req.pod.supplemental_groups", {{"/requestObject/spec/securityContext/supplementalGroups"_json_pointer}}},
+			{"ka.req.pod.containers.add_capabilities", {{"/requestObject/spec/containers"_json_pointer, "/securityContext/capabilities/add"_json_pointer}}},
+			{"ka.req.service.type", {{"/requestObject/spec/type"_json_pointer}}},
+			{"ka.req.service.ports", {{"/requestObject/spec/ports"_json_pointer}}},
+			{"ka.req.pod.volumes.hostpath", {{"/requestObject/spec/volumes"_json_pointer, "/hostPath/path"_json_pointer}}},
+			{"ka.req.volume.hostpath", {check_volumes_hostpath}},
+			{"ka.req.pod.volumes.flexvolume_driver", {{"/requestObject/spec/volumes"_json_pointer, "/flexVolume/driver"_json_pointer}}},
+			{"ka.req.pod.volumes.volume_type", {extract_volume_types}},
+			{"ka.resp.name", {{"/responseObject/metadata/name"_json_pointer}}},
+			{"ka.response.code", {{"/responseStatus/code"_json_pointer}}},
+			{"ka.response.reason", {{"/responseStatus/reason"_json_pointer}}},
+			{"ka.useragent", {{"/userAgent"_json_pointer}}}};
 	}
 }
 
@@ -796,6 +1420,7 @@ std::string json_event_formatter::tostring(json_event *ev)
 std::string json_event_formatter::tojson(json_event *ev)
 {
 	nlohmann::json ret;
+	// todo(leodido, fntlnz) > assign tomap() result to ret (implicit conversion using = operator)
 
 	std::list<std::pair<std::string, std::string>> resolved;
 
@@ -806,11 +1431,35 @@ std::string json_event_formatter::tojson(json_event *ev)
 		// Only include the fields and not the raw text blocks.
 		if(!res.first.empty())
 		{
+			// todo(leodido, fntlnz) > do we want "<NA>" rather than empty res.second values?
 			ret[res.first] = res.second;
 		}
 	}
 
 	return ret.dump();
+}
+
+std::map<std::string, std::string> json_event_formatter::tomap(json_event *ev)
+{
+	std::map<std::string, std::string> ret;
+	std::list<std::pair<std::string, std::string>> res;
+
+	resolve_tokens(ev, res);
+
+	for(auto &r : res)
+	{
+		// Only include the fields and not the raw text blocks.
+		if(!r.first.empty())
+		{
+			if(r.second.empty())
+			{
+				r.second = "<NA>";
+			}
+			ret.insert(r);
+		}
+	}
+
+	return ret;
 }
 
 void json_event_formatter::parse_format()
@@ -874,7 +1523,33 @@ void json_event_formatter::resolve_tokens(json_event *ev, std::list<std::pair<st
 	{
 		if(tok.check)
 		{
-			resolved.push_back(std::make_pair(tok.check->field(), tok.check->extract(ev)));
+			uint32_t len;
+
+			(void) tok.check->extract(ev, &len);
+
+			const json_event_filter_check::values_t &evals =
+				tok.check->extracted_values();
+
+			std::string res_str = json_event_filter_check::no_value;
+			if(evals.size() == 1)
+			{
+				res_str = evals.at(0).as_string();
+			}
+			else if (evals.size() > 1)
+			{
+				res_str = "(";
+				for(auto &val : evals)
+				{
+					if(res_str != "(")
+					{
+						res_str += ",";
+					}
+					res_str += val.as_string();
+				}
+				res_str += ")";
+			}
+
+			resolved.push_back(std::make_pair(tok.check->field(), res_str));
 		}
 		else
 		{

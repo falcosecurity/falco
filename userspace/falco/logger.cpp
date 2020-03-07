@@ -1,7 +1,5 @@
 /*
-Copyright (C) 2016-2018 Draios Inc dba Sysdig.
-
-This file is part of falco.
+Copyright (C) 2019 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,7 +12,6 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
 */
 
 #include <ctime>
@@ -22,6 +19,7 @@ limitations under the License.
 #include "chisel_api.h"
 
 #include "falco_common.h"
+#include "banned.h" // This raises a compilation error when certain functions are used
 
 const static struct luaL_reg ll_falco [] =
 {
@@ -133,12 +131,8 @@ void falco_logger::log(int priority, const string msg)
 		{
 			char buf[sizeof "YYYY-MM-DDTHH:MM:SS-0000"];
 			struct tm *gtm = std::gmtime(&result);
-			if(gtm == NULL ||
-			   (strftime(buf, sizeof(buf), "%FT%T%z", gtm) == 0))
-			{
-				sprintf(buf, "N/A");
-			}
-			else
+			if(gtm != NULL &&
+			   (strftime(buf, sizeof(buf), "%FT%T%z", gtm) != 0))
 			{
 				fprintf(stderr, "%s: %s", buf, msg.c_str());
 			}
@@ -161,5 +155,3 @@ void falco_logger::log(int priority, const string msg)
 		}
 	}
 }
-
-

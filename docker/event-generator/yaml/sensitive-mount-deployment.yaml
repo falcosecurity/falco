@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sensitive-mount-deployment
+  namespace: falco-event-generator
+  labels:
+    app.kubernetes.io/name: sensitive-mount-deployment
+    app.kubernetes.io/part-of: falco-event-generator
+    falco.rules: Create-Sensitive-Mount-Pod
+    message: Creating-deployment-with-pod-mounting-sensitive-path-from-host
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: sensitive-mount-busybox
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: sensitive-mount-busybox
+        app.kubernetes.io/part-of: falco-event-generator
+    spec:
+      containers:
+        - name: busybox
+          image: busybox
+          command: ["/bin/sh", "-c", "while true; do echo sleeping; sleep 3600; done"]
+          volumeMounts:
+            - mountPath: /host/etc
+              name: etc
+      volumes:
+        - name: etc
+          hostPath:
+            path: /etc

@@ -1,0 +1,17 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: wildcard-resources-role
+  namespace: falco-event-generator
+  labels:
+    app.kubernetes.io/name: wildcard-resources-role
+    app.kubernetes.io/part-of: falco-event-generator
+    falco.rules: ClusterRole-With-Write-Privileges-Created
+    message: Creating-role-with-wildcard-resources
+rules:
+- apiGroups:
+    - ""
+  resources:
+    - "*"
+  verbs:
+    - get

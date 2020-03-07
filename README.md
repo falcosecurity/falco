@@ -1,20 +1,20 @@
-<p><img align="right" src="https://github.com/falcosecurity/falco-website/raw/master/themes/falco-fresh/static/images/favicon.png" width="64px"/></p>
-<p></p>
+<p align="center"><img src="https://raw.githubusercontent.com/falcosecurity/community/master/logo/primary-logo.png" width="360"></p>
+<p align="center"><b>Cloud Native Runtime Security.</b></p>
 
-# Falco
+<hr>
+
+# The Falco Project
 
 #### Latest release
 
-**v0.16.0**
-Read the [change log](https://github.com/falcosecurity/falco/blob/dev/CHANGELOG.md)
+**v0.20.0**
+Read the [change log](CHANGELOG.md)
 
-Dev Branch: [![Build Status](https://travis-ci.com/falcosecurity/falco.svg?branch=dev)](https://travis-ci.com/falcosecurity/falco)<br />
-Master Branch: [![Build Status](https://travis-ci.com/falcosecurity/falco.svg?branch=master)](https://travis-ci.com/falcosecurity/falco)<br />
-CII Best Practices: [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/2317/badge)](https://bestpractices.coreinfrastructure.org/projects/2317)
+[![Build Status](https://img.shields.io/circleci/build/github/falcosecurity/falco/master?style=for-the-badge)](https://circleci.com/gh/falcosecurity/falco) [![CII Best Practices Summary](https://img.shields.io/cii/summary/2317?label=CCI%20Best%20Practices&style=for-the-badge)](https://bestpractices.coreinfrastructure.org/projects/2317) [![GitHub](https://img.shields.io/github/license/falcosecurity/falco?style=for-the-badge)](COPYING)
 
 ---
 
-Falco is a behavioral activity monitor designed to detect anomalous activity in your applications. Powered by [sysdig’s](https://github.com/draios/sysdig) system call capture infrastructure, Falco lets you continuously monitor and detect container, application, host, and network activity—all in one place—from one source of data, with one set of rules.
+Falco is a behavioral activity monitor designed to detect anomalous activity in your applications. Falco audits a system at the most fundamental level, the kernel. Falco then enriches this data with other input streams such as container runtime metrics, and Kubernetes metrics. Falco lets you continuously monitor and detect container, application, host, and network activity—all in one place—from one source of data, with one set of rules.
 
 Falco is hosted by the Cloud Native Computing Foundation (CNCF) as a sandbox level project. If you are an organization that wants to help shape the evolution of technologies that are container-packaged, dynamically-scheduled and microservices-oriented, consider joining the CNCF. For details read the [Falco CNCF project proposal](https://github.com/cncf/toc/tree/master/proposals/falco.adoc).
 
@@ -41,18 +41,30 @@ One of the questions we often get when we talk about Falco is “How does Falco 
 
 Documentation
 ---
+
 See [Falco Documentation](https://falco.org/docs/) to quickly get started using Falco.
 
 Join the Community
 ---
-* [Website](https://falco.org) for Falco.
-* We are working on a blog for the Falco project. In the meantime you can find [Falco](https://sysdig.com/blog/tag/falco/) posts over on the Sysdig blog.
-* Join our [Public Slack](https://slack.sysdig.com) channel for open source Sysdig and Falco announcements and discussions.
+
+To get involved with The Falco Project please visit [the community repository](https://github.com/falcosecurity/community) to find more.
 
 License Terms
 ---
+
 Falco is licensed to you under the [Apache 2.0](./COPYING) open source license.
 
 Contributing
 ---
+
 See the [CONTRIBUTING.md](./CONTRIBUTING.md).
+
+Security
+---
+
+### Security Audit
+
+A third party security audit was performed by Cure53, you can see the full report [here](./audits/SECURITY_AUDIT_2019_07.pdf).
+
+### Reporting security vulnerabilities
+Please report security vulnerabilities following the community process documented [here](https://github.com/falcosecurity/.github/blob/master/SECURITY.md).

@@ -1,8 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
-# Copyright (C) 2016-2018 Draios Inc dba Sysdig.
+# Copyright (C) 2019 The Falco Authors.
 #
-# This file is part of falco.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -131,7 +130,7 @@ function run_trace() {
 	files=($TRACEDIR/traces-perf/$trace_file.scap)
     fi
 
-    for file in ${files[@]}; do
+    for file in "${files[@]}"; do
 	if [[ $ROOT == *"falco"* ]]; then
 	    run_falco_on "$file"
 	elif [[ $ROOT == *"sysdig"* ]]; then
@@ -143,7 +142,7 @@ function run_trace() {
 }
 
 function start_monitor_cpu_usage() {
-    echo "   monitoring cpu usage for sysdig/falco program"
+    echo "   monitoring cpu usage for falcosecurity/falco program"
 
     setsid bash `dirname $0`/cpu_monitor.sh $SUBJ_PID $live_test $VARIANT $RESULTS_FILE $CPU_INTERVAL &
     CPU_PID=$!
