@@ -27,12 +27,12 @@ file(MAKE_DIRECTORY ${SYSDIG_CMAKE_WORKING_DIR})
 # In case you want to test against another sysdig version just pass the variable - ie., `cmake -DSYSDIG_VERSION=dev ..`
 if(NOT SYSDIG_VERSION)
   set(SYSDIG_VERSION "be1ea2d9482d0e6e2cb14a0fd7e08cbecf517f94")
-  set(SYSDIG_CHECKSUM "SHA256=6e477ac5fe9d3110b870bd4495f01541373a008c375a1934a2d1c46798b6bad6")
+  set(SYSDIG_CHECKSUM "SHA256=1c69363e4c36cdaeed413c2ef557af53bfc4bf1109fbcb6d6e18dc40fe6ddec8")
 endif()
 set(PROBE_VERSION "${SYSDIG_VERSION}")
 
 # cd /path/to/build && cmake /path/to/source
-execute_process(COMMAND "${CMAKE_COMMAND}" -DSYSDIG_VERSION=${SYSDIG_VERSION} ${SYSDIG_CMAKE_SOURCE_DIR} WORKING_DIRECTORY ${SYSDIG_CMAKE_WORKING_DIR})
+execute_process(COMMAND "${CMAKE_COMMAND}" -DSYSDIG_VERSION=${SYSDIG_VERSION} -DSYSDIG_CHECKSUM=${SYSDIG_CHECKSUM} ${SYSDIG_CMAKE_SOURCE_DIR} WORKING_DIRECTORY ${SYSDIG_CMAKE_WORKING_DIR})
 
 
 # todo(leodido, fntlnz) > use the following one when CMake version will be >= 3.13
