@@ -71,7 +71,6 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3 -fno-strict-aliasing -DNDEBUG")
 include(GetFalcoVersion)
 
 set(PACKAGE_NAME "falco")
-set(PROBE_VERSION "${FALCO_VERSION}")
 set(PROBE_NAME "falco-probe")
 set(PROBE_DEVICE_NAME "falco")
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
