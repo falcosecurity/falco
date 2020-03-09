@@ -15,6 +15,7 @@ cmake_minimum_required(VERSION 3.5.1)
 project(sysdig-repo NONE)
 
 include(ExternalProject)
+message(STATUS "Driver version: ${SYSDIG_VERSION}")
 
 ExternalProject_Add(
   sysdig
