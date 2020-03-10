@@ -2,7 +2,7 @@ FROM ubuntu:18.04 as ubuntu
 
 LABEL maintainer="cncf-falco-dev@lists.cncf.io"
 
-ARG FALCO_VERSION=0.20.0
+ARG FALCO_VERSION
 ARG VERSION_BUCKET=bin
 
 ENV FALCO_VERSION=${FALCO_VERSION}

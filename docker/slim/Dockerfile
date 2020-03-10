@@ -4,8 +4,10 @@ LABEL maintainer="cncf-falco-dev@lists.cncf.io"
 
 LABEL RUN="docker run -i -t -v /var/run/docker.sock:/host/var/run/docker.sock -v /dev:/host/dev -v /proc:/host/proc:ro -v /boot:/host/boot:ro -v /lib/modules:/host/lib/modules:ro -v /usr:/host/usr:ro --name <name> <image>"
 
+ARG FALCO_VERSION=latest
 ARG VERSION_BUCKET=deb
 
+ENV FALCO_VERSION=${FALCO_VERSION}
 ENV VERSION_BUCKET=${VERSION_BUCKET}
 
 ENV HOST_ROOT /host
@@ -28,7 +30,7 @@ RUN apt-get update \
 RUN curl -s https://falco.org/repo/falcosecurity-3672BA8F.asc | apt-key add - \
   && echo "deb https://dl.bintray.com/falcosecurity/${VERSION_BUCKET} stable main" | tee -a /etc/apt/sources.list.d/falcosecurity.list \
   && apt-get update -y \
-  && apt-get install -y --no-install-recommends falco \
+  && if [ "$FALCO_VERSION" = "latest" ]; then apt-get install -y --no-install-recommends falco; else apt-get install -y --no-install-recommends falco=${FALCO_VERSION}; fi \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
