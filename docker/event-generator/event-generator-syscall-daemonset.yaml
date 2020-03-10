@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: falco-event-generator-syscall
+  labels:
+    app: falco-event-generator-syscall
+  namespace: falco-event-generator
+spec:
+  selector:
+    matchLabels:
+      name: falco-event-generator-syscall
+  template:
+    metadata:
+      labels:
+        name: falco-event-generator-syscall
+    spec:
+      containers:
+      - name: falco-event-generator
+        image: falcosecurity/falco-event-generator
+        args: ["syscall"]
