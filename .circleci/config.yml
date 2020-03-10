@@ -305,7 +305,7 @@ workflows:
           filters:
             branches:
               only:
-                - master
+                - feature/version-prerelease
           requires:
             - "tests/integration"
       - "publish/packages-dev":
@@ -313,7 +313,7 @@ workflows:
           filters:
             branches:
               only:
-                - master
+                - feature/version-prerelease
           requires:
             - "rpm/sign"
       - "publish/docker-dev":
@@ -321,7 +321,7 @@ workflows:
           filters:
             branches:
               only:
-                - master
+                - feature/version-prerelease
           requires:
             - "publish/packages-dev"
   release:
