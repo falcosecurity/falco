@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: vanilla-deployment
-  namespace: falco-event-generator
   labels:
     app.kubernetes.io/name: vanilla-deployment
     app.kubernetes.io/part-of: falco-event-generator

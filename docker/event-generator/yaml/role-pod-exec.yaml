@@ -2,7 +2,6 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: pod-exec-role
-  namespace: falco-event-generator
   labels:
     app.kubernetes.io/name: pod-exec-role
     app.kubernetes.io/part-of: falco-event-generator
