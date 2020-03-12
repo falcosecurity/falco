@@ -7,10 +7,10 @@ LABEL maintainer="cncf-falco-dev@lists.cncf.io"
 ENV FALCO_VERSION=
 ENV BUILD_TYPE=release
 
-RUN dnf install -y python2-pip python2 docker findutils jq unzip && dnf clean all
+RUN dnf install -y python-pip python docker findutils jq unzip && dnf clean all
 ENV PATH="/root/.local/bin/:${PATH}"
-RUN pip2 install --user avocado-framework==69.0
-RUN pip2 install --user avocado-framework-plugin-varianter-yaml-to-mux==69.0
+RUN pip install --user avocado-framework==69.0
+RUN pip install --user avocado-framework-plugin-varianter-yaml-to-mux==69.0
 
 COPY ./root /
 
