@@ -18,6 +18,6 @@ spec:
       serviceAccount: falco-event-generator
       containers:
       - name: falco-event-generator
-        image: falcosecurity/falco-event-generator:eg-sandbox
+        image: falcosecurity/falco-event-generator
         imagePullPolicy: Always
         args: ["k8s_audit"]
