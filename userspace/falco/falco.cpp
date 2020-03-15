@@ -443,6 +443,7 @@ int falco_init(int argc, char **argv)
 	set<string> disable_sources;
 	bool disable_syscall = false;
 	bool disable_k8s_audit = false;
+	bool udig = false;
 
 	// Used for writing trace files
 	int duration_seconds = 0;
@@ -482,6 +483,7 @@ int falco_init(int argc, char **argv)
         {"stats-interval", required_argument, 0},
         {"support", no_argument, 0},
         {"unbuffered", no_argument, 0, 'U'},
+		{"udig", no_argument, 0, 'u'},
         {"validate", required_argument, 0, 'V'},
         {"version", no_argument, 0, 0},
         {"writefile", required_argument, 0, 'w'},
@@ -500,7 +502,7 @@ int falco_init(int argc, char **argv)
 		// Parse the args
 		//
 		while((op = getopt_long(argc, argv,
-                                        "hc:AbdD:e:F:ik:K:Ll:m:M:No:P:p:r:S:s:T:t:UvV:w:",
+                                        "hc:AbdD:e:F:ik:K:Ll:m:M:No:P:p:r:S:s:T:t:UuvV:w:",
                                         long_options, &long_index)) != -1)
 		{
 			switch(op)
@@ -606,6 +608,9 @@ int falco_init(int argc, char **argv)
 			case 'U':
 				buffered_outputs = false;
 				buffered_cmdline = true;
+				break;
+			case 'u':
+				udig = true;
 				break;
 			case 'v':
 				verbose = true;
@@ -1091,8 +1096,16 @@ int falco_init(int argc, char **argv)
 		}
 		else
 		{
-			open_t open_cb = [](sinsp* inspector) {
-				inspector->open();
+			open_t open_cb = [&udig](sinsp* inspector) 
+			{
+				if(udig)
+				{
+					inspector->open_udig();
+				}
+				else
+				{
+					inspector->open();
+				}
 			};
 			open_t open_nodriver_cb = [](sinsp* inspector) {
 				inspector->open_nodriver();
