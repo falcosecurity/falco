@@ -32,7 +32,9 @@ Falco can detect and alert on any behavior that involves making Linux system cal
 
 ### Installing Falco
 
-A comprehensive [installation guide](https://falco.org/docs/installation/) for Falco is available in the documentation website.
+You can find the latest release downloads on the official [release archive](https://bintray.com/falcosecurity)
+
+Furthermore the comprehensive [installation guide](https://falco.org/docs/installation/) for Falco is available in the documentation website.
 
 #### How do you compare Falco with other security tools?
 
