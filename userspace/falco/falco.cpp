@@ -89,6 +89,12 @@ static void usage()
 	   " --cri <path>                  Path to CRI socket for container metadata.\n"
 	   "                               Use the specified socket to fetch data from a CRI-compatible runtime.\n"
 	   " -d, --daemon                  Run as a daemon.\n"
+	   " --disable-cri-async           Disable asynchronous CRI metadata fetching.\n"
+	   "                               This is useful to let the input event wait for the container metadata fetch\n"
+	   "                               to finish before moving forward. Async fetching, in some environments leads\n"
+	   "                               to empty fields for container metadata when the fetch is not fast enough to be\n"
+	   "                               completed asynchronously. This can have a performance penalty on your environment\n"
+	   "                               depending on the number of containers and the frequency at which they are created/started/stopped\n"
 	   " --disable-source <event_source>\n"
 	   "                               Disable a specific event source.\n"
 	   "                               Available event sources are: syscall, k8s_audit.\n"
@@ -433,6 +439,7 @@ int falco_init(int argc, char **argv)
 	string list_flds_source = "";
 	bool print_support = false;
 	string cri_socket_path;
+	bool cri_async = true;
 	set<string> disable_sources;
 	bool disable_syscall = false;
 	bool disable_k8s_audit = false;
@@ -459,6 +466,7 @@ int falco_init(int argc, char **argv)
 	{
 		{"cri", required_argument, 0},
         {"daemon", no_argument, 0, 'd'},
+        {"disable-cri-async", no_argument, 0, 0},
         {"disable-source", required_argument, 0},
         {"help", no_argument, 0, 'h'},
         {"ignored-events", no_argument, 0, 'i'},
@@ -625,6 +633,10 @@ int falco_init(int argc, char **argv)
 						cri_socket_path = optarg;
 					}
 				}
+				else if (string(long_options[long_index].name) == "disable-cri-async")
+				{
+				  cri_async = false;
+				}
 				else if (string(long_options[long_index].name) == "list")
 				{
 					list_flds = true;
@@ -664,6 +676,9 @@ int falco_init(int argc, char **argv)
 		{
 			inspector->set_cri_socket_path(cri_socket_path);
 		}
+
+		// Decide wether to do sync or async for CRI metadata fetch
+		inspector->set_cri_async(cri_async);
 
 		//
 		// If required, set the snaplen
