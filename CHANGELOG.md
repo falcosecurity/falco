@@ -8,7 +8,7 @@ Released on 2020-03-17
 
 ### Major Changes
 
-* breaking change: the sysdig_bpf_probe environment variable is now just falco_bpf_probe (please update your systemd scripts or kubernetes deployments. [[#1050](https://github.com/falcosecurity/falco/pull/1050)]
+* BREAKING CHANGE: the SYSDIG_BPF_PROBE environment variable is now just FALCO_BPF_PROBE (please update your systemd scripts or kubernetes deployments. [[#1050](https://github.com/falcosecurity/falco/pull/1050)]
 * new: automatically publish deb packages (from git master branch) to public dev repository [[#1059](https://github.com/falcosecurity/falco/pull/1059)]
 * new: automatically publish rpm packages (from git master branch) to public dev repository [[#1059](https://github.com/falcosecurity/falco/pull/1059)]
 * new: automatically release deb packages (from git tags) to public repository [[#1059](https://github.com/falcosecurity/falco/pull/1059)]
