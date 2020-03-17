@@ -244,7 +244,7 @@ jobs:
           name: Publish deb
           command: |
             FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
-            jfrog bt u /build/release/falco-${FALCO_VERSION}-x86_64.deb falcosecurity/deb/falco/${FALCO_VERSION} stable/ --deb stable/main/amd64 --user poiana --key ${BINTRAY_SECRET} --publish --labels="falco","security","cncf","kubernetes"
+            jfrog bt u /build/release/falco-${FALCO_VERSION}-x86_64.deb falcosecurity/deb/falco/${FALCO_VERSION} stable/ --deb stable/main/amd64 --user poiana --key ${BINTRAY_SECRET} --publish
       - run:
           name: Publish rpm
           command: |
