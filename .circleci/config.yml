@@ -237,9 +237,9 @@ jobs:
           name: Create versions
           command: |
             FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
-            jfrog bt vc falcosecurity/deb/falco/${FALCO_VERSION} --desc="Falco (${CIRCLE_TAG})" --github-tag-rel-notes --released=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z") --vcs-tag=${CIRCLE_TAG} --user poiana --key ${BINTRAY_SECRET}
-            jfrog bt vc falcosecurity/rpm/falco/${FALCO_VERSION} --desc="Falco (${CIRCLE_TAG})" --github-tag-rel-notes --released=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z") --vcs-tag=${CIRCLE_TAG} --user poiana --key ${BINTRAY_SECRET}
-            jfrog bt vc falcosecurity/bin/falco/${FALCO_VERSION} --desc="Falco (${CIRCLE_TAG})" --github-tag-rel-notes --released=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z") --vcs-tag=${CIRCLE_TAG} --user poiana --key ${BINTRAY_SECRET}
+            jfrog bt vc falcosecurity/deb/falco/${FALCO_VERSION} --desc="Falco (${CIRCLE_TAG})" --released=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z") --vcs-tag=${CIRCLE_TAG} --user poiana --key ${BINTRAY_SECRET}
+            jfrog bt vc falcosecurity/rpm/falco/${FALCO_VERSION} --desc="Falco (${CIRCLE_TAG})" --released=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z") --vcs-tag=${CIRCLE_TAG} --user poiana --key ${BINTRAY_SECRET}
+            jfrog bt vc falcosecurity/bin/falco/${FALCO_VERSION} --desc="Falco (${CIRCLE_TAG})" --released=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z") --vcs-tag=${CIRCLE_TAG} --user poiana --key ${BINTRAY_SECRET}
       - run:
           name: Publish deb
           command: |
