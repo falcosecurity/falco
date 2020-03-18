@@ -182,7 +182,7 @@ ExternalProject_Add(
   INSTALL_COMMAND sh -c
                   "cp -R ${PROJECT_BINARY_DIR}/lyaml-prefix/src/lyaml/lib/* ${PROJECT_SOURCE_DIR}/userspace/engine/lua")
 
-# Intel TBB
+# One TBB
 set(TBB_SRC "${PROJECT_BINARY_DIR}/tbb-prefix/src/tbb")
 
 message(STATUS "Using bundled tbb in '${TBB_SRC}'")
@@ -191,8 +191,9 @@ set(TBB_INCLUDE_DIR "${TBB_SRC}/include/")
 set(TBB_LIB "${TBB_SRC}/build/lib_release/libtbb.a")
 ExternalProject_Add(
   tbb
-  URL "https://github.com/intel/tbb/archive/2018_U5.tar.gz"
+  URL "https://github.com/oneapi-src/oneTBB/archive/2018_U5.tar.gz"
   URL_MD5 "ff3ae09f8c23892fbc3008c39f78288f"
+  URL_HASH "SHA256=b8dbab5aea2b70cf07844f86fa413e549e099aa3205b6a04059ca92ead93a372"
   CONFIGURE_COMMAND ""
   BUILD_COMMAND ${CMD_MAKE} tbb_build_dir=${TBB_SRC}/build tbb_build_prefix=lib extra_inc=big_iron.inc
   BUILD_IN_SOURCE 1
