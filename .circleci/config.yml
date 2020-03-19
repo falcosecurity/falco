@@ -303,25 +303,28 @@ workflows:
       - "rpm/sign":
           context: falco
           filters:
+            tags:
+              ignore: /.*/
             branches:
-              only:
-                - master
+              only: master
           requires:
             - "tests/integration"
       - "publish/packages-dev":
           context: falco
           filters:
+            tags:
+              ignore: /.*/
             branches:
-              only:
-                - master
+              only: master
           requires:
             - "rpm/sign"
       - "publish/docker-dev":
           context: falco
           filters:
+            tags:
+              ignore: /.*/
             branches:
-              only:
-                - master
+              only: master
           requires:
             - "publish/packages-dev"
   release:
