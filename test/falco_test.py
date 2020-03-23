@@ -23,7 +23,7 @@ import shutil
 import stat
 import subprocess
 import sys
-import urllib
+import urllib.request
 
 from avocado import Test
 from avocado import main
@@ -141,7 +141,7 @@ class FalcoTest(Test):
         else:
             detect_counts = {}
             for item in self.detect_counts:
-                for key, value in item.items():
+                for key, value in list(item.items()):
                     detect_counts[key] = value
             self.detect_counts = detect_counts
 
@@ -184,7 +184,7 @@ class FalcoTest(Test):
         else:
             outputs = []
             for item in self.outputs:
-                for key, value in item.items():
+                for key, value in list(item.items()):
                     output = {}
                     output['file'] = key
                     output['line'] = value
@@ -238,7 +238,7 @@ class FalcoTest(Test):
         self.log.debug("Expected events for rules: {}".format(self.rules_events))
         self.log.debug("Actual events for rules: {}".format(found_events))
 
-        for rule in found_events.keys():
+        for rule in list(found_events.keys()):
             if found_events.get(rule) != self.rules_events.get(rule):
                 self.fail("rule {}: expected events {} differs from actual events {}".format(rule, self.rules_events.get(rule), found_events.get(rule)))
 
@@ -277,7 +277,7 @@ class FalcoTest(Test):
 
         triggered_rules = match.group(1)
 
-        for rule, count in self.detect_counts.items():
+        for rule, count in list(self.detect_counts.items()):
             expected = '\s{}: (\d+)'.format(re.sub(r'([$\.*+?()[\]{}|^])', r'\\\1', rule))
             match = re.search(expected, triggered_rules)
 
@@ -440,7 +440,7 @@ class FalcoTest(Test):
             if not os.path.isfile(self.psp_conv_path):
                 self.log.info("Downloading {} to {}".format(self.psp_conv_url, self.psp_conv_path))
 
-                urllib.urlretrieve(self.psp_conv_url, self.psp_conv_path)
+                urllib.request.urlretrieve(self.psp_conv_url, self.psp_conv_path)
                 os.chmod(self.psp_conv_path, stat.S_IEXEC)
 
             conv_cmd = '{} convert psp --psp-path {} --rules-path {}'.format(
