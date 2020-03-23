@@ -269,7 +269,7 @@ jobs:
       - run:
           name: Build and publish slim
           command: |
-            docker build --build-arg VERSION_BUCKET=deb -t "falcosecurity/falco:${CIRCLE_TAG}-slim" docker/slim
+            docker build --build-arg VERSION_BUCKET=deb --build-arg FALCO_VERSION=${CIRCLE_TAG} -t "falcosecurity/falco:${CIRCLE_TAG}-slim" docker/slim
             docker tag "falcosecurity/falco:${CIRCLE_TAG}-slim" falcosecurity/falco:latest-slim
             echo ${DOCKERHUB_SECRET} | docker login -u ${DOCKERHUB_USER} --password-stdin
             docker push "falcosecurity/falco:${CIRCLE_TAG}-slim"
@@ -286,7 +286,7 @@ jobs:
       - run:
           name: Build and publish stable
           command: |
-            docker build --build-arg VERSION_BUCKET=deb -t "falcosecurity/falco:${CIRCLE_TAG}" docker/stable
+            docker build --build-arg VERSION_BUCKET=deb --build-arg FALCO_VERSION=${CIRCLE_TAG} -t "falcosecurity/falco:${CIRCLE_TAG}" docker/stable
             docker tag "falcosecurity/falco:${CIRCLE_TAG}" falcosecurity/falco:latest
             echo ${DOCKERHUB_SECRET} | docker login -u ${DOCKERHUB_USER} --password-stdin
             docker push "falcosecurity/falco:${CIRCLE_TAG}"
