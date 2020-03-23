@@ -73,6 +73,7 @@ include(GetFalcoVersion)
 set(PACKAGE_NAME "falco")
 set(PROBE_NAME "falco-probe")
 set(PROBE_DEVICE_NAME "falco")
+set(DRIVER_LOOKUP_URL "https://s3.amazonaws.com/download.draios.com")
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   set(CMAKE_INSTALL_PREFIX
       /usr
