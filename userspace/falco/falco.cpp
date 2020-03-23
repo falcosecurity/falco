@@ -624,6 +624,7 @@ int falco_init(int argc, char **argv)
 				if(string(long_options[long_index].name) == "version")
 				{
 					printf("Falco version: %s\n", FALCO_VERSION);
+					printf("Driver version: %s\n", DRIVER_VERSION);
 					return EXIT_SUCCESS;
 				}
 				else if (string(long_options[long_index].name) == "cri")

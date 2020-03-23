@@ -31,4 +31,5 @@ limitations under the License.
 #define FALCO_INSTALL_CONF_FILE "/etc/falco/falco.yaml"
 #define FALCO_SOURCE_LUA_DIR "${PROJECT_SOURCE_DIR}/userspace/falco/lua/"
 
-#define PROBE_NAME "${PROBE_NAME}"
+#define PROBE_NAME "@PROBE_NAME@"
+#define DRIVER_VERSION "@PROBE_VERSION@"
