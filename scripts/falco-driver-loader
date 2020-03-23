@@ -25,20 +25,20 @@
 #
 cos_version_greater()
 {
-	if [[ $cos_ver == $base_ver ]]; then
+	if [[ $cos_ver == "${base_ver}" ]]; then
 		return 0
 	fi
 
 	#
 	# COS build numbers are in the format x.y.z
 	#
-	a=`echo $cos_ver | cut -d. -f1`
-	b=`echo $cos_ver | cut -d. -f2`
-	c=`echo $cos_ver | cut -d. -f3`
+	a=$(echo "${cos_ver}" | cut -d. -f1)
+	b=$(echo "${cos_ver}" | cut -d. -f2)
+	c=$(echo "${cos_ver}" | cut -d. -f3)
 
-	d=`echo $base_ver | cut -d. -f1`
-	e=`echo $base_ver | cut -d. -f2`
-	f=`echo $base_ver | cut -d. -f3`
+	d=$(echo "${base_ver}" | cut -d. -f1)
+	e=$(echo "${base_ver}" | cut -d. -f2)
+	f=$(echo "${base_ver}" | cut -d. -f3)
 
 	# Test the first component
 	if [[ $a -gt $d ]]; then
@@ -74,16 +74,16 @@ get_kernel_config() {
 	elif [ -f "/boot/config-${KERNEL_RELEASE}" ]; then
 		echo "Found kernel config at /boot/config-${KERNEL_RELEASE}"
 		KERNEL_CONFIG_PATH=/boot/config-${KERNEL_RELEASE}
-	elif [ ! -z "${HOST_ROOT}" ] && [ -f "${HOST_ROOT}/boot/config-${KERNEL_RELEASE}" ]; then
+	elif [ -n "${HOST_ROOT}" ] && [ -f "${HOST_ROOT}/boot/config-${KERNEL_RELEASE}" ]; then
 		echo "Found kernel config at ${HOST_ROOT}/boot/config-${KERNEL_RELEASE}"
 		KERNEL_CONFIG_PATH="${HOST_ROOT}/boot/config-${KERNEL_RELEASE}"
 	elif [ -f "/usr/lib/ostree-boot/config-${KERNEL_RELEASE}" ]; then
 		echo "Found kernel config at /usr/lib/ostree-boot/config-${KERNEL_RELEASE}"
 		KERNEL_CONFIG_PATH="/usr/lib/ostree-boot/config-${KERNEL_RELEASE}"
-	elif [ ! -z "${HOST_ROOT}" ] && [ -f "${HOST_ROOT}/usr/lib/ostree-boot/config-${KERNEL_RELEASE}" ]; then
+	elif [ -n "${HOST_ROOT}" ] && [ -f "${HOST_ROOT}/usr/lib/ostree-boot/config-${KERNEL_RELEASE}" ]; then
 		echo "Found kernel config at ${HOST_ROOT}/usr/lib/ostree-boot/config-${KERNEL_RELEASE}"
 		KERNEL_CONFIG_PATH="${HOST_ROOT}/usr/lib/ostree-boot/config-${KERNEL_RELEASE}"
-	elif [ -f /lib/modules/${KERNEL_RELEASE}/config ]; then
+	elif [ -f "/lib/modules/${KERNEL_RELEASE}/config" ]; then
 		# this code works both for native host and agent container assuming that
 		# Dockerfile sets up the desired symlink /lib/modules -> $HOST_ROOT/lib/modules
 		echo "Found kernel config at /lib/modules/${KERNEL_RELEASE}/config"
@@ -96,13 +96,13 @@ get_kernel_config() {
 	fi
 
 	if [[ "${KERNEL_CONFIG_PATH}" == *.gz ]]; then
-	    HASH=$(zcat "${KERNEL_CONFIG_PATH}" | md5sum - | cut -d' ' -f1)
+		HASH=$(zcat "${KERNEL_CONFIG_PATH}" | md5sum - | cut -d' ' -f1)
 	else
-	    HASH=$(md5sum "${KERNEL_CONFIG_PATH}" | cut -d' ' -f1)
+		HASH=$(md5sum "${KERNEL_CONFIG_PATH}" | cut -d' ' -f1)
 	fi
 }
 
-load_kernel_probe() {
+load_kernel_module() {
 	if ! hash lsmod > /dev/null 2>&1; then
 		echo "This program requires lsmod"
 		exit 1
@@ -122,13 +122,13 @@ load_kernel_probe() {
 	rmmod "${PROBE_NAME}" 2>/dev/null
 	WAIT_TIME=0
 	KMOD_NAME=$(echo "${PROBE_NAME}" | tr "-" "_")
-	while lsmod | grep "${KMOD_NAME}" > /dev/null 2>&1 && [ $WAIT_TIME -lt $MAX_RMMOD_WAIT ]; do
+	while lsmod | grep "${KMOD_NAME}" > /dev/null 2>&1 && [ $WAIT_TIME -lt "${MAX_RMMOD_WAIT}" ]; do
 		if rmmod "${PROBE_NAME}" 2>/dev/null; then
 			echo "* Unloading ${PROBE_NAME} succeeded after ${WAIT_TIME}s"
 			break
 		fi
 		((++WAIT_TIME))
-		if (( $WAIT_TIME % 5 == 0 )); then
+		if (( WAIT_TIME % 5 == 0 )); then
 			echo "* ${PROBE_NAME} still loaded, waited ${WAIT_TIME}s (max wait ${MAX_RMMOD_WAIT}s)"
 		fi
 		sleep 1
@@ -144,20 +144,20 @@ load_kernel_probe() {
 		echo "* Skipping dkms install for UEK host"
 	else
 		echo "* Running dkms install for ${PACKAGE_NAME}"
-		if dkms install -m "${PACKAGE_NAME}" -v "${FALCO_VERSION}" -k "${KERNEL_RELEASE}"; then
+		if dkms install -m "${PACKAGE_NAME}" -v "${DRIVER_VERSION}" -k "${KERNEL_RELEASE}"; then
 			echo "* Trying to load a dkms ${PROBE_NAME}, if present"
 
-			if insmod "/var/lib/dkms/${PACKAGE_NAME}/${FALCO_VERSION}/${KERNEL_RELEASE}/${ARCH}/module/${PROBE_NAME}.ko" > /dev/null 2>&1; then
+			if insmod "/var/lib/dkms/${PACKAGE_NAME}/${DRIVER_VERSION}/${KERNEL_RELEASE}/${ARCH}/module/${PROBE_NAME}.ko" > /dev/null 2>&1; then
 				echo "${PROBE_NAME} found and loaded in dkms"
 				exit 0
-			elif insmod "/var/lib/dkms/${PACKAGE_NAME}/${FALCO_VERSION}/${KERNEL_RELEASE}/${ARCH}/module/${PROBE_NAME}.ko.xz" > /dev/null 2>&1; then
+			elif insmod "/var/lib/dkms/${PACKAGE_NAME}/${DRIVER_VERSION}/${KERNEL_RELEASE}/${ARCH}/module/${PROBE_NAME}.ko.xz" > /dev/null 2>&1; then
 				echo "${PROBE_NAME} found and loaded in dkms (xz)"
 				exit 0
 			else
 				echo "* Unable to insmod"
 			fi
 		else
-			DKMS_LOG="/var/lib/dkms/${PACKAGE_NAME}/${FALCO_VERSION}/build/make.log"
+			DKMS_LOG="/var/lib/dkms/${PACKAGE_NAME}/${DRIVER_VERSION}/build/make.log"
 			if [ -f "${DKMS_LOG}" ]; then
 				echo "* Running dkms build failed, dumping ${DKMS_LOG}"
 				cat "${DKMS_LOG}"
@@ -178,7 +178,7 @@ load_kernel_probe() {
 
 	get_kernel_config
 
-	local FALCO_PROBE_FILENAME="${PROBE_NAME}-${FALCO_VERSION}-${ARCH}-${KERNEL_RELEASE}-${HASH}.ko"
+	local FALCO_PROBE_FILENAME="${PROBE_NAME}-${DRIVER_VERSION}-${ARCH}-${KERNEL_RELEASE}-${HASH}.ko"
 
 	if [ -f "${HOME}/.falco/${FALCO_PROBE_FILENAME}" ]; then
 		echo "Found precompiled module at ~/.falco/${FALCO_PROBE_FILENAME}, loading module"
@@ -209,7 +209,8 @@ load_bpf_probe() {
 
 	get_kernel_config
 
-	if [ ! -z "${HOST_ROOT}" ] && [ -f "${HOST_ROOT}/etc/os-release" ]; then
+	if [ -n "${HOST_ROOT}" ] && [ -f "${HOST_ROOT}/etc/os-release" ]; then
+		# shellcheck source=/dev/null
 		. "${HOST_ROOT}/etc/os-release"
 
 		if [ "${ID}" == "cos" ]; then
@@ -217,24 +218,24 @@ load_bpf_probe() {
 		fi
 	fi
 
-	if [ ! -z "${HOST_ROOT}" ] && [ -f "${HOST_ROOT}/etc/VERSION" ]; then
+	if [ -n "${HOST_ROOT}" ] && [ -f "${HOST_ROOT}/etc/VERSION" ]; then
 		MINIKUBE=1
-		MINIKUBE_VERSION="$(cat ${HOST_ROOT}/etc/VERSION)"
+		MINIKUBE_VERSION="$(cat "${HOST_ROOT}/etc/VERSION")"
 	fi
 
-	local BPF_PROBE_FILENAME="${BPF_PROBE_NAME}-${FALCO_VERSION}-${ARCH}-${KERNEL_RELEASE}-${HASH}.o"
+	local BPF_PROBE_FILENAME="${BPF_PROBE_NAME}-${DRIVER_VERSION}-${ARCH}-${KERNEL_RELEASE}-${HASH}.o"
 
 	if [ ! -f "${HOME}/.falco/${BPF_PROBE_FILENAME}" ]; then
 
-	        local BPF_KERNEL_SOURCES_URL=""
+		local BPF_KERNEL_SOURCES_URL=""
 		local STRIP_COMPONENTS=1
 
-	        customize_kernel_build() {
-		    if [ -n "${KERNEL_EXTRA_VERSION}" ]; then
+		customize_kernel_build() {
+			if [ -n "${KERNEL_EXTRA_VERSION}" ]; then
 			sed -i "s/LOCALVERSION=\"\"/LOCALVERSION=\"${KERNEL_EXTRA_VERSION}\"/" .config
-		    fi
-		    make olddefconfig > /dev/null
-		    make modules_prepare > /dev/null
+			fi
+			make olddefconfig > /dev/null
+			make modules_prepare > /dev/null
 		}
 
 		if [ -n "${COS}" ]; then
@@ -245,35 +246,37 @@ load_bpf_probe() {
 			STRIP_COMPONENTS=0
 
 			customize_kernel_build() {
-			    pushd usr/src/* > /dev/null
+				pushd usr/src/* > /dev/null || exit
 
-			    # Note: this overrides the KERNELDIR set while untarring the tarball
-			    export KERNELDIR=`pwd`
+				# Note: this overrides the KERNELDIR set while untarring the tarball
+				KERNELDIR=$(pwd)
+				export KERNELDIR
 
-			    sed -i '/^#define randomized_struct_fields_start	struct {$/d' include/linux/compiler-clang.h
-			    sed -i '/^#define randomized_struct_fields_end	};$/d' include/linux/compiler-clang.h
+				sed -i '/^#define randomized_struct_fields_start	struct {$/d' include/linux/compiler-clang.h
+				sed -i '/^#define randomized_struct_fields_end	};$/d' include/linux/compiler-clang.h
 
-			    popd > /dev/null
+				popd > /dev/null || exit
 
-			    # Might need to configure our own sources depending on COS version
-			    cos_ver=${BUILD_ID}
-			    base_ver=11553.0.0
+				# Might need to configure our own sources depending on COS version
+				cos_ver=${BUILD_ID}
+				base_ver=11553.0.0
 
-			    cos_version_greater
-			    greater_ret=$?
+				cos_version_greater
+				greater_ret=$?
 
-			    if [[ greater_ret -eq 1 ]]; then
+				if [[ greater_ret -eq 1 ]]; then
 				export KBUILD_EXTRA_CPPFLAGS=-DCOS_73_WORKAROUND
-			    fi
-                        }
+				fi
+						}
 		fi
 
 		if [ -n "${MINIKUBE}" ]; then
 			echo "* Minikube detected (${MINIKUBE_VERSION}), using linux kernel sources for minikube kernel"
-			local kernel_version=$(uname -r)
-			local -r kernel_version_major=$(echo ${kernel_version} | cut -d. -f1)
-			local -r kernel_version_minor=$(echo ${kernel_version} | cut -d. -f2)
-			local -r kernel_version_patch=$(echo ${kernel_version} | cut -d. -f3)
+			local kernel_version
+			kernel_version=$(uname -r)
+			local -r kernel_version_major=$(echo "${kernel_version}" | cut -d. -f1)
+			local -r kernel_version_minor=$(echo "${kernel_version}" | cut -d. -f2)
+			local -r kernel_version_patch=$(echo "${kernel_version}" | cut -d. -f3)
 
 			if [ "${kernel_version_patch}" == "0" ]; then
 				kernel_version="${kernel_version_major}.${kernel_version_minor}"
@@ -283,7 +286,7 @@ load_bpf_probe() {
 		fi
 
 		if [ -n "${BPF_USE_LOCAL_KERNEL_SOURCES}" ]; then
-		        local -r kernel_version_major=$(uname -r | cut -d. -f1)
+			local -r kernel_version_major=$(uname -r | cut -d. -f1)
 			local -r kernel_version=$(uname -r | cut -d- -f1)
 			KERNEL_EXTRA_VERSION="-$(uname -r | cut -d- -f2)"
 
@@ -296,8 +299,8 @@ load_bpf_probe() {
 			echo "* Downloading ${BPF_KERNEL_SOURCES_URL}"
 
 			mkdir -p /tmp/kernel
-			cd /tmp/kernel
-			cd `mktemp -d -p /tmp/kernel`
+			cd /tmp/kernel || exit
+			cd "$(mktemp -d -p /tmp/kernel)" || exit
 			if ! curl -o kernel-sources.tgz --create-dirs "${FALCO_PROBE_CURL_OPTIONS}" "${BPF_KERNEL_SOURCES_URL}"; then
 				exit 1;
 			fi
@@ -306,13 +309,14 @@ load_bpf_probe() {
 
 			mkdir kernel-sources && tar xf kernel-sources.tgz -C kernel-sources --strip-components "${STRIP_COMPONENTS}"
 
-			cd kernel-sources
-			export KERNELDIR=`pwd`
+			cd kernel-sources || exit
+			KERNELDIR=$(pwd)
+			export KERNELDIR
 
 			if [[ "${KERNEL_CONFIG_PATH}" == *.gz ]]; then
-			    zcat "${KERNEL_CONFIG_PATH}" > .config
+				zcat "${KERNEL_CONFIG_PATH}" > .config
 			else
-			    cat "${KERNEL_CONFIG_PATH}" > .config
+				cat "${KERNEL_CONFIG_PATH}" > .config
 			fi
 
 			echo "* Configuring kernel"
@@ -321,10 +325,10 @@ load_bpf_probe() {
 
 		echo "* Trying to compile BPF probe ${BPF_PROBE_NAME} (${BPF_PROBE_FILENAME})"
 
-		make -C "/usr/src/${PACKAGE_NAME}-${FALCO_VERSION}/bpf" > /dev/null
+		make -C "/usr/src/${PACKAGE_NAME}-${DRIVER_VERSION}/bpf" > /dev/null
 
 		mkdir -p ~/.falco
-		mv "/usr/src/${PACKAGE_NAME}-${FALCO_VERSION}/bpf/probe.o" "${HOME}/.falco/${BPF_PROBE_FILENAME}"
+		mv "/usr/src/${PACKAGE_NAME}-${DRIVER_VERSION}/bpf/probe.o" "${HOME}/.falco/${BPF_PROBE_FILENAME}"
 
 		if [ -n "${BPF_KERNEL_SOURCES_URL}" ]; then
 			rm -r /tmp/kernel
@@ -363,7 +367,7 @@ load_bpf_probe() {
 ARCH=$(uname -m)
 KERNEL_RELEASE=$(uname -r)
 SCRIPT_NAME=$(basename "${0}")
-PROBE_URL=${PROBE_URL:-https://s3.amazonaws.com/download.draios.com}
+PROBE_URL=${PROBE_URL:-"@DRIVER_LOOKUP_URL@"}
 if [ -n "$PROBE_INSECURE_DOWNLOAD" ]
 then
 	FALCO_PROBE_CURL_OPTIONS=-fsSk
@@ -380,15 +384,13 @@ if [ -z "${PACKAGES_REPOSITORY}" ]; then
 	PACKAGES_REPOSITORY="stable"
 fi
 
-if [ "${SCRIPT_NAME}" = "falco-probe-loader" ]; then
-        if [ -z "$FALCO_VERSION" ]; then
-	    FALCO_VERSION=$(falco --version | cut -d' ' -f3)
-	fi
-	PROBE_NAME="falco-probe"
-	BPF_PROBE_NAME="falco-probe-bpf"
-	PACKAGE_NAME="falco"
+if [ "${SCRIPT_NAME}" = "falco-driver-loader" ]; then
+	DRIVER_VERSION="@PROBE_VERSION@"
+	PROBE_NAME="@PROBE_NAME@"
+	BPF_PROBE_NAME="@PROBE_NAME@-bpf"
+	PACKAGE_NAME="@PACKAGE_NAME@"
 else
-	echo "This script must be called as falco-probe-loader"
+	echo "This script must be called as falco-driver-loader"
 	exit 1
 fi
 
@@ -405,5 +407,5 @@ fi
 if [ -v FALCO_BPF_PROBE ] || [ "${1}" = "bpf" ]; then
 	load_bpf_probe
 else
-	load_kernel_probe
+	load_kernel_module
 fi
