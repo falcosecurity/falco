@@ -397,7 +397,8 @@ class FalcoTest(Test):
                 os.remove(rmfile)
 
         if self.copy_local_driver:
-            verstr = subprocess.check_output([self.falco_binary_path, "--version"]).rstrip()
+            verlines = [str.strip() for str in subprocess.check_output([self.falco_binary_path, "--version"]).splitlines()]
+            verstr = verlines[0].decode("utf-8")
             self.log.info("verstr {}".format(verstr))
             falco_version = verstr.split(" ")[2]
             self.log.info("falco_version {}".format(falco_version))
@@ -406,7 +407,7 @@ class FalcoTest(Test):
             kernel_release = subprocess.check_output(["uname", "-r"]).rstrip()
             self.log.info("kernel release {}".format(kernel_release))
 
-            # falco-probe-loader has a more comprehensive set of ways to
+            # falco-driver-loader has a more comprehensive set of ways to
             # find the config hash. We only look at /boot/config-<kernel release>
             md5_output = subprocess.check_output(["md5sum", "/boot/config-{}".format(kernel_release)]).rstrip()
             config_hash = md5_output.split(" ")[0]
