@@ -47,7 +47,7 @@ case "$CMD" in
 "test")
     if [ -z "$FALCO_VERSION" ]; then
         echo "Automatically figuring out Falco version."
-        FALCO_VERSION=$("$BUILD_DIR/$BUILD_TYPE/userspace/falco/falco" --version | cut -d' ' -f3 | tr -d '\r')
+        FALCO_VERSION=$("$BUILD_DIR/$BUILD_TYPE/userspace/falco/falco" --version | head -n 1 | cut -d' ' -f3 | tr -d '\r')
         echo "Falco version: $FALCO_VERSION"
     fi
     if [ -z "$FALCO_VERSION" ]; then
