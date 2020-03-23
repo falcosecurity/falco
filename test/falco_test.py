@@ -175,7 +175,7 @@ class FalcoTest(Test):
         self.copy_local_driver = self.params.get('copy_local_driver', '*', default=False)
 
         # Used by possibly_copy_local_driver as well as docker run
-        self.module_dir = os.path.expanduser("~/.sysdig")
+        self.module_dir = os.path.expanduser("~/.falco")
 
         self.outputs = self.params.get('outputs', '*', default='')
 
@@ -335,7 +335,7 @@ class FalcoTest(Test):
             self.falco_binary_path = "docker run --rm --name falco-test --privileged " \
                                      "-v /var/run/docker.sock:/host/var/run/docker.sock " \
                                      "-v /dev:/host/dev -v /proc:/host/proc:ro -v /boot:/host/boot:ro " \
-                                     "-v /lib/modules:/host/lib/modules:ro -v {}:/root/.sysdig:ro " \
+                                     "-v /lib/modules:/host/lib/modules:ro -v {}:/root/.falco:ro " \
                                      "-v /usr:/host/usr:ro {} {} falco".format(
                                          self.module_dir, self.addl_docker_run_args, image)
 
@@ -387,8 +387,7 @@ class FalcoTest(Test):
             res = process.run(cmdline, timeout=120, sudo=True)
 
     def possibly_copy_driver(self):
-        # Remove the contents of ~/.sysdig regardless of
-        # copy_local_driver.
+        # Remove the contents of ~/.falco regardless of copy_local_driver.
         self.log.debug("Checking for module dir {}".format(self.module_dir))
         if os.path.isdir(self.module_dir):
             self.log.info("Removing files below directory {}".format(self.module_dir))
