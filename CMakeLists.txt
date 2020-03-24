@@ -94,7 +94,7 @@ set(NJSON_INCLUDE "${NJSON_SRC}/single_include")
 ExternalProject_Add(
   njson
   URL "https://s3.amazonaws.com/download.draios.com/dependencies/njson-3.3.0.tar.gz"
-  URL_MD5 "e26760e848656a5da400662e6c5d999a"
+  URL_HASH "SHA256=2fd1d207b4669a7843296c41d3b6ac5b23d00dec48dba507ba051d14564aa801"
   CONFIGURE_COMMAND ""
   BUILD_COMMAND ""
   INSTALL_COMMAND "")
@@ -113,7 +113,7 @@ set(B64_LIB "${B64_SRC}/src/libb64.a")
 ExternalProject_Add(
   b64
   URL "https://s3.amazonaws.com/download.draios.com/dependencies/libb64-1.2.src.zip"
-  URL_MD5 "a609809408327117e2c643bed91b76c5"
+  URL_HASH "SHA256=343d8d61c5cbe3d3407394f16a5390c06f8ff907bd8d614c16546310b689bfd3"
   CONFIGURE_COMMAND ""
   BUILD_COMMAND ${CMD_MAKE}
   BUILD_IN_SOURCE 1
@@ -136,7 +136,7 @@ set(LUAJIT_LIB "${LUAJIT_SRC}/libluajit.a")
 ExternalProject_Add(
   luajit
   URL "https://s3.amazonaws.com/download.draios.com/dependencies/LuaJIT-2.0.3.tar.gz"
-  URL_MD5 "f14e9104be513913810cd59c8c658dc0"
+  URL_HASH "SHA256=55be6cb2d101ed38acca32c5b1f99ae345904b365b642203194c585d27bebd79"
   CONFIGURE_COMMAND ""
   BUILD_COMMAND ${CMD_MAKE}
   BUILD_IN_SOURCE 1
@@ -152,7 +152,7 @@ ExternalProject_Add(
   lpeg
   DEPENDS ${LPEG_DEPENDENCIES}
   URL "https://s3.amazonaws.com/download.draios.com/dependencies/lpeg-1.0.0.tar.gz"
-  URL_MD5 "0aec64ccd13996202ad0c099e2877ece"
+  URL_HASH "SHA256=10190ae758a22a16415429a9eb70344cf29cbda738a6962a9f94a732340abf8e"
   BUILD_COMMAND LUA_INCLUDE=${LUAJIT_INCLUDE} "${PROJECT_SOURCE_DIR}/scripts/build-lpeg.sh" "${LPEG_SRC}/build"
   BUILD_IN_SOURCE 1
   CONFIGURE_COMMAND ""
@@ -176,7 +176,7 @@ ExternalProject_Add(
   lyaml
   DEPENDS ${LYAML_DEPENDENCIES}
   URL "https://s3.amazonaws.com/download.draios.com/dependencies/lyaml-release-v6.0.tar.gz"
-  URL_MD5 "dc3494689a0dce7cf44e7a99c72b1f30"
+  URL_HASH "SHA256=9d7cf74d776999ff6f758c569d5202ff5da1f303c6f4229d3b41f71cd3a3e7a7"
   BUILD_COMMAND ${CMD_MAKE}
   BUILD_IN_SOURCE 1
   CONFIGURE_COMMAND ./configure --enable-static LIBS=-lyaml LUA_INCLUDE=-I${LUAJIT_INCLUDE} LUA=${LUAJIT_SRC}/luajit
@@ -193,7 +193,6 @@ set(TBB_LIB "${TBB_SRC}/build/lib_release/libtbb.a")
 ExternalProject_Add(
   tbb
   URL "https://github.com/oneapi-src/oneTBB/archive/2018_U5.tar.gz"
-  URL_MD5 "ff3ae09f8c23892fbc3008c39f78288f"
   URL_HASH "SHA256=b8dbab5aea2b70cf07844f86fa413e549e099aa3205b6a04059ca92ead93a372"
   CONFIGURE_COMMAND ""
   BUILD_COMMAND ${CMD_MAKE} tbb_build_dir=${TBB_SRC}/build tbb_build_prefix=lib extra_inc=big_iron.inc
@@ -209,7 +208,7 @@ message(STATUS "Using bundled civetweb in '${CIVETWEB_SRC}'")
 ExternalProject_Add(
   civetweb
   URL "https://github.com/civetweb/civetweb/archive/v1.11.tar.gz"
-  URL_MD5 "b6d2175650a27924bccb747cbe084cd4"
+  URL_HASH "SHA256=de7d5e7a2d9551d325898c71e41d437d5f7b51e754b242af897f7be96e713a42"
   CONFIGURE_COMMAND ${CMAKE_COMMAND} -E make_directory ${CIVETWEB_SRC}/install/lib
   COMMAND ${CMAKE_COMMAND} -E make_directory ${CIVETWEB_SRC}/install/include
   BUILD_IN_SOURCE 1

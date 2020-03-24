@@ -21,7 +21,7 @@ else()
     openssl
     # START CHANGE for CVE-2017-3735, CVE-2017-3731, CVE-2017-3737, CVE-2017-3738, CVE-2017-3736
     URL "https://s3.amazonaws.com/download.draios.com/dependencies/openssl-1.0.2n.tar.gz"
-    URL_MD5 "13bdc1b1d1ff39b6fd42a255e74676a4"
+    URL_HASH "SHA256=370babb75f278c39e0c50e8c4e7493bc0f18db6867478341a832a982fd15a8fe"
     # END CHANGE for CVE-2017-3735, CVE-2017-3731, CVE-2017-3737, CVE-2017-3738, CVE-2017-3736
     CONFIGURE_COMMAND ./config shared --prefix=${OPENSSL_INSTALL_DIR}
     BUILD_COMMAND ${CMD_MAKE}

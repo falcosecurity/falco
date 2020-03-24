@@ -15,7 +15,7 @@ include(ExternalProject)
 set(CATCH2_INCLUDE ${CMAKE_BINARY_DIR}/catch2-prefix/include)
 
 set(CATCH_EXTERNAL_URL URL https://github.com/catchorg/catch2/archive/v2.9.1.tar.gz URL_HASH
-                       MD5=4980778888fed635bf191d8a86f9f89c)
+                       SHA256=0b36488aca6265e7be14da2c2d0c748b4ddb9c70a1ea4da75736699c629f14ac)
 
 ExternalProject_Add(
   catch2
