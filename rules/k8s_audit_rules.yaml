@@ -418,3 +418,110 @@
   priority: DEBUG
   source: k8s_audit
   tags: [k8s]
+
+
+
+- list: full_admin_k8s_users
+  items: ["admin", "kubernetes-admin",  "kubernetes-admin@kubernetes", "default", "kubernetes-admin@cluster.local", "minikube-user"]
+
+- macro: allowed_full_admin_users
+  condition: (k8s_audit_always_true)
+
+# # How to test:
+# # Execute any kubectl command connected using default cluster user, as:
+# kubectl create namespace rule-test
+
+- rule: Full K8s Administrative Access
+  desc: Detect any k8s operation by an administrator with full access.
+  condition: >
+    kevt 
+    and non_system_user 
+    and ka.user.name in (admin_k8s_users) 
+    and not allowed_full_admin_users
+  output: K8s Operation performed by full admin user (user=%ka.user.name target=%ka.target.name/%ka.target.resource verb=%ka.verb uri=%ka.uri resp=%ka.response.code)
+  priority: WARNING
+  source: k8s_audit
+  tags: [k8s]
+
+
+
+- macro: ingress
+  condition: ka.target.resource=ingresses
+
+- macro: ingress_tls
+  condition: (jevt.value[/requestObject/spec/tls] exists)
+
+# # How to test:
+# # Create an ingress.yaml file with content:
+# apiVersion: networking.k8s.io/v1beta1
+# kind: Ingress
+# metadata:
+#   name: test-ingress
+#   annotations:
+#     nginx.ingress.kubernetes.io/rewrite-target: /
+# spec:
+#   rules:
+#   - http:
+#       paths:
+#       - path: /testpath
+#         backend:
+#           serviceName: test
+#           servicePort: 80
+# # Execute: kubectl apply -f ingress.yaml
+
+- rule: Ingress Object without TLS Certificate Created
+  desc: Detect any attempt to create an ingress without TLS certification.
+  condition: >
+    (kactivity and kcreate and ingress and response_successful and not ingress_tls)
+  output: >
+    K8s Ingress Without TLS Cert Created (user=%ka.user.name ingress=%ka.target.name
+    namespace=%ka.target.namespace)
+  source: k8s_audit    
+  priority: WARNING
+  tags: [k8s, network]
+
+
+
+- macro: node
+  condition: ka.target.resource=nodes
+
+- macro: allow_all_k8s_nodes
+  condition: (k8s_audit_always_true)
+
+- list: allowed_k8s_nodes
+  items: []
+
+# # How to test:
+# # Create a Falco monitored cluster with Kops
+# # Increase the number of minimum nodes with:
+# kops edit ig nodes
+# kops apply --yes
+
+- rule: Untrusted Node Successfully Joined the Cluster
+  desc: >
+    Detect a node successfully joined the cluster outside of the list of allowed nodes.
+  condition: >
+    kevt and node 
+    and kcreate 
+    and response_successful 
+    and not allow_all_k8s_nodes 
+    and not ka.target.name in (allowed_k8s_nodes)
+  output: Node not in allowed list successfully joined the cluster (user=%ka.user.name node=%ka.target.name)
+  priority: ERROR
+  source: k8s_audit
+  tags: [k8s]
+
+- rule: Untrusted Node Unsuccessfully Tried to Join the Cluster
+  desc: >
+    Detect an unsuccessful attempt to join the cluster for a node not in the list of allowed nodes.
+  condition: >
+    kevt and node 
+    and kcreate 
+    and not response_successful 
+    and not allow_all_k8s_nodes 
+    and not ka.target.name in (allowed_k8s_nodes)
+  output: Node not in allowed list tried unsuccessfully to join the cluster  (user=%ka.user.name node=%ka.target.name reason=%ka.response.reason)
+  priority: WARNING
+  source: k8s_audit
+  tags: [k8s]
+
