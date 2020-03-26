@@ -2700,6 +2700,89 @@
   priority: NOTICE
   tags: [network, mitre_discovery]
   
+# Change to (always_true) to enable rule 'Network connection outside local subnet'
+- macro: enabled_rule_network_only_subnet
+  condition: (never_true)
+
+# Images that are allowed to have outbound traffic
+- list: images_allow_network_outside_subnet
+  items: []
+
+# Namespaces where the rule is enforce
+- list: namespace_scope_network_only_subnet
+  items: [] 
+
+- macro: network_local_subnet
+  condition: >
+    fd.rnet in (rfc_1918_addresses) or
+    fd.ip = "0.0.0.0" or 
+    fd.net = "127.0.0.0/8"
+
+# # How to test:
+# # Change macro enabled_rule_network_only_subnet to condition: always_true
+# # Add 'default' to namespace_scope_network_only_subnet
+# # Run:
+# kubectl run --generator=run-pod/v1 -n default -i --tty busybox --image=busybox --rm -- wget google.com -O /var/google.html
+# # Check logs running  
+
+- rule: Network Connection outside Local Subnet
+  desc: Detect traffic to image outside local subnet.
+  condition: >
+    enabled_rule_network_only_subnet and
+    inbound_outbound and 
+    container and
+    not network_local_subnet and
+    k8s.ns.name in (namespace_scope_network_only_subnet)
+  output: >
+    Network connection outside local subnet
+    (command=%proc.cmdline connection=%fd.name user=%user.name container_id=%container.id 
+    image=%container.image.repository namespace=%k8s.ns.name
+    fd.rip.name=%fd.rip.name fd.lip.name=%fd.lip.name fd.cip.name=%fd.cip.name fd.sip.name=%fd.sip.name)
+  priority: WARNING
+  tags: [network]
+  
+
+
+- macro: allowed_port
+  condition: (never_true)
+
+- list: allowed_image
+  items: [] # add image to monitor, i.e.: bitnami/nginx
+
+- list: authorized_server_binaries
+  items: []  # add binary to allow, i.e.: nginx
+
+- list: authorized_server_port
+  items: [] # add port to allow, i.e.: 80
+
+# # How to test:
+# kubectl run --image=nginx nginx-app --port=80 --env="DOMAIN=cluster"
+# kubectl expose deployment nginx-app --port=80 --name=nginx-http --type=LoadBalancer
+# # On minikube:
+# minikube service nginx-http
+# # On general K8s:
+# kubectl get services
+# kubectl cluster-info
+# # Visit the Nginx service and port, should not fire.
+# # Change rule to different port, then different process name, and test again that it fires.
+
+- rule: Outbound or Inbound Traffic not to Authorized Server Process and Port
+  desc: Detect traffic that is not to authorized server process and port.
+  condition: >
+    allowed_port and
+    inbound_outbound and
+    container and
+    container.image.repository in (allowed_image) and
+    not proc.name in (authorized_server_binary) and
+    not fd.sport in (authorized_server_port)
+  output: >
+    Network connection outside authorized port and binary
+    (command=%proc.cmdline connection=%fd.name user=%user.name container_id=%container.id 
+    image=%container.image.repository)
+  priority: WARNING
+  tags: [network]
+
+
 
 # Application rules have moved to application_rules.yaml. Please look
 # there if you want to enable them by adding to
