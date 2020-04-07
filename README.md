@@ -5,12 +5,17 @@
 
 # The Falco Project
 
-#### Latest release
-
-**v0.21.0**
-Read the [change log](CHANGELOG.md)
-
 [![Build Status](https://img.shields.io/circleci/build/github/falcosecurity/falco/master?style=for-the-badge)](https://circleci.com/gh/falcosecurity/falco) [![CII Best Practices Summary](https://img.shields.io/cii/summary/2317?label=CCI%20Best%20Practices&style=for-the-badge)](https://bestpractices.coreinfrastructure.org/projects/2317) [![GitHub](https://img.shields.io/github/license/falcosecurity/falco?style=for-the-badge)](COPYING)
+
+#### Latest releases
+
+Read the [change log](CHANGELOG.md).
+
+|        | development                                                                                                                 | stable                                                                                                              |
+|--------|-----------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
+| rpm    | [![rpm-dev](https://img.shields.io/bintray/v/falcosecurity/rpm-dev/falco?label=Falco&color=%2300aec7&style=flat-square)][1] | [![rpm](https://img.shields.io/bintray/v/falcosecurity/rpm/falco?label=Falco&color=%23005763&style=flat-square)][2] |
+| deb    | [![deb-dev](https://img.shields.io/bintray/v/falcosecurity/deb-dev/falco?label=Falco&color=%2300aec7&style=flat-square)][3] | [![deb](https://img.shields.io/bintray/v/falcosecurity/deb/falco?label=Falco&color=%23005763&style=flat-square)][4] |
+| binary | [![bin-dev](https://img.shields.io/bintray/v/falcosecurity/bin-dev/falco?label=Falco&color=%2300aec7&style=flat-square)][5] | [![bin](https://img.shields.io/bintray/v/falcosecurity/bin/falco?label=Falco&color=%23005763&style=flat-square)][6] |
 
 ---
 
@@ -71,11 +76,9 @@ A third party security audit was performed by Cure53, you can see the full repor
 ### Reporting security vulnerabilities
 Please report security vulnerabilities following the community process documented [here](https://github.com/falcosecurity/.github/blob/master/SECURITY.md).
 
-Versions
----
-
-|        | development                                                                                                            | stable                                                                                                         |
-|--------|------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------|
-| rpm    | ![rpm-dev](https://img.shields.io/bintray/v/falcosecurity/rpm-dev/falco?label=Falco&color=%2300aec7&style=flat-square) | ![rpm](https://img.shields.io/bintray/v/falcosecurity/rpm/falco?label=Falco&color=%23005763&style=flat-square) |
-| deb    | ![deb-dev](https://img.shields.io/bintray/v/falcosecurity/deb-dev/falco?label=Falco&color=%2300aec7&style=flat-square) | ![deb](https://img.shields.io/bintray/v/falcosecurity/deb/falco?label=Falco&color=%23005763&style=flat-square) |
-| binary | ![bin-dev](https://img.shields.io/bintray/v/falcosecurity/bin-dev/falco?label=Falco&color=%2300aec7&style=flat-square) | ![bin](https://img.shields.io/bintray/v/falcosecurity/bin/falco?label=Falco&color=%23005763&style=flat-square) |
+[1]: https://dl.bintray.com/falcosecurity/rpm-dev
+[2]: https://dl.bintray.com/falcosecurity/rpm
+[3]: https://dl.bintray.com/falcosecurity/deb-dev/stable
+[4]: https://dl.bintray.com/falcosecurity/deb/stable
+[5]: https://dl.bintray.com/falcosecurity/bin-dev/x86_64
+[6]: https://dl.bintray.com/falcosecurity/bin/x86_64
