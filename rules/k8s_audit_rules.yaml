@@ -420,6 +420,10 @@
   tags: [k8s]
 
 
+# This macro disables following rule, change to k8s_audit_never_true to enable it
+- macro: allowed_full_admin_users
+  condition: (k8s_audit_always_true)
+
 # This list includes some of the default user names for an administrator in several K8s installations
 - list: full_admin_k8s_users
   items: ["admin", "kubernetes-admin",  "kubernetes-admin@kubernetes", "kubernetes-admin@cluster.local", "minikube-user"]
