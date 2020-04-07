@@ -420,19 +420,23 @@
   tags: [k8s]
 
 
-
+# This list includes some of the default user names for an administrator in several K8s installations
 - list: full_admin_k8s_users
-  items: ["admin", "kubernetes-admin",  "kubernetes-admin@kubernetes", "default", "kubernetes-admin@cluster.local", "minikube-user"]
+  items: ["admin", "kubernetes-admin",  "kubernetes-admin@kubernetes", "kubernetes-admin@cluster.local", "minikube-user"]
 
-- macro: allowed_full_admin_users
-  condition: (k8s_audit_always_true)
+# This rules detect an operation triggered by an user name that is 
+# included in the list of those that are default administrators upon 
+# cluster creation. This may signify a permission setting too broader. 
+# As we can't check for role of the user on a general ka.* event, this 
+# may or may not be an administrator. Customize the full_admin_k8s_users 
+# list to your needs, and activate at your discrection.
 
 # # How to test:
 # # Execute any kubectl command connected using default cluster user, as:
 # kubectl create namespace rule-test
 
 - rule: Full K8s Administrative Access
-  desc: Detect any k8s operation by an administrator with full access.
+  desc: Detect any k8s operation by a user name that may be an administrator with full access.
   condition: >
     kevt 
     and non_system_user 
