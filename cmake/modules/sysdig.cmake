@@ -26,8 +26,8 @@ file(MAKE_DIRECTORY ${SYSDIG_CMAKE_WORKING_DIR})
 # To update sysdig version for the next release, change the default below
 # In case you want to test against another sysdig version just pass the variable - ie., `cmake -DSYSDIG_VERSION=dev ..`
 if(NOT SYSDIG_VERSION)
-  set(SYSDIG_VERSION "be1ea2d9482d0e6e2cb14a0fd7e08cbecf517f94")
-  set(SYSDIG_CHECKSUM "SHA256=1c69363e4c36cdaeed413c2ef557af53bfc4bf1109fbcb6d6e18dc40fe6ddec8")
+  set(SYSDIG_VERSION "d809a4cc0575f0268963de8eb92ba9416a485d8b")
+  set(SYSDIG_CHECKSUM "SHA256=0b6bcae815c537893e75cef20a48287c91764a76f64b147b596d44f08242089f")
 endif()
 set(PROBE_VERSION "${SYSDIG_VERSION}")
 
