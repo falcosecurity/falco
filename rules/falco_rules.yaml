@@ -1361,7 +1361,7 @@
   condition: >
     root_dir and evt.dir = < and open_write
     and not fd.name in (known_root_files)
-    and not fd.directory in (known_root_directories)
+    and not fd.directory pmatch (known_root_directories)
     and not exe_running_docker_save
     and not gugent_writing_guestagent_log
     and not dse_writing_tmp
