@@ -2480,7 +2480,7 @@
     Shell history had been deleted or renamed (user=%user.name type=%evt.type command=%proc.cmdline fd.name=%fd.name name=%evt.arg.name path=%evt.arg.path oldpath=%evt.arg.oldpath %container.info)
   priority:
     WARNING
-  tags: [process, mitre_defense_evation]
+  tags: [process, mitre_defense_evasion]
 
 # This rule is deprecated and will/should never be triggered. Keep it here for backport compatibility.
 # Rule Delete or rename shell history is the preferred rule to use now.
