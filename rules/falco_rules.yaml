@@ -2493,7 +2493,7 @@
     Shell history had been deleted or renamed (user=%user.name type=%evt.type command=%proc.cmdline fd.name=%fd.name name=%evt.arg.name path=%evt.arg.path oldpath=%evt.arg.oldpath %container.info)
   priority:
     WARNING
-  tags: [process, mitre_defense_evation]
+  tags: [process, mitre_defense_evasion]
 
 - macro: consider_all_chmods
   condition: (always_true)
