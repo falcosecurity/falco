@@ -2795,7 +2795,12 @@
   priority: WARNING
   tags: [network]
 
-
+- rule: Reverse shell
+  desc: Detect reverse shell established remote connection in container.
+  condition: evt.type=dup and evt.dir=> and container and fd.num in (0, 1, 2) and fd.type in ("ipv4", "ipv6")
+  output: >
+    Reverse shell connection (user=%user.name %container.info process=%proc.name parent=%proc.pname cmdline=%proc.cmdline terminal=%proc.tty container_id=%container.id image=%container.image.repository fd.name=%fd.name fd.num=%fd.num fd.type=%fd.type fd.sip=%fd.sip)
+  priority: WARNING
 
 # Application rules have moved to application_rules.yaml. Please look
 # there if you want to enable them by adding to
