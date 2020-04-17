@@ -43,6 +43,6 @@ case "$1" in
 esac
 
 if [ -x "/etc/init.d/$NAME" ]; then
-        update-rc.d $NAME defaults >/dev/null
+		update-rc.d $NAME defaults >/dev/null
 fi
 
