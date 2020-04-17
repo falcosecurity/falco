@@ -2,6 +2,26 @@
 
 This file documents all notable changes to Falco. The release numbering uses [semantic versioning](http://semver.org).
 
+## v0.22.1
+
+Released on 2020-17-04
+
+### Major Changes
+
+* Same as v0.22.0
+
+### Minor Changes
+
+* Same as v0.22.0
+
+### Bug Fixes
+
+* fix: correct driver path (/usr/src/falco-%driver_version%) for RPM package [[#1148](https://github.com/falcosecurity/falco/pull/1148)]
+
+### Rule Changes
+
+* Same as v0.22.0
+
 ## v0.22.0
 
 Released on 2020-16-04
@@ -229,7 +249,7 @@ Released 2019-09-26
 
 * Same as v0.17.0
 
-##
+### Minor Changes
 
 * Same as v0.17.0
 
