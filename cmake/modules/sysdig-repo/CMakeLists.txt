@@ -15,20 +15,14 @@ cmake_minimum_required(VERSION 3.5.1)
 project(sysdig-repo NONE)
 
 include(ExternalProject)
-
-# The sysdig git reference (branch name, commit hash, or tag)
-
-# To update sysdig version for the next release, change the default below
-# In case you want to test against another sysdig version just pass the variable - ie., `cmake -DSYSDIG_VERSION=dev ..`
-if(NOT SYSDIG_VERSION)
-  set(SYSDIG_VERSION "146a431edf95829ac11bfd9c85ba3ef08789bffe")
-endif()
+message(STATUS "Driver version: ${SYSDIG_VERSION}")
 
 ExternalProject_Add(
   sysdig
   URL "https://github.com/draios/sysdig/archive/${SYSDIG_VERSION}.tar.gz"
-  # URL_HASH SHA256=bd09607aa8beb863db07e695863f7dc543e2d39e7153005759d26a340ff66fa5
+  URL_HASH "${SYSDIG_CHECKSUM}"
   CONFIGURE_COMMAND ""
   BUILD_COMMAND ""
   INSTALL_COMMAND ""
-  TEST_COMMAND "")
+  TEST_COMMAND ""
+  PATCH_COMMAND patch -p1 -i ${CMAKE_CURRENT_SOURCE_DIR}/patch/libscap.patch)

@@ -62,5 +62,6 @@ public:
 	mutable void* m_stream = nullptr; // todo(fntlnz, leodido) > useful in the future
 	mutable bool m_has_more = false;
 };
+
 } // namespace grpc
 } // namespace falco

@@ -15,6 +15,7 @@ limitations under the License.
 */
 
 #include "utils.h"
+#include "banned.h" // This raises a compilation error when certain functions are used
 
 void falco::utils::read(const std::string& filename, std::string& data)
 {

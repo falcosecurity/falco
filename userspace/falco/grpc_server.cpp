@@ -22,81 +22,27 @@ limitations under the License.
 
 #include "logger.h"
 #include "grpc_server.h"
-#include "grpc_context.h"
+#include "grpc_request_context.h"
 #include "utils.h"
+#include "banned.h" // This raises a compilation error when certain functions are used
 
-#define REGISTER_STREAM(req, res, svc, rpc, impl, num)                                  \
-	std::vector<request_stream_context<req, res>> rpc##_contexts(num);         \
-	for(request_stream_context<req, res> & ctx : rpc##_contexts)               \
-	{                                                                          \
-		ctx.m_process_func = &server::impl;                                \
-		ctx.m_request_func = &svc::AsyncService::Request##rpc; \
-		ctx.start(this);                                                   \
+#define REGISTER_STREAM(req, res, svc, rpc, impl, num)                          \
+	std::vector<request_stream_context<svc, req, res>> rpc##_contexts(num); \
+	for(request_stream_context<svc, req, res> & c : rpc##_contexts)         \
+	{                                                                       \
+		c.m_process_func = &server::impl;                               \
+		c.m_request_func = &svc::AsyncService::Request##rpc;            \
+		c.start(this);                                                  \
 	}
 
-namespace falco
-{
-namespace grpc
-{
-
-template<>
-void request_stream_context<falco::output::request, falco::output::response>::start(server* srv)
-{
-	m_state = request_context_base::REQUEST;
-	m_srv_ctx.reset(new ::grpc::ServerContext);
-	auto srvctx = m_srv_ctx.get();
-	m_res_writer.reset(new ::grpc::ServerAsyncWriter<output::response>(srvctx));
-	m_stream_ctx.reset();
-	m_req.Clear();
-	auto cq = srv->m_completion_queue.get();
-	(srv->m_svc.*m_request_func)(srvctx, &m_req, m_res_writer.get(), cq, cq, this);
-}
-
-template<>
-void request_stream_context<falco::output::request, falco::output::response>::process(server* srv)
-{
-	// When it is the 1st process call
-	if(m_state == request_context_base::REQUEST)
-	{
-		m_state = request_context_base::WRITE;
-		m_stream_ctx.reset(new stream_context(m_srv_ctx.get()));
+#define REGISTER_UNARY(req, res, svc, rpc, impl, num)                    \
+	std::vector<request_context<svc, req, res>> rpc##_contexts(num); \
+	for(request_context<svc, req, res> & c : rpc##_contexts)         \
+	{                                                                \
+		c.m_process_func = &server::impl;                        \
+		c.m_request_func = &svc::AsyncService::Request##rpc;     \
+		c.start(this);                                           \
 	}
-
-	// Processing
-	output::response res;
-	(srv->*m_process_func)(*m_stream_ctx, m_req, res); // subscribe()
-
-	// When there still are more responses to stream
-	if(m_stream_ctx->m_has_more)
-	{
-		m_res_writer->Write(res, this);
-	}
-	// No more responses to stream
-	else
-	{
-		// Communicate to the gRPC runtime that we have finished.
-		// The memory address of `this` instance uniquely identifies the event.
-		m_state = request_context_base::FINISH;
-		m_res_writer->Finish(::grpc::Status::OK, this);
-	}
-}
-
-template<>
-void request_stream_context<falco::output::request, falco::output::response>::end(server* srv, bool errored)
-{
-	if(m_stream_ctx)
-	{
-		m_stream_ctx->m_status = errored ? stream_context::ERROR : stream_context::SUCCESS;
-
-		// Complete the processing
-		output::response res;
-		(srv->*m_process_func)(*m_stream_ctx, m_req, res); // subscribe()
-	}
-
-	start(srv);
-}
-} // namespace grpc
-} // namespace falco
 
 void falco::grpc::server::thread_process(int thread_index)
 {
@@ -106,17 +52,22 @@ void falco::grpc::server::thread_process(int thread_index)
 	{
 		if(tag == nullptr)
 		{
+			// todo(leodido) > log error "server completion queue error: empty tag"
 			continue;
 		}
 
 		// Obtain the context for a given tag
 		request_context_base* ctx = static_cast<request_context_base*>(tag);
 
+		// todo(leodido) > log "next event: tag=tag, read_success=event_read_success, state=ctx->m_state"
+
 		// When event has not been read successfully
 		if(!event_read_success)
 		{
 			if(ctx->m_state != request_context_base::REQUEST)
 			{
+				// todo(leodido) > log error "server completion queue failing to read: tag=tag"
+
 				// End the context with error
 				ctx->end(this, true);
 			}
@@ -129,17 +80,19 @@ void falco::grpc::server::thread_process(int thread_index)
 		case request_context_base::REQUEST:
 			// Completion of m_request_func
 		case request_context_base::WRITE:
-			// Completion of ServerAsyncWriter::Write()
+			// Completion of Write()
 			ctx->process(this);
 			break;
 		case request_context_base::FINISH:
-			// Completion of ServerAsyncWriter::Finish()
+			// Completion of Finish()
 			ctx->end(this, false);
 			break;
 		default:
-			// todo > log "unkown completion queue event"
+			// todo(leodido) > log error "unkown completion queue event: tag=tag, state=ctx->m_state"
 			break;
 		}
+
+		// todo(leodido) > log "thread completed: index=thread_index"
 	}
 }
 
@@ -170,7 +123,8 @@ void falco::grpc::server::run()
 
 	::grpc::ServerBuilder builder;
 	builder.AddListeningPort(m_server_addr, ::grpc::SslServerCredentials(ssl_opts));
-	builder.RegisterService(&m_svc);
+	builder.RegisterService(&m_output_svc);
+	builder.RegisterService(&m_version_svc);
 
 	m_completion_queue = builder.AddCompletionQueue();
 	m_server = builder.BuildAndStart();
@@ -180,9 +134,10 @@ void falco::grpc::server::run()
 	// This defines the number of simultaneous completion queue requests of the same type (service::AsyncService::Request##RPC)
 	// For this approach to be sufficient server::IMPL have to be fast
 	int context_num = m_threadiness * 10;
-	REGISTER_STREAM(output::request, output::response, output::service, subscribe, subscribe, context_num)
+	// todo(leodido) > take a look at thread_stress_test.cc into grpc repository
 
-	// register_stream<output::request, output::response>(subscribe, context_num)
+	REGISTER_UNARY(version::request, version::response, version::service, version, version, context_num)
+	REGISTER_STREAM(output::request, output::response, output::service, subscribe, subscribe, context_num)
 
 	m_threads.resize(m_threadiness);
 	int thread_idx = 0;
@@ -190,11 +145,13 @@ void falco::grpc::server::run()
 	{
 		thread = std::thread(&server::thread_process, this, thread_idx++);
 	}
+	// todo(leodido) > log "gRPC server running: threadiness=m_threads.size()"
 
 	while(server_impl::is_running())
 	{
 		sleep(1);
 	}
+	// todo(leodido) > log "stopping gRPC server"
 	stop();
 }
 
@@ -214,7 +171,7 @@ void falco::grpc::server::stop()
 	}
 	m_threads.clear();
 
-	falco_logger::log(LOG_INFO, "Ignoring all the remaining gRPC events\n");
+	falco_logger::log(LOG_INFO, "Draining all the remaining gRPC events\n");
 	// Ignore remaining events
 	void* ignore_tag = nullptr;
 	bool ignore_ok = false;

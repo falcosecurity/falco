@@ -1,5 +1,5 @@
 FROM alpine:latest
-LABEL maintainer="opensource@sysdig.com"
+LABEL maintainer="cncf-falco-dev@lists.cncf.io"
 RUN apk add --no-cache bash g++ curl
 COPY ./event_generator.cpp /usr/local/bin
 COPY ./docker-entrypoint.sh ./k8s_event_generator.sh /

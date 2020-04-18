@@ -18,6 +18,7 @@ limitations under the License.
 #include <signal.h>
 
 #include "statsfilewriter.h"
+#include "banned.h" // This raises a compilation error when certain functions are used
 
 using namespace std;
 

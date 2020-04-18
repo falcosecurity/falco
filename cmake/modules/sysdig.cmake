@@ -21,8 +21,19 @@ if(USE_BUNDLED_DEPS)
 endif()
 
 file(MAKE_DIRECTORY ${SYSDIG_CMAKE_WORKING_DIR})
+
+# The sysdig git reference (branch name, commit hash, or tag)
+# To update sysdig version for the next release, change the default below
+# In case you want to test against another sysdig version just pass the variable - ie., `cmake -DSYSDIG_VERSION=dev ..`
+if(NOT SYSDIG_VERSION)
+  set(SYSDIG_VERSION "a259b4bf49c3330d9ad6c3eed9eb1a31954259a6")
+  set(SYSDIG_CHECKSUM "SHA256=fdbeb8d182e6383fe89428e0934d521636068f62109c1b3ca11689d886458284")
+endif()
+set(PROBE_VERSION "${SYSDIG_VERSION}")
+
 # cd /path/to/build && cmake /path/to/source
-execute_process(COMMAND "${CMAKE_COMMAND}" ${SYSDIG_CMAKE_SOURCE_DIR} WORKING_DIRECTORY ${SYSDIG_CMAKE_WORKING_DIR})
+execute_process(COMMAND "${CMAKE_COMMAND}" -DSYSDIG_VERSION=${SYSDIG_VERSION} -DSYSDIG_CHECKSUM=${SYSDIG_CHECKSUM} ${SYSDIG_CMAKE_SOURCE_DIR} WORKING_DIRECTORY ${SYSDIG_CMAKE_WORKING_DIR})
+
 
 # todo(leodido, fntlnz) > use the following one when CMake version will be >= 3.13
 

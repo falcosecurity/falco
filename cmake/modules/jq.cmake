@@ -26,7 +26,7 @@ else()
   ExternalProject_Add(
     jq
     URL "https://github.com/stedolan/jq/releases/download/jq-1.5/jq-1.5.tar.gz"
-    URL_MD5 "0933532b086bd8b6a41c1b162b1731f9"
+    URL_HASH "SHA256=c4d2bfec6436341113419debf479d833692cc5cdab7eb0326b5a4d4fbe9f493c"
     CONFIGURE_COMMAND ./configure --disable-maintainer-mode --enable-all-static --disable-dependency-tracking
     BUILD_COMMAND ${CMD_MAKE} LDFLAGS=-all-static
     BUILD_IN_SOURCE 1

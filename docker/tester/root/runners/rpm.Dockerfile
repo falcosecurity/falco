@@ -1,6 +1,6 @@
 FROM centos:7
 
-LABEL maintainer="opensource@sysdig.com"
+LABEL maintainer="cncf-falco-dev@lists.cncf.io"
 
 ARG FALCO_VERSION=
 RUN test -n FALCO_VERSION

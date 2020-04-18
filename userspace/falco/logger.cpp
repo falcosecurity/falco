@@ -19,6 +19,7 @@ limitations under the License.
 #include "chisel_api.h"
 
 #include "falco_common.h"
+#include "banned.h" // This raises a compilation error when certain functions are used
 
 const static struct luaL_reg ll_falco [] =
 {
@@ -130,12 +131,8 @@ void falco_logger::log(int priority, const string msg)
 		{
 			char buf[sizeof "YYYY-MM-DDTHH:MM:SS-0000"];
 			struct tm *gtm = std::gmtime(&result);
-			if(gtm == NULL ||
-			   (strftime(buf, sizeof(buf), "%FT%T%z", gtm) == 0))
-			{
-				sprintf(buf, "N/A");
-			}
-			else
+			if(gtm != NULL &&
+			   (strftime(buf, sizeof(buf), "%FT%T%z", gtm) != 0))
 			{
 				fprintf(stderr, "%s: %s", buf, msg.c_str());
 			}
@@ -158,5 +155,3 @@ void falco_logger::log(int priority, const string msg)
 		}
 	}
 }
-
-

@@ -20,6 +20,7 @@ limitations under the License.
 #include "falco_common.h"
 #include "webserver.h"
 #include "json_evt.h"
+#include "banned.h" // This raises a compilation error when certain functions are used
 
 using json = nlohmann::json;
 using namespace std;

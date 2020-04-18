@@ -1,16 +1,21 @@
-<p><img align="right" src="https://github.com/falcosecurity/falco-website/raw/master/themes/falco-fresh/static/images/favicon.png" width="64px"/></p>
-<p></p>
+<p align="center"><img src="https://raw.githubusercontent.com/falcosecurity/community/master/logo/primary-logo.png" width="360"></p>
+<p align="center"><b>Cloud Native Runtime Security.</b></p>
 
-# Falco
+<hr>
 
-#### Latest release
+# The Falco Project
 
-**v0.19.0**
-Read the [change log](https://github.com/falcosecurity/falco/blob/dev/CHANGELOG.md)
+[![Build Status](https://img.shields.io/circleci/build/github/falcosecurity/falco/master?style=for-the-badge)](https://circleci.com/gh/falcosecurity/falco) [![CII Best Practices Summary](https://img.shields.io/cii/summary/2317?label=CCI%20Best%20Practices&style=for-the-badge)](https://bestpractices.coreinfrastructure.org/projects/2317) [![GitHub](https://img.shields.io/github/license/falcosecurity/falco?style=for-the-badge)](COPYING)
 
-Dev Branch: [![Build Status](https://travis-ci.com/falcosecurity/falco.svg?branch=dev)](https://travis-ci.com/falcosecurity/falco)<br />
-Master Branch: [![Build Status](https://travis-ci.com/falcosecurity/falco.svg?branch=master)](https://travis-ci.com/falcosecurity/falco)<br />
-CII Best Practices: [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/2317/badge)](https://bestpractices.coreinfrastructure.org/projects/2317)
+#### Latest releases
+
+Read the [change log](CHANGELOG.md).
+
+|        | development                                                                                                                 | stable                                                                                                              |
+|--------|-----------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
+| rpm    | [![rpm-dev](https://img.shields.io/bintray/v/falcosecurity/rpm-dev/falco?label=Falco&color=%2300aec7&style=flat-square)][1] | [![rpm](https://img.shields.io/bintray/v/falcosecurity/rpm/falco?label=Falco&color=%23005763&style=flat-square)][2] |
+| deb    | [![deb-dev](https://img.shields.io/bintray/v/falcosecurity/deb-dev/falco?label=Falco&color=%2300aec7&style=flat-square)][3] | [![deb](https://img.shields.io/bintray/v/falcosecurity/deb/falco?label=Falco&color=%23005763&style=flat-square)][4] |
+| binary | [![bin-dev](https://img.shields.io/bintray/v/falcosecurity/bin-dev/falco?label=Falco&color=%2300aec7&style=flat-square)][5] | [![bin](https://img.shields.io/bintray/v/falcosecurity/bin/falco?label=Falco&color=%23005763&style=flat-square)][6] |
 
 ---
 
@@ -32,7 +37,9 @@ Falco can detect and alert on any behavior that involves making Linux system cal
 
 ### Installing Falco
 
-A comprehensive [installation guide](https://falco.org/docs/installation/) for Falco is available in the documentation website.
+You can find the latest release downloads on the official [release archive](https://bintray.com/falcosecurity)
+
+Furthermore the comprehensive [installation guide](https://falco.org/docs/installation/) for Falco is available in the documentation website.
 
 #### How do you compare Falco with other security tools?
 
@@ -47,27 +54,7 @@ See [Falco Documentation](https://falco.org/docs/) to quickly get started using 
 Join the Community
 ---
 
-* [Join the mailing list](https://lists.cncf.io/g/cncf-falco-dev/) for news and a Google calendar invite for our Falco open source meetings. Note: this is the only way to get a calendar invite for our open meetings.
-* [Website](https://falco.org) for Falco.
-* Join our [Public Slack](https://slack.sysdig.com) channel for Falco announcements and discussions.
-
-Community call
----
-
-> Are you using Falco? Do you have have ideas for things to do with Falco? How can Falco be better?
-
-Falco has bi-weekly [community](https://github.com/falcosecurity/community) call which is an open call to discuss Falco from a user perspective. These happen on opposite weeks of Repo planning calls.
-
-[Wednesdays at 8am Pacific](https://lists.cncf.io/g/cncf-falco-dev/calendar) on [Zoom](https://sysdig.zoom.us/j/213235330).
-
-Repo planning
----
-
-> Do you want to contribute to Falco? Are you interested in working on Falco? Do you want to fix something or make something better?
-
-Falco has bi-weekly planning meetings which is an open call to discuss upcoming Falco releases, and assign open GitHub issues to engineers. These happen on opposite weeks of office hours calls.
-
-[Wednesdays at 8am Pacific](https://lists.cncf.io/g/cncf-falco-dev/calendar) on [Zoom](https://sysdig.zoom.us/j/213235330).
+To get involved with The Falco Project please visit [the community repository](https://github.com/falcosecurity/community) to find more.
 
 License Terms
 ---
@@ -88,3 +75,10 @@ A third party security audit was performed by Cure53, you can see the full repor
 
 ### Reporting security vulnerabilities
 Please report security vulnerabilities following the community process documented [here](https://github.com/falcosecurity/.github/blob/master/SECURITY.md).
+
+[1]: https://dl.bintray.com/falcosecurity/rpm-dev
+[2]: https://dl.bintray.com/falcosecurity/rpm
+[3]: https://dl.bintray.com/falcosecurity/deb-dev/stable
+[4]: https://dl.bintray.com/falcosecurity/deb/stable
+[5]: https://dl.bintray.com/falcosecurity/bin-dev/x86_64
+[6]: https://dl.bintray.com/falcosecurity/bin/x86_64

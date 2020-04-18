@@ -18,17 +18,16 @@
 import os
 import re
 import json
-import sets
 import glob
 import shutil
 import stat
 import subprocess
 import sys
-import urllib
+import urllib.request
 
 from avocado import Test
+from avocado import main
 from avocado.utils import process
-from avocado.utils import linux_modules
 
 class FalcoTest(Test):
 
@@ -142,15 +141,15 @@ class FalcoTest(Test):
         else:
             detect_counts = {}
             for item in self.detect_counts:
-                for key, value in item.items():
+                for key, value in list(item.items()):
                     detect_counts[key] = value
             self.detect_counts = detect_counts
 
         self.rules_warning = self.params.get('rules_warning', '*', default=False)
         if self.rules_warning == False:
-            self.rules_warning = sets.Set()
+            self.rules_warning = set()
         else:
-            self.rules_warning = sets.Set(self.rules_warning)
+            self.rules_warning = set(self.rules_warning)
 
         # Maps from rule name to set of evttypes
         self.rules_events = self.params.get('rules_events', '*', default=False)
@@ -160,7 +159,7 @@ class FalcoTest(Test):
             events = {}
             for item in self.rules_events:
                 for item2 in item:
-                    events[item2[0]] = sets.Set(item2[1])
+                    events[item2[0]] = set(item2[1])
             self.rules_events = events
 
         if self.should_detect:
@@ -176,7 +175,7 @@ class FalcoTest(Test):
         self.copy_local_driver = self.params.get('copy_local_driver', '*', default=False)
 
         # Used by possibly_copy_local_driver as well as docker run
-        self.module_dir = os.path.expanduser("~/.sysdig")
+        self.module_dir = os.path.expanduser("~/.falco")
 
         self.outputs = self.params.get('outputs', '*', default='')
 
@@ -185,7 +184,7 @@ class FalcoTest(Test):
         else:
             outputs = []
             for item in self.outputs:
-                for key, value in item.items():
+                for key, value in list(item.items()):
                     output = {}
                     output['file'] = key
                     output['line'] = value
@@ -214,9 +213,9 @@ class FalcoTest(Test):
 
     def check_rules_warnings(self, res):
 
-        found_warning = sets.Set()
+        found_warning = set()
 
-        for match in re.finditer('Rule ([^:]+): warning \(([^)]+)\):', res.stderr):
+        for match in re.finditer('Rule ([^:]+): warning \(([^)]+)\):', res.stderr.decode("utf-8")):
             rule = match.group(1)
             warning = match.group(2)
             found_warning.add(rule)
@@ -231,21 +230,21 @@ class FalcoTest(Test):
 
         found_events = {}
 
-        for match in re.finditer('Event types for rule ([^:]+): (\S+)', res.stderr):
+        for match in re.finditer('Event types for rule ([^:]+): (\S+)', res.stderr.decode("utf-8")):
             rule = match.group(1)
-            events = sets.Set(match.group(2).split(","))
+            events = set(match.group(2).split(","))
             found_events[rule] = events
 
         self.log.debug("Expected events for rules: {}".format(self.rules_events))
         self.log.debug("Actual events for rules: {}".format(found_events))
 
-        for rule in found_events.keys():
+        for rule in list(found_events.keys()):
             if found_events.get(rule) != self.rules_events.get(rule):
                 self.fail("rule {}: expected events {} differs from actual events {}".format(rule, self.rules_events.get(rule), found_events.get(rule)))
 
     def check_detections(self, res):
         # Get the number of events detected.
-        match = re.search('Events detected: (\d+)', res.stdout)
+        match = re.search('Events detected: (\d+)', res.stdout.decode("utf-8"))
         if match is None:
             self.fail("Could not find a line 'Events detected: <count>' in falco output")
 
@@ -260,7 +259,7 @@ class FalcoTest(Test):
 
             for level in self.detect_level:
                 level_line = '(?i){}: (\d+)'.format(level)
-                match = re.search(level_line, res.stdout)
+                match = re.search(level_line, res.stdout.decode("utf-8"))
 
                 if match is None:
                     self.fail("Could not find a line '{}: <count>' in falco output".format(level))
@@ -272,13 +271,13 @@ class FalcoTest(Test):
 
     def check_detections_by_rule(self, res):
         # Get the number of events detected for each rule. Must match the expected counts.
-        match = re.search('Triggered rules by rule name:(.*)', res.stdout, re.DOTALL)
+        match = re.search('Triggered rules by rule name:(.*)', res.stdout.decode("utf-8"), re.DOTALL)
         if match is None:
             self.fail("Could not find a block 'Triggered rules by rule name: ...' in falco output")
 
         triggered_rules = match.group(1)
 
-        for rule, count in self.detect_counts.iteritems():
+        for rule, count in list(self.detect_counts.items()):
             expected = '\s{}: (\d+)'.format(re.sub(r'([$\.*+?()[\]{}|^])', r'\\\1', rule))
             match = re.search(expected, triggered_rules)
 
@@ -313,7 +312,7 @@ class FalcoTest(Test):
         if self.json_output:
             # Just verify that any lines starting with '{' are valid json objects.
             # Doesn't do any deep inspection of the contents.
-            for line in res.stdout.splitlines():
+            for line in res.stdout.decode("utf-8").splitlines():
                 if line.startswith('{'):
                     obj = json.loads(line)
                     if self.json_include_output_property:
@@ -336,7 +335,7 @@ class FalcoTest(Test):
             self.falco_binary_path = "docker run --rm --name falco-test --privileged " \
                                      "-v /var/run/docker.sock:/host/var/run/docker.sock " \
                                      "-v /dev:/host/dev -v /proc:/host/proc:ro -v /boot:/host/boot:ro " \
-                                     "-v /lib/modules:/host/lib/modules:ro -v {}:/root/.sysdig:ro " \
+                                     "-v /lib/modules:/host/lib/modules:ro -v {}:/root/.falco:ro " \
                                      "-v /usr:/host/usr:ro {} {} falco".format(
                                          self.module_dir, self.addl_docker_run_args, image)
 
@@ -388,8 +387,7 @@ class FalcoTest(Test):
             res = process.run(cmdline, timeout=120, sudo=True)
 
     def possibly_copy_driver(self):
-        # Remove the contents of ~/.sysdig regardless of
-        # copy_local_driver.
+        # Remove the contents of ~/.falco regardless of copy_local_driver.
         self.log.debug("Checking for module dir {}".format(self.module_dir))
         if os.path.isdir(self.module_dir):
             self.log.info("Removing files below directory {}".format(self.module_dir))
@@ -398,7 +396,8 @@ class FalcoTest(Test):
                 os.remove(rmfile)
 
         if self.copy_local_driver:
-            verstr = subprocess.check_output([self.falco_binary_path, "--version"]).rstrip()
+            verlines = [str.strip() for str in subprocess.check_output([self.falco_binary_path, "--version"]).splitlines()]
+            verstr = verlines[0].decode("utf-8")
             self.log.info("verstr {}".format(verstr))
             falco_version = verstr.split(" ")[2]
             self.log.info("falco_version {}".format(falco_version))
@@ -407,7 +406,7 @@ class FalcoTest(Test):
             kernel_release = subprocess.check_output(["uname", "-r"]).rstrip()
             self.log.info("kernel release {}".format(kernel_release))
 
-            # falco-probe-loader has a more comprehensive set of ways to
+            # falco-driver-loader has a more comprehensive set of ways to
             # find the config hash. We only look at /boot/config-<kernel release>
             md5_output = subprocess.check_output(["md5sum", "/boot/config-{}".format(kernel_release)]).rstrip()
             config_hash = md5_output.split(" ")[0]
@@ -440,7 +439,7 @@ class FalcoTest(Test):
             if not os.path.isfile(self.psp_conv_path):
                 self.log.info("Downloading {} to {}".format(self.psp_conv_url, self.psp_conv_path))
 
-                urllib.urlretrieve(self.psp_conv_url, self.psp_conv_path)
+                urllib.request.urlretrieve(self.psp_conv_url, self.psp_conv_path)
                 os.chmod(self.psp_conv_path, stat.S_IEXEC)
 
             conv_cmd = '{} convert psp --psp-path {} --rules-path {}'.format(
@@ -484,32 +483,32 @@ class FalcoTest(Test):
 
         if self.stdout_is != '':
             print(self.stdout_is)
-            if self.stdout_is != res.stdout:
+            if self.stdout_is != res.stdout.decode("utf-8"):
                 self.fail("Stdout was not exactly {}".format(self.stdout_is))
 
         if self.stderr_is != '':
-            if self.stderr_is != res.stdout:
+            if self.stderr_is != res.stdout.decode("utf-8"):
                 self.fail("Stdout was not exactly {}".format(self.stderr_is))
 
         for pattern in self.stderr_contains:
-            match = re.search(pattern, res.stderr)
+            match = re.search(pattern, res.stderr.decode("utf-8"))
             if match is None:
                 self.fail("Stderr of falco process did not contain content matching {}".format(pattern))
 
         for pattern in self.stdout_contains:
-            match = re.search(pattern, res.stdout)
+            match = re.search(pattern, res.stdout.decode("utf-8"))
             if match is None:
-                self.fail("Stdout of falco process '{}' did not contain content matching {}".format(res.stdout, pattern))
+                self.fail("Stdout of falco process '{}' did not contain content matching {}".format(res.stdout.decode("utf-8"), pattern))
 
         for pattern in self.stderr_not_contains:
-            match = re.search(pattern, res.stderr)
+            match = re.search(pattern, res.stderr.decode("utf-8"))
             if match is not None:
                 self.fail("Stderr of falco process contained content matching {} when it should have not".format(pattern))
 
         for pattern in self.stdout_not_contains:
-            match = re.search(pattern, res.stdout)
+            match = re.search(pattern, res.stdout.decode("utf-8"))
             if match is not None:
-                self.fail("Stdout of falco process '{}' did contain content matching {} when it should have not".format(res.stdout, pattern))
+                self.fail("Stdout of falco process '{}' did contain content matching {} when it should have not".format(res.stdout.decode("utf-8"), pattern))
 
         if res.exit_status != self.exit_status:
             self.error("Falco command \"{}\" exited with unexpected return value {} (!= {})".format(

@@ -1,20 +1,20 @@
 FROM ubuntu:18.04 as ubuntu
 
-LABEL maintainer="opensource@sysdig.com"
+LABEL maintainer="cncf-falco-dev@lists.cncf.io"
 
-ARG FALCO_VERSION=0.19.0
+ARG FALCO_VERSION
+ARG VERSION_BUCKET=bin
 
 ENV FALCO_VERSION=${FALCO_VERSION}
+ENV VERSION_BUCKET=${VERSION_BUCKET}
 
 WORKDIR /
 
-ADD https://s3.amazonaws.com/download.draios.com/stable/tgz/x86_64/falco-${FALCO_VERSION}-x86_64.tar.gz /
+ADD https://bintray.com/api/ui/download/falcosecurity/${VERSION_BUCKET}/x86_64/falco-${FALCO_VERSION}-x86_64.tar.gz /
 
-# ADD will download from URL and unntar
-RUN apt-get update && \
+RUN apt-get update -y && \
     apt-get install -y libyaml-0-2 binutils && \
-    # curl -O https://s3.amazonaws.com/download.draios.com/stable/tgz/x86_64/falco-${FALCO_VERSION}-x86_64.tar.gz && \
-    tar xfzv falco-${FALCO_VERSION}-x86_64.tar.gz && \
+    tar -xvf falco-${FALCO_VERSION}-x86_64.tar.gz && \
     rm -f falco-${FALCO_VERSION}-x86_64.tar.gz && \
     mv falco-${FALCO_VERSION}-x86_64 falco && \
     strip falco/usr/bin/falco && \

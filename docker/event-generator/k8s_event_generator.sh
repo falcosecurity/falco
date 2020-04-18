@@ -17,15 +17,18 @@ kubectl version --short
 
 while true; do
 
-    RET=$(kubectl get namespaces --output=name | grep falco-event-generator || true)
+    # Delete all resources in the falco-eg-sandbox namespace
+    echo "***Deleting all resources in falco-eg-sandbox namespace..."
+    kubectl delete --all configmaps -n falco-eg-sandbox
+    kubectl delete --all deployments -n falco-eg-sandbox
+    kubectl delete --all services -n falco-eg-sandbox
+    kubectl delete --all roles -n falco-eg-sandbox
+    kubectl delete --all serviceaccounts -n falco-eg-sandbox
 
-    if [[ "$RET" == *falco-event-generator* ]]; then
-	echo "***Deleting existing falco-event-generator namespace..."
-	kubectl delete namespace falco-event-generator
-    fi
-
-    echo "***Creating falco-event-generator namespace..."
-    kubectl create namespace falco-event-generator
+    # We don't delete all rolebindings in the falco-eg-sandbox
+    # namespace, as that would also delete the rolebinding for the
+    # event generator itself.
+    kubectl delete rolebinding vanilla-role-binding -n falco-eg-sandbox || true
 
     for file in yaml/*.yaml; do
 
@@ -48,7 +51,7 @@ while true; do
 	    RULES=$(echo "$RULES" | tr '-' ' '| tr '.' '/' | sed -e 's/ *//' | sed  -e 's/,$//')
 
 	    echo "***$MESSAGES (Rule(s) $RULES)..."
-	    kubectl apply -f $file
+	    kubectl apply -f $file -n falco-eg-sandbox
 	    sleep 2
 	fi
     done

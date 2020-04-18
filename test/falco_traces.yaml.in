@@ -26,7 +26,7 @@ traces: !mux
     detect: True
     detect_level: NOTICE
     detect_counts:
-      - "Change thread namespace": 2
+      - "Change thread namespace": 1
 
   container-privileged:
     trace_file: traces-positive/container-privileged.scap
@@ -73,7 +73,7 @@ traces: !mux
       - "Non sudo setuid": 1
       - "Create files below dev": 1
       - "Modify binary dirs": 2
-      - "Change thread namespace": 2
+      - "Change thread namespace": 1
 
   mkdir-binary-dirs:
     trace_file: traces-positive/mkdir-binary-dirs.scap

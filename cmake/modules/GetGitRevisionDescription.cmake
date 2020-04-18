@@ -104,18 +104,19 @@ function(git_describe _var)
     return()
   endif()
 
-  # TODO sanitize if((${ARGN}" MATCHES "&&") OR (ARGN MATCHES "||") OR (ARGN MATCHES "\\;")) message("Please report the
-  # following error to the project!") message(FATAL_ERROR "Looks like someone's doing something nefarious with
-  # git_describe! Passed arguments ${ARGN}") endif()
-
-  # message(STATUS "Arguments to execute_process: ${ARGN}")
-
-  execute_process(
-    COMMAND "${GIT_EXECUTABLE}" describe ${hash} ${ARGN}
-    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-    RESULT_VARIABLE res
-    OUTPUT_VARIABLE out
-    ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+  execute_process(COMMAND
+    "${GIT_EXECUTABLE}"
+    describe
+    ${hash}
+    ${ARGN}
+    WORKING_DIRECTORY
+    "${CMAKE_CURRENT_SOURCE_DIR}"
+    RESULT_VARIABLE
+    res
+    OUTPUT_VARIABLE
+    out
+    ERROR_QUIET
+    OUTPUT_STRIP_TRAILING_WHITESPACE)
   if(NOT res EQUAL 0)
     set(out "${out}-${res}-NOTFOUND")
   endif()

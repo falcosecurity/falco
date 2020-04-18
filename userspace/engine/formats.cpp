@@ -18,6 +18,7 @@ limitations under the License.
 
 #include "formats.h"
 #include "falco_engine.h"
+#include "banned.h" // This raises a compilation error when certain functions are used
 
 
 sinsp* falco_formats::s_inspector = NULL;
@@ -145,11 +146,13 @@ int falco_formats::format_event (lua_State *ls)
 	if(strcmp(source, "syscall") == 0)
 	{
 		try {
+			// This is "output"
 			s_formatters->tostring((sinsp_evt *) evt, sformat, &line);
 
 			if(s_json_output)
 			{
-				switch(s_inspector->get_buffer_format())
+				sinsp_evt::param_fmt cur_fmt = s_inspector->get_buffer_format();
+				switch(cur_fmt)
 				{
 					case sinsp_evt::PF_NORMAL:
 						s_inspector->set_buffer_format(sinsp_evt::PF_JSON);
@@ -170,6 +173,7 @@ int falco_formats::format_event (lua_State *ls)
 						// do nothing
 						break;
 				}
+				// This is output fields
 				s_formatters->tostring((sinsp_evt *) evt, sformat, &json_line);
 
 				// The formatted string might have a leading newline. If it does, remove it.
@@ -177,8 +181,7 @@ int falco_formats::format_event (lua_State *ls)
 				{
 					json_line.erase(0, 1);
 				}
-
-				s_inspector->set_buffer_format(sinsp_evt::PF_NORMAL);
+				s_inspector->set_buffer_format(cur_fmt);
 			}
 		}
 		catch (sinsp_exception& e)
