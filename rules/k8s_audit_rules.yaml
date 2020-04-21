@@ -105,9 +105,6 @@
 - macro: secret
   condition: ka.target.resource=secrets
 
-- macro: req_service_account_token
-  condition: (jevt.value[/requestObject/type]="kubernetes.io/service-account-token")
-
 - macro: health_endpoint
   condition: ka.uri=/healthz
 
@@ -409,7 +406,7 @@
 
 - rule: K8s Secret Created
   desc: Detect any attempt to create a secret. Service account tokens are excluded.
-  condition: (kactivity and kcreate and secret and ka.target.namespace!=kube-system and not req_service_account_token and response_successful)
+  condition: (kactivity and kcreate and secret and ka.target.namespace!=kube-system and non_system_user and response_successful)
   output: K8s Secret Created (user=%ka.user.name secret=%ka.target.name ns=%ka.target.namespace resp=%ka.response.code decision=%ka.auth.decision reason=%ka.auth.reason)
   priority: INFO
   source: k8s_audit
@@ -417,7 +414,7 @@
 
 - rule: K8s Secret Deleted
   desc: Detect any attempt to delete a secret Service account tokens are excluded.
-  condition: (kactivity and kdelete and secret and ka.target.namespace!=kube-system and not req_service_account_token and response_successful)
+  condition: (kactivity and kdelete and secret and ka.target.namespace!=kube-system and non_system_user and response_successful)
   output: K8s Secret Deleted (user=%ka.user.name secret=%ka.target.name ns=%ka.target.namespace resp=%ka.response.code decision=%ka.auth.decision reason=%ka.auth.reason)
   priority: INFO
   source: k8s_audit
