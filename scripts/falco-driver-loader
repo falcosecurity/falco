@@ -66,7 +66,6 @@ cos_version_greater()
 	return 0
 }
 
-
 get_kernel_config() {
 	if [ -f /proc/config.gz ]; then
 		echo "Found kernel config at /proc/config.gz"
@@ -102,19 +101,58 @@ get_kernel_config() {
 	fi
 }
 
+get_target_id() {
+	if [ -f /etc/os-release ]; then
+		# freedesktop.org and systemd
+		# shellcheck source=/dev/null
+		source "/etc/os-release"
+		OS_ID=$ID
+	elif [ -f /etc/debian_version ]; then
+		# Older Debian
+		# fixme > can this happen on older Ubuntu?
+		OS_ID=debian
+	elif [ -f /etc/centos-release ]; then
+		# Older CentOS
+		OS_ID=centos
+	else
+		>&2 echo "Detected an unsupported target system, please get in touch with the Falco community"
+		exit 1
+	fi
+
+	case "${OS_ID}" in
+	("amzn")
+		if [[ $VERSION_ID == "2" ]]; then
+			TARGET_ID="amazonlinux2"
+		else
+			TARGET_ID="amazonlinux"
+		fi
+		;;
+	("ubuntu")
+		if [[ $KERNEL_RELEASE == *"aws"* ]]; then
+			TARGET_ID="ubuntu-aws"
+		else
+			TARGET_ID="ubuntu"
+		fi
+		;;
+	(*)
+		TARGET_ID=$(echo "${OS_ID}" | tr '[:upper:]' '[:lower:]')
+		;;
+	esac
+}
+
 load_kernel_module() {
 	if ! hash lsmod > /dev/null 2>&1; then
-		echo "This program requires lsmod"
+		>&2 echo "This program requires lsmod"
 		exit 1
 	fi
 
 	if ! hash modprobe > /dev/null 2>&1; then
-		echo "This program requires modprobe"
+		>&2 echo "This program requires modprobe"
 		exit 1
 	fi
 
 	if ! hash rmmod > /dev/null 2>&1; then
-		echo "This program requires rmmod"
+		>&2 echo "This program requires rmmod"
 		exit 1
 	fi
 
@@ -139,12 +177,11 @@ load_kernel_module() {
 		exit 0
 	fi
 
-	# skip dkms on UEK hosts because it will always fail
+	# skip dkms on UEK hosts because it will always fail`
 	if [[ $(uname -r) == *uek* ]]; then
 		echo "* Skipping dkms install for UEK host"
 	else
-		echo "* Running dkms install for ${PACKAGE_NAME}"
-		if dkms install -m "${PACKAGE_NAME}" -v "${DRIVER_VERSION}" -k "${KERNEL_RELEASE}"; then
+		if hash dkms &>/dev/null && dkms install -m "${PACKAGE_NAME}" -v "${DRIVER_VERSION}" -k "${KERNEL_RELEASE}" 2>/dev/null; then
 			echo "* Trying to load a dkms ${PROBE_NAME}, if present"
 
 			if insmod "/var/lib/dkms/${PACKAGE_NAME}/${DRIVER_VERSION}/${KERNEL_RELEASE}/${ARCH}/module/${PROBE_NAME}.ko" > /dev/null 2>&1; then
@@ -176,26 +213,26 @@ load_kernel_module() {
 
 	echo "* Trying to find precompiled ${PROBE_NAME} for ${KERNEL_RELEASE}"
 
-	get_kernel_config
+	get_target_id
 
-	local FALCO_PROBE_FILENAME="${PROBE_NAME}-${DRIVER_VERSION}-${ARCH}-${KERNEL_RELEASE}-${HASH}.ko"
+	local FALCO_KERNEL_MODULE_FILENAME="${PROBE_NAME}_${TARGET_ID}_${KERNEL_RELEASE}_${KERNEL_VERSION}.ko"
 
-	if [ -f "${HOME}/.falco/${FALCO_PROBE_FILENAME}" ]; then
-		echo "Found precompiled module at ~/.falco/${FALCO_PROBE_FILENAME}, loading module"
-		insmod "${HOME}/.falco/${FALCO_PROBE_FILENAME}"
+	if [ -f "${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}" ]; then
+		echo "Found precompiled module at ~/.falco/${FALCO_KERNEL_MODULE_FILENAME}, loading module"
+		insmod "${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}"
 		exit $?
 	fi
 
 	local URL
-	URL=$(echo "${PROBE_URL}/${PACKAGES_REPOSITORY}/sysdig-probe-binaries/${FALCO_PROBE_FILENAME}" | sed s/+/%2B/g)
+	URL=$(echo "${PROBE_URL}/kernel-module/${DRIVER_VERSION}/${FALCO_KERNEL_MODULE_FILENAME}" | sed s/+/%2B/g)
 
 	echo "* Trying to download precompiled module from ${URL}"
-	if curl --create-dirs "${FALCO_PROBE_CURL_OPTIONS}" -o "${HOME}/.falco/${FALCO_PROBE_FILENAME}" "${URL}"; then
+	if curl --create-dirs "${FALCO_PROBE_CURL_OPTIONS}" -o "${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}" "${URL}"; then
 		echo "Download succeeded, loading module"
-		insmod "${HOME}/.falco/${FALCO_PROBE_FILENAME}"
+		insmod "${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}"
 		exit $?
 	else
-		echo "Download failed, consider compiling your own ${PROBE_NAME} and loading it or getting in touch with the Falco community"
+		>&2 echo "Download failed, consider compiling your own ${PROBE_NAME} and loading it or getting in touch with the Falco community"
 		exit 1
 	fi
 }
@@ -211,7 +248,7 @@ load_bpf_probe() {
 
 	if [ -n "${HOST_ROOT}" ] && [ -f "${HOST_ROOT}/etc/os-release" ]; then
 		# shellcheck source=/dev/null
-		. "${HOST_ROOT}/etc/os-release"
+		source "${HOST_ROOT}/etc/os-release"
 
 		if [ "${ID}" == "cos" ]; then
 			COS=1
@@ -337,7 +374,7 @@ load_bpf_probe() {
 
 	if [ ! -f "${HOME}/.falco/${BPF_PROBE_FILENAME}" ]; then
 		local URL
-		URL=$(echo "${PROBE_URL}/${PACKAGES_REPOSITORY}/sysdig-probe-binaries/${BPF_PROBE_FILENAME}" | sed s/+/%2B/g)
+		URL=$(echo "${PROBE_URL}/ebpf-probe/${DRIVER_VERSION}/${BPF_PROBE_FILENAME}" | sed s/+/%2B/g)
 
 		echo "* Trying to download precompiled BPF probe from ${URL}"
 
@@ -366,6 +403,7 @@ load_bpf_probe() {
 
 ARCH=$(uname -m)
 KERNEL_RELEASE=$(uname -r)
+KERNEL_VERSION=$(uname -v | sed 's/#\([[:digit:]]\+\).*/\1/')
 SCRIPT_NAME=$(basename "${0}")
 PROBE_URL=${PROBE_URL:-"@DRIVER_LOOKUP_URL@"}
 if [ -n "$PROBE_INSECURE_DOWNLOAD" ]
@@ -378,10 +416,6 @@ fi
 MAX_RMMOD_WAIT=60
 if [[ $# -ge 1 ]]; then
 	MAX_RMMOD_WAIT=$1
-fi
-
-if [ -z "${PACKAGES_REPOSITORY}" ]; then
-	PACKAGES_REPOSITORY="stable"
 fi
 
 if [ "${SCRIPT_NAME}" = "falco-driver-loader" ]; then
@@ -409,3 +443,13 @@ if [ -v FALCO_BPF_PROBE ] || [ "${1}" = "bpf" ]; then
 else
 	load_kernel_module
 fi
+
+# sudo falco-driver-loader
+#
+# env variables:
+# PROBE_URL="..."
+# PROBE_INSECURE_DOWNLOAD=true
+
+# RENAMES
+# PROBE_URL
+# FALCO_PROBE_CURL_OPTIONS
