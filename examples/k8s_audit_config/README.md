@@ -28,7 +28,7 @@ The main steps are:
 
 ### Deploy Falco to your Kubernetes cluster
 
-Follow the [Kubernetes Using Daemonset](../../integrations/k8s-using-daemonset/README.md) instructions to create a falco service account, service, configmap, and daemonset.
+Follow the [Falco documentation website](https://falco.org/docs/installation/). You can also find useful resources for creating a service account, service, configmap, and daemonset in the [contrib](https://github.com/falcosecurity/contrib) repo.
 
 ### Define your audit policy and webhook configuration
 
