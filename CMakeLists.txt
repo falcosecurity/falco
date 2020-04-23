@@ -71,9 +71,9 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3 -fno-strict-aliasing -DNDEBUG")
 include(GetFalcoVersion)
 
 set(PACKAGE_NAME "falco")
-set(PROBE_NAME "falco-probe")
+set(PROBE_NAME "falco")
 set(PROBE_DEVICE_NAME "falco")
-set(DRIVER_LOOKUP_URL "https://s3.amazonaws.com/download.draios.com")
+set(DRIVERS_REPO "https://bintray.com/falcosecurity/driver")
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   set(CMAKE_INSTALL_PREFIX
       /usr
