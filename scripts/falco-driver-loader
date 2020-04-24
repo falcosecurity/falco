@@ -224,7 +224,7 @@ load_kernel_module() {
 	fi
 
 	local URL
-	URL=$(echo "${DRIVERS_REPO}/kernel-module/${DRIVER_VERSION}/${FALCO_KERNEL_MODULE_FILENAME}" | sed s/+/%2B/g)
+	URL=$(echo "${DRIVERS_REPO}/${DRIVER_VERSION}/${FALCO_KERNEL_MODULE_FILENAME}" | sed s/+/%2B/g)
 
 	echo "* Trying to download prebuilt module from ${URL}"
 	if curl --create-dirs "${FALCO_DRIVER_CURL_OPTIONS}" -o "${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}" "${URL}"; then
@@ -376,7 +376,7 @@ load_bpf_probe() {
 
 	if [ ! -f "${HOME}/.falco/${BPF_PROBE_FILENAME}" ]; then
 		local URL
-		URL=$(echo "${DRIVERS_REPO}/ebpf-probe/${DRIVER_VERSION}/${BPF_PROBE_FILENAME}" | sed s/+/%2B/g)
+		URL=$(echo "${DRIVERS_REPO}/${DRIVER_VERSION}/${BPF_PROBE_FILENAME}" | sed s/+/%2B/g)
 
 		echo "* Trying to download a prebuilt eBPF probe from ${URL}"
 
