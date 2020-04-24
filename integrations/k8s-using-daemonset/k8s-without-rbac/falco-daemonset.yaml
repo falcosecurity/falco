@@ -1,4 +1,4 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: falco
@@ -6,6 +6,11 @@ metadata:
     name: falco-daemonset
     app: demo
 spec:
+  selector:
+    matchLabels:
+      name: falco
+      app: demo
+      role: security
   template:
     metadata:
       labels:
@@ -18,7 +23,7 @@ spec:
           image: falcosecurity/falco:latest
           securityContext:
             privileged: true
-          args: [ "/usr/bin/falco", "--cri", "/host/run/containerd/containerd.sock", "-K", "/var/run/secrets/kubernetes.io/serviceaccount/token", "-k", "https://kubernetes.default", "-pk", "-o", "json_output=true", "-o", "program_output.enabled=true", "-o",  "program_output.program=jq '{text: .output}' | curl -d @- -X POST https://hooks.slack.com/services/see_your_slack_team/apps_settings_for/a_webhook_url"]
+          args: [ "/usr/bin/falco", "--cri", "/run/containerd/containerd.sock", "-K", "/var/run/secrets/kubernetes.io/serviceaccount/token", "-k", "https://kubernetes.default", "-pk", "-o", "json_output=true", "-o", "program_output.enabled=true", "-o",  "program_output.program=jq '{text: .output}' | curl -d @- -X POST https://hooks.slack.com/services/see_your_slack_team/apps_settings_for/a_webhook_url"]
           volumeMounts:
             - mountPath: /host/var/run/docker.sock
               name: docker-socket

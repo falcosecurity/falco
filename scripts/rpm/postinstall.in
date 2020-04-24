@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2019 The Falco Authors.
+# Copyright (C) 2020 The Falco Authors.
 #
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,8 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-rpm_v=%{version}
-mod_version=${rpm_v//_/-}
+
+mod_version="@PROBE_VERSION@"
 dkms add -m falco -v $mod_version --rpm_safe_upgrade
 if [ `uname -r | grep -c "BOOT"` -eq 0 ] && [ -e /lib/modules/`uname -r`/build/include ]; then
 	dkms build -m falco -v $mod_version

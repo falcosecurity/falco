@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2019 The Falco Authors.
+# Copyright (C) 2020 The Falco Authors.
 #
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,11 +14,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 configure_file(debian/postinst.in debian/postinst)
+configure_file(debian/postrm.in debian/postrm)
 configure_file(debian/prerm.in debian/prerm)
 
 file(COPY "${PROJECT_SOURCE_DIR}/scripts/debian/falco"
 	DESTINATION "${PROJECT_BINARY_DIR}/scripts/debian")
+
+configure_file(rpm/postinstall.in rpm/postinstall)
+configure_file(rpm/postuninstall.in rpm/postuninstall)
+configure_file(rpm/preuninstall.in rpm/preuninstall)
 
 file(COPY "${PROJECT_SOURCE_DIR}/scripts/rpm/falco"
 	DESTINATION "${PROJECT_BINARY_DIR}/scripts/rpm")
