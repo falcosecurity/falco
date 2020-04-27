@@ -2664,7 +2664,7 @@
   condition: (container.image.repository endswith "sysdig/agent" or container.image.repository endswith "falcosecurity/falco")
   append: false
 
-# The rule is disabled by default. 
+# The rule is disabled by default.
 # Note: falco will send DNS request to resolve miner pool domain which may trigger alerts in your environment.
 - rule: Detect outbound connections to common miner pool ports
   desc: Miners typically connect to miner pools on common ports.
@@ -2685,10 +2685,10 @@
   items: [docker, kubectl, crictl]
 
 # Whitelist for known docker client binaries run inside container
-# - k8s.gcr.io/fluentd-gcp-scaler in GCP/GKE 
+# - k8s.gcr.io/fluentd-gcp-scaler in GCP/GKE
 - macro: user_known_k8s_client_container
   condition: (k8s.ns.name="kube-system" and container.image.repository=k8s.gcr.io/fluentd-gcp-scaler)
-  
+ 
 - rule: The docker client is executed in a container
   desc: Detect a k8s client tool executed inside a container
   condition: spawned_process and container and not user_known_k8s_client_container and proc.name in (k8s_client_binaries)
@@ -2712,7 +2712,7 @@
   output: Packet socket was created in a container (user=%user.name command=%proc.cmdline socket_info=%evt.args container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
   priority: NOTICE
   tags: [network, mitre_discovery]
-  
+ 
 # Change to (always_true) to enable rule 'Network connection outside local subnet'
 - macro: enabled_rule_network_only_subnet
   condition: (never_true)
@@ -2723,7 +2723,7 @@
 
 # Namespaces where the rule is enforce
 - list: namespace_scope_network_only_subnet
-  items: [] 
+  items: []
 
 - macro: network_local_subnet
   condition: >
@@ -2736,25 +2736,23 @@
 # # Add 'default' to namespace_scope_network_only_subnet
 # # Run:
 # kubectl run --generator=run-pod/v1 -n default -i --tty busybox --image=busybox --rm -- wget google.com -O /var/google.html
-# # Check logs running  
+# # Check logs running
 
 - rule: Network Connection outside Local Subnet
   desc: Detect traffic to image outside local subnet.
   condition: >
     enabled_rule_network_only_subnet and
-    inbound_outbound and 
+    inbound_outbound and
     container and
     not network_local_subnet and
     k8s.ns.name in (namespace_scope_network_only_subnet)
   output: >
     Network connection outside local subnet
-    (command=%proc.cmdline connection=%fd.name user=%user.name container_id=%container.id 
-    image=%container.image.repository namespace=%k8s.ns.name
-    fd.rip.name=%fd.rip.name fd.lip.name=%fd.lip.name fd.cip.name=%fd.cip.name fd.sip.name=%fd.sip.name)
+    (command=%proc.cmdline connection=%fd.name user=%user.name container_id=%container.id
+     image=%container.image.repository namespace=%k8s.ns.name
+     fd.rip.name=%fd.rip.name fd.lip.name=%fd.lip.name fd.cip.name=%fd.cip.name fd.sip.name=%fd.sip.name)
   priority: WARNING
   tags: [network]
-  
-
 
 - macro: allowed_port
   condition: (never_true)
@@ -2795,7 +2793,7 @@
   priority: WARNING
   tags: [network]
 
-- rule: Redirect stdout/stdin to network connection in container 
+- rule: Redirect STDOUT/STDIN to Network Connection in Container
   desc: Detect redirecting stdout/stdin to network connection in container (potential reverse shell).
   condition: evt.type=dup and evt.dir=> and container and fd.num in (0, 1, 2) and fd.type in ("ipv4", "ipv6")
   output: >
