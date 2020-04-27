@@ -27,8 +27,7 @@ Finally, on the proposed due date the assignees for the upcoming release proceed
 - Double-check if any hard-coded version number is present in the code, it should be not present anywhere:
     - If any, manually correct it then open an issue to automate version number bumping later
     - Versions table in the `README.md` update itself automatically
-- Generate the change log https://github.com/leodido/rn2md
-    - [leo/lore] gotta move this (and merge it with Lorenzo's one) into test-infra
+- Generate the change log https://github.com/leodido/rn2md, or https://fs.fntlnz.wtf/falco/milestones-changelog.txt for the lazy people (it updates every 5 minutes) 
 - Add the lastest changes on top the previous `CHANGELOG.md`
 - Submit a PR with the above modifications
 - Await PR approval
@@ -76,5 +75,5 @@ Let `x.y.z` the new version.
 
 Announce the new release to the world!
 
-- Send an announcement to cncf-falco-dev@lists.cncf.io
+- Send an announcement to cncf-falco-dev@lists.cncf.io (plain text, please)
 - Let folks in the slack #falco channel know about a new release came out
