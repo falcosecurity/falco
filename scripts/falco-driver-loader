@@ -227,7 +227,7 @@ load_kernel_module() {
 	URL=$(echo "${DRIVERS_REPO}/${DRIVER_VERSION}/${FALCO_KERNEL_MODULE_FILENAME}" | sed s/+/%2B/g)
 
 	echo "* Trying to download prebuilt module from ${URL}"
-	if curl --create-dirs "${FALCO_DRIVER_CURL_OPTIONS}" -o "${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}" "${URL}"; then
+	if curl -L --create-dirs "${FALCO_DRIVER_CURL_OPTIONS}" -o "${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}" "${URL}"; then
 		echo "Download succeeded, loading module"
 		insmod "${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}"
 		exit $?
@@ -340,7 +340,7 @@ load_bpf_probe() {
 			mkdir -p /tmp/kernel
 			cd /tmp/kernel || exit
 			cd "$(mktemp -d -p /tmp/kernel)" || exit
-			if ! curl -o kernel-sources.tgz --create-dirs "${FALCO_DRIVER_CURL_OPTIONS}" "${BPF_KERNEL_SOURCES_URL}"; then
+			if ! curl -L -o kernel-sources.tgz --create-dirs "${FALCO_DRIVER_CURL_OPTIONS}" "${BPF_KERNEL_SOURCES_URL}"; then
 				exit 1;
 			fi
 
@@ -380,7 +380,7 @@ load_bpf_probe() {
 
 		echo "* Trying to download a prebuilt eBPF probe from ${URL}"
 
-		curl --create-dirs "${FALCO_DRIVER_CURL_OPTIONS}" -o "${HOME}/.falco/${BPF_PROBE_FILENAME}" "${URL}"
+		curl -L --create-dirs "${FALCO_DRIVER_CURL_OPTIONS}" -o "${HOME}/.falco/${BPF_PROBE_FILENAME}" "${URL}"
 	fi
 
 	if [ -f "${HOME}/.falco/${BPF_PROBE_FILENAME}" ]; then
