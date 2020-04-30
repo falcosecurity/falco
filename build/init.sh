@@ -12,12 +12,6 @@
 # specific language governing permissions and limitations under the License.
 #
 
-
-# @kris-nova We have experimental support for ARM and I have tested
-# on armv7. Please use this flag as experimental only.
-BUILD_ARM=false
-
-
 cmake ../ \
       -DBUILD_BPF=OFF \
       -DBUILD_WARNINGS_AS_ERRORS="OFF" \
@@ -27,9 +21,3 @@ cmake ../ \
       -DFALCO_ETC_DIR="/etc/falco" \
       -DUSE_BUNDLED_DEPS=OFF
 
-if [ BUILD_ARM ]; then
-   driver_config="./driver/src/driver_config.h"
-   if ! grep -q "CONFIG_ARM" $driver_config; then
-       printf "\n#define CONFIG_ARM\n\n" >> $driver_config
-   fi
-fi   
