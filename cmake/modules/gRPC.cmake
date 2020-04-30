@@ -42,6 +42,15 @@ if(NOT USE_BUNDLED_DEPS)
     message(FATAL_ERROR "Couldn't find system protobuf")
   endif()
 
+  # gpr
+  find_library(GPR_LIB NAMES gpr)
+
+  if(GPR_LIB)
+    message(STATUS "Found gpr lib: ${GPR_LIB}")
+  else()
+    message(FATAL_ERROR "Couldn't find system gpr")
+  endif()
+
   # gRPC todo(fntlnz, leodido): check that gRPC version is greater or equal than 1.8.0
   find_path(GRPCXX_INCLUDE NAMES grpc++/grpc++.h)
   if(GRPCXX_INCLUDE)
