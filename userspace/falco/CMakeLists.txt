@@ -75,6 +75,7 @@ target_include_directories(
     "${YAMLCPP_INCLUDE_DIR}"
     "${CIVETWEB_INCLUDE_DIR}"
     "${GRPC_INCLUDE}"
+    "${GRPCPP_INCLUDE}"
     "${PROTOBUF_INCLUDE}"
     "${CMAKE_CURRENT_BINARY_DIR}"
     "${DRAIOS_DEPENDENCIES_DIR}/yaml-${DRAIOS_YAML_VERSION}/target/include")
@@ -83,8 +84,9 @@ target_link_libraries(
   falco
   falco_engine
   sinsp
-  "${GRPCPP_LIB}"
+  "${GPR_LIB}"
   "${GRPC_LIB}"
+  "${GRPCPP_LIB}"
   "${PROTOBUF_LIB}"
   "${LIBYAML_LIB}"
   "${YAMLCPP_LIB}"
