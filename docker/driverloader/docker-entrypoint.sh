@@ -16,8 +16,6 @@
 # limitations under the License.
 #
 
-# set -e
-
 
 echo "* Setting up /usr/src links from host"
 

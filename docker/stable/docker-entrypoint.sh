@@ -16,7 +16,6 @@
 # limitations under the License.
 #
 
-# set -e
 
 # Set the SKIP_MODULE_LOAD variable to skip loading the kernel module
 
