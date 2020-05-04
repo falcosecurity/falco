@@ -231,8 +231,7 @@ jobs:
       - run:
           name: Build and publish dev driverloader-dev
           command: |
-            FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
-            docker build --build-arg FALCO_VERSION=${FALCO_VERSION} -t falcosecurity/driverloader:master docker/driverloader
+            docker build --build-arg FALCO_IMAGE_TAG=master -t falcosecurity/driverloader:master docker/driverloader
             echo ${DOCKERHUB_SECRET} | docker login -u ${DOCKERHUB_USER} --password-stdin
             docker push falcosecurity/driverloader:master
   # Publish the packages
@@ -301,7 +300,7 @@ jobs:
       - run:
           name: Build and publish driverloader
           command: |
-            docker build --build-arg FALCO_VERSION=${CIRCLE_TAG} -t "falcosecurity/driverloader:${CIRCLE_TAG}" docker/driverloader
+            docker build --build-arg FALCO_IMAGE_TAG=${CIRCLE_TAG} -t "falcosecurity/driverloader:${CIRCLE_TAG}" docker/driverloader
             docker tag "falcosecurity/driverloader:${CIRCLE_TAG}" falcosecurity/driverloader:latest
             echo ${DOCKERHUB_SECRET} | docker login -u ${DOCKERHUB_USER} --password-stdin
             docker push "falcosecurity/driverloader:${CIRCLE_TAG}"
