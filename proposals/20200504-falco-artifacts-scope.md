@@ -6,6 +6,8 @@ Everything else will be moved to [contrib](https://github.com/falcosecurity/cont
 
 As a project we will build, change, rename, and move files, documents, scripts, configurations according to this new state of the world.
 
+Inspired from [#1114](https://github.com/falcosecurity/falco/issues/1114) and many of the weekly community calls.
+
 ## Terms
 
 **falco** 
@@ -32,7 +34,7 @@ As a project we will build, change, rename, and move files, documents, scripts, 
 
 # Packages
 
-Official packages for X86_64 only. 
+Official packages for X86_64 only. All package names should contain a version which is not specified below.
 
 The following convention MUST be used for all packages.
 
@@ -81,14 +83,14 @@ _If a package installs the Falco kernel module it MUST contain `module`._
 
  - falco-src-x86.tar.gz
      - No binaries
-     - 
+     - `INSTALL` file
  - falco-driver-src-x86.tar.gz
      - `falco` and `/driver` with `Makefile`
      - `INSTALL` file
  - falco-driver-download-x86.tar.gz
-     - `falco` and script to download or fail
+     - `falco` and `falco-driver-loader` download only
  - falco-driver-full-x86.tar.gz
-     - `falco` and script to first try to download then `make install` or fail
+     - `falco` and `falco-driver-loader` download else compile
 
 
 # Images
@@ -137,7 +139,7 @@ Incubating level projects such as [falco-exporter](https://github.com/falco-expo
 
 This is done as needed, and can best be measured by the need to cut a release and use the github release features. Again, this is at the discretion of the Falco open source community.
 
-### official support
+### Official support
 
 As the need for a project grows, it can ultimately achieve the highest and most coveted status. Offical support.
 
@@ -152,14 +154,15 @@ For each item, ask if this already exists. If so we need to rename, and update i
 
 Here are SOME of the items that would need to be done for example:
 
- - Rename `stable` image to `privileged-driver-falco`
- - Rename `bin` package to `bin-driver-loader`
+ - Rename `stable` image to `privileged-driver-install-falco`
+ - Rename `bin` package to `falco-driver-full-x86.tar.gz`
  - Rename `slim` image to `falco`
- - Documentation in `bin-driver-loader` package as INSTALL
- - Documentation in `src` package as INSTALL
+ - Documentation in all packages with `INSTALL` file.
  - Move everything else to contrib
      - Move [/integrations](https://github.com/falcosecurity/falco/tree/master/integrations) to contrib
      - Move [/examples](https://github.com/falcosecurity/falco/tree/master/examples) to contrib
+     - Old docker files
+     - Old documentation
 
 ### Documentation
 
