@@ -17,6 +17,5 @@ cmake ../ \
       -DBUILD_WARNINGS_AS_ERRORS="OFF" \
       -DCMAKE_BUILD_TYPE="Release" \
       -DCMAKE_INSTALL_PREFIX="/usr" \
-      -DDRAIOS_DEBUG_FLAGS="-D_DEBUG" \
       -DFALCO_ETC_DIR="/etc/falco" \
       -DUSE_BUNDLED_DEPS=OFF
