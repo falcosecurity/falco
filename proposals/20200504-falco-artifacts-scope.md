@@ -129,19 +129,19 @@ The criteria will remain loose, and tighten as needed at the discretion of the F
 
 ### contrib
 
-Sandbox level
+"_Sandbox level_"
 
 This new [contrib](https://github.com/falcosecurity/contrib) repository will be equivalent to the `Falco Sandbox` and serves as a place for the community to `test-drive` ideas/projects/code.
 
 ### repository
 
-Incubating level projects such as [falco-exporter](https://github.com/falco-exporter) can be promoted from `contrib` to their own repository. 
+"_Incubating level_" projects such as [falco-exporter](https://github.com/falco-exporter) can be promoted from `contrib` to their own repository. 
 
 This is done as needed, and can best be measured by the need to cut a release and use the github release features. Again, this is at the discretion of the Falco open source community.
 
-### Official support
+### official support
 
-As the need for a project grows, it can ultimately achieve the highest and most coveted status. Offical support.
+As the need for a project grows, it can ultimately achieve the highest and most coveted status within The Falco Project. "_Offical support_."
 
 These artifacts will be ammended to the ones listed above, and will become a part of the official Falco release process.
 
