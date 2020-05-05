@@ -85,6 +85,13 @@ public:
 	// Wrapper that assumes the default ruleset
 	void enable_rule(const std::string &substring, bool enabled);
 
+
+	// Like enable_rule, but the rule name must be an exact match.
+	void enable_rule_exact(const std::string &rule_name, bool enabled, const std::string &ruleset);
+
+	// Wrapper that assumes the default ruleset
+	void enable_rule_exact(const std::string &rule_name, bool enabled);
+
 	//
 	// Enable/Disable any rules with any of the provided tags (set, exact matches only)
 	//
