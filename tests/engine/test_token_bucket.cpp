@@ -14,6 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+#include <memory>
+
 #include "token_bucket.h"
 #include <catch.hpp>
 
@@ -21,7 +23,7 @@ using namespace Catch::literals;
 
 TEST_CASE("token bucket default ctor", "[token_bucket]")
 {
-	auto tb = new token_bucket();
+	auto tb = std::make_shared<token_bucket>();
 
 	REQUIRE(tb->get_tokens() == 1);
 
@@ -38,7 +40,7 @@ TEST_CASE("token bucket default ctor", "[token_bucket]")
 TEST_CASE("token bucket ctor with custom timer", "[token_bucket]")
 {
 	auto t = []() -> uint64_t { return 22; };
-	auto tb = new token_bucket(t);
+	auto tb = std::make_shared<token_bucket>(t);
 
 	REQUIRE(tb->get_tokens() == 1);
 	REQUIRE(tb->get_last_seen() == 22);
@@ -46,7 +48,7 @@ TEST_CASE("token bucket ctor with custom timer", "[token_bucket]")
 
 TEST_CASE("token bucket with 2 tokens/sec rate, max 10 tokens", "[token_bucket]")
 {
-	auto tb = new token_bucket();
+	auto tb = std::make_shared<token_bucket>();
 	tb->init(2.0, 10, 1);
 
 	SECTION("claiming 5 tokens")
