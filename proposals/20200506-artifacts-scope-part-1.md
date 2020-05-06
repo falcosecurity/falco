@@ -22,7 +22,7 @@ Inspired by many previous issues and many of the weekly community calls.
 
 **driver**
 
-*System call provider from the Linux kernel. Either (`bpf`, `module`, or `ptrace`)*
+*System call provider from the Linux kernel. Either (`bpf`, `module`)*
 
 **falco-driver-loader**
 
