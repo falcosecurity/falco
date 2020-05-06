@@ -229,11 +229,11 @@ jobs:
             echo ${DOCKERHUB_SECRET} | docker login -u ${DOCKERHUB_USER} --password-stdin
             docker push falcosecurity/falco:master
       - run:
-          name: Build and publish dev driverloader-dev
+          name: Build and publish dev falco-driver-loader-dev
           command: |
-            docker build --build-arg FALCO_IMAGE_TAG=master -t falcosecurity/driverloader:master docker/driverloader
+            docker build --build-arg FALCO_IMAGE_TAG=master -t falcosecurity/falco-driver-loader:master docker/driver-loader
             echo ${DOCKERHUB_SECRET} | docker login -u ${DOCKERHUB_USER} --password-stdin
-            docker push falcosecurity/driverloader:master
+            docker push falcosecurity/falco-driver-loader:master
   # Publish the packages
   "publish/packages":
     docker:
@@ -298,13 +298,13 @@ jobs:
             docker push "falcosecurity/falco:${CIRCLE_TAG}"
             docker push "falcosecurity/falco:latest"
       - run:
-          name: Build and publish driverloader
+          name: Build and publish falco-driver-loader
           command: |
-            docker build --build-arg FALCO_IMAGE_TAG=${CIRCLE_TAG} -t "falcosecurity/driverloader:${CIRCLE_TAG}" docker/driverloader
-            docker tag "falcosecurity/driverloader:${CIRCLE_TAG}" falcosecurity/driverloader:latest
+            docker build --build-arg FALCO_IMAGE_TAG=${CIRCLE_TAG} -t "falcosecurity/falco-driver-loader:${CIRCLE_TAG}" docker/driver-loader
+            docker tag "falcosecurity/falco-driver-loader:${CIRCLE_TAG}" falcosecurity/falco-driver-loader:latest
             echo ${DOCKERHUB_SECRET} | docker login -u ${DOCKERHUB_USER} --password-stdin
-            docker push "falcosecurity/driverloader:${CIRCLE_TAG}"
-            docker push "falcosecurity/driverloader:latest"
+            docker push "falcosecurity/falco-driver-loader:${CIRCLE_TAG}"
+            docker push "falcosecurity/falco-driver-loader:latest"
 workflows:
   version: 2
   build_and_test:
