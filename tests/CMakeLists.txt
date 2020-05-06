@@ -14,7 +14,7 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 #
-set(FALCO_TESTS_SOURCES test_base.cpp engine/test_token_bucket.cpp engine/test_rulesets.cpp falco/test_webserver.cpp)
+set(FALCO_TESTS_SOURCES test_base.cpp engine/test_token_bucket.cpp falco/test_webserver.cpp engine/test_rulesets.cpp falco/test_profiler.cpp)
 
 set(FALCO_TESTED_LIBRARIES falco_engine)
 

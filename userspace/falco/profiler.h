@@ -64,7 +64,7 @@ struct profiler
 {
 	uint32_t* pd;
 
-	profiler(uint32_t label)
+	explicit profiler(uint32_t label)
 	{
 		pd = c.current;
 		auto next = pd + 5;
