@@ -1,7 +1,7 @@
 # Falco Artifacts Scope - Part 1
 
 The **Falco Artifact Scope** proposal is divided in two parts:
-1. the Part 1 - *this document*: to “capture” the state of recent changes
+1. the Part 1 - *this document*: the State of Art of Falco artifacts
 2. the [Part 2](./20200506-artifacts-scope-part-2.md): the intended state moving forward
 
 ## Summary 
@@ -10,15 +10,15 @@ As a project we would like to support the following artifacts.
 
 Everything else will be moved to [contrib](https://github.com/falcosecurity/contrib).
 
-As a project we will build, change, rename, and move files, documents, scripts, configurations according to this new state of the world.
+As a project we will build, change, rename, and move files, documents, scripts, configurations according to the new state of the art described into [Part 2](./20200506-artifacts-scope-part-2.md).
 
-Inspired from [#1114](https://github.com/falcosecurity/falco/issues/1114) and many of the weekly community calls.
+Inspired by many previous issues and many of the weekly community calls.
 
 ## Terms
 
 **falco** 
 
-*Standalone Falco binary*
+*The Falco binary*
 
 **driver**
 
@@ -34,7 +34,7 @@ Inspired from [#1114](https://github.com/falcosecurity/falco/issues/1114) and ma
 
 **image**
 
-*OCI compliant container image hosted on dockerhub with tags for every release.*
+*OCI compliant container image hosted on dockerhub with tags for every release and the current master branch.*
  
 
 # Packages
@@ -43,7 +43,7 @@ List of currently official packages (for x86 64bits only):
 
 - `falco-x.y.z-x86_64.deb` for debian like systems, it installs the kernel module by default
 - `falco-x.y.z-x86_64.rpm` for rpm like systems, it installs the kernel module by default
-- `falco-x.y.z-x86_64.tar.gz` for binary installation, it contains `falco` binary, `falco-driver-loader` script and related dependencies
+- `falco-x.y.z-x86_64.tar.gz` for binary installation, it contains `falco` binary, `falco-driver-loader` script, drivers source, and related dependencies
 
 
 # Images
@@ -59,7 +59,7 @@ List of currently official container images (for X86 64bits only):
 | [falcosecurity/falco-tester:latest](https://hub.docker.com/repository/docker/falcosecurity/falco-tester) | docker/tester | Container image for running the Falco test suite. Used to run Falco integration tests (CI). | 
 | _to not be published_ | docker/local | Built on-the-fly and used by falco-tester. |
 
-**Note**: `falco-builder`, `falco-tester` (and the `docker/local` image that it's built on the fly) are not integrated into the release process because they are development and CI tools that need to be manually pushed only when updated.
+**Note**: `falco-builder`, `falco-tester` (and the `docker/local` image which it's built on the fly by the `falco-tester` one) are not integrated into the release process because they are development and CI tools that need to be manually pushed only when updated.
 
 
 # Falco Project Evolution
@@ -97,7 +97,7 @@ After the cleanup process, all items will match the *Part 1* of this proposal.
 
 Here are SOME of the items that would need to be done, for example:
 
- - Remove `minimal` from `falco` repository (it's almost similar to `slime`, we don't need two images for the same purpose)
+ - Remove `minimal` from `falco` repository (it's almost similar to `slim`, we don't need two images for the same purpose)
  - Rename `driverloader` image to `falco-driver-loader` (since it has not been release yet, we can rename it without breaking things)
  - Move everything else to contrib
      - Move [/integrations](https://github.com/falcosecurity/falco/tree/master/integrations) to contrib
