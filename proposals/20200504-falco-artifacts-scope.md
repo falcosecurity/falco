@@ -38,7 +38,6 @@ Official packages for X86_64 only. All package names should contain a version wh
 
 The following convention MUST be used for all packages.
 
-_If a package installs Falco as a daemon (systemd, init) it MUST contain `daemon`._
 
 _If a package installs the Falco kernel module it MUST contain `module`._
 
@@ -53,8 +52,6 @@ _If a package installs the Falco BPF probe it MUST contain `bpf`._
 
 - falco-x86.deb
      - `falco` only (default depends on `falco-module`)
- - falco-daemon-x86.deb
-     - `falco` and script to configure as daemon (default depends on `falco-module`)
  - falco-module-x86.deb
      - `module` only
  - falco-bpf-x86.deb
@@ -68,8 +65,6 @@ _If a package installs the Falco BPF probe it MUST contain `bpf`._
 
 - falco-x86.deb
      - `falco` only (default depends on `falco-module`)
- - falco-daemon-x86.deb
-     - `falco` and script to configure as daemon (default depends on `falco-module`)
  - falco-module-x86.deb
      - `module` only
  - falco-bpf-x86.deb
@@ -96,7 +91,6 @@ _If a package installs the Falco BPF probe it MUST contain `bpf`._
 
 The following convention MUST be used for all container images.
 
-_If a container image requires `--privileged` the name MUST have the `priviliged-` prefix._
 
 _If a container image is for development purproses it MUST have the `dev-` prefix._ 
 
@@ -106,14 +100,10 @@ _If a container image is used to install something, then exit it MUST have the `
 
  - falcosecurity/falco:TAG
      - Runs `falco` userspace only
- - falcosecurity/privileged-driver-install:TAG
+ - falcosecurity/falco-driver-loader:TAG
      - Runs `falco-driver-loader` and exit
  - falcosecurity/priviliged-driver-install-falco 
      - first runs `falco-driver-loader` then runs `falco`
- - falcosecurity/priviliged-host-systemd-driver-falco:TAG
-     - Detects arch and runs new bash script:
-         - Installs Falco with packages (deb, rpm, src)
-         - Configures with systemd and Unix Domain Socket [#858](https://github.com/falcosecurity/falco/issues/858)
  - falcosecurity/dev-tester:TAG 
      - Runs the Falco integration test suite
  - falcosecurity/dev-builder:TAG
