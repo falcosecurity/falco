@@ -53,6 +53,7 @@ add_executable(
   grpc_request_context.cpp
   grpc_server.cpp
   utils.cpp
+  profiler.h
   ${CMAKE_CURRENT_BINARY_DIR}/version.grpc.pb.cc
   ${CMAKE_CURRENT_BINARY_DIR}/version.pb.cc
   ${CMAKE_CURRENT_BINARY_DIR}/output.grpc.pb.cc
