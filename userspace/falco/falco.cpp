@@ -158,6 +158,8 @@ static void usage()
 	   "                               This causes every single line emitted by falco to be flushed,\n"
 	   "                               which generates higher CPU usage but is useful when piping those outputs\n"
 	   "                               into another process or into a script.\n"
+	   " -u                            Flip the inspector code to parse from userspace. This can be used in conjunction with\n"
+	   "                               the ptrace(2) based capture source pdig.\n"
 	   " -V, --validate <rules_file>   Read the contents of the specified rules(s) file and exit.\n"
 	   "                               Can be specified multiple times to validate multiple files.\n"
 	   " -v                            Verbose output.\n"
@@ -1096,10 +1098,17 @@ int falco_init(int argc, char **argv)
 		}
 		else
 		{
-			open_t open_cb = [&udig](sinsp* inspector) 
+			open_t open_cb = [&udig](sinsp* inspector)
 			{
 				if(udig)
 				{
+				    // open_udig() is the underlying method used in the capture
+				    // code to parse userspace events from the kernel.
+				    //
+				    // In the case of falco we use ptrace(2) for one
+				    // of these userspace implementations. Regardless
+				    // of the implementation, the underlying method
+				    // remains the same.
 					inspector->open_udig();
 				}
 				else
