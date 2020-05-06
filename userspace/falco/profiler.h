@@ -4,6 +4,7 @@
 #include <thread>
 #include <vector>
 #include <mutex>
+#include "hedley.h"
 
 #define __no_inline __attribute__((noinline))
 
@@ -69,7 +70,7 @@ struct profiler
 		pd = c.current;
 		auto next = pd + 5;
 
-		if(next != c.end)
+		if(HEDLEY_LIKELY(next != c.end))
 			c.current = next;
 		else
 			alloc_chunk();
