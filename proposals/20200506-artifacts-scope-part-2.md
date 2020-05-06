@@ -24,7 +24,7 @@ _If a package installs the Falco kernel module it MUST contain `module`._
 
 _If a package installs the Falco BPF probe it MUST contain `bpf`._
 
-_In general, if a package install a Falco driver it MUST contain the driver name._
+_In general, if a package installs a Falco driver it MUST contain the driver name._
 
 
 ### .deb
@@ -32,13 +32,11 @@ _In general, if a package install a Falco driver it MUST contain the driver name
  Falco running in debian like systems that will default to the kernel module.
 
 - falco-*x.y.z*-amd64.deb
-     - `falco` only (default depends on `falco-module`)
+     - alias to ` falco-*x.y.z*-module-amd64.deb`
  - falco-*x.y.z*-module-amd64.deb
-     - `module` only
+     - `falco` and `module`
  - falco-*x.y.z*-bpf-amd64.deb
-     - `bpf` only
- - falco-*x.y.z*-ptrace-amd64.deb
-     - `ptrace` only
+     - `falco` and `bpf`
 
 
 We reserve the right to change the naming convention of deb packages accordingly to deb conventions.
@@ -48,13 +46,11 @@ We reserve the right to change the naming convention of deb packages accordingly
  Falco running in rpm like systems that will default to the kernel module.
 
 - falco-*x.y.z*-x86_64.rpm
-     - `falco` only (default depends on `falco-module`)
-- falco-*x.y.z*-module-x86_64.rpm
-    - `module` only
-- falco-*x.y.z*-bpf-x86_64.rpm
-    - `bpf` only
-- falco-*x.y.z*-ptrace-x86_64.rpm
-    - `ptrace` only
+     - alias to ` falco-*x.y.z*-module-x86_64.rpm`
+ - falco-*x.y.z*-module-x86_64.rpm
+     - `falco` and `module`
+ - falco-*x.y.z*-bpf-x86_64.rpm
+     - `falco` and `bpf`
 
 We reserve the right to change the naming convention of rpm packages accordingly to rpm conventions.
 
@@ -72,9 +68,6 @@ We reserve the right to change the naming convention of rpm packages accordingly
     - `INSTALL` file
 - falco-bpf-src-x86.tar.gz
     - `bpf` sources with `Makefile`
-    - `INSTALL` file
-- falco-ptrace-src-x86.tar.gz
-    - `ptrace` sources with `Makefile`
     - `INSTALL` file
 
 ## Images
