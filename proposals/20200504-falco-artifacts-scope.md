@@ -18,10 +18,10 @@ Inspired from [#1114](https://github.com/falcosecurity/falco/issues/1114) and ma
 
 *System call provider from the Linux kernel. Either (`bpf`, `module`, or `ptrace`)*
 
-**falco-driver-loader-script**
+**falco-driver-loader**
 
 
-*The bash script found [here](https://github.com/falcosecurity/falco/blob/master/scripts/falco-driver-loader) that tries to compile else download the kernel module.*
+*The bash script found [here](https://github.com/falcosecurity/falco/blob/master/scripts/falco-driver-loader) that tries to compile else download the driver (kernel module or eBPF probe).*
 
 **package**
 
@@ -44,7 +44,6 @@ _If a package installs the Falco kernel module it MUST contain `module`._
 
 _If a package installs the Falco BPF probe it MUST contain `bpf`._
 
-_If a package installs the Falco kernel module it MUST contain `module`._
 
 ---
 
@@ -110,13 +109,13 @@ _If a container image is used to install something, then exit it MUST have the `
  - falcosecurity/privileged-driver-install:TAG
      - Runs `falco-driver-loader` and exit
  - falcosecurity/priviliged-driver-install-falco 
-     - first runs `privileged-driver-install` then runs `falco`
+     - first runs `falco-driver-loader` then runs `falco`
  - falcosecurity/priviliged-host-systemd-driver-falco:TAG
      - Detects arch and runs new bash script:
          - Installs Falco with packages (deb, rpm, src)
          - Configures with systemd and Unix Domain Socket [#858](https://github.com/falcosecurity/falco/issues/858)
  - falcosecurity/dev-tester:TAG 
-     - Runs the falco test suite
+     - Runs the Falco integration test suite
  - falcosecurity/dev-builder:TAG
      -  Contains falco tool chain
 
