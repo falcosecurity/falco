@@ -1,7 +1,7 @@
 # Falco Artifacts Scope - Part 2
 
 The **Falco Artifact Scope** proposal is divided in two parts:
-1. the [Part 1](./20200506-artifacts-scope-part-1.md): to “capture” the state of recent changes
+1. the [Part 1](./20200506-artifacts-scope-part-1.md): the State of Art of Falco artifacts
 2. the Part 2 - *this document*: the intended state moving forward
 
 ## Summary 
@@ -31,35 +31,37 @@ _In general, if a package install a Falco driver it MUST contain the driver name
 
  Falco running in debian like systems that will default to the kernel module.
 
-- falco-*x.y.z*-x86.deb
+- falco-*x.y.z*-amd64.deb
      - `falco` only (default depends on `falco-module`)
- - falco-*x.y.z*-module-x86.deb
+ - falco-*x.y.z*-module-amd64.deb
      - `module` only
- - falco-*x.y.z*-bpf-x86.deb
+ - falco-*x.y.z*-bpf-amd64.deb
      - `bpf` only
- - falco-*x.y.z*-ptrace-x86.deb
+ - falco-*x.y.z*-ptrace-amd64.deb
      - `ptrace` only
 
-N.B.:
+
+We reserve the right to change the naming convention of deb packages accordingly to deb conventions.
 
 ### .rpm
 
  Falco running in rpm like systems that will default to the kernel module.
 
-- falco-*x.y.z*-x86.deb
+- falco-*x.y.z*-x86_64.rpm
      - `falco` only (default depends on `falco-module`)
-- falco-*x.y.z*-module-x86.deb
+- falco-*x.y.z*-module-x86_64.rpm
     - `module` only
-- falco-*x.y.z*-bpf-x86.deb
+- falco-*x.y.z*-bpf-x86_64.rpm
     - `bpf` only
-- falco-*x.y.z*-ptrace-x86.deb
+- falco-*x.y.z*-ptrace-x86_64.rpm
     - `ptrace` only
 
+We reserve the right to change the naming convention of rpm packages accordingly to rpm conventions.
 
 ### .tar.gz
 
 - falco-bin-x86.tar.gz
-    - `falco` binary, `falco-loader-script`, and related dependecies
+    - `falco` binary, `falco-loader-script`, drivers source, and related dependencies
     - `INSTALL` file
     - `Makefile` file
 - falco-src-x86.tar.gz
@@ -79,18 +81,23 @@ N.B.:
 
 The following convention MUST be used for all container images.
 
-*TODO* image name conventions
 
  - falcosecurity/falco:TAG
-     - Runs `falco` userspace only
+     - First runs `falco-driver-loader` and then runs `falco`
+     - Can be run with `--privileged`
+     - Can be run with `-e SKIP_DRIVER_LOAD=true` to skip the execution of `falco-driver-loader`
+     - TAG can be `latest` to refer to the latest release
+     - TAG can be `master` to refer to the latest master
+     - TAG can be `x.y.z` to refer to a specific release
  - falcosecurity/falco-driver-loader:TAG
      - Runs `falco-driver-loader` and exit
+     - Needs to be run with `--privileged`
  - falcosecurity/*TBD**
-     - First runs `falco-driver-loader` then runs `falco`
- - falcosecurity/tester:TAG 
+     - Runs `falco` (only userspace)
+ - falcosecurity/falco-tester:TAG 
      - Runs the Falco integration test suite
- - falcosecurity/builder:TAG
-     - Contains falco tool chain
+ - falcosecurity/falco-builder:TAG
+     - Contains the Falco tool chain for development
 
 The image usage MUST be documented in the Dockerfile and in the [website](https://falco.org/docs/).
 If an image does not take any action by default, a command usage MUST printed out.
@@ -110,10 +117,13 @@ Here are SOME of the items that would need to be done for example:
 
  - Rename package accordingly 
  - Rename docker images accordingly 
+     - Evaluate how to call what's currently called `falcosecurity/falco:latest-slim`
  - Documentation in all packages with `INSTALL` file
  - Add `Makefile` where needed
  - Implement missing packages
-
+    - Rename `SKIP_MODULE_LOAD` environment variable of docker images to `SKIP_DRIVER_LOADER`
+    - Create `usage` commands for every docker image
+    
 ### Documentation
 
 Update documentation in [falco-website](https://github.com/falcosecurity/falco-website/)
