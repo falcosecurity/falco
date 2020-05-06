@@ -215,6 +215,9 @@ ExternalProject_Add(
   BUILD_COMMAND ${CMD_MAKE} COPT="-DNO_FILES" WITH_CPP=1
   INSTALL_COMMAND ${CMD_MAKE} COPT="-DNO_FILES" install-lib install-headers PREFIX=${CIVETWEB_SRC}/install "WITH_CPP=1")
 
+# Hedley
+include(DownloadHedley)
+
 # gRPC
 include(gRPC)
 
