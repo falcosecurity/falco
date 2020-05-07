@@ -78,7 +78,7 @@ The following convention MUST be used for all container images.
  - falcosecurity/falco:TAG
      - First runs `falco-driver-loader` and then runs `falco`
      - Can be run with `--privileged`
-     - Can be run with `-e SKIP_DRIVER_LOAD=true` to skip the execution of `falco-driver-loader`
+     - Can be run with `-e SKIP_DRIVER_LOADER=true` to skip the execution of `falco-driver-loader`
      - TAG can be `latest` to refer to the latest release
      - TAG can be `master` to refer to the latest master
      - TAG can be `x.y.z` to refer to a specific release
