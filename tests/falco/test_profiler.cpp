@@ -17,6 +17,7 @@ limitations under the License.
 #include <catch.hpp>
 #include <thread>
 #include <chrono>
+#include <hedley.h>
 
 void profiler_test_do_experiment()
 {
@@ -70,15 +71,15 @@ TEST_CASE("profiler tests", "[profiler]")
 
 TEST_CASE("consecutive chunks allocation", "[profiler]")
 {
-	int expected_chunks = 10;
+	size_t expected_chunks_size = 10;
 	alloc_chunk();
-	for(int i = chunks.size(); i < (CHUNK_SIZE / 5) * expected_chunks; i++)
+	for(int i = chunks.size(); i < (CHUNK_SIZE / CHUNK_ELEMENTS) * HEDLEY_STATIC_CAST(int, expected_chunks_size); i++)
 	{
 		profiler_test_do_experiment();
 	}
 
 	REQUIRE(labels.size() == 1);
-	REQUIRE(chunks.size() == expected_chunks);
+	REQUIRE(chunks.size() == expected_chunks_size);
 
 	labels.clear();
 	chunks.clear();

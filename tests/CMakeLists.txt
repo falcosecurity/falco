@@ -42,8 +42,9 @@ if(FALCO_BUILD_TESTS)
            "${PROJECT_SOURCE_DIR}/userspace/engine"
            "${YAMLCPP_INCLUDE_DIR}"
            "${CIVETWEB_INCLUDE_DIR}"
+           "${HEDLEY_INCLUDE}"
            "${PROJECT_SOURCE_DIR}/userspace/falco")
-  add_dependencies(falco_test catch2)
+  add_dependencies(falco_test catch2 hedley)
 
   include(CMakeParseArguments)
   include(CTest)
