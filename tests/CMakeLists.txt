@@ -39,12 +39,13 @@ if(FALCO_BUILD_TESTS)
     falco_test
     PUBLIC "${CATCH2_INCLUDE}"
            "${FAKEIT_INCLUDE}"
+           "${HEDLEY_INCLUDE}"
+           "${PROJECT_SOURCE_DIR}/userspace/profiler"
            "${PROJECT_SOURCE_DIR}/userspace/engine"
            "${YAMLCPP_INCLUDE_DIR}"
            "${CIVETWEB_INCLUDE_DIR}"
-           "${HEDLEY_INCLUDE}"
            "${PROJECT_SOURCE_DIR}/userspace/falco")
-  add_dependencies(falco_test catch2 hedley)
+  add_dependencies(falco_test catch2)
 
   include(CMakeParseArguments)
   include(CTest)

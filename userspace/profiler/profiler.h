@@ -22,7 +22,7 @@ limitations under the License.
 #include <hedley.h>
 
 #define CHUNK_ELEMENTS 5
-#define CHUNK_SIZE ((1 << 20) * CHUNK_ELEMENTS) // 5 MiB
+#define CHUNK_SIZE ((1 << 20) * CHUNK_ELEMENTS) // 20 MiB = 5242880 * sizeof(uint32_t)
 #define LABEL_MASK 0x80000000			// Largest positive int32 + 1
 
 struct cursor

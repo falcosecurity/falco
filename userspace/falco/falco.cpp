@@ -45,6 +45,7 @@ limitations under the License.
 #include "statsfilewriter.h"
 #include "webserver.h"
 #include "grpc_server.h"
+#include "profiler.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
 
 typedef function<void(sinsp* inspector)> open_t;
@@ -235,6 +236,7 @@ uint64_t do_inspect(falco_engine *engine,
 			bool all_events,
 			int &result)
 {
+	PROFILEME();
 	uint64_t num_evts = 0;
 	int32_t rc;
 	sinsp_evt* ev;
@@ -1291,6 +1293,7 @@ exit:
 //
 int main(int argc, char **argv)
 {
+	alloc_chunk();
 	int rc;
 
 	// g_restart will cause the falco loop to exit, but we

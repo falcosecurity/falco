@@ -53,14 +53,13 @@ add_executable(
   grpc_request_context.cpp
   grpc_server.cpp
   utils.cpp
-  profiler.h
   ${CMAKE_CURRENT_BINARY_DIR}/version.grpc.pb.cc
   ${CMAKE_CURRENT_BINARY_DIR}/version.pb.cc
   ${CMAKE_CURRENT_BINARY_DIR}/output.grpc.pb.cc
   ${CMAKE_CURRENT_BINARY_DIR}/output.pb.cc
   ${CMAKE_CURRENT_BINARY_DIR}/schema.pb.cc)
 
-add_dependencies(falco civetweb hedley)
+add_dependencies(falco civetweb)
 
 if(USE_BUNDLED_DEPS)
   add_dependencies(falco yamlcpp)
@@ -70,10 +69,11 @@ target_include_directories(
   falco
   PUBLIC
     "${SYSDIG_SOURCE_DIR}/userspace/sysdig"
+    "${HEDLEY_INCLUDE}"
+    "${PROJECT_SOURCE_DIR}/userspace/profiler"
     "${PROJECT_SOURCE_DIR}/userspace/engine"
     "${PROJECT_BINARY_DIR}/userspace/falco"
     "${PROJECT_BINARY_DIR}/driver/src"
-    "${HEDLEY_INCLUDE}"
     "${YAMLCPP_INCLUDE_DIR}"
     "${CIVETWEB_INCLUDE_DIR}"
     "${GRPC_INCLUDE}"
