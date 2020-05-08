@@ -24,55 +24,59 @@ limitations under the License.
 #include <cstdlib>
 #include <iostream>
 
-void profile_empty_func()
+// void profile_recurse(int times)
+// {
+// 	PROFILEME();
+// 	for(int i = 1; i < times; i++)
+// 	{
+// 		profile_recurse(1);
+// 	}
+// }
+
+void profiler_sleep_1sec()
 {
 	PROFILEME();
+	std::this_thread::sleep_for(std::chrono::seconds(1));
 }
 
-// void profiler_test_do_work()
-// {
-// 	PROFILEME();
-// 	std::this_thread::sleep_for(std::chrono::seconds(1));
-// }
+void profiler_sleep_2sec()
+{
+	PROFILEME();
+	profiler_sleep_1sec();
+	std::this_thread::sleep_for(std::chrono::seconds(1));
+}
 
-// void profiler_test_do_work2()
-// {
-// 	PROFILEME();
-// 	profiler_test_do_work();
-// 	std::this_thread::sleep_for(std::chrono::seconds(1));
-// }
+TEST_CASE("profiler stores labels and chunks", "[profiler]")
+{
+	SECTION("profiler needs to be allocated before usage")
+	{
+		alloc_chunk();
+		REQUIRE(chunks.size() == 1);
+		REQUIRE(labels.empty());
+	}
 
-// TEST_CASE("profiler tests", "[profiler]")
-// {
-// 	SECTION("profiler needs to be allocated before usage")
-// 	{
-// 		alloc_chunk();
-// 		REQUIRE(chunks.size() == 1);
-// 		REQUIRE(labels.empty());
-// 	}
+	SECTION("calling a profiled function results in labels and chunks increase")
+	{
+		profiler_sleep_1sec();
+		REQUIRE(labels.size() == 1);
+		REQUIRE(chunks.size() == 1);
+	}
 
-// 	SECTION("calling a profiled function results in labels and chunks increase")
-// 	{
-// 		profiler_test_do_work();
-// 		REQUIRE(labels.size() == 1);
-// 		REQUIRE(chunks.size() == 1);
-// 	}
+	SECTION("calling just another profiled function that calls the one previously called should only increase labels by one")
+	{
+		profiler_sleep_2sec();
+		REQUIRE(labels.size() == 2);
+		REQUIRE(chunks.size() == 1);
+	}
 
-// 	SECTION("calling just another profiled function that calls the one previously called should only increase labels by one")
-// 	{
-// 		profiler_test_do_work2();
-// 		REQUIRE(labels.size() == 2);
-// 		REQUIRE(chunks.size() == 1);
-// 	}
-
-// 	SECTION("clean")
-// 	{
-// 		labels.clear();
-// 		chunks.clear();
-// 		REQUIRE(labels.empty());
-// 		REQUIRE(chunks.empty());
-// 	}
-// }
+	SECTION("clean")
+	{
+		labels.clear();
+		chunks.clear();
+		REQUIRE(labels.empty());
+		REQUIRE(chunks.empty());
+	}
+}
 
 void bb()
 {
@@ -105,7 +109,7 @@ void profiler_fake_root_func()
 	aa();
 }
 
-TEST_CASE("parents - single chunk", "[profiler]")
+TEST_CASE("profiler computes parents (single chunk)", "[profiler]")
 {
 	alloc_chunk();
 	profiler_fake_root_func();
@@ -177,29 +181,26 @@ TEST_CASE("parents - single chunk", "[profiler]")
 		REQUIRE(it->func == "bb"); // function name is "bb" (call bb3)
 	}
 
-	// for(std::vector<int>::size_type j = 0; j != chunks.size(); j++)
-	// {
-	// 	auto *c = chunks[j].begin;
-	// 	for(int i = 0; i < CHUNK_SIZE; i+=CHUNK_ELEMENTS)
-	// 	{
-	// 		if (c[i] == 0) {
-	// 			break;
-	// 		}
-	// 		auto parent = c[i+5];
-	// 		auto e = ((unsigned long long)c[i+4])|(((unsigned long long)c[i+3])<<32);
-	// 		auto s = ((unsigned long long)c[i+2])|(((unsigned long long)c[i+1])<<32);
-	// 		char b[1024];
-	// 		if (parent == 0) {
-	// 			sprintf(b, "%u %lld", c[i], e-s);
-	// 		} else {
-	// 			sprintf(b, "%u;%u %lld", parent, c[i], e-s);
-	// 		}
-	// 		std::cout << std::string(b) << std::endl;
-	// 		// char b2[1024];
-	// 		// sprintf(b2, "%ld - %03d: %u", j, i, c[i]);
-	// 		// std::cout << std::string(b2) << std::endl;
-	// 	}
-	// }
+	for(std::vector<int>::size_type j = 0; j != chunks.size(); j++)
+	{
+		auto *c = chunks[j].begin;
+		for(int i = 0; i < CHUNK_SIZE; i+=CHUNK_ELEMENTS)
+		{
+			if (c[i] == 0) {
+				break;
+			}
+			auto parent = c[i+5];
+			auto e = ((unsigned long long)c[i+4])|(((unsigned long long)c[i+3])<<32);
+			auto s = ((unsigned long long)c[i+2])|(((unsigned long long)c[i+1])<<32);
+			char b[1024];
+			if (i == 0) {
+				sprintf(b, "#;idx;parent    ;function  ;clocks");
+				std::cout << std::string(b) << std::endl;
+			}
+			sprintf(b, "%ld;%03d;%010u;%u;%lld", j, i, parent, c[i], e - s);
+			std::cout << std::string(b) << std::endl;
+		}
+	}
 
 	labels.clear();
 	chunks.clear();
@@ -207,7 +208,7 @@ TEST_CASE("parents - single chunk", "[profiler]")
 	REQUIRE(chunks.empty());
 }
 
-// TEST_CASE("ccc", "[profiler]")
+// TEST_CASE("profile computes recursive parents (more chunks)", "[profiler]")
 // {
 // 	alloc_chunk();
 // 	REQUIRE(chunks.size() == 1);
@@ -215,14 +216,21 @@ TEST_CASE("parents - single chunk", "[profiler]")
 // 	size_t expected_chunks = 2;
 // 	int how_many_times = (CHUNK_SIZE / CHUNK_ELEMENTS) * HEDLEY_STATIC_CAST(int, expected_chunks);
 
-// 	// Use lt (<) to avoid pre-allocation of a new chunk at last element of previous chunk
-// 	for(int i = 1; i < how_many_times; i++)
-// 	{
-// 		profile_empty_func();
-// 	}
+// 	profile_recurse(how_many_times);
 
 // 	REQUIRE(labels.size() == 1);
-// 	REQUIRE(chunks.size() == expected_chunks);
+// 	REQUIRE(chunks.size() == expected_chunks + 1);
+
+// 	for(std::vector<int>::size_type j = 0; j != chunks.size(); j++)
+// 	{
+// 		auto *c = chunks[j].begin;
+// 		for(int i = 0; i < CHUNK_SIZE; i++)
+// 		{
+// 			char b[1024];
+// 			sprintf(b, "%ld - %03d: %u", j, i, c[i]);
+// 			std::cout << std::string(b) << std::endl;
+// 		}
+// 	}
 
 // 	labels.clear();
 // 	chunks.clear();
