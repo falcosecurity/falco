@@ -86,6 +86,7 @@ target_link_libraries(
   falco
   falco_engine
   sinsp
+  falco_profiler
   "${GPR_LIB}"
   "${GRPC_LIB}"
   "${GRPCPP_LIB}"

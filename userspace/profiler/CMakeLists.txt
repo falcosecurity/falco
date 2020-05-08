@@ -12,9 +12,8 @@
 
 add_library(falco_profiler INTERFACE)
 
-message(STATUS "hedley ${HEDLEY_INCLUDE}")
-target_include_directories(
-  falco_profiler
-  INTERFACE
-  "${HEDLEY_INCLUDE}"
-)
+target_include_directories(falco_profiler INTERFACE "${HEDLEY_INCLUDE}" "${FLATBUFFER_INCLUDE_DIR}"
+                                                    "${CMAKE_CURRENT_BINARY_DIR}")
+
+flatbuffers_generate_c_headers(PROFILE "profile.fbs")
+# => exports ${PROFILE_OUTPUTS}

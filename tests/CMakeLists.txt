@@ -16,7 +16,7 @@
 #
 set(FALCO_TESTS_SOURCES test_base.cpp engine/test_token_bucket.cpp falco/test_webserver.cpp engine/test_rulesets.cpp falco/test_profiler.cpp)
 
-set(FALCO_TESTED_LIBRARIES falco_engine)
+set(FALCO_TESTED_LIBRARIES falco_engine falco_profiler)
 
 SET(FALCO_TESTS_ARGUMENTS "" CACHE STRING "Test arguments to pass to the Falco test suite")
 
@@ -39,13 +39,11 @@ if(FALCO_BUILD_TESTS)
     falco_test
     PUBLIC "${CATCH2_INCLUDE}"
            "${FAKEIT_INCLUDE}"
-           "${HEDLEY_INCLUDE}"
-           "${PROJECT_SOURCE_DIR}/userspace/profiler"
            "${PROJECT_SOURCE_DIR}/userspace/engine"
            "${YAMLCPP_INCLUDE_DIR}"
            "${CIVETWEB_INCLUDE_DIR}"
            "${PROJECT_SOURCE_DIR}/userspace/falco")
-  add_dependencies(falco_test catch2)
+  add_dependencies(falco_test catch2 hedley)
 
   include(CMakeParseArguments)
   include(CTest)

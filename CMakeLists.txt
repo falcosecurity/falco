@@ -17,8 +17,8 @@ project(falco)
 option(USE_BUNDLED_DEPS "Bundle hard to find dependencies into the Falco binary" OFF)
 option(BUILD_WARNINGS_AS_ERRORS "Enable building with -Wextra -Werror flags" OFF)
 
-# Elapsed time
-# set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CMAKE_COMMAND} -E time") # TODO(fntlnz, leodido): add a flag to enable this
+# Elapsed time set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CMAKE_COMMAND} -E time") # TODO(fntlnz, leodido): add
+# a flag to enable this
 
 # Make flag for parallel processing
 include(ProcessorCount)
@@ -99,8 +99,7 @@ ExternalProject_Add(
   BUILD_COMMAND ""
   INSTALL_COMMAND "")
 
-# curses
-# We pull this in because libsinsp won't build without it
+# curses We pull this in because libsinsp won't build without it
 set(CURSES_NEED_NCURSES TRUE)
 find_package(Curses REQUIRED)
 message(STATUS "Found ncurses: include: ${CURSES_INCLUDE_DIR}, lib: ${CURSES_LIBRARIES}")
@@ -218,6 +217,9 @@ ExternalProject_Add(
 # Hedley
 include(DownloadHedley)
 
+# FlatBuffers
+include(FlatBuffers)
+
 # gRPC
 include(gRPC)
 
@@ -239,8 +241,8 @@ add_subdirectory(rules)
 # Dockerfiles
 add_subdirectory(docker)
 
-# Clang format
-# add_custom_target(format COMMAND clang-format --style=file -i $<TARGET_PROPERTY:falco,SOURCES> COMMENT "Formatting ..." VERBATIM)
+# Clang format add_custom_target(format COMMAND clang-format --style=file -i $<TARGET_PROPERTY:falco,SOURCES> COMMENT
+# "Formatting ..." VERBATIM)
 
 # Shared build variables
 set(FALCO_SINSP_LIBRARY sinsp)

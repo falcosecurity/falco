@@ -14,6 +14,7 @@ include(ExternalProject)
 
 set(HEDLEY_PREFIX ${CMAKE_BINARY_DIR}/hedley-prefix)
 set(HEDLEY_INCLUDE ${HEDLEY_PREFIX}/include)
+message(STATUS "Found hedley: include: ${HEDLEY_INCLUDE}")
 
 ExternalProject_Add(
   hedley
