@@ -85,7 +85,7 @@ The following convention MUST be used for all container images.
  - falcosecurity/falco-driver-loader:TAG
      - Runs `falco-driver-loader` and exit
      - Needs to be run with `--privileged`
- - falcosecurity/*TBD**
+ - falcosecurity/falco-no-driver
      - Runs `falco` (only userspace)
  - falcosecurity/falco-tester:TAG 
      - Runs the Falco integration test suite
@@ -94,6 +94,7 @@ The following convention MUST be used for all container images.
 
 The image usage MUST be documented in the Dockerfile and in the [website](https://falco.org/docs/).
 If an image does not take any action by default, a command usage MUST printed out.
+We reserve the right to add image aliases if it was needed.
 
 ## Official support
 
