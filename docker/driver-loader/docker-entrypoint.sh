@@ -25,4 +25,4 @@ do
     ln -s "$i" "/usr/src/$base"
 done
 
-/usr/bin/falco-driver-loader $1
+/usr/bin/falco-driver-loader "$@"
