@@ -375,7 +375,10 @@ load_bpf_probe_download() {
 
 	echo "* Trying to download a prebuilt eBPF probe from ${URL}"
 
-	curl -L --create-dirs "${FALCO_DRIVER_CURL_OPTIONS}" -o "${HOME}/.falco/${BPF_PROBE_FILENAME}" "${URL}"
+	if ! curl -L --create-dirs "${FALCO_DRIVER_CURL_OPTIONS}" -o "${HOME}/.falco/${BPF_PROBE_FILENAME}" "${URL}"; then
+		>&2 echo "Download failed"
+		exit 1;
+	fi
 }
 
 load_bpf_probe() {
