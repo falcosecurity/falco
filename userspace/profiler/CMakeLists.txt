@@ -16,4 +16,4 @@ target_include_directories(falco_profiler INTERFACE "${HEDLEY_INCLUDE}" "${FLATB
                                                     "${CMAKE_CURRENT_BINARY_DIR}")
 
 flatbuffers_generate_c_headers(PROFILE "profile.fbs")
-# => exports ${PROFILE_OUTPUTS}
+add_custom_target(flatbuffer_profiler DEPENDS ${PROFILE_OUTPUTS})
