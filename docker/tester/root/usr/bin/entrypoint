@@ -58,6 +58,7 @@ case "$CMD" in
     # build docker images
     build_image "$BUILD_DIR" "$BUILD_TYPE" "$FALCO_VERSION" "deb"
     build_image "$BUILD_DIR" "$BUILD_TYPE" "$FALCO_VERSION" "rpm"
+    build_image "$BUILD_DIR" "$BUILD_TYPE" "$FALCO_VERSION" "tar.gz"
 
     # check that source directory contains Falco
     if [ ! -d "$SOURCE_DIR/falco/test" ]; then
@@ -73,6 +74,7 @@ case "$CMD" in
     # clean docker images
     clean_image "deb"
     clean_image "rpm"
+    clean_image "tar.gz"
     ;;
 "bash")
     CMD=/bin/bash
