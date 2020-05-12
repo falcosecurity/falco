@@ -20,9 +20,12 @@ limitations under the License.
 #include <algorithm>
 #include <hedley.h>
 
-
 #include <cstdlib>
 #include <iostream>
+
+#include <flatbuffers/flatbuffers.h>
+#include <flatbuffers/util.h>
+#include "profile_generated.h"
 
 // void profile_recurse(int times)
 // {
@@ -207,7 +210,6 @@ TEST_CASE("profiler computes parents (single chunk)", "[profiler]")
 	REQUIRE(labels.empty());
 	REQUIRE(chunks.empty());
 }
-
 // TEST_CASE("profile computes recursive parents (more chunks)", "[profiler]")
 // {
 // 	alloc_chunk();
@@ -237,3 +239,51 @@ TEST_CASE("profiler computes parents (single chunk)", "[profiler]")
 // 	REQUIRE(labels.empty());
 // 	REQUIRE(chunks.empty());
 // }
+
+TEST_CASE("profiler flatbuffer serialization deserialization", "[profiler]")
+{
+	flatbuffers::FlatBufferBuilder builder;
+
+	auto root_node = profiler_structures::NodeBuilder(builder);
+	root_node.add_func(builder.CreateString("main"));
+	root_node.add_file(builder.CreateString("falco.cpp"));
+	root_node.add_line(123);
+	root_node.add_cycles(750);
+
+	auto node_one = profiler_structures::NodeBuilder(builder);
+	node_one.add_func(builder.CreateString("do_init"));
+	node_one.add_file(builder.CreateString("falco_engine.cpp"));
+	node_one.add_line(345);
+	node_one.add_cycles(500);
+
+	auto node_two = profiler_structures::NodeBuilder(builder);
+	node_two.add_func(builder.CreateString("do_match"));
+	node_two.add_file(builder.CreateString("ruleset.cpp"));
+	node_two.add_line(678);
+	node_two.add_cycles(250);
+
+	auto node_two_one = profiler_structures::NodeBuilder(builder);
+	node_two_one.add_func(builder.CreateString("do_match"));
+	node_two_one.add_file(builder.CreateString("ruleset.cpp"));
+	node_two_one.add_line(690);
+	node_two_one.add_cycles(100);
+
+	std::vector<flatbuffers::Offset<profiler_structures::Node>> child_vector_node_two;
+	child_vector_node_two.push_back(node_two_one.Finish());
+	auto childs_node_two = builder.CreateVector(child_vector_node_two);
+	node_two_one.add_childs(childs_node_two);
+
+	std::vector<flatbuffers::Offset<profiler_structures::Node>> child_vector;
+	child_vector.push_back(node_one.Finish());
+	child_vector.push_back(node_two.Finish());
+
+	auto childs = builder.CreateVector(child_vector);
+
+	root_node.add_childs(childs);
+
+	profiler_structures::FinishNodeBuffer(builder, root_node.Finish());
+
+	auto node = profiler_structures::GetNode(builder.GetBufferPointer());
+
+	REQUIRE(node->func()->str() == "main");
+}

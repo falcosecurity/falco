@@ -1,15 +1,14 @@
-namespace profiler;
+namespace profiler_structures;
 
 file_identifier "FPRO";
 file_extension "fpro";
 
-table node {
+table Node {
     func:string;
     file:string;
     line:int;
     cycles:uint64;
-    parent:node;
-    childs:[node];
+    childs:[Node];
 }
 
-root_type node;
+root_type Node;
