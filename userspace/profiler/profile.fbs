@@ -1,4 +1,4 @@
-namespace profiler_structures;
+namespace profiler;
 
 file_identifier "FPRO";
 file_extension "fpro";

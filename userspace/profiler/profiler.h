@@ -22,9 +22,12 @@ limitations under the License.
 #include <memory>
 #include <hedley.h>
 
+namespace profiler
+{
+
 #define CHUNK_ELEMENTS 7
 #define CHUNK_SIZE ((1 << 20) * CHUNK_ELEMENTS) // 20 MiB = 5242880 * sizeof(uint32_t)
-#define LABEL_MASK 0x80000000 // Largest positive int32 + 1
+#define LABEL_MASK 0x80000000			// Largest positive int32 + 1
 
 struct cursor
 {
@@ -78,13 +81,13 @@ HEDLEY_NEVER_INLINE uint32_t create_label(char const* file, int line, char const
 	return l.label;
 }
 
-struct profiler
+struct profile
 {
 	uint32_t* data;
 	int n;
 	int epochs; // (max) depth at the moment of execution
 
-	explicit profiler(uint32_t label)
+	explicit profile(uint32_t label)
 	{
 		data = c.current;
 		auto next = data + CHUNK_ELEMENTS;
@@ -107,14 +110,13 @@ struct profiler
 		data[2] = lo;
 	}
 
-	~profiler()
+	~profile()
 	{
 		unsigned int lo, hi;
 		__asm__ __volatile__("rdtsc"
 				     : "=a"(lo), "=d"(hi));
 		data[3] = hi;
 		data[4] = lo;
-
 
 		if(HEDLEY_LIKELY(epochs > 1))
 		{
@@ -163,6 +165,8 @@ struct profiler
 #define PROFILE_VARIABLE_IMPL(arg1, arg2) arg1##arg2
 #define PROFILE_VARIABLE(arg1, arg2) PROFILE_VARIABLE_IMPL(arg1, arg2)
 
-#define PROFILEME()                                                                                    \
-	static uint32_t PROFILE_VARIABLE(_label, __LINE__) = create_label(__FILE__, __LINE__, __FUNCTION__); \
-	profiler PROFILE_VARIABLE(_profile_, __LINE__)(PROFILE_VARIABLE(_label, __LINE__));
+#define PROFILEME()                                                                                                    \
+	static uint32_t PROFILE_VARIABLE(_label, __LINE__) = profiler::create_label(__FILE__, __LINE__, __FUNCTION__); \
+	profiler::profile PROFILE_VARIABLE(_profile_, __LINE__)(PROFILE_VARIABLE(_label, __LINE__));
+
+}; // namespace profiler
