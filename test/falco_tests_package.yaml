@@ -31,3 +31,11 @@ trace_files: !mux
     rules_file: /rules/rule_names_with_spaces.yaml
     trace_file: /traces/cat_write.scap
     conf_file: /etc/falco/falco.yaml
+
+  docker_bin_package:
+    package: docker:falcosecurity/falco:test-tar.gz
+    detect: True
+    detect_level: WARNING
+    rules_file: /rules/rule_names_with_spaces.yaml
+    trace_file: /traces/cat_write.scap
+    conf_file: /etc/falco/falco.yaml
