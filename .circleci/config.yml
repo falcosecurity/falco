@@ -220,7 +220,7 @@ jobs:
           name: Build and publish dev
           command: |
             FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
-            docker build --build-arg VERSION_BUCKET=deb-dev --build-arg FALCO_VERSION=${FALCO_VERSION} -t falcosecurity/falco:master docker/stable
+            docker build --build-arg VERSION_BUCKET=deb-dev --build-arg FALCO_VERSION=${FALCO_VERSION} -t falcosecurity/falco:master docker/falco
             echo ${DOCKERHUB_SECRET} | docker login -u ${DOCKERHUB_USER} --password-stdin
             docker push falcosecurity/falco:master
       - run:
