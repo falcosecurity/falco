@@ -138,6 +138,15 @@ jobs:
       - run:
           name: Execute integration tests
           command: /usr/bin/entrypoint test
+  "tests/driver-loader/integration":
+    machine:
+      image: ubuntu-1604:202004-01
+    steps:
+      - attach_workspace:
+          at: /tmp/ws
+      - run:
+          name: Execute driver-loader integration tests
+          command: /tmp/ws/source/falco/test/driver-loader/run_test.sh /tmp/ws/build/release/
   # Sign rpm packages
   "rpm/sign":
     docker:
@@ -300,6 +309,9 @@ workflows:
       - "tests/integration":
           requires:
             - "build/centos7"
+      - "tests/driver-loader/integration":
+          requires:
+              - "build/centos7"
       - "rpm/sign":
           context: falco
           filters:
@@ -327,6 +339,7 @@ workflows:
               only: master
           requires:
             - "publish/packages-dev"
+            - "tests/driver-loader/integration"
   release:
     jobs:
       - "build/centos7":
