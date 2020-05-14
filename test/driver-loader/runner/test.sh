@@ -19,48 +19,44 @@ set -euo pipefail
 
 FALCO="falco -M 1"
 FALCO_DRIVER_LOADER=falco-driver-loader
-DRIVER_NAME=falco
-KERNEL_RELEASE=$(uname -r)
-KERNEL_VERSION=$(uname -v | sed 's/#\([[:digit:]]\+\).*/\1/')
 
 
-function get_target_id() {
-	if [ -f "${HOST_ROOT}/etc/os-release" ]; then
-		# freedesktop.org and systemd
-		# shellcheck source=/dev/null
-		source "${HOST_ROOT}/etc/os-release"
-		OS_ID=$ID
-	elif [ -f "${HOST_ROOT}/etc/debian_version" ]; then
-		# Older Debian
-		# fixme > can this happen on older Ubuntu?
-		OS_ID=debian
-	elif [ -f "${HOST_ROOT}/etc/centos-release" ]; then
-		# Older CentOS
-		OS_ID=centos
-	else
-		>&2 echo "Detected an unsupported target system, please get in touch with the Falco community"
+function init() {
+
+	# We need this here since is not part of the falco-driver-loader script
+	#
+	# todo(leogr): maybe this can be moved into falco-driver-loader directly
+	# since it depends on HOST_ROOT
+	if [ -n "${HOST_ROOT}" ]; then
+		echo "INIT: Setting up /usr/src links from host"
+		for i in "$HOST_ROOT/usr/src"/*
+		do
+			base=$(basename "$i")
+			ln -s "$i" "/usr/src/$base"
+		done
+	fi
+
+	local EXPECTED_DRIVER_VERSION=${DRIVER_VERSION}
+
+	# We need some env vars to be populated
+	# Just source falco-driver-loader, and call get_target_id
+	# Loaded driver will be cleaned up later, if any.
+	echo "INIT: Sourcing ${FALCO_DRIVER_LOADER} to get env vars populated"
+	set +eu
+	source $FALCO_DRIVER_LOADER --source-only
+	get_target_id
+	set -eu
+
+	if [ ! "${EXPECTED_DRIVER_VERSION}" = "${DRIVER_VERSION}" ]; then
+		echo "INIT: Unexpected DRIVER_VERSION in falco-driver-loader"
+		echo "Expected: ${EXPECTED_DRIVER_VERSION}"
+		echo "Found: ${DRIVER_VERSION}"
 		exit 1
 	fi
 
-	case "${OS_ID}" in
-	("amzn")
-		if [[ $VERSION_ID == "2" ]]; then
-			TARGET_ID="amazonlinux2"
-		else
-			TARGET_ID="amazonlinux"
-		fi
-		;;
-	("ubuntu")
-		if [[ $KERNEL_RELEASE == *"aws"* ]]; then
-			TARGET_ID="ubuntu-aws"
-		else
-			TARGET_ID="ubuntu"
-		fi
-		;;
-	(*)
-		TARGET_ID=$(echo "${OS_ID}" | tr '[:upper:]' '[:lower:]')
-		;;
-	esac
+	FALCO_KERNEL_MODULE_PATH="${HOME}/.falco/${DRIVER_NAME}_${TARGET_ID}_${KERNEL_RELEASE}_${KERNEL_VERSION}.ko"
+	FALCO_BPF_PROBE_PATH="${HOME}/.falco/${DRIVER_NAME}_${TARGET_ID}_${KERNEL_RELEASE}_${KERNEL_VERSION}.o"
+	cleanup_drivers
 }
 
 function cleanup_drivers() {
@@ -72,6 +68,7 @@ function cleanup_drivers() {
     rm -f "$FALCO_KERNEL_MODULE_PATH"
 
     # bpf probe
+	local PROBE_INSTALL_PATH="${HOME}/.falco/${DRIVER_NAME}-bpf.o"
     rm -f "$FALCO_BPF_PROBE_PATH"
     rm -f "$PROBE_INSTALL_PATH"
 }
@@ -79,12 +76,12 @@ function cleanup_drivers() {
 function run_test() {
     echo ""
     echo "TEST: $1"
-	cleanup_drivers
 	echo ""
     $1
 	echo ""
     echo "PASS: $1"
     echo ""
+	cleanup_drivers
 }
 
 function assert_kernel_module() {
@@ -102,6 +99,7 @@ function assert_kernel_module() {
 }
 
 function assert_bpf_probe() {
+	local PROBE_INSTALL_PATH="${HOME}/.falco/${DRIVER_NAME}-bpf.o"
 	echo "ASSERT: eBPF probe at $PROBE_INSTALL_PATH"
     if ! test -f "$PROBE_INSTALL_PATH"; then 
         echo "FAIL: eBPF probe not found"
@@ -132,21 +130,7 @@ echo "Driver version: $DRIVER_VERSION"
 echo "HOST_ROOT: ${HOST_ROOT}"
 echo ""
 
-if [ -n "${HOST_ROOT}" ]; then
-	echo "Setting up /usr/src links from host"
-	for i in "$HOST_ROOT/usr/src"/*
-	do
-		base=$(basename "$i")
-		ln -s "$i" "/usr/src/$base"
-	done
-fi
-
-get_target_id
-FALCO_KERNEL_MODULE_PATH="${HOME}/.falco/${DRIVER_NAME}_${TARGET_ID}_${KERNEL_RELEASE}_${KERNEL_VERSION}.ko"
-FALCO_BPF_PROBE_PATH="${HOME}/.falco/${DRIVER_NAME}_${TARGET_ID}_${KERNEL_RELEASE}_${KERNEL_VERSION}.o"
-PROBE_INSTALL_PATH="${HOME}/.falco/${DRIVER_NAME}-bpf.o"
+init
 
 run_test "test_kernel_module"
 run_test "test_bpf_probe"
-
-cleanup_drivers
