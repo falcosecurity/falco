@@ -10,7 +10,7 @@ When you want to test a new file or test a non tested file, remember four steps:
 
 - The folder structure here is the same as the one in the `userspace` folder, so `userspace/engine` becomes `tests/engine`.
 - We call test files with this format `test_<original-file-name>.cpp`
-- Update the `CMakeLists.txt` file to include your file in `FALCO_TESTS_SOURCES` and change the `FALCO_TESTED_LIBRARIES` accordingly. You might aslo need to add dependencies, in that case, look at `target_link_libraries` and `target_include_directories`
+- Update the `CMakeLists.txt` file to include your file in `FALCO_TESTS_SOURCES` and change the `FALCO_TESTED_LIBRARIES` accordingly. You might also need to add dependencies, in that case, look at `target_link_libraries` and `target_include_directories`
 - If you are unsure on how to write tests, refer to our existing tests in this folder and to the [Catch2](https://github.com/catchorg/Catch2/tree/master/docs) documentation.
 
 ## How to execute tests
@@ -55,4 +55,3 @@ Once you are ready, you can run your configuration with:
 ```bash
 make tests
 ```
-
