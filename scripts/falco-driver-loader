@@ -420,6 +420,10 @@ fi
 DRIVER_VERSION="@PROBE_VERSION@"
 DRIVER_NAME="@PROBE_NAME@"
 
+if [ "${1}" = "--source-only" ]; then
+    return
+fi
+
 if [ "$(id -u)" != 0 ]; then
 	echo "Installer must be run as root (or with sudo)."
 	exit 1
