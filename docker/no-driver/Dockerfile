@@ -55,4 +55,7 @@ COPY --from=ubuntu /lib64/ld-linux-x86-64.so.2 /lib64/ld-linux-x86-64.so.2
 
 COPY --from=ubuntu /falco /
 
+RUN sed -e 's/time_format_iso_8601: false/time_format_iso_8601: true/' < /etc/falco/falco.yaml > /etc/falco/falco.yaml.new \
+    && mv /etc/falco/falco.yaml.new /etc/falco/falco.yaml
+
 CMD ["/usr/bin/falco", "-o", "time_format_iso_8601=true"]
