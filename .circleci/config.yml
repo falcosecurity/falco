@@ -281,8 +281,8 @@ jobs:
           command: |
             docker build --build-arg VERSION_BUCKET=bin --build-arg FALCO_VERSION=${CIRCLE_TAG} -t "falcosecurity/falco-no-driver:${CIRCLE_TAG}" docker/no-driver
             docker tag "falcosecurity/falco-no-driver:${CIRCLE_TAG}" falcosecurity/falco-no-driver:latest
-            docker tag "falcosecurity/falco:${CIRCLE_TAG}" "falcosecurity/falco:${CIRCLE_TAG}-slim"
-            docker tag "falcosecurity/falco:${CIRCLE_TAG}" "falcosecurity/falco:latest-slim"
+            docker tag "falcosecurity/falco-no-driver:${CIRCLE_TAG}" "falcosecurity/falco:${CIRCLE_TAG}-slim"
+            docker tag "falcosecurity/falco-no-driver:${CIRCLE_TAG}" "falcosecurity/falco:latest-slim"
             echo ${DOCKERHUB_SECRET} | docker login -u ${DOCKERHUB_USER} --password-stdin
             docker push "falcosecurity/falco-no-driver:${CIRCLE_TAG}"
             docker push "falcosecurity/falco-no-driver:latest"
