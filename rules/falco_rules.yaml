@@ -861,7 +861,8 @@
 - macro: exe_running_docker_save
   condition: >
     proc.name = "exe"
-    and proc.cmdline contains "/var/lib/docker"
+    and (proc.cmdline contains "/var/lib/docker"
+    or proc.cmdline contains "/var/run/docker")
     and proc.pname in (dockerd, docker)
 
 # Ideally we'd have a length check here as well but sysdig
