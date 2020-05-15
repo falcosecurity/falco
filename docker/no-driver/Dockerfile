@@ -21,6 +21,9 @@ RUN apt-get update -y && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
+RUN sed -e 's/time_format_iso_8601: false/time_format_iso_8601: true/' < /falco/etc/falco/falco.yaml > /falco/etc/falco/falco.yaml.new \
+    && mv /falco/etc/falco/falco.yaml.new /falco/etc/falco/falco.yaml
+
 FROM scratch
 
 COPY --from=ubuntu /lib/x86_64-linux-gnu/libanl.so.1 \
@@ -54,8 +57,5 @@ COPY --from=ubuntu /etc/default/nss /etc/default/nss
 COPY --from=ubuntu /lib64/ld-linux-x86-64.so.2 /lib64/ld-linux-x86-64.so.2
 
 COPY --from=ubuntu /falco /
-
-RUN sed -e 's/time_format_iso_8601: false/time_format_iso_8601: true/' < /etc/falco/falco.yaml > /etc/falco/falco.yaml.new \
-    && mv /etc/falco/falco.yaml.new /etc/falco/falco.yaml
 
 CMD ["/usr/bin/falco", "-o", "time_format_iso_8601=true"]
