@@ -2516,6 +2516,12 @@
 - list: user_known_chmod_applications
   items: [hyperkube, kubelet]
 
+# This macro should be overridden in user rules as needed. This is useful if a given application
+# should not be ignored alltogether with the user_known_chmod_applications list, but only in
+# specific conditions.
+- macro: user_known_set_setuid_or_setgid_bit_conditions
+  condition: (never_true)
+
 - rule: Set Setuid or Setgid bit
   desc: >
     When the setuid or setgid bits are set for an application,
@@ -2525,6 +2531,7 @@
     consider_all_chmods and chmod and (evt.arg.mode contains "S_ISUID" or evt.arg.mode contains "S_ISGID")
     and not proc.name in (user_known_chmod_applications)
     and not exe_running_docker_save
+    and not user_known_set_setuid_or_setgid_bit_conditions
   output: >
     Setuid or setgid bit is set via chmod (fd=%evt.arg.fd filename=%evt.arg.filename mode=%evt.arg.mode user=%user.name process=%proc.name
     command=%proc.cmdline container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
