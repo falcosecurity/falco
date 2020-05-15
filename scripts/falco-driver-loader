@@ -131,7 +131,7 @@ get_target_id() {
 		if [[ $KERNEL_RELEASE == *"aws"* ]]; then
 			TARGET_ID="ubuntu-aws"
 		else
-			TARGET_ID="ubuntu"
+			TARGET_ID="ubuntu-generic"
 		fi
 		;;
 	(*)
