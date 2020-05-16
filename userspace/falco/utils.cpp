@@ -14,6 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+#include <cstring>
+
 #include "utils.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
 
@@ -32,4 +34,16 @@ void falco::utils::read(const std::string& filename, std::string& data)
 	}
 
 	return;
+}
+
+bool falco::utils::starts_with(const std::string& text, const std::string& prefix)
+{
+	return prefix.empty() ||
+	       (text.size() >= prefix.size() &&
+		std::memcmp(text.data(), prefix.data(), prefix.size()) == 0);
+}
+
+bool falco::utils::network::url_is_unix_scheme(const std::string& url)
+{
+	return starts_with(url, UNIX_SCHEME);
 }

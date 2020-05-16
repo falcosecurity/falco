@@ -26,5 +26,12 @@ namespace falco
 namespace utils
 {
 void read(const std::string& filename, std::string& data);
+bool starts_with(const std::string& text, const std::string& prefix);
+
+namespace network
+{
+static const std::string UNIX_SCHEME{"unix://"};
+bool url_is_unix_scheme(const std::string& url);
+} // namespace network
 } // namespace utils
 } // namespace falco
