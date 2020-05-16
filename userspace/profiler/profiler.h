@@ -95,7 +95,7 @@ struct profile
 		epochs = (next - chunks[n - 1].begin) / CHUNK_ELEMENTS; // (next - start) / data size
 
 		if(HEDLEY_LIKELY(next != c.end))
-			c.current = next;
+			c.current = next; // adds 28 bytes
 		else
 			alloc_chunk(); // note: changes `c` values (current and end)
 

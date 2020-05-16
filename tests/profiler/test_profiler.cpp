@@ -22,6 +22,7 @@ limitations under the License.
 
 #include <cstdlib>
 #include <iostream>
+#include <thread>
 
 #include <flatbuffers/flatbuffers.h>
 #include "profile_generated.h"
@@ -90,6 +91,13 @@ void aa()
 {
 	PROFILEME();
 	bb();
+	std::this_thread::sleep_for(std::chrono::microseconds(1));
+}
+
+void aa_threaded()
+{
+	profiler::alloc_chunk();
+	PROFILEME();
 	std::this_thread::sleep_for(std::chrono::microseconds(1));
 }
 
@@ -325,4 +333,21 @@ TEST_CASE("profiler flatbuffer serialization deserialization", "[profiler]")
 		REQUIRE(expect_two_one->file()->str() == "ruleset.cpp");
 		REQUIRE(expect_two_one->childs() == nullptr);
 	}
+}
+
+void profile_fake_root_launching_threads()
+{
+	PROFILEME();
+	std::thread ta(aa_threaded);
+	std::this_thread::sleep_for(std::chrono::microseconds(1));
+	bb();
+
+	ta.join();
+}
+
+TEST_CASE("profiler multi threading", "[profiler]")
+{
+	profiler::alloc_chunk();
+	REQUIRE(profiler::chunks.size() == 1);
+	profile_fake_root_launching_threads();
 }
