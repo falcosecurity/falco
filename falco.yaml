@@ -167,21 +167,35 @@ http_output:
   enabled: false
   url: http://some.url
 
-# gRPC server configuration.
-# The gRPC server is secure by default (mutual TLS) so you need to generate certificates and update their paths here.
+# Falco supports running a gRPC server
+# with two main binding types
+# 1. Over the network with mandatory mutual TLS authentication (mTLS)
+# 2. Over a local unix socket with no authentication
+# By default, the gRPC server is disabled, with no enabled services (see grpc_output)
+# please comment/uncomment and change accordingly the options below to configure it.
+
+# gRPC server over network with (mandatory) mutual TLS configuration.
+# This gRPC server is secure by default so you need to generate certificates and update their paths here.
 # By default the gRPC server is off.
 # You can configure the address to bind and expose it.
 # By modifying the threadiness configuration you can fine-tune the number of threads (and context) it will use.
+# grpc:
+#   enabled: true
+#   bind_address: "0.0.0.0:5060"
+#   threadiness: 8
+#   private_key: "/etc/falco/certs/server.key"
+#   cert_chain: "/etc/falco/certs/server.crt"
+#   root_certs: "/etc/falco/certs/ca.crt"
+
+# gRPC server using an unix socket
 grpc:
   enabled: false
-  bind_address: "0.0.0.0:5060"
+  bind_address: "unix:///var/run/falco/falco.sock"
   threadiness: 8
-  private_key: "/etc/falco/certs/server.key"
-  cert_chain: "/etc/falco/certs/server.crt"
-  root_certs: "/etc/falco/certs/ca.crt"
 
 # gRPC output service.
 # By default it is off.
 # By enabling this all the output events will be kept in memory until you read them with a gRPC client.
+# Make sure to have a consumer for them or leave this disabled.
 grpc_output:
   enabled: false
