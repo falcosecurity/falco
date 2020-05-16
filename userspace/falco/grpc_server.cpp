@@ -103,31 +103,43 @@ void falco::grpc::server::init(std::string server_addr, int threadiness, std::st
 	m_private_key = private_key;
 	m_cert_chain = cert_chain;
 	m_root_certs = root_certs;
+
+	if(falco::utils::network::url_is_unix_scheme(m_server_addr))
+	{
+		init_unix_server_builder();
+		return;
+	}
+	init_mtls_server_builder();
 }
 
-void falco::grpc::server::run()
+void falco::grpc::server::init_mtls_server_builder()
 {
 	string private_key;
 	string cert_chain;
 	string root_certs;
-
 	falco::utils::read(m_cert_chain, cert_chain);
 	falco::utils::read(m_private_key, private_key);
 	falco::utils::read(m_root_certs, root_certs);
-
 	::grpc::SslServerCredentialsOptions::PemKeyCertPair cert_pair{private_key, cert_chain};
-
 	::grpc::SslServerCredentialsOptions ssl_opts(GRPC_SSL_REQUEST_AND_REQUIRE_CLIENT_CERTIFICATE_AND_VERIFY);
 	ssl_opts.pem_root_certs = root_certs;
 	ssl_opts.pem_key_cert_pairs.push_back(cert_pair);
 
-	::grpc::ServerBuilder builder;
-	builder.AddListeningPort(m_server_addr, ::grpc::SslServerCredentials(ssl_opts));
-	builder.RegisterService(&m_output_svc);
-	builder.RegisterService(&m_version_svc);
+	m_server_builder.AddListeningPort(m_server_addr, ::grpc::SslServerCredentials(ssl_opts));
+}
 
-	m_completion_queue = builder.AddCompletionQueue();
-	m_server = builder.BuildAndStart();
+void falco::grpc::server::init_unix_server_builder()
+{
+	m_server_builder.AddListeningPort(m_server_addr, ::grpc::InsecureServerCredentials());
+}
+
+void falco::grpc::server::run()
+{
+	m_server_builder.RegisterService(&m_output_svc);
+	m_server_builder.RegisterService(&m_version_svc);
+
+	m_completion_queue = m_server_builder.AddCompletionQueue();
+	m_server = m_server_builder.BuildAndStart();
 	falco_logger::log(LOG_INFO, "Starting gRPC server at " + m_server_addr + "\n");
 
 	// The number of contexts is multiple of the number of threads

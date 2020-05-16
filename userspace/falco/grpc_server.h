@@ -61,6 +61,9 @@ private:
 
 	std::unique_ptr<::grpc::Server> m_server;
 	std::vector<std::thread> m_threads;
+	::grpc::ServerBuilder m_server_builder;
+	void init_mtls_server_builder();
+	void init_unix_server_builder();
 };
 
 } // namespace grpc
