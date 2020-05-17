@@ -17,6 +17,9 @@ limitations under the License.
 
 */
 
+#include <sstream>
+#include <fstream>
+#include <iostream>
 #include <string>
 
 #pragma once
@@ -27,8 +30,14 @@ namespace falco
 namespace utils
 {
 
-std::string wrap_text(const std::string &str, uint32_t initial_pos, uint32_t indent, uint32_t line_len);
+std::string wrap_text(const std::string& str, uint32_t initial_pos, uint32_t indent, uint32_t line_len);
 
+void readfile(const std::string& filename, std::string& data);
+bool starts_with(const std::string& text, const std::string& prefix);
+namespace network
+{
+static const std::string UNIX_SCHEME{"unix://"};
+bool url_is_unix_scheme(const std::string& url);
+} // namespace network
 } // namespace utils
-
 } // namespace falco
