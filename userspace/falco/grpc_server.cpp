@@ -44,6 +44,23 @@ limitations under the License.
 		c.start(this);                                           \
 	}
 
+static void gpr_falco_log_dispatcher_func(gpr_log_func_args* args)
+{
+	int priority = LOG_INFO;
+
+	if(args
+		   ->severity == GPR_LOG_SEVERITY_ERROR)
+	{
+		priority = LOG_ERR;
+	}
+	if(args
+		   ->severity == GPR_LOG_SEVERITY_DEBUG)
+	{
+		priority = LOG_DEBUG;
+	}
+	falco_logger::log(priority, args->message);
+}
+
 void falco::grpc::server::thread_process(int thread_index)
 {
 	void* tag = nullptr;
@@ -135,11 +152,18 @@ void falco::grpc::server::init_unix_server_builder()
 
 void falco::grpc::server::run()
 {
+	gpr_set_log_function(gpr_falco_log_dispatcher_func);
+
 	m_server_builder.RegisterService(&m_output_svc);
 	m_server_builder.RegisterService(&m_version_svc);
 
 	m_completion_queue = m_server_builder.AddCompletionQueue();
 	m_server = m_server_builder.BuildAndStart();
+	if(m_server == nullptr)
+	{
+		falco_logger::log(LOG_EMERG, "Error starting gRPC server\n");
+		return;
+	}
 	falco_logger::log(LOG_INFO, "Starting gRPC server at " + m_server_addr + "\n");
 
 	// The number of contexts is multiple of the number of threads
