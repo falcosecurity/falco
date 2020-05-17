@@ -18,13 +18,13 @@ limitations under the License.
 
 TEST_CASE("Startswith shold match when checked string has prefix", "[utils]")
 {
-	bool res = falco::utils::starts_with("unix:///var/run/falco/falco.sock", "unix://");
+	bool res = falco::utils::starts_with("unix:///var/run/falco.sock", "unix://");
 	REQUIRE(res);
 }
 
 TEST_CASE("Startswith shold not match when checked string does not have prefix", "[utils]")
 {
-	bool res = falco::utils::starts_with("unix:///var/run/falco/falco.sock", "something://");
+	bool res = falco::utils::starts_with("unix:///var/run/falco.sock", "something://");
 	REQUIRE_FALSE(res);
 }
 
