@@ -16,6 +16,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 */
+#include <cstring>
 
 #include "falco_utils.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
@@ -26,7 +27,7 @@ namespace falco
 namespace utils
 {
 
-std::string wrap_text(const std::string &str, uint32_t initial_pos, uint32_t indent, uint32_t line_len)
+std::string wrap_text(const std::string& str, uint32_t initial_pos, uint32_t indent, uint32_t line_len)
 {
 	std::string ret;
 
@@ -51,6 +52,36 @@ std::string wrap_text(const std::string &str, uint32_t initial_pos, uint32_t ind
 	return ret;
 }
 
-} // namespace utils
+void readfile(const std::string& filename, std::string& data)
+{
+	std::ifstream file(filename.c_str(), std::ios::in);
 
+	if(file.is_open())
+	{
+		std::stringstream ss;
+		ss << file.rdbuf();
+
+		file.close();
+
+		data = ss.str();
+	}
+
+	return;
+}
+
+bool starts_with(const std::string& text, const std::string& prefix)
+{
+	return prefix.empty() ||
+	       (text.size() >= prefix.size() &&
+		std::memcmp(text.data(), prefix.data(), prefix.size()) == 0);
+}
+
+namespace network
+{
+bool url_is_unix_scheme(const std::string& url)
+{
+	return starts_with(url, UNIX_SCHEME);
+}
+} // namespace network
+} // namespace utils
 } // namespace falco

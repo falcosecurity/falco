@@ -23,7 +23,7 @@ limitations under the License.
 #include "logger.h"
 #include "grpc_server.h"
 #include "grpc_request_context.h"
-#include "utils.h"
+#include "falco_utils.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
 
 #define REGISTER_STREAM(req, res, svc, rpc, impl, num)                          \
@@ -117,9 +117,9 @@ void falco::grpc::server::init_mtls_server_builder()
 	string private_key;
 	string cert_chain;
 	string root_certs;
-	falco::utils::read(m_cert_chain, cert_chain);
-	falco::utils::read(m_private_key, private_key);
-	falco::utils::read(m_root_certs, root_certs);
+	falco::utils::readfile(m_cert_chain, cert_chain);
+	falco::utils::readfile(m_private_key, private_key);
+	falco::utils::readfile(m_root_certs, root_certs);
 	::grpc::SslServerCredentialsOptions::PemKeyCertPair cert_pair{private_key, cert_chain};
 	::grpc::SslServerCredentialsOptions ssl_opts(GRPC_SSL_REQUEST_AND_REQUIRE_CLIENT_CERTIFICATE_AND_VERIFY);
 	ssl_opts.pem_root_certs = root_certs;
