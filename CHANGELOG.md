@@ -9,7 +9,7 @@ Released on 2020-18-05
 ### Major Changes
 
 * BREAKING CHANGE: the falco-driver-loader script now references `falco-probe.o` and `falco-probe.ko` as `falco.o` and `falco.ko` [[#1158](https://github.com/falcosecurity/falco/pull/1158)]
-* BREAKING CHANGE: the `falco-driver-loader` script environment variable to use a custom repository to download drivers now uses the `DRIVERS_REPO` environment variable instead of `DRIVER_LOOKUP_URL`. This variable must contain the parent URI containing the following directory structure `/$driver_version$/falco_$target$_$kernelrelease$_$kernelversion$.[ko|o]`. e.g: ` [[#1160](https://github.com/falcosecurity/falco/pull/1160)]
+* BREAKING CHANGE: the `falco-driver-loader` script environment variable to use a custom repository to download drivers now uses the `DRIVERS_REPO` environment variable instead of `DRIVER_LOOKUP_URL`. This variable must contain the parent URI containing the following directory structure `/$driver_version$/falco_$target$_$kernelrelease$_$kernelversion$.[ko|o]`. e.g: [[#1160](https://github.com/falcosecurity/falco/pull/1160)]
 * new(scripts): options and command-line usage for `falco-driver-loader` [[#1200](https://github.com/falcosecurity/falco/pull/1200)]
 * new: ability to specify exact matches when adding rules to Falco engine (only API) [[#1185](https://github.com/falcosecurity/falco/pull/1185)]
 * new(docker): add an image that wraps the `falco-driver-loader` with the toolchain [[#1192](https://github.com/falcosecurity/falco/pull/1192)]
