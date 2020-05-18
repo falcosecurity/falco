@@ -12,7 +12,7 @@ Finally, on the proposed due date the assignees for the upcoming release proceed
 
 ### 1. Release notes
 - Let `YYYY-MM-DD` the day before of the [latest release](https://github.com/falcosecurity/falco/releases)
-- Check the release note block of every PR matching the `is:pr is:merged closed:>YYY-MM-DD` [filter](https://github.com/falcosecurity/falco/pulls?q=is%3Apr+is%3Amerged+closed%3A%3EYYYY-MM-DD)
+- Check the release note block of every PR matching the `is:pr is:merged closed:>YYYY-MM-DD` [filter](https://github.com/falcosecurity/falco/pulls?q=is%3Apr+is%3Amerged+closed%3A%3EYYYY-MM-DD)
     - Ensure the release note block follows the [commit convention](https://github.com/falcosecurity/falco/blob/master/CONTRIBUTING.md#commit-convention), otherwise fix its content
     - If the PR has no milestone, assign it to the milestone currently undergoing release
 - Check issues without a milestone (using [is:pr is:merged no:milestone closed:>YYYT-MM-DD](https://github.com/falcosecurity/falco/pulls?q=is%3Apr+is%3Amerged+no%3Amilestone+closed%3A%3EYYYT-MM-DD) filter) and add them to the milestone currently undergoing release
