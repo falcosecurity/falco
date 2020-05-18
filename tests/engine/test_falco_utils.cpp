@@ -14,22 +14,40 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include "falco_utils.h"
+#include <nonstd/string_view.hpp>
 #include <catch.hpp>
 
-TEST_CASE("Startswith shold match when checked string has prefix", "[utils]")
+TEST_CASE("is_unix_scheme matches", "[utils]")
 {
-	bool res = falco::utils::starts_with("unix:///var/run/falco.sock", "unix://");
-	REQUIRE(res);
+	SECTION("rvalue")
+	{
+		bool res = falco::utils::network::is_unix_scheme("unix:///var/run/falco.sock");
+		REQUIRE(res);
+	}
+
+	SECTION("std::string")
+	{
+		std::string url("unix:///var/run/falco.sock");
+		bool res = falco::utils::network::is_unix_scheme(url);
+		REQUIRE(res);
+	}
+
+	SECTION("char[]")
+	{
+		char url[] = "unix:///var/run/falco.sock";
+		bool res = falco::utils::network::is_unix_scheme(url);
+		REQUIRE(res);
+	}
 }
 
-TEST_CASE("Startswith shold not match when checked string does not have prefix", "[utils]")
+TEST_CASE("is_unix_scheme does not match", "[utils]")
 {
-	bool res = falco::utils::starts_with("unix:///var/run/falco.sock", "something://");
+	bool res = falco::utils::network::is_unix_scheme("something:///var/run/falco.sock");
 	REQUIRE_FALSE(res);
 }
 
-TEST_CASE("Startswith shold not match when prefix is at a random position", "[utils]")
+TEST_CASE("is_unix_scheme only matches scheme at the start of the string", "[utils]")
 {
-	bool res = falco::utils::starts_with("/var/run/unix:///falco.sock", "unix://");
+	bool res = falco::utils::network::is_unix_scheme("/var/run/unix:///falco.sock");
 	REQUIRE_FALSE(res);
 }

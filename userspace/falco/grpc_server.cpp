@@ -121,7 +121,7 @@ void falco::grpc::server::init(std::string server_addr, int threadiness, std::st
 	m_cert_chain = cert_chain;
 	m_root_certs = root_certs;
 
-	if(falco::utils::network::url_is_unix_scheme(m_server_addr))
+	if(falco::utils::network::is_unix_scheme(m_server_addr))
 	{
 		init_unix_server_builder();
 		return;
