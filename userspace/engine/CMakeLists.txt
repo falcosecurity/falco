@@ -21,7 +21,7 @@ set(FALCO_ENGINE_SOURCE_FILES
     formats.cpp)
 
 add_library(falco_engine STATIC ${FALCO_ENGINE_SOURCE_FILES})
-add_dependencies(falco_engine njson lyaml lpeg)
+add_dependencies(falco_engine njson lyaml lpeg string-view-lite)
 
 target_include_directories(
   falco_engine
@@ -30,6 +30,7 @@ target_include_directories(
     "${NJSON_INCLUDE}"
     "${CURL_INCLUDE_DIR}"
     "${TBB_INCLUDE_DIR}"
+    "${STRING_VIEW_LITE_INCLUDE}"
     "${SYSDIG_SOURCE_DIR}/userspace/libsinsp/third-party/jsoncpp"
     "${SYSDIG_SOURCE_DIR}/userspace/libscap"
     "${SYSDIG_SOURCE_DIR}/userspace/libsinsp"
