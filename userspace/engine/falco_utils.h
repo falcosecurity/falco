@@ -21,6 +21,7 @@ limitations under the License.
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <nonstd/string_view.hpp>
 
 #pragma once
 
@@ -33,11 +34,10 @@ namespace utils
 std::string wrap_text(const std::string& str, uint32_t initial_pos, uint32_t indent, uint32_t line_len);
 
 void readfile(const std::string& filename, std::string& data);
-bool starts_with(const std::string& text, const std::string& prefix);
 namespace network
 {
-static const std::string UNIX_SCHEME{"unix://"};
-bool url_is_unix_scheme(const std::string& url);
+static const std::string UNIX_SCHEME("unix://");
+bool is_unix_scheme(nonstd::string_view url);
 } // namespace network
 } // namespace utils
 } // namespace falco

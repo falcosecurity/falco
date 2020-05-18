@@ -68,19 +68,11 @@ void readfile(const std::string& filename, std::string& data)
 
 	return;
 }
-
-bool starts_with(const std::string& text, const std::string& prefix)
-{
-	return prefix.empty() ||
-	       (text.size() >= prefix.size() &&
-		std::memcmp(text.data(), prefix.data(), prefix.size()) == 0);
-}
-
 namespace network
 {
-bool url_is_unix_scheme(const std::string& url)
+bool is_unix_scheme(nonstd::string_view url)
 {
-	return starts_with(url, UNIX_SCHEME);
+	return url.starts_with(UNIX_SCHEME);
 }
 } // namespace network
 } // namespace utils
