@@ -151,7 +151,7 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 	m_grpc_threadiness = m_config->get_scalar<uint32_t>("grpc", "threadiness", 8); // todo > limit it to avoid overshubscription? std::thread::hardware_concurrency()
 	if(m_grpc_threadiness == 0)
 	{
-		throw logic_error("error reading config file (" + m_config_file +"): gRPC threadiness must be greater than 0");
+		throw logic_error("error reading config file (" + m_config_file + "): gRPC threadiness must be greater than 0");
 	}
 	m_grpc_private_key = m_config->get_scalar<string>("grpc", "private_key", "/etc/falco/certs/server.key");
 	m_grpc_cert_chain = m_config->get_scalar<string>("grpc", "cert_chain", "/etc/falco/certs/server.crt");
@@ -170,9 +170,9 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 		throw logic_error("Error reading config file (" + m_config_file + "): No outputs configured. Please configure at least one output file output enabled but no filename in configuration block");
 	}
 
-	string log_level = m_config->get_scalar<string>("log_level", "info");
+	m_log_level = m_config->get_scalar<string>("log_level", "info");
 
-	falco_logger::set_level(log_level);
+	falco_logger::set_level(m_log_level);
 
 	m_notifications_rate = m_config->get_scalar<uint32_t>("outputs", "rate", 1);
 	m_notifications_max_burst = m_config->get_scalar<uint32_t>("outputs", "max_burst", 1000);
