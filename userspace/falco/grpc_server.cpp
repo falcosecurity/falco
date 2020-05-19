@@ -44,20 +44,22 @@ limitations under the License.
 		c.start(this);                                           \
 	}
 
-static void gpr_falco_log_dispatcher_func(gpr_log_func_args* args)
+static void gpr_log_dispatcher_func(gpr_log_func_args* args)
 {
-	int priority = LOG_INFO;
-
-	if(args
-		   ->severity == GPR_LOG_SEVERITY_ERROR)
+	int priority;
+	switch(args->severity)
 	{
+	case GPR_LOG_SEVERITY_ERROR:
 		priority = LOG_ERR;
-	}
-	if(args
-		   ->severity == GPR_LOG_SEVERITY_DEBUG)
-	{
+		break;
+	case GPR_LOG_SEVERITY_DEBUG:
 		priority = LOG_DEBUG;
+		break;
+	default:
+		priority = LOG_INFO;
+		break;
 	}
+
 	falco_logger::log(priority, args->message);
 }
 
@@ -113,13 +115,39 @@ void falco::grpc::server::thread_process(int thread_index)
 	}
 }
 
-void falco::grpc::server::init(std::string server_addr, int threadiness, std::string private_key, std::string cert_chain, std::string root_certs)
+void falco::grpc::server::init(
+	std::string server_addr,
+	int threadiness,
+	std::string private_key,
+	std::string cert_chain,
+	std::string root_certs,
+	std::string log_level)
 {
 	m_server_addr = server_addr;
 	m_threadiness = threadiness;
 	m_private_key = private_key;
 	m_cert_chain = cert_chain;
 	m_root_certs = root_certs;
+
+	// Set the verbosity level of gpr logger
+	falco::schema::priority logging_level = falco::schema::INFORMATIONAL;
+	falco::schema::priority_Parse(log_level, &logging_level);
+	switch(logging_level)
+	{
+	case falco::schema::ERROR:
+		gpr_set_log_verbosity(GPR_LOG_SEVERITY_ERROR);
+		break;
+	case falco::schema::DEBUG:
+		gpr_set_log_verbosity(GPR_LOG_SEVERITY_DEBUG);
+		break;
+	case falco::schema::INFORMATIONAL:
+	default:
+		// note > info will always enter here since it is != from "informational"
+		gpr_set_log_verbosity(GPR_LOG_SEVERITY_INFO);
+		break;
+	}
+	gpr_log_verbosity_init();
+	gpr_set_log_function(gpr_log_dispatcher_func);
 
 	if(falco::utils::network::is_unix_scheme(m_server_addr))
 	{
@@ -152,8 +180,6 @@ void falco::grpc::server::init_unix_server_builder()
 
 void falco::grpc::server::run()
 {
-	gpr_set_log_function(gpr_falco_log_dispatcher_func);
-
 	m_server_builder.RegisterService(&m_output_svc);
 	m_server_builder.RegisterService(&m_version_svc);
 

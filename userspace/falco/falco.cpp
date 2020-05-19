@@ -1208,7 +1208,14 @@ int falco_init(int argc, char **argv)
 		{
 			// TODO(fntlnz,leodido): when we want to spawn multiple threads we need to have a queue per thread, or implement
 			// different queuing mechanisms, round robin, fanout? What we want to achieve?
-			grpc_server.init(config.m_grpc_bind_address, config.m_grpc_threadiness, config.m_grpc_private_key, config.m_grpc_cert_chain, config.m_grpc_root_certs);
+			grpc_server.init(
+				config.m_grpc_bind_address,
+				config.m_grpc_threadiness,
+				config.m_grpc_private_key,
+				config.m_grpc_cert_chain,
+				config.m_grpc_root_certs,
+				config.m_log_level
+			);
 			grpc_server_thread = std::thread([&grpc_server] {
 				grpc_server.run();
 			});
