@@ -12,19 +12,19 @@ jobs:
           command: apt update -y
       - run:
           name: Install dependencies
-          command: DEBIAN_FRONTEND=noninteractive apt install libssl-dev libyaml-dev libncurses-dev libc-ares-dev libprotobuf-dev protobuf-compiler libjq-dev libyaml-cpp-dev libgrpc++-dev protobuf-compiler-grpc rpm libelf-dev cmake build-essential libcurl4-openssl-dev -y
+          command: DEBIAN_FRONTEND=noninteractive apt install libssl-dev libyaml-dev libncurses-dev libc-ares-dev libprotobuf-dev protobuf-compiler libjq-dev libyaml-cpp-dev libgrpc++-dev protobuf-compiler-grpc rpm libelf-dev cmake build-essential libcurl4-openssl-dev linux-headers-generic clang llvm -y
       - run:
           name: Prepare project
           command: |
             mkdir build
             pushd build
-            cmake ..
+            cmake -DBUILD_BPF=On ..
             popd
       - run:
           name: Build
           command: |
             pushd build
-            make -j4 all
+            KERNELDIR=/lib/modules/$(ls /lib/modules)/build make -j4 all
             popd
       - run:
           name: Run unit tests
@@ -44,19 +44,19 @@ jobs:
           command: apt update -y
       - run:
           name: Install dependencies
-          command: DEBIAN_FRONTEND=noninteractive apt install libssl-dev libyaml-dev libncurses-dev libc-ares-dev libprotobuf-dev protobuf-compiler libjq-dev libyaml-cpp-dev libgrpc++-dev protobuf-compiler-grpc rpm libelf-dev cmake build-essential libcurl4-openssl-dev -y
+          command: DEBIAN_FRONTEND=noninteractive apt install libssl-dev libyaml-dev libncurses-dev libc-ares-dev libprotobuf-dev protobuf-compiler libjq-dev libyaml-cpp-dev libgrpc++-dev protobuf-compiler-grpc rpm libelf-dev cmake build-essential libcurl4-openssl-dev linux-headers-generic clang llvm -y
       - run:
           name: Prepare project
           command: |
             mkdir build
             pushd build
-            cmake -DCMAKE_BUILD_TYPE=debug ..
+            cmake -DCMAKE_BUILD_TYPE=debug -DBUILD_BPF=On ..
             popd
       - run:
           name: Build
           command: |
             pushd build
-            make -j4 all
+            KERNELDIR=/lib/modules/$(ls /lib/modules)/build make -j4 all
             popd
       - run:
           name: Run unit tests
