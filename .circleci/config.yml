@@ -2,9 +2,9 @@ version: 2
 jobs:
   # Build using ubuntu LTS
   # This build is dynamic, most dependencies are taken from the OS
-  "build/ubuntu-bionic":
+  "build/ubuntu-focal":
     docker:
-      - image: ubuntu:bionic
+      - image: ubuntu:focal
     steps:
       - checkout
       - run:
@@ -12,7 +12,7 @@ jobs:
           command: apt update -y
       - run:
           name: Install dependencies
-          command: apt install libssl-dev libyaml-dev libncurses-dev libc-ares-dev libprotobuf-dev protobuf-compiler libjq-dev libyaml-cpp-dev libgrpc++-dev protobuf-compiler-grpc rpm linux-headers-$(uname -r) libelf-dev cmake build-essential libcurl4-openssl-dev -y
+          command: DEBIAN_FRONTEND=noninteractive apt install libssl-dev libyaml-dev libncurses-dev libc-ares-dev libprotobuf-dev protobuf-compiler libjq-dev libyaml-cpp-dev libgrpc++-dev protobuf-compiler-grpc rpm libelf-dev cmake build-essential libcurl4-openssl-dev -y
       - run:
           name: Prepare project
           command: |
@@ -34,9 +34,9 @@ jobs:
             popd
   # Debug build using ubuntu LTS
   # This build is dynamic, most dependencies are taken from the OS
-  "build/ubuntu-bionic-debug":
+  "build/ubuntu-focal-debug":
     docker:
-      - image: ubuntu:bionic
+      - image: ubuntu:focal
     steps:
       - checkout
       - run:
@@ -44,7 +44,7 @@ jobs:
           command: apt update -y
       - run:
           name: Install dependencies
-          command: apt install libssl-dev libyaml-dev libncurses-dev libc-ares-dev libprotobuf-dev protobuf-compiler libjq-dev libyaml-cpp-dev libgrpc++-dev protobuf-compiler-grpc rpm linux-headers-$(uname -r) libelf-dev cmake build-essential libcurl4-openssl-dev -y
+          command: DEBIAN_FRONTEND=noninteractive apt install libssl-dev libyaml-dev libncurses-dev libc-ares-dev libprotobuf-dev protobuf-compiler libjq-dev libyaml-cpp-dev libgrpc++-dev protobuf-compiler-grpc rpm libelf-dev cmake build-essential libcurl4-openssl-dev -y
       - run:
           name: Prepare project
           command: |
@@ -308,8 +308,8 @@ workflows:
   version: 2
   build_and_test:
     jobs:
-      - "build/ubuntu-bionic"
-      - "build/ubuntu-bionic-debug"
+      - "build/ubuntu-focal"
+      - "build/ubuntu-focal-debug"
       - "build/centos7"
       - "build/centos7-debug"
       - "tests/integration":
@@ -317,7 +317,7 @@ workflows:
             - "build/centos7"
       - "tests/driver-loader/integration":
           requires:
-              - "build/centos7"
+            - "build/centos7"
       - "rpm/sign":
           context: falco
           filters:
