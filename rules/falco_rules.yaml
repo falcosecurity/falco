@@ -2556,7 +2556,7 @@
   items: [rsync, scp, sftp, dcp]
 
 - macro: remote_file_copy_procs
-  condition: (proc.name in (remote_File_copy_binaries))
+  condition: (proc.name in (remote_file_copy_binaries))
 
 - rule: Launch Remote File Copy Tools in Container
   desc: Detect remote file copy tools launched in container
