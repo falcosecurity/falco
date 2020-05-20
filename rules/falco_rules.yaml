@@ -707,7 +707,7 @@
 
 - macro: lvprogs_writing_conf
   condition: >
-    (proc.name in (dmeventd,lvcreate,pvscan) and
+    (proc.name in (dmeventd,lvcreate,pvscan,lvs) and
      (fd.name startswith /etc/lvm/archive or
       fd.name startswith /etc/lvm/backup or
       fd.name startswith /etc/lvm/cache))
