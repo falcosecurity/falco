@@ -2438,7 +2438,8 @@
 - macro: trusted_logging_images
   condition: (container.image.repository endswith "splunk/fluentd-hec" or
               container.image.repository endswith "fluent/fluentd-kubernetes-daemonset" or
-              container.image.repository endswith "openshift3/ose-logging-fluentd")
+              container.image.repository endswith "openshift3/ose-logging-fluentd" or
+              container.image.repository endswith "containernetworking/azure-npm")
 
 - rule: Clear Log Activities
   desc: Detect clearing of critical log files
