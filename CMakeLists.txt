@@ -133,15 +133,26 @@ set(LUAJIT_SRC "${PROJECT_BINARY_DIR}/luajit-prefix/src/luajit/src")
 message(STATUS "Using bundled LuaJIT in '${LUAJIT_SRC}'")
 set(LUAJIT_INCLUDE "${LUAJIT_SRC}")
 set(LUAJIT_LIB "${LUAJIT_SRC}/libluajit.a")
-ExternalProject_Add(
-  luajit
-  URL "https://s3.amazonaws.com/download.draios.com/dependencies/LuaJIT-2.0.3.tar.gz"
-  URL_HASH "SHA256=55be6cb2d101ed38acca32c5b1f99ae345904b365b642203194c585d27bebd79"
-  CONFIGURE_COMMAND ""
-  BUILD_COMMAND ${CMD_MAKE}
-  BUILD_IN_SOURCE 1
-  INSTALL_COMMAND "")
-
+if("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "ppc64le")
+  ExternalProject_Add(
+    luajit
+    GIT_REPOSITORY "https://github.com/moonjit/moonjit"
+    GIT_TAG "2.1.2"
+    PATCH_COMMAND sed -i "s/luaL_reg/luaL_Reg/g" ${PROJECT_SOURCE_DIR}/userspace/engine/formats.cpp && sed -i "s/luaL_reg/luaL_Reg/g" ${PROJECT_SOURCE_DIR}/userspace/engine/rules.cpp && sed -i "s/luaL_reg/luaL_Reg/g" ${PROJECT_SOURCE_DIR}/userspace/falco/falco_outputs.cpp && sed -i "s/luaL_reg/luaL_Reg/g" ${PROJECT_SOURCE_DIR}/userspace/falco/logger.cpp
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ${CMD_MAKE}
+    BUILD_IN_SOURCE 1
+    INSTALL_COMMAND "")
+else()
+  ExternalProject_Add(
+    luajit
+    URL "https://s3.amazonaws.com/download.draios.com/dependencies/LuaJIT-2.0.3.tar.gz"
+    URL_MD5 "f14e9104be513913810cd59c8c658dc0"
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ${CMD_MAKE}
+    BUILD_IN_SOURCE 1
+    INSTALL_COMMAND "")
+endif()
 # Lpeg
 set(LPEG_SRC "${PROJECT_BINARY_DIR}/lpeg-prefix/src/lpeg")
 set(LPEG_LIB "${PROJECT_BINARY_DIR}/lpeg-prefix/src/lpeg/build/lpeg.a")
