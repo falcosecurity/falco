@@ -40,8 +40,14 @@
 
 # If you wish to restrict activity to a specific set of users, override/append to this list.
 # users created by kops are included
+- list: vertical_pod_autoscaler_users
+  items: ["vpa-recommender", "vpa-updater"]
+
 - list: allowed_k8s_users
-  items: ["minikube", "minikube-user", "kubelet", "kops", "admin", "kube", "kube-proxy"]
+  items: [
+    "minikube", "minikube-user", "kubelet", "kops", "admin", "kube", "kube-proxy",
+    vertical_pod_autoscaler_users,
+    ]
 
 - rule: Disallowed K8s User
   desc: Detect any k8s operation by users outside of an allowed set of users.
