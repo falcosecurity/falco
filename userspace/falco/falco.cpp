@@ -1203,7 +1203,7 @@ int falco_init(int argc, char **argv)
 			webserver.start();
 		}
 
-		// grpc server
+		// gRPC server
 		if(config.m_grpc_enabled)
 		{
 			// TODO(fntlnz,leodido): when we want to spawn multiple threads we need to have a queue per thread, or implement

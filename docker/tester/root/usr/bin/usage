@@ -30,7 +30,7 @@ How to use.
 
 How to build.
 
-    * cd docker/builder && DOCKER_BUILDKIT=1 docker build -t falcosecurity/falco-tester .
+    * cd docker/tester && DOCKER_BUILDKIT=1 docker build -t falcosecurity/falco-tester .
 
 Environment.
 

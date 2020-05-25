@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2019 The Falco Authors.
+# Copyright (C) 2020 The Falco Authors.
 #
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,14 +21,14 @@ rules_file: /etc/falco_rules.yaml
 # Whether to output events in json or text
 json_output: false
 
-# Send information logs to stderr and/or syslog Note these are *not* security
-# notification logs! These are just Falco lifecycle (and possibly error) logs.
+# Send information logs to stderr and/or syslog
+# Note these are *not* security notification logs!
+# These are just Falco lifecycle (and possibly error) logs.
 log_stderr: false
 log_syslog: false
 
 # Where security notifications should go.
 # Multiple outputs can be enabled.
-
 syslog_output:
   enabled: false
 
