@@ -195,6 +195,19 @@ class FalcoTest(Test):
                         os.makedirs(filedir)
             self.outputs = outputs
 
+        self.grpc_unix_socket_path = self.params.get('grpc_unix_socket_path', '*', default='/var/run/falco.sock')
+        self.grpc_address = self.params.get('address', 'grpc/*', default='/var/run/falco.sock')
+        if self.grpc_address.startswith("unix://"):
+            self.is_grpc_using_unix_socket = True
+            self.grpc_address = self.grpc_address[len("unix://"):]
+        self.grpc_proto = self.params.get('proto', 'grpc/*', default='')
+        self.grpc_service = self.params.get('service', 'grpc/*', default='')
+        self.grpc_method = self.params.get('method', 'grpc/*', default='')
+        self.grpc_results = self.params.get('results', 'grpc/*', default='')
+        # todo: if string wrap in an array
+        if self.grpc_results == '':
+            self.grpc_results = []
+
         self.disable_tags = self.params.get('disable_tags', '*', default='')
 
         if self.disable_tags == '':
