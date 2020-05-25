@@ -672,6 +672,20 @@ trace_files: !mux
     outputs:
       - /tmp/falco_outputs/program_output.txt: Warning An open was seen
 
+  grpc_unix_socket_outputs:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/single_rule.yaml
+    conf_file: confs/grpc_unix_socket.yaml
+    grpc:
+      address: unix:///tmp/falco.sock
+      proto: output.proto
+      service: falco.output.service
+      method: subscribe
+      results:
+        - "Warning An open was seen"
+
   detect_counts:
     detect: True
     detect_level: WARNING
