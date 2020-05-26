@@ -29,7 +29,8 @@ class request_context_base
 {
 public:
 	request_context_base() = default;
-	~request_context_base() = default;
+	// virtual to guarantee that the derived classes are destructed properly
+	virtual ~request_context_base() = default;
 
 	std::unique_ptr<::grpc::ServerContext> m_srv_ctx;
 	enum : char
@@ -39,6 +40,7 @@ public:
 		WRITE,
 		FINISH
 	} m_state = UNKNOWN;
+	
 	virtual void start(server* srv) = 0;
 	virtual void process(server* srv) = 0;
 	virtual void end(server* srv, bool isError) = 0;
