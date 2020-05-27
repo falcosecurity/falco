@@ -40,7 +40,7 @@ public:
 		WRITE,
 		FINISH
 	} m_state = UNKNOWN;
-	
+
 	virtual void start(server* srv) = 0;
 	virtual void process(server* srv) = 0;
 	virtual void end(server* srv, bool isError) = 0;
@@ -65,7 +65,7 @@ public:
 
 	void start(server* srv);
 	void process(server* srv);
-	void end(server* srv, bool isError);
+	void end(server* srv, bool error);
 
 private:
 	std::unique_ptr<::grpc::ServerAsyncWriter<Response>> m_res_writer;
@@ -92,11 +92,37 @@ public:
 
 	void start(server* srv);
 	void process(server* srv);
-	void end(server* srv, bool isError);
+	void end(server* srv, bool error);
 
 private:
 	std::unique_ptr<::grpc::ServerAsyncResponseWriter<Response>> m_res_writer;
 	Request m_req;
 };
+
+template<class Service, class Request, class Response>
+class request_bidi_context : public request_context_base
+{
+public:
+	request_bidi_context():
+		m_process_func(nullptr),
+		m_request_func(nullptr){};
+	~request_bidi_context() = default;
+
+	// Pointer to function that does actual processing
+	void (server::*m_process_func)(const bidi_context&, const Request&, Response&);
+
+	// Pointer to function that requests the system to start processing given requests
+	void (Service::AsyncService::*m_request_func)(::grpc::ServerContext*, ::grpc::ServerAsyncReaderWriter<Response, Request>*, ::grpc::CompletionQueue*, ::grpc::ServerCompletionQueue*, void*);
+
+	void start(server* srv);
+	void process(server* srv);
+	void end(server* srv, bool error);
+
+private:
+	std::unique_ptr<::grpc::ServerAsyncReaderWriter<Response, Request>> m_reader_writer;
+	std::unique_ptr<bidi_context> m_bidi_ctx;
+	Request m_req;
+};
+
 } // namespace grpc
 } // namespace falco
