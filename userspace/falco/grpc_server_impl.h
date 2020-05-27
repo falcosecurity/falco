@@ -36,8 +36,11 @@ public:
 protected:
 	bool is_running();
 
-	void subscribe(const stream_context& ctx, const output::request& req, output::response& res);
+	// Outputs
+	void get(const stream_context& ctx, const output::request& req, output::response& res);
+	void sub(const bidi_context& ctx, const output::request& req, output::response& res);
 
+	// Version
 	void version(const context& ctx, const version::request& req, version::response& res);
 
 private:
