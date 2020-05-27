@@ -7,10 +7,12 @@ package falco.output;
 
 option go_package = "github.com/falcosecurity/client-go/pkg/api/output";
 
-// The `subscribe` service defines the RPC call
-// to perform an output `request` which will lead to obtain an output `response`.
+// This service defines the RPC calls
+// to perform an output `request` which will lead to obtain a stream of output `response`s.
 service service {
-  rpc subscribe(request) returns (stream response);
+  rpc sub(stream request) returns (stream response);
+  
+  rpc get(request) returns (stream response);
 }
 
 // The `request` message is the logical representation of the request model.
