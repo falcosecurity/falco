@@ -44,6 +44,11 @@ public:
 		m_queue.push(res);
 	}
 
+	size_t unsafe_size()
+	{
+		return m_queue.unsafe_size();
+	}
+
 private:
 	queue()
 	{
