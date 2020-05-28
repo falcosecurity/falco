@@ -51,9 +51,33 @@ void falco::grpc::server_impl::get(const stream_context& ctx, const output::requ
 
 void falco::grpc::server_impl::sub(const bidi_context& ctx, const output::request& req, output::response& res)
 {
-	// todo
-	falco_logger::log(LOG_INFO, "SUB!\n");
+	if(ctx.m_status == stream_context::SUCCESS || ctx.m_status == stream_context::ERROR)
+	{
+		return;
+	}
 
+	falco_logger::log(LOG_INFO, "SUB\n");
+	ctx.m_has_more = output::queue::get().unsafe_size() > 0;
+
+	if(ctx.m_has_more)
+	{
+		falco_logger::log(LOG_INFO, "SUB - HAS MORE? TRUE\n");
+	}
+	else
+	{
+		falco_logger::log(LOG_INFO, "SUB - HAS MORE? FALSE\n");
+	}
+
+	if(output::queue::get().try_pop(res))
+	{
+		falco_logger::log(LOG_INFO, "SUB - WAIT WRITE DONE: TRUE\n");
+		ctx.m_wait_write_done = true;
+	}
+	else
+	{
+		falco_logger::log(LOG_INFO, "SUB - WAIT WRITE DONE: FALSE\n");
+		ctx.m_wait_write_done = false;
+	}
 }
 
 void falco::grpc::server_impl::version(const context& ctx, const version::request&, version::response& res)
