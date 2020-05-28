@@ -36,7 +36,7 @@ class context
 {
 public:
 	context(::grpc::ServerContext* ctx);
-	~context() = default;
+	virtual ~context() = default;
 
 	void get_metadata(std::string key, std::string& val);
 
@@ -63,23 +63,33 @@ public:
 	mutable bool m_has_more = false;
 };
 
-class bidi_context : public context
+// class bidi_context : public context
+// {
+// public:
+// 	bidi_context(::grpc::ServerContext* ctx):
+// 		context(ctx){};
+// 	~bidi_context() = default;
+
+// 	enum : char
+// 	{
+// 		WAIT_CONNECT = 1,
+// 		READY_TO_WRITE,
+// 		WAIT_WRITE_DONE,
+// 		FINISHED,
+// 	} m_status = WAIT_CONNECT;
+
+// 	mutable void* m_stream = nullptr; // todo(fntlnz, leodido) > useful in the future
+// 	mutable bool m_has_more = false;  // fixme > needed?
+// };
+
+class bidi_context : public stream_context
 {
 public:
 	bidi_context(::grpc::ServerContext* ctx):
-		context(ctx){};
+		stream_context(ctx){};
 	~bidi_context() = default;
 
-	enum : char
-	{
-		WAIT_CONNECT = 1,
-		READY_TO_WRITE,
-		WAIT_WRITE_DONE,
-		FINISHED,
-	} m_status = WAIT_CONNECT;
-
-	mutable void* m_stream = nullptr; // todo(fntlnz, leodido) > useful in the future
-	mutable bool m_has_more = false;  // fixme > needed?
+	mutable bool m_wait_write_done = false;
 };
 
 } // namespace grpc
