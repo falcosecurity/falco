@@ -40,13 +40,14 @@ void falco::grpc::server_impl::subscribe(const stream_context& ctx, const output
 		// Start or continue streaming
 		// todo(leodido) > check for m_status == stream_context::STREAMING?
 		// todo(leodido) > set m_stream
-		if(output::queue::get().try_pop(res) && !req.keepalive())
+		if(!req.keepalive() && output::queue::get().try_pop(res))
 		{
 			ctx.m_has_more = true;
 			return;
 		}
-		while(is_running() && !output::queue::get().try_pop(res) && req.keepalive())
+		while(is_running() && req.keepalive() && !output::queue::get().try_pop(res))
 		{
+			usleep(200);
 		}
 
 		ctx.m_has_more = !is_running() ? false : req.keepalive();
