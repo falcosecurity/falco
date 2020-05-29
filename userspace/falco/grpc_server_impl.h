@@ -17,7 +17,7 @@ limitations under the License.
 #pragma once
 
 #include <atomic>
-#include "output.grpc.pb.h"
+#include "outputs.grpc.pb.h"
 #include "version.grpc.pb.h"
 #include "grpc_context.h"
 
@@ -37,8 +37,8 @@ protected:
 	bool is_running();
 
 	// Outputs
-	void get(const stream_context& ctx, const output::request& req, output::response& res);
-	void sub(const bidi_context& ctx, const output::request& req, output::response& res);
+	void get(const stream_context& ctx, const outputs::request& req, outputs::response& res);
+	void sub(const bidi_context& ctx, const outputs::request& req, outputs::response& res);
 
 	// Version
 	void version(const context& ctx, const version::request& req, version::response& res);

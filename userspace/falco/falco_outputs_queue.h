@@ -16,12 +16,12 @@ limitations under the License.
 
 #pragma once
 
-#include "output.pb.h"
+#include "outputs.pb.h"
 #include "tbb/concurrent_queue.h"
 
 namespace falco
 {
-namespace output
+namespace outputs
 {
 typedef tbb::concurrent_queue<response> response_cq;
 
