@@ -27,12 +27,3 @@ log_syslog: false
 # Where security notifications should go.
 stdout_output:
   enabled: true
-
-# gRPC server using an unix socket.
-grpc:
-    enabled: true
-    bind_address: "unix:////tmp/falco.sock"
-    threadiness: 8
-
-grpc_output:
-  enabled: true

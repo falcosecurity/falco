@@ -76,6 +76,8 @@ class FalcoTest(Test):
         self.exit_status = self.params.get('exit_status', '*', default=0)
         self.should_detect = self.params.get('detect', '*', default=False)
         self.trace_file = self.params.get('trace_file', '*', default='')
+        self.event_generator = self.params.get('event_generator', '*', default='')
+        self.event_generator_ver = self.params.get('event_generator_ver', '*', default='latest')
 
         if self.trace_file and not os.path.isabs(self.trace_file):
             self.trace_file = os.path.join(build_dir, "test", self.trace_file)
@@ -430,10 +432,21 @@ class FalcoTest(Test):
             self.log.debug("Copying {} to {}".format(driver_path, module_path))
             shutil.copyfile(driver_path, module_path)
 
+    def start_event_generator(self):
+        if self.event_generator != "":
+            self.stop_event_generator()
+            cmdline = "docker run --rm -d --name falco-test-event-generator " \
+                      "falcosecurity/event-generator:{} {}".format(self.event_generator_ver, self.event_generator)
+            process.run(cmdline, timeout=120)
+
+    def stop_event_generator(self):
+        if self.event_generator != "":
+            process.run("docker rm -f falco-test-event-generator", ignore_status=True)
+
     def test(self):
         self.log.info("Trace file %s", self.trace_file)
 
-        self.falco_binary_path = '{}/userspace/falco/falco'.format(self.falcodir)
+        self.falco_binary_path = 'sudo {}/userspace/falco/falco'.format(self.falcodir)
 
         self.possibly_copy_driver()
 
@@ -470,6 +483,8 @@ class FalcoTest(Test):
                 psp_rules = myfile.read()
                 self.log.debug("Converted Rules: {}".format(psp_rules))
 
+        # Possibly run the event-generator in background
+        self.start_event_generator()
 
         # Run falco
         cmd = '{} {} {} -c {} {} -o json_output={} -o json_include_output_property={} -o priority={} -v'.format(
@@ -493,6 +508,9 @@ class FalcoTest(Test):
         self.falco_proc = process.SubProcess(cmd)
 
         res = self.falco_proc.run(timeout=180, sig=9)
+
+        # Possibly stop the event-generator
+        self.stop_event_generator()
 
         if self.stdout_is != '':
             print(self.stdout_is)

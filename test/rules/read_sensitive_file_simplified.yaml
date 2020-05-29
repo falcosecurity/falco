@@ -1,0 +1,30 @@
+- macro: proc_name_exists
+  condition: (proc.name!="<NA>")
+
+- macro: open_read
+  condition: (evt.type=open or evt.type=openat) and evt.is_open_read=true and fd.typechar='f' and fd.num>=0
+
+- list: sensitive_file_names
+  items: [/etc/shadow, /etc/sudoers, /etc/pam.conf, /etc/security/pwquality.conf]
+
+- macro: sensitive_files
+  condition: >
+    fd.name startswith /etc and
+    (fd.name in (sensitive_file_names)
+     or fd.directory in (/etc/sudoers.d, /etc/pam.d))
+
+- macro: cmp_cp_by_passwd
+  condition: proc.name in (cmp, cp) and proc.pname in (passwd, run-parts)
+
+- rule: Read sensitive file
+  desc: >
+    an attempt to read any sensitive file (e.g. files containing user/password/authentication
+    information).
+  condition: >
+    sensitive_files and open_read
+    and proc_name_exists
+    and not cmp_cp_by_passwd
+  output: >
+    Sensitive file opened for reading (user=%user.name program=%proc.name
+    command=%proc.cmdline file=%fd.name parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4] container_id=%container.id image=%container.image.repository)
+  priority: WARNING
