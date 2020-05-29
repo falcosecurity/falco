@@ -31,53 +31,37 @@ bool falco::grpc::server_impl::is_running()
 
 void falco::grpc::server_impl::get(const stream_context& ctx, const output::request& req, output::response& res)
 {
-	falco_logger::log(LOG_INFO, "get\n");
 	if(ctx.m_status == stream_context::SUCCESS || ctx.m_status == stream_context::ERROR)
 	{
 		// todo(leodido) > log "status=ctx->m_status, stream=ctx->m_stream"
 		ctx.m_stream = nullptr;
+		return;
 	}
-	else
-	{
-		// Start or continue streaming
-		// m_status == stream_context::STREAMING?
-		// todo(leodido) > set m_stream
-		falco_logger::log(LOG_INFO, "get - else\n");
 
-		ctx.m_has_more = output::queue::get().unsafe_size() > 1;
-		output::queue::get().try_pop(res);
-	}
+	ctx.m_is_running = is_running();
+
+	// Start or continue streaming
+	// m_status == stream_context::STREAMING?
+	// todo(leodido) > set m_stream
+
+	ctx.m_has_more = output::queue::get().try_pop(res);
 }
 
 void falco::grpc::server_impl::sub(const bidi_context& ctx, const output::request& req, output::response& res)
 {
 	if(ctx.m_status == stream_context::SUCCESS || ctx.m_status == stream_context::ERROR)
 	{
+		ctx.m_stream = nullptr;
 		return;
 	}
 
-	falco_logger::log(LOG_INFO, "SUB\n");
-	ctx.m_has_more = output::queue::get().unsafe_size() > 0;
+	ctx.m_is_running = is_running();
 
-	if(ctx.m_has_more)
-	{
-		falco_logger::log(LOG_INFO, "SUB - HAS MORE? TRUE\n");
-	}
-	else
-	{
-		falco_logger::log(LOG_INFO, "SUB - HAS MORE? FALSE\n");
-	}
+	// Start or continue streaming
+	// m_status == stream_context::STREAMING?
+	// todo(leodido) > set m_stream
 
-	if(output::queue::get().try_pop(res))
-	{
-		falco_logger::log(LOG_INFO, "SUB - WAIT WRITE DONE: TRUE\n");
-		ctx.m_wait_write_done = true;
-	}
-	else
-	{
-		falco_logger::log(LOG_INFO, "SUB - WAIT WRITE DONE: FALSE\n");
-		ctx.m_wait_write_done = false;
-	}
+	ctx.m_has_more = output::queue::get().try_pop(res);
 }
 
 void falco::grpc::server_impl::version(const context& ctx, const version::request&, version::response& res)
