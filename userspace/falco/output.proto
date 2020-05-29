@@ -22,9 +22,7 @@ service service {
 // By default the request asks to the server to only receive the accumulated events.
 // In case you want to wait indefinitely for new events to come set the keepalive option to true.
 message request {
-  bool keepalive = 1;
-  // string duration = 2; // TODO(leodido, fntlnz): not handled yet but keeping for reference.
-  // repeated string tags = 3; // TODO(leodido, fntlnz): not handled yet but keeping for reference.
+  // repeated string tags = 1; // TODO(leodido, fntlnz): not handled yet but keeping for reference.
 }
 
 // The `response` message is the logical representation of the output model.
