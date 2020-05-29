@@ -50,7 +50,7 @@ class stream_context : public context
 public:
 	stream_context(::grpc::ServerContext* ctx):
 		context(ctx){};
-	~stream_context() = default;
+	virtual ~stream_context() = default;
 
 	enum : char
 	{
@@ -61,35 +61,15 @@ public:
 
 	mutable void* m_stream = nullptr; // todo(fntlnz, leodido) > useful in the future
 	mutable bool m_has_more = false;
+	mutable bool m_is_running = true;
 };
-
-// class bidi_context : public context
-// {
-// public:
-// 	bidi_context(::grpc::ServerContext* ctx):
-// 		context(ctx){};
-// 	~bidi_context() = default;
-
-// 	enum : char
-// 	{
-// 		WAIT_CONNECT = 1,
-// 		READY_TO_WRITE,
-// 		WAIT_WRITE_DONE,
-// 		FINISHED,
-// 	} m_status = WAIT_CONNECT;
-
-// 	mutable void* m_stream = nullptr; // todo(fntlnz, leodido) > useful in the future
-// 	mutable bool m_has_more = false;  // fixme > needed?
-// };
 
 class bidi_context : public stream_context
 {
 public:
 	bidi_context(::grpc::ServerContext* ctx):
 		stream_context(ctx){};
-	~bidi_context() = default;
-
-	mutable bool m_wait_write_done = false;
+	virtual ~bidi_context() = default;
 };
 
 } // namespace grpc
