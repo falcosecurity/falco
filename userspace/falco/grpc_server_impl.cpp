@@ -16,7 +16,7 @@ limitations under the License.
 
 #include "config_falco.h"
 #include "grpc_server_impl.h"
-#include "falco_output_queue.h"
+#include "falco_outputs_queue.h"
 #include "logger.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
 
@@ -29,7 +29,7 @@ bool falco::grpc::server_impl::is_running()
 	return true;
 }
 
-void falco::grpc::server_impl::get(const stream_context& ctx, const output::request& req, output::response& res)
+void falco::grpc::server_impl::get(const stream_context& ctx, const outputs::request& req, outputs::response& res)
 {
 	if(ctx.m_status == stream_context::SUCCESS || ctx.m_status == stream_context::ERROR)
 	{
@@ -44,10 +44,10 @@ void falco::grpc::server_impl::get(const stream_context& ctx, const output::requ
 	// m_status == stream_context::STREAMING?
 	// todo(leodido) > set m_stream
 
-	ctx.m_has_more = output::queue::get().try_pop(res);
+	ctx.m_has_more = outputs::queue::get().try_pop(res);
 }
 
-void falco::grpc::server_impl::sub(const bidi_context& ctx, const output::request& req, output::response& res)
+void falco::grpc::server_impl::sub(const bidi_context& ctx, const outputs::request& req, outputs::response& res)
 {
 	if(ctx.m_status == stream_context::SUCCESS || ctx.m_status == stream_context::ERROR)
 	{
@@ -61,7 +61,7 @@ void falco::grpc::server_impl::sub(const bidi_context& ctx, const output::reques
 	// m_status == stream_context::STREAMING?
 	// todo(leodido) > set m_stream
 
-	ctx.m_has_more = output::queue::get().try_pop(res);
+	ctx.m_has_more = outputs::queue::get().try_pop(res);
 }
 
 void falco::grpc::server_impl::version(const context& ctx, const version::request&, version::response& res)

@@ -208,8 +208,8 @@ void falco::grpc::server::run()
 	// todo(leodido) > take a look at thread_stress_test.cc into grpc repository
 
 	REGISTER_UNARY(version::request, version::response, version::service, version, version, context_num)
-	REGISTER_STREAM(output::request, output::response, output::service, get, get, context_num)
-	REGISTER_BIDI(output::request, output::response, output::service, sub, sub, context_num)
+	REGISTER_STREAM(outputs::request, outputs::response, outputs::service, get, get, context_num)
+	REGISTER_BIDI(outputs::request, outputs::response, outputs::service, sub, sub, context_num)
 
 	m_threads.resize(m_threadiness);
 	int thread_idx = 0;

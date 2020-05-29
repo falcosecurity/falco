@@ -22,11 +22,10 @@ limitations under the License.
 
 #include "formats.h"
 #include "logger.h"
-#include "falco_output_queue.h"
+#include "falco_outputs_queue.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
 
 using namespace std;
-using namespace falco::output;
 
 const static struct luaL_reg ll_falco_outputs [] =
 {
@@ -316,7 +315,7 @@ int falco_outputs::handle_grpc(lua_State *ls)
 		lua_error(ls);
 	}
 
-	response grpc_res = response();
+	auto grpc_res = falco::outputs::response();
 
 	// time
 	gen_event *evt = (gen_event *)lua_topointer(ls, 1);
@@ -366,7 +365,7 @@ int falco_outputs::handle_grpc(lua_State *ls)
 	auto host = grpc_res.mutable_hostname();
 	*host = (char *)lua_tostring(ls, 7);
 
-	falco::output::queue::get().push(grpc_res);
+	falco::outputs::queue::get().push(grpc_res);
 
 	return 1;
 }
