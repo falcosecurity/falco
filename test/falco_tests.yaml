@@ -678,11 +678,13 @@ trace_files: !mux
     rules_file:
       - rules/single_rule.yaml
     conf_file: confs/grpc_unix_socket.yaml
+    trace_file: trace_files/cat_write.scap
+    run_duration: 5
     grpc:
-      address: unix:///tmp/falco.sock
-      proto: output.proto
-      service: falco.output.service
-      method: subscribe
+      address: unix:///tmp/falco/falco.sock
+      proto: outputs.proto
+      service: falco.outputs.service
+      method: get
       results:
         - "Warning An open was seen"
 
