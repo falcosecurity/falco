@@ -28,6 +28,8 @@ import urllib.request
 from avocado import Test
 from avocado import main
 from avocado.utils import process
+from watchdog.observers import Observer
+from watchdog.events import PatternMatchingEventHandler
 
 class FalcoTest(Test):
 
@@ -195,18 +197,23 @@ class FalcoTest(Test):
                         os.makedirs(filedir)
             self.outputs = outputs
 
-        self.grpc_unix_socket_path = self.params.get('grpc_unix_socket_path', '*', default='/var/run/falco.sock')
+        self.grpcurl_res = None
+        self.grpc_observer = None
         self.grpc_address = self.params.get('address', 'grpc/*', default='/var/run/falco.sock')
         if self.grpc_address.startswith("unix://"):
             self.is_grpc_using_unix_socket = True
             self.grpc_address = self.grpc_address[len("unix://"):]
+        else:
+            self.is_grpc_using_unix_socket = False
         self.grpc_proto = self.params.get('proto', 'grpc/*', default='')
         self.grpc_service = self.params.get('service', 'grpc/*', default='')
         self.grpc_method = self.params.get('method', 'grpc/*', default='')
         self.grpc_results = self.params.get('results', 'grpc/*', default='')
-        # todo: if string wrap in an array
         if self.grpc_results == '':
             self.grpc_results = []
+        else: 
+            if type(self.grpc_results) == str:
+                self.grpc_results = [self.grpc_results]
 
         self.disable_tags = self.params.get('disable_tags', '*', default='')
 
@@ -430,12 +437,56 @@ class FalcoTest(Test):
             self.log.debug("Copying {} to {}".format(driver_path, module_path))
             shutil.copyfile(driver_path, module_path)
 
+    def init_grpc_handler(self):
+        self.grpcurl_res = None
+        if len(self.grpc_results) > 0:
+            if not self.is_grpc_using_unix_socket:
+                self.fail("This test suite supports gRPC with unix socket only")
+            
+            cmdline = "grpcurl -import-path ../userspace/falco " \
+                            "-proto {} -plaintext -unix {} " \
+                            "{}/{}".format(self.grpc_proto, self.grpc_address, self.grpc_service, self.grpc_method)
+            that = self
+            class GRPCUnixSocketEventHandler(PatternMatchingEventHandler):
+                def on_created(self, event):
+                    # that.log.info("EVENT: {}", event)
+                    that.grpcurl_res = process.run(cmdline)
+                    
+            path = os.path.dirname(self.grpc_address)
+            process.run("mkdir -p {}".format(path))
+            event_handler = GRPCUnixSocketEventHandler(patterns=['*'],
+                                ignore_directories=True)
+            self.grpc_observer = Observer()
+            self.grpc_observer.schedule(event_handler, path, recursive=False)
+            self.grpc_observer.start()
+
+    def check_grpc(self):
+        if self.grpc_observer is not None:
+            self.grpc_observer.stop()
+            self.grpc_observer = None
+            if self.grpcurl_res is None:
+                self.fail("gRPC responses not found")
+
+            for exp_result in self.grpc_results:
+                found = False
+                for line in self.grpcurl_res.stdout.decode("utf-8").splitlines():
+                    match = re.search(exp_result, line)
+
+                    if match is not None:
+                        found = True
+
+                if found == False:
+                    self.fail("Could not find a line '{}' in gRPC responses".format(exp_result))
+
+
     def test(self):
         self.log.info("Trace file %s", self.trace_file)
 
         self.falco_binary_path = '{}/userspace/falco/falco'.format(self.falcodir)
 
         self.possibly_copy_driver()
+
+        self.init_grpc_handler()
 
         if self.package != 'None':
             # This sets falco_binary_path as a side-effect.
@@ -539,6 +590,7 @@ class FalcoTest(Test):
             self.check_detections_by_rule(res)
         self.check_json_output(res)
         self.check_outputs()
+        self.check_grpc()
         pass
 
 
