@@ -1260,6 +1260,14 @@ int falco_init(int argc, char **argv)
 
 		}
 
+		// Honor -M also when using a trace file.
+		// Since inspection stops as soon as all events have been consumed
+		// just await the given duration is reached, if needed.
+		if(!trace_filename.empty() && duration_to_tot>0) 
+		{
+			std::this_thread::sleep_for(std::chrono::seconds(duration_to_tot));
+		}
+
 		inspector->close();
 		engine->print_stats();
 		sdropmgr.print_stats();
