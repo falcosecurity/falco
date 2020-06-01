@@ -31,7 +31,7 @@ stdout_output:
 # gRPC server using an unix socket.
 grpc:
     enabled: true
-    bind_address: "unix:////tmp/falco.sock"
+    bind_address: "unix:///tmp/falco/falco.sock"
     threadiness: 8
 
 grpc_output:
