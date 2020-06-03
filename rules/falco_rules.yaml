@@ -100,7 +100,7 @@
   condition: ((fd.directory=/ or fd.name startswith /root) and fd.name contains "/")
 
 - list: shell_binaries
-  items: [ash, bash, csh, ksh, sh, tcsh, zsh, dash]
+  items: [ash, bash, csh, ksh, sh, tcsh, zsh, dash, fish]
 
 - list: ssh_binaries
   items: [
@@ -2486,7 +2486,7 @@
       evt.arg.path contains "zsh_history" or
       evt.arg.path contains "fish_read_history" or
       evt.arg.path endswith "fish_history")) or
-    (open_write and (
+    (open_write and not shell_procs (
       fd.name contains "bash_history" or
       fd.name contains "zsh_history" or
       fd.name contains "fish_read_history" or
