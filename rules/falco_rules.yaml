@@ -55,6 +55,7 @@
 - macro: proc_name_exists
   condition: (proc.name!="<NA>")
 
+# todo(leogr): we miss "renameat2", but it's not yet supported by sinsp
 - macro: rename
   condition: evt.type in (rename, renameat)
 - macro: mkdir
@@ -87,10 +88,22 @@
 
 - macro: bin_dir_rename
   condition: >
-    evt.arg[1] startswith /bin/ or
-    evt.arg[1] startswith /sbin/ or
-    evt.arg[1] startswith /usr/bin/ or
-    evt.arg[1] startswith /usr/sbin/
+     (evt.arg.path startswith /bin/ or
+     evt.arg.path startswith /sbin/ or
+     evt.arg.path startswith /usr/bin/ or
+     evt.arg.path startswith /usr/sbin/ or
+     evt.arg.name startswith /bin/ or
+     evt.arg.name startswith /sbin/ or
+     evt.arg.name startswith /usr/bin/ or
+     evt.arg.name startswith /usr/sbin/ or
+     evt.arg.oldpath startswith /bin/ or
+     evt.arg.oldpath startswith /sbin/ or
+     evt.arg.oldpath startswith /usr/bin/ or
+     evt.arg.oldpath startswith /usr/sbin/ or
+     evt.arg.newpath startswith /bin/ or
+     evt.arg.newpath startswith /sbin/ or
+     evt.arg.newpath startswith /usr/bin/ or
+     evt.arg.newpath startswith /usr/sbin/)
 
 - macro: etc_dir
   condition: fd.name startswith /etc/
@@ -1505,7 +1518,7 @@
 
 - rule: Modify binary dirs
   desc: an attempt to modify any file below a set of binary directories.
-  condition: (bin_dir_rename) and modify and not package_mgmt_procs and not exe_running_docker_save
+  condition: bin_dir_rename and modify and not package_mgmt_procs and not exe_running_docker_save
   output: >
     File below known binary directory renamed/removed (user=%user.name command=%proc.cmdline
     pcmdline=%proc.pcmdline operation=%evt.type file=%fd.name %evt.args container_id=%container.id image=%container.image.repository)
