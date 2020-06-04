@@ -134,7 +134,7 @@ void falco_logger::log(int priority, const string msg)
 			if(gtm != NULL &&
 			   (strftime(buf, sizeof(buf), "%FT%T%z", gtm) != 0))
 			{
-				fprintf(stderr, "%s: %s", buf, msg.c_str());
+				fprintf(stderr, "%s: %s", buf, copy.c_str());
 			}
 		}
 		else
@@ -151,7 +151,7 @@ void falco_logger::log(int priority, const string msg)
 			{
 				tstr = "N/A";
 			}
-			fprintf(stderr, "%s: %s", tstr.c_str(), msg.c_str());
+			fprintf(stderr, "%s: %s", tstr.c_str(), copy.c_str());
 		}
 	}
 }
