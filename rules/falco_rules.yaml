@@ -2827,6 +2827,34 @@
     Redirect stdout/stdin to network connection (user=%user.name %container.info process=%proc.name parent=%proc.pname cmdline=%proc.cmdline terminal=%proc.tty container_id=%container.id image=%container.image.repository fd.name=%fd.name fd.num=%fd.num fd.type=%fd.type fd.sip=%fd.sip)
   priority: WARNING
 
+# The two Container Drift rules below will fire when a new executable is created in a container. 
+# There are two ways to create executables - file is created with execution permissions or permissions change of existing file.
+# We will use a new sysdig filter, is_open_exec, to find all files creations with execution permission, and will trace all chmods in a container.
+# The use case we are targeting here is an attempt to execute code that was not shipped as part of a container (drift) - 
+# an activity that might be malicious or non-compliant.
+# Two things to pay attention to:
+#   1) In most cases, 'docker cp' will not be identified, but the assumption is that if an attacker gained access to the container runtime daemon, they are already privileged
+#   2) Drift rules will be noisy in environments in which containers are built (e.g. docker build) 
+
+- rule: Container Drift Detected (chmod)
+  desc: New executable created in a container due to chmod
+  condition: (chmod and consider_all_chmods and container and evt.rawres>=0 and
+       ((evt.arg.mode contains "S_IXUSR") or
+        (evt.arg.mode contains "S_IXGRP") or
+        (evt.arg.mode contains "S_IXOTH")))
+  output: Drift detected! New executable created in a container (user=%user.name command=%proc.cmdline filename=%evt.arg.filename name=%evt.arg.name mode=%evt.arg.mode event=%evt.type)
+  priority: ERROR
+  
+# ****************************************************************************
+# * "Container Drift Detected (open+create)" requires FALCO_ENGINE_VERSION 6 *
+# ****************************************************************************
+- rule: Container Drift Detected (open+create)
+  desc: New executable created in a container due to open+create
+  condition: (evt.type in (open,openat,creat) and evt.is_open_exec=true and container and evt.rawres>=0)
+  output: Drift detected! New executable created in a container (user=%user.name command=%proc.cmdline filename=%evt.arg.filename name=%evt.arg.name mode=%evt.arg.mode event=%evt.type)
+  priority: ERROR
+  
+
 # Application rules have moved to application_rules.yaml. Please look
 # there if you want to enable them by adding to
 # falco_rules.local.yaml.
