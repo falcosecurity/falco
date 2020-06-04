@@ -80,10 +80,10 @@
 
 - macro: bin_dir_mkdir
   condition: >
-    (evt.arg[1] startswith /bin/ or
-     evt.arg[1] startswith /sbin/ or
-     evt.arg[1] startswith /usr/bin/ or
-     evt.arg[1] startswith /usr/sbin/)
+     (evt.arg.path startswith /bin/ or
+     evt.arg.path startswith /sbin/ or
+     evt.arg.path startswith /usr/bin/ or
+     evt.arg.path startswith /usr/sbin/)
 
 - macro: bin_dir_rename
   condition: >
