@@ -315,7 +315,7 @@ int falco_outputs::handle_grpc(lua_State *ls)
 		lua_error(ls);
 	}
 
-	auto grpc_res = falco::outputs::response();
+	falco::outputs::response grpc_res;
 
 	// time
 	gen_event *evt = (gen_event *)lua_topointer(ls, 1);
