@@ -10,7 +10,6 @@ ENV HOST_ROOT=/host
 RUN apt-get update -y
 RUN apt-get install -y --no-install-recommends \
 	ca-certificates \
-	libyaml-0-2 \
 	dkms \
 	curl \
 	gcc \

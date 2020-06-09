@@ -13,7 +13,7 @@ WORKDIR /
 ADD https://bintray.com/api/ui/download/falcosecurity/${VERSION_BUCKET}/x86_64/falco-${FALCO_VERSION}-x86_64.tar.gz /
 
 RUN apt-get update -y && \
-    apt-get install -y libyaml-0-2 binutils && \
+    apt-get install -y binutils && \
     tar -xvf falco-${FALCO_VERSION}-x86_64.tar.gz && \
     rm -f falco-${FALCO_VERSION}-x86_64.tar.gz && \
     mv falco-${FALCO_VERSION}-x86_64 falco && \
@@ -42,9 +42,6 @@ COPY --from=ubuntu /lib/x86_64-linux-gnu/libanl.so.1 \
 
 COPY --from=ubuntu /usr/lib/x86_64-linux-gnu/libstdc++.so.6 \
     /usr/lib/x86_64-linux-gnu/libstdc++.so.6
-
-COPY --from=ubuntu /usr/lib/x86_64-linux-gnu/libyaml-0.so.2.0.5 \
-    /usr/lib/x86_64-linux-gnu/libyaml-0.so.2
 
 COPY --from=ubuntu /etc/ld.so.cache \
     /etc/nsswitch.conf \
