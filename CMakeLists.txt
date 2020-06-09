@@ -160,12 +160,7 @@ ExternalProject_Add(
   INSTALL_COMMAND "")
 
 # libyaml
-find_library(LIBYAML_LIB NAMES libyaml.so)
-if(LIBYAML_LIB)
-  message(STATUS "Found libyaml: lib: ${LIBYAML_LIB}")
-else()
-  message(FATAL_ERROR "Couldn't find system libyaml")
-endif()
+include(libyaml)
 
 # lyaml
 set(LYAML_SRC "${PROJECT_BINARY_DIR}/lyaml-prefix/src/lyaml/ext/yaml")

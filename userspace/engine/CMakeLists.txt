@@ -23,6 +23,10 @@ set(FALCO_ENGINE_SOURCE_FILES
 add_library(falco_engine STATIC ${FALCO_ENGINE_SOURCE_FILES})
 add_dependencies(falco_engine njson lyaml lpeg string-view-lite)
 
+if(USE_BUNDLED_DEPS)
+  add_dependencies(falco_engine libyaml)
+endif()
+
 target_include_directories(
   falco_engine
   PUBLIC
