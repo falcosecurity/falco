@@ -942,6 +942,12 @@
     NOTICE
   tags: [filesystem, mitre_persistence]
 
+# Users should overwrite this macro to specify conditions under which a
+# write under the binary dir is ignored. For example, it may be okay to
+# install a binary in the context of a ci/cd build.
+- macro: user_known_write_below_binary_dir_activities
+  condition: (never_true)
+
 - rule: Write below binary dir
   desc: an attempt to write to any file below a set of binary directories
   condition: >
@@ -950,6 +956,7 @@
     and not exe_running_docker_save
     and not python_running_get_pip
     and not python_running_ms_oms
+    and not user_known_write_below_binary_dir_activities
   output: >
     File below a known binary directory opened for writing (user=%user.name
     command=%proc.cmdline file=%fd.name parent=%proc.pname pcmdline=%proc.pcmdline gparent=%proc.aname[2] container_id=%container.id image=%container.image.repository)
