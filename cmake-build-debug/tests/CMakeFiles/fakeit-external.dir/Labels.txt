@@ -1,0 +1,13 @@
+# Target labels
+ fakeit-external
+# Source files and their labels
+/home/nova/falco/falco/cmake-build-debug/tests/CMakeFiles/fakeit-external
+/home/nova/falco/falco/cmake-build-debug/tests/CMakeFiles/fakeit-external.rule
+/home/nova/falco/falco/cmake-build-debug/tests/CMakeFiles/fakeit-external-complete.rule
+/home/nova/falco/falco/cmake-build-debug/fakeit-prefix/src/fakeit-external-stamp/fakeit-external-install.rule
+/home/nova/falco/falco/cmake-build-debug/fakeit-prefix/src/fakeit-external-stamp/fakeit-external-mkdir.rule
+/home/nova/falco/falco/cmake-build-debug/fakeit-prefix/src/fakeit-external-stamp/fakeit-external-download.rule
+/home/nova/falco/falco/cmake-build-debug/fakeit-prefix/src/fakeit-external-stamp/fakeit-external-update.rule
+/home/nova/falco/falco/cmake-build-debug/fakeit-prefix/src/fakeit-external-stamp/fakeit-external-patch.rule
+/home/nova/falco/falco/cmake-build-debug/fakeit-prefix/src/fakeit-external-stamp/fakeit-external-configure.rule
+/home/nova/falco/falco/cmake-build-debug/fakeit-prefix/src/fakeit-external-stamp/fakeit-external-build.rule

@@ -1,0 +1,14 @@
+# Target labels
+ sysdig
+# Source files and their labels
+/home/nova/falco/falco/cmake-build-debug/sysdig-repo/CMakeFiles/sysdig
+/home/nova/falco/falco/cmake-build-debug/sysdig-repo/CMakeFiles/sysdig.rule
+/home/nova/falco/falco/cmake-build-debug/sysdig-repo/CMakeFiles/sysdig-complete.rule
+/home/nova/falco/falco/cmake-build-debug/sysdig-repo/sysdig-prefix/src/sysdig-stamp/sysdig-install.rule
+/home/nova/falco/falco/cmake-build-debug/sysdig-repo/sysdig-prefix/src/sysdig-stamp/sysdig-mkdir.rule
+/home/nova/falco/falco/cmake-build-debug/sysdig-repo/sysdig-prefix/src/sysdig-stamp/sysdig-download.rule
+/home/nova/falco/falco/cmake-build-debug/sysdig-repo/sysdig-prefix/src/sysdig-stamp/sysdig-update.rule
+/home/nova/falco/falco/cmake-build-debug/sysdig-repo/sysdig-prefix/src/sysdig-stamp/sysdig-patch.rule
+/home/nova/falco/falco/cmake-build-debug/sysdig-repo/sysdig-prefix/src/sysdig-stamp/sysdig-configure.rule
+/home/nova/falco/falco/cmake-build-debug/sysdig-repo/sysdig-prefix/src/sysdig-stamp/sysdig-build.rule
+/home/nova/falco/falco/cmake-build-debug/sysdig-repo/sysdig-prefix/src/sysdig-stamp/sysdig-test.rule

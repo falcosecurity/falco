@@ -1,0 +1,43 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/home/nova/falco/falco/cmake-build-debug/tests/CMakeFiles/catch2"
+		},
+		{
+			"file" : "/home/nova/falco/falco/cmake-build-debug/tests/CMakeFiles/catch2.rule"
+		},
+		{
+			"file" : "/home/nova/falco/falco/cmake-build-debug/tests/CMakeFiles/catch2-complete.rule"
+		},
+		{
+			"file" : "/home/nova/falco/falco/cmake-build-debug/catch2-prefix/src/catch2-stamp/catch2-install.rule"
+		},
+		{
+			"file" : "/home/nova/falco/falco/cmake-build-debug/catch2-prefix/src/catch2-stamp/catch2-mkdir.rule"
+		},
+		{
+			"file" : "/home/nova/falco/falco/cmake-build-debug/catch2-prefix/src/catch2-stamp/catch2-download.rule"
+		},
+		{
+			"file" : "/home/nova/falco/falco/cmake-build-debug/catch2-prefix/src/catch2-stamp/catch2-update.rule"
+		},
+		{
+			"file" : "/home/nova/falco/falco/cmake-build-debug/catch2-prefix/src/catch2-stamp/catch2-patch.rule"
+		},
+		{
+			"file" : "/home/nova/falco/falco/cmake-build-debug/catch2-prefix/src/catch2-stamp/catch2-configure.rule"
+		},
+		{
+			"file" : "/home/nova/falco/falco/cmake-build-debug/catch2-prefix/src/catch2-stamp/catch2-build.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"catch2"
+		],
+		"name" : "catch2"
+	}
+}

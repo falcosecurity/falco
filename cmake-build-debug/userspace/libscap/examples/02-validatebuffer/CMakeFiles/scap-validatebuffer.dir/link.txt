@@ -1,0 +1,1 @@
+/usr/bin/cc -Wall -ggdb  -D_DEBUG   CMakeFiles/scap-validatebuffer.dir/test.c.o  -o scap-validatebuffer  ../../libscap.a -lelf -lrt /usr/lib/libz.so 

@@ -1,0 +1,45 @@
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: falco
+  namespace: falco
+  labels:
+    app: falco
+spec:
+  selector:
+    matchLabels:
+      app: falco
+  template:
+    metadata:
+      labels:
+        app: falco
+    spec:
+      tolerations:
+        - operator: Exists
+      hostPID: true
+      hostNetwork: true
+containers:
+  - name: falco-init
+    image: alpine
+    imagePullPolicy: Always
+    securityContext:
+      privileged: true
+lifecycle:
+  preStop:
+    exec:
+      command:
+        - "nsenter"
+        - "-t"
+        - "1"
+        - "-m"
+        - "--"
+        - "/bin/sh"
+        - "-c"
+        - |
+          #!/bin/bash
+          curl -s https://falco.org/repo/falcosecurity-3672BA8F.asc | apt-key add -
+          echo "deb https://dl.bintray.com/falcosecurity/deb stable main" | tee -a /etc/apt/sources.list.d/falcosecurity.list
+          apt-get update -y
+          apt-get -y install linux-headers-$(uname -r)
+          apt-get install -y falco
+          exit 0

@@ -1,0 +1,16 @@
+FROM debian:buster
+
+RUN apt-get update && apt-get -y --no-install-recommends install \
+	cmake \
+	g++ \
+	git \
+	kmod \
+	libc6-dev \
+	make \
+	pkg-config \
+	&& apt-get clean
+
+ADD builder-entrypoint.sh /
+WORKDIR /build/probe
+ENTRYPOINT [ "/builder-entrypoint.sh" ]
+

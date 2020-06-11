@@ -1,0 +1,17 @@
+Determining if the include file sys/mkdev.h exists failed with the following output:
+Change Dir: /home/nova/falco/falco/cmake-build-debug/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_4503a/fast && /usr/bin/make  -f CMakeFiles/cmTC_4503a.dir/build.make CMakeFiles/cmTC_4503a.dir/build
+make[1]: Entering directory '/home/nova/falco/falco/cmake-build-debug/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_4503a.dir/CheckIncludeFile.c.o
+/usr/bin/cc   -Wall -ggdb     -o CMakeFiles/cmTC_4503a.dir/CheckIncludeFile.c.o   -c /home/nova/falco/falco/cmake-build-debug/CMakeFiles/CMakeTmp/CheckIncludeFile.c
+/home/nova/falco/falco/cmake-build-debug/CMakeFiles/CMakeTmp/CheckIncludeFile.c:1:10: fatal error: sys/mkdev.h: No such file or directory
+    1 | #include <sys/mkdev.h>
+      |          ^~~~~~~~~~~~~
+compilation terminated.
+make[1]: *** [CMakeFiles/cmTC_4503a.dir/build.make:86: CMakeFiles/cmTC_4503a.dir/CheckIncludeFile.c.o] Error 1
+make[1]: Leaving directory '/home/nova/falco/falco/cmake-build-debug/CMakeFiles/CMakeTmp'
+make: *** [Makefile:141: cmTC_4503a/fast] Error 2
+
+
+

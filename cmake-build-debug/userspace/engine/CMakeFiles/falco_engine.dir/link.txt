@@ -1,0 +1,2 @@
+/usr/bin/ar qc libfalco_engine.a  CMakeFiles/falco_engine.dir/rules.cpp.o CMakeFiles/falco_engine.dir/falco_common.cpp.o CMakeFiles/falco_engine.dir/falco_engine.cpp.o CMakeFiles/falco_engine.dir/falco_utils.cpp.o CMakeFiles/falco_engine.dir/json_evt.cpp.o CMakeFiles/falco_engine.dir/prettyprint.cpp.o CMakeFiles/falco_engine.dir/ruleset.cpp.o CMakeFiles/falco_engine.dir/token_bucket.cpp.o CMakeFiles/falco_engine.dir/formats.cpp.o
+/usr/bin/ranlib libfalco_engine.a

@@ -1,0 +1,3 @@
+repository='external project URL'
+module='https://github.com/civetweb/civetweb/archive/v1.11.tar.gz'
+tag='SHA256=de7d5e7a2d9551d325898c71e41d437d5f7b51e754b242af897f7be96e713a42'

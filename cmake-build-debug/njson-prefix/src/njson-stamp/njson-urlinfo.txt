@@ -1,0 +1,3 @@
+repository='external project URL'
+module='https://s3.amazonaws.com/download.draios.com/dependencies/njson-3.3.0.tar.gz'
+tag='SHA256=2fd1d207b4669a7843296c41d3b6ac5b23d00dec48dba507ba051d14564aa801'

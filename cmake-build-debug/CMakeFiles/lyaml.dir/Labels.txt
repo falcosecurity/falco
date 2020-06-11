@@ -1,0 +1,13 @@
+# Target labels
+ lyaml
+# Source files and their labels
+/home/nova/falco/falco/cmake-build-debug/CMakeFiles/lyaml
+/home/nova/falco/falco/cmake-build-debug/CMakeFiles/lyaml.rule
+/home/nova/falco/falco/cmake-build-debug/CMakeFiles/lyaml-complete.rule
+/home/nova/falco/falco/cmake-build-debug/lyaml-prefix/src/lyaml-stamp/lyaml-install.rule
+/home/nova/falco/falco/cmake-build-debug/lyaml-prefix/src/lyaml-stamp/lyaml-mkdir.rule
+/home/nova/falco/falco/cmake-build-debug/lyaml-prefix/src/lyaml-stamp/lyaml-download.rule
+/home/nova/falco/falco/cmake-build-debug/lyaml-prefix/src/lyaml-stamp/lyaml-update.rule
+/home/nova/falco/falco/cmake-build-debug/lyaml-prefix/src/lyaml-stamp/lyaml-patch.rule
+/home/nova/falco/falco/cmake-build-debug/lyaml-prefix/src/lyaml-stamp/lyaml-configure.rule
+/home/nova/falco/falco/cmake-build-debug/lyaml-prefix/src/lyaml-stamp/lyaml-build.rule

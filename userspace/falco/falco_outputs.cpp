@@ -145,6 +145,8 @@ void falco_outputs::handle_event(gen_event *ev, string &rule, string &source,
 		return;
 	}
 
+
+
 	std::lock_guard<std::mutex> guard(m_ls_semaphore);
 	lua_getglobal(m_ls, m_lua_output_event.c_str());
 

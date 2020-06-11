@@ -1,0 +1,17 @@
+FROM oraclelinux:6
+
+RUN yum -y install \
+	wget \
+	git \
+	gcc \
+	gcc-c++ \
+	autoconf \
+	make \
+	cmake \
+	libdtrace-ctf \
+	elfutils-devel \
+	python-lxml && yum clean all
+
+ADD builder-entrypoint.sh /
+WORKDIR /build/probe
+ENTRYPOINT [ "/builder-entrypoint.sh" ]

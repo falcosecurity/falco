@@ -22,6 +22,7 @@ limitations under the License.
 #include "falco_engine.h"
 #include "falco_utils.h"
 #include "falco_engine_version.h"
+#include "prettyprint.h"
 #include "config_falco_engine.h"
 
 #include "formats.h"
@@ -316,6 +317,9 @@ unique_ptr<falco_engine::rule_result> falco_engine::process_sinsp_event(sinsp_ev
 			string err = "Error invoking function output: " + string(lerr);
 			throw falco_exception(err);
 		}
+
+		prettyprint::sinsp_event(ev, "Raw event just before popping to Lua");
+
 		res->evt = ev;
 		const char *p =  lua_tostring(m_ls, -3);
 		res->rule = p;

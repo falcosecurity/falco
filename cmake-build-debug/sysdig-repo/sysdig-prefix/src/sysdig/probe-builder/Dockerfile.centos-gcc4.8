@@ -1,0 +1,18 @@
+FROM centos:7
+
+RUN yum -y install \
+	wget \
+	git \
+	gcc \
+	gcc-c++ \
+	autoconf \
+	bison \
+	flex \
+	make \
+	cmake \
+	elfutils-devel \
+	python-lxml && yum clean all
+
+ADD builder-entrypoint.sh /
+WORKDIR /build/probe
+ENTRYPOINT [ "/builder-entrypoint.sh" ]

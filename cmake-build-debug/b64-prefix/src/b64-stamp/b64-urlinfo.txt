@@ -1,0 +1,3 @@
+repository='external project URL'
+module='https://s3.amazonaws.com/download.draios.com/dependencies/libb64-1.2.src.zip'
+tag='SHA256=343d8d61c5cbe3d3407394f16a5390c06f8ff907bd8d614c16546310b689bfd3'

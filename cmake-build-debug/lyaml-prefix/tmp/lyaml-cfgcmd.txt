@@ -1,0 +1,1 @@
+cmd='./configure;--enable-static;LIBS=-lyaml;LUA_INCLUDE=-I/home/nova/falco/falco/cmake-build-debug/luajit-prefix/src/luajit/src;LUA=/home/nova/falco/falco/cmake-build-debug/luajit-prefix/src/luajit/src/luajit'

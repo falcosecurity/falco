@@ -1,0 +1,13 @@
+# Target labels
+ b64
+# Source files and their labels
+/home/nova/falco/falco/cmake-build-debug/CMakeFiles/b64
+/home/nova/falco/falco/cmake-build-debug/CMakeFiles/b64.rule
+/home/nova/falco/falco/cmake-build-debug/CMakeFiles/b64-complete.rule
+/home/nova/falco/falco/cmake-build-debug/b64-prefix/src/b64-stamp/b64-install.rule
+/home/nova/falco/falco/cmake-build-debug/b64-prefix/src/b64-stamp/b64-mkdir.rule
+/home/nova/falco/falco/cmake-build-debug/b64-prefix/src/b64-stamp/b64-download.rule
+/home/nova/falco/falco/cmake-build-debug/b64-prefix/src/b64-stamp/b64-update.rule
+/home/nova/falco/falco/cmake-build-debug/b64-prefix/src/b64-stamp/b64-patch.rule
+/home/nova/falco/falco/cmake-build-debug/b64-prefix/src/b64-stamp/b64-configure.rule
+/home/nova/falco/falco/cmake-build-debug/b64-prefix/src/b64-stamp/b64-build.rule

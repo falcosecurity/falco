@@ -16,6 +16,7 @@ set(FALCO_ENGINE_SOURCE_FILES
     falco_engine.cpp
     falco_utils.cpp
     json_evt.cpp
+    prettyprint.cpp
     ruleset.cpp
     token_bucket.cpp
     formats.cpp)

@@ -1,0 +1,3 @@
+repository='external project URL'
+module='https://s3.amazonaws.com/download.draios.com/dependencies/lpeg-1.0.0.tar.gz'
+tag='SHA256=10190ae758a22a16415429a9eb70344cf29cbda738a6962a9f94a732340abf8e'

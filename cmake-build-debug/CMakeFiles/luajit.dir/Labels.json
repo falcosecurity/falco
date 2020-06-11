@@ -1,0 +1,43 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/home/nova/falco/falco/cmake-build-debug/CMakeFiles/luajit"
+		},
+		{
+			"file" : "/home/nova/falco/falco/cmake-build-debug/CMakeFiles/luajit.rule"
+		},
+		{
+			"file" : "/home/nova/falco/falco/cmake-build-debug/CMakeFiles/luajit-complete.rule"
+		},
+		{
+			"file" : "/home/nova/falco/falco/cmake-build-debug/luajit-prefix/src/luajit-stamp/luajit-install.rule"
+		},
+		{
+			"file" : "/home/nova/falco/falco/cmake-build-debug/luajit-prefix/src/luajit-stamp/luajit-mkdir.rule"
+		},
+		{
+			"file" : "/home/nova/falco/falco/cmake-build-debug/luajit-prefix/src/luajit-stamp/luajit-download.rule"
+		},
+		{
+			"file" : "/home/nova/falco/falco/cmake-build-debug/luajit-prefix/src/luajit-stamp/luajit-update.rule"
+		},
+		{
+			"file" : "/home/nova/falco/falco/cmake-build-debug/luajit-prefix/src/luajit-stamp/luajit-patch.rule"
+		},
+		{
+			"file" : "/home/nova/falco/falco/cmake-build-debug/luajit-prefix/src/luajit-stamp/luajit-configure.rule"
+		},
+		{
+			"file" : "/home/nova/falco/falco/cmake-build-debug/luajit-prefix/src/luajit-stamp/luajit-build.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"luajit"
+		],
+		"name" : "luajit"
+	}
+}

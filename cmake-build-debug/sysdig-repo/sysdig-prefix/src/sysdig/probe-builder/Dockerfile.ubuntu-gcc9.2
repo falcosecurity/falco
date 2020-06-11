@@ -1,0 +1,16 @@
+FROM ubuntu:19.10
+
+RUN apt-get update && apt-get -y --no-install-recommends install \
+	cmake \
+	g++ \
+	git \
+	kmod \
+	libc6-dev \
+	libelf-dev \
+	make \
+	pkg-config \
+	&& apt-get clean
+
+ADD builder-entrypoint.sh /
+WORKDIR /build/probe
+ENTRYPOINT [ "/builder-entrypoint.sh" ]

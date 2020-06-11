@@ -1,0 +1,43 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/home/nova/falco/falco/cmake-build-debug/CMakeFiles/njson"
+		},
+		{
+			"file" : "/home/nova/falco/falco/cmake-build-debug/CMakeFiles/njson.rule"
+		},
+		{
+			"file" : "/home/nova/falco/falco/cmake-build-debug/CMakeFiles/njson-complete.rule"
+		},
+		{
+			"file" : "/home/nova/falco/falco/cmake-build-debug/njson-prefix/src/njson-stamp/njson-install.rule"
+		},
+		{
+			"file" : "/home/nova/falco/falco/cmake-build-debug/njson-prefix/src/njson-stamp/njson-mkdir.rule"
+		},
+		{
+			"file" : "/home/nova/falco/falco/cmake-build-debug/njson-prefix/src/njson-stamp/njson-download.rule"
+		},
+		{
+			"file" : "/home/nova/falco/falco/cmake-build-debug/njson-prefix/src/njson-stamp/njson-update.rule"
+		},
+		{
+			"file" : "/home/nova/falco/falco/cmake-build-debug/njson-prefix/src/njson-stamp/njson-patch.rule"
+		},
+		{
+			"file" : "/home/nova/falco/falco/cmake-build-debug/njson-prefix/src/njson-stamp/njson-configure.rule"
+		},
+		{
+			"file" : "/home/nova/falco/falco/cmake-build-debug/njson-prefix/src/njson-stamp/njson-build.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"njson"
+		],
+		"name" : "njson"
+	}
+}

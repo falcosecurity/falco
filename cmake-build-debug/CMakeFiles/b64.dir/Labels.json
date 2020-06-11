@@ -1,0 +1,43 @@
+{
+	"sources" : 
+	[
+		{
+			"file" : "/home/nova/falco/falco/cmake-build-debug/CMakeFiles/b64"
+		},
+		{
+			"file" : "/home/nova/falco/falco/cmake-build-debug/CMakeFiles/b64.rule"
+		},
+		{
+			"file" : "/home/nova/falco/falco/cmake-build-debug/CMakeFiles/b64-complete.rule"
+		},
+		{
+			"file" : "/home/nova/falco/falco/cmake-build-debug/b64-prefix/src/b64-stamp/b64-install.rule"
+		},
+		{
+			"file" : "/home/nova/falco/falco/cmake-build-debug/b64-prefix/src/b64-stamp/b64-mkdir.rule"
+		},
+		{
+			"file" : "/home/nova/falco/falco/cmake-build-debug/b64-prefix/src/b64-stamp/b64-download.rule"
+		},
+		{
+			"file" : "/home/nova/falco/falco/cmake-build-debug/b64-prefix/src/b64-stamp/b64-update.rule"
+		},
+		{
+			"file" : "/home/nova/falco/falco/cmake-build-debug/b64-prefix/src/b64-stamp/b64-patch.rule"
+		},
+		{
+			"file" : "/home/nova/falco/falco/cmake-build-debug/b64-prefix/src/b64-stamp/b64-configure.rule"
+		},
+		{
+			"file" : "/home/nova/falco/falco/cmake-build-debug/b64-prefix/src/b64-stamp/b64-build.rule"
+		}
+	],
+	"target" : 
+	{
+		"labels" : 
+		[
+			"b64"
+		],
+		"name" : "b64"
+	}
+}

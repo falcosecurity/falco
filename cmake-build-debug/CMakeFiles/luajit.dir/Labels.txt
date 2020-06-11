@@ -1,0 +1,13 @@
+# Target labels
+ luajit
+# Source files and their labels
+/home/nova/falco/falco/cmake-build-debug/CMakeFiles/luajit
+/home/nova/falco/falco/cmake-build-debug/CMakeFiles/luajit.rule
+/home/nova/falco/falco/cmake-build-debug/CMakeFiles/luajit-complete.rule
+/home/nova/falco/falco/cmake-build-debug/luajit-prefix/src/luajit-stamp/luajit-install.rule
+/home/nova/falco/falco/cmake-build-debug/luajit-prefix/src/luajit-stamp/luajit-mkdir.rule
+/home/nova/falco/falco/cmake-build-debug/luajit-prefix/src/luajit-stamp/luajit-download.rule
+/home/nova/falco/falco/cmake-build-debug/luajit-prefix/src/luajit-stamp/luajit-update.rule
+/home/nova/falco/falco/cmake-build-debug/luajit-prefix/src/luajit-stamp/luajit-patch.rule
+/home/nova/falco/falco/cmake-build-debug/luajit-prefix/src/luajit-stamp/luajit-configure.rule
+/home/nova/falco/falco/cmake-build-debug/luajit-prefix/src/luajit-stamp/luajit-build.rule
