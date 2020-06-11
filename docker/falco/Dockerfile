@@ -12,6 +12,8 @@ ENV FALCO_VERSION=${FALCO_VERSION}
 ENV HOST_ROOT /host
 ENV HOME /root
 
+ADD ../../scripts/falco-driver-loader /usr/local/bin/falco-driver-loader
+
 RUN cp /etc/skel/.bashrc /root && cp /etc/skel/.profile /root
 
 RUN apt-get update \
