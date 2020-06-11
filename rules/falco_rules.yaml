@@ -1369,6 +1369,9 @@
 - macro: runc_writing_exec_fifo
   condition: (proc.cmdline="runc:[1:CHILD] init" and fd.name=/exec.fifo)
 
+- macro: runc_writing_var_lib_docker
+  condition: (proc.cmdline="runc:[1:CHILD] init" and evt.arg.filename startswith /var/lib/docker)
+
 - rule: Write below root
   desc: an attempt to write to any file directly below / or /root
   condition: >
@@ -2515,7 +2518,7 @@
 - rule: Delete Bash History
   desc: Detect bash history deletion
   condition: >
-    ((spawned_process and proc.name in (shred, rm, mv) and proc.args contains "bash_history") or 
+    ((spawned_process and proc.name in (shred, rm, mv) and proc.args contains "bash_history") or
      (open_write and fd.name contains "bash_history" and evt.arg.flags contains "O_TRUNC"))
   output: >
     Shell history had been deleted or renamed (user=%user.name type=%evt.type command=%proc.cmdline fd.name=%fd.name name=%evt.arg.name path=%evt.arg.path oldpath=%evt.arg.oldpath %container.info)
@@ -2739,7 +2742,7 @@
   output: Packet socket was created in a container (user=%user.name command=%proc.cmdline socket_info=%evt.args container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
   priority: NOTICE
   tags: [network, mitre_discovery]
- 
+
 # Change to (always_true) to enable rule 'Network connection outside local subnet'
 - macro: enabled_rule_network_only_subnet
   condition: (never_true)
@@ -2755,7 +2758,7 @@
 - macro: network_local_subnet
   condition: >
     fd.rnet in (rfc_1918_addresses) or
-    fd.ip = "0.0.0.0" or 
+    fd.ip = "0.0.0.0" or
     fd.net = "127.0.0.0/8"
 
 # # How to test:
@@ -2815,7 +2818,7 @@
     not fd.sport in (authorized_server_port)
   output: >
     Network connection outside authorized port and binary
-    (command=%proc.cmdline connection=%fd.name user=%user.name container_id=%container.id 
+    (command=%proc.cmdline connection=%fd.name user=%user.name container_id=%container.id
     image=%container.image.repository)
   priority: WARNING
   tags: [network]
@@ -2827,33 +2830,45 @@
     Redirect stdout/stdin to network connection (user=%user.name %container.info process=%proc.name parent=%proc.pname cmdline=%proc.cmdline terminal=%proc.tty container_id=%container.id image=%container.image.repository fd.name=%fd.name fd.num=%fd.num fd.type=%fd.type fd.sip=%fd.sip)
   priority: WARNING
 
-# The two Container Drift rules below will fire when a new executable is created in a container. 
+# The two Container Drift rules below will fire when a new executable is created in a container.
 # There are two ways to create executables - file is created with execution permissions or permissions change of existing file.
 # We will use a new sysdig filter, is_open_exec, to find all files creations with execution permission, and will trace all chmods in a container.
-# The use case we are targeting here is an attempt to execute code that was not shipped as part of a container (drift) - 
+# The use case we are targeting here is an attempt to execute code that was not shipped as part of a container (drift) -
 # an activity that might be malicious or non-compliant.
 # Two things to pay attention to:
 #   1) In most cases, 'docker cp' will not be identified, but the assumption is that if an attacker gained access to the container runtime daemon, they are already privileged
-#   2) Drift rules will be noisy in environments in which containers are built (e.g. docker build) 
+#   2) Drift rules will be noisy in environments in which containers are built (e.g. docker build)
 
 - rule: Container Drift Detected (chmod)
   desc: New executable created in a container due to chmod
-  condition: (chmod and consider_all_chmods and container and evt.rawres>=0 and
-       ((evt.arg.mode contains "S_IXUSR") or
-        (evt.arg.mode contains "S_IXGRP") or
-        (evt.arg.mode contains "S_IXOTH")))
-  output: Drift detected! New executable created in a container (user=%user.name command=%proc.cmdline filename=%evt.arg.filename name=%evt.arg.name mode=%evt.arg.mode event=%evt.type)
+  condition: >
+    chmod and
+    consider_all_chmods and
+    container and
+    not runc_writing_exec_fifo and
+    not runc_writing_var_lib_docker and
+    evt.rawres>=0 and
+    ((evt.arg.mode contains "S_IXUSR") or
+    (evt.arg.mode contains "S_IXGRP") or
+    (evt.arg.mode contains "S_IXOTH"))
+  output: Drift detected (chmod), new executable created in a container (user=%user.name command=%proc.cmdline filename=%evt.arg.filename name=%evt.arg.name mode=%evt.arg.mode event=%evt.type)
   priority: ERROR
-  
+
 # ****************************************************************************
 # * "Container Drift Detected (open+create)" requires FALCO_ENGINE_VERSION 6 *
 # ****************************************************************************
 - rule: Container Drift Detected (open+create)
   desc: New executable created in a container due to open+create
-  condition: (evt.type in (open,openat,creat) and evt.is_open_exec=true and container and evt.rawres>=0)
-  output: Drift detected! New executable created in a container (user=%user.name command=%proc.cmdline filename=%evt.arg.filename name=%evt.arg.name mode=%evt.arg.mode event=%evt.type)
+  condition: >
+    evt.type in (open,openat,creat) and
+    evt.is_open_exec=true and
+    container and
+    not runc_writing_exec_fifo and
+    not runc_writing_var_lib_docker and
+    evt.rawres>=0
+  output: Drift detected (open+create), new executable created in a container (user=%user.name command=%proc.cmdline filename=%evt.arg.filename name=%evt.arg.name mode=%evt.arg.mode event=%evt.type)
   priority: ERROR
-  
+
 
 # Application rules have moved to application_rules.yaml. Please look
 # there if you want to enable them by adding to
