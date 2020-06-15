@@ -23,8 +23,7 @@
 #
 # Returns 1 if $cos_ver > $base_ver, 0 otherwise
 #
-cos_version_greater()
-{
+cos_version_greater() {
 	if [[ $cos_ver == "${base_ver}" ]]; then
 		return 0
 	fi
@@ -68,29 +67,29 @@ cos_version_greater()
 
 get_kernel_config() {
 	if [ -f /proc/config.gz ]; then
-		echo "Found kernel config at /proc/config.gz"
+		echo "* Found kernel config at /proc/config.gz"
 		KERNEL_CONFIG_PATH=/proc/config.gz
 	elif [ -f "/boot/config-${KERNEL_RELEASE}" ]; then
-		echo "Found kernel config at /boot/config-${KERNEL_RELEASE}"
+		echo "* Found kernel config at /boot/config-${KERNEL_RELEASE}"
 		KERNEL_CONFIG_PATH=/boot/config-${KERNEL_RELEASE}
 	elif [ -n "${HOST_ROOT}" ] && [ -f "${HOST_ROOT}/boot/config-${KERNEL_RELEASE}" ]; then
-		echo "Found kernel config at ${HOST_ROOT}/boot/config-${KERNEL_RELEASE}"
+		echo "* Found kernel config at ${HOST_ROOT}/boot/config-${KERNEL_RELEASE}"
 		KERNEL_CONFIG_PATH="${HOST_ROOT}/boot/config-${KERNEL_RELEASE}"
 	elif [ -f "/usr/lib/ostree-boot/config-${KERNEL_RELEASE}" ]; then
-		echo "Found kernel config at /usr/lib/ostree-boot/config-${KERNEL_RELEASE}"
+		echo "* Found kernel config at /usr/lib/ostree-boot/config-${KERNEL_RELEASE}"
 		KERNEL_CONFIG_PATH="/usr/lib/ostree-boot/config-${KERNEL_RELEASE}"
 	elif [ -n "${HOST_ROOT}" ] && [ -f "${HOST_ROOT}/usr/lib/ostree-boot/config-${KERNEL_RELEASE}" ]; then
-		echo "Found kernel config at ${HOST_ROOT}/usr/lib/ostree-boot/config-${KERNEL_RELEASE}"
+		echo "* Found kernel config at ${HOST_ROOT}/usr/lib/ostree-boot/config-${KERNEL_RELEASE}"
 		KERNEL_CONFIG_PATH="${HOST_ROOT}/usr/lib/ostree-boot/config-${KERNEL_RELEASE}"
 	elif [ -f "/lib/modules/${KERNEL_RELEASE}/config" ]; then
 		# this code works both for native host and agent container assuming that
 		# Dockerfile sets up the desired symlink /lib/modules -> $HOST_ROOT/lib/modules
-		echo "Found kernel config at /lib/modules/${KERNEL_RELEASE}/config"
+		echo "* Found kernel config at /lib/modules/${KERNEL_RELEASE}/config"
 		KERNEL_CONFIG_PATH="/lib/modules/${KERNEL_RELEASE}/config"
 	fi
 
 	if [ -z "${KERNEL_CONFIG_PATH}" ]; then
-		echo "Cannot find kernel config"
+		>&2 echo "Cannot find kernel config"
 		exit 1
 	fi
 
@@ -131,13 +130,66 @@ get_target_id() {
 		if [[ $KERNEL_RELEASE == *"aws"* ]]; then
 			TARGET_ID="ubuntu-aws"
 		else
-			TARGET_ID="ubuntu"
+			TARGET_ID="ubuntu-generic"
 		fi
 		;;
 	(*)
 		TARGET_ID=$(echo "${OS_ID}" | tr '[:upper:]' '[:lower:]')
 		;;
 	esac
+}
+
+load_kernel_module_compile() {
+	# skip dkms on UEK hosts because it will always fail
+	if [[ $(uname -r) == *uek* ]]; then
+		echo "* Skipping dkms install for UEK host"
+	else
+		if hash dkms &>/dev/null; then
+				echo "* Trying to dkms install ${DRIVER_NAME} module"
+			if dkms install -m "${DRIVER_NAME}" -v "${DRIVER_VERSION}" -k "${KERNEL_RELEASE}" 2>/dev/null; then
+				echo "* ${DRIVER_NAME} module installed in dkms, trying to insmod"				
+				if insmod "/var/lib/dkms/${DRIVER_NAME}/${DRIVER_VERSION}/${KERNEL_RELEASE}/${ARCH}/module/${DRIVER_NAME}.ko" > /dev/null 2>&1; then
+					echo "* Success: ${DRIVER_NAME} module found and loaded in dkms"
+					exit 0
+				elif insmod "/var/lib/dkms/${DRIVER_NAME}/${DRIVER_VERSION}/${KERNEL_RELEASE}/${ARCH}/module/${DRIVER_NAME}.ko.xz" > /dev/null 2>&1; then
+					echo "* Success: ${DRIVER_NAME} module found and loaded in dkms (xz)"
+					exit 0
+				else
+					echo "* Unable to insmod ${DRIVER_NAME} module"
+				fi
+			else
+				DKMS_LOG="/var/lib/dkms/${DRIVER_NAME}/${DRIVER_VERSION}/build/make.log"
+				if [ -f "${DKMS_LOG}" ]; then
+					echo "* Running dkms build failed, dumping ${DKMS_LOG}"
+					cat "${DKMS_LOG}"
+				else
+					echo "* Running dkms build failed, couldn't find ${DKMS_LOG}"
+				fi
+			fi
+		else
+			echo "* Skipping dkms install (dkms not found)"
+		fi
+	fi
+}
+
+load_kernel_module_download() {
+
+	get_target_id
+
+	local FALCO_KERNEL_MODULE_FILENAME="${DRIVER_NAME}_${TARGET_ID}_${KERNEL_RELEASE}_${KERNEL_VERSION}.ko"
+
+	local URL
+	URL=$(echo "${DRIVERS_REPO}/${DRIVER_VERSION}/${FALCO_KERNEL_MODULE_FILENAME}" | sed s/+/%2B/g)
+
+	echo "* Trying to download prebuilt module from ${URL}"
+	if curl -L --create-dirs "${FALCO_DRIVER_CURL_OPTIONS}" -o "${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}" "${URL}"; then
+		echo "* Download succeeded"
+		insmod "${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}" && echo "* Success: ${DRIVER_NAME} module loaded"
+		exit $?
+	else
+		>&2 echo "Download failed, consider compiling your own ${DRIVER_NAME} module and loading it or getting in touch with the Falco community"
+		exit 1
+	fi
 }
 
 load_kernel_module() {
@@ -177,67 +229,160 @@ load_kernel_module() {
 		exit 0
 	fi
 
-	# skip dkms on UEK hosts because it will always fail`
-	if [[ $(uname -r) == *uek* ]]; then
-		echo "* Skipping dkms install for UEK host"
-	else
-		if hash dkms &>/dev/null && dkms install -m "${DRIVER_NAME}" -v "${DRIVER_VERSION}" -k "${KERNEL_RELEASE}" 2>/dev/null; then
-			echo "* Trying to load a dkms ${DRIVER_NAME} module, if present"
-
-			if insmod "/var/lib/dkms/${DRIVER_NAME}/${DRIVER_VERSION}/${KERNEL_RELEASE}/${ARCH}/module/${DRIVER_NAME}.ko" > /dev/null 2>&1; then
-				echo "${DRIVER_NAME} module found and loaded in dkms"
-				exit 0
-			elif insmod "/var/lib/dkms/${DRIVER_NAME}/${DRIVER_VERSION}/${KERNEL_RELEASE}/${ARCH}/module/${DRIVER_NAME}.ko.xz" > /dev/null 2>&1; then
-				echo "${DRIVER_NAME} module found and loaded in dkms (xz)"
-				exit 0
-			else
-				echo "* Unable to insmod"
-			fi
-		else
-			DKMS_LOG="/var/lib/dkms/${DRIVER_NAME}/${DRIVER_VERSION}/build/make.log"
-			if [ -f "${DKMS_LOG}" ]; then
-				echo "* Running dkms build failed, dumping ${DKMS_LOG}"
-				cat "${DKMS_LOG}"
-			else
-				echo "* Running dkms build failed, couldn't find ${DKMS_LOG}"
-			fi
-		fi
+	if [ -n "$ENABLE_COMPILE" ]; then
+		load_kernel_module_compile
 	fi
+
 
 	echo "* Trying to load a system ${DRIVER_NAME} driver, if present"
-
 	if modprobe "${DRIVER_NAME}" > /dev/null 2>&1; then
-		echo "${DRIVER_NAME} module found and loaded with modprobe"
+		echo "* Success: ${DRIVER_NAME} module found and loaded with modprobe"
 		exit 0
-	fi
+	fi		
 
-	echo "* Trying to find a prebuilt ${DRIVER_NAME} module for kernel ${KERNEL_RELEASE}"
+
+	echo "* Trying to find locally a prebuilt ${DRIVER_NAME} module for kernel ${KERNEL_RELEASE}, if present"
 
 	get_target_id
 
 	local FALCO_KERNEL_MODULE_FILENAME="${DRIVER_NAME}_${TARGET_ID}_${KERNEL_RELEASE}_${KERNEL_VERSION}.ko"
 
 	if [ -f "${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}" ]; then
-		echo "Found a prebuilt module at ${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}, loading it"
-		insmod "${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}"
+		echo "* Found a prebuilt module at ${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}, loading it"
+		insmod "${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}" && echo "* Success: ${DRIVER_NAME} module loaded"
 		exit $?
 	fi
 
-	local URL
-	URL=$(echo "${DRIVERS_REPO}/kernel-module/${DRIVER_VERSION}/${FALCO_KERNEL_MODULE_FILENAME}" | sed s/+/%2B/g)
+	if [ -n "$ENABLE_DOWNLOAD" ]; then
+		load_kernel_module_download
+	fi
+}
 
-	echo "* Trying to download prebuilt module from ${URL}"
-	if curl --create-dirs "${FALCO_DRIVER_CURL_OPTIONS}" -o "${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}" "${URL}"; then
-		echo "Download succeeded, loading module"
-		insmod "${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}"
-		exit $?
-	else
-		>&2 echo "Download failed, consider compiling your own ${DRIVER_NAME} module and loading it or getting in touch with the Falco community"
-		exit 1
+load_bpf_probe_compile() {
+	local BPF_KERNEL_SOURCES_URL=""
+	local STRIP_COMPONENTS=1
+
+	customize_kernel_build() {
+		if [ -n "${KERNEL_EXTRA_VERSION}" ]; then
+		sed -i "s/LOCALVERSION=\"\"/LOCALVERSION=\"${KERNEL_EXTRA_VERSION}\"/" .config
+		fi
+		make olddefconfig > /dev/null
+		make modules_prepare > /dev/null
+	}
+
+	if [ -n "${COS}" ]; then
+		echo "* COS detected (build ${BUILD_ID}), using cos kernel headers"
+
+		BPF_KERNEL_SOURCES_URL="https://storage.googleapis.com/cos-tools/${BUILD_ID}/kernel-headers.tgz"
+		KERNEL_EXTRA_VERSION="+"
+		STRIP_COMPONENTS=0
+
+		customize_kernel_build() {
+			pushd usr/src/* > /dev/null || exit
+
+			# Note: this overrides the KERNELDIR set while untarring the tarball
+			KERNELDIR=$(pwd)
+			export KERNELDIR
+
+			sed -i '/^#define randomized_struct_fields_start	struct {$/d' include/linux/compiler-clang.h
+			sed -i '/^#define randomized_struct_fields_end	};$/d' include/linux/compiler-clang.h
+
+			popd > /dev/null || exit
+
+			# Might need to configure our own sources depending on COS version
+			cos_ver=${BUILD_ID}
+			base_ver=11553.0.0
+
+			cos_version_greater
+			greater_ret=$?
+
+			if [[ greater_ret -eq 1 ]]; then
+			export KBUILD_EXTRA_CPPFLAGS=-DCOS_73_WORKAROUND
+			fi
+		}
+	fi
+
+	if [ -n "${MINIKUBE}" ]; then
+		echo "* Minikube detected (${MINIKUBE_VERSION}), using linux kernel sources for minikube kernel"
+		local kernel_version
+		kernel_version=$(uname -r)
+		local -r kernel_version_major=$(echo "${kernel_version}" | cut -d. -f1)
+		local -r kernel_version_minor=$(echo "${kernel_version}" | cut -d. -f2)
+		local -r kernel_version_patch=$(echo "${kernel_version}" | cut -d. -f3)
+
+		if [ "${kernel_version_patch}" == "0" ]; then
+			kernel_version="${kernel_version_major}.${kernel_version_minor}"
+		fi
+
+		BPF_KERNEL_SOURCES_URL="http://mirrors.edge.kernel.org/pub/linux/kernel/v${kernel_version_major}.x/linux-${kernel_version}.tar.gz"
+	fi
+
+	if [ -n "${BPF_USE_LOCAL_KERNEL_SOURCES}" ]; then
+		local -r kernel_version_major=$(uname -r | cut -d. -f1)
+		local -r kernel_version=$(uname -r | cut -d- -f1)
+		KERNEL_EXTRA_VERSION="-$(uname -r | cut -d- -f2)"
+
+		echo "* Using downloaded kernel sources for kernel version ${kernel_version}..."
+
+		BPF_KERNEL_SOURCES_URL="http://mirrors.edge.kernel.org/pub/linux/kernel/v${kernel_version_major}.x/linux-${kernel_version}.tar.gz"
+	fi
+
+	if [ -n "${BPF_KERNEL_SOURCES_URL}" ]; then
+		echo "* Downloading ${BPF_KERNEL_SOURCES_URL}"
+
+		mkdir -p /tmp/kernel
+		cd /tmp/kernel || exit
+		cd "$(mktemp -d -p /tmp/kernel)" || exit
+		if ! curl -L -o kernel-sources.tgz --create-dirs "${FALCO_DRIVER_CURL_OPTIONS}" "${BPF_KERNEL_SOURCES_URL}"; then
+			>&2 echo "Download failed"
+			exit 1;
+		fi
+
+		echo "* Extracting kernel sources"
+
+		mkdir kernel-sources && tar xf kernel-sources.tgz -C kernel-sources --strip-components "${STRIP_COMPONENTS}"
+
+		cd kernel-sources || exit
+		KERNELDIR=$(pwd)
+		export KERNELDIR
+
+		if [[ "${KERNEL_CONFIG_PATH}" == *.gz ]]; then
+			zcat "${KERNEL_CONFIG_PATH}" > .config
+		else
+			cat "${KERNEL_CONFIG_PATH}" > .config
+		fi
+
+		echo "* Configuring kernel"
+		customize_kernel_build
+	fi
+
+	echo "* Trying to compile the eBPF probe (${BPF_PROBE_FILENAME})"
+
+	make -C "/usr/src/${DRIVER_NAME}-${DRIVER_VERSION}/bpf" > /dev/null
+
+	mkdir -p "${HOME}/.falco"
+	mv "/usr/src/${DRIVER_NAME}-${DRIVER_VERSION}/bpf/probe.o" "${HOME}/.falco/${BPF_PROBE_FILENAME}"
+
+	if [ -n "${BPF_KERNEL_SOURCES_URL}" ]; then
+		rm -r /tmp/kernel
+	fi
+
+}
+
+load_bpf_probe_download() {
+	local URL
+	URL=$(echo "${DRIVERS_REPO}/${DRIVER_VERSION}/${BPF_PROBE_FILENAME}" | sed s/+/%2B/g)
+
+	echo "* Trying to download a prebuilt eBPF probe from ${URL}"
+
+	if ! curl -L --create-dirs "${FALCO_DRIVER_CURL_OPTIONS}" -o "${HOME}/.falco/${BPF_PROBE_FILENAME}" "${URL}"; then
+		>&2 echo "Download failed"
+		exit 1;
 	fi
 }
 
 load_bpf_probe() {
+
 	echo "* Mounting debugfs"
 
 	if [ ! -d /sys/kernel/debug/tracing ]; then
@@ -262,128 +407,27 @@ load_bpf_probe() {
 
 	get_target_id
 
-	local BPF_PROBE_FILENAME="${DRIVER_NAME}_${TARGET_ID}_${KERNEL_RELEASE}_${KERNEL_VERSION}.o"
+	BPF_PROBE_FILENAME="${DRIVER_NAME}_${TARGET_ID}_${KERNEL_RELEASE}_${KERNEL_VERSION}.o"
 
-	if [ ! -f "${HOME}/.falco/${BPF_PROBE_FILENAME}" ]; then
-
-		local BPF_KERNEL_SOURCES_URL=""
-		local STRIP_COMPONENTS=1
-
-		customize_kernel_build() {
-			if [ -n "${KERNEL_EXTRA_VERSION}" ]; then
-			sed -i "s/LOCALVERSION=\"\"/LOCALVERSION=\"${KERNEL_EXTRA_VERSION}\"/" .config
-			fi
-			make olddefconfig > /dev/null
-			make modules_prepare > /dev/null
-		}
-
-		if [ -n "${COS}" ]; then
-			echo "* COS detected (build ${BUILD_ID}), using cos kernel headers..."
-
-			BPF_KERNEL_SOURCES_URL="https://storage.googleapis.com/cos-tools/${BUILD_ID}/kernel-headers.tgz"
-			KERNEL_EXTRA_VERSION="+"
-			STRIP_COMPONENTS=0
-
-			customize_kernel_build() {
-				pushd usr/src/* > /dev/null || exit
-
-				# Note: this overrides the KERNELDIR set while untarring the tarball
-				KERNELDIR=$(pwd)
-				export KERNELDIR
-
-				sed -i '/^#define randomized_struct_fields_start	struct {$/d' include/linux/compiler-clang.h
-				sed -i '/^#define randomized_struct_fields_end	};$/d' include/linux/compiler-clang.h
-
-				popd > /dev/null || exit
-
-				# Might need to configure our own sources depending on COS version
-				cos_ver=${BUILD_ID}
-				base_ver=11553.0.0
-
-				cos_version_greater
-				greater_ret=$?
-
-				if [[ greater_ret -eq 1 ]]; then
-				export KBUILD_EXTRA_CPPFLAGS=-DCOS_73_WORKAROUND
-				fi
-			}
-		fi
-
-		if [ -n "${MINIKUBE}" ]; then
-			echo "* Minikube detected (${MINIKUBE_VERSION}), using linux kernel sources for minikube kernel"
-			local kernel_version
-			kernel_version=$(uname -r)
-			local -r kernel_version_major=$(echo "${kernel_version}" | cut -d. -f1)
-			local -r kernel_version_minor=$(echo "${kernel_version}" | cut -d. -f2)
-			local -r kernel_version_patch=$(echo "${kernel_version}" | cut -d. -f3)
-
-			if [ "${kernel_version_patch}" == "0" ]; then
-				kernel_version="${kernel_version_major}.${kernel_version_minor}"
-			fi
-
-			BPF_KERNEL_SOURCES_URL="http://mirrors.edge.kernel.org/pub/linux/kernel/v${kernel_version_major}.x/linux-${kernel_version}.tar.gz"
-		fi
-
-		if [ -n "${BPF_USE_LOCAL_KERNEL_SOURCES}" ]; then
-			local -r kernel_version_major=$(uname -r | cut -d. -f1)
-			local -r kernel_version=$(uname -r | cut -d- -f1)
-			KERNEL_EXTRA_VERSION="-$(uname -r | cut -d- -f2)"
-
-			echo "* Using downloaded kernel sources for kernel version ${kernel_version}..."
-
-			BPF_KERNEL_SOURCES_URL="http://mirrors.edge.kernel.org/pub/linux/kernel/v${kernel_version_major}.x/linux-${kernel_version}.tar.gz"
-		fi
-
-		if [ -n "${BPF_KERNEL_SOURCES_URL}" ]; then
-			echo "* Downloading ${BPF_KERNEL_SOURCES_URL}"
-
-			mkdir -p /tmp/kernel
-			cd /tmp/kernel || exit
-			cd "$(mktemp -d -p /tmp/kernel)" || exit
-			if ! curl -o kernel-sources.tgz --create-dirs "${FALCO_DRIVER_CURL_OPTIONS}" "${BPF_KERNEL_SOURCES_URL}"; then
-				exit 1;
-			fi
-
-			echo "* Extracting kernel sources"
-
-			mkdir kernel-sources && tar xf kernel-sources.tgz -C kernel-sources --strip-components "${STRIP_COMPONENTS}"
-
-			cd kernel-sources || exit
-			KERNELDIR=$(pwd)
-			export KERNELDIR
-
-			if [[ "${KERNEL_CONFIG_PATH}" == *.gz ]]; then
-				zcat "${KERNEL_CONFIG_PATH}" > .config
-			else
-				cat "${KERNEL_CONFIG_PATH}" > .config
-			fi
-
-			echo "* Configuring kernel"
-			customize_kernel_build
-		fi
-
-		echo "* Trying to compile the eBPF probe (${BPF_PROBE_FILENAME})"
-
-		make -C "/usr/src/${DRIVER_NAME}-${DRIVER_VERSION}/bpf" > /dev/null
-
-		mkdir -p "${HOME}/.falco"
-		mv "/usr/src/${DRIVER_NAME}-${DRIVER_VERSION}/bpf/probe.o" "${HOME}/.falco/${BPF_PROBE_FILENAME}"
-
-		if [ -n "${BPF_KERNEL_SOURCES_URL}" ]; then
-			rm -r /tmp/kernel
+	if [ -n "$ENABLE_COMPILE" ]; then
+		if [ -f "${HOME}/.falco/${BPF_PROBE_FILENAME}" ]; then
+			echo "* Skipping compile, eBPF probe is already present in ${HOME}/.falco/${BPF_PROBE_FILENAME}"
+		else
+			load_bpf_probe_compile
 		fi
 	fi
 
-	if [ ! -f "${HOME}/.falco/${BPF_PROBE_FILENAME}" ]; then
-		local URL
-		URL=$(echo "${DRIVERS_REPO}/ebpf-probe/${DRIVER_VERSION}/${BPF_PROBE_FILENAME}" | sed s/+/%2B/g)
-
-		echo "* Trying to download a prebuilt eBPF probe from ${URL}"
-
-		curl --create-dirs "${FALCO_DRIVER_CURL_OPTIONS}" -o "${HOME}/.falco/${BPF_PROBE_FILENAME}" "${URL}"
+	if [ -n "$ENABLE_DOWNLOAD" ]; then
+		if [ -f "${HOME}/.falco/${BPF_PROBE_FILENAME}" ]; then
+			echo "* Skipping download, eBPF probe is already present in ${HOME}/.falco/${BPF_PROBE_FILENAME}"
+		else
+			load_bpf_probe_download
+		fi
 	fi
 
 	if [ -f "${HOME}/.falco/${BPF_PROBE_FILENAME}" ]; then
+		echo "* eBPF probe located in ${HOME}/.falco/${BPF_PROBE_FILENAME}"
+
 		if [ ! -f /proc/sys/net/core/bpf_jit_enable ]; then
 			echo "******************************************************************"
 			echo "** BPF doesn't have JIT enabled, performance might be degraded. **"
@@ -391,20 +435,37 @@ load_bpf_probe() {
 			echo "******************************************************************"
 		fi
 
-		echo "* eBPF probe located, it's now possible to start Falco"
-
-		ln -sf "${HOME}/.falco/${BPF_PROBE_FILENAME}" "${HOME}/.falco/${DRIVER_NAME}-bpf.o"
+		ln -sf "${HOME}/.falco/${BPF_PROBE_FILENAME}" "${HOME}/.falco/${DRIVER_NAME}-bpf.o" \
+			&& echo "* Success: eBPF probe symlinked to ${HOME}/.falco/${DRIVER_NAME}-bpf.o"
 		exit $?
 	else
-		echo "* Failure to find an eBPF probe"
+		>&2 echo "Failure to find an eBPF probe"
 		exit 1
 	fi
+}
+
+print_usage() {
+	echo ""
+	echo "Usage:"
+	echo "  falco-driver-loader [driver] [options]"
+	echo ""
+	echo "Available drivers:"
+	echo "  module        kernel module (default)"
+	echo "  bpf           eBPF probe"
+	echo ""
+	echo "Options:"
+	echo "  --help         show brief help"
+	echo "  --compile      try to compile the driver locally"
+	echo "  --download     try to download a prebuilt driver"
+	echo "  --source-only  skip execution and allow sourcing in another script"
+	echo ""
 }
 
 ARCH=$(uname -m)
 KERNEL_RELEASE=$(uname -r)
 KERNEL_VERSION=$(uname -v | sed 's/#\([[:digit:]]\+\).*/\1/')
 DRIVERS_REPO=${DRIVERS_REPO:-"@DRIVERS_REPO@"}
+
 if [ -n "$DRIVER_INSECURE_DOWNLOAD" ]
 then
 	FALCO_DRIVER_CURL_OPTIONS=-fsSk
@@ -420,18 +481,84 @@ fi
 DRIVER_VERSION="@PROBE_VERSION@"
 DRIVER_NAME="@PROBE_NAME@"
 
-if [ "$(id -u)" != 0 ]; then
-	echo "Installer must be run as root (or with sudo)."
-	exit 1
+DRIVER="module"
+if [ -v FALCO_BPF_PROBE ]; then
+	DRIVER="bpf"
 fi
 
-if ! hash curl > /dev/null 2>&1; then
-	echo "This program requires curl"
-	exit 1
+ENABLE_COMPILE=
+ENABLE_DOWNLOAD=
+
+has_args=
+has_opts=
+source_only=
+while test $# -gt 0; do
+	case "$1" in
+		module|bpf)
+			if [ -n "$has_args" ]; then
+				>&2 echo "Only one driver can be passed"
+				print_usage
+				exit 1
+			else
+				DRIVER="$1"
+				has_args="true"
+				shift
+			fi
+			;;
+		-h|--help)
+			print_usage
+			exit 0
+			;;
+		--compile)
+			ENABLE_COMPILE="yes"
+			has_opts="true"
+			shift
+			;;
+		--download)
+			ENABLE_DOWNLOAD="yes"
+			has_opts="true"
+			shift
+			;;
+		--source-only)
+			source_only="true"
+			shift
+			;;
+		--*)
+			>&2 echo "Unknown option: $1"
+			print_usage
+			exit 1
+			;;
+		*)
+			>&2 echo "Unknown driver: $1"
+			print_usage
+			exit 1
+			;;
+	esac
+done
+
+if [ -z "$has_opts" ]; then
+	ENABLE_COMPILE="yes"
+	ENABLE_DOWNLOAD="yes"
 fi
 
-if [ -v FALCO_BPF_PROBE ] || [ "${1}" = "bpf" ]; then
-	load_bpf_probe
-else
-	load_kernel_module
+if [ -z "$source_only" ]; then
+	if [ "$(id -u)" != 0 ]; then
+		>&2 echo "This program must be run as root (or with sudo)"
+		exit 1
+	fi
+
+	if ! hash curl > /dev/null 2>&1; then
+		>&2 echo "This program requires curl"
+		exit 1
+	fi
+
+	echo "* Running falco-driver-loader with: driver=$DRIVER, compile=${ENABLE_COMPILE:-"no"}, download=${ENABLE_DOWNLOAD:-"no"}"
+	case $DRIVER in 
+		module)
+			load_kernel_module
+			;;
+		bpf)
+			load_bpf_probe
+			;;
+	esac
 fi
