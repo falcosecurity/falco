@@ -1,3 +1,0 @@
-repository='external project URL'
-module='https://github.com/eranpeer/fakeit/archive/2.0.5.tar.gz'
-tag='SHA256=298539c773baca6ecbc28914306bba19d1008e098f8adc3ad3bb00e993ecdf15'

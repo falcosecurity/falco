@@ -1,1 +1,0 @@
-cmd='/usr/bin/cmake;-E;make_directory;/home/nova/falco/falco/cmake-build-debug/civetweb-prefix/src/civetweb//install/lib;COMMAND;/usr/bin/cmake;-E;make_directory;/home/nova/falco/falco/cmake-build-debug/civetweb-prefix/src/civetweb//install/include'

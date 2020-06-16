@@ -1,1 +1,0 @@
-/usr/bin/cc -Wall -ggdb  -D_DEBUG   CMakeFiles/scap-open.dir/test.c.o  -o scap-open  ../../libscap.a -lelf -lrt /usr/lib/libz.so 

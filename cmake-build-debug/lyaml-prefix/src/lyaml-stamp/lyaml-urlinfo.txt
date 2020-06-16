@@ -1,3 +1,0 @@
-repository='external project URL'
-module='https://s3.amazonaws.com/download.draios.com/dependencies/lyaml-release-v6.0.tar.gz'
-tag='SHA256=9d7cf74d776999ff6f758c569d5202ff5da1f303c6f4229d3b41f71cd3a3e7a7'

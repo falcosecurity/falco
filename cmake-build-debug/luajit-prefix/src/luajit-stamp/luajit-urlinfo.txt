@@ -1,3 +1,0 @@
-repository='external project URL'
-module='https://s3.amazonaws.com/download.draios.com/dependencies/LuaJIT-2.0.3.tar.gz'
-tag='SHA256=55be6cb2d101ed38acca32c5b1f99ae345904b365b642203194c585d27bebd79'

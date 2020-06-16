@@ -1,3 +1,0 @@
-repository='https://github.com/martinmoene/string-view-lite.git'
-module=''
-tag='origin'

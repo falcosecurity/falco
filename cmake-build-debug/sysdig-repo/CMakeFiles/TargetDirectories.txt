@@ -1,3 +1,0 @@
-/home/nova/falco/falco/cmake-build-debug/sysdig-repo/CMakeFiles/rebuild_cache.dir
-/home/nova/falco/falco/cmake-build-debug/sysdig-repo/CMakeFiles/edit_cache.dir
-/home/nova/falco/falco/cmake-build-debug/sysdig-repo/CMakeFiles/sysdig.dir

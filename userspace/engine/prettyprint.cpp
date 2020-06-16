@@ -28,10 +28,11 @@ limitations under the License.
  */
 void prettyprint::sinsp_event(sinsp_evt *ev, const char* note)
 {
+  ev->get_type()
   prettyprint::warning();
   printf("\033[0;34m"); // Start Blue
   printf("\n*************************************************************\n");
-  printf("[Sinsp Event:   %s]\n\n", note);
+  printf("[Sinsp Event: %s]\n\n", note);
   printf("name: %s\n", ev->get_name());
   for(uint32_t i = 0; i <= ev->get_num_params(); i++){
   }

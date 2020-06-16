@@ -1,5 +1,0 @@
-if(EXISTS "/home/nova/falco/falco/cmake-build-debug/tests/falco_test_tests-b858cb2.cmake")
-  include("/home/nova/falco/falco/cmake-build-debug/tests/falco_test_tests-b858cb2.cmake")
-else()
-  add_test(falco_test_NOT_BUILT-b858cb2 falco_test_NOT_BUILT-b858cb2)
-endif()

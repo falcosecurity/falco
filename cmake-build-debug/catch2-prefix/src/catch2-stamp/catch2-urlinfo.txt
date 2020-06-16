@@ -1,3 +1,0 @@
-repository='external project URL'
-module='https://github.com/catchorg/catch2/archive/v2.12.1.tar.gz'
-tag='SHA256=e5635c082282ea518a8dd7ee89796c8026af8ea9068cd7402fb1615deacd91c3'
