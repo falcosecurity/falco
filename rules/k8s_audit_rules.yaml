@@ -186,7 +186,7 @@
 - rule: Anonymous Request Allowed
   desc: >
     Detect any request made by the anonymous user that was allowed
-  condition: kevt and ka.user.name=system:anonymous and ka.auth.decision!=reject and not health_endpoint
+  condition: kevt and ka.user.name=system:anonymous and ka.auth.decision="allow" and not health_endpoint
   output: Request by anonymous user allowed (user=%ka.user.name verb=%ka.verb uri=%ka.uri reason=%ka.auth.reason))
   priority: WARNING
   source: k8s_audit
