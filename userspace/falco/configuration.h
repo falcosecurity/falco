@@ -206,7 +206,7 @@ public:
 	bool m_time_format_iso_8601;
 
 	bool m_grpc_enabled;
-	int m_grpc_threadiness;
+	uint32_t m_grpc_threadiness;
 	std::string m_grpc_bind_address;
 	std::string m_grpc_private_key;
 	std::string m_grpc_cert_chain;
