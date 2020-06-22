@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2019 The Falco Authors.
+Copyright (C) 2020 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ limitations under the License.
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include "falco_utils.h"
 
 #include "configuration.h"
 #include "logger.h"
@@ -148,11 +149,12 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 
 	m_grpc_enabled = m_config->get_scalar<bool>("grpc", "enabled", false);
 	m_grpc_bind_address = m_config->get_scalar<string>("grpc", "bind_address", "0.0.0.0:5060");
-	m_grpc_threadiness = m_config->get_scalar<uint32_t>("grpc", "threadiness", 8); // todo > limit it to avoid overshubscription? std::thread::hardware_concurrency()
+	m_grpc_threadiness = m_config->get_scalar<uint32_t>("grpc", "threadiness", 0);
 	if(m_grpc_threadiness == 0)
 	{
-		throw logic_error("error reading config file (" + m_config_file + "): gRPC threadiness must be greater than 0");
+		m_grpc_threadiness = falco::utils::hardware_concurrency();
 	}
+	// todo > else limit threadiness to avoid oversubscription?
 	m_grpc_private_key = m_config->get_scalar<string>("grpc", "private_key", "/etc/falco/certs/server.key");
 	m_grpc_cert_chain = m_config->get_scalar<string>("grpc", "cert_chain", "/etc/falco/certs/server.crt");
 	m_grpc_root_certs = m_config->get_scalar<string>("grpc", "root_certs", "/etc/falco/certs/ca.crt");
