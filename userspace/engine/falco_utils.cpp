@@ -52,6 +52,12 @@ std::string wrap_text(const std::string& str, uint32_t initial_pos, uint32_t ind
 	return ret;
 }
 
+uint32_t hardware_concurrency()
+{
+	auto hc = std::thread::hardware_concurrency();
+	return hc ? hc : 1;
+}
+
 void readfile(const std::string& filename, std::string& data)
 {
 	std::ifstream file(filename.c_str(), std::ios::in);
