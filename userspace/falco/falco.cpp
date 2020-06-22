@@ -1206,6 +1206,7 @@ int falco_init(int argc, char **argv)
 		// gRPC server
 		if(config.m_grpc_enabled)
 		{
+			falco_logger::log(LOG_INFO, "gRPC server threadiness equals to " + to_string(config.m_grpc_threadiness) + "\n");
 			// TODO(fntlnz,leodido): when we want to spawn multiple threads we need to have a queue per thread, or implement
 			// different queuing mechanisms, round robin, fanout? What we want to achieve?
 			grpc_server.init(
