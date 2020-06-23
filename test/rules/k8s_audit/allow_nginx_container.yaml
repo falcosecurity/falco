@@ -1,3 +1,2 @@
 - macro: allowed_k8s_containers
   condition: (ka.req.pod.containers.image.repository in (nginx))
-

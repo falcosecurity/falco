@@ -44,10 +44,18 @@
   items: ["vpa-recommender", "vpa-updater"]
 
 - list: allowed_k8s_users
-  items: [
-    "minikube", "minikube-user", "kubelet", "kops", "admin", "kube", "kube-proxy", "kube-apiserver-healthcheck",
-    "kubernetes-admin",
-    vertical_pod_autoscaler_users,
+  items:
+    [
+      "minikube",
+      "minikube-user",
+      "kubelet",
+      "kops",
+      "admin",
+      "kube",
+      "kube-proxy",
+      "kube-apiserver-healthcheck",
+      "kubernetes-admin",
+      vertical_pod_autoscaler_users,
     ]
 
 - rule: Disallowed K8s User
@@ -116,6 +124,7 @@
   condition: ka.uri=/healthz
 
 - rule: Create Disallowed Pod
+  required_engine_version: 5
   desc: >
     Detect an attempt to start a pod with a container image outside of a list of allowed images.
   condition: kevt and pod and kcreate and not allowed_k8s_containers
@@ -125,6 +134,7 @@
   tags: [k8s]
 
 - rule: Create Privileged Pod
+  required_engine_version: 5
   desc: >
     Detect an attempt to start a pod with a privileged container
   condition: kevt and pod and kcreate and ka.req.pod.containers.privileged intersects (true) and not ka.req.pod.containers.image.repository in (falco_privileged_images)
@@ -138,6 +148,7 @@
     (ka.req.pod.volumes.hostpath intersects (/proc, /var/run/docker.sock, /, /etc, /root, /var/run/crio/crio.sock, /home/admin, /var/lib/kubelet, /var/lib/kubelet/pki, /etc/kubernetes, /etc/kubernetes/manifests))
 
 - rule: Create Sensitive Mount Pod
+  required_engine_version: 5
   desc: >
     Detect an attempt to start a pod with a volume from a sensitive host directory (i.e. /proc).
     Exceptions are made for known trusted images.
@@ -149,6 +160,7 @@
 
 # Corresponds to K8s CIS Benchmark 1.7.4
 - rule: Create HostNetwork Pod
+  required_engine_version: 5
   desc: Detect an attempt to start a pod using the host network.
   condition: kevt and pod and kcreate and ka.req.pod.host_network intersects (true) and not ka.req.pod.containers.image.repository in (falco_hostnetwork_images)
   output: Pod started using host network (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace images=%ka.req.pod.containers.image)
@@ -179,7 +191,7 @@
 
 - rule: Create/Modify Configmap With Private Credentials
   desc: >
-     Detect creating/modifying a configmap containing a private credential (aws key, password, etc.)
+    Detect creating/modifying a configmap containing a private credential (aws key, password, etc.)
   condition: kevt and configmap and kmodify and contains_private_credentials
   output: K8s configmap with private credential (user=%ka.user.name verb=%ka.verb configmap=%ka.req.configmap.name config=%ka.req.configmap.obj)
   priority: WARNING
@@ -237,6 +249,7 @@
 
 # Detect any new pod created in the kube-system namespace
 - rule: Pod Created in Kube Namespace
+  required_engine_version: 5
   desc: Detect any attempt to create a pod in the kube-system or kube-public namespaces
   condition: kevt and pod and kcreate and ka.target.namespace in (kube-system, kube-public) and not trusted_pod
   output: Pod created in kube namespace (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace images=%ka.req.pod.containers.image)
@@ -281,6 +294,7 @@
   tags: [k8s]
 
 - rule: ClusterRole With Wildcard Created
+  required_engine_version: 5
   desc: Detect any attempt to create a Role/ClusterRole with wildcard resources or verbs
   condition: kevt and (role or clusterrole) and kcreate and (ka.req.role.rules.resources intersects ("*") or ka.req.role.rules.verbs intersects ("*"))
   output: Created Role/ClusterRole with wildcard (user=%ka.user.name role=%ka.target.name rules=%ka.req.role.rules)
@@ -293,6 +307,7 @@
     (ka.req.role.rules.verbs intersects (create, update, patch, delete, deletecollection))
 
 - rule: ClusterRole With Write Privileges Created
+  required_engine_version: 5
   desc: Detect any attempt to create a Role/ClusterRole that can perform write-related actions
   condition: kevt and (role or clusterrole) and kcreate and writable_verbs
   output: Created Role/ClusterRole with write privileges (user=%ka.user.name role=%ka.target.name rules=%ka.req.role.rules)
@@ -301,6 +316,7 @@
   tags: [k8s]
 
 - rule: ClusterRole With Pod Exec Created
+  required_engine_version: 5
   desc: Detect any attempt to create a Role/ClusterRole that can exec to pods
   condition: kevt and (role or clusterrole) and kcreate and ka.req.role.rules.resources intersects ("pods/exec")
   output: Created Role/ClusterRole with pod exec privileges (user=%ka.user.name role=%ka.target.name rules=%ka.req.role.rules)
@@ -463,20 +479,26 @@
   source: k8s_audit
   tags: [k8s]
 
-
 # This macro disables following rule, change to k8s_audit_never_true to enable it
 - macro: allowed_full_admin_users
   condition: (k8s_audit_always_true)
 
 # This list includes some of the default user names for an administrator in several K8s installations
 - list: full_admin_k8s_users
-  items: ["admin", "kubernetes-admin",  "kubernetes-admin@kubernetes", "kubernetes-admin@cluster.local", "minikube-user"]
+  items:
+    [
+      "admin",
+      "kubernetes-admin",
+      "kubernetes-admin@kubernetes",
+      "kubernetes-admin@cluster.local",
+      "minikube-user",
+    ]
 
-# This rules detect an operation triggered by an user name that is 
-# included in the list of those that are default administrators upon 
-# cluster creation. This may signify a permission setting too broader. 
-# As we can't check for role of the user on a general ka.* event, this 
-# may or may not be an administrator. Customize the full_admin_k8s_users 
+# This rules detect an operation triggered by an user name that is
+# included in the list of those that are default administrators upon
+# cluster creation. This may signify a permission setting too broader.
+# As we can't check for role of the user on a general ka.* event, this
+# may or may not be an administrator. Customize the full_admin_k8s_users
 # list to your needs, and activate at your discrection.
 
 # # How to test:
@@ -526,7 +548,7 @@
   output: >
     K8s Ingress Without TLS Cert Created (user=%ka.user.name ingress=%ka.target.name
     namespace=%ka.target.namespace)
-  source: k8s_audit    
+  source: k8s_audit
   priority: WARNING
   tags: [k8s, network]
 
@@ -572,4 +594,3 @@
   priority: WARNING
   source: k8s_audit
   tags: [k8s]
-
