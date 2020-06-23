@@ -2,6 +2,15 @@
 
 <!-- toc -->
 
+- [Summary](#summary)
+- [Motivation](#motivation)
+  * [Goals](#goals)
+  * [Non-Goals](#non-goals)
+  * [Use cases](#use-cases)
+  * [Example of rules file](#example-of-rules-file)
+
+<!-- tocstop -->
+
 ## Summary
 
 We want to be able to scope the `required_engine_version` field also for the specific rule/macro
