@@ -182,6 +182,7 @@ http_output:
 # grpc:
 #   enabled: true
 #   bind_address: "0.0.0.0:5060"
+#   # when threadiness is 0, Falco sets it by automatically figuring out the number of online cores
 #   threadiness: 0
 #   private_key: "/etc/falco/certs/server.key"
 #   cert_chain: "/etc/falco/certs/server.crt"
