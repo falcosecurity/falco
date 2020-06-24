@@ -110,7 +110,7 @@
 
 # This detects writes immediately below / or any write anywhere below /root
 - macro: root_dir
-  condition: ((fd.directory=/ or fd.name startswith /root) and fd.name contains "/")
+  condition: ((fd.directory=/ or fd.name startswith /root/) and fd.name contains "/")
 
 - list: shell_binaries
   items: [ash, bash, csh, ksh, sh, tcsh, zsh, dash]
