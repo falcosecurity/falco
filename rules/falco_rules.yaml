@@ -232,7 +232,7 @@
 # The truncated dpkg-preconfigu is intentional, process names are
 # truncated at the sysdig level.
 - list: package_mgmt_binaries
-  items: [rpm_binaries, deb_binaries, update-alternat, gem, pip, pip3, sane-utils.post, alternatives, chef-client, apk]
+  items: [rpm_binaries, deb_binaries, update-alternat, gem, pip, pip3, sane-utils.post, alternatives, chef-client, apk, snapd]
 
 - macro: package_mgmt_procs
   condition: proc.name in (package_mgmt_binaries)
