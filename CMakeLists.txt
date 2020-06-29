@@ -106,14 +106,15 @@ find_package(Curses REQUIRED)
 message(STATUS "Found ncurses: include: ${CURSES_INCLUDE_DIR}, lib: ${CURSES_LIBRARIES}")
 
 # libb64
+
 set(B64_SRC "${PROJECT_BINARY_DIR}/b64-prefix/src/b64")
 message(STATUS "Using bundled b64 in '${B64_SRC}'")
 set(B64_INCLUDE "${B64_SRC}/include")
 set(B64_LIB "${B64_SRC}/src/libb64.a")
 ExternalProject_Add(
   b64
-  URL "https://s3.amazonaws.com/download.draios.com/dependencies/libb64-1.2.src.zip"
-  URL_HASH "SHA256=343d8d61c5cbe3d3407394f16a5390c06f8ff907bd8d614c16546310b689bfd3"
+  URL "https://github.com/libb64/libb64/archive/v1.2.1.zip"
+  URL_HASH "SHA256=665134c2b600098a7ebd3d00b6a866cb34909a6d48e0e37a0eda226a4ad2638a"
   CONFIGURE_COMMAND ""
   BUILD_COMMAND ${CMD_MAKE}
   BUILD_IN_SOURCE 1
@@ -135,8 +136,8 @@ set(LUAJIT_INCLUDE "${LUAJIT_SRC}")
 set(LUAJIT_LIB "${LUAJIT_SRC}/libluajit.a")
 ExternalProject_Add(
   luajit
-  URL "https://s3.amazonaws.com/download.draios.com/dependencies/LuaJIT-2.0.3.tar.gz"
-  URL_HASH "SHA256=55be6cb2d101ed38acca32c5b1f99ae345904b365b642203194c585d27bebd79"
+  URL "https://github.com/LuaJIT/LuaJIT/archive/v2.0.3.tar.gz"
+  URL_HASH "SHA256=8da3d984495a11ba1bce9a833ba60e18b532ca0641e7d90d97fafe85ff014baa"
   CONFIGURE_COMMAND ""
   BUILD_COMMAND ${CMD_MAKE}
   BUILD_IN_SOURCE 1
