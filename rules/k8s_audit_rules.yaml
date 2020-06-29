@@ -45,7 +45,7 @@
 
 - list: allowed_k8s_users
   items: [
-    "minikube", "minikube-user", "kubelet", "kops", "admin", "kube", "kube-proxy",
+    "minikube", "minikube-user", "kubelet", "kops", "admin", "kube", "kube-proxy", "kube-apiserver-healthcheck",
     vertical_pod_autoscaler_users,
     ]
 
