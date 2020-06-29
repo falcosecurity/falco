@@ -32,8 +32,8 @@ else()
   ExternalProject_Add(
     openssl
     # START CHANGE for CVE-2017-3735, CVE-2017-3731, CVE-2017-3737, CVE-2017-3738, CVE-2017-3736
-    URL "https://s3.amazonaws.com/download.draios.com/dependencies/openssl-1.0.2n.tar.gz"
-    URL_HASH "SHA256=370babb75f278c39e0c50e8c4e7493bc0f18db6867478341a832a982fd15a8fe"
+    URL "https://github.com/openssl/openssl/archive/OpenSSL_1_0_2n.tar.gz"
+    URL_HASH "SHA256=4f4bc907caff1fee6ff8593729e5729891adcee412049153a3bb4db7625e8364"
     # END CHANGE for CVE-2017-3735, CVE-2017-3731, CVE-2017-3737, CVE-2017-3738, CVE-2017-3736
     CONFIGURE_COMMAND ./config shared --prefix=${OPENSSL_INSTALL_DIR}
     BUILD_COMMAND ${CMD_MAKE}
