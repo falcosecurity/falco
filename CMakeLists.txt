@@ -152,8 +152,8 @@ list(APPEND LPEG_DEPENDENCIES "luajit")
 ExternalProject_Add(
   lpeg
   DEPENDS ${LPEG_DEPENDENCIES}
-  URL "https://s3.amazonaws.com/download.draios.com/dependencies/lpeg-1.0.0.tar.gz"
-  URL_HASH "SHA256=10190ae758a22a16415429a9eb70344cf29cbda738a6962a9f94a732340abf8e"
+  URL "http://www.inf.puc-rio.br/~roberto/lpeg/lpeg-1.0.2.tar.gz"
+  URL_HASH "SHA256=48d66576051b6c78388faad09b70493093264588fcd0f258ddaab1cdd4a15ffe"
   BUILD_COMMAND LUA_INCLUDE=${LUAJIT_INCLUDE} "${PROJECT_SOURCE_DIR}/scripts/build-lpeg.sh" "${LPEG_SRC}/build"
   BUILD_IN_SOURCE 1
   CONFIGURE_COMMAND ""
@@ -176,7 +176,7 @@ list(APPEND LYAML_DEPENDENCIES "luajit")
 ExternalProject_Add(
   lyaml
   DEPENDS ${LYAML_DEPENDENCIES}
-  URL "https://s3.amazonaws.com/download.draios.com/dependencies/lyaml-release-v6.0.tar.gz"
+  URL "https://github.com/gvvaughan/lyaml/archive/release-v6.0.tar.gz"
   URL_HASH "SHA256=9d7cf74d776999ff6f758c569d5202ff5da1f303c6f4229d3b41f71cd3a3e7a7"
   BUILD_COMMAND ${CMD_MAKE}
   BUILD_IN_SOURCE 1
