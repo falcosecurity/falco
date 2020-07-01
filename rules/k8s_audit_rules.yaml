@@ -155,10 +155,13 @@
   source: k8s_audit
   tags: [k8s]
 
+- macro: user_known_node_port_service
+  condition: (k8s_audit_never_true)
+
 - rule: Create NodePort Service
   desc: >
     Detect an attempt to start a service with a NodePort service type
-  condition: kevt and service and kcreate and ka.req.service.type=NodePort
+  condition: kevt and service and kcreate and ka.req.service.type=NodePort and not user_known_node_port_service
   output: NodePort Service Created (user=%ka.user.name service=%ka.target.name ns=%ka.target.namespace ports=%ka.req.service.ports)
   priority: WARNING
   source: k8s_audit
@@ -201,10 +204,13 @@
 # attach request was created privileged or not. For now, we have a
 # less severe rule that detects attaches/execs to any pod.
 
+- macro: user_known_exec_pod_activities
+  condition: (k8s_audit_never_true)
+
 - rule: Attach/Exec Pod
   desc: >
     Detect any attempt to attach/exec to a pod
-  condition: kevt_started and pod_subresource and kcreate and ka.target.subresource in (exec,attach)
+  condition: kevt_started and pod_subresource and kcreate and ka.target.subresource in (exec,attach) and not user_known_exec_pod_activities
   output: Attach/Exec to pod (user=%ka.user.name pod=%ka.target.name ns=%ka.target.namespace action=%ka.target.subresource command=%ka.uri.param[command])
   priority: NOTICE
   source: k8s_audit
@@ -222,19 +228,31 @@
   source: k8s_audit
   tags: [k8s]
 
+- list: user_trusted_image_list
+  items: []
+
+- macro: trusted_pod
+  condition: (ka.req.pod.containers.image.repository in (user_trusted_image_list))
+
 # Detect any new pod created in the kube-system namespace
 - rule: Pod Created in Kube Namespace
   desc: Detect any attempt to create a pod in the kube-system or kube-public namespaces
-  condition: kevt and pod and kcreate and ka.target.namespace in (kube-system, kube-public)
+  condition: kevt and pod and kcreate and ka.target.namespace in (kube-system, kube-public) and not trusted_pod
   output: Pod created in kube namespace (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace images=%ka.req.pod.containers.image)
   priority: WARNING
   source: k8s_audit
   tags: [k8s]
 
+- list: user_known_sa_list
+  items: []
+
+- macro: trusted_sa
+  condition: (ka.target.name in (user_known_sa_list))
+
 # Detect creating a service account in the kube-system/kube-public namespace
 - rule: Service Account Created in Kube Namespace
   desc: Detect any attempt to create a serviceaccount in the kube-system or kube-public namespaces
-  condition: kevt and serviceaccount and kcreate and ka.target.namespace in (kube-system, kube-public) and response_successful
+  condition: kevt and serviceaccount and kcreate and ka.target.namespace in (kube-system, kube-public) and response_successful and not trusted_sa
   output: Service account created in kube namespace (user=%ka.user.name serviceaccount=%ka.target.name ns=%ka.target.namespace)
   priority: WARNING
   source: k8s_audit
@@ -476,8 +494,6 @@
   source: k8s_audit
   tags: [k8s]
 
-
-
 - macro: ingress
   condition: ka.target.resource=ingresses
 
@@ -512,8 +528,6 @@
   source: k8s_audit    
   priority: WARNING
   tags: [k8s, network]
-
-
 
 - macro: node
   condition: ka.target.resource=nodes
