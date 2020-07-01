@@ -490,12 +490,16 @@
 - macro: consider_all_cron_jobs
   condition: (never_true)
 
+- macro: user_known_cron_jobs
+  condition: (never_true)
+
 - rule: Schedule Cron Jobs
   desc: Detect cron jobs scheduled
   condition: >
-    consider_all_cron_jobs and
     ((open_write and fd.name startswith /etc/cron) or
-     (spawned_process and proc.name = "crontab"))
+     (spawned_process and proc.name = "crontab")) and
+    consider_all_cron_jobs and
+    not user_known_cron_jobs
   output: >
     Cron jobs were scheduled to run (user=%user.name command=%proc.cmdline
     file=%fd.name container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
@@ -931,12 +935,16 @@
 - macro: modify_repositories
   condition: (evt.arg.newpath pmatch (repository_directories))
 
+- macro: user_known_update_package_registry
+  condition: (never_true)
+
 - rule: Update Package Repository
   desc: Detect package repositories get updated
   condition: >
     ((open_write and access_repositories) or (modify and modify_repositories))
     and not package_mgmt_procs
     and not exe_running_docker_save
+    and not user_known_update_package_registry
   output: >
     Repository files get updated (user=%user.name command=%proc.cmdline pcmdline=%proc.pcmdline file=%fd.name newpath=%evt.arg.newpath container_id=%container.id image=%container.image.repository)
   priority:
@@ -1028,13 +1036,17 @@
 - macro: consider_ssh_reads
   condition: (never_true)
 
+- macro: user_known_read_ssh_information_activities
+  condition: (never_true)
+
 - rule: Read ssh information
   desc: Any attempt to read files below ssh directories by non-ssh programs
   condition: >
-    (consider_ssh_reads and
-     (open_read or open_directory) and
+    ((open_read or open_directory) and
+     consider_ssh_reads and
      (user_ssh_directory or fd.name startswith /root/.ssh) and
-     (not proc.name in (ssh_binaries)))
+     not user_known_read_ssh_information_activities and
+     not proc.name in (ssh_binaries))
   output: >
     ssh-related file/directory read by non-ssh program (user=%user.name
     command=%proc.cmdline file=%fd.name parent=%proc.pname pcmdline=%proc.pcmdline container_id=%container.id image=%container.image.repository)
@@ -1410,12 +1422,15 @@
 - macro: cmp_cp_by_passwd
   condition: proc.name in (cmp, cp) and proc.pname in (passwd, run-parts)
 
+- macro: user_known_read_sensitive_files_activities
+  condition: (never_true)
+
 - rule: Read sensitive file trusted after startup
   desc: >
     an attempt to read any sensitive file (e.g. files containing user/password/authentication
     information) by a trusted program after startup. Trusted programs might read these files
     at startup to load initial state, but not afterwards.
-  condition: sensitive_files and open_read and server_procs and not proc_is_new and proc.name!="sshd"
+  condition: sensitive_files and open_read and server_procs and not proc_is_new and proc.name!="sshd" and not user_known_read_sensitive_files_activities
   output: >
     Sensitive file opened for reading by trusted program after startup (user=%user.name
     command=%proc.cmdline parent=%proc.pname file=%fd.name parent=%proc.pname gparent=%proc.aname[2] container_id=%container.id image=%container.image.repository)
@@ -1466,6 +1481,7 @@
     and not veritas_driver_script
     and not perl_running_centrifydc
     and not runuser_reading_pam
+    and not user_known_read_sensitive_files_activities
   output: >
     Sensitive file opened for reading by non-trusted program (user=%user.name program=%proc.name
     command=%proc.cmdline file=%fd.name parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4] container_id=%container.id image=%container.image.repository)
@@ -1478,6 +1494,9 @@
      proc.pcmdline = "python -m amazon_linux_extras system_motd" and
      proc.cmdline startswith "python -c import yum;")
 
+- macro: user_known_write_rpm_database_activities
+  condition: (never_true)
+
 # Only let rpm-related programs write to the rpm database
 - rule: Write below rpm database
   desc: an attempt to write to the rpm database by any non-rpm related program
@@ -1488,6 +1507,7 @@
     and not python_running_chef
     and not exe_running_docker_save
     and not amazon_linux_running_python_yum
+    and not user_known_write_rpm_database_activities
   output: "Rpm database opened for writing by a non-rpm program (command=%proc.cmdline file=%fd.name parent=%proc.pname pcmdline=%proc.pcmdline container_id=%container.id image=%container.image.repository)"
   priority: ERROR
   tags: [filesystem, software_mgmt, mitre_persistence]
@@ -1512,6 +1532,9 @@
 - macro: run_by_appdynamics
   condition: (proc.pname=java and proc.pcmdline startswith "java -jar -Dappdynamics")
 
+- macro: user_known_db_spawned_processes
+  condition: (never_true)
+
 - rule: DB program spawned process
   desc: >
     a database-server related program spawned a new process other than itself.
@@ -1521,24 +1544,31 @@
     and spawned_process
     and not proc.name in (db_server_binaries)
     and not postgres_running_wal_e
+    and not user_known_db_spawned_processes
   output: >
     Database-related program spawned process other than itself (user=%user.name
     program=%proc.cmdline parent=%proc.pname container_id=%container.id image=%container.image.repository)
   priority: NOTICE
   tags: [process, database, mitre_execution]
 
+- macro: user_known_modify_bin_dir_activities
+  condition: (never_true)
+
 - rule: Modify binary dirs
   desc: an attempt to modify any file below a set of binary directories.
-  condition: bin_dir_rename and modify and not package_mgmt_procs and not exe_running_docker_save
+  condition: bin_dir_rename and modify and not package_mgmt_procs and not exe_running_docker_save and not user_known_modify_bin_dir_activities
   output: >
     File below known binary directory renamed/removed (user=%user.name command=%proc.cmdline
     pcmdline=%proc.pcmdline operation=%evt.type file=%fd.name %evt.args container_id=%container.id image=%container.image.repository)
   priority: ERROR
   tags: [filesystem, mitre_persistence]
 
+- macro: user_known_mkdir_bin_dir_activities
+  condition: (never_true)
+
 - rule: Mkdir binary dirs
   desc: an attempt to create a directory below a set of binary directories.
-  condition: mkdir and bin_dir_mkdir and not package_mgmt_procs
+  condition: mkdir and bin_dir_mkdir and not package_mgmt_procs and not user_known_mkdir_bin_dir_activities
   output: >
     Directory below known binary directory created (user=%user.name
     command=%proc.cmdline directory=%evt.arg.path container_id=%container.id image=%container.image.repository)
@@ -1941,6 +1971,9 @@
   priority: WARNING
   tags: [container, mitre_lateral_movement]
 
+- macro: user_known_system_user_login
+  condition: (never_true)
+
 # Anything run interactively by root
 # - condition: evt.type != switch and user.name = root and proc.name != sshd and interactive
 #  output: "Interactive root (%user.name %proc.name %evt.dir %evt.type %evt.args %fd.name)"
@@ -1948,7 +1981,7 @@
 
 - rule: System user interactive
   desc: an attempt to run interactive commands by a system (i.e. non-login) user
-  condition: spawned_process and system_users and interactive
+  condition: spawned_process and system_users and interactive and not user_known_system_user_login
   output: "System user ran an interactive command (user=%user.name command=%proc.cmdline container_id=%container.id image=%container.image.repository)"
   priority: INFO
   tags: [users, mitre_remote_access_tools]
@@ -2219,6 +2252,9 @@
   priority: NOTICE
   tags: [users, mitre_privilege_escalation]
 
+- macro: user_known_user_management_activities
+  condition: (never_true)
+
 - rule: User mgmt binaries
   desc: >
     activity by any programs that can manage users, passwords, or permissions. sudo and su are excluded.
@@ -2236,7 +2272,8 @@
     not run_by_sumologic_securefiles and
     not run_by_yum and
     not run_by_ms_oms and
-    not run_by_google_accounts_daemon
+    not run_by_google_accounts_daemon and
+    not user_known_user_management_activities
   output: >
     User management binary command run outside of container
     (user=%user.name command=%proc.cmdline parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4])
@@ -2249,6 +2286,9 @@
     /dev/random, /dev/urandom, /dev/console, /dev/kmsg
     ]
 
+- macro: user_known_create_files_below_dev_activities
+  condition: (never_true)
+
 # (we may need to add additional checks against false positives, see:
 # https://bugs.launchpad.net/ubuntu/+source/rkhunter/+bug/86153)
 - rule: Create files below dev
@@ -2259,6 +2299,7 @@
     and not proc.name in (dev_creation_binaries)
     and not fd.name in (allowed_dev_files)
     and not fd.name startswith /dev/tty
+    and not user_known_create_files_below_dev_activities
   output: "File created below /dev by untrusted program (user=%user.name command=%proc.cmdline file=%fd.name container_id=%container.id image=%container.image.repository)"
   priority: ERROR
   tags: [filesystem, mitre_persistence]
@@ -2318,9 +2359,18 @@
 - macro: k8s_api_server
   condition: (fd.sip.name="kubernetes.default.svc.cluster.local")
 
+- macro: user_known_contact_k8s_api_server_activities
+  condition: (never_true)
+
 - rule: Contact K8S API Server From Container
   desc: Detect attempts to contact the K8S API Server from a container
-  condition: evt.type=connect and evt.dir=< and (fd.typechar=4 or fd.typechar=6) and container and not k8s_containers and k8s_api_server
+  condition: >
+    evt.type=connect and evt.dir=< and 
+    (fd.typechar=4 or fd.typechar=6) and
+    container and 
+    not k8s_containers and
+    k8s_api_server and
+    not user_known_contact_k8s_api_server_activities
   output: Unexpected connection to K8s API Server from container (command=%proc.cmdline %container.info image=%container.image.repository:%container.image.tag connection=%fd.name)
   priority: NOTICE
   tags: [network, k8s, container, mitre_discovery]
@@ -2386,10 +2436,13 @@
   priority: WARNING
   tags: [network, process, mitre_execution]
 
+- macro: user_known_network_tool_activities
+  condition: (never_true)
+
 - rule: Launch Suspicious Network Tool in Container
   desc: Detect network tools launched inside container
   condition: >
-    spawned_process and container and network_tool_procs
+    spawned_process and container and network_tool_procs and not user_known_network_tool_activities
   output: >
     Network tool launched in container (user=%user.name command=%proc.cmdline parent_process=%proc.pname
     container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
@@ -2408,7 +2461,8 @@
     spawned_process and
     not container and
     consider_network_tools_on_host and
-    network_tool_procs
+    network_tool_procs and
+    not user_known_network_tool_activities
   output: >
     Network tool launched on host (user=%user.name command=%proc.cmdline parent_process=%proc.pname)
   priority: NOTICE
@@ -2491,9 +2545,12 @@
 - macro: clear_data_procs
   condition: (proc.name in (data_remove_commands))
 
+- macro: user_known_remove_data_activities
+  condition: (never_true)
+
 - rule: Remove Bulk Data from Disk
   desc: Detect process running to clear bulk data from disk
-  condition: spawned_process and clear_data_procs
+  condition: spawned_process and clear_data_procs and not user_known_remove_data_activities
   output: >
     Bulk data has been removed from disk (user=%user.name command=%proc.cmdline file=%fd.name container_id=%container.id image=%container.image.repository)
   priority:
@@ -2576,14 +2633,17 @@
 - macro: consider_hidden_file_creation
   condition: (never_true)
 
+- macro: user_known_create_hidden_file_activities
+  condition: (never_true)
+
 - rule: Create Hidden Files or Directories
   desc: Detect hidden files or directories created
   condition: >
-    (consider_hidden_file_creation and (
-      (modify and evt.arg.newpath contains "/.") or
-      (mkdir and evt.arg.path contains "/.") or
-      (open_write and evt.arg.flags contains "O_CREAT" and fd.name contains "/." and not fd.name pmatch (exclude_hidden_directories)))
-    )
+    ((modify and evt.arg.newpath contains "/.") or
+     (mkdir and evt.arg.path contains "/.") or
+     (open_write and evt.arg.flags contains "O_CREAT" and fd.name contains "/." and not fd.name pmatch (exclude_hidden_directories))) and
+    consider_hidden_file_creation and
+    not user_known_create_hidden_file_activities
   output: >
     Hidden file or directory created (user=%user.name command=%proc.cmdline
     file=%fd.name newpath=%evt.arg.newpath container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
@@ -2837,9 +2897,12 @@
   priority: WARNING
   tags: [network]
 
+- macro: user_known_stand_streams_redirect_activities
+  condition: (never_true)
+
 - rule: Redirect STDOUT/STDIN to Network Connection in Container
   desc: Detect redirecting stdout/stdin to network connection in container (potential reverse shell).
-  condition: evt.type=dup and evt.dir=> and container and fd.num in (0, 1, 2) and fd.type in ("ipv4", "ipv6")
+  condition: evt.type=dup and evt.dir=> and container and fd.num in (0, 1, 2) and fd.type in ("ipv4", "ipv6") and not user_known_stand_streams_redirect_activities
   output: >
     Redirect stdout/stdin to network connection (user=%user.name %container.info process=%proc.name parent=%proc.pname cmdline=%proc.cmdline terminal=%proc.tty container_id=%container.id image=%container.image.repository fd.name=%fd.name fd.num=%fd.num fd.type=%fd.type fd.sip=%fd.sip)
   priority: WARNING
@@ -2853,6 +2916,9 @@
 #   1) In most cases, 'docker cp' will not be identified, but the assumption is that if an attacker gained access to the container runtime daemon, they are already privileged
 #   2) Drift rules will be noisy in environments in which containers are built (e.g. docker build)
 
+- macro: user_known_container_drift_activities
+  condition: (never_true)
+
 - rule: Container Drift Detected (chmod)
   desc: New executable created in a container due to chmod
   condition: >
@@ -2861,6 +2927,7 @@
     container and
     not runc_writing_exec_fifo and
     not runc_writing_var_lib_docker and
+    not user_known_container_drift_activities and
     evt.rawres>=0 and
     ((evt.arg.mode contains "S_IXUSR") or
     (evt.arg.mode contains "S_IXGRP") or
@@ -2879,6 +2946,7 @@
     container and
     not runc_writing_exec_fifo and
     not runc_writing_var_lib_docker and
+    not user_known_container_drift_activities and
     evt.rawres>=0
   output: Drift detected (open+create), new executable created in a container (user=%user.name command=%proc.cmdline filename=%evt.arg.filename name=%evt.arg.name mode=%evt.arg.mode event=%evt.type)
   priority: ERROR
