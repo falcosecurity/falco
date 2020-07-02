@@ -7,7 +7,7 @@
 
 [![Build Status](https://img.shields.io/circleci/build/github/falcosecurity/falco/master?style=for-the-badge)](https://circleci.com/gh/falcosecurity/falco) [![CII Best Practices Summary](https://img.shields.io/cii/summary/2317?label=CCI%20Best%20Practices&style=for-the-badge)](https://bestpractices.coreinfrastructure.org/projects/2317) [![GitHub](https://img.shields.io/github/license/falcosecurity/falco?style=for-the-badge)](COPYING)
 
-#### Latest releases
+### Download
 
 Read the [change log](CHANGELOG.md).
 
@@ -19,13 +19,15 @@ Read the [change log](CHANGELOG.md).
 
 ---
 
-Falco is a behavioral activity monitor designed to detect anomalous activity in your applications. Falco audits a system at the most fundamental level, the kernel. Falco then enriches this data with other input streams such as container runtime metrics, and Kubernetes metrics. Falco lets you continuously monitor and detect container, application, host, and network activity—all in one place—from one source of data, with one set of rules.
+The Falco Project supports a cloud-native runtime security tool, as well as ancillary projects and integrations that surround it.
+Falco is a daemon that can run either directly on a host, or in a container.
+Falco observes system calls at runtime and builds a model of the system in memory.
+As events occur the events are parsed through a rules engine.
+If a rule is violated, an alert occurs.
+Alerts are dynamic and configurable using the Falco SDKs.
 
-Falco is hosted by the Cloud Native Computing Foundation (CNCF) as a sandbox level project. If you are an organization that wants to help shape the evolution of technologies that are container-packaged, dynamically-scheduled and microservices-oriented, consider joining the CNCF. For details read the [Falco CNCF project proposal](https://github.com/cncf/toc/tree/master/proposals/falco.adoc).
 
-#### What kind of behaviors can Falco detect?
-
-Falco can detect and alert on any behavior that involves making Linux system calls. Falco alerts can be triggered by the use of specific system calls, their arguments, and by properties of the calling process. For example, Falco can easily detect incidents including but not limited to:
+Falco ships with a sane set of default rules. These rules look for things like:
 
 - A shell is running inside a container.
 - A container is running in privileged mode, or is mounting a sensitive path, such as `/proc`, from the host.
