@@ -18,7 +18,7 @@ local mod = {}
 local outputs = {}
 
 function mod.stdout(event, rule, source, priority, priority_num, msg, format, hostname, options)
-   mod.stdout_message(priority, priority_num, msg, outputs)
+   mod.stdout_message(priority, priority_num, msg, options)
 end
 
 function mod.stdout_message(priority, priority_num, msg, options)
