@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (C) 2019 The Falco Authors.
+# Copyright (C) 2020 The Falco Authors.
 #
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,9 +17,9 @@
 #
 
 
-# Set the SKIP_MODULE_LOAD variable to skip loading the kernel module
+# Set the SKIP_DRIVER_LOADER variable to skip loading the driver
 
-if [[ -z "${SKIP_MODULE_LOAD}" ]]; then
+if [[ -z "${SKIP_DRIVER_LOADER}" ]]; then
     echo "* Setting up /usr/src links from host"
 
     for i in "$HOST_ROOT/usr/src"/*
