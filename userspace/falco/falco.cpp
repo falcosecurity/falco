@@ -802,12 +802,16 @@ int falco_init(int argc, char **argv)
 			falco_logger::set_time_format_iso_8601(config.m_time_format_iso_8601);
 
 			// log after config init because config determines where logs go
+			falco_logger::log(LOG_INFO, "Falco version " + std::string(FALCO_VERSION) + " (driver version " + std::string(DRIVER_VERSION) + ")\n");
 			falco_logger::log(LOG_INFO, "Falco initialized with configuration file " + conf_filename + "\n");
 		}
 		else
 		{
 			config.init(cmdline_options);
 			falco_logger::set_time_format_iso_8601(config.m_time_format_iso_8601);
+
+			// log after config init because config determines where logs go
+			falco_logger::log(LOG_INFO, "Falco version " + std::string(FALCO_VERSION) + " (driver version " + std::string(DRIVER_VERSION) + ")\n");
 			falco_logger::log(LOG_INFO, "Falco initialized. No configuration file found, proceeding with defaults\n");
 		}
 
