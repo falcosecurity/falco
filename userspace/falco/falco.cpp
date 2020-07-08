@@ -140,9 +140,9 @@ static void usage()
 	   " -P, --pidfile <pid_file>      When run as a daemon, write pid to specified file\n"
        " -r <rules_file>               Rules file/directory (defaults to value set in configuration file, or /etc/falco_rules.yaml).\n"
        "                               Can be specified multiple times to read from multiple files/directories.\n"
-	   " -s <stats_file>               If specified, write statistics related to falco's reading/processing of events\n"
-	   "                               to this file. (Only useful in live mode).\n"
-	   " --stats_interval <msec>       When using -s <stats_file>, write statistics every <msec> ms.\n"
+	   " -s <stats_file>               If specified, append statistics related to Falco's reading/processing of events\n"
+	   "                               to this file (only useful in live mode).\n"
+	   " --stats-interval <msec>       When using -s <stats_file>, write statistics every <msec> ms.\n"
 	   "                               This uses signals, so don't recommend intervals below 200 ms.\n"
 	   "                               Defaults to 5000 (5 seconds).\n"
 	   " -S <len>, --snaplen <len>\n"
@@ -479,7 +479,7 @@ int falco_init(int argc, char **argv)
         {"print-base64", no_argument, 0, 'b'},
         {"print", required_argument, 0, 'p'},
         {"snaplen", required_argument, 0, 'S'},
-        {"stats_interval", required_argument, 0},
+        {"stats-interval", required_argument, 0},
         {"support", no_argument, 0},
         {"unbuffered", no_argument, 0, 'U'},
         {"validate", required_argument, 0, 'V'},
@@ -1264,7 +1264,7 @@ int falco_init(int argc, char **argv)
 		// Honor -M also when using a trace file.
 		// Since inspection stops as soon as all events have been consumed
 		// just await the given duration is reached, if needed.
-		if(!trace_filename.empty() && duration_to_tot>0) 
+		if(!trace_filename.empty() && duration_to_tot>0)
 		{
 			std::this_thread::sleep_for(std::chrono::seconds(duration_to_tot));
 		}
