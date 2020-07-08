@@ -646,7 +646,7 @@ int falco_init(int argc, char **argv)
 						list_flds_source = optarg;
 					}
 				}
-				else if (string(long_options[long_index].name) == "stats_interval")
+				else if (string(long_options[long_index].name) == "stats-interval")
 				{
 					stats_interval = atoi(optarg);
 				}
