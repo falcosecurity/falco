@@ -17,7 +17,7 @@
 #
 
 # todo(leogr): remove deprecation notice within a couple of releases
-if [[ ! -z "${SKIP_MODULE_LOAD}"]]; then
+if [[ ! -z "${SKIP_MODULE_LOAD}" ]]; then
     echo "* SKIP_MODULE_LOAD is deprecated and will be removed soon, use SKIP_DRIVER_LOADER instead"
 fi
 
