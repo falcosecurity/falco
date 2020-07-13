@@ -159,7 +159,7 @@ static void usage()
 	   "                               which generates higher CPU usage but is useful when piping those outputs\n"
 	   "                               into another process or into a script.\n"
 	   " -u                            Flip the inspector code to parse from userspace. This can be used in conjunction with\n"
-	   "                               the ptrace(2) based capture source pdig.\n"
+	   "                               To be used in conjunction with the ptrace(2) based driver (pdig).\n"
 	   " -V, --validate <rules_file>   Read the contents of the specified rules(s) file and exit.\n"
 	   "                               Can be specified multiple times to validate multiple files.\n"
 	   " -v                            Verbose output.\n"
