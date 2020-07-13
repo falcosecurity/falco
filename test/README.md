@@ -7,12 +7,22 @@ You can find instructions on how to run this test suite on the Falco website [he
 ## Test suites
 
 - [falco_tests](./falco_tests.yaml)
-- [falco_traces](./falco_traces.yaml)
+- [falco_traces](./falco_traces.yaml.in)
 - [falco_tests_package](./falco_tests_package.yaml)
 - [falco_k8s_audit_tests](./falco_k8s_audit_tests.yaml)
 - [falco_tests_psp](./falco_tests_psp.yaml)
 
 ## Running locally
+
+This step assumes you already built Falco.
+
+Also, it assumes you already run the following command from the build directory:
+
+```console
+make test-trace-files
+```
+
+It prepares the fixtures (`json` and `scap` files) needed by the integration tests.
 
 Using `virtualenv` the steps to locally run a specific test suite are the following ones (from this directory):
 
@@ -37,3 +47,10 @@ To obtain the path of all the available variants, execute:
 ```console
 avocado variants --mux-yaml falco_test.yaml
 ```
+
+### falco_traces
+
+The `falco_traces.yaml` test suite gets through the `falco_traces.yaml.in` file and some fixtures (`scap` files) downloaded from the web.
+
+1. Ensure you have `unzip` utility
+2. 
