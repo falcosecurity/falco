@@ -42,7 +42,7 @@ In case you want to only execute a specific test case, use the `--mux-filter-onl
 BUILD_DIR="../build" avocado run --mux-yaml falco_tests.yaml --job-results-dir /tmp/job-results --mux-filter-only /run/trace_files/program_output -- falco_test.py
 ```
 
-To obtain the path of all the available variants, execute:
+To obtain the path of all the available variants for a given test suite, execute:
 
 ```console
 avocado variants --mux-yaml falco_tests.yaml
@@ -60,3 +60,45 @@ The `falco_traces.yaml` test suite gets generated through the `falco_traces.yaml
     ```
 
 ### falco_tests_package
+
+The `falco_tests_package.yaml` test suite requires some additional setup steps to be succesfully run on your local machine.
+
+In particular, it requires some runners (ie., docker images) to be already built and present into your local machine.
+
+1. Ensure you have `docker` up and running
+2. Ensure you build Falco (with bundled deps)
+
+    The recommended way of doing it by running the `falcosecurity/falco-builder` docker image from the project root:
+
+    ```console
+    docker run -v $PWD/..:/source -v $PWD/mybuild:/build falcosecurity/falco-builder cmake
+    docker run -v $PWD/..:/source -v $PWD/mybuild:/build falcosecurity/falco-builder falco
+    ```
+
+3. Ensure you build the Falco packages from the Falco above:
+
+    ```console
+    docker run -v $PWD/..:/source -v $PWD/mybuild:/build falcosecurity/falco-builder package
+    ```
+
+4. Ensure you build the runners:
+
+    ```console
+    FALCO_VERSION=$(./mybuild/release/userspace/falco/falco --version  | head -n 1 | cut -d' ' -f3 | tr -d '\r')
+    mkdir -p /tmp/runners-rootfs
+    cp -R ./test/rules /tmp/runners-rootfs
+    cp -R ./test/trace_files /tmp/runners-rootfs
+    cp ./mybuild/release/falco-${FALCO_VERSION}-x86_64.deb /tmp/runners-rootfs
+    cp ./mybuild/release/falco-${FALCO_VERSION}-x86_64.rpm /tmp/runners-rootfs
+    cp ./mybuild/release/falco-${FALCO_VERSION}-x86_64.tar.gz /tmp/runners-rootfs
+    docker build -f docker/tester/root/runners/deb.Dockerfile --build-arg FALCO_VERSION=${FALCO_VERSION} -t falcosecurity/falco:test-deb /tmp/runners-rootfs
+    docker build -f docker/tester/root/runners/rpm.Dockerfile --build-arg FALCO_VERSION=${FALCO_VERSION} -t falcosecurity/falco:test-rpm /tmp/runners-rootfs
+    docker build -f docker/tester/root/runners/tar.gz.Dockerfile --build-arg FALCO_VERSION=${FALCO_VERSION} -t falcosecurity/falco:test-tar.gz /tmp/runners-rootfs
+    ```
+
+5. Run the `falco_tests_package.yaml` test suite from the `test` directory
+
+    ```console
+    cd test
+    BUILD_DIR="../mybuild" avocado run --mux-yaml falco_tests_package.yaml --job-results-dir /tmp/job-results -- falco_test.py
+    ```
