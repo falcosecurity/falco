@@ -20,17 +20,17 @@ set -euo pipefail
 BUILD_DIR=$1
 
 SCRIPT=$(readlink -f $0)
-SCRIPTDIR=$(dirname $SCRIPT)
+SCRIPTDIR=$(dirname "$SCRIPT")
 RUNNERDIR="${SCRIPTDIR}/runner"
 FALCO_VERSION=$(cat ${BUILD_DIR}/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
 DRIVER_VERSION=$(cat ${BUILD_DIR}/userspace/falco/config_falco.h | grep 'DRIVER_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
 FALCO_PACKAGE="falco-${FALCO_VERSION}-x86_64.tar.gz"
 
 cp "${BUILD_DIR}/${FALCO_PACKAGE}" "${RUNNERDIR}"
-pushd ${RUNNERDIR}
+pushd "${RUNNERDIR}"
 docker build --build-arg FALCO_VERSION="$FALCO_VERSION" \
     -t falcosecurity/falco:test-driver-loader \
-    -f "${RUNNERDIR}/Dockerfile" ${RUNNERDIR}
+    -f "${RUNNERDIR}/Dockerfile" "${RUNNERDIR}"
 popd
 rm -f "${RUNNERDIR}/${FALCO_PACKAGE}"
 
