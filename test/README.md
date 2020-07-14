@@ -45,12 +45,18 @@ BUILD_DIR="../build" avocado run --mux-yaml falco_tests.yaml --job-results-dir /
 To obtain the path of all the available variants, execute:
 
 ```console
-avocado variants --mux-yaml falco_test.yaml
+avocado variants --mux-yaml falco_tests.yaml
 ```
 
 ### falco_traces
 
-The `falco_traces.yaml` test suite gets through the `falco_traces.yaml.in` file and some fixtures (`scap` files) downloaded from the web.
+The `falco_traces.yaml` test suite gets generated through the `falco_traces.yaml.in` file and some fixtures (`scap` files) downloaded from the web at execution time.
 
-1. Ensure you have `unzip` utility
-2. 
+1. Ensure you have `unzip` and `xargs` utilities
+2. Prepare the test suite with the following command:
+
+    ```console
+    bash run_regression_tests.sh -p -v
+    ```
+
+### falco_tests_package
