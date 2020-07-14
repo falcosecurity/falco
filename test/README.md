@@ -88,9 +88,7 @@ In particular, it requires some runners (ie., docker images) to be already built
     mkdir -p /tmp/runners-rootfs
     cp -R ./test/rules /tmp/runners-rootfs
     cp -R ./test/trace_files /tmp/runners-rootfs
-    cp ./mybuild/release/falco-${FALCO_VERSION}-x86_64.deb /tmp/runners-rootfs
-    cp ./mybuild/release/falco-${FALCO_VERSION}-x86_64.rpm /tmp/runners-rootfs
-    cp ./mybuild/release/falco-${FALCO_VERSION}-x86_64.tar.gz /tmp/runners-rootfs
+    cp ./mybuild/release/falco-${FALCO_VERSION}-x86_64.{deb,rpm,tar.gz} /tmp/runners-rootfs
     docker build -f docker/tester/root/runners/deb.Dockerfile --build-arg FALCO_VERSION=${FALCO_VERSION} -t falcosecurity/falco:test-deb /tmp/runners-rootfs
     docker build -f docker/tester/root/runners/rpm.Dockerfile --build-arg FALCO_VERSION=${FALCO_VERSION} -t falcosecurity/falco:test-rpm /tmp/runners-rootfs
     docker build -f docker/tester/root/runners/tar.gz.Dockerfile --build-arg FALCO_VERSION=${FALCO_VERSION} -t falcosecurity/falco:test-tar.gz /tmp/runners-rootfs
@@ -102,3 +100,14 @@ In particular, it requires some runners (ie., docker images) to be already built
     cd test
     BUILD_DIR="../mybuild" avocado run --mux-yaml falco_tests_package.yaml --job-results-dir /tmp/job-results -- falco_test.py
     ```
+
+### Execute all the test suites
+
+In case you want to run all the test suites at once, you can directly use the `run_regression_tests.sh` runner script.
+
+```console
+cd test
+./run_regression_tests.sh -v
+```
+
+Just make sure you followed all the previous setup steps.
