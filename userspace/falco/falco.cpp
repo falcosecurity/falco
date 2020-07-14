@@ -158,7 +158,7 @@ static void usage()
 	   "                               This causes every single line emitted by falco to be flushed,\n"
 	   "                               which generates higher CPU usage but is useful when piping those outputs\n"
 	   "                               into another process or into a script.\n"
-	   " -u                            Flip the inspector code to parse from userspace. This can be used in conjunction with\n"
+	   " -u                            Parse events from userspace.\n"
 	   "                               To be used in conjunction with the ptrace(2) based driver (pdig).\n"
 	   " -V, --validate <rules_file>   Read the contents of the specified rules(s) file and exit.\n"
 	   "                               Can be specified multiple times to validate multiple files.\n"
@@ -485,7 +485,7 @@ int falco_init(int argc, char **argv)
         {"stats-interval", required_argument, 0},
         {"support", no_argument, 0},
         {"unbuffered", no_argument, 0, 'U'},
-		{"udig", no_argument, 0, 'u'},
+	{"udig", no_argument, 0, 'u'},
         {"validate", required_argument, 0, 'V'},
         {"version", no_argument, 0, 0},
         {"writefile", required_argument, 0, 'w'},
