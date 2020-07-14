@@ -69,7 +69,7 @@ case "$CMD" in
     # run tests
     echo "Running regression tests ..."
     cd "$SOURCE_DIR/falco/test"
-    ./run_regression_tests.sh "$BUILD_DIR/$BUILD_TYPE"
+    ./run_regression_tests.sh -d "$BUILD_DIR/$BUILD_TYPE"
 
     # clean docker images
     clean_image "deb"
