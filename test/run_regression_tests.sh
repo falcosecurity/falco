@@ -67,7 +67,7 @@ EOF
 }
 
 function prepare_multiplex_file() {
-    cp "$SCRIPTDIR/falco_traces.yaml.in" "$SCRIPTDIR/falco_traces.yaml"
+    /bin/cp -f "$SCRIPTDIR/falco_traces.yaml.in" "$SCRIPTDIR/falco_traces.yaml"
 
     prepare_multiplex_fileset traces-positive True
     prepare_multiplex_fileset traces-negative False
