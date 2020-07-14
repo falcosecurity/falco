@@ -107,10 +107,14 @@ OPT_ONLY_PREPARE="false"
 OPT_VERBOSE="false"
 OPT_BUILD_DIR="$(dirname "$SCRIPTDIR")/build"
 OPT_BRANCH="none"
-while getopts ':p :v :b: :d:' 'OPTKEY'; do
+while getopts ':p :h :v :b: :d:' 'OPTKEY'; do
     case ${OPTKEY} in
         'p')
             OPT_ONLY_PREPARE="true"
+            ;;
+        'h')
+            /bin/bash usage
+            exit 0
             ;;
         'v')
             OPT_VERBOSE="true"
@@ -122,15 +126,18 @@ while getopts ':p :v :b: :d:' 'OPTKEY'; do
             OPT_BRANCH=${OPTARG}
             ;;
         '?')
-            echo "Invalid option -- ${OPTARG}" >&2
+            echo "Invalid option: ${OPTARG}." >&2
+            /bin/bash usage
             exit 1
             ;;
         ':')
-            echo "Missing argument for option -- ${OPTARG}" >&2
+            echo "Missing argument for option: ${OPTARG}." >&2
+            /bin/bash usage
             exit 1
             ;;
         *)
-            echo "Unimplemented option -- ${OPTKEY}" >&2
+            echo "Unimplemented option: ${OPTKEY}." >&2
+            /bin/bash usage
             exit 1
             ;;
         esac
@@ -140,7 +147,7 @@ TRACE_DIR=$OPT_BUILD_DIR/test
 
 if ${OPT_VERBOSE}; then
     echo "Build directory = $OPT_BUILD_DIR"
-    echo "Trace directory = $TRACE_DIR (creating...)"
+    echo "Trace directory = $TRACE_DIR"
     echo "Custom branch   = $OPT_BRANCH"
 fi
 
