@@ -126,7 +126,7 @@ jobs:
   # Execute integration tests based on the build results coming from the "build/centos7" job
   "tests/integration":
     docker:
-      - image: falcosecurity/falco-tester:latest
+      - image: falcosecurity/falco-tester:update-integration-tests-build
         environment:
           SOURCE_DIR: "/source"
           BUILD_DIR: "/build"
