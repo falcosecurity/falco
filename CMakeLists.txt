@@ -193,13 +193,8 @@ set(TBB_INCLUDE_DIR "${TBB_SRC}/include/")
 set(TBB_LIB "${TBB_SRC}/build/lib_release/libtbb.a")
 ExternalProject_Add(
   tbb
- # @kris-nova This was in head, saving as we work towards getting udig
- # to compile for fargate.
- # URL "https://github.com/oneapi-src/oneTBB/archive/2018_U5.tar.gz"
- # URL_HASH "SHA256=b8dbab5aea2b70cf07844f86fa413e549e099aa3205b6a04059ca92ead93a372"
- #
-  URL "https://github.com/intel/tbb/archive/2018_U5.tar.gz"
-  URL_MD5 "d180f4b025ff8432a447dd2f917cb3f6"
+  URL "https://github.com/oneapi-src/oneTBB/archive/2018_U5.tar.gz"
+  URL_HASH "SHA256=b8dbab5aea2b70cf07844f86fa413e549e099aa3205b6a04059ca92ead93a372"
   CONFIGURE_COMMAND ""
   BUILD_COMMAND ${CMD_MAKE} tbb_build_dir=${TBB_SRC}/build tbb_build_prefix=lib extra_inc=big_iron.inc
   BUILD_IN_SOURCE 1
