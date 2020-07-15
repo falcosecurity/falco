@@ -1107,11 +1107,9 @@ int falco_init(int argc, char **argv)
 					// Falco uses a ptrace(2) based userspace implementation.
 					// Regardless of the implementation, the underlying method remains the same.
 					inspector->open_udig();
+					return;
 				}
-				else
-				{
-					inspector->open();
-				}
+				inspector->open();
 			};
 			open_t open_nodriver_cb = [](sinsp* inspector) {
 				inspector->open_nodriver();
@@ -1145,6 +1143,7 @@ int falco_init(int argc, char **argv)
 					}
 					open_f(inspector);
 				}
+				rethrow_exception(current_exception());
 			}
 		}
 
