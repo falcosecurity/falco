@@ -2915,9 +2915,10 @@
 # Two things to pay attention to:
 #   1) In most cases, 'docker cp' will not be identified, but the assumption is that if an attacker gained access to the container runtime daemon, they are already privileged
 #   2) Drift rules will be noisy in environments in which containers are built (e.g. docker build)
+# These two rules are not enabled by default. Use `never_true` in macro condition to enable them.
 
 - macro: user_known_container_drift_activities
-  condition: (never_true)
+  condition: (always_true)
 
 - rule: Container Drift Detected (chmod)
   desc: New executable created in a container due to chmod
