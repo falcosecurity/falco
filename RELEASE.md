@@ -2,7 +2,7 @@
 
 Our release process is mostly automated, but we still need some manual steps to initiate and complete it.
 
-Changes and new features are grouped in [milestones](https://github.com/falcosecurity/falco/milestones), the milestone with the next version represents what is going to be released. 
+Changes and new features are grouped in [milestones](https://github.com/falcosecurity/falco/milestones), the milestone with the next version represents what is going to be released.
 
 Releases happen on a monthly cadence, towards the 16th of the on-going month, and we need to assign owners for each (usually we pair a new person with an experienced one). Assignees and the due date are proposed during the [weekly community call](https://github.com/falcosecurity/community). Note that hotfix releases can happen as soon as it is needed.
 
@@ -19,18 +19,19 @@ Finally, on the proposed due date the assignees for the upcoming release proceed
 - Double-check that there are no more merged PRs without the target milestone assigned with the `is:pr is:merged no:milestone closed:>YYYT-MM-DD` [filters](https://github.com/falcosecurity/falco/pulls?q=is%3Apr+is%3Amerged+no%3Amilestone+closed%3A%3EYYYT-MM-DD), if any, fix them
 
 ### 2. Milestones
+
 - Move the [tasks not completed](https://github.com/falcosecurity/falco/pulls?q=is%3Apr+is%3Aopen) to a new minor milestone
-- Close the completed milestone
-    
+
 ### 3. Release PR
 
 - Double-check if any hard-coded version number is present in the code, it should be not present anywhere:
     - If any, manually correct it then open an issue to automate version number bumping later
     - Versions table in the `README.md` update itself automatically
-- Generate the change log https://github.com/leodido/rn2md, or https://fs.fntlnz.wtf/falco/milestones-changelog.txt for the lazy people (it updates every 5 minutes) 
+- Generate the change log https://github.com/leodido/rn2md, or https://fs.fntlnz.wtf/falco/milestones-changelog.txt for the lazy people (it updates every 5 minutes)
 - Add the lastest changes on top the previous `CHANGELOG.md`
 - Submit a PR with the above modifications
 - Await PR approval
+- Close the completed milestone as soon PR is merged
 
 ## Release
 
@@ -52,6 +53,7 @@ Let `x.y.z` the new version.
 - Wait for the CI to complete
 
 ### 2. Update the GitHub release
+
 - [Draft a new release](https://github.com/falcosecurity/falco/releases/new)
 - Use `x.y.z` both as tag version and release title
 - Use the following template to fill the release description:
