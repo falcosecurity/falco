@@ -4,7 +4,7 @@ This file documents all notable changes to Falco. The release numbering uses [se
 
 ## v0.24.0
 
-Released on 2020-16-07
+Released on 2020-07-16
 
 ### Major Changes
 
@@ -109,7 +109,7 @@ Released on 2020-16-07
 
 ## v0.23.0
 
-Released on 2020-18-05
+Released on 2020-05-18
 
 ### Major Changes
 
@@ -151,7 +151,7 @@ Released on 2020-18-05
 
 ## v0.22.1
 
-Released on 2020-17-04
+Released on 2020-04-17
 
 ### Major Changes
 
@@ -171,7 +171,7 @@ Released on 2020-17-04
 
 ## v0.22.0
 
-Released on 2020-16-04
+Released on 2020-04-16
 
 ### Major Changes
 
