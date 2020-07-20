@@ -1825,6 +1825,7 @@
 # and repeats it.
 - macro: user_trusted_containers
   condition: (container.image.repository endswith sysdig/agent or
+              container.image.repository endswith sysdig/agent-slim or
               container.image.repository endswith sysdig/node-image-analyzer)
 
 - list: sematext_images
