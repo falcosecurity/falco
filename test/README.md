@@ -16,7 +16,9 @@ You can find instructions on how to run this test suite on the Falco website [he
 
 This step assumes you already built Falco.
 
-Also, it assumes you already run the following command from the build directory:
+Note that the tests are intended to be run against a [release build](https://falco.org/docs/source/#specify-the-build-type) of Falco, at the moment.
+
+Also, it assumes you prepared [falco_traces](#falco_traces) (see the section below) and you already run the following command from the build directory:
 
 ```console
 make test-trace-files
