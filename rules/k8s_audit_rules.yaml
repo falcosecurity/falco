@@ -123,8 +123,8 @@
 - macro: health_endpoint
   condition: ka.uri=/healthz
 
+# requires FALCO_ENGINE_VERSION 5
 - rule: Create Disallowed Pod
-  required_engine_version: 5
   desc: >
     Detect an attempt to start a pod with a container image outside of a list of allowed images.
   condition: kevt and pod and kcreate and not allowed_k8s_containers
@@ -133,8 +133,8 @@
   source: k8s_audit
   tags: [k8s]
 
+# requires FALCO_ENGINE_VERSION 5
 - rule: Create Privileged Pod
-  required_engine_version: 5
   desc: >
     Detect an attempt to start a pod with a privileged container
   condition: kevt and pod and kcreate and ka.req.pod.containers.privileged intersects (true) and not ka.req.pod.containers.image.repository in (falco_privileged_images)
@@ -146,9 +146,9 @@
 - macro: sensitive_vol_mount
   condition: >
     (ka.req.pod.volumes.hostpath intersects (/proc, /var/run/docker.sock, /, /etc, /root, /var/run/crio/crio.sock, /home/admin, /var/lib/kubelet, /var/lib/kubelet/pki, /etc/kubernetes, /etc/kubernetes/manifests))
-
+    
+# requires FALCO_ENGINE_VERSION 5
 - rule: Create Sensitive Mount Pod
-  required_engine_version: 5
   desc: >
     Detect an attempt to start a pod with a volume from a sensitive host directory (i.e. /proc).
     Exceptions are made for known trusted images.
@@ -159,8 +159,8 @@
   tags: [k8s]
 
 # Corresponds to K8s CIS Benchmark 1.7.4
+# requires FALCO_ENGINE_VERSION 5
 - rule: Create HostNetwork Pod
-  required_engine_version: 5
   desc: Detect an attempt to start a pod using the host network.
   condition: kevt and pod and kcreate and ka.req.pod.host_network intersects (true) and not ka.req.pod.containers.image.repository in (falco_hostnetwork_images)
   output: Pod started using host network (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace images=%ka.req.pod.containers.image)
@@ -248,8 +248,8 @@
   condition: (ka.req.pod.containers.image.repository in (user_trusted_image_list))
 
 # Detect any new pod created in the kube-system namespace
+# requires FALCO_ENGINE_VERSION 5
 - rule: Pod Created in Kube Namespace
-  required_engine_version: 5
   desc: Detect any attempt to create a pod in the kube-system or kube-public namespaces
   condition: kevt and pod and kcreate and ka.target.namespace in (kube-system, kube-public) and not trusted_pod
   output: Pod created in kube namespace (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace images=%ka.req.pod.containers.image)
@@ -293,8 +293,8 @@
   source: k8s_audit
   tags: [k8s]
 
+# requires FALCO_ENGINE_VERSION 5
 - rule: ClusterRole With Wildcard Created
-  required_engine_version: 5
   desc: Detect any attempt to create a Role/ClusterRole with wildcard resources or verbs
   condition: kevt and (role or clusterrole) and kcreate and (ka.req.role.rules.resources intersects ("*") or ka.req.role.rules.verbs intersects ("*"))
   output: Created Role/ClusterRole with wildcard (user=%ka.user.name role=%ka.target.name rules=%ka.req.role.rules)
@@ -306,8 +306,8 @@
   condition: >
     (ka.req.role.rules.verbs intersects (create, update, patch, delete, deletecollection))
 
+# requires FALCO_ENGINE_VERSION 5
 - rule: ClusterRole With Write Privileges Created
-  required_engine_version: 5
   desc: Detect any attempt to create a Role/ClusterRole that can perform write-related actions
   condition: kevt and (role or clusterrole) and kcreate and writable_verbs
   output: Created Role/ClusterRole with write privileges (user=%ka.user.name role=%ka.target.name rules=%ka.req.role.rules)
@@ -315,8 +315,8 @@
   source: k8s_audit
   tags: [k8s]
 
+# requires FALCO_ENGINE_VERSION 5
 - rule: ClusterRole With Pod Exec Created
-  required_engine_version: 5
   desc: Detect any attempt to create a Role/ClusterRole that can exec to pods
   condition: kevt and (role or clusterrole) and kcreate and ka.req.role.rules.resources intersects ("pods/exec")
   output: Created Role/ClusterRole with pod exec privileges (user=%ka.user.name role=%ka.target.name rules=%ka.req.role.rules)

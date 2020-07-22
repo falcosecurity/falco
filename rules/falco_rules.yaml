@@ -3425,7 +3425,6 @@
 # ****************************************************************************
 - rule: Container Drift Detected (open+create)
   desc: New executable created in a container due to open+create
-  required_engine_version: 6
   condition: >
     evt.type in (open,openat,creat) and
     evt.is_open_exec=true and
