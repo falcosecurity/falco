@@ -1482,6 +1482,7 @@
     and not perl_running_centrifydc
     and not runuser_reading_pam
     and not user_known_read_sensitive_files_activities
+    and not (container and user_trusted_containers)
   output: >
     Sensitive file opened for reading by non-trusted program (user=%user.name program=%proc.name
     command=%proc.cmdline file=%fd.name parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4] container_id=%container.id image=%container.image.repository)
