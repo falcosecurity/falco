@@ -473,9 +473,8 @@ else
 	FALCO_DRIVER_CURL_OPTIONS=-fsS
 fi
 
-MAX_RMMOD_WAIT=60
-if [[ $# -ge 1 ]]; then
-	MAX_RMMOD_WAIT=$1
+if [[ -z "$MAX_RMMOD_WAIT" ]]; then
+	MAX_RMMOD_WAIT=60
 fi
 
 DRIVER_VERSION="@PROBE_VERSION@"
