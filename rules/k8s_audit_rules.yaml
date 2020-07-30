@@ -232,8 +232,12 @@
 - list: user_trusted_image_list
   items: []
 
+- list: k8s_image_list
+  items: [k8s.gcr.io/kube-apiserver, kope/kube-apiserver-healthcheck]
+
 - macro: trusted_pod
-  condition: (ka.req.pod.containers.image.repository in (user_trusted_image_list))
+  condition: (ka.req.pod.containers.image.repository in (user_trusted_image_list) or
+              ka.req.pod.containers.image.repository in (k8s_image_list))
 
 # Detect any new pod created in the kube-system namespace
 - rule: Pod Created in Kube Namespace
