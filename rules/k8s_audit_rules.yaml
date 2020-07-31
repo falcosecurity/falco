@@ -217,6 +217,19 @@
   source: k8s_audit
   tags: [k8s]
 
+- macro: user_known_pod_debug_activities
+  condition: (k8s_audit_never_true)
+
+# Only works when feature gate EphemeralContainers is enabled
+- rule: EphemeralContainers Created
+  desc: >
+    Detect any ephemeral container created
+  condition: kevt and pod_subresource and kmodify and ka.target.subresource in (ephemeralcontainers) and not user_known_pod_debug_activities
+  output: Ephemeral container is created in pod (user=%ka.user.name pod=%ka.target.name ns=%ka.target.namespace ephemeral_container_name=%jevt.value[/requestObject/ephemeralContainers/0/name] ephemeral_container_image=%jevt.value[/requestObject/ephemeralContainers/0/image])
+  priority: NOTICE
+  source: k8s_audit
+  tags: [k8s]
+
 # In a local/user rules fie, you can append to this list to add additional allowed namespaces
 - list: allowed_namespaces
   items: [kube-system, kube-public, default]
