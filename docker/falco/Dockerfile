@@ -66,10 +66,6 @@ RUN curl -L -o cpp-5_5.5.0-12_amd64.deb https://dl.bintray.com/falcosecurity/dep
 	&& dpkg -i cpp-5_5.5.0-12_amd64.deb gcc-5-base_5.5.0-12_amd64.deb gcc-5_5.5.0-12_amd64.deb libasan2_5.5.0-12_amd64.deb libgcc-5-dev_5.5.0-12_amd64.deb libisl15_0.18-4_amd64.deb libmpx0_5.5.0-12_amd64.deb \
 	&& rm -f cpp-5_5.5.0-12_amd64.deb gcc-5-base_5.5.0-12_amd64.deb gcc-5_5.5.0-12_amd64.deb libasan2_5.5.0-12_amd64.deb libgcc-5-dev_5.5.0-12_amd64.deb libisl15_0.18-4_amd64.deb libmpx0_5.5.0-12_amd64.deb
 
-# Since our base Debian image ships with GCC 7 which breaks older kernels, revert the
-# default to gcc-5.
-RUN rm -rf /usr/bin/gcc && ln -s /usr/bin/gcc-5 /usr/bin/gcc
-
 RUN rm -rf /usr/bin/clang \
 	&& rm -rf /usr/bin/llc \
 	&& ln -s /usr/bin/clang-7 /usr/bin/clang \

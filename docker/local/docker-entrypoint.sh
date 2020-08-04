@@ -28,6 +28,23 @@ if [[ -z "${SKIP_DRIVER_LOADER}" ]]; then
         ln -s "$i" "/usr/src/$base"
     done
 
+    GCC_AVAILABLE_VERSIONS=( $(ls /usr/bin | grep -Po "^gcc-\K[0-9]+") )
+    GCC_MIN_VERSION="${GCC_AVAILABLE_VERSIONS[0]}"
+    GCC_MAX_VERSION="${GCC_AVAILABLE_VERSIONS[-1]}"
+    GCC_KERNEL_VERSION="$(grep -Po "gcc version \K[0-9]+" /proc/version 2>/dev/null)"
+
+    if [[ $GCC_KERNEL_VERSION -lt $GCC_MIN_VERSION ]]; then
+        # Kernel version not parsed or lower than available gcc
+        GCC_KERNEL_VERSION="${GCC_MIN_VERSION}"
+    elif [[ $GCC_KERNEL_VERSION -gt $GCC_MAX_VERSION ]]; then
+        # Kernel version higher than available gcc
+        GCC_KERNEL_VERSION="${GCC_MAX_VERSION}"
+    fi
+
+    echo "* Setting up link /usr/bin/gcc-${GCC_KERNEL_VERSION}->/usr/bin/gcc from /proc/version"
+
+    ln -sf "/usr/bin/gcc-${GCC_KERNEL_VERSION}" "/usr/bin/gcc"
+
     /usr/bin/falco-driver-loader
 fi
 
