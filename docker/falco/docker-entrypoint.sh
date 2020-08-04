@@ -32,7 +32,7 @@ if [[ -z "${SKIP_DRIVER_LOADER}" ]] && [[ -z "${SKIP_MODULE_LOAD}" ]]; then
         ln -s "$i" "/usr/src/$base"
     done
 
-    /usr/bin/falco-driver-loader
+    /usr/bin/falco-driver-loader ${FALCO_DRIVER_LOADER_ARGS}
 fi
 
 exec "$@"
