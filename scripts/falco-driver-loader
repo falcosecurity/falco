@@ -158,11 +158,11 @@ load_kernel_module_compile() {
 		echo "make CC=${CURRENT_GCC} \$@" >> /tmp/falco-dkms-make
 		chmod +x /tmp/falco-dkms-make
 		if dkms install --directive="MAKE='/tmp/falco-dkms-make'" -m "${DRIVER_NAME}" -v "${DRIVER_VERSION}" -k "${KERNEL_RELEASE}" 2>/dev/null; then
-			echo "* ${DRIVER_NAME} module installed in dkms, trying to insmod"				
-			if insmod "/var/lib/dkms/${DRIVER_NAME}/${DRIVER_VERSION}/${KERNEL_RELEASE}/${ARCH}/module/${DRIVER_NAME}.ko" > /dev/null 2>&1; then
+			echo "* ${DRIVER_NAME} module installed in dkms, trying to insmod"
+			if insmod "/var/lib/dkms/${DRIVER_NAME}/${DRIVER_VERSION}/${KERNEL_RELEASE}/${ARCH}/module/${DRIVER_NAME}.ko" "${MODULE_ARGS[@]}" > /dev/null 2>&1; then
 				echo "* Success: ${DRIVER_NAME} module found and loaded in dkms"
 				exit 0
-			elif insmod "/var/lib/dkms/${DRIVER_NAME}/${DRIVER_VERSION}/${KERNEL_RELEASE}/${ARCH}/module/${DRIVER_NAME}.ko.xz" > /dev/null 2>&1; then
+			elif insmod "/var/lib/dkms/${DRIVER_NAME}/${DRIVER_VERSION}/${KERNEL_RELEASE}/${ARCH}/module/${DRIVER_NAME}.ko.xz" "${MODULE_ARGS[@]}" > /dev/null 2>&1; then
 				echo "* Success: ${DRIVER_NAME} module found and loaded in dkms (xz)"
 				exit 0
 			else
@@ -192,7 +192,7 @@ load_kernel_module_download() {
 	echo "* Trying to download prebuilt module from ${URL}"
 	if curl -L --create-dirs "${FALCO_DRIVER_CURL_OPTIONS}" -o "${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}" "${URL}"; then
 		echo "* Download succeeded"
-		insmod "${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}" && echo "* Success: ${DRIVER_NAME} module loaded"
+		insmod "${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}" "${MODULE_ARGS[@]}" && echo "* Success: ${DRIVER_NAME} module loaded"
 		exit $?
 	else
 		>&2 echo "Download failed, consider compiling your own ${DRIVER_NAME} module and loading it or getting in touch with the Falco community"
@@ -462,10 +462,11 @@ print_usage() {
 	echo "  bpf           eBPF probe"
 	echo ""
 	echo "Options:"
-	echo "  --help         show brief help"
-	echo "  --compile      try to compile the driver locally"
-	echo "  --download     try to download a prebuilt driver"
-	echo "  --source-only  skip execution and allow sourcing in another script"
+	echo "  --help                  show brief help"
+	echo "  --compile               try to compile the driver locally"
+	echo "  --download              try to download a prebuilt driver"
+	echo "  --source-only           skip execution and allow sourcing in another script"
+	echo "  --module-arg PARAM=VAL  set module argument (flag can be repeated)"
 	echo ""
 }
 
@@ -495,6 +496,7 @@ fi
 
 ENABLE_COMPILE=
 ENABLE_DOWNLOAD=
+MODULE_ARGS=( )
 
 has_args=
 has_opts=
@@ -530,6 +532,11 @@ while test $# -gt 0; do
 			source_only="true"
 			shift
 			;;
+		--module-arg)
+			shift
+			MODULE_ARGS+=( "$1" )
+			shift
+			;;
 		--*)
 			>&2 echo "Unknown option: $1"
 			print_usage
@@ -559,7 +566,7 @@ if [ -z "$source_only" ]; then
 		exit 1
 	fi
 
-	echo "* Running falco-driver-loader with: driver=$DRIVER, compile=${ENABLE_COMPILE:-"no"}, download=${ENABLE_DOWNLOAD:-"no"}"
+	echo "* Running falco-driver-loader with: driver=$DRIVER, compile=${ENABLE_COMPILE:-"no"}, download=${ENABLE_DOWNLOAD:-"no"}, module_args=(${MODULE_ARGS[@]})"
 	case $DRIVER in 
 		module)
 			load_kernel_module
