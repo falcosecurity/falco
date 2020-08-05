@@ -1,4 +1,4 @@
-FROM debian:stable
+FROM debian:buster
 
 LABEL usage="docker run -i -t -v /var/run/docker.sock:/host/var/run/docker.sock -v /dev:/host/dev -v /proc:/host/proc:ro -v /boot:/host/boot:ro -v /lib/modules:/host/lib/modules:ro -v /usr:/host/usr:ro --name NAME IMAGE"
 LABEL maintainer="cncf-falco-dev@lists.cncf.io"
@@ -22,6 +22,7 @@ RUN apt-get update \
 	curl \
 	dkms \
 	gnupg2 \
+	gcc-7 \
 	gcc \
 	jq \
 	libc6-dev \

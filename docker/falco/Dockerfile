@@ -1,4 +1,4 @@
-FROM debian:stable
+FROM debian:buster
 
 LABEL maintainer="cncf-falco-dev@lists.cncf.io"
 
@@ -23,6 +23,7 @@ RUN apt-get update \
 	curl \
 	dkms \
 	gnupg2 \
+	gcc-7 \
 	gcc \
 	jq \
 	libc6-dev \
