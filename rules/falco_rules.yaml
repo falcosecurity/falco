@@ -1459,9 +1459,7 @@
   condition: cmp_cp_by_passwd
 
 - macro: user_read_sensitive_file_containers
-  condition: (container and
-              (container.image.repository endswith "sysdig/agent") or
-              (container.image.repository endswith "sysdig/agent-slim"))
+  condition: (container and container.image.repository in (docker.io/sysdig/agent, docker.io/sysdig/agent-slim))
 
 - rule: Read sensitive file untrusted
   desc: >
@@ -1830,9 +1828,7 @@
 # In this file, it just takes one of the images in trusted_containers
 # and repeats it.
 - macro: user_trusted_containers
-  condition: (container.image.repository endswith sysdig/agent or
-              container.image.repository endswith sysdig/agent-slim or
-              container.image.repository endswith sysdig/node-image-analyzer)
+  condition: (container.image.repository=docker.io/sysdig/agent)
 
 - list: sematext_images
   items: [docker.io/sematext/sematext-agent-docker, docker.io/sematext/agent, docker.io/sematext/logagent,
@@ -1844,6 +1840,7 @@
 - list: falco_privileged_images
   items: [
     docker.io/sysdig/agent, docker.io/sysdig/falco, docker.io/sysdig/sysdig,
+    docker.io/sysdig/agent-slim, docker.io/sysdig/node-image-analyzer,
     gcr.io/google_containers/kube-proxy, docker.io/calico/node, quay.io/calico/node,
     docker.io/rook/toolbox, docker.io/cloudnativelabs/kube-router, docker.io/mesosphere/mesos-slave,
     docker.io/docker/ucp-agent, sematext_images, k8s.gcr.io/kube-proxy,
@@ -1856,7 +1853,7 @@
               container.image.repository in (trusted_images) or
               container.image.repository in (falco_privileged_images) or
               container.image.repository startswith istio/proxy_ or
-              container.image.repository startswith quay.io/sysdig)
+              container.image.repository startswith quay.io/sysdig/)
 
 # Add conditions to this macro (probably in a separate file,
 # overwriting this macro) to specify additional containers that are
@@ -1865,7 +1862,7 @@
 # In this file, it just takes one of the images in falco_privileged_images
 # and repeats it.
 - macro: user_privileged_containers
-  condition: (container.image.repository endswith sysdig/agent)
+  condition: (container.image.repository=docker.io/sysdig/agent)
 
 - list: rancher_images
   items: [
@@ -1877,7 +1874,7 @@
 # host filesystem.
 - list: falco_sensitive_mount_images
   items: [
-    docker.io/sysdig/agent, docker.io/sysdig/falco, docker.io/sysdig/sysdig,
+    docker.io/sysdig/agent, docker.io/sysdig/falco, docker.io/sysdig/sysdig, docker.io/sysdig/agent-slim,
     gcr.io/google_containers/hyperkube,
     gcr.io/google_containers/kube-proxy, docker.io/calico/node,
     docker.io/rook/toolbox, docker.io/cloudnativelabs/kube-router, docker.io/consul,
@@ -2362,8 +2359,8 @@
 - macro: k8s_containers
   condition: >
     (container.image.repository in (gcr.io/google_containers/hyperkube-amd64,
-     gcr.io/google_containers/kube2sky, sysdig/agent, sysdig/falco,
-     sysdig/sysdig, falcosecurity/falco) or (k8s.ns.name = "kube-system"))
+     gcr.io/google_containers/kube2sky, docker.io/sysdig/agent, docker.io/sysdig/agent-slim, docker.io/sysdig/falco,
+     docker.io/sysdig/sysdig, docker.io/falcosecurity/falco) or (k8s.ns.name = "kube-system"))
 
 - macro: k8s_api_server
   condition: (fd.sip.name="kubernetes.default.svc.cluster.local")
@@ -2769,7 +2766,7 @@
   condition: (evt.type in (sendto, sendmsg) and evt.dir=< and (fd.net != "127.0.0.0/8" and not fd.snet in (rfc_1918_addresses)) and ((minerpool_http) or (minerpool_https) or (minerpool_other)))
 
 - macro: trusted_images_query_miner_domain_dns
-  condition: (container.image.repository endswith "sysdig/agent" or container.image.repository endswith "falcosecurity/falco")
+  condition: (container.image.repository in (docker.io/sysdig/agent, docker.io/sysdig/agent-slim, docker.io/falcosecurity/falco))
   append: false
 
 # The rule is disabled by default.
