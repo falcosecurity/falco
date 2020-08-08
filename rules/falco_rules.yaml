@@ -1458,8 +1458,11 @@
 - macro: user_read_sensitive_file_conditions
   condition: cmp_cp_by_passwd
 
+- list: read_sensitive_file_images
+  items: [sysdig/agent, sysdig/agent-slim, docker.io/sysdig/agent, docker.io/sysdig/agent-slim]
+
 - macro: user_read_sensitive_file_containers
-  condition: (container and container.image.repository in (docker.io/sysdig/agent, docker.io/sysdig/agent-slim))
+  condition: (container and container.image.repository in read_sensitive_file_images)
 
 - rule: Read sensitive file untrusted
   desc: >
@@ -1844,7 +1847,8 @@
     gcr.io/google_containers/kube-proxy, docker.io/calico/node, quay.io/calico/node,
     docker.io/rook/toolbox, docker.io/cloudnativelabs/kube-router, docker.io/mesosphere/mesos-slave,
     docker.io/docker/ucp-agent, sematext_images, k8s.gcr.io/kube-proxy,
-    docker.io/falcosecurity/falco
+    docker.io/falcosecurity/falco, sysdig/agent, sysdig/falco, sysdig/sysdig, sysdig/agent-slim,
+    falcosecurity/falco, sysdig/node-image-analyzer
     ]
 
 - macro: falco_privileged_containers
@@ -1875,6 +1879,7 @@
 - list: falco_sensitive_mount_images
   items: [
     docker.io/sysdig/agent, docker.io/sysdig/falco, docker.io/sysdig/sysdig, docker.io/sysdig/agent-slim,
+    sysdig/agent, sysdig/falco, sysdig/sysdig, sysdig/agent-slim,
     gcr.io/google_containers/hyperkube,
     gcr.io/google_containers/kube-proxy, docker.io/calico/node,
     docker.io/rook/toolbox, docker.io/cloudnativelabs/kube-router, docker.io/consul,
@@ -2360,7 +2365,8 @@
   condition: >
     (container.image.repository in (gcr.io/google_containers/hyperkube-amd64,
      gcr.io/google_containers/kube2sky, docker.io/sysdig/agent, docker.io/sysdig/agent-slim, docker.io/sysdig/falco,
-     docker.io/sysdig/sysdig, docker.io/falcosecurity/falco) or (k8s.ns.name = "kube-system"))
+     docker.io/sysdig/sysdig, docker.io/falcosecurity/falco,
+     sysdig/agent, sysdig/agent-slim, sysdig/falco, sysdig/sysdig, falcosecurity/falco) or (k8s.ns.name = "kube-system"))
 
 - macro: k8s_api_server
   condition: (fd.sip.name="kubernetes.default.svc.cluster.local")
@@ -2766,7 +2772,9 @@
   condition: (evt.type in (sendto, sendmsg) and evt.dir=< and (fd.net != "127.0.0.0/8" and not fd.snet in (rfc_1918_addresses)) and ((minerpool_http) or (minerpool_https) or (minerpool_other)))
 
 - macro: trusted_images_query_miner_domain_dns
-  condition: (container.image.repository in (docker.io/sysdig/agent, docker.io/sysdig/agent-slim, docker.io/falcosecurity/falco))
+  condition: (container.image.repository in (docker.io/sysdig/agent,
+              docker.io/sysdig/agent-slim, docker.io/falcosecurity/falco,
+              sysdig/agent, sysdig/agent-slim, falcosecurity/falco))
   append: false
 
 # The rule is disabled by default.
