@@ -1834,7 +1834,10 @@
   condition: (never_true)
 
 - list: sematext_images
-  items: []
+  items: [docker.io/sematext/sematext-agent-docker, docker.io/sematext/agent, docker.io/sematext/logagent,
+          registry.access.redhat.com/sematext/sematext-agent-docker,
+          registry.access.redhat.com/sematext/agent,
+          registry.access.redhat.com/sematext/logagent]
 
 # These container images are allowed to run with --privileged
 - list: falco_privileged_images
