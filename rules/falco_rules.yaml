@@ -867,7 +867,7 @@
     proc.name = "exe"
     and (proc.cmdline contains "/var/lib/docker"
     or proc.cmdline contains "/var/run/docker")
-    and proc.pname in (dockerd, docker)
+    and proc.pname in (dockerd, docker, dockerd-current, docker-current)
 
 # Ideally we'd have a length check here as well but sysdig
 # filterchecks don't have operators like len()
