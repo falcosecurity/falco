@@ -1462,7 +1462,7 @@
   items: []
 
 - macro: user_read_sensitive_file_containers
-  condition: (container and container.image.repository in read_sensitive_file_images)
+  condition: (container and container.image.repository in (read_sensitive_file_images))
 
 - rule: Read sensitive file untrusted
   desc: >
