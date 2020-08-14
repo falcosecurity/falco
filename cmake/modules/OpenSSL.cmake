@@ -35,7 +35,7 @@ else()
     URL "https://github.com/openssl/openssl/archive/OpenSSL_1_0_2n.tar.gz"
     URL_HASH "SHA256=4f4bc907caff1fee6ff8593729e5729891adcee412049153a3bb4db7625e8364"
     # END CHANGE for CVE-2017-3735, CVE-2017-3731, CVE-2017-3737, CVE-2017-3738, CVE-2017-3736
-    CONFIGURE_COMMAND ./config shared --prefix=${OPENSSL_INSTALL_DIR}
+    CONFIGURE_COMMAND ./config no-shared --prefix=${OPENSSL_INSTALL_DIR}
     BUILD_COMMAND ${CMD_MAKE}
     BUILD_IN_SOURCE 1
     INSTALL_COMMAND ${CMD_MAKE} install)
