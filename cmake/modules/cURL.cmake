@@ -19,13 +19,9 @@ else()
   set(CURL_INCLUDE_DIR "${CURL_BUNDLE_DIR}/include/")
   set(CURL_LIBRARIES "${CURL_BUNDLE_DIR}/lib/.libs/libcurl.a")
 
-  if(NOT USE_BUNDLED_OPENSSL)
-    set(CURL_SSL_OPTION "--with-ssl")
-  else()
-    set(CURL_SSL_OPTION "--with-ssl=${OPENSSL_INSTALL_DIR}")
-    message(STATUS "Using bundled curl in '${CURL_BUNDLE_DIR}'")
-    message(STATUS "Using SSL for curl in '${CURL_SSL_OPTION}'")
-  endif()
+  set(CURL_SSL_OPTION "--with-ssl=${OPENSSL_INSTALL_DIR}")
+  message(STATUS "Using bundled curl in '${CURL_BUNDLE_DIR}'")
+  message(STATUS "Using SSL for curl in '${CURL_SSL_OPTION}'")
 
   externalproject_add(
     curl
