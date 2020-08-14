@@ -1,0 +1,17 @@
+diff --git a/Makefile b/Makefile
+index dd4ced8112..795f499137 100644
+--- a/Makefile
++++ b/Makefile
+@@ -786,11 +786,10 @@ endif # EMBED_OPENSSL
+ endif # NO_SECURE
+
+ ifeq ($(OPENSSL_PKG_CONFIG),true)
+-LDLIBS_SECURE += $(shell $(PKG_CONFIG) --libs-only-l openssl)
++LDLIBS_SECURE += $(shell $(PKG_CONFIG) --static --libs openssl)
+ else
+ LDLIBS_SECURE += $(addprefix -l, $(LIBS_SECURE))
+ endif
+-
+ # gpr .pc file
+ PC_NAME = gpr
+ PC_DESCRIPTION = gRPC platform support library
