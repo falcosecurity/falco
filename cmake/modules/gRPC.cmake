@@ -116,7 +116,6 @@ else()
     BUILD_BYPRODUCTS ${GRPC_LIB} ${GRPCPP_LIB}
     INSTALL_COMMAND ""
     CONFIGURE_COMMAND ""
-    PATCH_COMMAND patch -p1 -i ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/patch/grpc.patch
     BUILD_COMMAND
       CFLAGS=-Wno-implicit-fallthrough
       HAS_SYSTEM_ZLIB=false

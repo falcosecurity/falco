@@ -75,6 +75,7 @@ target_include_directories(
     "${STRING_VIEW_LITE_INCLUDE}"
     "${YAMLCPP_INCLUDE_DIR}"
     "${CIVETWEB_INCLUDE_DIR}"
+    "${OPENSSL_INCLUDE_DIR}"
     "${GRPC_INCLUDE}"
     "${GRPCPP_INCLUDE}"
     "${PROTOBUF_INCLUDE}"
@@ -89,6 +90,8 @@ target_link_libraries(
   "${GRPC_LIB}"
   "${GRPCPP_LIB}"
   "${PROTOBUF_LIB}"
+  "${OPENSSL_LIBRARY_SSL}"
+  "${OPENSSL_LIBRARY_CRYPTO}"
   "${LIBYAML_LIB}"
   "${YAMLCPP_LIB}"
   "${CIVETWEB_LIB}")
