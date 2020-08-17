@@ -28,7 +28,7 @@ file(MAKE_DIRECTORY ${SYSDIG_CMAKE_WORKING_DIR})
 # In case you want to test against another sysdig version just pass the variable - ie., `cmake -DSYSDIG_VERSION=dev ..`
 if(NOT SYSDIG_VERSION)
   set(SYSDIG_VERSION "build/jq-update") # todo(fntlnz): revert this before merging
-  set(SYSDIG_CHECKSUM "SHA256=be04af32ade8f4c77ae39c45cb8820975f023b46fdf45edcdd28be104d89110b")
+  set(SYSDIG_CHECKSUM "SHA256=7a775966ed72b239561707b73ac59e8b11a586aee4c5baa6a8c39fd9b8e38f8d")
 endif()
 set(PROBE_VERSION "${SYSDIG_VERSION}")
 

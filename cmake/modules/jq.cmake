@@ -26,11 +26,24 @@ else ()
     set(JQ_LIB "${JQ_INSTALL_DIR}/lib/libjq.a")
     set(ONIGURUMA_LIB "${JQ_INSTALL_DIR}/lib/libonig.a")
 
+    # Why we mirror jq here?
+    #
+    # In their readme, jq claims that you don't have
+    # to do autoreconf -fi when downloading a released tarball.
+    #
+    # However, they forgot to push the released makefiles
+    # into their release tarbal.
+    #
+    # For this reason, we have to mirror their release after
+    # doing the configuration ourselves.
+    #
+    # This is needed because many distros do not ship the right
+    # version of autoreconf, making virtually impossible to build Falco on them.
     ExternalProject_Add(
             jq
-            URL "https://github.com/stedolan/jq/releases/download/jq-1.6/jq-1.6.tar.gz"
-            URL_HASH "SHA256=5de8c8e29aaa3fb9cc6b47bb27299f271354ebb72514e3accadc7d38b5bbaa72"
-            CONFIGURE_COMMAND autoreconf -fi && ./configure --disable-maintainer-mode --enable-all-static --disable-dependency-tracking --with-oniguruma=builtin --prefix=${JQ_INSTALL_DIR}
+            URL "https://fs.fntlnz.wtf/falco/jq-1.6.tar.gz" # todo: upload this to Falco bintray
+            URL_HASH "SHA256=787518068c35e244334cc79b8e56b60dbab352dff175b7f04a94f662b540bfd9"
+            CONFIGURE_COMMAND ./configure --disable-maintainer-mode --enable-all-static --disable-dependency-tracking --with-oniguruma=builtin --prefix=${JQ_INSTALL_DIR}
             BUILD_COMMAND ${CMD_MAKE} LDFLAGS=-all-static
             BUILD_IN_SOURCE 1
             INSTALL_COMMAND ${CMD_MAKE} install)
