@@ -18,9 +18,8 @@ Read the [change log](CHANGELOG.md).
 ---
 
 The Falco Project, originally created by [Sysdig](https://sysdig.com), is an incubating [CNCF](https://cncf.io) open source cloud native runtime security tool.
-The premise behind the tooling is fairly straightforward, but the details are another story.
-Essentially, Falco makes it easy to consume kernel events, and enrich those events with information from Kubernetes and the rest of the stack.
-Falco has a rich rule set of security rules specifically built for Kubernetes, Linux, and cloud-native stacks.
+Falco makes it easy to consume kernel events, and enrich those events with information from Kubernetes and the rest of the cloud native stack.
+Falco has a rich rule set of security rules specifically built for Kubernetes, Linux, and cloud-native.
 If a rule is violated in a system, Falco will send an alert notifying the user of the violation and its severity.
 
 #### Installing Falco
@@ -35,6 +34,21 @@ If you would like to run Falco in *production* please adhere to the [official in
 | Minikube | [Tutorial](https://falco.org/docs/third-party/#minikube)                                   | The Falco driver has been baked into minikube for easy deployment. |
 | Kind     | [Tutorial](https://falco.org/docs/third-party/#kind)                                       | Running Falco with kind requires a driver on the host system.      |
 | GKE      | [Tutorial](https://falco.org/docs/third-party/#gke)                                        | We suggest using the eBPF driver for running Falco on GKE.         |
+
+### Developing
+
+Falco is designed to be extensible such that it can be built into cloud-native applications and infrastructure.
+
+Falco has a [gRPC]() endpoint and an API defined in [protobuf]().
+The Falco Project supports various SDKs for this endpoint.
+
+##### SDKs
+
+| Language | Repository                                              |
+|----------|---------------------------------------------------------|
+| Go       | [client-go](https://github.com/falcosecurity/client-go) |
+| Rust     | [client-rs](https://github.com/falcosecurity/client-rs) |
+| Python   | [client-py](https://github.com/falcosecurity/client-py) |
 
 
 #### What can Falco detect?
