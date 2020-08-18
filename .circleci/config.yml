@@ -75,7 +75,7 @@ jobs:
           command: apt update -y
       - run:
           name: Install dependencies
-          command: DEBIAN_FRONTEND=noninteractive apt install cmake build-essential clang llvm git linux-headers-generic libncurses-dev pkg-config autoconf libtool -y
+          command: DEBIAN_FRONTEND=noninteractive apt install cmake build-essential clang llvm git linux-headers-generic libncurses-dev pkg-config autoconf libtool libelf-dev -y
       - run:
           name: Prepare project
           command: |

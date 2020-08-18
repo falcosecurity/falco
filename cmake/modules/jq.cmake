@@ -21,10 +21,11 @@ if (NOT USE_BUNDLED_DEPS)
 else ()
     set(JQ_SRC "${PROJECT_BINARY_DIR}/jq-prefix/src/jq")
     message(STATUS "Using bundled jq in '${JQ_SRC}'")
-    set(JQ_INCLUDE "${JQ_SRC}")
+    set(JQ_INCLUDE "${JQ_SRC}/target/include")
     set(JQ_INSTALL_DIR "${JQ_SRC}/target")
     set(JQ_LIB "${JQ_INSTALL_DIR}/lib/libjq.a")
     set(ONIGURUMA_LIB "${JQ_INSTALL_DIR}/lib/libonig.a")
+    message(STATUS "Bundled jq: include: ${JQ_INCLUDE}, lib: ${JQ_LIB}")
 
     # Why we mirror jq here?
     #
