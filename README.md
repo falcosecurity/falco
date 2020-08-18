@@ -24,7 +24,7 @@ If a rule is violated in a system, Falco will send an alert notifying the user o
 
 ### Installing Falco
 
-If you would like to run Falco in *production* please adhere to the [official installation guide](https://falco.org/docs/installation/).
+If you would like to run Falco in **production** please adhere to the [official installation guide](https://falco.org/docs/installation/).
 
 ##### Kubernetes
 
@@ -39,7 +39,7 @@ If you would like to run Falco in *production* please adhere to the [official in
 
 Falco is designed to be extensible such that it can be built into cloud-native applications and infrastructure.
 
-Falco has a [gRPC]() endpoint and an API defined in [protobuf]().
+Falco has a [gRPC](https://falco.org/docs/grpc/) endpoint and an API defined in [protobuf](https://github.com/falcosecurity/falco/blob/update-readme/userspace/falco/outputs.proto).
 The Falco Project supports various SDKs for this endpoint.
 
 ##### SDKs
