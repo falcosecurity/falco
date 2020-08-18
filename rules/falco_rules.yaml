@@ -55,11 +55,12 @@
 - macro: proc_name_exists
   condition: (proc.name!="<NA>")
 
-# todo(leogr): we miss "renameat2", but it's not yet supported by sinsp
 - macro: rename
-  condition: evt.type in (rename, renameat)
+  condition: evt.type in (rename, renameat, renameat2)
+
 - macro: mkdir
   condition: evt.type in (mkdir, mkdirat)
+
 - macro: remove
   condition: evt.type in (rmdir, unlink, unlinkat)
 
