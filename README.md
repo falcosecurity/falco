@@ -22,7 +22,7 @@ Falco makes it easy to consume kernel events, and enrich those events with infor
 Falco has a rich rule set of security rules specifically built for Kubernetes, Linux, and cloud-native.
 If a rule is violated in a system, Falco will send an alert notifying the user of the violation and its severity.
 
-#### Installing Falco
+### Installing Falco
 
 If you would like to run Falco in *production* please adhere to the [official installation guide](https://falco.org/docs/installation/).
 
@@ -51,7 +51,7 @@ The Falco Project supports various SDKs for this endpoint.
 | Python   | [client-py](https://github.com/falcosecurity/client-py) |
 
 
-#### What can Falco detect?
+### What can Falco detect?
 
 Falco can detect and alert on any behavior that involves making Linux system calls.
 Falco alerts can be triggered by the use of specific system calls, their arguments, and by properties of the calling process.
