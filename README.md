@@ -3,8 +3,6 @@
 
 <hr>
 
-# The Falco Project
-
 [![Build Status](https://img.shields.io/circleci/build/github/falcosecurity/falco/master?style=for-the-badge)](https://circleci.com/gh/falcosecurity/falco) [![CII Best Practices Summary](https://img.shields.io/cii/summary/2317?label=CCI%20Best%20Practices&style=for-the-badge)](https://bestpractices.coreinfrastructure.org/projects/2317) [![GitHub](https://img.shields.io/github/license/falcosecurity/falco?style=for-the-badge)](COPYING)
 
 #### Latest releases
@@ -19,62 +17,63 @@ Read the [change log](CHANGELOG.md).
 
 ---
 
-Falco is a behavioral activity monitor designed to detect anomalous activity in your applications. Falco audits a system at the most fundamental level, the kernel. Falco then enriches this data with other input streams such as container runtime metrics, and Kubernetes metrics. Falco lets you continuously monitor and detect container, application, host, and network activity—all in one place—from one source of data, with one set of rules.
+The Falco Project, originally created by [Sysdig](https://sysdig.com), is a [CNCF](https://cncf.io) open source cloud native runtime security tool.
+The premise behind the tooling is fairly straightforward, but the details are another story.
+Essentially, Falco makes it easy to consume kernel events, and enrich those events with information from Kubernetes and the rest of the stack.
+Falco has a rich rule set of security rules specifically built for Kubernetes, Linux, and cloud-native stacks.
+If a rule is violated in a system, Falco will send an alert notifying the user of the violation and its severity.
 
-Falco is hosted by the Cloud Native Computing Foundation (CNCF) as a sandbox level project. If you are an organization that wants to help shape the evolution of technologies that are container-packaged, dynamically-scheduled and microservices-oriented, consider joining the CNCF. For details read the [Falco CNCF project proposal](https://github.com/cncf/toc/tree/master/proposals/falco.adoc).
+#### Installing Falco
 
-#### What kind of behaviors can Falco detect?
+If you would like to run Falco in *production* please adhere to the [official installation guide](https://falco.org/docs/installation/).
 
-Falco can detect and alert on any behavior that involves making Linux system calls. Falco alerts can be triggered by the use of specific system calls, their arguments, and by properties of the calling process. For example, Falco can easily detect incidents including but not limited to:
+##### Kubernetes
 
-- A shell is running inside a container.
+| Tool     | Link                                                                                       | Note                                                               |
+|----------|--------------------------------------------------------------------------------------------|--------------------------------------------------------------------|
+| Helm     | [Chart Repository](https://github.com/falcosecurity/charts/tree/master/falco#introduction) | The Falco community offers regular helm chart releases.            |
+| Minikube | [Tutorial](https://falco.org/docs/third-party/#minikube)                                   | The Falco driver has been baked into minikube for easy deployment. |
+| Kind     | [Tutorial](https://falco.org/docs/third-party/#kind)                                       | Running Falco with kind requires a driver on the host system.      |
+| GKE      | [Tutorial](https://falco.org/docs/third-party/#gke)                                        | We suggest using the eBPF driver for running Falco on GKE.         |
+
+
+#### What can Falco detect?
+
+Falco can detect and alert on any behavior that involves making Linux system calls.
+Falco alerts can be triggered by the use of specific system calls, their arguments, and by properties of the calling process.
+For example, Falco can easily detect incidents including but not limited to:
+
+- A shell is running inside a container or pod in Kubernetes.
 - A container is running in privileged mode, or is mounting a sensitive path, such as `/proc`, from the host.
 - A server process is spawning a child process of an unexpected type.
 - Unexpected read of a sensitive file, such as `/etc/shadow`.
 - A non-device file is written to `/dev`.
 - A standard system binary, such as `ls`, is making an outbound network connection.
 
+### Documentation
 
-### Installing Falco
+The [Official Documentation](https://falco.org/docs/) is the best resource to learn about Falco.
 
-You can find the latest release downloads on the official [release archive](https://bintray.com/falcosecurity)
-
-Furthermore the comprehensive [installation guide](https://falco.org/docs/installation/) for Falco is available in the documentation website.
-
-#### How do you compare Falco with other security tools?
-
-One of the questions we often get when we talk about Falco is “How does Falco differ from other Linux security tools such as SELinux, AppArmor, Auditd, etc.?”. We wrote a [blog post](https://sysdig.com/blog/selinux-seccomp-falco-technical-discussion/) comparing Falco with other tools.
-
-
-Documentation
----
-
-See [Falco Documentation](https://falco.org/docs/) to quickly get started using Falco.
-
-Join the Community
----
+### Join the Community
 
 To get involved with The Falco Project please visit [the community repository](https://github.com/falcosecurity/community) to find more.
 
-License Terms
----
-
-Falco is licensed to you under the [Apache 2.0](./COPYING) open source license.
-
-Contributing
----
+### Contributing
 
 See the [CONTRIBUTING.md](./CONTRIBUTING.md).
-
-Security
----
 
 ### Security Audit
 
 A third party security audit was performed by Cure53, you can see the full report [here](./audits/SECURITY_AUDIT_2019_07.pdf).
 
 ### Reporting security vulnerabilities
+
 Please report security vulnerabilities following the community process documented [here](https://github.com/falcosecurity/.github/blob/master/SECURITY.md).
+
+### License Terms
+
+Falco is licensed to you under the [Apache 2.0](./COPYING) open source license.
+
 
 [1]: https://dl.bintray.com/falcosecurity/rpm-dev
 [2]: https://dl.bintray.com/falcosecurity/rpm
