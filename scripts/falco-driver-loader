@@ -159,14 +159,17 @@ load_kernel_module_compile() {
 		chmod +x /tmp/falco-dkms-make
 		if dkms install --directive="MAKE='/tmp/falco-dkms-make'" -m "${DRIVER_NAME}" -v "${DRIVER_VERSION}" -k "${KERNEL_RELEASE}" 2>/dev/null; then
 			echo "* ${DRIVER_NAME} module installed in dkms, trying to insmod"
-			if insmod "/var/lib/dkms/${DRIVER_NAME}/${DRIVER_VERSION}/${KERNEL_RELEASE}/${ARCH}/module/${DRIVER_NAME}.ko" "${MODULE_ARGS[@]}" > /dev/null 2>&1; then
-				echo "* Success: ${DRIVER_NAME} module found and loaded in dkms"
-				exit 0
-			elif insmod "/var/lib/dkms/${DRIVER_NAME}/${DRIVER_VERSION}/${KERNEL_RELEASE}/${ARCH}/module/${DRIVER_NAME}.ko.xz" "${MODULE_ARGS[@]}" > /dev/null 2>&1; then
-				echo "* Success: ${DRIVER_NAME} module found and loaded in dkms (xz)"
+			if OUTPUT="$(insmod "/var/lib/dkms/${DRIVER_NAME}/${DRIVER_VERSION}/${KERNEL_RELEASE}/${ARCH}/module/${DRIVER_NAME}.ko" "${MODULE_ARGS[@]}" 2>&1)"; then
+				echo "* Success: ${DRIVER_NAME} module found and loaded in dkms with arguments '${MODULE_ARGS[@]}'"
 				exit 0
 			else
-				echo "* Unable to insmod ${DRIVER_NAME} module"
+				echo "* Unable to insmod ${DRIVER_NAME} module with arguments '${MODULE_ARGS[@]}': ${OUTPUT}"
+			fi
+			if OUTPUT="$(insmod "/var/lib/dkms/${DRIVER_NAME}/${DRIVER_VERSION}/${KERNEL_RELEASE}/${ARCH}/module/${DRIVER_NAME}.ko.xz" "${MODULE_ARGS[@]}" 2>&1)"; then
+				echo "* Success: ${DRIVER_NAME} module found and loaded in dkms with arguments '${MODULE_ARGS[@]}' (xz)"
+				exit 0
+			else
+				echo "* Unable to insmod ${DRIVER_NAME} module with arguments '${MODULE_ARGS[@]}' (xz): ${OUTPUT}"
 			fi
 		else
 			DKMS_LOG="/var/lib/dkms/${DRIVER_NAME}/${DRIVER_VERSION}/build/make.log"
@@ -192,8 +195,14 @@ load_kernel_module_download() {
 	echo "* Trying to download prebuilt module from ${URL}"
 	if curl -L --create-dirs "${FALCO_DRIVER_CURL_OPTIONS}" -o "${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}" "${URL}"; then
 		echo "* Download succeeded"
-		insmod "${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}" "${MODULE_ARGS[@]}" && echo "* Success: ${DRIVER_NAME} module loaded"
-		exit $?
+		if OUTPUT="$(insmod "${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}" "${MODULE_ARGS[@]}")"; then
+		  echo "* Success: ${DRIVER_NAME} module loaded with arguments '${MODULE_ARGS[@]}'"
+		  exit 0
+		else
+		  EXIT=$?
+		  echo "* Unable to insmod ${DRIVER_NAME} module with arguments '${MODULE_ARGS[@]}': ${OUTPUT}"
+		  exit $EXIT
+		fi
 	else
 		>&2 echo "Download failed, consider compiling your own ${DRIVER_NAME} module and loading it or getting in touch with the Falco community"
 		exit 1
@@ -243,10 +252,12 @@ load_kernel_module() {
 
 
 	echo "* Trying to load a system ${DRIVER_NAME} driver, if present"
-	if modprobe "${DRIVER_NAME}" > /dev/null 2>&1; then
-		echo "* Success: ${DRIVER_NAME} module found and loaded with modprobe"
+	if OUTPUT="$(modprobe "${DRIVER_NAME}" "${MODULE_ARGS[@]}" 2>&1)"; then
+		echo "* Success: ${DRIVER_NAME} module found and loaded with modprobe and arguments '${MODULE_ARGS[@]}'"
 		exit 0
-	fi		
+	else
+	  echo "* Unable to modprobe ${DRIVER_NAME} module with arguments '${MODULE_ARGS[@]}': ${OUTPUT}"
+	fi
 
 
 	echo "* Trying to find locally a prebuilt ${DRIVER_NAME} module for kernel ${KERNEL_RELEASE}, if present"
@@ -257,8 +268,15 @@ load_kernel_module() {
 
 	if [ -f "${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}" ]; then
 		echo "* Found a prebuilt module at ${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}, loading it"
-		insmod "${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}" && echo "* Success: ${DRIVER_NAME} module loaded"
-		exit $?
+
+		if OUTPUT="$(insmod "${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}" "${MODULE_ARGS[@]}")"; then
+		  echo "* Success: ${DRIVER_NAME} module loaded with arguments '${MODULE_ARGS[@]}'"
+		  exit 0
+		else
+		  EXIT=$?
+		  echo "* Unable to insmod ${DRIVER_NAME} module with arguments '${MODULE_ARGS[@]}': ${OUTPUT}"
+		  exit $EXIT
+		fi
 	fi
 
 	if [ -n "$ENABLE_DOWNLOAD" ]; then
