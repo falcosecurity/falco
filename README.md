@@ -17,7 +17,7 @@ Read the [change log](CHANGELOG.md).
 
 ---
 
-The Falco Project, originally created by [Sysdig](https://sysdig.com), is a [CNCF](https://cncf.io) open source cloud native runtime security tool.
+The Falco Project, originally created by [Sysdig](https://sysdig.com), is an incubating [CNCF](https://cncf.io) open source cloud native runtime security tool.
 The premise behind the tooling is fairly straightforward, but the details are another story.
 Essentially, Falco makes it easy to consume kernel events, and enrich those events with information from Kubernetes and the rest of the stack.
 Falco has a rich rule set of security rules specifically built for Kubernetes, Linux, and cloud-native stacks.
