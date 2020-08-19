@@ -108,7 +108,7 @@ jobs:
           command: dnf update -y
       - run:
           name: Install dependencies
-          command: dnf install gcc gcc-c++ git make cmake autoconf automake pkg-config patch ncurses-devel libtool glibc-static libstdc++-static elfutils-libelf-devel linux-headers -y
+          command: dnf install gcc gcc-c++ git make cmake autoconf automake pkg-config patch ncurses-devel libtool elfutils-libelf-devel diffutils kernel-devel kernel-headers kernel-core clang llvm which -y
       - run:
           name: Prepare project
           command: |
