@@ -65,6 +65,7 @@ jobs:
             make tests
             popd
   # Build using Ubuntu Bionic Beaver (18.04)
+  # This build is static, dependencies are bundled in the Falco binary
   "build/ubuntu-bionic":
     docker:
       - image: ubuntu:bionic
@@ -95,8 +96,40 @@ jobs:
             pushd build
             make tests
             popd
+  # Build using CentOS 8
+  # This build is static, dependencies are bundled in the Falco binary
+  "build/centos8":
+    docker:
+      - image: centos:8
+    steps:
+      - checkout
+      - run:
+          name: Update base image
+          command: dnf update -y
+      - run:
+          name: Install dependencies
+          command: dnf install gcc gcc-c++ git make cmake autoconf automake pkg-config patch ncurses-devel libtool glibc-static libstdc++-static elfutils-libelf-devel linux-headers -y
+      - run:
+          name: Prepare project
+          command: |
+            mkdir build
+            pushd build
+            cmake -DBUILD_BPF=On -DUSE_BUNDLED_DEPS=On ..
+            popd
+      - run:
+          name: Build
+          command: |
+            pushd build
+            KERNELDIR=/lib/modules/$(ls /lib/modules)/build make -j4 all
+            popd
+      - run:
+          name: Run unit tests
+          command: |
+            pushd build
+            make tests
+            popd
   # Build using our own builder base image using centos 7
-  # This build is static, dependencies are bundled in the falco binary
+  # This build is static, dependencies are bundled in the Falco binary
   "build/centos7":
     docker:
       - image: falcosecurity/falco-builder:latest
@@ -133,7 +166,7 @@ jobs:
           path: /tmp/packages
           destination: /packages
   # Debug build using our own builder base image using centos 7
-  # This build is static, dependencies are bundled in the falco binary
+  # This build is static, dependencies are bundled in the Falco binary
   "build/centos7-debug":
     docker:
       - image: falcosecurity/falco-builder:latest
@@ -342,6 +375,7 @@ workflows:
       - "build/ubuntu-focal"
       - "build/ubuntu-focal-debug"
       - "build/ubuntu-bionic"
+      - "build/centos8"
       - "build/centos7"
       - "build/centos7-debug"
       - "tests/integration":
