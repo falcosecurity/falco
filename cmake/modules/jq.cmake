@@ -40,6 +40,8 @@ else ()
     #
     # This is needed because many distros do not ship the right
     # version of autoreconf, making virtually impossible to build Falco on them.
+    # Read more about it here:
+    #   https://github.com/stedolan/jq/issues/2061#issuecomment-593445920
     ExternalProject_Add(
             jq
             URL "https://dl.bintray.com/falcosecurity/dependencies/jq-1.6.tar.gz"
