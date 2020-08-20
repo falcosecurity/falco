@@ -23,18 +23,18 @@ endif()
 
 file(MAKE_DIRECTORY ${SYSDIG_CMAKE_WORKING_DIR})
 
-# The sysdig git reference (branch name, commit hash, or tag)
-# To update sysdig version for the next release, change the default below
-# In case you want to test against another sysdig version just pass the variable - ie., `cmake -DSYSDIG_VERSION=dev ..`
+# The sysdig git reference (branch name, commit hash, or tag) To update sysdig version for the next release, change the
+# default below In case you want to test against another sysdig version just pass the variable - ie., `cmake
+# -DSYSDIG_VERSION=dev ..`
 if(NOT SYSDIG_VERSION)
-  set(SYSDIG_VERSION "build/jq-update") # todo(fntlnz): revert this before merging
-  set(SYSDIG_CHECKSUM "SHA256=12541bcf2f3122c3e03bc71e5f39511d679c378d06d7c976527d13901d029410")
+  set(SYSDIG_VERSION "37aab8debf50140ca8796cfb732218d3ab123640")
+  set(SYSDIG_CHECKSUM "SHA256=48482e8299c092899f2516cc5a1db09fa2747fd03ec29fa555f42b62f1e38aeb")
 endif()
 set(PROBE_VERSION "${SYSDIG_VERSION}")
 
 # cd /path/to/build && cmake /path/to/source
-execute_process(COMMAND "${CMAKE_COMMAND}" -DSYSDIG_VERSION=${SYSDIG_VERSION} -DSYSDIG_CHECKSUM=${SYSDIG_CHECKSUM} ${SYSDIG_CMAKE_SOURCE_DIR} WORKING_DIRECTORY ${SYSDIG_CMAKE_WORKING_DIR})
-
+execute_process(COMMAND "${CMAKE_COMMAND}" -DSYSDIG_VERSION=${SYSDIG_VERSION} -DSYSDIG_CHECKSUM=${SYSDIG_CHECKSUM}
+                        ${SYSDIG_CMAKE_SOURCE_DIR} WORKING_DIRECTORY ${SYSDIG_CMAKE_WORKING_DIR})
 
 # todo(leodido, fntlnz) > use the following one when CMake version will be >= 3.13
 
