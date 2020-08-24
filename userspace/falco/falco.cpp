@@ -187,6 +187,7 @@ static void display_fatal_err(const string &msg)
 // Splitting into key=value or key.subkey=value will be handled by configuration class.
 std::list<string> cmdline_options;
 
+#ifndef MINIMAL_BUILD
 // Read a jsonl file containing k8s audit events and pass each to the engine.
 void read_k8s_audit_trace_file(falco_engine *engine,
 			       falco_outputs *outputs,
@@ -215,6 +216,7 @@ void read_k8s_audit_trace_file(falco_engine *engine,
 		}
 	}
 }
+#endif
 
 static std::string read_file(std::string filename)
 {
@@ -1078,6 +1080,12 @@ int falco_init(int argc, char **argv)
 
 			if(!trace_is_scap)
 			{
+#ifdef MINIMAL_BUILD
+				// Note that the webserver is not available when MINIMAL_BUILD is defined.
+				fprintf(stderr, "Cannot use k8s audit events trace file with a minimal Falco build");
+				result = EXIT_FAILURE;
+				goto exit;
+#else
 				try {
 					string line;
 					nlohmann::json j;
@@ -1102,6 +1110,7 @@ int falco_init(int argc, char **argv)
 					result = EXIT_FAILURE;
 					goto exit;
 				}
+#endif
 			}
 		}
 		else
@@ -1260,9 +1269,11 @@ int falco_init(int argc, char **argv)
 
 		if(!trace_filename.empty() && !trace_is_scap)
 		{
+#ifndef MINIMAL_BUILD			
 			read_k8s_audit_trace_file(engine,
 						  outputs,
 						  trace_filename);
+#endif
 		}
 		else
 		{
