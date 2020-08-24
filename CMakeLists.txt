@@ -16,6 +16,7 @@ project(falco)
 
 option(USE_BUNDLED_DEPS "Bundle hard to find dependencies into the Falco binary" OFF)
 option(BUILD_WARNINGS_AS_ERRORS "Enable building with -Wextra -Werror flags" OFF)
+option(MINIMAL_BUILD "Build a minimal version of Falco, containing only the engine and basic input/output" OFF)
 
 # Elapsed time
 # set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CMAKE_COMMAND} -E time") # TODO(fntlnz, leodido): add a flag to enable this
@@ -50,7 +51,11 @@ else()
 endif()
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
-set(CMAKE_COMMON_FLAGS "-Wall -ggdb ${DRAIOS_FEATURE_FLAGS}")
+if(MINIMAL_BUILD)
+  set(MINIMAL_BUILD_FLAGS "-DMINIMAL_BUILD")
+endif()
+
+set(CMAKE_COMMON_FLAGS "-Wall -ggdb ${DRAIOS_FEATURE_FLAGS} ${MINIMAL_BUILD_FLAGS}")
 
 if(BUILD_WARNINGS_AS_ERRORS)
   set(CMAKE_SUPPRESSED_WARNINGS
@@ -221,11 +226,13 @@ include(sysdig)
 # Installation
 install(FILES falco.yaml DESTINATION "${FALCO_ETC_DIR}")
 
-# Coverage
-include(Coverage)
+if(NOT MINIMAL_BUILD)
+  # Coverage
+  include(Coverage)
 
-# Tests
-add_subdirectory(test)
+  # Tests
+  add_subdirectory(test)
+endif()
 
 # Rules
 add_subdirectory(rules)
