@@ -43,7 +43,9 @@ limitations under the License.
 #include "falco_engine.h"
 #include "config_falco.h"
 #include "statsfilewriter.h"
+#ifndef MINIMAL_BUILD
 #include "webserver.h"
+#endif
 #include "grpc_server.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
 
@@ -461,7 +463,9 @@ int falco_init(int argc, char **argv)
 	double duration;
 	scap_stats cstats;
 
+#ifndef MINIMAL_BUILD
 	falco_webserver webserver;
+#endif
 	falco::grpc::server grpc_server;
 	std::thread grpc_server_thread;
 
@@ -1225,6 +1229,7 @@ int falco_init(int argc, char **argv)
 		delete mesos_api;
 		mesos_api = 0;
 
+#ifndef MINIMAL_BUILD
 		if(trace_filename.empty() && config.m_webserver_enabled && !disable_k8s_audit)
 		{
 			std::string ssl_option = (config.m_webserver_ssl_enabled ? " (SSL)" : "");
@@ -1232,6 +1237,7 @@ int falco_init(int argc, char **argv)
 			webserver.init(&config, engine, outputs);
 			webserver.start();
 		}
+#endif
 
 		// gRPC server
 		if(config.m_grpc_enabled)
@@ -1302,7 +1308,9 @@ int falco_init(int argc, char **argv)
 		inspector->close();
 		engine->print_stats();
 		sdropmgr.print_stats();
+#ifndef MINIMAL_BUILD
 		webserver.stop();
+#endif
 		if(grpc_server_thread.joinable())
 		{
 			grpc_server.shutdown();
@@ -1315,7 +1323,9 @@ int falco_init(int argc, char **argv)
 
 		result = EXIT_FAILURE;
 
+#ifndef MINIMAL_BUILD
 		webserver.stop();
+#endif
 		if(grpc_server_thread.joinable())
 		{
 			grpc_server.shutdown();
