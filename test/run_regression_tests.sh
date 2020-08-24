@@ -91,7 +91,7 @@ function run_tests() {
     # as we're watching the return status when running avocado.
     set +e
     TEST_RC=0
-    for mult in $SCRIPTDIR/falco_tests.yaml $SCRIPTDIR/falco_tests_package.yaml $SCRIPTDIR/falco_k8s_audit_tests.yaml $SCRIPTDIR/falco_tests_psp.yaml; do
+    for mult in $SCRIPTDIR/falco_traces.yaml $SCRIPTDIR/falco_tests.yaml $SCRIPTDIR/falco_tests_package.yaml $SCRIPTDIR/falco_k8s_audit_tests.yaml $SCRIPTDIR/falco_tests_psp.yaml; do
         CMD="avocado run --mux-yaml $mult --job-results-dir $SCRIPTDIR/job-results -- $SCRIPTDIR/falco_test.py"
         echo "Running $CMD"
         BUILD_DIR=${OPT_BUILD_DIR} $CMD
