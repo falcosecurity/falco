@@ -199,6 +199,7 @@ ExternalProject_Add(
   BUILD_BYPRODUCTS ${TBB_LIB}
   INSTALL_COMMAND "")
 
+if(NOT MINIMAL_BUILD)
 # civetweb
 set(CIVETWEB_SRC "${PROJECT_BINARY_DIR}/civetweb-prefix/src/civetweb/")
 set(CIVETWEB_LIB "${CIVETWEB_SRC}/install/lib/libcivetweb.a")
@@ -213,6 +214,7 @@ ExternalProject_Add(
   BUILD_IN_SOURCE 1
   BUILD_COMMAND ${CMD_MAKE} COPT="-DNO_FILES" WITH_CPP=1
   INSTALL_COMMAND ${CMD_MAKE} COPT="-DNO_FILES" install-lib install-headers PREFIX=${CIVETWEB_SRC}/install "WITH_CPP=1")
+endif()
 
 #string-view-lite
 include(DownloadStringViewLite)
