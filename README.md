@@ -74,7 +74,7 @@ To get involved with The Falco Project please visit [the community repository](h
 
 ### Contributing
 
-See the [CONTRIBUTING.md](./CONTRIBUTING.md).
+See the [CONTRIBUTING.md](https://github.com/falcosecurity/.github/blob/master/CONTRIBUTING.md).
 
 ### Security Audit
 
