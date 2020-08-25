@@ -15,8 +15,8 @@ Finally, on the proposed due date the assignees for the upcoming release proceed
 - Check the release note block of every PR matching the `is:pr is:merged closed:>YYYY-MM-DD` [filter](https://github.com/falcosecurity/falco/pulls?q=is%3Apr+is%3Amerged+closed%3A%3EYYYY-MM-DD)
     - Ensure the release note block follows the [commit convention](https://github.com/falcosecurity/falco/blob/master/CONTRIBUTING.md#commit-convention), otherwise fix its content
     - If the PR has no milestone, assign it to the milestone currently undergoing release
-- Check issues without a milestone (using [is:pr is:merged no:milestone closed:>YYYT-MM-DD](https://github.com/falcosecurity/falco/pulls?q=is%3Apr+is%3Amerged+no%3Amilestone+closed%3A%3EYYYT-MM-DD) filter) and add them to the milestone currently undergoing release
-- Double-check that there are no more merged PRs without the target milestone assigned with the `is:pr is:merged no:milestone closed:>YYYT-MM-DD` [filters](https://github.com/falcosecurity/falco/pulls?q=is%3Apr+is%3Amerged+no%3Amilestone+closed%3A%3EYYYT-MM-DD), if any, fix them
+- Check issues without a milestone (using [is:pr is:merged no:milestone closed:>YYYY-MM-DD](https://github.com/falcosecurity/falco/pulls?q=is%3Apr+is%3Amerged+no%3Amilestone+closed%3A%3EYYYY-MM-DD) filter) and add them to the milestone currently undergoing release
+- Double-check that there are no more merged PRs without the target milestone assigned with the `is:pr is:merged no:milestone closed:>YYYY-MM-DD` [filters](https://github.com/falcosecurity/falco/pulls?q=is%3Apr+is%3Amerged+no%3Amilestone+closed%3A%3EYYYY-MM-DD), if any, fix them
 
 ### 2. Milestones
 
