@@ -1143,11 +1143,14 @@ int falco_init(int argc, char **argv)
 					// Try to insert the Falco kernel module
 					if(system("modprobe " PROBE_NAME " > /dev/null 2> /dev/null"))
 					{
-						falco_logger::log(LOG_ERR, "Unable to load the driver. Exiting.\n");
+						falco_logger::log(LOG_ERR, "Unable to load the driver.\n");
 					}
 					open_f(inspector);
+				} 
+				else 
+				{
+					rethrow_exception(current_exception());
 				}
-				rethrow_exception(current_exception());
 			}
 		}
 
