@@ -21,7 +21,7 @@
 # Required-Stop:     $remote_fs $syslog
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Short-Description: Falco syscall activity monitoring agent
+# Short-Description: Falco Cloud Native runtime security
 # Description:       Falco is a system activity monitoring agent
 #                    driven by system calls with support for containers.
 ### END INIT INFO
