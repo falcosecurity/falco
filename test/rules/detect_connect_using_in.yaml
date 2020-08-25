@@ -18,5 +18,5 @@
   desc: Detect any connect to the localhost network, using fd.net and the in operator
   condition: evt.type=connect and fd.net in ("127.0.0.1/24")
   output: Program connected to localhost network
-    (user=%user.name command=%proc.cmdline connection=%fd.name)
+    (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline connection=%fd.name)
   priority: INFO
