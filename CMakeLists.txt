@@ -128,11 +128,13 @@ ExternalProject_Add(
 # yaml-cpp
 include(yaml-cpp)
 
-# OpenSSL
-include(OpenSSL)
+if(NOT MINIMAL_BUILD)
+  # OpenSSL
+  include(OpenSSL)
 
-# libcurl
-include(cURL)
+  # libcurl
+  include(cURL)
+endif()
 
 # LuaJIT
 set(LUAJIT_SRC "${PROJECT_BINARY_DIR}/luajit-prefix/src/luajit/src")
@@ -200,27 +202,29 @@ ExternalProject_Add(
   INSTALL_COMMAND "")
 
 if(NOT MINIMAL_BUILD)
-# civetweb
-set(CIVETWEB_SRC "${PROJECT_BINARY_DIR}/civetweb-prefix/src/civetweb/")
-set(CIVETWEB_LIB "${CIVETWEB_SRC}/install/lib/libcivetweb.a")
-set(CIVETWEB_INCLUDE_DIR "${CIVETWEB_SRC}/install/include")
-message(STATUS "Using bundled civetweb in '${CIVETWEB_SRC}'")
-ExternalProject_Add(
-  civetweb
-  URL "https://github.com/civetweb/civetweb/archive/v1.11.tar.gz"
-  URL_HASH "SHA256=de7d5e7a2d9551d325898c71e41d437d5f7b51e754b242af897f7be96e713a42"
-  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E make_directory ${CIVETWEB_SRC}/install/lib
-  COMMAND ${CMAKE_COMMAND} -E make_directory ${CIVETWEB_SRC}/install/include
-  BUILD_IN_SOURCE 1
-  BUILD_COMMAND ${CMD_MAKE} COPT="-DNO_FILES" WITH_CPP=1
-  INSTALL_COMMAND ${CMD_MAKE} COPT="-DNO_FILES" install-lib install-headers PREFIX=${CIVETWEB_SRC}/install "WITH_CPP=1")
+  # civetweb
+  set(CIVETWEB_SRC "${PROJECT_BINARY_DIR}/civetweb-prefix/src/civetweb/")
+  set(CIVETWEB_LIB "${CIVETWEB_SRC}/install/lib/libcivetweb.a")
+  set(CIVETWEB_INCLUDE_DIR "${CIVETWEB_SRC}/install/include")
+  message(STATUS "Using bundled civetweb in '${CIVETWEB_SRC}'")
+  ExternalProject_Add(
+    civetweb
+    URL "https://github.com/civetweb/civetweb/archive/v1.11.tar.gz"
+    URL_HASH "SHA256=de7d5e7a2d9551d325898c71e41d437d5f7b51e754b242af897f7be96e713a42"
+    CONFIGURE_COMMAND ${CMAKE_COMMAND} -E make_directory ${CIVETWEB_SRC}/install/lib
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CIVETWEB_SRC}/install/include
+    BUILD_IN_SOURCE 1
+    BUILD_COMMAND ${CMD_MAKE} COPT="-DNO_FILES" WITH_CPP=1
+    INSTALL_COMMAND ${CMD_MAKE} COPT="-DNO_FILES" install-lib install-headers PREFIX=${CIVETWEB_SRC}/install "WITH_CPP=1")
 endif()
 
 #string-view-lite
 include(DownloadStringViewLite)
 
-# gRPC
-include(gRPC)
+if(NOT MINIMAL_BUILD)
+  # gRPC
+  include(gRPC)
+endif()
 
 # sysdig
 include(sysdig)

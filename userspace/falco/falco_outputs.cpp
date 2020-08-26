@@ -14,7 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+#ifndef MINIMAL_BUILD
 #include <google/protobuf/util/time_util.h>
+#endif
 
 #include "falco_outputs.h"
 
@@ -22,15 +24,19 @@ limitations under the License.
 
 #include "formats.h"
 #include "logger.h"
+#ifndef MINIMAL_BUILD
 #include "falco_outputs_queue.h"
+#endif
 #include "banned.h" // This raises a compilation error when certain functions are used
 
 using namespace std;
 
 const static struct luaL_reg ll_falco_outputs [] =
 {
+#ifndef MINIMAL_BUILD
 	{"handle_http", &falco_outputs::handle_http},
 	{"handle_grpc", &falco_outputs::handle_grpc},
+#endif
 	{NULL, NULL}
 };
 
@@ -259,6 +265,7 @@ void falco_outputs::reopen_outputs()
 	}
 }
 
+#ifndef MINIMAL_BUILD
 int falco_outputs::handle_http(lua_State *ls)
 {
 	CURL *curl = NULL;
@@ -369,3 +376,4 @@ int falco_outputs::handle_grpc(lua_State *ls)
 
 	return 1;
 }
+#endif

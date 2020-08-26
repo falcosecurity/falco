@@ -13,31 +13,33 @@
 
 configure_file("${SYSDIG_SOURCE_DIR}/userspace/sysdig/config_sysdig.h.in" config_sysdig.h)
 
-add_custom_command(
-  OUTPUT
-    ${CMAKE_CURRENT_BINARY_DIR}/version.grpc.pb.cc
-    ${CMAKE_CURRENT_BINARY_DIR}/version.grpc.pb.h
-    ${CMAKE_CURRENT_BINARY_DIR}/version.pb.cc
-    ${CMAKE_CURRENT_BINARY_DIR}/version.pb.h
-    ${CMAKE_CURRENT_BINARY_DIR}/outputs.grpc.pb.cc
-    ${CMAKE_CURRENT_BINARY_DIR}/outputs.grpc.pb.h
-    ${CMAKE_CURRENT_BINARY_DIR}/outputs.pb.cc
-    ${CMAKE_CURRENT_BINARY_DIR}/outputs.pb.h
-    ${CMAKE_CURRENT_BINARY_DIR}/schema.pb.cc
-    ${CMAKE_CURRENT_BINARY_DIR}/schema.pb.h
-  COMMENT "Generate gRPC API"
-  # Falco gRPC Version API
-  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/version.proto
-  COMMAND ${PROTOC} -I ${CMAKE_CURRENT_SOURCE_DIR} --cpp_out=. ${CMAKE_CURRENT_SOURCE_DIR}/version.proto
-  COMMAND ${PROTOC} -I ${CMAKE_CURRENT_SOURCE_DIR} --grpc_out=. --plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN}
-          ${CMAKE_CURRENT_SOURCE_DIR}/version.proto
-  # Falco gRPC Outputs API
-  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/outputs.proto
-  COMMAND ${PROTOC} -I ${CMAKE_CURRENT_SOURCE_DIR} --cpp_out=. ${CMAKE_CURRENT_SOURCE_DIR}/outputs.proto
-          ${CMAKE_CURRENT_SOURCE_DIR}/schema.proto
-  COMMAND ${PROTOC} -I ${CMAKE_CURRENT_SOURCE_DIR} --grpc_out=. --plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN}
-          ${CMAKE_CURRENT_SOURCE_DIR}/outputs.proto
-  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+if(NOT MINIMAL_BUILD)
+  add_custom_command(
+    OUTPUT
+      ${CMAKE_CURRENT_BINARY_DIR}/version.grpc.pb.cc
+      ${CMAKE_CURRENT_BINARY_DIR}/version.grpc.pb.h
+      ${CMAKE_CURRENT_BINARY_DIR}/version.pb.cc
+      ${CMAKE_CURRENT_BINARY_DIR}/version.pb.h
+      ${CMAKE_CURRENT_BINARY_DIR}/outputs.grpc.pb.cc
+      ${CMAKE_CURRENT_BINARY_DIR}/outputs.grpc.pb.h
+      ${CMAKE_CURRENT_BINARY_DIR}/outputs.pb.cc
+      ${CMAKE_CURRENT_BINARY_DIR}/outputs.pb.h
+      ${CMAKE_CURRENT_BINARY_DIR}/schema.pb.cc
+      ${CMAKE_CURRENT_BINARY_DIR}/schema.pb.h
+    COMMENT "Generate gRPC API"
+    # Falco gRPC Version API
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/version.proto
+    COMMAND ${PROTOC} -I ${CMAKE_CURRENT_SOURCE_DIR} --cpp_out=. ${CMAKE_CURRENT_SOURCE_DIR}/version.proto
+    COMMAND ${PROTOC} -I ${CMAKE_CURRENT_SOURCE_DIR} --grpc_out=. --plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN}
+            ${CMAKE_CURRENT_SOURCE_DIR}/version.proto
+    # Falco gRPC Outputs API
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/outputs.proto
+    COMMAND ${PROTOC} -I ${CMAKE_CURRENT_SOURCE_DIR} --cpp_out=. ${CMAKE_CURRENT_SOURCE_DIR}/outputs.proto
+            ${CMAKE_CURRENT_SOURCE_DIR}/schema.proto
+    COMMAND ${PROTOC} -I ${CMAKE_CURRENT_SOURCE_DIR} --grpc_out=. --plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN}
+            ${CMAKE_CURRENT_SOURCE_DIR}/outputs.proto
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+endif()
 
 if(MINIMAL_BUILD)
 add_executable(
@@ -48,16 +50,7 @@ add_executable(
   event_drops.cpp
   statsfilewriter.cpp
   falco.cpp
-  "${SYSDIG_SOURCE_DIR}/userspace/sysdig/fields_info.cpp"
-  grpc_context.cpp
-  grpc_server_impl.cpp
-  grpc_request_context.cpp
-  grpc_server.cpp
-  ${CMAKE_CURRENT_BINARY_DIR}/version.grpc.pb.cc
-  ${CMAKE_CURRENT_BINARY_DIR}/version.pb.cc
-  ${CMAKE_CURRENT_BINARY_DIR}/outputs.grpc.pb.cc
-  ${CMAKE_CURRENT_BINARY_DIR}/outputs.pb.cc
-  ${CMAKE_CURRENT_BINARY_DIR}/schema.pb.cc)
+  "${SYSDIG_SOURCE_DIR}/userspace/sysdig/fields_info.cpp")
 else()
   add_executable(
     falco
@@ -98,10 +91,6 @@ if(MINIMAL_BUILD)
       "${PROJECT_BINARY_DIR}/driver/src"
       "${STRING_VIEW_LITE_INCLUDE}"
       "${YAMLCPP_INCLUDE_DIR}"
-      "${OPENSSL_INCLUDE_DIR}"
-      "${GRPC_INCLUDE}"
-      "${GRPCPP_INCLUDE}"
-      "${PROTOBUF_INCLUDE}"
       "${CMAKE_CURRENT_BINARY_DIR}"
       "${DRAIOS_DEPENDENCIES_DIR}/yaml-${DRAIOS_YAML_VERSION}/target/include")
 
@@ -109,12 +98,6 @@ if(MINIMAL_BUILD)
     falco
     falco_engine
     sinsp
-    "${GPR_LIB}"
-    "${GRPC_LIB}"
-    "${GRPCPP_LIB}"
-    "${PROTOBUF_LIB}"
-    "${OPENSSL_LIBRARY_SSL}"
-    "${OPENSSL_LIBRARY_CRYPTO}"
     "${LIBYAML_LIB}"
     "${YAMLCPP_LIB}")
 else()

@@ -74,8 +74,10 @@ public:
 
 	void reopen_outputs();
 
+#ifndef MINIMAL_BUILD
 	static int handle_http(lua_State *ls);
 	static int handle_grpc(lua_State *ls);
+#endif
 
 private:
 
