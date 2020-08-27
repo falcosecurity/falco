@@ -1607,6 +1607,7 @@
     as a part of creating a container) by calling setns.
   condition: >
     evt.type=setns and evt.dir=<
+    and proc_name_exists
     and not (container.id=host and proc.name in (docker_binaries, k8s_binaries, lxd_binaries, nsenter))
     and not proc.name in (sysdigcloud_binaries, sysdig, calico, oci-umount, cilium-cni, network_plugin_binaries)
     and not proc.name in (user_known_change_thread_namespace_binaries)
