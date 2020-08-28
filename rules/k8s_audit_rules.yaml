@@ -311,7 +311,8 @@
 # normal operation.
 - rule: System ClusterRole Modified/Deleted
   desc: Detect any attempt to modify/delete a ClusterRole/Role starting with system
-  condition: kevt and (role or clusterrole) and (kmodify or kdelete) and (ka.target.name startswith "system:") and ka.target.name!="system:coredns"
+  condition: kevt and (role or clusterrole) and (kmodify or kdelete) and (ka.target.name startswith "system:") and
+             not ka.target.name in (system:coredns, system:managed-certificate-controller)
   output: System ClusterRole/Role modified or deleted (user=%ka.user.name role=%ka.target.name ns=%ka.target.namespace action=%ka.verb)
   priority: WARNING
   source: k8s_audit
