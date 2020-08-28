@@ -344,8 +344,8 @@
 # for efficiency.
 - macro: inbound_outbound
   condition: >
-    (((evt.type in (accept,listen,connect) and evt.dir=<)) or
-     (fd.typechar = 4 or fd.typechar = 6) and
+    ((((evt.type in (accept,listen,connect) and evt.dir=<)) or
+     (fd.typechar = 4 or fd.typechar = 6)) and
      (fd.ip != "0.0.0.0" and fd.net != "127.0.0.0/8") and
      (evt.rawres >= 0 or evt.res = EINPROGRESS))
 
@@ -696,8 +696,8 @@
 - macro: run_by_foreman
   condition: >
     (user.name=foreman and
-     (proc.pname in (rake, ruby, scl) and proc.aname[5] in (tfm-rake,tfm-ruby)) or
-     (proc.pname=scl and proc.aname[2] in (tfm-rake,tfm-ruby)))
+     ((proc.pname in (rake, ruby, scl) and proc.aname[5] in (tfm-rake,tfm-ruby)) or
+     (proc.pname=scl and proc.aname[2] in (tfm-rake,tfm-ruby))))
 
 - macro: java_running_sdjagent
   condition: proc.name=java and proc.cmdline contains sdjagent.jar
@@ -1145,7 +1145,7 @@
 
 - macro: redis_writing_conf
   condition: >
-    (proc.name in (run-redis, redis-launcher.) and fd.name=/etc/redis.conf or fd.name startswith /etc/redis)
+    (proc.name in (run-redis, redis-launcher.) and (fd.name=/etc/redis.conf or fd.name startswith /etc/redis))
 
 - macro: openvpn_writing_conf
   condition: (proc.name in (openvpn,openvpn-entrypo) and fd.name startswith /etc/openvpn)
