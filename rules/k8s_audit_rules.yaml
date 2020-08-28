@@ -48,6 +48,8 @@
     "minikube", "minikube-user", "kubelet", "kops", "admin", "kube", "kube-proxy", "kube-apiserver-healthcheck",
     "kubernetes-admin",
     vertical_pod_autoscaler_users,
+    cluster-autoscaler,
+    system:addon-manager
     ]
 
 - rule: Disallowed K8s User
