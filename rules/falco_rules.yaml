@@ -935,10 +935,12 @@
   items: [sources.list]
 
 - list: repository_directories
-  items: [/etc/apt/sources.list.d, /etc/yum.repos.d]
+  items: [/etc/apt/sources.list.d, /etc/yum.repos.d, /etc/apt]
 
 - macro: access_repositories
-  condition: (fd.filename in (repository_files) or fd.directory in (repository_directories))
+  condition: (fd.directory in (repository_directories) or
+              (fd.name pmatch (repository_directories) and
+               fd.filename in (repository_files)))
 
 - macro: modify_repositories
   condition: (evt.arg.newpath pmatch (repository_directories))
@@ -951,6 +953,7 @@
   condition: >
     ((open_write and access_repositories) or (modify and modify_repositories))
     and not package_mgmt_procs
+    and not package_mgmt_ancestor_procs
     and not exe_running_docker_save
     and not user_known_update_package_registry
   output: >
