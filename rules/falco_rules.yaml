@@ -1864,11 +1864,21 @@
 # These container images are allowed to run with --privileged
 - list: falco_privileged_images
   items: [
-    docker.io/sysdig/falco, docker.io/sysdig/sysdig,
-    gcr.io/google_containers/kube-proxy, docker.io/calico/node, quay.io/calico/node,
-    docker.io/rook/toolbox, docker.io/cloudnativelabs/kube-router, docker.io/mesosphere/mesos-slave,
-    docker.io/docker/ucp-agent, sematext_images, k8s.gcr.io/kube-proxy,
-    docker.io/falcosecurity/falco, sysdig/falco, sysdig/sysdig, falcosecurity/falco
+    docker.io/calico/node,
+    docker.io/cloudnativelabs/kube-router,
+    docker.io/docker/ucp-agent,
+    docker.io/falcosecurity/falco,
+    docker.io/mesosphere/mesos-slave,
+    docker.io/rook/toolbox,
+    docker.io/sysdig/falco,
+    docker.io/sysdig/sysdig,
+    falcosecurity/falco,
+    gcr.io/google_containers/kube-proxy,
+    k8s.gcr.io/kube-proxy,
+    quay.io/calico/node,
+    sysdig/falco,
+    sysdig/sysdig,
+    sematext_images
     ]
 
 - macro: falco_privileged_containers
