@@ -1933,7 +1933,16 @@
 
 # These container images are allowed to run with hostnetwork=true
 - list: falco_hostnetwork_images
-  items: []
+  items: [
+    gcr.io/google-containers/prometheus-to-sd,
+    gcr.io/projectcalico-org/typha,
+    gcr.io/projectcalico-org/node,
+    gke.gcr.io/gke-metadata-server,
+    gke.gcr.io/kube-proxy,
+    gke.gcr.io/netd-amd64,
+    k8s.gcr.io/ip-masq-agent-amd64
+    k8s.gcr.io/prometheus-to-sd,
+    ]
 
 # Add conditions to this macro (probably in a separate file,
 # overwriting this macro) to specify additional containers that are
