@@ -244,20 +244,48 @@
   source: k8s_audit
   tags: [k8s]
 
+# Only defined for backwards compatibility. Use the more specific
+# user_allowed_kube_namespace_image_list instead.
 - list: user_trusted_image_list
   items: []
 
-- list: k8s_image_list
-  items: [k8s.gcr.io/kube-apiserver, kope/kube-apiserver-healthcheck]
+- list: user_allowed_kube_namespace_image_list
+  items: [user_trusted_image_list]
 
-- macro: trusted_pod
-  condition: (ka.req.pod.containers.image.repository in (user_trusted_image_list) or
-              ka.req.pod.containers.image.repository in (k8s_image_list))
+# Only defined for backwards compatibility. Use the more specific
+# allowed_kube_namespace_image_list instead.
+- list: k8s_image_list
+  items: []
+
+- list: allowed_kube_namespace_image_list
+  items: [
+    gcr.io/google-containers/prometheus-to-sd,
+    gcr.io/projectcalico-org/node,
+    gke.gcr.io/addon-resizer,
+    gke.gcr.io/heapster,
+    gke.gcr.io/gke-metadata-server,
+    k8s.gcr.io/ip-masq-agent-amd64,
+    k8s.gcr.io/kube-apiserver,
+    gke.gcr.io/kube-proxy,
+    gke.gcr.io/netd-amd64,
+    k8s.gcr.io/addon-resizer
+    k8s.gcr.io/prometheus-to-sd,
+    k8s.gcr.io/k8s-dns-dnsmasq-nanny-amd64,
+    k8s.gcr.io/k8s-dns-kube-dns-amd64,
+    k8s.gcr.io/k8s-dns-sidecar-amd64,
+    k8s.gcr.io/metrics-server-amd64,
+    kope/kube-apiserver-healthcheck,
+    k8s_image_list
+    ]
+
+- macro: allowed_kube_namespace_pods
+  condition: (ka.req.pod.containers.image.repository in (user_allowed_kube_namespace_image_list) or
+              ka.req.pod.containers.image.repository in (allowed_kube_namespace_image_list))
 
 # Detect any new pod created in the kube-system namespace
 - rule: Pod Created in Kube Namespace
   desc: Detect any attempt to create a pod in the kube-system or kube-public namespaces
-  condition: kevt and pod and kcreate and ka.target.namespace in (kube-system, kube-public) and not trusted_pod
+  condition: kevt and pod and kcreate and ka.target.namespace in (kube-system, kube-public) and not allowed_kube_namespace_pods
   output: Pod created in kube namespace (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace images=%ka.req.pod.containers.image)
   priority: WARNING
   source: k8s_audit
