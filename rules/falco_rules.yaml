@@ -746,6 +746,13 @@
 - macro: runuser_reading_pam
   condition: (proc.name=runuser and fd.directory=/etc/pam.d)
 
+# CIS Linux Benchmark program
+- macro: linux_bench_reading_etc_shadow
+  condition: ((proc.aname[2]=linux-bench and
+               proc.name in (awk,cut,grep)) and
+              (fd.name=/etc/shadow or
+               fd.directory=/etc/pam.d))
+
 - macro: parent_ucf_writing_conf
   condition: (proc.pname=ucf and proc.aname[2]=frontend)
 
@@ -1488,6 +1495,7 @@
     and not veritas_driver_script
     and not perl_running_centrifydc
     and not runuser_reading_pam
+    and not linux_bench_reading_etc_shadow
     and not user_known_read_sensitive_files_activities
     and not user_read_sensitive_file_containers
   output: >
