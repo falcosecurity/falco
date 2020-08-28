@@ -1183,7 +1183,10 @@
 
 - macro: calico_writing_conf
   condition: >
-    (proc.name = calico-node and fd.name startswith /etc/calico)
+    (((proc.name = calico-node) or
+      (container.image.repository=gcr.io/projectcalico-org/node and proc.name in (start_runit, cp)) or
+      (container.image.repository=gcr.io/projectcalico-org/cni and proc.name=sed))
+     and fd.name startswith /etc/calico)
 
 - macro: prometheus_conf_writing_conf
   condition: (proc.name=prometheus-conf and fd.name startswith /etc/prometheus/config_out)
