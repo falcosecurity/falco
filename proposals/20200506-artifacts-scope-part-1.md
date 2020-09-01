@@ -4,7 +4,7 @@ The **Falco Artifact Scope** proposal is divided in two parts:
 1. the Part 1 - *this document*: the State of Art of Falco artifacts
 2. the [Part 2](./20200506-artifacts-scope-part-2.md): the intended state moving forward
 
-## Summary 
+## Summary
 
 As a project we would like to support the following artifacts.
 
@@ -16,7 +16,7 @@ Inspired by many previous issues and many of the weekly community calls.
 
 ## Terms
 
-**falco** 
+**falco**
 
 *The Falco binary*
 
@@ -30,12 +30,12 @@ Inspired by many previous issues and many of the weekly community calls.
 
 **package**
 
-*An installable artifact that is operating system specific. All packages MUST be hosted on bintray.*
+*An installable artifact that is operating system specific. All packages MUST be hosted on [bintray](https://bintray.com/falcosecurity).*
 
 **image**
 
 *OCI compliant container image hosted on dockerhub with tags for every release and the current master branch.*
- 
+
 
 # Packages
 
@@ -52,11 +52,11 @@ List of currently official container images (for X86 64bits only):
 
 | Name | Directory | Description |
 |---|---|---|
-| [falcosecurity/falco:latest](https://hub.docker.com/repository/docker/falcosecurity/falco), [falcosecurity/falco:_tag_](https://hub.docker.com/repository/docker/falcosecurity/falco), [falcosecurity/falco:master](https://hub.docker.com/repository/docker/falcosecurity/falco) | docker/stable | Falco (DEB built from git tag or from the master) with all the building toolchain. | 
-| [falcosecurity/falco:latest-slim](https://hub.docker.com/repository/docker/falcosecurity/falco), [falcosecurity/falco:_tag_-slim](https://hub.docker.com/repository/docker/falcosecurity/falco),[falcosecurity/falco:master-slim](https://hub.docker.com/repository/docker/falcosecurity/falco) | docker/slim | Falco (DEB build from git tag or from the master) without the building toolchain. | 
-| [falcosecurity/falco-driver-loader:latest](https://hub.docker.com/repository/docker/falcosecurity/falco-driver-loader), [falcosecurity/falco-driver-loader:_tag_](https://hub.docker.com/repository/docker/falcosecurity/falco-driver-loader), [falcosecurity/falco-driver-loader:master](https://hub.docker.com/repository/docker/falcosecurity/falco-driver-loader) | docker/driver-loader | `falco-driver-loader` as entrypoint with the building toolchain. | 
-| [falcosecurity/falco-builder:latest](https://hub.docker.com/repository/docker/falcosecurity/falco-builder) | docker/builder | The complete build tool chain for compiling Falco from source. See [the documentation](https://falco.org/docs/source/) for more details on building from source. Used to build Falco (CI). | 
-| [falcosecurity/falco-tester:latest](https://hub.docker.com/repository/docker/falcosecurity/falco-tester) | docker/tester | Container image for running the Falco test suite. Used to run Falco integration tests (CI). | 
+| [falcosecurity/falco:latest](https://hub.docker.com/repository/docker/falcosecurity/falco), [falcosecurity/falco:_tag_](https://hub.docker.com/repository/docker/falcosecurity/falco), [falcosecurity/falco:master](https://hub.docker.com/repository/docker/falcosecurity/falco) | docker/stable | Falco (DEB built from git tag or from the master) with all the building toolchain. |
+| [falcosecurity/falco:latest-slim](https://hub.docker.com/repository/docker/falcosecurity/falco), [falcosecurity/falco:_tag_-slim](https://hub.docker.com/repository/docker/falcosecurity/falco),[falcosecurity/falco:master-slim](https://hub.docker.com/repository/docker/falcosecurity/falco) | docker/slim | Falco (DEB build from git tag or from the master) without the building toolchain. |
+| [falcosecurity/falco-driver-loader:latest](https://hub.docker.com/repository/docker/falcosecurity/falco-driver-loader), [falcosecurity/falco-driver-loader:_tag_](https://hub.docker.com/repository/docker/falcosecurity/falco-driver-loader), [falcosecurity/falco-driver-loader:master](https://hub.docker.com/repository/docker/falcosecurity/falco-driver-loader) | docker/driver-loader | `falco-driver-loader` as entrypoint with the building toolchain. |
+| [falcosecurity/falco-builder:latest](https://hub.docker.com/repository/docker/falcosecurity/falco-builder) | docker/builder | The complete build tool chain for compiling Falco from source. See [the documentation](https://falco.org/docs/source/) for more details on building from source. Used to build Falco (CI). |
+| [falcosecurity/falco-tester:latest](https://hub.docker.com/repository/docker/falcosecurity/falco-tester) | docker/tester | Container image for running the Falco test suite. Used to run Falco integration tests (CI). |
 | _to not be published_ | docker/local | Built on-the-fly and used by falco-tester. |
 
 **Note**: `falco-builder`, `falco-tester` (and the `docker/local` image which it's built on the fly by the `falco-tester` one) are not integrated into the release process because they are development and CI tools that need to be manually pushed only when updated.
@@ -76,7 +76,7 @@ This new [contrib](https://github.com/falcosecurity/contrib) repository will be 
 
 ### repository
 
-"_Incubating level_" projects such as [falco-exporter](https://github.com/falco-exporter) can be promoted from `contrib` to their own repository. 
+"_Incubating level_" projects such as [falco-exporter](https://github.com/falco-exporter) can be promoted from `contrib` to their own repository.
 
 This is done as needed, and can best be measured by the need to cut a release and use the GitHub release features. Again, this is at the discretion of the Falco open source community.
 
@@ -92,7 +92,7 @@ The *Part 1* is mainly intended as a cleanup process.
 For each item not listed above, ask if it needs to be moved or deleted.
 After the cleanup process, all items will match the *Part 1* of this proposal.
 
-    
+
 ### Action Items
 
 Here are SOME of the items that would need to be done, for example:
