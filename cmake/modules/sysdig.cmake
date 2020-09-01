@@ -23,10 +23,6 @@ if(USE_BUNDLED_DEPS)
   set(USE_BUNDLED_JQ ON)
 endif()
 
-if(MINIMAL_BUILD)
-  set(MUSL_OPTIMIZED_BUILD ON)
-endif()
-
 file(MAKE_DIRECTORY ${SYSDIG_CMAKE_WORKING_DIR})
 
 # The sysdig git reference (branch name, commit hash, or tag) To update sysdig version for the next release, change the
@@ -34,7 +30,7 @@ file(MAKE_DIRECTORY ${SYSDIG_CMAKE_WORKING_DIR})
 # -DSYSDIG_VERSION=dev ..`
 if(NOT SYSDIG_VERSION)
   set(SYSDIG_VERSION "build/stripped") # todo(leogr): set the correct version and checksum before merging
-  set(SYSDIG_CHECKSUM "SHA256=653a2e665b3a0ac2cafac07debaa779dc65113f9308f4e4e4ff3d5c9582836d3")
+  set(SYSDIG_CHECKSUM "SHA256=c6df1bf9e9846bd44adbb74861d2479ac5ba59745faf33d650fd9ece24445d27")
 endif()
 set(PROBE_VERSION "${SYSDIG_VERSION}")
 
@@ -61,6 +57,9 @@ add_subdirectory("${SYSDIG_SOURCE_DIR}/driver" "${PROJECT_BINARY_DIR}/driver")
 # Add libscap directory
 add_definitions(-D_GNU_SOURCE)
 add_definitions(-DHAS_CAPTURE)
+if(MUSL_OPTIMIZED_BUILD)
+  add_definitions(-DMUSL_OPTIMIZED)
+endif()
 add_subdirectory("${SYSDIG_SOURCE_DIR}/userspace/libscap" "${PROJECT_BINARY_DIR}/userspace/libscap")
 
 # Add libsinsp directory

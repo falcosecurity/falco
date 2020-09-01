@@ -17,6 +17,7 @@ project(falco)
 option(USE_BUNDLED_DEPS "Bundle hard to find dependencies into the Falco binary" OFF)
 option(BUILD_WARNINGS_AS_ERRORS "Enable building with -Wextra -Werror flags" OFF)
 option(MINIMAL_BUILD "Build a minimal version of Falco, containing only the engine and basic input/output" OFF)
+option(MUSL_OPTIMIZED_BUILD "Enable if you want a musl optimized build" OFF)
 
 # Elapsed time
 # set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CMAKE_COMMAND} -E time") # TODO(fntlnz, leodido): add a flag to enable this
@@ -55,7 +56,11 @@ if(MINIMAL_BUILD)
   set(MINIMAL_BUILD_FLAGS "-DMINIMAL_BUILD")
 endif()
 
-set(CMAKE_COMMON_FLAGS "-Wall -ggdb ${DRAIOS_FEATURE_FLAGS} ${MINIMAL_BUILD_FLAGS}")
+if(MUSL_OPTIMIZED_BUILD)
+  set(MUSL_FLAGS "-static -Os -D__NEED_struct_timespec -D__NEED_time_t")
+endif()
+
+set(CMAKE_COMMON_FLAGS "-Wall -ggdb ${DRAIOS_FEATURE_FLAGS} ${MINIMAL_BUILD_FLAGS} ${MUSL_FLAGS}")
 
 if(BUILD_WARNINGS_AS_ERRORS)
   set(CMAKE_SUPPRESSED_WARNINGS
