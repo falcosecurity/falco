@@ -46,8 +46,8 @@ Every time the `driverkit/config` directory on the master branch has some change
 
 The driver versions we ship prebuilt drivers for are:
 
-- the driver version associated with the last stable Falco version ([see here](https://github.com/falcosecurity/falco/blob/c4b7f17271d1a4ca533b2e672ecaaea5289ccdc5/cmake/modules/sysdig.cmake#L29))
-- the driver version associated with the current development Falco version - ie., the one on [master](https://github.com/falcosecurity/falco/blob/master/cmake/modules/sysdig.cmake#L30)
+- the driver version associated with the last Falco stable version ([see here](https://github.com/falcosecurity/falco/blob/c4b7f17271d1a4ca533b2e672ecaaea5289ccdc5/cmake/modules/sysdig.cmake#L29))
+- the driver version associated with the penultimate Falco stable version
 
 The prebuilt drivers get published into [this](https://bintray.com/falcosecurity/driver) generic artifacts repository.
 
