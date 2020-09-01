@@ -48,16 +48,15 @@ This means that the [rpm-dev](https://bintray.com/falcosecurity/rpm-dev) reposit
 
 This document proposes to retain all the stable releases.
 
-Which means that all the Falco packages present in the Falco stable release repositories will be kept.
-
+This means that all the Falco packages present in the Falco stable release repositories will be kept.
 
 The [bin](https://bintray.com/falcosecurity/bin) repository contains a Falco tarball package for every release.
 This means it grows in space of ~50MB each month.
 
-the [deb](https://bintray.com/falcosecurity/deb) repository contains a Falco DEB package for every release.
+The [deb](https://bintray.com/falcosecurity/deb) repository contains a Falco DEB package for every release.
 This means it grows in space of ~5MB each month.
 
-the [rpm](https://bintray.com/falcosecurity/rpm) repository contains a Falco RPM package for every release.
+The [rpm](https://bintray.com/falcosecurity/rpm) repository contains a Falco RPM package for every release.
 This means it grows in space of ~4.3MB each month.
 
 ### Considerations
@@ -66,11 +65,38 @@ Assuming the size of the packages does not surpass the numbers listed in the abo
 
 Assuming 12 stable releases at year, at the current size of packages, the **Falco stable releases** will take approx. 720MB of storage space every year.
 
+### Implementation
+
+The Falco CI will have a new CI job - called `cleanup/packages-dev` - responsible for removing the **Falco development releases** depending on the above plan.
+
+This job will be triggered after the `publish/packages-dev` completed successfully.
+
 ## Drivers
 
+As explained in the [Artifacts Storage](./20200818-artifacts-storage) proposal, we build the drivers for the **last two driver versions** associated with **latest Falco stable releases**.
+Then, we store those drivers into a [generic bintray repository](https://bintray.com/falcosecurity/driver) from which the installation process automatically downloads them, if suitable.
 
-Archive ...
+This document proposes to implement a cleanup mechanism that deletes all the other driver versions available.
 
+At the moment of writing, considering only the last two driver versions (**ae104eb**, **85c8895**) associated with the latest Falco stable releases, we ship ~340 eBPF drivers, each accounting for ~3.1MB of storage space, and 1512 kernel modules (~3.1MB size each, too).
 
+Thus, we obtain an estimate of approx. 2.875GB for **each** driver version.
 
-A scheduled job will be added to the continuous integration system of the [test-infra](https://github.com/falcosecurity/test-infra) repository.
+This document proposes to only store the last two driver versions associates with the latest Falco stable releases. And deleting the other ones.
+
+This way, assuming the number of prebuilt drivers does not skyrocket, we can reasonably estimate the storage space used by prebuilt drivers to be around 6GB.
+
+Notice that, in case a Falco stable release will not depend on a new driver version, this means the last two driver versions will, in this case, cover more than the two Falco stable releases.
+
+### Archivation
+
+Since the process of building drivers is time and resource consuming, this document also proposes to move the driver versions in other storage facilities.
+
+The candidate is an AWS S3 bucket responsible for holding the deleted driver version files.
+
+### Implementation
+
+The [test-infra](https://github.com/falcosecurity/test-infra) CI, specifically its part dedicated to run the **Drivers Build Grid** that runs every time it detects changes into the `driverkit` directory of the [test-infra](https://github.com/falcosecurity/test-infra) repository,
+will have a new job - called `drivers/cleanup` - responsible for removing all the Falco driver versions except the last two.
+
+This job will be triggered after the `drivers/publish` completed successfully on the master branch.
