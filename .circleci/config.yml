@@ -230,7 +230,7 @@ jobs:
   # Execute integration tests based on the build results coming from the "build/centos7" job
   "tests/integration":
     docker:
-      - image: falcosecurity/falco-tester:latest
+      - image: falcosecurity/falco-tester:feat-minimal-build # todo(fntlnz): change this to latest before merge, but first, update the image on docker hub
         environment:
           SOURCE_DIR: "/source"
           BUILD_DIR: "/build"
@@ -244,7 +244,7 @@ jobs:
           command: /usr/bin/entrypoint test
   "tests/integration-static":
     docker:
-      - image: falcosecurity/falco-tester:latest
+      - image: falcosecurity/falco-tester:feat-minimal-build # todo(fntlnz): change this to latest before merge, but first, update the image on docker hub
         environment:
           SOURCE_DIR: "/source-static"
           BUILD_DIR: "/build-static"
