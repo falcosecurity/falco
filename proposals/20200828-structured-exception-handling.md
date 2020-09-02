@@ -84,7 +84,7 @@ If someone wanted to add additional exceptions to this rule, they could add the 
   append: true
 
 - macro: user_known_update_package_registry
-  condition: (and not proc.name in (npm)
+  condition: (proc.name in (npm))
   append: false
 ```
 
@@ -108,7 +108,7 @@ condition: or fd.name=/tmp/baz
 append: true
 ```
 
-Results in unintended behavior--it will match any fd related event where the name is /tmp/baz, when the intent was probably to add /tmp/baz as an additional opened file.
+Results in unintended behavior. It will match any fd related event where the name is /tmp/baz, when the intent was probably to add /tmp/baz as an additional opened file.
 
 * A good convention many rules use is to have a clause "and not user_known_xxxx" built into the condition field. However, it's not in all rules and its use is a bit haphazard.
 
@@ -146,7 +146,7 @@ To address some of these problems, we will add the notion of Exceptions as top l
    - container_writer: [container.image.repository, fd.directory]
 ```
 
-This rule defines two kinds of exeptions: one called proc_writer with a combination of proc.name and fd.directory, and a second called container_writer with a combination of container.image.repository and fd.directory.
+This rule defines two kinds of exceptions: one called proc_writer with a combination of proc.name and fd.directory, and a second called container_writer with a combination of container.image.repository and fd.directory. The specific strings "proc_writer" and "container_writer" are arbitrary strings and don't have a special meaning to the rules file parser. They're only used to link together the list of field names with the list of field values that exist in the exception object.
 
 Notice that exceptions are defined as a part of the rule. This is important because the author of the rule defines what construes a valid exception to the rule. In this case, an exception can consist of a process and file directory (actor and target), but not a process name only (too broad).
 
@@ -165,6 +165,8 @@ We'll add a new object exception that defines exceptions to a rule:
 The name of the exception links it to the rule.
 
 A rule exception applies if for a given event, the fields in a rule.exception match all of the values in some exception.item. For example, if a program `apk` writes to a file below `/usr/lib/alpine`, the rule will not trigger, even if the condition is met.
+
+Note that the only operator is "=" (equality). Although general rules conditions support a wide variety of operators including "pmatch", "startswith", "endswith", etc., the only supported operator in exceptions is equality.
 
 Append will be supported for exception objects. If append: is true, the items in the second definition will be added to the items in the earlier definition. For example, adding:
 
@@ -200,14 +202,16 @@ Adding Exception objects as described here has several advantages:
 
 ## Backwards compatibility
 
+To take advantage of these new features, users will need to upgrade Falco to a version that supports exception objects and exception keys in rules. For the most part, however, the rules file structure is unchanged.
+
 This approach does not remove the ability to append to exceptions nor the existing use of user_xxx macros to define exceptions to rules. It only provides an additional way to express exceptions. Hopefully, we can migrate existing exceptions to use this approach, but there isn't any plan to make wholesale rules changes as a part of this.
 
-This approach is for the most part backwards compatible with older falco releases. To implement exceptions, we'll add a preprocessing element to rule parsing. The main falco engine is unchanged.
+This approach is for the most part backwards compatible with older Falco releases. To implement exceptions, we'll add a preprocessing element to rule parsing. The main Falco engine is unchanged.
 
-However, there are a few changes we'll have to make to falco rules file parsing:
+However, there are a few changes we'll have to make to Falco rules file parsing:
 
-* Currently, falco will reject files with top level `-exception` objects. We'll probably want to make a one-time change to Falco to allow unknown top level objects.
-* Similarly, falco will reject rule objects with exception keys. We'll also probably want to change falco to allow unknown keys inside rule/macro/list/exception objects.
+* Currently, Falco will reject files containing anything other than rule/macro/list top-level objects. As a result, `exception` objects would be rejected. We'll probably want to make a one-time change to Falco to allow arbitrary top level objects.
+* Similarly, Falco will reject rule objects with exception keys. We'll also probably want to change Falco to allow unknown keys inside rule/macro/list/exception objects.
 
 
 
