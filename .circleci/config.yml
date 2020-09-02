@@ -1,5 +1,45 @@
 version: 2
 jobs:
+  # Build a statically linked Falco release binary using musl
+  # This build is 100% static, there are no host dependencies
+  "build/musl":
+    docker:
+      - image: alpine:3.12
+    steps:
+      - checkout:
+          path: /source-static/falco
+      - run:
+          name: Update base image
+          command: apk update
+      - run:
+          name: Install build dependencies
+          command: apk add g++ gcc cmake cmake make  ncurses-dev git bash perl linux-headers autoconf  automake m4 libtool elfutils-dev libelf-static patch binutils
+      - run:
+          name: Prepare project
+          command: |
+            mkdir -p /build-static/release
+            cd /build-static/release
+            cmake -DCPACK_GENERATOR=TGZ -DBUILD_BPF=Off -DBUILD_DRIVER=Off -DCMAKE_BUILD_TYPE=Release -DUSE_BUNDLED_DEPS=On -DMUSL_OPTIMIZED_BUILD=On /source-static/falco
+      - run:
+          name: Build
+          command: |
+            cd /build-static/release
+            make -j4 all
+      - run:
+          name: Package
+          command: |
+            cd /build-static/release
+            make -j4 package
+      - run:
+          name: Run unit tests
+          command: |
+            cd /build-static/release
+            make tests
+      - persist_to_workspace:
+          root: /
+          paths:
+            - build-static/release
+            - source-static
   # Build using ubuntu LTS
   # This build is dynamic, most dependencies are taken from the OS
   "build/ubuntu-focal":
@@ -202,6 +242,20 @@ jobs:
       - run:
           name: Execute integration tests
           command: /usr/bin/entrypoint test
+  "tests/integration-static":
+    docker:
+      - image: falcosecurity/falco-tester:latest
+        environment:
+          SOURCE_DIR: "/source-static"
+          BUILD_DIR: "/build-static"
+          BUILD_TYPE: "release"
+    steps:
+      - setup_remote_docker
+      - attach_workspace:
+          at: /
+      - run:
+          name: Execute integration tests
+          command: /usr/bin/entrypoint test
   "tests/driver-loader/integration":
     machine:
       image: ubuntu-1604:202004-01
@@ -271,6 +325,11 @@ jobs:
           command: |
             FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
             jfrog bt u /build/release/falco-${FALCO_VERSION}-x86_64.tar.gz falcosecurity/bin-dev/falco/${FALCO_VERSION} x86_64/ --user poiana --key ${BINTRAY_SECRET} --publish --override
+      - run:
+          name: Publish tgz-static-dev
+          command: |
+            FALCO_VERSION=$(cat /build-musl/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
+            jfrog bt u /build-musl/release/falco-${FALCO_VERSION}-x86_64.tar.gz falcosecurity/bin-dev/falco/${FALCO_VERSION} x86_64/ falco-static-${FALCO_VERSION}-x86_64.tar.gz --user poiana --key ${BINTRAY_SECRET} --publish --override
   # Clenup the Falco development release packages
   "cleanup/packages-dev":
     docker:
@@ -394,6 +453,7 @@ workflows:
   version: 2
   build_and_test:
     jobs:
+      - "build/musl"
       - "build/ubuntu-focal"
       - "build/ubuntu-focal-debug"
       - "build/ubuntu-bionic"
@@ -403,6 +463,9 @@ workflows:
       - "tests/integration":
           requires:
             - "build/centos7"
+      - "tests/integration-static":
+          requires:
+            - "build/musl"
       - "tests/driver-loader/integration":
           requires:
             - "build/centos7"
@@ -424,6 +487,7 @@ workflows:
               only: master
           requires:
             - "rpm/sign"
+            - "tests/integration-static"
       - "cleanup/packages-dev":
           context: falco
           filters:
