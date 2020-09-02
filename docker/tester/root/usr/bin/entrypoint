@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 
-set -eu -o pipefail
+set -u -o pipefail
 
-SOURCE_DIR=/source
-BUILD_DIR=/build
+BUILD_DIR=${BUILD_DIR:-/build}
+SOURCE_DIR=${SOURCE_DIR:-/source}
+
 CMD=${1:-test}
 shift
 
