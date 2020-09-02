@@ -271,6 +271,28 @@ jobs:
           command: |
             FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
             jfrog bt u /build/release/falco-${FALCO_VERSION}-x86_64.tar.gz falcosecurity/bin-dev/falco/${FALCO_VERSION} x86_64/ --user poiana --key ${BINTRAY_SECRET} --publish --override
+  # Clenup the Falco development release packages
+  "cleanup/packages-dev":
+    docker:
+      - image: docker.bintray.io/jfrog/jfrog-cli-go:latest
+    steps:
+      - run:
+          name: Prepare env
+          command: |
+            apk add --no-cache --update
+            apk add curl jq
+      - run:
+          name: Only keep the 10 most recet Falco development release tarballs
+          command: |
+            .circleci/cleanup -p ${BINTRAY_SECRET} -r bin-dev
+      - run:
+          name: Only keep the 50 most recent Falco development release RPMs
+          command: |
+            .circleci/cleanup -p ${BINTRAY_SECRET} -r rpm-dev
+      - run:
+          name: Only keep the 50 most recent Falco development release DEBs
+          command: |
+            .circleci/cleanup -p ${BINTRAY_SECRET} -r deb-dev
   # Publish docker packages
   "publish/docker-dev":
     docker:
@@ -402,6 +424,15 @@ workflows:
               only: master
           requires:
             - "rpm/sign"
+      - "cleanup/packages-dev":
+          context: falco
+          filters:
+            tags:
+              ignore: /.*/
+            branches:
+              only: master
+          requires:
+            - "publish/packages-dev"
       - "publish/docker-dev":
           context: falco
           filters:
