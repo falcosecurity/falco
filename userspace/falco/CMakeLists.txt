@@ -141,6 +141,15 @@ add_custom_command(
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   COMMENT "Comparing engine fields checksum in falco_engine.h to actual fields")
 
+# strip the Falco binary when releasing using musl
+if(MUSL_OPTIMIZED_BUILD AND CMAKE_BUILD_TYPE STREQUAL "release")
+  add_custom_command(
+    TARGET falco
+    POST_BUILD
+    COMMAND ${CMAKE_STRIP} --strip-unneeded falco
+    COMMENT "Strip the Falco binary when releasing the musl build")
+endif()
+
 # add_custom_target(verify_engine_fields DEPENDS verify_engine_fields.sh falco_engine.h)
 
 # add_dependencies(verify_engine_fields falco)
