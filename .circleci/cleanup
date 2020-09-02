@@ -16,6 +16,9 @@ get_versions() {
     IFS=$'\n' read -r -d '' -a all < <(curl -s --header "Content-Type: application/json" "https://api.bintray.com/packages/falcosecurity/$1/falco" | jq -r '.versions | .[]' | tail -n "+$2")
 }
 
+# Remove all the versions (${all[@]} array).
+#
+# $1: repository containing the versions.
 rem_versions() {
     for i in "${!all[@]}";
     do
@@ -54,5 +57,5 @@ if [[ "${repo}" == "bin-dev" ]]; then
 fi
 
 get_versions "${repo}" ${skip}
-echo "# versions: ${#all[@]}"
+echo "number of versions to delete: ${#all[@]}"
 rem_versions "${repo}"
