@@ -249,6 +249,7 @@ jobs:
           SOURCE_DIR: "/source-static"
           BUILD_DIR: "/build-static"
           BUILD_TYPE: "release"
+          SKIP_PACKAGES_TESTS: "true"
     steps:
       - setup_remote_docker
       - attach_workspace:
