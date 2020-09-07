@@ -413,6 +413,11 @@ jobs:
           command: |
             FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
             jfrog bt u /build/release/falco-${FALCO_VERSION}-x86_64.tar.gz falcosecurity/bin/falco/${FALCO_VERSION} x86_64/ --user poiana --key ${BINTRAY_SECRET} --publish --override
+      - run:
+          name: Publish tgz-static
+          command: |
+            FALCO_VERSION=$(cat /build-musl/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
+            jfrog bt u /build-musl/release/falco-${FALCO_VERSION}-x86_64.tar.gz falcosecurity/bin/falco/${FALCO_VERSION} x86_64/ falco-static-${FALCO_VERSION}-x86_64.tar.gz --user poiana --key ${BINTRAY_SECRET} --publish --override
   # Publish docker packages
   "publish/docker":
     docker:
@@ -510,6 +515,7 @@ workflows:
             - "tests/driver-loader/integration"
   release:
     jobs:
+      - "build/musl"
       - "build/centos7":
           filters:
             tags:
@@ -528,6 +534,7 @@ workflows:
       - "publish/packages":
           context: falco
           requires:
+            - "build/musl"
             - "rpm/sign"
           filters:
             tags:
