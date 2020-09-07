@@ -55,7 +55,7 @@ You can also visualize the full list of prebuilt drivers by driver version visit
 
 ### Notice
 
-The generation of new prebuilt drivers takes usually place with a frequency of 1-2 weeks.
+The generation of new prebuilt drivers takes usually place with a frequency of 1-2 weeks, on a **best-effort** basis.
 
 Thus, it can happen the list of available prebuilt drivers does not yet contain the driver version currently on Falco master.
 
