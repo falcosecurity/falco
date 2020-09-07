@@ -282,7 +282,7 @@ jobs:
             apk add --no-cache --update
             apk add curl jq
       - run:
-          name: Only keep the 10 most recet Falco development release tarballs
+          name: Only keep the 10 most recent Falco development release tarballs
           command: |
             .circleci/cleanup -p ${BINTRAY_SECRET} -r bin-dev
       - run:
