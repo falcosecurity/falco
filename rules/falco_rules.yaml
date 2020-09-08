@@ -1601,7 +1601,12 @@
 
 - rule: Mkdir binary dirs
   desc: an attempt to create a directory below a set of binary directories.
-  condition: mkdir and bin_dir_mkdir and not package_mgmt_procs and not user_known_mkdir_bin_dir_activities
+  condition: >
+    mkdir
+    and bin_dir_mkdir
+    and not package_mgmt_procs
+    and not user_known_mkdir_bin_dir_activities
+    and not exe_running_docker_save
   output: >
     Directory below known binary directory created (user=%user.name user_loginuid=%user.loginuid
     command=%proc.cmdline directory=%evt.arg.path container_id=%container.id image=%container.image.repository)
