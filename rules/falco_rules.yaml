@@ -2730,6 +2730,7 @@
      (open_write and evt.arg.flags contains "O_CREAT" and fd.name contains "/." and not fd.name pmatch (exclude_hidden_directories))) and
     consider_hidden_file_creation and
     not user_known_create_hidden_file_activities
+    and not exe_running_docker_save
   output: >
     Hidden file or directory created (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline
     file=%fd.name newpath=%evt.arg.newpath container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
