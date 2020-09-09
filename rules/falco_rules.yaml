@@ -3010,6 +3010,12 @@
   output: Drift detected (open+create), new executable created in a container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline filename=%evt.arg.filename name=%evt.arg.name mode=%evt.arg.mode event=%evt.type)
   priority: ERROR
 
+# find when a new kernel module is injected
+- rule: Linux Kernel Module injection detected
+  desc: It is very uncommon for kernel modules to be injected on a running server, typically used by rookits implementing kernel hooking obfuscations. 
+  condition: evt.type=execve and proc.name=insmod
+  output: Linux Kernel Module injection using insmod detected (user=%user.name parent_process=%proc.pname module=%proc.args)
+  priority: WARNING
 
 # Application rules have moved to application_rules.yaml. Please look
 # there if you want to enable them by adding to
