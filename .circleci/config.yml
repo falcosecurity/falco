@@ -13,7 +13,7 @@ jobs:
           command: apk update
       - run:
           name: Install build dependencies
-          command: apk add g++ gcc cmake cmake make  ncurses-dev git bash perl linux-headers autoconf  automake m4 libtool elfutils-dev libelf-static patch binutils
+          command: apk add g++ gcc cmake cmake make ncurses-dev git bash perl linux-headers autoconf automake m4 libtool elfutils-dev libelf-static patch binutils
       - run:
           name: Prepare project
           command: |
@@ -40,6 +40,38 @@ jobs:
           paths:
             - build-static/release
             - source-static
+  # Build the minimal Falco
+  # This build only contains the Falco engine and the basic input/output.
+  "build/minimal":
+    docker:
+      - image: ubuntu:focal
+    steps:
+      - checkout
+      - run:
+          name: Update base image
+          command: apt update -y
+      - run:
+          name: Install dependencies
+          command: DEBIAN_FRONTEND=noninteractive apt install libjq-dev libncurses-dev libyaml-cpp-dev libelf-dev cmake build-essential git -y
+      - run:
+          name: Prepare project
+          command: |
+            mkdir build-minimal
+            pushd build-minimal
+            cmake -DMINIMAL_BUILD=On -DBUILD_BPF=Off -DBUILD_DRIVER=Off -DCMAKE_BUILD_TYPE=Release ..
+            popd
+      - run:
+          name: Build
+          command: |
+            pushd build-minimal
+            make -j4 all
+            popd
+      - run:
+          name: Run unit tests
+          command: |
+            pushd build-minimal
+            make tests
+            popd
   # Build using ubuntu LTS
   # This build is dynamic, most dependencies are taken from the OS
   "build/ubuntu-focal":
@@ -460,6 +492,7 @@ workflows:
   build_and_test:
     jobs:
       - "build/musl"
+      - "build/minimal"
       - "build/ubuntu-focal"
       - "build/ubuntu-focal-debug"
       - "build/ubuntu-bionic"
