@@ -3012,7 +3012,7 @@
 
 # find when a new kernel module is injected
 - rule: Linux Kernel Module injection detected
-  desc: It is very uncommon for kernel modules to be injected on a running server, typically used by rookits implementing kernel hooking obfuscations. 
+  desc: It is very uncommon for kernel modules to be injected in running production instances, used rookits to obfuscate their behavior via kernel hooking 
   condition: evt.type=execve and proc.name=insmod
   output: Linux Kernel Module injection using insmod detected (user=%user.name parent_process=%proc.pname module=%proc.args)
   priority: WARNING
