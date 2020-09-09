@@ -515,7 +515,12 @@ workflows:
             - "tests/driver-loader/integration"
   release:
     jobs:
-      - "build/musl"
+      - "build/musl":
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
       - "build/centos7":
           filters:
             tags:
