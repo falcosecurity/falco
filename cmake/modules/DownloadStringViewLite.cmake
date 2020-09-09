@@ -15,7 +15,7 @@ include(ExternalProject)
 
 set(STRING_VIEW_LITE_PREFIX ${CMAKE_BINARY_DIR}/string-view-lite-prefix)
 set(STRING_VIEW_LITE_INCLUDE ${STRING_VIEW_LITE_PREFIX}/include)
-message(STATUS "Found string-view-lite: include: ${STRING_VIEW_LITE_INCLUDE}")
+message(STATUS "Using bundled string-view-lite in ${STRING_VIEW_LITE_INCLUDE}")
 
 ExternalProject_Add(
   string-view-lite
