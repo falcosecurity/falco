@@ -72,7 +72,7 @@ else()
     ${CMAKE_CURRENT_BINARY_DIR}/outputs.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/schema.pb.cc)
 
-    add_dependencies(falco civetweb)   
+    add_dependencies(falco civetweb)
 endif()
 
 add_dependencies(falco string-view-lite)
@@ -135,11 +135,15 @@ endif()
 
 configure_file(config_falco.h.in config_falco.h)
 
-add_custom_command(
-  TARGET falco
-  COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/verify_engine_fields.sh ${CMAKE_SOURCE_DIR}
-  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-  COMMENT "Comparing engine fields checksum in falco_engine.h to actual fields")
+if(NOT MINIMAL_BUILD)
+  add_custom_command(
+    TARGET falco
+    COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/verify_engine_fields.sh ${CMAKE_SOURCE_DIR}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    COMMENT "Comparing engine fields checksum in falco_engine.h to actual fields")
+else()
+  MESSAGE(STATUS "Skipping engine fields checksum when building the minimal Falco.")
+endif()
 
 # strip the Falco binary when releasing using musl
 if(MUSL_OPTIMIZED_BUILD AND CMAKE_BUILD_TYPE STREQUAL "release")
@@ -149,10 +153,6 @@ if(MUSL_OPTIMIZED_BUILD AND CMAKE_BUILD_TYPE STREQUAL "release")
     COMMAND ${CMAKE_STRIP} --strip-unneeded falco
     COMMENT "Strip the Falco binary when releasing the musl build")
 endif()
-
-# add_custom_target(verify_engine_fields DEPENDS verify_engine_fields.sh falco_engine.h)
-
-# add_dependencies(verify_engine_fields falco)
 
 install(TARGETS falco DESTINATION ${FALCO_BIN_DIR})
 install(
