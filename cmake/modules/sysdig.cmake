@@ -30,7 +30,7 @@ file(MAKE_DIRECTORY ${SYSDIG_CMAKE_WORKING_DIR})
 # -DSYSDIG_VERSION=dev ..`
 if(NOT SYSDIG_VERSION)
   set(SYSDIG_VERSION "build/stripped") # todo(leogr): set the correct version and checksum before merging
-  set(SYSDIG_CHECKSUM "SHA256=9c7755ae7aaa221a3d17c1d98911c4c2cbdbd21317559d744e53bf63a2677a4b")
+  set(SYSDIG_CHECKSUM "SHA256=bd0eb18d80c3ac14e9fb1b7b72c8ad1605a3c6dbcff15a1f6d1824557f2b6e49")
 endif()
 set(PROBE_VERSION "${SYSDIG_VERSION}")
 
