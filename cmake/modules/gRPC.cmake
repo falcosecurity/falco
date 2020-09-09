@@ -98,7 +98,7 @@ else()
   set(ZLIB_LIB "${GRPC_LIBS_ABSOLUTE}/libz.a")
   # we tell gRPC to compile c-ares for us because when a gRPC package is not available, like on CentOS, it's very likely
   # that c-ares will be very outdated
-  set(CARES_INCLUDE "${GRPC_SRC}/third_party/cares/cares")
+  set(CARES_INCLUDE "${GRPC_SRC}/third_party/cares" "${GRPC_SRC}/third_party/cares/cares")
   set(CARES_LIB "${GRPC_LIBS_ABSOLUTE}/libares.a")
 
   message(STATUS "Using bundled gRPC in '${GRPC_SRC}'")
