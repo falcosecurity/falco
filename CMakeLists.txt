@@ -16,7 +16,7 @@ project(falco)
 
 option(USE_BUNDLED_DEPS "Bundle hard to find dependencies into the Falco binary" OFF)
 option(BUILD_WARNINGS_AS_ERRORS "Enable building with -Wextra -Werror flags" OFF)
-option(MINIMAL_BUILD "Build a minimal version of Falco, containing only the engine and basic input/output" OFF)
+option(MINIMAL_BUILD "Build a minimal version of Falco, containing only the engine and basic input/output (EXPERIMENTAL)" OFF)
 option(MUSL_OPTIMIZED_BUILD "Enable if you want a musl optimized build" OFF)
 
 # Elapsed time
