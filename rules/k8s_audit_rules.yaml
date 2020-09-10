@@ -49,7 +49,7 @@
     "kubernetes-admin",
     vertical_pod_autoscaler_users,
     cluster-autoscaler,
-    system:addon-manager
+    "system:addon-manager"
     ]
 
 - rule: Disallowed K8s User
