@@ -2619,6 +2619,7 @@
   desc: Detect shell history deletion
   condition: >
     (modify and (
+      not evt.arg.name startswith /var/lib/docker and (
       evt.arg.name contains "bash_history" or
       evt.arg.name contains "zsh_history" or
       evt.arg.name contains "fish_read_history" or
@@ -2630,12 +2631,13 @@
       evt.arg.path contains "bash_history" or
       evt.arg.path contains "zsh_history" or
       evt.arg.path contains "fish_read_history" or
-      evt.arg.path endswith "fish_history")) or
+      evt.arg.path endswith "fish_history"))) or
     (open_write and (
+      not fd.name startswith /var/lib/docker and (
       fd.name contains "bash_history" or
       fd.name contains "zsh_history" or
       fd.name contains "fish_read_history" or
-      fd.name endswith "fish_history") and evt.arg.flags contains "O_TRUNC")
+      fd.name endswith "fish_history")) and evt.arg.flags contains "O_TRUNC")
   output: >
     Shell history had been deleted or renamed (user=%user.name user_loginuid=%user.loginuid type=%evt.type command=%proc.cmdline fd.name=%fd.name name=%evt.arg.name path=%evt.arg.path oldpath=%evt.arg.oldpath %container.info)
   priority:
