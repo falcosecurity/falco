@@ -3014,7 +3014,7 @@
 - rule: Linux Kernel Module injection detected
   desc: It is very uncommon for kernel modules to be injected in running production instances, used rookits to obfuscate their behavior via kernel hooking 
   condition: evt.type=execve and proc.name=insmod
-  output: Linux Kernel Module injection using insmod detected (user=%user.name parent_process=%proc.pname module=%proc.args)
+  output: Linux Kernel Module injection using insmod detected (user=%user.name user_loginuid=%user.loginuid parent_process=%proc.pname module=%proc.args)
   priority: WARNING
 
 # Application rules have moved to application_rules.yaml. Please look
