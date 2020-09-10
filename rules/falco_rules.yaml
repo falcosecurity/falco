@@ -1929,7 +1929,7 @@
   condition: (user_trusted_containers or
               container.image.repository in (trusted_images) or
               container.image.repository in (falco_sensitive_mount_images) or
-              container.image.repository startswith quay.io/sysdig)
+              container.image.repository startswith quay.io/sysdig/)
 
 # These container images are allowed to run with hostnetwork=true
 - list: falco_hostnetwork_images
