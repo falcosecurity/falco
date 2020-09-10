@@ -37,8 +37,7 @@ if(DEFINED FALCO_COMPONENT)
     COMPONENT "${FALCO_COMPONENT}"
     DESTINATION "${FALCO_ETC_DIR}"
     RENAME "${FALCO_LOCAL_RULES_DEST_FILENAME}")
-
-  # Intentionally *not* installing application_rules.yaml. Not needed when falco is embedded in other projects.
+# Intentionally *not* installing application_rules.yaml. Not needed when falco is embedded in other projects.
 else()
   install(
     FILES falco_rules.yaml
@@ -57,8 +56,8 @@ else()
 
   install(
     FILES application_rules.yaml
-    DESTINATION "/etc/falco/rules.available"
+    DESTINATION "${FALCO_ETC_DIR}/rules.available"
     RENAME "${FALCO_APP_RULES_DEST_FILENAME}")
 
-  install(DIRECTORY DESTINATION "/etc/falco/rules.d")
+  install(DIRECTORY DESTINATION "${FALCO_ETC_DIR}/rules.d")
 endif()
