@@ -533,7 +533,9 @@ workflows:
             tags:
               ignore: /.*/
             branches:
-              only: fix/cleanup-dev-packages
+              only: master
+          requires:
+            - "publish/packages-dev"
       - "publish/docker-dev":
           context: falco
           filters:
