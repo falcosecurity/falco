@@ -371,6 +371,8 @@ jobs:
     docker:
       - image: docker.bintray.io/jfrog/jfrog-cli-go:latest
     steps:
+      - checkout:
+          path: /source/falco
       - run:
           name: Prepare env
           command: |
@@ -379,15 +381,15 @@ jobs:
       - run:
           name: Only keep the 10 most recent Falco development release tarballs
           command: |
-            .circleci/cleanup -p ${BINTRAY_SECRET} -r bin-dev
+            /source/falco/scripts/cleanup -p ${BINTRAY_SECRET} -r bin-dev
       - run:
           name: Only keep the 50 most recent Falco development release RPMs
           command: |
-            .circleci/cleanup -p ${BINTRAY_SECRET} -r rpm-dev
+            /source/falco/scripts/cleanup -p ${BINTRAY_SECRET} -r rpm-dev
       - run:
           name: Only keep the 50 most recent Falco development release DEBs
           command: |
-            .circleci/cleanup -p ${BINTRAY_SECRET} -r deb-dev
+            /source/falco/scripts/cleanup -p ${BINTRAY_SECRET} -r deb-dev
   # Publish docker packages
   "publish/docker-dev":
     docker:
@@ -531,9 +533,7 @@ workflows:
             tags:
               ignore: /.*/
             branches:
-              only: master
-          requires:
-            - "publish/packages-dev"
+              only: fix/cleanup-dev-packages
       - "publish/docker-dev":
           context: falco
           filters:
