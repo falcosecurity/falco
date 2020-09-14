@@ -57,7 +57,7 @@ if(MINIMAL_BUILD)
 endif()
 
 if(MUSL_OPTIMIZED_BUILD)
-  set(MUSL_FLAGS "-static -Os -D__NEED_struct_timespec -D__NEED_time_t")
+  set(MUSL_FLAGS "-static -Os")
 endif()
 
 set(CMAKE_COMMON_FLAGS "-Wall -ggdb ${DRAIOS_FEATURE_FLAGS} ${MINIMAL_BUILD_FLAGS} ${MUSL_FLAGS}")

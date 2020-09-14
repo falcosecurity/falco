@@ -29,8 +29,8 @@ file(MAKE_DIRECTORY ${SYSDIG_CMAKE_WORKING_DIR})
 # default below In case you want to test against another sysdig version just pass the variable - ie., `cmake
 # -DSYSDIG_VERSION=dev ..`
 if(NOT SYSDIG_VERSION)
-  set(SYSDIG_VERSION "73554b9c48b06612eb50494ee6fa5b779c57edc0") # todo(leogr): set the correct version and checksum before merging
-  set(SYSDIG_CHECKSUM "SHA256=c1c73498a834533dea61c979786a4ac3866743c17829d81aef209ddaa1b31538")
+  set(SYSDIG_VERSION "e0db61604dbe41765d3848a59f80f9dc61d6ffc2")
+  set(SYSDIG_CHECKSUM "SHA256=b6ffd89af2ff77270a24f900cfc40e7869183d1c7dbc289278683144228d4079")
 endif()
 set(PROBE_VERSION "${SYSDIG_VERSION}")
 
