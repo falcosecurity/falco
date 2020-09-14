@@ -1,109 +1,156 @@
-# Falco fargate support
+# Falco userspace launch support
 
 ## Summary
 
-This is a proposal on how to adress deployment of falco in a fargate environment.
+This is a proposal on how to adress deployment of falco in a userspace
+ environment.
 
-Fargate is a serverless runtime offered by AWS. It is used to run docker images without directly provisioning the 
-server resources required by the container itself.
-
-The intent is to propose a new project which allows us to wrap existing docker images when deploying to fargate.
+There has been a rise in popularity of serverless architectures that are 
+managed and make kernel instrumentation impossible. This makes it quite hard to
+monitor the runtimes. This project is about defining a patching language/definition
+that allows falco to be deployed alongside a container in userspace.
 
 ## Motivation 
 
-We want to run falco inside fargate containers.
+We want to run falco inside containers without access to kernel space.
 
-By creating a new project (Kilt) - that takes care of including misc binaries as wrappers we will be able to add 
-support for deploying to fargate in a flexible and extensible manner, paving the way to other OSS tools to do the same 
-(example: log capture implementations).
+By creating a new project (Kilt) - that defines a patching/deployment procedure 
+it is possible to deploy falco in different userspace environments (k8s, cloud 
+formation, etc) 
 
 ## Goals
 
-- Offer an easy mechanism to include falco in fargate containers
+- Offer a definition format for patching/deploying falco along user containers
+- Define a patching file for falco
+- Offer automation when using k8s
 - Offer automation when using cloud formation
-- Offer automation when using EKS
+
 
 ## Non-Goals
 
-- Automating deployments via API
-- Migrating existing task definitions to include fargate
+- Automating deployments done outside of goals
 
 ## Proposal
 
 There are 3 main deployment methods when using vanilla AWS: 
-- *ECS deployment via API (also UI)* - This deployment type is the hardest to automate. We will offer instructions on how to 
-alter the task definition to add falco. We can do a migration tool for existing task definitions but this is not the 
-goal of this project
-- *ECS deployment via Cloud Formation* - We will offer a cloud formation macro to automatically alter task definitions
-in a CFN template with `Transform:${MacroName}`
-- *EKS deployment* - We will offer an EKS Admission Controller Mutating Webhook that will alter pods adding falco
+
+- *Existing containers outside of K8S* - This deployment type is the hardest to automate. We 
+will offer instructions on how to alter the containers to add falco. We can do 
+a migration tool for existing containers but this is not the goal of this
+ project. Adding `patch {}` instructions to the file actually offers a way
+towards offering this functionality as well
+
+- *K8S* - We will offer a K8S Admission Controller Mutating Webhook that will 
+alter pods adding falco according to patching file
+
+- *K8S-exec* - We will offer a way to execute `patch {}` instructions against 
+specific pods
+
+- *Cloud Formation* - We will offer a cloud formation macro to automatically 
+alter fargate task definitions in a CFN template
+
 
 
 ### Components
-- *kilt-cfn* (PoC ready) - A lambda that patches aws task definitions and can be registered as a macro
-- *kilt-run* (WIP) - The new entrypoint of the docker container that we patch. It will exec falco and the original entry
-point
-- *kilt-eks* (TBD) - A service that listens for webhooks and alters pod resources as they are creating adding kilt-run 
-and falco
+- *kilt-cfn* (PoC ready) - A lambda that patches aws task definitions and can
+ be registered as a macro
+- *kilt-k8s-webhook* (TBD) - A service that listens for webhooks and alters pod
+ resources as they are created
+- *kilt-k8s-exec* - CLI to patch existing k8s pods.
 
 
-## Workflow
+## Workflow 
 ### Preparation
-We prepare and publish a docker image containing kilt-run and falco. The contents would be the following:
+We prepare and publish a docker image containing falco. The contents would be 
+the following:
+
 ```
-/kilt/run - kilt-run binary
-/kilt/init - an init replacement
-/kilt/run.cfg - configuration for launching software in background
-/kilt/falco - static binary for software to be launched
-/kilt/* - falco configs?
+/falco/falco - falco binary
+/falco/pdig - ptrace-based instrumentation
+/falco/* - falco configs?
 ```
-### Kilt Installation
+
+We also provide a file called `kilt.cfg` which looks like:
+
+```
+ deploy {
+    entrypoint: [ /falco/pdig ] ${original.entrypoint}
+    mount: [
+        {
+            image: "falco/falco:latest"
+            volume: /falco
+            entrypoint: /falco/waitforever
+        }
+    ]
+	environment:
+		FALCO_METADATA: "image="${original.image}",name="${original.name}
+}
+patch {
+    upload: [
+        {
+            url: "http://blah"
+            as: "/falco/falco"
+        }
+        {
+            file: "local/path/to/pdig"
+            as: "/falco/pdig"
+        }
+        {
+            payload: "base64payload" //or directly text
+            as: "/falco/falco.cfg"
+        }
+    ]
+    background_exec: [
+        /falco/pdig -p 1
+    ]
+}
+```
+
+### Cloud Formation User Workflow
 #### What the final user sees
-User downloads a cloud formation template distributed by us and executes it on the account. 
-User then adds the `Falco::FargateSupport` transform to the Cloud Formation templates that wants monitored and runs a 
-deploy.
+User downloads a cloud formation template distributed by us and executes it on
+ the AWS account. 
+User then adds the newly created macro as a transform to the Cloud Formation
+ templates that wants monitored and runs a deploy.
 
 #### Behind the scenes
-The CFN installer downloads the `kilt` binary and sets it up as an `AWS::Lambda`. A 
-[CFN Macro](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/template-macros.html) is registered for 
-`Falco::FargateSupport`
+The CFN installer downloads the `kilt` binary and sets it up as an
+ `AWS::Lambda`. A [CFN Macro](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/template-macros.html)
+ is registered with a name provided by the user.
 
 ### Kilt Transformation
+
 #### What the final user sees
 totally transparent
+
 #### Behind the scenes
-The kilt lambda is invoked on each stack creation/update referencing the macro. It finds all fargate task definitions
-in the template and applies the following patches:
-* add a container containing falco and kilt-run (from Preparation section) to the list of containers
-* alter all other containers in the task
-  * add VolumesFrom directive to mount `/kilt/` from the kilt container
-  * set kilt-run as entrypoint
-  * set original entrypoint + command as the command
-  * add metadata in environment variables (TBD)
+The kilt-cfn lambda is invoked on each stack creation/update referencing the
+ macro. It finds all fargate task definitions in the template and applies the 
+patches defined in `kilt.cfg`
   
 ### Runtime
 #### What the final user sees
 final user sees logs from falco in cloudwatch
 
 #### Behind the scenes
-`kilt-run` is invoked. It forks and execs falco as specified in `run.cfg`. The launch is wrapped with `/kilt/init` 
-binary which is actually [dumb-init](https://github.com/Yelp/dumb-init). 
+pdig is invoked. It forks and execs falco and original command.
 
 
 ## Design
 
 ### kilt-cfn
-A aws lambda written in go that receives fragments of template to transform. Does not need any permissions. See Kilt 
-Transformation for the alterations applied
+A aws lambda written in go that receives fragments of template to transform. 
+Does not need any permissions. Will execute instructions in the provided 
+`kilt.cfg` file. Can only interpret directives under `deploy`
 
-### kilt-run
-A static executable that reads `run.cfg` and `exec`s into init and falco.
+### kilt-k8s-webhook
+A webservice to be deployed to accept admission controller webhooks. 
+Applies only `deploy` directives. The service will run under k8s and will be 
+deployed via YAML.
 
-### kilt-eks
-A webservice to be deployed to accept admission controller webhooks
+### kilt-k8s-exec
+A CLI that uses local kubectl to instrument containers. Will only interpret 
+`patch` directives
 
 ## To be decided
-* how to deploy kilt-eks
-* config format - is TOML fine?
-* kilt-run single binary vs include `dumb-init`
-* other types of deployments?
+* config format - is [HOCON](https://github.com/lightbend/config/blob/master/HOCON.md) fine?
