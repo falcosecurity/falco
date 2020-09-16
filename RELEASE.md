@@ -10,7 +10,14 @@ Finally, on the proposed due date the assignees for the upcoming release proceed
 
 ## Pre-Release Checklist
 
-### 1. Release notes
+### 1. Drivers
+
+- Check whether the [driver version](https://github.com/falcosecurity/falco/blob/master/cmake/modules/sysdig.cmake#L32) has changed since the last stable release of Falco
+    - Verify the release notes (point 2) eventually communicate this change 
+- Update the [Drivers Build Grid](https://github.com/falcosecurity/test-infra/tree/master/driverkit) so to ship prebuilt drivers for it (**best-effort** task)
+
+### 2. Release notes
+
 - Let `YYYY-MM-DD` the day before of the [latest release](https://github.com/falcosecurity/falco/releases)
 - Check the release note block of every PR matching the `is:pr is:merged closed:>YYYY-MM-DD` [filter](https://github.com/falcosecurity/falco/pulls?q=is%3Apr+is%3Amerged+closed%3A%3EYYYY-MM-DD)
     - Ensure the release note block follows the [commit convention](https://github.com/falcosecurity/falco/blob/master/CONTRIBUTING.md#commit-convention), otherwise fix its content
@@ -18,11 +25,11 @@ Finally, on the proposed due date the assignees for the upcoming release proceed
 - Check issues without a milestone (using [is:pr is:merged no:milestone closed:>YYYY-MM-DD](https://github.com/falcosecurity/falco/pulls?q=is%3Apr+is%3Amerged+no%3Amilestone+closed%3A%3EYYYY-MM-DD) filter) and add them to the milestone currently undergoing release
 - Double-check that there are no more merged PRs without the target milestone assigned with the `is:pr is:merged no:milestone closed:>YYYY-MM-DD` [filters](https://github.com/falcosecurity/falco/pulls?q=is%3Apr+is%3Amerged+no%3Amilestone+closed%3A%3EYYYY-MM-DD), if any, fix them
 
-### 2. Milestones
+### 3. Milestones
 
 - Move the [tasks not completed](https://github.com/falcosecurity/falco/pulls?q=is%3Apr+is%3Aopen) to a new minor milestone
 
-### 3. Release PR
+### 4. Release PR
 
 - Double-check if any hard-coded version number is present in the code, it should be not present anywhere:
     - If any, manually correct it then open an issue to automate version number bumping later
