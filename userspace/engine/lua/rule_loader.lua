@@ -256,15 +256,17 @@ end
 function build_error(rules_lines, row, num_lines, err)
    local ret = err.."\n---\n"..get_lines(rules_lines, row, num_lines).."---"
 
-   return ret
+   return {ret}
 end
 
 function build_error_with_context(ctx, err)
    local ret = err.."\n---\n"..ctx.."---"
-   return ret
+   return {ret}
 end
 
 function load_rules_doc(rules_mgr, doc, load_state)
+
+   local warnings = {}
 
    -- Iterate over yaml list. In this pass, all we're doing is
    -- populating the set of rules, macros, and lists. We're not
@@ -279,7 +281,7 @@ function load_rules_doc(rules_mgr, doc, load_state)
 					load_state.indices[load_state.cur_item_idx])
 
       if (not (type(v) == "table")) then
-	 return false, build_error_with_context(context, "Unexpected element of type " ..type(v)..". Each element should be a yaml associative array.")
+	 return false, build_error_with_context(context, "Unexpected element of type " ..type(v)..". Each element should be a yaml associative array."), warnings
       end
 
       v['context'] = context
@@ -291,13 +293,13 @@ function load_rules_doc(rules_mgr, doc, load_state)
 	 end
 
 	 if falco_rules.engine_version(rules_mgr) < v['required_engine_version'] then
-	    return false, build_error_with_context(v['context'], "Rules require engine version "..v['required_engine_version']..", but engine version is "..falco_rules.engine_version(rules_mgr))
+	    return false, build_error_with_context(v['context'], "Rules require engine version "..v['required_engine_version']..", but engine version is "..falco_rules.engine_version(rules_mgr)), warnings
 	 end
 
       elseif (v['macro']) then
 
 	 if (v['macro'] == nil or type(v['macro']) == "table") then
-	    return false, build_error_with_context(v['context'], "Macro name is empty")
+	    return false, build_error_with_context(v['context'], "Macro name is empty"), warnings
 	 end
 
 	 if v['source'] == nil then
@@ -310,7 +312,7 @@ function load_rules_doc(rules_mgr, doc, load_state)
 
 	 for j, field in ipairs({'condition'}) do
 	    if (v[field] == nil) then
-	       return false, build_error_with_context(v['context'], "Macro must have property "..field)
+	       return false, build_error_with_context(v['context'], "Macro must have property "..field), warnings
 	    end
 	 end
 
@@ -323,7 +325,7 @@ function load_rules_doc(rules_mgr, doc, load_state)
 
 	 if append then
 	    if state.macros_by_name[v['macro']] == nil then
-	       return false, build_error_with_context(v['context'], "Macro " ..v['macro'].. " has 'append' key but no macro by that name already exists")
+	       return false, build_error_with_context(v['context'], "Macro " ..v['macro'].. " has 'append' key but no macro by that name already exists"), warnings
 	    end
 
 	    state.macros_by_name[v['macro']]['condition'] = state.macros_by_name[v['macro']]['condition'] .. " " .. v['condition']
@@ -338,7 +340,7 @@ function load_rules_doc(rules_mgr, doc, load_state)
       elseif (v['list']) then
 
 	 if (v['list'] == nil or type(v['list']) == "table") then
-	    return false, build_error_with_context(v['context'], "List name is empty")
+	    return false, build_error_with_context(v['context'], "List name is empty"), warnings
 	 end
 
 	 if state.lists_by_name[v['list']] == nil then
@@ -347,7 +349,7 @@ function load_rules_doc(rules_mgr, doc, load_state)
 
 	 for j, field in ipairs({'items'}) do
 	    if (v[field] == nil) then
-	       return false, build_error_with_context(v['context'], "List must have property "..field)
+	       return false, build_error_with_context(v['context'], "List must have property "..field), warnings
 	    end
 	 end
 
@@ -360,7 +362,7 @@ function load_rules_doc(rules_mgr, doc, load_state)
 
 	 if append then
 	    if state.lists_by_name[v['list']] == nil then
-	       return false, build_error_with_context(v['context'], "List " ..v['list'].. " has 'append' key but no list by that name already exists")
+	       return false, build_error_with_context(v['context'], "List " ..v['list'].. " has 'append' key but no list by that name already exists"), warnings
 	    end
 
 	    for j, elem in ipairs(v['items']) do
@@ -373,7 +375,7 @@ function load_rules_doc(rules_mgr, doc, load_state)
       elseif (v['rule']) then
 
 	 if (v['rule'] == nil or type(v['rule']) == "table") then
-	    return false, build_error_with_context(v['context'], "Rule name is empty")
+	    return false, build_error_with_context(v['context'], "Rule name is empty"), warnings
 	 end
 
 	 -- By default, if a rule's condition refers to an unknown
@@ -398,13 +400,13 @@ function load_rules_doc(rules_mgr, doc, load_state)
 	    -- For append rules, all you need is the condition
 	    for j, field in ipairs({'condition'}) do
 	       if (v[field] == nil) then
-		  return false, build_error_with_context(v['context'], "Rule must have property "..field)
+		  return false, build_error_with_context(v['context'], "Rule must have property "..field), warnings
 	       end
 	    end
 
 	    if state.rules_by_name[v['rule']] == nil then
 	       if state.skipped_rules_by_name[v['rule']] == nil then
-		  return false, build_error_with_context(v['context'], "Rule " ..v['rule'].. " has 'append' key but no rule by that name already exists")
+		  return false, build_error_with_context(v['context'], "Rule " ..v['rule'].. " has 'append' key but no rule by that name already exists"), warnings
 	       end
 	    else
 	       state.rules_by_name[v['rule']]['condition'] = state.rules_by_name[v['rule']]['condition'] .. " " .. v['condition']
@@ -417,7 +419,7 @@ function load_rules_doc(rules_mgr, doc, load_state)
 
 	    for j, field in ipairs({'condition', 'output', 'desc', 'priority'}) do
 	       if (v[field] == nil) then
-		  return false, build_error_with_context(v['context'], "Rule must have property "..field)
+		  return false, build_error_with_context(v['context'], "Rule must have property "..field), warnings
 	       end
 	    end
 
@@ -449,13 +451,18 @@ function load_rules_doc(rules_mgr, doc, load_state)
 	 -- Remove the context from the table, so the table is exactly what was parsed
 	 local context = v['context']
 	 v['context'] = nil
-	 return false, build_error_with_context(context, "Unknown rule object: "..table.tostring(v))
+	 return false, build_error_with_context(context, "Unknown rule object: "..table.tostring(v)), warnings
       end
    end
 
-   return true, ""
+   return true, {}, {}
 end
 
+-- Returns:
+-- - Load Result: bool
+-- - required engine version. will be nil when load result is false
+-- - List of Errors
+-- - List of Warnings
 function load_rules(sinsp_lua_parser,
 		    json_lua_parser,
 		    rules_content,
@@ -465,6 +472,8 @@ function load_rules(sinsp_lua_parser,
 		    extra,
 		    replace_container_info,
 		    min_priority)
+
+   local warnings = {}
 
    local load_state = {lines={}, indices={}, cur_item_idx=0, min_priority=min_priority, required_engine_version=0}
 
@@ -487,36 +496,42 @@ function load_rules(sinsp_lua_parser,
       row = tonumber(row)
       col = tonumber(col)
 
-      return false, build_error(load_state.lines, row, 3, docs)
+      return false, nil, build_error(load_state.lines, row, 3, docs), warnings
    end
 
    if docs == nil then
       -- An empty rules file is acceptable
-      return true, load_state.required_engine_version
+      return true, load_state.required_engine_version, {}, warnings
    end
 
    if type(docs) ~= "table" then
-      return false, build_error(load_state.lines, 1, 1, "Rules content is not yaml")
+      return false, nil, build_error(load_state.lines, 1, 1, "Rules content is not yaml"), warnings
    end
 
    for docidx, doc in ipairs(docs) do
 
       if type(doc) ~= "table" then
-	 return false, build_error(load_state.lines, 1, 1, "Rules content is not yaml")
+	 return false, nil, build_error(load_state.lines, 1, 1, "Rules content is not yaml"), warnings
       end
 
       -- Look for non-numeric indices--implies that document is not array
       -- of objects.
       for key, val in pairs(doc) do
 	 if type(key) ~= "number" then
-	    return false, build_error(load_state.lines, 1, 1, "Rules content is not yaml array of objects")
+	    return false, nil, build_error(load_state.lines, 1, 1, "Rules content is not yaml array of objects"), warnings
 	 end
       end
 
-      res, errstr = load_rules_doc(rules_mgr, doc, load_state)
+      res, errors, doc_warnings = load_rules_doc(rules_mgr, doc, load_state)
+
+      if (doc_warnings ~= nil) then
+	 for idx, warning in pairs(doc_warnings) do
+	    table.insert(warnings, warning)
+	 end
+      end
 
       if not res then
-	 return res, errstr
+	 return res, nil, errors, warnings
       end
    end
 
@@ -556,7 +571,7 @@ function load_rules(sinsp_lua_parser,
       local status, ast = compiler.compile_macro(v['condition'], state.macros, state.lists)
 
       if status == false then
-	 return false, build_error_with_context(v['context'], ast)
+	 return false, nil, build_error_with_context(v['context'], ast), warnings
       end
 
       if v['source'] == "syscall" then
@@ -581,7 +596,7 @@ function load_rules(sinsp_lua_parser,
 								  state.macros, state.lists)
 
       if status == false then
-	 return false, build_error_with_context(v['context'], filter_ast)
+	 return false, nil, build_error_with_context(v['context'], filter_ast), warnings
       end
 
       local evtttypes = {}
@@ -631,12 +646,10 @@ function load_rules(sinsp_lua_parser,
 	 end
 
 	 if not found then
-	    if v['skip-if-unknown-filter'] then
-	       if verbose then
-		  print("Skipping rule \""..v['rule'].."\" that contains unknown filter "..filter)
-	       end
-	       goto next_rule
-	    else
+	    msg = "rule \""..v['rule'].."\" contains unknown filter "..filter
+	    warnings[#warnings + 1] = msg
+
+	    if not v['skip-if-unknown-filter'] then
 	       error("Rule \""..v['rule'].."\" contains unknown filter "..filter)
 	    end
 	 end
@@ -719,30 +732,30 @@ function load_rules(sinsp_lua_parser,
 	 formatter = formats.formatter(v['source'], v['output'])
 	 formats.free_formatter(v['source'], formatter)
       else
-	 return false, build_error_with_context(v['context'], "Unexpected type in load_rule: "..filter_ast.type)
+	 return false, nil, build_error_with_context(v['context'], "Unexpected type in load_rule: "..filter_ast.type), warnings
       end
 
       ::next_rule::
    end
 
-   if verbose then
-      -- Print info on any dangling lists or macros that were not used anywhere
-      for name, macro in pairs(state.macros) do
-	 if macro.used == false then
-	    print("Warning: macro "..name.." not refered to by any rule/macro")
-	 end
+   -- Print info on any dangling lists or macros that were not used anywhere
+   for name, macro in pairs(state.macros) do
+      if macro.used == false then
+	 msg = "macro "..name.." not refered to by any rule/macro"
+	 warnings[#warnings + 1] = msg
       end
+   end
 
-      for name, list in pairs(state.lists) do
-	 if list.used == false then
-	    print("Warning: list "..name.." not refered to by any rule/macro/list")
-	 end
+   for name, list in pairs(state.lists) do
+      if list.used == false then
+	 msg = "list "..name.." not refered to by any rule/macro/list"
+	 warnings[#warnings + 1] = msg
       end
    end
 
    io.flush()
 
-   return true, load_state.required_engine_version
+   return true, load_state.required_engine_version, {}, warnings
 end
 
 local rule_fmt = "%-50s %s"

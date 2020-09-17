@@ -14,8 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+#include <sstream>
+
 #include "rules.h"
-#include "logger.h"
 
 extern "C" {
 #include "lua.h"
@@ -217,6 +218,31 @@ int falco_rules::engine_version(lua_State *ls)
 	lua_pushnumber(ls, rules->m_engine->engine_version());
 
 	return 1;
+}
+
+static std::list<std::string> get_lua_table_values(lua_State *ls, int idx)
+{
+	std::list<std::string> ret;
+
+	if (lua_isnil(ls, idx)) {
+		return ret;
+	}
+
+	lua_pushnil(ls);  /* first key */
+	while (lua_next(ls, idx-1) != 0) {
+                // key is at index -2, value is at index
+                // -1. We want the values.
+		if (! lua_isstring(ls, -1)) {
+			std::string err = "Non-string value in table of strings";
+			throw falco_exception(err);
+		}
+		ret.push_back(string(lua_tostring(ls, -1)));
+
+		// Remove value, keep key for next iteration
+		lua_pop(ls, 1);
+	}
+
+	return ret;
 }
 
 void falco_rules::load_rules(const string &rules_content,
@@ -424,7 +450,7 @@ void falco_rules::load_rules(const string &rules_content,
 		lua_pushstring(m_ls, extra.c_str());
 		lua_pushboolean(m_ls, (replace_container_info ? 1 : 0));
 		lua_pushnumber(m_ls, min_priority);
-		if(lua_pcall(m_ls, 9, 2, 0) != 0)
+		if(lua_pcall(m_ls, 9, 4, 0) != 0)
 		{
 			const char* lerr = lua_tostring(m_ls, -1);
 
@@ -433,20 +459,49 @@ void falco_rules::load_rules(const string &rules_content,
 			throw falco_exception(err);
 		}
 
-		// Either returns (true, required_engine_version), or (false, error string)
-		bool successful = lua_toboolean(m_ls, -2);
+		// Returns:
+		// Load result: bool
+		// required engine version: will be nil when load result is false
+		// array of errors
+		// array of warnings
+		bool successful = lua_toboolean(m_ls, -4);
+		required_engine_version = lua_tonumber(m_ls, -3);
+		std::list<std::string> errors = get_lua_table_values(m_ls, -2);
+		std::list<std::string> warnings = get_lua_table_values(m_ls, -1);
 
-		if(successful)
+		// Concatenate errors/warnings
+		std::ostringstream os;
+		if (errors.size() > 0)
 		{
-			required_engine_version = lua_tonumber(m_ls, -1);
-		}
-		else
-		{
-			std::string err = lua_tostring(m_ls, -1);
-			throw falco_exception(err);
+			os << errors.size() << " errors:" << std::endl;
+			for(auto err : errors)
+			{
+				os << err << std::endl;
+			}
 		}
 
-		lua_pop(m_ls, 2);
+		if (warnings.size() > 0)
+		{
+			os << warnings.size() << " warnings:" << std::endl;
+			for(auto warn : warnings)
+			{
+				os << warn << std::endl;
+			}
+		}
+
+		if(!successful)
+		{
+			throw falco_exception(os.str());
+		}
+
+		if (verbose && os.str() != "") {
+			// We don't really have a logging callback
+			// from the falco engine, but this would be a
+			// good place to use it.
+			fprintf(stderr, "When reading rules content: %s", os.str().c_str());
+		}
+
+		lua_pop(m_ls, 4);
 
 	} else {
 		throw falco_exception("No function " + m_lua_load_rules + " found in lua rule module");

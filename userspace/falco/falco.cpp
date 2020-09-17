@@ -816,7 +816,7 @@ int falco_init(int argc, char **argv)
 				}
 				catch(falco_exception &e)
 				{
-					printf("%s%s\n", prefix.c_str(), e.what());
+					printf("%s%s", prefix.c_str(), e.what());
 					throw;
 				}
 				printf("%sOk\n", prefix.c_str());
@@ -873,7 +873,15 @@ int falco_init(int argc, char **argv)
 			falco_logger::log(LOG_INFO, "Loading rules from file " + filename + ":\n");
 			uint64_t required_engine_version;
 
-			engine->load_rules_file(filename, verbose, all_events, required_engine_version);
+			try {
+				engine->load_rules_file(filename, verbose, all_events, required_engine_version);
+			}
+			catch(falco_exception &e)
+			{
+				std::string prefix = "Could not load rules file " + filename + ": ";
+
+				throw falco_exception(prefix + e.what());
+			}
 			required_engine_versions[filename] = required_engine_version;
 		}
 
@@ -1184,8 +1192,8 @@ int falco_init(int argc, char **argv)
 						falco_logger::log(LOG_ERR, "Unable to load the driver.\n");
 					}
 					open_f(inspector);
-				} 
-				else 
+				}
+				else
 				{
 					rethrow_exception(current_exception());
 				}
@@ -1294,7 +1302,7 @@ int falco_init(int argc, char **argv)
 
 		if(!trace_filename.empty() && !trace_is_scap)
 		{
-#ifndef MINIMAL_BUILD			
+#ifndef MINIMAL_BUILD
 			read_k8s_audit_trace_file(engine,
 						  outputs,
 						  trace_filename);
