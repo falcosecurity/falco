@@ -448,14 +448,14 @@ function load_rules_doc(rules_mgr, doc, load_state)
 	    end
 	 end
       else
-	 -- Remove the context from the table, so the table is exactly what was parsed
 	 local context = v['context']
-	 v['context'] = nil
-	 return false, build_error_with_context(context, "Unknown rule object: "..table.tostring(v)), warnings
+
+	 arr = build_error_with_context(context, "Unknown top level object: "..table.tostring(v))
+	 warnings[#warnings + 1] = arr[1]
       end
    end
 
-   return true, {}, {}
+   return true, {}, warnings
 end
 
 -- Returns:
