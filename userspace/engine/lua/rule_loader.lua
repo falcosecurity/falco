@@ -131,6 +131,7 @@ end
 -- and the by_idx index is used to map the relational node index back
 -- to a rule.
 local state = {macros={}, lists={}, filter_ast=nil, rules_by_name={},
+	       exceptions_by_name={},
 	       skipped_rules_by_name={}, macros_by_name={}, lists_by_name={},
 	       n_rules=0, rules_by_idx={}, ordered_rule_names={}, ordered_macro_names={}, ordered_list_names={}}
 
@@ -388,6 +389,14 @@ function load_rules_doc(rules_mgr, doc, load_state)
 	    v['source'] = "syscall"
 	 end
 
+	 -- Add an empty exceptions property to the rule if not
+	 -- defined, but add a warning about defining one
+	 if v['exceptions'] == nil then
+	    warnings[#warnings + 1] = "Rule "..v['rule']..": consider adding an exceptions property to define supported exceptions fields"
+	    v['exceptions'] = {}
+	    v['exceptions_values'] = {}
+	 end
+
 	 -- Possibly append to the condition field of an existing rule
 	 append = false
 
@@ -409,6 +418,12 @@ function load_rules_doc(rules_mgr, doc, load_state)
 		  return false, build_error_with_context(v['context'], "Rule " ..v['rule'].. " has 'append' key but no rule by that name already exists"), warnings
 	       end
 	    else
+
+	       -- You can't append exceptions to a rule
+	       if #v['exceptions'] > 0 then
+		  return false, build_error_with_context(v['context'], "Can not append exceptions to existing rule, only conditions"), warnings
+	       end
+
 	       state.rules_by_name[v['rule']]['condition'] = state.rules_by_name[v['rule']]['condition'] .. " " .. v['condition']
 
 	    -- Add the current object to the context of the base rule
@@ -447,6 +462,8 @@ function load_rules_doc(rules_mgr, doc, load_state)
 	       state.skipped_rules_by_name[v['rule']] = v
 	    end
 	 end
+      elseif (v['exception']) then
+	 state.exceptions_by_name[v['exception']] = v
       else
 	 local context = v['context']
 
@@ -540,6 +557,58 @@ function load_rules(sinsp_lua_parser,
    -- ordered_rule_{lists,macros,names} to compile them in the order
    -- in which they appeared in the file(s).
    reset_rules(rules_mgr)
+
+   -- Turn exceptions into condition strings and add them to each
+   -- rule's condition
+   for ename, exc in pairs(state.exceptions_by_name) do
+
+      if state.rules_by_name[ename] == nil then
+	 warnings[#warnings + 1] = "No rule matching exception name "..exc['exception']
+      else
+	 -- Extract the exception fields out of the corresponding rule
+	 fields = {}
+	 for i, efield in ipairs(state.rules_by_name[ename].exceptions) do
+	    for fname, ffields in pairs(efield) do
+	       fields[fname] = ffields
+	    end
+	 end
+
+	 local econd = ""
+
+	 -- Build up the additional condition string
+	 for i, eitems in ipairs(exc['items']) do
+	    for iname, ivals in pairs(eitems) do
+	       if fields[iname] == nil then
+		  warnings[#warnings + 1] = "Exception "..ename..": no set of fields matching name "..iname
+	       end
+
+	       for j, fvals in ipairs(ivals) do
+		  if #fields[iname] ~= #fvals then
+		     return false, nil, build_error_with_context(exc['context'], "Exception "..ename..", item "..iname..": values length "..#fvals.." does not match fields length "..#fields[iname]), warnings
+		  end
+
+		  local icond = "("
+		  for k, field in ipairs(fields[iname]) do
+		     if k > 1 then
+			icond=icond.." and "
+		     end
+		     icond = icond..field.."="..fvals[k]
+		  end
+		  icond = icond..")"
+
+		  if econd == "" then
+		     econd = econd.." and not ("..icond
+		  else
+		     econd = econd.." or "..icond
+		  end
+	       end
+	    end
+	 end
+	 econd=econd..")"
+
+	 state.rules_by_name[ename]['condition'] = "("..state.rules_by_name[ename]['condition']..") "..econd
+      end
+   end
 
    for i, name in ipairs(state.ordered_list_names) do
 
