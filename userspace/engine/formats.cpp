@@ -60,25 +60,32 @@ int falco_formats::lua_formatter(lua_State *ls)
 		{
 			sinsp_evt_formatter *formatter;
 			formatter = new sinsp_evt_formatter(s_inspector, format);
+			lua_pushnil(ls);
 			lua_pushlightuserdata(ls, formatter);
 		}
 		else
 		{
 			json_event_formatter *formatter;
 			formatter = new json_event_formatter(s_engine->json_factory(), format);
+			lua_pushnil(ls);
 			lua_pushlightuserdata(ls, formatter);
 		}
 	}
-	catch(sinsp_exception &e)
+	catch(exception &e)
 	{
-		luaL_error(ls, "Invalid output format '%s': '%s'", format.c_str(), e.what());
-	}
-	catch(falco_exception &e)
-	{
-		luaL_error(ls, "Invalid output format '%s': '%s'", format.c_str(), e.what());
+		std::ostringstream os;
+
+		os << "Invalid output format '"
+		   << format
+		   << "': '"
+		   << e.what()
+		   << "'";
+
+		lua_pushstring(ls, os.str().c_str());
+		lua_pushnil(ls);
 	}
 
-	return 1;
+	return 2;
 }
 
 int falco_formats::lua_free_formatter(lua_State *ls)
