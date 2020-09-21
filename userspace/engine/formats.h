@@ -44,14 +44,22 @@ class falco_formats
 	// falco.free_formatter(formatter)
 	static int free_formatter(lua_State *ls);
 
+	static void free_formatters();
+
 	// falco.free_formatters()
-	static int free_formatters(lua_State *ls);
+	static int free_formatters_lua(lua_State *ls);
+
+	static string format_event(const gen_event* evt, const std::string &rule, const std::string &source, 
+		const std::string &level, const std::string &format);
 
 	// formatted_string = falco.format_event(evt, formatter)
-	static int format_event(lua_State *ls);
+	static int format_event_lua(lua_State *ls);
+
+	static map<string, string> resolve_tokens(const gen_event* evt, const std::string &source, 
+		const std::string &format);
 
 	// resolve_tokens = falco.resolve_tokens(evt, formatter)
-	static int resolve_tokens(lua_State *ls);
+	static int resolve_tokens_lua(lua_State *ls);
 
 	static sinsp* s_inspector;
 	static falco_engine *s_engine;
