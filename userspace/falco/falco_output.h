@@ -22,7 +22,6 @@ limitations under the License.
 #include "falco_common.h"
 #include "gen_filter.h"
 
-
 namespace falco
 {
 namespace outputs
@@ -45,10 +44,10 @@ public:
 	};
 
 	void init(config oc, bool buffered,
-		  bool time_format_iso_8601, std::string hostname) 
+		  bool time_format_iso_8601, std::string hostname)
 	{
 
-	    m_oc = oc;
+		m_oc = oc;
 		m_buffered = buffered;
 		m_time_format_iso_8601 = time_format_iso_8601;
 		m_hostname = hostname;
@@ -56,16 +55,16 @@ public:
 
 	// Output an event that has matched some rule.
 	virtual void output_event(gen_event *evt, std::string &rule, std::string &source,
-			  falco_common::priority_type priority, std::string &format,
-			  std::string &msg, std::string &hostname) = 0;
+				  falco_common::priority_type priority, std::string &format, std::string &msg) = 0;
 
 	// Output a generic message. Not necessarily associated with any event.
 	virtual void output_msg(falco_common::priority_type priority, std::string &msg) = 0;
 
-	virtual void reopen() = 0;
+	virtual void reopen() {}
+
+	virtual void cleanup() {}
 
 protected:
-
 	config m_oc;
 	bool m_buffered;
 	bool m_time_format_iso_8601;
