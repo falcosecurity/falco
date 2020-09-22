@@ -56,5 +56,5 @@ public:
 	queue(queue const&) = delete;
 	void operator=(queue const&) = delete;
 };
-} // namespace output
+} // namespace outputs
 } // namespace falco

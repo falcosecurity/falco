@@ -47,6 +47,10 @@ add_executable(
   configuration.cpp
   logger.cpp
   falco_outputs.cpp
+  falco_outputs_file.cpp
+  falco_outputs_program.cpp
+  falco_outputs_stdout.cpp
+  falco_outputs_syslog.cpp
   event_drops.cpp
   statsfilewriter.cpp
   falco.cpp
@@ -57,6 +61,12 @@ else()
     configuration.cpp
     logger.cpp
     falco_outputs.cpp
+    falco_outputs_file.cpp
+    falco_outputs_grpc.cpp
+    falco_outputs_http.cpp
+    falco_outputs_program.cpp
+    falco_outputs_stdout.cpp
+    falco_outputs_syslog.cpp
     event_drops.cpp
     statsfilewriter.cpp
     falco.cpp
