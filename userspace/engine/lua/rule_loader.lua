@@ -394,7 +394,17 @@ function load_rules_doc(rules_mgr, doc, load_state)
 	 if v['exceptions'] == nil then
 	    warnings[#warnings + 1] = "Rule "..v['rule']..": consider adding an exceptions property to define supported exceptions fields"
 	    v['exceptions'] = {}
-	    v['exceptions_values'] = {}
+	 end
+
+	 -- Make sure that all exception fields are actually valid for this rule's source
+	 for i, efield in ipairs(v['exceptions']) do
+	    for iname, ffields in pairs(efield) do
+	       for j, fname in ipairs(ffields) do
+		  if defined_noarg_filters[fname] == nil then
+		     return false, build_error_with_context(v['context'], "Exception field name "..fname.." is not a supported filter field"), warnings
+		  end
+	       end
+	    end
 	 end
 
 	 -- Possibly append to the condition field of an existing rule
@@ -568,8 +578,8 @@ function load_rules(sinsp_lua_parser,
 	 -- Extract the exception fields out of the corresponding rule
 	 fields = {}
 	 for i, efield in ipairs(state.rules_by_name[ename].exceptions) do
-	    for fname, ffields in pairs(efield) do
-	       fields[fname] = ffields
+	    for iname, ffields in pairs(efield) do
+	       fields[iname] = ffields
 	    end
 	 end
 
