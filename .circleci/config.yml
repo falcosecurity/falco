@@ -309,24 +309,29 @@ jobs:
   # Code quality
   "quality/static-analysis":
     docker:
-      - image: ubuntu:focal
+      - image: falcosecurity/falco-builder:latest
+        environment:
+          BUILD_TYPE: "release"
     steps:
+      - run:
+          name: Install cppcheck
+          command: |
+            yum update -y
+            yum install epel-release -y
+            yum install cppcheck cppcheck-htmlreport -y
       - attach_workspace:
           at: /
       - run:
-          name: Update base image
-          command: apt update -y
-      - run:
-          name: Install dependencies
-          command: DEBIAN_FRONTEND=noninteractive apt install cppcheck cmake build-essential git -y
+          name: Prepare project
+          command: /usr/bin/entrypoint cmake
       - run:
           name: cppcheck
-          command: |
-            cd /build
-            make cppcheck
-            make cppcheck_htmlreport
+          command: /usr/bin/entrypoint cppcheck
+      - run:
+          name: cppcheck html report
+          command: /usr/bin/entrypoint cppcheck_htmlreport
       - store_artifacts:
-          path: /build/static-analysis-reports
+          path: /build/release/static-analysis-reports
           destination: /static-analysis-reports
   # Sign rpm packages
   "rpm/sign":
