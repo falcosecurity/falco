@@ -306,6 +306,28 @@ jobs:
       - run:
           name: Execute driver-loader integration tests
           command: /tmp/ws/source/falco/test/driver-loader/run_test.sh /tmp/ws/build/release/
+  # Code quality
+  "quality/static-analysis":
+    docker:
+      - image: ubuntu:focal
+    steps:
+      - attach_workspace:
+          at: /
+      - run:
+          name: Update base image
+          command: apt update -y
+      - run:
+          name: Install dependencies
+          command: DEBIAN_FRONTEND=noninteractive apt install cppcheck cmake build-essential git -y
+      - run:
+          name: cppcheck
+          command: |
+            cd /build
+            make cppcheck
+            make cppcheck_htmlreport
+      - store_artifacts:
+          path: /build/static-analysis-reports
+          destination: /static-analysis-reports
   # Sign rpm packages
   "rpm/sign":
     docker:
@@ -546,6 +568,10 @@ workflows:
           requires:
             - "publish/packages-dev"
             - "tests/driver-loader/integration"
+      - "quality/static-analysis":
+          context: falco
+          requires:
+            - "build/centos7"
   release:
     jobs:
       - "build/musl":
