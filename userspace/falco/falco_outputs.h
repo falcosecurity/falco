@@ -31,7 +31,6 @@ limitations under the License.
 // falco output engine. The falco rules engine is implemented by a
 // separate class falco_engine.
 //
-
 class falco_outputs : public falco_common
 {
 public:
@@ -44,10 +43,10 @@ public:
 		  bool time_format_iso_8601, std::string hostname,
 		  const std::string& alternate_lua_dir);
 
-	void add_output(falco::outputs::output::config oc);
+	void add_output(falco::outputs::config oc);
 
 	//
-	// ev is an event that has matched some rule. Pass the event
+	// evt is an event that has matched some rule. Pass the event
 	// to all configured outputs.
 	//
 	void handle_event(gen_event *evt, std::string &rule, std::string &source,

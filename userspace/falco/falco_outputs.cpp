@@ -87,7 +87,7 @@ void falco_outputs::init(bool json_output,
 	m_initialized = true;
 }
 
-void falco_outputs::add_output(falco::outputs::output::config oc)
+void falco_outputs::add_output(falco::outputs::config oc)
 {
 
 	falco::outputs::output *oo;
