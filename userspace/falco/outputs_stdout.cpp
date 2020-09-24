@@ -14,17 +14,26 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#include "falco_outputs_syslog.h"
-#include <syslog.h>
+#include "outputs_stdout.h"
+#include <iostream>
 #include "banned.h" // This raises a compilation error when certain functions are used
 
-void falco::outputs::output_syslog::output_event(gen_event *evt, std::string &rule, std::string &source,
+void falco::outputs::output_stdout::output_event(gen_event *evt, std::string &rule, std::string &source,
 						 falco_common::priority_type priority, std::string &format, std::string &msg)
 {
 	output_msg(priority, msg);
 }
 
-void falco::outputs::output_syslog::output_msg(falco_common::priority_type priority, std::string &msg)
+void falco::outputs::output_stdout::output_msg(falco_common::priority_type priority, std::string &msg)
 {
-	::syslog(priority, "%s", msg.c_str());
+	std::cout << msg + "\n";
+	if(!m_buffered)
+	{
+		std::cout.flush();
+	}
+}
+
+void falco::outputs::output_stdout::cleanup()
+{
+	std::cout.flush();
 }

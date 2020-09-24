@@ -24,7 +24,7 @@ limitations under the License.
 #include "falco_common.h"
 #include "token_bucket.h"
 #include "falco_engine.h"
-#include "falco_output.h"
+#include "outputs.h"
 
 //
 // This class acts as the primary interface between a program and the

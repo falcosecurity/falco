@@ -16,7 +16,7 @@ limitations under the License.
 
 #pragma once
 
-#include "falco_output.h"
+#include "outputs.h"
 #include <iostream>
 #include <fstream>
 

@@ -16,7 +16,7 @@ limitations under the License.
 
 #include "config_falco.h"
 #include "grpc_server_impl.h"
-#include "falco_outputs_queue.h"
+#include "outputs_queue.h"
 #include "logger.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
 
