@@ -16,14 +16,14 @@ limitations under the License.
 
 #pragma once
 
-#include "falco_output.h"
+#include "outputs.h"
 
 namespace falco
 {
 namespace outputs
 {
 
-class output_stdout : public output
+class output_program : public output
 {
 	void output_event(gen_event *evt, std::string &rule, std::string &source,
 			  falco_common::priority_type priority, std::string &format, std::string &msg);
@@ -31,6 +31,13 @@ class output_stdout : public output
 	void output_msg(falco_common::priority_type priority, std::string &msg);
 
 	void cleanup();
+
+	void reopen();
+
+private:
+	void open_pfile();
+
+	FILE *m_pfile;
 };
 
 } // namespace outputs

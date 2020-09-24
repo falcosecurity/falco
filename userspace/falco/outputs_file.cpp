@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#include "falco_outputs_file.h"
+#include "outputs_file.h"
 #include <iostream>
 #include <fstream>
 #include "banned.h" // This raises a compilation error when certain functions are used

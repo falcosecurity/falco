@@ -15,8 +15,8 @@ limitations under the License.
 */
 
 #include <google/protobuf/util/time_util.h>
-#include "falco_outputs_grpc.h"
-#include "falco_outputs_queue.h"
+#include "outputs_grpc.h"
+#include "outputs_queue.h"
 #include "falco_common.h"
 #include "formats.h"
 #include "banned.h" // This raises a compilation error when certain functions are used

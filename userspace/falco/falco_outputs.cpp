@@ -25,13 +25,13 @@ limitations under the License.
 #include "formats.h"
 #include "logger.h"
 
-#include "falco_outputs_file.h"
-#include "falco_outputs_program.h"
-#include "falco_outputs_stdout.h"
-#include "falco_outputs_syslog.h"
+#include "outputs_file.h"
+#include "outputs_program.h"
+#include "outputs_stdout.h"
+#include "outputs_syslog.h"
 #ifndef MINIMAL_BUILD
-#include "falco_outputs_http.h"
-#include "falco_outputs_grpc.h"
+#include "outputs_http.h"
+#include "outputs_grpc.h"
 #endif
 
 #include "banned.h" // This raises a compilation error when certain functions are used
