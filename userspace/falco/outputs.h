@@ -42,7 +42,7 @@ struct config
 // a Falco output class.
 //
 
-class output
+class abstract_output
 {
 public:
 	void init(config oc, bool buffered,
