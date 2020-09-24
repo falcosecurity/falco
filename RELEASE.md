@@ -10,8 +10,10 @@ Finally, on the proposed due date the assignees for the upcoming release proceed
 
 ## Pre-Release Checklist
 
+Before cutting a release we need to do some homework in the Falco repository. This should take 5 minutes using the GitHub UI.
+
 ### 1. Release notes
-- Let `YYYY-MM-DD` the day before of the [latest release](https://github.com/falcosecurity/falco/releases)
+- Find the LAST release (-1) and use `YYYY-MM-DD` as the day before of the [latest release](https://github.com/falcosecurity/falco/releases)
 - Check the release note block of every PR matching the `is:pr is:merged closed:>YYYY-MM-DD` [filter](https://github.com/falcosecurity/falco/pulls?q=is%3Apr+is%3Amerged+closed%3A%3EYYYY-MM-DD)
     - Ensure the release note block follows the [commit convention](https://github.com/falcosecurity/falco/blob/master/CONTRIBUTING.md#commit-convention), otherwise fix its content
     - If the PR has no milestone, assign it to the milestone currently undergoing release
@@ -24,18 +26,20 @@ Finally, on the proposed due date the assignees for the upcoming release proceed
 
 ### 3. Release PR
 
+- From the `master` branch checkout a new branch titled the release number such as `git checkout -b 0.26.0`
 - Double-check if any hard-coded version number is present in the code, it should be not present anywhere:
     - If any, manually correct it then open an issue to automate version number bumping later
     - Versions table in the `README.md` update itself automatically
 - Generate the change log https://github.com/leodido/rn2md, or https://fs.fntlnz.wtf/falco/milestones-changelog.txt for the lazy people (it updates every 5 minutes)
-- Add the lastest changes on top the previous `CHANGELOG.md`
+    - If you review timeout errors with `rn2md` try to generate an GitHub Oauth access token and use `-t`
+- Add the latest changes on top the previous `CHANGELOG.md`
 - Submit a PR with the above modifications
 - Await PR approval
-- Close the completed milestone as soon PR is merged
+- Close the completed milestone as soon as the PR is merged
 
 ## Release
 
-Let `x.y.z` the new version.
+Now assume `x.y.z` is the new version.
 
 ### 1. Create a tag
 
