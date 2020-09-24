@@ -28,6 +28,16 @@ namespace outputs
 {
 
 //
+// The way to refer to an output (file, syslog, stdout, etc.)
+// An output has a name and set of options.
+//
+struct config
+{
+	std::string name;
+	std::map<std::string, std::string> options;
+};
+
+//
 // This class acts as the primary interface for implementing
 // a Falco output class.
 //
@@ -35,14 +45,6 @@ namespace outputs
 class output
 {
 public:
-	// The way to refer to an output (file, syslog, stdout, etc.)
-	// An output has a name and set of options.
-	struct config
-	{
-		std::string name;
-		std::map<std::string, std::string> options;
-	};
-
 	void init(config oc, bool buffered,
 		  bool time_format_iso_8601, std::string hostname)
 	{
