@@ -15,6 +15,21 @@ There are 3 logos available for use in this directory. Use the primary logo unle
 
 The Falco logo is Apache 2 licensed and free to use in media and publication for the CNCF Falco project.
 
+### Colors
+
+| Name      | PMS  | RGB         |
+|-----------|------|-------------|
+| Teal      | 3125 |   0 174 199 |
+| Cool Gray |   11 |  83  86  90 |
+| Black     |      |   0   0   0 |
+| Blue-Gray | 7700 |  22 92 125  |
+| Gold      | 1375 | 255 158  27 |
+| Orange    |  171 | 255  92  57 |
+| Emerald   | 3278 |   0 155 119 |
+| Green     |  360 | 108 194  74 |
+
+The primary colors are those in the first two rows.
+
 ### Slogan
 
 > Cloud Native Runtime Security
