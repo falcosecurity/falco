@@ -66,7 +66,7 @@ private:
 
 	bool m_initialized;
 
-	std::vector<falco::outputs::output *> m_outputs;
+	std::vector<falco::outputs::abstract_output *> m_outputs;
 
 	// Rate limits notifications
 	token_bucket m_notifications_tb;

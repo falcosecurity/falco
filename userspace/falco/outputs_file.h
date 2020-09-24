@@ -25,7 +25,7 @@ namespace falco
 namespace outputs
 {
 
-class output_file : public output
+class output_file : public abstract_output
 {
 	void output_event(gen_event *evt, std::string &rule, std::string &source,
 			  falco_common::priority_type priority, std::string &format, std::string &msg);

@@ -90,7 +90,7 @@ void falco_outputs::init(bool json_output,
 void falco_outputs::add_output(falco::outputs::config oc)
 {
 
-	falco::outputs::output *oo;
+	falco::outputs::abstract_output *oo;
 
 	if(oc.name == "file")
 	{
