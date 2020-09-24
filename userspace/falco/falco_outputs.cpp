@@ -52,7 +52,6 @@ falco_outputs::~falco_outputs()
 {
 	if(m_initialized)
 	{
-		// falco_formats::free_formatters(); // todo(leogr): find a better place to free formatters
 		for(auto it = m_outputs.cbegin(); it != m_outputs.cend(); ++it)
 		{
 			(*it)->cleanup();
