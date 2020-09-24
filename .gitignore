@@ -11,8 +11,6 @@ test/.phoronix-test-suite
 test/results*.json.*
 test/build
 
-userspace/falco/lua/re.lua
-userspace/falco/lua/lpeg.so
 userspace/engine/lua/lyaml
 userspace/engine/lua/lyaml.lua
 
