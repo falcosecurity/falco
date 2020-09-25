@@ -26,7 +26,6 @@ Before cutting a release we need to do some homework in the Falco repository. Th
 
 ### 3. Release PR
 
-- From the `master` branch checkout a new branch titled the release number such as `git checkout -b 0.26.0`
 - Double-check if any hard-coded version number is present in the code, it should be not present anywhere:
     - If any, manually correct it then open an issue to automate version number bumping later
     - Versions table in the `README.md` update itself automatically

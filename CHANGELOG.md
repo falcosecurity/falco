@@ -6,7 +6,6 @@ Released on 2020-24-09
 
 ### Major Changes
 
-* new: Address several sources of FPs, primarily from GKE environments. [[#1372](https://github.com/falcosecurity/falco/pull/1372)]
 * new: driver updated to 2aa88dcf6243982697811df4c1b484bcbe9488a2 [[#1410](https://github.com/falcosecurity/falco/pull/1410)]
 * new(scripts/falco-driver-loader): detect and try to build the Falco kernel module driver using different GCC versions available in the current environment. [[#1408](https://github.com/falcosecurity/falco/pull/1408)]
 * new: tgz (tarball) containing the statically-linked (musl) binary of Falco is now automatically built and published on bintray [[#1377](https://github.com/falcosecurity/falco/pull/1377)]
@@ -24,6 +23,7 @@ Released on 2020-24-09
 
 ### Rule Changes
 
+* rule: Address several sources of FPs, primarily from GKE environments. [[#1372](https://github.com/falcosecurity/falco/pull/1372)]
 * rule(macro inbound_outbound): add brackets to disambiguate operator precedence [[#1373](https://github.com/falcosecurity/falco/pull/1373)]
 * rule(macro redis_writing_conf): add brackets to disambiguate operator precedence [[#1373](https://github.com/falcosecurity/falco/pull/1373)]
 * rule(macro run_by_foreman): add brackets to disambiguate operator precedence [[#1373](https://github.com/falcosecurity/falco/pull/1373)]
