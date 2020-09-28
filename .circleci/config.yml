@@ -319,8 +319,8 @@ jobs:
             yum update -y
             yum install epel-release -y
             yum install cppcheck cppcheck-htmlreport -y
-      - attach_workspace:
-          at: /
+      - checkout:
+          path: /source/falco
       - run:
           name: Prepare project
           command: /usr/bin/entrypoint cmake
@@ -573,10 +573,7 @@ workflows:
           requires:
             - "publish/packages-dev"
             - "tests/driver-loader/integration"
-      - "quality/static-analysis":
-          context: falco
-          requires:
-            - "build/centos7"
+      - "quality/static-analysis"
   release:
     jobs:
       - "build/musl":
