@@ -78,7 +78,8 @@ falco_outputs::~falco_outputs()
 void falco_outputs::init(bool json_output,
 			 bool json_include_output_property,
 			 uint32_t rate, uint32_t max_burst, bool buffered,
-			 bool time_format_iso_8601, string hostname)
+			 bool time_format_iso_8601, string hostname,
+			 const string& alternate_lua_dir)
 {
 	// The engine must have been given an inspector by now.
 	if(!m_inspector)
@@ -88,7 +89,7 @@ void falco_outputs::init(bool json_output,
 
 	m_json_output = json_output;
 
-	falco_common::init(m_lua_main_filename.c_str(), FALCO_SOURCE_LUA_DIR);
+	falco_common::init(m_lua_main_filename.c_str(), alternate_lua_dir.c_str());
 
 	// Note that falco_formats is added to both the lua state used
 	// by the falco engine as well as the separate lua state used
