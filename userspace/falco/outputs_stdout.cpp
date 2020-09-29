@@ -26,11 +26,17 @@ void falco::outputs::output_stdout::output_event(gen_event *evt, std::string &ru
 
 void falco::outputs::output_stdout::output_msg(falco_common::priority_type priority, std::string &msg)
 {
-	std::cout << msg + "\n";
+	//
+	// By default, the stdout stream is fully buffered or line buffered 
+	// (if the stream can be determined to refer to an interactive device, e.g. in a TTY).
+	// Just enable automatic flushing when unbuffered output is desired.
+	// Note that it is set every time since other writings to the stdout can disable it.
+	//
 	if(!m_buffered)
 	{
-		std::cout.flush();
+		std::cout << std::unitbuf;
 	}
+	std::cout << msg + "\n";
 }
 
 void falco::outputs::output_stdout::cleanup()
