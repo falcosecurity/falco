@@ -86,6 +86,7 @@ static void usage()
 	   " -h, --help                    Print this page\n"
 	   " -c                            Configuration file (default " FALCO_SOURCE_CONF_FILE ", " FALCO_INSTALL_CONF_FILE ")\n"
 	   " -A                            Monitor all events, including those with EF_DROP_SIMPLE_CONS flag.\n"
+	   " --alternate-lua-dir <path>    Specify an alternate path for loading Falco lua files\n"
 	   " -b, --print-base64            Print data buffers in base64.\n"
 	   "                               This is useful for encoding binary data that needs to be used over media designed to.\n"
 	   " --cri <path>                  Path to CRI socket for container metadata.\n"
@@ -478,37 +479,38 @@ int falco_init(int argc, char **argv)
 #endif
 
 	static struct option long_options[] =
-	{
-		{"cri", required_argument, 0},
-        {"daemon", no_argument, 0, 'd'},
-        {"disable-cri-async", no_argument, 0, 0},
-        {"disable-source", required_argument, 0},
-        {"help", no_argument, 0, 'h'},
-        {"ignored-events", no_argument, 0, 'i'},
-        {"k8s-api-cert", required_argument, 0, 'K'},
-        {"k8s-api", required_argument, 0, 'k'},
-        {"list", optional_argument, 0},
-        {"mesos-api", required_argument, 0, 'm'},
-        {"option", required_argument, 0, 'o'},
-        {"pidfile", required_argument, 0, 'P'},
-        {"print-base64", no_argument, 0, 'b'},
-        {"print", required_argument, 0, 'p'},
-        {"snaplen", required_argument, 0, 'S'},
-        {"stats-interval", required_argument, 0},
-        {"support", no_argument, 0},
-        {"unbuffered", no_argument, 0, 'U'},
-        {"userspace", no_argument, 0, 'u'},
-        {"validate", required_argument, 0, 'V'},
-        {"version", no_argument, 0, 0},
-        {"writefile", required_argument, 0, 'w'},
-		{0, 0, 0, 0}
-	};
+		{
+			{"alternate-lua-dir", required_argument, 0},
+			{"cri", required_argument, 0},
+			{"daemon", no_argument, 0, 'd'},
+			{"disable-cri-async", no_argument, 0, 0},
+			{"disable-source", required_argument, 0},
+			{"help", no_argument, 0, 'h'},
+			{"ignored-events", no_argument, 0, 'i'},
+			{"k8s-api-cert", required_argument, 0, 'K'},
+			{"k8s-api", required_argument, 0, 'k'},
+			{"list", optional_argument, 0},
+			{"mesos-api", required_argument, 0, 'm'},
+			{"option", required_argument, 0, 'o'},
+			{"pidfile", required_argument, 0, 'P'},
+			{"print-base64", no_argument, 0, 'b'},
+			{"print", required_argument, 0, 'p'},
+			{"snaplen", required_argument, 0, 'S'},
+			{"stats-interval", required_argument, 0},
+			{"support", no_argument, 0},
+			{"unbuffered", no_argument, 0, 'U'},
+			{"userspace", no_argument, 0, 'u'},
+			{"validate", required_argument, 0, 'V'},
+			{"version", no_argument, 0, 0},
+			{"writefile", required_argument, 0, 'w'},
+			{0, 0, 0, 0}};
 
 	try
 	{
 		set<string> disabled_rule_substrings;
 		string substring;
 		string all_rules = "";
+		string alternate_lua_dir = FALCO_ENGINE_SOURCE_LUA_DIR;
 		set<string> disabled_rule_tags;
 		set<string> enabled_rule_tags;
 
@@ -686,6 +688,16 @@ int falco_init(int argc, char **argv)
 						disable_sources.insert(optarg);
 					}
 				}
+				else if (string(long_options[long_index].name)== "alternate-lua-dir")
+				{
+					if(optarg != NULL)
+					{
+						alternate_lua_dir = optarg;
+						if (alternate_lua_dir.back() != '/') {
+							alternate_lua_dir += '/';
+						}
+					}
+				}
 				break;
 
 			default:
@@ -721,7 +733,7 @@ int falco_init(int argc, char **argv)
 			return EXIT_SUCCESS;
 		}
 
-		engine = new falco_engine();
+		engine = new falco_engine(true, alternate_lua_dir);
 		engine->set_inspector(inspector);
 		engine->set_extra(output_format, replace_container_info);
 
@@ -965,7 +977,8 @@ int falco_init(int argc, char **argv)
 			      config.m_notifications_rate, config.m_notifications_max_burst,
 			      config.m_buffered_outputs,
 			      config.m_time_format_iso_8601,
-			      hostname);
+			      hostname,
+			      alternate_lua_dir);
 
 		if(!all_events)
 		{
