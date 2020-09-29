@@ -52,7 +52,6 @@ void falco::outputs::output_file::cleanup()
 {
 	if(m_outfile.is_open())
 	{
-		m_outfile.flush();
 		m_outfile.close();
 	}
 }
