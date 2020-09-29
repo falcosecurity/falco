@@ -26,5 +26,6 @@ void falco::outputs::output_syslog::output_event(gen_event *evt, std::string &ru
 
 void falco::outputs::output_syslog::output_msg(falco_common::priority_type priority, std::string &msg)
 {
+	// Syslog output should not have any trailing newline
 	::syslog(priority, "%s", msg.c_str());
 }
