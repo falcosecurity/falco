@@ -72,7 +72,9 @@ void falco_outputs::init(bool json_output,
 
 	m_json_output = json_output;
 
-	// todo(leogr): explain why falco_formats does not need to be initialized here
+	// Note that falco_formats is already initialized by the engine,
+	// and the following json options are not used within the engine.
+	// So we can safely update them.
 	falco_formats::s_json_output = json_output;
 	falco_formats::s_json_include_output_property = json_include_output_property;
 
