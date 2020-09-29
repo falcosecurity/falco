@@ -2725,8 +2725,10 @@
 - rule: Launch Remote File Copy Tools in Container
   desc: Detect remote file copy tools launched in container
   condition: >
-    ((spawned_process and container and remote_file_copy_procs) or
-      user_known_remote_file_copy_tools_in_container_conditions)
+    spawned_process
+    and container
+    and remote_file_copy_procs
+    and not user_known_remote_file_copy_tools_in_container_conditions
   output: >
     Remote file copy tool launched in container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline parent_process=%proc.pname
     container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
