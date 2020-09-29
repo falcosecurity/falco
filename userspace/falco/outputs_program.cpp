@@ -20,17 +20,15 @@ limitations under the License.
 
 void falco::outputs::output_program::open_pfile()
 {
-
 	if(m_pfile == nullptr)
 	{
 		m_pfile = popen(m_oc.options["program"].c_str(), "w");
-		// todo(leogr): handle errno
-	}
 
-	// if(!m_buffered)
-	// {
-	// 	m_pipe.rdbuf()->pubsetbuf(0, 0);
-	// }
+		if(!m_buffered)
+		{
+			setvbuf(m_pfile, NULL, _IONBF, 0);
+		}
+	}
 }
 
 void falco::outputs::output_program::output_event(gen_event *evt, std::string &rule, std::string &source,
@@ -42,6 +40,7 @@ void falco::outputs::output_program::output_event(gen_event *evt, std::string &r
 void falco::outputs::output_program::output_msg(falco_common::priority_type priority, std::string &msg)
 {
 	open_pfile();
+
 	fprintf(m_pfile, "%s\n", msg.c_str());
 
 	if(m_oc.options["keep_alive"] != "true")
@@ -54,8 +53,8 @@ void falco::outputs::output_program::cleanup()
 {
 	if(m_pfile != nullptr)
 	{
-		fflush(m_pfile);
-		fclose(m_pfile);
+		pclose(m_pfile);
+		m_pfile = nullptr;
 	}
 }
 
