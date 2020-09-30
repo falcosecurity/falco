@@ -2615,11 +2615,9 @@
     WARNING
   tags: [process, mitre_persistence]
 
-- rule: Delete or rename shell history
-  desc: Detect shell history deletion
+- macro: modify_shell_history
   condition: >
     (modify and (
-      not evt.arg.name startswith /var/lib/docker and (
       evt.arg.name contains "bash_history" or
       evt.arg.name contains "zsh_history" or
       evt.arg.name contains "fish_read_history" or
@@ -2631,13 +2629,23 @@
       evt.arg.path contains "bash_history" or
       evt.arg.path contains "zsh_history" or
       evt.arg.path contains "fish_read_history" or
-      evt.arg.path endswith "fish_history"))) or
+      evt.arg.path endswith "fish_history"))
+
+- macro: truncate_shell_history
+  condition: >
     (open_write and (
-      not fd.name startswith /var/lib/docker and (
       fd.name contains "bash_history" or
       fd.name contains "zsh_history" or
       fd.name contains "fish_read_history" or
-      fd.name endswith "fish_history")) and evt.arg.flags contains "O_TRUNC")
+      fd.name endswith "fish_history") and evt.arg.flags contains "O_TRUNC")
+
+- macro: var_lib_docker_filepath
+  condition: (evt.arg.name startswith /var/lib/docker or fd.name startswith /var/lib/docker)
+
+- rule: Delete or rename shell history
+  desc: Detect shell history deletion
+  condition: >
+    (modify_shell_history or truncate_shell_history) and not var_lib_docker_filepath
   output: >
     Shell history had been deleted or renamed (user=%user.name user_loginuid=%user.loginuid type=%evt.type command=%proc.cmdline fd.name=%fd.name name=%evt.arg.name path=%evt.arg.path oldpath=%evt.arg.oldpath %container.info)
   priority:
