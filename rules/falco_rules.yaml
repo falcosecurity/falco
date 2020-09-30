@@ -1413,6 +1413,7 @@
   desc: an attempt to write to any file directly below / or /root
   condition: >
     root_dir and evt.dir = < and open_write
+    and proc_name_exists
     and not fd.name in (known_root_files)
     and not fd.directory pmatch (known_root_directories)
     and not exe_running_docker_save
