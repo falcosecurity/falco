@@ -2645,7 +2645,9 @@
 - rule: Delete or rename shell history
   desc: Detect shell history deletion
   condition: >
-    (modify_shell_history or truncate_shell_history) and not var_lib_docker_filepath
+    (modify_shell_history or truncate_shell_history) and
+       not var_lib_docker_filepath and
+       not proc.name in (docker_binaries)
   output: >
     Shell history had been deleted or renamed (user=%user.name user_loginuid=%user.loginuid type=%evt.type command=%proc.cmdline fd.name=%fd.name name=%evt.arg.name path=%evt.arg.path oldpath=%evt.arg.oldpath %container.info)
   priority:
