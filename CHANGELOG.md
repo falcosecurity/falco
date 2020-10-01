@@ -8,6 +8,7 @@ Released on 2020-10-01
 
 * new: CLI flag `--alternate-lua-dir` to load Lua files from arbitrary paths [[#1419](https://github.com/falcosecurity/falco/pull/1419)] - [@admiral0](https://github.com/admiral0)
 
+
 ### Rule Changes
 
 * rule(Delete or rename shell history): fix warnings/FPs + container teardown [[#1423](https://github.com/falcosecurity/falco/pull/1423)] - [@mstemm](https://github.com/mstemm)
@@ -20,36 +21,31 @@ Released on 2020-24-09
 
 ### Major Changes
 
-* new: driver updated to 2aa88dcf6243982697811df4c1b484bcbe9488a2 [[#1410](https://github.com/falcosecurity/falco/pull/1410)]
-* new(scripts/falco-driver-loader): detect and try to build the Falco kernel module driver using different GCC versions available in the current environment. [[#1408](https://github.com/falcosecurity/falco/pull/1408)]
-* new: tgz (tarball) containing the statically-linked (musl) binary of Falco is now automatically built and published on bintray [[#1377](https://github.com/falcosecurity/falco/pull/1377)]
+* new: address several sources of FPs, primarily from GKE environments. [[#1372](https://github.com/falcosecurity/falco/pull/1372)] - [@mstemm](https://github.com/mstemm)
+* new: driver updated to 2aa88dcf6243982697811df4c1b484bcbe9488a2 [[#1410](https://github.com/falcosecurity/falco/pull/1410)] - [@leogr](https://github.com/leogr)
+* new(scripts/falco-driver-loader): detect and try to build the Falco kernel module driver using different GCC versions available in the current environment. [[#1408](https://github.com/falcosecurity/falco/pull/1408)] - [@fntlnz](https://github.com/fntlnz)
+* new: tgz (tarball) containing the statically-linked (musl) binary of Falco is now automatically built and published on bintray [[#1377](https://github.com/falcosecurity/falco/pull/1377)] - [@leogr](https://github.com/leogr)
 
 
 ### Minor Changes
 
-* update: bump Falco engine version to 7 [[#1381](https://github.com/falcosecurity/falco/pull/1381)]
-* update: the required_engine_version is now on by default [[#1381](https://github.com/falcosecurity/falco/pull/1381)]
-* update: falcosecurity/falco-no-driver image now uses the statically-linked Falco [[#1377](https://github.com/falcosecurity/falco/pull/1377)]
-* docs(proposals): artifacts storage [[#1375](https://github.com/falcosecurity/falco/pull/1375)]
-* docs(proposals): artifacts cleanup [[#1375](https://github.com/falcosecurity/falco/pull/1375)]
-
+* update: bump Falco engine version to 7 [[#1381](https://github.com/falcosecurity/falco/pull/1381)] - [@leogr](https://github.com/leogr)
+* update: the required_engine_version is now on by default [[#1381](https://github.com/falcosecurity/falco/pull/1381)] - [@leogr](https://github.com/leogr)
+* update: falcosecurity/falco-no-driver image now uses the statically-linked Falco [[#1377](https://github.com/falcosecurity/falco/pull/1377)] - [@leogr](https://github.com/leogr)
+* docs(proposals): artifacts storage [[#1375](https://github.com/falcosecurity/falco/pull/1375)] - [@leodido](https://github.com/leodido)
+* docs(proposals): artifacts cleanup [[#1375](https://github.com/falcosecurity/falco/pull/1375)] - [@leodido](https://github.com/leodido)
 
 
 ### Rule Changes
 
-* rule: Address several sources of FPs, primarily from GKE environments. [[#1372](https://github.com/falcosecurity/falco/pull/1372)]
-* rule(macro inbound_outbound): add brackets to disambiguate operator precedence [[#1373](https://github.com/falcosecurity/falco/pull/1373)]
-* rule(macro redis_writing_conf): add brackets to disambiguate operator precedence [[#1373](https://github.com/falcosecurity/falco/pull/1373)]
-* rule(macro run_by_foreman): add brackets to disambiguate operator precedence [[#1373](https://github.com/falcosecurity/falco/pull/1373)]
-* rule(macro consider_packet_socket_communication): enable "Packet socket created in container" rule by default. [[#1402](https://github.com/falcosecurity/falco/pull/1402)]
-* rule(Delete or rename shell history): skip docker overlay filesystems when considering bash history [[#1393](https://github.com/falcosecurity/falco/pull/1393)]
-* rule(Disallowed K8s User): quote colons in user names [[#1393](https://github.com/falcosecurity/falco/pull/1393)]
-* rule(macro falco_sensitive_mount_containers): Adds a trailing slash to avoid repo naming issues [[#1394](https://github.com/falcosecurity/falco/pull/1394)]
-* rule: adds user.loginuid to the default Falco rules that also contain user.name [[#1369](https://github.com/falcosecurity/falco/pull/1369)]
-
-
-
-This file documents all notable changes to Falco. The release numbering uses [semantic versioning](http://semver.org).
+* rule(macro inbound_outbound): add brackets to disambiguate operator precedence [[#1373](https://github.com/falcosecurity/falco/pull/1373)] - [@ldegio](https://github.com/ldegio)
+* rule(macro redis_writing_conf): add brackets to disambiguate operator precedence [[#1373](https://github.com/falcosecurity/falco/pull/1373)] - [@ldegio](https://github.com/ldegio)
+* rule(macro run_by_foreman): add brackets to disambiguate operator precedence [[#1373](https://github.com/falcosecurity/falco/pull/1373)] - [@ldegio](https://github.com/ldegio)
+* rule(macro consider_packet_socket_communication): enable "Packet socket created in container" rule by default. [[#1402](https://github.com/falcosecurity/falco/pull/1402)] - [@rung](https://github.com/rung)
+* rule(Delete or rename shell history): skip docker overlay filesystems when considering bash history [[#1393](https://github.com/falcosecurity/falco/pull/1393)] - [@mstemm](https://github.com/mstemm)
+* rule(Disallowed K8s User): quote colons in user names [[#1393](https://github.com/falcosecurity/falco/pull/1393)] - [@mstemm](https://github.com/mstemm)
+* rule(macro falco_sensitive_mount_containers): Adds a trailing slash to avoid repo naming issues [[#1394](https://github.com/falcosecurity/falco/pull/1394)] - [@bgeesaman](https://github.com/bgeesaman)
+* rule: adds user.loginuid to the default Falco rules that also contain user.name [[#1369](https://github.com/falcosecurity/falco/pull/1369)] - [@csschwe](https://github.com/csschwe)
 
 ## v0.25.0
 
