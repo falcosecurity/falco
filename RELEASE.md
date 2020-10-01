@@ -4,7 +4,7 @@ Our release process is mostly automated, but we still need some manual steps to 
 
 Changes and new features are grouped in [milestones](https://github.com/falcosecurity/falco/milestones), the milestone with the next version represents what is going to be released.
 
-Releases happen on a monthly cadence, towards the 16th of the on-going month, and we need to assign owners for each (usually we pair a new person with an experienced one). Assignees and the due date are proposed during the [weekly community call](https://github.com/falcosecurity/community). Note that hotfix releases can happen as soon as it is needed.
+Releases happen on a bi-monthly cadence ([as per community discussion](https://github.com/falcosecurity/community/blob/master/meeting-notes/2020-09-30.md#agenda)), and we need to assign owners for each (usually we pair a new person with an experienced one). Assignees and the due date are proposed during the [weekly community call](https://github.com/falcosecurity/community). Note that hotfix releases can happen as soon as it is needed.
 
 Finally, on the proposed due date the assignees for the upcoming release proceed with the processes described below.
 
@@ -62,28 +62,28 @@ Now assume `x.y.z` is the new version.
 - Use the following template to fill the release description:
     ```
     <!-- Substitute x.y.z with the current release version -->
-    
-    | Packages  | Download |
-    |-----------|----------|
-    | rpm       | [![rpm](https://img.shields.io/badge/Falco-x.y.z-%2300aec7?style=flat-square)](https://dl.bintray.com/falcosecurity/rpm/falco-x.y.z-x86_64.rpm)        |
-    | deb       | [![deb](https://img.shields.io/badge/Falco-x.y.z-%2300aec7?style=flat-square)](https://dl.bintray.com/falcosecurity/deb/stable/falco-x.y.z-x86_64.deb) |
-    | tgz       | [![tgz](https://img.shields.io/badge/Falco-x.y.z-%2300aec7?style=flat-square)](https://dl.bintray.com/falcosecurity/bin/x86_64/falco-x.y.z-x86_64.deb) |
 
-    | Images |
-    |--------|
-    | `docker pull docker.io/falcosecurity/falco:_tag_` |
+    | Packages | Download                                                                                                                                               |
+    | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+    | rpm      | [![rpm](https://img.shields.io/badge/Falco-x.y.z-%2300aec7?style=flat-square)](https://dl.bintray.com/falcosecurity/rpm/falco-x.y.z-x86_64.rpm)        |
+    | deb      | [![deb](https://img.shields.io/badge/Falco-x.y.z-%2300aec7?style=flat-square)](https://dl.bintray.com/falcosecurity/deb/stable/falco-x.y.z-x86_64.deb) |
+    | tgz      | [![tgz](https://img.shields.io/badge/Falco-x.y.z-%2300aec7?style=flat-square)](https://dl.bintray.com/falcosecurity/bin/x86_64/falco-x.y.z-x86_64.deb) |
+
+    | Images                                                          |
+    | --------------------------------------------------------------- |
+    | `docker pull docker.io/falcosecurity/falco:_tag_`               |
     | `docker pull docker.io/falcosecurity/falco-driver-loader:_tag_` |
-    | `docker pull docker.io/falcosecurity/falco-no-driver:_tag_` |
+    | `docker pull docker.io/falcosecurity/falco-no-driver:_tag_`     |
 
     <!-- Copy the relevant part of the changelog here -->
 
     ### Statistics
 
-    | Merged PRs        | Number  |
-    |-------------------|---------|
-    | Not user-facing   | x       |
-    | Release note      | x       |
-    | Total             | x       |
+    | Merged PRs      | Number |
+    | --------------- | ------ |
+    | Not user-facing | x      |
+    | Release note    | x      |
+    | Total           | x      |
 
     <!-- Calculate stats and fill the above table -->
     ```
