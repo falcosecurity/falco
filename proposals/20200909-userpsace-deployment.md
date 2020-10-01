@@ -16,23 +16,28 @@ We want to run Falco inside containers without access to kernel space.
 
 By creating a new project (Kilt) - that defines a patching/deployment procedure 
 it is possible to deploy Falco in different userspace environments (k8s, cloud 
-formation, etc) 
+formation, etc)
+
+The project consists of a definition for recipes to include binaries and alter 
+containers, a library to process recipes and runtimes that execute the recipes 
+on supported platforms.
 
 ## Goals
 
 - Offer a definition format for patching/deploying Falco along user containers
+- Offer a golang library that parses and executes recipes
 - Define a patching file for Falco
-- Offer automation when using k8s
-- Offer automation when using cloud formation
+- Offer automation when using k8s (Admission Controller Mutating Webhook)
+- Offer automation when using cloud formation (CFN Macro)
 
 
 ## Non-Goals
 
-- Automating deployments done outside of goals
+- Implementing an image patching runtime
 
 ## Proposal
 
-There are 3 main deployment methods when using vanilla AWS: 
+The proposal intends to cover the following use cases: 
 
 - *Existing containers outside of K8S* - This deployment type is the hardest to automate. We 
 will offer instructions on how to alter the containers to add Falco. We can do 
@@ -52,40 +57,40 @@ alter fargate task definitions in a CFN template
 
 
 ### Components
-- *kilt-cfn* (PoC ready) - A lambda that patches aws task definitions and can
- be registered as a macro
+- *kilt-cfn* (In PR https://github.com/falcosecurity/evolution/pull/40) - A lambda that patches aws task definitions 
+and can be registered as a macro
 - *kilt-k8s-webhook* (TBD) - A service that listens for webhooks and alters pod
  resources as they are created
 - *kilt-k8s-exec* - CLI to patch existing k8s pods.
 
 
-## Workflow 
-### Preparation
+## Workflow
+### Preparation (done by Falco maintainers)
 We prepare and publish a docker image containing Falco. The contents would be 
 the following:
 
 ```
 /falco/falco - falco binary
 /falco/pdig - ptrace-based instrumentation
-/falco/* - falco configs?
+/falco/* - falco configs? other binaries?
 ```
 
 We also provide a file called `kilt.cfg` which looks like:
 
 ```
- deploy {
+ build {
     entrypoint: [ /falco/pdig ] ${original.entrypoint}
     mount: [
         {
             image: "falco/falco:latest"
-            volume: /falco
+            volumes: /falco
             entrypoint: /falco/waitforever
         }
     ]
 	environment:
 		FALCO_METADATA: "image="${original.image}",name="${original.name}
 }
-patch {
+runtime {
     upload: [
         {
             url: "http://blah"
@@ -100,7 +105,7 @@ patch {
             as: "/falco/falco.cfg"
         }
     ]
-    background_exec: [
+    exec: [
         /falco/pdig -p 1
     ]
 }
@@ -108,25 +113,27 @@ patch {
 
 ### Cloud Formation User Workflow
 #### What the final user sees
-User downloads a cloud formation template distributed by us and executes it on
- the AWS account. 
-User then adds the newly created macro as a transform to the Cloud Formation
- templates that wants monitored and runs a deploy.
+User downloads an installer done by us and executes it.
+User then adds the newly created macro as a transform to the Cloud Formation templates that wants monitored and runs
+ a deploy.
+ 
+This step can also be used to distribute upgrades for Falco and Kilt runtimes.
 
 #### Behind the scenes
-The CFN installer downloads the `kilt` binary and sets it up as an
+The installer downloads the `kilt` binary and sets it up as an
  `AWS::Lambda`. A [CFN Macro](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/template-macros.html)
- is registered with a name provided by the user.
+ is registered with a name provided by the user (example: `FalcoMacro`).
 
 ### Kilt Transformation
 
 #### What the final user sees
-totally transparent
+User creates a new stack/upgrades an existing stack with a CFN template that includes `Transform: ${MacroName}`
+ at root level.
 
 #### Behind the scenes
 The kilt-cfn lambda is invoked on each stack creation/update referencing the
  macro. It finds all fargate task definitions in the template and applies the 
-patches defined in `kilt.cfg`
+patches defined in `kilt.cfg` specified during macro installation.
   
 ### Runtime
 #### What the final user sees
@@ -141,16 +148,16 @@ pdig is invoked. It forks and execs Falco and original command.
 ### kilt-cfn
 A aws lambda written in go that receives fragments of template to transform. 
 Does not need any permissions. Will execute instructions in the provided 
-`kilt.cfg` file. Can only interpret directives under `deploy`
+`kilt.cfg` file. Can only interpret directives under `build`
 
 ### kilt-k8s-webhook
 A webservice to be deployed to accept admission controller webhooks. 
-Applies only `deploy` directives. The service will run under k8s and will be 
+Applies only `build` directives. The service will run under k8s and will be 
 deployed via YAML.
 
 ### kilt-k8s-exec
 A CLI that uses local kubectl to instrument containers. Will only interpret 
-`patch` directives
+`runtime` directives
 
 ## To be decided
 * config format - is [HOCON](https://github.com/lightbend/config/blob/master/HOCON.md) fine?
