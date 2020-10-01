@@ -61,6 +61,20 @@ Now assume `x.y.z` is the new version.
 - Use `x.y.z` both as tag version and release title
 - Use the following template to fill the release description:
     ```
+    <!-- Substitute x.y.z with the current release version -->
+    
+    | Packages  | Download |
+    |-----------|----------|
+    | rpm       | [![rpm](https://img.shields.io/badge/Falco-x.y.z-%2300aec7?style=flat-square)](https://dl.bintray.com/falcosecurity/rpm/falco-x.y.z-x86_64.rpm)        |
+    | deb       | [![deb](https://img.shields.io/badge/Falco-x.y.z-%2300aec7?style=flat-square)](https://dl.bintray.com/falcosecurity/deb/stable/falco-x.y.z-x86_64.deb) |
+    | tgz       | [![tgz](https://img.shields.io/badge/Falco-x.y.z-%2300aec7?style=flat-square)](https://dl.bintray.com/falcosecurity/bin/x86_64/falco-x.y.z-x86_64.deb) |
+
+    | Images |
+    |--------|
+    | `docker pull docker.io/falcosecurity/falco:_tag_` |
+    | `docker pull docker.io/falcosecurity/falco-driver-loader:_tag_` |
+    | `docker pull docker.io/falcosecurity/falco-no-driver:_tag_` |
+
     <!-- Copy the relevant part of the changelog here -->
 
     ### Statistics
