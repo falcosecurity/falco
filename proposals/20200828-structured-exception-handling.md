@@ -142,11 +142,16 @@ To address some of these problems, we will add the notion of Exceptions as top l
     and not python_running_ms_oms
     and not user_known_write_below_binary_dir_activities
   exceptions:
-   - proc_writer: [proc.name, fd.directory]
-   - container_writer: [container.image.repository, fd.directory]
+   - proc_writer:
+     - fields: [proc.name, fd.directory]
+   - container_writer:
+     - fields: [container.image.repository, fd.directory]
+	   comps: [=, startswith]
 ```
 
 This rule defines two kinds of exceptions: one called proc_writer with a combination of proc.name and fd.directory, and a second called container_writer with a combination of container.image.repository and fd.directory. The specific strings "proc_writer" and "container_writer" are arbitrary strings and don't have a special meaning to the rules file parser. They're only used to link together the list of field names with the list of field values that exist in the exception object.
+
+proc_writer does not have any comps property, so the fields are directly compared to values using the = operator. container_writer does have a comps property, so each field will be compared to the corresponding exception items using the corresponding comparison operator.
 
 Notice that exceptions are defined as a part of the rule. This is important because the author of the rule defines what construes a valid exception to the rule. In this case, an exception can consist of a process and file directory (actor and target), but not a process name only (too broad).
 
@@ -166,8 +171,6 @@ The name of the exception links it to the rule.
 
 A rule exception applies if for a given event, the fields in a rule.exception match all of the values in some exception.item. For example, if a program `apk` writes to a file below `/usr/lib/alpine`, the rule will not trigger, even if the condition is met.
 
-Note that the only operator is "=" (equality). Although general rules conditions support a wide variety of operators including "pmatch", "startswith", "endswith", etc., the only supported operator in exceptions is equality.
-
 Append will be supported for exception objects. If append: is true, the items in the second definition will be added to the items in the earlier definition. For example, adding:
 
 ```
@@ -182,12 +185,12 @@ Would add a second container_writer exception.
 
 ### Implementation
 
-Each exception can be thought of as an implicit "and not (field1=val1 and field2=val2 and...)" appended to the rule's condition. In practice, that's how exceptions will be implemented.
+Each exception can be thought of as an implicit "and not (field1 cmp1 val1 and field2 cmp2 val2 and...)" appended to the rule's condition. In practice, that's how exceptions will be implemented.
 
 When a rule is parsed, the original condition will be wrapped in an extra layer of parentheses and all exception values will be appended to the condition. For example, using the example above, the resulting condition will be:
 
 ```
-(<Write below binary dir condition>) and not ((proc.name=apk and fd.directory=/usr/lib/alpine) or (proc.name=npm and fd.directory=/usr/node/bin) or (container.image.repository=docker.io/alpine and fd.directory=/usr/libexec/alpine))
+(<Write below binary dir condition>) and not ((proc.name = apk and fd.directory = /usr/lib/alpine) or (proc.name = npm and fd.directory = /usr/node/bin) or (container.image.repository = docker.io/alpine and fd.directory startswith /usr/libexec/alpine))
 ```
 
 The exceptions are effectively syntatic sugar that allows expressing sets of exceptions in a concise way.
