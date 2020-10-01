@@ -1,5 +1,19 @@
 # Change Log
 
+## v0.26.1
+
+Released on 2020-10-01
+
+### Major Changes
+
+* new: CLI flag `--alternate-lua-dir` to load Lua files from arbitrary paths [[#1419](https://github.com/falcosecurity/falco/pull/1419)] - [@admiral0](https://github.com/admiral0)
+
+### Rule Changes
+
+* rule(Delete or rename shell history): fix warnings/FPs + container teardown [[#1423](https://github.com/falcosecurity/falco/pull/1423)] - [@mstemm](https://github.com/mstemm)
+* rule(Write below root): ensure proc_name_exists too [[#1423](https://github.com/falcosecurity/falco/pull/1423)] - [@mstemm](https://github.com/mstemm)
+
+
 ## v0.26.0
 
 Released on 2020-24-09
