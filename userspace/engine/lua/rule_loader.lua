@@ -126,6 +126,25 @@ function set_output(output_format, state)
    end
 end
 
+-- This should be keep in sync with parser.lua
+defined_comp_operators = {
+   ["="]=1,
+   ["=="] = 1,
+   ["!"] = 1,
+   ["<="] = 1,
+   [">="] = 1,
+   ["<"] = 1,
+   [">"] = 1,
+   ["contains"] = 1,
+   ["icontains"] = 1,
+   ["glob"] = 1,
+   ["startswith"] = 1,
+   ["endswith"] = 1,
+   ["in"] = 1,
+   ["intersects"] = 1,
+   ["pmatch"] = 1
+}
+
 -- Note that the rules_by_name and rules_by_idx refer to the same rule
 -- object. The by_name index is used for things like describing rules,
 -- and the by_idx index is used to map the relational node index back
@@ -404,9 +423,14 @@ function load_rules_doc(rules_mgr, doc, load_state)
 	       local fields = eitem['fields']
 	       local comps = eitem['comps']
 
+	       if name == nil then
+		  return false, build_error_with_context(v['context'], "Rule exception item must have name property"), warnings
+	       end
+
 	       if fields == nil then
 		  return false, build_error_with_context(v['context'], "Rule exception item "..name..": must have fields property with a list of fields"), warnings
 	       end
+
 	       if comps == nil then
 		  comps = {}
 		  for c=1,#fields do
@@ -421,6 +445,11 @@ function load_rules_doc(rules_mgr, doc, load_state)
 	       for j, fname in ipairs(fields) do
 		  if defined_noarg_filters[fname] == nil then
 		     return false, build_error_with_context(v['context'], "Rule exception item "..name..": field name "..fname.." is not a supported filter field"), warnings
+		  end
+	       end
+	       for j, comp in ipairs(comps) do
+		  if defined_comp_operators[comp] == nil then
+		     return false, build_error_with_context(v['context'], "Rule exception item "..name..": comparison operator "..comp.." is not a supported comparison operator"), warnings
 		  end
 	       end
 	    end
@@ -492,6 +521,19 @@ function load_rules_doc(rules_mgr, doc, load_state)
 	    end
 	 end
       elseif (v['exception']) then
+
+	 for i, eitem in ipairs(v['items']) do
+	    local name = eitem['name']
+	    local fields = eitem['values']
+
+	    if name == nil then
+	       return false, build_error_with_context(v['context'], "Exception item must have name property"), warnings
+	    end
+
+	    if fields == nil then
+	       return false, build_error_with_context(v['context'], "Exception item "..name..": must have values property with a list of values"), warnings
+	    end
+	 end
 	 state.exceptions_by_name[v['exception']] = v
       else
 	 local context = v['context']
@@ -515,7 +557,7 @@ function build_exception_condition_string(eitem, rexitems)
    for i, values in ipairs(eitem['values']) do
 
       if #fields ~= #values then
-	 return nil, "Exception item "..eitem['name']..": values length "..#values.." does not match fields length "..#fields
+	 return nil, "Exception item "..eitem['name']..": fields and values lists must have equal length"
       end
 
       if icond ~= "" then
@@ -528,7 +570,13 @@ function build_exception_condition_string(eitem, rexitems)
 	 if k > 1 then
 	    icond=icond.." and "
 	 end
-	 icond = icond..fields[k].." "..comps[k].." "..values[k]
+	 -- Quote the value if not already quoted
+	 local ival = values[k]
+	 if string.sub(values[k], 1, 1) ~= "'" and string.sub(values[k], 1, 1) ~= '"' then
+	    ival = "\""..ival.."\""
+	 end
+
+	 icond = icond..fields[k].." "..comps[k]..ival
       end
 
       icond=icond..")"
@@ -659,9 +707,11 @@ function load_rules(sinsp_lua_parser,
 	    end
 	 end
 
-	 econd=econd..")"
+	 if econd ~= "" then
+	    econd=econd..")"
 
-	 state.rules_by_name[ename]['condition'] = "("..state.rules_by_name[ename]['condition']..") "..econd
+	    state.rules_by_name[ename]['condition'] = "("..state.rules_by_name[ename]['condition']..") "..econd
+	 end
       end
    end
 
