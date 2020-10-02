@@ -675,7 +675,8 @@ class FalcoTest(Test):
         self.check_rules_warnings(res)
         if len(self.rules_events) > 0:
             self.check_rules_events(res)
-        self.check_detections(res)
+        if len(self.validate_rules_file) == 0:
+            self.check_detections(res)
         if len(self.detect_counts) > 0:
             self.check_detections_by_rule(res)
         self.check_json_output(res)
