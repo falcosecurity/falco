@@ -142,11 +142,11 @@ To address some of these problems, we will add the notion of Exceptions as top l
     and not python_running_ms_oms
     and not user_known_write_below_binary_dir_activities
   exceptions:
-   - proc_writer:
-     - fields: [proc.name, fd.directory]
-   - container_writer:
-     - fields: [container.image.repository, fd.directory]
-	   comps: [=, startswith]
+   - name: proc_writer
+     fields: [proc.name, fd.directory]
+   - name: container_writer
+     fields: [container.image.repository, fd.directory]
+     comps: [=, startswith]
 ```
 
 This rule defines two kinds of exceptions: one called proc_writer with a combination of proc.name and fd.directory, and a second called container_writer with a combination of container.image.repository and fd.directory. The specific strings "proc_writer" and "container_writer" are arbitrary strings and don't have a special meaning to the rules file parser. They're only used to link together the list of field names with the list of field values that exist in the exception object.
@@ -160,10 +160,12 @@ We'll add a new object exception that defines exceptions to a rule:
 ```
 - exception: Write below binary dir
   items:
-  - proc_writer:
+  - name: proc_writer
+    values:
     - [apk, /usr/lib/alpine]
     - [npm, /usr/node/bin]
-  - container_writer:
+  - name: container_writer
+    values:
     - [docker.io/alpine, /usr/libexec/alpine]
 ```
 
