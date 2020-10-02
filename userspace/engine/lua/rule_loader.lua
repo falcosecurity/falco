@@ -397,11 +397,26 @@ function load_rules_doc(rules_mgr, doc, load_state)
 	 end
 
 	 -- Make sure that all exception fields are actually valid for this rule's source
-	 for i, efield in ipairs(v['exceptions']) do
-	    for iname, ffields in pairs(efield) do
-	       for j, fname in ipairs(ffields) do
-		  if defined_noarg_filters[fname] == nil then
-		     return false, build_error_with_context(v['context'], "Exception field name "..fname.." is not a supported filter field"), warnings
+	 if next(v['exceptions']) ~= nil then
+	    if v['exceptions']['fields'] == nil then
+	       return false, build_error_with_context(v['context'], "Rule exception must have fields property with a list of fields"), warnings
+	    end
+	    if v['exceptions']['comps'] == nil then
+	       v['exceptions']['comps'] = {}
+	       for c=1,#v['exceptions']['fields'] do
+		  v['exceptions']['comps'][#v['exceptions']['fields']+1]="="
+	       end
+	    else
+	       if #v['exceptions']['fields'] ~= #v['exceptions']['comps'] then
+		  return false, build_error_with_context(v['context'], "Rule exception fields and comps lists must have equal length"), warnings
+	       end
+	    end
+	    for i, efield in ipairs(v['exceptions']['fields']) do
+	       for iname, ffields in pairs(efield) do
+		  for j, fname in ipairs(ffields) do
+		     if defined_noarg_filters[fname] == nil then
+			return false, build_error_with_context(v['context'], "Exception field name "..fname.." is not a supported filter field"), warnings
+		     end
 		  end
 	       end
 	    end
@@ -430,7 +445,7 @@ function load_rules_doc(rules_mgr, doc, load_state)
 	    else
 
 	       -- You can't append exceptions to a rule
-	       if #v['exceptions'] > 0 then
+	       if v['exceptions'] ~= {} then
 		  return false, build_error_with_context(v['context'], "Can not append exceptions to existing rule, only conditions"), warnings
 	       end
 
@@ -576,10 +591,10 @@ function load_rules(sinsp_lua_parser,
 	 warnings[#warnings + 1] = "No rule matching exception name "..exc['exception']
       else
 	 -- Extract the exception fields out of the corresponding rule
-	 fields = {}
-	 for i, efield in ipairs(state.rules_by_name[ename].exceptions) do
-	    for iname, ffields in pairs(efield) do
-	       fields[iname] = ffields
+	 exitems = {}
+	 for i, ex in ipairs(state.rules_by_name[ename].exceptions) do
+	    for iname, eobj in pairs(efield) do
+	       exitems[iname] = eobj
 	    end
 	 end
 
@@ -588,21 +603,21 @@ function load_rules(sinsp_lua_parser,
 	 -- Build up the additional condition string
 	 for i, eitems in ipairs(exc['items']) do
 	    for iname, ivals in pairs(eitems) do
-	       if fields[iname] == nil then
+	       if exitems[iname] == nil then
 		  warnings[#warnings + 1] = "Exception "..ename..": no set of fields matching name "..iname
 	       end
 
 	       for j, fvals in ipairs(ivals) do
-		  if #fields[iname] ~= #fvals then
-		     return false, nil, build_error_with_context(exc['context'], "Exception "..ename..", item "..iname..": values length "..#fvals.." does not match fields length "..#fields[iname]), warnings
+		  if #exitems[iname]['fields'] ~= #fvals then
+		     return false, nil, build_error_with_context(exc['context'], "Exception "..ename..", item "..iname..": values length "..#fvals.." does not match fields length "..#exitems[iname]['fields']), warnings
 		  end
 
 		  local icond = "("
-		  for k, field in ipairs(fields[iname]) do
+		  for k=1,#exitems[iname]['fields'] do
 		     if k > 1 then
 			icond=icond.." and "
 		     end
-		     icond = icond..field.."="..fvals[k]
+		     icond = icond..exitems[iname]['fields'][k].." "..exitems[iname]['fields'][k]..fvals[k]
 		  end
 		  icond = icond..")"
 
