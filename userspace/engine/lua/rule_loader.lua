@@ -396,27 +396,31 @@ function load_rules_doc(rules_mgr, doc, load_state)
 	    v['exceptions'] = {}
 	 end
 
-	 -- Make sure that all exception fields are actually valid for this rule's source
+	 -- Validate the contents of the rule exception
 	 if next(v['exceptions']) ~= nil then
-	    if v['exceptions']['fields'] == nil then
-	       return false, build_error_with_context(v['context'], "Rule exception must have fields property with a list of fields"), warnings
-	    end
-	    if v['exceptions']['comps'] == nil then
-	       v['exceptions']['comps'] = {}
-	       for c=1,#v['exceptions']['fields'] do
-		  v['exceptions']['comps'][#v['exceptions']['fields']+1]="="
+
+	    for i, eitem in ipairs(v['exceptions']) do
+	       local name = eitem['name']
+	       local fields = eitem['fields']
+	       local comps = eitem['comps']
+
+	       if fields == nil then
+		  return false, build_error_with_context(v['context'], "Rule exception item "..name..": must have fields property with a list of fields"), warnings
 	       end
-	    else
-	       if #v['exceptions']['fields'] ~= #v['exceptions']['comps'] then
-		  return false, build_error_with_context(v['context'], "Rule exception fields and comps lists must have equal length"), warnings
+	       if comps == nil then
+		  comps = {}
+		  for c=1,#fields do
+		     table.insert(comps, "=")
+		  end
+		  eitem['comps'] = comps
+	       else
+		  if #fields ~= #comps then
+		     return false, build_error_with_context(v['context'], "Rule exception item "..name..": fields and comps lists must have equal length"), warnings
+		  end
 	       end
-	    end
-	    for i, efield in ipairs(v['exceptions']['fields']) do
-	       for iname, ffields in pairs(efield) do
-		  for j, fname in ipairs(ffields) do
-		     if defined_noarg_filters[fname] == nil then
-			return false, build_error_with_context(v['context'], "Exception field name "..fname.." is not a supported filter field"), warnings
-		     end
+	       for j, fname in ipairs(fields) do
+		  if defined_noarg_filters[fname] == nil then
+		     return false, build_error_with_context(v['context'], "Rule exception item "..name..": field name "..fname.." is not a supported filter field"), warnings
 		  end
 	       end
 	    end
@@ -445,7 +449,7 @@ function load_rules_doc(rules_mgr, doc, load_state)
 	    else
 
 	       -- You can't append exceptions to a rule
-	       if v['exceptions'] ~= {} then
+	       if v['exceptions'] ~= nil then
 		  return false, build_error_with_context(v['context'], "Can not append exceptions to existing rule, only conditions"), warnings
 	       end
 
@@ -498,6 +502,40 @@ function load_rules_doc(rules_mgr, doc, load_state)
    end
 
    return true, {}, warnings
+end
+
+-- cond and not ((proc.name=apk and fd.directory=/usr/lib/alpine) or (proc.name=npm and fd.directory=/usr/node/bin) or (con
+function build_exception_condition_string(eitem, rexitems)
+
+   local fields = rexitems[eitem['name']]['fields']
+   local comps = rexitems[eitem['name']]['comps']
+
+   local icond = ""
+
+   for i, values in ipairs(eitem['values']) do
+
+      if #fields ~= #values then
+	 return nil, "Exception item "..eitem['name']..": values length "..#values.." does not match fields length "..#fields
+      end
+
+      if icond ~= "" then
+	 icond=icond.." or "
+      end
+
+      icond=icond.."("
+
+      for k=1,#fields do
+	 if k > 1 then
+	    icond=icond.." and "
+	 end
+	 icond = icond..fields[k].." "..comps[k].." "..values[k]
+      end
+
+      icond=icond..")"
+   end
+
+   return icond, nil
+
 end
 
 -- Returns:
@@ -590,45 +628,37 @@ function load_rules(sinsp_lua_parser,
       if state.rules_by_name[ename] == nil then
 	 warnings[#warnings + 1] = "No rule matching exception name "..exc['exception']
       else
-	 -- Extract the exception fields out of the corresponding rule
-	 exitems = {}
-	 for i, ex in ipairs(state.rules_by_name[ename].exceptions) do
-	    for iname, eobj in pairs(efield) do
-	       exitems[iname] = eobj
-	    end
-	 end
 
+	 local rexitems = {}
+
+	 -- Create a map from item name to object, speeds up matching
+	 for i, iobj in ipairs(state.rules_by_name[ename].exceptions) do
+	    rexitems[iobj['name']] = iobj
+	 end
+	 -- Usep the exception items, combined with any exceptions in
+	 -- the rules, to build condition strings to append to the
+	 -- rule's condition.
 	 local econd = ""
 
-	 -- Build up the additional condition string
-	 for i, eitems in ipairs(exc['items']) do
-	    for iname, ivals in pairs(eitems) do
-	       if exitems[iname] == nil then
-		  warnings[#warnings + 1] = "Exception "..ename..": no set of fields matching name "..iname
+	 for i, eitem in ipairs(exc['items']) do
+
+	    if rexitems[eitem['name']] == nil then
+	       warnings[#warnings + 1] = "Exception "..ename..": no set of fields matching name "..eitem['name']
+	    else
+	       icond, err = build_exception_condition_string(eitem, rexitems)
+
+	       if err ~= nil then
+		  return false, nil, build_error_with_context(exc['context'], err), warnings
 	       end
 
-	       for j, fvals in ipairs(ivals) do
-		  if #exitems[iname]['fields'] ~= #fvals then
-		     return false, nil, build_error_with_context(exc['context'], "Exception "..ename..", item "..iname..": values length "..#fvals.." does not match fields length "..#exitems[iname]['fields']), warnings
-		  end
-
-		  local icond = "("
-		  for k=1,#exitems[iname]['fields'] do
-		     if k > 1 then
-			icond=icond.." and "
-		     end
-		     icond = icond..exitems[iname]['fields'][k].." "..exitems[iname]['fields'][k]..fvals[k]
-		  end
-		  icond = icond..")"
-
-		  if econd == "" then
-		     econd = econd.." and not ("..icond
-		  else
-		     econd = econd.." or "..icond
-		  end
+	       if econd == "" then
+		  econd = econd.." and not ("..icond
+	       else
+		  econd = econd.." or "..icond
 	       end
 	    end
 	 end
+
 	 econd=econd..")"
 
 	 state.rules_by_name[ename]['condition'] = "("..state.rules_by_name[ename]['condition']..") "..econd
