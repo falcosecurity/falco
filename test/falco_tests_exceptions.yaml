@@ -1,0 +1,288 @@
+#
+# Copyright (C) 2016-2020 The Falco Authors..
+#
+# This file is part of falco.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+trace_files: !mux
+
+  rule_exception_no_fields:
+    exit_status: 1
+    stdout_is: |+
+      1 errors:
+      Rule exception item ex1: must have fields property with a list of fields
+      ---
+      - rule: My Rule
+        desc: Some desc
+        condition: evt.type=open and proc.name=cat
+        output: Some output
+        exceptions:
+          - name: ex1
+        priority: error
+      ---
+    validate_rules_file:
+      - rules/exceptions/item_no_fields.yaml
+    trace_file: trace_files/cat_write.scap
+
+  rule_exception_no_name:
+    exit_status: 1
+    stdout_is: |+
+      1 errors:
+      Rule exception item must have name property
+      ---
+      - rule: My Rule
+        desc: Some desc
+        condition: evt.type=open and proc.name=cat
+        output: Some output
+        exceptions:
+          - fields: [proc.name, fd.filename]
+        priority: error
+      ---
+    validate_rules_file:
+      - rules/exceptions/item_no_name.yaml
+    trace_file: trace_files/cat_write.scap
+
+  rule_exception_append_no_name:
+    exit_status: 1
+    stdout_is: |+
+      1 errors:
+      Rule exception item must have name property
+      ---
+      - rule: My Rule
+        exceptions:
+          - values:
+              - [nginx, /tmp/foo]
+        append: true
+      ---
+    validate_rules_file:
+      - rules/exceptions/append_item_no_name.yaml
+    trace_file: trace_files/cat_write.scap
+
+  rule_exception_unknown_fields:
+    exit_status: 1
+    stdout_is: |+
+      1 errors:
+      Rule exception item ex1: field name not.exist is not a supported filter field
+      ---
+      - rule: My Rule
+        desc: Some desc
+        condition: evt.type=open and proc.name=cat
+        output: Some output
+        exceptions:
+          - name: ex1
+            fields: [not.exist]
+        priority: error
+      ---
+    validate_rules_file:
+      - rules/exceptions/item_unknown_fields.yaml
+    trace_file: trace_files/cat_write.scap
+
+  rule_exception_comps_fields_len_mismatch:
+    exit_status: 1
+    stdout_is: |+
+      1 errors:
+      Rule exception item ex1: fields and comps lists must have equal length
+      ---
+      - rule: My Rule
+        desc: Some desc
+        condition: evt.type=open and proc.name=cat
+        output: Some output
+        exceptions:
+          - name: ex1
+            fields: [proc.name, fd.filename]
+            comps: [=]
+        priority: error
+      ---
+    validate_rules_file:
+      - rules/exceptions/item_comps_fields_len_mismatch.yaml
+    trace_file: trace_files/cat_write.scap
+
+  rule_exception_unknown_comp:
+    exit_status: 1
+    stdout_is: |+
+      1 errors:
+      Rule exception item ex1: comparison operator no-comp is not a supported comparison operator
+      ---
+      - rule: My Rule
+        desc: Some desc
+        condition: evt.type=open and proc.name=cat
+        output: Some output
+        exceptions:
+          - name: ex1
+            fields: [proc.name, fd.filename]
+            comps: [=, no-comp]
+        priority: error
+      ---
+    validate_rules_file:
+      - rules/exceptions/item_unknown_comp.yaml
+    trace_file: trace_files/cat_write.scap
+
+  rule_exception_fields_values_len_mismatch:
+    exit_status: 1
+    stdout_is: |+
+      1 errors:
+      Exception item ex1: fields and values lists must have equal length
+      ---
+      - rule: My Rule
+        desc: Some desc
+        condition: evt.type=open and proc.name=cat
+        output: Some output
+        exceptions:
+          - name: ex1
+            fields: [proc.name, fd.filename]
+            values:
+              - [nginx]
+        priority: error
+      ---
+    validate_rules_file:
+      - rules/exceptions/item_fields_values_len_mismatch.yaml
+    trace_file: trace_files/cat_write.scap
+
+  rule_exception_append_fields_values_len_mismatch:
+    exit_status: 1
+    stdout_is: |+
+      1 errors:
+      Exception item ex1: fields and values lists must have equal length
+      ---
+      - rule: My Rule
+        desc: Some desc
+        condition: evt.type=open and proc.name=cat
+        output: Some output
+        exceptions:
+          - name: ex1
+            fields: [proc.name, fd.filename]
+        priority: error
+
+      - rule: My Rule
+        exceptions:
+          - name: ex1
+            values:
+              - [nginx]
+        append: true
+      ---
+    validate_rules_file:
+      - rules/exceptions/append_item_fields_values_len_mismatch.yaml
+    trace_file: trace_files/cat_write.scap
+
+  rule_exception_append_item_not_in_rule:
+    exit_status: 0
+    stderr_contains: |+
+      1 warnings:
+      Rule My Rule with append=true: no set of fields matching name ex2
+    validate_rules_file:
+      - rules/exceptions/append_item_not_in_rule.yaml
+    trace_file: trace_files/cat_write.scap
+
+  rule_without_exception:
+    exit_status: 0
+    stderr_contains: |+
+      1 warnings:
+      Rule My Rule: consider adding an exceptions property to define supported exceptions fields
+    validate_rules_file:
+      - rules/exceptions/rule_without_exception.yaml
+    trace_file: trace_files/cat_write.scap
+
+  rule_exception_no_values:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/exceptions/rule_exception_no_values.yaml
+    trace_file: trace_files/cat_write.scap
+
+  rule_exception_one_value:
+    detect: False
+    detect_level: WARNING
+    rules_file:
+      - rules/exceptions/rule_exception_one_value.yaml
+    trace_file: trace_files/cat_write.scap
+
+  rule_exception_append_one_value:
+    detect: False
+    detect_level: WARNING
+    rules_file:
+      - rules/exceptions/rule_exception_append_one_value.yaml
+    trace_file: trace_files/cat_write.scap
+
+  rule_exception_second_value:
+    detect: False
+    detect_level: WARNING
+    rules_file:
+      - rules/exceptions/rule_exception_second_value.yaml
+    trace_file: trace_files/cat_write.scap
+
+  rule_exception_append_second_value:
+    detect: False
+    detect_level: WARNING
+    rules_file:
+      - rules/exceptions/rule_exception_append_second_value.yaml
+    trace_file: trace_files/cat_write.scap
+
+  rule_exception_second_item:
+    detect: False
+    detect_level: WARNING
+    rules_file:
+      - rules/exceptions/rule_exception_second_item.yaml
+    trace_file: trace_files/cat_write.scap
+
+  rule_exception_append_second_item:
+    detect: False
+    detect_level: WARNING
+    rules_file:
+      - rules/exceptions/rule_exception_append_second_item.yaml
+    trace_file: trace_files/cat_write.scap
+
+  rule_exception_third_item:
+    detect: False
+    detect_level: WARNING
+    rules_file:
+      - rules/exceptions/rule_exception_third_item.yaml
+    trace_file: trace_files/cat_write.scap
+
+  rule_exception_append_third_item:
+    detect: False
+    detect_level: WARNING
+    rules_file:
+      - rules/exceptions/rule_exception_append_third_item.yaml
+    trace_file: trace_files/cat_write.scap
+
+  rule_exception_quoted:
+    detect: False
+    detect_level: WARNING
+    rules_file:
+      - rules/exceptions/rule_exception_quoted.yaml
+    trace_file: trace_files/cat_write.scap
+
+  rule_exception_append_multiple_values:
+    detect: False
+    detect_level: WARNING
+    rules_file:
+      - rules/exceptions/rule_exception_append_multiple.yaml
+    trace_file: trace_files/cat_write.scap
+
+  rule_exception_comp:
+    detect: False
+    detect_level: WARNING
+    rules_file:
+      - rules/exceptions/rule_exception_comp.yaml
+    trace_file: trace_files/cat_write.scap
+
+  rule_exception_append_comp:
+    detect: False
+    detect_level: WARNING
+    rules_file:
+      - rules/exceptions/rule_exception_append_comp.yaml
+    trace_file: trace_files/cat_write.scap
+
+
