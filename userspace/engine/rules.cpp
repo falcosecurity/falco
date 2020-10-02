@@ -491,8 +491,7 @@ void falco_rules::load_rules(const string &rules_content,
 
 		if(!successful)
 		{
-			std::string err = "Could not load rules content: " + os.str();
-			throw falco_exception(err);
+			throw falco_exception(os.str());
 		}
 
 		if (verbose && os.str() != "") {
