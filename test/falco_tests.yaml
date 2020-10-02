@@ -262,6 +262,7 @@ trace_files: !mux
   invalid_not_yaml:
     exit_status: 1
     stdout_is: |+
+      1 errors:
       Rules content is not yaml
       ---
       This is not yaml
@@ -273,6 +274,7 @@ trace_files: !mux
   invalid_not_array:
     exit_status: 1
     stdout_is: |+
+      1 errors:
       Rules content is not yaml array of objects
       ---
       foo: bar
@@ -284,6 +286,7 @@ trace_files: !mux
   invalid_array_item_not_object:
     exit_status: 1
     stdout_is: |+
+      1 errors:
       Unexpected element of type string. Each element should be a yaml associative array.
       ---
       - foo
@@ -295,6 +298,7 @@ trace_files: !mux
   invalid_unexpected object:
     exit_status: 1
     stdout_is: |+
+      1 errors:
       Unknown rule object: {foo="bar"}
       ---
       - foo: bar
@@ -306,6 +310,7 @@ trace_files: !mux
   invalid_engine_version_not_number:
     exit_status: 1
     stdout_is: |+
+      1 errors:
       Value of required_engine_version must be a number
       ---
       - required_engine_version: not-a-number
@@ -317,6 +322,7 @@ trace_files: !mux
   invalid_yaml_parse_error:
     exit_status: 1
     stdout_is: |+
+      1 errors:
       mapping values are not allowed in this context
       ---
       this : is : not : yaml
@@ -328,6 +334,7 @@ trace_files: !mux
   invalid_list_without_items:
     exit_status: 1
     stdout_is: |+
+      1 errors:
       List must have property items
       ---
       - list: bad_list
@@ -340,6 +347,7 @@ trace_files: !mux
   invalid_macro_without_condition:
     exit_status: 1
     stdout_is: |+
+      1 errors:
       Macro must have property condition
       ---
       - macro: bad_macro
@@ -352,6 +360,7 @@ trace_files: !mux
   invalid_rule_without_output:
     exit_status: 1
     stdout_is: |+
+      1 errors:
       Rule must have property output
       ---
       - rule: no output rule
@@ -359,6 +368,8 @@ trace_files: !mux
         condition: evt.type=fork
         priority: INFO
       ---
+      1 warnings:
+      Rule no output rule: consider adding an exceptions property to define supported exceptions fields
     validate_rules_file:
       - rules/invalid_rule_without_output.yaml
     trace_file: trace_files/cat_write.scap
@@ -366,7 +377,8 @@ trace_files: !mux
   invalid_append_rule_without_condition:
     exit_status: 1
     stdout_is: |+
-      Rule must have property condition
+      1 errors:
+      Rule must have exceptions or condition property
       ---
       - rule: no condition rule
         append: true
@@ -378,6 +390,7 @@ trace_files: !mux
   invalid_append_macro_dangling:
     exit_status: 1
     stdout_is: |+
+      1 errors:
       Macro dangling append has 'append' key but no macro by that name already exists
       ---
       - macro: dangling append
@@ -391,6 +404,7 @@ trace_files: !mux
   invalid_list_append_dangling:
     exit_status: 1
     stdout_is: |+
+      1 errors:
       List my_list has 'append' key but no list by that name already exists
       ---
       - list: my_list
@@ -404,12 +418,15 @@ trace_files: !mux
   invalid_rule_append_dangling:
     exit_status: 1
     stdout_is: |+
+      1 errors:
       Rule my_rule has 'append' key but no rule by that name already exists
       ---
       - rule: my_rule
         condition: evt.type=open
         append: true
       ---
+      1 warnings:
+      Rule my_rule: consider adding an exceptions property to define supported exceptions fields
     validate_rules_file:
       - rules/rule_append_failure.yaml
     trace_file: trace_files/cat_write.scap
@@ -418,7 +435,8 @@ trace_files: !mux
     exit_status: 1
     stdout_contains: |+
       .*invalid_base_macro.yaml: Ok
-      .*invalid_overwrite_macro.yaml: Compilation error when compiling "foo": Undefined macro 'foo' used in filter.
+      .*invalid_overwrite_macro.yaml: 1 errors:
+      Compilation error when compiling "foo": Undefined macro 'foo' used in filter.
       ---
       - macro: some macro
         condition: foo
@@ -433,7 +451,8 @@ trace_files: !mux
     exit_status: 1
     stdout_contains: |+
       .*invalid_base_macro.yaml: Ok
-      .*invalid_append_macro.yaml: Compilation error when compiling "evt.type=execve foo": 17: syntax error, unexpected 'foo', expecting 'or', 'and'
+      .*invalid_append_macro.yaml: 1 errors:
+      Compilation error when compiling "evt.type=execve foo": 17: syntax error, unexpected 'foo', expecting 'or', 'and'
       ---
       - macro: some macro
         condition: evt.type=execve
@@ -450,6 +469,7 @@ trace_files: !mux
   invalid_overwrite_macro_multiple_docs:
     exit_status: 1
     stdout_is: |+
+      1 errors:
       Compilation error when compiling "foo": Undefined macro 'foo' used in filter.
       ---
       - macro: some macro
@@ -463,6 +483,7 @@ trace_files: !mux
   invalid_append_macro_multiple_docs:
     exit_status: 1
     stdout_is: |+
+      1 errors:
       Compilation error when compiling "evt.type=execve foo": 17: syntax error, unexpected 'foo', expecting 'or', 'and'
       ---
       - macro: some macro
@@ -480,7 +501,8 @@ trace_files: !mux
     exit_status: 1
     stdout_contains: |+
       .*invalid_base_rule.yaml: Ok
-      .*invalid_overwrite_rule.yaml: Undefined macro 'bar' used in filter.
+      .*invalid_overwrite_rule.yaml: 1 errors:
+      Undefined macro 'bar' used in filter.
       ---
       - rule: some rule
         desc: some desc
@@ -498,7 +520,8 @@ trace_files: !mux
     exit_status: 1
     stdout_contains: |+
       .*invalid_base_rule.yaml: Ok
-      .*invalid_append_rule.yaml: Compilation error when compiling "evt.type=open bar": 15: syntax error, unexpected 'bar', expecting 'or', 'and'
+      .*invalid_append_rule.yaml: 1 errors:
+      Compilation error when compiling "evt.type=open bar": 15: syntax error, unexpected 'bar', expecting 'or', 'and'
       ---
       - rule: some rule
         desc: some desc
@@ -521,6 +544,7 @@ trace_files: !mux
   invalid_overwrite_rule_multiple_docs:
     exit_status: 1
     stdout_is: |+
+      1 errors:
       Undefined macro 'bar' used in filter.
       ---
       - rule: some rule
@@ -530,6 +554,9 @@ trace_files: !mux
         priority: INFO
         append: false
       ---
+      2 warnings:
+      Rule some rule: consider adding an exceptions property to define supported exceptions fields
+      Rule some rule: consider adding an exceptions property to define supported exceptions fields
     validate_rules_file:
       - rules/invalid_overwrite_rule_multiple_docs.yaml
     trace_file: trace_files/cat_write.scap
@@ -552,6 +579,9 @@ trace_files: !mux
         priority: INFO
         append: true
       ---
+      2 warnings:
+      Rule some rule: consider adding an exceptions property to define supported exceptions fields
+      Rule some rule: consider adding an exceptions property to define supported exceptions fields
     validate_rules_file:
       - rules/invalid_append_rule_multiple_docs.yaml
     trace_file: trace_files/cat_write.scap
@@ -559,6 +589,7 @@ trace_files: !mux
   invalid_missing_rule_name:
     exit_status: 1
     stdout_is: |+
+      1 errors:
       Rule name is empty
       ---
       - rule:
@@ -573,6 +604,7 @@ trace_files: !mux
   invalid_missing_list_name:
     exit_status: 1
     stdout_is: |+
+      1 errors:
       List name is empty
       ---
       - list:
@@ -585,6 +617,7 @@ trace_files: !mux
   invalid_missing_macro_name:
     exit_status: 1
     stdout_is: |+
+      1 errors:
       Macro name is empty
       ---
       - macro:
@@ -596,8 +629,19 @@ trace_files: !mux
 
   invalid_rule_output:
     exit_status: 1
-    stderr_contains: "Runtime error: Error loading rules:.* Invalid output format 'An open was seen %not_a_real_field': 'invalid formatting token not_a_real_field'. Exiting."
-    rules_file:
+    stdout_is: |+
+      1 errors:
+      Invalid output format 'An open was seen %not_a_real_field': 'invalid formatting token not_a_real_field'
+      ---
+      - rule: rule_with_invalid_output
+        desc: A rule with an invalid output field
+        condition: evt.type=open
+        output: "An open was seen %not_a_real_field"
+        priority: WARNING
+      ---
+      1 warnings:
+      Rule rule_with_invalid_output: consider adding an exceptions property to define supported exceptions fields
+    validate_rules_file:
       - rules/invalid_rule_output.yaml
     trace_file: trace_files/cat_write.scap
 
@@ -1117,7 +1161,7 @@ trace_files: !mux
 
   skip_unknown_noevt:
     detect: False
-    stdout_contains: Skipping rule "Contains Unknown Event And Skipping" that contains unknown filter proc.nobody
+    stdout_contains: Skipping rule "Contains Unknown Event And Skipping". contains unknown filter proc.nobody
     rules_file:
       - rules/skip_unknown_evt.yaml
     trace_file: trace_files/cat_write.scap
@@ -1130,14 +1174,33 @@ trace_files: !mux
 
   skip_unknown_error:
     exit_status: 1
-    stderr_contains: Rule "Contains Unknown Event And Not Skipping" contains unknown filter proc.nobody. Exiting.
+    stderr_contains: |+
+      Could not load rules file.*skip_unknown_error.yaml: 1 errors:
+      rule "Contains Unknown Event And Not Skipping". contains unknown filter proc.nobody
+      ---
+      - rule: Contains Unknown Event And Not Skipping
+        desc: Contains an unknown event
+        condition: proc.nobody=cat
+        output: Never
+        skip-if-unknown-filter: false
+        priority: INFO
+      ---
     rules_file:
       - rules/skip_unknown_error.yaml
     trace_file: trace_files/cat_write.scap
 
   skip_unknown_unspec_error:
     exit_status: 1
-    stderr_contains: Rule "Contains Unknown Event And Unspecified" contains unknown filter proc.nobody. Exiting.
+    stderr_contains: |+
+      Could not load rules file .*skip_unknown_unspec.yaml: 1 errors:
+      rule "Contains Unknown Event And Unspecified". contains unknown filter proc.nobody
+      ---
+      - rule: Contains Unknown Event And Unspecified
+        desc: Contains an unknown event
+        condition: proc.nobody=cat
+        output: Never
+        priority: INFO
+      ---
     rules_file:
       - rules/skip_unknown_unspec.yaml
     trace_file: trace_files/cat_write.scap
