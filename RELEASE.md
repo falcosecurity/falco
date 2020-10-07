@@ -90,6 +90,16 @@ Now assume `x.y.z` is the new version.
 
 - Finally, publish the release!
 
+### 3. Update the meeting notes
+
+For each release we archive the meeting notes in git for historical purposes.
+
+ - The notes from the Falco meetings can be [found here](https://hackmd.io/6sEAlInlSaGnLz2FnFz21A).
+    - Note: There may be other notes from working groups that can optionally be added as well as needed.
+ - Add the entire content of the document to a new file in [github.com/falcosecurity/community/tree/master/meeting-notes](https://github.com/falcosecurity/community/tree/master/meeting-notes) as a new file labeled `release-x.y.z.md`
+ - Open up a pull request with the new change.
+
+
 ## Post-Release tasks
 
 Announce the new release to the world!
