@@ -27,8 +27,10 @@ on supported platforms.
 - Offer a definition format for patching/deploying Falco along user containers
 - Offer a golang library that parses and executes recipes
 - Define a patching file for Falco
-- Offer automation when using k8s (Admission Controller Mutating Webhook)
-- Offer automation when using cloud formation (CFN Macro)
+
+## Possible runtimes
+- Automation when using k8s (Admission Controller Mutating Webhook)
+- Automation when using cloud formation (CFN Macro)
 
 
 ## Non-Goals
@@ -64,6 +66,10 @@ and can be registered as a macro
 - *kilt-k8s-exec* - CLI to patch existing k8s pods.
 
 
+### Kilt definition config format
+We decided to go with HOCON for the kilt definition file as it is very flexible and not obnoxious to write (it is less sensible to whitespace than YAML, but 
+can translate to JSON as well).
+
 ## Workflow
 ### Preparation (done by Falco maintainers)
 We prepare and publish a docker image containing Falco. The contents would be 
@@ -71,7 +77,7 @@ the following:
 
 ```
 /falco/falco - falco binary
-/falco/pdig - ptrace-based instrumentation
+/falco/pdig - ptrace-based instrumentation (userspace)
 /falco/* - falco configs? other binaries?
 ```
 
@@ -159,5 +165,7 @@ deployed via YAML.
 A CLI that uses local kubectl to instrument containers. Will only interpret 
 `runtime` directives
 
-## To be decided
-* config format - is [HOCON](https://github.com/lightbend/config/blob/master/HOCON.md) fine?
+## Actions
+* create a kilt repository
+* create a kilt-definitions repository
+
