@@ -2731,7 +2731,7 @@
 
 # Users should overwrite this macro to specify conditions under which a
 # Custom condition for use of remote file copy tool in container
-- macro: user_known_remote_file_copy_tools_in_container_conditions
+- macro: user_known_remote_file_copy_activities
   condition: (never_true)
 
 - rule: Launch Remote File Copy Tools in Container
@@ -2740,7 +2740,7 @@
     spawned_process
     and container
     and remote_file_copy_procs
-    and not user_known_remote_file_copy_tools_in_container_conditions
+    and not user_known_remote_file_copy_activities
   output: >
     Remote file copy tool launched in container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline parent_process=%proc.pname
     container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
