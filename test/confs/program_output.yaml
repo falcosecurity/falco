@@ -41,4 +41,4 @@ stdout_output:
 
 program_output:
   enabled: true
-  program: cat > /tmp/falco_outputs/program_output.txt
+  program: cat >> /tmp/falco_outputs/program_output.txt

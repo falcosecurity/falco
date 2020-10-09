@@ -652,25 +652,35 @@ trace_files: !mux
     trace_file: trace_files/cat_write.scap
     stdout_contains: "Warning An open was seen .cport=<NA> command=cat /dev/null."
 
-  file_output:
+  stdout_output_strict:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/single_rule.yaml
+    conf_file: confs/file_stdout.yaml
+    trace_file: trace_files/cat_write.scap
+    output_strictly_contains:
+      - stdout: output_files/single_rule_with_cat_write.txt
+
+  file_output_strict:
     detect: True
     detect_level: WARNING
     rules_file:
       - rules/single_rule.yaml
     conf_file: confs/file_output.yaml
     trace_file: trace_files/cat_write.scap
-    outputs:
-      - /tmp/falco_outputs/file_output.txt: Warning An open was seen
+    output_strictly_contains:
+      - /tmp/falco_outputs/file_output.txt: output_files/single_rule_with_cat_write.txt
 
-  program_output:
+  program_output_strict:
     detect: True
     detect_level: WARNING
     rules_file:
       - rules/single_rule.yaml
     conf_file: confs/program_output.yaml
     trace_file: trace_files/cat_write.scap
-    outputs:
-      - /tmp/falco_outputs/program_output.txt: Warning An open was seen
+    output_strictly_contains:
+      - /tmp/falco_outputs/program_output.txt: output_files/single_rule_with_cat_write.txt
 
   grpc_unix_socket_outputs:
     detect: True
@@ -687,16 +697,6 @@ trace_files: !mux
       method: get
       results:
         - "Warning An open was seen"
-
-  stdout_output_strict:
-    detect: True
-    detect_level: WARNING
-    rules_file:
-      - rules/single_rule.yaml
-    conf_file: confs/file_stdout.yaml
-    trace_file: trace_files/cat_write.scap
-    output_strictly_contains:
-      - stdout: output_files/single_rule_with_cat_write.txt
 
   detect_counts:
     detect: True
