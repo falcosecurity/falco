@@ -657,7 +657,7 @@ trace_files: !mux
     detect_level: WARNING
     rules_file:
       - rules/single_rule.yaml
-    conf_file: confs/file_stdout.yaml
+    conf_file: confs/stdout_output.yaml
     trace_file: trace_files/cat_write.scap
     output_strictly_contains:
       - stdout: output_files/single_rule_with_cat_write.txt
