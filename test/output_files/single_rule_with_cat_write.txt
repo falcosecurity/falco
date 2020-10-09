@@ -1,0 +1,8 @@
+18:17:57.881781397: Warning An open was seen (command=cat /dev/null)
+18:17:57.881785348: Warning An open was seen (command=cat /dev/null)
+18:17:57.881796705: Warning An open was seen (command=cat /dev/null)
+18:17:57.881799840: Warning An open was seen (command=cat /dev/null)
+18:17:57.882003104: Warning An open was seen (command=cat /dev/null)
+18:17:57.882008208: Warning An open was seen (command=cat /dev/null)
+18:17:57.882045694: Warning An open was seen (command=cat /dev/null)
+18:17:57.882054739: Warning An open was seen (command=cat /dev/null)
