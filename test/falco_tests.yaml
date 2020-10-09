@@ -706,8 +706,20 @@ trace_files: !mux
       proto: outputs.proto
       service: falco.outputs.service
       method: get
+      # protobuf text format
       results:
-        - "Warning An open was seen"
+        - "seconds:1470327477 nanos:881781397"
+        - "priority: WARNING"
+        - "rule: \"open_from_cat\""
+        - "output: \"18:17:57.881781397: Warning An open was seen (command=cat /dev/null)\""
+        # output fields
+        - "key: \"evt.time\""
+        - "value: \"18:17:57.881781397\""
+        - "key: \"proc.cmdline\""
+        - "value: \"cat /dev/null\""
+        # For the hostname, since we don't know that beforehand,
+        # only check the field presence
+        - "hostname: "
 
   detect_counts:
     detect: True

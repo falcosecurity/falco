@@ -525,7 +525,7 @@ class FalcoTest(Test):
             if not self.is_grpc_using_unix_socket:
                 self.fail("This test suite supports gRPC with unix socket only")
 
-            cmdline = "grpcurl -import-path ../userspace/falco " \
+            cmdline = "grpcurl -format text -import-path ../userspace/falco " \
                 "-proto {} -plaintext -unix {} " \
                 "{}/{}".format(self.grpc_proto, self.grpc_address,
                                self.grpc_service, self.grpc_method)
@@ -554,14 +554,13 @@ class FalcoTest(Test):
             for exp_result in self.grpc_results:
                 found = False
                 for line in self.grpcurl_res.stdout.decode("utf-8").splitlines():
-                    match = re.search(exp_result, line)
-
-                    if match is not None:
+                    if exp_result in line:
                         found = True
+                        break
 
                 if found == False:
                     self.fail(
-                        "Could not find a line '{}' in gRPC responses".format(exp_result))
+                        "Could not find a line with '{}' in gRPC responses (protobuf text".format(exp_result))
 
     def test(self):
         self.log.info("Trace file %s", self.trace_file)
