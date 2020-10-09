@@ -224,6 +224,9 @@ class FalcoTest(Test):
                     output['actual'] = key
                     output['expected'] = value
                     output_strictly_contains.append(output)
+                    # Clean up file from previous tests, if any
+                    if not output['actual'] == 'stdout' and os.path.exists(output['actual']):
+                        os.remove(output['actual'])
                     filedir = os.path.dirname(output['expected'])
                     # Create the parent directory for the file if it doesn't exist.
                     if not os.path.isdir(filedir):
