@@ -662,6 +662,17 @@ trace_files: !mux
     output_strictly_contains:
       - stdout: output_files/single_rule_with_cat_write.txt
 
+  stdout_output_json_strict:
+    json_output: True
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/single_rule.yaml
+    conf_file: confs/stdout_output.yaml
+    trace_file: trace_files/cat_write.scap
+    output_strictly_contains:
+      - stdout: output_files/single_rule_with_cat_write.json
+
   file_output_strict:
     detect: True
     detect_level: WARNING
