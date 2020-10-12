@@ -659,6 +659,7 @@ trace_files: !mux
       - rules/single_rule.yaml
     conf_file: confs/stdout_output.yaml
     trace_file: trace_files/cat_write.scap
+    time_iso_8601: true
     output_strictly_contains:
       - stdout: output_files/single_rule_with_cat_write.txt
 
@@ -670,6 +671,7 @@ trace_files: !mux
       - rules/single_rule.yaml
     conf_file: confs/stdout_output.yaml
     trace_file: trace_files/cat_write.scap
+    time_iso_8601: true
     output_strictly_contains:
       - stdout: output_files/single_rule_with_cat_write.json
 
@@ -680,6 +682,7 @@ trace_files: !mux
       - rules/single_rule.yaml
     conf_file: confs/file_output.yaml
     trace_file: trace_files/cat_write.scap
+    time_iso_8601: true
     output_strictly_contains:
       - /tmp/falco_outputs/file_output.txt: output_files/single_rule_with_cat_write.txt
 
@@ -690,6 +693,7 @@ trace_files: !mux
       - rules/single_rule.yaml
     conf_file: confs/program_output.yaml
     trace_file: trace_files/cat_write.scap
+    time_iso_8601: true
     output_strictly_contains:
       - /tmp/falco_outputs/program_output.txt: output_files/single_rule_with_cat_write.txt
 
@@ -701,6 +705,7 @@ trace_files: !mux
     conf_file: confs/grpc_unix_socket.yaml
     trace_file: trace_files/cat_write.scap
     run_duration: 5
+    time_iso_8601: true
     grpc:
       address: unix:///tmp/falco/falco.sock
       proto: outputs.proto
@@ -711,10 +716,10 @@ trace_files: !mux
         - "seconds:1470327477 nanos:881781397"
         - "priority: WARNING"
         - "rule: \"open_from_cat\""
-        - "output: \"18:17:57.881781397: Warning An open was seen (command=cat /dev/null)\""
+        - "output: \"2016-08-04T16:17:57.881781397+0000: Warning An open was seen (command=cat /dev/null)\""
         # output fields
-        - "key: \"evt.time\""
-        - "value: \"18:17:57.881781397\""
+        - "key: \"evt.time.iso8601\""
+        - "value: \"2016-08-04T16:17:57.881781397+0000\""
         - "key: \"proc.cmdline\""
         - "value: \"cat /dev/null\""
         # For the hostname, since we don't know that beforehand,
