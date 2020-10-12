@@ -145,6 +145,12 @@ defined_comp_operators = {
    ["pmatch"] = 1
 }
 
+defined_list_comp_operators = {
+   ["in"] = 1,
+   ["intersects"] = 1,
+   ["pmatch"] = 1
+}
+
 -- Note that the rules_by_name and rules_by_idx refer to the same rule
 -- object. The by_name index is used for things like describing rules,
 -- and the by_idx index is used to map the relational node index back
@@ -270,6 +276,22 @@ function get_lines(rules_lines, row, num_lines)
    end
 
    return ret
+end
+
+function quote_item(item)
+   if string.sub(item, 1, 1) ~= "'" and string.sub(item, 1, 1) ~= '"' then
+      item = "\""..item.."\""
+   end
+
+   return item
+end
+
+function paren_item(item)
+   if string.sub(item, 1, 1) ~= "(" then
+      item = "("..item..")"
+   end
+
+   return item
 end
 
 function build_error(rules_lines, row, num_lines, err)
@@ -601,13 +623,30 @@ function build_exception_condition_string(eitem)
 	 if k > 1 then
 	    icond=icond.." and "
 	 end
-	 -- Quote the value if not already quoted
 	 local ival = values[k]
-	 if string.sub(values[k], 1, 1) ~= "'" and string.sub(values[k], 1, 1) ~= '"' then
-	    ival = "\""..ival.."\""
+	 local istr = ""
+
+	 -- If ival is a table, express it as (titem1, titem2, etc)
+	 if type(ival) == "table" then
+	    istr = "("
+	    for _, item in ipairs(ival) do
+	       if istr ~= "(" then
+		  istr = istr..", "
+	       end
+	       istr = istr..quote_item(item)
+	    end
+	    istr = istr..")"
+	 else
+	    -- If the corresponding operator is one that works on lists, possibly add surrounding parentheses.
+	    if defined_list_comp_operators[comps[k]] then
+	       istr = paren_item(ival)
+	    else
+	       -- Quote the value if not already quoted
+	       istr = quote_item(ival)
+	    end
 	 end
 
-	 icond = icond..fields[k].." "..comps[k]..ival
+	 icond = icond..fields[k].." "..comps[k].." "..istr
       end
 
       icond=icond..")"
@@ -712,7 +751,7 @@ function load_rules(sinsp_lua_parser,
       -- the items and expand any references to the items in the list
       for i, item in ipairs(v['items']) do
 	 if (state.lists[item] == nil) then
-	    items[#items+1] = item
+	    items[#items+1] = quote_item(item)
 	 else
 	    for i, exp_item in ipairs(state.lists[item].items) do
 	       items[#items+1] = exp_item
