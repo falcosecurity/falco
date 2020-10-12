@@ -45,8 +45,6 @@ public:
 	// falco.free_formatter(formatter)
 	static int lua_free_formatter(lua_State *ls);
 
-	static void free_formatters();
-
 	static string format_event(const gen_event *evt, const std::string &rule, const std::string &source,
 				   const std::string &level, const std::string &format);
 

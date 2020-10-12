@@ -107,15 +107,6 @@ int falco_formats::lua_free_formatter(lua_State *ls)
 	return 0;
 }
 
-void falco_formats::free_formatters()
-{
-	if(s_formatters)
-	{
-		delete(s_formatters);
-		s_formatters = NULL;
-	}
-}
-
 string falco_formats::format_event(const gen_event *evt, const std::string &rule, const std::string &source,
 				   const std::string &level, const std::string &format)
 {
