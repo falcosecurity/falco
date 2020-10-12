@@ -3031,6 +3031,15 @@
   output: Drift detected (open+create), new executable created in a container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline filename=%evt.arg.filename name=%evt.arg.name mode=%evt.arg.mode event=%evt.type)
   priority: ERROR
 
+- list: c2_server_ip_list
+  items: []
+
+- rule: Outbound Connection to C2 Servers
+  desc: Detect outbound connection to command & control servers
+  condition: outbound and fd.sip in (c2_server_ip_list)
+  output: Outbound connection to C2 server (command=%proc.cmdline connection=%fd.name user=%user.name user_loginuid=%user.loginuid container_id=%container.id image=%container.image.repository)
+  priority: WARNING
+  tags: [network]
 
 # Application rules have moved to application_rules.yaml. Please look
 # there if you want to enable them by adding to
