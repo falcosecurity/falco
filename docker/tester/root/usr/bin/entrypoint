@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 
-set -u -o pipefail
-
 BUILD_DIR=${BUILD_DIR:-/build}
 SOURCE_DIR=${SOURCE_DIR:-/source}
 SKIP_PACKAGES_TESTS=${SKIP_PACKAGES_TESTS:-false}
 
 CMD=${1:-test}
 shift
+
+# Stop the execution if a command in the pipeline has an error, from now on
+set -e -u -o pipefail
 
 # build type can be "debug" or "release", fallbacks to "release" by default
 BUILD_TYPE=$(echo "$BUILD_TYPE" | tr "[:upper:]" "[:lower:]")
