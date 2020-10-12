@@ -285,4 +285,25 @@ trace_files: !mux
       - rules/exceptions/rule_exception_append_comp.yaml
     trace_file: trace_files/cat_write.scap
 
+  rule_exception_values_listref:
+    detect: False
+    detect_level: WARNING
+    rules_file:
+      - rules/exceptions/rule_exception_values_listref.yaml
+    trace_file: trace_files/cat_write.scap
+
+  rule_exception_values_listref_noparens:
+    detect: False
+    detect_level: WARNING
+    rules_file:
+      - rules/exceptions/rule_exception_values_listref_noparens.yaml
+    trace_file: trace_files/cat_write.scap
+
+  rule_exception_values_list:
+    detect: False
+    detect_level: WARNING
+    rules_file:
+      - rules/exceptions/rule_exception_values_list.yaml
+    trace_file: trace_files/cat_write.scap
+
 
