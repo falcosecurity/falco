@@ -25,4 +25,4 @@ ExternalProject_Add(
   BUILD_COMMAND ""
   INSTALL_COMMAND ""
   TEST_COMMAND ""
-  PATCH_COMMAND patch -p1 -i ${CMAKE_CURRENT_SOURCE_DIR}/patch/libscap.patch && patch -p1 -i ${CMAKE_CURRENT_SOURCE_DIR}/patch/moonjit.patch)
+  PATCH_COMMAND patch -p1 -i ${CMAKE_CURRENT_SOURCE_DIR}/patch/libscap.patch && patch -p1 -i ${CMAKE_CURRENT_SOURCE_DIR}/patch/luajit.patch)

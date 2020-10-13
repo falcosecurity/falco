@@ -148,8 +148,8 @@ set(LUAJIT_INCLUDE "${LUAJIT_SRC}")
 set(LUAJIT_LIB "${LUAJIT_SRC}/libluajit.a")
 ExternalProject_Add(
   luajit
-  GIT_REPOSITORY "https://github.com/moonjit/moonjit"
-  GIT_TAG "2.1.2"
+  GIT_REPOSITORY "https://github.com/LuaJIT/LuaJIT"
+  GIT_TAG "1d8b747c161db457e032a023ebbff511f5de5ec2"
   CONFIGURE_COMMAND ""
   BUILD_COMMAND ${CMD_MAKE}
   BUILD_IN_SOURCE 1
