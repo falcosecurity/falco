@@ -141,19 +141,7 @@ if(NOT MINIMAL_BUILD)
   include(cURL)
 endif()
 
-# LuaJIT
-set(LUAJIT_SRC "${PROJECT_BINARY_DIR}/luajit-prefix/src/luajit/src")
-message(STATUS "Using bundled LuaJIT in '${LUAJIT_SRC}'")
-set(LUAJIT_INCLUDE "${LUAJIT_SRC}")
-set(LUAJIT_LIB "${LUAJIT_SRC}/libluajit.a")
-ExternalProject_Add(
-  luajit
-  URL "https://github.com/LuaJIT/LuaJIT/archive/v2.0.3.tar.gz"
-  URL_HASH "SHA256=8da3d984495a11ba1bce9a833ba60e18b532ca0641e7d90d97fafe85ff014baa"
-  CONFIGURE_COMMAND ""
-  BUILD_COMMAND ${CMD_MAKE}
-  BUILD_IN_SOURCE 1
-  INSTALL_COMMAND "")
+include(luajit)
 
 # Lpeg
 set(LPEG_SRC "${PROJECT_BINARY_DIR}/lpeg-prefix/src/lpeg")
