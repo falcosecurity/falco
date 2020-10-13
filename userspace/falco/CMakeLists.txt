@@ -11,8 +11,6 @@
 # specific language governing permissions and limitations under the License.
 #
 
-configure_file("${SYSDIG_SOURCE_DIR}/userspace/sysdig/config_sysdig.h.in" config_sysdig.h)
-
 if(NOT MINIMAL_BUILD)
   add_custom_command(
     OUTPUT
@@ -54,7 +52,7 @@ add_executable(
   event_drops.cpp
   statsfilewriter.cpp
   falco.cpp
-  "${SYSDIG_SOURCE_DIR}/userspace/sysdig/fields_info.cpp")
+  "${SYSDIG_SOURCE_DIR}/userspace/libsinsp/fields_info.cpp")
 else()
   add_executable(
     falco
@@ -70,7 +68,7 @@ else()
     event_drops.cpp
     statsfilewriter.cpp
     falco.cpp
-    "${SYSDIG_SOURCE_DIR}/userspace/sysdig/fields_info.cpp"
+    "${SYSDIG_SOURCE_DIR}/userspace/libsinsp/fields_info.cpp"
     webserver.cpp
     grpc_context.cpp
     grpc_server_impl.cpp
@@ -95,7 +93,6 @@ if(MINIMAL_BUILD)
   target_include_directories(
     falco
     PUBLIC
-      "${SYSDIG_SOURCE_DIR}/userspace/sysdig"
       "${PROJECT_SOURCE_DIR}/userspace/engine"
       "${PROJECT_BINARY_DIR}/userspace/falco"
       "${PROJECT_BINARY_DIR}/driver/src"
@@ -114,7 +111,6 @@ else()
   target_include_directories(
     falco
     PUBLIC
-      "${SYSDIG_SOURCE_DIR}/userspace/sysdig"
       "${PROJECT_SOURCE_DIR}/userspace/engine"
       "${PROJECT_BINARY_DIR}/userspace/falco"
       "${PROJECT_BINARY_DIR}/driver/src"
