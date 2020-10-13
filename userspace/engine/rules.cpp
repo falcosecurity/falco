@@ -26,15 +26,14 @@ extern "C" {
 #include "falco_engine.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
 
-const static struct luaL_reg ll_falco_rules [] =
-{
-	{"clear_filters", &falco_rules::clear_filters},
-	{"add_filter", &falco_rules::add_filter},
-	{"add_k8s_audit_filter", &falco_rules::add_k8s_audit_filter},
-	{"enable_rule", &falco_rules::enable_rule},
-	{"engine_version", &falco_rules::engine_version},
-	{NULL,NULL}
-};
+const static struct luaL_Reg ll_falco_rules[] =
+	{
+		{"clear_filters", &falco_rules::clear_filters},
+		{"add_filter", &falco_rules::add_filter},
+		{"add_k8s_audit_filter", &falco_rules::add_k8s_audit_filter},
+		{"enable_rule", &falco_rules::enable_rule},
+		{"engine_version", &falco_rules::engine_version},
+		{NULL, NULL}};
 
 falco_rules::falco_rules(sinsp* inspector,
 			 falco_engine *engine,

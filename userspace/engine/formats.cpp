@@ -26,7 +26,7 @@ bool falco_formats::s_json_output = false;
 bool falco_formats::s_json_include_output_property = true;
 std::unique_ptr<sinsp_evt_formatter_cache> falco_formats::s_formatters = NULL;
 
-const static struct luaL_reg ll_falco[] =
+const static struct luaL_Reg ll_falco[] =
 	{
 		{"formatter", &falco_formats::lua_formatter},
 		{"free_formatter", &falco_formats::lua_free_formatter},
