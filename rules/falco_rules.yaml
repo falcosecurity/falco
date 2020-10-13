@@ -925,9 +925,6 @@
 - list: known_istio_files
   items: [/healthready, /healthliveness]
 
-- macro: calico_writing_state
-  condition: (proc.name=kube-controller and fd.name startswith /status.json and k8s.pod.name startswith calico)
-
 - macro: calico_writing_envvars
   condition: (proc.name=start_runit and fd.name startswith "/etc/envvars" and container.image.repository endswith "calico/node")
 
@@ -1413,7 +1410,6 @@
   desc: an attempt to write to any file directly below / or /root
   condition: >
     root_dir and evt.dir = < and open_write
-    and proc_name_exists
     and not fd.name in (known_root_files)
     and not fd.directory pmatch (known_root_directories)
     and not exe_running_docker_save
@@ -1427,7 +1423,6 @@
     and not kubectl_writing_state
     and not cassandra_writing_state
     and not galley_writing_state
-    and not calico_writing_state
     and not rancher_writing_root
     and not runc_writing_exec_fifo
     and not mysqlsh_writing_state
@@ -1918,7 +1913,6 @@
 - list: falco_sensitive_mount_images
   items: [
     docker.io/sysdig/falco, docker.io/sysdig/sysdig, sysdig/falco, sysdig/sysdig,
-    docker.io/falcosecurity/falco, falcosecurity/falco,
     gcr.io/google_containers/hyperkube,
     gcr.io/google_containers/kube-proxy, docker.io/calico/node,
     docker.io/rook/toolbox, docker.io/cloudnativelabs/kube-router, docker.io/consul,
@@ -2392,14 +2386,11 @@
 - macro: consider_metadata_access
   condition: (never_true)
 
-- macro: user_known_metadata_access
-  condition: (k8s.ns.name = "kube-system")
-
 # On GCP, AWS and Azure, 169.254.169.254 is a special IP used to fetch
 # metadata about the instance. The metadata could be used to get credentials by attackers.
 - rule: Contact cloud metadata service from container
   desc: Detect attempts to contact the Cloud Instance Metadata Service from a container
-  condition: outbound and fd.sip="169.254.169.254" and container and consider_metadata_access and not user_known_metadata_access
+  condition: outbound and fd.sip="169.254.169.254" and container and consider_metadata_access
   output: Outbound connection to cloud instance metadata service (command=%proc.cmdline connection=%fd.name %container.info image=%container.image.repository:%container.image.tag)
   priority: NOTICE
   tags: [network, container, mitre_discovery]
@@ -2414,7 +2405,7 @@
     (container.image.repository in (gcr.io/google_containers/hyperkube-amd64,
      gcr.io/google_containers/kube2sky, docker.io/sysdig/falco,
      docker.io/sysdig/sysdig, docker.io/falcosecurity/falco,
-     sysdig/falco, sysdig/sysdig, falcosecurity/falco) or (k8s.ns.name = "kube-system"))
+     sysdig/falco, sysdig/sysdig, falcosecurity/falco))
 
 - macro: k8s_api_server
   condition: (fd.sip.name="kubernetes.default.svc.cluster.local")
@@ -2617,7 +2608,8 @@
     WARNING
   tags: [process, mitre_persistence]
 
-- macro: modify_shell_history
+- rule: Delete or rename shell history
+  desc: Detect shell history deletion
   condition: >
     (modify and (
       evt.arg.name contains "bash_history" or
@@ -2631,25 +2623,12 @@
       evt.arg.path contains "bash_history" or
       evt.arg.path contains "zsh_history" or
       evt.arg.path contains "fish_read_history" or
-      evt.arg.path endswith "fish_history"))
-
-- macro: truncate_shell_history
-  condition: >
+      evt.arg.path endswith "fish_history")) or
     (open_write and (
       fd.name contains "bash_history" or
       fd.name contains "zsh_history" or
       fd.name contains "fish_read_history" or
       fd.name endswith "fish_history") and evt.arg.flags contains "O_TRUNC")
-
-- macro: var_lib_docker_filepath
-  condition: (evt.arg.name startswith /var/lib/docker or fd.name startswith /var/lib/docker)
-
-- rule: Delete or rename shell history
-  desc: Detect shell history deletion
-  condition: >
-    (modify_shell_history or truncate_shell_history) and
-       not var_lib_docker_filepath and
-       not proc.name in (docker_binaries)
   output: >
     Shell history had been deleted or renamed (user=%user.name user_loginuid=%user.loginuid type=%evt.type command=%proc.cmdline fd.name=%fd.name name=%evt.arg.name path=%evt.arg.path oldpath=%evt.arg.oldpath %container.info)
   priority:
@@ -2729,18 +2708,10 @@
 - macro: remote_file_copy_procs
   condition: (proc.name in (remote_file_copy_binaries))
 
-# Users should overwrite this macro to specify conditions under which a
-# Custom condition for use of remote file copy tool in container
-- macro: user_known_remote_file_copy_activities
-  condition: (never_true)
-
 - rule: Launch Remote File Copy Tools in Container
   desc: Detect remote file copy tools launched in container
   condition: >
-    spawned_process
-    and container
-    and remote_file_copy_procs
-    and not user_known_remote_file_copy_activities
+    spawned_process and container and remote_file_copy_procs
   output: >
     Remote file copy tool launched in container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline parent_process=%proc.pname
     container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
@@ -2867,7 +2838,7 @@
 # - k8s.gcr.io/fluentd-gcp-scaler in GCP/GKE
 - macro: user_known_k8s_client_container
   condition: >
-    (k8s.ns.name="kube-system" and container.image.repository=k8s.gcr.io/fluentd-gcp-scaler) or
+    (container.image.repository=k8s.gcr.io/fluentd-gcp-scaler) or
     container.image.repository=mcr.microsoft.com/aks/hcp/hcp-tunnel-front
 
 - macro: user_known_k8s_client_container_parens
@@ -2927,12 +2898,11 @@
     enabled_rule_network_only_subnet and
     inbound_outbound and
     container and
-    not network_local_subnet and
-    k8s.ns.name in (namespace_scope_network_only_subnet)
+    not network_local_subnet
   output: >
     Network connection outside local subnet
     (command=%proc.cmdline connection=%fd.name user=%user.name user_loginuid=%user.loginuid container_id=%container.id
-     image=%container.image.repository namespace=%k8s.ns.name
+     image=%container.image.repository
      fd.rip.name=%fd.rip.name fd.lip.name=%fd.lip.name fd.cip.name=%fd.cip.name fd.sip.name=%fd.sip.name)
   priority: WARNING
   tags: [network]
