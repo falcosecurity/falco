@@ -36,7 +36,7 @@ limitations under the License.
 #include "logger.h"
 #include "utils.h"
 #include "chisel.h"
-#include "sysdig.h"
+#include "fields_info.h"
 
 #include "event_drops.h"
 #include "configuration.h"

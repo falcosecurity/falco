@@ -53,8 +53,7 @@ add_executable(
   outputs_syslog.cpp
   event_drops.cpp
   statsfilewriter.cpp
-  falco.cpp
-  "${SYSDIG_SOURCE_DIR}/userspace/sysdig/fields_info.cpp")
+  falco.cpp)
 else()
   add_executable(
     falco
@@ -70,7 +69,6 @@ else()
     event_drops.cpp
     statsfilewriter.cpp
     falco.cpp
-    "${SYSDIG_SOURCE_DIR}/userspace/sysdig/fields_info.cpp"
     webserver.cpp
     grpc_context.cpp
     grpc_server_impl.cpp
