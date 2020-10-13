@@ -305,6 +305,58 @@ function build_error_with_context(ctx, err)
    return {ret}
 end
 
+function validate_exception_item_multi_fields(eitem, context)
+
+   local name = eitem['name']
+   local fields = eitem['fields']
+   local values = eitem['values']
+   local comps = eitem['comps']
+
+   if comps == nil then
+      comps = {}
+      for c=1,#fields do
+	 table.insert(comps, "=")
+      end
+      eitem['comps'] = comps
+   else
+      if #fields ~= #comps then
+	 return false, build_error_with_context(context, "Rule exception item "..name..": fields and comps lists must have equal length"), warnings
+      end
+   end
+   for k, fname in ipairs(fields) do
+      if defined_noarg_filters[fname] == nil then
+	 return false, build_error_with_context(context, "Rule exception item "..name..": field name "..fname.." is not a supported filter field"), warnings
+      end
+   end
+   for k, comp in ipairs(comps) do
+      if defined_comp_operators[comp] == nil then
+	 return false, build_error_with_context(context, "Rule exception item "..name..": comparison operator "..comp.." is not a supported comparison operator"), warnings
+      end
+   end
+end
+
+function validate_exception_item_single_field(eitem, context)
+
+   local name = eitem['name']
+   local fields = eitem['fields']
+   local values = eitem['values']
+   local comps = eitem['comps']
+
+   if comps == nil then
+      eitem['comps'] = "in"
+   else
+      if type(fields) ~= "string" or type(comps) ~= "string" then
+	 return false, build_error_with_context(context, "Rule exception item "..name..": fields and comps must both be strings"), warnings
+      end
+   end
+   if defined_noarg_filters[fields] == nil then
+      return false, build_error_with_context(context, "Rule exception item "..name..": field name "..fields.." is not a supported filter field"), warnings
+   end
+   if defined_comp_operators[comps] == nil then
+      return false, build_error_with_context(context, "Rule exception item "..name..": comparison operator "..comps.." is not a supported comparison operator"), warnings
+   end
+end
+
 function load_rules_doc(rules_mgr, doc, load_state)
 
    local warnings = {}
@@ -450,44 +502,30 @@ function load_rules_doc(rules_mgr, doc, load_state)
 	    if append == false then
 
 	       for _, eitem in ipairs(v['exceptions']) do
-		  local name = eitem['name']
-		  local fields = eitem['fields']
-		  local values = eitem['values']
-		  local comps = eitem['comps']
 
-		  if name == nil then
+		  if eitem['name'] == nil then
 		     return false, build_error_with_context(v['context'], "Rule exception item must have name property"), warnings
 		  end
 
-		  if fields == nil then
-		     return false, build_error_with_context(v['context'], "Rule exception item "..name..": must have fields property with a list of fields"), warnings
+		  if eitem['fields'] == nil then
+		     return false, build_error_with_context(v['context'], "Rule exception item "..eitem['name']..": must have fields property with a list of fields"), warnings
 		  end
 
-		  if values == nil then
+		  if eitem['values'] == nil then
 		     -- An empty values array is okay
 		     eitem['values'] = {}
 		  end
 
-		  if comps == nil then
-		     comps = {}
-		     for c=1,#fields do
-			table.insert(comps, "=")
-		     end
-		     eitem['comps'] = comps
+		  -- Different handling if the fields property is a single item vs a list
+		  local valid, err
+		  if type(eitem['fields']) == "table" then
+		     valid, err = validate_exception_item_multi_fields(eitem, v['context'])
 		  else
-		     if #fields ~= #comps then
-			return false, build_error_with_context(v['context'], "Rule exception item "..name..": fields and comps lists must have equal length"), warnings
-		     end
+		     valid, err = validate_exception_item_single_field(eitem, v['context'])
 		  end
-		  for k, fname in ipairs(fields) do
-		     if defined_noarg_filters[fname] == nil then
-			return false, build_error_with_context(v['context'], "Rule exception item "..name..": field name "..fname.." is not a supported filter field"), warnings
-		     end
-		  end
-		  for k, comp in ipairs(comps) do
-		     if defined_comp_operators[comp] == nil then
-			return false, build_error_with_context(v['context'], "Rule exception item "..name..": comparison operator "..comp.." is not a supported comparison operator"), warnings
-		     end
+
+		  if valid == false then
+		     return valid, err
 		  end
 	       end
 	    end
@@ -599,8 +637,8 @@ function load_rules_doc(rules_mgr, doc, load_state)
    return true, {}, warnings
 end
 
--- cond and not ((proc.name=apk and fd.directory=/usr/lib/alpine) or (proc.name=npm and fd.directory=/usr/node/bin) or (con
-function build_exception_condition_string(eitem)
+-- cond and not ((proc.name=apk and fd.directory=/usr/lib/alpine) or (proc.name=npm and fd.directory=/usr/node/bin) or ...)
+function build_exception_condition_string_multi_fields(eitem)
 
    local fields = eitem['fields']
    local comps = eitem['comps']
@@ -651,6 +689,27 @@ function build_exception_condition_string(eitem)
 
       icond=icond..")"
    end
+
+   return icond, nil
+
+end
+
+function build_exception_condition_string_single_field(eitem)
+
+   local icond = ""
+
+   for i, value in ipairs(eitem['values']) do
+
+      if icond == "" then
+	 icond = "("..eitem['fields'].." "..eitem['comps'].." ("
+      else
+	 icond = icond..", "
+      end
+
+      icond = icond..quote_item(value)
+   end
+
+   icond = icond.."))"
 
    return icond, nil
 
@@ -791,7 +850,12 @@ function load_rules(sinsp_lua_parser,
       -- rule's condition
       for _, eitem in ipairs(v['exceptions']) do
 
-	 local icond, err = build_exception_condition_string(eitem)
+	 local icond, err
+	 if type(eitem['fields']) == "table" then
+	    icond, err = build_exception_condition_string_multi_fields(eitem)
+	 else
+	    icond, err = build_exception_condition_string_single_field(eitem)
+	 end
 
 	 if err ~= nil then
 	    return false, nil, build_error_with_context(v['context'], err), warnings
