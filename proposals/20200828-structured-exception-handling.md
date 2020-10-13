@@ -147,19 +147,38 @@ To address some of these problems, we will add the notion of Exceptions as top l
    - name: container_writer
      fields: [container.image.repository, fd.directory]
      comps: [=, startswith]
+   - name: proc_filenames
+     fields: [proc.name, fd.name]
+	 comps: [=, in]
+   - name: filenames
+     fields: fd.filename
+     comps: in
 ```
 
-This rule defines two kinds of exceptions: one called proc_writer with a combination of proc.name and fd.directory, and a second called container_writer with a combination of container.image.repository and fd.directory. The specific strings "proc_writer" and "container_writer" are arbitrary strings and don't have a special meaning to the rules file parser. They're only used to link together the list of field names with the list of field values that exist in the exception object.
+This rule defines four kinds of exceptions:
+  * proc_writer: uses a combination of proc.name and fd.directory
+  * container_writer: uses a combination of container.image.repository and fd.directory
+  * proc_filenames: uses a combination of process and list of filenames.
+  * filenames: uses a list of filenames
+
+The specific strings "proc_writer"/"container_writer"/"proc_filenames"/"filenames" are arbitrary strings and don't have a special meaning to the rules file parser. They're only used to link together the list of field names with the list of field values that exist in the exception object.
 
 proc_writer does not have any comps property, so the fields are directly compared to values using the = operator. container_writer does have a comps property, so each field will be compared to the corresponding exception items using the corresponding comparison operator.
 
+proc_filenames uses the in comparison operator, so the corresponding values entry should be a list of filenames.
+
+filenames differs from the others in that it names a single field and single comp operator. This changes how the exception condition snippet is constructed (see below).
+
 Notice that exceptions are defined as a part of the rule. This is important because the author of the rule defines what construes a valid exception to the rule. In this case, an exception can consist of a process and file directory (actor and target), but not a process name only (too broad).
 
-We'll add a new object exception that defines exceptions to a rule:
+Exception values will most commonly be defined in rules with append: true. Here's an example:
 
 ```
-- exception: Write below binary dir
-  items:
+- list: apt_files
+  items: [/bin/ls, /bin/rm]
+
+- rule: Write below binary dir
+  exceptions:
   - name: proc_writer
     values:
     - [apk, /usr/lib/alpine]
@@ -167,32 +186,32 @@ We'll add a new object exception that defines exceptions to a rule:
   - name: container_writer
     values:
     - [docker.io/alpine, /usr/libexec/alpine]
+  - name: proc_filenames
+    values:
+	 - [apt, apt_files]
+	 - [rpm, [/bin/cp, /bin/pwd]]
+  - name: filenames
+    values: [python, go]
 ```
-
-The name of the exception links it to the rule.
 
 A rule exception applies if for a given event, the fields in a rule.exception match all of the values in some exception.item. For example, if a program `apk` writes to a file below `/usr/lib/alpine`, the rule will not trigger, even if the condition is met.
 
-Append will be supported for exception objects. If append: is true, the items in the second definition will be added to the items in the earlier definition. For example, adding:
+Notice that an item in a values list can be a list. This allows building exceptions with operators like "in", "pmatch", etc. that work on a list of items. The item can also be a name of an existing list. If not present surrounding parantheses will be added.
 
-```
-- exception: Write below binary dir
-  items:
-  - container_writer:
-    - [docker.io/golang-alpine, /usr/libexec/go]
-  append: true
-```
-
-Would add a second container_writer exception.
+Finally, note that the structure of the values property differs between the items where fields is a list of fields (proc_writer/container_writer/proc_filenames) and when it is a single field (procs_only). This changes how the condition snippet is constructed.
 
 ### Implementation
 
-Each exception can be thought of as an implicit "and not (field1 cmp1 val1 and field2 cmp2 val2 and...)" appended to the rule's condition. In practice, that's how exceptions will be implemented.
+For exception items where the fields property is a list of field names, each exception can be thought of as an implicit "and not (field1 cmp1 val1 and field2 cmp2 val2 and...)" appended to the rule's condition. For exception items where the fields property is a single field name, the exception can be thought of as an implict "and not field cmp (val1, val2, ...)". In practice, that's how exceptions will be implemented.
 
 When a rule is parsed, the original condition will be wrapped in an extra layer of parentheses and all exception values will be appended to the condition. For example, using the example above, the resulting condition will be:
 
 ```
-(<Write below binary dir condition>) and not ((proc.name = apk and fd.directory = /usr/lib/alpine) or (proc.name = npm and fd.directory = /usr/node/bin) or (container.image.repository = docker.io/alpine and fd.directory startswith /usr/libexec/alpine))
+(<Write below binary dir condition>) and not (
+    (proc.name = apk and fd.directory = /usr/lib/alpine) or (proc.name = npm and fd.directory = /usr/node/bin) or
+	(container.image.repository = docker.io/alpine and fd.directory startswith /usr/libexec/alpine) or
+	(proc.name=apt and fd.name in (apt_files))) or
+	(fd.filename in (python, go))))
 ```
 
 The exceptions are effectively syntatic sugar that allows expressing sets of exceptions in a concise way.
