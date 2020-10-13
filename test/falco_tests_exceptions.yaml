@@ -306,4 +306,18 @@ trace_files: !mux
       - rules/exceptions/rule_exception_values_list.yaml
     trace_file: trace_files/cat_write.scap
 
+  rule_exception_single_field:
+    detect: False
+    detect_level: WARNING
+    rules_file:
+      - rules/exceptions/rule_exception_single_field.yaml
+    trace_file: trace_files/cat_write.scap
+
+  rule_exception_single_field_append:
+    detect: False
+    detect_level: WARNING
+    rules_file:
+      - rules/exceptions/rule_exception_single_field_append.yaml
+    trace_file: trace_files/cat_write.scap
+
 
