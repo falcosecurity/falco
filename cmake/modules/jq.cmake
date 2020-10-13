@@ -10,7 +10,8 @@
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 #
-if (NOT USE_BUNDLED_DEPS)
+if (TARGET jq)
+elseif (NOT USE_BUNDLED_DEPS)
     find_path(JQ_INCLUDE jq.h PATH_SUFFIXES jq)
     find_library(JQ_LIB NAMES jq)
     if (JQ_INCLUDE AND JQ_LIB)
@@ -51,3 +52,4 @@ else ()
             BUILD_IN_SOURCE 1
             INSTALL_COMMAND ${CMD_MAKE} install)
 endif ()
+include_directories("${JQ_INCLUDE}")
