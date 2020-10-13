@@ -11,8 +11,6 @@
 # specific language governing permissions and limitations under the License.
 #
 
-configure_file("${SYSDIG_SOURCE_DIR}/userspace/sysdig/config_sysdig.h.in" config_sysdig.h)
-
 if(NOT MINIMAL_BUILD)
   add_custom_command(
     OUTPUT

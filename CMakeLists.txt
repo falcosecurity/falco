@@ -19,6 +19,20 @@ option(BUILD_WARNINGS_AS_ERRORS "Enable building with -Wextra -Werror flags" OFF
 option(MINIMAL_BUILD "Build a minimal version of Falco, containing only the engine and basic input/output (EXPERIMENTAL)" OFF)
 option(MUSL_OPTIMIZED_BUILD "Enable if you want a musl optimized build" OFF)
 
+option(LIBSCAP_DIR "Path to libscap repository" "")
+if(NOT LIBSCAP_DIR)
+  message(FATAL_ERROR "-DLIBSCAP_DIR=<path> not specified")
+endif()
+
+option(LIBSINSP_DIR "Path to libsinsp repository" "")
+if(NOT LIBSINSP_DIR)
+  message(FATAL_ERROR "-DLIBSINSP_DIR=<path> not specified")
+endif()
+
+# Custom CMake modules
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
+list(APPEND CMAKE_MODULE_PATH "${LIBSINSP_DIR}/cmake/modules")
+
 # Elapsed time
 # set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CMAKE_COMMAND} -E time") # TODO(fntlnz, leodido): add a flag to enable this
 
@@ -28,9 +42,6 @@ processorcount(PROCESSOR_COUNT)
 if(NOT PROCESSOR_COUNT EQUAL 0)
   set(PROCESSOUR_COUNT_MAKE_FLAG -j${PROCESSOR_COUNT})
 endif()
-
-# Custom CMake modules
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
 
 # GNU standard installation directories' definitions
 include(GNUInstallDirs)
@@ -204,8 +215,7 @@ if(NOT MINIMAL_BUILD)
   include(gRPC)
 endif()
 
-# sysdig
-include(sysdig)
+include(libsinsp)
 
 # Installation
 install(FILES falco.yaml DESTINATION "${FALCO_ETC_DIR}")
