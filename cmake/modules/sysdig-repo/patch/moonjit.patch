@@ -1,0 +1,57 @@
+diff --git a/userspace/libsinsp/chisel.cpp b/userspace/libsinsp/chisel.cpp
+index 0a6e3cf8..0c2e255a 100644
+--- a/userspace/libsinsp/chisel.cpp
++++ b/userspace/libsinsp/chisel.cpp
+@@ -98,7 +98,7 @@ void lua_stackdump(lua_State *L)
+ // Lua callbacks
+ ///////////////////////////////////////////////////////////////////////////////
+ #ifdef HAS_LUA_CHISELS
+-const static struct luaL_reg ll_sysdig [] =
++const static struct luaL_Reg ll_sysdig [] =
+ {
+ 	{"set_filter", &lua_cbacks::set_global_filter},
+ 	{"set_snaplen", &lua_cbacks::set_snaplen},
+@@ -134,7 +134,7 @@ const static struct luaL_reg ll_sysdig [] =
+ 	{NULL,NULL}
+ };
+ 
+-const static struct luaL_reg ll_chisel [] =
++const static struct luaL_Reg ll_chisel [] =
+ {
+ 	{"request_field", &lua_cbacks::request_field},
+ 	{"set_filter", &lua_cbacks::set_filter},
+@@ -146,7 +146,7 @@ const static struct luaL_reg ll_chisel [] =
+ 	{NULL,NULL}
+ };
+ 
+-const static struct luaL_reg ll_evt [] =
++const static struct luaL_Reg ll_evt [] =
+ {
+ 	{"field", &lua_cbacks::field},
+ 	{"get_num", &lua_cbacks::get_num},
+diff --git a/userspace/libsinsp/lua_parser.cpp b/userspace/libsinsp/lua_parser.cpp
+index 0e26617d..78810d96 100644
+--- a/userspace/libsinsp/lua_parser.cpp
++++ b/userspace/libsinsp/lua_parser.cpp
+@@ -32,7 +32,7 @@ extern "C" {
+ #include "lauxlib.h"
+ }
+ 
+-const static struct luaL_reg ll_filter [] =
++const static struct luaL_Reg ll_filter [] =
+ {
+ 	{"rel_expr", &lua_parser_cbacks::rel_expr},
+ 	{"bool_op", &lua_parser_cbacks::bool_op},
+diff --git a/userspace/libsinsp/lua_parser_api.cpp b/userspace/libsinsp/lua_parser_api.cpp
+index c89e9126..c3d8008a 100644
+--- a/userspace/libsinsp/lua_parser_api.cpp
++++ b/userspace/libsinsp/lua_parser_api.cpp
+@@ -266,7 +266,7 @@ int lua_parser_cbacks::rel_expr(lua_State *ls)
+ 					string err = "Got non-table as in-expression operand\n";
+ 					throw sinsp_exception("parser API error");
+ 				}
+-				int n = luaL_getn(ls, 4);  /* get size of table */
++				int n = lua_objlen (ls, 4);  /* get size of table */
+ 				for (i=1; i<=n; i++)
+ 				{
+ 					lua_rawgeti(ls, 4, i);
