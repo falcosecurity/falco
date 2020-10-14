@@ -15,15 +15,8 @@
 # limitations under the License.
 #
 
-# See xxx for details on falco engine and rules versioning. Currently,
-# this specific rules file is compatible with engine version 0
-# (e.g. falco releases <= 0.13.1), so we'll keep the
-# required_engine_version lines commented out, so maintain
-# compatibility with older falco releases. With the first incompatible
-# change to this rules file, we'll uncomment this line and set it to
-# the falco engine version in use at the time.
-#
-- required_engine_version: 7
+# Falco engine 8 supports exception properties on rules.
+- required_engine_version: 8
 
 # Currently disabled as read/write are ignored syscalls. The nearly
 # similar open_write/open_read check for files being opened for
@@ -244,9 +237,6 @@
              proc.aname[3] in (package_mgmt_binaries) or
              proc.aname[4] in (package_mgmt_binaries)
 
-- macro: coreos_write_ssh_dir
-  condition: (proc.name=update-ssh-keys and fd.name startswith /home/core/.ssh)
-
 - macro: run_by_package_mgmt_binaries
   condition: proc.aname in (package_mgmt_binaries, needrestart)
 
@@ -362,12 +352,17 @@
 # repeats ssh_port, which effectively allows ssh from all hosts. In
 # the overridden macro, the condition would look something like
 # "fd.sip="a.b.c.d" or fd.sip="e.f.g.h" or ..."
+#
+# If at all possible, use the rule exceptions instead.
 - macro: allowed_ssh_hosts
   condition: ssh_port
 
 - rule: Disallowed SSH Connection
   desc: Detect any new ssh connection to a host other than those in an allowed group of hosts
   condition: (inbound_outbound) and ssh_port and not allowed_ssh_hosts
+  exceptions:
+    - name: allowed_ssh_ipaddrs
+      fields: fd.sip
   output: Disallowed SSH Connection (command=%proc.cmdline connection=%fd.name user=%user.name user_loginuid=%user.loginuid container_id=%container.id image=%container.image.repository)
   priority: NOTICE
   tags: [network, mitre_remote_service]
@@ -395,10 +390,20 @@
 - rule: Unexpected outbound connection destination
   desc: Detect any outbound connection to a destination outside of an allowed set of ips, networks, or domain names
   condition: >
-    consider_all_outbound_conns and outbound and not
-    ((fd.sip in (allowed_outbound_destination_ipaddrs)) or
-     (fd.snet in (allowed_outbound_destination_networks)) or
-     (fd.sip.name in (allowed_outbound_destination_domains)))
+    consider_all_outbound_conns and outbound
+  exceptions:
+    - name: allowed_outbound_ipaddrs
+      fields: fd.sip
+      values:
+        - allowed_outbound_destination_ipaddrs
+    - name: allowed_outbound_networks
+      fields: fd.snet
+      values:
+        - allowed_outbound_destination_networks
+    - name: allowed_outbound_domains
+      fields: fd.sip.name
+      values:
+        - allowed_outbound_destination_domains
   output: Disallowed outbound connection destination (command=%proc.cmdline connection=%fd.name user=%user.name user_loginuid=%user.loginuid container_id=%container.id image=%container.image.repository)
   priority: NOTICE
   tags: [network]
@@ -418,10 +423,20 @@
 - rule: Unexpected inbound connection source
   desc: Detect any inbound connection from a source outside of an allowed set of ips, networks, or domain names
   condition: >
-    consider_all_inbound_conns and inbound and not
-    ((fd.cip in (allowed_inbound_source_ipaddrs)) or
-     (fd.cnet in (allowed_inbound_source_networks)) or
-     (fd.cip.name in (allowed_inbound_source_domains)))
+    consider_all_inbound_conns and inbound
+  exceptions:
+    - name: allowed_inbound_ipaddrs
+      fields: fd.cip
+      values:
+        - allowed_inbound_source_ipaddrs
+    - name: allowed_inbound_networks
+      fields: fd.cnet
+      values:
+        - allowed_inbound_source_networks
+    - name: allowed_inbound_domains
+      fields: fd.cip.name
+      values:
+        - allowed_inbound_source_domains
   output: Disallowed inbound connection source (command=%proc.cmdline connection=%fd.name user=%user.name user_loginuid=%user.loginuid container_id=%container.id image=%container.image.repository)
   priority: NOTICE
   tags: [network]
@@ -460,6 +475,10 @@
      fd.directory in (shell_config_directories))
     and not proc.name in (shell_binaries)
     and not exe_running_docker_save
+  exceptions:
+    - name: known_shell_conf_writers
+      fields: [proc.name, fd.name]
+      comps: [=, contains]
   output: >
     a shell configuration file has been modified (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pcmdline=%proc.pcmdline file=%fd.name container_id=%container.id image=%container.image.repository)
   priority:
@@ -482,6 +501,10 @@
      fd.name in (shell_config_files) or
      fd.directory in (shell_config_directories)) and
     (not proc.name in (shell_binaries))
+  exceptions:
+    - name: known_shell_conf_readers
+      fields: [proc.name, fd.name]
+      comps: [=, contains]
   output: >
     a shell configuration file was read by a non-shell program (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline file=%fd.name container_id=%container.id image=%container.image.repository)
   priority:
@@ -501,6 +524,10 @@
      (spawned_process and proc.name = "crontab")) and
     consider_all_cron_jobs and
     not user_known_cron_jobs
+  exceptions:
+    - name: known_cron_writer
+      fields: [proc.name, fd.name]
+      comps: [=, contains]
   output: >
     Cron jobs were scheduled to run (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline
     file=%fd.name container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
@@ -609,9 +636,6 @@
      (proc.cmdline startswith "sed -ri" or proc.cmdline startswith "sed -i") and
      (fd.name startswith /etc/httpd/conf.d/ or fd.name startswith /etc/httpd/conf))
 
-- macro: userhelper_writing_etc_security
-  condition: (proc.name=userhelper and fd.name startswith /etc/security)
-
 - macro: parent_Xvfb_running_xkbcomp
   condition: (proc.pname=Xvfb and proc.cmdline startswith 'sh -c "/usr/bin/xkbcomp"')
 
@@ -714,25 +738,6 @@
 - macro: parent_supervise_running_multilog
   condition: (proc.name=multilog and proc.pname=supervise)
 
-- macro: supervise_writing_status
-  condition: (proc.name in (supervise,svc) and fd.name startswith "/etc/sb/")
-
-- macro: pki_realm_writing_realms
-  condition: (proc.cmdline startswith "bash /usr/local/lib/pki/pki-realm" and fd.name startswith /etc/pki/realms)
-
-- macro: htpasswd_writing_passwd
-  condition: (proc.name=htpasswd and fd.name=/etc/nginx/.htpasswd)
-
-- macro: lvprogs_writing_conf
-  condition: >
-    (proc.name in (dmeventd,lvcreate,pvscan,lvs) and
-     (fd.name startswith /etc/lvm/archive or
-      fd.name startswith /etc/lvm/backup or
-      fd.name startswith /etc/lvm/cache))
-
-- macro: ovsdb_writing_openvswitch
-  condition: (proc.name=ovsdb-server and fd.directory=/etc/openvswitch)
-
 - macro: perl_running_plesk
   condition: (proc.cmdline startswith "perl /opt/psa/admin/bin/plesk_agent_manager" or
               proc.pcmdline startswith "perl /opt/psa/admin/bin/plesk_agent_manager")
@@ -761,9 +766,6 @@
     ((proc.name=consul-template and fd.name startswith /etc/haproxy) or
      (proc.name=reload.sh and proc.aname[2]=consul-template and fd.name startswith /etc/ssl))
 
-- macro: countly_writing_nginx_conf
-  condition: (proc.cmdline startswith "nodejs /opt/countly/bin" and fd.name startswith /etc/nginx)
-
 - list: ms_oms_binaries
   items: [omi.postinst, omsconfig.posti, scx.postinst, omsadmin.sh, omiagent]
 
@@ -774,43 +776,8 @@
        or proc.aname[2] in (ms_oms_binaries))
      and (fd.name startswith /etc/opt/omi or fd.name startswith /etc/opt/microsoft/omsagent))
 
-- macro: ms_scx_writing_conf
-  condition: (proc.name in (GetLinuxOS.sh) and fd.name startswith /etc/opt/microsoft/scx)
-
-- macro: azure_scripts_writing_conf
-  condition: (proc.pname startswith "bash /var/lib/waagent/" and fd.name startswith /etc/azure)
-
-- macro: azure_networkwatcher_writing_conf
-  condition: (proc.name in (NetworkWatcherA) and fd.name=/etc/init.d/AzureNetworkWatcherAgent)
-
 - macro: couchdb_writing_conf
   condition: (proc.name=beam.smp and proc.cmdline contains couchdb and fd.name startswith /etc/couchdb)
-
-- macro: update_texmf_writing_conf
-  condition: (proc.name=update-texmf and fd.name startswith /etc/texmf)
-
-- macro: slapadd_writing_conf
-  condition: (proc.name=slapadd and fd.name startswith /etc/ldap)
-
-- macro: openldap_writing_conf
-  condition: (proc.pname=run-openldap.sh and fd.name startswith /etc/openldap)
-
-- macro: ucpagent_writing_conf
-  condition: (proc.name=apiserver and container.image.repository=docker/ucp-agent and fd.name=/etc/authorization_config.cfg)
-
-- macro: iscsi_writing_conf
-  condition: (proc.name=iscsiadm and fd.name startswith /etc/iscsi)
-
-- macro: istio_writing_conf
-  condition: (proc.name=pilot-agent and fd.name startswith /etc/istio)
-
-- macro: symantec_writing_conf
-  condition: >
-    ((proc.name=symcfgd and fd.name startswith /etc/symantec) or
-     (proc.name=navdefutil and fd.name=/etc/symc-defutils.conf))
-
-- macro: liveupdate_writing_conf
-  condition: (proc.cmdline startswith "java LiveUpdate" and fd.name in (/etc/liveupdate.conf, /etc/Product.Catalog.JavaLiveUpdate))
 
 - macro: rancher_agent
   condition: (proc.name=agent and container.image.repository contains "rancher/agent")
@@ -822,20 +789,6 @@
   condition: >
     (proc.name=urlgrabber-ext- and proc.aname[3]=sosreport and
      (fd.name startswith /etc/pkt/nssdb or fd.name startswith /etc/pki/nssdb))
-
-- macro: pkgmgmt_progs_writing_pki
-  condition: >
-    (proc.name=urlgrabber-ext- and proc.pname in (yum, yum-cron, repoquery) and
-     (fd.name startswith /etc/pkt/nssdb or fd.name startswith /etc/pki/nssdb))
-
-- macro: update_ca_trust_writing_pki
-  condition: (proc.pname=update-ca-trust and proc.name=trust and fd.name startswith /etc/pki)
-
-- macro: brandbot_writing_os_release
-  condition: proc.name=brandbot and fd.name=/etc/os-release
-
-- macro: selinux_writing_conf
-  condition: (proc.name in (semodule,genhomedircon,sefcontext_comp) and fd.name startswith /etc/selinux)
 
 - list: veritas_binaries
   items: [vxconfigd, sfcache, vxclustadm, vxdctl, vxprint, vxdmpadm, vxdisk, vxdg, vxassist, vxtune]
@@ -849,26 +802,14 @@
 - macro: veritas_writing_config
   condition: (veritas_progs and (fd.name startswith /etc/vx or fd.name startswith /etc/opt/VRTS or fd.name startswith /etc/vom))
 
-- macro: nginx_writing_conf
-  condition: (proc.name in (nginx,nginx-ingress-c,nginx-ingress) and (fd.name startswith /etc/nginx or fd.name startswith /etc/ingress-controller))
-
 - macro: nginx_writing_certs
   condition: >
     (((proc.name=openssl and proc.pname=nginx-launch.sh) or proc.name=nginx-launch.sh) and fd.name startswith /etc/nginx/certs)
-
-- macro: chef_client_writing_conf
-  condition: (proc.pcmdline startswith "chef-client /opt/gitlab" and fd.name startswith /etc/gitlab)
-
-- macro: centrify_writing_krb
-  condition: (proc.name in (adjoin,addns) and fd.name startswith /etc/krb5)
 
 - macro: cockpit_writing_conf
   condition: >
     ((proc.pname=cockpit-kube-la or proc.aname[2]=cockpit-kube-la)
      and fd.name startswith /etc/cockpit)
-
-- macro: ipsec_writing_conf
-  condition: (proc.name=start-ipsec.sh and fd.directory=/etc/ipsec)
 
 - macro: exe_running_docker_save
   condition: >
@@ -877,50 +818,23 @@
     or proc.cmdline contains "/var/run/docker")
     and proc.pname in (dockerd, docker, dockerd-current, docker-current)
 
-# Ideally we'd have a length check here as well but sysdig
-# filterchecks don't have operators like len()
-- macro: sed_temporary_file
-  condition: (proc.name=sed and fd.name startswith "/etc/sed")
-
 - macro: python_running_get_pip
   condition: (proc.cmdline startswith "python get-pip.py")
 
 - macro: python_running_ms_oms
   condition: (proc.cmdline startswith "python /var/lib/waagent/")
 
-- macro: gugent_writing_guestagent_log
-  condition: (proc.name=gugent and fd.name=GuestAgent.log)
-
-- macro: dse_writing_tmp
-  condition: (proc.name=dse-entrypoint and fd.name=/root/tmp__)
-
 - macro: zap_writing_state
   condition: (proc.name=java and proc.cmdline contains "jar /zap" and fd.name startswith /root/.ZAP)
 
-- macro: airflow_writing_state
-  condition: (proc.name=airflow and fd.name startswith /root/airflow)
-
-- macro: rpm_writing_root_rpmdb
-  condition: (proc.name=rpm and fd.directory=/root/.rpmdb)
-
 - macro: maven_writing_groovy
   condition: (proc.name=java and proc.cmdline contains "classpath /usr/local/apache-maven" and fd.name startswith /root/.groovy)
-
-- macro: chef_writing_conf
-  condition: (proc.name=chef-client and fd.name startswith /root/.chef)
-
-- macro: kubectl_writing_state
-  condition: (proc.name in (kubectl,oc) and fd.name startswith /root/.kube)
 
 - macro: java_running_cassandra
   condition: (proc.name=java and proc.cmdline contains "cassandra.jar")
 
 - macro: cassandra_writing_state
   condition: (java_running_cassandra and fd.directory=/root/.cassandra)
-
-# Istio
-- macro: galley_writing_state
-  condition: (proc.name=galley and fd.name in (known_istio_files))
 
 - list: known_istio_files
   items: [/healthready, /healthliveness]
@@ -956,6 +870,12 @@
     and not package_mgmt_ancestor_procs
     and not exe_running_docker_save
     and not user_known_update_package_registry
+  exceptions:
+    - name: package_repo_filenames
+      fields: [proc.name, fd.name]
+      comps: [=, contains]
+    - name: package_repo_dirs
+      fields: [proc.name, fd.directory]
   output: >
     Repository files get updated (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pcmdline=%proc.pcmdline file=%fd.name newpath=%evt.arg.newpath container_id=%container.id image=%container.image.repository)
   priority:
@@ -977,6 +897,10 @@
     and not python_running_get_pip
     and not python_running_ms_oms
     and not user_known_write_below_binary_dir_activities
+  exceptions:
+    - name: known_bin_writers
+      fields: [proc.name, fd.name]
+      comps: [=, contains]
   output: >
     File below a known binary directory opened for writing (user=%user.name user_loginuid=%user.loginuid
     command=%proc.cmdline file=%fd.name parent=%proc.pname pcmdline=%proc.pcmdline gparent=%proc.aname[2] container_id=%container.id image=%container.image.repository)
@@ -997,13 +921,6 @@
 # When fixed, we will use "fd.name glob '/home/*/.ssh/*'"
 - macro: user_ssh_directory
   condition: (fd.name startswith '/home' and fd.name contains '.ssh')
-
-# google_accounts_(daemon)
-- macro: google_accounts_daemon_writing_ssh
-  condition: (proc.name=google_accounts and user_ssh_directory)
-
-- macro: cloud_init_writing_ssh
-  condition: (proc.name=cloud-init and user_ssh_directory)
 
 - macro: mkinitramfs_writing_boot
   condition: (proc.pname in (mkinitramfs, update-initramf) and fd.directory=/boot)
@@ -1028,13 +945,22 @@
   condition: >
     evt.dir = < and open_write and monitored_dir
     and not package_mgmt_procs
-    and not coreos_write_ssh_dir
     and not exe_running_docker_save
     and not python_running_get_pip
     and not python_running_ms_oms
-    and not google_accounts_daemon_writing_ssh
-    and not cloud_init_writing_ssh
     and not user_known_write_monitored_dir_conditions
+  exceptions:
+    - name: known_writer_prefix
+      fields: [proc.name, fd.name]
+      comps: [=, startswith]
+      values:
+        - [update-ssh-keys, /home/core/.ssh]
+    - name: known_writer_prefix_substring
+      fields: [proc.name, fd.name, fd.name]
+      comps: [=, startswith, contains]
+      values:
+        - [google_accounts, /home, .ssh]
+        - [cloud-init, /home, .ssh]
   output: >
     File below a monitored directory opened for writing (user=%user.name user_loginuid=%user.loginuid
     command=%proc.cmdline file=%fd.name parent=%proc.pname pcmdline=%proc.pcmdline gparent=%proc.aname[2] container_id=%container.id image=%container.image.repository)
@@ -1058,6 +984,10 @@
      (user_ssh_directory or fd.name startswith /root/.ssh) and
      not user_known_read_ssh_information_activities and
      not proc.name in (ssh_binaries))
+  exceptions:
+    - name: known_ssh_reader
+      fields: [proc.name, fd.name]
+      comps: [=, contains]
   output: >
     ssh-related file/directory read by non-ssh program (user=%user.name user_loginuid=%user.loginuid
     command=%proc.cmdline file=%fd.name parent=%proc.pname pcmdline=%proc.pcmdline container_id=%container.id image=%container.image.repository)
@@ -1067,42 +997,14 @@
 - list: safe_etc_dirs
   items: [/etc/cassandra, /etc/ssl/certs/java, /etc/logstash, /etc/nginx/conf.d, /etc/container_environment, /etc/hrmconfig, /etc/fluent/configs.d]
 
-- macro: fluentd_writing_conf_files
-  condition: (proc.name=start-fluentd and fd.name in (/etc/fluent/fluent.conf, /etc/td-agent/td-agent.conf))
-
-- macro: qualys_writing_conf_files
-  condition: (proc.name=qualys-cloud-ag and fd.name=/etc/qualys/cloud-agent/qagent-log.conf)
-
-- macro: git_writing_nssdb
-  condition: (proc.name=git-remote-http and fd.directory=/etc/pki/nssdb)
-
-- macro: plesk_writing_keys
-  condition: (proc.name in (plesk_binaries) and fd.name startswith /etc/sw/keys)
-
-- macro: plesk_install_writing_apache_conf
-  condition: (proc.cmdline startswith "bash -hB /usr/lib/plesk-9.0/services/webserver.apache configure"
-              and fd.name="/etc/apache2/apache2.conf.tmp")
-
 - macro: plesk_running_mktemp
   condition: (proc.name=mktemp and proc.aname[3] in (plesk_binaries))
 
 - macro: networkmanager_writing_resolv_conf
   condition: proc.aname[2]=nm-dispatcher and fd.name=/etc/resolv.conf
 
-- macro: add_shell_writing_shells_tmp
-  condition: (proc.name=add-shell and fd.name=/etc/shells.tmp)
-
 - macro: duply_writing_exclude_files
   condition: (proc.name=touch and proc.pcmdline startswith "bash /usr/bin/duply" and fd.name startswith "/etc/duply")
-
-- macro: xmlcatalog_writing_files
-  condition: (proc.name=update-xmlcatal and fd.directory=/etc/xml)
-
-- macro: datadog_writing_conf
-  condition: ((proc.cmdline startswith "python /opt/datadog-agent" or
-               proc.cmdline startswith "entrypoint.sh /entrypoint.sh datadog start" or
-               proc.cmdline startswith "agent.py /opt/datadog-agent")
-              and fd.name startswith "/etc/dd-agent")
 
 - macro: rancher_writing_conf
   condition: ((proc.name in (healthcheck, lb-controller, rancher-dns)) and
@@ -1116,52 +1018,12 @@
               (container.image.repository contains "rancher/metadata" or container.image.repository contains "rancher/lb-service-haproxy") and
               fd.name startswith "/answers.json")
 
-- macro: checkpoint_writing_state
-  condition: (proc.name=checkpoint and
-              container.image.repository contains "coreos/pod-checkpointer" and
-              fd.name startswith "/etc/kubernetes")
-
 - macro: jboss_in_container_writing_passwd
   condition: >
     ((proc.cmdline="run-java.sh /opt/jboss/container/java/run/run-java.sh"
       or proc.cmdline="run-java.sh /opt/run-java/run-java.sh")
      and container
      and fd.name=/etc/passwd)
-
-- macro: curl_writing_pki_db
-  condition: (proc.name=curl and fd.directory=/etc/pki/nssdb)
-
-- macro: haproxy_writing_conf
-  condition: ((proc.name in (update-haproxy-,haproxy_reload.) or proc.pname in (update-haproxy-,haproxy_reload,haproxy_reload.))
-               and (fd.name=/etc/openvpn/client.map or fd.name startswith /etc/haproxy))
-
-- macro: java_writing_conf
-  condition: (proc.name=java and fd.name=/etc/.java/.systemPrefs/.system.lock)
-
-- macro: rabbitmq_writing_conf
-  condition: (proc.name=rabbitmq-server and fd.directory=/etc/rabbitmq)
-
-- macro: rook_writing_conf
-  condition: (proc.name=toolbox.sh and container.image.repository=rook/toolbox
-              and fd.directory=/etc/ceph)
-
-- macro: httpd_writing_conf_logs
-  condition: (proc.name=httpd and fd.name startswith /etc/httpd/)
-
-- macro: mysql_writing_conf
-  condition: >
-    ((proc.name in (start-mysql.sh, run-mysqld) or proc.pname=start-mysql.sh) and
-     (fd.name startswith /etc/mysql or fd.directory=/etc/my.cnf.d))
-
-- macro: redis_writing_conf
-  condition: >
-    (proc.name in (run-redis, redis-launcher.) and (fd.name=/etc/redis.conf or fd.name startswith /etc/redis))
-
-- macro: openvpn_writing_conf
-  condition: (proc.name in (openvpn,openvpn-entrypo) and fd.name startswith /etc/openvpn)
-
-- macro: php_handlers_writing_conf
-  condition: (proc.name=php_handlers_co and fd.name=/etc/psa/php_versions.json)
 
 - macro: sed_writing_temp_file
   condition: >
@@ -1170,55 +1032,18 @@
                          fd.name startswith /etc/apt/sed or
                          fd.name startswith /etc/apt/apt.conf.d/sed)))
 
-- macro: cron_start_writing_pam_env
-  condition: (proc.cmdline="bash /usr/sbin/start-cron" and fd.name=/etc/security/pam_env.conf)
-
 # In some cases dpkg-reconfigur runs commands that modify /etc. Not
 # putting the full set of package management programs yet.
 - macro: dpkg_scripting
   condition: (proc.aname[2] in (dpkg-reconfigur, dpkg-preconfigu))
 
-- macro: ufw_writing_conf
-  condition: (proc.name=ufw and fd.directory=/etc/ufw)
-
-- macro: calico_writing_conf
-  condition: >
-    (((proc.name = calico-node) or
-      (container.image.repository=gcr.io/projectcalico-org/node and proc.name in (start_runit, cp)) or
-      (container.image.repository=gcr.io/projectcalico-org/cni and proc.name=sed))
-     and fd.name startswith /etc/calico)
-
-- macro: prometheus_conf_writing_conf
-  condition: (proc.name=prometheus-conf and fd.name startswith /etc/prometheus/config_out)
-
-- macro: openshift_writing_conf
-  condition: (proc.name=oc and fd.name startswith /etc/origin/node)
-
-- macro: keepalived_writing_conf
-  condition: (proc.name=keepalived and fd.name=/etc/keepalived/keepalived.conf)
-
 - macro: etcd_manager_updating_dns
   condition: (container and proc.name=etcd-manager and fd.name=/etc/hosts)
-
-- macro: automount_using_mtab
-  condition: (proc.pname = automount and fd.name startswith /etc/mtab)
-
-- macro: mcafee_writing_cma_d
-  condition: (proc.name=macompatsvc and fd.directory=/etc/cma.d)
-
-- macro: avinetworks_supervisor_writing_ssh
-  condition: >
-    (proc.cmdline="se_supervisor.p /opt/avi/scripts/se_supervisor.py -d" and
-      (fd.name startswith /etc/ssh/known_host_ or
-       fd.name startswith /etc/ssh/ssh_monitor_config_ or
-       fd.name startswith /etc/ssh/ssh_config_))
 
 # Add conditions to this macro (probably in a separate file,
 # overwriting this macro) to allow for specific combinations of
 # programs writing below specific directories below
-# /etc. fluentd_writing_conf_files is a good example to follow, as it
-# specifies both the program doing the writing as well as the specific
-# files it is allowed to modify.
+# /etc.
 #
 # In this file, it just takes one of the programs in the base macro
 # and repeats it.
@@ -1234,110 +1059,206 @@
   condition: >
     etc_dir and evt.dir = < and open_write
     and proc_name_exists
-    and not proc.name in (passwd_binaries, shadowutils_binaries, sysdigcloud_binaries,
-                          package_mgmt_binaries, ssl_mgmt_binaries, dhcp_binaries,
-                          dev_creation_binaries, shell_mgmt_binaries,
-                          mail_config_binaries,
-                          sshkit_script_binaries,
-                          ldconfig.real, ldconfig, confd, gpg, insserv,
-                          apparmor_parser, update-mime, tzdata.config, tzdata.postinst,
-                          systemd, systemd-machine, systemd-sysuser,
-                          debconf-show, rollerd, bind9.postinst, sv,
-                          gen_resolvconf., update-ca-certi, certbot, runsv,
-                          qualys-cloud-ag, locales.postins, nomachine_binaries,
-                          adclient, certutil, crlutil, pam-auth-update, parallels_insta,
-                          openshift-launc, update-rc.d, puppet)
     and not (container and proc.cmdline in ("cp /run/secrets/kubernetes.io/serviceaccount/ca.crt /etc/pki/ca-trust/source/anchors/openshift-ca.crt"))
-    and not proc.pname in (sysdigcloud_binaries, mail_config_binaries, hddtemp.postins, sshkit_script_binaries, locales.postins, deb_binaries, dhcp_binaries)
-    and not fd.name pmatch (safe_etc_dirs)
-    and not fd.name in (/etc/container_environment.sh, /etc/container_environment.json, /etc/motd, /etc/motd.svc)
-    and not sed_temporary_file
     and not exe_running_docker_save
     and not ansible_running_python
     and not python_running_denyhosts
-    and not fluentd_writing_conf_files
     and not user_known_write_etc_conditions
     and not run_by_centrify
     and not run_by_adclient
-    and not qualys_writing_conf_files
-    and not git_writing_nssdb
-    and not plesk_writing_keys
-    and not plesk_install_writing_apache_conf
     and not plesk_running_mktemp
     and not networkmanager_writing_resolv_conf
     and not run_by_chef
-    and not add_shell_writing_shells_tmp
     and not duply_writing_exclude_files
-    and not xmlcatalog_writing_files
     and not parent_supervise_running_multilog
-    and not supervise_writing_status
-    and not pki_realm_writing_realms
-    and not htpasswd_writing_passwd
-    and not lvprogs_writing_conf
-    and not ovsdb_writing_openvswitch
-    and not datadog_writing_conf
-    and not curl_writing_pki_db
-    and not haproxy_writing_conf
-    and not java_writing_conf
     and not dpkg_scripting
     and not parent_ucf_writing_conf
-    and not rabbitmq_writing_conf
-    and not rook_writing_conf
-    and not php_handlers_writing_conf
     and not sed_writing_temp_file
-    and not cron_start_writing_pam_env
-    and not httpd_writing_conf_logs
-    and not mysql_writing_conf
-    and not openvpn_writing_conf
     and not consul_template_writing_conf
-    and not countly_writing_nginx_conf
     and not ms_oms_writing_conf
-    and not ms_scx_writing_conf
-    and not azure_scripts_writing_conf
-    and not azure_networkwatcher_writing_conf
     and not couchdb_writing_conf
-    and not update_texmf_writing_conf
-    and not slapadd_writing_conf
-    and not symantec_writing_conf
-    and not liveupdate_writing_conf
     and not sosreport_writing_files
-    and not selinux_writing_conf
     and not veritas_writing_config
-    and not nginx_writing_conf
     and not nginx_writing_certs
-    and not chef_client_writing_conf
-    and not centrify_writing_krb
     and not cockpit_writing_conf
-    and not ipsec_writing_conf
     and not httpd_writing_ssl_conf
-    and not userhelper_writing_etc_security
-    and not pkgmgmt_progs_writing_pki
-    and not update_ca_trust_writing_pki
-    and not brandbot_writing_os_release
-    and not redis_writing_conf
-    and not openldap_writing_conf
-    and not ucpagent_writing_conf
-    and not iscsi_writing_conf
-    and not istio_writing_conf
-    and not ufw_writing_conf
-    and not calico_writing_conf
     and not calico_writing_envvars
-    and not prometheus_conf_writing_conf
-    and not openshift_writing_conf
-    and not keepalived_writing_conf
     and not rancher_writing_conf
-    and not checkpoint_writing_state
     and not jboss_in_container_writing_passwd
     and not etcd_manager_updating_dns
     and not user_known_write_below_etc_activities
-    and not automount_using_mtab
-    and not mcafee_writing_cma_d
-    and not avinetworks_supervisor_writing_ssh
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc
   condition: write_etc_common
   output: "File below /etc opened for writing (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline parent=%proc.pname pcmdline=%proc.pcmdline file=%fd.name program=%proc.name gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4] container_id=%container.id image=%container.image.repository)"
+  exceptions:
+    - name: proc_names
+      fields: proc.name
+      values:
+        - [passwd_binaries, shadowutils_binaries, sysdigcloud_binaries,
+            package_mgmt_binaries, ssl_mgmt_binaries, dhcp_binaries,
+            dev_creation_binaries, shell_mgmt_binaries,
+            mail_config_binaries,
+            sshkit_script_binaries,
+            ldconfig.real, ldconfig, confd, gpg, insserv,
+            apparmor_parser, update-mime, tzdata.config, tzdata.postinst,
+            systemd, systemd-machine, systemd-sysuser,
+            debconf-show, rollerd, bind9.postinst, sv,
+            gen_resolvconf., update-ca-certi, certbot, runsv,
+            qualys-cloud-ag, locales.postins, nomachine_binaries,
+            adclient, certutil, crlutil, pam-auth-update, parallels_insta,
+            openshift-launc, update-rc.d, puppet]
+    - name: proc_pnames
+      fields: proc.pname
+      values: [sysdigcloud_binaries, mail_config_binaries, hddtemp.postins,
+               sshkit_script_binaries, locales.postins, deb_binaries, dhcp_binaries]
+    - name: dirs
+      fields: fd.name
+      comps: pmatch
+      values: [safe_etc_dirs]
+    - name: files
+      fields: fd.name
+      values: [/etc/container_environment.sh, /etc/container_environment.json, /etc/motd, /etc/motd.svc]
+    - name: proc_file
+      fields: [proc.name, fd.name]
+      comps: [in, in]
+      values:
+        - [[qualys-cloud-ag], [/etc/qualys/cloud-agent/qagent-log.conf]]
+        - [[add-shell], [/etc/shells.tmp]]
+        - [[htpasswd], [/etc/nginx/.htpasswd]]
+        - [[java], [/etc/.java/.systemPrefs/.system.lock]]
+        - [[php_handlers_co], [/etc/psa/php_versions.json]]
+        - [[NetworkWatcherA], [/etc/init.d/AzureNetworkWatcherAgent]]
+        - [[navdefutil], [/etc/symc-defutils.conf]]
+        - [[brandbot], [/etc/os-release]]
+        - [[keepalived], [/etc/keepalived/keepalived.conf]]
+        - [[update-haproxy-,haproxy_reload.], [/etc/openvpn/client.map]]
+        - [[start-fluentd], [/etc/fluent/fluent.conf, /etc/td-agent/td-agent.conf]]
+    - name: proc_file_prefix
+      fields: [proc.name, fd.name]
+      comps: [in, startswith]
+      values:
+        - [[sed], /etc/sed]
+        - [[httpd], /etc/httpd/]
+        - [[GetLinuxOS.sh], /etc/opt/microsoft/scx]
+        - [[update-texmf], /etc/texmf]
+        - [[slapadd], /etc/ldap]
+        - [[symcfgd], /etc/symantec]
+        - [[userhelper], /etc/security]
+        - [[iscsiadm], /etc/iscsi]
+        - [[pilot-agent], /etc/istio]
+        - [[calico-node], /etc/calico]
+        - [[prometheus-conf], /etc/prometheus/config_out]
+        - [[oc], /etc/origin/node]
+        - [[plesk_binaries], /etc/sw/keys]
+        - [[supervice,svc], /etc/sb/]
+        - [[openvpn,openvpn-entrypo], /etc/openvpn]
+        - [[semodule,genhomedircon,sefcontext_comp], /etc/selinux]
+        - [[dmeventd,lvcreate,pvscan,lvs], /etc/lvm/archive]
+        - [[dmeventd,lvcreate,pvscan,lvs], /etc/lvm/backup]
+        - [[dmeventd,lvcreate,pvscan,lvs], /etc/lvm/cache]
+        - [[nginx,nginx-ingress-c,nginx-ingress], /etc/nginx]
+        - [[nginx,nginx-ingress-c,nginx-ingress], /etc/ingress-controller]
+        - [[adjoin,addns], /etc/krb5]
+        - [[run-redis, redis-launcher.], /etc/redis]
+        - [[update-haproxy-,haproxy_reload.], /etc/haproxy]
+        - [[start-mysql.sh, run-mysqld], /etc/mysql]
+   - name: proc_directory
+      fields: [proc.name, fd.directory]
+      comps: [in, in]
+      values:
+        - [[git-remote-http], [/etc/pki/nssdb]]
+        - [[update-xmlcatal], [/etc/xml]]
+        - [[ovsdb-server], [/etc/openvswitch]]
+        - [[curl], [/etc/pki/nssdb]]
+        - [[rabbitmq-server], [/etc/rabbitmq]]
+        - [[start-ipsec.sh], [/etc/ipsec]]
+        - [[ufw], [/etc/ufw]]
+        - [[macompatsvc], [/etc/cma.d]]
+        - [[start-mysql.sh, run-mysqld], [/etc/my.cnf.d]]
+    - name: pname_file
+      fields: [proc.pname, fd.name]
+      comps: [in, in]
+      fields:
+        - [[update-haproxy-,haproxy_reload,haproxy_reload.], [/etc/openvpn/client.map]]
+    - name: pname_file_prefix
+      fields: [proc.pname, fd.name]
+      comps: [in, startswith]
+      fields:
+        - [[run-openldap.sh], /etc/openldap]
+        - [[start-mysql.sh], /etc/mysql]
+        - [[update-haproxy-,haproxy_reload.], /etc/haproxy]
+    - name: pname_directory
+      fields: [proc.pname, fd.directory]
+      comps: [in, in]
+      fields:
+        - [[start-mysql.sh], [/etc/my.cnf.d]]
+    - name: pname_prefix_file_prefix
+      fields: [proc.pname, fd.name]
+      comps: [startswith, startswith]
+      fields:
+        - ["bash /var/lib/waagent/", /etc/azure]
+        - [automount, /etc/mtab]
+    - name: proc_pname_file
+      fields: [proc.name, proc.pname, fd.name]
+      comps: [in, in, startswith]
+      values:
+        - [[urlgrabber-ext-], [yum, yum-cron, repoquery], /etc/pkt/nssdb or fd.name startswith /etc/pki/nssdb))
+        - [[urlgrabber-ext-], [yum, yum-cron, repoquery], /etc/pki/nssdb]
+        - [[trust], [update-ca-trust], /etc/pki]
+    - name: cmdline_file
+      fields: [proc.cmdline, fd.name]
+      fields: [in, in]
+      values:
+        - [["bash /usr/sbin/start-cron"], [/etc/security/pam_env.conf]]
+    - name: cmdline_file_prefix
+      fields: [proc.cmdline, fd.name]
+      comps: [in, startswith]
+      values:
+        - [["bash /usr/sbin/start-cron"], /etc/security/pam_env.conf]
+        - [["se_supervisor.p /opt/avi/scripts/se_supervisor.py -d"], /etc/ssh/known_host_]
+        - [["se_supervisor.p /opt/avi/scripts/se_supervisor.py -d"], /etc/ssh/ssh_monitor_config_]
+        - [["se_supervisor.p /opt/avi/scripts/se_supervisor.py -d"], /etc/ssh/ssh_config_]
+    - name: cmdline_prefix_file
+      fields: [proc.cmdline, fd.name]
+      comps: [startswith, in]
+      values:
+        - ["bash -hB /usr/lib/plesk-9.0/services/webserver.apache configure", ["/etc/apache2/apache2.conf.tmp"]]
+        - ["java LiveUpdate", [/etc/liveupdate.conf]]
+        - ["java LiveUpdate", [/etc/Product.Catalog.JavaLiveUpdate]]
+    - name: cmdline_prefix_file_prefix
+      fields: [proc.cmdline, fd.name]
+      comps: [startswith, startswith]
+      values:
+        - ["bash /usr/local/lib/pki/pki-realm", /etc/pki/realms]
+        - ["python /opt/datadog-agent", "/etc/dd-agent"]
+        - ["entrypoint.sh /entrypoint.sh datadog start", "/etc/dd-agent"]
+        - ["agent.py /opt/datadog-agent", "/etc/dd-agent"]
+        - ["nodejs /opt/countly/bin", /etc/nginx]
+    - name: pcmdline_prefix_file_prefix
+      fields: [proc.pcmdline, fd.name]
+      comps: [startswith, startswith]
+      fields:
+        - ["bash /var/lib/waagent/", /etc/azure]
+        - ["chef-client /opt/gitlab", /etc/gitlab]
+    - name: proc_container_dir
+      fields: [proc.name, container.image.repository, fd.directory]
+      comps: [in, in, in]
+      values:
+        - [[toolbox.sh], [rook/toolbox], [/etc/ceph]]
+    - name: proc_container_file
+      fields: [proc.name, container.image.repository, fd.name]
+      comps: [in, in, in]
+      values:
+        - [[apiserver], [docker/ucp-agent], [/etc/authorization_config.cfg]]
+    - name: proc_container_prefix
+      fields: [proc.name, container.image.repository, fd.name]
+      comps: [in, in, startswith]
+      values:
+        - [[start_runit, cp], [gcr.io/projectcalico-org/node], /etc/calico]
+        - [[sed], [gcr.io/projectcalico-org/cni], /etc/calico]
+        - [[checkpoint], ["coreos/pod-checkpointer"], "/etc/kubernetes"]
   priority: ERROR
   tags: [filesystem, mitre_persistence]
 
@@ -1348,43 +1269,6 @@
 
 - list: known_root_directories
   items: [/root/.oracle_jre_usage, /root/.ssh, /root/.subversion, /root/.nami]
-
-- macro: known_root_conditions
-  condition: (fd.name startswith /root/orcexec.
-              or fd.name startswith /root/.m2
-              or fd.name startswith /root/.npm
-              or fd.name startswith /root/.pki
-              or fd.name startswith /root/.ivy2
-              or fd.name startswith /root/.config/Cypress
-              or fd.name startswith /root/.config/pulse
-              or fd.name startswith /root/.config/configstore
-              or fd.name startswith /root/jenkins/workspace
-              or fd.name startswith /root/.jenkins
-              or fd.name startswith /root/.cache
-              or fd.name startswith /root/.sbt
-              or fd.name startswith /root/.java
-              or fd.name startswith /root/.glide
-              or fd.name startswith /root/.sonar
-              or fd.name startswith /root/.v8flag
-              or fd.name startswith /root/infaagent
-              or fd.name startswith /root/.local/lib/python
-              or fd.name startswith /root/.pm2
-              or fd.name startswith /root/.gnupg
-              or fd.name startswith /root/.pgpass
-              or fd.name startswith /root/.theano
-              or fd.name startswith /root/.gradle
-              or fd.name startswith /root/.android
-              or fd.name startswith /root/.ansible
-              or fd.name startswith /root/.crashlytics
-              or fd.name startswith /root/.dbus
-              or fd.name startswith /root/.composer
-              or fd.name startswith /root/.gconf
-              or fd.name startswith /root/.nv
-              or fd.name startswith /root/.local/share/jupyter
-              or fd.name startswith /root/oradiag_root
-              or fd.name startswith /root/workspace
-              or fd.name startswith /root/jvm
-              or fd.name startswith /root/.node-gyp)
 
 # Add conditions to this macro (probably in a separate file,
 # overwriting this macro) to allow for specific combinations of
@@ -1400,40 +1284,94 @@
 - macro: user_known_write_below_root_activities
   condition: (never_true)
 
-- macro: runc_writing_exec_fifo
-  condition: (proc.cmdline="runc:[1:CHILD] init" and fd.name=/exec.fifo)
-
 - macro: runc_writing_var_lib_docker
   condition: (proc.cmdline="runc:[1:CHILD] init" and evt.arg.filename startswith /var/lib/docker)
-
-- macro: mysqlsh_writing_state
-  condition: (proc.name=mysqlsh and fd.directory=/root/.mysqlsh)
 
 - rule: Write below root
   desc: an attempt to write to any file directly below / or /root
   condition: >
     root_dir and evt.dir = < and open_write
     and proc_name_exists
-    and not fd.name in (known_root_files)
-    and not fd.directory pmatch (known_root_directories)
     and not exe_running_docker_save
-    and not gugent_writing_guestagent_log
-    and not dse_writing_tmp
     and not zap_writing_state
-    and not airflow_writing_state
-    and not rpm_writing_root_rpmdb
     and not maven_writing_groovy
-    and not chef_writing_conf
-    and not kubectl_writing_state
     and not cassandra_writing_state
-    and not galley_writing_state
     and not calico_writing_state
     and not rancher_writing_root
-    and not runc_writing_exec_fifo
-    and not mysqlsh_writing_state
-    and not known_root_conditions
     and not user_known_write_root_conditions
     and not user_known_write_below_root_activities
+  exceptions:
+    - name: files
+      field: fd.name
+      values: [known_root_files]
+    - name: dirs
+      field: fd.directory
+      comps: pmatch
+      values: [known_root_directories]
+    - name: prefixes
+      field: [fd.name]
+      comps: [startswith]
+      values:
+        - [/root/orcexec.]
+        - [/root/.m2]
+        - [/root/.npm]
+        - [/root/.pki]
+        - [/root/.ivy2]
+        - [/root/.config/Cypress]
+        - [/root/.config/pulse]
+        - [/root/.config/configstore]
+        - [/root/jenkins/workspace]
+        - [/root/.jenkins]
+        - [/root/.cache]
+        - [/root/.sbt]
+        - [/root/.java]
+        - [/root/.glide]
+        - [/root/.sonar]
+        - [/root/.v8flag]
+        - [/root/infaagent]
+        - [/root/.local/lib/python]
+        - [/root/.pm2]
+        - [/root/.gnupg]
+        - [/root/.pgpass]
+        - [/root/.theano]
+        - [/root/.gradle]
+        - [/root/.android]
+        - [/root/.ansible]
+        - [/root/.crashlytics]
+        - [/root/.dbus]
+        - [/root/.composer]
+        - [/root/.gconf]
+        - [/root/.nv]
+        - [/root/.local/share/jupyter]
+        - [/root/oradiag_root]
+        - [/root/workspace]
+        - [/root/jvm]
+        - [/root/.node-gyp]
+    - name: proc_file
+      fields: [proc.name, fd.name]
+      comps: [in, in]
+      values:
+        - [[gugent], [GuestAgent.log]]
+        - [[dse-entrypoint], [/root/tmp__]]
+        - [[galley], [known_istio_files]]
+    - name: proc_directory
+      fields: [proc.name, fd.directory]
+      comps: [in, in]
+      values:
+        - [[rpm], [/root/.rpmdb]]
+        - [[mysqlsh], [/root/.mysqlsh]]
+    - name: proc_file_prefix
+      fields: [proc.name, fd.name]
+      comps: [in, startswith]
+      values:
+        - [[airflow], /root/airflow]
+        - [[chef-client], /root/.chef]
+        - [[kubectl, oc], /root/.kube]
+    - name: cmdline_file
+      fields: [proc.cmdline, fd.name]
+      comps: [in, in]
+      values:
+        - ["runc:[1:CHILD] init"], [/exec.fifo]]
   output: "File below / or /root opened for writing (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline parent=%proc.pname file=%fd.name program=%proc.name container_id=%container.id image=%container.image.repository)"
   priority: ERROR
   tags: [filesystem, mitre_persistence]
@@ -2424,9 +2362,9 @@
 - rule: Contact K8S API Server From Container
   desc: Detect attempts to contact the K8S API Server from a container
   condition: >
-    evt.type=connect and evt.dir=< and 
+    evt.type=connect and evt.dir=< and
     (fd.typechar=4 or fd.typechar=6) and
-    container and 
+    container and
     not k8s_containers and
     k8s_api_server and
     not user_known_contact_k8s_api_server_activities
@@ -2872,7 +2810,7 @@
   tags: [container, mitre_execution]
 
 
-# This rule is enabled by default. 
+# This rule is enabled by default.
 # If you want to disable it, modify the following macro.
 - macro: consider_packet_socket_communication
   condition: (always_true)
