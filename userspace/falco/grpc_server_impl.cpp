@@ -16,7 +16,7 @@ limitations under the License.
 
 #include "config_falco.h"
 #include "grpc_server_impl.h"
-#include "outputs_queue.h"
+#include "grpc_queue.h"
 #include "logger.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
 
@@ -44,7 +44,7 @@ void falco::grpc::server_impl::get(const stream_context& ctx, const outputs::req
 	// m_status == stream_context::STREAMING?
 	// todo(leodido) > set m_stream
 
-	ctx.m_has_more = outputs::queue::get().try_pop(res);
+	ctx.m_has_more = queue::get().try_pop(res);
 }
 
 void falco::grpc::server_impl::sub(const bidi_context& ctx, const outputs::request& req, outputs::response& res)
@@ -61,7 +61,7 @@ void falco::grpc::server_impl::sub(const bidi_context& ctx, const outputs::reque
 	// m_status == stream_context::STREAMING?
 	// todo(leodido) > set m_stream
 
-	ctx.m_has_more = outputs::queue::get().try_pop(res);
+	ctx.m_has_more = queue::get().try_pop(res);
 }
 
 void falco::grpc::server_impl::version(const context& ctx, const version::request&, version::response& res)

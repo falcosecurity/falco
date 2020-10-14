@@ -16,7 +16,7 @@ limitations under the License.
 
 #include <google/protobuf/util/time_util.h>
 #include "outputs_grpc.h"
-#include "outputs_queue.h"
+#include "grpc_queue.h"
 #include "falco_common.h"
 #include "formats.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
@@ -67,7 +67,7 @@ void falco::outputs::output_grpc::output_event(gen_event *evt, std::string &rule
 	auto host = grpc_res.mutable_hostname();
 	*host = m_hostname;
 
-	falco::outputs::queue::get().push(grpc_res);
+	falco::grpc::queue::get().push(grpc_res);
 }
 
 void falco::outputs::output_grpc::output_msg(falco_common::priority_type priority, std::string &msg)
