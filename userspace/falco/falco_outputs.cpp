@@ -123,7 +123,7 @@ void falco_outputs::add_output(falco::outputs::config oc)
 		throw falco_exception("Output not supported: " + oc.name);
 	}
 
-	oo->init(oc, m_buffered, m_time_format_iso_8601, m_hostname);
+	oo->init(oc, m_buffered, m_hostname);
 	m_outputs.push_back(oo);
 }
 
