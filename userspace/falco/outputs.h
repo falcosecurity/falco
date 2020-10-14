@@ -45,13 +45,10 @@ struct config
 class abstract_output
 {
 public:
-	void init(config oc, bool buffered,
-		  bool time_format_iso_8601, std::string hostname)
+	void init(config oc, bool buffered, std::string hostname)
 	{
-
 		m_oc = oc;
 		m_buffered = buffered;
-		m_time_format_iso_8601 = time_format_iso_8601;
 		m_hostname = hostname;
 	}
 
@@ -69,7 +66,6 @@ public:
 protected:
 	config m_oc;
 	bool m_buffered;
-	bool m_time_format_iso_8601;
 	std::string m_hostname;
 };
 
