@@ -15,15 +15,8 @@
 # limitations under the License.
 #
 
-# See xxx for details on falco engine and rules versioning. Currently,
-# this specific rules file is compatible with engine version 0
-# (e.g. falco releases <= 0.13.1), so we'll keep the
-# required_engine_version lines commented out, so maintain
-# compatibility with older falco releases. With the first incompatible
-# change to this rules file, we'll uncomment this line and set it to
-# the falco engine version in use at the time.
-#
-- required_engine_version: 7
+# Falco engine 8 supports exception properties on rules.
+- required_engine_version: 8
 
 # Currently disabled as read/write are ignored syscalls. The nearly
 # similar open_write/open_read check for files being opened for
@@ -221,9 +214,6 @@
 - list: openscap_rpm_binaries
   items: [probe_rpminfo, probe_rpmverify, probe_rpmverifyfile, probe_rpmverifypackage]
 
-- macro: rpm_procs
-  condition: (proc.name in (rpm_binaries, openscap_rpm_binaries) or proc.name in (salt-minion))
-
 - list: deb_binaries
   items: [dpkg, dpkg-preconfigu, dpkg-reconfigur, dpkg-divert, apt, apt-get, aptitude,
     frontend, preinst, add-apt-reposit, apt-auto-remova, apt-key,
@@ -243,9 +233,6 @@
              proc.aname[2] in (package_mgmt_binaries) or
              proc.aname[3] in (package_mgmt_binaries) or
              proc.aname[4] in (package_mgmt_binaries)
-
-- macro: coreos_write_ssh_dir
-  condition: (proc.name=update-ssh-keys and fd.name startswith /home/core/.ssh)
 
 - macro: run_by_package_mgmt_binaries
   condition: proc.aname in (package_mgmt_binaries, needrestart)
@@ -362,12 +349,17 @@
 # repeats ssh_port, which effectively allows ssh from all hosts. In
 # the overridden macro, the condition would look something like
 # "fd.sip="a.b.c.d" or fd.sip="e.f.g.h" or ..."
+#
+# If at all possible, use the rule exceptions instead.
 - macro: allowed_ssh_hosts
   condition: ssh_port
 
 - rule: Disallowed SSH Connection
   desc: Detect any new ssh connection to a host other than those in an allowed group of hosts
   condition: (inbound_outbound) and ssh_port and not allowed_ssh_hosts
+  exceptions:
+    - name: allowed_ssh_ipaddrs
+      fields: fd.sip
   output: Disallowed SSH Connection (command=%proc.cmdline connection=%fd.name user=%user.name user_loginuid=%user.loginuid container_id=%container.id image=%container.image.repository)
   priority: NOTICE
   tags: [network, mitre_remote_service]
@@ -395,10 +387,20 @@
 - rule: Unexpected outbound connection destination
   desc: Detect any outbound connection to a destination outside of an allowed set of ips, networks, or domain names
   condition: >
-    consider_all_outbound_conns and outbound and not
-    ((fd.sip in (allowed_outbound_destination_ipaddrs)) or
-     (fd.snet in (allowed_outbound_destination_networks)) or
-     (fd.sip.name in (allowed_outbound_destination_domains)))
+    consider_all_outbound_conns and outbound
+  exceptions:
+    - name: allowed_outbound_ipaddrs
+      fields: fd.sip
+      values:
+        - allowed_outbound_destination_ipaddrs
+    - name: allowed_outbound_networks
+      fields: fd.snet
+      values:
+        - allowed_outbound_destination_networks
+    - name: allowed_outbound_domains
+      fields: fd.sip.name
+      values:
+        - allowed_outbound_destination_domains
   output: Disallowed outbound connection destination (command=%proc.cmdline connection=%fd.name user=%user.name user_loginuid=%user.loginuid container_id=%container.id image=%container.image.repository)
   priority: NOTICE
   tags: [network]
@@ -418,10 +420,20 @@
 - rule: Unexpected inbound connection source
   desc: Detect any inbound connection from a source outside of an allowed set of ips, networks, or domain names
   condition: >
-    consider_all_inbound_conns and inbound and not
-    ((fd.cip in (allowed_inbound_source_ipaddrs)) or
-     (fd.cnet in (allowed_inbound_source_networks)) or
-     (fd.cip.name in (allowed_inbound_source_domains)))
+    consider_all_inbound_conns and inbound
+  exceptions:
+    - name: allowed_inbound_ipaddrs
+      fields: fd.cip
+      values:
+        - allowed_inbound_source_ipaddrs
+    - name: allowed_inbound_networks
+      fields: fd.cnet
+      values:
+        - allowed_inbound_source_networks
+    - name: allowed_inbound_domains
+      fields: fd.cip.name
+      values:
+        - allowed_inbound_source_domains
   output: Disallowed inbound connection source (command=%proc.cmdline connection=%fd.name user=%user.name user_loginuid=%user.loginuid container_id=%container.id image=%container.image.repository)
   priority: NOTICE
   tags: [network]
@@ -451,6 +463,9 @@
 - list: shell_config_directories
   items: [/etc/zsh]
 
+- list: lvprogs_binaries
+  items: [dmeventd, lvcreate, pvscan, lvs]
+
 - rule: Modify Shell Configuration File
   desc: Detect attempt to modify shell configuration files
   condition: >
@@ -460,6 +475,10 @@
      fd.directory in (shell_config_directories))
     and not proc.name in (shell_binaries)
     and not exe_running_docker_save
+  exceptions:
+    - name: known_shell_conf_writers
+      fields: [proc.name, fd.name]
+      comps: [=, contains]
   output: >
     a shell configuration file has been modified (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pcmdline=%proc.pcmdline file=%fd.name container_id=%container.id image=%container.image.repository)
   priority:
@@ -482,6 +501,10 @@
      fd.name in (shell_config_files) or
      fd.directory in (shell_config_directories)) and
     (not proc.name in (shell_binaries))
+  exceptions:
+    - name: known_shell_conf_readers
+      fields: [proc.name, fd.name]
+      comps: [=, contains]
   output: >
     a shell configuration file was read by a non-shell program (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline file=%fd.name container_id=%container.id image=%container.image.repository)
   priority:
@@ -501,6 +524,10 @@
      (spawned_process and proc.name = "crontab")) and
     consider_all_cron_jobs and
     not user_known_cron_jobs
+  exceptions:
+    - name: known_cron_writers
+      fields: [proc.name, fd.name]
+      comps: [=, contains]
   output: >
     Cron jobs were scheduled to run (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline
     file=%fd.name container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
@@ -565,16 +592,6 @@
      (proc.pcmdline contains /usr/sbin/denyhosts or
       proc.pcmdline contains /usr/local/bin/denyhosts.py)))
 
-- macro: parent_python_running_sdchecks
-  condition: >
-    (proc.pname in (python, python2.7) and
-    (proc.pcmdline contains /opt/draios/bin/sdchecks))
-
-- macro: python_running_sdchecks
-  condition: >
-    (proc.name in (python, python2.7) and
-    (proc.cmdline contains /opt/draios/bin/sdchecks))
-
 - macro: parent_linux_image_upgrade_script
   condition: proc.pname startswith linux-image-
 
@@ -608,9 +625,6 @@
     (proc.pname=run-httpd and
      (proc.cmdline startswith "sed -ri" or proc.cmdline startswith "sed -i") and
      (fd.name startswith /etc/httpd/conf.d/ or fd.name startswith /etc/httpd/conf))
-
-- macro: userhelper_writing_etc_security
-  condition: (proc.name=userhelper and fd.name startswith /etc/security)
 
 - macro: parent_Xvfb_running_xkbcomp
   condition: (proc.pname=Xvfb and proc.cmdline startswith 'sh -c "/usr/bin/xkbcomp"')
@@ -699,52 +713,15 @@
      ((proc.pname in (rake, ruby, scl) and proc.aname[5] in (tfm-rake,tfm-ruby)) or
      (proc.pname=scl and proc.aname[2] in (tfm-rake,tfm-ruby))))
 
-- macro: java_running_sdjagent
-  condition: proc.name=java and proc.cmdline contains sdjagent.jar
-
-- macro: kubelet_running_loopback
-  condition: (proc.pname=kubelet and proc.name=loopback)
-
 - macro: python_mesos_marathon_scripting
   condition: (proc.pcmdline startswith "python3 /marathon-lb/marathon_lb.py")
-
-- macro: splunk_running_forwarder
-  condition: (proc.pname=splunkd and proc.cmdline startswith "sh -c /opt/splunkforwarder")
 
 - macro: parent_supervise_running_multilog
   condition: (proc.name=multilog and proc.pname=supervise)
 
-- macro: supervise_writing_status
-  condition: (proc.name in (supervise,svc) and fd.name startswith "/etc/sb/")
-
-- macro: pki_realm_writing_realms
-  condition: (proc.cmdline startswith "bash /usr/local/lib/pki/pki-realm" and fd.name startswith /etc/pki/realms)
-
-- macro: htpasswd_writing_passwd
-  condition: (proc.name=htpasswd and fd.name=/etc/nginx/.htpasswd)
-
-- macro: lvprogs_writing_conf
-  condition: >
-    (proc.name in (dmeventd,lvcreate,pvscan,lvs) and
-     (fd.name startswith /etc/lvm/archive or
-      fd.name startswith /etc/lvm/backup or
-      fd.name startswith /etc/lvm/cache))
-
-- macro: ovsdb_writing_openvswitch
-  condition: (proc.name=ovsdb-server and fd.directory=/etc/openvswitch)
-
 - macro: perl_running_plesk
   condition: (proc.cmdline startswith "perl /opt/psa/admin/bin/plesk_agent_manager" or
               proc.pcmdline startswith "perl /opt/psa/admin/bin/plesk_agent_manager")
-
-- macro: perl_running_updmap
-  condition: (proc.cmdline startswith "perl /usr/bin/updmap")
-
-- macro: perl_running_centrifydc
-  condition: (proc.cmdline startswith "perl /usr/share/centrifydc")
-
-- macro: runuser_reading_pam
-  condition: (proc.name=runuser and fd.directory=/etc/pam.d)
 
 # CIS Linux Benchmark program
 - macro: linux_bench_reading_etc_shadow
@@ -761,9 +738,6 @@
     ((proc.name=consul-template and fd.name startswith /etc/haproxy) or
      (proc.name=reload.sh and proc.aname[2]=consul-template and fd.name startswith /etc/ssl))
 
-- macro: countly_writing_nginx_conf
-  condition: (proc.cmdline startswith "nodejs /opt/countly/bin" and fd.name startswith /etc/nginx)
-
 - list: ms_oms_binaries
   items: [omi.postinst, omsconfig.posti, scx.postinst, omsadmin.sh, omiagent]
 
@@ -774,68 +748,13 @@
        or proc.aname[2] in (ms_oms_binaries))
      and (fd.name startswith /etc/opt/omi or fd.name startswith /etc/opt/microsoft/omsagent))
 
-- macro: ms_scx_writing_conf
-  condition: (proc.name in (GetLinuxOS.sh) and fd.name startswith /etc/opt/microsoft/scx)
-
-- macro: azure_scripts_writing_conf
-  condition: (proc.pname startswith "bash /var/lib/waagent/" and fd.name startswith /etc/azure)
-
-- macro: azure_networkwatcher_writing_conf
-  condition: (proc.name in (NetworkWatcherA) and fd.name=/etc/init.d/AzureNetworkWatcherAgent)
-
 - macro: couchdb_writing_conf
   condition: (proc.name=beam.smp and proc.cmdline contains couchdb and fd.name startswith /etc/couchdb)
-
-- macro: update_texmf_writing_conf
-  condition: (proc.name=update-texmf and fd.name startswith /etc/texmf)
-
-- macro: slapadd_writing_conf
-  condition: (proc.name=slapadd and fd.name startswith /etc/ldap)
-
-- macro: openldap_writing_conf
-  condition: (proc.pname=run-openldap.sh and fd.name startswith /etc/openldap)
-
-- macro: ucpagent_writing_conf
-  condition: (proc.name=apiserver and container.image.repository=docker/ucp-agent and fd.name=/etc/authorization_config.cfg)
-
-- macro: iscsi_writing_conf
-  condition: (proc.name=iscsiadm and fd.name startswith /etc/iscsi)
-
-- macro: istio_writing_conf
-  condition: (proc.name=pilot-agent and fd.name startswith /etc/istio)
-
-- macro: symantec_writing_conf
-  condition: >
-    ((proc.name=symcfgd and fd.name startswith /etc/symantec) or
-     (proc.name=navdefutil and fd.name=/etc/symc-defutils.conf))
-
-- macro: liveupdate_writing_conf
-  condition: (proc.cmdline startswith "java LiveUpdate" and fd.name in (/etc/liveupdate.conf, /etc/Product.Catalog.JavaLiveUpdate))
-
-- macro: rancher_agent
-  condition: (proc.name=agent and container.image.repository contains "rancher/agent")
-
-- macro: rancher_network_manager
-  condition: (proc.name=rancher-bridge and container.image.repository contains "rancher/network-manager")
 
 - macro: sosreport_writing_files
   condition: >
     (proc.name=urlgrabber-ext- and proc.aname[3]=sosreport and
      (fd.name startswith /etc/pkt/nssdb or fd.name startswith /etc/pki/nssdb))
-
-- macro: pkgmgmt_progs_writing_pki
-  condition: >
-    (proc.name=urlgrabber-ext- and proc.pname in (yum, yum-cron, repoquery) and
-     (fd.name startswith /etc/pkt/nssdb or fd.name startswith /etc/pki/nssdb))
-
-- macro: update_ca_trust_writing_pki
-  condition: (proc.pname=update-ca-trust and proc.name=trust and fd.name startswith /etc/pki)
-
-- macro: brandbot_writing_os_release
-  condition: proc.name=brandbot and fd.name=/etc/os-release
-
-- macro: selinux_writing_conf
-  condition: (proc.name in (semodule,genhomedircon,sefcontext_comp) and fd.name startswith /etc/selinux)
 
 - list: veritas_binaries
   items: [vxconfigd, sfcache, vxclustadm, vxdctl, vxprint, vxdmpadm, vxdisk, vxdg, vxassist, vxtune]
@@ -849,26 +768,14 @@
 - macro: veritas_writing_config
   condition: (veritas_progs and (fd.name startswith /etc/vx or fd.name startswith /etc/opt/VRTS or fd.name startswith /etc/vom))
 
-- macro: nginx_writing_conf
-  condition: (proc.name in (nginx,nginx-ingress-c,nginx-ingress) and (fd.name startswith /etc/nginx or fd.name startswith /etc/ingress-controller))
-
 - macro: nginx_writing_certs
   condition: >
     (((proc.name=openssl and proc.pname=nginx-launch.sh) or proc.name=nginx-launch.sh) and fd.name startswith /etc/nginx/certs)
-
-- macro: chef_client_writing_conf
-  condition: (proc.pcmdline startswith "chef-client /opt/gitlab" and fd.name startswith /etc/gitlab)
-
-- macro: centrify_writing_krb
-  condition: (proc.name in (adjoin,addns) and fd.name startswith /etc/krb5)
 
 - macro: cockpit_writing_conf
   condition: >
     ((proc.pname=cockpit-kube-la or proc.aname[2]=cockpit-kube-la)
      and fd.name startswith /etc/cockpit)
-
-- macro: ipsec_writing_conf
-  condition: (proc.name=start-ipsec.sh and fd.directory=/etc/ipsec)
 
 - macro: exe_running_docker_save
   condition: >
@@ -877,50 +784,23 @@
     or proc.cmdline contains "/var/run/docker")
     and proc.pname in (dockerd, docker, dockerd-current, docker-current)
 
-# Ideally we'd have a length check here as well but sysdig
-# filterchecks don't have operators like len()
-- macro: sed_temporary_file
-  condition: (proc.name=sed and fd.name startswith "/etc/sed")
-
 - macro: python_running_get_pip
   condition: (proc.cmdline startswith "python get-pip.py")
 
 - macro: python_running_ms_oms
   condition: (proc.cmdline startswith "python /var/lib/waagent/")
 
-- macro: gugent_writing_guestagent_log
-  condition: (proc.name=gugent and fd.name=GuestAgent.log)
-
-- macro: dse_writing_tmp
-  condition: (proc.name=dse-entrypoint and fd.name=/root/tmp__)
-
 - macro: zap_writing_state
   condition: (proc.name=java and proc.cmdline contains "jar /zap" and fd.name startswith /root/.ZAP)
 
-- macro: airflow_writing_state
-  condition: (proc.name=airflow and fd.name startswith /root/airflow)
-
-- macro: rpm_writing_root_rpmdb
-  condition: (proc.name=rpm and fd.directory=/root/.rpmdb)
-
 - macro: maven_writing_groovy
   condition: (proc.name=java and proc.cmdline contains "classpath /usr/local/apache-maven" and fd.name startswith /root/.groovy)
-
-- macro: chef_writing_conf
-  condition: (proc.name=chef-client and fd.name startswith /root/.chef)
-
-- macro: kubectl_writing_state
-  condition: (proc.name in (kubectl,oc) and fd.name startswith /root/.kube)
 
 - macro: java_running_cassandra
   condition: (proc.name=java and proc.cmdline contains "cassandra.jar")
 
 - macro: cassandra_writing_state
   condition: (java_running_cassandra and fd.directory=/root/.cassandra)
-
-# Istio
-- macro: galley_writing_state
-  condition: (proc.name=galley and fd.name in (known_istio_files))
 
 - list: known_istio_files
   items: [/healthready, /healthliveness]
@@ -956,6 +836,12 @@
     and not package_mgmt_ancestor_procs
     and not exe_running_docker_save
     and not user_known_update_package_registry
+  exceptions:
+    - name: package_repo_filenames
+      fields: [proc.name, fd.name]
+      comps: [=, contains]
+    - name: package_repo_dirs
+      fields: [proc.name, fd.directory]
   output: >
     Repository files get updated (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pcmdline=%proc.pcmdline file=%fd.name newpath=%evt.arg.newpath container_id=%container.id image=%container.image.repository)
   priority:
@@ -972,11 +858,18 @@
   desc: an attempt to write to any file below a set of binary directories
   condition: >
     bin_dir and evt.dir = < and open_write
-    and not package_mgmt_procs
     and not exe_running_docker_save
     and not python_running_get_pip
     and not python_running_ms_oms
     and not user_known_write_below_binary_dir_activities
+  exceptions:
+    - name: proc_names
+      fields: proc.name
+      comps: in
+      values: [package_mgmt_binaries]
+    - name: known_bin_writers
+      fields: [proc.name, fd.name]
+      comps: [=, contains]
   output: >
     File below a known binary directory opened for writing (user=%user.name user_loginuid=%user.loginuid
     command=%proc.cmdline file=%fd.name parent=%proc.pname pcmdline=%proc.pcmdline gparent=%proc.aname[2] container_id=%container.id image=%container.image.repository)
@@ -997,13 +890,6 @@
 # When fixed, we will use "fd.name glob '/home/*/.ssh/*'"
 - macro: user_ssh_directory
   condition: (fd.name startswith '/home' and fd.name contains '.ssh')
-
-# google_accounts_(daemon)
-- macro: google_accounts_daemon_writing_ssh
-  condition: (proc.name=google_accounts and user_ssh_directory)
-
-- macro: cloud_init_writing_ssh
-  condition: (proc.name=cloud-init and user_ssh_directory)
 
 - macro: mkinitramfs_writing_boot
   condition: (proc.pname in (mkinitramfs, update-initramf) and fd.directory=/boot)
@@ -1027,14 +913,26 @@
   desc: an attempt to write to any file below a set of binary directories
   condition: >
     evt.dir = < and open_write and monitored_dir
-    and not package_mgmt_procs
-    and not coreos_write_ssh_dir
     and not exe_running_docker_save
     and not python_running_get_pip
     and not python_running_ms_oms
-    and not google_accounts_daemon_writing_ssh
-    and not cloud_init_writing_ssh
     and not user_known_write_monitored_dir_conditions
+  exceptions:
+    - name: proc_names
+      fields: proc.name
+      comps: in
+      values: [package_mgmt_binaries]
+    - name: known_writer_prefix
+      fields: [proc.name, fd.name]
+      comps: [=, startswith]
+      values:
+        - [update-ssh-keys, /home/core/.ssh]
+    - name: known_writer_prefix_substring
+      fields: [proc.name, fd.name, fd.name]
+      comps: [=, startswith, contains]
+      values:
+        - [google_accounts, /home, .ssh]
+        - [cloud-init, /home, .ssh]
   output: >
     File below a monitored directory opened for writing (user=%user.name user_loginuid=%user.loginuid
     command=%proc.cmdline file=%fd.name parent=%proc.pname pcmdline=%proc.pcmdline gparent=%proc.aname[2] container_id=%container.id image=%container.image.repository)
@@ -1058,6 +956,10 @@
      (user_ssh_directory or fd.name startswith /root/.ssh) and
      not user_known_read_ssh_information_activities and
      not proc.name in (ssh_binaries))
+  exceptions:
+    - name: known_ssh_reader
+      fields: [proc.name, fd.name]
+      comps: [=, contains]
   output: >
     ssh-related file/directory read by non-ssh program (user=%user.name user_loginuid=%user.loginuid
     command=%proc.cmdline file=%fd.name parent=%proc.pname pcmdline=%proc.pcmdline container_id=%container.id image=%container.image.repository)
@@ -1067,42 +969,14 @@
 - list: safe_etc_dirs
   items: [/etc/cassandra, /etc/ssl/certs/java, /etc/logstash, /etc/nginx/conf.d, /etc/container_environment, /etc/hrmconfig, /etc/fluent/configs.d]
 
-- macro: fluentd_writing_conf_files
-  condition: (proc.name=start-fluentd and fd.name in (/etc/fluent/fluent.conf, /etc/td-agent/td-agent.conf))
-
-- macro: qualys_writing_conf_files
-  condition: (proc.name=qualys-cloud-ag and fd.name=/etc/qualys/cloud-agent/qagent-log.conf)
-
-- macro: git_writing_nssdb
-  condition: (proc.name=git-remote-http and fd.directory=/etc/pki/nssdb)
-
-- macro: plesk_writing_keys
-  condition: (proc.name in (plesk_binaries) and fd.name startswith /etc/sw/keys)
-
-- macro: plesk_install_writing_apache_conf
-  condition: (proc.cmdline startswith "bash -hB /usr/lib/plesk-9.0/services/webserver.apache configure"
-              and fd.name="/etc/apache2/apache2.conf.tmp")
-
 - macro: plesk_running_mktemp
   condition: (proc.name=mktemp and proc.aname[3] in (plesk_binaries))
 
 - macro: networkmanager_writing_resolv_conf
   condition: proc.aname[2]=nm-dispatcher and fd.name=/etc/resolv.conf
 
-- macro: add_shell_writing_shells_tmp
-  condition: (proc.name=add-shell and fd.name=/etc/shells.tmp)
-
 - macro: duply_writing_exclude_files
   condition: (proc.name=touch and proc.pcmdline startswith "bash /usr/bin/duply" and fd.name startswith "/etc/duply")
-
-- macro: xmlcatalog_writing_files
-  condition: (proc.name=update-xmlcatal and fd.directory=/etc/xml)
-
-- macro: datadog_writing_conf
-  condition: ((proc.cmdline startswith "python /opt/datadog-agent" or
-               proc.cmdline startswith "entrypoint.sh /entrypoint.sh datadog start" or
-               proc.cmdline startswith "agent.py /opt/datadog-agent")
-              and fd.name startswith "/etc/dd-agent")
 
 - macro: rancher_writing_conf
   condition: ((proc.name in (healthcheck, lb-controller, rancher-dns)) and
@@ -1116,52 +990,12 @@
               (container.image.repository contains "rancher/metadata" or container.image.repository contains "rancher/lb-service-haproxy") and
               fd.name startswith "/answers.json")
 
-- macro: checkpoint_writing_state
-  condition: (proc.name=checkpoint and
-              container.image.repository contains "coreos/pod-checkpointer" and
-              fd.name startswith "/etc/kubernetes")
-
 - macro: jboss_in_container_writing_passwd
   condition: >
     ((proc.cmdline="run-java.sh /opt/jboss/container/java/run/run-java.sh"
       or proc.cmdline="run-java.sh /opt/run-java/run-java.sh")
      and container
      and fd.name=/etc/passwd)
-
-- macro: curl_writing_pki_db
-  condition: (proc.name=curl and fd.directory=/etc/pki/nssdb)
-
-- macro: haproxy_writing_conf
-  condition: ((proc.name in (update-haproxy-,haproxy_reload.) or proc.pname in (update-haproxy-,haproxy_reload,haproxy_reload.))
-               and (fd.name=/etc/openvpn/client.map or fd.name startswith /etc/haproxy))
-
-- macro: java_writing_conf
-  condition: (proc.name=java and fd.name=/etc/.java/.systemPrefs/.system.lock)
-
-- macro: rabbitmq_writing_conf
-  condition: (proc.name=rabbitmq-server and fd.directory=/etc/rabbitmq)
-
-- macro: rook_writing_conf
-  condition: (proc.name=toolbox.sh and container.image.repository=rook/toolbox
-              and fd.directory=/etc/ceph)
-
-- macro: httpd_writing_conf_logs
-  condition: (proc.name=httpd and fd.name startswith /etc/httpd/)
-
-- macro: mysql_writing_conf
-  condition: >
-    ((proc.name in (start-mysql.sh, run-mysqld) or proc.pname=start-mysql.sh) and
-     (fd.name startswith /etc/mysql or fd.directory=/etc/my.cnf.d))
-
-- macro: redis_writing_conf
-  condition: >
-    (proc.name in (run-redis, redis-launcher.) and (fd.name=/etc/redis.conf or fd.name startswith /etc/redis))
-
-- macro: openvpn_writing_conf
-  condition: (proc.name in (openvpn,openvpn-entrypo) and fd.name startswith /etc/openvpn)
-
-- macro: php_handlers_writing_conf
-  condition: (proc.name=php_handlers_co and fd.name=/etc/psa/php_versions.json)
 
 - macro: sed_writing_temp_file
   condition: >
@@ -1170,58 +1004,18 @@
                          fd.name startswith /etc/apt/sed or
                          fd.name startswith /etc/apt/apt.conf.d/sed)))
 
-- macro: cron_start_writing_pam_env
-  condition: (proc.cmdline="bash /usr/sbin/start-cron" and fd.name=/etc/security/pam_env.conf)
-
 # In some cases dpkg-reconfigur runs commands that modify /etc. Not
 # putting the full set of package management programs yet.
 - macro: dpkg_scripting
   condition: (proc.aname[2] in (dpkg-reconfigur, dpkg-preconfigu))
 
-- macro: ufw_writing_conf
-  condition: (proc.name=ufw and fd.directory=/etc/ufw)
-
-- macro: calico_writing_conf
-  condition: >
-    (((proc.name = calico-node) or
-      (container.image.repository=gcr.io/projectcalico-org/node and proc.name in (start_runit, cp)) or
-      (container.image.repository=gcr.io/projectcalico-org/cni and proc.name=sed))
-     and fd.name startswith /etc/calico)
-
-- macro: prometheus_conf_writing_conf
-  condition: (proc.name=prometheus-conf and fd.name startswith /etc/prometheus/config_out)
-
-- macro: openshift_writing_conf
-  condition: (proc.name=oc and fd.name startswith /etc/origin/node)
-
-- macro: keepalived_writing_conf
-  condition: (proc.name=keepalived and fd.name=/etc/keepalived/keepalived.conf)
-
 - macro: etcd_manager_updating_dns
   condition: (container and proc.name=etcd-manager and fd.name=/etc/hosts)
-
-- macro: automount_using_mtab
-  condition: (proc.pname = automount and fd.name startswith /etc/mtab)
-
-- macro: mcafee_writing_cma_d
-  condition: (proc.name=macompatsvc and fd.directory=/etc/cma.d)
-
-- macro: avinetworks_supervisor_writing_ssh
-  condition: >
-    (proc.cmdline="se_supervisor.p /opt/avi/scripts/se_supervisor.py -d" and
-      (fd.name startswith /etc/ssh/known_host_ or
-       fd.name startswith /etc/ssh/ssh_monitor_config_ or
-       fd.name startswith /etc/ssh/ssh_config_))
-
-- macro: multipath_writing_conf
-  condition: (proc.name = multipath and fd.name startswith /etc/multipath/)
 
 # Add conditions to this macro (probably in a separate file,
 # overwriting this macro) to allow for specific combinations of
 # programs writing below specific directories below
-# /etc. fluentd_writing_conf_files is a good example to follow, as it
-# specifies both the program doing the writing as well as the specific
-# files it is allowed to modify.
+# /etc.
 #
 # In this file, it just takes one of the programs in the base macro
 # and repeats it.
@@ -1237,111 +1031,207 @@
   condition: >
     etc_dir and evt.dir = < and open_write
     and proc_name_exists
-    and not proc.name in (passwd_binaries, shadowutils_binaries, sysdigcloud_binaries,
-                          package_mgmt_binaries, ssl_mgmt_binaries, dhcp_binaries,
-                          dev_creation_binaries, shell_mgmt_binaries,
-                          mail_config_binaries,
-                          sshkit_script_binaries,
-                          ldconfig.real, ldconfig, confd, gpg, insserv,
-                          apparmor_parser, update-mime, tzdata.config, tzdata.postinst,
-                          systemd, systemd-machine, systemd-sysuser,
-                          debconf-show, rollerd, bind9.postinst, sv,
-                          gen_resolvconf., update-ca-certi, certbot, runsv,
-                          qualys-cloud-ag, locales.postins, nomachine_binaries,
-                          adclient, certutil, crlutil, pam-auth-update, parallels_insta,
-                          openshift-launc, update-rc.d, puppet)
     and not (container and proc.cmdline in ("cp /run/secrets/kubernetes.io/serviceaccount/ca.crt /etc/pki/ca-trust/source/anchors/openshift-ca.crt"))
-    and not proc.pname in (sysdigcloud_binaries, mail_config_binaries, hddtemp.postins, sshkit_script_binaries, locales.postins, deb_binaries, dhcp_binaries)
-    and not fd.name pmatch (safe_etc_dirs)
-    and not fd.name in (/etc/container_environment.sh, /etc/container_environment.json, /etc/motd, /etc/motd.svc)
-    and not sed_temporary_file
     and not exe_running_docker_save
     and not ansible_running_python
     and not python_running_denyhosts
-    and not fluentd_writing_conf_files
     and not user_known_write_etc_conditions
     and not run_by_centrify
     and not run_by_adclient
-    and not qualys_writing_conf_files
-    and not git_writing_nssdb
-    and not plesk_writing_keys
-    and not plesk_install_writing_apache_conf
     and not plesk_running_mktemp
     and not networkmanager_writing_resolv_conf
     and not run_by_chef
-    and not add_shell_writing_shells_tmp
     and not duply_writing_exclude_files
-    and not xmlcatalog_writing_files
     and not parent_supervise_running_multilog
-    and not supervise_writing_status
-    and not pki_realm_writing_realms
-    and not htpasswd_writing_passwd
-    and not lvprogs_writing_conf
-    and not ovsdb_writing_openvswitch
-    and not datadog_writing_conf
-    and not curl_writing_pki_db
-    and not haproxy_writing_conf
-    and not java_writing_conf
     and not dpkg_scripting
     and not parent_ucf_writing_conf
-    and not rabbitmq_writing_conf
-    and not rook_writing_conf
-    and not php_handlers_writing_conf
     and not sed_writing_temp_file
-    and not cron_start_writing_pam_env
-    and not httpd_writing_conf_logs
-    and not mysql_writing_conf
-    and not openvpn_writing_conf
     and not consul_template_writing_conf
-    and not countly_writing_nginx_conf
     and not ms_oms_writing_conf
-    and not ms_scx_writing_conf
-    and not azure_scripts_writing_conf
-    and not azure_networkwatcher_writing_conf
     and not couchdb_writing_conf
-    and not update_texmf_writing_conf
-    and not slapadd_writing_conf
-    and not symantec_writing_conf
-    and not liveupdate_writing_conf
     and not sosreport_writing_files
-    and not selinux_writing_conf
     and not veritas_writing_config
-    and not nginx_writing_conf
     and not nginx_writing_certs
-    and not chef_client_writing_conf
-    and not centrify_writing_krb
     and not cockpit_writing_conf
-    and not ipsec_writing_conf
     and not httpd_writing_ssl_conf
-    and not userhelper_writing_etc_security
-    and not pkgmgmt_progs_writing_pki
-    and not update_ca_trust_writing_pki
-    and not brandbot_writing_os_release
-    and not redis_writing_conf
-    and not openldap_writing_conf
-    and not ucpagent_writing_conf
-    and not iscsi_writing_conf
-    and not istio_writing_conf
-    and not ufw_writing_conf
-    and not calico_writing_conf
     and not calico_writing_envvars
-    and not prometheus_conf_writing_conf
-    and not openshift_writing_conf
-    and not keepalived_writing_conf
     and not rancher_writing_conf
-    and not checkpoint_writing_state
     and not jboss_in_container_writing_passwd
     and not etcd_manager_updating_dns
     and not user_known_write_below_etc_activities
-    and not automount_using_mtab
-    and not mcafee_writing_cma_d
-    and not avinetworks_supervisor_writing_ssh
-    and not multipath_writing_conf
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc
   condition: write_etc_common
   output: "File below /etc opened for writing (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline parent=%proc.pname pcmdline=%proc.pcmdline file=%fd.name program=%proc.name gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4] container_id=%container.id image=%container.image.repository)"
+  exceptions:
+    - name: proc_names
+      fields: proc.name
+      values: [passwd_binaries, shadowutils_binaries, sysdigcloud_binaries,
+            package_mgmt_binaries, ssl_mgmt_binaries, dhcp_binaries,
+            dev_creation_binaries, shell_mgmt_binaries,
+            mail_config_binaries,
+            sshkit_script_binaries,
+            ldconfig.real, ldconfig, confd, gpg, insserv,
+            apparmor_parser, update-mime, tzdata.config, tzdata.postinst,
+            systemd, systemd-machine, systemd-sysuser,
+            debconf-show, rollerd, bind9.postinst, sv,
+            gen_resolvconf., update-ca-certi, certbot, runsv,
+            qualys-cloud-ag, locales.postins, nomachine_binaries,
+            adclient, certutil, crlutil, pam-auth-update, parallels_insta,
+            openshift-launc, update-rc.d, puppet]
+    - name: proc_pnames
+      fields: proc.pname
+      values: [sysdigcloud_binaries, mail_config_binaries, hddtemp.postins,
+               sshkit_script_binaries, locales.postins, deb_binaries, dhcp_binaries]
+    - name: dirs
+      fields: fd.name
+      comps: pmatch
+      values: [safe_etc_dirs]
+    - name: files
+      fields: fd.name
+      values: [/etc/container_environment.sh, /etc/container_environment.json, /etc/motd, /etc/motd.svc]
+    - name: proc_file
+      fields: [proc.name, fd.name]
+      comps: [in, in]
+      values:
+        - [[qualys-cloud-ag], [/etc/qualys/cloud-agent/qagent-log.conf]]
+        - [[add-shell], [/etc/shells.tmp]]
+        - [[htpasswd], [/etc/nginx/.htpasswd]]
+        - [[java], [/etc/.java/.systemPrefs/.system.lock]]
+        - [[php_handlers_co], [/etc/psa/php_versions.json]]
+        - [[NetworkWatcherA], [/etc/init.d/AzureNetworkWatcherAgent]]
+        - [[navdefutil], [/etc/symc-defutils.conf]]
+        - [[brandbot], [/etc/os-release]]
+        - [[keepalived], [/etc/keepalived/keepalived.conf]]
+        - [[update-haproxy-,haproxy_reload.], [/etc/openvpn/client.map]]
+        - [[start-fluentd], [/etc/fluent/fluent.conf, /etc/td-agent/td-agent.conf]]
+        - [[run-redis, redis-launcher.], [/etc/redis.conf]]
+    - name: proc_file_prefix
+      fields: [proc.name, fd.name]
+      comps: [in, startswith]
+      values:
+        - [[sed], /etc/sed]
+        - [[httpd], /etc/httpd/]
+        - [[GetLinuxOS.sh], /etc/opt/microsoft/scx]
+        - [[update-texmf], /etc/texmf]
+        - [[slapadd], /etc/ldap]
+        - [[symcfgd], /etc/symantec]
+        - [[userhelper], /etc/security]
+        - [[iscsiadm], /etc/iscsi]
+        - [[pilot-agent], /etc/istio]
+        - [[calico-node], /etc/calico]
+        - [[prometheus-conf], /etc/prometheus/config_out]
+        - [[oc], /etc/origin/node]
+        - [[plesk_binaries], /etc/sw/keys]
+        - [[supervise,svc], /etc/sb/]
+        - [[openvpn,openvpn-entrypo], /etc/openvpn]
+        - [[semodule,genhomedircon,sefcontext_comp], /etc/selinux]
+        - [[lvprogs_binaries], /etc/lvm/archive]
+        - [[lvprogs_binaries], /etc/lvm/backup]
+        - [[lvprogs_binaries], /etc/lvm/cache]
+        - [[nginx,nginx-ingress-c,nginx-ingress], /etc/nginx]
+        - [[nginx,nginx-ingress-c,nginx-ingress], /etc/ingress-controller]
+        - [[adjoin,addns], /etc/krb5]
+        - [[run-redis, redis-launcher.], /etc/redis/]
+        - [[update-haproxy-,haproxy_reload.], /etc/haproxy]
+        - [[start-mysql.sh, run-mysqld], /etc/mysql]
+        - [[multipath], /etc/multipath/]
+    - name: proc_directory
+      fields: [proc.name, fd.directory]
+      comps: [in, in]
+      values:
+        - [[git-remote-http], [/etc/pki/nssdb]]
+        - [[update-xmlcatal], [/etc/xml]]
+        - [[ovsdb-server], [/etc/openvswitch]]
+        - [[curl], [/etc/pki/nssdb]]
+        - [[rabbitmq-server], [/etc/rabbitmq]]
+        - [[start-ipsec.sh], [/etc/ipsec]]
+        - [[ufw], [/etc/ufw]]
+        - [[macompatsvc], [/etc/cma.d]]
+        - [[start-mysql.sh, run-mysqld], [/etc/my.cnf.d]]
+    - name: pname_file
+      fields: [proc.pname, fd.name]
+      comps: [in, in]
+      values:
+        - [[update-haproxy-,haproxy_reload,haproxy_reload.], [/etc/openvpn/client.map]]
+    - name: pname_file_prefix
+      fields: [proc.pname, fd.name]
+      comps: [in, startswith]
+      values:
+        - [[run-openldap.sh], /etc/openldap]
+        - [[start-mysql.sh], /etc/mysql]
+        - [[update-haproxy-,haproxy_reload.], /etc/haproxy]
+    - name: pname_directory
+      fields: [proc.pname, fd.directory]
+      comps: [in, in]
+      values:
+        - [[start-mysql.sh], [/etc/my.cnf.d]]
+    - name: pname_prefix_file_prefix
+      fields: [proc.pname, fd.name]
+      comps: [startswith, startswith]
+      values:
+        - ["bash /var/lib/waagent/", /etc/azure]
+        - [automount, /etc/mtab]
+    - name: proc_pname_file
+      fields: [proc.name, proc.pname, fd.name]
+      comps: [in, in, startswith]
+      values:
+        - [[urlgrabber-ext-], [yum, yum-cron, repoquery], /etc/pkt/nssdb or fd.name startswith /etc/pki/nssdb]
+        - [[urlgrabber-ext-], [yum, yum-cron, repoquery], /etc/pki/nssdb]
+        - [[trust], [update-ca-trust], /etc/pki]
+    - name: cmdline_file
+      fields: [proc.cmdline, fd.name]
+      comps: [in, in]
+      values:
+        - [["bash /usr/sbin/start-cron"], [/etc/security/pam_env.conf]]
+    - name: cmdline_file_prefix
+      fields: [proc.cmdline, fd.name]
+      comps: [in, startswith]
+      values:
+        - [["bash /usr/sbin/start-cron"], /etc/security/pam_env.conf]
+        - [["se_supervisor.p /opt/avi/scripts/se_supervisor.py -d"], /etc/ssh/known_host_]
+        - [["se_supervisor.p /opt/avi/scripts/se_supervisor.py -d"], /etc/ssh/ssh_monitor_config_]
+        - [["se_supervisor.p /opt/avi/scripts/se_supervisor.py -d"], /etc/ssh/ssh_config_]
+    - name: cmdline_prefix_file
+      fields: [proc.cmdline, fd.name]
+      comps: [startswith, in]
+      values:
+        - ["bash -hB /usr/lib/plesk-9.0/services/webserver.apache configure", ["/etc/apache2/apache2.conf.tmp"]]
+        - ["java LiveUpdate", [/etc/liveupdate.conf]]
+        - ["java LiveUpdate", [/etc/Product.Catalog.JavaLiveUpdate]]
+    - name: cmdline_prefix_file_prefix
+      fields: [proc.cmdline, fd.name]
+      comps: [startswith, startswith]
+      values:
+        - ["bash /usr/local/lib/pki/pki-realm", /etc/pki/realms]
+        - ["python /opt/datadog-agent", "/etc/dd-agent"]
+        - ["entrypoint.sh /entrypoint.sh datadog start", "/etc/dd-agent"]
+        - ["agent.py /opt/datadog-agent", "/etc/dd-agent"]
+        - ["nodejs /opt/countly/bin", /etc/nginx]
+    - name: pcmdline_prefix_file_prefix
+      fields: [proc.pcmdline, fd.name]
+      comps: [startswith, startswith]
+      values:
+        - ["bash /var/lib/waagent/", /etc/azure]
+        - ["chef-client /opt/gitlab", /etc/gitlab]
+    - name: proc_container_dir
+      fields: [proc.name, container.image.repository, fd.directory]
+      comps: [in, in, in]
+      values:
+        - [[toolbox.sh], [rook/toolbox], [/etc/ceph]]
+    - name: proc_container_file
+      fields: [proc.name, container.image.repository, fd.name]
+      comps: [in, in, in]
+      values:
+        - [[apiserver], [docker/ucp-agent], [/etc/authorization_config.cfg]]
+    - name: proc_container_prefix
+      fields: [proc.name, container.image.repository, fd.name]
+      comps: [in, in, startswith]
+      values:
+        - [[start_runit, cp], [gcr.io/projectcalico-org/node], /etc/calico]
+        - [[sed], [gcr.io/projectcalico-org/cni], /etc/calico]
+        - [[checkpoint], ["coreos/pod-checkpointer"], "/etc/kubernetes"]
   priority: ERROR
   tags: [filesystem, mitre_persistence]
 
@@ -1352,43 +1242,6 @@
 
 - list: known_root_directories
   items: [/root/.oracle_jre_usage, /root/.ssh, /root/.subversion, /root/.nami]
-
-- macro: known_root_conditions
-  condition: (fd.name startswith /root/orcexec.
-              or fd.name startswith /root/.m2
-              or fd.name startswith /root/.npm
-              or fd.name startswith /root/.pki
-              or fd.name startswith /root/.ivy2
-              or fd.name startswith /root/.config/Cypress
-              or fd.name startswith /root/.config/pulse
-              or fd.name startswith /root/.config/configstore
-              or fd.name startswith /root/jenkins/workspace
-              or fd.name startswith /root/.jenkins
-              or fd.name startswith /root/.cache
-              or fd.name startswith /root/.sbt
-              or fd.name startswith /root/.java
-              or fd.name startswith /root/.glide
-              or fd.name startswith /root/.sonar
-              or fd.name startswith /root/.v8flag
-              or fd.name startswith /root/infaagent
-              or fd.name startswith /root/.local/lib/python
-              or fd.name startswith /root/.pm2
-              or fd.name startswith /root/.gnupg
-              or fd.name startswith /root/.pgpass
-              or fd.name startswith /root/.theano
-              or fd.name startswith /root/.gradle
-              or fd.name startswith /root/.android
-              or fd.name startswith /root/.ansible
-              or fd.name startswith /root/.crashlytics
-              or fd.name startswith /root/.dbus
-              or fd.name startswith /root/.composer
-              or fd.name startswith /root/.gconf
-              or fd.name startswith /root/.nv
-              or fd.name startswith /root/.local/share/jupyter
-              or fd.name startswith /root/oradiag_root
-              or fd.name startswith /root/workspace
-              or fd.name startswith /root/jvm
-              or fd.name startswith /root/.node-gyp)
 
 # Add conditions to this macro (probably in a separate file,
 # overwriting this macro) to allow for specific combinations of
@@ -1404,40 +1257,94 @@
 - macro: user_known_write_below_root_activities
   condition: (never_true)
 
-- macro: runc_writing_exec_fifo
-  condition: (proc.cmdline="runc:[1:CHILD] init" and fd.name=/exec.fifo)
-
 - macro: runc_writing_var_lib_docker
   condition: (proc.cmdline="runc:[1:CHILD] init" and evt.arg.filename startswith /var/lib/docker)
-
-- macro: mysqlsh_writing_state
-  condition: (proc.name=mysqlsh and fd.directory=/root/.mysqlsh)
 
 - rule: Write below root
   desc: an attempt to write to any file directly below / or /root
   condition: >
     root_dir and evt.dir = < and open_write
     and proc_name_exists
-    and not fd.name in (known_root_files)
-    and not fd.directory pmatch (known_root_directories)
     and not exe_running_docker_save
-    and not gugent_writing_guestagent_log
-    and not dse_writing_tmp
     and not zap_writing_state
-    and not airflow_writing_state
-    and not rpm_writing_root_rpmdb
     and not maven_writing_groovy
-    and not chef_writing_conf
-    and not kubectl_writing_state
     and not cassandra_writing_state
-    and not galley_writing_state
     and not calico_writing_state
     and not rancher_writing_root
-    and not runc_writing_exec_fifo
-    and not mysqlsh_writing_state
-    and not known_root_conditions
     and not user_known_write_root_conditions
     and not user_known_write_below_root_activities
+  exceptions:
+    - name: files
+      fields: fd.name
+      values: [known_root_files]
+    - name: dirs
+      fields: fd.directory
+      comps: pmatch
+      values: [known_root_directories]
+    - name: prefixes
+      fields: [fd.name]
+      comps: [startswith]
+      values:
+        - [/root/orcexec.]
+        - [/root/.m2]
+        - [/root/.npm]
+        - [/root/.pki]
+        - [/root/.ivy2]
+        - [/root/.config/Cypress]
+        - [/root/.config/pulse]
+        - [/root/.config/configstore]
+        - [/root/jenkins/workspace]
+        - [/root/.jenkins]
+        - [/root/.cache]
+        - [/root/.sbt]
+        - [/root/.java]
+        - [/root/.glide]
+        - [/root/.sonar]
+        - [/root/.v8flag]
+        - [/root/infaagent]
+        - [/root/.local/lib/python]
+        - [/root/.pm2]
+        - [/root/.gnupg]
+        - [/root/.pgpass]
+        - [/root/.theano]
+        - [/root/.gradle]
+        - [/root/.android]
+        - [/root/.ansible]
+        - [/root/.crashlytics]
+        - [/root/.dbus]
+        - [/root/.composer]
+        - [/root/.gconf]
+        - [/root/.nv]
+        - [/root/.local/share/jupyter]
+        - [/root/oradiag_root]
+        - [/root/workspace]
+        - [/root/jvm]
+        - [/root/.node-gyp]
+    - name: proc_file
+      fields: [proc.name, fd.name]
+      comps: [in, in]
+      values:
+        - [[gugent], [GuestAgent.log]]
+        - [[dse-entrypoint], [/root/tmp__]]
+        - [[galley], [known_istio_files]]
+    - name: proc_directory
+      fields: [proc.name, fd.directory]
+      comps: [in, in]
+      values:
+        - [[rpm], [/root/.rpmdb]]
+        - [[mysqlsh], [/root/.mysqlsh]]
+    - name: proc_file_prefix
+      fields: [proc.name, fd.name]
+      comps: [in, startswith]
+      values:
+        - [[airflow], /root/airflow]
+        - [[chef-client], /root/.chef]
+        - [[kubectl, oc], /root/.kube]
+    - name: cmdline_file
+      fields: [proc.cmdline, fd.name]
+      comps: [in, in]
+      values:
+        - [["runc:[1:CHILD] init"], [/exec.fifo]]
   output: "File below / or /root opened for writing (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline parent=%proc.pname file=%fd.name program=%proc.name container_id=%container.id image=%container.image.repository)"
   priority: ERROR
   tags: [filesystem, mitre_persistence]
@@ -1454,6 +1361,10 @@
     information) by a trusted program after startup. Trusted programs might read these files
     at startup to load initial state, but not afterwards.
   condition: sensitive_files and open_read and server_procs and not proc_is_new and proc.name!="sshd" and not user_known_read_sensitive_files_activities
+  exceptions:
+    - name: known_sensitive_reader
+      fields: [proc.name, fd.name]
+      comps: [=, contains]
   output: >
     Sensitive file opened for reading by trusted program after startup (user=%user.name user_loginuid=%user.loginuid
     command=%proc.cmdline parent=%proc.pname file=%fd.name parent=%proc.pname gparent=%proc.aname[2] container_id=%container.id image=%container.image.repository)
@@ -1494,12 +1405,6 @@
   condition: >
     sensitive_files and open_read
     and proc_name_exists
-    and not proc.name in (user_mgmt_binaries, userexec_binaries, package_mgmt_binaries,
-     cron_binaries, read_sensitive_file_binaries, shell_binaries, hids_binaries,
-     vpn_binaries, mail_config_binaries, nomachine_binaries, sshkit_script_binaries,
-     in.proftpd, mandb, salt-minion, postgres_mgmt_binaries,
-     google_oslogin_
-     )
     and not cmp_cp_by_passwd
     and not ansible_running_python
     and not proc.cmdline contains /usr/bin/mandb
@@ -1508,13 +1413,32 @@
     and not run_by_google_accounts_daemon
     and not user_read_sensitive_file_conditions
     and not perl_running_plesk
-    and not perl_running_updmap
-    and not veritas_driver_script
-    and not perl_running_centrifydc
-    and not runuser_reading_pam
     and not linux_bench_reading_etc_shadow
     and not user_known_read_sensitive_files_activities
     and not user_read_sensitive_file_containers
+  exceptions:
+    - name: proc_names
+      fields: proc.name
+      comps: in
+      values: [user_mgmt_binaries, userexec_binaries, package_mgmt_binaries,
+               cron_binaries, read_sensitive_file_binaries, shell_binaries, hids_binaries,
+               vpn_binaries, mail_config_binaries, nomachine_binaries, sshkit_script_binaries,
+               in.proftpd, mandb, salt-minion, postgres_mgmt_binaries,
+               google_oslogin_]
+    - name: cmdline
+      fields: [proc.cmdline]
+      ops: [startswith]
+      values:
+        - ["perl /usr/bin/updmap"]
+        - ["perl /opt/VRTSsfmh/bin/mh_driver.pl"]
+        - ["perl /usr/share/centrifydc"]
+    - name: proc_directory
+      fields: [proc.name, fd.directory]
+      values:
+        - [runuser, /etc/pam.d]
+    - name: proc_file_prefix
+      fields: [proc.name, fd.name]
+      comps: [in, startswith]
   output: >
     Sensitive file opened for reading by non-trusted program (user=%user.name user_loginuid=%user.loginuid program=%proc.name
     command=%proc.cmdline file=%fd.name parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4] container_id=%container.id image=%container.image.repository)
@@ -1535,29 +1459,25 @@
   desc: an attempt to write to the rpm database by any non-rpm related program
   condition: >
     fd.name startswith /var/lib/rpm and open_write
-    and not rpm_procs
     and not ansible_running_python
     and not python_running_chef
     and not exe_running_docker_save
     and not amazon_linux_running_python_yum
     and not user_known_write_rpm_database_activities
+  exceptions:
+    - name: proc_names
+      fields: proc.name
+      comps: in
+      values: [rpm_binaries, openscap_rpm_binaries, salt-minion]
+    - name: proc_file_prefix
+      fields: [proc.name, fd.name]
+      comps: [in, startswith]
   output: "Rpm database opened for writing by a non-rpm program (command=%proc.cmdline file=%fd.name parent=%proc.pname pcmdline=%proc.pcmdline container_id=%container.id image=%container.image.repository)"
   priority: ERROR
   tags: [filesystem, software_mgmt, mitre_persistence]
 
-- macro: postgres_running_wal_e
-  condition: (proc.pname=postgres and proc.cmdline startswith "sh -c envdir /etc/wal-e.d/env /usr/local/bin/wal-e")
-
 - macro: redis_running_prepost_scripts
   condition: (proc.aname[2]=redis-server and (proc.cmdline contains "redis-server.post-up.d" or proc.cmdline contains "redis-server.pre-up.d"))
-
-- macro: rabbitmq_running_scripts
-  condition: >
-    (proc.pname=beam.smp and
-    (proc.cmdline startswith "sh -c exec ps" or
-     proc.cmdline startswith "sh -c exec inet_gethost" or
-     proc.cmdline= "sh -s unix:cmd" or
-     proc.cmdline= "sh -c exec /bin/sh -s unix:cmd 2>&1"))
 
 - macro: rabbitmqctl_running_scripts
   condition: (proc.aname[2]=rabbitmqctl and proc.cmdline startswith "sh -c ")
@@ -1576,8 +1496,13 @@
     proc.pname in (db_server_binaries)
     and spawned_process
     and not proc.name in (db_server_binaries)
-    and not postgres_running_wal_e
     and not user_known_db_spawned_processes
+  exceptions:
+    - name: pname_cmdline
+      fields: [proc.pname, proc.cmdline]
+      comps: [in, startswith]
+      values:
+        - [[postgres], "sh -c envdir /etc/wal-e.d/env /usr/local/bin/wal-e"]
   output: >
     Database-related program spawned process other than itself (user=%user.name user_loginuid=%user.loginuid
     program=%proc.cmdline parent=%proc.pname container_id=%container.id image=%container.image.repository)
@@ -1589,7 +1514,17 @@
 
 - rule: Modify binary dirs
   desc: an attempt to modify any file below a set of binary directories.
-  condition: bin_dir_rename and modify and not package_mgmt_procs and not exe_running_docker_save and not user_known_modify_bin_dir_activities
+  condition: bin_dir_rename and modify
+             and not exe_running_docker_save
+             and not user_known_modify_bin_dir_activities
+  exceptions:
+    - name: proc_names
+      fields: proc.name
+      comps: in
+      values: [package_mgmt_binaries]
+    - name: proc_file_prefix
+      fields: [proc.name, fd.name]
+      comps: [in, startswith]
   output: >
     File below known binary directory renamed/removed (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline
     pcmdline=%proc.pcmdline operation=%evt.type file=%fd.name %evt.args container_id=%container.id image=%container.image.repository)
@@ -1604,9 +1539,16 @@
   condition: >
     mkdir
     and bin_dir_mkdir
-    and not package_mgmt_procs
     and not user_known_mkdir_bin_dir_activities
     and not exe_running_docker_save
+  exceptions:
+    - name: proc_names
+      fields: proc.name
+      comps: in
+      values: [package_mgmt_binaries]
+    - name: proc_file_prefix
+      fields: [proc.name, fd.name]
+      comps: [in, startswith]
   output: >
     Directory below known binary directory created (user=%user.name user_loginuid=%user.loginuid
     command=%proc.cmdline directory=%evt.arg.path container_id=%container.id image=%container.image.repository)
@@ -1625,12 +1567,6 @@
 - list: network_plugin_binaries
   items: [aws-cni, azure-vnet]
 
-- macro: calico_node
-  condition: (container.image.repository endswith calico/node and proc.name=calico-node)
-
-- macro: weaveworks_scope
-  condition: (container.image.repository endswith weaveworks/scope and proc.name=scope)
-
 - rule: Change thread namespace
   desc: >
     an attempt to change a program/thread\'s namespace (commonly done
@@ -1638,20 +1574,44 @@
   condition: >
     evt.type=setns and evt.dir=<
     and proc_name_exists
-    and not (container.id=host and proc.name in (docker_binaries, k8s_binaries, lxd_binaries, nsenter))
-    and not proc.name in (sysdigcloud_binaries, sysdig, calico, oci-umount, cilium-cni, network_plugin_binaries)
-    and not proc.name in (user_known_change_thread_namespace_binaries)
     and not proc.name startswith "runc"
     and not proc.cmdline startswith "containerd"
-    and not proc.pname in (sysdigcloud_binaries, hyperkube, kubelet, protokube, dockerd, tini, aws)
-    and not python_running_sdchecks
-    and not java_running_sdjagent
-    and not kubelet_running_loopback
-    and not rancher_agent
-    and not rancher_network_manager
-    and not calico_node
-    and not weaveworks_scope
     and not user_known_change_thread_namespace_activities
+  exceptions:
+    - name: proc_names
+      fields: proc.name
+      comps: in
+      values: [sysdigcloud_binaries, sysdig, calico, oci-umount,
+               cilium-cni, network_plugin_binaries,
+               user_known_change_thread_namespace_binaries]
+    - name: container_proc_name
+      fields: [container.id, proc.name]
+      comps: [=, in]
+      values:
+        - [host, [docker_binaries, k8s_binaries, lxd_binaries, nsenter]]
+    - name: proc_pname
+      fields: proc.pname
+      comps: in
+      values: [sysdigcloud_binaries, hyperkube, kubelet, protokube, dockerd, tini, aws]
+    - name: proc_cmdline
+      fields: [proc.name, proc.cmdline]
+      comps: [in, contains]
+      values:
+        - [[python, python2.7], /opt/draios/bin/sdchecks]
+        - [[java], sdjagent.jar]
+    - name: proc_name_parent_name
+      fields: [proc.name, proc.pname]
+      comps: [in, in]
+      values:
+        - [[loopback], [kubelet]]
+    - name: proc_name_image_suffix
+      fields: [proc.name, container.image.repository]
+      comps: [in, endswith]
+      values:
+        - [[agent], "rancher/agent"]
+        - [[rancher-bridge], "rancher/network-manager"]
+        - [[calico-node], "calico/node"]
+        - [[scope], "weaveworks/scope"]
   output: >
     Namespace change (setns) by unexpected program (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline
     parent=%proc.pname %container.info container_id=%container.id image=%container.image.repository:%container.image.tag)
@@ -1696,24 +1656,6 @@
 
 - macro: parent_java_running_datastax
   condition: (proc.pname=java and proc.pcmdline contains com.datastax)
-
-- macro: nginx_starting_nginx
-  condition: (proc.pname=nginx and proc.cmdline contains "/usr/sbin/nginx -c /etc/nginx/nginx.conf")
-
-- macro: nginx_running_aws_s3_cp
-  condition: (proc.pname=nginx and proc.cmdline startswith "sh -c /usr/local/bin/aws s3 cp")
-
-- macro: consul_running_net_scripts
-  condition: (proc.pname=consul and (proc.cmdline startswith "sh -c curl" or proc.cmdline startswith "sh -c nc"))
-
-- macro: consul_running_alert_checks
-  condition: (proc.pname=consul and proc.cmdline startswith "sh -c /bin/consul-alerts")
-
-- macro: serf_script
-  condition: (proc.cmdline startswith "sh -c serf")
-
-- macro: check_process_status
-  condition: (proc.cmdline startswith "sh -c kill -0 ")
 
 # In some cases, you may want to consider node processes run directly
 # in containers as protected shell spawners. Examples include using
@@ -1773,31 +1715,54 @@
     and shell_procs
     and proc.pname exists
     and protected_shell_spawner
-    and not proc.pname in (shell_binaries, gitlab_binaries, cron_binaries, user_known_shell_spawn_binaries,
-                           needrestart_binaries,
-                           mesos_shell_binaries,
-                           erl_child_setup, exechealthz,
-                           PM2, PassengerWatchd, c_rehash, svlogd, logrotate, hhvm, serf,
-                           lb-controller, nvidia-installe, runsv, statsite, erlexec, calico-node,
-                           "puma reactor")
-    and not proc.cmdline in (known_shell_spawn_cmdlines)
     and not proc.aname in (unicorn_launche)
-    and not consul_running_net_scripts
-    and not consul_running_alert_checks
-    and not nginx_starting_nginx
-    and not nginx_running_aws_s3_cp
     and not run_by_package_mgmt_binaries
-    and not serf_script
-    and not check_process_status
     and not run_by_foreman
     and not python_mesos_marathon_scripting
-    and not splunk_running_forwarder
-    and not postgres_running_wal_e
     and not redis_running_prepost_scripts
-    and not rabbitmq_running_scripts
     and not rabbitmqctl_running_scripts
     and not run_by_appdynamics
     and not user_shell_container_exclusions
+  exceptions:
+    - name: proc_pname
+      fields: proc.pname
+      comps: in
+      values: [shell_binaries, gitlab_binaries, cron_binaries, user_known_shell_spawn_binaries,
+               needrestart_binaries,
+               mesos_shell_binaries,
+               erl_child_setup, exechealthz,
+               PM2, PassengerWatchd, c_rehash, svlogd, logrotate, hhvm, serf,
+               lb-controller, nvidia-installe, runsv, statsite, erlexec, calico-node,
+               "puma reactor"]
+    - name: cmdlines
+      fields: proc.cmdline
+      comps: in
+      values: [known_shell_spawn_cmdlines]
+    - name: cmdline_prefix
+      fields: [proc.cmdline]
+      comps: [startswith]
+      values:
+        - ["sh -c serf"]
+        - ["sh -c kill -0 "]
+    - name: pname_cmdline_contains
+      fields: [proc.pname, proc.cmdline]
+      comps: [in, contains]
+      values:
+        - [[nginx], "/usr/sbin/nginx -c /etc/nginx/nginx.conf"]
+    - name: pname_cmdline_prefix
+      fields: [proc.pname, proc.cmdline]
+      comps: [in, startswith]
+      values:
+        - [[consul], "sh -c curl"]
+        - [[consul], "sh -c nc"]
+        - [[consul], "sh -c /bin/consul-alerts"]
+        - [[nginx], "sh -c /usr/local/bin/aws s3 cp"]
+        - [[splunkd], "sh -c /opt/splunkforwarder"]
+        - [[postgres], "sh -c envdir /etc/wal-e.d/env /usr/local/bin/wal-e"]
+        - [[beam.smp], "sh -c exec ps"]
+        - [[beam.smp], "sh -c exec inet_gethost"]
+        - [[beam.smp], "sh -s unix:cmd"]
+        - [[beam.smp], "sh -c exec /bin/sh -s unix:cmd 2>&1"]
   output: >
     Shell spawned by untrusted binary (user=%user.name user_loginuid=%user.loginuid shell=%proc.name parent=%proc.pname
     cmdline=%proc.cmdline pcmdline=%proc.pcmdline gparent=%proc.aname[2] ggparent=%proc.aname[3]
@@ -1844,27 +1809,6 @@
 - list: trusted_images
   items: []
 
-# NOTE: This macro is only provided for backwards compatibility with
-# older local falco rules files that may have been appending to
-# trusted_images. To make customizations, it's better to add containers to
-# user_trusted_containers, user_privileged_containers or user_sensitive_mount_containers.
-- macro: trusted_containers
-  condition: (container.image.repository in (trusted_images))
-
-# Add conditions to this macro (probably in a separate file,
-# overwriting this macro) to specify additional containers that are
-# trusted and therefore allowed to run privileged *and* with sensitive
-# mounts.
-#
-# Like trusted_images, this is deprecated in favor of
-# user_privileged_containers and user_sensitive_mount_containers and
-# is only provided for backwards compatibility.
-#
-# In this file, it just takes one of the images in trusted_containers
-# and repeats it.
-- macro: user_trusted_containers
-  condition: (never_true)
-
 - list: sematext_images
   items: [docker.io/sematext/sematext-agent-docker, docker.io/sematext/agent, docker.io/sematext/logagent,
           registry.access.redhat.com/sematext/sematext-agent-docker,
@@ -1900,14 +1844,6 @@
     sematext_images
     ]
 
-- macro: falco_privileged_containers
-  condition: (openshift_image or
-              user_trusted_containers or
-              container.image.repository in (trusted_images) or
-              container.image.repository in (falco_privileged_images) or
-              container.image.repository startswith istio/proxy_ or
-              container.image.repository startswith quay.io/sysdig/)
-
 # Add conditions to this macro (probably in a separate file,
 # overwriting this macro) to specify additional containers that are
 # allowed to run privileged
@@ -1937,12 +1873,6 @@
     amazon/amazon-ecs-agent
     ]
 
-- macro: falco_sensitive_mount_containers
-  condition: (user_trusted_containers or
-              container.image.repository in (trusted_images) or
-              container.image.repository in (falco_sensitive_mount_images) or
-              container.image.repository startswith quay.io/sysdig/)
-
 # These container images are allowed to run with hostnetwork=true
 - list: falco_hostnetwork_images
   items: [
@@ -1970,8 +1900,18 @@
   condition: >
     container_started and container
     and container.privileged=true
-    and not falco_privileged_containers
-    and not user_privileged_containers
+    and not openshift_image
+  exceptions:
+    - name: image_repo
+      fields: container.image.repository
+      comps: in
+      values: [trusted_images, falco_privileged_images]
+    - name: image_repo_prefix
+      fields: [container.image.repository]
+      comps: [startswith]
+      values:
+        - [istio/proxy_]
+        - [quay.io/sysdig/]
   output: Privileged container started (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline %container.info image=%container.image.repository:%container.image.tag)
   priority: INFO
   tags: [container, cis, mitre_privilege_escalation, mitre_lateral_movement]
@@ -2014,8 +1954,17 @@
   condition: >
     container_started and container
     and sensitive_mount
-    and not falco_sensitive_mount_containers
     and not user_sensitive_mount_containers
+  exceptions:
+    - name: image_repo
+      fields: container.image.repository
+      comps: in
+      values: [trusted_images, falco_sensitive_mount_images]
+    - name: image_repo_prefix
+      fields: [container.image.repository]
+      comps: [startswith]
+      values:
+        - [quay.io/sysdig/]
   output: Container with sensitive mount started (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline %container.info image=%container.image.repository:%container.image.tag mounts=%container.mounts)
   priority: INFO
   tags: [container, cis, mitre_lateral_movement]
@@ -2036,6 +1985,10 @@
   desc: >
     Detect the initial process started by a container that is not in a list of allowed containers.
   condition: container_started and container and not allowed_containers
+  exceptions:
+    - name: image_repo
+      fields: container.image.repository
+      comps: in
   output: Container started and not in allowed list (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline %container.info image=%container.image.repository:%container.image.tag)
   priority: WARNING
   tags: [container, mitre_lateral_movement]
@@ -2051,6 +2004,9 @@
 - rule: System user interactive
   desc: an attempt to run interactive commands by a system (i.e. non-login) user
   condition: spawned_process and system_users and interactive and not user_known_system_user_login
+  exceptions:
+    - name: user_proc
+      fields: [user.name, proc.name]
   output: "System user ran an interactive command (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline container_id=%container.id image=%container.image.repository)"
   priority: INFO
   tags: [users, mitre_remote_access_tools]
@@ -2067,6 +2023,10 @@
     and shell_procs and proc.tty != 0
     and container_entrypoint
     and not user_expected_terminal_shell_in_container_conditions
+  exceptions:
+    - name: proc_name_image_suffix
+      fields: [proc.name, container.image.repository]
+      comps: [in, endswith]
   output: >
     A shell was spawned in a container with an attached terminal (user=%user.name user_loginuid=%user.loginuid %container.info
     shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline terminal=%proc.tty container_id=%container.id image=%container.image.repository)
@@ -2129,9 +2089,6 @@
 - macro: user_shell_container_exclusions
   condition: (never_true)
 
-- macro: login_doing_dns_lookup
-  condition: (proc.name=login and fd.l4proto=udp and fd.sport=53)
-
 # sockfamily ip is to exclude certain processes (like 'groups') that communicate on unix-domain sockets
 # systemd can listen on ports to launch things like sshd on demand
 - rule: System procs network activity
@@ -2139,9 +2096,16 @@
   condition: >
     (fd.sockfamily = ip and (system_procs or proc.name in (shell_binaries)))
     and (inbound_outbound)
-    and not proc.name in (known_system_procs_network_activity_binaries)
-    and not login_doing_dns_lookup
     and not user_expected_system_procs_network_activity_conditions
+  exceptions:
+    - name: proc_names
+      fields: proc.name
+      comps: in
+      values: [known_system_procs_network_activity_binaries]
+    - name: proc_proto_sport
+      fields: [proc.name, fd.l4proto, fd.sport]
+      values:
+        - [login, udp, 53]
   output: >
     Known system binary sent/received network traffic
     (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline connection=%fd.name container_id=%container.id image=%container.image.repository)
@@ -2180,6 +2144,10 @@
     http_proxy_procs and
     not allowed_ssh_proxy_env and
     proc.env icontains HTTP_PROXY
+  exceptions:
+    - name: proc_names
+      fields: proc.name
+      comps: in
   output: >
     Program run with disallowed HTTP_PROXY environment variable
     (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline env=%proc.env parent=%proc.pname container_id=%container.id image=%container.image.repository)
@@ -2203,6 +2171,9 @@
   condition: >
     (inbound and consider_interpreted_inbound
      and interpreted_procs)
+  exceptions:
+    - name: proc_proto_sport
+      fields: [proc.name, fd.l4proto, fd.sport]
   output: >
     Interpreted program received/listened for network traffic
     (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline connection=%fd.name container_id=%container.id image=%container.image.repository)
@@ -2214,6 +2185,9 @@
   condition: >
     (outbound and consider_interpreted_outbound
      and interpreted_procs)
+  exceptions:
+    - name: proc_proto_sport
+      fields: [proc.name, fd.l4proto, fd.sport]
   output: >
     Interpreted program performed outgoing network connection
     (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline connection=%fd.name container_id=%container.id image=%container.image.repository)
@@ -2255,33 +2229,14 @@
 - rule: Unexpected UDP Traffic
   desc: UDP traffic not on port 53 (DNS) or other commonly used ports
   condition: (inbound_outbound) and do_unexpected_udp_check and fd.l4proto=udp and not expected_udp_traffic
+  exceptions:
+    - name: proc_proto_sport
+      fields: [proc.name, fd.l4proto, fd.sport]
   output: >
     Unexpected UDP Traffic Seen
     (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline connection=%fd.name proto=%fd.l4proto evt=%evt.type %evt.args container_id=%container.id image=%container.image.repository)
   priority: NOTICE
   tags: [network, mitre_exfiltration]
-
-# With the current restriction on system calls handled by falco
-# (e.g. excluding read/write/sendto/recvfrom/etc, this rule won't
-# trigger).
-# - rule: Ssh error in syslog
-#   desc: any ssh errors (failed logins, disconnects, ...) sent to syslog
-#   condition: syslog and ssh_error_message and evt.dir = <
-#   output: "sshd sent error message to syslog (error=%evt.buffer)"
-#   priority: WARNING
-
-- macro: somebody_becoming_themself
-  condition: ((user.name=nobody and evt.arg.uid=nobody) or
-              (user.name=www-data and evt.arg.uid=www-data) or
-              (user.name=_apt and evt.arg.uid=_apt) or
-              (user.name=postfix and evt.arg.uid=postfix) or
-              (user.name=pki-agent and evt.arg.uid=pki-agent) or
-              (user.name=pki-acme and evt.arg.uid=pki-acme) or
-              (user.name=nfsnobody and evt.arg.uid=nfsnobody) or
-              (user.name=postgres and evt.arg.uid=postgres))
-
-- macro: nrpe_becoming_nagios
-  condition: (proc.name=nrpe and evt.arg.uid=nagios)
 
 # In containers, the user name might be for a uid that exists in the
 # container but not on the host. (See
@@ -2308,13 +2263,34 @@
     evt.type=setuid and evt.dir=>
     and (known_user_in_container or not container)
     and not user.name=root
-    and not somebody_becoming_themself
-    and not proc.name in (known_setuid_binaries, userexec_binaries, mail_binaries, docker_binaries,
-                          nomachine_binaries)
     and not proc.name startswith "runc:"
-    and not java_running_sdjagent
-    and not nrpe_becoming_nagios
     and not user_known_non_sudo_setuid_conditions
+  exceptions:
+    - name: proc_names
+      fields: proc.name
+      comps: in
+      values: [known_setuid_binaries, userexec_binaries, mail_binaries, docker_binaries,
+               nomachine_binaries]
+    - name: proc_cmdline
+      fields: [proc.name, proc.cmdline]
+      comps: [in, contains]
+      values:
+        - [[java], sdjagent.jar]
+    - name: proc_new_uid
+      fields: [proc.name, evt.arg.uid]
+      values:
+        - [nrpe, nagios]
+    - name: user_new_uid
+      fields: [user.name, evt.arg.uid]
+      values:
+        - [nobody, nobody]
+        - [www-data, www-data]
+        - [_apt, _apt]
+        - [postfix, postfix]
+        - [pki-agent, pki-agent]
+        - [pki-acme, pki-acme]
+        - [nfsnobody, nfsnobody]
+        - [postgres, postgres]
   output: >
     Unexpected setuid call by non-sudo, non-root program (user=%user.name user_loginuid=%user.loginuid cur_uid=%user.uid parent=%proc.pname
     command=%proc.cmdline uid=%evt.arg.uid container_id=%container.id image=%container.image.repository)
@@ -2335,11 +2311,7 @@
     Some innocuous commandlines that don't actually change anything are excluded.
   condition: >
     spawned_process and proc.name in (user_mgmt_binaries) and
-    not proc.name in (su, sudo, lastlog, nologin, unix_chkpwd) and not container and
-    not proc.pname in (cron_binaries, systemd, systemd.postins, udev.postinst, run-parts) and
-    not proc.cmdline startswith "passwd -S" and
-    not proc.cmdline startswith "useradd -D" and
-    not proc.cmdline startswith "systemd --version" and
+    not container and
     not run_by_qualys and
     not run_by_sumologic_securefiles and
     not run_by_yum and
@@ -2347,6 +2319,22 @@
     not run_by_google_accounts_daemon and
     not chage_list and
     not user_known_user_management_activities
+  exceptions:
+    - name: proc_names
+      fields: proc.name
+      comps: in
+      values: [su, sudo, lastlog, nologin, unix_chkpwd]
+    - name: proc_pnames
+      fields: proc.pname
+      comps: in
+      values: [cron_binaries, systemd, systemd.postins, udev.postinst, run-parts]
+    - name: cmdline_prefixes
+      fields: [proc.cmdline]
+      comps: [startswith]
+      values:
+        - ["passwd -S"]
+        - ["useradd -D"]
+        - ["systemd --version"]
   output: >
     User management binary command run outside of container
     (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4])
@@ -2369,10 +2357,19 @@
   condition: >
     fd.directory = /dev and
     (evt.type = creat or ((evt.type = open or evt.type = openat) and evt.arg.flags contains O_CREAT))
-    and not proc.name in (dev_creation_binaries)
-    and not fd.name in (allowed_dev_files)
     and not fd.name startswith /dev/tty
     and not user_known_create_files_below_dev_activities
+  exceptions:
+    - name: proc_names
+      fields: proc.name
+      comps: in
+      values: [dev_creation_binaries]
+    - name: file_names
+      fields: fd.name
+      comps: in
+      values: [allowed_dev_files]
+    - name: proc_file
+      fields: [proc.name, fd.name]
   output: "File created below /dev by untrusted program (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline file=%fd.name container_id=%container.id image=%container.image.repository)"
   priority: ERROR
   tags: [filesystem, mitre_persistence]
@@ -2395,6 +2392,10 @@
 - rule: Contact EC2 Instance Metadata Service From Container
   desc: Detect attempts to contact the EC2 Instance Metadata Service from a container
   condition: outbound and fd.sip="169.254.169.254" and container and not ec2_metadata_containers
+  exceptions:
+    - name: proc_name_image_suffix
+      fields: [proc.name, container.image.repository]
+      comps: [in, endswith]
   output: Outbound connection to EC2 instance metadata service (command=%proc.cmdline connection=%fd.name %container.info image=%container.image.repository:%container.image.tag)
   priority: NOTICE
   tags: [network, aws, container, mitre_discovery]
@@ -2414,6 +2415,10 @@
 - rule: Contact cloud metadata service from container
   desc: Detect attempts to contact the Cloud Instance Metadata Service from a container
   condition: outbound and fd.sip="169.254.169.254" and container and consider_metadata_access and not user_known_metadata_access
+  exceptions:
+    - name: proc_name_image_suffix
+      fields: [proc.name, container.image.repository]
+      comps: [in, endswith]
   output: Outbound connection to cloud instance metadata service (command=%proc.cmdline connection=%fd.name %container.info image=%container.image.repository:%container.image.tag)
   priority: NOTICE
   tags: [network, container, mitre_discovery]
@@ -2439,12 +2444,16 @@
 - rule: Contact K8S API Server From Container
   desc: Detect attempts to contact the K8S API Server from a container
   condition: >
-    evt.type=connect and evt.dir=< and 
+    evt.type=connect and evt.dir=< and
     (fd.typechar=4 or fd.typechar=6) and
-    container and 
+    container and
     not k8s_containers and
     k8s_api_server and
     not user_known_contact_k8s_api_server_activities
+  exceptions:
+    - name: proc_name_image_suffix
+      fields: [proc.name, container.image.repository]
+      comps: [in, endswith]
   output: Unexpected connection to K8s API Server from container (command=%proc.cmdline %container.info image=%container.image.repository:%container.image.tag connection=%fd.name)
   priority: NOTICE
   tags: [network, k8s, container, mitre_discovery]
@@ -2461,6 +2470,10 @@
 - rule: Unexpected K8s NodePort Connection
   desc: Detect attempts to use K8s NodePorts from a container
   condition: (inbound_outbound) and fd.sport >= 30000 and fd.sport <= 32767 and container and not nodeport_containers
+  exceptions:
+    - name: proc_name_image_suffix
+      fields: [proc.name, container.image.repository]
+      comps: [in, endswith]
   output: Unexpected K8s NodePort Connection (command=%proc.cmdline connection=%fd.name container_id=%container.id image=%container.image.repository)
   priority: NOTICE
   tags: [network, k8s, container, mitre_port_knocking]
@@ -2490,6 +2503,10 @@
     and package_mgmt_procs
     and not package_mgmt_ancestor_procs
     and not user_known_package_manager_in_container
+  exceptions:
+    - name: proc_name_image_suffix
+      fields: [proc.name, container.image.repository]
+      comps: [in, endswith]
   output: >
     Package management process launched in container (user=%user.name user_loginuid=%user.loginuid
     command=%proc.cmdline container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
@@ -2504,6 +2521,10 @@
      (proc.name = "ncat" and (proc.args contains "--sh-exec" or proc.args contains "--exec" or proc.args contains "-e "
                               or proc.args contains "-c " or proc.args contains "--lua-exec"))
     )
+  exceptions:
+    - name: proc_name_image_suffix
+      fields: [proc.name, container.image.repository]
+      comps: [in, endswith]
   output: >
     Netcat runs inside container that allows remote code execution (user=%user.name user_loginuid=%user.loginuid
     command=%proc.cmdline container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
@@ -2517,6 +2538,10 @@
   desc: Detect network tools launched inside container
   condition: >
     spawned_process and container and network_tool_procs and not user_known_network_tool_activities
+  exceptions:
+    - name: proc_name_image_suffix
+      fields: [proc.name, container.image.repository]
+      comps: [in, endswith]
   output: >
     Network tool launched in container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline parent_process=%proc.pname
     container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
@@ -2537,6 +2562,9 @@
     consider_network_tools_on_host and
     network_tool_procs and
     not user_known_network_tool_activities
+  exceptions:
+    - name: proc_pname
+      fields: [proc.name, proc.pname]
   output: >
     Network tool launched on host (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline parent_process=%proc.pname)
   priority: NOTICE
@@ -2572,6 +2600,9 @@
      ((grep_commands and private_key_or_password) or
       (proc.name = "find" and (proc.args contains "id_rsa" or proc.args contains "id_dsa")))
     )
+  exceptions:
+    - name: proc_pname
+      fields: [proc.name, proc.pname]
   output: >
     Grep private keys or passwords activities found
     (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline container_id=%container.id container_name=%container.name
@@ -2593,20 +2624,25 @@
 - macro: allowed_clear_log_files
   condition: (never_true)
 
-- macro: trusted_logging_images
-  condition: (container.image.repository endswith "splunk/fluentd-hec" or
-              container.image.repository endswith "fluent/fluentd-kubernetes-daemonset" or
-              container.image.repository endswith "openshift3/ose-logging-fluentd" or
-              container.image.repository endswith "containernetworking/azure-npm")
-
 - rule: Clear Log Activities
   desc: Detect clearing of critical log files
   condition: >
     open_write and
     access_log_files and
     evt.arg.flags contains "O_TRUNC" and
-    not trusted_logging_images and
     not allowed_clear_log_files
+  exceptions:
+    - name: proc_file_prefix
+      fields: [proc.name, fd.name]
+      comps: [in, startswith]
+    - name: image_suffix
+      fields: [container.image.repository]
+      comps: [endswith]
+      values:
+        - ["splunk/fluentd-hec"]
+        - ["fluent/fluentd-kubernetes-daemonset"]
+        - ["openshift3/ose-logging-fluentd"]
+        - ["containernetworking/azure-npm"]
   output: >
     Log files were tampered (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline file=%fd.name container_id=%container.id image=%container.image.repository)
   priority:
@@ -2625,6 +2661,9 @@
 - rule: Remove Bulk Data from Disk
   desc: Detect process running to clear bulk data from disk
   condition: spawned_process and clear_data_procs and not user_known_remove_data_activities
+  exceptions:
+    - name: proc_pname
+      fields: [proc.name, proc.pname]
   output: >
     Bulk data has been removed from disk (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline file=%fd.name container_id=%container.id image=%container.image.repository)
   priority:
@@ -2662,8 +2701,15 @@
   desc: Detect shell history deletion
   condition: >
     (modify_shell_history or truncate_shell_history) and
-       not var_lib_docker_filepath and
-       not proc.name in (docker_binaries)
+       not var_lib_docker_filepath
+  exceptions:
+    - name: proc_names
+      fields: proc.name
+      comps: in
+      values: [docker_binaries]
+    - name: known_shell_history_mods
+      fields: [proc.name, fd.name]
+      comps: [=, contains]
   output: >
     Shell history had been deleted or renamed (user=%user.name user_loginuid=%user.loginuid type=%evt.type command=%proc.cmdline fd.name=%fd.name name=%evt.arg.name path=%evt.arg.path oldpath=%evt.arg.oldpath %container.info)
   priority:
@@ -2677,6 +2723,12 @@
   condition: >
     ((spawned_process and proc.name in (shred, rm, mv) and proc.args contains "bash_history") or
      (open_write and fd.name contains "bash_history" and evt.arg.flags contains "O_TRUNC"))
+  exceptions:
+    - name: proc_pname
+      fields: [proc.name, proc.pname]
+    - name: known_shell_history_deletes
+      fields: [proc.name, fd.name]
+      comps: [=, contains]
   output: >
     Shell history had been deleted or renamed (user=%user.name user_loginuid=%user.loginuid type=%evt.type command=%proc.cmdline fd.name=%fd.name name=%evt.arg.name path=%evt.arg.path oldpath=%evt.arg.oldpath %container.info)
   priority:
@@ -2702,9 +2754,13 @@
     Detect setuid or setgid bits set via chmod
   condition: >
     consider_all_chmods and chmod and (evt.arg.mode contains "S_ISUID" or evt.arg.mode contains "S_ISGID")
-    and not proc.name in (user_known_chmod_applications)
     and not exe_running_docker_save
     and not user_known_set_setuid_or_setgid_bit_conditions
+  exceptions:
+    - name: proc_names
+      fields: proc.name
+      comps: in
+      values: [user_known_chmod_applications]
   output: >
     Setuid or setgid bit is set via chmod (fd=%evt.arg.fd filename=%evt.arg.filename mode=%evt.arg.mode user=%user.name user_loginuid=%user.loginuid process=%proc.name
     command=%proc.cmdline container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
@@ -2731,6 +2787,10 @@
     consider_hidden_file_creation and
     not user_known_create_hidden_file_activities
     and not exe_running_docker_save
+  exceptions:
+    - name: proc_file_prefix
+      fields: [proc.name, fd.name]
+      comps: [in, startswith]
   output: >
     Hidden file or directory created (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline
     file=%fd.name newpath=%evt.arg.newpath container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
@@ -2756,6 +2816,9 @@
     and container
     and remote_file_copy_procs
     and not user_known_remote_file_copy_activities
+  exceptions:
+    - name: proc_name_parent_name
+      fields: [proc.name, proc.pname]
   output: >
     Remote file copy tool launched in container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline parent_process=%proc.pname
     container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
@@ -2767,6 +2830,10 @@
   condition: >
     create_symlink and
     (evt.arg.target in (sensitive_file_names) or evt.arg.target in (sensitive_directory_names))
+  exceptions:
+    - name: proc_file_prefix
+      fields: [proc.name, evt.arg.target]
+      comps: [in, startswith]
   output: >
     Symlinks created over senstivie files (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline target=%evt.arg.target linkpath=%evt.arg.linkpath parent_process=%proc.pname)
   priority: NOTICE
@@ -2863,6 +2930,9 @@
 - rule: Detect outbound connections to common miner pool ports
   desc: Miners typically connect to miner pools on common ports.
   condition: net_miner_pool and not trusted_images_query_miner_domain_dns
+  exceptions:
+    - name: proc_sport_sipname
+      fields: [proc.name, fd.sport, fd.sip.name]
   enabled: false
   output: Outbound connection to IP/Port flagged by cryptoioc.ch (command=%proc.cmdline port=%fd.rport ip=%fd.rip container=%container.info image=%container.image.repository)
   priority: CRITICAL
@@ -2871,6 +2941,10 @@
 - rule: Detect crypto miners using the Stratum protocol
   desc: Miners typically specify the mining pool to connect to with a URI that begins with 'stratum+tcp'
   condition: spawned_process and proc.cmdline contains "stratum+tcp"
+  exceptions:
+    - name: proc_pname_parent_cmdline
+      fields: [proc.pname, proc.cmdline]
+      comps: [=, contains]
   output: Possible miner running (command=%proc.cmdline container=%container.info image=%container.image.repository)
   priority: CRITICAL
   tags: [process, mitre_execution]
@@ -2901,12 +2975,16 @@
 - rule: The docker client is executed in a container
   desc: Detect a k8s client tool executed inside a container
   condition: spawned_process and container and not user_known_k8s_client_container_parens and proc.name in (k8s_client_binaries)
+  exceptions:
+    - name: image_suffix
+      fields: [container.image.repository]
+      comps: [endswith]
   output: "Docker or kubernetes client executed in container (user=%user.name user_loginuid=%user.loginuid %container.info parent=%proc.pname cmdline=%proc.cmdline image=%container.image.repository:%container.image.tag)"
   priority: WARNING
   tags: [container, mitre_execution]
 
 
-# This rule is enabled by default. 
+# This rule is enabled by default.
 # If you want to disable it, modify the following macro.
 - macro: consider_packet_socket_communication
   condition: (always_true)
@@ -2917,6 +2995,10 @@
 - rule: Packet socket created in container
   desc: Detect new packet socket at the device driver (OSI Layer 2) level in a container. Packet socket could be used for ARP Spoofing and privilege escalation(CVE-2020-14386) by attacker.
   condition: evt.type=socket and evt.arg[0]=AF_PACKET and consider_packet_socket_communication and container and not proc.name in (user_known_packet_socket_binaries)
+  exceptions:
+    - name: proc_name_image_suffix
+      fields: [proc.name, container.image.repository]
+      comps: [in, endswith]
   output: Packet socket was created in a container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline socket_info=%evt.args container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
   priority: NOTICE
   tags: [network, mitre_discovery]
@@ -2954,6 +3036,9 @@
     container and
     not network_local_subnet and
     k8s.ns.name in (namespace_scope_network_only_subnet)
+  exceptions:
+    - name: proc_proto_sport
+      fields: [proc.name, fd.l4proto, fd.sport]
   output: >
     Network connection outside local subnet
     (command=%proc.cmdline connection=%fd.name user=%user.name user_loginuid=%user.loginuid container_id=%container.id
@@ -2991,9 +3076,18 @@
     allowed_port and
     inbound_outbound and
     container and
-    container.image.repository in (allowed_image) and
-    not proc.name in (authorized_server_binary) and
-    not fd.sport in (authorized_server_port)
+    container.image.repository in (allowed_image)
+  exceptions:
+    - name: proc_names
+      fields: proc.name
+      comps: in
+      values: [authorized_server_binaries]
+    - name: fd_sports
+      fields: fd.sport
+      comps: in
+      values: [authorized_server_port]
+    - name: proc_proto_sport
+      fields: [proc.name, fd.l4proto, fd.sport]
   output: >
     Network connection outside authorized port and binary
     (command=%proc.cmdline connection=%fd.name user=%user.name user_loginuid=%user.loginuid container_id=%container.id
@@ -3007,6 +3101,10 @@
 - rule: Redirect STDOUT/STDIN to Network Connection in Container
   desc: Detect redirecting stdout/stdin to network connection in container (potential reverse shell).
   condition: evt.type=dup and evt.dir=> and container and fd.num in (0, 1, 2) and fd.type in ("ipv4", "ipv6") and not user_known_stand_streams_redirect_activities
+  exceptions:
+    - name: proc_name_image_suffix
+      fields: [proc.name, container.image.repository]
+      comps: [in, endswith]
   output: >
     Redirect stdout/stdin to network connection (user=%user.name user_loginuid=%user.loginuid %container.info process=%proc.name parent=%proc.pname cmdline=%proc.cmdline terminal=%proc.tty container_id=%container.id image=%container.image.repository fd.name=%fd.name fd.num=%fd.num fd.type=%fd.type fd.sip=%fd.sip)
   priority: WARNING
@@ -3030,13 +3128,21 @@
     chmod and
     consider_all_chmods and
     container and
-    not runc_writing_exec_fifo and
     not runc_writing_var_lib_docker and
     not user_known_container_drift_activities and
     evt.rawres>=0 and
     ((evt.arg.mode contains "S_IXUSR") or
     (evt.arg.mode contains "S_IXGRP") or
     (evt.arg.mode contains "S_IXOTH"))
+  exceptions:
+    - name: proc_name_image_suffix
+      fields: [proc.name, container.image.repository]
+      comps: [in, endswith]
+    - name: cmdline_file
+      fields: [proc.cmdline, fd.name]
+      comps: [in, in]
+      values:
+        - [["runc:[1:CHILD] init"], [/exec.fifo]]
   output: Drift detected (chmod), new executable created in a container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline filename=%evt.arg.filename name=%evt.arg.name mode=%evt.arg.mode event=%evt.type)
   priority: ERROR
 
@@ -3049,10 +3155,18 @@
     evt.type in (open,openat,creat) and
     evt.is_open_exec=true and
     container and
-    not runc_writing_exec_fifo and
     not runc_writing_var_lib_docker and
     not user_known_container_drift_activities and
     evt.rawres>=0
+  exceptions:
+    - name: proc_name_image_suffix
+      fields: [proc.name, container.image.repository]
+      comps: [in, endswith]
+    - name: cmdline_file
+      fields: [proc.cmdline, fd.name]
+      comps: [in, in]
+      values:
+        - [["runc:[1:CHILD] init"], [/exec.fifo]]
   output: Drift detected (open+create), new executable created in a container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline filename=%evt.arg.filename name=%evt.arg.name mode=%evt.arg.mode event=%evt.type)
   priority: ERROR
 
@@ -3062,13 +3176,16 @@
 - rule: Outbound Connection to C2 Servers
   desc: Detect outbound connection to command & control servers
   condition: outbound and fd.sip in (c2_server_ip_list)
+  exceptions:
+    - name: proc_proto_sport
+      fields: [proc.name, fd.l4proto, fd.sport]
   output: Outbound connection to C2 server (command=%proc.cmdline connection=%fd.name user=%user.name user_loginuid=%user.loginuid container_id=%container.id image=%container.image.repository)
   priority: WARNING
   tags: [network]
 
 - list: white_listed_modules
   items: []
-    
+
 - rule: Linux Kernel Module Injection Detected
   desc: Detect kernel module was injected (from container).
   condition: spawned_process and container and proc.name=insmod and not proc.args in (white_listed_modules)
