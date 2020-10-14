@@ -21,9 +21,9 @@ limitations under the License.
 
 namespace falco
 {
-namespace outputs
+namespace grpc
 {
-typedef tbb::concurrent_queue<response> response_cq;
+typedef tbb::concurrent_queue<outputs::response> response_cq;
 
 class queue
 {
@@ -34,12 +34,12 @@ public:
 		return instance;
 	}
 
-	bool try_pop(response& res)
+	bool try_pop(outputs::response& res)
 	{
 		return m_queue.try_pop(res);
 	}
 
-	void push(response& res)
+	void push(outputs::response& res)
 	{
 		m_queue.push(res);
 	}
@@ -56,5 +56,5 @@ public:
 	queue(queue const&) = delete;
 	void operator=(queue const&) = delete;
 };
-} // namespace outputs
+} // namespace grpc
 } // namespace falco
