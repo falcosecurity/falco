@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2019 The Falco Authors.
+Copyright (C) 2020 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -44,8 +44,9 @@ void falco_formats::init(sinsp *inspector,
 	s_json_include_output_property = json_include_output_property;
 	if(!s_formatters)
 	{
-		s_formatters = new sinsp_evt_formatter_cache(s_inspector);
+		delete(s_formatters);
 	}
+	s_formatters = new sinsp_evt_formatter_cache(s_inspector);
 
 	luaL_openlib(ls, "formats", ll_falco, 0);
 }
