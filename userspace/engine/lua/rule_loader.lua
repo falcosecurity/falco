@@ -861,6 +861,7 @@ function load_rules(sinsp_lua_parser,
 	 if (state.lists[item] == nil) then
 	    items[#items+1] = quote_item(item)
 	 else
+	    state.lists[item].used = true
 	    for i, exp_item in ipairs(state.lists[item].items) do
 	       items[#items+1] = exp_item
 	    end
