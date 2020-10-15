@@ -179,14 +179,8 @@
 - list: db_server_binaries
   items: [mysqld, postgres, sqlplus]
 
-- list: mysql_mgmt_binaries
-  items: [mysql_install_d, mysql_ssl_rsa_s]
-
 - list: postgres_mgmt_binaries
   items: [pg_dumpall, pg_ctl, pg_lsclusters, pg_ctlcluster]
-
-- list: db_mgmt_binaries
-  items: [mysql_mgmt_binaries, postgres_mgmt_binaries]
 
 - list: nosql_server_binaries
   items: [couchdb, memcached, redis-server, rabbitmq-server, mongod]
@@ -576,77 +570,11 @@
 - macro: system_users
   condition: user.name in (bin, daemon, games, lp, mail, nobody, sshd, sync, uucp, www-data)
 
-# These macros will be removed soon. Only keeping them to maintain
-# compatiblity with some widely used rules files.
-# Begin Deprecated
-- macro: parent_ansible_running_python
-  condition: (proc.pname in (python, pypy, python3) and proc.pcmdline contains ansible)
-
-- macro: parent_bro_running_python
-  condition: (proc.pname=python and proc.cmdline contains /usr/share/broctl)
-
-- macro: parent_python_running_denyhosts
-  condition: >
-    (proc.cmdline startswith "denyhosts.py /usr/bin/denyhosts.py" or
-     (proc.pname=python and
-     (proc.pcmdline contains /usr/sbin/denyhosts or
-      proc.pcmdline contains /usr/local/bin/denyhosts.py)))
-
-- macro: parent_linux_image_upgrade_script
-  condition: proc.pname startswith linux-image-
-
-- macro: parent_java_running_echo
-  condition: (proc.pname=java and proc.cmdline startswith "sh -c echo")
-
-- macro: parent_scripting_running_builds
-  condition: >
-    (proc.pname in (php,php5-fpm,php-fpm7.1,python,ruby,ruby2.3,ruby2.1,node,conda) and (
-       proc.cmdline startswith "sh -c git" or
-       proc.cmdline startswith "sh -c date" or
-       proc.cmdline startswith "sh -c /usr/bin/g++" or
-       proc.cmdline startswith "sh -c /usr/bin/gcc" or
-       proc.cmdline startswith "sh -c gcc" or
-       proc.cmdline startswith "sh -c if type gcc" or
-       proc.cmdline startswith "sh -c cd '/var/www/edi/';LC_ALL=en_US.UTF-8 git" or
-       proc.cmdline startswith "sh -c /var/www/edi/bin/sftp.sh" or
-       proc.cmdline startswith "sh -c /usr/src/app/crxlsx/bin/linux/crxlsx" or
-       proc.cmdline startswith "sh -c make parent" or
-       proc.cmdline startswith "node /jenkins/tools" or
-       proc.cmdline startswith "sh -c '/usr/bin/node'" or
-       proc.cmdline startswith "sh -c stty -a |" or
-       proc.pcmdline startswith "node /opt/nodejs/bin/yarn" or
-       proc.pcmdline startswith "node /usr/local/bin/yarn" or
-       proc.pcmdline startswith "node /root/.config/yarn" or
-       proc.pcmdline startswith "node /opt/yarn/bin/yarn.js"))
-
-
 - macro: httpd_writing_ssl_conf
   condition: >
     (proc.pname=run-httpd and
      (proc.cmdline startswith "sed -ri" or proc.cmdline startswith "sed -i") and
      (fd.name startswith /etc/httpd/conf.d/ or fd.name startswith /etc/httpd/conf))
-
-- macro: parent_Xvfb_running_xkbcomp
-  condition: (proc.pname=Xvfb and proc.cmdline startswith 'sh -c "/usr/bin/xkbcomp"')
-
-- macro: parent_nginx_running_serf
-  condition: (proc.pname=nginx and proc.cmdline startswith "sh -c serf")
-
-- macro: parent_node_running_npm
-  condition: (proc.pcmdline startswith "node /usr/local/bin/npm" or
-              proc.pcmdline startswith "node /usr/local/nodejs/bin/npm" or
-              proc.pcmdline startswith "node /opt/rh/rh-nodejs6/root/usr/bin/npm")
-
-- macro: parent_java_running_sbt
-  condition: (proc.pname=java and proc.pcmdline contains sbt-launch.jar)
-
-- list: known_container_shell_spawn_cmdlines
-  items: []
-
-- list: known_shell_spawn_binaries
-  items: []
-
-## End Deprecated
 
 - macro: ansible_running_python
   condition: (proc.name in (python, pypy, python3) and proc.cmdline contains ansible)
@@ -702,9 +630,6 @@
 
 - macro: run_by_centrify
   condition: (proc.aname[2]=centrify or proc.aname[3]=centrify or proc.aname[4]=centrify)
-
-- macro: run_by_puppet
-  condition: (proc.aname[2]=puppet or proc.aname[3]=puppet)
 
 # Also handles running semi-indirectly via scl
 - macro: run_by_foreman
@@ -1843,21 +1768,6 @@
     sysdig/sysdig,
     sematext_images
     ]
-
-# Add conditions to this macro (probably in a separate file,
-# overwriting this macro) to specify additional containers that are
-# allowed to run privileged
-#
-# In this file, it just takes one of the images in falco_privileged_images
-# and repeats it.
-- macro: user_privileged_containers
-  condition: (never_true)
-
-- list: rancher_images
-  items: [
-    rancher/network-manager, rancher/dns, rancher/agent,
-    rancher/lb-service-haproxy, rancher/metadata, rancher/healthcheck
-  ]
 
 # These container images are allowed to mount sensitive paths from the
 # host filesystem.
@@ -3006,10 +2916,6 @@
 # Change to (always_true) to enable rule 'Network connection outside local subnet'
 - macro: enabled_rule_network_only_subnet
   condition: (never_true)
-
-# Images that are allowed to have outbound traffic
-- list: images_allow_network_outside_subnet
-  items: []
 
 # Namespaces where the rule is enforce
 - list: namespace_scope_network_only_subnet
