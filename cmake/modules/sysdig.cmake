@@ -29,8 +29,8 @@ file(MAKE_DIRECTORY ${SYSDIG_CMAKE_WORKING_DIR})
 # default below In case you want to test against another sysdig version just pass the variable - ie., `cmake
 # -DSYSDIG_VERSION=dev ..`
 if(NOT SYSDIG_VERSION)
-  set(SYSDIG_VERSION "fntlnz-aarch64")
-  set(SYSDIG_CHECKSUM "SHA256=cd7e90408825457a049ef626f78ca02022648a71497c34c1fd86b1cfa736479e")
+  set(SYSDIG_VERSION "c4f096099bf81966803d26c40c6c2cb2b8d08033")
+  set(SYSDIG_CHECKSUM "SHA256=9bda3960e14a1d9bc71e951b01b11d1885a5a39fd39d89945e99ae5819c8bb15")
 endif()
 set(PROBE_VERSION "${SYSDIG_VERSION}")
 
