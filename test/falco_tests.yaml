@@ -295,18 +295,6 @@ trace_files: !mux
       - rules/invalid_array_item_not_object.yaml
     trace_file: trace_files/cat_write.scap
 
-  invalid_unexpected object:
-    exit_status: 1
-    stdout_is: |+
-      1 errors:
-      Unknown rule object: {foo="bar"}
-      ---
-      - foo: bar
-      ---
-    validate_rules_file:
-      - rules/invalid_unexpected_object.yaml
-    trace_file: trace_files/cat_write.scap
-
   invalid_engine_version_not_number:
     exit_status: 1
     stdout_is: |+
