@@ -29,5 +29,3 @@ else
 	echo -e "Module build for the currently running kernel was skipped since the"
 	echo -e "kernel source for this kernel does not seem to be installed."
 fi
-
-/sbin/chkconfig --add falco

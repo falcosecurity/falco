@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2019 The Falco Authors.
+# Copyright (C) 2020 The Falco Authors.
 #
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,11 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-if [ $1 = 0 ]; then
-	/sbin/service falco stop > /dev/null 2>&1
-	/sbin/chkconfig --del falco
-fi
 
 mod_version="@PROBE_VERSION@"
 dkms remove -m falco -v $mod_version --all --rpm_safe_upgrade
