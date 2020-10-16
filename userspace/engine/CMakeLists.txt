@@ -38,7 +38,8 @@ if(MINIMAL_BUILD)
       "${SYSDIG_SOURCE_DIR}/userspace/libsinsp/third-party/jsoncpp"
       "${SYSDIG_SOURCE_DIR}/userspace/libscap"
       "${SYSDIG_SOURCE_DIR}/userspace/libsinsp"
-      "${PROJECT_BINARY_DIR}/userspace/engine")
+      "${PROJECT_BINARY_DIR}/userspace/engine"
+      "${PROJECT_SOURCE_DIR}/userspace/libhawk")
 else()
   target_include_directories(
     falco_engine
@@ -51,10 +52,16 @@ else()
       "${SYSDIG_SOURCE_DIR}/userspace/libsinsp/third-party/jsoncpp"
       "${SYSDIG_SOURCE_DIR}/userspace/libscap"
       "${SYSDIG_SOURCE_DIR}/userspace/libsinsp"
-      "${PROJECT_BINARY_DIR}/userspace/engine")
+      "${PROJECT_BINARY_DIR}/userspace/engine"
+      "${PROJECT_SOURCE_DIR}/userspace/libhawk")
 endif()
 
 target_link_libraries(falco_engine "${FALCO_SINSP_LIBRARY}" "${LPEG_LIB}" "${LYAML_LIB}" "${LIBYAML_LIB}")
+
+if(DEFINED LIBHAWK_LIBRARIES)
+  message(STATUS "Using externally provided libhawk implementations: ${LIBHAWK_LIBRARIES}")
+  target_link_libraries(falco_engine ${LIBHAWK_LIBRARIES})
+endif()
 
 configure_file(config_falco_engine.h.in config_falco_engine.h)
 

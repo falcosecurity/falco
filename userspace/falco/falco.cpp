@@ -79,100 +79,97 @@ static void restart_falco(int signal)
 //
 static void usage()
 {
-    printf(
-	   "Falco version: " FALCO_VERSION "\n"
-	   "Usage: falco [options]\n\n"
-	   "Options:\n"
-	   " -h, --help                    Print this page\n"
-	   " -c                            Configuration file (default " FALCO_SOURCE_CONF_FILE ", " FALCO_INSTALL_CONF_FILE ")\n"
-	   " -A                            Monitor all events, including those with EF_DROP_SIMPLE_CONS flag.\n"
-	   " --alternate-lua-dir <path>    Specify an alternate path for loading Falco lua files\n"
-	   " -b, --print-base64            Print data buffers in base64.\n"
-	   "                               This is useful for encoding binary data that needs to be used over media designed to.\n"
-	   " --cri <path>                  Path to CRI socket for container metadata.\n"
-	   "                               Use the specified socket to fetch data from a CRI-compatible runtime.\n"
-	   " -d, --daemon                  Run as a daemon.\n"
-	   " --disable-cri-async           Disable asynchronous CRI metadata fetching.\n"
-	   "                               This is useful to let the input event wait for the container metadata fetch\n"
-	   "                               to finish before moving forward. Async fetching, in some environments leads\n"
-	   "                               to empty fields for container metadata when the fetch is not fast enough to be\n"
-	   "                               completed asynchronously. This can have a performance penalty on your environment\n"
-	   "                               depending on the number of containers and the frequency at which they are created/started/stopped\n"
-	   " --disable-source <event_source>\n"
-	   "                               Disable a specific event source.\n"
-	   "                               Available event sources are: syscall, k8s_audit.\n"
-	   "                               It can be passed multiple times.\n"
-	   "                               Can not disable both the event sources.\n"
-	   " -D <substring>                Disable any rules with names having the substring <substring>. Can be specified multiple times.\n"
-	   "                               Can not be specified with -t.\n"
-	   " -e <events_file>              Read the events from <events_file> (in .scap format for sinsp events, or jsonl for\n"
-	   "                               k8s audit events) instead of tapping into live.\n"
+	printf(
+		"Falco version: " FALCO_VERSION "\n"
+		"Usage: falco [options]\n\n"
+		"Options:\n"
+		" -h, --help                    Print this page\n"
+		" -c                            Configuration file (default " FALCO_SOURCE_CONF_FILE ", " FALCO_INSTALL_CONF_FILE ")\n"
+		" -A                            Monitor all events, including those with EF_DROP_SIMPLE_CONS flag.\n"
+		" --alternate-lua-dir <path>    Specify an alternate path for loading Falco lua files\n"
+		" -b, --print-base64            Print data buffers in base64.\n"
+		"                               This is useful for encoding binary data that needs to be used over media designed to.\n"
+		" --cri <path>                  Path to CRI socket for container metadata.\n"
+		"                               Use the specified socket to fetch data from a CRI-compatible runtime.\n"
+		" -d, --daemon                  Run as a daemon.\n"
+		" --disable-cri-async           Disable asynchronous CRI metadata fetching.\n"
+		"                               This is useful to let the input event wait for the container metadata fetch\n"
+		"                               to finish before moving forward. Async fetching, in some environments leads\n"
+		"                               to empty fields for container metadata when the fetch is not fast enough to be\n"
+		"                               completed asynchronously. This can have a performance penalty on your environment\n"
+		"                               depending on the number of containers and the frequency at which they are created/started/stopped\n"
+		" --disable-source <event_source>\n"
+		"                               Disable a specific event source.\n"
+		"                               Available event sources are: syscall, k8s_audit.\n"
+		"                               It can be passed multiple times.\n"
+		"                               Can not disable both the event sources.\n"
+		" -D <substring>                Disable any rules with names having the substring <substring>. Can be specified multiple times.\n"
+		"                               Can not be specified with -t.\n"
+		" -e <events_file>              Read the events from <events_file> (in .scap format for sinsp events, or jsonl for\n"
+		"                               k8s audit events) instead of tapping into live.\n"
 #ifndef MINIMAL_BUILD
-	   " -k <url>, --k8s-api <url>\n"
-	   "                               Enable Kubernetes support by connecting to the API server specified as argument.\n"
-       "                               E.g. \"http://admin:password@127.0.0.1:8080\".\n"
-	   "                               The API server can also be specified via the environment variable FALCO_K8S_API.\n"
-	   " -K <bt_file> | <cert_file>:<key_file[#password]>[:<ca_cert_file>], --k8s-api-cert <bt_file> | <cert_file>:<key_file[#password]>[:<ca_cert_file>]\n"
-	   "                               Use the provided files names to authenticate user and (optionally) verify the K8S API server identity.\n"
-	   "                               Each entry must specify full (absolute, or relative to the current directory) path to the respective file.\n"
-	   "                               Private key password is optional (needed only if key is password protected).\n"
-	   "                               CA certificate is optional. For all files, only PEM file format is supported. \n"
-	   "                               Specifying CA certificate only is obsoleted - when single entry is provided \n"
-	   "                               for this option, it will be interpreted as the name of a file containing bearer token.\n"
-	   "                               Note that the format of this command-line option prohibits use of files whose names contain\n"
-	   "                               ':' or '#' characters in the file name.\n"
+		" -k <url>, --k8s-api <url>\n"
+		"                               Enable Kubernetes support by connecting to the API server specified as argument.\n"
+		"                               E.g. \"http://admin:password@127.0.0.1:8080\".\n"
+		"                               The API server can also be specified via the environment variable FALCO_K8S_API.\n"
+		" -K <bt_file> | <cert_file>:<key_file[#password]>[:<ca_cert_file>], --k8s-api-cert <bt_file> | <cert_file>:<key_file[#password]>[:<ca_cert_file>]\n"
+		"                               Use the provided files names to authenticate user and (optionally) verify the K8S API server identity.\n"
+		"                               Each entry must specify full (absolute, or relative to the current directory) path to the respective file.\n"
+		"                               Private key password is optional (needed only if key is password protected).\n"
+		"                               CA certificate is optional. For all files, only PEM file format is supported. \n"
+		"                               Specifying CA certificate only is obsoleted - when single entry is provided \n"
+		"                               for this option, it will be interpreted as the name of a file containing bearer token.\n"
+		"                               Note that the format of this command-line option prohibits use of files whose names contain\n"
+		"                               ':' or '#' characters in the file name.\n"
 #endif
-	   " -L                            Show the name and description of all rules and exit.\n"
-	   " -l <rule>                     Show the name and description of the rule with name <rule> and exit.\n"
-	   " --list [<source>]             List all defined fields. If <source> is provided, only list those fields for\n"
-	   "                               the source <source>. Current values for <source> are \"syscall\", \"k8s_audit\"\n"
+		" -L                            Show the name and description of all rules and exit.\n"
+		" -l <rule>                     Show the name and description of the rule with name <rule> and exit.\n"
+		" --list [<source>]             List all defined fields. If <source> is provided, only list those fields for\n"
+		"                               the source <source>. Current values for <source> are \"syscall\", \"k8s_audit\"\n"
 #ifndef MINIMAL_BUILD
-	   " -m <url[,marathon_url]>, --mesos-api <url[,marathon_url]>\n"
-	   "                               Enable Mesos support by connecting to the API server\n"
-	   "                               specified as argument. E.g. \"http://admin:password@127.0.0.1:5050\".\n"
-	   "                               Marathon url is optional and defaults to Mesos address, port 8080.\n"
-	   "                               The API servers can also be specified via the environment variable FALCO_MESOS_API.\n"
+		" -m <url[,marathon_url]>, --mesos-api <url[,marathon_url]>\n"
+		"                               Enable Mesos support by connecting to the API server\n"
+		"                               specified as argument. E.g. \"http://admin:password@127.0.0.1:5050\".\n"
+		"                               Marathon url is optional and defaults to Mesos address, port 8080.\n"
+		"                               The API servers can also be specified via the environment variable FALCO_MESOS_API.\n"
 #endif
-	   " -M <num_seconds>              Stop collecting after <num_seconds> reached.\n"
-	   " -N                            When used with --list, only print field names.\n"
-	   " -o, --option <key>=<val>      Set the value of option <key> to <val>. Overrides values in configuration file.\n"
-	   "                               <key> can be a two-part <key>.<subkey>\n"
-	   " -p <output_format>, --print <output_format>\n"
-	   "                               Add additional information to each falco notification's output.\n"
-	   "                               With -pc or -pcontainer will use a container-friendly format.\n"
-	   "                               With -pk or -pkubernetes will use a kubernetes-friendly format.\n"
-	   "                               With -pm or -pmesos will use a mesos-friendly format.\n"
-	   "                               Additionally, specifying -pc/-pk/-pm will change the interpretation\n"
-	   "                               of %%container.info in rule output fields.\n"
-	   " -P, --pidfile <pid_file>      When run as a daemon, write pid to specified file\n"
-       " -r <rules_file>               Rules file/directory (defaults to value set in configuration file, or /etc/falco_rules.yaml).\n"
-       "                               Can be specified multiple times to read from multiple files/directories.\n"
-	   " -s <stats_file>               If specified, append statistics related to Falco's reading/processing of events\n"
-	   "                               to this file (only useful in live mode).\n"
-	   " --stats-interval <msec>       When using -s <stats_file>, write statistics every <msec> ms.\n"
-	   "                               This uses signals, so don't recommend intervals below 200 ms.\n"
-	   "                               Defaults to 5000 (5 seconds).\n"
-	   " -S <len>, --snaplen <len>\n"
-	   "                               Capture the first <len> bytes of each I/O buffer.\n"
-	   "                               By default, the first 80 bytes are captured. Use this\n"
-	   "                               option with caution, it can generate huge trace files.\n"
-	   " --support                     Print support information including version, rules files used, etc. and exit.\n"
-	   " -T <tag>                      Disable any rules with a tag=<tag>. Can be specified multiple times.\n"
-	   "                               Can not be specified with -t.\n"
-	   " -t <tag>                      Only run those rules with a tag=<tag>. Can be specified multiple times.\n"
-	   "                               Can not be specified with -T/-D.\n"
-	   " -U,--unbuffered               Turn off output buffering to configured outputs.\n"
-	   "                               This causes every single line emitted by falco to be flushed,\n"
-	   "                               which generates higher CPU usage but is useful when piping those outputs\n"
-	   "                               into another process or into a script.\n"
-	   " -u, --userspace               Parse events from userspace.\n"
-	   "                               To be used in conjunction with the ptrace(2) based driver (pdig).\n"
-	   " -V, --validate <rules_file>   Read the contents of the specified rules(s) file and exit.\n"
-	   "                               Can be specified multiple times to validate multiple files.\n"
-	   " -v                            Verbose output.\n"
-       " --version                     Print version number.\n"
-	   "\n"
-    );
+		" -M <num_seconds>              Stop collecting after <num_seconds> reached.\n"
+		" -N                            When used with --list, only print field names.\n"
+		" -o, --option <key>=<val>      Set the value of option <key> to <val>. Overrides values in configuration file.\n"
+		"                               <key> can be a two-part <key>.<subkey>\n"
+		" -p <output_format>, --print <output_format>\n"
+		"                               Add additional information to each falco notification's output.\n"
+		"                               With -pc or -pcontainer will use a container-friendly format.\n"
+		"                               With -pk or -pkubernetes will use a kubernetes-friendly format.\n"
+		"                               With -pm or -pmesos will use a mesos-friendly format.\n"
+		"                               Additionally, specifying -pc/-pk/-pm will change the interpretation\n"
+		"                               of %%container.info in rule output fields.\n"
+		" -P, --pidfile <pid_file>      When run as a daemon, write pid to specified file\n"
+		" -s <stats_file>               If specified, append statistics related to Falco's reading/processing of events\n"
+		"                               to this file (only useful in live mode).\n"
+		" --stats-interval <msec>       When using -s <stats_file>, write statistics every <msec> ms.\n"
+		"                               This uses signals, so don't recommend intervals below 200 ms.\n"
+		"                               Defaults to 5000 (5 seconds).\n"
+		" -S <len>, --snaplen <len>\n"
+		"                               Capture the first <len> bytes of each I/O buffer.\n"
+		"                               By default, the first 80 bytes are captured. Use this\n"
+		"                               option with caution, it can generate huge trace files.\n"
+		" --support                     Print support information including version, etc. and exit.\n"
+		" -T <tag>                      Disable any rules with a tag=<tag>. Can be specified multiple times.\n"
+		"                               Can not be specified with -t.\n"
+		" -t <tag>                      Only run those rules with a tag=<tag>. Can be specified multiple times.\n"
+		"                               Can not be specified with -T/-D.\n"
+		" -U,--unbuffered               Turn off output buffering to configured outputs.\n"
+		"                               This causes every single line emitted by falco to be flushed,\n"
+		"                               which generates higher CPU usage but is useful when piping those outputs\n"
+		"                               into another process or into a script.\n"
+		" -u, --userspace               Parse events from userspace.\n"
+		"                               To be used in conjunction with the ptrace(2) based driver (pdig).\n"
+		" -V, --validate <rules_file>   Read the contents of the specified rules(s) file and exit.\n"
+		"                               Can be specified multiple times to validate multiple files.\n"
+		" -v                            Verbose output.\n"
+		" --version                     Print version number.\n"
+		"\n");
 }
 
 static void display_fatal_err(const string &msg)
@@ -518,8 +515,8 @@ int falco_init(int argc, char **argv)
 		// Parse the args
 		//
 		while((op = getopt_long(argc, argv,
-                                        "hc:AbdD:e:F:ik:K:Ll:m:M:No:P:p:r:S:s:T:t:UuvV:w:",
-                                        long_options, &long_index)) != -1)
+					"hc:AbdD:e:F:ik:K:Ll:m:M:No:P:p:S:s:T:t:UuvV:w:",
+					long_options, &long_index)) != -1)
 		{
 			switch(op)
 			{
@@ -611,9 +608,6 @@ int falco_init(int argc, char **argv)
 					output_format = optarg;
 					replace_container_info = false;
 				}
-				break;
-			case 'r':
-				falco_configuration::read_rules_file_directory(string(optarg), rules_filenames);
 				break;
 			case 'S':
 				snaplen = atoi(optarg);
@@ -797,6 +791,7 @@ int falco_init(int argc, char **argv)
 			}
 		}
 
+		// validate the rules files and exit
 		if(validate_rules_filenames.size() > 0)
 		{
 			falco_logger::log(LOG_INFO, "Validating rules file(s):\n");
@@ -837,11 +832,6 @@ int falco_init(int argc, char **argv)
 			throw std::runtime_error("Could not find configuration file at " + conf_filename);
 		}
 
-		if (rules_filenames.size())
-		{
-			config.m_rules_filenames = rules_filenames;
-		}
-
 		engine->set_min_priority(config.m_min_priority);
 
 		if(buffered_cmdline)
@@ -849,67 +839,69 @@ int falco_init(int argc, char **argv)
 			config.m_buffered_outputs = buffered_outputs;
 		}
 
-		if(config.m_rules_filenames.size() == 0)
-		{
-			throw std::invalid_argument("You must specify at least one rules file/directory via -r or a rules_file entry in falco.yaml");
-		}
+		engine->watch_rules(verbose, all_events);
 
-		falco_logger::log(LOG_DEBUG, "Configured rules filenames:\n");
-		for (auto filename : config.m_rules_filenames)
-		{
-			falco_logger::log(LOG_DEBUG, string("   ") + filename + "\n");
-		}
+		// if(config.m_rules_filenames.size() == 0)
+		// {
+		// 	throw std::invalid_argument("You must specify at least one rules file/directory via -r or a rules_file entry in falco.yaml");
+		// }
 
-		for (auto filename : config.m_rules_filenames)
-		{
-			falco_logger::log(LOG_INFO, "Loading rules from file " + filename + ":\n");
-			uint64_t required_engine_version;
+		// falco_logger::log(LOG_DEBUG, "Configured rules filenames:\n");
+		// for (auto filename : config.m_rules_filenames)
+		// {
+		// 	falco_logger::log(LOG_DEBUG, string("   ") + filename + "\n");
+		// }
 
-			try {
-				engine->load_rules_file(filename, verbose, all_events, required_engine_version);
-			}
-			catch(falco_exception &e)
-			{
-				std::string prefix = "Could not load rules file " + filename + ": ";
+		// for (auto filename : config.m_rules_filenames)
+		// {
+		// 	falco_logger::log(LOG_INFO, "Loading rules from file " + filename + ":\n");
+		// 	uint64_t required_engine_version;
 
-				throw falco_exception(prefix + e.what());
-			}
-			required_engine_versions[filename] = required_engine_version;
-		}
+		// 	try {
+		// 		engine->load_rules_file(filename, verbose, all_events, required_engine_version);
+		// 	}
+		// 	catch(falco_exception &e)
+		// 	{
+		// 		std::string prefix = "Could not load rules file " + filename + ": ";
 
-		// You can't both disable and enable rules
-		if((disabled_rule_substrings.size() + disabled_rule_tags.size() > 0) &&
-		    enabled_rule_tags.size() > 0) {
-			throw std::invalid_argument("You can not specify both disabled (-D/-T) and enabled (-t) rules");
-		}
+		// 		throw falco_exception(prefix + e.what());
+		// 	}
+		// 	required_engine_versions[filename] = required_engine_version;
+		// }
 
-		for (auto substring : disabled_rule_substrings)
-		{
-			falco_logger::log(LOG_INFO, "Disabling rules matching substring: " + substring + "\n");
-			engine->enable_rule(substring, false);
-		}
+		// // You can't both disable and enable rules
+		// if((disabled_rule_substrings.size() + disabled_rule_tags.size() > 0) &&
+		//     enabled_rule_tags.size() > 0) {
+		// 	throw std::invalid_argument("You can not specify both disabled (-D/-T) and enabled (-t) rules");
+		// }
 
-		if(disabled_rule_tags.size() > 0)
-		{
-			for(auto tag : disabled_rule_tags)
-			{
-				falco_logger::log(LOG_INFO, "Disabling rules with tag: " + tag + "\n");
-			}
-			engine->enable_rule_by_tag(disabled_rule_tags, false);
-		}
+		// for (auto substring : disabled_rule_substrings)
+		// {
+		// 	falco_logger::log(LOG_INFO, "Disabling rules matching substring: " + substring + "\n");
+		// 	engine->enable_rule(substring, false);
+		// }
 
-		if(enabled_rule_tags.size() > 0)
-		{
+		// if(disabled_rule_tags.size() > 0)
+		// {
+		// 	for(auto tag : disabled_rule_tags)
+		// 	{
+		// 		falco_logger::log(LOG_INFO, "Disabling rules with tag: " + tag + "\n");
+		// 	}
+		// 	engine->enable_rule_by_tag(disabled_rule_tags, false);
+		// }
 
-			// Since we only want to enable specific
-			// rules, first disable all rules.
-			engine->enable_rule(all_rules, false);
-			for(auto tag : enabled_rule_tags)
-			{
-				falco_logger::log(LOG_INFO, "Enabling rules with tag: " + tag + "\n");
-			}
-			engine->enable_rule_by_tag(enabled_rule_tags, true);
-		}
+		// if(enabled_rule_tags.size() > 0)
+		// {
+
+		// 	// Since we only want to enable specific
+		// 	// rules, first disable all rules.
+		// 	engine->enable_rule(all_rules, false);
+		// 	for(auto tag : enabled_rule_tags)
+		// 	{
+		// 		falco_logger::log(LOG_INFO, "Enabling rules with tag: " + tag + "\n");
+		// 	}
+		// 	engine->enable_rule_by_tag(enabled_rule_tags, true);
+		// }
 
 		if(print_support)
 		{
@@ -939,17 +931,7 @@ int falco_init(int argc, char **argv)
 			support["system_info"]["machine"] = sysinfo.machine;
 			support["cmdline"] = cmdline;
 			support["config"] = read_file(conf_filename);
-			support["rules_files"] = nlohmann::json::array();
-			for(auto filename : config.m_rules_filenames)
-			{
-				nlohmann::json finfo;
-				finfo["name"] = filename;
-				nlohmann::json variant;
-				variant["required_engine_version"] = required_engine_versions[filename];
-				variant["content"] = read_file(filename);
-				finfo["variants"].push_back(variant);
-				support["rules_files"].push_back(finfo);
-			}
+			support["rules_source"] = "external"; // todo(fntlnz): do we want to let libhawk pass an identifier and maybe more dump info for this?
 			printf("%s\n", support.dump().c_str());
 			goto exit;
 		}

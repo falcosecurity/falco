@@ -26,7 +26,8 @@ limitations under the License.
 
 #include "formats.h"
 
-extern "C" {
+extern "C"
+{
 #include "lpeg.h"
 #include "lyaml.h"
 }
@@ -66,6 +67,8 @@ falco_engine::falco_engine(bool seed_rng, const std::string& alternate_lua_dir)
 
 	// Create this now so we can potentially list filters and exit
 	m_json_factory = make_shared<json_event_filter_factory>();
+
+	hawk_init();
 }
 
 falco_engine::~falco_engine()
@@ -74,6 +77,7 @@ falco_engine::~falco_engine()
 	{
 		delete m_rules;
 	}
+	hawk_destroy();
 }
 
 uint32_t falco_engine::engine_version()
@@ -144,14 +148,25 @@ void falco_engine::list_fields(bool names_only)
 	}
 }
 
-void falco_engine::load_rules(const string &rules_content, bool verbose, bool all_events)
+void falco_engine::load_rules_file(const string &rules_filename, bool verbose, bool all_events)
 {
-	uint64_t dummy;
+	ifstream is;
 
-	return load_rules(rules_content, verbose, all_events, dummy);
+	is.open(rules_filename);
+	if(!is.is_open())
+	{
+		throw falco_exception("Could not open rules filename " +
+				      rules_filename + " " +
+				      "for reading");
+	}
+
+	string rules_content((istreambuf_iterator<char>(is)),
+			     istreambuf_iterator<char>());
+
+	load_rules(rules_content, verbose, all_events);
 }
 
-void falco_engine::load_rules(const string &rules_content, bool verbose, bool all_events, uint64_t &required_engine_version)
+void falco_engine::load_rules(const string &rules_content, bool verbose, bool all_events)
 {
 	// The engine must have been given an inspector by now.
 	if(! m_inspector)
@@ -178,33 +193,20 @@ void falco_engine::load_rules(const string &rules_content, bool verbose, bool al
 	bool json_output = false;
 	bool json_include_output_property = false;
 	falco_formats::init(m_inspector, this, m_ls, json_output, json_include_output_property);
-
-	m_rules->load_rules(rules_content, verbose, all_events, m_extra, m_replace_container_info, m_min_priority, required_engine_version);
-}
-
-void falco_engine::load_rules_file(const string &rules_filename, bool verbose, bool all_events)
-{
 	uint64_t dummy;
-
-	return load_rules_file(rules_filename, verbose, all_events, dummy);
+	m_rules->load_rules(rules_content, verbose, all_events, m_extra, m_replace_container_info, m_min_priority, dummy);
 }
 
-void falco_engine::load_rules_file(const string &rules_filename, bool verbose, bool all_events, uint64_t &required_engine_version)
+// todo(fntlnz): make this do the real loading
+static void rules_cb(char *rules_content)
 {
-	ifstream is;
+	printf(rules_content);
+}
 
-	is.open(rules_filename);
-	if (!is.is_open())
-	{
-		throw falco_exception("Could not open rules filename " +
-				      rules_filename + " " +
-				      "for reading");
-	}
-
-	string rules_content((istreambuf_iterator<char>(is)),
-			     istreambuf_iterator<char>());
-
-	load_rules(rules_content, verbose, all_events, required_engine_version);
+// todo(fntlnz): not sure we want this in falco_engine
+void falco_engine::watch_rules(bool verbose, bool all_events)
+{
+	hawk_watch_rules((hawk_watch_rules_cb)rules_cb);
 }
 
 void falco_engine::enable_rule(const string &substring, bool enabled, const string &ruleset)

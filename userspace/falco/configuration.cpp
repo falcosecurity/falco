@@ -58,16 +58,6 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 
 	m_config->get_sequence<list<string>>(rules_files, string("rules_file"));
 
-	for(auto &file : rules_files)
-	{
-		// Here, we only include files that exist
-		struct stat buffer;
-		if(stat(file.c_str(), &buffer) == 0)
-		{
-			read_rules_file_directory(file, m_rules_filenames);
-		}
-	}
-
 	m_json_output = m_config->get_scalar<bool>("json_output", false);
 	m_json_include_output_property = m_config->get_scalar<bool>("json_include_output_property", true);
 
@@ -234,69 +224,6 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 	m_syscall_evt_simulate_drops = m_config->get_scalar<bool>("syscall_event_drops", "simulate_drops", false);
 }
 
-void falco_configuration::read_rules_file_directory(const string &path, list<string> &rules_filenames)
-{
-	struct stat st;
-
-	int rc = stat(path.c_str(), &st);
-
-	if(rc != 0)
-	{
-		std::cerr << "Could not get info on rules file " << path << ": " << strerror(errno) << std::endl;
-		exit(-1);
-	}
-
-	if(st.st_mode & S_IFDIR)
-	{
-		// It's a directory. Read the contents, sort
-		// alphabetically, and add every path to
-		// rules_filenames
-		vector<string> dir_filenames;
-
-		DIR *dir = opendir(path.c_str());
-
-		if(!dir)
-		{
-			std::cerr << "Could not get read contents of directory " << path << ": " << strerror(errno) << std::endl;
-			exit(-1);
-		}
-
-		for(struct dirent *ent = readdir(dir); ent; ent = readdir(dir))
-		{
-			string efile = path + "/" + ent->d_name;
-
-			rc = stat(efile.c_str(), &st);
-
-			if(rc != 0)
-			{
-				std::cerr << "Could not get info on rules file " << efile << ": " << strerror(errno) << std::endl;
-				exit(-1);
-			}
-
-			if(st.st_mode & S_IFREG)
-			{
-				dir_filenames.push_back(efile);
-			}
-		}
-
-		closedir(dir);
-
-		std::sort(dir_filenames.begin(),
-			  dir_filenames.end());
-
-		for(string &ent : dir_filenames)
-		{
-			rules_filenames.push_back(ent);
-		}
-	}
-	else
-	{
-		// Assume it's a file and just add to
-		// rules_filenames. If it can't be opened/etc that
-		// will be reported later..
-		rules_filenames.push_back(path);
-	}
-}
 
 static bool split(const string &str, char delim, pair<string, string> &parts)
 {

@@ -38,6 +38,11 @@ limitations under the License.
 #include "config_falco_engine.h"
 #include "falco_common.h"
 
+extern "C"
+{
+#include "hawk.h"
+}
+
 //
 // This class acts as the primary interface between a program and the
 // falco rules engine. Falco outputs (writing to files/syslog/etc) are
@@ -65,12 +70,8 @@ public:
 	void load_rules_file(const std::string &rules_filename, bool verbose, bool all_events);
 	void load_rules(const std::string &rules_content, bool verbose, bool all_events);
 
-	//
-	// Identical to above, but also returns the required engine version for the file/content.
-	// (If no required engine version is specified, returns 0).
-	//
-	void load_rules_file(const std::string &rules_filename, bool verbose, bool all_events, uint64_t &required_engine_version);
-	void load_rules(const std::string &rules_content, bool verbose, bool all_events, uint64_t &required_engine_version);
+	// Watch and live-reload rules using an external ABI interface provided by libhawk
+	void watch_rules(bool verbose, bool all_events);
 
 	//
 	// Enable/Disable any rules matching the provided substring.
