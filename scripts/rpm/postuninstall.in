@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2019 The Falco Authors.
+# Copyright (C) 2020 The Falco Authors.
 #
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +14,3 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-if [ "$1" -ge "1" ]; then
-	/sbin/service falco condrestart > /dev/null 2>&1
-fi

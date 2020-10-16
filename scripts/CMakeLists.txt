@@ -26,7 +26,7 @@ configure_file(rpm/postinstall.in rpm/postinstall)
 configure_file(rpm/postuninstall.in rpm/postuninstall)
 configure_file(rpm/preuninstall.in rpm/preuninstall)
 
-file(COPY "${PROJECT_SOURCE_DIR}/scripts/rpm/falco"
+file(COPY "${PROJECT_SOURCE_DIR}/scripts/rpm/falco.service"
 	DESTINATION "${PROJECT_BINARY_DIR}/scripts/rpm")
 
 configure_file(falco-driver-loader falco-driver-loader @ONLY)
