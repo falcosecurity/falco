@@ -11,17 +11,17 @@
 # specific language governing permissions and limitations under the License.
 #
 
-set(LIBYAML_SRC "${PROJECT_BINARY_DIR}/libyaml-prefix/src/libyaml")
-set(LIBYAML_INSTALL_DIR "${LIBYAML_SRC}/target")
-message(STATUS "Using bundled libyaml in '${LIBYAML_SRC}'")
-set(LIBYAML_LIB "${LIBYAML_SRC}/src/.libs/libyaml.a")
+set(LUAJIT_SRC "${PROJECT_BINARY_DIR}/luajit-prefix/src/luajit/src")
+message(STATUS "Using bundled LuaJIT in '${LUAJIT_SRC}'")
+set(LUAJIT_INCLUDE "${LUAJIT_SRC}")
+set(LUAJIT_LIB "${LUAJIT_SRC}/libluajit.a")
 externalproject_add(
-  libyaml
-  URL "https://github.com/yaml/libyaml/releases/download/0.2.5/yaml-0.2.5.tar.gz"
-  URL_HASH "SHA256=c642ae9b75fee120b2d96c712538bd2cf283228d2337df2cf2988e3c02678ef4"
-  CONFIGURE_COMMAND ./configure --prefix=${LIBYAML_INSTALL_DIR} CFLAGS=-fPIC CPPFLAGS=-fPIC --enable-static=true --enable-shared=false
+  luajit
+  GIT_REPOSITORY "https://github.com/LuaJIT/LuaJIT"
+  GIT_TAG "1d8b747c161db457e032a023ebbff511f5de5ec2"
+  CONFIGURE_COMMAND ""
   BUILD_COMMAND ${CMD_MAKE}
   BUILD_IN_SOURCE 1
-  BUILD_BYPRODUCTS ${LIBYAML_LIB}
-  INSTALL_COMMAND ${CMD_MAKE} install
+  BUILD_BYPRODUCTS ${LUAJIT_LIB}
+  INSTALL_COMMAND ""
 )
