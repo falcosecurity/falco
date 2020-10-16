@@ -64,11 +64,16 @@ endif()
 if(NOT MINIMAL_BUILD)
   list(
     APPEND FALCO_SOURCES
+    outputs_grpc.cpp
+    outputs_http.cpp
     webserver.cpp
     grpc_context.cpp
     grpc_server_impl.cpp
     grpc_request_context.cpp
     grpc_server.cpp
+    webserver.cpp
+    grpc_context.cpp
+    grpc_server_impl.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/version.grpc.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/version.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/outputs.grpc.pb.cc
@@ -78,18 +83,11 @@ if(NOT MINIMAL_BUILD)
 
   list(
     APPEND FALCO_INCLUDE_DIRECTORIES
-    "${PROJECT_SOURCE_DIR}/userspace/engine"
-    "${PROJECT_BINARY_DIR}/userspace/falco"
-    "${PROJECT_BINARY_DIR}/driver/src"
-    "${STRING_VIEW_LITE_INCLUDE}"
-    "${YAMLCPP_INCLUDE_DIR}"
     "${CIVETWEB_INCLUDE_DIR}"
     "${OPENSSL_INCLUDE_DIR}"
     "${GRPC_INCLUDE}"
     "${GRPCPP_INCLUDE}"
     "${PROTOBUF_INCLUDE}"
-    "${CMAKE_CURRENT_BINARY_DIR}"
-    "${DRAIOS_DEPENDENCIES_DIR}/yaml-${DRAIOS_YAML_VERSION}/target/include"
   )
 
   list(APPEND FALCO_DEPENDENCIES civetweb)
