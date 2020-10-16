@@ -146,11 +146,11 @@ endif()
 configure_file(config_falco.h.in config_falco.h)
 
 if(NOT MINIMAL_BUILD)
-  add_custom_command(
-    TARGET falco
-    COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/verify_engine_fields.sh ${CMAKE_SOURCE_DIR}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    COMMENT "Comparing engine fields checksum in falco_engine.h to actual fields")
+  # add_custom_command(
+  #   TARGET falco
+  #   COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/verify_engine_fields.sh ${CMAKE_SOURCE_DIR}
+  #   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+  #   COMMENT "Comparing engine fields checksum in falco_engine.h to actual fields")
 else()
   MESSAGE(STATUS "Skipping engine fields checksum when building the minimal Falco.")
 endif()
