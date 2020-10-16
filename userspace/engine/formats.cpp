@@ -24,7 +24,7 @@ sinsp *falco_formats::s_inspector = NULL;
 falco_engine *falco_formats::s_engine = NULL;
 bool falco_formats::s_json_output = false;
 bool falco_formats::s_json_include_output_property = true;
-sinsp_evt_formatter_cache *falco_formats::s_formatters = NULL;
+std::unique_ptr<sinsp_evt_formatter_cache> falco_formats::s_formatters = NULL;
 
 const static struct luaL_reg ll_falco[] =
 	{
@@ -42,11 +42,9 @@ void falco_formats::init(sinsp *inspector,
 	s_engine = engine;
 	s_json_output = json_output;
 	s_json_include_output_property = json_include_output_property;
-	if(!s_formatters)
-	{
-		delete(s_formatters);
-	}
-	s_formatters = new sinsp_evt_formatter_cache(s_inspector);
+
+	// todo(leogr): we should have used std::make_unique, but we cannot since it's not C++14
+	s_formatters = std::unique_ptr<sinsp_evt_formatter_cache>(new sinsp_evt_formatter_cache(s_inspector));
 
 	luaL_openlib(ls, "formats", ll_falco, 0);
 }

@@ -53,7 +53,7 @@ public:
 
 	static sinsp *s_inspector;
 	static falco_engine *s_engine;
-	static sinsp_evt_formatter_cache *s_formatters;
+	static std::unique_ptr<sinsp_evt_formatter_cache> s_formatters;
 	static bool s_json_output;
 	static bool s_json_include_output_property;
 };
