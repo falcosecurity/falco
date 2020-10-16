@@ -115,20 +115,8 @@ set(CURSES_NEED_NCURSES TRUE)
 find_package(Curses REQUIRED)
 message(STATUS "Found ncurses: include: ${CURSES_INCLUDE_DIR}, lib: ${CURSES_LIBRARIES}")
 
-# libb64
-
-set(B64_SRC "${PROJECT_BINARY_DIR}/b64-prefix/src/b64")
-message(STATUS "Using bundled b64 in '${B64_SRC}'")
-set(B64_INCLUDE "${B64_SRC}/include")
-set(B64_LIB "${B64_SRC}/src/libb64.a")
-ExternalProject_Add(
-  b64
-  URL "https://github.com/libb64/libb64/archive/ce864b17ea0e24a91e77c7dd3eb2d1ac4175b3f0.tar.gz"
-  URL_HASH "SHA256=d07173e66f435e5c77dbf81bd9313f8d0e4a3b4edd4105a62f4f8132ba932811"
-  CONFIGURE_COMMAND ""
-  BUILD_COMMAND ${CMD_MAKE}
-  BUILD_IN_SOURCE 1
-  INSTALL_COMMAND "")
+# b64
+include(b64)
 
 # yaml-cpp
 include(yaml-cpp)
@@ -142,52 +130,16 @@ if(NOT MINIMAL_BUILD)
 endif()
 
 # LuaJIT
-set(LUAJIT_SRC "${PROJECT_BINARY_DIR}/luajit-prefix/src/luajit/src")
-message(STATUS "Using bundled LuaJIT in '${LUAJIT_SRC}'")
-set(LUAJIT_INCLUDE "${LUAJIT_SRC}")
-set(LUAJIT_LIB "${LUAJIT_SRC}/libluajit.a")
-ExternalProject_Add(
-  luajit
-  GIT_REPOSITORY "https://github.com/LuaJIT/LuaJIT"
-  GIT_TAG "1d8b747c161db457e032a023ebbff511f5de5ec2"
-  CONFIGURE_COMMAND ""
-  BUILD_COMMAND ${CMD_MAKE}
-  BUILD_IN_SOURCE 1
-  INSTALL_COMMAND "")
+include(luajit)
 
 # Lpeg
-set(LPEG_SRC "${PROJECT_BINARY_DIR}/lpeg-prefix/src/lpeg")
-set(LPEG_LIB "${PROJECT_BINARY_DIR}/lpeg-prefix/src/lpeg/build/lpeg.a")
-message(STATUS "Using bundled lpeg in '${LPEG_SRC}'")
-set(LPEG_DEPENDENCIES "")
-list(APPEND LPEG_DEPENDENCIES "luajit")
-ExternalProject_Add(
-  lpeg
-  DEPENDS ${LPEG_DEPENDENCIES}
-  URL "http://www.inf.puc-rio.br/~roberto/lpeg/lpeg-1.0.2.tar.gz"
-  URL_HASH "SHA256=48d66576051b6c78388faad09b70493093264588fcd0f258ddaab1cdd4a15ffe"
-  BUILD_COMMAND LUA_INCLUDE=${LUAJIT_INCLUDE} "${PROJECT_SOURCE_DIR}/scripts/build-lpeg.sh" "${LPEG_SRC}/build"
-  BUILD_IN_SOURCE 1
-  CONFIGURE_COMMAND ""
-  INSTALL_COMMAND "")
+include(lpeg)
 
 # libyaml
 include(libyaml)
 
 # lyaml
-set(LYAML_SRC "${PROJECT_BINARY_DIR}/lyaml-prefix/src/lyaml/ext/yaml")
-set(LYAML_LIB "${LYAML_SRC}/.libs/yaml.a")
-message(STATUS "Using bundled lyaml in '${LYAML_SRC}'")
-ExternalProject_Add(
-  lyaml
-  DEPENDS luajit libyaml
-  URL "https://github.com/gvvaughan/lyaml/archive/release-v6.0.tar.gz"
-  URL_HASH "SHA256=9d7cf74d776999ff6f758c569d5202ff5da1f303c6f4229d3b41f71cd3a3e7a7"
-  BUILD_COMMAND ${CMD_MAKE}
-  BUILD_IN_SOURCE 1
-  CONFIGURE_COMMAND ./configure --enable-static CFLAGS=-I${LIBYAML_INSTALL_DIR}/include CPPFLAGS=-I${LIBYAML_INSTALL_DIR}/include LDFLAGS=-L${LIBYAML_INSTALL_DIR}/lib LIBS=-lyaml LUA=${LUAJIT_SRC}/luajit LUA_INCLUDE=-I${LUAJIT_INCLUDE}
-  INSTALL_COMMAND sh -c
-                  "cp -R ${PROJECT_BINARY_DIR}/lyaml-prefix/src/lyaml/lib/* ${PROJECT_SOURCE_DIR}/userspace/engine/lua")
+include(lyaml)
 
 # One TBB
 set(TBB_SRC "${PROJECT_BINARY_DIR}/tbb-prefix/src/tbb")

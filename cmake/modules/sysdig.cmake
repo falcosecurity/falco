@@ -29,8 +29,8 @@ file(MAKE_DIRECTORY ${SYSDIG_CMAKE_WORKING_DIR})
 # default below In case you want to test against another sysdig version just pass the variable - ie., `cmake
 # -DSYSDIG_VERSION=dev ..`
 if(NOT SYSDIG_VERSION)
-  set(SYSDIG_VERSION "c4f096099bf81966803d26c40c6c2cb2b8d08033")
-  set(SYSDIG_CHECKSUM "SHA256=9bda3960e14a1d9bc71e951b01b11d1885a5a39fd39d89945e99ae5819c8bb15")
+  set(SYSDIG_VERSION "fntlnz/sinsp-fixes")
+  set(SYSDIG_CHECKSUM "SHA256=30343d50a756cfa1d97939733e3177b6e3f78652555538c3ce4aa4890229d5e5")
 endif()
 set(PROBE_VERSION "${SYSDIG_VERSION}")
 
@@ -57,6 +57,7 @@ add_subdirectory("${SYSDIG_SOURCE_DIR}/driver" "${PROJECT_BINARY_DIR}/driver")
 # Add libscap directory
 add_definitions(-D_GNU_SOURCE)
 add_definitions(-DHAS_CAPTURE)
+add_definitions(-DNOCURSESUI)
 if(MUSL_OPTIMIZED_BUILD)
   add_definitions(-DMUSL_OPTIMIZED)
 endif()

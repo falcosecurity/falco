@@ -11,17 +11,17 @@
 # specific language governing permissions and limitations under the License.
 #
 
-set(LIBYAML_SRC "${PROJECT_BINARY_DIR}/libyaml-prefix/src/libyaml")
-set(LIBYAML_INSTALL_DIR "${LIBYAML_SRC}/target")
-message(STATUS "Using bundled libyaml in '${LIBYAML_SRC}'")
-set(LIBYAML_LIB "${LIBYAML_SRC}/src/.libs/libyaml.a")
+set(B64_SRC "${PROJECT_BINARY_DIR}/b64-prefix/src/b64")
+message(STATUS "Using bundled b64 in '${B64_SRC}'")
+set(B64_INCLUDE "${B64_SRC}/include")
+set(B64_LIB "${B64_SRC}/src/libb64.a")
 externalproject_add(
-  libyaml
-  URL "https://github.com/yaml/libyaml/releases/download/0.2.5/yaml-0.2.5.tar.gz"
-  URL_HASH "SHA256=c642ae9b75fee120b2d96c712538bd2cf283228d2337df2cf2988e3c02678ef4"
-  CONFIGURE_COMMAND ./configure --prefix=${LIBYAML_INSTALL_DIR} CFLAGS=-fPIC CPPFLAGS=-fPIC --enable-static=true --enable-shared=false
+  b64
+  URL "https://github.com/libb64/libb64/archive/ce864b17ea0e24a91e77c7dd3eb2d1ac4175b3f0.tar.gz"
+  URL_HASH "SHA256=d07173e66f435e5c77dbf81bd9313f8d0e4a3b4edd4105a62f4f8132ba932811"
+  CONFIGURE_COMMAND ""
   BUILD_COMMAND ${CMD_MAKE}
   BUILD_IN_SOURCE 1
-  BUILD_BYPRODUCTS ${LIBYAML_LIB}
-  INSTALL_COMMAND ${CMD_MAKE} install
+  BUILD_BYPRODUCTS ${B64_LIB}
+  INSTALL_COMMAND ""
 )
