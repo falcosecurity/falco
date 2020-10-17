@@ -61,7 +61,7 @@ if test "@CPACK_SYSTEMD_FOUND@" -eq 1 ; then
     fi
 else
     if [ -x "/etc/init.d/$NAME" ]; then
-	update-rc.d $NAME defaults >/dev/null
-	invoke-rc.d $NAME start || exit $?
+        update-rc.d $NAME defaults >/dev/null
+        invoke-rc.d $NAME start || exit $?
     fi
 fi
