@@ -21,6 +21,7 @@ limitations under the License.
 
 #include "falco_common.h"
 #include "json_evt.h"
+#include "banned.h" // This raises a compilation error when certain functions are used
 
 using json = nlohmann::json;
 using namespace std;
@@ -44,7 +45,7 @@ const json &json_event::jevt()
 	return m_jevt;
 }
 
-uint64_t json_event::get_ts()
+uint64_t json_event::get_ts() const
 {
 	return m_event_ts;
 }
@@ -511,31 +512,27 @@ const json_event_filter_check::values_t &json_event_filter_check::extracted_valu
 
 bool json_event_filter_check::compare(gen_event *evt)
 {
-	json_event *jevt = (json_event *)evt;
+	auto jevt = (json_event *)evt;
 
 	uint32_t len;
 
-	const extracted_values_t *evalues = (const extracted_values_t *) extract(jevt, &len);
+	auto evalues = (const extracted_values_t *) extract(jevt, &len);
 	values_set_t setvals;
 
 	switch(m_cmpop)
 	{
 	case CO_EQ:
 		return evalues->second == m_values;
-		break;
 	case CO_NE:
 		return evalues->second != m_values;
-		break;
 	case CO_STARTSWITH:
 		return (evalues->first.size() == 1 &&
 			m_values.size() == 1 &&
 			evalues->first.at(0).startswith(*(m_values.begin())));
-		break;
 	case CO_CONTAINS:
 		return (evalues->first.size() == 1 &&
 			m_values.size() == 1 &&
 			evalues->first.at(0).contains(*(m_values.begin())));
-		break;
 	case CO_IN:
 		for(auto &item : evalues->second)
 		{
@@ -545,7 +542,6 @@ bool json_event_filter_check::compare(gen_event *evt)
 			}
 		}
 		return true;
-		break;
 	case CO_PMATCH:
 		for(auto &item : evalues->second)
 		{
@@ -558,19 +554,16 @@ bool json_event_filter_check::compare(gen_event *evt)
 			}
 		}
 		return true;
-		break;
 	case CO_INTERSECTS:
 		std::set_intersection(evalues->second.begin(), evalues->second.end(),
 				      m_values.begin(), m_values.end(),
 				      std::inserter(setvals, setvals.begin()));
-		return (setvals.size() > 0);
-		break;
+		return (!setvals.empty());
 	case CO_LT:
 		return (evalues->first.size() == 1 &&
 			m_values.size() == 1 &&
 			evalues->first.at(0).ptype() == m_values.begin()->ptype() &&
 			evalues->first.at(0) < *(m_values.begin()));
-		break;
 	case CO_LE:
 		return (evalues->first.size() == 1 &&
 			m_values.size() == 1 &&
@@ -588,11 +581,9 @@ bool json_event_filter_check::compare(gen_event *evt)
 			evalues->first.at(0).ptype() == m_values.begin()->ptype() &&
 			(evalues->first.at(0) > *(m_values.begin()) ||
 			 evalues->first.at(0) == *(m_values.begin())));
-		break;
 	case CO_EXISTS:
 		return (evalues->first.size() == 1 &&
 			(evalues->first.at(0) != json_event_filter_check::no_value));
-		break;
 	default:
 		throw falco_exception("filter error: unsupported comparison operator");
 	}

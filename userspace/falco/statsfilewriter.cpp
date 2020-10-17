@@ -18,6 +18,7 @@ limitations under the License.
 #include <signal.h>
 
 #include "statsfilewriter.h"
+#include "banned.h" // This raises a compilation error when certain functions are used
 
 using namespace std;
 
@@ -57,8 +58,8 @@ bool StatsFileWriter::init(sinsp *inspector, string &filename, uint32_t interval
 		return false;
 	}
 
-	timer.it_value.tv_sec = 0;
-	timer.it_value.tv_usec = interval_msec * 1000;
+	timer.it_value.tv_sec = interval_msec / 1000;
+	timer.it_value.tv_usec = (interval_msec % 1000) * 1000;
 	timer.it_interval = timer.it_value;
 	if (setitimer(ITIMER_REAL, &timer, NULL) == -1)
 	{

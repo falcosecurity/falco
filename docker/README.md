@@ -1,30 +1,17 @@
 # Falco Dockerfiles
 
-This directory contains the various ways to package Falco as a container. 
+This directory contains various ways to package Falco as a container and related tools. 
 
-## Currently Supported Containers
+## Currently Supported Images
 
-### `falcosecurity/falco` Dockerfiles
- - `./dev`: Builds a container image from the `dev` apt repo.
- - `./stable`: Builds a container image from the `stable` apt repo.
- - `./local`: Builds a container image from a locally provided Falco `dpkg` package.
+| Name | Directory | Description |
+|---|---|---|
+| [falcosecurity/falco:latest](https://hub.docker.com/repository/docker/falcosecurity/falco), [falcosecurity/falco:_tag_](https://hub.docker.com/repository/docker/falcosecurity/falco), [falcosecurity/falco:master](https://hub.docker.com/repository/docker/falcosecurity/falco) | docker/falco | Falco (DEB built from git tag or from the master) with all the building toolchain. | 
+| [falcosecurity/falco-driver-loader:latest](https://hub.docker.com/repository/docker/falcosecurity/falco-driver-loader), [falcosecurity/falco-driver-loader:_tag_](https://hub.docker.com/repository/docker/falcosecurity/falco-driver-loader), [falcosecurity/falco-driver-loader:master](https://hub.docker.com/repository/docker/falcosecurity/falco-driver-loader) | docker/driver-loader | `falco-driver-loader` as entrypoint with the building toolchain. | 
+| [falcosecurity/falco-no-driver:latest](https://hub.docker.com/repository/docker/falcosecurity/falco-no-driver), [falcosecurity/falco-no-driver:_tag_](https://hub.docker.com/repository/docker/falcosecurity/falco-no-driver),[falcosecurity/falco-no-driver:master](https://hub.docker.com/repository/docker/falcosecurity/falco-no-driver) | docker/no-driver | Falco (TGZ built from git tag or from the master) without the building toolchain. | 
+| [falcosecurity/falco-builder:latest](https://hub.docker.com/repository/docker/falcosecurity/falco-builder) | docker/builder | The complete build tool chain for compiling Falco from source. See [the documentation](https://falco.org/docs/source/) for more details on building from source. Used to build Falco (CI). | 
+| [falcosecurity/falco-tester:latest](https://hub.docker.com/repository/docker/falcosecurity/falco-tester) | docker/tester | Container image for running the Falco test suite. Used to run Falco integration tests (CI). | 
+| _to not be published_ | docker/local | Built on-the-fly and used by falco-tester. |
 
-### Build & Testing Dockerfiles
- - `./builder`: `falcosecurity/falco-builder` - The complete build tool chain for compiling Falco from source. See [the documentation](https://falco.org/docs/source/) for more details on building from source.
- - `./tester`: `falcosecurity/falco-tester` - Container image for running the Falco test suite.
-
-## Alpha Release Containers
-
-These Dockerfiles (and resulting container images) are currently in `alpha`. We'd love for you to test these images and [report any feedback](https://github.com/falcosecurity/falco/issues/new/choose).
-
-### Slim and Minimal Dockerfiles
-The goal of these container images is to reduce the size of the underlying Falco container. 
- - `./slim-dev`: Like `./dev` above but removes build tools for older kernels.
- - `./slim-stable`: Like `./stable` above but removes build tools for older kernels.
- - `./minimal`: A minimal container image (~20mb), containing only the files required to run Falco.
-
-### Init Containers
-These container images allow for the delivery of the kernel module or eBPF probe either via HTTP or via a container image.
- - `kernel/linuxkit`: Multistage Dockerfile to build a Falco kernel module for Linuxkit (Docker Desktop). Generates an alpine based container image with the kernel module, and `insmod` as the container `CMD`.  
- - `kernel/probeloader`: Multistage Dockerfile to build a Go based application to download (via HTTPS) and load a Falco kernel module. The resulting container image can be ran as an `initContainer` to load the Falco module before Falco starts.
+> Note: `falco-builder`, `falco-tester` (and the `docker/local` image that it's built on the fly) are not integrated into the release process because they are development and CI tools that need to be manually pushed only when updated.
 

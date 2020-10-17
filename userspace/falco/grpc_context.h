@@ -36,7 +36,7 @@ class context
 {
 public:
 	context(::grpc::ServerContext* ctx);
-	~context() = default;
+	virtual ~context() = default;
 
 	void get_metadata(std::string key, std::string& val);
 
@@ -50,7 +50,7 @@ class stream_context : public context
 public:
 	stream_context(::grpc::ServerContext* ctx):
 		context(ctx){};
-	~stream_context() = default;
+	virtual ~stream_context() = default;
 
 	enum : char
 	{
@@ -61,6 +61,16 @@ public:
 
 	mutable void* m_stream = nullptr; // todo(fntlnz, leodido) > useful in the future
 	mutable bool m_has_more = false;
+	mutable bool m_is_running = true;
 };
+
+class bidi_context : public stream_context
+{
+public:
+	bidi_context(::grpc::ServerContext* ctx):
+		stream_context(ctx){};
+	virtual ~bidi_context() = default;
+};
+
 } // namespace grpc
 } // namespace falco

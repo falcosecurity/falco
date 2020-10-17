@@ -32,6 +32,7 @@ extern "C" {
 }
 
 #include "utils.h"
+#include "banned.h" // This raises a compilation error when certain functions are used
 
 
 string lua_on_event = "on_event";
@@ -170,9 +171,8 @@ void falco_engine::load_rules(const string &rules_content, bool verbose, bool al
 					  m_ls);
 	}
 
-	// Note that falco_formats is added to both the lua state used
-	// by the falco engine as well as the separate lua state used
-	// by falco outputs.  Within the engine, only
+	// Note that falco_formats is added to the lua state used
+	// by the falco engine only. Within the engine, only
 	// formats.formatter is used, so we can unconditionally set
 	// json_output to false.
 	bool json_output = false;
@@ -210,14 +210,29 @@ void falco_engine::load_rules_file(const string &rules_filename, bool verbose, b
 void falco_engine::enable_rule(const string &substring, bool enabled, const string &ruleset)
 {
 	uint16_t ruleset_id = find_ruleset_id(ruleset);
+	bool match_exact = false;
 
-	m_sinsp_rules->enable(substring, enabled, ruleset_id);
-	m_k8s_audit_rules->enable(substring, enabled, ruleset_id);
+	m_sinsp_rules->enable(substring, match_exact, enabled, ruleset_id);
+	m_k8s_audit_rules->enable(substring, match_exact, enabled, ruleset_id);
 }
 
 void falco_engine::enable_rule(const string &substring, bool enabled)
 {
 	enable_rule(substring, enabled, m_default_ruleset);
+}
+
+void falco_engine::enable_rule_exact(const string &rule_name, bool enabled, const string &ruleset)
+{
+	uint16_t ruleset_id = find_ruleset_id(ruleset);
+	bool match_exact = true;
+
+	m_sinsp_rules->enable(rule_name, match_exact, enabled, ruleset_id);
+	m_k8s_audit_rules->enable(rule_name, match_exact, enabled, ruleset_id);
+}
+
+void falco_engine::enable_rule_exact(const string &rule_name, bool enabled)
+{
+	enable_rule_exact(rule_name, enabled, m_default_ruleset);
 }
 
 void falco_engine::enable_rule_by_tag(const set<string> &tags, bool enabled, const string &ruleset)

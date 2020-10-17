@@ -38,14 +38,14 @@ public:
 	void set_jevt(nlohmann::json &evt, uint64_t ts);
 	const nlohmann::json &jevt();
 
-	uint64_t get_ts();
+	uint64_t get_ts() const;
 
-	inline uint16_t get_source()
+	inline uint16_t get_source() const
 	{
 		return ESRC_K8S_AUDIT;
 	}
 
-	inline uint16_t get_type()
+	inline uint16_t get_type() const
 	{
 		// All k8s audit events have the single tag "1". - see falco_engine::process_k8s_audit_event
 		return 1;
@@ -193,7 +193,6 @@ public:
 	const values_t &extracted_values();
 
 protected:
-
 	// Subclasses can override this method, calling
 	// add_extracted_value to add extracted values.
 	virtual bool extract_values(json_event *jevt);
@@ -282,7 +281,8 @@ private:
 
 	// If true, this filtercheck works on paths, which enables
 	// some extra bookkeeping to allow for path prefix searches.
-	bool m_uses_paths;
+	bool m_uses_paths = false;
+
 	path_prefix_search m_prefix_search;
 };
 
@@ -292,7 +292,7 @@ public:
 	jevt_filter_check();
 	virtual ~jevt_filter_check();
 
-        int32_t parse_field_name(const char* str, bool alloc_state, bool needed_for_filtering) final;
+	int32_t parse_field_name(const char* str, bool alloc_state, bool needed_for_filtering) final;
 
 	json_event_filter_check *allocate_new();
 

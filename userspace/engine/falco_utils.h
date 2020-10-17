@@ -17,7 +17,12 @@ limitations under the License.
 
 */
 
+#include <sstream>
+#include <fstream>
+#include <iostream>
 #include <string>
+#include <thread>
+#include <nonstd/string_view.hpp>
 
 #pragma once
 
@@ -27,8 +32,16 @@ namespace falco
 namespace utils
 {
 
-std::string wrap_text(const std::string &str, uint32_t initial_pos, uint32_t indent, uint32_t line_len);
+std::string wrap_text(const std::string& str, uint32_t initial_pos, uint32_t indent, uint32_t line_len);
 
+void readfile(const std::string& filename, std::string& data);
+
+uint32_t hardware_concurrency();
+
+namespace network
+{
+static const std::string UNIX_SCHEME("unix://");
+bool is_unix_scheme(nonstd::string_view url);
+} // namespace network
 } // namespace utils
-
 } // namespace falco

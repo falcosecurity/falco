@@ -576,3 +576,40 @@ trace_files: !mux
     detect_counts:
       - K8s Role/Clusterrolebinding Deleted: 1
     trace_file: trace_files/k8s_audit/delete_clusterrolebinding.json
+
+  create_secret:
+    detect: True
+    detect_level: INFO
+    rules_file:
+      - ../rules/falco_rules.yaml
+      - ../rules/k8s_audit_rules.yaml
+    detect_counts:
+      - K8s Secret Created: 1
+    trace_file: trace_files/k8s_audit/create_secret.json
+
+  # Should *not* result in any event as the secret rules skip service account token secrets
+  create_service_account_token_secret:
+    detect: False
+    detect_level: INFO
+    rules_file:
+      - ../rules/falco_rules.yaml
+      - ../rules/k8s_audit_rules.yaml
+    trace_file: trace_files/k8s_audit/create_service_account_token_secret.json
+
+  create_kube_system_secret:
+    detect: False
+    detect_level: INFO
+    rules_file:
+      - ../rules/falco_rules.yaml
+      - ../rules/k8s_audit_rules.yaml
+    trace_file: trace_files/k8s_audit/create_kube_system_secret.json
+
+  delete_secret:
+    detect: True
+    detect_level: INFO
+    rules_file:
+      - ../rules/falco_rules.yaml
+      - ../rules/k8s_audit_rules.yaml
+    detect_counts:
+      - K8s Secret Deleted: 1
+    trace_file: trace_files/k8s_audit/delete_secret.json

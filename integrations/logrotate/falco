@@ -1,7 +1,0 @@
-/var/log/falco-events.log {
-    rotate 5
-    size 1M
-    postrotate
-        /usr/bin/killall -USR1 falco
-    endscript
-}

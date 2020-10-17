@@ -40,11 +40,7 @@ Please remove the leading whitespace before the `/kind <>` you uncommented.
 
 > /area engine
 
-> /area examples
-
 > /area rules
-
-> /area integrations
 
 > /area tests
 

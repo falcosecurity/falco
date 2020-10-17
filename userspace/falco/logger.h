@@ -19,24 +19,14 @@ limitations under the License.
 #include "sinsp.h"
 #include <syslog.h>
 
-extern "C" {
-#include "lua.h"
-#include "lualib.h"
-#include "lauxlib.h"
-}
-
 class falco_logger
 {
  public:
-	static void init(lua_State *ls);
 
 	static void set_time_format_iso_8601(bool val);
 
 	// Will throw exception if level is unknown.
 	static void set_level(string &level);
-
-	// value = falco.syslog(level, message)
-	static int syslog(lua_State *ls);
 
 	static void log(int priority, const string msg);
 

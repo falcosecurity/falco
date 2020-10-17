@@ -40,8 +40,17 @@
 
 # If you wish to restrict activity to a specific set of users, override/append to this list.
 # users created by kops are included
+- list: vertical_pod_autoscaler_users
+  items: ["vpa-recommender", "vpa-updater"]
+
 - list: allowed_k8s_users
-  items: ["minikube", "minikube-user", "kubelet", "kops", "admin", "kube", "kube-proxy"]
+  items: [
+    "minikube", "minikube-user", "kubelet", "kops", "admin", "kube", "kube-proxy", "kube-apiserver-healthcheck",
+    "kubernetes-admin",
+    vertical_pod_autoscaler_users,
+    cluster-autoscaler,
+    "system:addon-manager"
+    ]
 
 - rule: Disallowed K8s User
   desc: Detect any k8s operation by users outside of an allowed set of users.
@@ -102,6 +111,9 @@
 - macro: role
   condition: ka.target.resource=roles
 
+- macro: secret
+  condition: ka.target.resource=secrets
+
 - macro: health_endpoint
   condition: ka.uri=/healthz
 
@@ -146,10 +158,13 @@
   source: k8s_audit
   tags: [k8s]
 
+- macro: user_known_node_port_service
+  condition: (k8s_audit_never_true)
+
 - rule: Create NodePort Service
   desc: >
     Detect an attempt to start a service with a NodePort service type
-  condition: kevt and service and kcreate and ka.req.service.type=NodePort
+  condition: kevt and service and kcreate and ka.req.service.type=NodePort and not user_known_node_port_service
   output: NodePort Service Created (user=%ka.user.name service=%ka.target.name ns=%ka.target.namespace ports=%ka.req.service.ports)
   priority: WARNING
   source: k8s_audit
@@ -177,7 +192,7 @@
 - rule: Anonymous Request Allowed
   desc: >
     Detect any request made by the anonymous user that was allowed
-  condition: kevt and ka.user.name=system:anonymous and ka.auth.decision!=reject and not health_endpoint
+  condition: kevt and ka.user.name=system:anonymous and ka.auth.decision="allow" and not health_endpoint
   output: Request by anonymous user allowed (user=%ka.user.name verb=%ka.verb uri=%ka.uri reason=%ka.auth.reason))
   priority: WARNING
   source: k8s_audit
@@ -192,11 +207,27 @@
 # attach request was created privileged or not. For now, we have a
 # less severe rule that detects attaches/execs to any pod.
 
+- macro: user_known_exec_pod_activities
+  condition: (k8s_audit_never_true)
+
 - rule: Attach/Exec Pod
   desc: >
     Detect any attempt to attach/exec to a pod
-  condition: kevt_started and pod_subresource and kcreate and ka.target.subresource in (exec,attach)
+  condition: kevt_started and pod_subresource and kcreate and ka.target.subresource in (exec,attach) and not user_known_exec_pod_activities
   output: Attach/Exec to pod (user=%ka.user.name pod=%ka.target.name ns=%ka.target.namespace action=%ka.target.subresource command=%ka.uri.param[command])
+  priority: NOTICE
+  source: k8s_audit
+  tags: [k8s]
+
+- macro: user_known_pod_debug_activities
+  condition: (k8s_audit_never_true)
+
+# Only works when feature gate EphemeralContainers is enabled
+- rule: EphemeralContainers Created
+  desc: >
+    Detect any ephemeral container created
+  condition: kevt and pod_subresource and kmodify and ka.target.subresource in (ephemeralcontainers) and not user_known_pod_debug_activities
+  output: Ephemeral container is created in pod (user=%ka.user.name pod=%ka.target.name ns=%ka.target.namespace ephemeral_container_name=%jevt.value[/requestObject/ephemeralContainers/0/name] ephemeral_container_image=%jevt.value[/requestObject/ephemeralContainers/0/image])
   priority: NOTICE
   source: k8s_audit
   tags: [k8s]
@@ -213,19 +244,63 @@
   source: k8s_audit
   tags: [k8s]
 
+# Only defined for backwards compatibility. Use the more specific
+# user_allowed_kube_namespace_image_list instead.
+- list: user_trusted_image_list
+  items: []
+
+- list: user_allowed_kube_namespace_image_list
+  items: [user_trusted_image_list]
+
+# Only defined for backwards compatibility. Use the more specific
+# allowed_kube_namespace_image_list instead.
+- list: k8s_image_list
+  items: []
+
+- list: allowed_kube_namespace_image_list
+  items: [
+    gcr.io/google-containers/prometheus-to-sd,
+    gcr.io/projectcalico-org/node,
+    gke.gcr.io/addon-resizer,
+    gke.gcr.io/heapster,
+    gke.gcr.io/gke-metadata-server,
+    k8s.gcr.io/ip-masq-agent-amd64,
+    k8s.gcr.io/kube-apiserver,
+    gke.gcr.io/kube-proxy,
+    gke.gcr.io/netd-amd64,
+    k8s.gcr.io/addon-resizer
+    k8s.gcr.io/prometheus-to-sd,
+    k8s.gcr.io/k8s-dns-dnsmasq-nanny-amd64,
+    k8s.gcr.io/k8s-dns-kube-dns-amd64,
+    k8s.gcr.io/k8s-dns-sidecar-amd64,
+    k8s.gcr.io/metrics-server-amd64,
+    kope/kube-apiserver-healthcheck,
+    k8s_image_list
+    ]
+
+- macro: allowed_kube_namespace_pods
+  condition: (ka.req.pod.containers.image.repository in (user_allowed_kube_namespace_image_list) or
+              ka.req.pod.containers.image.repository in (allowed_kube_namespace_image_list))
+
 # Detect any new pod created in the kube-system namespace
 - rule: Pod Created in Kube Namespace
   desc: Detect any attempt to create a pod in the kube-system or kube-public namespaces
-  condition: kevt and pod and kcreate and ka.target.namespace in (kube-system, kube-public)
+  condition: kevt and pod and kcreate and ka.target.namespace in (kube-system, kube-public) and not allowed_kube_namespace_pods
   output: Pod created in kube namespace (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace images=%ka.req.pod.containers.image)
   priority: WARNING
   source: k8s_audit
   tags: [k8s]
 
+- list: user_known_sa_list
+  items: []
+
+- macro: trusted_sa
+  condition: (ka.target.name in (user_known_sa_list))
+
 # Detect creating a service account in the kube-system/kube-public namespace
 - rule: Service Account Created in Kube Namespace
   desc: Detect any attempt to create a serviceaccount in the kube-system or kube-public namespaces
-  condition: kevt and serviceaccount and kcreate and ka.target.namespace in (kube-system, kube-public)
+  condition: kevt and serviceaccount and kcreate and ka.target.namespace in (kube-system, kube-public) and response_successful and not trusted_sa
   output: Service account created in kube namespace (user=%ka.user.name serviceaccount=%ka.target.name ns=%ka.target.namespace)
   priority: WARNING
   source: k8s_audit
@@ -236,7 +311,8 @@
 # normal operation.
 - rule: System ClusterRole Modified/Deleted
   desc: Detect any attempt to modify/delete a ClusterRole/Role starting with system
-  condition: kevt and (role or clusterrole) and (kmodify or kdelete) and (ka.target.name startswith "system:") and ka.target.name!="system:coredns"
+  condition: kevt and (role or clusterrole) and (kmodify or kdelete) and (ka.target.name startswith "system:") and
+             not ka.target.name in (system:coredns, system:managed-certificate-controller)
   output: System ClusterRole/Role modified or deleted (user=%ka.user.name role=%ka.target.name ns=%ka.target.namespace action=%ka.verb)
   priority: WARNING
   source: k8s_audit
@@ -401,6 +477,22 @@
   source: k8s_audit
   tags: [k8s]
 
+- rule: K8s Secret Created
+  desc: Detect any attempt to create a secret. Service account tokens are excluded.
+  condition: (kactivity and kcreate and secret and ka.target.namespace!=kube-system and non_system_user and response_successful)
+  output: K8s Secret Created (user=%ka.user.name secret=%ka.target.name ns=%ka.target.namespace resp=%ka.response.code decision=%ka.auth.decision reason=%ka.auth.reason)
+  priority: INFO
+  source: k8s_audit
+  tags: [k8s]
+
+- rule: K8s Secret Deleted
+  desc: Detect any attempt to delete a secret Service account tokens are excluded.
+  condition: (kactivity and kdelete and secret and ka.target.namespace!=kube-system and non_system_user and response_successful)
+  output: K8s Secret Deleted (user=%ka.user.name secret=%ka.target.name ns=%ka.target.namespace resp=%ka.response.code decision=%ka.auth.decision reason=%ka.auth.reason)
+  priority: INFO
+  source: k8s_audit
+  tags: [k8s]
+
 # This rule generally matches all events, and as a result is disabled
 # by default. If you wish to enable these events, modify the
 # following macro.
@@ -418,3 +510,114 @@
   priority: DEBUG
   source: k8s_audit
   tags: [k8s]
+
+
+# This macro disables following rule, change to k8s_audit_never_true to enable it
+- macro: allowed_full_admin_users
+  condition: (k8s_audit_always_true)
+
+# This list includes some of the default user names for an administrator in several K8s installations
+- list: full_admin_k8s_users
+  items: ["admin", "kubernetes-admin",  "kubernetes-admin@kubernetes", "kubernetes-admin@cluster.local", "minikube-user"]
+
+# This rules detect an operation triggered by an user name that is 
+# included in the list of those that are default administrators upon 
+# cluster creation. This may signify a permission setting too broader. 
+# As we can't check for role of the user on a general ka.* event, this 
+# may or may not be an administrator. Customize the full_admin_k8s_users 
+# list to your needs, and activate at your discrection.
+
+# # How to test:
+# # Execute any kubectl command connected using default cluster user, as:
+# kubectl create namespace rule-test
+
+- rule: Full K8s Administrative Access
+  desc: Detect any k8s operation by a user name that may be an administrator with full access.
+  condition: >
+    kevt 
+    and non_system_user 
+    and ka.user.name in (admin_k8s_users) 
+    and not allowed_full_admin_users
+  output: K8s Operation performed by full admin user (user=%ka.user.name target=%ka.target.name/%ka.target.resource verb=%ka.verb uri=%ka.uri resp=%ka.response.code)
+  priority: WARNING
+  source: k8s_audit
+  tags: [k8s]
+
+- macro: ingress
+  condition: ka.target.resource=ingresses
+
+- macro: ingress_tls
+  condition: (jevt.value[/requestObject/spec/tls] exists)
+
+# # How to test:
+# # Create an ingress.yaml file with content:
+# apiVersion: networking.k8s.io/v1beta1
+# kind: Ingress
+# metadata:
+#   name: test-ingress
+#   annotations:
+#     nginx.ingress.kubernetes.io/rewrite-target: /
+# spec:
+#   rules:
+#   - http:
+#       paths:
+#       - path: /testpath
+#         backend:
+#           serviceName: test
+#           servicePort: 80
+# # Execute: kubectl apply -f ingress.yaml
+
+- rule: Ingress Object without TLS Certificate Created
+  desc: Detect any attempt to create an ingress without TLS certification.
+  condition: >
+    (kactivity and kcreate and ingress and response_successful and not ingress_tls)
+  output: >
+    K8s Ingress Without TLS Cert Created (user=%ka.user.name ingress=%ka.target.name
+    namespace=%ka.target.namespace)
+  source: k8s_audit    
+  priority: WARNING
+  tags: [k8s, network]
+
+- macro: node
+  condition: ka.target.resource=nodes
+
+- macro: allow_all_k8s_nodes
+  condition: (k8s_audit_always_true)
+
+- list: allowed_k8s_nodes
+  items: []
+
+# # How to test:
+# # Create a Falco monitored cluster with Kops
+# # Increase the number of minimum nodes with:
+# kops edit ig nodes
+# kops apply --yes
+
+- rule: Untrusted Node Successfully Joined the Cluster
+  desc: >
+    Detect a node successfully joined the cluster outside of the list of allowed nodes.
+  condition: >
+    kevt and node 
+    and kcreate 
+    and response_successful 
+    and not allow_all_k8s_nodes 
+    and not ka.target.name in (allowed_k8s_nodes)
+  output: Node not in allowed list successfully joined the cluster (user=%ka.user.name node=%ka.target.name)
+  priority: ERROR
+  source: k8s_audit
+  tags: [k8s]
+
+- rule: Untrusted Node Unsuccessfully Tried to Join the Cluster
+  desc: >
+    Detect an unsuccessful attempt to join the cluster for a node not in the list of allowed nodes.
+  condition: >
+    kevt and node 
+    and kcreate 
+    and not response_successful 
+    and not allow_all_k8s_nodes 
+    and not ka.target.name in (allowed_k8s_nodes)
+  output: Node not in allowed list tried unsuccessfully to join the cluster  (user=%ka.user.name node=%ka.target.name reason=%ka.response.reason)
+  priority: WARNING
+  source: k8s_audit
+  tags: [k8s]
+

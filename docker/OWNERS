@@ -1,2 +1,6 @@
 labels:
   - area/integration
+approvers:
+  - leogr
+reviewers:
+  - leogr

@@ -37,7 +37,7 @@ public:
 	{
 		m_path = path;
 		YAML::Node config;
-		std::vector<falco_outputs::output_config> outputs;
+		std::vector<falco::outputs::config> outputs;
 		try
 		{
 			m_root = YAML::LoadFile(path);
@@ -195,7 +195,8 @@ public:
 	std::list<std::string> m_rules_filenames;
 	bool m_json_output;
 	bool m_json_include_output_property;
-	std::vector<falco_outputs::output_config> m_outputs;
+	std::string m_log_level;
+	std::vector<falco::outputs::config> m_outputs;
 	uint32_t m_notifications_rate;
 	uint32_t m_notifications_max_burst;
 
@@ -205,7 +206,7 @@ public:
 	bool m_time_format_iso_8601;
 
 	bool m_grpc_enabled;
-	int m_grpc_threadiness;
+	uint32_t m_grpc_threadiness;
 	std::string m_grpc_bind_address;
 	std::string m_grpc_private_key;
 	std::string m_grpc_cert_chain;

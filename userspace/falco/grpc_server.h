@@ -25,28 +25,28 @@ namespace falco
 {
 namespace grpc
 {
+
 class server : public server_impl
 {
 public:
-	server()
-	{
-	}
-	server(std::string server_addr, int threadiness, std::string private_key, std::string cert_chain, std::string root_certs):
-		m_server_addr(server_addr),
-		m_threadiness(threadiness),
-		m_private_key(private_key),
-		m_cert_chain(cert_chain),
-		m_root_certs(root_certs)
-	{
-	}
+	server() = default;
 	virtual ~server() = default;
 
-	void init(std::string server_addr, int threadiness, std::string private_key, std::string cert_chain, std::string root_certs);
+	void init(
+		std::string server_addr,
+		int threadiness,
+		std::string private_key,
+		std::string cert_chain,
+		std::string root_certs,
+		std::string log_level
+	);
 	void thread_process(int thread_index);
 	void run();
 	void stop();
 
-	output::service::AsyncService m_svc;
+	outputs::service::AsyncService m_output_svc;
+	version::service::AsyncService m_version_svc;
+
 	std::unique_ptr<::grpc::ServerCompletionQueue> m_completion_queue;
 
 private:
@@ -58,53 +58,10 @@ private:
 
 	std::unique_ptr<::grpc::Server> m_server;
 	std::vector<std::thread> m_threads;
+	::grpc::ServerBuilder m_server_builder;
+	void init_mtls_server_builder();
+	void init_unix_server_builder();
 };
 
-class request_context_base
-{
-public:
-	request_context_base() = default;
-	~request_context_base() = default;
-
-	std::unique_ptr<::grpc::ServerContext> m_srv_ctx;
-	enum : char
-	{
-		UNKNOWN = 0,
-		REQUEST,
-		WRITE,
-		FINISH
-	} m_state = UNKNOWN;
-	virtual void start(server* srv) = 0;
-	virtual void process(server* srv) = 0;
-	virtual void end(server* srv, bool isError) = 0;
-};
-
-//
-// Template class to handle streaming responses
-//
-template<class Request, class Response>
-class request_stream_context : public request_context_base
-{
-public:
-	request_stream_context():
-		m_process_func(nullptr),
-		m_request_func(nullptr){};
-	~request_stream_context() = default;
-
-	// Pointer to function that does actual processing
-	void (server::*m_process_func)(const stream_context&, const Request&, Response&);
-
-	// Pointer to function that requests the system to start processing given requests
-	void (output::service::AsyncService::*m_request_func)(::grpc::ServerContext*, Request*, ::grpc::ServerAsyncWriter<Response>*, ::grpc::CompletionQueue*, ::grpc::ServerCompletionQueue*, void*);
-
-	void start(server* srv);
-	void process(server* srv);
-	void end(server* srv, bool isError);
-
-private:
-	std::unique_ptr<::grpc::ServerAsyncWriter<Response>> m_res_writer;
-	std::unique_ptr<stream_context> m_stream_ctx;
-	Request m_req;
-};
 } // namespace grpc
 } // namespace falco

@@ -1,13 +1,16 @@
 #!/usr/bin/env bash
 
-set -eu -o pipefail
+BUILD_DIR=${BUILD_DIR:-/build}
+SOURCE_DIR=${SOURCE_DIR:-/source}
+SKIP_PACKAGES_TESTS=${SKIP_PACKAGES_TESTS:-false}
 
-SOURCE_DIR=/source
-BUILD_DIR=/build
 CMD=${1:-test}
 shift
 
-# Build type can be "debug" or "release", fallbacks to "release" by default
+# Stop the execution if a command in the pipeline has an error, from now on
+set -e -u -o pipefail
+
+# build type can be "debug" or "release", fallbacks to "release" by default
 BUILD_TYPE=$(echo "$BUILD_TYPE" | tr "[:upper:]" "[:lower:]")
 case "$BUILD_TYPE" in
 "debug")
@@ -17,36 +20,69 @@ case "$BUILD_TYPE" in
     ;;
 esac
 
+build_image() {
+    BUILD_DIR=$1
+    BUILD_TYPE=$2
+    FALCO_VERSION=$3
+    PACKAGE_TYPE=$4
+    PACKAGE="$BUILD_DIR/$BUILD_TYPE/falco-$FALCO_VERSION-x86_64.${PACKAGE_TYPE}"
+    if [ ! -f "$PACKAGE" ]; then
+        echo "Package not found: ${PACKAGE}." >&2
+        exit 1
+    fi
+    DOCKER_IMAGE_NAME="falcosecurity/falco:test-${PACKAGE_TYPE}"
+    echo "Building local docker image $DOCKER_IMAGE_NAME from latest ${PACKAGE_TYPE} package..."
+
+    mkdir -p /runner-rootfs
+    cp "$PACKAGE" /runner-rootfs
+    cp -R "$SOURCE_DIR/falco/test/rules" /runner-rootfs
+    cp -R "$SOURCE_DIR/falco/test/trace_files" /runner-rootfs
+    docker build -f "/runners/$PACKAGE_TYPE.Dockerfile" --build-arg FALCO_VERSION="$FALCO_VERSION" -t "$DOCKER_IMAGE_NAME" /runner-rootfs
+}
+
+clean_image() {
+    PACKAGE_TYPE=$1
+    DOCKER_IMAGE_NAME="falcosecurity/falco:test-${PACKAGE_TYPE}"
+    docker rmi -f "$DOCKER_IMAGE_NAME"
+}
+
 case "$CMD" in
 "test")
-    if [ ! -d "$BUILD_DIR/$BUILD_TYPE/docker/local" ]; then
-        echo "Missing $BUILD_DIR/$BUILD_TYPE/docker/local directory." >&2
-        exit 1
+    if [ -z "$FALCO_VERSION" ]; then
+        echo "Automatically figuring out Falco version."
+        FALCO_VERSION_FULL=$("$BUILD_DIR/$BUILD_TYPE/userspace/falco/falco" --version)
+        FALCO_VERSION=$(echo "$FALCO_VERSION_FULL" | head -n 1 | cut -d' ' -f3  | tr -d '\r')
+        echo "Falco version: $FALCO_VERSION"
     fi
     if [ -z "$FALCO_VERSION" ]; then
-        echo "Missing Falco version." >&2
+        echo "Falco version cannot be guessed, please provide it with the FALCO_VERSION environment variable." >&2
         exit 1
     fi
-    PACKAGE="$BUILD_DIR/$BUILD_TYPE/falco-$FALCO_VERSION-x86_64.deb"
-    if [ ! -f "$PACKAGE" ]; then
-        echo "Package(s) not found." >&2
-        exit 1
-    fi
-    DOCKER_IMAGE_NAME="falcosecurity/falco:test"
-    echo "Building local docker image $DOCKER_IMAGE_NAME from latest debian package..."
-    cp "$PACKAGE" $BUILD_DIR/$BUILD_TYPE/docker/local
-    cd $BUILD_DIR/$BUILD_TYPE/docker/local
-    docker build --build-arg FALCO_VERSION="$FALCO_VERSION" -t "$DOCKER_IMAGE_NAME" .
 
-    # Check that source directory contains Falco and sysdig
+    # build docker images
+    if [ "$SKIP_PACKAGES_TESTS" = false ] ; then
+        build_image "$BUILD_DIR" "$BUILD_TYPE" "$FALCO_VERSION" "deb"
+        build_image "$BUILD_DIR" "$BUILD_TYPE" "$FALCO_VERSION" "rpm"
+        build_image "$BUILD_DIR" "$BUILD_TYPE" "$FALCO_VERSION" "tar.gz"
+    fi
+
+    # check that source directory contains Falco
     if [ ! -d "$SOURCE_DIR/falco/test" ]; then
         echo "Missing $SOURCE_DIR/falco/test directory." >&2
         exit 1
     fi
+
+    # run tests
     echo "Running regression tests ..."
-    cd $SOURCE_DIR/falco/test
-    bash run_regression_tests.sh $BUILD_DIR/$BUILD_TYPE
-    docker rmi "$DOCKER_IMAGE_NAME" || true
+    cd "$SOURCE_DIR/falco/test"
+    SKIP_PACKAGES_TESTS=$SKIP_PACKAGES_TESTS ./run_regression_tests.sh -d "$BUILD_DIR/$BUILD_TYPE"
+
+    # clean docker images
+    if [ "$SKIP_PACKAGES_TESTS" = false ] ; then
+        clean_image "deb"
+        clean_image "rpm"
+        clean_image "tar.gz"
+    fi
     ;;
 "bash")
     CMD=/bin/bash
