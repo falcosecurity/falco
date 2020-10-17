@@ -16,7 +16,8 @@ limitations under the License.
 
 #include "config_falco.h"
 #include "grpc_server_impl.h"
-#include "falco_output_queue.h"
+#include "outputs_queue.h"
+#include "logger.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
 
 bool falco::grpc::server_impl::is_running()
@@ -28,29 +29,39 @@ bool falco::grpc::server_impl::is_running()
 	return true;
 }
 
-void falco::grpc::server_impl::subscribe(const stream_context& ctx, const output::request& req, output::response& res)
+void falco::grpc::server_impl::get(const stream_context& ctx, const outputs::request& req, outputs::response& res)
 {
 	if(ctx.m_status == stream_context::SUCCESS || ctx.m_status == stream_context::ERROR)
 	{
 		// todo(leodido) > log "status=ctx->m_status, stream=ctx->m_stream"
 		ctx.m_stream = nullptr;
+		return;
 	}
-	else
-	{
-		// Start or continue streaming
-		// todo(leodido) > check for m_status == stream_context::STREAMING?
-		// todo(leodido) > set m_stream
-		if(output::queue::get().try_pop(res) && !req.keepalive())
-		{
-			ctx.m_has_more = true;
-			return;
-		}
-		while(is_running() && !output::queue::get().try_pop(res) && req.keepalive())
-		{
-		}
 
-		ctx.m_has_more = !is_running() ? false : req.keepalive();
+	ctx.m_is_running = is_running();
+
+	// Start or continue streaming
+	// m_status == stream_context::STREAMING?
+	// todo(leodido) > set m_stream
+
+	ctx.m_has_more = outputs::queue::get().try_pop(res);
+}
+
+void falco::grpc::server_impl::sub(const bidi_context& ctx, const outputs::request& req, outputs::response& res)
+{
+	if(ctx.m_status == stream_context::SUCCESS || ctx.m_status == stream_context::ERROR)
+	{
+		ctx.m_stream = nullptr;
+		return;
 	}
+
+	ctx.m_is_running = is_running();
+
+	// Start or continue streaming
+	// m_status == stream_context::STREAMING?
+	// todo(leodido) > set m_stream
+
+	ctx.m_has_more = outputs::queue::get().try_pop(res);
 }
 
 void falco::grpc::server_impl::version(const context& ctx, const version::request&, version::response& res)

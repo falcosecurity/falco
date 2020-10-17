@@ -38,14 +38,14 @@ public:
 	void set_jevt(nlohmann::json &evt, uint64_t ts);
 	const nlohmann::json &jevt();
 
-	uint64_t get_ts();
+	uint64_t get_ts() const;
 
-	inline uint16_t get_source()
+	inline uint16_t get_source() const
 	{
 		return ESRC_K8S_AUDIT;
 	}
 
-	inline uint16_t get_type()
+	inline uint16_t get_type() const
 	{
 		// All k8s audit events have the single tag "1". - see falco_engine::process_k8s_audit_event
 		return 1;

@@ -45,7 +45,7 @@ const json &json_event::jevt()
 	return m_jevt;
 }
 
-uint64_t json_event::get_ts()
+uint64_t json_event::get_ts() const
 {
 	return m_event_ts;
 }

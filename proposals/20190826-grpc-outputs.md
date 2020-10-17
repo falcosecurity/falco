@@ -1,4 +1,4 @@
-# gRPC Falco Output
+# Falco gRPC Outputs
 
 <!-- toc -->
 
@@ -25,7 +25,7 @@ An alert is an "output" when it goes over a transport, and it is emitted by Falc
 
 At the current moment, however, Falco can deliver alerts in a very basic way, for example by dumping them to standard output.
 
-For this reason, many Falco users asked, with issues - eg., [falco#528](https://github.com/falcosecurity/falco/issues/528) - or in the [slack channel](https://sysdig.slack.com) if we can find a more consumable way to implement Falco outputs in an extensible way.
+For this reason, many Falco users asked, with issues - eg., [falco#528](https://github.com/falcosecurity/falco/issues/528) - or in the [slack channel](https://slack.k8s.io) if we can find a more consumable way to implement Falco outputs in an extensible way.
 
 The motivation behind this proposal is to design a new output implementation that can meet our user's needs.
 
@@ -39,7 +39,10 @@ The motivation behind this proposal is to design a new output implementation tha
 - To continue supporting the old output formats by implementing their same interface
 - To be secure by default (**mutual TLS** authentication)
 - To be **asynchronous** and **non-blocking**
-- To implement a Go SDK
+- To provide a connection over unix socket (no authentication)
+- To implement a Go client
+- To implement a Rust client
+- To implement a Python client
 
 ### Non-Goals
 
@@ -77,26 +80,25 @@ syntax = "proto3";
 import "google/protobuf/timestamp.proto";
 import "schema.proto";
 
-package falco.output;
+package falco.outputs;
 
-option go_package = "github.com/falcosecurity/client-go/pkg/api/output";
+option go_package = "github.com/falcosecurity/client-go/pkg/api/outputs";
 
-// The `subscribe` service defines the RPC call
-// to perform an output `request` which will lead to obtain an output `response`.
+// This service defines the RPC methods
+// to `request` a stream of output `response`s.
 service service {
-  rpc subscribe(request) returns (stream response);
+  // Subscribe to a stream of Falco outputs by sending a stream of requests.
+  rpc sub(stream request) returns (stream response);
+  // Get all the Falco outputs present in the system up to this call.
+  rpc get(request) returns (stream response);
 }
 
 // The `request` message is the logical representation of the request model.
-// It is the input of the `subscribe` service.
-// It is used to configure the kind of subscription to the gRPC streaming server.
+// It is the input of the `output.service` service.
 message request {
-  bool keepalive = 1;
-  // string duration = 2; // TODO(leodido, fntlnz): not handled yet but keeping for reference.
-  // repeated string tags = 3; // TODO(leodido, fntlnz): not handled yet but keeping for reference.
 }
 
-// The `response` message is the logical representation of the output model.
+// The `response` message is the representation of the output model.
 // It contains all the elements that Falco emits in an output along with the
 // definitions for priorities and source.
 message response {
@@ -106,7 +108,7 @@ message response {
   string rule = 4;
   string output = 5;
   map<string, string> output_fields = 6;
-  // repeated string tags = 7; // TODO(leodido,fntlnz): tags not supported yet, keeping for reference
+  string hostname = 7;
 }
 ```
 

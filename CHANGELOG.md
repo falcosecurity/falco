@@ -1,6 +1,346 @@
 # Change Log
 
-This file documents all notable changes to Falco. The release numbering uses [semantic versioning](http://semver.org).
+## v0.26.1
+
+Released on 2020-10-01
+
+### Major Changes
+
+* new: CLI flag `--alternate-lua-dir` to load Lua files from arbitrary paths [[#1419](https://github.com/falcosecurity/falco/pull/1419)] - [@admiral0](https://github.com/admiral0)
+
+
+### Rule Changes
+
+* rule(Delete or rename shell history): fix warnings/FPs + container teardown [[#1423](https://github.com/falcosecurity/falco/pull/1423)] - [@mstemm](https://github.com/mstemm)
+* rule(Write below root): ensure proc_name_exists too [[#1423](https://github.com/falcosecurity/falco/pull/1423)] - [@mstemm](https://github.com/mstemm)
+
+
+## v0.26.0
+
+Released on 2020-24-09
+
+### Major Changes
+
+* new: address several sources of FPs, primarily from GKE environments. [[#1372](https://github.com/falcosecurity/falco/pull/1372)] - [@mstemm](https://github.com/mstemm)
+* new: driver updated to 2aa88dcf6243982697811df4c1b484bcbe9488a2 [[#1410](https://github.com/falcosecurity/falco/pull/1410)] - [@leogr](https://github.com/leogr)
+* new(scripts/falco-driver-loader): detect and try to build the Falco kernel module driver using different GCC versions available in the current environment. [[#1408](https://github.com/falcosecurity/falco/pull/1408)] - [@fntlnz](https://github.com/fntlnz)
+* new: tgz (tarball) containing the statically-linked (musl) binary of Falco is now automatically built and published on bintray [[#1377](https://github.com/falcosecurity/falco/pull/1377)] - [@leogr](https://github.com/leogr)
+
+
+### Minor Changes
+
+* update: bump Falco engine version to 7 [[#1381](https://github.com/falcosecurity/falco/pull/1381)] - [@leogr](https://github.com/leogr)
+* update: the required_engine_version is now on by default [[#1381](https://github.com/falcosecurity/falco/pull/1381)] - [@leogr](https://github.com/leogr)
+* update: falcosecurity/falco-no-driver image now uses the statically-linked Falco [[#1377](https://github.com/falcosecurity/falco/pull/1377)] - [@leogr](https://github.com/leogr)
+* docs(proposals): artifacts storage [[#1375](https://github.com/falcosecurity/falco/pull/1375)] - [@leodido](https://github.com/leodido)
+* docs(proposals): artifacts cleanup [[#1375](https://github.com/falcosecurity/falco/pull/1375)] - [@leodido](https://github.com/leodido)
+
+
+### Rule Changes
+
+* rule(macro inbound_outbound): add brackets to disambiguate operator precedence [[#1373](https://github.com/falcosecurity/falco/pull/1373)] - [@ldegio](https://github.com/ldegio)
+* rule(macro redis_writing_conf): add brackets to disambiguate operator precedence [[#1373](https://github.com/falcosecurity/falco/pull/1373)] - [@ldegio](https://github.com/ldegio)
+* rule(macro run_by_foreman): add brackets to disambiguate operator precedence [[#1373](https://github.com/falcosecurity/falco/pull/1373)] - [@ldegio](https://github.com/ldegio)
+* rule(macro consider_packet_socket_communication): enable "Packet socket created in container" rule by default. [[#1402](https://github.com/falcosecurity/falco/pull/1402)] - [@rung](https://github.com/rung)
+* rule(Delete or rename shell history): skip docker overlay filesystems when considering bash history [[#1393](https://github.com/falcosecurity/falco/pull/1393)] - [@mstemm](https://github.com/mstemm)
+* rule(Disallowed K8s User): quote colons in user names [[#1393](https://github.com/falcosecurity/falco/pull/1393)] - [@mstemm](https://github.com/mstemm)
+* rule(macro falco_sensitive_mount_containers): Adds a trailing slash to avoid repo naming issues [[#1394](https://github.com/falcosecurity/falco/pull/1394)] - [@bgeesaman](https://github.com/bgeesaman)
+* rule: adds user.loginuid to the default Falco rules that also contain user.name [[#1369](https://github.com/falcosecurity/falco/pull/1369)] - [@csschwe](https://github.com/csschwe)
+
+## v0.25.0
+
+Released on 2020-08-25
+
+### Major Changes
+
+* new(userspace/falco): print the Falco and driver versions at the very beginning of the output. [[#1303](https://github.com/falcosecurity/falco/pull/1303)] - [@leogr](https://github.com/leogr)
+* new: libyaml is now bundled in the release process. Users can now avoid installing libyaml directly when getting Falco from the official release. [[#1252](https://github.com/falcosecurity/falco/pull/1252)] - [@fntlnz](https://github.com/fntlnz)
+
+
+### Minor Changes
+
+* docs(test): step-by-step instructions to run integration tests locally [[#1313](https://github.com/falcosecurity/falco/pull/1313)] - [@leodido](https://github.com/leodido)
+* update: renameat2 syscall support [[#1355](https://github.com/falcosecurity/falco/pull/1355)] - [@fntlnz](https://github.com/fntlnz)
+* update: support for 5.8.x kernels [[#1355](https://github.com/falcosecurity/falco/pull/1355)] - [@fntlnz](https://github.com/fntlnz)
+
+
+### Bug Fixes
+
+* fix(userspace/falco): correct the fallback mechanism for loading the kernel module [[#1366](https://github.com/falcosecurity/falco/pull/1366)] - [@leogr](https://github.com/leogr)
+* fix(falco-driver-loader): script crashing when using arguments [[#1330](https://github.com/falcosecurity/falco/pull/1330)] - [@antoinedeschenes](https://github.com/antoinedeschenes)
+
+
+### Rule Changes
+
+* rule(macro user_trusted_containers): add `sysdig/node-image-analyzer` and `sysdig/agent-slim` [[#1321](https://github.com/falcosecurity/falco/pull/1321)] - [@Kaizhe](https://github.com/Kaizhe)
+* rule(macro falco_privileged_images): add `docker.io/falcosecurity/falco` [[#1326](https://github.com/falcosecurity/falco/pull/1326)] - [@nvanheuverzwijn](https://github.com/nvanheuverzwijn)
+* rule(EphemeralContainers Created): add new rule to detect ephemeral container created [[#1339](https://github.com/falcosecurity/falco/pull/1339)] - [@Kaizhe](https://github.com/Kaizhe)
+* rule(macro user_read_sensitive_file_containers): replace endswiths with exact image repo name [[#1349](https://github.com/falcosecurity/falco/pull/1349)] - [@Kaizhe](https://github.com/Kaizhe)
+* rule(macro user_trusted_containers): replace endswiths with exact image repo name [[#1349](https://github.com/falcosecurity/falco/pull/1349)] - [@Kaizhe](https://github.com/Kaizhe)
+* rule(macro user_privileged_containers): replace endswiths with exact image repo name [[#1349](https://github.com/falcosecurity/falco/pull/1349)] - [@Kaizhe](https://github.com/Kaizhe)
+* rule(macro trusted_images_query_miner_domain_dns): replace endswiths with exact image repo name [[#1349](https://github.com/falcosecurity/falco/pull/1349)] - [@Kaizhe](https://github.com/Kaizhe)
+* rule(macro falco_privileged_containers): append "/" to quay.io/sysdig [[#1349](https://github.com/falcosecurity/falco/pull/1349)] - [@Kaizhe](https://github.com/Kaizhe)
+* rule(list falco_privileged_images): add images docker.io/sysdig/agent-slim and docker.io/sysdig/node-image-analyzer [[#1349](https://github.com/falcosecurity/falco/pull/1349)] - [@Kaizhe](https://github.com/Kaizhe)
+* rule(list falco_sensitive_mount_images): add image docker.io/sysdig/agent-slim [[#1349](https://github.com/falcosecurity/falco/pull/1349)] - [@Kaizhe](https://github.com/Kaizhe)
+* rule(list k8s_containers): prepend docker.io to images [[#1349](https://github.com/falcosecurity/falco/pull/1349)] - [@Kaizhe](https://github.com/Kaizhe)
+* rule(macro exe_running_docker_save): add better support for centos [[#1350](https://github.com/falcosecurity/falco/pull/1350)] - [@admiral0](https://github.com/admiral0)
+* rule(macro rename): add `renameat2` syscall [[#1359](https://github.com/falcosecurity/falco/pull/1359)] - [@leogr](https://github.com/leogr)
+* rule(Read sensitive file untrusted): add trusted images into whitelist [[#1327](https://github.com/falcosecurity/falco/pull/1327)] - [@Kaizhe](https://github.com/Kaizhe)
+* rule(Pod Created in Kube Namespace): add new list k8s_image_list as white list [[#1336](https://github.com/falcosecurity/falco/pull/1336)] - [@Kaizhe](https://github.com/Kaizhe)
+* rule(list allowed_k8s_users): add "kubernetes-admin" user [[#1323](https://github.com/falcosecurity/falco/pull/1323)] - [@leogr](https://github.com/leogr)
+
+## v0.24.0
+
+Released on 2020-07-16
+
+### Major Changes
+
+* new: Falco now supports userspace instrumentation with the -u flag [[#1195](https://github.com/falcosecurity/falco/pull/1195)]
+* BREAKING CHANGE: --stats_interval is now --stats-interval [[#1308](https://github.com/falcosecurity/falco/pull/1308)]
+* new: auto threadiness for gRPC server [[#1271](https://github.com/falcosecurity/falco/pull/1271)]
+* BREAKING CHANGE: server streaming gRPC outputs method is now `falco.outputs.service/get` [[#1241](https://github.com/falcosecurity/falco/pull/1241)]
+* new: new bi-directional async streaming gRPC outputs (`falco.outputs.service/sub`)  [[#1241](https://github.com/falcosecurity/falco/pull/1241)]
+* new: unix socket for the gRPC server [[#1217](https://github.com/falcosecurity/falco/pull/1217)]
+
+
+### Minor Changes
+
+* update: driver version is 85c88952b018fdbce2464222c3303229f5bfcfad now [[#1305](https://github.com/falcosecurity/falco/pull/1305)]
+* update: `SKIP_MODULE_LOAD` renamed to `SKIP_DRIVER_LOADER` [[#1297](https://github.com/falcosecurity/falco/pull/1297)]
+* docs: add leogr to OWNERS [[#1300](https://github.com/falcosecurity/falco/pull/1300)]
+* update: default threadiness to 0 ("auto" behavior) [[#1271](https://github.com/falcosecurity/falco/pull/1271)]
+* update: k8s audit endpoint now defaults to /k8s-audit everywhere [[#1292](https://github.com/falcosecurity/falco/pull/1292)]
+* update(falco.yaml): `webserver.k8s_audit_endpoint` default value changed from `/k8s_audit` to `/k8s-audit` [[#1261](https://github.com/falcosecurity/falco/pull/1261)]
+* docs(test): instructions to run regression test suites locally [[#1234](https://github.com/falcosecurity/falco/pull/1234)]
+
+
+### Bug Fixes
+
+* fix: --stats-interval correctly accepts values >= 999 (ms) [[#1308](https://github.com/falcosecurity/falco/pull/1308)]
+* fix: make the eBPF driver build work on CentOS 8 [[#1301](https://github.com/falcosecurity/falco/pull/1301)]
+* fix(userspace/falco): correct options handling for `buffered_output: false` which was not honored for the `stdout` output [[#1296](https://github.com/falcosecurity/falco/pull/1296)]
+* fix(userspace/falco): honor -M also when using a trace file [[#1245](https://github.com/falcosecurity/falco/pull/1245)]
+* fix: high CPU usage when using server streaming gRPC outputs [[#1241](https://github.com/falcosecurity/falco/pull/1241)]
+* fix: missing newline from some log messages (eg., token bucket depleted) [[#1257](https://github.com/falcosecurity/falco/pull/1257)]
+
+
+### Rule Changes
+
+* rule(Container Drift Detected (chmod)): disabled by default [[#1316](https://github.com/falcosecurity/falco/pull/1316)]
+* rule(Container Drift Detected (open+create)): disabled by default [[#1316](https://github.com/falcosecurity/falco/pull/1316)]
+* rule(Write below etc): allow snapd to write its unit files [[#1289](https://github.com/falcosecurity/falco/pull/1289)]
+* rule(macro remote_file_copy_procs): fix reference to remote_file_copy_binaries [[#1224](https://github.com/falcosecurity/falco/pull/1224)]
+* rule(list allowed_k8s_users): whitelisted kube-apiserver-healthcheck user created by kops >= 1.17.0 for the kube-apiserver-healthcheck sidecar [[#1286](https://github.com/falcosecurity/falco/pull/1286)]
+* rule(Change thread namespace): Allow `protokube`, `dockerd`, `tini` and `aws` binaries to change thread namespace. [[#1222](https://github.com/falcosecurity/falco/pull/1222)]
+* rule(macro exe_running_docker_save): to filter out cmdlines containing `/var/run/docker`. [[#1222](https://github.com/falcosecurity/falco/pull/1222)]
+* rule(macro user_known_cron_jobs): new macro to be overridden to list known cron jobs   [[#1294](https://github.com/falcosecurity/falco/pull/1294)]
+* rule(Schedule Cron Jobs): exclude known cron jobs  [[#1294](https://github.com/falcosecurity/falco/pull/1294)]
+* rule(macro user_known_update_package_registry): new macro to be overridden to list known package registry update  [[#1294](https://github.com/falcosecurity/falco/pull/1294)]
+* rule(Update Package Registry): exclude known package registry update [[#1294](https://github.com/falcosecurity/falco/pull/1294)]
+* rule(macro user_known_read_ssh_information_activities): new macro to be overridden to list known activities that read SSH info  [[#1294](https://github.com/falcosecurity/falco/pull/1294)]
+* rule(Read ssh information): do not throw for activities known to read SSH info [[#1294](https://github.com/falcosecurity/falco/pull/1294)]
+* rule(macro user_known_read_sensitive_files_activities): new macro to be overridden to list activities known to read sensitive files [[#1294](https://github.com/falcosecurity/falco/pull/1294)]
+* rule(Read sensitive file trusted after startup): do not throw for activities known to read sensitive files [[#1294](https://github.com/falcosecurity/falco/pull/1294)]
+* rule(Read sensitive file untrusted): do not throw for activities known to read sensitive files [[#1294](https://github.com/falcosecurity/falco/pull/1294)]
+* rule(macro user_known_write_rpm_database_activities): new macro to be overridden to list activities known to write RPM database [[#1294](https://github.com/falcosecurity/falco/pull/1294)]
+* rule(Write below rpm database): do not throw for activities known to write RPM database [[#1294](https://github.com/falcosecurity/falco/pull/1294)]
+* rule(macro user_known_db_spawned_processes): new macro to be overridden to list processes known to spawn DB [[#1294](https://github.com/falcosecurity/falco/pull/1294)]
+* rule(DB program spawned process): do not throw for processes known to spawn DB [[#1294](https://github.com/falcosecurity/falco/pull/1294)]
+* rule(macro user_known_modify_bin_dir_activities): new macro to be overridden to list activities known to modify bin directories [[#1294](https://github.com/falcosecurity/falco/pull/1294)]
+* rule(Modify binary dirs): do not throw for activities known to modify bin directories [[#1294](https://github.com/falcosecurity/falco/pull/1294)]
+* rule(macro user_known_mkdir_bin_dir_activities): new macro to be overridden to list activities known to create directories below bin directories [[#1294](https://github.com/falcosecurity/falco/pull/1294)]
+* rule(Mkdir binary dirs): do not throw for activities known to create directories below bin directories [[#1294](https://github.com/falcosecurity/falco/pull/1294)]
+* rule(macro user_known_system_user_login): new macro to exclude known system user logins [[#1294](https://github.com/falcosecurity/falco/pull/1294)]
+* rule(System user interactive): do not throw for known system user logins [[#1294](https://github.com/falcosecurity/falco/pull/1294)]
+* rule(macro user_known_user_management_activities): new macro to be overridden to list activities known to do user managements activities [[#1294](https://github.com/falcosecurity/falco/pull/1294)]
+* rule(User mgmt binaries): do not throw for activities known to do user managements activities [[#1294](https://github.com/falcosecurity/falco/pull/1294)]
+* rule(macro user_known_create_files_below_dev_activities): new macro to be overridden to list activities known to create files below dev [[#1294](https://github.com/falcosecurity/falco/pull/1294)]
+* rule(Create files below dev): do not throw for activities known to create files below dev [[#1294](https://github.com/falcosecurity/falco/pull/1294)]
+* rule(macro user_known_contact_k8s_api_server_activities): new macro to be overridden to list activities known to contact Kubernetes API server [[#1294](https://github.com/falcosecurity/falco/pull/1294)]
+* rule(Contact K8S API Server From Container): do not throw for activities known to contact Kubernetes API server [[#1294](https://github.com/falcosecurity/falco/pull/1294)]
+* rule(macro user_known_network_tool_activities): new macro to be overridden to list activities known to spawn/use network tools [[#1294](https://github.com/falcosecurity/falco/pull/1294)]
+* rule(Launch Suspicious Network Tool in Container): do not throw for activities known to spawn/use network tools [[#1294](https://github.com/falcosecurity/falco/pull/1294)]
+* rule(macro user_known_remove_data_activities): new macro to be overridden to list activities known to perform data remove commands [[#1294](https://github.com/falcosecurity/falco/pull/1294)]
+* rule(Remove Bulk Data from Disk): do not throw for activities known to perform data remove commands [[#1294](https://github.com/falcosecurity/falco/pull/1294)]
+* rule(macro user_known_create_hidden_file_activities): new macro to be overridden to list activities known to create hidden files [[#1294](https://github.com/falcosecurity/falco/pull/1294)]
+* rule(Create Hidden Files or Directories): do not throw for activities known to create hidden files [[#1294](https://github.com/falcosecurity/falco/pull/1294)]
+* rule(macro user_known_stand_streams_redirect_activities): new macro to be overridden to list activities known to redirect stream to network connection (in containers) [[#1294](https://github.com/falcosecurity/falco/pull/1294)]
+* rule(Redirect STDOUT/STDIN to Network Connection in Container): do not throw for activities known to redirect stream to network connection (in containers) [[#1294](https://github.com/falcosecurity/falco/pull/1294)]
+* rule(macro user_known_container_drift_activities): new macro to be overridden to list activities known to create executables in containers [[#1294](https://github.com/falcosecurity/falco/pull/1294)]
+* rule(Container Drift Detected (chmod)): do not throw for activities known to give execution permissions to files in containers [[#1294](https://github.com/falcosecurity/falco/pull/1294)]
+* rule(Container Drift Detected (open+create)): do not throw for activities known to create executables in containers [[#1294](https://github.com/falcosecurity/falco/pull/1294)]
+* rule(macro user_known_node_port_service): do not throw for services known to start with a NopePort service type (k8s) [[#1294](https://github.com/falcosecurity/falco/pull/1294)]
+* rule(Create NodePort Service): do not throw for services known to start with a NopePort service type (k8s) [[#1294](https://github.com/falcosecurity/falco/pull/1294)]
+* rule(macro user_known_exec_pod_activities): do not throw for activities known to attach/exec to a pod (k8s) [[#1294](https://github.com/falcosecurity/falco/pull/1294)]
+* rule(Attach/Exec Pod): do not throw for activities known to attach/exec to a pod (k8s) [[#1294](https://github.com/falcosecurity/falco/pull/1294)]
+* rule(macro trusted_pod): defines trusted pods by an image list  [[#1294](https://github.com/falcosecurity/falco/pull/1294)]
+* rule(Pod Created in Kube Namespace): do not throw for trusted pods [[#1294](https://github.com/falcosecurity/falco/pull/1294)]
+* rule(macro trusted_sa): define trusted ServiceAccount [[#1294](https://github.com/falcosecurity/falco/pull/1294)]
+* rule(Service Account Created in Kube Namespace): do not throw for trusted ServiceAccount [[#1294](https://github.com/falcosecurity/falco/pull/1294)]
+* rule(list network_tool_binaries): add zmap to the list [[#1284](https://github.com/falcosecurity/falco/pull/1284)]
+* rule(macro root_dir): correct macro to exactly match the `/root` dir and not other with just `/root` as a prefix [[#1279](https://github.com/falcosecurity/falco/pull/1279)]
+* rule(macro user_expected_terminal_shell_in_container_conditions): allow whitelisting terminals in containers under specific conditions [[#1154](https://github.com/falcosecurity/falco/pull/1154)]
+* rule(macro user_known_write_below_binary_dir_activities): allow writing to a binary dir in some conditions [[#1260](https://github.com/falcosecurity/falco/pull/1260)]
+* rule(macro trusted_logging_images): Add addl fluentd image [[#1230](https://github.com/falcosecurity/falco/pull/1230)]
+* rule(macro trusted_logging_images): Let azure-npm image write to /var/log [[#1230](https://github.com/falcosecurity/falco/pull/1230)]
+* rule(macro lvprogs_writing_conf): Add lvs as a lvm program [[#1230](https://github.com/falcosecurity/falco/pull/1230)]
+* rule(macro user_known_k8s_client_container): Allow hcp-tunnelfront to run kubectl in containers [[#1230](https://github.com/falcosecurity/falco/pull/1230)]
+* rule(list allowed_k8s_users): Add vertical pod autoscaler as known k8s users [[#1230](https://github.com/falcosecurity/falco/pull/1230)]
+* rule(Anonymous Request Allowed): update to checking auth decision equals to allow [[#1267](https://github.com/falcosecurity/falco/pull/1267)]
+* rule(Container Drift Detected (chmod)): new rule to detect if an existing file get exec permissions in a container [[#1254](https://github.com/falcosecurity/falco/pull/1254)]
+* rule(Container Drift Detected (open+create)): new rule to detect if a new file with execution permission is created in a container [[#1254](https://github.com/falcosecurity/falco/pull/1254)]
+* rule(Mkdir binary dirs): correct condition in macro `bin_dir_mkdir` to catch `mkdirat` syscall [[#1250](https://github.com/falcosecurity/falco/pull/1250)]
+* rule(Modify binary dirs): correct condition in macro `bin_dir_rename` to catch `rename`, `renameat`, and `unlinkat` syscalls [[#1250](https://github.com/falcosecurity/falco/pull/1250)]
+* rule(Create files below dev): correct condition to catch `openat` syscall [[#1250](https://github.com/falcosecurity/falco/pull/1250)]
+* rule(macro user_known_set_setuid_or_setgid_bit_conditions): create macro [[#1213](https://github.com/falcosecurity/falco/pull/1213)]
+
+## v0.23.0
+
+Released on 2020-05-18
+
+### Major Changes
+
+* BREAKING CHANGE: the falco-driver-loader script now references `falco-probe.o` and `falco-probe.ko` as `falco.o` and `falco.ko` [[#1158](https://github.com/falcosecurity/falco/pull/1158)]
+* BREAKING CHANGE: the `falco-driver-loader` script environment variable to use a custom repository to download drivers now uses the `DRIVERS_REPO` environment variable instead of `DRIVER_LOOKUP_URL`. This variable must contain the parent URI containing the following directory structure `/$driver_version$/falco_$target$_$kernelrelease$_$kernelversion$.[ko|o]`. e.g: [[#1160](https://github.com/falcosecurity/falco/pull/1160)]
+* new(scripts): options and command-line usage for `falco-driver-loader` [[#1200](https://github.com/falcosecurity/falco/pull/1200)]
+* new: ability to specify exact matches when adding rules to Falco engine (only API) [[#1185](https://github.com/falcosecurity/falco/pull/1185)]
+* new(docker): add an image that wraps the `falco-driver-loader` with the toolchain [[#1192](https://github.com/falcosecurity/falco/pull/1192)]
+* new(docker): add `falcosecurity/falco-no-driver` image [[#1205](https://github.com/falcosecurity/falco/pull/1205)]
+
+
+### Minor Changes
+
+* update(scripts): improve `falco-driver-loader` output messages [[#1200](https://github.com/falcosecurity/falco/pull/1200)]
+* update: containers look for prebuilt drivers on the Drivers Build Grid [[#1158](https://github.com/falcosecurity/falco/pull/1158)]
+* update: driver version bump to 96bd9bc560f67742738eb7255aeb4d03046b8045 [[#1190](https://github.com/falcosecurity/falco/pull/1190)]
+* update(docker): now `falcosecurity/falco:slim-*` alias to `falcosecurity/falco-no-driver:*` [[#1205](https://github.com/falcosecurity/falco/pull/1205)]
+* docs: instructions to run unit tests [[#1199](https://github.com/falcosecurity/falco/pull/1199)]
+* docs(examples): move `/examples` to `contrib` repo [[#1191](https://github.com/falcosecurity/falco/pull/1191)]
+* update(docker): remove `minimal` image [[#1196](https://github.com/falcosecurity/falco/pull/1196)]
+* update(integration): move `/integrations` to `contrib` repo [[#1157](https://github.com/falcosecurity/falco/pull/1157)]
+* https://dl.bintray.com/driver/$driver_version$/falco_$target$_$kernelrelease$_$kernelversion$.[ko|o]` [[#1160](https://github.com/falcosecurity/falco/pull/1160)]
+* update(docker/event-generator): remove the event-generator from Falco repository [[#1156](https://github.com/falcosecurity/falco/pull/1156)]
+* docs(examples): set audit level to metadata for object secrets [[#1153](https://github.com/falcosecurity/falco/pull/1153)]
+
+
+### Bug Fixes
+
+* fix(scripts): upstream files (prebuilt drivers) for the generic Ubuntu kernel contains "ubuntu-generic" [[#1212](https://github.com/falcosecurity/falco/pull/1212)]
+* fix: support Falco driver on Linux kernels 5.6.y [[#1174](https://github.com/falcosecurity/falco/pull/1174)]
+
+
+### Rule Changes
+
+* rule(Redirect STDOUT/STDIN to Network Connection in Container): correct rule name as per rules naming convention [[#1164](https://github.com/falcosecurity/falco/pull/1164)]
+* rule(Redirect STDOUT/STDIN to Network Connection in Container): new rule to detect Redirect stdout/stdin to network connection in container [[#1152](https://github.com/falcosecurity/falco/pull/1152)]
+* rule(K8s Secret Created): new rule to track the creation of Kubernetes secrets (excluding kube-system and service account secrets) [[#1151](https://github.com/falcosecurity/falco/pull/1151)]
+* rule(K8s Secret Deleted): new rule to track the deletion of Kubernetes secrets (excluding kube-system and service account secrets) [[#1151](https://github.com/falcosecurity/falco/pull/1151)]
+
+## v0.22.1
+
+Released on 2020-04-17
+
+### Major Changes
+
+* Same as v0.22.0
+
+### Minor Changes
+
+* Same as v0.22.0
+
+### Bug Fixes
+
+* fix: correct driver path (/usr/src/falco-%driver_version%) for RPM package [[#1148](https://github.com/falcosecurity/falco/pull/1148)]
+
+### Rule Changes
+
+* Same as v0.22.0
+
+## v0.22.0
+
+Released on 2020-04-16
+
+### Major Changes
+
+* new: falco version and driver version are distinct and not coupled anymore [[#1111](https://github.com/falcosecurity/falco/pull/1111)]
+* new: flag to disable asynchronous container metadata (CRI) fetch `--disable-cri-async` [[#1099](https://github.com/falcosecurity/falco/pull/1099)]
+
+
+### Minor Changes
+
+* docs(integrations): update API resource versions to Kubernetes 1.16 [[#1044](https://github.com/falcosecurity/falco/pull/1044)]
+* docs: add new release archive to the `README.md` [[#1098](https://github.com/falcosecurity/falco/pull/1098)]
+* update: driver version a259b4bf49c3 [[#1138](https://github.com/falcosecurity/falco/pull/1138)]
+* docs(integrations/k8s-using-daemonset): --cri flag correct socket path [[#1140](https://github.com/falcosecurity/falco/pull/1140)]
+* update: bump driver version to cd3d10123e [[#1131](https://github.com/falcosecurity/falco/pull/1131)]
+* update(docker): remove RHEL, kernel/linuxkit, and kernel/probeloader images [[#1124](https://github.com/falcosecurity/falco/pull/1124)]
+* update: falco-probe-loader script is falco-driver-loader now [[#1111](https://github.com/falcosecurity/falco/pull/1111)]
+* update: using only sha256 hashes when pulling build dependencies [[#1118](https://github.com/falcosecurity/falco/pull/1118)]
+
+
+### Bug Fixes
+
+* fix(integrations/k8s-using-daemonset): added missing privileges for the apps Kubernetes API group in the falco-cluster-role when using RBAC [[#1136](https://github.com/falcosecurity/falco/pull/1136)]
+* fix: connect to docker works also with libcurl >= 7.69.0 [[#1138](https://github.com/falcosecurity/falco/pull/1138)]
+* fix: HOST_ROOT environment variable detection [[#1133](https://github.com/falcosecurity/falco/pull/1133)]
+* fix(driver/bpf): stricter conditionals while dealing with strings [[#1131](https://github.com/falcosecurity/falco/pull/1131)]
+* fix: `/usr/bin/falco-${DRIVER_VERSION}` driver directory [[#1111](https://github.com/falcosecurity/falco/pull/1111)]
+* fix: FALCO_VERSION env variable inside Falco containers contains the Falco version now (not the docker image tag) [[#1111](https://github.com/falcosecurity/falco/pull/1111)]
+
+
+### Rule Changes
+
+* rule(macro user_expected_system_procs_network_activity_conditions): allow whitelisting system binaries using the network under specific conditions [[#1070](https://github.com/falcosecurity/falco/pull/1070)]
+* rule(Full K8s Administrative Access): detect any k8s operation by an administrator with full access [[#1122](https://github.com/falcosecurity/falco/pull/1122)]
+* rule(Ingress Object without TLS Certificate Created): detect any attempt to create an ingress without TLS certification (rule enabled by default) [[#1122](https://github.com/falcosecurity/falco/pull/1122)]
+* rule(Untrusted Node Successfully Joined the Cluster): detect a node successfully joined the cluster outside of the list of allowed nodes [[#1122](https://github.com/falcosecurity/falco/pull/1122)]
+* rule(Untrusted Node Unsuccessfully Tried to Join the Cluster): detect an unsuccessful attempt to join the cluster for a node not in the list of allowed nodes [[#1122](https://github.com/falcosecurity/falco/pull/1122)]
+* rule(Network Connection outside Local Subnet): detect traffic to image outside local subnet [[#1122](https://github.com/falcosecurity/falco/pull/1122)]
+* rule(Outbound or Inbound Traffic not to Authorized Server Process and Port): detect traffic that is not to authorized server process and port [[#1122](https://github.com/falcosecurity/falco/pull/1122)]
+* rule(Delete or rename shell history): "mitre_defense_evation" tag corrected to "mitre_defense_evasion" [[#1143](https://github.com/falcosecurity/falco/pull/1143)]
+* rule(Delete Bash History): "mitre_defense_evation" tag corrected to "mitre_defense_evasion" [[#1143](https://github.com/falcosecurity/falco/pull/1143)]
+* rule(Write below root): use pmatch to check against known root directories [[#1137](https://github.com/falcosecurity/falco/pull/1137)]
+* rule(Detect outbound connections to common miner pool ports): whitelist sysdig/agent and falcosecurity/falco for query miner domain dns [[#1115](https://github.com/falcosecurity/falco/pull/1115)]
+* rule(Service Account Created in Kube Namespace): only detect sa created in kube namespace with success [[#1117](https://github.com/falcosecurity/falco/pull/1117)]
+
+## v0.21.0
+
+Released on 2020-03-17
+
+### Major Changes
+
+* BREAKING CHANGE: the SYSDIG_BPF_PROBE environment variable is now just FALCO_BPF_PROBE (please update your systemd scripts or kubernetes deployments. [[#1050](https://github.com/falcosecurity/falco/pull/1050)]
+* new: automatically publish deb packages (from git master branch) to public dev repository [[#1059](https://github.com/falcosecurity/falco/pull/1059)]
+* new: automatically publish rpm packages (from git master branch) to public dev repository [[#1059](https://github.com/falcosecurity/falco/pull/1059)]
+* new: automatically release deb packages (from git tags) to public repository [[#1059](https://github.com/falcosecurity/falco/pull/1059)]
+* new: automatically release rpm packages (from git tags) to public repository [[#1059](https://github.com/falcosecurity/falco/pull/1059)]
+* new: automatically publish docker images from master (master, master-slim, master-minimal) [[#1059](https://github.com/falcosecurity/falco/pull/1059)]
+* new: automatically publish docker images from git tag (tag, tag-slim, tag-master, latest, latest-slim, latest-minimal) [[#1059](https://github.com/falcosecurity/falco/pull/1059)]
+* new: sign packages with falcosecurity gpg key [[#1059](https://github.com/falcosecurity/falco/pull/1059)]
+
+### Minor Changes
+
+* new: falco_version_prerelease contains the number of commits since last tag on the master [[#1086](https://github.com/falcosecurity/falco/pull/1086)]
+* docs: update branding [[#1074](https://github.com/falcosecurity/falco/pull/1074)]
+* new(docker/event-generator): add example k8s resource files that allow running the event generator in a k8s cluster. [[#1088](https://github.com/falcosecurity/falco/pull/1088)]
+* update: creating *-dev docker images using build arguments at build time [[#1059](https://github.com/falcosecurity/falco/pull/1059)]
+* update: docker images use packages from the new repositories [[#1059](https://github.com/falcosecurity/falco/pull/1059)]
+* update: docker image downloads old deb dependencies (gcc-6, gcc-5, binutils-2.30) from a new open repository [[#1059](https://github.com/falcosecurity/falco/pull/1059)]
+
+### Bug Fixes
+
+* fix(docker): updating `stable` and `local` images to run from `debian:stable` [[#1018](https://github.com/falcosecurity/falco/pull/1018)]
+* fix(event-generator): the image used by the event generator deployment to `latest`. [[#1091](https://github.com/falcosecurity/falco/pull/1091)]
+* fix: -t (to disable rules by certain tag) or -t (to only run rules with a certain tag) work now [[#1081](https://github.com/falcosecurity/falco/pull/1081)]
+* fix: the falco driver now compiles on >= 5.4 kernels [[#1080](https://github.com/falcosecurity/falco/pull/1080)]
+* fix: download falco packages which url contains character to encode - eg, `+` [[#1059](https://github.com/falcosecurity/falco/pull/1059)]
+* fix(docker): use base name in docker-entrypoint.sh [[#981](https://github.com/falcosecurity/falco/pull/981)]
+
+### Rule Changes
+
+* rule(detect outbound connections to common miner pool ports): disabled by default [[#1061](https://github.com/falcosecurity/falco/pull/1061)]
+* rule(macro net_miner_pool): add localhost and rfc1918 addresses as exception in the rule. [[#1061](https://github.com/falcosecurity/falco/pull/1061)]
+* rule(change thread namespace): modify condition to detect suspicious container activity [[#974](https://github.com/falcosecurity/falco/pull/974)]
 
 ## v0.20.0
 
@@ -143,7 +483,7 @@ Released 2019-09-26
 
 * Same as v0.17.0
 
-##
+### Minor Changes
 
 * Same as v0.17.0
 

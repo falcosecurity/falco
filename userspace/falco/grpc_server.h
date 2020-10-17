@@ -29,25 +29,22 @@ namespace grpc
 class server : public server_impl
 {
 public:
-	server()
-	{
-	}
-	server(std::string server_addr, int threadiness, std::string private_key, std::string cert_chain, std::string root_certs):
-		m_server_addr(server_addr),
-		m_threadiness(threadiness),
-		m_private_key(private_key),
-		m_cert_chain(cert_chain),
-		m_root_certs(root_certs)
-	{
-	}
+	server() = default;
 	virtual ~server() = default;
 
-	void init(std::string server_addr, int threadiness, std::string private_key, std::string cert_chain, std::string root_certs);
+	void init(
+		std::string server_addr,
+		int threadiness,
+		std::string private_key,
+		std::string cert_chain,
+		std::string root_certs,
+		std::string log_level
+	);
 	void thread_process(int thread_index);
 	void run();
 	void stop();
 
-	output::service::AsyncService m_output_svc;
+	outputs::service::AsyncService m_output_svc;
 	version::service::AsyncService m_version_svc;
 
 	std::unique_ptr<::grpc::ServerCompletionQueue> m_completion_queue;
@@ -61,6 +58,9 @@ private:
 
 	std::unique_ptr<::grpc::Server> m_server;
 	std::vector<std::thread> m_threads;
+	::grpc::ServerBuilder m_server_builder;
+	void init_mtls_server_builder();
+	void init_unix_server_builder();
 };
 
 } // namespace grpc

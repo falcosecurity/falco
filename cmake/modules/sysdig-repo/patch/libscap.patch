@@ -1,5 +1,5 @@
 diff --git a/userspace/libscap/scap.c b/userspace/libscap/scap.c
-index 59b04e0a..bdc311cb 100644
+index e9faea51..a1b3b501 100644
 --- a/userspace/libscap/scap.c
 +++ b/userspace/libscap/scap.c
 @@ -52,7 +52,7 @@ limitations under the License.
@@ -20,3 +20,12 @@ index 59b04e0a..bdc311cb 100644
  			bpf_probe = buf;
  		}
  	}
+@@ -1808,7 +1808,7 @@ int32_t scap_disable_dynamic_snaplen(scap_t* handle)
+ 
+ const char* scap_get_host_root()
+ {
+-	char* p = getenv("SYSDIG_HOST_ROOT");
++	char* p = getenv("HOST_ROOT");
+ 	static char env_str[SCAP_MAX_PATH_SIZE + 1];
+ 	static bool inited = false;
+ 	if (! inited) {

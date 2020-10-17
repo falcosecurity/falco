@@ -16,24 +16,12 @@ limitations under the License.
 
 #include <ctime>
 #include "logger.h"
-#include "chisel_api.h"
 
 #include "falco_common.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
 
-const static struct luaL_reg ll_falco [] =
-{
-	{"syslog", &falco_logger::syslog},
-	{NULL,NULL}
-};
-
 int falco_logger::level = LOG_INFO;
 bool falco_logger::time_format_iso_8601 = false;
-
-void falco_logger::init(lua_State *ls)
-{
-	luaL_openlib(ls, "falco", ll_falco, 0);
-}
 
 void falco_logger::set_time_format_iso_8601(bool val)
 {
@@ -81,19 +69,6 @@ void falco_logger::set_level(string &level)
 }
 
 
-int falco_logger::syslog(lua_State *ls) {
-	int priority = luaL_checknumber(ls, 1);
-
-	if (priority > LOG_DEBUG) {
-		return luaL_argerror(ls, 1, "falco.syslog: priority must be a number between 0 and 7");
-	}
-
-	const char *msg = luaL_checkstring(ls, 2);
-	::syslog(priority, "%s", msg);
-
-	return 0;
-}
-
 bool falco_logger::log_stderr = true;
 bool falco_logger::log_syslog = true;
 
@@ -134,7 +109,7 @@ void falco_logger::log(int priority, const string msg)
 			if(gtm != NULL &&
 			   (strftime(buf, sizeof(buf), "%FT%T%z", gtm) != 0))
 			{
-				fprintf(stderr, "%s: %s", buf, msg.c_str());
+				fprintf(stderr, "%s: %s", buf, copy.c_str());
 			}
 		}
 		else
@@ -151,7 +126,7 @@ void falco_logger::log(int priority, const string msg)
 			{
 				tstr = "N/A";
 			}
-			fprintf(stderr, "%s: %s", tstr.c_str(), msg.c_str());
+			fprintf(stderr, "%s: %s", tstr.c_str(), copy.c_str());
 		}
 	}
 }

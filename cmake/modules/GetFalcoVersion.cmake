@@ -1,6 +1,18 @@
+#
+# Copyright (C) 2020 The Falco Authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+# specific language governing permissions and limitations under the License.
+#
+
 # Retrieve git ref and commit hash
 include(GetGitRevisionDescription)
-get_git_head_revision(FALCO_REF FALCO_HASH)
 
 # Create the falco version variable according to git index
 if(NOT FALCO_VERSION)
@@ -9,25 +21,13 @@ if(NOT FALCO_VERSION)
   git_get_exact_tag(FALCO_TAG)
   if(NOT FALCO_TAG)
     # Obtain the closest tag
-    git_describe(FALCO_VERSION "--abbrev=0" "--tags") # suppress the long format
+    git_describe(FALCO_VERSION "--always" "--tags")
     # Fallback version
     if(FALCO_VERSION MATCHES "NOTFOUND$")
       set(FALCO_VERSION "0.0.0")
     endif()
-    # TODO(leodido) > Construct the prerelease part (semver 2) Construct the Build metadata part (semver 2)
-    if(NOT FALCO_HASH MATCHES "NOTFOUND$")
-      string(SUBSTRING "${FALCO_HASH}" 0 7 FALCO_VERSION_BUILD)
-      # Check whether there are uncommitted changes or not
-      git_local_changes(FALCO_CHANGES)
-      if(FALCO_CHANGES STREQUAL "DIRTY")
-        string(TOLOWER "${FALCO_CHANGES}" FALCO_CHANGES)
-        set(FALCO_VERSION_BUILD "${FALCO_VERSION_BUILD}.${FALCO_CHANGES}")
-      endif()
-    endif()
-    # Append the build metadata part (semver 2)
-    if(FALCO_VERSION_BUILD)
-      set(FALCO_VERSION "${FALCO_VERSION}+${FALCO_VERSION_BUILD}")
-    endif()
+    # Format FALCO_VERSION to be semver with prerelease and build part
+    string(REPLACE "-g" "+" FALCO_VERSION "${FALCO_VERSION}")
   else()
     # A tag has been found: use it as the Falco version
     set(FALCO_VERSION "${FALCO_TAG}")
@@ -42,8 +42,8 @@ if(NOT FALCO_VERSION)
   string(
     REGEX
     REPLACE
-      "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)-((0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*)\\.(0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*)*).*"
-      "\\4"
+      "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)-((0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*)(\\.(0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*))*).*"
+      "\\5"
       FALCO_VERSION_PRERELEASE
       "${FALCO_VERSION}")
   if(FALCO_VERSION_PRERELEASE STREQUAL "${FALCO_VERSION}")

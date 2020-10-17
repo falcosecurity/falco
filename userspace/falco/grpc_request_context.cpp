@@ -24,12 +24,12 @@ namespace grpc
 {
 
 template<>
-void request_stream_context<falco::output::service, falco::output::request, falco::output::response>::start(server* srv)
+void request_stream_context<outputs::service, outputs::request, outputs::response>::start(server* srv)
 {
 	m_state = request_context_base::REQUEST;
 	m_srv_ctx.reset(new ::grpc::ServerContext);
 	auto srvctx = m_srv_ctx.get();
-	m_res_writer.reset(new ::grpc::ServerAsyncWriter<output::response>(srvctx));
+	m_res_writer.reset(new ::grpc::ServerAsyncWriter<outputs::response>(srvctx));
 	m_stream_ctx.reset();
 	m_req.Clear();
 	auto cq = srv->m_completion_queue.get();
@@ -38,7 +38,7 @@ void request_stream_context<falco::output::service, falco::output::request, falc
 }
 
 template<>
-void request_stream_context<falco::output::service, falco::output::request, falco::output::response>::process(server* srv)
+void request_stream_context<outputs::service, outputs::request, outputs::response>::process(server* srv)
 {
 	// When it is the 1st process call
 	if(m_state == request_context_base::REQUEST)
@@ -48,40 +48,46 @@ void request_stream_context<falco::output::service, falco::output::request, falc
 	}
 
 	// Processing
-	output::response res;
-	(srv->*m_process_func)(*m_stream_ctx, m_req, res); // subscribe()
+	outputs::response res;
+	(srv->*m_process_func)(*m_stream_ctx, m_req, res); // get()
+
+	if(!m_stream_ctx->m_is_running)
+	{
+		m_state = request_context_base::FINISH;
+		m_res_writer->Finish(::grpc::Status::OK, this);
+		return;
+	}
 
 	// When there are still more responses to stream
 	if(m_stream_ctx->m_has_more)
 	{
 		// todo(leodido) > log "write: tag=this, state=m_state"
 		m_res_writer->Write(res, this);
+		return;
 	}
+
 	// No more responses to stream
-	else
-	{
-		// Communicate to the gRPC runtime that we have finished.
-		// The memory address of "this" instance uniquely identifies the event.
-		m_state = request_context_base::FINISH;
-		// todo(leodido) > log "finish: tag=this, state=m_state"
-		m_res_writer->Finish(::grpc::Status::OK, this);
-	}
+	// Communicate to the gRPC runtime that we have finished.
+	// The memory address of "this" instance uniquely identifies the event.
+	m_state = request_context_base::FINISH;
+	// todo(leodido) > log "finish: tag=this, state=m_state"
+	m_res_writer->Finish(::grpc::Status::OK, this);
 }
 
 template<>
-void request_stream_context<falco::output::service, falco::output::request, falco::output::response>::end(server* srv, bool errored)
+void request_stream_context<outputs::service, outputs::request, outputs::response>::end(server* srv, bool error)
 {
 	if(m_stream_ctx)
 	{
-		if(errored)
+		if(error)
 		{
 			// todo(leodido) > log error "error streaming: tag=this, state=m_state, stream=m_stream_ctx->m_stream"
 		}
-		m_stream_ctx->m_status = errored ? stream_context::ERROR : stream_context::SUCCESS;
+		m_stream_ctx->m_status = error ? stream_context::ERROR : stream_context::SUCCESS;
 
 		// Complete the processing
-		output::response res;
-		(srv->*m_process_func)(*m_stream_ctx, m_req, res); // subscribe()
+		outputs::response res;
+		(srv->*m_process_func)(*m_stream_ctx, m_req, res); // get()
 	}
 	else
 	{
@@ -98,7 +104,7 @@ void request_stream_context<falco::output::service, falco::output::request, falc
 }
 
 template<>
-void falco::grpc::request_context<falco::version::service, falco::version::request, falco::version::response>::start(server* srv)
+void request_context<version::service, version::request, version::response>::start(server* srv)
 {
 	m_state = request_context_base::REQUEST;
 	m_srv_ctx.reset(new ::grpc::ServerContext);
@@ -113,7 +119,7 @@ void falco::grpc::request_context<falco::version::service, falco::version::reque
 }
 
 template<>
-void falco::grpc::request_context<falco::version::service, falco::version::request, falco::version::response>::process(server* srv)
+void request_context<version::service, version::request, version::response>::process(server* srv)
 {
 	version::response res;
 	(srv->*m_process_func)(m_srv_ctx.get(), m_req, res);
@@ -125,13 +131,85 @@ void falco::grpc::request_context<falco::version::service, falco::version::reque
 }
 
 template<>
-void falco::grpc::request_context<falco::version::service, falco::version::request, falco::version::response>::end(server* srv, bool errored)
+void request_context<version::service, version::request, version::response>::end(server* srv, bool error)
 {
 	// todo(leodido) > handle processing errors here
-	
+
 	// Ask to start processing requests
 	start(srv);
 }
+
+template<>
+void request_bidi_context<outputs::service, outputs::request, outputs::response>::start(server* srv)
+{
+	m_state = request_context_base::REQUEST;
+	m_srv_ctx.reset(new ::grpc::ServerContext);
+	auto srvctx = m_srv_ctx.get();
+	m_reader_writer.reset(new ::grpc::ServerAsyncReaderWriter<outputs::response, outputs::request>(srvctx));
+	m_req.Clear();
+	auto cq = srv->m_completion_queue.get();
+	// Request to start processing given requests.
+	// Using "this" - ie., the memory address of this context - as the tag that uniquely identifies the request.
+	// In this way, different contexts can serve different requests concurrently.
+	(srv->m_output_svc.*m_request_func)(srvctx, m_reader_writer.get(), cq, cq, this);
+};
+
+template<>
+void request_bidi_context<outputs::service, outputs::request, outputs::response>::process(server* srv)
+{
+	switch(m_state)
+	{
+	case request_context_base::REQUEST:
+		m_bidi_ctx.reset(new bidi_context(m_srv_ctx.get()));
+		m_bidi_ctx->m_status = bidi_context::STREAMING;
+		m_state = request_context_base::WRITE;
+		m_reader_writer->Read(&m_req, this);
+		return;
+	case request_context_base::WRITE:
+		// Processing
+		{
+			outputs::response res;
+			(srv->*m_process_func)(*m_bidi_ctx, m_req, res); // sub()
+
+			if(!m_bidi_ctx->m_is_running)
+			{
+				m_state = request_context_base::FINISH;
+				m_reader_writer->Finish(::grpc::Status::OK, this);
+				return;
+			}
+
+			if(m_bidi_ctx->m_has_more)
+			{
+				m_state = request_context_base::WRITE;
+				m_reader_writer->Write(res, this);
+				return;
+			}
+
+			m_state = request_context_base::WRITE;
+			m_reader_writer->Read(&m_req, this);
+		}
+
+		return;
+	default:
+		return;
+	}
+};
+
+template<>
+void request_bidi_context<outputs::service, outputs::request, outputs::response>::end(server* srv, bool error)
+{
+	if(m_bidi_ctx)
+	{
+		m_bidi_ctx->m_status = error ? bidi_context::ERROR : bidi_context::SUCCESS;
+
+		// Complete the processing
+		outputs::response res;
+		(srv->*m_process_func)(*m_bidi_ctx, m_req, res); // sub()
+	}
+
+	// Ask to start processing requests
+	start(srv);
+};
 
 } // namespace grpc
 } // namespace falco

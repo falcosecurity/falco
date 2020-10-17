@@ -43,8 +43,10 @@ limitations under the License.
 #include "falco_engine.h"
 #include "config_falco.h"
 #include "statsfilewriter.h"
+#ifndef MINIMAL_BUILD
 #include "webserver.h"
 #include "grpc_server.h"
+#endif
 #include "banned.h" // This raises a compilation error when certain functions are used
 
 typedef function<void(sinsp* inspector)> open_t;
@@ -84,11 +86,18 @@ static void usage()
 	   " -h, --help                    Print this page\n"
 	   " -c                            Configuration file (default " FALCO_SOURCE_CONF_FILE ", " FALCO_INSTALL_CONF_FILE ")\n"
 	   " -A                            Monitor all events, including those with EF_DROP_SIMPLE_CONS flag.\n"
+	   " --alternate-lua-dir <path>    Specify an alternate path for loading Falco lua files\n"
 	   " -b, --print-base64            Print data buffers in base64.\n"
 	   "                               This is useful for encoding binary data that needs to be used over media designed to.\n"
 	   " --cri <path>                  Path to CRI socket for container metadata.\n"
 	   "                               Use the specified socket to fetch data from a CRI-compatible runtime.\n"
 	   " -d, --daemon                  Run as a daemon.\n"
+	   " --disable-cri-async           Disable asynchronous CRI metadata fetching.\n"
+	   "                               This is useful to let the input event wait for the container metadata fetch\n"
+	   "                               to finish before moving forward. Async fetching, in some environments leads\n"
+	   "                               to empty fields for container metadata when the fetch is not fast enough to be\n"
+	   "                               completed asynchronously. This can have a performance penalty on your environment\n"
+	   "                               depending on the number of containers and the frequency at which they are created/started/stopped\n"
 	   " --disable-source <event_source>\n"
 	   "                               Disable a specific event source.\n"
 	   "                               Available event sources are: syscall, k8s_audit.\n"
@@ -98,6 +107,7 @@ static void usage()
 	   "                               Can not be specified with -t.\n"
 	   " -e <events_file>              Read the events from <events_file> (in .scap format for sinsp events, or jsonl for\n"
 	   "                               k8s audit events) instead of tapping into live.\n"
+#ifndef MINIMAL_BUILD
 	   " -k <url>, --k8s-api <url>\n"
 	   "                               Enable Kubernetes support by connecting to the API server specified as argument.\n"
        "                               E.g. \"http://admin:password@127.0.0.1:8080\".\n"
@@ -111,15 +121,18 @@ static void usage()
 	   "                               for this option, it will be interpreted as the name of a file containing bearer token.\n"
 	   "                               Note that the format of this command-line option prohibits use of files whose names contain\n"
 	   "                               ':' or '#' characters in the file name.\n"
+#endif
 	   " -L                            Show the name and description of all rules and exit.\n"
 	   " -l <rule>                     Show the name and description of the rule with name <rule> and exit.\n"
 	   " --list [<source>]             List all defined fields. If <source> is provided, only list those fields for\n"
 	   "                               the source <source>. Current values for <source> are \"syscall\", \"k8s_audit\"\n"
+#ifndef MINIMAL_BUILD
 	   " -m <url[,marathon_url]>, --mesos-api <url[,marathon_url]>\n"
 	   "                               Enable Mesos support by connecting to the API server\n"
 	   "                               specified as argument. E.g. \"http://admin:password@127.0.0.1:5050\".\n"
 	   "                               Marathon url is optional and defaults to Mesos address, port 8080.\n"
 	   "                               The API servers can also be specified via the environment variable FALCO_MESOS_API.\n"
+#endif
 	   " -M <num_seconds>              Stop collecting after <num_seconds> reached.\n"
 	   " -N                            When used with --list, only print field names.\n"
 	   " -o, --option <key>=<val>      Set the value of option <key> to <val>. Overrides values in configuration file.\n"
@@ -134,9 +147,9 @@ static void usage()
 	   " -P, --pidfile <pid_file>      When run as a daemon, write pid to specified file\n"
        " -r <rules_file>               Rules file/directory (defaults to value set in configuration file, or /etc/falco_rules.yaml).\n"
        "                               Can be specified multiple times to read from multiple files/directories.\n"
-	   " -s <stats_file>               If specified, write statistics related to falco's reading/processing of events\n"
-	   "                               to this file. (Only useful in live mode).\n"
-	   " --stats_interval <msec>       When using -s <stats_file>, write statistics every <msec> ms.\n"
+	   " -s <stats_file>               If specified, append statistics related to Falco's reading/processing of events\n"
+	   "                               to this file (only useful in live mode).\n"
+	   " --stats-interval <msec>       When using -s <stats_file>, write statistics every <msec> ms.\n"
 	   "                               This uses signals, so don't recommend intervals below 200 ms.\n"
 	   "                               Defaults to 5000 (5 seconds).\n"
 	   " -S <len>, --snaplen <len>\n"
@@ -152,6 +165,8 @@ static void usage()
 	   "                               This causes every single line emitted by falco to be flushed,\n"
 	   "                               which generates higher CPU usage but is useful when piping those outputs\n"
 	   "                               into another process or into a script.\n"
+	   " -u, --userspace               Parse events from userspace.\n"
+	   "                               To be used in conjunction with the ptrace(2) based driver (pdig).\n"
 	   " -V, --validate <rules_file>   Read the contents of the specified rules(s) file and exit.\n"
 	   "                               Can be specified multiple times to validate multiple files.\n"
 	   " -v                            Verbose output.\n"
@@ -177,6 +192,7 @@ static void display_fatal_err(const string &msg)
 // Splitting into key=value or key.subkey=value will be handled by configuration class.
 std::list<string> cmdline_options;
 
+#ifndef MINIMAL_BUILD
 // Read a jsonl file containing k8s audit events and pass each to the engine.
 void read_k8s_audit_trace_file(falco_engine *engine,
 			       falco_outputs *outputs,
@@ -205,6 +221,7 @@ void read_k8s_audit_trace_file(falco_engine *engine,
 		}
 	}
 }
+#endif
 
 static std::string read_file(std::string filename)
 {
@@ -421,9 +438,11 @@ int falco_init(int argc, char **argv)
 	bool verbose = false;
 	bool names_only = false;
 	bool all_events = false;
+#ifndef MINIMAL_BUILD
 	string* k8s_api = 0;
 	string* k8s_api_cert = 0;
 	string* mesos_api = 0;
+#endif
 	string output_format = "";
 	uint32_t snaplen = 0;
 	bool replace_container_info = false;
@@ -433,9 +452,11 @@ int falco_init(int argc, char **argv)
 	string list_flds_source = "";
 	bool print_support = false;
 	string cri_socket_path;
+	bool cri_async = true;
 	set<string> disable_sources;
 	bool disable_syscall = false;
 	bool disable_k8s_audit = false;
+	bool userspace = false;
 
 	// Used for writing trace files
 	int duration_seconds = 0;
@@ -451,40 +472,45 @@ int falco_init(int argc, char **argv)
 	double duration;
 	scap_stats cstats;
 
+#ifndef MINIMAL_BUILD
 	falco_webserver webserver;
 	falco::grpc::server grpc_server;
 	std::thread grpc_server_thread;
+#endif
 
 	static struct option long_options[] =
-	{
-		{"cri", required_argument, 0},
-        {"daemon", no_argument, 0, 'd'},
-        {"disable-source", required_argument, 0},
-        {"help", no_argument, 0, 'h'},
-        {"ignored-events", no_argument, 0, 'i'},
-        {"k8s-api-cert", required_argument, 0, 'K'},
-        {"k8s-api", required_argument, 0, 'k'},
-        {"list", optional_argument, 0},
-        {"mesos-api", required_argument, 0, 'm'},
-        {"option", required_argument, 0, 'o'},
-        {"pidfile", required_argument, 0, 'P'},
-        {"print-base64", no_argument, 0, 'b'},
-        {"print", required_argument, 0, 'p'},
-        {"snaplen", required_argument, 0, 'S'},
-        {"stats_interval", required_argument, 0},
-        {"support", no_argument, 0},
-        {"unbuffered", no_argument, 0, 'U'},
-        {"validate", required_argument, 0, 'V'},
-        {"version", no_argument, 0, 0},
-        {"writefile", required_argument, 0, 'w'},
-		{0, 0, 0, 0}
-	};
+		{
+			{"alternate-lua-dir", required_argument, 0},
+			{"cri", required_argument, 0},
+			{"daemon", no_argument, 0, 'd'},
+			{"disable-cri-async", no_argument, 0, 0},
+			{"disable-source", required_argument, 0},
+			{"help", no_argument, 0, 'h'},
+			{"ignored-events", no_argument, 0, 'i'},
+			{"k8s-api-cert", required_argument, 0, 'K'},
+			{"k8s-api", required_argument, 0, 'k'},
+			{"list", optional_argument, 0},
+			{"mesos-api", required_argument, 0, 'm'},
+			{"option", required_argument, 0, 'o'},
+			{"pidfile", required_argument, 0, 'P'},
+			{"print-base64", no_argument, 0, 'b'},
+			{"print", required_argument, 0, 'p'},
+			{"snaplen", required_argument, 0, 'S'},
+			{"stats-interval", required_argument, 0},
+			{"support", no_argument, 0},
+			{"unbuffered", no_argument, 0, 'U'},
+			{"userspace", no_argument, 0, 'u'},
+			{"validate", required_argument, 0, 'V'},
+			{"version", no_argument, 0, 0},
+			{"writefile", required_argument, 0, 'w'},
+			{0, 0, 0, 0}};
 
 	try
 	{
 		set<string> disabled_rule_substrings;
 		string substring;
 		string all_rules = "";
+		string alternate_lua_dir = FALCO_ENGINE_SOURCE_LUA_DIR;
 		set<string> disabled_rule_tags;
 		set<string> enabled_rule_tags;
 
@@ -492,7 +518,7 @@ int falco_init(int argc, char **argv)
 		// Parse the args
 		//
 		while((op = getopt_long(argc, argv,
-                                        "hc:AbdD:e:F:ik:K:Ll:m:M:No:P:p:r:S:s:T:t:UvV:w:",
+                                        "hc:AbdD:e:F:ik:K:Ll:m:M:No:P:p:r:S:s:T:t:UuvV:w:",
                                         long_options, &long_index)) != -1)
 		{
 			switch(op)
@@ -518,8 +544,10 @@ int falco_init(int argc, char **argv)
 				break;
 			case 'e':
 				trace_filename = optarg;
+#ifndef MINIMAL_BUILD
 				k8s_api = new string();
 				mesos_api = new string();
+#endif
 				break;
 			case 'F':
 				list_flds = optarg;
@@ -527,21 +555,25 @@ int falco_init(int argc, char **argv)
 			case 'i':
 				print_ignored_events = true;
 				break;
+#ifndef MINIMAL_BUILD
 			case 'k':
 				k8s_api = new string(optarg);
 				break;
 			case 'K':
 				k8s_api_cert = new string(optarg);
 				break;
+#endif
 			case 'L':
 				describe_all_rules = true;
 				break;
 			case 'l':
 				describe_rule = optarg;
 				break;
+#ifndef MINIMAL_BUILD
 			case 'm':
 				mesos_api = new string(optarg);
 				break;
+#endif
 			case 'M':
 				duration_to_tot = atoi(optarg);
 				if(duration_to_tot <= 0)
@@ -599,6 +631,9 @@ int falco_init(int argc, char **argv)
 				buffered_outputs = false;
 				buffered_cmdline = true;
 				break;
+			case 'u':
+				userspace = true;
+				break;
 			case 'v':
 				verbose = true;
 				break;
@@ -616,6 +651,7 @@ int falco_init(int argc, char **argv)
 				if(string(long_options[long_index].name) == "version")
 				{
 					printf("Falco version: %s\n", FALCO_VERSION);
+					printf("Driver version: %s\n", DRIVER_VERSION);
 					return EXIT_SUCCESS;
 				}
 				else if (string(long_options[long_index].name) == "cri")
@@ -625,6 +661,10 @@ int falco_init(int argc, char **argv)
 						cri_socket_path = optarg;
 					}
 				}
+				else if (string(long_options[long_index].name) == "disable-cri-async")
+				{
+				  cri_async = false;
+				}
 				else if (string(long_options[long_index].name) == "list")
 				{
 					list_flds = true;
@@ -633,7 +673,7 @@ int falco_init(int argc, char **argv)
 						list_flds_source = optarg;
 					}
 				}
-				else if (string(long_options[long_index].name) == "stats_interval")
+				else if (string(long_options[long_index].name) == "stats-interval")
 				{
 					stats_interval = atoi(optarg);
 				}
@@ -646,6 +686,16 @@ int falco_init(int argc, char **argv)
 					if(optarg != NULL)
 					{
 						disable_sources.insert(optarg);
+					}
+				}
+				else if (string(long_options[long_index].name)== "alternate-lua-dir")
+				{
+					if(optarg != NULL)
+					{
+						alternate_lua_dir = optarg;
+						if (alternate_lua_dir.back() != '/') {
+							alternate_lua_dir += '/';
+						}
 					}
 				}
 				break;
@@ -665,6 +715,9 @@ int falco_init(int argc, char **argv)
 			inspector->set_cri_socket_path(cri_socket_path);
 		}
 
+		// Decide wether to do sync or async for CRI metadata fetch
+		inspector->set_cri_async(cri_async);
+
 		//
 		// If required, set the snaplen
 		//
@@ -680,7 +733,7 @@ int falco_init(int argc, char **argv)
 			return EXIT_SUCCESS;
 		}
 
-		engine = new falco_engine();
+		engine = new falco_engine(true, alternate_lua_dir);
 		engine->set_inspector(inspector);
 		engine->set_extra(output_format, replace_container_info);
 
@@ -779,12 +832,16 @@ int falco_init(int argc, char **argv)
 			falco_logger::set_time_format_iso_8601(config.m_time_format_iso_8601);
 
 			// log after config init because config determines where logs go
+			falco_logger::log(LOG_INFO, "Falco version " + std::string(FALCO_VERSION) + " (driver version " + std::string(DRIVER_VERSION) + ")\n");
 			falco_logger::log(LOG_INFO, "Falco initialized with configuration file " + conf_filename + "\n");
 		}
 		else
 		{
 			config.init(cmdline_options);
 			falco_logger::set_time_format_iso_8601(config.m_time_format_iso_8601);
+
+			// log after config init because config determines where logs go
+			falco_logger::log(LOG_INFO, "Falco version " + std::string(FALCO_VERSION) + " (driver version " + std::string(DRIVER_VERSION) + ")\n");
 			falco_logger::log(LOG_INFO, "Falco initialized. No configuration file found, proceeding with defaults\n");
 		}
 
@@ -913,7 +970,6 @@ int falco_init(int argc, char **argv)
 			}
 			hostname = c_hostname;
 		}
-
 
 		outputs->init(config.m_json_output,
 			      config.m_json_include_output_property,
@@ -1047,6 +1103,12 @@ int falco_init(int argc, char **argv)
 
 			if(!trace_is_scap)
 			{
+#ifdef MINIMAL_BUILD
+				// Note that the webserver is not available when MINIMAL_BUILD is defined.
+				fprintf(stderr, "Cannot use k8s audit events trace file with a minimal Falco build");
+				result = EXIT_FAILURE;
+				goto exit;
+#else
 				try {
 					string line;
 					nlohmann::json j;
@@ -1071,11 +1133,22 @@ int falco_init(int argc, char **argv)
 					result = EXIT_FAILURE;
 					goto exit;
 				}
+#endif
 			}
 		}
 		else
 		{
-			open_t open_cb = [](sinsp* inspector) {
+			open_t open_cb = [&userspace](sinsp* inspector)
+			{
+				if(userspace)
+				{
+					// open_udig() is the underlying method used in the capture code to parse userspace events from the kernel.
+					//
+					// Falco uses a ptrace(2) based userspace implementation.
+					// Regardless of the implementation, the underlying method remains the same.
+					inspector->open_udig();
+					return;
+				}
 				inspector->open();
 			};
 			open_t open_nodriver_cb = [](sinsp* inspector) {
@@ -1100,11 +1173,20 @@ int falco_init(int argc, char **argv)
 			}
 			catch(sinsp_exception &e)
 			{
-				if(system("modprobe " PROBE_NAME " > /dev/null 2> /dev/null"))
+				// If syscall input source is enabled and not through userspace instrumentation
+				if (!disable_syscall && !userspace)
 				{
-					falco_logger::log(LOG_ERR, "Unable to load the driver. Exiting.\n");
+					// Try to insert the Falco kernel module
+					if(system("modprobe " PROBE_NAME " > /dev/null 2> /dev/null"))
+					{
+						falco_logger::log(LOG_ERR, "Unable to load the driver.\n");
+					}
+					open_f(inspector);
+				} 
+				else 
+				{
+					rethrow_exception(current_exception());
 				}
-				open_f(inspector);
 			}
 		}
 
@@ -1122,8 +1204,9 @@ int falco_init(int argc, char **argv)
 
 		duration = ((double)clock()) / CLOCKS_PER_SEC;
 
+#ifndef MINIMAL_BUILD
 		//
-		// run k8s, if required
+		// Run k8s, if required
 		//
 		if(k8s_api)
 		{
@@ -1162,7 +1245,7 @@ int falco_init(int argc, char **argv)
 		}
 
 		//
-		// run mesos, if required
+		// Run mesos, if required
 		//
 		if(mesos_api)
 		{
@@ -1187,22 +1270,33 @@ int falco_init(int argc, char **argv)
 			webserver.start();
 		}
 
-		// grpc server
+		// gRPC server
 		if(config.m_grpc_enabled)
 		{
+			falco_logger::log(LOG_INFO, "gRPC server threadiness equals to " + to_string(config.m_grpc_threadiness) + "\n");
 			// TODO(fntlnz,leodido): when we want to spawn multiple threads we need to have a queue per thread, or implement
 			// different queuing mechanisms, round robin, fanout? What we want to achieve?
-			grpc_server.init(config.m_grpc_bind_address, config.m_grpc_threadiness, config.m_grpc_private_key, config.m_grpc_cert_chain, config.m_grpc_root_certs);
+			grpc_server.init(
+				config.m_grpc_bind_address,
+				config.m_grpc_threadiness,
+				config.m_grpc_private_key,
+				config.m_grpc_cert_chain,
+				config.m_grpc_root_certs,
+				config.m_log_level
+			);
 			grpc_server_thread = std::thread([&grpc_server] {
 				grpc_server.run();
 			});
 		}
+#endif
 
 		if(!trace_filename.empty() && !trace_is_scap)
 		{
+#ifndef MINIMAL_BUILD			
 			read_k8s_audit_trace_file(engine,
 						  outputs,
 						  trace_filename);
+#endif
 		}
 		else
 		{
@@ -1237,15 +1331,25 @@ int falco_init(int argc, char **argv)
 
 		}
 
+		// Honor -M also when using a trace file.
+		// Since inspection stops as soon as all events have been consumed
+		// just await the given duration is reached, if needed.
+		if(!trace_filename.empty() && duration_to_tot>0)
+		{
+			std::this_thread::sleep_for(std::chrono::seconds(duration_to_tot));
+		}
+
 		inspector->close();
 		engine->print_stats();
 		sdropmgr.print_stats();
+#ifndef MINIMAL_BUILD
 		webserver.stop();
 		if(grpc_server_thread.joinable())
 		{
 			grpc_server.shutdown();
 			grpc_server_thread.join();
 		}
+#endif
 	}
 	catch(exception &e)
 	{
@@ -1253,12 +1357,14 @@ int falco_init(int argc, char **argv)
 
 		result = EXIT_FAILURE;
 
+#ifndef MINIMAL_BUILD
 		webserver.stop();
 		if(grpc_server_thread.joinable())
 		{
 			grpc_server.shutdown();
 			grpc_server_thread.join();
 		}
+#endif
 	}
 
 exit:

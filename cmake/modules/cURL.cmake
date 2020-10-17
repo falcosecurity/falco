@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2019 The Falco Authors.
+# Copyright (C) 2020 The Falco Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
 # the License. You may obtain a copy of the License at
@@ -19,20 +19,16 @@ else()
   set(CURL_INCLUDE_DIR "${CURL_BUNDLE_DIR}/include/")
   set(CURL_LIBRARIES "${CURL_BUNDLE_DIR}/lib/.libs/libcurl.a")
 
-  if(NOT USE_BUNDLED_OPENSSL)
-    set(CURL_SSL_OPTION "--with-ssl")
-  else()
-    set(CURL_SSL_OPTION "--with-ssl=${OPENSSL_INSTALL_DIR}")
-    message(STATUS "Using bundled curl in '${CURL_BUNDLE_DIR}'")
-    message(STATUS "Using SSL for curl in '${CURL_SSL_OPTION}'")
-  endif()
+  set(CURL_SSL_OPTION "--with-ssl=${OPENSSL_INSTALL_DIR}")
+  message(STATUS "Using bundled curl in '${CURL_BUNDLE_DIR}'")
+  message(STATUS "Using SSL for curl in '${CURL_SSL_OPTION}'")
 
   externalproject_add(
     curl
     DEPENDS openssl
     # START CHANGE for CVE-2017-8816, CVE-2017-8817, CVE-2017-8818, CVE-2018-1000007
-    URL "https://s3.amazonaws.com/download.draios.com/dependencies/curl-7.61.0.tar.bz2"
-    URL_MD5 "31d0a9f48dc796a7db351898a1e5058a"
+    URL "https://github.com/curl/curl/releases/download/curl-7_61_0/curl-7.61.0.tar.bz2"
+    URL_HASH "SHA256=5f6f336921cf5b84de56afbd08dfb70adeef2303751ffb3e570c936c6d656c9c"
     # END CHANGE for CVE-2017-8816, CVE-2017-8817, CVE-2017-8818, CVE-2018-1000007
     CONFIGURE_COMMAND
       ./configure

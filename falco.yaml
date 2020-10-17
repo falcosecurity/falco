@@ -139,7 +139,7 @@ stdout_output:
 webserver:
   enabled: true
   listen_port: 8765
-  k8s_audit_endpoint: /k8s_audit
+  k8s_audit_endpoint: /k8s-audit
   ssl_enabled: false
   ssl_certificate: /etc/falco/falco.pem
 
@@ -167,21 +167,37 @@ http_output:
   enabled: false
   url: http://some.url
 
-# gRPC server configuration.
-# The gRPC server is secure by default (mutual TLS) so you need to generate certificates and update their paths here.
+# Falco supports running a gRPC server with two main binding types
+# 1. Over the network with mandatory mutual TLS authentication (mTLS)
+# 2. Over a local unix socket with no authentication
+# By default, the gRPC server is disabled, with no enabled services (see grpc_output)
+# please comment/uncomment and change accordingly the options below to configure it.
+# Important note: if Falco has any troubles creating the gRPC server
+# this information will be logged, however the main Falco daemon will not be stopped.
+# gRPC server over network with (mandatory) mutual TLS configuration.
+# This gRPC server is secure by default so you need to generate certificates and update their paths here.
 # By default the gRPC server is off.
 # You can configure the address to bind and expose it.
 # By modifying the threadiness configuration you can fine-tune the number of threads (and context) it will use.
+# grpc:
+#   enabled: true
+#   bind_address: "0.0.0.0:5060"
+#   # when threadiness is 0, Falco sets it by automatically figuring out the number of online cores
+#   threadiness: 0
+#   private_key: "/etc/falco/certs/server.key"
+#   cert_chain: "/etc/falco/certs/server.crt"
+#   root_certs: "/etc/falco/certs/ca.crt"
+
+# gRPC server using an unix socket
 grpc:
   enabled: false
-  bind_address: "0.0.0.0:5060"
-  threadiness: 8
-  private_key: "/etc/falco/certs/server.key"
-  cert_chain: "/etc/falco/certs/server.crt"
-  root_certs: "/etc/falco/certs/ca.crt"
+  bind_address: "unix:///var/run/falco.sock"
+  # when threadiness is 0, Falco automatically guesses it depending on the number of online cores
+  threadiness: 0
 
 # gRPC output service.
 # By default it is off.
 # By enabling this all the output events will be kept in memory until you read them with a gRPC client.
+# Make sure to have a consumer for them or leave this disabled.
 grpc_output:
   enabled: false

@@ -1,0 +1,55 @@
+/*
+Copyright (C) 2020 The Falco Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import "schema.proto";
+
+package falco.outputs;
+
+option go_package = "github.com/falcosecurity/client-go/pkg/api/outputs";
+
+// This service defines the RPC methods
+// to `request` a stream of output `response`s.
+service service {
+  // Subscribe to a stream of Falco outputs by sending a stream of requests.
+  rpc sub(stream request) returns (stream response);
+  // Get all the Falco outputs present in the system up to this call.
+  rpc get(request) returns (stream response);
+}
+
+// The `request` message is the logical representation of the request model.
+// It is the input of the `output.service` service.
+message request {
+  // TODO(leodido,fntlnz): tags not supported yet, keeping it for reference.
+  // repeated string tags = 1;
+}
+
+// The `response` message is the representation of the output model.
+// It contains all the elements that Falco emits in an output along with the
+// definitions for priorities and source.
+message response {
+  google.protobuf.Timestamp time = 1;
+  falco.schema.priority priority = 2;
+  falco.schema.source source = 3;
+  string rule = 4;
+  string output = 5;
+  map<string, string> output_fields = 6;
+  string hostname = 7;
+  // TODO(leodido,fntlnz): tags not supported yet, keeping it for reference.
+  // repeated string tags = 8;
+}

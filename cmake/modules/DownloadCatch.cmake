@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2019 The Falco Authors.
+# Copyright (C) 2020 The Falco Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
 # the License. You may obtain a copy of the License at
@@ -14,8 +14,8 @@ include(ExternalProject)
 
 set(CATCH2_INCLUDE ${CMAKE_BINARY_DIR}/catch2-prefix/include)
 
-set(CATCH_EXTERNAL_URL URL https://github.com/catchorg/catch2/archive/v2.9.1.tar.gz URL_HASH
-                       MD5=4980778888fed635bf191d8a86f9f89c)
+set(CATCH_EXTERNAL_URL URL https://github.com/catchorg/catch2/archive/v2.12.1.tar.gz URL_HASH
+                       SHA256=e5635c082282ea518a8dd7ee89796c8026af8ea9068cd7402fb1615deacd91c3)
 
 ExternalProject_Add(
   catch2

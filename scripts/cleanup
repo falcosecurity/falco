@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+
+usage() {
+    echo "usage: $0 -p 0987654321 -r <deb-dev|rpm-dev|bin-dev>"
+    exit 1
+}
+
+user=poiana
+
+# Get the versions to delete.
+#
+# $1: repository to lookup
+# $2: number of versions to skip.
+get_versions() {
+    # The API endpoint returns the Falco package versions sort by most recent.
+    IFS=$'\n' read -r -d '' -a all < <(curl -s --header "Content-Type: application/json" "https://api.bintray.com/packages/falcosecurity/$1/falco" | jq -r '.versions | .[]' | tail -n "+$2")
+}
+
+# Remove all the versions (${all[@]} array).
+#
+# $1: repository containing the versions.
+rem_versions() {
+    for i in "${!all[@]}";
+    do
+        JFROG_CLI_LOG_LEVEL=DEBUG jfrog bt vd --quiet --user "${user}" --key "${pass}" "falcosecurity/$1/falco/${all[$i]}"
+    done
+}
+
+while getopts ":p::r:" opt; do
+    case "${opt}" in
+        p )
+          pass=${OPTARG}
+          ;;
+        r )
+          repo="${OPTARG}"
+          [[ "${repo}" == "deb-dev" || "${repo}" == "rpm-dev" || "${repo}" == "bin-dev" ]] || usage
+          ;;
+        : )
+          echo "invalid option: ${OPTARG} requires an argument" 1>&2
+          exit 1
+          ;;
+        \?)
+          echo "invalid option: ${OPTARG}" 1>&2
+          exit 1
+          ;;
+    esac
+done
+shift $((OPTIND-1))
+
+if [ -z "${pass}" ] || [ -z "${repo}" ]; then
+    usage
+fi
+
+skip=51
+if [[ "${repo}" == "bin-dev" ]]; then
+    skip=11
+fi
+
+get_versions "${repo}" ${skip}
+echo "number of versions to delete: ${#all[@]}"
+rem_versions "${repo}"

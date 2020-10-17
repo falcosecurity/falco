@@ -6,7 +6,6 @@ daysUntilClose: 7
 exemptLabels:
   - cncf
   - roadmap
-  - enhancement
   - "help wanted"
 # Label to use when marking an issue as stale
 staleLabel: wontfix
@@ -15,5 +14,7 @@ markComment: >
   This issue has been automatically marked as stale because it has not had
   recent activity. It will be closed if no further activity occurs. Thank you
   for your contributions.
+  Issues labeled "cncf", "roadmap" and "help wanted" will not be automatically closed.
+  Please refer to a maintainer to get such label added if you think this should be kept open.
 # Comment to post when closing a stale issue. Set to `false` to disable
 closeComment: false

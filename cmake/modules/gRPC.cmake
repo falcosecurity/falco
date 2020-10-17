@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2019 The Falco Authors.
+# Copyright (C) 2020 The Falco Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
 # the License. You may obtain a copy of the License at
@@ -40,6 +40,15 @@ if(NOT USE_BUNDLED_DEPS)
     message(STATUS "Found protobuf: compiler: ${PROTOC}, include: ${PROTOBUF_INCLUDE}, lib: ${PROTOBUF_LIB}")
   else()
     message(FATAL_ERROR "Couldn't find system protobuf")
+  endif()
+
+  # gpr
+  find_library(GPR_LIB NAMES gpr)
+
+  if(GPR_LIB)
+    message(STATUS "Found gpr lib: ${GPR_LIB}")
+  else()
+    message(FATAL_ERROR "Couldn't find system gpr")
   endif()
 
   # gRPC todo(fntlnz, leodido): check that gRPC version is greater or equal than 1.8.0
@@ -87,12 +96,17 @@ else()
   # that zlib will be very outdated
   set(ZLIB_INCLUDE "${GRPC_SRC}/third_party/zlib")
   set(ZLIB_LIB "${GRPC_LIBS_ABSOLUTE}/libz.a")
+  # we tell gRPC to compile c-ares for us because when a gRPC package is not available, like on CentOS, it's very likely
+  # that c-ares will be very outdated
+  set(CARES_INCLUDE "${GRPC_SRC}/third_party/cares" "${GRPC_SRC}/third_party/cares/cares")
+  set(CARES_LIB "${GRPC_LIBS_ABSOLUTE}/libares.a")
 
   message(STATUS "Using bundled gRPC in '${GRPC_SRC}'")
   message(
     STATUS
       "Bundled gRPC comes with protobuf: compiler: ${PROTOC}, include: ${PROTOBUF_INCLUDE}, lib: ${PROTOBUF_LIB}")
   message(STATUS "Bundled gRPC comes with zlib: include: ${ZLIB_INCLUDE}, lib: ${ZLIB_LIB}}")
+  message(STATUS "Bundled gRPC comes with cares: include: ${CARES_INCLUDE}, lib: ${CARES_LIB}}")
   message(STATUS "Bundled gRPC comes with gRPC C++ plugin: include: ${GRPC_CPP_PLUGIN}")
 
   get_filename_component(PROTOC_DIR ${PROTOC} PATH)
@@ -101,8 +115,8 @@ else()
     grpc
     DEPENDS openssl
     GIT_REPOSITORY https://github.com/grpc/grpc.git
-    GIT_TAG v1.25.0
-    GIT_SUBMODULES "third_party/protobuf third_party/zlib third_party/cares/cares"
+    GIT_TAG v1.31.1
+    GIT_SUBMODULES "third_party/protobuf third_party/zlib third_party/cares/cares third_party/abseil-cpp third_party/re2"
     BUILD_IN_SOURCE 1
     BUILD_BYPRODUCTS ${GRPC_LIB} ${GRPCPP_LIB}
     INSTALL_COMMAND ""
@@ -112,6 +126,8 @@ else()
       HAS_SYSTEM_ZLIB=false
       HAS_SYSTEM_PROTOBUF=false
       HAS_SYSTEM_CARES=false
+      HAS_EMBEDDED_OPENSSL_ALPN=false
+      HAS_SYSTEM_OPENSSL_ALPN=true
       PKG_CONFIG_PATH=${OPENSSL_BUNDLE_DIR}
       PKG_CONFIG=${PKG_CONFIG_EXECUTABLE}
       PATH=${PROTOC_DIR}:$ENV{PATH}

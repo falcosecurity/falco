@@ -1,0 +1,33 @@
+#
+# Copyright (C) 2020 The Falco Authors.
+#
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+mod_version="@PROBE_VERSION@"
+dkms add -m falco -v $mod_version --rpm_safe_upgrade
+if [ `uname -r | grep -c "BOOT"` -eq 0 ] && [ -e /lib/modules/`uname -r`/build/include ]; then
+	dkms build -m falco -v $mod_version
+	dkms install --force -m falco -v $mod_version
+elif [ `uname -r | grep -c "BOOT"` -gt 0 ]; then
+	echo -e ""
+	echo -e "Module build for the currently running kernel was skipped since you"
+	echo -e "are running a BOOT variant of the kernel."
+else
+	echo -e ""
+	echo -e "Module build for the currently running kernel was skipped since the"
+	echo -e "kernel source for this kernel does not seem to be installed."
+fi
+
+/sbin/chkconfig --add falco

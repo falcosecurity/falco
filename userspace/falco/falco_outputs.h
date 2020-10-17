@@ -19,50 +19,36 @@ limitations under the License.
 #include <memory>
 #include <map>
 
-extern "C" {
-#include "lua.h"
-#include "lualib.h"
-#include "lauxlib.h"
-}
-
 #include "gen_filter.h"
 #include "json_evt.h"
 #include "falco_common.h"
 #include "token_bucket.h"
 #include "falco_engine.h"
+#include "outputs.h"
 
 //
 // This class acts as the primary interface between a program and the
 // falco output engine. The falco rules engine is implemented by a
 // separate class falco_engine.
 //
-
 class falco_outputs : public falco_common
 {
 public:
 	falco_outputs(falco_engine *engine);
 	virtual ~falco_outputs();
 
-	// The way to refer to an output (file, syslog, stdout, etc.)
-	// An output has a name and set of options.
-	struct output_config
-	{
-		std::string name;
-		std::map<std::string, std::string> options;
-	};
-
 	void init(bool json_output,
 		  bool json_include_output_property,
 		  uint32_t rate, uint32_t max_burst, bool buffered,
 		  bool time_format_iso_8601, std::string hostname);
 
-	void add_output(output_config oc);
+	void add_output(falco::outputs::config oc);
 
 	//
-	// ev is an event that has matched some rule. Pass the event
+	// evt is an event that has matched some rule. Pass the event
 	// to all configured outputs.
 	//
-	void handle_event(gen_event *ev, std::string &rule, std::string &source,
+	void handle_event(gen_event *evt, std::string &rule, std::string &source,
 			  falco_common::priority_type priority, std::string &format);
 
 	// Send a generic message to all outputs. Not necessarily associated with any event.
@@ -70,18 +56,16 @@ public:
 			falco_common::priority_type priority,
 			std::string &msg,
 			std::string &rule,
-			std::map<std::string,std::string> &output_fields);
+			std::map<std::string, std::string> &output_fields);
 
 	void reopen_outputs();
 
-	static int handle_http(lua_State *ls);
-	static int handle_grpc(lua_State *ls);
-
 private:
-
 	falco_engine *m_falco_engine;
 
 	bool m_initialized;
+
+	std::vector<falco::outputs::abstract_output *> m_outputs;
 
 	// Rate limits notifications
 	token_bucket m_notifications_tb;
@@ -90,11 +74,4 @@ private:
 	bool m_json_output;
 	bool m_time_format_iso_8601;
 	std::string m_hostname;
-
-	std::string m_lua_add_output = "add_output";
-	std::string m_lua_output_event = "output_event";
-	std::string m_lua_output_msg = "output_msg";
-	std::string m_lua_output_cleanup = "output_cleanup";
-	std::string m_lua_output_reopen = "output_reopen";
-	std::string m_lua_main_filename = "output.lua";
 };

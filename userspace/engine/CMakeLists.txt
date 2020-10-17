@@ -21,19 +21,38 @@ set(FALCO_ENGINE_SOURCE_FILES
     formats.cpp)
 
 add_library(falco_engine STATIC ${FALCO_ENGINE_SOURCE_FILES})
-add_dependencies(falco_engine njson lyaml lpeg)
+add_dependencies(falco_engine njson lyaml lpeg string-view-lite)
 
-target_include_directories(
-  falco_engine
-  PUBLIC
-    "${LUAJIT_INCLUDE}"
-    "${NJSON_INCLUDE}"
-    "${CURL_INCLUDE_DIR}"
-    "${TBB_INCLUDE_DIR}"
-    "${SYSDIG_SOURCE_DIR}/userspace/libsinsp/third-party/jsoncpp"
-    "${SYSDIG_SOURCE_DIR}/userspace/libscap"
-    "${SYSDIG_SOURCE_DIR}/userspace/libsinsp"
-    "${PROJECT_BINARY_DIR}/userspace/engine")
+if(USE_BUNDLED_DEPS)
+  add_dependencies(falco_engine libyaml)
+endif()
+
+if(MINIMAL_BUILD)
+  target_include_directories(
+    falco_engine
+    PUBLIC
+      "${LUAJIT_INCLUDE}"
+      "${NJSON_INCLUDE}"
+      "${TBB_INCLUDE_DIR}"
+      "${STRING_VIEW_LITE_INCLUDE}"
+      "${SYSDIG_SOURCE_DIR}/userspace/libsinsp/third-party/jsoncpp"
+      "${SYSDIG_SOURCE_DIR}/userspace/libscap"
+      "${SYSDIG_SOURCE_DIR}/userspace/libsinsp"
+      "${PROJECT_BINARY_DIR}/userspace/engine")
+else()
+  target_include_directories(
+    falco_engine
+    PUBLIC
+      "${LUAJIT_INCLUDE}"
+      "${NJSON_INCLUDE}"
+      "${CURL_INCLUDE_DIR}"
+      "${TBB_INCLUDE_DIR}"
+      "${STRING_VIEW_LITE_INCLUDE}"
+      "${SYSDIG_SOURCE_DIR}/userspace/libsinsp/third-party/jsoncpp"
+      "${SYSDIG_SOURCE_DIR}/userspace/libscap"
+      "${SYSDIG_SOURCE_DIR}/userspace/libsinsp"
+      "${PROJECT_BINARY_DIR}/userspace/engine")
+endif()
 
 target_link_libraries(falco_engine "${FALCO_SINSP_LIBRARY}" "${LPEG_LIB}" "${LYAML_LIB}" "${LIBYAML_LIB}")
 

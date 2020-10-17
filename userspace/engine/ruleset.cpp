@@ -201,7 +201,7 @@ void falco_ruleset::add(string &name,
 	}
 }
 
-void falco_ruleset::enable(const string &substring, bool enabled, uint16_t ruleset)
+void falco_ruleset::enable(const string &substring, bool match_exact, bool enabled, uint16_t ruleset)
 {
 	while(m_rulesets.size() < (size_t)ruleset + 1)
 	{
@@ -212,7 +212,17 @@ void falco_ruleset::enable(const string &substring, bool enabled, uint16_t rules
 	{
 		bool matches;
 
-		matches = (substring == "" || (val.first.find(substring) != string::npos));
+		if(match_exact)
+		{
+			size_t pos = val.first.find(substring);
+
+			matches = (substring == "" || (pos == 0 &&
+						       substring.size() == val.first.size()));
+		}
+		else
+		{
+			matches = (substring == "" || (val.first.find(substring) != string::npos));
+		}
 
 		if(matches)
 		{

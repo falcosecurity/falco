@@ -16,6 +16,8 @@ project(falco)
 
 option(USE_BUNDLED_DEPS "Bundle hard to find dependencies into the Falco binary" OFF)
 option(BUILD_WARNINGS_AS_ERRORS "Enable building with -Wextra -Werror flags" OFF)
+option(MINIMAL_BUILD "Build a minimal version of Falco, containing only the engine and basic input/output (EXPERIMENTAL)" OFF)
+option(MUSL_OPTIMIZED_BUILD "Enable if you want a musl optimized build" OFF)
 
 # Elapsed time
 # set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CMAKE_COMMAND} -E time") # TODO(fntlnz, leodido): add a flag to enable this
@@ -50,7 +52,15 @@ else()
 endif()
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
-set(CMAKE_COMMON_FLAGS "-Wall -ggdb ${DRAIOS_FEATURE_FLAGS}")
+if(MINIMAL_BUILD)
+  set(MINIMAL_BUILD_FLAGS "-DMINIMAL_BUILD")
+endif()
+
+if(MUSL_OPTIMIZED_BUILD)
+  set(MUSL_FLAGS "-static -Os")
+endif()
+
+set(CMAKE_COMMON_FLAGS "-Wall -ggdb ${DRAIOS_FEATURE_FLAGS} ${MINIMAL_BUILD_FLAGS} ${MUSL_FLAGS}")
 
 if(BUILD_WARNINGS_AS_ERRORS)
   set(CMAKE_SUPPRESSED_WARNINGS
@@ -71,9 +81,9 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3 -fno-strict-aliasing -DNDEBUG")
 include(GetFalcoVersion)
 
 set(PACKAGE_NAME "falco")
-set(PROBE_VERSION "${FALCO_VERSION}")
-set(PROBE_NAME "falco-probe")
+set(PROBE_NAME "falco")
 set(PROBE_DEVICE_NAME "falco")
+set(DRIVERS_REPO "https://dl.bintray.com/falcosecurity/driver")
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   set(CMAKE_INSTALL_PREFIX
       /usr
@@ -93,8 +103,8 @@ message(STATUS "Using bundled nlohmann-json in '${NJSON_SRC}'")
 set(NJSON_INCLUDE "${NJSON_SRC}/single_include")
 ExternalProject_Add(
   njson
-  URL "https://s3.amazonaws.com/download.draios.com/dependencies/njson-3.3.0.tar.gz"
-  URL_MD5 "e26760e848656a5da400662e6c5d999a"
+  URL "https://github.com/nlohmann/json/archive/v3.3.0.tar.gz"
+  URL_HASH "SHA256=2fd1d207b4669a7843296c41d3b6ac5b23d00dec48dba507ba051d14564aa801"
   CONFIGURE_COMMAND ""
   BUILD_COMMAND ""
   INSTALL_COMMAND "")
@@ -106,14 +116,15 @@ find_package(Curses REQUIRED)
 message(STATUS "Found ncurses: include: ${CURSES_INCLUDE_DIR}, lib: ${CURSES_LIBRARIES}")
 
 # libb64
+
 set(B64_SRC "${PROJECT_BINARY_DIR}/b64-prefix/src/b64")
 message(STATUS "Using bundled b64 in '${B64_SRC}'")
 set(B64_INCLUDE "${B64_SRC}/include")
 set(B64_LIB "${B64_SRC}/src/libb64.a")
 ExternalProject_Add(
   b64
-  URL "https://s3.amazonaws.com/download.draios.com/dependencies/libb64-1.2.src.zip"
-  URL_MD5 "a609809408327117e2c643bed91b76c5"
+  URL "https://github.com/libb64/libb64/archive/ce864b17ea0e24a91e77c7dd3eb2d1ac4175b3f0.tar.gz"
+  URL_HASH "SHA256=d07173e66f435e5c77dbf81bd9313f8d0e4a3b4edd4105a62f4f8132ba932811"
   CONFIGURE_COMMAND ""
   BUILD_COMMAND ${CMD_MAKE}
   BUILD_IN_SOURCE 1
@@ -122,11 +133,13 @@ ExternalProject_Add(
 # yaml-cpp
 include(yaml-cpp)
 
-# OpenSSL
-include(OpenSSL)
+if(NOT MINIMAL_BUILD)
+  # OpenSSL
+  include(OpenSSL)
 
-# libcurl
-include(cURL)
+  # libcurl
+  include(cURL)
+endif()
 
 # LuaJIT
 set(LUAJIT_SRC "${PROJECT_BINARY_DIR}/luajit-prefix/src/luajit/src")
@@ -135,8 +148,8 @@ set(LUAJIT_INCLUDE "${LUAJIT_SRC}")
 set(LUAJIT_LIB "${LUAJIT_SRC}/libluajit.a")
 ExternalProject_Add(
   luajit
-  URL "https://s3.amazonaws.com/download.draios.com/dependencies/LuaJIT-2.0.3.tar.gz"
-  URL_MD5 "f14e9104be513913810cd59c8c658dc0"
+  URL "https://github.com/LuaJIT/LuaJIT/archive/v2.0.3.tar.gz"
+  URL_HASH "SHA256=8da3d984495a11ba1bce9a833ba60e18b532ca0641e7d90d97fafe85ff014baa"
   CONFIGURE_COMMAND ""
   BUILD_COMMAND ${CMD_MAKE}
   BUILD_IN_SOURCE 1
@@ -151,39 +164,32 @@ list(APPEND LPEG_DEPENDENCIES "luajit")
 ExternalProject_Add(
   lpeg
   DEPENDS ${LPEG_DEPENDENCIES}
-  URL "https://s3.amazonaws.com/download.draios.com/dependencies/lpeg-1.0.0.tar.gz"
-  URL_MD5 "0aec64ccd13996202ad0c099e2877ece"
+  URL "http://www.inf.puc-rio.br/~roberto/lpeg/lpeg-1.0.2.tar.gz"
+  URL_HASH "SHA256=48d66576051b6c78388faad09b70493093264588fcd0f258ddaab1cdd4a15ffe"
   BUILD_COMMAND LUA_INCLUDE=${LUAJIT_INCLUDE} "${PROJECT_SOURCE_DIR}/scripts/build-lpeg.sh" "${LPEG_SRC}/build"
   BUILD_IN_SOURCE 1
   CONFIGURE_COMMAND ""
   INSTALL_COMMAND "")
 
 # libyaml
-find_library(LIBYAML_LIB NAMES libyaml.so)
-if(LIBYAML_LIB)
-  message(STATUS "Found libyaml: lib: ${LIBYAML_LIB}")
-else()
-  message(FATAL_ERROR "Couldn't find system libyaml")
-endif()
+include(libyaml)
 
 # lyaml
 set(LYAML_SRC "${PROJECT_BINARY_DIR}/lyaml-prefix/src/lyaml/ext/yaml")
 set(LYAML_LIB "${LYAML_SRC}/.libs/yaml.a")
 message(STATUS "Using bundled lyaml in '${LYAML_SRC}'")
-set(LYAML_DEPENDENCIES "")
-list(APPEND LYAML_DEPENDENCIES "luajit")
 ExternalProject_Add(
   lyaml
-  DEPENDS ${LYAML_DEPENDENCIES}
-  URL "https://s3.amazonaws.com/download.draios.com/dependencies/lyaml-release-v6.0.tar.gz"
-  URL_MD5 "dc3494689a0dce7cf44e7a99c72b1f30"
+  DEPENDS luajit libyaml
+  URL "https://github.com/gvvaughan/lyaml/archive/release-v6.0.tar.gz"
+  URL_HASH "SHA256=9d7cf74d776999ff6f758c569d5202ff5da1f303c6f4229d3b41f71cd3a3e7a7"
   BUILD_COMMAND ${CMD_MAKE}
   BUILD_IN_SOURCE 1
-  CONFIGURE_COMMAND ./configure --enable-static LIBS=-lyaml LUA_INCLUDE=-I${LUAJIT_INCLUDE} LUA=${LUAJIT_SRC}/luajit
+  CONFIGURE_COMMAND ./configure --enable-static CFLAGS=-I${LIBYAML_INSTALL_DIR}/include CPPFLAGS=-I${LIBYAML_INSTALL_DIR}/include LDFLAGS=-L${LIBYAML_INSTALL_DIR}/lib LIBS=-lyaml LUA=${LUAJIT_SRC}/luajit LUA_INCLUDE=-I${LUAJIT_INCLUDE}
   INSTALL_COMMAND sh -c
                   "cp -R ${PROJECT_BINARY_DIR}/lyaml-prefix/src/lyaml/lib/* ${PROJECT_SOURCE_DIR}/userspace/engine/lua")
 
-# Intel TBB
+# One TBB
 set(TBB_SRC "${PROJECT_BINARY_DIR}/tbb-prefix/src/tbb")
 
 message(STATUS "Using bundled tbb in '${TBB_SRC}'")
@@ -192,31 +198,38 @@ set(TBB_INCLUDE_DIR "${TBB_SRC}/include/")
 set(TBB_LIB "${TBB_SRC}/build/lib_release/libtbb.a")
 ExternalProject_Add(
   tbb
-  URL "https://github.com/intel/tbb/archive/2018_U5.tar.gz"
-  URL_MD5 "ff3ae09f8c23892fbc3008c39f78288f"
+  URL "https://github.com/oneapi-src/oneTBB/archive/2018_U5.tar.gz"
+  URL_HASH "SHA256=b8dbab5aea2b70cf07844f86fa413e549e099aa3205b6a04059ca92ead93a372"
   CONFIGURE_COMMAND ""
   BUILD_COMMAND ${CMD_MAKE} tbb_build_dir=${TBB_SRC}/build tbb_build_prefix=lib extra_inc=big_iron.inc
   BUILD_IN_SOURCE 1
   BUILD_BYPRODUCTS ${TBB_LIB}
   INSTALL_COMMAND "")
 
-# civetweb
-set(CIVETWEB_SRC "${PROJECT_BINARY_DIR}/civetweb-prefix/src/civetweb/")
-set(CIVETWEB_LIB "${CIVETWEB_SRC}/install/lib/libcivetweb.a")
-set(CIVETWEB_INCLUDE_DIR "${CIVETWEB_SRC}/install/include")
-message(STATUS "Using bundled civetweb in '${CIVETWEB_SRC}'")
-ExternalProject_Add(
-  civetweb
-  URL "https://github.com/civetweb/civetweb/archive/v1.11.tar.gz"
-  URL_MD5 "b6d2175650a27924bccb747cbe084cd4"
-  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E make_directory ${CIVETWEB_SRC}/install/lib
-  COMMAND ${CMAKE_COMMAND} -E make_directory ${CIVETWEB_SRC}/install/include
-  BUILD_IN_SOURCE 1
-  BUILD_COMMAND ${CMD_MAKE} COPT="-DNO_FILES" WITH_CPP=1
-  INSTALL_COMMAND ${CMD_MAKE} COPT="-DNO_FILES" install-lib install-headers PREFIX=${CIVETWEB_SRC}/install "WITH_CPP=1")
+if(NOT MINIMAL_BUILD)
+  # civetweb
+  set(CIVETWEB_SRC "${PROJECT_BINARY_DIR}/civetweb-prefix/src/civetweb/")
+  set(CIVETWEB_LIB "${CIVETWEB_SRC}/install/lib/libcivetweb.a")
+  set(CIVETWEB_INCLUDE_DIR "${CIVETWEB_SRC}/install/include")
+  message(STATUS "Using bundled civetweb in '${CIVETWEB_SRC}'")
+  ExternalProject_Add(
+    civetweb
+    URL "https://github.com/civetweb/civetweb/archive/v1.11.tar.gz"
+    URL_HASH "SHA256=de7d5e7a2d9551d325898c71e41d437d5f7b51e754b242af897f7be96e713a42"
+    CONFIGURE_COMMAND ${CMAKE_COMMAND} -E make_directory ${CIVETWEB_SRC}/install/lib
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CIVETWEB_SRC}/install/include
+    BUILD_IN_SOURCE 1
+    BUILD_COMMAND ${CMD_MAKE} COPT="-DNO_FILES" WITH_CPP=1
+    INSTALL_COMMAND ${CMD_MAKE} COPT="-DNO_FILES" install-lib install-headers PREFIX=${CIVETWEB_SRC}/install "WITH_CPP=1")
+endif()
 
-# gRPC
-include(gRPC)
+#string-view-lite
+include(DownloadStringViewLite)
+
+if(NOT MINIMAL_BUILD)
+  # gRPC
+  include(gRPC)
+endif()
 
 # sysdig
 include(sysdig)
@@ -224,11 +237,13 @@ include(sysdig)
 # Installation
 install(FILES falco.yaml DESTINATION "${FALCO_ETC_DIR}")
 
-# Coverage
-include(Coverage)
+if(NOT MINIMAL_BUILD)
+  # Coverage
+  include(Coverage)
 
-# Tests
-add_subdirectory(test)
+  # Tests
+  add_subdirectory(test)
+endif()
 
 # Rules
 add_subdirectory(rules)
@@ -238,6 +253,9 @@ add_subdirectory(docker)
 
 # Clang format
 # add_custom_target(format COMMAND clang-format --style=file -i $<TARGET_PROPERTY:falco,SOURCES> COMMENT "Formatting ..." VERBATIM)
+
+# Static analysis
+include(static-analysis)
 
 # Shared build variables
 set(FALCO_SINSP_LIBRARY sinsp)

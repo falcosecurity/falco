@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2019 The Falco Authors.
+# Copyright (C) 2020 The Falco Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
 # the License. You may obtain a copy of the License at
@@ -26,7 +26,7 @@ else()
   ExternalProject_Add(
     yamlcpp
     URL "https://github.com/jbeder/yaml-cpp/archive/yaml-cpp-0.6.2.tar.gz"
-    URL_MD5 "5b943e9af0060d0811148b037449ef82"
+    URL_HASH "SHA256=e4d8560e163c3d875fd5d9e5542b5fd5bec810febdcba61481fe5fc4e6b1fd05"
     BUILD_IN_SOURCE 1
     INSTALL_COMMAND "")
 endif()

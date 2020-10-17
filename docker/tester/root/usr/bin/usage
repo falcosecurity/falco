@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-pythonversion=$(python2 -c 'import sys; version=sys.version_info[:3]; print("{0}.{1}.{2}".format(*version))')
-pipversion=$(pip2 --version | cut -d' ' -f 1,2,5,6)
+pythonversion=$(python -c 'import sys; version=sys.version_info[:3]; print("{0}.{1}.{2}".format(*version))')
+pipversion=$(pip --version | cut -d' ' -f 1,2,5,6)
 dockerversion=$(docker --version)
 avocadoversion=$(pip2 show avocado-framework | grep Version)
 avocadoversion=${avocadoversion#"Version: "}
@@ -30,7 +30,7 @@ How to use.
 
 How to build.
 
-    * cd docker/builder && DOCKER_BUILDKIT=1 docker build -t falcosecurity/falco-tester .
+    * cd docker/tester && DOCKER_BUILDKIT=1 docker build -t falcosecurity/falco-tester .
 
 Environment.
 

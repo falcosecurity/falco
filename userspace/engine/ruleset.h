@@ -45,8 +45,11 @@ public:
         // unnecessarily large vectors.
 
 	// Find those rules matching the provided substring and set
-	// their enabled status to enabled.
-	void enable(const std::string &substring, bool enabled, uint16_t ruleset = 0);
+	// their enabled status to enabled. If match_exact is true,
+	// substring must be an exact match for a given rule
+	// name. Otherwise, any rules having substring as a substring
+	// in the rule name are enabled/disabled.
+	void enable(const std::string &substring, bool match_exact, bool enabled, uint16_t ruleset = 0);
 
 	// Find those rules that have a tag in the set of tags and set
 	// their enabled status to enabled. Note that the enabled

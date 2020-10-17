@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2019 The Falco Authors.
+Copyright (C) 2020 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ limitations under the License.
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include "falco_utils.h"
 
 #include "configuration.h"
 #include "logger.h"
@@ -32,7 +33,7 @@ falco_configuration::falco_configuration():
 	m_time_format_iso_8601(false),
 	m_webserver_enabled(false),
 	m_webserver_listen_port(8765),
-	m_webserver_k8s_audit_endpoint("/k8s_audit"),
+	m_webserver_k8s_audit_endpoint("/k8s-audit"),
 	m_webserver_ssl_enabled(false),
 	m_config(NULL)
 {
@@ -51,7 +52,7 @@ void falco_configuration::init(list<string> &cmdline_options)
 {
 	init_cmdline_options(cmdline_options);
 
-	falco_outputs::output_config stdout_output;
+	falco::outputs::config stdout_output;
 	stdout_output.name = "stdout";
 	m_outputs.push_back(stdout_output);
 }
@@ -80,7 +81,7 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 	m_json_output = m_config->get_scalar<bool>("json_output", false);
 	m_json_include_output_property = m_config->get_scalar<bool>("json_include_output_property", true);
 
-	falco_outputs::output_config file_output;
+	falco::outputs::config file_output;
 	file_output.name = "file";
 	if(m_config->get_scalar<bool>("file_output", "enabled", false))
 	{
@@ -98,21 +99,21 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 		m_outputs.push_back(file_output);
 	}
 
-	falco_outputs::output_config stdout_output;
+	falco::outputs::config stdout_output;
 	stdout_output.name = "stdout";
 	if(m_config->get_scalar<bool>("stdout_output", "enabled", false))
 	{
 		m_outputs.push_back(stdout_output);
 	}
 
-	falco_outputs::output_config syslog_output;
+	falco::outputs::config syslog_output;
 	syslog_output.name = "syslog";
 	if(m_config->get_scalar<bool>("syslog_output", "enabled", false))
 	{
 		m_outputs.push_back(syslog_output);
 	}
 
-	falco_outputs::output_config program_output;
+	falco::outputs::config program_output;
 	program_output.name = "program";
 	if(m_config->get_scalar<bool>("program_output", "enabled", false))
 	{
@@ -130,7 +131,7 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 		m_outputs.push_back(program_output);
 	}
 
-	falco_outputs::output_config http_output;
+	falco::outputs::config http_output;
 	http_output.name = "http";
 	if(m_config->get_scalar<bool>("http_output", "enabled", false))
 	{
@@ -148,16 +149,17 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 
 	m_grpc_enabled = m_config->get_scalar<bool>("grpc", "enabled", false);
 	m_grpc_bind_address = m_config->get_scalar<string>("grpc", "bind_address", "0.0.0.0:5060");
-	m_grpc_threadiness = m_config->get_scalar<uint32_t>("grpc", "threadiness", 8); // todo > limit it to avoid overshubscription? std::thread::hardware_concurrency()
+	m_grpc_threadiness = m_config->get_scalar<uint32_t>("grpc", "threadiness", 0);
 	if(m_grpc_threadiness == 0)
 	{
-		throw logic_error("error reading config file (" + m_config_file +"): gRPC threadiness must be greater than 0");
+		m_grpc_threadiness = falco::utils::hardware_concurrency();
 	}
+	// todo > else limit threadiness to avoid oversubscription?
 	m_grpc_private_key = m_config->get_scalar<string>("grpc", "private_key", "/etc/falco/certs/server.key");
 	m_grpc_cert_chain = m_config->get_scalar<string>("grpc", "cert_chain", "/etc/falco/certs/server.crt");
 	m_grpc_root_certs = m_config->get_scalar<string>("grpc", "root_certs", "/etc/falco/certs/ca.crt");
 
-	falco_outputs::output_config grpc_output;
+	falco::outputs::config grpc_output;
 	grpc_output.name = "grpc";
 	// gRPC output is enabled only if gRPC server is enabled too
 	if(m_config->get_scalar<bool>("grpc_output", "enabled", true) && m_grpc_enabled)
@@ -170,9 +172,9 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 		throw logic_error("Error reading config file (" + m_config_file + "): No outputs configured. Please configure at least one output file output enabled but no filename in configuration block");
 	}
 
-	string log_level = m_config->get_scalar<string>("log_level", "info");
+	m_log_level = m_config->get_scalar<string>("log_level", "info");
 
-	falco_logger::set_level(log_level);
+	falco_logger::set_level(m_log_level);
 
 	m_notifications_rate = m_config->get_scalar<uint32_t>("outputs", "rate", 1);
 	m_notifications_max_burst = m_config->get_scalar<uint32_t>("outputs", "max_burst", 1000);
@@ -198,7 +200,7 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 
 	m_webserver_enabled = m_config->get_scalar<bool>("webserver", "enabled", false);
 	m_webserver_listen_port = m_config->get_scalar<uint32_t>("webserver", "listen_port", 8765);
-	m_webserver_k8s_audit_endpoint = m_config->get_scalar<string>("webserver", "k8s_audit_endpoint", "/k8s_audit");
+	m_webserver_k8s_audit_endpoint = m_config->get_scalar<string>("webserver", "k8s_audit_endpoint", "/k8s-audit");
 	m_webserver_ssl_enabled = m_config->get_scalar<bool>("webserver", "ssl_enabled", false);
 	m_webserver_ssl_certificate = m_config->get_scalar<string>("webserver", "ssl_certificate", "/etc/falco/falco.pem");
 
