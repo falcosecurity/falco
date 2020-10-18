@@ -522,7 +522,7 @@
 - macro: container_started
   condition: >
     ((evt.type = container or
-     (evt.type=execve and evt.dir=< and proc.vpid=1)) and
+     (spawned_process and proc.vpid=1)) and
      container.image.repository != incomplete)
 
 - macro: interactive
