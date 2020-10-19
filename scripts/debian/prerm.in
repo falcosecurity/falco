@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright (C) 2019 The Falco Authors.
+# Copyright (C) 2020 The Falco Authors.
 #
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,16 +16,6 @@
 # limitations under the License.
 #
 set -e
-
-NAME="@PACKAGE_NAME@"
-
-if [ -x "/etc/init.d/$NAME" ]; then
-		if [ -x "`which invoke-rc.d 2>/dev/null`" ]; then
-				invoke-rc.d $NAME stop || exit $?
-		else
-				/etc/init.d/$NAME stop || exit $?
-		fi
-fi
 
 DKMS_PACKAGE_NAME="@PACKAGE_NAME@"
 DKMS_VERSION="@PROBE_VERSION@"

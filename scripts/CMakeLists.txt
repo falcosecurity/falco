@@ -19,7 +19,7 @@ configure_file(debian/postinst.in debian/postinst)
 configure_file(debian/postrm.in debian/postrm)
 configure_file(debian/prerm.in debian/prerm)
 
-file(COPY "${PROJECT_SOURCE_DIR}/scripts/debian/falco"
+file(COPY "${PROJECT_SOURCE_DIR}/scripts/debian/falco.service"
 	DESTINATION "${PROJECT_BINARY_DIR}/scripts/debian")
 
 configure_file(rpm/postinstall.in rpm/postinstall)
