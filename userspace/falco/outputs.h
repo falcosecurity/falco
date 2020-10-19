@@ -38,6 +38,21 @@ struct config
 };
 
 //
+// The message to be outputted. It can either refer to:
+//  - an event that has matched some rule,
+//  - or a generic message (e.g., a drop alert).
+//
+struct message
+{
+	uint64_t ts;
+	falco_common::priority_type priority;
+	std::string msg;
+	std::string rule;
+	std::string source;
+	map<std::string, std::string> fields;
+};
+
+//
 // This class acts as the primary interface for implementing
 // a Falco output class.
 //
@@ -52,15 +67,13 @@ public:
 		m_hostname = hostname;
 	}
 
-	// Output an event that has matched some rule.
-	virtual void output_event(gen_event *evt, std::string &rule, std::string &source,
-				  falco_common::priority_type priority, std::string &format, std::string &msg) = 0;
+	// Output a message.
+	virtual void output(const message *msg) = 0;
 
-	// Output a generic message. Not necessarily associated with any event.
-	virtual void output_msg(falco_common::priority_type priority, std::string &msg) = 0;
-
+	// Possibly close the output and open it again.
 	virtual void reopen() {}
 
+	// Possibly flush the output.
 	virtual void cleanup() {}
 
 protected:

@@ -31,17 +31,11 @@ void falco::outputs::output_program::open_pfile()
 	}
 }
 
-void falco::outputs::output_program::output_event(gen_event *evt, std::string &rule, std::string &source,
-						  falco_common::priority_type priority, std::string &format, std::string &msg)
-{
-	output_msg(priority, msg);
-}
-
-void falco::outputs::output_program::output_msg(falco_common::priority_type priority, std::string &msg)
+void falco::outputs::output_program::output(const message *msg)
 {
 	open_pfile();
 
-	fprintf(m_pfile, "%s\n", msg.c_str());
+	fprintf(m_pfile, "%s\n", msg->msg.c_str());
 
 	if(m_oc.options["keep_alive"] != "true")
 	{
