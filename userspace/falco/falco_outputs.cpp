@@ -65,6 +65,12 @@ void falco_outputs::init(bool json_output,
 			 uint32_t rate, uint32_t max_burst, bool buffered,
 			 bool time_format_iso_8601, string hostname)
 {
+	// Cannot be initialized more than one time.
+	if(m_initialized)
+	{
+		throw falco_exception("falco_outputs already initialized");
+	}
+
 	m_json_output = json_output;
 
 	// Note that falco_formats is already initialized by the engine,
