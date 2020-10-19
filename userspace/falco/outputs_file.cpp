@@ -31,16 +31,10 @@ void falco::outputs::output_file::open_file()
 	}
 }
 
-void falco::outputs::output_file::output_event(gen_event *evt, std::string &rule, std::string &source,
-					       falco_common::priority_type priority, std::string &format, std::string &msg)
-{
-	output_msg(priority, msg);
-}
-
-void falco::outputs::output_file::output_msg(falco_common::priority_type priority, std::string &msg)
+void falco::outputs::output_file::output(const message *msg)
 {
 	open_file();
-	m_outfile << msg + "\n";
+	m_outfile << msg->msg + "\n";
 
 	if(m_oc.options["keep_alive"] != "true")
 	{

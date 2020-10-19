@@ -18,14 +18,8 @@ limitations under the License.
 #include <syslog.h>
 #include "banned.h" // This raises a compilation error when certain functions are used
 
-void falco::outputs::output_syslog::output_event(gen_event *evt, std::string &rule, std::string &source,
-						 falco_common::priority_type priority, std::string &format, std::string &msg)
-{
-	output_msg(priority, msg);
-}
-
-void falco::outputs::output_syslog::output_msg(falco_common::priority_type priority, std::string &msg)
+void falco::outputs::output_syslog::output(const message *msg)
 {
 	// Syslog output should not have any trailing newline
-	::syslog(priority, "%s", msg.c_str());
+	::syslog(msg->priority, "%s", msg->msg.c_str());
 }

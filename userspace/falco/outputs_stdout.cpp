@@ -18,16 +18,10 @@ limitations under the License.
 #include <iostream>
 #include "banned.h" // This raises a compilation error when certain functions are used
 
-void falco::outputs::output_stdout::output_event(gen_event *evt, std::string &rule, std::string &source,
-						 falco_common::priority_type priority, std::string &format, std::string &msg)
-{
-	output_msg(priority, msg);
-}
-
-void falco::outputs::output_stdout::output_msg(falco_common::priority_type priority, std::string &msg)
+void falco::outputs::output_stdout::output(const message *msg)
 {
 	//
-	// By default, the stdout stream is fully buffered or line buffered 
+	// By default, the stdout stream is fully buffered or line buffered
 	// (if the stream can be determined to refer to an interactive device, e.g. in a TTY).
 	// Just enable automatic flushing when unbuffered output is desired.
 	// Note that it is set every time since other writings to the stdout can disable it.
@@ -36,7 +30,7 @@ void falco::outputs::output_stdout::output_msg(falco_common::priority_type prior
 	{
 		std::cout << std::unitbuf;
 	}
-	std::cout << msg + "\n";
+	std::cout << msg->msg + "\n";
 }
 
 void falco::outputs::output_stdout::cleanup()

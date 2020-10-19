@@ -21,23 +21,21 @@ limitations under the License.
 #include "formats.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
 
-void falco::outputs::output_grpc::output_event(gen_event *evt, std::string &rule, std::string &source,
-					       falco_common::priority_type priority, std::string &format,
-					       std::string &msg)
+void falco::outputs::output_grpc::output(const message *msg)
 {
 	falco::outputs::response grpc_res;
 
 	// time
 	auto timestamp = grpc_res.mutable_time();
-	*timestamp = google::protobuf::util::TimeUtil::NanosecondsToTimestamp(evt->get_ts());
+	*timestamp = google::protobuf::util::TimeUtil::NanosecondsToTimestamp(msg->ts);
 
 	// rule
 	auto r = grpc_res.mutable_rule();
-	*r = rule;
+	*r = msg->rule;
 
 	// source
 	falco::schema::source s = falco::schema::source::SYSCALL;
-	if(!falco::schema::source_Parse(source, &s))
+	if(!falco::schema::source_Parse(msg->source, &s))
 	{
 		throw falco_exception("Unknown source passed to output_grpc::output_event()");
 	}
@@ -45,7 +43,7 @@ void falco::outputs::output_grpc::output_event(gen_event *evt, std::string &rule
 
 	// priority
 	falco::schema::priority p = falco::schema::priority::EMERGENCY;
-	if(!falco::schema::priority_Parse(falco_common::priority_names[priority], &p))
+	if(!falco::schema::priority_Parse(falco_common::priority_names[msg->priority], &p))
 	{
 		throw falco_exception("Unknown priority passed to output_grpc::output_event()");
 	}
@@ -53,12 +51,11 @@ void falco::outputs::output_grpc::output_event(gen_event *evt, std::string &rule
 
 	// output
 	auto output = grpc_res.mutable_output();
-	*output = msg;
+	*output = msg->msg;
 
 	// output fields
 	auto &fields = *grpc_res.mutable_output_fields();
-	auto resolvedTkns = falco_formats::resolve_tokens(evt, source, format);
-	for(const auto &kv : resolvedTkns)
+	for(const auto &kv : msg->fields)
 	{
 		fields[kv.first] = kv.second;
 	}
@@ -68,9 +65,4 @@ void falco::outputs::output_grpc::output_event(gen_event *evt, std::string &rule
 	*host = m_hostname;
 
 	falco::grpc::queue::get().push(grpc_res);
-}
-
-void falco::outputs::output_grpc::output_msg(falco_common::priority_type priority, std::string &msg)
-{
-	// todo(fntlnz, leodido, leogr) > gRPC does not support subscribing to dropped events yet
 }

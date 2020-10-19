@@ -18,13 +18,7 @@ limitations under the License.
 #include "logger.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
 
-void falco::outputs::output_http::output_event(gen_event *evt, std::string &rule, std::string &source,
-					       falco_common::priority_type priority, std::string &format, std::string &msg)
-{
-	output_msg(priority, msg);
-}
-
-void falco::outputs::output_http::output_msg(falco_common::priority_type priority, std::string &msg)
+void falco::outputs::output_http::output(const message *msg)
 {
 	CURL *curl = NULL;
 	CURLcode res = CURLE_FAILED_INIT;
@@ -37,7 +31,7 @@ void falco::outputs::output_http::output_msg(falco_common::priority_type priorit
 		slist1 = curl_slist_append(slist1, "Content-Type: application/json");
 		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, slist1);
 		curl_easy_setopt(curl, CURLOPT_URL, m_oc.options["url"].c_str());
-		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, msg.c_str());
+		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, msg->msg.c_str());
 		curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, -1L);
 
 		res = curl_easy_perform(curl);
