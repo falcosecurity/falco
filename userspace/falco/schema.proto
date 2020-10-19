@@ -57,4 +57,7 @@ enum source {
   k8s_audit = 1;
   K8s_audit = 1;
   K8S_audit = 1;
+  INTERNAL = 2;
+  internal = 2;
+  Internal = 2;
 }

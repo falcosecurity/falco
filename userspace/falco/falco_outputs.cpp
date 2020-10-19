@@ -196,7 +196,7 @@ void falco_outputs::handle_msg(uint64_t ts,
 	falco_outputs::ctrl_msg cmsg = {};
 	cmsg.ts = ts;
 	cmsg.priority = priority;
-	cmsg.source = "";
+	cmsg.source = "internal";
 	cmsg.rule = rule;
 	cmsg.fields = output_fields;
 
