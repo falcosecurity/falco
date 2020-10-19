@@ -203,7 +203,7 @@ void falco_outputs::handle_msg(uint64_t now,
 		iso8601evttime += time_ns;
 
 		jmsg["output"] = msg;
-		jmsg["priority"] = "Critical";
+		jmsg["priority"] = falco_common::priority_names[priority];
 		jmsg["rule"] = rule;
 		jmsg["time"] = iso8601evttime;
 		jmsg["output_fields"] = output_fields;
@@ -216,7 +216,7 @@ void falco_outputs::handle_msg(uint64_t now,
 		bool first = true;
 
 		sinsp_utils::ts_to_string(now, &timestr, false, true);
-		full_msg = timestr + ": " + falco_common::priority_names[LOG_CRIT] + " " + msg + " (";
+		full_msg = timestr + ": " + falco_common::priority_names[priority] + " " + msg + " (";
 		for(auto &pair : output_fields)
 		{
 			if(first)
