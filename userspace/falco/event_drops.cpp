@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2019 The Falco Authors.
+Copyright (C) 2020 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@ limitations under the License.
 */
 
 #include "event_drops.h"
+#include "falco_common.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
 
 syscall_evt_drop_mgr::syscall_evt_drop_mgr():
@@ -137,7 +138,7 @@ bool syscall_evt_drop_mgr::perform_actions(uint64_t now, scap_stats &delta, bool
 
 		case ACT_ALERT:
 			m_outputs->handle_msg(now,
-					      falco_outputs::PRIORITY_CRITICAL,
+					      falco_common::PRIORITY_CRITICAL,
 					      msg,
 					      rule,
 					      output_fields);

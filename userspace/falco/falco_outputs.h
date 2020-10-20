@@ -31,7 +31,7 @@ limitations under the License.
 // falco output engine. The falco rules engine is implemented by a
 // separate class falco_engine.
 //
-class falco_outputs : public falco_common
+class falco_outputs
 {
 public:
 	falco_outputs();
