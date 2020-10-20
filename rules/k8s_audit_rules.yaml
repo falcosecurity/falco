@@ -537,7 +537,7 @@
   condition: >
     kevt 
     and non_system_user 
-    and ka.user.name in (admin_k8s_users) 
+    and ka.user.name in (full_admin_k8s_users)
     and not allowed_full_admin_users
   output: K8s Operation performed by full admin user (user=%ka.user.name target=%ka.target.name/%ka.target.resource verb=%ka.verb uri=%ka.uri resp=%ka.response.code)
   priority: WARNING
