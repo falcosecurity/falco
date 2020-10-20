@@ -38,8 +38,7 @@ limitations under the License.
 
 using namespace std;
 
-falco_outputs::falco_outputs(falco_engine *engine):
-	m_falco_engine(engine),
+falco_outputs::falco_outputs():
 	m_initialized(false),
 	m_buffered(true),
 	m_json_output(false),

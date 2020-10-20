@@ -34,7 +34,7 @@ limitations under the License.
 class falco_outputs : public falco_common
 {
 public:
-	falco_outputs(falco_engine *engine);
+	falco_outputs();
 	virtual ~falco_outputs();
 
 	void init(bool json_output,
@@ -61,8 +61,6 @@ public:
 	void reopen_outputs();
 
 private:
-	falco_engine *m_falco_engine;
-
 	bool m_initialized;
 
 	std::vector<falco::outputs::abstract_output *> m_outputs;
