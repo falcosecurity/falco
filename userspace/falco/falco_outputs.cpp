@@ -63,12 +63,6 @@ void falco_outputs::init(bool json_output,
 			 uint32_t rate, uint32_t max_burst, bool buffered,
 			 bool time_format_iso_8601, string hostname)
 {
-	// The engine must have been given an inspector by now.
-	if(!m_inspector)
-	{
-		throw falco_exception("No inspector provided");
-	}
-
 	m_json_output = json_output;
 
 	// Note that falco_formats is already initialized by the engine,

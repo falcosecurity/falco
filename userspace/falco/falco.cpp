@@ -763,7 +763,6 @@ int falco_init(int argc, char **argv)
 		}
 
 		outputs = new falco_outputs();
-		outputs->set_inspector(inspector);
 
 		// Some combinations of arguments are not allowed.
 		if (daemon && pidfilename == "") {
