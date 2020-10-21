@@ -1866,6 +1866,7 @@
 - list: falco_privileged_images
   items: [
     docker.io/calico/node,
+    calico/node,
     docker.io/cloudnativelabs/kube-router,
     docker.io/docker/ucp-agent,
     docker.io/falcosecurity/falco,
