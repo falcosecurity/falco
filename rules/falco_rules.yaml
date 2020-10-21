@@ -1799,7 +1799,7 @@
     docker.io/rook/toolbox, docker.io/cloudnativelabs/kube-router, docker.io/consul,
     docker.io/datadog/docker-dd-agent, docker.io/datadog/agent, docker.io/docker/ucp-agent, docker.io/gliderlabs/logspout,
     docker.io/netdata/netdata, docker.io/google/cadvisor, docker.io/prom/node-exporter,
-    amazon/amazon-ecs-agent, prom/node-exporter, amazon/cloudwatch-agent, falcosecurity/falco
+    amazon/amazon-ecs-agent, prom/node-exporter, amazon/cloudwatch-agent
     ]
 
 # These container images are allowed to run with hostnetwork=true
@@ -2359,8 +2359,8 @@
 - list: ibm_cloud_containers
   items:
     - icr.io/ext/sysdig/agent
-    - registry.ng.bluemix.net/armada-master/olm
     - registry.ng.bluemix.net/armada-master/metrics-server-amd64
+    - registry.ng.bluemix.net/armada-master/olm
 
 # In a local/user rules file, list the namespace or container images that are
 # allowed to contact the K8s API Server from within a container. This
@@ -2371,11 +2371,10 @@
     (container.image.repository in (gcr.io/google_containers/hyperkube-amd64,
      gcr.io/google_containers/kube2sky, docker.io/sysdig/falco,
      docker.io/sysdig/sysdig, docker.io/falcosecurity/falco,
-     sysdig/falco, sysdig/sysdig, falcosecurity/falco,
-     fluent/fluentd-kubernetes-daemonset, prom/prometheus)
-     or (container.image.repository in (ibm_cloud_containers))
+     sysdig/falco, sysdig/sysdig, falcosecurity/falco, 
+     fluent/fluentd-kubernetes-daemonset, prom/prometheus,
+     ibm_cloud_containers)
      or (k8s.ns.name = "kube-system"))
-
 
 - macro: k8s_api_server
   condition: (fd.sip.name="kubernetes.default.svc.cluster.local")
