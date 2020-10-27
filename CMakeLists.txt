@@ -83,7 +83,7 @@ include(GetFalcoVersion)
 set(PACKAGE_NAME "falco")
 set(PROBE_NAME "falco")
 set(PROBE_DEVICE_NAME "falco")
-set(DRIVERS_REPO "https://dl.bintray.com/falcosecurity/driver")
+set(DRIVERS_REPO "https://download.falco.org/driver")
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   set(CMAKE_INSTALL_PREFIX
       /usr
