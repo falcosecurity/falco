@@ -1,5 +1,9 @@
 # Falco Drivers Storage S3
 
+Supersedes: [20200818-artifacts-storage.md#drivers](20200818-artifacts-storage.md#drivers)
+
+Supersedes: [20200901-artifacts-cleanup.md#drivers](20200901-artifacts-cleanup.md#drivers)
+
 ## Introduction
 
 In the past days, as many people probably noticed, Bintray started rate-limiting our users, effectively preventing them from downloading any kernel module, rpm/deb package or any pre-built dependency we host there.
@@ -41,7 +45,7 @@ Before today, we had many issues with storage even without the spike in users we
 
 ## Context on AWS
 
-Amazon AWS, recently gave credits to the Falco project to operate some parts of the infrastructure on AWS. The CNCF is providing a sub-account we are already using for the migration of the other pieces (like Prow). 
+Amazon AWS, recently gave credits to the Falco project to operate some parts of the infrastructure on AWS. The CNCF is providing a sub-account we are already using for the migration of the other pieces (like Prow).
 
 ## Interactions with other teams and the CNCF
 
@@ -55,7 +59,7 @@ We want to propose to move the drivers and the container dependencies to S3.
 
 #### Moving means:
 
-* We create a public S3 bucket with[ stats enabled](https://docs.aws.amazon.com/AmazonS3/latest/dev/analytics-storage-class.html)
+* We create a public S3 bucket with [stats enabled](https://docs.aws.amazon.com/AmazonS3/latest/dev/analytics-storage-class.html)
 
 * We attach the bucket to a cloudfront distribution behind the download.falco.org subdomain
 
@@ -113,7 +117,7 @@ export DRIVERS_REPO=https://your-url-here
 
 Pass it as environment variable using the docker run flag -e - for example:
 
-docker run -e DRIVERS_REPO=[https://your-url-here](https://your-url-here) 
+docker run -e DRIVERS_REPO=[https://your-url-here](https://your-url-here)
 
 **Kubernetes**
 
