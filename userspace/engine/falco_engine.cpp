@@ -35,7 +35,6 @@ extern "C"
 #include "utils.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
 
-
 string lua_on_event = "on_event";
 string lua_print_stats = "print_stats";
 
@@ -43,11 +42,11 @@ using namespace std;
 
 nlohmann::json::json_pointer falco_engine::k8s_audit_time = "/stageTimestamp"_json_pointer;
 
-falco_engine::falco_engine(bool seed_rng, const std::string& alternate_lua_dir)
-	: m_rules(NULL), m_next_ruleset_id(0),
-	  m_min_priority(falco_common::PRIORITY_DEBUG),
-	  m_sampling_ratio(1), m_sampling_multiplier(0),
-	  m_replace_container_info(false)
+falco_engine::falco_engine(bool seed_rng, const std::string &alternate_lua_dir):
+	m_rules(NULL), m_next_ruleset_id(0),
+	m_min_priority(falco_common::PRIORITY_DEBUG),
+	m_sampling_ratio(1), m_sampling_multiplier(0),
+	m_replace_container_info(false)
 {
 	luaopen_lpeg(m_ls);
 	luaopen_yaml(m_ls);
@@ -60,7 +59,7 @@ falco_engine::falco_engine(bool seed_rng, const std::string& alternate_lua_dir)
 
 	if(seed_rng)
 	{
-		srandom((unsigned) getpid());
+		srandom((unsigned)getpid());
 	}
 
 	m_default_ruleset_id = find_ruleset_id(m_default_ruleset);
@@ -73,7 +72,7 @@ falco_engine::falco_engine(bool seed_rng, const std::string& alternate_lua_dir)
 
 falco_engine::~falco_engine()
 {
-	if (m_rules)
+	if(m_rules)
 	{
 		delete m_rules;
 	}
@@ -82,7 +81,7 @@ falco_engine::~falco_engine()
 
 uint32_t falco_engine::engine_version()
 {
-	return (uint32_t) FALCO_ENGINE_VERSION;
+	return (uint32_t)FALCO_ENGINE_VERSION;
 }
 
 #define DESCRIPTION_TEXT_START 16
@@ -169,7 +168,7 @@ void falco_engine::load_rules_file(const string &rules_filename, bool verbose, b
 void falco_engine::load_rules(const string &rules_content, bool verbose, bool all_events)
 {
 	// The engine must have been given an inspector by now.
-	if(! m_inspector)
+	if(!m_inspector)
 	{
 		throw falco_exception("No inspector provided");
 	}
@@ -198,15 +197,15 @@ void falco_engine::load_rules(const string &rules_content, bool verbose, bool al
 }
 
 // todo(fntlnz): make this do the real loading
-static void rules_cb(char *rules_content)
+static void rules_cb(char *rules_content, hawk_engine *engine)
 {
-	printf(rules_content);
+	reinterpret_cast<falco_engine *>(engine)->load_rules(rules_content, false, true);
 }
 
 // todo(fntlnz): not sure we want this in falco_engine
 void falco_engine::watch_rules(bool verbose, bool all_events)
 {
-	hawk_watch_rules((hawk_watch_rules_cb)rules_cb);
+	hawk_watch_rules((hawk_watch_rules_cb)rules_cb, reinterpret_cast<hawk_engine *>(this));
 }
 
 void falco_engine::enable_rule(const string &substring, bool enabled, const string &ruleset)
@@ -274,7 +273,7 @@ uint64_t falco_engine::num_rules_for_ruleset(const std::string &ruleset)
 	uint16_t ruleset_id = find_ruleset_id(ruleset);
 
 	return m_sinsp_rules->num_rules_for_ruleset(ruleset_id) +
-		m_k8s_audit_rules->num_rules_for_ruleset(ruleset_id);
+	       m_k8s_audit_rules->num_rules_for_ruleset(ruleset_id);
 }
 
 void falco_engine::evttypes_for_ruleset(std::vector<bool> &evttypes, const std::string &ruleset)
@@ -313,15 +312,15 @@ unique_ptr<falco_engine::rule_result> falco_engine::process_sinsp_event(sinsp_ev
 
 		if(lua_pcall(m_ls, 1, 3, 0) != 0)
 		{
-			const char* lerr = lua_tostring(m_ls, -1);
+			const char *lerr = lua_tostring(m_ls, -1);
 			string err = "Error invoking function output: " + string(lerr);
 			throw falco_exception(err);
 		}
 		res->evt = ev;
-		const char *p =  lua_tostring(m_ls, -3);
+		const char *p = lua_tostring(m_ls, -3);
 		res->rule = p;
 		res->source = "syscall";
-		res->priority_num = (falco_common::priority_type) lua_tonumber(m_ls, -2);
+		res->priority_num = (falco_common::priority_type)lua_tonumber(m_ls, -2);
 		res->format = lua_tostring(m_ls, -1);
 		lua_pop(m_ls, 3);
 	}
@@ -346,7 +345,7 @@ unique_ptr<falco_engine::rule_result> falco_engine::process_k8s_audit_event(json
 	}
 
 	// All k8s audit events have the single tag "1".
-	if(!m_k8s_audit_rules->run((gen_event *) ev, 1, ruleset_id))
+	if(!m_k8s_audit_rules->run((gen_event *)ev, 1, ruleset_id))
 	{
 		return unique_ptr<struct rule_result>();
 	}
@@ -361,15 +360,15 @@ unique_ptr<falco_engine::rule_result> falco_engine::process_k8s_audit_event(json
 
 		if(lua_pcall(m_ls, 1, 3, 0) != 0)
 		{
-			const char* lerr = lua_tostring(m_ls, -1);
+			const char *lerr = lua_tostring(m_ls, -1);
 			string err = "Error invoking function output: " + string(lerr);
 			throw falco_exception(err);
 		}
 		res->evt = ev;
-		const char *p =  lua_tostring(m_ls, -3);
+		const char *p = lua_tostring(m_ls, -3);
 		res->rule = p;
 		res->source = "k8s_audit";
-		res->priority_num = (falco_common::priority_type) lua_tonumber(m_ls, -2);
+		res->priority_num = (falco_common::priority_type)lua_tonumber(m_ls, -2);
 		res->format = lua_tostring(m_ls, -1);
 		lua_pop(m_ls, 3);
 	}
@@ -395,7 +394,7 @@ bool falco_engine::parse_k8s_audit_json(nlohmann::json &j, std::list<json_event>
 				{
 					// Note we only handle a single top level array, to
 					// avoid excessive recursion.
-					if(! parse_k8s_audit_json(item, evts, false))
+					if(!parse_k8s_audit_json(item, evts, false))
 					{
 						return false;
 					}
@@ -473,7 +472,7 @@ void falco_engine::print_stats()
 	{
 		if(lua_pcall(m_ls, 0, 0, 0) != 0)
 		{
-			const char* lerr = lua_tostring(m_ls, -1);
+			const char *lerr = lua_tostring(m_ls, -1);
 			string err = "Error invoking function print_stats: " + string(lerr);
 			throw falco_exception(err);
 		}
@@ -482,21 +481,20 @@ void falco_engine::print_stats()
 	{
 		throw falco_exception("No function " + lua_print_stats + " found in lua rule loader module");
 	}
-
 }
 
 void falco_engine::add_sinsp_filter(string &rule,
 				    set<uint32_t> &evttypes,
 				    set<uint32_t> &syscalls,
 				    set<string> &tags,
-				    sinsp_filter* filter)
+				    sinsp_filter *filter)
 {
 	m_sinsp_rules->add(rule, evttypes, syscalls, tags, filter);
 }
 
 void falco_engine::add_k8s_audit_filter(string &rule,
 					set<string> &tags,
-					json_event_filter* filter)
+					json_event_filter *filter)
 {
 	// All k8s audit events have a single tag "1".
 	std::set<uint32_t> event_tags = {1};
@@ -538,8 +536,8 @@ inline bool falco_engine::should_drop_evt()
 		return false;
 	}
 
-	double coin = (random() * (1.0/RAND_MAX));
-	return (coin >= (1.0/(m_sampling_multiplier * m_sampling_ratio)));
+	double coin = (random() * (1.0 / RAND_MAX));
+	return (coin >= (1.0 / (m_sampling_multiplier * m_sampling_ratio)));
 }
 
 sinsp_filter_factory &falco_engine::sinsp_factory()
