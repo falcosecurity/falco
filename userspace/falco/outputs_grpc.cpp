@@ -37,7 +37,7 @@ void falco::outputs::output_grpc::output(const message *msg)
 	falco::schema::source s = falco::schema::source::SYSCALL;
 	if(!falco::schema::source_Parse(msg->source, &s))
 	{
-		throw falco_exception("Unknown source passed to output_grpc::output_event()");
+		throw falco_exception("Unknown source passed to output_grpc::output()");
 	}
 	grpc_res.set_source(s);
 
@@ -45,7 +45,7 @@ void falco::outputs::output_grpc::output(const message *msg)
 	falco::schema::priority p = falco::schema::priority::EMERGENCY;
 	if(!falco::schema::priority_Parse(falco_common::priority_names[msg->priority], &p))
 	{
-		throw falco_exception("Unknown priority passed to output_grpc::output_event()");
+		throw falco_exception("Unknown priority passed to output_grpc::output()");
 	}
 	grpc_res.set_priority(p);
 
