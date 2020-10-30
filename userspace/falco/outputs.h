@@ -67,6 +67,12 @@ public:
 		m_hostname = hostname;
 	}
 
+	// Return the output's name as per its configuration.
+	const std::string get_name()
+	{
+		return m_oc.name;
+	}
+
 	// Output a message.
 	virtual void output(const message *msg) = 0;
 
