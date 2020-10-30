@@ -52,8 +52,11 @@ extern "C"
 class falco_engine : public falco_common
 {
 public:
-	falco_engine(bool seed_rng=true, const std::string& alternate_lua_dir=FALCO_ENGINE_SOURCE_LUA_DIR);
+	falco_engine(bool seed_rng = true, const std::string &alternate_lua_dir = FALCO_ENGINE_SOURCE_LUA_DIR);
 	virtual ~falco_engine();
+
+	falco_engine(const falco_engine &rhs);
+	falco_engine *clone();
 
 	// A given engine has a version which identifies the fields
 	// and rules file format it supports. This version will change
@@ -62,7 +65,7 @@ public:
 	static uint32_t engine_version();
 
 	// Print to stdout (using printf) a description of each field supported by this engine.
-	void list_fields(bool names_only=false);
+	void list_fields(bool names_only = false);
 
 	//
 	// Load rules either directly or from a filename.
@@ -85,7 +88,6 @@ public:
 
 	// Wrapper that assumes the default ruleset
 	void enable_rule(const std::string &substring, bool enabled);
-
 
 	// Like enable_rule, but the rule name must be an exact match.
 	void enable_rule_exact(const std::string &rule_name, bool enabled, const std::string &ruleset);
@@ -155,7 +157,8 @@ public:
 
 	// **Methods Related to k8s audit log events, which are
 	// **represented as json objects.
-	struct rule_result {
+	struct rule_result
+	{
 		gen_event *evt;
 		std::string rule;
 		std::string source;
@@ -171,7 +174,7 @@ public:
 	// Returns true if the json object was recognized as a k8s
 	// audit event(s), false otherwise.
 	//
-	bool parse_k8s_audit_json(nlohmann::json &j, std::list<json_event> &evts, bool top=true);
+	bool parse_k8s_audit_json(nlohmann::json &j, std::list<json_event> &evts, bool top = true);
 
 	//
 	// Given an event, check it against the set of rules in the
@@ -196,7 +199,7 @@ public:
 	//
 	void add_k8s_audit_filter(std::string &rule,
 				  std::set<std::string> &tags,
-				  json_event_filter* filter);
+				  json_event_filter *filter);
 
 	// **Methods Related to Sinsp Events e.g system calls
 	//
@@ -237,13 +240,14 @@ public:
 			      std::set<uint32_t> &evttypes,
 			      std::set<uint32_t> &syscalls,
 			      std::set<std::string> &tags,
-			      sinsp_filter* filter);
+			      sinsp_filter *filter);
 
 	sinsp_filter_factory &sinsp_factory();
 	json_event_filter_factory &json_factory();
 
-private:
+	bool is_ready();
 
+private:
 	static nlohmann::json::json_pointer k8s_audit_time;
 
 	//
@@ -262,6 +266,8 @@ private:
 
 	std::unique_ptr<falco_sinsp_ruleset> m_sinsp_rules;
 	std::unique_ptr<falco_ruleset> m_k8s_audit_rules;
+
+	std::string m_alternate_lua_dir;
 
 	//
 	// Here's how the sampling ratio and multiplier influence
@@ -292,5 +298,6 @@ private:
 
 	std::string m_extra;
 	bool m_replace_container_info;
-};
 
+	bool m_is_ready = false;
+};

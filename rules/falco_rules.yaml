@@ -2425,9 +2425,9 @@
 - rule: Contact K8S API Server From Container
   desc: Detect attempts to contact the K8S API Server from a container
   condition: >
-    evt.type=connect and evt.dir=< and 
+    evt.type=connect and evt.dir=< and
     (fd.typechar=4 or fd.typechar=6) and
-    container and 
+    container and
     not k8s_containers and
     k8s_api_server and
     not user_known_contact_k8s_api_server_activities
@@ -2647,7 +2647,7 @@
 - rule: Delete or rename shell history
   desc: Detect shell history deletion
   condition: >
-    (modify_shell_history or truncate_shell_history) and
+      (modify_shell_history or truncate_shell_history) and
        not var_lib_docker_filepath and
        not proc.name in (docker_binaries)
   output: >
@@ -2881,7 +2881,7 @@
   tags: [container, mitre_execution]
 
 
-# This rule is enabled by default. 
+# This rule is enabled by default.
 # If you want to disable it, modify the following macro.
 - macro: consider_packet_socket_communication
   condition: (always_true)

@@ -51,11 +51,11 @@ falco_engine::falco_engine(bool seed_rng, const std::string &alternate_lua_dir):
 	luaopen_lpeg(m_ls);
 	luaopen_yaml(m_ls);
 
+	m_alternate_lua_dir = alternate_lua_dir;
 	falco_common::init(m_lua_main_filename.c_str(), alternate_lua_dir.c_str());
 	falco_rules::init(m_ls);
 
-	m_sinsp_rules.reset(new falco_sinsp_ruleset());
-	m_k8s_audit_rules.reset(new falco_ruleset());
+	clear_filters();
 
 	if(seed_rng)
 	{
@@ -66,8 +66,6 @@ falco_engine::falco_engine(bool seed_rng, const std::string &alternate_lua_dir):
 
 	// Create this now so we can potentially list filters and exit
 	m_json_factory = make_shared<json_event_filter_factory>();
-
-	hawk_init();
 }
 
 falco_engine::~falco_engine()
@@ -76,7 +74,15 @@ falco_engine::~falco_engine()
 	{
 		delete m_rules;
 	}
-	hawk_destroy();
+}
+
+falco_engine *falco_engine::clone()
+{
+	auto engine = new falco_engine(true, m_alternate_lua_dir);
+	engine->set_inspector(m_inspector);
+	engine->set_extra(m_extra, m_replace_container_info);
+	engine->set_min_priority(m_min_priority);
+	return engine;
 }
 
 uint32_t falco_engine::engine_version()
@@ -180,32 +186,52 @@ void falco_engine::load_rules(const string &rules_content, bool verbose, bool al
 
 	if(!m_rules)
 	{
-		m_rules = new falco_rules(m_inspector,
-					  this,
-					  m_ls);
+		// Note that falco_formats is added to the lua state used by the falco engine only.
+		// Within the engine, only formats.
+		// Formatter is used, so we can unconditionally set json_output to false.
+		bool json_output = false;
+		bool json_include_output_property = false;
+		falco_formats::init(m_inspector, this, m_ls, json_output, json_include_output_property);
+		m_rules = new falco_rules(m_inspector, this, m_ls);
 	}
 
-	// Note that falco_formats is added to the lua state used
-	// by the falco engine only. Within the engine, only
-	// formats.formatter is used, so we can unconditionally set
-	// json_output to false.
-	bool json_output = false;
-	bool json_include_output_property = false;
-	falco_formats::init(m_inspector, this, m_ls, json_output, json_include_output_property);
 	uint64_t dummy;
+	// m_sinsp_rules.reset(new falco_sinsp_ruleset());
+	// m_k8s_audit_rules.reset(new falco_ruleset());
 	m_rules->load_rules(rules_content, verbose, all_events, m_extra, m_replace_container_info, m_min_priority, dummy);
+
+	m_is_ready = true;
+
+	return;
+
+	//
+	// auto local_rules = new falco_rules(m_inspector, this, m_ls);
+	// try
+	// {
+	// 	uint64_t dummy;
+	// 	local_rules->load_rules(rules_content, verbose, all_events, m_extra, m_replace_container_info, m_min_priority, dummy);
+
+	// 	// m_rules = local_rules
+	// 	// std::atomic<falco_rules *> lore(m_rules);
+	// 	// std::atomic_exchange(&lore, local_rules);
+	// 	// SCHEDULE LOCAL_RULES AS NEXT RULESET
+	// }
+	// catch(const falco_exception &e)
+	// {
+	// 	// todo
+	// 	printf("IGNORE BECAUSE OF ERROR LOADING RULESET!\n");
+	// }
 }
 
-// todo(fntlnz): make this do the real loading
-static void rules_cb(char *rules_content, hawk_engine *engine)
-{
-	reinterpret_cast<falco_engine *>(engine)->load_rules(rules_content, false, true);
-}
+// // todo(fntlnz): not sure we want this in falco_engine
+// void falco_engine::watch_rules(bool verbose, bool all_events)
+// {
+// 	hawk_watch_rules((hawk_watch_rules_cb)rules_cb, reinterpret_cast<hawk_engine *>(this));
+// }
 
-// todo(fntlnz): not sure we want this in falco_engine
-void falco_engine::watch_rules(bool verbose, bool all_events)
+bool falco_engine::is_ready()
 {
-	hawk_watch_rules((hawk_watch_rules_cb)rules_cb, reinterpret_cast<hawk_engine *>(this));
+	return m_is_ready;
 }
 
 void falco_engine::enable_rule(const string &substring, bool enabled, const string &ruleset)
@@ -334,6 +360,7 @@ unique_ptr<falco_engine::rule_result> falco_engine::process_sinsp_event(sinsp_ev
 
 unique_ptr<falco_engine::rule_result> falco_engine::process_sinsp_event(sinsp_evt *ev)
 {
+	// todo(leodido, fntlnz) > pass the last ruleset id
 	return process_sinsp_event(ev, m_default_ruleset_id);
 }
 

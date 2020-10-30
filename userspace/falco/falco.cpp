@@ -30,6 +30,8 @@ limitations under the License.
 #include <sys/stat.h>
 #include <unistd.h>
 #include <getopt.h>
+#include <condition_variable>
+#include <tuple>
 
 #include <sinsp.h>
 
@@ -55,6 +57,10 @@ bool g_terminate = false;
 bool g_reopen_outputs = false;
 bool g_restart = false;
 bool g_daemonized = false;
+
+std::mutex engine_ready;
+std::condition_variable engine_cv;
+bool is_engine_ready = false;
 
 //
 // Helper functions
@@ -232,8 +238,7 @@ static std::string read_file(std::string filename)
 //
 // Event processing loop
 //
-uint64_t do_inspect(falco_engine *engine,
-		    falco_outputs *outputs,
+uint64_t do_inspect(falco_engine *engine, falco_outputs *outputs,
 		    sinsp *inspector,
 		    falco_configuration &config,
 		    syscall_evt_drop_mgr &sdropmgr,
@@ -243,6 +248,7 @@ uint64_t do_inspect(falco_engine *engine,
 		    bool all_events,
 		    int &result)
 {
+
 	uint64_t num_evts = 0;
 	int32_t rc;
 	sinsp_evt *ev;
@@ -266,12 +272,23 @@ uint64_t do_inspect(falco_engine *engine,
 		}
 	}
 
+	{
+		// wait for the first engine to be ready
+		std::unique_lock<std::mutex> lk(engine_ready);
+		engine_cv.wait(lk, [] { return is_engine_ready; });
+	}
+
+	// printf("ADDRESS: %p\n", engine);
+
 	//
 	// Loop through the events
 	//
+
+	std::atomic<falco_engine *> e;
+	falco_engine *h = e.load();
+	falco_engine *engine_to_use = nullptr;
 	while(1)
 	{
-
 		rc = inspector->next(&ev);
 
 		writer.handle();
@@ -338,7 +355,16 @@ uint64_t do_inspect(falco_engine *engine,
 		// engine, which will match the event against the set
 		// of rules. If a match is found, pass the event to
 		// the outputs.
-		unique_ptr<falco_engine::rule_result> res = engine->process_sinsp_event(ev);
+		bool engine_cmp_res = e.compare_exchange_strong(h, engine);
+		if(engine_cmp_res == true)
+		{
+			engine_to_use = e.load();
+		}
+		if(engine_to_use == nullptr)
+		{
+			continue;
+		}
+		unique_ptr<falco_engine::rule_result> res = engine_to_use->process_sinsp_event(ev);
 		if(res)
 		{
 			outputs->handle_event(res->evt, res->rule, res->source, res->priority_num, res->format);
@@ -408,6 +434,23 @@ static void list_source_fields(falco_engine *engine, bool verbose, bool names_on
 	}
 }
 
+static void rules_cb(char *rules_content, hawk_engine &engine)
+{
+	auto &x = reinterpret_cast<falco_engine *&>(engine);
+
+	x = x->clone();
+	x->load_rules(rules_content, false, true);
+
+	engine = x;
+
+	if(!is_engine_ready)
+	{
+		std::lock_guard<std::mutex> lk(engine_ready);
+		is_engine_ready = true;
+		engine_cv.notify_all();
+	}
+}
+
 //
 // ARGUMENT PARSING AND PROGRAM SETUP
 //
@@ -416,8 +459,10 @@ int falco_init(int argc, char **argv)
 	int result = EXIT_SUCCESS;
 	sinsp *inspector = NULL;
 	sinsp_evt::param_fmt event_buffer_format = sinsp_evt::PF_NORMAL;
-	falco_engine *engine = NULL;
-	std::thread engine_watchrules_thread;
+	// std::promise<std::shared_ptr<falco_engine>> engine;
+	// std::future<std::shared_ptr<falco_engine>> engine_future = engine.get_future();
+	falco_engine *bluengine;
+	std::thread watchrules_thread;
 	falco_outputs *outputs = NULL;
 	syscall_evt_drop_mgr sdropmgr;
 	int op;
@@ -729,15 +774,15 @@ int falco_init(int argc, char **argv)
 			return EXIT_SUCCESS;
 		}
 
-		engine = new falco_engine(true, alternate_lua_dir);
-		engine->set_inspector(inspector);
-		engine->set_extra(output_format, replace_container_info);
+		bluengine = new falco_engine(true, alternate_lua_dir);
+		bluengine->set_inspector(inspector);
+		bluengine->set_extra(output_format, replace_container_info);
 
-		if(list_flds)
-		{
-			list_source_fields(engine, verbose, names_only, list_flds_source);
-			return EXIT_SUCCESS;
-		}
+		// if(list_flds)
+		// {
+		// 	list_source_fields(engine, verbose, names_only, list_flds_source);
+		// 	return EXIT_SUCCESS;
+		// }
 
 		if(disable_sources.size() > 0)
 		{
@@ -798,31 +843,31 @@ int falco_init(int argc, char **argv)
 		}
 
 		// validate the rules files and exit
-		if(validate_rules_filenames.size() > 0)
-		{
-			falco_logger::log(LOG_INFO, "Validating rules file(s):\n");
-			for(auto file : validate_rules_filenames)
-			{
-				falco_logger::log(LOG_INFO, "   " + file + "\n");
-			}
-			for(auto file : validate_rules_filenames)
-			{
-				// Only include the prefix if there is more than one file
-				std::string prefix = (validate_rules_filenames.size() > 1 ? file + ": " : "");
-				try
-				{
-					engine->load_rules_file(file, verbose, all_events);
-				}
-				catch(falco_exception &e)
-				{
-					printf("%s%s\n", prefix.c_str(), e.what());
-					throw;
-				}
-				printf("%sOk\n", prefix.c_str());
-			}
-			falco_logger::log(LOG_INFO, "Ok\n");
-			goto exit;
-		}
+		// if(validate_rules_filenames.size() > 0)
+		// {
+		// 	falco_logger::log(LOG_INFO, "Validating rules file(s):\n");
+		// 	for(auto file : validate_rules_filenames)
+		// 	{
+		// 		falco_logger::log(LOG_INFO, "   " + file + "\n");
+		// 	}
+		// 	for(auto file : validate_rules_filenames)
+		// 	{
+		// 		// Only include the prefix if there is more than one file
+		// 		std::string prefix = (validate_rules_filenames.size() > 1 ? file + ": " : "");
+		// 		try
+		// 		{
+		// 			engine->load_rules_file(file, verbose, all_events);
+		// 		}
+		// 		catch(falco_exception &e)
+		// 		{
+		// 			printf("%s%s\n", prefix.c_str(), e.what());
+		// 			throw;
+		// 		}
+		// 		printf("%sOk\n", prefix.c_str());
+		// 	}
+		// 	falco_logger::log(LOG_INFO, "Ok\n");
+		// 	goto exit;
+		// }
 
 		falco_configuration config;
 		if(conf_filename.size())
@@ -844,15 +889,17 @@ int falco_init(int argc, char **argv)
 			falco_logger::log(LOG_INFO, "Falco initialized. No configuration file found, proceeding with defaults\n");
 		}
 
-		engine->set_min_priority(config.m_min_priority);
+		bluengine->set_min_priority(config.m_min_priority);
 
 		if(buffered_cmdline)
 		{
 			config.m_buffered_outputs = buffered_outputs;
 		}
 
-		engine_watchrules_thread = std::thread([&engine, verbose, all_events] {
-			engine->watch_rules(verbose, all_events);
+		hawk_init();
+		watchrules_thread = std::thread([&] {
+			// todo: pass verbose, and all_events
+			hawk_watch_rules((hawk_watch_rules_cb)rules_cb, reinterpret_cast<hawk_engine *>(&bluengine));
 		});
 
 		falco_logger::log(LOG_INFO, "DOPO\n");
@@ -958,13 +1005,13 @@ int falco_init(int argc, char **argv)
 
 		if(describe_all_rules)
 		{
-			engine->describe_rule(NULL);
+			// engine->describe_rule(NULL);
 			goto exit;
 		}
 
 		if(describe_rule != "")
 		{
-			engine->describe_rule(&describe_rule);
+			// engine->describe_rule(&describe_rule);
 			goto exit;
 		}
 
@@ -1247,10 +1294,10 @@ int falco_init(int argc, char **argv)
 
 		if(trace_filename.empty() && config.m_webserver_enabled && !disable_k8s_audit)
 		{
-			std::string ssl_option = (config.m_webserver_ssl_enabled ? " (SSL)" : "");
-			falco_logger::log(LOG_INFO, "Starting internal webserver, listening on port " + to_string(config.m_webserver_listen_port) + ssl_option + "\n");
-			webserver.init(&config, engine, outputs);
-			webserver.start();
+			// std::string ssl_option = (config.m_webserver_ssl_enabled ? " (SSL)" : "");
+			// falco_logger::log(LOG_INFO, "Starting internal webserver, listening on port " + to_string(config.m_webserver_listen_port) + ssl_option + "\n");
+			// webserver.init(&config, engine_future.get().get(), outputs);
+			// webserver.start();
 		}
 
 		// gRPC server
@@ -1275,17 +1322,16 @@ int falco_init(int argc, char **argv)
 		if(!trace_filename.empty() && !trace_is_scap)
 		{
 #ifndef MINIMAL_BUILD
-			read_k8s_audit_trace_file(engine,
-						  outputs,
-						  trace_filename);
+			// read_k8s_audit_trace_file(engine.get(),
+			// 			  outputs,
+			// 			  trace_filename);
 #endif
 		}
 		else
 		{
 			uint64_t num_evts;
 
-			num_evts = do_inspect(engine,
-					      outputs,
+			num_evts = do_inspect(bluengine, outputs,
 					      inspector,
 					      config,
 					      sdropmgr,
@@ -1321,12 +1367,12 @@ int falco_init(int argc, char **argv)
 		}
 
 		inspector->close();
-		engine->print_stats();
+		// engine->print_stats();
 		sdropmgr.print_stats();
-		if(engine_watchrules_thread.joinable())
+		if(watchrules_thread.joinable())
 		{
 			hawk_destroy();
-			engine_watchrules_thread.join();
+			watchrules_thread.join();
 		}
 #ifndef MINIMAL_BUILD
 		webserver.stop();
@@ -1343,10 +1389,10 @@ int falco_init(int argc, char **argv)
 
 		result = EXIT_FAILURE;
 
-		if(engine_watchrules_thread.joinable())
+		if(watchrules_thread.joinable())
 		{
 			hawk_destroy();
-			engine_watchrules_thread.join();
+			watchrules_thread.join();
 		}
 #ifndef MINIMAL_BUILD
 		webserver.stop();
@@ -1361,7 +1407,8 @@ int falco_init(int argc, char **argv)
 exit:
 
 	delete inspector;
-	delete engine;
+	delete bluengine;
+	// delete engine.get();
 	delete outputs;
 
 	return result;
