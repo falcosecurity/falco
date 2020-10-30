@@ -25,6 +25,15 @@
 #
 - required_engine_version: 7
 
+
+# Rule to notify successful instrumentation
+# This triggers when instrumentation produces its first evt
+- rule: Instrumentation started
+  desc: Container has started with instrumentation active
+  condition: (evt.num=1)
+  output: Container has started with instrumentation active
+  priority: NOTICE
+
 # Currently disabled as read/write are ignored syscalls. The nearly
 # similar open_write/open_read check for files being opened for
 # reading/writing.
