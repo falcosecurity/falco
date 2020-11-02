@@ -278,31 +278,30 @@ void falco_outputs::worker()
 	{
 		// Block until a message becomes available.
 		m_queue.pop(cmsg);
-		switch(cmsg.type)
-		{
-		case ctrl_msg_type::CTRL_MSG_OUTPUT:
-			for(auto it = m_outputs.cbegin(); it != m_outputs.cend(); ++it)
-			{
-				(*it)->output(&cmsg);
-			}
-			break;
-		case ctrl_msg_type::CTRL_MSG_CLEANUP:
-			for(auto it = m_outputs.cbegin(); it != m_outputs.cend(); ++it)
-			{
-				(*it)->cleanup();
-			}
-			break;
-		case ctrl_msg_type::CTRL_MSG_REOPEN:
-			for(auto it = m_outputs.cbegin(); it != m_outputs.cend(); ++it)
-			{
-				(*it)->reopen();
-			}
-			break;
-		case ctrl_msg_type::CTRL_MSG_STOP:
+
+		if (cmsg.type == ctrl_msg_type::CTRL_MSG_STOP)
 			return;
 
-		default:
-			break;
+		for(auto it = m_outputs.cbegin(); it != m_outputs.cend(); ++it)
+		{
+			try {
+				switch(cmsg.type)
+				{
+					case ctrl_msg_type::CTRL_MSG_OUTPUT:
+							(*it)->output(&cmsg);
+						break;
+					case ctrl_msg_type::CTRL_MSG_CLEANUP:
+							(*it)->cleanup();
+						break;
+					case ctrl_msg_type::CTRL_MSG_REOPEN:
+							(*it)->reopen();
+						break;
+					default:
+						falco_logger::log(LOG_DEBUG, "Outputs worker received an unknown message type\n");	
+				}
+			} catch(const exception &e) {
+				falco_logger::log(LOG_ERR, (*it)->get_name() + ": " + string(e.what()) + "\n");
+			}
 		}
 	}
 }
