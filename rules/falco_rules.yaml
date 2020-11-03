@@ -3032,6 +3032,17 @@
   output: Drift detected (open+create), new executable created in a container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline filename=%evt.arg.filename name=%evt.arg.name mode=%evt.arg.mode event=%evt.type)
   priority: ERROR
 
+# find when a new kernel module is injected
+
+- list: white_listed_modules
+  items: [""]
+- rule: Linux Kernel Module Injection Detected
+  desc: Detect kernel module was injected (from container).
+  condition: spawned_process and container and evt.type=execve and proc.name=insmod
+  output: Linux Kernel Module injection using insmod detected (user=%user.name user_loginuid=%user.loginuid parent_process=%proc.pname module=%proc.args)
+  priority: WARNING
+  tags: [process]
+
 - list: c2_server_ip_list
   items: []
 
