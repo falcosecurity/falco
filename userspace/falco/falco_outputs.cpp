@@ -24,6 +24,7 @@ limitations under the License.
 
 #include "formats.h"
 #include "logger.h"
+#include "watchdog.h"
 
 #include "outputs_file.h"
 #include "outputs_program.h"
@@ -273,6 +274,12 @@ inline void falco_outputs::push(ctrl_msg_type cmt)
 
 void falco_outputs::worker()
 {
+	Watchdog<std::string> wd;
+
+	wd.start([&](std::string payload) -> void {
+		falco_logger::log(LOG_CRIT, "\"" + payload + "\" output deadline exceeded, all output channels are blocked.\n");
+	});
+
 	falco_outputs::ctrl_msg cmsg;
 	while(true)
 	{
@@ -284,7 +291,9 @@ void falco_outputs::worker()
 
 		for(auto it = m_outputs.cbegin(); it != m_outputs.cend(); ++it)
 		{
-			try {
+			wd.set_timeout(std::chrono::milliseconds(2000), (*it)->get_name());
+			try
+			{
 				switch(cmsg.type)
 				{
 					case ctrl_msg_type::CTRL_MSG_OUTPUT:
@@ -299,9 +308,12 @@ void falco_outputs::worker()
 					default:
 						falco_logger::log(LOG_DEBUG, "Outputs worker received an unknown message type\n");	
 				}
-			} catch(const exception &e) {
+			}
+			catch(const exception &e)
+			{
 				falco_logger::log(LOG_ERR, (*it)->get_name() + ": " + string(e.what()) + "\n");
 			}
 		}
+		wd.cancel_timeout();
 	}
 }
