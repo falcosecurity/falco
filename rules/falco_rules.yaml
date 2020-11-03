@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2019 The Falco Authors.
+# Copyright (C) 2020 The Falco Authors.
 #
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,7 +23,7 @@
 # change to this rules file, we'll uncomment this line and set it to
 # the falco engine version in use at the time.
 #
-#- required_engine_version: 2
+- required_engine_version: 7
 
 # Currently disabled as read/write are ignored syscalls. The nearly
 # similar open_write/open_read check for files being opened for
@@ -1413,6 +1413,7 @@
   desc: an attempt to write to any file directly below / or /root
   condition: >
     root_dir and evt.dir = < and open_write
+    and proc_name_exists
     and not fd.name in (known_root_files)
     and not fd.directory pmatch (known_root_directories)
     and not exe_running_docker_save
@@ -1917,6 +1918,7 @@
 - list: falco_sensitive_mount_images
   items: [
     docker.io/sysdig/falco, docker.io/sysdig/sysdig, sysdig/falco, sysdig/sysdig,
+    docker.io/falcosecurity/falco, falcosecurity/falco,
     gcr.io/google_containers/hyperkube,
     gcr.io/google_containers/kube-proxy, docker.io/calico/node,
     docker.io/rook/toolbox, docker.io/cloudnativelabs/kube-router, docker.io/consul,
@@ -1929,7 +1931,7 @@
   condition: (user_trusted_containers or
               container.image.repository in (trusted_images) or
               container.image.repository in (falco_sensitive_mount_images) or
-              container.image.repository startswith quay.io/sysdig)
+              container.image.repository startswith quay.io/sysdig/)
 
 # These container images are allowed to run with hostnetwork=true
 - list: falco_hostnetwork_images
@@ -2615,8 +2617,7 @@
     WARNING
   tags: [process, mitre_persistence]
 
-- rule: Delete or rename shell history
-  desc: Detect shell history deletion
+- macro: modify_shell_history
   condition: >
     (modify and (
       evt.arg.name contains "bash_history" or
@@ -2630,12 +2631,25 @@
       evt.arg.path contains "bash_history" or
       evt.arg.path contains "zsh_history" or
       evt.arg.path contains "fish_read_history" or
-      evt.arg.path endswith "fish_history")) or
+      evt.arg.path endswith "fish_history"))
+
+- macro: truncate_shell_history
+  condition: >
     (open_write and (
       fd.name contains "bash_history" or
       fd.name contains "zsh_history" or
       fd.name contains "fish_read_history" or
       fd.name endswith "fish_history") and evt.arg.flags contains "O_TRUNC")
+
+- macro: var_lib_docker_filepath
+  condition: (evt.arg.name startswith /var/lib/docker or fd.name startswith /var/lib/docker)
+
+- rule: Delete or rename shell history
+  desc: Detect shell history deletion
+  condition: >
+    (modify_shell_history or truncate_shell_history) and
+       not var_lib_docker_filepath and
+       not proc.name in (docker_binaries)
   output: >
     Shell history had been deleted or renamed (user=%user.name user_loginuid=%user.loginuid type=%evt.type command=%proc.cmdline fd.name=%fd.name name=%evt.arg.name path=%evt.arg.path oldpath=%evt.arg.oldpath %container.info)
   priority:
@@ -2715,10 +2729,18 @@
 - macro: remote_file_copy_procs
   condition: (proc.name in (remote_file_copy_binaries))
 
+# Users should overwrite this macro to specify conditions under which a
+# Custom condition for use of remote file copy tool in container
+- macro: user_known_remote_file_copy_activities
+  condition: (never_true)
+
 - rule: Launch Remote File Copy Tools in Container
   desc: Detect remote file copy tools launched in container
   condition: >
-    spawned_process and container and remote_file_copy_procs
+    spawned_process
+    and container
+    and remote_file_copy_procs
+    and not user_known_remote_file_copy_activities
   output: >
     Remote file copy tool launched in container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline parent_process=%proc.pname
     container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
@@ -2859,17 +2881,16 @@
   tags: [container, mitre_execution]
 
 
-# This rule is not enabled by default, as there are legitimate use
-# cases for raw packet. If you want to enable it, modify the
-# following macro.
+# This rule is enabled by default. 
+# If you want to disable it, modify the following macro.
 - macro: consider_packet_socket_communication
-  condition: (never_true)
+  condition: (always_true)
 
 - list: user_known_packet_socket_binaries
   items: []
 
 - rule: Packet socket created in container
-  desc: Detect new packet socket at the device driver (OSI Layer 2) level in a container. Packet socket could be used to do ARP Spoofing by attacker.
+  desc: Detect new packet socket at the device driver (OSI Layer 2) level in a container. Packet socket could be used for ARP Spoofing and privilege escalation(CVE-2020-14386) by attacker.
   condition: evt.type=socket and evt.arg[0]=AF_PACKET and consider_packet_socket_communication and container and not proc.name in (user_known_packet_socket_binaries)
   output: Packet socket was created in a container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline socket_info=%evt.args container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
   priority: NOTICE
@@ -3011,11 +3032,25 @@
   priority: ERROR
 
 # find when a new kernel module is injected
-- rule: Linux Kernel Module injection detected
-  desc: It is very uncommon for kernel modules to be injected in running production instances, used rookits to obfuscate their behavior via kernel hooking 
-  condition: evt.type=execve and proc.name=insmod
+
+- list: white_listed_modules
+  items: [""]
+- rule: Linux Kernel Module Injection Detected
+  desc: Detect kernel module was injected (from container).
+  condition: spawned_process and container and evt.type=execve and proc.name=insmod
   output: Linux Kernel Module injection using insmod detected (user=%user.name user_loginuid=%user.loginuid parent_process=%proc.pname module=%proc.args)
   priority: WARNING
+  tags: [process]
+
+- list: c2_server_ip_list
+  items: []
+
+- rule: Outbound Connection to C2 Servers
+  desc: Detect outbound connection to command & control servers
+  condition: outbound and fd.sip in (c2_server_ip_list)
+  output: Outbound connection to C2 server (command=%proc.cmdline connection=%fd.name user=%user.name user_loginuid=%user.loginuid container_id=%container.id image=%container.image.repository)
+  priority: WARNING
+  tags: [network]
 
 # Application rules have moved to application_rules.yaml. Please look
 # there if you want to enable them by adding to

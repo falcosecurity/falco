@@ -96,12 +96,17 @@ else()
   # that zlib will be very outdated
   set(ZLIB_INCLUDE "${GRPC_SRC}/third_party/zlib")
   set(ZLIB_LIB "${GRPC_LIBS_ABSOLUTE}/libz.a")
+  # we tell gRPC to compile c-ares for us because when a gRPC package is not available, like on CentOS, it's very likely
+  # that c-ares will be very outdated
+  set(CARES_INCLUDE "${GRPC_SRC}/third_party/cares" "${GRPC_SRC}/third_party/cares/cares")
+  set(CARES_LIB "${GRPC_LIBS_ABSOLUTE}/libares.a")
 
   message(STATUS "Using bundled gRPC in '${GRPC_SRC}'")
   message(
     STATUS
       "Bundled gRPC comes with protobuf: compiler: ${PROTOC}, include: ${PROTOBUF_INCLUDE}, lib: ${PROTOBUF_LIB}")
   message(STATUS "Bundled gRPC comes with zlib: include: ${ZLIB_INCLUDE}, lib: ${ZLIB_LIB}}")
+  message(STATUS "Bundled gRPC comes with cares: include: ${CARES_INCLUDE}, lib: ${CARES_LIB}}")
   message(STATUS "Bundled gRPC comes with gRPC C++ plugin: include: ${GRPC_CPP_PLUGIN}")
 
   get_filename_component(PROTOC_DIR ${PROTOC} PATH)

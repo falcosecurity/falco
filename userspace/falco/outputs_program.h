@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2019 The Falco Authors
+Copyright (C) 2020 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,45 +16,29 @@ limitations under the License.
 
 #pragma once
 
-#include "outputs.pb.h"
-#include "tbb/concurrent_queue.h"
+#include "outputs.h"
 
 namespace falco
 {
 namespace outputs
 {
-typedef tbb::concurrent_queue<response> response_cq;
 
-class queue
+class output_program : public abstract_output
 {
-public:
-	static queue& get()
-	{
-		static queue instance;
-		return instance;
-	}
+	void output_event(gen_event *evt, std::string &rule, std::string &source,
+			  falco_common::priority_type priority, std::string &format, std::string &msg);
 
-	bool try_pop(response& res)
-	{
-		return m_queue.try_pop(res);
-	}
+	void output_msg(falco_common::priority_type priority, std::string &msg);
 
-	void push(response& res)
-	{
-		m_queue.push(res);
-	}
+	void cleanup();
+
+	void reopen();
 
 private:
-	queue()
-	{
-	}
+	void open_pfile();
 
-	response_cq m_queue;
-
-	// We can use the better technique of deleting the methods we don't want.
-public:
-	queue(queue const&) = delete;
-	void operator=(queue const&) = delete;
+	FILE *m_pfile;
 };
-} // namespace output
+
+} // namespace outputs
 } // namespace falco

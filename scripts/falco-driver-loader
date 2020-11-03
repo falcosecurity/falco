@@ -143,33 +143,41 @@ load_kernel_module_compile() {
 	# skip dkms on UEK hosts because it will always fail
 	if [[ $(uname -r) == *uek* ]]; then
 		echo "* Skipping dkms install for UEK host"
-	else
-		if hash dkms &>/dev/null; then
-				echo "* Trying to dkms install ${DRIVER_NAME} module"
-			if dkms install -m "${DRIVER_NAME}" -v "${DRIVER_VERSION}" -k "${KERNEL_RELEASE}" 2>/dev/null; then
-				echo "* ${DRIVER_NAME} module installed in dkms, trying to insmod"				
-				if insmod "/var/lib/dkms/${DRIVER_NAME}/${DRIVER_VERSION}/${KERNEL_RELEASE}/${ARCH}/module/${DRIVER_NAME}.ko" > /dev/null 2>&1; then
-					echo "* Success: ${DRIVER_NAME} module found and loaded in dkms"
-					exit 0
-				elif insmod "/var/lib/dkms/${DRIVER_NAME}/${DRIVER_VERSION}/${KERNEL_RELEASE}/${ARCH}/module/${DRIVER_NAME}.ko.xz" > /dev/null 2>&1; then
-					echo "* Success: ${DRIVER_NAME} module found and loaded in dkms (xz)"
-					exit 0
-				else
-					echo "* Unable to insmod ${DRIVER_NAME} module"
-				fi
+		return
+	fi
+
+	if ! hash dkms &>/dev/null; then
+		echo "* Skipping dkms install (dkms not found)"
+		return
+	fi
+
+	# try to compile using all the available gcc versions
+	for CURRENT_GCC in $(which gcc) $(ls "$(dirname "$(which gcc)")"/gcc-* | grep 'gcc-[0-9]\+' | sort -r); do
+		echo "* Trying to dkms install ${DRIVER_NAME} module with GCC ${CURRENT_GCC}"
+		echo "#!/usr/bin/env bash" > /tmp/falco-dkms-make
+		echo "make CC=${CURRENT_GCC} \$@" >> /tmp/falco-dkms-make
+		chmod +x /tmp/falco-dkms-make
+		if dkms install --directive="MAKE='/tmp/falco-dkms-make'" -m "${DRIVER_NAME}" -v "${DRIVER_VERSION}" -k "${KERNEL_RELEASE}" 2>/dev/null; then
+			echo "* ${DRIVER_NAME} module installed in dkms, trying to insmod"				
+			if insmod "/var/lib/dkms/${DRIVER_NAME}/${DRIVER_VERSION}/${KERNEL_RELEASE}/${ARCH}/module/${DRIVER_NAME}.ko" > /dev/null 2>&1; then
+				echo "* Success: ${DRIVER_NAME} module found and loaded in dkms"
+				exit 0
+			elif insmod "/var/lib/dkms/${DRIVER_NAME}/${DRIVER_VERSION}/${KERNEL_RELEASE}/${ARCH}/module/${DRIVER_NAME}.ko.xz" > /dev/null 2>&1; then
+				echo "* Success: ${DRIVER_NAME} module found and loaded in dkms (xz)"
+				exit 0
 			else
-				DKMS_LOG="/var/lib/dkms/${DRIVER_NAME}/${DRIVER_VERSION}/build/make.log"
-				if [ -f "${DKMS_LOG}" ]; then
-					echo "* Running dkms build failed, dumping ${DKMS_LOG}"
-					cat "${DKMS_LOG}"
-				else
-					echo "* Running dkms build failed, couldn't find ${DKMS_LOG}"
-				fi
+				echo "* Unable to insmod ${DRIVER_NAME} module"
 			fi
 		else
-			echo "* Skipping dkms install (dkms not found)"
+			DKMS_LOG="/var/lib/dkms/${DRIVER_NAME}/${DRIVER_VERSION}/build/make.log"
+			if [ -f "${DKMS_LOG}" ]; then
+				echo "* Running dkms build failed, dumping ${DKMS_LOG} (with GCC ${CURRENT_GCC})"
+				cat "${DKMS_LOG}"
+			else
+				echo "* Running dkms build failed, couldn't find ${DKMS_LOG} (with GCC ${CURRENT_GCC})"
+			fi
 		fi
-	fi
+	done
 }
 
 load_kernel_module_download() {

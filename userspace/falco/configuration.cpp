@@ -52,7 +52,7 @@ void falco_configuration::init(list<string> &cmdline_options)
 {
 	init_cmdline_options(cmdline_options);
 
-	falco_outputs::output_config stdout_output;
+	falco::outputs::config stdout_output;
 	stdout_output.name = "stdout";
 	m_outputs.push_back(stdout_output);
 }
@@ -81,7 +81,7 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 	m_json_output = m_config->get_scalar<bool>("json_output", false);
 	m_json_include_output_property = m_config->get_scalar<bool>("json_include_output_property", true);
 
-	falco_outputs::output_config file_output;
+	falco::outputs::config file_output;
 	file_output.name = "file";
 	if(m_config->get_scalar<bool>("file_output", "enabled", false))
 	{
@@ -99,21 +99,21 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 		m_outputs.push_back(file_output);
 	}
 
-	falco_outputs::output_config stdout_output;
+	falco::outputs::config stdout_output;
 	stdout_output.name = "stdout";
 	if(m_config->get_scalar<bool>("stdout_output", "enabled", false))
 	{
 		m_outputs.push_back(stdout_output);
 	}
 
-	falco_outputs::output_config syslog_output;
+	falco::outputs::config syslog_output;
 	syslog_output.name = "syslog";
 	if(m_config->get_scalar<bool>("syslog_output", "enabled", false))
 	{
 		m_outputs.push_back(syslog_output);
 	}
 
-	falco_outputs::output_config program_output;
+	falco::outputs::config program_output;
 	program_output.name = "program";
 	if(m_config->get_scalar<bool>("program_output", "enabled", false))
 	{
@@ -131,7 +131,7 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 		m_outputs.push_back(program_output);
 	}
 
-	falco_outputs::output_config http_output;
+	falco::outputs::config http_output;
 	http_output.name = "http";
 	if(m_config->get_scalar<bool>("http_output", "enabled", false))
 	{
@@ -159,7 +159,7 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 	m_grpc_cert_chain = m_config->get_scalar<string>("grpc", "cert_chain", "/etc/falco/certs/server.crt");
 	m_grpc_root_certs = m_config->get_scalar<string>("grpc", "root_certs", "/etc/falco/certs/ca.crt");
 
-	falco_outputs::output_config grpc_output;
+	falco::outputs::config grpc_output;
 	grpc_output.name = "grpc";
 	// gRPC output is enabled only if gRPC server is enabled too
 	if(m_config->get_scalar<bool>("grpc_output", "enabled", true) && m_grpc_enabled)

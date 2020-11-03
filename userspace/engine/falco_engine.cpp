@@ -171,9 +171,8 @@ void falco_engine::load_rules(const string &rules_content, bool verbose, bool al
 					  m_ls);
 	}
 
-	// Note that falco_formats is added to both the lua state used
-	// by the falco engine as well as the separate lua state used
-	// by falco outputs.  Within the engine, only
+	// Note that falco_formats is added to the lua state used
+	// by the falco engine only. Within the engine, only
 	// formats.formatter is used, so we can unconditionally set
 	// json_output to false.
 	bool json_output = false;

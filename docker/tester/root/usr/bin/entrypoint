@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 
-set -eu -o pipefail
+BUILD_DIR=${BUILD_DIR:-/build}
+SOURCE_DIR=${SOURCE_DIR:-/source}
+SKIP_PACKAGES_TESTS=${SKIP_PACKAGES_TESTS:-false}
 
-SOURCE_DIR=/source
-BUILD_DIR=/build
 CMD=${1:-test}
 shift
+
+# Stop the execution if a command in the pipeline has an error, from now on
+set -e -u -o pipefail
 
 # build type can be "debug" or "release", fallbacks to "release" by default
 BUILD_TYPE=$(echo "$BUILD_TYPE" | tr "[:upper:]" "[:lower:]")
@@ -47,7 +50,8 @@ case "$CMD" in
 "test")
     if [ -z "$FALCO_VERSION" ]; then
         echo "Automatically figuring out Falco version."
-        FALCO_VERSION=$("$BUILD_DIR/$BUILD_TYPE/userspace/falco/falco" --version | head -n 1 | cut -d' ' -f3 | tr -d '\r')
+        FALCO_VERSION_FULL=$("$BUILD_DIR/$BUILD_TYPE/userspace/falco/falco" --version)
+        FALCO_VERSION=$(echo "$FALCO_VERSION_FULL" | head -n 1 | cut -d' ' -f3  | tr -d '\r')
         echo "Falco version: $FALCO_VERSION"
     fi
     if [ -z "$FALCO_VERSION" ]; then
@@ -56,9 +60,11 @@ case "$CMD" in
     fi
 
     # build docker images
-    build_image "$BUILD_DIR" "$BUILD_TYPE" "$FALCO_VERSION" "deb"
-    build_image "$BUILD_DIR" "$BUILD_TYPE" "$FALCO_VERSION" "rpm"
-    build_image "$BUILD_DIR" "$BUILD_TYPE" "$FALCO_VERSION" "tar.gz"
+    if [ "$SKIP_PACKAGES_TESTS" = false ] ; then
+        build_image "$BUILD_DIR" "$BUILD_TYPE" "$FALCO_VERSION" "deb"
+        build_image "$BUILD_DIR" "$BUILD_TYPE" "$FALCO_VERSION" "rpm"
+        build_image "$BUILD_DIR" "$BUILD_TYPE" "$FALCO_VERSION" "tar.gz"
+    fi
 
     # check that source directory contains Falco
     if [ ! -d "$SOURCE_DIR/falco/test" ]; then
@@ -69,12 +75,14 @@ case "$CMD" in
     # run tests
     echo "Running regression tests ..."
     cd "$SOURCE_DIR/falco/test"
-    ./run_regression_tests.sh -d "$BUILD_DIR/$BUILD_TYPE"
+    SKIP_PACKAGES_TESTS=$SKIP_PACKAGES_TESTS ./run_regression_tests.sh -d "$BUILD_DIR/$BUILD_TYPE"
 
     # clean docker images
-    clean_image "deb"
-    clean_image "rpm"
-    clean_image "tar.gz"
+    if [ "$SKIP_PACKAGES_TESTS" = false ] ; then
+        clean_image "deb"
+        clean_image "rpm"
+        clean_image "tar.gz"
+    fi
     ;;
 "bash")
     CMD=/bin/bash

@@ -16,6 +16,8 @@ project(falco)
 
 option(USE_BUNDLED_DEPS "Bundle hard to find dependencies into the Falco binary" OFF)
 option(BUILD_WARNINGS_AS_ERRORS "Enable building with -Wextra -Werror flags" OFF)
+option(MINIMAL_BUILD "Build a minimal version of Falco, containing only the engine and basic input/output (EXPERIMENTAL)" OFF)
+option(MUSL_OPTIMIZED_BUILD "Enable if you want a musl optimized build" OFF)
 
 # Elapsed time
 # set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CMAKE_COMMAND} -E time") # TODO(fntlnz, leodido): add a flag to enable this
@@ -50,7 +52,15 @@ else()
 endif()
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
-set(CMAKE_COMMON_FLAGS "-Wall -ggdb ${DRAIOS_FEATURE_FLAGS}")
+if(MINIMAL_BUILD)
+  set(MINIMAL_BUILD_FLAGS "-DMINIMAL_BUILD")
+endif()
+
+if(MUSL_OPTIMIZED_BUILD)
+  set(MUSL_FLAGS "-static -Os")
+endif()
+
+set(CMAKE_COMMON_FLAGS "-Wall -ggdb ${DRAIOS_FEATURE_FLAGS} ${MINIMAL_BUILD_FLAGS} ${MUSL_FLAGS}")
 
 if(BUILD_WARNINGS_AS_ERRORS)
   set(CMAKE_SUPPRESSED_WARNINGS
@@ -113,8 +123,8 @@ set(B64_INCLUDE "${B64_SRC}/include")
 set(B64_LIB "${B64_SRC}/src/libb64.a")
 ExternalProject_Add(
   b64
-  URL "https://github.com/libb64/libb64/archive/v1.2.1.zip"
-  URL_HASH "SHA256=665134c2b600098a7ebd3d00b6a866cb34909a6d48e0e37a0eda226a4ad2638a"
+  URL "https://github.com/libb64/libb64/archive/ce864b17ea0e24a91e77c7dd3eb2d1ac4175b3f0.tar.gz"
+  URL_HASH "SHA256=d07173e66f435e5c77dbf81bd9313f8d0e4a3b4edd4105a62f4f8132ba932811"
   CONFIGURE_COMMAND ""
   BUILD_COMMAND ${CMD_MAKE}
   BUILD_IN_SOURCE 1
@@ -123,11 +133,13 @@ ExternalProject_Add(
 # yaml-cpp
 include(yaml-cpp)
 
-# OpenSSL
-include(OpenSSL)
+if(NOT MINIMAL_BUILD)
+  # OpenSSL
+  include(OpenSSL)
 
-# libcurl
-include(cURL)
+  # libcurl
+  include(cURL)
+endif()
 
 # LuaJIT
 set(LUAJIT_SRC "${PROJECT_BINARY_DIR}/luajit-prefix/src/luajit/src")
@@ -194,26 +206,30 @@ ExternalProject_Add(
   BUILD_BYPRODUCTS ${TBB_LIB}
   INSTALL_COMMAND "")
 
-# civetweb
-set(CIVETWEB_SRC "${PROJECT_BINARY_DIR}/civetweb-prefix/src/civetweb/")
-set(CIVETWEB_LIB "${CIVETWEB_SRC}/install/lib/libcivetweb.a")
-set(CIVETWEB_INCLUDE_DIR "${CIVETWEB_SRC}/install/include")
-message(STATUS "Using bundled civetweb in '${CIVETWEB_SRC}'")
-ExternalProject_Add(
-  civetweb
-  URL "https://github.com/civetweb/civetweb/archive/v1.11.tar.gz"
-  URL_HASH "SHA256=de7d5e7a2d9551d325898c71e41d437d5f7b51e754b242af897f7be96e713a42"
-  CONFIGURE_COMMAND ${CMAKE_COMMAND} -E make_directory ${CIVETWEB_SRC}/install/lib
-  COMMAND ${CMAKE_COMMAND} -E make_directory ${CIVETWEB_SRC}/install/include
-  BUILD_IN_SOURCE 1
-  BUILD_COMMAND ${CMD_MAKE} COPT="-DNO_FILES" WITH_CPP=1
-  INSTALL_COMMAND ${CMD_MAKE} COPT="-DNO_FILES" install-lib install-headers PREFIX=${CIVETWEB_SRC}/install "WITH_CPP=1")
+if(NOT MINIMAL_BUILD)
+  # civetweb
+  set(CIVETWEB_SRC "${PROJECT_BINARY_DIR}/civetweb-prefix/src/civetweb/")
+  set(CIVETWEB_LIB "${CIVETWEB_SRC}/install/lib/libcivetweb.a")
+  set(CIVETWEB_INCLUDE_DIR "${CIVETWEB_SRC}/install/include")
+  message(STATUS "Using bundled civetweb in '${CIVETWEB_SRC}'")
+  ExternalProject_Add(
+    civetweb
+    URL "https://github.com/civetweb/civetweb/archive/v1.11.tar.gz"
+    URL_HASH "SHA256=de7d5e7a2d9551d325898c71e41d437d5f7b51e754b242af897f7be96e713a42"
+    CONFIGURE_COMMAND ${CMAKE_COMMAND} -E make_directory ${CIVETWEB_SRC}/install/lib
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CIVETWEB_SRC}/install/include
+    BUILD_IN_SOURCE 1
+    BUILD_COMMAND ${CMD_MAKE} COPT="-DNO_FILES" WITH_CPP=1
+    INSTALL_COMMAND ${CMD_MAKE} COPT="-DNO_FILES" install-lib install-headers PREFIX=${CIVETWEB_SRC}/install "WITH_CPP=1")
+endif()
 
 #string-view-lite
 include(DownloadStringViewLite)
 
-# gRPC
-include(gRPC)
+if(NOT MINIMAL_BUILD)
+  # gRPC
+  include(gRPC)
+endif()
 
 # sysdig
 include(sysdig)
@@ -221,11 +237,13 @@ include(sysdig)
 # Installation
 install(FILES falco.yaml DESTINATION "${FALCO_ETC_DIR}")
 
-# Coverage
-include(Coverage)
+if(NOT MINIMAL_BUILD)
+  # Coverage
+  include(Coverage)
 
-# Tests
-add_subdirectory(test)
+  # Tests
+  add_subdirectory(test)
+endif()
 
 # Rules
 add_subdirectory(rules)
@@ -235,6 +253,9 @@ add_subdirectory(docker)
 
 # Clang format
 # add_custom_target(format COMMAND clang-format --style=file -i $<TARGET_PROPERTY:falco,SOURCES> COMMENT "Formatting ..." VERBATIM)
+
+# Static analysis
+include(static-analysis)
 
 # Shared build variables
 set(FALCO_SINSP_LIBRARY sinsp)

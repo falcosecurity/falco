@@ -37,7 +37,7 @@ public:
 	{
 		m_path = path;
 		YAML::Node config;
-		std::vector<falco_outputs::output_config> outputs;
+		std::vector<falco::outputs::config> outputs;
 		try
 		{
 			m_root = YAML::LoadFile(path);
@@ -196,7 +196,7 @@ public:
 	bool m_json_output;
 	bool m_json_include_output_property;
 	std::string m_log_level;
-	std::vector<falco_outputs::output_config> m_outputs;
+	std::vector<falco::outputs::config> m_outputs;
 	uint32_t m_notifications_rate;
 	uint32_t m_notifications_max_burst;
 

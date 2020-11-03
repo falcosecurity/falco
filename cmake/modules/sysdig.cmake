@@ -17,7 +17,9 @@ set(SYSDIG_CMAKE_WORKING_DIR "${CMAKE_BINARY_DIR}/sysdig-repo")
 # this needs to be here at the top
 if(USE_BUNDLED_DEPS)
   # explicitly force this dependency to use the bundled OpenSSL
-  set(USE_BUNDLED_OPENSSL ON)
+  if(NOT MINIMAL_BUILD)
+    set(USE_BUNDLED_OPENSSL ON)
+  endif()
   set(USE_BUNDLED_JQ ON)
 endif()
 
@@ -27,8 +29,8 @@ file(MAKE_DIRECTORY ${SYSDIG_CMAKE_WORKING_DIR})
 # default below In case you want to test against another sysdig version just pass the variable - ie., `cmake
 # -DSYSDIG_VERSION=dev ..`
 if(NOT SYSDIG_VERSION)
-  set(SYSDIG_VERSION "ae104eb20ff0198a5dcb0c91cc36c86e7c3f25c7")
-  set(SYSDIG_CHECKSUM "SHA256=43d274e4ce16b0d0e4dd00aab78006c902f36070d1cbb22d12a2685134a2ae51")
+  set(SYSDIG_VERSION "2aa88dcf6243982697811df4c1b484bcbe9488a2")
+  set(SYSDIG_CHECKSUM "SHA256=a737077543a6f3473ab306b424bcf7385d788149829ed1538252661b0f20d0f6")
 endif()
 set(PROBE_VERSION "${SYSDIG_VERSION}")
 
@@ -55,6 +57,9 @@ add_subdirectory("${SYSDIG_SOURCE_DIR}/driver" "${PROJECT_BINARY_DIR}/driver")
 # Add libscap directory
 add_definitions(-D_GNU_SOURCE)
 add_definitions(-DHAS_CAPTURE)
+if(MUSL_OPTIMIZED_BUILD)
+  add_definitions(-DMUSL_OPTIMIZED)
+endif()
 add_subdirectory("${SYSDIG_SOURCE_DIR}/userspace/libscap" "${PROJECT_BINARY_DIR}/userspace/libscap")
 
 # Add libsinsp directory
@@ -65,5 +70,8 @@ add_dependencies(sinsp tbb b64 luajit)
 set(CREATE_TEST_TARGETS OFF)
 
 if(USE_BUNDLED_DEPS)
-  add_dependencies(scap grpc curl jq)
+  add_dependencies(scap jq)
+  if(NOT MINIMAL_BUILD)
+    add_dependencies(scap curl grpc)
+  endif()
 endif()
