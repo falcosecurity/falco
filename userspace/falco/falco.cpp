@@ -238,7 +238,7 @@ static std::string read_file(std::string filename)
 //
 // Event processing loop
 //
-uint64_t do_inspect(falco_engine *engine, falco_outputs *outputs,
+uint64_t do_inspect(falco_engine **engine, falco_outputs *outputs,
 		    sinsp *inspector,
 		    falco_configuration &config,
 		    syscall_evt_drop_mgr &sdropmgr,
@@ -278,15 +278,13 @@ uint64_t do_inspect(falco_engine *engine, falco_outputs *outputs,
 		engine_cv.wait(lk, [] { return is_engine_ready; });
 	}
 
-	// printf("ADDRESS: %p\n", engine);
-
 	//
 	// Loop through the events
 	//
-
 	std::atomic<falco_engine *> e;
-	falco_engine *h = e.load();
 	falco_engine *engine_to_use = nullptr;
+
+	e.compare_exchange_strong(engine_to_use, *engine);
 	while(1)
 	{
 		rc = inspector->next(&ev);
@@ -351,20 +349,16 @@ uint64_t do_inspect(falco_engine *engine, falco_outputs *outputs,
 		}
 
 		// As the inspector has no filter at its level, all
-		// events are returned here. Pass them to the falco
+		// events are returned here. Pass them to the Falco
 		// engine, which will match the event against the set
 		// of rules. If a match is found, pass the event to
 		// the outputs.
-		bool engine_cmp_res = e.compare_exchange_strong(h, engine);
-		if(engine_cmp_res == true)
+		bool engine_cmp_res = e.compare_exchange_strong(engine_to_use, *engine);
+		if(engine_cmp_res == false)
 		{
-			engine_to_use = e.load();
+			falco_logger::log(LOG_INFO, "Using new engine with new ruleset\n");
 		}
-		if(engine_to_use == nullptr)
-		{
-			continue;
-		}
-		unique_ptr<falco_engine::rule_result> res = engine_to_use->process_sinsp_event(ev);
+		unique_ptr<falco_engine::rule_result> res = e.load()->process_sinsp_event(ev);
 		if(res)
 		{
 			outputs->handle_event(res->evt, res->rule, res->source, res->priority_num, res->format);
@@ -434,15 +428,16 @@ static void list_source_fields(falco_engine *engine, bool verbose, bool names_on
 	}
 }
 
-static void rules_cb(char *rules_content, hawk_engine &engine)
+static void rules_cb(char *rules_content, hawk_engine *engine)
 {
-	auto &x = reinterpret_cast<falco_engine *&>(engine);
+	falco_engine *engine_replacement = (*reinterpret_cast<falco_engine **>(engine))->clone();
+	engine_replacement->load_rules(rules_content, false, true);
 
-	x = x->clone();
-	x->load_rules(rules_content, false, true);
+	*engine = std::ref(engine_replacement);
 
-	engine = x;
-
+	// This mutex is only needed for the first synchronization
+	// it can be discarded the second time rules_cb is needed
+	// since the main engine loop is already started.
 	if(!is_engine_ready)
 	{
 		std::lock_guard<std::mutex> lk(engine_ready);
@@ -459,9 +454,7 @@ int falco_init(int argc, char **argv)
 	int result = EXIT_SUCCESS;
 	sinsp *inspector = NULL;
 	sinsp_evt::param_fmt event_buffer_format = sinsp_evt::PF_NORMAL;
-	// std::promise<std::shared_ptr<falco_engine>> engine;
-	// std::future<std::shared_ptr<falco_engine>> engine_future = engine.get_future();
-	falco_engine *bluengine;
+	falco_engine *engine_blueprint;
 	std::thread watchrules_thread;
 	falco_outputs *outputs = NULL;
 	syscall_evt_drop_mgr sdropmgr;
@@ -774,9 +767,9 @@ int falco_init(int argc, char **argv)
 			return EXIT_SUCCESS;
 		}
 
-		bluengine = new falco_engine(true, alternate_lua_dir);
-		bluengine->set_inspector(inspector);
-		bluengine->set_extra(output_format, replace_container_info);
+		engine_blueprint = new falco_engine(true, alternate_lua_dir);
+		engine_blueprint->set_inspector(inspector);
+		engine_blueprint->set_extra(output_format, replace_container_info);
 
 		// if(list_flds)
 		// {
@@ -889,7 +882,7 @@ int falco_init(int argc, char **argv)
 			falco_logger::log(LOG_INFO, "Falco initialized. No configuration file found, proceeding with defaults\n");
 		}
 
-		bluengine->set_min_priority(config.m_min_priority);
+		engine_blueprint->set_min_priority(config.m_min_priority);
 
 		if(buffered_cmdline)
 		{
@@ -899,10 +892,8 @@ int falco_init(int argc, char **argv)
 		hawk_init();
 		watchrules_thread = std::thread([&] {
 			// todo: pass verbose, and all_events
-			hawk_watch_rules((hawk_watch_rules_cb)rules_cb, reinterpret_cast<hawk_engine *>(&bluengine));
+			hawk_watch_rules((hawk_watch_rules_cb)rules_cb, reinterpret_cast<hawk_engine *>(&engine_blueprint));
 		});
-
-		falco_logger::log(LOG_INFO, "DOPO\n");
 
 		// todo(fntlnz): make this a callback to watch_rules?
 		// This needs to be done for every load
@@ -1331,7 +1322,7 @@ int falco_init(int argc, char **argv)
 		{
 			uint64_t num_evts;
 
-			num_evts = do_inspect(bluengine, outputs,
+			num_evts = do_inspect(&engine_blueprint, outputs,
 					      inspector,
 					      config,
 					      sdropmgr,
@@ -1407,8 +1398,7 @@ int falco_init(int argc, char **argv)
 exit:
 
 	delete inspector;
-	delete bluengine;
-	// delete engine.get();
+	delete engine_blueprint;
 	delete outputs;
 
 	return result;
