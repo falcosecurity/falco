@@ -220,7 +220,7 @@ load_kernel_module() {
 	rmmod "${DRIVER_NAME}" 2>/dev/null
 	WAIT_TIME=0
 	KMOD_NAME=$(echo "${DRIVER_NAME}" | tr "-" "_")
-	while lsmod | grep "${KMOD_NAME}" > /dev/null 2>&1 && [ $WAIT_TIME -lt "${MAX_RMMOD_WAIT}" ]; do
+	while lsmod | cut -d' ' -f1 | grep -qx "${KMOD_NAME}" && [ $WAIT_TIME -lt "${MAX_RMMOD_WAIT}" ]; do 
 		if rmmod "${DRIVER_NAME}" 2>/dev/null; then
 			echo "* Unloading ${DRIVER_NAME} module succeeded after ${WAIT_TIME}s"
 			break
@@ -232,7 +232,7 @@ load_kernel_module() {
 		sleep 1
 	done
 
-	if lsmod | grep "${KMOD_NAME}" > /dev/null 2>&1; then
+	if lsmod | cut -d' ' -f1 | grep -qx "${KMOD_NAME}" > /dev/null 2>&1; then
 		echo "* ${DRIVER_NAME} module seems to still be loaded, hoping the best"
 		exit 0
 	fi
