@@ -1213,6 +1213,9 @@
        fd.name startswith /etc/ssh/ssh_monitor_config_ or
        fd.name startswith /etc/ssh/ssh_config_))
 
+- macro: multipath_writing_conf
+  condition: (proc.name = multipath and fd.name startswith /etc/multipath/)
+
 # Add conditions to this macro (probably in a separate file,
 # overwriting this macro) to allow for specific combinations of
 # programs writing below specific directories below
@@ -1333,6 +1336,7 @@
     and not automount_using_mtab
     and not mcafee_writing_cma_d
     and not avinetworks_supervisor_writing_ssh
+    and not multipath_writing_conf
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc
