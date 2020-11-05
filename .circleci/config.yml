@@ -283,7 +283,7 @@ jobs:
           name: Execute integration tests
           command: /usr/bin/entrypoint test
       - store_test_results:
-          path: /build/integration-tests-xunit
+          path: /build/release/integration-tests-xunit
   "tests/integration-static":
     docker:
       - image: falcosecurity/falco-tester:latest
@@ -300,7 +300,7 @@ jobs:
           name: Execute integration tests
           command: /usr/bin/entrypoint test
       - store_test_results:
-          path: /build-static/integration-tests-xunit
+          path: /build-static/release/integration-tests-xunit
   "tests/driver-loader/integration":
     machine:
       image: ubuntu-1604:202004-01

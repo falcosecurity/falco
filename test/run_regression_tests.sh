@@ -104,11 +104,12 @@ function run_tests() {
         suites+=($SCRIPTDIR/falco_tests_package.yaml)
     fi
     
-    mkdir -p ${OPT_BUILD_DIR}/integration-tests-xunit
+    XUNIT_DIR="${OPT_BUILD_DIR}/integration-tests-xunit"
+    mkdir -p "${XUNIT_DIR}"
 
     for mult in "${suites[@]}"; do
-        XUNITFILENAME="${OPT_BUILD_DIR}/$(basename "${mult}").xml"
-        CMD="avocado run --xunit ${XUNITFILENAME} --mux-yaml $mult --job-results-dir $SCRIPTDIR/job-results -- $SCRIPTDIR/falco_test.py"
+        XUNIT_FILE_NAME="${XUNIT_DIR}/$(basename "${mult}").xml"
+        CMD="avocado run --xunit ${XUNIT_FILE_NAME} --mux-yaml $mult --job-results-dir $SCRIPTDIR/job-results -- $SCRIPTDIR/falco_test.py"
         echo "Running $CMD"
         BUILD_DIR=${OPT_BUILD_DIR} $CMD
         RC=$?
