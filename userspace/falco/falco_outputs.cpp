@@ -62,9 +62,10 @@ falco_outputs::~falco_outputs()
 }
 
 void falco_outputs::init(bool json_output,
-			 bool json_include_output_property,
-			 uint32_t rate, uint32_t max_burst, bool buffered,
-			 bool time_format_iso_8601, string hostname)
+		  bool json_include_output_property,
+		  uint32_t timeout,
+		  uint32_t rate, uint32_t max_burst, bool buffered,
+		  bool time_format_iso_8601, std::string hostname)
 {
 	// Cannot be initialized more than one time.
 	if(m_initialized)
@@ -79,6 +80,8 @@ void falco_outputs::init(bool json_output,
 	// So we can safely update them.
 	falco_formats::s_json_output = json_output;
 	falco_formats::s_json_include_output_property = json_include_output_property;
+
+	m_timeout = std::chrono::milliseconds(timeout);
 
 	m_notifications_tb.init(rate, max_burst);
 
@@ -275,10 +278,11 @@ inline void falco_outputs::push(ctrl_msg_type cmt)
 void falco_outputs::worker()
 {
 	Watchdog<std::string> wd;
-
 	wd.start([&](std::string payload) -> void {
-		falco_logger::log(LOG_CRIT, "\"" + payload + "\" output deadline exceeded, all output channels are blocked.\n");
+		falco_logger::log(LOG_CRIT, "\"" + payload + "\" output timeout, all output channels are blocked.\n");
 	});
+
+	auto timeout = m_timeout;
 
 	falco_outputs::ctrl_msg cmsg;
 	while(true)
@@ -291,7 +295,7 @@ void falco_outputs::worker()
 
 		for(auto it = m_outputs.cbegin(); it != m_outputs.cend(); ++it)
 		{
-			wd.set_timeout(std::chrono::milliseconds(2000), (*it)->get_name());
+			wd.set_timeout(timeout, (*it)->get_name());
 			try
 			{
 				switch(cmsg.type)

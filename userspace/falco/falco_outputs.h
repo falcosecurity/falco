@@ -40,6 +40,7 @@ public:
 
 	void init(bool json_output,
 		  bool json_include_output_property,
+		  uint32_t timeout,
 		  uint32_t rate, uint32_t max_burst, bool buffered,
 		  bool time_format_iso_8601, std::string hostname);
 
@@ -71,6 +72,7 @@ private:
 	bool m_buffered;
 	bool m_json_output;
 	bool m_time_format_iso_8601;
+	std::chrono::milliseconds m_timeout;
 	std::string m_hostname;
 
 	enum ctrl_msg_type
