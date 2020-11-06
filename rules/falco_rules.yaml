@@ -2319,6 +2319,9 @@
 - macro: user_known_user_management_activities
   condition: (never_true)
 
+- macro: chage_list
+  condition: (proc.name=chage and (proc.cmdline contains "-l" or proc.cmdline contains "--list"))
+
 - rule: User mgmt binaries
   desc: >
     activity by any programs that can manage users, passwords, or permissions. sudo and su are excluded.
@@ -2337,6 +2340,7 @@
     not run_by_yum and
     not run_by_ms_oms and
     not run_by_google_accounts_daemon and
+    not chage_list and
     not user_known_user_management_activities
   output: >
     User management binary command run outside of container
