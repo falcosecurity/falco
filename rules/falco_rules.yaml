@@ -3046,6 +3046,16 @@
   priority: WARNING
   tags: [network]
 
+- list: white_listed_modules
+  items: []
+    
+- rule: Linux Kernel Module Injection Detected
+  desc: Detect kernel module was injected (from container).
+  condition: spawned_process and container and proc.name=insmod and not proc.args in (white_listed_modules)
+  output: Linux Kernel Module injection using insmod detected (user=%user.name user_loginuid=%user.loginuid parent_process=%proc.pname module=%proc.args)
+  priority: WARNING
+  tags: [process]
+
 # Application rules have moved to application_rules.yaml. Please look
 # there if you want to enable them by adding to
 # falco_rules.local.yaml.
