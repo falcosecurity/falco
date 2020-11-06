@@ -204,6 +204,7 @@ public:
 
 	bool m_buffered_outputs;
 	bool m_time_format_iso_8601;
+	uint32_t m_output_timeout;
 
 	bool m_grpc_enabled;
 	uint32_t m_grpc_threadiness;

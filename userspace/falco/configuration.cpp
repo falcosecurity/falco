@@ -176,6 +176,8 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 
 	falco_logger::set_level(m_log_level);
 
+	m_output_timeout = m_config->get_scalar<uint32_t>("output_timeout", 2000);
+
 	m_notifications_rate = m_config->get_scalar<uint32_t>("outputs", "rate", 1);
 	m_notifications_max_burst = m_config->get_scalar<uint32_t>("outputs", "max_burst", 1000);
 
