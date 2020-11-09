@@ -61,6 +61,8 @@ if(USE_BUNDLED_DEPS)
   list(APPEND FALCO_DEPENDENCIES yamlcpp)
 endif()
 
+
+
 if(NOT MINIMAL_BUILD)
   list(
     APPEND FALCO_SOURCES
@@ -109,6 +111,18 @@ add_executable(
   falco
   ${FALCO_SOURCES}
 )
+
+if(DEFINED LIBHAWK_LIBRARIES)
+  message(STATUS "Using externally provided libhawk implementations: ${LIBHAWK_LIBRARIES}")
+  list(
+    APPEND FALCO_LIBRARIES
+    "${LIBHAWK_LIBRARIES}"
+  )
+  list(
+    APPEND FALCO_INCLUDE_DIRECTORIES
+    "${PROJECT_SOURCE_DIR}/userspace/libhawk"
+  )
+endif()
 
 add_dependencies(falco ${FALCO_DEPENDENCIES})
 
