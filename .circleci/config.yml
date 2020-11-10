@@ -546,6 +546,7 @@ workflows:
     jobs:
       - "build/musl"
       - "build/minimal"
+      - "build/aarch64"
       - "build/ubuntu-focal"
       - "build/ubuntu-focal-debug"
       - "build/ubuntu-bionic"
