@@ -1,5 +1,13 @@
 # Change Log
 
+## v0.26.2
+
+Released on 2020-11-10
+
+### Major Changes
+
+* update: DRIVERS_REPO now defaults to https://download.falco.org/driver [[#1460](https://github.com/falcosecurity/falco/pull/1460)] - [@leodido](https://github.com/leodido)
+
 ## v0.26.1
 
 Released on 2020-10-01
