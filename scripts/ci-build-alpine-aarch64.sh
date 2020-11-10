@@ -7,7 +7,7 @@ apk add g++ gcc cmake cmake make ncurses-dev git bash perl linux-headers autocon
 
 mkdir -p "${BUILD_DIR}"
 cd "${BUILD_DIR}"
-cmake -DUSE_BUNDLED_DEPS=On -DMUSL_OPTIMIZED_BUILD=On /falco
+cmake -DUSE_BUNDLED_DEPS=On -DMUSL_OPTIMIZED_BUILD=On -DBUILD_DRIVER=Off /falco
 make -j4 all
 make tests
 make -j4 package
