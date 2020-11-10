@@ -87,17 +87,19 @@ syscall_event_drops:
   rate: .03333
   max_burst: 10
 
-
-# Falco continuously monitors outputs performance. When an output channel does not allow 
-# to deliver an alert within a given deadline, an error is reported to the log indicating 
-# which output is blocking notifications. 
-# An output timeout error may indicate a misconfiguration issue or I/O problems 
-# that should be fixed by the user.
+# Falco continuously monitors outputs performance. When an output channel does not allow
+# to deliver an alert within a given deadline, an error is reported indicating
+# which output is blocking notifications.
+# The timeout error will be reported to the log according to the above log_* settings.
+# Note that the notification will not be discarded from the output queue; thus,
+# output channels may indefinitely remain blocked.
+# An output timeout error indeed indicate a misconfiguration issue or I/O problems
+# that cannot be recovered by Falco and should be fixed by the user.
 #
-# The "output_timeout" value specifies the duration in milliseconds to wait before 
+# The "output_timeout" value specifies the duration in milliseconds to wait before
 # considering the deadline exceed.
 #
-# With a 2000ms default, the notification consumer can block the Falco output 
+# With a 2000ms default, the notification consumer can block the Falco output
 # for up to 2 seconds without reaching the timeout.
 
 output_timeout: 2000
