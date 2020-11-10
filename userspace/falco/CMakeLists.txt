@@ -71,7 +71,6 @@ if(NOT MINIMAL_BUILD)
     grpc_server_impl.cpp
     grpc_request_context.cpp
     grpc_server.cpp
-    webserver.cpp
     grpc_context.cpp
     grpc_server_impl.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/version.grpc.pb.cc
