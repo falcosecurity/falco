@@ -80,6 +80,28 @@ jobs:
             pushd build-minimal
             make tests
             popd
+  # Build for aarch64
+  "build/aarch64":
+    machine:
+      image: ubuntu-2004:202010-01
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Build for aarch64
+          command: |
+            docker run --rm --privileged multiarch/qemu-user-static:register
+            docker run -v $PWD:/falco -w /falco -e BUILD_DIR=/build -v /build:/build multiarch/alpine:aarch64-v3.12 scripts/ci-build-alpine-aarch64.sh
+      - run:
+          name: Prepare artifacts
+          command: |
+            mkdir -p /tmp/packages
+            cp /build/release/*.deb /tmp/packages
+            cp /build/release/*.tar.gz /tmp/packages
+            cp /build/release/*.rpm /tmp/packages
+      - store_artifacts:
+          path: /tmp/packages
+          destination: /packages
   # Build using ubuntu LTS
   # This build is dynamic, most dependencies are taken from the OS
   "build/ubuntu-focal":
