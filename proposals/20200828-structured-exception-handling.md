@@ -67,7 +67,7 @@ An important way to customize rules and macros is to use `append: true` to add t
   desc: Detect package repositories get updated
   condition: >
     ((open_write and access_repositories) or (modify and modify_repositories))
-`    and not package_mgmt_procs
+    and not package_mgmt_procs
     and not exe_running_docker_save
     and not user_known_update_package_registry
 ```
@@ -149,7 +149,7 @@ To address some of these problems, we will add the notion of Exceptions as top l
      comps: [=, startswith]
    - name: proc_filenames
      fields: [proc.name, fd.name]
-	 comps: [=, in]
+     comps: [=, in]
    - name: filenames
      fields: fd.filename
      comps: in
@@ -188,8 +188,8 @@ Exception values will most commonly be defined in rules with append: true. Here'
     - [docker.io/alpine, /usr/libexec/alpine]
   - name: proc_filenames
     values:
-	 - [apt, apt_files]
-	 - [rpm, [/bin/cp, /bin/pwd]]
+    - [apt, apt_files]
+    - [rpm, [/bin/cp, /bin/pwd]]
   - name: filenames
     values: [python, go]
 ```
@@ -236,6 +236,5 @@ However, there are a few changes we'll have to make to Falco rules file parsing:
 
 * Currently, Falco will reject files containing anything other than rule/macro/list top-level objects. As a result, `exception` objects would be rejected. We'll probably want to make a one-time change to Falco to allow arbitrary top level objects.
 * Similarly, Falco will reject rule objects with exception keys. We'll also probably want to change Falco to allow unknown keys inside rule/macro/list/exception objects.
-
 
 
