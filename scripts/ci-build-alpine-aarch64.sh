@@ -7,13 +7,11 @@ set -xeu
 mkdir -p "${BUILD_DIR}"
 cd "${BUILD_DIR}"
 
+apk update
+apk add g++ gcc cmake cmake make ncurses-dev git bash perl linux-headers autoconf automake m4 libtool elfutils-dev libelf-static patch binutils
+
 while test $# -gt 0; do
     case "$1" in
-        prepare)
-            apk update
-            apk add g++ gcc cmake cmake make ncurses-dev git bash perl linux-headers autoconf automake m4 libtool elfutils-dev libelf-static patch binutils
-            exit 0
-            ;;
         cmake)
             cmake -DUSE_BUNDLED_DEPS=On -DMUSL_OPTIMIZED_BUILD=On -DBUILD_DRIVER=Off /falco
             exit 0

@@ -80,37 +80,21 @@ jobs:
             pushd build-minimal
             make tests
             popd
-  # Prepare dependencies for aarch64
-  "build/aarch64-prepare":
-    machine:
-      image: ubuntu-2004:202010-01
-    steps:
-      - checkout
-      - run:
-          name: Prepare dependencies for aarch64
-          command: |
-            docker run --rm --privileged multiarch/qemu-user-static:register
-            docker run -v $PWD:/falco -w /falco -e BUILD_DIR=/build --entrypoint="scripts/ci-build-alpine-aarch64.sh" -v /build:/build multiarch/alpine:aarch64-v3.12 prepare
-      - persist_to_workspace:
-          root: /
-          paths:
-            - falco
-            - build
   # CMake for aarch64
   "build/aarch64-cmake":
     machine:
       image: ubuntu-2004:202010-01
     steps:
-      - attach_workspace:
-          at: /
+      - checkout
       - run:
           name: CMake for aarch64
           command: |
             docker run --rm --privileged multiarch/qemu-user-static:register
-            docker run -v $PWD:/falco -w /falco -e BUILD_DIR=/build --entrypoint="scripts/ci-build-alpine-aarch64.sh" -v /build:/build multiarch/alpine:aarch64-v3.12 cmake
+            docker run --user $(id -u):$(id -g) -v $PWD:/falco -w /falco -e BUILD_DIR=/build --entrypoint="scripts/ci-build-alpine-aarch64.sh" -v /build:/build multiarch/alpine:aarch64-v3.12 cmake
       - persist_to_workspace:
           root: /
           paths:
+            - falco
             - build
   # Build gRPC for aarch64
   "build/aarch64-grpc":
@@ -123,7 +107,7 @@ jobs:
           name: Build gRPC for aarch64
           command: |
             docker run --rm --privileged multiarch/qemu-user-static:register
-            docker run -v $PWD:/falco -w /falco -e BUILD_DIR=/build --entrypoint="scripts/ci-build-alpine-aarch64.sh" -v /build:/build multiarch/alpine:aarch64-v3.12 grpc
+            docker run --user $(id -u):$(id -g) -v $PWD:/falco -w /falco -e BUILD_DIR=/build --entrypoint="scripts/ci-build-alpine-aarch64.sh" -v /build:/build multiarch/alpine:aarch64-v3.12 grpc
       - persist_to_workspace:
           root: /
           paths:
@@ -572,10 +556,7 @@ workflows:
     jobs:
       - "build/musl"
       - "build/minimal"
-      - "build/aarch64-prepare"
-      - "build/aarch64-cmake":
-          requires:
-            - "build/aarch64-prepare"
+      - "build/aarch64-cmake"
       - "build/aarch64-grpc":
           requires:
             - "build/aarch64-cmake"
