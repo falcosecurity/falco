@@ -2878,11 +2878,16 @@
       k8s.gcr.io/node-problem-detector/node-problem-detector
   ]
 
+- list: user_known_k8s_images
+  items: [
+      mcr.microsoft.com/aks/hcp/hcp-tunnel-front
+  ]
+
 # Whitelist for known docker client binaries run inside container
 # - k8s.gcr.io/fluentd-gcp-scaler in GCP/GKE
 - macro: user_known_k8s_client_container
   condition: >
-    (k8s.ns.name="kube-system" and container.image.repository in (user_known_k8s_ns_kube_system_images)) or container.image.repository=mcr.microsoft.com/aks/hcp/hcp-tunnel-front
+    (k8s.ns.name="kube-system" and container.image.repository in (user_known_k8s_ns_kube_system_images)) or container.image.repository in (user_known_k8s_images)
 
 - macro: user_known_k8s_client_container_parens
   condition: (user_known_k8s_client_container)
