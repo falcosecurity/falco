@@ -9,7 +9,7 @@ rule should be allowed. For example, The rule Write Below Binary Dir
 has exceptions for specific programs that are known to write below
 these directories as a part of software installation/management:
 
-```
+```yaml
 - rule: Write below binary dir
   desc: an attempt to write to any file below a set of binary directories
   condition: >
@@ -23,7 +23,7 @@ these directories as a part of software installation/management:
 ```
 In most cases, these exceptions are expressed as concatenations to the original rule's condition. For example, looking at the macro package_mgmt_procs:
 
-```
+```yaml
 - macro: package_mgmt_procs
   condition: proc.name in (package_mgmt_binaries)
 ```
@@ -53,7 +53,7 @@ The exceptions all generally follow the same structure--naming a program and a d
 
 An important way to customize rules and macros is to use `append: true` to add to them, or `append: false` to define a new rule/macro, overwriting the original rule/macro. Here's an example from Update Package Repository:
 
-```
+```yaml
 - list: package_mgmt_binaries
   items: [rpm_binaries, deb_binaries, update-alternat, gem, pip, pip3, sane-utils.post, alternatives, chef-client, apk, snapd]
 
@@ -74,7 +74,7 @@ An important way to customize rules and macros is to use `append: true` to add t
 
 If someone wanted to add additional exceptions to this rule, they could add the following to the user_rules file:
 
-```
+```yaml
 - list: package_mgmt_binaries
   items: [puppet]
   append: true
@@ -99,7 +99,7 @@ Although the concepts of macros and lists in condition fields, combined with app
 
 * Appending to conditions can result in incorrect behavior, unless the original condition has its logical operators set up properly with parentheses. For example:
 
-```
+```yaml
 rule: my_rule
 condition: (evt.type=open and (fd.name=/tmp/foo or fd.name=/tmp/bar))
 
@@ -114,7 +114,7 @@ Results in unintended behavior. It will match any fd related event where the nam
 
 * Appends and overrides can get confusing if you try to apply them multiple times. For example:
 
-```
+```yaml
 macro: allowed_files
 condition: fd.name=/tmp/foo
 
@@ -131,7 +131,7 @@ If someone wanted to override the original behavior of allowed_files, they would
 
 To address some of these problems, we will add the notion of Exceptions as top level objects alongside Rules, Macros, and Lists. A rule that supports exceptions must define a new key `exceptions` in the rule. The exceptions key is a list of identifier plus list of tuples of filtercheck fields. Here's an example:
 
-```
+```yaml
 - rule: Write below binary dir
   desc: an attempt to write to any file below a set of binary directories
   condition: >
@@ -173,7 +173,7 @@ Notice that exceptions are defined as a part of the rule. This is important beca
 
 Exception values will most commonly be defined in rules with append: true. Here's an example:
 
-```
+```yaml
 - list: apt_files
   items: [/bin/ls, /bin/rm]
 
@@ -236,7 +236,6 @@ However, there are a few changes we'll have to make to Falco rules file parsing:
 
 * Currently, Falco will reject files containing anything other than rule/macro/list top-level objects. As a result, `exception` objects would be rejected. We'll probably want to make a one-time change to Falco to allow arbitrary top level objects.
 * Similarly, Falco will reject rule objects with exception keys. We'll also probably want to change Falco to allow unknown keys inside rule/macro/list/exception objects.
-
 
 
 
