@@ -80,27 +80,54 @@ jobs:
             pushd build-minimal
             make tests
             popd
-  # Build for aarch64
-  "build/aarch64":
+  # Prepare dependencies for aarch64
+  "build/aarch64-prepare":
     machine:
       image: ubuntu-2004:202010-01
     steps:
       - checkout
       - run:
-          name: Build for aarch64
+          name: Prepare dependencies for aarch64
           command: |
             docker run --rm --privileged multiarch/qemu-user-static:register
-            docker run -v $PWD:/falco -w /falco -e BUILD_DIR=/build -v /build:/build multiarch/alpine:aarch64-v3.12 scripts/ci-build-alpine-aarch64.sh
+            docker run -v $PWD:/falco -w /falco -e BUILD_DIR=/build --entrypoint="scripts/ci-build-alpine-aarch64.sh" -v /build:/build multiarch/alpine:aarch64-v3.12 prepare
+      - persist_to_workspace:
+          root: /
+          paths:
+            - falco
+            - build
+  # CMake for aarch64
+  "build/aarch64-cmake":
+    machine:
+      image: ubuntu-2004:202010-01
+    steps:
+      - attach_workspace:
+          at: /
       - run:
-          name: Prepare artifacts
+          name: CMake for aarch64
           command: |
-            mkdir -p /tmp/packages
-            cp /build/release/*.deb /tmp/packages
-            cp /build/release/*.tar.gz /tmp/packages
-            cp /build/release/*.rpm /tmp/packages
-      - store_artifacts:
-          path: /tmp/packages
-          destination: /packages
+            docker run --rm --privileged multiarch/qemu-user-static:register
+            docker run -v $PWD:/falco -w /falco -e BUILD_DIR=/build --entrypoint="scripts/ci-build-alpine-aarch64.sh" -v /build:/build multiarch/alpine:aarch64-v3.12 cmake
+      - persist_to_workspace:
+          root: /
+          paths:
+            - build
+  # Build gRPC for aarch64
+  "build/aarch64-grpc":
+    machine:
+      image: ubuntu-2004:202010-01
+    steps:
+      - attach_workspace:
+          at: /
+      - run:
+          name: Build gRPC for aarch64
+          command: |
+            docker run --rm --privileged multiarch/qemu-user-static:register
+            docker run -v $PWD:/falco -w /falco -e BUILD_DIR=/build --entrypoint="scripts/ci-build-alpine-aarch64.sh" -v /build:/build multiarch/alpine:aarch64-v3.12 grpc
+      - persist_to_workspace:
+          root: /
+          paths:
+            - build
   # Build using ubuntu LTS
   # This build is dynamic, most dependencies are taken from the OS
   "build/ubuntu-focal":
@@ -545,7 +572,13 @@ workflows:
     jobs:
       - "build/musl"
       - "build/minimal"
-      - "build/aarch64"
+      - "build/aarch64-prepare"
+      - "build/aarch64-cmake":
+          requires:
+            - "build/aarch64-prepare"
+      - "build/aarch64-grpc":
+          requires:
+            - "build/aarch64-cmake"
       - "build/ubuntu-focal"
       - "build/ubuntu-focal-debug"
       - "build/ubuntu-bionic"
