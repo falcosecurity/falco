@@ -30,6 +30,8 @@ limitations under the License.
 #include <sys/stat.h>
 #include <unistd.h>
 #include <getopt.h>
+#include <condition_variable>
+#include <chrono>
 
 #include <sinsp.h>
 
@@ -247,17 +249,14 @@ uint64_t do_inspect(falco_engine *engine,
 			int &result)
 {
 	uint64_t num_evts = 0;
-	int32_t rc;
-	sinsp_evt* ev;
 	StatsFileWriter writer;
-	uint64_t duration_start = 0;
 
-	sdropmgr.init(inspector,
-		      outputs,
-		      config.m_syscall_evt_drop_actions,
-		      config.m_syscall_evt_drop_rate,
-		      config.m_syscall_evt_drop_max_burst,
-		      config.m_syscall_evt_simulate_drops);
+	// sdropmgr.init(inspector,
+	// 	      outputs,
+	// 	      config.m_syscall_evt_drop_actions,
+	// 	      config.m_syscall_evt_drop_rate,
+	// 	      config.m_syscall_evt_drop_max_burst,
+	// 	      config.m_syscall_evt_simulate_drops);
 
 	if (stats_filename != "")
 	{
@@ -269,15 +268,74 @@ uint64_t do_inspect(falco_engine *engine,
 		}
 	}
 
-	//
-	// Loop through the events
-	//
+	uint32_t ndevs = inspector->get_open_ndevs();
+	std::vector<std::thread> threads(ndevs);
+	for(size_t i = 0; i < ndevs; i++)
+	{
+		threads.push_back(std::thread([inspector, engine, outputs, i, all_events] {
+			int32_t rc;
+			sinsp_evt *ev;
+			//
+			// Loop through the events
+			//
+			while(1)
+			{
+				rc = inspector->next_per_cpu(&ev, i);
+
+				// writer.handle();
+
+				if(rc == SCAP_TIMEOUT)
+				{
+					continue;
+				}
+				else if(rc == SCAP_EOF)
+				{
+					break; // todo > capire
+				}
+				else if(rc != SCAP_SUCCESS)
+				{
+					//
+					// Event read error.
+					// Notify that we're exiting, and then die with an error.
+					//
+					cerr << "rc = " << rc << endl;
+					throw sinsp_exception(inspector->getlasterr().c_str()); // TODO(leodido,fntlnz)
+				}
+
+				// if(!sdropmgr.process_event(inspector, ev))
+				// {
+				// 	result = EXIT_FAILURE;
+				// 	break;
+				// }
+
+				if(!ev->simple_consumer_consider() && !all_events)
+				{
+					continue;
+				}
+
+				// As the inspector has no filter at its level, all
+				// events are returned here. Pass them to the falco
+				// engine, which will match the event against the set
+				// of rules. If a match is found, pass the event to
+				// the outputs.
+				unique_ptr<falco_engine::rule_result> res = engine->process_sinsp_event(ev);
+				if(res)
+				{
+					outputs->handle_event(res->evt, res->rule, res->source, res->priority_num, res->format);
+				}
+
+				// num_evts++;
+			}
+		}));
+	}
+	auto deadline = std::chrono::steady_clock::now() + std::chrono::nanoseconds(duration_to_tot_ns);
+
 	while(1)
 	{
-
-		rc = inspector->next(&ev);
-
-		writer.handle();
+		if(std::chrono::steady_clock::now() >= deadline)
+		{
+			break;
+		}
 
 		if(g_reopen_outputs)
 		{
@@ -290,63 +348,19 @@ uint64_t do_inspect(falco_engine *engine,
 			falco_logger::log(LOG_INFO, "SIGINT received, exiting...\n");
 			break;
 		}
-		else if (g_restart)
+		else if(g_restart)
 		{
 			falco_logger::log(LOG_INFO, "SIGHUP received, restarting...\n");
 			break;
 		}
-		else if(rc == SCAP_TIMEOUT)
-		{
-			continue;
-		}
-		else if(rc == SCAP_EOF)
-		{
-			break;
-		}
-		else if(rc != SCAP_SUCCESS)
-		{
-			//
-			// Event read error.
-			// Notify the chisels that we're exiting, and then die with an error.
-			//
-			cerr << "rc = " << rc << endl;
-			throw sinsp_exception(inspector->getlasterr().c_str());
-		}
+	}
 
-		if (duration_start == 0)
+	for(auto &t : threads)
+	{
+		if(t.joinable())
 		{
-			duration_start = ev->get_ts();
-		} else if(duration_to_tot_ns > 0)
-		{
-			if(ev->get_ts() - duration_start >= duration_to_tot_ns)
-			{
-				break;
-			}
+			t.join();
 		}
-
-		if(!sdropmgr.process_event(inspector, ev))
-		{
-			result = EXIT_FAILURE;
-			break;
-		}
-
-		if(!ev->simple_consumer_consider() && !all_events)
-		{
-			continue;
-		}
-
-		// As the inspector has no filter at its level, all
-		// events are returned here. Pass them to the falco
-		// engine, which will match the event against the set
-		// of rules. If a match is found, pass the event to
-		// the outputs.
-		unique_ptr<falco_engine::rule_result> res = engine->process_sinsp_event(ev);
-		if(res)
-		{
-			outputs->handle_event(res->evt, res->rule, res->source, res->priority_num, res->format);
-		}
-
-		num_evts++;
 	}
 
 	return num_evts;
@@ -1181,8 +1195,8 @@ int falco_init(int argc, char **argv)
 						falco_logger::log(LOG_ERR, "Unable to load the driver.\n");
 					}
 					open_f(inspector);
-				} 
-				else 
+				}
+				else
 				{
 					rethrow_exception(current_exception());
 				}
@@ -1291,7 +1305,7 @@ int falco_init(int argc, char **argv)
 
 		if(!trace_filename.empty() && !trace_is_scap)
 		{
-#ifndef MINIMAL_BUILD			
+#ifndef MINIMAL_BUILD
 			read_k8s_audit_trace_file(engine,
 						  outputs,
 						  trace_filename);
