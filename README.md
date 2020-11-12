@@ -65,6 +65,7 @@ For example, Falco can easily detect incidents including but not limited to:
 - Unexpected read of a sensitive file, such as `/etc/shadow`.
 - A non-device file is written to `/dev`.
 - A standard system binary, such as `ls`, is making an outbound network connection.
+- A privileged pod is started in a Kubernetes cluster.
 
 ### Documentation
 
