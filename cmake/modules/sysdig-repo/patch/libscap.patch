@@ -1,8 +1,8 @@
 diff --git a/userspace/libscap/scap.c b/userspace/libscap/scap.c
-index e9faea51..a1b3b501 100644
+index 6f51588e..5f9ea84e 100644
 --- a/userspace/libscap/scap.c
 +++ b/userspace/libscap/scap.c
-@@ -52,7 +52,7 @@ limitations under the License.
+@@ -55,7 +55,7 @@ limitations under the License.
  //#define NDEBUG
  #include <assert.h>
  
@@ -11,7 +11,16 @@ index e9faea51..a1b3b501 100644
  
  //
  // Probe version string size
-@@ -171,7 +171,7 @@ scap_t* scap_open_live_int(char *error, int32_t *rc,
+@@ -114,7 +114,7 @@ scap_t* scap_open_udig_int(char *error, int32_t *rc,
+ static uint32_t get_max_consumers()
+ {
+ 	uint32_t max;
+-	FILE *pfile = fopen("/sys/module/" PROBE_DEVICE_NAME "_probe/parameters/max_consumers", "r");
++	FILE *pfile = fopen("/sys/module/" PROBE_DEVICE_NAME "/parameters/max_consumers", "r");
+ 	if(pfile != NULL)
+ 	{
+ 		int w = fscanf(pfile, "%"PRIu32, &max);
+@@ -186,7 +186,7 @@ scap_t* scap_open_live_int(char *error, int32_t *rc,
  				return NULL;
  			}
  
@@ -20,7 +29,27 @@ index e9faea51..a1b3b501 100644
  			bpf_probe = buf;
  		}
  	}
-@@ -1808,7 +1808,7 @@ int32_t scap_disable_dynamic_snaplen(scap_t* handle)
+@@ -344,7 +344,7 @@ scap_t* scap_open_live_int(char *error, int32_t *rc,
+ 				else if(errno == EBUSY)
+ 				{
+ 					uint32_t curr_max_consumers = get_max_consumers();
+-					snprintf(error, SCAP_LASTERR_SIZE, "Too many sysdig instances attached to device %s. Current value for /sys/module/" PROBE_DEVICE_NAME "_probe/parameters/max_consumers is '%"PRIu32"'.", filename, curr_max_consumers);
++					snprintf(error, SCAP_LASTERR_SIZE, "Too many Falco instances attached to device %s. Current value for /sys/module/" PROBE_DEVICE_NAME "/parameters/max_consumers is '%"PRIu32"'.", filename, curr_max_consumers);
+ 				}
+ 				else
+ 				{
+@@ -579,8 +579,8 @@ scap_t* scap_open_udig_int(char *error, int32_t *rc,
+ 	//
+ 	// Map the ppm_ring_buffer_info that contains the buffer pointers
+ 	//
+-	if(udig_alloc_ring_descriptors(&(handle->m_devs[0].m_bufinfo_fd), 
+-		&handle->m_devs[0].m_bufinfo, 
++	if(udig_alloc_ring_descriptors(&(handle->m_devs[0].m_bufinfo_fd),
++		&handle->m_devs[0].m_bufinfo,
+ 		&handle->m_devs[0].m_bufstatus,
+ 		error) != SCAP_SUCCESS)
+ 	{
+@@ -2175,7 +2175,7 @@ int32_t scap_disable_dynamic_snaplen(scap_t* handle)
  
  const char* scap_get_host_root()
  {
