@@ -467,6 +467,10 @@ print_usage() {
 	echo "  --download     try to download a prebuilt driver"
 	echo "  --source-only  skip execution and allow sourcing in another script"
 	echo ""
+	echo "Environment variables:"
+	echo "DRIVER_REPO      specify a different URL where to look for prebuilt Falco drivers"
+	echo "DRIVER_NAME      specify a different name for the driver"
+	echo ""
 }
 
 ARCH=$(uname -m)
