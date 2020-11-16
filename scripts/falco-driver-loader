@@ -158,7 +158,7 @@ load_kernel_module_compile() {
 		echo "make CC=${CURRENT_GCC} \$@" >> /tmp/falco-dkms-make
 		chmod +x /tmp/falco-dkms-make
 		if dkms install --directive="MAKE='/tmp/falco-dkms-make'" -m "${DRIVER_NAME}" -v "${DRIVER_VERSION}" -k "${KERNEL_RELEASE}" 2>/dev/null; then
-			echo "* ${DRIVER_NAME} module installed in dkms, trying to insmod"				
+			echo "* ${DRIVER_NAME} module installed in dkms, trying to insmod"
 			if insmod "/var/lib/dkms/${DRIVER_NAME}/${DRIVER_VERSION}/${KERNEL_RELEASE}/${ARCH}/module/${DRIVER_NAME}.ko" > /dev/null 2>&1; then
 				echo "* Success: ${DRIVER_NAME} module found and loaded in dkms"
 				exit 0
@@ -220,7 +220,7 @@ load_kernel_module() {
 	rmmod "${DRIVER_NAME}" 2>/dev/null
 	WAIT_TIME=0
 	KMOD_NAME=$(echo "${DRIVER_NAME}" | tr "-" "_")
-	while lsmod | cut -d' ' -f1 | grep -qx "${KMOD_NAME}" && [ $WAIT_TIME -lt "${MAX_RMMOD_WAIT}" ]; do 
+	while lsmod | cut -d' ' -f1 | grep -qx "${KMOD_NAME}" && [ $WAIT_TIME -lt "${MAX_RMMOD_WAIT}" ]; do
 		if rmmod "${DRIVER_NAME}" 2>/dev/null; then
 			echo "* Unloading ${DRIVER_NAME} module succeeded after ${WAIT_TIME}s"
 			break
@@ -246,7 +246,7 @@ load_kernel_module() {
 	if modprobe "${DRIVER_NAME}" > /dev/null 2>&1; then
 		echo "* Success: ${DRIVER_NAME} module found and loaded with modprobe"
 		exit 0
-	fi		
+	fi
 
 
 	echo "* Trying to find locally a prebuilt ${DRIVER_NAME} module for kernel ${KERNEL_RELEASE}, if present"
@@ -486,7 +486,7 @@ if [[ -z "$MAX_RMMOD_WAIT" ]]; then
 fi
 
 DRIVER_VERSION="@PROBE_VERSION@"
-DRIVER_NAME="@PROBE_NAME@"
+DRIVER_NAME=${DRIVER_NAME:-"@PROBE_NAME@"}
 
 DRIVER="module"
 if [ -v FALCO_BPF_PROBE ]; then
@@ -560,7 +560,7 @@ if [ -z "$source_only" ]; then
 	fi
 
 	echo "* Running falco-driver-loader with: driver=$DRIVER, compile=${ENABLE_COMPILE:-"no"}, download=${ENABLE_DOWNLOAD:-"no"}"
-	case $DRIVER in 
+	case $DRIVER in
 		module)
 			load_kernel_module
 			;;
