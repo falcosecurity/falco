@@ -266,6 +266,48 @@ load_kernel_module() {
 	fi
 }
 
+clean_kernel_module() {
+	if ! hash lsmod > /dev/null 2>&1; then
+		>&2 echo "This program requires lsmod"
+		exit 1
+	fi
+
+	if ! hash rmmod > /dev/null 2>&1; then
+		>&2 echo "This program requires rmmod"
+		exit 1
+	fi
+
+	KMOD_NAME=$(echo "${DRIVER_NAME}" | tr "-" "_")
+	if lsmod | cut -d' ' -f1 | grep -qx "${KMOD_NAME}"; then 
+		if rmmod "${DRIVER_NAME}" 2>/dev/null; then
+			echo "* Unloading ${DRIVER_NAME} module succeeded"
+		else 
+			echo "* Unloading ${DRIVER_NAME} module failed"
+		fi
+	else
+		echo "* No ${DRIVER_NAME} module loaded"
+	fi
+
+	if ! hash dkms &>/dev/null; then
+		echo "* Skipping dkms remove (dkms not found)"
+		return
+	fi
+    
+	DRIVER_VERSIONS=$(dkms status -m "${DRIVER_NAME}" | cut -d',' -f2 | sed -e 's/^[[:space:]]*//')
+	if [ -z "${DRIVER_VERSIONS}" ]; then
+		echo "* No ${DRIVER_NAME} module found in dkms"
+		return
+	fi
+	for CURRENT_VER in ${DRIVER_VERSIONS}; do
+		if dkms remove -m "${DRIVER_NAME}" -v "${CURRENT_VER}" --all 2>/dev/null; then
+			echo "* Removing ${DRIVER_NAME}/${CURRENT_VER} succeeded"
+		else 
+			echo "* Removing ${DRIVER_NAME}/${CURRENT_VER} failed"
+			exit 1
+		fi
+	done
+}
+
 load_bpf_probe_compile() {
 	local BPF_KERNEL_SOURCES_URL=""
 	local STRIP_COMPONENTS=1
@@ -463,6 +505,7 @@ print_usage() {
 	echo ""
 	echo "Options:"
 	echo "  --help         show brief help"
+	echo "  --clean        try to remove an already present driver installation"
 	echo "  --compile      try to compile the driver locally"
 	echo "  --download     try to download a prebuilt driver"
 	echo "  --source-only  skip execution and allow sourcing in another script"
@@ -505,6 +548,7 @@ fi
 ENABLE_COMPILE=
 ENABLE_DOWNLOAD=
 
+clean=
 has_args=
 has_opts=
 source_only=
@@ -524,6 +568,10 @@ while test $# -gt 0; do
 		-h|--help)
 			print_usage
 			exit 0
+			;;
+		--clean)
+			clean="true"
+			shift
 			;;
 		--compile)
 			ENABLE_COMPILE="yes"
@@ -563,20 +611,37 @@ if [ -z "$source_only" ]; then
 		exit 1
 	fi
 
-	if ! hash curl > /dev/null 2>&1; then
-		>&2 echo "This program requires curl"
-		exit 1
-	fi
+	if [ -n "$clean" ]; then
+		if ! [ -z "$has_opt"]; then
+			>&2 echo "Cannot use --clean with other options"
+			exit 1
+		fi
 
-	echo "* Running falco-driver-loader with: driver=$DRIVER, compile=${ENABLE_COMPILE:-"no"}, download=${ENABLE_DOWNLOAD:-"no"}"
-	case $DRIVER in
+		echo "* Running falco-driver-loader with: driver=$DRIVER, clean=yes"
+		case $DRIVER in
 		module)
-			load_kernel_module
+			clean_kernel_module
 			;;
 		bpf)
-			load_bpf_probe
-			;;
-	esac
+			>&2 echo "--clean not supported for driver=$DRIVER"
+			exit 1
+		esac
+	else
+		if ! hash curl > /dev/null 2>&1; then
+			>&2 echo "This program requires curl"
+			exit 1
+		fi
+
+		echo "* Running falco-driver-loader with: driver=$DRIVER, compile=${ENABLE_COMPILE:-"no"}, download=${ENABLE_DOWNLOAD:-"no"}"
+		case $DRIVER in
+			module)
+				load_kernel_module
+				;;
+			bpf)
+				load_bpf_probe
+				;;
+		esac
+	fi
 fi
 
 echo "* Running falco-driver-loader for: falco version=${FALCO_VERSION}, driver version=${DRIVER_VERSION}"
