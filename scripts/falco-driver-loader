@@ -606,6 +606,8 @@ if [ -z "$has_opts" ]; then
 fi
 
 if [ -z "$source_only" ]; then
+	echo "* Running falco-driver-loader for: falco version=${FALCO_VERSION}, driver version=${DRIVER_VERSION}"
+
 	if [ "$(id -u)" != 0 ]; then
 		>&2 echo "This program must be run as root (or with sudo)"
 		exit 1
@@ -643,5 +645,3 @@ if [ -z "$source_only" ]; then
 		esac
 	fi
 fi
-
-echo "* Running falco-driver-loader for: falco version=${FALCO_VERSION}, driver version=${DRIVER_VERSION}"
