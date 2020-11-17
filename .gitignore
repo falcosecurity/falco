@@ -2,7 +2,6 @@
 *~
 *.pyc
 
-test/falco_tests.yaml
 test/traces-negative
 test/traces-positive
 test/traces-info
