@@ -58,6 +58,10 @@ falco_outputs::~falco_outputs()
 		{
 			m_worker_thread.join();
 		}
+		for(auto it = m_outputs.cbegin(); it != m_outputs.cend(); ++it)
+		{
+			delete *it;
+		}
 	}
 }
 
@@ -94,7 +98,10 @@ void falco_outputs::init(bool json_output,
 	m_initialized = true;
 }
 
-// todo(leogr): when the worker has started, adding an outputs is not thread-safe
+// This function has to be called after init() since some configuration settings
+// need to be passed to the output plugins. Then, although the worker has started,
+// the worker is still on hold, waiting for a message.
+// Thus it is still safe to call add_output() before any message has been enqueued.
 void falco_outputs::add_output(falco::outputs::config oc)
 {
 

@@ -60,6 +60,8 @@ struct message
 class abstract_output
 {
 public:
+	virtual ~abstract_output() {}
+
 	void init(config oc, bool buffered, std::string hostname)
 	{
 		m_oc = oc;
