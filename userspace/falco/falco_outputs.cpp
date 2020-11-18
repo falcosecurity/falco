@@ -104,6 +104,10 @@ void falco_outputs::init(bool json_output,
 // Thus it is still safe to call add_output() before any message has been enqueued.
 void falco_outputs::add_output(falco::outputs::config oc)
 {
+	if(!m_initialized)
+	{
+		throw falco_exception("cannot add output: falco_outputs not initialized yet");
+	}
 
 	falco::outputs::abstract_output *oo;
 
