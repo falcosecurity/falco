@@ -22,6 +22,9 @@ RUN sed -e 's/time_format_iso_8601: false/time_format_iso_8601: true/' < /falco/
 
 FROM scratch
 
+ENV HOST_ROOT /host
+ENV HOME /root
+
 COPY --from=ubuntu /falco /
 
 CMD ["/usr/bin/falco", "-o", "time_format_iso_8601=true"]
