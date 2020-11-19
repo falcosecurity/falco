@@ -36,9 +36,9 @@ limitations under the License.
 
 #include "logger.h"
 #include "utils.h"
-#include "chisel.h"
 #include "fields_info.h"
 
+#include "lifecycle.h"
 #include "event_drops.h"
 #include "configuration.h"
 #include "falco_engine.h"
@@ -48,10 +48,6 @@ limitations under the License.
 #include "webserver.h"
 #include "grpc_server.h"
 #endif
-extern "C"
-{
-#include "hawk.h"
-}
 #include "banned.h" // This raises a compilation error when certain functions are used
 
 typedef function<void(sinsp* inspector)> open_t;
@@ -463,6 +459,7 @@ int falco_init(int argc, char **argv)
 	falco_engine *engine_blueprint;
 	std::thread watchrules_thread;
 	falco_outputs *outputs = NULL;
+	libhawk::lifecycle *hawk_lifecycle = NULL;
 	syscall_evt_drop_mgr sdropmgr;
 	int op;
 	int long_index = 0;
@@ -810,6 +807,8 @@ int falco_init(int argc, char **argv)
 			throw std::invalid_argument("If -d is provided, a pid file must also be provided");
 		}
 
+		hawk_lifecycle = new libhawk::lifecycle();
+
 		ifstream conf_stream;
 		if (conf_filename.size())
 		{
@@ -948,10 +947,11 @@ int falco_init(int argc, char **argv)
 			// engine->enable_rule_by_tag(enabled_rule_tags, true);
 		}
 
-		hawk_init();
 		watchrules_thread = std::thread([&] {
-			// todo: pass verbose, and all_events
-			hawk_watch_rules((hawk_watch_rules_cb)rules_cb, reinterpret_cast<hawk_engine *>(&engine_blueprint));
+			hawk_lifecycle->watch_rules(
+					(hawk_watch_rules_cb)rules_cb,
+					reinterpret_cast<hawk_engine *>(&engine_blueprint),
+					"hawk_example_c");
 		});
 
 		falco_logger::log(LOG_INFO, "DOPO\n");
@@ -1455,7 +1455,6 @@ int falco_init(int argc, char **argv)
 		sdropmgr.print_stats();
 		if(watchrules_thread.joinable())
 		{
-			hawk_destroy();
 			watchrules_thread.join();
 		}
 #ifndef MINIMAL_BUILD
@@ -1472,7 +1471,6 @@ int falco_init(int argc, char **argv)
 		display_fatal_err("Runtime error: " + string(e.what()) + ". Exiting.\n");
 		if(watchrules_thread.joinable())
 		{
-			hawk_destroy();
 			watchrules_thread.join();
 		}
 		result = EXIT_FAILURE;
@@ -1492,6 +1490,7 @@ exit:
 	delete inspector;
 	delete engine_blueprint;
 	delete outputs;
+	delete hawk_lifecycle;
 
 	return result;
 }
