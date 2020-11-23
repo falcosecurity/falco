@@ -41,7 +41,7 @@ If you would like to run Falco in **production** please adhere to the [official 
 
 Falco is designed to be extensible such that it can be built into cloud-native applications and infrastructure.
 
-Falco has a [gRPC](https://falco.org/docs/grpc/) endpoint and an API defined in [protobuf](https://github.com/falcosecurity/falco/blob/update-readme/userspace/falco/outputs.proto).
+Falco has a [gRPC](https://falco.org/docs/grpc/) endpoint and an API defined in [protobuf](https://github.com/falcosecurity/falco/blob/master/userspace/falco/outputs.proto).
 The Falco Project supports various SDKs for this endpoint.
 
 ##### SDKs
