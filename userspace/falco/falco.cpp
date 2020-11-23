@@ -794,7 +794,7 @@ int falco_init(int argc, char **argv)
 				}
 				else
 				{
-					conf_filename = "";
+					throw std::invalid_argument("You must create a config file at " FALCO_SOURCE_CONF_FILE ", " FALCO_INSTALL_CONF_FILE " or by passing -c\n");
 				}
 			}
 		}
@@ -836,12 +836,7 @@ int falco_init(int argc, char **argv)
 		}
 		else
 		{
-			config.init(cmdline_options);
-			falco_logger::set_time_format_iso_8601(config.m_time_format_iso_8601);
-
-			// log after config init because config determines where logs go
-			falco_logger::log(LOG_INFO, "Falco version " + std::string(FALCO_VERSION) + " (driver version " + std::string(DRIVER_VERSION) + ")\n");
-			falco_logger::log(LOG_INFO, "Falco initialized. No configuration file found, proceeding with defaults\n");
+			throw std::runtime_error("Could not find configuration file at " + conf_filename);
 		}
 
 		if (rules_filenames.size())
