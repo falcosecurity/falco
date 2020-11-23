@@ -47,16 +47,6 @@ falco_configuration::~falco_configuration()
 	}
 }
 
-// If we don't have a configuration file, we just use stdout output and all other defaults
-void falco_configuration::init(list<string> &cmdline_options)
-{
-	init_cmdline_options(cmdline_options);
-
-	falco::outputs::config stdout_output;
-	stdout_output.name = "stdout";
-	m_outputs.push_back(stdout_output);
-}
-
 void falco_configuration::init(string conf_filename, list<string> &cmdline_options)
 {
 	string m_config_file = conf_filename;
