@@ -33,6 +33,7 @@ set(
   "${PROJECT_SOURCE_DIR}/userspace/engine"
   "${PROJECT_BINARY_DIR}/userspace/falco"
   "${PROJECT_BINARY_DIR}/driver/src"
+  "${SPDLOG_INCLUDE_DIR}"
   "${STRING_VIEW_LITE_INCLUDE}"
   "${YAMLCPP_INCLUDE_DIR}"
   "${CMAKE_CURRENT_BINARY_DIR}"
@@ -41,6 +42,7 @@ set(
 
 set(
   FALCO_DEPENDENCIES
+  spdlog
   string-view-lite
   libyaml
   b64

@@ -94,6 +94,9 @@ set(CMD_MAKE make)
 
 include(ExternalProject)
 
+# spdlog
+include(spdlog)
+
 # jq
 include(jq)
 
