@@ -57,7 +57,7 @@ libhawk::lifecycle::lifecycle()
 	}
 }
 
-libhawk::lifecycle::~lifecycle()
+void libhawk::lifecycle::stop()
 {
 	for(auto plugin : *g_plugins)
 	{

@@ -33,8 +33,8 @@ class lifecycle
 {
 public:
 	lifecycle();
-	virtual ~lifecycle();
 
 	void watch_rules(hawk_watch_rules_cb cb, hawk_engine* engine, const std::string& plugin_name);
+	void stop();
 };
 } // namespace libhawk
