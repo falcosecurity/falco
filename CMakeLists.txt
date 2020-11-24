@@ -19,6 +19,15 @@ option(BUILD_WARNINGS_AS_ERRORS "Enable building with -Wextra -Werror flags" OFF
 option(MINIMAL_BUILD "Build a minimal version of Falco, containing only the engine and basic input/output (EXPERIMENTAL)" OFF)
 option(MUSL_OPTIMIZED_BUILD "Enable if you want a musl optimized build" OFF)
 
+# We shouldn't need to set this, see https://gitlab.kitware.com/cmake/cmake/-/issues/16419
+option(EP_UPDATE_DISCONNECTED "ExternalProject update disconnected" OFF)
+if (${EP_UPDATE_DISCONNECTED})
+  set_property(
+    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    PROPERTY EP_UPDATE_DISCONNECTED TRUE)
+endif()
+
+
 # Elapsed time
 # set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CMAKE_COMMAND} -E time") # TODO(fntlnz, leodido): add a flag to enable this
 
