@@ -22,6 +22,7 @@ if(NOT USE_BUNDLED_DEPS)
   endif()
 
   # c-ares
+  mark_as_advanced(CARES_INCLUDE CARES_LIB)
   find_path(CARES_INCLUDE NAMES ares.h)
   find_library(CARES_LIB NAMES libcares.so)
   if(CARES_INCLUDE AND CARES_LIB)
@@ -31,6 +32,7 @@ if(NOT USE_BUNDLED_DEPS)
   endif()
 
   # protobuf
+  mark_as_advanced(PROTOC PROTOBUF_INCLUDE PROTOBUF_LIB)
   find_program(PROTOC NAMES protoc)
   find_path(PROTOBUF_INCLUDE NAMES google/protobuf/message.h)
   find_library(PROTOBUF_LIB NAMES libprotobuf.so)
@@ -43,6 +45,7 @@ if(NOT USE_BUNDLED_DEPS)
   endif()
 
   # gpr
+  mark_as_advanced(GPR_LIB)
   find_library(GPR_LIB NAMES gpr)
 
   if(GPR_LIB)
@@ -52,12 +55,16 @@ if(NOT USE_BUNDLED_DEPS)
   endif()
 
   # gRPC todo(fntlnz, leodido): check that gRPC version is greater or equal than 1.8.0
+  mark_as_advanced(GRPC_INCLUDE GRPC_SRC
+    GRPC_LIB GRPC_LIBS_ABSOLUTE  GRPCPP_LIB GRPC_CPP_PLUGIN)
   find_path(GRPCXX_INCLUDE NAMES grpc++/grpc++.h)
   if(GRPCXX_INCLUDE)
     set(GRPC_INCLUDE ${GRPCXX_INCLUDE})
+    unset(GRPCXX_INCLUDE CACHE)
   else()
     find_path(GRPCPP_INCLUDE NAMES grpcpp/grpcpp.h)
     set(GRPC_INCLUDE ${GRPCPP_INCLUDE})
+    unset(GRPCPP_INCLUDE CACHE)
     add_definitions(-DGRPC_INCLUDE_IS_GRPCPP=1)
   endif()
   find_library(GRPC_LIB NAMES grpc)

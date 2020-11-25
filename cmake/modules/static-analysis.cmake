@@ -3,6 +3,7 @@ file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/static-analysis-reports)
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/static-analysis-reports/cppcheck)
 
 # cppcheck
+mark_as_advanced(CPPCHECK CPPCHECK_HTMLREPORT)
 find_program(CPPCHECK cppcheck)
 find_program(CPPCHECK_HTMLREPORT cppcheck-htmlreport)
 
