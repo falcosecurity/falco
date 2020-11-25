@@ -10,6 +10,7 @@
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 #
+mark_as_advanced(YAMLCPP_INCLUDE_DIR YAMLCPP_LIB)
 if(NOT USE_BUNDLED_DEPS)
   find_path(YAMLCPP_INCLUDE_DIR NAMES yaml-cpp/yaml.h)
   find_library(YAMLCPP_LIB NAMES yaml-cpp)

@@ -10,6 +10,7 @@
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 #
+mark_as_advanced(OPENSSL_BINARY)
 if(NOT USE_BUNDLED_DEPS)
   find_package(OpenSSL REQUIRED)
   message(STATUS "Found openssl: include: ${OPENSSL_INCLUDE_DIR}, lib: ${OPENSSL_LIBRARIES}")
@@ -20,6 +21,8 @@ if(NOT USE_BUNDLED_DEPS)
     message(STATUS "Found openssl: binary: ${OPENSSL_BINARY}")
   endif()
 else()
+  mark_as_advanced(OPENSSL_BUNDLE_DIR OPENSSL_INSTALL_DIR OPENSSL_INCLUDE_DIR
+    OPENSSL_LIBRARY_SSL OPENSSL_LIBRARY_CRYPTO)
   set(OPENSSL_BUNDLE_DIR "${PROJECT_BINARY_DIR}/openssl-prefix/src/openssl")
   set(OPENSSL_INSTALL_DIR "${OPENSSL_BUNDLE_DIR}/target")
   set(OPENSSL_INCLUDE_DIR "${PROJECT_BINARY_DIR}/openssl-prefix/src/openssl/include")
