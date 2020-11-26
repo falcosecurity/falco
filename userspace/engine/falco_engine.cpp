@@ -69,6 +69,32 @@ falco_engine::falco_engine(bool seed_rng, const std::string& alternate_lua_dir)
 	m_json_factory = make_shared<json_event_filter_factory>();
 }
 
+falco_engine::falco_engine(const falco_engine &orig_engine)
+{
+	std::cout << "copy ctor" << std::endl;
+	luaopen_lpeg(m_ls);
+	luaopen_yaml(m_ls);
+	m_alternate_lua_dir = orig_engine.m_alternate_lua_dir;
+
+	falco_common::init(m_lua_main_filename.c_str(), m_alternate_lua_dir.c_str());
+	falco_rules::init(m_ls);
+
+	m_sinsp_rules.reset(new falco_sinsp_ruleset());
+	m_k8s_audit_rules.reset(new falco_ruleset());
+
+	m_default_ruleset_id = find_ruleset_id(m_default_ruleset);
+
+	// Create this now so we can potentially list filters and exit
+	m_json_factory = make_shared<json_event_filter_factory>();
+
+	set_inspector(orig_engine.m_inspector);
+	std::string extra = orig_engine.m_extra;
+	set_extra(extra, orig_engine.m_replace_container_info);
+	set_min_priority(orig_engine.m_min_priority);
+	set_sampling_multiplier(orig_engine.m_sampling_multiplier);
+	set_sampling_ratio(orig_engine.m_sampling_ratio);
+}
+
 falco_engine::~falco_engine()
 {
 	if (m_rules)

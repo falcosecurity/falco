@@ -50,13 +50,15 @@ limitations under the License.
 #endif
 #include "banned.h" // This raises a compilation error when certain functions are used
 
-typedef function<void(sinsp* inspector)> open_t;
+typedef function<void(sinsp *inspector)> open_t;
+
 
 bool g_terminate = false;
 bool g_reopen_outputs = false;
 bool g_restart = false;
 bool g_daemonized = false;
 
+std::atomic<falco_engine *> g_engine;
 std::mutex g_engine_ready;
 std::condition_variable g_engine_cv;
 bool g_is_engine_ready = false;
@@ -240,20 +242,19 @@ static std::string read_file(std::string filename)
 //
 // Event processing loop
 //
-uint64_t do_inspect(falco_engine **engine,
-			falco_outputs *outputs,
-			sinsp* inspector,
-			falco_configuration &config,
-			syscall_evt_drop_mgr &sdropmgr,
-			uint64_t duration_to_tot_ns,
-			string &stats_filename,
-			uint64_t stats_interval,
-			bool all_events,
-			int &result)
+uint64_t do_inspect(falco_outputs *outputs,
+		    sinsp *inspector,
+		    falco_configuration &config,
+		    syscall_evt_drop_mgr &sdropmgr,
+		    uint64_t duration_to_tot_ns,
+		    string &stats_filename,
+		    uint64_t stats_interval,
+		    bool all_events,
+		    int &result)
 {
 	uint64_t num_evts = 0;
 	int32_t rc;
-	sinsp_evt* ev;
+	sinsp_evt *ev;
 	StatsFileWriter writer;
 	uint64_t duration_start = 0;
 
@@ -264,11 +265,11 @@ uint64_t do_inspect(falco_engine **engine,
 		      config.m_syscall_evt_drop_max_burst,
 		      config.m_syscall_evt_simulate_drops);
 
-	if (stats_filename != "")
+	if(stats_filename != "")
 	{
 		string errstr;
 
-		if (!writer.init(inspector, stats_filename, stats_interval, errstr))
+		if(!writer.init(inspector, stats_filename, stats_interval, errstr))
 		{
 			throw falco_exception(errstr);
 		}
@@ -280,13 +281,6 @@ uint64_t do_inspect(falco_engine **engine,
 		g_engine_cv.wait(lk, [] { return g_is_engine_ready; });
 	}
 
-	//
-	// Loop through the events
-	//
-	std::atomic<falco_engine *> e;
-	falco_engine *engine_to_use = nullptr;
-
-	e.compare_exchange_strong(engine_to_use, *engine);
 	while(1)
 	{
 
@@ -305,7 +299,7 @@ uint64_t do_inspect(falco_engine **engine,
 			falco_logger::log(LOG_INFO, "SIGINT received, exiting...\n");
 			break;
 		}
-		else if (g_restart)
+		else if(g_restart)
 		{
 			falco_logger::log(LOG_INFO, "SIGHUP received, restarting...\n");
 			break;
@@ -328,10 +322,11 @@ uint64_t do_inspect(falco_engine **engine,
 			throw sinsp_exception(inspector->getlasterr().c_str());
 		}
 
-		if (duration_start == 0)
+		if(duration_start == 0)
 		{
 			duration_start = ev->get_ts();
-		} else if(duration_to_tot_ns > 0)
+		}
+		else if(duration_to_tot_ns > 0)
 		{
 			if(ev->get_ts() - duration_start >= duration_to_tot_ns)
 			{
@@ -350,17 +345,7 @@ uint64_t do_inspect(falco_engine **engine,
 			continue;
 		}
 
-		// As the inspector has no filter at its level, all
-		// events are returned here. Pass them to the Falco
-		// engine, which will match the event against the set
-		// of rules. If a match is found, pass the event to
-		// the outputs.
-		bool engine_cmp_res = e.compare_exchange_strong(engine_to_use, *engine);
-		if(engine_cmp_res == false)
-		{
-			falco_logger::log(LOG_INFO, "Using new engine with new ruleset\n");
-		}
-		unique_ptr<falco_engine::rule_result> res = e.load()->process_sinsp_event(ev);
+		unique_ptr<falco_engine::rule_result> res = g_engine.load()->process_sinsp_event(ev);
 		if(res)
 		{
 			outputs->handle_event(res->evt, res->rule, res->source, res->priority_num, res->format);
@@ -374,9 +359,9 @@ uint64_t do_inspect(falco_engine **engine,
 
 static void print_all_ignored_events(sinsp *inspector)
 {
-	sinsp_evttables* einfo = inspector->get_event_info_tables();
-	const struct ppm_event_info* etable = einfo->m_event_info;
-	const struct ppm_syscall_desc* stable = einfo->m_syscall_info_table;
+	sinsp_evttables *einfo = inspector->get_event_info_tables();
+	const struct ppm_event_info *etable = einfo->m_event_info;
+	const struct ppm_syscall_desc *stable = einfo->m_syscall_info_table;
 
 	std::set<string> ignored_event_names;
 	for(uint32_t j = 0; j < PPM_EVENT_MAX; j++)
@@ -430,12 +415,21 @@ static void list_source_fields(falco_engine *engine, bool verbose, bool names_on
 	}
 }
 
-static void rules_cb(char *rules_content, hawk_engine *engine)
+static void rules_cb(char *rules_content)
 {
-	falco_engine *engine_replacement = (*reinterpret_cast<falco_engine **>(engine))->clone();
-	engine_replacement->load_rules(rules_content, false, true);
-
-	*engine = std::ref(engine_replacement);
+	try
+	{
+		// todo(fntlnz): remove clone and use copy constructor here instead
+		falco_engine *engine_replacement = g_engine.load()->clone();
+		//auto engine_replacement = new falco_engine(g_engine.load());
+		engine_replacement->load_rules(rules_content, false, true);
+		g_engine.store(engine_replacement);
+	}
+	catch(const falco_exception &e)
+	{
+		falco_logger::log(LOG_WARNING, std::string("rules replacement failed: ") + e.what());
+		return;
+	}
 
 	// This mutex is only needed for the first synchronization
 	// it can be discarded the second time rules_cb is needed
@@ -454,12 +448,10 @@ static void rules_cb(char *rules_content, hawk_engine *engine)
 int falco_init(int argc, char **argv)
 {
 	int result = EXIT_SUCCESS;
-	sinsp* inspector = NULL;
+	sinsp *inspector = NULL;
 	sinsp_evt::param_fmt event_buffer_format = sinsp_evt::PF_NORMAL;
-	falco_engine *engine_blueprint;
 	std::thread watchrules_thread;
 	falco_outputs *outputs = NULL;
-	libhawk::lifecycle *hawk_lifecycle = NULL;
 	syscall_evt_drop_mgr sdropmgr;
 	int op;
 	int long_index = 0;
@@ -479,9 +471,9 @@ int falco_init(int argc, char **argv)
 	bool names_only = false;
 	bool all_events = false;
 #ifndef MINIMAL_BUILD
-	string* k8s_api = 0;
-	string* k8s_api_cert = 0;
-	string* mesos_api = 0;
+	string *k8s_api = 0;
+	string *k8s_api_cert = 0;
+	string *mesos_api = 0;
 #endif
 	string output_format = "";
 	uint32_t snaplen = 0;
@@ -506,7 +498,7 @@ int falco_init(int argc, char **argv)
 	bool compress = false;
 	bool buffered_outputs = true;
 	bool buffered_cmdline = false;
-	std::map<string,uint64_t> required_engine_versions;
+	std::map<string, uint64_t> required_engine_versions;
 
 	// Used for stats
 	double duration;
@@ -558,8 +550,8 @@ int falco_init(int argc, char **argv)
 		// Parse the args
 		//
 		while((op = getopt_long(argc, argv,
-                                        "hc:AbdD:e:F:ik:K:Ll:m:M:No:P:p:r:S:s:T:t:UuvV:w:",
-                                        long_options, &long_index)) != -1)
+					"hc:AbdD:e:F:ik:K:Ll:m:M:No:P:p:r:S:s:T:t:UuvV:w:",
+					long_options, &long_index)) != -1)
 		{
 			switch(op)
 			{
@@ -694,18 +686,18 @@ int falco_init(int argc, char **argv)
 					printf("Driver version: %s\n", DRIVER_VERSION);
 					return EXIT_SUCCESS;
 				}
-				else if (string(long_options[long_index].name) == "cri")
+				else if(string(long_options[long_index].name) == "cri")
 				{
 					if(optarg != NULL)
 					{
 						cri_socket_path = optarg;
 					}
 				}
-				else if (string(long_options[long_index].name) == "disable-cri-async")
+				else if(string(long_options[long_index].name) == "disable-cri-async")
 				{
-				  cri_async = false;
+					cri_async = false;
 				}
-				else if (string(long_options[long_index].name) == "list")
+				else if(string(long_options[long_index].name) == "list")
 				{
 					list_flds = true;
 					if(optarg != NULL)
@@ -713,27 +705,28 @@ int falco_init(int argc, char **argv)
 						list_flds_source = optarg;
 					}
 				}
-				else if (string(long_options[long_index].name) == "stats-interval")
+				else if(string(long_options[long_index].name) == "stats-interval")
 				{
 					stats_interval = atoi(optarg);
 				}
-				else if (string(long_options[long_index].name) == "support")
+				else if(string(long_options[long_index].name) == "support")
 				{
 					print_support = true;
 				}
-				else if (string(long_options[long_index].name) == "disable-source")
+				else if(string(long_options[long_index].name) == "disable-source")
 				{
 					if(optarg != NULL)
 					{
 						disable_sources.insert(optarg);
 					}
 				}
-				else if (string(long_options[long_index].name)== "alternate-lua-dir")
+				else if(string(long_options[long_index].name) == "alternate-lua-dir")
 				{
 					if(optarg != NULL)
 					{
 						alternate_lua_dir = optarg;
-						if (alternate_lua_dir.back() != '/') {
+						if(alternate_lua_dir.back() != '/')
+						{
 							alternate_lua_dir += '/';
 						}
 					}
@@ -743,7 +736,6 @@ int falco_init(int argc, char **argv)
 			default:
 				break;
 			}
-
 		}
 
 		inspector = new sinsp();
@@ -773,9 +765,10 @@ int falco_init(int argc, char **argv)
 			return EXIT_SUCCESS;
 		}
 
-		engine_blueprint = new falco_engine(true, alternate_lua_dir);
-		engine_blueprint->set_inspector(inspector);
-		engine_blueprint->set_extra(output_format, replace_container_info);
+		falco_engine *initial_engine = new falco_engine(true, alternate_lua_dir);
+		initial_engine->set_inspector(inspector);
+		initial_engine->set_extra(output_format, replace_container_info);
+		g_engine = initial_engine;
 
 		if(list_flds)
 		{
@@ -797,23 +790,25 @@ int falco_init(int argc, char **argv)
 			}
 			disable_syscall = disable_sources.count("syscall") > 0;
 			disable_k8s_audit = disable_sources.count("k8s_audit") > 0;
-			if (disable_syscall && disable_k8s_audit) {
+			if(disable_syscall && disable_k8s_audit)
+			{
 				throw std::invalid_argument("The event source \"syscall\" and \"k8s_audit\" can not be disabled together");
 			}
 		}
 
 		// Some combinations of arguments are not allowed.
-		if (daemon && pidfilename == "") {
+		if(daemon && pidfilename == "")
+		{
 			throw std::invalid_argument("If -d is provided, a pid file must also be provided");
 		}
 
-		hawk_lifecycle = new libhawk::lifecycle();
+		libhawk::lifecycle::start();
 
 		ifstream conf_stream;
-		if (conf_filename.size())
+		if(conf_filename.size())
 		{
 			conf_stream.open(conf_filename);
-			if (!conf_stream.is_open())
+			if(!conf_stream.is_open())
 			{
 				throw std::runtime_error("Could not find configuration file at " + conf_filename);
 			}
@@ -821,14 +816,14 @@ int falco_init(int argc, char **argv)
 		else
 		{
 			conf_stream.open(FALCO_SOURCE_CONF_FILE);
-			if (conf_stream.is_open())
+			if(conf_stream.is_open())
 			{
 				conf_filename = FALCO_SOURCE_CONF_FILE;
 			}
 			else
 			{
 				conf_stream.open(FALCO_INSTALL_CONF_FILE);
-				if (conf_stream.is_open())
+				if(conf_stream.is_open())
 				{
 					conf_filename = FALCO_INSTALL_CONF_FILE;
 				}
@@ -839,6 +834,7 @@ int falco_init(int argc, char **argv)
 			}
 		}
 
+<<<<<<< HEAD
 		// validate the rules files and exit
 		// if(validate_rules_filenames.size() > 0)
 		// {
@@ -865,9 +861,36 @@ int falco_init(int argc, char **argv)
 		// 	falco_logger::log(LOG_INFO, "Ok\n");
 		// 	goto exit;
 		// }
+=======
+		if(validate_rules_filenames.size() > 0)
+		{
+			falco_logger::log(LOG_INFO, "Validating rules file(s):\n");
+			for(auto file : validate_rules_filenames)
+			{
+				falco_logger::log(LOG_INFO, "   " + file + "\n");
+			}
+			for(auto file : validate_rules_filenames)
+			{
+				// Only include the prefix if there is more than one file
+				std::string prefix = (validate_rules_filenames.size() > 1 ? file + ": " : "");
+				try
+				{
+					// engine->load_rules_file(file, verbose, all_events);
+				}
+				catch(falco_exception &e)
+				{
+					printf("%s%s\n", prefix.c_str(), e.what());
+					throw;
+				}
+				printf("%sOk\n", prefix.c_str());
+			}
+			falco_logger::log(LOG_INFO, "Ok\n");
+			goto exit;
+		}
+>>>>>>> e7adf5a (update(userspace): engine atomic and express lifecycle with a namespace)
 
 		falco_configuration config;
-		if (conf_filename.size())
+		if(conf_filename.size())
 		{
 			config.init(conf_filename, cmdline_options);
 			falco_logger::set_time_format_iso_8601(config.m_time_format_iso_8601);
@@ -881,12 +904,12 @@ int falco_init(int argc, char **argv)
 			throw std::runtime_error("Could not find configuration file at " + conf_filename);
 		}
 
-		if (rules_filenames.size())
+		if(rules_filenames.size())
 		{
 			config.m_rules_filenames = rules_filenames;
 		}
 
-		engine_blueprint->set_min_priority(config.m_min_priority);
+		g_engine.load()->set_min_priority(config.m_min_priority);
 
 		if(buffered_cmdline)
 		{
@@ -899,12 +922,12 @@ int falco_init(int argc, char **argv)
 		}
 
 		falco_logger::log(LOG_DEBUG, "Configured rules filenames:\n");
-		for (auto filename : config.m_rules_filenames)
+		for(auto filename : config.m_rules_filenames)
 		{
 			falco_logger::log(LOG_DEBUG, string("   ") + filename + "\n");
 		}
 
-		for (auto filename : config.m_rules_filenames)
+		for(auto filename : config.m_rules_filenames)
 		{
 			falco_logger::log(LOG_INFO, "Loading rules from file " + filename + ":\n");
 			uint64_t required_engine_version;
@@ -915,11 +938,12 @@ int falco_init(int argc, char **argv)
 
 		// You can't both disable and enable rules
 		if((disabled_rule_substrings.size() + disabled_rule_tags.size() > 0) &&
-		    enabled_rule_tags.size() > 0) {
+		   enabled_rule_tags.size() > 0)
+		{
 			throw std::invalid_argument("You can not specify both disabled (-D/-T) and enabled (-t) rules");
 		}
 
-		for (auto substring : disabled_rule_substrings)
+		for(auto substring : disabled_rule_substrings)
 		{
 			falco_logger::log(LOG_INFO, "Disabling rules matching substring: " + substring + "\n");
 			// engine->enable_rule(substring, false);
@@ -948,10 +972,9 @@ int falco_init(int argc, char **argv)
 		}
 
 		watchrules_thread = std::thread([&] {
-			hawk_lifecycle->watch_rules(
-					(hawk_watch_rules_cb)rules_cb,
-					reinterpret_cast<hawk_engine *>(&engine_blueprint),
-					"hawk_example_go");
+			libhawk::lifecycle::watch_rules(
+				(hawk_watch_rules_cb)rules_cb,
+				"hawk_example_go");
 		});
 
 		falco_logger::log(LOG_INFO, "DOPO\n");
@@ -1063,7 +1086,7 @@ int falco_init(int argc, char **argv)
 
 		// read hostname
 		string hostname;
-		if(char* env_hostname = getenv("FALCO_GRPC_HOSTNAME"))
+		if(char *env_hostname = getenv("FALCO_GRPC_HOSTNAME"))
 		{
 			hostname = env_hostname;
 		}
@@ -1083,13 +1106,13 @@ int falco_init(int argc, char **argv)
 			inspector->set_drop_event_flags(EF_DROP_SIMPLE_CONS);
 		}
 
-		if (describe_all_rules)
+		if(describe_all_rules)
 		{
 			// engine->describe_rule(NULL);
 			goto exit;
 		}
 
-		if (describe_rule != "")
+		if(describe_rule != "")
 		{
 			// engine->describe_rule(&describe_rule);
 			goto exit;
@@ -1127,21 +1150,25 @@ int falco_init(int argc, char **argv)
 
 		// If daemonizing, do it here so any init errors will
 		// be returned in the foreground process.
-		if (daemon && !g_daemonized) {
+		if(daemon && !g_daemonized)
+		{
 			pid_t pid, sid;
 
 			pid = fork();
-			if (pid < 0) {
+			if(pid < 0)
+			{
 				// error
 				falco_logger::log(LOG_ERR, "Could not fork. Exiting.\n");
 				result = EXIT_FAILURE;
 				goto exit;
-			} else if (pid > 0) {
+			}
+			else if(pid > 0)
+			{
 				// parent. Write child pid to pidfile and exit
 				std::ofstream pidfile;
 				pidfile.open(pidfilename);
 
-				if (!pidfile.good())
+				if(!pidfile.good())
 				{
 					falco_logger::log(LOG_ERR, "Could not write pid to pid file " + pidfilename + ". Exiting.\n");
 					result = EXIT_FAILURE;
@@ -1155,7 +1182,8 @@ int falco_init(int argc, char **argv)
 
 			// Become own process group.
 			sid = setsid();
-			if (sid < 0) {
+			if(sid < 0)
+			{
 				falco_logger::log(LOG_ERR, "Could not set session id. Exiting.\n");
 				result = EXIT_FAILURE;
 				goto exit;
@@ -1165,7 +1193,8 @@ int falco_init(int argc, char **argv)
 			umask(027);
 
 			// Change working directory to '/'
-			if ((chdir("/")) < 0) {
+			if((chdir("/")) < 0)
+			{
 				falco_logger::log(LOG_ERR, "Could not change working directory to '/'. Exiting.\n");
 				result = EXIT_FAILURE;
 				goto exit;
@@ -1201,14 +1230,15 @@ int falco_init(int argc, char **argv)
 		{
 			// Try to open the trace file as a sysdig
 			// capture file first.
-			try {
+			try
+			{
 				inspector->open(trace_filename);
 				falco_logger::log(LOG_INFO, "Reading system call events from file: " + trace_filename + "\n");
 			}
 			catch(sinsp_exception &e)
 			{
 				falco_logger::log(LOG_DEBUG, "Could not read trace file \"" + trace_filename + "\": " + string(e.what()));
-				trace_is_scap=false;
+				trace_is_scap = false;
 			}
 
 			if(!trace_is_scap)
@@ -1219,7 +1249,8 @@ int falco_init(int argc, char **argv)
 				result = EXIT_FAILURE;
 				goto exit;
 #else
-				try {
+				try
+				{
 					string line;
 					nlohmann::json j;
 
@@ -1231,13 +1262,13 @@ int falco_init(int argc, char **argv)
 
 					falco_logger::log(LOG_INFO, "Reading k8s audit events from file: " + trace_filename + "\n");
 				}
-				catch (nlohmann::json::parse_error& e)
+				catch(nlohmann::json::parse_error &e)
 				{
 					fprintf(stderr, "Trace filename %s not recognized as system call events or k8s audit events\n", trace_filename.c_str());
 					result = EXIT_FAILURE;
 					goto exit;
 				}
-				catch (exception &e)
+				catch(exception &e)
 				{
 					fprintf(stderr, "Could not open trace filename %s for reading: %s\n", trace_filename.c_str(), e.what());
 					result = EXIT_FAILURE;
@@ -1248,8 +1279,7 @@ int falco_init(int argc, char **argv)
 		}
 		else
 		{
-			open_t open_cb = [&userspace](sinsp* inspector)
-			{
+			open_t open_cb = [&userspace](sinsp *inspector) {
 				if(userspace)
 				{
 					// open_udig() is the underlying method used in the capture code to parse userspace events from the kernel.
@@ -1261,19 +1291,22 @@ int falco_init(int argc, char **argv)
 				}
 				inspector->open();
 			};
-			open_t open_nodriver_cb = [](sinsp* inspector) {
+			open_t open_nodriver_cb = [](sinsp *inspector) {
 				inspector->open_nodriver();
 			};
 			open_t open_f;
 
 			// Default mode: both event sources enabled
-			if (!disable_syscall && !disable_k8s_audit) {
+			if(!disable_syscall && !disable_k8s_audit)
+			{
 				open_f = open_cb;
 			}
-			if (disable_syscall) {
+			if(disable_syscall)
+			{
 				open_f = open_nodriver_cb;
 			}
-			if (disable_k8s_audit) {
+			if(disable_k8s_audit)
+			{
 				open_f = open_cb;
 			}
 
@@ -1284,7 +1317,7 @@ int falco_init(int argc, char **argv)
 			catch(sinsp_exception &e)
 			{
 				// If syscall input source is enabled and not through userspace instrumentation
-				if (!disable_syscall && !userspace)
+				if(!disable_syscall && !userspace)
 				{
 					// Try to insert the Falco kernel module
 					if(system("modprobe " PROBE_NAME " > /dev/null 2> /dev/null"))
@@ -1292,8 +1325,8 @@ int falco_init(int argc, char **argv)
 						falco_logger::log(LOG_ERR, "Unable to load the driver.\n");
 					}
 					open_f(inspector);
-				} 
-				else 
+				}
+				else
 				{
 					rethrow_exception(current_exception());
 				}
@@ -1322,7 +1355,7 @@ int falco_init(int argc, char **argv)
 		{
 			if(!k8s_api_cert)
 			{
-				if(char* k8s_cert_env = getenv("FALCO_K8S_API_CERT"))
+				if(char *k8s_cert_env = getenv("FALCO_K8S_API_CERT"))
 				{
 					k8s_api_cert = new string(k8s_cert_env);
 				}
@@ -1331,13 +1364,13 @@ int falco_init(int argc, char **argv)
 			k8s_api = 0;
 			k8s_api_cert = 0;
 		}
-		else if(char* k8s_api_env = getenv("FALCO_K8S_API"))
+		else if(char *k8s_api_env = getenv("FALCO_K8S_API"))
 		{
 			if(k8s_api_env != NULL)
 			{
 				if(!k8s_api_cert)
 				{
-					if(char* k8s_cert_env = getenv("FALCO_K8S_API_CERT"))
+					if(char *k8s_cert_env = getenv("FALCO_K8S_API_CERT"))
 					{
 						k8s_api_cert = new string(k8s_cert_env);
 					}
@@ -1361,7 +1394,7 @@ int falco_init(int argc, char **argv)
 		{
 			inspector->init_mesos_client(mesos_api, verbose);
 		}
-		else if(char* mesos_api_env = getenv("FALCO_MESOS_API"))
+		else if(char *mesos_api_env = getenv("FALCO_MESOS_API"))
 		{
 			if(mesos_api_env != NULL)
 			{
@@ -1392,18 +1425,16 @@ int falco_init(int argc, char **argv)
 				config.m_grpc_private_key,
 				config.m_grpc_cert_chain,
 				config.m_grpc_root_certs,
-				config.m_log_level
-			);
+				config.m_log_level);
 			grpc_server_thread = std::thread([&grpc_server] {
 				grpc_server.run();
 			});
 		}
 #endif
 
-
 		if(!trace_filename.empty() && !trace_is_scap)
 		{
-#ifndef MINIMAL_BUILD			
+#ifndef MINIMAL_BUILD
 			// read_k8s_audit_trace_file(engine,
 			// 			  outputs,
 			// 			  trace_filename);
@@ -1413,12 +1444,12 @@ int falco_init(int argc, char **argv)
 		{
 			uint64_t num_evts;
 
-			num_evts = do_inspect(&engine_blueprint,
-					      outputs,
+
+			num_evts = do_inspect(outputs,
 					      inspector,
 					      config,
 					      sdropmgr,
-					      uint64_t(duration_to_tot*ONE_SECOND_IN_NS),
+					      uint64_t(duration_to_tot * ONE_SECOND_IN_NS),
 					      stats_filename,
 					      stats_interval,
 					      all_events,
@@ -1439,13 +1470,12 @@ int falco_init(int argc, char **argv)
 					num_evts,
 					num_evts / duration);
 			}
-
 		}
 
 		// Honor -M also when using a trace file.
 		// Since inspection stops as soon as all events have been consumed
 		// just await the given duration is reached, if needed.
-		if(!trace_filename.empty() && duration_to_tot>0)
+		if(!trace_filename.empty() && duration_to_tot > 0)
 		{
 			std::this_thread::sleep_for(std::chrono::seconds(duration_to_tot));
 		}
@@ -1454,7 +1484,7 @@ int falco_init(int argc, char **argv)
 		// engine->print_stats();
 		sdropmgr.print_stats();
 
-		hawk_lifecycle->stop();
+		libhawk::lifecycle::stop();
 		if(watchrules_thread.joinable())
 		{
 			watchrules_thread.join();
@@ -1471,7 +1501,7 @@ int falco_init(int argc, char **argv)
 	catch(exception &e)
 	{
 		display_fatal_err("Runtime error: " + string(e.what()) + ". Exiting.\n");
-		hawk_lifecycle->stop();
+		libhawk::lifecycle::stop();
 		if(watchrules_thread.joinable())
 		{
 			watchrules_thread.join();
@@ -1491,10 +1521,7 @@ int falco_init(int argc, char **argv)
 exit:
 
 	delete inspector;
-	delete engine_blueprint;
 	delete outputs;
-	delete hawk_lifecycle;
-
 	return result;
 }
 

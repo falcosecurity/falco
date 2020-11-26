@@ -6,17 +6,16 @@
 #define HAWK_AT_LEAST_VERSION(x, y, z) \
 	(HAWK_VERSION_CODE >= HAWK_VERSION_BITS(x, y, z))
 
-typedef void* hawk_engine;
-typedef void (*hawk_watch_rules_cb)(char* rules_content, hawk_engine* engine);
+typedef void (*hawk_watch_rules_cb)(char* rules_content);
 
 typedef struct
 {
 	void (*hawk_init)(void);
 	void (*hawk_destroy)(void);
-	void (*hawk_watch_rules)(hawk_watch_rules_cb, hawk_engine*);
+	void (*hawk_watch_rules)(hawk_watch_rules_cb);
 } hawk_plugin_definition;
 
-typedef void(register_plugin_cb)(const char *, hawk_plugin_definition);
+typedef void(register_plugin_cb)(const char*, hawk_plugin_definition);
 
 typedef struct
 {
@@ -29,7 +28,7 @@ extern hawk_plugin_registry plugin_registry;
 	void name##_hawk_plugin_init(void) __attribute__((constructor)); \
 	void name##_hawk_plugin_init(void)                               \
 	{                                                                \
-		plugin_registry.register_plugin(#name, definition);       \
+		plugin_registry.register_plugin(#name, definition);      \
 	}
 
 #endif //HAWK_H

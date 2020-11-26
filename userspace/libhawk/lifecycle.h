@@ -29,12 +29,10 @@ namespace libhawk
 {
 extern std::map<std::string, hawk_plugin_definition>* g_plugins;
 
-class lifecycle
+namespace lifecycle
 {
-public:
-	lifecycle();
-
-	void watch_rules(hawk_watch_rules_cb cb, hawk_engine* engine, const std::string& plugin_name);
-	void stop();
-};
+void start();
+void stop();
+void watch_rules(hawk_watch_rules_cb cb, const std::string& plugin_name);
+} // namespace lifecycle
 } // namespace libhawk
