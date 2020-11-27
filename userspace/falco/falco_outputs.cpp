@@ -53,9 +53,9 @@ falco_outputs::~falco_outputs()
 	if(m_initialized)
 	{
 		this->stop_worker();
-		for(auto it = m_outputs.cbegin(); it != m_outputs.cend(); ++it)
+		for(auto o : m_outputs)
 		{
-			delete *it;
+			delete o;
 		}
 	}
 }
@@ -308,22 +308,22 @@ void falco_outputs::worker()
 		// Block until a message becomes available.
 		m_queue.pop(cmsg);
 
-		for(auto it = m_outputs.cbegin(); it != m_outputs.cend(); ++it)
+		for(const auto o : m_outputs)
 		{
-			wd.set_timeout(timeout, (*it)->get_name());
+			wd.set_timeout(timeout, o->get_name());
 			try
 			{
 				switch(cmsg.type)
 				{
 					case ctrl_msg_type::CTRL_MSG_OUTPUT:
-						(*it)->output(&cmsg);
+						o->output(&cmsg);
 						break;
 					case ctrl_msg_type::CTRL_MSG_CLEANUP:
 					case ctrl_msg_type::CTRL_MSG_STOP:
-						(*it)->cleanup();
+						o->cleanup();
 						break;
 					case ctrl_msg_type::CTRL_MSG_REOPEN:
-						(*it)->reopen();
+						o->reopen();
 						break;
 					default:
 						falco_logger::log(LOG_DEBUG, "Outputs worker received an unknown message type\n");	
@@ -331,7 +331,7 @@ void falco_outputs::worker()
 			}
 			catch(const exception &e)
 			{
-				falco_logger::log(LOG_ERR, (*it)->get_name() + ": " + string(e.what()) + "\n");
+				falco_logger::log(LOG_ERR, o->get_name() + ": " + string(e.what()) + "\n");
 			}
 		}
 		wd.cancel_timeout();

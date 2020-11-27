@@ -70,7 +70,7 @@ public:
 	}
 
 	// Return the output's name as per its configuration.
-	const std::string get_name()
+	const std::string get_name() const
 	{
 		return m_oc.name;
 	}
