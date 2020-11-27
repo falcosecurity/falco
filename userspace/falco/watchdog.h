@@ -20,16 +20,16 @@ limitations under the License.
 #include <atomic>
 
 template<typename _T>
-class Watchdog
+class watchdog
 {
 public:
-	Watchdog():
+	watchdog():
 		m_timeout(nullptr),
 		m_is_running(false)
 	{
 	}
 
-	~Watchdog()
+	~watchdog()
 	{
 		stop();
 	}
