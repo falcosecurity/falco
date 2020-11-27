@@ -47,11 +47,9 @@ limitations under the License.
 class falco_engine : public falco_common
 {
 public:
-	falco_engine(bool seed_rng=true, const std::string& alternate_lua_dir=FALCO_ENGINE_SOURCE_LUA_DIR);
+	explicit falco_engine(bool seed_rng=true, const std::string& alternate_lua_dir=FALCO_ENGINE_SOURCE_LUA_DIR);
 	falco_engine(const falco_engine &orig_engine);
 	virtual ~falco_engine();
-
-	falco_engine *clone();
 
 	// A given engine has a version which identifies the fields
 	// and rules file format it supports. This version will change

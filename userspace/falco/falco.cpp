@@ -59,7 +59,7 @@ bool g_restart = false;
 bool g_daemonized = false;
 
 std::atomic<falco_engine *> g_engine;
-std::atomic<falco_engine *> g_engine_blueprint;
+falco_engine * g_engine_blueprint;
 
 //
 // Helper functions
@@ -279,7 +279,7 @@ uint64_t do_inspect(falco_outputs *outputs,
 	// an engine with an empty ruleset to let Falco do the processing without blocking
 	// the driver.
 	if (current_engine == nullptr) {
-		current_engine = g_engine_blueprint.load()->clone();
+		current_engine = new falco_engine((const falco_engine)*g_engine_blueprint);
 		current_engine->load_rules("", false, false);
 	}
 
@@ -427,8 +427,7 @@ static void rules_cb(char *rules_content)
 {
 	try
 	{
-		// todo(fntlnz): remove clone and use copy constructor here instead
-		falco_engine *engine_replacement = g_engine_blueprint.load()->clone();
+		auto engine_replacement =  new falco_engine((const falco_engine)*g_engine_blueprint);
 		//auto engine_replacement = new falco_engine(g_engine.load());
 		engine_replacement->load_rules(rules_content, false, true);
 		delete g_engine.exchange(engine_replacement);
@@ -763,7 +762,7 @@ int falco_init(int argc, char **argv)
 			return EXIT_SUCCESS;
 		}
 
-		falco_engine *initial_engine = new falco_engine(true, alternate_lua_dir);
+		auto initial_engine = new falco_engine(true, alternate_lua_dir);
 		initial_engine->set_inspector(inspector);
 		initial_engine->set_extra(output_format, replace_container_info);
 		g_engine_blueprint = initial_engine;
@@ -907,7 +906,7 @@ int falco_init(int argc, char **argv)
 			config.m_rules_filenames = rules_filenames;
 		}
 
-		g_engine_blueprint.load()->set_min_priority(config.m_min_priority);
+		g_engine_blueprint->set_min_priority(config.m_min_priority);
 
 		if(buffered_cmdline)
 		{

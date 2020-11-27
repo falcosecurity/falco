@@ -45,12 +45,12 @@ nlohmann::json::json_pointer falco_engine::k8s_audit_time = "/stageTimestamp"_js
 falco_engine::falco_engine(bool seed_rng, const std::string& alternate_lua_dir)
 	: m_rules(NULL), m_next_ruleset_id(0),
 	  m_min_priority(falco_common::PRIORITY_DEBUG),
+	  m_alternate_lua_dir(alternate_lua_dir),
 	  m_sampling_ratio(1), m_sampling_multiplier(0),
 	  m_replace_container_info(false)
 {
 	luaopen_lpeg(m_ls);
 	luaopen_yaml(m_ls);
-	m_alternate_lua_dir = alternate_lua_dir;
 
 	falco_common::init(m_lua_main_filename.c_str(), alternate_lua_dir.c_str());
 	falco_rules::init(m_ls);
@@ -70,12 +70,16 @@ falco_engine::falco_engine(bool seed_rng, const std::string& alternate_lua_dir)
 }
 
 falco_engine::falco_engine(const falco_engine &orig_engine)
+	: m_rules(NULL), m_next_ruleset_id(0),
+	  m_min_priority(falco_common::PRIORITY_DEBUG),
+	  m_sampling_ratio(1), m_sampling_multiplier(0),
+	  m_replace_container_info(false)
 {
 	std::cout << "copy ctor" << std::endl;
 	luaopen_lpeg(m_ls);
 	luaopen_yaml(m_ls);
-	m_alternate_lua_dir = orig_engine.m_alternate_lua_dir;
 
+	m_alternate_lua_dir = orig_engine.m_alternate_lua_dir;
 	falco_common::init(m_lua_main_filename.c_str(), m_alternate_lua_dir.c_str());
 	falco_rules::init(m_ls);
 
@@ -101,15 +105,6 @@ falco_engine::~falco_engine()
 	{
 		delete m_rules;
 	}
-}
-
-falco_engine *falco_engine::clone()
-{
-	auto engine = new falco_engine(true, m_alternate_lua_dir);
-	engine->set_inspector(m_inspector);
-	engine->set_extra(m_extra, m_replace_container_info);
-	engine->set_min_priority(m_min_priority);
-	return engine;
 }
 
 uint32_t falco_engine::engine_version()
