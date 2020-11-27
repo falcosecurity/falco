@@ -17,8 +17,6 @@ limitations under the License.
 #include "lifecycle.h"
 #include "exception.h"
 
-#include <iostream>
-
 std::map<std::string, hawk_plugin_definition> *libhawk::g_plugins;
 
 void libhawk_register_plugin(const char *name, hawk_plugin_definition def)

@@ -59,9 +59,7 @@ bool g_restart = false;
 bool g_daemonized = false;
 
 std::atomic<falco_engine *> g_engine;
-std::mutex g_engine_ready;
-std::condition_variable g_engine_cv;
-bool g_is_engine_ready = false;
+std::atomic<falco_engine *> g_engine_blueprint;
 
 //
 // Helper functions
@@ -275,10 +273,14 @@ uint64_t do_inspect(falco_outputs *outputs,
 		}
 	}
 
-	{
-		// wait for the first engine to be ready
-		std::unique_lock<std::mutex> lk(g_engine_ready);
-		g_engine_cv.wait(lk, [] { return g_is_engine_ready; });
+	falco_engine *current_engine = g_engine.exchange(nullptr);
+
+	// If we didn't get a set of rules yet from the rules plugin, we load
+	// an engine with an empty ruleset to let Falco do the processing without blocking
+	// the driver.
+	if (current_engine == nullptr) {
+		current_engine = g_engine_blueprint.load()->clone();
+		current_engine->load_rules("", false, false);
 	}
 
 	while(1)
@@ -345,7 +347,13 @@ uint64_t do_inspect(falco_outputs *outputs,
 			continue;
 		}
 
-		unique_ptr<falco_engine::rule_result> res = g_engine.load()->process_sinsp_event(ev);
+		auto engine_replacement = g_engine.exchange(nullptr);
+		if (engine_replacement != nullptr) {
+			delete current_engine;
+			current_engine = engine_replacement;
+			falco_logger::log(LOG_DEBUG, "falco_engine replacement found and swapped");
+		}
+		unique_ptr<falco_engine::rule_result> res = current_engine->process_sinsp_event(ev);
 		if(res)
 		{
 			outputs->handle_event(res->evt, res->rule, res->source, res->priority_num, res->format);
@@ -420,25 +428,15 @@ static void rules_cb(char *rules_content)
 	try
 	{
 		// todo(fntlnz): remove clone and use copy constructor here instead
-		falco_engine *engine_replacement = g_engine.load()->clone();
+		falco_engine *engine_replacement = g_engine_blueprint.load()->clone();
 		//auto engine_replacement = new falco_engine(g_engine.load());
 		engine_replacement->load_rules(rules_content, false, true);
-		g_engine.store(engine_replacement);
+		delete g_engine.exchange(engine_replacement);
 	}
 	catch(const falco_exception &e)
 	{
 		falco_logger::log(LOG_WARNING, std::string("rules replacement failed: ") + e.what());
 		return;
-	}
-
-	// This mutex is only needed for the first synchronization
-	// it can be discarded the second time rules_cb is needed
-	// since the main engine loop is already started.
-	if(!g_is_engine_ready)
-	{
-		std::lock_guard<std::mutex> lk(g_engine_ready);
-		g_is_engine_ready = true;
-		g_engine_cv.notify_all();
 	}
 }
 
@@ -768,7 +766,7 @@ int falco_init(int argc, char **argv)
 		falco_engine *initial_engine = new falco_engine(true, alternate_lua_dir);
 		initial_engine->set_inspector(inspector);
 		initial_engine->set_extra(output_format, replace_container_info);
-		g_engine = initial_engine;
+		g_engine_blueprint = initial_engine;
 
 		if(list_flds)
 		{
@@ -909,7 +907,7 @@ int falco_init(int argc, char **argv)
 			config.m_rules_filenames = rules_filenames;
 		}
 
-		g_engine.load()->set_min_priority(config.m_min_priority);
+		g_engine_blueprint.load()->set_min_priority(config.m_min_priority);
 
 		if(buffered_cmdline)
 		{
