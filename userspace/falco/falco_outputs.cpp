@@ -271,7 +271,7 @@ void falco_outputs::reopen_outputs()
 
 void falco_outputs::stop_worker()
 {
-	Watchdog<void *> wd;
+	watchdog<void *> wd;
 	wd.start([&](void *) -> void {
 		falco_logger::log(LOG_NOTICE, "output channels still blocked, discarding all remaining notifications\n");
 		m_queue.clear();
@@ -295,7 +295,7 @@ inline void falco_outputs::push(ctrl_msg_type cmt)
 
 void falco_outputs::worker()
 {
-	Watchdog<std::string> wd;
+	watchdog<std::string> wd;
 	wd.start([&](std::string payload) -> void {
 		falco_logger::log(LOG_CRIT, "\"" + payload + "\" output timeout, all output channels are blocked\n");
 	});
