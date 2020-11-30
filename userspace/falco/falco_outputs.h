@@ -94,6 +94,6 @@ private:
 
 	std::thread m_worker_thread;
 	inline void push(ctrl_msg_type cmt);
-	void worker();
+	void worker() noexcept;
 	void stop_worker();
 };

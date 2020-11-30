@@ -293,7 +293,10 @@ inline void falco_outputs::push(ctrl_msg_type cmt)
 	m_queue.push(cmsg);
 }
 
-void falco_outputs::worker()
+// todo(leogr,leodido): this function is not supposed to throw exceptions, and with "noexcept",
+// the program is terminated if that occurs. Although that's the wanted behavior,
+// we still need to improve the error reporting since some inner functions can throw exceptions.
+void falco_outputs::worker() noexcept
 {
 	watchdog<std::string> wd;
 	wd.start([&](std::string payload) -> void {
