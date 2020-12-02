@@ -3070,6 +3070,16 @@
   priority: WARNING
   tags: [process]
 
+# The rule is disabled by default and should be enabled when non-root container policy has been applied.
+# Note the rule will not work as expected when usernamespace is applied, e.g. userns-remap is enabled.
+- rule: Container Run as Root User
+  desc: Detected container running as root user
+  condition: spawned_process and container and proc.vpid=1 and user.uid=0
+  enabled: false
+  output: Container launched with root user privilege (uid=%user.uid container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
+  priority: INFO
+  tags: [container, process]
+
 # Application rules have moved to application_rules.yaml. Please look
 # there if you want to enable them by adding to
 # falco_rules.local.yaml.
