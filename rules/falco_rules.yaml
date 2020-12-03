@@ -1612,7 +1612,7 @@
 # to change thread namespace without having to copy and override the
 # entire change thread namespace rule.
 - list: user_known_change_thread_namespace_binaries
-  items: []
+  items: [crio, multus]
 
 - macro: user_known_change_thread_namespace_activities
   condition: (never_true)
