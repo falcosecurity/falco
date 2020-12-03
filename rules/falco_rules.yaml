@@ -3070,11 +3070,17 @@
   priority: WARNING
   tags: [process]
 
+- list: run_as_root_image_list
+  items: []
+
+- macro: user_known_run_as_root_container
+  condition: (container.image.repository in (run_as_root_image_list))
+
 # The rule is disabled by default and should be enabled when non-root container policy has been applied.
 # Note the rule will not work as expected when usernamespace is applied, e.g. userns-remap is enabled.
 - rule: Container Run as Root User
   desc: Detected container running as root user
-  condition: spawned_process and container and proc.vpid=1 and user.uid=0
+  condition: spawned_process and container and proc.vpid=1 and user.uid=0 and not user_known_run_as_root_container
   enabled: false
   output: Container launched with root user privilege (uid=%user.uid container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
   priority: INFO
