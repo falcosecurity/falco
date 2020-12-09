@@ -11,9 +11,8 @@ Content in this document can be used to publically share about Falco.
 
 ### Logo
 
-There are 3 logos available for use in this directory. Use the primary logo unless required otherwise due to background issues, or printing.
-
-The Falco logo is Apache 2 licensed and free to use in media and publication for the CNCF Falco project.
+You can find the Falco logo in PNG and SVG in different colors in
+the [CNCF's artwork repository](https://github.com/cncf/artwork/blob/master/examples/incubating.md#falco-logos).
 
 ### Colors
 
