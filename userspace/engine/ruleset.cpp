@@ -19,6 +19,21 @@ limitations under the License.
 
 using namespace std;
 
+falco_ruleset::filter_wrapper::filter_wrapper(
+	const std::set<uint32_t>& event_tags_,
+	std::unique_ptr<gen_event_filter> filter_)
+	: filter(std::move(filter_))
+{
+	auto it = event_tags_.rbegin(), itEnd = event_tags_.rend();
+	if (it == itEnd)
+		return;
+	event_tags.resize(*it + 1);
+
+	for(; it != itEnd; ++it)
+		event_tags[*it] = true;
+}
+
+
 falco_ruleset::falco_ruleset()
 {
 }
@@ -174,16 +189,9 @@ void falco_ruleset::add(const string &name,
 			const set<uint32_t> &event_tags,
 			std::unique_ptr<gen_event_filter> filter)
 {
-	filter_wrapper *wrap = new filter_wrapper();
-	wrap->filter = std::move(filter);
+	filter_wrapper *wrap = new filter_wrapper(event_tags, std::move(filter));
 
-	for(auto &etag : event_tags)
-	{
-		wrap->event_tags.resize(etag + 1);
-		wrap->event_tags[etag] = true;
-	}
-
-	m_filters.insert(pair<string, filter_wrapper *>(name, wrap));
+	m_filters.emplace(name, wrap);
 
 	for(const auto &tag : tags)
 	{

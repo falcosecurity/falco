@@ -75,7 +75,10 @@ public:
 
 private:
 
-	struct filter_wrapper {
+	struct filter_wrapper
+	{
+		filter_wrapper(const std::set<uint32_t> &event_tags, std::unique_ptr<gen_event_filter> filter);
+
 		std::unique_ptr<gen_event_filter> filter;
 
 		// Indexes from event tag to enabled/disabled.
