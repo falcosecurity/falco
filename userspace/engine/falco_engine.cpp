@@ -482,19 +482,20 @@ void falco_engine::add_sinsp_filter(string &rule,
 				    set<uint32_t> &evttypes,
 				    set<uint32_t> &syscalls,
 				    set<string> &tags,
-				    sinsp_filter* filter)
+				    std::unique_ptr<sinsp_filter> filter)
 {
-	m_sinsp_rules->add(rule, evttypes, syscalls, tags, filter);
+	m_sinsp_rules->add(rule, evttypes, syscalls, tags, std::move(filter));
 }
 
 void falco_engine::add_k8s_audit_filter(string &rule,
 					set<string> &tags,
-					json_event_filter* filter)
+					std::unique_ptr<json_event_filter> filter)
 {
 	// All k8s audit events have a single tag "1".
 	std::set<uint32_t> event_tags = {1};
 
-	m_k8s_audit_rules->add(rule, tags, event_tags, filter);
+	std::unique_ptr<gen_event_filter> upcast_filter(dynamic_cast<gen_event_filter*>(filter.release()));
+	m_k8s_audit_rules->add(rule, tags, event_tags, std::move(upcast_filter));
 }
 
 void falco_engine::clear_filters()

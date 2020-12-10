@@ -27,7 +27,6 @@ falco_ruleset::~falco_ruleset()
 {
 	for(const auto &val : m_filters)
 	{
-		delete val.second->filter;
 		delete val.second;
 	}
 
@@ -170,13 +169,13 @@ void falco_ruleset::ruleset_filters::event_tags_for_ruleset(vector<bool> &event_
 	}
 }
 
-void falco_ruleset::add(string &name,
-			set<string> &tags,
-			set<uint32_t> &event_tags,
-			gen_event_filter *filter)
+void falco_ruleset::add(const string &name,
+			const set<string> &tags,
+			const set<uint32_t> &event_tags,
+			std::unique_ptr<gen_event_filter> filter)
 {
 	filter_wrapper *wrap = new filter_wrapper();
-	wrap->filter = filter;
+	wrap->filter = std::move(filter);
 
 	for(auto &etag : event_tags)
 	{
@@ -302,8 +301,8 @@ falco_sinsp_ruleset::~falco_sinsp_ruleset()
 void falco_sinsp_ruleset::add(string &name,
 			      set<uint32_t> &evttypes,
 			      set<uint32_t> &syscalls,
-			      set<string> &tags,
-			      sinsp_filter *filter)
+			      const set<string> &tags,
+			      std::unique_ptr<gen_event_filter> filter)
 {
 	set<uint32_t> event_tags;
 
@@ -332,7 +331,17 @@ void falco_sinsp_ruleset::add(string &name,
 		event_tags.insert(syscall_to_event_tag(syscallid));
 	}
 
-	falco_ruleset::add(name, tags, event_tags, (gen_event_filter *)filter);
+	falco_ruleset::add(name, tags, event_tags, std::move(filter));
+}
+
+void falco_sinsp_ruleset::add(string &name,
+			      set<uint32_t> &evttypes,
+			      set<uint32_t> &syscalls,
+			      const set<string> &tags,
+			      std::unique_ptr<sinsp_filter> filter)
+{
+	std::unique_ptr<gen_event_filter> upcast_filter(dynamic_cast<gen_event_filter*>(filter.release()));
+	add(name, evttypes, syscalls, tags, std::move(upcast_filter));
 }
 
 bool falco_sinsp_ruleset::run(sinsp_evt *evt, uint16_t ruleset)

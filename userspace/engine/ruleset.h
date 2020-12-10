@@ -34,10 +34,10 @@ public:
 	falco_ruleset();
 	virtual ~falco_ruleset();
 
-	void add(std::string &name,
-		 std::set<std::string> &tags,
-		 std::set<uint32_t> &event_tags,
-		 gen_event_filter* filter);
+	void add(const std::string &name,
+		 const std::set<std::string> &tags,
+		 const std::set<uint32_t> &event_tags,
+		 std::unique_ptr<gen_event_filter> filter);
 
 	// rulesets are arbitrary numbers and should be managed by the caller.
         // Note that rulesets are used to index into a std::vector so
@@ -76,7 +76,7 @@ public:
 private:
 
 	struct filter_wrapper {
-		gen_event_filter *filter;
+		std::unique_ptr<gen_event_filter> filter;
 
 		// Indexes from event tag to enabled/disabled.
 		std::vector<bool> event_tags;
@@ -128,8 +128,8 @@ public:
 	void add(std::string &name,
 		 std::set<uint32_t> &evttypes,
 		 std::set<uint32_t> &syscalls,
-		 std::set<std::string> &tags,
-		 sinsp_filter* filter);
+		 const std::set<std::string> &tags,
+		 std::unique_ptr<sinsp_filter> filter);
 
 	bool run(sinsp_evt *evt, uint16_t ruleset = 0);
 
@@ -146,6 +146,12 @@ public:
 	void syscalls_for_ruleset(std::vector<bool> &syscalls, uint16_t ruleset);
 
 private:
+	void add(std::string &name,
+		 std::set<uint32_t> &evttypes,
+		 std::set<uint32_t> &syscalls,
+		 const std::set<std::string> &tags,
+		 std::unique_ptr<gen_event_filter> filter);
+
 	uint32_t evttype_to_event_tag(uint32_t evttype);
 	uint32_t syscall_to_event_tag(uint32_t syscallid);
 };

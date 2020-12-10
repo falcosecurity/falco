@@ -164,9 +164,10 @@ void falco_rules::add_filter(string &rule, set<uint32_t> &evttypes, set<uint32_t
 	// While the current rule was being parsed, a sinsp_filter
 	// object was being populated by lua_parser. Grab that filter
 	// and pass it to the engine.
-	sinsp_filter *filter = (sinsp_filter *) m_sinsp_lua_parser->get_filter(true);
+	auto* raw_filter = m_sinsp_lua_parser->get_filter(true);
+	std::unique_ptr<sinsp_filter> filter(dynamic_cast<sinsp_filter*>(raw_filter));
 
-	m_engine->add_sinsp_filter(rule, evttypes, syscalls, tags, filter);
+	m_engine->add_sinsp_filter(rule, evttypes, syscalls, tags, std::move(filter));
 }
 
 void falco_rules::add_k8s_audit_filter(string &rule, set<string> &tags)
@@ -174,9 +175,10 @@ void falco_rules::add_k8s_audit_filter(string &rule, set<string> &tags)
 	// While the current rule was being parsed, a sinsp_filter
 	// object was being populated by lua_parser. Grab that filter
 	// and pass it to the engine.
-	json_event_filter *filter = (json_event_filter *) m_json_lua_parser->get_filter(true);
+	auto* raw_filter = m_json_lua_parser->get_filter(true);
+	std::unique_ptr<json_event_filter> filter(dynamic_cast<json_event_filter*>(raw_filter));
 
-	m_engine->add_k8s_audit_filter(rule, tags, filter);
+	m_engine->add_k8s_audit_filter(rule, tags, std::move(filter));
 }
 
 int falco_rules::enable_rule(lua_State *ls)

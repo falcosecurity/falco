@@ -196,7 +196,7 @@ public:
 	//
 	void add_k8s_audit_filter(std::string &rule,
 				  std::set<std::string> &tags,
-				  json_event_filter* filter);
+				  std::unique_ptr<json_event_filter> filter);
 
 	// **Methods Related to Sinsp Events e.g system calls
 	//
@@ -237,7 +237,7 @@ public:
 			      std::set<uint32_t> &evttypes,
 			      std::set<uint32_t> &syscalls,
 			      std::set<std::string> &tags,
-			      sinsp_filter* filter);
+			      std::unique_ptr<sinsp_filter> filter);
 
 	sinsp_filter_factory &sinsp_factory();
 	json_event_filter_factory &json_factory();
