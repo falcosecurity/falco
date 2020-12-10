@@ -18,6 +18,7 @@ limitations under the License.
 #include <string.h>
 
 #include "falco_common.h"
+#include "falco_utils.h"
 #include "webserver.h"
 #include "json_evt.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
@@ -193,12 +194,6 @@ void falco_webserver::init(falco_configuration *config,
 	m_outputs = outputs;
 }
 
-template<typename T, typename... Args>
-std::unique_ptr<T> make_unique(Args &&... args)
-{
-	return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
-}
-
 void falco_webserver::start()
 {
 	if(m_server)
@@ -239,7 +234,7 @@ void falco_webserver::start()
 
 	try
 	{
-		m_server = make_unique<CivetServer>(cpp_options);
+		m_server = std::make_unique<CivetServer>(cpp_options);
 	}
 	catch(CivetException &e)
 	{
@@ -250,7 +245,7 @@ void falco_webserver::start()
 		throw falco_exception("Could not create embedded webserver");
 	}
 
-	m_k8s_audit_handler = make_unique<k8s_audit_handler>(m_engine, m_outputs);
+	m_k8s_audit_handler = std::make_unique<k8s_audit_handler>(m_engine, m_outputs);
 	m_server->addHandler(m_config->m_webserver_k8s_audit_endpoint, *m_k8s_audit_handler);
 	m_k8s_healthz_handler = make_unique<k8s_healthz_handler>();
 	m_server->addHandler(m_config->m_webserver_k8s_healthz_endpoint, *m_k8s_healthz_handler);

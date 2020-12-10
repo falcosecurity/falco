@@ -18,6 +18,7 @@ limitations under the License.
 
 #include "formats.h"
 #include "falco_engine.h"
+#include "falco_utils.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
 
 sinsp *falco_formats::s_inspector = NULL;
@@ -43,8 +44,7 @@ void falco_formats::init(sinsp *inspector,
 	s_json_output = json_output;
 	s_json_include_output_property = json_include_output_property;
 
-	// todo(leogr): we should have used std::make_unique, but we cannot since it's not C++14
-	s_formatters = std::unique_ptr<sinsp_evt_formatter_cache>(new sinsp_evt_formatter_cache(s_inspector));
+	s_formatters = std::make_unique<sinsp_evt_formatter_cache>(s_inspector);
 
 	luaL_openlib(ls, "formats", ll_falco, 0);
 }

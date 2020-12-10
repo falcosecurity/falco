@@ -293,15 +293,15 @@ unique_ptr<falco_engine::rule_result> falco_engine::process_sinsp_event(sinsp_ev
 {
 	if(should_drop_evt())
 	{
-		return unique_ptr<struct rule_result>();
+		return unique_ptr<rule_result>();
 	}
 
 	if(!m_sinsp_rules->run(ev, ruleset_id))
 	{
-		return unique_ptr<struct rule_result>();
+		return unique_ptr<rule_result>();
 	}
 
-	unique_ptr<struct rule_result> res(new rule_result());
+	auto res = make_unique<rule_result>();
 	res->source = "syscall";
 
 	populate_rule_result(res, ev);
@@ -318,16 +318,16 @@ unique_ptr<falco_engine::rule_result> falco_engine::process_k8s_audit_event(json
 {
 	if(should_drop_evt())
 	{
-		return unique_ptr<struct rule_result>();
+		return unique_ptr<rule_result>();
 	}
 
 	// All k8s audit events have the single tag "1".
 	if(!m_k8s_audit_rules->run((gen_event *) ev, 1, ruleset_id))
 	{
-		return unique_ptr<struct rule_result>();
+		return unique_ptr<rule_result>();
 	}
 
-	unique_ptr<struct rule_result> res(new rule_result());
+	auto res = make_unique<rule_result>();
 	res->source = "k8s_audit";
 
 	populate_rule_result(res, ev);
