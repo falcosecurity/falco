@@ -15,6 +15,7 @@ limitations under the License.
 */
 
 #include "config_falco.h"
+#include "falco_engine_version.h"
 #include "grpc_server_impl.h"
 #include "grpc_queue.h"
 #include "logger.h"
@@ -74,6 +75,9 @@ void falco::grpc::server_impl::version(const context& ctx, const version::reques
 
 	auto& version = *res.mutable_version();
 	version = FALCO_VERSION;
+
+	res.set_engine_version(FALCO_ENGINE_VERSION);
+	res.set_engine_fields_checksum(FALCO_FIELDS_CHECKSUM); 
 
 	res.set_major(FALCO_VERSION_MAJOR);
 	res.set_minor(FALCO_VERSION_MINOR);

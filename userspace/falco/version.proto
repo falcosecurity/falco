@@ -36,10 +36,14 @@ message request
 // its parts as per semver 2.0 specification (https://semver.org).
 message response
 {
+// falco version
   string version = 1;
   uint32 major = 2;
   uint32 minor = 3;
   uint32 patch = 4;
   string prerelease = 5;
   string build = 6;
+// falco engine version
+  uint32 engine_version = 7;
+  string engine_fields_checksum = 8;
 }
