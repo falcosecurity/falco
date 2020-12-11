@@ -33,9 +33,9 @@ If you would like to run Falco in **production** please adhere to the [official 
 | Tool     | Link                                                                                       | Note                                                               |
 |----------|--------------------------------------------------------------------------------------------|--------------------------------------------------------------------|
 | Helm     | [Chart Repository](https://github.com/falcosecurity/charts/tree/master/falco#introduction) | The Falco community offers regular helm chart releases.            |
-| Minikube | [Tutorial](https://falco.org/docs/third-party/#minikube)                                   | The Falco driver has been baked into minikube for easy deployment. |
-| Kind     | [Tutorial](https://falco.org/docs/third-party/#kind)                                       | Running Falco with kind requires a driver on the host system.      |
-| GKE      | [Tutorial](https://falco.org/docs/third-party/#gke)                                        | We suggest using the eBPF driver for running Falco on GKE.         |
+| Minikube | [Tutorial](https://falco.org/docs/getting-started/third-party/#minikube)                                   | The Falco driver has been baked into minikube for easy deployment. |
+| Kind     | [Tutorial](https://falco.org/docs/getting-started/third-party/#kind)                                       | Running Falco with kind requires a driver on the host system.      |
+| GKE      | [Tutorial](https://falco.org/docs/getting-started/third-party/#gke)                                        | We suggest using the eBPF driver for running Falco on GKE.         |
 
 ### Developing
 
