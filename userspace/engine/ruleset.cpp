@@ -15,6 +15,7 @@ limitations under the License.
 */
 
 #include "ruleset.h"
+#include "falco_utils.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
 
 using namespace std;
@@ -40,16 +41,6 @@ falco_ruleset::falco_ruleset()
 
 falco_ruleset::~falco_ruleset()
 {
-	for(const auto &val : m_filters)
-	{
-		delete val.second;
-	}
-
-	for(auto &ruleset : m_rulesets)
-	{
-		delete ruleset;
-	}
-	m_filters.clear();
 }
 
 falco_ruleset::ruleset_filters::ruleset_filters():
@@ -59,14 +50,6 @@ falco_ruleset::ruleset_filters::ruleset_filters():
 
 falco_ruleset::ruleset_filters::~ruleset_filters()
 {
-	for(uint32_t i = 0; i < m_filter_by_event_tag.size(); i++)
-	{
-		if(m_filter_by_event_tag[i])
-		{
-			delete m_filter_by_event_tag[i];
-			m_filter_by_event_tag[i] = NULL;
-		}
-	}
 }
 
 void falco_ruleset::ruleset_filters::add_filter(filter_wrapper *wrap)
@@ -86,7 +69,7 @@ void falco_ruleset::ruleset_filters::add_filter(filter_wrapper *wrap)
 
 			if(!m_filter_by_event_tag[etag])
 			{
-				m_filter_by_event_tag[etag] = new list<filter_wrapper *>();
+				m_filter_by_event_tag[etag] = std::make_unique<filter_wrapper_list>();
 			}
 
 			m_filter_by_event_tag[etag]->push_back(wrap);
@@ -109,7 +92,7 @@ void falco_ruleset::ruleset_filters::remove_filter(filter_wrapper *wrap)
 		{
 			if(etag < m_filter_by_event_tag.size())
 			{
-				list<filter_wrapper *> *l = m_filter_by_event_tag[etag];
+				auto& l = m_filter_by_event_tag[etag];
 				if(l)
 				{
 					auto it = remove(l->begin(),
@@ -125,8 +108,7 @@ void falco_ruleset::ruleset_filters::remove_filter(filter_wrapper *wrap)
 
 						if(l->size() == 0)
 						{
-							delete l;
-							m_filter_by_event_tag[etag] = NULL;
+							l.reset();
 						}
 					}
 				}
@@ -152,7 +134,7 @@ bool falco_ruleset::ruleset_filters::run(gen_event *evt, uint32_t etag)
 		return false;
 	}
 
-	list<filter_wrapper *> *filters = m_filter_by_event_tag[etag];
+	auto& filters = m_filter_by_event_tag[etag];
 
 	if(!filters)
 	{
@@ -176,8 +158,7 @@ void falco_ruleset::ruleset_filters::event_tags_for_ruleset(vector<bool> &event_
 
 	for(uint32_t etag = 0; etag < m_filter_by_event_tag.size(); etag++)
 	{
-		list<filter_wrapper *> *filters = m_filter_by_event_tag[etag];
-		if(filters)
+		if(m_filter_by_event_tag[etag])
 		{
 			event_tags[etag] = true;
 		}
@@ -189,9 +170,10 @@ void falco_ruleset::add(const string &name,
 			const set<uint32_t> &event_tags,
 			std::unique_ptr<gen_event_filter> filter)
 {
-	filter_wrapper *wrap = new filter_wrapper(event_tags, std::move(filter));
+	auto wrap = std::make_unique<filter_wrapper>(event_tags, std::move(filter));
+	auto raw = wrap.get();
 
-	m_filters.emplace(name, wrap);
+	m_filters.emplace(name, std::move(wrap));
 
 	for(const auto &tag : tags)
 	{
@@ -201,10 +183,10 @@ void falco_ruleset::add(const string &name,
 		   it->first != tag)
 		{
 			it = m_filter_by_event_tag.emplace_hint(it,
-								make_pair(tag, list<filter_wrapper *>()));
+								make_pair(tag, ruleset_filters::filter_wrapper_list()));
 		}
 
-		it->second.push_back(wrap);
+		it->second.push_back(raw);
 	}
 }
 
@@ -212,7 +194,7 @@ void falco_ruleset::enable(const string &substring, bool match_exact, bool enabl
 {
 	while(m_rulesets.size() < (size_t)ruleset + 1)
 	{
-		m_rulesets.push_back(new ruleset_filters());
+		m_rulesets.push_back(std::make_unique<ruleset_filters>());
 	}
 
 	for(const auto &val : m_filters)
@@ -235,11 +217,11 @@ void falco_ruleset::enable(const string &substring, bool match_exact, bool enabl
 		{
 			if(enabled)
 			{
-				m_rulesets[ruleset]->add_filter(val.second);
+				m_rulesets[ruleset]->add_filter(val.second.get());
 			}
 			else
 			{
-				m_rulesets[ruleset]->remove_filter(val.second);
+				m_rulesets[ruleset]->remove_filter(val.second.get());
 			}
 		}
 	}
@@ -249,7 +231,7 @@ void falco_ruleset::enable_tags(const set<string> &tags, bool enabled, uint16_t 
 {
 	while(m_rulesets.size() < (size_t)ruleset + 1)
 	{
-		m_rulesets.push_back(new ruleset_filters());
+		m_rulesets.push_back(std::make_unique<ruleset_filters>());
 	}
 
 	for(const auto &tag : tags)
@@ -272,7 +254,7 @@ uint64_t falco_ruleset::num_rules_for_ruleset(uint16_t ruleset)
 {
 	while(m_rulesets.size() < (size_t)ruleset + 1)
 	{
-		m_rulesets.push_back(new ruleset_filters());
+		m_rulesets.push_back(std::make_unique<ruleset_filters>());
 	}
 
 	return m_rulesets[ruleset]->num_filters();

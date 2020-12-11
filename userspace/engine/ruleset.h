@@ -88,6 +88,8 @@ private:
 	// A group of filters all having the same ruleset
 	class ruleset_filters {
 	public:
+		using filter_wrapper_list = std::list<filter_wrapper *>;
+
 		ruleset_filters();
 
 		virtual ~ruleset_filters();
@@ -106,18 +108,18 @@ private:
 
 		// Maps from event tag to a list of filters. There can
 		// be multiple filters for a given event tag.
-		std::vector<std::list<filter_wrapper *> *> m_filter_by_event_tag;
+		std::vector<std::unique_ptr<filter_wrapper_list>> m_filter_by_event_tag;
 
 	};
 
-	std::vector<ruleset_filters *> m_rulesets;
+	std::vector<std::unique_ptr<ruleset_filters>> m_rulesets;
 
 	// Maps from tag to list of filters having that tag.
-	std::map<std::string, std::list<filter_wrapper *>> m_filter_by_event_tag;
+	std::map<std::string, ruleset_filters::filter_wrapper_list> m_filter_by_event_tag;
 
 	// This holds all the filters passed to add(), so they can
 	// be cleaned up.
-	std::map<std::string,filter_wrapper *> m_filters;
+	std::map<std::string, std::unique_ptr<filter_wrapper>> m_filters;
 };
 
 // falco_sinsp_ruleset is a specialization of falco_ruleset that
