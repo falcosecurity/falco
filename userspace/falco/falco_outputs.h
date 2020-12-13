@@ -41,6 +41,7 @@ public:
 	void init(bool json_output,
 		  bool json_include_output_property,
 		  uint32_t timeout,
+		  bool rate_limit_enabled,
 		  uint32_t rate, uint32_t max_burst, bool buffered,
 		  bool time_format_iso_8601, std::string hostname);
 
@@ -67,7 +68,7 @@ private:
 	std::vector<falco::outputs::abstract_output *> m_outputs;
 
 	// Rate limits notifications
-	token_bucket m_notifications_tb;
+	std::unique_ptr<token_bucket> m_notifications_tb;
 
 	bool m_buffered;
 	bool m_json_output;

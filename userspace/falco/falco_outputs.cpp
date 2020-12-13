@@ -63,6 +63,7 @@ falco_outputs::~falco_outputs()
 void falco_outputs::init(bool json_output,
 		  bool json_include_output_property,
 		  uint32_t timeout,
+		  bool rate_limit_enabled,
 		  uint32_t rate, uint32_t max_burst, bool buffered,
 		  bool time_format_iso_8601, std::string hostname)
 {
@@ -82,7 +83,11 @@ void falco_outputs::init(bool json_output,
 
 	m_timeout = std::chrono::milliseconds(timeout);
 
-	m_notifications_tb.init(rate, max_burst);
+	if(rate_limit_enabled)
+	{
+		m_notifications_tb.reset(new token_bucket());
+		m_notifications_tb->init(rate, max_burst);
+	}
 
 	m_buffered = buffered;
 	m_time_format_iso_8601 = time_format_iso_8601;
@@ -144,7 +149,7 @@ void falco_outputs::add_output(falco::outputs::config oc)
 void falco_outputs::handle_event(gen_event *evt, string &rule, string &source,
 				 falco_common::priority_type priority, string &format)
 {
-	if(!m_notifications_tb.claim())
+	if(m_notifications_tb && !m_notifications_tb->claim())
 	{
 		falco_logger::log(LOG_DEBUG, "Skipping rate-limited notification for rule " + rule + "\n");
 		return;

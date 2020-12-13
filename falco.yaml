@@ -129,6 +129,7 @@ output_timeout: 2000
 outputs:
   rate: 1
   max_burst: 1000
+  rate_limit_enabled: true
 
 # Where security notifications should go.
 # Multiple outputs can be enabled.

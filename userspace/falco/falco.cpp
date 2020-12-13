@@ -972,6 +972,7 @@ int falco_init(int argc, char **argv)
 			hostname = c_hostname;
 		}
 
+
 		if(!all_events)
 		{
 			inspector->set_drop_event_flags(EF_DROP_SIMPLE_CONS);
@@ -1081,6 +1082,7 @@ int falco_init(int argc, char **argv)
 		outputs->init(config.m_json_output,
 			config.m_json_include_output_property,
 			config.m_output_timeout,
+			config.m_notifications_rate_limit_enabled,
 			config.m_notifications_rate, config.m_notifications_max_burst,
 			config.m_buffered_outputs,
 			config.m_time_format_iso_8601,
