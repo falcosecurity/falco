@@ -255,7 +255,7 @@ private:
 	shared_ptr<sinsp_filter_factory> m_sinsp_factory;
 	shared_ptr<json_event_filter_factory> m_json_factory;
 
-	falco_rules *m_rules;
+	std::unique_ptr<falco_rules> m_rules;
 	uint16_t m_next_ruleset_id;
 	std::map<string, uint16_t> m_known_rulesets;
 	falco_common::priority_type m_min_priority;

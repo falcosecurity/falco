@@ -43,7 +43,7 @@ using namespace std;
 nlohmann::json::json_pointer falco_engine::k8s_audit_time = "/stageTimestamp"_json_pointer;
 
 falco_engine::falco_engine(bool seed_rng, const std::string& alternate_lua_dir)
-	: m_rules(NULL), m_next_ruleset_id(0),
+	: m_next_ruleset_id(0),
 	  m_min_priority(falco_common::PRIORITY_DEBUG),
 	  m_sampling_ratio(1), m_sampling_multiplier(0),
 	  m_replace_container_info(false)
@@ -70,10 +70,6 @@ falco_engine::falco_engine(bool seed_rng, const std::string& alternate_lua_dir)
 
 falco_engine::~falco_engine()
 {
-	if (m_rules)
-	{
-		delete m_rules;
-	}
 }
 
 uint32_t falco_engine::engine_version()
@@ -166,9 +162,7 @@ void falco_engine::load_rules(const string &rules_content, bool verbose, bool al
 
 	if(!m_rules)
 	{
-		m_rules = new falco_rules(m_inspector,
-					  this,
-					  m_ls);
+		m_rules = std::make_unique<falco_rules>(m_inspector, this, m_ls);
 	}
 
 	// Note that falco_formats is added to the lua state used
