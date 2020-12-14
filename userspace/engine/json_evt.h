@@ -181,7 +181,7 @@ public:
 	//
 	// Allocate a new check of the same type. Must be overridden.
 	//
-	virtual json_event_filter_check *allocate_new() = 0;
+	virtual std::unique_ptr<json_event_filter_check> allocate_new() = 0;
 
 	// Subclasses or extraction functions can call this method to add each extracted value.
 	void add_extracted_value(const std::string &val);
@@ -294,7 +294,7 @@ public:
 
 	int32_t parse_field_name(const char* str, bool alloc_state, bool needed_for_filtering) final;
 
-	json_event_filter_check *allocate_new();
+	std::unique_ptr<json_event_filter_check> allocate_new() override;
 
 protected:
 
@@ -319,7 +319,7 @@ public:
 	k8s_audit_filter_check();
 	virtual ~k8s_audit_filter_check();
 
-	json_event_filter_check *allocate_new();
+	std::unique_ptr<json_event_filter_check> allocate_new() override;
 
 	// Extract all images/image repositories from the provided containers
 	static bool extract_images(const nlohmann::json &j,
@@ -380,10 +380,10 @@ public:
 	virtual ~json_event_filter_factory();
 
 	// Create a new filter
-	gen_event_filter *new_filter();
+	gen_event_filter *new_filter() override;
 
 	// Create a new filter_check
-	gen_event_filter_check *new_filtercheck(const char *fldname);
+	gen_event_filter_check *new_filtercheck(const char *fldname) override;
 
 	// All defined field names
 	std::list<json_event_filter_check::check_info> &get_fields();

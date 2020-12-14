@@ -20,6 +20,7 @@ limitations under the License.
 #include "utils.h"
 
 #include "falco_common.h"
+#include "falco_utils.h"
 #include "json_evt.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
 
@@ -834,11 +835,9 @@ bool jevt_filter_check::extract_values(json_event *jevt)
 	return true;
 }
 
-json_event_filter_check *jevt_filter_check::allocate_new()
+std::unique_ptr<json_event_filter_check> jevt_filter_check::allocate_new()
 {
-	jevt_filter_check *chk = new jevt_filter_check();
-
-	return (json_event_filter_check *)chk;
+	return std::make_unique<jevt_filter_check>();
 }
 
 bool k8s_audit_filter_check::extract_images(const json &j,
@@ -1335,11 +1334,9 @@ k8s_audit_filter_check::~k8s_audit_filter_check()
 {
 }
 
-json_event_filter_check *k8s_audit_filter_check::allocate_new()
+std::unique_ptr<json_event_filter_check> k8s_audit_filter_check::allocate_new()
 {
-	k8s_audit_filter_check *chk = new k8s_audit_filter_check();
-
-	return (json_event_filter_check *)chk;
+	return std::make_unique<k8s_audit_filter_check>();
 }
 
 json_event_filter::json_event_filter()
@@ -1367,6 +1364,7 @@ json_event_filter_factory::~json_event_filter_factory()
 
 gen_event_filter *json_event_filter_factory::new_filter()
 {
+	//todo(deepskyblue86) gen_event_filter_factory interface shall be changed
 	return new json_event_filter();
 }
 
@@ -1374,16 +1372,16 @@ gen_event_filter_check *json_event_filter_factory::new_filtercheck(const char *f
 {
 	for(auto &chk : m_defined_checks)
 	{
-		json_event_filter_check *newchk = chk->allocate_new();
+		auto newchk = chk->allocate_new();
 
 		int32_t parsed = newchk->parse_field_name(fldname, false, true);
 
 		if(parsed > 0)
 		{
-			return newchk;
+			//todo(deepskyblue86) gen_event_filter_factory interface shall be changed
+			// transfer ownership to the callee
+			return newchk.release();
 		}
-
-		delete newchk;
 	}
 
 	return NULL;
