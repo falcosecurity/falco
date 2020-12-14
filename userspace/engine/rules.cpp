@@ -25,6 +25,7 @@ extern "C" {
 }
 
 #include "falco_engine.h"
+#include "falco_utils.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
 
 const static struct luaL_Reg ll_falco_rules[] =
@@ -41,10 +42,10 @@ falco_rules::falco_rules(sinsp* inspector,
 			 lua_State *ls)
 	: m_inspector(inspector),
 	  m_engine(engine),
-	  m_ls(ls)
+	  m_ls(ls),
+	  m_sinsp_lua_parser(std::make_unique<lua_parser>(engine->sinsp_factory(), m_ls, "filter")),
+	  m_json_lua_parser(std::make_unique<lua_parser>(engine->json_factory(), m_ls, "k8s_audit_filter"))
 {
-	m_sinsp_lua_parser = new lua_parser(engine->sinsp_factory(), m_ls, "filter");
-	m_json_lua_parser = new lua_parser(engine->json_factory(), m_ls, "k8s_audit_filter");
 }
 
 void falco_rules::init(lua_State *ls)
@@ -442,8 +443,8 @@ void falco_rules::load_rules(const string &rules_content,
 
 		lua_setglobal(m_ls, m_lua_defined_noarg_filters.c_str());
 
-		lua_pushlightuserdata(m_ls, m_sinsp_lua_parser);
-		lua_pushlightuserdata(m_ls, m_json_lua_parser);
+		lua_pushlightuserdata(m_ls, m_sinsp_lua_parser.get());
+		lua_pushlightuserdata(m_ls, m_json_lua_parser.get());
 		lua_pushstring(m_ls, rules_content.c_str());
 		lua_pushlightuserdata(m_ls, this);
 		lua_pushboolean(m_ls, (verbose ? 1 : 0));
@@ -535,6 +536,4 @@ void falco_rules::describe_rule(std::string *rule)
 
 falco_rules::~falco_rules()
 {
-	delete m_sinsp_lua_parser;
-	delete m_json_lua_parser;
 }

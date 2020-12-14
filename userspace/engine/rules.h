@@ -55,11 +55,11 @@ class falco_rules
 	void add_k8s_audit_filter(string &rule, std::set<string> &tags);
 	void enable_rule(string &rule, bool enabled);
 
-	lua_parser* m_sinsp_lua_parser;
-	lua_parser* m_json_lua_parser;
 	sinsp* m_inspector;
 	falco_engine *m_engine;
 	lua_State* m_ls;
+	std::unique_ptr<lua_parser> m_sinsp_lua_parser;
+	std::unique_ptr<lua_parser> m_json_lua_parser;
 
 	string m_lua_load_rules = "load_rules";
 	string m_lua_ignored_syscalls = "ignored_syscalls";
