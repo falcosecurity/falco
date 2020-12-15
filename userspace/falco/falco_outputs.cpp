@@ -19,6 +19,7 @@ limitations under the License.
 #endif
 
 #include "falco_outputs.h"
+#include "falco_utils.h"
 
 #include "config_falco.h"
 
@@ -53,10 +54,6 @@ falco_outputs::~falco_outputs()
 	if(m_initialized)
 	{
 		this->stop_worker();
-		for(auto o : m_outputs)
-		{
-			delete o;
-		}
 	}
 }
 
@@ -104,32 +101,32 @@ void falco_outputs::add_output(falco::outputs::config oc)
 		throw falco_exception("cannot add output: falco_outputs not initialized yet");
 	}
 
-	falco::outputs::abstract_output *oo;
+	std::unique_ptr<falco::outputs::abstract_output> oo;
 
 	if(oc.name == "file")
 	{
-		oo = new falco::outputs::output_file();
+		oo = std::make_unique<falco::outputs::output_file>();
 	}
 	else if(oc.name == "program")
 	{
-		oo = new falco::outputs::output_program();
+		oo = std::make_unique<falco::outputs::output_program>();
 	}
 	else if(oc.name == "stdout")
 	{
-		oo = new falco::outputs::output_stdout();
+		oo = std::make_unique<falco::outputs::output_stdout>();
 	}
 	else if(oc.name == "syslog")
 	{
-		oo = new falco::outputs::output_syslog();
+		oo = std::make_unique<falco::outputs::output_syslog>();
 	}
 #ifndef MINIMAL_BUILD
 	else if(oc.name == "http")
 	{
-		oo = new falco::outputs::output_http();
+		oo = std::make_unique<falco::outputs::output_http>();
 	}
 	else if(oc.name == "grpc")
 	{
-		oo = new falco::outputs::output_grpc();
+		oo = std::make_unique<falco::outputs::output_grpc>();
 	}
 #endif
 	else
@@ -138,7 +135,7 @@ void falco_outputs::add_output(falco::outputs::config oc)
 	}
 
 	oo->init(oc, m_buffered, m_hostname);
-	m_outputs.push_back(oo);
+	m_outputs.push_back(std::move(oo));
 }
 
 void falco_outputs::handle_event(gen_event *evt, string &rule, string &source,
@@ -311,7 +308,7 @@ void falco_outputs::worker() noexcept
 		// Block until a message becomes available.
 		m_queue.pop(cmsg);
 
-		for(const auto o : m_outputs)
+		for(const auto& o : m_outputs)
 		{
 			wd.set_timeout(timeout, o->get_name());
 			try
