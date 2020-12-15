@@ -238,5 +238,5 @@ private:
 	 */
 	void set_cmdline_option(const std::string& spec);
 
-	yaml_configuration* m_config;
+	std::unique_ptr<yaml_configuration> m_config;
 };

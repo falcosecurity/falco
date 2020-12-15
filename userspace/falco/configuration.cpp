@@ -35,23 +35,18 @@ falco_configuration::falco_configuration():
 	m_webserver_listen_port(8765),
 	m_webserver_k8s_audit_endpoint("/k8s-audit"),
 	m_webserver_k8s_healthz_endpoint("/healthz"),
-	m_webserver_ssl_enabled(false),
-	m_config(NULL)
+	m_webserver_ssl_enabled(false)
 {
 }
 
 falco_configuration::~falco_configuration()
 {
-	if(m_config)
-	{
-		delete m_config;
-	}
 }
 
 void falco_configuration::init(string conf_filename, list<string> &cmdline_options)
 {
 	string m_config_file = conf_filename;
-	m_config = new yaml_configuration(m_config_file);
+	m_config = std::make_unique<yaml_configuration>(m_config_file);
 
 	init_cmdline_options(cmdline_options);
 
