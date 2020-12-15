@@ -42,6 +42,7 @@ limitations under the License.
 #include "configuration.h"
 #include "falco_engine.h"
 #include "falco_engine_version.h"
+#include "falco_utils.h"
 #include "config_falco.h"
 #include "statsfilewriter.h"
 #ifndef MINIMAL_BUILD
@@ -418,10 +419,10 @@ static void list_source_fields(falco_engine *engine, bool verbose, bool names_on
 int falco_init(int argc, char **argv)
 {
 	int result = EXIT_SUCCESS;
-	sinsp* inspector = NULL;
+	std::unique_ptr<sinsp> inspector;
 	sinsp_evt::param_fmt event_buffer_format = sinsp_evt::PF_NORMAL;
-	falco_engine *engine = NULL;
-	falco_outputs *outputs = NULL;
+	std::unique_ptr<falco_engine> engine;
+	std::unique_ptr<falco_outputs> outputs;
 	syscall_evt_drop_mgr sdropmgr;
 	int op;
 	int long_index = 0;
@@ -441,9 +442,9 @@ int falco_init(int argc, char **argv)
 	bool names_only = false;
 	bool all_events = false;
 #ifndef MINIMAL_BUILD
-	string* k8s_api = 0;
-	string* k8s_api_cert = 0;
-	string* mesos_api = 0;
+	std::unique_ptr<string> k8s_api;
+	std::unique_ptr<string> k8s_api_cert;
+	std::unique_ptr<string> mesos_api;
 #endif
 	string output_format = "";
 	uint32_t snaplen = 0;
@@ -527,7 +528,7 @@ int falco_init(int argc, char **argv)
 			{
 			case 'h':
 				usage();
-				goto exit;
+				return result;
 			case 'c':
 				conf_filename = optarg;
 				break;
@@ -547,8 +548,8 @@ int falco_init(int argc, char **argv)
 			case 'e':
 				trace_filename = optarg;
 #ifndef MINIMAL_BUILD
-				k8s_api = new string();
-				mesos_api = new string();
+				k8s_api = std::make_unique<string>();
+				mesos_api = std::make_unique<string>();
 #endif
 				break;
 			case 'F':
@@ -559,10 +560,10 @@ int falco_init(int argc, char **argv)
 				break;
 #ifndef MINIMAL_BUILD
 			case 'k':
-				k8s_api = new string(optarg);
+				k8s_api = std::make_unique<string>(optarg);
 				break;
 			case 'K':
-				k8s_api_cert = new string(optarg);
+				k8s_api_cert = std::make_unique<string>(optarg);
 				break;
 #endif
 			case 'L':
@@ -573,7 +574,7 @@ int falco_init(int argc, char **argv)
 				break;
 #ifndef MINIMAL_BUILD
 			case 'm':
-				mesos_api = new string(optarg);
+				mesos_api = std::make_unique<string>(optarg);
 				break;
 #endif
 			case 'M':
@@ -647,7 +648,7 @@ int falco_init(int argc, char **argv)
 				break;
 			case '?':
 				result = EXIT_FAILURE;
-				goto exit;
+				return result;
 
 			case 0:
 				if(string(long_options[long_index].name) == "version")
@@ -708,7 +709,7 @@ int falco_init(int argc, char **argv)
 
 		}
 
-		inspector = new sinsp();
+		inspector = std::make_unique<sinsp>();
 		inspector->set_buffer_format(event_buffer_format);
 
 		// If required, set the CRI path
@@ -730,18 +731,18 @@ int falco_init(int argc, char **argv)
 
 		if(print_ignored_events)
 		{
-			print_all_ignored_events(inspector);
-			delete(inspector);
+			print_all_ignored_events(inspector.get());
+
 			return EXIT_SUCCESS;
 		}
 
-		engine = new falco_engine(true, alternate_lua_dir);
-		engine->set_inspector(inspector);
+		engine = std::make_unique<falco_engine>(true, alternate_lua_dir);
+		engine->set_inspector(inspector.get());
 		engine->set_extra(output_format, replace_container_info);
 
 		if(list_flds)
 		{
-			list_source_fields(engine, verbose, names_only, list_flds_source);
+			list_source_fields(engine.get(), verbose, names_only, list_flds_source);
 			return EXIT_SUCCESS;
 		}
 
@@ -821,7 +822,7 @@ int falco_init(int argc, char **argv)
 				printf("%sOk\n", prefix.c_str());
 			}
 			falco_logger::log(LOG_INFO, "Ok\n");
-			goto exit;
+			return result;
 		}
 
 		falco_configuration config;
@@ -954,7 +955,7 @@ int falco_init(int argc, char **argv)
 				support["rules_files"].push_back(finfo);
 			}
 			printf("%s\n", support.dump().c_str());
-			goto exit;
+			return result;
 		}
 
 		// read hostname
@@ -982,13 +983,13 @@ int falco_init(int argc, char **argv)
 		if (describe_all_rules)
 		{
 			engine->describe_rule(NULL);
-			goto exit;
+			return result;
 		}
 
 		if (describe_rule != "")
 		{
 			engine->describe_rule(&describe_rule);
-			goto exit;
+			return result;
 		}
 
 		inspector->set_hostname_and_port_resolution_mode(false);
@@ -997,28 +998,28 @@ int falco_init(int argc, char **argv)
 		{
 			fprintf(stderr, "An error occurred while setting SIGINT signal handler.\n");
 			result = EXIT_FAILURE;
-			goto exit;
+			return result;
 		}
 
 		if(signal(SIGTERM, signal_callback) == SIG_ERR)
 		{
 			fprintf(stderr, "An error occurred while setting SIGTERM signal handler.\n");
 			result = EXIT_FAILURE;
-			goto exit;
+			return result;
 		}
 
 		if(signal(SIGUSR1, reopen_outputs) == SIG_ERR)
 		{
 			fprintf(stderr, "An error occurred while setting SIGUSR1 signal handler.\n");
 			result = EXIT_FAILURE;
-			goto exit;
+			return result;
 		}
 
 		if(signal(SIGHUP, restart_falco) == SIG_ERR)
 		{
 			fprintf(stderr, "An error occurred while setting SIGHUP signal handler.\n");
 			result = EXIT_FAILURE;
-			goto exit;
+			return result;
 		}
 
 		// If daemonizing, do it here so any init errors will
@@ -1031,7 +1032,7 @@ int falco_init(int argc, char **argv)
 				// error
 				falco_logger::log(LOG_ERR, "Could not fork. Exiting.\n");
 				result = EXIT_FAILURE;
-				goto exit;
+				return result;
 			} else if (pid > 0) {
 				// parent. Write child pid to pidfile and exit
 				std::ofstream pidfile;
@@ -1041,11 +1042,11 @@ int falco_init(int argc, char **argv)
 				{
 					falco_logger::log(LOG_ERR, "Could not write pid to pid file " + pidfilename + ". Exiting.\n");
 					result = EXIT_FAILURE;
-					goto exit;
+					return result;
 				}
 				pidfile << pid;
 				pidfile.close();
-				goto exit;
+				return result;
 			}
 			// if here, child.
 
@@ -1054,7 +1055,7 @@ int falco_init(int argc, char **argv)
 			if (sid < 0) {
 				falco_logger::log(LOG_ERR, "Could not set session id. Exiting.\n");
 				result = EXIT_FAILURE;
-				goto exit;
+				return result;
 			}
 
 			// Set umask so no files are world anything or group writable.
@@ -1064,7 +1065,7 @@ int falco_init(int argc, char **argv)
 			if ((chdir("/")) < 0) {
 				falco_logger::log(LOG_ERR, "Could not change working directory to '/'. Exiting.\n");
 				result = EXIT_FAILURE;
-				goto exit;
+				return result;
 			}
 
 			// Close stdin, stdout, stderr and reopen to /dev/null
@@ -1078,7 +1079,7 @@ int falco_init(int argc, char **argv)
 			g_daemonized = true;
 		}
 
-		outputs = new falco_outputs();
+		outputs = std::make_unique<falco_outputs>();
 
 		outputs->init(config.m_json_output,
 			config.m_json_include_output_property,
@@ -1113,7 +1114,7 @@ int falco_init(int argc, char **argv)
 				// Note that the webserver is not available when MINIMAL_BUILD is defined.
 				fprintf(stderr, "Cannot use k8s audit events trace file with a minimal Falco build");
 				result = EXIT_FAILURE;
-				goto exit;
+				return result;
 #else
 				try {
 					string line;
@@ -1131,13 +1132,13 @@ int falco_init(int argc, char **argv)
 				{
 					fprintf(stderr, "Trace filename %s not recognized as system call events or k8s audit events\n", trace_filename.c_str());
 					result = EXIT_FAILURE;
-					goto exit;
+					return result;
 				}
 				catch (exception &e)
 				{
 					fprintf(stderr, "Could not open trace filename %s for reading: %s\n", trace_filename.c_str(), e.what());
 					result = EXIT_FAILURE;
-					goto exit;
+					return result;
 				}
 #endif
 			}
@@ -1175,7 +1176,7 @@ int falco_init(int argc, char **argv)
 
 			try
 			{
-				open_f(inspector);
+				open_f(inspector.get());
 			}
 			catch(sinsp_exception &e)
 			{
@@ -1187,7 +1188,7 @@ int falco_init(int argc, char **argv)
 					{
 						falco_logger::log(LOG_ERR, "Unable to load the driver.\n");
 					}
-					open_f(inspector);
+					open_f(inspector.get());
 				}
 				else
 				{
@@ -1220,12 +1221,12 @@ int falco_init(int argc, char **argv)
 			{
 				if(char* k8s_cert_env = getenv("FALCO_K8S_API_CERT"))
 				{
-					k8s_api_cert = new string(k8s_cert_env);
+					k8s_api_cert = std::make_unique<string>(k8s_cert_env);
 				}
 			}
-			inspector->init_k8s_client(k8s_api, k8s_api_cert, verbose);
-			k8s_api = 0;
-			k8s_api_cert = 0;
+			//todo(deepskyblue86) init_k8s_client interface shall be changed
+			inspector->init_k8s_client(k8s_api.release(), k8s_api_cert.release(), verbose);
+
 		}
 		else if(char* k8s_api_env = getenv("FALCO_K8S_API"))
 		{
@@ -1235,19 +1236,15 @@ int falco_init(int argc, char **argv)
 				{
 					if(char* k8s_cert_env = getenv("FALCO_K8S_API_CERT"))
 					{
-						k8s_api_cert = new string(k8s_cert_env);
+						k8s_api_cert = std::make_unique<string>(k8s_cert_env);
 					}
 				}
-				k8s_api = new string(k8s_api_env);
-				inspector->init_k8s_client(k8s_api, k8s_api_cert, verbose);
+				k8s_api = std::make_unique<string>(k8s_api_env);
+				//todo(deepskyblue86) init_k8s_client interface shall be changed
+				inspector->init_k8s_client(k8s_api.release(), k8s_api_cert.release(), verbose);
+
 			}
-			else
-			{
-				delete k8s_api;
-				delete k8s_api_cert;
-			}
-			k8s_api = 0;
-			k8s_api_cert = 0;
+
 		}
 
 		//
@@ -1255,24 +1252,25 @@ int falco_init(int argc, char **argv)
 		//
 		if(mesos_api)
 		{
-			inspector->init_mesos_client(mesos_api, verbose);
+			//todo(deepskyblue86) init_mesos_client interface shall be changed
+			inspector->init_mesos_client(mesos_api.get(), verbose);
 		}
 		else if(char* mesos_api_env = getenv("FALCO_MESOS_API"))
 		{
 			if(mesos_api_env != NULL)
 			{
-				mesos_api = new string(mesos_api_env);
-				inspector->init_mesos_client(mesos_api, verbose);
+				mesos_api = std::make_unique<string>(mesos_api_env);
+				//todo(deepskyblue86) init_mesos_client interface shall be changed
+				inspector->init_mesos_client(mesos_api.get(), verbose);
 			}
 		}
-		delete mesos_api;
-		mesos_api = 0;
+
 
 		if(trace_filename.empty() && config.m_webserver_enabled && !disable_k8s_audit)
 		{
 			std::string ssl_option = (config.m_webserver_ssl_enabled ? " (SSL)" : "");
 			falco_logger::log(LOG_INFO, "Starting internal webserver, listening on port " + to_string(config.m_webserver_listen_port) + ssl_option + "\n");
-			webserver.init(&config, engine, outputs);
+			webserver.init(&config, engine.get(), outputs.get());
 			webserver.start();
 		}
 
@@ -1299,8 +1297,8 @@ int falco_init(int argc, char **argv)
 		if(!trace_filename.empty() && !trace_is_scap)
 		{
 #ifndef MINIMAL_BUILD
-			read_k8s_audit_trace_file(engine,
-						  outputs,
+			read_k8s_audit_trace_file(engine.get(),
+						  outputs.get(),
 						  trace_filename);
 #endif
 		}
@@ -1308,9 +1306,9 @@ int falco_init(int argc, char **argv)
 		{
 			uint64_t num_evts;
 
-			num_evts = do_inspect(engine,
-					      outputs,
-					      inspector,
+			num_evts = do_inspect(engine.get(),
+					      outputs.get(),
+					      inspector.get(),
 					      config,
 					      sdropmgr,
 					      uint64_t(duration_to_tot*ONE_SECOND_IN_NS),
@@ -1373,11 +1371,6 @@ int falco_init(int argc, char **argv)
 #endif
 	}
 
-exit:
-
-	delete inspector;
-	delete engine;
-	delete outputs;
 
 	return result;
 }
