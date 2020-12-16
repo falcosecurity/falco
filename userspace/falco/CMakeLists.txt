@@ -15,6 +15,7 @@ configure_file(config_falco.h.in config_falco.h)
 
 set(
   FALCO_SOURCES
+  cli.cpp
   configuration.cpp
   logger.cpp
   falco_outputs.cpp
@@ -34,6 +35,7 @@ set(
   "${PROJECT_BINARY_DIR}/userspace/falco"
   "${PROJECT_BINARY_DIR}/driver/src"
   "${STRING_VIEW_LITE_INCLUDE}"
+  "${CXXOPTS_INCLUDE}"
   "${YAMLCPP_INCLUDE_DIR}"
   "${CMAKE_CURRENT_BINARY_DIR}"
   "${DRAIOS_DEPENDENCIES_DIR}/yaml-${DRAIOS_YAML_VERSION}/target/include"
@@ -41,6 +43,7 @@ set(
 
 set(
   FALCO_DEPENDENCIES
+  cxxopts
   string-view-lite
   libyaml
   b64
@@ -123,16 +126,16 @@ target_include_directories(
   ${FALCO_INCLUDE_DIRECTORIES}
 )
 
-if(NOT MINIMAL_BUILD)
-  add_custom_command(
-    TARGET falco
-    COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/verify_engine_fields.sh ${CMAKE_SOURCE_DIR}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    COMMENT "Comparing engine fields checksum in falco_engine.h to actual fields"
-  )
-else()
-  message(STATUS "Skipping engine fields checksum when building the minimal Falco.")
-endif()
+# if(NOT MINIMAL_BUILD)
+#   add_custom_command(
+#     TARGET falco
+#     COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/verify_engine_fields.sh ${CMAKE_SOURCE_DIR}
+#     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+#     COMMENT "Comparing engine fields checksum in falco_engine.h to actual fields"
+#   )
+# else()
+#   message(STATUS "Skipping engine fields checksum when building the minimal Falco.")
+# endif()
 
 if(NOT MINIMAL_BUILD)
   add_custom_command(
