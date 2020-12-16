@@ -176,8 +176,11 @@ if(NOT MINIMAL_BUILD)
     INSTALL_COMMAND ${CMD_MAKE} COPT="-DNO_FILES" install-lib install-headers PREFIX=${CIVETWEB_SRC}/install "WITH_CPP=1")
 endif()
 
-#string-view-lite
+# string-view-lite
 include(DownloadStringViewLite)
+
+# cxxopts
+include(DownloadCxxOpts)
 
 if(NOT MINIMAL_BUILD)
   # gRPC
