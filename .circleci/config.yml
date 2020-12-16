@@ -452,6 +452,25 @@ jobs:
             docker build --build-arg FALCO_IMAGE_TAG=master -t falcosecurity/falco-driver-loader:master docker/driver-loader
             echo ${DOCKERHUB_SECRET} | docker login -u ${DOCKERHUB_USER} --password-stdin
             docker push falcosecurity/falco-driver-loader:master
+  # Publish container images to AWS ECR Public
+  "publish/container-images-aws-dev":
+    docker:
+      - image: docker:stable
+    steps:
+      - attach_workspace:
+          at: /
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Build and publish falco to AWS
+          command: |
+            apk update
+            apk add --update groff less py-pip
+            pip install awscli
+            FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
+            docker build --build-arg VERSION_BUCKET=deb --build-arg FALCO_VERSION=${FALCO_VERSION} -t "public.ecr.aws/b4t6c0y6/falco:master" docker/falco
+            aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/b4t6c0y6
+            docker push "public.ecr.aws/b4t6c0y6/falco:master"
   # Publish the packages
   "publish/packages":
     docker:
@@ -598,6 +617,16 @@ workflows:
             - "publish/packages-dev"
             - "tests/driver-loader/integration"
       - "quality/static-analysis"
+      - "publish/container-images-aws-dev":
+          context: test-infra
+          filters:
+            tags:
+              ignore: /.*/
+            branches:
+              only: jonah-ci-aws-ecr-registry # todo > revert before to merge
+          # Add this once tests pass
+          # requires:
+          #   - "publish/docker-dev"
   release:
     jobs:
       - "build/musl":
