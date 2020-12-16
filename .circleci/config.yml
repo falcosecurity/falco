@@ -518,8 +518,8 @@ jobs:
             echo ${DOCKERHUB_SECRET} | docker login -u ${DOCKERHUB_USER} --password-stdin
             docker push "falcosecurity/falco-driver-loader:${CIRCLE_TAG}"
             docker push "falcosecurity/falco-driver-loader:latest"
-  # Publish docker packages to AWS Public
-  "publish/packages-aws":
+  # Publish container images to AWS ECR Public
+  "publish/container-images-aws":
     docker:
       - image: docker:stable
     steps:
@@ -640,13 +640,13 @@ workflows:
               only: /.*/
             branches:
               ignore: /.*/
-      - "publish/packages-aws":
+      - "publish/container-images-aws":
           context: test-infra
           filters:
             tags:
               ignore: /.*/
             branches:
-              only: new/ecr-public-push #Name of PR branch to test
+              only: jonah-ci-aws-ecr-registry # todo > revert before to merge
           # Add this once tests pass
           # requires:
           #   - "publish/docker"
