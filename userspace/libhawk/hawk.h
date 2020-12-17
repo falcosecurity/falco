@@ -1,6 +1,7 @@
 #ifndef HAWK_H
 #define HAWK_H
 
+// TODO(fntlnz): decide what to do with versioning here
 #define HAWK_VERSION_CODE 0x000001
 #define HAWK_VERSION_BITS(x, y, z) ((x) << 16 | (y) << 8 | (z))
 #define HAWK_AT_LEAST_VERSION(x, y, z) \

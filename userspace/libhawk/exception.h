@@ -14,10 +14,24 @@ public:
 		std::runtime_error(message) {}
 };
 
-class hawk_plugin_exception: public hawk_exception
+class hawk_plugin_exception : public hawk_exception
 {
 public:
 	hawk_plugin_exception(const std::string& plugin_name, const std::string& message):
 		hawk_exception("plugin: " + plugin_name + ", error: " + message) {}
+};
+
+class hawk_library_exception : public hawk_exception
+{
+public:
+	hawk_library_exception(const std::string& message):
+		hawk_exception(message) {}
+};
+
+class hawk_library_load_exception : public hawk_library_exception
+{
+	public:
+		hawk_library_load_exception(const std::string&library_name, const std::string&message):
+			hawk_library_exception("library loading error, library: " + library_name + " error: " + message) {}
 };
 } // namespace libhawk
