@@ -467,8 +467,9 @@ jobs:
             apk update
             apk add --update groff less py-pip
             pip install awscli
-            FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
-            docker build --build-arg VERSION_BUCKET=deb --build-arg FALCO_VERSION=${FALCO_VERSION} -t "public.ecr.aws/b4t6c0y6/falco:master" docker/falco
+            FALCO_VERSION="0.26.1-115+574e7f4"
+            # FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
+            docker build --build-arg VERSION_BUCKET=deb-dev --build-arg FALCO_VERSION=${FALCO_VERSION} -t "public.ecr.aws/b4t6c0y6/falco:master" docker/falco
             aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/b4t6c0y6
             docker push "public.ecr.aws/b4t6c0y6/falco:master"
   # Publish the packages
