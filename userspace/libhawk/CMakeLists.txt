@@ -15,6 +15,7 @@ include(CheckSymbolExists)
 set(
   LIBHAWK_SOURCES
   lifecycle.cpp
+	library.cpp
 )
 
 set(
@@ -25,15 +26,12 @@ set(
 set(LIBHAWK_INCLUDE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PARENT_SCOPE)
 
 add_library(libhawk STATIC ${LIBHAWK_SOURCES})
-
-if(DEFINED LIBHAWK_LIBRARIES)
-  message(STATUS "Using externally provided libhawk plugins: ${LIBHAWK_LIBRARIES}")
-  target_link_libraries(libhawk ${LIBHAWK_LIBRARIES})
-endif()
+target_link_options(libhawk PUBLIC "LINKER:--export-dynamic-symbol=plugin_registry")
 
 #todo: we want to provide a default version of the libhawk plugin functions
 # we need to manage the situation where the user only provides parts of it and not others
 install(
   FILES ${LIBHAWK_PUBLIC_INCLUDES}
+	${PROJECT_BINARY_DIR}/userspace/libhawk/libhawk_export.h
   DESTINATION "${FALCO_SHARE_DIR}"
 )

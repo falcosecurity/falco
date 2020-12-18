@@ -39,6 +39,7 @@ limitations under the License.
 #include "fields_info.h"
 
 #include "lifecycle.h"
+#include "library.h"
 #include "event_drops.h"
 #include "configuration.h"
 #include "falco_engine.h"
@@ -799,8 +800,6 @@ int falco_init(int argc, char **argv)
 			throw std::invalid_argument("If -d is provided, a pid file must also be provided");
 		}
 
-		libhawk::lifecycle::start();
-
 		ifstream conf_stream;
 		if(conf_filename.size())
 		{
@@ -900,6 +899,13 @@ int falco_init(int argc, char **argv)
 		{
 			throw std::runtime_error("Could not find configuration file at " + conf_filename);
 		}
+
+		for(auto extension: config.m_extensions_filenames) {
+			auto lib = new libhawk::library(extension);
+			lib->load();
+		}
+
+		libhawk::lifecycle::start();
 
 		if(rules_filenames.size())
 		{

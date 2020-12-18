@@ -25,7 +25,7 @@ libhawk::library::library(const std::string &filename):
 bool libhawk::library::load()
 {
 	library_handle handler = nullptr;
-	handler = dlopen(m_library_filename.c_str(), RTLD_NOW);
+	handler = dlopen(m_library_filename.c_str(), RTLD_LAZY);
 	if(!handler)
 	{
 		std::string errmsg(dlerror());

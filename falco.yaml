@@ -215,3 +215,9 @@ grpc:
 # Make sure to have a consumer for them or leave this disabled.
 grpc_output:
   enabled: false
+
+# todo(fntlnz): provide a default implementation
+# so that users can avoid to input this configuration
+# if they don't need to change the default Falco behavior
+#extensions:
+#  - myextension.so

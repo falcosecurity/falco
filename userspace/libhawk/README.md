@@ -8,6 +8,7 @@ functionalities via external, user-defined libraries.
 - library: a bundle (e.g: an ELF shared library) containing one or more plugins
 - plugin: an hawk plugin. Libraries can register one or more plugins using the `HAWK_REGISTER_PLUGIN` macro
 - plugin function: a specific function inside the plugin definition of each plugin. `hawk_init`, `hawk_destroy`
+- extension: it's the user facing term to define a library that contains one or more plugin.
 
 ## Plugin definitions and lifecycle
 
@@ -28,11 +29,28 @@ When Falco is stopped, the `hawk_destroy` p
 TODO: explain that only one at time can be done and how to configure. This can be
 explained once we have the plugin configuration code done.
 
-<a name="plugin-loading"></a>
-## Plugin loading
+<a name="extension-loading"></a>
 
-TODO, describe how to dynamically load a plugin.
-This can be explained once this feature is developed.
+## Extension Loading
+
+To tell falco to load a library containing one or more plugins
+you have to add the path to the shared object into the `extensions`
+configuration in `falco.yaml`:
+
+The path can be either absolute, relative or specified into the `ldconfig` search path.
+See `/etc/ld.so.conf` for reference.
+
+examples:
+
+```
+extensions:
+	- ./mylocalextension.so
+	- myextension.so
+	- /usr/share/falco/extensions/kubernetes.so
+```
+
+TODO: when shipping Falco with this feature, we probably want to ship a ld config file to allow dynamic
+loading from `/usr/share/falco/extensions` for example.
 
 ## Plugin configuration
 
@@ -53,9 +71,9 @@ void hawk_init() { printf("hawk_example init!\n"); }
 
 void hawk_destroy() {printf("hawk example destroy\n");}
 
-void hawk_watch_rules(hawk_watch_rules_cb cb, hawk_engine *engine) {
+void hawk_watch_rules(hawk_watch_rules_cb cb) {
   printf("loading rules\n");
-  cb("", engine); // todo: pass the rules here, this is empty
+  cb(""); // todo: pass the rules here, this is empty
 }
 
 hawk_plugin_definition plugin_definition = {
@@ -76,5 +94,5 @@ gcc -o libhawk.so -fPIC -shared -I$FALCO/userspace/libhawk plugin.c
 
 Remember to change the `FALCO` variable to point to where you have the Falco sources.
 
-This should produce shared object called `libhawk.so`, you can use that to load the plugin in Falco.
-See the [Plugin loading](#plugin-loading) section.
+This should produce shared object called `libhawk.so`, you can now use this library to load the plugin in Falco.
+See the [Extension loading](#extension-loading) section.

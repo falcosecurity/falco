@@ -20,10 +20,7 @@ limitations under the License.
 #include <string>
 #include <vector>
 
-extern "C"
-{
 #include "hawk.h"
-}
 
 namespace libhawk
 {
