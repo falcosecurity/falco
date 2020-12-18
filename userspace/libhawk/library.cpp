@@ -19,16 +19,41 @@ limitations under the License.
 
 #include <dlfcn.h>
 
-libhawk::library::library(const std::string &filename) : m_library_filename(filename) {};
+libhawk::library::library(const std::string &filename):
+	m_library_filename(filename){};
 
 bool libhawk::library::load()
 {
-	void *handler = nullptr;
+	library_handle handler = nullptr;
 	handler = dlopen(m_library_filename.c_str(), RTLD_NOW);
-	if (!handler) {
+	if(!handler)
+	{
 		std::string errmsg(dlerror());
 		throw hawk_library_load_exception(m_library_filename, errmsg);
 	}
-	//todo(fntlnz): need to store the handler or anything to use the library?
+	m_library_handle.store(handler);
 	return (handler != nullptr);
+}
+
+bool libhawk::library::unload()
+{
+	if(!m_library_handle.load())
+	{
+		return false;
+	}
+
+	library_handle handler = m_library_handle.load();
+	if(!dlclose(handler))
+	{
+		std::string errmsg(dlerror());
+		throw hawk_library_unload_exception(m_library_filename, errmsg);
+		return false;
+	}
+	m_library_handle.store(nullptr);
+	return true;
+}
+
+bool libhawk::library::is_loaded() const
+{
+	return m_library_handle && m_library_handle.load();
 }

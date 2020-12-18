@@ -34,4 +34,11 @@ class hawk_library_load_exception : public hawk_library_exception
 		hawk_library_load_exception(const std::string&library_name, const std::string&message):
 			hawk_library_exception("library loading error, library: " + library_name + " error: " + message) {}
 };
+
+class hawk_library_unload_exception : public hawk_library_exception
+{
+	public:
+		hawk_library_unload_exception(const std::string&library_name, const std::string&message):
+			hawk_library_exception("library unloading error, library: " + library_name + " error: " + message) {}
+};
 } // namespace libhawk

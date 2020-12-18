@@ -17,15 +17,22 @@ limitations under the License.
 #pragma once
 
 #include <string>
+#include <atomic>
+
 namespace libhawk
 {
 class library
 {
 public:
+	using library_handle = void *;
 	library(const std::string &filename);
 	bool load();
+	bool unload();
+	bool is_loaded() const;
 	~library();
+
 private:
 	std::string m_library_filename;
+	std::atomic<library_handle> m_library_handle;
 };
 }; // namespace libhawk
