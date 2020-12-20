@@ -221,3 +221,8 @@ grpc_output:
 # if they don't need to change the default Falco behavior
 #extensions:
 #  - myextension.so
+
+# Rules provider
+# Specify a non-default provider.
+# Default value is "internal"
+rules_provider: internal

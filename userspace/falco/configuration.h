@@ -223,6 +223,7 @@ public:
 	double m_syscall_evt_drop_max_burst;
 
 	std::list<std::string> m_extensions_filenames;
+	std::string m_rules_provider;
 
 	// Only used for testing
 	bool m_syscall_evt_simulate_drops;

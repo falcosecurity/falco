@@ -137,8 +137,11 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 		m_outputs.push_back(http_output);
 	}
 
+	// extension related configuration
 	m_config->get_sequence<list<string>>(m_extensions_filenames , string("extensions"));
+	m_rules_provider = m_config->get_scalar<string>("rules_provider", "internal");
 
+	// gRPC related configuration
 	m_grpc_enabled = m_config->get_scalar<bool>("grpc", "enabled", false);
 	m_grpc_bind_address = m_config->get_scalar<string>("grpc", "bind_address", "0.0.0.0:5060");
 	m_grpc_threadiness = m_config->get_scalar<uint32_t>("grpc", "threadiness", 0);

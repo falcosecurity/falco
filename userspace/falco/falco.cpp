@@ -977,7 +977,7 @@ int falco_init(int argc, char **argv)
 		watchrules_thread = std::thread([&] {
 			libhawk::lifecycle::watch_rules(
 				(hawk_watch_rules_cb)rules_cb,
-				"hawk_example_go");
+				config.m_rules_provider);
 		});
 
 		falco_logger::log(LOG_INFO, "DOPO\n");

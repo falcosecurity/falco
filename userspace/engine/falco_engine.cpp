@@ -75,7 +75,6 @@ falco_engine::falco_engine(const falco_engine &orig_engine)
 	  m_sampling_ratio(1), m_sampling_multiplier(0),
 	  m_replace_container_info(false)
 {
-	std::cout << "copy ctor" << std::endl;
 	luaopen_lpeg(m_ls);
 	luaopen_yaml(m_ls);
 
