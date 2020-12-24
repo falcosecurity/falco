@@ -556,7 +556,7 @@ jobs:
             docker tag "public.ecr.aws/falcosecurity/falco:${CIRCLE_TAG}" public.ecr.aws/falcosecurity/falco:latest
             aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/falcosecurity
             docker push "public.ecr.aws/falcosecurity/falco:${CIRCLE_TAG}"
-            docker push "public.ecr.aws/b4t6c0y6/falco:latest"
+            docker push "public.ecr.aws/falcosecurity/falco:latest"
 workflows:
   version: 2
   build_and_test:
