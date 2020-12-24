@@ -467,11 +467,10 @@ jobs:
             apk update
             apk add --update groff less py-pip
             pip install awscli
-            FALCO_VERSION="0.26.1-115+574e7f4"
-            # FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
-            docker build --build-arg VERSION_BUCKET=deb-dev --build-arg FALCO_VERSION=${FALCO_VERSION} -t "public.ecr.aws/b4t6c0y6/falco:master" docker/falco
-            aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/b4t6c0y6
-            docker push "public.ecr.aws/b4t6c0y6/falco:master"
+            FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
+            docker build --build-arg VERSION_BUCKET=deb-dev --build-arg FALCO_VERSION=${FALCO_VERSION} -t "public.ecr.aws/falcosecurity/falco:master" docker/falco
+            aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/falcosecurity
+            docker push "public.ecr.aws/falcosecurity/falco:master"
   # Publish the packages
   "publish/packages":
     docker:
@@ -553,10 +552,10 @@ jobs:
             apk update
             apk add --update groff less py-pip
             pip install awscli
-            docker build --build-arg VERSION_BUCKET=deb --build-arg FALCO_VERSION=${CIRCLE_TAG} -t "public.ecr.aws/b4t6c0y6/falco:${CIRCLE_TAG}" docker/falco
-            docker tag "public.ecr.aws/b4t6c0y6/falco:${CIRCLE_TAG}" public.ecr.aws/b4t6c0y6/falco:latest
-            aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/b4t6c0y6
-            docker push "public.ecr.aws/b4t6c0y6/falco:${CIRCLE_TAG}"
+            docker build --build-arg VERSION_BUCKET=deb --build-arg FALCO_VERSION=${CIRCLE_TAG} -t "public.ecr.aws/falcosecurity/falco:${CIRCLE_TAG}" docker/falco
+            docker tag "public.ecr.aws/falcosecurity/falco:${CIRCLE_TAG}" public.ecr.aws/falcosecurity/falco:latest
+            aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/falcosecurity
+            docker push "public.ecr.aws/falcosecurity/falco:${CIRCLE_TAG}"
             docker push "public.ecr.aws/b4t6c0y6/falco:latest"
 workflows:
   version: 2
@@ -623,9 +622,9 @@ workflows:
             tags:
               ignore: /.*/
             branches:
-              only: jonah-ci-aws-ecr-registry # todo > revert to master before to merge
+              only: master
           requires:
-            - build/centos7 # Switch with "publish/docker-dev" once passes
+            - publish/docker-dev
       - "quality/static-analysis"
   release:
     jobs:
