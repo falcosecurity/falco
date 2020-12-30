@@ -28,7 +28,7 @@ Before cutting a release we need to do some homework in the Falco repository. Th
 
 - Double-check if any hard-coded version number is present in the code, it should be not present anywhere:
     - If any, manually correct it then open an issue to automate version number bumping later
-    - Versions table in the `README.md` update itself automatically
+    - Versions table in the `README.md` updates itself automatically
 - Generate the change log https://github.com/leodido/rn2md:
     - If you review timeout errors with `rn2md` try to generate an GitHub Oauth access token and use `-t`
 - Add the latest changes on top the previous `CHANGELOG.md`
