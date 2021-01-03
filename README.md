@@ -26,7 +26,7 @@ If a rule is violated in a system, Falco will send an alert notifying the user o
 
 ### Installing Falco
 
-If you would like to run Falco in **production** please adhere to the [official installation guide](https://falco.org/docs/installation/).
+If you would like to run Falco in **production** please adhere to the [official installation guide](https://falco.org/docs/getting-started/installation/).
 
 ##### Kubernetes
 
