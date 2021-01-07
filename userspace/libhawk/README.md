@@ -52,7 +52,12 @@ As you can see, we have a `begin_cb` that is telling the Falco engine to start t
 Then we have an `insert_cb` which takes Falco rules as a yaml string, it can be called as many times you want.
 Finally we can either commit the transaction with `commit_cb` or we can rollback it with `rollback_cb`.
 
+**Important note**: `hawk_watch_rules` gets called in a thread by Falco.
+This means that it is not blocking and executing in parallel with the rest of Falco.
+Practically, you can implement things like a for loop to update rules **live** from a database or an external resource.
 
+After you load the extension, you will need to change the `rules_provider` configuration in `falco.yaml` to the
+name you gave to the extension you are writing if you want to use the watch rules implementation you just wrote.
 
 <a name="extension-loading"></a>
 
@@ -97,11 +102,16 @@ void hawk_init() { printf("hawk_example init!\n"); }
 
 void hawk_destroy() { printf("hawk example destroy\n"); }
 
+// note: this function gets called in a thread.
+// this means that it is non blocking for the rest of falco.
+// You can start your own lifecycle here to fetch rules from
+// the outside and begin/commit as many transactions you want in a loop.
 void hawk_watch_rules(hawk_rules_begin_cb begin_cb,
                       hawk_rules_insert_cb insert_cb,
                       hawk_rules_commit_cb commit_cb,
                       hawk_rules_rollback_cb rollback_cb)
 {
+
   printf("starting rules transaction\n");
   begin_cb(); // start the rules loading transaction
   printf("insert rules\n");
@@ -118,7 +128,6 @@ hawk_plugin_definition plugin_definition = {
 };
 
 HAWK_REGISTER_PLUGIN(hawk_example_c, plugin_definition)
-
 ```
 
 To compile the plugin, save it in a file `plugin.c` and then:
