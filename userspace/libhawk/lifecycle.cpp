@@ -46,7 +46,7 @@ void libhawk::lifecycle::start()
 		throw hawk_exception("no libhawk plugins registered");
 	}
 
-	for(const auto& plugin : *g_plugins)
+	for(const auto &plugin : *g_plugins)
 	{
 		if(plugin.second.hawk_init != nullptr)
 		{
@@ -57,7 +57,7 @@ void libhawk::lifecycle::start()
 
 void libhawk::lifecycle::stop()
 {
-	for(const auto& plugin : *g_plugins)
+	for(const auto &plugin : *g_plugins)
 	{
 		if(plugin.second.hawk_destroy != nullptr)
 		{
@@ -66,7 +66,12 @@ void libhawk::lifecycle::stop()
 	}
 }
 
-void libhawk::lifecycle::watch_rules(hawk_watch_rules_cb cb, const std::string &plugin_name)
+void libhawk::lifecycle::watch_rules(
+	hawk_rules_begin_cb begin_cb,
+	hawk_rules_insert_cb insert_cb,
+	hawk_rules_commit_cb commit_cb,
+	hawk_rules_rollback_cb rollback_cb,
+	const std::string &plugin_name)
 {
 	auto plugin = g_plugins->find(plugin_name);
 	if(plugin == g_plugins->end())
@@ -77,5 +82,5 @@ void libhawk::lifecycle::watch_rules(hawk_watch_rules_cb cb, const std::string &
 	{
 		throw hawk_plugin_exception(plugin_name, "plugin does not implement hawk_watch_rules");
 	}
-	plugin->second.hawk_watch_rules(cb);
+	plugin->second.hawk_watch_rules(begin_cb, insert_cb, commit_cb, rollback_cb);
 }

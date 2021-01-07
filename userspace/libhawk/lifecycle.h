@@ -30,6 +30,10 @@ namespace lifecycle
 {
 void start();
 void stop();
-void watch_rules(hawk_watch_rules_cb cb, const std::string& plugin_name);
+void watch_rules(hawk_rules_begin_cb begin_cb,
+		 hawk_rules_insert_cb insert_cb,
+		 hawk_rules_commit_cb commit_cb,
+		 hawk_rules_rollback_cb rollback_cb,
+		 const std::string& plugin_name);
 } // namespace lifecycle
 } // namespace libhawk

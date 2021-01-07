@@ -53,14 +53,21 @@ limitations under the License.
 
 typedef function<void(sinsp *inspector)> open_t;
 
-
 bool g_terminate = false;
 bool g_reopen_outputs = false;
 bool g_restart = false;
 bool g_daemonized = false;
 
+// g_engine is the current loaded Falco engine
 std::atomic<falco_engine *> g_engine;
-falco_engine * g_engine_blueprint;
+
+// g_engine_transaction is the Falco engine that is
+// being modified under a transaction started by a libhawk plugin
+// This engine might become the current g_engine if the transaction is committed
+std::atomic<falco_engine *> g_engine_transaction;
+
+// g_engine_blueprint is the engine we use as a template to create new engines
+falco_engine *g_engine_blueprint;
 
 //
 // Helper functions
@@ -180,7 +187,6 @@ static void usage()
 	   "\n"
     );
 }
-
 static void display_fatal_err(const string &msg)
 {
 	falco_logger::log(LOG_ERR, msg);
@@ -189,7 +195,7 @@ static void display_fatal_err(const string &msg)
 	 * If stderr logging is not enabled, also log to stderr. When
 	 * daemonized this will simply write to /dev/null.
 	 */
-	if (! falco_logger::log_stderr)
+	if(!falco_logger::log_stderr)
 	{
 		std::cerr << msg;
 	}
@@ -279,7 +285,8 @@ uint64_t do_inspect(falco_outputs *outputs,
 	// If we didn't get a set of rules yet from the rules plugin, we load
 	// an engine with an empty ruleset to let Falco do the processing without blocking
 	// the driver.
-	if (current_engine == nullptr) {
+	if(current_engine == nullptr)
+	{
 		current_engine = new falco_engine((const falco_engine)*g_engine_blueprint);
 		current_engine->load_rules("", false, false);
 	}
@@ -349,7 +356,8 @@ uint64_t do_inspect(falco_outputs *outputs,
 		}
 
 		auto engine_replacement = g_engine.exchange(nullptr);
-		if (engine_replacement != nullptr) {
+		if(engine_replacement != nullptr)
+		{
 			delete current_engine;
 			current_engine = engine_replacement;
 			falco_logger::log(LOG_DEBUG, "falco_engine replacement found and swapped");
@@ -424,20 +432,56 @@ static void list_source_fields(falco_engine *engine, bool verbose, bool names_on
 	}
 }
 
-static void rules_cb(char *rules_content)
+static void rules_insert_cb(char *rules_content)
 {
 	try
 	{
-		auto engine_replacement =  new falco_engine((const falco_engine)*g_engine_blueprint);
-		//auto engine_replacement = new falco_engine(g_engine.load());
-		engine_replacement->load_rules(rules_content, false, true);
-		delete g_engine.exchange(engine_replacement);
+		auto engine = g_engine_transaction.load();
+		if(engine == nullptr)
+		{
+			// todo: inform the caller about this error, maybe stderr and return code?
+			falco_logger::log(LOG_ERR, std::string("can't insert rules, no transaction in progress"));
+			return;
+		}
+		engine->load_rules(rules_content, false, true);
+		g_engine_transaction.store(engine);
 	}
 	catch(const falco_exception &e)
 	{
-		falco_logger::log(LOG_WARNING, std::string("rules replacement failed: ") + e.what());
+		// todo: inform the caller about this error, maybe stderr and return code?
+		falco_logger::log(LOG_WARNING, std::string("rules load failed: ") + e.what());
 		return;
 	}
+}
+
+static void rules_begin_cb()
+{
+	if(g_engine_transaction.load() != nullptr)
+	{
+		// todo: inform the caller about this error, maybe stderr and return code?
+		falco_logger::log(LOG_ERR, std::string("a transaction is already in progress"));
+		return;
+	}
+	auto engine_replacement = new falco_engine((const falco_engine)*g_engine_blueprint);
+	g_engine_transaction.store(engine_replacement);
+}
+
+static void rules_commit_cb()
+{
+	auto engine = g_engine_transaction.load();
+	if(engine == nullptr)
+	{
+		// todo: inform the caller about this error, maybe stderr and return code?
+		falco_logger::log(LOG_ERR, std::string("can't commit rules, no transaction in progress"));
+		return;
+	}
+	delete g_engine.exchange(g_engine_transaction.load());
+	g_engine_transaction.store(nullptr);
+}
+
+static void rules_rollback_cb()
+{
+	g_engine_transaction.store(nullptr);
 }
 
 //
@@ -900,7 +944,8 @@ int falco_init(int argc, char **argv)
 			throw std::runtime_error("Could not find configuration file at " + conf_filename);
 		}
 
-		for(auto extension: config.m_extensions_filenames) {
+		for(auto extension : config.m_extensions_filenames)
+		{
 			auto lib = new libhawk::library(extension);
 			lib->load();
 		}
@@ -976,7 +1021,10 @@ int falco_init(int argc, char **argv)
 
 		watchrules_thread = std::thread([&] {
 			libhawk::lifecycle::watch_rules(
-				(hawk_watch_rules_cb)rules_cb,
+				(hawk_rules_begin_cb)rules_begin_cb,
+				(hawk_rules_insert_cb)rules_insert_cb,
+				(hawk_rules_commit_cb)rules_commit_cb,
+				(hawk_rules_rollback_cb)rules_rollback_cb,
 				config.m_rules_provider);
 		});
 
@@ -1446,7 +1494,6 @@ int falco_init(int argc, char **argv)
 		else
 		{
 			uint64_t num_evts;
-
 
 			num_evts = do_inspect(outputs,
 					      inspector,

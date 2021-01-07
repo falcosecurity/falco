@@ -7,13 +7,21 @@
 #define HAWK_AT_LEAST_VERSION(x, y, z) \
 	(HAWK_VERSION_CODE >= HAWK_VERSION_BITS(x, y, z))
 
-typedef void (*hawk_watch_rules_cb)(char* rules_content);
+// Rules update follows a transactional pattern
+// - begin the transaction with `hawk_rules_begin_cb`
+// - add rules as many times you want with `hawk_rules_insert_cb`
+// - commit the rules with `hawk_rules_commit_cb`
+// - if anything went wrong, you can rollback with hawk_rules_rollback_cb
+typedef void (*hawk_rules_begin_cb)();
+typedef void (*hawk_rules_insert_cb)(char* rules_content);
+typedef void (*hawk_rules_commit_cb)();
+typedef void (*hawk_rules_rollback_cb)();
 
 typedef struct
 {
 	void (*hawk_init)(void);
 	void (*hawk_destroy)(void);
-	void (*hawk_watch_rules)(hawk_watch_rules_cb);
+	void (*hawk_watch_rules)(hawk_rules_begin_cb, hawk_rules_insert_cb, hawk_rules_commit_cb, hawk_rules_rollback_cb);
 } hawk_plugin_definition;
 
 typedef void(register_plugin_cb)(const char*, hawk_plugin_definition);

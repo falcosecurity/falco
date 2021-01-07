@@ -32,7 +32,7 @@ public:
 	~library();
 
 private:
-	std::string m_library_filename;
+	const std::string m_library_filename;
 	std::atomic<library_handle> m_library_handle;
 };
 }; // namespace libhawk
