@@ -22,12 +22,37 @@ for your plugin's lifecycle.
 
 ### hawk_destroy
 
-When Falco is stopped, the `hawk_destroy` p
+When Falco is stopped, the `hawk_destroy` function gets called.
+Implementors have the last chance to free any resources here.
 
 ### hawk_watch_rules
 
-TODO: explain that only one at time can be done and how to configure. This can be
-explained once we have the plugin configuration code done.
+`hawk_watch_rules` implements a transactional interface for updating rules.
+
+Its signature takes four arguments, one for each state of the transaction.
+
+An implementation looks like this
+
+```C
+void hawk_watch_rules(hawk_rules_begin_cb begin_cb,
+                      hawk_rules_insert_cb insert_cb,
+                      hawk_rules_commit_cb commit_cb,
+                      hawk_rules_rollback_cb rollback_cb)
+{
+  printf("starting rules transaction\n");
+  begin_cb(); // start the rules loading transaction
+  printf("insert rules\n");
+  insert_cb(""); // todo: pass the rules as a string here, this is empty
+  insert_cb(""); // you can do this as many times you want
+  commit_cb();   // commit rules
+  printf("rules committed");
+}
+```
+As you can see, we have a `begin_cb` that is telling the Falco engine to start the transactiont o load rules.
+Then we have an `insert_cb` which takes Falco rules as a yaml string, it can be called as many times you want.
+Finally we can either commit the transaction with `commit_cb` or we can rollback it with `rollback_cb`.
+
+
 
 <a name="extension-loading"></a>
 
@@ -66,14 +91,24 @@ Here's an example of plugin that is registered and defines
 
 ```c
 #include "hawk.h"
+#include <stdio.h>
 
 void hawk_init() { printf("hawk_example init!\n"); }
 
-void hawk_destroy() {printf("hawk example destroy\n");}
+void hawk_destroy() { printf("hawk example destroy\n"); }
 
-void hawk_watch_rules(hawk_watch_rules_cb cb) {
-  printf("loading rules\n");
-  cb(""); // todo: pass the rules here, this is empty
+void hawk_watch_rules(hawk_rules_begin_cb begin_cb,
+                      hawk_rules_insert_cb insert_cb,
+                      hawk_rules_commit_cb commit_cb,
+                      hawk_rules_rollback_cb rollback_cb)
+{
+  printf("starting rules transaction\n");
+  begin_cb(); // start the rules loading transaction
+  printf("insert rules\n");
+  insert_cb(""); // todo: pass the rules as a string here, this is empty
+  insert_cb(""); // you can do this as many times you want
+  commit_cb();   // commit rules
+  printf("rules committed");
 }
 
 hawk_plugin_definition plugin_definition = {
@@ -83,6 +118,7 @@ hawk_plugin_definition plugin_definition = {
 };
 
 HAWK_REGISTER_PLUGIN(hawk_example_c, plugin_definition)
+
 ```
 
 To compile the plugin, save it in a file `plugin.c` and then:
