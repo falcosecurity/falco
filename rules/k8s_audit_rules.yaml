@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-- required_engine_version: 2
+- required_engine_version: 8
 
 # Like always_true/always_false, but works with k8s audit events
 - macro: k8s_audit_always_true
