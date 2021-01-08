@@ -160,6 +160,7 @@ public:
 		std::string source;
 		falco_common::priority_type priority_num;
 		std::string format;
+		std::set<std::string> exception_fields;
 	};
 
 	//
@@ -261,6 +262,8 @@ private:
 
 	std::unique_ptr<falco_sinsp_ruleset> m_sinsp_rules;
 	std::unique_ptr<falco_ruleset> m_k8s_audit_rules;
+
+	void populate_rule_result(unique_ptr<struct rule_result> &res, gen_event *ev);
 
 	//
 	// Here's how the sampling ratio and multiplier influence

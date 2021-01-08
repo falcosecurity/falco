@@ -302,31 +302,9 @@ unique_ptr<falco_engine::rule_result> falco_engine::process_sinsp_event(sinsp_ev
 	}
 
 	unique_ptr<struct rule_result> res(new rule_result());
+	res->source = "syscall";
 
-	std::lock_guard<std::mutex> guard(m_ls_semaphore);
-	lua_getglobal(m_ls, lua_on_event.c_str());
-	if(lua_isfunction(m_ls, -1))
-	{
-		lua_pushnumber(m_ls, ev->get_check_id());
-
-		if(lua_pcall(m_ls, 1, 3, 0) != 0)
-		{
-			const char* lerr = lua_tostring(m_ls, -1);
-			string err = "Error invoking function output: " + string(lerr);
-			throw falco_exception(err);
-		}
-		res->evt = ev;
-		const char *p =  lua_tostring(m_ls, -3);
-		res->rule = p;
-		res->source = "syscall";
-		res->priority_num = (falco_common::priority_type) lua_tonumber(m_ls, -2);
-		res->format = lua_tostring(m_ls, -1);
-		lua_pop(m_ls, 3);
-	}
-	else
-	{
-		throw falco_exception("No function " + lua_on_event + " found in lua compiler module");
-	}
+	populate_rule_result(res, ev);
 
 	return res;
 }
@@ -350,33 +328,50 @@ unique_ptr<falco_engine::rule_result> falco_engine::process_k8s_audit_event(json
 	}
 
 	unique_ptr<struct rule_result> res(new rule_result());
+	res->source = "k8s_audit";
 
+	populate_rule_result(res, ev);
+
+	return res;
+}
+
+void falco_engine::populate_rule_result(unique_ptr<struct rule_result> &res, gen_event *ev)
+{
 	std::lock_guard<std::mutex> guard(m_ls_semaphore);
 	lua_getglobal(m_ls, lua_on_event.c_str());
 	if(lua_isfunction(m_ls, -1))
 	{
 		lua_pushnumber(m_ls, ev->get_check_id());
 
-		if(lua_pcall(m_ls, 1, 3, 0) != 0)
+		if(lua_pcall(m_ls, 1, 4, 0) != 0)
 		{
 			const char* lerr = lua_tostring(m_ls, -1);
 			string err = "Error invoking function output: " + string(lerr);
 			throw falco_exception(err);
 		}
-		res->evt = ev;
-		const char *p =  lua_tostring(m_ls, -3);
+		const char *p =  lua_tostring(m_ls, -4);
 		res->rule = p;
-		res->source = "k8s_audit";
-		res->priority_num = (falco_common::priority_type) lua_tonumber(m_ls, -2);
-		res->format = lua_tostring(m_ls, -1);
-		lua_pop(m_ls, 3);
+		res->evt = ev;
+		res->priority_num = (falco_common::priority_type) lua_tonumber(m_ls, -3);
+		res->format = lua_tostring(m_ls, -2);
+
+		// Exception fields are passed back as a table
+		lua_pushnil(m_ls);  /* first key */
+		while (lua_next(m_ls, -2) != 0) {
+			// key is at index -2, value is at index
+			// -1. We want the keys.
+			res->exception_fields.insert(luaL_checkstring(m_ls, -2));
+
+			// Remove value, keep key for next iteration
+			lua_pop(m_ls, 1);
+		}
+
+		lua_pop(m_ls, 4);
 	}
 	else
 	{
 		throw falco_exception("No function " + lua_on_event + " found in lua compiler module");
 	}
-
-	return res;
 }
 
 bool falco_engine::parse_k8s_audit_json(nlohmann::json &j, std::list<json_event> &evts, bool top)

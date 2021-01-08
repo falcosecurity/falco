@@ -674,7 +674,8 @@ function load_rules_doc(rules_mgr, doc, load_state)
 end
 
 -- cond and not ((proc.name=apk and fd.directory=/usr/lib/alpine) or (proc.name=npm and fd.directory=/usr/node/bin) or ...)
-function build_exception_condition_string_multi_fields(eitem)
+-- Populates exfields with all fields used
+function build_exception_condition_string_multi_fields(eitem, exfields)
 
    local fields = eitem['fields']
    local comps = eitem['comps']
@@ -721,6 +722,7 @@ function build_exception_condition_string_multi_fields(eitem)
 	 end
 
 	 icond = icond..fields[k].." "..comps[k].." "..istr
+	 exfields[fields[k]] = true
       end
 
       icond=icond..")"
@@ -737,7 +739,7 @@ function build_exception_condition_string_multi_fields(eitem)
 
 end
 
-function build_exception_condition_string_single_field(eitem)
+function build_exception_condition_string_single_field(eitem, exfields)
 
    local icond = ""
 
@@ -752,6 +754,8 @@ function build_exception_condition_string_single_field(eitem)
       else
 	 icond = icond..", "
       end
+
+      exfields[eitem['fields']] = true
 
       icond = icond..quote_item(value)
    end
@@ -896,15 +900,17 @@ function load_rules(sinsp_lua_parser,
 
       local econd = ""
 
+      local exfields = {}
+
       -- Turn exceptions into condition strings and add them to each
       -- rule's condition
       for _, eitem in ipairs(v['exceptions']) do
 
 	 local icond, err
 	 if type(eitem['fields']) == "table" then
-	    icond, err = build_exception_condition_string_multi_fields(eitem)
+	    icond, err = build_exception_condition_string_multi_fields(eitem, exfields)
 	 else
-	    icond, err = build_exception_condition_string_single_field(eitem)
+	    icond, err = build_exception_condition_string_single_field(eitem, exfields)
 	 end
 
 	 if err ~= nil then
@@ -915,6 +921,8 @@ function load_rules(sinsp_lua_parser,
 	    econd = econd.." and not "..icond
 	 end
       end
+
+      state.rules_by_name[name]['exception_fields'] = exfields
 
       if econd ~= "" then
 	 state.rules_by_name[name]['compile_condition'] = "("..state.rules_by_name[name]['condition']..") "..econd
@@ -1143,7 +1151,14 @@ function on_event(rule_id)
    -- Prefix output with '*' so formatting is permissive
    output = "*"..rule.output
 
-   return rule.rule, rule.priority_num, output
+   -- Also return all fields from all exceptions
+   combined_rule = state.rules_by_name[rule.rule]
+
+   if combined_rule == nil then
+      error ("rule_loader.on_event(): could not find rule by name: ", rule.rule)
+   end
+
+   return rule.rule, rule.priority_num, output, combined_rule.exception_fields
 end
 
 function print_stats()
