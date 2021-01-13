@@ -468,7 +468,7 @@ jobs:
             apk add --update groff less py-pip
             pip install awscli
             FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
-            docker build --build-arg VERSION_BUCKET=deb-dev --build-arg FALCO_VERSION=${FALCO_VERSION} -t "public.ecr.aws/falcosecurity/falco-no-driver:master" docker/no-driver
+            docker build --build-arg VERSION_BUCKET=bin-dev --build-arg FALCO_VERSION=${FALCO_VERSION} -t "public.ecr.aws/falcosecurity/falco-no-driver:master" docker/no-driver
             docker tag public.ecr.aws/falcosecurity/falco-no-driver:master public.ecr.aws/falcosecurity/falco:master-slim
             aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/falcosecurity
             docker push "public.ecr.aws/falcosecurity/falco-no-driver:master"
