@@ -38,17 +38,6 @@ index 6f51588e..5f9ea84e 100644
  				}
  				else
  				{
-@@ -579,8 +579,8 @@ scap_t* scap_open_udig_int(char *error, int32_t *rc,
- 	//
- 	// Map the ppm_ring_buffer_info that contains the buffer pointers
- 	//
--	if(udig_alloc_ring_descriptors(&(handle->m_devs[0].m_bufinfo_fd), 
--		&handle->m_devs[0].m_bufinfo, 
-+	if(udig_alloc_ring_descriptors(&(handle->m_devs[0].m_bufinfo_fd),
-+		&handle->m_devs[0].m_bufinfo,
- 		&handle->m_devs[0].m_bufstatus,
- 		error) != SCAP_SUCCESS)
- 	{
 @@ -2175,7 +2175,7 @@ int32_t scap_disable_dynamic_snaplen(scap_t* handle)
  
  const char* scap_get_host_root()
