@@ -38,118 +38,128 @@ limitations under the License.
 #include "config_falco_engine.h"
 #include "falco_common.h"
 
-//
-// This class acts as the primary interface between a program and the
-// falco rules engine. Falco outputs (writing to files/syslog/etc) are
-// handled in a separate class falco_outputs.
-//
-
+/**
+ * @brief The primary interface between a program and the falco rules engine.
+ *
+ * @see falco_outputs
+ */
 class falco_engine : public falco_common
 {
 public:
 	falco_engine(bool seed_rng=true, const std::string& alternate_lua_dir=FALCO_ENGINE_SOURCE_LUA_DIR);
 	virtual ~falco_engine();
 
-	// A given engine has a version which identifies the fields
-	// and rules file format it supports. This version will change
-	// any time the code that handles rules files, expression
-	// fields, etc, changes.
+	/**
+	 * @brief A given engine has a version which identifies the fields
+	 * and rules file format it supports.
+	 *
+	 * @note This version will change any time the code that handles rules files,
+	 * expression fields, etc, changes.
+	 *
+	 * @return uint32_t version number
+	 */
 	static uint32_t engine_version();
 
-	// Print to stdout (using printf) a description of each field supported by this engine.
+	//! Print to stdout a description of each field supported by this engine.
 	void list_fields(bool names_only=false);
 
-	//
-	// Load rules either directly or from a filename.
-	//
+	//! Load rules from a file.
 	void load_rules_file(const std::string &rules_filename, bool verbose, bool all_events);
+	//! Load rules directly.
 	void load_rules(const std::string &rules_content, bool verbose, bool all_events);
 
-	//
-	// Identical to above, but also returns the required engine version for the file/content.
-	// (If no required engine version is specified, returns 0).
-	//
+	/**
+	 * @brief Load rules from a file.
+	 *
+	 * @param[out] required_engine_version the required engine version for the file/content,
+	 *             0 if not specified.
+	 */
 	void load_rules_file(const std::string &rules_filename, bool verbose, bool all_events, uint64_t &required_engine_version);
+	/**
+	 * @brief Load rules directly.
+	 *
+	 * @param[out] required_engine_version the required engine version for the file/content,
+	 *             0 if not specified.
+	 */
 	void load_rules(const std::string &rules_content, bool verbose, bool all_events, uint64_t &required_engine_version);
 
-	//
-	// Enable/Disable any rules matching the provided substring.
-	// If the substring is "", all rules are enabled/disabled.
-	// When provided, enable/disable these rules in the
-	// context of the provided ruleset. The ruleset (id) can later
-	// be passed as an argument to process_event(). This allows
-	// for different sets of rules being active at once.
-	//
+	/**
+	 * @brief Enable/disable rules.
+	 *
+	 * @param substring string to match against, matches everything if empty.
+	 * @param enabled whether to enable or disable the rules.
+	 * @param ruleset when provided, enable/disable these rules in the
+	 *        context of the provided ruleset.
+	 */
 	void enable_rule(const std::string &substring, bool enabled, const std::string &ruleset);
 
-	// Wrapper that assumes the default ruleset
+	//! Wrapper of @ref enable_rule that assumes the default ruleset.
 	void enable_rule(const std::string &substring, bool enabled);
 
 
-	// Like enable_rule, but the rule name must be an exact match.
+	//! Like @ref enable_rule, but the rule name must be an exact match.
 	void enable_rule_exact(const std::string &rule_name, bool enabled, const std::string &ruleset);
 
-	// Wrapper that assumes the default ruleset
+	//! Wrapper of @ref enable_rule_exact that assumes the default ruleset.
 	void enable_rule_exact(const std::string &rule_name, bool enabled);
 
-	//
-	// Enable/Disable any rules with any of the provided tags (set, exact matches only)
-	//
+	//! Enable/disable any rules with any of the provided tags (set, exact matches only)
 	void enable_rule_by_tag(const std::set<std::string> &tags, bool enabled, const std::string &ruleset);
 
-	// Wrapper that assumes the default ruleset
+	//! Wrapper of @ref enable_rule_by_tag that assumes the default ruleset
 	void enable_rule_by_tag(const std::set<std::string> &tags, bool enabled);
 
-	// Only load rules having this priority or more severe.
+	//! Only load rules having this priority or more severe.
 	void set_min_priority(falco_common::priority_type priority);
 
-	//
-	// Return the ruleset id corresponding to this ruleset name,
-	// creating a new one if necessary. If you provide any ruleset
-	// to enable_rule/enable_rule_by_tag(), you should look up the
-	// ruleset id and pass it to process_event().
-	//
+	/**
+	 * @brief Return the ruleset id corresponding to this ruleset name,
+	 * creating a new one if necessary.
+	 *
+	 * @param ruleset
+	 * @return uint16_t
+	 *
+	 * @note If you provide any ruleset to @ref enable_rule/@ref enable_rule_by_tag,
+	 * you should look up the ruleset id and pass it to
+	 * @ref process_sinsp_event/@ref process_k8s_audit_event.
+	 */
 	uint16_t find_ruleset_id(const std::string &ruleset);
 
-	//
-	// Return the number of falco rules enabled for the provided ruleset
-	//
+	//! Return the number of falco rules enabled for the provided ruleset
 	uint64_t num_rules_for_ruleset(const std::string &ruleset);
 
-	//
-	// Print details on the given rule. If rule is NULL, print
-	// details on all rules.
-	//
+	/**
+	 * @brief Print details about the given \p rule. If \p rule is null, print
+	 * details about all rules.
+	 */
 	void describe_rule(std::string *rule);
 
-	//
-	// Print statistics on how many events matched each rule.
-	//
+	//! Print statistics on how many events matched each rule.
 	void print_stats();
 
-	// Clear all existing filters.
+	//! Clear all existing filters.
 	void clear_filters();
 
-	//
-	// Set the sampling ratio, which can affect which events are
-	// matched against the set of rules.
-	//
+	/**
+	 * @brief Set the sampling ratio, which can affect which events are
+	 * matched against the set of rules.
+	 */
 	void set_sampling_ratio(uint32_t sampling_ratio);
 
-	//
-	// Set the sampling ratio multiplier, which can affect which
-	// events are matched against the set of rules.
-	//
+	/**
+	 * @brief Set the sampling ratio multiplier, which can affect which
+	 * events are matched against the set of rules.
+	 */
 	void set_sampling_multiplier(double sampling_multiplier);
 
-	//
-	// You can optionally add "extra" formatting fields to the end
-	// of all output expressions. You can also choose to replace
-	// %container.info with the extra information or add it to the
-	// end of the expression. This is used in open source falco to
-	// add k8s/mesos/container information to outputs when
-	// available.
-	//
+	/**
+	 * @brief Add "extra" formatting fields to the end of all output expressions.
+	 *
+	 * @param extra
+	 * @param replace_container_info Replace %container.info with the extra
+	 * information or add it to the end of the expression. This is used to
+	 * add k8s/mesos/container information to outputs when available.
+	 */
 	void set_extra(string &extra, bool replace_container_info);
 
 	// **Methods Related to k8s audit log events, which are
@@ -162,76 +172,85 @@ public:
 		std::string format;
 	};
 
-	//
-	// Given a raw json object, return a list of k8s audit event
-	// objects that represent the object. This method handles
-	// things such as EventList splitting.
-	//
-	// Returns true if the json object was recognized as a k8s
-	// audit event(s), false otherwise.
-	//
+	/**
+	 * @brief Given a raw json object, return a list of k8s audit event
+	 * objects that represent the object. This method handles
+	 * things such as EventList splitting.
+	 *
+	 * @param j
+	 * @param[out] evts
+	 * @param top
+	 * @return true if the json object was recognized as a k8s
+	                audit event(s), false otherwise.
+	 */
 	bool parse_k8s_audit_json(nlohmann::json &j, std::list<json_event> &evts, bool top=true);
 
-	//
-	// Given an event, check it against the set of rules in the
-	// engine and if a matching rule is found, return details on
-	// the rule that matched. If no rule matched, returns NULL.
-	//
-	// When ruleset_id is provided, use the enabled/disabled status
-	// associated with the provided ruleset. This is only useful
-	// when you have previously called enable_rule/enable_rule_by_tag
-	// with a ruleset string.
-	//
-	// the returned rule_result is allocated and must be delete()d.
+	/**
+	 * @brief Given an event, check it against the set of rules in the
+	 * engine and if a matching rule is found, return details on
+	 * the rule that matched. If no rule matched, returns null.
+	 *
+	 * @param ev
+	 * @param ruleset_id if provided, use the enabled/disabled status
+	 * associated with the provided ruleset. This is only useful
+	 * when you have previously called @ref enable_rule/@ref enable_rule_by_tag
+	 * with a ruleset string.
+	 *
+	 * @return std::unique_ptr<rule_result>
+	 */
 	std::unique_ptr<rule_result> process_k8s_audit_event(json_event *ev, uint16_t ruleset_id);
 
-	//
-	// Wrapper assuming the default ruleset
-	//
+	//! Wrapper of @ref process_k8s_audit_event assuming the default ruleset
 	std::unique_ptr<rule_result> process_k8s_audit_event(json_event *ev);
 
-	//
-	// Add a k8s_audit filter to the engine
-	//
+	//! Add a k8s_audit filter to the engine
 	void add_k8s_audit_filter(std::string &rule,
 				  std::set<std::string> &tags,
 				  json_event_filter* filter);
 
+
 	// **Methods Related to Sinsp Events e.g system calls
-	//
-	// Given a ruleset, fill in a bitset containing the event
-	// types for which this ruleset can run.
-	//
+
+	/**
+	 * @brief Given a ruleset, fill in a bitset containing the event
+	 * types for which this ruleset can run.
+	 *
+	 * @param[out] evttypes
+	 * @param ruleset
+	 */
 	void evttypes_for_ruleset(std::vector<bool> &evttypes, const std::string &ruleset);
 
-	//
-	// Given a ruleset, fill in a bitset containing the syscalls
-	// for which this ruleset can run.
-	//
+	/**
+	 * @brief Given a ruleset, fill in a bitset containing the syscalls
+	 * for which this ruleset can run.
+	 *
+	 * @param[out] syscalls
+	 * @param ruleset
+	 */
 	void syscalls_for_ruleset(std::vector<bool> &syscalls, const std::string &ruleset);
 
-	//
-	// Given an event, check it against the set of rules in the
-	// engine and if a matching rule is found, return details on
-	// the rule that matched. If no rule matched, returns NULL.
-	//
-	// When ruleset_id is provided, use the enabled/disabled status
-	// associated with the provided ruleset. This is only useful
-	// when you have previously called enable_rule/enable_rule_by_tag
-	// with a ruleset string.
-	//
-	// the returned rule_result is allocated and must be delete()d.
+	/**
+	 * @brief Given an event, check it against the set of rules in the
+	 * engine and if a matching rule is found, return details on
+	 * the rule that matched. If no rule matched, returns null.
+	 *
+	 * @param ev
+	 * @param ruleset_id When provided, use the enabled/disabled status
+	 * associated with the provided ruleset. This is only useful
+	 * when you have previously called @ref enable_rule/@ref enable_rule_by_tag
+	 * with a ruleset string.
+	 * @return std::unique_ptr<rule_result>
+	 */
 	std::unique_ptr<rule_result> process_sinsp_event(sinsp_evt *ev, uint16_t ruleset_id);
 
-	//
-	// Wrapper assuming the default ruleset
-	//
+	//! Wrapper of @ref process_sinsp_event that assumes the default ruleset.
 	std::unique_ptr<rule_result> process_sinsp_event(sinsp_evt *ev);
 
-	//
-	// Add a filter, which is related to the specified set of
-	// event types/syscalls, to the engine.
-	//
+
+	/**
+	 * Add a filter, which is related to the specified set of
+	 * event types/syscalls, to the engine.
+	 */
 	void add_sinsp_filter(std::string &rule,
 			      std::set<uint32_t> &evttypes,
 			      std::set<uint32_t> &syscalls,
