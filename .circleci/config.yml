@@ -576,9 +576,13 @@ jobs:
             pip install awscli
             docker build --build-arg VERSION_BUCKET=bin --build-arg FALCO_VERSION=${CIRCLE_TAG} -t "public.ecr.aws/falcosecurity/falco-no-driver:${CIRCLE_TAG}" docker/no-driver
             docker tag "public.ecr.aws/falcosecurity/falco-no-driver:${CIRCLE_TAG}" public.ecr.aws/falcosecurity/falco-no-driver:latest
+            docker tag "public.ecr.aws/falcosecurity/falco-no-driver:${CIRCLE_TAG}" "public.ecr.aws/falcosecurity/falco:${CIRCLE_TAG}-slim"
+            docker tag "public.ecr.aws/falcosecurity/falco-no-driver:${CIRCLE_TAG}" "public.ecr.aws/falcosecurity/falco:latest-slim"
             aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/falcosecurity
             docker push "public.ecr.aws/falcosecurity/falco-no-driver:${CIRCLE_TAG}"
             docker push "public.ecr.aws/falcosecurity/falco-no-driver:latest"
+            docker push "public.ecr.aws/falcosecurity/falco:${CIRCLE_TAG}-slim"
+            docker push "public.ecr.aws/falcosecurity/falco:latest-slim"
       - run:
           name: Build and publish falco to AWS
           command: |
