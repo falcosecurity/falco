@@ -595,12 +595,12 @@ jobs:
             docker push "public.ecr.aws/falcosecurity/falco:${CIRCLE_TAG}"
             docker push "public.ecr.aws/falcosecurity/falco:latest"
       - run:
-          name: Build and publish driver-loader to AWS
+          name: Build and publish falco-driver-loader to AWS
           command: |
             apk update
             apk add --update groff less py-pip
             pip install awscli
-            docker build --build-arg VERSION_BUCKET=deb --build-arg FALCO_VERSION=${CIRCLE_TAG} -t "public.ecr.aws/falcosecurity/falco-driver-loader:${CIRCLE_TAG}" docker/driver-loader
+            docker build --build-arg FALCO_IMAGE_TAG=${CIRCLE_TAG} -t "public.ecr.aws/falcosecurity/falco-driver-loader:${CIRCLE_TAG}" docker/driver-loader
             docker tag "public.ecr.aws/falcosecurity/falco-driver-loader:${CIRCLE_TAG}" public.ecr.aws/falcosecurity/falco-driver-loader:latest
             aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/falcosecurity
             docker push "public.ecr.aws/falcosecurity/falco-driver-loader:${CIRCLE_TAG}"
