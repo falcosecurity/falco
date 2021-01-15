@@ -462,7 +462,7 @@ jobs:
       - checkout
       - setup_remote_docker
       - run:
-          name: Build and publish no-driver to AWS
+          name: Build and publish no-driver (dev) to AWS
           command: |
             apk update
             apk add --update groff less py-pip
@@ -474,7 +474,7 @@ jobs:
             docker push "public.ecr.aws/falcosecurity/falco-no-driver:master"
             docker push "public.ecr.aws/falcosecurity/falco:master-slim"
       - run:
-          name: Build and publish falco to AWS
+          name: Build and publish falco (dev) to AWS
           command: |
             apk update
             apk add --update groff less py-pip
@@ -484,13 +484,12 @@ jobs:
             aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/falcosecurity
             docker push "public.ecr.aws/falcosecurity/falco:master"
       - run:
-          name: Build and publish driver-loader to AWS
+          name: Build and publish driver-loader (dev) to AWS
           command: |
             apk update
             apk add --update groff less py-pip
             pip install awscli
-            FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
-            docker build --build-arg VERSION_BUCKET=deb-dev --build-arg FALCO_VERSION=${FALCO_VERSION} -t "public.ecr.aws/falcosecurity/falco-driver-loader:master" docker/driver-loader
+            docker build --build-arg FALCO_IMAGE_TAG=master -t "public.ecr.aws/falcosecurity/falco-driver-loader:master" docker/driver-loader
             aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/falcosecurity
             docker push "public.ecr.aws/falcosecurity/falco-driver-loader:master"
   # Publish the packages
