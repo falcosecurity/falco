@@ -674,6 +674,6 @@ workflows:
             - "publish/docker"
           filters:
             tags:
-              ignore: /.*/
+              only: /.*/
             branches:
               ignore: /.*/
