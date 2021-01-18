@@ -762,8 +762,6 @@ int falco_init(int argc, char **argv)
 			}
 		}
 
-		outputs = new falco_outputs();
-
 		// Some combinations of arguments are not allowed.
 		if (daemon && pidfilename == "") {
 			throw std::invalid_argument("If -d is provided, a pid file must also be provided");
@@ -965,14 +963,6 @@ int falco_init(int argc, char **argv)
 			hostname = c_hostname;
 		}
 
-		outputs->init(config.m_json_output,
-			      config.m_json_include_output_property,
-			      config.m_output_timeout,
-			      config.m_notifications_rate, config.m_notifications_max_burst,
-			      config.m_buffered_outputs,
-			      config.m_time_format_iso_8601,
-			      hostname);
-
 		if(!all_events)
 		{
 			inspector->set_drop_event_flags(EF_DROP_SIMPLE_CONS);
@@ -991,11 +981,6 @@ int falco_init(int argc, char **argv)
 		}
 
 		inspector->set_hostname_and_port_resolution_mode(false);
-
-		for(auto output : config.m_outputs)
-		{
-			outputs->add_output(output);
-		}
 
 		if(signal(SIGINT, signal_callback) == SIG_ERR)
 		{
@@ -1080,6 +1065,21 @@ int falco_init(int argc, char **argv)
 			open("/dev/null", O_RDWR);
 
 			g_daemonized = true;
+		}
+
+		outputs = new falco_outputs();
+
+		outputs->init(config.m_json_output,
+			config.m_json_include_output_property,
+			config.m_output_timeout,
+			config.m_notifications_rate, config.m_notifications_max_burst,
+			config.m_buffered_outputs,
+			config.m_time_format_iso_8601,
+			hostname);
+
+		for(auto output : config.m_outputs)
+		{
+			outputs->add_output(output);
 		}
 
 		if(trace_filename.size())
