@@ -625,7 +625,7 @@ workflows:
               only: master
           requires:
             - publish/docker-dev
-      - "quality/static-analysis"
+      # - "quality/static-analysis" # This is temporarly disabled: https://github.com/falcosecurity/falco/issues/1526
   release:
     jobs:
       - "build/musl":
