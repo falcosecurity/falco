@@ -69,13 +69,12 @@ Now assume `x.y.z` is the new version.
     | deb      | [![deb](https://img.shields.io/badge/Falco-x.y.z-%2300aec7?style=flat-square)](https://dl.bintray.com/falcosecurity/deb/stable/falco-x.y.z-x86_64.deb) |
     | tgz      | [![tgz](https://img.shields.io/badge/Falco-x.y.z-%2300aec7?style=flat-square)](https://dl.bintray.com/falcosecurity/bin/x86_64/falco-x.y.z-x86_64.deb) |
 
-    | Images                                                          |
-    | --------------------------------------------------------------- |
-    | `docker pull docker.io/falcosecurity/falco:_tag_`               |
-    | `docker pull docker.io/falcosecurity/falco-driver-loader:_tag_` |
-    | `docker pull docker.io/falcosecurity/falco-no-driver:_tag_`     |
-
-    <!-- Copy the relevant part of the changelog here -->
+    | Images                                                                      |
+    | --------------------------------------------------------------------------- |
+    | `docker pull docker.io/falcosecurity/falco:x.y.z`                           |
+    | `docker pull public.ecr.aws/falcosecurity/falco:x.y.z`                      |
+    | `docker pull docker.io/falcosecurity/falco-driver-loader:x.y.z`             |
+    | `docker pull docker.io/falcosecurity/falco-no-driver:x.y.z`                 |
 
     ### Statistics
 
