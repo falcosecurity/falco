@@ -39,7 +39,7 @@ limitations under the License.
 #include "falco_common.h"
 
 /**
- * @brief The primary interface between a program and the falco rules engine.
+ * @brief The primary interface between a program and the Falco rules engine.
  *
  * @see falco_outputs
  */
@@ -125,7 +125,7 @@ public:
 	 */
 	uint16_t find_ruleset_id(const std::string &ruleset);
 
-	//! Return the number of falco rules enabled for the provided ruleset
+	//! Return the number of Falco rules enabled for the provided ruleset
 	uint64_t num_rules_for_ruleset(const std::string &ruleset);
 
 	/**
@@ -311,4 +311,3 @@ private:
 	std::string m_extra;
 	bool m_replace_container_info;
 };
-
