@@ -874,7 +874,6 @@ int falco_init(int argc, char **argv)
 			}
 		}
 
-<<<<<<< HEAD
 		// validate the rules files and exit
 		// if(validate_rules_filenames.size() > 0)
 		// {
@@ -901,33 +900,6 @@ int falco_init(int argc, char **argv)
 		// 	falco_logger::log(LOG_INFO, "Ok\n");
 		// 	goto exit;
 		// }
-=======
-		if(validate_rules_filenames.size() > 0)
-		{
-			falco_logger::log(LOG_INFO, "Validating rules file(s):\n");
-			for(auto file : validate_rules_filenames)
-			{
-				falco_logger::log(LOG_INFO, "   " + file + "\n");
-			}
-			for(auto file : validate_rules_filenames)
-			{
-				// Only include the prefix if there is more than one file
-				std::string prefix = (validate_rules_filenames.size() > 1 ? file + ": " : "");
-				try
-				{
-					// engine->load_rules_file(file, verbose, all_events);
-				}
-				catch(falco_exception &e)
-				{
-					printf("%s%s\n", prefix.c_str(), e.what());
-					throw;
-				}
-				printf("%sOk\n", prefix.c_str());
-			}
-			falco_logger::log(LOG_INFO, "Ok\n");
-			goto exit;
-		}
->>>>>>> e7adf5a (update(userspace): engine atomic and express lifecycle with a namespace)
 
 		falco_configuration config;
 		if(conf_filename.size())
