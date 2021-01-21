@@ -44,33 +44,49 @@ public:
         // specifying unnecessarily large rulesets will result in
         // unnecessarily large vectors.
 
-	// Find those rules matching the provided substring and set
-	// their enabled status to enabled. If match_exact is true,
-	// substring must be an exact match for a given rule
-	// name. Otherwise, any rules having substring as a substring
-	// in the rule name are enabled/disabled.
+	/**
+	 * @brief Find those rules matching @p substring and set
+	 * their enabled status to @p enabled. If @p match_exact is true,
+	 * @p substring must be an exact match for a given rule name
+	 * Otherwise, any rules having @p substring as a substring
+	 * in the rule name are enabled/disabled.
+	 *
+	 * @param substring
+	 * @param match_exact
+	 * @param enabled
+	 * @param ruleset
+	 */
 	void enable(const std::string &substring, bool match_exact, bool enabled, uint16_t ruleset = 0);
 
-	// Find those rules that have a tag in the set of tags and set
-	// their enabled status to enabled. Note that the enabled
-	// status is on the rules, and not the tags--if a rule R has
-	// tags (a, b), and you call enable_tags([a], true) and then
-	// enable_tags([b], false), R will be disabled despite the
-	// fact it has tag a and was enabled by the first call to
-	// enable_tags.
+	/**
+	 * @brief Find those rules that have a tag in the set of tags and set
+	 * their enabled status to @p enabled.
+	 *
+	 * @note The enabled status is on the rules, and not the tags:
+	 * if a rule @p R has tags <tt>(a, b)</tt>, and you call
+	 * <tt>enable_tags([a], true)</tt> and then <tt>enable_tags([b], false)</tt>,
+	 * @p R will be disabled despite the fact it has tag @p a and was enabled
+	 * by the first call to @p enable_tags.
+	 *
+	 * @param tags
+	 * @param enabled
+	 * @param ruleset
+	 */
 	void enable_tags(const std::set<std::string> &tags, bool enabled, uint16_t ruleset = 0);
 
 
-	// Return the number of falco rules enabled for the provided ruleset
+	//! Return the number of falco rules enabled for the provided ruleset
 	uint64_t num_rules_for_ruleset(uint16_t ruleset = 0);
 
-	// Match all filters against the provided event.
+	//! Match all filters against the provided event.
 	bool run(gen_event *evt, uint32_t etag, uint16_t ruleset = 0);
 
-	// Populate the provided vector, indexed by event tag, of the
-	// event tags associated with the given ruleset id. For
-	// example, event_tags[10] = true would mean that this ruleset
-	// relates to event tag 10.
+	/**
+	 * @brief Populate the provided vector, indexed by event tag, of the
+	 * event tags associated with the given ruleset id.
+	 * For example, <tt>event_tags[10] = true</tt> would mean that this ruleset
+	 * relates to event tag @p 10.
+	 */
 	void event_tags_for_ruleset(std::vector<bool> &event_tags, uint16_t ruleset);
 
 private:
@@ -117,8 +133,10 @@ private:
 	std::map<std::string,filter_wrapper *> m_filters;
 };
 
-// falco_sinsp_ruleset is a specialization of falco_ruleset that
-// maps sinsp evttypes/syscalls to event tags.
+/**
+ * @brief Specialization of \ref falco_ruleset that
+ * maps sinsp evttypes/syscalls to event tags.
+ */
 class falco_sinsp_ruleset : public falco_ruleset
 {
 public:
@@ -133,16 +151,28 @@ public:
 
 	bool run(sinsp_evt *evt, uint16_t ruleset = 0);
 
-	// Populate the provided vector, indexed by event type, of the
-	// event types associated with the given ruleset id. For
-	// example, evttypes[10] = true would mean that this ruleset
-	// relates to event type 10.
+
+	/**
+	 * @brief Populate the provided vector, indexed by event type, of the event
+	 * types associated with the given ruleset id.
+	 * For example, <tt>evttypes[10] = true</tt> would mean that this ruleset
+	 * relates to event type @p 10.
+	 *
+	 * @param evttypes
+	 * @param ruleset
+	 */
 	void evttypes_for_ruleset(std::vector<bool> &evttypes, uint16_t ruleset);
 
-	// Populate the provided vector, indexed by syscall code, of the
-	// syscall codes associated with the given ruleset id. For
-	// example, syscalls[10] = true would mean that this ruleset
-	// relates to syscall code 10.
+
+	/**
+	 * @brief Populate the provided vector, indexed by syscall code, of the
+	 * syscall codes associated with the given ruleset id.
+	 * For example, <tt>syscalls[10] = true</tt> would mean that this ruleset
+	 * relates to syscall code @p 10.
+	 *
+	 * @param syscalls
+	 * @param ruleset
+	 */
 	void syscalls_for_ruleset(std::vector<bool> &syscalls, uint16_t ruleset);
 
 private:
