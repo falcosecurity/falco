@@ -28,12 +28,10 @@ extern "C" {
 
 #include <sinsp.h>
 
-//
-// Most falco_* classes can throw exceptions. Unless directly related
-// to low-level failures like inability to open file, etc, they will
-// be of this type.
-//
-
+/**
+ * @brief Unless directly related to low-level failures like inability to
+ * open file, etc, exceptions thrown by falco_* classes will be of this type.
+ */
 struct falco_exception : std::exception
 {
 	falco_exception()
@@ -57,12 +55,10 @@ struct falco_exception : std::exception
 	std::string m_error_str;
 };
 
-//
-// This is the base class of falco_engine/falco_output. It is
-// responsible for managing a lua state and associated inspector and
-// loading a single "main" lua file into that state.
-//
-
+/**
+ * @brief Class responsible for managing a lua state and associated inspector,
+ * and loading a single "main" lua file into that state.
+ */
 class falco_common
 {
 public:
@@ -73,10 +69,10 @@ public:
 
 	void set_inspector(sinsp *inspector);
 
-    // Priority levels, as a vector of strings
+    //! Priority levels, as a vector of strings
 	static std::vector<std::string> priority_names;
 
-	// Same as numbers/indices into the above vector
+	//! Same as numbers/indices into \ref priority_names
 	enum priority_type
 	{
 		PRIORITY_EMERGENCY = 0,
