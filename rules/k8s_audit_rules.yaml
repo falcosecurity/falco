@@ -50,7 +50,8 @@
     vertical_pod_autoscaler_users,
     cluster-autoscaler,
     "system:addon-manager",
-    "cloud-controller-manager"
+    "cloud-controller-manager",
+    "eks:node-manager"
     ]
 
 - rule: Disallowed K8s User
