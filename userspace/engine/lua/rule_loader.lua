@@ -436,6 +436,11 @@ function load_rules_doc(rules_mgr, doc, load_state)
 	    v['source'] = "syscall"
 	 end
 
+	 -- Ignore macros with unknown sources
+	 if (v['source'] ~= "syscall" and v['source'] ~= "k8s_audit") then
+	    goto next_object
+	 end
+
 	 if state.macros_by_name[v['macro']] == nil then
 	    state.ordered_macro_names[#state.ordered_macro_names+1] = v['macro']
 	 end
@@ -520,6 +525,11 @@ function load_rules_doc(rules_mgr, doc, load_state)
 
 	 if v['source'] == nil then
 	    v['source'] = "syscall"
+	 end
+
+	 -- Ignore rules with unknown sources
+	 if (v['source'] ~= "syscall" and v['source'] ~= "k8s_audit") then
+	    goto next_object
 	 end
 
 	 -- Add an empty exceptions property to the rule if not
@@ -668,6 +678,8 @@ function load_rules_doc(rules_mgr, doc, load_state)
 	 arr = build_error_with_context(context, "Unknown top level object: "..table.tostring(v))
 	 warnings[#warnings + 1] = arr[1]
       end
+
+      ::next_object::
    end
 
    return true, {}, warnings
