@@ -19,8 +19,10 @@ limitations under the License.
 #include <cstdint>
 #include <functional>
 
-// A simple token bucket that accumulates tokens at a fixed rate and allows
-// for limited bursting in the form of "banked" tokens.
+/**
+ *  A simple token bucket that accumulates tokens at a fixed rate and allows
+ * for limited bursting in the form of "banked" tokens.
+ */
 class token_bucket
 {
 public:
@@ -28,26 +30,32 @@ public:
 	token_bucket(std::function<uint64_t()> timer);
 	virtual ~token_bucket();
 
-	//
-	// Initialize the token bucket and start accumulating tokens
-	//
+	//! Initialize the token bucket and start accumulating tokens
 	void init(double rate, double max_tokens, uint64_t now = 0);
 
-	//
-	// Try to claim tokens tokens from the token bucket, using a
-	// timestamp of now. Returns true if the tokens could be
-	// claimed. Also updates internal metrics.
-	//
+	/**
+	 * @brief Try to claim `tokens` tokens from the token bucket, using a
+	 * timestamp of `now`.
+	 *
+	 * @note Also updates internal metrics.
+	 *
+	 * @param tokens
+	 * @param now
+	 * @return true true if the tokens could be claimed
+	 * @return false
+	 */
 	bool claim(double tokens, uint64_t now);
 
-	// Simpler version of claim that claims a single token and
-	// uses the current time for now
+	/**
+	 * @brief Simpler version of @ref claim that claims a single token and
+	 * uses the current time for `now`.
+	 */
 	bool claim();
 
-	// Return the current number of tokens available
+	//! Return the current number of tokens available
 	double get_tokens();
 
-	// Return the last time someone tried to claim a token.
+	//! Return the last time someone tried to claim a token.
 	uint64_t get_last_seen();
 
 private:
