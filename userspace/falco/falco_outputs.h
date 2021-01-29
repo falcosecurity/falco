@@ -27,11 +27,12 @@ limitations under the License.
 #include "outputs.h"
 #include "tbb/concurrent_queue.h"
 
-//
-// This class acts as the primary interface between a program and the
-// falco output engine. The falco rules engine is implemented by a
-// separate class falco_engine.
-//
+
+/**
+ * @brief This class acts as the primary interface between a program and the
+ * falco output engine. The falco rules engine is implemented by a
+ * separate class falco_engine.
+ */
 class falco_outputs
 {
 public:
@@ -46,11 +47,11 @@ public:
 
 	void add_output(falco::outputs::config oc);
 
-	// Format then send the event to all configured outputs (`evt` is an event that has matched some rule).
+	//! Format then send the event to all configured outputs (`evt` is an event that has matched some rule).
 	void handle_event(gen_event *evt, std::string &rule, std::string &source,
 			  falco_common::priority_type priority, std::string &format);
 
-	// Format then send a generic message to all outputs. Not necessarily associated with any event.
+	//! Format then send a generic message to all outputs. Not necessarily associated with any event.
 	void handle_msg(uint64_t now,
 			falco_common::priority_type priority,
 			std::string &msg,

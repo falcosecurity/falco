@@ -27,21 +27,21 @@ namespace falco
 namespace outputs
 {
 
-//
-// The way to refer to an output (file, syslog, stdout, etc.)
-// An output has a name and set of options.
-//
+///
+/// The way to refer to an output (file, syslog, stdout, etc.).
+/// An output has a name and set of options.
+///
 struct config
 {
 	std::string name;
 	std::map<std::string, std::string> options;
 };
 
-//
-// The message to be outputted. It can either refer to:
-//  - an event that has matched some rule,
-//  - or a generic message (e.g., a drop alert).
-//
+///
+/// The message to be outputted. It can either refer to:
+///  - an event that has matched some rule,
+///  - or a generic message (e.g., a drop alert).
+///
 struct message
 {
 	uint64_t ts;
@@ -52,11 +52,10 @@ struct message
 	map<std::string, std::string> fields;
 };
 
-//
-// This class acts as the primary interface for implementing
-// a Falco output class.
-//
-
+///
+/// This class acts as the primary interface for implementing
+/// a Falco output class.
+///
 class abstract_output
 {
 public:
@@ -69,19 +68,19 @@ public:
 		m_hostname = hostname;
 	}
 
-	// Return the output's name as per its configuration.
+	//! Return the output's name as per its configuration.
 	const std::string get_name() const
 	{
 		return m_oc.name;
 	}
 
-	// Output a message.
+	//! Output a message.
 	virtual void output(const message *msg) = 0;
 
-	// Possibly close the output and open it again.
+	//! Possibly close the output and open it again.
 	virtual void reopen() {}
 
-	// Possibly flush the output.
+	//! Possibly flush the output.
 	virtual void cleanup() {}
 
 protected:
