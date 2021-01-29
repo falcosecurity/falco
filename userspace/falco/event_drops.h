@@ -46,11 +46,15 @@ public:
 		  double max_tokens,
 		  bool simulate_drops);
 
-	// Call this for every event. The class will take care of
-	// periodically measuring the scap stats, looking for syscall
-	// event drops, and performing any actions.
-	//
-	// Returns whether event processing should continue or stop (with an error).
+	/**
+	 * @brief Call this for every event, the class will take care of
+	 * periodically measuring the scap stats, looking for syscall
+	 * event drops, and performing any actions.
+	 *
+	 * @param inspector
+	 * @param evt
+	 * @return whether event processing should continue or stop (with an error).
+	 */
 	bool process_event(sinsp *inspector, sinsp_evt *evt);
 
 	void print_stats();
