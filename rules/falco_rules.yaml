@@ -3115,16 +3115,16 @@
   priority: INFO
   tags: [container, process]
   
-- rule: Sudo Potential Privilege Escalation (CVE-2021-3156)
-  desc: Privilege escalation vulnerability affected sudo. Executing sudo using sudoedit -s or sudoedit -t command from an unprivileged user it's possible to elevate the user privileges to root.
+#This rule helps detect CVE-2021-3156:
+#A privilege escalation to root through heap-based buffer overflow
+- rule: Sudo Potential Privilege Escalation
+  desc: Privilege escalation vulnerability affecting sudo (<= 1.9.5p2). Executing sudo using sudoedit -s or sudoedit -i command with command-line argument that ends with a single backslash character from an unprivileged user it's possible to elevate the user privileges to root.
   condition: spawned_process and user.uid!= 0 and proc.name=sudoedit and (proc.args contains -s or proc.args contains -i) and (proc.args contains "\ " or proc.args endswith \)
-  output: "Detect Sudo Privilege Escalation Exploit (CVE-2021-3156)  (user=%user.name parent=%proc.pname cmdline=%proc.cmdline %container.info)"
+  output: "Detect Sudo Privilege Escalation Exploit (CVE-2021-3156) (user=%user.name parent=%proc.pname cmdline=%proc.cmdline %container.info)"
   priority: CRITICAL
   tags: [filesystem, mitre_privilege_escalation]
 
 # Application rules have moved to application_rules.yaml. Please look
 # there if you want to enable them by adding to
 # falco_rules.local.yaml.
-
-
 
