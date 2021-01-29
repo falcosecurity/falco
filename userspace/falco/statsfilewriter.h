@@ -22,21 +22,21 @@ limitations under the License.
 
 #include <sinsp.h>
 
-// Periodically collects scap stats files and writes them to a file as
-// json.
-
+/**
+ * @brief Periodically collects scap stats files
+ * and writes them to a file as json.
+ */
 class StatsFileWriter {
 public:
 	StatsFileWriter();
 	virtual ~StatsFileWriter();
 
-	// Returns success as bool. On false fills in errstr.
+	//! Returns success as bool. On false fills in @p errstr.
 	bool init(sinsp *inspector, std::string &filename,
 		  uint32_t interval_msec,
 		  string &errstr);
 
-	// Should be called often (like for each event in a sinsp
-	// loop).
+	//! Should be called often (like for each event in a sinsp loop).
 	void handle();
 
 protected:
