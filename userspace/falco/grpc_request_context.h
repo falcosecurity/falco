@@ -46,8 +46,7 @@ public:
 	virtual void end(server* srv, bool isError) = 0;
 };
 
-// The responsibility of `request_stream_context` template class
-// is to handle streaming responses.
+//! The responsibility of this class is to handle streaming responses.
 template<class Service, class Request, class Response>
 class request_stream_context : public request_context_base
 {
@@ -57,10 +56,10 @@ public:
 		m_request_func(nullptr){};
 	~request_stream_context() = default;
 
-	// Pointer to function that does actual processing
+	//! Pointer to function that does actual processing
 	void (server::*m_process_func)(const stream_context&, const Request&, Response&);
 
-	// Pointer to function that requests the system to start processing given requests
+	//! Pointer to function that requests the system to start processing given requests
 	void (Service::AsyncService::*m_request_func)(::grpc::ServerContext*, Request*, ::grpc::ServerAsyncWriter<Response>*, ::grpc::CompletionQueue*, ::grpc::ServerCompletionQueue*, void*);
 
 	void start(server* srv);
@@ -73,8 +72,7 @@ private:
 	Request m_req;
 };
 
-// The responsibility of `request_context` template class
-// is to handle unary responses.
+//! The responsibility of this class is to handle unary responses.
 template<class Service, class Request, class Response>
 class request_context : public request_context_base
 {
@@ -84,10 +82,10 @@ public:
 		m_request_func(nullptr){};
 	~request_context() = default;
 
-	// Pointer to function that does actual processing
+	//! Pointer to function that does actual processing
 	void (server::*m_process_func)(const context&, const Request&, Response&);
 
-	// Pointer to function that requests the system to start processing given requests
+	//! Pointer to function that requests the system to start processing given requests
 	void (Service::AsyncService::*m_request_func)(::grpc::ServerContext*, Request*, ::grpc::ServerAsyncResponseWriter<Response>*, ::grpc::CompletionQueue*, ::grpc::ServerCompletionQueue*, void*);
 
 	void start(server* srv);
@@ -108,10 +106,10 @@ public:
 		m_request_func(nullptr){};
 	~request_bidi_context() = default;
 
-	// Pointer to function that does actual processing
+	//! Pointer to function that does actual processing
 	void (server::*m_process_func)(const bidi_context&, const Request&, Response&);
 
-	// Pointer to function that requests the system to start processing given requests
+	//! Pointer to function that requests the system to start processing given requests
 	void (Service::AsyncService::*m_request_func)(::grpc::ServerContext*, ::grpc::ServerAsyncReaderWriter<Response, Request>*, ::grpc::CompletionQueue*, ::grpc::ServerCompletionQueue*, void*);
 
 	void start(server* srv);
