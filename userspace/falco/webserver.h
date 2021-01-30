@@ -41,6 +41,20 @@ private:
 	bool accept_uploaded_data(std::string &post_data, std::string &errstr);
 };
 
+class k8s_healthz_handler : public CivetHandler
+{
+public:
+	k8s_healthz_handler()
+	{
+	}
+
+	virtual ~k8s_healthz_handler()
+	{
+	}
+
+	bool handleGet(CivetServer *server, struct mg_connection *conn);
+};
+
 class falco_webserver
 {
 public:
@@ -60,4 +74,5 @@ private:
 	falco_outputs *m_outputs;
 	unique_ptr<CivetServer> m_server;
 	unique_ptr<k8s_audit_handler> m_k8s_audit_handler;
+	unique_ptr<k8s_healthz_handler> m_k8s_healthz_handler;
 };
