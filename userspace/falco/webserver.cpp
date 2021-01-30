@@ -34,6 +34,15 @@ k8s_audit_handler::~k8s_audit_handler()
 {
 }
 
+bool k8s_healthz_handler::handleGet(CivetServer *server, struct mg_connection *conn)
+{
+	const std::string status_body = "{\"status\": \"ok\"}";
+	mg_send_http_ok(conn, "application/json", status_body.size());
+	mg_printf(conn, "%s", status_body.c_str());
+
+	return true;
+}
+
 bool k8s_audit_handler::accept_data(falco_engine *engine,
 				    falco_outputs *outputs,
 				    std::string &data,
@@ -148,7 +157,7 @@ bool k8s_audit_handler::handlePost(CivetServer *server, struct mg_connection *co
 		return true;
 	}
 
-	std::string ok_body = "<html><body>Ok</body></html>";
+	const std::string ok_body = "<html><body>Ok</body></html>";
 	mg_send_http_ok(conn, "text/html", ok_body.size());
 	mg_printf(conn, "%s", ok_body.c_str());
 
@@ -233,6 +242,8 @@ void falco_webserver::start()
 
 	m_k8s_audit_handler = make_unique<k8s_audit_handler>(m_engine, m_outputs);
 	m_server->addHandler(m_config->m_webserver_k8s_audit_endpoint, *m_k8s_audit_handler);
+	m_k8s_healthz_handler = make_unique<k8s_healthz_handler>();
+	m_server->addHandler(m_config->m_webserver_k8s_healthz_endpoint, *m_k8s_healthz_handler);
 }
 
 void falco_webserver::stop()
@@ -241,5 +252,6 @@ void falco_webserver::stop()
 	{
 		m_server = NULL;
 		m_k8s_audit_handler = NULL;
+		m_k8s_healthz_handler = NULL;
 	}
 }
