@@ -1,5 +1,6 @@
 [Unit]
 Description=Falco: Container Native Runtime Security
+Documentation=https://falco.org/docs/
 
 [Service]
 Type=simple
