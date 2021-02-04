@@ -4,7 +4,9 @@ Description=Falco: Container Native Runtime Security
 [Service]
 Type=simple
 User=root
+ExecStartPre=/sbin/modprobe falco
 ExecStart=/usr/bin/falco --pidfile=/var/run/falco.pid
+ExecStopPost=/sbin/rmmod falco
 UMask=0077
 TimeoutSec=30
 RestartSec=15s
@@ -16,7 +18,6 @@ ProtectSystem=full
 ProtectKernelTunables=true
 RestrictRealtime=true
 RestrictAddressFamilies=~AF_PACKET
-SystemCallFilter=~@debug @mount @cpu-emulation @obsolete @privileged
 
 [Install]
 WantedBy=multi-user.target
