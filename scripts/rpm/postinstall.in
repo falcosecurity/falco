@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2020 The Falco Authors.
+# Copyright (C) 2021 The Falco Authors.
 #
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
