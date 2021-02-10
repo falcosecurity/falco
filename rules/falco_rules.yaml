@@ -2421,6 +2421,8 @@
     - name: proc_name_image_suffix
       fields: [proc.name, container.image.repository]
       comps: [in, endswith]
+      values:
+        - [[rpm], quay.io/sysdig/node-image-analyzer]
   output: >
     Package management process launched in container (user=%user.name user_loginuid=%user.loginuid
     command=%proc.cmdline container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
