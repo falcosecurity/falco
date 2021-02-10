@@ -2556,6 +2556,7 @@
         - ["fluent/fluentd-kubernetes-daemonset"]
         - ["openshift3/ose-logging-fluentd"]
         - ["containernetworking/azure-npm"]
+        - ["registry.redhat.io/openshift4/ose-logging-fluentd"]
   output: >
     Log files were tampered (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline file=%fd.name container_id=%container.id image=%container.image.repository)
   priority:
