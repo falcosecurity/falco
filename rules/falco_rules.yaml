@@ -1508,6 +1508,7 @@
       comps: in
       values: [sysdigcloud_binaries, sysdig, calico, oci-umount,
                cilium-cni, network_plugin_binaries,
+               oneagenthelper,
                user_known_change_thread_namespace_binaries]
     - name: container_proc_name
       fields: [container.id, proc.name]
