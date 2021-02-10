@@ -1539,6 +1539,7 @@
         - [[calico-node], "calico/node"]
         - [[scope], "weaveworks/scope"]
         - [[nsenter], "quay.io/cilium/startup-script"]
+        - [[java], "docker.io/sysdig/agent"]
   output: >
     Namespace change (setns) by unexpected program (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline
     parent=%proc.pname %container.info container_id=%container.id image=%container.image.repository:%container.image.tag)
