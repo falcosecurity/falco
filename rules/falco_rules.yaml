@@ -706,8 +706,9 @@
   condition: >
     proc.name = "exe"
     and (proc.cmdline contains "/var/lib/docker"
-    or proc.cmdline contains "/var/run/docker")
-    and proc.pname in (dockerd, docker, dockerd-current, docker-current)
+    or proc.cmdline contains "/var/run/docker"
+    or proc.cmdline contains "/var/lib/containers")
+    and proc.pname in (dockerd, docker, dockerd-current, docker-current, crio)
 
 - macro: python_running_get_pip
   condition: (proc.cmdline startswith "python get-pip.py")
