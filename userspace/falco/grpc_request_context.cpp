@@ -17,6 +17,7 @@ limitations under the License.
 */
 
 #include "grpc_request_context.h"
+#include "falco_utils.h"
 
 namespace falco
 {
@@ -27,9 +28,9 @@ template<>
 void request_stream_context<outputs::service, outputs::request, outputs::response>::start(server* srv)
 {
 	m_state = request_context_base::REQUEST;
-	m_srv_ctx.reset(new ::grpc::ServerContext);
+	m_srv_ctx = std::make_unique<::grpc::ServerContext>();
 	auto srvctx = m_srv_ctx.get();
-	m_res_writer.reset(new ::grpc::ServerAsyncWriter<outputs::response>(srvctx));
+	m_res_writer = std::make_unique<::grpc::ServerAsyncWriter<outputs::response>>(srvctx);
 	m_stream_ctx.reset();
 	m_req.Clear();
 	auto cq = srv->m_completion_queue.get();
@@ -44,7 +45,7 @@ void request_stream_context<outputs::service, outputs::request, outputs::respons
 	if(m_state == request_context_base::REQUEST)
 	{
 		m_state = request_context_base::WRITE;
-		m_stream_ctx.reset(new stream_context(m_srv_ctx.get()));
+		m_stream_ctx = std::make_unique<stream_context>(m_srv_ctx.get());
 	}
 
 	// Processing
@@ -107,9 +108,9 @@ template<>
 void request_context<version::service, version::request, version::response>::start(server* srv)
 {
 	m_state = request_context_base::REQUEST;
-	m_srv_ctx.reset(new ::grpc::ServerContext);
+	m_srv_ctx = std::make_unique<::grpc::ServerContext>();
 	auto srvctx = m_srv_ctx.get();
-	m_res_writer.reset(new ::grpc::ServerAsyncResponseWriter<version::response>(srvctx));
+	m_res_writer = std::make_unique<::grpc::ServerAsyncResponseWriter<version::response>>(srvctx);
 	m_req.Clear();
 	auto cq = srv->m_completion_queue.get();
 	// Request to start processing given requests.
@@ -143,9 +144,9 @@ template<>
 void request_bidi_context<outputs::service, outputs::request, outputs::response>::start(server* srv)
 {
 	m_state = request_context_base::REQUEST;
-	m_srv_ctx.reset(new ::grpc::ServerContext);
+	m_srv_ctx = std::make_unique<::grpc::ServerContext>();
 	auto srvctx = m_srv_ctx.get();
-	m_reader_writer.reset(new ::grpc::ServerAsyncReaderWriter<outputs::response, outputs::request>(srvctx));
+	m_reader_writer = std::make_unique<::grpc::ServerAsyncReaderWriter<outputs::response, outputs::request>>(srvctx);
 	m_req.Clear();
 	auto cq = srv->m_completion_queue.get();
 	// Request to start processing given requests.
@@ -160,7 +161,7 @@ void request_bidi_context<outputs::service, outputs::request, outputs::response>
 	switch(m_state)
 	{
 	case request_context_base::REQUEST:
-		m_bidi_ctx.reset(new bidi_context(m_srv_ctx.get()));
+		m_bidi_ctx = std::make_unique<bidi_context>(m_srv_ctx.get());
 		m_bidi_ctx->m_status = bidi_context::STREAMING;
 		m_state = request_context_base::WRITE;
 		m_reader_writer->Read(&m_req, this);

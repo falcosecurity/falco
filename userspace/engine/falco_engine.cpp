@@ -45,6 +45,8 @@ nlohmann::json::json_pointer falco_engine::k8s_audit_time = "/stageTimestamp"_js
 falco_engine::falco_engine(bool seed_rng, const std::string& alternate_lua_dir)
 	: m_next_ruleset_id(0),
 	  m_min_priority(falco_common::PRIORITY_DEBUG),
+	  m_sinsp_rules(std::make_unique<falco_sinsp_ruleset>()),
+	  m_k8s_audit_rules(std::make_unique<falco_ruleset>()),
 	  m_sampling_ratio(1), m_sampling_multiplier(0),
 	  m_replace_container_info(false)
 {
@@ -53,9 +55,6 @@ falco_engine::falco_engine(bool seed_rng, const std::string& alternate_lua_dir)
 
 	falco_common::init(m_lua_main_filename.c_str(), alternate_lua_dir.c_str());
 	falco_rules::init(m_ls);
-
-	m_sinsp_rules.reset(new falco_sinsp_ruleset());
-	m_k8s_audit_rules.reset(new falco_ruleset());
 
 	if(seed_rng)
 	{
@@ -494,8 +493,8 @@ void falco_engine::add_k8s_audit_filter(string &rule,
 
 void falco_engine::clear_filters()
 {
-	m_sinsp_rules.reset(new falco_sinsp_ruleset());
-	m_k8s_audit_rules.reset(new falco_ruleset());
+	m_sinsp_rules = std::make_unique<falco_sinsp_ruleset>();
+	m_k8s_audit_rules = std::make_unique<falco_ruleset>();
 }
 
 void falco_engine::set_sampling_ratio(uint32_t sampling_ratio)
