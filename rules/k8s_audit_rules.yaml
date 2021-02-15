@@ -51,7 +51,8 @@
     cluster-autoscaler,
     "system:addon-manager",
     "cloud-controller-manager",
-    "eks:node-manager"
+    "eks:node-manager",
+    "system:kube-controller-manager"
     ]
 
 - rule: Disallowed K8s User
@@ -346,7 +347,7 @@
   tags: [k8s]
 
 - list: user_known_sa_list
-  items: []
+  items: ["pod-garbage-collector","resourcequota-controller","cronjob-controller","generic-garbage-collector", "daemon-set-controller","endpointslice-controller","deployment-controller", "replicaset-controller"]
 
 - macro: trusted_sa
   condition: (ka.target.name in (user_known_sa_list))
