@@ -1537,7 +1537,6 @@
         - [[rancher-bridge], "rancher/network-manager"]
         - [[calico-node], "calico/node"]
         - [[scope], "weaveworks/scope"]
-        - [[system-probe], "datadog/agent"]
   output: >
     Namespace change (setns) by unexpected program (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline
     parent=%proc.pname %container.info container_id=%container.id image=%container.image.repository:%container.image.tag)
@@ -1799,7 +1798,7 @@
     docker.io/rook/toolbox, docker.io/cloudnativelabs/kube-router, docker.io/consul,
     docker.io/datadog/docker-dd-agent, docker.io/datadog/agent, docker.io/docker/ucp-agent, docker.io/gliderlabs/logspout,
     docker.io/netdata/netdata, docker.io/google/cadvisor, docker.io/prom/node-exporter,
-    amazon/amazon-ecs-agent, prom/node-exporter, gcr.io/datadoghq/agent, amazon/cloudwatch-agent
+    amazon/amazon-ecs-agent, prom/node-exporter, amazon/cloudwatch-agent
     ]
 
 # These container images are allowed to run with hostnetwork=true
@@ -2365,8 +2364,7 @@
      gcr.io/google_containers/kube2sky, docker.io/sysdig/falco,
      docker.io/sysdig/sysdig, docker.io/falcosecurity/falco,
      sysdig/falco, sysdig/sysdig, falcosecurity/falco, fluent/fluentd-kubernetes-daemonset, 
-     newrelic/infrastructure-k8s, prom/prometheus,
-     cloudability/metrics-agent) or (k8s.ns.name = "kube-system"))
+     prom/prometheus) or (k8s.ns.name = "kube-system"))
 
 - macro: k8s_api_server
   condition: (fd.sip.name="kubernetes.default.svc.cluster.local")
