@@ -17,9 +17,9 @@
 #
 scriptdir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 parentdir="$(dirname "$scriptdir")"
-sysdigdir="${parentdir}/build/sysdig-repo/sysdig-prefix/src/sysdig"
-cat "${sysdigdir}/userspace/libscap/syscall_info_table.c" | grep EF_DROP_SIMPLE_CONS | sed -e 's/.*\"\(.*\)\".*/\1/'  | sort > /tmp/ignored_syscall_info_table.txt
-cat "${sysdigdir}/driver/event_table.c" | grep EF_DROP_SIMPLE_CONS | sed -e 's/[^\"]*\"\([^\"]*\)\".*/\1/' | sort | uniq > /tmp/ignored_driver_event_table.txt
+libsdir="${parentdir}/build/falcosecurity-libs-repo/falcosecurity-libs-prefix/src/falcosecurity-libs"
+cat "${libsdir}/userspace/libscap/syscall_info_table.c" | grep EF_DROP_SIMPLE_CONS | sed -e 's/.*\"\(.*\)\".*/\1/'  | sort > /tmp/ignored_syscall_info_table.txt
+cat "${libsdir}/driver/event_table.c" | grep EF_DROP_SIMPLE_CONS | sed -e 's/[^\"]*\"\([^\"]*\)\".*/\1/' | sort | uniq > /tmp/ignored_driver_event_table.txt
 
 cat /tmp/ignored_driver_event_table.txt /tmp/ignored_syscall_info_table.txt | sort | uniq | tr '\n' ', '
 

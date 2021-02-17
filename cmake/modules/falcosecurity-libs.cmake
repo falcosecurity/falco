@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2020 The Falco Authors.
+# Copyright (C) 2021 The Falco Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
 # the License. You may obtain a copy of the License at
@@ -11,8 +11,8 @@
 # specific language governing permissions and limitations under the License.
 #
 
-set(SYSDIG_CMAKE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/sysdig-repo")
-set(SYSDIG_CMAKE_WORKING_DIR "${CMAKE_BINARY_DIR}/sysdig-repo")
+set(FALCOSECURITY_LIBS_CMAKE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/falcosecurity-libs-repo")
+set(FALCOSECURITY_LIBS_CMAKE_WORKING_DIR "${CMAKE_BINARY_DIR}/falcosecurity-libs-repo")
 
 # this needs to be here at the top
 if(USE_BUNDLED_DEPS)
@@ -23,36 +23,36 @@ if(USE_BUNDLED_DEPS)
   set(USE_BUNDLED_JQ ON)
 endif()
 
-file(MAKE_DIRECTORY ${SYSDIG_CMAKE_WORKING_DIR})
+file(MAKE_DIRECTORY ${FALCOSECURITY_LIBS_CMAKE_WORKING_DIR})
 
-# The sysdig git reference (branch name, commit hash, or tag) To update sysdig version for the next release, change the
-# default below In case you want to test against another sysdig version just pass the variable - ie., `cmake
-# -DSYSDIG_VERSION=dev ..`
-if(NOT SYSDIG_VERSION)
-  set(SYSDIG_VERSION "5c0b863ddade7a45568c0ac97d037422c9efb750")
-  set(SYSDIG_CHECKSUM "SHA256=9de717b3a4b611ea6df56afee05171860167112f74bb7717b394bcc88ac843cd")
+# The falcosecurity/libs git reference (branch name, commit hash, or tag) To update falcosecurity/libs version for the next release, change the
+# default below In case you want to test against another falcosecurity/libs version just pass the variable - ie., `cmake
+# -DFALCOSECURITY_LIBS_VERSION=dev ..`
+if(NOT FALCOSECURITY_LIBS_VERSION)
+  set(FALCOSECURITY_LIBS_VERSION "bf2bc1e2aa21e1ec65c77caf449de77d0487fb79")
+  set(FALCOSECURITY_LIBS_CHECKSUM "SHA256=3d1a56a322b6f5300ae4ce2cf82b03f30535cbe49f7b1943762596fa13be7050")
 endif()
-set(PROBE_VERSION "${SYSDIG_VERSION}")
+set(PROBE_VERSION "${FALCOSECURITY_LIBS_VERSION}")
 
 # cd /path/to/build && cmake /path/to/source
-execute_process(COMMAND "${CMAKE_COMMAND}" -DSYSDIG_VERSION=${SYSDIG_VERSION} -DSYSDIG_CHECKSUM=${SYSDIG_CHECKSUM}
-                        ${SYSDIG_CMAKE_SOURCE_DIR} WORKING_DIRECTORY ${SYSDIG_CMAKE_WORKING_DIR})
+execute_process(COMMAND "${CMAKE_COMMAND}" -DFALCOSECURITY_LIBS_VERSION=${FALCOSECURITY_LIBS_VERSION} -DFALCOSECURITY_LIBS_CHECKSUM=${FALCOSECURITY_LIBS_CHECKSUM}
+                        ${FALCOSECURITY_LIBS_CMAKE_SOURCE_DIR} WORKING_DIRECTORY ${FALCOSECURITY_LIBS_CMAKE_WORKING_DIR})
 
 # todo(leodido, fntlnz) > use the following one when CMake version will be >= 3.13
 
-# execute_process(COMMAND "${CMAKE_COMMAND}" -B ${SYSDIG_CMAKE_WORKING_DIR} WORKING_DIRECTORY
-# "${SYSDIG_CMAKE_SOURCE_DIR}")
+# execute_process(COMMAND "${CMAKE_COMMAND}" -B ${FALCOSECURITY_LIBS_CMAKE_WORKING_DIR} WORKING_DIRECTORY
+# "${FALCOSECURITY_LIBS_CMAKE_SOURCE_DIR}")
 
-execute_process(COMMAND "${CMAKE_COMMAND}" --build . WORKING_DIRECTORY "${SYSDIG_CMAKE_WORKING_DIR}")
-set(SYSDIG_SOURCE_DIR "${SYSDIG_CMAKE_WORKING_DIR}/sysdig-prefix/src/sysdig")
+execute_process(COMMAND "${CMAKE_COMMAND}" --build . WORKING_DIRECTORY "${FALCOSECURITY_LIBS_CMAKE_WORKING_DIR}")
+set(FALCOSECURITY_LIBS_SOURCE_DIR "${FALCOSECURITY_LIBS_CMAKE_WORKING_DIR}/falcosecurity-libs-prefix/src/falcosecurity-libs")
 
 # jsoncpp
-set(JSONCPP_SRC "${SYSDIG_SOURCE_DIR}/userspace/libsinsp/third-party/jsoncpp")
+set(JSONCPP_SRC "${FALCOSECURITY_LIBS_SOURCE_DIR}/userspace/libsinsp/third-party/jsoncpp")
 set(JSONCPP_INCLUDE "${JSONCPP_SRC}")
 set(JSONCPP_LIB_SRC "${JSONCPP_SRC}/jsoncpp.cpp")
 
 # Add driver directory
-add_subdirectory("${SYSDIG_SOURCE_DIR}/driver" "${PROJECT_BINARY_DIR}/driver")
+add_subdirectory("${FALCOSECURITY_LIBS_SOURCE_DIR}/driver" "${PROJECT_BINARY_DIR}/driver")
 
 # Add libscap directory
 add_definitions(-D_GNU_SOURCE)
@@ -61,10 +61,10 @@ add_definitions(-DNOCURSESUI)
 if(MUSL_OPTIMIZED_BUILD)
   add_definitions(-DMUSL_OPTIMIZED)
 endif()
-add_subdirectory("${SYSDIG_SOURCE_DIR}/userspace/libscap" "${PROJECT_BINARY_DIR}/userspace/libscap")
+add_subdirectory("${FALCOSECURITY_LIBS_SOURCE_DIR}/userspace/libscap" "${PROJECT_BINARY_DIR}/userspace/libscap")
 
 # Add libsinsp directory
-add_subdirectory("${SYSDIG_SOURCE_DIR}/userspace/libsinsp" "${PROJECT_BINARY_DIR}/userspace/libsinsp")
+add_subdirectory("${FALCOSECURITY_LIBS_SOURCE_DIR}/userspace/libsinsp" "${PROJECT_BINARY_DIR}/userspace/libsinsp")
 add_dependencies(sinsp tbb b64 luajit)
 
 # explicitly disable the tests of this dependency

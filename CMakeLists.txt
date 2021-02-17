@@ -200,8 +200,8 @@ if(NOT MINIMAL_BUILD)
   include(gRPC)
 endif()
 
-# sysdig
-include(sysdig)
+# libs
+include(falcosecurity-libs)
 
 # Installation
 install(FILES falco.yaml DESTINATION "${FALCO_ETC_DIR}")
