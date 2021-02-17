@@ -12,15 +12,15 @@
 #
 cmake_minimum_required(VERSION 3.5.1)
 
-project(sysdig-repo NONE)
+project(falcosecurity-libs-repo NONE)
 
 include(ExternalProject)
-message(STATUS "Driver version: ${SYSDIG_VERSION}")
+message(STATUS "Driver version: ${FALCOSECURITY_LIBS_VERSION}")
 
 ExternalProject_Add(
-  sysdig
-  URL "https://github.com/draios/sysdig/archive/${SYSDIG_VERSION}.tar.gz"
-  URL_HASH "${SYSDIG_CHECKSUM}"
+  falcosecurity-libs
+  URL "https://github.com/falcosecurity/libs/archive/${FALCOSECURITY_LIBS_VERSION}.tar.gz"
+  URL_HASH "${FALCOSECURITY_LIBS_CHECKSUM}"
   CONFIGURE_COMMAND ""
   BUILD_COMMAND ""
   INSTALL_COMMAND ""
