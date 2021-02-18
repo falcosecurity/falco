@@ -1724,22 +1724,23 @@
        container.image.repository endswith /prometheus-node-exporter or
        container.image.repository endswith /image-inspector))
 
-#602401143452.dkr.ecr is official AWS EKS registry. AWS has different ECR repo per region
-#602401143452.dkr.ecr.eu-west-1.amazonaws.com/eks/kube-proxy
-#602401143452.dkr.ecr.us-east-1.amazonaws.com/eks/kube-proxy
-#For this reason we use two macro to match all regions 
+# 602401143452.dkr.ecr is official AWS EKS registry. AWS has different ECR repo per region
+# 602401143452.dkr.ecr.eu-west-1.amazonaws.com/eks/kube-proxy
+# 602401143452.dkr.ecr.us-east-1.amazonaws.com/eks/kube-proxy
+# For this reason we use two macro to match all regions 
 - macro: allowed_aws_eks_registry_root
-    condition: >
-          (container.image.repository startswith "602401143452.dkr.ecr")
+  condition: >
+        (container.image.repository startswith "602401143452.dkr.ecr")
 
 - macro: aws_eks_image
-    condition: >
-          (allowed_aws_eks_registry_root and
-          (container.image.repository endswith ".amazonaws.com/amazon-k8s-cni" or
-          container.image.repository endswith ".amazonaws.com/eks/kube-proxy"))
+  condition: >
+        (allowed_aws_eks_registry_root and
+        (container.image.repository endswith ".amazonaws.com/amazon-k8s-cni" or
+        container.image.repository endswith ".amazonaws.com/eks/kube-proxy"))
+
 - macro: aws_eks_image_sensitive_mount
-    condition: >
-          (allowed_aws_eks_registry_root and container.image.repository endswith ".amazonaws.com/amazon-k8s-cni")
+  condition: >
+        (allowed_aws_eks_registry_root and container.image.repository endswith ".amazonaws.com/amazon-k8s-cni")
 
 
 # These images are allowed both to run with --privileged and to mount
