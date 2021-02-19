@@ -521,7 +521,7 @@
 
 - rule: K8s Serviceaccount Created
   desc: Detect any attempt to create a service account
-  condition: (kactivity and kcreate and serviceaccount and response_successful)
+  condition: (kactivity and kcreate and serviceaccount and non_system_user and response_successful)
   exceptions:
   output: K8s Serviceaccount Created (user=%ka.user.name user=%ka.target.name ns=%ka.target.namespace resp=%ka.response.code decision=%ka.auth.decision reason=%ka.auth.reason)
   priority: INFO
