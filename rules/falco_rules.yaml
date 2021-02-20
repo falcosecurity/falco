@@ -806,15 +806,10 @@
 # the following rule and lists.
 
 - list: monitored_directories
-  items: [/boot, /lib, /lib64, /usr/lib, /usr/local/lib, /usr/local/sbin, /usr/local/bin, /root/.ssh, /etc/cardserver]
+  items: [/boot, /lib, /lib64, /usr/lib, /usr/local/lib, /usr/local/sbin, /usr/local/bin, /root/.ssh]
 
-# Until https://github.com/draios/sysdig/pull/1153, which fixes
-# https://github.com/draios/sysdig/issues/1152, is widely available,
-# we can't use glob operators to match pathnames. Until then, we do a
-# looser check to match ssh directories.
-# When fixed, we will use "fd.name glob '/home/*/.ssh/*'"
 - macro: user_ssh_directory
-  condition: (fd.name startswith '/home' and fd.name contains '.ssh')
+  condition: (fd.name glob '/home/*/.ssh/*')
 
 - macro: mkinitramfs_writing_boot
   condition: (proc.pname in (mkinitramfs, update-initramf) and fd.directory=/boot)
