@@ -18,10 +18,12 @@ RUN apt-get update \
 	&& apt-get install -y --no-install-recommends \
 	bash-completion \
 	bc \
+	bison \
 	clang-7 \
 	ca-certificates \
 	curl \
 	dkms \
+	flex \
 	gnupg2 \
 	gcc \
 	jq \
