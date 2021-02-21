@@ -22,6 +22,7 @@ RUN apt-get update \
 	ca-certificates \
 	curl \
 	dkms \
+	flex \
 	gnupg2 \
 	gcc \
 	jq \
