@@ -3,7 +3,7 @@
 pythonversion=$(python -c 'import sys; version=sys.version_info[:3]; print("{0}.{1}.{2}".format(*version))')
 pipversion=$(pip --version | cut -d' ' -f 1,2,5,6)
 dockerversion=$(docker --version)
-avocadoversion=$(pip2 show avocado-framework | grep Version)
+avocadoversion=$(pip show avocado-framework | grep Version)
 avocadoversion=${avocadoversion#"Version: "}
 
 cat <<EOF
