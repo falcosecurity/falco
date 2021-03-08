@@ -191,6 +191,7 @@ static void display_fatal_err(const string &msg)
 
 // Splitting into key=value or key.subkey=value will be handled by configuration class.
 std::list<string> cmdline_options;
+std::set<string> ignored_event_names_cmdline;
 
 #ifndef MINIMAL_BUILD
 // Read a jsonl file containing k8s audit events and pass each to the engine.
@@ -352,6 +353,19 @@ uint64_t do_inspect(falco_engine *engine,
 	return num_evts;
 }
 
+static void unset_eventmask(sinsp *inspector, std::set<string> event_names)
+{
+	sinsp_evttables* einfo = inspector->get_event_info_tables();
+	const struct ppm_event_info* etable = einfo->m_event_info;
+	for(uint32_t j = 0; j < PPM_EVENT_MAX; j++)
+	{
+		if (event_names.count(etable[j].name) > 0)
+		{
+			inspector->unset_eventmask(j);
+		}
+	}
+}
+
 static void print_all_ignored_events(sinsp *inspector)
 {
 	sinsp_evttables* einfo = inspector->get_event_info_tables();
@@ -383,6 +397,11 @@ static void print_all_ignored_events(sinsp *inspector)
 				ignored_event_names.insert(name);
 			}
 		}
+	}
+
+	for(auto it : ignored_event_names_cmdline)
+	{
+		ignored_event_names.insert(it);
 	}
 
 	printf("Ignored Event(s):");
@@ -486,6 +505,7 @@ int falco_init(int argc, char **argv)
 			{"disable-cri-async", no_argument, 0, 0},
 			{"disable-source", required_argument, 0},
 			{"help", no_argument, 0, 'h'},
+			{"ignore-event", required_argument, 0, 0},
 			{"ignored-events", no_argument, 0, 'i'},
 			{"k8s-api-cert", required_argument, 0, 'K'},
 			{"k8s-api", required_argument, 0, 'k'},
@@ -664,6 +684,10 @@ int falco_init(int argc, char **argv)
 				else if (string(long_options[long_index].name) == "disable-cri-async")
 				{
 				  cri_async = false;
+				}
+				else if (string(long_options[long_index].name) == "ignore-event")
+				{
+					ignored_event_names_cmdline.insert(optarg);
 				}
 				else if (string(long_options[long_index].name) == "list")
 				{
@@ -1197,6 +1221,10 @@ int falco_init(int argc, char **argv)
 		if(!all_events)
 		{
 			inspector->start_dropping_mode(1);
+		}
+		if(ignored_event_names_cmdline.size() > 0)
+		{
+			unset_eventmask(inspector, ignored_event_names_cmdline);
 		}
 
 		if(outfile != "")
