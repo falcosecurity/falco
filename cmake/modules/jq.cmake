@@ -45,7 +45,7 @@ else ()
     #   https://github.com/stedolan/jq/issues/2061#issuecomment-593445920
     ExternalProject_Add(
             jq
-            URL "https://dl.bintray.com/falcosecurity/dependencies/jq-1.6.tar.gz"
+            URL "https://download.falco.org/dependencies/jq-1.6.tar.gz"
             URL_HASH "SHA256=787518068c35e244334cc79b8e56b60dbab352dff175b7f04a94f662b540bfd9"
             CONFIGURE_COMMAND ./configure --disable-maintainer-mode --enable-all-static --disable-dependency-tracking --with-oniguruma=builtin --prefix=${JQ_INSTALL_DIR}
             BUILD_COMMAND ${CMD_MAKE} LDFLAGS=-all-static
