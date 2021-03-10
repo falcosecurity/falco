@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+set -e
+
+usage() {
+    echo "usage: $0 -f <package.rpm> -r <rpm|rpm-dev>"
+    exit 1
+}
+
+check_program() {
+  if ! command -v $1 &> /dev/null
+  then
+      echo "$1 is required and could not be found"
+      exit
+  fi
+}
+
+# Add a package to the local RPM repository
+#
+# $1: path of the repository.
+# $2: path of the RPM file.
+add_rpm() {
+    cp -f $2 $1
+    pushd $1 > /dev/null
+    rm -f $(basename -- $2).asc
+    gpg --detach-sign --armor $(basename -- $2)
+    popd > /dev/null
+}
+
+# Update the local RPM repository
+#
+# $1: path of the repository.
+update_repo() {
+    pushd $1 > /dev/null
+    createrepo --update --no-database .
+    rm -f repodata/repomd.xml.asc
+    gpg --detach-sign --armor repodata/repomd.xml
+    popd > /dev/null
+}
+
+
+# parse options
+while getopts ":f::r:" opt; do
+    case "${opt}" in
+        f )
+          file=${OPTARG}
+          ;;
+        r )
+          repo="${OPTARG}"
+          [[ "${repo}" == "rpm" || "${repo}" == "rpm-dev" ]] || usage
+          ;;
+        : )
+          echo "invalid option: ${OPTARG} requires an argument" 1>&2
+          exit 1
+          ;;
+        \?)
+          echo "invalid option: ${OPTARG}" 1>&2
+          exit 1
+          ;;
+    esac
+done
+shift $((OPTIND-1))
+
+if [ -z "${file}" ] || [ -z "${repo}" ]; then
+    usage
+fi
+
+# check prerequisites
+check_program createrepo
+check_program gpg
+check_program aws
+
+# settings
+s3_bucket_repo="s3://falco-distribution/packages/${repo}"
+tmp_repo_path=/tmp/falco-$repo
+
+# prepere repository local copy
+echo "Fetching ${s3_bucket_repo}..."
+mkdir -p ${tmp_repo_path}
+aws s3 cp ${s3_bucket_repo} ${tmp_repo_path} --recursive
+
+# update the repo
+echo "Adding ${file}..."
+add_rpm ${tmp_repo_path} ${file}
+update_repo ${tmp_repo_path}
+
+# publish
+package=$(basename -- ${file})
+echo "Publishing ${package} to ${s3_bucket_repo}..."
+aws s3 cp ${tmp_repo_path}/${package} ${s3_bucket_repo}/${package} --acl public-read
+aws s3 cp ${tmp_repo_path}/${package}.asc ${s3_bucket_repo}/${package}.asc --acl public-read
+aws s3 sync ${tmp_repo_path}/repodata ${s3_bucket_repo}/repodata --delete --acl public-read
