@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+set -e
+
+usage() {
+    echo "usage: $0 -f <package.tar.gz> -r <bin|bin-dev> -a <arch>"
+    exit 1
+}
+
+# parse options
+while getopts ":f::r::a:" opt; do
+    case "${opt}" in
+        f )
+          file=${OPTARG}
+          ;;
+        r )
+          repo="${OPTARG}"
+          [[ "${repo}" == "bin" || "${repo}" == "bin-dev" ]] || usage
+          ;;
+        a )
+          arch=${OPTARG}
+          ;;
+        : )
+          echo "invalid option: ${OPTARG} requires an argument" 1>&2
+          exit 1
+          ;;
+        \?)
+          echo "invalid option: ${OPTARG}" 1>&2
+          exit 1
+          ;;
+    esac
+done
+shift $((OPTIND-1))
+
+if [ -z "${file}" ] || [ -z "${repo}" ] || [ -z "${arch}" ]; then
+    usage
+fi
+
+s3_bucket_repo="s3://falco-distribution/packages/${repo}/${arch}"
+
+# publish
+package=$(basename -- ${file})
+echo "Publishing ${package} to ${s3_bucket_repo}..."
+aws s3 cp ${file} ${s3_bucket_repo}/${package} --acl public-read
