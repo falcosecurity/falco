@@ -371,32 +371,44 @@ jobs:
   # Publish the packages
   "publish/packages-dev":
     docker:
-      - image: docker.bintray.io/jfrog/jfrog-cli-go:latest
+      - image: docker.io/amazon/aws-cli:latest
     steps:
       - attach_workspace:
           at: /
       - run:
-          name: Create versions
+          name: Setup
           command: |
-            FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
-            jfrog bt vs falcosecurity/deb-dev/falco/${FALCO_VERSION} --user poiana --key ${BINTRAY_SECRET} || jfrog bt vc falcosecurity/deb-dev/falco/${FALCO_VERSION} --desc="Falco (master)" --github-rel-notes=CHANGELOG.md --released=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z") --vcs-tag=${CIRCLE_SHA1} --user poiana --key ${BINTRAY_SECRET}
-            jfrog bt vs falcosecurity/rpm-dev/falco/${FALCO_VERSION} --user poiana --key ${BINTRAY_SECRET} || jfrog bt vc falcosecurity/rpm-dev/falco/${FALCO_VERSION} --desc="Falco (master)" --github-rel-notes=CHANGELOG.md --released=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z") --vcs-tag=${CIRCLE_SHA1} --user poiana --key ${BINTRAY_SECRET}
-            jfrog bt vs falcosecurity/bin-dev/falco/${FALCO_VERSION} --user poiana --key ${BINTRAY_SECRET} || jfrog bt vc falcosecurity/bin-dev/falco/${FALCO_VERSION} --desc="Falco (master)" --github-rel-notes=CHANGELOG.md --released=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z") --vcs-tag=${CIRCLE_SHA1} --user poiana --key ${BINTRAY_SECRET}
-      - run:
-          name: Publish deb-dev
-          command: |
-            FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
-            jfrog bt u /build/release/falco-${FALCO_VERSION}-x86_64.deb falcosecurity/deb-dev/falco/${FALCO_VERSION} stable/ --deb stable/main/amd64 --user poiana --key ${BINTRAY_SECRET} --publish --override
+            yum update -y
+            yum install createrepo gpg -y
+            echo $GPG_KEY | base64 -d | gpg --import
       - run:
           name: Publish rpm-dev
           command: |
             FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
-            jfrog bt u /build/release/falco-${FALCO_VERSION}-x86_64.rpm falcosecurity/rpm-dev/falco/${FALCO_VERSION} --user poiana --key ${BINTRAY_SECRET} --publish --override
+            /source/falco/scripts/publish-rpm -f /build/release/falco-${FALCO_VERSION}-x86_64.rpm -r rpm-dev
       - run:
           name: Publish bin-dev
           command: |
             FALCO_VERSION=$(cat /build-static/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
-            jfrog bt u /build-static/release/falco-${FALCO_VERSION}-x86_64.tar.gz falcosecurity/bin-dev/falco/${FALCO_VERSION} x86_64/ --user poiana --key ${BINTRAY_SECRET} --publish --override
+            /source/falco/scripts/publish-bin -f /build-static/release/falco-${FALCO_VERSION}-x86_64.tar.gz -r bin-dev -a x86_64
+  "publish/packages-deb-dev":
+    docker:
+      - image: docker.io/debian:stable
+    steps:
+      - attach_workspace:
+          at: /
+      - run:
+          name: Setup
+          command: |
+            apt update -y
+            apt-get install apt-utils bzip2 gpg python python-pip -y
+            pip install awscli
+            echo $GPG_KEY | base64 -d | gpg --import
+      - run:
+          name: Publish deb-dev
+          command: |
+            FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
+            /source/falco/scripts/publish-deb -f /build/release/falco-${FALCO_VERSION}-x86_64.deb -r deb-dev
   # Clenup the Falco development release packages
   "cleanup/packages-dev":
     docker:
@@ -635,7 +647,9 @@ workflows:
           requires:
             - "tests/integration"
       - "publish/packages-dev":
-          context: falco
+          context:
+            - falco
+            - test-infra
           filters:
             tags:
               ignore: /.*/
@@ -644,15 +658,28 @@ workflows:
           requires:
             - "rpm/sign"
             - "tests/integration-static"
-      - "cleanup/packages-dev":
-          context: falco
+      - "publish/packages-deb-dev":
+          context:
+            - falco
+            - test-infra
           filters:
             tags:
               ignore: /.*/
             branches:
               only: master
           requires:
-            - "publish/packages-dev"
+            - "tests/integration-static"
+      # todo(leogr): the cleanup job is intende to work with bintray, now deprecated,
+      #              do we still need it?
+      # - "cleanup/packages-dev":
+      #     context: falco
+      #     filters:
+      #       tags:
+      #         ignore: /.*/
+      #       branches:
+      #         only: master
+      #     requires:
+      #       - "publish/packages-dev"
       - "publish/docker-dev":
           context: falco
           filters:
@@ -662,6 +689,7 @@ workflows:
               only: master
           requires:
             - "publish/packages-dev"
+            - "publish/packages-deb-dev"
             - "tests/driver-loader/integration"
       - "publish/container-images-aws-dev":
           context: test-infra # contains Falco AWS credentials
