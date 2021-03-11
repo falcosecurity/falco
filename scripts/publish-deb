@@ -1,0 +1,127 @@
+#!/usr/bin/env bash
+set -e
+
+usage() {
+    echo "usage: $0 -f <package.deb> -r <deb|deb-dev>"
+    exit 1
+}
+
+check_program() {
+  if ! command -v $1 &> /dev/null
+  then
+      echo "$1 is required and could not be found"
+      exit
+  fi
+}
+
+# Add a package to the local DEB repository
+#
+# $1: path of the repository.
+# $2: suite (eg. "stable")
+# $3: path of the DEB file.
+add_deb() {
+    cp -f $3 $1/$2
+    pushd $1/$2 > /dev/null
+    rm -f $(basename -- $3).asc
+    gpg --detach-sign --armor $(basename -- $3)
+    popd > /dev/null
+}
+
+# Update the local DEB repository
+#
+# $1: path of the repository
+# $2: suite (eg. "stable")
+update_repo() {
+    # fixme(leogr): we cannot use apt-ftparchive --arch packages ...
+    # since our .deb files ends with "_x86_64" instead of "amd64".
+    # See https://manpages.debian.org/jessie/apt-utils/apt-ftparchive.1.en.html
+    #
+    # As a workaround, we temporarily stick here with "amd64" 
+    # (the only supported arch at the moment)
+    local arch=amd64
+
+    local component=main
+    local debs_dir=$2
+    local release_dir=dists/$2
+    local packages_dir=${release_dir}/${component}/binary-${arch}
+
+    pushd $1 > /dev/null
+
+    # packages metadata
+    apt-ftparchive packages ${debs_dir} > ${packages_dir}/Packages
+    gzip -c ${packages_dir}/Packages > ${packages_dir}/Packages.gz
+    bzip2 -z -c ${packages_dir}/Packages > ${packages_dir}/Packages.bz2
+    
+    # release metadata
+    apt-ftparchive release \
+      -o APT::FTPArchive::Release::Origin=Falco \
+      -o APT::FTPArchive::Release::Label=Falco \
+      -o APT::FTPArchive::Release::Suite=$2 \
+      -o APT::FTPArchive::Release::Codename=$2 \
+      -o APT::FTPArchive::Release::Components=${component} \
+      -o APT::FTPArchive::Release::Architectures=${arch} \
+      ${release_dir} > ${release_dir}/Release
+
+    # release signature
+    gpg --detach-sign --armor ${release_dir}/Release
+    rm -f ${release_dir}/Release.gpg
+    mv ${release_dir}/Release.asc ${release_dir}/Release.gpg
+
+    popd > /dev/null
+}
+
+# parse options
+while getopts ":f::r:" opt; do
+    case "${opt}" in
+        f )
+          file=${OPTARG}
+          ;;
+        r )
+          repo="${OPTARG}"
+          [[ "${repo}" == "deb" || "${repo}" == "deb-dev" ]] || usage
+          ;;
+        : )
+          echo "invalid option: ${OPTARG} requires an argument" 1>&2
+          exit 1
+          ;;
+        \?)
+          echo "invalid option: ${OPTARG}" 1>&2
+          exit 1
+          ;;
+    esac
+done
+shift $((OPTIND-1))
+
+# check options
+if [ -z "${file}" ] || [ -z "${repo}" ]; then
+    usage
+fi
+
+# check prerequisites
+check_program apt-ftparchive
+check_program gzip
+check_program bzip2
+check_program gpg
+check_program aws
+
+# settings
+debSuite=stable
+s3_bucket_repo="s3://falco-distribution/packages/${repo}"
+tmp_repo_path=/tmp/falco-$repo
+
+# prepere repository local copy
+echo "Fetching ${s3_bucket_repo}..."
+mkdir -p ${tmp_repo_path}
+aws s3 cp ${s3_bucket_repo} ${tmp_repo_path} --recursive
+
+# update the repo
+echo "Adding ${file}..."
+add_deb ${tmp_repo_path} ${debSuite} ${file}
+update_repo ${tmp_repo_path} ${debSuite}
+
+# publish
+package=$(basename -- ${file})
+echo "Publishing ${package} to ${s3_bucket_repo}..."
+aws s3 cp ${tmp_repo_path}/${debSuite}/${package} ${s3_bucket_repo}/${debSuite}/${package} --acl public-read
+aws s3 cp ${tmp_repo_path}/${debSuite}/${package}.asc ${s3_bucket_repo}/${debSuite}/${package}.asc --acl public-read
+aws s3 sync ${tmp_repo_path}/dists ${s3_bucket_repo}/dists --delete --acl public-read
