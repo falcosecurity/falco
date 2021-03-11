@@ -27,7 +27,7 @@ if(NOT FALCO_VERSION)
       set(FALCO_VERSION "0.0.0")
     endif()
     # Format FALCO_VERSION to be semver with prerelease and build part
-    string(REPLACE "-g" "+" FALCO_VERSION "${FALCO_VERSION}")
+    string(REPLACE "-g" "~" FALCO_VERSION "${FALCO_VERSION}")
   else()
     # A tag has been found: use it as the Falco version
     set(FALCO_VERSION "${FALCO_TAG}")
