@@ -8,7 +8,7 @@ ENV VERSION_BUCKET=${VERSION_BUCKET}
 
 WORKDIR /
 
-ADD https://bintray.com/api/ui/download/falcosecurity/${VERSION_BUCKET}/x86_64/falco-${FALCO_VERSION}-x86_64.tar.gz /
+ADD https://download.falco.org/packages/${VERSION_BUCKET}/x86_64/falco-${FALCO_VERSION}-x86_64.tar.gz /
 
 RUN tar -xvf falco-${FALCO_VERSION}-x86_64.tar.gz && \
     rm -f falco-${FALCO_VERSION}-x86_64.tar.gz && \
