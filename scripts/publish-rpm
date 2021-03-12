@@ -71,6 +71,7 @@ check_program aws
 
 # settings
 s3_bucket_repo="s3://falco-distribution/packages/${repo}"
+cloudfront_path="/packages/${repo}"
 tmp_repo_path=/tmp/falco-$repo
 
 # prepere repository local copy
@@ -89,3 +90,7 @@ echo "Publishing ${package} to ${s3_bucket_repo}..."
 aws s3 cp ${tmp_repo_path}/${package} ${s3_bucket_repo}/${package} --acl public-read
 aws s3 cp ${tmp_repo_path}/${package}.asc ${s3_bucket_repo}/${package}.asc --acl public-read
 aws s3 sync ${tmp_repo_path}/repodata ${s3_bucket_repo}/repodata --delete --acl public-read
+
+aws cloudfront create-invalidation --distribution-id ${AWS_CLOUDFRONT_DIST_ID} --paths ${cloudfront_path}/${package}
+aws cloudfront create-invalidation --distribution-id ${AWS_CLOUDFRONT_DIST_ID} --paths ${cloudfront_path}/${package}.asc
+aws cloudfront create-invalidation --distribution-id ${AWS_CLOUDFRONT_DIST_ID} --paths ${cloudfront_path}/repodata/*

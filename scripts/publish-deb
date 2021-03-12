@@ -107,6 +107,7 @@ check_program aws
 # settings
 debSuite=stable
 s3_bucket_repo="s3://falco-distribution/packages/${repo}"
+cloudfront_path="/packages/${repo}"
 tmp_repo_path=/tmp/falco-$repo
 
 # prepere repository local copy
@@ -125,3 +126,7 @@ echo "Publishing ${package} to ${s3_bucket_repo}..."
 aws s3 cp ${tmp_repo_path}/${debSuite}/${package} ${s3_bucket_repo}/${debSuite}/${package} --acl public-read
 aws s3 cp ${tmp_repo_path}/${debSuite}/${package}.asc ${s3_bucket_repo}/${debSuite}/${package}.asc --acl public-read
 aws s3 sync ${tmp_repo_path}/dists ${s3_bucket_repo}/dists --delete --acl public-read
+
+aws cloudfront create-invalidation --distribution-id ${AWS_CLOUDFRONT_DIST_ID} --paths ${cloudfront_path}/${debSuite}/${package}
+aws cloudfront create-invalidation --distribution-id ${AWS_CLOUDFRONT_DIST_ID} --paths ${cloudfront_path}/${debSuite}/${package}.asc
+aws cloudfront create-invalidation --distribution-id ${AWS_CLOUDFRONT_DIST_ID} --paths ${cloudfront_path}/dists/*
