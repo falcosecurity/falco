@@ -43,8 +43,8 @@ void syscall_evt_drop_mgr::init(sinsp *inspector,
 	m_inspector = inspector;
 	m_outputs = outputs;
 	m_actions = actions;
-	m_bucket.init(rate, max_tokens);
 	m_threshold = threshold;
+	m_bucket.init(rate, max_tokens, sinsp_utils::get_current_time_ns());
 
 	m_inspector->get_capture_stats(&m_last_stats);
 

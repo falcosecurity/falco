@@ -67,7 +67,7 @@ protected:
 	sinsp *m_inspector;
 	falco_outputs *m_outputs;
 	syscall_evt_drop_actions m_actions;
-	token_bucket m_bucket;
+	raw_token_bucket m_bucket;
 	uint64_t m_next_check_ts;
 	scap_stats m_last_stats;
 	bool m_simulate_drops;

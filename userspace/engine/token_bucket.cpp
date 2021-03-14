@@ -19,38 +19,18 @@ limitations under the License.
 #include <sys/time.h>
 
 #include "token_bucket.h"
-#include "utils.h"
+#include <chrono>
 #include "banned.h" // This raises a compilation error when certain functions are used
 
-token_bucket::token_bucket():
-	token_bucket(sinsp_utils::get_current_time_ns)
-{
-}
-
-token_bucket::token_bucket(std::function<uint64_t()> timer)
-{
-	m_timer = timer;
-	init(1, 1);
-}
-
-token_bucket::~token_bucket()
-{
-}
-
-void token_bucket::init(double rate, double max_tokens, uint64_t now)
+void raw_token_bucket::init(double rate, double max_tokens, uint64_t now)
 {
 	m_rate = rate;
 	m_max_tokens = max_tokens;
 	m_tokens = max_tokens;
-	m_last_seen = now == 0 ? m_timer() : now;
+	m_last_seen = now;
 }
 
-bool token_bucket::claim()
-{
-	return claim(1, m_timer());
-}
-
-bool token_bucket::claim(double tokens, uint64_t now)
+bool raw_token_bucket::claim(double tokens, uint64_t now)
 {
 	double tokens_gained = m_rate * ((now - m_last_seen) / (1000000000.0));
 	m_last_seen = now;
@@ -78,12 +58,39 @@ bool token_bucket::claim(double tokens, uint64_t now)
 	return true;
 }
 
-double token_bucket::get_tokens()
+double raw_token_bucket::get_tokens()
 {
 	return m_tokens;
 }
 
-uint64_t token_bucket::get_last_seen()
+uint64_t raw_token_bucket::get_last_seen()
 {
 	return m_last_seen;
+}
+
+// get_monotonic_clock_time_ns returns the monotonic clock time in ns.
+// Note that the returned value is only useful for computing the elapsed time
+// between two intervals, it should ne be interpreted as real time.
+uint64_t get_monotonic_clock_time_ns()
+{
+	return std::chrono::duration_cast<std::chrono::nanoseconds>(
+		       std::chrono::steady_clock::now().time_since_epoch())
+		.count();
+}
+
+token_bucket::token_bucket(double rate, double max_tokens, time_getter timer):
+	m_timer(timer)
+{
+	init(rate, max_tokens, m_timer());
+}
+
+token_bucket::token_bucket(double rate, double max_tokens):
+	m_timer(get_monotonic_clock_time_ns)
+{
+	init(rate, max_tokens, m_timer());
+}
+
+bool token_bucket::claim(double n)
+{
+	return raw_token_bucket::claim(n, m_timer());
 }

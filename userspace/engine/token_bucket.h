@@ -19,30 +19,30 @@ limitations under the License.
 #include <cstdint>
 #include <functional>
 
-// A simple token bucket that accumulates tokens at a fixed rate and allows
+// A token bucket that accumulates tokens at a fixed rate and allows
 // for limited bursting in the form of "banked" tokens.
-class token_bucket
+//
+// It is up to the caller to provide the time when init and claim methods are
+// invoked, prefer using token_bucket when possible.
+//
+// This class is not thread safe.
+class raw_token_bucket
 {
 public:
-	token_bucket();
-	token_bucket(std::function<uint64_t()> timer);
-	virtual ~token_bucket();
+	raw_token_bucket() = default;
+	virtual ~raw_token_bucket() = default;
 
 	//
 	// Initialize the token bucket and start accumulating tokens
 	//
-	void init(double rate, double max_tokens, uint64_t now = 0);
+	void init(double rate, double max_tokens, uint64_t now);
 
 	//
-	// Try to claim tokens tokens from the token bucket, using a
+	// Try to claim tokens from the token bucket, using a
 	// timestamp of now. Returns true if the tokens could be
 	// claimed. Also updates internal metrics.
 	//
 	bool claim(double tokens, uint64_t now);
-
-	// Simpler version of claim that claims a single token and
-	// uses the current time for now
-	bool claim();
 
 	// Return the current number of tokens available
 	double get_tokens();
@@ -51,27 +51,48 @@ public:
 	uint64_t get_last_seen();
 
 private:
-	std::function<uint64_t()> m_timer;
-
 	//
 	// The number of tokens generated per second.
 	//
-	double m_rate;
+	double m_rate{1};
 
 	//
 	// The maximum number of tokens that can be banked for future
 	// claim()s.
 	//
-	double m_max_tokens;
+	double m_max_tokens{1};
 
 	//
 	// The current number of tokens
 	//
-	double m_tokens;
+	double m_tokens{1};
 
 	//
 	// The last time claim() was called (or the object was created).
 	// Nanoseconds since the epoch.
 	//
 	uint64_t m_last_seen;
+};
+
+// time_getter returns current time in ns.
+using time_getter = std::function<uint64_t()>;
+
+// A facade for raw_token_bucket hiding timestamp handling to the caller.
+// The token bucket is initialized and thus starts accumulating tokens at
+// construction time.
+class token_bucket : private raw_token_bucket
+{
+public:
+	token_bucket(double rate, double max_tokens);
+	token_bucket(double rate, double max_tokens, time_getter timer);
+	virtual ~token_bucket() = default;
+
+	// Claims n tokens.
+	bool claim(double n = 1);
+
+	using raw_token_bucket::get_last_seen;
+	using raw_token_bucket::get_tokens;
+
+private:
+	time_getter m_timer;
 };

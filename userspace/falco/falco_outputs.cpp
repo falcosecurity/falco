@@ -85,8 +85,7 @@ void falco_outputs::init(bool json_output,
 
 	if(rate_limit_enabled)
 	{
-		m_notifications_tb.reset(new token_bucket());
-		m_notifications_tb->init(rate, max_burst);
+		m_notifications_tb.reset(new token_bucket(rate, max_burst));
 	}
 
 	m_buffered = buffered;
