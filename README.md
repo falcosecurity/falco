@@ -11,11 +11,54 @@ Want to talk? Join us on the [#falco](https://kubernetes.slack.com/archives/CMWH
 
 Read the [change log](CHANGELOG.md).
 
+<!-- 
+Badges in the following table are constructed by using the
+https://img.shields.io/badge/dynamic/xml endpoint.
+
+Parameters are configured for fetching packages from S3 before 
+(filtered by prefix, sorted in ascending order) and for picking 
+the latest package by using an XPath selector after.
+
+
+- Common query parameters:
+
+color=#300aec7
+style=flat-square
+label=Falco
+
+
+- DEB packages parameters:
+
+url=https://falco-distribution.s3-eu-west-1.amazonaws.com/?prefix=packages/deb/stable/falco-
+query=substring-before(substring-after((/*[name()='ListBucketResult']/*[name()='Contents'])[last()]/*[name()='Key'],"falco-"),".asc")
+
+
+- RPM packages parameters:
+
+url=https://falco-distribution.s3-eu-west-1.amazonaws.com/?prefix=packages/rpm/falco-
+query=substring-before(substring-after((/*[name()='ListBucketResult']/*[name()='Contents'])[last()]/*[name()='Key'],"falco-"),".asc")
+
+
+BIN packages parameters:
+
+url=https://falco-distribution.s3-eu-west-1.amazonaws.com/?prefix=packages/bin/x86_64/falco-
+query=substring-after((/*[name()='ListBucketResult']/*[name()='Contents'])[last()]/*[name()='Key'], "falco-")
+
+
+Notes:
+ - if more than 1000 items are present under as S3 prefix, 
+   the actual latest package will be not picked;
+   see https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectsV2.html
+ - for `-dev` packages, the S3 prefix is modified accordingly
+ - finally, all parameters are URL encoded and appended to the badge endpoint
+
+-->
+
 |        | development                                                                                                                 | stable                                                                                                              |
 |--------|-----------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
-| rpm    | [![rpm-dev](https://img.shields.io/bintray/v/falcosecurity/rpm-dev/falco?label=Falco&color=%2300aec7&style=flat-square)][1] | [![rpm](https://img.shields.io/bintray/v/falcosecurity/rpm/falco?label=Falco&color=%23005763&style=flat-square)][2] |
-| deb    | [![deb-dev](https://img.shields.io/bintray/v/falcosecurity/deb-dev/falco?label=Falco&color=%2300aec7&style=flat-square)][3] | [![deb](https://img.shields.io/bintray/v/falcosecurity/deb/falco?label=Falco&color=%23005763&style=flat-square)][4] |
-| binary | [![bin-dev](https://img.shields.io/bintray/v/falcosecurity/bin-dev/falco?label=Falco&color=%2300aec7&style=flat-square)][5] | [![bin](https://img.shields.io/bintray/v/falcosecurity/bin/falco?label=Falco&color=%23005763&style=flat-square)][6] |
+| rpm    | [![rpm-dev](https://img.shields.io/badge/dynamic/xml?color=%2300aec7&style=flat-square&label=Falco&query=substring-before%28substring-after%28%28%2F%2A%5Bname%28%29%3D%27ListBucketResult%27%5D%2F%2A%5Bname%28%29%3D%27Contents%27%5D%29%5Blast%28%29%5D%2F%2A%5Bname%28%29%3D%27Key%27%5D%2C%22falco-%22%29%2C%22.asc%22%29&url=https%3A%2F%2Ffalco-distribution.s3-eu-west-1.amazonaws.com%2F%3Fprefix%3Dpackages%2Frpm-dev%2Ffalco-)][1] | [![rpm](https://img.shields.io/badge/dynamic/xml?color=%2300aec7&style=flat-square&label=Falco&query=substring-before%28substring-after%28%28%2F%2A%5Bname%28%29%3D%27ListBucketResult%27%5D%2F%2A%5Bname%28%29%3D%27Contents%27%5D%29%5Blast%28%29%5D%2F%2A%5Bname%28%29%3D%27Key%27%5D%2C%22falco-%22%29%2C%22.asc%22%29&url=https%3A%2F%2Ffalco-distribution.s3-eu-west-1.amazonaws.com%2F%3Fprefix%3Dpackages%2Frpm%2Ffalco-)][2] |
+| deb    | [![deb-dev](https://img.shields.io/badge/dynamic/xml?color=%2300aec7&style=flat-square&label=Falco&query=substring-before%28substring-after%28%28%2F%2A%5Bname%28%29%3D%27ListBucketResult%27%5D%2F%2A%5Bname%28%29%3D%27Contents%27%5D%29%5Blast%28%29%5D%2F%2A%5Bname%28%29%3D%27Key%27%5D%2C%22falco-%22%29%2C%22.asc%22%29&url=https%3A%2F%2Ffalco-distribution.s3-eu-west-1.amazonaws.com%2F%3Fprefix%3Dpackages%2Fdeb-dev%2Fstable%2Ffalco-)][3] | [![deb](https://img.shields.io/badge/dynamic/xml?color=%2300aec7&style=flat-square&label=Falco&query=substring-before%28substring-after%28%28%2F%2A%5Bname%28%29%3D%27ListBucketResult%27%5D%2F%2A%5Bname%28%29%3D%27Contents%27%5D%29%5Blast%28%29%5D%2F%2A%5Bname%28%29%3D%27Key%27%5D%2C%22falco-%22%29%2C%22.asc%22%29&url=https%3A%2F%2Ffalco-distribution.s3-eu-west-1.amazonaws.com%2F%3Fprefix%3Dpackages%2Fdeb%2Fstable%2Ffalco-)][4] |
+| binary | [![bin-dev](https://img.shields.io/badge/dynamic/xml?color=%2300aec7&style=flat-square&label=Falco&query=substring-after%28%28%2F%2A%5Bname%28%29%3D%27ListBucketResult%27%5D%2F%2A%5Bname%28%29%3D%27Contents%27%5D%29%5Blast%28%29%5D%2F%2A%5Bname%28%29%3D%27Key%27%5D%2C%20%22falco-%22%29&url=https%3A%2F%2Ffalco-distribution.s3-eu-west-1.amazonaws.com%2F%3Fprefix%3Dpackages%2Fbin-dev%2Fx86_64%2Ffalco-)][5] | [![bin](https://img.shields.io/badge/dynamic/xml?color=%2300aec7&style=flat-square&label=Falco&query=substring-after%28%28%2F%2A%5Bname%28%29%3D%27ListBucketResult%27%5D%2F%2A%5Bname%28%29%3D%27Contents%27%5D%29%5Blast%28%29%5D%2F%2A%5Bname%28%29%3D%27Key%27%5D%2C%20%22falco-%22%29&url=https%3A%2F%2Ffalco-distribution.s3-eu-west-1.amazonaws.com%2F%3Fprefix%3Dpackages%2Fbin%2Fx86_64%2Ffalco-)][6] |
 
 ---
 
@@ -99,9 +142,9 @@ Please report security vulnerabilities following the community process documente
 Falco is licensed to you under the [Apache 2.0](./COPYING) open source license.
 
 
-[1]: https://dl.bintray.com/falcosecurity/rpm-dev
-[2]: https://dl.bintray.com/falcosecurity/rpm
-[3]: https://dl.bintray.com/falcosecurity/deb-dev/stable
-[4]: https://dl.bintray.com/falcosecurity/deb/stable
-[5]: https://dl.bintray.com/falcosecurity/bin-dev/x86_64
-[6]: https://dl.bintray.com/falcosecurity/bin/x86_64
+[1]: https://download.falco.org/?prefix=packages/rpm-dev/
+[2]: https://download.falco.org/?prefix=packages/rpm/
+[3]: https://download.falco.org/?prefix=packages/deb-dev/stable/
+[4]: https://download.falco.org/?prefix=packages/deb/stable/
+[5]: https://download.falco.org/?prefix=packages/bin-dev/x86_64/
+[6]: https://download.falco.org/?prefix=packages/bin/x86_64/

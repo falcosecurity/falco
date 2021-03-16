@@ -65,9 +65,9 @@ Now assume `x.y.z` is the new version.
 
     | Packages | Download                                                                                                                                               |
     | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-    | rpm      | [![rpm](https://img.shields.io/badge/Falco-x.y.z-%2300aec7?style=flat-square)](https://dl.bintray.com/falcosecurity/rpm/falco-x.y.z-x86_64.rpm)        |
-    | deb      | [![deb](https://img.shields.io/badge/Falco-x.y.z-%2300aec7?style=flat-square)](https://dl.bintray.com/falcosecurity/deb/stable/falco-x.y.z-x86_64.deb) |
-    | tgz      | [![tgz](https://img.shields.io/badge/Falco-x.y.z-%2300aec7?style=flat-square)](https://dl.bintray.com/falcosecurity/bin/x86_64/falco-x.y.z-x86_64.deb) |
+    | rpm      | [![rpm](https://img.shields.io/badge/Falco-x.y.z-%2300aec7?style=flat-square)](https://download.falco.org/packages/rpm/falco-x.y.z-x86_64.rpm)        |
+    | deb      | [![deb](https://img.shields.io/badge/Falco-x.y.z-%2300aec7?style=flat-square)](https://download.falco.org/packages/deb/stable/falco-x.y.z-x86_64.deb) |
+    | tgz      | [![tgz](https://img.shields.io/badge/Falco-x.y.z-%2300aec7?style=flat-square)](https://download.falco.org/packages/bin/x86_64/falco-x.y.z-x86_64.tar.gz) |
 
     | Images                                                                      |
     | --------------------------------------------------------------------------- |
