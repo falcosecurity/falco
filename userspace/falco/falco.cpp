@@ -41,6 +41,7 @@ limitations under the License.
 #include "event_drops.h"
 #include "configuration.h"
 #include "falco_engine.h"
+#include "falco_engine_version.h"
 #include "config_falco.h"
 #include "statsfilewriter.h"
 #ifndef MINIMAL_BUILD
@@ -938,6 +939,7 @@ int falco_init(int argc, char **argv)
 			support["system_info"]["version"] = sysinfo.version;
 			support["system_info"]["machine"] = sysinfo.machine;
 			support["cmdline"] = cmdline;
+			support["engine_info"]["engine_version"] = FALCO_ENGINE_VERSION;
 			support["config"] = read_file(conf_filename);
 			support["rules_files"] = nlohmann::json::array();
 			for(auto filename : config.m_rules_filenames)
