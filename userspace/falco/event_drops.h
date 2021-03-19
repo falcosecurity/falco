@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2019 The Falco Authors.
+Copyright (C) 2021 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -23,25 +23,28 @@ limitations under the License.
 #include "logger.h"
 #include "falco_outputs.h"
 
+// The possible actions that this class can take upon
+// detecting a syscall event drop.
+enum class syscall_evt_drop_action : uint8_t
+{
+	IGNORE = 0,
+	LOG,
+	ALERT,
+	EXIT
+};
+
+using syscall_evt_drop_actions = std::set<syscall_evt_drop_action>;
+
 class syscall_evt_drop_mgr
 {
 public:
-	// The possible actions that this class can take upon
-	// detecting a syscall event drop.
-	enum action
-	{
-		ACT_IGNORE = 0,
-		ACT_LOG,
-		ACT_ALERT,
-		ACT_EXIT,
-	};
-
 	syscall_evt_drop_mgr();
 	virtual ~syscall_evt_drop_mgr();
 
 	void init(sinsp *inspector,
 		  falco_outputs *outputs,
-		  std::set<action> &actions,
+		  syscall_evt_drop_actions &actions,
+		  double threshold,
 		  double rate,
 		  double max_tokens,
 		  bool simulate_drops);
@@ -63,9 +66,10 @@ protected:
 	uint64_t m_num_actions;
 	sinsp *m_inspector;
 	falco_outputs *m_outputs;
-	std::set<action> m_actions;
+	syscall_evt_drop_actions m_actions;
 	token_bucket m_bucket;
 	uint64_t m_next_check_ts;
 	scap_stats m_last_stats;
 	bool m_simulate_drops;
+	double m_threshold;
 };
