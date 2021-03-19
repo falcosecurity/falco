@@ -80,7 +80,7 @@ buffered_outputs: false
 #
 # The rate at which log/alert messages are emitted is governed by a
 # token bucket. The rate corresponds to one message every 30 seconds
-# with a burst of one message.
+# with a burst of one message (by default).
 #
 # The messages are emitted when the percentage of dropped system calls
 # with respect the number of events in the last second

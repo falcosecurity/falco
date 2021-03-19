@@ -87,14 +87,11 @@ bool syscall_evt_drop_mgr::process_event(sinsp *inspector, sinsp_evt *evt)
 			delta.n_drops++;
 		}
 
-		if(m_simulate_drops || (delta.n_drops > 0 && delta.n_evts > 0))
+		if(delta.n_drops > 0)
 		{
 			double ratio = delta.n_drops;
-			// Number of events can possiblity be zero here only when simulating drops
-			// In which case, ratio holds an infinite value
-			// Assuming IEC 559 (aka IEEE 754 - std::numeric_limits<T>::is_iec559) is true
-			// Anyways, this is always greater than zero when not simulating drops
-			ratio /= delta.n_evts;
+			// Assuming the number of event does not contains the dropped ones
+			ratio /= delta.n_drops + delta.n_evts;
 
 			// When simulating drops the threshold is always zero
 			if(ratio > m_threshold)
