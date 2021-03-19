@@ -239,7 +239,7 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 	}
 
 	m_syscall_evt_drop_threshold = m_config->get_scalar<double>("syscall_event_drops", "threshold", .1);
-	if(m_syscall_evt_drop_threshold > 100)
+	if(m_syscall_evt_drop_threshold < 0 || m_syscall_evt_drop_threshold > 1)
 	{
 		throw logic_error("Error reading config file (" + m_config_file + "): syscall event drops threshold must be a double in the range [0, 1]");
 	}
