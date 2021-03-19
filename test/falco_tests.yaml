@@ -1236,6 +1236,24 @@ trace_files: !mux
     stderr_contains:
       - "syscall event drop action \"log\" does not make sense with the \"ignore\" action"
 
+  monitor_syscall_drops_threshold_oor:
+    exit_status: 1
+    rules_file:
+      - rules/single_rule.yaml
+    conf_file: confs/drops_threshold_oor.yaml
+    trace_file: trace_files/ping_sendto.scap
+    stderr_contains:
+      - "syscall event drops threshold must be a double in the range"
+
+  monitor_syscall_drops_threshold_neg:
+    exit_status: 1
+    rules_file:
+      - rules/single_rule.yaml
+    conf_file: confs/drops_threshold_neg.yaml
+    trace_file: trace_files/ping_sendto.scap
+    stderr_contains:
+      - "syscall event drops threshold must be a double in the range"
+
   monitor_syscall_drops_log:
     exit_status: 0
     rules_file:
