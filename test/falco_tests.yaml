@@ -1227,6 +1227,15 @@ trace_files: !mux
     stdout_not_contains:
       - "Falco internal: syscall event drop"
 
+  monitor_syscall_drops_ignore_and_log:
+    exit_status: 1
+    rules_file:
+      - rules/single_rule.yaml
+    conf_file: confs/drops_ignore_log.yaml
+    trace_file: trace_files/ping_sendto.scap
+    stderr_contains:
+      - "syscall event drop action \"log\" does not make sense with the \"ignore\" action"
+
   monitor_syscall_drops_log:
     exit_status: 0
     rules_file:

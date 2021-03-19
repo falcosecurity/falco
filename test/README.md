@@ -26,7 +26,7 @@ make test-trace-files
 
 It prepares the fixtures (`json` and `scap` files) needed by the integration tests.
 
-Using `virtualenv` the steps to locally run a specific test suite are the following ones (from this directory):
+Using `virtualenv` the steps to locally run a specific test suite are the following ones (**from this directory**):
 
 ```console
 virtualenv venv
