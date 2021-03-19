@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2020 The Falco Authors.
+Copyright (C) 2021 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -205,34 +205,46 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 	{
 		if(act == "ignore")
 		{
-			m_syscall_evt_drop_actions.insert(syscall_evt_drop_mgr::ACT_IGNORE);
+			m_syscall_evt_drop_actions.insert(syscall_evt_drop_action::IGNORE);
 		}
 		else if(act == "log")
 		{
-			m_syscall_evt_drop_actions.insert(syscall_evt_drop_mgr::ACT_LOG);
+			if(m_syscall_evt_drop_actions.count(syscall_evt_drop_action::IGNORE))
+			{
+				throw logic_error("Error reading config file (" + m_config_file + "): syscall event drop action \"" + act + "\" does not make sense with the \"ignore\" action");
+			}
+			m_syscall_evt_drop_actions.insert(syscall_evt_drop_action::LOG);
 		}
 		else if(act == "alert")
 		{
-			m_syscall_evt_drop_actions.insert(syscall_evt_drop_mgr::ACT_ALERT);
+			if(m_syscall_evt_drop_actions.count(syscall_evt_drop_action::IGNORE))
+			{
+				throw logic_error("Error reading config file (" + m_config_file + "): syscall event drop action \"" + act + "\" does not make sense with the \"ignore\" action");
+			}
+			m_syscall_evt_drop_actions.insert(syscall_evt_drop_action::ALERT);
 		}
 		else if(act == "exit")
 		{
-			m_syscall_evt_drop_actions.insert(syscall_evt_drop_mgr::ACT_EXIT);
+			m_syscall_evt_drop_actions.insert(syscall_evt_drop_action::EXIT);
 		}
 		else
 		{
-			throw logic_error("Error reading config file (" + m_config_file + "): syscall event drop action " + act + " must be one of \"ignore\", \"log\", \"alert\", or \"exit\"");
+			throw logic_error("Error reading config file (" + m_config_file + "): available actions for syscall event drops are \"ignore\", \"log\", \"alert\", and \"exit\"");
 		}
 	}
 
 	if(m_syscall_evt_drop_actions.empty())
 	{
-		m_syscall_evt_drop_actions.insert(syscall_evt_drop_mgr::ACT_IGNORE);
+		m_syscall_evt_drop_actions.insert(syscall_evt_drop_action::IGNORE);
 	}
 
-	m_syscall_evt_drop_rate = m_config->get_scalar<double>("syscall_event_drops", "rate", 0.3333);
-	m_syscall_evt_drop_max_burst = m_config->get_scalar<double>("syscall_event_drops", "max_burst", 10);
-
+	m_syscall_evt_drop_threshold = m_config->get_scalar<double>("syscall_event_drops", "threshold", .1);
+	if(m_syscall_evt_drop_threshold > 100)
+	{
+		throw logic_error("Error reading config file (" + m_config_file + "): syscall event drops threshold must be a double in the range [0, 1]");
+	}
+	m_syscall_evt_drop_rate = m_config->get_scalar<double>("syscall_event_drops", "rate", .03333);
+	m_syscall_evt_drop_max_burst = m_config->get_scalar<double>("syscall_event_drops", "max_burst", 1);
 	m_syscall_evt_simulate_drops = m_config->get_scalar<bool>("syscall_event_drops", "simulate_drops", false);
 }
 

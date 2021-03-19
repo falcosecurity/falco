@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2019 The Falco Authors.
+Copyright (C) 2021 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -111,7 +111,7 @@ public:
 		}
 		catch(const YAML::BadConversion& ex)
 		{
-			std::cerr << "Cannot read config file (" + m_path + "): wrong type at key " + key + "\n";
+			std::cerr << "Cannot read config file (" + m_path + "): wrong type at key " + key + "." + subkey + "\n";
 			throw;
 		}
 
@@ -172,7 +172,7 @@ public:
 		}
 		catch(const YAML::BadConversion& ex)
 		{
-			std::cerr << "Cannot read config file (" + m_path + "): wrong type at key " + key + "\n";
+			std::cerr << "Cannot read config file (" + m_path + "): wrong type at key " + key + "." + subkey +"\n";
 			throw;
 		}
 	}
@@ -219,7 +219,8 @@ public:
 	std::string m_webserver_k8s_healthz_endpoint;
 	bool m_webserver_ssl_enabled;
 	std::string m_webserver_ssl_certificate;
-	std::set<syscall_evt_drop_mgr::action> m_syscall_evt_drop_actions;
+	syscall_evt_drop_actions m_syscall_evt_drop_actions;
+	double m_syscall_evt_drop_threshold;
 	double m_syscall_evt_drop_rate;
 	double m_syscall_evt_drop_max_burst;
 
