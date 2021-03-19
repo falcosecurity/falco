@@ -139,7 +139,7 @@ bool syscall_evt_drop_mgr::perform_actions(uint64_t now, scap_stats &delta, bool
 			break;
 
 		case syscall_evt_drop_action::LOG:
-			falco_logger::log(LOG_ERR, msg);
+			falco_logger::log(LOG_DEBUG, msg);
 			break;
 
 		case syscall_evt_drop_action::ALERT:
@@ -151,7 +151,7 @@ bool syscall_evt_drop_mgr::perform_actions(uint64_t now, scap_stats &delta, bool
 			output_fields["n_drops_pf"] = std::to_string(delta.n_drops_pf);
 			output_fields["n_drops_bug"] = std::to_string(delta.n_drops_bug);
 			output_fields["ebpf_enabled"] = std::to_string(bpf_enabled);
-			m_outputs->handle_msg(now, falco_common::PRIORITY_CRITICAL, msg, rule, output_fields);
+			m_outputs->handle_msg(now, falco_common::PRIORITY_DEBUG, msg, rule, output_fields);
 			break;
 		}
 		case syscall_evt_drop_action::EXIT:
