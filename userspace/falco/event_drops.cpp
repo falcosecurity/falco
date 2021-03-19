@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2020 The Falco Authors.
+Copyright (C) 2021 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -34,7 +34,8 @@ syscall_evt_drop_mgr::~syscall_evt_drop_mgr()
 
 void syscall_evt_drop_mgr::init(sinsp *inspector,
 				falco_outputs *outputs,
-				std::set<action> &actions,
+				syscall_evt_drop_actions &actions,
+				double threshold,
 				double rate,
 				double max_tokens,
 				bool simulate_drops)
@@ -43,10 +44,15 @@ void syscall_evt_drop_mgr::init(sinsp *inspector,
 	m_outputs = outputs;
 	m_actions = actions;
 	m_bucket.init(rate, max_tokens);
+	m_threshold = threshold;
 
 	m_inspector->get_capture_stats(&m_last_stats);
 
 	m_simulate_drops = simulate_drops;
+	if(m_simulate_drops)
+	{
+		m_threshold = 0;
+	}
 }
 
 bool syscall_evt_drop_mgr::process_event(sinsp *inspector, sinsp_evt *evt)
@@ -81,21 +87,32 @@ bool syscall_evt_drop_mgr::process_event(sinsp *inspector, sinsp_evt *evt)
 			delta.n_drops++;
 		}
 
-		if(delta.n_drops > 0)
+		if(m_simulate_drops || (delta.n_drops > 0 && delta.n_evts > 0))
 		{
-			m_num_syscall_evt_drops++;
+			double ratio = delta.n_drops;
+			// Number of events can possiblity be zero here only when simulating drops
+			// In which case, ratio holds an infinite value
+			// Assuming IEC 559 (aka IEEE 754 - std::numeric_limits<T>::is_iec559) is true
+			// Anyways, this is always greater than zero when not simulating drops
+			ratio /= delta.n_evts;
 
-			// There were new drops in the last second. If
-			// the token bucket allows, perform actions.
-			if(m_bucket.claim(1, evt->get_ts()))
+			// When simulating drops the threshold is always zero
+			if(ratio > m_threshold)
 			{
-				m_num_actions++;
+				m_num_syscall_evt_drops++;
 
-				return perform_actions(evt->get_ts(), delta, inspector->is_bpf_enabled());
-			}
-			else
-			{
-				falco_logger::log(LOG_DEBUG, "Syscall event drop but token bucket depleted, skipping actions");
+				// There were new drops in the last second.
+				// If the token bucket allows, perform actions.
+				if(m_bucket.claim(1, evt->get_ts()))
+				{
+					m_num_actions++;
+
+					return perform_actions(evt->get_ts(), delta, inspector->is_bpf_enabled());
+				}
+				else
+				{
+					falco_logger::log(LOG_DEBUG, "Syscall event drop but token bucket depleted, skipping actions");
+				}
 			}
 		}
 	}
@@ -115,36 +132,32 @@ bool syscall_evt_drop_mgr::perform_actions(uint64_t now, scap_stats &delta, bool
 	std::string rule = "Falco internal: syscall event drop";
 	std::string msg = rule + ". " + std::to_string(delta.n_drops) + " system calls dropped in last second.";
 
-	std::map<std::string, std::string> output_fields;
-
-	output_fields["n_evts"] = std::to_string(delta.n_evts);
-	output_fields["n_drops"] = std::to_string(delta.n_drops);
-	output_fields["n_drops_buffer"] = std::to_string(delta.n_drops_buffer);
-	output_fields["n_drops_pf"] = std::to_string(delta.n_drops_pf);
-	output_fields["n_drops_bug"] = std::to_string(delta.n_drops_bug);
-	output_fields["ebpf_enabled"] = std::to_string(bpf_enabled);
 	bool should_exit = false;
 
 	for(auto &act : m_actions)
 	{
 		switch(act)
 		{
-		case ACT_IGNORE:
+		case syscall_evt_drop_action::IGNORE:
 			break;
 
-		case ACT_LOG:
+		case syscall_evt_drop_action::LOG:
 			falco_logger::log(LOG_ERR, msg);
 			break;
 
-		case ACT_ALERT:
-			m_outputs->handle_msg(now,
-					      falco_common::PRIORITY_CRITICAL,
-					      msg,
-					      rule,
-					      output_fields);
+		case syscall_evt_drop_action::ALERT:
+		{
+			std::map<std::string, std::string> output_fields;
+			output_fields["n_evts"] = std::to_string(delta.n_evts);
+			output_fields["n_drops"] = std::to_string(delta.n_drops);
+			output_fields["n_drops_buffer"] = std::to_string(delta.n_drops_buffer);
+			output_fields["n_drops_pf"] = std::to_string(delta.n_drops_pf);
+			output_fields["n_drops_bug"] = std::to_string(delta.n_drops_bug);
+			output_fields["ebpf_enabled"] = std::to_string(bpf_enabled);
+			m_outputs->handle_msg(now, falco_common::PRIORITY_CRITICAL, msg, rule, output_fields);
 			break;
-
-		case ACT_EXIT:
+		}
+		case syscall_evt_drop_action::EXIT:
 			should_exit = true;
 			break;
 
