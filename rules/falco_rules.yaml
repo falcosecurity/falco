@@ -3150,6 +3150,30 @@
   priority: CRITICAL
   tags: [filesystem, mitre_privilege_escalation]
 
+- rule: Debugfs Launched in Privileged Container
+  desc: Detect file system debugger debugfs launched inside a privilegd container which might lead to container escape.
+  condition: >
+    spawned_process and container
+    and container.privileged=true
+    and proc.name=debugfs
+  output: Debugfs launched started in a privileged container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline %container.info image=%container.image.repository:%container.image.tag)
+  priority: WARNING
+  tags: [container, cis, mitre_lateral_movement]
+
+- macro: mount_info
+  condition: (proc.args="" or proc.args intersects ("-V", "-l", "-h"))
+
+- rule: Mount Launched in Privileged Container
+  desc: Detect file system mount happened inside a privilegd container which might lead to container escape.
+  condition: >
+    spawned_process and container
+    and container.privileged=true
+    and proc.name=mount
+    and not mount_info
+  output: Mount was executed inside a privileged container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline %container.info image=%container.image.repository:%container.image.tag)
+  priority: WARNING
+  tags: [container, cis, mitre_lateral_movement]
+
 # Application rules have moved to application_rules.yaml. Please look
 # there if you want to enable them by adding to
 # falco_rules.local.yaml.
