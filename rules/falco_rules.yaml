@@ -2675,7 +2675,7 @@
   condition: (always_true)
 
 - list: user_known_chmod_applications
-  items: [hyperkube, kubelet]
+  items: [hyperkube, kubelet, k3s-agent]
 
 # This macro should be overridden in user rules as needed. This is useful if a given application
 # should not be ignored alltogether with the user_known_chmod_applications list, but only in
