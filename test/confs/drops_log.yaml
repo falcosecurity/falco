@@ -9,3 +9,5 @@ stdout_output:
   enabled: true
 
 log_stderr: true
+
+log_level: debug

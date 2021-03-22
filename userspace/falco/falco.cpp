@@ -255,7 +255,7 @@ uint64_t do_inspect(falco_engine *engine,
 	sdropmgr.init(inspector,
 		      outputs,
 		      config.m_syscall_evt_drop_actions,
-			  config.m_syscall_evt_drop_threshold,
+		      config.m_syscall_evt_drop_threshold,
 		      config.m_syscall_evt_drop_rate,
 		      config.m_syscall_evt_drop_max_burst,
 		      config.m_syscall_evt_simulate_drops);
