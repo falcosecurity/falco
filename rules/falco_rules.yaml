@@ -830,7 +830,7 @@
   condition: (never_true)
 
 - rule: Write below monitored dir
-  desc: an attempt to write to any file below a set of binary directories
+  desc: an attempt to write to any file below a set of monitored directories
   condition: >
     evt.dir = < and open_write and monitored_dir
     and not exe_running_docker_save
