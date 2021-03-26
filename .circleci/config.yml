@@ -379,7 +379,7 @@ jobs:
           name: Setup
           command: |
             yum update -y
-            yum install createrepo gpg -y
+            yum install createrepo gpg tar -y
             echo $GPG_KEY | base64 -d | gpg --import
       - run:
           name: Publish rpm-dev
@@ -515,7 +515,7 @@ jobs:
           name: Setup
           command: |
             yum update -y
-            yum install createrepo gpg -y
+            yum install createrepo gpg tar -y
             echo $GPG_KEY | base64 -d | gpg --import
       - run:
           name: Publish rpm
