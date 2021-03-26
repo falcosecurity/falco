@@ -680,7 +680,7 @@ workflows:
             branches:
               only: master
           requires:
-            - "tests/integration-static"
+            - "tests/integration"
       # todo(leogr): the cleanup job is intende to work with bintray, now deprecated,
       #              do we still need it?
       # - "cleanup/packages-dev":
