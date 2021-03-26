@@ -19,31 +19,26 @@ Parameters are configured for fetching packages from S3 before
 (filtered by prefix, sorted in ascending order) and for picking 
 the latest package by using an XPath selector after.
 
-
 - Common query parameters:
 
 color=#300aec7
 style=flat-square
 label=Falco
 
-
 - DEB packages parameters:
 
 url=https://falco-distribution.s3-eu-west-1.amazonaws.com/?prefix=packages/deb/stable/falco-
 query=substring-before(substring-after((/*[name()='ListBucketResult']/*[name()='Contents'])[last()]/*[name()='Key'],"falco-"),".asc")
-
 
 - RPM packages parameters:
 
 url=https://falco-distribution.s3-eu-west-1.amazonaws.com/?prefix=packages/rpm/falco-
 query=substring-before(substring-after((/*[name()='ListBucketResult']/*[name()='Contents'])[last()]/*[name()='Key'],"falco-"),".asc")
 
-
-BIN packages parameters:
+- BIN packages parameters:
 
 url=https://falco-distribution.s3-eu-west-1.amazonaws.com/?prefix=packages/bin/x86_64/falco-
 query=substring-after((/*[name()='ListBucketResult']/*[name()='Contents'])[last()]/*[name()='Key'], "falco-")
-
 
 Notes:
  - if more than 1000 items are present under as S3 prefix, 
