@@ -1722,7 +1722,7 @@
 # 602401143452.dkr.ecr is official AWS EKS registry. AWS has different ECR repo per region
 # 602401143452.dkr.ecr.eu-west-1.amazonaws.com/eks/kube-proxy
 # 602401143452.dkr.ecr.us-east-1.amazonaws.com/eks/kube-proxy
-# For this reason we use two macro to match all regions 
+# For this reason we use two macro to match all regions
 - macro: allowed_aws_eks_registry_root
   condition: >
         (container.image.repository startswith "602401143452.dkr.ecr")
@@ -2366,7 +2366,7 @@
     (container.image.repository in (gcr.io/google_containers/hyperkube-amd64,
      gcr.io/google_containers/kube2sky, docker.io/sysdig/falco,
      docker.io/sysdig/sysdig, docker.io/falcosecurity/falco,
-     sysdig/falco, sysdig/sysdig, falcosecurity/falco, 
+     sysdig/falco, sysdig/sysdig, falcosecurity/falco,
      fluent/fluentd-kubernetes-daemonset, prom/prometheus,
      ibm_cloud_containers)
      or (k8s.ns.name = "kube-system"))
@@ -2453,9 +2453,9 @@
   desc: Netcat Program runs inside container that allows remote code execution
   condition: >
     spawned_process and container and
-    ((proc.name = "nc" and (proc.args contains "-e" or proc.args contains "-c")) or
-     (proc.name = "ncat" and (proc.args contains "--sh-exec" or proc.args contains "--exec" or proc.args contains "-e "
-                              or proc.args contains "-c " or proc.args contains "--lua-exec"))
+    ((proc.name = "nc" and (proc.args contains " -e" or proc.args contains " -c")) or
+     (proc.name = "ncat" and (proc.args contains "--sh-exec" or proc.args contains "--exec" or proc.args contains " -e "
+                              or proc.args contains " -c " or proc.args contains "--lua-exec"))
     )
   exceptions:
     - name: proc_name_image_suffix
@@ -3140,7 +3140,7 @@
   output: Container launched with root user privilege (uid=%user.uid container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
   priority: INFO
   tags: [container, process]
-  
+
 #This rule helps detect CVE-2021-3156:
 #A privilege escalation to root through heap-based buffer overflow
 - rule: Sudo Potential Privilege Escalation
@@ -3177,4 +3177,3 @@
 # Application rules have moved to application_rules.yaml. Please look
 # there if you want to enable them by adding to
 # falco_rules.local.yaml.
-
