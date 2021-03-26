@@ -16,14 +16,9 @@
 # limitations under the License.
 #
 
-# todo(leogr): remove deprecation notice within a couple of releases
-if [[ ! -z "${SKIP_MODULE_LOAD}" ]]; then
-    echo "* SKIP_MODULE_LOAD is deprecated and will be removed soon, use SKIP_DRIVER_LOADER instead"
-fi
-
 # Set the SKIP_DRIVER_LOADER variable to skip loading the driver
 
-if [[ -z "${SKIP_DRIVER_LOADER}" ]] && [[ -z "${SKIP_MODULE_LOAD}" ]]; then
+if [[ -z "${SKIP_DRIVER_LOADER}" ]]; then
     echo "* Setting up /usr/src links from host"
 
     for i in "$HOST_ROOT/usr/src"/*
