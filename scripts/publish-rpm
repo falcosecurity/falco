@@ -74,7 +74,7 @@ s3_bucket_repo="s3://falco-distribution/packages/${repo}"
 cloudfront_path="/packages/${repo}"
 tmp_repo_path=/tmp/falco-$repo
 
-# prepere repository local copy
+# prepare repository local copy
 echo "Fetching ${s3_bucket_repo}..."
 mkdir -p ${tmp_repo_path}
 aws s3 cp ${s3_bucket_repo} ${tmp_repo_path} --recursive
