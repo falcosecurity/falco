@@ -411,30 +411,6 @@ jobs:
           command: |
             FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
             /source/falco/scripts/publish-deb -f /build/release/falco-${FALCO_VERSION}-x86_64.deb -r deb-dev
-  # Clenup the Falco development release packages
-  "cleanup/packages-dev":
-    docker:
-      - image: docker.bintray.io/jfrog/jfrog-cli-go:latest
-    steps:
-      - checkout:
-          path: /source/falco
-      - run:
-          name: Prepare env
-          command: |
-            apk add --no-cache --update
-            apk add curl jq
-      - run:
-          name: Only keep the 10 most recent Falco development release tarballs
-          command: |
-            /source/falco/scripts/cleanup -p ${BINTRAY_SECRET} -r bin-dev
-      - run:
-          name: Only keep the 50 most recent Falco development release RPMs
-          command: |
-            /source/falco/scripts/cleanup -p ${BINTRAY_SECRET} -r rpm-dev
-      - run:
-          name: Only keep the 50 most recent Falco development release DEBs
-          command: |
-            /source/falco/scripts/cleanup -p ${BINTRAY_SECRET} -r deb-dev
   # Publish docker packages
   "publish/docker-dev":
     docker:
@@ -685,17 +661,6 @@ workflows:
               only: master
           requires:
             - "tests/integration"
-      # todo(leogr): the cleanup job is intende to work with bintray, now deprecated,
-      #              do we still need it?
-      # - "cleanup/packages-dev":
-      #     context: falco
-      #     filters:
-      #       tags:
-      #         ignore: /.*/
-      #       branches:
-      #         only: master
-      #     requires:
-      #       - "publish/packages-dev"
       - "publish/docker-dev":
           context: falco
           filters:
