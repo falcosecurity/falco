@@ -5,7 +5,7 @@ chardet==3.0.4
 idna==2.9
 pathtools==0.1.2
 pbr==5.4.5
-PyYAML==5.3.1
+PyYAML==5.4
 requests==2.23.0
 six==1.14.0
 stevedore==1.32.0
