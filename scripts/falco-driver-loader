@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (C) 2019 The Falco Authors.
+# Copyright (C) 2021 The Falco Authors.
 #
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -82,7 +82,7 @@ get_kernel_config() {
 		echo "* Found kernel config at ${HOST_ROOT}/usr/lib/ostree-boot/config-${KERNEL_RELEASE}"
 		KERNEL_CONFIG_PATH="${HOST_ROOT}/usr/lib/ostree-boot/config-${KERNEL_RELEASE}"
 	elif [ -f "/lib/modules/${KERNEL_RELEASE}/config" ]; then
-		# this code works both for native host and agent container assuming that
+		# This code works both for native host and containers assuming that
 		# Dockerfile sets up the desired symlink /lib/modules -> $HOST_ROOT/lib/modules
 		echo "* Found kernel config at /lib/modules/${KERNEL_RELEASE}/config"
 		KERNEL_CONFIG_PATH="/lib/modules/${KERNEL_RELEASE}/config"
@@ -140,18 +140,18 @@ get_target_id() {
 }
 
 load_kernel_module_compile() {
-	# skip dkms on UEK hosts because it will always fail
+	# Skip dkms on UEK hosts because it will always fail
 	if [[ $(uname -r) == *uek* ]]; then
-		echo "* Skipping dkms install for UEK host"
+		>&2 echo "Skipping because the dkms install always fail (on UEK hosts)"
 		return
 	fi
 
-	if ! hash dkms &>/dev/null; then
-		echo "* Skipping dkms install (dkms not found)"
+	if ! hash dkms >/dev/null 2>&1; then
+		>&2 echo "This program requires dkms"
 		return
 	fi
 
-	# try to compile using all the available gcc versions
+	# Try to compile using all the available gcc versions
 	for CURRENT_GCC in $(which gcc) $(ls "$(dirname "$(which gcc)")"/gcc-* | grep 'gcc-[0-9]\+' | sort -r); do
 		echo "* Trying to dkms install ${DRIVER_NAME} module with GCC ${CURRENT_GCC}"
 		echo "#!/usr/bin/env bash" > /tmp/falco-dkms-make
@@ -181,7 +181,6 @@ load_kernel_module_compile() {
 }
 
 load_kernel_module_download() {
-
 	get_target_id
 
 	local FALCO_KERNEL_MODULE_FILENAME="${DRIVER_NAME}_${TARGET_ID}_${KERNEL_RELEASE}_${KERNEL_VERSION}.ko"
@@ -189,14 +188,14 @@ load_kernel_module_download() {
 	local URL
 	URL=$(echo "${DRIVERS_REPO}/${DRIVER_VERSION}/${FALCO_KERNEL_MODULE_FILENAME}" | sed s/+/%2B/g)
 
-	echo "* Trying to download prebuilt module from ${URL}"
+	echo "* Trying to download prebuilt ${DRIVER_NAME} module from ${URL}"
 	if curl -L --create-dirs "${FALCO_DRIVER_CURL_OPTIONS}" -o "${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}" "${URL}"; then
 		echo "* Download succeeded"
 		insmod "${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}" && echo "* Success: ${DRIVER_NAME} module loaded"
 		exit $?
 	else
-		>&2 echo "Download failed, consider compiling your own ${DRIVER_NAME} module and loading it or getting in touch with the Falco community"
-		exit 1
+		>&2 echo "Unable to find a prebuilt ${DRIVER_NAME} module"
+		return
 	fi
 }
 
@@ -237,26 +236,20 @@ load_kernel_module() {
 		exit 0
 	fi
 
-	if [ -n "$ENABLE_COMPILE" ]; then
-		load_kernel_module_compile
-	fi
-
-
 	echo "* Trying to load a system ${DRIVER_NAME} driver, if present"
 	if modprobe "${DRIVER_NAME}" > /dev/null 2>&1; then
 		echo "* Success: ${DRIVER_NAME} module found and loaded with modprobe"
 		exit 0
 	fi
 
-
-	echo "* Trying to find locally a prebuilt ${DRIVER_NAME} module for kernel ${KERNEL_RELEASE}, if present"
+	echo "* Looking for a prebuilt ${DRIVER_NAME} module for kernel ${KERNEL_RELEASE} locally"
 
 	get_target_id
 
 	local FALCO_KERNEL_MODULE_FILENAME="${DRIVER_NAME}_${TARGET_ID}_${KERNEL_RELEASE}_${KERNEL_VERSION}.ko"
 
 	if [ -f "${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}" ]; then
-		echo "* Found a prebuilt module at ${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}, loading it"
+		echo "* Found a prebuilt ${DRIVER_NAME} module at ${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}, loading it"
 		insmod "${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}" && echo "* Success: ${DRIVER_NAME} module loaded"
 		exit $?
 	fi
@@ -264,6 +257,14 @@ load_kernel_module() {
 	if [ -n "$ENABLE_DOWNLOAD" ]; then
 		load_kernel_module_download
 	fi
+
+	if [ -n "$ENABLE_COMPILE" ]; then
+		load_kernel_module_compile
+	fi
+
+	# Not able to download a prebuilt module nor to compile one on-the-fly
+	>&2 echo "Consider compiling your own ${DRIVER_NAME} module and loading it or getting in touch with the Falco community"
+	exit 1
 }
 
 clean_kernel_module() {
@@ -278,21 +279,21 @@ clean_kernel_module() {
 	fi
 
 	KMOD_NAME=$(echo "${DRIVER_NAME}" | tr "-" "_")
-	if lsmod | cut -d' ' -f1 | grep -qx "${KMOD_NAME}"; then 
+	if lsmod | cut -d' ' -f1 | grep -qx "${KMOD_NAME}"; then
 		if rmmod "${DRIVER_NAME}" 2>/dev/null; then
 			echo "* Unloading ${DRIVER_NAME} module succeeded"
-		else 
+		else
 			echo "* Unloading ${DRIVER_NAME} module failed"
 		fi
 	else
 		echo "* No ${DRIVER_NAME} module loaded"
 	fi
 
-	if ! hash dkms &>/dev/null; then
+	if ! hash dkms >/dev/null 2>&1; then
 		echo "* Skipping dkms remove (dkms not found)"
 		return
 	fi
-    
+
 	DRIVER_VERSIONS=$(dkms status -m "${DRIVER_NAME}" | cut -d',' -f2 | sed -e 's/^[[:space:]]*//')
 	if [ -z "${DRIVER_VERSIONS}" ]; then
 		echo "* No ${DRIVER_NAME} module found in dkms"
@@ -301,7 +302,7 @@ clean_kernel_module() {
 	for CURRENT_VER in ${DRIVER_VERSIONS}; do
 		if dkms remove -m "${DRIVER_NAME}" -v "${CURRENT_VER}" --all 2>/dev/null; then
 			echo "* Removing ${DRIVER_NAME}/${CURRENT_VER} succeeded"
-		else 
+		else
 			echo "* Removing ${DRIVER_NAME}/${CURRENT_VER} failed"
 			exit 1
 		fi
@@ -432,7 +433,6 @@ load_bpf_probe_download() {
 }
 
 load_bpf_probe() {
-
 	echo "* Mounting debugfs"
 
 	if [ ! -d /sys/kernel/debug/tracing ]; then
@@ -556,7 +556,7 @@ while test $# -gt 0; do
 	case "$1" in
 		module|bpf)
 			if [ -n "$has_args" ]; then
-				>&2 echo "Only one driver can be passed"
+				>&2 echo "Only one driver per invocation"
 				print_usage
 				exit 1
 			else
@@ -614,7 +614,7 @@ if [ -z "$source_only" ]; then
 	fi
 
 	if [ -n "$clean" ]; then
-		if ! [ -z "$has_opt"]; then
+		if [ -n "$has_opts" ]; then
 			>&2 echo "Cannot use --clean with other options"
 			exit 1
 		fi
