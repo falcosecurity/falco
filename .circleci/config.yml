@@ -371,15 +371,17 @@ jobs:
   # Publish the dev packages
   "publish/packages-dev":
     docker:
-      - image: docker.io/amazon/aws-cli:latest
+      - image: docker.io/centos:7
     steps:
       - attach_workspace:
           at: /
       - run:
           name: Setup
           command: |
+            yum install epel-release -y
             yum update -y
-            yum install createrepo gpg tar -y
+            yum install createrepo gpg python python-pip -y
+            pip install awscli
             echo $GPG_KEY | base64 -d | gpg --import
       - run:
           name: Publish rpm-dev
@@ -507,15 +509,17 @@ jobs:
   # Publish the packages
   "publish/packages":
     docker:
-      - image: docker.io/amazon/aws-cli:latest
+      - image: docker.io/centos:7
     steps:
       - attach_workspace:
           at: /
       - run:
           name: Setup
           command: |
+            yum install epel-release -y
             yum update -y
-            yum install createrepo gpg tar -y
+            yum install createrepo gpg python python-pip -y
+            pip install awscli
             echo $GPG_KEY | base64 -d | gpg --import
       - run:
           name: Publish rpm
