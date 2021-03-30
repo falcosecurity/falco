@@ -204,7 +204,7 @@ local G = {
    Hex = (P("0x") + P("0X")) * xdigit ^ 1,
    Expo = S("eE") * S("+-") ^ -1 * digit ^ 1,
    Float = (((digit ^ 1 * P(".") * digit ^ 0) + (P(".") * digit ^ 1)) * V "Expo" ^ -1) + (digit ^ 1 * V "Expo"),
-   Number = C(V "Hex" + V "Float" + V "Int") / function(n)
+   Number = C(V "Hex" + V "Float" + V "Int") * - V "idStart" / function(n)
          return tonumber(n)
       end,
    String = (P '"' * C(((P "\\" * P(1)) + (P(1) - P '"')) ^ 0) * P '"' +
