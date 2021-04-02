@@ -234,7 +234,7 @@ load_kernel_module() {
 	done
 
 	if lsmod | cut -d' ' -f1 | grep -qx "${KMOD_NAME}" > /dev/null 2>&1; then
-		echo "* Falco} module seems to still be loaded, hoping the best"
+		echo "* Falco module seems to still be loaded, hoping the best"
 		exit 0
 	fi
 
@@ -244,7 +244,7 @@ load_kernel_module() {
 		exit 0
 	fi
 
-	echo "* Looking for a prebuilt Falco module for kernel ${KERNEL_RELEASE} locally"
+	echo "* Looking for a Falco module locally (kernel ${KERNEL_RELEASE})"
 
 	get_target_id
 
@@ -460,13 +460,6 @@ load_bpf_probe() {
 
 	if [ -f "${HOME}/.falco/${BPF_PROBE_FILENAME}" ]; then
 		echo "* eBPF probe located in ${HOME}/.falco/${BPF_PROBE_FILENAME}"
-
-		if [ ! -f /proc/sys/net/core/bpf_jit_enable ]; then
-			echo "******************************************************************"
-			echo "** BPF doesn't have JIT enabled, performance might be degraded. **"
-			echo "** Please ensure to run on a kernel with CONFIG_BPF_JIT on.     **"
-			echo "******************************************************************"
-		fi
 
 		ln -sf "${HOME}/.falco/${BPF_PROBE_FILENAME}" "${HOME}/.falco/${DRIVER_NAME}-bpf.o" \
 			&& echo "* Success: eBPF probe symlinked to ${HOME}/.falco/${DRIVER_NAME}-bpf.o"
