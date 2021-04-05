@@ -312,7 +312,7 @@ bool json_event_filter_check::def_extract(const nlohmann::json &root,
 			{
 				if(!def_extract(item, ptrs, std::next(it, 1)))
 				{
-					return false;
+					add_extracted_value(no_value);
 				}
 			}
 		}
