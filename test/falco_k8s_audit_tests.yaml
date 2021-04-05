@@ -128,6 +128,16 @@ trace_files: !mux
       - Create Privileged Pod: 1
     trace_file: trace_files/k8s_audit/create_nginx_pod_privileged.json
 
+  create_privileged_no_secctx_1st_container_2nd_container_pod:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - ../rules/falco_rules.yaml
+      - ../rules/k8s_audit_rules.yaml
+    detect_counts:
+      - Create Privileged Pod: 1
+    trace_file: trace_files/k8s_audit/create_nginx_pod_no_secctx_1st_container_privileged_2nd_container.json
+
   create_privileged_2nd_container_pod:
     detect: True
     detect_level: WARNING
