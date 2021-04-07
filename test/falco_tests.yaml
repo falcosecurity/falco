@@ -356,8 +356,6 @@ trace_files: !mux
         condition: evt.type=fork
         priority: INFO
       ---
-      1 warnings:
-      Rule no output rule: consider adding an exceptions property to define supported exceptions fields
     validate_rules_file:
       - rules/invalid_rule_without_output.yaml
     trace_file: trace_files/cat_write.scap
@@ -413,8 +411,6 @@ trace_files: !mux
         condition: evt.type=open
         append: true
       ---
-      1 warnings:
-      Rule my_rule: consider adding an exceptions property to define supported exceptions fields
     validate_rules_file:
       - rules/rule_append_failure.yaml
     trace_file: trace_files/cat_write.scap
@@ -542,9 +538,6 @@ trace_files: !mux
         priority: INFO
         append: false
       ---
-      2 warnings:
-      Rule some rule: consider adding an exceptions property to define supported exceptions fields
-      Rule some rule: consider adding an exceptions property to define supported exceptions fields
     validate_rules_file:
       - rules/invalid_overwrite_rule_multiple_docs.yaml
     trace_file: trace_files/cat_write.scap
@@ -567,9 +560,6 @@ trace_files: !mux
         priority: INFO
         append: true
       ---
-      2 warnings:
-      Rule some rule: consider adding an exceptions property to define supported exceptions fields
-      Rule some rule: consider adding an exceptions property to define supported exceptions fields
     validate_rules_file:
       - rules/invalid_append_rule_multiple_docs.yaml
     trace_file: trace_files/cat_write.scap
@@ -627,8 +617,6 @@ trace_files: !mux
         output: "An open was seen %not_a_real_field"
         priority: WARNING
       ---
-      1 warnings:
-      Rule rule_with_invalid_output: consider adding an exceptions property to define supported exceptions fields
     validate_rules_file:
       - rules/invalid_rule_output.yaml
     trace_file: trace_files/cat_write.scap

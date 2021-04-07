@@ -185,15 +185,6 @@ trace_files: !mux
       - rules/exceptions/append_item_not_in_rule.yaml
     trace_file: trace_files/cat_write.scap
 
-  rule_without_exception:
-    exit_status: 0
-    stderr_contains: |+
-      1 warnings:
-      Rule My Rule: consider adding an exceptions property to define supported exceptions fields
-    validate_rules_file:
-      - rules/exceptions/rule_without_exception.yaml
-    trace_file: trace_files/cat_write.scap
-
   rule_exception_no_values:
     detect: True
     detect_level: WARNING
