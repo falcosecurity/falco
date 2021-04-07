@@ -347,12 +347,15 @@
   tags: [k8s]
 
 - list: user_known_sa_list
-  items: ["pod-garbage-collector","resourcequota-controller","cronjob-controller","generic-garbage-collector", 
+  items: []
+
+- list: known_sa_list
+  items: ["pod-garbage-collector","resourcequota-controller","cronjob-controller","generic-garbage-collector",
           "daemon-set-controller","endpointslice-controller","deployment-controller", "replicaset-controller",
           "endpoint-controller"]
 
 - macro: trusted_sa
-  condition: (ka.target.name in (user_known_sa_list))
+  condition: (ka.target.name in (known_sa_list, user_known_sa_list))
 
 # Detect creating a service account in the kube-system/kube-public namespace
 - rule: Service Account Created in Kube Namespace
