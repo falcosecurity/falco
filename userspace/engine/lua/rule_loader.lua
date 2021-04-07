@@ -522,10 +522,8 @@ function load_rules_doc(rules_mgr, doc, load_state)
 	    v['source'] = "syscall"
 	 end
 
-	 -- Add an empty exceptions property to the rule if not
-	 -- defined, but add a warning about defining one
+	 -- Add an empty exceptions property to the rule if not defined
 	 if v['exceptions'] == nil then
-	    warnings[#warnings + 1] = "Rule "..v['rule']..": consider adding an exceptions property to define supported exceptions fields"
 	    v['exceptions'] = {}
 	 end
 
