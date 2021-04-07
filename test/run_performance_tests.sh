@@ -20,9 +20,11 @@
 
 trap "cleanup; exit" SIGHUP SIGINT SIGTERM
 
+TRACE_FILES_BASE_URL=${TRACE_FILES_BASE_URL:-"https://falco-distribution.s3.amazonaws.com/fixtures/trace-files/"}
+
 function download_trace_files() {
 
-    (mkdir -p $TRACEDIR && rm -rf $TRACEDIR/traces-perf && curl -fo $TRACEDIR/traces-perf.zip https://s3.amazonaws.com/download.draios.com/falco-tests/traces-perf.zip && unzip -d $TRACEDIR $TRACEDIR/traces-perf.zip && rm -f $TRACEDIR/traces-perf.zip) || exit 1
+    (mkdir -p $TRACEDIR && rm -rf $TRACEDIR/traces-perf && curl -fo $TRACEDIR/traces-perf.zip "${TRACE_FILES_BASE_URL}traces-perf.zip" && unzip -d $TRACEDIR $TRACEDIR/traces-perf.zip && rm -f $TRACEDIR/traces-perf.zip) || exit 1
 
 }
 
