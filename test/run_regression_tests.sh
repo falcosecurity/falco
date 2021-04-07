@@ -20,6 +20,7 @@ set -euo pipefail
 SCRIPT=$(readlink -f $0)
 SCRIPTDIR=$(dirname "$SCRIPT")
 SKIP_PACKAGES_TESTS=${SKIP_PACKAGES_TESTS:-false}
+TRACE_FILES_BASE_URL=${TRACE_FILES_BASE_URL:-"https://falco-distribution.s3.amazonaws.com/fixtures/trace-files/"}
 
 # Trace file tarballs are now versioned. Any time a substantial change
 # is made that affects the interaction of rules+engine and the trace
@@ -31,9 +32,9 @@ function download_trace_files() {
     for TRACE in traces-positive traces-negative traces-info ; do
     if [ ! -e "$TRACE_DIR/$TRACE" ]; then
         if [ "$OPT_BRANCH" != "none" ]; then
-        curl -fso "$TRACE_DIR/$TRACE.zip" https://s3.amazonaws.com/download.draios.com/falco-tests/$TRACE-$OPT_BRANCH.zip
+        curl -fso "$TRACE_DIR/$TRACE.zip" "$TRACE_FILES_BASE_URL$TRACE-$OPT_BRANCH.zip"
         else
-        curl -fso "$TRACE_DIR/$TRACE.zip" https://s3.amazonaws.com/download.draios.com/falco-tests/$TRACE-$TRACE_FILES_VERSION.zip
+        curl -fso "$TRACE_DIR/$TRACE.zip" "$TRACE_FILES_BASE_URL$TRACE-$TRACE_FILES_VERSION.zip"
         fi
         unzip -d "$TRACE_DIR" "$TRACE_DIR/$TRACE.zip"
         rm -rf "$TRACE_DIR/$TRACE.zip"
