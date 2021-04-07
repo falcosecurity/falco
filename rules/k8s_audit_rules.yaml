@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-- required_engine_version: 8
+- required_engine_version: 2
 
 # Like always_true/always_false, but works with k8s audit events
 - macro: k8s_audit_always_true
@@ -57,12 +57,7 @@
 
 - rule: Disallowed K8s User
   desc: Detect any k8s operation by users outside of an allowed set of users.
-  condition: kevt and non_system_user
-  exceptions:
-    - name: user_names
-      fields: ka.user.name
-      comps: in
-      values: [allowed_k8s_users]
+  condition: kevt and non_system_user and not ka.user.name in (allowed_k8s_users)
   output: K8s Operation performed by user not in allowed list of users (user=%ka.user.name target=%ka.target.name/%ka.target.resource verb=%ka.verb uri=%ka.uri resp=%ka.response.code)
   priority: WARNING
   source: k8s_audit
@@ -129,10 +124,6 @@
   desc: >
     Detect an attempt to start a pod with a container image outside of a list of allowed images.
   condition: kevt and pod and kcreate and not allowed_k8s_containers
-  exceptions:
-    - name: image_repos
-      fields: ka.req.pod.containers.image.repository
-      comps: in
   output: Pod started with container not in allowed list (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace images=%ka.req.pod.containers.image)
   priority: WARNING
   source: k8s_audit
@@ -141,12 +132,7 @@
 - rule: Create Privileged Pod
   desc: >
     Detect an attempt to start a pod with a privileged container
-  condition: kevt and pod and kcreate and ka.req.pod.containers.privileged intersects (true)
-  exceptions:
-    - name: image_repos
-      fields: ka.req.pod.containers.image.repository
-      comps: in
-      values: [falco_privileged_images]
+  condition: kevt and pod and kcreate and ka.req.pod.containers.privileged intersects (true) and not ka.req.pod.containers.image.repository in (falco_privileged_images)
   output: Pod started with privileged container (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace images=%ka.req.pod.containers.image)
   priority: WARNING
   source: k8s_audit
@@ -160,12 +146,7 @@
   desc: >
     Detect an attempt to start a pod with a volume from a sensitive host directory (i.e. /proc).
     Exceptions are made for known trusted images.
-  condition: kevt and pod and kcreate and sensitive_vol_mount
-  exceptions:
-    - name: image_repos
-      fields: ka.req.pod.containers.image.repository
-      comps: in
-      values: [falco_sensitive_mount_images]
+  condition: kevt and pod and kcreate and sensitive_vol_mount and not ka.req.pod.containers.image.repository in (falco_sensitive_mount_images)
   output: Pod started with sensitive mount (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace images=%ka.req.pod.containers.image volumes=%jevt.value[/requestObject/spec/volumes])
   priority: WARNING
   source: k8s_audit
@@ -174,12 +155,7 @@
 # Corresponds to K8s CIS Benchmark 1.7.4
 - rule: Create HostNetwork Pod
   desc: Detect an attempt to start a pod using the host network.
-  condition: kevt and pod and kcreate and ka.req.pod.host_network intersects (true)
-  exceptions:
-    - name: image_repos
-      fields: ka.req.pod.containers.image.repository
-      comps: in
-      values: [falco_hostnetwork_images]
+  condition: kevt and pod and kcreate and ka.req.pod.host_network intersects (true) and not ka.req.pod.containers.image.repository in (falco_hostnetwork_images)
   output: Pod started using host network (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace images=%ka.req.pod.containers.image)
   priority: WARNING
   source: k8s_audit
@@ -192,9 +168,6 @@
   desc: >
     Detect an attempt to start a service with a NodePort service type
   condition: kevt and service and kcreate and ka.req.service.type=NodePort and not user_known_node_port_service
-  exceptions:
-    - name: services
-      fields: [ka.target.namespace, ka.target.name]
   output: NodePort Service Created (user=%ka.user.name service=%ka.target.name ns=%ka.target.namespace ports=%ka.req.service.ports)
   priority: WARNING
   source: k8s_audit
@@ -213,9 +186,6 @@
   desc: >
      Detect creating/modifying a configmap containing a private credential (aws key, password, etc.)
   condition: kevt and configmap and kmodify and contains_private_credentials
-  exceptions:
-    - name: configmaps
-      fields: [ka.target.namespace, ka.req.configmap.name]
   output: K8s configmap with private credential (user=%ka.user.name verb=%ka.verb configmap=%ka.req.configmap.name config=%ka.req.configmap.obj)
   priority: WARNING
   source: k8s_audit
@@ -226,10 +196,6 @@
   desc: >
     Detect any request made by the anonymous user that was allowed
   condition: kevt and ka.user.name=system:anonymous and ka.auth.decision="allow" and not health_endpoint
-  exceptions:
-    - name: user_names
-      fields: ka.user.name
-      comps: in
   output: Request by anonymous user allowed (user=%ka.user.name verb=%ka.verb uri=%ka.uri reason=%ka.auth.reason))
   priority: WARNING
   source: k8s_audit
@@ -255,10 +221,6 @@
   desc: >
     Detect any attempt to attach/exec to a pod
   condition: kevt_started and pod_subresource and kcreate and ka.target.subresource in (exec,attach) and not user_known_exec_pod_activities
-  exceptions:
-    - name: user_names
-      fields: ka.user.name
-      comps: in
   output: Attach/Exec to pod (user=%ka.user.name pod=%ka.target.name ns=%ka.target.namespace action=%ka.target.subresource command=%ka.uri.param[command])
   priority: NOTICE
   source: k8s_audit
@@ -268,14 +230,10 @@
   condition: (k8s_audit_never_true)
 
 # Only works when feature gate EphemeralContainers is enabled
-# Definining empty exceptions just to avoid warnings. There isn't any
-#  great exception for this kind of object, as you'd expect the images
-#  to vary wildly.
 - rule: EphemeralContainers Created
   desc: >
     Detect any ephemeral container created
   condition: kevt and pod_subresource and kmodify and ka.target.subresource in (ephemeralcontainers) and not user_known_pod_debug_activities
-  exceptions:
   output: Ephemeral container is created in pod (user=%ka.user.name pod=%ka.target.name ns=%ka.target.namespace ephemeral_container_name=%jevt.value[/requestObject/ephemeralContainers/0/name] ephemeral_container_image=%jevt.value[/requestObject/ephemeralContainers/0/image])
   priority: NOTICE
   source: k8s_audit
@@ -287,12 +245,7 @@
 
 - rule: Create Disallowed Namespace
   desc: Detect any attempt to create a namespace outside of a set of known namespaces
-  condition: kevt and namespace and kcreate
-  exceptions:
-    - name: services
-      fields: ka.target.name
-      comps: in
-      values: [allowed_namespaces]
+  condition: kevt and namespace and kcreate and not ka.target.name in (allowed_namespaces)
   output: Disallowed namespace created (user=%ka.user.name ns=%ka.target.name)
   priority: WARNING
   source: k8s_audit
@@ -332,16 +285,15 @@
     k8s_image_list
     ]
 
+- macro: allowed_kube_namespace_pods
+  condition: (ka.req.pod.containers.image.repository in (user_allowed_kube_namespace_image_list) or
+              ka.req.pod.containers.image.repository in (allowed_kube_namespace_image_list))
+
 # Detect any new pod created in the kube-system namespace
 - rule: Pod Created in Kube Namespace
   desc: Detect any attempt to create a pod in the kube-system or kube-public namespaces
-  condition: kevt and pod and kcreate and ka.target.namespace in (kube-system, kube-public)
+  condition: kevt and pod and kcreate and ka.target.namespace in (kube-system, kube-public) and not allowed_kube_namespace_pods
   output: Pod created in kube namespace (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace images=%ka.req.pod.containers.image)
-  exceptions:
-    - name: images
-      fields: ka.req.pod.containers.image.repository
-      comps: in
-      values: [user_allowed_kube_namespace_image_list, allowed_kube_namespace_image_list]
   priority: WARNING
   source: k8s_audit
   tags: [k8s]
@@ -361,9 +313,6 @@
 - rule: Service Account Created in Kube Namespace
   desc: Detect any attempt to create a serviceaccount in the kube-system or kube-public namespaces
   condition: kevt and serviceaccount and kcreate and ka.target.namespace in (kube-system, kube-public) and response_successful and not trusted_sa
-  exceptions:
-    - name: accounts
-      fields: [ka.target.namespace, ka.target.name]
   output: Service account created in kube namespace (user=%ka.user.name serviceaccount=%ka.target.name ns=%ka.target.namespace)
   priority: WARNING
   source: k8s_audit
@@ -376,9 +325,6 @@
   desc: Detect any attempt to modify/delete a ClusterRole/Role starting with system
   condition: kevt and (role or clusterrole) and (kmodify or kdelete) and (ka.target.name startswith "system:") and
              not ka.target.name in (system:coredns, system:managed-certificate-controller)
-  exceptions:
-    - name: roles
-      fields: [ka.target.namespace, ka.target.name]
   output: System ClusterRole/Role modified or deleted (user=%ka.user.name role=%ka.target.name ns=%ka.target.namespace action=%ka.verb)
   priority: WARNING
   source: k8s_audit
@@ -389,10 +335,6 @@
 - rule: Attach to cluster-admin Role
   desc: Detect any attempt to create a ClusterRoleBinding to the cluster-admin user
   condition: kevt and clusterrolebinding and kcreate and ka.req.binding.role=cluster-admin
-  exceptions:
-    - name: subjects
-      fields: ka.req.binding.subjects
-      comps: in
   output: Cluster Role Binding to cluster-admin role (user=%ka.user.name subject=%ka.req.binding.subjects)
   priority: WARNING
   source: k8s_audit
@@ -401,10 +343,6 @@
 - rule: ClusterRole With Wildcard Created
   desc: Detect any attempt to create a Role/ClusterRole with wildcard resources or verbs
   condition: kevt and (role or clusterrole) and kcreate and (ka.req.role.rules.resources intersects ("*") or ka.req.role.rules.verbs intersects ("*"))
-  exceptions:
-    - name: roles
-      fields: ka.target.name
-      comps: in
   output: Created Role/ClusterRole with wildcard (user=%ka.user.name role=%ka.target.name rules=%ka.req.role.rules)
   priority: WARNING
   source: k8s_audit
@@ -417,10 +355,6 @@
 - rule: ClusterRole With Write Privileges Created
   desc: Detect any attempt to create a Role/ClusterRole that can perform write-related actions
   condition: kevt and (role or clusterrole) and kcreate and writable_verbs
-  exceptions:
-    - name: roles
-      fields: ka.target.name
-      comps: in
   output: Created Role/ClusterRole with write privileges (user=%ka.user.name role=%ka.target.name rules=%ka.req.role.rules)
   priority: NOTICE
   source: k8s_audit
@@ -429,10 +363,6 @@
 - rule: ClusterRole With Pod Exec Created
   desc: Detect any attempt to create a Role/ClusterRole that can exec to pods
   condition: kevt and (role or clusterrole) and kcreate and ka.req.role.rules.resources intersects ("pods/exec")
-  exceptions:
-    - name: roles
-      fields: ka.target.name
-      comps: in
   output: Created Role/ClusterRole with pod exec privileges (user=%ka.user.name role=%ka.target.name rules=%ka.req.role.rules)
   priority: WARNING
   source: k8s_audit
@@ -444,16 +374,12 @@
 - macro: consider_activity_events
   condition: (k8s_audit_always_true)
 
-# Activity events don't have exceptions. They do define an empty
-# exceptions property just to avoid warnings when loading rules.
-
 - macro: kactivity
   condition: (kevt and consider_activity_events)
 
 - rule: K8s Deployment Created
   desc: Detect any attempt to create a deployment
   condition: (kactivity and kcreate and deployment and response_successful)
-  exceptions:
   output: K8s Deployment Created (user=%ka.user.name deployment=%ka.target.name ns=%ka.target.namespace resp=%ka.response.code decision=%ka.auth.decision reason=%ka.auth.reason)
   priority: INFO
   source: k8s_audit
@@ -462,7 +388,6 @@
 - rule: K8s Deployment Deleted
   desc: Detect any attempt to delete a deployment
   condition: (kactivity and kdelete and deployment and response_successful)
-  exceptions:
   output: K8s Deployment Deleted (user=%ka.user.name deployment=%ka.target.name ns=%ka.target.namespace resp=%ka.response.code decision=%ka.auth.decision reason=%ka.auth.reason)
   priority: INFO
   source: k8s_audit
@@ -471,7 +396,6 @@
 - rule: K8s Service Created
   desc: Detect any attempt to create a service
   condition: (kactivity and kcreate and service and response_successful)
-  exceptions:
   output: K8s Service Created (user=%ka.user.name service=%ka.target.name ns=%ka.target.namespace resp=%ka.response.code decision=%ka.auth.decision reason=%ka.auth.reason)
   priority: INFO
   source: k8s_audit
@@ -480,7 +404,6 @@
 - rule: K8s Service Deleted
   desc: Detect any attempt to delete a service
   condition: (kactivity and kdelete and service and response_successful)
-  exceptions:
   output: K8s Service Deleted (user=%ka.user.name service=%ka.target.name ns=%ka.target.namespace resp=%ka.response.code decision=%ka.auth.decision reason=%ka.auth.reason)
   priority: INFO
   source: k8s_audit
@@ -489,7 +412,6 @@
 - rule: K8s ConfigMap Created
   desc: Detect any attempt to create a configmap
   condition: (kactivity and kcreate and configmap and response_successful)
-  exceptions:
   output: K8s ConfigMap Created (user=%ka.user.name configmap=%ka.target.name ns=%ka.target.namespace resp=%ka.response.code decision=%ka.auth.decision reason=%ka.auth.reason)
   priority: INFO
   source: k8s_audit
@@ -498,7 +420,6 @@
 - rule: K8s ConfigMap Deleted
   desc: Detect any attempt to delete a configmap
   condition: (kactivity and kdelete and configmap and response_successful)
-  exceptions:
   output: K8s ConfigMap Deleted (user=%ka.user.name configmap=%ka.target.name ns=%ka.target.namespace resp=%ka.response.code decision=%ka.auth.decision reason=%ka.auth.reason)
   priority: INFO
   source: k8s_audit
@@ -507,7 +428,6 @@
 - rule: K8s Namespace Created
   desc: Detect any attempt to create a namespace
   condition: (kactivity and kcreate and namespace and response_successful)
-  exceptions:
   output: K8s Namespace Created (user=%ka.user.name namespace=%ka.target.name resp=%ka.response.code decision=%ka.auth.decision reason=%ka.auth.reason)
   priority: INFO
   source: k8s_audit
@@ -516,7 +436,6 @@
 - rule: K8s Namespace Deleted
   desc: Detect any attempt to delete a namespace
   condition: (kactivity and non_system_user and kdelete and namespace and response_successful)
-  exceptions:
   output: K8s Namespace Deleted (user=%ka.user.name namespace=%ka.target.name resp=%ka.response.code decision=%ka.auth.decision reason=%ka.auth.reason)
   priority: INFO
   source: k8s_audit
@@ -525,7 +444,6 @@
 - rule: K8s Serviceaccount Created
   desc: Detect any attempt to create a service account
   condition: (kactivity and kcreate and serviceaccount and response_successful)
-  exceptions:
   output: K8s Serviceaccount Created (user=%ka.user.name user=%ka.target.name ns=%ka.target.namespace resp=%ka.response.code decision=%ka.auth.decision reason=%ka.auth.reason)
   priority: INFO
   source: k8s_audit
@@ -534,7 +452,6 @@
 - rule: K8s Serviceaccount Deleted
   desc: Detect any attempt to delete a service account
   condition: (kactivity and kdelete and serviceaccount and response_successful)
-  exceptions:
   output: K8s Serviceaccount Deleted (user=%ka.user.name user=%ka.target.name ns=%ka.target.namespace resp=%ka.response.code decision=%ka.auth.decision reason=%ka.auth.reason)
   priority: INFO
   source: k8s_audit
@@ -543,7 +460,6 @@
 - rule: K8s Role/Clusterrole Created
   desc: Detect any attempt to create a cluster role/role
   condition: (kactivity and kcreate and (clusterrole or role) and response_successful)
-  exceptions:
   output: K8s Cluster Role Created (user=%ka.user.name role=%ka.target.name rules=%ka.req.role.rules resp=%ka.response.code decision=%ka.auth.decision reason=%ka.auth.reason)
   priority: INFO
   source: k8s_audit
@@ -552,7 +468,6 @@
 - rule: K8s Role/Clusterrole Deleted
   desc: Detect any attempt to delete a cluster role/role
   condition: (kactivity and kdelete and (clusterrole or role) and response_successful)
-  exceptions:
   output: K8s Cluster Role Deleted (user=%ka.user.name role=%ka.target.name resp=%ka.response.code decision=%ka.auth.decision reason=%ka.auth.reason)
   priority: INFO
   source: k8s_audit
@@ -561,7 +476,6 @@
 - rule: K8s Role/Clusterrolebinding Created
   desc: Detect any attempt to create a clusterrolebinding
   condition: (kactivity and kcreate and clusterrolebinding and response_successful)
-  exceptions:
   output: K8s Cluster Role Binding Created (user=%ka.user.name binding=%ka.target.name subjects=%ka.req.binding.subjects role=%ka.req.binding.role resp=%ka.response.code decision=%ka.auth.decision reason=%ka.auth.reason)
   priority: INFO
   source: k8s_audit
@@ -570,7 +484,6 @@
 - rule: K8s Role/Clusterrolebinding Deleted
   desc: Detect any attempt to delete a clusterrolebinding
   condition: (kactivity and kdelete and clusterrolebinding and response_successful)
-  exceptions:
   output: K8s Cluster Role Binding Deleted (user=%ka.user.name binding=%ka.target.name resp=%ka.response.code decision=%ka.auth.decision reason=%ka.auth.reason)
   priority: INFO
   source: k8s_audit
@@ -579,7 +492,6 @@
 - rule: K8s Secret Created
   desc: Detect any attempt to create a secret. Service account tokens are excluded.
   condition: (kactivity and kcreate and secret and ka.target.namespace!=kube-system and non_system_user and response_successful)
-  exceptions:
   output: K8s Secret Created (user=%ka.user.name secret=%ka.target.name ns=%ka.target.namespace resp=%ka.response.code decision=%ka.auth.decision reason=%ka.auth.reason)
   priority: INFO
   source: k8s_audit
@@ -588,7 +500,6 @@
 - rule: K8s Secret Deleted
   desc: Detect any attempt to delete a secret Service account tokens are excluded.
   condition: (kactivity and kdelete and secret and ka.target.namespace!=kube-system and non_system_user and response_successful)
-  exceptions:
   output: K8s Secret Deleted (user=%ka.user.name secret=%ka.target.name ns=%ka.target.namespace resp=%ka.response.code decision=%ka.auth.decision reason=%ka.auth.reason)
   priority: INFO
   source: k8s_audit
@@ -607,7 +518,6 @@
 - rule: All K8s Audit Events
   desc: Match all K8s Audit Events
   condition: kall
-  exceptions:
   output: K8s Audit Event received (user=%ka.user.name verb=%ka.verb uri=%ka.uri obj=%jevt.obj)
   priority: DEBUG
   source: k8s_audit
@@ -640,10 +550,6 @@
     and non_system_user
     and ka.user.name in (full_admin_k8s_users)
     and not allowed_full_admin_users
-  exceptions:
-    - name: user_names
-      fields: ka.user.name
-      comps: in
   output: K8s Operation performed by full admin user (user=%ka.user.name target=%ka.target.name/%ka.target.resource verb=%ka.verb uri=%ka.uri resp=%ka.response.code)
   priority: WARNING
   source: k8s_audit
@@ -677,9 +583,6 @@
   desc: Detect any attempt to create an ingress without TLS certification.
   condition: >
     (kactivity and kcreate and ingress and response_successful and not ingress_tls)
-  exceptions:
-    - name: ingresses
-      fields: [ka.target.namespace, ka.target.name]
   output: >
     K8s Ingress Without TLS Cert Created (user=%ka.user.name ingress=%ka.target.name
     namespace=%ka.target.namespace)
@@ -710,11 +613,7 @@
     and kcreate
     and response_successful
     and not allow_all_k8s_nodes
-  exceptions:
-    - name: nodes
-      fields: ka.target.name
-      comps: in
-      values: [allowed_k8s_nodes]
+    and not ka.target.name in (allowed_k8s_nodes)
   output: Node not in allowed list successfully joined the cluster (user=%ka.user.name node=%ka.target.name)
   priority: ERROR
   source: k8s_audit
@@ -728,11 +627,7 @@
     and kcreate
     and not response_successful
     and not allow_all_k8s_nodes
-  exceptions:
-    - name: nodes
-      fields: ka.target.name
-      comps: in
-      values: [allowed_k8s_nodes]
+    and not ka.target.name in (allowed_k8s_nodes)
   output: Node not in allowed list tried unsuccessfully to join the cluster  (user=%ka.user.name node=%ka.target.name reason=%ka.response.reason)
   priority: WARNING
   source: k8s_audit
