@@ -20,7 +20,7 @@
 
 trap "cleanup; exit" SIGHUP SIGINT SIGTERM
 
-TRACE_FILES_BASE_URL=${TRACE_FILES_BASE_URL:-"https://falco-distribution.s3.amazonaws.com/fixtures/trace-files/"}
+TRACE_FILES_BASE_URL=${TRACE_FILES_BASE_URL:-"https://download.falco.org/fixtures/trace-files/"}
 
 function download_trace_files() {
 
