@@ -26,6 +26,14 @@ make test-trace-files
 
 It prepares the fixtures (`json` and `scap` files) needed by the integration tests.
 
+**Requirements**
+
+- Python 3.x
+- [Virtualenv](https://virtualenv.pypa.io/en/latest/)
+- [grpcurl](https://github.com/fullstorydev/grpcurl)
+
+**Setup and execution**
+
 Using `virtualenv` the steps to locally run a specific test suite are the following ones (**from this directory**):
 
 ```console
