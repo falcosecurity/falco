@@ -20,7 +20,7 @@ set -euo pipefail
 SCRIPT=$(readlink -f $0)
 SCRIPTDIR=$(dirname "$SCRIPT")
 SKIP_PACKAGES_TESTS=${SKIP_PACKAGES_TESTS:-false}
-TRACE_FILES_BASE_URL=${TRACE_FILES_BASE_URL:-"https://falco-distribution.s3.amazonaws.com/fixtures/trace-files/"}
+TRACE_FILES_BASE_URL=${TRACE_FILES_BASE_URL:-"https://download.falco.org/fixtures/trace-files/"}
 
 # Trace file tarballs are now versioned. Any time a substantial change
 # is made that affects the interaction of rules+engine and the trace
