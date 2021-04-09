@@ -381,7 +381,7 @@ jobs:
             yum install epel-release -y
             yum update -y
             yum install createrepo gpg python python-pip -y
-            pip install awscli
+            pip install awscli==1.19.47
             echo $GPG_KEY | base64 -d | gpg --import
       - run:
           name: Publish rpm-dev
@@ -495,7 +495,7 @@ jobs:
             yum install epel-release -y
             yum update -y
             yum install createrepo gpg python python-pip -y
-            pip install awscli
+            pip install awscli==1.19.47
             echo $GPG_KEY | base64 -d | gpg --import
       - run:
           name: Publish rpm
