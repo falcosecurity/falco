@@ -2,7 +2,7 @@
 
 ## v0.28.0
 
-Released on 2021-04-09
+Released on 2021-04-12
 
 ### Major Changes
 
@@ -57,6 +57,27 @@ Released on 2021-04-09
 * rule(list deb_binaries): add apt.systemd.daily [[#1385](https://github.com/falcosecurity/falco/pull/1385)] - [@epcim](https://github.com/epcim)
 * rule(Sudo Potential Privilege Escalation): new rule created to detect CVE-2021-3156 [[#1543](https://github.com/falcosecurity/falco/pull/1543)] - [@darryk10](https://github.com/darryk10)
 * rule(list allowed_k8s_users): add `eks:node-manager` [[#1536](https://github.com/falcosecurity/falco/pull/1536)] - [@ismailyenigul](https://github.com/ismailyenigul)
+* rule(list mysql_mgmt_binaries): removed [[#1602](https://github.com/falcosecurity/falco/pull/1602)] - [@fntlnz](https://github.com/fntlnz)
+* rule(list db_mgmt_binaries): removed [[#1602](https://github.com/falcosecurity/falco/pull/1602)] - [@fntlnz](https://github.com/fntlnz)
+* rule(macro parent_ansible_running_python): removed [[#1602](https://github.com/falcosecurity/falco/pull/1602)] - [@fntlnz](https://github.com/fntlnz)
+* rule(macro parent_bro_running_python): removed [[#1602](https://github.com/falcosecurity/falco/pull/1602)] - [@fntlnz](https://github.com/fntlnz)
+* rule(macro parent_python_running_denyhosts): removed [[#1602](https://github.com/falcosecurity/falco/pull/1602)] - [@fntlnz](https://github.com/fntlnz)
+* rule(macro parent_linux_image_upgrade_script): removed [[#1602](https://github.com/falcosecurity/falco/pull/1602)] - [@fntlnz](https://github.com/fntlnz)
+* rule(macro parent_java_running_echo): removed [[#1602](https://github.com/falcosecurity/falco/pull/1602)] - [@fntlnz](https://github.com/fntlnz)
+* rule(macro parent_scripting_running_builds): removed [[#1602](https://github.com/falcosecurity/falco/pull/1602)] - [@fntlnz](https://github.com/fntlnz)
+* rule(macro parent_Xvfb_running_xkbcomp): removed [[#1602](https://github.com/falcosecurity/falco/pull/1602)] - [@fntlnz](https://github.com/fntlnz)
+* rule(macro parent_nginx_running_serf): removed [[#1602](https://github.com/falcosecurity/falco/pull/1602)] - [@fntlnz](https://github.com/fntlnz)
+* rule(macro parent_node_running_npm): removed [[#1602](https://github.com/falcosecurity/falco/pull/1602)] - [@fntlnz](https://github.com/fntlnz)
+* rule(macro parent_java_running_sbt): removed [[#1602](https://github.com/falcosecurity/falco/pull/1602)] - [@fntlnz](https://github.com/fntlnz)
+* rule(list known_container_shell_spawn_cmdlines): removed [[#1602](https://github.com/falcosecurity/falco/pull/1602)] - [@fntlnz](https://github.com/fntlnz)
+* rule(list known_shell_spawn_binaries): removed [[#1602](https://github.com/falcosecurity/falco/pull/1602)] - [@fntlnz](https://github.com/fntlnz)
+* rule(macro run_by_puppet): removed [[#1602](https://github.com/falcosecurity/falco/pull/1602)] - [@fntlnz](https://github.com/fntlnz)
+* rule(macro user_privileged_containers): removed [[#1602](https://github.com/falcosecurity/falco/pull/1602)] - [@fntlnz](https://github.com/fntlnz)
+* rule(list rancher_images): removed [[#1602](https://github.com/falcosecurity/falco/pull/1602)] - [@fntlnz](https://github.com/fntlnz)
+* rule(list images_allow_network_outside_subnet): removed [[#1602](https://github.com/falcosecurity/falco/pull/1602)] - [@fntlnz](https://github.com/fntlnz)
+* rule(macro parent_python_running_sdchecks): removed [[#1602](https://github.com/falcosecurity/falco/pull/1602)] - [@fntlnz](https://github.com/fntlnz)
+* rule(macro trusted_containers): removed [[#1602](https://github.com/falcosecurity/falco/pull/1602)] - [@fntlnz](https://github.com/fntlnz)
+* rule(list authorized_server_binaries): removed [[#1602](https://github.com/falcosecurity/falco/pull/1602)] - [@fntlnz](https://github.com/fntlnz)
 
 
 ### Non user-facing changes
