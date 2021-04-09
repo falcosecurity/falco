@@ -538,11 +538,6 @@
 - macro: system_users
   condition: user.name in (bin, daemon, games, lp, mail, nobody, sshd, sync, uucp, www-data)
 
-- macro: parent_python_running_sdchecks
-  condition: >
-    (proc.pname in (python, python2.7) and
-    (proc.pcmdline contains /opt/draios/bin/sdchecks))
-
 - macro: python_running_sdchecks
   condition: >
     (proc.name in (python, python2.7) and
@@ -1759,13 +1754,6 @@
 - list: trusted_images
   items: []
 
-# NOTE: This macro is only provided for backwards compatibility with
-# older local falco rules files that may have been appending to
-# trusted_images. To make customizations, it's better to add containers to
-# user_trusted_containers, user_privileged_containers or user_sensitive_mount_containers.
-- macro: trusted_containers
-  condition: (container.image.repository in (trusted_images))
-
 # Add conditions to this macro (probably in a separate file,
 # overwriting this macro) to specify additional containers that are
 # trusted and therefore allowed to run privileged *and* with sensitive
@@ -1831,12 +1819,6 @@
 # and repeats it.
 - macro: user_privileged_containers
   condition: (never_true)
-
-- list: rancher_images
-  items: [
-    rancher/network-manager, rancher/dns, rancher/agent,
-    rancher/lb-service-haproxy, rancher/metadata, rancher/healthcheck
-  ]
 
 # These container images are allowed to mount sensitive paths from the
 # host filesystem.
@@ -2849,10 +2831,6 @@
 - macro: enabled_rule_network_only_subnet
   condition: (never_true)
 
-# Images that are allowed to have outbound traffic
-- list: images_allow_network_outside_subnet
-  items: []
-
 # Namespaces where the rule is enforce
 - list: namespace_scope_network_only_subnet
   items: []
@@ -2891,9 +2869,6 @@
 
 - list: allowed_image
   items: [] # add image to monitor, i.e.: bitnami/nginx
-
-- list: authorized_server_binaries
-  items: []  # add binary to allow, i.e.: nginx
 
 - list: authorized_server_port
   items: [] # add port to allow, i.e.: 80
