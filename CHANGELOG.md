@@ -1,5 +1,82 @@
 # Change Log
 
+## v0.28.0
+
+Released on 2021-04-09
+
+### Major Changes
+
+* BREAKING CHANGE: Bintray is deprecated, no new packages will be published at https://dl.bintray.com/falcosecurity/ [[#1577](https://github.com/falcosecurity/falco/pull/1577)] - [@leogr](https://github.com/leogr)
+* BREAKING CHANGE: SKIP_MODULE_LOAD env variable no more disables the driver loading (use SKIP_DRIVER_LOADER env variable introduced in Falco 0.24) [[#1599](https://github.com/falcosecurity/falco/pull/1599)] - [@leodido](https://github.com/leodido)
+* BREAKING CHANGE: the init.d service unit is not shipped anymore in deb/rpm packages in favor of a systemd service file [[#1448](https://github.com/falcosecurity/falco/pull/1448)] - [@jenting](https://github.com/jenting)
+
+* new: add support for exceptions as rule attributes to provide a compact way to add exceptions to Falco rules [[#1427](https://github.com/falcosecurity/falco/pull/1427)] - [@mstemm](https://github.com/mstemm)
+* new: falco-no-driver container images on AWS ECR gallery (https://gallery.ecr.aws/falcosecurity/falco-no-driver) [[#1519](https://github.com/falcosecurity/falco/pull/1519)] - [@jonahjon](https://github.com/jonahjon)
+* new: falco-driver-loader container images on AWS ECR gallery (https://gallery.ecr.aws/falcosecurity/falco-driver-loader) [[#1519](https://github.com/falcosecurity/falco/pull/1519)] - [@jonahjon](https://github.com/jonahjon)
+* new: add healthz endpoint to the webserver [[#1546](https://github.com/falcosecurity/falco/pull/1546)] - [@cpanato](https://github.com/cpanato)
+* new: introduce a new configuration field `syscall_event_drops.threshold` to tune the drop noisiness [[#1586](https://github.com/falcosecurity/falco/pull/1586)] - [@leodido](https://github.com/leodido)
+* new: falco-driver-loader script can get a custom driver name from DRIVER_NAME env variable [[#1488](https://github.com/falcosecurity/falco/pull/1488)] - [@leodido](https://github.com/leodido)
+* new: falco-driver-loader know the Falco version [[#1488](https://github.com/falcosecurity/falco/pull/1488)] - [@leodido](https://github.com/leodido)
+
+
+### Minor Changes
+
+* docs(proposals): libraries and drivers donation [[#1530](https://github.com/falcosecurity/falco/pull/1530)] - [@leodido](https://github.com/leodido)
+* docs(docker): update links to the new Falco website URLs [[#1545](https://github.com/falcosecurity/falco/pull/1545)] - [@cpanato](https://github.com/cpanato)
+* docs(test): update links to new Falco website URLs [[#1563](https://github.com/falcosecurity/falco/pull/1563)] - [@shane-lawrence](https://github.com/shane-lawrence)
+* build: now Falco packages are published at https://download.falco.org [[#1577](https://github.com/falcosecurity/falco/pull/1577)] - [@leogr](https://github.com/leogr)
+* update: lower the `syscall_event_drops.max_burst` default value to 1 [[#1586](https://github.com/falcosecurity/falco/pull/1586)] - [@leodido](https://github.com/leodido)
+* update: falco-driver-loader tries to download a Falco driver before then compiling it on the fly for the host [[#1599](https://github.com/falcosecurity/falco/pull/1599)] - [@leodido](https://github.com/leodido)
+* docs(test): document the prerequisites for running the integration test suite locally [[#1609](https://github.com/falcosecurity/falco/pull/1609)] - [@fntlnz](https://github.com/fntlnz)
+* update: Debian/RPM package migrated from init to systemd [[#1448](https://github.com/falcosecurity/falco/pull/1448)] - [@jenting](https://github.com/jenting)
+
+
+### Bug Fixes
+
+* fix(userspace/engine): properly handle field extraction over lists of containers when not all containers match the specified sub-properties [[#1601](https://github.com/falcosecurity/falco/pull/1601)] - [@mstemm](https://github.com/mstemm)
+* fix(docker/falco): add flex and bison dependency to container image [[#1562](https://github.com/falcosecurity/falco/pull/1562)] - [@schans](https://github.com/schans)
+* fix: ignore action can not be used with log and alert ones (`syscall_event_drops` config) [[#1586](https://github.com/falcosecurity/falco/pull/1586)] - [@leodido](https://github.com/leodido)
+* fix(userspace/engine): allows fields starting with numbers to be parsed properly [[#1598](https://github.com/falcosecurity/falco/pull/1598)] - [@mstemm](https://github.com/mstemm)
+
+
+### Rule Changes
+
+* rule(Write below monitored dir): improve rule description [[#1588](https://github.com/falcosecurity/falco/pull/1588)] - [@stevenshuang](https://github.com/stevenshuang)
+* rule(macro allowed_aws_eks_registry_root): macro to match the official eks registry [[#1555](https://github.com/falcosecurity/falco/pull/1555)] - [@ismailyenigul](https://github.com/ismailyenigul)
+* rule(macro aws_eks_image): match aws image repository for eks [[#1555](https://github.com/falcosecurity/falco/pull/1555)] - [@ismailyenigul](https://github.com/ismailyenigul)
+* rule(macro aws_eks_image_sensitive_mount): match aws cni images [[#1555](https://github.com/falcosecurity/falco/pull/1555)] - [@ismailyenigul](https://github.com/ismailyenigul)
+* rule(macro k8s_containers): include fluent/fluentd-kubernetes-daemonset and prom/prometheus [[#1555](https://github.com/falcosecurity/falco/pull/1555)] - [@ismailyenigul](https://github.com/ismailyenigul)
+* rule(Launch Privileged Container): exclude aws_eks_image [[#1555](https://github.com/falcosecurity/falco/pull/1555)] - [@ismailyenigul](https://github.com/ismailyenigul)
+* rule(Launch Sensitive Mount Container): exclude aws_eks_image_sensitive_mount [[#1555](https://github.com/falcosecurity/falco/pull/1555)] - [@ismailyenigul](https://github.com/ismailyenigul)
+* rule(Debugfs Launched in Privileged Container): new rule [[#1583](https://github.com/falcosecurity/falco/pull/1583)] - [@Kaizhe](https://github.com/Kaizhe)
+* rule(Mount Launched in Privileged Container): new rule [[#1583](https://github.com/falcosecurity/falco/pull/1583)] - [@Kaizhe](https://github.com/Kaizhe)
+* rule(Set Setuid or Setgid bit): add k3s-agent in the whitelist [[#1583](https://github.com/falcosecurity/falco/pull/1583)] - [@Kaizhe](https://github.com/Kaizhe)
+* rule(macro user_ssh_directory): using glob operator [[#1560](https://github.com/falcosecurity/falco/pull/1560)] - [@shane-lawrence](https://github.com/shane-lawrence)
+* rule(list falco_sensitive_mount_containers): added image exceptions for IBM cloud [[#1337](https://github.com/falcosecurity/falco/pull/1337)] - [@nibalizer](https://github.com/nibalizer)
+* rule(list rpm_binaries): add rhsmcertd [[#1385](https://github.com/falcosecurity/falco/pull/1385)] - [@epcim](https://github.com/epcim)
+* rule(list deb_binaries): add apt.systemd.daily [[#1385](https://github.com/falcosecurity/falco/pull/1385)] - [@epcim](https://github.com/epcim)
+* rule(Sudo Potential Privilege Escalation): new rule created to detect CVE-2021-3156 [[#1543](https://github.com/falcosecurity/falco/pull/1543)] - [@darryk10](https://github.com/darryk10)
+* rule(list allowed_k8s_users): add `eks:node-manager` [[#1536](https://github.com/falcosecurity/falco/pull/1536)] - [@ismailyenigul](https://github.com/ismailyenigul)
+
+
+### Non user-facing changes
+
+* chore(test): replace bucket url with official distribution url [[#1608](https://github.com/falcosecurity/falco/pull/1608)] - [@fntlnz](https://github.com/fntlnz)
+* adding asapp as an adopter [[#1611](https://github.com/falcosecurity/falco/pull/1611)] - [@Stuxend](https://github.com/Stuxend)
+* update: fixtures URLs [[#1603](https://github.com/falcosecurity/falco/pull/1603)] - [@leogr](https://github.com/leogr)
+* cleanup publishing jobs [[#1596](https://github.com/falcosecurity/falco/pull/1596)] - [@leogr](https://github.com/leogr)
+* fix(falco/test): bump pyyaml from 5.3.1 to 5.4 [[#1595](https://github.com/falcosecurity/falco/pull/1595)] - [@leodido](https://github.com/leodido)
+* fix(.circleci): tar must be present in the image [[#1594](https://github.com/falcosecurity/falco/pull/1594)] - [@leogr](https://github.com/leogr)
+* fix: publishing jobs [[#1591](https://github.com/falcosecurity/falco/pull/1591)] - [@leogr](https://github.com/leogr)
+* Pocteo as an adopter [[#1574](https://github.com/falcosecurity/falco/pull/1574)] - [@pocteo-labs](https://github.com/pocteo-labs)
+* build: fetch build deps from download.falco.org [[#1572](https://github.com/falcosecurity/falco/pull/1572)] - [@leogr](https://github.com/leogr)
+* adding shapesecurity to adopters [[#1566](https://github.com/falcosecurity/falco/pull/1566)] - [@irivera007](https://github.com/irivera007)
+* Use default pip version to get avocado version [[#1565](https://github.com/falcosecurity/falco/pull/1565)] - [@shane-lawrence](https://github.com/shane-lawrence)
+* Added Swissblock to list of adopters [[#1551](https://github.com/falcosecurity/falco/pull/1551)] - [@bygui86](https://github.com/bygui86)
+* Fix various typos in markdown files. [[#1514](https://github.com/falcosecurity/falco/pull/1514)] - [@didier-durand](https://github.com/didier-durand)
+* docs: move governance to falcosecurity/.github [[#1524](https://github.com/falcosecurity/falco/pull/1524)] - [@leogr](https://github.com/leogr)
+
+
 ## v0.27.0
 
 Released on 2021-01-18
