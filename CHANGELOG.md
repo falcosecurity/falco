@@ -9,7 +9,6 @@ Released on 2021-04-12
 * BREAKING CHANGE: Bintray is deprecated, no new packages will be published at https://dl.bintray.com/falcosecurity/ [[#1577](https://github.com/falcosecurity/falco/pull/1577)] - [@leogr](https://github.com/leogr)
 * BREAKING CHANGE: SKIP_MODULE_LOAD env variable no more disables the driver loading (use SKIP_DRIVER_LOADER env variable introduced in Falco 0.24) [[#1599](https://github.com/falcosecurity/falco/pull/1599)] - [@leodido](https://github.com/leodido)
 * BREAKING CHANGE: the init.d service unit is not shipped anymore in deb/rpm packages in favor of a systemd service file [[#1448](https://github.com/falcosecurity/falco/pull/1448)] - [@jenting](https://github.com/jenting)
-
 * new: add support for exceptions as rule attributes to provide a compact way to add exceptions to Falco rules [[#1427](https://github.com/falcosecurity/falco/pull/1427)] - [@mstemm](https://github.com/mstemm)
 * new: falco-no-driver container images on AWS ECR gallery (https://gallery.ecr.aws/falcosecurity/falco-no-driver) [[#1519](https://github.com/falcosecurity/falco/pull/1519)] - [@jonahjon](https://github.com/jonahjon)
 * new: falco-driver-loader container images on AWS ECR gallery (https://gallery.ecr.aws/falcosecurity/falco-driver-loader) [[#1519](https://github.com/falcosecurity/falco/pull/1519)] - [@jonahjon](https://github.com/jonahjon)
@@ -96,6 +95,7 @@ Released on 2021-04-12
 * Added Swissblock to list of adopters [[#1551](https://github.com/falcosecurity/falco/pull/1551)] - [@bygui86](https://github.com/bygui86)
 * Fix various typos in markdown files. [[#1514](https://github.com/falcosecurity/falco/pull/1514)] - [@didier-durand](https://github.com/didier-durand)
 * docs: move governance to falcosecurity/.github [[#1524](https://github.com/falcosecurity/falco/pull/1524)] - [@leogr](https://github.com/leogr)
+* ci: fix missing infra context to publish stable Falco packages [[#1615](https://github.com/falcosecurity/falco/pull/1615)] - [@leodido](https://github.com/leodido)
 
 
 ## v0.27.0
