@@ -706,7 +706,9 @@ workflows:
             branches:
               ignore: /.*/
       - "publish/packages":
-          context: falco
+          context:
+            - falco
+            - test-infra
           requires:
             - "build/musl"
             - "rpm/sign"
