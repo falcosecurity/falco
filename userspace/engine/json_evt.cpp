@@ -281,7 +281,11 @@ bool json_event_value::parse_as_int64(int64_t &intval, const std::string &val)
 			return false;
 		}
 	}
-	catch (std::invalid_argument &e)
+	catch(std::out_of_range &)
+	{
+		return false;
+	}
+	catch (std::invalid_argument &)
 	{
 		return false;
 	}
