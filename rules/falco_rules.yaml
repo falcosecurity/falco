@@ -538,11 +538,6 @@
 - macro: system_users
   condition: user.name in (bin, daemon, games, lp, mail, nobody, sshd, sync, uucp, www-data)
 
-- macro: python_running_sdchecks
-  condition: >
-    (proc.name in (python, python2.7) and
-    (proc.cmdline contains /opt/draios/bin/sdchecks))
-
 - macro: httpd_writing_ssl_conf
   condition: >
     (proc.pname=run-httpd and
@@ -1554,7 +1549,6 @@
     and not proc.name startswith "runc"
     and not proc.cmdline startswith "containerd"
     and not proc.pname in (sysdigcloud_binaries, hyperkube, kubelet, protokube, dockerd, tini, aws)
-    and not python_running_sdchecks
     and not java_running_sdjagent
     and not kubelet_running_loopback
     and not rancher_agent
