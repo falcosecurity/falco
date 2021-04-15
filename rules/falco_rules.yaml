@@ -1392,6 +1392,15 @@
 - macro: user_read_sensitive_file_containers
   condition: (container and container.image.repository in (read_sensitive_file_images))
 
+# This macro detects man-db postinst, see https://salsa.debian.org/debian/man-db/-/blob/master/debian/postinst
+# The rule "Read sensitive file untrusted" use this macro to avoid FPs.
+- macro: mandb_postinst
+  condition: >
+    (proc.name=perl and proc.args startswith "-e" and
+    proc.args contains "@pwd = getpwnam(" and
+    proc.args contains "exec " and
+    proc.args contains "/usr/bin/mandb")
+
 - rule: Read sensitive file untrusted
   desc: >
     an attempt to read any sensitive file (e.g. files containing user/password/authentication
@@ -1407,11 +1416,11 @@
      )
     and not cmp_cp_by_passwd
     and not ansible_running_python
-    and not proc.cmdline contains /usr/bin/mandb
     and not run_by_qualys
     and not run_by_chef
     and not run_by_google_accounts_daemon
     and not user_read_sensitive_file_conditions
+    and not mandb_postinst
     and not perl_running_plesk
     and not perl_running_updmap
     and not veritas_driver_script
