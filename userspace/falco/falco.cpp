@@ -252,6 +252,7 @@ uint64_t do_inspect(falco_engine *engine,
 	sinsp_evt* ev;
 	StatsFileWriter writer;
 	uint64_t duration_start = 0;
+	uint64_t timeouts_since_last_success_or_msg = 0;
 
 	sdropmgr.init(inspector,
 		      outputs,
@@ -299,6 +300,19 @@ uint64_t do_inspect(falco_engine *engine,
 		}
 		else if(rc == SCAP_TIMEOUT)
 		{
+			if(ev == nullptr)
+			{
+				timeouts_since_last_success_or_msg++;
+				if(timeouts_since_last_success_or_msg > 100)
+				{
+					std::string rule = "Falco internal: timeouts notification";
+					std::string msg = rule + ". 100 consecutive timeouts without event.";
+					std::map<std::string, std::string> of;
+					outputs->handle_msg(duration_start, falco_common::PRIORITY_DEBUG, msg, rule, of);
+					timeouts_since_last_success_or_msg = 0;
+				}
+			}
+
 			continue;
 		}
 		else if(rc == SCAP_EOF)
@@ -309,16 +323,17 @@ uint64_t do_inspect(falco_engine *engine,
 		{
 			//
 			// Event read error.
-			// Notify the chisels that we're exiting, and then die with an error.
 			//
 			cerr << "rc = " << rc << endl;
 			throw sinsp_exception(inspector->getlasterr().c_str());
 		}
 
-		if (duration_start == 0)
+		timeouts_since_last_success_or_msg = 0;
+		if(duration_start == 0)
 		{
 			duration_start = ev->get_ts();
-		} else if(duration_to_tot_ns > 0)
+		}
+		else if(duration_to_tot_ns > 0)
 		{
 			if(ev->get_ts() - duration_start >= duration_to_tot_ns)
 			{
