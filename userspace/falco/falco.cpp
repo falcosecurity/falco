@@ -37,6 +37,7 @@ limitations under the License.
 #include "utils.h"
 #include "chisel.h"
 #include "fields_info.h"
+#include "falco_utils.h"
 
 #include "event_drops.h"
 #include "configuration.h"
@@ -300,7 +301,7 @@ uint64_t do_inspect(falco_engine *engine,
 		}
 		else if(rc == SCAP_TIMEOUT)
 		{
-			if(ev == nullptr)
+			if(unlikely(ev == nullptr))
 			{
 				timeouts_since_last_success_or_msg++;
 				if(timeouts_since_last_success_or_msg > 100)
@@ -309,6 +310,7 @@ uint64_t do_inspect(falco_engine *engine,
 					std::string msg = rule + ". 100 consecutive timeouts without event.";
 					std::map<std::string, std::string> of;
 					outputs->handle_msg(duration_start, falco_common::PRIORITY_DEBUG, msg, rule, of);
+					// Reset the timeouts counter, Falco alerted
 					timeouts_since_last_success_or_msg = 0;
 				}
 			}
@@ -328,6 +330,7 @@ uint64_t do_inspect(falco_engine *engine,
 			throw sinsp_exception(inspector->getlasterr().c_str());
 		}
 
+		// Reset the timeouts counter, Falco succesfully got an event to process
 		timeouts_since_last_success_or_msg = 0;
 		if(duration_start == 0)
 		{
