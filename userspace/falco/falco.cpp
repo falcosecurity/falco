@@ -309,8 +309,11 @@ uint64_t do_inspect(falco_engine *engine,
 				{
 					std::string rule = "Falco internal: timeouts notification";
 					std::string msg = rule + ". " + std::to_string(config.m_syscall_evt_timeout_max_consecutives) + " consecutive timeouts without event.";
-					std::string last_event_time_str;
-					sinsp_utils::ts_to_string(duration_start, &last_event_time_str, false, true);
+					std::string last_event_time_str = "none";
+					if(duration_start > 0)
+					{
+						sinsp_utils::ts_to_string(duration_start, &last_event_time_str, false, true);
+					}
 					std::map<std::string, std::string> o = {
 						{"last_event_time", last_event_time_str},
 					};
