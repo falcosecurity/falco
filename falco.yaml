@@ -110,6 +110,7 @@ syscall_event_drops:
 # Here you can configure the maximum number of consecutive timeouts without an event
 # after which you want Falco to alert.
 # By default this value is set to 1000 consecutive timeouts without an event at all.
+# How this value maps to a time interval depends on the CPU frequency.
 
 syscall_event_timeouts:
   max_consecutives: 1000

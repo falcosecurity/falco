@@ -23,6 +23,7 @@ limitations under the License.
 #include <vector>
 #include <algorithm>
 #include <string>
+#include <chrono>
 #include <functional>
 #include <signal.h>
 #include <fcntl.h>
@@ -253,7 +254,7 @@ uint64_t do_inspect(falco_engine *engine,
 	sinsp_evt* ev;
 	StatsFileWriter writer;
 	uint64_t duration_start = 0;
-	uint64_t timeouts_since_last_success_or_msg = 0;
+	uint32_t timeouts_since_last_success_or_msg = 0;
 
 	sdropmgr.init(inspector,
 		      outputs,
@@ -304,12 +305,17 @@ uint64_t do_inspect(falco_engine *engine,
 			if(unlikely(ev == nullptr))
 			{
 				timeouts_since_last_success_or_msg++;
-				if(timeouts_since_last_success_or_msg > 100)
+				if(timeouts_since_last_success_or_msg > config.m_syscall_evt_timeout_max_consecutives)
 				{
 					std::string rule = "Falco internal: timeouts notification";
-					std::string msg = rule + ". 100 consecutive timeouts without event.";
-					std::map<std::string, std::string> of;
-					outputs->handle_msg(duration_start, falco_common::PRIORITY_DEBUG, msg, rule, of);
+					std::string msg = rule + ". " + std::to_string(config.m_syscall_evt_timeout_max_consecutives) + " consecutive timeouts without event.";
+					std::string last_event_time_str;
+					sinsp_utils::ts_to_string(duration_start, &last_event_time_str, false, true);
+					std::map<std::string, std::string> o = {
+						{"last_event_time", last_event_time_str},
+					};
+					auto now = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+					outputs->handle_msg(now, falco_common::PRIORITY_DEBUG, msg, rule, o);
 					// Reset the timeouts counter, Falco alerted
 					timeouts_since_last_success_or_msg = 0;
 				}
