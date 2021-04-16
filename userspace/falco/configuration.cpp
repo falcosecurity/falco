@@ -246,6 +246,12 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 	m_syscall_evt_drop_rate = m_config->get_scalar<double>("syscall_event_drops", "rate", .03333);
 	m_syscall_evt_drop_max_burst = m_config->get_scalar<double>("syscall_event_drops", "max_burst", 1);
 	m_syscall_evt_simulate_drops = m_config->get_scalar<bool>("syscall_event_drops", "simulate_drops", false);
+
+	m_syscall_evt_timeout_max_consecutives = m_config->get_scalar<uint32_t>("syscall_event_timeouts", "max_consecutives", 1000);
+	if(m_syscall_evt_timeout_max_consecutives == 0)
+	{
+		throw logic_error("Error reading config file(" + m_config_file + "): the maximum consecutive timeouts without an event must be an unsigned integer > 0");
+	}
 }
 
 void falco_configuration::read_rules_file_directory(const string &path, list<string> &rules_filenames)

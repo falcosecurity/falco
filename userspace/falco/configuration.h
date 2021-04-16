@@ -219,13 +219,15 @@ public:
 	std::string m_webserver_k8s_healthz_endpoint;
 	bool m_webserver_ssl_enabled;
 	std::string m_webserver_ssl_certificate;
+
 	syscall_evt_drop_actions m_syscall_evt_drop_actions;
 	double m_syscall_evt_drop_threshold;
 	double m_syscall_evt_drop_rate;
 	double m_syscall_evt_drop_max_burst;
-
 	// Only used for testing
 	bool m_syscall_evt_simulate_drops;
+
+	uint32_t m_syscall_evt_timeout_max_consecutives;
 
 private:
 	void init_cmdline_options(std::list<std::string>& cmdline_options);

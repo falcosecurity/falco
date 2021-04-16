@@ -97,6 +97,23 @@ syscall_event_drops:
   rate: .03333
   max_burst: 1
 
+# Falco uses a shared buffer between the kernel and userspace to receive
+# the events (eg., system call information) in userspace.
+#
+# Anyways, the underlying libraries can also timeout for various reasons.
+# For example, there could have been issues while reading an event.
+# Or the particular event needs to be skipped.
+# Normally, it's very unlikely that Falco does not receive events consecutively.
+#
+# Falco is able to detect such uncommon situation.
+#
+# Here you can configure the maximum number of consecutive timeouts without an event
+# after which you want Falco to alert.
+# By default this value is set to 1000 consecutive timeouts without an event at all.
+
+syscall_event_timeouts:
+  max_consecutives: 1000
+
 # Falco continuously monitors outputs performance. When an output channel does not allow
 # to deliver an alert within a given deadline, an error is reported indicating
 # which output is blocking notifications.
