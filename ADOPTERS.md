@@ -1,5 +1,21 @@
 # Adopters
 
+Known end users with notable contributions to the project include:
+* AWS
+* IBM
+* Red Hat
+
+Falco is being used by numerous other companies, both large and small, to build higher layer products and services. The list includes but is not limited to: 
+* Equinix Metal
+* IEEE
+* Lowes
+* Reckrut
+* Yellow Pepper
+* CTx
+* Utikal
+* Discrete Events
+* Agritech Infra
+
 This is a list of production adopters of Falco (in alphabetical order):
 
 * [ASAPP](https://www.asapp.com/) - ASAPP is a pushing the boundaries of fundamental artificial intelligence research. We apply our research into AI-Native® products that make organizations, in the customer experience industry, highly productive, efficient, and effective—by augmenting human activity and automating workflows. We constantly monitor our workloads against different hazards and FALCO helps us extend our threat monitoring boundaries.
@@ -35,3 +51,7 @@ This is a list of production adopters of Falco (in alphabetical order):
 * [Shapesecurity/F5] (https://www.shapesecurity.com/) Shapesecurity defends against application fraud attacks like Account Take Over, Credential Stuffing, Fake Accounts, etc. Required by FedRamp certification, we needed to find a FIM solution to help monitor and protect our Kubernetes clusters. Traditional FIM solutions were not scalable and not working for our environment, but with Falco we found the solution we needed. Falco's detection capabilities have helped us identify anomalous behaviour within our clusters. We leverage Sidekick (https://github.com/falcosecurity/charts/tree/master/falcosidekick) to send Falco alerts to a PubSub which in turn publishes those alerts to our SIEM (SumoLogic)
 
 * [Sysdig](https://www.sysdig.com/) Sysdig originally created Falco in 2016 to detect unexpected or suspicious activity using a rules engine on top of the data that comes from the sysdig kernel system call probe. Sysdig provides tooling to help with vulnerability management, compliance, detection, incident response and forensics in Cloud-native environments. Sysdig Secure has extended Falco to include: a rule library, the ability to update macros, lists & rules via the user interface and API, automated tuning of rules, and rule creation based on profiling known system behavior. On top of the basic Falco rules, Sysdig Secure implements the concept of a "Security policy" that can comprise several rules which are evaluated for a user-defined infrastructure scope like Kubernetes namespaces, OpenShift clusters, deployment workload, cloud regions etc.
+
+## Adding a name
+
+If you would like to add your name to this file, submit a pull request with your change. 
