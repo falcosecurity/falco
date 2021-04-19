@@ -623,3 +623,12 @@ trace_files: !mux
     detect_counts:
       - K8s Secret Deleted: 1
     trace_file: trace_files/k8s_audit/delete_secret.json
+
+  fal_01_003:
+    detect: False
+    detect_level: INFO
+    rules_file:
+      - ../rules/falco_rules.yaml
+      - ../rules/k8s_audit_rules.yaml
+    trace_file: trace_files/k8s_audit/fal_01_003.json
+    stderr_contains: 'Could not read k8s audit event line #1, "{"kind": 0}": Data not recognized as a k8s audit event, stopping'
