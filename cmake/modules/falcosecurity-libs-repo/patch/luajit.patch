@@ -1,7 +1,7 @@
-diff --git a/userspace/libsinsp/chisel.cpp b/userspace/libsinsp/chisel.cpp
+diff --git a/userspace/chisel/chisel.cpp b/userspace/chisel/chisel.cpp
 index 0a6e3cf8..0c2e255a 100644
---- a/userspace/libsinsp/chisel.cpp
-+++ b/userspace/libsinsp/chisel.cpp
+--- a/userspace/chisel/chisel.cpp
++++ b/userspace/chisel/chisel.cpp
 @@ -98,7 +98,7 @@ void lua_stackdump(lua_State *L)
  // Lua callbacks
  ///////////////////////////////////////////////////////////////////////////////
@@ -29,10 +29,10 @@ index 0a6e3cf8..0c2e255a 100644
  {
  	{"field", &lua_cbacks::field},
  	{"get_num", &lua_cbacks::get_num},
-diff --git a/userspace/libsinsp/lua_parser.cpp b/userspace/libsinsp/lua_parser.cpp
+diff --git a/userspace/chisel/lua_parser.cpp b/userspace/chisel/lua_parser.cpp
 index 0e26617d..78810d96 100644
---- a/userspace/libsinsp/lua_parser.cpp
-+++ b/userspace/libsinsp/lua_parser.cpp
+--- a/userspace/chisel/lua_parser.cpp
++++ b/userspace/chisel/lua_parser.cpp
 @@ -32,7 +32,7 @@ extern "C" {
  #include "lauxlib.h"
  }
@@ -42,10 +42,10 @@ index 0e26617d..78810d96 100644
  {
  	{"rel_expr", &lua_parser_cbacks::rel_expr},
  	{"bool_op", &lua_parser_cbacks::bool_op},
-diff --git a/userspace/libsinsp/lua_parser_api.cpp b/userspace/libsinsp/lua_parser_api.cpp
+diff --git a/userspace/chisel/lua_parser_api.cpp b/userspace/chisel/lua_parser_api.cpp
 index c89e9126..c3d8008a 100644
---- a/userspace/libsinsp/lua_parser_api.cpp
-+++ b/userspace/libsinsp/lua_parser_api.cpp
+--- a/userspace/chisel/lua_parser_api.cpp
++++ b/userspace/chisel/lua_parser_api.cpp
 @@ -266,7 +266,7 @@ int lua_parser_cbacks::rel_expr(lua_State *ls)
  					string err = "Got non-table as in-expression operand\n";
  					throw sinsp_exception("parser API error");

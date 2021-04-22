@@ -36,7 +36,6 @@ limitations under the License.
 
 #include "logger.h"
 #include "utils.h"
-#include "chisel.h"
 #include "fields_info.h"
 #include "falco_utils.h"
 
