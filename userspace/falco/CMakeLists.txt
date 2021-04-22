@@ -25,7 +25,6 @@ set(
   event_drops.cpp
   statsfilewriter.cpp
   falco.cpp
-  "${FALCOSECURITY_LIBS_SOURCE_DIR}/userspace/libsinsp/fields_info.cpp"
 )
 
 set(

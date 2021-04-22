@@ -14,25 +14,15 @@
 set(FALCOSECURITY_LIBS_CMAKE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules/falcosecurity-libs-repo")
 set(FALCOSECURITY_LIBS_CMAKE_WORKING_DIR "${CMAKE_BINARY_DIR}/falcosecurity-libs-repo")
 
-# this needs to be here at the top
-if(USE_BUNDLED_DEPS)
-  # explicitly force this dependency to use the bundled OpenSSL
-  if(NOT MINIMAL_BUILD)
-    set(USE_BUNDLED_OPENSSL ON)
-  endif()
-  set(USE_BUNDLED_JQ ON)
-endif()
-
 file(MAKE_DIRECTORY ${FALCOSECURITY_LIBS_CMAKE_WORKING_DIR})
 
 # The falcosecurity/libs git reference (branch name, commit hash, or tag) To update falcosecurity/libs version for the next release, change the
 # default below In case you want to test against another falcosecurity/libs version just pass the variable - ie., `cmake
 # -DFALCOSECURITY_LIBS_VERSION=dev ..`
 if(NOT FALCOSECURITY_LIBS_VERSION)
-  set(FALCOSECURITY_LIBS_VERSION "bf2bc1e2aa21e1ec65c77caf449de77d0487fb79")
-  set(FALCOSECURITY_LIBS_CHECKSUM "SHA256=3d1a56a322b6f5300ae4ce2cf82b03f30535cbe49f7b1943762596fa13be7050")
+  set(FALCOSECURITY_LIBS_VERSION "build/upgrade-deps")
+  set(FALCOSECURITY_LIBS_CHECKSUM "SHA256=087837c7d8c4a2756b2f2110e53eb8218c603d8dc8e98155a9d072ed1112502b")
 endif()
-set(PROBE_VERSION "${FALCOSECURITY_LIBS_VERSION}")
 
 # cd /path/to/build && cmake /path/to/source
 execute_process(COMMAND "${CMAKE_COMMAND}" -DFALCOSECURITY_LIBS_VERSION=${FALCOSECURITY_LIBS_VERSION} -DFALCOSECURITY_LIBS_CHECKSUM=${FALCOSECURITY_LIBS_CHECKSUM}
@@ -46,33 +36,29 @@ execute_process(COMMAND "${CMAKE_COMMAND}" -DFALCOSECURITY_LIBS_VERSION=${FALCOS
 execute_process(COMMAND "${CMAKE_COMMAND}" --build . WORKING_DIRECTORY "${FALCOSECURITY_LIBS_CMAKE_WORKING_DIR}")
 set(FALCOSECURITY_LIBS_SOURCE_DIR "${FALCOSECURITY_LIBS_CMAKE_WORKING_DIR}/falcosecurity-libs-prefix/src/falcosecurity-libs")
 
-# jsoncpp
-set(JSONCPP_SRC "${FALCOSECURITY_LIBS_SOURCE_DIR}/userspace/libsinsp/third-party/jsoncpp")
-set(JSONCPP_INCLUDE "${JSONCPP_SRC}")
-set(JSONCPP_LIB_SRC "${JSONCPP_SRC}/jsoncpp.cpp")
-
-# Add driver directory
-add_subdirectory("${FALCOSECURITY_LIBS_SOURCE_DIR}/driver" "${PROJECT_BINARY_DIR}/driver")
-
-# Add libscap directory
 add_definitions(-D_GNU_SOURCE)
 add_definitions(-DHAS_CAPTURE)
-add_definitions(-DNOCURSESUI)
 if(MUSL_OPTIMIZED_BUILD)
   add_definitions(-DMUSL_OPTIMIZED)
 endif()
-add_subdirectory("${FALCOSECURITY_LIBS_SOURCE_DIR}/userspace/libscap" "${PROJECT_BINARY_DIR}/userspace/libscap")
 
-# Add libsinsp directory
-add_subdirectory("${FALCOSECURITY_LIBS_SOURCE_DIR}/userspace/libsinsp" "${PROJECT_BINARY_DIR}/userspace/libsinsp")
-add_dependencies(sinsp tbb b64 luajit)
+set(PROBE_VERSION "${FALCOSECURITY_LIBS_VERSION}")
+
+if(NOT LIBSCAP_DIR)
+  set(LIBSCAP_DIR "${FALCOSECURITY_LIBS_SOURCE_DIR}")
+endif()
+set(LIBSINSP_DIR "${FALCOSECURITY_LIBS_SOURCE_DIR}")
 
 # explicitly disable the tests of this dependency
-set(CREATE_TEST_TARGETS OFF)
+set(CREATE_TEST_TARGETS OFF CACHE BOOL "")
 
-if(USE_BUNDLED_DEPS)
-  add_dependencies(scap jq)
-  if(NOT MINIMAL_BUILD)
-    add_dependencies(scap curl grpc)
-  endif()
-endif()
+# todo(leogr): although Falco does not actually depend on chisels, we need this for the lua_parser. 
+# Hopefully, we can switch off this in the future
+set(WITH_CHISEL ON CACHE BOOL "")
+
+set(USE_BUNDLED_TBB ON CACHE BOOL "")
+
+list(APPEND CMAKE_MODULE_PATH "${FALCOSECURITY_LIBS_SOURCE_DIR}/cmake/modules")
+
+include(libscap)
+include(libsinsp)
