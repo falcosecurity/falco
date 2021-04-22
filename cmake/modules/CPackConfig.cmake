@@ -48,7 +48,7 @@ set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA
 set(CPACK_RPM_PACKAGE_LICENSE "Apache v2.0")
 set(CPACK_RPM_PACKAGE_ARCHITECTURE, "amd64")
 set(CPACK_RPM_PACKAGE_URL "https://www.falco.org")
-set(CPACK_RPM_PACKAGE_REQUIRES "dkms, kernel-devel, ncurses, systemd")
+set(CPACK_RPM_PACKAGE_REQUIRES "dkms, kernel-devel, systemd")
 set(CPACK_RPM_POST_INSTALL_SCRIPT_FILE "${CMAKE_BINARY_DIR}/scripts/rpm/postinstall")
 set(CPACK_RPM_PRE_UNINSTALL_SCRIPT_FILE "${CMAKE_BINARY_DIR}/scripts/rpm/preuninstall")
 set(CPACK_RPM_POST_UNINSTALL_SCRIPT_FILE "${CMAKE_BINARY_DIR}/scripts/rpm/postuninstall")
