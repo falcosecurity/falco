@@ -1787,7 +1787,6 @@
     docker.io/falcosecurity/falco,
     docker.io/mesosphere/mesos-slave,
     docker.io/rook/toolbox,
-    docker.io/sysdig/falco,
     docker.io/sysdig/sysdig,
     falcosecurity/falco,
     gcr.io/google_containers/kube-proxy,
@@ -1801,7 +1800,6 @@
     k8s.gcr.io/kube-proxy,
     k8s.gcr.io/prometheus-to-sd,
     quay.io/calico/node,
-    sysdig/falco,
     sysdig/sysdig,
     sematext_images
     ]
@@ -1827,7 +1825,7 @@
 # host filesystem.
 - list: falco_sensitive_mount_images
   items: [
-    docker.io/sysdig/falco, docker.io/sysdig/sysdig, sysdig/falco, sysdig/sysdig,
+    docker.io/sysdig/sysdig, sysdig/sysdig,
     docker.io/falcosecurity/falco, falcosecurity/falco,
     gcr.io/google_containers/hyperkube,
     gcr.io/google_containers/kube-proxy, docker.io/calico/node,
@@ -2332,9 +2330,9 @@
 - macro: k8s_containers
   condition: >
     (container.image.repository in (gcr.io/google_containers/hyperkube-amd64,
-     gcr.io/google_containers/kube2sky, docker.io/sysdig/falco,
+     gcr.io/google_containers/kube2sky,
      docker.io/sysdig/sysdig, docker.io/falcosecurity/falco,
-     sysdig/falco, sysdig/sysdig, falcosecurity/falco,
+     sysdig/sysdig, falcosecurity/falco,
      fluent/fluentd-kubernetes-daemonset, prom/prometheus,
      ibm_cloud_containers)
      or (k8s.ns.name = "kube-system"))
