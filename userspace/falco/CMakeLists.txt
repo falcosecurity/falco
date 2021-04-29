@@ -86,16 +86,22 @@ if(NOT MINIMAL_BUILD)
     "${GRPC_INCLUDE}"
     "${GRPCPP_INCLUDE}"
     "${PROTOBUF_INCLUDE}"
+    "${CARES_INCLUDE}"
   )
+
+  if(USE_BUNDLED_GRPC)
+    list(APPEND FALCO_DEPENDENCIES grpc)
+  endif()
 
   list(APPEND FALCO_DEPENDENCIES civetweb)
 
   list(
     APPEND FALCO_LIBRARIES
-    "${GPR_LIB}"
-    "${GRPC_LIB}"
     "${GRPCPP_LIB}"
+    "${GRPC_LIB}"
+    "${GPR_LIB}"
     "${PROTOBUF_LIB}"
+    "${CARES_LIB}"
     "${OPENSSL_LIBRARY_SSL}"
     "${OPENSSL_LIBRARY_CRYPTO}"
     "${LIBYAML_LIB}"
