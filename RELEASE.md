@@ -15,10 +15,10 @@ Before cutting a release we need to do some homework in the Falco repository. Th
 ### 1. Release notes
 - Find the previous release date (`YYYY-MM-DD`) by looking at the [Falco releases](https://github.com/falcosecurity/falco/releases)
 - Check the release note block of every PR matching the `is:pr is:merged closed:>YYYY-MM-DD` [filter](https://github.com/falcosecurity/falco/pulls?q=is%3Apr+is%3Amerged+closed%3A%3EYYYY-MM-DD)
-    - Ensure the release note block follows the [commit convention](https://github.com/falcosecurity/falco/blob/master/CONTRIBUTING.md#commit-convention), otherwise fix its content
+    - Ensure the release note block follows the [commit convention](https://github.com/falcosecurity/.github/blob/master/CONTRIBUTING.md#commit-convention), otherwise fix its content
     - If the PR has no milestone, assign it to the milestone currently undergoing release
-- Check issues without a milestone (using [is:pr is:merged no:milestone closed:>YYYY-MM-DD](https://github.com/falcosecurity/falco/pulls?q=is%3Apr+is%3Amerged+no%3Amilestone+closed%3A%3EYYYY-MM-DD) filter) and add them to the milestone currently undergoing release
-- Double-check that there are no more merged PRs without the target milestone assigned with the `is:pr is:merged no:milestone closed:>YYYY-MM-DD` [filters](https://github.com/falcosecurity/falco/pulls?q=is%3Apr+is%3Amerged+no%3Amilestone+closed%3A%3EYYYY-MM-DD), if any, fix them
+- Check issues without a milestone (using `is:pr is:merged no:milestone closed:>YYYY-MM-DD` [filter](https://github.com/falcosecurity/falco/pulls?q=is%3Apr+is%3Amerged+no%3Amilestone+closed%3A%3EYYYY-MM-DD) ) and add them to the milestone currently undergoing release
+- Double-check that there are no more merged PRs without the target milestone assigned with the `is:pr is:merged no:milestone closed:>YYYY-MM-DD` [filter](https://github.com/falcosecurity/falco/pulls?q=is%3Apr+is%3Amerged+no%3Amilestone+closed%3A%3EYYYY-MM-DD), if any, update those missing
 
 ### 2. Milestones
 
@@ -30,7 +30,7 @@ Before cutting a release we need to do some homework in the Falco repository. Th
     - If any, manually correct it then open an issue to automate version number bumping later
     - Versions table in the `README.md` updates itself automatically
 - Generate the change log using [rn2md](https://github.com/leodido/rn2md):
-    - Execute `rn2md -o falcosecurity -m <version> -r falco` 
+    - Execute `rn2md -o falcosecurity -m <version> -r falco`
     - In case `rn2md` emits error try to generate an GitHub OAuth access token and provide it with the `-t` flag
 - Add the latest changes on top the previous `CHANGELOG.md`
 - Submit a PR with the above modifications
@@ -52,7 +52,7 @@ Now assume `x.y.z` is the new version.
     git push origin x.y.z
     ```
 
-> **N.B.**: do NOT use an annotated tag
+> **N.B.**: do NOT use an annotated tag. For reference https://git-scm.com/book/en/v2/Git-Basics-Tagging
 
 - Wait for the CI to complete
 
