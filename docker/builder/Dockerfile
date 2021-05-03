@@ -24,7 +24,7 @@ RUN yum -y install centos-release-scl && \
     yum -y install --setopt=tsflags=nodocs $INSTALL_PKGS && \
     rpm -V $INSTALL_PKGS
 
-ARG CMAKE_VERSION=3.5.1
+ARG CMAKE_VERSION=3.6.3
 RUN source scl_source enable devtoolset-7 llvm-toolset-7 && \
     cd /tmp && \
     curl -L https://github.com/kitware/cmake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}.tar.gz | tar xz; \
