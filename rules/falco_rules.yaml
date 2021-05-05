@@ -1747,6 +1747,33 @@
        container.image.repository endswith /prometheus-node-exporter or
        container.image.repository endswith /image-inspector))
 
+# https://docs.aws.amazon.com/eks/latest/userguide/add-ons-images.html
+#  official AWS EKS registry list. AWS has different ECR repo per region
+- macro: allowed_aws_ecr_registry_root_for_eks
+  condition: >
+    (container.image.repository startswith "602401143452.dkr.ecr" or
+     container.image.repository startswith "877085696533.dkr.ecr" or 
+     container.image.repository startswith "800184023465.dkr.ecr" or 
+     container.image.repository startswith "602401143452.dkr.ecr" or 
+     container.image.repository startswith "918309763551.dkr.ecr" or
+     container.image.repository startswith "961992271922.dkr.ecr" or 
+     container.image.repository startswith "590381155156.dkr.ecr" or
+     container.image.repository startswith "558608220178.dkr.ecr" or 
+     container.image.repository startswith "151742754352.dkr.ecr" or
+     container.image.repository startswith "013241004608.dkr.ecr")
+
+
+- macro: aws_eks_core_images
+  condition: >
+    (allowed_aws_ecr_registry_root_for_eks and
+    (container.image.repository endswith ".amazonaws.com/amazon-k8s-cni" or
+     container.image.repository endswith ".amazonaws.com/eks/kube-proxy"))
+
+
+- macro: aws_eks_image_sensitive_mount
+  condition: >
+    (allowed_aws_ecr_registry_root_for_eks and container.image.repository endswith ".amazonaws.com/amazon-k8s-cni")
+
 # These images are allowed both to run with --privileged and to mount
 # sensitive paths from the host filesystem.
 #
@@ -1807,6 +1834,7 @@
 - macro: falco_privileged_containers
   condition: (openshift_image or
               user_trusted_containers or
+              aws_eks_core_images or
               container.image.repository in (trusted_images) or
               container.image.repository in (falco_privileged_images) or
               container.image.repository startswith istio/proxy_ or
@@ -1837,6 +1865,7 @@
 
 - macro: falco_sensitive_mount_containers
   condition: (user_trusted_containers or
+              aws_eks_image_sensitive_mount or
               container.image.repository in (trusted_images) or
               container.image.repository in (falco_sensitive_mount_images) or
               container.image.repository startswith quay.io/sysdig/)
