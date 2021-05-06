@@ -1,4 +1,4 @@
-# OSS Libraries Donation Plan
+# OSS Libraries Contribution Plan
 
 ## Summary
 
@@ -6,7 +6,7 @@ Sysdig Inc. intends to donate **libsinsp**, **libscap**, the **kernel module dri
 
 This means that some parts of the [draios/sysdig](https://github.com/draios/sysdig) repository will be moved to a new GitHub repository called [falcosecurity/libs](https://github.com/falcosecurity/libs).
 
-This plan aims to describe and clarify the terms and goals to get the donation done.
+This plan aims to describe and clarify the terms and goals to get the contribution done.
 
 ## Motivation
 
@@ -22,7 +22,7 @@ Sysdig (the command line tool) will continue to use the libraries now provided b
 This change is win-win for both parties because of the following reasons:
 
 - The Falco community owns the source code of the three most important parts of the software it distributes.
-  - Right now it is "only" an engine on top of the libraries. This **donation** helps in making the scope of the Falco project broader. Having the majority of the source code under an **open governance** in the same organization gives the Falco project more contribution opportunities, helps it in **evolving independently** and makes the whole Falco community a strong owner of the processes and decision making regarding those crucial parts.
+  - Right now it is "only" an engine on top of the libraries. This **contribution** helps in making the scope of the Falco project broader. Having the majority of the source code under an **open governance** in the same organization gives the Falco project more contribution opportunities, helps it in **evolving independently** and makes the whole Falco community a strong owner of the processes and decision making regarding those crucial parts.
 
 - Given the previous point, Sysdig (the command line tool) will benefit from the now **extended contributors base**
 
@@ -34,7 +34,7 @@ This change is win-win for both parties because of the following reasons:
 
 ## Goals
 
-There are many sub-projects and each of them interacts in a different way in this donation.
+There are many sub-projects and each of them interacts in a different way in this contribution.
 
 Let's see the goals per sub-project.
 
@@ -68,7 +68,7 @@ Let's see the goals per sub-project.
 
 13. Falco follows a [multi-stage model for adopting new projects](https://github.com/falcosecurity/evolution#falco-project-evolution), in this case we will do an exception since the library is foundational for Falco and it has a very good track record already
 
-14. This project will go already "Official support" once the donation is completed
+14. This project will go already "Official support" once the contribution is completed
 
 15. Contributing, Code of Conduct, Governance, Security, and Support will be the same as the rest of the organization, find them [here](https://github.com/falcosecurity/.github)
 
@@ -110,7 +110,7 @@ Let's see the goals per sub-project.
 
 13. Falco follows a [multi-stage model for adopting new projects](https://github.com/falcosecurity/evolution#falco-project-evolution), in this case we will do an exception since the library is foundational for Falco and it has a very good track record already
 
-14. This project will go already "Official support" once the donation is completed
+14. This project will go already "Official support" once the contribution is completed
 
 15. Contributing, Code of Conduct, Governance, Security, and Support will be the same as the rest of the organization, find them [here](https://github.com/falcosecurity/.github)
 
