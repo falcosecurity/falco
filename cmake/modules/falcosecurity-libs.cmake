@@ -49,8 +49,9 @@ if(NOT LIBSCAP_DIR)
 endif()
 set(LIBSINSP_DIR "${FALCOSECURITY_LIBS_SOURCE_DIR}")
 
-# explicitly disable the tests of this dependency
+# explicitly disable the tests/examples of this dependency
 set(CREATE_TEST_TARGETS OFF CACHE BOOL "")
+set(BUILD_LIBSCAP_EXAMPLES OFF CACHE BOOL "")
 
 # todo(leogr): although Falco does not actually depend on chisels, we need this for the lua_parser. 
 # Hopefully, we can switch off this in the future
