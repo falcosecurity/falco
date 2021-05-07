@@ -1,5 +1,44 @@
 # Change Log
 
+## v0.28.1
+
+Released on 2021-05-07
+
+### Major Changes
+
+* new: `--support` output now includes info about the Falco engine version [[#1581](https://github.com/falcosecurity/falco/pull/1581)] - [@mstemm](https://github.com/mstemm)
+* new: Falco outputs an alert in the unlikely situation it's receiving too many consecutive timeouts without an event [[#1622](https://github.com/falcosecurity/falco/pull/1622)] - [@leodido](https://github.com/leodido)
+* new: configuration field `syscall_event_timeouts.max_consecutive` to configure after how many consecutive timeouts without an event Falco must alert [[#1622](https://github.com/falcosecurity/falco/pull/1622)] - [@leodido](https://github.com/leodido)
+
+### Minor Changes
+
+* build: enforcing hardening flags by default [[#1604](https://github.com/falcosecurity/falco/pull/1604)] - [@leogr](https://github.com/leogr)
+
+### Bug Fixes
+
+* fix: do not stop the webserver for k8s audit logs when invalid data is coming in the event to be processed [[#1617](https://github.com/falcosecurity/falco/pull/1617)] - [@fntlnz](https://github.com/fntlnz)
+
+### Rule Changes
+
+* rule(macro: allowed_aws_ecr_registry_root_for_eks): new macro for AWS EKS images hosted on ECR to use in rule: Launch Privileged Container [[#1640](https://github.com/falcosecurity/falco/pull/1640)] - [@ismailyenigul](https://github.com/ismailyenigul)
+* rule(macro: aws_eks_core_images): new macro for AWS EKS images hosted on ECR to use in rule: Launch Privileged Container [[#1640](https://github.com/falcosecurity/falco/pull/1640)] - [@ismailyenigul](https://github.com/ismailyenigul)
+* rule(macro: aws_eks_image_sensitive_mount): new macro for AWS EKS images hosted on ECR to use in rule: Launch Privileged Container [[#1640](https://github.com/falcosecurity/falco/pull/1640)] - [@ismailyenigul](https://github.com/ismailyenigul)
+* rule(list `falco_privileged_images`): remove deprecated Falco's OCI image repositories [[#1634](https://github.com/falcosecurity/falco/pull/1634)] - [@maxgio92](https://github.com/maxgio92)
+* rule(list `falco_sensitive_mount_images`): remove deprecated Falco's OCI image repositories [[#1634](https://github.com/falcosecurity/falco/pull/1634)] - [@maxgio92](https://github.com/maxgio92)
+* rule(macro `k8s_containers`): remove deprecated Falco's OCI image repositories [[#1634](https://github.com/falcosecurity/falco/pull/1634)] - [@maxgio92](https://github.com/maxgio92)
+* rule(macro: python_running_sdchecks): macro removed [[#1620](https://github.com/falcosecurity/falco/pull/1620)] - [@leogr](https://github.com/leogr)
+* rule(Change thread namespace): remove python_running_sdchecks exception [[#1620](https://github.com/falcosecurity/falco/pull/1620)] - [@leogr](https://github.com/leogr)
+
+### Non user-facing changes
+
+* urelease/docs: fix link and small refactor in the text [[#1636](https://github.com/falcosecurity/falco/pull/1636)] - [@cpanato](https://github.com/cpanato)
+* Add Secureworks to adopters [[#1629](https://github.com/falcosecurity/falco/pull/1629)] - [@dwindsor-scwx](https://github.com/dwindsor-scwx)
+* regression test for malformed k8s audit input (FAL-01-003) [[#1624](https://github.com/falcosecurity/falco/pull/1624)] - [@leodido](https://github.com/leodido)
+* Add mathworks to adopterlist [[#1621](https://github.com/falcosecurity/falco/pull/1621)] - [@natchaphon-r](https://github.com/natchaphon-r)
+* adding known users [[#1623](https://github.com/falcosecurity/falco/pull/1623)] - [@danpopSD](https://github.com/danpopSD)
+* docs: update link for HackMD community call notes [[#1614](https://github.com/falcosecurity/falco/pull/1614)] - [@leodido](https://github.com/leodido)
+
+
 ## v0.28.0
 
 Released on 2021-04-12
