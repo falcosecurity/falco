@@ -106,3 +106,4 @@ Announce the new release to the world!
 
 - Send an announcement to cncf-falco-dev@lists.cncf.io (plain text, please)
 - Let folks in the slack #falco channel know about a new release came out
+- Publish a blog on [Falco website](https://github.com/falcosecurity/falco-website) ([example](https://github.com/falcosecurity/falco-website/blob/master/content/en/blog/falco-0-28-1.md))
