@@ -86,6 +86,10 @@ Now assume `x.y.z` is the new version.
     | Total           | x      |
 
     <!-- Calculate stats and fill the above table -->
+
+    #### Release Manager <github handle>
+
+    <!-- Substitute Github handle with the release manager's one -->
     ```
 
 - Finally, publish the release!
