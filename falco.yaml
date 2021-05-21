@@ -15,6 +15,12 @@
 # limitations under the License.
 #
 
+input_plugin:
+  name: ""
+  path: ""
+  init_config: ""
+  open_params: ""
+
 # File(s) or Directories containing Falco rules, loaded at startup.
 # The name "rules_file" is only for backwards compatibility.
 # If the entry is a file, it will be read directly. If the entry is a directory,

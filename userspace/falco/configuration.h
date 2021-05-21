@@ -229,6 +229,11 @@ public:
 
 	uint32_t m_syscall_evt_timeout_max_consecutives;
 
+	std::string m_input_plugin_name;
+	std::string m_input_plugin_path;
+	std::string m_input_plugin_init_config;
+	std::string m_input_plugin_open_params;
+
 private:
 	void init_cmdline_options(std::list<std::string>& cmdline_options);
 

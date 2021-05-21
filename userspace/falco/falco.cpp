@@ -49,6 +49,7 @@ limitations under the License.
 #include "webserver.h"
 #include "grpc_server.h"
 #endif
+#include "plugin.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
 
 typedef function<void(sinsp* inspector)> open_t;
@@ -863,6 +864,27 @@ int falco_init(int argc, char **argv)
 		else
 		{
 			throw std::runtime_error("Could not find configuration file at " + conf_filename);
+		}
+
+		if(config.m_input_plugin_path.size() > 0)
+		{
+
+			falco_logger::log(LOG_INFO, "Loading input plugin (" + config.m_input_plugin_name + ") from file " + config.m_input_plugin_path + "\n");
+
+			if(config.m_input_plugin_init_config.size() > 0)
+			{
+				sinsp_plugin::register_plugin(inspector, config.m_input_plugin_path, (char *)config.m_input_plugin_init_config.c_str());
+			}
+			else
+			{
+				sinsp_plugin::register_plugin(inspector, config.m_input_plugin_path, NULL);
+			}
+
+			inspector->set_input_plugin(config.m_input_plugin_name);
+			if(config.m_input_plugin_open_params.size() > 0)
+			{
+				inspector->set_input_plugin_open_params(config.m_input_plugin_open_params);
+			}
 		}
 
 		if (rules_filenames.size())
