@@ -1,0 +1,12 @@
+diff --git a/cmake/modules/grpc.cmake b/cmake/modules/grpc.cmake
+index ffa4e6c4..346939b9 100644
+--- a/cmake/modules/grpc.cmake
++++ b/cmake/modules/grpc.cmake
+@@ -125,6 +125,7 @@ else()
+ 				-DZLIB_ROOT:STRING=${ZLIB_SRC}
+ 			BUILD_IN_SOURCE 1
+ 			BUILD_BYPRODUCTS ${GRPC_LIB} ${GRPCPP_LIB} ${GPR_LIB} ${GRPC_LIBRARIES}
++			INSTALL_COMMAND DESTDIR=/ make install
+ 		)
+ 	endif()
+ endif()
