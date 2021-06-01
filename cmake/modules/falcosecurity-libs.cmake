@@ -20,8 +20,8 @@ file(MAKE_DIRECTORY ${FALCOSECURITY_LIBS_CMAKE_WORKING_DIR})
 # default below In case you want to test against another falcosecurity/libs version just pass the variable - ie., `cmake
 # -DFALCOSECURITY_LIBS_VERSION=dev ..`
 if(NOT FALCOSECURITY_LIBS_VERSION)
-  set(FALCOSECURITY_LIBS_VERSION "13ec67ebd23417273275296813066e07cb85bc91")
-  set(FALCOSECURITY_LIBS_CHECKSUM "SHA256=c2cc1c17af98cef1fa958841da3cfc480774190b5cebc503faf4184cf2b2abfa")
+  set(FALCOSECURITY_LIBS_VERSION "build/do-not-install-grpc-files-when-bundled")
+  set(FALCOSECURITY_LIBS_CHECKSUM "SHA256=0d67e3ee8bd8a974d5ebac3a2e14ec0e1e6907b96b5c354e5ac1b4e260acf235")
 endif()
 
 # cd /path/to/build && cmake /path/to/source
