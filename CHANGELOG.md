@@ -1,27 +1,5 @@
 # Change Log
 
-## v0.28.2
-
-Released on 2021-05-27
-
-### Major Changes
-
-### Minor Changes
-
-* update: driver version is 13ec67ebd23417273275296813066e07cb85bc91 now [[#1552](https://github.com/falcosecurity/falco/pull/1552)] - [@leogr](https://github.com/leogr)
-
-### Rule Changes
-
-* rule(Debugfs Launched in Privileged Container): fix typo in description [[#1657](https://github.com/falcosecurity/falco/pull/1657)] - [@Kaizhe](https://github.com/Kaizhe)
-
-### Non user-facing changes
-
-* docs(release.md): add blog announcement to post-release tasks [[#1652](https://github.com/falcosecurity/falco/pull/1652)] - [@maxgio92](https://github.com/maxgio92)
-* docs(proposals): fix libs contribution name [[#1641](https://github.com/falcosecurity/falco/pull/1641)] - [@leodido](https://github.com/leodido)
-* add Yahoo!Japan as an adopter [[#1651](https://github.com/falcosecurity/falco/pull/1651)] - [@ukitazume](https://github.com/ukitazume)
-* Add Replicated to adopters [[#1649](https://github.com/falcosecurity/falco/pull/1649)] - [@diamonwiggins](https://github.com/diamonwiggins)
-
-
 ## v0.28.1
 
 Released on 2021-05-07
