@@ -2,7 +2,7 @@
 
 ## v0.28.2
 
-Released on 2021-05-27
+Released on 2021-06-01
 
 ### Major Changes
 
@@ -20,6 +20,7 @@ Released on 2021-05-27
 * docs(proposals): fix libs contribution name [[#1641](https://github.com/falcosecurity/falco/pull/1641)] - [@leodido](https://github.com/leodido)
 * add Yahoo!Japan as an adopter [[#1651](https://github.com/falcosecurity/falco/pull/1651)] - [@ukitazume](https://github.com/ukitazume)
 * Add Replicated to adopters [[#1649](https://github.com/falcosecurity/falco/pull/1649)] - [@diamonwiggins](https://github.com/diamonwiggins)
+* build(cmake/modules): avoid gRCP files to be installed into packages [[#1662](https://github.com/falcosecurity/falco/pull/1662)] - [@leogr](https://github.com/leogr)
 
 
 ## v0.28.1
