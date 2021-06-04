@@ -2235,7 +2235,7 @@
   condition: >
     evt.type=setuid and evt.dir=>
     and (known_user_in_container or not container)
-    and not user.name=root
+    and not (user.name=root or user.uid=0)
     and not somebody_becoming_themself
     and not proc.name in (known_setuid_binaries, userexec_binaries, mail_binaries, docker_binaries,
                           nomachine_binaries)
