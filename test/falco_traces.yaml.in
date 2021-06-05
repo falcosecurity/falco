@@ -73,7 +73,7 @@ traces: !mux
       - "Non sudo setuid": 1
       - "Create files below dev": 1
       - "Modify binary dirs": 2
-      - "Change thread namespace": 1
+      - "Change thread namespace": 0
 
   mkdir-binary-dirs:
     trace_file: traces-positive/mkdir-binary-dirs.scap
