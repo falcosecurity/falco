@@ -23,7 +23,7 @@ has_json_output: !mux
 traces: !mux
   change-thread-namespace:
     trace_file: traces-positive/change-thread-namespace.scap
-    detect: True
+    detect: False
     detect_level: NOTICE
     detect_counts:
       - "Change thread namespace": 0
