@@ -123,6 +123,9 @@ static void usage()
 	   "                               for this option, it will be interpreted as the name of a file containing bearer token.\n"
 	   "                               Note that the format of this command-line option prohibits use of files whose names contain\n"
 	   "                               ':' or '#' characters in the file name.\n"
+	   " --k8s-node <node_name>        The node name will be used as a filter when requesting metadata of pods to the API server.\n"
+	   "                               Usually, it should be set to the current node on which Falco is running.\n"
+	   "                               If empty, no filter is set, which may have a performance penalty on large clusters.\n"
 #endif
 	   " -L                            Show the name and description of all rules and exit.\n"
 	   " -l <rule>                     Show the name and description of the rule with name <rule> and exit.\n"
@@ -469,6 +472,7 @@ int falco_init(int argc, char **argv)
 #ifndef MINIMAL_BUILD
 	string* k8s_api = 0;
 	string* k8s_api_cert = 0;
+	string *k8s_node_name = 0;
 	string* mesos_api = 0;
 #endif
 	string output_format = "";
@@ -517,6 +521,7 @@ int falco_init(int argc, char **argv)
 			{"ignored-events", no_argument, 0, 'i'},
 			{"k8s-api-cert", required_argument, 0, 'K'},
 			{"k8s-api", required_argument, 0, 'k'},
+			{"k8s-node", required_argument, 0},
 			{"list", optional_argument, 0},
 			{"mesos-api", required_argument, 0, 'm'},
 			{"option", required_argument, 0, 'o'},
@@ -693,6 +698,15 @@ int falco_init(int argc, char **argv)
 				{
 				  cri_async = false;
 				}
+#ifndef MINIMAL_BUILD
+				else if(string(long_options[long_index].name) == "k8s-node")
+				{
+					k8s_node_name = new string(optarg);
+					if (k8s_node_name->size() == 0) {
+						throw std::invalid_argument("If --k8s-node is provided, it cannot be an empty string");
+					}
+				}
+#endif
 				else if (string(long_options[long_index].name) == "list")
 				{
 					list_flds = true;
@@ -1249,7 +1263,7 @@ int falco_init(int argc, char **argv)
 					k8s_api_cert = new string(k8s_cert_env);
 				}
 			}
-			inspector->init_k8s_client(k8s_api, k8s_api_cert, verbose);
+			inspector->init_k8s_client(k8s_api, k8s_api_cert, k8s_node_name, verbose);
 			k8s_api = 0;
 			k8s_api_cert = 0;
 		}
@@ -1265,7 +1279,7 @@ int falco_init(int argc, char **argv)
 					}
 				}
 				k8s_api = new string(k8s_api_env);
-				inspector->init_k8s_client(k8s_api, k8s_api_cert, verbose);
+				inspector->init_k8s_client(k8s_api, k8s_api_cert, k8s_node_name, verbose);
 			}
 			else
 			{
