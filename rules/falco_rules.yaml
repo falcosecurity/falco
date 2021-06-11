@@ -1753,13 +1753,13 @@
 - macro: allowed_aws_ecr_registry_root_for_eks
   condition: >
     (container.image.repository startswith "602401143452.dkr.ecr" or
-     container.image.repository startswith "877085696533.dkr.ecr" or 
-     container.image.repository startswith "800184023465.dkr.ecr" or 
-     container.image.repository startswith "602401143452.dkr.ecr" or 
+     container.image.repository startswith "877085696533.dkr.ecr" or
+     container.image.repository startswith "800184023465.dkr.ecr" or
+     container.image.repository startswith "602401143452.dkr.ecr" or
      container.image.repository startswith "918309763551.dkr.ecr" or
-     container.image.repository startswith "961992271922.dkr.ecr" or 
+     container.image.repository startswith "961992271922.dkr.ecr" or
      container.image.repository startswith "590381155156.dkr.ecr" or
-     container.image.repository startswith "558608220178.dkr.ecr" or 
+     container.image.repository startswith "558608220178.dkr.ecr" or
      container.image.repository startswith "151742754352.dkr.ecr" or
      container.image.repository startswith "013241004608.dkr.ecr")
 
@@ -3003,7 +3003,7 @@
 - rule: Linux Kernel Module Injection Detected
   desc: Detect kernel module was injected (from container).
   condition: spawned_process and container and proc.name=insmod and not proc.args in (white_listed_modules)
-  output: Linux Kernel Module injection using insmod detected (user=%user.name user_loginuid=%user.loginuid parent_process=%proc.pname module=%proc.args)
+  output: Linux Kernel Module injection using insmod detected (user=%user.name user_loginuid=%user.loginuid parent_process=%proc.pname module=%proc.args %container.info image=%container.image.repository:%container.image.tag)
   priority: WARNING
   tags: [process]
 
@@ -3027,7 +3027,7 @@
 # A privilege escalation to root through heap-based buffer overflow
 - rule: Sudo Potential Privilege Escalation
   desc: Privilege escalation vulnerability affecting sudo (<= 1.9.5p2). Executing sudo using sudoedit -s or sudoedit -i command with command-line argument that ends with a single backslash character from an unprivileged user it's possible to elevate the user privileges to root.
-  condition: spawned_process and user.uid!= 0 and proc.name=sudoedit and (proc.args contains -s or proc.args contains -i) and (proc.args contains "\ " or proc.args endswith \)
+  condition: spawned_process and user.uid != 0 and proc.name=sudoedit and (proc.args contains -s or proc.args contains -i) and (proc.args contains "\ " or proc.args endswith \)
   output: "Detect Sudo Privilege Escalation Exploit (CVE-2021-3156) (user=%user.name parent=%proc.pname cmdline=%proc.cmdline %container.info)"
   priority: CRITICAL
   tags: [filesystem, mitre_privilege_escalation]
