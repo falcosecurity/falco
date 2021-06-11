@@ -3056,6 +3056,16 @@
   priority: WARNING
   tags: [container, cis, mitre_lateral_movement]
 
+- rule: Unprivileged Delegation of Page Faults Handling to a Userspace Process
+  desc: Detect a successful unprivileged userfaultfd syscall which might act as an attack primitive to exploit other bugs
+  condition: >
+    evt.type = userfaultfd and
+    user.uid != 0 and
+    (evt.rawres >= 0 or evt.res != -1)
+  output: An userfaultfd syscall was successfully executed by an unprivileged user (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline %container.info image=%container.image.repository:%container.image.tag)
+  priority: CRITICAL
+  tags: [process, mitre_defense_evasion]
+
 # Application rules have moved to application_rules.yaml. Please look
 # there if you want to enable them by adding to
 # falco_rules.local.yaml.
