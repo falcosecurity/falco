@@ -2747,7 +2747,7 @@
       "xmr-eu1.nanopool.org","xmr-eu2.nanopool.org",
       "xmr-jp1.nanopool.org","xmr-us-east1.nanopool.org",
       "xmr-us-west1.nanopool.org","xmr.crypto-pool.fr",
-      "xmr.pool.minergate.com"
+      "xmr.pool.minergate.com", "rx.unmineable.com"
       ]
 
 - list: https_miner_domains
