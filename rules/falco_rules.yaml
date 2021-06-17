@@ -3059,13 +3059,17 @@
 - macro: consider_userfaultfd_activities
   condition: (always_true)
 
+- list: user_known_userfaultfd_activities
+  items: []
+
 - rule: Unprivileged Delegation of Page Faults Handling to a Userspace Process
   desc: Detect a successful unprivileged userfaultfd syscall which might act as an attack primitive to exploit other bugs
   condition: >
     consider_userfaultfd_activities and evt.type = userfaultfd and
     user.uid != 0 and
-    (evt.rawres >= 0 or evt.res != -1)
-  output: An userfaultfd syscall was successfully executed by an unprivileged user (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline %container.info image=%container.image.repository:%container.image.tag)
+    (evt.rawres >= 0 or evt.res != -1) and
+    not proc.name in (user_known_userfaultfd_activities)
+  output: An userfaultfd syscall was successfully executed by an unprivileged user (user=%user.name user_loginuid=%user.loginuid process=%proc.name command=%proc.cmdline %container.info image=%container.image.repository:%container.image.tag)
   priority: CRITICAL
   tags: [syscall, mitre_defense_evasion]
 
