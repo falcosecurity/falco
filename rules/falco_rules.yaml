@@ -3064,7 +3064,7 @@
     (evt.rawres >= 0 or evt.res != -1)
   output: An userfaultfd syscall was successfully executed by an unprivileged user (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline %container.info image=%container.image.repository:%container.image.tag)
   priority: CRITICAL
-  tags: [process, mitre_defense_evasion]
+  tags: [syscall, mitre_defense_evasion]
 
 # Application rules have moved to application_rules.yaml. Please look
 # there if you want to enable them by adding to
