@@ -7,7 +7,6 @@ Released on 2021-06-21
 ### Minor Changes
 
 * update: driver version is 17f5df52a7d9ed6bb12d3b1768460def8439936d now [[#1669](https://github.com/falcosecurity/falco/pull/1669)] - [@leogr](https://github.com/leogr)
-* rules(list miner_domains): add rx.unmineable.com for anti-miner detection [[#1676](https://github.com/falcosecurity/falco/pull/1676)] - [@fntlnz](https://github.com/fntlnz)
 
 ### Rule Changes
 
@@ -15,6 +14,7 @@ Released on 2021-06-21
 * rule(list known_sa_list): add namespace-controller, statefulset-controller, disruption-controller, job-controller, horizontal-pod-autoscaler and persistent-volume-binder as allowed service accounts in the kube-system namespace [[#1659](https://github.com/falcosecurity/falco/pull/1659)] - [@sboschman](https://github.com/sboschman)
 * rule(Non sudo setuid): check user id as well in case user name info is not available [[#1665](https://github.com/falcosecurity/falco/pull/1665)] - [@Kaizhe](https://github.com/Kaizhe)
 * rule(Debugfs Launched in Privileged Container): fix typo in description [[#1657](https://github.com/falcosecurity/falco/pull/1657)] - [@Kaizhe](https://github.com/Kaizhe)
+* rule(list miner_domains): add rx.unmineable.com for anti-miner detection [[#1676](https://github.com/falcosecurity/falco/pull/1676)] - [@fntlnz](https://github.com/fntlnz)
 
 ### Non user-facing changes
 
