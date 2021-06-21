@@ -10,14 +10,15 @@ Released on 2021-06-21
 
 ### Rule Changes
 
+* rule(list miner_domains): add rx.unmineable.com for anti-miner detection [[#1676](https://github.com/falcosecurity/falco/pull/1676)] - [@fntlnz](https://github.com/fntlnz)
 * rule(Change thread namespace and Set Setuid or Setgid bit): disable by default [[#1632](https://github.com/falcosecurity/falco/pull/1632)] - [@Kaizhe](https://github.com/Kaizhe)
 * rule(list known_sa_list): add namespace-controller, statefulset-controller, disruption-controller, job-controller, horizontal-pod-autoscaler and persistent-volume-binder as allowed service accounts in the kube-system namespace [[#1659](https://github.com/falcosecurity/falco/pull/1659)] - [@sboschman](https://github.com/sboschman)
 * rule(Non sudo setuid): check user id as well in case user name info is not available [[#1665](https://github.com/falcosecurity/falco/pull/1665)] - [@Kaizhe](https://github.com/Kaizhe)
 * rule(Debugfs Launched in Privileged Container): fix typo in description [[#1657](https://github.com/falcosecurity/falco/pull/1657)] - [@Kaizhe](https://github.com/Kaizhe)
-* rule(list miner_domains): add rx.unmineable.com for anti-miner detection [[#1676](https://github.com/falcosecurity/falco/pull/1676)] - [@fntlnz](https://github.com/fntlnz)
 
 ### Non user-facing changes
 
+* Fix link to CONTRIBUTING.md in the Pull Request Template [[#1679](https://github.com/falcosecurity/falco/pull/1679)] - [@tspearconquest](https://github.com/tspearconquest)
 * fetch libs and drivers from the new repo [[#1552](https://github.com/falcosecurity/falco/pull/1552)] - [@leogr](https://github.com/leogr)
 * build(test): upgrade urllib3 to 1.26.5 [[#1666](https://github.com/falcosecurity/falco/pull/1666)] - [@leogr](https://github.com/leogr)
 * revert: add notes for 0.28.2 release [[#1663](https://github.com/falcosecurity/falco/pull/1663)] - [@maxgio92](https://github.com/maxgio92)
