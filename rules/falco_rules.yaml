@@ -15,10 +15,10 @@
 # limitations under the License.
 #
 
-# The latest Falco Engine version is 8 if you want to
-# use exceptions. However the default rules file does not
-# use them so we stick with 7 for compatibility.
-- required_engine_version: 7
+# The latest Falco Engine version is 9.
+# Starting with version 8, the Falco engine supports exceptions.
+# However the Falco rules file does not use them by default.
+- required_engine_version: 9
 
 # Currently disabled as read/write are ignored syscalls. The nearly
 # similar open_write/open_read check for files being opened for
