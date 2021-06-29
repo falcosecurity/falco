@@ -1,5 +1,28 @@
 # Change Log
 
+## v0.29.1
+
+Released on 2021-06-29
+
+### Major Changes
+
+
+### Minor Changes
+
+* update: bump the Falco engine version to version 9 [[#1675](https://github.com/falcosecurity/falco/pull/1675)] - [@leodido](https://github.com/leodido)
+
+### Rule Changes
+
+* rule(list user_known_userfaultfd_processes): list to exclude processes known to use userfaultfd syscall [[#1675](https://github.com/falcosecurity/falco/pull/1675)] - [@leodido](https://github.com/leodido)
+* rule(macro consider_userfaultfd_activities): macro to gate the "Unprivileged Delegation of Page Faults Handling to a Userspace Process" rule [[#1675](https://github.com/falcosecurity/falco/pull/1675)] - [@leodido](https://github.com/leodido)
+* rule(Unprivileged Delegation of Page Faults Handling to a Userspace Process): new rule to detect successful unprivileged userfaultfd syscalls [[#1675](https://github.com/falcosecurity/falco/pull/1675)] - [@leodido](https://github.com/leodido)
+* rule(Linux Kernel Module Injection Detected): adding container info to the output of the rule [[#1675](https://github.com/falcosecurity/falco/pull/1675)] - [@leodido](https://github.com/leodido)
+
+### Non user-facing changes
+
+* docs(release.md): update steps [[#1684](https://github.com/falcosecurity/falco/pull/1684)] - [@maxgio92](https://github.com/maxgio92
+
+
 ## v0.29.0
 
 Released on 2021-06-21
