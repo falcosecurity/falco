@@ -16,6 +16,9 @@ limitations under the License.
 
 #include <algorithm>
 
+#include <list>
+#include <set>
+
 #include <dirent.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -253,10 +256,28 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 		throw logic_error("Error reading config file(" + m_config_file + "): the maximum consecutive timeouts without an event must be an unsigned integer > 0");
 	}
 
-	m_input_plugin_name = m_config->get_scalar<string>("input_plugin", "name", "");
-	m_input_plugin_path = m_config->get_scalar<string>("input_plugin", "path", "");
-	m_input_plugin_init_config = m_config->get_scalar<string>("input_plugin", "init_config", "");
-	m_input_plugin_open_params = m_config->get_scalar<string>("input_plugin", "open_params", "");
+	std::set<std::string> load_plugins;
+	m_config->get_sequence<set<string>>(load_plugins, "load_plugins");
+
+	std::list<falco_configuration::plugin_config> plugins;
+	try
+	{
+		m_config->get_sequence<std::list<falco_configuration::plugin_config>>(plugins, string("plugins"));
+	}
+	catch (exception &e)
+	{
+		// Might be thrown due to not being able to open files
+		throw logic_error("Error reading config file(" + m_config_file + "): could not load plugins config: " + e.what());
+	}
+
+	// If load_plugins has values, only save plugins matching those in values
+	for (auto &p : plugins)
+	{
+		if(load_plugins.empty() || load_plugins.find(p.m_name) != load_plugins.end())
+		{
+			m_plugins.push_back(p);
+		}
+	}
 }
 
 void falco_configuration::read_rules_file_directory(const string &path, list<string> &rules_filenames)

@@ -129,6 +129,7 @@ static void usage()
 	   " -l <rule>                     Show the name and description of the rule with name <rule> and exit.\n"
 	   " --list [<source>]             List all defined fields. If <source> is provided, only list those fields for\n"
 	   "                               the source <source>. Current values for <source> are \"syscall\", \"k8s_audit\"\n"
+	   " --list-plugins                Print info on all loaded plugins and exit.\n"
 #ifndef MINIMAL_BUILD
 	   " -m <url[,marathon_url]>, --mesos-api <url[,marathon_url]>\n"
 	   "                               Enable Mesos support by connecting to the API server\n"
@@ -479,6 +480,7 @@ int falco_init(int argc, char **argv)
 	bool print_ignored_events = false;
 	bool list_flds = false;
 	string list_flds_source = "";
+	bool list_plugins = false;
 	bool print_support = false;
 	string cri_socket_path;
 	bool cri_async = true;
@@ -519,6 +521,7 @@ int falco_init(int argc, char **argv)
 			{"k8s-api-cert", required_argument, 0, 'K'},
 			{"k8s-api", required_argument, 0, 'k'},
 			{"list", optional_argument, 0},
+			{"list-plugins", no_argument, 0},
 			{"mesos-api", required_argument, 0, 'm'},
 			{"option", required_argument, 0, 'o'},
 			{"pidfile", required_argument, 0, 'P'},
@@ -702,6 +705,10 @@ int falco_init(int argc, char **argv)
 						list_flds_source = optarg;
 					}
 				}
+				else if (string(long_options[long_index].name) == "list-plugins")
+				{
+					list_plugins = true;
+				}
 				else if (string(long_options[long_index].name) == "stats-interval")
 				{
 					stats_interval = atoi(optarg);
@@ -866,25 +873,30 @@ int falco_init(int argc, char **argv)
 			throw std::runtime_error("Could not find configuration file at " + conf_filename);
 		}
 
-		if(config.m_input_plugin_path.size() > 0)
+		for(auto &p : config.m_plugins)
 		{
+			bool avoid_async = true;
 
-			falco_logger::log(LOG_INFO, "Loading input plugin (" + config.m_input_plugin_name + ") from file " + config.m_input_plugin_path + "\n");
+			falco_logger::log(LOG_INFO, "Loading plugin (" + p.m_name + ") from file " + p.m_library_path + "\n");
 
-			if(config.m_input_plugin_init_config.size() > 0)
-			{
-				sinsp_plugin::register_plugin(inspector, config.m_input_plugin_path, (char *)config.m_input_plugin_init_config.c_str());
-			}
-			else
-			{
-				sinsp_plugin::register_plugin(inspector, config.m_input_plugin_path, NULL);
-			}
+			sinsp_plugin::register_plugin(inspector,
+						      p.m_library_path,
+						      (p.m_init_config.empty() ? NULL : (char *)p.m_init_config.c_str()),
+						      avoid_async);
 
-			inspector->set_input_plugin(config.m_input_plugin_name);
-			if(config.m_input_plugin_open_params.size() > 0)
+			// XXX/mstemm adapt this to handle multiple source plugins.
+			inspector->set_input_plugin(p.m_name);
+			if(!p.m_open_params.empty())
 			{
-				inspector->set_input_plugin_open_params(config.m_input_plugin_open_params);
+				inspector->set_input_plugin_open_params(p.m_open_params.c_str());
 			}
+		}
+
+		if(list_plugins)
+		{
+			std::string desc = sinsp_plugin::plugin_infos(inspector);
+			printf("%lu Plugins Loaded:\n\n%s\n", config.m_plugins.size(), desc.c_str());
+			return EXIT_SUCCESS;
 		}
 
 		if (rules_filenames.size())
