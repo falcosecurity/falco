@@ -252,6 +252,10 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 	{
 		throw logic_error("Error reading config file(" + m_config_file + "): the maximum consecutive timeouts without an event must be an unsigned integer > 0");
 	}
+
+	m_metadata_download_max_mb = m_config->get_scalar<uint32_t>("metadata_download", "max_mb", 100);
+	m_metadata_download_chunk_wait_us = m_config->get_scalar<uint32_t>("metadata_download", "chunk_wait_us", 1000);
+	m_metadata_download_watch_freq_sec = m_config->get_scalar<uint32_t>("metadata_download", "watch_freq_sec", 1);
 }
 
 void falco_configuration::read_rules_file_directory(const string &path, list<string> &rules_filenames)

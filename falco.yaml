@@ -249,3 +249,9 @@ grpc:
 # Make sure to have a consumer for them or leave this disabled.
 grpc_output:
   enabled: false
+
+# Container orchestrator metadata fetching params
+metadata_download:
+  max_mb: 100
+  chunk_wait_us: 1000
+  watch_freq_sec: 1
