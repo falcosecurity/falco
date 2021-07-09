@@ -16,6 +16,10 @@ limitations under the License.
 
 #pragma once
 
+#include <string>
+#include <map>
+#include <memory>
+
 #include "sinsp.h"
 
 extern "C"
@@ -39,11 +43,17 @@ public:
 			 bool json_output,
 			 bool json_include_output_property);
 
+	static void create_sinsp_formatter(lua_State *ls, const std::string &format);
+	static void delete_sinsp_formatter(lua_State *ls);
+
 	// formatter = falco.formatter(format_string)
 	static int lua_formatter(lua_State *ls);
 
 	// falco.free_formatter(formatter)
 	static int lua_free_formatter(lua_State *ls);
+
+	static void format_sinsp_event(const gen_event *evt, const std::string &format,
+				       std::string &line, std::string &json_line, std::string &sformat);
 
 	static string format_event(const gen_event *evt, const std::string &rule, const std::string &source,
 				   const std::string &level, const std::string &format);

@@ -773,12 +773,6 @@ int falco_init(int argc, char **argv)
 		engine->set_inspector(inspector);
 		engine->set_extra(output_format, replace_container_info);
 
-		if(list_flds)
-		{
-			list_source_fields(engine, verbose, names_only, list_flds_source);
-			return EXIT_SUCCESS;
-		}
-
 		if(disable_sources.size() > 0)
 		{
 			auto it = disable_sources.begin();
@@ -896,6 +890,12 @@ int falco_init(int argc, char **argv)
 		{
 			std::string desc = sinsp_plugin::plugin_infos(inspector);
 			printf("%lu Plugins Loaded:\n\n%s\n", config.m_plugins.size(), desc.c_str());
+			return EXIT_SUCCESS;
+		}
+
+		if(list_flds)
+		{
+			list_source_fields(engine, verbose, names_only, list_flds_source);
 			return EXIT_SUCCESS;
 		}
 

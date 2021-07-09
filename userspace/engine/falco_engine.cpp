@@ -18,6 +18,7 @@ limitations under the License.
 #include <unistd.h>
 #include <string>
 #include <fstream>
+#include <utility>
 
 #include "falco_engine.h"
 #include "falco_utils.h"
@@ -56,6 +57,7 @@ falco_engine::falco_engine(bool seed_rng, const std::string& alternate_lua_dir)
 
 	m_sinsp_rules.reset(new falco_sinsp_ruleset());
 	m_k8s_audit_rules.reset(new falco_ruleset());
+	m_plugin_rules.clear();
 
 	if(seed_rng)
 	{
@@ -214,6 +216,11 @@ void falco_engine::enable_rule(const string &substring, bool enabled, const stri
 
 	m_sinsp_rules->enable(substring, match_exact, enabled, ruleset_id);
 	m_k8s_audit_rules->enable(substring, match_exact, enabled, ruleset_id);
+
+	for(auto &it : m_plugin_rules)
+	{
+		it.second->enable(substring, match_exact, enabled, ruleset_id);
+	}
 }
 
 void falco_engine::enable_rule(const string &substring, bool enabled)
@@ -228,6 +235,11 @@ void falco_engine::enable_rule_exact(const string &rule_name, bool enabled, cons
 
 	m_sinsp_rules->enable(rule_name, match_exact, enabled, ruleset_id);
 	m_k8s_audit_rules->enable(rule_name, match_exact, enabled, ruleset_id);
+
+	for(auto &it : m_plugin_rules)
+	{
+		it.second->enable(rule_name, match_exact, enabled, ruleset_id);
+	}
 }
 
 void falco_engine::enable_rule_exact(const string &rule_name, bool enabled)
@@ -241,6 +253,11 @@ void falco_engine::enable_rule_by_tag(const set<string> &tags, bool enabled, con
 
 	m_sinsp_rules->enable_tags(tags, enabled, ruleset_id);
 	m_k8s_audit_rules->enable_tags(tags, enabled, ruleset_id);
+
+	for(auto &it : m_plugin_rules)
+	{
+		it.second->enable_tags(tags, enabled, ruleset_id);
+	}
 }
 
 void falco_engine::enable_rule_by_tag(const set<string> &tags, bool enabled)
@@ -271,8 +288,16 @@ uint64_t falco_engine::num_rules_for_ruleset(const std::string &ruleset)
 {
 	uint16_t ruleset_id = find_ruleset_id(ruleset);
 
+	uint32_t num_plugin_rules = 0;
+
+	for(auto &it : m_plugin_rules)
+	{
+		num_plugin_rules += it.second->num_rules_for_ruleset(ruleset_id);
+	}
+
 	return m_sinsp_rules->num_rules_for_ruleset(ruleset_id) +
-		m_k8s_audit_rules->num_rules_for_ruleset(ruleset_id);
+		m_k8s_audit_rules->num_rules_for_ruleset(ruleset_id) +
+		num_plugin_rules;
 }
 
 void falco_engine::evttypes_for_ruleset(std::vector<bool> &evttypes, const std::string &ruleset)
@@ -296,13 +321,38 @@ unique_ptr<falco_engine::rule_result> falco_engine::process_sinsp_event(sinsp_ev
 		return unique_ptr<struct rule_result>();
 	}
 
-	if(!m_sinsp_rules->run(ev, ruleset_id))
+	unique_ptr<struct rule_result> res;
+	std::string source = "syscall";
+
+	if(ev->get_type() == PPME_PLUGINEVENT_E)
 	{
-		return unique_ptr<struct rule_result>();
+		sinsp_evt_param *parinfo = ev->get_param(0);
+		ASSERT(parinfo->m_len == sizeof(int32_t));
+		uint32_t plugin_id = *(int32_t *)parinfo->m_val;
+
+		// No rules for this plugin-->no rule match
+		auto it = m_plugin_rules.find(plugin_id);
+		if(it == m_plugin_rules.end())
+		{
+			return res;
+		}
+
+		// All plugin events have a single tag PPME_CONTAINER_X.
+		if (!it->second->run((gen_event *) ev, PPME_CONTAINER_X, ruleset_id))
+		{
+			return res;
+		}
+	}
+	else
+	{
+		if(!m_sinsp_rules->run(ev, ruleset_id))
+		{
+			return res;
+		}
 	}
 
-	unique_ptr<struct rule_result> res(new rule_result());
-	res->source = "syscall";
+	res.reset(new rule_result());
+	res->source = source;
 
 	populate_rule_result(res, ev);
 
@@ -478,11 +528,11 @@ void falco_engine::print_stats()
 
 }
 
-void falco_engine::add_sinsp_filter(string &rule,
-				    set<uint32_t> &evttypes,
-				    set<uint32_t> &syscalls,
-				    set<string> &tags,
-				    sinsp_filter* filter)
+void falco_engine::add_syscall_filter(string &rule,
+				      set<uint32_t> &evttypes,
+				      set<uint32_t> &syscalls,
+				      set<string> &tags,
+				      sinsp_filter* filter)
 {
 	m_sinsp_rules->add(rule, evttypes, syscalls, tags, filter);
 }
@@ -497,10 +547,43 @@ void falco_engine::add_k8s_audit_filter(string &rule,
 	m_k8s_audit_rules->add(rule, tags, event_tags, filter);
 }
 
+void falco_engine::add_plugin_filter(string &rule,
+				     set<string> &tags,
+				     sinsp_filter* filter,
+				     string &source)
+{
+	// Find the loaded source plugin with event source == source
+	// and add this filter to the map.
+	// XXX/mstemm what to do with extractor plugins?
+	std::shared_ptr<sinsp_plugin> plugin = m_inspector->get_source_plugin_by_source(source);
+
+	if(plugin)
+	{
+		// All plugin events have a single tag PPME_CONTAINER_X.
+		std::set<uint32_t> event_tags = {PPME_CONTAINER_X};
+
+		sinsp_source_plugin *splugin = static_cast<sinsp_source_plugin *>(plugin.get());
+		uint32_t id = splugin->id();
+
+		auto it = m_plugin_rules.find(id);
+
+		if(it == m_plugin_rules.end())
+		{
+			std::unique_ptr<falco_ruleset> add;
+			add.reset(new falco_ruleset());
+			m_plugin_rules[id] = std::move(add);
+			it = m_plugin_rules.find(id);
+		}
+
+		it->second->add(rule, tags, event_tags, filter);
+	}
+}
+
 void falco_engine::clear_filters()
 {
 	m_sinsp_rules.reset(new falco_sinsp_ruleset());
 	m_k8s_audit_rules.reset(new falco_ruleset());
+	m_plugin_rules.clear();
 }
 
 void falco_engine::set_sampling_ratio(uint32_t sampling_ratio)

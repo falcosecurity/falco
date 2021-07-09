@@ -32,6 +32,7 @@ const static struct luaL_Reg ll_falco_rules[] =
 		{"clear_filters", &falco_rules::clear_filters},
 		{"add_filter", &falco_rules::add_filter},
 		{"add_k8s_audit_filter", &falco_rules::add_k8s_audit_filter},
+		{"add_plugin_filter", &falco_rules::add_plugin_filter},
 		{"enable_rule", &falco_rules::enable_rule},
 		{"engine_version", &falco_rules::engine_version},
 		{NULL, NULL}};
@@ -159,6 +160,41 @@ int falco_rules::add_k8s_audit_filter(lua_State *ls)
 	return 0;
 }
 
+int falco_rules::add_plugin_filter(lua_State *ls)
+{
+	if (! lua_islightuserdata(ls, -4) ||
+	    ! lua_isstring(ls, -3) ||
+	    ! lua_istable(ls, -2) ||
+	    ! lua_isstring(ls, -1))
+	{
+		lua_pushstring(ls, "Invalid arguments passed to add_plugin_filter()");
+		lua_error(ls);
+	}
+
+	falco_rules *rules = (falco_rules *) lua_topointer(ls, -4);
+	const char *rulec = lua_tostring(ls, -3);
+
+	set<string> tags;
+
+	lua_pushnil(ls);  /* first key */
+	while (lua_next(ls, -3) != 0) {
+                // key is at index -2, value is at index
+                // -1. We want the values.
+		tags.insert(lua_tostring(ls, -1));
+
+		// Remove value, keep key for next iteration
+		lua_pop(ls, 1);
+	}
+
+	const char *sourcec = lua_tostring(ls, -1);
+
+	std::string rule = rulec;
+	std::string source = sourcec;
+	rules->add_plugin_filter(rule, tags, source);
+
+	return 0;
+}
+
 void falco_rules::add_filter(string &rule, set<uint32_t> &evttypes, set<uint32_t> &syscalls, set<string> &tags)
 {
 	// While the current rule was being parsed, a sinsp_filter
@@ -166,7 +202,7 @@ void falco_rules::add_filter(string &rule, set<uint32_t> &evttypes, set<uint32_t
 	// and pass it to the engine.
 	sinsp_filter *filter = (sinsp_filter *) m_sinsp_lua_parser->get_filter(true);
 
-	m_engine->add_sinsp_filter(rule, evttypes, syscalls, tags, filter);
+	m_engine->add_syscall_filter(rule, evttypes, syscalls, tags, filter);
 }
 
 void falco_rules::add_k8s_audit_filter(string &rule, set<string> &tags)
@@ -177,6 +213,16 @@ void falco_rules::add_k8s_audit_filter(string &rule, set<string> &tags)
 	json_event_filter *filter = (json_event_filter *) m_json_lua_parser->get_filter(true);
 
 	m_engine->add_k8s_audit_filter(rule, tags, filter);
+}
+
+void falco_rules::add_plugin_filter(string &rule, set<string> &tags, string &source)
+{
+	// While the current rule was being parsed, a sinsp_filter
+	// object was being populated by lua_parser. Grab that filter
+	// and pass it to the engine.
+	sinsp_filter *filter = (sinsp_filter *) m_sinsp_lua_parser->get_filter(true);
+
+	m_engine->add_plugin_filter(rule, tags, filter, source);
 }
 
 int falco_rules::enable_rule(lua_State *ls)

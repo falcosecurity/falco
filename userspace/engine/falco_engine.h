@@ -29,6 +29,7 @@ limitations under the License.
 #include <nlohmann/json.hpp>
 
 #include "sinsp.h"
+#include "plugin.h"
 #include "filter.h"
 
 #include "json_evt.h"
@@ -233,11 +234,16 @@ public:
 	// Add a filter, which is related to the specified set of
 	// event types/syscalls, to the engine.
 	//
-	void add_sinsp_filter(std::string &rule,
-			      std::set<uint32_t> &evttypes,
-			      std::set<uint32_t> &syscalls,
+	void add_syscall_filter(std::string &rule,
+				std::set<uint32_t> &evttypes,
+				std::set<uint32_t> &syscalls,
+				std::set<std::string> &tags,
+				sinsp_filter* filter);
+
+	void add_plugin_filter(std::string &rule,
 			      std::set<std::string> &tags,
-			      sinsp_filter* filter);
+			      sinsp_filter* filter,
+			      std::string &source);
 
 	sinsp_filter_factory &sinsp_factory();
 	json_event_filter_factory &json_factory();
@@ -262,6 +268,10 @@ private:
 
 	std::unique_ptr<falco_sinsp_ruleset> m_sinsp_rules;
 	std::unique_ptr<falco_ruleset> m_k8s_audit_rules;
+
+	// Maps from plugin id to rules related to that plugin
+	// XXX/mstemm how to handle extractor-only plugins?
+	std::map<uint32_t, std::unique_ptr<falco_ruleset>> m_plugin_rules;
 
 	void populate_rule_result(unique_ptr<struct rule_result> &res, gen_event *ev);
 

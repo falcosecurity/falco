@@ -992,6 +992,10 @@ function load_rules(sinsp_lua_parser,
 	    install_filter(filter_ast.filter.value, k8s_audit_filter, json_lua_parser)
 
 	    falco_rules.add_k8s_audit_filter(rules_mgr, v['rule'], v['tags'])
+	 else
+	    install_filter(filter_ast.filter.value, filter, sinsp_lua_parser)
+
+	    falco_rules.add_plugin_filter(rules_mgr, v['rule'], v['tags'], v['source'])
 	 end
 
 	 -- Rule ASTs are merged together into one big AST, with "OR" between each

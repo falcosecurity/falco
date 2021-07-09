@@ -46,6 +46,7 @@ class falco_rules
 	static int clear_filters(lua_State *ls);
 	static int add_filter(lua_State *ls);
 	static int add_k8s_audit_filter(lua_State *ls);
+	static int add_plugin_filter(lua_State *ls);
 	static int enable_rule(lua_State *ls);
 	static int engine_version(lua_State *ls);
 
@@ -53,6 +54,7 @@ class falco_rules
 	void clear_filters();
 	void add_filter(string &rule, std::set<uint32_t> &evttypes, std::set<uint32_t> &syscalls, std::set<string> &tags);
 	void add_k8s_audit_filter(string &rule, std::set<string> &tags);
+	void add_plugin_filter(string &rule, std::set<string> &tags, string &source);
 	void enable_rule(string &rule, bool enabled);
 
 	lua_parser* m_sinsp_lua_parser;

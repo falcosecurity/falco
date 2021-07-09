@@ -49,6 +49,14 @@ void falco_formats::init(sinsp *inspector,
 	luaL_openlib(ls, "formats", ll_falco, 0);
 }
 
+void falco_formats::create_sinsp_formatter(lua_State *ls, const std::string &format)
+{
+	sinsp_evt_formatter *formatter;
+	formatter = new sinsp_evt_formatter(s_inspector, format);
+	lua_pushnil(ls);
+	lua_pushlightuserdata(ls, formatter);
+}
+
 int falco_formats::lua_formatter(lua_State *ls)
 {
 	string source = luaL_checkstring(ls, -2);
@@ -58,17 +66,18 @@ int falco_formats::lua_formatter(lua_State *ls)
 	{
 		if(source == "syscall")
 		{
-			sinsp_evt_formatter *formatter;
-			formatter = new sinsp_evt_formatter(s_inspector, format);
-			lua_pushnil(ls);
-			lua_pushlightuserdata(ls, formatter);
+			create_sinsp_formatter(ls, format);
 		}
-		else
+		else if (source == "k8s_audit")
 		{
 			json_event_formatter *formatter;
 			formatter = new json_event_formatter(s_engine->json_factory(), format);
 			lua_pushnil(ls);
 			lua_pushlightuserdata(ls, formatter);
+		} else {
+			// Not one of the built-in sources, so assume it's a plugin.
+			// Plugins behave identically to syscall events for now.
+			create_sinsp_formatter(ls, format);
 		}
 	}
 	catch(exception &e)
@@ -88,6 +97,12 @@ int falco_formats::lua_formatter(lua_State *ls)
 	return 2;
 }
 
+void falco_formats::delete_sinsp_formatter(lua_State *ls)
+{
+	sinsp_evt_formatter *formatter = (sinsp_evt_formatter *)lua_topointer(ls, -1);
+	delete(formatter);
+}
+
 int falco_formats::lua_free_formatter(lua_State *ls)
 {
 	if(!lua_islightuserdata(ls, -1) ||
@@ -101,16 +116,62 @@ int falco_formats::lua_free_formatter(lua_State *ls)
 
 	if(source == "syscall")
 	{
-		sinsp_evt_formatter *formatter = (sinsp_evt_formatter *)lua_topointer(ls, -1);
-		delete(formatter);
+		delete_sinsp_formatter(ls);
 	}
-	else
+	else if (source == "k8s_audit")
 	{
 		json_event_formatter *formatter = (json_event_formatter *)lua_topointer(ls, -1);
 		delete(formatter);
 	}
-
+	else
+	{
+		// Not one of the built-in sources, so assume it's a plugin.
+		// Plugins behave identically to syscall events for now.
+		delete_sinsp_formatter(ls);
+	}
 	return 0;
+}
+
+void falco_formats::format_sinsp_event(const gen_event *evt, const std::string &format,
+				       std::string &line, std::string &json_line, std::string &sformat)
+{
+	// This is "output"
+	s_formatters->tostring((sinsp_evt *)evt, sformat, &line);
+
+	if(s_json_output)
+	{
+		sinsp_evt::param_fmt cur_fmt = s_inspector->get_buffer_format();
+		switch(cur_fmt)
+		{
+		case sinsp_evt::PF_NORMAL:
+			s_inspector->set_buffer_format(sinsp_evt::PF_JSON);
+			break;
+		case sinsp_evt::PF_EOLS:
+			s_inspector->set_buffer_format(sinsp_evt::PF_JSONEOLS);
+			break;
+		case sinsp_evt::PF_HEX:
+			s_inspector->set_buffer_format(sinsp_evt::PF_JSONHEX);
+			break;
+		case sinsp_evt::PF_HEXASCII:
+			s_inspector->set_buffer_format(sinsp_evt::PF_JSONHEXASCII);
+			break;
+		case sinsp_evt::PF_BASE64:
+			s_inspector->set_buffer_format(sinsp_evt::PF_JSONBASE64);
+			break;
+		default:
+			// do nothing
+			break;
+		}
+		// This is output fields
+		s_formatters->tostring((sinsp_evt *)evt, sformat, &json_line);
+
+		// The formatted string might have a leading newline. If it does, remove it.
+		if(json_line[0] == '\n')
+		{
+			json_line.erase(0, 1);
+		}
+		s_inspector->set_buffer_format(cur_fmt);
+	}
 }
 
 string falco_formats::format_event(const gen_event *evt, const std::string &rule, const std::string &source,
@@ -121,47 +182,11 @@ string falco_formats::format_event(const gen_event *evt, const std::string &rule
 	string json_line;
 	string sformat = format;
 
-	if(strcmp(source.c_str(), "syscall") == 0)
+	if(source == "syscall")
 	{
-		// This is "output"
-		s_formatters->tostring((sinsp_evt *)evt, sformat, &line);
-
-		if(s_json_output)
-		{
-			sinsp_evt::param_fmt cur_fmt = s_inspector->get_buffer_format();
-			switch(cur_fmt)
-			{
-			case sinsp_evt::PF_NORMAL:
-				s_inspector->set_buffer_format(sinsp_evt::PF_JSON);
-				break;
-			case sinsp_evt::PF_EOLS:
-				s_inspector->set_buffer_format(sinsp_evt::PF_JSONEOLS);
-				break;
-			case sinsp_evt::PF_HEX:
-				s_inspector->set_buffer_format(sinsp_evt::PF_JSONHEX);
-				break;
-			case sinsp_evt::PF_HEXASCII:
-				s_inspector->set_buffer_format(sinsp_evt::PF_JSONHEXASCII);
-				break;
-			case sinsp_evt::PF_BASE64:
-				s_inspector->set_buffer_format(sinsp_evt::PF_JSONBASE64);
-				break;
-			default:
-				// do nothing
-				break;
-			}
-			// This is output fields
-			s_formatters->tostring((sinsp_evt *)evt, sformat, &json_line);
-
-			// The formatted string might have a leading newline. If it does, remove it.
-			if(json_line[0] == '\n')
-			{
-				json_line.erase(0, 1);
-			}
-			s_inspector->set_buffer_format(cur_fmt);
-		}
+		format_sinsp_event(evt, format, line, json_line, sformat);
 	}
-	else
+	else if (source == "k8s_audit")
 	{
 		json_event_formatter formatter(s_engine->json_factory(), sformat);
 
@@ -171,6 +196,10 @@ string falco_formats::format_event(const gen_event *evt, const std::string &rule
 		{
 			json_line = formatter.tojson((json_event *)evt);
 		}
+	} else {
+		// Not one of the built-in sources, so assume it's a plugin.
+		// Plugins behave identically to syscall events for now.
+		format_sinsp_event(evt, format, line, json_line, sformat);
 	}
 
 	// For JSON output, the formatter returned a json-as-text
@@ -234,11 +263,16 @@ map<string, string> falco_formats::resolve_tokens(const gen_event *evt, const st
 	{
 		s_formatters->resolve_tokens((sinsp_evt *)evt, sformat, values);
 	}
-	// k8s_audit
-	else
+	else if (source == "k8s_audit")
 	{
 		json_event_formatter json_formatter(s_engine->json_factory(), sformat);
 		values = json_formatter.tomap((json_event *)evt);
+	}
+	else
+	{
+		// Not one of the built-in sources, so assume it's a plugin.
+		// Plugins behave identically to syscall events for now.
+		s_formatters->resolve_tokens((sinsp_evt *)evt, sformat, values);
 	}
 	return values;
 }
