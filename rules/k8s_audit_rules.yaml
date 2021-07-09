@@ -61,7 +61,7 @@
   output: K8s Operation performed by user not in allowed list of users (user=%ka.user.name target=%ka.target.name/%ka.target.resource verb=%ka.verb uri=%ka.uri resp=%ka.response.code)
   priority: WARNING
   source: k8s_audit
-  tags: [k8s]
+  tags: [k8s, mitre_TA0005_defense_evasion, mitre_T1078_valid_accounts]
 
 # In a local/user rules file, you could override this macro to
 # explicitly enumerate the container images that you want to run in
@@ -127,7 +127,7 @@
   output: Pod started with container not in allowed list (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace images=%ka.req.pod.containers.image)
   priority: WARNING
   source: k8s_audit
-  tags: [k8s]
+  tags: [k8s, mitre_TA0002_execution, mitre_T1610_deploy_container]
 
 - rule: Create Privileged Pod
   desc: >
@@ -136,7 +136,7 @@
   output: Pod started with privileged container (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace images=%ka.req.pod.containers.image)
   priority: WARNING
   source: k8s_audit
-  tags: [k8s]
+  tags: [k8s, mitre_TA0002_execution, mitre_T1609_container_administration_command]
 
 - macro: sensitive_vol_mount
   condition: >
@@ -150,7 +150,7 @@
   output: Pod started with sensitive mount (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace images=%ka.req.pod.containers.image volumes=%jevt.value[/requestObject/spec/volumes])
   priority: WARNING
   source: k8s_audit
-  tags: [k8s]
+  tags: [k8s, mitre_TA0002_execution, mitre_TA0004_privilege_escalation, mitre_T1609_container_administration_command, mitre_T1611_escape_to_host]
 
 # Corresponds to K8s CIS Benchmark 1.7.4
 - rule: Create HostNetwork Pod
@@ -159,7 +159,7 @@
   output: Pod started using host network (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace images=%ka.req.pod.containers.image)
   priority: WARNING
   source: k8s_audit
-  tags: [k8s]
+  tags: [k8s, mitre_TA0002_execution, mitre_T1609_container_administration_command]
 
 - macro: user_known_node_port_service
   condition: (k8s_audit_never_true)
@@ -171,7 +171,7 @@
   output: NodePort Service Created (user=%ka.user.name service=%ka.target.name ns=%ka.target.namespace ports=%ka.req.service.ports)
   priority: WARNING
   source: k8s_audit
-  tags: [k8s]
+  tags: [k8s, mitre_TA0002_execution, mitre_T1609_container_administration_command]
 
 - macro: contains_private_credentials
   condition: >
@@ -189,7 +189,7 @@
   output: K8s configmap with private credential (user=%ka.user.name verb=%ka.verb configmap=%ka.req.configmap.name config=%ka.req.configmap.obj)
   priority: WARNING
   source: k8s_audit
-  tags: [k8s]
+  tags: [k8s, mitre_TA0006_credential_access, mitre_T1552_unsecured_credentials]
 
 # Corresponds to K8s CIS Benchmark, 1.1.1.
 - rule: Anonymous Request Allowed
@@ -199,7 +199,7 @@
   output: Request by anonymous user allowed (user=%ka.user.name verb=%ka.verb uri=%ka.uri reason=%ka.auth.reason))
   priority: WARNING
   source: k8s_audit
-  tags: [k8s]
+  tags: [k8s, mitre_TA0004_privilege_escalation, mitre_T1068_explotation_for_privilege_escalation]
 
 # Roughly corresponds to K8s CIS Benchmark, 1.1.12. In this case,
 # notifies an attempt to exec/attach to a privileged container.
@@ -224,7 +224,7 @@
   output: Attach/Exec to pod (user=%ka.user.name pod=%ka.target.name ns=%ka.target.namespace action=%ka.target.subresource command=%ka.uri.param[command])
   priority: NOTICE
   source: k8s_audit
-  tags: [k8s]
+  tags: [k8s, mitre_TA0002_execution, mitre_T1610_deploy_container]
 
 - macro: user_known_pod_debug_activities
   condition: (k8s_audit_never_true)
@@ -237,7 +237,7 @@
   output: Ephemeral container is created in pod (user=%ka.user.name pod=%ka.target.name ns=%ka.target.namespace ephemeral_container_name=%jevt.value[/requestObject/ephemeralContainers/0/name] ephemeral_container_image=%jevt.value[/requestObject/ephemeralContainers/0/image])
   priority: NOTICE
   source: k8s_audit
-  tags: [k8s]
+  tags: [k8s, mitre_TA0005_defense_evasion, mitre_T1036_masquerading]
 
 # In a local/user rules fie, you can append to this list to add additional allowed namespaces
 - list: allowed_namespaces
@@ -249,7 +249,7 @@
   output: Disallowed namespace created (user=%ka.user.name ns=%ka.target.name)
   priority: WARNING
   source: k8s_audit
-  tags: [k8s]
+  tags: [k8s, mitre_TA0005_defense_evasion, mitre_T1036_masquerading]
 
 # Only defined for backwards compatibility. Use the more specific
 # user_allowed_kube_namespace_image_list instead.
@@ -296,7 +296,7 @@
   output: Pod created in kube namespace (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace images=%ka.req.pod.containers.image)
   priority: WARNING
   source: k8s_audit
-  tags: [k8s]
+  tags: [k8s, mitre_TA0002_execution, mitre_TA0005_defense_evasion, mitre_T1609_container_administration_command, mitre_T1036_masquerading]
 
 - list: user_known_sa_list
   items: []
@@ -316,7 +316,7 @@
   output: Service account created in kube namespace (user=%ka.user.name serviceaccount=%ka.target.name ns=%ka.target.namespace)
   priority: WARNING
   source: k8s_audit
-  tags: [k8s]
+  tags: [k8s, mitre_TA0002_execution, mitre_TA0005_defense_evasion, mitre_T1609_container_administration_command, mitre_T1036_masquerading]
 
 # Detect any modify/delete to any ClusterRole starting with
 # "system:". "system:coredns" is excluded as changes are expected in
@@ -328,7 +328,7 @@
   output: System ClusterRole/Role modified or deleted (user=%ka.user.name role=%ka.target.name ns=%ka.target.namespace action=%ka.verb)
   priority: WARNING
   source: k8s_audit
-  tags: [k8s]
+  tags: [k8s, mitre_TA0004_privilege_escalation, mitre_T1068_explotation_for_privilege_escalation]
 
 # Detect any attempt to create a ClusterRoleBinding to the cluster-admin user
 # (exapand this to any built-in cluster role that does "sensitive" things)
@@ -338,7 +338,7 @@
   output: Cluster Role Binding to cluster-admin role (user=%ka.user.name subject=%ka.req.binding.subjects)
   priority: WARNING
   source: k8s_audit
-  tags: [k8s]
+  tags: [k8s, mitre_TA0004_privilege_escalation, mitre_T1068_explotation_for_privilege_escalation]
 
 - rule: ClusterRole With Wildcard Created
   desc: Detect any attempt to create a Role/ClusterRole with wildcard resources or verbs
@@ -346,7 +346,7 @@
   output: Created Role/ClusterRole with wildcard (user=%ka.user.name role=%ka.target.name rules=%ka.req.role.rules)
   priority: WARNING
   source: k8s_audit
-  tags: [k8s]
+  tags: [k8s, mitre_TA0004_privilege_escalation, mitre_T1068_explotation_for_privilege_escalation]
 
 - macro: writable_verbs
   condition: >
@@ -358,7 +358,7 @@
   output: Created Role/ClusterRole with write privileges (user=%ka.user.name role=%ka.target.name rules=%ka.req.role.rules)
   priority: NOTICE
   source: k8s_audit
-  tags: [k8s]
+  tags: [k8s, mitre_TA0004_privilege_escalation, mitre_T1068_explotation_for_privilege_escalation]
 
 - rule: ClusterRole With Pod Exec Created
   desc: Detect any attempt to create a Role/ClusterRole that can exec to pods
@@ -366,7 +366,7 @@
   output: Created Role/ClusterRole with pod exec privileges (user=%ka.user.name role=%ka.target.name rules=%ka.req.role.rules)
   priority: WARNING
   source: k8s_audit
-  tags: [k8s]
+  tags: [k8s, mitre_TA0004_privilege_escalation, mitre_T1068_explotation_for_privilege_escalation]
 
 # The rules below this point are less discriminatory and generally
 # represent a stream of activity for a cluster. If you wish to disable
@@ -479,7 +479,7 @@
   output: K8s Cluster Role Binding Created (user=%ka.user.name binding=%ka.target.name subjects=%ka.req.binding.subjects role=%ka.req.binding.role resp=%ka.response.code decision=%ka.auth.decision reason=%ka.auth.reason)
   priority: INFO
   source: k8s_audit
-  tags: [k8s]
+  tags: [k8s, mitre_TA0004_privilege_escalation, mitre_T1068_explotation_for_privilege_escalation]
 
 - rule: K8s Role/Clusterrolebinding Deleted
   desc: Detect any attempt to delete a clusterrolebinding
@@ -553,7 +553,7 @@
   output: K8s Operation performed by full admin user (user=%ka.user.name target=%ka.target.name/%ka.target.resource verb=%ka.verb uri=%ka.uri resp=%ka.response.code)
   priority: WARNING
   source: k8s_audit
-  tags: [k8s]
+  tags: [k8s, mitre_TA0004_privilege_escalation, mitre_T1078_valid_accounts, mitre_T1078.001_default_accounts]
 
 - macro: ingress
   condition: ka.target.resource=ingresses
@@ -588,7 +588,7 @@
     namespace=%ka.target.namespace)
   source: k8s_audit
   priority: WARNING
-  tags: [k8s, network]
+  tags: [k8s, network, mitre_TA0001_initial_access, mitre_T1190_exploit_public-facing_application]
 
 - macro: node
   condition: ka.target.resource=nodes
@@ -617,7 +617,7 @@
   output: Node not in allowed list successfully joined the cluster (user=%ka.user.name node=%ka.target.name)
   priority: ERROR
   source: k8s_audit
-  tags: [k8s]
+  tags: [k8s, mitre_TA0002_execution, mitre_T1609_container_administration_command, mitre_T1552_unsecured_credentials, mitre_T1552.007_container_api]
 
 - rule: Untrusted Node Unsuccessfully Tried to Join the Cluster
   desc: >

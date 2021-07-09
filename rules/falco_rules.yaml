@@ -359,7 +359,7 @@
   condition: (inbound_outbound) and ssh_port and not allowed_ssh_hosts
   output: Disallowed SSH Connection (command=%proc.cmdline connection=%fd.name user=%user.name user_loginuid=%user.loginuid container_id=%container.id image=%container.image.repository)
   priority: NOTICE
-  tags: [network, mitre_remote_service]
+  tags: [network, mitre_TA0008_lateral_movement, mitre_T1021_remote_services, mitre_TA0001_initial_access, mitre_T1190_exploit_public-facing_application]
 
 # These rules and supporting macros are more of an example for how to
 # use the fd.*ip and fd.*ip.name fields to match connection
@@ -390,7 +390,7 @@
      (fd.sip.name in (allowed_outbound_destination_domains)))
   output: Disallowed outbound connection destination (command=%proc.cmdline connection=%fd.name user=%user.name user_loginuid=%user.loginuid container_id=%container.id image=%container.image.repository)
   priority: NOTICE
-  tags: [network]
+  tags: [network, mitre_TA0001_initial_access, mitre_T1190_exploit_public-facing_application]
 
 - macro: consider_all_inbound_conns
   condition: (never_true)
@@ -413,7 +413,7 @@
      (fd.cip.name in (allowed_inbound_source_domains)))
   output: Disallowed inbound connection source (command=%proc.cmdline connection=%fd.name user=%user.name user_loginuid=%user.loginuid container_id=%container.id image=%container.image.repository)
   priority: NOTICE
-  tags: [network]
+  tags: [network, mitre_TA0001_initial_access, mitre_T1190_exploit_public-facing_application]
 
 - list: bash_config_filenames
   items: [.bashrc, .bash_profile, .bash_history, .bash_login, .bash_logout, .inputrc, .profile]
@@ -453,7 +453,7 @@
     a shell configuration file has been modified (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pcmdline=%proc.pcmdline file=%fd.name container_id=%container.id image=%container.image.repository)
   priority:
     WARNING
-  tags: [file, mitre_persistence]
+  tags: [file, mitre_TA0003_persistence, mitre_TA0005_defense_evasion, mitre_T1562_impair_defenses, mitre_T1562.001_disable_or_modify_tools]
 
 # This rule is not enabled by default, as there are many legitimate
 # readers of shell config files. If you want to enable it, modify the
@@ -475,7 +475,7 @@
     a shell configuration file was read by a non-shell program (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline file=%fd.name container_id=%container.id image=%container.image.repository)
   priority:
     WARNING
-  tags: [file, mitre_discovery]
+  tags: [file, mitre_TA0007_discovery, mitre_TA0005_defense_evasion, mitre_T1562_impair_defenses, mitre_T1562.001_disable_or_modify_tools]
 
 - macro: consider_all_cron_jobs
   condition: (never_true)
@@ -495,7 +495,7 @@
     file=%fd.name container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
   priority:
     NOTICE
-  tags: [file, mitre_persistence]
+  tags: [file, mitre_TA0003_persistence, mitre_TA0002_execution, mitre_TA0003_persistence, mitre_T1053_scheduled_task_job]
 
 # Use this to test whether the event occurred within a container.
 
@@ -870,7 +870,7 @@
     Repository files get updated (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pcmdline=%proc.pcmdline file=%fd.name newpath=%evt.arg.newpath container_id=%container.id image=%container.image.repository)
   priority:
     NOTICE
-  tags: [filesystem, mitre_persistence]
+  tags: [filesystem, mitre_TA0003_persistence, mitre_TA0002_execution, mitre_TA0003_persistence]
 
 # Users should overwrite this macro to specify conditions under which a
 # write under the binary dir is ignored. For example, it may be okay to
@@ -891,7 +891,7 @@
     File below a known binary directory opened for writing (user=%user.name user_loginuid=%user.loginuid
     command=%proc.cmdline file=%fd.name parent=%proc.pname pcmdline=%proc.pcmdline gparent=%proc.aname[2] container_id=%container.id image=%container.image.repository)
   priority: ERROR
-  tags: [filesystem, mitre_persistence]
+  tags: [filesystem, mitre_TA0003_persistence, mitre_TA0005_defense_evasion, mitre_T1562.001_disable_or_modify_tools, mitre_T1036_masquerading, mitre_T1036.005_match_legitimate_name_or_location]
 
 # If you'd like to generally monitor a wider set of directories on top
 # of the ones covered by the rule Write below binary dir, you can use
@@ -944,7 +944,7 @@
     File below a monitored directory opened for writing (user=%user.name user_loginuid=%user.loginuid
     command=%proc.cmdline file=%fd.name parent=%proc.pname pcmdline=%proc.pcmdline gparent=%proc.aname[2] container_id=%container.id image=%container.image.repository)
   priority: ERROR
-  tags: [filesystem, mitre_persistence]
+  tags: [filesystem, mitre_TA0003_persistence, mitre_TA0005_defense_evasion, mitre_T1562.001_disable_or_modify_tools, mitre_T1036_masquerading, mitre_T1036.005_match_legitimate_name_or_location]
 
 # This rule is disabled by default as many system management tools
 # like ansible, etc can read these files/paths. Enable it using this macro.
@@ -967,7 +967,7 @@
     ssh-related file/directory read by non-ssh program (user=%user.name user_loginuid=%user.loginuid
     command=%proc.cmdline file=%fd.name parent=%proc.pname pcmdline=%proc.pcmdline container_id=%container.id image=%container.image.repository)
   priority: ERROR
-  tags: [filesystem, mitre_discovery]
+  tags: [filesystem, mitre_TA0007_discovery, mitre_TA0006_credential_access, mitre_T1552_unsecured_credentials, mitre_T1552.001_credentials_in_files]
 
 - list: safe_etc_dirs
   items: [/etc/cassandra, /etc/ssl/certs/java, /etc/logstash, /etc/nginx/conf.d, /etc/container_environment, /etc/hrmconfig, /etc/fluent/configs.d]
@@ -1248,7 +1248,7 @@
   condition: write_etc_common
   output: "File below /etc opened for writing (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline parent=%proc.pname pcmdline=%proc.pcmdline file=%fd.name program=%proc.name gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4] container_id=%container.id image=%container.image.repository)"
   priority: ERROR
-  tags: [filesystem, mitre_persistence]
+  tags: [filesystem, mitre_TA0003_persistence, mitre_TA0005_defense_evasion, mitre_T1562.001_disable_or_modify_tools, mitre_T1036_masquerading, mitre_T1036.005_match_legitimate_name_or_location]
 
 - list: known_root_files
   items: [/root/.monit.state, /root/.auth_tokens, /root/.bash_history, /root/.ash_history, /root/.aws/credentials,
@@ -1345,7 +1345,7 @@
     and not user_known_write_below_root_activities
   output: "File below / or /root opened for writing (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline parent=%proc.pname file=%fd.name program=%proc.name container_id=%container.id image=%container.image.repository)"
   priority: ERROR
-  tags: [filesystem, mitre_persistence]
+  tags: [filesystem, mitre_TA0003_persistence, mitre_TA0005_defense_evasion, mitre_T1562.001_disable_or_modify_tools, mitre_T1036_masquerading, mitre_T1036.005_match_legitimate_name_or_location]
 
 - macro: cmp_cp_by_passwd
   condition: proc.name in (cmp, cp) and proc.pname in (passwd, run-parts)
@@ -1363,7 +1363,7 @@
     Sensitive file opened for reading by trusted program after startup (user=%user.name user_loginuid=%user.loginuid
     command=%proc.cmdline parent=%proc.pname file=%fd.name parent=%proc.pname gparent=%proc.aname[2] container_id=%container.id image=%container.image.repository)
   priority: WARNING
-  tags: [filesystem, mitre_credential_access]
+  tags: [filesystem, mitre_TA0006_credential_access, mitre_TA0006_credential_access, mitre_TA0003_persistence, mitre_T1552_unsecured_credentials, mitre_T1552.001_credentials_in_files]
 
 - list: read_sensitive_file_binaries
   items: [
@@ -1433,7 +1433,7 @@
     Sensitive file opened for reading by non-trusted program (user=%user.name user_loginuid=%user.loginuid program=%proc.name
     command=%proc.cmdline file=%fd.name parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4] container_id=%container.id image=%container.image.repository)
   priority: WARNING
-  tags: [filesystem, mitre_credential_access, mitre_discovery]
+  tags: [filesystem, mitre_TA0006_credential_access, mitre_TA0007_discovery, mitre_TA0006_credential_access, mitre_TA0003_persistence, mitre_T1552_unsecured_credentials, mitre_T1552.001_credentials_in_files]
 
 - macro: amazon_linux_running_python_yum
   condition: >
@@ -1457,7 +1457,7 @@
     and not user_known_write_rpm_database_activities
   output: "Rpm database opened for writing by a non-rpm program (command=%proc.cmdline file=%fd.name parent=%proc.pname pcmdline=%proc.pcmdline container_id=%container.id image=%container.image.repository)"
   priority: ERROR
-  tags: [filesystem, software_mgmt, mitre_persistence]
+  tags: [filesystem, software_mgmt, mitre_TA0003_persistence, mitre_TA0005_defense_evasion, mitre_T1562.001_disable_or_modify_tools]
 
 - macro: postgres_running_wal_e
   condition: (proc.pname=postgres and proc.cmdline startswith "sh -c envdir /etc/wal-e.d/env /usr/local/bin/wal-e")
@@ -1496,7 +1496,7 @@
     Database-related program spawned process other than itself (user=%user.name user_loginuid=%user.loginuid
     program=%proc.cmdline parent=%proc.pname container_id=%container.id image=%container.image.repository)
   priority: NOTICE
-  tags: [process, database, mitre_execution]
+  tags: [process, database, mitre_TA0002_execution, mitre_TA0001_initial_access, mitre_T1190_exploit_public-facing_application]
 
 - macro: user_known_modify_bin_dir_activities
   condition: (never_true)
@@ -1508,7 +1508,7 @@
     File below known binary directory renamed/removed (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline
     pcmdline=%proc.pcmdline operation=%evt.type file=%fd.name %evt.args container_id=%container.id image=%container.image.repository)
   priority: ERROR
-  tags: [filesystem, mitre_persistence]
+  tags: [filesystem, mitre_TA0003_persistence, mitre_TA0005_defense_evasion, mitre_T1562.001_disable_or_modify_tools, mitre_T1036_masquerading]
 
 - macro: user_known_mkdir_bin_dir_activities
   condition: (never_true)
@@ -1525,7 +1525,7 @@
     Directory below known binary directory created (user=%user.name user_loginuid=%user.loginuid
     command=%proc.cmdline directory=%evt.arg.path container_id=%container.id image=%container.image.repository)
   priority: ERROR
-  tags: [filesystem, mitre_persistence]
+  tags: [filesystem, mitre_TA0003_persistence, mitre_TA0005_defense_evasion, mitre_T1562.001_disable_or_modify_tools, mitre_T1036_masquerading]
 
 # This list allows for easy additions to the set of commands allowed
 # to change thread namespace without having to copy and override the
@@ -1570,7 +1570,7 @@
     Namespace change (setns) by unexpected program (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline
     parent=%proc.pname %container.info container_id=%container.id image=%container.image.repository:%container.image.tag)
   priority: NOTICE
-  tags: [process, mitre_privilege_escalation, mitre_lateral_movement]
+  tags: [process, mitre_TA0004_privilege_escalation, mitre_TA0008_lateral_movement, mitre_TA0002_execution, mitre_TA0004_privilege_escalation, mitre_T1609_container_administration_command, mitre_T1611_escape_to_host]
 
 # The binaries in this list and their descendents are *not* allowed
 # spawn shells. This includes the binaries spawning shells directly as
@@ -1717,7 +1717,7 @@
     cmdline=%proc.cmdline pcmdline=%proc.pcmdline gparent=%proc.aname[2] ggparent=%proc.aname[3]
     aname[4]=%proc.aname[4] aname[5]=%proc.aname[5] aname[6]=%proc.aname[6] aname[7]=%proc.aname[7] container_id=%container.id image=%container.image.repository)
   priority: DEBUG
-  tags: [shell, mitre_execution]
+  tags: [shell, mitre_TA0002_execution, mitre_TA0001_initial_access, mitre_T1190_exploit_public-facing_application]
 
 - macro: allowed_openshift_registry_root
   condition: >
@@ -1902,7 +1902,7 @@
     and not user_privileged_containers
   output: Privileged container started (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline %container.info image=%container.image.repository:%container.image.tag)
   priority: INFO
-  tags: [container, cis, mitre_privilege_escalation, mitre_lateral_movement]
+  tags: [container, cis, mitre_TA0004_privilege_escalation, mitre_TA0008_lateral_movement, mitre_TA0002_execution, mitre_T1609_container_administration_command]
 
 # For now, only considering a full mount of /etc as
 # sensitive. Ideally, this would also consider all subdirectories
@@ -1946,7 +1946,7 @@
     and not user_sensitive_mount_containers
   output: Container with sensitive mount started (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline %container.info image=%container.image.repository:%container.image.tag mounts=%container.mounts)
   priority: INFO
-  tags: [container, cis, mitre_lateral_movement]
+  tags: [container, cis, mitre_TA0008_lateral_movement, mitre_TA0002_execution, mitre_TA0004_privilege_escalation, mitre_T1609_container_administration_command, mitre_T1611_escape_to_host]
 
 # In a local/user rules file, you could override this macro to
 # explicitly enumerate the container images that you want to run in
@@ -1966,7 +1966,7 @@
   condition: container_started and container and not allowed_containers
   output: Container started and not in allowed list (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline %container.info image=%container.image.repository:%container.image.tag)
   priority: WARNING
-  tags: [container, mitre_lateral_movement]
+  tags: [container, mitre_TA0008_lateral_movement, mitre_TA0002_execution, mitre_T1204_user_execution, mitre_T1204.003_malicious_image]
 
 - macro: user_known_system_user_login
   condition: (never_true)
@@ -1981,7 +1981,7 @@
   condition: spawned_process and system_users and interactive and not user_known_system_user_login
   output: "System user ran an interactive command (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline container_id=%container.id image=%container.image.repository)"
   priority: INFO
-  tags: [users, mitre_remote_access_tools]
+  tags: [users, mitre_TA0011_command_and_control, mitre_T1219_remote_access_software, mitre_TA0001_initial_access, mitre_T1190_exploit_public-facing_application]
 
 # In some cases, a shell is expected to be run in a container. For example, configuration
 # management software may do this, which is expected.
@@ -1999,7 +1999,7 @@
     A shell was spawned in a container with an attached terminal (user=%user.name user_loginuid=%user.loginuid %container.info
     shell=%proc.name parent=%proc.pname cmdline=%proc.cmdline terminal=%proc.tty container_id=%container.id image=%container.image.repository)
   priority: NOTICE
-  tags: [container, shell, mitre_execution]
+  tags: [container, shell, mitre_TA0002_execution, mitre_TA0002_execution, mitre_T1609_container_administration_command]
 
 # For some container types (mesos), there isn't a container image to
 # work with, and the container name is autogenerated, so there isn't
@@ -2074,7 +2074,7 @@
     Known system binary sent/received network traffic
     (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline connection=%fd.name container_id=%container.id image=%container.image.repository)
   priority: NOTICE
-  tags: [network, mitre_exfiltration]
+  tags: [network, mitre_TA0010_exfiltration, mitre_TA0001_initial_access, mitre_T1190_exploit_public-facing_application]
 
 # This list allows easily whitelisting system proc names that are
 # expected to communicate on the network.
@@ -2112,7 +2112,7 @@
     Program run with disallowed HTTP_PROXY environment variable
     (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline env=%proc.env parent=%proc.pname container_id=%container.id image=%container.image.repository)
   priority: NOTICE
-  tags: [host, users]
+  tags: [host, users, mitre_TA0001_initial_access, mitre_T1190_exploit_public-facing_application]
 
 # In some environments, any attempt by a interpreted program (perl,
 # python, ruby, etc) to listen for incoming connections or perform
@@ -2135,7 +2135,7 @@
     Interpreted program received/listened for network traffic
     (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline connection=%fd.name container_id=%container.id image=%container.image.repository)
   priority: NOTICE
-  tags: [network, mitre_exfiltration]
+  tags: [network, mitre_TA0010_exfiltration]
 
 - rule: Interpreted procs outbound network activity
   desc: Any outbound network activity performed by any interpreted program (perl, python, ruby, etc.)
@@ -2146,7 +2146,7 @@
     Interpreted program performed outgoing network connection
     (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline connection=%fd.name container_id=%container.id image=%container.image.repository)
   priority: NOTICE
-  tags: [network, mitre_exfiltration]
+  tags: [network, mitre_TA0010_exfiltration]
 
 - list: openvpn_udp_ports
   items: [1194, 1197, 1198, 8080, 9201]
@@ -2187,7 +2187,7 @@
     Unexpected UDP Traffic Seen
     (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline connection=%fd.name proto=%fd.l4proto evt=%evt.type %evt.args container_id=%container.id image=%container.image.repository)
   priority: NOTICE
-  tags: [network, mitre_exfiltration]
+  tags: [network, mitre_TA0010_exfiltration]
 
 # With the current restriction on system calls handled by falco
 # (e.g. excluding read/write/sendto/recvfrom/etc, this rule won't
@@ -2247,7 +2247,7 @@
     Unexpected setuid call by non-sudo, non-root program (user=%user.name user_loginuid=%user.loginuid cur_uid=%user.uid parent=%proc.pname
     command=%proc.cmdline uid=%evt.arg.uid container_id=%container.id image=%container.image.repository)
   priority: NOTICE
-  tags: [users, mitre_privilege_escalation]
+  tags: [users, mitre_TA0004_privilege_escalation, mitre_TA0004_privilege_escalation, mitre_T1068_explotation_for_privilege_escalation]
 
 - macro: user_known_user_management_activities
   condition: (never_true)
@@ -2279,7 +2279,7 @@
     User management binary command run outside of container
     (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4])
   priority: NOTICE
-  tags: [host, users, mitre_persistence]
+  tags: [host, users, mitre_TA0003_persistence, mitre_TA0004_privilege_escalation, mitre_T1068_explotation_for_privilege_escalation]
 
 - list: allowed_dev_files
   items: [
@@ -2303,7 +2303,7 @@
     and not user_known_create_files_below_dev_activities
   output: "File created below /dev by untrusted program (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline file=%fd.name container_id=%container.id image=%container.image.repository)"
   priority: ERROR
-  tags: [filesystem, mitre_persistence]
+  tags: [filesystem, mitre_TA0003_persistence, mitre_TA0005_defense_evasion, mitre_T1036_masquerading, mitre_T1036.005_match_legitimate_name_or_location]
 
 
 # In a local/user rules file, you could override this macro to
@@ -2325,7 +2325,7 @@
   condition: outbound and fd.sip="169.254.169.254" and container and not ec2_metadata_containers
   output: Outbound connection to EC2 instance metadata service (command=%proc.cmdline connection=%fd.name %container.info image=%container.image.repository:%container.image.tag)
   priority: NOTICE
-  tags: [network, aws, container, mitre_discovery]
+  tags: [network, aws, container, mitre_TA0007_discovery, mitre_TA0006_credential_access, mitre_T1552_unsecured_credentials, mitre_T1552.007_container_api]
 
 
 # This rule is not enabled by default, since this rule is for cloud environment(GCP, AWS and Azure) only.
@@ -2344,7 +2344,7 @@
   condition: outbound and fd.sip="169.254.169.254" and container and consider_metadata_access and not user_known_metadata_access
   output: Outbound connection to cloud instance metadata service (command=%proc.cmdline connection=%fd.name %container.info image=%container.image.repository:%container.image.tag)
   priority: NOTICE
-  tags: [network, container, mitre_discovery]
+  tags: [network, container, mitre_TA0007_discovery, mitre_TA0006_credential_access, mitre_T1552_unsecured_credentials, mitre_T1552.007_container_api]
 
 # Containers from IBM Cloud
 - list: ibm_cloud_containers
@@ -2384,7 +2384,7 @@
     not user_known_contact_k8s_api_server_activities
   output: Unexpected connection to K8s API Server from container (command=%proc.cmdline %container.info image=%container.image.repository:%container.image.tag connection=%fd.name)
   priority: NOTICE
-  tags: [network, k8s, container, mitre_discovery]
+  tags: [network, k8s, container, mitre_TA0007_discovery, mitre_TA0006_credential_access, mitre_T1552_unsecured_credentials, mitre_T1552.007_container_api]
 
 # In a local/user rules file, list the container images that are
 # allowed to contact NodePort services from within a container. This
@@ -2400,7 +2400,7 @@
   condition: (inbound_outbound) and fd.sport >= 30000 and fd.sport <= 32767 and container and not nodeport_containers
   output: Unexpected K8s NodePort Connection (command=%proc.cmdline connection=%fd.name container_id=%container.id image=%container.image.repository)
   priority: NOTICE
-  tags: [network, k8s, container, mitre_port_knocking]
+  tags: [network, k8s, container, mitre_TA0003_persistence, mitre_T1205.001_port_knocking]
 
 - list: network_tool_binaries
   items: [nc, ncat, nmap, dig, tcpdump, tshark, ngrep, telnet, mitmproxy, socat, zmap]
@@ -2431,7 +2431,7 @@
     Package management process launched in container (user=%user.name user_loginuid=%user.loginuid
     command=%proc.cmdline container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
   priority: ERROR
-  tags: [process, mitre_persistence]
+  tags: [process, mitre_TA0003_persistence, mitre_TA0004_privilege_escalation, mitre_T1068_explotation_for_privilege_escalation]
 
 - rule: Netcat Remote Code Execution in Container
   desc: Netcat Program runs inside container that allows remote code execution
@@ -2445,7 +2445,7 @@
     Netcat runs inside container that allows remote code execution (user=%user.name user_loginuid=%user.loginuid
     command=%proc.cmdline container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
   priority: WARNING
-  tags: [network, process, mitre_execution]
+  tags: [network, process, mitre_TA0002_execution, mitre_TA0007_discovery, mitre_T1046_network_service_scanning]
 
 - macro: user_known_network_tool_activities
   condition: (never_true)
@@ -2458,7 +2458,7 @@
     Network tool launched in container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline parent_process=%proc.pname
     container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
   priority: NOTICE
-  tags: [network, process, mitre_discovery, mitre_exfiltration]
+  tags: [network, process, mitre_TA0007_discovery, mitre_TA0010_exfiltration, mitre_TA0007_discovery, mitre_T1046_network_service_scanning]
 
 # This rule is not enabled by default, as there are legitimate use
 # cases for these tools on hosts. If you want to enable it, modify the
@@ -2477,7 +2477,7 @@
   output: >
     Network tool launched on host (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline parent_process=%proc.pname)
   priority: NOTICE
-  tags: [network, process, mitre_discovery, mitre_exfiltration]
+  tags: [network, process, mitre_TA0007_discovery, mitre_TA0010_exfiltration, mitre_TA0007_discovery, mitre_T1046_network_service_scanning]
 
 - list: grep_binaries
   items: [grep, egrep, fgrep]
@@ -2515,7 +2515,7 @@
     image=%container.image.repository:%container.image.tag)
   priority:
     WARNING
-  tags: [process, mitre_credential_access]
+  tags: [process, mitre_TA0006_credential_access, mitre_TA0006_credential_access, mitre_T1552_unsecured_credentials]
 
 - list: log_directories
   items: [/var/log, /dev/log]
@@ -2548,7 +2548,7 @@
     Log files were tampered (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline file=%fd.name container_id=%container.id image=%container.image.repository)
   priority:
     WARNING
-  tags: [file, mitre_defense_evasion]
+  tags: [file, mitre_TA0005_defense_evasion, mitre_TA0005_defense_evasion, mitre_T1070_indicator_removal_on_host]
 
 - list: data_remove_commands
   items: [shred, mkfs, mke2fs]
@@ -2566,7 +2566,7 @@
     Bulk data has been removed from disk (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline file=%fd.name container_id=%container.id image=%container.image.repository)
   priority:
     WARNING
-  tags: [process, mitre_persistence]
+  tags: [process, mitre_TA0003_persistence, mitre_TA0005_defense_evasion, mitre_T1070_indicator_removal_on_host]
 
 - macro: modify_shell_history
   condition: >
@@ -2605,7 +2605,7 @@
     Shell history had been deleted or renamed (user=%user.name user_loginuid=%user.loginuid type=%evt.type command=%proc.cmdline fd.name=%fd.name name=%evt.arg.name path=%evt.arg.path oldpath=%evt.arg.oldpath %container.info)
   priority:
     WARNING
-  tags: [process, mitre_defense_evasion]
+  tags: [process, mitre_TA0005_defense_evasion, mitre_TA0005_defense_evasion, mitre_T1070_indicator_removal_on_host]
 
 # This rule is deprecated and will/should never be triggered. Keep it here for backport compatibility.
 # Rule Delete or rename shell history is the preferred rule to use now.
@@ -2618,7 +2618,7 @@
     Shell history had been deleted or renamed (user=%user.name user_loginuid=%user.loginuid type=%evt.type command=%proc.cmdline fd.name=%fd.name name=%evt.arg.name path=%evt.arg.path oldpath=%evt.arg.oldpath %container.info)
   priority:
     WARNING
-  tags: [process, mitre_defense_evasion]
+  tags: [process, mitre_TA0005_defense_evasion, mitre_TA0005_defense_evasion, mitre_T1070_indicator_removal_on_host]
 
 - macro: consider_all_chmods
   condition: (always_true)
@@ -2648,7 +2648,7 @@
     command=%proc.cmdline container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
   priority:
     NOTICE
-  tags: [process, mitre_persistence]
+  tags: [process, mitre_TA0003_persistence, mitre_TA0004_privilege_escalation, mitre_T1068_explotation_for_privilege_escalation]
 
 - list: exclude_hidden_directories
   items: [/root/.cassandra]
@@ -2674,7 +2674,7 @@
     file=%fd.name newpath=%evt.arg.newpath container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
   priority:
     NOTICE
-  tags: [file, mitre_persistence]
+  tags: [file, mitre_TA0003_persistence, mitre_TA0005_defense_evasion, mitre_T1036_masquerading]
 
 - list: remote_file_copy_binaries
   items: [rsync, scp, sftp, dcp]
@@ -2698,7 +2698,7 @@
     Remote file copy tool launched in container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline parent_process=%proc.pname
     container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
   priority: NOTICE
-  tags: [network, process, mitre_lateral_movement, mitre_exfiltration]
+  tags: [network, process, mitre_TA0008_lateral_movement, mitre_TA0010_exfiltration, mitre_TA0006_credential_access, mitre_T1552_unsecured_credentials]
 
 - rule: Create Symlink Over Sensitive Files
   desc: Detect symlink created over sensitive files
@@ -2708,7 +2708,7 @@
   output: >
     Symlinks created over senstivie files (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline target=%evt.arg.target linkpath=%evt.arg.linkpath parent_process=%proc.pname)
   priority: NOTICE
-  tags: [file, mitre_exfiltration]
+  tags: [file, mitre_TA0010_exfiltration, mitre_TA0005_defense_evasion, mitre_T1036_masquerading, mitre_T1036.005_match_legitimate_name_or_location]
 
 - list: miner_ports
   items: [
@@ -2804,14 +2804,14 @@
   enabled: false
   output: Outbound connection to IP/Port flagged by cryptoioc.ch (command=%proc.cmdline port=%fd.rport ip=%fd.rip container=%container.info image=%container.image.repository)
   priority: CRITICAL
-  tags: [network, mitre_execution]
+  tags: [network, mitre_TA0002_execution, mitre_TA0040_impact, mitre_T1496_resource_hijacking]
 
 - rule: Detect crypto miners using the Stratum protocol
   desc: Miners typically specify the mining pool to connect to with a URI that begins with 'stratum+tcp'
   condition: spawned_process and proc.cmdline contains "stratum+tcp"
   output: Possible miner running (command=%proc.cmdline container=%container.info image=%container.image.repository)
   priority: CRITICAL
-  tags: [process, mitre_execution]
+  tags: [process, mitre_TA0002_execution, mitre_TA0040_impact, mitre_T1496_resource_hijacking]
 
 - list: k8s_client_binaries
   items: [docker, kubectl, crictl]
@@ -2841,7 +2841,7 @@
   condition: spawned_process and container and not user_known_k8s_client_container_parens and proc.name in (k8s_client_binaries)
   output: "Docker or kubernetes client executed in container (user=%user.name user_loginuid=%user.loginuid %container.info parent=%proc.pname cmdline=%proc.cmdline image=%container.image.repository:%container.image.tag)"
   priority: WARNING
-  tags: [container, mitre_execution]
+  tags: [container, mitre_TA0002_execution, mitre_TA0002_execution, mitre_T1609_container_administration_command, mitre_T1610_deploy_container]
 
 
 # This rule is enabled by default.
@@ -2857,7 +2857,7 @@
   condition: evt.type=socket and evt.arg[0]=AF_PACKET and consider_packet_socket_communication and container and not proc.name in (user_known_packet_socket_binaries)
   output: Packet socket was created in a container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline socket_info=%evt.args container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
   priority: NOTICE
-  tags: [network, mitre_discovery]
+  tags: [network, mitre_TA0007_discovery, mitre_TA0003_persistence, mitre_T1133_external_remote_services]
 
 # Change to (always_true) to enable rule 'Network connection outside local subnet'
 - macro: enabled_rule_network_only_subnet
@@ -2930,7 +2930,7 @@
     (command=%proc.cmdline connection=%fd.name user=%user.name user_loginuid=%user.loginuid container_id=%container.id
     image=%container.image.repository)
   priority: WARNING
-  tags: [network]
+  tags: [network, mitre_TA0001_initial_access, mitre_T1190_exploit_public-facing_application, mitre_TA0007_discovery, mitre_T1046_network_service_scanning]
 
 - macro: user_known_stand_streams_redirect_activities
   condition: (never_true)
@@ -2995,7 +2995,7 @@
   condition: outbound and fd.sip in (c2_server_ip_list)
   output: Outbound connection to C2 server (command=%proc.cmdline connection=%fd.name user=%user.name user_loginuid=%user.loginuid container_id=%container.id image=%container.image.repository)
   priority: WARNING
-  tags: [network]
+  tags: [network, mitre_TA0001_initial_access, mitre_T1190_exploit_public-facing_application]
 
 - list: white_listed_modules
   items: []
@@ -3005,7 +3005,7 @@
   condition: spawned_process and container and proc.name=insmod and not proc.args in (white_listed_modules)
   output: Linux Kernel Module injection using insmod detected (user=%user.name user_loginuid=%user.loginuid parent_process=%proc.pname module=%proc.args %container.info image=%container.image.repository:%container.image.tag)
   priority: WARNING
-  tags: [process]
+  tags: [process, mitre_TA0004_privilege_escalation, mitre_TA0005_defense_evasion, mitre_T1068_explotation_for_privilege_escalation, mitre_T1036_masquerading, mitre_T1036.005_match_legitimate_name_or_location]
 
 - list: run_as_root_image_list
   items: []
@@ -3021,7 +3021,7 @@
   enabled: false
   output: Container launched with root user privilege (uid=%user.uid container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
   priority: INFO
-  tags: [container, process]
+  tags: [container, process, mitre_TA0002_execution, mitre_TA0004_privilege_escalation, mitre_T1609_container_administration_command, mitre_T1068_exploitation_for_privilege_escalation]
 
 # This rule helps detect CVE-2021-3156:
 # A privilege escalation to root through heap-based buffer overflow
@@ -3030,7 +3030,7 @@
   condition: spawned_process and user.uid != 0 and proc.name=sudoedit and (proc.args contains -s or proc.args contains -i) and (proc.args contains "\ " or proc.args endswith \)
   output: "Detect Sudo Privilege Escalation Exploit (CVE-2021-3156) (user=%user.name parent=%proc.pname cmdline=%proc.cmdline %container.info)"
   priority: CRITICAL
-  tags: [filesystem, mitre_privilege_escalation]
+  tags: [filesystem, mitre_TA0004_privilege_escalation, mitre_TA0004_privilege_escalation, mitre_T1068_explotation_for_privilege_escalation]
 
 - rule: Debugfs Launched in Privileged Container
   desc: Detect file system debugger debugfs launched inside a privileged container which might lead to container escape.
@@ -3040,7 +3040,7 @@
     and proc.name=debugfs
   output: Debugfs launched started in a privileged container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline %container.info image=%container.image.repository:%container.image.tag)
   priority: WARNING
-  tags: [container, cis, mitre_lateral_movement]
+  tags: [container, cis, mitre_TA0008_lateral_movement, mitre_TA0004_privilege_escalation, mitre_T1611_escape_to_host]
 
 - macro: mount_info
   condition: (proc.args="" or proc.args intersects ("-V", "-l", "-h"))
@@ -3054,7 +3054,7 @@
     and not mount_info
   output: Mount was executed inside a privileged container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline %container.info image=%container.image.repository:%container.image.tag)
   priority: WARNING
-  tags: [container, cis, mitre_lateral_movement]
+  tags: [container, cis, mitre_TA0008_lateral_movement, mitre_TA0002_execution, mitre_TA0004_privilege_escalation, mitre_T1609_container_administration_command, mitre_T1611_escape_to_host]
 
 - macro: consider_userfaultfd_activities
   condition: (always_true)
