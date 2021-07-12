@@ -11,7 +11,7 @@
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
+# See the License for the specific language governing permissions and 
 # limitations under the License.
 #
 
@@ -495,7 +495,7 @@
     file=%fd.name container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
   priority:
     NOTICE
-  tags: [file, mitre_TA0003_persistence, mitre_TA0002_execution, mitre_TA0003_persistence, mitre_T1053_scheduled_task_job]
+  tags: [file, mitre_TA0002_execution, mitre_TA0003_persistence, mitre_T1053_scheduled_task_job]
 
 # Use this to test whether the event occurred within a container.
 
@@ -870,7 +870,7 @@
     Repository files get updated (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pcmdline=%proc.pcmdline file=%fd.name newpath=%evt.arg.newpath container_id=%container.id image=%container.image.repository)
   priority:
     NOTICE
-  tags: [filesystem, mitre_TA0003_persistence, mitre_TA0002_execution, mitre_TA0003_persistence]
+  tags: [filesystem, mitre_TA0002_execution, mitre_TA0003_persistence]
 
 # Users should overwrite this macro to specify conditions under which a
 # write under the binary dir is ignored. For example, it may be okay to
