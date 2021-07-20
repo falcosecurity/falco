@@ -2458,7 +2458,7 @@
     Network tool launched in container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline parent_process=%proc.pname
     container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
   priority: NOTICE
-  tags: [network, process, mitre_TA0007_discovery, mitre_TA0010_exfiltration, mitre_TA0007_discovery, mitre_T1046_network_service_scanning]
+  tags: [network, process, mitre_TA0007_discovery, mitre_TA0010_exfiltration, mitre_T1046_network_service_scanning]
 
 # This rule is not enabled by default, as there are legitimate use
 # cases for these tools on hosts. If you want to enable it, modify the
@@ -2477,7 +2477,7 @@
   output: >
     Network tool launched on host (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline parent_process=%proc.pname)
   priority: NOTICE
-  tags: [network, process, mitre_TA0007_discovery, mitre_TA0010_exfiltration, mitre_TA0007_discovery, mitre_T1046_network_service_scanning]
+  tags: [network, process, mitre_TA0007_discovery, mitre_TA0010_exfiltration, mitre_T1046_network_service_scanning]
 
 - list: grep_binaries
   items: [grep, egrep, fgrep]
