@@ -886,10 +886,31 @@ int falco_init(int argc, char **argv)
 			}
 		}
 
+		std::list<sinsp_plugin::info> infos = sinsp_plugin::plugin_infos(inspector);
+
 		if(list_plugins)
 		{
-			std::string desc = sinsp_plugin::plugin_infos(inspector);
-			printf("%lu Plugins Loaded:\n\n%s\n", config.m_plugins.size(), desc.c_str());
+			std::ostringstream os;
+
+			for(auto &info : infos)
+			{
+				os << "Name: " << info.name << std::endl;
+				os << "Description: " << info.description << std::endl;
+				os << "Contact: " << info.contact << std::endl;
+				os << "Version: " << info.plugin_version.as_string() << std::endl;
+
+				if(info.type == TYPE_SOURCE_PLUGIN)
+				{
+					os << "Type: source plugin" << std::endl;
+					os << "ID: " << info.id << std::endl;
+				}
+				else
+				{
+					os << "Type: extractor plugin" << std::endl;
+				}
+			}
+
+			printf("%lu Plugins Loaded:\n\n%s\n", infos.size(), os.str().c_str());
 			return EXIT_SUCCESS;
 		}
 
@@ -937,6 +958,17 @@ int falco_init(int argc, char **argv)
 				throw falco_exception(prefix + e.what());
 			}
 			required_engine_versions[filename] = required_engine_version;
+		}
+
+		// Ensure that all plugins are compatible with the loaded set of rules
+		for(auto &info : infos)
+		{
+			std::string required_version;
+
+			if(!engine->is_plugin_compatible(info.name, info.plugin_version.as_string(), required_version))
+			{
+				throw std::invalid_argument(std::string("Plugin ") + info.name + " version " + info.plugin_version.as_string() + " not compatible with required plugin version " + required_version);
+			}
 		}
 
 		// You can't both disable and enable rules

@@ -245,6 +245,12 @@ public:
 			      sinsp_filter* filter,
 			      std::string &source);
 
+	// Return whether the provided plugin name + version is
+	// compatible with the current set of loaded rules files.
+	// required_version will be filled in with the required
+	// version when the method returns false.
+	bool is_plugin_compatible(const std::string &name, const std::string &version, std::string &required_version);
+
 	sinsp_filter_factory &sinsp_factory();
 	json_event_filter_factory &json_factory();
 
@@ -272,6 +278,10 @@ private:
 	// Maps from plugin id to rules related to that plugin
 	// XXX/mstemm how to handle extractor-only plugins?
 	std::map<uint32_t, std::unique_ptr<falco_ruleset>> m_plugin_rules;
+
+	// Maps from plugin to a list of required plugin versions
+	// found in any loaded rules files.
+	std::map<std::string, std::list<std::string>> m_required_plugin_versions;
 
 	void populate_rule_result(unique_ptr<struct rule_result> &res, gen_event *ev);
 

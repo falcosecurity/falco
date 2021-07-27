@@ -39,7 +39,8 @@ class falco_rules
 	void load_rules(const string &rules_content, bool verbose, bool all_events,
 			std::string &extra, bool replace_container_info,
 			falco_common::priority_type min_priority,
-			uint64_t &required_engine_version);
+			uint64_t &required_engine_version,
+			std::map<std::string, std::list<std::string>> &required_plugin_versions);
 	void describe_rule(string *rule);
 
 	static void init(lua_State *ls);
