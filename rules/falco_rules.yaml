@@ -453,7 +453,7 @@
     a shell configuration file has been modified (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline pcmdline=%proc.pcmdline file=%fd.name container_id=%container.id image=%container.image.repository)
   priority:
     WARNING
-  tags: [file, mitre_TA0003_persistence, mitre_TA0005_defense_evasion, mitre_T1562_impair_defenses, mitre_T1562.001_disable_or_modify_tools]
+  tags: [file, mitre_TA0003_persistence]
 
 # This rule is not enabled by default, as there are many legitimate
 # readers of shell config files. If you want to enable it, modify the
@@ -475,7 +475,7 @@
     a shell configuration file was read by a non-shell program (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline file=%fd.name container_id=%container.id image=%container.image.repository)
   priority:
     WARNING
-  tags: [file, mitre_TA0007_discovery, mitre_TA0005_defense_evasion, mitre_T1562_impair_defenses, mitre_T1562.001_disable_or_modify_tools]
+  tags: [file, mitre_TA0007_discovery]
 
 - macro: consider_all_cron_jobs
   condition: (never_true)
@@ -2344,7 +2344,7 @@
   condition: outbound and fd.sip="169.254.169.254" and container and consider_metadata_access and not user_known_metadata_access
   output: Outbound connection to cloud instance metadata service (command=%proc.cmdline connection=%fd.name %container.info image=%container.image.repository:%container.image.tag)
   priority: NOTICE
-  tags: [network, container, mitre_TA0007_discovery, mitre_TA0006_credential_access, mitre_T1552_unsecured_credentials, mitre_T1552.007_container_api]
+  tags: [network, container, mitre_TA0007_discovery, mitre_TA0006_credential_access, mitre_T1552_unsecured_credentials]
 
 # Containers from IBM Cloud
 - list: ibm_cloud_containers
@@ -2384,7 +2384,7 @@
     not user_known_contact_k8s_api_server_activities
   output: Unexpected connection to K8s API Server from container (command=%proc.cmdline %container.info image=%container.image.repository:%container.image.tag connection=%fd.name)
   priority: NOTICE
-  tags: [network, k8s, container, mitre_TA0007_discovery, mitre_TA0006_credential_access, mitre_T1552_unsecured_credentials, mitre_T1552.007_container_api]
+  tags: [network, k8s, container, mitre_TA0007_discovery, mitre_T1552.007_container_api]
 
 # In a local/user rules file, list the container images that are
 # allowed to contact NodePort services from within a container. This
@@ -2400,7 +2400,7 @@
   condition: (inbound_outbound) and fd.sport >= 30000 and fd.sport <= 32767 and container and not nodeport_containers
   output: Unexpected K8s NodePort Connection (command=%proc.cmdline connection=%fd.name container_id=%container.id image=%container.image.repository)
   priority: NOTICE
-  tags: [network, k8s, container, mitre_TA0003_persistence, mitre_T1205.001_port_knocking]
+  tags: [network, k8s, container, mitre_T1205.001_port_knocking]
 
 - list: network_tool_binaries
   items: [nc, ncat, nmap, dig, tcpdump, tshark, ngrep, telnet, mitmproxy, socat, zmap]
@@ -2445,7 +2445,7 @@
     Netcat runs inside container that allows remote code execution (user=%user.name user_loginuid=%user.loginuid
     command=%proc.cmdline container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
   priority: WARNING
-  tags: [network, process, mitre_TA0002_execution, mitre_TA0007_discovery, mitre_T1046_network_service_scanning]
+  tags: [network, process, mitre_TA0002_execution, mitre_TA0007_discovery]
 
 - macro: user_known_network_tool_activities
   condition: (never_true)
