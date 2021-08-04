@@ -867,22 +867,30 @@ int falco_init(int argc, char **argv)
 			throw std::runtime_error("Could not find configuration file at " + conf_filename);
 		}
 
+		std::shared_ptr<sinsp_plugin> input_plugin;
 		for(auto &p : config.m_plugins)
 		{
 			bool avoid_async = true;
 
 			falco_logger::log(LOG_INFO, "Loading plugin (" + p.m_name + ") from file " + p.m_library_path + "\n");
 
-			sinsp_plugin::register_plugin(inspector,
-						      p.m_library_path,
-						      (p.m_init_config.empty() ? NULL : (char *)p.m_init_config.c_str()),
-						      avoid_async);
+			std::shared_ptr<sinsp_plugin> plugin = sinsp_plugin::register_plugin(inspector,
+										    p.m_library_path,
+										    (p.m_init_config.empty() ? NULL : (char *)p.m_init_config.c_str()),
+										    avoid_async);
 
-			// XXX/mstemm adapt this to handle multiple source plugins.
-			inspector->set_input_plugin(p.m_name);
-			if(!p.m_open_params.empty())
+			if(plugin->type() == TYPE_SOURCE_PLUGIN)
 			{
-				inspector->set_input_plugin_open_params(p.m_open_params.c_str());
+				if(input_plugin)
+				{
+					throw std::invalid_argument(string("Can not load multiple source plugins. ") + input_plugin->name() + " already loaded");
+				}
+
+				inspector->set_input_plugin(p.m_name);
+				if(!p.m_open_params.empty())
+				{
+					inspector->set_input_plugin_open_params(p.m_open_params.c_str());
+				}
 			}
 		}
 
