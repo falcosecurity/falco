@@ -70,3 +70,5 @@ else()
     FILES_MATCHING
     PATTERN *.lua)
 endif()
+
+add_subdirectory(embeddable)
