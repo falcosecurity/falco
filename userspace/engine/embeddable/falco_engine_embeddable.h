@@ -39,6 +39,7 @@
 
 #pragma once
 
+#include <stdint.h>
 #include <stdbool.h>
 
 #ifdef __cplusplus
@@ -211,7 +212,7 @@ int32_t falco_engine_embed_load_rules_content(falco_engine_embed_t *engine,
 // Return value: an integer containing a falco_engine_embed_rc
 // value.
 int32_t falco_engine_embed_enable_source(falco_engine_embed_t *engine,
-					 source int32_t,
+					 int32_t source,
 					 bool enabled,
 					 char **errstr);
 

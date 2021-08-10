@@ -18,9 +18,10 @@ limitations under the License.
 #include <atomic>
 
 #include <sinsp.h>
+#include <event.h>
 
 #include <falco_engine.h>
-#include <falco_engine_embeddable.h>
+#include "falco_engine_embeddable.h"
 
 using namespace std;
 
@@ -29,18 +30,18 @@ public:
 	falco_engine_embed_int();
 	virtual ~falco_engine_embed_int();
 
-	bool load_rules_content(string &errstr);
+	bool load_rules_content(const char *rules_content, string &err);
 	bool is_open();
-	bool open(string &errstr);
-	void close();
-	falco_engine_embed_rc next_result(falco_engine_embed_result **result, string &errstr);
+	bool open(string &err);
+	bool close(string &err);
+	falco_engine_embed_rc next_result(falco_engine_embed_result **result, string &err);
 
 private:
 
-	static falco_engine_embed_result *rule_result_to_embed_result(gen_event *ev,
-								      unique_ptr<falco_engine::rule_result> &res);
+	falco_engine_embed_result *rule_result_to_embed_result(sinsp_evt *ev,
+							       unique_ptr<falco_engine::rule_result> &res);
 
-	static void add_output_pair(string &field, string &val,
+	static void add_output_pair(const string &field, const string &val,
 				    char **&fields, char **&vals,
 				    uint32_t &len);
 
@@ -58,7 +59,7 @@ falco_engine_embed_int::falco_engine_embed_int()
 	m_inspector.reset(new sinsp());
 	m_falco_engine.reset(new falco_engine());
 
-	m_formatters = make_unique<sinsp_evt_formatter_cache>(m_inspector.get());
+	m_formatters.reset(new sinsp_evt_formatter_cache(m_inspector.get()));
 }
 
 falco_engine_embed_int::~falco_engine_embed_int()
@@ -82,7 +83,7 @@ bool falco_engine_embed_int::load_rules_content(const char *rules_content, strin
 	return true;
 }
 
-bool falco_engine_embed::is_open()
+bool falco_engine_embed_int::is_open()
 {
 	return m_open;
 }
@@ -98,21 +99,27 @@ bool falco_engine_embed_int::open(string &err)
 		return false;
 	}
 
+	m_open = true;
 	return true;
 }
 
-void falco_engine_embed_int::close()
+bool falco_engine_embed_int::close(string &err)
 {
 	m_shutdown = true;
+	m_open = false;
+
+	return true;
 }
 
-falco_engine_embed_rc next_result(falco_engine_embed_result **result, string &err)
+falco_engine_embed_rc falco_engine_embed_int::next_result(falco_engine_embed_result **result, string &err)
 {
 	*result = NULL;
 
 	while(!m_shutdown)
 	{
-		int32_t rc = inspector->next(&ev);
+		sinsp_evt* ev;
+
+		int32_t rc = m_inspector->next(&ev);
 
 		if (rc == SCAP_TIMEOUT)
 		{
@@ -133,7 +140,7 @@ falco_engine_embed_rc next_result(falco_engine_embed_result **result, string &er
 			continue;
 		}
 
-		unique_ptr<falco_engine::rule_result> res = engine->process_sinsp_event(ev);
+		unique_ptr<falco_engine::rule_result> res = m_falco_engine->process_sinsp_event(ev);
 		if(!res)
 		{
 			continue;
@@ -145,10 +152,10 @@ falco_engine_embed_rc next_result(falco_engine_embed_result **result, string &er
 	}
 
 	// Can only get here if shut down/eof.
-	return FE_EMB_RC_EOF:
+	return FE_EMB_RC_EOF;
 }
 
-falco_engine_embed_result * falco_engine_embed_int::rule_result_to_embed_result(gen_event *ev,
+falco_engine_embed_result * falco_engine_embed_int::rule_result_to_embed_result(sinsp_evt *ev,
 										unique_ptr<falco_engine::rule_result> &res)
 {
 	falco_engine_embed_result *result;
@@ -160,7 +167,7 @@ falco_engine_embed_result * falco_engine_embed_int::rule_result_to_embed_result(
 	result->priority_num = res->priority_num;
 
 	// Copy output format string without resolving fields.
-	result->output_format_str = res->format;
+	result->output_format_str = strdup(res->format.c_str());
 
 	// Resolve output format string into resolved output
 	string output;
@@ -168,7 +175,7 @@ falco_engine_embed_result * falco_engine_embed_int::rule_result_to_embed_result(
 	result->output_str = strdup(output.c_str());
 
 	map<string, string> rule_output_fields;
-	m_formatters->resolve_tokens(evt, res->format, rule_output_fields);
+	m_formatters->resolve_tokens(ev, res->format, rule_output_fields);
 	for(auto &pair : rule_output_fields)
 	{
 		add_output_pair(pair.first, pair.second,
@@ -184,7 +191,7 @@ falco_engine_embed_result * falco_engine_embed_int::rule_result_to_embed_result(
 	}
 
 	map<string, string> exception_output_fields;
-	m_formatters->resolve_tokens(evt, exformat, exception_output_fields);
+	m_formatters->resolve_tokens(ev, exformat, exception_output_fields);
 	for(auto &pair : exception_output_fields)
 	{
 		add_output_pair(pair.first, pair.second,
@@ -195,9 +202,9 @@ falco_engine_embed_result * falco_engine_embed_int::rule_result_to_embed_result(
 	return result;
 }
 
-falco_engine_embed_int::add_output_pair(string &field, string &val,
-					char **&fields, char **&vals,
-					uint32_t len)
+void falco_engine_embed_int::add_output_pair(const string &field, const string &val,
+					     char **&fields, char **&vals,
+					     uint32_t &len)
 {
 	len++;
 	fields = (char **) realloc(fields, len*sizeof(char *));
@@ -213,7 +220,7 @@ char *falco_engine_embed_get_version()
 	return strdup(FALCO_ENGINE_EMBED_VERSION);
 }
 
-void falco_engine_embed_free_result(falco_engine_embed_result *result);
+void falco_engine_embed_free_result(falco_engine_embed_result *result)
 {
 	free(result->rule);
 	free(result->event_source);
@@ -241,12 +248,12 @@ falco_engine_embed_t* falco_engine_embed_init(int32_t *rc)
 
 int32_t falco_engine_embed_destroy(falco_engine_embed_t *engine, char *errstr)
 {
-	eengine = (falco_engine_embed_int *) engine;
+	falco_engine_embed_int *eengine = (falco_engine_embed_int *) engine;
 
 	if(eengine->is_open())
 	{
 		errstr = strdup("Engine is open--must call close() first");
-		return FE_EMB_RC_ERROR:
+		return FE_EMB_RC_ERROR;
 	}
 
 	delete(eengine);
@@ -260,7 +267,7 @@ int32_t falco_engine_embed_load_plugin(falco_engine_embed_t *engine,
 				       const char* open_params,
 				       char **errstr)
 {
-	eengine = (falco_engine_embed_int *) engine;
+	falco_engine_embed_int *eengine = (falco_engine_embed_int *) engine;
 
 	// XXX/mstemm fill in
 	return FE_EMB_RC_OK;
@@ -270,12 +277,12 @@ int32_t falco_engine_embed_load_rules_content(falco_engine_embed_t *engine,
 					      const char *rules_content,
 					      char **errstr)
 {
-	eengine = (falco_engine_embed_int *) engine;
+	falco_engine_embed_int *eengine = (falco_engine_embed_int *) engine;
 	std::string err;
 
-	if (!eengine->load_rules_content(err))
+	if (!eengine->load_rules_content(rules_content, err))
 	{
-		errstr = strdup(err.c_str());
+		*errstr = strdup(err.c_str());
 		return FE_EMB_RC_ERROR;
 	}
 
@@ -283,11 +290,11 @@ int32_t falco_engine_embed_load_rules_content(falco_engine_embed_t *engine,
 }
 
 int32_t falco_engine_embed_enable_source(falco_engine_embed_t *engine,
-					 source int32_t,
+					 int32_t source,
 					 bool enabled,
 					 char **errstr)
 {
-	eengine = (falco_engine_embed_int *) engine;
+	falco_engine_embed_int *eengine = (falco_engine_embed_int *) engine;
 
 	// XXX/mstemm fill in
 	return FE_EMB_RC_OK;
@@ -296,12 +303,12 @@ int32_t falco_engine_embed_enable_source(falco_engine_embed_t *engine,
 int32_t falco_engine_embed_open(falco_engine_embed_t *engine,
 				char **errstr)
 {
-	eengine = (falco_engine_embed_int *) engine;
+	falco_engine_embed_int *eengine = (falco_engine_embed_int *) engine;
 	std::string err;
 
 	if (!eengine->open(err))
 	{
-		errstr = strdup(err.c_str());
+		*errstr = strdup(err.c_str());
 		return FE_EMB_RC_ERROR;
 	}
 
@@ -311,12 +318,12 @@ int32_t falco_engine_embed_open(falco_engine_embed_t *engine,
 int32_t falco_engine_embed_close(falco_engine_embed_t *engine,
 				 char **errstr)
 {
-	eengine = (falco_engine_embed_int *) engine;
+	falco_engine_embed_int *eengine = (falco_engine_embed_int *) engine;
 	std::string err;
 
 	if (!eengine->close(err))
 	{
-		errstr = strdup(err.c_str());
+		*errstr = strdup(err.c_str());
 		return FE_EMB_RC_ERROR;
 	}
 
@@ -327,15 +334,15 @@ int32_t falco_engine_embed_next_result(falco_engine_embed_t *engine,
 				       falco_engine_embed_result **result,
 				       char **errstr)
 {
-	eengine = (falco_engine_embed_int *) engine;
+	falco_engine_embed_int *eengine = (falco_engine_embed_int *) engine;
 	std::string err;
 	falco_engine_embed_rc rc;
 
-	rc = eengine->next_result(falco_engine_embed_result, err);
+	rc = eengine->next_result(result, err);
 
 	if(rc == FE_EMB_RC_ERROR)
 	{
-		errstr = strdup(err.c_str());
+		*errstr = strdup(err.c_str());
 	}
 
 	return rc;
