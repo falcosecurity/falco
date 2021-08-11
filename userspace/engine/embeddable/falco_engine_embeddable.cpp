@@ -58,6 +58,7 @@ falco_engine_embed_int::falco_engine_embed_int()
 {
 	m_inspector.reset(new sinsp());
 	m_falco_engine.reset(new falco_engine());
+	m_falco_engine->set_inspector(m_inspector.get());
 
 	m_formatters.reset(new sinsp_evt_formatter_cache(m_inspector.get()));
 }
@@ -173,6 +174,10 @@ falco_engine_embed_result * falco_engine_embed_int::rule_result_to_embed_result(
 	string output;
 	m_formatters->tostring(ev, res->format, &output);
 	result->output_str = strdup(output.c_str());
+
+	result->output_fields = NULL;
+	result->output_values = NULL;
+	result->num_output_values = 0;
 
 	map<string, string> rule_output_fields;
 	m_formatters->resolve_tokens(ev, res->format, rule_output_fields);

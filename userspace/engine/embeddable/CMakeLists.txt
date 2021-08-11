@@ -21,7 +21,7 @@ set(
   "${YAMLCPP_LIB}"
 )
 
-add_library(falco_engine_embeddable STATIC ${FALCO_ENGINE_EMBEDDABLE_SOURCE_FILES})
+add_library(falco_engine_embeddable SHARED ${FALCO_ENGINE_EMBEDDABLE_SOURCE_FILES})
 add_dependencies(falco_engine_embeddable falco_engine)
 
 target_include_directories(
