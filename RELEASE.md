@@ -4,7 +4,9 @@ Our release process is mostly automated, but we still need some manual steps to 
 
 Changes and new features are grouped in [milestones](https://github.com/falcosecurity/falco/milestones), the milestone with the next version represents what is going to be released.
 
-A release happens every two months ([as per community discussion](https://github.com/falcosecurity/community/blob/master/meeting-notes/2020-09-30.md#agenda)), and we need to assign owners for each (usually we pair a new person with an experienced one). Assignees and the due date are proposed during the [weekly community call](https://github.com/falcosecurity/community). Note that hotfix releases can happen as soon as it is needed.
+Falco releases are due to happen 3 times per year. Our current schedule sees a new release by the end of January, May, and September each year. Hotfix releases can happen whenever it's needed.
+
+Moreover, we need to assign owners for each release (usually we pair a new person with an experienced one). Assignees and the due date are proposed during the [weekly community call](https://github.com/falcosecurity/community).
 
 Finally, on the proposed due date the assignees for the upcoming release proceed with the processes described below.
 
