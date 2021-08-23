@@ -2605,7 +2605,7 @@
     Shell history had been deleted or renamed (user=%user.name user_loginuid=%user.loginuid type=%evt.type command=%proc.cmdline fd.name=%fd.name name=%evt.arg.name path=%evt.arg.path oldpath=%evt.arg.oldpath %container.info)
   priority:
     WARNING
-  tags: [process, mitre_TA0005_defense_evasion, mitre_TA0005_defense_evasion, mitre_T1070_indicator_removal_on_host]
+  tags: [process, mitre_TA0005_defense_evasion, mitre_T1070_indicator_removal_on_host]
 
 # This rule is deprecated and will/should never be triggered. Keep it here for backport compatibility.
 # Rule Delete or rename shell history is the preferred rule to use now.
@@ -2618,7 +2618,7 @@
     Shell history had been deleted or renamed (user=%user.name user_loginuid=%user.loginuid type=%evt.type command=%proc.cmdline fd.name=%fd.name name=%evt.arg.name path=%evt.arg.path oldpath=%evt.arg.oldpath %container.info)
   priority:
     WARNING
-  tags: [process, mitre_TA0005_defense_evasion, mitre_TA0005_defense_evasion, mitre_T1070_indicator_removal_on_host]
+  tags: [process, mitre_TA0005_defense_evasion, mitre_T1070_indicator_removal_on_host]
 
 - macro: consider_all_chmods
   condition: (always_true)
@@ -2841,7 +2841,7 @@
   condition: spawned_process and container and not user_known_k8s_client_container_parens and proc.name in (k8s_client_binaries)
   output: "Docker or kubernetes client executed in container (user=%user.name user_loginuid=%user.loginuid %container.info parent=%proc.pname cmdline=%proc.cmdline image=%container.image.repository:%container.image.tag)"
   priority: WARNING
-  tags: [container, mitre_TA0002_execution, mitre_TA0002_execution, mitre_T1609_container_administration_command, mitre_T1610_deploy_container]
+  tags: [container, mitre_TA0002_execution, mitre_T1609_container_administration_command, mitre_T1610_deploy_container]
 
 
 # This rule is enabled by default.
