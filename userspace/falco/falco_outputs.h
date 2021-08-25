@@ -25,6 +25,7 @@ limitations under the License.
 #include "token_bucket.h"
 #include "falco_engine.h"
 #include "outputs.h"
+#include "formats.h"
 #include "tbb/concurrent_queue.h"
 
 //
@@ -38,7 +39,8 @@ public:
 	falco_outputs();
 	virtual ~falco_outputs();
 
-	void init(bool json_output,
+	void init(falco_engine *engine,
+		  bool json_output,
 		  bool json_include_output_property,
 		  bool json_include_tags_property,
 		  uint32_t timeout,
@@ -63,6 +65,7 @@ public:
 	void reopen_outputs();
 
 private:
+	std::unique_ptr<falco_formats> m_formats;
 	bool m_initialized;
 
 	std::vector<falco::outputs::abstract_output *> m_outputs;
