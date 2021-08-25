@@ -60,12 +60,13 @@ falco_outputs::~falco_outputs()
 	}
 }
 
-void falco_outputs::init(bool json_output,
-		  bool json_include_output_property,
-		  bool json_include_tags_property,
-		  uint32_t timeout,
-		  uint32_t rate, uint32_t max_burst, bool buffered,
-		  bool time_format_iso_8601, std::string hostname)
+void falco_outputs::init(falco_engine *engine,
+			 bool json_output,
+			 bool json_include_output_property,
+			 bool json_include_tags_property,
+			 uint32_t timeout,
+			 uint32_t rate, uint32_t max_burst, bool buffered,
+			 bool time_format_iso_8601, std::string hostname)
 {
 	// Cannot be initialized more than one time.
 	if(m_initialized)
@@ -73,14 +74,9 @@ void falco_outputs::init(bool json_output,
 		throw falco_exception("falco_outputs already initialized");
 	}
 
-	m_json_output = json_output;
+	m_formats.reset(new falco_formats(engine, json_include_output_property, json_include_tags_property));
 
-	// Note that falco_formats is already initialized by the engine,
-	// and the following json options are not used within the engine.
-	// So we can safely update them.
-	falco_formats::s_json_output = json_output;
-	falco_formats::s_json_include_output_property = json_include_output_property;
-	falco_formats::s_json_include_tags_property = json_include_tags_property;
+	m_json_output = json_output;
 
 	m_timeout = std::chrono::milliseconds(timeout);
 
@@ -192,8 +188,8 @@ void falco_outputs::handle_event(gen_event *evt, string &rule, string &source,
 		sformat += " " + format;
 	}
 
-	cmsg.msg = falco_formats::format_event(evt, rule, source, falco_common::priority_names[priority], sformat, tags);
-	cmsg.fields = falco_formats::resolve_tokens(evt, source, sformat);
+	cmsg.msg = m_formats->format_event(evt, rule, source, falco_common::priority_names[priority], sformat, tags);
+	cmsg.fields = m_formats->get_field_values(evt, source, sformat);
 	cmsg.tags.insert(tags.begin(), tags.end());
 
 	cmsg.type = ctrl_msg_type::CTRL_MSG_OUTPUT;
@@ -332,7 +328,7 @@ void falco_outputs::worker() noexcept
 						o->reopen();
 						break;
 					default:
-						falco_logger::log(LOG_DEBUG, "Outputs worker received an unknown message type\n");	
+						falco_logger::log(LOG_DEBUG, "Outputs worker received an unknown message type\n");
 				}
 			}
 			catch(const exception &e)
