@@ -424,21 +424,14 @@ static void print_all_ignored_events(sinsp *inspector)
 	printf("\n");
 }
 
-static void list_source_fields(falco_engine *engine, bool verbose, bool names_only, std::string &source)
+static void list_source_fields(falco_engine *engine, bool names_only, std::string &source)
 {
 	if(source.size() > 0 &&
 	   !(source == "syscall" || source == "k8s_audit"))
 	{
 		throw std::invalid_argument("Value for --list must be \"syscall\" or \"k8s_audit\"");
 	}
-	if(source == "" || source == "syscall")
-	{
-		list_fields(verbose, false, names_only);
-	}
-	if(source == "" || source == "k8s_audit")
-	{
-		engine->list_fields(names_only);
-	}
+	engine->list_fields(source, names_only);
 }
 
 //
@@ -781,7 +774,7 @@ int falco_init(int argc, char **argv)
 
 		if(list_flds)
 		{
-			list_source_fields(engine, verbose, names_only, list_flds_source);
+			list_source_fields(engine, names_only, list_flds_source);
 			return EXIT_SUCCESS;
 		}
 

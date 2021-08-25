@@ -189,7 +189,7 @@ public:
 	// brackets (e.g. ka.image[foo])
 	size_t parsed_size();
 
-	check_info &get_fields();
+	check_info &get_info();
 
 	//
 	// Allocate a new check of the same type. Must be overridden.
@@ -399,7 +399,7 @@ public:
 	gen_event_filter_check *new_filtercheck(const char *fldname);
 
 	// All defined field names
-	std::list<json_event_filter_check::check_info> &get_fields();
+	std::list<gen_event_filter_factory::filter_fieldclass_info> get_fields();
 
 private:
 	std::list<std::shared_ptr<json_event_filter_check>> m_defined_checks;
