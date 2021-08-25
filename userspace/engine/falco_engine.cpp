@@ -85,61 +85,61 @@ uint32_t falco_engine::engine_version()
 
 #define CONSOLE_LINE_LEN 79
 
-void falco_engine::list_fields(bool names_only)
+void falco_engine::list_fields(std::string &source, bool names_only)
 {
-	for(auto &chk_field : json_factory().get_fields())
+	for(auto &it : m_filter_factories)
 	{
-		if(!names_only)
+		if(source != "" && source != it.first)
 		{
-			printf("\n----------------------\n");
-			printf("Field Class: %s (%s)\n\n", chk_field.m_name.c_str(), chk_field.m_desc.c_str());
-			if(chk_field.m_class_info != "")
-			{
-				std::string str = falco::utils::wrap_text(chk_field.m_class_info, 0, 0, CONSOLE_LINE_LEN);
-				printf("%s\n", str.c_str());
-			}
+			continue;
 		}
 
-		for(auto &field : chk_field.m_fields)
+		for(auto &chk_field : it.second->get_fields())
 		{
-			printf("%s", field.m_name.c_str());
-
-			if(names_only)
+			if(!names_only)
 			{
-				printf("\n");
-				continue;
+				// Add some pretty printing around deesc, but if there's no desc keep
+				// as an empty string.
+				std::string desc = chk_field.desc;
+				if(!desc.empty())
+				{
+					desc = string(" (") + desc + ")";
+				}
+
+				printf("\n----------------------\n");
+				printf("Field Class: %s%s\n\n", chk_field.name.c_str(), desc.c_str());
+				if(chk_field.class_info != "")
+				{
+					std::string str = falco::utils::wrap_text(chk_field.class_info, 0, 0, CONSOLE_LINE_LEN);
+					printf("%s\n", str.c_str());
+				}
 			}
-			uint32_t namelen = field.m_name.size();
 
-			if(namelen >= DESCRIPTION_TEXT_START)
+			for(auto &field : chk_field.fields)
 			{
-				printf("\n");
-				namelen = 0;
+				printf("%s", field.name.c_str());
+
+				if(names_only)
+				{
+					printf("\n");
+					continue;
+				}
+				uint32_t namelen = field.name.size();
+
+				if(namelen >= DESCRIPTION_TEXT_START)
+				{
+					printf("\n");
+					namelen = 0;
+				}
+
+				for(uint32_t l = 0; l < DESCRIPTION_TEXT_START - namelen; l++)
+				{
+					printf(" ");
+				}
+
+				std::string str = falco::utils::wrap_text(field.desc, namelen, DESCRIPTION_TEXT_START, CONSOLE_LINE_LEN);
+				printf("%s\n", str.c_str());
 			}
-
-			for(uint32_t l = 0; l < DESCRIPTION_TEXT_START - namelen; l++)
-			{
-				printf(" ");
-			}
-
-			std::string desc = field.m_desc;
-			switch(field.m_idx_mode)
-			{
-			case json_event_filter_check::IDX_REQUIRED:
-			case json_event_filter_check::IDX_ALLOWED:
-				desc += " (";
-				desc += json_event_filter_check::s_index_mode_strs[field.m_idx_mode];
-				desc += ", ";
-				desc += json_event_filter_check::s_index_type_strs[field.m_idx_type];
-				desc += ")";
-				break;
-			case json_event_filter_check::IDX_NONE:
-			default:
-				break;
-			};
-
-			std::string str = falco::utils::wrap_text(desc, namelen, DESCRIPTION_TEXT_START, CONSOLE_LINE_LEN);
-			printf("%s\n", str.c_str());
 		}
 	}
 }

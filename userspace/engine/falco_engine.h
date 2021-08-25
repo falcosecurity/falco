@@ -57,7 +57,8 @@ public:
 	static uint32_t engine_version();
 
 	// Print to stdout (using printf) a description of each field supported by this engine.
-	void list_fields(bool names_only=false);
+	// If source is non-empty, only fields for the provided source are printed.
+	void list_fields(std::string &source, bool names_only);
 
 	//
 	// Load rules either directly or from a filename.
