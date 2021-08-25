@@ -36,8 +36,7 @@ public:
 
 	void add(std::string &name,
 		 std::set<std::string> &tags,
-		 std::set<uint32_t> &event_tags,
-		 gen_event_filter* filter);
+		 std::shared_ptr<gen_event_filter> filter);
 
 	// rulesets are arbitrary numbers and should be managed by the caller.
         // Note that rulesets are used to index into a std::vector so
@@ -65,22 +64,21 @@ public:
 	uint64_t num_rules_for_ruleset(uint16_t ruleset = 0);
 
 	// Match all filters against the provided event.
-	bool run(gen_event *evt, uint32_t etag, uint16_t ruleset = 0);
+	bool run(gen_event *evt, uint16_t ruleset = 0);
 
-	// Populate the provided vector, indexed by event tag, of the
-	// event tags associated with the given ruleset id. For
-	// example, event_tags[10] = true would mean that this ruleset
-	// relates to event tag 10.
-	void event_tags_for_ruleset(std::vector<bool> &event_tags, uint16_t ruleset);
+	// Populate the provided set of event types used by this ruleset.
+	void evttypes_for_ruleset(std::set<uint16_t> &evttypes, uint16_t ruleset);
 
 private:
 
-	struct filter_wrapper {
-		gen_event_filter *filter;
-
-		// Indexes from event tag to enabled/disabled.
-		std::vector<bool> event_tags;
+	class filter_wrapper {
+	public:
+		std::string name;
+		std::set<std::string> tags;
+		std::shared_ptr<gen_event_filter> filter;
 	};
+
+	typedef std::list<std::shared_ptr<filter_wrapper>> filter_wrapper_list;
 
 	// A group of filters all having the same ruleset
 	class ruleset_filters {
@@ -89,63 +87,33 @@ private:
 
 		virtual ~ruleset_filters();
 
-		void add_filter(filter_wrapper *wrap);
-		void remove_filter(filter_wrapper *wrap);
+		void add_filter(std::shared_ptr<filter_wrapper> wrap);
+		void remove_filter(std::shared_ptr<filter_wrapper> wrap);
 
 		uint64_t num_filters();
 
-		bool run(gen_event *evt, uint32_t etag);
+		bool run(gen_event *evt);
 
-		void event_tags_for_ruleset(std::vector<bool> &event_tags);
+		void evttypes_for_ruleset(std::set<uint16_t> &evttypes);
 
 	private:
-		uint64_t m_num_filters;
+		void add_wrapper_to_list(filter_wrapper_list &wrappers, std::shared_ptr<filter_wrapper> wrap);
+		void remove_wrapper_from_list(filter_wrapper_list &wrappers, std::shared_ptr<filter_wrapper> wrap);
 
-		// Maps from event tag to a list of filters. There can
-		// be multiple filters for a given event tag.
-		std::vector<std::list<filter_wrapper *> *> m_filter_by_event_tag;
+		// Vector indexes from event type to a set of filters. There can
+		// be multiple filters for a given event type.
+		// NOTE: This is used only when the event sub-type is 0.
+		std::vector<filter_wrapper_list> m_filter_by_event_type;
 
+		filter_wrapper_list m_filter_all_event_types;
+
+		// All filters added. Used to make num_filters() fast.
+		std::set<std::shared_ptr<filter_wrapper>> m_filters;
 	};
 
-	std::vector<ruleset_filters *> m_rulesets;
+	// Vector indexes from ruleset id to set of rules.
+	std::vector<std::shared_ptr<ruleset_filters>> m_rulesets;
 
-	// Maps from tag to list of filters having that tag.
-	std::map<std::string, std::list<filter_wrapper *>> m_filter_by_event_tag;
-
-	// This holds all the filters passed to add(), so they can
-	// be cleaned up.
-	std::map<std::string,filter_wrapper *> m_filters;
-};
-
-// falco_sinsp_ruleset is a specialization of falco_ruleset that
-// maps sinsp evttypes/syscalls to event tags.
-class falco_sinsp_ruleset : public falco_ruleset
-{
-public:
-	falco_sinsp_ruleset();
-	virtual ~falco_sinsp_ruleset();
-
-	void add(std::string &name,
-		 std::set<uint32_t> &evttypes,
-		 std::set<uint32_t> &syscalls,
-		 std::set<std::string> &tags,
-		 sinsp_filter* filter);
-
-	bool run(sinsp_evt *evt, uint16_t ruleset = 0);
-
-	// Populate the provided vector, indexed by event type, of the
-	// event types associated with the given ruleset id. For
-	// example, evttypes[10] = true would mean that this ruleset
-	// relates to event type 10.
-	void evttypes_for_ruleset(std::vector<bool> &evttypes, uint16_t ruleset);
-
-	// Populate the provided vector, indexed by syscall code, of the
-	// syscall codes associated with the given ruleset id. For
-	// example, syscalls[10] = true would mean that this ruleset
-	// relates to syscall code 10.
-	void syscalls_for_ruleset(std::vector<bool> &syscalls, uint16_t ruleset);
-
-private:
-	uint32_t evttype_to_event_tag(uint32_t evttype);
-	uint32_t syscall_to_event_tag(uint32_t syscallid);
+	// All filters added. The set of enabled filters is held in m_rulesets
+	std::set<std::shared_ptr<filter_wrapper>> m_filters;
 };
