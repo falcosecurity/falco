@@ -57,6 +57,19 @@ protected:
 	uint64_t m_event_ts;
 };
 
+namespace falco_k8s_audit {
+
+	//
+	// Given a raw json object, return a list of k8s audit event
+	// objects that represent the object. This method handles
+	// things such as EventList splitting.
+	//
+	// Returns true if the json object was recognized as a k8s
+	// audit event(s), false otherwise.
+	//
+	bool parse_k8s_audit_json(nlohmann::json &j, std::list<json_event> &evts, bool top=true);
+};
+
 // A class representing an extracted value or a value on the rhs of a
 // filter_check. This intentionally doesn't use the same types as
 // ppm_events_public.h to take advantage of actual classes instead of

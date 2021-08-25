@@ -165,16 +165,6 @@ public:
 	};
 
 	//
-	// Given a raw json object, return a list of k8s audit event
-	// objects that represent the object. This method handles
-	// things such as EventList splitting.
-	//
-	// Returns true if the json object was recognized as a k8s
-	// audit event(s), false otherwise.
-	//
-	bool parse_k8s_audit_json(nlohmann::json &j, std::list<json_event> &evts, bool top=true);
-
-	//
 	// Given an event, check it against the set of rules in the
 	// engine and if a matching rule is found, return details on
 	// the rule that matched. If no rule matched, returns NULL.

@@ -69,7 +69,7 @@ bool k8s_audit_handler::accept_data(falco_engine *engine,
 	bool ok;
 	try
 	{
-		ok = engine->parse_k8s_audit_json(j, jevts);
+		ok = falco_k8s_audit::parse_k8s_audit_json(j, jevts);
 	}
 	catch(json::type_error &e)
 	{
