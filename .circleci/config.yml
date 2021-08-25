@@ -403,7 +403,7 @@ jobs:
           name: Setup
           command: |
             apt update -y
-            apt-get install apt-utils bzip2 gpg python python-pip -y
+            apt-get install apt-utils bzip2 gpg python python3-pip -y
             pip install awscli
             echo $GPG_KEY | base64 -d | gpg --import
       - run:
@@ -517,7 +517,7 @@ jobs:
           name: Setup
           command: |
             apt update -y
-            apt-get install apt-utils bzip2 gpg python python-pip -y
+            apt-get install apt-utils bzip2 gpg python python3-pip -y
             pip install awscli
             echo $GPG_KEY | base64 -d | gpg --import
       - run:
