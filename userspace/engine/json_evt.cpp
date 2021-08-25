@@ -50,6 +50,81 @@ uint64_t json_event::get_ts() const
 	return m_event_ts;
 }
 
+static nlohmann::json::json_pointer k8s_audit_time = "/stageTimestamp"_json_pointer;
+
+bool falco_k8s_audit::parse_k8s_audit_json(nlohmann::json &j, std::list<json_event> &evts, bool top)
+{
+	// Note that nlohmann::basic_json::value can throw  nlohmann::basic_json::type_error (302, 306)
+	try
+	{
+		// If the object is an array, call parse_k8s_audit_json again for each item.
+		if(j.is_array())
+		{
+			if(top)
+			{
+				for(auto &item : j)
+				{
+					// Note we only handle a single top level array, to
+					// avoid excessive recursion.
+					if(! parse_k8s_audit_json(item, evts, false))
+					{
+						return false;
+					}
+				}
+
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+
+		// If the kind is EventList, split it into individual events
+		if(j.value("kind", "<NA>") == "EventList")
+		{
+			for(auto &je : j["items"])
+			{
+				evts.emplace_back();
+				je["kind"] = "Event";
+
+				uint64_t ns = 0;
+				if(!sinsp_utils::parse_iso_8601_utc_string(je.value(k8s_audit_time, "<NA>"), ns))
+				{
+					return false;
+				}
+
+				std::string tmp;
+				sinsp_utils::ts_to_string(ns, &tmp, false, true);
+
+				evts.back().set_jevt(je, ns);
+			}
+
+			return true;
+		}
+		else if(j.value("kind", "<NA>") == "Event")
+		{
+			evts.emplace_back();
+			uint64_t ns = 0;
+			if(!sinsp_utils::parse_iso_8601_utc_string(j.value(k8s_audit_time, "<NA>"), ns))
+			{
+				return false;
+			}
+
+			evts.back().set_jevt(j, ns);
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	catch(exception &e)
+	{
+		return false;
+	}
+}
+
 json_event_value::json_event_value()
 {
 }
