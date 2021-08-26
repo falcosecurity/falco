@@ -20,7 +20,6 @@
 
 --]]
 
-local sinsp_rule_utils = require "sinsp_rule_utils"
 local compiler = require "compiler"
 local yaml = require"lyaml"
 
@@ -69,7 +68,7 @@ priorities = {
 --[[
    Take a filter AST and set it up in the libsinsp runtime, using the filter API.
 --]]
-local function install_filter(node, filter_api_lib, lua_parser, parent_bool_op)
+local function create_filter_obj(node, lua_parser, parent_bool_op)
    local t = node.type
 
    if t == "BinaryBoolOp" then
@@ -78,41 +77,84 @@ local function install_filter(node, filter_api_lib, lua_parser, parent_bool_op)
       -- never necessary when we have identical successive operators. so we
       -- avoid it as a runtime performance optimization.
       if (not(node.operator == parent_bool_op)) then
-	 filter_api_lib.nest(lua_parser) -- io.write("(")
+	 err = filter.nest(lua_parser) -- io.write("(")
+	 if err ~= nil then
+	    return err
+	 end
       end
 
-      install_filter(node.left, filter_api_lib, lua_parser, node.operator)
-      filter_api_lib.bool_op(lua_parser, node.operator) -- io.write(" "..node.operator.." ")
-      install_filter(node.right, filter_api_lib, lua_parser, node.operator)
+      err = create_filter_obj(node.left, lua_parser, node.operator)
+      if err ~= nil then
+	 return err
+      end
+
+      err = filter.bool_op(lua_parser, node.operator) -- io.write(" "..node.operator.." ")
+      if err ~= nil then
+	 return err
+      end
+
+      err = create_filter_obj(node.right, lua_parser, node.operator)
+      if err ~= nil then
+	 return err
+      end
 
       if (not (node.operator == parent_bool_op)) then
-	 filter_api_lib.unnest(lua_parser) -- io.write(")")
+	 err = filter.unnest(lua_parser) -- io.write(")")
+	 if err ~= nil then
+	    return err
+	 end
       end
 
    elseif t == "UnaryBoolOp" then
-      filter_api_lib.nest(lua_parser) --io.write("(")
-      filter_api_lib.bool_op(lua_parser, node.operator) -- io.write(" "..node.operator.." ")
-      install_filter(node.argument, filter_api_lib, lua_parser)
-      filter_api_lib.unnest(lua_parser) -- io.write(")")
+      err = filter.nest(lua_parser) --io.write("(")
+      if err ~= nil then
+	 return err
+      end
+
+      err = filter.bool_op(lua_parser, node.operator) -- io.write(" "..node.operator.." ")
+      if err ~= nil then
+	 return err
+      end
+
+      err = create_filter_obj(node.argument, lua_parser)
+      if err ~= nil then
+	 return err
+      end
+
+      err = filter.unnest(lua_parser) -- io.write(")")
+      if err ~= nil then
+	 return err
+      end
 
    elseif t == "BinaryRelOp" then
       if (node.operator == "in" or
           node.operator == "intersects" or
 	  node.operator == "pmatch") then
 	 elements = map(function (el) return el.value end, node.right.elements)
-	 filter_api_lib.rel_expr(lua_parser, node.left.value, node.operator, elements, node.index)
+	 err = filter.rel_expr(lua_parser, node.left.value, node.operator, elements, node.index)
+	 if err ~= nil then
+	    return err
+	 end
       else
-	 filter_api_lib.rel_expr(lua_parser, node.left.value, node.operator, node.right.value, node.index)
+	 err = filter.rel_expr(lua_parser, node.left.value, node.operator, node.right.value, node.index)
+	 if err ~= nil then
+	    return err
+	 end
       end
       -- io.write(node.left.value.." "..node.operator.." "..node.right.value)
 
    elseif t == "UnaryRelOp"  then
-      filter_api_lib.rel_expr(lua_parser, node.argument.value, node.operator, node.index)
+      err = filter.rel_expr(lua_parser, node.argument.value, node.operator, node.index)
+      if err ~= nil then
+	 return err
+      end
       --io.write(node.argument.value.." "..node.operator)
 
    else
-      error ("Unexpected type in install_filter: "..t)
+      return "Unexpected type in create_filter_obj: "..t
    end
+
+   return nil
 end
 
 function set_output(output_format, state)
@@ -310,7 +352,7 @@ function build_error_with_context(ctx, err)
    return {ret}
 end
 
-function validate_exception_item_multi_fields(eitem, context)
+function validate_exception_item_multi_fields(rules_mgr, source, eitem, context)
 
    local name = eitem['name']
    local fields = eitem['fields']
@@ -329,7 +371,7 @@ function validate_exception_item_multi_fields(eitem, context)
       end
    end
    for k, fname in ipairs(fields) do
-      if not is_defined_filter(fname) then
+      if not falco_rules.is_defined_field(rules_mgr, source, fname) then
 	 return false, build_error_with_context(context, "Rule exception item "..name..": field name "..fname.." is not a supported filter field"), warnings
       end
    end
@@ -340,7 +382,7 @@ function validate_exception_item_multi_fields(eitem, context)
    end
 end
 
-function validate_exception_item_single_field(eitem, context)
+function validate_exception_item_single_field(rules_mgr, source, eitem, context)
 
    local name = eitem['name']
    local fields = eitem['fields']
@@ -355,44 +397,13 @@ function validate_exception_item_single_field(eitem, context)
 	 return false, build_error_with_context(context, "Rule exception item "..name..": fields and comps must both be strings"), warnings
       end
    end
-   if not is_defined_filter(fields) then
+   if not falco_rules.is_defined_field(rules_mgr, source, fields) then
       return false, build_error_with_context(context, "Rule exception item "..name..": field name "..fields.." is not a supported filter field"), warnings
    end
    if defined_comp_operators[comps] == nil then
       return false, build_error_with_context(context, "Rule exception item "..name..": comparison operator "..comps.." is not a supported comparison operator"), warnings
    end
 end
-
-function is_defined_filter(filter)
-   if defined_noarg_filters[filter] ~= nil then
-      return true
-   else
-      bracket_idx = string.find(filter, "[", 1, true)
-
-      if bracket_idx ~= nil then
-	 subfilter = string.sub(filter, 1, bracket_idx-1)
-
-	 if defined_arg_filters[subfilter] ~= nil then
-	    return true
-	 end
-      end
-
-      dot_idx = string.find(filter, ".", 1, true)
-
-      while dot_idx ~= nil do
-	 subfilter = string.sub(filter, 1, dot_idx-1)
-
-	 if defined_arg_filters[subfilter] ~= nil then
-	    return true
-	 end
-
-	 dot_idx = string.find(filter, ".", dot_idx+1, true)
-      end
-   end
-
-   return false
-end
-
 
 function load_rules_doc(rules_mgr, doc, load_state)
 
@@ -558,9 +569,9 @@ function load_rules_doc(rules_mgr, doc, load_state)
 		  -- Different handling if the fields property is a single item vs a list
 		  local valid, err
 		  if type(eitem['fields']) == "table" then
-		     valid, err = validate_exception_item_multi_fields(eitem, v['context'])
+		     valid, err = validate_exception_item_multi_fields(rules_mgr, v['source'], eitem, v['context'])
 		  else
-		     valid, err = validate_exception_item_single_field(eitem, v['context'])
+		     valid, err = validate_exception_item_single_field(rules_mgr, v['source'], eitem, v['context'])
 		  end
 
 		  if valid == false then
@@ -771,9 +782,7 @@ end
 -- - required engine version. will be nil when load result is false
 -- - List of Errors
 -- - List of Warnings
-function load_rules(sinsp_lua_parser,
-		    json_lua_parser,
-		    rules_content,
+function load_rules(rules_content,
 		    rules_mgr,
 		    verbose,
 		    all_events,
@@ -883,12 +892,6 @@ function load_rules(sinsp_lua_parser,
 	 return false, nil, build_error_with_context(v['context'], ast), warnings
       end
 
-      if v['source'] == "syscall" then
-	 if not all_events then
-	    sinsp_rule_utils.check_for_ignored_syscalls_events(ast, 'macro', v['condition'])
-	 end
-      end
-
       state.macros[v['macro']] = {["ast"] = ast.filter.value, ["used"] = false}
    end
 
@@ -933,39 +936,11 @@ function load_rules(sinsp_lua_parser,
 	 warn_evttypes = v['warn_evttypes']
       end
 
-      local status, filter_ast, filters = compiler.compile_filter(v['rule'], v['compile_condition'],
-								  state.macros, state.lists)
+      local status, filter_ast = compiler.compile_filter(v['rule'], v['compile_condition'],
+							 state.macros, state.lists)
 
       if status == false then
 	 return false, nil, build_error_with_context(v['context'], filter_ast), warnings
-      end
-
-      local evtttypes = {}
-      local syscallnums = {}
-
-      if v['source'] == "syscall" then
-	 if not all_events then
-	    sinsp_rule_utils.check_for_ignored_syscalls_events(filter_ast, 'rule', v['rule'])
-	 end
-
-	 evttypes, syscallnums = sinsp_rule_utils.get_evttypes_syscalls(name, filter_ast, v['compile_condition'], warn_evttypes, verbose)
-      end
-
-      -- If a filter in the rule doesn't exist, either skip the rule
-      -- or raise an error, depending on the value of
-      -- skip-if-unknown-filter.
-      for filter, _ in pairs(filters) do
-	 if not is_defined_filter(filter) then
-	    msg = "rule \""..v['rule'].."\": contains unknown filter "..filter
-	    warnings[#warnings + 1] = msg
-
-	    if not v['skip-if-unknown-filter'] then
-	       return false, nil, build_error_with_context(v['context'], msg), warnings
-	    else
-	       print("Skipping "..msg)
-	       goto next_rule
-	    end
-	 end
       end
 
       if (filter_ast.type == "Rule") then
@@ -983,15 +958,30 @@ function load_rules(sinsp_lua_parser,
 	 if (v['tags'] == nil) then
 	    v['tags'] = {}
 	 end
-	 if v['source'] == "syscall" then
-	    install_filter(filter_ast.filter.value, filter, sinsp_lua_parser)
-	    -- Pass the filter and event types back up
-	    falco_rules.add_filter(rules_mgr, v['rule'], evttypes, syscallnums, v['tags'])
 
-	 elseif v['source'] == "k8s_audit" then
-	    install_filter(filter_ast.filter.value, k8s_audit_filter, json_lua_parser)
+	 lua_parser = falco_rules.create_lua_parser(rules_mgr, v['source'])
+	 local err = create_filter_obj(filter_ast.filter.value, lua_parser)
+	 if err ~= nil then
 
-	    falco_rules.add_k8s_audit_filter(rules_mgr, v['rule'], v['tags'])
+	    -- If a rule has a property skip-if-unknown-filter: true,
+	    -- and the error is about an undefined field, print a
+	    -- message but continue.
+	    if v['skip-if-unknown-filter'] == true and string.find(err, "filter_check called with nonexistent field") ~= nil then
+	       msg = "Rule "..v['rule']..": warning (unknown-field):"
+	       warnings[#warnings + 1] = msg
+	    else
+	       msg = "Rule "..v['rule']..": error "..err
+	       return false, nil, build_error_with_context(v['context'], msg), warnings
+	    end
+
+	 else
+	    num_evttypes = falco_rules.add_filter(rules_mgr, lua_parser, v['rule'], v['source'], v['tags'])
+	    if num_evttypes == 0 or num_evttypes > 100 then
+	       if warn_evttypes == true then
+		  msg = "Rule "..v['rule']..": warning (no-evttype):"
+		  warnings[#warnings + 1] = msg
+	       end
+	    end
 	 end
 
 	 -- Rule ASTs are merged together into one big AST, with "OR" between each
@@ -1042,10 +1032,8 @@ function load_rules(sinsp_lua_parser,
 	 -- Ensure that the output field is properly formatted by
 	 -- creating a formatter from it. Any error will be thrown
 	 -- up to the top level.
-	 local err, formatter = formats.formatter(v['source'], v['output'])
-	 if err == nil then
-	    formats.free_formatter(v['source'], formatter)
-	 else
+	 local err = falco_rules.is_format_valid(rules_mgr, v['source'], v['output'])
+	 if err ~= nil then
 	    return false, nil, build_error_with_context(v['context'], err), warnings
 	 end
       else
