@@ -59,6 +59,9 @@ bool g_reopen_outputs = false;
 bool g_restart = false;
 bool g_daemonized = false;
 
+static std::string syscall_source = "syscall";
+static std::string k8s_audit_source = "k8s_audit";
+
 //
 // Helper functions
 //
@@ -259,8 +262,6 @@ uint64_t do_inspect(falco_engine *engine,
 	uint64_t duration_start = 0;
 	uint32_t timeouts_since_last_success_or_msg = 0;
 
-	std::string syscall_source = "syscall";
-
 	sdropmgr.init(inspector,
 		      outputs,
 		      config.m_syscall_evt_drop_actions,
@@ -427,10 +428,40 @@ static void print_all_ignored_events(sinsp *inspector)
 	printf("\n");
 }
 
+static void check_for_ignored_events(sinsp &inspector, falco_engine &engine)
+{
+	std::set<uint16_t> evttypes;
+	sinsp_evttables* einfo = inspector.get_event_info_tables();
+	const struct ppm_event_info* etable = einfo->m_event_info;
+
+	engine.evttypes_for_ruleset(syscall_source, evttypes);
+
+	// Save event names so we don't warn for both the enter and exit event.
+	std::set<std::string> warn_event_names;
+
+	for(auto evtnum : evttypes)
+	{
+		if(evtnum == PPME_GENERIC_E || evtnum == PPME_GENERIC_X)
+		{
+			continue;
+		}
+
+		if(!sinsp::simple_consumer_consider_evtnum(evtnum))
+		{
+			std::string name = etable[evtnum].name;
+			if(warn_event_names.find(name) == warn_event_names.end())
+			{
+				printf("Loaded rules use event %s, but this event is not returned unless running falco with -A\n", name.c_str());
+				warn_event_names.insert(name);
+			}
+		}
+	}
+}
+
 static void list_source_fields(falco_engine *engine, bool names_only, std::string &source)
 {
 	if(source.size() > 0 &&
-	   !(source == "syscall" || source == "k8s_audit"))
+	   !(source == syscall_source || source == k8s_audit_source))
 	{
 		throw std::invalid_argument("Value for --list must be \"syscall\" or \"k8s_audit\"");
 	}
@@ -782,8 +813,6 @@ int falco_init(int argc, char **argv)
 		std::shared_ptr<gen_event_formatter_factory> syscall_formatter_factory(new sinsp_evt_formatter_factory(inspector));
 		std::shared_ptr<gen_event_formatter_factory> k8s_audit_formatter_factory(new json_event_formatter_factory(k8s_audit_filter_factory));
 
-		string syscall_source = "syscall";
-		string k8s_audit_source = "k8s_audit";
 		engine->add_source(syscall_source, syscall_filter_factory, syscall_formatter_factory);
 		engine->add_source(k8s_audit_source, k8s_audit_filter_factory, k8s_audit_formatter_factory);
 
@@ -798,15 +827,15 @@ int falco_init(int argc, char **argv)
 			auto it = disable_sources.begin();
 			while(it != disable_sources.end())
 			{
-				if(*it != "syscall" && *it != "k8s_audit")
+				if(*it != syscall_source && *it != k8s_audit_source)
 				{
 					it = disable_sources.erase(it);
 					continue;
 				}
 				++it;
 			}
-			disable_syscall = disable_sources.count("syscall") > 0;
-			disable_k8s_audit = disable_sources.count("k8s_audit") > 0;
+			disable_syscall = disable_sources.count(syscall_source) > 0;
+			disable_k8s_audit = disable_sources.count(k8s_audit_source) > 0;
 			if (disable_syscall && disable_k8s_audit) {
 				throw std::invalid_argument("The event source \"syscall\" and \"k8s_audit\" can not be disabled together");
 			}
@@ -966,6 +995,11 @@ int falco_init(int argc, char **argv)
 			}
 			engine->enable_rule_by_tag(enabled_rule_tags, true);
 		}
+
+		// For syscalls, see if any event types used by the
+		// loaded rules are ones with the EF_DROP_SIMPLE_CONS
+		// label.
+		check_for_ignored_events(*inspector, *engine);
 
 		if(print_support)
 		{
