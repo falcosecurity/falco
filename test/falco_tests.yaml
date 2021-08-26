@@ -721,7 +721,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     rules_file:
-      - rules/single_rule.yaml
+      - rules/single_rule_with_tags.yaml
     conf_file: confs/grpc_unix_socket.yaml
     trace_file: trace_files/cat_write.scap
     run_duration: 5
@@ -745,6 +745,10 @@ trace_files: !mux
         # For the hostname, since we don't know that beforehand,
         # only check the field presence
         - "hostname: "
+        #tags
+        - "tags: \"filesystem\""
+        - "tags: \"process\""
+        - "tags: \"testing\""
 
   detect_counts:
     detect: True
