@@ -25,6 +25,8 @@ limitations under the License.
 using json = nlohmann::json;
 using namespace std;
 
+string k8s_audit_handler::m_k8s_audit_event_source = "k8s_audit";
+
 k8s_audit_handler::k8s_audit_handler(falco_engine *engine, falco_outputs *outputs):
 	m_engine(engine), m_outputs(outputs)
 {
@@ -87,7 +89,7 @@ bool k8s_audit_handler::accept_data(falco_engine *engine,
 
 		try
 		{
-			res = engine->process_k8s_audit_event(&jev);
+			res = engine->process_event(m_k8s_audit_event_source, &jev);
 		}
 		catch(...)
 		{
