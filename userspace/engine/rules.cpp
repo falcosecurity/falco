@@ -30,26 +30,30 @@ extern "C" {
 const static struct luaL_Reg ll_falco_rules[] =
 	{
 		{"clear_filters", &falco_rules::clear_filters},
+		{"create_lua_parser", &falco_rules::create_lua_parser},
 		{"add_filter", &falco_rules::add_filter},
-		{"add_k8s_audit_filter", &falco_rules::add_k8s_audit_filter},
 		{"enable_rule", &falco_rules::enable_rule},
 		{"engine_version", &falco_rules::engine_version},
+		{"is_format_valid", &falco_rules::is_format_valid},
 		{NULL, NULL}};
 
-falco_rules::falco_rules(sinsp* inspector,
-			 falco_engine *engine,
+falco_rules::falco_rules(falco_engine *engine,
 			 lua_State *ls)
-	: m_inspector(inspector),
-	  m_engine(engine),
+	: m_engine(engine),
 	  m_ls(ls)
 {
-	m_sinsp_lua_parser = new lua_parser(engine->sinsp_factory(), m_ls, "filter");
-	m_json_lua_parser = new lua_parser(engine->json_factory(), m_ls, "k8s_audit_filter");
+}
+
+void falco_rules::add_filter_factory(const std::string &source,
+				     std::shared_ptr<gen_event_filter_factory> factory)
+{
+	m_filter_factories[source] = factory;
 }
 
 void falco_rules::init(lua_State *ls)
 {
 	luaL_openlib(ls, "falco_rules", ll_falco_rules, 0);
+	lua_parser::register_callbacks(ls, "filter");
 }
 
 int falco_rules::clear_filters(lua_State *ls)
@@ -71,12 +75,51 @@ void falco_rules::clear_filters()
 	m_engine->clear_filters();
 }
 
+int falco_rules::create_lua_parser(lua_State *ls)
+{
+	if (! lua_islightuserdata(ls, -2) ||
+	    ! lua_isstring(ls, -1))
+	{
+		lua_pushstring(ls, "Invalid argument passed to create_lua_parser()");
+		lua_error(ls);
+	}
+
+	falco_rules *rules = (falco_rules *) lua_topointer(ls, -2);
+	std::string source = lua_tostring(ls, -1);
+
+	std::string errstr;
+	lua_parser *lp = rules->create_lua_parser(source, errstr);
+
+	if(lp == NULL) {
+		lua_pushstring(ls, errstr.c_str());
+		lua_error(ls);
+	}
+
+	lua_pushlightuserdata(ls, lp);
+	return 1;
+}
+
+lua_parser *falco_rules::create_lua_parser(std::string &source, std::string &errstr)
+{
+	auto it = m_filter_factories.find(source);
+
+	if(it == m_filter_factories.end())
+	{
+		errstr = string("Unknown event source ") + source;
+		return NULL;
+	}
+
+	lua_parser *lp = new lua_parser(it->second);
+
+	return lp;
+}
+
 int falco_rules::add_filter(lua_State *ls)
 {
 	if (! lua_islightuserdata(ls, -5) ||
-	    ! lua_isstring(ls, -4) ||
-	    ! lua_istable(ls, -3) ||
-	    ! lua_istable(ls, -2) ||
+	    ! lua_islightuserdata(ls, -4) ||
+	    ! lua_isstring(ls, -3) ||
+	    ! lua_isstring(ls, -2) ||
 	    ! lua_istable(ls, -1))
 	{
 		lua_pushstring(ls, "Invalid arguments passed to add_filter()");
@@ -84,31 +127,9 @@ int falco_rules::add_filter(lua_State *ls)
 	}
 
 	falco_rules *rules = (falco_rules *) lua_topointer(ls, -5);
-	const char *rulec = lua_tostring(ls, -4);
-
-	set<uint32_t> evttypes;
-
-	lua_pushnil(ls);  /* first key */
-	while (lua_next(ls, -4) != 0) {
-                // key is at index -2, value is at index
-                // -1. We want the keys.
-		evttypes.insert(luaL_checknumber(ls, -2));
-
-		// Remove value, keep key for next iteration
-		lua_pop(ls, 1);
-	}
-
-	set<uint32_t> syscalls;
-
-	lua_pushnil(ls);  /* first key */
-	while (lua_next(ls, -3) != 0) {
-                // key is at index -2, value is at index
-                // -1. We want the keys.
-		syscalls.insert(luaL_checknumber(ls, -2));
-
-		// Remove value, keep key for next iteration
-		lua_pop(ls, 1);
-	}
+	lua_parser *lp = (lua_parser *) lua_topointer(ls, -4);
+	std::string rule = lua_tostring(ls, -3);
+	std::string source = lua_tostring(ls, -2);
 
 	set<string> tags;
 
@@ -122,61 +143,25 @@ int falco_rules::add_filter(lua_State *ls)
 		lua_pop(ls, 1);
 	}
 
-	std::string rule = rulec;
-	rules->add_filter(rule, evttypes, syscalls, tags);
+	size_t num_evttypes = lp->filter()->evttypes().size();
 
-	return 0;
-}
-
-int falco_rules::add_k8s_audit_filter(lua_State *ls)
-{
-	if (! lua_islightuserdata(ls, -3) ||
-	    ! lua_isstring(ls, -2) ||
-	    ! lua_istable(ls, -1))
-	{
-		lua_pushstring(ls, "Invalid arguments passed to add_k8s_audit_filter()");
+	try {
+		rules->add_filter(lp->filter(), rule, source, tags);
+	} catch (exception &e) {
+		std::string errstr = string("Could not add rule to falco engine: ") + e.what();
+		lua_pushstring(ls, errstr.c_str());
 		lua_error(ls);
 	}
 
-	falco_rules *rules = (falco_rules *) lua_topointer(ls, -3);
-	const char *rulec = lua_tostring(ls, -2);
+	delete lp;
 
-	set<string> tags;
-
-	lua_pushnil(ls);  /* first key */
-	while (lua_next(ls, -2) != 0) {
-                // key is at index -2, value is at index
-                // -1. We want the values.
-		tags.insert(lua_tostring(ls, -1));
-
-		// Remove value, keep key for next iteration
-		lua_pop(ls, 1);
-	}
-
-	std::string rule = rulec;
-	rules->add_k8s_audit_filter(rule, tags);
-
-	return 0;
+	lua_pushnumber(ls, num_evttypes);
+	return 1;
 }
 
-void falco_rules::add_filter(string &rule, set<uint32_t> &evttypes, set<uint32_t> &syscalls, set<string> &tags)
+void falco_rules::add_filter(std::shared_ptr<gen_event_filter> filter, string &rule, string &source, set<string> &tags)
 {
-	// While the current rule was being parsed, a sinsp_filter
-	// object was being populated by lua_parser. Grab that filter
-	// and pass it to the engine.
-	sinsp_filter *filter = (sinsp_filter *) m_sinsp_lua_parser->get_filter(true);
-
-	m_engine->add_sinsp_filter(rule, evttypes, syscalls, tags, filter);
-}
-
-void falco_rules::add_k8s_audit_filter(string &rule, set<string> &tags)
-{
-	// While the current rule was being parsed, a sinsp_filter
-	// object was being populated by lua_parser. Grab that filter
-	// and pass it to the engine.
-	json_event_filter *filter = (json_event_filter *) m_json_lua_parser->get_filter(true);
-
-	m_engine->add_k8s_audit_filter(rule, tags, filter);
+	m_engine->add_filter(filter, rule, source, tags);
 }
 
 int falco_rules::enable_rule(lua_State *ls)
@@ -219,6 +204,62 @@ int falco_rules::engine_version(lua_State *ls)
 	return 1;
 }
 
+int falco_rules::is_format_valid(lua_State *ls)
+{
+	if (! lua_islightuserdata(ls, -3) ||
+	    ! lua_isstring(ls, -2) ||
+	    ! lua_isstring(ls, -1))
+	{
+		lua_pushstring(ls, "Invalid arguments passed to is_format_valid");
+		lua_error(ls);
+	}
+
+	falco_rules *rules = (falco_rules *) lua_topointer(ls, -3);
+	string source = luaL_checkstring(ls, -2);
+	string format = luaL_checkstring(ls, -1);
+	string errstr;
+
+	bool ret = rules->is_format_valid(source, format, errstr);
+
+	if (!ret)
+	{
+		lua_pushstring(ls, errstr.c_str());
+	}
+	else
+	{
+		lua_pushnil(ls);
+	}
+
+	return 1;
+}
+
+bool falco_rules::is_format_valid(const std::string &source, const std::string &format, std::string &errstr)
+{
+	bool ret = true;
+
+	try
+	{
+		std::shared_ptr<gen_event_formatter> formatter;
+
+		formatter = m_engine->create_formatter(source, format);
+	}
+	catch(exception &e)
+	{
+		std::ostringstream os;
+
+		os << "Invalid output format '"
+		   << format
+		   << "': '"
+		   << e.what()
+		   << "'";
+
+		errstr = os.str();
+		ret = false;
+	}
+
+	return ret;
+}
+
 static std::list<std::string> get_lua_table_values(lua_State *ls, int idx)
 {
 	std::list<std::string> ret;
@@ -253,195 +294,6 @@ void falco_rules::load_rules(const string &rules_content,
 	lua_getglobal(m_ls, m_lua_load_rules.c_str());
 	if(lua_isfunction(m_ls, -1))
 	{
-		// Create a table containing all events, so they can
-		// be mapped to event ids.
-		sinsp_evttables* einfo = m_inspector->get_event_info_tables();
-		const struct ppm_event_info* etable = einfo->m_event_info;
-		const struct ppm_syscall_desc* stable = einfo->m_syscall_info_table;
-
-		map<string,string> events_by_name;
-		for(uint32_t j = 0; j < PPM_EVENT_MAX; j++)
-		{
-			auto it = events_by_name.find(etable[j].name);
-
-			if (it == events_by_name.end()) {
-				events_by_name[etable[j].name] = to_string(j);
-			} else {
-				string cur = it->second;
-				cur += " ";
-				cur += to_string(j);
-				events_by_name[etable[j].name] = cur;
-			}
-		}
-
-		lua_newtable(m_ls);
-
-		for( auto kv : events_by_name)
-		{
-			lua_pushstring(m_ls, kv.first.c_str());
-			lua_pushstring(m_ls, kv.second.c_str());
-			lua_settable(m_ls, -3);
-		}
-
-		lua_setglobal(m_ls, m_lua_events.c_str());
-
-		map<string,string> syscalls_by_name;
-		for(uint32_t j = 0; j < PPM_SC_MAX; j++)
-		{
-			auto it = syscalls_by_name.find(stable[j].name);
-
-			if (it == syscalls_by_name.end())
-			{
-				syscalls_by_name[stable[j].name] = to_string(j);
-			}
-			else
-			{
-				string cur = it->second;
-				cur += " ";
-				cur += to_string(j);
-				syscalls_by_name[stable[j].name] = cur;
-			}
-		}
-
-		lua_newtable(m_ls);
-
-		for( auto kv : syscalls_by_name)
-		{
-			lua_pushstring(m_ls, kv.first.c_str());
-			lua_pushstring(m_ls, kv.second.c_str());
-			lua_settable(m_ls, -3);
-		}
-
-		lua_setglobal(m_ls, m_lua_syscalls.c_str());
-
-		// Create a table containing the syscalls/events that
-		// are ignored by the kernel module. load_rules will
-		// return an error if any rule references one of these
-		// syscalls/events.
-
-		lua_newtable(m_ls);
-
-		for(uint32_t j = 0; j < PPM_EVENT_MAX; j++)
-		{
-			if(etable[j].flags & EF_DROP_SIMPLE_CONS)
-			{
-				lua_pushstring(m_ls, etable[j].name);
-				lua_pushnumber(m_ls, 1);
-				lua_settable(m_ls, -3);
-			}
-		}
-
-		lua_setglobal(m_ls, m_lua_ignored_events.c_str());
-
-		lua_newtable(m_ls);
-
-		for(uint32_t j = 0; j < PPM_SC_MAX; j++)
-		{
-			if(stable[j].flags & EF_DROP_SIMPLE_CONS)
-			{
-				lua_pushstring(m_ls, stable[j].name);
-				lua_pushnumber(m_ls, 1);
-				lua_settable(m_ls, -3);
-			}
-		}
-
-		lua_setglobal(m_ls, m_lua_ignored_syscalls.c_str());
-
-		vector<const filter_check_info*> fc_plugins;
-		sinsp::get_filtercheck_fields_info(&fc_plugins);
-
-		set<string> no_argument_filters;
-		set<string> argument_filters;
-
-		for(uint32_t j = 0; j < fc_plugins.size(); j++)
-		{
-			const filter_check_info* fci = fc_plugins[j];
-
-			if(fci->m_flags & filter_check_info::FL_HIDDEN)
-			{
-				continue;
-			}
-
-			for(int32_t k = 0; k < fci->m_nfields; k++)
-			{
-				const filtercheck_field_info* fld = &fci->m_fields[k];
-
-				if(fld->m_flags & EPF_TABLE_ONLY ||
-				   fld->m_flags & EPF_PRINT_ONLY)
-				{
-					continue;
-				}
-
-				// Some filters can work with or without an argument
-				std::set<string> flexible_filters = {
-					"proc.aname",
-					"proc.apid"
-				};
-
-				if(fld->m_flags & EPF_REQUIRES_ARGUMENT ||
-				   flexible_filters.find(fld->m_name) != flexible_filters.end())
-				{
-					argument_filters.insert(fld->m_name);
-				}
-
-				if(!(fld->m_flags & EPF_REQUIRES_ARGUMENT) ||
-				   flexible_filters.find(fld->m_name) != flexible_filters.end())
-				{
-					no_argument_filters.insert(fld->m_name);
-				}
-			}
-		}
-
-		for(auto &chk_field : m_engine->json_factory().get_fields())
-		{
-			for(auto &field : chk_field.m_fields)
-			{
-				switch(field.m_idx_mode)
-				{
-				case json_event_filter_check::IDX_REQUIRED:
-					argument_filters.insert(field.m_name);
-					break;
-				case json_event_filter_check::IDX_ALLOWED:
-					argument_filters.insert(field.m_name);
-					no_argument_filters.insert(field.m_name);
-					break;
-				case json_event_filter_check::IDX_NONE:
-					no_argument_filters.insert(field.m_name);
-					break;
-				default:
-					break;
-				}
-			}
-		}
-
-		// Create tables containing all filtercheck
-		// names. They are split into names that require
-		// arguments and ones that do not.
-
-		lua_newtable(m_ls);
-
-		for(auto &field : argument_filters)
-		{
-			lua_pushstring(m_ls, field.c_str());
-			lua_pushnumber(m_ls, 1);
-			lua_settable(m_ls, -3);
-		}
-
-		lua_setglobal(m_ls, m_lua_defined_arg_filters.c_str());
-
-		lua_newtable(m_ls);
-
-		for(auto &field : no_argument_filters)
-		{
-			lua_pushstring(m_ls, field.c_str());
-			lua_pushnumber(m_ls, 1);
-			lua_settable(m_ls, -3);
-		}
-
-		lua_setglobal(m_ls, m_lua_defined_noarg_filters.c_str());
-
-		lua_pushlightuserdata(m_ls, m_sinsp_lua_parser);
-		lua_pushlightuserdata(m_ls, m_json_lua_parser);
 		lua_pushstring(m_ls, rules_content.c_str());
 		lua_pushlightuserdata(m_ls, this);
 		lua_pushboolean(m_ls, (verbose ? 1 : 0));
@@ -449,7 +301,7 @@ void falco_rules::load_rules(const string &rules_content,
 		lua_pushstring(m_ls, extra.c_str());
 		lua_pushboolean(m_ls, (replace_container_info ? 1 : 0));
 		lua_pushnumber(m_ls, min_priority);
-		if(lua_pcall(m_ls, 9, 4, 0) != 0)
+		if(lua_pcall(m_ls, 7, 4, 0) != 0)
 		{
 			const char* lerr = lua_tostring(m_ls, -1);
 
@@ -533,6 +385,4 @@ void falco_rules::describe_rule(std::string *rule)
 
 falco_rules::~falco_rules()
 {
-	delete m_sinsp_lua_parser;
-	delete m_json_lua_parser;
 }

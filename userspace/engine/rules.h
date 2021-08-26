@@ -32,41 +32,45 @@ class falco_engine;
 class falco_rules
 {
  public:
-	falco_rules(sinsp* inspector,
-		    falco_engine *engine,
+	falco_rules(falco_engine *engine,
 		    lua_State *ls);
 	~falco_rules();
+
+	void add_filter_factory(const std::string &source,
+				std::shared_ptr<gen_event_filter_factory> factory);
+
 	void load_rules(const string &rules_content, bool verbose, bool all_events,
 			std::string &extra, bool replace_container_info,
 			falco_common::priority_type min_priority,
 			uint64_t &required_engine_version);
 	void describe_rule(string *rule);
 
+	bool is_format_valid(const std::string &source, const std::string &format, std::string &errstr);
+
 	static void init(lua_State *ls);
 	static int clear_filters(lua_State *ls);
+	static int create_lua_parser(lua_State *ls);
 	static int add_filter(lua_State *ls);
-	static int add_k8s_audit_filter(lua_State *ls);
 	static int enable_rule(lua_State *ls);
 	static int engine_version(lua_State *ls);
 
+	// err = falco_rules.is_format_valid(source, format_string)
+	static int is_format_valid(lua_State *ls);
+
  private:
 	void clear_filters();
-	void add_filter(string &rule, std::set<uint32_t> &evttypes, std::set<uint32_t> &syscalls, std::set<string> &tags);
-	void add_k8s_audit_filter(string &rule, std::set<string> &tags);
+	// XXX/mstemm can I make this a shared_ptr?
+	lua_parser * create_lua_parser(std::string &source, std::string &errstr);
+	void add_filter(std::shared_ptr<gen_event_filter> filter, string &rule, string &source, std::set<string> &tags);
 	void enable_rule(string &rule, bool enabled);
 
-	lua_parser* m_sinsp_lua_parser;
-	lua_parser* m_json_lua_parser;
-	sinsp* m_inspector;
 	falco_engine *m_engine;
 	lua_State* m_ls;
 
+	// Maps from event source to an object that can create rules
+	// for that event source.
+	std::map<std::string, std::shared_ptr<gen_event_filter_factory>> m_filter_factories;
+
 	string m_lua_load_rules = "load_rules";
-	string m_lua_ignored_syscalls = "ignored_syscalls";
-	string m_lua_ignored_events = "ignored_events";
-	string m_lua_defined_arg_filters = "defined_arg_filters";
-	string m_lua_defined_noarg_filters = "defined_noarg_filters";
-	string m_lua_events = "events";
-	string m_lua_syscalls = "syscalls";
 	string m_lua_describe_rule = "describe_rule";
 };
