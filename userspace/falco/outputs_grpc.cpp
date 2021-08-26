@@ -64,5 +64,9 @@ void falco::outputs::output_grpc::output(const message *msg)
 	auto host = grpc_res.mutable_hostname();
 	*host = m_hostname;
 
+	// tags
+	auto tags = grpc_res.mutable_tags();
+	*tags = {msg->tags.begin(), msg->tags.end()};
+
 	falco::grpc::queue::get().push(grpc_res);
 }
