@@ -274,6 +274,11 @@ void falco_engine::evttypes_for_ruleset(std::string &source, std::set<uint16_t> 
 
 }
 
+void falco_engine::evttypes_for_ruleset(std::string &source, std::set<uint16_t> &evttypes)
+{
+	evttypes_for_ruleset(source, evttypes, m_default_ruleset);
+}
+
 std::shared_ptr<gen_event_formatter> falco_engine::create_formatter(const std::string &source,
 								    const std::string &output)
 {
