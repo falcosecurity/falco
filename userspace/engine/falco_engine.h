@@ -204,6 +204,10 @@ public:
 				  std::set<uint16_t> &evttypes,
 				  const std::string &ruleset);
 
+	// Assuming default ruleset
+	void evttypes_for_ruleset(std::string &source,
+				  std::set<uint16_t> &evttypes);
+
 	//
 	// Given a source and output string, return an
 	// gen_event_formatter that can format output strings for an
