@@ -35,6 +35,8 @@ public:
 				falco_outputs *outputs,
 				std::string &post_data, std::string &errstr);
 
+	static std::string m_k8s_audit_event_source;
+
 private:
 	falco_engine *m_engine;
 	falco_outputs *m_outputs;
