@@ -406,22 +406,34 @@ private:
 	std::list<json_event_filter_check::check_info> m_info;
 };
 
-// Unlike the other classes, this does not inherit from a shared class
-// that's used both by json events and sinsp events. It might be
-// worthwhile, but it would require a lot of additional work to pull
-// up functionality into the generic filtercheck class.
-
-class json_event_formatter
+class json_event_formatter : public gen_event_formatter
 {
 public:
-	json_event_formatter(json_event_filter_factory &factory, std::string &format);
+	json_event_formatter(std::shared_ptr<gen_event_filter_factory> factory);
 	virtual ~json_event_formatter();
 
-	std::string tostring(json_event *ev);
-	std::string tojson(json_event *ev);
-	std::map<std::string, std::string> tomap(json_event *ev);
+	void set_format(output_format of, const std::string &format) override;
+	bool tostring(gen_event *evt, std::string &output) override;
+	bool tostring_withformat(gen_event *evt, std::string &output, gen_event_formatter::output_format of) override;
+	bool get_field_values(gen_event *evt, std::map<std::string, std::string> &fields) override;
+	output_format get_output_format() override;
 
-	void resolve_tokens(json_event *ev, std::list<std::pair<std::string, std::string>> &resolved);
+	std::string tojson(json_event *ev);
+
+	// Split the format string into a list of tuples, broken at
+	// output fields, where each tuple is either a block of text
+	// from the original format string, or a field value/pair from
+	// the original format string.
+	//
+	// For example, given a format string "some output
+	// (%proc.name)", this will fill in resolved with 3 tuples:
+	// - ["", "some output ("]
+	// - ["proc.name", "nginx"]
+	// - ["", ")"]
+	//
+	// This can be used either to return a resolved output string
+	// or a map of field name/value pairs.
+        void resolve_format(json_event *ev, std::list<std::pair<std::string, std::string>> &resolved);
 
 private:
 	void parse_format();
@@ -441,6 +453,8 @@ private:
 		std::shared_ptr<json_event_filter_check> check;
 	};
 
+	gen_event_formatter::output_format m_output_format;
+
 	// The original format string
 	std::string m_format;
 
@@ -449,5 +463,25 @@ private:
 	std::list<fmt_token> m_tokens;
 
 	// All the filterchecks required to resolve tokens in the format string
-	json_event_filter_factory &m_json_factory;
+	std::shared_ptr<gen_event_filter_factory> m_json_factory;
+};
+
+class json_event_formatter_factory : public gen_event_formatter_factory
+{
+public:
+	json_event_formatter_factory(std::shared_ptr<gen_event_filter_factory> factory);
+	virtual ~json_event_formatter_factory();
+
+	void set_output_format(gen_event_formatter::output_format of) override;
+
+	std::shared_ptr<gen_event_formatter> create_formatter(const std::string &format) override;
+
+protected:
+	// Maps from output string to formatter
+	std::map<std::string, std::shared_ptr<gen_event_formatter>> m_formatters;
+
+	gen_event_formatter::output_format m_output_format;
+
+	// All the filterchecks required to resolve tokens in the format string
+	std::shared_ptr<gen_event_filter_factory> m_json_factory;
 };
