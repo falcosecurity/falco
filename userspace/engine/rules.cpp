@@ -35,6 +35,7 @@ const static struct luaL_Reg ll_falco_rules[] =
 		{"enable_rule", &falco_rules::enable_rule},
 		{"engine_version", &falco_rules::engine_version},
 		{"is_format_valid", &falco_rules::is_format_valid},
+		{"is_defined_field", &falco_rules::is_defined_field},
 		{NULL, NULL}};
 
 falco_rules::falco_rules(falco_engine *engine,
@@ -258,6 +259,48 @@ bool falco_rules::is_format_valid(const std::string &source, const std::string &
 	}
 
 	return ret;
+}
+
+int falco_rules::is_defined_field(lua_State *ls)
+{
+	if (! lua_islightuserdata(ls, -3) ||
+	    ! lua_isstring(ls, -2) ||
+	    ! lua_isstring(ls, -1))
+	{
+		lua_pushstring(ls, "Invalid arguments passed to is_defined_field");
+		lua_error(ls);
+	}
+
+	falco_rules *rules = (falco_rules *) lua_topointer(ls, -3);
+	string source = luaL_checkstring(ls, -2);
+	string fldname = luaL_checkstring(ls, -1);
+
+	bool ret = rules->is_defined_field(source, fldname);
+
+	lua_pushboolean(ls, (ret ? 1 : 0));
+
+	return 1;
+}
+
+bool falco_rules::is_defined_field(const std::string &source, const std::string &fldname)
+{
+	auto it = m_filter_factories.find(source);
+
+	if(it == m_filter_factories.end())
+	{
+		return false;
+	}
+
+	auto *chk = it->second->new_filtercheck(fldname.c_str());
+
+	if (chk == NULL)
+	{
+		return false;
+	}
+
+	delete(chk);
+
+	return true;
 }
 
 static std::list<std::string> get_lua_table_values(lua_State *ls, int idx)
