@@ -28,10 +28,7 @@ limitations under the License.
 
 #include <nlohmann/json.hpp>
 
-#include "sinsp.h"
-#include "filter.h"
-
-#include "json_evt.h"
+#include "gen_filter.h"
 #include "rules.h"
 #include "ruleset.h"
 
@@ -153,8 +150,8 @@ public:
 	//
 	void set_extra(string &extra, bool replace_container_info);
 
-	// **Methods Related to k8s audit log events, which are
-	// **represented as json objects.
+	// Represents the result of matching an event against a set of
+	// rules.
 	struct rule_result {
 		gen_event *evt;
 		std::string rule;
@@ -176,67 +173,46 @@ public:
 	// with a ruleset string.
 	//
 	// the returned rule_result is allocated and must be delete()d.
-	std::unique_ptr<rule_result> process_k8s_audit_event(json_event *ev, uint16_t ruleset_id);
+	std::unique_ptr<rule_result> process_event(std::string &source, gen_event *ev, uint16_t ruleset_id);
 
 	//
 	// Wrapper assuming the default ruleset
 	//
-	std::unique_ptr<rule_result> process_k8s_audit_event(json_event *ev);
+	std::unique_ptr<rule_result> process_event(std::string &source, gen_event *ev);
 
 	//
-	// Add a k8s_audit filter to the engine
+	// Configure the engine to support events with the provided
+	// source, with the provided filter factory and formatter factory.
 	//
-	void add_k8s_audit_filter(std::string &rule,
-				  std::set<std::string> &tags,
-				  json_event_filter* filter);
-
-	// **Methods Related to Sinsp Events e.g system calls
-	//
-	// Given a ruleset, fill in a bitset containing the event
-	// types for which this ruleset can run.
-	//
-	void evttypes_for_ruleset(std::vector<bool> &evttypes, const std::string &ruleset);
+	void add_source(std::string &source,
+			std::shared_ptr<gen_event_filter_factory> filter_factory,
+			std::shared_ptr<gen_event_formatter_factory> formatter_factory);
 
 	//
-	// Given a ruleset, fill in a bitset containing the syscalls
-	// for which this ruleset can run.
+	// Add a filter for the provided event source to the engine
 	//
-	void syscalls_for_ruleset(std::vector<bool> &syscalls, const std::string &ruleset);
+	void add_filter(std::shared_ptr<gen_event_filter> filter,
+			std::string &rule,
+			std::string &source,
+			std::set<std::string> &tags);
 
 	//
-	// Given an event, check it against the set of rules in the
-	// engine and if a matching rule is found, return details on
-	// the rule that matched. If no rule matched, returns NULL.
+	// Given an event source and ruleset, fill in a bitset
+	// containing the event types for which this ruleset can run.
 	//
-	// When ruleset_id is provided, use the enabled/disabled status
-	// associated with the provided ruleset. This is only useful
-	// when you have previously called enable_rule/enable_rule_by_tag
-	// with a ruleset string.
-	//
-	// the returned rule_result is allocated and must be delete()d.
-	std::unique_ptr<rule_result> process_sinsp_event(sinsp_evt *ev, uint16_t ruleset_id);
+	void evttypes_for_ruleset(std::string &source,
+				  std::set<uint16_t> &evttypes,
+				  const std::string &ruleset);
 
 	//
-	// Wrapper assuming the default ruleset
+	// Given a source and output string, return an
+	// gen_event_formatter that can format output strings for an
+	// event.
 	//
-	std::unique_ptr<rule_result> process_sinsp_event(sinsp_evt *ev);
-
-	//
-	// Add a filter, which is related to the specified set of
-	// event types/syscalls, to the engine.
-	//
-	void add_sinsp_filter(std::string &rule,
-			      std::set<uint32_t> &evttypes,
-			      std::set<uint32_t> &syscalls,
-			      std::set<std::string> &tags,
-			      sinsp_filter* filter);
-
-	sinsp_filter_factory &sinsp_factory();
-	json_event_filter_factory &json_factory();
+	std::shared_ptr<gen_event_formatter> create_formatter(const std::string &source,
+							      const std::string &output);
 
 private:
-
-	static nlohmann::json::json_pointer k8s_audit_time;
 
 	//
 	// Determine whether the given event should be matched at all
@@ -244,16 +220,20 @@ private:
 	// ratio/multiplier.
 	//
 	inline bool should_drop_evt();
-	shared_ptr<sinsp_filter_factory> m_sinsp_factory;
-	shared_ptr<json_event_filter_factory> m_json_factory;
 
-	falco_rules *m_rules;
+	// Maps from event source to object that can generate filters from rules
+	std::map<std::string, std::shared_ptr<gen_event_filter_factory>> m_filter_factories;
+
+	// Maps from event source to object that can format output strings in rules
+	std::map<std::string, std::shared_ptr<gen_event_formatter_factory>> m_format_factories;
+
+	// Maps from event source to the set of rules for that event source
+	std::map<std::string, std::shared_ptr<falco_ruleset>> m_rulesets;
+
+	std::unique_ptr<falco_rules> m_rules;
 	uint16_t m_next_ruleset_id;
 	std::map<string, uint16_t> m_known_rulesets;
 	falco_common::priority_type m_min_priority;
-
-	std::unique_ptr<falco_sinsp_ruleset> m_sinsp_rules;
-	std::unique_ptr<falco_ruleset> m_k8s_audit_rules;
 
 	void populate_rule_result(unique_ptr<struct rule_result> &res, gen_event *ev);
 

@@ -40,10 +40,8 @@ string lua_print_stats = "print_stats";
 
 using namespace std;
 
-nlohmann::json::json_pointer falco_engine::k8s_audit_time = "/stageTimestamp"_json_pointer;
-
 falco_engine::falco_engine(bool seed_rng, const std::string& alternate_lua_dir)
-	: m_rules(NULL), m_next_ruleset_id(0),
+	: m_next_ruleset_id(0),
 	  m_min_priority(falco_common::PRIORITY_DEBUG),
 	  m_sampling_ratio(1), m_sampling_multiplier(0),
 	  m_replace_container_info(false)
@@ -54,26 +52,16 @@ falco_engine::falco_engine(bool seed_rng, const std::string& alternate_lua_dir)
 	falco_common::init(m_lua_main_filename.c_str(), alternate_lua_dir.c_str());
 	falco_rules::init(m_ls);
 
-	m_sinsp_rules.reset(new falco_sinsp_ruleset());
-	m_k8s_audit_rules.reset(new falco_ruleset());
-
 	if(seed_rng)
 	{
 		srandom((unsigned) getpid());
 	}
 
 	m_default_ruleset_id = find_ruleset_id(m_default_ruleset);
-
-	// Create this now so we can potentially list filters and exit
-	m_json_factory = make_shared<json_event_filter_factory>();
 }
 
 falco_engine::~falco_engine()
 {
-	if (m_rules)
-	{
-		delete m_rules;
-	}
 }
 
 uint32_t falco_engine::engine_version()
@@ -153,32 +141,16 @@ void falco_engine::load_rules(const string &rules_content, bool verbose, bool al
 
 void falco_engine::load_rules(const string &rules_content, bool verbose, bool all_events, uint64_t &required_engine_version)
 {
-	// The engine must have been given an inspector by now.
-	if(! m_inspector)
-	{
-		throw falco_exception("No inspector provided");
-	}
-
-	if(!m_sinsp_factory)
-	{
-		m_sinsp_factory = make_shared<sinsp_filter_factory>(m_inspector);
-	}
-
 	if(!m_rules)
 	{
-		m_rules = new falco_rules(m_inspector,
-					  this,
-					  m_ls);
-	}
+		m_rules.reset(new falco_rules(this,
+					      m_ls));
 
-	// Note that falco_formats is added to the lua state used
-	// by the falco engine only. Within the engine, only
-	// formats.formatter is used, so we can unconditionally set
-	// json_output to false.
-	bool json_output = false;
-	bool json_include_output_property = false;
-	bool json_include_tags_property = false;
-	falco_formats::init(m_inspector, this, m_ls, json_output, json_include_output_property, json_include_tags_property);
+		for(auto const &it : m_filter_factories)
+		{
+			m_rules->add_filter_factory(it.first, it.second);
+		}
+	}
 
 	m_rules->load_rules(rules_content, verbose, all_events, m_extra, m_replace_container_info, m_min_priority, required_engine_version);
 }
@@ -213,8 +185,10 @@ void falco_engine::enable_rule(const string &substring, bool enabled, const stri
 	uint16_t ruleset_id = find_ruleset_id(ruleset);
 	bool match_exact = false;
 
-	m_sinsp_rules->enable(substring, match_exact, enabled, ruleset_id);
-	m_k8s_audit_rules->enable(substring, match_exact, enabled, ruleset_id);
+	for(auto &it : m_rulesets)
+	{
+		it.second->enable(substring, match_exact, enabled, ruleset_id);
+	}
 }
 
 void falco_engine::enable_rule(const string &substring, bool enabled)
@@ -227,8 +201,10 @@ void falco_engine::enable_rule_exact(const string &rule_name, bool enabled, cons
 	uint16_t ruleset_id = find_ruleset_id(ruleset);
 	bool match_exact = true;
 
-	m_sinsp_rules->enable(rule_name, match_exact, enabled, ruleset_id);
-	m_k8s_audit_rules->enable(rule_name, match_exact, enabled, ruleset_id);
+	for(auto &it : m_rulesets)
+	{
+		it.second->enable(rule_name, match_exact, enabled, ruleset_id);
+	}
 }
 
 void falco_engine::enable_rule_exact(const string &rule_name, bool enabled)
@@ -240,8 +216,10 @@ void falco_engine::enable_rule_by_tag(const set<string> &tags, bool enabled, con
 {
 	uint16_t ruleset_id = find_ruleset_id(ruleset);
 
-	m_sinsp_rules->enable_tags(tags, enabled, ruleset_id);
-	m_k8s_audit_rules->enable_tags(tags, enabled, ruleset_id);
+	for(auto &it : m_rulesets)
+	{
+		it.second->enable_tags(tags, enabled, ruleset_id);
+	}
 }
 
 void falco_engine::enable_rule_by_tag(const set<string> &tags, bool enabled)
@@ -272,68 +250,85 @@ uint64_t falco_engine::num_rules_for_ruleset(const std::string &ruleset)
 {
 	uint16_t ruleset_id = find_ruleset_id(ruleset);
 
-	return m_sinsp_rules->num_rules_for_ruleset(ruleset_id) +
-		m_k8s_audit_rules->num_rules_for_ruleset(ruleset_id);
+	uint64_t ret = 0;
+	for(auto &it : m_rulesets)
+	{
+		ret += it.second->num_rules_for_ruleset(ruleset_id);
+	}
+
+	return ret;
 }
 
-void falco_engine::evttypes_for_ruleset(std::vector<bool> &evttypes, const std::string &ruleset)
+void falco_engine::evttypes_for_ruleset(std::string &source, std::set<uint16_t> &evttypes, const std::string &ruleset)
 {
 	uint16_t ruleset_id = find_ruleset_id(ruleset);
 
-	return m_sinsp_rules->evttypes_for_ruleset(evttypes, ruleset_id);
+	auto it = m_rulesets.find(source);
+	if(it == m_rulesets.end())
+	{
+		string err = "Unknown event source " + source;
+		throw falco_exception(err);
+	}
+
+	it->second->evttypes_for_ruleset(evttypes, ruleset_id);
+
 }
 
-void falco_engine::syscalls_for_ruleset(std::vector<bool> &syscalls, const std::string &ruleset)
+std::shared_ptr<gen_event_formatter> falco_engine::create_formatter(const std::string &source,
+								    const std::string &output)
 {
-	uint16_t ruleset_id = find_ruleset_id(ruleset);
+	auto it = m_format_factories.find(source);
 
-	return m_sinsp_rules->syscalls_for_ruleset(syscalls, ruleset_id);
+	if(it == m_format_factories.end())
+	{
+		string err = "Unknown event source " + source;
+		throw falco_exception(err);
+	}
+
+	return it->second->create_formatter(output);
 }
 
-unique_ptr<falco_engine::rule_result> falco_engine::process_sinsp_event(sinsp_evt *ev, uint16_t ruleset_id)
+unique_ptr<falco_engine::rule_result> falco_engine::process_event(std::string &source, gen_event *ev, uint16_t ruleset_id)
 {
 	if(should_drop_evt())
 	{
 		return unique_ptr<struct rule_result>();
 	}
 
-	if(!m_sinsp_rules->run(ev, ruleset_id))
+	auto it = m_rulesets.find(source);
+	if(it == m_rulesets.end())
+	{
+		string err = "Unknown event source " + source;
+		throw falco_exception(err);
+	}
+
+	if (!it->second->run(ev, ruleset_id))
 	{
 		return unique_ptr<struct rule_result>();
 	}
 
 	unique_ptr<struct rule_result> res(new rule_result());
-	res->source = "syscall";
+	res->source = source;
 
 	populate_rule_result(res, ev);
 
 	return res;
 }
 
-unique_ptr<falco_engine::rule_result> falco_engine::process_sinsp_event(sinsp_evt *ev)
+unique_ptr<falco_engine::rule_result> falco_engine::process_event(std::string &source, gen_event *ev)
 {
-	return process_sinsp_event(ev, m_default_ruleset_id);
+	return process_event(source, ev, m_default_ruleset_id);
 }
 
-unique_ptr<falco_engine::rule_result> falco_engine::process_k8s_audit_event(json_event *ev, uint16_t ruleset_id)
+void falco_engine::add_source(std::string &source,
+		std::shared_ptr<gen_event_filter_factory> filter_factory,
+		std::shared_ptr<gen_event_formatter_factory> formatter_factory)
 {
-	if(should_drop_evt())
-	{
-		return unique_ptr<struct rule_result>();
-	}
+	m_filter_factories[source] = filter_factory;
+	m_format_factories[source] = formatter_factory;
 
-	// All k8s audit events have the single tag "1".
-	if(!m_k8s_audit_rules->run((gen_event *) ev, 1, ruleset_id))
-	{
-		return unique_ptr<struct rule_result>();
-	}
-
-	unique_ptr<struct rule_result> res(new rule_result());
-	res->source = "k8s_audit";
-
-	populate_rule_result(res, ev);
-
-	return res;
+	std::shared_ptr<falco_ruleset> ruleset(new falco_ruleset());
+	m_rulesets[source] = ruleset;
 }
 
 void falco_engine::populate_rule_result(unique_ptr<struct rule_result> &res, gen_event *ev)
@@ -412,29 +407,30 @@ void falco_engine::print_stats()
 
 }
 
-void falco_engine::add_sinsp_filter(string &rule,
-				    set<uint32_t> &evttypes,
-				    set<uint32_t> &syscalls,
-				    set<string> &tags,
-				    sinsp_filter* filter)
+void falco_engine::add_filter(std::shared_ptr<gen_event_filter> filter,
+			      std::string &rule,
+			      std::string &source,
+			      std::set<std::string> &tags)
 {
-	m_sinsp_rules->add(rule, evttypes, syscalls, tags, filter);
-}
+	auto it = m_rulesets.find(source);
+	if(it == m_rulesets.end())
+	{
+		string err = "Unknown event source " + source;
+		throw falco_exception(err);
+	}
 
-void falco_engine::add_k8s_audit_filter(string &rule,
-					set<string> &tags,
-					json_event_filter* filter)
-{
-	// All k8s audit events have a single tag "1".
-	std::set<uint32_t> event_tags = {1};
-
-	m_k8s_audit_rules->add(rule, tags, event_tags, filter);
+	it->second->add(rule, tags, filter);
 }
 
 void falco_engine::clear_filters()
 {
-	m_sinsp_rules.reset(new falco_sinsp_ruleset());
-	m_k8s_audit_rules.reset(new falco_ruleset());
+	m_rulesets.clear();
+
+	for(auto &it : m_filter_factories)
+	{
+		std::shared_ptr<falco_ruleset> ruleset(new falco_ruleset());
+		m_rulesets[it.first] = ruleset;
+	}
 }
 
 void falco_engine::set_sampling_ratio(uint32_t sampling_ratio)
@@ -467,24 +463,4 @@ inline bool falco_engine::should_drop_evt()
 
 	double coin = (random() * (1.0/RAND_MAX));
 	return (coin >= (1.0/(m_sampling_multiplier * m_sampling_ratio)));
-}
-
-sinsp_filter_factory &falco_engine::sinsp_factory()
-{
-	if(!m_sinsp_factory)
-	{
-		throw falco_exception("No sinsp factory created yet");
-	}
-
-	return *(m_sinsp_factory.get());
-}
-
-json_event_filter_factory &falco_engine::json_factory()
-{
-	if(!m_json_factory)
-	{
-		throw falco_exception("No json factory created yet");
-	}
-
-	return *(m_json_factory.get());
 }

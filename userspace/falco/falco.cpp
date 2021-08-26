@@ -33,6 +33,7 @@ limitations under the License.
 #include <getopt.h>
 
 #include <sinsp.h>
+#include <filter.h>
 
 #include "logger.h"
 #include "utils.h"
@@ -258,6 +259,8 @@ uint64_t do_inspect(falco_engine *engine,
 	uint64_t duration_start = 0;
 	uint32_t timeouts_since_last_success_or_msg = 0;
 
+	std::string syscall_source = "syscall";
+
 	sdropmgr.init(inspector,
 		      outputs,
 		      config.m_syscall_evt_drop_actions,
@@ -371,7 +374,7 @@ uint64_t do_inspect(falco_engine *engine,
 		// engine, which will match the event against the set
 		// of rules. If a match is found, pass the event to
 		// the outputs.
-		unique_ptr<falco_engine::rule_result> res = engine->process_sinsp_event(ev);
+		unique_ptr<falco_engine::rule_result> res = engine->process_event(syscall_source, ev);
 		if(res)
 		{
 			outputs->handle_event(res->evt, res->rule, res->source, res->priority_num, res->format, res->tags);
@@ -769,8 +772,20 @@ int falco_init(int argc, char **argv)
 		}
 
 		engine = new falco_engine(true, alternate_lua_dir);
-		engine->set_inspector(inspector);
 		engine->set_extra(output_format, replace_container_info);
+
+		// Create "factories" that can create filters/formatters for
+		// syscalls and k8s audit events.
+		std::shared_ptr<gen_event_filter_factory> syscall_filter_factory(new sinsp_filter_factory(inspector));
+		std::shared_ptr<gen_event_filter_factory> k8s_audit_filter_factory(new json_event_filter_factory());
+
+		std::shared_ptr<gen_event_formatter_factory> syscall_formatter_factory(new sinsp_evt_formatter_factory(inspector));
+		std::shared_ptr<gen_event_formatter_factory> k8s_audit_formatter_factory(new json_event_formatter_factory(k8s_audit_filter_factory));
+
+		string syscall_source = "syscall";
+		string k8s_audit_source = "k8s_audit";
+		engine->add_source(syscall_source, syscall_filter_factory, syscall_formatter_factory);
+		engine->add_source(k8s_audit_source, k8s_audit_filter_factory, k8s_audit_formatter_factory);
 
 		if(list_flds)
 		{
@@ -870,6 +885,12 @@ int falco_init(int argc, char **argv)
 		else
 		{
 			throw std::runtime_error("Could not find configuration file at " + conf_filename);
+		}
+
+		if(config.m_json_output)
+		{
+			syscall_formatter_factory->set_output_format(gen_event_formatter::OF_JSON);
+			k8s_audit_formatter_factory->set_output_format(gen_event_formatter::OF_JSON);
 		}
 
 		if (rules_filenames.size())

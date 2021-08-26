@@ -48,11 +48,6 @@ falco_common::~falco_common()
 	}
 }
 
-void falco_common::set_inspector(sinsp *inspector)
-{
-	m_inspector = inspector;
-}
-
 void falco_common::init(const char *lua_main_filename, const char *alternate_lua_dir)
 {
 	ifstream is;
