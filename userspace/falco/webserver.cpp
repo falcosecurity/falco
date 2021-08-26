@@ -102,7 +102,7 @@ bool k8s_audit_handler::accept_data(falco_engine *engine,
 			{
 				outputs->handle_event(res->evt, res->rule,
 						      res->source, res->priority_num,
-						      res->format);
+						      res->format, res->tags);
 			}
 			catch(falco_exception &e)
 			{

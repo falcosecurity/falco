@@ -161,6 +161,7 @@ public:
 		falco_common::priority_type priority_num;
 		std::string format;
 		std::set<std::string> exception_fields;
+		std::set<std::string> tags;
 	};
 
 	//

@@ -142,7 +142,7 @@ void falco_outputs::add_output(falco::outputs::config oc)
 }
 
 void falco_outputs::handle_event(gen_event *evt, string &rule, string &source,
-				 falco_common::priority_type priority, string &format)
+				 falco_common::priority_type priority, string &format, std::set<std::string> tags)
 {
 	if(!m_notifications_tb.claim())
 	{
@@ -192,6 +192,7 @@ void falco_outputs::handle_event(gen_event *evt, string &rule, string &source,
 
 	cmsg.msg = falco_formats::format_event(evt, rule, source, falco_common::priority_names[priority], sformat);
 	cmsg.fields = falco_formats::resolve_tokens(evt, source, sformat);
+	cmsg.tags.insert(tags.begin(), tags.end());
 
 	cmsg.type = ctrl_msg_type::CTRL_MSG_OUTPUT;
 	m_queue.push(cmsg);

@@ -342,18 +342,30 @@ void falco_engine::populate_rule_result(unique_ptr<struct rule_result> &res, gen
 	if(lua_isfunction(m_ls, -1))
 	{
 		lua_pushnumber(m_ls, ev->get_check_id());
-
-		if(lua_pcall(m_ls, 1, 4, 0) != 0)
+		
+		if(lua_pcall(m_ls, 1, 5, 0) != 0)
 		{
 			const char* lerr = lua_tostring(m_ls, -1);
 			string err = "Error invoking function output: " + string(lerr);
 			throw falco_exception(err);
 		}
-		const char *p =  lua_tostring(m_ls, -4);
+		const char *p =  lua_tostring(m_ls, -5);
 		res->rule = p;
 		res->evt = ev;
-		res->priority_num = (falco_common::priority_type) lua_tonumber(m_ls, -3);
-		res->format = lua_tostring(m_ls, -2);
+		res->priority_num = (falco_common::priority_type) lua_tonumber(m_ls, -4);
+		res->format = lua_tostring(m_ls, -3);
+
+		// Tags are passed back as a table, and is on the top of the stack
+		lua_pushnil(m_ls);  /* first key */
+		while (lua_next(m_ls, -2) != 0) {
+			// key is at index -2, value is at index
+			// -1. We want the value.
+			res->tags.insert(luaL_checkstring(m_ls, -1));
+
+			// Remove value, keep key for next iteration
+			lua_pop(m_ls, 1);
+		}
+		lua_pop(m_ls, 1); // Clean table leftover
 
 		// Exception fields are passed back as a table
 		lua_pushnil(m_ls);  /* first key */

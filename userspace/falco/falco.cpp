@@ -371,7 +371,7 @@ uint64_t do_inspect(falco_engine *engine,
 		unique_ptr<falco_engine::rule_result> res = engine->process_sinsp_event(ev);
 		if(res)
 		{
-			outputs->handle_event(res->evt, res->rule, res->source, res->priority_num, res->format);
+			outputs->handle_event(res->evt, res->rule, res->source, res->priority_num, res->format, res->tags);
 		}
 
 		num_evts++;
