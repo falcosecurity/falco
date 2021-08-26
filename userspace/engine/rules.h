@@ -47,6 +47,8 @@ class falco_rules
 
 	bool is_format_valid(const std::string &source, const std::string &format, std::string &errstr);
 
+	bool is_defined_field(const std::string &source, const std::string &field);
+
 	static void init(lua_State *ls);
 	static int clear_filters(lua_State *ls);
 	static int create_lua_parser(lua_State *ls);
@@ -56,6 +58,9 @@ class falco_rules
 
 	// err = falco_rules.is_format_valid(source, format_string)
 	static int is_format_valid(lua_State *ls);
+
+	// err = falco_rules.is_defined_field(source, field)
+	static int is_defined_field(lua_State *ls);
 
  private:
 	void clear_filters();
