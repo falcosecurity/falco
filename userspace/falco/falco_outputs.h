@@ -48,7 +48,7 @@ public:
 
 	// Format then send the event to all configured outputs (`evt` is an event that has matched some rule).
 	void handle_event(gen_event *evt, std::string &rule, std::string &source,
-			  falco_common::priority_type priority, std::string &format, std::set<std::string> tags);
+			  falco_common::priority_type priority, std::string &format, std::set<std::string> &tags);
 
 	// Format then send a generic message to all outputs. Not necessarily associated with any event.
 	void handle_msg(uint64_t now,

@@ -46,7 +46,7 @@ public:
 	static int lua_free_formatter(lua_State *ls);
 
 	static string format_event(const gen_event *evt, const std::string &rule, const std::string &source,
-				   const std::string &level, const std::string &format);
+				   const std::string &level, const std::string &format, std::set<std::string> &tags);
 
 	static map<string, string> resolve_tokens(const gen_event *evt, const std::string &source,
 						  const std::string &format);
