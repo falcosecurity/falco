@@ -114,7 +114,7 @@ int falco_formats::lua_free_formatter(lua_State *ls)
 }
 
 string falco_formats::format_event(const gen_event *evt, const std::string &rule, const std::string &source,
-				   const std::string &level, const std::string &format)
+				   const std::string &level, const std::string &format, std::set<std::string> &tags)
 {
 
 	string line;
@@ -181,8 +181,10 @@ string falco_formats::format_event(const gen_event *evt, const std::string &rule
 	if(s_json_output)
 	{
 		Json::Value event;
+		Json::Value rule_tags;
 		Json::FastWriter writer;
 		string full_line;
+		unsigned int rule_tags_idx = 0;
 
 		// Convert the time-as-nanoseconds to a more json-friendly ISO8601.
 		time_t evttime = evt->get_ts() / 1000000000;
@@ -197,12 +199,19 @@ string falco_formats::format_event(const gen_event *evt, const std::string &rule
 		event["time"] = iso8601evttime;
 		event["rule"] = rule;
 		event["priority"] = level;
+		event["source"] = source;
 
 		if(s_json_include_output_property)
 		{
 			// This is the filled-in output line.
 			event["output"] = line;
 		}
+		
+		for (auto &tag : tags)
+		{
+			rule_tags[rule_tags_idx++] = tag;
+		}
+		event["tags"] = rule_tags;
 
 		full_line = writer.write(event);
 
