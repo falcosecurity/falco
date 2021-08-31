@@ -688,7 +688,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     rules_file:
-      - rules/single_rule.yaml
+      - rules/single_rule_with_tags.yaml
     conf_file: confs/stdout_output.yaml
     trace_file: trace_files/cat_write.scap
     time_iso_8601: true
