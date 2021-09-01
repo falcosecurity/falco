@@ -1,4 +1,4 @@
-FROM debian:stable
+FROM debian:buster
 
 LABEL maintainer="cncf-falco-dev@lists.cncf.io"
 
@@ -30,6 +30,7 @@ RUN apt-get update \
 	libc6-dev \
 	libelf-dev \
 	libmpx2 \
+	libssl-dev \
 	llvm-7 \
 	netcat \
 	xz-utils \
