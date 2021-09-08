@@ -409,10 +409,12 @@ class FalcoTest(Test):
             else:
                 actual = open(output['actual']).read()
 
-            if expected not in actual:
-                self.fail("Output '{}' does not strictly contains the expected content '{}'".format(
-                    output['actual'], output['expected']))
-                return False
+            expected_lines = expected.splitlines()
+            for line in expected_lines:
+                if line not in actual:
+                    self.fail("Output '{}' does not strictly contains the expected content '{}'".format(
+                        output['actual'], output['expected']))
+                    return False
 
         return True
 
