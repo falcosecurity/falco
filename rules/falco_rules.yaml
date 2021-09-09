@@ -1755,7 +1755,6 @@
     (container.image.repository startswith "602401143452.dkr.ecr" or
      container.image.repository startswith "877085696533.dkr.ecr" or
      container.image.repository startswith "800184023465.dkr.ecr" or
-     container.image.repository startswith "602401143452.dkr.ecr" or
      container.image.repository startswith "918309763551.dkr.ecr" or
      container.image.repository startswith "961992271922.dkr.ecr" or
      container.image.repository startswith "590381155156.dkr.ecr" or
