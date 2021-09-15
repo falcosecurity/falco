@@ -342,7 +342,6 @@ void falco_engine::populate_rule_result(unique_ptr<struct rule_result> &res, gen
 	if(lua_isfunction(m_ls, -1))
 	{
 		lua_pushnumber(m_ls, ev->get_check_id());
-		
 		if(lua_pcall(m_ls, 1, 5, 0) != 0)
 		{
 			const char* lerr = lua_tostring(m_ls, -1);
