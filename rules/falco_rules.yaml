@@ -2769,7 +2769,12 @@
     "stratum-ltc.antpool.com",
     "stratum-zec.antpool.com",
     "stratum.antpool.com",
-    "xmr.crypto-pool.fr"
+    "xmr.crypto-pool.fr",
+    "ss.antpool.com",
+    "stratum-dash.antpool.com.antpool.com",
+    "stratum-xmc.antpool.com",
+    "stratum-btm.antpool.com",
+    "btm.antpool.com"
   ]
 
 - list: http_miner_domains
