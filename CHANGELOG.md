@@ -4,9 +4,6 @@
 
 Released on 2021-06-29
 
-### Major Changes
-
-
 ### Minor Changes
 
 * update: bump the Falco engine version to version 9 [[#1675](https://github.com/falcosecurity/falco/pull/1675)] - [@leodido](https://github.com/leodido)
@@ -20,7 +17,7 @@ Released on 2021-06-29
 
 ### Non user-facing changes
 
-* docs(release.md): update steps [[#1684](https://github.com/falcosecurity/falco/pull/1684)] - [@maxgio92](https://github.com/maxgio92
+* docs(release.md): update steps [[#1684](https://github.com/falcosecurity/falco/pull/1684)] - [@maxgio92](https://github.com/maxgio92)
 
 
 ## v0.29.0
