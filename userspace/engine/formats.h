@@ -37,7 +37,8 @@ public:
 			 falco_engine *engine,
 			 lua_State *ls,
 			 bool json_output,
-			 bool json_include_output_property);
+			 bool json_include_output_property,
+			 bool json_include_tags_property);
 
 	// formatter = falco.formatter(format_string)
 	static int lua_formatter(lua_State *ls);
@@ -56,4 +57,5 @@ public:
 	static std::unique_ptr<sinsp_evt_formatter_cache> s_formatters;
 	static bool s_json_output;
 	static bool s_json_include_output_property;
+	static bool s_json_include_tags_property;
 };
