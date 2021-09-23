@@ -62,6 +62,7 @@ falco_outputs::~falco_outputs()
 
 void falco_outputs::init(bool json_output,
 		  bool json_include_output_property,
+		  bool json_include_tags_property,
 		  uint32_t timeout,
 		  uint32_t rate, uint32_t max_burst, bool buffered,
 		  bool time_format_iso_8601, std::string hostname)
@@ -79,6 +80,7 @@ void falco_outputs::init(bool json_output,
 	// So we can safely update them.
 	falco_formats::s_json_output = json_output;
 	falco_formats::s_json_include_output_property = json_include_output_property;
+	falco_formats::s_json_include_tags_property = json_include_tags_property;
 
 	m_timeout = std::chrono::milliseconds(timeout);
 

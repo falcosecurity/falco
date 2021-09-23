@@ -24,6 +24,7 @@ sinsp *falco_formats::s_inspector = NULL;
 falco_engine *falco_formats::s_engine = NULL;
 bool falco_formats::s_json_output = false;
 bool falco_formats::s_json_include_output_property = true;
+bool falco_formats::s_json_include_tags_property = true;
 std::unique_ptr<sinsp_evt_formatter_cache> falco_formats::s_formatters = NULL;
 
 const static struct luaL_Reg ll_falco[] =
@@ -36,12 +37,14 @@ void falco_formats::init(sinsp *inspector,
 			 falco_engine *engine,
 			 lua_State *ls,
 			 bool json_output,
-			 bool json_include_output_property)
+			 bool json_include_output_property,
+			 bool json_include_tags_property)
 {
 	s_inspector = inspector;
 	s_engine = engine;
 	s_json_output = json_output;
 	s_json_include_output_property = json_include_output_property;
+	s_json_include_tags_property = json_include_tags_property;
 
 	// todo(leogr): we should have used std::make_unique, but we cannot since it's not C++14
 	s_formatters = std::unique_ptr<sinsp_evt_formatter_cache>(new sinsp_evt_formatter_cache(s_inspector));
@@ -207,11 +210,22 @@ string falco_formats::format_event(const gen_event *evt, const std::string &rule
 			event["output"] = line;
 		}
 		
-		for (auto &tag : tags)
+		if(s_json_include_tags_property)
 		{
-			rule_tags[rule_tags_idx++] = tag;
+			if (tags.size() == 0) 
+			{
+				// This sets an empty array
+				rule_tags = Json::arrayValue;
+			}
+			else
+			{
+				for (auto &tag : tags)
+				{
+					rule_tags[rule_tags_idx++] = tag;
+				}
+			}
+			event["tags"] = rule_tags;
 		}
-		event["tags"] = rule_tags;
 
 		full_line = writer.write(event);
 
