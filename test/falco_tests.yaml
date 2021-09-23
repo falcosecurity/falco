@@ -1111,6 +1111,25 @@ trace_files: !mux
     trace_file: trace_files/cat_write.scap
     stdout_contains: "^(?!.*Warning An open of /dev/null was seen.*)"
 
+  json_output_no_tags_property:
+    json_output: True
+    json_include_tags_property: False
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/rule_append.yaml
+    trace_file: trace_files/cat_write.scap
+    stdout_contains: "^(?!.*\"tags\":[ ]*\\[.*\\],.*)"
+
+  json_output_empty_tags_property:
+    json_output: True
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/rule_append.yaml
+    trace_file: trace_files/cat_write.scap
+    stdout_contains: "^(.*\"tags\":[ ]*\\[\\],.*)"
+
   in_operator_netmasks:
     detect: True
     detect_level: INFO

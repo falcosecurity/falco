@@ -90,6 +90,8 @@ class FalcoTest(Test):
         self.json_output = self.params.get('json_output', '*', default=False)
         self.json_include_output_property = self.params.get(
             'json_include_output_property', '*', default=True)
+        self.json_include_tags_property = self.params.get(
+            'json_include_tags_property', '*', default=True)
         self.all_events = self.params.get('all_events', '*', default=False)
         self.priority = self.params.get('priority', '*', default='debug')
         self.rules_file = self.params.get(
@@ -388,10 +390,11 @@ class FalcoTest(Test):
             for line in res.stdout.decode("utf-8").splitlines():
                 if line.startswith('{'):
                     obj = json.loads(line)
+                    attrs = ['time', 'rule', 'priority']
                     if self.json_include_output_property:
-                        attrs = ['time', 'rule', 'priority', 'output']
-                    else:
-                        attrs = ['time', 'rule', 'priority']
+                        attrs.append('output')
+                    if self.json_include_tags_property:
+                        attrs.append('tags')
                     for attr in attrs:
                         if not attr in obj:
                             self.fail(
@@ -614,8 +617,9 @@ class FalcoTest(Test):
                 self.log.debug("Converted Rules: {}".format(psp_rules))
 
         # Run falco
-        cmd = '{} {} {} -c {} {} -o json_output={} -o json_include_output_property={} -o priority={} -v'.format(
-            self.falco_binary_path, self.rules_args, self.disabled_args, self.conf_file, trace_arg, self.json_output, self.json_include_output_property, self.priority)
+        cmd = '{} {} {} -c {} {} -o json_output={} -o json_include_output_property={} -o json_include_tags_property={} -o priority={} -v'.format(
+            self.falco_binary_path, self.rules_args, self.disabled_args, self.conf_file, trace_arg, self.json_output,
+            self.json_include_output_property, self.json_include_tags_property, self.priority)
 
         for tag in self.disable_tags:
             cmd += ' -T {}'.format(tag)
