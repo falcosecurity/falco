@@ -2,6 +2,8 @@
 
 This document reflects when and how we clean up the Falco artifacts from their storage location.
 
+**Superseeded by**: [drivers-storage-s3 proposal](https://github.com/falcosecurity/falco/blob/master/proposals/20201025-drivers-storage-s3.md).
+
 ## Motivation
 
 The [bintray](https://bintray.com/falcosecurity) open-source plan offers 10GB free space for storing artifacts.
@@ -94,9 +96,19 @@ Since the process of building drivers is time and resource consuming, this docum
 
 The candidate is an AWS S3 bucket responsible for holding the deleted driver version files.
 
+#### Notice
+
+The current mechanism the Falco community uses to store the Falco drivers is explained by the [drivers-storage-s3](https://github.com/falcosecurity/falco/blob/master/proposals/20201025-drivers-storage-s3.md) proposal.
+
 ### Implementation
 
 The [test-infra](https://github.com/falcosecurity/test-infra) CI, specifically its part dedicated to run the **Drivers Build Grid** that runs every time it detects changes into the `driverkit` directory of the [test-infra](https://github.com/falcosecurity/test-infra) repository,
 will have a new job - called `drivers/cleanup` - responsible for removing all the Falco driver versions except the last two.
 
 This job will be triggered after the `drivers/publish` completed successfully on the master branch.
+
+#### Notice
+
+At the moment of writing (2021 09 28) the `drivers/cleanup` job is no more in place.
+
+Pragmatically, this means that the older Falco drivers will remain available in their [S3 bucket](https://download.falco.org/?prefix=driver/).
