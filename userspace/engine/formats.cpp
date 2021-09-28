@@ -24,6 +24,7 @@ sinsp *falco_formats::s_inspector = NULL;
 falco_engine *falco_formats::s_engine = NULL;
 bool falco_formats::s_json_output = false;
 bool falco_formats::s_json_include_output_property = true;
+bool falco_formats::s_json_include_tags_property = true;
 std::unique_ptr<sinsp_evt_formatter_cache> falco_formats::s_formatters = NULL;
 
 const static struct luaL_Reg ll_falco[] =
@@ -36,12 +37,14 @@ void falco_formats::init(sinsp *inspector,
 			 falco_engine *engine,
 			 lua_State *ls,
 			 bool json_output,
-			 bool json_include_output_property)
+			 bool json_include_output_property,
+			 bool json_include_tags_property)
 {
 	s_inspector = inspector;
 	s_engine = engine;
 	s_json_output = json_output;
 	s_json_include_output_property = json_include_output_property;
+	s_json_include_tags_property = json_include_tags_property;
 
 	// todo(leogr): we should have used std::make_unique, but we cannot since it's not C++14
 	s_formatters = std::unique_ptr<sinsp_evt_formatter_cache>(new sinsp_evt_formatter_cache(s_inspector));
@@ -114,7 +117,7 @@ int falco_formats::lua_free_formatter(lua_State *ls)
 }
 
 string falco_formats::format_event(const gen_event *evt, const std::string &rule, const std::string &source,
-				   const std::string &level, const std::string &format)
+				   const std::string &level, const std::string &format, std::set<std::string> &tags)
 {
 
 	string line;
@@ -181,8 +184,10 @@ string falco_formats::format_event(const gen_event *evt, const std::string &rule
 	if(s_json_output)
 	{
 		Json::Value event;
+		Json::Value rule_tags;
 		Json::FastWriter writer;
 		string full_line;
+		unsigned int rule_tags_idx = 0;
 
 		// Convert the time-as-nanoseconds to a more json-friendly ISO8601.
 		time_t evttime = evt->get_ts() / 1000000000;
@@ -197,11 +202,29 @@ string falco_formats::format_event(const gen_event *evt, const std::string &rule
 		event["time"] = iso8601evttime;
 		event["rule"] = rule;
 		event["priority"] = level;
+		event["source"] = source;
 
 		if(s_json_include_output_property)
 		{
 			// This is the filled-in output line.
 			event["output"] = line;
+		}
+		
+		if(s_json_include_tags_property)
+		{
+			if (tags.size() == 0) 
+			{
+				// This sets an empty array
+				rule_tags = Json::arrayValue;
+			}
+			else
+			{
+				for (auto &tag : tags)
+				{
+					rule_tags[rule_tags_idx++] = tag;
+				}
+			}
+			event["tags"] = rule_tags;
 		}
 
 		full_line = writer.write(event);

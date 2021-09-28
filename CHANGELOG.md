@@ -1,5 +1,54 @@
 # Change Log
 
+## v0.29.1
+
+Released on 2021-06-29
+
+### Minor Changes
+
+* update: bump the Falco engine version to version 9 [[#1675](https://github.com/falcosecurity/falco/pull/1675)] - [@leodido](https://github.com/leodido)
+
+### Rule Changes
+
+* rule(list user_known_userfaultfd_processes): list to exclude processes known to use userfaultfd syscall [[#1675](https://github.com/falcosecurity/falco/pull/1675)] - [@leodido](https://github.com/leodido)
+* rule(macro consider_userfaultfd_activities): macro to gate the "Unprivileged Delegation of Page Faults Handling to a Userspace Process" rule [[#1675](https://github.com/falcosecurity/falco/pull/1675)] - [@leodido](https://github.com/leodido)
+* rule(Unprivileged Delegation of Page Faults Handling to a Userspace Process): new rule to detect successful unprivileged userfaultfd syscalls [[#1675](https://github.com/falcosecurity/falco/pull/1675)] - [@leodido](https://github.com/leodido)
+* rule(Linux Kernel Module Injection Detected): adding container info to the output of the rule [[#1675](https://github.com/falcosecurity/falco/pull/1675)] - [@leodido](https://github.com/leodido)
+
+### Non user-facing changes
+
+* docs(release.md): update steps [[#1684](https://github.com/falcosecurity/falco/pull/1684)] - [@maxgio92](https://github.com/maxgio92)
+
+
+## v0.29.0
+
+Released on 2021-06-21
+
+### Minor Changes
+
+* update: driver version is 17f5df52a7d9ed6bb12d3b1768460def8439936d now [[#1669](https://github.com/falcosecurity/falco/pull/1669)] - [@leogr](https://github.com/leogr)
+
+### Rule Changes
+
+* rule(list miner_domains): add rx.unmineable.com for anti-miner detection [[#1676](https://github.com/falcosecurity/falco/pull/1676)] - [@fntlnz](https://github.com/fntlnz)
+* rule(Change thread namespace and Set Setuid or Setgid bit): disable by default [[#1632](https://github.com/falcosecurity/falco/pull/1632)] - [@Kaizhe](https://github.com/Kaizhe)
+* rule(list known_sa_list): add namespace-controller, statefulset-controller, disruption-controller, job-controller, horizontal-pod-autoscaler and persistent-volume-binder as allowed service accounts in the kube-system namespace [[#1659](https://github.com/falcosecurity/falco/pull/1659)] - [@sboschman](https://github.com/sboschman)
+* rule(Non sudo setuid): check user id as well in case user name info is not available [[#1665](https://github.com/falcosecurity/falco/pull/1665)] - [@Kaizhe](https://github.com/Kaizhe)
+* rule(Debugfs Launched in Privileged Container): fix typo in description [[#1657](https://github.com/falcosecurity/falco/pull/1657)] - [@Kaizhe](https://github.com/Kaizhe)
+
+### Non user-facing changes
+
+* Fix link to CONTRIBUTING.md in the Pull Request Template [[#1679](https://github.com/falcosecurity/falco/pull/1679)] - [@tspearconquest](https://github.com/tspearconquest)
+* fetch libs and drivers from the new repo [[#1552](https://github.com/falcosecurity/falco/pull/1552)] - [@leogr](https://github.com/leogr)
+* build(test): upgrade urllib3 to 1.26.5 [[#1666](https://github.com/falcosecurity/falco/pull/1666)] - [@leogr](https://github.com/leogr)
+* revert: add notes for 0.28.2 release [[#1663](https://github.com/falcosecurity/falco/pull/1663)] - [@maxgio92](https://github.com/maxgio92)
+* changelog: add notes for 0.28.2 release [[#1661](https://github.com/falcosecurity/falco/pull/1661)] - [@maxgio92](https://github.com/maxgio92)
+* docs(release.md): add blog announcement to post-release tasks [[#1652](https://github.com/falcosecurity/falco/pull/1652)] - [@maxgio92](https://github.com/maxgio92)
+* add Yahoo!Japan as an adopter [[#1651](https://github.com/falcosecurity/falco/pull/1651)] - [@ukitazume](https://github.com/ukitazume)
+* Add Replicated to adopters [[#1649](https://github.com/falcosecurity/falco/pull/1649)] - [@diamonwiggins](https://github.com/diamonwiggins)
+* docs(proposals): fix libs contribution name [[#1641](https://github.com/falcosecurity/falco/pull/1641)] - [@leodido](https://github.com/leodido)
+
+
 ## v0.28.1
 
 Released on 2021-05-07

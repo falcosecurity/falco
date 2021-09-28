@@ -13,7 +13,7 @@ jobs:
           command: apk update
       - run:
           name: Install build dependencies
-          command: apk add g++ gcc cmake cmake make ncurses-dev git bash perl linux-headers autoconf automake m4 libtool elfutils-dev libelf-static patch binutils
+          command: apk add g++ gcc cmake cmake make git bash perl linux-headers autoconf automake m4 libtool elfutils-dev libelf-static patch binutils
       - run:
           name: Prepare project
           command: |
@@ -60,7 +60,7 @@ jobs:
           command: apt update -y
       - run:
           name: Install dependencies
-          command: DEBIAN_FRONTEND=noninteractive apt install libjq-dev libncurses-dev libyaml-cpp-dev libelf-dev cmake build-essential git -y
+          command: DEBIAN_FRONTEND=noninteractive apt install libjq-dev libyaml-cpp-dev libelf-dev cmake build-essential git -y
       - run:
           name: Prepare project
           command: |
@@ -92,7 +92,7 @@ jobs:
           command: apt update -y
       - run:
           name: Install dependencies
-          command: DEBIAN_FRONTEND=noninteractive apt install libssl-dev libyaml-dev libncurses-dev libc-ares-dev libprotobuf-dev protobuf-compiler libjq-dev libyaml-cpp-dev libgrpc++-dev protobuf-compiler-grpc rpm libelf-dev cmake build-essential libcurl4-openssl-dev linux-headers-generic clang llvm git -y
+          command: DEBIAN_FRONTEND=noninteractive apt install libssl-dev libyaml-dev libc-ares-dev libprotobuf-dev protobuf-compiler libjq-dev libyaml-cpp-dev libgrpc++-dev protobuf-compiler-grpc rpm libelf-dev cmake build-essential libcurl4-openssl-dev linux-headers-generic clang llvm git -y
       - run:
           name: Prepare project
           command: |
@@ -124,7 +124,7 @@ jobs:
           command: apt update -y
       - run:
           name: Install dependencies
-          command: DEBIAN_FRONTEND=noninteractive apt install libssl-dev libyaml-dev libncurses-dev libc-ares-dev libprotobuf-dev protobuf-compiler libjq-dev libyaml-cpp-dev libgrpc++-dev protobuf-compiler-grpc rpm libelf-dev cmake build-essential libcurl4-openssl-dev linux-headers-generic clang llvm git -y
+          command: DEBIAN_FRONTEND=noninteractive apt install libssl-dev libyaml-dev libc-ares-dev libprotobuf-dev protobuf-compiler libjq-dev libyaml-cpp-dev libgrpc++-dev protobuf-compiler-grpc rpm libelf-dev cmake build-essential libcurl4-openssl-dev linux-headers-generic clang llvm git -y
       - run:
           name: Prepare project
           command: |
@@ -156,7 +156,7 @@ jobs:
           command: apt update -y
       - run:
           name: Install dependencies
-          command: DEBIAN_FRONTEND=noninteractive apt install cmake build-essential clang llvm git linux-headers-generic libncurses-dev pkg-config autoconf libtool libelf-dev -y
+          command: DEBIAN_FRONTEND=noninteractive apt install cmake build-essential clang llvm git linux-headers-generic pkg-config autoconf libtool libelf-dev -y
       - run:
           name: Prepare project
           command: |
@@ -188,7 +188,7 @@ jobs:
           command: dnf update -y
       - run:
           name: Install dependencies
-          command: dnf install gcc gcc-c++ git make cmake autoconf automake pkg-config patch ncurses-devel libtool elfutils-libelf-devel diffutils kernel-devel kernel-headers kernel-core clang llvm which -y
+          command: dnf install gcc gcc-c++ git make cmake autoconf automake pkg-config patch libtool elfutils-libelf-devel diffutils kernel-devel kernel-headers kernel-core clang llvm which -y
       - run:
           name: Prepare project
           command: |
@@ -403,7 +403,7 @@ jobs:
           name: Setup
           command: |
             apt update -y
-            apt-get install apt-utils bzip2 gpg python python-pip -y
+            apt-get install apt-utils bzip2 gpg python python3-pip -y
             pip install awscli
             echo $GPG_KEY | base64 -d | gpg --import
       - run:
@@ -517,7 +517,7 @@ jobs:
           name: Setup
           command: |
             apt update -y
-            apt-get install apt-utils bzip2 gpg python python-pip -y
+            apt-get install apt-utils bzip2 gpg python python3-pip -y
             pip install awscli
             echo $GPG_KEY | base64 -d | gpg --import
       - run:

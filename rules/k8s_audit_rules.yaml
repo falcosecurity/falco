@@ -304,7 +304,7 @@
 - list: known_sa_list
   items: ["pod-garbage-collector","resourcequota-controller","cronjob-controller","generic-garbage-collector",
           "daemon-set-controller","endpointslice-controller","deployment-controller", "replicaset-controller",
-          "endpoint-controller"]
+          "endpoint-controller", "namespace-controller", "statefulset-controller", "disruption-controller"]
 
 - macro: trusted_sa
   condition: (ka.target.name in (known_sa_list, user_known_sa_list))

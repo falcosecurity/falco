@@ -688,7 +688,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     rules_file:
-      - rules/single_rule.yaml
+      - rules/single_rule_with_tags.yaml
     conf_file: confs/stdout_output.yaml
     trace_file: trace_files/cat_write.scap
     time_iso_8601: true
@@ -721,7 +721,7 @@ trace_files: !mux
     detect: True
     detect_level: WARNING
     rules_file:
-      - rules/single_rule.yaml
+      - rules/single_rule_with_tags.yaml
     conf_file: confs/grpc_unix_socket.yaml
     trace_file: trace_files/cat_write.scap
     run_duration: 5
@@ -745,6 +745,10 @@ trace_files: !mux
         # For the hostname, since we don't know that beforehand,
         # only check the field presence
         - "hostname: "
+        #tags
+        - "tags: \"filesystem\""
+        - "tags: \"process\""
+        - "tags: \"testing\""
 
   detect_counts:
     detect: True
@@ -763,7 +767,7 @@ trace_files: !mux
       - "Non sudo setuid": 1
       - "Create files below dev": 1
       - "Modify binary dirs": 2
-      - "Change thread namespace": 1
+      - "Change thread namespace": 0
 
   disabled_tags_a:
     detect: True
@@ -1106,6 +1110,25 @@ trace_files: !mux
       - rules/rule_append.yaml
     trace_file: trace_files/cat_write.scap
     stdout_contains: "^(?!.*Warning An open of /dev/null was seen.*)"
+
+  json_output_no_tags_property:
+    json_output: True
+    json_include_tags_property: False
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/rule_append.yaml
+    trace_file: trace_files/cat_write.scap
+    stdout_contains: "^(?!.*\"tags\":[ ]*\\[.*\\],.*)"
+
+  json_output_empty_tags_property:
+    json_output: True
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - rules/rule_append.yaml
+    trace_file: trace_files/cat_write.scap
+    stdout_contains: "^(.*\"tags\":[ ]*\\[\\],.*)"
 
   in_operator_netmasks:
     detect: True

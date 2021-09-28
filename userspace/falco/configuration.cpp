@@ -71,6 +71,7 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 
 	m_json_output = m_config->get_scalar<bool>("json_output", false);
 	m_json_include_output_property = m_config->get_scalar<bool>("json_include_output_property", true);
+	m_json_include_tags_property = m_config->get_scalar<bool>("json_include_tags_property", true);
 
 	falco::outputs::config file_output;
 	file_output.name = "file";
@@ -252,6 +253,19 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 	{
 		throw logic_error("Error reading config file(" + m_config_file + "): the maximum consecutive timeouts without an event must be an unsigned integer > 0");
 	}
+
+	m_metadata_download_max_mb = m_config->get_scalar<uint32_t>("metadata_download", "max_mb", 100);
+	if(m_metadata_download_max_mb > 1024)
+	{
+		throw logic_error("Error reading config file(" + m_config_file + "): metadata download maximum size should be < 1024 Mb");
+	}
+	m_metadata_download_chunk_wait_us = m_config->get_scalar<uint32_t>("metadata_download", "chunk_wait_us", 1000);
+	m_metadata_download_watch_freq_sec = m_config->get_scalar<uint32_t>("metadata_download", "watch_freq_sec", 1);
+	if(m_metadata_download_watch_freq_sec == 0)
+	{
+		throw logic_error("Error reading config file(" + m_config_file + "): metadata download watch frequency seconds must be an unsigned integer > 0");
+	}
+	
 }
 
 void falco_configuration::read_rules_file_directory(const string &path, list<string> &rules_filenames)

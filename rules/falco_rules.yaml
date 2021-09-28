@@ -15,10 +15,10 @@
 # limitations under the License.
 #
 
-# The latest Falco Engine version is 8 if you want to
-# use exceptions. However the default rules file does not
-# use them so we stick with 7 for compatibility.
-- required_engine_version: 7
+# The latest Falco Engine version is 9.
+# Starting with version 8, the Falco engine supports exceptions.
+# However the Falco rules file does not use them by default.
+- required_engine_version: 9
 
 # Currently disabled as read/write are ignored syscalls. The nearly
 # similar open_write/open_read check for files being opened for
@@ -1565,6 +1565,7 @@
     and not calico_node
     and not weaveworks_scope
     and not user_known_change_thread_namespace_activities
+  enabled: false
   output: >
     Namespace change (setns) by unexpected program (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline
     parent=%proc.pname %container.info container_id=%container.id image=%container.image.repository:%container.image.tag)
@@ -1752,13 +1753,12 @@
 - macro: allowed_aws_ecr_registry_root_for_eks
   condition: >
     (container.image.repository startswith "602401143452.dkr.ecr" or
-     container.image.repository startswith "877085696533.dkr.ecr" or 
-     container.image.repository startswith "800184023465.dkr.ecr" or 
-     container.image.repository startswith "602401143452.dkr.ecr" or 
+     container.image.repository startswith "877085696533.dkr.ecr" or
+     container.image.repository startswith "800184023465.dkr.ecr" or
      container.image.repository startswith "918309763551.dkr.ecr" or
-     container.image.repository startswith "961992271922.dkr.ecr" or 
+     container.image.repository startswith "961992271922.dkr.ecr" or
      container.image.repository startswith "590381155156.dkr.ecr" or
-     container.image.repository startswith "558608220178.dkr.ecr" or 
+     container.image.repository startswith "558608220178.dkr.ecr" or
      container.image.repository startswith "151742754352.dkr.ecr" or
      container.image.repository startswith "013241004608.dkr.ecr")
 
@@ -2234,7 +2234,7 @@
   condition: >
     evt.type=setuid and evt.dir=>
     and (known_user_in_container or not container)
-    and not user.name=root
+    and not (user.name=root or user.uid=0)
     and not somebody_becoming_themself
     and not proc.name in (known_setuid_binaries, userexec_binaries, mail_binaries, docker_binaries,
                           nomachine_binaries)
@@ -2641,6 +2641,7 @@
     and not proc.name in (user_known_chmod_applications)
     and not exe_running_docker_save
     and not user_known_set_setuid_or_setgid_bit_conditions
+  enabled: false
   output: >
     Setuid or setgid bit is set via chmod (fd=%evt.arg.fd filename=%evt.arg.filename mode=%evt.arg.mode user=%user.name user_loginuid=%user.loginuid process=%proc.name
     command=%proc.cmdline container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
@@ -2745,7 +2746,12 @@
       "xmr-eu1.nanopool.org","xmr-eu2.nanopool.org",
       "xmr-jp1.nanopool.org","xmr-us-east1.nanopool.org",
       "xmr-us-west1.nanopool.org","xmr.crypto-pool.fr",
-      "xmr.pool.minergate.com"
+      "xmr.pool.minergate.com", "rx.unmineable.com",
+      "ss.antpool.com","dash.antpool.com",
+      "eth.antpool.com","zec.antpool.com",
+      "xmc.antpool.com","btm.antpool.com",
+      "stratum-dash.antpool.com","stratum-xmc.antpool.com",
+      "stratum-btm.antpool.com"
       ]
 
 - list: https_miner_domains
@@ -2762,7 +2768,12 @@
     "stratum-ltc.antpool.com",
     "stratum-zec.antpool.com",
     "stratum.antpool.com",
-    "xmr.crypto-pool.fr"
+    "xmr.crypto-pool.fr",
+    "ss.antpool.com",
+    "stratum-dash.antpool.com",
+    "stratum-xmc.antpool.com",
+    "stratum-btm.antpool.com",
+    "btm.antpool.com"
   ]
 
 - list: http_miner_domains
@@ -3001,7 +3012,7 @@
 - rule: Linux Kernel Module Injection Detected
   desc: Detect kernel module was injected (from container).
   condition: spawned_process and container and proc.name=insmod and not proc.args in (white_listed_modules)
-  output: Linux Kernel Module injection using insmod detected (user=%user.name user_loginuid=%user.loginuid parent_process=%proc.pname module=%proc.args)
+  output: Linux Kernel Module injection using insmod detected (user=%user.name user_loginuid=%user.loginuid parent_process=%proc.pname module=%proc.args %container.info image=%container.image.repository:%container.image.tag)
   priority: WARNING
   tags: [process]
 
@@ -3025,13 +3036,13 @@
 # A privilege escalation to root through heap-based buffer overflow
 - rule: Sudo Potential Privilege Escalation
   desc: Privilege escalation vulnerability affecting sudo (<= 1.9.5p2). Executing sudo using sudoedit -s or sudoedit -i command with command-line argument that ends with a single backslash character from an unprivileged user it's possible to elevate the user privileges to root.
-  condition: spawned_process and user.uid!= 0 and proc.name=sudoedit and (proc.args contains -s or proc.args contains -i) and (proc.args contains "\ " or proc.args endswith \)
+  condition: spawned_process and user.uid != 0 and proc.name=sudoedit and (proc.args contains -s or proc.args contains -i) and (proc.args contains "\ " or proc.args endswith \)
   output: "Detect Sudo Privilege Escalation Exploit (CVE-2021-3156) (user=%user.name parent=%proc.pname cmdline=%proc.cmdline %container.info)"
   priority: CRITICAL
   tags: [filesystem, mitre_privilege_escalation]
 
 - rule: Debugfs Launched in Privileged Container
-  desc: Detect file system debugger debugfs launched inside a privilegd container which might lead to container escape.
+  desc: Detect file system debugger debugfs launched inside a privileged container which might lead to container escape.
   condition: >
     spawned_process and container
     and container.privileged=true
@@ -3053,6 +3064,24 @@
   output: Mount was executed inside a privileged container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline %container.info image=%container.image.repository:%container.image.tag)
   priority: WARNING
   tags: [container, cis, mitre_lateral_movement]
+
+- macro: consider_userfaultfd_activities
+  condition: (always_true)
+
+- list: user_known_userfaultfd_processes
+  items: []
+
+- rule: Unprivileged Delegation of Page Faults Handling to a Userspace Process
+  desc: Detect a successful unprivileged userfaultfd syscall which might act as an attack primitive to exploit other bugs
+  condition: >
+    consider_userfaultfd_activities and
+    evt.type = userfaultfd and
+    user.uid != 0 and
+    (evt.rawres >= 0 or evt.res != -1) and
+    not proc.name in (user_known_userfaultfd_processes)
+  output: An userfaultfd syscall was successfully executed by an unprivileged user (user=%user.name user_loginuid=%user.loginuid process=%proc.name command=%proc.cmdline %container.info image=%container.image.repository:%container.image.tag)
+  priority: CRITICAL
+  tags: [syscall, mitre_defense_evasion]
 
 # Application rules have moved to application_rules.yaml. Please look
 # there if you want to enable them by adding to

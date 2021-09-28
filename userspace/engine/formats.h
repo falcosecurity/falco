@@ -37,7 +37,8 @@ public:
 			 falco_engine *engine,
 			 lua_State *ls,
 			 bool json_output,
-			 bool json_include_output_property);
+			 bool json_include_output_property,
+			 bool json_include_tags_property);
 
 	// formatter = falco.formatter(format_string)
 	static int lua_formatter(lua_State *ls);
@@ -46,7 +47,7 @@ public:
 	static int lua_free_formatter(lua_State *ls);
 
 	static string format_event(const gen_event *evt, const std::string &rule, const std::string &source,
-				   const std::string &level, const std::string &format);
+				   const std::string &level, const std::string &format, std::set<std::string> &tags);
 
 	static map<string, string> resolve_tokens(const gen_event *evt, const std::string &source,
 						  const std::string &format);
@@ -56,4 +57,5 @@ public:
 	static std::unique_ptr<sinsp_evt_formatter_cache> s_formatters;
 	static bool s_json_output;
 	static bool s_json_include_output_property;
+	static bool s_json_include_tags_property;
 };

@@ -46,6 +46,12 @@ json_output: false
 # (user=root ....") in the json output.
 json_include_output_property: true
 
+# When using json output, whether or not to include the "tags" property
+# itself in the json output. If set to true, outputs caused by rules
+# with no tags will have a "tags" field set to an empty array. If set to
+# false, the "tags" field will not be included in the json output at all.
+json_include_tags_property: true
+
 # Send information logs to stderr and/or syslog Note these are *not* security
 # notification logs! These are just Falco lifecycle (and possibly error) logs.
 log_stderr: true
@@ -249,3 +255,9 @@ grpc:
 # Make sure to have a consumer for them or leave this disabled.
 grpc_output:
   enabled: false
+
+# Container orchestrator metadata fetching params
+metadata_download:
+  max_mb: 100
+  chunk_wait_us: 1000
+  watch_freq_sec: 1

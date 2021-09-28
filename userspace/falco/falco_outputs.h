@@ -40,6 +40,7 @@ public:
 
 	void init(bool json_output,
 		  bool json_include_output_property,
+		  bool json_include_tags_property,
 		  uint32_t timeout,
 		  uint32_t rate, uint32_t max_burst, bool buffered,
 		  bool time_format_iso_8601, std::string hostname);
@@ -48,7 +49,7 @@ public:
 
 	// Format then send the event to all configured outputs (`evt` is an event that has matched some rule).
 	void handle_event(gen_event *evt, std::string &rule, std::string &source,
-			  falco_common::priority_type priority, std::string &format);
+			  falco_common::priority_type priority, std::string &format, std::set<std::string> &tags);
 
 	// Format then send a generic message to all outputs. Not necessarily associated with any event.
 	void handle_msg(uint64_t now,

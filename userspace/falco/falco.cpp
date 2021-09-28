@@ -123,6 +123,9 @@ static void usage()
 	   "                               for this option, it will be interpreted as the name of a file containing bearer token.\n"
 	   "                               Note that the format of this command-line option prohibits use of files whose names contain\n"
 	   "                               ':' or '#' characters in the file name.\n"
+	   " --k8s-node <node_name>        The node name will be used as a filter when requesting metadata of pods to the API server.\n"
+	   "                               Usually, it should be set to the current node on which Falco is running.\n"
+	   "                               If empty, no filter is set, which may have a performance penalty on large clusters.\n"
 #endif
 	   " -L                            Show the name and description of all rules and exit.\n"
 	   " -l <rule>                     Show the name and description of the rule with name <rule> and exit.\n"
@@ -371,7 +374,7 @@ uint64_t do_inspect(falco_engine *engine,
 		unique_ptr<falco_engine::rule_result> res = engine->process_sinsp_event(ev);
 		if(res)
 		{
-			outputs->handle_event(res->evt, res->rule, res->source, res->priority_num, res->format);
+			outputs->handle_event(res->evt, res->rule, res->source, res->priority_num, res->format, res->tags);
 		}
 
 		num_evts++;
@@ -469,6 +472,7 @@ int falco_init(int argc, char **argv)
 #ifndef MINIMAL_BUILD
 	string* k8s_api = 0;
 	string* k8s_api_cert = 0;
+	string *k8s_node_name = 0;
 	string* mesos_api = 0;
 #endif
 	string output_format = "";
@@ -517,6 +521,7 @@ int falco_init(int argc, char **argv)
 			{"ignored-events", no_argument, 0, 'i'},
 			{"k8s-api-cert", required_argument, 0, 'K'},
 			{"k8s-api", required_argument, 0, 'k'},
+			{"k8s-node", required_argument, 0},
 			{"list", optional_argument, 0},
 			{"mesos-api", required_argument, 0, 'm'},
 			{"option", required_argument, 0, 'o'},
@@ -693,6 +698,15 @@ int falco_init(int argc, char **argv)
 				{
 				  cri_async = false;
 				}
+#ifndef MINIMAL_BUILD
+				else if(string(long_options[long_index].name) == "k8s-node")
+				{
+					k8s_node_name = new string(optarg);
+					if (k8s_node_name->size() == 0) {
+						throw std::invalid_argument("If --k8s-node is provided, it cannot be an empty string");
+					}
+				}
+#endif
 				else if (string(long_options[long_index].name) == "list")
 				{
 					list_flds = true;
@@ -1108,6 +1122,7 @@ int falco_init(int argc, char **argv)
 
 		outputs->init(config.m_json_output,
 			config.m_json_include_output_property,
+			config.m_json_include_tags_property,
 			config.m_output_timeout,
 			config.m_notifications_rate, config.m_notifications_max_burst,
 			config.m_buffered_outputs,
@@ -1249,7 +1264,7 @@ int falco_init(int argc, char **argv)
 					k8s_api_cert = new string(k8s_cert_env);
 				}
 			}
-			inspector->init_k8s_client(k8s_api, k8s_api_cert, verbose);
+			inspector->init_k8s_client(k8s_api, k8s_api_cert, k8s_node_name, verbose);
 			k8s_api = 0;
 			k8s_api_cert = 0;
 		}
@@ -1265,7 +1280,7 @@ int falco_init(int argc, char **argv)
 					}
 				}
 				k8s_api = new string(k8s_api_env);
-				inspector->init_k8s_client(k8s_api, k8s_api_cert, verbose);
+				inspector->init_k8s_client(k8s_api, k8s_api_cert, k8s_node_name, verbose);
 			}
 			else
 			{
@@ -1294,6 +1309,11 @@ int falco_init(int argc, char **argv)
 		delete mesos_api;
 		mesos_api = 0;
 
+		falco_logger::log(LOG_DEBUG, "Setting metadata download max size to " + to_string(config.m_metadata_download_max_mb) + " MB\n");
+		falco_logger::log(LOG_DEBUG, "Setting metadata download chunk wait time to " + to_string(config.m_metadata_download_chunk_wait_us) + " μs\n");
+		falco_logger::log(LOG_DEBUG, "Setting metadata download watch frequency to " + to_string(config.m_metadata_download_watch_freq_sec) + " seconds\n");
+		inspector->set_metadata_download_params(config.m_metadata_download_max_mb * 1024 * 1024, config.m_metadata_download_chunk_wait_us, config.m_metadata_download_watch_freq_sec);
+		
 		if(trace_filename.empty() && config.m_webserver_enabled && !disable_k8s_audit)
 		{
 			std::string ssl_option = (config.m_webserver_ssl_enabled ? " (SSL)" : "");

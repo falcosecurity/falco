@@ -195,6 +195,7 @@ public:
 	std::list<std::string> m_rules_filenames;
 	bool m_json_output;
 	bool m_json_include_output_property;
+	bool m_json_include_tags_property;
 	std::string m_log_level;
 	std::vector<falco::outputs::config> m_outputs;
 	uint32_t m_notifications_rate;
@@ -228,6 +229,10 @@ public:
 	bool m_syscall_evt_simulate_drops;
 
 	uint32_t m_syscall_evt_timeout_max_consecutives;
+
+	uint32_t m_metadata_download_max_mb;
+	uint32_t m_metadata_download_chunk_wait_us;
+	uint32_t m_metadata_download_watch_freq_sec;
 
 private:
 	void init_cmdline_options(std::list<std::string>& cmdline_options);

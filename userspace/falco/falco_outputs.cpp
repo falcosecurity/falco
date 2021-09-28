@@ -62,6 +62,7 @@ falco_outputs::~falco_outputs()
 
 void falco_outputs::init(bool json_output,
 		  bool json_include_output_property,
+		  bool json_include_tags_property,
 		  uint32_t timeout,
 		  uint32_t rate, uint32_t max_burst, bool buffered,
 		  bool time_format_iso_8601, std::string hostname)
@@ -79,6 +80,7 @@ void falco_outputs::init(bool json_output,
 	// So we can safely update them.
 	falco_formats::s_json_output = json_output;
 	falco_formats::s_json_include_output_property = json_include_output_property;
+	falco_formats::s_json_include_tags_property = json_include_tags_property;
 
 	m_timeout = std::chrono::milliseconds(timeout);
 
@@ -142,7 +144,7 @@ void falco_outputs::add_output(falco::outputs::config oc)
 }
 
 void falco_outputs::handle_event(gen_event *evt, string &rule, string &source,
-				 falco_common::priority_type priority, string &format)
+				 falco_common::priority_type priority, string &format, std::set<std::string> &tags)
 {
 	if(!m_notifications_tb.claim())
 	{
@@ -190,8 +192,9 @@ void falco_outputs::handle_event(gen_event *evt, string &rule, string &source,
 		sformat += " " + format;
 	}
 
-	cmsg.msg = falco_formats::format_event(evt, rule, source, falco_common::priority_names[priority], sformat);
+	cmsg.msg = falco_formats::format_event(evt, rule, source, falco_common::priority_names[priority], sformat, tags);
 	cmsg.fields = falco_formats::resolve_tokens(evt, source, sformat);
+	cmsg.tags.insert(tags.begin(), tags.end());
 
 	cmsg.type = ctrl_msg_type::CTRL_MSG_OUTPUT;
 	m_queue.push(cmsg);

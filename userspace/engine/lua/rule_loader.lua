@@ -1156,7 +1156,7 @@ function on_event(rule_id)
       error ("rule_loader.on_event(): could not find rule by name: ", rule.rule)
    end
 
-   return rule.rule, rule.priority_num, output, combined_rule.exception_fields
+   return rule.rule, rule.priority_num, output, combined_rule.exception_fields, rule.tags
 end
 
 function print_stats()
