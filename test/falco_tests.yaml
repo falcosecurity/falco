@@ -32,20 +32,10 @@ trace_files: !mux
       - leading_not
       - not_equals_at_end
       - not_at_end
-      - not_before_trailing_evttype
-      - not_equals_before_trailing_evttype
       - not_equals_and_not
-      - not_equals_before_in
-      - not_before_in
-      - not_in_before_in
-      - leading_in_not_equals_before_evttype
       - leading_in_not_equals_at_evttype
       - not_with_evttypes
       - not_with_evttypes_addl
-      - not_equals_before_evttype
-      - not_equals_before_in_evttype
-      - not_before_evttype
-      - not_before_evttype_using_in
     rules_events:
       - no_warnings: [execve]
       - no_evttype: [all]
@@ -1142,6 +1132,8 @@ trace_files: !mux
     detect_level: INFO
     rules_file:
       - rules/syscalls.yaml
+    rules_warning:
+      - detect_madvise
     detect_counts:
       - detect_madvise: 2
       - detect_open: 2
@@ -1160,7 +1152,8 @@ trace_files: !mux
 
   skip_unknown_noevt:
     detect: False
-    stdout_contains: Skipping rule "Contains Unknown Event And Skipping". contains unknown filter proc.nobody
+    rules_warning:
+      - Contains Unknown Event And Skipping
     rules_file:
       - rules/skip_unknown_evt.yaml
     trace_file: trace_files/cat_write.scap
@@ -1175,7 +1168,7 @@ trace_files: !mux
     exit_status: 1
     stderr_contains: |+
       Could not load rules file.*skip_unknown_error.yaml: 1 errors:
-      rule "Contains Unknown Event And Not Skipping". contains unknown filter proc.nobody
+      Rule Contains Unknown Event And Not Skipping: error filter_check called with nonexistent field proc.nobody
       ---
       - rule: Contains Unknown Event And Not Skipping
         desc: Contains an unknown event
@@ -1192,7 +1185,7 @@ trace_files: !mux
     exit_status: 1
     stderr_contains: |+
       Could not load rules file .*skip_unknown_unspec.yaml: 1 errors:
-      rule "Contains Unknown Event And Unspecified". contains unknown filter proc.nobody
+      Rule Contains Unknown Event And Unspecified: error filter_check called with nonexistent field proc.nobody
       ---
       - rule: Contains Unknown Event And Unspecified
         desc: Contains an unknown event

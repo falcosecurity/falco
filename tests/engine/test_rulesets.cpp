@@ -26,10 +26,21 @@ static uint16_t non_default_ruleset = 3;
 static uint16_t other_non_default_ruleset = 2;
 static std::set<std::string> tags = {"some_tag", "some_other_tag"};
 
+static std::shared_ptr<gen_event_filter> create_filter()
+{
+	// The actual contents of the filters don't matter here.
+	sinsp_filter_compiler compiler(NULL, "evt.type=open");
+	sinsp_filter *f = compiler.compile();
+
+	std::shared_ptr<gen_event_filter> ret(f);
+
+	return ret;
+}
+
 TEST_CASE("Should enable/disable for exact match w/ default ruleset", "[rulesets]")
 {
 	falco_ruleset r;
-	std::shared_ptr<gen_event_filter> filter(new gen_event_filter());
+	std::shared_ptr<gen_event_filter> filter = create_filter();
 	string rule_name = "one_rule";
 
 	r.add(rule_name, tags, filter);
@@ -44,7 +55,7 @@ TEST_CASE("Should enable/disable for exact match w/ default ruleset", "[rulesets
 TEST_CASE("Should enable/disable for exact match w/ specific ruleset", "[rulesets]")
 {
 	falco_ruleset r;
-	std::shared_ptr<gen_event_filter> filter(new gen_event_filter());
+	std::shared_ptr<gen_event_filter> filter = create_filter();
 	string rule_name = "one_rule";
 
 	r.add(rule_name, tags, filter);
@@ -63,7 +74,7 @@ TEST_CASE("Should enable/disable for exact match w/ specific ruleset", "[ruleset
 TEST_CASE("Should not enable for exact match different rule name", "[rulesets]")
 {
 	falco_ruleset r;
-	std::shared_ptr<gen_event_filter> filter(new gen_event_filter());
+	std::shared_ptr<gen_event_filter> filter = create_filter();
 	string rule_name = "one_rule";
 
 	r.add(rule_name, tags, filter);
@@ -75,7 +86,7 @@ TEST_CASE("Should not enable for exact match different rule name", "[rulesets]")
 TEST_CASE("Should enable/disable for exact match w/ substring and default ruleset", "[rulesets]")
 {
 	falco_ruleset r;
-	std::shared_ptr<gen_event_filter> filter(new gen_event_filter());
+	std::shared_ptr<gen_event_filter> filter = create_filter();
 	string rule_name = "one_rule";
 
 	r.add(rule_name, tags, filter);
@@ -90,7 +101,7 @@ TEST_CASE("Should enable/disable for exact match w/ substring and default rulese
 TEST_CASE("Should not enable for substring w/ exact_match", "[rulesets]")
 {
 	falco_ruleset r;
-	std::shared_ptr<gen_event_filter> filter(new gen_event_filter());
+	std::shared_ptr<gen_event_filter> filter = create_filter();
 	string rule_name = "one_rule";
 
 	r.add(rule_name, tags, filter);
@@ -102,7 +113,7 @@ TEST_CASE("Should not enable for substring w/ exact_match", "[rulesets]")
 TEST_CASE("Should enable/disable for prefix match w/ default ruleset", "[rulesets]")
 {
 	falco_ruleset r;
-	std::shared_ptr<gen_event_filter> filter(new gen_event_filter());
+	std::shared_ptr<gen_event_filter> filter = create_filter();
 	string rule_name = "one_rule";
 
 	r.add(rule_name, tags, filter);
@@ -117,7 +128,7 @@ TEST_CASE("Should enable/disable for prefix match w/ default ruleset", "[ruleset
 TEST_CASE("Should enable/disable for suffix match w/ default ruleset", "[rulesets]")
 {
 	falco_ruleset r;
-	std::shared_ptr<gen_event_filter> filter(new gen_event_filter());
+	std::shared_ptr<gen_event_filter> filter = create_filter();
 	string rule_name = "one_rule";
 
 	r.add(rule_name, tags, filter);
@@ -132,7 +143,7 @@ TEST_CASE("Should enable/disable for suffix match w/ default ruleset", "[ruleset
 TEST_CASE("Should enable/disable for substring match w/ default ruleset", "[rulesets]")
 {
 	falco_ruleset r;
-	std::shared_ptr<gen_event_filter> filter(new gen_event_filter());
+	std::shared_ptr<gen_event_filter> filter = create_filter();
 	string rule_name = "one_rule";
 
 	r.add(rule_name, tags, filter);
@@ -147,7 +158,7 @@ TEST_CASE("Should enable/disable for substring match w/ default ruleset", "[rule
 TEST_CASE("Should enable/disable for substring match w/ specific ruleset", "[rulesets]")
 {
 	falco_ruleset r;
-	std::shared_ptr<gen_event_filter> filter(new gen_event_filter());
+	std::shared_ptr<gen_event_filter> filter = create_filter();
 	string rule_name = "one_rule";
 
 	r.add(rule_name, tags, filter);
@@ -166,7 +177,7 @@ TEST_CASE("Should enable/disable for substring match w/ specific ruleset", "[rul
 TEST_CASE("Should enable/disable for tags w/ default ruleset", "[rulesets]")
 {
 	falco_ruleset r;
-	std::shared_ptr<gen_event_filter> filter(new gen_event_filter());
+	std::shared_ptr<gen_event_filter> filter = create_filter();
 	string rule_name = "one_rule";
 	std::set<std::string> want_tags = {"some_tag"};
 
@@ -182,7 +193,7 @@ TEST_CASE("Should enable/disable for tags w/ default ruleset", "[rulesets]")
 TEST_CASE("Should enable/disable for tags w/ specific ruleset", "[rulesets]")
 {
 	falco_ruleset r;
-	std::shared_ptr<gen_event_filter> filter(new gen_event_filter());
+	std::shared_ptr<gen_event_filter> filter = create_filter();
 	string rule_name = "one_rule";
 	std::set<std::string> want_tags = {"some_tag"};
 
@@ -202,7 +213,7 @@ TEST_CASE("Should enable/disable for tags w/ specific ruleset", "[rulesets]")
 TEST_CASE("Should not enable for different tags", "[rulesets]")
 {
 	falco_ruleset r;
-	std::shared_ptr<gen_event_filter> filter(new gen_event_filter());
+	std::shared_ptr<gen_event_filter> filter = create_filter();
 	string rule_name = "one_rule";
 	std::set<std::string> want_tags = {"some_different_tag"};
 
@@ -215,7 +226,7 @@ TEST_CASE("Should not enable for different tags", "[rulesets]")
 TEST_CASE("Should enable/disable for overlapping tags", "[rulesets]")
 {
 	falco_ruleset r;
-	std::shared_ptr<gen_event_filter> filter(new gen_event_filter());
+	std::shared_ptr<gen_event_filter> filter = create_filter();
 	string rule_name = "one_rule";
 	std::set<std::string> want_tags = {"some_tag", "some_different_tag"};
 
@@ -231,12 +242,12 @@ TEST_CASE("Should enable/disable for overlapping tags", "[rulesets]")
 TEST_CASE("Should enable/disable for incremental adding tags", "[rulesets]")
 {
 	falco_ruleset r;
-	std::shared_ptr<gen_event_filter> rule1_filter(new gen_event_filter());
+	std::shared_ptr<gen_event_filter> rule1_filter = create_filter();
 	string rule1_name = "one_rule";
 	std::set<std::string> rule1_tags = {"rule1_tag"};
 	r.add(rule1_name, rule1_tags, rule1_filter);
 
-	std::shared_ptr<gen_event_filter> rule2_filter(new gen_event_filter());
+	std::shared_ptr<gen_event_filter> rule2_filter = create_filter();
 	string rule2_name = "two_rule";
 	std::set<std::string> rule2_tags = {"rule2_tag"};
 	r.add(rule2_name, rule2_tags, rule2_filter);
