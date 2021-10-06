@@ -257,6 +257,10 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 	}
 
 	std::set<std::string> load_plugins;
+
+	YAML::Node load_plugins_node;
+	m_config->get_node(load_plugins_node, "load_plugins");
+
 	m_config->get_sequence<set<string>>(load_plugins, "load_plugins");
 
 	std::list<falco_configuration::plugin_config> plugins;
@@ -270,10 +274,13 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 		throw logic_error("Error reading config file(" + m_config_file + "): could not load plugins config: " + e.what());
 	}
 
-	// If load_plugins has values, only save plugins matching those in values
+	// If load_plugins was specified, only save plugins matching those in values
 	for (auto &p : plugins)
 	{
-		if(load_plugins.empty() || load_plugins.find(p.m_name) != load_plugins.end())
+		// If load_plugins was not specified at all, every
+		// plugin is added. Otherwise, the plugin must be in
+		// the load_plugins list.
+		if(!load_plugins_node.IsDefined() || load_plugins.find(p.m_name) != load_plugins.end())
 		{
 			m_plugins.push_back(p);
 		}
