@@ -466,6 +466,9 @@
 - macro: consider_shell_config_reads
   condition: (never_true)
 
+- macro: user_known_shell_config_read_conditions
+  condition: (never_true)
+
 - rule: Read Shell Configuration File
   desc: Detect attempts to read shell configuration files by non-shell programs
   condition: >
@@ -474,7 +477,8 @@
     (fd.filename in (shell_config_filenames) or
      fd.name in (shell_config_files) or
      fd.directory in (shell_config_directories)) and
-    (not proc.name in (shell_binaries))
+    (not proc.name in (shell_binaries)) and
+    not user_known_shell_config_read_conditions
   output: >
     a shell configuration file was read by a non-shell program (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline file=%fd.name container_id=%container.id image=%container.image.repository)
   priority:
