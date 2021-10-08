@@ -221,7 +221,8 @@ add_subdirectory(userspace/engine)
 add_subdirectory(userspace/falco)
 add_subdirectory(tests)
 
-include(plugins)
+# Reenable once test-infra is publishing plugins artifacts
+#include(plugins)
 
 # Packages configuration
 include(CPackConfig)
