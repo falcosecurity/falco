@@ -111,12 +111,17 @@ traces: !mux
     detect_counts:
       - "Read sensitive file untrusted": 1
 
+  # This should *not* generate any falco alerts as of the changes in
+  # https://github.com/falcosecurity/libs/pull/94--the execve event in
+  # this trace file is PPME_SYSCALL_EXECVE_18, which was deprecated by
+  # PPME_SYSCALL_EXECVE_19 in 2018.
+  #
+  # This activity in this trace file overlaps with the activity in
+  # falco-event-generator.scap so the rule is still being tested.
   run-shell-untrusted:
     trace_file: traces-positive/run-shell-untrusted.scap
-    detect: True
+    detect: False
     detect_level: DEBUG
-    detect_counts:
-      - "Run shell untrusted": 1
 
   system-binaries-network-activity:
     trace_file: traces-positive/system-binaries-network-activity.scap
