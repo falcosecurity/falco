@@ -40,6 +40,7 @@ extern "C" {
 
 string lua_on_event = "on_event";
 string lua_print_stats = "print_stats";
+const std::string falco_engine::m_default_ruleset = "falco-default-ruleset";
 
 using namespace std;
 
@@ -196,11 +197,6 @@ void falco_engine::enable_rule(const string &substring, bool enabled, const stri
 	}
 }
 
-void falco_engine::enable_rule(const string &substring, bool enabled)
-{
-	enable_rule(substring, enabled, m_default_ruleset);
-}
-
 void falco_engine::enable_rule_exact(const string &rule_name, bool enabled, const string &ruleset)
 {
 	uint16_t ruleset_id = find_ruleset_id(ruleset);
@@ -212,11 +208,6 @@ void falco_engine::enable_rule_exact(const string &rule_name, bool enabled, cons
 	}
 }
 
-void falco_engine::enable_rule_exact(const string &rule_name, bool enabled)
-{
-	enable_rule_exact(rule_name, enabled, m_default_ruleset);
-}
-
 void falco_engine::enable_rule_by_tag(const set<string> &tags, bool enabled, const string &ruleset)
 {
 	uint16_t ruleset_id = find_ruleset_id(ruleset);
@@ -225,11 +216,6 @@ void falco_engine::enable_rule_by_tag(const set<string> &tags, bool enabled, con
 	{
 		it.second->enable_tags(tags, enabled, ruleset_id);
 	}
-}
-
-void falco_engine::enable_rule_by_tag(const set<string> &tags, bool enabled)
-{
-	enable_rule_by_tag(tags, enabled, m_default_ruleset);
 }
 
 void falco_engine::set_min_priority(falco_common::priority_type priority)
@@ -277,11 +263,6 @@ void falco_engine::evttypes_for_ruleset(std::string &source, std::set<uint16_t> 
 
 	it->second->evttypes_for_ruleset(evttypes, ruleset_id);
 
-}
-
-void falco_engine::evttypes_for_ruleset(std::string &source, std::set<uint16_t> &evttypes)
-{
-	evttypes_for_ruleset(source, evttypes, m_default_ruleset);
 }
 
 std::shared_ptr<gen_event_formatter> falco_engine::create_formatter(const std::string &source,
