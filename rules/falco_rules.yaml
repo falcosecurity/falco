@@ -68,6 +68,9 @@
 - macro: create_symlink
   condition: evt.type in (symlink, symlinkat) and evt.dir=<
 
+- macro: create_hardlink
+  condition: evt.type in (link, linkat) and evt.dir=<
+
 - macro: chmod
   condition: (evt.type in (chmod, fchmod, fchmodat) and evt.dir=<)
 
@@ -2696,7 +2699,17 @@
     (evt.arg.target in (sensitive_file_names) or evt.arg.target in (sensitive_directory_names))
   output: >
     Symlinks created over sensitive files (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline target=%evt.arg.target linkpath=%evt.arg.linkpath parent_process=%proc.pname)
-  priority: NOTICE
+  priority: WARNING
+  tags: [file, mitre_exfiltration]
+
+- rule: Create Hardlink Over Sensitive Files
+  desc: Detect hardlink created over sensitive files
+  condition: >
+    create_hardlink and
+    (evt.arg.oldpath in (sensitive_file_names))
+  output: >
+    Hardlinks created over sensitive files (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline target=%evt.arg.oldpath linkpath=%evt.arg.newpath parent_process=%proc.pname)
+  priority: WARNING
   tags: [file, mitre_exfiltration]
 
 - list: miner_ports
