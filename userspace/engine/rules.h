@@ -42,8 +42,11 @@ class falco_rules
 	void load_rules(const string &rules_content, bool verbose, bool all_events,
 			std::string &extra, bool replace_container_info,
 			falco_common::priority_type min_priority,
-			uint64_t &required_engine_version);
+			uint64_t &required_engine_version,
+			std::map<std::string, std::list<std::string>> &required_plugin_versions);
 	void describe_rule(string *rule);
+
+	bool is_source_valid(const std::string &source);
 
 	bool is_format_valid(const std::string &source, const std::string &format, std::string &errstr);
 
@@ -55,6 +58,8 @@ class falco_rules
 	static int add_filter(lua_State *ls);
 	static int enable_rule(lua_State *ls);
 	static int engine_version(lua_State *ls);
+
+	static int is_source_valid(lua_State *ls);
 
 	// err = falco_rules.is_format_valid(source, format_string)
 	static int is_format_valid(lua_State *ls);
