@@ -34,6 +34,8 @@ limitations under the License.
 
 #include <sinsp.h>
 #include <filter.h>
+#include <eventformatter.h>
+#include <plugin.h>
 
 #include "logger.h"
 #include "utils.h"
@@ -135,6 +137,7 @@ static void usage()
 	   " -l <rule>                     Show the name and description of the rule with name <rule> and exit.\n"
 	   " --list [<source>]             List all defined fields. If <source> is provided, only list those fields for\n"
 	   "                               the source <source>. Current values for <source> are \"syscall\", \"k8s_audit\"\n"
+	   " --list-plugins                Print info on all loaded plugins and exit.\n"
 #ifndef MINIMAL_BUILD
 	   " -m <url[,marathon_url]>, --mesos-api <url[,marathon_url]>\n"
 	   "                               Enable Mesos support by connecting to the API server\n"
@@ -247,6 +250,7 @@ static std::string read_file(std::string filename)
 uint64_t do_inspect(falco_engine *engine,
 			falco_outputs *outputs,
 			sinsp* inspector,
+		        std::string &event_source,
 			falco_configuration &config,
 			syscall_evt_drop_mgr &sdropmgr,
 			uint64_t duration_to_tot_ns,
@@ -311,7 +315,8 @@ uint64_t do_inspect(falco_engine *engine,
 			if(unlikely(ev == nullptr))
 			{
 				timeouts_since_last_success_or_msg++;
-				if(timeouts_since_last_success_or_msg > config.m_syscall_evt_timeout_max_consecutives)
+				if(event_source == syscall_source &&
+				   (timeouts_since_last_success_or_msg > config.m_syscall_evt_timeout_max_consecutives))
 				{
 					std::string rule = "Falco internal: timeouts notification";
 					std::string msg = rule + ". " + std::to_string(config.m_syscall_evt_timeout_max_consecutives) + " consecutive timeouts without event.";
@@ -375,7 +380,7 @@ uint64_t do_inspect(falco_engine *engine,
 		// engine, which will match the event against the set
 		// of rules. If a match is found, pass the event to
 		// the outputs.
-		unique_ptr<falco_engine::rule_result> res = engine->process_event(syscall_source, ev);
+		unique_ptr<falco_engine::rule_result> res = engine->process_event(event_source, ev);
 		if(res)
 		{
 			outputs->handle_event(res->evt, res->rule, res->source, res->priority_num, res->format, res->tags);
@@ -509,6 +514,7 @@ int falco_init(int argc, char **argv)
 	bool print_ignored_events = false;
 	bool list_flds = false;
 	string list_flds_source = "";
+	bool list_plugins = false;
 	bool print_support = false;
 	string cri_socket_path;
 	bool cri_async = true;
@@ -550,6 +556,7 @@ int falco_init(int argc, char **argv)
 			{"k8s-api", required_argument, 0, 'k'},
 			{"k8s-node", required_argument, 0},
 			{"list", optional_argument, 0},
+			{"list-plugins", no_argument, 0},
 			{"mesos-api", required_argument, 0, 'm'},
 			{"option", required_argument, 0, 'o'},
 			{"pidfile", required_argument, 0, 'P'},
@@ -742,6 +749,10 @@ int falco_init(int argc, char **argv)
 						list_flds_source = optarg;
 					}
 				}
+				else if (string(long_options[long_index].name) == "list-plugins")
+				{
+					list_plugins = true;
+				}
 				else if (string(long_options[long_index].name) == "stats-interval")
 				{
 					stats_interval = atoi(optarg);
@@ -815,12 +826,6 @@ int falco_init(int argc, char **argv)
 
 		engine->add_source(syscall_source, syscall_filter_factory, syscall_formatter_factory);
 		engine->add_source(k8s_audit_source, k8s_audit_filter_factory, k8s_audit_formatter_factory);
-
-		if(list_flds)
-		{
-			list_source_fields(engine, names_only, list_flds_source);
-			return EXIT_SUCCESS;
-		}
 
 		if(disable_sources.size() > 0)
 		{
@@ -916,10 +921,127 @@ int falco_init(int argc, char **argv)
 			throw std::runtime_error("Could not find configuration file at " + conf_filename);
 		}
 
+		// The event source is syscall by default. If an input
+		// plugin was found, the source is the source of that
+		// plugin.
+		std::string event_source = syscall_source;
+
+		// All filterchecks created by plugins go in this
+		// list. If we ever support multiple event sources at
+		// the same time, this (and the below factories) will
+		// have to be a map from event source to filtercheck
+		// list.
+		filter_check_list plugin_filter_checks;
+
+		// Factories that can create filters/formatters for
+		// the (single) source supported by the (single) input plugin.
+		std::shared_ptr<gen_event_filter_factory> plugin_filter_factory(new sinsp_filter_factory(inspector, plugin_filter_checks));
+		std::shared_ptr<gen_event_formatter_factory> plugin_formatter_factory(new sinsp_evt_formatter_factory(inspector, plugin_filter_checks));
+
+		std::shared_ptr<sinsp_plugin> input_plugin;
+		std::list<std::shared_ptr<sinsp_plugin>> extractor_plugins;
+		for(auto &p : config.m_plugins)
+		{
+			falco_logger::log(LOG_INFO, "Loading plugin (" + p.m_name + ") from file " + p.m_library_path + "\n");
+
+			std::shared_ptr<sinsp_plugin> plugin = sinsp_plugin::register_plugin(inspector,
+											     p.m_library_path,
+											     (p.m_init_config.empty() ? NULL : (char *)p.m_init_config.c_str()),
+											     plugin_filter_checks);
+
+			if(plugin->type() == TYPE_SOURCE_PLUGIN)
+			{
+				sinsp_source_plugin *splugin = static_cast<sinsp_source_plugin *>(plugin.get());
+
+				if(input_plugin)
+				{
+					throw std::invalid_argument(string("Can not load multiple source plugins. ") + input_plugin->name() + " already loaded");
+				}
+
+				input_plugin = plugin;
+				event_source = splugin->event_source();
+
+				inspector->set_input_plugin(p.m_name);
+				if(!p.m_open_params.empty())
+				{
+					inspector->set_input_plugin_open_params(p.m_open_params.c_str());
+				}
+
+				engine->add_source(event_source, plugin_filter_factory, plugin_formatter_factory);
+
+			} else {
+				extractor_plugins.push_back(plugin);
+			}
+		}
+
+		// Ensure that extractor plugins are compatible with the event source.
+		// Also, ensure that extractor plugins don't have overlapping compatible event sources.
+		std::set<std::string> compat_sources_seen;
+		for(auto plugin : extractor_plugins)
+		{
+			// If the extractor plugin names compatible sources,
+			// ensure that the input plugin's source is in the list
+			// of compatible sources.
+			sinsp_extractor_plugin *eplugin = static_cast<sinsp_extractor_plugin *>(plugin.get());
+			const std::set<std::string> &compat_sources = eplugin->extract_event_sources();
+			if(input_plugin &&
+			   !compat_sources.empty())
+			{
+				if (compat_sources.find(event_source) == compat_sources.end())
+				{
+					throw std::invalid_argument(string("Extractor plugin not compatible with event source ") + event_source);
+				}
+
+				for(const auto &compat_source : compat_sources)
+				{
+					if(compat_sources_seen.find(compat_source) != compat_sources_seen.end())
+					{
+						throw std::invalid_argument(string("Extractor plugins have overlapping compatible event source ") + compat_source);
+					}
+					compat_sources_seen.insert(compat_source);
+				}
+			}
+		}
+
 		if(config.m_json_output)
 		{
 			syscall_formatter_factory->set_output_format(gen_event_formatter::OF_JSON);
 			k8s_audit_formatter_factory->set_output_format(gen_event_formatter::OF_JSON);
+			plugin_formatter_factory->set_output_format(gen_event_formatter::OF_JSON);
+		}
+
+		std::list<sinsp_plugin::info> infos = sinsp_plugin::plugin_infos(inspector);
+
+		if(list_plugins)
+		{
+			std::ostringstream os;
+
+			for(auto &info : infos)
+			{
+				os << "Name: " << info.name << std::endl;
+				os << "Description: " << info.description << std::endl;
+				os << "Contact: " << info.contact << std::endl;
+				os << "Version: " << info.plugin_version.as_string() << std::endl;
+
+				if(info.type == TYPE_SOURCE_PLUGIN)
+				{
+					os << "Type: source plugin" << std::endl;
+					os << "ID: " << info.id << std::endl;
+				}
+				else
+				{
+					os << "Type: extractor plugin" << std::endl;
+				}
+			}
+
+			printf("%lu Plugins Loaded:\n\n%s\n", infos.size(), os.str().c_str());
+			return EXIT_SUCCESS;
+		}
+
+		if(list_flds)
+		{
+			list_source_fields(engine, names_only, list_flds_source);
+			return EXIT_SUCCESS;
 		}
 
 		if (rules_filenames.size())
@@ -960,6 +1082,17 @@ int falco_init(int argc, char **argv)
 				throw falco_exception(prefix + e.what());
 			}
 			required_engine_versions[filename] = required_engine_version;
+		}
+
+		// Ensure that all plugins are compatible with the loaded set of rules
+		for(auto &info : infos)
+		{
+			std::string required_version;
+
+			if(!engine->is_plugin_compatible(info.name, info.plugin_version.as_string(), required_version))
+			{
+				throw std::invalid_argument(std::string("Plugin ") + info.name + " version " + info.plugin_version.as_string() + " not compatible with required plugin version " + required_version);
+			}
 		}
 
 		// You can't both disable and enable rules
@@ -1362,7 +1495,7 @@ int falco_init(int argc, char **argv)
 		falco_logger::log(LOG_DEBUG, "Setting metadata download chunk wait time to " + to_string(config.m_metadata_download_chunk_wait_us) + " μs\n");
 		falco_logger::log(LOG_DEBUG, "Setting metadata download watch frequency to " + to_string(config.m_metadata_download_watch_freq_sec) + " seconds\n");
 		inspector->set_metadata_download_params(config.m_metadata_download_max_mb * 1024 * 1024, config.m_metadata_download_chunk_wait_us, config.m_metadata_download_watch_freq_sec);
-		
+
 		if(trace_filename.empty() && config.m_webserver_enabled && !disable_k8s_audit)
 		{
 			std::string ssl_option = (config.m_webserver_ssl_enabled ? " (SSL)" : "");
@@ -1406,6 +1539,7 @@ int falco_init(int argc, char **argv)
 			num_evts = do_inspect(engine,
 					      outputs,
 					      inspector,
+					      event_source,
 					      config,
 					      sdropmgr,
 					      uint64_t(duration_to_tot*ONE_SECOND_IN_NS),
