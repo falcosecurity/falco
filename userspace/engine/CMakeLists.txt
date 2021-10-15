@@ -17,7 +17,6 @@ set(FALCO_ENGINE_SOURCE_FILES
     falco_utils.cpp
     json_evt.cpp
     ruleset.cpp
-    token_bucket.cpp
     formats.cpp)
 
 add_library(falco_engine STATIC ${FALCO_ENGINE_SOURCE_FILES})
