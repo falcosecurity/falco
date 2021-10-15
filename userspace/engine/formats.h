@@ -17,6 +17,7 @@ limitations under the License.
 #pragma once
 
 #include <string>
+#include <map>
 
 extern "C"
 {
