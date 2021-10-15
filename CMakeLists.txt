@@ -212,6 +212,7 @@ include(static-analysis)
 # Shared build variables
 set(FALCO_SINSP_LIBRARY sinsp)
 set(FALCO_SHARE_DIR share/falco)
+set(FALCO_PLUGINS_DIR ${FALCO_SHARE_DIR}/plugins)
 set(FALCO_ABSOLUTE_SHARE_DIR "${CMAKE_INSTALL_PREFIX}/${FALCO_SHARE_DIR}")
 set(FALCO_BIN_DIR bin)
 
@@ -219,6 +220,8 @@ add_subdirectory(scripts)
 add_subdirectory(userspace/engine)
 add_subdirectory(userspace/falco)
 add_subdirectory(tests)
+
+include(plugins)
 
 # Packages configuration
 include(CPackConfig)

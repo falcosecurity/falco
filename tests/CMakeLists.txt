@@ -46,6 +46,7 @@ if(FALCO_BUILD_TESTS)
       PUBLIC "${CATCH2_INCLUDE}"
             "${FAKEIT_INCLUDE}"
             "${PROJECT_SOURCE_DIR}/userspace/engine"
+            "${PROJECT_BINARY_DIR}/userspace/falco"
             "${YAMLCPP_INCLUDE_DIR}"
             "${PROJECT_SOURCE_DIR}/userspace/falco")
   else()
@@ -54,6 +55,7 @@ if(FALCO_BUILD_TESTS)
       PUBLIC "${CATCH2_INCLUDE}"
             "${FAKEIT_INCLUDE}"
             "${PROJECT_SOURCE_DIR}/userspace/engine"
+            "${PROJECT_BINARY_DIR}/userspace/falco"
             "${YAMLCPP_INCLUDE_DIR}"
             "${CIVETWEB_INCLUDE_DIR}"
             "${PROJECT_SOURCE_DIR}/userspace/falco")
