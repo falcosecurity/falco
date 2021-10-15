@@ -34,6 +34,7 @@ const static struct luaL_Reg ll_falco_rules[] =
 		{"add_filter", &falco_rules::add_filter},
 		{"enable_rule", &falco_rules::enable_rule},
 		{"engine_version", &falco_rules::engine_version},
+		{"is_source_valid", &falco_rules::is_source_valid},
 		{"is_format_valid", &falco_rules::is_format_valid},
 		{"is_defined_field", &falco_rules::is_defined_field},
 		{NULL, NULL}};
@@ -205,6 +206,30 @@ int falco_rules::engine_version(lua_State *ls)
 	return 1;
 }
 
+bool falco_rules::is_source_valid(const std::string &source)
+{
+	return m_engine->is_source_valid(source);
+}
+
+int falco_rules::is_source_valid(lua_State *ls)
+{
+	if (! lua_islightuserdata(ls, -2) ||
+	    ! lua_isstring(ls, -1))
+	{
+		lua_pushstring(ls, "Invalid arguments passed to is_source_valid");
+		lua_error(ls);
+	}
+
+	falco_rules *rules = (falco_rules *) lua_topointer(ls, -2);
+	string source = luaL_checkstring(ls, -1);
+
+	bool ret = rules->is_source_valid(source);
+
+	lua_pushboolean(ls, (ret ? 1 : 0));
+
+	return 1;
+}
+
 int falco_rules::is_format_valid(lua_State *ls)
 {
 	if (! lua_islightuserdata(ls, -3) ||
@@ -328,11 +353,48 @@ static std::list<std::string> get_lua_table_values(lua_State *ls, int idx)
 	return ret;
 }
 
+static void get_lua_table_list_values(lua_State *ls,
+				      int idx,
+				      std::map<std::string, std::list<std::string>> &required_plugin_versions)
+{
+	if (lua_isnil(ls, idx)) {
+		return;
+	}
+
+	lua_pushnil(ls);  /* first key */
+	while (lua_next(ls, idx-1) != 0) {
+                // key is at index -2, table of values is at index -1.
+		if (! lua_isstring(ls, -2)) {
+			std::string err = "Non-string key in table of strings";
+			throw falco_exception(err);
+		}
+
+		std::string key = string(lua_tostring(ls, -2));
+		std::list<std::string> vals = get_lua_table_values(ls, -1);
+
+		if (required_plugin_versions.find(key) == required_plugin_versions.end())
+		{
+			required_plugin_versions[key] = vals;
+		}
+		else
+		{
+			required_plugin_versions[key].insert(required_plugin_versions[key].end(),
+							     vals.begin(),
+							     vals.end());
+		}
+
+		// Remove value, keep key for next iteration
+		lua_pop(ls, 1);
+	}
+}
+
+
 void falco_rules::load_rules(const string &rules_content,
 			     bool verbose, bool all_events,
 			     string &extra, bool replace_container_info,
 			     falco_common::priority_type min_priority,
-			     uint64_t &required_engine_version)
+			     uint64_t &required_engine_version,
+			     std::map<std::string, std::list<std::string>> &required_plugin_versions)
 {
 	lua_getglobal(m_ls, m_lua_load_rules.c_str());
 	if(lua_isfunction(m_ls, -1))
@@ -344,7 +406,7 @@ void falco_rules::load_rules(const string &rules_content,
 		lua_pushstring(m_ls, extra.c_str());
 		lua_pushboolean(m_ls, (replace_container_info ? 1 : 0));
 		lua_pushnumber(m_ls, min_priority);
-		if(lua_pcall(m_ls, 7, 4, 0) != 0)
+		if(lua_pcall(m_ls, 7, 5, 0) != 0)
 		{
 			const char* lerr = lua_tostring(m_ls, -1);
 
@@ -356,10 +418,12 @@ void falco_rules::load_rules(const string &rules_content,
 		// Returns:
 		// Load result: bool
 		// required engine version: will be nil when load result is false
+		// required_plugin_versions: will be nil when load result is false
 		// array of errors
 		// array of warnings
-		bool successful = lua_toboolean(m_ls, -4);
-		required_engine_version = lua_tonumber(m_ls, -3);
+		bool successful = lua_toboolean(m_ls, -5);
+		required_engine_version = lua_tonumber(m_ls, -4);
+		get_lua_table_list_values(m_ls, -3, required_plugin_versions);
 		std::list<std::string> errors = get_lua_table_values(m_ls, -2);
 		std::list<std::string> warnings = get_lua_table_values(m_ls, -1);
 
