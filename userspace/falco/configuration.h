@@ -25,6 +25,9 @@ limitations under the License.
 #include <list>
 #include <set>
 #include <iostream>
+#include <fstream>
+
+#include "config_falco.h"
 
 #include "event_drops.h"
 #include "falco_outputs.h"
@@ -177,6 +180,11 @@ public:
 		}
 	}
 
+	void get_node(YAML::Node &ret, const std::string &key)
+	{
+		ret = m_root[key];
+	}
+
 private:
 	YAML::Node m_root;
 };
@@ -184,6 +192,15 @@ private:
 class falco_configuration
 {
 public:
+
+	typedef struct {
+	public:
+		std::string m_name;
+		std::string m_library_path;
+		std::string m_init_config;
+		std::string m_open_params;
+	} plugin_config;
+
 	falco_configuration();
 	virtual ~falco_configuration();
 
@@ -234,6 +251,8 @@ public:
 	uint32_t m_metadata_download_chunk_wait_us;
 	uint32_t m_metadata_download_watch_freq_sec;
 
+	std::vector<plugin_config> m_plugins;
+
 private:
 	void init_cmdline_options(std::list<std::string>& cmdline_options);
 
@@ -247,3 +266,103 @@ private:
 
 	yaml_configuration* m_config;
 };
+
+namespace YAML {
+	template<>
+	struct convert<falco_configuration::plugin_config> {
+
+		static bool read_file_from_key(const Node &node, const std::string &prefix, std::string &value)
+		{
+			std::string key = prefix;
+
+			if(node[key])
+			{
+				value = node[key].as<std::string>();
+				return true;
+			}
+
+			key += "_file";
+
+			if(node[key])
+			{
+				std::string path = node[key].as<std::string>();
+
+				// prepend share dir if path is not absolute
+				if(path.at(0) != '/')
+				{
+					path = string(FALCO_ENGINE_PLUGINS_DIR) + path;
+				}
+
+				// Intentionally letting potential
+				// exception be thrown, will get
+				// caught when reading config.
+				std::ifstream f(path);
+				std::string str((std::istreambuf_iterator<char>(f)),
+						std::istreambuf_iterator<char>());
+
+				value = str;
+				return true;
+			}
+
+			return false;
+		}
+
+		// Note that the distinction between
+		// init_config/init_config_file and
+		// open_params/open_params_file is lost. But also,
+		// this class doesn't write yaml config anyway.
+		static Node encode(const falco_configuration::plugin_config & rhs) {
+			Node node;
+			node["name"] = rhs.m_name;
+			node["library_path"] = rhs.m_library_path;
+			node["init_config"] = rhs.m_init_config;
+			node["open_params"] = rhs.m_open_params;
+			return node;
+		}
+
+		static bool decode(const Node& node, falco_configuration::plugin_config & rhs) {
+			if(!node.IsMap())
+			{
+				return false;
+			}
+
+			if(!node["name"])
+			{
+				return false;
+			}
+			else
+			{
+				rhs.m_name = node["name"].as<std::string>();
+			}
+
+			if(!node["library_path"])
+			{
+				return false;
+			}
+			else
+			{
+				rhs.m_library_path = node["library_path"].as<std::string>();
+
+				// prepend share dir if path is not absolute
+				if(rhs.m_library_path.at(0) != '/')
+				{
+					rhs.m_library_path = string(FALCO_ENGINE_PLUGINS_DIR) + rhs.m_library_path;
+				}
+
+			}
+
+			if(!read_file_from_key(node, string("init_config"), rhs.m_init_config))
+			{
+				return false;
+			}
+
+			if(node["open_params"] &&
+			   !read_file_from_key(node, string("open_params"), rhs.m_open_params))
+			{
+				return false;
+			}
+
+			return true;
+		}
+	};
+}

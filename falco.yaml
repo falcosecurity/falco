@@ -33,6 +33,32 @@ rules_file:
   - /etc/falco/k8s_audit_rules.yaml
   - /etc/falco/rules.d
 
+
+#
+# Plugins that are available for use. These plugins are not loaded by
+# default, as they require explicit configuration to point to
+# cloudtrail log files.
+#
+
+# To learn more about the supported formats for
+# init_config/open_params for the cloudtrail plugin, see the README at
+# https://github.com/falcosecurity/plugins/blob/master/plugins/cloudtrail/README.md.
+plugins:
+  - name: cloudtrail
+    library_path: libcloudtrail.so
+    init_config: ""
+    open_params: ""
+  - name: json
+    library_path: libjson.so
+    init_config: ""
+
+# Setting this list to empty ensures that the above plugins are *not*
+# loaded and enabled by default. If you want to use the above plugins,
+# set a meaningful init_config/open_params for the cloudtrail plugin
+# and then change this to:
+# load_plugins: [cloudtrail, json]
+load_plugins: []
+
 # If true, the times displayed in log messages and output messages
 # will be in ISO 8601. By default, times are displayed in the local
 # time zone, as governed by /etc/localtime.

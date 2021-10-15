@@ -16,6 +16,9 @@ limitations under the License.
 
 #include <algorithm>
 
+#include <list>
+#include <set>
+
 #include <dirent.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -265,7 +268,36 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 	{
 		throw logic_error("Error reading config file(" + m_config_file + "): metadata download watch frequency seconds must be an unsigned integer > 0");
 	}
-	
+
+	std::set<std::string> load_plugins;
+
+	YAML::Node load_plugins_node;
+	m_config->get_node(load_plugins_node, "load_plugins");
+
+	m_config->get_sequence<set<string>>(load_plugins, "load_plugins");
+
+	std::list<falco_configuration::plugin_config> plugins;
+	try
+	{
+		m_config->get_sequence<std::list<falco_configuration::plugin_config>>(plugins, string("plugins"));
+	}
+	catch (exception &e)
+	{
+		// Might be thrown due to not being able to open files
+		throw logic_error("Error reading config file(" + m_config_file + "): could not load plugins config: " + e.what());
+	}
+
+	// If load_plugins was specified, only save plugins matching those in values
+	for (auto &p : plugins)
+	{
+		// If load_plugins was not specified at all, every
+		// plugin is added. Otherwise, the plugin must be in
+		// the load_plugins list.
+		if(!load_plugins_node.IsDefined() || load_plugins.find(p.m_name) != load_plugins.end())
+		{
+			m_plugins.push_back(p);
+		}
+	}
 }
 
 void falco_configuration::read_rules_file_directory(const string &path, list<string> &rules_filenames)
