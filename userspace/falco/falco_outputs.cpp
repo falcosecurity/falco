@@ -155,7 +155,7 @@ void falco_outputs::handle_event(gen_event *evt, string &rule, string &source,
 	cmsg.rule = rule;
 
 	string sformat;
-	if(source == "syscall")
+	if(source != "k8s_audit")
 	{
 		if(m_time_format_iso_8601)
 		{
