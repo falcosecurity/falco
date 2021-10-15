@@ -184,9 +184,13 @@ public:
 	// Configure the engine to support events with the provided
 	// source, with the provided filter factory and formatter factory.
 	//
-	void add_source(std::string &source,
+	void add_source(const std::string &source,
 			std::shared_ptr<gen_event_filter_factory> filter_factory,
 			std::shared_ptr<gen_event_formatter_factory> formatter_factory);
+
+	// Return whether or not there is a valid filter/formatter
+	// factory for this source.
+	bool is_source_valid(const std::string &source);
 
 	//
 	// Add a filter for the provided event source to the engine
@@ -216,6 +220,12 @@ public:
 	std::shared_ptr<gen_event_formatter> create_formatter(const std::string &source,
 							      const std::string &output);
 
+	// Return whether the provided plugin name + version is
+	// compatible with the current set of loaded rules files.
+	// required_version will be filled in with the required
+	// version when the method returns false.
+	bool is_plugin_compatible(const std::string &name, const std::string &version, std::string &required_version);
+
 private:
 
 	//
@@ -238,6 +248,10 @@ private:
 	uint16_t m_next_ruleset_id;
 	std::map<string, uint16_t> m_known_rulesets;
 	falco_common::priority_type m_min_priority;
+
+	// Maps from plugin to a list of required plugin versions
+	// found in any loaded rules files.
+	std::map<std::string, std::list<std::string>> m_required_plugin_versions;
 
 	void populate_rule_result(unique_ptr<struct rule_result> &res, gen_event *ev);
 

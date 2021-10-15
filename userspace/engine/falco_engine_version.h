@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2020 The Falco Authors.
+Copyright (C) 2021 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,11 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// The version of rules/filter fields/etc supported by this falco
+// The version of rules/filter fields/etc supported by this Falco
 // engine.
-#define FALCO_ENGINE_VERSION (9)
+#define FALCO_ENGINE_VERSION (10)
 
 // This is the result of running "falco --list -N | sha256sum" and
-// represents the fields supported by this version of falco. It's used
+// represents the fields supported by this version of Falco. It's used
 // at build time to detect a changed set of fields.
-#define FALCO_FIELDS_CHECKSUM "3153c620bf3640fab536a2d0e42aa69f10482d741ef3fa72fd8d994b0261ec55"
+#define FALCO_FIELDS_CHECKSUM "64c449b28013e400cd4d67c993a253752199d749f820c90c4314946c999c5a9f"
+
