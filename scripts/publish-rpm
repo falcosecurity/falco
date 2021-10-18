@@ -22,7 +22,7 @@ add_rpm() {
     cp -f $2 $1
     pushd $1 > /dev/null
     rm -f $(basename -- $2).asc
-    gpg --detach-sign --armor $(basename -- $2)
+    gpg --detach-sign --digest-algo SHA256 --armor $(basename -- $2)
     popd > /dev/null
 }
 
@@ -33,7 +33,7 @@ update_repo() {
     pushd $1 > /dev/null
     createrepo --update --no-database .
     rm -f repodata/repomd.xml.asc
-    gpg --detach-sign --armor repodata/repomd.xml
+    gpg --detach-sign --digest-algo SHA256 --armor repodata/repomd.xml
     popd > /dev/null
 }
 
