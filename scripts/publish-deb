@@ -23,7 +23,7 @@ add_deb() {
     cp -f $3 $1/$2
     pushd $1/$2 > /dev/null
     rm -f $(basename -- $3).asc
-    gpg --detach-sign --armor $(basename -- $3)
+    gpg --detach-sign --digest-algo SHA256 --armor $(basename -- $3)
     popd > /dev/null
 }
 
@@ -63,7 +63,7 @@ update_repo() {
       ${release_dir} > ${release_dir}/Release
 
     # release signature
-    gpg --detach-sign --armor ${release_dir}/Release
+    gpg --detach-sign --digest-algo SHA256 --armor ${release_dir}/Release
     rm -f ${release_dir}/Release.gpg
     mv ${release_dir}/Release.asc ${release_dir}/Release.gpg
 
