@@ -303,17 +303,28 @@
 
 - list: known_sa_list
   items: [
+    coredns,
+    coredns-autoscaler,
     cronjob-controller,
     daemon-set-controller,
     deployment-controller,
     disruption-controller,
     endpoint-controller,
     endpointslice-controller,
+    endpointslicemirroring-controller,
     generic-garbage-collector,
+    horizontal-pod-autoscaler,
+    job-controller,
     namespace-controller,
+    node-controller,
+    persistent-volume-binder,
     pod-garbage-collector,
+    pv-protection-controller,
+    pvc-protection-controller,
     replicaset-controller,
     resourcequota-controller,
+    root-ca-cert-publisher,
+    service-account-controller,
     statefulset-controller
     ]
 
