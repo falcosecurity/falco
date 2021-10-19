@@ -255,7 +255,7 @@ load_kernel_module() {
 
 	if [ -f "${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}" ]; then
 		echo "* Found a prebuilt ${DRIVER_NAME} module at ${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}, loading it"
-		chcon -t modules_object_t "${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}" > /dev/null 2>&1
+		chcon -t modules_object_t "${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}" > /dev/null 2>&1 || true
 		insmod "${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}" && echo "* Success: ${DRIVER_NAME} module found and inserted"
 		exit $?
 	fi
