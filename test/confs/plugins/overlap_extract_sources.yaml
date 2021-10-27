@@ -1,0 +1,17 @@
+stdout_output:
+  enabled: true
+
+plugins:
+  - name: test_source
+    library_path: BUILD_DIR/test/plugins/libtest_source.so
+    init_config: ""
+    open_params: ""
+  - name: test_extract_p1
+    library_path: BUILD_DIR/test/plugins/libtest_extract_p1.so
+    init_config: ""
+  - name: test_extract_p2
+    library_path: BUILD_DIR/test/plugins/libtest_extract_p2.so
+    init_config: ""
+
+# Optional
+load_plugins: [test_source, test_extract_p1, test_extract_p2]

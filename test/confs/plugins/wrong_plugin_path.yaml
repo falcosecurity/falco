@@ -1,0 +1,10 @@
+stdout_output:
+  enabled: true
+
+plugins:
+  - name: wrong_plugin_path
+    library_path: BUILD_DIR/test/plugins/wrong_plugin_path.so
+    init_config: ""
+
+# Optional
+load_plugins: [wrong_plugin_path]
