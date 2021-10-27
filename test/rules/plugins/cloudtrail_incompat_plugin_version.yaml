@@ -1,0 +1,10 @@
+- required_plugin_versions:
+    - name: cloudtrail
+      version: 100000.0.0
+
+- rule: Cloudtrail Create Instance
+  desc: Detect Creating an EC2 Instance
+  condition: evt.num > 0 and ct.name="StartInstances"
+  output: EC2 Instance Created (evtnum=%evt.num info=%evt.plugininfo id=%ct.id user name=%json.value[/userIdentity/userName])
+  priority: INFO
+  source: aws_cloudtrail

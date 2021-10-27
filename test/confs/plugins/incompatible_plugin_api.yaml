@@ -1,0 +1,10 @@
+stdout_output:
+  enabled: true
+
+plugins:
+  - name: incompatible_plugin_api
+    library_path: BUILD_DIR/test/plugins/libtest_incompat_api.so
+    init_config: ""
+
+# Optional
+load_plugins: [incompatible_plugin_api]

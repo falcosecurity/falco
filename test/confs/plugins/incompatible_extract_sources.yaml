@@ -1,0 +1,14 @@
+stdout_output:
+  enabled: true
+
+plugins:
+  - name: cloudtrail
+    library_path: BUILD_DIR/cloudtrail-plugin-prefix/src/cloudtrail-plugin/libcloudtrail.so
+    init_config: ""
+    open_params: ""
+  - name: test_extract_p1
+    library_path: BUILD_DIR/test/plugins/libtest_extract_p1.so
+    init_config: ""
+
+# Optional
+load_plugins: [cloudtrail, test_extract_p1]

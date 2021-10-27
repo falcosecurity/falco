@@ -82,6 +82,7 @@ class FalcoTest(Test):
 
         self.exit_status = self.params.get('exit_status', '*', default=0)
         self.should_detect = self.params.get('detect', '*', default=False)
+        self.check_detection_counts = self.params.get('check_detection_counts', '*', default=True)
         self.trace_file = self.params.get('trace_file', '*', default='')
 
         if self.trace_file and not os.path.isabs(self.trace_file):
@@ -94,6 +95,7 @@ class FalcoTest(Test):
             'json_include_tags_property', '*', default=True)
         self.all_events = self.params.get('all_events', '*', default=False)
         self.priority = self.params.get('priority', '*', default='debug')
+        self.addl_cmdline_opts = self.params.get('addl_cmdline_opts', '*', default='')
         self.rules_file = self.params.get(
             'rules_file', '*', default=os.path.join(self.basedir, '../rules/falco_rules.yaml'))
 
@@ -130,6 +132,7 @@ class FalcoTest(Test):
 
         self.conf_file = self.params.get(
             'conf_file', '*', default=os.path.join(self.basedir, '../falco.yaml'))
+        self.conf_file = self.conf_file.replace("BUILD_DIR", build_dir)
         if not os.path.isabs(self.conf_file):
             self.conf_file = os.path.join(self.basedir, self.conf_file)
 
@@ -617,9 +620,9 @@ class FalcoTest(Test):
                 self.log.debug("Converted Rules: {}".format(psp_rules))
 
         # Run falco
-        cmd = '{} {} {} -c {} {} -o json_output={} -o json_include_output_property={} -o json_include_tags_property={} -o priority={} -v'.format(
+        cmd = '{} {} {} -c {} {} -o json_output={} -o json_include_output_property={} -o json_include_tags_property={} -o priority={} -v {}'.format(
             self.falco_binary_path, self.rules_args, self.disabled_args, self.conf_file, trace_arg, self.json_output,
-            self.json_include_output_property, self.json_include_tags_property, self.priority)
+            self.json_include_output_property, self.json_include_tags_property, self.priority, self.addl_cmdline_opts)
 
         for tag in self.disable_tags:
             cmd += ' -T {}'.format(tag)
@@ -650,13 +653,13 @@ class FalcoTest(Test):
                 self.fail("Stdout was not exactly {}".format(self.stderr_is))
 
         for pattern in self.stderr_contains:
-            match = re.search(pattern, res.stderr.decode("utf-8"))
+            match = re.search(pattern, res.stderr.decode("utf-8"), re.DOTALL)
             if match is None:
                 self.fail(
                     "Stderr of falco process did not contain content matching {}".format(pattern))
 
         for pattern in self.stdout_contains:
-            match = re.search(pattern, res.stdout.decode("utf-8"))
+            match = re.search(pattern, res.stdout.decode("utf-8"), re.DOTALL)
             if match is None:
                 self.fail("Stdout of falco process '{}' did not contain content matching {}".format(
                     res.stdout.decode("utf-8"), pattern))
@@ -684,7 +687,7 @@ class FalcoTest(Test):
         self.check_rules_warnings(res)
         if len(self.rules_events) > 0:
             self.check_rules_events(res)
-        if len(self.validate_rules_file) == 0:
+        if len(self.validate_rules_file) == 0 and self.check_detection_counts:
             self.check_detections(res)
         if len(self.detect_counts) > 0:
             self.check_detections_by_rule(res)

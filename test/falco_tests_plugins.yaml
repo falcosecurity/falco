@@ -1,0 +1,106 @@
+#
+# Copyright (C) 2021 The Falco Authors.
+#
+# This file is part of Falco.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+trace_files: !mux
+
+  list_plugins:
+    check_detection_counts: False
+    rules_file:
+      - rules/plugins/cloudtrail_create_instances.yaml
+    conf_file: BUILD_DIR/test/confs/plugins/cloudtrail_json_create_instances.yaml
+    addl_cmdline_opts: --list-plugins
+    stdout_contains: "2 Plugins Loaded.*Name: cloudtrail.*Type: source plugin.*Name: json.*Type: extractor plugin"
+
+  list_plugin_fields:
+    check_detection_counts: False
+    rules_file:
+      - rules/plugins/cloudtrail_create_instances.yaml
+    conf_file: BUILD_DIR/test/confs/plugins/cloudtrail_json_create_instances.yaml
+    addl_cmdline_opts: --list
+    stdout_contains: "ct.id"
+
+  detect_create_instance:
+    detect: True
+    detect_level: INFO
+    rules_file:
+      - rules/plugins/cloudtrail_create_instances.yaml
+    detect_counts:
+      - 'Cloudtrail Create Instance': 1
+    conf_file: BUILD_DIR/test/confs/plugins/cloudtrail_json_create_instances.yaml
+
+  detect_create_instance_bigevent:
+    detect: True
+    detect_level: INFO
+    rules_file:
+      - rules/plugins/cloudtrail_create_instances.yaml
+    detect_counts:
+      - 'Cloudtrail Create Instance': 1
+    conf_file: BUILD_DIR/test/confs/plugins/cloudtrail_json_create_instances_bigevent.yaml
+
+  multiple_source_plugins:
+    exit_status: 1
+    stderr_contains: "Runtime error: Can not load multiple source plugins. cloudtrail already loaded. Exiting."
+    conf_file: BUILD_DIR/test/confs/plugins/multiple_source_plugins.yaml
+    rules_file:
+      - rules/plugins/cloudtrail_create_instances.yaml
+
+  incompatible_extract_sources:
+    exit_status: 1
+    stderr_contains: "Runtime error: Extractor plugin not compatible with event source aws_cloudtrail. Exiting."
+    conf_file: BUILD_DIR/test/confs/plugins/incompatible_extract_sources.yaml
+    rules_file:
+      - rules/plugins/cloudtrail_create_instances.yaml
+
+  overlap_extract_sources:
+    exit_status: 1
+    stderr_contains: "Runtime error: Extractor plugins have overlapping compatible event source test_source. Exiting."
+    conf_file: BUILD_DIR/test/confs/plugins/overlap_extract_sources.yaml
+    rules_file:
+      - rules/plugins/cloudtrail_create_instances.yaml
+
+  incompat_plugin_api:
+    exit_status: 1
+    stderr_contains: "Unsupported plugin required api version 10000000.0.0"
+    conf_file: BUILD_DIR/test/confs/plugins/incompatible_plugin_api.yaml
+    rules_file:
+      - rules/plugins/cloudtrail_create_instances.yaml
+
+  incompat_plugin_rules_version:
+    exit_status: 1
+    stderr_contains: "Runtime error: Plugin cloudtrail version 0.1.0 not compatible with required plugin version 100000.0.0. Exiting."
+    conf_file: BUILD_DIR/test/confs/plugins/cloudtrail_json_create_instances.yaml
+    rules_file:
+      - rules/plugins/cloudtrail_incompat_plugin_version.yaml
+
+  wrong_plugin_path:
+    exit_status: 1
+    stderr_contains: "error loading plugin.*No such file or directory. Exiting"
+    conf_file: BUILD_DIR/test/confs/plugins/wrong_plugin_path.yaml
+    rules_file:
+      - rules/plugins/cloudtrail_incompat_plugin_version.yaml
+
+  no_plugins_unknown_source:
+    detect: False
+    rules_file:
+      - rules/plugins/cloudtrail_create_instances.yaml
+    trace_file: trace_files/empty.scap
+    rules_warning:
+      - Cloudtrail Create Instance
+    stderr_contains: "Rule Cloudtrail Create Instance: warning .unknown-source.: unknown source aws_cloudtrail, skipping"
+
+

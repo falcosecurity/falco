@@ -1,0 +1,15 @@
+stdout_output:
+  enabled: true
+
+plugins:
+  - name: cloudtrail
+    library_path: BUILD_DIR/cloudtrail-plugin-prefix/src/cloudtrail-plugin/libcloudtrail.so
+    init_config: ""
+    open_params: "BUILD_DIR/test/trace_files/plugins/alice_start_instances.json"
+  - name: test_source
+    library_path: BUILD_DIR/test/plugins/libtest_source.so
+    init_config: ""
+    open_params: ""
+
+# Optional
+load_plugins: [cloudtrail, test_source]
