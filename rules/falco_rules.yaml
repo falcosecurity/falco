@@ -2676,7 +2676,7 @@
   tags: [file, mitre_persistence]
 
 - list: remote_file_copy_binaries
-  items: [rsync, scp, sftp, dcp, wget, scp]
+  items: [rsync, scp, sftp, dcp, wget, curl]
 
 - macro: remote_file_copy_procs
   condition: (proc.name in (remote_file_copy_binaries))
