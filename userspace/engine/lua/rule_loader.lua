@@ -600,33 +600,75 @@ function load_rules_doc(rules_mgr, doc, load_state)
 			return false, build_error_with_context(v['context'], "Rule exception item must have name property"), warnings
 		     end
 
-		     -- You can't append exception fields or comps to a rule
-		     if fields ~= nil then
-			return false, build_error_with_context(v['context'], "Can not append exception fields to existing rule, only values"), warnings
+		     -- Seperate case when a exception name is not found
+		     -- This means that a new exception is being appended
+
+		     local new_exception = true
+		     for _, rex_item in ipairs(state.rules_by_name[v['rule']]['exceptions']) do
+			if rex_item['name'] == eitem['name'] then
+			   new_exception = false
+			   break
+			end
 		     end
 
-		     if comps ~= nil then
-			return false, build_error_with_context(v['context'], "Can not append exception comps to existing rule, only values"), warnings
-		     end
+		     if new_exception then
+			local exceptions = state.rules_by_name[v['rule']]['exceptions']
+			if exceptions == nil do
+			   exceptions = {}
+			end
+			
+			if eitem['fields'] == nil then
+			   return false, build_error_with_context(v['context'], "Rule exception new item "..eitem['name']..": must have fields property with a list of fields"), warnings
+			end
+			if eitem['values'] == nil then
+			   return false, build_error_with_context(v['context'], "Rule exception new item "..eitem['name']..": must have values property with a list of values"), warnings
+			end
+			
+			local valid, err
+			if type(eitem['fields']) == "table" then
+			   valid, err = validate_exception_item_multi_fields(rules_mgr, v['source'], eitem, v['context'])
+			else
+			   valid, err = validate_exception_item_single_field(rules_mgr, v['source'], eitem, v['context'])
+			end
+			
+			if valid == false then
+			   return valid, err
+			end
 
-		     -- You can append values. They are added to the
-		     -- corresponding name, if it exists. If no
-		     -- exception with that name exists, add a
-		     -- warning.
-		     if eitem['values'] ~= nil then
-			local found=false
-			for _, reitem in ipairs(state.rules_by_name[v['rule']]['exceptions']) do
-			   if reitem['name'] == eitem['name'] then
-			      found=true
-			      for _, values in ipairs(eitem['values']) do
-				 reitem['values'][#reitem['values'] + 1] = values
+			-- Insert the complete exception object
+			exceptions[#exceptions+1] = eitem
+		     else
+
+			-- Appends to existing exception here
+
+		   	-- You can't append exception fields or comps to an existing rule exception
+		     	if fields ~= nil then
+			   return false, build_error_with_context(v['context'], "Can not append exception fields to existing rule, only values"), warnings
+		     	end
+
+		     	if comps ~= nil then
+			   return false, build_error_with_context(v['context'], "Can not append exception comps to existing rule, only values"), warnings
+		     	end
+
+		     	-- You can append values. They are added to the
+		     	-- corresponding name, if it exists. If no
+		     	-- exception with that name exists, add a
+		     	-- warning.
+		     	if eitem['values'] ~= nil then
+			   local found=false
+			   for _, reitem in ipairs(state.rules_by_name[v['rule']]['exceptions']) do
+			      if reitem['name'] == eitem['name'] then
+			         found=true
+			         for _, values in ipairs(eitem['values']) do
+				    reitem['values'][#reitem['values'] + 1] = values
+			         end
 			      end
 			   end
-			end
 
-			if found == false then
-			   warnings[#warnings + 1] = "Rule "..v['rule'].." with append=true: no set of fields matching name "..eitem['name']
-			end
+			   if found == false then
+			      warnings[#warnings + 1] = "Rule "..v['rule'].." with append=true: no set of fields matching name "..eitem['name']
+			   end
+		        end
 		     end
 		  end
 	       end
