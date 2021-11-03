@@ -20,6 +20,7 @@ set -euo pipefail
 SCRIPT=$(readlink -f $0)
 SCRIPTDIR=$(dirname "$SCRIPT")
 SKIP_PACKAGES_TESTS=${SKIP_PACKAGES_TESTS:-false}
+SKIP_PLUGINS_TESTS=${SKIP_PLUGINS_TESTS:-false}
 TRACE_FILES_BASE_URL=${TRACE_FILES_BASE_URL:-"https://download.falco.org/fixtures/trace-files/"}
 
 # Trace file tarballs are now versioned. Any time a substantial change
@@ -99,10 +100,14 @@ function run_tests() {
     # as we're watching the return status when running avocado.
     set +e
     TEST_RC=0
-    suites=($SCRIPTDIR/falco_traces.yaml $SCRIPTDIR/falco_tests.yaml $SCRIPTDIR/falco_k8s_audit_tests.yaml $SCRIPTDIR/falco_tests_psp.yaml $SCRIPTDIR/falco_tests_exceptions.yaml $SCRIPTDIR/falco_tests_plugins.yaml)
+    suites=($SCRIPTDIR/falco_traces.yaml $SCRIPTDIR/falco_tests.yaml $SCRIPTDIR/falco_k8s_audit_tests.yaml $SCRIPTDIR/falco_tests_psp.yaml $SCRIPTDIR/falco_tests_exceptions.yaml)
 
     if [ "$SKIP_PACKAGES_TESTS" = false ] ; then
         suites+=($SCRIPTDIR/falco_tests_package.yaml)
+    fi
+
+    if [ "$SKIP_PLUGINS_TESTS" = false ] ; then
+        suites+=($SCRIPTDIR/falco_tests_plugins.yaml)
     fi
     
     XUNIT_DIR="${OPT_BUILD_DIR}/integration-tests-xunit"
