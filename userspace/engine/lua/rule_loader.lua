@@ -617,7 +617,7 @@ function load_rules_doc(rules_mgr, doc, load_state)
 			   exceptions = {}
 			end
 			
-			if eitem['fields'] == nil then
+			if fields == nil then
 			   return false, build_error_with_context(v['context'], "Rule exception new item "..eitem['name']..": must have fields property with a list of fields"), warnings
 			end
 			if eitem['values'] == nil then
@@ -638,17 +638,15 @@ function load_rules_doc(rules_mgr, doc, load_state)
 			-- Insert the complete exception object
 			exceptions[#exceptions+1] = eitem
 		     else
-
 			-- Appends to existing exception here
-
 		   	-- You can't append exception fields or comps to an existing rule exception
-		     	if fields ~= nil then
+                        if fields ~= nil then
 			   return false, build_error_with_context(v['context'], "Can not append exception fields to existing rule, only values"), warnings
-		     	end
+                        end
 
-		     	if comps ~= nil then
-			   return false, build_error_with_context(v['context'], "Can not append exception comps to existing rule, only values"), warnings
-		     	end
+                        if comps ~= nil then
+                           return false, build_error_with_context(v['context'], "Can not append exception comps to existing rule, only values"), warnings
+                        end
 
 		     	-- You can append values. They are added to the
 		     	-- corresponding name, if it exists. If no
