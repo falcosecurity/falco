@@ -613,7 +613,7 @@ function load_rules_doc(rules_mgr, doc, load_state)
 
 		     if new_exception then
 			local exceptions = state.rules_by_name[v['rule']]['exceptions']
-			if exceptions == nil do
+			if exceptions == nil then
 			   exceptions = {}
 			end
 			
