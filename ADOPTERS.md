@@ -42,7 +42,7 @@ This is a list of production adopters of Falco (in alphabetical order):
 
 * [Qonto](https://qonto.com) - Qonto is a modern banking for SMEs and freelancers. Qonto provides a fully featured business account with a simplified accounting flow. Falco is used by our SecOps team to detect suspicous behaviors in our clusters.
   
-* [Raft](https://goraft.tech/) - Raft is a government contractor that offers cloud-native solutions across many different agencies including DoD (Department of Defense),  HHS (Health and Human Services), as well as within CFPB (Consumer Finance Protection Bureau). Raft leverages Falco to detect threats in our client's Kubernetes clusters and as a Host Intrusion Detection System. Raft proudly recommends Falco across all our different projects.
+* [Raft](https://goraft.tech/) - Raft is a government contractor that offers cloud-native solutions across many different agencies including DoD (Department of Defense), HHS (Health and Human Services), as well as within CFPB (Consumer Finance Protection Bureau). Raft leverages Falco to detect threats in our client's Kubernetes clusters and as a Host Intrusion Detection System. Raft proudly recommends Falco across all our different projects.
 
 * [Replicated](https://www.replicated.com/) - Replicated is the modern way to ship on-prem software. Replicated gives software vendors a container-based platform for easily deploying cloud native applications inside customers'​ environments to provide greater security and control. Replicated uses Falco as runtime security to detect threats in the Kubernetes clusters which host our critical SaaS services.
 
