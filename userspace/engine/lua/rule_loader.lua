@@ -592,11 +592,8 @@ function load_rules_doc(rules_mgr, doc, load_state)
 	       if next(v['exceptions']) ~= nil then
 
 		  for _, eitem in ipairs(v['exceptions']) do
-		     local name = eitem['name']
-		     local fields = eitem['fields']
-		     local comps = eitem['comps']
 
-		     if name == nil then
+		     if eitem['name'] == nil then
 			return false, build_error_with_context(v['context'], "Rule exception item must have name property"), warnings
 		     end
 
@@ -617,7 +614,7 @@ function load_rules_doc(rules_mgr, doc, load_state)
 			   exceptions = {}
 			end
 			
-			if fields == nil then
+			if eitem['fields'] == nil then
 			   return false, build_error_with_context(v['context'], "Rule exception new item "..eitem['name']..": must have fields property with a list of fields"), warnings
 			end
 			if eitem['values'] == nil then
@@ -640,11 +637,11 @@ function load_rules_doc(rules_mgr, doc, load_state)
 		     else
 			-- Appends to existing exception here
 		   	-- You can't append exception fields or comps to an existing rule exception
-                        if fields ~= nil then
+                        if eitem['fields'] ~= nil then
 			   return false, build_error_with_context(v['context'], "Can not append exception fields to existing rule, only values"), warnings
                         end
 
-                        if comps ~= nil then
+                        if eitem['comps'] ~= nil then
                            return false, build_error_with_context(v['context'], "Can not append exception comps to existing rule, only values"), warnings
                         end
 
