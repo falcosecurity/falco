@@ -31,29 +31,33 @@ if(NOT FALCO_VERSION)
   else()
     # A tag has been found: use it as the Falco version
     set(FALCO_VERSION "${FALCO_TAG}")
-    # Remove the starting "v" in case there is one
-    string(REGEX REPLACE "^v(.*)" "\\1" FALCO_VERSION "${FALCO_TAG}")
-  endif()
-  # TODO(leodido) > ensure Falco version is semver before extracting parts Populate partial version variables
-  string(REGEX MATCH "^(0|[1-9][0-9]*)" FALCO_VERSION_MAJOR "${FALCO_VERSION}")
-  string(REGEX REPLACE "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\..*" "\\2" FALCO_VERSION_MINOR "${FALCO_VERSION}")
-  string(REGEX REPLACE "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*).*" "\\3" FALCO_VERSION_PATCH
-                       "${FALCO_VERSION}")
-  string(
-    REGEX
-    REPLACE
-      "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)-((0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*)(\\.(0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*))*).*"
-      "\\5"
-      FALCO_VERSION_PRERELEASE
-      "${FALCO_VERSION}")
-  if(FALCO_VERSION_PRERELEASE STREQUAL "${FALCO_VERSION}")
-    set(FALCO_VERSION_PRERELEASE "")
-  endif()
-  if(NOT FALCO_VERSION_BUILD)
-    string(REGEX REPLACE ".*\\+([0-9a-zA-Z-]+(\\.[0-9a-zA-Z-]+)*)" "\\1" FALCO_VERSION_BUILD "${FALCO_VERSION}")
-  endif()
-  if(FALCO_VERSION_BUILD STREQUAL "${FALCO_VERSION}")
-    set(FALCO_VERSION_BUILD "")
   endif()
 endif()
+
+# Remove the starting "v" in case there is one
+string(REGEX REPLACE "^v(.*)" "\\1" FALCO_VERSION "${FALCO_VERSION}")
+
+# TODO(leodido) > ensure Falco version is semver before extracting parts Populate partial version variables
+string(REGEX MATCH "^(0|[1-9][0-9]*)" FALCO_VERSION_MAJOR "${FALCO_VERSION}")
+string(REGEX REPLACE "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\..*" "\\2" FALCO_VERSION_MINOR "${FALCO_VERSION}")
+string(REGEX REPLACE "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*).*" "\\3" FALCO_VERSION_PATCH
+                     "${FALCO_VERSION}")
+string(
+  REGEX
+  REPLACE
+    "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)-((0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*)(\\.(0|[1-9][0-9]*|[0-9]*[a-zA-Z-][0-9a-zA-Z-]*))*).*"
+    "\\5"
+    FALCO_VERSION_PRERELEASE
+    "${FALCO_VERSION}")
+
+if(FALCO_VERSION_PRERELEASE STREQUAL "${FALCO_VERSION}")
+  set(FALCO_VERSION_PRERELEASE "")
+endif()
+if(NOT FALCO_VERSION_BUILD)
+  string(REGEX REPLACE ".*\\+([0-9a-zA-Z-]+(\\.[0-9a-zA-Z-]+)*)" "\\1" FALCO_VERSION_BUILD "${FALCO_VERSION}")
+endif()
+if(FALCO_VERSION_BUILD STREQUAL "${FALCO_VERSION}")
+  set(FALCO_VERSION_BUILD "")
+endif()
+
 message(STATUS "Falco version: ${FALCO_VERSION}")
