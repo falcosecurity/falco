@@ -632,3 +632,12 @@ trace_files: !mux
       - ../rules/k8s_audit_rules.yaml
     trace_file: trace_files/k8s_audit/fal_01_003.json
     stderr_contains: 'Could not read k8s audit event line #1, "{"kind": 0}": Data not recognized as a k8s audit event, stopping'
+
+  json_pointer_correct_parse:
+    detect: True
+    detect_level: WARNING
+    rules_file:
+      - ./rules/k8s_audit/single_rule_with_json_pointer.yaml
+    detect_counts:
+      - json_pointer_example: 1
+    trace_file: trace_files/k8s_audit/create_nginx_pod_unprivileged.json
