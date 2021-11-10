@@ -2676,7 +2676,7 @@
   tags: [file, mitre_persistence]
 
 - list: remote_file_copy_binaries
-  items: [rsync, scp, sftp, dcp, wget, curl]
+  items: [rsync, scp, sftp, dcp]
 
 - macro: remote_file_copy_procs
   condition: (proc.name in (remote_file_copy_binaries))
@@ -3082,6 +3082,30 @@
   output: An userfaultfd syscall was successfully executed by an unprivileged user (user=%user.name user_loginuid=%user.loginuid process=%proc.name command=%proc.cmdline %container.info image=%container.image.repository:%container.image.tag)
   priority: CRITICAL
   tags: [syscall, mitre_defense_evasion]
+
+- list: ingress_remote_file_copy_binaries
+  items: [wget, curl]
+
+- macro: ingress_remote_file_copy_procs
+  condition: (proc.name in (remote_file_copy_binaries))
+
+# Users should overwrite this macro to specify conditions under which a
+# Custom condition for use of ingress remote file copy tool in container
+- macro: user_known_ingress_remote_file_copy_activities
+  condition: (never_true)
+
+- rule: Launch Ingress Remote File Copy Tools in Container
+  desc: Detect ingress remote file copy tools launched in container
+  condition: >
+    spawned_process
+    and container
+    and ingress_remote_file_copy_procs
+    and not user_known_ingress_remote_file_copy_activities
+  output: >
+    Ingress remote file copy tool launched in container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline parent_process=%proc.pname
+    container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
+  priority: NOTICE
+  tags: [network, process, mitre_command_and_control]
 
 # Application rules have moved to application_rules.yaml. Please look
 # there if you want to enable them by adding to
