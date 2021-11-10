@@ -177,10 +177,18 @@ trace_files: !mux
     trace_file: trace_files/cat_write.scap
 
   rule_exception_append_item_not_in_rule:
-    exit_status: 0
-    stderr_contains: |+
-      1 warnings:
-      Rule My Rule with append=true: no set of fields matching name ex2
+    exit_status: 1
+    stdout_is: |+
+      1 errors:
+      Rule exception new item ex2: must have fields property with a list of fields
+      ---
+      - rule: My Rule
+        exceptions:
+          - name: ex2
+            values:
+              - [apache, /tmp]
+        append: true
+      ---
     validate_rules_file:
       - rules/exceptions/append_item_not_in_rule.yaml
     trace_file: trace_files/cat_write.scap
@@ -311,4 +319,35 @@ trace_files: !mux
       - rules/exceptions/rule_exception_single_field_append.yaml
     trace_file: trace_files/cat_write.scap
 
+  rule_exception_new_single_field_append:
+    detect: False
+    detect_level: WARNING
+    rules_file:
+      - rules/exceptions/rule_exception_new_single_field_append.yaml
+    trace_file: trace_files/cat_write.scap
+  
+  rule_exception_new_second_field_append:
+    detect: False
+    detect_level: WARNING
+    rules_file:
+      - rules/exceptions/rule_exception_new_second_field_append.yaml
+    trace_file: trace_files/cat_write.scap
+
+  rule_exception_new_append_no_field:
+    exit_status: 1
+    stdout_is: |+
+      1 errors:
+      Rule exception new item proc_cmdline: must have fields property with a list of fields
+      ---
+      - rule: Open From Cat
+        exceptions:
+          - name: proc_cmdline
+            comps: in
+            values:
+              - "cat /dev/null"
+        append: true
+      ---
+    validate_rules_file:
+      - rules/exceptions/rule_exception_new_no_field_append.yaml
+    trace_file: trace_files/cat_write.scap
 
