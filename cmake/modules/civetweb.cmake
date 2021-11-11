@@ -10,8 +10,6 @@
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 #
-# Used internally by our patched civetweb cmakelists
-set(OPENSSL_LIBRARIES "${OPENSSL_LIBRARY_SSL} ${OPENSSL_LIBRARY_CRYPTO}")
 
 set(CIVETWEB_SRC "${PROJECT_BINARY_DIR}/civetweb-prefix/src/civetweb/")
 set(CIVETWEB_LIB "${CIVETWEB_SRC}/install/lib/libcivetweb.a")
