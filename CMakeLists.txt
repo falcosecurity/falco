@@ -165,8 +165,8 @@ if(NOT MINIMAL_BUILD)
   message(STATUS "Using bundled civetweb in '${CIVETWEB_SRC}'")
   ExternalProject_Add(
     civetweb
-    URL "https://github.com/civetweb/civetweb/archive/v1.11.tar.gz"
-    URL_HASH "SHA256=de7d5e7a2d9551d325898c71e41d437d5f7b51e754b242af897f7be96e713a42"
+    URL "https://github.com/civetweb/civetweb/archive/v1.15.tar.gz"
+    URL_HASH "SHA256=90a533422944ab327a4fbb9969f0845d0dba05354f9cacce3a5005fa59f593b9"
     CONFIGURE_COMMAND ${CMAKE_COMMAND} -E make_directory ${CIVETWEB_SRC}/install/lib
     COMMAND ${CMAKE_COMMAND} -E make_directory ${CIVETWEB_SRC}/install/include
     BUILD_IN_SOURCE 1
