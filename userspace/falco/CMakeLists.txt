@@ -108,6 +108,7 @@ if(NOT MINIMAL_BUILD)
     "${LIBYAML_LIB}"
     "${YAMLCPP_LIB}"
     "${CIVETWEB_LIB}"
+    "${CIVETWEB_CPP_LIB}"
   )
 endif()
 
