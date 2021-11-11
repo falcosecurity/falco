@@ -1,0 +1,16 @@
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index 43f3a77e..92664b79 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -53,7 +53,10 @@ if (CIVETWEB_ENABLE_SSL)
+       target_link_libraries(civetweb-c-library -ldl)
+     endif()
+   else()
+-    find_package(OpenSSL)
++    # Let it use our own provided openssl
++    if (NOT OPENSSL_INCLUDE_DIR)
++      find_package(OpenSSL)
++    endif()
+     include_directories(${OPENSSL_INCLUDE_DIR})
+     message(STATUS "OpenSSL include directory: ${OPENSSL_INCLUDE_DIR}")
+     target_link_libraries(civetweb-c-library ${OPENSSL_LIBRARIES})
