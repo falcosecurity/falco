@@ -12,8 +12,8 @@
 #
 
 set(CIVETWEB_SRC "${PROJECT_BINARY_DIR}/civetweb-prefix/src/civetweb/")
-set(CIVETWEB_LIB "${CIVETWEB_SRC}/install/lib/libcivetweb.a")
-SET(CIVETWEB_CPP_LIB "${CIVETWEB_SRC}/install/lib/libcivetweb-cpp.a")
+set(CIVETWEB_LIB "${CIVETWEB_SRC}/install/${CMAKE_INSTALL_LIBDIR}/libcivetweb.a")
+SET(CIVETWEB_CPP_LIB "${CIVETWEB_SRC}/install/${CMAKE_INSTALL_LIBDIR}/libcivetweb-cpp.a")
 set(CIVETWEB_INCLUDE_DIR "${CIVETWEB_SRC}/install/include")
 message(STATUS "Using bundled civetweb in '${CIVETWEB_SRC}'")
 if (USE_BUNDLED_OPENSSL)
