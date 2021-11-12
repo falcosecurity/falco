@@ -18,6 +18,7 @@ set(CIVETWEB_INCLUDE_DIR "${CIVETWEB_SRC}/install/include")
 message(STATUS "Using bundled civetweb in '${CIVETWEB_SRC}'")
 ExternalProject_Add(
         civetweb
+        DEPENDS openssl
         URL "https://github.com/civetweb/civetweb/archive/v1.15.tar.gz"
         URL_HASH "SHA256=90a533422944ab327a4fbb9969f0845d0dba05354f9cacce3a5005fa59f593b9"
         INSTALL_DIR ${CIVETWEB_SRC}/install
