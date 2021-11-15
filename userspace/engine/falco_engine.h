@@ -78,16 +78,16 @@ public:
 	// be passed as an argument to process_event(). This allows
 	// for different sets of rules being active at once.
 	//
-	void enable_rule(const std::string &substring, bool enabled, const std::string &ruleset = m_default_ruleset);
+	void enable_rule(const std::string &substring, bool enabled, const std::string &ruleset = s_default_ruleset);
 
 
 	// Like enable_rule, but the rule name must be an exact match.
-	void enable_rule_exact(const std::string &rule_name, bool enabled, const std::string &ruleset = m_default_ruleset);
+	void enable_rule_exact(const std::string &rule_name, bool enabled, const std::string &ruleset = s_default_ruleset);
 
 	//
 	// Enable/Disable any rules with any of the provided tags (set, exact matches only)
 	//
-	void enable_rule_by_tag(const std::set<std::string> &tags, bool enabled, const std::string &ruleset = m_default_ruleset);
+	void enable_rule_by_tag(const std::set<std::string> &tags, bool enabled, const std::string &ruleset = s_default_ruleset);
 
 	// Only load rules having this priority or more severe.
 	void set_min_priority(falco_common::priority_type priority);
@@ -197,7 +197,7 @@ public:
 	//
 	void evttypes_for_ruleset(std::string &source,
 				  std::set<uint16_t> &evttypes,
-				  const std::string &ruleset = m_default_ruleset);
+				  const std::string &ruleset = s_default_ruleset);
 
 	//
 	// Given a source and output string, return an
@@ -266,7 +266,7 @@ private:
 	double m_sampling_multiplier;
 
 	std::string m_lua_main_filename = "rule_loader.lua";
-	static const std::string m_default_ruleset;
+	static const std::string s_default_ruleset;
 	uint32_t m_default_ruleset_id;
 
 	std::string m_extra;
