@@ -542,10 +542,6 @@ function load_rules_doc(rules_mgr, doc, load_state)
 	    return false, build_error_with_context(v['context'], "Rule name is empty"), warnings
 	 end
 
-	 if (v['condition'] == nil and v['exceptions'] == nil) then
-	    return false, build_error_with_context(v['context'], "Rule must have exceptions or condition property"), warnings
-	 end
-
 	 -- By default, if a rule's condition refers to an unknown
 	 -- filter like evt.type, etc the loader throws an error.
 	 if v['skip-if-unknown-filter'] == nil then
@@ -611,6 +607,9 @@ function load_rules_doc(rules_mgr, doc, load_state)
 		  return false, build_error_with_context(v['context'], "Rule " ..v['rule'].. " has 'append' key but no rule by that name already exists"), warnings
 	       end
 	    else
+          if (v['condition'] == nil and next(v['exceptions']) == nil) then
+             return false, build_error_with_context(v['context'], "Appended rule must have exceptions or condition property"), warnings
+          end
 
 	       if next(v['exceptions']) ~= nil then
 
@@ -663,14 +662,25 @@ function load_rules_doc(rules_mgr, doc, load_state)
 	    end
 
 	 else
-
+       local err = nil
 	    for j, field in ipairs({'condition', 'output', 'desc', 'priority'}) do
-	       if (v[field] == nil) then
-		  return false, build_error_with_context(v['context'], "Rule must have property "..field), warnings
+	       if (err == nil and v[field] == nil) then
+		       err = build_error_with_context(v['context'], "Rule must have property "..field)
 	       end
 	    end
 
-	    -- Convert the priority-as-string to a priority-as-number now
+       -- Handle spacial case where "enabled" flag is defined only
+       if (err ~= nil) then
+          if (v['enabled'] == nil) then
+            return false, err, warnings
+          else 
+             if state.rules_by_name[v['rule']] == nil then
+                return false, build_error_with_context(v['context'], "Rule " ..v['rule'].. " has 'enabled' key only, but no rule by that name already exists"), warnings
+             end
+             state.rules_by_name[v['rule']]['enabled'] = v['enabled']
+          end
+       else
+       -- Convert the priority-as-string to a priority-as-number now
 	    v['priority_num'] = priorities[v['priority']]
 
 	    if v['priority_num'] == nil then
@@ -693,6 +703,7 @@ function load_rules_doc(rules_mgr, doc, load_state)
 	    else
 	       state.skipped_rules_by_name[v['rule']] = v
 	    end
+       end
 	 end
       else
 	 local context = v['context']
