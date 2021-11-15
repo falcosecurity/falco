@@ -40,7 +40,7 @@ extern "C" {
 
 string lua_on_event = "on_event";
 string lua_print_stats = "print_stats";
-const std::string falco_engine::m_default_ruleset = "falco-default-ruleset";
+const std::string falco_engine::s_default_ruleset = "falco-default-ruleset";
 
 using namespace std;
 
@@ -63,7 +63,7 @@ falco_engine::falco_engine(bool seed_rng, const std::string& alternate_lua_dir)
 		srandom((unsigned) getpid());
 	}
 
-	m_default_ruleset_id = find_ruleset_id(m_default_ruleset);
+	m_default_ruleset_id = find_ruleset_id(s_default_ruleset);
 }
 
 falco_engine::~falco_engine()
