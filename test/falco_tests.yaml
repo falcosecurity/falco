@@ -634,7 +634,13 @@ trace_files: !mux
     rules_file:
       - rules/single_rule_enabled_flag.yaml
     trace_file: trace_files/cat_write.scap
-
+  
+  disabled_rule_using_false_enabled_flag_only:
+    detect: False
+    rules_file:
+      - rules/disabled_rule_using_enabled_flag_only.yaml
+    trace_file: trace_files/cat_write.scap
+  
   disabled_and_enabled_rules_1:
     exit_status: 1
     stderr_contains: "Runtime error: You can not specify both disabled .-D/-T. and enabled .-t. rules. Exiting."
