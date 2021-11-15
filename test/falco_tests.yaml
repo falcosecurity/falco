@@ -354,7 +354,7 @@ trace_files: !mux
     exit_status: 1
     stdout_is: |+
       1 errors:
-      Rule must have exceptions or condition property
+      Appended rule must have exceptions or condition property
       ---
       - rule: no condition rule
         append: true
