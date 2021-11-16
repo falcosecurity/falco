@@ -18,7 +18,7 @@
 
    Much of the scaffolding and helpers was derived from Andre Murbach Maidl's Lua parser (https://github.com/andremm/lua-parser).
 
-   While this is based on the sysdig filtering syntax (*), the Falco syntax is extended to support "macro" terms, which are just identifiers.
+   While this is based on the falcosecurity-libs filtering syntax (*), the Falco syntax is extended to support "macro" terms, which are just identifiers.
 
    (*) There is currently one known difference with the syntax implemented in libsinsp: In libsinsp, field names cannot start with 'a', 'o', or 'n'. With this parser they can.
 

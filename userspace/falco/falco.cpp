@@ -1327,7 +1327,7 @@ int falco_init(int argc, char **argv)
 
 		if(trace_filename.size())
 		{
-			// Try to open the trace file as a sysdig
+			// Try to open the trace file as a
 			// capture file first.
 			try {
 				inspector->open(trace_filename);
