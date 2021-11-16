@@ -18,7 +18,7 @@ How to use.
     * docker run -ti falcosecurity/falco-builder bash
 
     To build Falco it needs:
-    - a bind-mount on the source directory (ie., the directory containing Falco and sysdig source as siblings)
+    - a bind-mount on the source directory (ie., the directory containing the Falco source as sibling)
 
     Optionally, you can also bind-mount the build directory.
     So, you can execute it from the Falco root directory as follows.
