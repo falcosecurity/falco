@@ -110,11 +110,11 @@ set(CMD_MAKE make)
 
 include(ExternalProject)
 
-# LuaJIT
-include(luajit)
-
 # libs
 include(falcosecurity-libs)
+
+# LuaJit provided by libs
+include(luajit)
 
 # jq
 include(jq)
