@@ -3084,23 +3084,27 @@
   tags: [syscall, mitre_defense_evasion]
 
 - list: ingress_remote_file_copy_binaries
-  items: [wget, curl]
+  items: [wget]
 
 - macro: ingress_remote_file_copy_procs
-  condition: (proc.name in (remote_file_copy_binaries))
+  condition: (proc.name in (ingress_remote_file_copy_binaries))
 
 # Users should overwrite this macro to specify conditions under which a
 # Custom condition for use of ingress remote file copy tool in container
 - macro: user_known_ingress_remote_file_copy_activities
   condition: (never_true)
 
+-  macro: curl_download
+   condition: proc.name = curl and (proc.cmdline contains (" > ") or proc.cmdline contains (" >> ") or proc.cmdline contains (" | "))
+
 - rule: Launch Ingress Remote File Copy Tools in Container
   desc: Detect ingress remote file copy tools launched in container
   condition: >
-    spawned_process
-    and container
-    and ingress_remote_file_copy_procs
-    and not user_known_ingress_remote_file_copy_activities
+    spawned_process and
+    container and
+    ((ingress_remote_file_copy_procs and
+      not user_known_ingress_remote_file_copy_activities) or
+     (curl_download))
   output: >
     Ingress remote file copy tool launched in container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline parent_process=%proc.pname
     container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
