@@ -60,83 +60,126 @@ public:
 	}
 
 	/**
-	* Get a scalar value defined at the top level of the config
+	* Get a scalar value from the node identified by key.
 	*/
 	template<typename T>
 	const T get_scalar(const std::string& key, const T& default_value)
 	{
-		try
+		YAML::Node node;
+		get_node(node, key);
+		if(node.IsDefined())
 		{
-			auto node = m_root[key];
-			if(node.IsDefined())
-			{
-				return node.as<T>();
-			}
-		}
-		catch(const YAML::BadConversion& ex)
-		{
-			std::cerr << "Cannot read config file (" + m_path + "): wrong type at key " + key + "\n";
-			throw;
+			return node.as<T>();
 		}
 
 		return default_value;
 	}
 
 	/**
-	 * Set the top-level node identified by key to value
+	 * Set the node identified by key to value.
 	 */
 	template<typename T>
 	void set_scalar(const std::string& key, const T& value)
 	{
-		auto node = m_root;
+		YAML::Node node;
+		get_node(node, key);
 		if(node.IsDefined())
 		{
-			node[key] = value;
+			node = value;
 		}
 	}
 
 	/**
-	* Get a scalar value defined inside a 2 level nested structure like:
-	* file_output:
-	*   enabled: true
-	*   filename: output_file.txt
-	*
-	* get_scalar<bool>("file_output", "enabled", false)
+	* Get the sequence value from the node identified by key.
 	*/
 	template<typename T>
-	const T get_scalar(const std::string& key, const std::string& subkey, const T& default_value)
+	void get_sequence(T& ret, const std::string& key)
+	{
+		YAML::Node node;
+		get_node(node, key);
+		return get_sequence_from_node<T>(ret, node);
+	}
+
+	/**
+	* Return true if the node identified by key is defined.
+	*/
+	bool is_defined(const std::string& key)
+	{
+		YAML::Node node;
+		get_node(node, key);
+		return node.IsDefined();
+	}
+
+private:
+	YAML::Node m_root;
+	std::string m_input;
+	bool m_is_from_file;
+
+	/**
+	 * Key is a string representing a node in the YAML document.
+	 * The provided key string can navigate the document in its
+	 * nested nodes, with arbitrary depth. The key string follows
+	 * this regular language:
+	 * 
+	 * Key 		:= NodeKey ('.' NodeKey)*
+	 * NodeKey	:= (any)+ ('[' (integer)+ ']')*
+	 * 
+	 * Some examples of accepted key strings:
+	 * - NodeName
+	 * - ListValue[3].subvalue
+	 * - MatrixValue[1][3]
+	 * - value1.subvalue2.subvalue3
+	 */
+	void get_node(YAML::Node &ret, const std::string &key)
 	{
 		try
 		{
-			auto node = m_root[key][subkey];
-			if(node.IsDefined())
+			char c;
+			bool should_shift;
+			std::string nodeKey;
+			ret.reset(m_root);
+			for(std::string::size_type i = 0; i < key.size(); ++i)
 			{
-				return node.as<T>();
+				c = key[i];
+				should_shift = c == '.' || c == '[' || i == key.size() - 1;
+
+				if (c != '.' && c != '[')
+				{
+					if (i > 0 && nodeKey.empty() && key[i - 1] != '.')
+					{
+						throw runtime_error(
+							"Parsing error: expected '.' character at pos " 
+							+ to_string(i - 1));
+					}
+					nodeKey += c;
+				}
+
+				if (should_shift)
+				{
+					if (nodeKey.empty())
+					{
+						throw runtime_error(
+							"Parsing error: unexpected character at pos " 
+							+ to_string(i));
+					}
+					ret.reset(ret[nodeKey]);
+					nodeKey.clear();
+				}
+				if (c == '[')
+				{
+					auto close_param_idx = key.find(']', i);
+					int nodeIdx = std::stoi(key.substr(i + 1, close_param_idx - i - 1));
+					ret.reset(ret[nodeIdx]);
+					i = close_param_idx;
+				}
 			}
 		}
-		catch(const YAML::BadConversion& ex)
+		catch(const std::exception& e)
 		{
-			std::cerr << "Cannot read config file (" + m_path + "): wrong type at key " + key + "." + subkey + "\n";
-			throw;
-		}
-
-		return default_value;
-	}
-
-	/**
-	 * Set the second-level node identified by key[key][subkey] to value.
-	 */
-	template<typename T>
-	void set_scalar(const std::string& key, const std::string& subkey, const T& value)
-	{
-		auto node = m_root;
-		if(node.IsDefined())
-		{
-			node[key][subkey] = value;
+			throw runtime_error("Config error at key \"" + key + "\": " + string(e.what()));
 		}
 	}
-
-	// called with the last variadic arg (where the sequence is expected to be found)
+	
 	template<typename T>
 	void get_sequence_from_node(T& ret, const YAML::Node& node)
 	{
@@ -155,40 +198,6 @@ public:
 			}
 		}
 	}
-
-	// called with the last variadic arg (where the sequence is expected to be found)
-	template<typename T>
-	void get_sequence(T& ret, const std::string& name)
-	{
-		return get_sequence_from_node<T>(ret, m_root[name]);
-	}
-
-	// called with the last variadic arg (where the sequence is expected to be found)
-	template<typename T>
-	void get_sequence(T& ret, const std::string& key, const std::string& subkey)
-	{
-		try
-		{
-			auto node = m_root[key];
-			if(node.IsDefined())
-			{
-				return get_sequence_from_node<T>(ret, node[subkey]);
-			}
-		}
-		catch(const YAML::BadConversion& ex)
-		{
-			std::cerr << "Cannot read config file (" + m_path + "): wrong type at key " + key + "." + subkey +"\n";
-			throw;
-		}
-	}
-
-	void get_node(YAML::Node &ret, const std::string &key)
-	{
-		ret = m_root[key];
-	}
-
-private:
-	YAML::Node m_root;
 };
 
 class falco_configuration
