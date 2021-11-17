@@ -20,7 +20,7 @@ else()
   set(FALCO_TESTS_SOURCES test_base.cpp engine/test_token_bucket.cpp engine/test_rulesets.cpp engine/test_falco_utils.cpp falco/test_webserver.cpp)
 endif()
 
-set(FALCO_TESTED_LIBRARIES falco_engine)
+set(FALCO_TESTED_LIBRARIES falco_engine yaml-cpp)
 
 SET(FALCO_TESTS_ARGUMENTS "" CACHE STRING "Test arguments to pass to the Falco test suite")
 
