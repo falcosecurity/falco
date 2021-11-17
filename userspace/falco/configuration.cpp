@@ -87,17 +87,17 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 
 	falco::outputs::config file_output;
 	file_output.name = "file";
-	if(m_config->get_scalar<bool>("file_output", "enabled", false))
+	if(m_config->get_scalar<bool>("file_output.enabled", false))
 	{
 		string filename, keep_alive;
-		filename = m_config->get_scalar<string>("file_output", "filename", "");
+		filename = m_config->get_scalar<string>("file_output.filename", "");
 		if(filename == string(""))
 		{
 			throw logic_error("Error reading config file (" + m_config_file + "): file output enabled but no filename in configuration block");
 		}
 		file_output.options["filename"] = filename;
 
-		keep_alive = m_config->get_scalar<string>("file_output", "keep_alive", "");
+		keep_alive = m_config->get_scalar<string>("file_output.keep_alive", "");
 		file_output.options["keep_alive"] = keep_alive;
 
 		m_outputs.push_back(file_output);
@@ -105,31 +105,31 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 
 	falco::outputs::config stdout_output;
 	stdout_output.name = "stdout";
-	if(m_config->get_scalar<bool>("stdout_output", "enabled", false))
+	if(m_config->get_scalar<bool>("stdout_output.enabled", false))
 	{
 		m_outputs.push_back(stdout_output);
 	}
 
 	falco::outputs::config syslog_output;
 	syslog_output.name = "syslog";
-	if(m_config->get_scalar<bool>("syslog_output", "enabled", false))
+	if(m_config->get_scalar<bool>("syslog_output.enabled", false))
 	{
 		m_outputs.push_back(syslog_output);
 	}
 
 	falco::outputs::config program_output;
 	program_output.name = "program";
-	if(m_config->get_scalar<bool>("program_output", "enabled", false))
+	if(m_config->get_scalar<bool>("program_output.enabled", false))
 	{
 		string program, keep_alive;
-		program = m_config->get_scalar<string>("program_output", "program", "");
+		program = m_config->get_scalar<string>("program_output.program", "");
 		if(program == string(""))
 		{
 			throw logic_error("Error reading config file (" + m_config_file + "): program output enabled but no program in configuration block");
 		}
 		program_output.options["program"] = program;
 
-		keep_alive = m_config->get_scalar<string>("program_output", "keep_alive", "");
+		keep_alive = m_config->get_scalar<string>("program_output.keep_alive", "");
 		program_output.options["keep_alive"] = keep_alive;
 
 		m_outputs.push_back(program_output);
@@ -137,10 +137,10 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 
 	falco::outputs::config http_output;
 	http_output.name = "http";
-	if(m_config->get_scalar<bool>("http_output", "enabled", false))
+	if(m_config->get_scalar<bool>("http_output.enabled", false))
 	{
 		string url;
-		url = m_config->get_scalar<string>("http_output", "url", "");
+		url = m_config->get_scalar<string>("http_output.url", "");
 
 		if(url == string(""))
 		{
@@ -151,22 +151,22 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 		m_outputs.push_back(http_output);
 	}
 
-	m_grpc_enabled = m_config->get_scalar<bool>("grpc", "enabled", false);
-	m_grpc_bind_address = m_config->get_scalar<string>("grpc", "bind_address", "0.0.0.0:5060");
-	m_grpc_threadiness = m_config->get_scalar<uint32_t>("grpc", "threadiness", 0);
+	m_grpc_enabled = m_config->get_scalar<bool>("grpc.enabled", false);
+	m_grpc_bind_address = m_config->get_scalar<string>("grpc.bind_address", "0.0.0.0:5060");
+	m_grpc_threadiness = m_config->get_scalar<uint32_t>("grpc.threadiness", 0);
 	if(m_grpc_threadiness == 0)
 	{
 		m_grpc_threadiness = falco::utils::hardware_concurrency();
 	}
 	// todo > else limit threadiness to avoid oversubscription?
-	m_grpc_private_key = m_config->get_scalar<string>("grpc", "private_key", "/etc/falco/certs/server.key");
-	m_grpc_cert_chain = m_config->get_scalar<string>("grpc", "cert_chain", "/etc/falco/certs/server.crt");
-	m_grpc_root_certs = m_config->get_scalar<string>("grpc", "root_certs", "/etc/falco/certs/ca.crt");
+	m_grpc_private_key = m_config->get_scalar<string>("grpc.private_key", "/etc/falco/certs/server.key");
+	m_grpc_cert_chain = m_config->get_scalar<string>("grpc.cert_chain", "/etc/falco/certs/server.crt");
+	m_grpc_root_certs = m_config->get_scalar<string>("grpc.root_certs", "/etc/falco/certs/ca.crt");
 
 	falco::outputs::config grpc_output;
 	grpc_output.name = "grpc";
 	// gRPC output is enabled only if gRPC server is enabled too
-	if(m_config->get_scalar<bool>("grpc_output", "enabled", true) && m_grpc_enabled)
+	if(m_config->get_scalar<bool>("grpc_output.enabled", true) && m_grpc_enabled)
 	{
 		m_outputs.push_back(grpc_output);
 	}
@@ -182,8 +182,8 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 
 	m_output_timeout = m_config->get_scalar<uint32_t>("output_timeout", 2000);
 
-	m_notifications_rate = m_config->get_scalar<uint32_t>("outputs", "rate", 1);
-	m_notifications_max_burst = m_config->get_scalar<uint32_t>("outputs", "max_burst", 1000);
+	m_notifications_rate = m_config->get_scalar<uint32_t>("outputs.rate", 1);
+	m_notifications_max_burst = m_config->get_scalar<uint32_t>("outputs.max_burst", 1000);
 
 	string priority = m_config->get_scalar<string>("priority", "debug");
 	vector<string>::iterator it;
@@ -204,15 +204,15 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 	falco_logger::log_stderr = m_config->get_scalar<bool>("log_stderr", false);
 	falco_logger::log_syslog = m_config->get_scalar<bool>("log_syslog", true);
 
-	m_webserver_enabled = m_config->get_scalar<bool>("webserver", "enabled", false);
-	m_webserver_listen_port = m_config->get_scalar<uint32_t>("webserver", "listen_port", 8765);
-	m_webserver_k8s_audit_endpoint = m_config->get_scalar<string>("webserver", "k8s_audit_endpoint", "/k8s-audit");
-	m_webserver_k8s_healthz_endpoint = m_config->get_scalar<string>("webserver", "k8s_healthz_endpoint", "/healthz");
-	m_webserver_ssl_enabled = m_config->get_scalar<bool>("webserver", "ssl_enabled", false);
-	m_webserver_ssl_certificate = m_config->get_scalar<string>("webserver", "ssl_certificate", "/etc/falco/falco.pem");
+	m_webserver_enabled = m_config->get_scalar<bool>("webserver.enabled", false);
+	m_webserver_listen_port = m_config->get_scalar<uint32_t>("webserver.listen_port", 8765);
+	m_webserver_k8s_audit_endpoint = m_config->get_scalar<string>("webserver.k8s_audit_endpoint", "/k8s-audit");
+	m_webserver_k8s_healthz_endpoint = m_config->get_scalar<string>("webserver.k8s_healthz_endpoint", "/healthz");
+	m_webserver_ssl_enabled = m_config->get_scalar<bool>("webserver.ssl_enabled", false);
+	m_webserver_ssl_certificate = m_config->get_scalar<string>("webserver.ssl_certificate", "/etc/falco/falco.pem");
 
 	std::list<string> syscall_event_drop_acts;
-	m_config->get_sequence(syscall_event_drop_acts, "syscall_event_drops", "actions");
+	m_config->get_sequence(syscall_event_drop_acts, "syscall_event_drops.actions");
 
 	for(std::string &act : syscall_event_drop_acts)
 	{
@@ -251,28 +251,28 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 		m_syscall_evt_drop_actions.insert(syscall_evt_drop_action::IGNORE);
 	}
 
-	m_syscall_evt_drop_threshold = m_config->get_scalar<double>("syscall_event_drops", "threshold", .1);
+	m_syscall_evt_drop_threshold = m_config->get_scalar<double>("syscall_event_drops.threshold", .1);
 	if(m_syscall_evt_drop_threshold < 0 || m_syscall_evt_drop_threshold > 1)
 	{
 		throw logic_error("Error reading config file (" + m_config_file + "): syscall event drops threshold must be a double in the range [0, 1]");
 	}
-	m_syscall_evt_drop_rate = m_config->get_scalar<double>("syscall_event_drops", "rate", .03333);
-	m_syscall_evt_drop_max_burst = m_config->get_scalar<double>("syscall_event_drops", "max_burst", 1);
-	m_syscall_evt_simulate_drops = m_config->get_scalar<bool>("syscall_event_drops", "simulate_drops", false);
+	m_syscall_evt_drop_rate = m_config->get_scalar<double>("syscall_event_drops.rate", .03333);
+	m_syscall_evt_drop_max_burst = m_config->get_scalar<double>("syscall_event_drops.max_burst", 1);
+	m_syscall_evt_simulate_drops = m_config->get_scalar<bool>("syscall_event_drops.simulate_drops", false);
 
-	m_syscall_evt_timeout_max_consecutives = m_config->get_scalar<uint32_t>("syscall_event_timeouts", "max_consecutives", 1000);
+	m_syscall_evt_timeout_max_consecutives = m_config->get_scalar<uint32_t>("syscall_event_timeouts.max_consecutives", 1000);
 	if(m_syscall_evt_timeout_max_consecutives == 0)
 	{
 		throw logic_error("Error reading config file(" + m_config_file + "): the maximum consecutive timeouts without an event must be an unsigned integer > 0");
 	}
 
-	m_metadata_download_max_mb = m_config->get_scalar<uint32_t>("metadata_download", "max_mb", 100);
+	m_metadata_download_max_mb = m_config->get_scalar<uint32_t>("metadata_download.max_mb", 100);
 	if(m_metadata_download_max_mb > 1024)
 	{
 		throw logic_error("Error reading config file(" + m_config_file + "): metadata download maximum size should be < 1024 Mb");
 	}
-	m_metadata_download_chunk_wait_us = m_config->get_scalar<uint32_t>("metadata_download", "chunk_wait_us", 1000);
-	m_metadata_download_watch_freq_sec = m_config->get_scalar<uint32_t>("metadata_download", "watch_freq_sec", 1);
+	m_metadata_download_chunk_wait_us = m_config->get_scalar<uint32_t>("metadata_download.chunk_wait_us", 1000);
+	m_metadata_download_watch_freq_sec = m_config->get_scalar<uint32_t>("metadata_download.watch_freq_sec", 1);
 	if(m_metadata_download_watch_freq_sec == 0)
 	{
 		throw logic_error("Error reading config file(" + m_config_file + "): metadata download watch frequency seconds must be an unsigned integer > 0");
@@ -398,19 +398,16 @@ void falco_configuration::init_cmdline_options(list<string> &cmdline_options)
 void falco_configuration::set_cmdline_option(const string &opt)
 {
 	pair<string, string> keyval;
-	pair<string, string> subkey;
 
 	if(!split(opt, '=', keyval))
 	{
 		throw logic_error("Error parsing config option \"" + opt + "\". Must be of the form key=val or key.subkey=val");
 	}
 
-	if(split(keyval.first, '.', subkey))
+	if(!m_config->is_defined(keyval.first))
 	{
-		m_config->set_scalar(subkey.first, subkey.second, keyval.second);
+		throw logic_error("Error parsing config option \"" + opt + "\". Option does not exist");
 	}
-	else
-	{
-		m_config->set_scalar(keyval.first, keyval.second);
-	}
+
+	m_config->set_scalar(keyval.first, keyval.second);
 }
