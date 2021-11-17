@@ -280,8 +280,7 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 
 	std::set<std::string> load_plugins;
 
-	YAML::Node load_plugins_node;
-	m_config->get_node(load_plugins_node, "load_plugins");
+	bool load_plugins_node_defined = m_config->is_defined("load_plugins");
 
 	m_config->get_sequence<set<string>>(load_plugins, "load_plugins");
 
@@ -302,7 +301,7 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 		// If load_plugins was not specified at all, every
 		// plugin is added. Otherwise, the plugin must be in
 		// the load_plugins list.
-		if(!load_plugins_node.IsDefined() || load_plugins.find(p.m_name) != load_plugins.end())
+		if(!load_plugins_node_defined || load_plugins.find(p.m_name) != load_plugins.end())
 		{
 			m_plugins.push_back(p);
 		}
