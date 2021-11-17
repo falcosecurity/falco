@@ -35,7 +35,7 @@ else()
   )
 endif()
 
-set(FALCO_TESTED_LIBRARIES falco_engine yaml-cpp)
+set(FALCO_TESTED_LIBRARIES falco_engine ${YAMLCPP_LIB})
 
 SET(FALCO_TESTS_ARGUMENTS "" CACHE STRING "Test arguments to pass to the Falco test suite")
 
