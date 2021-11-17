@@ -35,26 +35,28 @@ limitations under the License.
 class yaml_configuration
 {
 public:
-	std::string m_path;
-	yaml_configuration(const std::string& path)
+	/**
+	* Load the YAML document represented by the input string.
+	*/
+	void load_from_string(const std::string& input)
 	{
-		m_path = path;
-		YAML::Node config;
-		std::vector<falco::outputs::config> outputs;
-		try
-		{
-			m_root = YAML::LoadFile(path);
-		}
-		catch(const YAML::BadFile& ex)
-		{
-			std::cerr << "Error reading config file (" + path + "): " + ex.what() + "\n";
-			throw;
-		}
-		catch(const YAML::ParserException& ex)
-		{
-			std::cerr << "Cannot read config file (" + path + "): " + ex.what() + "\n";
-			throw;
-		}
+		m_root = YAML::Load(input);
+	}
+
+	/**
+	* Load the YAML document from the given file path.
+	*/
+	void load_from_file(const std::string& path)
+	{
+		m_root = YAML::LoadFile(path);
+	}
+
+	/**
+	 * Clears the internal loaded document.
+	 */
+	void clear()
+	{
+		m_root = YAML::Node();
 	}
 
 	/**

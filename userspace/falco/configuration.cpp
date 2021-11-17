@@ -54,7 +54,16 @@ falco_configuration::~falco_configuration()
 void falco_configuration::init(string conf_filename, list<string> &cmdline_options)
 {
 	string m_config_file = conf_filename;
-	m_config = new yaml_configuration(m_config_file);
+	m_config = new yaml_configuration();
+	try
+	{
+		m_config->load_from_file(m_config_file);
+	}
+	catch(const std::exception& e)
+	{
+		std::cerr << "Cannot read config file (" + m_config_file + "): " + e.what() + "\n";
+		throw e;
+	}
 
 	init_cmdline_options(cmdline_options);
 
