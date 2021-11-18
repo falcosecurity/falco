@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 - macro: open_read
-  condition: (evt.type=open or evt.type=openat) and evt.is_open_read=true and fd.typechar='f'
+  condition: evt.type in (open,openat,openat2) and evt.is_open_read=true and fd.typechar='f'
 
 - rule: open_1
   desc: open one
