@@ -300,13 +300,13 @@ clean_kernel_module() {
 		return
 	fi
 
-	DRIVER_VERSIONS=$(dkms status -m "${DRIVER_NAME}" | cut -d',' -f2 | sed -e 's/^[[:space:]]*//')
+	DRIVER_VERSIONS=$(dkms status -m "${DRIVER_NAME}" | cut -d',' -f1 | sed -e 's/^[[:space:]]*//')
 	if [ -z "${DRIVER_VERSIONS}" ]; then
 		echo "* There is no ${DRIVER_NAME} module in dkms"
 		return
 	fi
 	for CURRENT_VER in ${DRIVER_VERSIONS}; do
-		if dkms remove -m "${DRIVER_NAME}" -v "${CURRENT_VER}" --all 2>/dev/null; then
+		if dkms remove "${CURRENT_VER}" --all 2>/dev/null; then
 			echo "* Removing ${DRIVER_NAME}/${CURRENT_VER} succeeded"
 		else
 			echo "* Removing ${DRIVER_NAME}/${CURRENT_VER} failed"
