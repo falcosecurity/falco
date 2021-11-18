@@ -83,10 +83,7 @@ public:
 	{
 		YAML::Node node;
 		get_node(node, key);
-		if(node.IsDefined())
-		{
-			node = value;
-		}
+		node = value;
 	}
 
 	/**

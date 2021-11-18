@@ -403,10 +403,5 @@ void falco_configuration::set_cmdline_option(const string &opt)
 		throw logic_error("Error parsing config option \"" + opt + "\". Must be of the form key=val or key.subkey=val");
 	}
 
-	if(!m_config->is_defined(keyval.first))
-	{
-		throw logic_error("Error parsing config option \"" + opt + "\". Option does not exist");
-	}
-
 	m_config->set_scalar(keyval.first, keyval.second);
 }
