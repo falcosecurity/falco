@@ -14,8 +14,8 @@ include(ExternalProject)
 
 set(FAKEIT_INCLUDE ${CMAKE_BINARY_DIR}/fakeit-prefix/include)
 
-set(FAKEIT_EXTERNAL_URL URL https://github.com/eranpeer/fakeit/archive/2.0.5.tar.gz URL_HASH
-                        SHA256=298539c773baca6ecbc28914306bba19d1008e098f8adc3ad3bb00e993ecdf15)
+set(FAKEIT_EXTERNAL_URL URL https://github.com/eranpeer/fakeit/archive/2.0.9.tar.gz URL_HASH
+                        SHA256=dc4ee7b17a84c959019b92c20fce6dc9426e9e170b6edf84db6cb2e188520cd7)
 
 ExternalProject_Add(
   fakeit-external
