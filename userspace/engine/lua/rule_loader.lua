@@ -811,6 +811,46 @@ function build_exception_condition_string_single_field(eitem, exfields)
 
 end
 
+-- Process macros. Broken off from the big load_rules() function for readability.
+-- Tries loading all the macros, pushing back any failed ones to a next try.
+-- Stops and fails first when a run fails without completing any resolution.
+-- Returns: an error or nil on success
+local function load_rule_macros(s)
+   -- Initialize macros to resolve.
+   local idx
+   local macros_to_try = {}
+   for idx = 1, #s.ordered_macro_names do
+      macros_to_try[idx] = s.ordered_macro_names[idx]
+   end
+
+   -- v and ast are used when reporting failure.
+   local status, v, ast
+   local did_anything = true
+   repeat
+      local macros_to_retry = {}
+      did_anything = false
+      for idx = 1, #macros_to_try do
+	 local name = macros_to_try[idx]
+	 v = s.macros_by_name[name]
+	 status, ast = compiler.compile_macro(v['condition'], s.macros, s.lists)
+	 if status == false then
+	    macros_to_retry[#macros_to_retry + 1] = name
+	 else
+	    s.macros[v['macro']] = {["ast"] = ast.filter.value, ["used"] = false}
+	    did_anything = true
+	 end
+      end
+      macros_to_try = macros_to_retry
+   until #macros_to_try == 0 or did_anything == false
+
+   -- Work left to do?
+   if #macros_to_try ~= 0 then
+      return build_error_with_context(v['context'], ast)
+   end
+
+   return nil
+end
+
 -- Returns:
 -- - Load Result: bool
 -- - required engine version. will be nil when load result is false
@@ -917,17 +957,9 @@ function load_rules(rules_content,
       state.lists[v['list']] = {["items"] = items, ["used"] = false}
    end
 
-   for _, name in ipairs(state.ordered_macro_names) do
-
-      local v = state.macros_by_name[name]
-
-      local status, ast = compiler.compile_macro(v['condition'], state.macros, state.lists)
-
-      if status == false then
-	 return false, nil, nil, build_error_with_context(v['context'], ast), warnings
-      end
-
-      state.macros[v['macro']] = {["ast"] = ast.filter.value, ["used"] = false}
+   res = load_rule_macros(state)
+   if res ~= nil then
+      return false, nil, nil, res, warnings
    end
 
    for _, name in ipairs(state.ordered_rule_names) do
