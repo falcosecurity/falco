@@ -3096,13 +3096,13 @@
 
 -  macro: curl_download
    condition: proc.name = curl and
-              (proc.cmdline contains (" > ") or
-              proc.cmdline contains (" >> ") or
-              proc.cmdline contains (" | ") or
-              proc.cmdline contains (" -o ") or
-              proc.cmdline contains (" --output ") or
-              proc.cmdline contains (" -O ") or
-              proc.cmdline contains (" --remote-name "))
+              (proc.cmdline contains " > " or
+              proc.cmdline contains " >> " or
+              proc.cmdline contains " | " or
+              proc.cmdline contains " -o " or
+              proc.cmdline contains " --output " or
+              proc.cmdline contains " -O " or
+              proc.cmdline contains " --remote-name ")
 
 - rule: Launch Ingress Remote File Copy Tools in Container
   desc: Detect ingress remote file copy tools launched in container
