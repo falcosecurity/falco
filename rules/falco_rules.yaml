@@ -3109,9 +3109,8 @@
   condition: >
     spawned_process and
     container and
-    ((ingress_remote_file_copy_procs and
-      not user_known_ingress_remote_file_copy_activities) or
-     (curl_download))
+    (ingress_remote_file_copy_procs or curl_download) and
+    not user_known_ingress_remote_file_copy_activities
   output: >
     Ingress remote file copy tool launched in container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline parent_process=%proc.pname
     container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
