@@ -66,6 +66,8 @@ This is a list of production adopters of Falco (in alphabetical order):
 
 ## Projects that use Falco libs
 
+* [R6/Phoenix](https://r6security.com/) is an attack surface protection company that uses moving target defense to provide fully automated, proactive and devops friendly security to its customers. There are a set of policies you can add to enable the moving target defense capabilities. Some of them are triggered by a combination of Falco's findings. You can kill, restart and rename pods according to the ever changing policies. 
+
 * [SysFlow](https://sysflow.io) SysFlow is a cloud-native system telemetry framework that focuses on data abstraction, behavioral analytics, and noise reduction. At its core, SysFlow exposes a compact open telemetry format that records workload behaviors by connecting event and flow representations of process control flows, file interactions, and network communications. The resulting abstraction encodes a graph structure that enables provenance reasoning on host and container environments, and fast retrieval of security-relevant information.
 
 ## Adding a name
