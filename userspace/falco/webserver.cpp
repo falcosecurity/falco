@@ -150,7 +150,8 @@ bool k8s_audit_handler::handlePost(CivetServer *server, struct mg_connection *co
 	// Ensure that the content-type is application/json
 	const char *ct = server->getHeader(conn, string("Content-Type"));
 
-	if(ct == NULL || strstr(ct, "application/json") == NULL)
+	// content type *must* start with application/json
+	if(ct == NULL || strncmp(ct, "application/json", strlen("application/json")) != 0)
 	{
 		mg_send_http_error(conn, 400, "Wrong Content Type");
 
