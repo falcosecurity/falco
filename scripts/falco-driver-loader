@@ -471,6 +471,15 @@ load_bpf_probe() {
 	if [ -f "${HOME}/.falco/${BPF_PROBE_FILENAME}" ]; then
 		echo "* eBPF probe located in ${HOME}/.falco/${BPF_PROBE_FILENAME}"
 
+		if [ ! -f /proc/sys/net/core/bpf_jit_enable ] || [ $(cat /proc/sys/net/core/bpf_jit_enable) -eq 0 ]; then
+			echo "**********************************************************"
+			echo "** BPF doesn't have JIT enabled, performance might be   **"
+			echo "** degraded. Please ensure to run on a kernel with      **"
+			echo "** CONFIG_BPF_JIT enabled and/or use --net=host if      **"
+			echo "** running inside a container.                          **"
+			echo "**********************************************************"
+		fi
+
 		ln -sf "${HOME}/.falco/${BPF_PROBE_FILENAME}" "${HOME}/.falco/${DRIVER_NAME}-bpf.o" \
 			&& echo "* Success: eBPF probe symlinked to ${HOME}/.falco/${DRIVER_NAME}-bpf.o"
 		exit $?
