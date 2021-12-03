@@ -307,9 +307,9 @@ clean_kernel_module() {
 	fi
 	for CURRENT_VER in ${DRIVER_VERSIONS}; do
 		if dkms remove "${CURRENT_VER}" --all 2>/dev/null; then
-			echo "* Removing ${DRIVER_NAME}/${CURRENT_VER} succeeded"
+			echo "* Removing ${CURRENT_VER} succeeded"
 		else
-			echo "* Removing ${DRIVER_NAME}/${CURRENT_VER} failed"
+			echo "* Removing ${CURRENT_VER} failed"
 			exit 1
 		fi
 	done
