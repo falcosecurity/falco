@@ -1912,6 +1912,7 @@
   condition: (container.mount.dest[/proc*] != "N/A" or
               container.mount.dest[/var/run/docker.sock] != "N/A" or
               container.mount.dest[/var/run/crio/crio.sock] != "N/A" or
+              container.mount.dest[/run/containerd/containerd.sock] != "N/A" or
               container.mount.dest[/var/lib/kubelet] != "N/A" or
               container.mount.dest[/var/lib/kubelet/pki] != "N/A" or
               container.mount.dest[/] != "N/A" or
