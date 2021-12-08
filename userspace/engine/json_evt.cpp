@@ -1479,7 +1479,7 @@ std::list<gen_event_filter_factory::filter_fieldclass_info> json_event_filter_fa
 
 		cinfo.name = info.m_name;
 		cinfo.desc = info.m_desc;
-		cinfo.class_info = info.m_class_info;
+		cinfo.shortdesc = info.m_shortdesc;
 
 		for(auto &field : info.m_fields)
 		{
@@ -1487,15 +1487,14 @@ std::list<gen_event_filter_factory::filter_fieldclass_info> json_event_filter_fa
 			info.name = field.m_name;
 			info.desc = field.m_desc;
 
+			// All json fields work on strings
+			info.data_type = "CHARBUF";
+
 			switch(field.m_idx_mode)
 			{
 			case json_event_filter_check::IDX_REQUIRED:
 			case json_event_filter_check::IDX_ALLOWED:
-				info.desc += " (";
-				info.desc += json_event_filter_check::s_index_mode_strs[field.m_idx_mode];
-				info.desc += ", ";
-				info.desc += json_event_filter_check::s_index_type_strs[field.m_idx_type];
-				info.desc += ")";
+				info.tags.insert(json_event_filter_check::s_index_mode_strs[field.m_idx_mode]);
 				break;
 			case json_event_filter_check::IDX_NONE:
 			default:
