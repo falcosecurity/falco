@@ -75,12 +75,21 @@ uint32_t falco_engine::engine_version()
 	return (uint32_t) FALCO_ENGINE_VERSION;
 }
 
-#define DESCRIPTION_TEXT_START 16
-
-#define CONSOLE_LINE_LEN 79
-
-void falco_engine::list_fields(std::string &source, bool names_only)
+// Return a key that uniquely represents a field class.
+// For now, we assume name + shortdesc is unique.
+static std::string fieldclass_key(const gen_event_filter_factory::filter_fieldclass_info &fld_info)
 {
+	return fld_info.name + fld_info.shortdesc;
+}
+
+void falco_engine::list_fields(std::string &source, bool verbose, bool names_only)
+{
+	// Maps from field class name + short desc to list of event
+	// sources for which this field class can be used.
+	std::map<std::string,std::set<std::string>> fieldclass_event_sources;
+
+	// Do a first pass to group together classes that are
+	// applicable to multiple event sources.
 	for(auto &it : m_filter_factories)
 	{
 		if(source != "" && source != it.first)
@@ -88,51 +97,47 @@ void falco_engine::list_fields(std::string &source, bool names_only)
 			continue;
 		}
 
-		for(auto &chk_field : it.second->get_fields())
+		for(auto &fld_class : it.second->get_fields())
 		{
-			if(!names_only)
-			{
-				// Add some pretty printing around deesc, but if there's no desc keep
-				// as an empty string.
-				std::string desc = chk_field.desc;
-				if(!desc.empty())
-				{
-					desc = string(" (") + desc + ")";
-				}
+			fieldclass_event_sources[fieldclass_key(fld_class)].insert(it.first);
+		}
+	}
 
-				printf("\n----------------------\n");
-				printf("Field Class: %s%s\n\n", chk_field.name.c_str(), desc.c_str());
-				if(chk_field.class_info != "")
-				{
-					std::string str = falco::utils::wrap_text(chk_field.class_info, 0, 0, CONSOLE_LINE_LEN);
-					printf("%s\n", str.c_str());
-				}
+	// The set of field classes already printed. Used to avoid
+	// printing field classes multiple times for different sources
+	std::set<std::string> seen_fieldclasses;
+
+	// In the second pass, actually print info, skipping duplicate
+	// field classes and also printing info on supported sources.
+	for(auto &it : m_filter_factories)
+	{
+		if(source != "" && source != it.first)
+		{
+			continue;
+		}
+
+		for(auto &fld_class : it.second->get_fields())
+		{
+			std::string key = fieldclass_key(fld_class);
+
+			if(seen_fieldclasses.find(key) != seen_fieldclasses.end())
+			{
+				continue;
 			}
 
-			for(auto &field : chk_field.fields)
+			seen_fieldclasses.insert(key);
+
+			if(!names_only)
 			{
-				printf("%s", field.name.c_str());
-
-				if(names_only)
+				printf("%s\n", fld_class.as_string(verbose,
+								   fieldclass_event_sources[fieldclass_key(fld_class)]).c_str());
+			}
+			else
+			{
+				for(auto &field : fld_class.fields)
 				{
-					printf("\n");
-					continue;
+					printf("%s\n", field.name.c_str());
 				}
-				uint32_t namelen = field.name.size();
-
-				if(namelen >= DESCRIPTION_TEXT_START)
-				{
-					printf("\n");
-					namelen = 0;
-				}
-
-				for(uint32_t l = 0; l < DESCRIPTION_TEXT_START - namelen; l++)
-				{
-					printf(" ");
-				}
-
-				std::string str = falco::utils::wrap_text(field.desc, namelen, DESCRIPTION_TEXT_START, CONSOLE_LINE_LEN);
-				printf("%s\n", str.c_str());
 			}
 		}
 	}
