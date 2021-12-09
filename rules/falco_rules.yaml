@@ -1245,20 +1245,16 @@
     and not checkpoint_writing_state
     and not jboss_in_container_writing_passwd
     and not etcd_manager_updating_dns
-    and not user_known_write_below_etc_activities
     and not automount_using_mtab
     and not mcafee_writing_cma_d
     and not avinetworks_supervisor_writing_ssh
     and not multipath_writing_conf
 
-- macro: user_known_write_below_etc_conditions
-  condition: (never_true)
-
 - rule: Write below etc
   desc: an attempt to write to any file below /etc
   condition: >
     write_etc_common and
-    not user_known_write_below_etc_conditions
+    not user_known_write_below_etc_activities
   output: "File below /etc opened for writing (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline parent=%proc.pname pcmdline=%proc.pcmdline file=%fd.name program=%proc.name gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4] container_id=%container.id image=%container.image.repository)"
   priority: ERROR
   tags: [filesystem, mitre_persistence]
