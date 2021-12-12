@@ -293,19 +293,19 @@ function split_lines(rules_content)
 end
 
 function get_orig_yaml_obj(rules_lines, row)
-   local ret = ""
+    idx = row
+    local t = {}
+    while (idx <= #rules_lines) do
+        t[#t + 1] = rules_lines[idx]
+        idx = idx + 1
 
-   idx = row
-   while (idx <= #rules_lines) do
-      ret = ret..rules_lines[idx].."\n"
-      idx = idx + 1
-
-      if idx > #rules_lines or rules_lines[idx] == "" or string.sub(rules_lines[idx], 1, 1) == '-' then
-	 break
-      end
-   end
-
-   return ret
+        if idx > #rules_lines or rules_lines[idx] == "" or string.sub(rules_lines[idx], 1, 1) == '-' then
+            break
+        end
+    end
+    local ret = ""
+    ret = table.concat(t, "\n")
+    return ret
 end
 
 function get_lines(rules_lines, row, num_lines)
@@ -754,65 +754,69 @@ end
 -- Populates exfields with all fields used
 function build_exception_condition_string_multi_fields(eitem, exfields)
 
-   local fields = eitem['fields']
-   local comps = eitem['comps']
+    local fields = eitem['fields']
+    local comps = eitem['comps']
 
-   local icond = "("
+    local icond = {}
 
-   for i, values in ipairs(eitem['values']) do
+    icond[#icond + 1] = "("
 
-      if #fields ~= #values then
-	 return nil, "Exception item "..eitem['name']..": fields and values lists must have equal length"
-      end
+    local lcount = 0
+    for i, values in ipairs(eitem['values']) do
+        if #fields ~= #values then
+            return nil, "Exception item " .. eitem['name'] .. ": fields and values lists must have equal length"
+        end
 
-      if icond ~= "(" then
-	 icond=icond.." or "
-      end
+        if lcount ~= 0 then
+            icond[#icond + 1] = " or "
+        end
+        lcount = lcount + 1
 
-      icond=icond.."("
+        icond[#icond + 1] = "("
 
-      for k=1,#fields do
-	 if k > 1 then
-	    icond=icond.." and "
-	 end
-	 local ival = values[k]
-	 local istr = ""
+        for k = 1, #fields do
+            if k > 1 then
+                icond[#icond + 1] = " and "
+            end
+            local ival = values[k]
+            local istr = ""
 
-	 -- If ival is a table, express it as (titem1, titem2, etc)
-	 if type(ival) == "table" then
-	    istr = "("
-	    for _, item in ipairs(ival) do
-	       if istr ~= "(" then
-		  istr = istr..", "
-	       end
-	       istr = istr..quote_item(item)
-	    end
-	    istr = istr..")"
-	 else
-	    -- If the corresponding operator is one that works on lists, possibly add surrounding parentheses.
-	    if defined_list_comp_operators[comps[k]] then
-	       istr = paren_item(ival)
-	    else
-	       -- Quote the value if not already quoted
-	       istr = quote_item(ival)
-	    end
-	 end
+            -- If ival is a table, express it as (titem1, titem2, etc)
+            if type(ival) == "table" then
+                istr = "("
+                for _, item in ipairs(ival) do
+                    if istr ~= "(" then
+                        istr = istr .. ", "
+                    end
+                    istr = istr .. quote_item(item)
+                end
+                istr = istr .. ")"
+            else
+                -- If the corresponding operator is one that works on lists, possibly add surrounding parentheses.
+                if defined_list_comp_operators[comps[k]] then
+                    istr = paren_item(ival)
+                else
+                    -- Quote the value if not already quoted
+                    istr = quote_item(ival)
+                end
+            end
 
-	 icond = icond..fields[k].." "..comps[k].." "..istr
-	 exfields[fields[k]] = true
-      end
+            icond[#icond + 1] = fields[k] .. " " .. comps[k] .. " " .. istr
+            exfields[fields[k]] = true
+        end
 
-      icond=icond..")"
-   end
+        icond[#icond + 1] = ")"
+    end
 
-   icond = icond..")"
+    icond[#icond + 1] = ")"
 
-   -- Don't return a trivially empty condition string
-   if icond == "()" then
-      icond = ""
-   end
+    -- Don't return a trivially empty condition string
+    local ret = table.concat(icond)
+    if ret == "()" then
+        return "", nil
+    end
 
-   return icond, nil
+    return ret, nil
 
 end
 
