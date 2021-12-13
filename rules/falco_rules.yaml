@@ -2707,7 +2707,7 @@
     create_symlink and
     (evt.arg.target in (sensitive_file_names) or evt.arg.target in (sensitive_directory_names))
   output: >
-    Symlinks created over senstivie files (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline target=%evt.arg.target linkpath=%evt.arg.linkpath parent_process=%proc.pname)
+    Symlinks created over sensitive files (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline target=%evt.arg.target linkpath=%evt.arg.linkpath parent_process=%proc.pname)
   priority: NOTICE
   tags: [file, mitre_exfiltration]
 
