@@ -233,6 +233,21 @@ void read_k8s_audit_trace_file(falco_engine *engine,
 		}
 	}
 }
+
+void check_k8s_node_name_validation_state(sinsp* inspector)
+{
+	switch(inspector->m_k8s_node_name_validation_state)
+	{
+		case sinsp::k8s_node_validation::NO_NODE_NAME_FILTER:
+			falco_logger::log(LOG_INFO, "Node name filter not set. This may result in performance penalty on large clusters. Check the --k8s-node option.\n");
+			break;
+		case sinsp::k8s_node_validation::INVALID_NODE_NAME_FILTER:
+			throw falco_exception("Failing to enrich events with Kubernetes metadata: node name does not correspond to a node in the cluster");
+			break;
+		default:
+			break;
+	}
+}
 #endif
 
 static std::string read_file(std::string filename)
@@ -265,6 +280,9 @@ uint64_t do_inspect(falco_engine *engine,
 	StatsFileWriter writer;
 	uint64_t duration_start = 0;
 	uint32_t timeouts_since_last_success_or_msg = 0;
+#ifndef MINIMAL_BUILD
+	bool k8s_node_name_validated = false;
+#endif 
 
 	sdropmgr.init(inspector,
 		      outputs,
@@ -385,6 +403,15 @@ uint64_t do_inspect(falco_engine *engine,
 		{
 			outputs->handle_event(res->evt, res->rule, res->source, res->priority_num, res->format, res->tags);
 		}
+
+#ifndef MINIMAL_BUILD
+		// Lazy validation of kubernetes node name 
+		if(!k8s_node_name_validated && inspector->m_k8s_node_name_validated)
+		{
+			check_k8s_node_name_validation_state(inspector);
+			k8s_node_name_validated = true;
+		}
+#endif	
 
 		num_evts++;
 	}
