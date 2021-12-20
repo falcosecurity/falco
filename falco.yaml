@@ -198,6 +198,8 @@ file_output:
   enabled: false
   keep_alive: false
   filename: ./events.txt
+  log_maxage: 0
+  log_maxbackup: 0
 
 stdout_output:
   enabled: true
