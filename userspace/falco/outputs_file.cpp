@@ -40,10 +40,51 @@ void falco::outputs::output_file::output(const message *msg)
 	open_file();
 	m_outfile << msg->msg + "\n";
 
+	logrotate();
+
 	if(m_oc.options["keep_alive"] != "true")
 	{
 		cleanup();
 	}
+}
+
+void falco::outputs::output_file::logrotate()
+{
+	if(m_oc.options["log_maxage"] == "0")
+	{
+		return;
+	}
+
+	std::time_t now = time(nullptr);
+	double diff = difftime(now, lastlog);
+
+	if(diff/m_secs_day < std::stoi(m_oc.options["log_maxage"]))
+	{
+		return;
+	}
+
+	if(m_oc.options["log_maxbackup"] == "0")
+	{
+		truncate(m_oc.options["filename"].c_str(), 0);
+	}
+	else
+	{
+		cleanup();
+		lastlog = now;
+		struct tm *tn = localtime(&now);
+
+		std::string log_name = m_oc.options["filename"]+"_" + to_string(tn->tm_year) + to_string(tn->tm_mon) + to_string(tn->tm_mday) + to_string(tn->tm_hour) + to_string(tn->tm_min) + to_string(tn->tm_sec) + ".txt";
+
+		rotating_queue.push(log_name);
+		rename(m_oc.options["filename"].c_str(), log_name.c_str());
+		if(rotating_queue.size()> stoi(m_oc.options["log_maxbackup"]))
+		{
+			remove(rotating_queue.front().data());
+			rotating_queue.pop();
+		}
+	}
+
+
 }
 
 void falco::outputs::output_file::cleanup()

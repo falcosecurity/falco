@@ -89,7 +89,7 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 	file_output.name = "file";
 	if(m_config->get_scalar<bool>("file_output.enabled", false))
 	{
-		string filename, keep_alive;
+		string filename, keep_alive, log_maxage, log_maxbackup;
 		filename = m_config->get_scalar<string>("file_output.filename", "");
 		if(filename == string(""))
 		{
@@ -99,6 +99,12 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 
 		keep_alive = m_config->get_scalar<string>("file_output.keep_alive", "");
 		file_output.options["keep_alive"] = keep_alive;
+
+		log_maxage = m_config->get_scalar<string>("file_output.log_maxage", "0");
+		file_output.options["log_maxage"] = log_maxage;
+
+		log_maxbackup = m_config->get_scalar<string>("file_output.log_maxbackup", "0");
+		file_output.options["log_maxbackup"] = log_maxbackup;
 
 		m_outputs.push_back(file_output);
 	}

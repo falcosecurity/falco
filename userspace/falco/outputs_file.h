@@ -19,6 +19,7 @@ limitations under the License.
 #include "outputs.h"
 #include <iostream>
 #include <fstream>
+#include <ctime>
 
 namespace falco
 {
@@ -33,10 +34,15 @@ class output_file : public abstract_output
 
 	void reopen();
 
+	void logrotate();
+
 private:
 	void open_file();
 
 	std::ofstream m_outfile;
+	std::queue<string> rotating_queue;
+	std::time_t lastlog = time(nullptr);
+	const unsigned int m_secs_day = 86400;
 };
 
 } // namespace outputs
