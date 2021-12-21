@@ -28,7 +28,6 @@ namespace outputs
 
 class output_file : public abstract_output
 {
-	output_file();
 
 	void output(const message *msg);
 
@@ -38,6 +37,8 @@ class output_file : public abstract_output
 
 	void logrotate();
 
+public:
+	output_file();
 private:
 	void open_file();
 
