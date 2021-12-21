@@ -19,6 +19,11 @@ limitations under the License.
 #include <fstream>
 #include "banned.h" // This raises a compilation error when certain functions are used
 
+falco::outputs::output_file::output_file()
+{
+	m_lastlog = time(nullptr);
+}
+
 void falco::outputs::output_file::open_file()
 {
 	if(!m_buffered)
@@ -56,7 +61,7 @@ void falco::outputs::output_file::logrotate()
 	}
 
 	std::time_t now = time(nullptr);
-	double diff = difftime(now, lastlog);
+	double diff = difftime(now, m_lastlog);
 
 	if(diff/m_secs_day < std::stoi(m_oc.options["log_maxage"]))
 	{
@@ -71,17 +76,17 @@ void falco::outputs::output_file::logrotate()
 	else
 	{
 		cleanup();
-		lastlog = now;
+		m_lastlog = now;
 		struct tm *tn = localtime(&now);
 
 		std::string log_name = m_oc.options["filename"]+"_" + to_string(tn->tm_year) + to_string(tn->tm_mon) + to_string(tn->tm_mday) + to_string(tn->tm_hour) + to_string(tn->tm_min) + to_string(tn->tm_sec) + ".txt";
 
-		rotating_queue.push(log_name);
+		m_rotating_queue.push(log_name);
 		rename(m_oc.options["filename"].c_str(), log_name.c_str());
-		if(rotating_queue.size()> stoi(m_oc.options["log_maxbackup"]))
+		if(m_rotating_queue.size()> stoi(m_oc.options["log_maxbackup"]))
 		{
-			remove(rotating_queue.front().data());
-			rotating_queue.pop();
+			remove(m_rotating_queue.front().data());
+			m_rotating_queue.pop();
 		}
 	}
 

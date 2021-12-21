@@ -28,6 +28,8 @@ namespace outputs
 
 class output_file : public abstract_output
 {
+	output_file();
+
 	void output(const message *msg);
 
 	void cleanup();
@@ -40,8 +42,8 @@ private:
 	void open_file();
 
 	std::ofstream m_outfile;
-	std::queue<string> rotating_queue;
-	std::time_t lastlog = time(nullptr);
+	std::queue<string> m_rotating_queue;
+	std::time_t m_lastlog;
 	const unsigned int m_secs_day = 86400;
 };
 
