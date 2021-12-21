@@ -65,7 +65,8 @@ void falco::outputs::output_file::logrotate()
 
 	if(m_oc.options["log_maxbackup"] == "0")
 	{
-		truncate(m_oc.options["filename"].c_str(), 0);
+		// Return value of truncate is not meaningful in this case.
+		static_cast<void>(truncate(m_oc.options["filename"].c_str(), 0));
 	}
 	else
 	{
