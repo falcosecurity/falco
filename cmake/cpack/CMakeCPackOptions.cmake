@@ -10,5 +10,4 @@ endif()
 
 if(CPACK_GENERATOR MATCHES "TGZ")
 	set(CPACK_SET_DESTDIR "ON")
-	set(CPACK_STRIP_FILES "OFF")
 endif()
