@@ -392,8 +392,8 @@ jobs:
       - run:
           name: Publish bin-dev
           command: |
-            FALCO_VERSION=$(cat /build-static/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
-            /source/falco/scripts/publish-bin -f /build-static/release/falco-${FALCO_VERSION}-x86_64.tar.gz -r bin-dev -a x86_64
+            FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
+            /source/falco/scripts/publish-bin -f /build/release/falco-${FALCO_VERSION}-x86_64.tar.gz -r bin-dev -a x86_64
   "publish/packages-deb-dev":
     docker:
       - image: docker.io/debian:stable
@@ -506,8 +506,8 @@ jobs:
       - run:
           name: Publish bin
           command: |
-            FALCO_VERSION=$(cat /build-static/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
-            /source/falco/scripts/publish-bin -f /build-static/release/falco-${FALCO_VERSION}-x86_64.tar.gz -r bin -a x86_64
+            FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
+            /source/falco/scripts/publish-bin -f /build/release/falco-${FALCO_VERSION}-x86_64.tar.gz -r bin -a x86_64
   "publish/packages-deb":
     docker:
       - image: docker.io/debian:stable
@@ -711,7 +711,6 @@ workflows:
             - falco
             - test-infra
           requires:
-            - "build/musl"
             - "rpm/sign"
           filters:
             tags:
