@@ -21,7 +21,7 @@ if(NOT FALCO_VERSION)
   git_get_exact_tag(FALCO_TAG)
   if(NOT FALCO_TAG)
     # Obtain the closest tag
-    git_describe(FALCO_VERSION "--always" "--tags")
+    git_describe(FALCO_VERSION "--always" "--tags" "--abbrev=7")
     # Fallback version
     if(FALCO_VERSION MATCHES "NOTFOUND$")
       set(FALCO_VERSION "0.0.0")
