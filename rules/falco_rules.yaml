@@ -2572,7 +2572,7 @@
       evt.arg.name contains "fish_read_history" or
       evt.arg.name endswith "fish_history" or
       evt.arg.oldpath contains "bash_history" or
-      evt.arg.oldpath endwith "zsh_history" or
+      evt.arg.oldpath endswith "zsh_history" or
       evt.arg.oldpath contains "fish_read_history" or
       evt.arg.oldpath endswith "fish_history" or
       evt.arg.path contains "bash_history" or
