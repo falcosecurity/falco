@@ -2568,15 +2568,15 @@
   condition: >
     (modify and (
       evt.arg.name contains "bash_history" or
-      evt.arg.name contains "zsh_history" or
+      evt.arg.name endswith "zsh_history" or
       evt.arg.name contains "fish_read_history" or
       evt.arg.name endswith "fish_history" or
       evt.arg.oldpath contains "bash_history" or
-      evt.arg.oldpath contains "zsh_history" or
+      evt.arg.oldpath endwith "zsh_history" or
       evt.arg.oldpath contains "fish_read_history" or
       evt.arg.oldpath endswith "fish_history" or
       evt.arg.path contains "bash_history" or
-      evt.arg.path contains "zsh_history" or
+      evt.arg.path endswith "zsh_history" or
       evt.arg.path contains "fish_read_history" or
       evt.arg.path endswith "fish_history"))
 
