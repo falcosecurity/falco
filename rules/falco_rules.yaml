@@ -2584,7 +2584,7 @@
   condition: >
     (open_write and (
       fd.name contains "bash_history" or
-      fd.name contains "zsh_history" or
+      fd.name endswith "zsh_history" or
       fd.name contains "fish_read_history" or
       fd.name endswith "fish_history") and evt.arg.flags contains "O_TRUNC")
 
