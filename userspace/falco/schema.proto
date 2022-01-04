@@ -60,4 +60,7 @@ enum source {
   INTERNAL = 2;
   internal = 2;
   Internal = 2;
+  PLUGIN = 3;
+  plugin = 3;
+  Plugin = 3;
 }
