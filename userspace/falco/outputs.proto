@@ -45,10 +45,11 @@ message request {
 message response {
   google.protobuf.Timestamp time = 1;
   falco.schema.priority priority = 2;
-  falco.schema.source source = 3;
+  falco.schema.source source_deprecated = 3 [deprecated=true];
   string rule = 4;
   string output = 5;
   map<string, string> output_fields = 6;
   string hostname = 7;
   repeated string tags = 8;
+  string source = 9;
 }
