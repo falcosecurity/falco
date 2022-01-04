@@ -33,13 +33,20 @@ void falco::outputs::output_grpc::output(const message *msg)
 	auto r = grpc_res.mutable_rule();
 	*r = msg->rule;
 
-	// source
+	// source_deprecated (maintained for backward compatibility)
+	// Setting this as reserved would cause old clients to receive the
+	// 0-index enum element, which is the SYSCALL source in our case.
+	// This can be misleading for clients with an old version of the
+	// protobuf, so for now we deprecate the field and add a new PLUGIN
+	// enum entry instead. 
+	// todo(jasondellaluce): remove source_deprecated and reserve its number
 	falco::schema::source s = falco::schema::source::SYSCALL;
 	if(!falco::schema::source_Parse(msg->source, &s))
 	{
-		throw falco_exception("Unknown source passed to output_grpc::output()");
+		// unknown source names are expected to come from plugins
+		s = falco::schema::source::PLUGIN;
 	}
-	grpc_res.set_source(s);
+	grpc_res.set_source_deprecated(s);
 
 	// priority
 	falco::schema::priority p = falco::schema::priority::EMERGENCY;
@@ -67,6 +74,10 @@ void falco::outputs::output_grpc::output(const message *msg)
 	// tags
 	auto tags = grpc_res.mutable_tags();
 	*tags = {msg->tags.begin(), msg->tags.end()};
+
+	// source
+	auto source = grpc_res.mutable_source();
+	*source = msg->source;
 
 	falco::grpc::queue::get().push(grpc_res);
 }
