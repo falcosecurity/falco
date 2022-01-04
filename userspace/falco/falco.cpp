@@ -466,9 +466,9 @@ static void check_for_ignored_events(sinsp &inspector, falco_engine &engine)
 static void list_source_fields(falco_engine *engine, bool verbose, bool names_only, std::string &source)
 {
 	if(source.size() > 0 &&
-	   !(source == syscall_source || source == k8s_audit_source))
+	   !engine->is_source_valid(source))
 	{
-		throw std::invalid_argument("Value for --list must be \"syscall\" or \"k8s_audit\"");
+		throw std::invalid_argument("Value for --list must be a valid source type");
 	}
 	engine->list_fields(source, verbose, names_only);
 }
