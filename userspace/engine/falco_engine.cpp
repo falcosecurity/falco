@@ -136,6 +136,12 @@ void falco_engine::list_fields(std::string &source, bool verbose, bool names_onl
 			{
 				for(auto &field : fld_class.fields)
 				{
+					// Skip fields with the EPF_TABLE_ONLY flag.
+					if(field.tags.find("EPF_TABLE_ONLY") != field.tags.end())
+					{
+						continue;
+					}
+
 					printf("%s\n", field.name.c_str());
 				}
 			}
