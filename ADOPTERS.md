@@ -5,7 +5,7 @@ Known end users with notable contributions to the project include:
 * IBM
 * Red Hat
 
-Falco is being used by numerous other companies, both large and small, to build higher layer products and services. The list includes but is not limited to: 
+Falco is being used by numerous other companies, both large and small, to build higher layer products and services. The list includes but is not limited to:
 * Equinix Metal
 * IEEE
 * Lowes
@@ -48,7 +48,7 @@ This is a list of production adopters of Falco (in alphabetical order):
 
 * [Replicated](https://www.replicated.com/) - Replicated is the modern way to ship on-prem software. Replicated gives software vendors a container-based platform for easily deploying cloud native applications inside customers'​ environments to provide greater security and control. Replicated uses Falco as runtime security to detect threats in the Kubernetes clusters which host our critical SaaS services.
 
-* [Secureworks](https://www.secureworks.com/) - Secureworks is a leading worldwide cybersecurity company with a cloud-native security product that combines the power of human intellect with security analytics to unify detection and response across cloud, network, and endpoint environments for improved security operations and outcomes. Our Taegis XDR platform and detection system processes petabytes of security relevant data to expose active threats amongst the billions of daily events from our customers. We are proud to protect our platform’s Kubernetes deployments, as well as help our customers protect their own Linux and container environments, using Falco. 
+* [Secureworks](https://www.secureworks.com/) - Secureworks is a leading worldwide cybersecurity company with a cloud-native security product that combines the power of human intellect with security analytics to unify detection and response across cloud, network, and endpoint environments for improved security operations and outcomes. Our Taegis XDR platform and detection system processes petabytes of security relevant data to expose active threats amongst the billions of daily events from our customers. We are proud to protect our platform’s Kubernetes deployments, as well as help our customers protect their own Linux and container environments, using Falco.
 
 * [Shopify](https://www.shopify.com) - Shopify is the leading multi-channel commerce platform. Merchants use Shopify to design, set up, and manage their stores across multiple sales channels, including mobile, web, social media, marketplaces, brick-and-mortar locations, and pop-up shops. The platform also provides merchants with a powerful back-office and a single view of their business, from payments to shipping. The Shopify platform was engineered for reliability and scale, making enterprise-level technology available to businesses of all sizes. Shopify uses Falco to complement its Host and Network Intrusion Detection Systems.
 
@@ -68,10 +68,10 @@ This is a list of production adopters of Falco (in alphabetical order):
 
 ## Projects that use Falco libs
 
-* [R6/Phoenix](https://r6security.com/) is an attack surface protection company that uses moving target defense to provide fully automated, proactive and devops friendly security to its customers. There are a set of policies you can add to enable the moving target defense capabilities. Some of them are triggered by a combination of Falco's findings. You can kill, restart and rename pods according to the ever changing policies. 
+* [R6/Phoenix](https://r6security.com/) is an attack surface protection company that uses moving target defense to provide fully automated, proactive and devops friendly security to its customers. There are a set of policies you can add to enable the moving target defense capabilities. Some of them are triggered by a combination of Falco's findings. You can kill, restart and rename pods according to the ever changing policies.
 
 * [SysFlow](https://sysflow.io) SysFlow is a cloud-native system telemetry framework that focuses on data abstraction, behavioral analytics, and noise reduction. At its core, SysFlow exposes a compact open telemetry format that records workload behaviors by connecting event and flow representations of process control flows, file interactions, and network communications. The resulting abstraction encodes a graph structure that enables provenance reasoning on host and container environments, and fast retrieval of security-relevant information.
 
 ## Adding a name
 
-If you would like to add your name to this file, submit a pull request with your change. 
+If you would like to add your name to this file, submit a pull request with your change.
