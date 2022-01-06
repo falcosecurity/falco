@@ -53,7 +53,7 @@ falco_engine::falco_engine(bool seed_rng, const std::string& alternate_lua_dir)
 	luaopen_lpeg(m_ls);
 	luaopen_yaml(m_ls);
 
-	falco_common::init(m_lua_main_filename.c_str(), alternate_lua_dir.c_str());
+	falco_common::init();
 	falco_rules::init(m_ls);
 
 	m_required_plugin_versions.clear();

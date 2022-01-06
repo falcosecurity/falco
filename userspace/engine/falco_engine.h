@@ -265,7 +265,6 @@ private:
 	uint32_t m_sampling_ratio;
 	double m_sampling_multiplier;
 
-	std::string m_lua_main_filename = "rule_loader.lua";
 	static const std::string s_default_ruleset;
 	uint32_t m_default_ruleset_id;
 
