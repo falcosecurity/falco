@@ -11,9 +11,10 @@
 # specific language governing permissions and limitations under the License.
 #
 
-set(LYAML_SRC "${PROJECT_BINARY_DIR}/lyaml-prefix/src/lyaml/ext/yaml")
-set(LYAML_LIB "${LYAML_SRC}/.libs/yaml.a")
-message(STATUS "Using bundled lyaml in '${LYAML_SRC}'")
+set(LYAML_ROOT "${PROJECT_BINARY_DIR}/lyaml-prefix/src/lyaml")
+set(LYAML_LIB "${LYAML_ROOT}/ext/yaml/.libs/yaml.a")
+set(LYAML_LUA_DIR "${LYAML_ROOT}/lib")
+message(STATUS "Using bundled lyaml in '${LYAML_ROOT}'")
 externalproject_add(
   lyaml
   DEPENDS luajit libyaml
@@ -22,7 +23,6 @@ externalproject_add(
   BUILD_COMMAND ${CMD_MAKE}
   BUILD_IN_SOURCE 1
   BUILD_BYPRODUCTS ${LYAML_LIB}
+  INSTALL_COMMAND ""
   CONFIGURE_COMMAND ./configure --enable-static CFLAGS=-I${LIBYAML_INSTALL_DIR}/include CPPFLAGS=-I${LIBYAML_INSTALL_DIR}/include LDFLAGS=-L${LIBYAML_INSTALL_DIR}/lib LIBS=-lyaml LUA=${LUAJIT_SRC}/luajit LUA_INCLUDE=-I${LUAJIT_INCLUDE}
-  INSTALL_COMMAND sh -c
-  "cp -R ${PROJECT_BINARY_DIR}/lyaml-prefix/src/lyaml/lib/* ${PROJECT_SOURCE_DIR}/userspace/engine/lua"
 )
