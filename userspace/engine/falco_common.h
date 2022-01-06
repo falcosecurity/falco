@@ -69,7 +69,7 @@ public:
 	falco_common();
 	virtual ~falco_common();
 
-	void init(const char *lua_main_filename, const char *alternate_lua_dir);
+	void init();
 
     // Priority levels, as a vector of strings
 	static std::vector<std::string> priority_names;
@@ -91,7 +91,4 @@ protected:
 	lua_State *m_ls;
 
 	std::mutex m_ls_semaphore;
-
-private:
-	void add_lua_path(std::string &path);
 };

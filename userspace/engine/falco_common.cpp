@@ -19,6 +19,7 @@ limitations under the License.
 #include "config_falco_engine.h"
 #include "falco_common.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
+#include "falco_engine_lua_files.hh"
 
 std::vector<std::string> falco_common::priority_names = {
 	"Emergency",
@@ -48,68 +49,33 @@ falco_common::~falco_common()
 	}
 }
 
-void falco_common::init(const char *lua_main_filename, const char *alternate_lua_dir)
+void falco_common::init()
 {
-	ifstream is;
-	string lua_dir = FALCO_ENGINE_LUA_DIR;
-	string lua_main_path = lua_dir + lua_main_filename;
-
-	is.open(lua_main_path);
-	if (!is.is_open())
+	// Strings in the list lua_module_strings need to be loaded as
+	// lua modules, which also involves adding them to the
+	// package.module table.
+	for(const auto &pair : lua_module_strings)
 	{
-		lua_dir = alternate_lua_dir;
-		lua_main_path = lua_dir + lua_main_filename;
+		lua_getglobal(m_ls, "package");
+		lua_getfield(m_ls, -1, "preload");
 
-		is.open(lua_main_path);
-		if (!is.is_open())
+		if(luaL_loadstring(m_ls, pair.first))
 		{
-			throw falco_exception("Could not find Falco Lua entrypoint (tried " +
-					      string(FALCO_ENGINE_LUA_DIR) + lua_main_filename + ", " +
-					      string(alternate_lua_dir) + lua_main_filename + ")");
+			throw falco_exception("Failed to load embedded lua code " +
+					      string(pair.second) + ": " + lua_tostring(m_ls, -1));
+		}
+
+		lua_setfield(m_ls, -2, pair.second);
+	}
+
+	// Strings in the list lua_code_strings need to be loaded and
+	// evaluated so any public functions can be directly called.
+	for(const auto &str : lua_code_strings)
+	{
+		if(luaL_loadstring(m_ls, str) || lua_pcall(m_ls, 0, 0, 0))
+		{
+			throw falco_exception("Failed to load + evaluate embedded lua code " +
+					      string(str) + ": " + lua_tostring(m_ls, -1));
 		}
 	}
-
-	// Initialize Lua interpreter
-	add_lua_path(lua_dir);
-
-	// Load the main program, which defines all the available functions.
-	string scriptstr((istreambuf_iterator<char>(is)),
-			 istreambuf_iterator<char>());
-
-	if(luaL_loadstring(m_ls, scriptstr.c_str()) || lua_pcall(m_ls, 0, 0, 0))
-	{
-		throw falco_exception("Failed to load script " +
-			lua_main_path + ": " + lua_tostring(m_ls, -1));
-	}
-}
-
-void falco_common::add_lua_path(string &path)
-{
-	string cpath = string(path);
-	path += "?.lua";
-	cpath += "?.so";
-
-	lua_getglobal(m_ls, "package");
-
-	lua_getfield(m_ls, -1, "path");
-	string cur_path = lua_tostring(m_ls, -1 );
-	cur_path += ';';
-	lua_pop(m_ls, 1);
-
-	cur_path.append(path.c_str());
-
-	lua_pushstring(m_ls, cur_path.c_str());
-	lua_setfield(m_ls, -2, "path");
-
-	lua_getfield(m_ls, -1, "cpath");
-	string cur_cpath = lua_tostring(m_ls, -1 );
-	cur_cpath += ';';
-	lua_pop(m_ls, 1);
-
-	cur_cpath.append(cpath.c_str());
-
-	lua_pushstring(m_ls, cur_cpath.c_str());
-	lua_setfield(m_ls, -2, "cpath");
-
-	lua_pop(m_ls, 1);
 }
