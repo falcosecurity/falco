@@ -303,6 +303,7 @@ function get_orig_yaml_obj(rules_lines, row)
             break
         end
     end
+    t[#t + 1] = ""
     local ret = ""
     ret = table.concat(t, "\n")
     return ret
