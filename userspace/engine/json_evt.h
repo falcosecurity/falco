@@ -166,8 +166,8 @@ public:
 	struct check_info
 	{
 		std::string m_name;
+		std::string m_shortdesc;
 		std::string m_desc;
-		std::string m_class_info;
 
 		std::list<field_info> m_fields;
 	};
