@@ -1206,6 +1206,11 @@ int falco_init(int argc, char **argv)
 
 		if(!all_events)
 		{
+			// Drop EF_DROP_SIMPLE_CONS kernel side
+			inspector->set_simple_consumer();
+			// Eventually, drop any EF_DROP_SIMPLE_CONS event
+			// that reached userspace (there are some events that are not syscall-based
+			// like signaldeliver, that have the EF_DROP_SIMPLE_CONS flag)
 			inspector->set_drop_event_flags(EF_DROP_SIMPLE_CONS);
 		}
 
