@@ -20,7 +20,7 @@ RUN curl -L -o falco.tar.gz \
 RUN sed -e 's/time_format_iso_8601: false/time_format_iso_8601: true/' < /falco/etc/falco/falco.yaml > /falco/etc/falco/falco.yaml.new \
     && mv /falco/etc/falco/falco.yaml.new /falco/etc/falco/falco.yaml
 
-FROM scratch
+FROM debian:11-slim
 
 LABEL maintainer="cncf-falco-dev@lists.cncf.io"
 
