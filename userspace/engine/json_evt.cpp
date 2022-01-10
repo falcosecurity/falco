@@ -1529,12 +1529,9 @@ void json_event_formatter::set_format(output_format of, const std::string &forma
 bool json_event_formatter::tostring_withformat(gen_event *gevt, std::string &output, gen_event_formatter::output_format of)
 {
 	json_event *ev = static_cast<json_event *>(gevt);
-
-	std::string ret;
-
 	if(of == OF_JSON)
 	{
-		ret = tojson(ev);
+		output = tojson(ev);
 		return true;
 	}
 	else
