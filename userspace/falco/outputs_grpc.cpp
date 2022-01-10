@@ -21,6 +21,20 @@ limitations under the License.
 #include "formats.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
 
+#if __has_attribute(deprecated)
+#define DISABLE_WARNING_PUSH                        _Pragma("GCC diagnostic push")
+#define DISABLE_WARNING_POP                         _Pragma("GCC diagnostic pop")
+#define DISABLE_WARNING_DEPRECATED_DECLARATIONS     _Pragma("GCC diagnostic ignored \"-Wdeprecated-declarations\"")
+#elif defined(_MSC_VER)
+#define DISABLE_WARNING_PUSH                        __pragma(warning(push))
+#define DISABLE_WARNING_POP                         __pragma(warning(pop)) 
+#define DISABLE_WARNING_DEPRECATED_DECLARATIONS     __pragma(warning(disable: 4996))
+#else
+#define DISABLE_WARNING_PUSH
+#define DISABLE_WARNING_POP
+#define DISABLE_WARNING_DEPRECATED_DECLARATIONS
+#endif
+
 void falco::outputs::output_grpc::output(const message *msg)
 {
 	falco::outputs::response grpc_res;
@@ -46,7 +60,10 @@ void falco::outputs::output_grpc::output(const message *msg)
 		// unknown source names are expected to come from plugins
 		s = falco::schema::source::PLUGIN;
 	}
+	DISABLE_WARNING_PUSH
+	DISABLE_WARNING_DEPRECATED_DECLARATIONS
 	grpc_res.set_source_deprecated(s);
+	DISABLE_WARNING_POP
 
 	// priority
 	falco::schema::priority p = falco::schema::priority::EMERGENCY;
