@@ -63,11 +63,12 @@ class abstract_output
 public:
 	virtual ~abstract_output() {}
 
-	void init(config oc, bool buffered, std::string hostname)
+	void init(config oc, bool buffered, std::string hostname, bool json_output)
 	{
 		m_oc = oc;
 		m_buffered = buffered;
 		m_hostname = hostname;
+		m_json_output = json_output;
 	}
 
 	// Return the output's name as per its configuration.
@@ -89,6 +90,7 @@ protected:
 	config m_oc;
 	bool m_buffered;
 	std::string m_hostname;
+	bool m_json_output;
 };
 
 } // namespace outputs

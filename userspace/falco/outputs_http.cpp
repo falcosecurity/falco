@@ -28,7 +28,12 @@ void falco::outputs::output_http::output(const message *msg)
 	curl = curl_easy_init();
 	if(curl)
 	{
-		slist1 = curl_slist_append(slist1, "Content-Type: application/json");
+		if (m_json_output)
+		{
+			slist1 = curl_slist_append(slist1, "Content-Type: application/json");
+		} else {
+			slist1 = curl_slist_append(slist1, "Content-Type: text/plain");
+		}
 		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, slist1);
 		curl_easy_setopt(curl, CURLOPT_URL, m_oc.options["url"].c_str());
 		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, msg->msg.c_str());
