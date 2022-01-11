@@ -78,6 +78,8 @@ if(NOT MINIMAL_BUILD)
     ${CMAKE_CURRENT_BINARY_DIR}/version.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/outputs.grpc.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/outputs.pb.cc
+    ${CMAKE_CURRENT_BINARY_DIR}/rules.grpc.pb.cc
+    ${CMAKE_CURRENT_BINARY_DIR}/rules.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/schema.pb.cc
   )
 
@@ -152,6 +154,10 @@ if(NOT MINIMAL_BUILD)
     ${CMAKE_CURRENT_BINARY_DIR}/outputs.grpc.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/outputs.grpc.pb.h
     ${CMAKE_CURRENT_BINARY_DIR}/outputs.pb.cc
+    ${CMAKE_CURRENT_BINARY_DIR}/rules.grpc.pb.cc
+    ${CMAKE_CURRENT_BINARY_DIR}/rules.grpc.pb.h
+    ${CMAKE_CURRENT_BINARY_DIR}/rules.pb.cc
+    ${CMAKE_CURRENT_BINARY_DIR}/rules.pb.h
     ${CMAKE_CURRENT_BINARY_DIR}/outputs.pb.h
     ${CMAKE_CURRENT_BINARY_DIR}/schema.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/schema.pb.h
@@ -167,6 +173,12 @@ if(NOT MINIMAL_BUILD)
     ${CMAKE_CURRENT_SOURCE_DIR}/schema.proto
     COMMAND ${PROTOC} -I ${CMAKE_CURRENT_SOURCE_DIR} --grpc_out=. --plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN}
     ${CMAKE_CURRENT_SOURCE_DIR}/outputs.proto
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    # Falco gRPC Rules API
+    DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/rules.proto
+    COMMAND ${PROTOC} -I ${CMAKE_CURRENT_SOURCE_DIR} --cpp_out=. ${CMAKE_CURRENT_SOURCE_DIR}/rules.proto
+    COMMAND ${PROTOC} -I ${CMAKE_CURRENT_SOURCE_DIR} --grpc_out=. --plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN}
+    ${CMAKE_CURRENT_SOURCE_DIR}/rules.proto
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   )
 endif()

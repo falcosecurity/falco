@@ -77,11 +77,19 @@ void falco::grpc::server_impl::version(const context& ctx, const version::reques
 	version = FALCO_VERSION;
 
 	res.set_engine_version(FALCO_ENGINE_VERSION);
-	res.set_engine_fields_checksum(FALCO_FIELDS_CHECKSUM); 
+	res.set_engine_fields_checksum(FALCO_FIELDS_CHECKSUM);
 
 	res.set_major(FALCO_VERSION_MAJOR);
 	res.set_minor(FALCO_VERSION_MINOR);
 	res.set_patch(FALCO_VERSION_PATCH);
+}
+
+void falco::grpc::server_impl::reload_rules(const context& ctx, const rules::rules_files& rules_files, rules::reload_response& res)
+{
+}
+
+void falco::grpc::server_impl::validate_rules(const context& ctx, const rules::rules_files& rules_files, rules::validate_response& res)
+{
 }
 
 void falco::grpc::server_impl::shutdown()

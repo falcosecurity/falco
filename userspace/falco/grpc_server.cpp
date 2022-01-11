@@ -194,6 +194,7 @@ void falco::grpc::server::run()
 {
 	m_server_builder.RegisterService(&m_output_svc);
 	m_server_builder.RegisterService(&m_version_svc);
+	m_server_builder.RegisterService(&m_rules_svc);
 
 	m_completion_queue = m_server_builder.AddCompletionQueue();
 	m_server = m_server_builder.BuildAndStart();
@@ -213,6 +214,8 @@ void falco::grpc::server::run()
 	REGISTER_UNARY(version::request, version::response, version::service, version, version, context_num)
 	REGISTER_STREAM(outputs::request, outputs::response, outputs::service, get, get, context_num)
 	REGISTER_BIDI(outputs::request, outputs::response, outputs::service, sub, sub, context_num)
+	REGISTER_UNARY(rules::rules_files, rules::reload_response, rules::service, reload_rules, reload_rules, context_num)
+	REGISTER_UNARY(rules::rules_files, rules::validate_response, rules::service, validate_rules, validate_rules, context_num)
 
 	m_threads.resize(m_threadiness);
 	int thread_idx = 0;

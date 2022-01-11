@@ -1,0 +1,51 @@
+/*
+Copyright (C) 2020 The Falco Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+syntax = "proto3";
+
+package falco.rules;
+
+option go_package = "github.com/falcosecurity/client-go/pkg/api/rules";
+
+// Functions to reload a set of rules files (replacing any currently
+// loaded rules), or validate a set of candidate rules files.
+service service {
+  rpc reload_rules(rules_files) returns (reload_response);
+  rpc validate_rules(rules_files) returns (validate_response);
+}
+
+message rules_file
+{
+	string filename = 1;
+	string content = 2;
+}
+
+message rules_files
+{
+	repeated rules_file files = 1;
+}
+
+message reload_response
+{
+	bool successful = 1;
+	string error = 2;
+}
+
+message validate_response
+{
+	bool successful = 1;
+	string error = 2;
+}

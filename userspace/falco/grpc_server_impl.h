@@ -19,6 +19,7 @@ limitations under the License.
 #include <atomic>
 #include "outputs.grpc.pb.h"
 #include "version.grpc.pb.h"
+#include "rules.grpc.pb.h"
 #include "grpc_context.h"
 
 namespace falco
@@ -42,6 +43,10 @@ protected:
 
 	// Version
 	void version(const context& ctx, const version::request& req, version::response& res);
+
+	// Rules
+	void reload_rules(const context& ctx, const rules::rules_files& rules_files, rules::reload_response& res);
+	void validate_rules(const context& ctx, const rules::rules_files& rules_files, rules::validate_response& res);
 
 private:
 	std::atomic<bool> m_stop{false};
