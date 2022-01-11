@@ -26,8 +26,6 @@ limitations under the License.
 #include "falco_utils.h"
 #include "falco_engine_version.h"
 
-#include "formats.h"
-
 extern "C" {
 #include "lpeg.h"
 #include "lyaml.h"

@@ -25,6 +25,7 @@ set(
   event_drops.cpp
   statsfilewriter.cpp
   falco.cpp
+  formats.cpp
 )
 
 set(
