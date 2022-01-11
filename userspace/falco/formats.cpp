@@ -17,13 +17,13 @@ limitations under the License.
 #include <json/json.h>
 
 #include "formats.h"
-#include "falco_engine.h"
+#include "swappable_falco_engine.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
 
-falco_formats::falco_formats(falco_engine *engine,
+falco_formats::falco_formats(swappable_falco_engine &swengine,
 			     bool json_include_output_property,
 			     bool json_include_tags_property)
-	: m_falco_engine(engine),
+	: m_swengine(swengine),
 	m_json_include_output_property(json_include_output_property),
 	m_json_include_tags_property(json_include_tags_property)
 {
@@ -40,7 +40,7 @@ string falco_formats::format_event(gen_event *evt, const std::string &rule, cons
 
 	std::shared_ptr<gen_event_formatter> formatter;
 
-	formatter = m_falco_engine->create_formatter(source, format);
+	formatter = m_swengine.engine()->create_formatter(source, format);
 
 	// Format the original output string, regardless of output format
 	formatter->tostring_withformat(evt, line, gen_event_formatter::OF_NORMAL);
@@ -134,7 +134,7 @@ map<string, string> falco_formats::get_field_values(gen_event *evt, const std::s
 {
 	std::shared_ptr<gen_event_formatter> formatter;
 
-	formatter = m_falco_engine->create_formatter(source, format);
+	formatter = m_swengine.engine()->create_formatter(source, format);
 
 	map<string, string> ret;
 

@@ -60,7 +60,7 @@ falco_outputs::~falco_outputs()
 	}
 }
 
-void falco_outputs::init(falco_engine *engine,
+void falco_outputs::init(swappable_falco_engine &swengine,
 			 bool json_output,
 			 bool json_include_output_property,
 			 bool json_include_tags_property,
@@ -74,7 +74,7 @@ void falco_outputs::init(falco_engine *engine,
 		throw falco_exception("falco_outputs already initialized");
 	}
 
-	m_formats.reset(new falco_formats(engine, json_include_output_property, json_include_tags_property));
+	m_formats.reset(new falco_formats(swengine, json_include_output_property, json_include_tags_property));
 
 	m_json_output = json_output;
 

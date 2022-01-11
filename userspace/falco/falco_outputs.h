@@ -23,7 +23,7 @@ limitations under the License.
 #include "json_evt.h"
 #include "falco_common.h"
 #include "token_bucket.h"
-#include "falco_engine.h"
+#include "swappable_falco_engine.h"
 #include "outputs.h"
 #include "formats.h"
 #include "tbb/concurrent_queue.h"
@@ -39,7 +39,7 @@ public:
 	falco_outputs();
 	virtual ~falco_outputs();
 
-	void init(falco_engine *engine,
+	void init(swappable_falco_engine &swengine,
 		  bool json_output,
 		  bool json_include_output_property,
 		  bool json_include_tags_property,

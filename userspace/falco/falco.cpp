@@ -46,6 +46,7 @@ limitations under the License.
 #include "configuration.h"
 #include "falco_engine.h"
 #include "falco_engine_version.h"
+#include "swappable_falco_engine.h"
 #include "config_falco.h"
 #include "statsfilewriter.h"
 #ifndef MINIMAL_BUILD
@@ -209,7 +210,7 @@ std::list<string> cmdline_options;
 
 #ifndef MINIMAL_BUILD
 // Read a jsonl file containing k8s audit events and pass each to the engine.
-void read_k8s_audit_trace_file(falco_engine *engine,
+void read_k8s_audit_trace_file(swappable_falco_engine &swengine,
 			       falco_outputs *outputs,
 			       string &trace_filename)
 {
@@ -229,7 +230,7 @@ void read_k8s_audit_trace_file(falco_engine *engine,
 			continue;
 		}
 
-		if(!k8s_audit_handler::accept_data(engine, outputs, line, errstr))
+		if(!k8s_audit_handler::accept_data(swengine, outputs, line, errstr))
 		{
 			falco_logger::log(LOG_ERR, "Could not read k8s audit event line #" + to_string(line_num) + ", \"" + line + "\": " + errstr + ", stopping");
 			return;
@@ -250,7 +251,7 @@ static std::string read_file(std::string filename)
 //
 // Event processing loop
 //
-uint64_t do_inspect(falco_engine *engine,
+uint64_t do_inspect(swappable_falco_engine &swengine,
 			falco_outputs *outputs,
 			sinsp* inspector,
 		        std::string &event_source,
@@ -383,7 +384,7 @@ uint64_t do_inspect(falco_engine *engine,
 		// engine, which will match the event against the set
 		// of rules. If a match is found, pass the event to
 		// the outputs.
-		unique_ptr<falco_engine::rule_result> res = engine->process_event(event_source, ev);
+		unique_ptr<falco_engine::rule_result> res = swengine.engine()->process_event(event_source, ev);
 		if(res)
 		{
 			outputs->handle_event(res->evt, res->rule, res->source, res->priority_num, res->format, res->tags);
@@ -436,13 +437,13 @@ static void print_all_ignored_events(sinsp *inspector)
 	printf("\n");
 }
 
-static void check_for_ignored_events(sinsp &inspector, falco_engine &engine)
+static void check_for_ignored_events(sinsp &inspector, swappable_falco_engine &swengine)
 {
 	std::set<uint16_t> evttypes;
 	sinsp_evttables* einfo = inspector.get_event_info_tables();
 	const struct ppm_event_info* etable = einfo->m_event_info;
 
-	engine.evttypes_for_ruleset(syscall_source, evttypes);
+	swengine.engine()->evttypes_for_ruleset(syscall_source, evttypes);
 
 	// Save event names so we don't warn for both the enter and exit event.
 	std::set<std::string> warn_event_names;
@@ -484,14 +485,14 @@ static void check_for_ignored_events(sinsp &inspector, falco_engine &engine)
 	}
 }
 
-static void list_source_fields(falco_engine *engine, bool verbose, bool names_only, std::string &source)
+static void list_source_fields(swappable_falco_engine &swengine, bool verbose, bool names_only, std::string &source)
 {
 	if(source.size() > 0 &&
 	   !engine->is_source_valid(source))
 	{
 		throw std::invalid_argument("Value for --list must be a valid source type");
 	}
-	engine->list_fields(source, verbose, names_only);
+	swengine.engine()->list_fields(source, verbose, names_only);
 }
 
 //
@@ -502,7 +503,7 @@ int falco_init(int argc, char **argv)
 	int result = EXIT_SUCCESS;
 	sinsp* inspector = NULL;
 	sinsp_evt::param_fmt event_buffer_format = sinsp_evt::PF_NORMAL;
-	falco_engine *engine = NULL;
+	swappable_falco_engine swengine;
 	falco_outputs *outputs = NULL;
 	syscall_evt_drop_mgr sdropmgr;
 	int op;
@@ -559,7 +560,7 @@ int falco_init(int argc, char **argv)
 	scap_stats cstats;
 
 #ifndef MINIMAL_BUILD
-	falco_webserver webserver;
+	falco_webserver webserver(swengine);
 	falco::grpc::server grpc_server;
 	std::thread grpc_server_thread;
 #endif
@@ -824,8 +825,7 @@ int falco_init(int argc, char **argv)
 			return EXIT_SUCCESS;
 		}
 
-		engine = new falco_engine(true);
-		engine->set_extra(output_format, replace_container_info);
+		swengine.engine()->set_extra(output_format, replace_container_info);
 
 		// Create "factories" that can create filters/formatters for
 		// syscalls and k8s audit events.
@@ -835,8 +835,8 @@ int falco_init(int argc, char **argv)
 		std::shared_ptr<gen_event_formatter_factory> syscall_formatter_factory(new sinsp_evt_formatter_factory(inspector));
 		std::shared_ptr<gen_event_formatter_factory> k8s_audit_formatter_factory(new json_event_formatter_factory(k8s_audit_filter_factory));
 
-		engine->add_source(syscall_source, syscall_filter_factory, syscall_formatter_factory);
-		engine->add_source(k8s_audit_source, k8s_audit_filter_factory, k8s_audit_formatter_factory);
+		swengine.engine()->add_source(syscall_source, syscall_filter_factory, syscall_formatter_factory);
+		swengine.engine()->add_source(k8s_audit_source, k8s_audit_filter_factory, k8s_audit_formatter_factory);
 
 		if(disable_sources.size() > 0)
 		{
@@ -904,7 +904,7 @@ int falco_init(int argc, char **argv)
 				// Only include the prefix if there is more than one file
 				std::string prefix = (validate_rules_filenames.size() > 1 ? file + ": " : "");
 				try {
-					engine->load_rules_file(file, verbose, all_events);
+					swengine.engine()->load_rules_file(file, verbose, all_events);
 				}
 				catch(falco_exception &e)
 				{
@@ -983,7 +983,7 @@ int falco_init(int argc, char **argv)
 					inspector->set_input_plugin_open_params(p.m_open_params.c_str());
 				}
 
-				engine->add_source(event_source, plugin_filter_factory, plugin_formatter_factory);
+				swengine.engine()->add_source(event_source, plugin_filter_factory, plugin_formatter_factory);
 
 			} else {
 				extractor_plugins.push_back(plugin);
@@ -1057,7 +1057,7 @@ int falco_init(int argc, char **argv)
 
 		if(list_flds)
 		{
-			list_source_fields(engine, verbose, names_only, list_flds_source);
+			list_source_fields(swengine, verbose, names_only, list_flds_source);
 			return EXIT_SUCCESS;
 		}
 
@@ -1066,7 +1066,7 @@ int falco_init(int argc, char **argv)
 			config.m_rules_filenames = rules_filenames;
 		}
 
-		engine->set_min_priority(config.m_min_priority);
+		swengine.engine()->set_min_priority(config.m_min_priority);
 
 		if(buffered_cmdline)
 		{
@@ -1090,7 +1090,7 @@ int falco_init(int argc, char **argv)
 			uint64_t required_engine_version;
 
 			try {
-				engine->load_rules_file(filename, verbose, all_events, required_engine_version);
+				swengine.engine()->load_rules_file(filename, verbose, all_events, required_engine_version);
 			}
 			catch(falco_exception &e)
 			{
@@ -1106,7 +1106,7 @@ int falco_init(int argc, char **argv)
 		{
 			std::string required_version;
 
-			if(!engine->is_plugin_compatible(info.name, info.plugin_version.as_string(), required_version))
+			if(!swengine.engine()->is_plugin_compatible(info.name, info.plugin_version.as_string(), required_version))
 			{
 				throw std::invalid_argument(std::string("Plugin ") + info.name + " version " + info.plugin_version.as_string() + " not compatible with required plugin version " + required_version);
 			}
@@ -1121,7 +1121,7 @@ int falco_init(int argc, char **argv)
 		for (auto substring : disabled_rule_substrings)
 		{
 			falco_logger::log(LOG_INFO, "Disabling rules matching substring: " + substring + "\n");
-			engine->enable_rule(substring, false);
+			swengine.engine()->enable_rule(substring, false);
 		}
 
 		if(disabled_rule_tags.size() > 0)
@@ -1130,7 +1130,7 @@ int falco_init(int argc, char **argv)
 			{
 				falco_logger::log(LOG_INFO, "Disabling rules with tag: " + tag + "\n");
 			}
-			engine->enable_rule_by_tag(disabled_rule_tags, false);
+			swengine.engine()->enable_rule_by_tag(disabled_rule_tags, false);
 		}
 
 		if(enabled_rule_tags.size() > 0)
@@ -1138,13 +1138,18 @@ int falco_init(int argc, char **argv)
 
 			// Since we only want to enable specific
 			// rules, first disable all rules.
-			engine->enable_rule(all_rules, false);
+			swengine.engine()->enable_rule(all_rules, false);
 			for(auto tag : enabled_rule_tags)
 			{
 				falco_logger::log(LOG_INFO, "Enabling rules with tag: " + tag + "\n");
 			}
-			engine->enable_rule_by_tag(enabled_rule_tags, true);
+			swengine.engine()->enable_rule_by_tag(enabled_rule_tags, true);
 		}
+
+		// For syscalls, see if any event types used by the
+		// loaded rules are ones with the EF_DROP_SIMPLE_CONS
+		// label.
+		check_for_ignored_events(*inspector, swengine);
 
 		if(print_support)
 		{
@@ -1223,13 +1228,13 @@ int falco_init(int argc, char **argv)
 
 		if (describe_all_rules)
 		{
-			engine->describe_rule(NULL);
+			swengine.engine()->describe_rule(NULL);
 			goto exit;
 		}
 
 		if (describe_rule != "")
 		{
-			engine->describe_rule(&describe_rule);
+			swengine.engine()->describe_rule(&describe_rule);
 			goto exit;
 		}
 
@@ -1322,7 +1327,7 @@ int falco_init(int argc, char **argv)
 
 		outputs = new falco_outputs();
 
-		outputs->init(engine,
+		outputs->init(swengine,
 			      config.m_json_output,
 			      config.m_json_include_output_property,
 			      config.m_json_include_tags_property,
@@ -1521,7 +1526,7 @@ int falco_init(int argc, char **argv)
 		{
 			std::string ssl_option = (config.m_webserver_ssl_enabled ? " (SSL)" : "");
 			falco_logger::log(LOG_INFO, "Starting internal webserver, listening on port " + to_string(config.m_webserver_listen_port) + ssl_option + "\n");
-			webserver.init(&config, engine, outputs);
+			webserver.init(&config, outputs);
 			webserver.start();
 		}
 
@@ -1548,7 +1553,7 @@ int falco_init(int argc, char **argv)
 		if(!trace_filename.empty() && !trace_is_scap)
 		{
 #ifndef MINIMAL_BUILD
-			read_k8s_audit_trace_file(engine,
+			read_k8s_audit_trace_file(swengine,
 						  outputs,
 						  trace_filename);
 #endif
@@ -1557,7 +1562,7 @@ int falco_init(int argc, char **argv)
 		{
 			uint64_t num_evts;
 
-			num_evts = do_inspect(engine,
+			num_evts = do_inspect(swengine,
 					      outputs,
 					      inspector,
 					      event_source,
@@ -1596,7 +1601,7 @@ int falco_init(int argc, char **argv)
 		}
 
 		inspector->close();
-		engine->print_stats();
+		swengine.engine()->print_stats();
 		sdropmgr.print_stats();
 #ifndef MINIMAL_BUILD
 		webserver.stop();
@@ -1626,7 +1631,6 @@ int falco_init(int argc, char **argv)
 exit:
 
 	delete inspector;
-	delete engine;
 	delete outputs;
 
 	return result;

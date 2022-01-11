@@ -27,8 +27,8 @@ using namespace std;
 
 string k8s_audit_handler::m_k8s_audit_event_source = "k8s_audit";
 
-k8s_audit_handler::k8s_audit_handler(falco_engine *engine, falco_outputs *outputs):
-	m_engine(engine), m_outputs(outputs)
+k8s_audit_handler::k8s_audit_handler(swappable_falco_engine &swengine, falco_outputs *outputs):
+	m_swengine(swengine), m_outputs(outputs)
 {
 }
 
@@ -45,7 +45,7 @@ bool k8s_healthz_handler::handleGet(CivetServer *server, struct mg_connection *c
 	return true;
 }
 
-bool k8s_audit_handler::accept_data(falco_engine *engine,
+bool k8s_audit_handler::accept_data(swappable_falco_engine &swengine,
 				    falco_outputs *outputs,
 				    std::string &data,
 				    std::string &errstr)
@@ -89,7 +89,7 @@ bool k8s_audit_handler::accept_data(falco_engine *engine,
 
 		try
 		{
-			res = engine->process_event(m_k8s_audit_event_source, &jev);
+			res = swengine.engine()->process_event(m_k8s_audit_event_source, &jev);
 		}
 		catch(...)
 		{
@@ -120,7 +120,7 @@ bool k8s_audit_handler::accept_data(falco_engine *engine,
 
 bool k8s_audit_handler::accept_uploaded_data(std::string &post_data, std::string &errstr)
 {
-	return k8s_audit_handler::accept_data(m_engine, m_outputs, post_data, errstr);
+	return k8s_audit_handler::accept_data(m_swengine, m_outputs, post_data, errstr);
 }
 
 bool k8s_audit_handler::handleGet(CivetServer *server, struct mg_connection *conn)
@@ -177,7 +177,8 @@ bool k8s_audit_handler::handlePost(CivetServer *server, struct mg_connection *co
 	return true;
 }
 
-falco_webserver::falco_webserver():
+falco_webserver::falco_webserver(swappable_falco_engine &swengine):
+	m_swengine(swengine),
 	m_config(NULL)
 {
 }
@@ -188,11 +189,9 @@ falco_webserver::~falco_webserver()
 }
 
 void falco_webserver::init(falco_configuration *config,
-			   falco_engine *engine,
 			   falco_outputs *outputs)
 {
 	m_config = config;
-	m_engine = engine;
 	m_outputs = outputs;
 }
 
@@ -212,11 +211,6 @@ void falco_webserver::start()
 	if(!m_config)
 	{
 		throw falco_exception("No config provided to webserver");
-	}
-
-	if(!m_engine)
-	{
-		throw falco_exception("No engine provided to webserver");
 	}
 
 	if(!m_outputs)
@@ -253,7 +247,7 @@ void falco_webserver::start()
 		throw falco_exception("Could not create embedded webserver");
 	}
 
-	m_k8s_audit_handler = make_unique<k8s_audit_handler>(m_engine, m_outputs);
+	m_k8s_audit_handler = make_unique<k8s_audit_handler>(m_swengine, m_outputs);
 	m_server->addHandler(m_config->m_webserver_k8s_audit_endpoint, *m_k8s_audit_handler);
 	m_k8s_healthz_handler = make_unique<k8s_healthz_handler>();
 	m_server->addHandler(m_config->m_webserver_k8s_healthz_endpoint, *m_k8s_healthz_handler);

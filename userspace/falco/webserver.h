@@ -19,26 +19,26 @@ limitations under the License.
 #include "CivetServer.h"
 
 #include "configuration.h"
-#include "falco_engine.h"
+#include "swappable_falco_engine.h"
 #include "falco_outputs.h"
 
 class k8s_audit_handler : public CivetHandler
 {
 public:
-	k8s_audit_handler(falco_engine *engine, falco_outputs *outputs);
+	k8s_audit_handler(swappable_falco_engine &swengine, falco_outputs *outputs);
 	virtual ~k8s_audit_handler();
 
 	bool handleGet(CivetServer *server, struct mg_connection *conn);
 	bool handlePost(CivetServer *server, struct mg_connection *conn);
 
-	static bool accept_data(falco_engine *engine,
+	static bool accept_data(swappable_falco_engine &swengine,
 				falco_outputs *outputs,
 				std::string &post_data, std::string &errstr);
 
 	static std::string m_k8s_audit_event_source;
 
 private:
-	falco_engine *m_engine;
+	swappable_falco_engine &m_swengine;
 	falco_outputs *m_outputs;
 	bool accept_uploaded_data(std::string &post_data, std::string &errstr);
 };
@@ -60,18 +60,17 @@ public:
 class falco_webserver
 {
 public:
-	falco_webserver();
+	falco_webserver(swappable_falco_engine &swengine);
 	virtual ~falco_webserver();
 
 	void init(falco_configuration *config,
-		  falco_engine *engine,
 		  falco_outputs *outputs);
 
 	void start();
 	void stop();
 
 private:
-	falco_engine *m_engine;
+	swappable_falco_engine &m_swengine;
 	falco_configuration *m_config;
 	falco_outputs *m_outputs;
 	unique_ptr<CivetServer> m_server;

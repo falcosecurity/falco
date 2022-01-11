@@ -28,12 +28,12 @@ extern "C"
 
 #include <gen_filter.h>
 
-#include "falco_engine.h"
+#include "swappable_falco_engine.h"
 
 class falco_formats
 {
 public:
-	falco_formats(falco_engine *engine,
+	falco_formats(swappable_falco_engine &swengine,
 		      bool json_include_output_property,
 		      bool json_include_tags_property);
 	virtual ~falco_formats();
@@ -45,7 +45,7 @@ public:
 					     const std::string &format);
 
 protected:
-	falco_engine *m_falco_engine;
+	swappable_falco_engine &m_swengine;
 	bool m_json_include_output_property;
 	bool m_json_include_tags_property;
 };
