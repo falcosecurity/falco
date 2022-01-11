@@ -148,6 +148,10 @@ void falco_configuration::init(string conf_filename, list<string> &cmdline_optio
 		}
 		http_output.options["url"] = url;
 
+		string user_agent;
+		user_agent = m_config->get_scalar<string>("http_output.user_agent","falcosecurity/falco");
+		http_output.options["user_agent"] = user_agent;
+
 		m_outputs.push_back(http_output);
 	}
 
