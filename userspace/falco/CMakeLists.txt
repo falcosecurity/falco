@@ -26,6 +26,7 @@ set(
   statsfilewriter.cpp
   falco.cpp
   formats.cpp
+  swappable_falco_engine.cpp
 )
 
 set(
