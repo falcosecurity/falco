@@ -218,8 +218,10 @@ local G = {
       symb(">") / ">" +
       symb("contains") / "contains" +
       symb("icontains") / "icontains" +
+      symb("bcontains") / "bcontains" +
       symb("glob") / "glob" +
       symb("startswith") / "startswith" +
+      symb("bstartswith") / "bstartswith" +
       symb("endswith") / "endswith",
    SetOp = kw("in") / "in" + kw("intersects") / "intersects" + kw("pmatch") / "pmatch",
    UnaryBoolOp = kw("not") / "not",
