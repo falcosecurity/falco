@@ -333,60 +333,8 @@ namespace YAML {
 	template<>
 	struct convert<falco_configuration::plugin_config> {
 
-		static bool read_file_from_key(const Node &node, const std::string &prefix, std::string &value)
-		{
-			std::string key = prefix;
-
-			if(node[key])
-			{
-				// By convention, if the config is a YAML map we convert it
-				// in a JSON object string. This is useful for plugins implementing
-				// the `get_init_schema` API symbol, which right now support the
-				// JSON Schema specific. If we ever support other schema/data types,
-				// we may want to bundle the conversion logic in an ad-hoc class.
-				// The benefit of this is being able of parsing/editing the config as
-				// a YAML map instead of having an opaque string.
-				if (node[key].IsMap())
-				{
-					nlohmann::json json;
-					YAML::convert<nlohmann::json>::decode(node[key], json);
-					value = json.dump();
-;					return true;
-				}
-				value = node[key].as<std::string>();
-				return true;
-			}
-
-			key += "_file";
-
-			if(node[key])
-			{
-				std::string path = node[key].as<std::string>();
-
-				// prepend share dir if path is not absolute
-				if(path.at(0) != '/')
-				{
-					path = string(FALCO_ENGINE_PLUGINS_DIR) + path;
-				}
-
-				// Intentionally letting potential
-				// exception be thrown, will get
-				// caught when reading config.
-				std::ifstream f(path);
-				std::string str((std::istreambuf_iterator<char>(f)),
-						std::istreambuf_iterator<char>());
-
-				value = str;
-				return true;
-			}
-
-			return false;
-		}
-
-		// Note that the distinction between
-		// init_config/init_config_file and
-		// open_params/open_params_file is lost. But also,
-		// this class doesn't write yaml config anyway.
+		// Note that this loses the distinction between init configs
+		// defined as YAML maps or as opaque strings.
 		static Node encode(const falco_configuration::plugin_config & rhs) {
 			Node node;
 			node["name"] = rhs.m_name;
@@ -406,36 +354,44 @@ namespace YAML {
 			{
 				return false;
 			}
-			else
-			{
-				rhs.m_name = node["name"].as<std::string>();
-			}
+			rhs.m_name = node["name"].as<std::string>();
 
 			if(!node["library_path"])
 			{
 				return false;
 			}
+			rhs.m_library_path = node["library_path"].as<std::string>();
+			if(rhs.m_library_path.at(0) != '/')
+			{
+				// prepend share dir if path is not absolute
+				rhs.m_library_path = string(FALCO_ENGINE_PLUGINS_DIR) + rhs.m_library_path;
+			}
+
+			if(!node["init_config"])
+			{
+				return false;
+			}
+			// By convention, if the init config is a YAML map we convert it
+			// in a JSON object string. This is useful for plugins implementing
+			// the `get_init_schema` API symbol, which right now support the
+			// JSON Schema specific. If we ever support other schema/data types,
+			// we may want to bundle the conversion logic in an ad-hoc class.
+			// The benefit of this is being able of parsing/editing the config as
+			// a YAML map instead of having an opaque string.
+			if (node["init_config"].IsMap())
+			{
+				nlohmann::json json;
+				YAML::convert<nlohmann::json>::decode(node["init_config"], json);
+				rhs.m_init_config = json.dump();
+			}
 			else
 			{
-				rhs.m_library_path = node["library_path"].as<std::string>();
-
-				// prepend share dir if path is not absolute
-				if(rhs.m_library_path.at(0) != '/')
-				{
-					rhs.m_library_path = string(FALCO_ENGINE_PLUGINS_DIR) + rhs.m_library_path;
-				}
-
+				rhs.m_init_config = node["init_config"].as<std::string>();
 			}
 
-			if(!read_file_from_key(node, string("init_config"), rhs.m_init_config))
+			if(node["open_params"])
 			{
-				return false;
-			}
-
-			if(node["open_params"] &&
-			   !read_file_from_key(node, string("open_params"), rhs.m_open_params))
-			{
-				return false;
+				rhs.m_open_params = node["open_params"].as<std::string>();
 			}
 
 			return true;
