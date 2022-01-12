@@ -281,6 +281,56 @@ private:
 
 namespace YAML {
 	template<>
+	struct convert<nlohmann::json> {
+		static bool decode(const Node& node, nlohmann::json& res)
+		{
+			int int_val;
+			double double_val;
+			bool bool_val;
+			std::string str_val;
+			nlohmann::json sub{};
+
+			switch (node.Type()) {
+				case YAML::NodeType::Map:
+					for (auto &&it: node)
+					{
+						YAML::convert<nlohmann::json>::decode(it.second, sub);
+						res[it.first.as<std::string>()] = sub;
+					}
+					break;
+				case YAML::NodeType::Sequence:
+					for (auto &&it : node)
+					{
+						YAML::convert<nlohmann::json>::decode(it, sub);
+						res.emplace_back(sub);
+					}
+					break;
+				case YAML::NodeType::Scalar:
+					if (YAML::convert<int>::decode(node, int_val))
+					{
+						res = int_val;
+					}
+					else if (YAML::convert<double>::decode(node, double_val))
+					{
+						res = double_val;
+					}
+					else if (YAML::convert<bool>::decode(node, bool_val))
+					{
+						res = bool_val;
+					}
+					else if (YAML::convert<std::string>::decode(node, str_val))
+					{
+						res = str_val;
+					}
+				default:
+					break;
+			}
+			
+			return true;
+		}
+	};
+
+	template<>
 	struct convert<falco_configuration::plugin_config> {
 
 		static bool read_file_from_key(const Node &node, const std::string &prefix, std::string &value)
@@ -289,6 +339,20 @@ namespace YAML {
 
 			if(node[key])
 			{
+				// By convention, if the config is a YAML map we convert it
+				// in a JSON object string. This is useful for plugins implementing
+				// the `get_init_schema` API symbol, which right now support the
+				// JSON Schema specific. If we ever support other schema/data types,
+				// we may want to bundle the conversion logic in an ad-hoc class.
+				// The benefit of this is being able of parsing/editing the config as
+				// a YAML map instead of having an opaque string.
+				if (node[key].IsMap())
+				{
+					nlohmann::json json;
+					YAML::convert<nlohmann::json>::decode(node[key], json);
+					value = json.dump();
+;					return true;
+				}
 				value = node[key].as<std::string>();
 				return true;
 			}
