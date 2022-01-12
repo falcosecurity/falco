@@ -168,6 +168,10 @@ private:
 					int nodeIdx = std::stoi(key.substr(i + 1, close_param_idx - i - 1));
 					ret.reset(ret[nodeIdx]);
 					i = close_param_idx;
+					if (i < key.size() - 1 && key[i + 1] == '.')
+					{
+						i++;
+					}
 				}
 			}
 		}
