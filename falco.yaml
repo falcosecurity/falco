@@ -246,6 +246,7 @@ program_output:
 http_output:
   enabled: false
   url: http://some.url
+  user_agent: "falcosecurity/falco"
 
 # Falco supports running a gRPC server with two main binding types
 # 1. Over the network with mandatory mutual TLS authentication (mTLS)

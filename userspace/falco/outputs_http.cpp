@@ -34,7 +34,7 @@ void falco::outputs::output_http::output(const message *msg)
 		} else {
 			slist1 = curl_slist_append(slist1, "Content-Type: text/plain");
 		}
-        slist1 = curl_slist_append(slist1, m_oc.options["user_agent"].c_str());
+		slist1 = curl_slist_append(slist1, m_oc.options["user_agent"].c_str());
 
 		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, slist1);
 		curl_easy_setopt(curl, CURLOPT_URL, m_oc.options["url"].c_str());
