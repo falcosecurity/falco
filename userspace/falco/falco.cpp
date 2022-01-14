@@ -503,7 +503,9 @@ int falco_init(int argc, char **argv)
 	int result = EXIT_SUCCESS;
 	sinsp* inspector = NULL;
 	sinsp_evt::param_fmt event_buffer_format = sinsp_evt::PF_NORMAL;
+	swappable_falco_engine::config engine_config;
 	swappable_falco_engine swengine;
+	std::string errstr;
 	falco_outputs *outputs = NULL;
 	syscall_evt_drop_mgr sdropmgr;
 	int op;
@@ -529,9 +531,7 @@ int falco_init(int argc, char **argv)
 	string *k8s_node_name = 0;
 	string* mesos_api = 0;
 #endif
-	string output_format = "";
 	uint32_t snaplen = 0;
-	bool replace_container_info = false;
 	int duration_to_tot = 0;
 	bool print_ignored_events = false;
 	bool list_flds = false;
@@ -540,9 +540,6 @@ int falco_init(int argc, char **argv)
 	bool print_support = false;
 	string cri_socket_path;
 	bool cri_async = true;
-	set<string> disable_sources;
-	bool disable_syscall = false;
-	bool disable_k8s_audit = false;
 	bool userspace = false;
 
 	// Used for writing trace files
@@ -553,7 +550,6 @@ int falco_init(int argc, char **argv)
 	bool compress = false;
 	bool buffered_outputs = true;
 	bool buffered_cmdline = false;
-	std::map<string,uint64_t> required_engine_versions;
 
 	// Used for stats
 	double duration;
@@ -680,23 +676,23 @@ int falco_init(int argc, char **argv)
 			case 'p':
 				if(string(optarg) == "c" || string(optarg) == "container")
 				{
-					output_format = "container=%container.name (id=%container.id)";
-					replace_container_info = true;
+					engine_config.output_format = "container=%container.name (id=%container.id)";
+					engine_config.replace_container_info = true;
 				}
 				else if(string(optarg) == "k" || string(optarg) == "kubernetes")
 				{
-					output_format = "k8s.ns=%k8s.ns.name k8s.pod=%k8s.pod.name container=%container.id";
-					replace_container_info = true;
+					engine_config.output_format = "k8s.ns=%k8s.ns.name k8s.pod=%k8s.pod.name container=%container.id";
+					engine_config.replace_container_info = true;
 				}
 				else if(string(optarg) == "m" || string(optarg) == "mesos")
 				{
-					output_format = "task=%mesos.task.name container=%container.id";
-					replace_container_info = true;
+					engine_config.output_format = "task=%mesos.task.name container=%container.id";
+					engine_config.replace_container_info = true;
 				}
 				else
 				{
-					output_format = optarg;
-					replace_container_info = false;
+					engine_config.output_format = optarg;
+					engine_config.replace_container_info = false;
 				}
 				break;
 			case 'r':
@@ -787,7 +783,7 @@ int falco_init(int argc, char **argv)
 				{
 					if(optarg != NULL)
 					{
-						disable_sources.insert(optarg);
+						engine_config.event_sources.erase(std::string(optarg));
 					}
 				}
 				break;
@@ -797,6 +793,10 @@ int falco_init(int argc, char **argv)
 			}
 
 		}
+
+		/////////////////////////////////////////////////////////
+		// Create and configure inspector
+                /////////////////////////////////////////////////////////
 
 		inspector = new sinsp();
 		inspector->set_buffer_format(event_buffer_format);
@@ -823,38 +823,6 @@ int falco_init(int argc, char **argv)
 			print_all_ignored_events(inspector);
 			delete(inspector);
 			return EXIT_SUCCESS;
-		}
-
-		swengine.engine()->set_extra(output_format, replace_container_info);
-
-		// Create "factories" that can create filters/formatters for
-		// syscalls and k8s audit events.
-		std::shared_ptr<gen_event_filter_factory> syscall_filter_factory(new sinsp_filter_factory(inspector));
-		std::shared_ptr<gen_event_filter_factory> k8s_audit_filter_factory(new json_event_filter_factory());
-
-		std::shared_ptr<gen_event_formatter_factory> syscall_formatter_factory(new sinsp_evt_formatter_factory(inspector));
-		std::shared_ptr<gen_event_formatter_factory> k8s_audit_formatter_factory(new json_event_formatter_factory(k8s_audit_filter_factory));
-
-		swengine.engine()->add_source(syscall_source, syscall_filter_factory, syscall_formatter_factory);
-		swengine.engine()->add_source(k8s_audit_source, k8s_audit_filter_factory, k8s_audit_formatter_factory);
-
-		if(disable_sources.size() > 0)
-		{
-			auto it = disable_sources.begin();
-			while(it != disable_sources.end())
-			{
-				if(*it != syscall_source && *it != k8s_audit_source)
-				{
-					it = disable_sources.erase(it);
-					continue;
-				}
-				++it;
-			}
-			disable_syscall = disable_sources.count(syscall_source) > 0;
-			disable_k8s_audit = disable_sources.count(k8s_audit_source) > 0;
-			if (disable_syscall && disable_k8s_audit) {
-				throw std::invalid_argument("The event source \"syscall\" and \"k8s_audit\" can not be disabled together");
-			}
 		}
 
 		// Some combinations of arguments are not allowed.
@@ -894,24 +862,26 @@ int falco_init(int argc, char **argv)
 
 		if(validate_rules_filenames.size() > 0)
 		{
+			std::list<swappable_falco_engine::rulesfile> validate_rules;
+			std::string errstr;
+
 			falco_logger::log(LOG_INFO, "Validating rules file(s):\n");
 			for(auto file : validate_rules_filenames)
 			{
 				falco_logger::log(LOG_INFO, "   " + file + "\n");
 			}
-			for(auto file : validate_rules_filenames)
+			if (!swappable_falco_engine::open_files(validate_rules_filenames, validate_rules, errstr))
 			{
-				// Only include the prefix if there is more than one file
-				std::string prefix = (validate_rules_filenames.size() > 1 ? file + ": " : "");
-				try {
-					swengine.engine()->load_rules_file(file, verbose, all_events);
-				}
-				catch(falco_exception &e)
-				{
-					printf("%s%s", prefix.c_str(), e.what());
-					throw;
-				}
-				printf("%sOk\n", prefix.c_str());
+				throw falco_exception(errstr);
+			}
+			if (!swengine.validate(validate_rules, errstr))
+			{
+				printf("%s\n", errstr.c_str());
+				throw falco_exception(errstr);
+			}
+			else
+			{
+				printf("Ok\n");
 			}
 			falco_logger::log(LOG_INFO, "Ok\n");
 			goto exit;
@@ -936,19 +906,9 @@ int falco_init(int argc, char **argv)
 		// plugin was found, the source is the source of that
 		// plugin.
 		std::string event_source = syscall_source;
+		engine_config.json_output = config.m_json_output;
 
-		// All filterchecks created by plugins go in this
-		// list. If we ever support multiple event sources at
-		// the same time, this (and the below factories) will
-		// have to be a map from event source to filtercheck
-		// list.
-		filter_check_list plugin_filter_checks;
-
-		// Factories that can create filters/formatters for
-		// the (single) source supported by the (single) input plugin.
-		std::shared_ptr<gen_event_filter_factory> plugin_filter_factory(new sinsp_filter_factory(inspector, plugin_filter_checks));
-		std::shared_ptr<gen_event_formatter_factory> plugin_formatter_factory(new sinsp_evt_formatter_factory(inspector, plugin_filter_checks));
-
+		// Load and validate the configured plugins, if any.
 		std::shared_ptr<sinsp_plugin> input_plugin;
 		std::list<std::shared_ptr<sinsp_plugin>> extractor_plugins;
 		for(auto &p : config.m_plugins)
@@ -962,7 +922,7 @@ int falco_init(int argc, char **argv)
 			plugin = sinsp_plugin::register_plugin(inspector,
 							       p.m_library_path,
 							       (p.m_init_config.empty() ? NULL : (char *)p.m_init_config.c_str()),
-							       plugin_filter_checks);
+							       swengine.plugin_filter_checks());
 #endif
 
 			if(plugin->type() == TYPE_SOURCE_PLUGIN)
@@ -983,7 +943,9 @@ int falco_init(int argc, char **argv)
 					inspector->set_input_plugin_open_params(p.m_open_params.c_str());
 				}
 
-				swengine.engine()->add_source(event_source, plugin_filter_factory, plugin_formatter_factory);
+				// For now, if an input plugin is configured, the built-in sources are disabled.
+				engine_config.event_sources.clear();
+				engine_config.event_sources.insert(splugin->event_source());
 
 			} else {
 				extractor_plugins.push_back(plugin);
@@ -1019,20 +981,25 @@ int falco_init(int argc, char **argv)
 			}
 		}
 
-		if(config.m_json_output)
+		// If there are no event sources, due to a combination
+		// of --disable-source and lack of plugin config,
+		// raise an error.
+		if(engine_config.event_sources.empty())
 		{
-			syscall_formatter_factory->set_output_format(gen_event_formatter::OF_JSON);
-			k8s_audit_formatter_factory->set_output_format(gen_event_formatter::OF_JSON);
-			plugin_formatter_factory->set_output_format(gen_event_formatter::OF_JSON);
+			throw std::invalid_argument("No event sources configured. Check use of --disable-source and plugin configuration");
 		}
 
-		std::list<sinsp_plugin::info> infos = sinsp_plugin::plugin_infos(inspector);
+		engine_config.plugin_infos = sinsp_plugin::plugin_infos(inspector);
+		if (!swengine.init(engine_config, inspector, errstr))
+		{
+			throw std::runtime_error("Could not initialize falco engine: " + errstr);
+		}
 
 		if(list_plugins)
 		{
 			std::ostringstream os;
 
-			for(auto &info : infos)
+			for(auto &info : engine_config.plugin_infos)
 			{
 				os << "Name: " << info.name << std::endl;
 				os << "Description: " << info.description << std::endl;
@@ -1051,7 +1018,7 @@ int falco_init(int argc, char **argv)
 				os << std::endl;
 			}
 
-			printf("%lu Plugins Loaded:\n\n%s\n", infos.size(), os.str().c_str());
+			printf("%lu Plugins Loaded:\n\n%s\n", engine_config.plugin_infos.size(), os.str().c_str());
 			return EXIT_SUCCESS;
 		}
 
@@ -1065,8 +1032,6 @@ int falco_init(int argc, char **argv)
 		{
 			config.m_rules_filenames = rules_filenames;
 		}
-
-		swengine.engine()->set_min_priority(config.m_min_priority);
 
 		if(buffered_cmdline)
 		{
@@ -1087,63 +1052,19 @@ int falco_init(int argc, char **argv)
 		for (auto filename : config.m_rules_filenames)
 		{
 			falco_logger::log(LOG_INFO, "Loading rules from file " + filename + ":\n");
-			uint64_t required_engine_version;
-
-			try {
-				swengine.engine()->load_rules_file(filename, verbose, all_events, required_engine_version);
-			}
-			catch(falco_exception &e)
-			{
-				std::string prefix = "Could not load rules file " + filename + ": ";
-
-				throw falco_exception(prefix + e.what());
-			}
-			required_engine_versions[filename] = required_engine_version;
 		}
 
-		// Ensure that all plugins are compatible with the loaded set of rules
-		for(auto &info : infos)
+		std::list<swappable_falco_engine::rulesfile> rulesfiles;
+		if (!swappable_falco_engine::open_files(config.m_rules_filenames, rulesfiles, errstr) ||
+		    !swengine.replace(rulesfiles, errstr))
 		{
-			std::string required_version;
-
-			if(!swengine.engine()->is_plugin_compatible(info.name, info.plugin_version.as_string(), required_version))
-			{
-				throw std::invalid_argument(std::string("Plugin ") + info.name + " version " + info.plugin_version.as_string() + " not compatible with required plugin version " + required_version);
-			}
+			throw falco_exception(errstr);
 		}
 
 		// You can't both disable and enable rules
 		if((disabled_rule_substrings.size() + disabled_rule_tags.size() > 0) &&
 		    enabled_rule_tags.size() > 0) {
 			throw std::invalid_argument("You can not specify both disabled (-D/-T) and enabled (-t) rules");
-		}
-
-		for (auto substring : disabled_rule_substrings)
-		{
-			falco_logger::log(LOG_INFO, "Disabling rules matching substring: " + substring + "\n");
-			swengine.engine()->enable_rule(substring, false);
-		}
-
-		if(disabled_rule_tags.size() > 0)
-		{
-			for(auto tag : disabled_rule_tags)
-			{
-				falco_logger::log(LOG_INFO, "Disabling rules with tag: " + tag + "\n");
-			}
-			swengine.engine()->enable_rule_by_tag(disabled_rule_tags, false);
-		}
-
-		if(enabled_rule_tags.size() > 0)
-		{
-
-			// Since we only want to enable specific
-			// rules, first disable all rules.
-			swengine.engine()->enable_rule(all_rules, false);
-			for(auto tag : enabled_rule_tags)
-			{
-				falco_logger::log(LOG_INFO, "Enabling rules with tag: " + tag + "\n");
-			}
-			swengine.engine()->enable_rule_by_tag(enabled_rule_tags, true);
 		}
 
 		// For syscalls, see if any event types used by the
@@ -1181,13 +1102,13 @@ int falco_init(int argc, char **argv)
 			support["engine_info"]["engine_version"] = FALCO_ENGINE_VERSION;
 			support["config"] = read_file(conf_filename);
 			support["rules_files"] = nlohmann::json::array();
-			for(auto filename : config.m_rules_filenames)
+			for(auto &rf : rulesfiles)
 			{
 				nlohmann::json finfo;
-				finfo["name"] = filename;
+				finfo["name"] = rf.name;
 				nlohmann::json variant;
-				variant["required_engine_version"] = required_engine_versions[filename];
-				variant["content"] = read_file(filename);
+				variant["required_engine_version"] = rf.required_engine_version;
+				variant["content"] = rf.content;
 				finfo["variants"].push_back(variant);
 				support["rules_files"].push_back(finfo);
 			}
@@ -1412,13 +1333,14 @@ int falco_init(int argc, char **argv)
 			open_t open_f;
 
 			// Default mode: both event sources enabled
-			if (!disable_syscall && !disable_k8s_audit) {
+			if (engine_config.contains_event_source(syscall_source) &&
+			    engine_config.contains_event_source(k8s_audit_source)) {
 				open_f = open_cb;
 			}
-			if (disable_syscall) {
+			if (!engine_config.contains_event_source(syscall_source)) {
 				open_f = open_nodriver_cb;
 			}
-			if (disable_k8s_audit) {
+			if (!engine_config.contains_event_source(k8s_audit_source))  {
 				open_f = open_cb;
 			}
 
@@ -1429,7 +1351,7 @@ int falco_init(int argc, char **argv)
 			catch(sinsp_exception &e)
 			{
 				// If syscall input source is enabled and not through userspace instrumentation
-				if (!disable_syscall && !userspace)
+				if (engine_config.contains_event_source(syscall_source) && !userspace)
 				{
 					// Try to insert the Falco kernel module
 					if(system("modprobe " PROBE_NAME " > /dev/null 2> /dev/null"))
@@ -1522,7 +1444,7 @@ int falco_init(int argc, char **argv)
 		falco_logger::log(LOG_DEBUG, "Setting metadata download watch frequency to " + to_string(config.m_metadata_download_watch_freq_sec) + " seconds\n");
 		inspector->set_metadata_download_params(config.m_metadata_download_max_mb * 1024 * 1024, config.m_metadata_download_chunk_wait_us, config.m_metadata_download_watch_freq_sec);
 
-		if(trace_filename.empty() && config.m_webserver_enabled && !disable_k8s_audit)
+		if(trace_filename.empty() && config.m_webserver_enabled && engine_config.contains_event_source(k8s_audit_source))
 		{
 			std::string ssl_option = (config.m_webserver_ssl_enabled ? " (SSL)" : "");
 			falco_logger::log(LOG_INFO, "Starting internal webserver, listening on port " + to_string(config.m_webserver_listen_port) + ssl_option + "\n");
