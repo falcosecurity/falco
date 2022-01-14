@@ -42,6 +42,7 @@ public:
 		bool contains_event_source(const std::string &source);
 
 		bool json_output;
+		bool verbose;
 		std::string output_format;
 		bool replace_container_info;
 		std::set<std::string> event_sources;

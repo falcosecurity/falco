@@ -23,7 +23,7 @@ std::string swappable_falco_engine::syscall_source = "syscall";
 std::string swappable_falco_engine::k8s_audit_source = "k8s_audit";
 
 swappable_falco_engine::config::config()
-	: json_output(false), replace_container_info(false),
+	: json_output(false), verbose(false), replace_container_info(false),
 	  event_sources{syscall_source, k8s_audit_source}
 {
 }
@@ -188,14 +188,13 @@ std::shared_ptr<falco_engine> swappable_falco_engine::create_new(const std::list
 
 	for(auto &rf : rulesfiles)
 	{
-		// XXX/mstemm verbose and all_events are actually unused, remove them.
-		bool verbose = false;
+		// XXX/mstemm all_events is actually unused, remove them.
 		bool all_events = false;
 
 		uint64_t required;
 
 		try {
-			ret->load_rules(rf.content, verbose, all_events, required);
+			ret->load_rules(rf.content, m_config.verbose, all_events, required);
 		}
 		catch(falco_exception &e)
 		{

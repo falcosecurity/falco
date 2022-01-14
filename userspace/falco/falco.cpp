@@ -522,7 +522,6 @@ int falco_init(int argc, char **argv)
 	list<string> validate_rules_filenames;
 	string stats_filename = "";
 	uint64_t stats_interval = 5000;
-	bool verbose = false;
 	bool names_only = false;
 	bool all_events = false;
 #ifndef MINIMAL_BUILD
@@ -718,7 +717,7 @@ int falco_init(int argc, char **argv)
 				userspace = true;
 				break;
 			case 'v':
-				verbose = true;
+				engine_config.verbose = true;
 				break;
 			case 'V':
 				validate_rules_filenames.push_back(optarg);
@@ -860,33 +859,6 @@ int falco_init(int argc, char **argv)
 			}
 		}
 
-		if(validate_rules_filenames.size() > 0)
-		{
-			std::list<swappable_falco_engine::rulesfile> validate_rules;
-			std::string errstr;
-
-			falco_logger::log(LOG_INFO, "Validating rules file(s):\n");
-			for(auto file : validate_rules_filenames)
-			{
-				falco_logger::log(LOG_INFO, "   " + file + "\n");
-			}
-			if (!swappable_falco_engine::open_files(validate_rules_filenames, validate_rules, errstr))
-			{
-				throw falco_exception(errstr);
-			}
-			if (!swengine.validate(validate_rules, errstr))
-			{
-				printf("%s\n", errstr.c_str());
-				throw falco_exception(errstr);
-			}
-			else
-			{
-				printf("Ok\n");
-			}
-			falco_logger::log(LOG_INFO, "Ok\n");
-			goto exit;
-		}
-
 		falco_configuration config;
 		if (conf_filename.size())
 		{
@@ -1024,7 +996,7 @@ int falco_init(int argc, char **argv)
 
 		if(list_flds)
 		{
-			list_source_fields(swengine, verbose, names_only, list_flds_source);
+			list_source_fields(swengine, engine_config.verbose, names_only, list_flds_source);
 			return EXIT_SUCCESS;
 		}
 
@@ -1041,6 +1013,33 @@ int falco_init(int argc, char **argv)
 		if(config.m_rules_filenames.size() == 0)
 		{
 			throw std::invalid_argument("You must specify at least one rules file/directory via -r or a rules_file entry in falco.yaml");
+		}
+
+		if(validate_rules_filenames.size() > 0)
+		{
+			std::list<swappable_falco_engine::rulesfile> validate_rules;
+			std::string errstr;
+
+			falco_logger::log(LOG_INFO, "Validating rules file(s):\n");
+			for(auto file : validate_rules_filenames)
+			{
+				falco_logger::log(LOG_INFO, "   " + file + "\n");
+			}
+			if (!swappable_falco_engine::open_files(validate_rules_filenames, validate_rules, errstr))
+			{
+				throw falco_exception(errstr);
+			}
+			if (!swengine.validate(validate_rules, errstr))
+			{
+				printf("%s\n", errstr.c_str());
+				throw falco_exception(errstr);
+			}
+			else
+			{
+				printf("Ok\n");
+			}
+			falco_logger::log(LOG_INFO, "Ok\n");
+			goto exit;
 		}
 
 		falco_logger::log(LOG_DEBUG, "Configured rules filenames:\n");
@@ -1394,7 +1393,7 @@ int falco_init(int argc, char **argv)
 					k8s_api_cert = new string(k8s_cert_env);
 				}
 			}
-			inspector->init_k8s_client(k8s_api, k8s_api_cert, k8s_node_name, verbose);
+			inspector->init_k8s_client(k8s_api, k8s_api_cert, k8s_node_name, engine_config.verbose);
 			k8s_api = 0;
 			k8s_api_cert = 0;
 		}
@@ -1410,7 +1409,7 @@ int falco_init(int argc, char **argv)
 					}
 				}
 				k8s_api = new string(k8s_api_env);
-				inspector->init_k8s_client(k8s_api, k8s_api_cert, k8s_node_name, verbose);
+				inspector->init_k8s_client(k8s_api, k8s_api_cert, k8s_node_name, engine_config.verbose);
 			}
 			else
 			{
@@ -1426,14 +1425,14 @@ int falco_init(int argc, char **argv)
 		//
 		if(mesos_api)
 		{
-			inspector->init_mesos_client(mesos_api, verbose);
+			inspector->init_mesos_client(mesos_api, engine_config.verbose);
 		}
 		else if(char* mesos_api_env = getenv("FALCO_MESOS_API"))
 		{
 			if(mesos_api_env != NULL)
 			{
 				mesos_api = new string(mesos_api_env);
-				inspector->init_mesos_client(mesos_api, verbose);
+				inspector->init_mesos_client(mesos_api, engine_config.verbose);
 			}
 		}
 		delete mesos_api;
@@ -1500,7 +1499,7 @@ int falco_init(int argc, char **argv)
 
 			inspector->get_capture_stats(&cstats);
 
-			if(verbose)
+			if(engine_config.verbose)
 			{
 				fprintf(stderr, "Driver Events:%" PRIu64 "\nDriver Drops:%" PRIu64 "\n",
 					cstats.n_evts,
