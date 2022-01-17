@@ -10,9 +10,6 @@ test/.phoronix-test-suite
 test/results*.json.*
 test/build
 
-userspace/engine/lua/lyaml
-userspace/engine/lua/lyaml.lua
-
 .vscode/*
 
 .luacheckcache
