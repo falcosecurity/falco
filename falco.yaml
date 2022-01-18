@@ -92,7 +92,7 @@ log_level: info
 # Minimum rule priority level to load and run. All rules having a
 # priority more severe than this level will be loaded/run.  Can be one
 # of "emergency", "alert", "critical", "error", "warning", "notice",
-# "info", "debug".
+# "informational", "debug".
 priority: debug
 
 # Whether or not output to any of the output channels below is
