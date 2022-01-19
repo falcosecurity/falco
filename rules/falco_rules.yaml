@@ -216,7 +216,7 @@
 - list: deb_binaries
   items: [dpkg, dpkg-preconfigu, dpkg-reconfigur, dpkg-divert, apt, apt-get, aptitude,
     frontend, preinst, add-apt-reposit, apt-auto-remova, apt-key,
-    apt-listchanges, unattended-upgr, apt-add-reposit, apt-config, apt-cache, apt.systemd.dai
+    apt-listchanges, unattended-upgr, apt-add-reposit, apt-cache, apt.systemd.dai
     ]
 
 # The truncated dpkg-preconfigu is intentional, process names are
