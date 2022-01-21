@@ -196,8 +196,12 @@ load_kernel_module_download() {
 	if curl -L --create-dirs "${FALCO_DRIVER_CURL_OPTIONS}" -o "${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}" "${URL}"; then
 		echo "* Download succeeded"
 		chcon -t modules_object_t "${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}" > /dev/null 2>&1 || true
-		insmod "${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}" && echo "* Success: ${DRIVER_NAME} module found and inserted"
-		exit $?
+		if insmod "${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}"; then
+			echo "* Success: ${DRIVER_NAME} module found and inserted"
+			exit 0
+		else
+			>&2 echo "Unable to insmod the prebuilt ${DRIVER_NAME} module"
+		fi	
 	else
 		>&2 echo "Unable to find a prebuilt ${DRIVER_NAME} module"
 		return
@@ -241,11 +245,6 @@ load_kernel_module() {
 		exit 0
 	fi
 
-	echo "* Trying to load a system ${DRIVER_NAME} module, if present"
-	if modprobe "${DRIVER_NAME}" > /dev/null 2>&1; then
-		echo "* Success: ${DRIVER_NAME} module found and loaded with modprobe"
-		exit 0
-	fi
 
 	echo "* Looking for a ${DRIVER_NAME} module locally (kernel ${KERNEL_RELEASE})"
 
@@ -266,6 +265,13 @@ load_kernel_module() {
 
 	if [ -n "$ENABLE_COMPILE" ]; then
 		load_kernel_module_compile
+	fi
+
+	# Last try (might load a previous driver version)
+	echo "* Trying to load a system ${DRIVER_NAME} module, if present"
+	if modprobe "${DRIVER_NAME}" > /dev/null 2>&1; then
+		echo "* Success: ${DRIVER_NAME} module found and loaded with modprobe"
+		exit 0
 	fi
 
 	# Not able to download a prebuilt module nor to compile one on-the-fly
