@@ -160,14 +160,25 @@ load_kernel_module_compile() {
 		echo "make CC=${CURRENT_GCC} \$@" >> /tmp/falco-dkms-make
 		chmod +x /tmp/falco-dkms-make
 		if dkms install --directive="MAKE='/tmp/falco-dkms-make'" -m "${DRIVER_NAME}" -v "${DRIVER_VERSION}" -k "${KERNEL_RELEASE}" 2>/dev/null; then
-			echo "* ${DRIVER_NAME} module installed in dkms, trying to insmod"
-			chcon -t modules_object_t "/var/lib/dkms/${DRIVER_NAME}/${DRIVER_VERSION}/${KERNEL_RELEASE}/${ARCH}/module/${DRIVER_NAME}.ko" > /dev/null 2>&1 || true
-			chcon -t modules_object_t "/var/lib/dkms/${DRIVER_NAME}/${DRIVER_VERSION}/${KERNEL_RELEASE}/${ARCH}/module/${DRIVER_NAME}.ko.xz" > /dev/null 2>&1 || true
-			if insmod "/var/lib/dkms/${DRIVER_NAME}/${DRIVER_VERSION}/${KERNEL_RELEASE}/${ARCH}/module/${DRIVER_NAME}.ko" > /dev/null 2>&1; then
+			echo "* ${DRIVER_NAME} module installed in dkms"
+			KO_FILE="/var/lib/dkms/${DRIVER_NAME}/${DRIVER_VERSION}/${KERNEL_RELEASE}/${ARCH}/module/${DRIVER_NAME}"
+			if [ -f "$KO_FILE.ko" ]; then
+				KO_FILE="$KO_FILE.ko"
+			elif [ -f "$KO_FILE.ko.gz" ]; then
+				KO_FILE="$KO_FILE.ko.gz"
+			elif [ -f "$KO_FILE.ko.xz" ]; then
+				KO_FILE="$KO_FILE.ko.gz"
+			elif [ -f "$KO_FILE.ko.zst" ]; then
+				KO_FILE="$KO_FILE.ko.zst"
+			else
+				>&2 echo "${DRIVER_NAME} module file not found"
+				return
+			fi
+			echo "* ${DRIVER_NAME} module found: ${KO_FILE}"
+			echo "* Trying insmod"
+			chcon -t modules_object_t "$KO_FILE" > /dev/null 2>&1 || true
+			if insmod "$KO_FILE" > /dev/null 2>&1; then
 				echo "* Success: ${DRIVER_NAME} module found and loaded in dkms"
-				exit 0
-			elif insmod "/var/lib/dkms/${DRIVER_NAME}/${DRIVER_VERSION}/${KERNEL_RELEASE}/${ARCH}/module/${DRIVER_NAME}.ko.xz" > /dev/null 2>&1; then
-				echo "* Success: ${DRIVER_NAME} module found and loaded in dkms (xz)"
 				exit 0
 			else
 				echo "* Unable to insmod ${DRIVER_NAME} module"
