@@ -167,7 +167,7 @@ load_kernel_module_compile() {
 			elif [ -f "$KO_FILE.ko.gz" ]; then
 				KO_FILE="$KO_FILE.ko.gz"
 			elif [ -f "$KO_FILE.ko.xz" ]; then
-				KO_FILE="$KO_FILE.ko.gz"
+				KO_FILE="$KO_FILE.ko.xz"
 			elif [ -f "$KO_FILE.ko.zst" ]; then
 				KO_FILE="$KO_FILE.ko.zst"
 			else
