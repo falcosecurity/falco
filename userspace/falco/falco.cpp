@@ -1059,6 +1059,7 @@ int falco_init(int argc, char **argv)
 				{
 					os << "Type: extractor plugin" << std::endl;
 				}
+				os << std::endl;
 			}
 
 			printf("%lu Plugins Loaded:\n\n%s\n", infos.size(), os.str().c_str());
