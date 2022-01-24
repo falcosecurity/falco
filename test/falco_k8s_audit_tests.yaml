@@ -49,6 +49,7 @@ trace_files: !mux
     detect: False
     rules_file:
       - ../rules/falco_rules.yaml
+      - ../rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/engine_v4_k8s_audit_rules.yaml
       - ./rules/k8s_audit/trust_nginx_container.yaml
     trace_file: trace_files/k8s_audit/create_nginx_pod_privileged.json
@@ -74,6 +75,7 @@ trace_files: !mux
     detect: False
     rules_file:
       - ../rules/falco_rules.yaml
+      - ../rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/engine_v4_k8s_audit_rules.yaml
       - ./rules/k8s_audit/trust_nginx_container.yaml
     trace_file: trace_files/k8s_audit/create_nginx_pod_hostnetwork.json
