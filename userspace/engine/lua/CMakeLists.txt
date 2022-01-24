@@ -10,7 +10,7 @@
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 
-file(GLOB_RECURSE lua_module_files ${CMAKE_CURRENT_SOURCE_DIR} *.lua)
+file(GLOB_RECURSE lua_files ${CMAKE_CURRENT_SOURCE_DIR} *.lua)
 
 add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/falco_engine_lua_files.cpp
 	COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/lua-to-cpp.sh ${CMAKE_CURRENT_SOURCE_DIR} ${LYAML_LUA_DIR} ${CMAKE_CURRENT_BINARY_DIR}
