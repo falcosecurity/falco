@@ -1059,11 +1059,9 @@ function load_rules(rules_content,
 
 	 else
 	    num_evttypes = falco_rules.add_filter(rules_mgr, lua_parser, v['rule'], v['source'], v['tags'])
-	    if num_evttypes == 0 or num_evttypes > 100 then
+	    if v['source'] == "syscall" and (num_evttypes == 0 or num_evttypes > 100) then
 	       if warn_evttypes == true then
-		  msg = "Rule "..v['rule']..": warning (no-evttype):\n"
-		  msg = msg.."         did not contain any evt.type restriction, meaning it will run for all event types.\n"
-		  msg = msg.."         This has a significant performance penalty. Consider adding an evt.type restriction if possible.\n"
+		  msg = "Rule "..v['rule']..": warning (no-evttype):\n".."         matches too many evt.type values.\n".."         This has a significant performance penalty.\n"
 		  warnings[#warnings + 1] = msg
 	       end
 	    end
