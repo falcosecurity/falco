@@ -1061,7 +1061,7 @@ function load_rules(rules_content,
 	    num_evttypes = falco_rules.add_filter(rules_mgr, lua_parser, v['rule'], v['source'], v['tags'])
 	    if v['source'] == "syscall" and (num_evttypes == 0 or num_evttypes > 100) then
 	       if warn_evttypes == true then
-		  msg = "Rule "..v['rule']..": warning (no-evttype):\n".."         matches too many evt.type values.\n".."         This has a significant performance penalty.\n"
+		  msg = "Rule "..v['rule']..": warning (no-evttype):\n".."         matches too many evt.type values.\n".."         This has a significant performance penalty."
 		  warnings[#warnings + 1] = msg
 	       end
 	    end
