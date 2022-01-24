@@ -477,7 +477,7 @@ static void check_for_ignored_events(sinsp &inspector, falco_engine &engine)
 				skipped_events += "," + evtname;
 			}
 		}
-		fprintf(stderr,"Loaded rules match events (%s), but these events are not returned unless running falco with -A\n", skipped_events.c_str());
+		fprintf(stderr,"Rules match ignored syscall: warning (ignored-evttype):\n         loaded rules match the following events: %s;\n         but these events are not returned unless running falco with -A\n", skipped_events.c_str());
 	}
 }
 
