@@ -452,7 +452,7 @@ void falco_rules::load_rules(const string &rules_content,
 			throw falco_exception(os.str());
 		}
 
-		if (verbose && os.str() != "") {
+		if (os.str() != "") {
 			// We don't really have a logging callback
 			// from the falco engine, but this would be a
 			// good place to use it.

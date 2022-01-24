@@ -456,10 +456,28 @@ static void check_for_ignored_events(sinsp &inspector, falco_engine &engine)
 			std::string name = etable[evtnum].name;
 			if(warn_event_names.find(name) == warn_event_names.end())
 			{
-				printf("Loaded rules use event %s, but this event is not returned unless running falco with -A\n", name.c_str());
 				warn_event_names.insert(name);
 			}
 		}
+	}
+
+	// Print a single warning with the list of ignored events
+	if (!warn_event_names.empty())
+	{
+		std::string skipped_events;
+		bool first = true;
+		for (const auto& evtname : warn_event_names)
+		{
+			if (first)
+			{
+				skipped_events += evtname;
+				first = false;
+			} else
+			{
+				skipped_events += "," + evtname;
+			}
+		}
+		fprintf(stderr,"Loaded rules match events (%s), but these events are not returned unless running falco with -A\n", skipped_events.c_str());
 	}
 }
 
@@ -1138,11 +1156,6 @@ int falco_init(int argc, char **argv)
 			engine->enable_rule_by_tag(enabled_rule_tags, true);
 		}
 
-		// For syscalls, see if any event types used by the
-		// loaded rules are ones with the EF_DROP_SIMPLE_CONS
-		// label.
-		check_for_ignored_events(*inspector, *engine);
-
 		if(print_support)
 		{
 			nlohmann::json support;
@@ -1206,6 +1219,10 @@ int falco_init(int argc, char **argv)
 
 		if(!all_events)
 		{
+			// For syscalls, see if any event types used by the
+			// loaded rules are ones with the EF_DROP_SIMPLE_CONS
+			// label.
+			check_for_ignored_events(*inspector, *engine);
 			// Drop EF_DROP_SIMPLE_CONS kernel side
 			inspector->set_simple_consumer();
 			// Eventually, drop any EF_DROP_SIMPLE_CONS event

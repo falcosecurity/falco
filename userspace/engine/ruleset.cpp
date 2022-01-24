@@ -68,6 +68,9 @@ void falco_ruleset::ruleset_filters::add_filter(std::shared_ptr<filter_wrapper> 
 {
 	std::set<uint16_t> fevttypes = wrap->filter->evttypes();
 
+	// TODO: who fills this one for rules without evt.type specified?
+	// Can this be actually empty?
+	// Is m_filter_all_event_types useful?
 	if(fevttypes.empty())
 	{
 		// Should run for all event types
