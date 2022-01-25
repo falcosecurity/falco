@@ -63,7 +63,7 @@
   condition: rename or remove
 
 - macro: spawned_process
-  condition: evt.type = execve and evt.dir=<
+  condition: evt.type in (execve, execveat) and evt.dir=<
 
 - macro: create_symlink
   condition: evt.type in (symlink, symlinkat) and evt.dir=<
