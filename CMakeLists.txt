@@ -67,6 +67,7 @@ endif()
 
 if(MUSL_OPTIMIZED_BUILD)
   set(MUSL_FLAGS "-static -Os -fPIE -pie")
+  add_definitions(-DMUSL_OPTIMIZED)
 endif()
 
 # explicitly set hardening flags
