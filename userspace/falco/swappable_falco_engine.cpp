@@ -38,31 +38,26 @@ bool swappable_falco_engine::config::contains_event_source(const std::string &so
 }
 
 bool swappable_falco_engine::open_files(std::list<std::string> &filenames,
-					std::list<swappable_falco_engine::rulesfile> &rulesfiles,
+					std::list<falco_engine::rulesfile> &rulesfiles,
 					std::string &errstr)
 {
 	rulesfiles.clear();
 
-	for(const auto &file : filenames)
+	for(const auto &filename : filenames)
 	{
-		std::ifstream is;
+		std::string errstr;
 
-		is.open(file);
-		if (!is.is_open())
+		rulesfiles.emplace_back();
+
+		falco_engine::rulesfile &rf = rulesfiles.back();
+
+		if (!rf.load(filename, errstr))
 		{
-			errstr = "Could not open rules filename " +
-				file + " " + "for reading";
 			return false;
 		}
-
-		std::string content((istreambuf_iterator<char>(is)),
-				    istreambuf_iterator<char>());
-
-		rulesfile rf{file, content, 0};
-
-		rulesfiles.emplace_back(rf);
 	}
 
+	errstr = "";
 	return true;
 }
 
@@ -81,7 +76,7 @@ bool swappable_falco_engine::init(swappable_falco_engine::config &cfg, sinsp *in
 	m_inspector = inspector;
 
 	// Initialize some engine with no rules
-	std::list<swappable_falco_engine::rulesfile> empty;
+	std::list<falco_engine::rulesfile> empty;
 	return replace(empty, errstr);
 }
 
@@ -107,7 +102,8 @@ filter_check_list &swappable_falco_engine::plugin_filter_checks()
 	return m_plugin_filter_checks;
 }
 
-bool swappable_falco_engine::replace(const std::list<swappable_falco_engine::rulesfile> &rulesfiles, std::string &errstr)
+bool swappable_falco_engine::replace(std::list<falco_engine::rulesfile> &rulesfiles,
+				     std::string &errstr)
 {
 	std::shared_ptr<falco_engine> new_engine;
 
@@ -123,7 +119,8 @@ bool swappable_falco_engine::replace(const std::list<swappable_falco_engine::rul
 	return true;
 }
 
-bool swappable_falco_engine::validate(const std::list<swappable_falco_engine::rulesfile> &rulesfiles, std::string &errstr)
+bool swappable_falco_engine::validate(std::list<falco_engine::rulesfile> &rulesfiles,
+				      std::string &errstr)
 {
 	std::shared_ptr<falco_engine> new_engine;
 
@@ -132,10 +129,12 @@ bool swappable_falco_engine::validate(const std::list<swappable_falco_engine::ru
 	return (new_engine != NULL);
 }
 
-std::shared_ptr<falco_engine> swappable_falco_engine::create_new(const std::list<swappable_falco_engine::rulesfile> &rulesfiles,
+std::shared_ptr<falco_engine> swappable_falco_engine::create_new(std::list<falco_engine::rulesfile> &rulesfiles,
 								 std::string &errstr)
 {
 	std::shared_ptr<falco_engine> ret = make_shared<falco_engine>();
+
+	errstr = "";
 
 	if(!m_inspector)
 	{
@@ -186,22 +185,41 @@ std::shared_ptr<falco_engine> swappable_falco_engine::create_new(const std::list
 		ret->add_source(source, filter_factory, formatter_factory);
 	}
 
+	// Note that we load all rules files, even if one of them has an error.
+	bool successful = true;
+
+	// We include filenames if there is more than one file
+	bool include_filenames = (rulesfiles.size() > 1);
+
+	// We include warnings if verbose
+	bool include_warnings = m_config.verbose;
+
+	std::ostringstream os;
 	for(auto &rf : rulesfiles)
 	{
-		// XXX/mstemm all_events is actually unused, remove them.
+		falco_engine::load_result res(rf);
+
+		// XXX/mstemm all_events is actually unused, remove it.
 		bool all_events = false;
 
-		uint64_t required;
+		ret->load_rules(rf,
+				m_config.verbose, all_events,
+				res);
 
-		try {
-			ret->load_rules(rf.content, m_config.verbose, all_events, required);
-		}
-		catch(falco_exception &e)
+		os << res.as_string(include_filenames, include_warnings);
+
+		if(!res.successful)
 		{
-			errstr  = "Could not load rules file " + rf.name + ": " + e.what();
-			ret = NULL;
-			return ret;
+			successful = false;
 		}
+	}
+
+	errstr = os.str();
+
+	if(!successful)
+	{
+		ret = NULL;
+		return ret;
 	}
 
 	// Ensure that all plugins are compatible with the loaded set of rules

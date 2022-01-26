@@ -53,18 +53,9 @@ public:
 		std::set<std::string> enabled_rule_tags;
 	};
 
-	// Represents a rules file passed to replace() or validate().
-	// The required_engine_version will be filled in upon a
-	// successful call to replace() or validate().
-	struct rulesfile {
-		std::string name;
-		std::string content;
-		uint64_t required_engine_version;
-	};
-
 	// Helper to load a set of files from filenames
 	static bool open_files(std::list<std::string> &filenames,
-			       std::list<rulesfile> &rulesfiles,
+			       std::list<falco_engine::rulesfile> &rulesfiles,
 			       std::string &errstr);
 
 	swappable_falco_engine();
@@ -83,9 +74,11 @@ public:
 	// This can be called from a different thread than the one
 	// calling engine().
 	//
-        // Returns true on success, returns false and fills in
-        // errstr otherwise.
-	bool replace(const std::list<rulesfile> &rulesfiles, std::string &errstr);
+        // Returns true on success, false otherwise. Regardless,
+        // errstr will be filled in with details on any
+        // errors (and warnings, if config.verbose is true)
+	bool replace(std::list<falco_engine::rulesfile> &rulesfiles,
+		     std::string &errstr);
 
 	// Create a new engine, configure it, load the provided set of
 	// rules files, but do *not* queue it to replace the current
@@ -94,16 +87,20 @@ public:
 	// This can be called from a different thread than the one
 	// calling engine().
 	//
-        // Returns true if all rules were valid. Returns false and fills in
-        // errstr otherwise.
-	bool validate(const std::list<rulesfile> &rulesfiles, std::string &errstr);
+        // Returns true on success, false otherwise. Regardless,
+        // errstr will be filled in with details on any
+        // errors (and warnings, if config.verbose is true)
+	bool validate(std::list<falco_engine::rulesfile> &rulesfiles,
+		      std::string &errstr);
 
 private:
 
 	// Does everything but enqueue the new engine. Returns a
-	// shared_ptr to a new falco_engine on success. On error the
-	// shared_ptr will be empty and errstr will contain an error.
-	std::shared_ptr<falco_engine> create_new(const std::list<rulesfile> &rulesfiles, std::string &errstr);
+	// shared_ptr to a new falco_engine on success. Regardless,
+        // errstr will be filled in with details on any
+        // errors (and warnings, if config.verbose is true)
+	std::shared_ptr<falco_engine> create_new(std::list<falco_engine::rulesfile> &rulesfiles,
+						 std::string &errstr);
 
 	sinsp *m_inspector;
 	config m_config;
