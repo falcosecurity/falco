@@ -155,18 +155,20 @@ void falco_engine::load_rules(const string &rules_content, bool verbose, bool al
 
 void falco_engine::load_rules(const string &rules_content, bool verbose, bool all_events, uint64_t &required_engine_version)
 {
-	if(!m_rules)
+	rulesfile rf;
+	rf.content = rules_content;
+
+	load_result res(rf);
+
+	load_rules(rf, verbose, all_events, res);
+
+	if(!res.successful)
 	{
-		m_rules.reset(new falco_rules(this,
-					      m_ls));
+		bool include_filenames = false;
 
-		for(auto const &it : m_filter_factories)
-		{
-			m_rules->add_filter_factory(it.first, it.second);
-		}
+		// This version assembles the errors and/or warnings into an exception.
+		throw falco_exception(res.as_string(include_filenames, verbose));
 	}
-
-	m_rules->load_rules(rules_content, verbose, all_events, m_extra, m_replace_container_info, m_min_priority, required_engine_version, m_required_plugin_versions);
 }
 
 void falco_engine::load_rules_file(const string &rules_filename, bool verbose, bool all_events)
@@ -192,6 +194,113 @@ void falco_engine::load_rules_file(const string &rules_filename, bool verbose, b
 			     istreambuf_iterator<char>());
 
 	load_rules(rules_content, verbose, all_events, required_engine_version);
+}
+
+falco_engine::rulesfile::rulesfile()
+{
+}
+
+falco_engine::load_result::load_result(const rulesfile &rulesfile)
+	: rf(rulesfile)
+{
+}
+
+falco_engine::load_result::~load_result()
+{
+}
+
+std::string falco_engine::load_result::as_string(bool include_filenames, bool include_warnings)
+{
+	std::ostringstream os;
+
+	if((errors.size() + warnings.size()) == 0)
+	{
+		if(include_filenames)
+		{
+			os << rf.name << ": ";
+		}
+
+		os << "Ok" << std::endl;
+	} else {
+
+		if (errors.size() > 0)
+		{
+			if(include_filenames)
+			{
+				os << rf.name << ": ";
+			}
+
+			os << errors.size() << " errors:" << std::endl;
+			for(auto err : errors)
+			{
+				os << err << std::endl;
+			}
+		}
+
+		if (include_warnings && warnings.size() > 0)
+		{
+			// Only include the filename if there is more than one file
+			if(include_filenames)
+			{
+				os << rf.name << ": ";
+			}
+
+			os << warnings.size() << " warnings:" << std::endl;
+			for(auto warn : warnings)
+			{
+				os << warn << std::endl;
+			}
+		}
+	}
+
+	return os.str();
+}
+
+bool falco_engine::rulesfile::load(const std::string &filename, std::string &errstr)
+{
+	std::ifstream is;
+
+	is.open(filename);
+	if (!is.is_open())
+	{
+		errstr = "Could not open rules filename " +
+			filename + " " + "for reading";
+		return false;
+	}
+
+	name = filename;
+	content.assign((istreambuf_iterator<char>(is)),
+		       istreambuf_iterator<char>());
+
+	return true;
+}
+
+falco_engine::rulesfile::~rulesfile()
+{
+}
+
+void falco_engine::load_rules(falco_engine::rulesfile &rf,
+			      bool verbose, bool all_events,
+			      falco_engine::load_result &result)
+{
+	if(!m_rules)
+	{
+		m_rules.reset(new falco_rules(this,
+					      m_ls));
+
+		for(auto const &it : m_filter_factories)
+		{
+			m_rules->add_filter_factory(it.first, it.second);
+		}
+	}
+
+	result.successful = m_rules->load_rules(rf.content, verbose, all_events,
+						m_extra, m_replace_container_info,
+						m_min_priority,
+						result.warnings,
+						result.errors,
+						result.required_engine_version,
+						m_required_plugin_versions);
 }
 
 void falco_engine::enable_rule(const string &substring, bool enabled, const string &ruleset)

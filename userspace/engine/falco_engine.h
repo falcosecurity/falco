@@ -69,6 +69,42 @@ public:
 	void load_rules_file(const std::string &rules_filename, bool verbose, bool all_events, uint64_t &required_engine_version);
 	void load_rules(const std::string &rules_content, bool verbose, bool all_events, uint64_t &required_engine_version);
 
+	// Represents a block of rules. The name is only for
+	// logging/identification purposes, but generally is the path
+	// to the file that contained content.
+	class rulesfile {
+	public:
+		rulesfile();
+		virtual ~rulesfile();
+
+		bool load(const std::string &filename, std::string &errstr);
+
+		std::string name;
+		std::string content;
+	};
+
+	// Represents the result of loading a block of rules.
+	class load_result {
+	public:
+		load_result(const rulesfile &rulesfile);
+		~load_result();
+
+		std::string as_string(bool include_filenames, bool include_warnings);
+
+		const rulesfile &rf;
+		bool successful;
+		std::list<std::string> warnings;
+		std::list<std::string> errors;
+		uint64_t required_engine_version;
+	};
+
+	// Improved variant that explicitly passes back a load_result
+	// struct containing lists of errors/warnings, etc. instead of
+	// throwing an exception on error.
+	void load_rules(rulesfile &rf,
+			bool verbose, bool all_events,
+			load_result &result);
+
 	//
 	// Enable/Disable any rules matching the provided substring.
 	// If the substring is "", all rules are enabled/disabled.
