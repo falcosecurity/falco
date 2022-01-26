@@ -137,8 +137,12 @@ static void usage()
 	   " -l <rule>                     Show the name and description of the rule with name <rule> and exit.\n"
 	   " --list [<source>]             List all defined fields. If <source> is provided, only list those fields for\n"
 	   "                               the source <source>. Current values for <source> are \"syscall\", \"k8s_audit\"\n"
-#ifndef MUSL_OPTIMIZED_BUILD
+	   " --list-fields-markdown [<source>]\n"
+	   "                               List fields in md\n"
+#ifndef MUSL_OPTIMIZED
 	   " --list-plugins                Print info on all loaded plugins and exit.\n"
+#endif
+#ifndef MINIMAL_BUILD
 	   " -m <url[,marathon_url]>, --mesos-api <url[,marathon_url]>\n"
 	   "                               Enable Mesos support by connecting to the API server\n"
 	   "                               specified as argument. E.g. \"http://admin:password@127.0.0.1:5050\".\n"
@@ -574,9 +578,7 @@ int falco_init(int argc, char **argv)
 			{"k8s-api", required_argument, 0, 'k'},
 			{"k8s-node", required_argument, 0},
 			{"list", optional_argument, 0},
-#ifndef MUSL_OPTIMIZED_BUILD
 			{"list-plugins", no_argument, 0},
-#endif
 			{"mesos-api", required_argument, 0, 'm'},
 			{"option", required_argument, 0, 'o'},
 			{"pidfile", required_argument, 0, 'P'},
@@ -769,7 +771,7 @@ int falco_init(int argc, char **argv)
 						list_flds_source = optarg;
 					}
 				}
-#ifndef MUSL_OPTIMIZED_BUILD
+#ifndef MUSL_OPTIMIZED
 				else if (string(long_options[long_index].name) == "list-plugins")
 				{
 					list_plugins = true;
@@ -965,7 +967,7 @@ int falco_init(int argc, char **argv)
 		for(auto &p : config.m_plugins)
 		{
 			std::shared_ptr<sinsp_plugin> plugin;
-#ifdef MUSL_OPTIMIZED_BUILD
+#ifdef MUSL_OPTIMIZED
 			throw std::invalid_argument(string("Can not load/use plugins with musl optimized build"));
 #else
 			falco_logger::log(LOG_INFO, "Loading plugin (" + p.m_name + ") from file " + p.m_library_path + "\n");
