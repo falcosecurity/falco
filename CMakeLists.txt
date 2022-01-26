@@ -207,7 +207,9 @@ add_subdirectory(userspace/engine)
 add_subdirectory(userspace/falco)
 add_subdirectory(tests)
 
-include(plugins)
+if(NOT MUSL_OPTIMIZED_BUILD)
+  include(plugins)
+endif()
 
 # Packages configuration
 include(CPackConfig)
