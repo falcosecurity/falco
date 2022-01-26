@@ -39,9 +39,11 @@ class falco_rules
 	void add_filter_factory(const std::string &source,
 				std::shared_ptr<gen_event_filter_factory> factory);
 
-	void load_rules(const string &rules_content, bool verbose, bool all_events,
+	bool load_rules(const string &rules_content, bool verbose, bool all_events,
 			std::string &extra, bool replace_container_info,
 			falco_common::priority_type min_priority,
+			std::list<std::string> &warnings,
+			std::list<std::string> &errors,
 			uint64_t &required_engine_version,
 			std::map<std::string, std::list<std::string>> &required_plugin_versions);
 	void describe_rule(string *rule);

@@ -397,10 +397,12 @@ static void get_lua_table_list_values(lua_State *ls,
 }
 
 
-void falco_rules::load_rules(const string &rules_content,
+bool falco_rules::load_rules(const string &rules_content,
 			     bool verbose, bool all_events,
 			     string &extra, bool replace_container_info,
 			     falco_common::priority_type min_priority,
+			     std::list<std::string> &warnings,
+			     std::list<std::string> &errors,
 			     uint64_t &required_engine_version,
 			     std::map<std::string, std::list<std::string>> &required_plugin_versions)
 {
@@ -432,8 +434,8 @@ void falco_rules::load_rules(const string &rules_content,
 		bool successful = lua_toboolean(m_ls, -5);
 		required_engine_version = lua_tonumber(m_ls, -4);
 		get_lua_table_list_values(m_ls, -3, required_plugin_versions);
-		std::list<std::string> errors = get_lua_table_values(m_ls, -2);
-		std::list<std::string> warnings = get_lua_table_values(m_ls, -1);
+		errors = get_lua_table_values(m_ls, -2);
+		warnings = get_lua_table_values(m_ls, -1);
 
 		// Concatenate errors/warnings
 		std::ostringstream os;
@@ -455,23 +457,18 @@ void falco_rules::load_rules(const string &rules_content,
 			}
 		}
 
+		lua_pop(m_ls, 4);
+
 		if(!successful)
 		{
-			throw falco_exception(os.str());
+			return false;
 		}
-
-		if (verbose && os.str() != "") {
-			// We don't really have a logging callback
-			// from the falco engine, but this would be a
-			// good place to use it.
-			fprintf(stderr, "When reading rules content: %s", os.str().c_str());
-		}
-
-		lua_pop(m_ls, 4);
 
 	} else {
 		throw falco_exception("No function " + m_lua_load_rules + " found in lua rule module");
 	}
+
+	return true;
 }
 
 void falco_rules::describe_rule(std::string *rule)
