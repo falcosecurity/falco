@@ -25,7 +25,6 @@ limitations under the License.
 #include "falco_engine.h"
 #include "falco_utils.h"
 #include "falco_engine_version.h"
-#include "config_falco_engine.h"
 
 #include "formats.h"
 
@@ -44,7 +43,7 @@ const std::string falco_engine::s_default_ruleset = "falco-default-ruleset";
 
 using namespace std;
 
-falco_engine::falco_engine(bool seed_rng, const std::string& alternate_lua_dir)
+falco_engine::falco_engine(bool seed_rng)
 	: m_next_ruleset_id(0),
 	  m_min_priority(falco_common::PRIORITY_DEBUG),
 	  m_sampling_ratio(1), m_sampling_multiplier(0),
