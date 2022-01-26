@@ -32,7 +32,6 @@ limitations under the License.
 #include "rules.h"
 #include "ruleset.h"
 
-#include "config_falco_engine.h"
 #include "falco_common.h"
 
 //
@@ -44,7 +43,7 @@ limitations under the License.
 class falco_engine : public falco_common
 {
 public:
-	falco_engine(bool seed_rng=true, const std::string& alternate_lua_dir=FALCO_ENGINE_SOURCE_LUA_DIR);
+	falco_engine(bool seed_rng=true);
 	virtual ~falco_engine();
 
 	// A given engine has a version which identifies the fields

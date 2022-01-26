@@ -94,7 +94,6 @@ static void usage()
 	   " -h, --help                    Print this page\n"
 	   " -c                            Configuration file (default " FALCO_SOURCE_CONF_FILE ", " FALCO_INSTALL_CONF_FILE ")\n"
 	   " -A                            Monitor all events, including those with EF_DROP_SIMPLE_CONS flag.\n"
-	   " --alternate-lua-dir <path>    Specify an alternate path for loading Falco lua files\n"
 	   " -b, --print-base64            Print data buffers in base64.\n"
 	   "                               This is useful for encoding binary data that needs to be used over media designed to.\n"
 	   " --cri <path>                  Path to CRI socket for container metadata.\n"
@@ -563,7 +562,6 @@ int falco_init(int argc, char **argv)
 
 	static struct option long_options[] =
 		{
-			{"alternate-lua-dir", required_argument, 0},
 			{"cri", required_argument, 0},
 			{"daemon", no_argument, 0, 'd'},
 			{"disable-cri-async", no_argument, 0, 0},
@@ -596,8 +594,7 @@ int falco_init(int argc, char **argv)
 	{
 		set<string> disabled_rule_substrings;
 		string substring;
-		string all_rules = "";
-		string alternate_lua_dir = FALCO_ENGINE_SOURCE_LUA_DIR;
+		string all_rules;
 		set<string> disabled_rule_tags;
 		set<string> enabled_rule_tags;
 
@@ -790,16 +787,6 @@ int falco_init(int argc, char **argv)
 						disable_sources.insert(optarg);
 					}
 				}
-				else if (string(long_options[long_index].name)== "alternate-lua-dir")
-				{
-					if(optarg != NULL)
-					{
-						alternate_lua_dir = optarg;
-						if (alternate_lua_dir.back() != '/') {
-							alternate_lua_dir += '/';
-						}
-					}
-				}
 				break;
 
 			default:
@@ -835,7 +822,7 @@ int falco_init(int argc, char **argv)
 			return EXIT_SUCCESS;
 		}
 
-		engine = new falco_engine(true, alternate_lua_dir);
+		engine = new falco_engine(true);
 		engine->set_extra(output_format, replace_container_info);
 
 		// Create "factories" that can create filters/formatters for

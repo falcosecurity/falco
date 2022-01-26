@@ -56,6 +56,3 @@ else()
 endif()
 
 target_link_libraries(falco_engine "${FALCO_SINSP_LIBRARY}" "${LPEG_LIB}" "${LYAML_LIB}" "${LIBYAML_LIB}" luafiles)
-
-configure_file(config_falco_engine.h.in config_falco_engine.h)
-

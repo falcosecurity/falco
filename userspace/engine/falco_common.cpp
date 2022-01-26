@@ -16,7 +16,6 @@ limitations under the License.
 
 #include <fstream>
 
-#include "config_falco_engine.h"
 #include "falco_common.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
 #include "falco_engine_lua_files.hh"
