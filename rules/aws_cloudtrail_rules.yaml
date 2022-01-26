@@ -335,7 +335,7 @@
   desc: Detect deleting blocking public access to bucket.
   condition:
     ct.name="PutBucketPublicAccessBlock" and not ct.error exists and
-    json.value[/requestParameters/publicAccessBlock]="" and
+    json.value[/requestParameters/publicAccessBlock]='""' and
       (json.value[/requestParameters/PublicAccessBlockConfiguration/RestrictPublicBuckets]=false or
       json.value[/requestParameters/PublicAccessBlockConfiguration/BlockPublicPolicy]=false or
       json.value[/requestParameters/PublicAccessBlockConfiguration/BlockPublicAcls]=false or
