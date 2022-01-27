@@ -68,9 +68,6 @@ void falco_ruleset::ruleset_filters::add_filter(std::shared_ptr<filter_wrapper> 
 {
 	std::set<uint16_t> fevttypes = wrap->filter->evttypes();
 
-	// TODO: who fills this one for rules without evt.type specified?
-	// Can this be actually empty?
-	// Is m_filter_all_event_types useful?
 	if(fevttypes.empty())
 	{
 		// Should run for all event types
@@ -121,18 +118,16 @@ uint64_t falco_ruleset::ruleset_filters::num_filters()
 
 bool falco_ruleset::ruleset_filters::run(gen_event *evt)
 {
-	if(evt->get_type() >= m_filter_by_event_type.size())
-	{
-		return false;
-	}
-
-	for(auto &wrap : m_filter_by_event_type[evt->get_type()])
-	{
-		if(wrap->filter->run(evt))
-		{
-			return true;
-		}
-	}
+    if(evt->get_type() < m_filter_by_event_type.size())
+    {
+        for(auto &wrap : m_filter_by_event_type[evt->get_type()])
+        {
+            if(wrap->filter->run(evt))
+            {
+                return true;
+            }
+        }
+    }
 
 	// Finally, try filters that are not specific to an event type.
 	for(auto &wrap : m_filter_all_event_types)
