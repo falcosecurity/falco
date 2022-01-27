@@ -27,8 +27,8 @@ install(FILES "${PROJECT_BINARY_DIR}/cloudtrail-plugin-prefix/src/cloudtrail-plu
 
 ExternalProject_Add(
   json-plugin
-  URL "https://download.falco.org/plugins/stable/json-0.2.1-${PLUGINS_SYSTEM_NAME}-${CMAKE_HOST_SYSTEM_PROCESSOR}.tar.gz"
-  URL_HASH "SHA256=14d1cf4c3c651af0daec7a45162ef91172d6f0baba787f0eff0227b3cf2ca39c"
+  URL "https://download.falco.org/plugins/stable/json-0.2.2-${PLUGINS_SYSTEM_NAME}-${CMAKE_HOST_SYSTEM_PROCESSOR}.tar.gz"
+  URL_HASH "SHA256=83eb411c9f2125695875b229c6e7974e6a4cc7f028be146b79d26db30372af5e"
   CONFIGURE_COMMAND ""
   BUILD_COMMAND ""
   INSTALL_COMMAND "")
