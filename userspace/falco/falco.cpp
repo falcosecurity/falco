@@ -590,11 +590,7 @@ int falco_init(int argc, char **argv)
 
 	try
 	{
-		set<string> disabled_rule_substrings;
 		string substring;
-		string all_rules;
-		set<string> disabled_rule_tags;
-		set<string> enabled_rule_tags;
 
 		//
 		// Parse the args
@@ -622,7 +618,7 @@ int falco_init(int argc, char **argv)
 				break;
 			case 'D':
 				substring = optarg;
-				disabled_rule_substrings.insert(substring);
+				engine_config.disabled_rule_substrings.insert(substring);
 				break;
 			case 'e':
 				trace_filename = optarg;
@@ -704,10 +700,10 @@ int falco_init(int argc, char **argv)
 				stats_filename = optarg;
 				break;
 			case 'T':
-				disabled_rule_tags.insert(optarg);
+				engine_config.disabled_rule_tags.insert(optarg);
 				break;
 			case 't':
-				enabled_rule_tags.insert(optarg);
+				engine_config.enabled_rule_tags.insert(optarg);
 				break;
 			case 'U':
 				buffered_outputs = false;
@@ -879,6 +875,7 @@ int falco_init(int argc, char **argv)
 		// plugin.
 		std::string event_source = syscall_source;
 		engine_config.json_output = config.m_json_output;
+		engine_config.min_priority = config.m_min_priority;
 
 		// Load and validate the configured plugins, if any.
 		std::shared_ptr<sinsp_plugin> input_plugin;
@@ -1028,22 +1025,24 @@ int falco_init(int argc, char **argv)
 			{
 				throw falco_exception(errstr);
 			}
-			bool ret = swengine.validate(validate_rules, errstr);
+
+			std::string load_result;
+			bool ret = swengine.validate(validate_rules, load_result);
 
 			if(!ret)
 			{
 				// Print to stdout and also throw an error
-				printf("%s", errstr.c_str());
+				printf("%s", load_result.c_str());
 
-				throw falco_exception(errstr);
+				throw falco_exception(load_result);
 			}
 			else
 			{
-				// errstr might contain warnings. Print them
+				// load_result might contain warnings. Print them
 				// if verbose is true.
-				if(engine_config.verbose && !errstr.empty())
+				if(engine_config.verbose && !load_result.empty())
 				{
-					printf("%s", errstr.c_str());
+					printf("%s", load_result.c_str());
 				}
 				else
 				{
@@ -1072,30 +1071,34 @@ int falco_init(int argc, char **argv)
 			throw falco_exception(errstr);
 		}
 
-		bool ret = swengine.replace(rulesfiles, errstr);
+		std::string load_result;
+		bool ret = swengine.replace(rulesfiles, load_result);
 
 		if (!ret)
 		{
-			throw falco_exception(errstr);
+			throw falco_exception(string("When loading rules: ") + load_result);
 		}
 
-		// errstr might contain warnings. Print them
+		// load_result might contain warnings. Print them
 		// if verbose is true.
-		if(engine_config.verbose && !errstr.empty())
+		if(engine_config.verbose && !load_result.empty())
 		{
-			fprintf(stderr, "When reading rules: %s", errstr.c_str());
+			fprintf(stderr, "When loading rules: %s", load_result.c_str());
 		}
 
 		// You can't both disable and enable rules
-		if((disabled_rule_substrings.size() + disabled_rule_tags.size() > 0) &&
-		    enabled_rule_tags.size() > 0) {
+		if((engine_config.disabled_rule_substrings.size() + engine_config.disabled_rule_tags.size() > 0) &&
+		    engine_config.enabled_rule_tags.size() > 0) {
 			throw std::invalid_argument("You can not specify both disabled (-D/-T) and enabled (-t) rules");
 		}
 
 		// For syscalls, see if any event types used by the
 		// loaded rules are ones with the EF_DROP_SIMPLE_CONS
 		// label.
-		check_for_ignored_events(*inspector, swengine);
+		if(engine_config.contains_event_source(syscall_source))
+		{
+			check_for_ignored_events(*inspector, swengine);
+		}
 
 		if(print_support)
 		{
