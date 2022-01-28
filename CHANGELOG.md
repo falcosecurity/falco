@@ -1,5 +1,98 @@
 # Change Log
 
+## v0.31.0
+
+Released on 2022-01-28
+
+### Major Changes
+
+
+* new: add support for plugins to extend Falco functionality to new event sources and custom fields [[#1753](https://github.com/falcosecurity/falco/pull/1753)] - [@mstemm](https://github.com/mstemm)
+* new: add ability to set User-Agent http header when sending http output. Provide default value of 'falcosecurit/falco'. [[#1850](https://github.com/falcosecurity/falco/pull/1850)] - [@yoshi314](https://github.com/yoshi314)
+* new(configuration): support defining plugin init config as a YAML [[#1852](https://github.com/falcosecurity/falco/pull/1852)] - [@jasondellaluce](https://github.com/jasondellaluce)
+
+
+### Minor Changes
+
+* rules: add the official Falco ECR repository to rules [[#1817](https://github.com/falcosecurity/falco/pull/1817)] - [@calvinbui](https://github.com/calvinbui)
+* build: update CircleCI machine image for eBPF tests to a newer version of ubuntu [[#1764](https://github.com/falcosecurity/falco/pull/1764)] - [@mstemm](https://github.com/mstemm)
+* update(engine): refactor Falco engine to be agnostic to specific event sources [[#1715](https://github.com/falcosecurity/falco/pull/1715)] - [@mstemm](https://github.com/mstemm)
+* build: upgrade civetweb to v1.15 [[#1782](https://github.com/falcosecurity/falco/pull/1782)] - [@FedeDP](https://github.com/FedeDP)
+* update: driver version is 319368f1ad778691164d33d59945e00c5752cd27 now [[#1861](https://github.com/falcosecurity/falco/pull/1861)] - [@FedeDP](https://github.com/FedeDP)
+* build: allow using local libs source dir by setting `FALCOSECURITY_LIBS_SOURCE_DIR` in cmake [[#1791](https://github.com/falcosecurity/falco/pull/1791)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* build: the statically linked binary package is now published with the `-static` suffix [[#1873](https://github.com/falcosecurity/falco/pull/1873)] - [@LucaGuerra](https://github.com/LucaGuerra)
+* update!: removed "--alternate-lua-dir" cmdline option as lua scripts are now embedded in Falco executable. [[#1872](https://github.com/falcosecurity/falco/pull/1872)] - [@FedeDP](https://github.com/FedeDP)
+* build: switch to dynamic build for the binary package (`.tar.gz`) [[#1853](https://github.com/falcosecurity/falco/pull/1853)] - [@LucaGuerra](https://github.com/LucaGuerra)
+* update: simpleconsumer filtering is now being done at kernel level [[#1846](https://github.com/falcosecurity/falco/pull/1846)] - [@FedeDP](https://github.com/FedeDP)
+* update(scripts/falco-driver-loader): first try to load the latest kmod version, then fallback to an already installed if any [[#1863](https://github.com/falcosecurity/falco/pull/1863)] - [@leogr](https://github.com/leogr)
+* refactor: clean up --list output with better formatting and no duplicate sections across event sources. [[#1816](https://github.com/falcosecurity/falco/pull/1816)] - [@mstemm](https://github.com/mstemm)
+* update: embed .lua files used to load/compile rules into the main falco executable, for simplicity and to avoid tampering. [[#1843](https://github.com/falcosecurity/falco/pull/1843)] - [@mstemm](https://github.com/mstemm)
+* update: support non-enumerable event sources in gRPC outputs service [[#1840](https://github.com/falcosecurity/falco/pull/1840)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* docs: add jasondellaluce to OWNERS [[#1818](https://github.com/falcosecurity/falco/pull/1818)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* chore: --list option can be used to selectively list fields related to new sources that are introduced by plugins [[#1839](https://github.com/falcosecurity/falco/pull/1839)] - [@loresuso](https://github.com/loresuso)
+* update(userspace/falco): support arbitrary-depth nested values in YAML configuration [[#1792](https://github.com/falcosecurity/falco/pull/1792)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* build: bump FakeIt version to 2.0.9 [[#1797](https://github.com/falcosecurity/falco/pull/1797)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* update: allow append of new exceptions to rules [[#1780](https://github.com/falcosecurity/falco/pull/1780)] - [@sai-arigeli](https://github.com/sai-arigeli)
+* update: Linux packages are now signed with SHA256 [[#1758](https://github.com/falcosecurity/falco/pull/1758)] - [@twa16](https://github.com/twa16)
+
+
+### Bug Fixes
+
+* fix(scripts/falco-driver-loader): fix for SELinux insmod denials [[#1756](https://github.com/falcosecurity/falco/pull/1756)] - [@dwindsor](https://github.com/dwindsor)
+* fix(scripts/falco-driver-loader): correctly clean loaded drivers when using `--clean` [[#1795](https://github.com/falcosecurity/falco/pull/1795)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* fix(userspace/falco): in case output_file cannot be opened, throw a falco exception [[#1773](https://github.com/falcosecurity/falco/pull/1773)] - [@FedeDP](https://github.com/FedeDP)
+* fix(userspace/engine): support jsonpointer escaping in rule parser [[#1777](https://github.com/falcosecurity/falco/pull/1777)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* fix(scripts/falco-driver-loader): support kernel object files in `.zst` and `.gz` compression formats [[#1863](https://github.com/falcosecurity/falco/pull/1863)] - [@leogr](https://github.com/leogr)
+* fix(engine): correctly format json output in json_event [[#1847](https://github.com/falcosecurity/falco/pull/1847)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* fix: set http output contenttype to text/plain when json output is disabled [[#1829](https://github.com/falcosecurity/falco/pull/1829)] - [@FedeDP](https://github.com/FedeDP)
+* fix(userspace/falco): accept 'Content-Type' header that contains "application/json", but it is not strictly equal to it [[#1800](https://github.com/falcosecurity/falco/pull/1800)] - [@FedeDP](https://github.com/FedeDP)
+* fix(userspace/engine): supporting enabled-only overwritten rules [[#1775](https://github.com/falcosecurity/falco/pull/1775)] - [@jasondellaluce](https://github.com/jasondellaluce)
+
+
+### Rule Changes
+
+* rule(Create Symlink Over Sensitive File): corrected typo in rule output [[#1820](https://github.com/falcosecurity/falco/pull/1820)] - [@deepskyblue86](https://github.com/deepskyblue86)
+* rule(macro open_write): add support to openat2 [[#1796](https://github.com/falcosecurity/falco/pull/1796)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* rule(macro open_read): add support to openat2 [[#1796](https://github.com/falcosecurity/falco/pull/1796)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* rule(macro open_directory): add support to openat2 [[#1796](https://github.com/falcosecurity/falco/pull/1796)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* rule(Create files below dev): add support to openat2 [[#1796](https://github.com/falcosecurity/falco/pull/1796)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* rule(Container Drift Detected (open+create)): add support to openat2 [[#1796](https://github.com/falcosecurity/falco/pull/1796)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* rule(macro sensitive_mount): add containerd socket [[#1815](https://github.com/falcosecurity/falco/pull/1815)] - [@loresuso](https://github.com/loresuso)
+* rule(macro spawned_process): monitor also processes spawned by `execveat` [[#1868](https://github.com/falcosecurity/falco/pull/1868)] - [@Andreagit97](https://github.com/Andreagit97)
+* rule(Create Hardlink Over Sensitive Files): new rule to detect hard links created over sensitive files [[#1810](https://github.com/falcosecurity/falco/pull/1810)] - [@sberkovich](https://github.com/sberkovich)
+* rule(Detect crypto miners using the Stratum protocol): add `stratum2+tcp` and `stratum+ssl` protocols detection [[#1810](https://github.com/falcosecurity/falco/pull/1810)] - [@sberkovich](https://github.com/sberkovich)
+* rule(Sudo Potential Privilege Escalation): correct special case for the CVE-2021-3156 exploit [[#1810](https://github.com/falcosecurity/falco/pull/1810)] - [@sberkovich](https://github.com/sberkovich)
+* rule(list falco_hostnetwork_images): moved to k8s_audit_rules.yaml to avoid a warning when usng falco_rules.yaml only [[#1681](https://github.com/falcosecurity/falco/pull/1681)] - [@leodido](https://github.com/leodido)
+* rule(list deb_binaries): remove `apt-config` [[#1860](https://github.com/falcosecurity/falco/pull/1860)] - [@Andreagit97](https://github.com/Andreagit97)
+* rule(Launch Remote File Copy Tools in Container): add additional binaries: curl and wget. [[#1771](https://github.com/falcosecurity/falco/pull/1771)] - [@ec4n6](https://github.com/ec4n6)
+* rule(list known_sa_list): add coredns, coredns-autoscaler, endpointslicemirroring-controller, horizontal-pod-autoscaler, job-controller, node-controller (nodelifecycle), persistent-volume-binder, pv-protection-controller, pvc-protection-controller, root-ca-cert-publisher and service-account-controller as allowed service accounts in the kube-system namespace [[#1760](https://github.com/falcosecurity/falco/pull/1760)] - [@sboschman](https://github.com/sboschman)
+
+
+### Non user-facing changes
+
+* fix: force-set evt.type for plugin source events [[#1878](https://github.com/falcosecurity/falco/pull/1878)] - [@FedeDP](https://github.com/FedeDP)
+* fix: updated some warning strings; properly refresh lua files embedded in falco [[#1864](https://github.com/falcosecurity/falco/pull/1864)] - [@FedeDP](https://github.com/FedeDP)
+* style(userspace/engine): avoid creating multiple versions of methods only to assume default ruleset. Use a default argument instead. [[#1754](https://github.com/falcosecurity/falco/pull/1754)] - [@FedeDP](https://github.com/FedeDP)
+* add raft in the adopters list [[#1776](https://github.com/falcosecurity/falco/pull/1776)] - [@teshsharma](https://github.com/teshsharma)
+* build: always populate partial version variables [[#1778](https://github.com/falcosecurity/falco/pull/1778)] - [@dnwe](https://github.com/dnwe)
+* build: updated cloudtrail plugin to latest version [[#1865](https://github.com/falcosecurity/falco/pull/1865)] - [@FedeDP](https://github.com/FedeDP)
+* replace ".." concatenation with table.concat [[#1834](https://github.com/falcosecurity/falco/pull/1834)] - [@VadimZy](https://github.com/VadimZy)
+* fix(userspace/engine): actually make m_filter_all_event_types useful by properly using it as fallback when no filter event types is provided [[#1875](https://github.com/falcosecurity/falco/pull/1875)] - [@FedeDP](https://github.com/FedeDP)
+* fix(build): do not show plugin options in musl optimized builds [[#1871](https://github.com/falcosecurity/falco/pull/1871)] - [@LucaGuerra](https://github.com/LucaGuerra)
+* fix(aws_cloudtrail_rules.yaml): correct required plugin versions [[#1867](https://github.com/falcosecurity/falco/pull/1867)] - [@FedeDP](https://github.com/FedeDP)
+* docs: fix priority level "info" to "informational" [[#1858](https://github.com/falcosecurity/falco/pull/1858)] - [@Andreagit97](https://github.com/Andreagit97)
+* Field properties changes [[#1838](https://github.com/falcosecurity/falco/pull/1838)] - [@mstemm](https://github.com/mstemm)
+* update(build): updated libs to latest master version; updated plugins versions [[#1856](https://github.com/falcosecurity/falco/pull/1856)] - [@FedeDP](https://github.com/FedeDP)
+* Add Giant Swarm to Adopters list [[#1842](https://github.com/falcosecurity/falco/pull/1842)] - [@stone-z](https://github.com/stone-z)
+* update(tests): remove `token_bucket` unit tests [[#1798](https://github.com/falcosecurity/falco/pull/1798)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* fix(build): use consistent 7-character build abbrev sha [[#1830](https://github.com/falcosecurity/falco/pull/1830)] - [@LucaGuerra](https://github.com/LucaGuerra)
+* add Phoenix to adopters list [[#1806](https://github.com/falcosecurity/falco/pull/1806)] - [@kaldyka](https://github.com/kaldyka)
+* remove unused files in test directory [[#1801](https://github.com/falcosecurity/falco/pull/1801)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* drop Falco luajit module, use the one provied by libs [[#1788](https://github.com/falcosecurity/falco/pull/1788)] - [@FedeDP](https://github.com/FedeDP)
+* chore(build): update libs version to 7906f7e [[#1790](https://github.com/falcosecurity/falco/pull/1790)] - [@LucaGuerra](https://github.com/LucaGuerra)
+* Add SysFlow to list of libs adopters [[#1747](https://github.com/falcosecurity/falco/pull/1747)] - [@araujof](https://github.com/araujof)
+
+
 ## v0.30.0
 
 Released on 2021-10-01
