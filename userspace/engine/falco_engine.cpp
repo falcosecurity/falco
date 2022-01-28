@@ -450,6 +450,7 @@ bool falco_engine::is_plugin_compatible(const std::string &name,
 		sinsp_plugin::version req_version(rversion);
 		if (!plugin_version.check(req_version))
 		{
+			required_version = rversion;
 			return false;
 		}
 	}
