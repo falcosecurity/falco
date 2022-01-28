@@ -3124,6 +3124,17 @@
   priority: NOTICE
   tags: [network, process, mitre_command_and_control]
 
+# This rule helps detect CVE-2021-4034:
+# A privilege escalation to root through memory corruption
+- rule: Polkit Local Privilege Escalation Vulnerability (CVE-2021-4034)
+  desc: "This rule detects an attempt to exploit a privilege escalation vulnerability in Polkit's pkexec. By running specially crafted code, a local user can leverage this flaw to gain root privileges on a compromised system"
+  condition:
+    spawned_process and user.uid != 0 and proc.name=pkexec and proc.args = '' and proc.env icontains 'GCONV_PATH'
+  output:
+    "Detect Polkit pkexec Local Privilege Escalation Exploit (CVE-2021-4034) (user=%user.loginname uid=%user.loginuid command=%proc.cmdline access_args=%evt.args)"
+  priority: CRITICAL
+  tags: [process, mitre_privilege_escalation]
+
 # Application rules have moved to application_rules.yaml. Please look
 # there if you want to enable them by adding to
 # falco_rules.local.yaml.
