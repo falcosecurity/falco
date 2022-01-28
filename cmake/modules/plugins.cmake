@@ -17,8 +17,8 @@ string(TOLOWER ${CMAKE_HOST_SYSTEM_NAME} PLUGINS_SYSTEM_NAME)
 
 ExternalProject_Add(
   cloudtrail-plugin
-  URL "https://download.falco.org/plugins/stable/cloudtrail-0.2.2-${PLUGINS_SYSTEM_NAME}-${CMAKE_HOST_SYSTEM_PROCESSOR}.tar.gz"
-  URL_HASH "SHA256=1628717e48b2ba1b9c78c9081e2ec23e4d88bb1a7b68b12cf8dff7f247b5b9b1"
+  URL "https://download.falco.org/plugins/stable/cloudtrail-0.2.3-${PLUGINS_SYSTEM_NAME}-${CMAKE_HOST_SYSTEM_PROCESSOR}.tar.gz"
+  URL_HASH "SHA256=3dfce36f37a4f834b6078c6b78776414472a6ee775e8f262535313cc4031d0b7"
   CONFIGURE_COMMAND ""
   BUILD_COMMAND ""
   INSTALL_COMMAND "")

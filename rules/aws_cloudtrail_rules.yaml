@@ -22,9 +22,9 @@
 # anything semver-compatible.
 - required_plugin_versions:
   - name: cloudtrail
-    version: 0.2.2
+    version: 0.2.3
   - name: json
-    version: 0.2.1
+    version: 0.2.2
 
 # Note that this rule is disabled by default. It's useful only to
 # verify that the cloudtrail plugin is sending events properly.  The
