@@ -404,8 +404,10 @@ bool falco_rules::load_rules(const string &rules_content,
 			     std::list<std::string> &warnings,
 			     std::list<std::string> &errors,
 			     uint64_t &required_engine_version,
-			     std::map<std::string, std::list<std::string>> &required_plugin_versions)
+			     std::list<sinsp_plugin::info> &plugin_infos)
 {
+	std::map<std::string, std::list<std::string>> required_plugin_versions;
+
 	lua_getglobal(m_ls, m_lua_load_rules.c_str());
 	if(lua_isfunction(m_ls, -1))
 	{
@@ -437,27 +439,28 @@ bool falco_rules::load_rules(const string &rules_content,
 		errors = get_lua_table_values(m_ls, -2);
 		warnings = get_lua_table_values(m_ls, -1);
 
-		// Concatenate errors/warnings
-		std::ostringstream os;
-		if (errors.size() > 0)
-		{
-			os << errors.size() << " errors:" << std::endl;
-			for(auto err : errors)
-			{
-				os << err << std::endl;
-			}
-		}
-
-		if (warnings.size() > 0)
-		{
-			os << warnings.size() << " warnings:" << std::endl;
-			for(auto warn : warnings)
-			{
-				os << warn << std::endl;
-			}
-		}
-
 		lua_pop(m_ls, 4);
+
+		// Also check plugin compatibility. Only meaningful if
+		// plugin_infos is non-empty.
+		for(auto &pinfo : plugin_infos)
+		{
+			if(required_plugin_versions.find(pinfo.name) == required_plugin_versions.end())
+			{
+				// No required engine versions, so no restrictions. Compatible.
+				continue;
+			}
+
+			for(auto &rversion : required_plugin_versions[pinfo.name])
+			{
+				sinsp_plugin::version req_version(rversion.c_str());
+				if(!pinfo.plugin_version.check(req_version))
+				{
+					errors.push_back(std::string("Plugin ") + pinfo.name + " version " + pinfo.plugin_version.as_string() + " not compatible with required plugin version " + rversion);
+					successful = false;
+				}
+			}
+		}
 
 		if(!successful)
 		{

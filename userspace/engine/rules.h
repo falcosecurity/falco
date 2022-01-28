@@ -45,7 +45,7 @@ class falco_rules
 			std::list<std::string> &warnings,
 			std::list<std::string> &errors,
 			uint64_t &required_engine_version,
-			std::map<std::string, std::list<std::string>> &required_plugin_versions);
+			std::list<sinsp_plugin::info> &plugin_infos);
 	void describe_rule(string *rule);
 
 	bool is_source_valid(const std::string &source);
