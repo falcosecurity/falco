@@ -20,7 +20,6 @@ limitations under the License.
 #include <fstream>
 
 #include <sinsp.h>
-#include <plugin.h>
 
 #include "falco_engine.h"
 #include "falco_utils.h"
@@ -52,8 +51,6 @@ falco_engine::falco_engine(bool seed_rng)
 
 	falco_common::init();
 	falco_rules::init(m_ls);
-
-	m_required_plugin_versions.clear();
 
 	if(seed_rng)
 	{
@@ -146,6 +143,11 @@ void falco_engine::list_fields(std::string &source, bool verbose, bool names_onl
 	}
 }
 
+void falco_engine::set_plugin_infos(std::list<sinsp_plugin::info> &plugin_infos)
+{
+	m_plugin_infos = plugin_infos;
+}
+
 void falco_engine::load_rules(const string &rules_content, bool verbose, bool all_events)
 {
 	uint64_t dummy;
@@ -213,23 +215,18 @@ std::string falco_engine::load_result::as_string(bool include_filenames, bool in
 {
 	std::ostringstream os;
 
+	if(include_filenames)
+	{
+		os << rf.name << ": ";
+	}
+
 	if((errors.size() + warnings.size()) == 0)
 	{
-		if(include_filenames)
-		{
-			os << rf.name << ": ";
-		}
-
 		os << "Ok" << std::endl;
 	} else {
 
 		if (errors.size() > 0)
 		{
-			if(include_filenames)
-			{
-				os << rf.name << ": ";
-			}
-
 			os << errors.size() << " errors:" << std::endl;
 			for(auto err : errors)
 			{
@@ -239,12 +236,6 @@ std::string falco_engine::load_result::as_string(bool include_filenames, bool in
 
 		if (include_warnings && warnings.size() > 0)
 		{
-			// Only include the filename if there is more than one file
-			if(include_filenames)
-			{
-				os << rf.name << ": ";
-			}
-
 			os << warnings.size() << " warnings:" << std::endl;
 			for(auto warn : warnings)
 			{
@@ -294,13 +285,16 @@ void falco_engine::load_rules(falco_engine::rulesfile &rf,
 		}
 	}
 
+	uint64_t required_engine_version;
+	std::map<std::string, std::list<std::string>> required_plugin_versions;
+
 	result.successful = m_rules->load_rules(rf.content, verbose, all_events,
 						m_extra, m_replace_container_info,
 						m_min_priority,
 						result.warnings,
 						result.errors,
-						result.required_engine_version,
-						m_required_plugin_versions);
+						required_engine_version,
+						m_plugin_infos);
 }
 
 void falco_engine::enable_rule(const string &substring, bool enabled, const string &ruleset)
@@ -374,7 +368,7 @@ void falco_engine::evttypes_for_ruleset(std::string &source, std::set<uint16_t> 
 	auto it = m_rulesets.find(source);
 	if(it == m_rulesets.end())
 	{
-		string err = "Unknown event source " + source;
+		string err = "Unknown event source1 " + source;
 		throw falco_exception(err);
 	}
 
@@ -389,7 +383,7 @@ std::shared_ptr<gen_event_formatter> falco_engine::create_formatter(const std::s
 
 	if(it == m_format_factories.end())
 	{
-		string err = "Unknown event source " + source;
+		string err = "Unknown event source4 " + source;
 		throw falco_exception(err);
 	}
 
@@ -406,7 +400,7 @@ unique_ptr<falco_engine::rule_result> falco_engine::process_event(std::string &s
 	auto it = m_rulesets.find(source);
 	if(it == m_rulesets.end())
 	{
-		string err = "Unknown event source " + source;
+		string err = "Unknown event source5 " + source;
 		throw falco_exception(err);
 	}
 
@@ -535,36 +529,6 @@ bool falco_engine::is_source_valid(const std::string &source)
 	return (m_rulesets.find(source) != m_rulesets.end());
 }
 
-bool falco_engine::is_plugin_compatible(const std::string &name,
-					const std::string &version,
-					std::string &required_version)
-{
-	sinsp_plugin::version plugin_version(version);
-
-	if(!plugin_version.m_valid)
-	{
-		throw falco_exception(string("Plugin version string ") + version + " not valid");
-	}
-
-	if(m_required_plugin_versions.find(name) == m_required_plugin_versions.end())
-	{
-		// No required engine versions, so no restrictions. Compatible.
-		return true;
-	}
-
-	for(auto &rversion : m_required_plugin_versions[name])
-	{
-		sinsp_plugin::version req_version(rversion);
-		if (!plugin_version.check(req_version))
-		{
-			required_version = rversion;
-			return false;
-		}
-	}
-
-	return true;
-}
-
 void falco_engine::clear_filters()
 {
 	m_rulesets.clear();
@@ -574,8 +538,6 @@ void falco_engine::clear_filters()
 		std::shared_ptr<falco_ruleset> ruleset(new falco_ruleset());
 		m_rulesets[it.first] = ruleset;
 	}
-
-	m_required_plugin_versions.clear();
 }
 
 void falco_engine::set_sampling_ratio(uint32_t sampling_ratio)

@@ -56,6 +56,12 @@ public:
 	// If source is non-empty, only fields for the provided source are printed.
 	void list_fields(std::string &source, bool verbose, bool names_only);
 
+	// Optional--pass info on the currently loaded set of
+	// plugins. If provided, when loading rules content plugin
+	// info will be checked against any required_plugin_version
+	// blocks in the rules content.
+	void set_plugin_infos(std::list<sinsp_plugin::info> &plugin_infos);
+
 	//
 	// Load rules either directly or from a filename.
 	//
@@ -84,6 +90,9 @@ public:
 	};
 
 	// Represents the result of loading a block of rules.
+	//  - successful: true if the file was loaded, false otherwise
+	//  - warnings: any warnings from loading the rules
+	//  - errors: any errors from loading the rules
 	class load_result {
 	public:
 		load_result(const rulesfile &rulesfile);
@@ -95,7 +104,6 @@ public:
 		bool successful;
 		std::list<std::string> warnings;
 		std::list<std::string> errors;
-		uint64_t required_engine_version;
 	};
 
 	// Improved variant that explicitly passes back a load_result
@@ -242,12 +250,6 @@ public:
 	std::shared_ptr<gen_event_formatter> create_formatter(const std::string &source,
 							      const std::string &output);
 
-	// Return whether the provided plugin name + version is
-	// compatible with the current set of loaded rules files.
-	// required_version will be filled in with the required
-	// version when the method returns false.
-	bool is_plugin_compatible(const std::string &name, const std::string &version, std::string &required_version);
-
 private:
 
 	//
@@ -256,6 +258,9 @@ private:
 	// ratio/multiplier.
 	//
 	inline bool should_drop_evt();
+
+	// Optional--info on any loaded plugins.
+	std::list<sinsp_plugin::info> m_plugin_infos;
 
 	// Maps from event source to object that can generate filters from rules
 	std::map<std::string, std::shared_ptr<gen_event_filter_factory>> m_filter_factories;
@@ -270,10 +275,6 @@ private:
 	uint16_t m_next_ruleset_id;
 	std::map<string, uint16_t> m_known_rulesets;
 	falco_common::priority_type m_min_priority;
-
-	// Maps from plugin to a list of required plugin versions
-	// found in any loaded rules files.
-	std::map<std::string, std::list<std::string>> m_required_plugin_versions;
 
 	void populate_rule_result(unique_ptr<struct rule_result> &res, gen_event *ev);
 
