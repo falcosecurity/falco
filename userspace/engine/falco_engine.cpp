@@ -420,7 +420,7 @@ void falco_engine::add_filter(std::shared_ptr<gen_event_filter> filter,
 		throw falco_exception(err);
 	}
 
-	it->second->add(rule, tags, filter);
+	it->second->add(source, rule, tags, filter);
 }
 
 bool falco_engine::is_source_valid(const std::string &source)

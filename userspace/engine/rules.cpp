@@ -145,11 +145,19 @@ int falco_rules::add_filter(lua_State *ls)
 		lua_pop(ls, 1);
 	}
 
-	size_t num_evttypes = lp->filter()->evttypes().size();
+	// todo(jasondellaluce,leogr,fededp): temp workaround, remove when fixed in libs
+	size_t num_evttypes = 1; // assume plugin
+	if(source == "syscall" || source == "k8s_audit")
+	{
+		num_evttypes = lp->filter()->evttypes().size();
+	}
 
-	try {
+	try
+	{
 		rules->add_filter(lp->filter(), rule, source, tags);
-	} catch (exception &e) {
+	}
+	catch (exception &e)
+	{
 		std::string errstr = string("Could not add rule to falco engine: ") + e.what();
 		lua_pushstring(ls, errstr.c_str());
 		lua_error(ls);
