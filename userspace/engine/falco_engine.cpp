@@ -432,7 +432,7 @@ bool falco_engine::is_plugin_compatible(const std::string &name,
 					const std::string &version,
 					std::string &required_version)
 {
-	sinsp_plugin::version plugin_version(version.c_str());
+	sinsp_plugin::version plugin_version(version);
 
 	if(!plugin_version.m_valid)
 	{
@@ -447,13 +447,11 @@ bool falco_engine::is_plugin_compatible(const std::string &name,
 
 	for(auto &rversion : m_required_plugin_versions[name])
 	{
-		sinsp_plugin::version req_version(rversion.c_str());
-		if(req_version.m_version_major > plugin_version.m_version_major)
+		sinsp_plugin::version req_version(rversion);
+		if (!plugin_version.check(req_version))
 		{
-			required_version = rversion;
 			return false;
 		}
-
 	}
 
 	return true;
