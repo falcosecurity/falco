@@ -408,7 +408,8 @@ trace_files: !mux
   invalid_overwrite_macro:
     exit_status: 1
     stdout_contains: |+
-      .*invalid_base_macro.yaml: Ok
+      .*invalid_base_macro.yaml: 1 warnings:
+      macro some macro not refered to by any rule/macro
       .*invalid_overwrite_macro.yaml: 1 errors:
       Compilation error when compiling "foo": Undefined macro 'foo' used in filter.
       ---
@@ -424,7 +425,8 @@ trace_files: !mux
   invalid_append_macro:
     exit_status: 1
     stdout_contains: |+
-      .*invalid_base_macro.yaml: Ok
+      .*invalid_base_macro.yaml: 1 warnings:
+      macro some macro not refered to by any rule/macro
       .*invalid_append_macro.yaml: 1 errors:
       Compilation error when compiling "evt.type=execve foo": 17: syntax error, unexpected 'foo', expecting 'or', 'and'
       ---
@@ -1181,7 +1183,7 @@ trace_files: !mux
   skip_unknown_error:
     exit_status: 1
     stderr_contains: |+
-      Could not load rules file.*skip_unknown_error.yaml: 1 errors:
+      When loading rules: 1 errors:
       Rule Contains Unknown Event And Not Skipping: error filter_check called with nonexistent field proc.nobody
       ---
       - rule: Contains Unknown Event And Not Skipping
@@ -1198,7 +1200,7 @@ trace_files: !mux
   skip_unknown_unspec_error:
     exit_status: 1
     stderr_contains: |+
-      Could not load rules file .*skip_unknown_unspec.yaml: 1 errors:
+      When loading rules: 1 errors:
       Rule Contains Unknown Event And Unspecified: error filter_check called with nonexistent field proc.nobody
       ---
       - rule: Contains Unknown Event And Unspecified
