@@ -103,11 +103,11 @@ filter_check_list &swappable_falco_engine::plugin_filter_checks()
 }
 
 bool swappable_falco_engine::replace(std::list<falco_engine::rulesfile> &rulesfiles,
-				     std::string &errstr)
+				     std::string &load_result)
 {
 	std::shared_ptr<falco_engine> new_engine;
 
-	new_engine = create_new(rulesfiles, errstr);
+	new_engine = create_new(rulesfiles, load_result);
 
 	if (new_engine == NULL)
 	{
@@ -120,31 +120,32 @@ bool swappable_falco_engine::replace(std::list<falco_engine::rulesfile> &rulesfi
 }
 
 bool swappable_falco_engine::validate(std::list<falco_engine::rulesfile> &rulesfiles,
-				      std::string &errstr)
+				      std::string &load_result)
 {
 	std::shared_ptr<falco_engine> new_engine;
 
-	new_engine = create_new(rulesfiles, errstr);
+	new_engine = create_new(rulesfiles, load_result);
 
 	return (new_engine != NULL);
 }
 
 std::shared_ptr<falco_engine> swappable_falco_engine::create_new(std::list<falco_engine::rulesfile> &rulesfiles,
-								 std::string &errstr)
+								 std::string &load_result)
 {
 	std::shared_ptr<falco_engine> ret = make_shared<falco_engine>();
 
-	errstr = "";
+	load_result = "";
 
 	if(!m_inspector)
 	{
-		errstr = "No inspector provided yet";
+		load_result = "No inspector provided yet";
 		ret = NULL;
 		return ret;
 	}
 
 	ret->set_extra(m_config.output_format, m_config.replace_container_info);
 	ret->set_min_priority(m_config.min_priority);
+	ret->set_plugin_infos(m_config.plugin_infos);
 
 	// Create "factories" that can create filters/formatters for
 	// each supported source.
@@ -214,25 +215,12 @@ std::shared_ptr<falco_engine> swappable_falco_engine::create_new(std::list<falco
 		}
 	}
 
-	errstr = os.str();
+	load_result = os.str();
 
 	if(!successful)
 	{
 		ret = NULL;
 		return ret;
-	}
-
-	// Ensure that all plugins are compatible with the loaded set of rules
-	for(auto &info : m_config.plugin_infos)
-	{
-		std::string required_version;
-
-		if(!ret->is_plugin_compatible(info.name, info.plugin_version.as_string(), required_version))
-		{
-			errstr = std::string("Plugin ") + info.name + " version " + info.plugin_version.as_string() + " not compatible with required plugin version " + required_version;
-			ret = NULL;
-			return ret;
-		}
 	}
 
 	for (auto substring : m_config.disabled_rule_substrings)

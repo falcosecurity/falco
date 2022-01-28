@@ -74,11 +74,12 @@ public:
 	// This can be called from a different thread than the one
 	// calling engine().
 	//
-        // Returns true on success, false otherwise. Regardless,
-        // errstr will be filled in with details on any
-        // errors (and warnings, if config.verbose is true)
+        // Returns true on success, false otherwise.
+	//
+	// load_result will be filled in with details on any errors (and warnings,
+	// if config.verbose is true).
 	bool replace(std::list<falco_engine::rulesfile> &rulesfiles,
-		     std::string &errstr);
+		     std::string &load_result);
 
 	// Create a new engine, configure it, load the provided set of
 	// rules files, but do *not* queue it to replace the current
@@ -87,20 +88,23 @@ public:
 	// This can be called from a different thread than the one
 	// calling engine().
 	//
-        // Returns true on success, false otherwise. Regardless,
-        // errstr will be filled in with details on any
-        // errors (and warnings, if config.verbose is true)
+        // Returns true on success, false otherwise.
+	//
+	// load_result will be filled in with details on any errors (and warnings,
+	// if config.verbose is true).
 	bool validate(std::list<falco_engine::rulesfile> &rulesfiles,
-		      std::string &errstr);
+		      std::string &load_result);
 
 private:
 
 	// Does everything but enqueue the new engine. Returns a
-	// shared_ptr to a new falco_engine on success. Regardless,
-        // errstr will be filled in with details on any
-        // errors (and warnings, if config.verbose is true)
+	// shared_ptr to a new falco_engine on success, an empty
+	// shared_ptr on failure.
+	//
+	// load_result will be filled in with details on any errors (and warnings,
+	// if config.verbose is true).
 	std::shared_ptr<falco_engine> create_new(std::list<falco_engine::rulesfile> &rulesfiles,
-						 std::string &errstr);
+						 std::string &load_result);
 
 	sinsp *m_inspector;
 	config m_config;
