@@ -368,7 +368,7 @@ void falco_engine::evttypes_for_ruleset(std::string &source, std::set<uint16_t> 
 	auto it = m_rulesets.find(source);
 	if(it == m_rulesets.end())
 	{
-		string err = "Unknown event source1 " + source;
+		string err = "Unknown event source " + source;
 		throw falco_exception(err);
 	}
 
@@ -383,7 +383,7 @@ std::shared_ptr<gen_event_formatter> falco_engine::create_formatter(const std::s
 
 	if(it == m_format_factories.end())
 	{
-		string err = "Unknown event source4 " + source;
+		string err = "Unknown event source "" + source;
 		throw falco_exception(err);
 	}
 
