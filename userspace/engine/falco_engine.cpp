@@ -383,7 +383,7 @@ std::shared_ptr<gen_event_formatter> falco_engine::create_formatter(const std::s
 
 	if(it == m_format_factories.end())
 	{
-		string err = "Unknown event source "" + source;
+		string err = "Unknown event source " + source;
 		throw falco_exception(err);
 	}
 
@@ -400,7 +400,7 @@ unique_ptr<falco_engine::rule_result> falco_engine::process_event(std::string &s
 	auto it = m_rulesets.find(source);
 	if(it == m_rulesets.end())
 	{
-		string err = "Unknown event source5 " + source;
+		string err = "Unknown event source " + source;
 		throw falco_exception(err);
 	}
 
