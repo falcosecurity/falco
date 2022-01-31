@@ -2,7 +2,7 @@
 
 ## v0.31.0
 
-Released on 2022-01-28
+Released on 2022-01-31
 
 ### Major Changes
 
@@ -91,6 +91,7 @@ Released on 2022-01-28
 * drop Falco luajit module, use the one provied by libs [[#1788](https://github.com/falcosecurity/falco/pull/1788)] - [@FedeDP](https://github.com/FedeDP)
 * chore(build): update libs version to 7906f7e [[#1790](https://github.com/falcosecurity/falco/pull/1790)] - [@LucaGuerra](https://github.com/LucaGuerra)
 * Add SysFlow to list of libs adopters [[#1747](https://github.com/falcosecurity/falco/pull/1747)] - [@araujof](https://github.com/araujof)
+* build: dropped centos8 circleci build because it is useless [[#1882](https://github.com/falcosecurity/falco/pull/1882)] - [@FedeDP](https://github.com/FedeDP)
 
 
 ## v0.30.0
