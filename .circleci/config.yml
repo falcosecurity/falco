@@ -176,38 +176,6 @@ jobs:
             pushd build
             make tests
             popd
-  # Build using CentOS 8
-  # This build is static, dependencies are bundled in the Falco binary
-  "build/centos8":
-    docker:
-      - image: centos:8
-    steps:
-      - checkout
-      - run:
-          name: Update base image
-          command: dnf update -y
-      - run:
-          name: Install dependencies
-          command: dnf install gcc gcc-c++ git make cmake autoconf automake pkg-config patch libtool elfutils-libelf-devel diffutils kernel-devel kernel-headers kernel-core clang llvm which -y
-      - run:
-          name: Prepare project
-          command: |
-            mkdir build
-            pushd build
-            cmake -DBUILD_BPF=On -DUSE_BUNDLED_DEPS=On ..
-            popd
-      - run:
-          name: Build
-          command: |
-            pushd build
-            KERNELDIR=/lib/modules/$(ls /lib/modules)/build make -j4 all
-            popd
-      - run:
-          name: Run unit tests
-          command: |
-            pushd build
-            make tests
-            popd
   # Build using our own builder base image using centos 7
   # This build is static, dependencies are bundled in the Falco binary
   "build/centos7":
@@ -630,7 +598,6 @@ workflows:
       - "build/ubuntu-focal"
       - "build/ubuntu-focal-debug"
       - "build/ubuntu-bionic"
-      - "build/centos8"
       - "build/centos7"
       - "build/centos7-debug"
       - "tests/integration":
