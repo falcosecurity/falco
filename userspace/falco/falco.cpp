@@ -488,7 +488,7 @@ static void check_for_ignored_events(sinsp &inspector, swappable_falco_engine &s
 static void list_source_fields(swappable_falco_engine &swengine, bool verbose, bool names_only, std::string &source)
 {
 	if(source.size() > 0 &&
-	   !engine->is_source_valid(source))
+	   !swengine.engine()->is_source_valid(source))
 	{
 		throw std::invalid_argument("Value for --list must be a valid source type");
 	}
@@ -1092,14 +1092,6 @@ int falco_init(int argc, char **argv)
 			throw std::invalid_argument("You can not specify both disabled (-D/-T) and enabled (-t) rules");
 		}
 
-		// For syscalls, see if any event types used by the
-		// loaded rules are ones with the EF_DROP_SIMPLE_CONS
-		// label.
-		if(engine_config.contains_event_source(syscall_source))
-		{
-			check_for_ignored_events(*inspector, swengine);
-		}
-
 		if(print_support)
 		{
 			nlohmann::json support;
@@ -1167,7 +1159,10 @@ int falco_init(int argc, char **argv)
 			// For syscalls, see if any event types used by the
 			// loaded rules are ones with the EF_DROP_SIMPLE_CONS
 			// label.
-			check_for_ignored_events(*inspector, *engine);
+			if(engine_config.contains_event_source(syscall_source))
+			{
+				check_for_ignored_events(*inspector, swengine);
+			}
 			// Drop EF_DROP_SIMPLE_CONS kernel side
 			inspector->set_simple_consumer();
 			// Eventually, drop any EF_DROP_SIMPLE_CONS event
