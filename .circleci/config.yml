@@ -690,6 +690,7 @@ workflows:
             - falco
             - test-infra
           requires:
+            - "build/musl"
             - "rpm/sign"
           filters:
             tags:
