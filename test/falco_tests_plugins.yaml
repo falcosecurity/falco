@@ -84,7 +84,7 @@ trace_files: !mux
     exit_status: 1
     stderr_contains: |+
       Runtime error: When loading rules: 1 errors:
-      Plugin cloudtrail version 0.1.0 not compatible with required plugin version 100000.0.0
+      Plugin cloudtrail version 0.2.3 not compatible with required plugin version 100000.0.0
     conf_file: BUILD_DIR/test/confs/plugins/cloudtrail_json_create_instances.yaml
     rules_file:
       - rules/plugins/cloudtrail_incompat_plugin_version.yaml
