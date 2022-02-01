@@ -15,6 +15,7 @@ configure_file(config_falco.h.in config_falco.h)
 
 set(
   FALCO_SOURCES
+  application.cpp
   configuration.cpp
   logger.cpp
   falco_outputs.cpp
@@ -33,6 +34,7 @@ set(
   "${PROJECT_BINARY_DIR}/userspace/falco"
   "${PROJECT_BINARY_DIR}/driver/src"
   "${STRING_VIEW_LITE_INCLUDE}"
+  "${CXXOPTS_INCLUDE_DIR}"
   "${YAMLCPP_INCLUDE_DIR}"
   "${CMAKE_CURRENT_BINARY_DIR}"
   "${DRAIOS_DEPENDENCIES_DIR}/yaml-${DRAIOS_YAML_VERSION}/target/include"
@@ -46,6 +48,7 @@ set(
   luajit
   lpeg
   lyaml
+  cxxopts
 )
 
 set(

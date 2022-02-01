@@ -37,6 +37,7 @@ limitations under the License.
 #include <eventformatter.h>
 #include <plugin.h>
 
+#include "application.h"
 #include "logger.h"
 #include "utils.h"
 #include "fields_info.h"
@@ -507,6 +508,8 @@ static void list_source_fields(falco_engine *engine, bool verbose, bool names_on
 //
 int falco_init(int argc, char **argv)
 {
+	falco::application app;
+
 	int result = EXIT_SUCCESS;
 	sinsp* inspector = NULL;
 	sinsp_evt::param_fmt event_buffer_format = sinsp_evt::PF_NORMAL;
@@ -607,6 +610,14 @@ int falco_init(int argc, char **argv)
 		string all_rules;
 		set<string> disabled_rule_tags;
 		set<string> enabled_rule_tags;
+
+		std::string errstr;
+		bool successful = app.init(argc, argv, errstr);
+
+		if(!successful)
+		{
+			throw falco_exception(string("Could not initialize: ") + errstr);
+		}
 
 		//
 		// Parse the args
