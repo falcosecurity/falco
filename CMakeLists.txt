@@ -150,6 +150,8 @@ if(NOT MINIMAL_BUILD)
   include(civetweb)
 endif()
 
+include(cxxopts)
+
 # Lpeg
 include(lpeg)
 
