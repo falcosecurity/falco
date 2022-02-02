@@ -3131,7 +3131,7 @@
   condition:
     spawned_process and user.uid != 0 and proc.name=pkexec and proc.args = ''
   output:
-    "Detect Polkit pkexec Local Privilege Escalation Exploit (CVE-2021-4034) (user=%user.loginname uid=%user.loginuid command=%proc.cmdline args=%evt.args)"
+    "Detect Polkit pkexec Local Privilege Escalation Exploit (CVE-2021-4034) (user=%user.loginname uid=%user.loginuid command=%proc.cmdline args=%proc.args)"
   priority: CRITICAL
   tags: [process, mitre_privilege_escalation]
 
