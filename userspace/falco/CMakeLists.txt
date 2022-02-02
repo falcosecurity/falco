@@ -16,6 +16,7 @@ configure_file(config_falco.h.in config_falco.h)
 set(
   FALCO_SOURCES
   application.cpp
+  app_cmdline_options.cpp
   configuration.cpp
   logger.cpp
   falco_outputs.cpp
