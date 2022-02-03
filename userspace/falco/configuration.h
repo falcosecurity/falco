@@ -216,8 +216,8 @@ public:
 	falco_configuration();
 	virtual ~falco_configuration();
 
-	void init(std::string conf_filename, std::list<std::string>& cmdline_options);
-	void init(std::list<std::string>& cmdline_options);
+	void init(std::string conf_filename, const std::vector<std::string>& cmdline_options);
+	void init(const std::vector<std::string>& cmdline_options);
 
 	static void read_rules_file_directory(const string& path, list<string>& rules_filenames);
 
@@ -266,7 +266,7 @@ public:
 	std::vector<plugin_config> m_plugins;
 
 private:
-	void init_cmdline_options(std::list<std::string>& cmdline_options);
+	void init_cmdline_options(const std::vector<std::string>& cmdline_options);
 
 	/**
 	 * Given a <key>=<value> specifier, set the appropriate option
