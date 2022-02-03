@@ -341,7 +341,7 @@
       json.value[/requestParameters/PublicAccessBlockConfiguration/BlockPublicAcls]=false or
       json.value[/requestParameters/PublicAccessBlockConfiguration/IgnorePublicAcls]=false)
   output:
-    A pulic access block for a bucket has been deleted
+    A public access block for a bucket has been deleted
     (requesting user=%ct.user,
      requesting IP=%ct.srcip,
      AWS region=%ct.region,
