@@ -524,10 +524,10 @@ class FalcoTest(Test):
                 ["md5sum", "/boot/config-{}".format(kernel_release)]).rstrip()
             config_hash = md5_output.split(" ")[0]
 
-            probe_filename = "falco-{}-{}-{}-{}.ko".format(
+            driver_filename = "falco-{}-{}-{}-{}.ko".format(
                 falco_version, arch, kernel_release, config_hash)
             driver_path = os.path.join(self.falcodir, "driver", "falco.ko")
-            module_path = os.path.join(self.module_dir, probe_filename)
+            module_path = os.path.join(self.module_dir, driver_filename)
             self.log.debug("Copying {} to {}".format(driver_path, module_path))
             shutil.copyfile(driver_path, module_path)
 

@@ -1427,7 +1427,7 @@ int falco_init(int argc, char **argv)
 				if (!disable_syscall && !userspace)
 				{
 					// Try to insert the Falco kernel module
-					if(system("modprobe " PROBE_NAME " > /dev/null 2> /dev/null"))
+					if(system("modprobe " DRIVER_NAME " > /dev/null 2> /dev/null"))
 					{
 						falco_logger::log(LOG_ERR, "Unable to load the driver.\n");
 					}
