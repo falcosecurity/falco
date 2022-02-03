@@ -24,8 +24,8 @@ else()
   # default below In case you want to test against another falcosecurity/libs version just pass the variable - ie., `cmake
   # -DFALCOSECURITY_LIBS_VERSION=dev ..`
   if(NOT FALCOSECURITY_LIBS_VERSION)
-    set(FALCOSECURITY_LIBS_VERSION "319368f1ad778691164d33d59945e00c5752cd27")
-    set(FALCOSECURITY_LIBS_CHECKSUM "SHA256=2cf44f06a282e8cee7aa1f775a08ea94c06e275faaf0636b21eb06af28cf4b3f")
+    set(FALCOSECURITY_LIBS_VERSION "85f898e7afdc250984bb31c5f80a86dc97ec0d10")
+    set(FALCOSECURITY_LIBS_CHECKSUM "SHA256=c4175c8830d11f5d2467e1f4e61a2ea47449135c08af7acbe4d7f36a0d9b6252")
   endif()
 
   # cd /path/to/build && cmake /path/to/source
@@ -47,8 +47,8 @@ if(MUSL_OPTIMIZED_BUILD)
   add_definitions(-DMUSL_OPTIMIZED)
 endif()
 
-set(PROBE_VERSION "${FALCOSECURITY_LIBS_VERSION}")
-set(PROBE_NAME "falco")
+set(DRIVER_VERSION "${FALCOSECURITY_LIBS_VERSION}")
+set(DRIVER_NAME "falco")
 set(DRIVER_PACKAGE_NAME "falco")
 set(SCAP_BPF_PROBE_ENV_VAR_NAME "FALCO_BPF_PROBE")
 set(SCAP_HOST_ROOT_ENV_VAR_NAME "HOST_ROOT")

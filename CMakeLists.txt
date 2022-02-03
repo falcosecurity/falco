@@ -98,8 +98,8 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3 -fno-strict-aliasing -DNDEBUG")
 include(GetFalcoVersion)
 
 set(PACKAGE_NAME "falco")
-set(PROBE_NAME "falco")
-set(PROBE_DEVICE_NAME "falco")
+set(DRIVER_NAME "falco")
+set(DRIVER_DEVICE_NAME "falco")
 set(DRIVERS_REPO "https://download.falco.org/driver")
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   set(CMAKE_INSTALL_PREFIX

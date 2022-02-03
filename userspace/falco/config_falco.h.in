@@ -30,5 +30,5 @@ limitations under the License.
 #define FALCO_INSTALL_CONF_FILE "/etc/falco/falco.yaml"
 #define FALCO_ENGINE_PLUGINS_DIR "${FALCO_ABSOLUTE_SHARE_DIR}/plugins/"
 
-#define PROBE_NAME "@PROBE_NAME@"
-#define DRIVER_VERSION "@PROBE_VERSION@"
+#define DRIVER_NAME "@DRIVER_NAME@"
+#define DRIVER_VERSION "@DRIVER_VERSION@"

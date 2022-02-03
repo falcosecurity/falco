@@ -18,7 +18,7 @@
 set -e
 
 DKMS_PACKAGE_NAME="@PACKAGE_NAME@"
-DKMS_VERSION="@PROBE_VERSION@"
+DKMS_VERSION="@DRIVER_VERSION@"
 
 case "$1" in
 	remove|upgrade|deconfigure)
