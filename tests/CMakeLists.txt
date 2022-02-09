@@ -17,17 +17,25 @@
 if(MINIMAL_BUILD)
   set(
     FALCO_TESTS_SOURCES
+    ${PROJECT_SOURCE_DIR}/userspace/falco/app_runnable_action.cpp
+    ${PROJECT_SOURCE_DIR}/userspace/falco/app_action_manager.cpp
+    ${PROJECT_SOURCE_DIR}/userspace/falco/logger.cpp
     test_base.cpp
     engine/test_rulesets.cpp
     engine/test_falco_utils.cpp
+    falco/test_actions.cpp
     falco/test_configuration.cpp
   )
 else()
   set(
     FALCO_TESTS_SOURCES
+    ${PROJECT_SOURCE_DIR}/userspace/falco/app_runnable_action.cpp
+    ${PROJECT_SOURCE_DIR}/userspace/falco/app_action_manager.cpp
+    ${PROJECT_SOURCE_DIR}/userspace/falco/logger.cpp
     test_base.cpp
     engine/test_rulesets.cpp
     engine/test_falco_utils.cpp
+    falco/test_actions.cpp
     falco/test_configuration.cpp
     falco/test_webserver.cpp
   )
