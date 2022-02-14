@@ -92,7 +92,11 @@ static void usage()
 	   "Usage: falco [options]\n\n"
 	   "Options:\n"
 	   " -h, --help                    Print this page\n"
-	   " -c                            Configuration file (default " FALCO_SOURCE_CONF_FILE ", " FALCO_INSTALL_CONF_FILE ")\n"
+#ifdef BUILD_TYPE_RELEASE
+	   " -c                            Configuration file (default " FALCO_INSTALL_CONF_FILE ")\n"
+#else
+           " -c                            Configuration file (default " FALCO_SOURCE_CONF_FILE ", " FALCO_INSTALL_CONF_FILE ")\n"
+#endif
 	   " -A                            Monitor all events, including those with EF_DROP_SIMPLE_CONS flag.\n"
 	   " -b, --print-base64            Print data buffers in base64.\n"
 	   "                               This is useful for encoding binary data that needs to be used over media designed to.\n"
@@ -873,12 +877,14 @@ int falco_init(int argc, char **argv)
 		}
 		else
 		{
+#ifndef BULD_TYPE_RELEASE
 			conf_stream.open(FALCO_SOURCE_CONF_FILE);
 			if (conf_stream.is_open())
 			{
 				conf_filename = FALCO_SOURCE_CONF_FILE;
 			}
 			else
+#endif
 			{
 				conf_stream.open(FALCO_INSTALL_CONF_FILE);
 				if (conf_stream.is_open())
@@ -887,7 +893,11 @@ int falco_init(int argc, char **argv)
 				}
 				else
 				{
-					throw std::invalid_argument("You must create a config file at " FALCO_SOURCE_CONF_FILE ", " FALCO_INSTALL_CONF_FILE " or by passing -c\n");
+#ifndef BUILD_TYPE_RELEASE
+					throw std::invalid_argument("You must create a config file at " FALCO_SOURCE_CONF_FILE ", " FALCO_INSTALL_CONF_FILE "or by passing -c\n");
+#else
+					throw std::invalid_argument("You must create a config file at " FALCO_INSTALL_CONF_FILE " or by passing -c\n");
+#endif
 				}
 			}
 		}

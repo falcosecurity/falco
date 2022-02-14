@@ -4,7 +4,7 @@ set -euo pipefail
 
 SOURCE_DIR=$1
 
-NEW_CHECKSUM=$(./falco --list -N | sha256sum | awk '{print $1}')
+NEW_CHECKSUM=$(./falco -c ${SOURCE_DIR}/falco.yaml --list -N | sha256sum | awk '{print $1}')
 CUR_CHECKSUM=$(grep FALCO_FIELDS_CHECKSUM "${SOURCE_DIR}/userspace/engine/falco_engine_version.h" | awk '{print $3}' | sed -e 's/"//g')
 
 if [ "$NEW_CHECKSUM" != "$CUR_CHECKSUM" ]; then
