@@ -58,6 +58,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "debug")
 else()
   set(CMAKE_BUILD_TYPE "release")
   set(KBUILD_FLAGS "${DRAIOS_FEATURE_FLAGS}")
+  add_definitions(-DBUILD_TYPE_RELEASE)
 endif()
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 
