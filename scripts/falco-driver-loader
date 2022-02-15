@@ -626,6 +626,7 @@ print_usage() {
 	echo "  DRIVERS_REPO             specify different URL(s) where to look for prebuilt Falco drivers (comma separated)"
 	echo "  DRIVER_NAME              specify a different name for the driver"
 	echo "  DRIVER_INSECURE_DOWNLOAD whether you want to allow insecure downloads or not"
+ 	echo "  ADD_CURL_OPTIONS         specify additional options to be passed to curl command used to download Falco drivers"
 	echo ""
 	echo "Versions:"
 	echo "  Falco version  ${FALCO_VERSION}"
@@ -651,6 +652,8 @@ then
 else
 	FALCO_DRIVER_CURL_OPTIONS=-fsS
 fi
+
+FALCO_DRIVER_CURL_OPTIONS+=" "${ADD_CURL_OPTIONS}
 
 if [[ -z "$MAX_RMMOD_WAIT" ]]; then
 	MAX_RMMOD_WAIT=60
