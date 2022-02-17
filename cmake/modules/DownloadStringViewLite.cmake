@@ -24,6 +24,7 @@ ExternalProject_Add(
   GIT_TAG "v1.4.0"
   CONFIGURE_COMMAND ""
   BUILD_COMMAND ""
+  UPDATE_COMMAND ""
   INSTALL_COMMAND
     ${CMAKE_COMMAND} -E copy ${STRING_VIEW_LITE_PREFIX}/src/string-view-lite/include/nonstd/string_view.hpp
     ${STRING_VIEW_LITE_INCLUDE}/nonstd/string_view.hpp)
