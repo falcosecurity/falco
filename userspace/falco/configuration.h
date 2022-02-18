@@ -288,12 +288,12 @@ namespace YAML {
 			double double_val;
 			bool bool_val;
 			std::string str_val;
-			nlohmann::json sub{};
 
 			switch (node.Type()) {
 				case YAML::NodeType::Map:
 					for (auto &&it: node)
 					{
+						nlohmann::json sub{};
 						YAML::convert<nlohmann::json>::decode(it.second, sub);
 						res[it.first.as<std::string>()] = sub;
 					}
@@ -301,6 +301,7 @@ namespace YAML {
 				case YAML::NodeType::Sequence:
 					for (auto &&it : node)
 					{
+						nlohmann::json sub{};
 						YAML::convert<nlohmann::json>::decode(it, sub);
 						res.emplace_back(sub);
 					}
