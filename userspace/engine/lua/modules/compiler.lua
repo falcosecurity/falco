@@ -113,31 +113,6 @@ function expand_macros(ast, defs, changed)
    return true, changed
 end
 
-function get_macros(ast, set)
-   if (ast.type == "Macro") then
-      set[ast.value] = true
-      return set
-   end
-
-   if ast.type == "Filter" then
-      return get_macros(ast.value, set)
-   end
-
-   if ast.type == "BinaryBoolOp" then
-      local left = get_macros(ast.left, {})
-      local right = get_macros(ast.right, {})
-
-      for m, _ in pairs(left) do set[m] = true end
-      for m, _ in pairs(right) do set[m] = true end
-
-      return set
-   end
-   if ast.type == "UnaryBoolOp" then
-      return get_macros(ast.argument, set)
-   end
-   return set
-end
-
 function get_filters(ast)
 
    local filters = {}
