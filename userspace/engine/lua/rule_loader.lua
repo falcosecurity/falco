@@ -157,17 +157,6 @@ local function create_filter_obj(node, lua_parser, parent_bool_op)
    return nil
 end
 
-function set_output(output_format, state)
-
-   if(output_ast.type == "OutputFormat") then
-
-      local format
-
-   else
-      error ("Unexpected type in set_output: ".. output_ast.type)
-   end
-end
-
 -- This should be keep in sync with parser.lua
 defined_comp_operators = {
    ["="]=1,
@@ -197,7 +186,7 @@ defined_list_comp_operators = {
 -- object. The by_name index is used for things like describing rules,
 -- and the by_idx index is used to map the relational node index back
 -- to a rule.
-local state = {macros={}, lists={}, filter_ast=nil, rules_by_name={},
+local state = {macros={}, lists={}, rules_by_name={},
 	       skipped_rules_by_name={}, macros_by_name={}, lists_by_name={},
 	       n_rules=0, rules_by_idx={}, ordered_rule_names={}, ordered_macro_names={}, ordered_list_names={}}
 
@@ -1065,14 +1054,6 @@ function load_rules(rules_content,
 		  warnings[#warnings + 1] = msg
 	       end
 	    end
-	 end
-
-	 -- Rule ASTs are merged together into one big AST, with "OR" between each
-	 -- rule.
-	 if (state.filter_ast == nil) then
-	    state.filter_ast = filter_ast.filter.value
-	 else
-	    state.filter_ast = { type = "BinaryBoolOp", operator = "or", left = state.filter_ast, right = filter_ast.filter.value }
 	 end
 
 	 -- Enable/disable the rule
