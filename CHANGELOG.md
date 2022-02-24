@@ -1105,7 +1105,7 @@ Released 2019-05-13
 
 * Docker-based builder/tester: You can now build Falco using the [falco-builder](https://falco.org/docs/source/#build-using-falco-builder-container) docker image, and run regression tests using the [falco-tester](https://falco.org/docs/source/#test-using-falco-tester-container) docker image. [[#522](https://github.com/falcosecurity/falco/pull/522)] [[#584](https://github.com/falcosecurity/falco/pull/584)]
 
-* Several small docs changes to improve clarity and readibility [[#524](https://github.com/falcosecurity/falco/pull/524)] [[#540](https://github.com/falcosecurity/falco/pull/540)] [[#541](https://github.com/falcosecurity/falco/pull/541)] [[#542](https://github.com/falcosecurity/falco/pull/542)]
+* Several small docs changes to improve clarity and readability [[#524](https://github.com/falcosecurity/falco/pull/524)] [[#540](https://github.com/falcosecurity/falco/pull/540)] [[#541](https://github.com/falcosecurity/falco/pull/541)] [[#542](https://github.com/falcosecurity/falco/pull/542)]
 
 * Add instructions on how to enable K8s Audit Logging for kops [[#535](https://github.com/falcosecurity/falco/pull/535)]
 
