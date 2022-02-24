@@ -2,7 +2,7 @@
 
 This document reflects when and how we clean up the Falco artifacts from their storage location.
 
-**Superseeded by**: [drivers-storage-s3 proposal](https://github.com/falcosecurity/falco/blob/master/proposals/20201025-drivers-storage-s3.md).
+**Superseded by**: [drivers-storage-s3 proposal](https://github.com/falcosecurity/falco/blob/master/proposals/20201025-drivers-storage-s3.md).
 
 ## Motivation
 
