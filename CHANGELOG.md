@@ -88,7 +88,7 @@ Released on 2022-01-31
 * fix(build): use consistent 7-character build abbrev sha [[#1830](https://github.com/falcosecurity/falco/pull/1830)] - [@LucaGuerra](https://github.com/LucaGuerra)
 * add Phoenix to adopters list [[#1806](https://github.com/falcosecurity/falco/pull/1806)] - [@kaldyka](https://github.com/kaldyka)
 * remove unused files in test directory [[#1801](https://github.com/falcosecurity/falco/pull/1801)] - [@jasondellaluce](https://github.com/jasondellaluce)
-* drop Falco luajit module, use the one provied by libs [[#1788](https://github.com/falcosecurity/falco/pull/1788)] - [@FedeDP](https://github.com/FedeDP)
+* drop Falco luajit module, use the one provided by libs [[#1788](https://github.com/falcosecurity/falco/pull/1788)] - [@FedeDP](https://github.com/FedeDP)
 * chore(build): update libs version to 7906f7e [[#1790](https://github.com/falcosecurity/falco/pull/1790)] - [@LucaGuerra](https://github.com/LucaGuerra)
 * Add SysFlow to list of libs adopters [[#1747](https://github.com/falcosecurity/falco/pull/1747)] - [@araujof](https://github.com/araujof)
 * build: dropped centos8 circleci build because it is useless [[#1882](https://github.com/falcosecurity/falco/pull/1882)] - [@FedeDP](https://github.com/FedeDP)
