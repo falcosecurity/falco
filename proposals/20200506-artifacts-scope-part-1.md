@@ -111,4 +111,4 @@ Update documentation in [falco-website#184](https://github.com/falcosecurity/fal
 ### Adjusting projects
 
  - YAML manifest documentation to be moved to `contrib`
- - Minkube, Kind, Puppet, Ansible, etc documentation to be moved to `contrib`
+ - Minikube, Kind, Puppet, Ansible, etc documentation to be moved to `contrib`
