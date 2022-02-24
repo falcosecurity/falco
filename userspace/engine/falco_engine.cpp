@@ -387,7 +387,7 @@ void falco_engine::describe_rule(string *rule)
 	return m_rules->describe_rule(rule);
 }
 
-// Print statistics on the the rules that triggered
+// Print statistics on the rules that triggered
 void falco_engine::print_stats()
 {
 	lua_getglobal(m_ls, lua_print_stats.c_str());
