@@ -8,7 +8,7 @@ Released on 2022-01-31
 
 
 * new: add support for plugins to extend Falco functionality to new event sources and custom fields [[#1753](https://github.com/falcosecurity/falco/pull/1753)] - [@mstemm](https://github.com/mstemm)
-* new: add ability to set User-Agent http header when sending http output. Provide default value of 'falcosecurit/falco'. [[#1850](https://github.com/falcosecurity/falco/pull/1850)] - [@yoshi314](https://github.com/yoshi314)
+* new: add ability to set User-Agent http header when sending http output. Provide default value of 'falcosecurity/falco'. [[#1850](https://github.com/falcosecurity/falco/pull/1850)] - [@yoshi314](https://github.com/yoshi314)
 * new(configuration): support defining plugin init config as a YAML [[#1852](https://github.com/falcosecurity/falco/pull/1852)] - [@jasondellaluce](https://github.com/jasondellaluce)
 
 
