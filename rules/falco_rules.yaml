@@ -564,7 +564,7 @@
 
 # Qualys seems to run a variety of shell subprocesses, at various
 # levels. This checks at a few levels without the cost of a full
-# proc.aname, which traverses the full parent heirarchy.
+# proc.aname, which traverses the full parent hierarchy.
 - macro: run_by_qualys
   condition: >
     (proc.pname=qualys-cloud-ag or
