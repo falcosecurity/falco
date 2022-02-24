@@ -278,7 +278,7 @@ private:
 	// events. See alias struct for usage.
 	std::list<nlohmann::json::json_pointer> m_jptrs;
 
-	// Theextraction function to use. May not be defined, in which
+	// The extraction function to use. May not be defined, in which
 	// case the default function is used.
 	extract_t m_extract;
 
