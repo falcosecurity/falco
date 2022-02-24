@@ -51,6 +51,6 @@ No diagrams yet.
 
 * We'll use [inja](https://github.com/pantor/inja) as the templating engine.
 
-* For the most part, we can rely on the existing framework of rules, filter expressions, and output expressions that already exist in Falco. One significant change will be that filter fields can extract more than one "value" per event, and we'll need to define new operators to perform set comparisions betweeen values in an event and values in the comparison right-hand-side.
+* For the most part, we can rely on the existing framework of rules, filter expressions, and output expressions that already exist in Falco. One significant change will be that filter fields can extract more than one "value" per event, and we'll need to define new operators to perform set comparisions between values in an event and values in the comparison right-hand-side.
 
 * This will rely heavily on existing support for [K8s Audit Events](https://falco.org/docs/event-sources/kubernetes-audit/) in Falco.
