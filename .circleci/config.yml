@@ -13,7 +13,7 @@ jobs:
           command: apk update
       - run:
           name: Install build dependencies
-          command: apk add g++ gcc cmake cmake make git bash perl linux-headers autoconf automake m4 libtool elfutils-dev libelf-static patch binutils
+          command: apk add g++ gcc cmake make git bash perl linux-headers autoconf automake m4 libtool elfutils-dev libelf-static patch binutils
       - run:
           name: Prepare project
           command: |
