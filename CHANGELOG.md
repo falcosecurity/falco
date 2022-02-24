@@ -1308,7 +1308,7 @@ Released 2018-07-24
 
 ### Minor Changes
 
-* Rules may now have an `skip-if-unknown-filter` property. If set to true, a rule will be skipped if its condition/output property refers to a filtercheck (e.g. `fd.some-new-attibute`) that is not present in the current falco version. [[#364](https://github.com/draios/falco/pull/364)] [[#345](https://github.com/draios/falco/issues/345)]
+* Rules may now have an `skip-if-unknown-filter` property. If set to true, a rule will be skipped if its condition/output property refers to a filtercheck (e.g. `fd.some-new-attribute`) that is not present in the current falco version. [[#364](https://github.com/draios/falco/pull/364)] [[#345](https://github.com/draios/falco/issues/345)]
 * Small changes to Falco `COPYING` file so github automatically recognizes license [[#380](https://github.com/draios/falco/pull/380)]
 * New example integration showing how to connect Falco with Anchore to dynamically create falco rules based on negative scan results [[#390](https://github.com/draios/falco/pull/390)]
 * New example integration showing how to connect Falco, [nats](https://nats.io/), and K8s to run flexible "playbooks" based on Falco events [[#389](https://github.com/draios/falco/pull/389)]
