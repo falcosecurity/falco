@@ -156,7 +156,7 @@ void cmdline_options::define()
 		("c",                             "Configuration file. If not specified tries " FALCO_SOURCE_CONF_FILE ", " FALCO_INSTALL_CONF_FILE ".", cxxopts::value(conf_filename), "<path>")
 #endif
 		("A",                             "Monitor all events, including those with EF_DROP_SIMPLE_CONS flag.", cxxopts::value(all_events)->default_value("false"))
-		("b,print-base64",                "Print data buffers in base64. This is useful for encoding binary data that needs to be used over media designed to.")
+		("b,print-base64",                "Print data buffers in base64. This is useful for encoding binary data that needs to be used over media designed to consume this format.")
 		("cri",                           "Path to CRI socket for container metadata. Use the specified socket to fetch data from a CRI-compatible runtime. If not specified, uses libs default.", cxxopts::value(cri_socket_path), "<path>")
 		("d,daemon",                      "Run as a daemon.", cxxopts::value(daemon)->default_value("false"))
 		("disable-cri-async",             "Disable asynchronous CRI metadata fetching. This is useful to let the input event wait for the container metadata fetch to finish before moving forward. Async fetching, in some environments leads to empty fields for container metadata when the fetch is not fast enough to be completed asynchronously. This can have a performance penalty on your environment depending on the number of containers and the frequency at which they are created/started/stopped.", cxxopts::value(disable_cri_async)->default_value("false"))
