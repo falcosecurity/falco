@@ -71,7 +71,7 @@ The `falco_traces.yaml` test suite gets generated through the `falco_traces.yaml
 
 ### falco_tests_package
 
-The `falco_tests_package.yaml` test suite requires some additional setup steps to be succesfully run on your local machine.
+The `falco_tests_package.yaml` test suite requires some additional setup steps to be successfully run on your local machine.
 
 In particular, it requires some runners (ie., docker images) to be already built and present into your local machine.
 
