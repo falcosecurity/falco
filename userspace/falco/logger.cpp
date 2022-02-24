@@ -120,7 +120,7 @@ void falco_logger::log(int priority, const string msg)
 			if(atime)
 			{
 				tstr = atime;
-				tstr = tstr.substr(0, 24);// remove trailling newline
+				tstr = tstr.substr(0, 24);// remove trailing newline
 			}
 			else
 			{
