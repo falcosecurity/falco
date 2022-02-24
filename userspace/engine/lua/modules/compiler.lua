@@ -41,7 +41,7 @@ end
 
    The return value is a boolean which is true if any macro was
    substitued. This allows a caller to re-traverse until no more macros are
-   found, a simple strategy for recursive resoltuions (e.g. when a macro
+   found, a simple strategy for recursive resolutions (e.g. when a macro
    definition uses another macro).
 
 --]]
