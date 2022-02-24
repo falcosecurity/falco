@@ -3062,7 +3062,7 @@
   condition: (proc.args="" or proc.args intersects ("-V", "-l", "-h"))
 
 - rule: Mount Launched in Privileged Container
-  desc: Detect file system mount happened inside a privilegd container which might lead to container escape.
+  desc: Detect file system mount happened inside a privileged container which might lead to container escape.
   condition: >
     spawned_process and container
     and container.privileged=true
