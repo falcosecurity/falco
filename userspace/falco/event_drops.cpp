@@ -73,6 +73,7 @@ bool syscall_evt_drop_mgr::process_event(sinsp *inspector, sinsp_evt *evt)
 		delta.n_evts = stats.n_evts - m_last_stats.n_evts;
 		delta.n_drops = stats.n_drops - m_last_stats.n_drops;
 		delta.n_drops_buffer = stats.n_drops_buffer - m_last_stats.n_drops_buffer;
+		delta.n_drops_scratch_map = stats.n_drops_scratch_map - m_last_stats.n_drops_scratch_map;
 		delta.n_drops_pf = stats.n_drops_pf - m_last_stats.n_drops_pf;
 		delta.n_drops_bug = stats.n_drops_bug - m_last_stats.n_drops_bug;
 		delta.n_preemptions = stats.n_preemptions - m_last_stats.n_preemptions;
@@ -148,6 +149,7 @@ bool syscall_evt_drop_mgr::perform_actions(uint64_t now, scap_stats &delta, bool
 			output_fields["n_evts"] = std::to_string(delta.n_evts);
 			output_fields["n_drops"] = std::to_string(delta.n_drops);
 			output_fields["n_drops_buffer"] = std::to_string(delta.n_drops_buffer);
+			output_fields["n_drops_scratch_map"] = std::to_string(delta.n_drops_scratch_map);
 			output_fields["n_drops_pf"] = std::to_string(delta.n_drops_pf);
 			output_fields["n_drops_bug"] = std::to_string(delta.n_drops_bug);
 			output_fields["ebpf_enabled"] = std::to_string(bpf_enabled);
