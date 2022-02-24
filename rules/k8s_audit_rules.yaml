@@ -572,7 +572,7 @@
 # cluster creation. This may signify a permission setting too broader.
 # As we can't check for role of the user on a general ka.* event, this
 # may or may not be an administrator. Customize the full_admin_k8s_users
-# list to your needs, and activate at your discrection.
+# list to your needs, and activate at your discretion.
 
 # # How to test:
 # # Execute any kubectl command connected using default cluster user, as:
