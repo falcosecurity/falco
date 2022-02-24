@@ -487,7 +487,7 @@ int falco_init(int argc, char **argv)
 			}
 		}
 
-		// Decide wether to do sync or async for CRI metadata fetch
+		// Decide whether to do sync or async for CRI metadata fetch
 		inspector->set_cri_async(!app.options().disable_cri_async);
 
 		//
