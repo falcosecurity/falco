@@ -36,7 +36,7 @@ There will be no intention to cover Falco rule syntax in this proposal.
 
 ### Use cases
 
-When new PRs are created in the area of rules, reviewers need to examine whether there are new rules, macros or lists are introduced. If yes, check wether follow the naming convention.
+When new PRs are created in the area of rules, reviewers need to examine whether there are new rules, macros or lists are introduced. If yes, check whether follow the naming convention.
 
 ### Diagrams
 

@@ -484,7 +484,7 @@ int falco_init(int argc, char **argv)
 			inspector->set_cri_socket_path(app.options().cri_socket_path);
 		}
 
-		// Decide wether to do sync or async for CRI metadata fetch
+		// Decide whether to do sync or async for CRI metadata fetch
 		inspector->set_cri_async(!app.options().disable_cri_async);
 
 		//
