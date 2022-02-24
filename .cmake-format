@@ -7,7 +7,7 @@ line_width = 120
 # How many spaces to tab for indent
 tab_size = 2
 
-# If arglists are longer than this, break them always
+# If arg lists are longer than this, break them always
 max_subargs_per_line = 3
 
 # If true, separate flow control names from their parentheses with a space
