@@ -214,7 +214,7 @@ When a rule is parsed, the original condition will be wrapped in an extra layer 
 	(fd.filename in (python, go))))
 ```
 
-The exceptions are effectively syntatic sugar that allows expressing sets of exceptions in a concise way.
+The exceptions are effectively syntactic sugar that allows expressing sets of exceptions in a concise way.
 
 ### Advantages
 
