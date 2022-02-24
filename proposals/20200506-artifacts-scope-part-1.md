@@ -82,7 +82,7 @@ This is done as needed, and can best be measured by the need to cut a release an
 
 ### official support
 
-As the need for a project grows, it can ultimately achieve the highest and most coveted status within The Falco Project. "_Offical support_."
+As the need for a project grows, it can ultimately achieve the highest and most coveted status within The Falco Project. "_Official support_."
 
 The artifacts listed above are part of the official Falco release process. These artifact will be refined and amended by the [Part 2](./20200506-artifacts-scope-part-2.md).
 
