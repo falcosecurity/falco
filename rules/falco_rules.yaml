@@ -2305,7 +2305,7 @@
 # explicitly enumerate the container images that you want to allow
 # access to EC2 metadata. In this main falco rules file, there isn't
 # any way to know all the containers that should have access, so any
-# container is alllowed, by repeating the "container" macro. In the
+# container is allowed, by repeating the "container" macro. In the
 # overridden macro, the condition would look something like
 # (container.image.repository = vendor/container-1 or
 # container.image.repository = vendor/container-2 or ...)
