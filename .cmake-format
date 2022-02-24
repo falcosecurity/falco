@@ -21,7 +21,7 @@ separate_fn_name_with_space = False
 dangle_parens = False
 
 # If the statement spelling length (including space and parenthesis is larger
-# than the tab width by more than this amoung, then force reject un-nested
+# than the tab width by more than this among, then force reject un-nested
 # layouts.
 max_prefix_chars = 2
 
