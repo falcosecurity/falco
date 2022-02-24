@@ -196,7 +196,7 @@ Exception values will most commonly be defined in rules with append: true. Here'
 
 A rule exception applies if for a given event, the fields in a rule.exception match all of the values in some exception.item. For example, if a program `apk` writes to a file below `/usr/lib/alpine`, the rule will not trigger, even if the condition is met.
 
-Notice that an item in a values list can be a list. This allows building exceptions with operators like "in", "pmatch", etc. that work on a list of items. The item can also be a name of an existing list. If not present surrounding parantheses will be added.
+Notice that an item in a values list can be a list. This allows building exceptions with operators like "in", "pmatch", etc. that work on a list of items. The item can also be a name of an existing list. If not present surrounding parentheses will be added.
 
 Finally, note that the structure of the values property differs between the items where fields is a list of fields (proc_writer/container_writer/proc_filenames) and when it is a single field (procs_only). This changes how the condition snippet is constructed.
 
