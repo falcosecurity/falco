@@ -80,7 +80,7 @@ private:
 		std::shared_ptr<gen_event_filter> filter;
 		std::set<uint16_t> evttypes()
 		{
-			// todo(jasondellaluce,leogr): temp workarond, remove when fixed in libs
+			// todo(jasondellaluce,leogr): temp workaround, remove when fixed in libs
 			if(source == "syscall" || source == "k8s_audit")
 			{
 				return filter->evttypes();
