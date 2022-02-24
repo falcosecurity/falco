@@ -366,7 +366,7 @@
   tags: [k8s]
 
 # Detect any attempt to create a ClusterRoleBinding to the cluster-admin user
-# (exapand this to any built-in cluster role that does "sensitive" things)
+# (expand this to any built-in cluster role that does "sensitive" things)
 - rule: Attach to cluster-admin Role
   desc: Detect any attempt to create a ClusterRoleBinding to the cluster-admin user
   condition: kevt and clusterrolebinding and kcreate and ka.req.binding.role=cluster-admin
