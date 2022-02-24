@@ -93,7 +93,7 @@ bool k8s_audit_handler::accept_data(falco_engine *engine,
 		}
 		catch(...)
 		{
-			errstr = string("unkown error processing audit event");
+			errstr = string("unknown error processing audit event");
 			fprintf(stderr, "%s\n", errstr.c_str());
 			return false;
 		}

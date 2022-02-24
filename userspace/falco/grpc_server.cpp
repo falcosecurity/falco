@@ -119,7 +119,7 @@ void falco::grpc::server::thread_process(int thread_index)
 			ctx->end(this, false);
 			break;
 		default:
-			// todo(leodido) > log error "unkown completion queue event: tag=tag, state=ctx->m_state"
+			// todo(leodido) > log error "unknown completion queue event: tag=tag, state=ctx->m_state"
 			break;
 		}
 
