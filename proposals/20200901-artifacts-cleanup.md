@@ -90,7 +90,7 @@ This way, assuming the number of prebuilt drivers does not skyrocket, we can rea
 
 Notice that, in case a Falco stable release will not depend on a new driver version, this means the last two driver versions will, in this case, cover more than the two Falco stable releases.
 
-### Archivation
+### Archiving
 
 Since the process of building drivers is time and resource consuming, this document also proposes to move the driver versions in other storage facilities.
 
