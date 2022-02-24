@@ -910,7 +910,7 @@ Released 2019-07-31
 
 * Fix a problem that would cause prevent container metadata lookups when falco was daemonized [[#731](https://github.com/falcosecurity/falco/pull/731)]
 
-* Allow rule priorites to be expressed as lowercase and a mix of lower/uppercase [[#737](https://github.com/falcosecurity/falco/pull/737)]
+* Allow rule priorities to be expressed as lowercase and a mix of lower/uppercase [[#737](https://github.com/falcosecurity/falco/pull/737)]
 
 ### Rule Changes
 
