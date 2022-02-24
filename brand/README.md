@@ -113,7 +113,7 @@ Falco ultimately is a security engine. It reasons about signals coming from a sy
 
 ##### Anomaly detection
 
-This refers to an event that occurs with something unsual, concerning, or odd occurs.
+This refers to an event that occurs with something unusual, concerning, or odd occurs.
 We can associate anomalies with unwanted behavior, and alert in their presence.
 
 ##### Detection tooling
