@@ -44,7 +44,7 @@ Released on 2022-01-31
 * fix(userspace/engine): support jsonpointer escaping in rule parser [[#1777](https://github.com/falcosecurity/falco/pull/1777)] - [@jasondellaluce](https://github.com/jasondellaluce)
 * fix(scripts/falco-driver-loader): support kernel object files in `.zst` and `.gz` compression formats [[#1863](https://github.com/falcosecurity/falco/pull/1863)] - [@leogr](https://github.com/leogr)
 * fix(engine): correctly format json output in json_event [[#1847](https://github.com/falcosecurity/falco/pull/1847)] - [@jasondellaluce](https://github.com/jasondellaluce)
-* fix: set http output contenttype to text/plain when json output is disabled [[#1829](https://github.com/falcosecurity/falco/pull/1829)] - [@FedeDP](https://github.com/FedeDP)
+* fix: set http output content type to text/plain when json output is disabled [[#1829](https://github.com/falcosecurity/falco/pull/1829)] - [@FedeDP](https://github.com/FedeDP)
 * fix(userspace/falco): accept 'Content-Type' header that contains "application/json", but it is not strictly equal to it [[#1800](https://github.com/falcosecurity/falco/pull/1800)] - [@FedeDP](https://github.com/FedeDP)
 * fix(userspace/engine): supporting enabled-only overwritten rules [[#1775](https://github.com/falcosecurity/falco/pull/1775)] - [@jasondellaluce](https://github.com/jasondellaluce)
 
