@@ -44,7 +44,7 @@ This is a list of production adopters of Falco (in alphabetical order):
 * [Preferral](https://www.preferral.com) - Preferral is a HIPAA-compliant platform for Referral Management and Online Referral Forms. Preferral streamlines the referral process for patients, specialists and their referral partners. By automating the referral process, referring practices spend less time on the phone, manual efforts are eliminated, and patients get the right care from the right specialist. Preferral leverages Falco to provide a Host Intrusion Detection System to meet their HIPAA compliance requirements.
   * https://hipaa.preferral.com/01-preferral_hipaa_compliance/
 
-* [Qonto](https://qonto.com) - Qonto is a modern banking for SMEs and freelancers. Qonto provides a fully featured business account with a simplified accounting flow. Falco is used by our SecOps team to detect suspicous behaviors in our clusters.
+* [Qonto](https://qonto.com) - Qonto is a modern banking for SMEs and freelancers. Qonto provides a fully featured business account with a simplified accounting flow. Falco is used by our SecOps team to detect suspicious behaviors in our clusters.
 
 * [Raft](https://goraft.tech) - Raft is a government contractor that offers cloud-native solutions across many different agencies including DoD (Department of Defense), HHS (Health and Human Services), as well as within CFPB (Consumer Finance Protection Bureau). Raft leverages Falco to detect threats in our client's Kubernetes clusters and as a Host Intrusion Detection System. Raft proudly recommends Falco across all our different projects.
 
