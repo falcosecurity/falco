@@ -609,7 +609,7 @@ function load_rules_doc(rules_mgr, doc, load_state)
 			return false, build_error_with_context(v['context'], "Rule exception item must have name property"), warnings
 		     end
 
-		     -- Seperate case when a exception name is not found
+		     -- Separate case when a exception name is not found
 		     -- This means that a new exception is being appended
 
 		     local new_exception = true
