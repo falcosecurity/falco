@@ -95,7 +95,7 @@ Now assume `x.y.z` is the new version.
 
     #### Release Manager <github handle>
 
-    <!-- Substitute Github handle with the release manager's one -->
+    <!-- Substitute GitHub handle with the release manager's one -->
     ```
 
 - Finally, publish the release!
