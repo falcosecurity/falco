@@ -56,13 +56,13 @@
   output: "None"
   priority: WARNING
 
-- rule: leading_multtrailing_evttypes
+- rule: leading_multitrailing_evttypes
   desc: one evttype at beginning, multiple at end
   condition: evt.type=execve and proc.name=foo or evt.type=open or evt.type=connect
   output: "None"
   priority: WARNING
 
-- rule: leading_multtrailing_evttypes_using_in
+- rule: leading_multitrailing_evttypes_using_in
   desc: one evttype at beginning, multiple at end, using in
   condition: evt.type=execve and proc.name=foo or evt.type in (open, connect)
   output: "None"
