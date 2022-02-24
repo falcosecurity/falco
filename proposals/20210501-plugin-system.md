@@ -91,7 +91,7 @@ The libraries will do everything possible to validate the data coming from the p
 
 ### Plugin/Event Source registries
 
-Every source plugin requires its own, unique plugin ID to interoperate with Falco and the other plugins. The plugin ID will be used by the libs to properly process incoming events (for example, when saving events to file and loading them back), and by plugins to unuambiguosly recognize their dependencies.
+Every source plugin requires its own, unique plugin ID to interoperate with Falco and the other plugins. The plugin ID will be used by the libs to properly process incoming events (for example, when saving events to file and loading them back), and by plugins to unambiguously recognize their dependencies.
 
 To facilitate the allocation and distribution of plugin IDs, we will require that plugin developers request IDs for their plugins to the Falco organization. The mechanism used for plugin allocation is not determined yet and will be discussed in the future.
 
