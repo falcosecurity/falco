@@ -478,10 +478,13 @@ int falco_init(int argc, char **argv)
 		inspector = new sinsp();
 		inspector->set_buffer_format(app.options().event_buffer_format);
 
-		// If required, set the CRI path
-		if(!app.options().cri_socket_path.empty())
+		// If required, set the CRI paths
+		for (auto &p : app.options().cri_socket_paths)
 		{
-			inspector->set_cri_socket_path(app.options().cri_socket_path);
+			if (!p.empty())
+			{
+				inspector->add_cri_socket_path(p);
+			}
 		}
 
 		// Decide wether to do sync or async for CRI metadata fetch

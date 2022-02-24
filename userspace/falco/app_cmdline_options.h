@@ -37,7 +37,7 @@ public:
 	std::string conf_filename;
 	bool all_events;
 	sinsp_evt::param_fmt event_buffer_format;
-	std::string cri_socket_path;
+	std::vector<std::string> cri_socket_paths;
 	bool daemon;
 	bool disable_cri_async;
 	std::vector<std::string> disable_sources;
