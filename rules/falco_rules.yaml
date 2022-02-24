@@ -2193,7 +2193,7 @@
 #   output: "sshd sent error message to syslog (error=%evt.buffer)"
 #   priority: WARNING
 
-- macro: somebody_becoming_themself
+- macro: somebody_becoming_themselves
   condition: ((user.name=nobody and evt.arg.uid=nobody) or
               (user.name=www-data and evt.arg.uid=www-data) or
               (user.name=_apt and evt.arg.uid=_apt) or
@@ -2231,7 +2231,7 @@
     evt.type=setuid and evt.dir=>
     and (known_user_in_container or not container)
     and not (user.name=root or user.uid=0)
-    and not somebody_becoming_themself
+    and not somebody_becoming_themselves
     and not proc.name in (known_setuid_binaries, userexec_binaries, mail_binaries, docker_binaries,
                           nomachine_binaries)
     and not proc.name startswith "runc:"
