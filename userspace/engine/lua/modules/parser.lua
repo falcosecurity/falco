@@ -57,7 +57,7 @@ local function geterrorinfo()
       end
 end
 
--- creates an errror message using the farthest failure position
+-- creates an error message using the farthest failure position
 local function errormsg()
    return geterrorinfo() / function(t)
          local p = t.ffp or 1
