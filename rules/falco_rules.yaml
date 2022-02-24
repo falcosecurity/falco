@@ -2255,7 +2255,7 @@
     activity by any programs that can manage users, passwords, or permissions. sudo and su are excluded.
     Activity in containers is also excluded--some containers create custom users on top
     of a base linux distribution at startup.
-    Some innocuous commandlines that don't actually change anything are excluded.
+    Some innocuous command lines that don't actually change anything are excluded.
   condition: >
     spawned_process and proc.name in (user_mgmt_binaries) and
     not proc.name in (su, sudo, lastlog, nologin, unix_chkpwd) and not container and
