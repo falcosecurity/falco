@@ -27,7 +27,7 @@ That's where Falco comes in. We want to make it possible for Falco to perform a 
 
 Transparently read a candidate PSP into an equivalent set of Falco rules that can look for the conditions in the PSP.
 
-The PSP is converted into a set of Falco rules which can be either saved as a file for later use/inspection, or loaded directly so they they can monitor system calls and k8s audit activity.
+The PSP is converted into a set of Falco rules which can be either saved as a file for later use/inspection, or loaded directly so that they can monitor system calls and k8s audit activity.
 
 ### Non-Goals
 
