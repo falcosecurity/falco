@@ -795,7 +795,7 @@ Released on 2020-01-23
 ### Bug Fixes
 
 * fix: providing clang into docker-builder [[#972](https://github.com/falcosecurity/falco/pull/972)]
-* fix: prevent throwing json type error c++ exceptions outside of the falco engine when procesing k8s audit events. [[#928](https://github.com/falcosecurity/falco/pull/928)]
+* fix: prevent throwing json type error c++ exceptions outside of the falco engine when processing k8s audit events. [[#928](https://github.com/falcosecurity/falco/pull/928)]
 * fix(docker/kernel/linuxkit): correct from for falco minimal image [[#913](https://github.com/falcosecurity/falco/pull/913)]
 
 ### Rule Changes
