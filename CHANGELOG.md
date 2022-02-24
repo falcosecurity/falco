@@ -1220,7 +1220,7 @@ Released 2019-01-16
 
 * Fix FPs related to `apt-config`/`apt-cache`, `apk` [[#490](https://github.com/falcosecurity/falco/pull/490)]
 
-* New rules `Launch Package Management Process in Container`, `Netcat Remote Code Execution in Container`, `Lauch Suspicious Network Tool in Container` look for host-level network tools like `netcat`, package management tools like `apt-get`, or network tool binaries being run in a container. [[#490](https://github.com/falcosecurity/falco/pull/490)]
+* New rules `Launch Package Management Process in Container`, `Netcat Remote Code Execution in Container`, `Launch Suspicious Network Tool in Container` look for host-level network tools like `netcat`, package management tools like `apt-get`, or network tool binaries being run in a container. [[#490](https://github.com/falcosecurity/falco/pull/490)]
 
 * Fix the `inbound` and `outbound` macros so they work with sendto/recvfrom/sendmsg/recvmsg. [[#470](https://github.com/falcosecurity/falco/pull/470)]
 
@@ -1253,7 +1253,7 @@ Released 2018-11-09
 
 * Better coverage (e.g. reduced FPs) for critical stack, hids systems, ufw, cloud-init, etc. [[#445](https://github.com/falcosecurity/falco/pull/445)]
 
-* New rules `Launch Package Management Process in Container`, `Netcat Remote Code Execution in Container`, and `Lauch Suspicious Network Tool in Container` look for running various suspicious programs in a container. [[#461](https://github.com/falcosecurity/falco/pull/461)]
+* New rules `Launch Package Management Process in Container`, `Netcat Remote Code Execution in Container`, and `Launch Suspicious Network Tool in Container` look for running various suspicious programs in a container. [[#461](https://github.com/falcosecurity/falco/pull/461)]
 
 * Misc changes to address false positives in GKE, Istio, etc. [[#455](https://github.com/falcosecurity/falco/pull/455)] [[#439](https://github.com/falcosecurity/falco/issues/439)]
 
