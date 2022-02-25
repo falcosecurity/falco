@@ -18,7 +18,7 @@ limitations under the License.
 // falco.cpp. We expect it will be responsible for the following:
 //  - Parsing/validating command line options
 //  - Parsing/validing falco config
-//  - Initialize prerequsites (inspector, falco engine, webserver, etc)
+//  - Initialize prerequisites (inspector, falco engine, webserver, etc)
 //  - Loading plugins
 //  - Loading/validating rules
 //  - Command/subcommand execution (e.g. --list/--list-fields, or
