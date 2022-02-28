@@ -22,7 +22,7 @@ set(FALCO_ENGINE_SOURCE_FILES
     formats.cpp)
 
 add_library(falco_engine STATIC ${FALCO_ENGINE_SOURCE_FILES})
-add_dependencies(falco_engine njson lyaml lpeg string-view-lite)
+add_dependencies(falco_engine njson lyaml string-view-lite)
 
 if(USE_BUNDLED_DEPS)
   add_dependencies(falco_engine libyaml)
@@ -55,4 +55,4 @@ else()
       "${PROJECT_BINARY_DIR}/userspace/engine/lua")
 endif()
 
-target_link_libraries(falco_engine "${FALCO_SINSP_LIBRARY}" "${LPEG_LIB}" "${LYAML_LIB}" "${LIBYAML_LIB}" luafiles)
+target_link_libraries(falco_engine "${FALCO_SINSP_LIBRARY}" "${LYAML_LIB}" "${LIBYAML_LIB}" luafiles)

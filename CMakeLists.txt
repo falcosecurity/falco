@@ -152,9 +152,6 @@ endif()
 
 include(cxxopts)
 
-# Lpeg
-include(lpeg)
-
 # libyaml
 include(libyaml)
 
