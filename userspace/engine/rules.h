@@ -22,10 +22,10 @@ limitations under the License.
 #include "sinsp.h"
 #include "filter.h"
 
-#include "lua_parser.h"
-
 #include "json_evt.h"
 #include "falco_common.h"
+
+typedef struct lua_State lua_State;
 
 class falco_engine;
 
@@ -38,6 +38,8 @@ class falco_rules
 
 	void add_filter_factory(const std::string &source,
 				std::shared_ptr<gen_event_filter_factory> factory);
+
+	std::shared_ptr<gen_event_filter_factory> get_filter_factory(const std::string &source);
 
 	void load_rules(const string &rules_content, bool verbose, bool all_events,
 			std::string &extra, bool replace_container_info,
@@ -54,7 +56,6 @@ class falco_rules
 
 	static void init(lua_State *ls);
 	static int clear_filters(lua_State *ls);
-	static int create_lua_parser(lua_State *ls);
 	static int add_filter(lua_State *ls);
 	static int enable_rule(lua_State *ls);
 	static int engine_version(lua_State *ls);
@@ -69,8 +70,6 @@ class falco_rules
 
  private:
 	void clear_filters();
-	// XXX/mstemm can I make this a shared_ptr?
-	lua_parser * create_lua_parser(std::string &source, std::string &errstr);
 	void add_filter(std::shared_ptr<gen_event_filter> filter, string &rule, string &source, std::set<string> &tags);
 	void enable_rule(string &rule, bool enabled);
 
