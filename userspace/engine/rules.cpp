@@ -30,7 +30,6 @@ extern "C" {
 const static struct luaL_Reg ll_falco_rules[] =
 	{
 		{"clear_filters", &falco_rules::clear_filters},
-		{"create_lua_parser", &falco_rules::create_lua_parser},
 		{"add_filter", &falco_rules::add_filter},
 		{"enable_rule", &falco_rules::enable_rule},
 		{"engine_version", &falco_rules::engine_version},
@@ -55,7 +54,6 @@ void falco_rules::add_filter_factory(const std::string &source,
 void falco_rules::init(lua_State *ls)
 {
 	luaL_openlib(ls, "falco_rules", ll_falco_rules, 0);
-	lua_parser::register_callbacks(ls, "filter");
 }
 
 int falco_rules::clear_filters(lua_State *ls)
@@ -77,43 +75,14 @@ void falco_rules::clear_filters()
 	m_engine->clear_filters();
 }
 
-int falco_rules::create_lua_parser(lua_State *ls)
-{
-	if (! lua_islightuserdata(ls, -2) ||
-	    ! lua_isstring(ls, -1))
-	{
-		lua_pushstring(ls, "Invalid argument passed to create_lua_parser()");
-		lua_error(ls);
-	}
-
-	falco_rules *rules = (falco_rules *) lua_topointer(ls, -2);
-	std::string source = lua_tostring(ls, -1);
-
-	std::string errstr;
-	lua_parser *lp = rules->create_lua_parser(source, errstr);
-
-	if(lp == NULL) {
-		lua_pushstring(ls, errstr.c_str());
-		lua_error(ls);
-	}
-
-	lua_pushlightuserdata(ls, lp);
-	return 1;
-}
-
-lua_parser *falco_rules::create_lua_parser(std::string &source, std::string &errstr)
+std::shared_ptr<gen_event_filter_factory> falco_rules::get_filter_factory(const std::string &source)
 {
 	auto it = m_filter_factories.find(source);
-
 	if(it == m_filter_factories.end())
 	{
-		errstr = string("Unknown event source ") + source;
-		return NULL;
+		throw falco_exception(string("unknown event source: ") + source);
 	}
-
-	lua_parser *lp = new lua_parser(it->second);
-
-	return lp;
+	return it->second;
 }
 
 int falco_rules::add_filter(lua_State *ls)
@@ -129,7 +98,7 @@ int falco_rules::add_filter(lua_State *ls)
 	}
 
 	falco_rules *rules = (falco_rules *) lua_topointer(ls, -5);
-	lua_parser *lp = (lua_parser *) lua_topointer(ls, -4);
+	gen_event_filter *filter = (gen_event_filter*) lua_topointer(ls, -4);
 	std::string rule = lua_tostring(ls, -3);
 	std::string source = lua_tostring(ls, -2);
 
@@ -149,12 +118,13 @@ int falco_rules::add_filter(lua_State *ls)
 	size_t num_evttypes = 1; // assume plugin
 	if(source == "syscall" || source == "k8s_audit")
 	{
-		num_evttypes = lp->filter()->evttypes().size();
+		num_evttypes = filter->evttypes().size();
 	}
 
 	try
 	{
-		rules->add_filter(lp->filter(), rule, source, tags);
+		std::shared_ptr<gen_event_filter> filter_ptr(filter);
+		rules->add_filter(filter_ptr, rule, source, tags);
 	}
 	catch (exception &e)
 	{
@@ -162,8 +132,6 @@ int falco_rules::add_filter(lua_State *ls)
 		lua_pushstring(ls, errstr.c_str());
 		lua_error(ls);
 	}
-
-	delete lp;
 
 	lua_pushnumber(ls, num_evttypes);
 	return 1;
