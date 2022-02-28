@@ -47,7 +47,6 @@ set(
   libyaml
   b64
   luajit
-  lpeg
   lyaml
   cxxopts
 )

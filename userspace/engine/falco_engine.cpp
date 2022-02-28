@@ -49,7 +49,6 @@ falco_engine::falco_engine(bool seed_rng)
 	  m_sampling_ratio(1), m_sampling_multiplier(0),
 	  m_replace_container_info(false)
 {
-	luaopen_lpeg(m_ls);
 	luaopen_yaml(m_ls);
 
 	falco_common::init();
