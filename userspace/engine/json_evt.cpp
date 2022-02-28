@@ -1418,7 +1418,7 @@ json_event_filter_check *k8s_audit_filter_check::allocate_new()
 	return (json_event_filter_check *)chk;
 }
 
-json_event_filter::json_event_filter()
+json_event_filter::json_event_filter(): sinsp_filter(NULL)
 {
 }
 

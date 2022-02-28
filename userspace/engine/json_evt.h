@@ -27,7 +27,7 @@ limitations under the License.
 #include <nlohmann/json.hpp>
 
 #include "prefix_search.h"
-#include "gen_filter.h"
+#include <sinsp.h>
 
 class json_event : public gen_event
 {
@@ -383,7 +383,8 @@ public:
 					   json_event_filter_check &jchk);
 };
 
-class json_event_filter : public gen_event_filter
+
+class json_event_filter : public sinsp_filter
 {
 public:
 	json_event_filter();
