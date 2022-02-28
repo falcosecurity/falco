@@ -19,7 +19,9 @@ set(FALCO_ENGINE_SOURCE_FILES
     falco_utils.cpp
     json_evt.cpp
     ruleset.cpp
-    formats.cpp)
+    formats.cpp
+    filter_macro_resolver.cpp
+    lua_filter_helper.cpp)
 
 add_library(falco_engine STATIC ${FALCO_ENGINE_SOURCE_FILES})
 add_dependencies(falco_engine njson lyaml string-view-lite)

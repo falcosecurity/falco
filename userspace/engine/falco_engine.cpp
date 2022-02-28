@@ -28,8 +28,8 @@ limitations under the License.
 
 #include "formats.h"
 
+#include "lua_filter_helper.h"
 extern "C" {
-#include "lpeg.h"
 #include "lyaml.h"
 }
 
@@ -53,6 +53,7 @@ falco_engine::falco_engine(bool seed_rng)
 
 	falco_common::init();
 	falco_rules::init(m_ls);
+	lua_filter_helper::init(m_ls);
 
 	m_required_plugin_versions.clear();
 
