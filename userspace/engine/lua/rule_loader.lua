@@ -20,42 +20,149 @@
 
 --]]
 
-local compiler = require "compiler"
 local yaml = require"lyaml"
 
+--http://lua-users.org/wiki/StringTrim
+function trim(s)
+   if (type(s) ~= "string") then
+      return s
+   end
+   return (s:gsub("^%s*(.-)%s*$", "%1"))
+end
+
+
+function expand_list(source, list_defs)
+   for name, def in pairs(list_defs) do
+      local bpos = string.find(source, name, 1, true)
+      while bpos ~= nil do
+	      def.used = true
+	      local epos = bpos + string.len(name)
+
+         -- The characters surrounding the name must be delimiters of beginning/end of string
+         if (bpos == 1 or string.match(string.sub(source, bpos-1, bpos-1), "[%s(),=]"))
+               and (epos > string.len(source) or string.match(string.sub(source, epos, epos), "[%s(),=]")) then
+            -- Shift pointers to consume all whitespaces
+            while (bpos > 1 and string.match(string.sub(source, bpos-1, bpos-1), "[%s]")) do
+               bpos = bpos - 1
+            end
+            while (epos < string.len(source) and string.match(string.sub(source, epos, epos), "[%s]")) do
+               epos = epos + 1
+            end
+
+            -- Create substitution string by concatenating all values
+            local sub = table.concat(def.items, ", ")
+
+            -- If substituted list is empty, we need to remove a comma from the left or the right
+            if string.len(sub) == 0 then
+               if (bpos > 1 and string.sub(source, bpos-1, bpos-1) == ",") then
+                  bpos = bpos - 1
+               elseif (epos < string.len(source) and string.sub(source, epos, epos) == ",") then
+                  epos = epos + 1
+               end
+               -- If no comma is removed, this means that the list is only surrounded by parenthesis
+               -- or other characters
+            end
+
+            -- Compose new string with substitution
+            local new_source = ""
+            if bpos > 1 then
+               new_source = new_source..string.sub(source, 1, bpos-1).." "
+            end
+            new_source = new_source..sub.." "
+            if epos <= string.len(source) then
+               new_source = new_source..string.sub(source, epos, string.len(source))
+            end
+            
+            -- Iterate to the next match
+            source = new_source
+            bpos = bpos + (string.len(sub)-string.len(name))
+         end
+	      bpos = string.find(source, name, bpos+1, true)
+      end
+   end
+   return source
+end
+
+function parse_macro(line, macro_defs, list_defs)
+   -- Substitute list in macro filter string
+   line = expand_list(line, list_defs)
+
+   -- Parse the macro to an AST
+   local ok, filter_or_error = filter_helper.parse_filter(line)
+   if (ok == false) then
+      local err = filter_or_error
+      local msg = "Compilation error when compiling \""..line.."\": ".. err
+      return false, msg
+   end
+   local filter = filter_or_error
+
+   -- Validate the macro
+   local filter_copy = filter_helper.clone_ast(filter)
+   local expand_macros = true
+   while (expand_macros) do
+      expand_macros = false
+      for m_name, macro in pairs(macro_defs) do
+         local expanded, new_filter_copy = filter_helper.expand_macro(
+               filter_copy, m_name, macro.ast)
+         if (expanded) then
+            expand_macros = true
+            macro.used = true
+         end
+         filter_copy = new_filter_copy
+      end
+   end
+   local has_unknown_macro, unknown_macro = filter_helper.find_unknown_macro(filter_copy)
+   filter_helper.delete_ast(filter_copy)
+   if (has_unknown_macro) then
+      filter_helper.delete_ast(filter)
+      local msg = "Compilation error when compiling \""..line.."\": Undefined macro '"..unknown_macro.."' used in filter."
+      return false, msg
+   end
+
+   return true, filter
+end
 
 --[[
-   Traverse AST, adding the passed-in 'index' to each node that contains a relational expression
+   Parses a single filter, then expands macros using passed-in table of definitions. Returns resulting AST.
 --]]
-local function mark_relational_nodes(ast, index)
-   local t = ast.type
+function parse_rule(name, source, macro_defs, list_defs)
+   -- Substitute list in rule filter string
+   -- todo(jasondellaluce): we are supposed to do better than text-substitution, this is what
+   -- breaks escaping in lists and exceptions of Falco rulesets
+   source = expand_list(source, list_defs)
 
-   if t == "BinaryBoolOp" then
-      mark_relational_nodes(ast.left, index)
-      mark_relational_nodes(ast.right, index)
-
-   elseif t == "UnaryBoolOp" then
-      mark_relational_nodes(ast.argument, index)
-
-   elseif t == "BinaryRelOp" then
-      ast.index = index
-
-   elseif t == "UnaryRelOp"  then
-      ast.index = index
-
-   else
-      error ("Unexpected type in mark_relational_nodes: "..t)
+   -- Parse the rule filter to an AST
+   local ok, filter_or_err = filter_helper.parse_filter(source)
+   if (ok == false) then
+      local err = filter_or_err
+      local msg = "Compilation error when compiling \""..source.."\": ".. err
+      return false, msg
    end
-end
+   local filter = filter_or_err
 
-function map(f, arr)
-   local res = {}
-   for i,v in ipairs(arr) do
-      res[i] = f(v)
+   -- Expand all macros
+   local expand_macros = true
+   while (expand_macros) do
+      expand_macros = false
+      for m_name, macro in pairs(macro_defs) do
+         local expanded, new_filter = filter_helper.expand_macro(
+               filter, m_name, macro.ast)
+         if (expanded) then
+            expand_macros = true
+            macro.used = true
+         end
+         filter = new_filter
+      end
    end
-   return res
-end
+   local has_unknown_macro, unknown_macro = filter_helper.find_unknown_macro(filter)
+   if (has_unknown_macro) then
+      filter_helper.delete_ast(filter)
+      local msg = "Undefined macro '"..unknown_macro.."' used in filter."
+      return false, msg
+   end
 
+   return true, filter
+end
 
 -- Permissive for case and for common abbreviations.
 priorities = {
@@ -64,98 +171,6 @@ priorities = {
    EMERGENCY=0, ALERT=1, CRITICAL=2, ERROR=3, WARNING=4, NOTICE=5, INFORMATIONAL=6, DEBUG=7,
    INFO=6, info=6
 }
-
---[[
-   Take a filter AST and set it up in the libsinsp runtime, using the filter API.
---]]
-local function create_filter_obj(node, lua_parser, parent_bool_op)
-   local t = node.type
-
-   if t == "BinaryBoolOp" then
-
-      -- "nesting" (the runtime equivalent of placing parens in syntax) is
-      -- never necessary when we have identical successive operators. so we
-      -- avoid it as a runtime performance optimization.
-      if (not(node.operator == parent_bool_op)) then
-	 err = filter.nest(lua_parser) -- io.write("(")
-	 if err ~= nil then
-	    return err
-	 end
-      end
-
-      err = create_filter_obj(node.left, lua_parser, node.operator)
-      if err ~= nil then
-	 return err
-      end
-
-      err = filter.bool_op(lua_parser, node.operator) -- io.write(" "..node.operator.." ")
-      if err ~= nil then
-	 return err
-      end
-
-      err = create_filter_obj(node.right, lua_parser, node.operator)
-      if err ~= nil then
-	 return err
-      end
-
-      if (not (node.operator == parent_bool_op)) then
-	 err = filter.unnest(lua_parser) -- io.write(")")
-	 if err ~= nil then
-	    return err
-	 end
-      end
-
-   elseif t == "UnaryBoolOp" then
-      err = filter.nest(lua_parser) --io.write("(")
-      if err ~= nil then
-	 return err
-      end
-
-      err = filter.bool_op(lua_parser, node.operator) -- io.write(" "..node.operator.." ")
-      if err ~= nil then
-	 return err
-      end
-
-      err = create_filter_obj(node.argument, lua_parser)
-      if err ~= nil then
-	 return err
-      end
-
-      err = filter.unnest(lua_parser) -- io.write(")")
-      if err ~= nil then
-	 return err
-      end
-
-   elseif t == "BinaryRelOp" then
-      if (node.operator == "in" or
-          node.operator == "intersects" or
-	  node.operator == "pmatch") then
-	 elements = map(function (el) return el.value end, node.right.elements)
-	 err = filter.rel_expr(lua_parser, node.left.value, node.operator, elements, node.index)
-	 if err ~= nil then
-	    return err
-	 end
-      else
-	 err = filter.rel_expr(lua_parser, node.left.value, node.operator, node.right.value, node.index)
-	 if err ~= nil then
-	    return err
-	 end
-      end
-      -- io.write(node.left.value.." "..node.operator.." "..node.right.value)
-
-   elseif t == "UnaryRelOp"  then
-      err = filter.rel_expr(lua_parser, node.argument.value, node.operator, node.index)
-      if err ~= nil then
-	 return err
-      end
-      --io.write(node.argument.value.." "..node.operator)
-
-   else
-      return "Unexpected type in create_filter_obj: "..t
-   end
-
-   return nil
-end
 
 -- This should be keep in sync with parser.lua
 defined_comp_operators = {
@@ -737,7 +752,7 @@ function load_rules_doc(rules_mgr, doc, load_state)
 
 	       -- The output field might be a folded-style, which adds a
 	       -- newline to the end. Remove any trailing newlines.
-	       v['output'] = compiler.trim(v['output'])
+	       v['output'] = trim(v['output'])
 
 	       state.rules_by_name[v['rule']] = v
 	    else
@@ -967,13 +982,13 @@ function load_rules(rules_content,
 
       local v = state.macros_by_name[name]
 
-      local status, ast = compiler.compile_macro(v['condition'], state.macros, state.lists)
+      local status, ast = parse_macro(v['condition'], state.macros, state.lists)
 
       if status == false then
 	 return false, nil, nil, build_error_with_context(v['context'], ast), warnings
       end
 
-      state.macros[v['macro']] = {["ast"] = ast.filter.value, ["used"] = false}
+      state.macros[v['macro']] = {["ast"] = ast, ["used"] = false}
    end
 
    for _, name in ipairs(state.ordered_rule_names) do
@@ -1017,14 +1032,12 @@ function load_rules(rules_content,
 	 warn_evttypes = v['warn_evttypes']
       end
 
-      local status, filter_ast = compiler.compile_filter(v['rule'], v['compile_condition'],
+      local status, filter = parse_rule(v['rule'], v['compile_condition'],
 							 state.macros, state.lists)
 
       if status == false then
-	 return false, nil, nil, build_error_with_context(v['context'], filter_ast), warnings
+	 return false, nil, nil, build_error_with_context(v['context'], filter), warnings
       end
-
-      if (filter_ast.type == "Rule") then
 
 	 state.n_rules = state.n_rules + 1
 
@@ -1035,33 +1048,32 @@ function load_rules(rules_content,
 	 -- This index will eventually be stamped in events passing this rule, and
 	 -- we'll use it later to determine which output to display when we get an
 	 -- event.
-	 mark_relational_nodes(filter_ast.filter.value, state.n_rules)
 
 	 if (v['tags'] == nil) then
 	    v['tags'] = {}
 	 end
 
-	 lua_parser = falco_rules.create_lua_parser(rules_mgr, v['source'])
-	 local err = create_filter_obj(filter_ast.filter.value, lua_parser)
-	 if err ~= nil then
-
-	    -- If a rule has a property skip-if-unknown-filter: true,
-	    -- and the error is about an undefined field, print a
-	    -- message but continue.
+	 local ok, compiled_filter_or_err = filter_helper.compile_filter(rules_mgr, filter, v['source'], state.n_rules)
+    filter_helper.delete_ast(filter)
+	 if (ok == false) then
+      local err = compiled_filter_or_err
+	   --  If a rule has a property skip-if-unknown-filter: true,
+	   --  and the error is about an undefined field, print a
+	   --  message but continue.
 	    if v['skip-if-unknown-filter'] == true and string.find(err, "filter_check called with nonexistent field") ~= nil then
-	       msg = "Rule "..v['rule']..": warning (unknown-field):"
+	       local msg = "Rule "..v['rule']..": warning (unknown-field):"
 	       warnings[#warnings + 1] = msg
 	    else
-	       msg = "Rule "..v['rule']..": error "..err
+	       local msg = "Rule "..v['rule']..": error "..err
 	       return false, nil, nil, build_error_with_context(v['context'], msg), warnings
 	    end
-
 	 else
-	    num_evttypes = falco_rules.add_filter(rules_mgr, lua_parser, v['rule'], v['source'], v['tags'])
+       local compiled_filter = compiled_filter_or_err
+	    local num_evttypes = falco_rules.add_filter(rules_mgr, compiled_filter, v['rule'], v['source'], v['tags'])
 	    if v['source'] == "syscall" and (num_evttypes == 0 or num_evttypes > 100) then
 	       if warn_evttypes == true then
-		  msg = "Rule "..v['rule']..": warning (no-evttype):\n".."         matches too many evt.type values.\n".."         This has a significant performance penalty."
-		  warnings[#warnings + 1] = msg
+            local msg = "Rule "..v['rule']..": warning (no-evttype):\n".."         matches too many evt.type values.\n".."         This has a significant performance penalty."
+            warnings[#warnings + 1] = msg
 	       end
 	    end
 	 end
@@ -1110,9 +1122,6 @@ function load_rules(rules_content,
 	 if err ~= nil then
 	    return false, nil, nil, build_error_with_context(v['context'], err), warnings
 	 end
-      else
-	 return false, nil, nil, build_error_with_context(v['context'], "Unexpected type in load_rule: "..filter_ast.type), warnings
-      end
 
       ::next_rule::
    end
