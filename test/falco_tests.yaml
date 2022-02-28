@@ -426,7 +426,7 @@ trace_files: !mux
     stdout_contains: |+
       .*invalid_base_macro.yaml: Ok
       .*invalid_append_macro.yaml: 1 errors:
-      Compilation error when compiling "evt.type=execve foo": 17: syntax error, unexpected 'foo', expecting 'or', 'and'
+      Compilation error when compiling "evt.type=execve foo": 17: unexpected token after 'execve', expecting 'or', 'and'
       ---
       - macro: some macro
         condition: evt.type=execve
@@ -458,7 +458,7 @@ trace_files: !mux
     exit_status: 1
     stdout_is: |+
       1 errors:
-      Compilation error when compiling "evt.type=execve foo": 17: syntax error, unexpected 'foo', expecting 'or', 'and'
+      Compilation error when compiling "evt.type=execve foo": 17: unexpected token after 'execve', expecting 'or', 'and'
       ---
       - macro: some macro
         condition: evt.type=execve
@@ -495,7 +495,7 @@ trace_files: !mux
     stdout_contains: |+
       .*invalid_base_rule.yaml: Ok
       .*invalid_append_rule.yaml: 1 errors:
-      Compilation error when compiling "evt.type=open bar": 15: syntax error, unexpected 'bar', expecting 'or', 'and'
+      Compilation error when compiling "evt.type=open bar": 15: unexpected token after 'open', expecting 'or', 'and'
       ---
       - rule: some rule
         desc: some desc
@@ -535,7 +535,7 @@ trace_files: !mux
   invalid_append_rule_multiple_docs:
     exit_status: 1
     stdout_contains: |+
-      Compilation error when compiling "evt.type=open bar": 15: syntax error, unexpected 'bar', expecting 'or', 'and'
+      Compilation error when compiling "evt.type=open bar": 15: unexpected token after 'open', expecting 'or', 'and'
       ---
       - rule: some rule
         desc: some desc
