@@ -61,12 +61,6 @@ for file in *.lua */*.lua; do
 done
 popd
 
-pushd ${LUA_FILE_DIR}/modules
-for file in *.lua; do
-    add_lua_file $file "true"
-done
-popd
-
 # Any .lua files in this directory are treated as code with functions
 # to execute.
 pushd ${LUA_FILE_DIR}
