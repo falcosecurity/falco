@@ -22,31 +22,29 @@ limitations under the License.
 namespace falco {
 namespace app {
 
-// Current set of actions:
-// One-offs:
+// Init-style actions, in dependency order:
 //  - parse command line options
-//  - display help
-//  - print version info
-//  - print ignored events
-//  - list plugins
-//  - list all fields/list source fields
-//  - print support
-//  - describe rule(s)
-
-// "main" actions:
-//  - setup signal handlers
-//  - create/configure inspector
-//  - load plugins
-//  - create/configure falco engine
-//  - validate rules files
-//  - read config
-//  - load rules files
+//     - DONE display help
+//     - DONE print version info
+//     - DONE setup signal handlers
+//     - load config
+//       - initialize outputs
+//       - start grpc server
+//       - start webserver
+//     - create/configure inspector
+//        - print ignored events
+//        - load plugins (also depends on load config)
+//          - list plugins
+//          - create/configure falco engine
+//            - validate rules files
+//            - list all fields/list source fields
+//            - load rules files
+//               - describe rule(s)
+//               - print support
+//
+// Run-style actions, in dependency order
 //  - daemonize
-//  - initialize outputs
-//  - start grpc server
-//  - set up signal handlers
-//  - start webserver
-//  - read events from source (trace or live), pass to falco engine
+//     - read events from source (trace or live), pass to falco engine
 
 // This class represents an "action" e.g. a chunk of code to execute
 // as a part of running the falco application. Examples of actions are:
