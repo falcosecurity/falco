@@ -29,7 +29,6 @@ public:
 	static void init(lua_State *ls);
 	static int compile_filter(lua_State *ls);
 	static int parse_filter(lua_State *ls);
-	static int expand_list(lua_State *ls);
 	static int expand_macro(lua_State *ls);
 	static int find_unknown_macro(lua_State *ls);
 	static int clone_ast(lua_State *ls);

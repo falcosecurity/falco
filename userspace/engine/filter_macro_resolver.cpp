@@ -34,7 +34,7 @@ bool filter_macro_resolver::run(libsinsp::filter::ast::expr*& filter)
 	return !m_resolved_macros.empty();
 }
 
-void filter_macro_resolver::define_macro(
+void filter_macro_resolver::set_macro(
 		string name,
 		shared_ptr<libsinsp::filter::ast::expr> macro)
 {
@@ -122,8 +122,8 @@ void filter_macro_resolver::visit(ast::value_expr* e)
 	auto macro = m_macros.find(e->value);
 	if (macro != m_macros.end())
 	{
-		// todo(jasondellaluce): should we visit down the new resolved AST too?
-		m_last_node = ast::clone((*macro).second.get());
+		ast::expr* new_node = ast::clone(macro->second.get());
+		new_node->accept(this); // this sets m_last_node
 		m_last_node_changed = true;
 		m_resolved_macros.insert(e->value);
 	}
