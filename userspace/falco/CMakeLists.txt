@@ -19,6 +19,10 @@ set(
   app_cmdline_options.cpp
   app_action.cpp
   app_runnable_action.cpp
+  app_actions/print_help.cpp
+  app_actions/print_version.cpp
+  app_actions/create_signal_handlers.cpp
+  app_actions/load_config.cpp
   app_action_manager.cpp
   configuration.cpp
   logger.cpp
@@ -134,6 +138,7 @@ target_include_directories(
   falco
   PUBLIC
   ${FALCO_INCLUDE_DIRECTORIES}
+  ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 if(NOT MINIMAL_BUILD)
