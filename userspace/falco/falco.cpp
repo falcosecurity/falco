@@ -24,7 +24,6 @@ limitations under the License.
 #include <string>
 #include <chrono>
 #include <functional>
-#include <signal.h>
 #include <fcntl.h>
 #include <sys/utsname.h>
 #include <sys/stat.h>
@@ -43,7 +42,6 @@ limitations under the License.
 #include "falco_utils.h"
 
 #include "event_drops.h"
-#include "configuration.h"
 #include "falco_engine.h"
 #include "falco_engine_version.h"
 #include "config_falco.h"
@@ -56,31 +54,9 @@ limitations under the License.
 
 typedef function<void(sinsp* inspector)> open_t;
 
-bool g_terminate = false;
-bool g_reopen_outputs = false;
-bool g_restart = false;
 bool g_daemonized = false;
-
 static std::string syscall_source = "syscall";
 static std::string k8s_audit_source = "k8s_audit";
-
-//
-// Helper functions
-//
-static void signal_callback(int signal)
-{
-	g_terminate = true;
-}
-
-static void reopen_outputs(int signal)
-{
-	g_reopen_outputs = true;
-}
-
-static void restart_falco(int signal)
-{
-	g_restart = true;
-}
 
 static void display_fatal_err(const string &msg)
 {
@@ -186,18 +162,18 @@ uint64_t do_inspect(falco_engine *engine,
 
 		writer.handle();
 
-		if(g_reopen_outputs)
+		if(falco::app::application::get().state().reopen_outputs)
 		{
 			outputs->reopen_outputs();
-			g_reopen_outputs = false;
+			falco::app::application::get().state().reopen_outputs = false;
 		}
 
-		if(g_terminate)
+		if(falco::app::application::get().state().terminate)
 		{
 			falco_logger::log(LOG_INFO, "SIGINT received, exiting...\n");
 			break;
 		}
-		else if (g_restart)
+		else if (falco::app::application::get().state().restart)
 		{
 			falco_logger::log(LOG_INFO, "SIGHUP received, restarting...\n");
 			break;
@@ -418,10 +394,8 @@ static void configure_output_format(falco::app::application &app, falco_engine *
 //
 // ARGUMENT PARSING AND PROGRAM SETUP
 //
-int falco_init(int argc, char **argv)
+int falco_init(falco::app::application &app, int argc, char **argv)
 {
-	falco::app::application app;
-
 	int result = EXIT_SUCCESS;
 	sinsp* inspector = NULL;
 	falco_engine *engine = NULL;
@@ -458,22 +432,11 @@ int falco_init(int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
+	app.run();
+
 	try
 	{
 		string all_rules;
-
-		if(app.options().help)
-		{
-			printf("%s", app.options().usage().c_str());
-			return EXIT_SUCCESS;
-		}
-
-		if(app.options().print_version_info)
-		{
-			printf("Falco version: %s\n", FALCO_VERSION);
-			printf("Driver version: %s\n", DRIVER_VERSION);
-			return EXIT_SUCCESS;
-		}
 
 		inspector = new sinsp();
 		inspector->set_buffer_format(app.options().event_buffer_format);
@@ -556,27 +519,6 @@ int falco_init(int argc, char **argv)
 			goto exit;
 		}
 
-		falco_configuration config;
-
-		if (app.options().conf_filename.size())
-		{
-			config.init(app.options().conf_filename, app.options().cmdline_config_options);
-			falco_logger::set_time_format_iso_8601(config.m_time_format_iso_8601);
-
-			// log after config init because config determines where logs go
-			falco_logger::log(LOG_INFO, "Falco version " + std::string(FALCO_VERSION) + " (driver version " + std::string(DRIVER_VERSION) + ")\n");
-			falco_logger::log(LOG_INFO, "Falco initialized with configuration file " + app.options().conf_filename + "\n");
-		}
-		else
-		{
-#ifndef BUILD_TYPE_RELEASE
-			errstr = std::string("You must create a config file at ")  + FALCO_SOURCE_CONF_FILE + ", " + FALCO_INSTALL_CONF_FILE + " or by passing -c";
-#else
-			errstr = std::string("You must create a config file at ")  + FALCO_INSTALL_CONF_FILE + " or by passing -c";
-#endif
-			throw std::runtime_error(errstr);
-		}
-
 		// The event source is syscall by default. If an input
 		// plugin was found, the source is the source of that
 		// plugin.
@@ -596,7 +538,7 @@ int falco_init(int argc, char **argv)
 
 		std::shared_ptr<sinsp_plugin> input_plugin;
 		std::list<std::shared_ptr<sinsp_plugin>> extractor_plugins;
-		for(auto &p : config.m_plugins)
+		for(auto &p : app.state().config.m_plugins)
 		{
 			std::shared_ptr<sinsp_plugin> plugin;
 #ifdef MUSL_OPTIMIZED
@@ -664,7 +606,7 @@ int falco_init(int argc, char **argv)
 			}
 		}
 
-		if(config.m_json_output)
+		if(app.state().config.m_json_output)
 		{
 			syscall_formatter_factory->set_output_format(gen_event_formatter::OF_JSON);
 			k8s_audit_formatter_factory->set_output_format(gen_event_formatter::OF_JSON);
@@ -708,25 +650,25 @@ int falco_init(int argc, char **argv)
 
 		if (app.options().rules_filenames.size())
 		{
-			config.m_rules_filenames = app.options().rules_filenames;
+			app.state().config.m_rules_filenames = app.options().rules_filenames;
 		}
 
-		engine->set_min_priority(config.m_min_priority);
+		engine->set_min_priority(app.state().config.m_min_priority);
 
-		config.m_buffered_outputs = !app.options().unbuffered_outputs;
+		app.state().config.m_buffered_outputs = !app.options().unbuffered_outputs;
 
-		if(config.m_rules_filenames.size() == 0)
+		if(app.state().config.m_rules_filenames.size() == 0)
 		{
 			throw std::invalid_argument("You must specify at least one rules file/directory via -r or a rules_file entry in falco.yaml");
 		}
 
 		falco_logger::log(LOG_DEBUG, "Configured rules filenames:\n");
-		for (auto filename : config.m_rules_filenames)
+		for (auto filename : app.state().config.m_rules_filenames)
 		{
 			falco_logger::log(LOG_DEBUG, string("   ") + filename + "\n");
 		}
 
-		for (auto filename : config.m_rules_filenames)
+		for (auto filename : app.state().config.m_rules_filenames)
 		{
 			falco_logger::log(LOG_INFO, "Loading rules from file " + filename + ":\n");
 			uint64_t required_engine_version;
@@ -812,7 +754,7 @@ int falco_init(int argc, char **argv)
 			support["engine_info"]["engine_version"] = FALCO_ENGINE_VERSION;
 			support["config"] = read_file(app.options().conf_filename);
 			support["rules_files"] = nlohmann::json::array();
-			for(auto filename : config.m_rules_filenames)
+			for(auto filename : app.state().config.m_rules_filenames)
 			{
 				nlohmann::json finfo;
 				finfo["name"] = filename;
@@ -870,34 +812,6 @@ int falco_init(int argc, char **argv)
 		}
 
 		inspector->set_hostname_and_port_resolution_mode(false);
-
-		if(signal(SIGINT, signal_callback) == SIG_ERR)
-		{
-			fprintf(stderr, "An error occurred while setting SIGINT signal handler.\n");
-			result = EXIT_FAILURE;
-			goto exit;
-		}
-
-		if(signal(SIGTERM, signal_callback) == SIG_ERR)
-		{
-			fprintf(stderr, "An error occurred while setting SIGTERM signal handler.\n");
-			result = EXIT_FAILURE;
-			goto exit;
-		}
-
-		if(signal(SIGUSR1, reopen_outputs) == SIG_ERR)
-		{
-			fprintf(stderr, "An error occurred while setting SIGUSR1 signal handler.\n");
-			result = EXIT_FAILURE;
-			goto exit;
-		}
-
-		if(signal(SIGHUP, restart_falco) == SIG_ERR)
-		{
-			fprintf(stderr, "An error occurred while setting SIGHUP signal handler.\n");
-			result = EXIT_FAILURE;
-			goto exit;
-		}
 
 		// If daemonizing, do it here so any init errors will
 		// be returned in the foreground process.
@@ -959,16 +873,16 @@ int falco_init(int argc, char **argv)
 		outputs = new falco_outputs();
 
 		outputs->init(engine,
-			      config.m_json_output,
-			      config.m_json_include_output_property,
-			      config.m_json_include_tags_property,
-			      config.m_output_timeout,
-			      config.m_notifications_rate, config.m_notifications_max_burst,
-			      config.m_buffered_outputs,
-			      config.m_time_format_iso_8601,
+			      app.state().config.m_json_output,
+			      app.state().config.m_json_include_output_property,
+			      app.state().config.m_json_include_tags_property,
+			      app.state().config.m_output_timeout,
+			      app.state().config.m_notifications_rate, app.state().config.m_notifications_max_burst,
+			      app.state().config.m_buffered_outputs,
+			      app.state().config.m_time_format_iso_8601,
 			      hostname);
 
-		for(auto output : config.m_outputs)
+		for(auto output : app.state().config.m_outputs)
 		{
 			outputs->add_output(output);
 		}
@@ -1136,32 +1050,32 @@ int falco_init(int argc, char **argv)
 			inspector->init_mesos_client(&mesos_api_copy, app.options().verbose);
 		}
 
-		falco_logger::log(LOG_DEBUG, "Setting metadata download max size to " + to_string(config.m_metadata_download_max_mb) + " MB\n");
-		falco_logger::log(LOG_DEBUG, "Setting metadata download chunk wait time to " + to_string(config.m_metadata_download_chunk_wait_us) + " μs\n");
-		falco_logger::log(LOG_DEBUG, "Setting metadata download watch frequency to " + to_string(config.m_metadata_download_watch_freq_sec) + " seconds\n");
-		inspector->set_metadata_download_params(config.m_metadata_download_max_mb * 1024 * 1024, config.m_metadata_download_chunk_wait_us, config.m_metadata_download_watch_freq_sec);
+		falco_logger::log(LOG_DEBUG, "Setting metadata download max size to " + to_string(app.state().config.m_metadata_download_max_mb) + " MB\n");
+		falco_logger::log(LOG_DEBUG, "Setting metadata download chunk wait time to " + to_string(app.state().config.m_metadata_download_chunk_wait_us) + " μs\n");
+		falco_logger::log(LOG_DEBUG, "Setting metadata download watch frequency to " + to_string(app.state().config.m_metadata_download_watch_freq_sec) + " seconds\n");
+		inspector->set_metadata_download_params(app.state().config.m_metadata_download_max_mb * 1024 * 1024, app.state().config.m_metadata_download_chunk_wait_us, app.state().config.m_metadata_download_watch_freq_sec);
 
-		if(app.options().trace_filename.empty() && config.m_webserver_enabled && enabled_sources.find(k8s_audit_source) != enabled_sources.end())
+		if(app.options().trace_filename.empty() && app.state().config.m_webserver_enabled && enabled_sources.find(k8s_audit_source) != enabled_sources.end())
 		{
-			std::string ssl_option = (config.m_webserver_ssl_enabled ? " (SSL)" : "");
-			falco_logger::log(LOG_INFO, "Starting internal webserver, listening on port " + to_string(config.m_webserver_listen_port) + ssl_option + "\n");
-			webserver.init(&config, engine, outputs);
+			std::string ssl_option = (app.state().config.m_webserver_ssl_enabled ? " (SSL)" : "");
+			falco_logger::log(LOG_INFO, "Starting internal webserver, listening on port " + to_string(app.state().config.m_webserver_listen_port) + ssl_option + "\n");
+			webserver.init(&app.state().config, engine, outputs);
 			webserver.start();
 		}
 
 		// gRPC server
-		if(config.m_grpc_enabled)
+		if(app.state().config.m_grpc_enabled)
 		{
-			falco_logger::log(LOG_INFO, "gRPC server threadiness equals to " + to_string(config.m_grpc_threadiness) + "\n");
+			falco_logger::log(LOG_INFO, "gRPC server threadiness equals to " + to_string(app.state().config.m_grpc_threadiness) + "\n");
 			// TODO(fntlnz,leodido): when we want to spawn multiple threads we need to have a queue per thread, or implement
 			// different queuing mechanisms, round robin, fanout? What we want to achieve?
 			grpc_server.init(
-				config.m_grpc_bind_address,
-				config.m_grpc_threadiness,
-				config.m_grpc_private_key,
-				config.m_grpc_cert_chain,
-				config.m_grpc_root_certs,
-				config.m_log_level
+				app.state().config.m_grpc_bind_address,
+				app.state().config.m_grpc_threadiness,
+				app.state().config.m_grpc_private_key,
+				app.state().config.m_grpc_cert_chain,
+				app.state().config.m_grpc_root_certs,
+				app.state().config.m_log_level
 			);
 			grpc_server_thread = std::thread([&grpc_server] {
 				grpc_server.run();
@@ -1185,7 +1099,7 @@ int falco_init(int argc, char **argv)
 					      outputs,
 					      inspector,
 					      event_source,
-					      config,
+					      app.state().config,
 					      sdropmgr,
 					      uint64_t(app.options().duration_to_tot*ONE_SECOND_IN_NS),
 					      app.options().stats_filename,
@@ -1262,13 +1176,13 @@ exit:
 int main(int argc, char **argv)
 {
 	int rc;
+	falco::app::application &app = falco::app::application::get();
 
-	// g_restart will cause the falco loop to exit, but we
+	// m_restart will cause the falco loop to exit, but we
 	// should reload everything and start over.
-	while((rc = falco_init(argc, argv)) == EXIT_SUCCESS && g_restart)
+	while((rc = falco_init(app, argc, argv)) == EXIT_SUCCESS && app.state().restart)
 	{
-		g_restart = false;
-		optind = 1;
+		app.state().restart = false;
 	}
 
 	return rc;
