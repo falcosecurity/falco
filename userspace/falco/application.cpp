@@ -22,10 +22,22 @@ limitations under the License.
 // inspector, falco engine, etc.
 
 #include "application.h"
+#include "defined_app_actions.h"
 #include "falco_common.h"
 
 namespace falco {
 namespace app {
+
+application::action_state::action_state()
+	: restart(false),
+	  terminate(false),
+	  reopen_outputs(false)
+{
+}
+
+application::action_state::~action_state()
+{
+}
 
 application::application()
 	: m_initialized(false)
@@ -34,6 +46,12 @@ application::application()
 
 application::~application()
 {
+}
+
+application &application::get()
+{
+	static application instance;
+	return instance;
 }
 
 cmdline_options &application::options()
@@ -46,6 +64,11 @@ cmdline_options &application::options()
 	return m_cmdline_options;
 }
 
+application::action_state &application::state()
+{
+	return m_state;
+}
+
 bool application::init(int argc, char **argv, std::string &errstr)
 {
 	if(!m_cmdline_options.parse(argc, argv, errstr))
@@ -53,8 +76,18 @@ bool application::init(int argc, char **argv, std::string &errstr)
 		return false;
 	}
 
+	m_action_manager.add(std::shared_ptr<runnable_action>(new act_print_help(*this)));
+	m_action_manager.add(std::shared_ptr<runnable_action>(new act_print_version(*this)));
+	m_action_manager.add(std::shared_ptr<runnable_action>(new act_create_signal_handlers(*this)));
+	m_action_manager.add(std::shared_ptr<runnable_action>(new act_load_config(*this)));
+
 	m_initialized = true;
 	return true;
+}
+
+void application::run()
+{
+	m_action_manager.run();
 }
 
 }; // namespace app

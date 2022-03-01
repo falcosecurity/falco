@@ -27,7 +27,10 @@ limitations under the License.
 // For now, it is only responsible for command line options.
 #pragma once
 
+#include "configuration.h"
+
 #include "app_cmdline_options.h"
+#include "app_action_manager.h"
 
 #include <string>
 
@@ -36,15 +39,34 @@ namespace app {
 
 class application {
 public:
+	class action_state {
+	public:
+		action_state();
+		virtual ~action_state();
+
+		bool restart;
+		bool terminate;
+		bool reopen_outputs;
+
+		falco_configuration config;
+	};
 
 	application();
 	virtual ~application();
 
+	// Singleton for application
+	static application &get();
+
 	cmdline_options &options();
+	action_state &state();
+
 	bool init(int argc, char **argv, std::string &errstr);
 
-private:
+	void run();
 
+private:
+	action_state m_state;
+	action_manager m_action_manager;
 	cmdline_options m_cmdline_options;
 	bool m_initialized;
 };
