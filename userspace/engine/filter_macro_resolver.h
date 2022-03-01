@@ -31,7 +31,7 @@ class filter_macro_resolver: private libsinsp::filter::ast::expr_visitor
 	public:
 		/*!
 			\brief Visits a filter AST and substitutes macro references
-			according with all the definitions added through define_macro(),
+			according with all the definitions added through set_macro(),
 			by replacing the reference with a clone of the macro AST.
 			\param filter The filter AST to be processed. Note that the pointer
 			is passed by reference and be modified in order to apply
@@ -48,7 +48,7 @@ class filter_macro_resolver: private libsinsp::filter::ast::expr_visitor
 			\param name The name of the macro.
 			\param macro The AST of the macro.
 		*/
-		void define_macro(
+		void set_macro(
 			std::string name,
 			std::shared_ptr<libsinsp::filter::ast::expr> macro);
 
@@ -63,7 +63,7 @@ class filter_macro_resolver: private libsinsp::filter::ast::expr_visitor
 			\brief Returns a set containing the names of all the macros
 			that remained unresolved during the last invocation of run().
 			A macro remains unresolved if it is found inside the processed
-			filter but it was not defined with define_macro();
+			filter but it was not defined with set_macro();
 		*/
 		std::set<std::string>& get_unknown_macros();
 		

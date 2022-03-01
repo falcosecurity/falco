@@ -17,7 +17,6 @@ limitations under the License.
 #include <sinsp.h>
 #include "lua_filter_helper.h"
 #include "filter_macro_resolver.h"
-#include "filter_list_resolver.h"
 #include "rules.h"
 
 using namespace std;
@@ -35,7 +34,6 @@ const static struct luaL_Reg ll_filter_helper[] =
 {
 	{"compile_filter", &lua_filter_helper::compile_filter},
 	{"parse_filter", &lua_filter_helper::parse_filter},
-	{"expand_list", &lua_filter_helper::expand_list},
 	{"expand_macro", &lua_filter_helper::expand_macro},
 	{"find_unknown_macro", &lua_filter_helper::find_unknown_macro},
 	{"clone_ast", &lua_filter_helper::clone_ast},
@@ -112,37 +110,6 @@ int lua_filter_helper::compile_filter(lua_State *ls)
 	return 2;
 }
 
-int lua_filter_helper::expand_list(lua_State *ls)
-{
-	if (! lua_islightuserdata(ls, -3) ||	// ast
-		! lua_isstring(ls, -2) ||		   // name
-		! lua_istable(ls, -1))			  // values
-	{
-		lua_pushstring(ls, "invalid arguments passed to expand_list()");
-		lua_error(ls);
-	}
-
-	ast::expr* ast = (ast::expr*) lua_topointer(ls, -3);
-	std::string name = lua_tostring(ls, -2);
-	vector<string> values;
-	// first key
-	lua_pushnil(ls);
-	while (lua_next(ls, -2) != 0) {
-		// key is at index -2, value is at index
-		// -1. We want the values.
-		values.push_back(lua_tostring(ls, -1));
-		// Remove value, keep key for next iteration
-		lua_pop(ls, 1);
-	}
-	
-	filter_list_resolver resolver;
-	resolver.define_list(name, values);
-	resolver.process(ast);
-	lua_pushboolean(ls, !resolver.get_resolved_lists().empty());
-	lua_pushlightuserdata(ls, ast);
-	return 2;
-}
-
 int lua_filter_helper::expand_macro(lua_State *ls)
 {
 	if (! lua_islightuserdata(ls, -3) ||	// ast
@@ -157,10 +124,14 @@ int lua_filter_helper::expand_macro(lua_State *ls)
 	std::string name = lua_tostring(ls, -2);
 	ast::expr* macro = (ast::expr*) lua_topointer(ls, -1);
 
+	// For now we need to clone the macro AST because the current Lua
+	// rule-loader implementation manages the pointer lifecycle manually,
+	// and it's not compatible with shared_ptr.
+	shared_ptr<ast::expr> macro_clone(ast::clone(macro));
 	filter_macro_resolver resolver;
-	resolver.define_macro(name, macro);
-	resolver.process(ast);
-	lua_pushboolean(ls, !resolver.get_resolved_macros().empty());
+	resolver.set_macro(name, macro_clone);
+	bool resolved = resolver.run(ast);
+	lua_pushboolean(ls, resolved);
 	lua_pushlightuserdata(ls, ast);
 	return 2;
 }
@@ -175,8 +146,10 @@ int lua_filter_helper::find_unknown_macro(lua_State *ls)
 
 	ast::expr* ast = (ast::expr*) lua_topointer(ls, -1);
 
+	// Running a macro resolver without defining any macro allows
+	// us to spot all the still-unresolved macros in an AST.
 	filter_macro_resolver resolver;
-	resolver.process(ast);
+	resolver.run(ast);
 	if (!resolver.get_unknown_macros().empty())
 	{
 		lua_pushboolean(ls, true);
