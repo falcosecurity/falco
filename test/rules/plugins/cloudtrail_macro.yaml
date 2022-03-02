@@ -1,0 +1,4 @@
+- macro: Some Cloudtrail Macro
+  condition: aws.user=bob
+  source: aws_cloudtrail
+
