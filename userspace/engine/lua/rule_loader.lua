@@ -460,6 +460,14 @@ function load_rules_doc(rules_mgr, doc, load_state)
 	    v['source'] = "syscall"
 	 end
 
+	 valid = falco_rules.is_source_valid(rules_mgr, v['source'])
+
+	 if valid == false then
+	    msg = "Macro "..v['macro']..": warning (unknown-source): unknown source "..v['source']..", skipping"
+	    warnings[#warnings + 1] = msg
+	    goto next_object
+	 end
+
 	 if state.macros_by_name[v['macro']] == nil then
 	    state.ordered_macro_names[#state.ordered_macro_names+1] = v['macro']
 	 end
