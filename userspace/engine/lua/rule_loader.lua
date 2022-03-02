@@ -542,6 +542,14 @@ function load_rules_doc(rules_mgr, doc, load_state)
 	    v['source'] = "syscall"
 	 end
 
+	 valid = falco_rules.is_source_valid(rules_mgr, v['source'])
+
+	 if valid == false then
+	    msg = "Rule "..v['rule']..": warning (unknown-source): unknown source "..v['source']..", skipping"
+	    warnings[#warnings + 1] = msg
+	    goto next_object
+	 end
+
 	 -- Add an empty exceptions property to the rule if not defined
 	 if v['exceptions'] == nil then
 	    v['exceptions'] = {}
@@ -735,6 +743,8 @@ function load_rules_doc(rules_mgr, doc, load_state)
 	 arr = build_error_with_context(context, "Unknown top level object: "..table.tostring(v))
 	 warnings[#warnings + 1] = arr[1]
       end
+
+      ::next_object::
    end
 
    return true, {}, warnings
@@ -1007,14 +1017,6 @@ function load_rules(rules_content,
       end
 
       if (filter_ast.type == "Rule") then
-
-	 valid = falco_rules.is_source_valid(rules_mgr, v['source'])
-
-	 if valid == false then
-	    msg = "Rule "..v['rule']..": warning (unknown-source): unknown source "..v['source']..", skipping"
-	    warnings[#warnings + 1] = msg
-	    goto next_rule
-	 end
 
 	 state.n_rules = state.n_rules + 1
 
