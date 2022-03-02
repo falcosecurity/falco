@@ -103,4 +103,20 @@ trace_files: !mux
       - Cloudtrail Create Instance
     stderr_contains: "Rule Cloudtrail Create Instance: warning .unknown-source.: unknown source aws_cloudtrail, skipping"
 
+  no_plugins_unknown_source_macro:
+    detect: False
+    rules_file:
+      - rules/plugins/cloudtrail_macro.yaml
+    trace_file: trace_files/empty.scap
+    stderr_contains: "Macro Some Cloudtrail Macro: warning .unknown-source.: unknown source aws_cloudtrail, skipping"
+
+  no_plugins_unknown_source_rule_exception:
+    detect: False
+    rules_file:
+      - rules/plugins/cloudtrail_create_instances_exceptions.yaml
+    trace_file: trace_files/empty.scap
+    rules_warning:
+      - Cloudtrail Create Instance
+    stderr_contains: "Rule Cloudtrail Create Instance: warning .unknown-source.: unknown source aws_cloudtrail, skipping"
+
 
