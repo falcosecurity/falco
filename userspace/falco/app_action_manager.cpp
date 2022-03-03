@@ -39,62 +39,32 @@ void action_manager::add(std::shared_ptr<runnable_action> act)
 	m_actions[act->name()] = act;
 }
 
-bool action_manager::run_after(const std::shared_ptr<runnable_action> &a, const std::shared_ptr<runnable_action> &b)
+bool action_manager::compare_actions(const std::shared_ptr<runnable_action> &a, const std::shared_ptr<runnable_action> &b)
 {
-	// Check b's prerequsites recursively. If a is found return true.
+	// Check b's prerequsites. If a is found return true.
 	for(auto &prereq_name : b->prerequsites())
 	{
 		if(prereq_name == a->name())
 		{
 			return true;
 		}
+	}
 
+	// Not a direct dependency. Check b's prerequsites recursively
+	for(auto &prereq_name : b->prerequsites())
+	{
 		auto it = m_actions.find(prereq_name);
 		if(it == m_actions.end())
 		{
 			throw falco_exception("No action with name " + prereq_name + " exists?");
 		}
 
-		if(run_after(a, it->second))
+		if(compare_actions(a, it->second))
 		{
-			fprintf(stderr, "a=%s b=%s A RUN AFTER B\n", a->name().c_str(), b->name().c_str());
 			return true;
 		}
 	}
 
-	fprintf(stderr, "a=%s b=%s A NOT RUN AFTER B\n", a->name().c_str(), b->name().c_str());
-	return false;
-}
-
-bool action_manager::compare_actions(const std::shared_ptr<runnable_action> &a, const std::shared_ptr<runnable_action> &b)
-{
-	bool a_after_b = run_after(a, b);
-
-	bool b_after_a = run_after(b, a);
-
-	fprintf(stderr, "a=%s b=%s a_after_b=%d b_after_a=%d\n", a->name().c_str(), b->name().c_str(), (a_after_b ? 1 : 0), (b_after_a ? 1 : 0));
-	// If both are prerequsites of each other, there is a cycle
-	// and throw an exception.
-	if(a_after_b && b_after_a)
-	{
-		throw falco_exception(std::string("Dependency cycle for actions ") + a->name() + " and " + b->name());
-	}
-
-	// If neither are, just sort on the name
-	if(!a_after_b && !b_after_a)
-	{
-		return (a->name() < b->name());
-	}
-
-	// If b is a prereq of a, a is "less"
-	if(b_after_a)
-	{
-		fprintf(stderr, "%s LESS %s\n", a->name().c_str(), b->name().c_str());
-		return true;
-	}
-
-	fprintf(stderr, "%s NOT LESS %s\n", a->name().c_str(), b->name().c_str());
-	// a must be a prereq of b. it is not less
 	return false;
 }
 
@@ -115,12 +85,7 @@ void action_manager::run()
 	};
 
 	// Order the actions according to precedence
-	std::make_heap(actions_ordered.begin(), actions_ordered.end(), compare);
-
-	for(auto &act : actions_ordered)
-	{
-		fprintf(stderr, "ACT %s\n", act->name().c_str());
-	}
+	std::sort(actions_ordered.begin(), actions_ordered.end(), compare);
 
 	for(auto &act : actions_ordered)
 	{

@@ -39,9 +39,7 @@ public:
 
 private:
 
-	// Return true if a should run after b
-	bool run_after(const std::shared_ptr<runnable_action> &a, const std::shared_ptr<runnable_action> &b);
-
+	// Return true if a is less (e.g. a should run before b)
 	bool compare_actions(const std::shared_ptr<runnable_action> &a, const std::shared_ptr<runnable_action> &b);
 
 	std::map<std::string, std::shared_ptr<runnable_action>> m_actions;
