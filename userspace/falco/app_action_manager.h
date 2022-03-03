@@ -20,6 +20,7 @@ limitations under the License.
 
 #include <memory>
 #include <vector>
+#include <map>
 
 namespace falco {
 namespace app {
@@ -38,7 +39,12 @@ public:
 
 private:
 
-	std::vector<std::shared_ptr<runnable_action>> m_actions;
+	// Return true if a should run after b
+	bool run_after(const std::shared_ptr<runnable_action> &a, const std::shared_ptr<runnable_action> &b);
+
+	bool compare_actions(const std::shared_ptr<runnable_action> &a, const std::shared_ptr<runnable_action> &b);
+
+	std::map<std::string, std::shared_ptr<runnable_action>> m_actions;
 };
 
 }; // namespace application
