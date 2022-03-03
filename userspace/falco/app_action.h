@@ -27,15 +27,15 @@ namespace app {
 //     - DONE display help
 //     - DONE print version info
 //     - DONE setup signal handlers
-//     - load config
-//       - initialize outputs
-//       - start grpc server
-//       - start webserver
-//     - create/configure inspector
-//        - print ignored events
-//        - load plugins (also depends on load config)
-//          - list plugins
-//          - create/configure falco engine
+//     - DONE load config
+//     - DONE create/configure inspector
+//        - DONE print ignored events
+//        - DONE create/configure falco engine
+//          - DONE load plugins (also depends on load config)
+//            - DONE list plugins
+//            - DONE initialize outputs (also depends on load config)
+//              - start grpc server
+//              - start webserver
 //            - validate rules files
 //            - list all fields/list source fields
 //            - load rules files
@@ -44,6 +44,7 @@ namespace app {
 //
 // Run-style actions, in dependency order
 //  - daemonize
+//     - open inspector
 //     - read events from source (trace or live), pass to falco engine
 
 // This class represents an "action" e.g. a chunk of code to execute
