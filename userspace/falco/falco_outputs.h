@@ -39,7 +39,7 @@ public:
 	falco_outputs();
 	virtual ~falco_outputs();
 
-	void init(falco_engine *engine,
+	void init(std::shared_ptr<falco_engine> engine,
 		  bool json_output,
 		  bool json_include_output_property,
 		  bool json_include_tags_property,

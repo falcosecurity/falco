@@ -32,8 +32,8 @@ syscall_evt_drop_mgr::~syscall_evt_drop_mgr()
 {
 }
 
-void syscall_evt_drop_mgr::init(sinsp *inspector,
-				falco_outputs *outputs,
+void syscall_evt_drop_mgr::init(std::shared_ptr<sinsp> inspector,
+				std::shared_ptr<falco_outputs> outputs,
 				syscall_evt_drop_actions &actions,
 				double threshold,
 				double rate,
@@ -55,7 +55,7 @@ void syscall_evt_drop_mgr::init(sinsp *inspector,
 	}
 }
 
-bool syscall_evt_drop_mgr::process_event(sinsp *inspector, sinsp_evt *evt)
+bool syscall_evt_drop_mgr::process_event(std::shared_ptr<sinsp> inspector, sinsp_evt *evt)
 {
 	if(m_next_check_ts == 0)
 	{

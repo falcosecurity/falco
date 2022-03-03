@@ -24,7 +24,7 @@ limitations under the License.
 class falco_formats
 {
 public:
-	falco_formats(falco_engine *engine,
+	falco_formats(std::shared_ptr<falco_engine> engine,
 		      bool json_include_output_property,
 		      bool json_include_tags_property);
 	virtual ~falco_formats();
@@ -36,7 +36,7 @@ public:
 					     const std::string &format);
 
 protected:
-	falco_engine *m_falco_engine;
+	std::shared_ptr<falco_engine> m_falco_engine;
 	bool m_json_include_output_property;
 	bool m_json_include_tags_property;
 };

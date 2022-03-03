@@ -27,20 +27,20 @@ limitations under the License.
 class k8s_audit_handler : public CivetHandler
 {
 public:
-	k8s_audit_handler(falco_engine *engine, falco_outputs *outputs, std::size_t k8s_audit_event_source_idx);
+	k8s_audit_handler(std::shared_ptr<falco_engine> engine, std::shared_ptr<falco_outputs> outputs, std::size_t k8s_audit_event_source_idx);
 	virtual ~k8s_audit_handler();
 
 	bool handleGet(CivetServer *server, struct mg_connection *conn);
 	bool handlePost(CivetServer *server, struct mg_connection *conn);
 
-	static bool accept_data(falco_engine *engine,
-				falco_outputs *outputs,
+	static bool accept_data(std::shared_ptr<falco_engine> engine,
+				std::shared_ptr<falco_outputs> outputs,
 				std::size_t k8s_audit_event_source_idx,
 				std::string &post_data, std::string &errstr);
 
 private:
-	falco_engine *m_engine;
-	falco_outputs *m_outputs;
+	std::shared_ptr<falco_engine> m_engine;
+	std::shared_ptr<falco_outputs> m_outputs;
 	std::size_t m_k8s_audit_event_source_idx;
 	bool accept_uploaded_data(std::string &post_data, std::string &errstr);
 };
@@ -65,18 +65,18 @@ public:
 	falco_webserver();
 	virtual ~falco_webserver();
 
-	void init(falco_configuration *config,
-		  falco_engine *engine,
-		  falco_outputs *outputs,
+	void init(std::shared_ptr<falco_configuration> config,
+		  std::shared_ptr<falco_engine> engine,
+		  std::shared_ptr<falco_outputs> outputs,
 		  std::size_t k8s_audit_event_source_idx);
 
 	void start();
 	void stop();
 
 private:
-	falco_engine *m_engine;
-	falco_configuration *m_config;
-	falco_outputs *m_outputs;
+	std::shared_ptr<falco_engine> m_engine;
+	std::shared_ptr<falco_configuration> m_config;
+	std::shared_ptr<falco_outputs> m_outputs;
 	std::size_t m_k8s_audit_event_source_idx;
 	unique_ptr<CivetServer> m_server;
 	unique_ptr<k8s_audit_handler> m_k8s_audit_handler;
