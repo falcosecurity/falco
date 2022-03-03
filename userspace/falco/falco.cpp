@@ -52,7 +52,7 @@ limitations under the License.
 #endif
 #include "banned.h" // This raises a compilation error when certain functions are used
 
-typedef function<void(sinsp* inspector)> open_t;
+typedef function<void(std::shared_ptr<sinsp> inspector)> open_t;
 
 bool g_daemonized = false;
 static std::string syscall_source = "syscall";
@@ -74,8 +74,8 @@ static void display_fatal_err(const string &msg)
 
 #ifndef MINIMAL_BUILD
 // Read a jsonl file containing k8s audit events and pass each to the engine.
-void read_k8s_audit_trace_file(falco_engine *engine,
-			       falco_outputs *outputs,
+void read_k8s_audit_trace_file(std::shared_ptr<falco_engine> engine,
+			       std::shared_ptr<falco_outputs> outputs,
 			       string &trace_filename)
 {
 	ifstream ifs(trace_filename);
@@ -115,17 +115,17 @@ static std::string read_file(std::string filename)
 //
 // Event processing loop
 //
-uint64_t do_inspect(falco_engine *engine,
-			falco_outputs *outputs,
-			sinsp* inspector,
-		        std::string &event_source,
-			falco_configuration &config,
-			syscall_evt_drop_mgr &sdropmgr,
-			uint64_t duration_to_tot_ns,
-			string &stats_filename,
-			uint64_t stats_interval,
-			bool all_events,
-			int &result)
+uint64_t do_inspect(std::shared_ptr<falco_engine> engine,
+		    std::shared_ptr<falco_outputs> outputs,
+		    std::shared_ptr<sinsp> inspector,
+		    std::string &event_source,
+		    std::shared_ptr<falco_configuration> config,
+		    syscall_evt_drop_mgr &sdropmgr,
+		    uint64_t duration_to_tot_ns,
+		    string &stats_filename,
+		    uint64_t stats_interval,
+		    bool all_events,
+		    int &result)
 {
 	uint64_t num_evts = 0;
 	int32_t rc;
@@ -136,11 +136,11 @@ uint64_t do_inspect(falco_engine *engine,
 
 	sdropmgr.init(inspector,
 		      outputs,
-		      config.m_syscall_evt_drop_actions,
-		      config.m_syscall_evt_drop_threshold,
-		      config.m_syscall_evt_drop_rate,
-		      config.m_syscall_evt_drop_max_burst,
-		      config.m_syscall_evt_simulate_drops);
+		      config->m_syscall_evt_drop_actions,
+		      config->m_syscall_evt_drop_threshold,
+		      config->m_syscall_evt_drop_rate,
+		      config->m_syscall_evt_drop_max_burst,
+		      config->m_syscall_evt_simulate_drops);
 
 	if (stats_filename != "")
 	{
@@ -184,10 +184,10 @@ uint64_t do_inspect(falco_engine *engine,
 			{
 				timeouts_since_last_success_or_msg++;
 				if(event_source == syscall_source &&
-				   (timeouts_since_last_success_or_msg > config.m_syscall_evt_timeout_max_consecutives))
+				   (timeouts_since_last_success_or_msg > config->m_syscall_evt_timeout_max_consecutives))
 				{
 					std::string rule = "Falco internal: timeouts notification";
-					std::string msg = rule + ". " + std::to_string(config.m_syscall_evt_timeout_max_consecutives) + " consecutive timeouts without event.";
+					std::string msg = rule + ". " + std::to_string(config->m_syscall_evt_timeout_max_consecutives) + " consecutive timeouts without event.";
 					std::string last_event_time_str = "none";
 					if(duration_start > 0)
 					{
@@ -260,54 +260,13 @@ uint64_t do_inspect(falco_engine *engine,
 	return num_evts;
 }
 
-static void print_all_ignored_events(sinsp *inspector)
-{
-	sinsp_evttables* einfo = inspector->get_event_info_tables();
-	const struct ppm_event_info* etable = einfo->m_event_info;
-	const struct ppm_syscall_desc* stable = einfo->m_syscall_info_table;
-
-	std::set<string> ignored_event_names;
-	for(uint32_t j = 0; j < PPM_EVENT_MAX; j++)
-	{
-		if(!sinsp::simple_consumer_consider_evtnum(j))
-		{
-			std::string name = etable[j].name;
-			// Ignore event names NA*
-			if(name.find("NA") != 0)
-			{
-				ignored_event_names.insert(name);
-			}
-		}
-	}
-
-	for(uint32_t j = 0; j < PPM_SC_MAX; j++)
-	{
-		if(!sinsp::simple_consumer_consider_syscallid(j))
-		{
-			std::string name = stable[j].name;
-			// Ignore event names NA*
-			if(name.find("NA") != 0)
-			{
-				ignored_event_names.insert(name);
-			}
-		}
-	}
-
-	printf("Ignored Event(s):");
-	for(auto it : ignored_event_names)
-	{
-		printf(" %s", it.c_str());
-	}
-	printf("\n");
-}
-
-static void check_for_ignored_events(sinsp &inspector, falco_engine &engine)
+static void check_for_ignored_events(std::shared_ptr<sinsp> inspector, std::shared_ptr<falco_engine> engine)
 {
 	std::set<uint16_t> evttypes;
-	sinsp_evttables* einfo = inspector.get_event_info_tables();
+	sinsp_evttables* einfo = inspector->get_event_info_tables();
 	const struct ppm_event_info* etable = einfo->m_event_info;
 
-	engine.evttypes_for_ruleset(syscall_source, evttypes);
+	engine->evttypes_for_ruleset(syscall_source, evttypes);
 
 	// Save event names so we don't warn for both the enter and exit event.
 	std::set<std::string> warn_event_names;
@@ -349,7 +308,7 @@ static void check_for_ignored_events(sinsp &inspector, falco_engine &engine)
 	}
 }
 
-static void list_source_fields(falco_engine *engine, bool verbose, bool names_only, std::string &source)
+static void list_source_fields(std::shared_ptr<falco_engine> engine, bool verbose, bool names_only, std::string &source)
 {
 	if(source != "" &&
 	   !engine->is_source_valid(source))
@@ -359,51 +318,15 @@ static void list_source_fields(falco_engine *engine, bool verbose, bool names_on
 	engine->list_fields(source, verbose, names_only);
 }
 
-static void configure_output_format(falco::app::application &app, falco_engine *engine)
-{
-	std::string output_format;
-	bool replace_container_info = false;
-
-	if(app.options().print_container)
-	{
-		output_format = "container=%container.name (id=%container.id)";
-		replace_container_info = true;
-	}
-	else if(app.options().print_kubernetes)
-	{
-		output_format = "k8s.ns=%k8s.ns.name k8s.pod=%k8s.pod.name container=%container.id";
-		replace_container_info = true;
-	}
-	else if(app.options().print_mesos)
-	{
-		output_format = "task=%mesos.task.name container=%container.id";
-		replace_container_info = true;
-	}
-	else if(!app.options().print_additional.empty())
-	{
-		output_format = app.options().print_additional;
-		replace_container_info = false;
-	}
-
-	if(!output_format.empty())
-	{
-		engine->set_extra(output_format, replace_container_info);
-	}
-}
-
 //
 // ARGUMENT PARSING AND PROGRAM SETUP
 //
 int falco_init(falco::app::application &app, int argc, char **argv)
 {
 	int result = EXIT_SUCCESS;
-	sinsp* inspector = NULL;
-	falco_engine *engine = NULL;
-	falco_outputs *outputs = NULL;
 	syscall_evt_drop_mgr sdropmgr;
 	bool trace_is_scap = true;
 	string outfile;
-	std::set<std::string> enabled_sources = {syscall_source, k8s_audit_source};
 
 	// Used for writing trace files
 	int duration_seconds = 0;
@@ -419,8 +342,6 @@ int falco_init(falco::app::application &app, int argc, char **argv)
 
 #ifndef MINIMAL_BUILD
 	falco_webserver webserver;
-	falco::grpc::server grpc_server;
-	std::thread grpc_server_thread;
 #endif
 
 	std::string errstr;
@@ -438,62 +359,6 @@ int falco_init(falco::app::application &app, int argc, char **argv)
 	{
 		string all_rules;
 
-		inspector = new sinsp();
-		inspector->set_buffer_format(app.options().event_buffer_format);
-
-		// If required, set the CRI paths
-		for (auto &p : app.options().cri_socket_paths)
-		{
-			if (!p.empty())
-			{
-				inspector->add_cri_socket_path(p);
-			}
-		}
-
-		// Decide wether to do sync or async for CRI metadata fetch
-		inspector->set_cri_async(!app.options().disable_cri_async);
-
-		//
-		// If required, set the snaplen
-		//
-		if(app.options().snaplen != 0)
-		{
-			inspector->set_snaplen(app.options().snaplen);
-		}
-
-		if(app.options().print_ignored_events)
-		{
-			print_all_ignored_events(inspector);
-			delete(inspector);
-			return EXIT_SUCCESS;
-		}
-
-		engine = new falco_engine(true);
-
-		configure_output_format(app, engine);
-
-		// Create "factories" that can create filters/formatters for
-		// syscalls and k8s audit events.
-		std::shared_ptr<gen_event_filter_factory> syscall_filter_factory(new sinsp_filter_factory(inspector));
-		std::shared_ptr<gen_event_filter_factory> k8s_audit_filter_factory(new json_event_filter_factory());
-
-		std::shared_ptr<gen_event_formatter_factory> syscall_formatter_factory(new sinsp_evt_formatter_factory(inspector));
-		std::shared_ptr<gen_event_formatter_factory> k8s_audit_formatter_factory(new json_event_formatter_factory(k8s_audit_filter_factory));
-
-		engine->add_source(syscall_source, syscall_filter_factory, syscall_formatter_factory);
-		engine->add_source(k8s_audit_source, k8s_audit_filter_factory, k8s_audit_formatter_factory);
-
-		for(const auto &src : app.options().disable_sources)
-		{
-			enabled_sources.erase(src);
-		}
-
-		// XXX/mstemm technically this isn't right, you could disable syscall *and* k8s_audit and configure a plugin.
-		if(enabled_sources.empty())
-		{
-			throw std::invalid_argument("The event source \"syscall\" and \"k8s_audit\" can not be disabled together");
-		}
-
 		if(app.options().validate_rules_filenames.size() > 0)
 		{
 			falco_logger::log(LOG_INFO, "Validating rules file(s):\n");
@@ -506,7 +371,7 @@ int falco_init(falco::app::application &app, int argc, char **argv)
 				// Only include the prefix if there is more than one file
 				std::string prefix = (app.options().validate_rules_filenames.size() > 1 ? file + ": " : "");
 				try {
-					engine->load_rules_file(file, app.options().verbose, app.options().all_events);
+					app.state().engine->load_rules_file(file, app.options().verbose, app.options().all_events);
 				}
 				catch(falco_exception &e)
 				{
@@ -519,162 +384,39 @@ int falco_init(falco::app::application &app, int argc, char **argv)
 			goto exit;
 		}
 
-		// The event source is syscall by default. If an input
-		// plugin was found, the source is the source of that
-		// plugin.
-		std::string event_source = syscall_source;
-
-		// All filterchecks created by plugins go in this
-		// list. If we ever support multiple event sources at
-		// the same time, this (and the below factories) will
-		// have to be a map from event source to filtercheck
-		// list.
-		filter_check_list plugin_filter_checks;
-
-		// Factories that can create filters/formatters for
-		// the (single) source supported by the (single) input plugin.
-		std::shared_ptr<gen_event_filter_factory> plugin_filter_factory(new sinsp_filter_factory(inspector, plugin_filter_checks));
-		std::shared_ptr<gen_event_formatter_factory> plugin_formatter_factory(new sinsp_evt_formatter_factory(inspector, plugin_filter_checks));
-
-		std::shared_ptr<sinsp_plugin> input_plugin;
-		std::list<std::shared_ptr<sinsp_plugin>> extractor_plugins;
-		for(auto &p : app.state().config.m_plugins)
-		{
-			std::shared_ptr<sinsp_plugin> plugin;
-#ifdef MUSL_OPTIMIZED
-			throw std::invalid_argument(string("Can not load/use plugins with musl optimized build"));
-#else
-			falco_logger::log(LOG_INFO, "Loading plugin (" + p.m_name + ") from file " + p.m_library_path + "\n");
-
-			plugin = sinsp_plugin::register_plugin(inspector,
-							       p.m_library_path,
-							       (p.m_init_config.empty() ? NULL : (char *)p.m_init_config.c_str()),
-							       plugin_filter_checks);
-#endif
-
-			if(plugin->type() == TYPE_SOURCE_PLUGIN)
-			{
-				sinsp_source_plugin *splugin = static_cast<sinsp_source_plugin *>(plugin.get());
-
-				if(input_plugin)
-				{
-					throw std::invalid_argument(string("Can not load multiple source plugins. ") + input_plugin->name() + " already loaded");
-				}
-
-				input_plugin = plugin;
-				event_source = splugin->event_source();
-
-				inspector->set_input_plugin(p.m_name);
-				if(!p.m_open_params.empty())
-				{
-					inspector->set_input_plugin_open_params(p.m_open_params.c_str());
-				}
-
-				engine->add_source(event_source, plugin_filter_factory, plugin_formatter_factory);
-
-			} else {
-				extractor_plugins.push_back(plugin);
-			}
-		}
-
-		// Ensure that extractor plugins are compatible with the event source.
-		// Also, ensure that extractor plugins don't have overlapping compatible event sources.
-		std::set<std::string> compat_sources_seen;
-		for(auto plugin : extractor_plugins)
-		{
-			// If the extractor plugin names compatible sources,
-			// ensure that the input plugin's source is in the list
-			// of compatible sources.
-			sinsp_extractor_plugin *eplugin = static_cast<sinsp_extractor_plugin *>(plugin.get());
-			const std::set<std::string> &compat_sources = eplugin->extract_event_sources();
-			if(input_plugin &&
-			   !compat_sources.empty())
-			{
-				if (compat_sources.find(event_source) == compat_sources.end())
-				{
-					throw std::invalid_argument(string("Extractor plugin not compatible with event source ") + event_source);
-				}
-
-				for(const auto &compat_source : compat_sources)
-				{
-					if(compat_sources_seen.find(compat_source) != compat_sources_seen.end())
-					{
-						throw std::invalid_argument(string("Extractor plugins have overlapping compatible event source ") + compat_source);
-					}
-					compat_sources_seen.insert(compat_source);
-				}
-			}
-		}
-
-		if(app.state().config.m_json_output)
-		{
-			syscall_formatter_factory->set_output_format(gen_event_formatter::OF_JSON);
-			k8s_audit_formatter_factory->set_output_format(gen_event_formatter::OF_JSON);
-			plugin_formatter_factory->set_output_format(gen_event_formatter::OF_JSON);
-		}
-
-		std::list<sinsp_plugin::info> infos = sinsp_plugin::plugin_infos(inspector);
-
-		if(app.options().list_plugins)
-		{
-			std::ostringstream os;
-
-			for(auto &info : infos)
-			{
-				os << "Name: " << info.name << std::endl;
-				os << "Description: " << info.description << std::endl;
-				os << "Contact: " << info.contact << std::endl;
-				os << "Version: " << info.plugin_version.as_string() << std::endl;
-
-				if(info.type == TYPE_SOURCE_PLUGIN)
-				{
-					os << "Type: source plugin" << std::endl;
-					os << "ID: " << info.id << std::endl;
-				}
-				else
-				{
-					os << "Type: extractor plugin" << std::endl;
-				}
-				os << std::endl;
-			}
-
-			printf("%lu Plugins Loaded:\n\n%s\n", infos.size(), os.str().c_str());
-			return EXIT_SUCCESS;
-		}
-
 		if(app.options().list_fields)
 		{
-			list_source_fields(engine, app.options().verbose, app.options().names_only, app.options().list_source_fields);
+			list_source_fields(app.state().engine, app.options().verbose, app.options().names_only, app.options().list_source_fields);
 			return EXIT_SUCCESS;
 		}
 
 		if (app.options().rules_filenames.size())
 		{
-			app.state().config.m_rules_filenames = app.options().rules_filenames;
+			app.state().config->m_rules_filenames = app.options().rules_filenames;
 		}
 
-		engine->set_min_priority(app.state().config.m_min_priority);
+		app.state().engine->set_min_priority(app.state().config->m_min_priority);
 
-		app.state().config.m_buffered_outputs = !app.options().unbuffered_outputs;
+		app.state().config->m_buffered_outputs = !app.options().unbuffered_outputs;
 
-		if(app.state().config.m_rules_filenames.size() == 0)
+		if(app.state().config->m_rules_filenames.size() == 0)
 		{
 			throw std::invalid_argument("You must specify at least one rules file/directory via -r or a rules_file entry in falco.yaml");
 		}
 
 		falco_logger::log(LOG_DEBUG, "Configured rules filenames:\n");
-		for (auto filename : app.state().config.m_rules_filenames)
+		for (auto filename : app.state().config->m_rules_filenames)
 		{
 			falco_logger::log(LOG_DEBUG, string("   ") + filename + "\n");
 		}
 
-		for (auto filename : app.state().config.m_rules_filenames)
+		for (auto filename : app.state().config->m_rules_filenames)
 		{
 			falco_logger::log(LOG_INFO, "Loading rules from file " + filename + ":\n");
 			uint64_t required_engine_version;
 
 			try {
-				engine->load_rules_file(filename, app.options().verbose, app.options().all_events, required_engine_version);
+				app.state().engine->load_rules_file(filename, app.options().verbose, app.options().all_events, required_engine_version);
 			}
 			catch(falco_exception &e)
 			{
@@ -686,11 +428,11 @@ int falco_init(falco::app::application &app, int argc, char **argv)
 		}
 
 		// Ensure that all plugins are compatible with the loaded set of rules
-		for(auto &info : infos)
+		for(auto &info : app.state().plugin_infos)
 		{
 			std::string required_version;
 
-			if(!engine->is_plugin_compatible(info.name, info.plugin_version.as_string(), required_version))
+			if(!app.state().engine->is_plugin_compatible(info.name, info.plugin_version.as_string(), required_version))
 			{
 				throw std::invalid_argument(std::string("Plugin ") + info.name + " version " + info.plugin_version.as_string() + " not compatible with required plugin version " + required_version);
 			}
@@ -699,7 +441,7 @@ int falco_init(falco::app::application &app, int argc, char **argv)
 		for (auto substring : app.options().disabled_rule_substrings)
 		{
 			falco_logger::log(LOG_INFO, "Disabling rules matching substring: " + substring + "\n");
-			engine->enable_rule(substring, false);
+			app.state().engine->enable_rule(substring, false);
 		}
 
 		if(app.options().disabled_rule_tags.size() > 0)
@@ -708,7 +450,7 @@ int falco_init(falco::app::application &app, int argc, char **argv)
 			{
 				falco_logger::log(LOG_INFO, "Disabling rules with tag: " + tag + "\n");
 			}
-			engine->enable_rule_by_tag(app.options().disabled_rule_tags, false);
+			app.state().engine->enable_rule_by_tag(app.options().disabled_rule_tags, false);
 		}
 
 		if(app.options().enabled_rule_tags.size() > 0)
@@ -716,12 +458,12 @@ int falco_init(falco::app::application &app, int argc, char **argv)
 
 			// Since we only want to enable specific
 			// rules, first disable all rules.
-			engine->enable_rule(all_rules, false);
+			app.state().engine->enable_rule(all_rules, false);
 			for(auto &tag : app.options().enabled_rule_tags)
 			{
 				falco_logger::log(LOG_INFO, "Enabling rules with tag: " + tag + "\n");
 			}
-			engine->enable_rule_by_tag(app.options().enabled_rule_tags, true);
+			app.state().engine->enable_rule_by_tag(app.options().enabled_rule_tags, true);
 		}
 
 		if(app.options().print_support)
@@ -754,7 +496,7 @@ int falco_init(falco::app::application &app, int argc, char **argv)
 			support["engine_info"]["engine_version"] = FALCO_ENGINE_VERSION;
 			support["config"] = read_file(app.options().conf_filename);
 			support["rules_files"] = nlohmann::json::array();
-			for(auto filename : app.state().config.m_rules_filenames)
+			for(auto filename : app.state().config->m_rules_filenames)
 			{
 				nlohmann::json finfo;
 				finfo["name"] = filename;
@@ -768,50 +510,25 @@ int falco_init(falco::app::application &app, int argc, char **argv)
 			goto exit;
 		}
 
-		// read hostname
-		string hostname;
-		if(char* env_hostname = getenv("FALCO_GRPC_HOSTNAME"))
-		{
-			hostname = env_hostname;
-		}
-		else
-		{
-			char c_hostname[256];
-			int err = gethostname(c_hostname, 256);
-			if(err != 0)
-			{
-				throw falco_exception("Failed to get hostname");
-			}
-			hostname = c_hostname;
-		}
-
 		if(!app.options().all_events)
 		{
 			// For syscalls, see if any event types used by the
 			// loaded rules are ones with the EF_DROP_SIMPLE_CONS
 			// label.
-			check_for_ignored_events(*inspector, *engine);
-			// Drop EF_DROP_SIMPLE_CONS kernel side
-			inspector->set_simple_consumer();
-			// Eventually, drop any EF_DROP_SIMPLE_CONS event
-			// that reached userspace (there are some events that are not syscall-based
-			// like signaldeliver, that have the EF_DROP_SIMPLE_CONS flag)
-			inspector->set_drop_event_flags(EF_DROP_SIMPLE_CONS);
+			check_for_ignored_events(app.state().inspector, app.state().engine);
 		}
 
 		if (app.options().describe_all_rules)
 		{
-			engine->describe_rule(NULL);
+			app.state().engine->describe_rule(NULL);
 			goto exit;
 		}
 
 		if (!app.options().describe_rule.empty())
 		{
-			engine->describe_rule(&(app.options().describe_rule));
+			app.state().engine->describe_rule(&(app.options().describe_rule));
 			goto exit;
 		}
-
-		inspector->set_hostname_and_port_resolution_mode(false);
 
 		// If daemonizing, do it here so any init errors will
 		// be returned in the foreground process.
@@ -870,29 +587,12 @@ int falco_init(falco::app::application &app, int argc, char **argv)
 			g_daemonized = true;
 		}
 
-		outputs = new falco_outputs();
-
-		outputs->init(engine,
-			      app.state().config.m_json_output,
-			      app.state().config.m_json_include_output_property,
-			      app.state().config.m_json_include_tags_property,
-			      app.state().config.m_output_timeout,
-			      app.state().config.m_notifications_rate, app.state().config.m_notifications_max_burst,
-			      app.state().config.m_buffered_outputs,
-			      app.state().config.m_time_format_iso_8601,
-			      hostname);
-
-		for(auto output : app.state().config.m_outputs)
-		{
-			outputs->add_output(output);
-		}
-
 		if(app.options().trace_filename.size())
 		{
 			// Try to open the trace file as a
 			// capture file first.
 			try {
-				inspector->open(app.options().trace_filename);
+				app.state().inspector->open(app.options().trace_filename);
 				falco_logger::log(LOG_INFO, "Reading system call events from file: " + app.options().trace_filename + "\n");
 			}
 			catch(sinsp_exception &e)
@@ -938,7 +638,7 @@ int falco_init(falco::app::application &app, int argc, char **argv)
 		}
 		else
 		{
-			open_t open_cb = [&app](sinsp* inspector)
+			open_t open_cb = [&app](std::shared_ptr<sinsp> inspector)
 			{
 				if(app.options().userspace)
 				{
@@ -951,41 +651,41 @@ int falco_init(falco::app::application &app, int argc, char **argv)
 				}
 				inspector->open();
 			};
-			open_t open_nodriver_cb = [](sinsp* inspector) {
+			open_t open_nodriver_cb = [](std::shared_ptr<sinsp> inspector) {
 				inspector->open_nodriver();
 			};
 			open_t open_f;
 
 			// Default mode: both event sources enabled
-			if (enabled_sources.find(syscall_source) != enabled_sources.end() &&
-			    enabled_sources.find(k8s_audit_source) != enabled_sources.end())
+			if (app.state().enabled_sources.find(syscall_source) != app.state().enabled_sources.end() &&
+			    app.state().enabled_sources.find(k8s_audit_source) != app.state().enabled_sources.end())
 			{
 				open_f = open_cb;
 			}
-			if (enabled_sources.find(syscall_source) == enabled_sources.end())
+			if (app.state().enabled_sources.find(syscall_source) == app.state().enabled_sources.end())
 			{
 				open_f = open_nodriver_cb;
 			}
-			if (enabled_sources.find(k8s_audit_source) == enabled_sources.end())
+			if (app.state().enabled_sources.find(k8s_audit_source) == app.state().enabled_sources.end())
 			{
 				open_f = open_cb;
 			}
 
 			try
 			{
-				open_f(inspector);
+				open_f(app.state().inspector);
 			}
 			catch(sinsp_exception &e)
 			{
 				// If syscall input source is enabled and not through userspace instrumentation
-				if (enabled_sources.find(syscall_source) != enabled_sources.end() && !app.options().userspace)
+				if (app.state().enabled_sources.find(syscall_source) != app.state().enabled_sources.end() && !app.options().userspace)
 				{
 					// Try to insert the Falco kernel module
 					if(system("modprobe " DRIVER_NAME " > /dev/null 2> /dev/null"))
 					{
 						falco_logger::log(LOG_ERR, "Unable to load the driver.\n");
 					}
-					open_f(inspector);
+					open_f(app.state().inspector);
 				}
 				else
 				{
@@ -997,97 +697,39 @@ int falco_init(falco::app::application &app, int argc, char **argv)
 		// This must be done after the open
 		if(!app.options().all_events)
 		{
-			inspector->start_dropping_mode(1);
+			app.state().inspector->start_dropping_mode(1);
 		}
 
 		if(outfile != "")
 		{
-			inspector->setup_cycle_writer(outfile, rollover_mb, duration_seconds, file_limit, event_limit, compress);
-			inspector->autodump_next_file();
+			app.state().inspector->setup_cycle_writer(outfile, rollover_mb, duration_seconds, file_limit, event_limit, compress);
+			app.state().inspector->autodump_next_file();
 		}
 
 		duration = ((double)clock()) / CLOCKS_PER_SEC;
 
 #ifndef MINIMAL_BUILD
-		//
-		// Run k8s, if required
-		//
-		char *k8s_api_env = NULL;
-		if(!app.options().k8s_api.empty() ||
-		   (k8s_api_env = getenv("FALCO_K8S_API")))
-		{
-			// Create string pointers for some config vars
-			// and pass to inspector. The inspector then
-			// owns the pointers.
-			std::string *k8s_api_ptr = new string((!app.options().k8s_api.empty() ? app.options().k8s_api : k8s_api_env));
-			std::string *k8s_api_cert_ptr = new string(app.options().k8s_api_cert);
-			std::string *k8s_node_name_ptr = new string(app.options().k8s_node_name);
 
-			if(k8s_api_cert_ptr->empty())
-			{
-				if(char* k8s_cert_env = getenv("FALCO_K8S_API_CERT"))
-				{
-					*k8s_api_cert_ptr = k8s_cert_env;
-				}
-			}
-			inspector->init_k8s_client(k8s_api_ptr, k8s_api_cert_ptr, k8s_node_name_ptr, app.options().verbose);
-		}
+		falco_logger::log(LOG_DEBUG, "Setting metadata download max size to " + to_string(app.state().config->m_metadata_download_max_mb) + " MB\n");
+		falco_logger::log(LOG_DEBUG, "Setting metadata download chunk wait time to " + to_string(app.state().config->m_metadata_download_chunk_wait_us) + " μs\n");
+		falco_logger::log(LOG_DEBUG, "Setting metadata download watch frequency to " + to_string(app.state().config->m_metadata_download_watch_freq_sec) + " seconds\n");
+		app.state().inspector->set_metadata_download_params(app.state().config->m_metadata_download_max_mb * 1024 * 1024, app.state().config->m_metadata_download_chunk_wait_us, app.state().config->m_metadata_download_watch_freq_sec);
 
-		//
-		// Run mesos, if required
-		//
-		if(!app.options().mesos_api.empty())
+		if(app.options().trace_filename.empty() && app.state().config->m_webserver_enabled && app.state().enabled_sources.find(k8s_audit_source) != app.state().enabled_sources.end())
 		{
-			// Differs from init_k8s_client in that it
-			// passes a pointer but the inspector does
-			// *not* own it and does not use it after
-			// init_mesos_client() returns.
-			inspector->init_mesos_client(&(app.options().mesos_api), app.options().verbose);
-		}
-		else if(char* mesos_api_env = getenv("FALCO_MESOS_API"))
-		{
-			std::string mesos_api_copy = mesos_api_env;
-			inspector->init_mesos_client(&mesos_api_copy, app.options().verbose);
-		}
-
-		falco_logger::log(LOG_DEBUG, "Setting metadata download max size to " + to_string(app.state().config.m_metadata_download_max_mb) + " MB\n");
-		falco_logger::log(LOG_DEBUG, "Setting metadata download chunk wait time to " + to_string(app.state().config.m_metadata_download_chunk_wait_us) + " μs\n");
-		falco_logger::log(LOG_DEBUG, "Setting metadata download watch frequency to " + to_string(app.state().config.m_metadata_download_watch_freq_sec) + " seconds\n");
-		inspector->set_metadata_download_params(app.state().config.m_metadata_download_max_mb * 1024 * 1024, app.state().config.m_metadata_download_chunk_wait_us, app.state().config.m_metadata_download_watch_freq_sec);
-
-		if(app.options().trace_filename.empty() && app.state().config.m_webserver_enabled && enabled_sources.find(k8s_audit_source) != enabled_sources.end())
-		{
-			std::string ssl_option = (app.state().config.m_webserver_ssl_enabled ? " (SSL)" : "");
-			falco_logger::log(LOG_INFO, "Starting internal webserver, listening on port " + to_string(app.state().config.m_webserver_listen_port) + ssl_option + "\n");
-			webserver.init(&app.state().config, engine, outputs);
+			std::string ssl_option = (app.state().config->m_webserver_ssl_enabled ? " (SSL)" : "");
+			falco_logger::log(LOG_INFO, "Starting internal webserver, listening on port " + to_string(app.state().config->m_webserver_listen_port) + ssl_option + "\n");
+			webserver.init(app.state().config, app.state().engine, app.state().outputs);
 			webserver.start();
 		}
 
-		// gRPC server
-		if(app.state().config.m_grpc_enabled)
-		{
-			falco_logger::log(LOG_INFO, "gRPC server threadiness equals to " + to_string(app.state().config.m_grpc_threadiness) + "\n");
-			// TODO(fntlnz,leodido): when we want to spawn multiple threads we need to have a queue per thread, or implement
-			// different queuing mechanisms, round robin, fanout? What we want to achieve?
-			grpc_server.init(
-				app.state().config.m_grpc_bind_address,
-				app.state().config.m_grpc_threadiness,
-				app.state().config.m_grpc_private_key,
-				app.state().config.m_grpc_cert_chain,
-				app.state().config.m_grpc_root_certs,
-				app.state().config.m_log_level
-			);
-			grpc_server_thread = std::thread([&grpc_server] {
-				grpc_server.run();
-			});
-		}
 #endif
 
 		if(!app.options().trace_filename.empty() && !trace_is_scap)
 		{
 #ifndef MINIMAL_BUILD
-			read_k8s_audit_trace_file(engine,
-						  outputs,
+			read_k8s_audit_trace_file(app.state().engine,
+						  app.state().outputs,
 						  app.options().trace_filename);
 #endif
 		}
@@ -1095,10 +737,10 @@ int falco_init(falco::app::application &app, int argc, char **argv)
 		{
 			uint64_t num_evts;
 
-			num_evts = do_inspect(engine,
-					      outputs,
-					      inspector,
-					      event_source,
+			num_evts = do_inspect(app.state().engine,
+					      app.state().outputs,
+					      app.state().inspector,
+					      app.state().event_source,
 					      app.state().config,
 					      sdropmgr,
 					      uint64_t(app.options().duration_to_tot*ONE_SECOND_IN_NS),
@@ -1109,7 +751,7 @@ int falco_init(falco::app::application &app, int argc, char **argv)
 
 			duration = ((double)clock()) / CLOCKS_PER_SEC - duration;
 
-			inspector->get_capture_stats(&cstats);
+			app.state().inspector->get_capture_stats(&cstats);
 
 			if(app.options().verbose)
 			{
@@ -1133,16 +775,11 @@ int falco_init(falco::app::application &app, int argc, char **argv)
 			std::this_thread::sleep_for(std::chrono::seconds(app.options().duration_to_tot));
 		}
 
-		inspector->close();
-		engine->print_stats();
+		app.state().inspector->close();
+		app.state().engine->print_stats();
 		sdropmgr.print_stats();
 #ifndef MINIMAL_BUILD
 		webserver.stop();
-		if(grpc_server_thread.joinable())
-		{
-			grpc_server.shutdown();
-			grpc_server_thread.join();
-		}
 #endif
 	}
 	catch(exception &e)
@@ -1153,19 +790,10 @@ int falco_init(falco::app::application &app, int argc, char **argv)
 
 #ifndef MINIMAL_BUILD
 		webserver.stop();
-		if(grpc_server_thread.joinable())
-		{
-			grpc_server.shutdown();
-			grpc_server_thread.join();
-		}
 #endif
 	}
 
 exit:
-
-	delete inspector;
-	delete engine;
-	delete outputs;
 
 	return result;
 }
