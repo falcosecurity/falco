@@ -14,8 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#include "app_actions/print_help.h"
-#include "app_actions/print_version.h"
 #include "app_actions/create_signal_handlers.h"
+#include "app_actions/init_falco_engine.h"
+#include "app_actions/init_inspector.h"
+#include "app_actions/init_outputs.h"
+#include "app_actions/list_plugins.h"
 #include "app_actions/load_config.h"
+#include "app_actions/load_plugins.h"
+#include "app_actions/print_help.h"
+#include "app_actions/print_ignored_events.h"
+#include "app_actions/print_version.h"
+#include "app_actions/start_grpc_server.h"
+
 
