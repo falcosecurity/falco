@@ -30,11 +30,11 @@ namespace app {
 //     - DONE load config
 //     - DONE create/configure inspector
 //        - DONE print ignored events
-//        - DONE create/configure falco engine
+//        - DONE init falco engine
 //          - DONE load plugins (also depends on load config)
 //            - DONE list plugins
 //            - DONE initialize outputs (also depends on load config)
-//              - start grpc server
+//              - DONE start grpc server
 //              - start webserver
 //            - validate rules files
 //            - list all fields/list source fields
