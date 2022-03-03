@@ -20,7 +20,7 @@ namespace falco {
 namespace app {
 
 act_load_config::act_load_config(application &app)
-	: action(app), m_name("print help")
+	: action(app), m_name("load config")
 {
 }
 
@@ -44,8 +44,8 @@ runnable_action::run_result act_load_config::run()
 
 	if (app().options().conf_filename.size())
 	{
-		app().state().config.init(app().options().conf_filename, app().options().cmdline_config_options);
-		falco_logger::set_time_format_iso_8601(app().state().config.m_time_format_iso_8601);
+		app().state().config->init(app().options().conf_filename, app().options().cmdline_config_options);
+		falco_logger::set_time_format_iso_8601(app().state().config->m_time_format_iso_8601);
 
 		// log after config init because config determines where logs go
 		falco_logger::log(LOG_INFO, "Falco version " + std::string(FALCO_VERSION) + " (driver version " + std::string(DRIVER_VERSION) + ")\n");
