@@ -62,50 +62,62 @@ private:
 std::list<std::string> test_action::s_actions_run;
 
 static std::list<std::string> empty;
+static std::list<std::string> prereq_a = {"a"};
+static std::list<std::string> prereq_aa = {"aa"};
+static std::list<std::string> prereq_ab = {"ab"};
 
-std::list<std::string> prereq_first = {"first"};
-std::list<std::string> prereq_third = {"third"};
-std::list<std::string> prereq_fourth = {"fourth"};
+// The action names denote the dependency order e.g. "a", "b", "c" are
+// all independent, "aa" and "ab" depend on a but are independent of
+// each other, "aaa" "aab" depend on "aa" but are independent, etc.
 
 static falco::app::runnable_action::run_result success_proceed{true, "", true};
 
 static falco::app::runnable_action::run_result success_noproceed{true, "", false};
 
-// No prereqs, succeeds with proceed=true
-static std::shared_ptr<test_action> first = std::make_shared<test_action>(std::string("first"),
-									  empty,
-									  success_proceed);
 
-static std::shared_ptr<test_action> first_noproceed = std::make_shared<test_action>(std::string("first"),
-										    empty,
-										    success_noproceed);
+static std::shared_ptr<test_action> a = std::make_shared<test_action>(std::string("a"),
+								      empty,
+								      success_proceed);
 
-// Identical to first
-static std::shared_ptr<test_action> second = std::make_shared<test_action>(std::string("second"),
-									   empty,
-									   success_proceed);
+static std::shared_ptr<test_action> a_noproceed = std::make_shared<test_action>(std::string("a"),
+										empty,
+										success_noproceed);
 
-// Has first as prereq, succeeds with proceed=true
-std::shared_ptr<test_action> third = std::make_shared<test_action>(std::string("third"),
-								   prereq_first,
-								   success_proceed);
+static std::shared_ptr<test_action> b = std::make_shared<test_action>(std::string("b"),
+								      empty,
+								      success_proceed);
 
-std::shared_ptr<test_action> third_noproceed = std::make_shared<test_action>(std::string("third"),
-									     prereq_first,
-									     success_noproceed);
+static std::shared_ptr<test_action> c = std::make_shared<test_action>(std::string("c"),
+								      empty,
+								      success_proceed);
 
-std::shared_ptr<test_action> third_depends_fourth = std::make_shared<test_action>(std::string("third"),
-										  prereq_fourth,
-										  success_noproceed);
+static std::shared_ptr<test_action> d = std::make_shared<test_action>(std::string("d"),
+								      empty,
+								      success_proceed);
 
-// Depends on third
-std::shared_ptr<test_action> fourth = std::make_shared<test_action>(std::string("fourth"),
-								    prereq_third,
-								    success_proceed);
+std::shared_ptr<test_action> aa = std::make_shared<test_action>(std::string("aa"),
+								prereq_a,
+								success_proceed);
 
-std::shared_ptr<test_action> fourth_noproceed = std::make_shared<test_action>(std::string("fourth"),
-									      prereq_third,
-									      success_noproceed);
+std::shared_ptr<test_action> ab = std::make_shared<test_action>(std::string("ab"),
+								prereq_a,
+								success_proceed);
+
+std::shared_ptr<test_action> aa_noproceed = std::make_shared<test_action>(std::string("aa"),
+									  prereq_a,
+									  success_noproceed);
+
+std::shared_ptr<test_action> aaa = std::make_shared<test_action>(std::string("aaa"),
+								 prereq_aa,
+								 success_proceed);
+
+std::shared_ptr<test_action> aab = std::make_shared<test_action>(std::string("aab"),
+								 prereq_aa,
+								 success_proceed);
+
+std::shared_ptr<test_action> aba = std::make_shared<test_action>(std::string("aba"),
+								 prereq_ab,
+								 success_proceed);
 
 static std::list<std::string>::iterator find_action(const std::string &name,
 						    std::list<std::string>::iterator begin = test_action::s_actions_run.begin())
@@ -131,26 +143,26 @@ TEST_CASE("action manager can add and run actions", "[actions]")
 	{
 		test_action::s_actions_run.clear();
 
-		amgr.add(first);
-		amgr.add(second);
+		amgr.add(a);
+		amgr.add(b);
 
 		amgr.run();
 
 		// Can't compare to any direct vector as order is not guaranteed
-		REQUIRE(action_is_found(first->name()) == true);
-		REQUIRE(action_is_found(second->name()) == true);
+		REQUIRE(action_is_found(a->name()) == true);
+		REQUIRE(action_is_found(b->name()) == true);
 	}
 
 	SECTION("Two dependent")
 	{
 		test_action::s_actions_run.clear();
 
-		amgr.add(first);
-		amgr.add(third);
+		amgr.add(a);
+		amgr.add(aa);
 
 		amgr.run();
 
-		std::list<std::string> exp_actions_run = {"first", "third"};
+		std::list<std::string> exp_actions_run = {"a", "aa"};
 		REQUIRE(test_action::s_actions_run == exp_actions_run);
 	}
 
@@ -158,32 +170,32 @@ TEST_CASE("action manager can add and run actions", "[actions]")
 	{
 		test_action::s_actions_run.clear();
 
-		amgr.add(first);
-		amgr.add(second);
-		amgr.add(third);
+		amgr.add(a);
+		amgr.add(aa);
+		amgr.add(b);
 
 		amgr.run();
 
 		// Can't compare to any direct vector as order is not guaranteed
-		REQUIRE(action_is_found(first->name()) == true);
-		REQUIRE(action_is_found(second->name()) == true);
-		REQUIRE(action_is_found(third->name()) == true);
+		REQUIRE(action_is_found(a->name()) == true);
+		REQUIRE(action_is_found(aa->name()) == true);
+		REQUIRE(action_is_found(b->name()) == true);
 
-		// Ensure that third appears *after* first
-		auto it = find_action(first->name());
-		REQUIRE(action_is_found(third->name(), it) == true);
+		// Ensure that aa appears after a
+		auto it = find_action(a->name());
+		REQUIRE(action_is_found(aa->name(), it) == true);
 	}
 
 	SECTION("Two dependent, first does not proceed")
 	{
 		test_action::s_actions_run.clear();
 
-		amgr.add(first_noproceed);
-		amgr.add(third);
+		amgr.add(a_noproceed);
+		amgr.add(aa);
 
 		amgr.run();
 
-		std::list<std::string> exp_actions_run = {"first"};
+		std::list<std::string> exp_actions_run = {"a"};
 		REQUIRE(test_action::s_actions_run == exp_actions_run);
 	}
 
@@ -191,12 +203,12 @@ TEST_CASE("action manager can add and run actions", "[actions]")
 	{
 		test_action::s_actions_run.clear();
 
-		amgr.add(first);
-		amgr.add(third_noproceed);
+		amgr.add(a);
+		amgr.add(aa_noproceed);
 
 		amgr.run();
 
-		std::list<std::string> exp_actions_run = {"first", "third"};
+		std::list<std::string> exp_actions_run = {"a", "aa"};
 		REQUIRE(test_action::s_actions_run == exp_actions_run);
 	}
 
@@ -204,13 +216,13 @@ TEST_CASE("action manager can add and run actions", "[actions]")
 	{
 		test_action::s_actions_run.clear();
 
-		amgr.add(first_noproceed);
-		amgr.add(third);
-		amgr.add(fourth);
+		amgr.add(a_noproceed);
+		amgr.add(aa);
+		amgr.add(aaa);
 
 		amgr.run();
 
-		std::list<std::string> exp_actions_run = {"first"};
+		std::list<std::string> exp_actions_run = {"a"};
 		REQUIRE(test_action::s_actions_run == exp_actions_run);
 	}
 
@@ -218,24 +230,51 @@ TEST_CASE("action manager can add and run actions", "[actions]")
 	{
 		test_action::s_actions_run.clear();
 
-		amgr.add(first);
-		amgr.add(third_noproceed);
-		amgr.add(fourth);
+		amgr.add(a);
+		amgr.add(aa_noproceed);
+		amgr.add(aaa);
 
 		amgr.run();
 
-		std::list<std::string> exp_actions_run = {"first", "third"};
+		std::list<std::string> exp_actions_run = {"a", "aa"};
 		REQUIRE(test_action::s_actions_run == exp_actions_run);
 	}
 
-	SECTION("Prerequsites Cycle")
+	SECTION("Complex")
 	{
 		test_action::s_actions_run.clear();
 
-		amgr.add(third_depends_fourth);
-		amgr.add(fourth);
+		amgr.add(a);
+		amgr.add(b);
+		amgr.add(c);
+		amgr.add(d);
+		amgr.add(aa);
+		amgr.add(ab);
+		amgr.add(aaa);
+		amgr.add(aab);
+		amgr.add(aba);
 
-		REQUIRE_THROWS_WITH(amgr.run(), Catch::Matchers::Contains("Dependency cycle for actions") && Catch::Matchers::Contains("third") && Catch::Matchers::Contains("fourth"));
+		amgr.run();
+
+		// a, b, c, d must be found. Order not specified.
+		REQUIRE(action_is_found(a->name()) == true);
+		REQUIRE(action_is_found(b->name()) == true);
+		REQUIRE(action_is_found(c->name()) == true);
+		REQUIRE(action_is_found(d->name()) == true);
+
+		// aa, ab must be after a.
+		auto it = find_action(a->name());
+		REQUIRE(action_is_found(aa->name(), it) == true);
+		REQUIRE(action_is_found(ab->name(), it) == true);
+
+		// aaa, aab must be after aa
+		it = find_action(aa->name());
+		REQUIRE(action_is_found(aaa->name(), it) == true);
+		REQUIRE(action_is_found(aab->name(), it) == true);
+
+		// aba must be after ab
+		it = find_action(ab->name());
+		REQUIRE(action_is_found(aba->name(), it) == true);
 	}
 }
 
