@@ -25,7 +25,7 @@ limitations under the License.
 using json = nlohmann::json;
 using namespace std;
 
-k8s_audit_handler::k8s_audit_handler(falco_engine *engine, falco_outputs *outputs, std::size_t k8s_audit_event_source_idx):
+k8s_audit_handler::k8s_audit_handler(std::shared_ptr<falco_engine> engine, std::shared_ptr<falco_outputs> outputs, std::size_t k8s_audit_event_source_idx):
 	m_engine(engine), m_outputs(outputs), m_k8s_audit_event_source_idx(k8s_audit_event_source_idx)
 {
 }
@@ -43,8 +43,8 @@ bool k8s_healthz_handler::handleGet(CivetServer *server, struct mg_connection *c
 	return true;
 }
 
-bool k8s_audit_handler::accept_data(falco_engine *engine,
-				    falco_outputs *outputs,
+bool k8s_audit_handler::accept_data(std::shared_ptr<falco_engine> engine,
+				    std::shared_ptr<falco_outputs> outputs,
 				    std::size_t k8s_audit_event_source_idx,
 				    std::string &data,
 				    std::string &errstr)
@@ -186,9 +186,9 @@ falco_webserver::~falco_webserver()
 	stop();
 }
 
-void falco_webserver::init(falco_configuration *config,
-			   falco_engine *engine,
-			   falco_outputs *outputs,
+void falco_webserver::init(std::shared_ptr<falco_configuration> config,
+			   std::shared_ptr<falco_engine> engine,
+			   std::shared_ptr<falco_outputs> outputs,
 			   std::size_t k8s_audit_event_source_idx)
 {
 	m_config = config;

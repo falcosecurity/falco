@@ -31,7 +31,7 @@ public:
 	virtual ~StatsFileWriter();
 
 	// Returns success as bool. On false fills in errstr.
-	bool init(sinsp *inspector, std::string &filename,
+	bool init(std::shared_ptr<sinsp> inspector, std::string &filename,
 		  uint32_t interval_msec,
 		  string &errstr);
 
@@ -41,7 +41,7 @@ public:
 
 protected:
 	uint32_t m_num_stats;
-	sinsp *m_inspector;
+	std::shared_ptr<sinsp> m_inspector;
 	std::ofstream m_output;
 	std::string m_extra;
 	scap_stats m_last_stats;
