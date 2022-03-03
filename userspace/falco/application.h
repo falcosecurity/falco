@@ -48,8 +48,22 @@ public:
 		bool terminate;
 		bool reopen_outputs;
 
-		falco_configuration config;
+		std::shared_ptr<falco_configuration> config;
+		std::shared_ptr<falco_outputs> outputs;
+		std::shared_ptr<falco_engine> engine;
+		std::shared_ptr<sinsp> inspector;
+		std::set<std::string> enabled_sources;
+
+		// The event source is syscall by default. If an input
+		// plugin was found, the source is the source of that
+		// plugin.
+		std::string event_source;
+
+		std::list<sinsp_plugin::info> plugin_infos;
 	};
+
+	static std::string s_syscall_source;
+	static std::string s_k8s_audit_source;
 
 	application();
 	virtual ~application();

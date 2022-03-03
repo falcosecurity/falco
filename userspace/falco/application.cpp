@@ -28,11 +28,20 @@ limitations under the License.
 namespace falco {
 namespace app {
 
+std::string application::s_syscall_source = "syscall";
+std::string application::s_k8s_audit_source = "k8s_audit";
+
 application::action_state::action_state()
 	: restart(false),
 	  terminate(false),
-	  reopen_outputs(false)
+	  reopen_outputs(false),
+	  enabled_sources({application::s_syscall_source, application::s_k8s_audit_source}),
+	  event_source(application::s_syscall_source)
 {
+	config = std::make_shared<falco_configuration>();
+	outputs = std::make_shared<falco_outputs>();
+	inspector = std::make_shared<sinsp>();
+        engine = std::make_shared<falco_engine>();
 }
 
 application::action_state::~action_state()
@@ -76,11 +85,19 @@ bool application::init(int argc, char **argv, std::string &errstr)
 		return false;
 	}
 
-	m_action_manager.add(std::shared_ptr<runnable_action>(new act_print_help(*this)));
-	m_action_manager.add(std::shared_ptr<runnable_action>(new act_print_version(*this)));
 	m_action_manager.add(std::shared_ptr<runnable_action>(new act_create_signal_handlers(*this)));
+	m_action_manager.add(std::shared_ptr<runnable_action>(new act_init_falco_engine(*this)));
+	m_action_manager.add(std::shared_ptr<runnable_action>(new act_init_inspector(*this)));
+	m_action_manager.add(std::shared_ptr<runnable_action>(new act_init_outputs(*this)));
+	m_action_manager.add(std::shared_ptr<runnable_action>(new act_list_plugins(*this)));
 	m_action_manager.add(std::shared_ptr<runnable_action>(new act_load_config(*this)));
-
+	m_action_manager.add(std::shared_ptr<runnable_action>(new act_load_plugins(*this)));
+	m_action_manager.add(std::shared_ptr<runnable_action>(new act_print_help(*this)));
+	m_action_manager.add(std::shared_ptr<runnable_action>(new act_print_ignored_events(*this)));
+	m_action_manager.add(std::shared_ptr<runnable_action>(new act_print_version(*this)));
+#ifndef MINIMAL_BUILD
+	m_action_manager.add(std::shared_ptr<runnable_action>(new act_start_grpc_server(*this)));
+#endif
 	m_initialized = true;
 	return true;
 }
