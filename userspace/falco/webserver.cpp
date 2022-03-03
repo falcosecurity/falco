@@ -27,7 +27,7 @@ using namespace std;
 
 string k8s_audit_handler::m_k8s_audit_event_source = "k8s_audit";
 
-k8s_audit_handler::k8s_audit_handler(falco_engine *engine, falco_outputs *outputs):
+k8s_audit_handler::k8s_audit_handler(std::shared_ptr<falco_engine> engine, std::shared_ptr<falco_outputs> outputs):
 	m_engine(engine), m_outputs(outputs)
 {
 }
@@ -45,8 +45,8 @@ bool k8s_healthz_handler::handleGet(CivetServer *server, struct mg_connection *c
 	return true;
 }
 
-bool k8s_audit_handler::accept_data(falco_engine *engine,
-				    falco_outputs *outputs,
+bool k8s_audit_handler::accept_data(std::shared_ptr<falco_engine> engine,
+				    std::shared_ptr<falco_outputs> outputs,
 				    std::string &data,
 				    std::string &errstr)
 {
@@ -187,9 +187,9 @@ falco_webserver::~falco_webserver()
 	stop();
 }
 
-void falco_webserver::init(falco_configuration *config,
-			   falco_engine *engine,
-			   falco_outputs *outputs)
+void falco_webserver::init(std::shared_ptr<falco_configuration> config,
+			   std::shared_ptr<falco_engine> engine,
+			   std::shared_ptr<falco_outputs> outputs)
 {
 	m_config = config;
 	m_engine = engine;

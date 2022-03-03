@@ -60,7 +60,7 @@ falco_outputs::~falco_outputs()
 	}
 }
 
-void falco_outputs::init(falco_engine *engine,
+void falco_outputs::init(std::shared_ptr<falco_engine> engine,
 			 bool json_output,
 			 bool json_include_output_property,
 			 bool json_include_tags_property,

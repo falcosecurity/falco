@@ -20,7 +20,7 @@ limitations under the License.
 #include "falco_engine.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
 
-falco_formats::falco_formats(falco_engine *engine,
+falco_formats::falco_formats(std::shared_ptr<falco_engine> engine,
 			     bool json_include_output_property,
 			     bool json_include_tags_property)
 	: m_falco_engine(engine),
