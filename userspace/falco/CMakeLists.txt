@@ -22,7 +22,14 @@ set(
   app_actions/print_help.cpp
   app_actions/print_version.cpp
   app_actions/create_signal_handlers.cpp
+  app_actions/list_plugins.cpp
   app_actions/load_config.cpp
+  app_actions/load_plugins.cpp
+  app_actions/init_falco_engine.cpp
+  app_actions/init_outputs.cpp
+  app_actions/init_inspector.cpp
+  app_actions/print_ignored_events.cpp
+  app_actions/start_grpc_server.cpp
   app_action_manager.cpp
   configuration.cpp
   logger.cpp
