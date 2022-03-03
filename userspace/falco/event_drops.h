@@ -15,6 +15,7 @@ limitations under the License.
 */
 #pragma once
 
+#include <memory>
 #include <set>
 
 #include <sinsp.h>
@@ -41,8 +42,8 @@ public:
 	syscall_evt_drop_mgr();
 	virtual ~syscall_evt_drop_mgr();
 
-	void init(sinsp *inspector,
-		  falco_outputs *outputs,
+	void init(std::shared_ptr<sinsp> inspector,
+		  std::shared_ptr<falco_outputs> outputs,
 		  syscall_evt_drop_actions &actions,
 		  double threshold,
 		  double rate,
@@ -54,7 +55,7 @@ public:
 	// event drops, and performing any actions.
 	//
 	// Returns whether event processing should continue or stop (with an error).
-	bool process_event(sinsp *inspector, sinsp_evt *evt);
+	bool process_event(std::shared_ptr<sinsp> inspector, sinsp_evt *evt);
 
 	void print_stats();
 
@@ -64,8 +65,8 @@ protected:
 
 	uint64_t m_num_syscall_evt_drops;
 	uint64_t m_num_actions;
-	sinsp *m_inspector;
-	falco_outputs *m_outputs;
+	std::shared_ptr<sinsp> m_inspector;
+	std::shared_ptr<falco_outputs> m_outputs;
 	syscall_evt_drop_actions m_actions;
 	token_bucket m_bucket;
 	uint64_t m_next_check_ts;

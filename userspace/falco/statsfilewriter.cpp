@@ -31,7 +31,7 @@ static void timer_handler (int signum)
 extern char **environ;
 
 StatsFileWriter::StatsFileWriter()
-	: m_num_stats(0), m_inspector(NULL)
+	: m_num_stats(0)
 {
 }
 
@@ -40,7 +40,7 @@ StatsFileWriter::~StatsFileWriter()
 	m_output.close();
 }
 
-bool StatsFileWriter::init(sinsp *inspector, string &filename, uint32_t interval_msec, string &errstr)
+bool StatsFileWriter::init(std::shared_ptr<sinsp> inspector, string &filename, uint32_t interval_msec, string &errstr)
 {
 	struct itimerval timer;
 	struct sigaction handler;
