@@ -14,41 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#define __STDC_FORMAT_MACROS
-
 #include <stdio.h>
-#include <set>
-#include <list>
-#include <vector>
-#include <algorithm>
 #include <string>
-#include <chrono>
-#include <functional>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <getopt.h>
-
-#include <sinsp.h>
-#include <filter.h>
-#include <eventformatter.h>
-#include <plugin.h>
 
 #include "application.h"
 #include "logger.h"
-#include "utils.h"
-#include "fields_info.h"
-
-#include "event_drops.h"
-#include "falco_engine.h"
-#include "config_falco.h"
-#ifndef MINIMAL_BUILD
-#include "webserver.h"
-#endif
 #include "banned.h" // This raises a compilation error when certain functions are used
-
-static std::string syscall_source = "syscall";
-static std::string k8s_audit_source = "k8s_audit";
 
 static void display_fatal_err(const string &msg)
 {
