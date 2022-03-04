@@ -21,7 +21,7 @@ namespace falco {
 namespace app {
 
 act_print_version::act_print_version(application &app)
-	: action(app), m_name("print version")
+	: init_action(app), m_name("print version")
 {
 }
 

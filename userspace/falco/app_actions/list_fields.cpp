@@ -20,7 +20,7 @@ namespace falco {
 namespace app {
 
 act_list_fields::act_list_fields(application &app)
-	: action(app), m_name("list fields"),
+	: init_action(app), m_name("list fields"),
 	  m_prerequsites({"load plugins"})
 {
 }

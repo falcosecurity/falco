@@ -20,7 +20,7 @@ namespace falco {
 namespace app {
 
 act_init_inspector::act_init_inspector(application &app)
-	: action(app), m_name("init inspector")
+	: init_action(app), m_name("init inspector")
 {
 }
 

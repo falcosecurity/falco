@@ -23,7 +23,7 @@ namespace falco {
 namespace app {
 
 act_init_outputs::act_init_outputs(application &app)
-	: action(app), m_name("init outputs"),
+	: init_action(app), m_name("init outputs"),
 	  m_prerequsites({"load config", "init falco engine"})
 {
 }

@@ -19,12 +19,12 @@ limitations under the License.
 
 #include <string>
 
-#include "app_action.h"
+#include "init_action.h"
 
 namespace falco {
 namespace app {
 
-class act_validate_rules_files : public action {
+class act_validate_rules_files : public init_action {
 public:
 	act_validate_rules_files(application &app);
 	virtual ~act_validate_rules_files();

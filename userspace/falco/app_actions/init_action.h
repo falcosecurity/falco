@@ -17,29 +17,19 @@ limitations under the License.
 
 #pragma once
 
-#include <string>
-
-#include "init_action.h"
+#include "app_action.h"
 
 namespace falco {
 namespace app {
 
-class act_load_rules_files : public init_action {
+// All actions in the "init" group derive from this class
+
+class init_action : public action {
 public:
-	act_load_rules_files(application &app);
-	virtual ~act_load_rules_files();
+	init_action(application &app);
+	virtual ~init_action();
 
-	const std::string &name() override;
-
-	const std::list<std::string> &prerequsites() override;
-
-	run_result run() override;
-
-private:
-	void check_for_ignored_events();
-
-	std::string m_name;
-	std::list<std::string> m_prerequsites;
+	const std::string &group() override;
 };
 
 }; // namespace application

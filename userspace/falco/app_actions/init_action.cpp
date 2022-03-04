@@ -14,33 +14,26 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-
-#pragma once
-
-#include <string>
-
-#include "init_action.h"
+#include "load_plugins.h"
 
 namespace falco {
 namespace app {
 
-class act_load_rules_files : public init_action {
-public:
-	act_load_rules_files(application &app);
-	virtual ~act_load_rules_files();
+static std::string init_group = "init";
 
-	const std::string &name() override;
+init_action::init_action(application &app)
+	: action(app)
+{
+}
 
-	const std::list<std::string> &prerequsites() override;
+init_action::~init_action()
+{
+}
 
-	run_result run() override;
-
-private:
-	void check_for_ignored_events();
-
-	std::string m_name;
-	std::list<std::string> m_prerequsites;
-};
+const std::string &init_action::group()
+{
+	return init_group;
+}
 
 }; // namespace application
 }; // namespace falco

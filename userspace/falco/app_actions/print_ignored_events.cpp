@@ -20,7 +20,7 @@ namespace falco {
 namespace app {
 
 act_print_ignored_events::act_print_ignored_events(application &app)
-	: action(app), m_name("print ignored events"),
+	: init_action(app), m_name("print ignored events"),
 	  m_prerequsites({"init inspector"})
 {
 }

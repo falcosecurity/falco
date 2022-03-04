@@ -20,6 +20,7 @@ set(
   app_action.cpp
   app_runnable_action.cpp
   app_actions/create_signal_handlers.cpp
+  app_actions/init_action.cpp
   app_actions/init_falco_engine.cpp
   app_actions/init_inspector.cpp
   app_actions/init_outputs.cpp

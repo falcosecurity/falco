@@ -19,13 +19,13 @@ limitations under the License.
 
 #include <string>
 
-#include "app_action.h"
+#include "init_action.h"
 #include "webserver.h"
 
 namespace falco {
 namespace app {
 
-class act_start_webserver : public action {
+class act_start_webserver : public init_action {
 public:
 	act_start_webserver(application &app);
 	virtual ~act_start_webserver();

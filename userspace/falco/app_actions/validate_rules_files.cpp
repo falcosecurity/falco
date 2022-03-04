@@ -20,7 +20,7 @@ namespace falco {
 namespace app {
 
 act_validate_rules_files::act_validate_rules_files(application &app)
-	: action(app), m_name("validate rules files"),
+	: init_action(app), m_name("validate rules files"),
 	  m_prerequsites({"load plugins"})
 {
 }

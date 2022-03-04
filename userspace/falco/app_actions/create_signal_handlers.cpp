@@ -37,7 +37,7 @@ namespace falco {
 namespace app {
 
 act_create_signal_handlers::act_create_signal_handlers(application &app)
-	: action(app), m_name("create signal handlers")
+	: init_action(app), m_name("create signal handlers")
 {
 }
 

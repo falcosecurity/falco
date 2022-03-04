@@ -22,7 +22,7 @@ namespace falco {
 namespace app {
 
 act_start_grpc_server::act_start_grpc_server(application &app)
-	: action(app), m_name("start grpc server"),
+	: init_action(app), m_name("start grpc server"),
 	  m_prerequsites({"init outputs"})
 {
 }

@@ -19,7 +19,7 @@ limitations under the License.
 
 #include <string>
 
-#include "app_action.h"
+#include "init_action.h"
 
 #ifndef MINIMAL_BUILD
 
@@ -28,7 +28,7 @@ limitations under the License.
 namespace falco {
 namespace app {
 
-class act_start_grpc_server : public action {
+class act_start_grpc_server : public init_action {
 public:
 	act_start_grpc_server(application &app);
 	virtual ~act_start_grpc_server();

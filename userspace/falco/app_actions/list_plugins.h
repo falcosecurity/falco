@@ -19,12 +19,12 @@ limitations under the License.
 
 #include <string>
 
-#include "app_action.h"
+#include "init_action.h"
 
 namespace falco {
 namespace app {
 
-class act_list_plugins : public action {
+class act_list_plugins : public init_action {
 public:
 	act_list_plugins(application &app);
 	virtual ~act_list_plugins();

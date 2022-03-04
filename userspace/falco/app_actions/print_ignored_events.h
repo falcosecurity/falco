@@ -19,12 +19,12 @@ limitations under the License.
 
 #include <string>
 
-#include "app_action.h"
+#include "init_action.h"
 
 namespace falco {
 namespace app {
 
-class act_print_ignored_events : public action {
+class act_print_ignored_events : public init_action {
 public:
 	act_print_ignored_events(application &app);
 	virtual ~act_print_ignored_events();

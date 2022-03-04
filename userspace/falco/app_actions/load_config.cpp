@@ -20,7 +20,7 @@ namespace falco {
 namespace app {
 
 act_load_config::act_load_config(application &app)
-	: action(app), m_name("load config")
+	: init_action(app), m_name("load config")
 {
 }
 

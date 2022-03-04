@@ -22,7 +22,7 @@ namespace falco {
 namespace app {
 
 act_start_webserver::act_start_webserver(application &app)
-	: action(app), m_name("start webserver"),
+	: init_action(app), m_name("start webserver"),
 	  m_prerequsites({"init outputs"})
 {
 }

@@ -20,7 +20,7 @@ namespace falco {
 namespace app {
 
 act_load_plugins::act_load_plugins(application &app)
-	: action(app), m_name("load plugins"),
+	: init_action(app), m_name("load plugins"),
 	  m_prerequsites({"init falco engine", "load config"})
 {
 }

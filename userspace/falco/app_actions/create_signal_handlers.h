@@ -19,12 +19,12 @@ limitations under the License.
 
 #include <string>
 
-#include "app_action.h"
+#include "init_action.h"
 
 namespace falco {
 namespace app {
 
-class act_create_signal_handlers : public action {
+class act_create_signal_handlers : public init_action {
 public:
 	act_create_signal_handlers(application &app);
 	virtual ~act_create_signal_handlers();

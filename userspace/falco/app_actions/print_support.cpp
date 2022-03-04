@@ -23,7 +23,7 @@ namespace falco {
 namespace app {
 
 act_print_support::act_print_support(application &app)
-	: action(app), m_name("print support"),
+	: init_action(app), m_name("print support"),
 	  m_prerequsites({"load rules files"})
 {
 }

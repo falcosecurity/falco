@@ -20,7 +20,7 @@ namespace falco {
 namespace app {
 
 act_print_help::act_print_help(application &app)
-	: action(app), m_name("print help")
+	: init_action(app), m_name("print help")
 {
 }
 
