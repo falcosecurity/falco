@@ -49,34 +49,34 @@ runnable_action::run_result act_init_falco_engine::run()
 	// syscalls and k8s audit events.
 
 	// libs requires raw pointer, we should modify libs to use reference/shared_ptr
-	std::shared_ptr<gen_event_filter_factory> syscall_filter_factory(new sinsp_filter_factory(app().state().inspector.get()));
+	std::shared_ptr<gen_event_filter_factory> syscall_filter_factory(new sinsp_filter_factory(state().inspector.get()));
 	std::shared_ptr<gen_event_filter_factory> k8s_audit_filter_factory(new json_event_filter_factory());
 
 	// libs requires raw pointer, we should modify libs to use reference/shared_ptr
-	std::shared_ptr<gen_event_formatter_factory> syscall_formatter_factory(new sinsp_evt_formatter_factory(app().state().inspector.get()));
+	std::shared_ptr<gen_event_formatter_factory> syscall_formatter_factory(new sinsp_evt_formatter_factory(state().inspector.get()));
 	std::shared_ptr<gen_event_formatter_factory> k8s_audit_formatter_factory(new json_event_formatter_factory(k8s_audit_filter_factory));
 
-	app().state().engine->add_source(application::s_syscall_source, syscall_filter_factory, syscall_formatter_factory);
-	app().state().engine->add_source(application::s_k8s_audit_source, k8s_audit_filter_factory, k8s_audit_formatter_factory);
+	state().engine->add_source(application::s_syscall_source, syscall_filter_factory, syscall_formatter_factory);
+	state().engine->add_source(application::s_k8s_audit_source, k8s_audit_filter_factory, k8s_audit_formatter_factory);
 
-	if(app().state().config->m_json_output)
+	if(state().config->m_json_output)
 	{
 		syscall_formatter_factory->set_output_format(gen_event_formatter::OF_JSON);
 		k8s_audit_formatter_factory->set_output_format(gen_event_formatter::OF_JSON);
 	}
 
-	for(const auto &src : app().options().disable_sources)
+	for(const auto &src : options().disable_sources)
 	{
-		app().state().enabled_sources.erase(src);
+		state().enabled_sources.erase(src);
 	}
 
 	// XXX/mstemm technically this isn't right, you could disable syscall *and* k8s_audit and configure a plugin.
-	if(app().state().enabled_sources.empty())
+	if(state().enabled_sources.empty())
 	{
 		throw std::invalid_argument("The event source \"syscall\" and \"k8s_audit\" can not be disabled together");
 	}
 
-	app().state().engine->set_min_priority(app().state().config->m_min_priority);
+	state().engine->set_min_priority(state().config->m_min_priority);
 
 	return ret;
 }
@@ -86,30 +86,30 @@ void act_init_falco_engine::configure_output_format()
 	std::string output_format;
 	bool replace_container_info = false;
 
-	if(app().options().print_container)
+	if(options().print_container)
 	{
 		output_format = "container=%container.name (id=%container.id)";
 		replace_container_info = true;
 	}
-	else if(app().options().print_kubernetes)
+	else if(options().print_kubernetes)
 	{
 		output_format = "k8s.ns=%k8s.ns.name k8s.pod=%k8s.pod.name container=%container.id";
 		replace_container_info = true;
 	}
-	else if(app().options().print_mesos)
+	else if(options().print_mesos)
 	{
 		output_format = "task=%mesos.task.name container=%container.id";
 		replace_container_info = true;
 	}
-	else if(!app().options().print_additional.empty())
+	else if(!options().print_additional.empty())
 	{
-		output_format = app().options().print_additional;
+		output_format = options().print_additional;
 		replace_container_info = false;
 	}
 
 	if(!output_format.empty())
 	{
-		app().state().engine->set_extra(output_format, replace_container_info);
+		state().engine->set_extra(output_format, replace_container_info);
 	}
 }
 

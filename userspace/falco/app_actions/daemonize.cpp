@@ -48,7 +48,7 @@ runnable_action::run_result act_daemonize::run()
 
 	// If daemonizing, do it here so any init errors will
 	// be returned in the foreground process.
-	if (app().options().daemon && !m_daemonized) {
+	if (options().daemon && !m_daemonized) {
 		pid_t pid, sid;
 
 		pid = fork();
@@ -61,12 +61,12 @@ runnable_action::run_result act_daemonize::run()
 		} else if (pid > 0) {
 			// parent. Write child pid to pidfile and exit
 			std::ofstream pidfile;
-			pidfile.open(app().options().pidfilename);
+			pidfile.open(options().pidfilename);
 
 			if (!pidfile.good())
 			{
 				ret.success = false;
-				ret.errstr = string("Could not write pid to pid file ") + app().options().pidfilename + ".";
+				ret.errstr = string("Could not write pid to pid file ") + options().pidfilename + ".";
 				ret.proceed = false;
 				return ret;
 			}

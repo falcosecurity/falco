@@ -43,19 +43,19 @@ runnable_action::run_result act_validate_rules_files::run()
 {
 	run_result ret = {true, "", true};
 
-	if(app().options().validate_rules_filenames.size() > 0)
+	if(options().validate_rules_filenames.size() > 0)
 	{
 		falco_logger::log(LOG_INFO, "Validating rules file(s):\n");
-		for(auto file : app().options().validate_rules_filenames)
+		for(auto file : options().validate_rules_filenames)
 		{
 			falco_logger::log(LOG_INFO, "   " + file + "\n");
 		}
-		for(auto file : app().options().validate_rules_filenames)
+		for(auto file : options().validate_rules_filenames)
 		{
 			// Only include the prefix if there is more than one file
-			std::string prefix = (app().options().validate_rules_filenames.size() > 1 ? file + ": " : "");
+			std::string prefix = (options().validate_rules_filenames.size() > 1 ? file + ": " : "");
 			try {
-				app().state().engine->load_rules_file(file, app().options().verbose, app().options().all_events);
+				state().engine->load_rules_file(file, options().verbose, options().all_events);
 			}
 			catch(falco_exception &e)
 			{

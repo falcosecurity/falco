@@ -43,7 +43,7 @@ runnable_action::run_result act_print_ignored_events::run()
 {
 	run_result ret = {true, "", true};
 
-	if(app().options().print_ignored_events)
+	if(options().print_ignored_events)
 	{
 		print_all_ignored_events();
 		ret.proceed = false;
@@ -54,7 +54,7 @@ runnable_action::run_result act_print_ignored_events::run()
 
 void act_print_ignored_events::print_all_ignored_events()
 {
-	sinsp_evttables* einfo = app().state().inspector->get_event_info_tables();
+	sinsp_evttables* einfo = state().inspector->get_event_info_tables();
 	const struct ppm_event_info* etable = einfo->m_event_info;
 	const struct ppm_syscall_desc* stable = einfo->m_syscall_info_table;
 

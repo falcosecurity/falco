@@ -46,7 +46,7 @@ runnable_action::run_result act_print_support::run()
 {
 	run_result ret = {true, "", true};
 
-	if(app().options().print_support)
+	if(options().print_support)
 	{
 		nlohmann::json support;
 		struct utsname sysinfo;
@@ -66,16 +66,16 @@ runnable_action::run_result act_print_support::run()
 		support["system_info"]["release"] = sysinfo.release;
 		support["system_info"]["version"] = sysinfo.version;
 		support["system_info"]["machine"] = sysinfo.machine;
-		support["cmdline"] = app().state().cmdline;
+		support["cmdline"] = state().cmdline;
 		support["engine_info"]["engine_version"] = FALCO_ENGINE_VERSION;
-		support["config"] = read_file(app().options().conf_filename);
+		support["config"] = read_file(options().conf_filename);
 		support["rules_files"] = nlohmann::json::array();
-		for(auto filename : app().state().config->m_rules_filenames)
+		for(auto filename : state().config->m_rules_filenames)
 		{
 			nlohmann::json finfo;
 			finfo["name"] = filename;
 			nlohmann::json variant;
-			variant["required_engine_version"] = app().state().required_engine_versions[filename];
+			variant["required_engine_version"] = state().required_engine_versions[filename];
 			variant["content"] = read_file(filename);
 			finfo["variants"].push_back(variant);
 			support["rules_files"].push_back(finfo);

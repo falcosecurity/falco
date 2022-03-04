@@ -46,18 +46,18 @@ runnable_action::run_result act_start_grpc_server::run()
 	run_result ret = {true, "", true};
 
 	// gRPC server
-	if(app().state().config->m_grpc_enabled)
+	if(state().config->m_grpc_enabled)
 	{
-		falco_logger::log(LOG_INFO, "gRPC server threadiness equals to " + to_string(app().state().config->m_grpc_threadiness) + "\n");
+		falco_logger::log(LOG_INFO, "gRPC server threadiness equals to " + to_string(state().config->m_grpc_threadiness) + "\n");
 		// TODO(fntlnz,leodido): when we want to spawn multiple threads we need to have a queue per thread, or implement
 		// different queuing mechanisms, round robin, fanout? What we want to achieve?
 		m_grpc_server.init(
-			app().state().config->m_grpc_bind_address,
-			app().state().config->m_grpc_threadiness,
-			app().state().config->m_grpc_private_key,
-			app().state().config->m_grpc_cert_chain,
-			app().state().config->m_grpc_root_certs,
-			app().state().config->m_log_level
+			state().config->m_grpc_bind_address,
+			state().config->m_grpc_threadiness,
+			state().config->m_grpc_private_key,
+			state().config->m_grpc_cert_chain,
+			state().config->m_grpc_root_certs,
+			state().config->m_log_level
 			);
 		m_grpc_server_thread = std::thread([this] {
 			m_grpc_server.run();

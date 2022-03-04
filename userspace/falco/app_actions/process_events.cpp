@@ -14,12 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+#define __STDC_FORMAT_MACROS
+
+#include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 
 #include "falco_utils.h"
+#ifndef MINIMAL_BUILD
 #include "webserver.h"
+#endif
 #include "statsfilewriter.h"
 #include "process_events.h"
 
@@ -57,33 +62,33 @@ runnable_action::run_result act_process_events::run()
 
 	duration = ((double)clock()) / CLOCKS_PER_SEC;
 
-	if(!app().options().trace_filename.empty() && !app().state().trace_is_scap)
+	if(!options().trace_filename.empty() && !state().trace_is_scap)
 	{
 #ifndef MINIMAL_BUILD
-		read_k8s_audit_trace_file(app().options().trace_filename);
+		read_k8s_audit_trace_file(options().trace_filename);
 #endif
 	}
 	else
 	{
 		uint64_t num_evts;
 
-		num_evts = do_inspect(app().state().engine,
-				      app().state().outputs,
-				      app().state().inspector,
-				      app().state().event_source,
-				      app().state().config,
+		num_evts = do_inspect(state().engine,
+				      state().outputs,
+				      state().inspector,
+				      state().event_source,
+				      state().config,
 				      sdropmgr,
-				      uint64_t(app().options().duration_to_tot*ONE_SECOND_IN_NS),
-				      app().options().stats_filename,
-				      app().options().stats_interval,
-				      app().options().all_events,
+				      uint64_t(options().duration_to_tot*ONE_SECOND_IN_NS),
+				      options().stats_filename,
+				      options().stats_interval,
+				      options().all_events,
 				      ret);
 
 		duration = ((double)clock()) / CLOCKS_PER_SEC - duration;
 
-		app().state().inspector->get_capture_stats(&cstats);
+		state().inspector->get_capture_stats(&cstats);
 
-		if(app().options().verbose)
+		if(options().verbose)
 		{
 			fprintf(stderr, "Driver Events:%" PRIu64 "\nDriver Drops:%" PRIu64 "\n",
 				cstats.n_evts,
@@ -100,13 +105,13 @@ runnable_action::run_result act_process_events::run()
 	// Honor -M also when using a trace file.
 	// Since inspection stops as soon as all events have been consumed
 	// just await the given duration is reached, if needed.
-	if(!app().options().trace_filename.empty() && app().options().duration_to_tot>0)
+	if(!options().trace_filename.empty() && options().duration_to_tot>0)
 	{
-		std::this_thread::sleep_for(std::chrono::seconds(app().options().duration_to_tot));
+		std::this_thread::sleep_for(std::chrono::seconds(options().duration_to_tot));
 	}
 
-	app().state().inspector->close();
-	app().state().engine->print_stats();
+	state().inspector->close();
+	state().engine->print_stats();
 	sdropmgr.print_stats();
 
 	return ret;
@@ -132,7 +137,7 @@ void act_process_events::read_k8s_audit_trace_file(string &trace_filename)
 			continue;
 		}
 
-		if(!k8s_audit_handler::accept_data(app().state().engine, app().state().outputs, line, errstr))
+		if(!k8s_audit_handler::accept_data(state().engine, state().outputs, line, errstr))
 		{
 			falco_logger::log(LOG_ERR, "Could not read k8s audit event line #" + to_string(line_num) + ", \"" + line + "\": " + errstr + ", stopping");
 			return;

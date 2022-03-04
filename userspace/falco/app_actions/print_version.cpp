@@ -43,7 +43,7 @@ runnable_action::run_result act_print_version::run()
 {
 	run_result ret = {true, "", true};
 
-	if(app().options().print_version_info)
+	if(options().print_version_info)
 	{
 		printf("Falco version: %s\n", FALCO_VERSION);
 		printf("Driver version: %s\n", DRIVER_VERSION);

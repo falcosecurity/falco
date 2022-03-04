@@ -45,11 +45,11 @@ runnable_action::run_result act_start_webserver::run()
 {
 	run_result ret = {true, "", true};
 
-	if(app().options().trace_filename.empty() && app().state().config->m_webserver_enabled && app().state().enabled_sources.find(application::s_k8s_audit_source) != app().state().enabled_sources.end())
+	if(options().trace_filename.empty() && state().config->m_webserver_enabled && state().enabled_sources.find(application::s_k8s_audit_source) != state().enabled_sources.end())
 	{
-		std::string ssl_option = (app().state().config->m_webserver_ssl_enabled ? " (SSL)" : "");
-		falco_logger::log(LOG_INFO, "Starting internal webserver, listening on port " + to_string(app().state().config->m_webserver_listen_port) + ssl_option + "\n");
-		m_webserver.init(app().state().config, app().state().engine, app().state().outputs);
+		std::string ssl_option = (state().config->m_webserver_ssl_enabled ? " (SSL)" : "");
+		falco_logger::log(LOG_INFO, "Starting internal webserver, listening on port " + to_string(state().config->m_webserver_listen_port) + ssl_option + "\n");
+		m_webserver.init(state().config, state().engine, state().outputs);
 		m_webserver.start();
 	}
 

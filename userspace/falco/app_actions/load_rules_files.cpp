@@ -45,12 +45,12 @@ runnable_action::run_result act_load_rules_files::run()
 
 	string all_rules;
 
-	if (app().options().rules_filenames.size())
+	if (options().rules_filenames.size())
 	{
-		app().state().config->m_rules_filenames = app().options().rules_filenames;
+		state().config->m_rules_filenames = options().rules_filenames;
 	}
 
-	if(app().state().config->m_rules_filenames.size() == 0)
+	if(state().config->m_rules_filenames.size() == 0)
 	{
 		ret.success = false;
 		ret.errstr = "You must specify at least one rules file/directory via -r or a rules_file entry in falco.yaml";
@@ -59,18 +59,18 @@ runnable_action::run_result act_load_rules_files::run()
 	}
 
 	falco_logger::log(LOG_DEBUG, "Configured rules filenames:\n");
-	for (auto filename : app().state().config->m_rules_filenames)
+	for (auto filename : state().config->m_rules_filenames)
 	{
 		falco_logger::log(LOG_DEBUG, string("   ") + filename + "\n");
 	}
 
-	for (auto filename : app().state().config->m_rules_filenames)
+	for (auto filename : state().config->m_rules_filenames)
 	{
 		falco_logger::log(LOG_INFO, "Loading rules from file " + filename + ":\n");
 		uint64_t required_engine_version;
 
 		try {
-			app().state().engine->load_rules_file(filename, app().options().verbose, app().options().all_events, required_engine_version);
+			state().engine->load_rules_file(filename, options().verbose, options().all_events, required_engine_version);
 		}
 		catch(falco_exception &e)
 		{
@@ -79,15 +79,15 @@ runnable_action::run_result act_load_rules_files::run()
 			ret.proceed = false;
 			return ret;
 		}
-		app().state().required_engine_versions[filename] = required_engine_version;
+		state().required_engine_versions[filename] = required_engine_version;
 	}
 
 	// Ensure that all plugins are compatible with the loaded set of rules
-	for(auto &info : app().state().plugin_infos)
+	for(auto &info : state().plugin_infos)
 	{
 		std::string required_version;
 
-		if(!app().state().engine->is_plugin_compatible(info.name, info.plugin_version.as_string(), required_version))
+		if(!state().engine->is_plugin_compatible(info.name, info.plugin_version.as_string(), required_version))
 		{
 			ret.success = false;
 			ret.errstr = std::string("Plugin ") + info.name + " version " + info.plugin_version.as_string() + " not compatible with required plugin version " + required_version;
@@ -95,34 +95,34 @@ runnable_action::run_result act_load_rules_files::run()
 		}
 	}
 
-	for (auto substring : app().options().disabled_rule_substrings)
+	for (auto substring : options().disabled_rule_substrings)
 	{
 		falco_logger::log(LOG_INFO, "Disabling rules matching substring: " + substring + "\n");
-		app().state().engine->enable_rule(substring, false);
+		state().engine->enable_rule(substring, false);
 	}
 
-	if(app().options().disabled_rule_tags.size() > 0)
+	if(options().disabled_rule_tags.size() > 0)
 	{
-		for(auto &tag : app().options().disabled_rule_tags)
+		for(auto &tag : options().disabled_rule_tags)
 		{
 			falco_logger::log(LOG_INFO, "Disabling rules with tag: " + tag + "\n");
 		}
-		app().state().engine->enable_rule_by_tag(app().options().disabled_rule_tags, false);
+		state().engine->enable_rule_by_tag(options().disabled_rule_tags, false);
 	}
 
-	if(app().options().enabled_rule_tags.size() > 0)
+	if(options().enabled_rule_tags.size() > 0)
 	{
 		// Since we only want to enable specific
 		// rules, first disable all rules.
-		app().state().engine->enable_rule(all_rules, false);
-		for(auto &tag : app().options().enabled_rule_tags)
+		state().engine->enable_rule(all_rules, false);
+		for(auto &tag : options().enabled_rule_tags)
 		{
 			falco_logger::log(LOG_INFO, "Enabling rules with tag: " + tag + "\n");
 		}
-		app().state().engine->enable_rule_by_tag(app().options().enabled_rule_tags, true);
+		state().engine->enable_rule_by_tag(options().enabled_rule_tags, true);
 	}
 
-	if(!app().options().all_events)
+	if(!options().all_events)
 	{
 		// For syscalls, see if any event types used by the
 		// loaded rules are ones with the EF_DROP_SIMPLE_CONS
@@ -130,16 +130,16 @@ runnable_action::run_result act_load_rules_files::run()
 		check_for_ignored_events();
 	}
 
-	if (app().options().describe_all_rules)
+	if (options().describe_all_rules)
 	{
-		app().state().engine->describe_rule(NULL);
+		state().engine->describe_rule(NULL);
 		ret.proceed = false;
 		return ret;
 	}
 
-	if (!app().options().describe_rule.empty())
+	if (!options().describe_rule.empty())
 	{
-		app().state().engine->describe_rule(&(app().options().describe_rule));
+		state().engine->describe_rule(&(options().describe_rule));
 		ret.proceed = false;
 		return ret;
 	}
@@ -150,10 +150,10 @@ runnable_action::run_result act_load_rules_files::run()
 void act_load_rules_files::check_for_ignored_events()
 {
 	std::set<uint16_t> evttypes;
-	sinsp_evttables* einfo = app().state().inspector->get_event_info_tables();
+	sinsp_evttables* einfo = state().inspector->get_event_info_tables();
 	const struct ppm_event_info* etable = einfo->m_event_info;
 
-	app().state().engine->evttypes_for_ruleset(application::s_syscall_source, evttypes);
+	state().engine->evttypes_for_ruleset(application::s_syscall_source, evttypes);
 
 	// Save event names so we don't warn for both the enter and exit event.
 	std::set<std::string> warn_event_names;

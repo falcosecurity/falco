@@ -43,17 +43,17 @@ runnable_action::run_result act_list_fields::run()
 {
 	run_result ret = {true, "", true};
 
-	if(app().options().list_fields)
+	if(options().list_fields)
 	{
-		if(app().options().list_source_fields != "" &&
-		   !app().state().engine->is_source_valid(app().options().list_source_fields))
+		if(options().list_source_fields != "" &&
+		   !state().engine->is_source_valid(options().list_source_fields))
 		{
 			ret.success = false;
 			ret.errstr = "Value for --list must be a valid source type";
 			ret.proceed = false;
 			return ret;
 		}
-		app().state().engine->list_fields(app().options().list_source_fields, app().options().verbose, app().options().names_only);
+		state().engine->list_fields(options().list_source_fields, options().verbose, options().names_only);
 
 		ret.proceed = false;
 	}

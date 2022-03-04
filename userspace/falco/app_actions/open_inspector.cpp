@@ -47,21 +47,21 @@ runnable_action::run_result act_open_inspector::run()
 {
 	run_result ret = {true, "", true};
 
-	if(app().options().trace_filename.size())
+	if(options().trace_filename.size())
 	{
 		// Try to open the trace file as a
 		// capture file first.
 		try {
-			app().state().inspector->open(app().options().trace_filename);
-			falco_logger::log(LOG_INFO, "Reading system call events from file: " + app().options().trace_filename + "\n");
+			state().inspector->open(options().trace_filename);
+			falco_logger::log(LOG_INFO, "Reading system call events from file: " + options().trace_filename + "\n");
 		}
 		catch(sinsp_exception &e)
 		{
-			falco_logger::log(LOG_DEBUG, "Could not read trace file \"" + app().options().trace_filename + "\": " + string(e.what()));
-			app().state().trace_is_scap=false;
+			falco_logger::log(LOG_DEBUG, "Could not read trace file \"" + options().trace_filename + "\": " + string(e.what()));
+			state().trace_is_scap=false;
 		}
 
-		if(!app().state().trace_is_scap)
+		if(!state().trace_is_scap)
 		{
 #ifdef MINIMAL_BUILD
 			ret.success = false;
@@ -75,16 +75,16 @@ runnable_action::run_result act_open_inspector::run()
 
 				// Note we only temporarily open the file here.
 				// The read file read loop will be later.
-				ifstream ifs(app().options().trace_filename);
+				ifstream ifs(options().trace_filename);
 				getline(ifs, line);
 				j = nlohmann::json::parse(line);
 
-				falco_logger::log(LOG_INFO, "Reading k8s audit events from file: " + app().options().trace_filename + "\n");
+				falco_logger::log(LOG_INFO, "Reading k8s audit events from file: " + options().trace_filename + "\n");
 			}
 			catch (nlohmann::json::parse_error& e)
 			{
 				ret.success = false;
-				ret.errstr = std::string("Trace filename ") + app().options().trace_filename + " not recognized as system call events or k8s audit events";
+				ret.errstr = std::string("Trace filename ") + options().trace_filename + " not recognized as system call events or k8s audit events";
 				ret.proceed = false;
 				return ret;
 
@@ -92,7 +92,7 @@ runnable_action::run_result act_open_inspector::run()
 			catch (exception &e)
 			{
 				ret.success = false;
-				ret.errstr = std::string("Could not open trace filename ") + app().options().trace_filename + " for reading: " + e.what();
+				ret.errstr = std::string("Could not open trace filename ") + options().trace_filename + " for reading: " + e.what();
 				ret.proceed = false;
 				return ret;
 			}
@@ -103,7 +103,7 @@ runnable_action::run_result act_open_inspector::run()
 	{
 		open_t open_cb = [this](std::shared_ptr<sinsp> inspector)
 			{
-				if(app().options().userspace)
+				if(options().userspace)
 				{
 					// open_udig() is the underlying method used in the capture code to parse userspace events from the kernel.
 					//
@@ -120,35 +120,35 @@ runnable_action::run_result act_open_inspector::run()
 		open_t open_f;
 
 		// Default mode: both event sources enabled
-		if (app().state().enabled_sources.find(application::s_syscall_source) != app().state().enabled_sources.end() &&
-		    app().state().enabled_sources.find(application::s_k8s_audit_source) != app().state().enabled_sources.end())
+		if (state().enabled_sources.find(application::s_syscall_source) != state().enabled_sources.end() &&
+		    state().enabled_sources.find(application::s_k8s_audit_source) != state().enabled_sources.end())
 		{
 			open_f = open_cb;
 		}
-		if (app().state().enabled_sources.find(application::s_syscall_source) == app().state().enabled_sources.end())
+		if (state().enabled_sources.find(application::s_syscall_source) == state().enabled_sources.end())
 		{
 			open_f = open_nodriver_cb;
 		}
-		if (app().state().enabled_sources.find(application::s_k8s_audit_source) == app().state().enabled_sources.end())
+		if (state().enabled_sources.find(application::s_k8s_audit_source) == state().enabled_sources.end())
 		{
 			open_f = open_cb;
 		}
 
 		try
 		{
-			open_f(app().state().inspector);
+			open_f(state().inspector);
 		}
 		catch(sinsp_exception &e)
 		{
 			// If syscall input source is enabled and not through userspace instrumentation
-			if (app().state().enabled_sources.find(application::s_syscall_source) != app().state().enabled_sources.end() && !app().options().userspace)
+			if (state().enabled_sources.find(application::s_syscall_source) != state().enabled_sources.end() && !options().userspace)
 			{
 				// Try to insert the Falco kernel module
 				if(system("modprobe " DRIVER_NAME " > /dev/null 2> /dev/null"))
 				{
 					falco_logger::log(LOG_ERR, "Unable to load the driver.\n");
 				}
-				open_f(app().state().inspector);
+				open_f(state().inspector);
 			}
 			else
 			{
@@ -161,9 +161,9 @@ runnable_action::run_result act_open_inspector::run()
 	}
 
 	// This must be done after the open
-	if(!app().options().all_events)
+	if(!options().all_events)
 	{
-		app().state().inspector->start_dropping_mode(1);
+		state().inspector->start_dropping_mode(1);
 	}
 
 	return ret;

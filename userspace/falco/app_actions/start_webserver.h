@@ -20,6 +20,8 @@ limitations under the License.
 #include <string>
 
 #include "init_action.h"
+
+#ifndef MINIMAL_BUILD
 #include "webserver.h"
 
 namespace falco {
@@ -44,6 +46,7 @@ private:
 	std::list<std::string> m_prerequsites;
 };
 
+#endif
 }; // namespace application
 }; // namespace falco
 

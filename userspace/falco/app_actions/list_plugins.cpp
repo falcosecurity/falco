@@ -43,11 +43,11 @@ runnable_action::run_result act_list_plugins::run()
 {
 	run_result ret = {true, "", true};
 
-	if(app().options().list_plugins)
+	if(options().list_plugins)
 	{
 		std::ostringstream os;
 
-		for(auto &info : app().state().plugin_infos)
+		for(auto &info : state().plugin_infos)
 		{
 			os << "Name: " << info.name << std::endl;
 			os << "Description: " << info.description << std::endl;
@@ -66,7 +66,7 @@ runnable_action::run_result act_list_plugins::run()
 			os << std::endl;
 		}
 
-		printf("%lu Plugins Loaded:\n\n%s\n", app().state().plugin_infos.size(), os.str().c_str());
+		printf("%lu Plugins Loaded:\n\n%s\n", state().plugin_infos.size(), os.str().c_str());
 		ret.proceed = false;
 	}
 

@@ -42,9 +42,9 @@ runnable_action::run_result act_print_help::run()
 {
 	run_result ret = {true, "", true};
 
-	if(app().options().help)
+	if(options().help)
 	{
-		printf("%s", app().options().usage().c_str());
+		printf("%s", options().usage().c_str());
 		ret.proceed = false;
 	}
 

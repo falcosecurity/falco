@@ -65,19 +65,19 @@ runnable_action::run_result act_init_outputs::run()
 		hostname = c_hostname;
 	}
 
-	app().state().outputs->init(app().state().engine,
-				    app().state().config->m_json_output,
-				    app().state().config->m_json_include_output_property,
-				    app().state().config->m_json_include_tags_property,
-				    app().state().config->m_output_timeout,
-				    app().state().config->m_notifications_rate, app().state().config->m_notifications_max_burst,
-				    app().state().config->m_buffered_outputs,
-				    app().state().config->m_time_format_iso_8601,
+	state().outputs->init(state().engine,
+				    state().config->m_json_output,
+				    state().config->m_json_include_output_property,
+				    state().config->m_json_include_tags_property,
+				    state().config->m_output_timeout,
+				    state().config->m_notifications_rate, state().config->m_notifications_max_burst,
+				    state().config->m_buffered_outputs,
+				    state().config->m_time_format_iso_8601,
 				    hostname);
 
-	for(auto output : app().state().config->m_outputs)
+	for(auto output : state().config->m_outputs)
 	{
-		app().state().outputs->add_output(output);
+		state().outputs->add_output(output);
 	}
 
 	return ret;

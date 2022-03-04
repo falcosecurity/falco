@@ -42,14 +42,14 @@ runnable_action::run_result act_load_config::run()
 {
 	run_result ret = {true, "", true};
 
-	if (app().options().conf_filename.size())
+	if (options().conf_filename.size())
 	{
-		app().state().config->init(app().options().conf_filename, app().options().cmdline_config_options);
-		falco_logger::set_time_format_iso_8601(app().state().config->m_time_format_iso_8601);
+		state().config->init(options().conf_filename, options().cmdline_config_options);
+		falco_logger::set_time_format_iso_8601(state().config->m_time_format_iso_8601);
 
 		// log after config init because config determines where logs go
 		falco_logger::log(LOG_INFO, "Falco version " + std::string(FALCO_VERSION) + " (driver version " + std::string(DRIVER_VERSION) + ")\n");
-		falco_logger::log(LOG_INFO, "Falco initialized with configuration file " + app().options().conf_filename + "\n");
+		falco_logger::log(LOG_INFO, "Falco initialized with configuration file " + options().conf_filename + "\n");
 	}
 	else
 	{
@@ -63,7 +63,7 @@ runnable_action::run_result act_load_config::run()
 #endif
 	}
 
-	app().state().config->m_buffered_outputs = !app().options().unbuffered_outputs;
+	state().config->m_buffered_outputs = !options().unbuffered_outputs;
 
 	return ret;
 }
