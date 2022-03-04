@@ -64,6 +64,8 @@ public:
 		std::map<string,uint64_t> required_engine_versions;
 
 		std::string cmdline;
+
+		bool trace_is_scap;
 	};
 
 	static std::string s_syscall_source;

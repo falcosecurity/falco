@@ -118,6 +118,8 @@ bool application::init(int argc, char **argv, std::string &errstr)
 	m_action_manager.add(std::shared_ptr<runnable_action>(new act_validate_rules_files(*this)));
 
 	m_action_manager.add(std::shared_ptr<runnable_action>(new act_daemonize(*this)));
+	m_action_manager.add(std::shared_ptr<runnable_action>(new act_open_inspector(*this)));
+	m_action_manager.add(std::shared_ptr<runnable_action>(new act_process_events(*this)));
 	m_initialized = true;
 	return true;
 }
