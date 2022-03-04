@@ -51,7 +51,6 @@ limitations under the License.
 
 typedef function<void(std::shared_ptr<sinsp> inspector)> open_t;
 
-bool g_daemonized = false;
 static std::string syscall_source = "syscall";
 static std::string k8s_audit_source = "k8s_audit";
 
@@ -281,63 +280,6 @@ int falco_init(falco::app::application &app, int argc, char **argv)
 	try
 	{
 		app.run();
-
-		// If daemonizing, do it here so any init errors will
-		// be returned in the foreground process.
-		if (app.options().daemon && !g_daemonized) {
-			pid_t pid, sid;
-
-			pid = fork();
-			if (pid < 0) {
-				// error
-				falco_logger::log(LOG_ERR, "Could not fork. Exiting.\n");
-				result = EXIT_FAILURE;
-				goto exit;
-			} else if (pid > 0) {
-				// parent. Write child pid to pidfile and exit
-				std::ofstream pidfile;
-				pidfile.open(app.options().pidfilename);
-
-				if (!pidfile.good())
-				{
-					falco_logger::log(LOG_ERR, "Could not write pid to pid file " + app.options().pidfilename + ". Exiting.\n");
-					result = EXIT_FAILURE;
-					goto exit;
-				}
-				pidfile << pid;
-				pidfile.close();
-				goto exit;
-			}
-			// if here, child.
-
-			// Become own process group.
-			sid = setsid();
-			if (sid < 0) {
-				falco_logger::log(LOG_ERR, "Could not set session id. Exiting.\n");
-				result = EXIT_FAILURE;
-				goto exit;
-			}
-
-			// Set umask so no files are world anything or group writable.
-			umask(027);
-
-			// Change working directory to '/'
-			if ((chdir("/")) < 0) {
-				falco_logger::log(LOG_ERR, "Could not change working directory to '/'. Exiting.\n");
-				result = EXIT_FAILURE;
-				goto exit;
-			}
-
-			// Close stdin, stdout, stderr and reopen to /dev/null
-			close(0);
-			close(1);
-			close(2);
-			open("/dev/null", O_RDONLY);
-			open("/dev/null", O_RDWR);
-			open("/dev/null", O_RDWR);
-
-			g_daemonized = true;
-		}
 
 		if(app.options().trace_filename.size())
 		{
