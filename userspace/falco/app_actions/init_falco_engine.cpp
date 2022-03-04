@@ -76,6 +76,8 @@ runnable_action::run_result act_init_falco_engine::run()
 		throw std::invalid_argument("The event source \"syscall\" and \"k8s_audit\" can not be disabled together");
 	}
 
+	app().state().engine->set_min_priority(app().state().config->m_min_priority);
+
 	return ret;
 }
 

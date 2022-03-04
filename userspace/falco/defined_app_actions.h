@@ -19,11 +19,16 @@ limitations under the License.
 #include "app_actions/init_inspector.h"
 #include "app_actions/init_outputs.h"
 #include "app_actions/list_plugins.h"
+#include "app_actions/list_fields.h"
 #include "app_actions/load_config.h"
 #include "app_actions/load_plugins.h"
+#include "app_actions/load_rules_files.h"
 #include "app_actions/print_help.h"
 #include "app_actions/print_ignored_events.h"
+#include "app_actions/print_support.h"
 #include "app_actions/print_version.h"
 #include "app_actions/start_grpc_server.h"
+#include "app_actions/start_webserver.h"
+#include "app_actions/validate_rules_files.h"
 
 

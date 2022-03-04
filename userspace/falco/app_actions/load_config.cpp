@@ -63,6 +63,8 @@ runnable_action::run_result act_load_config::run()
 #endif
 	}
 
+	app().state().config->m_buffered_outputs = !app().options().unbuffered_outputs;
+
 	return ret;
 }
 
