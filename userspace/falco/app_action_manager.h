@@ -33,11 +33,23 @@ public:
 	action_manager();
 	virtual ~action_manager();
 
+	// Actions are organized into groups. All actions from a
+	// given group are run before actions from another group.
+	//
+	// Example groups are "init", "run", etc.
+	//
+	// This specifies the order of groups.
+	void set_groups(std::list<std::string> &groups);
+
 	void add(std::shared_ptr<runnable_action> act);
 
 	void run();
 
 private:
+
+	void run_group(std::string &group);
+
+	std::list<std::string> m_groups;
 
 	// Return true if a is less (e.g. a should run before b)
 	bool compare_actions(const std::shared_ptr<runnable_action> &a, const std::shared_ptr<runnable_action> &b);

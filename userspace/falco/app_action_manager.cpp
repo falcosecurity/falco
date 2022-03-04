@@ -34,6 +34,11 @@ action_manager::~action_manager()
 {
 }
 
+void action_manager::set_groups(std::list<std::string> &groups)
+{
+	m_groups = groups;
+}
+
 void action_manager::add(std::shared_ptr<runnable_action> act)
 {
 	m_actions[act->name()] = act;
@@ -68,15 +73,25 @@ bool action_manager::compare_actions(const std::shared_ptr<runnable_action> &a, 
 	return false;
 }
 
-
 void action_manager::run()
 {
+	for(auto &group : m_groups)
+	{
+		falco_logger::log(LOG_DEBUG, string("Running group ") + group);
+		run_group(group);
+	}
+}
 
+void action_manager::run_group(std::string &group)
+{
 	std::vector<std::shared_ptr<runnable_action>> actions_ordered;
 
 	for(auto &pair : m_actions)
 	{
-		actions_ordered.push_back(pair.second);
+		if(pair.second->group() == group)
+		{
+			actions_ordered.push_back(pair.second);
+		}
 	}
 
 	auto compare = [this](const std::shared_ptr<runnable_action> &a,
