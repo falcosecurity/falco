@@ -77,6 +77,15 @@ runnable_action::run_result act_init_inspector::run()
 	app().state().inspector->set_hostname_and_port_resolution_mode(false);
 
 #ifndef MINIMAL_BUILD
+
+		falco_logger::log(LOG_DEBUG, "Setting metadata download max size to " + to_string(app().state().config->m_metadata_download_max_mb) + " MB\n");
+		falco_logger::log(LOG_DEBUG, "Setting metadata download chunk wait time to " + to_string(app().state().config->m_metadata_download_chunk_wait_us) + " μs\n");
+		falco_logger::log(LOG_DEBUG, "Setting metadata download watch frequency to " + to_string(app().state().config->m_metadata_download_watch_freq_sec) + " seconds\n");
+		app().state().inspector->set_metadata_download_params(app().state().config->m_metadata_download_max_mb * 1024 * 1024, app().state().config->m_metadata_download_chunk_wait_us, app().state().config->m_metadata_download_watch_freq_sec);
+
+#endif
+
+#ifndef MINIMAL_BUILD
 	// Initializing k8s/mesos might have to move to open inspector
 	//
 	// Run k8s, if required

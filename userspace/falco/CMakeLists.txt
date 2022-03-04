@@ -38,6 +38,8 @@ set(
   app_actions/start_webserver.cpp
   app_actions/validate_rules_files.cpp
   app_actions/daemonize.cpp
+  app_actions/open_inspector.cpp
+  app_actions/process_events.cpp
   app_action_manager.cpp
   configuration.cpp
   logger.cpp

@@ -32,5 +32,7 @@ limitations under the License.
 #include "app_actions/validate_rules_files.h"
 
 #include "app_actions/daemonize.h"
+#include "app_actions/open_inspector.h"
+#include "app_actions/process_events.h"
 
 
