@@ -60,6 +60,10 @@ public:
 		std::string event_source;
 
 		std::list<sinsp_plugin::info> plugin_infos;
+
+		std::map<string,uint64_t> required_engine_versions;
+
+		std::string cmdline;
 	};
 
 	static std::string s_syscall_source;

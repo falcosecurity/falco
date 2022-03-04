@@ -85,19 +85,33 @@ bool application::init(int argc, char **argv, std::string &errstr)
 		return false;
 	}
 
+	for(char **arg = argv; *arg; arg++)
+	{
+		if(state().cmdline.size() > 0)
+		{
+			state().cmdline += " ";
+		}
+		state().cmdline += *arg;
+	}
+
 	m_action_manager.add(std::shared_ptr<runnable_action>(new act_create_signal_handlers(*this)));
 	m_action_manager.add(std::shared_ptr<runnable_action>(new act_init_falco_engine(*this)));
 	m_action_manager.add(std::shared_ptr<runnable_action>(new act_init_inspector(*this)));
 	m_action_manager.add(std::shared_ptr<runnable_action>(new act_init_outputs(*this)));
+	m_action_manager.add(std::shared_ptr<runnable_action>(new act_list_fields(*this)));
 	m_action_manager.add(std::shared_ptr<runnable_action>(new act_list_plugins(*this)));
 	m_action_manager.add(std::shared_ptr<runnable_action>(new act_load_config(*this)));
 	m_action_manager.add(std::shared_ptr<runnable_action>(new act_load_plugins(*this)));
+	m_action_manager.add(std::shared_ptr<runnable_action>(new act_load_rules_files(*this)));
 	m_action_manager.add(std::shared_ptr<runnable_action>(new act_print_help(*this)));
 	m_action_manager.add(std::shared_ptr<runnable_action>(new act_print_ignored_events(*this)));
+	m_action_manager.add(std::shared_ptr<runnable_action>(new act_print_support(*this)));
 	m_action_manager.add(std::shared_ptr<runnable_action>(new act_print_version(*this)));
 #ifndef MINIMAL_BUILD
 	m_action_manager.add(std::shared_ptr<runnable_action>(new act_start_grpc_server(*this)));
+	m_action_manager.add(std::shared_ptr<runnable_action>(new act_start_webserver(*this)));
 #endif
+	m_action_manager.add(std::shared_ptr<runnable_action>(new act_validate_rules_files(*this)));
 	m_initialized = true;
 	return true;
 }
