@@ -94,6 +94,10 @@ bool application::init(int argc, char **argv, std::string &errstr)
 		state().cmdline += *arg;
 	}
 
+
+	std::list<std::string> groups = {"init", "run"};
+	m_action_manager.set_groups(groups);
+
 	m_action_manager.add(std::shared_ptr<runnable_action>(new act_create_signal_handlers(*this)));
 	m_action_manager.add(std::shared_ptr<runnable_action>(new act_init_falco_engine(*this)));
 	m_action_manager.add(std::shared_ptr<runnable_action>(new act_init_inspector(*this)));
