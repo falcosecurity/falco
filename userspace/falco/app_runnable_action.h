@@ -49,6 +49,13 @@ public:
 	// purposes and to use in prerequsites().
 	virtual const std::string &name() = 0;
 
+	// Actions are organized into groups. All actions from a
+	// given group are run before actions from another group.
+	//
+	// The order of groups is passed to the action manager in its
+	// constructor.
+	virtual const std::string &group() = 0;
+
 	// Return a list of action names that *must* run before this
 	// action is run.
 	virtual const std::list<std::string> &prerequsites() = 0;
