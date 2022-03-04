@@ -47,7 +47,8 @@ public:
 
 private:
 
-	void run_group(std::string &group);
+	// Returns true if subsequent groups should run, false otherwise.
+        bool run_group(std::string &group);
 
 	std::list<std::string> m_groups;
 

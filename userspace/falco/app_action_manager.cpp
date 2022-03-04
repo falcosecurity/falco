@@ -78,12 +78,19 @@ void action_manager::run()
 	for(auto &group : m_groups)
 	{
 		falco_logger::log(LOG_DEBUG, string("Running group ") + group);
-		run_group(group);
+		bool proceed = run_group(group);
+
+		if(!proceed)
+		{
+			break;
+		}
 	}
 }
 
-void action_manager::run_group(std::string &group)
+bool action_manager::run_group(std::string &group)
 {
+	bool proceed = true;
+
 	std::vector<std::shared_ptr<runnable_action>> actions_ordered;
 
 	for(auto &pair : m_actions)
@@ -122,6 +129,7 @@ void action_manager::run_group(std::string &group)
 
 		if(!res.proceed)
 		{
+			proceed = false;
 			break;
 		}
 	}
@@ -133,7 +141,7 @@ void action_manager::run_group(std::string &group)
 		act->deinit();
 	}
 
-	return;
+	return proceed;
 }
 
 }; // namespace application
