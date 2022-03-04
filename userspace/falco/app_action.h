@@ -35,10 +35,10 @@ namespace app {
 //            - DONE list plugins
 //            - DONE initialize outputs (also depends on load config)
 //              - DONE start grpc server
-//              - start webserver
-//            - validate rules files
-//            - list all fields/list source fields
-//            - load rules files
+//              - DONE start webserver
+//            - DONE validate rules files
+//            - DONE list all fields/list source fields
+//            - DONE load rules files
 //               - describe rule(s)
 //               - print support
 //
