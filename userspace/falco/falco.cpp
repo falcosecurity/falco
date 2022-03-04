@@ -25,7 +25,6 @@ limitations under the License.
 #include <chrono>
 #include <functional>
 #include <fcntl.h>
-#include <sys/utsname.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <getopt.h>
@@ -43,12 +42,10 @@ limitations under the License.
 
 #include "event_drops.h"
 #include "falco_engine.h"
-#include "falco_engine_version.h"
 #include "config_falco.h"
 #include "statsfilewriter.h"
 #ifndef MINIMAL_BUILD
 #include "webserver.h"
-#include "grpc_server.h"
 #endif
 #include "banned.h" // This raises a compilation error when certain functions are used
 
@@ -102,15 +99,6 @@ void read_k8s_audit_trace_file(std::shared_ptr<falco_engine> engine,
 	}
 }
 #endif
-
-static std::string read_file(std::string filename)
-{
-	std::ifstream t(filename);
-	std::string str((std::istreambuf_iterator<char>(t)),
-			std::istreambuf_iterator<char>());
-
-	return str;
-}
 
 //
 // Event processing loop
@@ -260,64 +248,6 @@ uint64_t do_inspect(std::shared_ptr<falco_engine> engine,
 	return num_evts;
 }
 
-static void check_for_ignored_events(std::shared_ptr<sinsp> inspector, std::shared_ptr<falco_engine> engine)
-{
-	std::set<uint16_t> evttypes;
-	sinsp_evttables* einfo = inspector->get_event_info_tables();
-	const struct ppm_event_info* etable = einfo->m_event_info;
-
-	engine->evttypes_for_ruleset(syscall_source, evttypes);
-
-	// Save event names so we don't warn for both the enter and exit event.
-	std::set<std::string> warn_event_names;
-
-	for(auto evtnum : evttypes)
-	{
-		if(evtnum == PPME_GENERIC_E || evtnum == PPME_GENERIC_X)
-		{
-			continue;
-		}
-
-		if(!sinsp::simple_consumer_consider_evtnum(evtnum))
-		{
-			std::string name = etable[evtnum].name;
-			if(warn_event_names.find(name) == warn_event_names.end())
-			{
-				warn_event_names.insert(name);
-			}
-		}
-	}
-
-	// Print a single warning with the list of ignored events
-	if (!warn_event_names.empty())
-	{
-		std::string skipped_events;
-		bool first = true;
-		for (const auto& evtname : warn_event_names)
-		{
-			if (first)
-			{
-				skipped_events += evtname;
-				first = false;
-			} else
-			{
-				skipped_events += "," + evtname;
-			}
-		}
-		fprintf(stderr,"Rules match ignored syscall: warning (ignored-evttype):\n         loaded rules match the following events: %s;\n         but these events are not returned unless running falco with -A\n", skipped_events.c_str());
-	}
-}
-
-static void list_source_fields(std::shared_ptr<falco_engine> engine, bool verbose, bool names_only, std::string &source)
-{
-	if(source != "" &&
-	   !engine->is_source_valid(source))
-	{
-		throw std::invalid_argument("Value for --list must be a valid source type");
-	}
-	engine->list_fields(source, verbose, names_only);
-}
-
 //
 // ARGUMENT PARSING AND PROGRAM SETUP
 //
@@ -334,15 +264,10 @@ int falco_init(falco::app::application &app, int argc, char **argv)
 	int file_limit = 0;
 	unsigned long event_limit = 0L;
 	bool compress = false;
-	std::map<string,uint64_t> required_engine_versions;
 
 	// Used for stats
 	double duration;
 	scap_stats cstats;
-
-#ifndef MINIMAL_BUILD
-	falco_webserver webserver;
-#endif
 
 	std::string errstr;
 	bool successful = app.init(argc, argv, errstr);
@@ -353,182 +278,9 @@ int falco_init(falco::app::application &app, int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
-	app.run();
-
 	try
 	{
-		string all_rules;
-
-		if(app.options().validate_rules_filenames.size() > 0)
-		{
-			falco_logger::log(LOG_INFO, "Validating rules file(s):\n");
-			for(auto file : app.options().validate_rules_filenames)
-			{
-				falco_logger::log(LOG_INFO, "   " + file + "\n");
-			}
-			for(auto file : app.options().validate_rules_filenames)
-			{
-				// Only include the prefix if there is more than one file
-				std::string prefix = (app.options().validate_rules_filenames.size() > 1 ? file + ": " : "");
-				try {
-					app.state().engine->load_rules_file(file, app.options().verbose, app.options().all_events);
-				}
-				catch(falco_exception &e)
-				{
-					printf("%s%s", prefix.c_str(), e.what());
-					throw;
-				}
-				printf("%sOk\n", prefix.c_str());
-			}
-			falco_logger::log(LOG_INFO, "Ok\n");
-			goto exit;
-		}
-
-		if(app.options().list_fields)
-		{
-			list_source_fields(app.state().engine, app.options().verbose, app.options().names_only, app.options().list_source_fields);
-			return EXIT_SUCCESS;
-		}
-
-		if (app.options().rules_filenames.size())
-		{
-			app.state().config->m_rules_filenames = app.options().rules_filenames;
-		}
-
-		app.state().engine->set_min_priority(app.state().config->m_min_priority);
-
-		app.state().config->m_buffered_outputs = !app.options().unbuffered_outputs;
-
-		if(app.state().config->m_rules_filenames.size() == 0)
-		{
-			throw std::invalid_argument("You must specify at least one rules file/directory via -r or a rules_file entry in falco.yaml");
-		}
-
-		falco_logger::log(LOG_DEBUG, "Configured rules filenames:\n");
-		for (auto filename : app.state().config->m_rules_filenames)
-		{
-			falco_logger::log(LOG_DEBUG, string("   ") + filename + "\n");
-		}
-
-		for (auto filename : app.state().config->m_rules_filenames)
-		{
-			falco_logger::log(LOG_INFO, "Loading rules from file " + filename + ":\n");
-			uint64_t required_engine_version;
-
-			try {
-				app.state().engine->load_rules_file(filename, app.options().verbose, app.options().all_events, required_engine_version);
-			}
-			catch(falco_exception &e)
-			{
-				std::string prefix = "Could not load rules file " + filename + ": ";
-
-				throw falco_exception(prefix + e.what());
-			}
-			required_engine_versions[filename] = required_engine_version;
-		}
-
-		// Ensure that all plugins are compatible with the loaded set of rules
-		for(auto &info : app.state().plugin_infos)
-		{
-			std::string required_version;
-
-			if(!app.state().engine->is_plugin_compatible(info.name, info.plugin_version.as_string(), required_version))
-			{
-				throw std::invalid_argument(std::string("Plugin ") + info.name + " version " + info.plugin_version.as_string() + " not compatible with required plugin version " + required_version);
-			}
-		}
-
-		for (auto substring : app.options().disabled_rule_substrings)
-		{
-			falco_logger::log(LOG_INFO, "Disabling rules matching substring: " + substring + "\n");
-			app.state().engine->enable_rule(substring, false);
-		}
-
-		if(app.options().disabled_rule_tags.size() > 0)
-		{
-			for(auto &tag : app.options().disabled_rule_tags)
-			{
-				falco_logger::log(LOG_INFO, "Disabling rules with tag: " + tag + "\n");
-			}
-			app.state().engine->enable_rule_by_tag(app.options().disabled_rule_tags, false);
-		}
-
-		if(app.options().enabled_rule_tags.size() > 0)
-		{
-
-			// Since we only want to enable specific
-			// rules, first disable all rules.
-			app.state().engine->enable_rule(all_rules, false);
-			for(auto &tag : app.options().enabled_rule_tags)
-			{
-				falco_logger::log(LOG_INFO, "Enabling rules with tag: " + tag + "\n");
-			}
-			app.state().engine->enable_rule_by_tag(app.options().enabled_rule_tags, true);
-		}
-
-		if(app.options().print_support)
-		{
-			nlohmann::json support;
-			struct utsname sysinfo;
-			std::string cmdline;
-
-			if(uname(&sysinfo) != 0)
-			{
-				throw std::runtime_error(string("Could not uname() to find system info: %s\n") + strerror(errno));
-			}
-
-			for(char **arg = argv; *arg; arg++)
-			{
-				if(cmdline.size() > 0)
-				{
-					cmdline += " ";
-				}
-				cmdline += *arg;
-			}
-
-			support["version"] = FALCO_VERSION;
-			support["system_info"]["sysname"] = sysinfo.sysname;
-			support["system_info"]["nodename"] = sysinfo.nodename;
-			support["system_info"]["release"] = sysinfo.release;
-			support["system_info"]["version"] = sysinfo.version;
-			support["system_info"]["machine"] = sysinfo.machine;
-			support["cmdline"] = cmdline;
-			support["engine_info"]["engine_version"] = FALCO_ENGINE_VERSION;
-			support["config"] = read_file(app.options().conf_filename);
-			support["rules_files"] = nlohmann::json::array();
-			for(auto filename : app.state().config->m_rules_filenames)
-			{
-				nlohmann::json finfo;
-				finfo["name"] = filename;
-				nlohmann::json variant;
-				variant["required_engine_version"] = required_engine_versions[filename];
-				variant["content"] = read_file(filename);
-				finfo["variants"].push_back(variant);
-				support["rules_files"].push_back(finfo);
-			}
-			printf("%s\n", support.dump().c_str());
-			goto exit;
-		}
-
-		if(!app.options().all_events)
-		{
-			// For syscalls, see if any event types used by the
-			// loaded rules are ones with the EF_DROP_SIMPLE_CONS
-			// label.
-			check_for_ignored_events(app.state().inspector, app.state().engine);
-		}
-
-		if (app.options().describe_all_rules)
-		{
-			app.state().engine->describe_rule(NULL);
-			goto exit;
-		}
-
-		if (!app.options().describe_rule.empty())
-		{
-			app.state().engine->describe_rule(&(app.options().describe_rule));
-			goto exit;
-		}
+		app.run();
 
 		// If daemonizing, do it here so any init errors will
 		// be returned in the foreground process.
@@ -715,13 +467,6 @@ int falco_init(falco::app::application &app, int argc, char **argv)
 		falco_logger::log(LOG_DEBUG, "Setting metadata download watch frequency to " + to_string(app.state().config->m_metadata_download_watch_freq_sec) + " seconds\n");
 		app.state().inspector->set_metadata_download_params(app.state().config->m_metadata_download_max_mb * 1024 * 1024, app.state().config->m_metadata_download_chunk_wait_us, app.state().config->m_metadata_download_watch_freq_sec);
 
-		if(app.options().trace_filename.empty() && app.state().config->m_webserver_enabled && app.state().enabled_sources.find(k8s_audit_source) != app.state().enabled_sources.end())
-		{
-			std::string ssl_option = (app.state().config->m_webserver_ssl_enabled ? " (SSL)" : "");
-			falco_logger::log(LOG_INFO, "Starting internal webserver, listening on port " + to_string(app.state().config->m_webserver_listen_port) + ssl_option + "\n");
-			webserver.init(app.state().config, app.state().engine, app.state().outputs);
-			webserver.start();
-		}
 
 #endif
 
@@ -778,19 +523,12 @@ int falco_init(falco::app::application &app, int argc, char **argv)
 		app.state().inspector->close();
 		app.state().engine->print_stats();
 		sdropmgr.print_stats();
-#ifndef MINIMAL_BUILD
-		webserver.stop();
-#endif
 	}
 	catch(exception &e)
 	{
 		display_fatal_err("Runtime error: " + string(e.what()) + ". Exiting.\n");
 
 		result = EXIT_FAILURE;
-
-#ifndef MINIMAL_BUILD
-		webserver.stop();
-#endif
 	}
 
 exit:
