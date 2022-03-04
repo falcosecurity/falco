@@ -31,4 +31,6 @@ limitations under the License.
 #include "app_actions/start_webserver.h"
 #include "app_actions/validate_rules_files.h"
 
+#include "app_actions/daemonize.h"
+
 

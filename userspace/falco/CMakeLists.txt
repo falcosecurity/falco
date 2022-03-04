@@ -21,6 +21,7 @@ set(
   app_runnable_action.cpp
   app_actions/create_signal_handlers.cpp
   app_actions/init_action.cpp
+  app_actions/run_action.cpp
   app_actions/init_falco_engine.cpp
   app_actions/init_inspector.cpp
   app_actions/init_outputs.cpp
@@ -36,6 +37,7 @@ set(
   app_actions/start_grpc_server.cpp
   app_actions/start_webserver.cpp
   app_actions/validate_rules_files.cpp
+  app_actions/daemonize.cpp
   app_action_manager.cpp
   configuration.cpp
   logger.cpp
