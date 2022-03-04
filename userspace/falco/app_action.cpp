@@ -34,5 +34,15 @@ application &action::app()
 	return m_app;
 }
 
+cmdline_options &action::options()
+{
+	return m_app.options();
+}
+
+application::action_state &action::state()
+{
+	return m_app.state();
+}
+
 }; // namespace application
 }; // namespace falco

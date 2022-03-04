@@ -22,31 +22,6 @@ limitations under the License.
 namespace falco {
 namespace app {
 
-// Init-style actions, in dependency order:
-//  - parse command line options
-//     - DONE display help
-//     - DONE print version info
-//     - DONE setup signal handlers
-//     - DONE load config
-//     - DONE create/configure inspector
-//        - DONE print ignored events
-//        - DONE init falco engine
-//          - DONE load plugins (also depends on load config)
-//            - DONE list plugins
-//            - DONE initialize outputs (also depends on load config)
-//              - DONE start grpc server
-//              - DONE start webserver
-//            - DONE validate rules files
-//            - DONE list all fields/list source fields
-//            - DONE load rules files
-//               - describe rule(s)
-//               - print support
-//
-// Run-style actions, in dependency order
-//  - daemonize
-//     - open inspector
-//     - read events from source (trace or live), pass to falco engine
-
 // This class represents an "action" e.g. a chunk of code to execute
 // as a part of running the falco application. Examples of actions are:
 //   - initializing/configuring the inspector
@@ -56,11 +31,11 @@ namespace app {
 // Actions also include "one off" actions for things like --help
 // output, --list fields, etc.
 //
-// There's no attempt in this version to distribute state
-// (e.g. inspectors, lists of plugins, etc) across actions. The
-// expectation is that all state that needs to be used across actions
-// is held in the provided application object and actions know which
-// state they should create and destroy.
+// There's no attempt to distribute state (e.g. inspectors, lists of
+// plugins, etc) across actions. The expectation is that all state
+// that needs to be used across actions is held in the provided
+// application object and actions know which state they should create
+// and destroy.
 
 // The reason for a sublcass is to allow for building/running unit
 // tests for the action manager without bringing in all of the falco
@@ -71,6 +46,9 @@ public:
 	virtual ~action();
 
 	application &app();
+
+	cmdline_options &options();
+	application::action_state &state();
 
 private:
 	application &m_app;
