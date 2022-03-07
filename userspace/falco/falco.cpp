@@ -388,17 +388,17 @@ static void configure_output_format(falco::app::application &app, falco_engine *
 	std::string output_format;
 	bool replace_container_info = false;
 
-	if(app.options().print_container)
+	if(app.options().print_additional == "c" || app.options().print_additional == "container")
 	{
 		output_format = "container=%container.name (id=%container.id)";
 		replace_container_info = true;
 	}
-	else if(app.options().print_kubernetes)
+	else if(app.options().print_additional == "k" || app.options().print_additional == "kubernetes")
 	{
 		output_format = "k8s.ns=%k8s.ns.name k8s.pod=%k8s.pod.name container=%container.id";
 		replace_container_info = true;
 	}
-	else if(app.options().print_mesos)
+	else if(app.options().print_additional == "m" || app.options().print_additional == "mesos")
 	{
 		output_format = "task=%mesos.task.name container=%container.id";
 		replace_container_info = true;

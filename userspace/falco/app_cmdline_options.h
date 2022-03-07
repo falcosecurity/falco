@@ -57,9 +57,6 @@ public:
 	bool names_only;
 	std::vector<std::string> cmdline_config_options;
 	std::string print_additional;
-	bool print_container;
-	bool print_kubernetes;
-	bool print_mesos;
 	std::string pidfilename;
 	std::list<std::string> rules_filenames;
 	std::string stats_filename;
