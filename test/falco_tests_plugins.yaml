@@ -54,21 +54,21 @@ trace_files: !mux
 
   multiple_source_plugins:
     exit_status: 1
-    stderr_contains: "Runtime error: Can not load multiple source plugins. cloudtrail already loaded. Exiting."
+    stderr_contains: "Can not load multiple source plugins. cloudtrail already loaded."
     conf_file: BUILD_DIR/test/confs/plugins/multiple_source_plugins.yaml
     rules_file:
       - rules/plugins/cloudtrail_create_instances.yaml
 
   incompatible_extract_sources:
     exit_status: 1
-    stderr_contains: "Runtime error: Extractor plugin not compatible with event source aws_cloudtrail. Exiting."
+    stderr_contains: "Extractor plugin not compatible with event source aws_cloudtrail."
     conf_file: BUILD_DIR/test/confs/plugins/incompatible_extract_sources.yaml
     rules_file:
       - rules/plugins/cloudtrail_create_instances.yaml
 
   overlap_extract_sources:
     exit_status: 1
-    stderr_contains: "Runtime error: Extractor plugins have overlapping compatible event source test_source. Exiting."
+    stderr_contains: "Extractor plugins have overlapping compatible event source test_source."
     conf_file: BUILD_DIR/test/confs/plugins/overlap_extract_sources.yaml
     rules_file:
       - rules/plugins/cloudtrail_create_instances.yaml
@@ -82,7 +82,7 @@ trace_files: !mux
 
   incompat_plugin_rules_version:
     exit_status: 1
-    stderr_contains: "Runtime error: Plugin cloudtrail version .* not compatible with required plugin version 100000.0.0. Exiting."
+    stderr_contains: "Plugin cloudtrail version .* not compatible with required plugin version 100000.0.0."
     conf_file: BUILD_DIR/test/confs/plugins/cloudtrail_json_create_instances.yaml
     rules_file:
       - rules/plugins/cloudtrail_incompat_plugin_version.yaml
