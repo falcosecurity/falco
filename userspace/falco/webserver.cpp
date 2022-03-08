@@ -83,13 +83,15 @@ bool k8s_audit_handler::accept_data(falco_engine *engine,
 		return false;
 	}
 
+	static auto k8s_audit_event_source_idx = engine->source_index(m_k8s_audit_event_source);
+
 	for(auto &jev : jevts)
 	{
 		std::unique_ptr<falco_engine::rule_result> res;
 
 		try
 		{
-			res = engine->process_event(m_k8s_audit_event_source, &jev);
+			res = engine->process_event(k8s_audit_event_source_idx, &jev);
 		}
 		catch(...)
 		{

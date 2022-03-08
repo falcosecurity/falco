@@ -62,7 +62,9 @@ bool g_restart = false;
 bool g_daemonized = false;
 
 static std::string syscall_source = "syscall";
+static std::size_t syscall_source_idx;
 static std::string k8s_audit_source = "k8s_audit";
+static std::size_t k8s_audit_source_idx;
 
 //
 // Helper functions
@@ -140,16 +142,16 @@ static std::string read_file(std::string filename)
 // Event processing loop
 //
 uint64_t do_inspect(falco_engine *engine,
-			falco_outputs *outputs,
-			sinsp* inspector,
-		        std::string &event_source,
-			falco_configuration &config,
-			syscall_evt_drop_mgr &sdropmgr,
-			uint64_t duration_to_tot_ns,
-			string &stats_filename,
-			uint64_t stats_interval,
-			bool all_events,
-			int &result)
+		    falco_outputs *outputs,
+		    sinsp *inspector,
+		    std::size_t event_source_idx,
+		    falco_configuration &config,
+		    syscall_evt_drop_mgr &sdropmgr,
+		    uint64_t duration_to_tot_ns,
+		    string &stats_filename,
+		    uint64_t stats_interval,
+		    bool all_events,
+		    int &result)
 {
 	uint64_t num_evts = 0;
 	int32_t rc;
@@ -207,7 +209,7 @@ uint64_t do_inspect(falco_engine *engine,
 			if(unlikely(ev == nullptr))
 			{
 				timeouts_since_last_success_or_msg++;
-				if(event_source == syscall_source &&
+				if(event_source_idx == syscall_source_idx &&
 				   (timeouts_since_last_success_or_msg > config.m_syscall_evt_timeout_max_consecutives))
 				{
 					std::string rule = "Falco internal: timeouts notification";
@@ -272,7 +274,7 @@ uint64_t do_inspect(falco_engine *engine,
 		// engine, which will match the event against the set
 		// of rules. If a match is found, pass the event to
 		// the outputs.
-		unique_ptr<falco_engine::rule_result> res = engine->process_event(event_source, ev);
+		unique_ptr<falco_engine::rule_result> res = engine->process_event(event_source_idx, ev);
 		if(res)
 		{
 			outputs->handle_event(res->evt, res->rule, res->source, res->priority_num, res->format, res->tags);
@@ -517,8 +519,8 @@ int falco_init(int argc, char **argv)
 		std::shared_ptr<gen_event_formatter_factory> syscall_formatter_factory(new sinsp_evt_formatter_factory(inspector));
 		std::shared_ptr<gen_event_formatter_factory> k8s_audit_formatter_factory(new json_event_formatter_factory(k8s_audit_filter_factory));
 
-		engine->add_source(syscall_source, syscall_filter_factory, syscall_formatter_factory);
-		engine->add_source(k8s_audit_source, k8s_audit_filter_factory, k8s_audit_formatter_factory);
+		syscall_source_idx = engine->add_source(syscall_source, syscall_filter_factory, syscall_formatter_factory);
+		k8s_audit_source_idx = engine->add_source(k8s_audit_source, k8s_audit_filter_factory, k8s_audit_formatter_factory);
 
 		for(const auto &src : app.options().disable_sources)
 		{
@@ -581,6 +583,7 @@ int falco_init(int argc, char **argv)
 		// plugin was found, the source is the source of that
 		// plugin.
 		std::string event_source = syscall_source;
+		std::size_t event_source_idx = syscall_source_idx;
 
 		// All filterchecks created by plugins go in this
 		// list. If we ever support multiple event sources at
@@ -628,7 +631,7 @@ int falco_init(int argc, char **argv)
 					inspector->set_input_plugin_open_params(p.m_open_params.c_str());
 				}
 
-				engine->add_source(event_source, plugin_filter_factory, plugin_formatter_factory);
+				event_source_idx = engine->add_source(event_source, plugin_filter_factory, plugin_formatter_factory);
 
 			} else {
 				extractor_plugins.push_back(plugin);
@@ -1184,7 +1187,7 @@ int falco_init(int argc, char **argv)
 			num_evts = do_inspect(engine,
 					      outputs,
 					      inspector,
-					      event_source,
+					      event_source_idx,
 					      config,
 					      sdropmgr,
 					      uint64_t(app.options().duration_to_tot*ONE_SECOND_IN_NS),

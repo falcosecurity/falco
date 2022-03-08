@@ -167,20 +167,26 @@ public:
 	// with a ruleset string.
 	//
 	// the returned rule_result is allocated and must be delete()d.
-	std::unique_ptr<rule_result> process_event(std::string &source, gen_event *ev, uint16_t ruleset_id);
+	std::unique_ptr<rule_result> process_event(std::size_t source_idx, gen_event *ev, uint16_t ruleset_id);
 
 	//
 	// Wrapper assuming the default ruleset
 	//
-	std::unique_ptr<rule_result> process_event(std::string &source, gen_event *ev);
+	std::unique_ptr<rule_result> process_event(std::size_t source_idx, gen_event *ev);
 
 	//
 	// Configure the engine to support events with the provided
 	// source, with the provided filter factory and formatter factory.
+	// Return source index for fast lookup.
 	//
-	void add_source(const std::string &source,
-			std::shared_ptr<gen_event_filter_factory> filter_factory,
-			std::shared_ptr<gen_event_formatter_factory> formatter_factory);
+	std::size_t add_source(const std::string &source,
+			       std::shared_ptr<gen_event_filter_factory> filter_factory,
+			       std::shared_ptr<gen_event_formatter_factory> formatter_factory);
+
+	//
+	// Return source index by its name
+	//
+	std::size_t source_index(const std::string &source);
 
 	// Return whether or not there is a valid filter/formatter
 	// factory for this source.

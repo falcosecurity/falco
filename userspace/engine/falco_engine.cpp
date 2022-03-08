@@ -289,13 +289,55 @@ std::shared_ptr<gen_event_formatter> falco_engine::create_formatter(const std::s
 	return it->second->create_formatter(output);
 }
 
-unique_ptr<falco_engine::rule_result> falco_engine::process_event(std::string &source, gen_event *ev, uint16_t ruleset_id)
+unique_ptr<falco_engine::rule_result> falco_engine::process_event(std::size_t source_idx, gen_event *ev, uint16_t ruleset_id)
 {
 	if(should_drop_evt())
 	{
 		return unique_ptr<struct rule_result>();
 	}
 
+	try
+	{
+		auto &r = m_rulesets.get<1>().at(source_idx);
+		if(!r.second->run(ev, ruleset_id))
+		{
+			return unique_ptr<struct rule_result>();
+		}
+
+		unique_ptr<struct rule_result> res(new rule_result());
+		res->source = r.first;
+
+		populate_rule_result(res, ev);
+
+		return res;
+	}
+	catch(std::out_of_range const &exc)
+	{
+		std::string err = "Unknown event source index " + std::to_string(source_idx);
+		throw falco_exception(err);
+	}
+}
+
+unique_ptr<falco_engine::rule_result> falco_engine::process_event(std::size_t source_idx, gen_event *ev)
+{
+	return process_event(source_idx, ev, m_default_ruleset_id);
+}
+
+std::size_t falco_engine::add_source(const std::string &source,
+				     std::shared_ptr<gen_event_filter_factory> filter_factory,
+				     std::shared_ptr<gen_event_formatter_factory> formatter_factory)
+{
+	m_filter_factories[source] = filter_factory;
+	m_format_factories[source] = formatter_factory;
+
+	auto idx = m_rulesets.size();
+	m_rulesets.emplace(source, new falco_ruleset);
+	// here we just trust the caller they won't add the same source more than once
+	return idx;
+}
+
+std::size_t falco_engine::source_index(const std::string &source)
+{
 	auto it = m_rulesets.find(source);
 	if(it == m_rulesets.end())
 	{
@@ -303,32 +345,7 @@ unique_ptr<falco_engine::rule_result> falco_engine::process_event(std::string &s
 		throw falco_exception(err);
 	}
 
-	if (!it->second->run(ev, ruleset_id))
-	{
-		return unique_ptr<struct rule_result>();
-	}
-
-	unique_ptr<struct rule_result> res(new rule_result());
-	res->source = source;
-
-	populate_rule_result(res, ev);
-
-	return res;
-}
-
-unique_ptr<falco_engine::rule_result> falco_engine::process_event(std::string &source, gen_event *ev)
-{
-	return process_event(source, ev, m_default_ruleset_id);
-}
-
-void falco_engine::add_source(const std::string &source,
-			      std::shared_ptr<gen_event_filter_factory> filter_factory,
-			      std::shared_ptr<gen_event_formatter_factory> formatter_factory)
-{
-	m_filter_factories[source] = filter_factory;
-	m_format_factories[source] = formatter_factory;
-
-	m_rulesets.emplace(source, new falco_ruleset);
+	return m_rulesets.project<1>(it) - m_rulesets.get<1>().begin();
 }
 
 void falco_engine::populate_rule_result(unique_ptr<struct rule_result> &res, gen_event *ev)
