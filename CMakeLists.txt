@@ -186,6 +186,8 @@ if(NOT MINIMAL_BUILD)
   add_subdirectory(test)
 endif()
 
+include(boost)
+
 # Rules
 add_subdirectory(rules)
 

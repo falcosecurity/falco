@@ -37,6 +37,7 @@ set(
   "${STRING_VIEW_LITE_INCLUDE}"
   "${CXXOPTS_INCLUDE_DIR}"
   "${YAMLCPP_INCLUDE_DIR}"
+  "${BOOST_INCLUDE_DIR}"
   "${CMAKE_CURRENT_BINARY_DIR}"
   "${DRAIOS_DEPENDENCIES_DIR}/yaml-${DRAIOS_YAML_VERSION}/target/include"
 )
@@ -50,6 +51,7 @@ set(
   lpeg
   lyaml
   cxxopts
+  boost
 )
 
 set(
