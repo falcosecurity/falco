@@ -328,8 +328,7 @@ void falco_engine::add_source(const std::string &source,
 	m_filter_factories[source] = filter_factory;
 	m_format_factories[source] = formatter_factory;
 
-	std::shared_ptr<falco_ruleset> ruleset(new falco_ruleset());
-	m_rulesets[source] = ruleset;
+	m_rulesets.emplace(source, new falco_ruleset);
 }
 
 void falco_engine::populate_rule_result(unique_ptr<struct rule_result> &res, gen_event *ev)
@@ -464,8 +463,7 @@ void falco_engine::clear_filters()
 
 	for(auto &it : m_filter_factories)
 	{
-		std::shared_ptr<falco_ruleset> ruleset(new falco_ruleset());
-		m_rulesets[it.first] = ruleset;
+		m_rulesets.emplace(it.first, new falco_ruleset);
 	}
 
 	m_required_plugin_versions.clear();

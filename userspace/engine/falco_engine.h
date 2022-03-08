@@ -26,6 +26,10 @@ limitations under the License.
 #include <memory>
 #include <set>
 
+#include <boost/multi_index_container.hpp>
+#include <boost/multi_index/ordered_index.hpp>
+#include <boost/multi_index/random_access_index.hpp>
+#include <boost/multi_index/member.hpp>
 #include <nlohmann/json.hpp>
 
 #include "gen_filter.h"
@@ -213,6 +217,25 @@ public:
 	bool is_plugin_compatible(const std::string &name, const std::string &version, std::string &required_version);
 
 private:
+	struct ruleset_node
+	{
+		ruleset_node(const std::string &n, falco_ruleset *p):
+			first(n), second(p) {}
+
+		// pair-like names
+		std::string first; // source
+		std::shared_ptr<falco_ruleset> second;
+	};
+
+	//
+	// Able to access by source name or index
+	//
+	using ruleset_map = boost::multi_index::multi_index_container<
+		ruleset_node,
+		boost::multi_index::indexed_by<
+			boost::multi_index::ordered_unique<
+				boost::multi_index::member<ruleset_node, std::string, &ruleset_node::first>>,
+			boost::multi_index::random_access<>>>;
 
 	//
 	// Determine whether the given event should be matched at all
@@ -228,7 +251,7 @@ private:
 	std::map<std::string, std::shared_ptr<gen_event_formatter_factory>> m_format_factories;
 
 	// Maps from event source to the set of rules for that event source
-	std::map<std::string, std::shared_ptr<falco_ruleset>> m_rulesets;
+	ruleset_map m_rulesets;
 
 	std::unique_ptr<falco_rules> m_rules;
 	uint16_t m_next_ruleset_id;
