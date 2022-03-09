@@ -230,7 +230,7 @@ private:
 
 		// pair-like names
 		std::string first; // source
-		std::shared_ptr<falco_ruleset> second;
+		mutable std::shared_ptr<falco_ruleset> second;
 	};
 
 	//

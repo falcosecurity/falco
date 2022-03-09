@@ -476,11 +476,9 @@ bool falco_engine::is_plugin_compatible(const std::string &name,
 
 void falco_engine::clear_filters()
 {
-	m_rulesets.clear();
-
-	for(auto &it : m_filter_factories)
+	for(auto &it : m_rulesets)
 	{
-		m_rulesets.emplace(it.first, new falco_ruleset);
+		it.second.reset(new falco_ruleset);
 	}
 
 	m_required_plugin_versions.clear();
