@@ -3065,6 +3065,9 @@
 - macro: mount_info
   condition: (proc.args="" or proc.args intersects ("-V", "-l", "-h"))
 
+- macro: user_known_mount_in_privileged_containers
+  condition: (never_true)
+
 - rule: Mount Launched in Privileged Container
   desc: Detect file system mount happened inside a privileged container which might lead to container escape.
   condition: >
@@ -3072,6 +3075,7 @@
     and container.privileged=true
     and proc.name=mount
     and not mount_info
+    and not user_known_mount_in_privileged_containers
   output: Mount was executed inside a privileged container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline %container.info image=%container.image.repository:%container.image.tag)
   priority: WARNING
   tags: [container, cis, mitre_lateral_movement]
