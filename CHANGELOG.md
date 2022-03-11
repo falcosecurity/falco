@@ -24,6 +24,9 @@ Released on 2022-03-09
 * chore(userspace/falco): fixes truncated -b option description. [[#1915](https://github.com/falcosecurity/falco/pull/1915)] - [@andreabonanno](https://github.com/andreabonanno)
 * update(falco): updates usage description for -o, --option [[#1903](https://github.com/falcosecurity/falco/pull/1903)] - [@andreabonanno](https://github.com/andreabonanno)
 
+### Security Fixes
+
+* Fix for a TOCTOU issue that could lead to rule bypass (CVE-2022-26316). For more information, see the [advisory](https://github.com/falcosecurity/falco/security/advisories/GHSA-6v9j-2vm2-ghf7).
 
 ### Rule Changes
 
