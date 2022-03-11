@@ -3048,6 +3048,14 @@
   priority: CRITICAL
   tags: [filesystem, mitre_privilege_escalation]
 
+# A rule to detect base64 on the command line (generally an IoC)
+- rule: Base64 on Command Line
+  desc: Base64 detected on the command line (via execve)
+  condition: evt.type=execve and (proc.args contains base64 or proc.name=base64)
+  output: %proc.name called %proc.args
+  priority: WARNING
+  tags: [process]
+
 - rule: Debugfs Launched in Privileged Container
   desc: Detect file system debugger debugfs launched inside a privileged container which might lead to container escape.
   condition: >
