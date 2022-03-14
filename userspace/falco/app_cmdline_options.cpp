@@ -172,6 +172,7 @@ void cmdline_options::define()
 		("L",                             "Show the name and description of all rules and exit.", cxxopts::value(describe_all_rules)->default_value("false"))
 		("l",                             "Show the name and description of the rule with name <rule> and exit.", cxxopts::value(describe_rule), "<rule>")
 		("list",                          "List all defined fields. If <source> is provided, only list those fields for the source <source>. Current values for <source> are \"syscall\", \"k8s_audit\", or any source from a configured source plugin.", cxxopts::value(list_source_fields)->implicit_value(""), "<source>")
+		("list-syscall-events",  		  "List all defined system call events.", cxxopts::value<bool>(list_syscall_events))
 #ifndef MUSL_OPTIMIZED
 		("list-plugins",                  "Print info on all loaded plugins and exit.", cxxopts::value(list_plugins)->default_value("false"))
 #endif
@@ -179,7 +180,8 @@ void cmdline_options::define()
 		("m,mesos-api",                   "Enable Mesos support by connecting to the API server specified as argument. E.g. \"http://admin:password@127.0.0.1:5050\". Marathon url is optional and defaults to Mesos address, port 8080. The API servers can also be specified via the environment variable FALCO_MESOS_API.", cxxopts::value(mesos_api), "<url[,marathon_url]>")
 #endif
 		("M",                             "Stop collecting after <num_seconds> reached.", cxxopts::value(duration_to_tot)->default_value("0"), "<num_seconds>")
-		("N",                             "When used with --list/--list-source, only print field names.", cxxopts::value(names_only)->default_value("false"))
+		("markdown",                      "When used with --list/--list-syscall-events, print the content in Markdown format, suitable for publication on the Falco website", cxxopts::value<bool>(markdown))
+		("N",                             "When used with --list, only print field names.", cxxopts::value(names_only)->default_value("false"))
 		("o,option",                      "Set the value of option <opt> to <val>. Overrides values in configuration file. <opt> can be identified using its location in configuration file using dot notation. Elements which are entries of lists can be accessed via square brackets [].\n    E.g. base.id = val\n         base.subvalue.subvalue2 = val\n         base.list[1]=val", cxxopts::value(cmdline_config_options), "<opt>=<val>")
 		("p,print",                       "Add additional information to each falco notification's output.\nWith -pc or -pcontainer will use a container-friendly format.\nWith -pk or -pkubernetes will use a kubernetes-friendly format.\nWith -pm or -pmesos will use a mesos-friendly format.\nAdditionally, specifying -pc/-pk/-pm will change the interpretation of %container.info in rule output fields.", cxxopts::value(print_additional), "<output_format>")
 		("P,pidfile",                     "When run as a daemon, write pid to specified file", cxxopts::value(pidfilename)->default_value("/var/run/falco.pid"), "<pid_file>")

@@ -52,6 +52,8 @@ public:
 	bool list_fields;
 	std::string list_source_fields;
 	bool list_plugins;
+	bool list_syscall_events;
+	bool markdown;
 	std::string mesos_api;
 	int duration_to_tot;
 	bool names_only;

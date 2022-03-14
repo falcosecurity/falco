@@ -373,14 +373,14 @@ static void check_for_ignored_events(sinsp &inspector, falco_engine &engine)
 	}
 }
 
-static void list_source_fields(falco_engine *engine, bool verbose, bool names_only, std::string &source)
+static void list_source_fields(falco_engine *engine, bool verbose, bool names_only, bool markdown, std::string &source)
 {
 	if(source != "" &&
 	   !engine->is_source_valid(source))
 	{
 		throw std::invalid_argument("Value for --list must be a valid source type");
 	}
-	engine->list_fields(source, verbose, names_only);
+	engine->list_fields(source, verbose, names_only, markdown);
 }
 
 static void configure_output_format(falco::app::application &app, falco_engine *engine)
@@ -702,7 +702,13 @@ int falco_init(int argc, char **argv)
 
 		if(app.options().list_fields)
 		{
-			list_source_fields(engine, app.options().verbose, app.options().names_only, app.options().list_source_fields);
+			list_source_fields(engine, app.options().verbose, app.options().names_only, app.options().markdown, app.options().list_source_fields);
+			return EXIT_SUCCESS;
+		}
+
+		if(app.options().list_syscall_events)
+		{
+			list_events(inspector, app.options().markdown);
 			return EXIT_SUCCESS;
 		}
 
