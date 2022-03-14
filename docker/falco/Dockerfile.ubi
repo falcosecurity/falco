@@ -1,0 +1,52 @@
+ARG UBI_VERSION
+FROM registry.access.redhat.com/ubi8/ubi:${UBI_VERSION}
+
+LABEL "name"="Falco Runtime Security"
+LABEL "vendor"="Falco"
+LABEL "version"="${FALCO_VERSION}"
+LABEL "release"="${FALCO_VERSION}"
+LABEL "summary"="Falco is security policy engine that monitors system call and cloud events, and fires alerts when security policies are violated."
+LABEL "description"="Falco is security policy engine that monitors system call and cloud events, and fires alerts when security policies are violated."
+LABEL "io.k8s.display-name"="Falco"
+LABEL "io.k8s.description"="Falco is security policy engine that monitors system call and cloud events, and fires alerts when security policies are violated."
+LABEL maintainer="cncf-falco-dev@lists.cncf.io"
+LABEL usage="docker run -i -t --privileged -v /var/run/docker.sock:/host/var/run/docker.sock -v /dev:/host/dev -v /proc:/host/proc:ro -v /boot:/host/boot:ro -v /lib/modules:/host/lib/modules:ro -v /usr:/host/usr:ro -v /etc:/host/etc --name NAME IMAGE"
+
+
+ARG FALCO_VERSION=latest
+ENV FALCO_VERSION=${FALCO_VERSION}
+ENV HOST_ROOT /host
+ENV HOME /root
+
+#RUN cp /etc/skel/.bashrc /root && cp /etc/skel/.profile /root
+
+RUN  dnf -y update && \
+     dnf -y install \
+	curl \
+        make \
+        cmake \
+	gcc \
+	llvm \
+        clang \
+	&& rm -rf /var/lib/apt/lists/*
+
+#Install dkms from EPEL.
+# ref: https://access.redhat.com/solutions/1132653
+RUN dnf -y install http://mirror.centos.org/centos/8-stream/BaseOS/x86_64/os/Packages/kernel-devel-4.18.0-365.el8.x86_64.rpm && \
+    dnf -y install http://mirror.centos.org/centos/8-stream/BaseOS/x86_64/os/Packages/elfutils-libelf-0.185-1.el8.x86_64.rpm && \
+    dnf -y install http://mirror.centos.org/centos/8-stream/BaseOS/x86_64/os/Packages/elfutils-libelf-devel-0.185-1.el8.x86_64.rpm && \
+    dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm && \
+    dnf -y install dkms && \
+    dnf -y remove epel-release && dnf autoremove
+
+RUN rpm --import https://falco.org/repo/falcosecurity-3672BA8F.asc && \
+    curl -s -o /etc/yum.repos.d/falcosecurity.repo https://falco.org/repo/falcosecurity-rpm.repo && \
+    dnf -y install "falco-${FALCO_VERSION}"
+
+
+
+COPY ./docker-entrypoint.sh /
+COPY ./docker-entrypoint-ubi.sh /
+
+ENTRYPOINT ["/docker-entrypoint-ubi.sh"]
+CMD ["/usr/bin/falco"]
