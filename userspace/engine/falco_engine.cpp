@@ -81,7 +81,7 @@ static std::string fieldclass_key(const gen_event_filter_factory::filter_fieldcl
 	return fld_info.name + fld_info.shortdesc;
 }
 
-void falco_engine::list_fields(std::string &source, bool verbose, bool names_only)
+void falco_engine::list_fields(std::string &source, bool verbose, bool names_only, bool markdown)
 {
 	// Maps from field class name + short desc to list of event
 	// sources for which this field class can be used.
@@ -126,12 +126,7 @@ void falco_engine::list_fields(std::string &source, bool verbose, bool names_onl
 
 			seen_fieldclasses.insert(key);
 
-			if(!names_only)
-			{
-				printf("%s\n", fld_class.as_string(verbose,
-								   fieldclass_event_sources[fieldclass_key(fld_class)]).c_str());
-			}
-			else
+			if(names_only)
 			{
 				for(auto &field : fld_class.fields)
 				{
@@ -143,6 +138,16 @@ void falco_engine::list_fields(std::string &source, bool verbose, bool names_onl
 
 					printf("%s\n", field.name.c_str());
 				}
+			}
+			else if (markdown)
+			{
+				printf("%s\n", fld_class.as_markdown(
+									fieldclass_event_sources[fieldclass_key(fld_class)]).c_str());
+			}
+			else
+			{
+				printf("%s\n", fld_class.as_string(verbose,
+								   fieldclass_event_sources[fieldclass_key(fld_class)]).c_str());
 			}
 		}
 	}

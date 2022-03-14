@@ -54,7 +54,7 @@ public:
 
 	// Print to stdout (using printf) a description of each field supported by this engine.
 	// If source is non-empty, only fields for the provided source are printed.
-	void list_fields(std::string &source, bool verbose, bool names_only);
+	void list_fields(std::string &source, bool verbose, bool names_only, bool markdown);
 
 	//
 	// Load rules either directly or from a filename.
