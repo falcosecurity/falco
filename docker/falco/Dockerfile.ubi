@@ -1,6 +1,10 @@
 ARG UBI_VERSION
 FROM registry.access.redhat.com/ubi8/ubi:${UBI_VERSION}
 
+ARG FALCO_VERSION
+RUN test -n "$FALCO_VERSION" || (echo "FALCO_VERSION  not set" && false)
+ENV FALCO_VERSION=${FALCO_VERSION}
+
 LABEL "name"="Falco Runtime Security"
 LABEL "vendor"="Falco"
 LABEL "version"="${FALCO_VERSION}"
@@ -12,13 +16,8 @@ LABEL "io.k8s.description"="Falco is security policy engine that monitors system
 LABEL maintainer="cncf-falco-dev@lists.cncf.io"
 LABEL usage="docker run -i -t --privileged -v /var/run/docker.sock:/host/var/run/docker.sock -v /dev:/host/dev -v /proc:/host/proc:ro -v /boot:/host/boot:ro -v /lib/modules:/host/lib/modules:ro -v /usr:/host/usr:ro -v /etc:/host/etc --name NAME IMAGE"
 
-
-ARG FALCO_VERSION=latest
-ENV FALCO_VERSION=${FALCO_VERSION}
 ENV HOST_ROOT /host
 ENV HOME /root
-
-#RUN cp /etc/skel/.bashrc /root && cp /etc/skel/.profile /root
 
 RUN  dnf -y update && \
      dnf -y install \
