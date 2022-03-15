@@ -143,6 +143,10 @@ Sometimes this word is incorrectly used to refer to a `probe`.
 
 The global term for the software that sends events from the kernel. Such as the eBPF `probe` or the `kernel module`.
 
+#### Plugin
+
+Used to describe a dynamic shared library (`.so` files in Unix, `.dll` files in Windows) that conforms to a documented API and allows to extend Falco's capabilities.
+
 #### Falco
 
 The name of the project, and also the name of [the main engine](https://github.com/falcosecurity/falco) that the rest of the project is built on.
