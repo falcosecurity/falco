@@ -140,6 +140,12 @@
 - macro: health_endpoint
   condition: ka.uri=/healthz
 
+- macro: live_endpoint
+  condition: ka.uri=/livez
+
+- macro: ready_endpoint
+  condition: ka.uri=/readyz
+
 - rule: Create Disallowed Pod
   desc: >
     Detect an attempt to start a pod with a container image outside of a list of allowed images.
@@ -250,7 +256,7 @@
 - rule: Anonymous Request Allowed
   desc: >
     Detect any request made by the anonymous user that was allowed
-  condition: kevt and ka.user.name=system:anonymous and ka.auth.decision="allow" and not health_endpoint
+  condition: kevt and ka.user.name=system:anonymous and ka.auth.decision="allow" and not health_endpoint and not live_endpoint and not ready_endpoint
   output: Request by anonymous user allowed (user=%ka.user.name verb=%ka.verb uri=%ka.uri reason=%ka.auth.reason))
   priority: WARNING
   source: k8s_audit
@@ -734,4 +740,3 @@
   priority: WARNING
   source: k8s_audit
   tags: [k8s]
-
