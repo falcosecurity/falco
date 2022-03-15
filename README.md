@@ -5,7 +5,7 @@
 
 [![Build Status](https://img.shields.io/circleci/build/github/falcosecurity/falco/master?style=for-the-badge)](https://circleci.com/gh/falcosecurity/falco) [![CII Best Practices Summary](https://img.shields.io/cii/summary/2317?label=CCI%20Best%20Practices&style=for-the-badge)](https://bestpractices.coreinfrastructure.org/projects/2317) [![GitHub](https://img.shields.io/github/license/falcosecurity/falco?style=for-the-badge)](COPYING)
 
-Want to talk? Join us on the [#falco](https://kubernetes.slack.com/archives/CMWH3EH32) channel in the [Kubernetes Slack](https://slack.k8s.io).
+Want to talk? Join us on the [#falco](https://kubernetes.slack.com/messages/falco) channel in the [Kubernetes Slack](https://slack.k8s.io).
 
 ### Latest releases
 
@@ -132,7 +132,7 @@ To get involved with The Falco Project please visit [the community repository](h
 
 How to reach out?
 
- - Join the #falco channel on the [Kubernetes Slack](https://slack.k8s.io)
+ - Join the [#falco](https://kubernetes.slack.com/messages/falco) channel on the [Kubernetes Slack](https://slack.k8s.io)
  - [Join the Falco mailing list](https://lists.cncf.io/g/cncf-falco-dev)
  - [Read the Falco documentation](https://falco.org/docs/)
 
