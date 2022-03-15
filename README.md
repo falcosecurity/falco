@@ -58,7 +58,8 @@ Notes:
 ---
 
 The Falco Project, originally created by [Sysdig](https://sysdig.com), is an incubating [CNCF](https://cncf.io) open source cloud native runtime security tool.
-Falco makes it easy to consume kernel events, and enrich those events with information from Kubernetes and the rest of the cloud native stack.
+Falco makes it easy to consume kernel events, and enrich those events with information from Kubernetes and the rest of the cloud native stack. 
+Falco can also be extended to other data sources by using plugins.
 Falco has a rich set of security rules specifically built for Kubernetes, Linux, and cloud-native.
 If a rule is violated in a system, Falco will send an alert notifying the user of the violation and its severity.
 
@@ -103,6 +104,23 @@ The Falco Project supports various SDKs for this endpoint.
 | Go       | [client-go](https://github.com/falcosecurity/client-go) |
 | Rust     | [client-rs](https://github.com/falcosecurity/client-rs) |
 | Python   | [client-py](https://github.com/falcosecurity/client-py) |
+
+### Plugins
+
+Falco comes with a [plugin framework](https://falco.org/docs/plugins/) that extends it to potentially any cloud detection scenario. Plugins are shared libraries that conform to a documented API and allow for:
+
+- Adding new event sources that can be used in rules;
+- Adding the ability to define new fields and extract information from events.
+
+The Falco Project maintains [various plugins](https://github.com/falcosecurity/plugins) and provides SDKs for plugin development.
+
+
+##### SDKs
+
+| Language | Repository                                                                    |
+|----------|-------------------------------------------------------------------------------|
+| Go       | [falcosecurity/plugin-sdk-go](https://github.com/falcosecurity/plugin-sdk-go) |
+
 
 ### Documentation
 
