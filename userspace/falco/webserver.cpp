@@ -25,10 +25,8 @@ limitations under the License.
 using json = nlohmann::json;
 using namespace std;
 
-string k8s_audit_handler::m_k8s_audit_event_source = "k8s_audit";
-
-k8s_audit_handler::k8s_audit_handler(falco_engine *engine, falco_outputs *outputs):
-	m_engine(engine), m_outputs(outputs)
+k8s_audit_handler::k8s_audit_handler(falco_engine *engine, falco_outputs *outputs, std::size_t k8s_audit_event_source_idx):
+	m_engine(engine), m_outputs(outputs), m_k8s_audit_event_source_idx(k8s_audit_event_source_idx)
 {
 }
 
@@ -47,6 +45,7 @@ bool k8s_healthz_handler::handleGet(CivetServer *server, struct mg_connection *c
 
 bool k8s_audit_handler::accept_data(falco_engine *engine,
 				    falco_outputs *outputs,
+				    std::size_t k8s_audit_event_source_idx,
 				    std::string &data,
 				    std::string &errstr)
 {
@@ -89,7 +88,7 @@ bool k8s_audit_handler::accept_data(falco_engine *engine,
 
 		try
 		{
-			res = engine->process_event(m_k8s_audit_event_source, &jev);
+			res = engine->process_event(k8s_audit_event_source_idx, &jev);
 		}
 		catch(...)
 		{
@@ -120,7 +119,7 @@ bool k8s_audit_handler::accept_data(falco_engine *engine,
 
 bool k8s_audit_handler::accept_uploaded_data(std::string &post_data, std::string &errstr)
 {
-	return k8s_audit_handler::accept_data(m_engine, m_outputs, post_data, errstr);
+	return k8s_audit_handler::accept_data(m_engine, m_outputs, m_k8s_audit_event_source_idx, post_data, errstr);
 }
 
 bool k8s_audit_handler::handleGet(CivetServer *server, struct mg_connection *conn)
@@ -189,11 +188,13 @@ falco_webserver::~falco_webserver()
 
 void falco_webserver::init(falco_configuration *config,
 			   falco_engine *engine,
-			   falco_outputs *outputs)
+			   falco_outputs *outputs,
+			   std::size_t k8s_audit_event_source_idx)
 {
 	m_config = config;
 	m_engine = engine;
 	m_outputs = outputs;
+	m_k8s_audit_event_source_idx = k8s_audit_event_source_idx;
 }
 
 template<typename T, typename... Args>
@@ -253,7 +254,7 @@ void falco_webserver::start()
 		throw falco_exception("Could not create embedded webserver");
 	}
 
-	m_k8s_audit_handler = make_unique<k8s_audit_handler>(m_engine, m_outputs);
+	m_k8s_audit_handler = make_unique<k8s_audit_handler>(m_engine, m_outputs, m_k8s_audit_event_source_idx);
 	m_server->addHandler(m_config->m_webserver_k8s_audit_endpoint, *m_k8s_audit_handler);
 	m_k8s_healthz_handler = make_unique<k8s_healthz_handler>();
 	m_server->addHandler(m_config->m_webserver_k8s_healthz_endpoint, *m_k8s_healthz_handler);
