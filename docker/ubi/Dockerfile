@@ -33,14 +33,13 @@ RUN  dnf -y update && \
 	&& rm -rf /var/lib/apt/lists/*
 
 RUN mkdir /build && cd /build/ && curl --remote-name-all -L https://github.com/dell/dkms/archive/refs/tags/v3.0.3.tar.gz && \
-     tar xvf v3.0.3.tar.gz && cd dkms-3.0.3 && make install-redhat && rm -rf /build 
+     tar xvf v3.0.3.tar.gz && cd dkms-3.0.3 && make install-redhat && rm -rf /build
 
 RUN mkdir /deploy && cd /deploy/ && curl --remote-name-all -L https://download.falco.org/packages/bin/x86_64/falco-${FALCO_VERSION}-x86_64.tar.gz && \
-     cd / && tar --strip-components=1 -xvf /deploy/falco-${FALCO_VERSION}-x86_64.tar.gz && \ 
+     cd / && tar --strip-components=1 -xvf /deploy/falco-${FALCO_VERSION}-x86_64.tar.gz && \
      rm -rf /deploy
 
 COPY ./docker-entrypoint.sh /
-COPY ./docker-entrypoint-ubi.sh /
 
-ENTRYPOINT ["/docker-entrypoint-ubi.sh"]
+ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["/usr/bin/falco"]
