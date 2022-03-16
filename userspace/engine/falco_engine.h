@@ -163,20 +163,21 @@ public:
 	// with a ruleset string.
 	//
 	// the returned rule_result is allocated and must be delete()d.
-	std::unique_ptr<rule_result> process_event(std::string &source, gen_event *ev, uint16_t ruleset_id);
+	std::unique_ptr<rule_result> process_event(std::size_t source_idx, gen_event *ev, uint16_t ruleset_id);
 
 	//
 	// Wrapper assuming the default ruleset
 	//
-	std::unique_ptr<rule_result> process_event(std::string &source, gen_event *ev);
+	std::unique_ptr<rule_result> process_event(std::size_t source_idx, gen_event *ev);
 
 	//
 	// Configure the engine to support events with the provided
 	// source, with the provided filter factory and formatter factory.
+	// Return source index for fast lookup.
 	//
-	void add_source(const std::string &source,
-			std::shared_ptr<gen_event_filter_factory> filter_factory,
-			std::shared_ptr<gen_event_formatter_factory> formatter_factory);
+	std::size_t add_source(const std::string &source,
+			       std::shared_ptr<gen_event_filter_factory> filter_factory,
+			       std::shared_ptr<gen_event_formatter_factory> formatter_factory);
 
 	// Return whether or not there is a valid filter/formatter
 	// factory for this source.
@@ -213,6 +214,14 @@ public:
 	bool is_plugin_compatible(const std::string &name, const std::string &version, std::string &required_version);
 
 private:
+	struct ruleset_node
+	{
+		ruleset_node(const std::string &n, falco_ruleset *p):
+			source(n), ruleset(p) {}
+
+		std::string source;
+		mutable std::shared_ptr<falco_ruleset> ruleset;
+	};
 
 	//
 	// Determine whether the given event should be matched at all
@@ -221,6 +230,9 @@ private:
 	//
 	inline bool should_drop_evt();
 
+	inline std::vector<ruleset_node>::iterator find_ruleset(const std::string &source);
+	inline std::vector<ruleset_node>::const_iterator find_ruleset(const std::string &source) const;
+
 	// Maps from event source to object that can generate filters from rules
 	std::map<std::string, std::shared_ptr<gen_event_filter_factory>> m_filter_factories;
 
@@ -228,7 +240,7 @@ private:
 	std::map<std::string, std::shared_ptr<gen_event_formatter_factory>> m_format_factories;
 
 	// Maps from event source to the set of rules for that event source
-	std::map<std::string, std::shared_ptr<falco_ruleset>> m_rulesets;
+	std::vector<ruleset_node> m_rulesets;
 
 	std::unique_ptr<falco_rules> m_rules;
 	uint16_t m_next_ruleset_id;

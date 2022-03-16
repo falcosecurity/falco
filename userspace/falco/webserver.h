@@ -25,7 +25,7 @@ limitations under the License.
 class k8s_audit_handler : public CivetHandler
 {
 public:
-	k8s_audit_handler(falco_engine *engine, falco_outputs *outputs);
+	k8s_audit_handler(falco_engine *engine, falco_outputs *outputs, std::size_t k8s_audit_event_source_idx);
 	virtual ~k8s_audit_handler();
 
 	bool handleGet(CivetServer *server, struct mg_connection *conn);
@@ -33,13 +33,13 @@ public:
 
 	static bool accept_data(falco_engine *engine,
 				falco_outputs *outputs,
+				std::size_t k8s_audit_event_source_idx,
 				std::string &post_data, std::string &errstr);
-
-	static std::string m_k8s_audit_event_source;
 
 private:
 	falco_engine *m_engine;
 	falco_outputs *m_outputs;
+	std::size_t m_k8s_audit_event_source_idx;
 	bool accept_uploaded_data(std::string &post_data, std::string &errstr);
 };
 
@@ -65,7 +65,8 @@ public:
 
 	void init(falco_configuration *config,
 		  falco_engine *engine,
-		  falco_outputs *outputs);
+		  falco_outputs *outputs,
+		  std::size_t k8s_audit_event_source_idx);
 
 	void start();
 	void stop();
@@ -74,6 +75,7 @@ private:
 	falco_engine *m_engine;
 	falco_configuration *m_config;
 	falco_outputs *m_outputs;
+	std::size_t m_k8s_audit_event_source_idx;
 	unique_ptr<CivetServer> m_server;
 	unique_ptr<k8s_audit_handler> m_k8s_audit_handler;
 	unique_ptr<k8s_healthz_handler> m_k8s_healthz_handler;
