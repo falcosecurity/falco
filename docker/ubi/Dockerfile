@@ -30,7 +30,7 @@ RUN  dnf -y update && \
 	llvm-toolset \
         clang \
         kmod \
-	&& rm -rf /var/lib/apt/lists/*
+	&& dnf -y clean all ; rm -rf /var/cache/{dnf,yum}
 
 RUN mkdir /build && cd /build/ && curl --remote-name-all -L https://github.com/dell/dkms/archive/refs/tags/v3.0.3.tar.gz && \
      tar xvf v3.0.3.tar.gz && cd dkms-3.0.3 && make install-redhat && rm -rf /build
