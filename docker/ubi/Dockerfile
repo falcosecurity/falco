@@ -1,4 +1,4 @@
-ARG UBI_VERSION
+ARG UBI_VERSION=latest
 FROM registry.access.redhat.com/ubi8/ubi:${UBI_VERSION}
 
 ARG FALCO_VERSION
@@ -23,14 +23,14 @@ ENV HOME /root
 
 RUN  dnf -y update && \
      dnf -y install \
-	curl \
-        make \
-        cmake \
-	gcc \
-	llvm-toolset \
-        clang \
-        kmod \
-	&& dnf -y clean all ; rm -rf /var/cache/{dnf,yum}
+          curl \
+          make \
+          cmake \
+          gcc \
+          llvm-toolset \
+          clang \
+          kmod \
+     && dnf -y clean all ; rm -rf /var/cache/{dnf,yum}
 
 RUN mkdir /build && cd /build/ && curl --remote-name-all -L https://github.com/dell/dkms/archive/refs/tags/v3.0.3.tar.gz && \
      tar xvf v3.0.3.tar.gz && cd dkms-3.0.3 && make install-redhat && rm -rf /build
