@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (C) 2021 The Falco Authors.
+# Copyright (C) 2022 The Falco Authors.
 #
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,9 +15,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 set -x
 rm -fr /usr/src/kernels/ && rm -fr /usr/src/debug/
 rm -fr /lib/modules && ln -s $HOST_ROOT/lib/modules /lib/modules
 rm -fr /boot && ln -s $HOST_ROOT/boot /boot
 
-exec /docker-entrypoint.sh "$@"
+# Set the SKIP_DRIVER_LOADER variable to skip loading the driver
+
+if [[ -z "${SKIP_DRIVER_LOADER}" ]]; then
+    echo "* Setting up /usr/src links from host"
+
+    for i in "$HOST_ROOT/usr/src"/*
+    do
+        base=$(basename "$i")
+        ln -s "$i" "/usr/src/$base"
+    done
+
+    /usr/bin/falco-driver-loader
+fi
+
+exec "$@"
