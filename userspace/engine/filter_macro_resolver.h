@@ -44,7 +44,8 @@ class filter_macro_resolver: private libsinsp::filter::ast::expr_visitor
 		/*!
 			\brief Defines a new macro to be substituted in filters. If called
 			multiple times for the same macro name, the previous definition
-			gets overridden.
+			gets overridden. A macro can be undefined by setting a null
+			AST pointer.
 			\param name The name of the macro.
 			\param macro The AST of the macro.
 		*/
