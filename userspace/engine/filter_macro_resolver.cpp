@@ -38,7 +38,6 @@ void filter_macro_resolver::set_macro(
 		string name,
 		shared_ptr<libsinsp::filter::ast::expr> macro)
 {
-	auto it = m_macros.find(name);
 	m_macros[name] = macro;
 }
 
@@ -120,7 +119,7 @@ void filter_macro_resolver::visit(ast::value_expr* e)
 	// of identier-only children from either a 'not',
 	// an 'and' or an 'or'.
 	auto macro = m_macros.find(e->value);
-	if (macro != m_macros.end())
+	if (macro != m_macros.end() && macro->second) // skip null-ptr macros
 	{
 		ast::expr* new_node = ast::clone(macro->second.get());
 		new_node->accept(this); // this sets m_last_node
