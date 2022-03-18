@@ -19,7 +19,7 @@ limitations under the License.
 #include <string.h>
 #include <plugin_info.h>
 
-static const char *pl_required_api_version = "0.1.0";
+static const char *pl_required_api_version = "1.0.0";
 static uint32_t    pl_type                 = TYPE_EXTRACTOR_PLUGIN;
 static const char *pl_name_base            = "test_extract";
 static char pl_name[1024];

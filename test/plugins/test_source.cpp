@@ -20,7 +20,7 @@ limitations under the License.
 
 #include <plugin_info.h>
 
-static const char *pl_required_api_version = "0.1.0";
+static const char *pl_required_api_version = "1.0.0";
 static uint32_t    pl_type                 = TYPE_SOURCE_PLUGIN;
 static uint32_t    pl_id                   = 999;
 static const char *pl_name                 = "test_source";
