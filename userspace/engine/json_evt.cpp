@@ -591,13 +591,15 @@ const json_event_filter_check::values_t &json_event_filter_check::extracted_valu
 
 bool json_event_filter_check::compare(gen_event *evt)
 {
-	auto jevt = (json_event *)evt;
+	auto jevt = (json_event *) evt;
+	std::vector<extract_value_t> values;
+	if (!extract(jevt, values))
+	{
+		return false;
+	}
+	auto evalues = (const extracted_values_t *) values[0].ptr;
 
-	uint32_t len;
-
-	auto evalues = (const extracted_values_t *) extract(jevt, &len);
 	values_set_t setvals;
-
 	switch(m_cmpop)
 	{
 	case CO_EQ:
@@ -712,7 +714,7 @@ void json_event_filter_check::add_extracted_value_num(int64_t val)
 	m_evalues.second.emplace(json_event_value(val));
 }
 
-uint8_t *json_event_filter_check::extract(gen_event *evt, uint32_t *len, bool sanitize_strings)
+bool json_event_filter_check::extract(gen_event *evt, std::vector<extract_value_t>& values, bool sanitize_strings)
 {
 	m_evalues.first.clear();
 	m_evalues.second.clear();
@@ -723,9 +725,8 @@ uint8_t *json_event_filter_check::extract(gen_event *evt, uint32_t *len, bool sa
 		m_evalues.second.clear();
 		add_extracted_value(no_value);
 	}
-
-	*len = sizeof(m_evalues);
-	return (uint8_t *)&m_evalues;
+	values.push_back({(uint8_t *)&m_evalues, sizeof(m_evalues)});
+	return true;
 }
 
 bool json_event_filter_check::extract_values(json_event *jevt)
@@ -1659,13 +1660,13 @@ void json_event_formatter::parse_format()
 
 void json_event_formatter::resolve_format(json_event *ev, std::list<std::pair<std::string, std::string>> &resolved)
 {
+	vector<extract_value_t> values;
 	for(auto tok : m_tokens)
 	{
 		if(tok.check)
 		{
-			uint32_t len;
-
-			(void) tok.check->extract(ev, &len);
+			values.clear();
+			tok.check->extract(ev, values);
 
 			const json_event_filter_check::values_t &evals =
 				tok.check->extracted_values();

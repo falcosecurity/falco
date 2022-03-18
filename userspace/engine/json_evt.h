@@ -179,8 +179,16 @@ public:
 	void add_filter_value(const char *str, uint32_t len, uint32_t i = 0);
 	bool compare(gen_event *evt);
 
-	// This always returns a const extracted_values_t *. The pointer points to m_evalues;
-	uint8_t* extract(gen_event *evt, uint32_t* len, bool sanitize_strings = true) final;
+	// This is adapted to support the new extract() method signature that
+	// supports extracting list of values, however json_evt was implemented
+	// to support this feature in the first place through the
+	// extracted_values_t structure. As such, for now this is only used for
+	// signature compliance, and always pushes a single value. The value pushed
+	// in the vector is a a const extracted_values_t* that points to the
+	// internal m_evalues. This is a temporary workaround to sync with the
+	// latest falcosecurity/libs development without re-designing the whole K8S
+	// support, which will eventually be refactored as a plugin in the future anyway.
+	bool extract(gen_event *evt, std::vector<extract_value_t>& values, bool sanitize_strings = true) final;
 
 	const std::string &field();
 	const std::string &idx();
