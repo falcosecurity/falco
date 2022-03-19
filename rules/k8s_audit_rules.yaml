@@ -86,6 +86,9 @@
 - macro: response_successful
   condition: (ka.response.code startswith 2)
 
+- macro: kget
+  condition: ka.verb=get
+
 - macro: kcreate
   condition: ka.verb=create
 
@@ -567,10 +570,34 @@
   tags: [k8s]
 
 - rule: K8s Secret Deleted
-  desc: Detect any attempt to delete a secret Service account tokens are excluded.
+  desc: Detect any attempt to delete a secret. Service account tokens are excluded.
   condition: (kactivity and kdelete and secret and ka.target.namespace!=kube-system and non_system_user and response_successful)
   output: K8s Secret Deleted (user=%ka.user.name secret=%ka.target.name ns=%ka.target.namespace resp=%ka.response.code decision=%ka.auth.decision reason=%ka.auth.reason)
   priority: INFO
+  source: k8s_audit
+  tags: [k8s]
+
+- rule: K8s Secret Get Successfully
+  desc: >
+    Detect any attempt to get a secret. Service account tokens are excluded.
+  condition: >
+    secret and kget
+    and kactivity
+    and response_successful
+  output: K8s Secret Get Successfully (user=%ka.user.name secret=%ka.target.name ns=%ka.target.namespace resp=%ka.response.code decision=%ka.auth.decision reason=%ka.auth.reason)
+  priority: ERROR
+  source: k8s_audit
+  tags: [k8s]
+
+- rule:  K8s Secret Get Unsuccessfully Tried
+  desc: >
+    Detect an unsuccessful attempt to get the secret. Service account tokens are excluded.
+  condition: >
+    secret and kget
+    and kactivity
+    and not response_successful
+  output: K8s Secret Get Unsuccessfully Tried (user=%ka.user.name secret=%ka.target.name ns=%ka.target.namespace resp=%ka.response.code decision=%ka.auth.decision reason=%ka.auth.reason)
+  priority: WARNING
   source: k8s_audit
   tags: [k8s]
 
