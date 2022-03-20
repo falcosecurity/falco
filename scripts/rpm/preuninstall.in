@@ -15,5 +15,4 @@
 # limitations under the License.
 #
 
-mod_version="@DRIVER_VERSION@"
-dkms remove -m falco -v $mod_version --all --rpm_safe_upgrade
+/usr/bin/falco-driver-loader --clean

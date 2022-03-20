@@ -219,43 +219,93 @@ load_kernel_module_download() {
 	fi
 }
 
-load_kernel_module() {
-	if ! hash lsmod > /dev/null 2>&1; then
-		>&2 echo "This program requires lsmod"
-		exit 1
-	fi
+clean_kernel_module() {
+	echo 
+	echo "================ Cleaning phase ================"
+	echo 
 
-	if ! hash modprobe > /dev/null 2>&1; then
-		>&2 echo "This program requires modprobe"
+	if ! hash lsmod > /dev/null 2>&1; then
+		>&2 echo "* Error: This program requires lsmod."
 		exit 1
 	fi
 
 	if ! hash rmmod > /dev/null 2>&1; then
-		>&2 echo "This program requires rmmod"
+		>&2 echo "* Error: This program requires rmmod."
 		exit 1
 	fi
 
-	echo "* Unloading ${DRIVER_NAME} module, if present"
-	rmmod "${DRIVER_NAME}" 2>/dev/null
-	WAIT_TIME=0
 	KMOD_NAME=$(echo "${DRIVER_NAME}" | tr "-" "_")
-	while lsmod | cut -d' ' -f1 | grep -qx "${KMOD_NAME}" && [ $WAIT_TIME -lt "${MAX_RMMOD_WAIT}" ]; do
-		if rmmod "${DRIVER_NAME}" 2>/dev/null; then
-			echo "* Unloading ${DRIVER_NAME} module succeeded after ${WAIT_TIME}s"
-			break
-		fi
-		((++WAIT_TIME))
-		if (( WAIT_TIME % 5 == 0 )); then
-			echo "* ${DRIVER_NAME} module still loaded, waited ${WAIT_TIME}s (max wait ${MAX_RMMOD_WAIT}s)"
-		fi
-		sleep 1
-	done
+	echo "* 1. Check if kernel module '${KMOD_NAME}' is still loaded:"
 
-	if lsmod | cut -d' ' -f1 | grep -qx "${KMOD_NAME}" > /dev/null 2>&1; then
-		echo "* ${DRIVER_NAME} module seems to still be loaded, hoping the best"
-		exit 0
+	if ! lsmod | cut -d' ' -f1 | grep -qx "${KMOD_NAME}"; then
+		echo "- OK! There is no '${KMOD_NAME}' module loaded."
+		echo
 	fi
 
+	# Wait 50s = MAX_RMMOD_WAIT * 5s
+	MAX_RMMOD_WAIT=10
+	# Remove kernel module if is still loaded.
+	while lsmod | cut -d' ' -f1 | grep -qx "${KMOD_NAME}" && [ $MAX_RMMOD_WAIT -gt 0 ]; do
+		echo "- Kernel module '${KMOD_NAME}' is still loaded."
+		echo "- Trying to unload it with 'rmmod ${KMOD_NAME}'..."
+		if rmmod ${KMOD_NAME}; then
+			echo "- OK! Unloading '${KMOD_NAME}' module succeeded."
+			echo
+		else
+		    echo "- Nothing to do...'falco-driver-loader' will wait until you remove the kernel module to have a clean termination."
+		    echo "- Checkout here what to do (link to documentation)."
+		    echo "- Sleep 5 seconds..."
+		    echo
+			((--MAX_RMMOD_WAIT))
+		    sleep 5
+		fi
+	done
+
+	if [ ${MAX_RMMOD_WAIT} -eq 0 ]; then
+		echo "* [WARNING] '${KMOD_NAME}' module is still loaded, you could have incompatibility issues."
+		return
+	fi
+	
+	if ! hash dkms >/dev/null 2>&1; then
+		echo "* Skipping dkms remove (dkms not found)"
+		return
+	fi
+	
+	echo "* 2. Check kernel module '${KMOD_NAME}' in dkms:"
+
+	# Remove all versions of this module from dkms.
+	DRIVER_VERSIONS=$(dkms status -m "${KMOD_NAME}" | cut -d',' -f2 | sed -e 's/^[[:space:]]*//')
+	if [ -z "${DRIVER_VERSIONS}" ]; then
+		echo "- OK! There is no '${KMOD_NAME}' module in dkms-"
+		return
+	else
+		echo "- There are some verions of '${KMOD_NAME}' module in dkms."
+		echo
+		echo "* 3. Removing all the following versions of '${KMOD_NAME}' module from dkms:"
+		echo "- ${DRIVER_VERSIONS}"	
+		echo
+	fi
+
+	for CURRENT_VER in ${DRIVER_VERSIONS}; do
+		echo "- Removing ${CURRENT_VER}..."
+		if dkms remove -m ${KMOD_NAME} -v "${CURRENT_VER}" --all; then
+			echo
+			echo "- OK! Removing '${CURRENT_VER}' succeeded"
+			echo
+		else
+			echo "-  Removing '${KMOD_NAME}' version '${CURRENT_VER}' failed"
+			return
+		fi
+	done
+
+	echo "* [SUCCESS] Cleaning phase correctly terminated."
+	echo 
+	echo "================ Cleaning phase ================"
+	echo 
+}
+
+load_kernel_module() {
+	clean_kernel_module
 
 	echo "* Looking for a ${DRIVER_NAME} module locally (kernel ${KERNEL_RELEASE})"
 
@@ -288,48 +338,6 @@ load_kernel_module() {
 	# Not able to download a prebuilt module nor to compile one on-the-fly
 	>&2 echo "Consider compiling your own ${DRIVER_NAME} driver and loading it or getting in touch with the Falco community"
 	exit 1
-}
-
-clean_kernel_module() {
-	if ! hash lsmod > /dev/null 2>&1; then
-		>&2 echo "This program requires lsmod"
-		exit 1
-	fi
-
-	if ! hash rmmod > /dev/null 2>&1; then
-		>&2 echo "This program requires rmmod"
-		exit 1
-	fi
-
-	KMOD_NAME=$(echo "${DRIVER_NAME}" | tr "-" "_")
-	if lsmod | cut -d' ' -f1 | grep -qx "${KMOD_NAME}"; then
-		if rmmod "${DRIVER_NAME}" 2>/dev/null; then
-			echo "* Unloading ${DRIVER_NAME} module succeeded"
-		else
-			echo "* Unloading ${DRIVER_NAME} module failed"
-		fi
-	else
-		echo "* There is no ${DRIVER_NAME} module loaded"
-	fi
-
-	if ! hash dkms >/dev/null 2>&1; then
-		echo "* Skipping dkms remove (dkms not found)"
-		return
-	fi
-
-	DRIVER_VERSIONS=$(dkms status -m "${DRIVER_NAME}" | cut -d',' -f1 | sed -e 's/^[[:space:]]*//')
-	if [ -z "${DRIVER_VERSIONS}" ]; then
-		echo "* There is no ${DRIVER_NAME} module in dkms"
-		return
-	fi
-	for CURRENT_VER in ${DRIVER_VERSIONS}; do
-		if dkms remove "${CURRENT_VER}" --all 2>/dev/null; then
-			echo "* Removing ${CURRENT_VER} succeeded"
-		else
-			echo "* Removing ${CURRENT_VER} failed"
-			exit 1
-		fi
-	done
 }
 
 load_bpf_probe_compile() {
