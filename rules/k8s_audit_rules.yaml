@@ -185,6 +185,28 @@
   source: k8s_audit
   tags: [k8s]
 
+- list: falco_hostpid_images
+  items: []
+
+- rule: Create HostPid Pod
+  desc: Detect an attempt to start a pod using the host pid namespace.
+  condition: kevt and pod and kcreate and ka.req.pod.host_pid intersects (true) and not ka.req.pod.containers.image.repository in (falco_hostpid_images)
+  output: Pod started using host pid namespace (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace images=%ka.req.pod.containers.image)
+  priority: WARNING
+  source: k8s_audit
+  tags: [k8s]
+
+- list: falco_hostipc_images
+  items: []
+
+- rule: Create HostIPC Pod
+  desc: Detect an attempt to start a pod using the host ipc namespace.
+  condition: kevt and pod and kcreate and ka.req.pod.host_ipc intersects (true) and not ka.req.pod.containers.image.repository in (falco_hostipc_images)
+  output: Pod started using host ipc namespace (user=%ka.user.name pod=%ka.resp.name ns=%ka.target.namespace images=%ka.req.pod.containers.image)
+  priority: WARNING
+  source: k8s_audit
+  tags: [k8s]
+
 - macro: user_known_node_port_service
   condition: (k8s_audit_never_true)
 
