@@ -221,7 +221,7 @@ load_kernel_module_download() {
 
 print_clean_termination() {
 	echo
-	echo "* [SUCCESS] Cleaning phase correctly terminated."
+	echo "[SUCCESS] Cleaning phase correctly terminated."
 	echo 
 	echo "================ Cleaning phase ================"
 	echo 
@@ -233,12 +233,12 @@ clean_kernel_module() {
 	echo 
 
 	if ! hash lsmod > /dev/null 2>&1; then
-		>&2 echo "* [ERROR]: This program requires lsmod."
+		>&2 echo "This program requires lsmod."
 		exit 1
 	fi
 
 	if ! hash rmmod > /dev/null 2>&1; then
-		>&2 echo "* [ERROR]: This program requires rmmod."
+		>&2 echo "This program requires rmmod."
 		exit 1
 	fi
 
@@ -270,7 +270,7 @@ clean_kernel_module() {
 	done
 
 	if [ ${MAX_RMMOD_WAIT} -eq 0 ]; then
-		echo "* [WARNING] '${KMOD_NAME}' module is still loaded, you could have incompatibility issues."
+		echo "[WARNING] '${KMOD_NAME}' module is still loaded, you could have incompatibility issues."
 		echo
 	fi
 	
@@ -288,7 +288,7 @@ clean_kernel_module() {
 			echo
 			echo "- OK! Removing '${DRIVER_VERSION}' succeeded."
 		else
-			echo "* [WARNING] Removing '${KMOD_NAME}' version '${DRIVER_VERSION}' failed."
+			echo "[WARNING] Removing '${KMOD_NAME}' version '${DRIVER_VERSION}' failed."
 		fi
 	else
 		echo "- OK! There is no '${KMOD_NAME}' module in dkms."
