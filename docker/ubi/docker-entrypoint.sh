@@ -16,7 +16,6 @@
 # limitations under the License.
 #
 
-set -x
 rm -fr /usr/src/kernels/ && rm -fr /usr/src/debug/
 rm -fr /lib/modules && ln -s $HOST_ROOT/lib/modules /lib/modules
 rm -fr /boot && ln -s $HOST_ROOT/boot /boot
