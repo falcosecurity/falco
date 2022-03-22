@@ -16,13 +16,15 @@
 # limitations under the License.
 #
 
-rm -fr /usr/src/kernels/ && rm -fr /usr/src/debug/
-rm -fr /lib/modules && ln -s $HOST_ROOT/lib/modules /lib/modules
-rm -fr /boot && ln -s $HOST_ROOT/boot /boot
-
 # Set the SKIP_DRIVER_LOADER variable to skip loading the driver
 
 if [[ -z "${SKIP_DRIVER_LOADER}" ]]; then
+
+    # Required by dkms to find the required dependencies on RedHat UBI
+    rm -fr /usr/src/kernels/ && rm -fr /usr/src/debug/
+    rm -fr /lib/modules && ln -s $HOST_ROOT/lib/modules /lib/modules
+    rm -fr /boot && ln -s $HOST_ROOT/boot /boot
+
     echo "* Setting up /usr/src links from host"
 
     for i in "$HOST_ROOT/usr/src"/*
