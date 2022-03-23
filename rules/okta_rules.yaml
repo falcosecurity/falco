@@ -26,7 +26,7 @@
 - rule: User accessing app via single sign on OKTA
   desc: Detect a user accessing an app via OKTA
   condition: okta.evt.type = "user.authentication.sso"
-  output: "A user has accessed and app using OKTA (user=%okta.actor.name, app=%okta.app)"
+  output: "A user has accessed an app using OKTA (user=%okta.actor.name, app=%okta.app)"
   priority: NOTICE
   source: okta
   tags: [okta]
