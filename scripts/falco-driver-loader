@@ -261,7 +261,7 @@ clean_kernel_module() {
 			echo
 		else
 			echo "- Nothing to do...'falco-driver-loader' will wait until you remove the kernel module to have a clean termination."
-			echo "- Checkout here what to do (link to documentation)."
+			echo "- Check that no process is using the kernel module with 'lsmod | grep ${KMOD_NAME}'."
 			echo "- Sleep 5 seconds..."
 			echo
 			((--MAX_RMMOD_WAIT))
@@ -275,7 +275,7 @@ clean_kernel_module() {
 	fi
 	
 	if ! hash dkms >/dev/null 2>&1; then
-		echo "- Skipping dkms remove (dkms not found)"
+		echo "- Skipping dkms remove (dkms not found)."
 		print_clean_termination
 		return
 	fi
@@ -286,7 +286,7 @@ clean_kernel_module() {
 	if [ -z "${DRIVER_VERSIONS}" ]; then
 		echo "- OK! There are no '${KMOD_NAME}' module versions in dkms."
 	else
-		echo "- There are some verions of '${KMOD_NAME}' module in dkms."
+		echo "- There are some versions of '${KMOD_NAME}' module in dkms."
 		echo
 		echo "* 3. Removing all the following versions from dkms:"
 		echo "${DRIVER_VERSIONS}"
@@ -297,10 +297,10 @@ clean_kernel_module() {
 		echo "- Removing ${CURRENT_VER}..."
 		if dkms remove -m ${KMOD_NAME} -v "${CURRENT_VER}" --all; then
 			echo
-			echo "- OK! Removing '${CURRENT_VER}' succeeded"
+			echo "- OK! Removing '${CURRENT_VER}' succeeded."
 			echo
 		else
-			echo "[WARNING] Removing '${KMOD_NAME}' version '${CURRENT_VER}' failed"
+			echo "[WARNING] Removing '${KMOD_NAME}' version '${CURRENT_VER}' failed."
 		fi
 	done
 
