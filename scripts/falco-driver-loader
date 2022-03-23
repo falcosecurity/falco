@@ -279,20 +279,30 @@ clean_kernel_module() {
 		print_clean_termination
 		return
 	fi
-	
-	# Remove the module version from dkms.
-	echo "* 2. Check kernel module '${KMOD_NAME}' with version '${DRIVER_VERSION}' in dkms:"
-	if [ "$(dkms status -m $KMOD_NAME -v $DRIVER_VERSION)" ]; then
-		echo "- Removing version '${DRIVER_VERSION}' from dkms..."
-		if dkms remove -m $KMOD_NAME -v $DRIVER_VERSION --all; then
-			echo
-			echo "- OK! Removing '${DRIVER_VERSION}' succeeded."
-		else
-			echo "[WARNING] Removing '${KMOD_NAME}' version '${DRIVER_VERSION}' failed."
-		fi
+
+	# Remove all versions of this module from dkms.
+	echo "* 2. Check all versions of kernel module '${KMOD_NAME}' in dkms:"
+	DRIVER_VERSIONS=$(dkms status -m "${KMOD_NAME}" | tr -d "," | tr "/" " " | cut -d' ' -f2)
+	if [ -z "${DRIVER_VERSIONS}" ]; then
+		echo "- OK! There are no '${KMOD_NAME}' module versions in dkms."
 	else
-		echo "- OK! There is no '${KMOD_NAME}' module in dkms."
+		echo "- There are some verions of '${KMOD_NAME}' module in dkms."
+		echo
+		echo "* 3. Removing all the following versions from dkms:"
+		echo "${DRIVER_VERSIONS}"
+		echo
 	fi
+
+	for CURRENT_VER in ${DRIVER_VERSIONS}; do
+		echo "- Removing ${CURRENT_VER}..."
+		if dkms remove -m ${KMOD_NAME} -v "${CURRENT_VER}" --all; then
+			echo
+			echo "- OK! Removing '${CURRENT_VER}' succeeded"
+			echo
+		else
+			echo "[WARNING] Removing '${KMOD_NAME}' version '${CURRENT_VER}' failed"
+		fi
+	done
 
 	print_clean_termination
 }
