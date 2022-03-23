@@ -14,30 +14,16 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 #
-if(MINIMAL_BUILD)
-  set(
-    FALCO_TESTS_SOURCES
-    test_base.cpp
-    engine/test_rulesets.cpp
-    engine/test_falco_utils.cpp
-    engine/test_filter_macro_resolver.cpp
-    engine/test_filter_evttype_resolver.cpp
-    engine/test_filter_warning_resolver.cpp
-    falco/test_configuration.cpp
-  )
-else()
-  set(
-    FALCO_TESTS_SOURCES
-    test_base.cpp
-    engine/test_rulesets.cpp
-    engine/test_falco_utils.cpp
-    engine/test_filter_macro_resolver.cpp
-    engine/test_filter_evttype_resolver.cpp
-    engine/test_filter_warning_resolver.cpp
-    falco/test_configuration.cpp
-    falco/test_webserver.cpp
-  )
-endif()
+set(
+  FALCO_TESTS_SOURCES
+  test_base.cpp
+  engine/test_rulesets.cpp
+  engine/test_falco_utils.cpp
+  engine/test_filter_macro_resolver.cpp
+  engine/test_filter_evttype_resolver.cpp
+  engine/test_filter_warning_resolver.cpp
+  falco/test_configuration.cpp
+)
 
 set(FALCO_TESTED_LIBRARIES falco_engine ${YAMLCPP_LIB})
 
@@ -76,7 +62,6 @@ if(FALCO_BUILD_TESTS)
             "${PROJECT_SOURCE_DIR}/userspace/engine"
             "${PROJECT_BINARY_DIR}/userspace/falco"
             "${YAMLCPP_INCLUDE_DIR}"
-            "${CIVETWEB_INCLUDE_DIR}"
             "${PROJECT_SOURCE_DIR}/userspace/falco")
   endif()
   add_dependencies(falco_test catch2)

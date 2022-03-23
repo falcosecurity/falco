@@ -148,8 +148,8 @@ if(NOT MINIMAL_BUILD)
   # libcurl
   include(curl)
 
-  # civetweb
-  include(civetweb)
+  # cpp-httlib
+  include(cpp-httplib)
 endif()
 
 include(cxxopts)
