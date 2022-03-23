@@ -64,7 +64,6 @@ int falco_init(int argc, char **argv, bool &restart)
 
 		if(!success)
 		{
-
 			result = EXIT_FAILURE;
 			fprintf(stderr, "%s\n", errstr.c_str());
 		}
