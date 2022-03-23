@@ -53,7 +53,6 @@ public:
 
 private:
 	static std::string s_syscall_source;
-	static std::string s_k8s_audit_source;
 
 	// Holds the state used and shared by the below methods that
 	// actually implement the application. Declared as a
@@ -75,10 +74,8 @@ private:
 		std::shared_ptr<sinsp> inspector;
 		std::set<std::string> enabled_sources;
 
-		// The event sources that correspond to "syscalls" and
-		// "k8s_audit events".
+		// The event sources that correspond to "syscall"
 		std::size_t syscall_source_idx;
-		std::size_t k8s_audit_source_idx;
 
 		// The event source actually used to process events in
 		// process_events(). Will generally be
@@ -99,7 +96,6 @@ private:
 
 		std::string cmdline;
 
-		bool trace_is_scap;
 #ifndef MINIMAL_BUILD
 		falco::grpc::server grpc_server;
 		std::thread grpc_server_thread;
@@ -164,7 +160,6 @@ private:
 	void configure_output_format();
 	void check_for_ignored_events();
 	void print_all_ignored_events();
-	void read_k8s_audit_trace_file(string &trace_filename);
 	uint64_t do_inspect(syscall_evt_drop_mgr &sdropmgr,
 			    uint64_t duration_to_tot_ns,
 			    run_result &result);

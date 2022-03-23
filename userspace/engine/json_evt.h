@@ -48,7 +48,7 @@ public:
 	inline uint16_t get_type() const
 	{
 		// All k8s audit events have the single tag "1". - see falco_engine::process_k8s_audit_event
-		return 1;
+		return ppm_event_type::PPME_PLUGINEVENT_E;
 	}
 
 protected:

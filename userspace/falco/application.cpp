@@ -30,7 +30,6 @@ namespace falco {
 namespace app {
 
 std::string application::s_syscall_source = falco_common::syscall_source;
-std::string application::s_k8s_audit_source = "k8s_audit";
 
 application::run_result::run_result()
 	: success(true), errstr(""), proceed(true)
@@ -45,7 +44,7 @@ application::state::state()
 	: restart(false),
 	  terminate(false),
 	  reopen_outputs(false),
-	  enabled_sources({application::s_syscall_source, application::s_k8s_audit_source}),
+	  enabled_sources({application::s_syscall_source}),
 	  trace_is_scap(true)
 {
 	config = std::make_shared<falco_configuration>();

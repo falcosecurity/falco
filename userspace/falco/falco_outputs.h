@@ -20,7 +20,6 @@ limitations under the License.
 #include <map>
 
 #include "gen_filter.h"
-#include "json_evt.h"
 #include "falco_common.h"
 #include "token_bucket.h"
 #include "falco_engine.h"
