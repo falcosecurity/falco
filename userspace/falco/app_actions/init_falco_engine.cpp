@@ -56,24 +56,19 @@ application::run_result application::init_falco_engine()
 
 	configure_output_format();
 
-	// Create "factories" that can create filters/formatters for
-	// syscalls and k8s audit events.
+	// Create "factories" that can create filters/formatters for syscalls
 
 	// libs requires raw pointer, we should modify libs to use reference/shared_ptr
 	std::shared_ptr<gen_event_filter_factory> syscall_filter_factory(new sinsp_filter_factory(m_state->inspector.get()));
-	std::shared_ptr<gen_event_filter_factory> k8s_audit_filter_factory(new json_event_filter_factory());
 
 	// libs requires raw pointer, we should modify libs to use reference/shared_ptr
 	std::shared_ptr<gen_event_formatter_factory> syscall_formatter_factory(new sinsp_evt_formatter_factory(m_state->inspector.get()));
-	std::shared_ptr<gen_event_formatter_factory> k8s_audit_formatter_factory(new json_event_formatter_factory(k8s_audit_filter_factory));
 
 	m_state->syscall_source_idx = m_state->engine->add_source(application::s_syscall_source, syscall_filter_factory, syscall_formatter_factory);
-	m_state->k8s_audit_source_idx = m_state->engine->add_source(application::s_k8s_audit_source, k8s_audit_filter_factory, k8s_audit_formatter_factory);
-
+	
 	if(m_state->config->m_json_output)
 	{
 		syscall_formatter_factory->set_output_format(gen_event_formatter::OF_JSON);
-		k8s_audit_formatter_factory->set_output_format(gen_event_formatter::OF_JSON);
 	}
 
 	for(const auto &src : m_options.disable_sources)
@@ -81,10 +76,10 @@ application::run_result application::init_falco_engine()
 		m_state->enabled_sources.erase(src);
 	}
 
-	// XXX/mstemm technically this isn't right, you could disable syscall *and* k8s_audit and configure a plugin.
+	// todo(jasondellaluce,leogr): change this once we attain multiple active source
 	if(m_state->enabled_sources.empty())
 	{
-		throw std::invalid_argument("The event source \"syscall\" and \"k8s_audit\" can not be disabled together");
+		throw std::invalid_argument("At least one event source needs to be enabled");
 	}
 
 	m_state->engine->set_min_priority(m_state->config->m_min_priority);

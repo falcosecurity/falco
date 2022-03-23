@@ -38,46 +38,10 @@ application::run_result application::open_inspector()
 		}
 		catch(sinsp_exception &e)
 		{
-			falco_logger::log(LOG_DEBUG, "Could not read trace file \"" + m_options.trace_filename + "\": " + string(e.what()));
-			m_state->trace_is_scap=false;
-		}
-
-		if(!m_state->trace_is_scap)
-		{
-#ifdef MINIMAL_BUILD
 			ret.success = false;
-			ret.errstr = "Cannot use k8s audit events trace file with a minimal Falco build";
+			ret.errstr = std::string("Could not open trace filename ") + m_options.trace_filename + " for reading: " + e.what();
 			ret.proceed = false;
 			return ret;
-#else
-			try {
-				string line;
-				nlohmann::json j;
-
-				// Note we only temporarily open the file here.
-				// The read file read loop will be later.
-				ifstream ifs(m_options.trace_filename);
-				getline(ifs, line);
-				j = nlohmann::json::parse(line);
-
-				falco_logger::log(LOG_INFO, "Reading k8s audit events from file: " + m_options.trace_filename + "\n");
-			}
-			catch (nlohmann::json::parse_error& e)
-			{
-				ret.success = false;
-				ret.errstr = std::string("Trace filename ") + m_options.trace_filename + " not recognized as system call events or k8s audit events";
-				ret.proceed = false;
-				return ret;
-
-			}
-			catch (exception &e)
-			{
-				ret.success = false;
-				ret.errstr = std::string("Could not open trace filename ") + m_options.trace_filename + " for reading: " + e.what();
-				ret.proceed = false;
-				return ret;
-			}
-#endif
 		}
 	}
 	else
@@ -101,18 +65,13 @@ application::run_result application::open_inspector()
 		open_t open_f;
 
 		// Default mode: both event sources enabled
-		if (m_state->enabled_sources.find(application::s_syscall_source) != m_state->enabled_sources.end() &&
-		    m_state->enabled_sources.find(application::s_k8s_audit_source) != m_state->enabled_sources.end())
+		if (m_state->enabled_sources.find(application::s_syscall_source) != m_state->enabled_sources.end())
 		{
 			open_f = open_cb;
 		}
-		if (m_state->enabled_sources.find(application::s_syscall_source) == m_state->enabled_sources.end())
+		else
 		{
 			open_f = open_nodriver_cb;
-		}
-		if (m_state->enabled_sources.find(application::s_k8s_audit_source) == m_state->enabled_sources.end())
-		{
-			open_f = open_cb;
 		}
 
 		try

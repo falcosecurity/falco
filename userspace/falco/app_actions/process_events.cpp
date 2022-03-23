@@ -31,35 +31,6 @@ limitations under the License.
 
 using namespace falco::app;
 
-#ifndef MINIMAL_BUILD
-// Read a jsonl file containing k8s audit events and pass each to the engine.
-void application::read_k8s_audit_trace_file(string &trace_filename)
-{
-	ifstream ifs(trace_filename);
-
-	uint64_t line_num = 0;
-
-	while(ifs)
-	{
-		string line, errstr;
-
-		getline(ifs, line);
-		line_num++;
-
-		if(line == "")
-		{
-			continue;
-		}
-
-		if(!k8s_audit_handler::accept_data(m_state->engine, m_state->outputs, m_state->k8s_audit_source_idx, line, errstr))
-		{
-			falco_logger::log(LOG_ERR, "Could not read k8s audit event line #" + to_string(line_num) + ", \"" + line + "\": " + errstr + ", stopping");
-			return;
-		}
-	}
-}
-#endif
-
 //
 // Event processing loop
 //
@@ -214,36 +185,24 @@ application::run_result application::process_events()
 
 	duration = ((double)clock()) / CLOCKS_PER_SEC;
 
-	if(!m_options.trace_filename.empty() && !m_state->trace_is_scap)
+	uint64_t num_evts = do_inspect(sdropmgr,
+					uint64_t(m_options.duration_to_tot*ONE_SECOND_IN_NS),
+					ret);
+
+	duration = ((double)clock()) / CLOCKS_PER_SEC - duration;
+
+	m_state->inspector->get_capture_stats(&cstats);
+
+	if(m_options.verbose)
 	{
-#ifndef MINIMAL_BUILD
-		read_k8s_audit_trace_file(m_options.trace_filename);
-#endif
-	}
-	else
-	{
-		uint64_t num_evts;
+		fprintf(stderr, "Driver Events:%" PRIu64 "\nDriver Drops:%" PRIu64 "\n",
+			cstats.n_evts,
+			cstats.n_drops);
 
-		num_evts = do_inspect(sdropmgr,
-				      uint64_t(m_options.duration_to_tot*ONE_SECOND_IN_NS),
-				      ret);
-
-		duration = ((double)clock()) / CLOCKS_PER_SEC - duration;
-
-		m_state->inspector->get_capture_stats(&cstats);
-
-		if(m_options.verbose)
-		{
-			fprintf(stderr, "Driver Events:%" PRIu64 "\nDriver Drops:%" PRIu64 "\n",
-				cstats.n_evts,
-				cstats.n_drops);
-
-			fprintf(stderr, "Elapsed time: %.3lf, Captured Events: %" PRIu64 ", %.2lf eps\n",
-				duration,
-				num_evts,
-				num_evts / duration);
-		}
-
+		fprintf(stderr, "Elapsed time: %.3lf, Captured Events: %" PRIu64 ", %.2lf eps\n",
+			duration,
+			num_evts,
+			num_evts / duration);
 	}
 
 	// Honor -M also when using a trace file.

@@ -245,7 +245,6 @@ public:
 
 	bool m_webserver_enabled;
 	uint32_t m_webserver_listen_port;
-	std::string m_webserver_k8s_audit_endpoint;
 	std::string m_webserver_k8s_healthz_endpoint;
 	bool m_webserver_ssl_enabled;
 	std::string m_webserver_ssl_certificate;

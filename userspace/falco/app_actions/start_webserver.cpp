@@ -26,11 +26,10 @@ application::run_result application::start_webserver()
 {
 	run_result ret;
 
-	if(m_options.trace_filename.empty() && m_state->config->m_webserver_enabled && m_state->enabled_sources.find(application::s_k8s_audit_source) != m_state->enabled_sources.end())
+	if(m_state->config->m_webserver_enabled)
 	{
 		std::string ssl_option = (m_state->config->m_webserver_ssl_enabled ? " (SSL)" : "");
 		falco_logger::log(LOG_INFO, "Starting internal webserver, listening on port " + to_string(m_state->config->m_webserver_listen_port) + ssl_option + "\n");
-		m_state->webserver.init(m_state->config, m_state->engine, m_state->outputs, m_state->k8s_audit_source_idx);
 		m_state->webserver.start();
 	}
 
