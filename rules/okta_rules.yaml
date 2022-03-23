@@ -1,0 +1,170 @@
+#Example Rule on login in to OKTA. Disabled by default since it might be noisy
+#- rule: User logged in to OKTA
+#  desc: Detect the user login in to OKTA
+#  condition: okta.evt.type = "user.session.start" 
+#  output: "A user has logged in toOKTA (user=%okta.actor.name, ip=%okta.client.ip)"
+#       priority: NOTICE
+#  source: okta
+#  tags: [okta]
+
+- rule: User Changing password in to OKTA
+  desc: Detect a user change password in OKTA
+  condition: okta.evt.type = "user.account.update_password"
+  output: "A user has changed password from OKTA (user=%okta.actor.name, ip=%okta.client.ip)"
+  priority: NOTICE
+  source: okta
+  tags: [okta]
+
+- rule: Creating a new OKTA user account
+  desc: Detect a new OKTA user account created in the OKTA environment
+  condition: okta.evt.type = "user.lifecycle.create"
+  output: "A new OKTA user account created (user=%okta.actor.name, target user=%okta.target.user.name)"
+  priority: NOTICE
+  source: okta
+  tags: [okta]
+
+- rule: User accessing app via single sign on OKTA
+  desc: Detect a user accessing an app via OKTA
+  condition: okta.evt.type = "user.authentication.sso"
+  output: "A user has accessed and app using OKTA (user=%okta.actor.name, app=%okta.app)"
+  priority: NOTICE
+  source: okta
+  tags: [okta]
+
+- rule: User has been locked out in OKTA
+  desc: Detect a user who has been locked out in OKTA
+  condition: okta.evt.type = "user.account.lock"
+  output: "A user has been locked out in OKTA (user=%okta.actor.name, ip=%okta.client.ip)"
+  priority: NOTICE
+  source: okta
+  tags: [okta]
+
+- rule: User has been moved from suspended status in OKTA.
+  desc: Detect a user who has been moved from suspended status in OKTA
+  condition: okta.evt.type = "user.lifecycle.unsuspend"
+  output: "A user has been moved from suspended status in OKTA (user=%okta.actor.name, ip=%okta.client.ip, target user=%okta.target.user.name)"
+  priority: NOTICE
+  source: okta
+  tags: [okta]
+
+- rule: User has been activated in OKTA
+  desc: Detect a user who has been activated in OKTA
+  condition: okta.evt.type = "user.lifecycle.activate"
+  output: "A user has been activated in OKTA (user=%okta.actor.name, ip=%okta.client.ip, target user=%okta.target.user.name)"
+  priority: NOTICE
+  source: okta
+  tags: [okta]
+
+- rule: User has been deactivated in OKTA
+  desc: Detect a user who has been deactivated in OKTA
+  condition: okta.evt.type = "user.lifecycle.deactivate"
+  output: "A user has been deactivated in OKTA (user=%okta.actor.name, ip=%okta.client.ip, target user=%okta.target.user.name)"
+  priority: NOTICE
+  source: okta
+  tags: [okta]
+
+- rule: User has been suspended in OKTA
+  desc: Detect a user who has been suspended in OKTA
+  condition: okta.evt.type = "user.lifecycle.suspended"
+  output: "A user has been suspended in OKTA (user=%okta.actor.name, ip=%okta.client.ip, target user=%okta.target.user.name)"
+  priority: NOTICE
+  source: okta
+  tags: [okta]
+
+- rule: Admin permission has been assigned to a user in OKTA
+  desc: Detect an admin permission assigned to a user in OKTA
+  condition: okta.evt.type = "user.account.privilege.grant"
+  output: "A user has been locked out in OKTA (user=%okta.actor.name, ip=%okta.client.ip, target user=%okta.target.user.name)"
+  priority: NOTICE
+  source: okta
+  tags: [okta]
+
+- rule: Creating a new OKTA API token
+  desc: Detect a new OKTA API token created in the OKTA environment
+  condition: okta.evt.type = "system.api_token.create"
+  output: "A new OKTA API token has been created in OKTA (user=%okta.actor.name, ip=%okta.client.ip)"
+  priority: NOTICE
+  source: okta
+  tags: [okta]
+
+- rule: User accessing OKTA admin section
+  desc: Detect a user accessing OKTA admin section of your OKTA instance
+  condition: okta.evt.type = "user.session.access_admin_app"
+  output: "A user accessed the OKTA admin section of your OKTA instance (user=%okta.actor.name, ip=%okta.client.ip)"
+  priority: NOTICE
+  source: okta
+  tags: [okta]
+
+- rule: Adding user in OKTA group
+  desc: Detect a new user added to an OKTA group
+  condition: okta.evt.type = "group.user_membership.add"
+  output: "A user has been added in an OKTA group (user=%okta.actor.name, target group=%okta.target.group.name, target user=%okta.target.user.name)"
+  priority: NOTICE
+  source: okta
+  tags: [okta]
+
+- rule: removing MFA factor from user in OKTA
+  desc: Detect a removing MFA activity on a user in OKTA
+  condition: okta.evt.type = "user.mfa.factor.deactivate"
+  output: "A user has removed MFA factor in the OKTA account (user=%okta.actor.name, ip=%okta.client.ip)"
+  priority: NOTICE
+  source: okta
+  tags: [okta]
+
+- rule: removing all MFA factor from user in OKTA
+  desc: Detect a removing MFA activity on a user in OKTA
+  condition: okta.evt.type = "user.mfa.factor.reset_all"
+  output: "A user has removed all MFA factor in the OKTA account (user=%okta.actor.name, ip=%okta.client.ip)"
+  priority: NOTICE
+  source: okta
+  tags: [okta]
+
+- rule: User password reset by OKTA admin
+  desc: Detect a password reset on a user done by OKTA Admin Account
+  condition: okta.evt.type = "user.account.reset_password"
+  output: "A user password has been reset by an OKTA Admin account (user=%okta.actor.name, ip=%okta.client.ip, target user=%okta.target.user.name)"
+  priority: NOTICE
+  source: okta
+  tags: [okta]
+
+
+- rule: User hitting the rate limit on requests in OKTA
+  desc: Detect a user who hit the rate limit on requests in OKTA
+  condition: okta.evt.type = "system.org.rate_limit.violation"
+  output: "A user has hitted the rate limit on requests in OKTA (user=%okta.actor.name, ip=%okta.client.ip)"
+  priority: NOTICE
+  source: okta
+  tags: [okta]
+
+- rule: Adding user to application membership in OKTA
+  desc: Detect a user who has been added o application membership in OKTA
+  condition: okta.evt.type = "application.user_membership.add"
+  output: "A user has been added to an application membership in OKTA (user=%okta.actor.name, ip=%okta.client.ip, target user=%okta.target.user.name, app=%okta.app)"
+  priority: NOTICE
+  source: okta
+  tags: [okta]
+
+- rule: User initiating impersonation session in OKTA
+  desc: Detect a user who initiate an impersonation session in OKTA
+  condition: okta.evt.type = "user.session.impersonation.initiate"
+  output: "A user has initiated an impersonation session in OKTA (user=%okta.actor.name, ip=%okta.client.ip, target user=%okta.target.user.name)"
+  priority: NOTICE
+  source: okta
+  tags: [okta]
+
+# This list allows easily whitelisting countries that are
+# expected to see OKTA logins from.
+- list: allowed_countries_list
+  items: []
+
+- macro: user_known_countries
+  condition: (okta.client.geo.country in (allowed_countries_list))
+
+- rule: Detecting unknwon logins using geolocation
+  desc: Detect a logins event based on user geolocation
+  condition: okta.evt.type = "user.session.start" and not user_known_countries
+  output: "A user logged in OKTA from a sospicious country (user=%okta.actor.name, ip=%okta.client.ip, country=%okta.client.geo.country)"
+  priority: NOTICE
+  source: okta
+  tags: [okta]
+  enabled: false
