@@ -2619,7 +2619,8 @@
       fd.name contains "bash_history" or
       fd.name endswith "zsh_history" or
       fd.name contains "fish_read_history" or
-      fd.name endswith "fish_history") and evt.arg.flags contains "O_TRUNC")
+      fd.name endswith "fish_history" or
+      fd.name contains "ash_history") and evt.arg.flags contains "O_TRUNC")
 
 - macro: var_lib_docker_filepath
   condition: (evt.arg.name startswith /var/lib/docker or fd.name startswith /var/lib/docker)
