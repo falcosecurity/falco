@@ -55,10 +55,10 @@
     ]
 
 - list: eks_allowed_k8s_users
-  items: [  
+  items: [
     "eks:node-manager",
-    "eks:certificate-controller", 
-    "eks:fargate-scheduler", 
+    "eks:certificate-controller",
+    "eks:fargate-scheduler",
     "eks:k8s-metrics",
     "eks:authenticator",
     "eks:cluster-event-watcher",
