@@ -321,6 +321,7 @@
     k8s.gcr.io/kube-apiserver,
     gke.gcr.io/kube-proxy,
     gke.gcr.io/netd-amd64,
+    gke.gcr.io/watcher-daemonset,
     k8s.gcr.io/addon-resizer
     k8s.gcr.io/prometheus-to-sd,
     k8s.gcr.io/k8s-dns-dnsmasq-nanny-amd64,
