@@ -51,13 +51,24 @@
     cluster-autoscaler,
     "system:addon-manager",
     "cloud-controller-manager",
-    "eks:node-manager",
     "system:kube-controller-manager"
     ]
 
+- list: eks_allowed_k8s_users
+  items: [  
+    "eks:node-manager",
+    "eks:certificate-controller", 
+    "eks:fargate-scheduler", 
+    "eks:k8s-metrics",
+    "eks:authenticator",
+    "eks:cluster-event-watcher",
+    "eks:nodewatcher",
+    "eks:pod-identity-mutating-webhook"
+    ]
+-
 - rule: Disallowed K8s User
   desc: Detect any k8s operation by users outside of an allowed set of users.
-  condition: kevt and non_system_user and not ka.user.name in (allowed_k8s_users)
+  condition: kevt and non_system_user and not ka.user.name in (allowed_k8s_users) and not ka.user.name in (eks_allowed_k8s_users)
   output: K8s Operation performed by user not in allowed list of users (user=%ka.user.name target=%ka.target.name/%ka.target.resource verb=%ka.verb uri=%ka.uri resp=%ka.response.code)
   priority: WARNING
   source: k8s_audit
