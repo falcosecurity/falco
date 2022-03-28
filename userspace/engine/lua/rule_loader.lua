@@ -455,7 +455,7 @@ function load_rules_doc(rules_mgr, doc, load_state)
 
 	    -- In the rules yaml, it's a name + version. But it's
 	    -- possible, although unlikely, that a single yaml blob
-	    -- contains multiple docs, withe each doc having its own
+	    -- contains multiple docs, with each doc having its own
 	    -- required_engine_version entry. So populate a map plugin
 	    -- name -> list of required plugin versions.
 	    if load_state.required_plugin_versions[vobj['name']] == nil then
@@ -1129,14 +1129,14 @@ function load_rules(rules_content,
    -- Print info on any dangling lists or macros that were not used anywhere
    for name, macro in pairs(state.macros) do
       if macro.used == false then
-	 msg = "macro "..name.." not refered to by any rule/macro"
+	 msg = "macro "..name.." not referred to by any rule/macro"
 	 warnings[#warnings + 1] = msg
       end
    end
 
    for name, list in pairs(state.lists) do
       if list.used == false then
-	 msg = "list "..name.." not refered to by any rule/macro/list"
+	 msg = "list "..name.." not referred to by any rule/macro/list"
 	 warnings[#warnings + 1] = msg
       end
    end

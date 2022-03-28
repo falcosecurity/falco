@@ -116,7 +116,7 @@ Released on 2022-01-31
 * rule(Create Hardlink Over Sensitive Files): new rule to detect hard links created over sensitive files [[#1810](https://github.com/falcosecurity/falco/pull/1810)] - [@sberkovich](https://github.com/sberkovich)
 * rule(Detect crypto miners using the Stratum protocol): add `stratum2+tcp` and `stratum+ssl` protocols detection [[#1810](https://github.com/falcosecurity/falco/pull/1810)] - [@sberkovich](https://github.com/sberkovich)
 * rule(Sudo Potential Privilege Escalation): correct special case for the CVE-2021-3156 exploit [[#1810](https://github.com/falcosecurity/falco/pull/1810)] - [@sberkovich](https://github.com/sberkovich)
-* rule(list falco_hostnetwork_images): moved to k8s_audit_rules.yaml to avoid a warning when usng falco_rules.yaml only [[#1681](https://github.com/falcosecurity/falco/pull/1681)] - [@leodido](https://github.com/leodido)
+* rule(list falco_hostnetwork_images): moved to k8s_audit_rules.yaml to avoid a warning when using falco_rules.yaml only [[#1681](https://github.com/falcosecurity/falco/pull/1681)] - [@leodido](https://github.com/leodido)
 * rule(list deb_binaries): remove `apt-config` [[#1860](https://github.com/falcosecurity/falco/pull/1860)] - [@Andreagit97](https://github.com/Andreagit97)
 * rule(Launch Remote File Copy Tools in Container): add additional binaries: curl and wget. [[#1771](https://github.com/falcosecurity/falco/pull/1771)] - [@ec4n6](https://github.com/ec4n6)
 * rule(list known_sa_list): add coredns, coredns-autoscaler, endpointslicemirroring-controller, horizontal-pod-autoscaler, job-controller, node-controller (nodelifecycle), persistent-volume-binder, pv-protection-controller, pvc-protection-controller, root-ca-cert-publisher and service-account-controller as allowed service accounts in the kube-system namespace [[#1760](https://github.com/falcosecurity/falco/pull/1760)] - [@sboschman](https://github.com/sboschman)
@@ -812,7 +812,7 @@ Released on 2020-02-24
 * rule(write below etc): add "dsc_host" as a ms oms program [[#1028](https://github.com/falcosecurity/falco/pull/1028)]
 * rule(write below etc): let mcafee write to /etc/cma.d  [[#1028](https://github.com/falcosecurity/falco/pull/1028)]
 * rule(write below etc): let avinetworks supervisor write some ssh cfg [[#1028](https://github.com/falcosecurity/falco/pull/1028)]
-* rule(write below etc): alow writes to /etc/pki from openshift secrets dir [[#1028](https://github.com/falcosecurity/falco/pull/1028)]
+* rule(write below etc): allow writes to /etc/pki from openshift secrets dir [[#1028](https://github.com/falcosecurity/falco/pull/1028)]
 * rule(write below root): let runc write to /exec.fifo [[#1028](https://github.com/falcosecurity/falco/pull/1028)]
 * rule(change thread namespace): let cilium-cni change namespaces [[#1028](https://github.com/falcosecurity/falco/pull/1028)]
 * rule(run shell untrusted): let puma reactor spawn shells [[#1028](https://github.com/falcosecurity/falco/pull/1028)]

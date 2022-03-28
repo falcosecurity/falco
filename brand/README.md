@@ -5,7 +5,7 @@
 
 This document describes The Falco Project's branding guidelines, language, and message.
 
-Content in this document can be used to publically share about Falco.
+Content in this document can be used to publicly share about Falco.
 
 
 
