@@ -270,7 +270,7 @@ typedef struct
 	// Arguments:
 	// - s: the plugin state returned by init()
 	// - params: the open parameters, as a string. The format is defined by the plugin
-	//   itsef
+	//   itself
 	// - rc: pointer to an integer that will contain the open result, as a SCAP_* value
 	//   (e.g. SCAP_SUCCESS=0, SCAP_FAILURE=1)
 	// Return value: a pointer to the open context that will be passed to next(),

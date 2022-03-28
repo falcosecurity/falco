@@ -47,7 +47,7 @@ The motivation behind this proposal is to design a new output implementation tha
 ### Non-Goals
 
 - To substitute existing outputs (stdout, syslog, etc.)
-- To support different queing systems than the default (round-robin) one
+- To support different queuing systems than the default (round-robin) one
 - To support queuing mechanisms for message retransmission
   - Users can have a local gRPC relay server along with Falco that multiplexes connections and handles retires and backoff
 - To change the output format

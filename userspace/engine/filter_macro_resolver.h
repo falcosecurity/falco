@@ -24,7 +24,7 @@ limitations under the License.
 
 /*!
 	\brief Helper class for substituting and resolving macro
-	refereces in parsed filters.
+	references in parsed filters.
 */
 class filter_macro_resolver: private libsinsp::filter::ast::expr_visitor
 {
