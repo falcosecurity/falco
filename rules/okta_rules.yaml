@@ -14,6 +14,7 @@
   priority: NOTICE
   source: okta
   tags: [okta]
+  enabled: false
 
 - rule: Creating a new OKTA user account
   desc: Detect a new OKTA user account created in the OKTA environment
@@ -22,6 +23,7 @@
   priority: NOTICE
   source: okta
   tags: [okta]
+  enabled: false
 
 - rule: User accessing app via single sign on OKTA
   desc: Detect a user accessing an app via OKTA
@@ -30,6 +32,7 @@
   priority: NOTICE
   source: okta
   tags: [okta]
+  enabled: false
 
 - rule: User has been locked out in OKTA
   desc: Detect a user who has been locked out in OKTA
@@ -46,6 +49,7 @@
   priority: NOTICE
   source: okta
   tags: [okta]
+  enabled: false
 
 - rule: User has been activated in OKTA
   desc: Detect a user who has been activated in OKTA
@@ -54,6 +58,7 @@
   priority: NOTICE
   source: okta
   tags: [okta]
+  enabled: false
 
 - rule: User has been deactivated in OKTA
   desc: Detect a user who has been deactivated in OKTA
@@ -62,6 +67,7 @@
   priority: NOTICE
   source: okta
   tags: [okta]
+  enabled: false
 
 - rule: User has been suspended in OKTA
   desc: Detect a user who has been suspended in OKTA
@@ -102,6 +108,7 @@
   priority: NOTICE
   source: okta
   tags: [okta]
+  enabled: false
 
 - rule: removing MFA factor from user in OKTA
   desc: Detect a removing MFA activity on a user in OKTA
@@ -127,7 +134,6 @@
   source: okta
   tags: [okta]
 
-
 - rule: User hitting the rate limit on requests in OKTA
   desc: Detect a user who hit the rate limit on requests in OKTA
   condition: okta.evt.type = "system.org.rate_limit.violation"
@@ -143,6 +149,7 @@
   priority: NOTICE
   source: okta
   tags: [okta]
+  enabled: false
 
 - rule: User initiating impersonation session in OKTA
   desc: Detect a user who initiate an impersonation session in OKTA
