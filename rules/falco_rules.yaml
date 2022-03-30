@@ -1815,7 +1815,7 @@
           registry.access.redhat.com/sematext/agent,
           registry.access.redhat.com/sematext/logagent]
 
-# These container images are allowed to run with --privileged
+# These container images are allowed to run with --privileged and full set of capabilities
 - list: falco_privileged_images
   items: [
     docker.io/calico/node,
@@ -1902,6 +1902,31 @@
   output: Privileged container started (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline %container.info image=%container.image.repository:%container.image.tag)
   priority: INFO
   tags: [container, cis, mitre_privilege_escalation, mitre_lateral_movement]
+
+# These capabilities were used in the past to escape from containers
+- macro: excessively_capable_container
+  condition: >
+    (thread.cap_permitted contains CAP_SYS_ADMIN
+    or thread.cap_permitted contains CAP_SYS_MODULE
+    or thread.cap_permitted contains CAP_SYS_RAWIO
+    or thread.cap_permitted contains CAP_SYS_PTRACE
+    or thread.cap_permitted contains CAP_SYS_BOOT
+    or thread.cap_permitted contains CAP_SYSLOG
+    or thread.cap_permitted contains CAP_DAC_READ_SEARCH
+    or thread.cap_permitted contains CAP_NET_ADMIN
+    or thread.cap_permitted contains CAP_BPF)
+
+- rule: Launch Excessively Capable Container
+  desc: Detect container started with a powerful set of capabilities. Exceptions are made for known trusted images. 
+  condition: >
+    container_started and container
+    and excessively_capable_container
+    and not falco_privileged_containers
+    and not user_privileged_containers
+  output: Excessively capable container started (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline %container.info image=%container.image.repository:%container.image.tag cap_permitted=%thread.cap_permitted)
+  priority: INFO
+  tags: [container, cis, mitre_privilege_escalation, mitre_lateral_movement]
+
 
 # For now, only considering a full mount of /etc as
 # sensitive. Ideally, this would also consider all subdirectories
