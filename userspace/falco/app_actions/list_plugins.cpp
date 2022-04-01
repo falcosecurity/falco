@@ -32,15 +32,11 @@ application::run_result application::list_plugins()
 			os << "Description: " << info.description << std::endl;
 			os << "Contact: " << info.contact << std::endl;
 			os << "Version: " << info.plugin_version.as_string() << std::endl;
+			os << "Capabilities: " << info.caps << std::endl;
 
-			if(info.type == TYPE_SOURCE_PLUGIN)
+			if(info.caps & CAP_SOURCING)
 			{
-				os << "Type: source plugin" << std::endl;
 				os << "ID: " << info.id << std::endl;
-			}
-			else
-			{
-				os << "Type: extractor plugin" << std::endl;
 			}
 			os << std::endl;
 		}
