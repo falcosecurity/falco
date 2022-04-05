@@ -18,6 +18,7 @@ set(FALCO_ENGINE_SOURCE_FILES
     ruleset.cpp
     formats.cpp
     filter_macro_resolver.cpp
+    filter_evttype_resolver.cpp
     rule_loader.cpp
     rule_reader.cpp
     stats_manager.cpp)
