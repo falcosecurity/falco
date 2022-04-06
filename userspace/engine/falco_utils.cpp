@@ -27,6 +27,31 @@ namespace falco
 namespace utils
 {
 
+std::string wrap_text(const std::string& str, uint32_t indent, uint32_t line_len)
+{
+	std::string ret;
+	size_t len = str.size();
+	size_t cur_len = 0;
+	for(uint32_t l = 0; l < len; l++)
+	{
+		if(cur_len > (line_len - indent) && l != 0 && str[l] == ' ')
+		{
+			cur_len = 0;
+			while (l < len && str[l++] == ' ');
+			l--;
+			ret += "\n";
+			for(uint32_t m = 0; m < indent; m++)
+			{
+				ret += " ";
+			}
+		}
+		ret += str.at(l);
+		cur_len++;
+	}
+	ret += "\n";
+	return ret;
+}
+
 uint32_t hardware_concurrency()
 {
 	auto hc = std::thread::hardware_concurrency();
