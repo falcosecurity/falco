@@ -14,11 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#include <fstream>
-
 #include "falco_common.h"
-#include "banned.h" // This raises a compilation error when certain functions are used
-#include "falco_engine_lua_files.hh"
 
 std::vector<std::string> falco_common::priority_names = {
 	"Emergency",

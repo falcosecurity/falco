@@ -29,7 +29,6 @@ limitations under the License.
 #include <nlohmann/json.hpp>
 
 #include "gen_filter.h"
-#include "rules.h"
 #include "ruleset.h"
 
 #include "falco_common.h"
@@ -40,7 +39,7 @@ limitations under the License.
 // handled in a separate class falco_outputs.
 //
 
-class falco_engine : public falco_common
+class falco_engine
 {
 public:
 	falco_engine(bool seed_rng=true);
