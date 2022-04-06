@@ -254,9 +254,6 @@ trace_files: !mux
     stdout_is: |+
       1 errors:
       Rules content is not yaml
-      ---
-      This is not yaml
-      ---
     validate_rules_file:
       - rules/invalid_not_yaml.yaml
     trace_file: trace_files/cat_write.scap
@@ -266,9 +263,6 @@ trace_files: !mux
     stdout_is: |+
       1 errors:
       Rules content is not yaml array of objects
-      ---
-      foo: bar
-      ---
     validate_rules_file:
       - rules/invalid_not_array.yaml
     trace_file: trace_files/cat_write.scap
@@ -277,7 +271,7 @@ trace_files: !mux
     exit_status: 1
     stdout_is: |+
       1 errors:
-      Unexpected element of type string. Each element should be a yaml associative array.
+      Unexpected element type. Each element should be a yaml associative array.
       ---
       - foo
       ---
@@ -299,12 +293,6 @@ trace_files: !mux
 
   invalid_yaml_parse_error:
     exit_status: 1
-    stdout_is: |+
-      1 errors:
-      mapping values are not allowed in this context
-      ---
-      this : is : not : yaml
-      ---
     validate_rules_file:
       - rules/invalid_yaml_parse_error.yaml
     trace_file: trace_files/cat_write.scap
@@ -339,7 +327,7 @@ trace_files: !mux
     exit_status: 1
     stdout_is: |+
       1 errors:
-      Rule must have property output
+      Rule must have properties 'condition', 'output', 'desc', and 'priority'
       ---
       - rule: no output rule
         desc: some desc
