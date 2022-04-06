@@ -19,13 +19,6 @@ limitations under the License.
 #include <string>
 #include <exception>
 #include <mutex>
-
-extern "C" {
-#include "lua.h"
-#include "lualib.h"
-#include "lauxlib.h"
-}
-
 #include <sinsp.h>
 
 //

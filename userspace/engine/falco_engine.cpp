@@ -28,17 +28,9 @@ limitations under the License.
 
 #include "formats.h"
 
-#include "lua_filter_helper.h"
-extern "C" {
-#include "lyaml.h"
-}
-
 #include "utils.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
 
-
-string lua_on_event = "on_event";
-string lua_print_stats = "print_stats";
 const std::string falco_engine::s_default_ruleset = "falco-default-ruleset";
 
 using namespace std;

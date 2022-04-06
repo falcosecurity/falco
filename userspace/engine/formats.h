@@ -18,16 +18,7 @@ limitations under the License.
 
 #include <string>
 #include <map>
-
-extern "C"
-{
-#include "lua.h"
-#include "lualib.h"
-#include "lauxlib.h"
-}
-
 #include <gen_filter.h>
-
 #include "falco_engine.h"
 
 class falco_formats

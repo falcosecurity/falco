@@ -10,10 +10,7 @@
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 
-add_subdirectory(lua)
-
 set(FALCO_ENGINE_SOURCE_FILES
-    rules.cpp
     falco_common.cpp
     falco_engine.cpp
     falco_utils.cpp

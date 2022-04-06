@@ -12,6 +12,4 @@ test/build
 
 .vscode/*
 
-.luacheckcache
-
 *.idea*
