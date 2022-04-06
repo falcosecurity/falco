@@ -37,6 +37,7 @@ public:
 	void add(string &source,
 		 std::string &name,
 		 std::set<std::string> &tags,
+		 set<uint16_t> &evttypes,
 		 std::shared_ptr<gen_event_filter> filter);
 
 	// rulesets are arbitrary numbers and should be managed by the caller.
@@ -77,18 +78,8 @@ private:
 		std::string source;
 		std::string name;
 		std::set<std::string> tags;
+		std::set<uint16_t> evttypes;
 		std::shared_ptr<gen_event_filter> filter;
-		std::set<uint16_t> evttypes()
-		{
-			// todo(jasondellaluce,leogr): temp workaround, remove when fixed in libs
-			if(source == "syscall" || source == "k8s_audit")
-			{
-				return filter->evttypes();
-			}
-			// else assume plugins
-			return {ppm_event_type::PPME_PLUGINEVENT_E};
-			// workaround end
-		}
 	};
 
 	typedef std::list<std::shared_ptr<filter_wrapper>> filter_wrapper_list;

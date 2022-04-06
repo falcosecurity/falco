@@ -25,6 +25,7 @@ static uint16_t default_ruleset = 0;
 static uint16_t non_default_ruleset = 3;
 static uint16_t other_non_default_ruleset = 2;
 static std::set<std::string> tags = {"some_tag", "some_other_tag"};
+static std::set<uint16_t> evttypes = { ppm_event_type::PPME_GENERIC_E };
 
 static std::shared_ptr<gen_event_filter> create_filter()
 {
@@ -37,234 +38,159 @@ static std::shared_ptr<gen_event_filter> create_filter()
 	return ret;
 }
 
-TEST_CASE("Should enable/disable for exact match w/ default ruleset", "[rulesets]")
+TEST_CASE("Should enable/disable on ruleset", "[rulesets]")
 {
 	falco_ruleset r;
 	std::shared_ptr<gen_event_filter> filter = create_filter();
 	string rule_name = "one_rule";
 	string source = "syscall";
 
-	r.add(source, rule_name, tags, filter);
+	r.add(source, rule_name, tags, evttypes, filter);
 
-	r.enable("one_rule", exact_match, enabled);
-	REQUIRE(r.num_rules_for_ruleset(default_ruleset) == 1);
+	SECTION("Should enable/disable for exact match w/ default ruleset")
+	{
+		r.enable("one_rule", exact_match, enabled);
+		REQUIRE(r.num_rules_for_ruleset(default_ruleset) == 1);
 
-	r.enable("one_rule", exact_match, disabled);
-	REQUIRE(r.num_rules_for_ruleset(default_ruleset) == 0);
+		r.enable("one_rule", exact_match, disabled);
+		REQUIRE(r.num_rules_for_ruleset(default_ruleset) == 0);
+	}
+
+	SECTION("Should enable/disable for exact match w/ specific ruleset")
+	{
+		r.enable("one_rule", exact_match, enabled, non_default_ruleset);
+		REQUIRE(r.num_rules_for_ruleset(non_default_ruleset) == 1);
+		REQUIRE(r.num_rules_for_ruleset(default_ruleset) == 0);
+		REQUIRE(r.num_rules_for_ruleset(other_non_default_ruleset) == 0);
+
+		r.enable("one_rule", exact_match, disabled, non_default_ruleset);
+		REQUIRE(r.num_rules_for_ruleset(non_default_ruleset) == 0);
+		REQUIRE(r.num_rules_for_ruleset(default_ruleset) == 0);
+		REQUIRE(r.num_rules_for_ruleset(other_non_default_ruleset) == 0);
+	}
+
+	SECTION("Should not enable for exact match different rule name")
+	{
+		r.enable("some_other_rule", exact_match, enabled);
+		REQUIRE(r.num_rules_for_ruleset(default_ruleset) == 0);
+	}
+
+	SECTION("Should enable/disable for exact match w/ substring and default ruleset")
+	{
+		r.enable("one_rule", substring_match, enabled);
+		REQUIRE(r.num_rules_for_ruleset(default_ruleset) == 1);
+
+		r.enable("one_rule", substring_match, disabled);
+		REQUIRE(r.num_rules_for_ruleset(default_ruleset) == 0);
+	}
+
+	SECTION("Should not enable for substring w/ exact_match")
+	{
+		r.enable("one_", exact_match, enabled);
+		REQUIRE(r.num_rules_for_ruleset(default_ruleset) == 0);
+	}
+
+	SECTION("Should enable/disable for prefix match w/ default ruleset")
+	{
+		r.enable("one_", substring_match, enabled);
+		REQUIRE(r.num_rules_for_ruleset(default_ruleset) == 1);
+
+		r.enable("one_", substring_match, disabled);
+		REQUIRE(r.num_rules_for_ruleset(default_ruleset) == 0);
+	}
+
+	SECTION("Should enable/disable for suffix match w/ default ruleset")
+	{
+		r.enable("_rule", substring_match, enabled);
+		REQUIRE(r.num_rules_for_ruleset(default_ruleset) == 1);
+
+		r.enable("_rule", substring_match, disabled);
+		REQUIRE(r.num_rules_for_ruleset(default_ruleset) == 0);
+	}
+
+	SECTION("Should enable/disable for substring match w/ default ruleset")
+	{
+		r.enable("ne_ru", substring_match, enabled);
+		REQUIRE(r.num_rules_for_ruleset(default_ruleset) == 1);
+
+		r.enable("ne_ru", substring_match, disabled);
+		REQUIRE(r.num_rules_for_ruleset(default_ruleset) == 0);
+	}
+
+	SECTION("Should enable/disable for substring match w/ specific ruleset")
+	{
+		r.enable("ne_ru", substring_match, enabled, non_default_ruleset);
+		REQUIRE(r.num_rules_for_ruleset(non_default_ruleset) == 1);
+		REQUIRE(r.num_rules_for_ruleset(default_ruleset) == 0);
+		REQUIRE(r.num_rules_for_ruleset(other_non_default_ruleset) == 0);
+
+		r.enable("ne_ru", substring_match, disabled, non_default_ruleset);
+		REQUIRE(r.num_rules_for_ruleset(non_default_ruleset) == 0);
+		REQUIRE(r.num_rules_for_ruleset(default_ruleset) == 0);
+		REQUIRE(r.num_rules_for_ruleset(other_non_default_ruleset) == 0);
+	}
+
+	SECTION("Should enable/disable for tags w/ default ruleset")
+	{
+		std::set<std::string> want_tags = {"some_tag"};
+
+		r.enable_tags(want_tags, enabled);
+		REQUIRE(r.num_rules_for_ruleset(default_ruleset) == 1);
+
+		r.enable_tags(want_tags, disabled);
+		REQUIRE(r.num_rules_for_ruleset(default_ruleset) == 0);
+	}
+
+	SECTION("Should enable/disable for tags w/ specific ruleset")
+	{
+		std::set<std::string> want_tags = {"some_tag"};
+
+		r.enable_tags(want_tags, enabled, non_default_ruleset);
+		REQUIRE(r.num_rules_for_ruleset(non_default_ruleset) == 1);
+		REQUIRE(r.num_rules_for_ruleset(default_ruleset) == 0);
+		REQUIRE(r.num_rules_for_ruleset(other_non_default_ruleset) == 0);
+
+		r.enable_tags(want_tags, disabled, non_default_ruleset);
+		REQUIRE(r.num_rules_for_ruleset(non_default_ruleset) == 0);
+		REQUIRE(r.num_rules_for_ruleset(default_ruleset) == 0);
+		REQUIRE(r.num_rules_for_ruleset(other_non_default_ruleset) == 0);
+	}
+
+	SECTION("Should not enable for different tags")
+	{
+		std::set<std::string> want_tags = {"some_different_tag"};
+
+		r.enable_tags(want_tags, enabled);
+		REQUIRE(r.num_rules_for_ruleset(non_default_ruleset) == 0);
+	}
+
+	SECTION("Should enable/disable for overlapping tags")
+	{
+		std::set<std::string> want_tags = {"some_tag", "some_different_tag"};
+
+		r.enable_tags(want_tags, enabled);
+		REQUIRE(r.num_rules_for_ruleset(default_ruleset) == 1);
+
+		r.enable_tags(want_tags, disabled);
+		REQUIRE(r.num_rules_for_ruleset(default_ruleset) == 0);
+	}
+
 }
 
-TEST_CASE("Should enable/disable for exact match w/ specific ruleset", "[rulesets]")
+TEST_CASE("Should enable/disable on ruleset for incremental adding tags", "[rulesets]")
 {
 	falco_ruleset r;
-	std::shared_ptr<gen_event_filter> filter = create_filter();
-	string rule_name = "one_rule";
 	string source = "syscall";
 
-	r.add(source, rule_name, tags, filter);
-
-	r.enable("one_rule", exact_match, enabled, non_default_ruleset);
-	REQUIRE(r.num_rules_for_ruleset(non_default_ruleset) == 1);
-	REQUIRE(r.num_rules_for_ruleset(default_ruleset) == 0);
-	REQUIRE(r.num_rules_for_ruleset(other_non_default_ruleset) == 0);
-
-	r.enable("one_rule", exact_match, disabled, non_default_ruleset);
-	REQUIRE(r.num_rules_for_ruleset(non_default_ruleset) == 0);
-	REQUIRE(r.num_rules_for_ruleset(default_ruleset) == 0);
-	REQUIRE(r.num_rules_for_ruleset(other_non_default_ruleset) == 0);
-}
-
-TEST_CASE("Should not enable for exact match different rule name", "[rulesets]")
-{
-	falco_ruleset r;
-	std::shared_ptr<gen_event_filter> filter = create_filter();
-	string rule_name = "one_rule";
-	string source = "syscall";
-
-	r.add(source, rule_name, tags, filter);
-
-	r.enable("some_other_rule", exact_match, enabled);
-	REQUIRE(r.num_rules_for_ruleset(default_ruleset) == 0);
-}
-
-TEST_CASE("Should enable/disable for exact match w/ substring and default ruleset", "[rulesets]")
-{
-	falco_ruleset r;
-	std::shared_ptr<gen_event_filter> filter = create_filter();
-	string rule_name = "one_rule";
-	string source = "syscall";
-
-	r.add(source, rule_name, tags, filter);
-
-	r.enable("one_rule", substring_match, enabled);
-	REQUIRE(r.num_rules_for_ruleset(default_ruleset) == 1);
-
-	r.enable("one_rule", substring_match, disabled);
-	REQUIRE(r.num_rules_for_ruleset(default_ruleset) == 0);
-}
-
-TEST_CASE("Should not enable for substring w/ exact_match", "[rulesets]")
-{
-	falco_ruleset r;
-	std::shared_ptr<gen_event_filter> filter = create_filter();
-	string rule_name = "one_rule";
-	string source = "syscall";
-
-	r.add(source, rule_name, tags, filter);
-
-	r.enable("one_", exact_match, enabled);
-	REQUIRE(r.num_rules_for_ruleset(default_ruleset) == 0);
-}
-
-TEST_CASE("Should enable/disable for prefix match w/ default ruleset", "[rulesets]")
-{
-	falco_ruleset r;
-	std::shared_ptr<gen_event_filter> filter = create_filter();
-	string rule_name = "one_rule";
-	string source = "syscall";
-
-	r.add(source, rule_name, tags, filter);
-
-	r.enable("one_", substring_match, enabled);
-	REQUIRE(r.num_rules_for_ruleset(default_ruleset) == 1);
-
-	r.enable("one_", substring_match, disabled);
-	REQUIRE(r.num_rules_for_ruleset(default_ruleset) == 0);
-}
-
-TEST_CASE("Should enable/disable for suffix match w/ default ruleset", "[rulesets]")
-{
-	falco_ruleset r;
-	std::shared_ptr<gen_event_filter> filter = create_filter();
-	string rule_name = "one_rule";
-	string source = "syscall";
-
-	r.add(source, rule_name, tags, filter);
-
-	r.enable("_rule", substring_match, enabled);
-	REQUIRE(r.num_rules_for_ruleset(default_ruleset) == 1);
-
-	r.enable("_rule", substring_match, disabled);
-	REQUIRE(r.num_rules_for_ruleset(default_ruleset) == 0);
-}
-
-TEST_CASE("Should enable/disable for substring match w/ default ruleset", "[rulesets]")
-{
-	falco_ruleset r;
-	std::shared_ptr<gen_event_filter> filter = create_filter();
-	string rule_name = "one_rule";
-	string source = "syscall";
-
-	r.add(source, rule_name, tags, filter);
-
-	r.enable("ne_ru", substring_match, enabled);
-	REQUIRE(r.num_rules_for_ruleset(default_ruleset) == 1);
-
-	r.enable("ne_ru", substring_match, disabled);
-	REQUIRE(r.num_rules_for_ruleset(default_ruleset) == 0);
-}
-
-TEST_CASE("Should enable/disable for substring match w/ specific ruleset", "[rulesets]")
-{
-	falco_ruleset r;
-	std::shared_ptr<gen_event_filter> filter = create_filter();
-	string rule_name = "one_rule";
-	string source = "syscall";
-
-	r.add(source, rule_name, tags, filter);
-
-	r.enable("ne_ru", substring_match, enabled, non_default_ruleset);
-	REQUIRE(r.num_rules_for_ruleset(non_default_ruleset) == 1);
-	REQUIRE(r.num_rules_for_ruleset(default_ruleset) == 0);
-	REQUIRE(r.num_rules_for_ruleset(other_non_default_ruleset) == 0);
-
-	r.enable("ne_ru", substring_match, disabled, non_default_ruleset);
-	REQUIRE(r.num_rules_for_ruleset(non_default_ruleset) == 0);
-	REQUIRE(r.num_rules_for_ruleset(default_ruleset) == 0);
-	REQUIRE(r.num_rules_for_ruleset(other_non_default_ruleset) == 0);
-}
-
-TEST_CASE("Should enable/disable for tags w/ default ruleset", "[rulesets]")
-{
-	falco_ruleset r;
-	std::shared_ptr<gen_event_filter> filter = create_filter();
-	string rule_name = "one_rule";
-	string source = "syscall";
-	std::set<std::string> want_tags = {"some_tag"};
-
-	r.add(source, rule_name, tags, filter);
-
-	r.enable_tags(want_tags, enabled);
-	REQUIRE(r.num_rules_for_ruleset(default_ruleset) == 1);
-
-	r.enable_tags(want_tags, disabled);
-	REQUIRE(r.num_rules_for_ruleset(default_ruleset) == 0);
-}
-
-TEST_CASE("Should enable/disable for tags w/ specific ruleset", "[rulesets]")
-{
-	falco_ruleset r;
-	std::shared_ptr<gen_event_filter> filter = create_filter();
-	string rule_name = "one_rule";
-	string source = "syscall";
-	std::set<std::string> want_tags = {"some_tag"};
-
-	r.add(source, rule_name, tags, filter);
-
-	r.enable_tags(want_tags, enabled, non_default_ruleset);
-	REQUIRE(r.num_rules_for_ruleset(non_default_ruleset) == 1);
-	REQUIRE(r.num_rules_for_ruleset(default_ruleset) == 0);
-	REQUIRE(r.num_rules_for_ruleset(other_non_default_ruleset) == 0);
-
-	r.enable_tags(want_tags, disabled, non_default_ruleset);
-	REQUIRE(r.num_rules_for_ruleset(non_default_ruleset) == 0);
-	REQUIRE(r.num_rules_for_ruleset(default_ruleset) == 0);
-	REQUIRE(r.num_rules_for_ruleset(other_non_default_ruleset) == 0);
-}
-
-TEST_CASE("Should not enable for different tags", "[rulesets]")
-{
-	falco_ruleset r;
-	std::shared_ptr<gen_event_filter> filter = create_filter();
-	string rule_name = "one_rule";
-	string source = "syscall";
-	std::set<std::string> want_tags = {"some_different_tag"};
-
-	r.add(source, rule_name, tags, filter);
-
-	r.enable_tags(want_tags, enabled);
-	REQUIRE(r.num_rules_for_ruleset(non_default_ruleset) == 0);
-}
-
-TEST_CASE("Should enable/disable for overlapping tags", "[rulesets]")
-{
-	falco_ruleset r;
-	std::shared_ptr<gen_event_filter> filter = create_filter();
-	string rule_name = "one_rule";
-	string source = "syscall";
-	std::set<std::string> want_tags = {"some_tag", "some_different_tag"};
-
-	r.add(source, rule_name, tags, filter);
-
-	r.enable_tags(want_tags, enabled);
-	REQUIRE(r.num_rules_for_ruleset(default_ruleset) == 1);
-
-	r.enable_tags(want_tags, disabled);
-	REQUIRE(r.num_rules_for_ruleset(default_ruleset) == 0);
-}
-
-TEST_CASE("Should enable/disable for incremental adding tags", "[rulesets]")
-{
-	string source = "syscall";
-	falco_ruleset r;
 	std::shared_ptr<gen_event_filter> rule1_filter = create_filter();
 	string rule1_name = "one_rule";
 	std::set<std::string> rule1_tags = {"rule1_tag"};
-	r.add(source, rule1_name, rule1_tags, rule1_filter);
+	r.add(source, rule1_name, rule1_tags, evttypes, rule1_filter);
 
 	std::shared_ptr<gen_event_filter> rule2_filter = create_filter();
 	string rule2_name = "two_rule";
 	std::set<std::string> rule2_tags = {"rule2_tag"};
-	r.add(source, rule2_name, rule2_tags, rule2_filter);
+	r.add(source, rule2_name, rule2_tags, evttypes, rule2_filter);
 
 	std::set<std::string> want_tags;
 
