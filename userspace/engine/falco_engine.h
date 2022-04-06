@@ -30,7 +30,8 @@ limitations under the License.
 
 #include "gen_filter.h"
 #include "ruleset.h"
-
+#include "rule_loader.h"
+#include "stats_manager.h"
 #include "falco_common.h"
 
 //
@@ -178,6 +179,11 @@ public:
 			       std::shared_ptr<gen_event_filter_factory> filter_factory,
 			       std::shared_ptr<gen_event_formatter_factory> formatter_factory);
 
+	// todo(jasondellaluce): this is here for internal use, and
+	// will possibly be removed in the future
+	std::shared_ptr<gen_event_filter_factory> get_filter_factory(
+		const std::string &source);
+
 	// Return whether or not there is a valid filter/formatter
 	// factory for this source.
 	bool is_source_valid(const std::string &source);
@@ -241,14 +247,12 @@ private:
 	// Maps from event source to the set of rules for that event source
 	std::vector<ruleset_node> m_rulesets;
 
-	std::unique_ptr<falco_rules> m_rules;
+	rule_loader m_rule_loader;
+	stats_manager m_rule_stats_manager;
+
 	uint16_t m_next_ruleset_id;
 	std::map<string, uint16_t> m_known_rulesets;
 	falco_common::priority_type m_min_priority;
-
-	// Maps from plugin to a list of required plugin versions
-	// found in any loaded rules files.
-	std::map<std::string, std::list<std::string>> m_required_plugin_versions;
 
 	void populate_rule_result(unique_ptr<struct rule_result> &res, gen_event *ev);
 
