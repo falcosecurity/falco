@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2019 The Falco Authors.
+Copyright (C) 2022 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -50,22 +50,12 @@ struct falco_exception : std::exception
 	std::string m_error_str;
 };
 
-//
-// This is the base class of falco_engine/falco_output. It is
-// responsible for managing a lua state and associated inspector and
-// loading a single "main" lua file into that state.
-//
-
-class falco_common
+namespace falco_common
 {
-public:
-	falco_common();
-	virtual ~falco_common();
+	const string syscall_source = "syscall";
 
-	void init();
-
-    // Priority levels, as a vector of strings
-	static std::vector<std::string> priority_names;
+	// Priority levels, as a vector of strings
+	extern std::vector<std::string> priority_names;
 
 	// Same as numbers/indices into the above vector
 	enum priority_type
@@ -79,9 +69,7 @@ public:
 		PRIORITY_INFORMATIONAL = 6,
 		PRIORITY_DEBUG = 7
 	};
-
-protected:
-	lua_State *m_ls;
-
-	std::mutex m_ls_semaphore;
+	
+	bool parse_priority(std::string v, priority_type& out);
+	bool format_priority(priority_type v, std::string& out);
 };
