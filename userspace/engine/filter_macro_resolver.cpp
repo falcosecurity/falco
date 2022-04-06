@@ -34,6 +34,20 @@ bool filter_macro_resolver::run(libsinsp::filter::ast::expr*& filter)
 	return !m_resolved_macros.empty();
 }
 
+bool filter_macro_resolver::run(std::shared_ptr<libsinsp::filter::ast::expr>& filter)
+{
+	m_unknown_macros.clear();
+	m_resolved_macros.clear();
+	m_last_node_changed = false;
+	m_last_node = filter.get();
+	filter->accept(this);
+	if (m_last_node_changed)
+	{
+		filter.reset(m_last_node);
+	}
+	return !m_resolved_macros.empty();
+}
+
 void filter_macro_resolver::set_macro(
 		string name,
 		shared_ptr<libsinsp::filter::ast::expr> macro)
