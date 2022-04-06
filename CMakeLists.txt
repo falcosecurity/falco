@@ -115,9 +115,6 @@ include(ExternalProject)
 # libs
 include(falcosecurity-libs)
 
-# LuaJit provided by libs
-include(luajit)
-
 # jq
 include(jq)
 
@@ -151,12 +148,6 @@ if(NOT MINIMAL_BUILD)
 endif()
 
 include(cxxopts)
-
-# libyaml
-include(libyaml)
-
-# lyaml
-include(lyaml)
 
 # One TBB
 include(tbb)
