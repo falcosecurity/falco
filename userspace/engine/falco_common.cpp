@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2019 The Falco Authors.
+Copyright (C) 2022 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,61 +16,39 @@ limitations under the License.
 
 #include "falco_common.h"
 
-std::vector<std::string> falco_common::priority_names = {
+vector<string> falco_common::priority_names = {
 	"Emergency",
 	"Alert",
 	"Critical",
 	"Error",
 	"Warning",
 	"Notice",
-	"Informational",
-	"Debug"};
+	"Info",
+	"Debug"
+};
 
-falco_common::falco_common()
+bool falco_common::parse_priority(string v, priority_type& out)
 {
-	m_ls = lua_open();
-	if(!m_ls)
+	transform(v.begin(), v.end(), v.begin(), [](int c){return tolower(c);});
+	for (size_t i = 0; i < priority_names.size(); i++)
 	{
-		throw falco_exception("Cannot open lua");
-	}
-	luaL_openlibs(m_ls);
-}
-
-falco_common::~falco_common()
-{
-	if(m_ls)
-	{
-		lua_close(m_ls);
-	}
-}
-
-void falco_common::init()
-{
-	// Strings in the list lua_module_strings need to be loaded as
-	// lua modules, which also involves adding them to the
-	// package.module table.
-	for(const auto &pair : lua_module_strings)
-	{
-		lua_getglobal(m_ls, "package");
-		lua_getfield(m_ls, -1, "preload");
-
-		if(luaL_loadstring(m_ls, pair.first))
+		auto p = priority_names[i];
+		transform(p.begin(), p.end(), p.begin(), [](int c){return tolower(c);});
+		if (p.compare(0, v.size(), v) == 0)
 		{
-			throw falco_exception("Failed to load embedded lua code " +
-					      string(pair.second) + ": " + lua_tostring(m_ls, -1));
-		}
-
-		lua_setfield(m_ls, -2, pair.second);
-	}
-
-	// Strings in the list lua_code_strings need to be loaded and
-	// evaluated so any public functions can be directly called.
-	for(const auto &str : lua_code_strings)
-	{
-		if(luaL_loadstring(m_ls, str) || lua_pcall(m_ls, 0, 0, 0))
-		{
-			throw falco_exception("Failed to load + evaluate embedded lua code " +
-					      string(str) + ": " + lua_tostring(m_ls, -1));
+			out = (priority_type) i;
+			return true;
 		}
 	}
+	return false;
+}
+
+bool falco_common::format_priority(priority_type v, string& out)
+{
+	if ((size_t) v < priority_names.size())
+	{
+		out = priority_names[(size_t) v];
+		return true;
+	}
+	return false;
 }
