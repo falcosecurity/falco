@@ -18,7 +18,8 @@ set(FALCO_ENGINE_SOURCE_FILES
     ruleset.cpp
     formats.cpp
     filter_macro_resolver.cpp
-    lua_filter_helper.cpp)
+    rule_loader.cpp
+    stats_manager.cpp)
 
 add_library(falco_engine STATIC ${FALCO_ENGINE_SOURCE_FILES})
 add_dependencies(falco_engine njson string-view-lite)

@@ -41,14 +41,6 @@ falco_engine::falco_engine(bool seed_rng)
 	  m_sampling_ratio(1), m_sampling_multiplier(0),
 	  m_replace_container_info(false)
 {
-	luaopen_yaml(m_ls);
-
-	falco_common::init();
-	falco_rules::init(m_ls);
-	lua_filter_helper::init(m_ls);
-
-	m_required_plugin_versions.clear();
-
 	if(seed_rng)
 	{
 		srandom((unsigned) getpid());
@@ -59,6 +51,8 @@ falco_engine::falco_engine(bool seed_rng)
 
 falco_engine::~falco_engine()
 {
+	m_rule_loader.clear();
+	m_rule_stats_manager.clear();
 }
 
 uint32_t falco_engine::engine_version()
@@ -154,18 +148,35 @@ void falco_engine::load_rules(const string &rules_content, bool verbose, bool al
 
 void falco_engine::load_rules(const string &rules_content, bool verbose, bool all_events, uint64_t &required_engine_version)
 {
-	if(!m_rules)
+	std::vector<std::string> warnings;
+	std::vector<std::string> errors;
+	m_rule_loader.configure(m_min_priority, m_replace_container_info, m_extra);
+	bool success = m_rule_loader.load(rules_content, this, warnings, errors);
+	std::ostringstream os;
+	if (!errors.empty())
 	{
-		m_rules.reset(new falco_rules(this,
-					      m_ls));
-
-		for(auto const &it : m_filter_factories)
+		os << errors.size() << " errors:" << std::endl;
+		for(auto &err : errors)
 		{
-			m_rules->add_filter_factory(it.first, it.second);
+			os << err << std::endl;
 		}
 	}
-
-	m_rules->load_rules(rules_content, verbose, all_events, m_extra, m_replace_container_info, m_min_priority, required_engine_version, m_required_plugin_versions);
+	if (!warnings.empty())
+	{
+		os << warnings.size() << " warnings:" << std::endl;
+		for(auto &warn : warnings)
+		{
+			os << warn << std::endl;
+		}
+	}
+	if(!success)
+	{
+		throw falco_exception(os.str());
+	}
+	if (verbose && os.str() != "") {
+		// todo(jasondellaluce): introduce a logging callback in Falco
+		fprintf(stderr, "When reading rules content: %s", os.str().c_str());
+	}
 }
 
 void falco_engine::load_rules_file(const string &rules_filename, bool verbose, bool all_events)
@@ -302,9 +313,8 @@ unique_ptr<falco_engine::rule_result> falco_engine::process_event(std::size_t so
 		}
 
 		unique_ptr<struct rule_result> res(new rule_result());
-		res->source = r.source;
-
 		populate_rule_result(res, ev);
+		m_rule_stats_manager.on_event(m_rule_loader.rules(), ev->get_check_id());
 
 		return res;
 	}
@@ -333,80 +343,63 @@ std::size_t falco_engine::add_source(const std::string &source,
 	return idx;
 }
 
+std::shared_ptr<gen_event_filter_factory> falco_engine::get_filter_factory(
+	const std::string &source)
+{
+	auto it = m_filter_factories.find(source);
+	if(it == m_filter_factories.end())
+	{
+		throw falco_exception(string("unknown event source: ") + source);
+	}
+	return it->second;
+}
+
 void falco_engine::populate_rule_result(unique_ptr<struct rule_result> &res, gen_event *ev)
 {
-	std::lock_guard<std::mutex> guard(m_ls_semaphore);
-	lua_getglobal(m_ls, lua_on_event.c_str());
-	if(lua_isfunction(m_ls, -1))
+	res->evt = ev;
+	auto rule = m_rule_loader.rules().at(ev->get_check_id());
+	if (!rule)
 	{
-		lua_pushnumber(m_ls, ev->get_check_id());
-		if(lua_pcall(m_ls, 1, 5, 0) != 0)
-		{
-			const char* lerr = lua_tostring(m_ls, -1);
-			string err = "Error invoking function output: " + string(lerr);
-			throw falco_exception(err);
-		}
-		const char *p =  lua_tostring(m_ls, -5);
-		res->rule = p;
-		res->evt = ev;
-		res->priority_num = (falco_common::priority_type) lua_tonumber(m_ls, -4);
-		res->format = lua_tostring(m_ls, -3);
-
-		// Tags are passed back as a table, and is on the top of the stack
-		lua_pushnil(m_ls);  /* first key */
-		while (lua_next(m_ls, -2) != 0) {
-			// key is at index -2, value is at index
-			// -1. We want the value.
-			res->tags.insert(luaL_checkstring(m_ls, -1));
-
-			// Remove value, keep key for next iteration
-			lua_pop(m_ls, 1);
-		}
-		lua_pop(m_ls, 1); // Clean table leftover
-
-		// Exception fields are passed back as a table
-		lua_pushnil(m_ls);  /* first key */
-		while (lua_next(m_ls, -2) != 0) {
-			// key is at index -2, value is at index
-			// -1. We want the keys.
-			res->exception_fields.insert(luaL_checkstring(m_ls, -2));
-
-			// Remove value, keep key for next iteration
-			lua_pop(m_ls, 1);
-		}
-
-		lua_pop(m_ls, 4);
+		throw falco_exception("populate_rule_result error: unknown rule id "
+				+ to_string(ev->get_check_id()));
 	}
-	else
-	{
-		throw falco_exception("No function " + lua_on_event + " found in lua compiler module");
-	}
+	res->rule = rule->name;
+	res->source = rule->source;
+	res->format = rule->output;
+	res->priority_num = rule->priority;
+	res->tags = rule->tags;
+	res->exception_fields = rule->exception_fields;
 }
 
 void falco_engine::describe_rule(string *rule)
 {
-	return m_rules->describe_rule(rule);
-}
-
-// Print statistics on the rules that triggered
-void falco_engine::print_stats()
-{
-	lua_getglobal(m_ls, lua_print_stats.c_str());
-
-	if(lua_isfunction(m_ls, -1))
+	static const char* rule_fmt = "%-50s %s\n";
+	fprintf(stdout, rule_fmt, "Rule", "Description");
+	fprintf(stdout, rule_fmt, "----",  "-----------");
+	if (!rule)
 	{
-		if(lua_pcall(m_ls, 0, 0, 0) != 0)
+		for (uint32_t id = 0; id < m_rule_loader.rules().size(); id++)
 		{
-			const char* lerr = lua_tostring(m_ls, -1);
-			string err = "Error invoking function print_stats: " + string(lerr);
-			throw falco_exception(err);
+			auto r = m_rule_loader.rules().at(id);
+			auto wrapped = falco::utils::wrap_text(r->description, 51, 110);
+			fprintf(stdout, rule_fmt, r->name.c_str(), wrapped.c_str());
 		}
 	}
 	else
 	{
-		throw falco_exception("No function " + lua_print_stats + " found in lua rule loader module");
+		auto r = m_rule_loader.rules().at(*rule);
+		auto wrapped = falco::utils::wrap_text(r->description, 51, 110);
+		fprintf(stdout, rule_fmt, r->name.c_str(), wrapped.c_str());
 	}
 
+}
+
+void falco_engine::print_stats()
+{
+	string out;
+	m_rule_stats_manager.format_stats(m_rule_loader.rules(), out);
+	// todo(jasondellaluce): introduce a logging callback in Falco
+	fprintf(stdout, "%s", out.c_str());
 }
 
 void falco_engine::add_filter(std::shared_ptr<gen_event_filter> filter,
@@ -433,30 +426,7 @@ bool falco_engine::is_plugin_compatible(const std::string &name,
 					const std::string &version,
 					std::string &required_version)
 {
-	sinsp_plugin::version plugin_version(version);
-
-	if(!plugin_version.m_valid)
-	{
-		throw falco_exception(string("Plugin version string ") + version + " not valid");
-	}
-
-	if(m_required_plugin_versions.find(name) == m_required_plugin_versions.end())
-	{
-		// No required engine versions, so no restrictions. Compatible.
-		return true;
-	}
-
-	for(auto &rversion : m_required_plugin_versions[name])
-	{
-		sinsp_plugin::version req_version(rversion);
-		if (!plugin_version.check(req_version))
-		{
-			required_version = rversion;
-			return false;
-		}
-	}
-
-	return true;
+	return m_rule_loader.is_plugin_compatible(name, version, required_version);
 }
 
 void falco_engine::clear_filters()
@@ -465,8 +435,6 @@ void falco_engine::clear_filters()
 	{
 		it.ruleset.reset(new falco_ruleset);
 	}
-
-	m_required_plugin_versions.clear();
 }
 
 void falco_engine::set_sampling_ratio(uint32_t sampling_ratio)
