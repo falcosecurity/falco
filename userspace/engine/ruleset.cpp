@@ -66,16 +66,14 @@ void falco_ruleset::ruleset_filters::remove_wrapper_from_list(filter_wrapper_lis
 
 void falco_ruleset::ruleset_filters::add_filter(std::shared_ptr<filter_wrapper> wrap)
 {
-	std::set<uint16_t> fevttypes = wrap->evttypes();
-
-	if(fevttypes.empty())
+	if(wrap->evttypes.empty())
 	{
 		// Should run for all event types
 		add_wrapper_to_list(m_filter_all_event_types, wrap);
 	}
 	else
 	{
-		for(auto &etype : fevttypes)
+		for(auto &etype : wrap->evttypes)
 		{
 			if(m_filter_by_event_type.size() <= etype)
 			{
@@ -91,15 +89,13 @@ void falco_ruleset::ruleset_filters::add_filter(std::shared_ptr<filter_wrapper> 
 
 void falco_ruleset::ruleset_filters::remove_filter(std::shared_ptr<filter_wrapper> wrap)
 {
-	std::set<uint16_t> fevttypes = wrap->evttypes();
-
-	if(fevttypes.empty())
+	if(wrap->evttypes.empty())
 	{
 		remove_wrapper_from_list(m_filter_all_event_types, wrap);
 	}
 	else
 	{
-		for(auto &etype : fevttypes)
+		for(auto &etype : wrap->evttypes)
 		{
 			if( etype < m_filter_by_event_type.size() )
 			{
@@ -147,14 +143,14 @@ void falco_ruleset::ruleset_filters::evttypes_for_ruleset(std::set<uint16_t> &ev
 
 	for(auto &wrap : m_filters)
 	{
-		auto fevttypes = wrap->evttypes();
-		evttypes.insert(fevttypes.begin(), fevttypes.end());
+		evttypes.insert(wrap->evttypes.begin(), wrap->evttypes.end());
 	}
 }
 
 void falco_ruleset::add(string &source,
 			string &name,
 			set<string> &tags,
+			set<uint16_t> &evttypes,
 			std::shared_ptr<gen_event_filter> filter)
 {
 	std::shared_ptr<filter_wrapper> wrap(new filter_wrapper());
@@ -162,6 +158,7 @@ void falco_ruleset::add(string &source,
 	wrap->name = name;
 	wrap->tags = tags;
 	wrap->filter = filter;
+	wrap->evttypes = evttypes;
 
 	m_filters.insert(wrap);
 }
