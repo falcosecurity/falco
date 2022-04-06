@@ -587,19 +587,22 @@ bool rule_loader::read(const string &content, falco_engine* engine,
 			}
 			for(auto it = doc->begin(); it != doc->end(); it++)
 			{
-				string ctx = yaml_format_object(content, docs, doc, it);
-				YAML::Node item = *it;
-				try
+				if (!it->IsNull())
 				{
-					THROW(!item.IsMap(), "Unexpected element type. "
-						"Each element should be a yaml associative array.");
-					item["context"] = ctx;
-					read_item(engine, item, warnings);
-				}
-				catch(const exception& e)
-				{
-					errors.push_back(ctxerr(ctx, e.what()));
-					return false;
+					string ctx = yaml_format_object(content, docs, doc, it);
+					YAML::Node item = *it;
+					try
+					{
+						THROW(!item.IsMap(), "Unexpected element type. "
+							"Each element should be a yaml associative array.");
+						item["context"] = ctx;
+						read_item(engine, item, warnings);
+					}
+					catch(const exception& e)
+					{
+						errors.push_back(ctxerr(ctx, e.what()));
+						return false;
+					}
 				}
 			}
 		}
