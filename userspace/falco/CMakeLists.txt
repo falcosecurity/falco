@@ -44,10 +44,7 @@ set(
 set(
   FALCO_DEPENDENCIES
   string-view-lite
-  libyaml
   b64
-  luajit
-  lyaml
   cxxopts
 )
 
@@ -55,7 +52,6 @@ set(
   FALCO_LIBRARIES
   falco_engine
   sinsp
-  "${LIBYAML_LIB}"
   "${YAMLCPP_LIB}"
 )
 
@@ -107,7 +103,6 @@ if(NOT MINIMAL_BUILD)
     "${PROTOBUF_LIB}"
     "${CARES_LIB}"
     "${OPENSSL_LIBRARIES}"
-    "${LIBYAML_LIB}"
     "${YAMLCPP_LIB}"
     "${CIVETWEB_LIB}"
     "${CIVETWEB_CPP_LIB}"

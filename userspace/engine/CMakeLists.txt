@@ -24,37 +24,35 @@ set(FALCO_ENGINE_SOURCE_FILES
     lua_filter_helper.cpp)
 
 add_library(falco_engine STATIC ${FALCO_ENGINE_SOURCE_FILES})
-add_dependencies(falco_engine njson lyaml string-view-lite)
+add_dependencies(falco_engine njson string-view-lite)
 
 if(USE_BUNDLED_DEPS)
-  add_dependencies(falco_engine libyaml)
+  add_dependencies(falco_engine yamlcpp)
 endif()
 
 if(MINIMAL_BUILD)
   target_include_directories(
     falco_engine
     PUBLIC
-      "${LUAJIT_INCLUDE}"
       "${NJSON_INCLUDE}"
       "${TBB_INCLUDE_DIR}"
       "${STRING_VIEW_LITE_INCLUDE}"
       "${LIBSCAP_INCLUDE_DIRS}"
       "${LIBSINSP_INCLUDE_DIRS}"
-      "${PROJECT_BINARY_DIR}/userspace/engine"
-      "${PROJECT_BINARY_DIR}/userspace/engine/lua")
+      "${YAMLCPP_INCLUDE_DIR}"
+      "${PROJECT_BINARY_DIR}/userspace/engine")
 else()
   target_include_directories(
     falco_engine
     PUBLIC
-      "${LUAJIT_INCLUDE}"
       "${NJSON_INCLUDE}"
       "${CURL_INCLUDE_DIR}"
       "${TBB_INCLUDE_DIR}"
       "${STRING_VIEW_LITE_INCLUDE}"
       "${LIBSCAP_INCLUDE_DIRS}"
       "${LIBSINSP_INCLUDE_DIRS}"
-      "${PROJECT_BINARY_DIR}/userspace/engine"
-      "${PROJECT_BINARY_DIR}/userspace/engine/lua")
+      "${YAMLCPP_INCLUDE_DIR}"
+      "${PROJECT_BINARY_DIR}/userspace/engine")
 endif()
 
-target_link_libraries(falco_engine "${FALCO_SINSP_LIBRARY}" "${LYAML_LIB}" "${LIBYAML_LIB}" luafiles)
+target_link_libraries(falco_engine "${FALCO_SINSP_LIBRARY}" "${YAMLCPP_LIB}")

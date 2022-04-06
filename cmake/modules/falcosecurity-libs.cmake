@@ -62,14 +62,9 @@ set(LIBSINSP_DIR "${FALCOSECURITY_LIBS_SOURCE_DIR}")
 set(CREATE_TEST_TARGETS OFF CACHE BOOL "")
 set(BUILD_LIBSCAP_EXAMPLES OFF CACHE BOOL "")
 
-# todo(leogr): although Falco does not actually depend on chisels, we need this for the lua_parser. 
-# Hopefully, we can switch off this in the future
-set(WITH_CHISEL ON CACHE BOOL "")
-
 set(USE_BUNDLED_TBB ON CACHE BOOL "")
 set(USE_BUNDLED_B64 ON CACHE BOOL "")
 set(USE_BUNDLED_JSONCPP ON CACHE BOOL "")
-set(USE_BUNDLED_LUAJIT ON CACHE BOOL "")
 
 list(APPEND CMAKE_MODULE_PATH "${FALCOSECURITY_LIBS_SOURCE_DIR}/cmake/modules")
 
