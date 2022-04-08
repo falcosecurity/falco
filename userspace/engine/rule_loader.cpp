@@ -18,8 +18,8 @@ limitations under the License.
 #include "rule_loader.h"
 #include "filter_macro_resolver.h"
 
-#define MAX_VISIBILITY	  ((uint32_t) -1)
-#define THROW(cond, err)	{ if (cond) { throw falco_exception(err); } }
+#define MAX_VISIBILITY		((uint32_t) -1)
+#define THROW(cond, err)    { if (cond) { throw falco_exception(err); } }
 
 static string s_container_info_fmt = "%container.info";
 static string s_default_extra_fmt  = "%container.name (id=%container.id)";
@@ -27,7 +27,7 @@ static string s_default_extra_fmt  = "%container.name (id=%container.id)";
 using namespace std;
 using namespace libsinsp::filter;
 
-string ctxerr(std::string ctx, std::string e)
+static string ctxerr(std::string ctx, std::string e)
 {
 	e += "\n---\n";
 	e += trim(ctx);

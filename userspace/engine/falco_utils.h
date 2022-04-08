@@ -40,7 +40,7 @@ namespace falco
 namespace utils
 {
 
-std::string wrap_text(const std::string& str, uint32_t indent, uint32_t linelen);
+std::string wrap_text(const std::string& in, uint32_t indent, uint32_t linelen);
 
 void readfile(const std::string& filename, std::string& data);
 

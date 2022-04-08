@@ -17,6 +17,7 @@ limitations under the License.
 
 */
 #include <cstring>
+#include <iomanip>
 
 #include "falco_utils.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
@@ -27,29 +28,27 @@ namespace falco
 namespace utils
 {
 
-std::string wrap_text(const std::string& str, uint32_t indent, uint32_t line_len)
+std::string wrap_text(const std::string& in, uint32_t indent, uint32_t line_len)
 {
-	std::string ret;
-	size_t len = str.size();
-	size_t cur_len = 0;
-	for(uint32_t l = 0; l < len; l++)
+	std::istringstream is(in);
+	std::ostringstream os;
+	std::string word;
+	uint32_t len = 0;
+	while (is >> word)
 	{
-		if(cur_len > (line_len - indent) && l != 0 && str[l] == ' ')
+		if((len + word.length() + 1) <= (line_len-indent))
 		{
-			cur_len = 0;
-			while (l < len && str[l++] == ' ');
-			l--;
-			ret += "\n";
-			for(uint32_t m = 0; m < indent; m++)
-			{
-				ret += " ";
-			}
+			len += word.length() + 1;
 		}
-		ret += str.at(l);
-		cur_len++;
+		else
+		{
+			os << std::endl;
+			os << std::left << std::setw(indent) << " ";
+			len = word.length() + 1;
+		}
+		os << word << " ";
 	}
-	ret += "\n";
-	return ret;
+	return os.str();
 }
 
 uint32_t hardware_concurrency()
