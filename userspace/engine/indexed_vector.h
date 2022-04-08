@@ -22,7 +22,7 @@ limitations under the License.
 
 /*!
 	\brief Simple wrapper of std::vector that allows random access
-	through both numeric and string indexes with O(1) complexity.
+	through both numeric and string indexes with O(1) complexity
 */
 template <typename T>
 class indexed_vector
@@ -31,7 +31,7 @@ public:
 	/*!
 		\brief Returns the number of elements
 	*/
-	virtual inline uint32_t size()
+	virtual inline size_t size()
 	{
 		return m_entries.size();
 	}
@@ -64,18 +64,18 @@ public:
 		is returned.
 		\param entry Element to add in the vector
 		\param index String index of the element to be added in the vector
-		\return The numeric index of the element
+		\return The numeric index assigned to the element
 	*/
-	virtual inline uint32_t insert(T& entry, const std::string& index)
+	virtual inline size_t insert(T& entry, const std::string& index)
 	{
-		uint32_t id;
+		size_t id;
 		auto prev = m_index.find(index);
 		if (prev != m_index.end()) {
 			id = prev->second;
-			m_entries[id - 1] = entry;
+			m_entries[id] = entry;
 			return id;
 		}
-		id = m_entries.size() + 1;
+		id = m_entries.size();
 		m_entries.push_back(entry);
 		m_index[index] = id;
 		return id;
@@ -85,11 +85,11 @@ public:
 		\brief Returns a pointer to the element at the given numeric index,
 		or nullptr if no element exists at the given index.
 	*/
-	virtual inline T* at(uint32_t id)
+	virtual inline T* at(size_t id) const
 	{
 		if (id <= m_entries.size())
 		{
-			return &*(m_entries.begin() + id - 1);;
+			return (T* const) &m_entries[id];
 		}
 		return nullptr;
 	}
@@ -98,7 +98,7 @@ public:
 		\brief Returns a pointer to the element at the given string index,
 		or nullptr if no element exists at the given index.
 	*/
-	virtual inline T* at(const std::string& index)
+	virtual inline T* at(const std::string& index) const
 	{
 		auto it = m_index.find(index);
 		if (it != m_index.end()) {
@@ -129,5 +129,5 @@ public:
 
 private:
 	std::vector<T> m_entries;
-	std::map<std::string, uint32_t> m_index;
+	std::map<std::string, size_t> m_index;
 };

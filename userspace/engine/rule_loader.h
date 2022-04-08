@@ -42,7 +42,7 @@ public:
 	/*!
 		\brief Returns the rules loaded after the last invocation of load()
 	*/
-	virtual indexed_vector<falco_rule>& rules();
+	virtual const indexed_vector<falco_rule>& rules();
 
 	/*!
 		\brief Configures the loader. The changes will influence the next
@@ -57,47 +57,59 @@ public:
 		output does not contain "%container.info", then this flag has no effect
 		and the extra string is appended at the end of the rule output anyways.
 	*/
-	virtual void configure(falco_common::priority_type min_priority,
-		bool replace_container_info, const std::string& extra);
+	virtual void configure(
+		falco_common::priority_type min_priority,
+		bool replace_container_info,
+		const std::string& extra);
 
 	/*!
 		\brief Returns true if the given plugin name and version are compatible
 		with the loaded rulesets. If false is returned, required_version is
 		filled with the required plugin version that didn't match.
 	*/
-	virtual bool is_plugin_compatible(const std::string& name,
-		const std::string& version, std::string& required_version);
+	virtual bool is_plugin_compatible(
+		const std::string& name,
+		const std::string& version,
+		std::string& required_version);
 
 	/*!
 		\brief Parses the content of a ruleset. This should be called multiple
-		times to load different ruleset files. The internal state (e.g. loaded
+		times to load different rulesets. The internal state (e.g. loaded
 		rules, plugin version requirements, etc...) gets updated at each
 		invocation of the load() method.
-		\param rules_content The contents of the ruleset file
+		\param content The contents of the ruleset
 		\param engine The instance of falco_engine used to add rule filters
 		\param warnings Filled-out with warnings
 		\param warnings Filled-out with errors
 		\return true if the ruleset content is loaded successfully
 	*/
-	virtual bool load(const std::string& rules_content, falco_engine* engine,
-		std::vector<std::string>& warnings, std::vector<std::string>& errors);
+	virtual bool load(
+		const std::string& content,
+		falco_engine* engine,
+		std::vector<std::string>& warnings,
+		std::vector<std::string>& errors);
 
 private:
+	typedef pair<
+		YAML::Node,
+		shared_ptr<libsinsp::filter::ast::expr>
+	> macro_node;
+
 	bool read(
 		const std::string& content, falco_engine* engine,
 		std::vector<std::string>& warnings, std::vector<std::string>& errors);
 	void read_item(
-		falco_engine* engine, YAML::Node& item, vector<string>& warn);
+		falco_engine* engine, YAML::Node& item, vector<string>& warnings);
 	void read_required_engine_version(
-		falco_engine* engine, YAML::Node& item, vector<string>& warn);
+		falco_engine* engine, YAML::Node& item, vector<string>& warnings);
 	void read_required_plugin_versions(
-		falco_engine* engine, YAML::Node& item, vector<string>& warn);
+		falco_engine* engine, YAML::Node& item, vector<string>& warnings);
 	void read_macro(
-		falco_engine* engine, YAML::Node& item, vector<string>& warn);
+		falco_engine* engine, YAML::Node& item, vector<string>& warnings);
 	void read_list(
-		falco_engine* engine, YAML::Node& item, vector<string>& warn);
+		falco_engine* engine, YAML::Node& item, vector<string>& warnings);
 	void read_rule(
-		falco_engine* engine, YAML::Node& item, vector<string>& warn);
+		falco_engine* engine, YAML::Node& item, vector<string>& warnings);
 	void read_rule_exceptions(
 		falco_engine* engine, YAML::Node& item, bool append);
 	bool expand(falco_engine* engine,
@@ -105,18 +117,18 @@ private:
 	void expand_list_infos(
 		std::map<string, bool>& used, indexed_vector<YAML::Node>& out);
 	void expand_macro_infos(
-		indexed_vector<YAML::Node>& lists,
+		const indexed_vector<YAML::Node>& lists,
 		std::map<string, bool>& used_lists,
 		std::map<string, bool>& used_macros,
-		indexed_vector<pair<YAML::Node,shared_ptr<libsinsp::filter::ast::expr>>>& out);
+		indexed_vector<macro_node>& out);
 	void expand_rule_infos(
 		falco_engine* engine,
-		indexed_vector<YAML::Node>& lists,
-		indexed_vector<pair<YAML::Node,shared_ptr<libsinsp::filter::ast::expr>>>& macros,
+		const indexed_vector<YAML::Node>& lists,
+		const indexed_vector<macro_node>& macros,
 		std::map<string, bool>& used_lists,
 		std::map<string, bool>& used_macros,
 		vector<string>& warnings);
-	void apply_output_replacements(std::string& output);
+	void apply_output_substitutions(std::string& output);
 
 	uint32_t m_cur_index;
 	std::string m_extra;

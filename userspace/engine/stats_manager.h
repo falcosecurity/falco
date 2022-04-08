@@ -36,13 +36,15 @@ public:
 		\brief Callback for when a rule with a given index matches an event
 	*/
 	virtual void on_event(
-		indexed_vector<falco_rule>& rules, uint32_t index);
+		const indexed_vector<falco_rule>& rules,
+		uint32_t index);
 
 	/*!
 		\brief Formats the internal statistics into the out sring
 	*/
-	virtual void format_stats(
-		indexed_vector<falco_rule>& rules, std::string& out);
+	virtual void format(
+		const indexed_vector<falco_rule>& rules,
+		std::string& out);
 
 private:
 	uint64_t m_total;

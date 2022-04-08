@@ -67,7 +67,7 @@ static bool is_field_defined(falco_engine *engine, string source, string field)
 	return false;
 }
 
-// todo: this should be in libsinsp
+// todo(jasondellaluce): add an helper in libsinsp for this
 static bool is_operator_defined(std::string op)
 {
 	static vector<string> ops = {"=", "==", "!=", "<=", ">=", "<", ">",
@@ -76,13 +76,14 @@ static bool is_operator_defined(std::string op)
 	return find(ops.begin(), ops.end(), op) != ops.end();
 }
 
-// todo: this should be in libsinsp
+// todo(jasondellaluce): add an helper in libsinsp for this
 static bool is_operator_for_list(std::string op)
 {
 	return op == "in" || op == "intersects" || op == "pmatch";
 }
 
-static bool is_format_valid(falco_engine* e, string src, string fmt, string& err)
+static bool is_format_valid(
+	falco_engine* e, string src, string fmt, string& err)
 {
 	try
 	{
@@ -141,7 +142,7 @@ static void yaml_decode_seq(const YAML::Node& item, vector<T>& out)
 	for(const YAML::Node& v : item)
 	{
 		THROW(!v.IsScalar() || !YAML::convert<T>::decode(v, value),
-			"Can't decode YAML sequence value");
+			"Can't decode YAML sequence value: " + YAML::Dump(v));
 		out.push_back(value);
 	}
 }
@@ -153,13 +154,13 @@ static void yaml_decode_seq(const YAML::Node& item, set<T>& out)
 	for(const YAML::Node& v : item)
 	{
 		THROW(!v.IsScalar() || !YAML::convert<T>::decode(v, value),
-			"Can't decode YAML sequence value");
+			"Can't decode YAML sequence value: " + YAML::Dump(v));
 		out.insert(value);
 	}
 }
 
 // todo(jasondellaluce): this breaks string escaping in lists
-static bool resolve_list(string& cnd, YAML::Node& list)
+static bool resolve_list(string& cnd, const YAML::Node& list)
 {
 	static string blanks = " \t\n\r";
 	static string delims = blanks + "(),=";
@@ -230,14 +231,13 @@ static bool resolve_list(string& cnd, YAML::Node& list)
 }
 
 static void resolve_macros(
-	indexed_vector<pair<YAML::Node,shared_ptr<ast::expr>>>& macros,
+	const indexed_vector<pair<YAML::Node,shared_ptr<ast::expr>>>& macros,
 	map<string, bool>& used_macros,
 	shared_ptr<ast::expr>& ast,
 	uint32_t index_visibility,
 	string on_unknown_err_prefix)
 {
 	filter_macro_resolver macro_resolver;
-	
 	for (auto &ref : macros)
 	{
 		if (ref.first["index"].as<uint32_t>() < index_visibility)
@@ -246,9 +246,10 @@ static void resolve_macros(
 		}
 	}
 	macro_resolver.run(ast);
-	THROW(!macro_resolver.get_unknown_macros().empty(), on_unknown_err_prefix
-		+ "Undefined macro '" + *macro_resolver.get_unknown_macros().begin()
-		+ "' used in filter.");
+	THROW(!macro_resolver.get_unknown_macros().empty(),
+		on_unknown_err_prefix + "Undefined macro '"
+			+ *macro_resolver.get_unknown_macros().begin()
+			+ "' used in filter.");
 	for (auto &resolved : macro_resolver.get_resolved_macros())
 	{
 		used_macros[resolved] = true;
@@ -257,7 +258,7 @@ static void resolve_macros(
 
 // note: there is no visibility order between filter conditions and lists
 static shared_ptr<ast::expr> parse_condition(string cnd,
-	std::map<string, bool>& used_lists, indexed_vector<YAML::Node>& lists)
+	std::map<string, bool>& used_lists, const indexed_vector<YAML::Node>& lists)
 {
 	for (auto &l : lists)
 	{
@@ -341,19 +342,19 @@ static void validate_rule_exception(
 			else
 			{
 				THROW(!yaml_is_type<string>(ex["fields"])
-					|| !yaml_is_type<string>(ex["comps"]),
+						|| !yaml_is_type<string>(ex["comps"]),
 					"Rule exception item " + ex["name"].as<string>() 
 						+ ": fields and comps must both be strings");
 			}
 			THROW(!is_field_defined(
-				engine, source, ex["fields"].as<string>()),
+					engine, source, ex["fields"].as<string>()),
 				"Rule exception item " + ex["name"].as<string>()
 					+ ": field name " + ex["fields"].as<string>()
 					+ " is not a supported filter field");
 			THROW(!is_operator_defined(ex["comps"].as<string>()),
 				"Rule exception item "  + ex["name"].as<string>()
-				+ ": comparison operator " + ex["comps"].as<string>()
-				+ " is not a supported comparison operator");
+					+ ": comparison operator " + ex["comps"].as<string>()
+					+ " is not a supported comparison operator");
 			break;
 		case YAML::NodeType::Sequence:
 			if (!ex["comps"].IsDefined())
@@ -373,20 +374,22 @@ static void validate_rule_exception(
 			for (auto field : ex["fields"])
 			{
 				THROW(!yaml_is_type<string>(field),
-					"Rule exception item " + ex["name"].as<string>() + ": fields must strings ");
+					"Rule exception item " + ex["name"].as<string>()
+						+ ": fields must strings ");
 				THROW(!is_field_defined(engine, source, field.as<string>()),
-					"Rule exception item " + ex["name"].as<string>() + ": field name "
-						+ field.as<string>() + " is not a supported filter field");
+					"Rule exception item " + ex["name"].as<string>()
+						+ ": field name " + field.as<string>()
+						+ " is not a supported filter field");
 			}
 			for (auto comp : ex["comps"])
 			{
 				THROW(!yaml_is_type<string>(comp),
 					"Rule exception item " + ex["name"].as<string>() 
-					+ ": comps must strings ");
+						+ ": comps must strings ");
 				THROW(!is_operator_defined(comp.as<string>()),
 					"Rule exception item " + ex["name"].as<string>() 
-					+ ": comparison operator " + comp.as<string>()
-					+ " is not a supported comparison operator");
+						+ ": comparison operator " + comp.as<string>()
+						+ " is not a supported comparison operator");
 			}
 			break;
 		default:
@@ -409,10 +412,10 @@ static void build_rule_exception_infos(
 			{
 				THROW(!yaml_is_type<string>(val),
 					"Expected values array for item "
-					+ exname + " to contain a list of strings");
+						+ exname + " to contain a list of strings");
 				icond += icond.empty()
-					? "(" + ex["fields"].as<string>() + " "
-						+ ex["comps"].as<string>() + " ("
+					? ("(" + ex["fields"].as<string>() + " "
+						+ ex["comps"].as<string>() + " (")
 					: ", ";
 				exception_fields.insert(ex["fields"].as<string>());
 				value = val.as<string>();
@@ -428,7 +431,7 @@ static void build_rule_exception_infos(
 			{
 				THROW(ex["fields"].size() != values.size(),
 					"Exception item " + exname
-					+ ": fields and values lists must have equal length");
+						+ ": fields and values lists must have equal length");
 				icond += icond == "(" ? "" : " or ";
 				icond += "(";
 				uint32_t k = 0;
@@ -488,7 +491,7 @@ void rule_loader::clear()
 	m_required_plugin_versions.clear();
 }
 
-indexed_vector<falco_rule>& rule_loader::rules()
+const indexed_vector<falco_rule>& rule_loader::rules()
 {
 	return m_rules;
 }
@@ -531,7 +534,7 @@ bool rule_loader::is_plugin_compatible(
 	return true;
 }
 
-void rule_loader::apply_output_replacements(std::string& out)
+void rule_loader::apply_output_substitutions(std::string& out)
 {
 	if (out.find(s_container_info_fmt) != string::npos)
 	{
@@ -611,36 +614,36 @@ bool rule_loader::read(const string &content, falco_engine* engine,
 }
 
 void rule_loader::read_item(
-	falco_engine* engine, YAML::Node& item, vector<string>& warn)
+	falco_engine* engine, YAML::Node& item, vector<string>& warnings)
 {
 	if (item["required_engine_version"].IsDefined())
 	{
-		read_required_engine_version(engine, item, warn);
+		read_required_engine_version(engine, item, warnings);
 	}
 	else if(item["required_plugin_versions"].IsDefined())
 	{
-		read_required_plugin_versions(engine, item, warn);
+		read_required_plugin_versions(engine, item, warnings);
 	}
 	else if(item["macro"].IsDefined())
 	{
-		read_macro(engine, item, warn);
+		read_macro(engine, item, warnings);
 	}
 	else if(item["list"].IsDefined())
 	{
-		read_list(engine, item, warn);
+		read_list(engine, item, warnings);
 	}
 	else if(item["rule"].IsDefined())
 	{
-		read_rule(engine, item, warn);
+		read_rule(engine, item, warnings);
 	}
 	else
 	{
-		warn.push_back("Unknown top level object");
+		warnings.push_back("Unknown top level object");
 	}
 }
 
 void rule_loader::read_required_engine_version(
-	falco_engine* engine, YAML::Node& item, vector<string>& warn)
+	falco_engine* engine, YAML::Node& item, vector<string>& warnings)
 {
 	uint32_t v = 0;
 	THROW(!YAML::convert<uint32_t>::decode(item["required_engine_version"], v),
@@ -651,7 +654,7 @@ void rule_loader::read_required_engine_version(
 }
 
 void rule_loader::read_required_plugin_versions(
-	falco_engine* engine, YAML::Node& item, vector<string>& warn)
+	falco_engine* engine, YAML::Node& item, vector<string>& warnings)
 {
 	string name, ver;
 	THROW(!item["required_plugin_versions"].IsSequence(),
@@ -671,7 +674,7 @@ void rule_loader::read_required_plugin_versions(
 }
 
 void rule_loader::read_list(
-	falco_engine* engine, YAML::Node& item, vector<string>& warn)
+	falco_engine* engine, YAML::Node& item, vector<string>& warnings)
 {
 	string name;
 	THROW(!YAML::convert<string>::decode(item["list"], name) || name.empty(),
@@ -696,7 +699,7 @@ void rule_loader::read_list(
 }
 
 void rule_loader::read_macro(
-	falco_engine* engine, YAML::Node& item, vector<string>& warn)
+	falco_engine* engine, YAML::Node& item, vector<string>& warnings)
 {
 	string name, cnd;
 	THROW(!YAML::convert<string>::decode(item["macro"], name) || name.empty(),
@@ -714,7 +717,7 @@ void rule_loader::read_macro(
 	}
 	if (!engine->is_source_valid(item["source"].as<string>()))
 	{
-		warn.push_back("Macro " + name
+		warnings.push_back("Macro " + name
 			+ ": warning (unknown-source): unknown source "
 			+ item["source"].as<string>() + ", skipping");
 		return;
@@ -733,7 +736,7 @@ void rule_loader::read_macro(
 }
 
 void rule_loader::read_rule(
-	falco_engine* engine, YAML::Node& item, vector<string>& warn)
+	falco_engine* engine, YAML::Node& item, vector<string>& warnings)
 {
 	string name;
 	falco_common::priority_type priority;
@@ -762,7 +765,7 @@ void rule_loader::read_rule(
 	}
 	if (!engine->is_source_valid(item["source"].as<string>()))
 	{
-		warn.push_back("Rule " + name
+		warnings.push_back("Rule " + name
 			+ ": warning (unknown-source): unknown source "
 			+ item["source"].as<string>() + ", skipping");
 		return;
@@ -810,7 +813,8 @@ void rule_loader::read_rule(
 	}
 
 	THROW(!yaml_is_type<string>(item["priority"])
-		|| !falco_common::parse_priority(item["priority"].as<string>(), priority),
+			|| !falco_common::parse_priority(
+				item["priority"].as<string>(), priority),
 		"Invalid priority");
 	item["priority_num"] = (uint32_t) priority;
 
@@ -891,10 +895,7 @@ bool rule_loader::expand(falco_engine* engine,
 		vector<std::string>& warnings, vector<std::string>& errors)
 {
 	indexed_vector<YAML::Node> lists;
-	indexed_vector<pair<
-		YAML::Node,
-		shared_ptr<ast::expr> // todo: maybe remove pair
-	>> macros;
+	indexed_vector<macro_node> macros;
 	map<string, bool> used_lists;
 	map<string, bool> used_macros;
 	
@@ -975,10 +976,10 @@ void rule_loader::expand_list_infos(
 
 // note: there is a visibility ordering between macros
 void rule_loader::expand_macro_infos(
-	indexed_vector<YAML::Node>& lists,
+	const indexed_vector<YAML::Node>& lists,
 	map<string, bool>& used_lists,
 	map<string, bool>& used_macros,
-	indexed_vector<pair<YAML::Node,shared_ptr<ast::expr>>>& out)
+	indexed_vector<macro_node>& out)
 {
 	for (auto m : m_macro_infos)
 	{
@@ -1000,7 +1001,7 @@ void rule_loader::expand_macro_infos(
 			resolve_macros(out, used_macros, m.second,
 				m.first["index_visibility"].as<uint32_t>(),
 				"Compilation error when compiling \""
-				+ m.first["condition"].as<string>() + "\": ");
+					+ m.first["condition"].as<string>() + "\": ");
 		}
 		catch (exception& e)
 		{
@@ -1012,11 +1013,11 @@ void rule_loader::expand_macro_infos(
 
 void rule_loader::expand_rule_infos(
 	falco_engine* engine,
-	indexed_vector<YAML::Node>& lists,
-	indexed_vector<pair<YAML::Node,shared_ptr<ast::expr>>>& macros,
+	const indexed_vector<YAML::Node>& lists,
+	const indexed_vector<macro_node>& macros,
 	map<string, bool>& used_lists,
 	map<string, bool>& used_macros,
-	vector<string>& warn)
+	vector<string>& warnings)
 {
 	string err;
 	for (auto r : m_rule_infos)
@@ -1038,13 +1039,13 @@ void rule_loader::expand_rule_infos(
 			}
 
 			auto ast = parse_condition(condition, used_lists, lists);
-		
+
 			resolve_macros(macros, used_macros, ast, MAX_VISIBILITY, "");
 
 			string output = r["output"].as<string>();
 			if (r["source"].as<string>() == falco_common::syscall_source)
 			{
-				apply_output_replacements(output);
+				apply_output_substitutions(output);
 			}
 
 			THROW(!is_format_valid(engine, r["source"].as<string>(), output, err), 
@@ -1059,14 +1060,15 @@ void rule_loader::expand_rule_infos(
 			rule.exception_fields = exception_fields;
 			yaml_decode_seq<string>(r["tags"], rule.tags);
 
-			auto rule_id = m_rules.insert(rule, rule.name);
+			// note: indexes are 0-based, but 0 is not an acceptable rule_id
+			auto rule_id = m_rules.insert(rule, rule.name) + 1;
 			auto filter = compile_condition(engine, rule_id, ast, rule.source, err);
 			if (!filter)
 			{
 				if (r["skip-if-unknown-filter"].as<bool>()
 					&& err.find("nonexistent field") != string::npos)
 				{
-					warn.push_back(
+					warnings.push_back(
 						"Rule " + rule.name + ": warning (unknown-field):");
 					continue;
 				}
@@ -1082,7 +1084,7 @@ void rule_loader::expand_rule_infos(
 				auto evttypes = filter->evttypes();
 				if (evttypes.size() == 0 || evttypes.size() > 100)
 				{
-					warn.push_back(
+					warnings.push_back(
 						"Rule " + rule.name + ": warning (no-evttype):\n" +
 						+ "		 matches too many evt.type values.\n"
 						+ "		 This has a significant performance penalty.");

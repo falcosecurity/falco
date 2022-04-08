@@ -313,11 +313,13 @@ unique_ptr<falco_engine::rule_result> falco_engine::process_event(std::size_t so
 		}
 
 		unique_ptr<struct rule_result> res(new rule_result());
-		auto rule = m_rule_loader.rules().at(ev->get_check_id());
+		// note: indexes are 0-based, whereas check_ids are not
+		auto rule_idx = ev->get_check_id() - 1;
+		auto rule = m_rule_loader.rules().at(rule_idx);
 		if (!rule)
 		{
 			throw falco_exception("populate_rule_result error: unknown rule id "
-					+ to_string(ev->get_check_id()));
+					+ to_string(rule_idx));
 		}
 		res->evt = ev;
 		res->rule = rule->name;
@@ -326,7 +328,7 @@ unique_ptr<falco_engine::rule_result> falco_engine::process_event(std::size_t so
 		res->priority_num = rule->priority;
 		res->tags = rule->tags;
 		res->exception_fields = rule->exception_fields;
-		m_rule_stats_manager.on_event(m_rule_loader.rules(), ev->get_check_id());
+		m_rule_stats_manager.on_event(m_rule_loader.rules(), rule_idx);
 		return res;
 	}
 	catch(std::out_of_range const &exc)
@@ -390,7 +392,7 @@ void falco_engine::describe_rule(string *rule)
 void falco_engine::print_stats()
 {
 	string out;
-	m_rule_stats_manager.format_stats(m_rule_loader.rules(), out);
+	m_rule_stats_manager.format(m_rule_loader.rules(), out);
 	// todo(jasondellaluce): introduce a logging callback in Falco
 	fprintf(stdout, "%s", out.c_str());
 }
