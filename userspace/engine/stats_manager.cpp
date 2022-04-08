@@ -26,7 +26,9 @@ void stats_manager::clear()
 	m_by_priority.clear();
 }
 
-void stats_manager::format_stats(indexed_vector<falco_rule>& rules, string& out)
+void stats_manager::format(
+	const indexed_vector<falco_rule>& rules,
+	string& out)
 {
 	string fmt;
 	string name;
@@ -54,7 +56,7 @@ void stats_manager::format_stats(indexed_vector<falco_rule>& rules, string& out)
 }
 
 void stats_manager::on_event(
-		indexed_vector<falco_rule>& rules,
+		const indexed_vector<falco_rule>& rules,
 		uint32_t rule_id)
 {
 	auto *rule = rules.at(rule_id);
