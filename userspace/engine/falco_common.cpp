@@ -34,7 +34,10 @@ bool falco_common::parse_priority(string v, priority_type& out)
 	{
 		auto p = priority_names[i];
 		transform(p.begin(), p.end(), p.begin(), [](int c){return tolower(c);});
-		if (p.compare(0, v.size(), v) == 0)
+		// note: for legacy reasons, "Info" and "Informational" has been used
+		// interchangeably and ambiguously, so this is the only edge case for
+		// which we can't apply strict equality check
+		if (p == v || (v == "informational" && p == "info"))
 		{
 			out = (priority_type) i;
 			return true;

@@ -313,9 +313,20 @@ unique_ptr<falco_engine::rule_result> falco_engine::process_event(std::size_t so
 		}
 
 		unique_ptr<struct rule_result> res(new rule_result());
-		populate_rule_result(res, ev);
+		auto rule = m_rule_loader.rules().at(ev->get_check_id());
+		if (!rule)
+		{
+			throw falco_exception("populate_rule_result error: unknown rule id "
+					+ to_string(ev->get_check_id()));
+		}
+		res->evt = ev;
+		res->rule = rule->name;
+		res->source = rule->source;
+		res->format = rule->output;
+		res->priority_num = rule->priority;
+		res->tags = rule->tags;
+		res->exception_fields = rule->exception_fields;
 		m_rule_stats_manager.on_event(m_rule_loader.rules(), ev->get_check_id());
-
 		return res;
 	}
 	catch(std::out_of_range const &exc)
@@ -354,23 +365,6 @@ std::shared_ptr<gen_event_filter_factory> falco_engine::get_filter_factory(
 	return it->second;
 }
 
-void falco_engine::populate_rule_result(unique_ptr<struct rule_result> &res, gen_event *ev)
-{
-	res->evt = ev;
-	auto rule = m_rule_loader.rules().at(ev->get_check_id());
-	if (!rule)
-	{
-		throw falco_exception("populate_rule_result error: unknown rule id "
-				+ to_string(ev->get_check_id()));
-	}
-	res->rule = rule->name;
-	res->source = rule->source;
-	res->format = rule->output;
-	res->priority_num = rule->priority;
-	res->tags = rule->tags;
-	res->exception_fields = rule->exception_fields;
-}
-
 void falco_engine::describe_rule(string *rule)
 {
 	static const char* rule_fmt = "%-50s %s\n";
@@ -378,18 +372,17 @@ void falco_engine::describe_rule(string *rule)
 	fprintf(stdout, rule_fmt, "----",  "-----------");
 	if (!rule)
 	{
-		for (uint32_t id = 0; id < m_rule_loader.rules().size(); id++)
+		for (auto &r : m_rule_loader.rules())
 		{
-			auto r = m_rule_loader.rules().at(id);
-			auto wrapped = falco::utils::wrap_text(r->description, 51, 110);
-			fprintf(stdout, rule_fmt, r->name.c_str(), wrapped.c_str());
+			auto str = falco::utils::wrap_text(r.description, 51, 110) + "\n";
+			fprintf(stdout, rule_fmt, r.name.c_str(), str.c_str());
 		}
 	}
 	else
 	{
 		auto r = m_rule_loader.rules().at(*rule);
-		auto wrapped = falco::utils::wrap_text(r->description, 51, 110);
-		fprintf(stdout, rule_fmt, r->name.c_str(), wrapped.c_str());
+		auto str = falco::utils::wrap_text(r->description, 51, 110) + "\n";
+		fprintf(stdout, rule_fmt, r->name.c_str(), str.c_str());
 	}
 
 }

@@ -254,7 +254,6 @@ private:
 	std::map<string, uint16_t> m_known_rulesets;
 	falco_common::priority_type m_min_priority;
 
-	void populate_rule_result(unique_ptr<struct rule_result> &res, gen_event *ev);
 
 	//
 	// Here's how the sampling ratio and multiplier influence
