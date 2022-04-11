@@ -412,6 +412,7 @@ void falco_engine::print_stats()
 void falco_engine::add_filter(std::shared_ptr<gen_event_filter> filter,
 			      std::string &rule,
 			      std::string &source,
+			      std::set<uint16_t> &evttypes,
 			      std::set<std::string> &tags)
 {
 	auto it = find_ruleset(source);
@@ -421,7 +422,7 @@ void falco_engine::add_filter(std::shared_ptr<gen_event_filter> filter,
 		throw falco_exception(err);
 	}
 
-	it->ruleset->add(source, rule, tags, filter);
+	it->ruleset->add(source, rule, tags, evttypes, filter);
 }
 
 bool falco_engine::is_source_valid(const std::string &source)
