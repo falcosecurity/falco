@@ -190,17 +190,10 @@ void falco_configuration::init(string conf_filename, const vector<string> &cmdli
 	m_notifications_max_burst = m_config->get_scalar<uint32_t>("outputs.max_burst", 1000);
 
 	string priority = m_config->get_scalar<string>("priority", "debug");
-	vector<string>::iterator it;
-
-	auto comp = [priority](string &s) {
-		return (strcasecmp(s.c_str(), priority.c_str()) == 0);
-	};
-
-	if((it = std::find_if(falco_common::priority_names.begin(), falco_common::priority_names.end(), comp)) == falco_common::priority_names.end())
+	if (!falco_common::parse_priority(priority, m_min_priority))
 	{
 		throw logic_error("Unknown priority \"" + priority + "\"--must be one of emergency, alert, critical, error, warning, notice, informational, debug");
 	}
-	m_min_priority = (falco_common::priority_type)(it - falco_common::priority_names.begin());
 
 	m_buffered_outputs = m_config->get_scalar<bool>("buffered_outputs", false);
 	m_time_format_iso_8601 = m_config->get_scalar<bool>("time_format_iso_8601", false);

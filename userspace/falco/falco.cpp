@@ -61,7 +61,7 @@ bool g_reopen_outputs = false;
 bool g_restart = false;
 bool g_daemonized = false;
 
-static std::string syscall_source = "syscall";
+static std::string syscall_source = falco_common::syscall_source;
 static std::size_t syscall_source_idx;
 static std::string k8s_audit_source = "k8s_audit";
 static std::size_t k8s_audit_source_idx;

@@ -38,7 +38,8 @@ void stats_manager::format(
 	{
 		if (m_by_priority[i] > 0)
 		{
-			falco_common::format_priority((falco_common::priority_type) i, fmt);
+			falco_common::format_priority(
+				(falco_common::priority_type) i, fmt, true);
 			transform(fmt.begin(), fmt.end(), fmt.begin(), ::toupper);
 			out += "   " + fmt;
 			out += ": " + to_string(m_by_priority[i]) + "\n";
