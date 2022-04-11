@@ -67,7 +67,7 @@ void falco::outputs::output_grpc::output(const message *msg)
 
 	// priority
 	falco::schema::priority p = falco::schema::priority::EMERGENCY;
-	if(!falco::schema::priority_Parse(falco_common::priority_names[msg->priority], &p))
+	if(!falco::schema::priority_Parse(falco_common::format_priority(msg->priority), &p))
 	{
 		throw falco_exception("Unknown priority passed to output_grpc::output()");
 	}

@@ -159,24 +159,25 @@ void falco_outputs::handle_event(gen_event *evt, string &rule, string &source,
 	{
 		if(m_time_format_iso_8601)
 		{
-			sformat = "*%evt.time.iso8601: " + falco_common::priority_names[priority];
+			sformat = "*%evt.time.iso8601: ";
 		}
 		else
 		{
-			sformat = "*%evt.time: " + falco_common::priority_names[priority];
+			sformat = "*%evt.time: ";
 		}
 	}
 	else
 	{
 		if(m_time_format_iso_8601)
 		{
-			sformat = "*%jevt.time.iso8601: " + falco_common::priority_names[priority];
+			sformat = "*%jevt.time.iso8601: ";
 		}
 		else
 		{
-			sformat = "*%jevt.time: " + falco_common::priority_names[priority];
+			sformat = "*%jevt.time: ";
 		}
 	}
+	sformat += falco_common::format_priority(priority);
 
 	// if format starts with a *, remove it, as we added our own prefix
 	if(format[0] == '*')
@@ -188,7 +189,7 @@ void falco_outputs::handle_event(gen_event *evt, string &rule, string &source,
 		sformat += " " + format;
 	}
 
-	cmsg.msg = m_formats->format_event(evt, rule, source, falco_common::priority_names[priority], sformat, tags);
+	cmsg.msg = m_formats->format_event(evt, rule, source, falco_common::format_priority(priority), sformat, tags);
 	cmsg.fields = m_formats->get_field_values(evt, source, sformat);
 	cmsg.tags.insert(tags.begin(), tags.end());
 
@@ -225,7 +226,7 @@ void falco_outputs::handle_msg(uint64_t ts,
 		iso8601evttime += time_ns;
 
 		jmsg["output"] = msg;
-		jmsg["priority"] = falco_common::priority_names[priority];
+		jmsg["priority"] = falco_common::format_priority(priority);
 		jmsg["rule"] = rule;
 		jmsg["time"] = iso8601evttime;
 		jmsg["output_fields"] = output_fields;
@@ -238,7 +239,7 @@ void falco_outputs::handle_msg(uint64_t ts,
 		bool first = true;
 
 		sinsp_utils::ts_to_string(ts, &timestr, false, true);
-		cmsg.msg = timestr + ": " + falco_common::priority_names[priority] + " " + msg + " (";
+		cmsg.msg = timestr + ": " + falco_common::format_priority(priority) + " " + msg + " (";
 		for(auto &pair : output_fields)
 		{
 			if(first)
