@@ -54,9 +54,6 @@ namespace falco_common
 {
 	const string syscall_source = "syscall";
 
-	// Priority levels, as a vector of strings
-	extern std::vector<std::string> priority_names;
-
 	// Same as numbers/indices into the above vector
 	enum priority_type
 	{
@@ -71,5 +68,7 @@ namespace falco_common
 	};
 	
 	bool parse_priority(std::string v, priority_type& out);
-	bool format_priority(priority_type v, std::string& out);
+	priority_type parse_priority(std::string v);
+	bool format_priority(priority_type v, std::string& out, bool shortfmt=false);
+	std::string format_priority(priority_type v, bool shortfmt=false);
 };
