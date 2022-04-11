@@ -16,28 +16,26 @@ limitations under the License.
 
 #include "falco_common.h"
 
-vector<string> falco_common::priority_names = {
+static vector<string> priority_names = {
 	"Emergency",
 	"Alert",
 	"Critical",
 	"Error",
 	"Warning",
 	"Notice",
-	"Info",
+	"Informational",
 	"Debug"
 };
 
 bool falco_common::parse_priority(string v, priority_type& out)
 {
-	transform(v.begin(), v.end(), v.begin(), [](int c){return tolower(c);});
 	for (size_t i = 0; i < priority_names.size(); i++)
 	{
-		auto p = priority_names[i];
-		transform(p.begin(), p.end(), p.begin(), [](int c){return tolower(c);});
 		// note: for legacy reasons, "Info" and "Informational" has been used
 		// interchangeably and ambiguously, so this is the only edge case for
 		// which we can't apply strict equality check
-		if (p == v || (v == "informational" && p == "info"))
+		if (!strcasecmp(v.c_str(), priority_names[i].c_str())
+			|| (i == PRIORITY_INFORMATIONAL && !strcasecmp(v.c_str(), "info")))
 		{
 			out = (priority_type) i;
 			return true;
@@ -46,12 +44,39 @@ bool falco_common::parse_priority(string v, priority_type& out)
 	return false;
 }
 
-bool falco_common::format_priority(priority_type v, string& out)
+falco_common::priority_type falco_common::parse_priority(string v)
+{
+	falco_common::priority_type out;
+	if (!parse_priority(v, out))
+	{
+		throw falco_exception("Unknown priority value: " + v);
+	}
+	return out;
+}
+
+bool falco_common::format_priority(priority_type v, string& out, bool shortfmt)
 {
 	if ((size_t) v < priority_names.size())
 	{
-		out = priority_names[(size_t) v];
+		if (v == PRIORITY_INFORMATIONAL && shortfmt)
+		{
+			out = "Info";
+		}
+		else
+		{
+			out = priority_names[(size_t) v];
+		}
 		return true;
 	}
 	return false;
+}
+
+string falco_common::format_priority(priority_type v, bool shortfmt)
+{
+	string out;
+	if(!format_priority(v, out, shortfmt))
+	{
+		throw falco_exception("Unknown priority enum value: " + to_string(v));
+	}
+	return out;
 }
