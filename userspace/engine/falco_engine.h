@@ -203,6 +203,7 @@ public:
 	void add_filter(std::shared_ptr<gen_event_filter> filter,
 			std::string &rule,
 			std::string &source,
+			std::set<uint16_t> &evttypes,
 			std::set<std::string> &tags);
 
 	//

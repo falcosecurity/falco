@@ -17,6 +17,7 @@ limitations under the License.
 #include "falco_engine.h"
 #include "rule_loader.h"
 #include "filter_macro_resolver.h"
+#include "filter_evttype_resolver.h"
 
 #define MAX_VISIBILITY		((uint32_t) -1)
 #define THROW(cond, err)    { if (cond) { throw falco_exception(err); } }
@@ -701,11 +702,14 @@ void rule_loader::compile_rule_infos(
 					throw falco_exception("Rule " + rule.name + ": error " + err);
 				}
 			}
-			cfg.engine->add_filter(filter, rule.name, rule.source, rule.tags);
-			if (rule.source == falco_common::syscall_source && r.warn_evttypes)
+
+			set<uint16_t> evttypes;
+			if(rule.source == falco_common::syscall_source)
 			{
-				auto evttypes = filter->evttypes();
-				if (evttypes.size() == 0 || evttypes.size() > 100)
+				filter_evttype_resolver resolver;
+				resolver.evttypes(ast, evttypes);
+				if ((evttypes.empty() || evttypes.size() > 100)
+					&& r.warn_evttypes)
 				{
 					cfg.warnings.push_back(
 						"Rule " + rule.name + ": warning (no-evttype):\n" +
@@ -713,6 +717,18 @@ void rule_loader::compile_rule_infos(
 						+ "		 This has a significant performance penalty.");
 				}
 			}
+			else if (rule.source == "k8s_audit")
+			{
+				// todo(jasondellaluce): remove this case once k8saudit
+				// gets ported to a plugin
+				evttypes = { ppm_event_type::PPME_GENERIC_X };
+			}
+			else
+			{
+				evttypes = { ppm_event_type::PPME_PLUGINEVENT_E };
+			}
+
+			cfg.engine->add_filter(filter, rule.name, rule.source, evttypes, rule.tags);
 			cfg.engine->enable_rule(rule.name, r.enabled);
 		}
 		catch (exception& e)

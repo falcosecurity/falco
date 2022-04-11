@@ -62,6 +62,7 @@ private:
 	void visit(libsinsp::filter::ast::list_expr* e) override;
 	void visit(libsinsp::filter::ast::unary_check_expr* e) override;
 	void visit(libsinsp::filter::ast::binary_check_expr* e) override;
+	void inversion(std::set<uint16_t>& types);
 
 	bool m_expect_value;
 	std::set<uint16_t> m_last_node_evttypes;
