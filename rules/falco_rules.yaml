@@ -3110,10 +3110,7 @@
 
 -  macro: curl_download
    condition: proc.name = curl and
-              (proc.cmdline contains " > " or
-              proc.cmdline contains " >> " or
-              proc.cmdline contains " | " or
-              proc.cmdline contains " -o " or
+              (proc.cmdline contains " -o " or
               proc.cmdline contains " --output " or
               proc.cmdline contains " -O " or
               proc.cmdline contains " --remote-name ")
