@@ -33,110 +33,207 @@ class falco_engine;
 class rule_loader
 {
 public:
+	/*!
+		\brief Represents a section of text from which a certain info
+		struct has been decoded
+	*/
+	struct mark
+	{
+		std::string content;
+
+		/*!
+			\brief Wraps an error by adding info about the text section
+		*/
+		inline std::string error(std::string err)
+		{
+			err += "\n---\n";
+			err += trim(content);
+			err += "\n---";
+			return err;
+		}
+
+		/*!
+			\brief Appends another text section info to this one
+		*/
+		inline void append(mark& m)
+		{
+			content += "\n\n";
+			content += m.content;
+		}
+	};
 
 	/*!
-		\brief Erases the internal states and all the loaded rules
+		\brief Contains the info required to load rule definitions
+	*/
+	struct context
+	{
+		context(const std::string& cont): content(cont) {}
+		const std::string& content;
+		std::string output_extra;
+		bool replace_output_container_info;
+		falco_common::priority_type min_priority;
+		std::vector<std::string> warnings;
+		std::vector<std::string> errors;
+		falco_engine* engine;
+	};
+
+	/*!
+		\brief Represents infos about an engine version requirement
+	*/
+	struct engine_version_info
+	{
+		uint32_t version;
+	};
+
+	/*!
+		\brief Represents infos about a plugin version requirement
+	*/
+	struct plugin_version_info
+	{
+		std::string name;
+		std::string version;
+	};
+
+	/*!
+		\brief Represents infos about a list 
+	*/
+	struct list_info
+	{
+		mark context;
+		bool used;
+		size_t index;
+		size_t visibility;
+		std::string name;
+		std::vector<std::string> items;
+	};
+
+	/*!
+		\brief Represents infos about a macro 
+	*/
+	struct macro_info
+	{
+		mark context;
+		bool used;
+		size_t index;
+		size_t visibility;
+		std::string name;
+		std::string cond;
+		std::string source;
+		std::shared_ptr<libsinsp::filter::ast::expr> cond_ast;
+	};
+
+	/*!
+		\brief Represents infos about a single rule exception
+	*/
+	struct rule_exception_info
+	{
+		/*!
+			\brief This is necessary due to the dynamic-typed nature of
+			exceptions. Each of fields, comps, and values, can either be a
+			single value or a list of values. This is a simple hack to make
+			this easier to implement in C++, that is not non-dynamic-typed.
+		*/
+		struct entry {
+			bool is_list;
+			std::string item;
+			std::vector<entry> items;
+
+			inline bool is_valid() const
+			{
+				return (is_list && !items.empty())
+					|| (!is_list && !item.empty());
+			}
+		};
+
+		std::string name;
+		entry fields;
+		entry comps;
+		std::vector<entry> values;
+	};
+
+	/*!
+		\brief Represents infos about a rule 
+	*/
+	struct rule_info
+	{
+		mark context;
+		size_t index;
+		size_t visibility;
+		std::string name;
+		std::string cond;
+		std::string source;
+		std::string desc;
+		std::string output;
+		std::set<std::string> tags;
+		std::vector<rule_exception_info> exceptions;
+		falco_common::priority_type priority;
+		bool enabled;
+		bool warn_evttypes;
+		bool skip_if_unknown_filter;
+	};
+
+	/*!
+		\brief Erases all the internal state and definitions
 	*/
 	virtual void clear();
 
 	/*!
-		\brief Returns the rules loaded after the last invocation of load()
-	*/
-	virtual const indexed_vector<falco_rule>& rules();
-
-	/*!
-		\brief Configures the loader. The changes will influence the next
-		invocation of load().
-		\param min_priority The minimum priority below which rules are skipped
-		by the loader
-		\param extra Text to be appended/substituted in the output of all rules
-		\param replace_container_info If true, the extra string is used to
-		replace the "%container.info" token in rules outputs. If false, the
-		"%container.info" token is substituted with a default text and the
-		extra string is appended at the end of the rule output. If a rule
-		output does not contain "%container.info", then this flag has no effect
-		and the extra string is appended at the end of the rule output anyways.
-	*/
-	virtual void configure(
-		falco_common::priority_type min_priority,
-		bool replace_container_info,
-		const std::string& extra);
-
-	/*!
 		\brief Returns true if the given plugin name and version are compatible
-		with the loaded rulesets. If false is returned, required_version is
+		with the internal definitions. If false is returned, required_version is
 		filled with the required plugin version that didn't match.
 	*/
 	virtual bool is_plugin_compatible(
 		const std::string& name,
 		const std::string& version,
 		std::string& required_version);
+	
+	/*!
+		\brief Uses the internal state to compile a list of falco_rules
+	*/
+	bool compile(context& ctx, indexed_vector<falco_rule>& out);
 
 	/*!
-		\brief Parses the content of a ruleset. This should be called multiple
-		times to load different rulesets. The internal state (e.g. loaded
-		rules, plugin version requirements, etc...) gets updated at each
-		invocation of the load() method.
-		\param content The contents of the ruleset
-		\param engine The instance of falco_engine used to add rule filters
-		\param warnings Filled-out with warnings
-		\param warnings Filled-out with errors
-		\return true if the ruleset content is loaded successfully
+		\brief Defines an info block. If a similar info block is found
+		in the internal state (e.g. another rule with same name), then
+		the previous definition gets overwritten
 	*/
-	virtual bool load(
-		const std::string& content,
-		falco_engine* engine,
-		std::vector<std::string>& warnings,
-		std::vector<std::string>& errors);
+	virtual void define(context& ctx, engine_version_info& info);
+	virtual void define(context& ctx, plugin_version_info& info);
+	virtual void define(context& ctx, list_info& info);
+	virtual void define(context& ctx, macro_info& info);
+	virtual void define(context& ctx, rule_info& info);
+
+	/*!
+		\brief Appends an info block to an existing one. An exception
+		is thrown if no existing definition can be matched with the appended
+		one
+	*/
+	virtual void append(context& ctx, list_info& info);
+	virtual void append(context& ctx, macro_info& info);
+	virtual void append(context& ctx, rule_info& info);
+
+	/*!
+		\brief Updates the 'enabled' flag of an existing definition
+	*/
+	virtual void enable(context& ctx, rule_info& info);
 
 private:
-	typedef pair<
-		YAML::Node,
-		shared_ptr<libsinsp::filter::ast::expr>
-	> macro_node;
-
-	bool read(
-		const std::string& content, falco_engine* engine,
-		std::vector<std::string>& warnings, std::vector<std::string>& errors);
-	void read_item(
-		falco_engine* engine, YAML::Node& item, vector<string>& warnings);
-	void read_required_engine_version(
-		falco_engine* engine, YAML::Node& item, vector<string>& warnings);
-	void read_required_plugin_versions(
-		falco_engine* engine, YAML::Node& item, vector<string>& warnings);
-	void read_macro(
-		falco_engine* engine, YAML::Node& item, vector<string>& warnings);
-	void read_list(
-		falco_engine* engine, YAML::Node& item, vector<string>& warnings);
-	void read_rule(
-		falco_engine* engine, YAML::Node& item, vector<string>& warnings);
-	void read_rule_exceptions(
-		falco_engine* engine, YAML::Node& item, bool append);
-	bool expand(falco_engine* engine,
-		std::vector<std::string>& warnings, std::vector<std::string>& errors);
-	void expand_list_infos(
-		std::map<string, bool>& used, indexed_vector<YAML::Node>& out);
-	void expand_macro_infos(
-		const indexed_vector<YAML::Node>& lists,
-		std::map<string, bool>& used_lists,
-		std::map<string, bool>& used_macros,
-		indexed_vector<macro_node>& out);
-	void expand_rule_infos(
-		falco_engine* engine,
-		const indexed_vector<YAML::Node>& lists,
-		const indexed_vector<macro_node>& macros,
-		std::map<string, bool>& used_lists,
-		std::map<string, bool>& used_macros,
-		vector<string>& warnings);
-	void apply_output_substitutions(std::string& output);
+	void compile_list_infos(
+		context& ctx,
+		indexed_vector<list_info>& out);
+	void compile_macros_infos(
+		context& ctx,
+		indexed_vector<list_info>& lists,
+		indexed_vector<macro_info>& out);
+	void compile_rule_infos(
+		context& ctx,
+		indexed_vector<list_info>& lists,
+		indexed_vector<macro_info>& macros,
+		indexed_vector<falco_rule>& out);
 
 	uint32_t m_cur_index;
-	std::string m_extra;
-	bool m_replace_container_info;
-	falco_common::priority_type m_min_priority;
-	indexed_vector<falco_rule> m_rules;
-	indexed_vector<YAML::Node> m_rule_infos;
-	indexed_vector<YAML::Node> m_macro_infos;
-	indexed_vector<YAML::Node> m_list_infos;
+	indexed_vector<rule_info> m_rule_infos;
+	indexed_vector<macro_info> m_macro_infos;
+	indexed_vector<list_info> m_list_infos;
 	std::map<std::string, std::set<std::string>> m_required_plugin_versions;
 };
