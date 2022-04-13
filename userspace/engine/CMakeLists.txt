@@ -19,6 +19,7 @@ set(FALCO_ENGINE_SOURCE_FILES
     formats.cpp
     filter_macro_resolver.cpp
     rule_loader.cpp
+    rule_reader.cpp
     stats_manager.cpp)
 
 add_library(falco_engine STATIC ${FALCO_ENGINE_SOURCE_FILES})
