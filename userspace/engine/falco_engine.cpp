@@ -25,6 +25,7 @@ limitations under the License.
 #include "falco_engine.h"
 #include "falco_utils.h"
 #include "falco_engine_version.h"
+#include "rule_reader.h"
 
 #include "formats.h"
 
@@ -51,6 +52,7 @@ falco_engine::falco_engine(bool seed_rng)
 
 falco_engine::~falco_engine()
 {
+	m_rules.clear();
 	m_rule_loader.clear();
 	m_rule_stats_manager.clear();
 }
@@ -148,23 +150,33 @@ void falco_engine::load_rules(const string &rules_content, bool verbose, bool al
 
 void falco_engine::load_rules(const string &rules_content, bool verbose, bool all_events, uint64_t &required_engine_version)
 {
-	std::vector<std::string> warnings;
-	std::vector<std::string> errors;
-	m_rule_loader.configure(m_min_priority, m_replace_container_info, m_extra);
-	bool success = m_rule_loader.load(rules_content, this, warnings, errors);
+	rule_loader::context ctx(rules_content);
+	ctx.engine = this;
+	ctx.min_priority = m_min_priority;
+	ctx.output_extra = m_extra;
+	ctx.replace_output_container_info = m_replace_container_info;
+
 	std::ostringstream os;
-	if (!errors.empty())
+	rule_reader reader;
+	bool success = reader.load(ctx, m_rule_loader);
+	if (success)
 	{
-		os << errors.size() << " errors:" << std::endl;
-		for(auto &err : errors)
+		clear_filters();
+		m_rules.clear();
+		success = m_rule_loader.compile(ctx, m_rules);
+	}
+	if (!ctx.errors.empty())
+	{
+		os << ctx.errors.size() << " errors:" << std::endl;
+		for(auto &err : ctx.errors)
 		{
 			os << err << std::endl;
 		}
 	}
-	if (!warnings.empty())
+	if (!ctx.warnings.empty())
 	{
-		os << warnings.size() << " warnings:" << std::endl;
-		for(auto &warn : warnings)
+		os << ctx.warnings.size() << " warnings:" << std::endl;
+		for(auto &warn : ctx.warnings)
 		{
 			os << warn << std::endl;
 		}
@@ -315,7 +327,7 @@ unique_ptr<falco_engine::rule_result> falco_engine::process_event(std::size_t so
 		unique_ptr<struct rule_result> res(new rule_result());
 		// note: indexes are 0-based, whereas check_ids are not
 		auto rule_idx = ev->get_check_id() - 1;
-		auto rule = m_rule_loader.rules().at(rule_idx);
+		auto rule = m_rules.at(rule_idx);
 		if (!rule)
 		{
 			throw falco_exception("populate_rule_result error: unknown rule id "
@@ -328,7 +340,7 @@ unique_ptr<falco_engine::rule_result> falco_engine::process_event(std::size_t so
 		res->priority_num = rule->priority;
 		res->tags = rule->tags;
 		res->exception_fields = rule->exception_fields;
-		m_rule_stats_manager.on_event(m_rule_loader.rules(), rule_idx);
+		m_rule_stats_manager.on_event(m_rules, rule_idx);
 		return res;
 	}
 	catch(std::out_of_range const &exc)
@@ -374,7 +386,7 @@ void falco_engine::describe_rule(string *rule)
 	fprintf(stdout, rule_fmt, "----",  "-----------");
 	if (!rule)
 	{
-		for (auto &r : m_rule_loader.rules())
+		for (auto &r : m_rules)
 		{
 			auto str = falco::utils::wrap_text(r.description, 51, 110) + "\n";
 			fprintf(stdout, rule_fmt, r.name.c_str(), str.c_str());
@@ -382,7 +394,7 @@ void falco_engine::describe_rule(string *rule)
 	}
 	else
 	{
-		auto r = m_rule_loader.rules().at(*rule);
+		auto r = m_rules.at(*rule);
 		auto str = falco::utils::wrap_text(r->description, 51, 110) + "\n";
 		fprintf(stdout, rule_fmt, r->name.c_str(), str.c_str());
 	}
@@ -392,7 +404,7 @@ void falco_engine::describe_rule(string *rule)
 void falco_engine::print_stats()
 {
 	string out;
-	m_rule_stats_manager.format(m_rule_loader.rules(), out);
+	m_rule_stats_manager.format(m_rules, out);
 	// todo(jasondellaluce): introduce a logging callback in Falco
 	fprintf(stdout, "%s", out.c_str());
 }
