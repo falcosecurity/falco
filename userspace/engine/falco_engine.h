@@ -248,6 +248,7 @@ private:
 	std::vector<ruleset_node> m_rulesets;
 
 	rule_loader m_rule_loader;
+	indexed_vector<falco_rule> m_rules;
 	stats_manager m_rule_stats_manager;
 
 	uint16_t m_next_ruleset_id;
