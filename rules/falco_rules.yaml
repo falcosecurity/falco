@@ -3165,6 +3165,17 @@
   priority: CRITICAL
   tags: [process, mitre_privilege_escalation]
 
+# This rule helps detect CVE-2022-4092:
+# A privilege escalation container escaping in cgroup
+- rule: Linux Cgroup Container Escape Vulnerability (CVE-2022-4092)
+  desc: "Detect an attempt to exploit a container escape vulnerability in the Linux Kernel (CVE-2022-0492). By running a container with certains capabilities, a privileged user can modify release_agent file and escape from the container"
+  condition:
+    open_write and fd.name endswith release_agent and (user.uid=0 or thread.cap_permitted contains CAP_DAC_OVERRIDE) and excessively_capable_container
+  output:
+    "Detect cgroup container escaping attempt (CVE-2022-4092) (user=%user.name user_loginuid=%user.loginuid filename=%fd.name %container.info image=%container.image.repository:%container.image.tag cap_permitted=%thread.cap_permitted)"
+  priority: CRITICAL
+  tags: [container, mitre_privilege_escalation, mitre_lateral_movement]
+
 # Application rules have moved to application_rules.yaml. Please look
 # there if you want to enable them by adding to
 # falco_rules.local.yaml.
