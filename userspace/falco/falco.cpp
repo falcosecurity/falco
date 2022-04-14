@@ -763,6 +763,9 @@ int falco_init(int argc, char **argv)
 			}
 		}
 
+		// Free-up memory for the rule loader, which is not used from now on
+		engine->clear_loader();
+
 		for (auto substring : app.options().disabled_rule_substrings)
 		{
 			falco_logger::log(LOG_INFO, "Disabling rules matching substring: " + substring + "\n");

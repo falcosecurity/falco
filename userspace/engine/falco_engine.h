@@ -119,6 +119,15 @@ public:
 	void clear_filters();
 
 	//
+	// Clear all the definitions of the internal rule loader (e.g. defined
+	// rules, macros, lists, engine/plugin version requirements). This is meant
+	// to be used to free-up memory at runtime when the definitions are not
+	// used anymore. Calling this between successive invocations of load_rules
+	// or load_rules_file can cause failures of features like appending.
+	//
+	void clear_loader();
+
+	//
 	// Set the sampling ratio, which can affect which events are
 	// matched against the set of rules.
 	//
