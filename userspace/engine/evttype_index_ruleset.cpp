@@ -160,10 +160,17 @@ void evttype_index_ruleset::add(
 		sinsp_filter_compiler compiler(m_filter_factory, condition.get());
 		shared_ptr<gen_event_filter> filter(compiler.compile());
 		std::shared_ptr<filter_wrapper> wrap(new filter_wrapper());
-		filter_evttype_resolver resolver;
 		wrap->rule = rule;
 		wrap->filter = filter;
-		resolver.evttypes(condition, wrap->evttypes);
+		if(rule.source == falco_common::syscall_source)
+		{
+			filter_evttype_resolver resolver;
+			resolver.evttypes(condition, wrap->evttypes);
+		}
+		else
+		{
+			wrap->evttypes = { ppm_event_type::PPME_PLUGINEVENT_E };
+		}
 		m_filters.insert(wrap);
 	}
 	catch (const sinsp_exception& e)

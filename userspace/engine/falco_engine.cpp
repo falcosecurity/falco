@@ -169,7 +169,7 @@ void falco_engine::load_rules(const string &rules_content, bool verbose, bool al
 void falco_engine::load_rules(const string &rules_content, bool verbose, bool all_events, uint64_t &required_engine_version)
 {
 	rule_loader::configuration cfg(rules_content);
-	cfg.engine = this;
+	cfg.sources = m_sources;
 	cfg.min_priority = m_min_priority;
 	cfg.output_extra = m_extra;
 	cfg.replace_output_container_info = m_replace_container_info;
@@ -179,7 +179,10 @@ void falco_engine::load_rules(const string &rules_content, bool verbose, bool al
 	bool success = reader.load(cfg, m_rule_loader);
 	if (success)
 	{
-		clear_filters();
+		for (auto &s : m_sources)
+		{
+			s.ruleset->clear();
+		}
 		m_rules.clear();
 		success = m_rule_loader.compile(cfg, m_rules);
 	}

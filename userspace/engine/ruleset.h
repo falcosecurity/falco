@@ -16,11 +16,11 @@ limitations under the License.
 
 #pragma once
 
+#include "falco_rule.h"
+#include <filter/ast.h>
 #include <filter.h>
 #include <event.h>
 #include <gen_filter.h>
-#include <filter/ast.h>
-#include "falco_rule.h"
 
 /*!
 	\brief Represents a manager for rulesets.A ruleset represents a set of
