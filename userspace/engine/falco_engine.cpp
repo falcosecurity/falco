@@ -444,6 +444,11 @@ void falco_engine::clear_filters()
 	}
 }
 
+void falco_engine::clear_loader()
+{
+	m_rule_loader.clear();
+}
+
 void falco_engine::set_sampling_ratio(uint32_t sampling_ratio)
 {
 	m_sampling_ratio = sampling_ratio;
