@@ -21,10 +21,8 @@ limitations under the License.
 #include <vector>
 #include <yaml-cpp/yaml.h>
 #include "falco_rule.h"
+#include "falco_source.h"
 #include "indexed_vector.h"
-
-// todo(jasondellaluce): remove this cyclic dependency
-class falco_engine;
 
 
 /*!
@@ -73,9 +71,9 @@ public:
 		std::string output_extra;
 		bool replace_output_container_info;
 		falco_common::priority_type min_priority;
+		indexed_vector<falco_source> sources;
 		std::vector<std::string> warnings;
 		std::vector<std::string> errors;
-		falco_engine* engine;
 	};
 
 	/*!
