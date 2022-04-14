@@ -512,7 +512,7 @@
 - rule: K8s Serviceaccount Created
   desc: Detect any attempt to create a service account
   condition: (kactivity and kcreate and serviceaccount and response_successful)
-  output: K8s Serviceaccount Created (user=%ka.user.name user=%ka.target.name ns=%ka.target.namespace resp=%ka.response.code decision=%ka.auth.decision reason=%ka.auth.reason)
+  output: K8s Serviceaccount Created (user=%ka.user.name serviceaccount=%ka.target.name ns=%ka.target.namespace resp=%ka.response.code decision=%ka.auth.decision reason=%ka.auth.reason)
   priority: INFO
   source: k8s_audit
   tags: [k8s]
@@ -520,7 +520,7 @@
 - rule: K8s Serviceaccount Deleted
   desc: Detect any attempt to delete a service account
   condition: (kactivity and kdelete and serviceaccount and response_successful)
-  output: K8s Serviceaccount Deleted (user=%ka.user.name user=%ka.target.name ns=%ka.target.namespace resp=%ka.response.code decision=%ka.auth.decision reason=%ka.auth.reason)
+  output: K8s Serviceaccount Deleted (user=%ka.user.name serviceaccount=%ka.target.name ns=%ka.target.namespace resp=%ka.response.code decision=%ka.auth.decision reason=%ka.auth.reason)
   priority: INFO
   source: k8s_audit
   tags: [k8s]
