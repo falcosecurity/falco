@@ -37,7 +37,7 @@ public:
 		\brief Represents a section of text from which a certain info
 		struct has been decoded
 	*/
-	struct mark
+	struct context
 	{
 		std::string content;
 
@@ -55,7 +55,7 @@ public:
 		/*!
 			\brief Appends another text section info to this one
 		*/
-		inline void append(mark& m)
+		inline void append(context& m)
 		{
 			content += "\n\n";
 			content += m.content;
@@ -65,9 +65,9 @@ public:
 	/*!
 		\brief Contains the info required to load rule definitions
 	*/
-	struct context
+	struct configuration
 	{
-		context(const std::string& cont): content(cont) {}
+		configuration(const std::string& cont): content(cont) {}
 		const std::string& content;
 		std::string output_extra;
 		bool replace_output_container_info;
@@ -99,7 +99,7 @@ public:
 	*/
 	struct list_info
 	{
-		mark context;
+		context ctx;
 		bool used;
 		size_t index;
 		size_t visibility;
@@ -112,7 +112,7 @@ public:
 	*/
 	struct macro_info
 	{
-		mark context;
+		context ctx;
 		bool used;
 		size_t index;
 		size_t visibility;
@@ -156,7 +156,7 @@ public:
 	*/
 	struct rule_info
 	{
-		mark context;
+		context ctx;
 		size_t index;
 		size_t visibility;
 		std::string name;
@@ -190,43 +190,43 @@ public:
 	/*!
 		\brief Uses the internal state to compile a list of falco_rules
 	*/
-	bool compile(context& ctx, indexed_vector<falco_rule>& out);
+	bool compile(configuration& cfg, indexed_vector<falco_rule>& out);
 
 	/*!
 		\brief Defines an info block. If a similar info block is found
 		in the internal state (e.g. another rule with same name), then
 		the previous definition gets overwritten
 	*/
-	virtual void define(context& ctx, engine_version_info& info);
-	virtual void define(context& ctx, plugin_version_info& info);
-	virtual void define(context& ctx, list_info& info);
-	virtual void define(context& ctx, macro_info& info);
-	virtual void define(context& ctx, rule_info& info);
+	virtual void define(configuration& cfg, engine_version_info& info);
+	virtual void define(configuration& cfg, plugin_version_info& info);
+	virtual void define(configuration& cfg, list_info& info);
+	virtual void define(configuration& cfg, macro_info& info);
+	virtual void define(configuration& cfg, rule_info& info);
 
 	/*!
 		\brief Appends an info block to an existing one. An exception
 		is thrown if no existing definition can be matched with the appended
 		one
 	*/
-	virtual void append(context& ctx, list_info& info);
-	virtual void append(context& ctx, macro_info& info);
-	virtual void append(context& ctx, rule_info& info);
+	virtual void append(configuration& cfg, list_info& info);
+	virtual void append(configuration& cfg, macro_info& info);
+	virtual void append(configuration& cfg, rule_info& info);
 
 	/*!
 		\brief Updates the 'enabled' flag of an existing definition
 	*/
-	virtual void enable(context& ctx, rule_info& info);
+	virtual void enable(configuration& cfg, rule_info& info);
 
 private:
 	void compile_list_infos(
-		context& ctx,
+		configuration& cfg,
 		indexed_vector<list_info>& out);
 	void compile_macros_infos(
-		context& ctx,
+		configuration& cfg,
 		indexed_vector<list_info>& lists,
 		indexed_vector<macro_info>& out);
 	void compile_rule_infos(
-		context& ctx,
+		configuration& cfg,
 		indexed_vector<list_info>& lists,
 		indexed_vector<macro_info>& macros,
 		indexed_vector<falco_rule>& out);

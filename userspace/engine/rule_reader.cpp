@@ -18,13 +18,13 @@ limitations under the License.
 
 #define THROW(cond, err)    { if (cond) { throw falco_exception(err); } }
 
-static rule_loader::mark yaml_get_mark(
+static rule_loader::context yaml_get_context(
 		const string& content,
 		const vector<YAML::Node>& docs,
 		vector<YAML::Node>::iterator doc,
 		YAML::iterator node)
 {
-	rule_loader::mark m;
+	rule_loader::context m;
 	YAML::Node item = *node++;
 	YAML::Node cur_doc = *doc++;
 	// include the "- " sequence mark
@@ -151,17 +151,17 @@ static void read_rule_exceptions(
 }
 
 static void read_item(
-		rule_loader::context& ctx,
+		rule_loader::configuration& cfg,
 		rule_loader& loader,
 		const YAML::Node& item,
-		const rule_loader::mark& m)
+		const rule_loader::context& ctx)
 {
 	if (item["required_engine_version"].IsDefined())
 	{
 		rule_loader::engine_version_info v;
 		THROW(!decode_val(item["required_engine_version"], v.version),
 			"Value of required_engine_version must be a number");
-		loader.define(ctx, v);
+		loader.define(cfg, v);
 	}
 	else if(item["required_plugin_versions"].IsDefined())
 	{
@@ -175,13 +175,13 @@ static void read_item(
 				"required_plugin_versions item must have name property");
 			THROW(!decode_val(plugin["version"], v.version) || v.version.empty(),
 				"required_plugin_versions item must have version property");
-			loader.define(ctx, v);
+			loader.define(cfg, v);
 		}
 	}
 	else if(item["list"].IsDefined())
 	{
 		rule_loader::list_info v;
-		v.context = m;
+		v.ctx = ctx;
 		bool append = false;
 		THROW(!decode_val(item["list"], v.name) || v.name.empty(),
 			"List name is empty");
@@ -189,17 +189,17 @@ static void read_item(
 			"List must have property items");
 		if(decode_val(item["append"], append) && append)
 		{
-			loader.append(ctx, v);
+			loader.append(cfg, v);
 		}
 		else
 		{
-			loader.define(ctx, v);
+			loader.define(cfg, v);
 		}
 	}
 	else if(item["macro"].IsDefined())
 	{
 		rule_loader::macro_info v;
-		v.context = m;
+		v.ctx = ctx;
 		bool append = false;
 		v.source = falco_common::syscall_source;
 		THROW(!decode_val(item["macro"], v.name) || v.name.empty(),
@@ -209,17 +209,17 @@ static void read_item(
 		decode_val(item["source"], v.source);
 		if(decode_val(item["append"], append) && append)
 		{
-			loader.append(ctx, v);
+			loader.append(cfg, v);
 		}
 		else
 		{
-			loader.define(ctx, v);
+			loader.define(cfg, v);
 		}
 	}
 	else if(item["rule"].IsDefined())
 	{
 		rule_loader::rule_info v;
-		v.context = m;
+		v.ctx = ctx;
 		bool append = false;
 		v.enabled = true;
 		v.warn_evttypes = true;
@@ -233,7 +233,7 @@ static void read_item(
 			{
 				read_rule_exceptions(item["exceptions"], v);
 			}
-			loader.append(ctx, v);
+			loader.append(cfg, v);
 		}
 		else
 		{
@@ -246,7 +246,7 @@ static void read_item(
 			if (!has_defs)
 			{
 				THROW(!has_enabled, "Rule must have properties 'condition', 'output', 'desc', and 'priority'");
-				loader.enable(ctx, v);
+				loader.enable(cfg, v);
 			}
 			else
 			{
@@ -262,26 +262,26 @@ static void read_item(
 				{
 					read_rule_exceptions(item["exceptions"], v);
 				}
-				loader.define(ctx, v);
+				loader.define(cfg, v);
 			}
 		}
 	}
 	else
 	{
-		ctx.warnings.push_back("Unknown top level object");
+		cfg.warnings.push_back("Unknown top level object");
 	}
 }
 
-bool rule_reader::load(rule_loader::context& ctx, rule_loader& loader)
+bool rule_reader::load(rule_loader::configuration& cfg, rule_loader& loader)
 {
 	std::vector<YAML::Node> docs;
 	try
 	{
-		docs = YAML::LoadAll(ctx.content);
+		docs = YAML::LoadAll(cfg.content);
 	}
 	catch(const exception& e)
 	{
-		ctx.errors.push_back("Could not load YAML file: " + string(e.what()));
+		cfg.errors.push_back("Could not load YAML file: " + string(e.what()));
 		return false;
 	}
 	
@@ -291,12 +291,12 @@ bool rule_reader::load(rule_loader::context& ctx, rule_loader& loader)
 		{
 			if(!doc->IsMap() && !doc->IsSequence())
 			{
-				ctx.errors.push_back("Rules content is not yaml");
+				cfg.errors.push_back("Rules content is not yaml");
 				return false;
 			}
 			if(!doc->IsSequence())
 			{
-				ctx.errors.push_back(
+				cfg.errors.push_back(
 					"Rules content is not yaml array of objects");
 				return false;
 			}
@@ -304,17 +304,17 @@ bool rule_reader::load(rule_loader::context& ctx, rule_loader& loader)
 			{
 				if (!it->IsNull())
 				{
-					rule_loader::mark m = yaml_get_mark(ctx.content, docs, doc, it);
+					auto ctx = yaml_get_context(cfg.content, docs, doc, it);
 					YAML::Node item = *it;
 					try
 					{
 						THROW(!item.IsMap(), "Unexpected element type. "
 							"Each element should be a yaml associative array.");
-						read_item(ctx, loader, item, m);
+						read_item(cfg, loader, item, ctx);
 					}
 					catch(const exception& e)
 					{
-						ctx.errors.push_back(m.error(e.what()));
+						cfg.errors.push_back(ctx.error(e.what()));
 						return false;
 					}
 				}

@@ -150,33 +150,33 @@ void falco_engine::load_rules(const string &rules_content, bool verbose, bool al
 
 void falco_engine::load_rules(const string &rules_content, bool verbose, bool all_events, uint64_t &required_engine_version)
 {
-	rule_loader::context ctx(rules_content);
-	ctx.engine = this;
-	ctx.min_priority = m_min_priority;
-	ctx.output_extra = m_extra;
-	ctx.replace_output_container_info = m_replace_container_info;
+	rule_loader::configuration cfg(rules_content);
+	cfg.engine = this;
+	cfg.min_priority = m_min_priority;
+	cfg.output_extra = m_extra;
+	cfg.replace_output_container_info = m_replace_container_info;
 
 	std::ostringstream os;
 	rule_reader reader;
-	bool success = reader.load(ctx, m_rule_loader);
+	bool success = reader.load(cfg, m_rule_loader);
 	if (success)
 	{
 		clear_filters();
 		m_rules.clear();
-		success = m_rule_loader.compile(ctx, m_rules);
+		success = m_rule_loader.compile(cfg, m_rules);
 	}
-	if (!ctx.errors.empty())
+	if (!cfg.errors.empty())
 	{
-		os << ctx.errors.size() << " errors:" << std::endl;
-		for(auto &err : ctx.errors)
+		os << cfg.errors.size() << " errors:" << std::endl;
+		for(auto &err : cfg.errors)
 		{
 			os << err << std::endl;
 		}
 	}
-	if (!ctx.warnings.empty())
+	if (!cfg.warnings.empty())
 	{
-		os << ctx.warnings.size() << " warnings:" << std::endl;
-		for(auto &warn : ctx.warnings)
+		os << cfg.warnings.size() << " warnings:" << std::endl;
+		for(auto &warn : cfg.warnings)
 		{
 			os << warn << std::endl;
 		}

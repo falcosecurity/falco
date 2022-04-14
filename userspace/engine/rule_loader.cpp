@@ -36,7 +36,7 @@ static void quote_item(string& e)
 	}
 }
 
-static void paren_item(std::string& e)
+static void paren_item(string& e)
 {
 	if(e[0] != '(')
 	{
@@ -44,7 +44,8 @@ static void paren_item(std::string& e)
 	}
 }
 
-static bool is_field_defined(falco_engine *engine, string source, string field)
+static bool is_field_defined(
+	falco_engine *engine, const string& source, string field)
 {
 	auto factory = engine->get_filter_factory(source);
 	if(factory)
@@ -60,7 +61,7 @@ static bool is_field_defined(falco_engine *engine, string source, string field)
 }
 
 // todo(jasondellaluce): add an helper in libsinsp for this
-static bool is_operator_defined(std::string op)
+static bool is_operator_defined(const string& op)
 {
 	static vector<string> ops = {"=", "==", "!=", "<=", ">=", "<", ">",
 		"contains", "icontains", "bcontains", "glob", "bstartswith",
@@ -69,7 +70,7 @@ static bool is_operator_defined(std::string op)
 }
 
 // todo(jasondellaluce): add an helper in libsinsp for this
-static bool is_operator_for_list(std::string op)
+static bool is_operator_for_list(const string& op)
 {
 	return op == "in" || op == "intersects" || op == "pmatch";
 }
@@ -89,7 +90,6 @@ static bool is_format_valid(
 		return false;
 	}
 }
-
 
 template <typename T>
 static inline void define_info(indexed_vector<T>& infos, T& info, uint32_t id)
@@ -113,11 +113,11 @@ template <typename T>
 static inline void append_info(T* prev, T& info, uint32_t id)
 {
 	prev->visibility = id;
-	prev->context.append(info.context);
+	prev->ctx.append(info.ctx);
 }
 
 static void validate_exception_info(
-	rule_loader::context& ctx,
+	rule_loader::configuration& cfg,
 	rule_loader::rule_exception_info &ex,
 	const string& source)
 {
@@ -142,7 +142,7 @@ static void validate_exception_info(
 		}
 		for (auto &v : ex.fields.items)
 		{
-			THROW(!is_field_defined(ctx.engine, source, v.item),
+			THROW(!is_field_defined(cfg.engine, source, v.item),
 				"Rule exception item " + ex.name + ": field name "
 					+ v.item + " is not a supported filter field");
 		}
@@ -159,14 +159,14 @@ static void validate_exception_info(
 		THROW(!is_operator_defined(ex.comps.item),
 			"Rule exception item " + ex.name + ": comparison operator "
 				+ ex.comps.item + " is not a supported comparison operator");
-		THROW(!is_field_defined(ctx.engine, source, ex.fields.item),
+		THROW(!is_field_defined(cfg.engine, source, ex.fields.item),
 			"Rule exception item " + ex.name + ": field name "
 				+ ex.fields.item + " is not a supported filter field");
 	}
 }
 
 static void build_rule_exception_infos(
-	vector<rule_loader::rule_exception_info> exceptions,
+	vector<rule_loader::rule_exception_info>& exceptions,
 	set<string>& exception_fields,
 	string& condition)
 {
@@ -370,8 +370,11 @@ static shared_ptr<ast::expr> parse_condition(
 }
 
 static shared_ptr<gen_event_filter> compile_condition(
-		falco_engine* engine, uint32_t id, shared_ptr<ast::expr> cnd,
-		string src, string& err)
+		falco_engine* engine,
+		uint32_t id,
+		shared_ptr<ast::expr> cnd,
+		string src,
+		string& err)
 {
 	try
 	{
@@ -392,18 +395,20 @@ static shared_ptr<gen_event_filter> compile_condition(
 	return nullptr;
 }
 
-void apply_output_substitutions(rule_loader::context ctx, string& out)
+static void apply_output_substitutions(
+	rule_loader::configuration& cfg,
+	string& out)
 {
 	if (out.find(s_container_info_fmt) != string::npos)
 	{
-		if (ctx.replace_output_container_info)
+		if (cfg.replace_output_container_info)
 		{
-			out = replace(out, s_container_info_fmt, ctx.output_extra);
+			out = replace(out, s_container_info_fmt, cfg.output_extra);
 			return;
 		}
 		out = replace(out, s_container_info_fmt, s_default_extra_fmt);
 	}
-	out += ctx.output_extra.empty() ? "" : " " + ctx.output_extra;
+	out += cfg.output_extra.empty() ? "" : " " + cfg.output_extra;
 }
 
 void rule_loader::clear()
@@ -443,24 +448,24 @@ bool rule_loader::is_plugin_compatible(
 	return true;
 }
 
-void rule_loader::define(context& ctx, engine_version_info& info)
+void rule_loader::define(configuration& cfg, engine_version_info& info)
 {
 	auto v = falco_engine::engine_version();
 	THROW(v < info.version, "Rules require engine version "
 		+ to_string(info.version) + ", but engine version is " + to_string(v));
 }
 
-void rule_loader::define(context& ctx, plugin_version_info& info)
+void rule_loader::define(configuration& cfg, plugin_version_info& info)
 {
 	m_required_plugin_versions[info.name].insert(info.version);
 }
 
-void rule_loader::define(context& ctx, list_info& info)
+void rule_loader::define(configuration& cfg, list_info& info)
 {
 	define_info(m_list_infos, info, m_cur_index++);
 }
 
-void rule_loader::append(context& ctx, list_info& info)
+void rule_loader::append(configuration& cfg, list_info& info)
 {
 	auto prev = m_list_infos.at(info.name);
 	THROW(!prev, "List " + info.name +
@@ -469,11 +474,11 @@ void rule_loader::append(context& ctx, list_info& info)
 	append_info(prev, info, m_cur_index++);
 }
 
-void rule_loader::define(context& ctx, macro_info& info)
+void rule_loader::define(configuration& cfg, macro_info& info)
 {
-	if (!ctx.engine->is_source_valid(info.source))
+	if (!cfg.engine->is_source_valid(info.source))
 	{
-		ctx.warnings.push_back("Macro " + info.name
+		cfg.warnings.push_back("Macro " + info.name
 			+ ": warning (unknown-source): unknown source "
 			+ info.source + ", skipping");
 		return;
@@ -481,7 +486,7 @@ void rule_loader::define(context& ctx, macro_info& info)
 	define_info(m_macro_infos, info, m_cur_index++);
 }
 
-void rule_loader::append(context& ctx, macro_info& info)
+void rule_loader::append(configuration& cfg, macro_info& info)
 {
 	auto prev = m_macro_infos.at(info.name);
 	THROW(!prev, "Macro " + info.name
@@ -491,11 +496,11 @@ void rule_loader::append(context& ctx, macro_info& info)
 	append_info(prev, info, m_cur_index++);
 }
 
-void rule_loader::define(context& ctx, rule_info& info)
+void rule_loader::define(configuration& cfg, rule_info& info)
 {
-	if (!ctx.engine->is_source_valid(info.source))
+	if (!cfg.engine->is_source_valid(info.source))
 	{
-		ctx.warnings.push_back("Rule " + info.name
+		cfg.warnings.push_back("Rule " + info.name
 			+ ": warning (unknown-source): unknown source "
 			+ info.source + ", skipping");
 		return;
@@ -509,13 +514,13 @@ void rule_loader::define(context& ctx, rule_info& info)
 	{
 		THROW(!ex.fields.is_valid(), "Rule exception item "
 			+ ex.name + ": must have fields property with a list of fields");
-		validate_exception_info(ctx, ex, info.source);
+		validate_exception_info(cfg, ex, info.source);
 	}
 
 	define_info(m_rule_infos, info, m_cur_index++);
 }
 
-void rule_loader::append(context& ctx, rule_info& info)
+void rule_loader::append(configuration& cfg, rule_info& info)
 {
 	auto prev = m_rule_infos.at(info.name);
 	THROW(!prev, "Rule " + info.name
@@ -540,7 +545,7 @@ void rule_loader::append(context& ctx, rule_info& info)
 				+ ex.name + ": must have fields property with a list of fields");
 			THROW(ex.values.empty(), "Rule exception new item "
 				+ ex.name + ": must have fields property with a list of values");
-			validate_exception_info(ctx, ex, prev->source);
+			validate_exception_info(cfg, ex, prev->source);
 			prev->exceptions.push_back(ex);
 		}
 		else
@@ -556,7 +561,7 @@ void rule_loader::append(context& ctx, rule_info& info)
 	append_info(prev, info, m_cur_index++);
 }
 
-void rule_loader::enable(context& ctx, rule_info& info)
+void rule_loader::enable(configuration& cfg, rule_info& info)
 {
 	auto prev = m_rule_infos.at(info.name);
 	THROW(!prev, "Rule " + info.name
@@ -564,7 +569,7 @@ void rule_loader::enable(context& ctx, rule_info& info)
 	prev->enabled = info.enabled;
 }
 
-void rule_loader::compile_list_infos(context& ctx, indexed_vector<list_info>& out)
+void rule_loader::compile_list_infos(configuration& cfg, indexed_vector<list_info>& out)
 {
 	string tmp;
 	vector<string> used;
@@ -598,7 +603,7 @@ void rule_loader::compile_list_infos(context& ctx, indexed_vector<list_info>& ou
 		}
 		catch (exception& e)
 		{
-			throw falco_exception(list.context.error(e.what()));
+			throw falco_exception(list.ctx.error(e.what()));
 		}
 	}
 	for (auto &v : used)
@@ -609,17 +614,17 @@ void rule_loader::compile_list_infos(context& ctx, indexed_vector<list_info>& ou
 
 // note: there is a visibility ordering between macros
 void rule_loader::compile_macros_infos(
-	context& ctx,
+	configuration& cfg,
 	indexed_vector<list_info>& lists,
 	indexed_vector<macro_info>& out)
 {
 	set<string> used;
-	mark* info_ctx = NULL;
+	context* info_ctx = NULL;
 	try
 	{
 		for (auto &m : m_macro_infos)
 		{
-			info_ctx = &m.context;
+			info_ctx = &m.ctx;
 			macro_info entry = m;
 			entry.cond_ast = parse_condition(m.cond, lists);
 			entry.used = false;
@@ -627,7 +632,7 @@ void rule_loader::compile_macros_infos(
 		}
 		for (auto &m : out)
 		{
-			info_ctx = &m.context;
+			info_ctx = &m.ctx;
 			resolve_macros(out, m.cond_ast, m.visibility,
 				"Compilation error when compiling \"" + m.cond + "\": ");
 		}
@@ -640,7 +645,7 @@ void rule_loader::compile_macros_infos(
 
 
 void rule_loader::compile_rule_infos(
-	context& ctx,
+	configuration& cfg,
 	indexed_vector<list_info>& lists,
 	indexed_vector<macro_info>& macros,
 	indexed_vector<falco_rule>& out)
@@ -650,7 +655,7 @@ void rule_loader::compile_rule_infos(
 	{
 		try
 		{
-			if (r.priority > ctx.min_priority)
+			if (r.priority > cfg.min_priority)
 			{
 				continue;
 			}
@@ -668,9 +673,9 @@ void rule_loader::compile_rule_infos(
 			rule.output = r.output;
 			if (r.source == falco_common::syscall_source)
 			{
-				apply_output_substitutions(ctx, rule.output);
+				apply_output_substitutions(cfg, rule.output);
 			}
-			THROW(!is_format_valid(ctx.engine, r.source, rule.output, err), 
+			THROW(!is_format_valid(cfg.engine, r.source, rule.output, err), 
 				"Invalid output format '" + rule.output + "': '" + err + "'");
 			
 			
@@ -681,13 +686,13 @@ void rule_loader::compile_rule_infos(
 			rule.tags = r.tags;
 			// note: indexes are 0-based, but 0 is not an acceptable rule_id
 			auto id = out.insert(rule, rule.name) + 1;
-			auto filter = compile_condition(ctx.engine, id, ast, rule.source, err);
+			auto filter = compile_condition(cfg.engine, id, ast, rule.source, err);
 			if (!filter)
 			{
 				if (r.skip_if_unknown_filter
 					&& err.find("nonexistent field") != string::npos)
 				{
-					ctx.warnings.push_back(
+					cfg.warnings.push_back(
 						"Rule " + rule.name + ": warning (unknown-field):");
 					continue;
 				}
@@ -696,28 +701,28 @@ void rule_loader::compile_rule_infos(
 					throw falco_exception("Rule " + rule.name + ": error " + err);
 				}
 			}
-			ctx.engine->add_filter(filter, rule.name, rule.source, rule.tags);
+			cfg.engine->add_filter(filter, rule.name, rule.source, rule.tags);
 			if (rule.source == falco_common::syscall_source && r.warn_evttypes)
 			{
 				auto evttypes = filter->evttypes();
 				if (evttypes.size() == 0 || evttypes.size() > 100)
 				{
-					ctx.warnings.push_back(
+					cfg.warnings.push_back(
 						"Rule " + rule.name + ": warning (no-evttype):\n" +
 						+ "		 matches too many evt.type values.\n"
 						+ "		 This has a significant performance penalty.");
 				}
 			}
-			ctx.engine->enable_rule(rule.name, r.enabled);
+			cfg.engine->enable_rule(rule.name, r.enabled);
 		}
 		catch (exception& e)
 		{
-			throw falco_exception(r.context.error(e.what()));
+			throw falco_exception(r.ctx.error(e.what()));
 		}
 	}
 }
 
-bool rule_loader::compile(context& ctx, indexed_vector<falco_rule>& out)
+bool rule_loader::compile(configuration& cfg, indexed_vector<falco_rule>& out)
 {
 	indexed_vector<list_info> lists;
 	indexed_vector<macro_info> macros;
@@ -725,13 +730,13 @@ bool rule_loader::compile(context& ctx, indexed_vector<falco_rule>& out)
 	// expand all lists, macros, and rules
 	try
 	{
-		compile_list_infos(ctx, lists);
-		compile_macros_infos(ctx, lists, macros);
-		compile_rule_infos(ctx, lists, macros, out);
+		compile_list_infos(cfg, lists);
+		compile_macros_infos(cfg, lists, macros);
+		compile_rule_infos(cfg, lists, macros, out);
 	}
 	catch (exception& e)
 	{
-		ctx.errors.push_back(e.what());
+		cfg.errors.push_back(e.what());
 		return false;
 	}
 
@@ -740,7 +745,7 @@ bool rule_loader::compile(context& ctx, indexed_vector<falco_rule>& out)
 	{
 		if (!m.used)
 		{
-			ctx.warnings.push_back("macro " + m.name
+			cfg.warnings.push_back("macro " + m.name
 				+ " not referred to by any rule/macro");
 		}
 	}
@@ -748,7 +753,7 @@ bool rule_loader::compile(context& ctx, indexed_vector<falco_rule>& out)
 	{
 		if (!l.used)
 		{
-			ctx.warnings.push_back("list " + l.name
+			cfg.warnings.push_back("list " + l.name
 				+ " not referred to by any rule/macro/list");
 		}
 	}
