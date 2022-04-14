@@ -22,6 +22,7 @@ limitations under the License.
 
 struct falco_rule
 {
+	size_t id;
 	std::string source;
 	std::string name;
 	std::string description;
