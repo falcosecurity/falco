@@ -31,5 +31,5 @@ public:
 		\brief Reads the contents of a ruleset and uses a loader to store
         thew new definitions
 	*/
-	virtual bool load(rule_loader::context& ctx, rule_loader& loader);
+	virtual bool load(rule_loader::configuration& cfg, rule_loader& loader);
 };
