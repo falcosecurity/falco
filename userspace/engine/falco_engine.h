@@ -33,6 +33,7 @@ limitations under the License.
 #include "rule_loader.h"
 #include "stats_manager.h"
 #include "falco_common.h"
+#include "falco_source.h"
 
 //
 // This class acts as the primary interface between a program and the
@@ -76,6 +77,7 @@ public:
 	// context of the provided ruleset. The ruleset (id) can later
 	// be passed as an argument to process_event(). This allows
 	// for different sets of rules being active at once.
+	// The rules are matched against the rulesets of all the defined sources.
 	//
 	void enable_rule(const std::string &substring, bool enabled, const std::string &ruleset = s_default_ruleset);
 
@@ -97,10 +99,13 @@ public:
 	// to enable_rule/enable_rule_by_tag(), you should look up the
 	// ruleset id and pass it to process_event().
 	//
-	uint16_t find_ruleset_id(const std::string &ruleset);
+	uint16_t find_ruleset_id(
+		const std::string &ruleset,
+		const std::string &source = falco_common::syscall_source);
 
 	//
 	// Return the number of falco rules enabled for the provided ruleset
+	// across all sources.
 	//
 	uint64_t num_rules_for_ruleset(const std::string &ruleset);
 
@@ -187,24 +192,19 @@ public:
 	std::size_t add_source(const std::string &source,
 			       std::shared_ptr<gen_event_filter_factory> filter_factory,
 			       std::shared_ptr<gen_event_formatter_factory> formatter_factory);
-
-	// todo(jasondellaluce): this is here for internal use, and
-	// will possibly be removed in the future
-	std::shared_ptr<gen_event_filter_factory> get_filter_factory(
-		const std::string &source);
+	
+	//
+	// Equivalent to above, but allows specifying a ruleset factory
+	// for the newly added source.
+	//
+	std::size_t add_source(const std::string &source,
+			       std::shared_ptr<gen_event_filter_factory> filter_factory,
+			       std::shared_ptr<gen_event_formatter_factory> formatter_factory,
+			       std::shared_ptr<filter_ruleset_factory> ruleset_factory);
 
 	// Return whether or not there is a valid filter/formatter
 	// factory for this source.
 	bool is_source_valid(const std::string &source);
-
-	//
-	// Add a filter for the provided event source to the engine
-	//
-	void add_filter(std::shared_ptr<gen_event_filter> filter,
-			std::string &rule,
-			std::string &source,
-			std::set<uint16_t> &evttypes,
-			std::set<std::string> &tags);
 
 	//
 	// Given an event source and ruleset, fill in a bitset
@@ -229,14 +229,10 @@ public:
 	bool is_plugin_compatible(const std::string &name, const std::string &version, std::string &required_version);
 
 private:
-	struct ruleset_node
-	{
-		ruleset_node(const std::string &n, falco_ruleset *p):
-			source(n), ruleset(p) {}
+	indexed_vector<falco_source> m_sources;
 
-		std::string source;
-		mutable std::shared_ptr<falco_ruleset> ruleset;
-	};
+	falco_source& find_source(std::size_t index);
+	falco_source& find_source(const std::string& name);
 
 	//
 	// Determine whether the given event should be matched at all
@@ -245,26 +241,11 @@ private:
 	//
 	inline bool should_drop_evt();
 
-	inline std::vector<ruleset_node>::iterator find_ruleset(const std::string &source);
-	inline std::vector<ruleset_node>::const_iterator find_ruleset(const std::string &source) const;
-
-	// Maps from event source to object that can generate filters from rules
-	std::map<std::string, std::shared_ptr<gen_event_filter_factory>> m_filter_factories;
-
-	// Maps from event source to object that can format output strings in rules
-	std::map<std::string, std::shared_ptr<gen_event_formatter_factory>> m_format_factories;
-
-	// Maps from event source to the set of rules for that event source
-	std::vector<ruleset_node> m_rulesets;
-
 	rule_loader m_rule_loader;
 	indexed_vector<falco_rule> m_rules;
 	stats_manager m_rule_stats_manager;
 
-	uint16_t m_next_ruleset_id;
-	std::map<string, uint16_t> m_known_rulesets;
 	falco_common::priority_type m_min_priority;
-
 
 	//
 	// Here's how the sampling ratio and multiplier influence
@@ -290,7 +271,6 @@ private:
 	double m_sampling_multiplier;
 
 	static const std::string s_default_ruleset;
-	uint32_t m_default_ruleset_id;
 
 	std::string m_extra;
 	bool m_replace_container_info;
