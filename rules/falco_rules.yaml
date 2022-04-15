@@ -3165,14 +3165,13 @@
   priority: CRITICAL
   tags: [process, mitre_privilege_escalation]
 
-# This rule helps detect CVE-2022-0492:
-# A privilege escalation container escaping in cgroup
-- rule: Linux Cgroup Container Escape Vulnerability (CVE-2022-0492)
-  desc: "Detect an attempt to exploit a container escape vulnerability in the Linux Kernel (CVE-2022-0492). By running a container with certains capabilities, a privileged user can modify release_agent file and escape from the container"
+
+- rule: Detect release_agent File Container Escapes
+  desc: "This rule detect an attempt to exploit a container escape using release_agent file. By running a container with certains capabilities, a privileged user can modify release_agent file and escape from the container"
   condition:
-    open_write and fd.name endswith release_agent and (user.uid=0 or thread.cap_permitted contains CAP_DAC_OVERRIDE) and excessively_capable_container
+    open_write and container and fd.name endswith release_agent and (user.uid=0 or thread.cap_permitted contains CAP_DAC_OVERRIDE) and thread.cap_effective contains CAP_SYS_ADMIN
   output:
-    "Detect cgroup container escaping attempt (CVE-2022-0492) (user=%user.name user_loginuid=%user.loginuid filename=%fd.name %container.info image=%container.image.repository:%container.image.tag cap_permitted=%thread.cap_permitted)"
+    "Detect an attempt to exploit a container escape using release_agent file (user=%user.name user_loginuid=%user.loginuid filename=%fd.name %container.info image=%container.image.repository:%container.image.tag cap_effective=%thread.cap_effective)"
   priority: CRITICAL
   tags: [container, mitre_privilege_escalation, mitre_lateral_movement]
 
