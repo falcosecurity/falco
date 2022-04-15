@@ -3169,7 +3169,7 @@
 - rule: Detect release_agent File Container Escapes
   desc: "This rule detect an attempt to exploit a container escape using release_agent file. By running a container with certains capabilities, a privileged user can modify release_agent file and escape from the container"
   condition:
-    open_write and container and fd.name endswith release_agent and (user.uid=0 or thread.cap_permitted contains CAP_DAC_OVERRIDE) and thread.cap_effective contains CAP_SYS_ADMIN
+    open_write and container and fd.name endswith release_agent and (user.uid=0 or thread.cap_effective contains CAP_DAC_OVERRIDE) and thread.cap_effective contains CAP_SYS_ADMIN
   output:
     "Detect an attempt to exploit a container escape using release_agent file (user=%user.name user_loginuid=%user.loginuid filename=%fd.name %container.info image=%container.image.repository:%container.image.tag cap_effective=%thread.cap_effective)"
   priority: CRITICAL
