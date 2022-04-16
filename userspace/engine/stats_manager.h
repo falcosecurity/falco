@@ -40,7 +40,7 @@ public:
 		uint32_t index);
 
 	/*!
-		\brief Formats the internal statistics into the out sring
+		\brief Formats the internal statistics into the out string
 	*/
 	virtual void format(
 		const indexed_vector<falco_rule>& rules,
