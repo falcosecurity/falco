@@ -167,7 +167,7 @@
 - macro: user_known_countries
   condition: (okta.client.geo.country in (allowed_countries_list))
 
-- rule: Detecting unknwon logins using geolocation
+- rule: Detecting unknown logins using geolocation
   desc: Detect a logins event based on user geolocation
   condition: okta.evt.type = "user.session.start" and not user_known_countries
   output: "A user logged in OKTA from a suspicious country (user=%okta.actor.name, ip=%okta.client.ip, country=%okta.client.geo.country)"
