@@ -19,6 +19,16 @@ limitations under the License.
 
 using namespace std;
 
+stats_manager::stats_manager()
+	: m_total(0)
+{
+}
+
+stats_manager::~stats_manager()
+{
+	clear();
+}
+
 void stats_manager::clear()
 {
 	m_total = 0;
