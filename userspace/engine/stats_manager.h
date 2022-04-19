@@ -27,6 +27,9 @@ limitations under the License.
 class stats_manager
 {
 public:
+	stats_manager();
+	virtual ~stats_manager();
+
 	/*!
 		\brief Erases the internal state and statistics data
 	*/
