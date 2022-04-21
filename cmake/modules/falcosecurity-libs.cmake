@@ -41,6 +41,8 @@ else()
   set(FALCOSECURITY_LIBS_SOURCE_DIR "${FALCOSECURITY_LIBS_CMAKE_WORKING_DIR}/falcosecurity-libs-prefix/src/falcosecurity-libs")
 endif()
 
+set(LIBS_PACKAGE_NAME "falcosecurity")
+
 add_definitions(-D_GNU_SOURCE)
 add_definitions(-DHAS_CAPTURE)
 if(MUSL_OPTIMIZED_BUILD)
@@ -50,6 +52,7 @@ endif()
 set(DRIVER_VERSION "${FALCOSECURITY_LIBS_VERSION}")
 set(DRIVER_NAME "falco")
 set(DRIVER_PACKAGE_NAME "falco")
+set(DRIVER_COMPONENT_NAME "falco-driver")
 set(SCAP_BPF_PROBE_ENV_VAR_NAME "FALCO_BPF_PROBE")
 set(SCAP_HOST_ROOT_ENV_VAR_NAME "HOST_ROOT")
 
