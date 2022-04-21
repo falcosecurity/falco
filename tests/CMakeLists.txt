@@ -22,6 +22,7 @@ if(MINIMAL_BUILD)
     engine/test_falco_utils.cpp
     engine/test_filter_macro_resolver.cpp
     engine/test_filter_evttype_resolver.cpp
+    engine/test_filter_warning_resolver.cpp
     falco/test_configuration.cpp
   )
 else()
@@ -32,6 +33,7 @@ else()
     engine/test_falco_utils.cpp
     engine/test_filter_macro_resolver.cpp
     engine/test_filter_evttype_resolver.cpp
+    engine/test_filter_warning_resolver.cpp
     falco/test_configuration.cpp
     falco/test_webserver.cpp
   )
