@@ -38,8 +38,7 @@ string to_string(set<uint16_t> s)
 void compare_evttypes(ast::expr* f, set<uint16_t> &expected)
 {
     set<uint16_t> actual;
-    filter_evttype_resolver resolver;
-    resolver.evttypes(f, actual);
+    filter_evttype_resolver().evttypes(f, actual);
     for(auto &etype : expected)
     {
         REQUIRE(actual.find(etype) != actual.end());
@@ -52,13 +51,11 @@ void compare_evttypes(ast::expr* f, set<uint16_t> &expected)
 
 ast::expr* compile(const string &fltstr)
 {
-    libsinsp::filter::parser p(fltstr);
-    return p.parse();
+    return libsinsp::filter::parser(fltstr).parse();
 }
 
 TEST_CASE("Should find event types from filter", "[rule_loader]")
 {
-    filter_evttype_resolver resolver;
     set<uint16_t> openat_only{
 		PPME_SYSCALL_OPENAT_2_E, PPME_SYSCALL_OPENAT_2_X };
 

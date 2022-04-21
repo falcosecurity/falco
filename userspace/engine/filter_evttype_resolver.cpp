@@ -27,7 +27,7 @@ static bool is_evttype_operator(const string& op)
 	return op == "==" || op == "=" || op == "!=" || op == "in";
 }
 
-void filter_evttype_resolver::inversion(set<uint16_t>& types)
+void filter_evttype_resolver::visitor::inversion(set<uint16_t>& types)
 {
 	set<uint16_t> all_types;
 	evttypes("", all_types);
@@ -41,7 +41,7 @@ void filter_evttype_resolver::inversion(set<uint16_t>& types)
 	}
 }
 
-void filter_evttype_resolver::evttypes(string evtname, set<uint16_t>& out)
+void filter_evttype_resolver::visitor::evttypes(string evtname, set<uint16_t>& out)
 {
 	// Fill in from 2 to PPM_EVENT_MAX-1. 0 and 1 are excluded as
 	// those are PPM_GENERIC_E/PPME_GENERIC_X
@@ -58,26 +58,31 @@ void filter_evttype_resolver::evttypes(string evtname, set<uint16_t>& out)
 	}
 }
 
-void filter_evttype_resolver::evttypes(ast::expr* filter, set<uint16_t>& out)
+void filter_evttype_resolver::evttypes(
+	ast::expr* filter,
+	set<uint16_t>& out) const
 {
-	m_expect_value = false;
-	m_last_node_evttypes.clear();
-	filter->accept(this);
-	out.insert(m_last_node_evttypes.begin(), m_last_node_evttypes.end());
+	visitor v;
+	v.m_expect_value = false;
+	v.m_last_node_evttypes.clear();
+	filter->accept(&v);
+	out.insert(v.m_last_node_evttypes.begin(), v.m_last_node_evttypes.end());
 }
 
 void filter_evttype_resolver::evttypes(
-	shared_ptr<ast::expr> filter, set<uint16_t>& out)
+	shared_ptr<ast::expr> filter,
+	set<uint16_t>& out) const
 {
-	m_expect_value = false;
-	m_last_node_evttypes.clear();
-	filter.get()->accept(this);
-	out.insert(m_last_node_evttypes.begin(), m_last_node_evttypes.end());
+	visitor v;
+	v.m_expect_value = false;
+	v.m_last_node_evttypes.clear();
+	filter.get()->accept(&v);
+	out.insert(v.m_last_node_evttypes.begin(), v.m_last_node_evttypes.end());
 }
 
 // "and" nodes evttypes are the intersection of the evttypes of their children.
 // we initialize the set with "all event types"
-void filter_evttype_resolver::visit(ast::and_expr* e)
+void filter_evttype_resolver::visitor::visit(ast::and_expr* e)
 {
 	set<uint16_t> types, inters;
 	evttypes("", types);
@@ -96,7 +101,7 @@ void filter_evttype_resolver::visit(ast::and_expr* e)
 }
 
 // "or" nodes evttypes are the union of the evttypes their children
-void filter_evttype_resolver::visit(ast::or_expr* e)
+void filter_evttype_resolver::visitor::visit(ast::or_expr* e)
 {
 	set<uint16_t> types;
 	m_last_node_evttypes.clear();
@@ -108,14 +113,14 @@ void filter_evttype_resolver::visit(ast::or_expr* e)
 	m_last_node_evttypes = types;
 }
 
-void filter_evttype_resolver::visit(ast::not_expr* e)
+void filter_evttype_resolver::visitor::visit(ast::not_expr* e)
 {
 	m_last_node_evttypes.clear();
 	e->child->accept(this);
 	inversion(m_last_node_evttypes);
 }
 
-void filter_evttype_resolver::visit(ast::binary_check_expr* e)
+void filter_evttype_resolver::visitor::visit(ast::binary_check_expr* e)
 {
 	m_last_node_evttypes.clear();
 	if (e->field == "evt.type" && is_evttype_operator(e->op))
@@ -132,13 +137,13 @@ void filter_evttype_resolver::visit(ast::binary_check_expr* e)
 	evttypes("", m_last_node_evttypes);
 }
 
-void filter_evttype_resolver::visit(ast::unary_check_expr* e)
+void filter_evttype_resolver::visitor::visit(ast::unary_check_expr* e)
 {
 	m_last_node_evttypes.clear();
 	evttypes("", m_last_node_evttypes);
 }
 
-void filter_evttype_resolver::visit(ast::value_expr* e)
+void filter_evttype_resolver::visitor::visit(ast::value_expr* e)
 {
 	m_last_node_evttypes.clear();
 	if (m_expect_value)
@@ -149,7 +154,7 @@ void filter_evttype_resolver::visit(ast::value_expr* e)
 	evttypes("", m_last_node_evttypes);
 }
 
-void filter_evttype_resolver::visit(ast::list_expr* e)
+void filter_evttype_resolver::visitor::visit(ast::list_expr* e)
 {
 	m_last_node_evttypes.clear();
 	if (m_expect_value)

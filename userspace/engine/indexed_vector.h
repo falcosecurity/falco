@@ -28,10 +28,12 @@ template <typename T>
 class indexed_vector
 {
 public:
+	virtual ~indexed_vector() = default;
+
 	/*!
 		\brief Returns the number of elements
 	*/
-	virtual inline size_t size()
+	virtual inline size_t size() const
 	{
 		return m_entries.size();
 	}
@@ -39,7 +41,7 @@ public:
 	/*!
 		\brief Returns true if the vector is empty
 	*/
-	virtual inline bool empty()
+	virtual inline bool empty() const
 	{
 		return m_entries.empty();
 	}
