@@ -723,7 +723,7 @@ void rule_loader::compile_rule_infos(
 				}
 			}
 			
-			// popolate set of event types and emit an special warning
+			// populate set of event types and emit an special warning
 			set<uint16_t> evttypes;
 			if(rule.source == falco_common::syscall_source)
 			{
