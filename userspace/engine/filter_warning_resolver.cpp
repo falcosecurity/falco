@@ -20,6 +20,12 @@ limitations under the License.
 static const char* no_value = "<NA>";
 static const char* warn_unsafe_na_check = "unsafe-na-check";
 
+static inline bool is_unsafe_field(const string& f)
+{
+	return !strncmp(f.c_str(), "ka.", strlen("ka."))
+		|| !strncmp(f.c_str(), "jevt.", strlen("jevt."));
+}
+
 static inline bool is_equality_operator(const string& op)
 {
 	return op == "==" || op == "=" || op == "!="
@@ -57,7 +63,7 @@ bool filter_warning_resolver::format(
 void filter_warning_resolver::visitor::visit(
 	libsinsp::filter::ast::binary_check_expr* e)
 {
-	if (is_equality_operator(e->op))
+	if (is_unsafe_field(e->field) && is_equality_operator(e->op))
 	{
 		m_is_equality_check = true;
 		e->value->accept(this);
