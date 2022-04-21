@@ -1,5 +1,4 @@
 add_subdirectory(k8s_audit)
-add_subdirectory(psp)
 add_subdirectory(plugins)
 
 include(copy_files_to_build_dir)
