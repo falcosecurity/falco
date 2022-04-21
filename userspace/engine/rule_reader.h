@@ -27,6 +27,8 @@ limitations under the License.
 class rule_reader
 {
 public:
+    virtual ~rule_reader() = default;
+
     /*!
 		\brief Reads the contents of a ruleset and uses a loader to store
         thew new definitions

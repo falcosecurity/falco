@@ -24,7 +24,7 @@ limitations under the License.
 /*!
 	\brief Helper class for finding event types
 */
-class filter_evttype_resolver: private libsinsp::filter::ast::expr_visitor
+class filter_evttype_resolver
 {
 public:
 	/*!
@@ -35,7 +35,10 @@ public:
 		string is passed, all the available evttypes are collected
 		\param out The set to be filled with the evttypes
 	*/
-	void evttypes(std::string evtname, std::set<uint16_t>& out);
+	inline void evttypes(std::string evtname, std::set<uint16_t>& out) const
+	{
+		visitor().evttypes(evtname, out);
+	}
 
 	/*!
 		\brief Visits a filter AST and collects all the evttypes for which
@@ -45,25 +48,32 @@ public:
 		\param filter The filter AST to be explored
 		\param out The set to be filled with the evttypes
 	*/
-	void evttypes(libsinsp::filter::ast::expr* filter, std::set<uint16_t>& out);
+	void evttypes(
+		libsinsp::filter::ast::expr* filter,
+		std::set<uint16_t>& out) const;
 
 	/*!
 		\brief Overloaded version of evttypes() that supports filters wrapped
 		in shared pointers
 	*/
-	void evttypes(std::shared_ptr<libsinsp::filter::ast::expr> filter,
-		std::set<uint16_t>& out);
+	void evttypes(
+		std::shared_ptr<libsinsp::filter::ast::expr> filter,
+		std::set<uint16_t>& out) const;
 
 private:
-	void visit(libsinsp::filter::ast::and_expr* e) override;
-	void visit(libsinsp::filter::ast::or_expr* e) override;
-	void visit(libsinsp::filter::ast::not_expr* e) override;
-	void visit(libsinsp::filter::ast::value_expr* e) override;
-	void visit(libsinsp::filter::ast::list_expr* e) override;
-	void visit(libsinsp::filter::ast::unary_check_expr* e) override;
-	void visit(libsinsp::filter::ast::binary_check_expr* e) override;
-	void inversion(std::set<uint16_t>& types);
+	struct visitor : public libsinsp::filter::ast::expr_visitor
+	{
+		bool m_expect_value;
+		std::set<uint16_t> m_last_node_evttypes;
 
-	bool m_expect_value;
-	std::set<uint16_t> m_last_node_evttypes;
+		void visit(libsinsp::filter::ast::and_expr* e) override;
+		void visit(libsinsp::filter::ast::or_expr* e) override;
+		void visit(libsinsp::filter::ast::not_expr* e) override;
+		void visit(libsinsp::filter::ast::value_expr* e) override;
+		void visit(libsinsp::filter::ast::list_expr* e) override;
+		void visit(libsinsp::filter::ast::unary_check_expr* e) override;
+		void visit(libsinsp::filter::ast::binary_check_expr* e) override;
+		void inversion(std::set<uint16_t>& types);
+		void evttypes(std::string evtname, std::set<uint16_t>& out);
+	};
 };

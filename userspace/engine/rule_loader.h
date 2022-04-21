@@ -67,7 +67,7 @@ public:
 	*/
 	struct configuration
 	{
-		configuration(const std::string& cont): content(cont) {}
+		explicit configuration(const std::string& cont): content(cont) {}
 		const std::string& content;
 		std::string output_extra;
 		bool replace_output_container_info;
@@ -171,6 +171,8 @@ public:
 		bool warn_evttypes;
 		bool skip_if_unknown_filter;
 	};
+
+	virtual ~rule_loader() = default;
 
 	/*!
 		\brief Erases all the internal state and definitions

@@ -26,7 +26,7 @@ limitations under the License.
 	\brief Helper class for substituting and resolving macro
 	references in parsed filters.
 */
-class filter_macro_resolver: private libsinsp::filter::ast::expr_visitor
+class filter_macro_resolver
 {
 	public:
 		/*!
@@ -63,7 +63,7 @@ class filter_macro_resolver: private libsinsp::filter::ast::expr_visitor
 			substituted during the last invocation of run(). Should be
 			non-empty if the last invocation of run() returned true.
 		*/
-		std::set<std::string>& get_resolved_macros();
+		const std::set<std::string>& get_resolved_macros() const;
 
 		/*!
 			\brief Returns a set containing the names of all the macros
@@ -71,23 +71,32 @@ class filter_macro_resolver: private libsinsp::filter::ast::expr_visitor
 			A macro remains unresolved if it is found inside the processed
 			filter but it was not defined with set_macro();
 		*/
-		std::set<std::string>& get_unknown_macros();
+		const std::set<std::string>& get_unknown_macros() const;
 		
 	private:
-		void visit(libsinsp::filter::ast::and_expr* e) override;
-		void visit(libsinsp::filter::ast::or_expr* e) override;
-		void visit(libsinsp::filter::ast::not_expr* e) override;
-		void visit(libsinsp::filter::ast::value_expr* e) override;
-		void visit(libsinsp::filter::ast::list_expr* e) override;
-		void visit(libsinsp::filter::ast::unary_check_expr* e) override;
-		void visit(libsinsp::filter::ast::binary_check_expr* e) override;
-
-		bool m_last_node_changed;
-		libsinsp::filter::ast::expr* m_last_node;
-		std::set<std::string> m_unknown_macros;
-		std::set<std::string> m_resolved_macros;
-		std::map<
+		typedef std::map<
 			std::string,
 			std::shared_ptr<libsinsp::filter::ast::expr>
-		> m_macros;
+		> macro_defs;
+
+		struct visitor : public libsinsp::filter::ast::expr_visitor
+		{
+			bool m_last_node_changed;
+			libsinsp::filter::ast::expr* m_last_node;
+			std::set<std::string>* m_unknown_macros;
+			std::set<std::string>* m_resolved_macros;
+			macro_defs* m_macros;
+
+			void visit(libsinsp::filter::ast::and_expr* e) override;
+			void visit(libsinsp::filter::ast::or_expr* e) override;
+			void visit(libsinsp::filter::ast::not_expr* e) override;
+			void visit(libsinsp::filter::ast::value_expr* e) override;
+			void visit(libsinsp::filter::ast::list_expr* e) override;
+			void visit(libsinsp::filter::ast::unary_check_expr* e) override;
+			void visit(libsinsp::filter::ast::binary_check_expr* e) override;
+		};
+
+		std::set<std::string> m_unknown_macros;
+		std::set<std::string> m_resolved_macros;
+		macro_defs m_macros;
 };
