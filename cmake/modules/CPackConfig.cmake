@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2021 The Falco Authors.
+# Copyright (C) 2022 The Falco Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
 # the License. You may obtain a copy of the License at
@@ -24,6 +24,13 @@ set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${CM
 set(CPACK_PROJECT_CONFIG_FILE "${PROJECT_SOURCE_DIR}/cmake/cpack/CMakeCPackOptions.cmake")
 set(CPACK_STRIP_FILES "ON")
 set(CPACK_PACKAGE_RELOCATABLE "OFF")
+
+# Built packages will include only the following components
+set(CPACK_INSTALL_CMAKE_PROJECTS
+  "${CMAKE_CURRENT_BINARY_DIR};${FALCO_COMPONENT_NAME};${FALCO_COMPONENT_NAME};/"
+  "${CMAKE_CURRENT_BINARY_DIR};${DRIVER_COMPONENT_NAME};${DRIVER_COMPONENT_NAME};/"
+  "${CMAKE_CURRENT_BINARY_DIR};${PLUGINS_COMPONENT_NAME};${PLUGINS_COMPONENT_NAME};/"
+)
 
 if(NOT CPACK_GENERATOR)
     set(CPACK_GENERATOR DEB RPM TGZ)
