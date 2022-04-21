@@ -28,17 +28,19 @@ static bool warns(const std::string& condition)
 
 TEST_CASE("Should spot warnings in filtering conditions", "[rule_loader]")
 {
-	SECTION("for unsafe usage of <NA>")
+	SECTION("for unsafe usage of <NA> in k8s audit fields")
 	{
-		REQUIRE(false == warns("sample.field exists"));
-		REQUIRE(true == warns("sample.field = <NA>"));
-		REQUIRE(true == warns("sample.field == <NA>"));
-		REQUIRE(true == warns("sample.field != <NA>"));
-		REQUIRE(true == warns("sample.field in (<NA>)"));
-		REQUIRE(true == warns("sample.field in (otherval, <NA>)"));
-		REQUIRE(true == warns("sample.field intersects (<NA>)"));
-		REQUIRE(true == warns("sample.field intersects (otherval, <NA>)"));
-		REQUIRE(true == warns("sample.field pmatch (<NA>)"));
-		REQUIRE(true == warns("sample.field pmatch (otherval, <NA>)"));
+		REQUIRE(false == warns("ka.field exists"));
+		REQUIRE(false == warns("some.field = <NA>"));
+		REQUIRE(true == warns("jevt.field = <NA>"));
+		REQUIRE(true == warns("ka.field = <NA>"));
+		REQUIRE(true == warns("ka.field == <NA>"));
+		REQUIRE(true == warns("ka.field != <NA>"));
+		REQUIRE(true == warns("ka.field in (<NA>)"));
+		REQUIRE(true == warns("ka.field in (otherval, <NA>)"));
+		REQUIRE(true == warns("ka.field intersects (<NA>)"));
+		REQUIRE(true == warns("ka.field intersects (otherval, <NA>)"));
+		REQUIRE(true == warns("ka.field pmatch (<NA>)"));
+		REQUIRE(true == warns("ka.field pmatch (otherval, <NA>)"));
 	}
 }
