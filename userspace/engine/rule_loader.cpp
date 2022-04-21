@@ -61,19 +61,16 @@ static bool is_field_defined(
 	return false;
 }
 
-// todo(jasondellaluce): add an helper in libsinsp for this
-static bool is_operator_defined(const string& op)
+static inline bool is_operator_defined(const string& op)
 {
-	static vector<string> ops = {"=", "==", "!=", "<=", ">=", "<", ">",
-		"contains", "icontains", "bcontains", "glob", "bstartswith",
-		"startswith", "endswith", "in", "intersects", "pmatch"};
+	auto ops = libsinsp::filter::parser::supported_operators();
 	return find(ops.begin(), ops.end(), op) != ops.end();
 }
 
-// todo(jasondellaluce): add an helper in libsinsp for this
-static bool is_operator_for_list(const string& op)
+static inline bool is_operator_for_list(const string& op)
 {
-	return op == "in" || op == "intersects" || op == "pmatch";
+	auto ops = libsinsp::filter::parser::supported_operators(true);
+	return find(ops.begin(), ops.end(), op) != ops.end();
 }
 
 static bool is_format_valid(
