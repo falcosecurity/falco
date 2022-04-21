@@ -26,7 +26,8 @@ if(NOT DEFINED FALCO_RULES_DEST_FILENAME)
   set(FALCO_AWS_CLOUDTRAIL_RULES_DEST_FILENAME "aws_cloudtrail_rules.yaml")
 endif()
 
-if(DEFINED FALCO_COMPONENT)
+
+if(DEFINED FALCO_COMPONENT) # Allow a slim version of Falco to be embedded in other projects, intentionally *not* installing all rulesets.
   install(
     FILES falco_rules.yaml
     COMPONENT "${FALCO_COMPONENT}"
@@ -38,32 +39,36 @@ if(DEFINED FALCO_COMPONENT)
     COMPONENT "${FALCO_COMPONENT}"
     DESTINATION "${FALCO_ETC_DIR}"
     RENAME "${FALCO_LOCAL_RULES_DEST_FILENAME}")
-# Intentionally *not* installing application_rules.yaml. Not needed when falco is embedded in other projects.
-else()
+else() # Default Falco installation
   install(
     FILES falco_rules.yaml
     DESTINATION "${FALCO_ETC_DIR}"
-    RENAME "${FALCO_RULES_DEST_FILENAME}")
+    RENAME "${FALCO_RULES_DEST_FILENAME}"
+    COMPONENT "${FALCO_COMPONENT_NAME}")
 
   install(
     FILES falco_rules.local.yaml
     DESTINATION "${FALCO_ETC_DIR}"
-    RENAME "${FALCO_LOCAL_RULES_DEST_FILENAME}")
+    RENAME "${FALCO_LOCAL_RULES_DEST_FILENAME}"
+    COMPONENT "${FALCO_COMPONENT_NAME}")
 
   install(
     FILES k8s_audit_rules.yaml
     DESTINATION "${FALCO_ETC_DIR}"
-    RENAME "${FALCO_K8S_AUDIT_RULES_DEST_FILENAME}")
+    RENAME "${FALCO_K8S_AUDIT_RULES_DEST_FILENAME}"
+    COMPONENT "${FALCO_COMPONENT_NAME}")
 
   install(
     FILES application_rules.yaml
     DESTINATION "${FALCO_ETC_DIR}/rules.available"
-    RENAME "${FALCO_APP_RULES_DEST_FILENAME}")
+    RENAME "${FALCO_APP_RULES_DEST_FILENAME}"
+    COMPONENT "${FALCO_COMPONENT_NAME}")
 
   install(
     FILES aws_cloudtrail_rules.yaml
     DESTINATION "${FALCO_ETC_DIR}"
-    RENAME "${FALCO_AWS_CLOUDTRAIL_RULES_DEST_FILENAME}")
+    RENAME "${FALCO_AWS_CLOUDTRAIL_RULES_DEST_FILENAME}"
+    COMPONENT "${FALCO_COMPONENT_NAME}")
 
-  install(DIRECTORY DESTINATION "${FALCO_ETC_DIR}/rules.d")
+  install(DIRECTORY DESTINATION "${FALCO_ETC_DIR}/rules.d" COMPONENT "${FALCO_COMPONENT_NAME}")
 endif()

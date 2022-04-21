@@ -33,5 +33,5 @@ configure_file(falco-driver-loader falco-driver-loader @ONLY)
 
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
 	install(PROGRAMS ${PROJECT_BINARY_DIR}/scripts/falco-driver-loader
-		DESTINATION ${FALCO_BIN_DIR})
+		DESTINATION ${FALCO_BIN_DIR} COMPONENT "${FALCO_COMPONENT_NAME}")
 endif()

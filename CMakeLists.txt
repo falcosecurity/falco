@@ -102,6 +102,11 @@ set(PACKAGE_NAME "falco")
 set(DRIVER_NAME "falco")
 set(DRIVER_DEVICE_NAME "falco")
 set(DRIVERS_REPO "https://download.falco.org/driver")
+
+if(NOT DEFINED FALCO_COMPONENT_NAME)
+    set(FALCO_COMPONENT_NAME "${CMAKE_PROJECT_NAME}")
+endif()
+
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   set(CMAKE_INSTALL_PREFIX
       /usr
@@ -164,7 +169,7 @@ if(NOT MINIMAL_BUILD)
 endif()
 
 # Installation
-install(FILES falco.yaml DESTINATION "${FALCO_ETC_DIR}")
+install(FILES falco.yaml DESTINATION "${FALCO_ETC_DIR}" COMPONENT "${FALCO_COMPONENT_NAME}")
 
 if(NOT MINIMAL_BUILD)
   # Coverage
