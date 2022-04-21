@@ -15,9 +15,11 @@ limitations under the License.
 */
 
 #include "falco_engine.h"
+#include "falco_utils.h"
 #include "rule_loader.h"
 #include "filter_macro_resolver.h"
 #include "filter_evttype_resolver.h"
+#include "filter_warning_resolver.h"
 
 #define MAX_VISIBILITY		((uint32_t) -1)
 #define THROW(cond, err)    { if (cond) { throw falco_exception(err); } }
@@ -652,15 +654,20 @@ void rule_loader::compile_rule_infos(
 	indexed_vector<falco_rule>& out)
 {
 	string err, condition;
+	set<string> warn_codes;
+	filter_warning_resolver warn_resolver;
 	for (auto &r : m_rule_infos)
 	{
 		try
 		{
+			// skip the rule if below the minimum priority
 			if (r.priority > cfg.min_priority)
 			{
 				continue;
 			}
 
+			// build filter AST by parsing the condition, building exceptions,
+			// and resolving lists and macros
 			falco_rule rule;
 			condition = r.cond;
 			if (!r.exceptions.empty())
@@ -670,7 +677,20 @@ void rule_loader::compile_rule_infos(
 			}
 			auto ast = parse_condition(condition, lists);
 			resolve_macros(macros, ast, MAX_VISIBILITY, "");
-			
+
+			// check for warnings in the filtering condition
+			warn_codes.clear();
+			if (warn_resolver.run(ast.get(), warn_codes))
+			{
+				for (auto &w : warn_codes)
+				{
+					cfg.warnings.push_back(
+						"Rule " + r.name + ": warning (" + w + "):\n    "
+						+ falco::utils::wrap_text(warn_resolver.format(w), 4, 50));
+				}
+			}
+
+			// build rule output message
 			rule.output = r.output;
 			if (r.source == falco_common::syscall_source)
 			{
@@ -678,8 +698,8 @@ void rule_loader::compile_rule_infos(
 			}
 			THROW(!is_format_valid(cfg.engine, r.source, rule.output, err), 
 				"Invalid output format '" + rule.output + "': '" + err + "'");
-			
-			
+
+			// construct rule definition and compile it to a filter
 			rule.name = r.name;
 			rule.source = r.source;
 			rule.description = r.desc;
@@ -702,7 +722,8 @@ void rule_loader::compile_rule_infos(
 					throw falco_exception("Rule " + rule.name + ": error " + err);
 				}
 			}
-
+			
+			// popolate set of event types and emit an special warning
 			set<uint16_t> evttypes;
 			if(rule.source == falco_common::syscall_source)
 			{
@@ -713,8 +734,8 @@ void rule_loader::compile_rule_infos(
 				{
 					cfg.warnings.push_back(
 						"Rule " + rule.name + ": warning (no-evttype):\n" +
-						+ "		 matches too many evt.type values.\n"
-						+ "		 This has a significant performance penalty.");
+						+ "    matches too many evt.type values.\n"
+						+ "    This has a significant performance penalty.");
 				}
 			}
 			else if (rule.source == "k8s_audit")
@@ -728,6 +749,7 @@ void rule_loader::compile_rule_infos(
 				evttypes = { ppm_event_type::PPME_PLUGINEVENT_E };
 			}
 
+			// add rule and its filter in the engine
 			cfg.engine->add_filter(filter, rule.name, rule.source, evttypes, rule.tags);
 			cfg.engine->enable_rule(rule.name, r.enabled);
 		}
