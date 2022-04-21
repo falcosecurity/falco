@@ -44,9 +44,6 @@ class FalcoTest(Test):
 
         self.falcodir = self.params.get('falcodir', '/', default=build_dir)
 
-        self.psp_conv_path = os.path.join(build_dir, "falcoctl")
-        self.psp_conv_url = "https://github.com/falcosecurity/falcoctl/releases/download/v0.0.4/falcoctl-0.0.4-linux-amd64"
-
         self.stdout_is = self.params.get('stdout_is', '*', default='')
         self.stderr_is = self.params.get('stderr_is', '*', default='')
 
@@ -111,14 +108,7 @@ class FalcoTest(Test):
             if not isinstance(self.validate_rules_file, list):
                 self.validate_rules_file = [self.validate_rules_file]
 
-        self.psp_rules_file = os.path.join(build_dir, "psp_rules.yaml")
-
-        self.psp_file = self.params.get('psp_file', '*', default="")
-
         self.rules_args = ""
-
-        if self.psp_file != "":
-            self.rules_args = self.rules_args + "-r " + self.psp_rules_file + " "
 
         for file in self.validate_rules_file:
             if not os.path.isabs(file):
@@ -592,32 +582,6 @@ class FalcoTest(Test):
 
         if self.trace_file:
             trace_arg = "-e {}".format(self.trace_file)
-
-        # Possibly run psp converter
-        if self.psp_file != "":
-
-            if not os.path.isfile(self.psp_conv_path):
-                self.log.info("Downloading {} to {}".format(
-                    self.psp_conv_url, self.psp_conv_path))
-
-                urllib.request.urlretrieve(
-                    self.psp_conv_url, self.psp_conv_path)
-                os.chmod(self.psp_conv_path, stat.S_IEXEC)
-
-            conv_cmd = '{} convert psp --psp-path {} --rules-path {}'.format(
-                self.psp_conv_path, os.path.join(self.basedir, self.psp_file), self.psp_rules_file)
-
-            conv_proc = process.SubProcess(conv_cmd)
-
-            conv_res = conv_proc.run(timeout=180, sig=9)
-
-            if conv_res.exit_status != 0:
-                self.error("psp_conv command \"{}\" exited with unexpected return value {}. Full stdout={} stderr={}".format(
-                    conv_cmd, conv_res.exit_status, conv_res.stdout, conv_res.stderr))
-
-            with open(self.psp_rules_file, 'r') as myfile:
-                psp_rules = myfile.read()
-                self.log.debug("Converted Rules: {}".format(psp_rules))
 
         # Run falco
         cmd = '{} {} {} -c {} {} -o json_output={} -o json_include_output_property={} -o json_include_tags_property={} -o priority={} -v {}'.format(

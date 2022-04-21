@@ -10,7 +10,6 @@ You can find instructions on how to run this test suite on the Falco website [he
 - [falco_traces](./falco_traces.yaml.in)
 - [falco_tests_package](./falco_tests_package.yaml)
 - [falco_k8s_audit_tests](./falco_k8s_audit_tests.yaml)
-- [falco_tests_psp](./falco_tests_psp.yaml)
 
 ## Running locally
 
