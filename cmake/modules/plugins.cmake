@@ -15,6 +15,10 @@ include(ExternalProject)
 
 string(TOLOWER ${CMAKE_HOST_SYSTEM_NAME} PLUGINS_SYSTEM_NAME)
 
+if(NOT DEFINED PLUGINS_COMPONENT_NAME)
+    set(PLUGINS_COMPONENT_NAME "${CMAKE_PROJECT_NAME}-plugins")
+endif()
+
 # todo(jasondellaluce): switch this to a stable version once this plugin gets
 # released with a 1.0.0 required plugin api version
 ExternalProject_Add(
@@ -25,7 +29,7 @@ ExternalProject_Add(
   BUILD_COMMAND ""
   INSTALL_COMMAND "")
 
-install(FILES "${PROJECT_BINARY_DIR}/cloudtrail-plugin-prefix/src/cloudtrail-plugin/libcloudtrail.so" DESTINATION "${FALCO_PLUGINS_DIR}")
+install(FILES "${PROJECT_BINARY_DIR}/cloudtrail-plugin-prefix/src/cloudtrail-plugin/libcloudtrail.so" DESTINATION "${FALCO_PLUGINS_DIR}" COMPONENT "${PLUGINS_COMPONENT_NAME}")
 
 # todo(jasondellaluce): switch this to a stable version once this plugin gets
 # released with a 1.0.0 required plugin api version
@@ -37,4 +41,4 @@ ExternalProject_Add(
   BUILD_COMMAND ""
   INSTALL_COMMAND "")
 
-install(FILES "${PROJECT_BINARY_DIR}/json-plugin-prefix/src/json-plugin/libjson.so" DESTINATION "${FALCO_PLUGINS_DIR}")
+install(FILES "${PROJECT_BINARY_DIR}/json-plugin-prefix/src/json-plugin/libjson.so" DESTINATION "${FALCO_PLUGINS_DIR}" COMPONENT "${PLUGINS_COMPONENT_NAME}")
