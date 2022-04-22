@@ -44,8 +44,7 @@ application::state::state()
 	: restart(false),
 	  terminate(false),
 	  reopen_outputs(false),
-	  enabled_sources({application::s_syscall_source}),
-	  trace_is_scap(true)
+	  enabled_sources({application::s_syscall_source})
 {
 	config = std::make_shared<falco_configuration>();
 	outputs = std::make_shared<falco_outputs>();
