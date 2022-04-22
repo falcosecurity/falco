@@ -21,8 +21,6 @@ limitations under the License.
 
 static bool exact_match = true;
 static bool substring_match = false;
-static bool enabled = true;
-static bool disabled = false;
 static uint16_t default_ruleset = 0;
 static uint16_t non_default_ruleset = 3;
 static uint16_t other_non_default_ruleset = 2;
@@ -56,21 +54,21 @@ TEST_CASE("Should enable/disable on ruleset", "[rulesets]")
 
 	SECTION("Should enable/disable for exact match w/ default ruleset")
 	{
-		r->enable("one_rule", exact_match, enabled);
+		r->enable("one_rule", exact_match, default_ruleset);
 		REQUIRE(r->enabled_count(default_ruleset) == 1);
 
-		r->enable("one_rule", exact_match, disabled);
+		r->disable("one_rule", exact_match, default_ruleset);
 		REQUIRE(r->enabled_count(default_ruleset) == 0);
 	}
 
 	SECTION("Should enable/disable for exact match w/ specific ruleset")
 	{
-		r->enable("one_rule", exact_match, enabled, non_default_ruleset);
+		r->enable("one_rule", exact_match, non_default_ruleset);
 		REQUIRE(r->enabled_count(non_default_ruleset) == 1);
 		REQUIRE(r->enabled_count(default_ruleset) == 0);
 		REQUIRE(r->enabled_count(other_non_default_ruleset) == 0);
 
-		r->enable("one_rule", exact_match, disabled, non_default_ruleset);
+		r->disable("one_rule", exact_match, non_default_ruleset);
 		REQUIRE(r->enabled_count(non_default_ruleset) == 0);
 		REQUIRE(r->enabled_count(default_ruleset) == 0);
 		REQUIRE(r->enabled_count(other_non_default_ruleset) == 0);
@@ -78,60 +76,60 @@ TEST_CASE("Should enable/disable on ruleset", "[rulesets]")
 
 	SECTION("Should not enable for exact match different rule name")
 	{
-		r->enable("some_other_rule", exact_match, enabled);
+		r->enable("some_other_rule", exact_match, default_ruleset);
 		REQUIRE(r->enabled_count(default_ruleset) == 0);
 	}
 
 	SECTION("Should enable/disable for exact match w/ substring and default ruleset")
 	{
-		r->enable("one_rule", substring_match, enabled);
+		r->enable("one_rule", substring_match, default_ruleset);
 		REQUIRE(r->enabled_count(default_ruleset) == 1);
 
-		r->enable("one_rule", substring_match, disabled);
+		r->disable("one_rule", substring_match, default_ruleset);
 		REQUIRE(r->enabled_count(default_ruleset) == 0);
 	}
 
 	SECTION("Should not enable for substring w/ exact_match")
 	{
-		r->enable("one_", exact_match, enabled);
+		r->enable("one_", exact_match, default_ruleset);
 		REQUIRE(r->enabled_count(default_ruleset) == 0);
 	}
 
 	SECTION("Should enable/disable for prefix match w/ default ruleset")
 	{
-		r->enable("one_", substring_match, enabled);
+		r->enable("one_", substring_match, default_ruleset);
 		REQUIRE(r->enabled_count(default_ruleset) == 1);
 
-		r->enable("one_", substring_match, disabled);
+		r->disable("one_", substring_match, default_ruleset);
 		REQUIRE(r->enabled_count(default_ruleset) == 0);
 	}
 
 	SECTION("Should enable/disable for suffix match w/ default ruleset")
 	{
-		r->enable("_rule", substring_match, enabled);
+		r->enable("_rule", substring_match, default_ruleset);
 		REQUIRE(r->enabled_count(default_ruleset) == 1);
 
-		r->enable("_rule", substring_match, disabled);
+		r->disable("_rule", substring_match, default_ruleset);
 		REQUIRE(r->enabled_count(default_ruleset) == 0);
 	}
 
 	SECTION("Should enable/disable for substring match w/ default ruleset")
 	{
-		r->enable("ne_ru", substring_match, enabled);
+		r->enable("ne_ru", substring_match, default_ruleset);
 		REQUIRE(r->enabled_count(default_ruleset) == 1);
 
-		r->enable("ne_ru", substring_match, disabled);
+		r->disable("ne_ru", substring_match, default_ruleset);
 		REQUIRE(r->enabled_count(default_ruleset) == 0);
 	}
 
 	SECTION("Should enable/disable for substring match w/ specific ruleset")
 	{
-		r->enable("ne_ru", substring_match, enabled, non_default_ruleset);
+		r->enable("ne_ru", substring_match, non_default_ruleset);
 		REQUIRE(r->enabled_count(non_default_ruleset) == 1);
 		REQUIRE(r->enabled_count(default_ruleset) == 0);
 		REQUIRE(r->enabled_count(other_non_default_ruleset) == 0);
 
-		r->enable("ne_ru", substring_match, disabled, non_default_ruleset);
+		r->disable("ne_ru", substring_match, non_default_ruleset);
 		REQUIRE(r->enabled_count(non_default_ruleset) == 0);
 		REQUIRE(r->enabled_count(default_ruleset) == 0);
 		REQUIRE(r->enabled_count(other_non_default_ruleset) == 0);
@@ -141,10 +139,10 @@ TEST_CASE("Should enable/disable on ruleset", "[rulesets]")
 	{
 		std::set<std::string> want_tags = {"some_tag"};
 
-		r->enable_tags(want_tags, enabled);
+		r->enable_tags(want_tags, default_ruleset);
 		REQUIRE(r->enabled_count(default_ruleset) == 1);
 
-		r->enable_tags(want_tags, disabled);
+		r->disable_tags(want_tags, default_ruleset);
 		REQUIRE(r->enabled_count(default_ruleset) == 0);
 	}
 
@@ -152,12 +150,12 @@ TEST_CASE("Should enable/disable on ruleset", "[rulesets]")
 	{
 		std::set<std::string> want_tags = {"some_tag"};
 
-		r->enable_tags(want_tags, enabled, non_default_ruleset);
+		r->enable_tags(want_tags, non_default_ruleset);
 		REQUIRE(r->enabled_count(non_default_ruleset) == 1);
 		REQUIRE(r->enabled_count(default_ruleset) == 0);
 		REQUIRE(r->enabled_count(other_non_default_ruleset) == 0);
 
-		r->enable_tags(want_tags, disabled, non_default_ruleset);
+		r->disable_tags(want_tags, non_default_ruleset);
 		REQUIRE(r->enabled_count(non_default_ruleset) == 0);
 		REQUIRE(r->enabled_count(default_ruleset) == 0);
 		REQUIRE(r->enabled_count(other_non_default_ruleset) == 0);
@@ -167,7 +165,7 @@ TEST_CASE("Should enable/disable on ruleset", "[rulesets]")
 	{
 		std::set<std::string> want_tags = {"some_different_tag"};
 
-		r->enable_tags(want_tags, enabled);
+		r->enable_tags(want_tags, default_ruleset);
 		REQUIRE(r->enabled_count(non_default_ruleset) == 0);
 	}
 
@@ -175,10 +173,10 @@ TEST_CASE("Should enable/disable on ruleset", "[rulesets]")
 	{
 		std::set<std::string> want_tags = {"some_tag", "some_different_tag"};
 
-		r->enable_tags(want_tags, enabled);
+		r->enable_tags(want_tags, default_ruleset);
 		REQUIRE(r->enabled_count(default_ruleset) == 1);
 
-		r->enable_tags(want_tags, disabled);
+		r->disable_tags(want_tags, default_ruleset);
 		REQUIRE(r->enabled_count(default_ruleset) == 0);
 	}
 
@@ -205,17 +203,17 @@ TEST_CASE("Should enable/disable on ruleset for incremental adding tags", "[rule
 	std::set<std::string> want_tags;
 
 	want_tags = rule1.tags;
-	r->enable_tags(want_tags, enabled);
+	r->enable_tags(want_tags, default_ruleset);
 	REQUIRE(r->enabled_count(default_ruleset) == 1);
 
 	want_tags = rule2.tags;
-	r->enable_tags(want_tags, enabled);
+	r->enable_tags(want_tags, default_ruleset);
 	REQUIRE(r->enabled_count(default_ruleset) == 2);
 
-	r->enable_tags(want_tags, disabled);
+	r->disable_tags(want_tags, default_ruleset);
 	REQUIRE(r->enabled_count(default_ruleset) == 1);
 
 	want_tags = rule1.tags;
-	r->enable_tags(want_tags, disabled);
+	r->disable_tags(want_tags, default_ruleset);
 	REQUIRE(r->enabled_count(default_ruleset) == 0);
 }

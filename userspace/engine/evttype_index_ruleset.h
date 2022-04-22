@@ -42,27 +42,32 @@ public:
 	void add(
 		const falco_rule& rule,
 		std::shared_ptr<libsinsp::filter::ast::expr> condition) override;
-	
+
 	void clear() override;
 
-	uint16_t ruleset_id(const std::string &name) override;
+	bool run(gen_event *evt, falco_rule& match, uint16_t rulset_id);
 
-	bool run(gen_event *evt, falco_rule& match, uint16_t ruleset = 0);
-	
-	uint64_t enabled_count(uint16_t ruleset = 0) override;
+	uint64_t enabled_count(uint16_t ruleset_id) override;
 
-	void optimize(uint16_t ruleset = 0) override;
+	void optimize() override;
 
 	void enable(
 		const std::string &substring,
 		bool match_exact,
-		bool enabled,
-		uint16_t ruleset = 0) override;
+		uint16_t rulset_id) override;
+
+	void disable(
+		const std::string &substring,
+		bool match_exact,
+		uint16_t rulset_id) override;
 
 	void enable_tags(
 		const std::set<std::string> &tags,
-		bool enabled,
-		uint16_t ruleset = 0) override;
+		uint16_t rulset_id) override;
+
+	void disable_tags(
+		const std::set<std::string> &tags,
+		uint16_t rulset_id) override;
 
 	// evttypes for a ruleset
 	void enabled_evttypes(
@@ -70,6 +75,19 @@ public:
 		uint16_t ruleset) override;
 
 private:
+
+	// Helper used by enable()/disable()
+	void enable_disable(
+		const std::string &substring,
+		bool match_exact,
+		bool enabled,
+		uint16_t rulset_id);
+
+	// Helper used by enable_tags()/disable_tags()
+	void enable_disable_tags(
+		const std::set<std::string> &tags,
+		bool enabled,
+		uint16_t rulset_id);
 
 	struct filter_wrapper
 	{
