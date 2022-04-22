@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2019 The Falco Authors.
+# Copyright (C) 2022 The Falco Authors.
 #
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +14,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-- required_engine_version: 2
+- required_engine_version: 11
+
+- required_plugin_versions:
+  - name: k8saudit
+    version: 0.1.0
+  - name: json
+    version: 0.2.2
 
 # Like always_true/always_false, but works with k8s audit events
 - macro: k8s_audit_always_true
