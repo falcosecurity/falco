@@ -46,9 +46,9 @@ rules_file:
 plugins:
   - name: k8saudit
     library_path: libk8saudit.so
-    init_config:
-      maxEventBytes: 1048576
-      sslCertificate: /etc/falco/falco.pem
+    init_config: ""
+      # maxEventBytes: 1048576
+      # sslCertificate: /etc/falco/falco.pem
     open_params: "http://:9765/k8s-audit"
   - name: cloudtrail
     library_path: libcloudtrail.so
