@@ -66,7 +66,7 @@ public:
 		\param evt The event to be processed
 		\param match If true is returned, this is filled-out with the rule
 		that matched the event
-		\param ruleset The id of the ruleset to be used
+		\param ruleset_id The id of the ruleset to be used
 	*/
 	virtual bool run(
 		gen_event *evt,
@@ -75,51 +75,77 @@ public:
 
 	/*!
 		\brief Returns the number of rules enabled in a given ruleset
-		\param ruleset The id of the ruleset to be used
+		\param ruleset_id The id of the ruleset to be used
 	*/
 	virtual uint64_t enabled_count(uint16_t ruleset_id) = 0;
 
 	/*!
 		\brief Returns the union of the evttypes of all the rules enabled
 		in a given ruleset
-		\param ruleset The id of the ruleset to be used
+		\param ruleset_id The id of the ruleset to be used
 	*/
 	virtual void enabled_evttypes(
 		std::set<uint16_t> &evttypes,
 		uint16_t ruleset) = 0;
 
 	/*!
-		\brief Find those rules matching the provided substring and set
-		their enabled status to enabled in a given ruleset.
+		\brief Find those rules matching the provided substring and enable
+		them in the provided ruleset.
 		\param substring Substring used to match rule names.
 		If empty, all rules are matched.
 		\param match_exact If true, substring must be an exact match for a
 		given rule name. Otherwise, any rules having substring as a substring
 		in the rule name are enabled/disabled.
-		\param enabled The enabled status to set on all matching rules
-		\param ruleset The id of the ruleset to be used
+		\param ruleset_id The id of the ruleset to be used
 	*/
 	virtual void enable(
 		const std::string &substring,
 		bool match_exact,
-		bool enabled,
+		uint16_t ruleset_id) = 0;
+
+	/*!
+		\brief Find those rules matching the provided substring and disable
+		them in the provided ruleset.
+		\param substring Substring used to match rule names.
+		If empty, all rules are matched.
+		\param match_exact If true, substring must be an exact match for a
+		given rule name. Otherwise, any rules having substring as a substring
+		in the rule name are enabled/disabled.
+		\param ruleset_id The id of the ruleset to be used
+	*/
+	virtual void disable(
+		const std::string &substring,
+		bool match_exact,
 		uint16_t ruleset_id) = 0;
 
 	/*!
 		\brief Find those rules that have a tag in the set of tags and
-		set their enabled status to enabled. Note that the enabled
+		enable them for the provided ruleset. Note that the enabled
 		status is on the rules, and not the tags--if a rule R has
-		tags (a, b), and you call enable_tags([a], true) and then
-		enable_tags([b], false), R will be disabled despite the
+		tags (a, b), and you call enable_tags([a]) and then
+		disable_tags([b]), R will be disabled despite the
 		fact it has tag a and was enabled by the first call to
 		enable_tags.
 		\param substring Tags used to match ruless
-		\param enabled The enabled status to set on all matching rules
-		\param ruleset The id of the ruleset to be used
+		\param ruleset_id The id of the ruleset to be used
 	*/
 	virtual void enable_tags(
 		const std::set<std::string> &tags,
-		bool enabled,
+		uint16_t ruleset_id) = 0;
+
+	/*!
+		\brief Find those rules that have a tag in the set of tags and
+		disable them for the provided ruleset. Note that the disabled
+		status is on the rules, and not the tags--if a rule R has
+		tags (a, b), and you call enable_tags([a]) and then
+		disable_tags([b]), R will be disabled despite the
+		fact it has tag a and was enabled by the first call to
+		enable_tags.
+		\param substring Tags used to match ruless
+		\param ruleset_id The id of the ruleset to be used
+	*/
+	virtual void disable_tags(
+		const std::set<std::string> &tags,
 		uint16_t ruleset_id) = 0;
 };
 
