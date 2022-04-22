@@ -25,7 +25,8 @@ trace_files: !mux
       - ./rules/k8s_audit/engine_v4/allow_only_apache_container.yaml
     detect_counts:
       - Create Disallowed Pod: 1
-    trace_file: trace_files/k8s_audit/create_nginx_pod_unprivileged.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_nginx_pod_unprivileged.json
 
   compat_engine_v4_create_allowed_pod:
     detect: False
@@ -33,7 +34,8 @@ trace_files: !mux
       - ../rules/falco_rules.yaml
       - ./rules/k8s_audit/engine_v4_k8s_audit_rules.yaml
       - ./rules/k8s_audit/engine_v4/allow_nginx_container.yaml
-    trace_file: trace_files/k8s_audit/create_nginx_pod_unprivileged.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_nginx_pod_unprivileged.json
 
   compat_engine_v4_create_privileged_pod:
     detect: True
@@ -43,7 +45,8 @@ trace_files: !mux
       - ./rules/k8s_audit/engine_v4_k8s_audit_rules.yaml
     detect_counts:
       - Create Privileged Pod: 1
-    trace_file: trace_files/k8s_audit/create_nginx_pod_privileged.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_nginx_pod_privileged.json
 
   compat_engine_v4_create_privileged_trusted_pod:
     detect: False
@@ -52,14 +55,16 @@ trace_files: !mux
       - ../rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/engine_v4_k8s_audit_rules.yaml
       - ./rules/k8s_audit/trust_nginx_container.yaml
-    trace_file: trace_files/k8s_audit/create_nginx_pod_privileged.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_nginx_pod_privileged.json
 
   compat_engine_v4_create_unprivileged_pod:
     detect: False
     rules_file:
       - ../rules/falco_rules.yaml
       - ./rules/k8s_audit/engine_v4_k8s_audit_rules.yaml
-    trace_file: trace_files/k8s_audit/create_nginx_pod_unprivileged.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_nginx_pod_unprivileged.json
 
   compat_engine_v4_create_hostnetwork_pod:
     detect: True
@@ -69,7 +74,8 @@ trace_files: !mux
       - ./rules/k8s_audit/engine_v4_k8s_audit_rules.yaml
     detect_counts:
       - Create HostNetwork Pod: 1
-    trace_file: trace_files/k8s_audit/create_nginx_pod_hostnetwork.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_nginx_pod_hostnetwork.json
 
   compat_engine_v4_create_hostnetwork_trusted_pod:
     detect: False
@@ -78,7 +84,8 @@ trace_files: !mux
       - ../rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/engine_v4_k8s_audit_rules.yaml
       - ./rules/k8s_audit/trust_nginx_container.yaml
-    trace_file: trace_files/k8s_audit/create_nginx_pod_hostnetwork.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_nginx_pod_hostnetwork.json
 
   user_outside_allowed_set:
     detect: True
@@ -89,7 +96,8 @@ trace_files: !mux
       - ./rules/k8s_audit/allow_namespace_foo.yaml
     detect_counts:
       - Disallowed K8s User: 1
-    trace_file: trace_files/k8s_audit/some-user_creates_namespace_foo.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/some-user_creates_namespace_foo.json
 
   user_in_allowed_set:
     detect: False
@@ -99,7 +107,8 @@ trace_files: !mux
       - ./rules/k8s_audit/allow_namespace_foo.yaml
       - ./rules/k8s_audit/allow_user_some-user.yaml
       - ./rules/k8s_audit/disallow_kactivity.yaml
-    trace_file: trace_files/k8s_audit/some-user_creates_namespace_foo.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/some-user_creates_namespace_foo.json
 
   create_disallowed_pod:
     detect: True
@@ -110,7 +119,8 @@ trace_files: !mux
       - ./rules/k8s_audit/allow_only_apache_container.yaml
     detect_counts:
       - Create Disallowed Pod: 1
-    trace_file: trace_files/k8s_audit/create_nginx_pod_unprivileged.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_nginx_pod_unprivileged.json
 
   create_allowed_pod:
     detect: False
@@ -118,7 +128,8 @@ trace_files: !mux
       - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/allow_nginx_container.yaml
-    trace_file: trace_files/k8s_audit/create_nginx_pod_unprivileged.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_nginx_pod_unprivileged.json
 
   create_privileged_pod:
     detect: True
@@ -128,7 +139,8 @@ trace_files: !mux
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - Create Privileged Pod: 1
-    trace_file: trace_files/k8s_audit/create_nginx_pod_privileged.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_nginx_pod_privileged.json
 
   create_privileged_no_secctx_1st_container_2nd_container_pod:
     detect: True
@@ -138,7 +150,8 @@ trace_files: !mux
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - Create Privileged Pod: 1
-    trace_file: trace_files/k8s_audit/create_nginx_pod_no_secctx_1st_container_privileged_2nd_container.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_nginx_pod_no_secctx_1st_container_privileged_2nd_container.json
 
   create_privileged_2nd_container_pod:
     detect: True
@@ -148,7 +161,8 @@ trace_files: !mux
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - Create Privileged Pod: 1
-    trace_file: trace_files/k8s_audit/create_nginx_pod_privileged_2nd_container.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_nginx_pod_privileged_2nd_container.json
 
   create_privileged_trusted_pod:
     detect: False
@@ -156,14 +170,16 @@ trace_files: !mux
       - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/trust_nginx_container.yaml
-    trace_file: trace_files/k8s_audit/create_nginx_pod_privileged.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_nginx_pod_privileged.json
 
   create_unprivileged_pod:
     detect: False
     rules_file:
       - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
-    trace_file: trace_files/k8s_audit/create_nginx_pod_unprivileged.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_nginx_pod_unprivileged.json
 
   create_unprivileged_trusted_pod:
     detect: False
@@ -171,7 +187,8 @@ trace_files: !mux
       - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/trust_nginx_container.yaml
-    trace_file: trace_files/k8s_audit/create_nginx_pod_unprivileged.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_nginx_pod_unprivileged.json
 
   create_sensitive_mount_pod:
     detect: True
@@ -181,7 +198,8 @@ trace_files: !mux
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - Create Sensitive Mount Pod: 1
-    trace_file: trace_files/k8s_audit/create_nginx_pod_sensitive_mount.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_nginx_pod_sensitive_mount.json
 
   create_sensitive_mount_2nd_container_pod:
     detect: True
@@ -191,7 +209,8 @@ trace_files: !mux
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - Create Sensitive Mount Pod: 1
-    trace_file: trace_files/k8s_audit/create_nginx_pod_sensitive_mount_2nd_container.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_nginx_pod_sensitive_mount_2nd_container.json
 
   create_sensitive_mount_trusted_pod:
     detect: False
@@ -199,14 +218,16 @@ trace_files: !mux
       - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/trust_nginx_container.yaml
-    trace_file: trace_files/k8s_audit/create_nginx_pod_sensitive_mount.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_nginx_pod_sensitive_mount.json
 
   create_unsensitive_mount_pod:
     detect: False
     rules_file:
       - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
-    trace_file: trace_files/k8s_audit/create_nginx_pod_unsensitive_mount.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_nginx_pod_unsensitive_mount.json
 
   create_unsensitive_mount_trusted_pod:
     detect: False
@@ -214,7 +235,8 @@ trace_files: !mux
       - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/trust_nginx_container.yaml
-    trace_file: trace_files/k8s_audit/create_nginx_pod_unsensitive_mount.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_nginx_pod_unsensitive_mount.json
 
   create_hostnetwork_pod:
     detect: True
@@ -224,7 +246,8 @@ trace_files: !mux
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - Create HostNetwork Pod: 1
-    trace_file: trace_files/k8s_audit/create_nginx_pod_hostnetwork.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_nginx_pod_hostnetwork.json
 
   create_hostnetwork_trusted_pod:
     detect: False
@@ -232,14 +255,16 @@ trace_files: !mux
       - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/trust_nginx_container.yaml
-    trace_file: trace_files/k8s_audit/create_nginx_pod_hostnetwork.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_nginx_pod_hostnetwork.json
 
   create_nohostnetwork_pod:
     detect: False
     rules_file:
       - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
-    trace_file: trace_files/k8s_audit/create_nginx_pod_nohostnetwork.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_nginx_pod_nohostnetwork.json
 
   create_nohostnetwork_trusted_pod:
     detect: False
@@ -247,7 +272,8 @@ trace_files: !mux
       - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/trust_nginx_container.yaml
-    trace_file: trace_files/k8s_audit/create_nginx_pod_nohostnetwork.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_nginx_pod_nohostnetwork.json
 
   create_nodeport_service:
     detect: True
@@ -258,7 +284,8 @@ trace_files: !mux
       - ./rules/k8s_audit/disallow_kactivity.yaml
     detect_counts:
       - Create NodePort Service: 1
-    trace_file: trace_files/k8s_audit/create_nginx_service_nodeport.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_nginx_service_nodeport.json
 
   create_nonodeport_service:
     detect: False
@@ -266,7 +293,8 @@ trace_files: !mux
       - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/disallow_kactivity.yaml
-    trace_file: trace_files/k8s_audit/create_nginx_service_nonodeport.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_nginx_service_nonodeport.json
 
   create_configmap_private_creds:
     detect: True
@@ -277,7 +305,8 @@ trace_files: !mux
       - ./rules/k8s_audit/disallow_kactivity.yaml
     detect_counts:
       - Create/Modify Configmap With Private Credentials: 6
-    trace_file: trace_files/k8s_audit/create_configmap_sensitive_values.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_configmap_sensitive_values.json
 
   create_configmap_no_private_creds:
     detect: False
@@ -285,7 +314,8 @@ trace_files: !mux
       - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/disallow_kactivity.yaml
-    trace_file: trace_files/k8s_audit/create_configmap_no_sensitive_values.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_configmap_no_sensitive_values.json
 
   anonymous_user:
     detect: True
@@ -295,7 +325,8 @@ trace_files: !mux
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - Anonymous Request Allowed: 1
-    trace_file: trace_files/k8s_audit/anonymous_creates_namespace_foo.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/anonymous_creates_namespace_foo.json
 
   pod_exec:
     detect: True
@@ -305,7 +336,8 @@ trace_files: !mux
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - Attach/Exec Pod: 1
-    trace_file: trace_files/k8s_audit/exec_pod.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/exec_pod.json
 
   pod_attach:
     detect: True
@@ -315,7 +347,8 @@ trace_files: !mux
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - Attach/Exec Pod: 1
-    trace_file: trace_files/k8s_audit/attach_pod.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/attach_pod.json
 
   namespace_outside_allowed_set:
     detect: True
@@ -326,7 +359,8 @@ trace_files: !mux
       - ./rules/k8s_audit/allow_user_some-user.yaml
     detect_counts:
       - Create Disallowed Namespace: 1
-    trace_file: trace_files/k8s_audit/some-user_creates_namespace_foo.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/some-user_creates_namespace_foo.json
 
   namespace_in_allowed_set:
     detect: False
@@ -335,7 +369,8 @@ trace_files: !mux
       - ../rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/allow_namespace_foo.yaml
       - ./rules/k8s_audit/disallow_kactivity.yaml
-    trace_file: trace_files/k8s_audit/minikube_creates_namespace_foo.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/minikube_creates_namespace_foo.json
 
   create_pod_in_kube_system_namespace:
     detect: True
@@ -345,7 +380,8 @@ trace_files: !mux
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - Pod Created in Kube Namespace: 1
-    trace_file: trace_files/k8s_audit/create_pod_kube_system_namespace.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_pod_kube_system_namespace.json
 
   create_pod_in_kube_public_namespace:
     detect: True
@@ -355,7 +391,8 @@ trace_files: !mux
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - Pod Created in Kube Namespace: 1
-    trace_file: trace_files/k8s_audit/create_pod_kube_public_namespace.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_pod_kube_public_namespace.json
 
   create_serviceaccount_in_kube_system_namespace:
     detect: True
@@ -365,7 +402,8 @@ trace_files: !mux
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - Service Account Created in Kube Namespace: 1
-    trace_file: trace_files/k8s_audit/create_serviceaccount_kube_system_namespace.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_serviceaccount_kube_system_namespace.json
 
   create_serviceaccount_in_kube_public_namespace:
     detect: True
@@ -375,7 +413,8 @@ trace_files: !mux
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - Service Account Created in Kube Namespace: 1
-    trace_file: trace_files/k8s_audit/create_serviceaccount_kube_public_namespace.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_serviceaccount_kube_public_namespace.json
 
   system_clusterrole_deleted:
     detect: True
@@ -385,7 +424,8 @@ trace_files: !mux
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - System ClusterRole Modified/Deleted: 1
-    trace_file: trace_files/k8s_audit/delete_cluster_role_kube_aggregator.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/delete_cluster_role_kube_aggregator.json
 
   system_clusterrole_modified:
     detect: True
@@ -395,7 +435,8 @@ trace_files: !mux
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - System ClusterRole Modified/Deleted: 1
-    trace_file: trace_files/k8s_audit/modify_cluster_role_node_problem_detector.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/modify_cluster_role_node_problem_detector.json
 
   attach_cluster_admin_role:
     detect: True
@@ -405,7 +446,8 @@ trace_files: !mux
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - Attach to cluster-admin Role: 1
-    trace_file: trace_files/k8s_audit/attach_cluster_admin_role.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/attach_cluster_admin_role.json
 
   create_cluster_role_wildcard_resources:
     detect: True
@@ -415,7 +457,8 @@ trace_files: !mux
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - ClusterRole With Wildcard Created: 1
-    trace_file: trace_files/k8s_audit/create_cluster_role_wildcard_resources.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_cluster_role_wildcard_resources.json
 
   create_cluster_role_wildcard_verbs:
     detect: True
@@ -425,7 +468,8 @@ trace_files: !mux
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - ClusterRole With Wildcard Created: 1
-    trace_file: trace_files/k8s_audit/create_cluster_role_wildcard_verbs.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_cluster_role_wildcard_verbs.json
 
   create_writable_cluster_role:
     detect: True
@@ -435,7 +479,8 @@ trace_files: !mux
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - ClusterRole With Write Privileges Created: 1
-    trace_file: trace_files/k8s_audit/create_cluster_role_write_privileges.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_cluster_role_write_privileges.json
 
   create_pod_exec_cluster_role:
     detect: True
@@ -445,7 +490,8 @@ trace_files: !mux
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - ClusterRole With Pod Exec Created: 1
-    trace_file: trace_files/k8s_audit/create_cluster_role_pod_exec.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_cluster_role_pod_exec.json
 
   create_deployment:
     detect: True
@@ -455,7 +501,8 @@ trace_files: !mux
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - K8s Deployment Created: 1
-    trace_file: trace_files/k8s_audit/create_deployment.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_deployment.json
 
   delete_deployment:
     detect: True
@@ -465,7 +512,8 @@ trace_files: !mux
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - K8s Deployment Deleted: 1
-    trace_file: trace_files/k8s_audit/delete_deployment.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/delete_deployment.json
 
   create_service:
     detect: True
@@ -475,7 +523,8 @@ trace_files: !mux
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - K8s Service Created: 1
-    trace_file: trace_files/k8s_audit/create_service.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_service.json
 
   delete_service:
     detect: True
@@ -485,7 +534,8 @@ trace_files: !mux
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - K8s Service Deleted: 1
-    trace_file: trace_files/k8s_audit/delete_service.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/delete_service.json
 
   create_configmap:
     detect: True
@@ -495,7 +545,8 @@ trace_files: !mux
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - K8s ConfigMap Created: 1
-    trace_file: trace_files/k8s_audit/create_configmap.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_configmap.json
 
   delete_configmap:
     detect: True
@@ -505,7 +556,8 @@ trace_files: !mux
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - K8s ConfigMap Deleted: 1
-    trace_file: trace_files/k8s_audit/delete_configmap.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/delete_configmap.json
 
   create_namespace:
     detect: True
@@ -517,7 +569,8 @@ trace_files: !mux
       - ./rules/k8s_audit/allow_user_some-user.yaml
     detect_counts:
       - K8s Namespace Created: 1
-    trace_file: trace_files/k8s_audit/some-user_creates_namespace_foo.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/some-user_creates_namespace_foo.json
 
   delete_namespace:
     detect: True
@@ -527,7 +580,8 @@ trace_files: !mux
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - K8s Namespace Deleted: 1
-    trace_file: trace_files/k8s_audit/delete_namespace_foo.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/delete_namespace_foo.json
 
   create_serviceaccount:
     detect: True
@@ -537,7 +591,8 @@ trace_files: !mux
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - K8s Serviceaccount Created: 1
-    trace_file: trace_files/k8s_audit/create_serviceaccount.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_serviceaccount.json
 
   delete_serviceaccount:
     detect: True
@@ -547,7 +602,8 @@ trace_files: !mux
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - K8s Serviceaccount Deleted: 1
-    trace_file: trace_files/k8s_audit/delete_serviceaccount.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/delete_serviceaccount.json
 
   create_clusterrole:
     detect: True
@@ -557,7 +613,8 @@ trace_files: !mux
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - K8s Role/Clusterrole Created: 1
-    trace_file: trace_files/k8s_audit/create_clusterrole.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_clusterrole.json
 
   delete_clusterrole:
     detect: True
@@ -567,7 +624,8 @@ trace_files: !mux
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - K8s Role/Clusterrole Deleted: 1
-    trace_file: trace_files/k8s_audit/delete_clusterrole.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/delete_clusterrole.json
 
   create_clusterrolebinding:
     detect: True
@@ -577,7 +635,8 @@ trace_files: !mux
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - K8s Role/Clusterrolebinding Created: 1
-    trace_file: trace_files/k8s_audit/create_clusterrolebinding.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_clusterrolebinding.json
 
   delete_clusterrolebinding:
     detect: True
@@ -587,7 +646,8 @@ trace_files: !mux
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - K8s Role/Clusterrolebinding Deleted: 1
-    trace_file: trace_files/k8s_audit/delete_clusterrolebinding.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/delete_clusterrolebinding.json
 
   create_secret:
     detect: True
@@ -597,7 +657,8 @@ trace_files: !mux
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - K8s Secret Created: 1
-    trace_file: trace_files/k8s_audit/create_secret.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_secret.json
 
   # Should *not* result in any event as the secret rules skip service account token secrets
   create_service_account_token_secret:
@@ -606,7 +667,8 @@ trace_files: !mux
     rules_file:
       - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
-    trace_file: trace_files/k8s_audit/create_service_account_token_secret.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_service_account_token_secret.json
 
   create_kube_system_secret:
     detect: False
@@ -614,7 +676,8 @@ trace_files: !mux
     rules_file:
       - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
-    trace_file: trace_files/k8s_audit/create_kube_system_secret.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_kube_system_secret.json
 
   delete_secret:
     detect: True
@@ -624,16 +687,18 @@ trace_files: !mux
       - ../rules/k8s_audit_rules.yaml
     detect_counts:
       - K8s Secret Deleted: 1
-    trace_file: trace_files/k8s_audit/delete_secret.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/delete_secret.json
 
   fal_01_003:
     detect: False
-    detect_level: INFO
+    exit_status: 1
     rules_file:
       - ../rules/falco_rules.yaml
       - ../rules/k8s_audit_rules.yaml
-    trace_file: trace_files/k8s_audit/fal_01_003.json
-    stderr_contains: 'Could not read k8s audit event line #1, "{"kind": 0}": Data not recognized as a k8s audit event, stopping'
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/fal_01_003.json
+    stderr_contains: 'data not recognized as a k8s audit event'
 
   json_pointer_correct_parse:
     detect: True
@@ -642,4 +707,5 @@ trace_files: !mux
       - ./rules/k8s_audit/single_rule_with_json_pointer.yaml
     detect_counts:
       - json_pointer_example: 1
-    trace_file: trace_files/k8s_audit/create_nginx_pod_unprivileged.json
+    conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
+    addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_nginx_pod_unprivileged.json
