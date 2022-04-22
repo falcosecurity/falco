@@ -100,13 +100,14 @@ function run_tests() {
     # as we're watching the return status when running avocado.
     set +e
     TEST_RC=0
-    suites=($SCRIPTDIR/falco_traces.yaml $SCRIPTDIR/falco_tests.yaml $SCRIPTDIR/falco_k8s_audit_tests.yaml $SCRIPTDIR/falco_tests_exceptions.yaml)
+    suites=($SCRIPTDIR/falco_traces.yaml $SCRIPTDIR/falco_tests.yaml $SCRIPTDIR/falco_tests_exceptions.yaml)
 
     if [ "$SKIP_PACKAGES_TESTS" = false ] ; then
         suites+=($SCRIPTDIR/falco_tests_package.yaml)
     fi
 
     if [ "$SKIP_PLUGINS_TESTS" = false ] ; then
+        suites+=($SCRIPTDIR/falco_k8s_audit_tests.yaml)
         suites+=($SCRIPTDIR/falco_tests_plugins.yaml)
     fi
     
