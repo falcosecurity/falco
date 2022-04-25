@@ -1148,6 +1148,9 @@
 - macro: user_known_write_below_etc_activities
   condition: (never_true)
 
+- macro: calico_node
+  condition: (container.image.repository endswith calico/node and proc.name=calico-node)
+
 - macro: write_etc_common
   condition: >
     etc_dir and evt.dir = < and open_write
@@ -1253,6 +1256,7 @@
     and not mcafee_writing_cma_d
     and not avinetworks_supervisor_writing_ssh
     and not multipath_writing_conf
+    and not calico_node
 
 - rule: Write below etc
   desc: an attempt to write to any file below /etc
@@ -1471,7 +1475,7 @@
   tags: [filesystem, software_mgmt, mitre_persistence]
 
 - macro: postgres_running_wal_e
-  condition: (proc.pname=postgres and proc.cmdline startswith "sh -c envdir /etc/wal-e.d/env /usr/local/bin/wal-e")
+  condition: (proc.pname=postgres and (proc.cmdline startswith "sh -c envdir /etc/wal-e.d/env /usr/local/bin/wal-e" or proc.cmdline startswith "sh -c envdir \"/run/etc/wal-e.d/env\" wal-g wal-push"))
 
 - macro: redis_running_prepost_scripts
   condition: (proc.aname[2]=redis-server and (proc.cmdline contains "redis-server.post-up.d" or proc.cmdline contains "redis-server.pre-up.d"))
@@ -1549,9 +1553,6 @@
 
 - list: network_plugin_binaries
   items: [aws-cni, azure-vnet]
-
-- macro: calico_node
-  condition: (container.image.repository endswith calico/node and proc.name=calico-node)
 
 - macro: weaveworks_scope
   condition: (container.image.repository endswith weaveworks/scope and proc.name=scope)
@@ -1841,7 +1842,8 @@
     public.ecr.aws/falcosecurity/falco,
     quay.io/calico/node,
     sysdig/sysdig,
-    sematext_images
+    sematext_images,
+    k8s.gcr.io/dns/k8s-dns-node-cache
     ]
 
 - macro: falco_privileged_containers
@@ -1881,7 +1883,8 @@
               aws_eks_image_sensitive_mount or
               container.image.repository in (trusted_images) or
               container.image.repository in (falco_sensitive_mount_images) or
-              container.image.repository startswith quay.io/sysdig/)
+              container.image.repository startswith quay.io/sysdig/ or
+              container.image.repository=k8scloudprovider/cinder-csi-plugin)
 
 # Add conditions to this macro (probably in a separate file,
 # overwriting this macro) to specify additional containers that are
@@ -2391,7 +2394,12 @@
      sysdig/sysdig, falcosecurity/falco,
      fluent/fluentd-kubernetes-daemonset, prom/prometheus,
      ibm_cloud_containers,
-     public.ecr.aws/falcosecurity/falco)
+     public.ecr.aws/falcosecurity/falco, velero/velero,
+     quay.io/jetstack/cert-manager-cainjector, weaveworks/kured,
+     quay.io/prometheus-operator/prometheus-operator,
+     k8s.gcr.io/ingress-nginx/kube-webhook-certgen, quay.io/spotahome/redis-operator,
+     registry.opensource.zalan.do/acid/postgres-operator, registry.opensource.zalan.do/acid/postgres-operator-ui,
+     rabbitmqoperator/cluster-operator)
      or (k8s.ns.name = "kube-system"))
 
 - macro: k8s_api_server
@@ -2445,6 +2453,11 @@
   condition: (never_true)
 
 # Container is supposed to be immutable. Package management should be done in building the image.
+- macro: pkg_mgmt_in_kube_proxy
+  condition: >
+    proc.cmdline startswith "update-alternat"
+    and container.image.repository = "k8s.gcr.io/kube-proxy"
+
 - rule: Launch Package Management Process in Container
   desc: Package management process ran inside container
   condition: >
@@ -2454,6 +2467,7 @@
     and package_mgmt_procs
     and not package_mgmt_ancestor_procs
     and not user_known_package_manager_in_container
+    and not pkg_mgmt_in_kube_proxy
   output: >
     Package management process launched in container (user=%user.name user_loginuid=%user.loginuid
     command=%proc.cmdline container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
