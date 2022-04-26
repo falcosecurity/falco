@@ -126,6 +126,12 @@ static void read_rule_exceptions(
 	const YAML::Node& item,
 	rule_loader::rule_info& v)
 {
+	// An exceptions property with nothing in it is allowed
+	if(item.IsNull())
+	{
+		return;
+	}
+
 	THROW(!item.IsSequence(), "Rule exceptions must be a sequence");
 	for (auto &ex : item)
 	{
