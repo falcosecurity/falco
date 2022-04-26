@@ -21,7 +21,6 @@ limitations under the License.
 #include <plugin_info.h>
 
 static const char *pl_required_api_version = "1.0.0";
-static uint32_t    pl_type                 = TYPE_SOURCE_PLUGIN;
 static uint32_t    pl_id                   = 999;
 static const char *pl_name                 = "test_source";
 static const char *pl_desc                 = "Test Plugin For Regression Tests";
@@ -43,12 +42,6 @@ extern "C"
 const char* plugin_get_required_api_version()
 {
 	return pl_required_api_version;
-}
-
-extern "C"
-uint32_t plugin_get_type()
-{
-	return pl_type;
 }
 
 extern "C"
