@@ -155,7 +155,7 @@ static void validate_exception_info(
 		if (!ex.comps.is_valid())
 		{
 			ex.comps.is_list = false;
-			ex.comps.items.push_back({false, "in"});
+			ex.comps.item = "in";
 		}
 		THROW(ex.comps.is_list, "Rule exception item "
 			+ ex.name + ": fields and comps must both be strings");
