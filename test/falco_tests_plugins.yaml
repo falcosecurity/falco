@@ -24,7 +24,7 @@ trace_files: !mux
       - rules/plugins/cloudtrail_create_instances.yaml
     conf_file: BUILD_DIR/test/confs/plugins/cloudtrail_json_create_instances.yaml
     addl_cmdline_opts: --list-plugins
-    stdout_contains: "2 Plugins Loaded.*Name: cloudtrail.*Type: source plugin.*Name: json.*Type: extractor plugin"
+    stdout_contains: "2 Plugins Loaded.*Name: cloudtrail.*ID:.*Name: json"
 
   list_plugin_fields:
     check_detection_counts: False
