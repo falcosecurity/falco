@@ -66,7 +66,7 @@ void falco_webserver::start(
     {
         try
         {
-            this->m_server->listen("localhost", listen_port);
+            this->m_server->listen("0.0.0.0", listen_port);
         }
         catch(std::exception &e)
         {
