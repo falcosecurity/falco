@@ -47,7 +47,6 @@ else()
     falco_engine
     PUBLIC
       "${NJSON_INCLUDE}"
-      "${CURL_INCLUDE_DIR}"
       "${TBB_INCLUDE_DIR}"
       "${STRING_VIEW_LITE_INCLUDE}"
       "${LIBSCAP_INCLUDE_DIRS}"
