@@ -201,7 +201,12 @@ load_kernel_module_download() {
 	local FALCO_KERNEL_MODULE_FILENAME="${DRIVER_NAME}_${TARGET_ID}_${KERNEL_RELEASE}_${KERNEL_VERSION}.ko"
 
 	local URL
-	URL=$(echo "${DRIVERS_REPO}/${DRIVER_VERSION}/${FALCO_KERNEL_MODULE_FILENAME}" | sed s/+/%2B/g)
+	if [ "${ARCH}" == "x86_64" ]; then
+		# x86_64 still uses root
+		URL=$(echo "${DRIVERS_REPO}/${DRIVER_VERSION}/${FALCO_KERNEL_MODULE_FILENAME}" | sed s/+/%2B/g)
+	else
+		URL=$(echo "${DRIVERS_REPO}/${DRIVER_VERSION}/${ARCH}/${FALCO_KERNEL_MODULE_FILENAME}" | sed s/+/%2B/g)
+	fi
 
 	echo "* Trying to download a prebuilt ${DRIVER_NAME} module from ${URL}"
 	if curl -L --create-dirs "${FALCO_DRIVER_CURL_OPTIONS}" -o "${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}" "${URL}"; then
