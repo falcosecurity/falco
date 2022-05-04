@@ -8,8 +8,8 @@ ENV FALCO_VERSION ${FALCO_VERSION}
 RUN apt update -y
 RUN apt install dkms curl -y
 
-ADD falco-${FALCO_VERSION}-x86_64.tar.gz /
-RUN cp -R /falco-${FALCO_VERSION}-x86_64/* /
+ADD falco-${FALCO_VERSION}-*.tar.gz /
+RUN cp -R /falco-${FALCO_VERSION}-$(uname -m)/* /
 
 # Change the falco config within the container to enable ISO 8601 output.
 RUN sed -e 's/time_format_iso_8601: false/time_format_iso_8601: true/' < /etc/falco/falco.yaml > /etc/falco/falco.yaml.new \
