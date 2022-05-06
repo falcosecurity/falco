@@ -125,6 +125,7 @@ private:
 	// These methods comprise the code the application "runs". The
 	// order in which the methods run is in application.cpp.
 	run_result create_signal_handlers();
+	run_result attach_inotify_signals();
  	run_result daemonize();
  	run_result init_falco_engine();
  	run_result init_inspector();

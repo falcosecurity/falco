@@ -72,12 +72,12 @@ application::run_result application::load_rules_files()
 
 	string all_rules;
 
-	if (m_options.rules_filenames.size())
+	if (!m_options.rules_filenames.empty())
 	{
 		m_state->config->m_rules_filenames = m_options.rules_filenames;
 	}
 
-	if(m_state->config->m_rules_filenames.size() == 0)
+	if(m_state->config->m_rules_filenames.empty())
 	{
 		ret.success = false;
 		ret.errstr = "You must specify at least one rules file/directory via -r or a rules_file entry in falco.yaml";
