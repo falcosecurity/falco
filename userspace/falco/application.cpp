@@ -138,6 +138,7 @@ bool application::run(std::string &errstr, bool &restart)
 		std::bind(&application::print_ignored_events, this),
 		std::bind(&application::print_support, this),
 		std::bind(&application::validate_rules_files, this),
+		std::bind(&application::attach_inotify_signals, this),
 		std::bind(&application::daemonize, this),
 		std::bind(&application::init_outputs, this),
 		std::bind(&application::open_inspector, this),

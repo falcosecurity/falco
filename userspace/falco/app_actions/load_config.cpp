@@ -22,7 +22,7 @@ application::run_result application::load_config()
 {
 	run_result ret;
 
-	if (m_options.conf_filename.size())
+	if (!m_options.conf_filename.empty())
 	{
 		m_state->config->init(m_options.conf_filename, m_options.cmdline_config_options);
 		falco_logger::set_time_format_iso_8601(m_state->config->m_time_format_iso_8601);

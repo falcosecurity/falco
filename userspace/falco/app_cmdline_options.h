@@ -35,6 +35,7 @@ public:
 	// Each of these maps directly to a command line option.
 	bool help;
 	std::string conf_filename;
+	bool monitor_files;
 	bool all_events;
 	sinsp_evt::param_fmt event_buffer_format;
 	std::vector<std::string> cri_socket_paths;
