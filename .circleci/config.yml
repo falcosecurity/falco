@@ -239,74 +239,80 @@ jobs:
   # Publish docker packages
   "publish/docker-dev":
     docker:
-      - image: docker:stable
+      - image: cimg/base:stable
     steps:
       - attach_workspace:
           at: /
       - checkout
-      - setup_remote_docker
+      - setup_remote_docker:
+          version: 20.10.12
       - run:
           name: Build and publish no-driver-dev
           command: |
             FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
-            docker build --build-arg VERSION_BUCKET=bin-dev --build-arg FALCO_VERSION=${FALCO_VERSION} -t falcosecurity/falco-no-driver:master docker/no-driver
-            docker tag falcosecurity/falco-no-driver:master falcosecurity/falco:master-slim
             echo ${DOCKERHUB_SECRET} | docker login -u ${DOCKERHUB_USER} --password-stdin
-            docker push falcosecurity/falco-no-driver:master
-            docker push falcosecurity/falco:master-slim
+            docker buildx build --build-arg VERSION_BUCKET=bin-dev --build-arg FALCO_VERSION=${FALCO_VERSION} --platform "arm64,amd64" --push \ 
+              -t falcosecurity/falco-no-driver:master \
+              -t falcosecurity/falco:master-slim \
+              docker/no-driver
       - run:
           name: Build and publish dev
           command: |
             FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
-            docker build --build-arg VERSION_BUCKET=deb-dev --build-arg FALCO_VERSION=${FALCO_VERSION} -t falcosecurity/falco:master docker/falco
             echo ${DOCKERHUB_SECRET} | docker login -u ${DOCKERHUB_USER} --password-stdin
-            docker push falcosecurity/falco:master
+            docker buildx build --build-arg VERSION_BUCKET=deb-dev --build-arg FALCO_VERSION=${FALCO_VERSION} --platform "arm64,amd64" --push \ 
+              -t falcosecurity/falco:master \
+              docker/falco
       - run:
           name: Build and publish dev falco-driver-loader-dev
           command: |
-            docker build --build-arg FALCO_IMAGE_TAG=master -t falcosecurity/falco-driver-loader:master docker/driver-loader
             echo ${DOCKERHUB_SECRET} | docker login -u ${DOCKERHUB_USER} --password-stdin
-            docker push falcosecurity/falco-driver-loader:master
+            docker buildx build --build-arg FALCO_IMAGE_TAG=master --platform "arm64,amd64" --push \ 
+              -t falcosecurity/falco-driver-loader:master \
+              docker/driver-loader
   # Publish container images to AWS ECR Public
   "publish/container-images-aws-dev":
     docker:
-      - image: docker:stable
+      - image: cimg/base:stable
     steps:
       - attach_workspace:
           at: /
       - checkout
-      - setup_remote_docker
+      - setup_remote_docker:
+          version: 20.10.12
       - run:
           name: Build and publish no-driver (dev) to AWS
           command: |
             apk update
             apk add --update groff less py-pip
             pip install awscli
-            FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
-            docker build --build-arg VERSION_BUCKET=bin-dev --build-arg FALCO_VERSION=${FALCO_VERSION} -t "public.ecr.aws/falcosecurity/falco-no-driver:master" docker/no-driver
-            docker tag public.ecr.aws/falcosecurity/falco-no-driver:master public.ecr.aws/falcosecurity/falco:master-slim
             aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/falcosecurity
-            docker push "public.ecr.aws/falcosecurity/falco-no-driver:master"
-            docker push "public.ecr.aws/falcosecurity/falco:master-slim"
+            FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
+            docker buildx build --build-arg VERSION_BUCKET=bin-dev --build-arg FALCO_VERSION=${FALCO_VERSION} --platform "arm64,amd64" --push \ 
+              -t "public.ecr.aws/falcosecurity/falco-no-driver:master" \
+              -t public.ecr.aws/falcosecurity/falco:master-slim \
+              docker/no-driver
       - run:
           name: Build and publish falco (dev) to AWS
           command: |
             apk update
             apk add --update groff less py-pip
             pip install awscli
-            FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
-            docker build --build-arg VERSION_BUCKET=deb-dev --build-arg FALCO_VERSION=${FALCO_VERSION} -t "public.ecr.aws/falcosecurity/falco:master" docker/falco
             aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/falcosecurity
-            docker push "public.ecr.aws/falcosecurity/falco:master"
+            FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
+            docker buildx build --build-arg VERSION_BUCKET=deb-dev --build-arg FALCO_VERSION=${FALCO_VERSION} --platform "arm64,amd64" --push \ 
+              -t "public.ecr.aws/falcosecurity/falco:master" \
+              docker/falco
       - run:
           name: Build and publish driver-loader (dev) to AWS
           command: |
             apk update
             apk add --update groff less py-pip
             pip install awscli
-            docker build --build-arg FALCO_IMAGE_TAG=master -t "public.ecr.aws/falcosecurity/falco-driver-loader:master" docker/driver-loader
             aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/falcosecurity
-            docker push "public.ecr.aws/falcosecurity/falco-driver-loader:master"
+            docker buildx build --build-arg FALCO_IMAGE_TAG=master --platform "arm64,amd64" --push \
+              -t "public.ecr.aws/falcosecurity/falco-driver-loader:master" \
+              docker/driver-loader
   # Publish the packages
   "publish/packages":
     docker:
@@ -359,86 +365,83 @@ jobs:
   # Publish docker packages
   "publish/docker":
     docker:
-      - image: docker:stable
+      - image: cimg/base:stable
     steps:
       - attach_workspace:
           at: /
       - checkout
-      - setup_remote_docker
+      - setup_remote_docker:
+          version: 20.10.12
       - run:
           name: Build and publish no-driver
           command: |
-            docker build --build-arg VERSION_BUCKET=bin --build-arg FALCO_VERSION=${CIRCLE_TAG} -t "falcosecurity/falco-no-driver:${CIRCLE_TAG}" docker/no-driver
-            docker tag "falcosecurity/falco-no-driver:${CIRCLE_TAG}" falcosecurity/falco-no-driver:latest
-            docker tag "falcosecurity/falco-no-driver:${CIRCLE_TAG}" "falcosecurity/falco:${CIRCLE_TAG}-slim"
-            docker tag "falcosecurity/falco-no-driver:${CIRCLE_TAG}" "falcosecurity/falco:latest-slim"
             echo ${DOCKERHUB_SECRET} | docker login -u ${DOCKERHUB_USER} --password-stdin
-            docker push "falcosecurity/falco-no-driver:${CIRCLE_TAG}"
-            docker push "falcosecurity/falco-no-driver:latest"
-            docker push "falcosecurity/falco:${CIRCLE_TAG}-slim"
-            docker push "falcosecurity/falco:latest-slim"
+            docker buildx build --build-arg VERSION_BUCKET=bin --build-arg FALCO_VERSION=${CIRCLE_TAG} --platform "arm64,amd64" --push \
+              -t "falcosecurity/falco-no-driver:${CIRCLE_TAG}" \
+              -t falcosecurity/falco-no-driver:latest \
+              -t "falcosecurity/falco:${CIRCLE_TAG}-slim" \
+              -t "falcosecurity/falco:latest-slim" \
+              docker/no-driver
       - run:
           name: Build and publish falco
           command: |
-            docker build --build-arg VERSION_BUCKET=deb --build-arg FALCO_VERSION=${CIRCLE_TAG} -t "falcosecurity/falco:${CIRCLE_TAG}" docker/falco
-            docker tag "falcosecurity/falco:${CIRCLE_TAG}" falcosecurity/falco:latest
             echo ${DOCKERHUB_SECRET} | docker login -u ${DOCKERHUB_USER} --password-stdin
-            docker push "falcosecurity/falco:${CIRCLE_TAG}"
-            docker push "falcosecurity/falco:latest"
+            docker buildx build --build-arg VERSION_BUCKET=deb --build-arg FALCO_VERSION=${CIRCLE_TAG} --platform "arm64,amd64" --push \
+              -t "falcosecurity/falco:${CIRCLE_TAG}" \
+              -t "falcosecurity/falco:latest" \
+              docker/falco
       - run:
           name: Build and publish falco-driver-loader
           command: |
-            docker build --build-arg FALCO_IMAGE_TAG=${CIRCLE_TAG} -t "falcosecurity/falco-driver-loader:${CIRCLE_TAG}" docker/driver-loader
-            docker tag "falcosecurity/falco-driver-loader:${CIRCLE_TAG}" falcosecurity/falco-driver-loader:latest
             echo ${DOCKERHUB_SECRET} | docker login -u ${DOCKERHUB_USER} --password-stdin
-            docker push "falcosecurity/falco-driver-loader:${CIRCLE_TAG}"
-            docker push "falcosecurity/falco-driver-loader:latest"
+            docker buildx build --build-arg FALCO_IMAGE_TAG=${CIRCLE_TAG} --platform "arm64,amd64" --push \
+              -t "falcosecurity/falco-driver-loader:${CIRCLE_TAG}" \
+              -t "falcosecurity/falco-driver-loader:latest" \
+              docker/driver-loader
   # Publish container images to AWS ECR Public
   "publish/container-images-aws":
     docker:
-      - image: docker:stable
+      - image: cimg/base:stable
     steps:
       - attach_workspace:
           at: /
       - checkout
-      - setup_remote_docker
+      - setup_remote_docker:
+          version: 20.10.12
       - run:
           name: Build and publish no-driver to AWS
           command: |
             apk update
             apk add --update groff less py-pip
             pip install awscli
-            docker build --build-arg VERSION_BUCKET=bin --build-arg FALCO_VERSION=${CIRCLE_TAG} -t "public.ecr.aws/falcosecurity/falco-no-driver:${CIRCLE_TAG}" docker/no-driver
-            docker tag "public.ecr.aws/falcosecurity/falco-no-driver:${CIRCLE_TAG}" public.ecr.aws/falcosecurity/falco-no-driver:latest
-            docker tag "public.ecr.aws/falcosecurity/falco-no-driver:${CIRCLE_TAG}" "public.ecr.aws/falcosecurity/falco:${CIRCLE_TAG}-slim"
-            docker tag "public.ecr.aws/falcosecurity/falco-no-driver:${CIRCLE_TAG}" "public.ecr.aws/falcosecurity/falco:latest-slim"
             aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/falcosecurity
-            docker push "public.ecr.aws/falcosecurity/falco:${CIRCLE_TAG}-slim"
-            docker push "public.ecr.aws/falcosecurity/falco:latest-slim"
-            docker push "public.ecr.aws/falcosecurity/falco-no-driver:${CIRCLE_TAG}"
-            docker push "public.ecr.aws/falcosecurity/falco-no-driver:latest"
+            docker buildx build --build-arg VERSION_BUCKET=bin --build-arg FALCO_VERSION=${CIRCLE_TAG} --platform "arm64,amd64" --push \
+              -t "public.ecr.aws/falcosecurity/falco-no-driver:${CIRCLE_TAG}" \
+              -t public.ecr.aws/falcosecurity/falco-no-driver:latest \
+              -t "public.ecr.aws/falcosecurity/falco:${CIRCLE_TAG}-slim" \
+              -t "public.ecr.aws/falcosecurity/falco:latest-slim" \
+              docker/no-driver
       - run:
           name: Build and publish falco to AWS
           command: |
             apk update
             apk add --update groff less py-pip
             pip install awscli
-            docker build --build-arg VERSION_BUCKET=deb --build-arg FALCO_VERSION=${CIRCLE_TAG} -t "public.ecr.aws/falcosecurity/falco:${CIRCLE_TAG}" docker/falco
-            docker tag "public.ecr.aws/falcosecurity/falco:${CIRCLE_TAG}" public.ecr.aws/falcosecurity/falco:latest
             aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/falcosecurity
-            docker push "public.ecr.aws/falcosecurity/falco:${CIRCLE_TAG}"
-            docker push "public.ecr.aws/falcosecurity/falco:latest"
+            docker buildx build --build-arg VERSION_BUCKET=deb --build-arg FALCO_VERSION=${CIRCLE_TAG} --platform "arm64,amd64" --push \
+              -t "public.ecr.aws/falcosecurity/falco:${CIRCLE_TAG}" \
+              -t public.ecr.aws/falcosecurity/falco:latest \
+            docker/falco
       - run:
           name: Build and publish falco-driver-loader to AWS
           command: |
             apk update
             apk add --update groff less py-pip
             pip install awscli
-            docker build --build-arg FALCO_IMAGE_TAG=${CIRCLE_TAG} -t "public.ecr.aws/falcosecurity/falco-driver-loader:${CIRCLE_TAG}" docker/driver-loader
-            docker tag "public.ecr.aws/falcosecurity/falco-driver-loader:${CIRCLE_TAG}" public.ecr.aws/falcosecurity/falco-driver-loader:latest
-            aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/falcosecurity
-            docker push "public.ecr.aws/falcosecurity/falco-driver-loader:${CIRCLE_TAG}"
-            docker push "public.ecr.aws/falcosecurity/falco-driver-loader:latest"
+            docker buildx build --build-arg FALCO_IMAGE_TAG=${CIRCLE_TAG} --platform "arm64,amd64" --push \
+              -t "public.ecr.aws/falcosecurity/falco-driver-loader:${CIRCLE_TAG}" \
+              -t public.ecr.aws/falcosecurity/falco-driver-loader:latest \
+            docker/driver-loader
 workflows:
   version: 2
   build_and_test:
