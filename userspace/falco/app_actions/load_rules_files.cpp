@@ -86,12 +86,17 @@ application::run_result application::load_rules_files()
 	}
 
 	falco_logger::log(LOG_DEBUG, "Configured rules filenames:\n");
-	for (const auto& filename : m_state->config->m_rules_filenames)
+	for (const auto& path : m_state->config->m_rules_filenames)
 	{
-		falco_logger::log(LOG_DEBUG, string("   ") + filename + "\n");
+		falco_logger::log(LOG_DEBUG, string("   ") + path + "\n");
 	}
 
-	for (const auto& filename : m_state->config->m_rules_filenames)
+	for (const auto &path : m_state->config->m_rules_filenames)
+	{
+		falco_configuration::read_rules_file_directory(path, m_state->config->m_loaded_rules_filenames, m_state->config->m_loaded_rules_folders);
+	}
+
+	for (const auto& filename : m_state->config->m_loaded_rules_filenames)
 	{
 		falco_logger::log(LOG_INFO, "Loading rules from file " + filename + ":\n");
 		uint64_t required_engine_version;

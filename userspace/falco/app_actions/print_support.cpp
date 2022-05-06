@@ -58,7 +58,7 @@ application::run_result application::print_support()
 		support["engine_info"]["engine_version"] = FALCO_ENGINE_VERSION;
 		support["config"] = read_file(m_options.conf_filename);
 		support["rules_files"] = nlohmann::json::array();
-		for(auto filename : m_state->config->m_rules_filenames)
+		for(auto filename : m_state->config->m_loaded_rules_filenames)
 		{
 			nlohmann::json finfo;
 			finfo["name"] = filename;
