@@ -93,12 +93,12 @@ application::run_result application::attach_inotify_signals()
 	run_result ret;
         if (m_options.monitor_files)
 	{
+		ret.proceed = false;
+		ret.success = false;
 		inot_fd = inotify_init();
 		if (inot_fd == -1)
 		{
-			ret.success = false;
 			ret.errstr = std::string("Could not create inotify handler.");
-			ret.proceed = false;
 			return ret;
 		}
 
@@ -108,18 +108,14 @@ application::run_result application::attach_inotify_signals()
 		sa.sa_handler = restart_falco;
 		if (sigaction(SIGIO, &sa, NULL) == -1)
 		{
-			ret.success = false;
 			ret.errstr = std::string("Failed to link SIGIO to inotify handler.");
-			ret.proceed = false;
 			return ret;
 		}
 
 		/* Set owner process that is to receive "I/O possible" signal */
 		if (fcntl(inot_fd, F_SETOWN, getpid()) == -1)
 		{
-			ret.success = false;
 			ret.errstr = std::string("Failed to setting owner on inotify handler.");
-			ret.proceed = false;
 			return ret;
 		}
 
@@ -130,9 +126,7 @@ application::run_result application::attach_inotify_signals()
 		int flags = fcntl(inot_fd, F_GETFL);
 		if (fcntl(inot_fd, F_SETFL, flags | O_ASYNC | O_NONBLOCK) == -1)
 		{
-			ret.success = false;
 			ret.errstr = std::string("Failed to setting flags on inotify handler.");
-			ret.proceed = false;
 			return ret;
 		}
 
@@ -140,9 +134,7 @@ application::run_result application::attach_inotify_signals()
 		int wd = inotify_add_watch(inot_fd, m_options.conf_filename.c_str(), IN_CLOSE_WRITE);
 		if (wd == -1)
 		{
-			ret.success = false;
 			ret.errstr = std::string("Failed to watch conf file.");
-			ret.proceed = false;
 			return ret;
 		}
 		falco_logger::log(LOG_DEBUG, "Watching " + m_options.conf_filename +"\n");
@@ -151,15 +143,14 @@ application::run_result application::attach_inotify_signals()
 			wd = inotify_add_watch(inot_fd, rule.c_str(), IN_CLOSE_WRITE);
 			if (wd == -1)
 			{
-				ret.success = false;
 				ret.errstr = std::string("Failed to watch rule file: ") + rule;
-				ret.proceed = false;
 				return ret;
 			}
 			falco_logger::log(LOG_DEBUG, "Watching " + rule +"\n");
 		}
+		ret.success = true;
+		ret.proceed = true;
 	}
-
 	return ret;
 }
 
