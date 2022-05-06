@@ -86,12 +86,12 @@ application::run_result application::load_rules_files()
 	}
 
 	falco_logger::log(LOG_DEBUG, "Configured rules filenames:\n");
-	for (auto filename : m_state->config->m_rules_filenames)
+	for (const auto& filename : m_state->config->m_rules_filenames)
 	{
 		falco_logger::log(LOG_DEBUG, string("   ") + filename + "\n");
 	}
 
-	for (auto filename : m_state->config->m_rules_filenames)
+	for (const auto& filename : m_state->config->m_rules_filenames)
 	{
 		falco_logger::log(LOG_INFO, "Loading rules from file " + filename + ":\n");
 		uint64_t required_engine_version;
@@ -125,13 +125,13 @@ application::run_result application::load_rules_files()
 	// Free-up memory for the rule loader, which is not used from now on
 	m_state->engine->clear_loader();
 
-	for (auto substring : m_options.disabled_rule_substrings)
+	for (const auto& substring : m_options.disabled_rule_substrings)
 	{
 		falco_logger::log(LOG_INFO, "Disabling rules matching substring: " + substring + "\n");
 		m_state->engine->enable_rule(substring, false);
 	}
 
-	if(m_options.disabled_rule_tags.size() > 0)
+	if(!m_options.disabled_rule_tags.empty())
 	{
 		for(auto &tag : m_options.disabled_rule_tags)
 		{
@@ -140,7 +140,7 @@ application::run_result application::load_rules_files()
 		m_state->engine->enable_rule_by_tag(m_options.disabled_rule_tags, false);
 	}
 
-	if(m_options.enabled_rule_tags.size() > 0)
+	if(!m_options.enabled_rule_tags.empty())
 	{
 		// Since we only want to enable specific
 		// rules, first disable all rules.

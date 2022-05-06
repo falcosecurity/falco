@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2021 The Falco Authors.
+# Copyright (C) 2022 The Falco Authors.
 #
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -64,6 +64,11 @@ plugins:
 # and then change this to:
 # load_plugins: [cloudtrail, json]
 load_plugins: []
+
+# Watch config file and rules files for modification.
+# When a file is modified, Falco will propagate new config,
+# by reloading itself.
+watch_config_files: true
 
 # If true, the times displayed in log messages and output messages
 # will be in ISO 8601. By default, times are displayed in the local

@@ -181,7 +181,6 @@ void cmdline_options::define()
 #endif
 		("M",                             "Stop collecting after <num_seconds> reached.", cxxopts::value(duration_to_tot)->default_value("0"), "<num_seconds>")
 		("markdown",                      "When used with --list/--list-syscall-events, print the content in Markdown format", cxxopts::value<bool>(markdown))
-		("monitor_files",                 "Monitor rules and config files to reload Falco on change.", cxxopts::value<bool>(monitor_files))
 		("N",                             "When used with --list, only print field names.", cxxopts::value(names_only)->default_value("false"))
 		("o,option",                      "Set the value of option <opt> to <val>. Overrides values in configuration file. <opt> can be identified using its location in configuration file using dot notation. Elements which are entries of lists can be accessed via square brackets [].\n    E.g. base.id = val\n         base.subvalue.subvalue2 = val\n         base.list[1]=val", cxxopts::value(cmdline_config_options), "<opt>=<val>")
 		("p,print",                       "Add additional information to each falco notification's output.\nWith -pc or -pcontainer will use a container-friendly format.\nWith -pk or -pkubernetes will use a kubernetes-friendly format.\nWith -pm or -pmesos will use a mesos-friendly format.\nAdditionally, specifying -pc/-pk/-pm will change the interpretation of %container.info in rule output fields.", cxxopts::value(print_additional), "<output_format>")

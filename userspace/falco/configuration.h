@@ -232,6 +232,7 @@ public:
 
 	falco_common::priority_type m_min_priority;
 
+	bool m_watch_config_files;
 	bool m_buffered_outputs;
 	bool m_time_format_iso_8601;
 	uint32_t m_output_timeout;

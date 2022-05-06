@@ -301,6 +301,8 @@ void falco_configuration::init(string conf_filename, const vector<string> &cmdli
 			m_plugins.push_back(p);
 		}
 	}
+
+	m_watch_config_files = m_config->get_scalar<bool>("watch_config_files", true);
 }
 
 void falco_configuration::read_rules_file_directory(const string &path, list<string> &rules_filenames)
