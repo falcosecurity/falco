@@ -91,7 +91,7 @@ application::run_result application::create_signal_handlers()
 application::run_result application::attach_inotify_signals()
 {
 	run_result ret;
-        if (m_options.monitor_files)
+        if (m_state->config->m_watch_config_files)
 	{
 		ret.proceed = false;
 		ret.success = false;
