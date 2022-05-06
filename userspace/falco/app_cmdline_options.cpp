@@ -95,12 +95,11 @@ bool cmdline_options::parse(int argc, char **argv, std::string &errstr)
 		event_buffer_format = sinsp_evt::PF_BASE64;
 	}
 
-	// Expand any paths provided via -r and fill in rules_filenames
 	if(m_cmdline_parsed.count("r") > 0)
 	{
 		for(auto &path : m_cmdline_parsed["r"].as<std::vector<std::string>>())
 		{
-			falco_configuration::read_rules_file_directory(path, rules_filenames);
+			rules_filenames.push_back(path);
 		}
 	}
 

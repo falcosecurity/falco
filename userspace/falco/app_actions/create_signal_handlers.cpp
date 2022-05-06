@@ -130,7 +130,7 @@ application::run_result application::attach_inotify_signals()
 			return ret;
 		}
 
-		/* Add watchers */
+		// Watch conf file
 		int wd = inotify_add_watch(inot_fd, m_options.conf_filename.c_str(), IN_CLOSE_WRITE);
 		if (wd == -1)
 		{
@@ -139,15 +139,33 @@ application::run_result application::attach_inotify_signals()
 		}
 		falco_logger::log(LOG_DEBUG, "Watching " + m_options.conf_filename +"\n");
 
-		for (const auto &rule : m_state->config->m_rules_filenames) {
-			wd = inotify_add_watch(inot_fd, rule.c_str(), IN_CLOSE_WRITE);
+		// Watch rules files
+		for (const auto &rule : m_state->config->m_loaded_rules_filenames)
+		{
+			wd = inotify_add_watch(inot_fd, rule.c_str(), IN_CLOSE_WRITE | IN_ONESHOT);
 			if (wd == -1)
 			{
 				ret.errstr = std::string("Failed to watch rule file: ") + rule;
 				return ret;
 			}
-			falco_logger::log(LOG_DEBUG, "Watching " + rule +"\n");
+			falco_logger::log(LOG_DEBUG, "Watching " + rule +".\n");
 		}
+
+		// Watch specified rules folders, if any:
+		// any newly created/removed file within the folder
+		// will trigger a Falco restart.
+		for (const auto &fld : m_state->config->m_loaded_rules_folders)
+		{
+			// For folders, we watch if any file is created or destroyed within
+			wd = inotify_add_watch(inot_fd, fld.c_str(), IN_CREATE | IN_DELETE | IN_ONESHOT);
+			if (wd == -1)
+			{
+				ret.errstr = std::string("Failed to watch rule folder: ") + fld;
+				return ret;
+			}
+			falco_logger::log(LOG_DEBUG, "Watching " + fld +" folder.\n");
+		}
+
 		ret.success = true;
 		ret.proceed = true;
 	}

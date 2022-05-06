@@ -76,7 +76,7 @@ void falco_configuration::init(string conf_filename, const vector<string> &cmdli
 		struct stat buffer;
 		if(stat(file.c_str(), &buffer) == 0)
 		{
-			read_rules_file_directory(file, m_rules_filenames);
+			m_rules_filenames.push_back(file);
 		}
 	}
 
@@ -305,7 +305,7 @@ void falco_configuration::init(string conf_filename, const vector<string> &cmdli
 	m_watch_config_files = m_config->get_scalar<bool>("watch_config_files", true);
 }
 
-void falco_configuration::read_rules_file_directory(const string &path, list<string> &rules_filenames)
+void falco_configuration::read_rules_file_directory(const string &path, list<string> &rules_filenames, list<string> &rules_folders)
 {
 	struct stat st;
 
@@ -319,6 +319,8 @@ void falco_configuration::read_rules_file_directory(const string &path, list<str
 
 	if(st.st_mode & S_IFDIR)
 	{
+		rules_folders.push_back(path);
+
 		// It's a directory. Read the contents, sort
 		// alphabetically, and add every path to
 		// rules_filenames

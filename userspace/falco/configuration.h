@@ -219,9 +219,14 @@ public:
 	void init(std::string conf_filename, const std::vector<std::string>& cmdline_options);
 	void init(const std::vector<std::string>& cmdline_options);
 
-	static void read_rules_file_directory(const string& path, list<string>& rules_filenames);
+	static void read_rules_file_directory(const string& path, list<string>& rules_filenames, list<string> &rules_folders);
 
+	// Rules list as passed by the user
 	std::list<std::string> m_rules_filenames;
+	// Actually loaded rules, with folders inspected
+	std::list<std::string> m_loaded_rules_filenames;
+	// List of loaded rule folders
+	std::list<std::string> m_loaded_rules_folders;
 	bool m_json_output;
 	bool m_json_include_output_property;
 	bool m_json_include_tags_property;
