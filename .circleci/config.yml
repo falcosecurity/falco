@@ -1,27 +1,32 @@
 version: 2.1
 jobs:
-  "build-on-arm64":
+  "build-arm64":
     machine:
       enabled: true
       image: ubuntu-2004:202101-01
-    resource-class: arm.medium
+    resource_class: arm.medium
     steps:
       - run:
-        - command: |
-            docker run -e BUILD_TYPE="release" -it falcosecturity/falco-builder:latest /bin/sh -c "cd source/falco && \
+          command: |
+            docker run -e BUILD_TYPE="release" -it falcosecurity/falco-builder:latest /bin/sh -c "cd source/falco && \
             ./usr/bin/entrypoint cmake && \
             ./usr/bin/entrypoint all && \
             ./usr/bin/entrypoint tests && \
-            ./usr/bin/entrypoint package && \
-            cd ../.. && \
-            mkdir -p /temp/packages && \
-            cp /build/release/*.deb /temp/packages && \
-            cp /build/release/*/tar.gz /temp/packages && \
-            cp /build/release/*.rpm /temp/packages"
+            ./usr/bin/entrypoint package"
+      - run:
+          name: Prepare Artifacts
+          command: |
+            mkdir -p /tmp/packages
+            docker cp falcosecurity/falco-builder:/build/release/*.deb /tmp/packages
+            docker cp falcosecurity/falco-builder:/build/release/*.tar.gz /tmp/packages
+            docker cp falcosecurity/falco-builder:/build/release/*.rpm /tmp/packages
+      - store_artifacts:
+          path: /tmp/packages
+          destination: /packages
 
   # Build a statically linked Falco release binary using musl
   # This build is 100% static, there are no host dependencies
-  "build/musl":
+  "build-musl":
     docker:
       - image: alpine:3.12
     steps:
@@ -69,7 +74,7 @@ jobs:
             - source-static
   # Build using our own builder base image using centos 7
   # This build is static, dependencies are bundled in the Falco binary
-  "build/centos7":
+  "build-centos7":
     docker:
       - image: falcosecurity/falco-builder:latest
         environment:
@@ -105,7 +110,7 @@ jobs:
           path: /tmp/packages
           destination: /packages
   # Execute integration tests based on the build results coming from the "build/centos7" job
-  "tests/integration":
+  "tests-integration":
     docker:
       - image: falcosecurity/falco-tester:latest
         environment:
@@ -121,7 +126,7 @@ jobs:
           command: /usr/bin/entrypoint test
       - store_test_results:
           path: /build/release/integration-tests-xunit
-  "tests/integration-static":
+  "tests-integration-static":
     docker:
       - image: falcosecurity/falco-tester:latest
         environment:
@@ -139,7 +144,7 @@ jobs:
           command: /usr/bin/entrypoint test
       - store_test_results:
           path: /build-static/release/integration-tests-xunit
-  "tests/driver-loader/integration":
+  "tests-driver-loader-integration":
     machine:
       image: ubuntu-2004:202107-02
     steps:
@@ -149,7 +154,7 @@ jobs:
           name: Execute driver-loader integration tests
           command: /tmp/ws/source/falco/test/driver-loader/run_test.sh /tmp/ws/build/release/
   # Code quality
-  "quality/static-analysis":
+  "quality-static-analysis":
     docker:
       - image: falcosecurity/falco-builder:latest
         environment:
@@ -176,7 +181,7 @@ jobs:
           path: /build/release/static-analysis-reports
           destination: /static-analysis-reports
   # Sign rpm packages
-  "rpm/sign":
+  "rpm-sign":
     docker:
       - image: falcosecurity/falco-builder:latest
     steps:
@@ -207,7 +212,7 @@ jobs:
           paths:
             - build/release/*.rpm
   # Publish the dev packages
-  "publish/packages-dev":
+  "publish-packages-dev":
     docker:
       - image: docker.io/centos:7
     steps:
@@ -225,19 +230,20 @@ jobs:
           name: Publish rpm-dev
           command: |
             FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
-            /source/falco/scripts/publish-rpm -f /build/release/falco-${FALCO_VERSION}-x86_64.rpm -r rpm-dev
+            /source/falco/scripts/publish-rpm -f /build/release/falco-${FALCO_VERSION}-x86_64.rpm -f /build/release/falco-${FALCO_VERSION}-aarch64.rpm -r rpm-dev
       - run:
           name: Publish bin-dev
           command: |
             FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
             /source/falco/scripts/publish-bin -f /build/release/falco-${FALCO_VERSION}-x86_64.tar.gz -r bin-dev -a x86_64
+            /source/falco/scripts/publish-bin -f /build/release/falco-${FALCO_VERSION}-aarch64.tar.gz -r bin-dev -a aarch64
       - run:
           name: Publish bin-static-dev
           command: |
             FALCO_VERSION=$(cat /build-static/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
             cp -f /build-static/release/falco-${FALCO_VERSION}-x86_64.tar.gz /build-static/release/falco-${FALCO_VERSION}-static-x86_64.tar.gz
             /source/falco/scripts/publish-bin -f /build-static/release/falco-${FALCO_VERSION}-static-x86_64.tar.gz -r bin-dev -a x86_64
-  "publish/packages-deb-dev":
+  "publish-packages-deb-dev":
     docker:
       - image: docker.io/debian:stable
     steps:
@@ -254,48 +260,10 @@ jobs:
           name: Publish deb-dev
           command: |
             FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
-            /source/falco/scripts/publish-deb -f /build/release/falco-${FALCO_VERSION}-x86_64.deb -r deb-dev
-  
-  "publish/packages-dev-arm64":
-    machine:
-      enabled: true
-      image: ubuntu-2004:202101-01
-    resource-class: arm.medium
-    steps:
-      - run:
-          name: Setup
-          command: |
-            docker run -it docker.io/centos:7 /bin/sh -c "yum install epel-release -y && \
-            yum update -y && \
-            yum install createrepo gpg python python-pip -y && \
-            pip install awscli==1.19.47 && \
-            echo $GPG_KEY | base64 -d | gpg --import && \
-            FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//') && \
-            /source/falco/scripts/publish-rpm -f /build/release/falco-${FALCO_VERSION}-aarch64.rpm -r rpm-dev && \
-            FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//') && \
-            /source/falco/scripts/publish-bin -f /build/release/falco-${FALCO_VERSION}-aarch64.tar.gz -r bin-dev -a aarch64 && \
-            FALCO_VERSION=$(cat /build-static/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//') && \
-            cp -f /build-static/release/falco-${FALCO_VERSION}-aarch64.tar.gz /build-static/release/falco-${FALCO_VERSION}-static-aarch64.tar.gz && \
-            /source/falco/scripts/publish-bin -f /build-static/release/falco-${FALCO_VERSION}-static-aarch64.tar.gz -r bin-dev -a aarch64"
-  
-  "publish/packages-deb-dev-arm64":
-    machine:
-      enabled: true
-      image: ubuntu-2004:202101-01
-    resource-class: arm.medium
-    steps:
-      - run:
-          name: Setup
-          command: |
-            docker run -it docker.io/debian:stable /bin/sh -c "apt update -y && \
-            apt-get install apt-utils bzip2 gpg python python3-pip -y && \
-            pip install awscli && \
-            echo $GPG_KEY | base64 -d | gpg --import && \
-            FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//') && \
-            /source/falco/scripts/publish-deb -f /build/release/falco-${FALCO_VERSION}-aarch64.deb -r deb-dev"    
+            /source/falco/scripts/publish-deb -f /build/release/falco-${FALCO_VERSION}-x86_64.deb -f /build/release/falco-${FALCO_VERSION}-aarch64.deb -r deb-dev
 
   # Publish docker packages
-  "publish/docker-dev":
+  "publish-docker-dev":
     docker:
       - image: cimg/base:stable
         user: root
@@ -315,7 +283,7 @@ jobs:
             sudo apt update
             sudo apt install groff less python3-pip
             pip install awscli
-      - run:     
+      - run:
           name: Build and publish no-driver-dev
           command: |
             FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
@@ -340,7 +308,7 @@ jobs:
           name: Login to aws ECR
           command: |
             aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/falcosecurity
-            
+
       - run:
           name: Publish no-driver (dev) to AWS
           command: |
@@ -360,7 +328,7 @@ jobs:
             docker push public.ecr.aws/falcosecurity/falco-driver-loader:master
 
   # Publish the packages
-  "publish/packages":
+  "publish-packages":
     docker:
       - image: docker.io/centos:7
     steps:
@@ -378,19 +346,20 @@ jobs:
           name: Publish rpm
           command: |
             FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
-            /source/falco/scripts/publish-rpm -f /build/release/falco-${FALCO_VERSION}-x86_64.rpm -r rpm
+            /source/falco/scripts/publish-rpm -f /build/release/falco-${FALCO_VERSION}-x86_64.rpm -f /build/release/falco-${FALCO_VERSION}-aarch64.rpm -r rpm
       - run:
           name: Publish bin
           command: |
             FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
             /source/falco/scripts/publish-bin -f /build/release/falco-${FALCO_VERSION}-x86_64.tar.gz -r bin -a x86_64
+            /source/falco/scripts/publish-bin -f /build/release/falco-${FALCO_VERSION}-aarch64.tar.gz -r bin -a aarch64
       - run:
           name: Publish bin-static
           command: |
             FALCO_VERSION=$(cat /build-static/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
             cp -f /build-static/release/falco-${FALCO_VERSION}-x86_64.tar.gz /build-static/release/falco-${FALCO_VERSION}-static-x86_64.tar.gz
             /source/falco/scripts/publish-bin -f /build-static/release/falco-${FALCO_VERSION}-static-x86_64.tar.gz -r bin -a x86_64
-  "publish/packages-deb":
+  "publish-packages-deb":
     docker:
       - image: docker.io/debian:stable
     steps:
@@ -407,9 +376,9 @@ jobs:
           name: Publish deb
           command: |
             FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
-            /source/falco/scripts/publish-deb -f /build/release/falco-${FALCO_VERSION}-x86_64.deb -r deb
+            /source/falco/scripts/publish-deb -f /build/release/falco-${FALCO_VERSION}-x86_64.deb -f /build/release/falco-${FALCO_VERSION}-aarch64.deb -r deb
   # Publish docker packages
-  "publish/docker":
+  "publish-docker":
     docker:
       - image: cimg/base:stable
         user: root
@@ -456,7 +425,6 @@ jobs:
           name: Login to aws ECR
           command: |
             aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/falcosecurity
-            
       - run:
           name: Publish no-driver to AWS
           command: |
@@ -486,18 +454,19 @@ workflows:
   version: 2.1
   build_and_test:
     jobs:
-      - "build/musl"
-      - "build/centos7"
-      - "tests/integration":
+      - "build-musl"
+      - "build-arm64"
+      - "build-centos7"
+      - "tests-integration":
           requires:
-            - "build/centos7"
-      - "tests/integration-static":
+            - "build-centos7"
+      - "tests-integration-static":
           requires:
-            - "build/musl"
-      - "tests/driver-loader/integration":
+            - "build-musl"
+      - "tests-driver-loader-integration":
           requires:
-            - "build/centos7"
-      - "rpm/sign":
+            - "build-centos7"
+      - "rpm-sign":
           context: falco
           filters:
             tags:
@@ -505,8 +474,9 @@ workflows:
             branches:
               only: master
           requires:
-            - "tests/integration"
-      - "publish/packages-dev":
+            - "tests-integration"
+            - "build-arm64"
+      - "publish-packages-dev":
           context:
             - falco
             - test-infra
@@ -516,9 +486,9 @@ workflows:
             branches:
               only: master
           requires:
-            - "rpm/sign"
-            - "tests/integration-static"
-      - "publish/packages-deb-dev":
+            - "rpm-sign"
+            - "tests-integration-static"
+      - "publish-packages-deb-dev":
           context:
             - falco
             - test-infra
@@ -528,8 +498,9 @@ workflows:
             branches:
               only: master
           requires:
-            - "tests/integration"
-      - "publish/docker-dev":
+            - "tests-integration"
+            - "build-arm64"
+      - "publish-docker-dev":
           context: falco
           filters:
             tags:
@@ -537,63 +508,71 @@ workflows:
             branches:
               only: master
           requires:
-            - "publish/packages-dev"
-            - "publish/packages-deb-dev"
-            - "tests/driver-loader/integration"
+            - "publish-packages-dev"
+            - "publish-packages-deb-dev"
+            - "tests-driver-loader-integration"
       # - "quality/static-analysis" # This is temporarily disabled: https://github.com/falcosecurity/falco/issues/1526
   release:
     jobs:
-      - "build/musl":
+      - "build-musl":
           filters:
             tags:
               only: /.*/
             branches:
               ignore: /.*/
-      - "build/centos7":
+      - "build-centos7":
           filters:
             tags:
               only: /.*/
             branches:
               ignore: /.*/
-      - "rpm/sign":
+      - "build-arm64":
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
+      - "rpm-sign":
           context: falco
           requires:
-            - "build/centos7"
+            - "build-centos7"
+            - "build-arm64"
           filters:
             tags:
               only: /.*/
             branches:
               ignore: /.*/
-      - "publish/packages":
+      - "publish-packages":
           context:
             - falco
             - test-infra
           requires:
-            - "build/musl"
-            - "rpm/sign"
+            - "build-musl"
+            - "rpm-sign"
           filters:
             tags:
               only: /.*/
             branches:
               ignore: /.*/
-      - "publish/packages-deb":
+      - "publish-packages-deb":
           context:
             - falco
             - test-infra
           requires:
-            - "build/centos7"
+            - "build-centos7"
+            - "build-arm64"
           filters:
             tags:
               only: /.*/
             branches:
               ignore: /.*/
-      - "publish/docker":
+      - "publish-docker":
           context:
             - falco
             - test-infra
           requires:
-            - "publish/packages"
-            - "publish/packages-deb"
+            - "publish-packages"
+            - "publish-packages-deb"
           filters:
             tags:
               only: /.*/
