@@ -2594,33 +2594,31 @@
     WARNING
   tags: [process, mitre_persistence]
 
+# here `ash_history` will match both `bash_history` and `ash_history`
 - macro: modify_shell_history
   condition: >
     (modify and (
-      evt.arg.name contains "bash_history" or
+      evt.arg.name endswith "ash_history" or
       evt.arg.name endswith "zsh_history" or
       evt.arg.name contains "fish_read_history" or
       evt.arg.name endswith "fish_history" or
-      evt.arg.name contains "ash_history" or
-      evt.arg.oldpath contains "bash_history" or
+      evt.arg.oldpath endswith "ash_history" or
       evt.arg.oldpath endswith "zsh_history" or
       evt.arg.oldpath contains "fish_read_history" or
       evt.arg.oldpath endswith "fish_history" or
-      evt.arg.oldpath contains "ash_history" or
-      evt.arg.path contains "bash_history" or
+      evt.arg.path endswith "ash_history" or
       evt.arg.path endswith "zsh_history" or
       evt.arg.path contains "fish_read_history" or
-      evt.arg.path endswith "fish_history" or
-      evt.arg.path contains "ash_history"))
+      evt.arg.path endswith "fish_history"))
 
+# here `ash_history` will match both `bash_history` and `ash_history`
 - macro: truncate_shell_history
   condition: >
     (open_write and (
-      fd.name contains "bash_history" or
+      fd.name endswith "ash_history" or
       fd.name endswith "zsh_history" or
       fd.name contains "fish_read_history" or
-      fd.name endswith "fish_history" or
-      fd.name contains "ash_history") and evt.arg.flags contains "O_TRUNC")
+      fd.name endswith "fish_history") and evt.arg.flags contains "O_TRUNC")
 
 - macro: var_lib_docker_filepath
   condition: (evt.arg.name startswith /var/lib/docker or fd.name startswith /var/lib/docker)
