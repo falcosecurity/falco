@@ -117,7 +117,7 @@ class FalcoTest(Test):
 
         for file in self.rules_file:
             if not os.path.isabs(file):
-                file = os.path.join(self.basedir, file)
+                file = os.path.join(self.basedir, file.replace("BUILD_DIR", build_dir))
             self.rules_args = self.rules_args + "-r " + file + " "
 
         self.conf_file = self.params.get(

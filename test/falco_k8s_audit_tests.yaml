@@ -52,7 +52,7 @@ trace_files: !mux
     detect: False
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/engine_v4_k8s_audit_rules.yaml
       - ./rules/k8s_audit/trust_nginx_container.yaml
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
@@ -81,7 +81,7 @@ trace_files: !mux
     detect: False
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/engine_v4_k8s_audit_rules.yaml
       - ./rules/k8s_audit/trust_nginx_container.yaml
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
@@ -92,7 +92,7 @@ trace_files: !mux
     detect_level: WARNING
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/allow_namespace_foo.yaml
     detect_counts:
       - Disallowed K8s User: 1
@@ -103,7 +103,7 @@ trace_files: !mux
     detect: False
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/allow_namespace_foo.yaml
       - ./rules/k8s_audit/allow_user_some-user.yaml
       - ./rules/k8s_audit/disallow_kactivity.yaml
@@ -115,7 +115,7 @@ trace_files: !mux
     detect_level: WARNING
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/allow_only_apache_container.yaml
     detect_counts:
       - Create Disallowed Pod: 1
@@ -126,7 +126,7 @@ trace_files: !mux
     detect: False
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/allow_nginx_container.yaml
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
     addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_nginx_pod_unprivileged.json
@@ -136,7 +136,7 @@ trace_files: !mux
     detect_level: WARNING
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
     detect_counts:
       - Create Privileged Pod: 1
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
@@ -147,7 +147,7 @@ trace_files: !mux
     detect_level: WARNING
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
     detect_counts:
       - Create Privileged Pod: 1
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
@@ -158,7 +158,7 @@ trace_files: !mux
     detect_level: WARNING
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
     detect_counts:
       - Create Privileged Pod: 1
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
@@ -168,7 +168,7 @@ trace_files: !mux
     detect: False
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/trust_nginx_container.yaml
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
     addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_nginx_pod_privileged.json
@@ -177,7 +177,7 @@ trace_files: !mux
     detect: False
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
     addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_nginx_pod_unprivileged.json
 
@@ -185,7 +185,7 @@ trace_files: !mux
     detect: False
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/trust_nginx_container.yaml
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
     addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_nginx_pod_unprivileged.json
@@ -195,7 +195,7 @@ trace_files: !mux
     detect_level: WARNING
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
     detect_counts:
       - Create Sensitive Mount Pod: 1
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
@@ -206,7 +206,7 @@ trace_files: !mux
     detect_level: WARNING
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
     detect_counts:
       - Create Sensitive Mount Pod: 1
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
@@ -216,7 +216,7 @@ trace_files: !mux
     detect: False
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/trust_nginx_container.yaml
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
     addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_nginx_pod_sensitive_mount.json
@@ -225,7 +225,7 @@ trace_files: !mux
     detect: False
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
     addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_nginx_pod_unsensitive_mount.json
 
@@ -233,7 +233,7 @@ trace_files: !mux
     detect: False
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/trust_nginx_container.yaml
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
     addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_nginx_pod_unsensitive_mount.json
@@ -243,7 +243,7 @@ trace_files: !mux
     detect_level: WARNING
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
     detect_counts:
       - Create HostNetwork Pod: 1
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
@@ -253,7 +253,7 @@ trace_files: !mux
     detect: False
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/trust_nginx_container.yaml
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
     addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_nginx_pod_hostnetwork.json
@@ -262,7 +262,7 @@ trace_files: !mux
     detect: False
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
     addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_nginx_pod_nohostnetwork.json
 
@@ -270,7 +270,7 @@ trace_files: !mux
     detect: False
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/trust_nginx_container.yaml
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
     addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_nginx_pod_nohostnetwork.json
@@ -280,7 +280,7 @@ trace_files: !mux
     detect_level: WARNING
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/disallow_kactivity.yaml
     detect_counts:
       - Create NodePort Service: 1
@@ -291,7 +291,7 @@ trace_files: !mux
     detect: False
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/disallow_kactivity.yaml
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
     addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_nginx_service_nonodeport.json
@@ -301,7 +301,7 @@ trace_files: !mux
     detect_level: WARNING
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/disallow_kactivity.yaml
     detect_counts:
       - Create/Modify Configmap With Private Credentials: 6
@@ -312,7 +312,7 @@ trace_files: !mux
     detect: False
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/disallow_kactivity.yaml
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
     addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_configmap_no_sensitive_values.json
@@ -322,7 +322,7 @@ trace_files: !mux
     detect_level: WARNING
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
     detect_counts:
       - Anonymous Request Allowed: 1
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
@@ -333,7 +333,7 @@ trace_files: !mux
     detect_level: NOTICE
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
     detect_counts:
       - Attach/Exec Pod: 1
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
@@ -344,7 +344,7 @@ trace_files: !mux
     detect_level: NOTICE
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
     detect_counts:
       - Attach/Exec Pod: 1
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
@@ -355,7 +355,7 @@ trace_files: !mux
     detect_level: WARNING
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/allow_user_some-user.yaml
     detect_counts:
       - Create Disallowed Namespace: 1
@@ -366,7 +366,7 @@ trace_files: !mux
     detect: False
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/allow_namespace_foo.yaml
       - ./rules/k8s_audit/disallow_kactivity.yaml
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
@@ -377,7 +377,7 @@ trace_files: !mux
     detect_level: WARNING
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
     detect_counts:
       - Pod Created in Kube Namespace: 1
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
@@ -388,7 +388,7 @@ trace_files: !mux
     detect_level: WARNING
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
     detect_counts:
       - Pod Created in Kube Namespace: 1
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
@@ -399,7 +399,7 @@ trace_files: !mux
     detect_level: WARNING
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
     detect_counts:
       - Service Account Created in Kube Namespace: 1
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
@@ -410,7 +410,7 @@ trace_files: !mux
     detect_level: WARNING
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
     detect_counts:
       - Service Account Created in Kube Namespace: 1
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
@@ -421,7 +421,7 @@ trace_files: !mux
     detect_level: WARNING
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
     detect_counts:
       - System ClusterRole Modified/Deleted: 1
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
@@ -432,7 +432,7 @@ trace_files: !mux
     detect_level: WARNING
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
     detect_counts:
       - System ClusterRole Modified/Deleted: 1
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
@@ -443,7 +443,7 @@ trace_files: !mux
     detect_level: WARNING
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
     detect_counts:
       - Attach to cluster-admin Role: 1
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
@@ -454,7 +454,7 @@ trace_files: !mux
     detect_level: WARNING
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
     detect_counts:
       - ClusterRole With Wildcard Created: 1
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
@@ -465,7 +465,7 @@ trace_files: !mux
     detect_level: WARNING
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
     detect_counts:
       - ClusterRole With Wildcard Created: 1
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
@@ -476,7 +476,7 @@ trace_files: !mux
     detect_level: NOTICE
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
     detect_counts:
       - ClusterRole With Write Privileges Created: 1
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
@@ -487,7 +487,7 @@ trace_files: !mux
     detect_level: WARNING
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
     detect_counts:
       - ClusterRole With Pod Exec Created: 1
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
@@ -498,7 +498,7 @@ trace_files: !mux
     detect_level: INFO
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
     detect_counts:
       - K8s Deployment Created: 1
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
@@ -509,7 +509,7 @@ trace_files: !mux
     detect_level: INFO
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
     detect_counts:
       - K8s Deployment Deleted: 1
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
@@ -520,7 +520,7 @@ trace_files: !mux
     detect_level: INFO
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
     detect_counts:
       - K8s Service Created: 1
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
@@ -531,7 +531,7 @@ trace_files: !mux
     detect_level: INFO
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
     detect_counts:
       - K8s Service Deleted: 1
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
@@ -542,7 +542,7 @@ trace_files: !mux
     detect_level: INFO
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
     detect_counts:
       - K8s ConfigMap Created: 1
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
@@ -553,7 +553,7 @@ trace_files: !mux
     detect_level: INFO
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
     detect_counts:
       - K8s ConfigMap Deleted: 1
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
@@ -564,7 +564,7 @@ trace_files: !mux
     detect_level: INFO
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
       - ./rules/k8s_audit/allow_namespace_foo.yaml
       - ./rules/k8s_audit/allow_user_some-user.yaml
     detect_counts:
@@ -577,7 +577,7 @@ trace_files: !mux
     detect_level: INFO
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
     detect_counts:
       - K8s Namespace Deleted: 1
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
@@ -588,7 +588,7 @@ trace_files: !mux
     detect_level: INFO
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
     detect_counts:
       - K8s Serviceaccount Created: 1
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
@@ -599,7 +599,7 @@ trace_files: !mux
     detect_level: INFO
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
     detect_counts:
       - K8s Serviceaccount Deleted: 1
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
@@ -610,7 +610,7 @@ trace_files: !mux
     detect_level: INFO
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
     detect_counts:
       - K8s Role/Clusterrole Created: 1
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
@@ -621,7 +621,7 @@ trace_files: !mux
     detect_level: INFO
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
     detect_counts:
       - K8s Role/Clusterrole Deleted: 1
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
@@ -632,7 +632,7 @@ trace_files: !mux
     detect_level: INFO
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
     detect_counts:
       - K8s Role/Clusterrolebinding Created: 1
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
@@ -643,7 +643,7 @@ trace_files: !mux
     detect_level: INFO
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
     detect_counts:
       - K8s Role/Clusterrolebinding Deleted: 1
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
@@ -654,7 +654,7 @@ trace_files: !mux
     detect_level: INFO
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
     detect_counts:
       - K8s Secret Created: 1
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
@@ -666,7 +666,7 @@ trace_files: !mux
     detect_level: INFO
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
     addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_service_account_token_secret.json
 
@@ -675,7 +675,7 @@ trace_files: !mux
     detect_level: INFO
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
     addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/create_kube_system_secret.json
 
@@ -684,7 +684,7 @@ trace_files: !mux
     detect_level: INFO
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
     detect_counts:
       - K8s Secret Deleted: 1
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
@@ -695,7 +695,7 @@ trace_files: !mux
     exit_status: 1
     rules_file:
       - ../rules/falco_rules.yaml
-      - ../rules/k8s_audit_rules.yaml
+      - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
     conf_file: BUILD_DIR/test/confs/plugins/k8s_audit.yaml
     addl_cmdline_opts: -o plugins[0].open_params=file://trace_files/k8s_audit/fal_01_003.json
     stderr_contains: 'data not recognized as a k8s audit event'
