@@ -30,9 +30,7 @@
 rules_file:
   - /etc/falco/falco_rules.yaml
   - /etc/falco/falco_rules.local.yaml
-  - /etc/falco/k8s_audit_rules.yaml
   - /etc/falco/rules.d
-
 
 #
 # Plugins that are available for use. These plugins are not loaded by
@@ -46,7 +44,8 @@ rules_file:
 plugins:
   - name: k8saudit
     library_path: libk8saudit.so
-    init_config: ""
+    init_config:
+      ""
       # maxEventBytes: 1048576
       # sslCertificate: /etc/falco/falco.pem
     open_params: "http://:9765/k8s-audit"
