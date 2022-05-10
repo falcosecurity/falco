@@ -2065,6 +2065,7 @@
     '"sh -c openssl version"',
     '"bash -c id -Gn kafadmin"',
     '"sh -c /bin/sh -c ''date +%%s''"'
+    '"sh -c /usr/share/lighttpd/create-mime.conf.pl"'
     ]
 
 # This list allows for easy additions to the set of commands allowed
