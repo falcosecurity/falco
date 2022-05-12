@@ -60,7 +60,7 @@ public:
 	std::vector<std::string> cmdline_config_options;
 	std::string print_additional;
 	std::string pidfilename;
-	// Rules list as passed by the user, via cmdline option '-c'
+	// Rules list as passed by the user, via cmdline option '-r'
 	std::list<std::string> rules_filenames;
 	std::string stats_filename;
 	uint64_t stats_interval;
