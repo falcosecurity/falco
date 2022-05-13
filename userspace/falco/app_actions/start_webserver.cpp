@@ -25,8 +25,7 @@ using namespace falco::app;
 application::run_result application::start_webserver()
 {
 	run_result ret;
-
-	if(m_state->config->m_webserver_enabled)
+	if(!is_capture_mode() && m_state->config->m_webserver_enabled)
 	{
 		std::string ssl_option = (m_state->config->m_webserver_ssl_enabled ? " (SSL)" : "");
 		falco_logger::log(LOG_INFO, "Starting internal webserver, listening on port " + to_string(m_state->config->m_webserver_listen_port) + ssl_option + "\n");
@@ -36,14 +35,15 @@ application::run_result application::start_webserver()
 			m_state->config->m_webserver_ssl_certificate, 
 			m_state->config->m_webserver_ssl_enabled);
 	}
-
 	return ret;
 }
 
 bool application::stop_webserver(std::string &errstr)
 {
-	m_state->webserver.stop();
-
+	if(!is_capture_mode())
+	{
+		m_state->webserver.stop();
+	}
 	return true;
 }
 
