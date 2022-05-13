@@ -26,7 +26,7 @@ static const char *pl_desc                 = "Test Plugin For Regression Tests";
 static const char *pl_contact              = "github.com/falcosecurity/falco";
 static const char *pl_version              = "0.1.0";
 static const char *pl_extract_sources      = "[\"test_source\"]";
-static const char *pl_fields               = "[]";
+static const char *pl_fields               = "[{\"type\": \"uint64\", \"name\": \"test.field\", \"desc\": \"Describing test field\"}]";
 
 // This struct represents the state of a plugin. Just has a placeholder string value.
 typedef struct plugin_state
@@ -44,7 +44,7 @@ const char* plugin_get_name()
 {
 	// Add a random-ish suffix to the end, as some tests load
 	// multiple copies of this plugin
-	snprintf(pl_name, sizeof(pl_name)-1, "%s%ld\n", pl_name_base, random());
+	snprintf(pl_name, sizeof(pl_name)-1, "%s%ld", pl_name_base, random());
 	return pl_name;
 }
 
