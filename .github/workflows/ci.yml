@@ -34,3 +34,120 @@ jobs:
           pushd build-minimal
           make tests
           popd
+
+  build-ubuntu-focal:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Update base image
+        run: sudo apt update -y
+
+      - name: Install build dependencies
+        run: sudo DEBIAN_FRONTEND=noninteractive apt install libssl-dev libyaml-dev libc-ares-dev libprotobuf-dev protobuf-compiler libjq-dev libyaml-cpp-dev libgrpc++-dev protobuf-compiler-grpc rpm libelf-dev cmake build-essential libcurl4-openssl-dev linux-headers-generic clang llvm git -y
+
+      - name: Prepare project
+        run: |
+          mkdir build
+          pushd build
+          cmake -DBUILD_BPF=On ..
+          popd
+
+      - name: Build
+        run: |
+          pushd build
+          KERNELDIR=/lib/modules/$(ls /lib/modules)/build make -j4 all
+          popd
+
+      - name: Run unit tests
+        run: |
+          pushd build
+          make tests
+          popd
+
+  build-ubuntu-focal-debug:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Update base image
+        run: sudo apt update -y
+
+      - name: Install build dependencies
+        run: sudo DEBIAN_FRONTEND=noninteractive apt install libssl-dev libyaml-dev libc-ares-dev libprotobuf-dev protobuf-compiler libjq-dev libyaml-cpp-dev libgrpc++-dev protobuf-compiler-grpc rpm libelf-dev cmake build-essential libcurl4-openssl-dev linux-headers-generic clang llvm git -y
+
+      - name: Prepare project
+        run: |
+          mkdir build
+          pushd build
+          cmake -DCMAKE_BUILD_TYPE=debug -DBUILD_BPF=On ..
+          popd
+
+      - name: Build
+        run: |
+          pushd build
+          KERNELDIR=/lib/modules/$(ls /lib/modules)/build make -j4 all
+          popd
+
+      - name: Run unit tests
+        run: |
+          pushd build
+          make tests
+          popd
+
+  build-ubuntu-bionic:
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Update base image
+        run: sudo apt update -y
+
+      - name: Install build dependencies
+        run: sudo DEBIAN_FRONTEND=noninteractive apt install cmake build-essential clang llvm git linux-headers-generic pkg-config autoconf libtool libelf-dev -y
+
+      - name: Prepare project
+        run: |
+          mkdir build
+          pushd build
+          cmake -DBUILD_BPF=On -DUSE_BUNDLED_DEPS=On ..
+          popd
+
+      - name: Build
+        run: |
+          pushd build
+          KERNELDIR=/lib/modules/$(ls /lib/modules)/build make -j4 all
+          popd
+
+      - name: Run unit tests
+        run: |
+          pushd build
+          make tests
+          popd
+
+  build-centos7-debug:
+    runs-on: ubuntu-latest
+    container:
+      image: falcosecurity/falco-builder:latest
+      env:
+        BUILD_TYPE: "debug"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          path: /source/falco
+  
+      - name: Prepare project
+        run: /usr/bin/entrypoint cmake
+
+      - name: Build
+        run: /usr/bin/entrypoint all
+
+      - name: Run unit tests
+        run: /usr/bin/entrypoint tests
+
+      - name: Build packages
+        run: /usr/bin/entrypoint package
