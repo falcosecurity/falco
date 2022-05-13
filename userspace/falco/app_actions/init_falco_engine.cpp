@@ -64,7 +64,7 @@ application::run_result application::init_falco_engine()
 	// libs requires raw pointer, we should modify libs to use reference/shared_ptr
 	std::shared_ptr<gen_event_formatter_factory> syscall_formatter_factory(new sinsp_evt_formatter_factory(m_state->inspector.get()));
 
-	m_state->syscall_source_idx = m_state->engine->add_source(application::s_syscall_source, syscall_filter_factory, syscall_formatter_factory);
+	m_state->syscall_source_idx = m_state->engine->add_source(falco_common::syscall_source, syscall_filter_factory, syscall_formatter_factory);
 	
 	if(m_state->config->m_json_output)
 	{
@@ -73,6 +73,10 @@ application::run_result application::init_falco_engine()
 
 	for(const auto &src : m_options.disable_sources)
 	{
+		if (m_state->enabled_sources.find(src) == m_state->enabled_sources.end())
+		{
+			throw std::invalid_argument("Attempted disabling unknown event source: " + src);
+		}
 		m_state->enabled_sources.erase(src);
 	}
 
