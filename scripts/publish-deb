@@ -2,7 +2,7 @@
 set -e
 
 usage() {
-    echo "usage: $0 -f <package.deb> -r <deb|deb-dev>"
+    echo "usage: $0 -f <package_x86_64.deb> -f <package_aarch64.deb> -r <deb|deb-dev>"
     exit 1
 }
 
@@ -12,6 +12,13 @@ check_program() {
       echo "$1 is required and could not be found"
       exit
   fi
+}
+
+# Used to get comma separated list of architectures
+join_arr() {
+  local IFS="$1"
+  shift
+  echo "$*"
 }
 
 # Add a package to the local DEB repository
@@ -25,6 +32,11 @@ add_deb() {
     rm -f $(basename -- $3).asc
     gpg --detach-sign --digest-algo SHA256 --armor $(basename -- $3)
     popd > /dev/null
+
+    # Get package architecture from dpkg
+    local arch=$(dpkg --info $3 |  awk '/Architecture/ {printf "%s", $2}')
+    # Store architecture in array
+    architectures+=("${arch}")
 }
 
 # Update the local DEB repository
@@ -32,26 +44,20 @@ add_deb() {
 # $1: path of the repository
 # $2: suite (eg. "stable")
 update_repo() {
-    # fixme(leogr): we cannot use apt-ftparchive --arch packages ...
-    # since our .deb files ends with "_x86_64" instead of "amd64".
-    # See https://manpages.debian.org/jessie/apt-utils/apt-ftparchive.1.en.html
-    #
-    # As a workaround, we temporarily stick here with "amd64" 
-    # (the only supported arch at the moment)
-    local arch=amd64
-
     local component=main
     local debs_dir=$2
     local release_dir=dists/$2
-    local packages_dir=${release_dir}/${component}/binary-${arch}
 
     pushd $1 > /dev/null
 
     # packages metadata
-    apt-ftparchive packages ${debs_dir} > ${packages_dir}/Packages
-    gzip -c ${packages_dir}/Packages > ${packages_dir}/Packages.gz
-    bzip2 -z -c ${packages_dir}/Packages > ${packages_dir}/Packages.bz2
-    
+    for arch in "${architectures[@]}"; do
+      local packages_dir=${release_dir}/${component}/binary-${arch}
+      apt-ftparchive packages --arch=${arch} ${debs_dir} > ${packages_dir}/Packages
+      gzip -c ${packages_dir}/Packages > ${packages_dir}/Packages.gz
+      bzip2 -z -c ${packages_dir}/Packages > ${packages_dir}/Packages.bz2
+    done
+
     # release metadata
     apt-ftparchive release \
       -o APT::FTPArchive::Release::Origin=Falco \
@@ -59,7 +65,7 @@ update_repo() {
       -o APT::FTPArchive::Release::Suite=$2 \
       -o APT::FTPArchive::Release::Codename=$2 \
       -o APT::FTPArchive::Release::Components=${component} \
-      -o APT::FTPArchive::Release::Architectures=${arch} \
+      -o APT::FTPArchive::Release::Architectures="$(join_arr , "${architectures[@]}")" \
       ${release_dir} > ${release_dir}/Release
 
     # release signature
@@ -74,7 +80,7 @@ update_repo() {
 while getopts ":f::r:" opt; do
     case "${opt}" in
         f )
-          file=${OPTARG}
+          files+=("${OPTARG}")
           ;;
         r )
           repo="${OPTARG}"
@@ -93,7 +99,7 @@ done
 shift $((OPTIND-1))
 
 # check options
-if [ -z "${file}" ] || [ -z "${repo}" ]; then
+if [ ${#files[@]} -eq 0 ] || [ -z "${repo}" ]; then
     usage
 fi
 
@@ -103,6 +109,7 @@ check_program gzip
 check_program bzip2
 check_program gpg
 check_program aws
+check_program dpkg
 
 # settings
 debSuite=stable
@@ -116,17 +123,23 @@ mkdir -p ${tmp_repo_path}
 aws s3 cp ${s3_bucket_repo} ${tmp_repo_path} --recursive
 
 # update the repo
-echo "Adding ${file}..."
-add_deb ${tmp_repo_path} ${debSuite} ${file}
+for file in "${files[@]}"; do
+  echo "Adding ${file}..."
+  add_deb ${tmp_repo_path} ${debSuite} ${file}
+done
 update_repo ${tmp_repo_path} ${debSuite}
 
 # publish
-package=$(basename -- ${file})
-echo "Publishing ${package} to ${s3_bucket_repo}..."
-aws s3 cp ${tmp_repo_path}/${debSuite}/${package} ${s3_bucket_repo}/${debSuite}/${package} --acl public-read
-aws s3 cp ${tmp_repo_path}/${debSuite}/${package}.asc ${s3_bucket_repo}/${debSuite}/${package}.asc --acl public-read
-aws s3 sync ${tmp_repo_path}/dists ${s3_bucket_repo}/dists --delete --acl public-read
+for file in "${files[@]}"; do
+  package=$(basename -- ${file})
+  echo "Publishing ${package} to ${s3_bucket_repo}..."
+  aws s3 cp ${tmp_repo_path}/${debSuite}/${package} ${s3_bucket_repo}/${debSuite}/${package} --acl public-read
+  aws s3 cp ${tmp_repo_path}/${debSuite}/${package}.asc ${s3_bucket_repo}/${debSuite}/${package}.asc --acl public-read
 
-aws cloudfront create-invalidation --distribution-id ${AWS_CLOUDFRONT_DIST_ID} --paths ${cloudfront_path}/${debSuite}/${package}
-aws cloudfront create-invalidation --distribution-id ${AWS_CLOUDFRONT_DIST_ID} --paths ${cloudfront_path}/${debSuite}/${package}.asc
+  aws cloudfront create-invalidation --distribution-id ${AWS_CLOUDFRONT_DIST_ID} --paths ${cloudfront_path}/${debSuite}/${package}
+  aws cloudfront create-invalidation --distribution-id ${AWS_CLOUDFRONT_DIST_ID} --paths ${cloudfront_path}/${debSuite}/${package}.asc
+done
+
+# sync dists
+aws s3 sync ${tmp_repo_path}/dists ${s3_bucket_repo}/dists --delete --acl public-read
 aws cloudfront create-invalidation --distribution-id ${AWS_CLOUDFRONT_DIST_ID} --paths ${cloudfront_path}/dists/*
