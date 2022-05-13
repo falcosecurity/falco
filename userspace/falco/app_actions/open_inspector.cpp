@@ -28,7 +28,7 @@ application::run_result application::open_inspector()
 {
 	run_result ret;
 
-	if(m_options.trace_filename.size())
+	if(is_capture_mode())
 	{
 		// Try to open the trace file as a
 		// capture file first.
@@ -46,49 +46,32 @@ application::run_result application::open_inspector()
 	}
 	else
 	{
-		open_t open_cb = [this](std::shared_ptr<sinsp> inspector)
-			{
-				if(m_options.userspace)
-				{
-					// open_udig() is the underlying method used in the capture code to parse userspace events from the kernel.
-					//
-					// Falco uses a ptrace(2) based userspace implementation.
-					// Regardless of the implementation, the underlying method remains the same.
-					inspector->open_udig();
-					return;
-				}
-				inspector->open();
-			};
-		open_t open_nodriver_cb = [](std::shared_ptr<sinsp> inspector) {
-			inspector->open_nodriver();
-		};
-		open_t open_f;
-
-		// Default mode: both event sources enabled
-		if (m_state->enabled_sources.find(application::s_syscall_source) != m_state->enabled_sources.end())
-		{
-			open_f = open_cb;
-		}
-		else
-		{
-			open_f = open_nodriver_cb;
-		}
-
 		try
 		{
-			open_f(m_state->inspector);
+			// open_udig() is the underlying method used in the capture code to parse userspace events from the kernel.
+			//
+			// Falco uses a ptrace(2) based userspace implementation.
+			// Regardless of the implementation, the underlying method remains the same.
+			if(m_options.userspace)
+			{
+				m_state->inspector->open_udig();
+			}
+			else
+			{
+				m_state->inspector->open();
+			}
 		}
 		catch(sinsp_exception &e)
 		{
 			// If syscall input source is enabled and not through userspace instrumentation
-			if (m_state->enabled_sources.find(application::s_syscall_source) != m_state->enabled_sources.end() && !m_options.userspace)
+			if (is_syscall_source_enabled() && !m_options.userspace)
 			{
 				// Try to insert the Falco kernel module
 				if(system("modprobe " DRIVER_NAME " > /dev/null 2> /dev/null"))
 				{
 					falco_logger::log(LOG_ERR, "Unable to load the driver.\n");
 				}
-				open_f(m_state->inspector);
+				m_state->inspector->open();
 			}
 			else
 			{

@@ -15,6 +15,7 @@ limitations under the License.
 */
 
 #include "application.h"
+#include <plugin_manager.h>
 
 using namespace falco::app;
 
@@ -25,23 +26,28 @@ application::run_result application::list_plugins()
 	if(m_options.list_plugins)
 	{
 		std::ostringstream os;
-
-		for(auto &info : m_state->plugin_infos)
+		const auto &plugins = m_state->inspector->get_plugin_manager()->plugins();
+		for (auto &p : plugins)
 		{
-			os << "Name: " << info.name << std::endl;
-			os << "Description: " << info.description << std::endl;
-			os << "Contact: " << info.contact << std::endl;
-			os << "Version: " << info.plugin_version.as_string() << std::endl;
-			os << "Capabilities: " << info.caps << std::endl;
-
-			if(info.caps & CAP_SOURCING)
+			os << "Name: " << p->name() << std::endl;
+			os << "Description: " << p->description() << std::endl;
+			os << "Contact: " << p->contact() << std::endl;
+			os << "Version: " << p->plugin_version().as_string() << std::endl;
+			os << "Capabilities: " << std::endl;
+			if(p->caps() & CAP_SOURCING)
 			{
-				os << "ID: " << info.id << std::endl;
+				os << "  - Event Sourcing: (ID=" << p->id();
+				os << ", source='" << p->event_source() << "')" << std::endl;
 			}
+			if(p->caps() & CAP_EXTRACTION)
+			{
+				os << "  - Field Extraction" << std::endl;
+			}
+
 			os << std::endl;
 		}
 
-		printf("%lu Plugins Loaded:\n\n%s\n", m_state->plugin_infos.size(), os.str().c_str());
+		printf("%lu Plugins Loaded:\n\n%s\n", plugins.size(), os.str().c_str());
 		ret.proceed = false;
 	}
 

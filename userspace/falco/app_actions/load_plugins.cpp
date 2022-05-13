@@ -15,6 +15,7 @@ limitations under the License.
 */
 
 #include "application.h"
+#include <plugin_manager.h>
 
 using namespace falco::app;
 
@@ -22,103 +23,131 @@ application::run_result application::load_plugins()
 {
 	run_result ret;
 
-	// The event source is syscall by default. If an input
-	// plugin was found, the source is the source of that
-	// plugin.
-	std::string event_source = s_syscall_source;
-	m_state->event_source_idx = m_state->syscall_source_idx;
-
-	// Factories that can create filters/formatters for
-	// the (single) source supported by the (single) input plugin.
-	// libs requires raw pointer, we should modify libs to use reference/shared_ptr
-	std::shared_ptr<gen_event_filter_factory> plugin_filter_factory(new sinsp_filter_factory(m_state->inspector.get(), m_state->plugin_filter_checks));
-	std::shared_ptr<gen_event_formatter_factory> plugin_formatter_factory(new sinsp_evt_formatter_factory(m_state->inspector.get(), m_state->plugin_filter_checks));
-
-	if(m_state->config->m_json_output)
-	{
-		plugin_formatter_factory->set_output_format(gen_event_formatter::OF_JSON);
-	}
-
-	std::shared_ptr<sinsp_plugin> input_plugin;
-	std::list<std::shared_ptr<sinsp_plugin_cap_extraction>> extractor_plugins;
-	for(auto &p : m_state->config->m_plugins)
-	{
-		std::shared_ptr<sinsp_plugin> plugin;
 #ifdef MUSL_OPTIMIZED
+	if (!m_state->config->m_plugins.empty())
+	{
 		ret.success = ret.proceed = false;
 		ret.errstr = "Can not load/use plugins with musl optimized build";
 		return ret;
-#else
-		falco_logger::log(LOG_INFO, "Loading plugin (" + p.m_name + ") from file " + p.m_library_path + "\n");
-
-		// libs requires raw pointer, we should modify libs to use reference/shared_ptr
-		plugin = m_state->inspector->register_plugin(p.m_library_path,
-						    (p.m_init_config.empty() ? nullptr : (char *)p.m_init_config.c_str()),
-							     m_state->plugin_filter_checks);
+	}
 #endif
+
+	// The only enabled event source is syscall by default
+	m_state->enabled_sources = {falco_common::syscall_source};
+
+	std::shared_ptr<sinsp_plugin> loaded_plugin = nullptr;
+	for(auto &p : m_state->config->m_plugins)
+	{
+		falco_logger::log(LOG_INFO, "Loading plugin (" + p.m_name + ") from file " + p.m_library_path + "\n");
+		auto plugin = m_state->inspector->register_plugin(p.m_library_path, p.m_init_config);
 
 		if(plugin->caps() & CAP_SOURCING)
 		{
-			if(input_plugin)
+			if (!is_capture_mode())
 			{
-				ret.success = false;
-				ret.errstr = string("Can not load multiple source plugins. ") + input_plugin->name() + " already loaded";
-				ret.proceed = false;
-				return ret;
-			}
-
-			input_plugin = plugin;
-			event_source = plugin->event_source();
-
-			m_state->inspector->set_input_plugin(p.m_name);
-			if(!p.m_open_params.empty())
-			{
-				m_state->inspector->set_input_plugin_open_params(p.m_open_params);
-			}
-
-			m_state->event_source_idx = m_state->engine->add_source(event_source, plugin_filter_factory, plugin_formatter_factory);
-
-		}
-
-		if(plugin->caps() & CAP_EXTRACTION)
-		{
-			extractor_plugins.push_back(plugin);
-		}
-	}
-
-	// Ensure that extractor plugins are compatible with the event source.
-	// Also, ensure that extractor plugins don't have overlapping compatible event sources.
-	std::set<std::string> compat_sources_seen;
-	for(const auto& eplugin : extractor_plugins)
-	{
-		// If the extractor plugin names compatible sources,
-		// ensure that the input plugin's source is in the list
-		// of compatible sources.
-		const std::set<std::string> &compat_sources = eplugin->extract_event_sources();
-		if(input_plugin &&
-		   !compat_sources.empty())
-		{
-			if (compat_sources.find(event_source) == compat_sources.end())
-			{
-				ret.success = ret.proceed = false;
-				ret.errstr = string("Extractor plugin not compatible with event source ") + event_source;
-				return ret;
-			}
-
-			for(const auto &compat_source : compat_sources)
-			{
-				if(compat_sources_seen.find(compat_source) != compat_sources_seen.end())
+				// todo(jasondellaluce): change this once we support multiple enabled event sources
+				if(loaded_plugin)
 				{
-					ret.success = ret.proceed = false;
-					ret.errstr = string("Extractor plugins have overlapping compatible event source ") + compat_source;
+					ret.success = false;
+					ret.errstr = "Can not load multiple plugins with event sourcing capability: '"
+						+ loaded_plugin->name()
+						+ "' already loaded";
+					ret.proceed = false;
 					return ret;
 				}
-				compat_sources_seen.insert(compat_source);
+				loaded_plugin = plugin;
+				m_state->enabled_sources = {plugin->event_source()};
+				m_state->inspector->set_input_plugin(p.m_name, p.m_open_params);
+			}
+
+			// Init filtercheck list for the plugin's source and add the
+			// event-generic filterchecks
+			auto &filterchecks = m_state->plugin_filter_checks[plugin->event_source()];
+			filterchecks.add_filter_check(m_state->inspector->new_generic_filtercheck());
+
+			// Factories that can create filters/formatters for the event source of the plugin.
+			std::shared_ptr<gen_event_filter_factory> filter_factory(new sinsp_filter_factory(m_state->inspector.get(), filterchecks));
+			std::shared_ptr<gen_event_formatter_factory> formatter_factory(new sinsp_evt_formatter_factory(m_state->inspector.get(), filterchecks));
+			if(m_state->config->m_json_output)
+			{
+				formatter_factory->set_output_format(gen_event_formatter::OF_JSON);
+			}
+
+			// note: here we assume that the source index will be the same in
+			// both the falco engine and the sinsp plugin manager. This assumption
+			// stands because the plugin manager stores sources in a vector, and
+			// the syscall source is appended in the engine *after* the sources
+			// coming from plugins. Since this is an implementation-based
+			// assumption, we check this and throw an exception to spot
+			// regressions in the future. We keep it like this for to avoid the
+			// overhead of additional mappings at runtime, but we may consider
+			// mapping the two indexes under something like std::unordered_map in the future.
+			bool added = false;
+			auto source_idx = m_state->inspector->get_plugin_manager()->source_idx_by_plugin_id(plugin->id(), added);
+			auto source_idx_engine = m_state->engine->add_source(plugin->event_source(), filter_factory, formatter_factory);
+			if (!added || source_idx != source_idx_engine)
+			{
+				ret.success = ret.proceed = false;
+				ret.errstr = "Could not add event source in the engine: " + plugin->event_source();
+				return ret;
 			}
 		}
 	}
 
-	m_state->plugin_infos = m_state->inspector->plugin_infos();
+	// Iterate over the plugins with extractor capability and add them to the
+	// filtercheck list of their compatible sources
+	std::vector<const filter_check_info*> filtercheck_info;
+	for(const auto& p : m_state->inspector->get_plugin_manager()->plugins())
+	{
+		if (!(p->caps() & CAP_EXTRACTION))
+		{
+			continue;
+		}
+
+		bool used = false;
+		for (auto &it : m_state->plugin_filter_checks)
+		{
+			// check if the event source is compatible with this plugin
+			if (p->is_source_compatible(it.first))
+			{
+				// check if some fields are overlapping on this event sources
+				filtercheck_info.clear();
+				it.second.get_all_fields(filtercheck_info);
+				for (auto &info : filtercheck_info)
+				{
+					for (int32_t i = 0; i < info->m_nfields; i++)
+					{
+						// check if one of the fields extractable by the plugin
+						// is already provided by another filtercheck for this source
+						std::string fname = info->m_fields[i].m_name;
+						for (auto &f : p->fields())
+						{
+							if (std::string(f.m_name) == fname)
+							{
+								ret.success = ret.proceed = false;
+								ret.errstr =
+									"Plugin '" + p->name()
+									+ "' supports extraction of field '" + fname
+									+ "' that is overlapping for source '" + it.first + "'";
+								return ret;
+							}
+						}
+					}
+				}
+
+				// add plugin filterchecks to the event source
+				it.second.add_filter_check(sinsp_plugin::new_filtercheck(p));
+				used = true;
+			}
+		}
+		if (!used)
+		{
+			ret.success = ret.proceed = false;
+			ret.errstr = "Plugin '" + p->name()
+				+ "' has field extraction capability but is not compatible with any enabled event source";
+			return ret;
+		}
+	}
 
 	return ret;
 }

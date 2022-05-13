@@ -29,6 +29,8 @@ limitations under the License.
 #include "statsfilewriter.h"
 #include "application.h"
 
+#include <plugin_manager.h>
+
 using namespace falco::app;
 
 //
@@ -44,6 +46,8 @@ uint64_t application::do_inspect(syscall_evt_drop_mgr &sdropmgr,
 	StatsFileWriter writer;
 	uint64_t duration_start = 0;
 	uint32_t timeouts_since_last_success_or_msg = 0;
+	std::size_t source_idx;
+	bool source_idx_found = false;
 
 	sdropmgr.init(m_state->inspector,
 		      m_state->outputs,
@@ -95,8 +99,8 @@ uint64_t application::do_inspect(syscall_evt_drop_mgr &sdropmgr,
 			if(unlikely(ev == nullptr))
 			{
 				timeouts_since_last_success_or_msg++;
-				if(m_state->event_source_idx == m_state->syscall_source_idx &&
-				   (timeouts_since_last_success_or_msg > m_state->config->m_syscall_evt_timeout_max_consecutives))
+				if(timeouts_since_last_success_or_msg > m_state->config->m_syscall_evt_timeout_max_consecutives
+					&& is_syscall_source_enabled())
 				{
 					std::string rule = "Falco internal: timeouts notification";
 					std::string msg = rule + ". " + std::to_string(m_state->config->m_syscall_evt_timeout_max_consecutives) + " consecutive timeouts without event.";
@@ -157,12 +161,28 @@ uint64_t application::do_inspect(syscall_evt_drop_mgr &sdropmgr,
 			continue;
 		}
 
+		source_idx = m_state->syscall_source_idx;
+		if (ev->get_type() == PPME_PLUGINEVENT_E)
+		{
+			// note: here we can assume that the source index will be the same
+			// in both the falco engine and the sinsp plugin manager. See the
+			// comment in load_plugins.cpp for more details.
+			source_idx = m_state->inspector->get_plugin_manager()->source_idx_by_plugin_id(*(int32_t *)ev->get_param(0)->m_val, source_idx_found);
+			if (!source_idx_found)
+			{
+				result.success = false;
+				result.errstr = "Unknown plugin ID in inspector: " + std::to_string(*(int32_t *)ev->get_param(0)->m_val);
+				result.proceed = false;
+				break;
+			}
+		}
+
 		// As the inspector has no filter at its level, all
 		// events are returned here. Pass them to the falco
 		// engine, which will match the event against the set
 		// of rules. If a match is found, pass the event to
 		// the outputs.
-		unique_ptr<falco_engine::rule_result> res = m_state->engine->process_event(m_state->event_source_idx, ev);
+		unique_ptr<falco_engine::rule_result> res = m_state->engine->process_event(source_idx, ev);
 		if(res)
 		{
 			m_state->outputs->handle_event(res->evt, res->rule, res->source, res->priority_num, res->format, res->tags);
@@ -208,7 +228,7 @@ application::run_result application::process_events()
 	// Honor -M also when using a trace file.
 	// Since inspection stops as soon as all events have been consumed
 	// just await the given duration is reached, if needed.
-	if(!m_options.trace_filename.empty() && m_options.duration_to_tot>0)
+	if(is_capture_mode() && m_options.duration_to_tot > 0)
 	{
 		std::this_thread::sleep_for(std::chrono::seconds(m_options.duration_to_tot));
 	}

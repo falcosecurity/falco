@@ -15,6 +15,7 @@ limitations under the License.
 */
 
 #include "application.h"
+#include <plugin_manager.h>
 
 using namespace falco::app;
 
@@ -24,7 +25,8 @@ void application::check_for_ignored_events()
 	sinsp_evttables* einfo = m_state->inspector->get_event_info_tables();
 	const struct ppm_event_info* etable = einfo->m_event_info;
 
-	m_state->engine->evttypes_for_ruleset(application::s_syscall_source, evttypes);
+	std::string source = falco_common::syscall_source;
+	m_state->engine->evttypes_for_ruleset(source, evttypes);
 
 	// Save event names so we don't warn for both the enter and exit event.
 	std::set<std::string> warn_event_names;
@@ -115,14 +117,14 @@ application::run_result application::load_rules_files()
 	}
 
 	// Ensure that all plugins are compatible with the loaded set of rules
-	for(auto &info : m_state->plugin_infos)
+	for(const auto &plugin : m_state->inspector->get_plugin_manager()->plugins())
 	{
 		std::string required_version;
 
-		if(!m_state->engine->is_plugin_compatible(info.name, info.plugin_version.as_string(), required_version))
+		if(!m_state->engine->is_plugin_compatible(plugin->name(), plugin->plugin_version().as_string(), required_version))
 		{
 			ret.success = false;
-			ret.errstr = std::string("Plugin ") + info.name + " version " + info.plugin_version.as_string() + " not compatible with required plugin version " + required_version;
+			ret.errstr = "Plugin " + plugin->name() + " version " + plugin->plugin_version().as_string() + " not compatible with required plugin version " + required_version;
 			ret.proceed = false;
 		}
 	}
