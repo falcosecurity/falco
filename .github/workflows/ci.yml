@@ -138,7 +138,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         with:
-          path: /source/falco
+          path: falco
+
+      - name: Link falco repo to /source/falco
+        run: |
+          mkdir -p /source
+          ln -s "$GITHUB_WORKSPACE/falco" /source/falco
   
       - name: Prepare project
         run: /usr/bin/entrypoint cmake
