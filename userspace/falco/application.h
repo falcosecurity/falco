@@ -52,15 +52,12 @@ public:
 	bool run(std::string &errstr, bool &restart);
 
 private:
-	static std::string s_syscall_source;
-
 	// Holds the state used and shared by the below methods that
 	// actually implement the application. Declared as a
 	// standalone class to allow for a bit of separation between
 	// application state and instance variables, and to also defer
 	// initializing this state until application::init.
-	class state {
-	public:
+	struct state {
 		state();
 		virtual ~state();
 
@@ -74,23 +71,15 @@ private:
 		std::shared_ptr<sinsp> inspector;
 		std::set<std::string> enabled_sources;
 
-		// The event sources that correspond to "syscall"
+		// The event source index that correspond to "syscall"
 		std::size_t syscall_source_idx;
-
-		// The event source actually used to process events in
-		// process_events(). Will generally be
-		// syscall_source_idx, or a plugin index if plugins
-		// are loaded.
-		std::size_t event_source_idx;
-
-		std::list<sinsp_plugin::info> plugin_infos;
 
 		// All filterchecks created by plugins go in this
 		// list. If we ever support multiple event sources at
 		// the same time, this, and the factories created in
 		// init_inspector/load_plugins, will have to be a map
 		// from event source to filtercheck list.
-		filter_check_list plugin_filter_checks;
+		std::map<std::string, filter_check_list> plugin_filter_checks;
 
 		std::map<string,uint64_t> required_engine_versions;
 
@@ -164,11 +153,18 @@ private:
 	uint64_t do_inspect(syscall_evt_drop_mgr &sdropmgr,
 			    uint64_t duration_to_tot_ns,
 			    run_result &result);
+	
+	inline bool is_syscall_source_enabled() const 
+	{
+		return m_state->enabled_sources.find(falco_common::syscall_source)
+			!= m_state->enabled_sources.end();
+	}
 
-	// This could probably become a direct object once lua is
-	// removed from falco. Currently, creating any global
-	// application object results in a crash in
-	// falco_common::init(), as it loads all lua modules.
+	inline bool is_capture_mode() const 
+	{
+		return !m_options.trace_filename.empty();
+	}
+
 	std::unique_ptr<state> m_state;
 	cmdline_options m_options;
 	bool m_initialized;

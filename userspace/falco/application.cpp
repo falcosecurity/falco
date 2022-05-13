@@ -29,8 +29,6 @@ using namespace std::placeholders;
 namespace falco {
 namespace app {
 
-std::string application::s_syscall_source = falco_common::syscall_source;
-
 application::run_result::run_result()
 	: success(true), errstr(""), proceed(true)
 {
@@ -44,7 +42,7 @@ application::state::state()
 	: restart(false),
 	  terminate(false),
 	  reopen_outputs(false),
-	  enabled_sources({application::s_syscall_source})
+	  enabled_sources({falco_common::syscall_source})
 {
 	config = std::make_shared<falco_configuration>();
 	outputs = std::make_shared<falco_outputs>();
@@ -130,8 +128,8 @@ bool application::run(std::string &errstr, bool &restart)
 		std::bind(&application::create_signal_handlers, this),
 		std::bind(&application::load_config, this),
 		std::bind(&application::init_inspector, this),
-		std::bind(&application::init_falco_engine, this),
 		std::bind(&application::load_plugins, this),
+		std::bind(&application::init_falco_engine, this),
 		std::bind(&application::list_fields, this),
 		std::bind(&application::list_plugins, this),
 		std::bind(&application::load_rules_files, this),
