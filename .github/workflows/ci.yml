@@ -1,0 +1,36 @@
+name: CI Build
+on:
+  pull_request:
+    branches: [master]
+
+jobs:
+  build-minimal:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Update base image
+        run: apt update -y
+
+      - name: Install build dependencies
+        run: DEBIAN_FRONTEND=noninteractive apt install libjq-dev libyaml-cpp-dev libelf-dev cmake build-essential git -y
+
+      - name: Prepare project
+        run: |
+          mkdir build-minimal
+          pushd build-minimal
+          cmake -DMINIMAL_BUILD=On -DBUILD_BPF=Off -DBUILD_DRIVER=Off -DCMAKE_BUILD_TYPE=Release ..
+          popd
+
+      - name: Build
+        run: |
+          pushd build-minimal
+          make -j4 all
+          popd
+
+      - name: Run unit tests
+        run: |
+          pushd build-minimal
+          make tests
+          popd
