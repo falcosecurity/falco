@@ -83,6 +83,16 @@ falco_source& falco_engine::find_source(std::size_t index)
 	return *ret;
 }
 
+falco_source* falco_engine::find_source_ptr(std::size_t index)
+{
+        auto ret = m_sources.at(index);
+	if(!ret)
+	{
+		throw falco_exception("Unknown event source index " + to_string(index));
+	}
+	return ret;
+}
+
 // Return a key that uniquely represents a field class.
 // For now, we assume name + shortdesc is unique.
 static std::string fieldclass_key(const gen_event_filter_factory::filter_fieldclass_info &fld_info)

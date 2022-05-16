@@ -232,6 +232,8 @@ private:
 	falco_source& find_source(std::size_t index);
 	falco_source& find_source(const std::string& name);
 
+	falco_source* find_source_ptr(std::size_t index);
+
 	//
 	// Determine whether the given event should be matched at all
 	// against the set of rules, given the current sampling
