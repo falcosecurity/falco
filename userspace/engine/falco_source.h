@@ -27,6 +27,7 @@ struct falco_source
 	std::shared_ptr<filter_ruleset_factory> ruleset_factory;
 	std::shared_ptr<gen_event_filter_factory> filter_factory;
 	std::shared_ptr<gen_event_formatter_factory> formatter_factory;
+	bool optimized;
 
 	inline bool is_field_defined(std::string field) const
 	{

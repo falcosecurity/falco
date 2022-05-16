@@ -356,6 +356,13 @@ unique_ptr<falco_engine::rule_result> falco_engine::process_event(std::size_t so
 	}
 
 	falco_rule rule;
+	auto source = find_source_ptr(source_idx);
+	if(!source->optimized)
+	{
+		source->ruleset->optimize();
+		source->optimized = true;
+	}
+
 	if(!find_source(source_idx).ruleset->run(ev, rule, ruleset_id))
 	{
 		return unique_ptr<struct rule_result>();
@@ -400,6 +407,7 @@ std::size_t falco_engine::add_source(const std::string &source,
 	src.ruleset_factory = ruleset_factory;
 	src.ruleset = ruleset_factory->new_ruleset();
 	src.default_ruleset_id = find_ruleset_id(s_default_ruleset);
+	src.optimized = false;
 	return m_sources.insert(src, source);
 }
 
