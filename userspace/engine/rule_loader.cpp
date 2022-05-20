@@ -426,7 +426,7 @@ bool rule_loader::is_plugin_compatible(
 		string &required_version)
 {
 	set<string> required_plugin_versions;
-	sinsp_plugin::version plugin_version(version);
+	sinsp_version plugin_version(version);
 	if(!plugin_version.m_valid)
 	{
 		throw falco_exception(
@@ -437,7 +437,7 @@ bool rule_loader::is_plugin_compatible(
 	{
 		for (auto &rversion : it->second)
 		{
-			sinsp_plugin::version req_version(rversion);
+			sinsp_version req_version(rversion);
 			if (!plugin_version.check(req_version))
 			{
 				required_version = rversion;
