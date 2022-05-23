@@ -123,9 +123,6 @@ application::run_result application::load_rules_files()
 		return run_result::fatal(plugin_vers_err);
 	}
 
-	// Free-up memory for the rule loader, which is not used from now on
-	m_state->engine->clear_loader();
-
 	for (const auto& substring : m_options.disabled_rule_substrings)
 	{
 		falco_logger::log(LOG_INFO, "Disabling rules matching substring: " + substring + "\n");

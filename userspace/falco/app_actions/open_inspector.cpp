@@ -26,6 +26,9 @@ typedef std::function<void(std::shared_ptr<sinsp> inspector)> open_t;
 
 application::run_result application::open_inspector()
 {
+	// Notify engine that we finished loading and enabling all rules
+	m_state->engine->complete_rule_loading();
+	
 	if(is_capture_mode())
 	{
 		// Try to open the trace file as a
