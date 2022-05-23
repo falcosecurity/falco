@@ -179,17 +179,6 @@ void evttype_index_ruleset::add(
 	}
 }
 
-uint16_t evttype_index_ruleset::ruleset_id(const std::string &name)
-{
-	auto it = find(m_ruleset_names.begin(), m_ruleset_names.end(), name);
-	if (it != m_ruleset_names.end())
-	{
-		return it - m_ruleset_names.begin();
-	}
-	m_ruleset_names.push_back(name);
-	return m_ruleset_names.size() - 1;
-}
-
 void evttype_index_ruleset::on_loading_complete()
 {
 	// nothing to do for now
@@ -205,9 +194,19 @@ void evttype_index_ruleset::clear()
 	m_filters.clear();
 }
 
-void evttype_index_ruleset::enable(const string &substring, bool match_exact, bool enabled, uint16_t ruleset)
+void evttype_index_ruleset::enable(const string &substring, bool match_exact, uint16_t ruleset_id)
 {
-	while(m_rulesets.size() < (size_t)ruleset + 1)
+	enable_disable(substring, match_exact, true, ruleset_id);
+}
+
+void evttype_index_ruleset::disable(const string &substring, bool match_exact, uint16_t ruleset_id)
+{
+	enable_disable(substring, match_exact, false, ruleset_id);
+}
+
+void evttype_index_ruleset::enable_disable(const string &substring, bool match_exact, bool enabled, uint16_t ruleset_id)
+{
+	while(m_rulesets.size() < (size_t)ruleset_id + 1)
 	{
 		m_rulesets.emplace_back(new ruleset_filters());
 	}
@@ -232,19 +231,29 @@ void evttype_index_ruleset::enable(const string &substring, bool match_exact, bo
 		{
 			if(enabled)
 			{
-				m_rulesets[ruleset]->add_filter(wrap);
+				m_rulesets[ruleset_id]->add_filter(wrap);
 			}
 			else
 			{
-				m_rulesets[ruleset]->remove_filter(wrap);
+				m_rulesets[ruleset_id]->remove_filter(wrap);
 			}
 		}
 	}
 }
 
-void evttype_index_ruleset::enable_tags(const set<string> &tags, bool enabled, uint16_t ruleset)
+void evttype_index_ruleset::enable_tags(const set<string> &tags, uint16_t ruleset_id)
 {
-	while(m_rulesets.size() < (size_t)ruleset + 1)
+	enable_disable_tags(tags, true, ruleset_id);
+}
+
+void evttype_index_ruleset::disable_tags(const set<string> &tags, uint16_t ruleset_id)
+{
+	enable_disable_tags(tags, false, ruleset_id);
+}
+
+void evttype_index_ruleset::enable_disable_tags(const set<string> &tags, bool enabled, uint16_t ruleset_id)
+{
+	while(m_rulesets.size() < (size_t)ruleset_id + 1)
 	{
 		m_rulesets.emplace_back(new ruleset_filters());
 	}
@@ -261,42 +270,42 @@ void evttype_index_ruleset::enable_tags(const set<string> &tags, bool enabled, u
 		{
 			if(enabled)
 			{
-				m_rulesets[ruleset]->add_filter(wrap);
+				m_rulesets[ruleset_id]->add_filter(wrap);
 			}
 			else
 			{
-				m_rulesets[ruleset]->remove_filter(wrap);
+				m_rulesets[ruleset_id]->remove_filter(wrap);
 			}
 		}
 	}
 }
 
-uint64_t evttype_index_ruleset::enabled_count(uint16_t ruleset)
+uint64_t evttype_index_ruleset::enabled_count(uint16_t ruleset_id)
 {
-	while(m_rulesets.size() < (size_t)ruleset + 1)
+	while(m_rulesets.size() < (size_t)ruleset_id + 1)
 	{
 		m_rulesets.emplace_back(new ruleset_filters());
 	}
 
-	return m_rulesets[ruleset]->num_filters();
+	return m_rulesets[ruleset_id]->num_filters();
 }
 
-bool evttype_index_ruleset::run(gen_event *evt, falco_rule& match, uint16_t ruleset)
+bool evttype_index_ruleset::run(gen_event *evt, falco_rule& match, uint16_t ruleset_id)
 {
-	if(m_rulesets.size() < (size_t)ruleset + 1)
+	if(m_rulesets.size() < (size_t)ruleset_id + 1)
 	{
 		return false;
 	}
 
-	return m_rulesets[ruleset]->run(evt, match);
+	return m_rulesets[ruleset_id]->run(evt, match);
 }
 
-void evttype_index_ruleset::enabled_evttypes(set<uint16_t> &evttypes, uint16_t ruleset)
+void evttype_index_ruleset::enabled_evttypes(set<uint16_t> &evttypes, uint16_t ruleset_id)
 {
-	if(m_rulesets.size() < (size_t)ruleset + 1)
+	if(m_rulesets.size() < (size_t)ruleset_id + 1)
 	{
 		return;
 	}
 
-	return m_rulesets[ruleset]->evttypes_for_ruleset(evttypes);
+	return m_rulesets[ruleset_id]->evttypes_for_ruleset(evttypes);
 }
