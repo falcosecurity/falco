@@ -44,10 +44,11 @@ public:
 		/*!
 			\brief Wraps an error by adding info about the text section
 		*/
-		inline std::string error(std::string err)
+		inline std::string error(std::string err) const
 		{
+			std::string cnt = content;
 			err += "\n---\n";
-			err += trim(content);
+			err += trim(cnt);
 			err += "\n---";
 			return err;
 		}
@@ -180,19 +181,15 @@ public:
 	virtual void clear();
 
 	/*!
-		\brief Returns true if the given plugin name and version are compatible
-		with the internal definitions. If false is returned, required_version is
-		filled with the required plugin version that didn't match.
-	*/
-	virtual bool is_plugin_compatible(
-		const std::string& name,
-		const std::string& version,
-		std::string& required_version);
-	
-	/*!
 		\brief Uses the internal state to compile a list of falco_rules
 	*/
-	bool compile(configuration& cfg, indexed_vector<falco_rule>& out);
+	virtual bool compile(configuration& cfg, indexed_vector<falco_rule>& out) const;
+
+	/*!
+		\brief Returns the set of all required versions for each plugin according
+		to the internal definitions.
+	*/
+	virtual const std::map<std::string, std::set<std::string>> required_plugin_versions() const;
 
 	/*!
 		\brief Defines an info block. If a similar info block is found
@@ -222,16 +219,16 @@ public:
 private:
 	void compile_list_infos(
 		configuration& cfg,
-		indexed_vector<list_info>& out);
+		indexed_vector<list_info>& out) const;
 	void compile_macros_infos(
 		configuration& cfg,
 		indexed_vector<list_info>& lists,
-		indexed_vector<macro_info>& out);
+		indexed_vector<macro_info>& out) const;
 	void compile_rule_infos(
 		configuration& cfg,
 		indexed_vector<list_info>& lists,
 		indexed_vector<macro_info>& macros,
-		indexed_vector<falco_rule>& out);
+		indexed_vector<falco_rule>& out) const;
 
 	uint32_t m_cur_index;
 	indexed_vector<rule_info> m_rule_infos;

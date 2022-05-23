@@ -222,11 +222,19 @@ public:
 	std::shared_ptr<gen_event_formatter> create_formatter(const std::string &source,
 							      const std::string &output);
 
-	// Return whether the provided plugin name + version is
-	// compatible with the current set of loaded rules files.
-	// required_version will be filled in with the required
-	// version when the method returns false.
-	bool is_plugin_compatible(const std::string &name, const std::string &version, std::string &required_version);
+	// The rule loader definition is aliased as it is exactly what we need
+	typedef rule_loader::plugin_version_info plugin_version_requirement;
+
+	//
+	// Returns true if the provided list of plugins satisfies all the
+	// version requirements of the internal definitions. The list is represented
+	// as a vectors of pair of strings. In each pair, the first element is
+	// the name of the plugin and the second element is its version.
+	// If false is returned, err is filled with error causing the check failure.
+	//
+	bool check_plugin_requirements(
+		const std::vector<plugin_version_requirement>& plugins,
+		std::string& err);
 
 private:
 	struct ruleset_node

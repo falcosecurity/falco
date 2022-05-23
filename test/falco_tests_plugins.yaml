@@ -82,7 +82,7 @@ trace_files: !mux
 
   incompat_plugin_rules_version:
     exit_status: 1
-    stderr_contains: "Plugin cloudtrail version .* not compatible with required plugin version 100000.0.0."
+    stderr_contains: "Plugin 'cloudtrail' version '.*' is not compatible with required plugin version '100000.0.0'"
     conf_file: BUILD_DIR/test/confs/plugins/cloudtrail_json_create_instances.yaml
     rules_file:
       - rules/plugins/cloudtrail_incompat_plugin_version.yaml
