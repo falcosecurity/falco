@@ -20,9 +20,13 @@ limitations under the License.
 #include <string>
 #include "falco_common.h"
 
+/*!
+	\brief Represents a rule in the Falco Engine.
+	The rule ID must be unique across all the rules loaded in the engine.
+*/
 struct falco_rule
 {
-	size_t id;
+	std::size_t id;
 	std::string source;
 	std::string name;
 	std::string description;

@@ -38,7 +38,8 @@ const std::string falco_engine::s_default_ruleset = "falco-default-ruleset";
 using namespace std;
 
 falco_engine::falco_engine(bool seed_rng)
-	: m_min_priority(falco_common::PRIORITY_DEBUG),
+	: m_next_ruleset_id(0),
+	  m_min_priority(falco_common::PRIORITY_DEBUG),
 	  m_sampling_ratio(1), m_sampling_multiplier(0),
 	  m_replace_container_info(false)
 {
@@ -46,6 +47,8 @@ falco_engine::falco_engine(bool seed_rng)
 	{
 		srandom((unsigned) getpid());
 	}
+
+	m_default_ruleset_id = find_ruleset_id(s_default_ruleset);
 }
 
 falco_engine::~falco_engine()
@@ -53,6 +56,7 @@ falco_engine::~falco_engine()
 	m_rules.clear();
 	m_rule_loader.clear();
 	m_rule_stats_manager.clear();
+	m_sources.clear();
 }
 
 uint32_t falco_engine::engine_version()
@@ -60,24 +64,24 @@ uint32_t falco_engine::engine_version()
 	return (uint32_t) FALCO_ENGINE_VERSION;
 }
 
-falco_source& falco_engine::find_source(const std::string& name)
+falco_source* falco_engine::find_source(const std::string& name)
 {
 	auto ret = m_sources.at(name);
 	if(!ret)
 	{
 		throw falco_exception("Unknown event source " + name);
 	}
-	return *ret;
+	return ret;
 }
 
-falco_source& falco_engine::find_source(std::size_t index)
+falco_source* falco_engine::find_source(std::size_t index)
 {
 	auto ret = m_sources.at(index);
 	if(!ret)
 	{
 		throw falco_exception("Unknown event source index " + to_string(index));
 	}
-	return *ret;
+	return ret;
 }
 
 // Return a key that uniquely represents a field class.
@@ -168,20 +172,20 @@ void falco_engine::load_rules(const string &rules_content, bool verbose, bool al
 
 void falco_engine::load_rules(const string &rules_content, bool verbose, bool all_events, uint64_t &required_engine_version)
 {
-	rule_loader::configuration cfg(rules_content);
-	cfg.sources = m_sources;
+	rule_loader::configuration cfg(rules_content, m_sources);
 	cfg.min_priority = m_min_priority;
 	cfg.output_extra = m_extra;
 	cfg.replace_output_container_info = m_replace_container_info;
+	cfg.default_ruleset_id = m_default_ruleset_id;
 
 	std::ostringstream os;
 	rule_reader reader;
 	bool success = reader.load(cfg, m_rule_loader);
 	if (success)
 	{
-		for (auto &s : m_sources)
+		for (auto &src : m_sources)
 		{
-			s.ruleset->clear();
+			src.ruleset = src.ruleset_factory->new_ruleset();
 		}
 		m_rules.clear();
 		success = m_rule_loader.compile(cfg, m_rules);
@@ -244,7 +248,14 @@ void falco_engine::enable_rule(const string &substring, bool enabled, const stri
 
 	for(auto &it : m_sources)
 	{
-		it.ruleset->enable(substring, match_exact, enabled, ruleset_id);
+		if(enabled)
+		{
+			it.ruleset->enable(substring, match_exact, ruleset_id);
+		}
+		else
+		{
+			it.ruleset->disable(substring, match_exact, ruleset_id);
+		}
 	}
 }
 
@@ -255,7 +266,14 @@ void falco_engine::enable_rule_exact(const string &rule_name, bool enabled, cons
 
 	for(auto &it : m_sources)
 	{
-		it.ruleset->enable(rule_name, match_exact, enabled, ruleset_id);
+		if(enabled)
+		{
+			it.ruleset->enable(rule_name, match_exact, ruleset_id);
+		}
+		else
+		{
+			it.ruleset->disable(rule_name, match_exact, ruleset_id);
+		}
 	}
 }
 
@@ -265,7 +283,14 @@ void falco_engine::enable_rule_by_tag(const set<string> &tags, bool enabled, con
 
 	for(auto &it : m_sources)
 	{
-		it.ruleset->enable_tags(tags, enabled, ruleset_id);
+		if(enabled)
+		{
+			it.ruleset->enable_tags(tags, ruleset_id);
+		}
+		else
+		{
+			it.ruleset->disable_tags(tags, ruleset_id);
+		}
 	}
 }
 
@@ -274,47 +299,47 @@ void falco_engine::set_min_priority(falco_common::priority_type priority)
 	m_min_priority = priority;
 }
 
-uint16_t falco_engine::find_ruleset_id(
-	const std::string &ruleset, const std::string &source)
+uint16_t falco_engine::find_ruleset_id(const std::string &ruleset)
 {
-	return find_source(source).ruleset->ruleset_id(ruleset);
+	auto it = m_known_rulesets.lower_bound(ruleset);
+	if(it == m_known_rulesets.end() || it->first != ruleset)
+	{
+		it = m_known_rulesets.emplace_hint(it,
+						   std::make_pair(ruleset, m_next_ruleset_id++));
+	}
+	return it->second;
 }
 
 uint64_t falco_engine::num_rules_for_ruleset(const std::string &ruleset)
 {
+	uint16_t ruleset_id = find_ruleset_id(ruleset);
 	uint64_t ret = 0;
 	for (auto &src : m_sources)
 	{
-		ret += src.ruleset->enabled_count(src.ruleset->ruleset_id(ruleset));
+		ret += src.ruleset->enabled_count(ruleset_id);
 	}
 	return ret;
 }
 
 void falco_engine::evttypes_for_ruleset(std::string &source, std::set<uint16_t> &evttypes, const std::string &ruleset)
 {
-	auto src = find_source(source);
-	src.ruleset->enabled_evttypes(evttypes, src.ruleset->ruleset_id(ruleset));
+	find_source(source)->ruleset->enabled_evttypes(evttypes, find_ruleset_id(ruleset));
 }
 
 std::shared_ptr<gen_event_formatter> falco_engine::create_formatter(const std::string &source,
 								    const std::string &output)
 {
-	return find_source(source).formatter_factory->create_formatter(output);
+	return find_source(source)->formatter_factory->create_formatter(output);
 }
 
 unique_ptr<falco_engine::rule_result> falco_engine::process_event(std::size_t source_idx, gen_event *ev, uint16_t ruleset_id)
 {
-	if(should_drop_evt())
-	{
-		return unique_ptr<struct rule_result>();
-	}
-
 	falco_rule rule;
-	if(!find_source(source_idx).ruleset->run(ev, rule, ruleset_id))
+	if(should_drop_evt() || !find_source(source_idx)->ruleset->run(ev, rule, ruleset_id))
 	{
 		return unique_ptr<struct rule_result>();
 	}
-
+	
 	unique_ptr<struct rule_result> res(new rule_result());
 	res->evt = ev;
 	res->rule = rule.name;
@@ -323,19 +348,19 @@ unique_ptr<falco_engine::rule_result> falco_engine::process_event(std::size_t so
 	res->priority_num = rule.priority;
 	res->tags = rule.tags;
 	res->exception_fields = rule.exception_fields;
-	m_rule_stats_manager.on_event(m_rules, rule.id);
+	m_rule_stats_manager.on_event(rule);
 	return res;
 }
 
 unique_ptr<falco_engine::rule_result> falco_engine::process_event(std::size_t source_idx, gen_event *ev)
 {
-	return process_event(source_idx, ev, find_source(source_idx).default_ruleset_id);
+	return process_event(source_idx, ev, m_default_ruleset_id);
 }
 
 std::size_t falco_engine::add_source(const std::string &source,
 				     std::shared_ptr<gen_event_filter_factory> filter_factory,
 				     std::shared_ptr<gen_event_formatter_factory> formatter_factory)
-{	
+{
 	// evttype_index_ruleset is the default ruleset implementation
 	std::shared_ptr<filter_ruleset_factory> ruleset_factory(
 		new evttype_index_ruleset_factory(filter_factory));
@@ -353,7 +378,6 @@ std::size_t falco_engine::add_source(const std::string &source,
 	src.formatter_factory = formatter_factory;
 	src.ruleset_factory = ruleset_factory;
 	src.ruleset = ruleset_factory->new_ruleset();
-	src.default_ruleset_id = src.ruleset->ruleset_id(s_default_ruleset);
 	return m_sources.insert(src, source);
 }
 
@@ -434,18 +458,12 @@ bool falco_engine::check_plugin_requirements(
 	return true;
 }
 
-void falco_engine::clear_filters()
+void falco_engine::complete_rule_loading()
 {
-	for(auto &src : m_sources)
+	for (auto &src : m_sources)
 	{
-		src.ruleset = src.ruleset_factory->new_ruleset();
-		src.default_ruleset_id = src.ruleset->ruleset_id(s_default_ruleset);
+		src.ruleset->on_loading_complete();
 	}
-}
-
-void falco_engine::clear_loader()
-{
-	m_rule_loader.clear();
 }
 
 void falco_engine::set_sampling_ratio(uint32_t sampling_ratio)
