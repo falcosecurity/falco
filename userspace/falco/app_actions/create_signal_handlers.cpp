@@ -51,6 +51,7 @@ static void restart_falco(int signal)
 
 bool application::create_handler(int sig, void (*func)(int), run_result &ret)
 {
+	ret = run_result::ok();
 	if(signal(sig, func) == SIG_ERR)
 	{
 		char errbuf[1024];
@@ -59,13 +60,10 @@ bool application::create_handler(int sig, void (*func)(int), run_result &ret)
 			snprintf(errbuf, sizeof(errbuf)-1, "Errno %d", errno);
 		}
 
-		ret.success = false;
-		ret.errstr = std::string("Could not create signal handler for ") +
+		ret = run_result::fatal(std::string("Could not create signal handler for ") +
 			   strsignal(sig) +
 			   ": " +
-			   errbuf;
-
-		ret.proceed = false;
+			   errbuf);
 	}
 
 	return ret.success;
@@ -74,7 +72,6 @@ bool application::create_handler(int sig, void (*func)(int), run_result &ret)
 application::run_result application::create_signal_handlers()
 {
 	run_result ret;
-
 	if(! create_handler(SIGINT, ::signal_callback, ret) ||
 	   ! create_handler(SIGTERM, ::signal_callback, ret) ||
 	   ! create_handler(SIGUSR1, ::reopen_outputs, ret) ||
@@ -84,22 +81,17 @@ application::run_result application::create_signal_handlers()
 	}
 
 	s_app = *this;
-
 	return ret;
 }
 
 application::run_result application::attach_inotify_signals()
 {
-	run_result ret;
         if (m_state->config->m_watch_config_files)
 	{
-		ret.proceed = false;
-		ret.success = false;
 		inot_fd = inotify_init();
 		if (inot_fd == -1)
 		{
-			ret.errstr = std::string("Could not create inotify handler.");
-			return ret;
+			return run_result::fatal("Could not create inotify handler.");
 		}
 
 		struct sigaction sa;
@@ -108,15 +100,13 @@ application::run_result application::attach_inotify_signals()
 		sa.sa_handler = restart_falco;
 		if (sigaction(SIGIO, &sa, NULL) == -1)
 		{
-			ret.errstr = std::string("Failed to link SIGIO to inotify handler.");
-			return ret;
+			return run_result::fatal("Failed to link SIGIO to inotify handler.");
 		}
 
 		/* Set owner process that is to receive "I/O possible" signal */
 		if (fcntl(inot_fd, F_SETOWN, getpid()) == -1)
 		{
-			ret.errstr = std::string("Failed to setting owner on inotify handler.");
-			return ret;
+			return run_result::fatal("Failed to setting owner on inotify handler.");
 		}
 
 		/*
@@ -126,16 +116,14 @@ application::run_result application::attach_inotify_signals()
 		int flags = fcntl(inot_fd, F_GETFL);
 		if (fcntl(inot_fd, F_SETFL, flags | O_ASYNC | O_NONBLOCK) == -1)
 		{
-			ret.errstr = std::string("Failed to setting flags on inotify handler.");
-			return ret;
+			return run_result::fatal("Failed to setting flags on inotify handler.");
 		}
 
 		// Watch conf file
 		int wd = inotify_add_watch(inot_fd, m_options.conf_filename.c_str(), IN_CLOSE_WRITE);
 		if (wd == -1)
 		{
-			ret.errstr = std::string("Failed to watch conf file.");
-			return ret;
+			return run_result::fatal("Failed to watch conf file.");
 		}
 		falco_logger::log(LOG_DEBUG, "Watching " + m_options.conf_filename +"\n");
 
@@ -145,8 +133,7 @@ application::run_result application::attach_inotify_signals()
 			wd = inotify_add_watch(inot_fd, rule.c_str(), IN_CLOSE_WRITE | IN_ONESHOT);
 			if (wd == -1)
 			{
-				ret.errstr = std::string("Failed to watch rule file: ") + rule;
-				return ret;
+				return run_result::fatal("Failed to watch rule file: " + rule);
 			}
 			falco_logger::log(LOG_DEBUG, "Watching " + rule +".\n");
 		}
@@ -160,24 +147,18 @@ application::run_result application::attach_inotify_signals()
 			wd = inotify_add_watch(inot_fd, fld.c_str(), IN_CREATE | IN_DELETE | IN_ONESHOT);
 			if (wd == -1)
 			{
-				ret.errstr = std::string("Failed to watch rule folder: ") + fld;
-				return ret;
+				return run_result::fatal("Failed to watch rule folder: " + fld);
 			}
 			falco_logger::log(LOG_DEBUG, "Watching " + fld +" folder.\n");
 		}
-
-		ret.success = true;
-		ret.proceed = true;
 	}
-	return ret;
+	return run_result::ok();
 }
 
 bool application::unregister_signal_handlers(std::string &errstr)
 {
 	run_result ret;
-
 	close(inot_fd);
-
 	if(! create_handler(SIGINT, SIG_DFL, ret) ||
 	   ! create_handler(SIGTERM, SIG_DFL, ret) ||
 	   ! create_handler(SIGUSR1, SIG_DFL, ret) ||
@@ -188,6 +169,5 @@ bool application::unregister_signal_handlers(std::string &errstr)
 	}
 
 	s_app = dummy;
-
 	return true;
 }

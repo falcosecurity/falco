@@ -32,8 +32,6 @@ static std::string read_file(std::string &filename)
 
 application::run_result application::print_support()
 {
-	run_result ret;
-
 	if(m_options.print_support)
 	{
 		nlohmann::json support;
@@ -42,10 +40,7 @@ application::run_result application::print_support()
 
 		if(uname(&sysinfo) != 0)
 		{
-			ret.success = false;
-			ret.errstr = string("Could not uname() to find system info: ") + strerror(errno);
-			ret.proceed = false;
-			return ret;
+			return run_result::fatal(string("Could not uname() to find system info: ") + strerror(errno));
 		}
 
 		support["version"] = FALCO_VERSION;
@@ -70,8 +65,8 @@ application::run_result application::print_support()
 		}
 		printf("%s\n", support.dump().c_str());
 
-		ret.proceed = false;
+		return run_result::exit();
 	}
 
-	return ret;
+	return run_result::ok();
 }

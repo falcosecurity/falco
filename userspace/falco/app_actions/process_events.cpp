@@ -36,11 +36,10 @@ using namespace falco::app;
 //
 // Event processing loop
 //
-uint64_t application::do_inspect(syscall_evt_drop_mgr &sdropmgr,
+application::run_result application::do_inspect(syscall_evt_drop_mgr &sdropmgr,
 				 uint64_t duration_to_tot_ns,
-				 application::run_result &result)
+				 uint64_t &num_evts)
 {
-	uint64_t num_evts = 0;
 	int32_t rc;
 	sinsp_evt* ev;
 	StatsFileWriter writer;
@@ -48,6 +47,8 @@ uint64_t application::do_inspect(syscall_evt_drop_mgr &sdropmgr,
 	uint32_t timeouts_since_last_success_or_msg = 0;
 	std::size_t source_idx;
 	bool source_idx_found = false;
+
+	num_evts = 0;
 
 	sdropmgr.init(m_state->inspector,
 		      m_state->outputs,
@@ -63,7 +64,7 @@ uint64_t application::do_inspect(syscall_evt_drop_mgr &sdropmgr,
 
 		if (!writer.init(m_state->inspector, m_options.stats_filename, m_options.stats_interval, errstr))
 		{
-			throw falco_exception(errstr);
+			return run_result::fatal(errstr);
 		}
 	}
 
@@ -131,7 +132,7 @@ uint64_t application::do_inspect(syscall_evt_drop_mgr &sdropmgr,
 			// Event read error.
 			//
 			cerr << "rc = " << rc << endl;
-			throw sinsp_exception(m_state->inspector->getlasterr().c_str());
+			return run_result::fatal(m_state->inspector->getlasterr());
 		}
 
 		// Reset the timeouts counter, Falco successfully got an event to process
@@ -150,10 +151,7 @@ uint64_t application::do_inspect(syscall_evt_drop_mgr &sdropmgr,
 
 		if(!sdropmgr.process_event(m_state->inspector, ev))
 		{
-			result.success = false;
-			result.errstr = "";
-			result.proceed = false;
-			break;
+			return run_result::fatal("Drop manager internal error");
 		}
 
 		if(!ev->simple_consumer_consider() && !m_options.all_events)
@@ -170,10 +168,7 @@ uint64_t application::do_inspect(syscall_evt_drop_mgr &sdropmgr,
 			source_idx = m_state->inspector->get_plugin_manager()->source_idx_by_plugin_id(*(int32_t *)ev->get_param(0)->m_val, source_idx_found);
 			if (!source_idx_found)
 			{
-				result.success = false;
-				result.errstr = "Unknown plugin ID in inspector: " + std::to_string(*(int32_t *)ev->get_param(0)->m_val);
-				result.proceed = false;
-				break;
+				return run_result::fatal("Unknown plugin ID in inspector: " + std::to_string(*(int32_t *)ev->get_param(0)->m_val));
 			}
 		}
 
@@ -191,7 +186,7 @@ uint64_t application::do_inspect(syscall_evt_drop_mgr &sdropmgr,
 		num_evts++;
 	}
 
-	return num_evts;
+	return run_result::ok();
 }
 
 application::run_result application::process_events()
@@ -200,14 +195,14 @@ application::run_result application::process_events()
 	// Used for stats
 	double duration;
 	scap_stats cstats;
-
+	uint64_t num_evts = 0;
 	run_result ret;
 
 	duration = ((double)clock()) / CLOCKS_PER_SEC;
 
-	uint64_t num_evts = do_inspect(sdropmgr,
+	ret = do_inspect(sdropmgr,
 					uint64_t(m_options.duration_to_tot*ONE_SECOND_IN_NS),
-					ret);
+					num_evts);
 
 	duration = ((double)clock()) / CLOCKS_PER_SEC - duration;
 

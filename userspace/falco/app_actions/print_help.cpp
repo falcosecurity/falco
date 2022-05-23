@@ -20,13 +20,10 @@ using namespace falco::app;
 
 application::run_result application::print_help()
 {
-	run_result ret;
-
 	if(m_options.help)
 	{
 		printf("%s", m_options.usage().c_str());
-		ret.proceed = false;
+		return run_result::exit();
 	}
-
-	return ret;
+	return run_result::ok();
 }

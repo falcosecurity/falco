@@ -43,7 +43,6 @@ static void display_fatal_err(const string &msg)
 int falco_init(int argc, char **argv, bool &restart)
 {
 	falco::app::application app;
-	int result = EXIT_SUCCESS;
 	restart = false;
 
 	std::string errstr;
@@ -64,18 +63,17 @@ int falco_init(int argc, char **argv, bool &restart)
 
 		if(!success)
 		{
-			result = EXIT_FAILURE;
-			fprintf(stderr, "%s\n", errstr.c_str());
+			fprintf(stderr, "Error: %s\n", errstr.c_str());
+			return EXIT_FAILURE;
 		}
 	}
 	catch(exception &e)
 	{
 		display_fatal_err("Runtime error: " + string(e.what()) + ". Exiting.\n");
-
-		result = EXIT_FAILURE;
+		return EXIT_FAILURE;
 	}
 
-	return result;
+	return EXIT_SUCCESS;
 }
 
 //

@@ -23,8 +23,6 @@ using namespace falco::app;
 
 application::run_result application::init_outputs()
 {
-	run_result ret;
-
 	// read hostname
 	std::string hostname;
 	if(char* env_hostname = getenv("FALCO_GRPC_HOSTNAME"))
@@ -37,9 +35,7 @@ application::run_result application::init_outputs()
 		int err = gethostname(c_hostname, 256);
 		if(err != 0)
 		{
-			ret.success = false;
-			ret.errstr = "Failed to get hostname";
-			ret.proceed = false;
+			return run_result::fatal("Failed to get hostname");
 		}
 		hostname = c_hostname;
 	}
@@ -59,5 +55,5 @@ application::run_result application::init_outputs()
 		m_state->outputs->add_output(output);
 	}
 
-	return ret;
+	return run_result::ok();
 }

@@ -21,14 +21,11 @@ using namespace falco::app;
 
 application::run_result application::print_version()
 {
-	run_result ret;
-
 	if(m_options.print_version_info)
 	{
 		printf("Falco version: %s\n", FALCO_VERSION);
 		printf("Driver version: %s\n", DRIVER_VERSION);
-		ret.proceed = false;
+		return run_result::exit();
 	}
-
-	return ret;
+	return run_result::ok();
 }
