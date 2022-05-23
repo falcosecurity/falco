@@ -167,7 +167,7 @@ static void validate_exception_info(
 }
 
 static void build_rule_exception_infos(
-	vector<rule_loader::rule_exception_info>& exceptions,
+	const vector<rule_loader::rule_exception_info>& exceptions,
 	set<string>& exception_fields,
 	string& condition)
 {
@@ -421,32 +421,9 @@ void rule_loader::clear()
 	m_required_plugin_versions.clear();
 }
 
-bool rule_loader::is_plugin_compatible(
-		const string &name,
-		const string &version,
-		string &required_version)
+const std::map<std::string, std::set<std::string>> rule_loader::required_plugin_versions() const
 {
-	set<string> required_plugin_versions;
-	sinsp_version plugin_version(version);
-	if(!plugin_version.m_valid)
-	{
-		throw falco_exception(
-			string("Plugin version string ") + version + " not valid");
-	}
-	auto it = m_required_plugin_versions.find(name);
-	if (it != m_required_plugin_versions.end())
-	{
-		for (auto &rversion : it->second)
-		{
-			sinsp_version req_version(rversion);
-			if (!plugin_version.check(req_version))
-			{
-				required_version = rversion;
-				return false;
-			}
-		}
-	}
-	return true;
+	return m_required_plugin_versions;
 }
 
 void rule_loader::define(configuration& cfg, engine_version_info& info)
@@ -458,6 +435,9 @@ void rule_loader::define(configuration& cfg, engine_version_info& info)
 
 void rule_loader::define(configuration& cfg, plugin_version_info& info)
 {
+	sinsp_version plugin_version(info.version);
+	THROW(!plugin_version.m_valid, "Invalid required version '" + info.version
+		+ "' for plugin '" + info.name + "'");
 	m_required_plugin_versions[info.name].insert(info.version);
 }
 
@@ -575,7 +555,7 @@ void rule_loader::enable(configuration& cfg, rule_info& info)
 	prev->enabled = info.enabled;
 }
 
-void rule_loader::compile_list_infos(configuration& cfg, indexed_vector<list_info>& out)
+void rule_loader::compile_list_infos(configuration& cfg, indexed_vector<list_info>& out) const
 {
 	string tmp;
 	vector<string> used;
@@ -622,10 +602,10 @@ void rule_loader::compile_list_infos(configuration& cfg, indexed_vector<list_inf
 void rule_loader::compile_macros_infos(
 	configuration& cfg,
 	indexed_vector<list_info>& lists,
-	indexed_vector<macro_info>& out)
+	indexed_vector<macro_info>& out) const
 {
 	set<string> used;
-	context* info_ctx = NULL;
+	const context* info_ctx = NULL;
 	try
 	{
 		for (auto &m : m_macro_infos)
@@ -654,7 +634,7 @@ void rule_loader::compile_rule_infos(
 	configuration& cfg,
 	indexed_vector<list_info>& lists,
 	indexed_vector<macro_info>& macros,
-	indexed_vector<falco_rule>& out)
+	indexed_vector<falco_rule>& out) const
 {
 	string err, condition;
 	set<string> warn_codes;
@@ -753,7 +733,7 @@ void rule_loader::compile_rule_infos(
 	}
 }
 
-bool rule_loader::compile(configuration& cfg, indexed_vector<falco_rule>& out)
+bool rule_loader::compile(configuration& cfg, indexed_vector<falco_rule>& out) const
 {
 	indexed_vector<list_info> lists;
 	indexed_vector<macro_info> macros;

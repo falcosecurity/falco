@@ -117,16 +117,21 @@ application::run_result application::load_rules_files()
 	}
 
 	// Ensure that all plugins are compatible with the loaded set of rules
-	for(const auto &plugin : m_state->inspector->get_plugin_manager()->plugins())
+	std::string plugin_vers_err = "";
+	std::vector<falco_engine::plugin_version_requirement> plugin_reqs;
+	for (const auto &plugin : m_state->inspector->get_plugin_manager()->plugins())
+ 	{
+		 falco_engine::plugin_version_requirement req;
+		req.name = plugin->name();
+		req.version = plugin->plugin_version().as_string();
+		plugin_reqs.push_back(req);
+ 	}
+	if (!m_state->engine->check_plugin_requirements(plugin_reqs, plugin_vers_err))
 	{
-		std::string required_version;
-
-		if(!m_state->engine->is_plugin_compatible(plugin->name(), plugin->plugin_version().as_string(), required_version))
-		{
-			ret.success = false;
-			ret.errstr = "Plugin " + plugin->name() + " version " + plugin->plugin_version().as_string() + " not compatible with required plugin version " + required_version;
-			ret.proceed = false;
-		}
+		ret.success = false;
+		ret.errstr = plugin_vers_err;
+		ret.proceed = false;
+		return ret;
 	}
 
 	// Free-up memory for the rule loader, which is not used from now on

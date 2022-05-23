@@ -430,11 +430,47 @@ bool falco_engine::is_source_valid(const std::string &source)
 	return (find_ruleset(source) != m_rulesets.end());
 }
 
-bool falco_engine::is_plugin_compatible(const std::string &name,
-					const std::string &version,
-					std::string &required_version)
+bool falco_engine::check_plugin_requirements(
+		const std::vector<plugin_version_requirement>& plugins,
+		std::string& err)
 {
-	return m_rule_loader.is_plugin_compatible(name, version, required_version);
+	for (const auto &req : m_rule_loader.required_plugin_versions())
+	{
+		bool found = false;
+		for (const auto &plugin : plugins)
+		{
+			if (req.first == plugin.name)
+			{
+				found = true;
+				sinsp_version plugin_version(plugin.version);
+				if(!plugin_version.m_valid)
+				{
+					err = "Plugin '" + req.first
+						+ "' has invalid version string '"
+						+ plugin.version + "'";
+					return false;
+				}
+				for (const auto &reqver: req.second)
+				{
+					sinsp_version req_version(reqver);
+					if (!plugin_version.check(req_version))
+					{
+						err = "Plugin '" + plugin.name
+						+ "' version '" + plugin.version 
+						+ "' is not compatible with required plugin version '" 
+						+ reqver + "'";
+						return false;
+					}
+				}
+			}
+		}
+		if (!found)
+		{
+			err = "Plugin '" + req.first + "' is required but not loaded";
+			return false;
+		}
+	}
+	return true;
 }
 
 void falco_engine::clear_filters()
