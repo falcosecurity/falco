@@ -90,6 +90,16 @@ public:
 	//
 	void enable_rule_by_tag(const std::set<std::string> &tags, bool enabled, const std::string &ruleset = s_default_ruleset);
 
+	//
+	// Must be called after the engine has been configured and all rulesets
+	// have been loaded and enabled/disabled.
+	// This does not change the engine configuration nor the loaded/enabled rule
+	// setup, and does not affect the functional behavior.
+	// Internally, this can be used to release unused resources before starting
+	// processing events with process_event().
+	//
+	void complete_rule_loading();
+
 	// Only load rules having this priority or more severe.
 	void set_min_priority(falco_common::priority_type priority);
 
@@ -99,9 +109,7 @@ public:
 	// to enable_rule/enable_rule_by_tag(), you should look up the
 	// ruleset id and pass it to process_event().
 	//
-	uint16_t find_ruleset_id(
-		const std::string &ruleset,
-		const std::string &source = falco_common::syscall_source);
+	uint16_t find_ruleset_id(const std::string &ruleset);
 
 	//
 	// Return the number of falco rules enabled for the provided ruleset
@@ -119,18 +127,6 @@ public:
 	// Print statistics on how many events matched each rule.
 	//
 	void print_stats();
-
-	// Clear all existing filters.
-	void clear_filters();
-
-	//
-	// Clear all the definitions of the internal rule loader (e.g. defined
-	// rules, macros, lists, engine/plugin version requirements). This is meant
-	// to be used to free-up memory at runtime when the definitions are not
-	// used anymore. Calling this between successive invocations of load_rules
-	// or load_rules_file can cause failures of features like appending.
-	//
-	void clear_loader();
 
 	//
 	// Set the sampling ratio, which can affect which events are
@@ -239,8 +235,8 @@ public:
 private:
 	indexed_vector<falco_source> m_sources;
 
-	falco_source& find_source(std::size_t index);
-	falco_source& find_source(const std::string& name);
+	falco_source* find_source(std::size_t index);
+	falco_source* find_source(const std::string& name);
 
 	//
 	// Determine whether the given event should be matched at all
@@ -253,6 +249,8 @@ private:
 	indexed_vector<falco_rule> m_rules;
 	stats_manager m_rule_stats_manager;
 
+	uint16_t m_next_ruleset_id;
+	std::map<string, uint16_t> m_known_rulesets;
 	falco_common::priority_type m_min_priority;
 
 	//
@@ -279,6 +277,7 @@ private:
 	double m_sampling_multiplier;
 
 	static const std::string s_default_ruleset;
+	uint32_t m_default_ruleset_id;
 
 	std::string m_extra;
 	bool m_replace_container_info;

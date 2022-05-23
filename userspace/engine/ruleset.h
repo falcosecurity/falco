@@ -23,9 +23,8 @@ limitations under the License.
 #include <gen_filter.h>
 
 /*!
-	\brief Represents a manager for rulesets.A ruleset represents a set of
-	enabled rules that is able to process events and find potential rule
-	matches. By convention, the ruleset with id = 0 is the default one.
+	\brief Manages a set of rulesets. A ruleset is a set of
+	enabled rules that is able to process events and find matches for those rules.
 */
 class filter_ruleset
 {

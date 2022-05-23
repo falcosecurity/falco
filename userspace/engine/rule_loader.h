@@ -66,14 +66,19 @@ public:
 	*/
 	struct configuration
 	{
-		explicit configuration(const std::string& cont): content(cont) {}
+		explicit configuration(
+			const std::string& cont,
+			const indexed_vector<falco_source>& srcs)
+				: content(cont), sources(srcs) {}
+
 		const std::string& content;
+		const indexed_vector<falco_source>& sources;
+		std::vector<std::string> errors;
+		std::vector<std::string> warnings;
 		std::string output_extra;
+		uint16_t default_ruleset_id;
 		bool replace_output_container_info;
 		falco_common::priority_type min_priority;
-		indexed_vector<falco_source> sources;
-		std::vector<std::string> warnings;
-		std::vector<std::string> errors;
 	};
 
 	/*!

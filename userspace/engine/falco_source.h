@@ -19,14 +19,18 @@ limitations under the License.
 #include <string>
 #include "ruleset.h"
 
+/*!
+	\brief Represents a given data source used by the engine.
+	The ruleset of a source should be created through the ruleset factory
+	of the same data source.
+*/
 struct falco_source
 {
 	std::string name;
-	uint16_t default_ruleset_id;
 	std::shared_ptr<filter_ruleset> ruleset;
 	std::shared_ptr<filter_ruleset_factory> ruleset_factory;
 	std::shared_ptr<gen_event_filter_factory> filter_factory;
-	std::shared_ptr<gen_event_formatter_factory> formatter_factory;		
+	std::shared_ptr<gen_event_formatter_factory> formatter_factory;
 
 	inline bool is_field_defined(std::string field) const
 	{
