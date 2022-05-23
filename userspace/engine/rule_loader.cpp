@@ -484,6 +484,11 @@ void rule_loader::define(configuration& cfg, macro_info& info)
 			+ info.source + ", skipping");
 		return;
 	}
+	
+	auto prev = m_macro_infos.at(info.name);
+	THROW(prev && prev->source != info.source,
+		"Macro " + info.name + " has been re-defined with a different source");
+
 	define_info(m_macro_infos, info, m_cur_index++);
 }
 
@@ -507,7 +512,7 @@ void rule_loader::define(configuration& cfg, rule_info& info)
 		return;
 	}
 
-	auto prev = m_macro_infos.at(info.name);
+	auto prev = m_rule_infos.at(info.name);
 	THROW(prev && prev->source != info.source,
 		"Rule " + info.name + " has been re-defined with a different source");
 
