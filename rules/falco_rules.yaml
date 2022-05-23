@@ -1917,7 +1917,7 @@
     or thread.cap_permitted contains CAP_BPF)
 
 - rule: Launch Excessively Capable Container
-  desc: Detect container started with a powerful set of capabilities. Exceptions are made for known trusted images. 
+  desc: Detect container started with a powerful set of capabilities. Exceptions are made for known trusted images.
   condition: >
     container_started and container
     and excessively_capable_container
@@ -2838,7 +2838,7 @@
   condition: (fd.sport in (miner_ports) and fd.sip.name in (miner_domains))
 
 - macro: net_miner_pool
-  condition: (evt.type in (sendto, sendmsg) and evt.dir=< and (fd.net != "127.0.0.0/8" and not fd.snet in (rfc_1918_addresses)) and ((minerpool_http) or (minerpool_https) or (minerpool_other)))
+  condition: (evt.type in (sendto, sendmsg, connect) and evt.dir=< and (fd.net != "127.0.0.0/8" and not fd.snet in (rfc_1918_addresses)) and ((minerpool_http) or (minerpool_https) or (minerpool_other)))
 
 - macro: trusted_images_query_miner_domain_dns
   condition: (container.image.repository in (docker.io/falcosecurity/falco, falcosecurity/falco, public.ecr.aws/falcosecurity/falco))
