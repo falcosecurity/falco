@@ -21,8 +21,6 @@ using namespace falco::app;
 
 application::run_result application::list_plugins()
 {
-	run_result ret;
-
 	if(m_options.list_plugins)
 	{
 		std::ostringstream os;
@@ -48,8 +46,8 @@ application::run_result application::list_plugins()
 		}
 
 		printf("%lu Plugins Loaded:\n\n%s\n", plugins.size(), os.str().c_str());
-		ret.proceed = false;
+		return run_result::exit();
 	}
 
-	return ret;
+	return run_result::ok();
 }

@@ -52,8 +52,6 @@ void application::configure_output_format()
 
 application::run_result application::init_falco_engine()
 {
-	run_result ret;
-
 	configure_output_format();
 
 	// Create "factories" that can create filters/formatters for syscalls
@@ -75,7 +73,7 @@ application::run_result application::init_falco_engine()
 	{
 		if (m_state->enabled_sources.find(src) == m_state->enabled_sources.end())
 		{
-			throw std::invalid_argument("Attempted disabling unknown event source: " + src);
+			return run_result::fatal("Attempted disabling unknown event source: " + src);
 		}
 		m_state->enabled_sources.erase(src);
 	}
@@ -83,10 +81,10 @@ application::run_result application::init_falco_engine()
 	// todo(jasondellaluce,leogr): change this once we attain multiple active source
 	if(m_state->enabled_sources.empty())
 	{
-		throw std::invalid_argument("At least one event source needs to be enabled");
+		return run_result::fatal("At least one event source needs to be enabled");
 	}
 
 	m_state->engine->set_min_priority(m_state->config->m_min_priority);
 
-	return ret;
+	return run_result::ok();
 }

@@ -139,11 +139,11 @@ bool application::run(std::string &errstr, bool &restart)
 		std::bind(&application::attach_inotify_signals, this),
 		std::bind(&application::daemonize, this),
 		std::bind(&application::init_outputs, this),
-		std::bind(&application::open_inspector, this),
 #ifndef MINIMAL_BUILD
 		std::bind(&application::start_grpc_server, this),
 		std::bind(&application::start_webserver, this),
 #endif
+		std::bind(&application::open_inspector, this),
 		std::bind(&application::process_events, this)
 	};
 

@@ -26,8 +26,6 @@ typedef std::function<void(std::shared_ptr<sinsp> inspector)> open_t;
 
 application::run_result application::open_inspector()
 {
-	run_result ret;
-
 	if(is_capture_mode())
 	{
 		// Try to open the trace file as a
@@ -38,10 +36,7 @@ application::run_result application::open_inspector()
 		}
 		catch(sinsp_exception &e)
 		{
-			ret.success = false;
-			ret.errstr = std::string("Could not open trace filename ") + m_options.trace_filename + " for reading: " + e.what();
-			ret.proceed = false;
-			return ret;
+			return run_result::fatal("Could not open trace filename " + m_options.trace_filename + " for reading: " + e.what());
 		}
 	}
 	else
@@ -75,10 +70,7 @@ application::run_result application::open_inspector()
 			}
 			else
 			{
-				ret.success = false;
-				ret.errstr = e.what();
-				ret.proceed = false;
-				return ret;
+				return run_result::fatal(e.what());
 			}
 		}
 	}
@@ -89,7 +81,7 @@ application::run_result application::open_inspector()
 		m_state->inspector->start_dropping_mode(1);
 	}
 
-	return ret;
+	return run_result::ok();
 }
 
 bool application::close_inspector(std::string &errstr)

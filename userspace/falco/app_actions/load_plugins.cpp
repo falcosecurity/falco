@@ -21,14 +21,10 @@ using namespace falco::app;
 
 application::run_result application::load_plugins()
 {
-	run_result ret;
-
 #ifdef MUSL_OPTIMIZED
 	if (!m_state->config->m_plugins.empty())
 	{
-		ret.success = ret.proceed = false;
-		ret.errstr = "Can not load/use plugins with musl optimized build";
-		return ret;
+		return run_result::fatal("Can not load/use plugins with musl optimized build");
 	}
 #endif
 
@@ -48,12 +44,9 @@ application::run_result application::load_plugins()
 				// todo(jasondellaluce): change this once we support multiple enabled event sources
 				if(loaded_plugin)
 				{
-					ret.success = false;
-					ret.errstr = "Can not load multiple plugins with event sourcing capability: '"
+					return run_result::fatal("Can not load multiple plugins with event sourcing capability: '"
 						+ loaded_plugin->name()
-						+ "' already loaded";
-					ret.proceed = false;
-					return ret;
+						+ "' already loaded");
 				}
 				loaded_plugin = plugin;
 				m_state->enabled_sources = {plugin->event_source()};
@@ -78,7 +71,7 @@ application::run_result application::load_plugins()
 			// stands because the plugin manager stores sources in a vector, and
 			// the syscall source is appended in the engine *after* the sources
 			// coming from plugins. Since this is an implementation-based
-			// assumption, we check this and throw an exception to spot
+			// assumption, we check this and return an error to spot
 			// regressions in the future. We keep it like this for to avoid the
 			// overhead of additional mappings at runtime, but we may consider
 			// mapping the two indexes under something like std::unordered_map in the future.
@@ -87,9 +80,7 @@ application::run_result application::load_plugins()
 			auto source_idx_engine = m_state->engine->add_source(plugin->event_source(), filter_factory, formatter_factory);
 			if (!added || source_idx != source_idx_engine)
 			{
-				ret.success = ret.proceed = false;
-				ret.errstr = "Could not add event source in the engine: " + plugin->event_source();
-				return ret;
+				return run_result::fatal("Could not add event source in the engine: " + plugin->event_source());
 			}
 		}
 	}
@@ -124,12 +115,10 @@ application::run_result application::load_plugins()
 						{
 							if (std::string(f.m_name) == fname)
 							{
-								ret.success = ret.proceed = false;
-								ret.errstr =
+								return run_result::fatal(
 									"Plugin '" + p->name()
 									+ "' supports extraction of field '" + fname
-									+ "' that is overlapping for source '" + it.first + "'";
-								return ret;
+									+ "' that is overlapping for source '" + it.first + "'");
 							}
 						}
 					}
@@ -142,12 +131,10 @@ application::run_result application::load_plugins()
 		}
 		if (!used)
 		{
-			ret.success = ret.proceed = false;
-			ret.errstr = "Plugin '" + p->name()
-				+ "' has field extraction capability but is not compatible with any enabled event source";
-			return ret;
+			return run_result::fatal("Plugin '" + p->name()
+				+ "' has field extraction capability but is not compatible with any enabled event source");
 		}
 	}
 
-	return ret;
+	return run_result::ok();
 }

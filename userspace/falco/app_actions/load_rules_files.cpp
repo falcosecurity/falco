@@ -70,8 +70,6 @@ void application::check_for_ignored_events()
 
 application::run_result application::load_rules_files()
 {
-	run_result ret;
-
 	string all_rules;
 
 	if (!m_options.rules_filenames.empty())
@@ -81,10 +79,7 @@ application::run_result application::load_rules_files()
 
 	if(m_state->config->m_rules_filenames.empty())
 	{
-		ret.success = false;
-		ret.errstr = "You must specify at least one rules file/directory via -r or a rules_file entry in falco.yaml";
-		ret.proceed = false;
-		return ret;
+		return run_result::fatal("You must specify at least one rules file/directory via -r or a rules_file entry in falco.yaml");
 	}
 
 	falco_logger::log(LOG_DEBUG, "Configured rules filenames:\n");
@@ -108,10 +103,7 @@ application::run_result application::load_rules_files()
 		}
 		catch(falco_exception &e)
 		{
-			ret.success = false;
-			ret.errstr = string("Could not load rules file ") + filename + ": " + e.what();
-			ret.proceed = false;
-			return ret;
+			return run_result::fatal(string("Could not load rules file ") + filename + ": " + e.what());
 		}
 		m_state->required_engine_versions[filename] = required_engine_version;
 	}
@@ -128,10 +120,7 @@ application::run_result application::load_rules_files()
  	}
 	if (!m_state->engine->check_plugin_requirements(plugin_reqs, plugin_vers_err))
 	{
-		ret.success = false;
-		ret.errstr = plugin_vers_err;
-		ret.proceed = false;
-		return ret;
+		return run_result::fatal(plugin_vers_err);
 	}
 
 	// Free-up memory for the rule loader, which is not used from now on
@@ -175,16 +164,14 @@ application::run_result application::load_rules_files()
 	if (m_options.describe_all_rules)
 	{
 		m_state->engine->describe_rule(NULL);
-		ret.proceed = false;
-		return ret;
+		return run_result::exit();
 	}
 
 	if (!m_options.describe_rule.empty())
 	{
 		m_state->engine->describe_rule(&(m_options.describe_rule));
-		ret.proceed = false;
-		return ret;
+		return run_result::exit();
 	}
 
-	return ret;
+	return run_result::ok();
 }

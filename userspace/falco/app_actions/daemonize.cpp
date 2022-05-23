@@ -26,8 +26,6 @@ static bool s_daemonized = false;
 
 application::run_result application::daemonize()
 {
-	run_result ret;
-
 	// If daemonizing, do it here so any init errors will
 	// be returned in the foreground process.
 	if (m_options.daemon && !s_daemonized) {
@@ -36,10 +34,7 @@ application::run_result application::daemonize()
 		pid = fork();
 		if (pid < 0) {
 			// error
-			ret.success = false;
-			ret.errstr = "Could not fork.";
-			ret.proceed = false;
-			return ret;
+			return run_result::fatal("Could not fork.");
 		} else if (pid > 0) {
 			// parent. Write child pid to pidfile and exit
 			std::ofstream pidfile;
@@ -59,10 +54,7 @@ application::run_result application::daemonize()
 		// Become own process group.
 		sid = setsid();
 		if (sid < 0) {
-			ret.success = false;
-			ret.errstr = string("Could not set session id.");
-			ret.proceed = false;
-			return ret;
+			return run_result::fatal("Could not set session id.");
 		}
 
 		// Set umask so no files are world anything or group writable.
@@ -70,10 +62,7 @@ application::run_result application::daemonize()
 
 		// Change working directory to '/'
 		if ((chdir("/")) < 0) {
-			ret.success = false;
-			ret.errstr = string("Could not change working directory to '/'.");
-			ret.proceed = false;
-			return ret;
+			return run_result::fatal("Could not change working directory to '/'.");
 		}
 
 		// Close stdin, stdout, stderr and reopen to /dev/null
@@ -87,5 +76,5 @@ application::run_result application::daemonize()
 		s_daemonized = true;
 	}
 
-	return ret;
+	return run_result::ok();
 }

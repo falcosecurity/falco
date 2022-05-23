@@ -22,29 +22,23 @@ using namespace falco::app;
 
 application::run_result application::list_fields()
 {
-	run_result ret;
-
 	if(m_options.list_fields)
 	{
 		if(m_options.list_source_fields != "" &&
 		   !m_state->engine->is_source_valid(m_options.list_source_fields))
 		{
-			ret.success = false;
-			ret.errstr = "Value for --list must be a valid source type";
-			ret.proceed = false;
-			return ret;
+			return run_result::fatal("Value for --list must be a valid source type");
 		}
 		m_state->engine->list_fields(m_options.list_source_fields, m_options.verbose, m_options.names_only, m_options.markdown);
-
-		ret.proceed = false;
+		return run_result::exit();
 	}
 
 	if(m_options.list_syscall_events)
 	{
 		// We know this function doesn't hold into the raw pointer value
 		list_events(m_state->inspector.get(), m_options.markdown);
-		ret.proceed = false;
+		return run_result::exit();
 	}
 
-	return ret;
+	return run_result::ok();
 }

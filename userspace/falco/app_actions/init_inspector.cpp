@@ -20,8 +20,6 @@ using namespace falco::app;
 
 application::run_result application::init_inspector()
 {
-	run_result ret;
-
 	m_state->inspector->set_buffer_format(m_options.event_buffer_format);
 
 	// If required, set the CRI paths
@@ -108,5 +106,5 @@ application::run_result application::init_inspector()
 	}
 
 #endif
-	return ret;
+	return run_result::ok();
 }

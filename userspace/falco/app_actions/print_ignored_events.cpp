@@ -61,13 +61,10 @@ void application::print_all_ignored_events()
 
 application::run_result application::print_ignored_events()
 {
-	run_result ret;
-
 	if(m_options.print_ignored_events)
 	{
 		print_all_ignored_events();
-		ret.proceed = false;
+		return run_result::exit();
 	}
-
-	return ret;
+	return run_result::ok();
 }

@@ -24,8 +24,6 @@ using namespace falco::app;
 
 application::run_result application::start_grpc_server()
 {
-	run_result ret;
-
 	// gRPC server
 	if(m_state->config->m_grpc_enabled)
 	{
@@ -44,7 +42,7 @@ application::run_result application::start_grpc_server()
 			m_state->grpc_server.run();
 		});
 	}
-	return ret;
+	return run_result::ok();
 }
 
 bool application::stop_grpc_server(std::string &errstr)

@@ -20,8 +20,6 @@ using namespace falco::app;
 
 application::run_result application::validate_rules_files()
 {
-	run_result ret;
-
 	if(m_options.validate_rules_filenames.size() > 0)
 	{
 		falco_logger::log(LOG_INFO, "Validating rules file(s):\n");
@@ -39,15 +37,13 @@ application::run_result application::validate_rules_files()
 			catch(falco_exception &e)
 			{
 				printf("%s%s", prefix.c_str(), e.what());
-				ret.success = false;
-				ret.errstr = prefix +  e.what();
-				ret.proceed = false;
-				return ret;
+				return run_result::fatal(prefix +  e.what());
 			}
 			printf("%sOk\n", prefix.c_str());
 		}
 		falco_logger::log(LOG_INFO, "Ok\n");
+		return run_result::exit();
 	}
 
-	return ret;
+	return run_result::ok();
 }

@@ -95,16 +95,41 @@ private:
 
 	// Used in the below methods to indicate how to proceed.
 	struct run_result {
+		// Successful result
+		inline static run_result ok()
+		{
+			run_result r;
+			r.success = true;
+			r.errstr = "";
+			r.proceed = true;
+			return r;
+		}
+
+		// Successful result that causes the program to stop
+		inline static run_result exit()
+		{
+			run_result r = ok();
+			r.proceed = false;
+			return r;
+		}
+
+		// Failure result that causes the program to stop with an error
+		inline static run_result fatal(std::string err)
+		{
+			run_result r;
+			r.success = false;
+			r.errstr = err;
+			r.proceed = false;
+			return r;
+		}
 
 		run_result();
 		virtual ~run_result();
 
 		// If true, the method completed successfully.
 		bool success;
-
 		// If success==false, details on the error.
 		std::string errstr;
-
 		// If true, subsequent methods should be performed. If
 		// false, subsequent methods should *not* be performed
 		// and falco should tear down/exit/restart.
@@ -150,9 +175,9 @@ private:
 	void configure_output_format();
 	void check_for_ignored_events();
 	void print_all_ignored_events();
-	uint64_t do_inspect(syscall_evt_drop_mgr &sdropmgr,
+	run_result do_inspect(syscall_evt_drop_mgr &sdropmgr,
 			    uint64_t duration_to_tot_ns,
-			    run_result &result);
+			    uint64_t &num_events);
 	
 	inline bool is_syscall_source_enabled() const 
 	{
