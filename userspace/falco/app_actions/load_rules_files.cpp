@@ -121,7 +121,7 @@ application::run_result application::load_rules_files()
 	std::vector<falco_engine::plugin_version_requirement> plugin_reqs;
 	for (const auto &plugin : m_state->inspector->get_plugin_manager()->plugins())
  	{
-		 falco_engine::plugin_version_requirement req;
+		falco_engine::plugin_version_requirement req;
 		req.name = plugin->name();
 		req.version = plugin->plugin_version().as_string();
 		plugin_reqs.push_back(req);
