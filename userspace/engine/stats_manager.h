@@ -36,18 +36,16 @@ public:
 	virtual void clear();
 
 	/*!
-		\brief Callback for when a rule with a given index matches an event
+		\brief Callback for when a given rule matches an event
 	*/
-	virtual void on_event(
-		const indexed_vector<falco_rule>& rules,
-		uint32_t index);
+	virtual void on_event(const falco_rule& rule);
 
 	/*!
 		\brief Formats the internal statistics into the out string
 	*/
 	virtual void format(
 		const indexed_vector<falco_rule>& rules,
-		std::string& out);
+		std::string& out) const;
 
 private:
 	uint64_t m_total;

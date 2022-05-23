@@ -38,10 +38,9 @@ void stats_manager::clear()
 
 void stats_manager::format(
 	const indexed_vector<falco_rule>& rules,
-	string& out)
+	string& out) const
 {
 	string fmt;
-	string name;
 	out = "Events detected: " + to_string(m_total) + "\n";
 	out += "Rule counts by severity:\n";
 	for (size_t i = 0; i < m_by_priority.size(); i++)
@@ -66,27 +65,17 @@ void stats_manager::format(
 	}
 }
 
-void stats_manager::on_event(
-		const indexed_vector<falco_rule>& rules,
-		uint32_t rule_id)
+void stats_manager::on_event(const falco_rule& rule)
 {
-	auto *rule = rules.at(rule_id);
-	if (!rule)
+	if (m_by_rule_id.size() <= rule.id)
 	{
-		throw falco_exception(
-			"on_event(): event with invalid rule_id: " + rule_id);
+		m_by_rule_id.resize(rule.id + 1, (uint64_t) 0);
 	}
-	if (m_by_rule_id.size() <= rule_id)
+	if (m_by_priority.size() <= (size_t) rule.priority)
 	{
-		m_by_rule_id.resize(rule_id + 1);
-		m_by_rule_id[rule_id] = 0;
-	}
-	if (m_by_priority.size() <= (size_t) rule->priority)
-	{
-		m_by_priority.resize((size_t) rule->priority + 1);
-		m_by_priority[(size_t) rule->priority] = 0;
+		m_by_priority.resize((size_t) rule.priority + 1, (uint64_t) 0);
 	}
 	m_total++;
-	m_by_rule_id[rule_id]++;
-	m_by_priority[(size_t) rule->priority]++;
+	m_by_rule_id[rule.id]++;
+	m_by_priority[(size_t) rule.priority]++;
 }
