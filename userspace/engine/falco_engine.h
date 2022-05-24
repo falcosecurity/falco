@@ -29,7 +29,7 @@ limitations under the License.
 #include <nlohmann/json.hpp>
 
 #include "gen_filter.h"
-#include "ruleset.h"
+#include "filter_ruleset.h"
 #include "rule_loader.h"
 #include "stats_manager.h"
 #include "falco_common.h"

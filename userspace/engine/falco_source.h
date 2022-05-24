@@ -17,7 +17,7 @@ limitations under the License.
 #pragma once
 
 #include <string>
-#include "ruleset.h"
+#include "filter_ruleset.h"
 
 /*!
 	\brief Represents a given data source used by the engine.
