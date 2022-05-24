@@ -22,7 +22,7 @@ limitations under the License.
 #include <list>
 #include <map>
 
-#include "ruleset.h"
+#include "filter_ruleset.h"
 #include "sinsp.h"
 #include "filter.h"
 #include "event.h"
