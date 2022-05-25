@@ -17,13 +17,7 @@ This step assumes you already built Falco.
 
 Note that the tests are intended to be run against a [release build](https://falco.org/docs/getting-started/source/#specify-the-build-type) of Falco, at the moment.
 
-Also, it assumes you prepared [falco_traces](#falco_traces) (see the section below) and you already run the following command from the build directory:
-
-```console
-make test-trace-files
-```
-
-It prepares the fixtures (`json` and `scap` files) needed by the integration tests.
+Also, it assumes you prepared [falco_traces](#falco_traces) (see the section below).
 
 **Requirements**
 
