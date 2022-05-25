@@ -18,52 +18,20 @@ limitations under the License.
 
 using namespace falco::app;
 
-application::run_result application::init_inspector()
+application::run_result application::init_clients()
 {
-	m_state->inspector->set_buffer_format(m_options.event_buffer_format);
-
-	// If required, set the CRI paths
-	for (auto &p : m_options.cri_socket_paths)
-	{
-		if (!p.empty())
-		{
-			m_state->inspector->add_cri_socket_path(p);
-		}
-	}
-
-	// Decide whether to do sync or async for CRI metadata fetch
-	m_state->inspector->set_cri_async(!m_options.disable_cri_async);
-
-	//
-	// If required, set the snaplen
-	//
-	if(m_options.snaplen != 0)
-	{
-		m_state->inspector->set_snaplen(m_options.snaplen);
-	}
-
-	if(!m_options.all_events)
-	{
-		// Drop EF_DROP_SIMPLE_CONS kernel side
-		m_state->inspector->set_simple_consumer();
-		// Eventually, drop any EF_DROP_SIMPLE_CONS event
-		// that reached userspace (there are some events that are not syscall-based
-		// like signaldeliver, that have the EF_DROP_SIMPLE_CONS flag)
-		m_state->inspector->set_drop_event_flags(EF_DROP_SIMPLE_CONS);
-	}
-
-	m_state->inspector->set_hostname_and_port_resolution_mode(false);
-
 #ifndef MINIMAL_BUILD
+	// k8s and mesos clients are useful only if syscall source is enabled
+	if (!is_syscall_source_enabled())
+	{
+		return run_result::ok();
+	}
 
-		falco_logger::log(LOG_DEBUG, "Setting metadata download max size to " + to_string(m_state->config->m_metadata_download_max_mb) + " MB\n");
-		falco_logger::log(LOG_DEBUG, "Setting metadata download chunk wait time to " + to_string(m_state->config->m_metadata_download_chunk_wait_us) + " μs\n");
-		falco_logger::log(LOG_DEBUG, "Setting metadata download watch frequency to " + to_string(m_state->config->m_metadata_download_watch_freq_sec) + " seconds\n");
-		m_state->inspector->set_metadata_download_params(m_state->config->m_metadata_download_max_mb * 1024 * 1024, m_state->config->m_metadata_download_chunk_wait_us, m_state->config->m_metadata_download_watch_freq_sec);
+	falco_logger::log(LOG_DEBUG, "Setting metadata download max size to " + to_string(m_state->config->m_metadata_download_max_mb) + " MB\n");
+	falco_logger::log(LOG_DEBUG, "Setting metadata download chunk wait time to " + to_string(m_state->config->m_metadata_download_chunk_wait_us) + " μs\n");
+	falco_logger::log(LOG_DEBUG, "Setting metadata download watch frequency to " + to_string(m_state->config->m_metadata_download_watch_freq_sec) + " seconds\n");
+	m_state->inspector->set_metadata_download_params(m_state->config->m_metadata_download_max_mb * 1024 * 1024, m_state->config->m_metadata_download_chunk_wait_us, m_state->config->m_metadata_download_watch_freq_sec);
 
-#endif
-
-#ifndef MINIMAL_BUILD
 	//
 	// Run k8s, if required
 	//
@@ -104,7 +72,7 @@ application::run_result application::init_inspector()
 		std::string mesos_api_copy = mesos_api_env;
 		m_state->inspector->init_mesos_client(&mesos_api_copy, m_options.verbose);
 	}
-
 #endif
+
 	return run_result::ok();
 }
