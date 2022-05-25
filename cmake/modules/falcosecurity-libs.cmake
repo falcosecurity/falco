@@ -25,7 +25,7 @@ else()
   # -DFALCOSECURITY_LIBS_VERSION=dev ..`
   if(NOT FALCOSECURITY_LIBS_VERSION)
     set(FALCOSECURITY_LIBS_VERSION "vtable-rebased")
-    set(FALCOSECURITY_LIBS_CHECKSUM "SHA256=f530f0cf37875fe50c3cd93e9e2239db0c9dcf67863de42426e5eb855dfec0c1")
+    set(FALCOSECURITY_LIBS_CHECKSUM "SHA256=2f006cd68dce29ec98652c4b76d2d4d686ab5db265ae499e1f8acbd027d6c04c")
   endif()
 
   # cd /path/to/build && cmake /path/to/source
