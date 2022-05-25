@@ -140,26 +140,27 @@ private:
 	// order in which the methods run is in application.cpp.
 	run_result create_signal_handlers();
 	run_result attach_inotify_signals();
- 	run_result daemonize();
- 	run_result init_falco_engine();
- 	run_result init_inspector();
- 	run_result init_outputs();
- 	run_result list_fields();
- 	run_result list_plugins();
- 	run_result load_config();
- 	run_result load_plugins();
- 	run_result load_rules_files();
- 	run_result open_inspector();
- 	run_result print_help();
+	run_result daemonize();
+	run_result init_falco_engine();
+	run_result init_inspector();
+	run_result init_clients();
+	run_result init_outputs();
+	run_result list_fields();
+	run_result list_plugins();
+	run_result load_config();
+	run_result load_plugins();
+	run_result load_rules_files();
+	run_result open_inspector();
+	run_result print_help();
 	run_result print_ignored_events();
- 	run_result print_support();
- 	run_result print_version();
- 	run_result process_events();
+	run_result print_support();
+	run_result print_version();
+	run_result process_events();
 #ifndef MINIMAL_BUILD
- 	run_result start_grpc_server();
- 	run_result start_webserver();
+	run_result start_grpc_server();
+	run_result start_webserver();
 #endif
- 	run_result validate_rules_files();
+	run_result validate_rules_files();
 
 	// These methods comprise application teardown. The order in
 	// which the methods run is in application.cpp.

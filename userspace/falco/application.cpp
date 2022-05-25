@@ -139,6 +139,7 @@ bool application::run(std::string &errstr, bool &restart)
 		std::bind(&application::attach_inotify_signals, this),
 		std::bind(&application::daemonize, this),
 		std::bind(&application::init_outputs, this),
+		std::bind(&application::init_clients, this),
 #ifndef MINIMAL_BUILD
 		std::bind(&application::start_grpc_server, this),
 		std::bind(&application::start_webserver, this),
