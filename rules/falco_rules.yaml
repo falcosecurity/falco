@@ -2064,7 +2064,7 @@
     '"sh -c  -t -i"',
     '"sh -c openssl version"',
     '"bash -c id -Gn kafadmin"',
-    '"sh -c /bin/sh -c ''date +%%s''"'
+    '"sh -c /bin/sh -c ''date +%%s''"',
     '"sh -c /usr/share/lighttpd/create-mime.conf.pl"'
     ]
 
