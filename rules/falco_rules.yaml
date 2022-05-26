@@ -3177,6 +3177,24 @@
   priority: CRITICAL
   tags: [container, mitre_privilege_escalation, mitre_lateral_movement]
 
+# Rule for detecting potential successful Log4Shell (CVE-2021-44228) exploitation
+- macro: java_network_write
+  condition: (evt.type = sendto and evt.dir=< and fd.type in (ipv4, ipv6) and proc.name=java)
+
+- macro: jndi_ldap_indicator
+  condition: (evt.buffer contains "2.16.840")
+
+- macro: jndi_rmi_indicator
+  condition: (evt.buffer startswith "JRMI")
+
+- rule: Java Process JNDI Connection
+  desc: Potential exploitation of the log4shell Log4j vulnerability (CVE-2021-44228)
+  condition: >
+        java_network_write and (jndi_ldap_indicator or jndi_rmi_indicator)
+  output: Java process JNDI connection (user=%user.name user_loginname=%user.loginname user_loginuid=%user.loginuid event=%evt.type connection=%fd.name server_ip=%fd.sip server_port=%fd.sport proto=%fd.l4proto process=%proc.name command=%proc.cmdline parent=%proc.pname buffer=%evt.buffer container_id=%container.id image=%container.image.repository)
+  priority: CRITICAL
+  tags: [mitre_initial_access]
+
 # Application rules have moved to application_rules.yaml. Please look
 # there if you want to enable them by adding to
 # falco_rules.local.yaml.
