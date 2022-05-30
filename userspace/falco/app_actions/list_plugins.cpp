@@ -34,7 +34,7 @@ application::run_result application::list_plugins()
 			os << "Capabilities: " << std::endl;
 			if(p->caps() & CAP_SOURCING)
 			{
-				os << "  - Event Sourcing: (ID=" << p->id();
+				os << "  - Event Sourcing (ID=" << p->id();
 				os << ", source='" << p->event_source() << "')" << std::endl;
 			}
 			if(p->caps() & CAP_EXTRACTION)
