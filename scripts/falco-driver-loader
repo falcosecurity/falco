@@ -282,7 +282,7 @@ clean_kernel_module() {
 
 	# Remove all versions of this module from dkms.
 	echo "* 2. Check all versions of kernel module '${KMOD_NAME}' in dkms:"
-	DRIVER_VERSIONS=$(dkms status -m "${KMOD_NAME}" | tr -d "," | tr "/" " " | cut -d' ' -f2)
+	DRIVER_VERSIONS=$(dkms status -m "${KMOD_NAME}" | tr -d "," | tr -d ":" | tr "/" " " | cut -d' ' -f2)
 	if [ -z "${DRIVER_VERSIONS}" ]; then
 		echo "- OK! There are no '${KMOD_NAME}' module versions in dkms."
 	else
