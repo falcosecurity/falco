@@ -131,7 +131,6 @@ application::run_result application::do_inspect(syscall_evt_drop_mgr &sdropmgr,
 			//
 			// Event read error.
 			//
-			cerr << "rc = " << rc << endl;
 			return run_result::fatal(m_state->inspector->getlasterr());
 		}
 
