@@ -1,5 +1,90 @@
 # Change Log
 
+## v0.32.0
+
+Released on 2022-06-03
+
+### Major Changes
+
+
+* new: added new `watch_config_files` config option, to trigger a Falco restart whenever a change is detected in the rules or config files [[#1991](https://github.com/falcosecurity/falco/pull/1991)] - [@FedeDP](https://github.com/FedeDP)
+* new(rules): add rule to detect excessively capable container [[#1963](https://github.com/falcosecurity/falco/pull/1963)] - [@loresuso](https://github.com/loresuso)
+* new(rules): add rules to detect pods sharing host pid and IPC namespaces [[#1951](https://github.com/falcosecurity/falco/pull/1951)] - [@loresuso](https://github.com/loresuso)
+* new(image): add Falco image based on RedHat UBI [[#1943](https://github.com/falcosecurity/falco/pull/1943)] - [@araujof](https://github.com/araujof)
+* new(falco): add --markdown and --list-syscall-events [[#1939](https://github.com/falcosecurity/falco/pull/1939)] - [@LucaGuerra](https://github.com/LucaGuerra)
+
+
+### Minor Changes
+
+* update(build): updated plugins to latest versions. [[#2033](https://github.com/falcosecurity/falco/pull/2033)] - [@FedeDP](https://github.com/FedeDP)
+* refactor(userspace/falco): split the currently monolithic falco_init into smaller "actions", managed by the falco application's action manager. [[#1953](https://github.com/falcosecurity/falco/pull/1953)] - [@mstemm](https://github.com/mstemm)
+* rules: out of the box ruleset for OKTA Falco Plugin [[#1955](https://github.com/falcosecurity/falco/pull/1955)] - [@darryk10](https://github.com/darryk10)
+* update(build): updated libs to 39ae7d40496793cf3d3e7890c9bbdc202263836b [[#2031](https://github.com/falcosecurity/falco/pull/2031)] - [@FedeDP](https://github.com/FedeDP)
+* update!: moving out plugins ruleset files [[#1995](https://github.com/falcosecurity/falco/pull/1995)] - [@leogr](https://github.com/leogr)
+* update: added `hostname` as a field in JSON output [[#1989](https://github.com/falcosecurity/falco/pull/1989)] - [@Milkshak3s](https://github.com/Milkshak3s)
+* refactor!: remove K8S audit logs from Falco [[#1952](https://github.com/falcosecurity/falco/pull/1952)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* refactor(userspace/engine): use supported_operators helper from libsinsp filter parser [[#1975](https://github.com/falcosecurity/falco/pull/1975)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* refactor!: deprecate PSP regression tests and warn for unsafe usage of <NA> in k8s audit filters [[#1976](https://github.com/falcosecurity/falco/pull/1976)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* build(cmake): upgrade catch2 to 2.13.9 [[#1977](https://github.com/falcosecurity/falco/pull/1977)] - [@leogr](https://github.com/leogr)
+* refactor(userspace/engine): reduce memory usage for resolving evttypes [[#1965](https://github.com/falcosecurity/falco/pull/1965)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* refactor(userspace/engine): remove Lua from Falco and re-implement the rule loader [[#1966](https://github.com/falcosecurity/falco/pull/1966)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* refactor(userspace/engine): decoupling ruleset reading, parsing, and compilation steps [[#1970](https://github.com/falcosecurity/falco/pull/1970)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* refactor: update definitions of falco_common [[#1967](https://github.com/falcosecurity/falco/pull/1967)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* update: improved Falco engine event processing performance [[#1944](https://github.com/falcosecurity/falco/pull/1944)] - [@deepskyblue86](https://github.com/deepskyblue86)
+* refactor(userspace/engine): use libsinsp filter parser and compiler inside rule loader [[#1947](https://github.com/falcosecurity/falco/pull/1947)] - [@jasondellaluce](https://github.com/jasondellaluce)
+
+
+### Bug Fixes
+
+* fix(userspace/engine): skip rules with unknown sources that also have exceptions, and skip macros with unknown sources. [[#1920](https://github.com/falcosecurity/falco/pull/1920)] - [@mstemm](https://github.com/mstemm)
+* fix(userspace/falco): enable k8s and mesos clients only when syscall source is enabled [[#2019](https://github.com/falcosecurity/falco/pull/2019)] - [@jasondellaluce](https://github.com/jasondellaluce)
+
+
+### Rule Changes
+
+* rule(Launch Excessively Capable Container): fix typo in description [[#1996](https://github.com/falcosecurity/falco/pull/1996)] - [@mmonitz](https://github.com/mmonitz)
+* rule(macro: known_shell_spawn_cmdlines): add `sh -c /usr/share/lighttpd/create-mime.conf.pl` to macro [[#1996](https://github.com/falcosecurity/falco/pull/1996)] - [@mmonitz](https://github.com/mmonitz)
+* rule(macro net_miner_pool): additional syscall for detection [[#2011](https://github.com/falcosecurity/falco/pull/2011)] - [@beryxz](https://github.com/beryxz)
+* rule(macro truncate_shell_history): include .ash_history [[#1956](https://github.com/falcosecurity/falco/pull/1956)] - [@bdashrad](https://github.com/bdashrad)
+* rule(macro modify_shell_history): include .ash_history [[#1956](https://github.com/falcosecurity/falco/pull/1956)] - [@bdashrad](https://github.com/bdashrad)
+* rule(Detect release_agent File Container Escapes): new rule created to detect an attempt to exploit a container escape using release_agent file [[#1969](https://github.com/falcosecurity/falco/pull/1969)] - [@darryk10](https://github.com/darryk10)
+* rule(k8s: secret): detect `get` attempts for both successful and unsuccessful attempts [[#1949](https://github.com/falcosecurity/falco/pull/1949)] - [@Dentrax](https://github.com/Dentrax)
+* rule(K8s Serviceaccount Created/Deleted): Fixed output for the rules [[#1973](https://github.com/falcosecurity/falco/pull/1973)] - [@darryk10](https://github.com/darryk10)
+* rule(Disallowed K8s User): exclude allowed EKS users [[#1960](https://github.com/falcosecurity/falco/pull/1960)] - [@darryk10](https://github.com/darryk10)
+* rule(Launch Ingress Remote File Copy Tools in Container): Removed use cases not triggering the rule [[#1968](https://github.com/falcosecurity/falco/pull/1968)] - [@darryk10](https://github.com/darryk10)
+* rule(Mount Launched in Privileged Container): added allowlist macro user_known_mount_in_privileged_containers. [[#1930](https://github.com/falcosecurity/falco/pull/1930)] - [@mmoyerfigma](https://github.com/mmoyerfigma)
+* rule(macro user_known_shell_config_modifiers): allow to allowlist shell config modifiers [[#1938](https://github.com/falcosecurity/falco/pull/1938)] - [@claudio-vellage](https://github.com/claudio-vellage)
+
+
+### Non user-facing changes
+
+* new: update plugins [[#2023](https://github.com/falcosecurity/falco/pull/2023)] - [@FedeDP](https://github.com/FedeDP)
+* update(build): updated libs version for Falco 0.32.0 release. [[#2022](https://github.com/falcosecurity/falco/pull/2022)] - [@FedeDP](https://github.com/FedeDP)
+* update(build): updated libs to 1be924900a09cf2e4db4b4ae13d03d838959f350 [[#2024](https://github.com/falcosecurity/falco/pull/2024)] - [@FedeDP](https://github.com/FedeDP)
+* chore(userspace/falco): do not print error code in process_events.cpp [[#2030](https://github.com/falcosecurity/falco/pull/2030)] - [@alacuku](https://github.com/alacuku)
+* fix(falco-scripts): remove driver versions with `dkms-3.0.3` [[#2027](https://github.com/falcosecurity/falco/pull/2027)] - [@Andreagit97](https://github.com/Andreagit97)
+* chore(userspace/falco): fix punctuation typo in output message when loading plugins [[#2026](https://github.com/falcosecurity/falco/pull/2026)] - [@alacuku](https://github.com/alacuku)
+* refactor(userspace): change falco engine design to properly support multiple sources [[#2017](https://github.com/falcosecurity/falco/pull/2017)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* update(userspace/falco): improve falco termination [[#2012](https://github.com/falcosecurity/falco/pull/2012)] - [@Andreagit97](https://github.com/Andreagit97)
+* update(userspace/engine): introduce new `check_plugin_requirements` API [[#2009](https://github.com/falcosecurity/falco/pull/2009)] - [@Andreagit97](https://github.com/Andreagit97)
+* fix(userspace/engine): improve rule loader source checks [[#2010](https://github.com/falcosecurity/falco/pull/2010)] - [@Andreagit97](https://github.com/Andreagit97)
+* fix: split filterchecks per source-idx [[#1999](https://github.com/falcosecurity/falco/pull/1999)] - [@FedeDP](https://github.com/FedeDP)
+* new: port CI builds to github actions [[#2000](https://github.com/falcosecurity/falco/pull/2000)] - [@FedeDP](https://github.com/FedeDP)
+* build(userspace/engine): cleanup unused include dir [[#1987](https://github.com/falcosecurity/falco/pull/1987)] - [@leogr](https://github.com/leogr)
+* rule(Anonymous Request Allowed): exclude {/livez, /readyz} [[#1954](https://github.com/falcosecurity/falco/pull/1954)] - [@sledigabel](https://github.com/sledigabel)
+* chore(falco_scripts): Update `falco-driver-loader` cleaning phase [[#1950](https://github.com/falcosecurity/falco/pull/1950)] - [@Andreagit97](https://github.com/Andreagit97)
+* new(userspace/falco): use new plugin caps API [[#1982](https://github.com/falcosecurity/falco/pull/1982)] - [@FedeDP](https://github.com/FedeDP)
+* build: correct conffiles for DEB packages [[#1980](https://github.com/falcosecurity/falco/pull/1980)] - [@leogr](https://github.com/leogr)
+* Fix exception parsing regressions [[#1985](https://github.com/falcosecurity/falco/pull/1985)] - [@mstemm](https://github.com/mstemm)
+* Add codespell GitHub Action [[#1962](https://github.com/falcosecurity/falco/pull/1962)] - [@invidian](https://github.com/invidian)
+* build: components opt-in mechanism for packages [[#1979](https://github.com/falcosecurity/falco/pull/1979)] - [@leogr](https://github.com/leogr)
+* add gVisor to ADOPTERS.md [[#1974](https://github.com/falcosecurity/falco/pull/1974)] - [@kevinGC](https://github.com/kevinGC)
+* rules: whitelist GCP's container threat detection image [[#1959](https://github.com/falcosecurity/falco/pull/1959)] - [@clmssz](https://github.com/clmssz)
+* Fix some typos [[#1961](https://github.com/falcosecurity/falco/pull/1961)] - [@invidian](https://github.com/invidian)
+* chore(rules): remove leftover [[#1958](https://github.com/falcosecurity/falco/pull/1958)] - [@leogr](https://github.com/leogr)
+* docs: readme update and plugins [[#1940](https://github.com/falcosecurity/falco/pull/1940)] - [@leogr](https://github.com/leogr)
+
+
 ## v0.31.1
 
 Released on 2022-03-09
