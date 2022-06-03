@@ -3137,8 +3137,8 @@
 - macro: user_known_ingress_remote_file_copy_activities
   condition: (never_true)
 
--  macro: curl_download
-   condition: proc.name = curl and
+- macro: curl_download
+  condition: proc.name = curl and
               (proc.cmdline contains " -o " or
               proc.cmdline contains " --output " or
               proc.cmdline contains " -O " or
