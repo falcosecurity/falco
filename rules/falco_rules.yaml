@@ -3178,6 +3178,18 @@
   priority: CRITICAL
   tags: [container, mitre_privilege_escalation, mitre_lateral_movement]
 
+# Rule for detecting potential Log4Shell (CVE-2021-44228) exploitation
+- macro: java_network_read
+  condition: (evt.type=recvfrom and fd.type in (ipv4, ipv6) and proc.name=java)
+
+- rule: Java Process Class File Download
+  desc: Detected Java process downloading a class file which could indicate a successful exploit of the log4shell Log4j vulnerability (CVE-2021-44228)
+  condition: >
+        java_network_read and evt.buffer bcontains cafebabe
+  output: Java process class file download (user=%user.name user_loginname=%user.loginname user_loginuid=%user.loginuid event=%evt.type connection=%fd.name server_ip=%fd.sip server_port=%fd.sport proto=%fd.l4proto process=%proc.name command=%proc.cmdline parent=%proc.pname buffer=%evt.buffer container_id=%container.id image=%container.image.repository)
+  priority: CRITICAL
+  tags: [mitre_initial_access]
+
 # Application rules have moved to application_rules.yaml. Please look
 # there if you want to enable them by adding to
 # falco_rules.local.yaml.
