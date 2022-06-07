@@ -34,6 +34,7 @@ RUN apt-get update \
 	libssl-dev \
 	llvm-7 \
 	netcat \
+	patchelf \
 	xz-utils \
 	&& rm -rf /var/lib/apt/lists/*
 
