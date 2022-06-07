@@ -220,6 +220,7 @@ jobs:
           command: |
             echo "%_signature gpg" > ~/.rpmmacros
             echo "%_gpg_name  Falcosecurity Package Signing" >> ~/.rpmmacros
+            echo "%__gpg_sign_cmd %{__gpg} --force-v3-sigs --batch --no-armor --passphrase-fd 3 --no-secmem-warning -u \"%{_gpg_name}\" -sb --digest-algo sha256 %{__plaintext_filename}'" >> ~/.rpmmacros
             cd /build/release/
             echo '#!/usr/bin/expect -f' > sign
             echo 'spawn rpmsign --addsign {*}$argv' >> sign
