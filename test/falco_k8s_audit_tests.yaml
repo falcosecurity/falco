@@ -692,7 +692,6 @@ trace_files: !mux
 
   fal_01_003:
     detect: False
-    exit_status: 1
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
