@@ -141,6 +141,32 @@ get_target_id() {
 	esac
 }
 
+flatcar_relocate_tools() {
+	local -a tools=(
+		scripts/basic/fixdep
+		scripts/mod/modpost
+		tools/objtool/objtool
+	)
+	local -r hostld=$(ls /host/usr/lib64/ld-*.so)
+	local -r kdir=/lib/modules/$(ls /lib/modules/)/build
+	echo "** Found host dl interpreter: ${hostld}"
+	for host_tool in ${tools[@]}; do
+		t=${host_tool}
+		tool=$(basename $t)
+		tool_dir=$(dirname $t)
+		host_tool=${kdir}/${host_tool}
+		if [ ! -f ${host_tool} ]; then
+			continue
+		fi
+		umount ${host_tool} 2>/dev/null || true
+		mkdir -p /tmp/${tool_dir}/
+		cp -a ${host_tool} /tmp/${tool_dir}/
+		echo "** Setting host dl interpreter for $host_tool"
+		patchelf --set-interpreter ${hostld} --set-rpath /host/usr/lib64 /tmp/${tool_dir}/${tool}
+		mount -o bind /tmp/${tool_dir}/${tool} ${host_tool}
+	done
+}
+
 load_kernel_module_compile() {
 	# Skip dkms on UEK hosts because it will always fail
 	if [[ $(uname -r) == *uek* ]]; then
@@ -151,6 +177,11 @@ load_kernel_module_compile() {
 	if ! hash dkms >/dev/null 2>&1; then
 		>&2 echo "This program requires dkms"
 		return
+	fi
+
+	if [ "${TARGET_ID}" == "flatcar" ]; then
+		echo "* Flatcar detected (version ${VERSION_ID}); relocating kernel tools"
+		flatcar_relocate_tools
 	fi
 
 	# Try to compile using all the available gcc versions

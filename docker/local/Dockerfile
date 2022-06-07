@@ -40,6 +40,7 @@ RUN apt-get update \
 	liblsan0 \
 	libtsan0 \
 	libcc1-0 \
+	patchelf \
 	&& rm -rf /var/lib/apt/lists/*
 
 RUN if [ "$TARGETARCH" = "amd64" ]; \
