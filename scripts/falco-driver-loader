@@ -135,6 +135,10 @@ get_target_id() {
 			TARGET_ID="ubuntu-generic"
 		fi
 		;;
+	("flatcar")
+		KERNEL_RELEASE="${VERSION_ID}"
+		TARGET_ID=$(echo "${OS_ID}" | tr '[:upper:]' '[:lower:]')
+		;;
 	(*)
 		TARGET_ID=$(echo "${OS_ID}" | tr '[:upper:]' '[:lower:]')
 		;;
@@ -180,6 +184,7 @@ load_kernel_module_compile() {
 	fi
 
 	if [ "${TARGET_ID}" == "flatcar" ]; then
+		KERNEL_RELEASE=$(uname -r)
 		echo "* Flatcar detected (version ${VERSION_ID}); relocating kernel tools"
 		flatcar_relocate_tools
 	fi
