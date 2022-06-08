@@ -6,24 +6,43 @@ jobs:
       image: ubuntu-2004:202101-01
     resource_class: arm.medium
     steps:
+      - checkout:
+          path: /tmp/source/falco
       - run:
+          name: Prepare project
           command: |
-            docker run -e BUILD_TYPE="release" -it falcosecurity/falco-builder:latest /bin/sh -c "cd source/falco && \
-            ./usr/bin/entrypoint cmake && \
-            ./usr/bin/entrypoint all && \
-            ./usr/bin/entrypoint tests && \
-            ./usr/bin/entrypoint package"
+            mkdir -p /tmp/build && mkdir -p /tmp/build/release && \
+            docker run -e BUILD_TYPE="release" -it -v /tmp/source:/source -v /tmp/build:/build \
+              falcosecurity/falco-builder:latest \
+              cmake
+      - run:
+          name: Build
+          command: |
+            docker run -e BUILD_TYPE="release" -it -v /tmp/source:/source -v /tmp/build:/build \
+              falcosecurity/falco-builder:latest \
+              all
+      - run:
+          name: Run unit tests
+          command: |
+            docker run -e BUILD_TYPE="release" -it -v /tmp/source:/source -v /tmp/build:/build \
+              falcosecurity/falco-builder:latest \
+              tests
+      - run:
+          name: Build packages
+          command: |
+            docker run -e BUILD_TYPE="release" -it -v /tmp/source:/source -v /tmp/build:/build \
+              falcosecurity/falco-builder:latest \
+              package
       - run:
           name: Prepare Artifacts
           command: |
             mkdir -p /tmp/packages
-            docker cp falcosecurity/falco-builder:/build/release/*.deb /tmp/packages
-            docker cp falcosecurity/falco-builder:/build/release/*.tar.gz /tmp/packages
-            docker cp falcosecurity/falco-builder:/build/release/*.rpm /tmp/packages
+            cp /tmp/build/release/*.deb /tmp/packages
+            cp /tmp/build/release/*.tar.gz /tmp/packages
+            cp /tmp/build/release/*.rpm /tmp/packages
       - store_artifacts:
           path: /tmp/packages
           destination: /packages
-
   # Build a statically linked Falco release binary using musl
   # This build is 100% static, there are no host dependencies
   "build-musl":
