@@ -254,8 +254,8 @@ jobs:
             docker context create falco-env
             docker buildx create falco-env --driver docker-container --use
             echo ${DOCKERHUB_SECRET} | docker login -u ${DOCKERHUB_USER} --password-stdin
-            apk update
-            apk add --update groff less py-pip
+            sudo apt update
+            sudo apt install groff less python3-pip
             pip install awscli
       - run:     
           name: Build and publish no-driver-dev
@@ -368,8 +368,8 @@ jobs:
             docker context create falco-env
             docker buildx create falco-env --driver docker-container --use
             echo ${DOCKERHUB_SECRET} | docker login -u ${DOCKERHUB_USER} --password-stdin
-            apk update
-            apk add --update groff less py-pip
+            sudo apt update
+            sudo apt install groff less python3-pip
             pip install awscli
       - run:
           name: Build and publish no-driver
