@@ -3179,6 +3179,7 @@
   tags: [container, mitre_privilege_escalation, mitre_lateral_movement]
 
 # Rule for detecting potential Log4Shell (CVE-2021-44228) exploitation
+# Note: Not compatible with Java 17+, which uses read() syscalls
 - macro: java_network_read
   condition: (evt.type=recvfrom and fd.type in (ipv4, ipv6) and proc.name=java)
 
