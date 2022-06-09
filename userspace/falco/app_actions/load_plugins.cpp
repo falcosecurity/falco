@@ -37,10 +37,10 @@ application::run_result application::load_plugins()
 	{
 		falco_logger::log(LOG_INFO, "Loading plugin (" + p.m_name + ") from file " + p.m_library_path + "\n");
 		auto plugin = m_state->inspector->register_plugin(p.m_library_path);
-        if (!plugin->init(p.m_init_config, err))
-        {
-            return run_result::fatal(err);
-        }
+		if (!plugin->init(p.m_init_config, err))
+		{
+			return run_result::fatal(err);
+		}
 
 		if(plugin->caps() & CAP_SOURCING)
 		{
