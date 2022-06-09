@@ -47,7 +47,6 @@ jobs:
           root: /tmp
           paths:
             - build-arm64/release
-            - source
   # Build a statically linked Falco release binary using musl
   # This build is 100% static, there are no host dependencies
   "build-musl":
