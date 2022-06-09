@@ -31,11 +31,16 @@ application::run_result application::load_plugins()
 	// The only enabled event source is syscall by default
 	m_state->enabled_sources = {falco_common::syscall_source};
 
+	std::string err = "";
 	std::shared_ptr<sinsp_plugin> loaded_plugin = nullptr;
 	for(auto &p : m_state->config->m_plugins)
 	{
 		falco_logger::log(LOG_INFO, "Loading plugin (" + p.m_name + ") from file " + p.m_library_path + "\n");
-		auto plugin = m_state->inspector->register_plugin(p.m_library_path, p.m_init_config);
+		auto plugin = m_state->inspector->register_plugin(p.m_library_path);
+        if (!plugin->init(p.m_init_config, err))
+        {
+            return run_result::fatal(err);
+        }
 
 		if(plugin->caps() & CAP_SOURCING)
 		{
