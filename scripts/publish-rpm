@@ -2,7 +2,7 @@
 set -e
 
 usage() {
-    echo "usage: $0 -f <package.rpm> -r <rpm|rpm-dev>"
+    echo "usage: $0 -f <package_x86_64.rpm> -f <package_aarch64.rpm> -r <rpm|rpm-dev>"
     exit 1
 }
 
@@ -42,7 +42,7 @@ update_repo() {
 while getopts ":f::r:" opt; do
     case "${opt}" in
         f )
-          file=${OPTARG}
+          files+=("${OPTARG}")
           ;;
         r )
           repo="${OPTARG}"
@@ -60,7 +60,7 @@ while getopts ":f::r:" opt; do
 done
 shift $((OPTIND-1))
 
-if [ -z "${file}" ] || [ -z "${repo}" ]; then
+if [ ${#files[@]} -eq 0 ] || [ -z "${repo}" ]; then
     usage
 fi
 
@@ -80,17 +80,23 @@ mkdir -p ${tmp_repo_path}
 aws s3 cp ${s3_bucket_repo} ${tmp_repo_path} --recursive
 
 # update the repo
-echo "Adding ${file}..."
-add_rpm ${tmp_repo_path} ${file}
+for file in "${files[@]}"; do
+  echo "Adding ${file}..."
+  add_rpm ${tmp_repo_path} ${file}
+done
 update_repo ${tmp_repo_path}
 
 # publish
-package=$(basename -- ${file})
-echo "Publishing ${package} to ${s3_bucket_repo}..."
-aws s3 cp ${tmp_repo_path}/${package} ${s3_bucket_repo}/${package} --acl public-read
-aws s3 cp ${tmp_repo_path}/${package}.asc ${s3_bucket_repo}/${package}.asc --acl public-read
-aws s3 sync ${tmp_repo_path}/repodata ${s3_bucket_repo}/repodata --delete --acl public-read
+for file in "${files[@]}"; do
+  package=$(basename -- ${file})
+  echo "Publishing ${package} to ${s3_bucket_repo}..."
+  aws s3 cp ${tmp_repo_path}/${package} ${s3_bucket_repo}/${package} --acl public-read
+  aws s3 cp ${tmp_repo_path}/${package}.asc ${s3_bucket_repo}/${package}.asc --acl public-read
 
-aws cloudfront create-invalidation --distribution-id ${AWS_CLOUDFRONT_DIST_ID} --paths ${cloudfront_path}/${package}
-aws cloudfront create-invalidation --distribution-id ${AWS_CLOUDFRONT_DIST_ID} --paths ${cloudfront_path}/${package}.asc
+  aws cloudfront create-invalidation --distribution-id ${AWS_CLOUDFRONT_DIST_ID} --paths ${cloudfront_path}/${package}
+  aws cloudfront create-invalidation --distribution-id ${AWS_CLOUDFRONT_DIST_ID} --paths ${cloudfront_path}/${package}.asc
+done
+
+# sync repodata
+aws s3 sync ${tmp_repo_path}/repodata ${s3_bucket_repo}/repodata --delete --acl public-read
 aws cloudfront create-invalidation --distribution-id ${AWS_CLOUDFRONT_DIST_ID} --paths ${cloudfront_path}/repodata/*

@@ -9,8 +9,8 @@ ENV FALCO_VERSION ${FALCO_VERSION}
 RUN yum update -y
 RUN yum install epel-release -y
 
-ADD falco-${FALCO_VERSION}-x86_64.rpm /
-RUN yum install -y /falco-${FALCO_VERSION}-x86_64.rpm
+ADD falco-${FALCO_VERSION}-*.rpm /
+RUN yum install -y /falco-${FALCO_VERSION}-$(uname -m).rpm
 
 # Change the falco config within the container to enable ISO 8601 output.
 RUN sed -e 's/time_format_iso_8601: false/time_format_iso_8601: true/' < /etc/falco/falco.yaml > /etc/falco/falco.yaml.new \
