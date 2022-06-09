@@ -25,7 +25,7 @@ build_image() {
     BUILD_TYPE=$2
     FALCO_VERSION=$3
     PACKAGE_TYPE=$4
-    PACKAGE="$BUILD_DIR/$BUILD_TYPE/falco-$FALCO_VERSION-x86_64.${PACKAGE_TYPE}"
+    PACKAGE="$BUILD_DIR/$BUILD_TYPE/falco-$FALCO_VERSION-$(uname -m).${PACKAGE_TYPE}"
     if [ ! -f "$PACKAGE" ]; then
         echo "Package not found: ${PACKAGE}." >&2
         exit 1
