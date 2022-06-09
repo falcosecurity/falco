@@ -39,6 +39,21 @@ add_deb() {
     architectures+=("${arch}")
 }
 
+falco_arch_from_deb_arch() {
+    case "$1" in
+      "amd64")
+        echo -n "x86_64"
+        ;;
+      "arm64")
+        echo -n "aarch64"
+        ;;
+      *)
+        echo "Wrong arch."
+        exit 1
+        ;;
+    esac  
+}
+
 # Update the local DEB repository
 #
 # $1: path of the repository
@@ -54,7 +69,11 @@ update_repo() {
     for arch in "${architectures[@]}"; do
       local packages_dir=${release_dir}/${component}/binary-${arch}
       mkdir -p ${packages_dir}
-      apt-ftparchive packages --arch=${arch} ${debs_dir} > ${packages_dir}/Packages
+      truncate -s 0 ${packages_dir}/Packages
+      # Find all ${arch} deb files.
+      # Note that debian uses {arm64,amd64}, while 
+      # Falco packages use {x86_64,aarch64}.
+      find ${debs_dir} -name "falco-*-$(falco_arch_from_deb_arch ${arch}).deb" -exec apt-ftparchive packages {} \; >> ${packages_dir}/Packages
       gzip -c ${packages_dir}/Packages > ${packages_dir}/Packages.gz
       bzip2 -z -c ${packages_dir}/Packages > ${packages_dir}/Packages.bz2
     done
