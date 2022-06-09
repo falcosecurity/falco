@@ -53,6 +53,7 @@ update_repo() {
     # packages metadata
     for arch in "${architectures[@]}"; do
       local packages_dir=${release_dir}/${component}/binary-${arch}
+      mkdir -p ${packages_dir}
       apt-ftparchive packages --arch=${arch} ${debs_dir} > ${packages_dir}/Packages
       gzip -c ${packages_dir}/Packages > ${packages_dir}/Packages.gz
       bzip2 -z -c ${packages_dir}/Packages > ${packages_dir}/Packages.bz2
