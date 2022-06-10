@@ -94,7 +94,7 @@ update_repo() {
     mv ${release_dir}/Release.asc ${release_dir}/Release.gpg
     
     # release signature - InRelease file
-    gpg --armor --sign --clearsign --digest-algo SHA256 Release
+    gpg --armor --sign --clearsign --digest-algo SHA256 ${release_dir}/Release
     rm -f ${release_dir}/InRelease
     mv ${release_dir}/Release.asc ${release_dir}/InRelease
 
