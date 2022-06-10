@@ -524,7 +524,9 @@ workflows:
             - "tests-integration"
             - "build-arm64"
       - "publish-docker-dev":
-          context: falco
+          context:
+            - falco
+            - test-infra
           filters:
             tags:
               ignore: /.*/
