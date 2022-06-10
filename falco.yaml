@@ -51,8 +51,8 @@ plugins:
     open_params: "http://:9765/k8s-audit"
   - name: cloudtrail
     library_path: libcloudtrail.so
-    init_config:
-    open_params: ""
+    # see docs for init_config and open_params:
+    # https://github.com/falcosecurity/plugins/blob/master/plugins/cloudtrail/README.md
   - name: json
     library_path: libjson.so
 
