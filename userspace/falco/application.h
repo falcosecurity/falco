@@ -153,6 +153,7 @@ private:
 	run_result open_inspector();
 	run_result print_help();
 	run_result print_ignored_events();
+	run_result print_plugin_info();
 	run_result print_support();
 	run_result print_version();
 	run_result process_events();
@@ -176,6 +177,7 @@ private:
 	void configure_output_format();
 	void check_for_ignored_events();
 	void print_all_ignored_events();
+	void format_plugin_info(std::shared_ptr<sinsp_plugin> p, std::ostream& os) const;
 	run_result do_inspect(syscall_evt_drop_mgr &sdropmgr,
 			    uint64_t duration_to_tot_ns,
 			    uint64_t &num_events);

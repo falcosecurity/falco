@@ -27,21 +27,7 @@ application::run_result application::list_plugins()
 		const auto &plugins = m_state->inspector->get_plugin_manager()->plugins();
 		for (auto &p : plugins)
 		{
-			os << "Name: " << p->name() << std::endl;
-			os << "Description: " << p->description() << std::endl;
-			os << "Contact: " << p->contact() << std::endl;
-			os << "Version: " << p->plugin_version().as_string() << std::endl;
-			os << "Capabilities: " << std::endl;
-			if(p->caps() & CAP_SOURCING)
-			{
-				os << "  - Event Sourcing (ID=" << p->id();
-				os << ", source='" << p->event_source() << "')" << std::endl;
-			}
-			if(p->caps() & CAP_EXTRACTION)
-			{
-				os << "  - Field Extraction" << std::endl;
-			}
-
+			format_plugin_info(p, os);
 			os << std::endl;
 		}
 

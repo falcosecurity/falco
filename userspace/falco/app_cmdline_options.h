@@ -52,6 +52,7 @@ public:
 	bool list_fields;
 	std::string list_source_fields;
 	bool list_plugins;
+	std::string print_plugin_info;
 	bool list_syscall_events;
 	bool markdown;
 	std::string mesos_api;
