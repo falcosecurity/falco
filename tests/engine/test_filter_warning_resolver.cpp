@@ -19,7 +19,7 @@ limitations under the License.
 
 static bool warns(const std::string& condition)
 {
-	std::set<std::string> w;
+	std::set<falco::load_result::warning_code> w;
 	auto ast = libsinsp::filter::parser(condition).parse();
 	filter_warning_resolver().run(ast, w);
 	delete ast;

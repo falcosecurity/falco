@@ -17,8 +17,9 @@ limitations under the License.
 #include <sinsp.h>
 #include "filter_warning_resolver.h"
 
+using namespace falco;
+
 static const char* no_value = "<NA>";
-static const char* warn_unsafe_na_check = "unsafe-na-check";
 
 static inline bool is_unsafe_field(const string& f)
 {
@@ -34,7 +35,7 @@ static inline bool is_equality_operator(const string& op)
 
 bool filter_warning_resolver::run(
 	libsinsp::filter::ast::expr* filter,
-	std::set<string>& warnings) const
+	std::set<load_result::warning_code>& warnings) const
 {
 	visitor v;
 	auto size = warnings.size();
@@ -42,22 +43,6 @@ bool filter_warning_resolver::run(
 	v.m_warnings = &warnings;
 	filter->accept(&v);
 	return warnings.size() > size;
-}
-
-// todo(jasondellaluce): use an hard-coded map once we support more warnings
-bool filter_warning_resolver::format(
-	const std::string& code,
-	std::string& out) const
-{
-	if (code == warn_unsafe_na_check)
-	{
-		out = "comparing a field value with <NA> is unsafe and can lead to "
-			"unpredictable behavior of the rule condition. If you need to "
-			" check for the existence of a field, consider using the "
-			"'exists' operator instead.";
-		return true;
-	}
-	return false;
 }
 
 void filter_warning_resolver::visitor::visit(
@@ -76,7 +61,7 @@ void filter_warning_resolver::visitor::visit(
 {
 	if (m_is_equality_check && e->value == no_value)
 	{
-		m_warnings->insert(warn_unsafe_na_check);
+		m_warnings->insert(load_result::LOAD_UNSAFE_NA_CHECK);
 	}
 }
 
@@ -86,6 +71,6 @@ void filter_warning_resolver::visitor::visit(
 	if (m_is_equality_check
 		&& std::find(e->values.begin(), e->values.end(), no_value) != e->values.end())
 	{
-		m_warnings->insert(warn_unsafe_na_check);
+		m_warnings->insert(load_result::LOAD_UNSAFE_NA_CHECK);
 	}
 }
