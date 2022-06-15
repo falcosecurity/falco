@@ -13,6 +13,7 @@
 set(FALCO_ENGINE_SOURCE_FILES
     falco_common.cpp
     falco_engine.cpp
+    falco_load_result.cpp
     falco_utils.cpp
     json_evt.cpp
     evttype_index_ruleset.cpp
