@@ -18,6 +18,7 @@ limitations under the License.
 #include <unistd.h>
 #include <string>
 #include <fstream>
+#include <utility>
 
 #include <sinsp.h>
 #include <plugin.h>
@@ -36,6 +37,7 @@ limitations under the License.
 const std::string falco_engine::s_default_ruleset = "falco-default-ruleset";
 
 using namespace std;
+using namespace falco;
 
 falco_engine::falco_engine(bool seed_rng)
 	: m_next_ruleset_id(0),
@@ -165,66 +167,89 @@ void falco_engine::list_fields(std::string &source, bool verbose, bool names_onl
 
 void falco_engine::load_rules(const string &rules_content, bool verbose, bool all_events)
 {
-	rule_loader::configuration cfg(rules_content, m_sources);
+	static const std::string no_name = "N/A";
+
+	std::unique_ptr<load_result> res = load_rules(rules_content, no_name);
+
+	if(verbose)
+	{
+		// Here, verbose controls whether to additionally
+		// "log" e.g. print to stderr. What's logged is always
+		// non-verbose so it fits on a single line.
+		// todo(jasondellaluce): introduce a logging callback in Falco
+		fprintf(stderr, "%s\n", res->as_string(false).c_str());
+	}
+
+	if(!res->successful())
+	{
+		// The output here is always the full e.g. "verbose" output.
+		throw falco_exception(res->as_string(true).c_str());
+	}
+}
+
+std::unique_ptr<load_result> falco_engine::load_rules(const std::string &rules_content, const std::string &name)
+{
+	rule_loader::configuration cfg(rules_content, m_sources, name);
 	cfg.min_priority = m_min_priority;
 	cfg.output_extra = m_extra;
 	cfg.replace_output_container_info = m_replace_container_info;
 	cfg.default_ruleset_id = m_default_ruleset_id;
 
-	std::ostringstream os;
 	rule_reader reader;
-	bool success = reader.load(cfg, m_rule_loader);
-	if (success)
+	if (reader.load(cfg, m_rule_loader))
 	{
 		for (auto &src : m_sources)
 		{
 			src.ruleset = src.ruleset_factory->new_ruleset();
 		}
 		m_rules.clear();
-		success = m_rule_loader.compile(cfg, m_rules);
+		m_rule_loader.compile(cfg, m_rules);
 	}
-	if (!cfg.errors.empty())
+
+	return std::move(cfg.res);
+}
+
+void falco_engine::load_rules_file(const std::string &rules_filename, bool verbose, bool all_events)
+{
+	std::unique_ptr<load_result> res = load_rules_file(rules_filename);
+
+	if(verbose)
 	{
-		os << cfg.errors.size() << " errors:" << std::endl;
-		for(auto &err : cfg.errors)
-		{
-			os << err << std::endl;
-		}
-	}
-	if (!cfg.warnings.empty())
-	{
-		os << cfg.warnings.size() << " warnings:" << std::endl;
-		for(auto &warn : cfg.warnings)
-		{
-			os << warn << std::endl;
-		}
-	}
-	if(!success)
-	{
-		throw falco_exception(os.str());
-	}
-	if (verbose && os.str() != "") {
+		// Here, verbose controls whether to additionally
+		// "log" e.g. print to stderr. What's logged is always
+		// non-verbose so it fits on a single line.
 		// todo(jasondellaluce): introduce a logging callback in Falco
-		fprintf(stderr, "When reading rules content: %s", os.str().c_str());
+		fprintf(stderr, "%s\n", res->as_string(false).c_str());
+	}
+
+	if(!res->successful())
+	{
+		// The output here is always the full e.g. "verbose" output.
+		throw falco_exception(res->as_string(true).c_str());
 	}
 }
 
-void falco_engine::load_rules_file(const string &rules_filename, bool verbose, bool all_events)
+std::unique_ptr<load_result> falco_engine::load_rules_file(const string &rules_filename)
 {
 	ifstream is;
 
 	is.open(rules_filename);
 	if (!is.is_open())
 	{
-		throw falco_exception("Could not open rules filename " +
-				      rules_filename + " " +
-				      "for reading");
+		rule_loader::context ctx(rules_filename);
+		std::string empty;
+
+		std::unique_ptr<rule_loader::result> res(new rule_loader::result(rules_filename));
+
+		res->add_error(load_result::LOAD_ERR_FILE_READ, "Could not open for reading.", ctx, empty);
+
+		return std::move(res);
 	}
 
 	string rules_content((istreambuf_iterator<char>(is)),
 			     istreambuf_iterator<char>());
 
-	load_rules(rules_content, verbose, all_events);
+	return load_rules(rules_content, rules_filename);
 }
 
 void falco_engine::enable_rule(const string &substring, bool enabled, const string &ruleset)
