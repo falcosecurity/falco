@@ -151,7 +151,7 @@ flatcar_relocate_tools() {
 		scripts/mod/modpost
 		tools/objtool/objtool
 	)
-	local -r hostld=$(ls /host/usr/lib64/ld-*.so)
+	local -r hostld=$(ls /host/usr/lib64/ld-linux-*.so.*)
 	local -r kdir=/lib/modules/$(ls /lib/modules/)/build
 	echo "** Found host dl interpreter: ${hostld}"
 	for host_tool in ${tools[@]}; do
