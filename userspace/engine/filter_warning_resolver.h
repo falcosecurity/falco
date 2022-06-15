@@ -21,6 +21,7 @@ limitations under the License.
 #include <set>
 #include <memory>
 #include "falco_common.h"
+#include "falco_load_result.h"
 
 /*!
 	\brief Searches for bad practices in filter conditions and
@@ -42,40 +43,13 @@ public:
 	*/
 	bool run(
 		libsinsp::filter::ast::expr* filter,
-		std::set<std::string>& warnings) const;
-	
-	/*!
-		\brief Given a warning code retrieved through run(), returns
-		a verbose message describing the problem of the warning.
-		\param code The warning code string
-		\param out The string to be filled-out with the warning message
-		\return true if the warning code is recognized, false otherwise
-	*/
-	bool format(const std::string& code, std::string& out) const;
-
-	/*!
-		\brief Given a warning code retrieved through run(), returns
-		a verbose message describing the problem of the warning.
-		\param code The warning code string
-		\return The warning message string
-		\throw falco_exception if the warning code is not recognized
-
-	*/
-	inline std::string format(const std::string& code) const
-	{
-		std::string v;
-		if (!format(code, v))
-		{
-			throw falco_exception("unrecognized warning code: " + code);
-		}
-		return v;
-	}
+		std::set<falco::load_result::warning_code>& warnings) const;
 
 private:
 	struct visitor : public libsinsp::filter::ast::base_expr_visitor
 	{
 		bool m_is_equality_check;
-		std::set<std::string>* m_warnings;
+		std::set<falco::load_result::warning_code>* m_warnings;
 
 		void visit(libsinsp::filter::ast::value_expr* e) override;
 		void visit(libsinsp::filter::ast::list_expr* e) override;
