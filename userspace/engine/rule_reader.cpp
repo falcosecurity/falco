@@ -16,139 +16,222 @@ limitations under the License.
 
 #include "rule_reader.h"
 
-#define THROW(cond, err)    { if (cond) { throw falco_exception(err); } }
+#define THROW(cond, err, ctx)    { if ((cond)) { throw rule_loader::rule_load_exception(load_result::LOAD_ERR_YAML_VALIDATE, (err), (ctx)); } }
 
-static rule_loader::context yaml_get_context(
-		const string& content,
-		const vector<YAML::Node>& docs,
-		vector<YAML::Node>::iterator doc,
-		YAML::iterator node)
-{
-	rule_loader::context m;
-	YAML::Node item = *node++;
-	YAML::Node cur_doc = *doc++;
-	// include the "- " sequence mark
-	size_t from = item.Mark().pos - 2;
-	size_t to = 0;
-	if (node != cur_doc.end())
-	{
-		// end of item is beginning of next item
-		to = node->Mark().pos - 2;
-	}
-	else if (doc != docs.end())
-	{
-		// end of item is beginning of next doc
-		to = doc->Mark().pos - 4;
-	}
-	else
-	{
-		// end of item is end of file contents
-		to = content.length();
-	}
-	m.content = content.substr(from, to - from);
-	m.content = trim(m.content);
-	return m;
-}
+using namespace falco;
 
+// Don't call this directly, call decode_val/decode_optional_val instead.
 template <typename T>
-static bool decode_val(const YAML::Node& v, T& out)
+static void decode_val_generic(const YAML::Node& item, const char *key, T& out, const rule_loader::context& ctx, bool optional)
 {
-	return v.IsDefined() && v.IsScalar() && YAML::convert<T>::decode(v, out);
-}
+	const YAML::Node& val = item[key];
 
-template <typename T>
-static bool decode_seq(const YAML::Node& item, vector<T>& out)
-{
-	if (item.IsDefined() && item.IsSequence())
-	{
-		T value;
-		for(const YAML::Node& v : item)
-		{
-			THROW(!v.IsScalar() || !YAML::convert<T>::decode(v, value),
-				"Can't decode YAML sequence value: " + YAML::Dump(v));
-			out.push_back(value);
-		}
-		return true;
-	}
-	return false;
-}
-
-template <typename T>
-static bool decode_seq(const YAML::Node& item, set<T>& out)
-{
-	if (item.IsDefined() && item.IsSequence())
-	{
-		T value;
-		for(const YAML::Node& v : item)
-		{
-			THROW(!v.IsScalar() || !YAML::convert<T>::decode(v, value),
-				"Can't decode YAML sequence value: " + YAML::Dump(v));
-			out.insert(value);
-		}
-		return true;
-	}
-	return false;
-}
-
-static bool decode_exception_info_entry(
-	const YAML::Node& item,
-	rule_loader::rule_exception_info::entry& out)
-{
-	if (item.IsDefined())
-	{
-		if (item.IsScalar())
-		{
-			out.is_list = false;
-			if (YAML::convert<string>::decode(item, out.item))
-			{
-				return true;
-			}
-		}
-		if (item.IsSequence())
-		{
-			out.is_list = true;
-			rule_loader::rule_exception_info::entry tmp;
-			for(const YAML::Node& v : item)
-			{
-				if (!decode_exception_info_entry(v, tmp))
-				{
-					return false;
-				}
-				out.items.push_back(tmp);
-			}
-			return true;
-		}
-	}
-	return false;
-}
-
-static void read_rule_exceptions(
-	const YAML::Node& item,
-	rule_loader::rule_info& v)
-{
-	// An exceptions property with nothing in it is allowed
-	if(item.IsNull())
+	if(!val.IsDefined() && optional)
 	{
 		return;
 	}
 
-	THROW(!item.IsSequence(), "Rule exceptions must be a sequence");
-	for (auto &ex : item)
+	THROW(!val.IsDefined(), std::string("Item has no mapping for key '") + key + "'", ctx);
+	THROW(val.IsNull(), std::string("Mapping for key '") + key + "' is empty", ctx);
+
+	rule_loader::context valctx(val, "value for", key, ctx);
+	THROW(!val.IsScalar(), "Value is not a scalar value", valctx);
+	THROW(val.Scalar().empty(), "Value must be non-empty", valctx);
+
+	THROW(!YAML::convert<T>::decode(val, out), "Can't decode YAML scalar value", valctx);
+}
+
+template <typename T>
+static void decode_val(const YAML::Node& item, const char *key, T& out, const rule_loader::context& ctx)
+{
+	bool optional = false;
+
+	decode_val_generic(item, key, out, ctx, optional);
+}
+
+template <typename T>
+static void decode_optional_val(const YAML::Node& item, const char *key, T& out, const rule_loader::context& ctx)
+{
+	bool optional = true;
+
+	decode_val_generic(item, key, out, ctx, optional);
+}
+
+// Don't call this directly, call decode_items/decode_tags instead.
+template <typename T>
+static void decode_seq(const YAML::Node& item, const char *key,
+		       std::function<void(T)> inserter,
+		       const rule_loader::context &ctx, bool optional)
+{
+	const YAML::Node& val = item[key];
+
+	if(!val.IsDefined() && optional)
 	{
-		rule_loader::rule_exception_info v_ex;
-		THROW(!decode_val(ex["name"], v_ex.name) || v_ex.name.empty(),
-			"Rule exception item must have name property");
-		// note: the legacy lua loader used to throw a "xxx must strings" error
-		decode_exception_info_entry(ex["fields"], v_ex.fields);
-		decode_exception_info_entry(ex["comps"], v_ex.comps);
-		if (ex["values"].IsDefined())
+		return;
+	}
+
+	THROW(!val.IsDefined(), std::string("Item has no mapping for key '") + key + "'", ctx);
+
+	rule_loader::context valctx(val, "value for", key, ctx);
+	THROW(!val.IsSequence(), "Value is not a sequence", valctx);
+
+	T value;
+	for(const YAML::Node& v : val)
+	{
+		rule_loader::context ictx(v, "list item", "", valctx);
+		THROW(!v.IsScalar(), "sequence value is not scalar", ictx);
+		THROW(!YAML::convert<T>::decode(v, value), "Can't decode YAML sequence value", ictx);
+		inserter(value);
+	}
+}
+
+template <typename T>
+static void decode_items(const YAML::Node& item, vector<T>& out,
+		       const rule_loader::context& ctx)
+{
+	bool optional = false;
+
+	std::function<void(T)> inserter = [&out] (T value) {
+		out.push_back(value);
+	};
+
+	decode_seq(item, "items", inserter, ctx, optional);
+}
+
+template <typename T>
+static void decode_tags(const YAML::Node& item, set<T>& out,
+		       const rule_loader::context& ctx)
+{
+	bool optional = true;
+
+	std::function<void(T)> inserter = [&out] (T value) {
+		out.insert(value);
+	};
+
+	decode_seq(item, "tags", inserter, ctx, optional);
+}
+
+// Don't call this directly, call decode_exception_{fields,comps,values} instead
+static void decode_exception_info_entry(
+	const YAML::Node& item,
+	const char *key,
+	rule_loader::rule_exception_info::entry& out,
+	const rule_loader::context& ctx,
+	bool optional)
+{
+	const YAML::Node& val = (key == NULL ? item : item[key]);
+
+	if(!val.IsDefined() && optional)
+	{
+		return;
+	}
+
+	THROW(!val.IsDefined(), std::string("Item has no mapping for key '") + key + "'", ctx);
+
+	rule_loader::context valctx(val, "value for", (key == NULL ? "" : key), ctx);
+
+	if (val.IsScalar())
+	{
+		THROW(val.Scalar().empty(), "Value must be non-empty", valctx);
+		out.is_list = false;
+		THROW(!YAML::convert<string>::decode(val, out.item), "Could not decode scalar value", valctx);
+	}
+	if (val.IsSequence())
+	{
+		out.is_list = true;
+		rule_loader::rule_exception_info::entry tmp;
+		for(const YAML::Node& v : val)
 		{
-			THROW(!ex["values"].IsSequence(),
-				"Rule exception values must be a sequence");
-			for (auto &val : ex["values"])
+			rule_loader::context lctx(v, "list exception entry", "", valctx);
+
+			// Optional is always false once you get past the outer values
+			optional = false;
+			decode_exception_info_entry(v, NULL, tmp, lctx, optional);
+			out.items.push_back(tmp);
+		}
+	}
+}
+
+static void decode_exception_fields(
+	const YAML::Node& item,
+	rule_loader::rule_exception_info::entry& out,
+	const rule_loader::context& ctx,
+	bool optional)
+{
+	decode_exception_info_entry(item, "fields", out, ctx, optional);
+}
+
+static void decode_exception_comps(
+	const YAML::Node& item,
+	rule_loader::rule_exception_info::entry& out,
+	const rule_loader::context& ctx)
+{
+	bool optional = true;
+
+	decode_exception_info_entry(item, "comps", out, ctx, optional);
+}
+
+static void decode_exception_values(
+	const YAML::Node& item,
+	rule_loader::rule_exception_info::entry& out,
+	const rule_loader::context& ctx)
+{
+	bool optional = false;
+
+	decode_exception_info_entry(item, NULL, out, ctx, optional);
+}
+
+static void read_rule_exceptions(
+	const YAML::Node& item,
+	rule_loader::rule_info& v,
+	const rule_loader::context& parent,
+	bool append)
+{
+	const YAML::Node& exs = item["exceptions"];
+
+	// No exceptions property, or an exceptions property with
+	// nothing in it, are allowed
+	if(!exs.IsDefined() || exs.IsNull())
+	{
+		return;
+	}
+
+	rule_loader::context exes_ctx(exs, "exceptions", "", parent);
+
+	THROW(!exs.IsSequence(), "Rule exceptions must be a sequence", exes_ctx);
+
+	for (auto &ex : exs)
+	{
+		// Make a temp context to verify simple properties
+		// about the exception.
+		std::string name;
+		rule_loader::context tmp(ex, "exception", "", exes_ctx);
+
+		THROW(!ex.IsMap(), "Rule exception must be a mapping", tmp);
+		decode_val(ex, "name", name, tmp);
+
+		// Now use a real context including the exception name.
+		rule_loader::context ex_ctx(ex, "exception", name, parent);
+		rule_loader::rule_exception_info v_ex(ex_ctx);
+		v_ex.name = name;
+
+		// note: the legacy lua loader used to throw a "xxx must strings" error
+
+		// fields are optional when append is true
+		decode_exception_fields(ex, v_ex.fields, ex_ctx, append);
+		decode_exception_comps(ex, v_ex.comps, ex_ctx);
+		const YAML::Node& exvals = ex["values"];
+		if (exvals.IsDefined())
+		{
+			rule_loader::context vals_ctx(exvals, "exception values", "", ex_ctx);
+			THROW(!exvals.IsSequence(),
+			       "Rule exception values must be a sequence", vals_ctx);
+			for (auto &val : exvals)
 			{
+				rule_loader::context vctx(val, "exception value", "", vals_ctx);
 				rule_loader::rule_exception_info::entry v_ex_val;
-				decode_exception_info_entry(val, v_ex_val);
+
+				decode_exception_values(val, v_ex_val, vctx);
 				v_ex.values.push_back(v_ex_val);
 			}
 		}
@@ -157,43 +240,65 @@ static void read_rule_exceptions(
 }
 
 static void read_item(
-		rule_loader::configuration& cfg,
-		rule_loader& loader,
-		const YAML::Node& item,
-		const rule_loader::context& ctx)
+	rule_loader::configuration& cfg,
+	rule_loader& loader,
+	const YAML::Node& item,
+	const rule_loader::context& parent)
 {
+	rule_loader::context tmp(item, "item", "", parent);
+	THROW(!item.IsMap(), "Unexpected element type. "
+	      "Each element should be a yaml associative array.", tmp);
+
 	if (item["required_engine_version"].IsDefined())
 	{
-		rule_loader::engine_version_info v;
-		THROW(!decode_val(item["required_engine_version"], v.version),
-			"Value of required_engine_version must be a number");
+		rule_loader::context ctx(item, "required_engine_version", "", parent);
+		rule_loader::engine_version_info v(ctx);
+
+		decode_val(item, "required_engine_version", v.version, ctx);
 		loader.define(cfg, v);
 	}
 	else if(item["required_plugin_versions"].IsDefined())
 	{
-		THROW(!item["required_plugin_versions"].IsSequence(),
-			"Value of required_plugin_versions must be a sequence");
+		const YAML::Node& req_plugin_vers = item["required_plugin_versions"];
+		rule_loader::context ctx(req_plugin_vers, "required_plugin_versions", "", parent);
 
-		for(const YAML::Node& plugin : item["required_plugin_versions"])
+		THROW(!req_plugin_vers.IsSequence(),
+		       "Value of required_plugin_versions must be a sequence",
+		       ctx);
+
+		for(const YAML::Node& plugin : req_plugin_vers)
 		{
-			rule_loader::plugin_version_info v;
-			THROW(!decode_val(plugin["name"], v.name) || v.name.empty(),
-				"required_plugin_versions item must have name property");
-			THROW(!decode_val(plugin["version"], v.version) || v.version.empty(),
-				"required_plugin_versions item must have version property");
+			// Use a temp context until we can get a name
+			std::string name;
+			rule_loader::context tmp(plugin, "plugin version", "", ctx);
+			THROW(!plugin.IsMap(), "Plugin version must be a mapping", tmp);
+			decode_val(plugin, "name", name, tmp);
+
+			rule_loader::context pctx(plugin, "plugin version", name, ctx);
+			rule_loader::plugin_version_info v(pctx);
+			decode_val(plugin, "version", v.version, pctx);
+			v.name = name;
+
 			loader.define(cfg, v);
 		}
 	}
 	else if(item["list"].IsDefined())
 	{
-		rule_loader::list_info v;
-		v.ctx = ctx;
+		std::string name;
+		// Using tmp context until name is decoded
+		rule_loader::context tmp(item, "list", "", parent);
+		decode_val(item, "list", name, tmp);
+
+		rule_loader::context ctx(item, "list", name, parent);
+		rule_loader::list_info v(ctx);
+
 		bool append = false;
-		THROW(!decode_val(item["list"], v.name) || v.name.empty(),
-			"List name is empty");
-		THROW(!decode_seq(item["items"], v.items),
-			"List must have property items");
-		if(decode_val(item["append"], append) && append)
+		decode_val(item, "list", v.name, ctx);
+		decode_items(item, v.items, ctx);
+
+		decode_optional_val(item, "append", append, ctx);
+
+		if(append)
 		{
 			loader.append(cfg, v);
 		}
@@ -204,14 +309,24 @@ static void read_item(
 	}
 	else if(item["macro"].IsDefined())
 	{
-		rule_loader::macro_info v;
-		v.ctx = ctx;
+		std::string name;
+		// Using tmp context until name is decoded
+		rule_loader::context tmp(item, "macro", "", parent);
+		decode_val(item, "macro", name, tmp);
+
+		rule_loader::context ctx(item, "macro", name, parent);
+		rule_loader::macro_info v(ctx);
+		v.name = name;
+
 		bool append = false;
-		THROW(!decode_val(item["macro"], v.name) || v.name.empty(),
-			"Macro name is empty");
-		THROW(!decode_val(item["condition"], v.cond) || v.cond.empty(),
-			"Macro must have property condition");
-		if(decode_val(item["append"], append) && append)
+		decode_val(item, "condition", v.cond, ctx);
+
+		// Now set the proper context for the condition now that we know it exists
+		v.cond_ctx = rule_loader::context(item["condition"], "condition", "", ctx);
+
+		decode_optional_val(item, "append", append, ctx);
+
+		if(append)
 		{
 			loader.append(cfg, v);
 		}
@@ -222,57 +337,81 @@ static void read_item(
 	}
 	else if(item["rule"].IsDefined())
 	{
-		rule_loader::rule_info v;
-		v.ctx = ctx;
+		std::string name;
+
+		// Using tmp context until name is decoded
+		rule_loader::context tmp(item, "rule", "", parent);
+		decode_val(item, "rule", name, tmp);
+
+		rule_loader::context ctx(item, "rule", name, parent);
+		rule_loader::rule_info v(ctx);
+		v.name = name;
+
 		bool append = false;
 		v.enabled = true;
 		v.warn_evttypes = true;
 		v.skip_if_unknown_filter = false;
-		THROW(!decode_val(item["rule"], v.name) || v.name.empty(),
-			"Rule name is empty");
-		if(decode_val(item["append"], append) && append)
+
+		decode_optional_val(item, "append", append, ctx);
+
+		if(append)
 		{
-			decode_val(item["condition"], v.cond);
-			if (item["exceptions"].IsDefined())
+			decode_optional_val(item, "condition", v.cond, ctx);
+			if(item["condition"].IsDefined())
 			{
-				read_rule_exceptions(item["exceptions"], v);
+				v.cond_ctx = rule_loader::context(item["condition"], "condition", "", ctx);
 			}
+			read_rule_exceptions(item, v, ctx, append);
 			loader.append(cfg, v);
 		}
 		else
 		{
-			string priority;
-			bool has_enabled = decode_val(item["enabled"], v.enabled);
-			bool has_defs = decode_val(item["condition"], v.cond)
-					&& decode_val(item["output"], v.output)
-					&& decode_val(item["desc"], v.desc)
-					&& decode_val(item["priority"], priority);
-			if (!has_defs)
+			// If the rule does *not* have any of
+			// condition/output/desc/priority, it *must*
+			// have an enabled property. Use the enabled
+			// property to set the enabled status of an
+			// earlier rule.
+			if (!item["condition"].IsDefined() &&
+			    !item["output"].IsDefined() &&
+			    !item["desc"].IsDefined() &&
+			    !item["priority"].IsDefined())
 			{
-				THROW(!has_enabled, "Rule must have properties 'condition', 'output', 'desc', and 'priority'");
+				decode_val(item, "enabled", v.enabled, ctx);
 				loader.enable(cfg, v);
 			}
 			else
 			{
+				string priority;
+
+				// All of these are required
+				decode_val(item, "condition", v.cond, ctx);
+				v.cond_ctx = rule_loader::context(item["condition"], "condition", "", ctx);
+
+				decode_val(item, "output", v.output, ctx);
+				v.output_ctx = rule_loader::context(item["output"], "output", "", ctx);
+
+				decode_val(item, "desc", v.desc, ctx);
+				decode_val(item, "priority", priority, ctx);
+
 				v.output = trim(v.output);
 				v.source = falco_common::syscall_source;
+				rule_loader::context prictx(item["priority"], "priority value", "", ctx);
 				THROW(!falco_common::parse_priority(priority, v.priority),
-					"Invalid priority");
-				decode_val(item["source"], v.source);
-				decode_val(item["warn_evttypes"], v.warn_evttypes);
-				decode_val(item["skip-if-unknown-filter"], v.skip_if_unknown_filter);
-				decode_seq(item["tags"], v.tags);
-				if (item["exceptions"].IsDefined())
-				{
-					read_rule_exceptions(item["exceptions"], v);
-				}
+				       "Invalid priority", prictx);
+				decode_optional_val(item, "source", v.source, ctx);
+				decode_optional_val(item, "enabled", v.enabled, ctx);
+				decode_optional_val(item, "warn_evttypes", v.warn_evttypes, ctx);
+				decode_optional_val(item, "skip-if-unknown-filter", v.skip_if_unknown_filter, ctx);
+				decode_tags(item, v.tags, ctx);
+				read_rule_exceptions(item, v, ctx, append);
 				loader.define(cfg, v);
 			}
 		}
 	}
 	else
 	{
-		cfg.warnings.push_back("Unknown top level object");
+		rule_loader::context ctx(item, "unknown", "", parent);
+		cfg.res->add_warning(load_result::LOAD_UNKNOWN_ITEM, "Unknown top level item", ctx, cfg.content);
 	}
 }
 
@@ -285,45 +424,45 @@ bool rule_reader::load(rule_loader::configuration& cfg, rule_loader& loader)
 	}
 	catch(const exception& e)
 	{
-		cfg.errors.push_back("Could not load YAML file: " + string(e.what()));
+		rule_loader::context ctx(cfg.name);
+		cfg.res->add_error(load_result::LOAD_ERR_YAML_PARSE, e.what(), ctx, cfg.content);
 		return false;
 	}
-	
+
 	for (auto doc = docs.begin(); doc != docs.end(); doc++)
 	{
 		if (doc->IsDefined() && !doc->IsNull())
 		{
-			if(!doc->IsMap() && !doc->IsSequence())
-			{
-				cfg.errors.push_back("Rules content is not yaml");
-				return false;
-			}
-			if(!doc->IsSequence())
-			{
-				cfg.errors.push_back(
-					"Rules content is not yaml array of objects");
-				return false;
-			}
-			for (auto it = doc->begin(); it != doc->end(); it++)
-			{
-				if (!it->IsNull())
+			rule_loader::context ctx(cfg.name);
+
+			try {
+				THROW(!doc->IsMap() && !doc->IsSequence(),
+				       "Rules content is not yaml",
+				       ctx);
+
+				THROW(!doc->IsSequence(),
+				       "Rules content is not yaml array of objects",
+				       ctx);
+
+				for (auto it = doc->begin(); it != doc->end(); it++)
 				{
-					auto ctx = yaml_get_context(cfg.content, docs, doc, it);
-					YAML::Node item = *it;
-					try
+					if (!it->IsNull())
 					{
-						THROW(!item.IsMap(), "Unexpected element type. "
-							"Each element should be a yaml associative array.");
-						read_item(cfg, loader, item, ctx);
-					}
-					catch(const exception& e)
-					{
-						cfg.errors.push_back(ctx.error(e.what()));
-						return false;
+						read_item(cfg, loader, *it, ctx);
 					}
 				}
 			}
+			catch (rule_loader::rule_load_exception &e)
+			{
+				cfg.res->add_error(e.ec, e.msg, e.ctx, cfg.content);
+
+				// Although we *could* continue on to the next doc,
+				// as it's effectively a new rules file, for
+				// consistency we stop at the first error.
+				return false;
+			};
 		}
 	}
+
 	return true;
 }
