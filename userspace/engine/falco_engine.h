@@ -34,6 +34,7 @@ limitations under the License.
 #include "stats_manager.h"
 #include "falco_common.h"
 #include "falco_source.h"
+#include "falco_load_result.h"
 
 //
 // This class acts as the primary interface between a program and the
@@ -62,6 +63,12 @@ public:
 	//
 	void load_rules_file(const std::string &rules_filename, bool verbose, bool all_events);
 	void load_rules(const std::string &rules_content, bool verbose, bool all_events);
+
+	//
+	// Identical to above, but returns a result object instead of
+	// throwing exceptions on error.
+	std::unique_ptr<falco::load_result> load_rules_file(const std::string &rules_filename);
+	std::unique_ptr<falco::load_result> load_rules(const std::string &rules_content, const std::string &name);
 
 	//
 	// Enable/Disable any rules matching the provided substring.
@@ -181,7 +188,7 @@ public:
 	std::size_t add_source(const std::string &source,
 			       std::shared_ptr<gen_event_filter_factory> filter_factory,
 			       std::shared_ptr<gen_event_formatter_factory> formatter_factory);
-	
+
 	//
 	// Equivalent to above, but allows specifying a ruleset factory
 	// for the newly added source.
