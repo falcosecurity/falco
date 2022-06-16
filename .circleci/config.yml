@@ -216,11 +216,14 @@ jobs:
             yum update -y
             yum install rpm-sign -y
       - run:
-          name: Sign rpm
+          name: Prepare
           command: |
             echo "%_signature gpg" > ~/.rpmmacros
             echo "%_gpg_name  Falcosecurity Package Signing" >> ~/.rpmmacros
             echo "%__gpg_sign_cmd %{__gpg} --force-v3-sigs --batch --no-armor --passphrase-fd 3 --no-secmem-warning -u \"%{_gpg_name}\" -sb --digest-algo sha256 %{__plaintext_filename}'" >> ~/.rpmmacros
+      - run:
+          name: Sign rpm x86_64
+          command: |
             cd /build/release/
             echo '#!/usr/bin/expect -f' > sign
             echo 'spawn rpmsign --addsign {*}$argv' >> sign
@@ -231,10 +234,24 @@ jobs:
             echo $GPG_KEY | base64 -d | gpg --import
             ./sign *.rpm
             test "$(rpm -qpi *.rpm | awk '/Signature/' | grep -i none | wc -l)" -eq 0
+      - run:     
+          name: Sign rpm arm64
+          command: |
+            cd /build-arm64/release/
+            echo '#!/usr/bin/expect -f' > sign
+            echo 'spawn rpmsign --addsign {*}$argv' >> sign
+            echo 'expect -exact "Enter pass phrase: "' >> sign
+            echo 'send -- "\n"' >> sign
+            echo 'expect eof' >> sign
+            chmod +x sign
+            echo $GPG_KEY | base64 -d | gpg --import
+            ./sign *.rpm
+            test "$(rpm -qpi *.rpm | awk '/Signature/' | grep -i none | wc -l)" -eq 0      
       - persist_to_workspace:
           root: /
           paths:
             - build/release/*.rpm
+            - build-arm64/release/*.rpm
   # Publish the dev packages
   "publish-packages-dev":
     docker:
