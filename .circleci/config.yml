@@ -233,13 +233,13 @@ jobs:
           command: |
             cd /build/release/
             ~/sign *.rpm
-            test "$(rpm -qpi *.rpm | awk '/Signature/' | grep -i none | wc -l)" -eq 0
+            rpm --qf %{SIGPGP:pgpsig} -qp *.rpm | grep SHA256
       - run:     
           name: Sign rpm arm64
           command: |
             cd /build-arm64/release/
             ~/sign *.rpm
-            test "$(rpm -qpi *.rpm | awk '/Signature/' | grep -i none | wc -l)" -eq 0      
+            rpm --qf %{SIGPGP:pgpsig} -qp *.rpm | grep SHA256
       - persist_to_workspace:
           root: /
           paths:
