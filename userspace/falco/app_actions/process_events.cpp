@@ -101,7 +101,8 @@ application::run_result application::do_inspect(syscall_evt_drop_mgr &sdropmgr,
 			{
 				timeouts_since_last_success_or_msg++;
 				if(timeouts_since_last_success_or_msg > m_state->config->m_syscall_evt_timeout_max_consecutives
-					&& is_syscall_source_enabled())
+					&& is_syscall_source_enabled()
+					&& !is_gvisor_enabled())
 				{
 					std::string rule = "Falco internal: timeouts notification";
 					std::string msg = rule + ". " + std::to_string(m_state->config->m_syscall_evt_timeout_max_consecutives) + " consecutive timeouts without event.";
