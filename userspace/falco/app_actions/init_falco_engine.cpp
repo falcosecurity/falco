@@ -43,6 +43,11 @@ void application::configure_output_format()
 		output_format = m_options.print_additional;
 		replace_container_info = false;
 	}
+	else if(m_options.gvisor_config != "")
+	{
+		output_format = "container=%container.id pid=%proc.vpid tid=%thread.vtid ";
+		replace_container_info = true;
+	}
 
 	if(!output_format.empty())
 	{
