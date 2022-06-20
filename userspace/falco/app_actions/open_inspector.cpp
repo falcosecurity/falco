@@ -46,13 +46,19 @@ application::run_result application::open_inspector()
 	{
 		try
 		{
-			// open_udig() is the underlying method used in the capture code to parse userspace events from the kernel.
-			//
-			// Falco uses a ptrace(2) based userspace implementation.
-			// Regardless of the implementation, the underlying method remains the same.
 			if(m_options.userspace)
 			{
+				// open_udig() is the underlying method used in the capture code to parse userspace events from the kernel.
+				//
+				// Falco uses a ptrace(2) based userspace implementation.
+				// Regardless of the implementation, the underlying method remains the same.
 				m_state->inspector->open_udig();
+			}
+			else if(m_options.gvisor_config != "")
+			{
+				falco_logger::log(LOG_INFO, "Enabled event collection from gVisor. Configuration path: " + m_options.gvisor_config);
+				// XXX the first argument "/tmp/gvisor.sock" needs to be removed in favor of parsing everything from config."
+				m_state->inspector->open_gvisor("/tmp/gvisor.sock", m_options.gvisor_config, m_options.gvisor_root);
 			}
 			else
 			{

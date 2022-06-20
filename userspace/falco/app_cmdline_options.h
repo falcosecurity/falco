@@ -43,6 +43,9 @@ public:
 	std::vector<std::string> disable_sources;
 	std::vector<std::string> disabled_rule_substrings;
 	std::string trace_filename;
+	std::string gvisor_config;
+	bool gvisor_generate_config;
+	std::string gvisor_root;
 	std::string k8s_api;
 	std::string k8s_api_cert;
 	std::string k8s_node_name;

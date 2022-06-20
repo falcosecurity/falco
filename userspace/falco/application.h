@@ -193,6 +193,11 @@ private:
 		return !m_options.trace_filename.empty();
 	}
 
+	inline bool is_gvisor_enabled() const
+	{
+		return m_state->inspector->is_gvisor();
+	}
+
 	std::unique_ptr<state> m_state;
 	cmdline_options m_options;
 	bool m_initialized;
