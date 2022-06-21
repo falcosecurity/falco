@@ -45,9 +45,9 @@ application::state::state()
 	  enabled_sources({falco_common::syscall_source})
 {
 	config = std::make_shared<falco_configuration>();
-	outputs = std::make_shared<falco_outputs>();
 	engine = std::make_shared<falco_engine>();
 	inspector = std::make_shared<sinsp>();
+	outputs = nullptr;
 }
 
 application::state::~state()
