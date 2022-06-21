@@ -174,7 +174,7 @@ public:
 	// 
 	// This method is thread-safe only with the assumption that every invoker
 	// uses a different source_idx. Moreover, each invoker must not switch
-	// source_idx in subsequent invokations of this method.
+	// source_idx in subsequent invocations of this method.
 	// Considering that each invoker is related to a unique event source, it
 	// is safe to assume that each invoker will pass a different event
 	// to this method too, since two distinct sources cannot possibly produce
