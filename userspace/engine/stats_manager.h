@@ -18,11 +18,16 @@ limitations under the License.
 
 #include <vector>
 #include <string>
+#include <atomic>
+#include <memory>
 #include "falco_rule.h"
 #include "indexed_vector.h"
 
 /*!
-	\brief Manager for the internal statistics of the rule engine
+	\brief Manager for the internal statistics of the rule engine.
+	The on_event() is thread-safe and non-blocking, and it can be used
+	concurrently across many callers in parallel.
+	All the other methods are not thread safe.
 */
 class stats_manager
 {
@@ -36,19 +41,29 @@ public:
 	virtual void clear();
 
 	/*!
-		\brief Callback for when a given rule matches an event
+		\brief Callback for when a new rule is loaded in the engine.
+		Rules must be passed through this method before submitting them as
+		an argument of on_event().
+	*/
+	virtual void on_rule_loaded(const falco_rule& rule);
+
+	/*!
+		\brief Callback for when a given rule matches an event.
+		This method is thread-safe.
+		\throws falco_exception if rule has not been passed to
+		on_rule_loaded() first
 	*/
 	virtual void on_event(const falco_rule& rule);
 
 	/*!
-		\brief Formats the internal statistics into the out string
+		\brief Formats the internal statistics into the out string.
 	*/
 	virtual void format(
 		const indexed_vector<falco_rule>& rules,
 		std::string& out) const;
 
 private:
-	uint64_t m_total;
-	std::vector<uint64_t> m_by_priority;
-	std::vector<uint64_t> m_by_rule_id;
+	atomic<uint64_t> m_total;
+	std::vector<std::unique_ptr<atomic<uint64_t>>> m_by_priority;
+	std::vector<std::unique_ptr<atomic<uint64_t>>> m_by_rule_id;
 };
