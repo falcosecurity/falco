@@ -80,8 +80,6 @@ void falco_outputs::init(std::shared_ptr<falco_engine> engine,
 
 	m_timeout = std::chrono::milliseconds(timeout);
 
-	m_notifications_tb.init(rate, max_burst);
-
 	m_buffered = buffered;
 	m_time_format_iso_8601 = time_format_iso_8601;
 	m_hostname = hostname;
@@ -142,12 +140,6 @@ void falco_outputs::add_output(falco::outputs::config oc)
 void falco_outputs::handle_event(gen_event *evt, string &rule, string &source,
 				 falco_common::priority_type priority, string &format, std::set<std::string> &tags)
 {
-	if(!m_notifications_tb.claim())
-	{
-		falco_logger::log(LOG_DEBUG, "Skipping rate-limited notification for rule " + rule + "\n");
-		return;
-	}
-
 	falco_outputs::ctrl_msg cmsg = {};
 	cmsg.ts = evt->get_ts();
 	cmsg.priority = priority;

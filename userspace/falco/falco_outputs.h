@@ -69,9 +69,6 @@ private:
 
 	std::vector<falco::outputs::abstract_output *> m_outputs;
 
-	// Rate limits notifications
-	token_bucket m_notifications_tb;
-
 	bool m_buffered;
 	bool m_json_output;
 	bool m_time_format_iso_8601;
