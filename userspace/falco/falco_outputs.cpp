@@ -65,8 +65,9 @@ void falco_outputs::init(std::shared_ptr<falco_engine> engine,
 			 bool json_include_output_property,
 			 bool json_include_tags_property,
 			 uint32_t timeout,
-			 uint32_t rate, uint32_t max_burst, bool buffered,
-			 bool time_format_iso_8601, std::string hostname)
+			 bool buffered,
+			 bool time_format_iso_8601,
+			 std::string hostname)
 {
 	// Cannot be initialized more than one time.
 	if(m_initialized)

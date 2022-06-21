@@ -232,8 +232,6 @@ public:
 	bool m_json_include_tags_property;
 	std::string m_log_level;
 	std::vector<falco::outputs::config> m_outputs;
-	uint32_t m_notifications_rate;
-	uint32_t m_notifications_max_burst;
 
 	falco_common::priority_type m_min_priority;
 

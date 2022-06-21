@@ -39,12 +39,13 @@ public:
 	virtual ~falco_outputs();
 
 	void init(std::shared_ptr<falco_engine> engine,
-		  bool json_output,
-		  bool json_include_output_property,
-		  bool json_include_tags_property,
-		  uint32_t timeout,
-		  uint32_t rate, uint32_t max_burst, bool buffered,
-		  bool time_format_iso_8601, std::string hostname);
+		bool json_output,
+		bool json_include_output_property,
+		bool json_include_tags_property,
+		uint32_t timeout,
+		bool buffered,
+		bool time_format_iso_8601,
+		std::string hostname);
 
 	void add_output(falco::outputs::config oc);
 
