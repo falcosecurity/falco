@@ -165,18 +165,33 @@ public:
 	//
 	// Given an event, check it against the set of rules in the
 	// engine and if a matching rule is found, return details on
-	// the rule that matched. If no rule matched, returns NULL.
+	// the rule that matched. If no rule matched, returns nullptr.
 	//
-	// When ruleset_id is provided, use the enabled/disabled status
-	// associated with the provided ruleset. This is only useful
-	// when you have previously called enable_rule/enable_rule_by_tag
-	// with a ruleset string.
-	//
-	// the returned rule_result is allocated and must be delete()d.
+	// This method should be invoked only after having initialized and
+	// configured the engine. In particular, invoking this with a source_idx
+	// not previosly-returned by a call to add_source() would cause a
+	// falco_exception to be thrown.
+	// 
+	// This method is thread-safe only with the assumption that every invoker
+	// uses a different source_idx. Moreover, each invoker must not switch
+	// source_idx in subsequent invokations of this method.
+	// Considering that each invoker is related to a unique event source, it
+	// is safe to assume that each invoker will pass a different event
+	// to this method too, since two distinct sources cannot possibly produce
+	// the same event. Lastly, filterchecks and formatters (and their factories)
+	// that used to populate the conditions for a given event-source ruleset,
+	// must not be reused across rulesets of other event sources.
+	// These assumptions guarantee thread-safety because internally the engine
+	// is partitioned by event sources. However, each ruleset assigned to each
+	// event source is not thread-safe of its own, so invoking this method
+	// concurrently with the same source_idx would inherently cause data races
+	// and lead to undefined behavior.
 	std::unique_ptr<rule_result> process_event(std::size_t source_idx, gen_event *ev, uint16_t ruleset_id);
 
 	//
-	// Wrapper assuming the default ruleset
+	// Wrapper assuming the default ruleset.
+	//
+	// This inherits the same thread-safety guarantees.
 	//
 	std::unique_ptr<rule_result> process_event(std::size_t source_idx, gen_event *ev);
 

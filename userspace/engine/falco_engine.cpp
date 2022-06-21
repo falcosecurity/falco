@@ -332,6 +332,12 @@ std::shared_ptr<gen_event_formatter> falco_engine::create_formatter(const std::s
 unique_ptr<falco_engine::rule_result> falco_engine::process_event(std::size_t source_idx, gen_event *ev, uint16_t ruleset_id)
 {
 	falco_rule rule;
+
+	// note: there are no thread-safety guarantees on the filter_ruleset::run()
+	// method, but the thread-safety assumptions of falco_engine::process_event()
+	// imply that concurrent invokers use different and non-switchable values of
+	// source_idx, which means that at any time each filter_ruleset will only
+	// be accessed by a single thread.
 	if(should_drop_evt() || !find_source(source_idx)->ruleset->run(ev, rule, ruleset_id))
 	{
 		return unique_ptr<struct rule_result>();
