@@ -194,6 +194,15 @@ std::unique_ptr<load_result> falco_engine::load_rules(const std::string &rules_c
 		m_rule_loader.compile(cfg, m_rules);
 	}
 
+	if (cfg.res->successful())
+	{
+		m_rule_stats_manager.clear();
+		for (const auto &r : m_rules)
+		{
+			m_rule_stats_manager.on_rule_loaded(r);
+		}
+	}
+
 	return std::move(cfg.res);
 }
 

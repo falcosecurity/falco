@@ -45,37 +45,48 @@ void stats_manager::format(
 	out += "Rule counts by severity:\n";
 	for (size_t i = 0; i < m_by_priority.size(); i++)
 	{
-		if (m_by_priority[i] > 0)
+		auto val = m_by_priority[i].get()->load();
+		if (val > 0)
 		{
 			falco_common::format_priority(
 				(falco_common::priority_type) i, fmt, true);
 			transform(fmt.begin(), fmt.end(), fmt.begin(), ::toupper);
-			out += "   " + fmt;
-			out += ": " + to_string(m_by_priority[i]) + "\n";
+			out += "   " + fmt + ": " + to_string(val) + "\n";
 		}
 	}
 	out += "Triggered rules by rule name:\n";
 	for (size_t i = 0; i < m_by_rule_id.size(); i++)
 	{
-		if (m_by_rule_id[i] > 0)
+		auto val = m_by_rule_id[i].get()->load();
+		if (val > 0)
 		{
-			out += "   " + rules.at(i)->name;
-			out += ": " + to_string(m_by_rule_id[i]) + "\n";
+			out += "   " + rules.at(i)->name + ": " + to_string(val) + "\n";
 		}
+	}
+}
+
+void stats_manager::on_rule_loaded(const falco_rule& rule)
+{
+	while (m_by_rule_id.size() <= rule.id)
+	{
+		m_by_rule_id.emplace_back();
+		m_by_rule_id[m_by_rule_id.size() - 1].reset(new atomic<uint64_t>(0));
+	}
+	while (m_by_priority.size() <= (size_t) rule.priority)
+	{
+		m_by_priority.emplace_back();
+		m_by_priority[m_by_priority.size() - 1].reset(new atomic<uint64_t>(0));
 	}
 }
 
 void stats_manager::on_event(const falco_rule& rule)
 {
-	if (m_by_rule_id.size() <= rule.id)
+	if (m_by_rule_id.size() <= rule.id
+		|| m_by_priority.size() <= (size_t) rule.priority)
 	{
-		m_by_rule_id.resize(rule.id + 1, (uint64_t) 0);
+		throw falco_exception("rule id or priority is out of boubnds");
 	}
-	if (m_by_priority.size() <= (size_t) rule.priority)
-	{
-		m_by_priority.resize((size_t) rule.priority + 1, (uint64_t) 0);
-	}
-	m_total++;
-	m_by_rule_id[rule.id]++;
-	m_by_priority[(size_t) rule.priority]++;
+	m_total.fetch_add(1, std::memory_order_relaxed);
+	m_by_rule_id[rule.id]->fetch_add(1, std::memory_order_relaxed);
+	m_by_priority[(size_t) rule.priority]->fetch_add(1, std::memory_order_relaxed);
 }
