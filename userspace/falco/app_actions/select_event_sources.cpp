@@ -20,18 +20,53 @@ application::run_result application::select_event_sources()
 	// event sources selection is meaningless when reading trace files
 	if (!is_capture_mode())
 	{
-		for(const auto &src : m_options.disable_sources)
+		if (!m_options.enable_sources.empty() && !m_options.disable_sources.empty())
 		{
-			if (m_state->enabled_sources.find(src) == m_state->enabled_sources.end())
+			return run_result::fatal("You can not mix --enable-source and --disable-source");
+		}
+
+		if (!m_options.enable_sources.empty())
+		{
+			m_state->enabled_sources.clear();
+			for(const auto &src : m_options.enable_sources)
 			{
-				return run_result::fatal("Attempted disabling an unknown event source: " + src);
+				if (m_state->loaded_sources.find(src) == m_state->loaded_sources.end())
+				{
+					return run_result::fatal("Attempted enabling an unknown event source: " + src);
+				}
+				m_state->enabled_sources.insert(src);
 			}
-			m_state->enabled_sources.erase(src);
+		}
+		else if (!m_options.disable_sources.empty())
+		{
+			// this little hack ensure that the single-source samentic gets respected
+			// todo(jasondellaluce): remove this insert once we support multiple enabled event sources
+			m_state->enabled_sources = m_state->loaded_sources;
+
+			for(const auto &src : m_options.disable_sources)
+			{
+				if (m_state->loaded_sources.find(src) == m_state->loaded_sources.end())
+				{
+					return run_result::fatal("Attempted disabling an unknown event source: " + src);
+				}
+				m_state->enabled_sources.erase(src);
+			}
 		}
 
 		if(m_state->enabled_sources.empty())
 		{
 			return run_result::fatal("Must enable at least one event source");
+		}
+
+		// these two little hacks ensure that the single-source samentic gets respected
+		// todo(jasondellaluce): remove these two once we support multiple enabled event sources
+		if(m_state->enabled_sources.size() > 1)
+		{
+			return run_result::fatal("Can not enable more than one event source");
+		}
+		if(*m_state->enabled_sources.begin() == falco_common::syscall_source)
+		{
+			m_state->inspector->m_input_plugin = nullptr;
 		}
 
 		/* Print all enabled sources. */

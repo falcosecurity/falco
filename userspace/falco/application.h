@@ -69,6 +69,7 @@ private:
 		std::shared_ptr<falco_outputs> outputs;
 		std::shared_ptr<falco_engine> engine;
 		std::shared_ptr<sinsp> inspector;
+		std::set<std::string> loaded_sources;
 		std::set<std::string> enabled_sources;
 
 		// The event source index that correspond to "syscall"
