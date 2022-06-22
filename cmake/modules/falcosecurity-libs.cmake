@@ -16,26 +16,26 @@ set(FALCOSECURITY_LIBS_CMAKE_WORKING_DIR "${CMAKE_BINARY_DIR}/falcosecurity-libs
 
 file(MAKE_DIRECTORY ${FALCOSECURITY_LIBS_CMAKE_WORKING_DIR})
 
+# explicitly disable the bundled driver, since we pull it separately
+set(USE_BUNDLED_DRIVER OFF CACHE BOOL "")
+
 if(FALCOSECURITY_LIBS_SOURCE_DIR)
-  set(FALCOSECURITY_LIBS_VERSION "local")
-  message(STATUS "Using local falcosecurity/libs in '${FALCOSECURITY_LIBS_SOURCE_DIR}'")
+  set(FALCOSECURITY_LIBS_VERSION "0.0.0-local")
+  message(STATUS "Using local version of falcosecurity/libs: '${FALCOSECURITY_LIBS_SOURCE_DIR}'")
 else()
-  # The falcosecurity/libs git reference (branch name, commit hash, or tag) To update falcosecurity/libs version for the next release, change the
-  # default below In case you want to test against another falcosecurity/libs version just pass the variable - ie., `cmake
-  # -DFALCOSECURITY_LIBS_VERSION=dev ..`
+  # FALCOSECURITY_LIBS_VERSION accepts a git reference (branch name, commit hash, or tag) to the falcosecurity/libs repository.
+  # In case you want to test against another falcosecurity/libs version (or branch, or commit) just pass the variable -
+  # ie., `cmake -DFALCOSECURITY_LIBS_VERSION=dev ..`
   if(NOT FALCOSECURITY_LIBS_VERSION)
-    set(FALCOSECURITY_LIBS_VERSION "075da069af359954122ed7b8a9fc98bc7bcf3116")
-    set(FALCOSECURITY_LIBS_CHECKSUM "SHA256=4cfad3ff77afd3709cac92f244f38c998020156071138fb9edae2fb987954a84")
+    set(FALCOSECURITY_LIBS_VERSION "build/reorganize-driver-cmake-vars")
+    set(FALCOSECURITY_LIBS_CHECKSUM "SHA256=6129b216e71e3e6f5708e7c7c7791c2352440c3e60e8a21d1d69aca6665fcaaf")
   endif()
 
   # cd /path/to/build && cmake /path/to/source
   execute_process(COMMAND "${CMAKE_COMMAND}" -DFALCOSECURITY_LIBS_VERSION=${FALCOSECURITY_LIBS_VERSION} -DFALCOSECURITY_LIBS_CHECKSUM=${FALCOSECURITY_LIBS_CHECKSUM}
     ${FALCOSECURITY_LIBS_CMAKE_SOURCE_DIR} WORKING_DIRECTORY ${FALCOSECURITY_LIBS_CMAKE_WORKING_DIR})
 
-  # todo(leodido, fntlnz) > use the following one when CMake version will be >= 3.13
-
-  # execute_process(COMMAND "${CMAKE_COMMAND}" -B ${FALCOSECURITY_LIBS_CMAKE_WORKING_DIR} WORKING_DIRECTORY
-  # "${FALCOSECURITY_LIBS_CMAKE_SOURCE_DIR}")
+  # cmake --build .
   execute_process(COMMAND "${CMAKE_COMMAND}" --build . WORKING_DIRECTORY "${FALCOSECURITY_LIBS_CMAKE_WORKING_DIR}")
   set(FALCOSECURITY_LIBS_SOURCE_DIR "${FALCOSECURITY_LIBS_CMAKE_WORKING_DIR}/falcosecurity-libs-prefix/src/falcosecurity-libs")
 endif()
@@ -49,10 +49,6 @@ if(MUSL_OPTIMIZED_BUILD)
   add_definitions(-DMUSL_OPTIMIZED)
 endif()
 
-set(DRIVER_VERSION "${FALCOSECURITY_LIBS_VERSION}")
-set(DRIVER_NAME "falco")
-set(DRIVER_PACKAGE_NAME "falco")
-set(DRIVER_COMPONENT_NAME "falco-driver")
 set(SCAP_BPF_PROBE_ENV_VAR_NAME "FALCO_BPF_PROBE")
 set(SCAP_HOST_ROOT_ENV_VAR_NAME "HOST_ROOT")
 
@@ -82,5 +78,6 @@ else()
   message(STATUS "No strlcpy found, will use local definition")
 endif()
 
+include(driver)
 include(libscap)
 include(libsinsp)
