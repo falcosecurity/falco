@@ -41,6 +41,7 @@ application::run_result::~run_result()
 application::state::state()
 	: restart(false),
 	  terminate(false),
+	  loaded_sources({falco_common::syscall_source}),
 	  enabled_sources({falco_common::syscall_source})
 {
 	config = std::make_shared<falco_configuration>();

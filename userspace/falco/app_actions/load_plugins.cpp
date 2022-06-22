@@ -28,7 +28,8 @@ application::run_result application::load_plugins()
 	}
 #endif
 
-	// The only enabled event source is syscall by default
+	// By default only the syscall event source is loaded and enabled
+	m_state->loaded_sources = {falco_common::syscall_source};
 	m_state->enabled_sources = {falco_common::syscall_source};
 
 	std::string err = "";
@@ -54,8 +55,11 @@ application::run_result application::load_plugins()
 						+ "' already loaded");
 				}
 				loaded_plugin = plugin;
-				m_state->enabled_sources = {plugin->event_source()};
 				m_state->inspector->set_input_plugin(p.m_name, p.m_open_params);
+
+				m_state->loaded_sources.insert(plugin->event_source());
+				// todo(jasondellaluce): change this once we support multiple enabled event sources
+				m_state->enabled_sources = {plugin->event_source()};
 			}
 
 			// Init filtercheck list for the plugin's source and add the
