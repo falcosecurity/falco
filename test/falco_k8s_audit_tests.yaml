@@ -19,6 +19,7 @@ trace_files: !mux
   compat_engine_v4_create_disallowed_pod:
     detect: True
     detect_level: WARNING
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - ./rules/k8s_audit/engine_v4_k8s_audit_rules.yaml
@@ -30,6 +31,7 @@ trace_files: !mux
 
   compat_engine_v4_create_allowed_pod:
     detect: False
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - ./rules/k8s_audit/engine_v4_k8s_audit_rules.yaml
@@ -40,6 +42,7 @@ trace_files: !mux
   compat_engine_v4_create_privileged_pod:
     detect: True
     detect_level: WARNING
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - ./rules/k8s_audit/engine_v4_k8s_audit_rules.yaml
@@ -50,6 +53,7 @@ trace_files: !mux
 
   compat_engine_v4_create_privileged_trusted_pod:
     detect: False
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -60,6 +64,7 @@ trace_files: !mux
 
   compat_engine_v4_create_unprivileged_pod:
     detect: False
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - ./rules/k8s_audit/engine_v4_k8s_audit_rules.yaml
@@ -69,6 +74,7 @@ trace_files: !mux
   compat_engine_v4_create_hostnetwork_pod:
     detect: True
     detect_level: WARNING
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - ./rules/k8s_audit/engine_v4_k8s_audit_rules.yaml
@@ -79,6 +85,7 @@ trace_files: !mux
 
   compat_engine_v4_create_hostnetwork_trusted_pod:
     detect: False
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -90,6 +97,7 @@ trace_files: !mux
   user_outside_allowed_set:
     detect: True
     detect_level: WARNING
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -101,6 +109,7 @@ trace_files: !mux
 
   user_in_allowed_set:
     detect: False
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -113,6 +122,7 @@ trace_files: !mux
   create_disallowed_pod:
     detect: True
     detect_level: WARNING
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -124,6 +134,7 @@ trace_files: !mux
 
   create_allowed_pod:
     detect: False
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -134,6 +145,7 @@ trace_files: !mux
   create_privileged_pod:
     detect: True
     detect_level: WARNING
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -145,6 +157,7 @@ trace_files: !mux
   create_privileged_no_secctx_1st_container_2nd_container_pod:
     detect: True
     detect_level: WARNING
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -156,6 +169,7 @@ trace_files: !mux
   create_privileged_2nd_container_pod:
     detect: True
     detect_level: WARNING
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -166,6 +180,7 @@ trace_files: !mux
 
   create_privileged_trusted_pod:
     detect: False
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -175,6 +190,7 @@ trace_files: !mux
 
   create_unprivileged_pod:
     detect: False
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -183,6 +199,7 @@ trace_files: !mux
 
   create_unprivileged_trusted_pod:
     detect: False
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -193,6 +210,7 @@ trace_files: !mux
   create_sensitive_mount_pod:
     detect: True
     detect_level: WARNING
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -204,6 +222,7 @@ trace_files: !mux
   create_sensitive_mount_2nd_container_pod:
     detect: True
     detect_level: WARNING
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -214,6 +233,7 @@ trace_files: !mux
 
   create_sensitive_mount_trusted_pod:
     detect: False
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -223,6 +243,7 @@ trace_files: !mux
 
   create_unsensitive_mount_pod:
     detect: False
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -231,6 +252,7 @@ trace_files: !mux
 
   create_unsensitive_mount_trusted_pod:
     detect: False
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -241,6 +263,7 @@ trace_files: !mux
   create_hostnetwork_pod:
     detect: True
     detect_level: WARNING
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -251,6 +274,7 @@ trace_files: !mux
 
   create_hostnetwork_trusted_pod:
     detect: False
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -260,6 +284,7 @@ trace_files: !mux
 
   create_nohostnetwork_pod:
     detect: False
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -268,6 +293,7 @@ trace_files: !mux
 
   create_nohostnetwork_trusted_pod:
     detect: False
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -278,6 +304,7 @@ trace_files: !mux
   create_nodeport_service:
     detect: True
     detect_level: WARNING
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -289,6 +316,7 @@ trace_files: !mux
 
   create_nonodeport_service:
     detect: False
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -299,6 +327,7 @@ trace_files: !mux
   create_configmap_private_creds:
     detect: True
     detect_level: WARNING
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -310,6 +339,7 @@ trace_files: !mux
 
   create_configmap_no_private_creds:
     detect: False
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -320,6 +350,7 @@ trace_files: !mux
   anonymous_user:
     detect: True
     detect_level: WARNING
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -331,6 +362,7 @@ trace_files: !mux
   pod_exec:
     detect: True
     detect_level: NOTICE
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -342,6 +374,7 @@ trace_files: !mux
   pod_attach:
     detect: True
     detect_level: NOTICE
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -353,6 +386,7 @@ trace_files: !mux
   namespace_outside_allowed_set:
     detect: True
     detect_level: WARNING
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -364,6 +398,7 @@ trace_files: !mux
 
   namespace_in_allowed_set:
     detect: False
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -375,6 +410,7 @@ trace_files: !mux
   create_pod_in_kube_system_namespace:
     detect: True
     detect_level: WARNING
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -386,6 +422,7 @@ trace_files: !mux
   create_pod_in_kube_public_namespace:
     detect: True
     detect_level: WARNING
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -397,6 +434,7 @@ trace_files: !mux
   create_serviceaccount_in_kube_system_namespace:
     detect: True
     detect_level: WARNING
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -408,6 +446,7 @@ trace_files: !mux
   create_serviceaccount_in_kube_public_namespace:
     detect: True
     detect_level: WARNING
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -419,6 +458,7 @@ trace_files: !mux
   system_clusterrole_deleted:
     detect: True
     detect_level: WARNING
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -430,6 +470,7 @@ trace_files: !mux
   system_clusterrole_modified:
     detect: True
     detect_level: WARNING
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -441,6 +482,7 @@ trace_files: !mux
   attach_cluster_admin_role:
     detect: True
     detect_level: WARNING
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -452,6 +494,7 @@ trace_files: !mux
   create_cluster_role_wildcard_resources:
     detect: True
     detect_level: WARNING
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -463,6 +506,7 @@ trace_files: !mux
   create_cluster_role_wildcard_verbs:
     detect: True
     detect_level: WARNING
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -474,6 +518,7 @@ trace_files: !mux
   create_writable_cluster_role:
     detect: True
     detect_level: NOTICE
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -485,6 +530,7 @@ trace_files: !mux
   create_pod_exec_cluster_role:
     detect: True
     detect_level: WARNING
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -496,6 +542,7 @@ trace_files: !mux
   create_deployment:
     detect: True
     detect_level: INFO
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -507,6 +554,7 @@ trace_files: !mux
   delete_deployment:
     detect: True
     detect_level: INFO
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -518,6 +566,7 @@ trace_files: !mux
   create_service:
     detect: True
     detect_level: INFO
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -529,6 +578,7 @@ trace_files: !mux
   delete_service:
     detect: True
     detect_level: INFO
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -540,6 +590,7 @@ trace_files: !mux
   create_configmap:
     detect: True
     detect_level: INFO
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -551,6 +602,7 @@ trace_files: !mux
   delete_configmap:
     detect: True
     detect_level: INFO
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -562,6 +614,7 @@ trace_files: !mux
   create_namespace:
     detect: True
     detect_level: INFO
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -575,6 +628,7 @@ trace_files: !mux
   delete_namespace:
     detect: True
     detect_level: INFO
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -586,6 +640,7 @@ trace_files: !mux
   create_serviceaccount:
     detect: True
     detect_level: INFO
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -597,6 +652,7 @@ trace_files: !mux
   delete_serviceaccount:
     detect: True
     detect_level: INFO
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -608,6 +664,7 @@ trace_files: !mux
   create_clusterrole:
     detect: True
     detect_level: INFO
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -619,6 +676,7 @@ trace_files: !mux
   delete_clusterrole:
     detect: True
     detect_level: INFO
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -630,6 +688,7 @@ trace_files: !mux
   create_clusterrolebinding:
     detect: True
     detect_level: INFO
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -641,6 +700,7 @@ trace_files: !mux
   delete_clusterrolebinding:
     detect: True
     detect_level: INFO
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -652,6 +712,7 @@ trace_files: !mux
   create_secret:
     detect: True
     detect_level: INFO
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -664,6 +725,7 @@ trace_files: !mux
   create_service_account_token_secret:
     detect: False
     detect_level: INFO
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -673,6 +735,7 @@ trace_files: !mux
   create_kube_system_secret:
     detect: False
     detect_level: INFO
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -682,6 +745,7 @@ trace_files: !mux
   delete_secret:
     detect: True
     detect_level: INFO
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -692,6 +756,7 @@ trace_files: !mux
 
   fal_01_003:
     detect: False
+    enable_source: k8s_audit
     rules_file:
       - ../rules/falco_rules.yaml
       - BUILD_DIR/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml
@@ -702,6 +767,7 @@ trace_files: !mux
   json_pointer_correct_parse:
     detect: True
     detect_level: WARNING
+    enable_source: k8s_audit
     rules_file:
       - ./rules/k8s_audit/single_rule_with_json_pointer.yaml
     detect_counts:
