@@ -56,7 +56,7 @@ public:
 
 	// Print to stdout (using printf) a description of each field supported by this engine.
 	// If source is non-empty, only fields for the provided source are printed.
-	void list_fields(std::string &source, bool verbose, bool names_only, bool markdown);
+	void list_fields(std::string &source, bool verbose, bool names_only, bool markdown) const;
 
 	//
 	// Load rules either directly or from a filename.
@@ -98,7 +98,7 @@ public:
 	// Internally, this can be used to release unused resources before starting
 	// processing events with process_event().
 	//
-	void complete_rule_loading();
+	void complete_rule_loading() const;
 
 	// Only load rules having this priority or more severe.
 	void set_min_priority(falco_common::priority_type priority);
@@ -121,12 +121,12 @@ public:
 	// Print details on the given rule. If rule is NULL, print
 	// details on all rules.
 	//
-	void describe_rule(std::string *rule);
+	void describe_rule(std::string *rule) const;
 
 	//
 	// Print statistics on how many events matched each rule.
 	//
-	void print_stats();
+	void print_stats() const;
 
 	//
 	// Set the sampling ratio, which can affect which events are
@@ -200,7 +200,7 @@ public:
 
 	// Return whether or not there is a valid filter/formatter
 	// factory for this source.
-	bool is_source_valid(const std::string &source);
+	bool is_source_valid(const std::string &source) const;
 
 	//
 	// Given an event source and ruleset, fill in a bitset
@@ -216,7 +216,7 @@ public:
 	// event.
 	//
 	std::shared_ptr<gen_event_formatter> create_formatter(const std::string &source,
-							      const std::string &output);
+							      const std::string &output) const;
 
 	// The rule loader definition is aliased as it is exactly what we need
 	typedef rule_loader::plugin_version_info plugin_version_requirement;
@@ -230,7 +230,7 @@ public:
 	//
 	bool check_plugin_requirements(
 		const std::vector<plugin_version_requirement>& plugins,
-		std::string& err);
+		std::string& err) const;
 
 private:
 
@@ -246,15 +246,15 @@ private:
 
 	indexed_vector<falco_source> m_sources;
 
-	falco_source* find_source(std::size_t index);
-	falco_source* find_source(const std::string& name);
+	const falco_source* find_source(std::size_t index) const;
+	const falco_source* find_source(const std::string& name) const;
 
 	//
 	// Determine whether the given event should be matched at all
 	// against the set of rules, given the current sampling
 	// ratio/multiplier.
 	//
-	inline bool should_drop_evt();
+	inline bool should_drop_evt() const;
 
 	rule_loader m_rule_loader;
 	indexed_vector<falco_rule> m_rules;

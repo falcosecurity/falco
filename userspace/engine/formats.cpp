@@ -20,7 +20,7 @@ limitations under the License.
 #include "falco_engine.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
 
-falco_formats::falco_formats(std::shared_ptr<falco_engine> engine,
+falco_formats::falco_formats(std::shared_ptr<const falco_engine> engine,
 			     bool json_include_output_property,
 			     bool json_include_tags_property)
 	: m_falco_engine(engine),
@@ -35,7 +35,7 @@ falco_formats::~falco_formats()
 
 string falco_formats::format_event(gen_event *evt, const std::string &rule, const std::string &source,
 				   const std::string &level, const std::string &format, std::set<std::string> &tags,
-				   const std::string &hostname)
+				   const std::string &hostname) const
 {
 	string line;
 
@@ -132,7 +132,7 @@ string falco_formats::format_event(gen_event *evt, const std::string &rule, cons
 }
 
 map<string, string> falco_formats::get_field_values(gen_event *evt, const std::string &source,
-						    const std::string &format)
+						    const std::string &format) const
 {
 	std::shared_ptr<gen_event_formatter> formatter;
 
