@@ -24,20 +24,20 @@ limitations under the License.
 class falco_formats
 {
 public:
-	falco_formats(std::shared_ptr<falco_engine> engine,
+	falco_formats(std::shared_ptr<const falco_engine> engine,
 		      bool json_include_output_property,
 		      bool json_include_tags_property);
 	virtual ~falco_formats();
 
 	std::string format_event(gen_event *evt, const std::string &rule, const std::string &source,
 				 const std::string &level, const std::string &format, std::set<std::string> &tags,
-				 const std::string &hostname);
+				 const std::string &hostname) const;
 
 	map<string, string> get_field_values(gen_event *evt, const std::string &source,
-					     const std::string &format);
+					     const std::string &format) const ;
 
 protected:
-	std::shared_ptr<falco_engine> m_falco_engine;
+	std::shared_ptr<const falco_engine> m_falco_engine;
 	bool m_json_include_output_property;
 	bool m_json_include_tags_property;
 };
