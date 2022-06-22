@@ -97,6 +97,7 @@ class FalcoTest(Test):
         self.all_events = self.params.get('all_events', '*', default=False)
         self.priority = self.params.get('priority', '*', default='debug')
         self.addl_cmdline_opts = self.params.get('addl_cmdline_opts', '*', default='')
+        self.enable_source = self.params.get('enable_source', '*', default='')
         self.rules_file = self.params.get(
             'rules_file', '*', default=os.path.join(self.basedir, '../rules/falco_rules.yaml'))
 
@@ -114,6 +115,13 @@ class FalcoTest(Test):
             self.json_output = True
             if not isinstance(self.validate_rules_file, list):
                 self.validate_rules_file = [self.validate_rules_file]
+        
+        # can be either empty, a string, or a list
+        if self.enable_source == '':
+            self.enable_source = []
+        else:
+            if not isinstance(self.enable_source, list):
+                self.enable_source = [self.enable_source]
 
         self.rules_args = ""
 
@@ -630,10 +638,15 @@ class FalcoTest(Test):
         if self.trace_file:
             trace_arg = "-e {}".format(self.trace_file)
 
+        extra_cmdline = ''
+        for source in self.enable_source:
+            extra_cmdline += ' --enable-source="{}"'.format(source)
+        extra_cmdline += ' ' + self.addl_cmdline_opts
+
         # Run falco
         cmd = '{} {} {} -c {} {} -o json_output={} -o json_include_output_property={} -o json_include_tags_property={} -o priority={} -v {}'.format(
             self.falco_binary_path, self.rules_args, self.disabled_args, self.conf_file, trace_arg, self.json_output,
-            self.json_include_output_property, self.json_include_tags_property, self.priority, self.addl_cmdline_opts)
+            self.json_include_output_property, self.json_include_tags_property, self.priority, extra_cmdline)
 
         for tag in self.disable_tags:
             cmd += ' -T {}'.format(tag)
