@@ -42,6 +42,7 @@ public:
 	bool disable_cri_async;
 	std::vector<std::string> disable_sources;
 	std::vector<std::string> disabled_rule_substrings;
+	std::vector<std::string> enable_sources;
 	std::string trace_filename;
 	std::string gvisor_config;
 	std::string gvisor_generate_config_with_socket;
