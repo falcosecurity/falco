@@ -66,30 +66,20 @@ falco_outputs::falco_outputs(
 	}
 
 	m_worker_thread = std::thread(&falco_outputs::worker, this);
-
-	m_initialized = true;
 }
 
 falco_outputs::~falco_outputs()
 {
-	if(m_initialized)
+	this->stop_worker();
+	for(auto o : m_outputs)
 	{
-		this->stop_worker();
-		for(auto o : m_outputs)
-		{
-			delete o;
-		}
+		delete o;
 	}
 }
 
 // This function is called only at initialization-time by the constructor
 void falco_outputs::add_output(falco::outputs::config oc)
 {
-	if(!m_initialized)
-	{
-		throw falco_exception("cannot add output: falco_outputs not initialized yet");
-	}
-
 	falco::outputs::abstract_output *oo;
 
 	if(oc.name == "file")

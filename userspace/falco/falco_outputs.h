@@ -84,7 +84,6 @@ public:
 
 private:
 	std::unique_ptr<falco_formats> m_formats;
-	bool m_initialized;
 
 	std::vector<falco::outputs::abstract_output *> m_outputs;
 
