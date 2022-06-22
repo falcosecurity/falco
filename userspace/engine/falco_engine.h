@@ -179,8 +179,8 @@ public:
 	// is safe to assume that each invoker will pass a different event
 	// to this method too, since two distinct sources cannot possibly produce
 	// the same event. Lastly, filterchecks and formatters (and their factories)
-	// that used to populate the conditions for a given event-source ruleset,
-	// must not be reused across rulesets of other event sources.
+	// that are used to populate the conditions for a given event-source
+	// ruleset must not be reused across rulesets of other event sources.
 	// These assumptions guarantee thread-safety because internally the engine
 	// is partitioned by event sources. However, each ruleset assigned to each
 	// event source is not thread-safe of its own, so invoking this method
