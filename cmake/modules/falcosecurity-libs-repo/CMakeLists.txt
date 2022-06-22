@@ -15,7 +15,7 @@ cmake_minimum_required(VERSION 3.5.1)
 project(falcosecurity-libs-repo NONE)
 
 include(ExternalProject)
-message(STATUS "Driver version: ${FALCOSECURITY_LIBS_VERSION}")
+message(STATUS "Libs version: ${FALCOSECURITY_LIBS_VERSION}")
 
 ExternalProject_Add(
   falcosecurity-libs
@@ -24,4 +24,5 @@ ExternalProject_Add(
   CONFIGURE_COMMAND ""
   BUILD_COMMAND ""
   INSTALL_COMMAND ""
-  TEST_COMMAND "")
+  TEST_COMMAND ""
+)
