@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2020 The Falco Authors.
+# Copyright (C) 2022 The Falco Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
 # the License. You may obtain a copy of the License at
@@ -12,16 +12,18 @@
 #
 cmake_minimum_required(VERSION 3.5.1)
 
-project(falcosecurity-libs-repo NONE)
+project(driver-repo NONE)
 
 include(ExternalProject)
-message(STATUS "Driver version: ${FALCOSECURITY_LIBS_VERSION}")
+message(STATUS "Driver version: ${DRIVER_VERSION}")
 
 ExternalProject_Add(
-  falcosecurity-libs
-  URL "https://github.com/falcosecurity/libs/archive/${FALCOSECURITY_LIBS_VERSION}.tar.gz"
-  URL_HASH "${FALCOSECURITY_LIBS_CHECKSUM}"
+  driver
+  URL "https://github.com/falcosecurity/libs/archive/${DRIVER_VERSION}.tar.gz"
+  URL_HASH "${DRIVER_CHECKSUM}"
   CONFIGURE_COMMAND ""
   BUILD_COMMAND ""
   INSTALL_COMMAND ""
-  TEST_COMMAND "")
+  TEST_COMMAND ""
+  PATCH_COMMAND sh -c "mv ./driver ../driver.tmp && rm -rf ./* && mv ../driver.tmp/* ."
+)
