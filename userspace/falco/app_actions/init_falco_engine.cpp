@@ -76,28 +76,6 @@ application::run_result application::init_falco_engine()
 		syscall_formatter_factory->set_output_format(gen_event_formatter::OF_JSON);
 	}
 
-	for(const auto &src : m_options.disable_sources)
-	{
-		if (m_state->enabled_sources.find(src) == m_state->enabled_sources.end())
-		{
-			return run_result::fatal("Attempted disabling unknown event source: " + src);
-		}
-		m_state->enabled_sources.erase(src);
-	}
-
-	// todo(jasondellaluce,leogr): change this once we attain multiple active source
-	if(m_state->enabled_sources.empty())
-	{
-		return run_result::fatal("At least one event source needs to be enabled");
-	}
-
-	/* Print all enabled sources. */
-	std::ostringstream os;
-	std::copy(m_state->enabled_sources.begin(), m_state->enabled_sources.end(), std::ostream_iterator<std::string>(os, ","));
-	std::string result = os.str();
-	result.pop_back();
-	falco_logger::log(LOG_INFO, "Enabled sources: " + result + "\n");
-
 	m_state->engine->set_min_priority(m_state->config->m_min_priority);
 
 	return run_result::ok();
