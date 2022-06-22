@@ -84,7 +84,7 @@ void stats_manager::on_event(const falco_rule& rule)
 	if (m_by_rule_id.size() <= rule.id
 		|| m_by_priority.size() <= (size_t) rule.priority)
 	{
-		throw falco_exception("rule id or priority is out of boubnds");
+		throw falco_exception("rule id or priority out of bounds");
 	}
 	m_total.fetch_add(1, std::memory_order_relaxed);
 	m_by_rule_id[rule.id]->fetch_add(1, std::memory_order_relaxed);
