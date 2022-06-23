@@ -41,7 +41,6 @@ application::run_result::~run_result()
 application::state::state()
 	: restart(false),
 	  terminate(false),
-	  reopen_outputs(false),
 	  enabled_sources({falco_common::syscall_source})
 {
 	config = std::make_shared<falco_configuration>();
@@ -67,15 +66,17 @@ void application::terminate()
 {
 	if(m_state != nullptr)
 	{
-		m_state->terminate = true;
+		m_state->terminate.store(true, std::memory_order_release);
 	}
 }
 
 void application::reopen_outputs()
 {
-	if(m_state != nullptr)
+	if(m_state != nullptr && m_state->outputs != nullptr)
 	{
-		m_state->reopen_outputs = true;
+		// note: it is ok to do this inside the signal handler because
+		// in the current falco_outputs implementation this is non-blocking
+		m_state->outputs->reopen_outputs();
 	}
 }
 
@@ -83,7 +84,7 @@ void application::restart()
 {
 	if(m_state != nullptr)
 	{
-		m_state->restart = true;
+		m_state->restart.store(true, std::memory_order_release);
 	}
 }
 

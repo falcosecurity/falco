@@ -25,6 +25,7 @@ limitations under the License.
 #include "app_cmdline_options.h"
 
 #include <string>
+#include <atomic>
 
 namespace falco {
 namespace app {
@@ -61,9 +62,8 @@ private:
 		state();
 		virtual ~state();
 
-		bool restart;
-		bool terminate;
-		bool reopen_outputs;
+		std::atomic<bool> restart;
+		std::atomic<bool> terminate;
 
 		std::shared_ptr<falco_configuration> config;
 		std::shared_ptr<falco_outputs> outputs;
