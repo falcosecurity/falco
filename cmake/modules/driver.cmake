@@ -16,8 +16,6 @@ set(DRIVER_CMAKE_WORKING_DIR "${CMAKE_BINARY_DIR}/driver-repo")
 
 file(MAKE_DIRECTORY ${DRIVER_CMAKE_WORKING_DIR})
 
-set(USE_BUNDLED_DRIVER OFF CACHE BOOL "")
-
 if(DRIVER_SOURCE_DIR)
   set(DRIVER_VERSION "0.0.0-local")
   message(STATUS "Using local version for driver: '${DRIVER_SOURCE_DIR}'")
