@@ -110,7 +110,8 @@ private:
 	falco_outputs_cbq m_queue;
 
 	std::thread m_worker_thread;
-	inline void push(ctrl_msg_type cmt);
+	inline void push(const ctrl_msg& cmsg);
+	inline void push_ctrl(ctrl_msg_type cmt);
 	void worker() noexcept;
 	void stop_worker();
 	void add_output(falco::outputs::config oc);
