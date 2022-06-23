@@ -92,19 +92,12 @@ application::run_result application::do_inspect(syscall_evt_drop_mgr &sdropmgr,
 
 		if(m_state->reopen_outputs)
 		{
-			falco_logger::log(LOG_INFO, "SIGUSR1 received, reopening outputs...\n");
 			m_state->outputs->reopen_outputs();
 			m_state->reopen_outputs = false;
 		}
 
-		if(m_state->terminate)
+		if(m_state->terminate || m_state->restart)
 		{
-			falco_logger::log(LOG_INFO, "SIGINT received, exiting...\n");
-			break;
-		}
-		else if (m_state->restart)
-		{
-			falco_logger::log(LOG_INFO, "SIGHUP received, restarting...\n");
 			break;
 		}
 		else if(rc == SCAP_TIMEOUT)
