@@ -33,7 +33,7 @@ application::run_result application::print_version()
 		unsigned long driver_api_major = PPM_API_VERSION_MAJOR(driver_api_version);
 		unsigned long driver_api_minor = PPM_API_VERSION_MINOR(driver_api_version);
 		unsigned long driver_api_patch = PPM_API_VERSION_PATCH(driver_api_version);
-		auto driver_schema_version = s->get_scap_api_version();
+		auto driver_schema_version = s->get_scap_schema_version();
 		unsigned long driver_schema_major = PPM_API_VERSION_MAJOR(driver_schema_version);
 		unsigned long driver_schema_minor = PPM_API_VERSION_MINOR(driver_schema_version);
 		unsigned long driver_schema_patch = PPM_API_VERSION_PATCH(driver_schema_version);
