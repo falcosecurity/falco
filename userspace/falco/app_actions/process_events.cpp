@@ -90,13 +90,8 @@ application::run_result application::do_inspect(syscall_evt_drop_mgr &sdropmgr,
 
 		writer.handle();
 
-		if(m_state->reopen_outputs)
-		{
-			m_state->outputs->reopen_outputs();
-			m_state->reopen_outputs = false;
-		}
-
-		if(m_state->terminate || m_state->restart)
+		if(m_state->terminate.load(std::memory_order_acquire)
+			|| m_state->restart.load(std::memory_order_acquire))
 		{
 			break;
 		}
