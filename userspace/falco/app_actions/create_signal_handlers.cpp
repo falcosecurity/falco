@@ -36,16 +36,19 @@ static int inot_fd;
 
 static void signal_callback(int signal)
 {
+	falco_logger::log(LOG_INFO, "SIGINT received, exiting...\n");
 	s_app.get().terminate();
 }
 
 static void reopen_outputs(int signal)
 {
+	falco_logger::log(LOG_INFO, "SIGUSR1 received, reopening outputs...\n");
 	s_app.get().reopen_outputs();
 }
 
 static void restart_falco(int signal)
 {
+	falco_logger::log(LOG_INFO, "SIGHUP received, restarting...\n");
 	s_app.get().restart();
 }
 
