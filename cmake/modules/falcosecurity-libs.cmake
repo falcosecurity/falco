@@ -27,8 +27,8 @@ else()
   # In case you want to test against another falcosecurity/libs version (or branch, or commit) just pass the variable -
   # ie., `cmake -DFALCOSECURITY_LIBS_VERSION=dev ..`
   if(NOT FALCOSECURITY_LIBS_VERSION)
-    set(FALCOSECURITY_LIBS_VERSION "build/reorganize-driver-cmake-vars")
-    set(FALCOSECURITY_LIBS_CHECKSUM "SHA256=6129b216e71e3e6f5708e7c7c7791c2352440c3e60e8a21d1d69aca6665fcaaf")
+    set(FALCOSECURITY_LIBS_VERSION "0.7.0-alpha2")
+    set(FALCOSECURITY_LIBS_CHECKSUM "SHA256=4a62071043aa50cdd29016c7dc041b401f8fa551271ec7b3ba01a537e5eb8bce")
   endif()
 
   # cd /path/to/build && cmake /path/to/source
