@@ -110,7 +110,7 @@ In case you want to run all the test suites at once, you can directly use the `r
 
 ```console
 cd test
-./run_regression_tests.sh -v
+./run_regression_tests.sh -v -d ../build
 ```
 
 Just make sure you followed all the previous setup steps.
