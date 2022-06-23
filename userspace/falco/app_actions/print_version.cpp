@@ -23,7 +23,7 @@ application::run_result application::print_version()
 {
 	if(m_options.print_version_info)
 	{
-		auto s = new sinsp();
+		std::unique_ptr<sinsp> s(new sinsp());
 		printf("Falco version: %s\n", FALCO_VERSION);
 		printf("Libs version:  %s\n", FALCOSECURITY_LIBS_VERSION);
 		printf("Plugin API:    %s\n", s->get_plugin_api_version());
