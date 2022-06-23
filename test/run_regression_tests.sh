@@ -118,9 +118,7 @@ function run_tests() {
         XUNIT_FILE_NAME="${XUNIT_DIR}/$(basename "${mult}").xml"
         CMD="avocado run --xunit ${XUNIT_FILE_NAME} --mux-yaml $mult --job-results-dir $SCRIPTDIR/job-results -- $SCRIPTDIR/falco_test.py"
         echo "Running $CMD"
-        pushd $TRACE_DIR > /dev/null
         BUILD_DIR=${OPT_BUILD_DIR} $CMD
-        popd > /dev/null
         RC=$?
         TEST_RC=$((TEST_RC+RC))
         if [ $RC -ne 0 ]; then
