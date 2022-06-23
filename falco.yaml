@@ -227,9 +227,10 @@ file_output:
 stdout_output:
   enabled: true
 
-# Falco contains an embedded webserver that can be used to accept K8s
-# Audit Events. These config options control the behavior of that
-# webserver. (By default, the webserver is enabled).
+# Falco contains an embedded webserver that is used to implement an health
+# endpoint for checking if Falco is up and running. These config options control
+# the behavior of that webserver. By default, the webserver is enabled and
+# the endpoint is /healthz.
 #
 # The ssl_certificate is a combination SSL Certificate and corresponding
 # key contained in a single file. You can generate a key/cert as follows:
@@ -237,11 +238,10 @@ stdout_output:
 # $ openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out certificate.pem
 # $ cat certificate.pem key.pem > falco.pem
 # $ sudo cp falco.pem /etc/falco/falco.pem
-#
-# It also exposes a healthy endpoint that can be used to check if Falco is up and running
-# By default the endpoint is /healthz
 webserver:
   enabled: true
+  # when threadiness is 0, Falco automatically guesses it depending on the number of online cores
+  threadiness: 0
   listen_port: 8765
   k8s_healthz_endpoint: /healthz
   ssl_enabled: false
