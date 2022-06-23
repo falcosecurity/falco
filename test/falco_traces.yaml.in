@@ -164,3 +164,12 @@ traces: !mux
     detect_level: ERROR
     detect_counts:
       - "Write below rpm database": 1
+
+  # This generates two notices starting from https://github.com/falcosecurity/falco/pull/2092
+  # When a new version of the scap files is generated this should then become "traces-positive"
+  docker-compose:
+    trace_file: traces-negative/docker-compose.scap
+    detect: True
+    detect_level: NOTICE
+    detect_counts:
+      - "Redirect STDOUT/STDIN to Network Connection in Container": 2
