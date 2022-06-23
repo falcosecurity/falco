@@ -15,6 +15,7 @@ limitations under the License.
 */
 
 #include "webserver.h"
+#include "falco_utils.h"
 #include <atomic>
 
 falco_webserver::~falco_webserver()
@@ -45,6 +46,10 @@ void falco_webserver::start(
     {
         m_server = new httplib::Server();
     }
+
+    // configure server
+    auto threadiness = std::min(2u, falco::utils::hardware_concurrency());
+    m_server->new_task_queue = [&threadiness] { return new httplib::ThreadPool(threadiness); };
 
     // setup healthz endpoint
     m_server->Get(healthz_endpoint,
