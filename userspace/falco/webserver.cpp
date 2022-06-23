@@ -24,10 +24,11 @@ falco_webserver::~falco_webserver()
 }
 
 void falco_webserver::start(
-		uint32_t listen_port,
-		std::string& healthz_endpoint,
-		std::string &ssl_certificate,
-		bool ssl_enabled)
+        uint32_t threadiness,
+        uint32_t listen_port,
+        std::string& healthz_endpoint,
+        std::string &ssl_certificate,
+        bool ssl_enabled)
 {
     if (m_running)
     {
@@ -48,7 +49,6 @@ void falco_webserver::start(
     }
 
     // configure server
-    auto threadiness = std::min(2u, falco::utils::hardware_concurrency());
     m_server->new_task_queue = [&threadiness] { return new httplib::ThreadPool(threadiness); };
 
     // setup healthz endpoint

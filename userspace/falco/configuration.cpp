@@ -35,6 +35,7 @@ falco_configuration::falco_configuration():
 	m_buffered_outputs(false),
 	m_time_format_iso_8601(false),
 	m_webserver_enabled(false),
+	m_webserver_threadiness(0),
 	m_webserver_listen_port(8765),
 	m_webserver_k8s_healthz_endpoint("/healthz"),
 	m_webserver_ssl_enabled(false),
@@ -207,10 +208,15 @@ void falco_configuration::init(string conf_filename, const vector<string> &cmdli
 	falco_logger::log_syslog = m_config->get_scalar<bool>("log_syslog", true);
 
 	m_webserver_enabled = m_config->get_scalar<bool>("webserver.enabled", false);
+	m_webserver_threadiness = m_config->get_scalar<uint32_t>("webserver.threadiness", 0);
 	m_webserver_listen_port = m_config->get_scalar<uint32_t>("webserver.listen_port", 8765);
 	m_webserver_k8s_healthz_endpoint = m_config->get_scalar<string>("webserver.k8s_healthz_endpoint", "/healthz");
 	m_webserver_ssl_enabled = m_config->get_scalar<bool>("webserver.ssl_enabled", false);
 	m_webserver_ssl_certificate = m_config->get_scalar<string>("webserver.ssl_certificate", "/etc/falco/falco.pem");
+	if(m_webserver_threadiness == 0)
+	{
+		m_webserver_threadiness = falco::utils::hardware_concurrency();
+	}
 
 	std::list<string> syscall_event_drop_acts;
 	m_config->get_sequence(syscall_event_drop_acts, "syscall_event_drops.actions");
