@@ -75,7 +75,7 @@ trace_files: !mux
 
   incompat_plugin_api:
     exit_status: 1
-    stderr_contains: "Unsupported plugin required api version 10000000.0.0"
+    stderr_contains: "Plugin required API version '10000000.0.0' is not supported by the plugin API version of the framework '.*'"
     conf_file: BUILD_DIR/test/confs/plugins/incompatible_plugin_api.yaml
     rules_file:
       - rules/plugins/cloudtrail_create_instances.yaml
