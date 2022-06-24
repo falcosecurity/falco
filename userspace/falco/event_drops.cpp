@@ -161,24 +161,22 @@ bool syscall_evt_drop_mgr::perform_actions(uint64_t now, scap_stats &delta, bool
 			output_fields["n_evts"] = std::to_string(delta.n_evts);
 			output_fields["n_drops"] = std::to_string(delta.n_drops);
 			output_fields["n_drops_buffer"] = std::to_string(delta.n_drops_buffer);
+			output_fields["n_drops_buffer_clone_fork_enter"] = std::to_string(delta.n_drops_buffer_clone_fork_enter);
+			output_fields["n_drops_buffer_clone_fork_exit"] = std::to_string(delta.n_drops_buffer_clone_fork_exit);
+			output_fields["n_drops_buffer_execve_enter"] = std::to_string(delta.n_drops_buffer_execve_enter);
+			output_fields["n_drops_buffer_execve_exit"] = std::to_string(delta.n_drops_buffer_execve_exit);
+			output_fields["n_drops_buffer_connect_enter"] = std::to_string(delta.n_drops_buffer_connect_enter);
+			output_fields["n_drops_buffer_connect_exit"] = std::to_string(delta.n_drops_buffer_connect_exit);
+			output_fields["n_drops_buffer_open_enter"] = std::to_string(delta.n_drops_buffer_open_enter);
+			output_fields["n_drops_buffer_open_exit"] = std::to_string(delta.n_drops_buffer_open_exit);
+			output_fields["n_drops_buffer_dir_file_enter"] = std::to_string(delta.n_drops_buffer_dir_file_enter);
+			output_fields["n_drops_buffer_dir_file_exit"] = std::to_string(delta.n_drops_buffer_dir_file_exit);
+			output_fields["n_drops_buffer_other_interest_enter"] = std::to_string(delta.n_drops_buffer_other_interest_enter);
+			output_fields["n_drops_buffer_other_interest_exit"] = std::to_string(delta.n_drops_buffer_other_interest_exit);
 			output_fields["n_drops_scratch_map"] = std::to_string(delta.n_drops_scratch_map);
 			output_fields["n_drops_pf"] = std::to_string(delta.n_drops_pf);
 			output_fields["n_drops_bug"] = std::to_string(delta.n_drops_bug);
 			output_fields["ebpf_enabled"] = std::to_string(bpf_enabled);
-			if (bpf_enabled){
-				output_fields["n_drops_buffer_clone_fork_enter"] = std::to_string(delta.n_drops_buffer_clone_fork_enter);
-				output_fields["n_drops_buffer_clone_fork_exit"] = std::to_string(delta.n_drops_buffer_clone_fork_exit);
-				output_fields["n_drops_buffer_execve_enter"] = std::to_string(delta.n_drops_buffer_execve_enter);
-				output_fields["n_drops_buffer_execve_exit"] = std::to_string(delta.n_drops_buffer_execve_exit);
-				output_fields["n_drops_buffer_connect_enter"] = std::to_string(delta.n_drops_buffer_connect_enter);
-				output_fields["n_drops_buffer_connect_exit"] = std::to_string(delta.n_drops_buffer_connect_exit);
-				output_fields["n_drops_buffer_open_enter"] = std::to_string(delta.n_drops_buffer_open_enter);
-				output_fields["n_drops_buffer_open_exit"] = std::to_string(delta.n_drops_buffer_open_exit);
-				output_fields["n_drops_buffer_dir_file_enter"] = std::to_string(delta.n_drops_buffer_dir_file_enter);
-				output_fields["n_drops_buffer_dir_file_exit"] = std::to_string(delta.n_drops_buffer_dir_file_exit);
-				output_fields["n_drops_buffer_other_interest_enter"] = std::to_string(delta.n_drops_buffer_other_interest_enter);
-				output_fields["n_drops_buffer_other_interest_exit"] = std::to_string(delta.n_drops_buffer_other_interest_exit);
-			}
 			m_outputs->handle_msg(now, falco_common::PRIORITY_DEBUG, msg, rule, output_fields);
 			break;
 		}
