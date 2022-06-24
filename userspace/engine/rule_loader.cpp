@@ -413,18 +413,6 @@ void rule_loader::append(configuration& cfg, list_info& info)
 
 void rule_loader::define(configuration& cfg, macro_info& info)
 {
-	if (!cfg.sources.at(info.source))
-	{
-		cfg.warnings.push_back("Macro " + info.name
-			+ ": warning (unknown-source): unknown source "
-			+ info.source + ", skipping");
-		return;
-	}
-	
-	auto prev = m_macro_infos.at(info.name);
-	THROW(prev && prev->source != info.source,
-		"Macro " + info.name + " has been re-defined with a different source");
-
 	define_info(m_macro_infos, info, m_cur_index++);
 }
 
@@ -566,7 +554,6 @@ void rule_loader::compile_macros_infos(
 	indexed_vector<list_info>& lists,
 	indexed_vector<macro_info>& out) const
 {
-	set<string> used;
 	const context* info_ctx = NULL;
 	try
 	{
