@@ -125,6 +125,7 @@ bool application::run(std::string &errstr, bool &restart)
 	std::list<std::function<run_result()>> run_steps = {
 		std::bind(&application::print_help, this),
 		std::bind(&application::print_version, this),
+		std::bind(&application::print_generated_gvisor_config, this),
 		std::bind(&application::create_signal_handlers, this),
 		std::bind(&application::load_config, this),
 		std::bind(&application::init_inspector, this),

@@ -151,6 +151,7 @@ private:
 	run_result load_plugins();
 	run_result load_rules_files();
 	run_result open_inspector();
+	run_result print_generated_gvisor_config();
 	run_result print_help();
 	run_result print_ignored_events();
 	run_result print_plugin_info();
