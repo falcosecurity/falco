@@ -30,6 +30,7 @@ set(
   app_actions/load_rules_files.cpp
   app_actions/open_inspector.cpp
   app_actions/process_events.cpp
+  app_actions/print_generated_gvisor_config.cpp
   app_actions/print_help.cpp
   app_actions/print_ignored_events.cpp
   app_actions/print_plugin_info.cpp

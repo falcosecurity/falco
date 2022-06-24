@@ -163,7 +163,7 @@ void cmdline_options::define()
 		("D",                             "Disable any rules with names having the substring <substring>. Can be specified multiple times. Can not be specified with -t.", cxxopts::value(disabled_rule_substrings), "<substring>")
 		("e",                             "Read the events from <events_file> in .scap format instead of tapping into live.", cxxopts::value(trace_filename), "<events_file>")
 		("g,gvisor-config",				  "Parse events from gVisor using the specified configuration file. A falco-compatible configuration file can be generated with --gvisor-generate-config and can be used for both runsc and Falco.", cxxopts::value(gvisor_config), "<gvisor_config>")
-		("gvisor-generate-config",		  "Generate a configuration file that can be used for gVisor.", cxxopts::value<bool>(gvisor_generate_config))
+		("gvisor-generate-config",		  "Generate a configuration file that can be used for gVisor.", cxxopts::value<std::string>(gvisor_generate_config_with_socket)->implicit_value("/tmp/gvisor.sock"), "<socket_path>")
 		("gvisor-root",					  "gVisor root directory for storage of container state. Equivalent to runsc --root flag.", cxxopts::value(gvisor_root), "<gvisor_root>")
 		("i",                             "Print all events that are ignored by default (i.e. without the -A flag) and exit.", cxxopts::value(print_ignored_events)->default_value("false"))
 #ifndef MINIMAL_BUILD
