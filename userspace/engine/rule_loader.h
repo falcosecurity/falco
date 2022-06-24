@@ -122,7 +122,6 @@ public:
 		size_t visibility;
 		std::string name;
 		std::string cond;
-		std::string source;
 		std::shared_ptr<libsinsp::filter::ast::expr> cond_ast;
 	};
 

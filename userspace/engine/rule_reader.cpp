@@ -207,12 +207,10 @@ static void read_item(
 		rule_loader::macro_info v;
 		v.ctx = ctx;
 		bool append = false;
-		v.source = falco_common::syscall_source;
 		THROW(!decode_val(item["macro"], v.name) || v.name.empty(),
 			"Macro name is empty");
 		THROW(!decode_val(item["condition"], v.cond) || v.cond.empty(),
 			"Macro must have property condition");
-		decode_val(item["source"], v.source);
 		if(decode_val(item["append"], append) && append)
 		{
 			loader.append(cfg, v);
