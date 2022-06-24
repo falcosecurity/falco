@@ -57,8 +57,7 @@ application::run_result application::open_inspector()
 			else if(m_options.gvisor_config != "")
 			{
 				falco_logger::log(LOG_INFO, "Enabled event collection from gVisor. Configuration path: " + m_options.gvisor_config);
-				// XXX the first argument "/tmp/gvisor.sock" needs to be removed in favor of parsing everything from config."
-				m_state->inspector->open_gvisor("/tmp/gvisor.sock", m_options.gvisor_config, m_options.gvisor_root);
+				m_state->inspector->open_gvisor(m_options.gvisor_config, m_options.gvisor_root);
 			}
 			else
 			{
