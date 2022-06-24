@@ -96,13 +96,24 @@ application::run_result application::load_rules_files()
 	for (const auto& filename : m_state->config->m_loaded_rules_filenames)
 	{
 		falco_logger::log(LOG_INFO, "Loading rules from file " + filename + "\n");
+		std::unique_ptr<falco::load_result> res;
 
-		try {
-			m_state->engine->load_rules_file(filename, m_options.verbose, m_options.all_events);
-		}
-		catch(falco_exception &e)
+		res = m_state->engine->load_rules_file(filename);
+
+		// Print the full output if verbose is true
+		if(m_options.verbose &&
+		   (!res->successful() || res->has_warnings()))
 		{
-			return run_result::fatal(string("Could not load rules file ") + filename + ": " + e.what());
+			printf("%s\n",
+			       (m_state->config->m_json_output ?
+				res->as_json().dump().c_str() :
+				res->as_string(true).c_str()));
+		}
+
+		if(!res->successful())
+		{
+			// Return the summary version as the error
+			return run_result::fatal(res->as_string(false));
 		}
 	}
 
