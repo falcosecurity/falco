@@ -15,6 +15,7 @@ limitations under the License.
 */
 
 #include "application.h"
+#include <string>
 
 using namespace falco::app;
 
@@ -22,27 +23,64 @@ application::run_result application::validate_rules_files()
 {
 	if(m_options.validate_rules_filenames.size() > 0)
 	{
+		bool successful = true;
+		std::string summary;
+
 		falco_logger::log(LOG_INFO, "Validating rules file(s):\n");
 		for(auto file : m_options.validate_rules_filenames)
 		{
 			falco_logger::log(LOG_INFO, "   " + file + "\n");
 		}
+
+		// The json output encompasses all files so the
+		// validation result is a single json object.
+		nlohmann::json results = nlohmann::json::array();
+
 		for(auto file : m_options.validate_rules_filenames)
 		{
-			// Only include the prefix if there is more than one file
-			std::string prefix = (m_options.validate_rules_filenames.size() > 1 ? file + ": " : "");
-			try {
-				m_state->engine->load_rules_file(file, m_options.verbose, m_options.all_events);
-			}
-			catch(falco_exception &e)
+			std::unique_ptr<falco::load_result> res;
+
+			res = m_state->engine->load_rules_file(file);
+
+			successful &= res->successful();
+
+			if(summary != "")
 			{
-				printf("%s%s", prefix.c_str(), e.what());
-				return run_result::fatal(prefix +  e.what());
+				summary += "\n";
 			}
-			printf("%sOk\n", prefix.c_str());
+			summary += file + ": " + (res->successful() ? "Ok" : "Invalid");
+
+			if(m_state->config->m_json_output)
+			{
+				results.push_back(res->as_json());
+			}
+			else
+			{
+				// Print the full output when verbose is true
+				if(m_options.verbose &&
+				   (!res->successful() || res->has_warnings()))
+				{
+					printf("%s\n", res->as_string(true).c_str());
+				}
+			}
 		}
-		falco_logger::log(LOG_INFO, "Ok\n");
-		return run_result::exit();
+
+		if(m_state->config->m_json_output)
+		{
+			nlohmann::json res;
+			res["falco_load_results"] = results;
+			printf("%s\n", res.dump().c_str());
+		}
+
+		if(successful)
+		{
+			printf("%s\n", summary.c_str());
+			return run_result::exit();
+		}
+		else
+		{
+			return run_result::fatal(summary);
+		}
 	}
 
 	return run_result::ok();

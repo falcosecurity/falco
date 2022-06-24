@@ -73,7 +73,9 @@ watch_config_files: true
 # time zone, as governed by /etc/localtime.
 time_format_iso_8601: false
 
-# Whether to output events in json or text
+# If "true", print falco alert messages and rules file
+# loading/validation results as json, which allows for easier
+# consumption by downstream programs. Default is "false".
 json_output: false
 
 # When using json output, whether or not to include the "output" property
