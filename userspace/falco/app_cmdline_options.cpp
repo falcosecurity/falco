@@ -30,6 +30,7 @@ namespace app {
 cmdline_options::cmdline_options()
 	: event_buffer_format(sinsp_evt::PF_NORMAL),
 	  list_plugins(false),
+	  gvisor_config(""),
 	  m_cmdline_opts("falco", "Falco - Cloud Native Runtime Security")
 {
 	define();

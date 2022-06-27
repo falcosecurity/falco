@@ -196,7 +196,7 @@ private:
 
 	inline bool is_gvisor_enabled() const
 	{
-		return m_state->inspector->is_gvisor();
+		return !m_options.gvisor_config.empty();
 	}
 
 	std::unique_ptr<state> m_state;
