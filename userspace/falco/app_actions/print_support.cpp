@@ -58,7 +58,6 @@ application::run_result application::print_support()
 			nlohmann::json finfo;
 			finfo["name"] = filename;
 			nlohmann::json variant;
-			variant["required_engine_version"] = m_state->required_engine_versions[filename];
 			variant["content"] = read_file(filename);
 			finfo["variants"].push_back(variant);
 			support["rules_files"].push_back(finfo);
