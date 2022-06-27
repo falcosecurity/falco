@@ -183,6 +183,12 @@ void falco_configuration::init(string conf_filename, const vector<string> &cmdli
 
 	falco_logger::set_level(m_log_level);
 
+
+	falco_logger::set_sinsp_logging(
+		m_config->get_scalar<bool>("libs_logger.enabled", false),
+		m_config->get_scalar<std::string>("libs_logger.severity", "debug"),
+		"[libs]: ");
+
 	m_output_timeout = m_config->get_scalar<uint32_t>("output_timeout", 2000);
 
 	m_notifications_rate = m_config->get_scalar<uint32_t>("outputs.rate", 1);
