@@ -98,6 +98,17 @@ log_syslog: true
 # "alert", "critical", "error", "warning", "notice", "info", "debug".
 log_level: info
 
+# Falco is capable of managing the logs coming from libs. If enabled,
+# the libs logger send its log records the same outputs supported by
+# Falco (stderr and syslog). Disabled by default.
+libs_logger:
+  enabled: false
+  # Minimum log severity to include in the libs logs. Note: this value is
+  # separate from the log level of the Falco logger and does not affect it.
+  # Can be one of "fatal", "critical", "error", "warning", "notice",
+  # "info", "debug", "trace".
+  severity: debug
+
 # Minimum rule priority level to load and run. All rules having a
 # priority more severe than this level will be loaded/run.  Can be one
 # of "emergency", "alert", "critical", "error", "warning", "notice",
