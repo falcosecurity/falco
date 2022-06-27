@@ -72,7 +72,7 @@ static void gpr_log_dispatcher_func(gpr_log_func_args* args)
 	string copy = "grpc: ";
 	copy.append(args->message);
 	copy.push_back('\n');
-	falco_logger::log(priority, copy);
+	falco_logger::log(priority, std::move(copy));
 }
 
 void falco::grpc::server::thread_process(int thread_index)

@@ -30,7 +30,7 @@ class falco_logger
 
 	static void set_sinsp_logging(bool enable, const std::string& severity, const std::string& prefix);
 
-	static void log(int priority, const string msg);
+	static void log(int priority, const string&& msg);
 
 	static int level;
 	static bool log_stderr;

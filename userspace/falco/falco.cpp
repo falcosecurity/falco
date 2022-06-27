@@ -23,10 +23,8 @@ limitations under the License.
 #include "logger.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
 
-static void display_fatal_err(const string &msg)
+static void display_fatal_err(const string &&msg)
 {
-	falco_logger::log(LOG_ERR, msg);
-
 	/**
 	 * If stderr logging is not enabled, also log to stderr. When
 	 * daemonized this will simply write to /dev/null.
@@ -35,6 +33,8 @@ static void display_fatal_err(const string &msg)
 	{
 		std::cerr << msg;
 	}
+
+	falco_logger::log(LOG_ERR, std::move(msg));
 }
 
 //
