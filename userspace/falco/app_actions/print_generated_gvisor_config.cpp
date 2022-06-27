@@ -24,8 +24,8 @@ application::run_result application::print_generated_gvisor_config()
 	if(!m_options.gvisor_generate_config_with_socket.empty())
 	{
 		std::unique_ptr<sinsp> s(new sinsp());
-        std::string gvisor_config = s->generate_gvisor_config(m_options.gvisor_generate_config_with_socket);
-        printf("%s\n", gvisor_config.c_str());
+		std::string gvisor_config = s->generate_gvisor_config(m_options.gvisor_generate_config_with_socket);
+		printf("%s\n", gvisor_config.c_str());
 		return run_result::exit();
 	}
 	return run_result::ok();

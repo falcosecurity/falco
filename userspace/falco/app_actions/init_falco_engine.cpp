@@ -45,7 +45,7 @@ void application::configure_output_format()
 	}
 	else if(m_options.gvisor_config != "")
 	{
-		output_format = "container=%container.id pid=%proc.vpid tid=%thread.vtid ";
+		output_format = "container=%container.id pid=%proc.vpid tid=%thread.vtid";
 		replace_container_info = true;
 	}
 
