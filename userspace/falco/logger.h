@@ -28,6 +28,8 @@ class falco_logger
 	// Will throw exception if level is unknown.
 	static void set_level(string &level);
 
+	static void set_sinsp_logging(bool enable, const std::string& severity, const std::string& prefix);
+
 	static void log(int priority, const string msg);
 
 	static int level;

@@ -23,6 +23,46 @@ limitations under the License.
 int falco_logger::level = LOG_INFO;
 bool falco_logger::time_format_iso_8601 = false;
 
+static void decode_sinsp_severity(const string& s, sinsp_logger::severity& sev)
+{
+	if(s == "trace")
+	{
+		sev = sinsp_logger::SEV_TRACE;
+	}
+	else if(s == "debug")
+	{
+		sev = sinsp_logger::SEV_DEBUG;
+	}
+	else if(s == "info")
+	{
+		sev = sinsp_logger::SEV_INFO;
+	}
+	else if(s == "notice")
+	{
+		sev = sinsp_logger::SEV_NOTICE;
+	}
+	else if(s == "warning")
+	{
+		sev = sinsp_logger::SEV_WARNING;
+	}
+	else if(s == "error")
+	{
+		sev = sinsp_logger::SEV_ERROR;
+	}
+	else if(s == "critical")
+	{
+		sev = sinsp_logger::SEV_CRITICAL;
+	}
+	else if(s == "fatal")
+	{
+		sev = sinsp_logger::SEV_FATAL;
+	}
+	else
+	{
+		throw falco_exception("Unknown sinsp log severity " + s);
+	}
+}
+
 void falco_logger::set_time_format_iso_8601(bool val)
 {
 	falco_logger::time_format_iso_8601 = val;
@@ -65,6 +105,34 @@ void falco_logger::set_level(string &level)
 	else
 	{
 		throw falco_exception("Unknown log level " + level);
+	}
+}
+
+static std::string s_sinsp_logger_prefix = "";
+
+void falco_logger::set_sinsp_logging(bool enable, const std::string& severity, const std::string& prefix)
+{
+	if (enable)
+	{
+		sinsp_logger::severity sevcode = sinsp_logger::SEV_DEBUG;
+		decode_sinsp_severity(severity, sevcode);
+
+		s_sinsp_logger_prefix = prefix;
+		g_logger.set_severity(sevcode);
+		g_logger.disable_timestamps();
+		g_logger.add_callback_log(
+			[](std::string&& str, const sinsp_logger::severity sev)
+			{
+				// note: using falco_logger::level ensures that the sinsp
+				// logs are always printed by the Falco logger. These
+				// logs are pre-filtered at the sinsp level depending
+				// on the configured severity
+				falco_logger::log(falco_logger::level, s_sinsp_logger_prefix + str);
+			});
+	}
+	else
+	{
+		g_logger.remove_callback_log();
 	}
 }
 
