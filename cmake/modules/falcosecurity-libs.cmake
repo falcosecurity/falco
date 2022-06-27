@@ -58,6 +58,9 @@ endif()
 
 set(LIBSINSP_DIR "${FALCOSECURITY_LIBS_SOURCE_DIR}")
 
+# configure gVisor support
+set(BUILD_LIBSCAP_GVISOR ${BUILD_FALCO_GVISOR} CACHE BOOL "")
+
 # explicitly disable the tests/examples of this dependency
 set(CREATE_TEST_TARGETS OFF CACHE BOOL "")
 set(BUILD_LIBSCAP_EXAMPLES OFF CACHE BOOL "")

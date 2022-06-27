@@ -162,9 +162,11 @@ void cmdline_options::define()
 		("disable-source",                "Disable a specific event source. Available event sources are: syscall or any source from a configured plugin with event sourcing capability. It can be passed multiple times. Can not disable all event sources.", cxxopts::value(disable_sources), "<event_source>")
 		("D",                             "Disable any rules with names having the substring <substring>. Can be specified multiple times. Can not be specified with -t.", cxxopts::value(disabled_rule_substrings), "<substring>")
 		("e",                             "Read the events from <events_file> in .scap format instead of tapping into live.", cxxopts::value(trace_filename), "<events_file>")
+#ifdef HAS_GVISOR
 		("g,gvisor-config",				  "Parse events from gVisor using the specified configuration file. A falco-compatible configuration file can be generated with --gvisor-generate-config and can be used for both runsc and Falco.", cxxopts::value(gvisor_config), "<gvisor_config>")
 		("gvisor-generate-config",		  "Generate a configuration file that can be used for gVisor.", cxxopts::value<std::string>(gvisor_generate_config_with_socket)->implicit_value("/tmp/gvisor.sock"), "<socket_path>")
 		("gvisor-root",					  "gVisor root directory for storage of container state. Equivalent to runsc --root flag.", cxxopts::value(gvisor_root), "<gvisor_root>")
+#endif
 		("i",                             "Print all events that are ignored by default (i.e. without the -A flag) and exit.", cxxopts::value(print_ignored_events)->default_value("false"))
 #ifndef MINIMAL_BUILD
 		("k,k8s-api",                     "Enable Kubernetes support by connecting to the API server specified as argument. E.g. \"http://admin:password@127.0.0.1:8080\". The API server can also be specified via the environment variable FALCO_K8S_API.", cxxopts::value(k8s_api), "<url>")

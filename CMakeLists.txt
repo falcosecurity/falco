@@ -19,6 +19,14 @@ option(BUILD_WARNINGS_AS_ERRORS "Enable building with -Wextra -Werror flags" OFF
 option(MINIMAL_BUILD "Build a minimal version of Falco, containing only the engine and basic input/output (EXPERIMENTAL)" OFF)
 option(MUSL_OPTIMIZED_BUILD "Enable if you want a musl optimized build" OFF)
 
+# gVisor is currently only supported on Linux x86_64
+if(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" AND CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT MINIMAL_BUILD)
+  option(BUILD_FALCO_GVISOR "Build gVisor support for Falco" ON)
+  if (BUILD_FALCO_GVISOR)
+    add_definitions(-DHAS_GVISOR)
+  endif()
+endif()
+
 # We shouldn't need to set this, see https://gitlab.kitware.com/cmake/cmake/-/issues/16419
 option(EP_UPDATE_DISCONNECTED "ExternalProject update disconnected" OFF)
 if (${EP_UPDATE_DISCONNECTED})
