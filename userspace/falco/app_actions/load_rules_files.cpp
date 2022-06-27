@@ -96,16 +96,14 @@ application::run_result application::load_rules_files()
 	for (const auto& filename : m_state->config->m_loaded_rules_filenames)
 	{
 		falco_logger::log(LOG_INFO, "Loading rules from file " + filename + "\n");
-		uint64_t required_engine_version;
 
 		try {
-			m_state->engine->load_rules_file(filename, m_options.verbose, m_options.all_events, required_engine_version);
+			m_state->engine->load_rules_file(filename, m_options.verbose, m_options.all_events);
 		}
 		catch(falco_exception &e)
 		{
 			return run_result::fatal(string("Could not load rules file ") + filename + ": " + e.what());
 		}
-		m_state->required_engine_versions[filename] = required_engine_version;
 	}
 
 	// Ensure that all plugins are compatible with the loaded set of rules

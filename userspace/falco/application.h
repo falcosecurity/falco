@@ -81,8 +81,6 @@ private:
 		// from event source to filtercheck list.
 		std::map<std::string, filter_check_list> plugin_filter_checks;
 
-		std::map<string,uint64_t> required_engine_versions;
-
 		std::string cmdline;
 
 #ifndef MINIMAL_BUILD

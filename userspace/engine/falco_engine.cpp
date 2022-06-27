@@ -165,13 +165,6 @@ void falco_engine::list_fields(std::string &source, bool verbose, bool names_onl
 
 void falco_engine::load_rules(const string &rules_content, bool verbose, bool all_events)
 {
-	uint64_t dummy;
-
-	return load_rules(rules_content, verbose, all_events, dummy);
-}
-
-void falco_engine::load_rules(const string &rules_content, bool verbose, bool all_events, uint64_t &required_engine_version)
-{
 	rule_loader::configuration cfg(rules_content, m_sources);
 	cfg.min_priority = m_min_priority;
 	cfg.output_extra = m_extra;
@@ -218,13 +211,6 @@ void falco_engine::load_rules(const string &rules_content, bool verbose, bool al
 
 void falco_engine::load_rules_file(const string &rules_filename, bool verbose, bool all_events)
 {
-	uint64_t dummy;
-
-	return load_rules_file(rules_filename, verbose, all_events, dummy);
-}
-
-void falco_engine::load_rules_file(const string &rules_filename, bool verbose, bool all_events, uint64_t &required_engine_version)
-{
 	ifstream is;
 
 	is.open(rules_filename);
@@ -238,7 +224,7 @@ void falco_engine::load_rules_file(const string &rules_filename, bool verbose, b
 	string rules_content((istreambuf_iterator<char>(is)),
 			     istreambuf_iterator<char>());
 
-	load_rules(rules_content, verbose, all_events, required_engine_version);
+	load_rules(rules_content, verbose, all_events);
 }
 
 void falco_engine::enable_rule(const string &substring, bool enabled, const string &ruleset)
@@ -339,7 +325,7 @@ unique_ptr<falco_engine::rule_result> falco_engine::process_event(std::size_t so
 	{
 		return unique_ptr<struct rule_result>();
 	}
-	
+
 	unique_ptr<struct rule_result> res(new rule_result());
 	res->evt = ev;
 	res->rule = rule.name;
@@ -441,8 +427,8 @@ bool falco_engine::check_plugin_requirements(
 					if (!plugin_version.check(req_version))
 					{
 						err = "Plugin '" + plugin.name
-						+ "' version '" + plugin.version 
-						+ "' is not compatible with required plugin version '" 
+						+ "' version '" + plugin.version
+						+ "' is not compatible with required plugin version '"
 						+ reqver + "'";
 						return false;
 					}
