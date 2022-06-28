@@ -22,7 +22,8 @@ using namespace falco::app;
 void application::check_for_ignored_events()
 {
 	std::set<uint16_t> evttypes;
-	sinsp_evttables* einfo = m_state->inspector->get_event_info_tables();
+	std::unique_ptr<sinsp> inspector(new sinsp());
+	sinsp_evttables* einfo = inspector->get_event_info_tables();
 	const struct ppm_event_info* etable = einfo->m_event_info;
 
 	std::string source = falco_common::syscall_source;
