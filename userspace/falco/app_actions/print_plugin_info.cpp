@@ -47,13 +47,14 @@ application::run_result application::print_plugin_info()
 #else  // MUSL_OPTIMIZED
 	if(!m_options.print_plugin_info.empty())
 	{
+		std::unique_ptr<sinsp> inspector(new sinsp());
 		for(auto &pc : m_state->config->m_plugins)
 		{
 			if (pc.m_name == m_options.print_plugin_info
 				|| pc.m_library_path == m_options.print_plugin_info)
 			{
 				// load the plugin
-				auto p = m_state->inspector->register_plugin(pc.m_library_path);
+				auto p = inspector->register_plugin(pc.m_library_path);
 
 				// print plugin descriptive info
 				std::ostringstream os;
