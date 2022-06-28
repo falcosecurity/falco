@@ -20,7 +20,8 @@ using namespace falco::app;
 
 void application::print_all_ignored_events()
 {
-	sinsp_evttables* einfo = m_state->inspector->get_event_info_tables();
+	std::unique_ptr<sinsp> inspector(new sinsp());
+	sinsp_evttables* einfo = inspector->get_event_info_tables();
 	const struct ppm_event_info* etable = einfo->m_event_info;
 	const struct ppm_syscall_desc* stable = einfo->m_syscall_info_table;
 
