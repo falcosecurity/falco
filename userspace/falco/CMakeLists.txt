@@ -35,6 +35,7 @@ set(
   app_actions/print_ignored_events.cpp
   app_actions/print_plugin_info.cpp
   app_actions/print_support.cpp
+  app_actions/print_syscall_events.cpp
   app_actions/print_version.cpp
   app_actions/start_grpc_server.cpp
   app_actions/start_webserver.cpp

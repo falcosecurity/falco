@@ -156,6 +156,7 @@ private:
 	run_result print_ignored_events();
 	run_result print_plugin_info();
 	run_result print_support();
+	run_result print_syscall_events();
 	run_result print_version();
 	run_result process_events();
 #ifndef MINIMAL_BUILD
