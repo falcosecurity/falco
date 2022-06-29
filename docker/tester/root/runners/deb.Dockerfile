@@ -4,7 +4,6 @@ LABEL maintainer="cncf-falco-dev@lists.cncf.io"
 ARG FALCO_VERSION=
 RUN test -n FALCO_VERSION
 ENV FALCO_VERSION ${FALCO_VERSION}
-ENV ARCH=$(uname -m)
 
 RUN apt update -y
 RUN apt install dkms -y
