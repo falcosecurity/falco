@@ -180,7 +180,7 @@ jobs:
       - run:
           name: Execute integration tests
           command: |
-            docker run -e BUILD_TYPE="release" -e BUILD_DIR="/build-arm64" -e SOURCE_DIR="/source-arm64" -it -v /var/run/docker.sock:/var/run/docker.sock -v /tmp/source-arm64:/source-arm64 -v /tmp/build-arm64:/build-arm64 \
+            docker run -e BUILD_TYPE="release" -e BUILD_DIR="/build" -e SOURCE_DIR="/source" -it -v /var/run/docker.sock:/var/run/docker.sock -v /tmp/source-arm64:/source -v /tmp/build-arm64:/build \
               falcosecurity/falco-tester:latest \
               test
       - store_test_results:
