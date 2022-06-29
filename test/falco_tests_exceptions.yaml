@@ -20,175 +20,99 @@ trace_files: !mux
 
   rule_exception_no_fields:
     exit_status: 1
-    stdout_is: |+
-      1 errors:
-      Rule exception item ex1: must have fields property with a list of fields
-      ---
-      - rule: My Rule
-        desc: Some desc
-        condition: evt.type=open and proc.name=cat
-        output: Some output
-        exceptions:
-          - name: ex1
-        priority: error
-      ---
+    validate_errors:
+      - item_type: exception
+        item_name: ex1
+        code: LOAD_ERR_YAML_VALIDATE
+        message: "Item has no mapping for key 'fields'"
     validate_rules_file:
       - rules/exceptions/item_no_fields.yaml
     trace_file: trace_files/cat_write.scap
 
   rule_exception_no_name:
     exit_status: 1
-    stdout_is: |+
-      1 errors:
-      Rule exception item must have name property
-      ---
-      - rule: My Rule
-        desc: Some desc
-        condition: evt.type=open and proc.name=cat
-        output: Some output
-        exceptions:
-          - fields: [proc.name, fd.filename]
-        priority: error
-      ---
+    validate_errors:
+      - item_type: exception
+        item_name: ""
+        code: LOAD_ERR_YAML_VALIDATE
+        message: "Item has no mapping for key 'name'"
     validate_rules_file:
       - rules/exceptions/item_no_name.yaml
     trace_file: trace_files/cat_write.scap
 
   rule_exception_append_no_name:
     exit_status: 1
-    stdout_is: |+
-      1 errors:
-      Rule exception item must have name property
-      ---
-      - rule: My Rule
-        exceptions:
-          - values:
-              - [nginx, /tmp/foo]
-        append: true
-      ---
+    validate_errors:
+      - item_type: exception
+        item_name: ""
+        code: LOAD_ERR_YAML_VALIDATE
+        message: "Item has no mapping for key 'name'"
     validate_rules_file:
       - rules/exceptions/append_item_no_name.yaml
     trace_file: trace_files/cat_write.scap
 
   rule_exception_unknown_fields:
     exit_status: 1
-    stdout_is: |+
-      1 errors:
-      Rule exception item ex1: field name not.exist is not a supported filter field
-      ---
-      - rule: My Rule
-        desc: Some desc
-        condition: evt.type=open and proc.name=cat
-        output: Some output
-        exceptions:
-          - name: ex1
-            fields: [not.exist]
-        priority: error
-      ---
+    validate_errors:
+      - item_type: exception
+        item_name: ex1
+        code: LOAD_ERR_VALIDATE
+        message: "'not.exist' is not a supported filter field"
     validate_rules_file:
       - rules/exceptions/item_unknown_fields.yaml
     trace_file: trace_files/cat_write.scap
 
   rule_exception_comps_fields_len_mismatch:
     exit_status: 1
-    stdout_is: |+
-      1 errors:
-      Rule exception item ex1: fields and comps lists must have equal length
-      ---
-      - rule: My Rule
-        desc: Some desc
-        condition: evt.type=open and proc.name=cat
-        output: Some output
-        exceptions:
-          - name: ex1
-            fields: [proc.name, fd.filename]
-            comps: [=]
-        priority: error
-      ---
+    validate_errors:
+      - item_type: exception
+        item_name: ex1
+        code: LOAD_ERR_VALIDATE
+        message: "Fields and comps lists must have equal length"
     validate_rules_file:
       - rules/exceptions/item_comps_fields_len_mismatch.yaml
     trace_file: trace_files/cat_write.scap
 
   rule_exception_unknown_comp:
     exit_status: 1
-    stdout_is: |+
-      1 errors:
-      Rule exception item ex1: comparison operator no-comp is not a supported comparison operator
-      ---
-      - rule: My Rule
-        desc: Some desc
-        condition: evt.type=open and proc.name=cat
-        output: Some output
-        exceptions:
-          - name: ex1
-            fields: [proc.name, fd.filename]
-            comps: [=, no-comp]
-        priority: error
-      ---
+    validate_errors:
+      - item_type: exception
+        item_name: ex1
+        code: LOAD_ERR_VALIDATE
+        message: "'no-comp' is not a supported comparison operator"
     validate_rules_file:
       - rules/exceptions/item_unknown_comp.yaml
     trace_file: trace_files/cat_write.scap
 
   rule_exception_fields_values_len_mismatch:
     exit_status: 1
-    stdout_is: |+
-      1 errors:
-      Exception item ex1: fields and values lists must have equal length
-      ---
-      - rule: My Rule
-        desc: Some desc
-        condition: evt.type=open and proc.name=cat
-        output: Some output
-        exceptions:
-          - name: ex1
-            fields: [proc.name, fd.filename]
-            values:
-              - [nginx]
-        priority: error
-      ---
+    validate_errors:
+      - item_type: exception
+        item_name: ex1
+        code: LOAD_ERR_VALIDATE
+        message: "Fields and values lists must have equal length"
     validate_rules_file:
       - rules/exceptions/item_fields_values_len_mismatch.yaml
     trace_file: trace_files/cat_write.scap
 
   rule_exception_append_fields_values_len_mismatch:
     exit_status: 1
-    stdout_is: |+
-      1 errors:
-      Exception item ex1: fields and values lists must have equal length
-      ---
-      - rule: My Rule
-        desc: Some desc
-        condition: evt.type=open and proc.name=cat
-        output: Some output
-        exceptions:
-          - name: ex1
-            fields: [proc.name, fd.filename]
-        priority: error
-
-      - rule: My Rule
-        exceptions:
-          - name: ex1
-            values:
-              - [nginx]
-        append: true
-      ---
+    validate_errors:
+      - item_type: exception
+        item_name: ex1
+        code: LOAD_ERR_VALIDATE
+        message: "Fields and values lists must have equal length"
     validate_rules_file:
       - rules/exceptions/append_item_fields_values_len_mismatch.yaml
     trace_file: trace_files/cat_write.scap
 
   rule_exception_append_item_not_in_rule:
     exit_status: 1
-    stdout_is: |+
-      1 errors:
-      Rule exception new item ex2: must have fields property with a list of fields
-      ---
-      - rule: My Rule
-        exceptions:
-          - name: ex2
-            values:
-              - [apache, /tmp]
-        append: true
-      ---
+    validate_errors:
+      - item_type: exception
+        item_name: ex2
+        code: LOAD_ERR_VALIDATE
+        message: "Rule exception must have fields property with a list of fields"
     validate_rules_file:
       - rules/exceptions/append_item_not_in_rule.yaml
     trace_file: trace_files/cat_write.scap
@@ -325,7 +249,7 @@ trace_files: !mux
     rules_file:
       - rules/exceptions/rule_exception_new_single_field_append.yaml
     trace_file: trace_files/cat_write.scap
-  
+
   rule_exception_new_second_field_append:
     detect: False
     detect_level: WARNING
@@ -335,18 +259,11 @@ trace_files: !mux
 
   rule_exception_new_append_no_field:
     exit_status: 1
-    stdout_is: |+
-      1 errors:
-      Rule exception new item proc_cmdline: must have fields property with a list of fields
-      ---
-      - rule: Open From Cat
-        exceptions:
-          - name: proc_cmdline
-            comps: in
-            values:
-              - "cat /dev/null"
-        append: true
-      ---
+    validate_errors:
+      - item_type: exception
+        item_name: proc_cmdline
+        code: LOAD_ERR_VALIDATE
+        message: "Rule exception must have fields property with a list of fields"
     validate_rules_file:
       - rules/exceptions/rule_exception_new_no_field_append.yaml
     trace_file: trace_files/cat_write.scap
