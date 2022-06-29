@@ -7,30 +7,30 @@ jobs:
     resource_class: arm.medium
     steps:
       - checkout:
-          path: /tmp/source/falco
+          path: /tmp/source-arm64/falco
       - run:
           name: Prepare project
           command: |
             mkdir -p /tmp/build-arm64 && mkdir -p /tmp/build-arm64/release && \
-            docker run -e BUILD_TYPE="release" -it -v /tmp/source:/source -v /tmp/build-arm64:/build \
+            docker run -e BUILD_TYPE="release" -it -v /tmp/source-arm64:/source -v /tmp/build-arm64:/build \
               falcosecurity/falco-builder:latest \
               cmake
       - run:
           name: Build
           command: |
-            docker run -e BUILD_TYPE="release" -it -v /tmp/source:/source -v /tmp/build-arm64:/build \
+            docker run -e BUILD_TYPE="release" -it -v /tmp/source-arm64:/source -v /tmp/build-arm64:/build \
               falcosecurity/falco-builder:latest \
               all
       - run:
           name: Run unit tests
           command: |
-            docker run -e BUILD_TYPE="release" -it -v /tmp/source:/source -v /tmp/build-arm64:/build \
+            docker run -e BUILD_TYPE="release" -it -v /tmp/source-arm64:/source -v /tmp/build-arm64:/build \
               falcosecurity/falco-builder:latest \
               tests
       - run:
           name: Build packages
           command: |
-            docker run -e BUILD_TYPE="release" -it -v /tmp/source:/source -v /tmp/build-arm64:/build \
+            docker run -e BUILD_TYPE="release" -it -v /tmp/source-arm64:/source -v /tmp/build-arm64:/build \
               falcosecurity/falco-builder:latest \
               package
       - run:
@@ -47,6 +47,7 @@ jobs:
           root: /tmp
           paths:
             - build-arm64/release
+            - source-arm64
   # Build a statically linked Falco release binary using musl
   # This build is 100% static, there are no host dependencies
   "build-musl":
@@ -132,7 +133,7 @@ jobs:
       - store_artifacts:
           path: /tmp/packages
           destination: /packages
-  # Execute integration tests based on the build results coming from the "build/centos7" job
+  # Execute integration tests based on the build results coming from the "build-centos7" job
   "tests-integration":
     docker:
       - image: falcosecurity/falco-tester:latest
@@ -167,6 +168,23 @@ jobs:
           command: /usr/bin/entrypoint test
       - store_test_results:
           path: /build-static/release/integration-tests-xunit
+  # Execute integration tests based on the build results coming from the "build-arm64" job
+  "tests-integration-arm64":
+    machine:
+      enabled: true
+      image: ubuntu-2004:202101-01
+    resource_class: arm.medium
+    steps:
+      - attach_workspace:
+          at: /tmp
+      - run:
+          name: Execute integration tests
+          command: |
+            docker run -e BUILD_TYPE="release" -e BUILD_DIR="/build-arm64" -e SOURCE_DIR="/source-arm64" -it -v /tmp/source-arm64:/source-arm64 -v /tmp/build-arm64:/build-arm64 \
+              falcosecurity/falco-tester:latest \
+              test
+      - store_test_results:
+          path: /tmp/build-arm64/release/integration-tests-xunit
   "tests-driver-loader-integration":
     machine:
       image: ubuntu-2004:202107-02
@@ -466,6 +484,9 @@ workflows:
       - "tests-integration":
           requires:
             - "build-centos7"
+      - "tests-integration-arm64":
+          requires:
+            - "build-arm64"
       - "tests-integration-static":
           requires:
             - "build-musl"
@@ -481,7 +502,7 @@ workflows:
               only: master
           requires:
             - "tests-integration"
-            - "build-arm64"
+            - "tests-integration-arm64"
       - "publish-packages-dev":
           context:
             - falco
@@ -505,7 +526,7 @@ workflows:
               only: master
           requires:
             - "tests-integration"
-            - "build-arm64"
+            - "tests-integration-arm64"
       - "publish-docker-dev":
           context:
             - falco
