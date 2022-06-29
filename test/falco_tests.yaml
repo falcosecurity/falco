@@ -20,22 +20,55 @@ trace_files: !mux
   builtin_rules_no_warnings:
     detect: False
     trace_file: trace_files/empty.scap
-    rules_warning: False
 
+  # The rules_events part of this test was mistakenly disabled when
+  # generic events (e.g. k8s_audit support) was added (#1715).
+  # The implementation no longer prints messages of the form:
+  # "Event types for rule (<RULE>): (<EVENT TYPES>)
+  # And without that output, none of the checks below rules_events
+  # are considered.
+  # XXX/mstemm add it back
   test_warnings:
     detect: False
     trace_file: trace_files/empty.scap
-    rules_file: rules/falco_rules_warnings.yaml
-    rules_warning:
-      - no_evttype
-      - evttype_not_equals
-      - leading_not
-      - not_equals_at_end
-      - not_at_end
-      - not_equals_and_not
-      - leading_in_not_equals_at_evttype
-      - not_with_evttypes
-      - not_with_evttypes_addl
+    validate_rules_file: rules/falco_rules_warnings.yaml
+    validate_warnings:
+      - item_type: rule
+        item_name: no_evttype
+        code: LOAD_NO_EVTTYPE
+        message: "Rule matches too many evt.type values. This has a significant performance penalty."
+      - item_type: rule
+        item_name: evttype_not_equals
+        code: LOAD_NO_EVTTYPE
+        message: "Rule matches too many evt.type values. This has a significant performance penalty."
+      - item_type: rule
+        item_name: leading_not
+        code: LOAD_NO_EVTTYPE
+        message: "Rule matches too many evt.type values. This has a significant performance penalty."
+      - item_type: rule
+        item_name: not_equals_at_end
+        code: LOAD_NO_EVTTYPE
+        message: "Rule matches too many evt.type values. This has a significant performance penalty."
+      - item_type: rule
+        item_name: not_at_end
+        code: LOAD_NO_EVTTYPE
+        message: "Rule matches too many evt.type values. This has a significant performance penalty."
+      - item_type: rule
+        item_name: not_equals_and_not
+        code: LOAD_NO_EVTTYPE
+        message: "Rule matches too many evt.type values. This has a significant performance penalty."
+      - item_type: rule
+        item_name: leading_in_not_equals_at_evttype
+        code: LOAD_NO_EVTTYPE
+        message: "Rule matches too many evt.type values. This has a significant performance penalty."
+      - item_type: rule
+        item_name: not_with_evttypes
+        code: LOAD_NO_EVTTYPE
+        message: "Rule matches too many evt.type values. This has a significant performance penalty."
+      - item_type: rule
+        item_name: not_with_evttypes_addl
+        code: LOAD_NO_EVTTYPE
+        message: "Rule matches too many evt.type values. This has a significant performance penalty."
     rules_events:
       - no_warnings: [execve]
       - no_evttype: [all]
@@ -251,159 +284,149 @@ trace_files: !mux
 
   invalid_not_yaml:
     exit_status: 1
-    stdout_is: |+
-      1 errors:
-      Rules content is not yaml
+    validate_errors:
+      - item_type: file
+        item_name: ""
+        code: LOAD_ERR_YAML_VALIDATE
+        message: "Rules content is not yaml"
     validate_rules_file:
       - rules/invalid_not_yaml.yaml
     trace_file: trace_files/cat_write.scap
 
   invalid_not_array:
     exit_status: 1
-    stdout_is: |+
-      1 errors:
-      Rules content is not yaml array of objects
+    validate_errors:
+      - item_type: file
+        item_name: ""
+        code: LOAD_ERR_YAML_VALIDATE
+        message: "Rules content is not yaml array of objects"
     validate_rules_file:
       - rules/invalid_not_array.yaml
     trace_file: trace_files/cat_write.scap
 
   invalid_array_item_not_object:
     exit_status: 1
-    stdout_is: |+
-      1 errors:
-      Unexpected element type. Each element should be a yaml associative array.
-      ---
-      - foo
-      ---
+    validate_errors:
+      - item_type: item
+        item_name: ""
+        code: LOAD_ERR_YAML_VALIDATE
+        message: "Unexpected element type. Each element should be a yaml associative array."
     validate_rules_file:
       - rules/invalid_array_item_not_object.yaml
     trace_file: trace_files/cat_write.scap
 
   invalid_engine_version_not_number:
     exit_status: 1
-    stdout_is: |+
-      1 errors:
-      Value of required_engine_version must be a number
-      ---
-      - required_engine_version: not-a-number
-      ---
+    validate_errors:
+      - item_type: required_engine_version
+        item_name: ""
+        code: LOAD_ERR_YAML_VALIDATE
+        message: "Can't decode YAML scalar value"
     validate_rules_file:
       - rules/invalid_engine_version_not_number.yaml
     trace_file: trace_files/cat_write.scap
 
   invalid_yaml_parse_error:
     exit_status: 1
+    validate_errors:
+      - item_type: file
+        item_name: ""
+        code: LOAD_ERR_YAML_PARSE
+        message: "yaml-cpp: error at line 1, column 11: illegal map value"
     validate_rules_file:
       - rules/invalid_yaml_parse_error.yaml
     trace_file: trace_files/cat_write.scap
 
   invalid_list_without_items:
     exit_status: 1
-    stdout_is: |+
-      1 errors:
-      List must have property items
-      ---
-      - list: bad_list
-        no_items: foo
-      ---
+    validate_errors:
+      - item_type: list
+        item_name: bad_list
+        code: LOAD_ERR_YAML_VALIDATE
+        message: "Item has no mapping for key 'items'"
     validate_rules_file:
       - rules/invalid_list_without_items.yaml
     trace_file: trace_files/cat_write.scap
 
   invalid_macro_without_condition:
     exit_status: 1
-    stdout_is: |+
-      1 errors:
-      Macro must have property condition
-      ---
-      - macro: bad_macro
-        nope: 1
-      ---
+    validate_errors:
+      - item_type: macro
+        item_name: bad_macro
+        code: LOAD_ERR_YAML_VALIDATE
+        message: "Item has no mapping for key 'condition'"
     validate_rules_file:
       - rules/invalid_macro_without_condition.yaml
     trace_file: trace_files/cat_write.scap
 
   invalid_rule_without_output:
     exit_status: 1
-    stdout_is: |+
-      1 errors:
-      Rule must have properties 'condition', 'output', 'desc', and 'priority'
-      ---
-      - rule: no output rule
-        desc: some desc
-        condition: evt.type=fork
-        priority: INFO
-      ---
+    validate_errors:
+      - item_type: rule
+        item_name: no output rule
+        code: LOAD_ERR_YAML_VALIDATE
+        message: "Item has no mapping for key 'output'"
     validate_rules_file:
       - rules/invalid_rule_without_output.yaml
     trace_file: trace_files/cat_write.scap
 
   invalid_append_rule_without_condition:
     exit_status: 1
-    stdout_is: |+
-      1 errors:
-      Appended rule must have exceptions or condition property
-      ---
-      - rule: no condition rule
-        append: true
-      ---
+    validate_errors:
+      - item_type: rule
+        item_name: no condition rule
+        code: LOAD_ERR_VALIDATE
+        message: "Appended rule must have exceptions or condition property"
     validate_rules_file:
       - rules/invalid_append_rule_without_condition.yaml
     trace_file: trace_files/cat_write.scap
 
   invalid_append_macro_dangling:
     exit_status: 1
-    stdout_is: |+
-      1 errors:
-      Macro dangling append has 'append' key but no macro by that name already exists
-      ---
-      - macro: dangling append
-        condition: and evt.type=execve
-        append: true
-      ---
+    validate_errors:
+      - item_type: macro
+        item_name: dangling append
+        code: LOAD_ERR_VALIDATE
+        message: "Macro has 'append' key but no macro by that name already exists"
     validate_rules_file:
       - rules/invalid_append_macro_dangling.yaml
     trace_file: trace_files/cat_write.scap
 
   invalid_list_append_dangling:
     exit_status: 1
-    stdout_is: |+
-      1 errors:
-      List my_list has 'append' key but no list by that name already exists
-      ---
-      - list: my_list
-        items: [not-cat]
-        append: true
-      ---
+    validate_errors:
+      - item_type: list
+        item_name: my_list
+        code: LOAD_ERR_VALIDATE
+        message: "List has 'append' key but no list by that name already exists"
     validate_rules_file:
       - rules/list_append_failure.yaml
     trace_file: trace_files/cat_write.scap
 
   invalid_rule_append_dangling:
     exit_status: 1
-    stdout_is: |+
-      1 errors:
-      Rule my_rule has 'append' key but no rule by that name already exists
-      ---
-      - rule: my_rule
-        condition: evt.type=open
-        append: true
-      ---
+    validate_errors:
+      - item_type: rule
+        item_name: my_rule
+        code: LOAD_ERR_VALIDATE
+        message: "Rule has 'append' key but no rule by that name already exists"
     validate_rules_file:
       - rules/rule_append_failure.yaml
     trace_file: trace_files/cat_write.scap
 
   invalid_overwrite_macro:
     exit_status: 1
-    stdout_contains: |+
-      .*invalid_base_macro.yaml: Ok
-      .*invalid_overwrite_macro.yaml: 1 errors:
-      Compilation error when compiling "foo": Undefined macro 'foo' used in filter.
-      ---
-      - macro: some macro
-        condition: foo
-        append: false
-      ---
+    validate_ok: [invalid_base_macro.yaml]
+    validate_errors:
+      - item_type: macro
+        item_name: some macro
+        code: LOAD_ERR_VALIDATE
+        message: "Undefined macro 'foo' used in filter."
+    validate_warnings:
+      - item_type: macro
+        item_name: some macro
+        code: LOAD_UNUSED_MACRO
+        message:  "Macro not referred to by any other rule/macro"
     validate_rules_file:
       - rules/invalid_base_macro.yaml
       - rules/invalid_overwrite_macro.yaml
@@ -411,18 +434,17 @@ trace_files: !mux
 
   invalid_append_macro:
     exit_status: 1
-    stdout_contains: |+
-      .*invalid_base_macro.yaml: Ok
-      .*invalid_append_macro.yaml: 1 errors:
-      Compilation error when compiling "evt.type=execve foo": 17: unexpected token after 'execve', expecting 'or', 'and'
-      ---
-      - macro: some macro
-        condition: evt.type=execve
-
-      - macro: some macro
-        condition: foo
-        append: true
-      ---
+    validate_ok: [invalid_base_macro.yaml]
+    validate_errors:
+      - item_type: macro
+        item_name: some macro
+        code: LOAD_ERR_COMPILE_CONDITION
+        message: "unexpected token after 'execve', expecting 'or', 'and'"
+    validate_warnings:
+      - item_type: macro
+        item_name: some macro
+        code: LOAD_UNUSED_MACRO
+        message: "Macro not referred to by any other rule/macro"
     validate_rules_file:
       - rules/invalid_base_macro.yaml
       - rules/invalid_append_macro.yaml
@@ -430,49 +452,39 @@ trace_files: !mux
 
   invalid_overwrite_macro_multiple_docs:
     exit_status: 1
-    stdout_is: |+
-      1 errors:
-      Compilation error when compiling "foo": Undefined macro 'foo' used in filter.
-      ---
-      - macro: some macro
-        condition: foo
-        append: false
-      ---
+    validate_errors:
+      - item_type: macro
+        item_name: some macro
+        code: LOAD_ERR_VALIDATE
+        message: "Undefined macro 'foo' used in filter."
+    validate_warnings:
+      - item_type: macro
+        item_name: some macro
+        code: LOAD_UNUSED_MACRO
+        message: "Macro not referred to by any other rule/macro"
     validate_rules_file:
       - rules/invalid_overwrite_macro_multiple_docs.yaml
     trace_file: trace_files/cat_write.scap
 
   invalid_append_macro_multiple_docs:
     exit_status: 1
-    stdout_is: |+
-      1 errors:
-      Compilation error when compiling "evt.type=execve foo": 17: unexpected token after 'execve', expecting 'or', 'and'
-      ---
-      - macro: some macro
-        condition: evt.type=execve
-
-      - macro: some macro
-        condition: foo
-        append: true
-      ---
+    validate_errors:
+      - item_type: macro
+        item_name: some macro
+        code: LOAD_ERR_COMPILE_CONDITION
+        message: "unexpected token after 'execve', expecting 'or', 'and'"
     validate_rules_file:
       - rules/invalid_append_macro_multiple_docs.yaml
     trace_file: trace_files/cat_write.scap
 
   invalid_overwrite_rule:
     exit_status: 1
-    stdout_contains: |+
-      .*invalid_base_rule.yaml: Ok
-      .*invalid_overwrite_rule.yaml: 1 errors:
-      Undefined macro 'bar' used in filter.
-      ---
-      - rule: some rule
-        desc: some desc
-        condition: bar
-        output: some output
-        priority: INFO
-        append: false
-      ---
+    validate_ok: [invalid_base_rule.yaml]
+    validate_errors:
+      - item_type: rule
+        item_name: some rule
+        code: LOAD_ERR_VALIDATE
+        message: "Undefined macro 'bar' used in filter."
     validate_rules_file:
       - rules/invalid_base_rule.yaml
       - rules/invalid_overwrite_rule.yaml
@@ -480,24 +492,12 @@ trace_files: !mux
 
   invalid_append_rule:
     exit_status: 1
-    stdout_contains: |+
-      .*invalid_base_rule.yaml: Ok
-      .*invalid_append_rule.yaml: 1 errors:
-      Compilation error when compiling "evt.type=open bar": 15: unexpected token after 'open', expecting 'or', 'and'
-      ---
-      - rule: some rule
-        desc: some desc
-        condition: evt.type=open
-        output: some output
-        priority: INFO
-
-      - rule: some rule
-        desc: some desc
-        condition: bar
-        output: some output
-        priority: INFO
-        append: true
-      ---
+    validate_ok: [invalid_base_rule.yaml]
+    validate_errors:
+      - item_type: rule
+        item_name: some rule
+        code: LOAD_ERR_COMPILE_CONDITION
+        message: "unexpected token after 'open', expecting 'or', 'and'"
     validate_rules_file:
       - rules/invalid_base_rule.yaml
       - rules/invalid_append_rule.yaml
@@ -505,96 +505,66 @@ trace_files: !mux
 
   invalid_overwrite_rule_multiple_docs:
     exit_status: 1
-    stdout_is: |+
-      1 errors:
-      Undefined macro 'bar' used in filter.
-      ---
-      - rule: some rule
-        desc: some desc
-        condition: bar
-        output: some output
-        priority: INFO
-        append: false
-      ---
+    validate_errors:
+      - item_type: rule
+        item_name: some rule
+        code: LOAD_ERR_VALIDATE
+        message: "Undefined macro 'bar' used in filter."
     validate_rules_file:
       - rules/invalid_overwrite_rule_multiple_docs.yaml
     trace_file: trace_files/cat_write.scap
 
   invalid_append_rule_multiple_docs:
     exit_status: 1
-    stdout_contains: |+
-      Compilation error when compiling "evt.type=open bar": 15: unexpected token after 'open', expecting 'or', 'and'
-      ---
-      - rule: some rule
-        desc: some desc
-        condition: evt.type=open
-        output: some output
-        priority: INFO
-
-      - rule: some rule
-        desc: some desc
-        condition: bar
-        output: some output
-        priority: INFO
-        append: true
-      ---
+    validate_errors:
+      - item_type: rule
+        item_name: some rule
+        code: LOAD_ERR_COMPILE_CONDITION
+        message: "unexpected token after 'open', expecting 'or', 'and'"
     validate_rules_file:
       - rules/invalid_append_rule_multiple_docs.yaml
     trace_file: trace_files/cat_write.scap
 
   invalid_missing_rule_name:
     exit_status: 1
-    stdout_is: |+
-      1 errors:
-      Rule name is empty
-      ---
-      - rule:
-        desc: some desc
-        condition: evt.type=execve
-        output: some output
-      ---
+    validate_errors:
+      - item_type: rule
+        item_name: ""
+        code: LOAD_ERR_YAML_VALIDATE
+        message: "Mapping for key 'rule' is empty"
     validate_rules_file:
       - rules/invalid_missing_rule_name.yaml
     trace_file: trace_files/cat_write.scap
 
   invalid_missing_list_name:
     exit_status: 1
-    stdout_is: |+
-      1 errors:
-      List name is empty
-      ---
-      - list:
-        items: [foo]
-      ---
+    validate_errors:
+      - item_type: list
+        item_name: ""
+        code: LOAD_ERR_YAML_VALIDATE
+        message: "Mapping for key 'list' is empty"
     validate_rules_file:
       - rules/invalid_missing_list_name.yaml
     trace_file: trace_files/cat_write.scap
 
   invalid_missing_macro_name:
     exit_status: 1
-    stdout_is: |+
-      1 errors:
-      Macro name is empty
-      ---
-      - macro:
-        condition: evt.type=execve
-      ---
+    validate_errors:
+      - item_type: macro
+        item_name: ""
+        code: LOAD_ERR_YAML_VALIDATE
+        message: "Mapping for key 'macro' is empty"
     validate_rules_file:
       - rules/invalid_missing_macro_name.yaml
     trace_file: trace_files/cat_write.scap
 
   invalid_rule_output:
     exit_status: 1
-    stdout_is: |+
-      1 errors:
-      Invalid output format 'An open was seen %not_a_real_field': 'invalid formatting token not_a_real_field'
-      ---
-      - rule: rule_with_invalid_output
-        desc: A rule with an invalid output field
-        condition: evt.type=open
-        output: "An open was seen %not_a_real_field"
-        priority: WARNING
-      ---
+    validate_errors:
+      - item_type: rule
+        item_name: rule_with_invalid_output
+        code: LOAD_ERR_COMPILE_OUTPUT
+        message: "invalid formatting token not_a_real_field"
     validate_rules_file:
       - rules/invalid_rule_output.yaml
     trace_file: trace_files/cat_write.scap
@@ -622,13 +592,13 @@ trace_files: !mux
     rules_file:
       - rules/single_rule_enabled_flag.yaml
     trace_file: trace_files/cat_write.scap
-  
+
   disabled_rule_using_false_enabled_flag_only:
     detect: False
     rules_file:
       - rules/disabled_rule_using_enabled_flag_only.yaml
     trace_file: trace_files/cat_write.scap
-  
+
   enabled_rule_using_false_enabled_flag_only:
     detect: True
     detect_level: WARNING
@@ -1025,13 +995,6 @@ trace_files: !mux
       - open_12: 0
       - open_13: 0
 
-  list_append_failure:
-    exit_status: 1
-    stderr_contains: "List my_list has 'append' key but no list by that name already exists"
-    rules_file:
-      - rules/list_append_failure.yaml
-    trace_file: trace_files/cat_write.scap
-
   list_append:
     detect: True
     detect_level: WARNING
@@ -1045,13 +1008,6 @@ trace_files: !mux
       - rules/list_append_false.yaml
     trace_file: trace_files/cat_write.scap
 
-  macro_append_failure:
-    exit_status: 1
-    stderr_contains: "Macro my_macro has 'append' key but no macro by that name already exists"
-    rules_file:
-      - rules/macro_append_failure.yaml
-    trace_file: trace_files/cat_write.scap
-
   macro_append:
     detect: True
     detect_level: WARNING
@@ -1063,13 +1019,6 @@ trace_files: !mux
     detect: False
     rules_file:
       - rules/macro_append_false.yaml
-    trace_file: trace_files/cat_write.scap
-
-  rule_append_failure:
-    exit_status: 1
-    stderr_contains: "Rule my_rule has 'append' key but no rule by that name already exists"
-    rules_file:
-      - rules/rule_append_failure.yaml
     trace_file: trace_files/cat_write.scap
 
   rule_append_skipped:
@@ -1152,10 +1101,18 @@ trace_files: !mux
         dev_null: 0
     trace_file: trace_files/cat_write.scap
 
-  skip_unknown_noevt:
+  validate_skip_unknown_noevt:
+    validate_warnings:
+      - item_type: rule
+        item_name: "Contains Unknown Event And Skipping"
+        code: LOAD_UNKNOWN_FIELD
+        message: "filter_check called with nonexistent field proc.nobody"
+    validate_rules_file:
+      - rules/skip_unknown_evt.yaml
+    trace_file: trace_files/cat_write.scap
+
+  detect_skip_unknown_noevt:
     detect: False
-    rules_warning:
-      - Contains Unknown Event And Skipping
     rules_file:
       - rules/skip_unknown_evt.yaml
     trace_file: trace_files/cat_write.scap
@@ -1168,41 +1125,34 @@ trace_files: !mux
 
   skip_unknown_error:
     exit_status: 1
-    stderr_contains: |+
-      Could not load rules file.*skip_unknown_error.yaml: 1 errors:
-      Rule Contains Unknown Event And Not Skipping: error filter_check called with nonexistent field proc.nobody
-      ---
-      - rule: Contains Unknown Event And Not Skipping
-        desc: Contains an unknown event
-        condition: proc.nobody=cat
-        output: Never
-        skip-if-unknown-filter: false
-        priority: INFO
-      ---
-    rules_file:
+    validate_errors:
+      - item_type: rule
+        item_name: "Contains Unknown Event And Not Skipping"
+        code: LOAD_ERR_COMPILE_CONDITION
+        message: "filter_check called with nonexistent field proc.nobody"
+    validate_rules_file:
       - rules/skip_unknown_error.yaml
     trace_file: trace_files/cat_write.scap
 
   skip_unknown_unspec_error:
     exit_status: 1
-    stderr_contains: |+
-      Could not load rules file .*skip_unknown_unspec.yaml: 1 errors:
-      Rule Contains Unknown Event And Unspecified: error filter_check called with nonexistent field proc.nobody
-      ---
-      - rule: Contains Unknown Event And Unspecified
-        desc: Contains an unknown event
-        condition: proc.nobody=cat
-        output: Never
-        priority: INFO
-      ---
-    rules_file:
+    validate_errors:
+      - item_type: rule
+        item_name: "Contains Unknown Event And Unspecified"
+        code: LOAD_ERR_COMPILE_CONDITION
+        message: "filter_check called with nonexistent field proc.nobody"
+    validate_rules_file:
       - rules/skip_unknown_unspec.yaml
     trace_file: trace_files/cat_write.scap
 
   engine_version_mismatch:
     exit_status: 1
-    stderr_contains: Rules require engine version 9999999, but engine version is
-    rules_file:
+    validate_errors:
+      - item_type: required_engine_version
+        item_name: ""
+        code: LOAD_ERR_VALIDATE
+        message_contains: "Rules require engine version 9999999, but engine version is"
+    validate_rules_file:
       - rules/engine_version_mismatch.yaml
     trace_file: trace_files/cat_write.scap
 

@@ -95,21 +95,24 @@ trace_files: !mux
       - rules/plugins/cloudtrail_incompat_plugin_version.yaml
 
   no_plugins_unknown_source:
-    detect: False
-    rules_file:
+    exit_status: 0
+    validate_warnings:
+      - item_type: rule
+        item_name: Cloudtrail Create Instance
+        code: LOAD_UNKNOWN_SOURCE
+        message: "Unknown source aws_cloudtrail, skipping"
+    validate_rules_file:
       - rules/plugins/cloudtrail_create_instances.yaml
-    trace_file: trace_files/empty.scap
-    rules_warning:
-      - Cloudtrail Create Instance
-    stderr_contains: "Rule Cloudtrail Create Instance: warning .unknown-source.: unknown source aws_cloudtrail, skipping"
 
   no_plugins_unknown_source_rule_exception:
-    detect: False
-    rules_file:
+    exit_status: 0
+    validate_warnings:
+      - item_type: rule
+        item_name: Cloudtrail Create Instance
+        code: LOAD_UNKNOWN_SOURCE
+        message: "Unknown source aws_cloudtrail, skipping"
+    validate_rules_file:
       - rules/plugins/cloudtrail_create_instances_exceptions.yaml
-    trace_file: trace_files/empty.scap
-    rules_warning:
-      - Cloudtrail Create Instance
-    stderr_contains: "Rule Cloudtrail Create Instance: warning .unknown-source.: unknown source aws_cloudtrail, skipping"
+
 
 
