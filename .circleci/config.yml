@@ -1,0 +1,15 @@
+version: 2.1
+
+setup: true
+
+orbs:
+  path-filtering: circleci/path-filtering@0.1.3
+workflows:
+  generate-config:
+    jobs:
+      - path-filtering/filter:
+          base-revision: master
+          config-path: .circleci/ci.yml
+          mapping: |
+            docker/builder/.* publish-falco-builder true
+            docker/tester/.*  publish-falco-tester true
