@@ -1,4 +1,13 @@
 version: 2.1
+
+parameters:
+  publish-falco-builder:
+    type: boolean
+    default: false
+  publish-falco-tester:
+    type: boolean
+    default: false
+
 jobs:
   "build-arm64":
     machine:
@@ -455,7 +464,52 @@ jobs:
               -t "public.ecr.aws/falcosecurity/falco-driver-loader:${CIRCLE_TAG}" \
               -t "public.ecr.aws/falcosecurity/falco-driver-loader:latest" \
               docker/driver-loader
-
+  "publish-docker-builder":
+    docker:
+      - image: cimg/base:stable
+        user: root
+    steps:
+      - attach_workspace:
+          at: /
+      - checkout
+      - setup_remote_docker:
+          version: 20.10.12
+      - run:
+          name: Prepare env
+          command: |
+            docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+            docker context create falco-env
+            docker buildx create falco-env --driver docker-container --use
+            echo ${DOCKERHUB_SECRET} | docker login -u ${DOCKERHUB_USER} --password-stdin
+      - run:
+          name: Build and publish falco-builder
+          command: |
+            docker buildx build --platform "arm64,amd64" --push \
+              -t falcosecurity/falco-builder:latest \
+              docker/builder
+  "publish-docker-tester":
+    docker:
+      - image: cimg/base:stable
+        user: root
+    steps:
+      - attach_workspace:
+          at: /
+      - checkout
+      - setup_remote_docker:
+          version: 20.10.12
+      - run:
+          name: Prepare env
+          command: |
+            docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+            docker context create falco-env
+            docker buildx create falco-env --driver docker-container --use
+            echo ${DOCKERHUB_SECRET} | docker login -u ${DOCKERHUB_USER} --password-stdin
+      - run:
+          name: Build and publish falco-tester
+          command: |
+            docker buildx build --platform "arm64,amd64" --push \
+              -t falcosecurity/falco-tester:latest \
+              docker/tester
 workflows:
   version: 2.1
   build_and_test:
@@ -519,6 +573,26 @@ workflows:
             - "publish-packages-dev"
             - "publish-packages-deb-dev"
             - "tests-driver-loader-integration"
+      - "publish-docker-builder":
+          when: << pipeline.parameters.publish-falco-builder >>
+          context:
+            - falco
+            - test-infra
+          filters:
+            tags:
+              ignore: /.*/
+            branches:
+              only: master
+      - "publish-docker-tester":
+          when: << pipeline.parameters.publish-falco-tester >>
+          context:
+            - falco
+            - test-infra
+          filters:
+            tags:
+              ignore: /.*/
+            branches:
+              only: master
       # - "quality/static-analysis" # This is temporarily disabled: https://github.com/falcosecurity/falco/issues/1526
   release:
     jobs:
