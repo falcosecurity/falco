@@ -27,27 +27,6 @@ limitations under the License.
 // Periodically collects scap stats files and writes them to a file as
 // json.
 
-class StatsFileWriter {
-public:
-	StatsFileWriter();
-	virtual ~StatsFileWriter();
-
-	// Returns success as bool. On false fills in errstr.
-	bool init(std::shared_ptr<sinsp> inspector, std::string &filename,
-		  uint32_t interval_msec,
-		  string &errstr);
-
-	// Should be called often (like for each event in a sinsp
-	// loop).
-	void handle();
-
-protected:
-	uint32_t m_num_stats;
-	std::shared_ptr<sinsp> m_inspector;
-	std::ofstream m_output;
-	scap_stats m_last_stats;
-};
-
 class stats_writer
 {
 public:
@@ -63,13 +42,13 @@ public:
 	stats_writer();
 	explicit stats_writer(const std::string &filename);
 	~stats_writer();
-	
+
+	void handle(const std::shared_ptr<sinsp>& inspector, stats_writer::state& s);
+
 	static bool set_timer(uint32_t interval_msec, std::string &err);
 
-	void handle(const std::shared_ptr<sinsp>& inspector, state& s);
-
 private:
-	struct worker_msg
+	struct msg
 	{
 		bool stop;
 		scap_stats delta;
@@ -78,11 +57,11 @@ private:
 
 	void worker() noexcept;
 	void stop_worker();
-	inline void push(const worker_msg& m);
+	inline void push(const stats_writer::msg& m);
 
 	bool m_initialized;
 	uint64_t m_total_samples;
 	std::thread m_worker;
 	std::ofstream m_output;
-	tbb::concurrent_bounded_queue<worker_msg> m_queue;	
+	tbb::concurrent_bounded_queue<stats_writer::msg> m_queue;	
 };
