@@ -22,6 +22,8 @@ limitations under the License.
 
 #include <sinsp.h>
 
+#include "tbb/concurrent_queue.h"
+
 // Periodically collects scap stats files and writes them to a file as
 // json.
 
@@ -44,4 +46,43 @@ protected:
 	std::shared_ptr<sinsp> m_inspector;
 	std::ofstream m_output;
 	scap_stats m_last_stats;
+};
+
+class stats_writer
+{
+public:
+	struct state
+	{	
+		inline state(): samples(0) { }
+
+		uint64_t samples;
+		uint16_t last_tick;
+		scap_stats last_stats;
+	};
+
+	stats_writer();
+	explicit stats_writer(const std::string &filename);
+	~stats_writer();
+	
+	static bool set_timer(uint32_t interval_msec, std::string &err);
+
+	void handle(const std::shared_ptr<sinsp>& inspector, state& s);
+
+private:
+	struct worker_msg
+	{
+		bool stop;
+		scap_stats delta;
+		scap_stats stats;
+	};
+
+	void worker() noexcept;
+	void stop_worker();
+	inline void push(const worker_msg& m);
+
+	bool m_initialized;
+	uint64_t m_total_samples;
+	std::thread m_worker;
+	std::ofstream m_output;
+	tbb::concurrent_bounded_queue<worker_msg> m_queue;	
 };
