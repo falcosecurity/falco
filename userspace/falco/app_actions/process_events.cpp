@@ -39,12 +39,13 @@ using namespace falco::app;
 // Event processing loop
 //
 application::run_result application::do_inspect(syscall_evt_drop_mgr &sdropmgr,
+				 std::shared_ptr<stats_writer> statsw,
 				 uint64_t duration_to_tot_ns,
 				 uint64_t &num_evts)
 {
 	int32_t rc;
 	sinsp_evt* ev;
-	StatsFileWriter writer;
+	stats_writer::state stats_state;
 	uint64_t duration_start = 0;
 	uint32_t timeouts_since_last_success_or_msg = 0;
 	std::size_t source_idx;
@@ -70,16 +71,6 @@ application::run_result application::do_inspect(syscall_evt_drop_mgr &sdropmgr,
 		      m_state->config->m_syscall_evt_drop_max_burst,
 		      m_state->config->m_syscall_evt_simulate_drops);
 
-	if (m_options.stats_filename != "")
-	{
-		string errstr;
-
-		if (!writer.init(m_state->inspector, m_options.stats_filename, m_options.stats_interval, errstr))
-		{
-			return run_result::fatal(errstr);
-		}
-	}
-
 	//
 	// Loop through the events
 	//
@@ -88,7 +79,7 @@ application::run_result application::do_inspect(syscall_evt_drop_mgr &sdropmgr,
 
 		rc = m_state->inspector->next(&ev);
 
-		writer.handle();
+		statsw->handle(m_state->inspector, stats_state);
 
 		if(m_state->terminate.load(std::memory_order_acquire)
 			|| m_state->restart.load(std::memory_order_acquire))
@@ -208,10 +199,26 @@ application::run_result application::process_events()
 	scap_stats cstats;
 	uint64_t num_evts = 0;
 	run_result ret;
+	std::shared_ptr<stats_writer> statsw;
+
+	if (!m_options.stats_filename.empty())
+	{
+		std::string err;
+		if (!stats_writer::set_timer(m_options.stats_interval, err))
+		{
+			return run_result::fatal(err);
+		}
+		statsw.reset(new stats_writer(m_options.stats_filename));
+	}
+	else
+	{
+		statsw.reset(new stats_writer());
+	}
 
 	duration = ((double)clock()) / CLOCKS_PER_SEC;
 
 	ret = do_inspect(sdropmgr,
+					statsw,
 					uint64_t(m_options.duration_to_tot*ONE_SECOND_IN_NS),
 					num_evts);
 
