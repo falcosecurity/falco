@@ -17,7 +17,7 @@ limitations under the License.
 #pragma once
 
 #include "configuration.h"
-#include "statsfilewriter.h"
+#include "stats_writer.h"
 #ifndef MINIMAL_BUILD
 #include "grpc_server.h"
 #include "webserver.h"
