@@ -23,44 +23,41 @@ limitations under the License.
 int falco_logger::level = LOG_INFO;
 bool falco_logger::time_format_iso_8601 = false;
 
-static void decode_sinsp_severity(const string& s, sinsp_logger::severity& sev)
+static sinsp_logger::severity decode_sinsp_severity(const string& s)
 {
 	if(s == "trace")
 	{
-		sev = sinsp_logger::SEV_TRACE;
+		return sinsp_logger::SEV_TRACE;
 	}
 	else if(s == "debug")
 	{
-		sev = sinsp_logger::SEV_DEBUG;
+		return sinsp_logger::SEV_DEBUG;
 	}
 	else if(s == "info")
 	{
-		sev = sinsp_logger::SEV_INFO;
+		return sinsp_logger::SEV_INFO;
 	}
 	else if(s == "notice")
 	{
-		sev = sinsp_logger::SEV_NOTICE;
+		return sinsp_logger::SEV_NOTICE;
 	}
 	else if(s == "warning")
 	{
-		sev = sinsp_logger::SEV_WARNING;
+		return sinsp_logger::SEV_WARNING;
 	}
 	else if(s == "error")
 	{
-		sev = sinsp_logger::SEV_ERROR;
+		return sinsp_logger::SEV_ERROR;
 	}
 	else if(s == "critical")
 	{
-		sev = sinsp_logger::SEV_CRITICAL;
+		return sinsp_logger::SEV_CRITICAL;
 	}
 	else if(s == "fatal")
 	{
-		sev = sinsp_logger::SEV_FATAL;
+		return sinsp_logger::SEV_FATAL;
 	}
-	else
-	{
-		throw falco_exception("Unknown sinsp log severity " + s);
-	}
+	throw falco_exception("Unknown sinsp log severity " + s);
 }
 
 void falco_logger::set_time_format_iso_8601(bool val)
@@ -114,11 +111,8 @@ void falco_logger::set_sinsp_logging(bool enable, const std::string& severity, c
 {
 	if (enable)
 	{
-		sinsp_logger::severity sevcode = sinsp_logger::SEV_DEBUG;
-		decode_sinsp_severity(severity, sevcode);
-
 		s_sinsp_logger_prefix = prefix;
-		g_logger.set_severity(sevcode);
+		g_logger.set_severity(decode_sinsp_severity(severity));
 		g_logger.disable_timestamps();
 		g_logger.add_callback_log(
 			[](std::string&& str, const sinsp_logger::severity sev)
