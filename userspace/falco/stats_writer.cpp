@@ -24,17 +24,17 @@ limitations under the License.
 #include "banned.h" // This raises a compilation error when certain functions are used
 #include "logger.h"
 
-// note: uint16_t is enough because we don't care about
+// note: ticker_t is an uint16_t, which is enough because we don't care about
 // overflows here. Threads calling stats_writer::handle() will just
 // check that this value changed since their last observation.
-static std::atomic<uint16_t> s_last_tick((uint16_t) 0);
+static std::atomic<stats_writer::ticker_t> s_timer((stats_writer::ticker_t) 0);
 
 static void timer_handler(int signum)
 {
-	s_last_tick.fetch_add(1, std::memory_order_relaxed);
+	s_timer.fetch_add(1, std::memory_order_relaxed);
 }
 
-bool stats_writer::set_timer(uint32_t interval_msec, string &err)
+bool stats_writer::init_ticker(uint32_t interval_msec, string &err)
 {
 	struct itimerval timer;
 	struct sigaction handler;
@@ -59,10 +59,15 @@ bool stats_writer::set_timer(uint32_t interval_msec, string &err)
 	return true;
 }
 
+stats_writer::ticker_t stats_writer::get_ticker()
+{
+	return s_timer.load(std::memory_order_relaxed);
+}
+
 stats_writer::stats_writer()
 	: m_initialized(false), m_total_samples(0)
 {
-	// the stats writter do nothing
+
 }
 
 stats_writer::stats_writer(const std::string &filename)
@@ -82,37 +87,9 @@ stats_writer::~stats_writer()
 	}
 }
 
-void stats_writer::handle(const std::shared_ptr<sinsp>& inspector, stats_writer::state& s)
+bool stats_writer::has_output() const
 {
-	if (m_initialized)
-	{
-		auto tick = s_last_tick.load(std::memory_order_relaxed);
-		if (tick != s.last_tick)
-		{
-			// gather stats sample and fill-up message
-			stats_writer::msg msg;
-			msg.stop = false;
-			inspector->get_capture_stats(&msg.stats);
-			if(s.samples == 1)
-			{
-				msg.delta = msg.stats;
-			}
-			else
-			{
-				msg.delta.n_evts = msg.stats.n_evts - s.last_stats.n_evts;
-				msg.delta.n_drops = msg.stats.n_drops - s.last_stats.n_drops;
-				msg.delta.n_preemptions = msg.stats.n_preemptions - s.last_stats.n_preemptions;
-			}
-
-			// update state
-			s.samples++;
-			s.last_tick = tick;
-			s.last_stats = msg.stats;
-
-			// push message into the queue
-			push(msg);
-		}
-	}
+	return m_initialized;
 }
 
 void stats_writer::stop_worker()
@@ -140,13 +117,14 @@ void stats_writer::worker() noexcept
 	stats_writer::msg m;
 	while(true)
 	{
-		// Block until a message becomes available.
+		// blocks until a message becomes availables
 		m_queue.pop(m);
 		if (m.stop)
 		{
 			return;
 		}
 
+		m_total_samples++;
 		try
 		{
 			jmsg["sample"] = m_num_stats;
@@ -163,6 +141,43 @@ void stats_writer::worker() noexcept
 		catch(const exception &e)
 		{
 			falco_logger::log(LOG_ERR, "stats_writer (worker): " + string(e.what()) + "\n");
+		}
+	}
+}
+
+stats_writer::collector::collector(std::shared_ptr<stats_writer> writer)
+	: m_writer(writer), m_last_tick(0), m_samples(0)
+{
+
+}
+
+void stats_writer::collector::collect(std::shared_ptr<sinsp> inspector)
+{
+	// just skip if no output is configured
+	if (m_writer->has_output())
+	{
+		// collect stats once per each ticker period
+		auto tick = stats_writer::get_ticker();
+		if (tick != m_last_tick)
+		{
+			stats_writer::msg msg;
+			msg.stop = false;
+			inspector->get_capture_stats(&msg.stats);
+			m_samples++;
+			if(m_samples == 1)
+			{
+				msg.delta = msg.stats;
+			}
+			else
+			{
+				msg.delta.n_evts = msg.stats.n_evts - m_last_stats.n_evts;
+				msg.delta.n_drops = msg.stats.n_drops - m_last_stats.n_drops;
+				msg.delta.n_preemptions = msg.stats.n_preemptions - m_last_stats.n_preemptions;
+			}
+
+			m_last_tick = tick;
+			m_last_stats = msg.stats;
+			m_writer->push(msg);
 		}
 	}
 }
