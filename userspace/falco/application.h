@@ -17,6 +17,7 @@ limitations under the License.
 #pragma once
 
 #include "configuration.h"
+#include "statsfilewriter.h"
 #ifndef MINIMAL_BUILD
 #include "grpc_server.h"
 #include "webserver.h"
@@ -222,6 +223,7 @@ private:
 	void print_all_ignored_events();
 	void format_plugin_info(std::shared_ptr<sinsp_plugin> p, std::ostream& os) const;
 	run_result do_inspect(syscall_evt_drop_mgr &sdropmgr,
+				std::shared_ptr<stats_writer> statsw,
 			    uint64_t duration_to_tot_ns,
 			    uint64_t &num_events);
 	
