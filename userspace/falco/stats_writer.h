@@ -76,13 +76,13 @@ public:
 
 	/*!
 		\brief Initializes a writer without any output.
-		With this contructor, has_output() always returns false
+		With this constructor, has_output() always returns false
 	*/
 	stats_writer();
 
 	/*!
 		\brief Initializes a writer that prints to a file at the given filename.
-		With this contructor, has_output() always returns true
+		With this constructor, has_output() always returns true
 	*/
 	explicit stats_writer(const std::string &filename);
 	
