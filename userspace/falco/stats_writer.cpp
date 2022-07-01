@@ -19,7 +19,7 @@ limitations under the License.
 #include <nlohmann/json.hpp>
 #include <atomic>
 
-#include "statsfilewriter.h"
+#include "stats_writer.h"
 #include "logger.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
 #include "logger.h"
