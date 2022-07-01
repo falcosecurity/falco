@@ -45,7 +45,7 @@ application::run_result application::do_inspect(syscall_evt_drop_mgr &sdropmgr,
 {
 	int32_t rc;
 	sinsp_evt* ev;
-	stats_writer::state stats_state;
+	stats_writer::collector stats_collector(statsw);
 	uint64_t duration_start = 0;
 	uint32_t timeouts_since_last_success_or_msg = 0;
 	std::size_t source_idx;
@@ -79,7 +79,7 @@ application::run_result application::do_inspect(syscall_evt_drop_mgr &sdropmgr,
 
 		rc = m_state->inspector->next(&ev);
 
-		statsw->handle(m_state->inspector, stats_state);
+		stats_collector.collect(m_state->inspector);
 
 		if(m_state->reopen_outputs)
 		{
@@ -216,7 +216,7 @@ application::run_result application::process_events()
 	if (!m_options.stats_filename.empty())
 	{
 		std::string err;
-		if (!stats_writer::set_timer(m_options.stats_interval, err))
+		if (!stats_writer::init_ticker(m_options.stats_interval, err))
 		{
 			return run_result::fatal(err);
 		}
