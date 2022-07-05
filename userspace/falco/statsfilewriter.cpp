@@ -129,8 +129,8 @@ void StatsFileWriter::handle()
 			"\"events\": " << delta.n_evts <<
 			", \"drops\": " << delta.n_drops <<
 			", \"preemptions\": " << delta.n_preemptions <<
-			"}, \"drop_pct\": " << (delta.n_evts == 0 ? 0 : (100.0*delta.n_drops/(delta.n_drops + delta.n_evts))) <<
-			"}," << endl;
+			", \"drop_pct\": " << (delta.n_evts == 0 ? 0 : (100.0*delta.n_drops/(delta.n_drops + delta.n_evts))) <<
+			"}}," << endl;
 
 		m_last_stats = cstats;
 	}
