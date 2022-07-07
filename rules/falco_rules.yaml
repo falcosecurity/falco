@@ -1760,6 +1760,13 @@
        container.image.repository endswith /prometheus-node-exporter or
        container.image.repository endswith /image-inspector))
 
+- list: redhat-io-images-privileged
+  items: [registry.redhat.io/openshift-logging/fluentd-rhel8, registry.redhat.io/openshift4/ose-csi-node-driver-registrar, registry.redhat.io/openshift4/ose-kubernetes-nmstate-handler-rhel8, registry.redhat.io/openshift3/ose-service-catalog, registry.redhat.io/openshift4/ose-local-storage-diskmaker,]
+
+- macro: redhat_image
+  condition: >
+    (container.image.repository in (redhat-io-images-privileged))
+
 # https://docs.aws.amazon.com/eks/latest/userguide/add-ons-images.html
 #  official AWS EKS registry list. AWS has different ECR repo per region
 - macro: allowed_aws_ecr_registry_root_for_eks
@@ -1902,6 +1909,7 @@
     and container.privileged=true
     and not falco_privileged_containers
     and not user_privileged_containers
+    and not redhat_image
   output: Privileged container started (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline %container.info image=%container.image.repository:%container.image.tag)
   priority: INFO
   tags: [container, cis, mitre_privilege_escalation, mitre_lateral_movement]
