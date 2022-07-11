@@ -68,9 +68,12 @@ Now assume `x.y.z` is the new version.
 
     | Packages | Download                                                                                                                                               |
     | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-    | rpm      | [![rpm](https://img.shields.io/badge/Falco-x.y.z-%2300aec7?style=flat-square)](https://download.falco.org/packages/rpm/falco-x.y.z-x86_64.rpm)        |
-    | deb      | [![deb](https://img.shields.io/badge/Falco-x.y.z-%2300aec7?style=flat-square)](https://download.falco.org/packages/deb/stable/falco-x.y.z-x86_64.deb) |
-    | tgz      | [![tgz](https://img.shields.io/badge/Falco-x.y.z-%2300aec7?style=flat-square)](https://download.falco.org/packages/bin/x86_64/falco-x.y.z-x86_64.tar.gz) |
+    | rpm-x86_64      | [![rpm](https://img.shields.io/badge/Falco-x.y.z-%2300aec7?style=flat-square)](https://download.falco.org/packages/rpm/falco-x.y.z-x86_64.rpm)        |
+    | deb-x86_64      | [![deb](https://img.shields.io/badge/Falco-x.y.z-%2300aec7?style=flat-square)](https://download.falco.org/packages/deb/stable/falco-x.y.z-x86_64.deb) |
+    | tgz-x86_64      | [![tgz](https://img.shields.io/badge/Falco-x.y.z-%2300aec7?style=flat-square)](https://download.falco.org/packages/bin/x86_64/falco-x.y.z-x86_64.tar.gz) |
+    | rpm-aarch64      | [![rpm](https://img.shields.io/badge/Falco-x.y.z-%2300aec7?style=flat-square)](https://download.falco.org/packages/rpm/falco-x.y.z-aarch64.rpm)        |
+    | deb-aarch64      | [![deb](https://img.shields.io/badge/Falco-x.y.z-%2300aec7?style=flat-square)](https://download.falco.org/packages/deb/stable/falco-x.y.z-aarch64.deb) |
+    | tgz-aarch64      | [![tgz](https://img.shields.io/badge/Falco-x.y.z-%2300aec7?style=flat-square)](https://download.falco.org/packages/bin/aarch64/falco-x.y.z-aarch64.tar.gz) |
 
     | Images                                                                      |
     | --------------------------------------------------------------------------- |
