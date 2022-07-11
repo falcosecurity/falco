@@ -1,5 +1,69 @@
 # Change Log
 
+## v0.32.1
+
+Released on 2022-07-11
+
+### Major Changes
+
+* new(falco): add gVisor support [[#2078](https://github.com/falcosecurity/falco/pull/2078)] - [@LucaGuerra](https://github.com/LucaGuerra)
+* new(docker,scripts): add multiarch images and ARM64 packages [[#1990](https://github.com/falcosecurity/falco/pull/1990)] - [@FedeDP](https://github.com/FedeDP)
+
+
+### Minor Changes
+
+* update(build): Switch from RSA/SHA1 to RSA/SHA256 signature in the RPM package [[#2044](https://github.com/falcosecurity/falco/pull/2044)] - [@vjjmiras](https://github.com/vjjmiras)
+* refactor(userspace/engine): drop macro source field in rules and rule loader [[#2094](https://github.com/falcosecurity/falco/pull/2094)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* build: introduce `DRIVER_VERSION` that allows setting a driver version (which may differ from the falcosecurity/libs version) [[#2086](https://github.com/falcosecurity/falco/pull/2086)] - [@leogr](https://github.com/leogr)
+* update: add more info to `--version` output [[#2086](https://github.com/falcosecurity/falco/pull/2086)] - [@leogr](https://github.com/leogr)
+* build(scripts): publish deb repo has now a InRelease file [[#2060](https://github.com/falcosecurity/falco/pull/2060)] - [@FedeDP](https://github.com/FedeDP)
+* update(userspace/falco): make plugin init config optional and add --plugin-info CLI option [[#2059](https://github.com/falcosecurity/falco/pull/2059)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* update(userspace/falco): support libs logging [[#2093](https://github.com/falcosecurity/falco/pull/2093)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* update(falco): update libs to 0.7.0 [[#2119](https://github.com/falcosecurity/falco/pull/2119)] - [@LucaGuerra](https://github.com/LucaGuerra)
+
+### Bug Fixes
+
+* fix(userspace/falco): ensure that only rules files named with `-V` are loaded when validating rules files. [[#2088](https://github.com/falcosecurity/falco/pull/2088)] - [@mstemm](https://github.com/mstemm)
+* fix(rules): use exit event in reverse shell detection rule [[#2076](https://github.com/falcosecurity/falco/pull/2076)] - [@alacuku](https://github.com/alacuku)
+* fix(scripts): falco-driver-loader script will now seek for drivers in driver/${ARCH}/ for x86_64 too. [[#2057](https://github.com/falcosecurity/falco/pull/2057)] - [@FedeDP](https://github.com/FedeDP)
+* fix(falco-driver-loader): building falco module with DKMS on Flatcar and supporting fetching pre-built module/eBPF probe [[#2043](https://github.com/falcosecurity/falco/pull/2043)] - [@jepio](https://github.com/jepio)
+
+
+### Rule Changes
+
+* rule(Redirect STDOUT/STDIN to Network Connection in Container): changed priority to NOTICE [[#2092](https://github.com/falcosecurity/falco/pull/2092)] - [@leogr](https://github.com/leogr)
+* rule(Java Process Class Download): detect potential log4shell exploitation [[#2041](https://github.com/falcosecurity/falco/pull/2041)] - [@pirxthepilot](https://github.com/pirxthepilot)
+
+
+### Non user-facing changes
+
+* remove kaizhe from falco rule owner [[#2050](https://github.com/falcosecurity/falco/pull/2050)] - [@Kaizhe](https://github.com/Kaizhe)
+* docs(readme): added arm64 mention + packages + badge. [[#2101](https://github.com/falcosecurity/falco/pull/2101)] - [@FedeDP](https://github.com/FedeDP)
+* new(circleci): enable integration tests for arm64. [[#2099](https://github.com/falcosecurity/falco/pull/2099)] - [@FedeDP](https://github.com/FedeDP)
+* chore(cmake): bump plugins versions [[#2102](https://github.com/falcosecurity/falco/pull/2102)] - [@Andreagit97](https://github.com/Andreagit97)
+* fix(docker): fixed deb tester sub image. [[#2100](https://github.com/falcosecurity/falco/pull/2100)] - [@FedeDP](https://github.com/FedeDP)
+* fix(ci): fix sign script - avoid interpreting '{*}$argv' too soon [[#2075](https://github.com/falcosecurity/falco/pull/2075)] - [@vjjmiras](https://github.com/vjjmiras)
+* fix(tests): make tests run locally (take 2) [[#2089](https://github.com/falcosecurity/falco/pull/2089)] - [@LucaGuerra](https://github.com/LucaGuerra)
+* fix(ci): creates ~/sign instead of ./sign [[#2072](https://github.com/falcosecurity/falco/pull/2072)] - [@vjjmiras](https://github.com/vjjmiras)
+* fix(ci): sign arm64 rpm packages. [[#2069](https://github.com/falcosecurity/falco/pull/2069)] - [@FedeDP](https://github.com/FedeDP)
+* update(falco_scripts): Change Flatcar dynlinker path [[#2066](https://github.com/falcosecurity/falco/pull/2066)] - [@jepio](https://github.com/jepio)
+* fix(scripts): fixed path in publish-deb script. [[#2062](https://github.com/falcosecurity/falco/pull/2062)] - [@FedeDP](https://github.com/FedeDP)
+* fix(build): docker-container buildx engine does not support retagging images. Tag all images together. [[#2058](https://github.com/falcosecurity/falco/pull/2058)] - [@FedeDP](https://github.com/FedeDP)
+* fix(build): fixed publish-docker-dev job context. [[#2056](https://github.com/falcosecurity/falco/pull/2056)] - [@FedeDP](https://github.com/FedeDP)
+* Correct linting issue in rules [[#2055](https://github.com/falcosecurity/falco/pull/2055)] - [@stephanmiehe](https://github.com/stephanmiehe)
+* Fix falco compilation issues with new libs [[#2053](https://github.com/falcosecurity/falco/pull/2053)] - [@alacuku](https://github.com/alacuku)
+* fix(scripts): forcefully create packages dir for debian packages. [[#2054](https://github.com/falcosecurity/falco/pull/2054)] - [@FedeDP](https://github.com/FedeDP)
+* fix(build): removed leftover line in circleci config. [[#2052](https://github.com/falcosecurity/falco/pull/2052)] - [@FedeDP](https://github.com/FedeDP)
+* fix(build): fixed circleCI artifacts publish for arm64. [[#2051](https://github.com/falcosecurity/falco/pull/2051)] - [@FedeDP](https://github.com/FedeDP)
+* update(docker): updated falco-builder to fix multiarch support. [[#2049](https://github.com/falcosecurity/falco/pull/2049)] - [@FedeDP](https://github.com/FedeDP)
+* fix(build): use apt instead of apk when installing deps for aws ecr publish [[#2047](https://github.com/falcosecurity/falco/pull/2047)] - [@FedeDP](https://github.com/FedeDP)
+* fix(build): try to use root user for cimg/base [[#2045](https://github.com/falcosecurity/falco/pull/2045)] - [@FedeDP](https://github.com/FedeDP)
+* update(build): avoid double build of docker images when pushing to aws ecr [[#2046](https://github.com/falcosecurity/falco/pull/2046)] - [@FedeDP](https://github.com/FedeDP)
+* chore(k8s_audit_plugin): bump k8s audit plugin version [[#2042](https://github.com/falcosecurity/falco/pull/2042)] - [@Andreagit97](https://github.com/Andreagit97)
+* fix(tests): make run_regression_tests.sh work locally [[#2020](https://github.com/falcosecurity/falco/pull/2020)] - [@LucaGuerra](https://github.com/LucaGuerra)
+* Circle CI build job for ARM64 [[#1997](https://github.com/falcosecurity/falco/pull/1997)] - [@odidev](https://github.com/odidev)
+
+
 ## v0.32.0
 
 Released on 2022-06-03
