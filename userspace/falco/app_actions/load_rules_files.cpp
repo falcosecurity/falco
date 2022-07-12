@@ -95,7 +95,7 @@ application::run_result application::load_rules_files()
 
 	for (const auto& filename : m_state->config->m_loaded_rules_filenames)
 	{
-		falco_logger::log(LOG_INFO, "Loading rules from file " + filename + ":\n");
+		falco_logger::log(LOG_INFO, "Loading rules from file " + filename + "\n");
 		uint64_t required_engine_version;
 
 		try {
