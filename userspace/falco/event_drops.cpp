@@ -91,8 +91,8 @@ bool syscall_evt_drop_mgr::process_event(std::shared_ptr<sinsp> inspector, sinsp
 		if(delta.n_drops > 0)
 		{
 			double ratio = delta.n_drops;
-			// Assuming the number of event does not contains the dropped ones
-			ratio /= delta.n_drops + delta.n_evts;
+			// The `n_evts` always contains the `n_drops`.
+			ratio /= delta.n_evts;
 
 			// When simulating drops the threshold is always zero
 			if(ratio > m_threshold)
