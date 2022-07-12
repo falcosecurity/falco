@@ -16,7 +16,6 @@ limitations under the License.
 #pragma once
 
 #define CPPHTTPLIB_OPENSSL_SUPPORT
-#define CPPHTTPLIB_ZLIB_SUPPORT
 #include <httplib.h>
 #include <thread>
 #include "configuration.h"
