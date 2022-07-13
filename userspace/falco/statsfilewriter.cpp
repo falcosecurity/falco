@@ -20,6 +20,7 @@ limitations under the License.
 
 #include "statsfilewriter.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
+#include "logger.h"
 
 using namespace std;
 
@@ -118,20 +119,27 @@ void StatsFileWriter::handle()
 			delta.n_preemptions = cstats.n_preemptions - m_last_stats.n_preemptions;
 		}
 
-		jmsg["sample"] = m_num_stats;
-		if(m_extra != "")
+		try
 		{
-			jmsg["extra"] = m_extra;
+			jmsg["sample"] = m_num_stats;
+			if(m_extra != "")
+			{
+				jmsg["extra"] = m_extra;
+			}
+			jmsg["cur"]["events"] = cstats.n_evts;
+			jmsg["cur"]["drops"] = cstats.n_drops;
+			jmsg["cur"]["preemptions"] = cstats.n_preemptions;
+			jmsg["cur"]["drop_pct"] = (cstats.n_evts == 0 ? 0 : (100.0*cstats.n_drops/cstats.n_evts));
+			jmsg["delta"]["events"] = delta.n_evts;
+			jmsg["delta"]["drops"] = delta.n_drops;
+			jmsg["delta"]["preemptions"] = delta.n_preemptions;
+			jmsg["delta"]["drop_pct"] = (delta.n_evts == 0 ? 0 : (100.0*delta.n_drops/delta.n_evts));
+			m_output << jmsg.dump() << endl;
+		} 
+		catch(const exception &e)
+		{
+			falco_logger::log(LOG_ERR, "StatsFileWriter (handle): " + string(e.what()) + "\n");
 		}
-		jmsg["cur"]["events"] = cstats.n_evts;
-		jmsg["cur"]["drops"] = cstats.n_drops;
-		jmsg["cur"]["preemptions"] = cstats.n_preemptions;
-		jmsg["cur"]["drop_pct"] = (cstats.n_evts == 0 ? 0 : (100.0*cstats.n_drops/cstats.n_evts));
-		jmsg["delta"]["events"] = delta.n_evts;
-		jmsg["delta"]["drops"] = delta.n_drops;
-		jmsg["delta"]["preemptions"] = delta.n_preemptions;
-		jmsg["delta"]["drop_pct"] = (delta.n_evts == 0 ? 0 : (100.0*delta.n_drops/delta.n_evts));
-		m_output << jmsg.dump() << endl;
 
 		m_last_stats = cstats;
 	}
