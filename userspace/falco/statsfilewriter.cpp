@@ -16,6 +16,7 @@ limitations under the License.
 
 #include <sys/time.h>
 #include <signal.h>
+#include <nlohmann/json.hpp>
 
 #include "statsfilewriter.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
@@ -100,6 +101,7 @@ void StatsFileWriter::handle()
 	{
 		scap_stats cstats;
 		scap_stats delta;
+		nlohmann::json jmsg;
 
 		g_save_stats = false;
 		m_num_stats++;
@@ -116,21 +118,19 @@ void StatsFileWriter::handle()
 			delta.n_preemptions = cstats.n_preemptions - m_last_stats.n_preemptions;
 		}
 
-		m_output << "{\"sample\": " << m_num_stats;
+		jmsg["sample"] = m_num_stats;
 		if(m_extra != "")
 		{
-			m_output << ", " << m_extra;
+			jmsg["extra"] = m_extra;
 		}
-		m_output << ", \"cur\": {" <<
-			"\"events\": " << cstats.n_evts <<
-			", \"drops\": " << cstats.n_drops <<
-			", \"preemptions\": " << cstats.n_preemptions <<
-			"}, \"delta\": {" <<
-			"\"events\": " << delta.n_evts <<
-			", \"drops\": " << delta.n_drops <<
-			", \"preemptions\": " << delta.n_preemptions <<
-			"}, \"drop_pct\": " << (delta.n_evts == 0 ? 0 : (100.0*delta.n_drops/delta.n_evts)) <<
-			"}," << endl;
+		jmsg["cur"]["events"] = cstats.n_evts;
+		jmsg["cur"]["drops"] = cstats.n_drops;
+		jmsg["cur"]["preemptions"] = cstats.n_preemptions;
+		jmsg["delta"]["events"] = delta.n_evts;
+		jmsg["delta"]["drops"] = delta.n_drops;
+		jmsg["delta"]["preemptions"] = delta.n_preemptions;
+		jmsg["drop_pct"] = (delta.n_evts == 0 ? 0 : (100.0*delta.n_drops/delta.n_evts));
+		m_output << jmsg.dump() << endl;
 
 		m_last_stats = cstats;
 	}
