@@ -43,6 +43,5 @@ protected:
 	uint32_t m_num_stats;
 	std::shared_ptr<sinsp> m_inspector;
 	std::ofstream m_output;
-	std::string m_extra;
 	scap_stats m_last_stats;
 };
