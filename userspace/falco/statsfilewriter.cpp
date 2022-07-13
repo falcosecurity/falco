@@ -126,10 +126,11 @@ void StatsFileWriter::handle()
 		jmsg["cur"]["events"] = cstats.n_evts;
 		jmsg["cur"]["drops"] = cstats.n_drops;
 		jmsg["cur"]["preemptions"] = cstats.n_preemptions;
+		jmsg["cur"]["drop_pct"] = (cstats.n_evts == 0 ? 0 : (100.0*cstats.n_drops/cstats.n_evts));
 		jmsg["delta"]["events"] = delta.n_evts;
 		jmsg["delta"]["drops"] = delta.n_drops;
 		jmsg["delta"]["preemptions"] = delta.n_preemptions;
-		jmsg["drop_pct"] = (delta.n_evts == 0 ? 0 : (100.0*delta.n_drops/delta.n_evts));
+		jmsg["delta"]["drop_pct"] = (delta.n_evts == 0 ? 0 : (100.0*delta.n_drops/delta.n_evts));
 		m_output << jmsg.dump() << endl;
 
 		m_last_stats = cstats;
