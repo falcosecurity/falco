@@ -1761,7 +1761,7 @@
        container.image.repository endswith /image-inspector))
 
 - list: redhat_io_images_privileged
-  items: [registry.redhat.io/openshift-logging/fluentd-rhel8, registry.redhat.io/openshift4/ose-csi-node-driver-registrar, registry.redhat.io/openshift4/ose-kubernetes-nmstate-handler-rhel8, registry.redhat.io/openshift3/ose-service-catalog, registry.redhat.io/openshift4/ose-local-storage-diskmaker]
+  items: [registry.redhat.io/openshift-logging/fluentd-rhel8, registry.redhat.io/openshift4/ose-csi-node-driver-registrar, registry.redhat.io/openshift4/ose-kubernetes-nmstate-handler-rhel8, registry.redhat.io/openshift4/ose-local-storage-diskmaker]
 
 - macro: redhat_image
   condition: >
