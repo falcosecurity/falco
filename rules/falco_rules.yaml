@@ -1765,7 +1765,7 @@
 
 - macro: redhat_image
   condition: >
-    (container.image.repository in (redhat-io-images-privileged))
+    (container.image.repository in (redhat_io_images_privileged))
 
 # https://docs.aws.amazon.com/eks/latest/userguide/add-ons-images.html
 #  official AWS EKS registry list. AWS has different ECR repo per region
