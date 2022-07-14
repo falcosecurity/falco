@@ -14,6 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+#include <sstream>
+
 #include "application.h"
 
 using namespace falco::app;
@@ -88,6 +90,13 @@ application::run_result application::init_falco_engine()
 	{
 		return run_result::fatal("At least one event source needs to be enabled");
 	}
+
+	/* Print all enabled sources. */
+	std::ostringstream os;
+	std::copy(m_state->enabled_sources.begin(), m_state->enabled_sources.end(), std::ostream_iterator<std::string>(os, ","));
+	std::string result = os.str();
+	result.pop_back();
+	falco_logger::log(LOG_INFO, "Enabled sources: " + result + "\n");
 
 	m_state->engine->set_min_priority(m_state->config->m_min_priority);
 
