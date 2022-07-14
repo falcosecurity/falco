@@ -83,6 +83,14 @@ application::run_result application::open_inspector()
 		}
 	}
 
+	/// TODO: we can add a method to the inspector that tells us what 
+	/// is the underline engine used. Right now we print something only 
+	/// in case of BPF engine
+	if(m_state->inspector->is_bpf_enabled())
+	{
+		falco_logger::log(LOG_INFO, "Falco is using the BPF probe\n");	
+	}
+
 	// This must be done after the open
 	if(!m_options.all_events)
 	{
