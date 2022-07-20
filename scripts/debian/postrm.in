@@ -15,3 +15,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+# Based off what debhelper dh_systemd_enable/13.3.4 would have added
+# ref: https://www.debian.org/doc/manuals/debmake-doc/ch05.en.html#debhelper
+
+set -e
+
+if [ -d /run/systemd/system ] && [ "$1" = remove ]; then
+        systemctl --system daemon-reload >/dev/null || true
+fi
+
+if [ "$1" = "remove" ]; then
+        if [ -x "/usr/bin/deb-systemd-helper" ]; then
+                deb-systemd-helper mask 'falco.service' >/dev/null || true
+        fi
+fi
+
+if [ "$1" = "purge" ]; then
+        if [ -x "/usr/bin/deb-systemd-helper" ]; then
+                deb-systemd-helper purge 'falco.service' >/dev/null || true
+                deb-systemd-helper unmask 'falco.service' >/dev/null || true
+        fi
+fi
