@@ -1,18 +1,12 @@
 approvers:
-  - fntlnz
-  - kris-nova
-  - leodido
   - mstemm
   - leogr
   - jasondellaluce
   - fededp
 reviewers:
-  - fntlnz
   - kaizhe
+  - mfdii
+emeritus_approvers:
+  - fntlnz
   - kris-nova
   - leodido
-  - mfdii
-  - mstemm
-  - leogr
-  - jasondellaluce
-  - fededp
