@@ -158,9 +158,16 @@ bool syscall_evt_drop_mgr::perform_actions(uint64_t now, scap_stats &delta, bool
 		case syscall_evt_drop_action::ALERT:
 		{
 			std::map<std::string, std::string> output_fields;
-			output_fields["n_evts"] = std::to_string(delta.n_evts);
-			output_fields["n_drops"] = std::to_string(delta.n_drops);
-			output_fields["n_drops_buffer"] = std::to_string(delta.n_drops_buffer);
+			output_fields["n_evts"] = std::to_string(delta.n_evts);		/* Total number of kernel side events actively traced (not including events discarded due to simple consumer mode in eBPF case). */
+			output_fields["n_drops"] = std::to_string(delta.n_drops);		/* Number of all kernel side event drops out of n_evts. */
+			output_fields["n_drops_buffer_total"] = std::to_string(delta.n_drops_buffer);		/* Total number of kernel side drops due to full buffer, includes all categories below, likely higher than sum of syscall categories. */
+			/* Kernel side drops due to full buffer for categories of system calls. Not all system calls of interest are mapped into one of the categories.
+			 * Insights:
+			 *   (1) Identify statistical properties of workloads (e.g. ratios between categories).
+			 *   (2) Data-driven optimization opportunity for kernel side filtering and prioritization.
+			 *   (3) Response: Coarse grained insights into syscalls dropped.
+			 *   (4) Bonus: Cost associated with syscall category (typically `open` system call category is highest by orders of magnitude).
+			 */
 			output_fields["n_drops_buffer_clone_fork_enter"] = std::to_string(delta.n_drops_buffer_clone_fork_enter);
 			output_fields["n_drops_buffer_clone_fork_exit"] = std::to_string(delta.n_drops_buffer_clone_fork_exit);
 			output_fields["n_drops_buffer_execve_enter"] = std::to_string(delta.n_drops_buffer_execve_enter);
@@ -171,11 +178,15 @@ bool syscall_evt_drop_mgr::perform_actions(uint64_t now, scap_stats &delta, bool
 			output_fields["n_drops_buffer_open_exit"] = std::to_string(delta.n_drops_buffer_open_exit);
 			output_fields["n_drops_buffer_dir_file_enter"] = std::to_string(delta.n_drops_buffer_dir_file_enter);
 			output_fields["n_drops_buffer_dir_file_exit"] = std::to_string(delta.n_drops_buffer_dir_file_exit);
+			/* `n_drops_buffer_other_interest_*` Category consisting of other system calls of interest,
+			 * not all other system calls that did not match a category from above.
+			 * Ideal for a custom category if needed - simply patch switch statement in kernel driver code (`falcosecurity/libs` repo).
+			 */
 			output_fields["n_drops_buffer_other_interest_enter"] = std::to_string(delta.n_drops_buffer_other_interest_enter);
 			output_fields["n_drops_buffer_other_interest_exit"] = std::to_string(delta.n_drops_buffer_other_interest_exit);
-			output_fields["n_drops_scratch_map"] = std::to_string(delta.n_drops_scratch_map);
-			output_fields["n_drops_pf"] = std::to_string(delta.n_drops_pf);
-			output_fields["n_drops_bug"] = std::to_string(delta.n_drops_bug);
+			output_fields["n_drops_scratch_map"] = std::to_string(delta.n_drops_scratch_map);		/* Number of kernel side scratch map drops. */
+			output_fields["n_drops_page_faults"] = std::to_string(delta.n_drops_pf);		/* Number of kernel side page faults drops (invalid memory access). */
+			output_fields["n_drops_bug"] = std::to_string(delta.n_drops_bug);		/* Number of kernel side bug drops (invalid condition in the kernel instrumentation). */
 			output_fields["ebpf_enabled"] = std::to_string(bpf_enabled);
 			m_outputs->handle_msg(now, falco_common::PRIORITY_DEBUG, msg, rule, output_fields);
 			break;
