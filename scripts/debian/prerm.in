@@ -17,6 +17,14 @@
 #
 set -e
 
+# Based off what debhelper dh_systemd_enable/13.3.4 would have added
+# ref: https://www.debian.org/doc/manuals/debmake-doc/ch05.en.html#debhelper
+# Currently running falco service uses the driver, so stop it before driver cleanup
+
+if [ -d /run/systemd/system ] && [ "$1" = remove ]; then
+        deb-systemd-invoke stop 'falco.service' >/dev/null || true
+fi
+
 case "$1" in
 	remove|upgrade|deconfigure)
 		/usr/bin/falco-driver-loader --clean
