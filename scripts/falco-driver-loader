@@ -493,7 +493,7 @@ load_bpf_probe_compile() {
 
 load_bpf_probe_download() {
 	local URL
-	URL=$(echo "${DRIVERS_REPO}/${DRIVER_VERSION}/${BPF_PROBE_FILENAME}" | sed s/+/%2B/g)
+	URL=$(echo "${DRIVERS_REPO}/${DRIVER_VERSION}/${ARCH}/${BPF_PROBE_FILENAME}" | sed s/+/%2B/g)
 
 	echo "* Trying to download a prebuilt eBPF probe from ${URL}"
 
