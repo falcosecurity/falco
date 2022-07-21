@@ -40,20 +40,17 @@ application::run_result application::init_outputs()
 		hostname = c_hostname;
 	}
 
-	m_state->outputs->init(m_state->engine,
-			      m_state->config->m_json_output,
-			      m_state->config->m_json_include_output_property,
-			      m_state->config->m_json_include_tags_property,
-			      m_state->config->m_output_timeout,
-			      m_state->config->m_notifications_rate, m_state->config->m_notifications_max_burst,
-			      m_state->config->m_buffered_outputs,
-			      m_state->config->m_time_format_iso_8601,
-			      hostname);
-
-	for(auto output : m_state->config->m_outputs)
-	{
-		m_state->outputs->add_output(output);
-	}
+	m_state->outputs.reset(new falco_outputs(
+		m_state->engine,
+		m_state->config->m_outputs,
+		m_state->config->m_json_output,
+		m_state->config->m_json_include_output_property,
+		m_state->config->m_json_include_tags_property,
+		m_state->config->m_output_timeout,
+		m_state->config->m_notifications_rate, m_state->config->m_notifications_max_burst,
+		m_state->config->m_buffered_outputs,
+		m_state->config->m_time_format_iso_8601,
+		hostname));
 
 	return run_result::ok();
 }

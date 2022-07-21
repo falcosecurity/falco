@@ -27,50 +27,67 @@ limitations under the License.
 #include "formats.h"
 #include "tbb/concurrent_queue.h"
 
-//
-// This class acts as the primary interface between a program and the
-// falco output engine. The falco rules engine is implemented by a
-// separate class falco_engine.
-//
+/*!
+	\brief This class acts as the primary interface between a program and the
+	falco output engine. The falco rules engine is implemented by a
+	separate class falco_engine.
+
+	All methods in this class are thread-safe. The output framework supports
+	a multi-producer model where messages are stored in a queue and consumed
+	by each configured output asynchrounously.
+*/
 class falco_outputs
 {
 public:
-	falco_outputs();
+	falco_outputs(
+		std::shared_ptr<falco_engine> engine,
+		const std::vector<falco::outputs::config>& outputs,
+		bool json_output,
+		bool json_include_output_property,
+		bool json_include_tags_property,
+		uint32_t timeout,
+		uint32_t rate,
+		uint32_t max_burst, 
+		bool buffered,
+		bool time_format_iso_8601,
+		std::string hostname);
+
 	virtual ~falco_outputs();
 
-	void init(std::shared_ptr<falco_engine> engine,
-		  bool json_output,
-		  bool json_include_output_property,
-		  bool json_include_tags_property,
-		  uint32_t timeout,
-		  uint32_t rate, uint32_t max_burst, bool buffered,
-		  bool time_format_iso_8601, std::string hostname);
-
-	void add_output(falco::outputs::config oc);
-
-	// Format then send the event to all configured outputs (`evt` is an event that has matched some rule).
+	/*!
+		\brief Format then send the event to all configured outputs (`evt`
+		is an event that has matched some rule).
+	*/
 	void handle_event(gen_event *evt, std::string &rule, std::string &source,
 			  falco_common::priority_type priority, std::string &format, std::set<std::string> &tags);
 
-	// Format then send a generic message to all outputs. Not necessarily associated with any event.
+	/*!
+		\brief Format then send a generic message to all outputs.
+		Not necessarily associated with any event.
+	*/
 	void handle_msg(uint64_t now,
 			falco_common::priority_type priority,
 			std::string &msg,
 			std::string &rule,
 			std::map<std::string, std::string> &output_fields);
 
+	/*!
+		\brief Sends a cleanup message to all outputs.
+		Each output can have an implementation-specific behavior.
+		In general, this is used to flush or clean output buffers.
+	*/
 	void cleanup_outputs();
 
+	/*!
+		\brief Sends a message to all outputs that causes them to be closed and
+		reopened. Each output can have an implementation-specific behavior.
+	*/
 	void reopen_outputs();
 
 private:
 	std::unique_ptr<falco_formats> m_formats;
-	bool m_initialized;
 
 	std::vector<falco::outputs::abstract_output *> m_outputs;
-
-	// Rate limits notifications
-	token_bucket m_notifications_tb;
 
 	bool m_buffered;
 	bool m_json_output;
@@ -99,4 +116,5 @@ private:
 	inline void push(ctrl_msg_type cmt);
 	void worker() noexcept;
 	void stop_worker();
+	void add_output(falco::outputs::config oc);
 };
