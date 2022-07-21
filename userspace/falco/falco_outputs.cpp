@@ -39,69 +39,49 @@ limitations under the License.
 
 using namespace std;
 
-falco_outputs::falco_outputs():
-	m_initialized(false),
-	m_buffered(true),
-	m_json_output(false),
-	m_time_format_iso_8601(false),
-	m_hostname("")
+falco_outputs::falco_outputs(
+	std::shared_ptr<falco_engine> engine,
+	const std::vector<falco::outputs::config>& outputs,
+	bool json_output,
+	bool json_include_output_property,
+	bool json_include_tags_property,
+	uint32_t timeout,
+	uint32_t rate,
+	uint32_t max_burst, 
+	bool buffered,
+	bool time_format_iso_8601,
+	std::string hostname)
 {
-}
-
-falco_outputs::~falco_outputs()
-{
-	if(m_initialized)
-	{
-		this->stop_worker();
-		for(auto o : m_outputs)
-		{
-			delete o;
-		}
-	}
-}
-
-void falco_outputs::init(std::shared_ptr<falco_engine> engine,
-			 bool json_output,
-			 bool json_include_output_property,
-			 bool json_include_tags_property,
-			 uint32_t timeout,
-			 uint32_t rate, uint32_t max_burst, bool buffered,
-			 bool time_format_iso_8601, std::string hostname)
-{
-	// Cannot be initialized more than one time.
-	if(m_initialized)
-	{
-		throw falco_exception("falco_outputs already initialized");
-	}
-
 	m_formats.reset(new falco_formats(engine, json_include_output_property, json_include_tags_property));
 
 	m_json_output = json_output;
 
 	m_timeout = std::chrono::milliseconds(timeout);
 
-	m_notifications_tb.init(rate, max_burst);
-
 	m_buffered = buffered;
 	m_time_format_iso_8601 = time_format_iso_8601;
 	m_hostname = hostname;
 
-	m_worker_thread = std::thread(&falco_outputs::worker, this);
-
-	m_initialized = true;
-}
-
-// This function has to be called after init() since some configuration settings
-// need to be passed to the output plugins. Then, although the worker has started,
-// the worker is still on hold, waiting for a message.
-// Thus it is still safe to call add_output() before any message has been enqueued.
-void falco_outputs::add_output(falco::outputs::config oc)
-{
-	if(!m_initialized)
+	for(const auto& output : outputs)
 	{
-		throw falco_exception("cannot add output: falco_outputs not initialized yet");
+		add_output(output);
 	}
 
+	m_worker_thread = std::thread(&falco_outputs::worker, this);
+}
+
+falco_outputs::~falco_outputs()
+{
+	this->stop_worker();
+	for(auto o : m_outputs)
+	{
+		delete o;
+	}
+}
+
+// This function is called only at initialization-time by the constructor
+void falco_outputs::add_output(falco::outputs::config oc)
+{
 	falco::outputs::abstract_output *oo;
 
 	if(oc.name == "file")
@@ -142,12 +122,6 @@ void falco_outputs::add_output(falco::outputs::config oc)
 void falco_outputs::handle_event(gen_event *evt, string &rule, string &source,
 				 falco_common::priority_type priority, string &format, std::set<std::string> &tags)
 {
-	if(!m_notifications_tb.claim())
-	{
-		falco_logger::log(LOG_DEBUG, "Skipping rate-limited notification for rule " + rule + "\n");
-		return;
-	}
-
 	falco_outputs::ctrl_msg cmsg = {};
 	cmsg.ts = evt->get_ts();
 	cmsg.priority = priority;
