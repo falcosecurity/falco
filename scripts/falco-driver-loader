@@ -79,7 +79,7 @@ get_kernel_config() {
 		echo "* Found kernel config at /usr/lib/ostree-boot/config-${KERNEL_RELEASE}"
 		KERNEL_CONFIG_PATH="/usr/lib/ostree-boot/config-${KERNEL_RELEASE}"
 	elif [ -n "${HOST_ROOT}" ] && [ -f "${HOST_ROOT}/usr/lib/ostree-boot/config-${KERNEL_RELEASE}" ]; then
-		echo "* Found kernel config at ${HOST_ROOT}/usr/lib/ostree-boot//config-${KERNEL_RELEASE}"
+		echo "* Found kernel config at ${HOST_ROOT}/usr/lib/ostree-boot/config-${KERNEL_RELEASE}"
 		KERNEL_CONFIG_PATH="${HOST_ROOT}/usr/lib/ostree-boot/config-${KERNEL_RELEASE}"
 	elif [ -f "/lib/modules/${KERNEL_RELEASE}/config" ]; then
 		# This code works both for native host and containers assuming that
@@ -493,7 +493,7 @@ load_bpf_probe_compile() {
 
 load_bpf_probe_download() {
 	local URL
-	URL=$(echo "${DRIVERS_REPO}/${DRIVER_VERSION}/${ARCH}/${BPF_PROBE_FILENAME}" | sed s/+/%2B/g)
+	URL=$(echo "${DRIVERS_REPO}/${DRIVER_VERSION}/${BPF_PROBE_FILENAME}" | sed s/+/%2B/g)
 
 	echo "* Trying to download a prebuilt eBPF probe from ${URL}"
 
