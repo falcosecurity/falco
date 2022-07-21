@@ -191,7 +191,7 @@ void falco_configuration::init(string conf_filename, const vector<string> &cmdli
 
 	m_output_timeout = m_config->get_scalar<uint32_t>("output_timeout", 2000);
 
-	m_notifications_rate = m_config->get_scalar<uint32_t>("outputs.rate", 1);
+	m_notifications_rate = m_config->get_scalar<uint32_t>("outputs.rate", 0);
 	m_notifications_max_burst = m_config->get_scalar<uint32_t>("outputs.max_burst", 1000);
 
 	string priority = m_config->get_scalar<string>("priority", "debug");
