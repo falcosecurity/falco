@@ -94,6 +94,9 @@ private:
 	bool m_time_format_iso_8601;
 	std::chrono::milliseconds m_timeout;
 	std::string m_hostname;
+	uint32_t m_token_bucket_rate;
+	uint32_t m_token_bucket_max_burst;
+	std::unordered_map<std::string, token_bucket> m_token_buckets;
 
 	enum ctrl_msg_type
 	{
@@ -117,4 +120,5 @@ private:
 	void worker() noexcept;
 	void stop_worker();
 	void add_output(falco::outputs::config oc);
+	bool should_throttle(const ctrl_msg& msg);
 };
