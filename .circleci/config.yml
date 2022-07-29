@@ -322,7 +322,6 @@ jobs:
     steps: 
       - attach_workspace:
           at: /
-      - checkout
       - setup_remote_docker:
           version: 20.10.12
           docker_layer_caching: true
@@ -341,7 +340,7 @@ jobs:
           name: Build and publish no-driver-dev
           command: |
             FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
-            cd /source
+            cd /source/falco
             docker buildx build --push --build-arg VERSION_BUCKET=bin-dev --build-arg FALCO_VERSION=${FALCO_VERSION} \
               -t falcosecurity/falco-no-driver:x86_64-master \
               -t falcosecurity/falco:x86_64-master-slim \
@@ -352,7 +351,7 @@ jobs:
           name: Build and publish falco-dev
           command: |
             FALCO_VERSION=$(cat /build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
-            cd /source
+            cd /source/falco
             docker buildx build --push --build-arg VERSION_BUCKET=deb-dev --build-arg FALCO_VERSION=${FALCO_VERSION} \
               -t falcosecurity/falco:x86_64-master \
               -t public.ecr.aws/falcosecurity/falco:x86_64-master \
@@ -360,7 +359,7 @@ jobs:
       - run:
           name: Build and publish falco-driver-loader-dev
           command: |
-            cd /source
+            cd /source/falco
             docker buildx build --push --build-arg FALCO_IMAGE_TAG=master \
               -t falcosecurity/falco-driver-loader:x86_64-master \
               -t public.ecr.aws/falcosecurity/falco-driver-loader:x86_64-master \
@@ -390,7 +389,7 @@ jobs:
           name: Build and publish no-driver-dev
           command: |
             FALCO_VERSION=$(cat /tmp/build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
-            cd /tmp/source-arm64
+            cd /tmp/source-arm64/falco
             docker buildx build --push --build-arg VERSION_BUCKET=bin-dev --build-arg FALCO_VERSION=${FALCO_VERSION} \
               -t falcosecurity/falco-no-driver:aarch64-master \
               -t falcosecurity/falco:aarch64-master-slim \
@@ -401,7 +400,7 @@ jobs:
           name: Build and publish falco-dev
           command: |
             FALCO_VERSION=$(cat /tmp/build/release/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
-            cd /tmp/source-arm64
+            cd /tmp/source-arm64/falco
             docker buildx build --push --build-arg VERSION_BUCKET=deb-dev --build-arg FALCO_VERSION=${FALCO_VERSION} \
               -t falcosecurity/falco:aarch64-master \
               -t public.ecr.aws/falcosecurity/falco:aarch64-master \
@@ -409,7 +408,7 @@ jobs:
       - run:
           name: Build and publish falco-driver-loader-dev
           command: |
-            cd /tmp/source-arm64
+            cd /tmp/source-arm64/falco
             docker buildx build --push --build-arg FALCO_IMAGE_TAG=master \
               -t falcosecurity/falco-driver-loader:aarch64-master \
               -t public.ecr.aws/falcosecurity/falco-driver-loader:aarch64-master \
@@ -421,9 +420,6 @@ jobs:
       - image: cimg/base:stable
         user: root
     steps:
-      - attach_workspace:
-          at: /
-      - checkout
       - setup_remote_docker:
           version: 20.10.12
       - run:
@@ -541,7 +537,6 @@ jobs:
     steps: 
       - attach_workspace:
           at: /
-      - checkout
       - setup_remote_docker:
           version: 20.10.12
           docker_layer_caching: true
@@ -559,7 +554,7 @@ jobs:
       - run:
           name: Build and publish no-driver
           command: |
-            cd /source
+            cd /source/falco
             docker buildx build --push --build-arg VERSION_BUCKET=bin-dev --build-arg FALCO_VERSION=${CIRCLE_TAG} \
               -t "falcosecurity/falco-no-driver:x86_64-${CIRCLE_TAG}" \
               -t falcosecurity/falco-no-driver:x86_64-latest \
@@ -573,7 +568,7 @@ jobs:
       - run:
           name: Build and publish falco
           command: |
-            cd /source
+            cd /source/falco
             docker buildx build --push --build-arg VERSION_BUCKET=deb-dev --build-arg FALCO_VERSION=${CIRCLE_TAG} \
               -t "falcosecurity/falco:x86_64-${CIRCLE_TAG}" \
               -t "falcosecurity/falco:x86_64-latest" \
@@ -583,7 +578,7 @@ jobs:
       - run:
           name: Build and publish falco-driver-loader
           command: |
-            cd /source
+            cd /source/falco
             docker buildx build --push --build-arg FALCO_IMAGE_TAG=${CIRCLE_TAG} \
               -t "falcosecurity/falco-driver-loader:x86_64-${CIRCLE_TAG}" \
               -t "falcosecurity/falco-driver-loader:x86_64-latest" \
@@ -614,7 +609,7 @@ jobs:
       - run:
           name: Build and publish no-driver
           command: |
-            cd /tmp/source-arm64
+            cd /tmp/source-arm64/falco
             docker buildx build --push --build-arg VERSION_BUCKET=bin --build-arg FALCO_VERSION=${CIRCLE_TAG} \
               -t falcosecurity/falco-no-driver:aarch64-${CIRCLE_TAG} \
               -t falcosecurity/falco-no-driver:aarch64-latest \
@@ -628,7 +623,7 @@ jobs:
       - run:
           name: Build and publish falco
           command: |
-            cd /tmp/source-arm64
+            cd /tmp/source-arm64/falco
             docker buildx build --push --build-arg VERSION_BUCKET=deb-dev --build-arg FALCO_VERSION=${CIRCLE_TAG} \
               -t "falcosecurity/falco:aarch64-${CIRCLE_TAG}" \
               -t "falcosecurity/falco:aarch64-latest" \
@@ -638,7 +633,7 @@ jobs:
       - run:
           name: Build and publish falco-driver-loader
           command: |
-            cd /tmp/source-arm64
+            cd /tmp/source-arm64/falco
             docker buildx build --push --build-arg FALCO_IMAGE_TAG=${CIRCLE_TAG} \
               -t "falcosecurity/falco-driver-loader:aarch64-${CIRCLE_TAG}" \
               -t "falcosecurity/falco-driver-loader:aarch64-latest" \
@@ -652,9 +647,6 @@ jobs:
       - image: cimg/base:stable
         user: root
     steps:
-      - attach_workspace:
-          at: /
-      - checkout
       - setup_remote_docker:
           version: 20.10.12
       - run:
