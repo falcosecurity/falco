@@ -56,6 +56,9 @@ if(NOT DEFINED FALCO_ETC_DIR)
   set(FALCO_ETC_DIR "${CMAKE_INSTALL_FULL_SYSCONFDIR}/falco")
 endif()
 
+# This will be used to print the architecture for which Falco is compiled.
+set(FALCO_TARGET_ARCH ${CMAKE_SYSTEM_PROCESSOR})
+
 if(NOT DRAIOS_DEBUG_FLAGS)
   set(DRAIOS_DEBUG_FLAGS "-D_DEBUG")
 endif()
