@@ -123,6 +123,10 @@ application::run_result application::do_inspect(syscall_evt_drop_mgr &sdropmgr,
 
 			continue;
 		}
+		else if(rc == SCAP_FILTERED_EVENT)
+		{
+			continue;
+		}
 		else if(rc == SCAP_EOF)
 		{
 			break;
