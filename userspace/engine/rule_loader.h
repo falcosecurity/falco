@@ -38,10 +38,26 @@ public:
 	public:
 		static const size_t default_snippet_width = 160;
 
+		struct position
+		{
+			position() : pos(0), line(0), column(0) {};
+			position(const YAML::Mark& mark) : pos(mark.pos), line(mark.line), column(mark.column) {};
+			~position() = default;
+			int pos;
+			int line;
+			int column;
+		};
+
 		struct location
 		{
+			// A name for the content this location refers
+			// to. Will generally be a filename, can also
+			// refer to a rule/macro condition when the
+			// location points into a condition string.
+			std::string name;
+
 			// The original location in the document
-			YAML::Mark mark;
+			position pos;
 
 			// The kind of item at this location
 			// (e.g. "list", "macro", "rule", "exception", etc)
@@ -57,23 +73,51 @@ public:
 			const std::string item_type,
 			const std::string item_name,
 			const context& parent);
+
+		// Build a context from a condition expression +
+		// parser position. This does not use the original
+		// yaml content because:
+		//   - YAML block indicators will remove whitespace/newlines/wrapping
+		//     from the YAML node containing the condition expression.
+		//   - When compiling, the condition expression has expanded
+		//     macro and list references with their values.
+		context(const libsinsp::filter::parser::pos_info& pos,
+			const std::string& condition,
+			const context& parent);
+
 		virtual ~context() = default;
+
+		// Return the content name (generally filename) for
+		// this context
+		const std::string& name() const;
 
 		// Return a snippet of the provided rules content
 		// corresponding to this context.
 		// Uses the provided rules_contents to look up the original
 		// rules content for a given location name.
+		// (If this context has a non-empty alt_content, it
+		// will be used to create the snippet, ignoring the
+		// provided rules_contents).
 		std::string snippet(const falco::load_result::rules_contents_t& rules_contents, size_t snippet_width = default_snippet_width) const;
 
 		std::string as_string();
 		nlohmann::json as_json();
 
 	private:
-		std::string name;
+		void init(const std::string& name,
+			  const position& pos,
+			  const std::string item_type,
+			  const std::string item_name,
+			  const context& parent);
 
 		// A chain of locations from the current item, its
 		// parent, possibly older ancestors.
 		std::vector<location> m_locs;
+
+		// If non-empty, this content will be used when
+		// creating snippets. Used for contexts involving
+		// condition expressions.
+		std::string alt_content;
 	};
 
 	struct warning

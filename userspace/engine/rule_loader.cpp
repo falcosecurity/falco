@@ -36,21 +36,71 @@ using namespace std;
 using namespace libsinsp::filter;
 
 rule_loader::context::context(const std::string& name)
-	: name(name)
 {
+	// This ensures that every context has one location, even if
+	// that location is effectively the whole document.
+	location loc = {name, position(), "rules content", ""};
+	m_locs.push_back(loc);
 }
 
 rule_loader::context::context(const YAML::Node &item,
 			      const std::string item_type,
 			      const std::string item_name,
 			      const context& parent)
-	: name(parent.name)
+{
+	init(parent.name(), position(item.Mark()), item_type, item_name, parent);
+}
+
+rule_loader::context::context(const libsinsp::filter::parser::pos_info& pos,
+			      const std::string& condition,
+			      const context& parent)
+	: alt_content(condition)
+{
+
+	// Contexts based on conditions don't use the
+	// filename. Instead the "name" is just the condition, and
+	// uses a short prefix of the condition.
+	std::string name = "\"" + condition.substr(0, 20) + "...\"";
+	std::replace(name.begin(), name.end(), '\n', ' ');
+	std::replace(name.begin(), name.end(), '\r', ' ');
+
+	std::string item_type = "condition expression";
+	std::string item_name = "";
+
+	// Convert the parser position to a context location. Both
+	// they have the same basic info (position, line, column).
+	// parser line/columns are 1-indexed while yaml marks are
+	// 0-indexed, though.
+	position condpos;
+	condpos.pos = pos.idx;
+	condpos.line = pos.line-1;
+	condpos.column = pos.col-1;
+
+	init(name, condpos, item_type, item_name, parent);
+}
+
+const std::string& rule_loader::context::name() const
+{
+	// All valid contexts should have at least one location.
+	if(m_locs.empty())
+	{
+		throw falco_exception("rule_loader::context without location?");
+	}
+
+	return m_locs.front().name;
+}
+
+void rule_loader::context::init(const std::string& name,
+				const position& pos,
+				const std::string item_type,
+				const std::string item_name,
+				const context& parent)
 {
 	// Copy parent locations
 	m_locs = parent.m_locs;
 
 	// Add current item to back
-	location loc = {item.Mark(), item_type, item_name};
+	location loc = {name, pos, item_type, item_name};
 	m_locs.push_back(loc);
 }
 
@@ -58,12 +108,10 @@ std::string rule_loader::context::as_string()
 {
 	std::ostringstream os;
 
-	// If no locations (can happen for initial file-level
-	// context), just note it was somewhere in the file
+	// All valid contexts should have at least one location.
 	if(m_locs.empty())
 	{
-		os << "In " << name << ":" << std::endl;
-		return os.str();
+		throw falco_exception("rule_loader::context without location?");
 	}
 
 	bool first = true;
@@ -81,9 +129,9 @@ std::string rule_loader::context::as_string()
 		os << ": ";
 
 		os << "("
-		   << name << ":"
-		   << loc.mark.line << ":"
-		   << loc.mark.column
+		   << loc.name << ":"
+		   << loc.pos.line << ":"
+		   << loc.pos.column
 		   << ")" << std::endl;
 	}
 
@@ -96,40 +144,27 @@ nlohmann::json rule_loader::context::as_json()
 
 	ret["locations"] = nlohmann::json::array();
 
+	// All valid contexts should have at least one location.
 	if(m_locs.empty())
+	{
+		throw falco_exception("rule_loader::context without location?");
+	}
+
+	for(auto& loc : m_locs)
 	{
 		nlohmann::json jloc, jpos;
 
-		jloc["item_type"] = "file";
-		jloc["item_name"] = "";
+		jloc["item_type"] = loc.item_type;
+		jloc["item_name"] = loc.item_name;
 
-		jpos["filename"] = name;
-		jpos["line"] = 0;
-		jpos["column"] = 0;
-		jpos["offset"] = 0;
+		jpos["name"] = loc.name;
+		jpos["line"] = loc.pos.line;
+		jpos["column"] = loc.pos.column;
+		jpos["offset"] = loc.pos.pos;
 
 		jloc["position"] = jpos;
 
 		ret["locations"].push_back(jloc);
-	}
-	else
-	{
-		for(auto& loc : m_locs)
-		{
-			nlohmann::json jloc, jpos;
-
-			jloc["item_type"] = loc.item_type;
-			jloc["item_name"] = loc.item_name;
-
-			jpos["filename"] = name;
-			jpos["line"] = loc.mark.line;
-			jpos["column"] = loc.mark.column;
-			jpos["offset"] = loc.mark.pos;
-
-			jloc["position"] = jpos;
-
-			ret["locations"].push_back(jloc);
-		}
 	}
 
 	return ret;
@@ -138,25 +173,29 @@ nlohmann::json rule_loader::context::as_json()
 std::string rule_loader::context::snippet(const falco::load_result::rules_contents_t& rules_contents,
 					  size_t snippet_width) const
 {
-	std::string ret;
-
+	// All valid contexts should have at least one location.
 	if(m_locs.empty())
 	{
-		return "<No context available>\n";
+		throw falco_exception("rule_loader::context without location?");
 	}
 
 	rule_loader::context::location loc = m_locs.back();
+	auto it = rules_contents.find(loc.name);
 
-	auto it = rules_contents.find(name);
+	if(alt_content.empty() && it == rules_contents.end())
+	{
+		return "<No context for file + " + loc.name + ">\n";
+	}
 
-	if(it == rules_contents.end())
+	// If not using alt content, the last location's name must be found in rules_contents
+	const std::string& snip_content = (!alt_content.empty() ? alt_content : it->second.get());
+
+	if(snip_content.empty())
 	{
 		return "<No context available>\n";
 	}
 
-	const std::string& snip_content = it->second;
-
-	size_t from = loc.mark.pos;
+	size_t from = loc.pos.pos;
 
 	// In some cases like this, where the content ends with a
 	// dangling property value:
@@ -172,10 +211,10 @@ std::string rule_loader::context::snippet(const falco::load_result::rules_conten
 	// However, some lines can be very very long, so the walk
 	// forwards/walk backwards is capped at a maximum of
 	// snippet_width/2 characters in either direction.
-	for(; from > 0 && snip_content.at(from) != '\n' && (loc.mark.pos - from) < (snippet_width/2); from--);
+	for(; from > 0 && snip_content.at(from) != '\n' && (loc.pos.pos - from) < (snippet_width/2); from--);
 
-	size_t to = loc.mark.pos;
-	for(; to < snip_content.size()-1 && snip_content.at(to) != '\n' && (to - loc.mark.pos) < (snippet_width/2); to++);
+	size_t to = loc.pos.pos;
+	for(; to < snip_content.size()-1 && snip_content.at(to) != '\n' && (to - loc.pos.pos) < (snippet_width/2); to++);
 
 	// Don't include the newlines
 	if(snip_content.at(from) == '\n')
@@ -187,24 +226,29 @@ std::string rule_loader::context::snippet(const falco::load_result::rules_conten
 		to--;
 	}
 
-	ret = snip_content.substr(from, to-from+1);
+	std::string ret = snip_content.substr(from, to-from+1);
+
+	if(snip_content.empty())
+	{
+		return "<No context available>\n";
+	}
 
 	// Replace the initial/end characters with '...' if the walk
 	// forwards/backwards was incomplete
-	if(loc.mark.pos - from >= (snippet_width/2))
+	if(loc.pos.pos - from >= (snippet_width/2))
 	{
-		ret.replace(0, 2, "...");
+		ret.replace(0, 3, "...");
 	}
 
-	if(to - loc.mark.pos >= (snippet_width/2))
+	if(to - loc.pos.pos >= (snippet_width/2))
 	{
-		ret.replace(ret.size()-2, ret.size(), "...");
+		ret.replace(ret.size()-3, 3, "...");
 	}
 
 	ret += "\n";
 
 	// Add a blank line with a marker at the position within the snippet
-	ret += std::string(loc.mark.pos-from, ' ') + '^' + "\n";
+	ret += std::string(loc.pos.pos-from, ' ') + '^' + "\n";
 
 	return ret;
 }
@@ -804,10 +848,12 @@ static shared_ptr<ast::expr> parse_condition(
 	}
 	catch (const sinsp_exception& e)
 	{
+		rule_loader::context parsectx(p.get_pos(), condition, ctx);
+
 		throw rule_loader::rule_load_exception(
 			load_result::LOAD_ERR_COMPILE_CONDITION,
 			e.what(),
-			ctx);
+			parsectx);
 	}
 }
 
