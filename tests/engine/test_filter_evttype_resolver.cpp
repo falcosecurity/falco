@@ -57,12 +57,14 @@ ast::expr* compile(const string &fltstr)
 TEST_CASE("Should find event types from filter", "[rule_loader]")
 {
     set<uint16_t> openat_only{
+        PPME_SYSCALL_OPENAT_E, PPME_SYSCALL_OPENAT_X,
 		PPME_SYSCALL_OPENAT_2_E, PPME_SYSCALL_OPENAT_2_X };
 
 	set<uint16_t> close_only{
 		PPME_SYSCALL_CLOSE_E, PPME_SYSCALL_CLOSE_X };
 
 	set<uint16_t> openat_close{
+        PPME_SYSCALL_OPENAT_E, PPME_SYSCALL_OPENAT_X,
         PPME_SYSCALL_OPENAT_2_E, PPME_SYSCALL_OPENAT_2_X,
         PPME_SYSCALL_CLOSE_E, PPME_SYSCALL_CLOSE_X };
 
@@ -75,7 +77,7 @@ TEST_CASE("Should find event types from filter", "[rule_loader]")
     {
         // Skip "old" event versions that have been replaced
         // by newer event versions, or events that are unused.
-        if(g_infotables.m_event_info[i].flags & (EF_OLD_VERSION | EF_UNUSED))
+        if(g_infotables.m_event_info[i].flags & EF_UNUSED)
         {
             continue;
         }
