@@ -75,8 +75,7 @@ TEST_CASE("Should find event types from filter", "[rule_loader]")
 	set<uint16_t> no_events;
     for(uint32_t i = 2; i < PPM_EVENT_MAX; i++)
     {
-        // Skip "old" event versions that have been replaced
-        // by newer event versions, or events that are unused.
+        // Skip events that are unused.
         if(g_infotables.m_event_info[i].flags & EF_UNUSED)
         {
             continue;
