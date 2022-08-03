@@ -912,7 +912,10 @@
   items: [/boot, /lib, /lib64, /usr/lib, /usr/local/lib, /usr/local/sbin, /usr/local/bin, /root/.ssh]
 
 - macro: user_ssh_directory
-  condition: (fd.name glob '/home/*/.ssh/*')
+  condition: (fd.name contains '/.ssh/' and fd.name glob '/home/*/.ssh/*')
+
+- macro: directory_traversal
+  condition: (fd.nameraw contains '../' and fd.nameraw glob '*../*../*')
 
 # google_accounts_(daemon)
 - macro: google_accounts_daemon_writing_ssh
@@ -956,6 +959,19 @@
     command=%proc.cmdline file=%fd.name parent=%proc.pname pcmdline=%proc.pcmdline gparent=%proc.aname[2] container_id=%container.id image=%container.image.repository)
   priority: ERROR
   tags: [filesystem, mitre_persistence]
+
+- rule: Directory traversal monitored file read
+  desc: >
+    Web applications can be vulnerable to directory traversal attacks that allow accessing files outside of the web app's root directory (e.g. Arbitrary File Read bugs).
+    System directories like /etc are typically accessed via absolute paths. Access patterns outside of this (here path traversal) can be regarded as suspicious.
+  condition: open_read and (etc_dir or user_ssh_directory or fd.name startswith /root/.ssh or fd.name contains "id_rsa") and directory_traversal and not proc.pname in (shell_binaries)
+  enabled: true
+  output: >
+    Read monitored file via directory traversal (username=%user.name useruid=%user.uid user_loginuid=%user.loginuid program=%proc.name exe=%proc.exepath
+    command=%proc.cmdline parent=%proc.pname file=%fd.name fileraw=%fd.nameraw parent=%proc.pname
+    gparent=%proc.aname[2] container_id=%container.id image=%container.image.repository returncode=%evt.res cwd=%proc.cwd)
+  priority: WARNING
+  tags: [filesystem, mitre_discovery, mitre_exfiltration, mitre_credential_access]
 
 # This rule is disabled by default as many system management tools
 # like ansible, etc can read these files/paths. Enable it using this macro.
@@ -1365,19 +1381,6 @@
 
 - macro: user_known_read_sensitive_files_activities
   condition: (never_true)
-
-- rule: Directory traversal monitored file read
-  desc: >
-    Web applications can be vulnerable to directory traversal attacks that allow accessing files outside of the web app's root directory (e.g. Arbitrary File Read bugs).
-    System directories like /etc are typically accessed via absolute paths. Access patterns outside of this (here path traversal) can be regarded as suspicious.
-  condition: open_read and (fd.directory startswith "/etc" or fd.name contains ".ssh/" or fd.name contains "id_rsa") and fd.nameraw contains "../" and fd.nameraw glob *../*../* and not proc.pname in (shell_binaries)
-  enabled: true
-  output: >
-    Read monitored file via directory traversal (username=%user.name useruid=%user.uid user_loginuid=%user.loginuid program=%proc.name exe=%proc.exepath
-    command=%proc.cmdline parent=%proc.pname file=%fd.name fileraw=%fd.nameraw parent=%proc.pname
-    gparent=%proc.aname[2] container_id=%container.id image=%container.image.repository returncode=%evt.res cwd=%proc.cwd)
-  priority: WARNING
-  tags: [filesystem, mitre_discovery, mitre_exfiltration, mitre_credential_access]
 
 - rule: Read sensitive file trusted after startup
   desc: >
