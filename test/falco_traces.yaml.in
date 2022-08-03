@@ -30,6 +30,7 @@ traces: !mux
 
   container-privileged:
     trace_file: traces-positive/container-privileged.scap
+    all_events: True
     detect: True
     detect_level: INFO
     detect_counts:
@@ -37,6 +38,7 @@ traces: !mux
 
   container-sensitive-mount:
     trace_file: traces-positive/container-sensitive-mount.scap
+    all_events: True
     detect: True
     detect_level: INFO
     detect_counts:
@@ -51,6 +53,7 @@ traces: !mux
 
   db-program-spawned-process:
     trace_file: traces-positive/db-program-spawned-process.scap
+    all_events: True
     detect: True
     detect_level: NOTICE
     detect_counts:
@@ -132,6 +135,7 @@ traces: !mux
 
   system-user-interactive:
     trace_file: traces-positive/system-user-interactive.scap
+    all_events: True
     detect: True
     detect_level: INFO
     detect_counts:
@@ -139,6 +143,7 @@ traces: !mux
 
   user-mgmt-binaries:
     trace_file: traces-positive/user-mgmt-binaries.scap
+    all_events: True
     detect: True
     detect_level: NOTICE
     detect_counts:
@@ -169,6 +174,7 @@ traces: !mux
   # When a new version of the scap files is generated this should then become "traces-positive"
   docker-compose:
     trace_file: traces-negative/docker-compose.scap
+    all_events: True
     detect: True
     detect_level: NOTICE
     detect_counts:
