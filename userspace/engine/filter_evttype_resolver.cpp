@@ -48,9 +48,8 @@ void filter_evttype_resolver::visitor::evttypes(string evtname, set<uint16_t>& o
 	const struct ppm_event_info* etable = g_infotables.m_event_info;
 	for(uint16_t i = 2; i < PPM_EVENT_MAX; i++)
 	{
-		// Skip "old" event versions, unused events, or events not matching
-		// the requested evtname
-		if(!(etable[i].flags & (EF_OLD_VERSION | EF_UNUSED))
+		// Skip unused events or events not matching the requested evtname
+		if(!(etable[i].flags & EF_UNUSED)
 			&& (evtname.empty() || string(etable[i].name) == evtname))
 		{
 			out.insert(i);
