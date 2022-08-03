@@ -1,5 +1,17 @@
 # Change Log
 
+## v0.32.2
+
+Released on 2022-08-09
+
+### Major Changes
+
+
+### Bug Fixes
+
+* fix: Added ARCH to bpf download URL [[#2142](https://github.com/falcosecurity/falco/pull/2142)] - [@eric-engberg](https://github.com/eric-engberg)
+
+
 ## v0.32.1
 
 Released on 2022-07-11
