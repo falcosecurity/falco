@@ -75,7 +75,7 @@ trace_files: !mux
 
   incompat_plugin_api:
     exit_status: 1
-    stderr_contains: "Plugin required API version '10000000.0.0' is not supported by the plugin API version of the framework '.*'"
+    stderr_contains: "plugin required API version '10000000.0.0' not compatible with the framework's API version '.*'"
     conf_file: BUILD_DIR/test/confs/plugins/incompatible_plugin_api.yaml
     rules_file:
       - rules/plugins/cloudtrail_create_instances.yaml
@@ -89,7 +89,7 @@ trace_files: !mux
 
   wrong_plugin_path:
     exit_status: 1
-    stderr_contains: "error loading plugin.*No such file or directory. Exiting"
+    stderr_contains: "cannot load plugin.*No such file or directory"
     conf_file: BUILD_DIR/test/confs/plugins/wrong_plugin_path.yaml
     rules_file:
       - rules/plugins/cloudtrail_incompat_plugin_version.yaml
