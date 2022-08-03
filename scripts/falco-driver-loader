@@ -261,6 +261,13 @@ print_clean_termination() {
 	echo 
 }
 
+print_filename_components() {
+	echo " - driver name: ${DRIVER_NAME}"
+	echo " - target identifier: ${TARGET_ID}"
+	echo " - kernel release: ${KERNEL_RELEASE}"
+	echo " - kernel version: ${KERNEL_VERSION}"
+}
+
 clean_kernel_module() {
 	echo 
 	echo "================ Cleaning phase ================"
@@ -349,6 +356,8 @@ load_kernel_module() {
 	get_target_id
 
 	local FALCO_KERNEL_MODULE_FILENAME="${DRIVER_NAME}_${TARGET_ID}_${KERNEL_RELEASE}_${KERNEL_VERSION}.ko"
+	echo "* Filename '${FALCO_KERNEL_MODULE_FILENAME}' is composed of:"
+	print_filename_components
 
 	if [ -f "${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}" ]; then
 		echo "* Found a prebuilt ${DRIVER_NAME} module at ${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}, loading it"
@@ -504,15 +513,17 @@ load_bpf_probe_download() {
 }
 
 load_bpf_probe() {
-	echo "* Mounting debugfs"
 
 	if [ ! -d /sys/kernel/debug/tracing ]; then
+		echo "* Mounting debugfs"
 		mount -t debugfs nodev /sys/kernel/debug
 	fi
 
 	get_target_id
 
 	BPF_PROBE_FILENAME="${DRIVER_NAME}_${TARGET_ID}_${KERNEL_RELEASE}_${KERNEL_VERSION}.o"
+	echo "* Filename '${BPF_PROBE_FILENAME}' is composed of:"
+	print_filename_components
 
 	if [ -n "$ENABLE_DOWNLOAD" ]; then
 		if [ -f "${HOME}/.falco/${BPF_PROBE_FILENAME}" ]; then
@@ -662,7 +673,7 @@ if [ -z "$has_opts" ]; then
 fi
 
 if [ -z "$source_only" ]; then
-	echo "* Running falco-driver-loader for: falco version=${FALCO_VERSION}, driver version=${DRIVER_VERSION}"
+	echo "* Running falco-driver-loader for: falco version=${FALCO_VERSION}, driver version=${DRIVER_VERSION}, arch=${ARCH}, kernel release=${KERNEL_RELEASE}, kernel version=${KERNEL_VERSION}"
 
 	if [ "$(id -u)" != 0 ]; then
 		>&2 echo "This program must be run as root (or with sudo)"
