@@ -360,6 +360,7 @@
 - rule: Disallowed SSH Connection
   desc: Detect any new ssh connection to a host other than those in an allowed group of hosts
   condition: (inbound_outbound) and ssh_port and not allowed_ssh_hosts
+  enabled: false
   output: Disallowed SSH Connection (command=%proc.cmdline connection=%fd.name user=%user.name user_loginuid=%user.loginuid container_id=%container.id image=%container.image.repository)
   priority: NOTICE
   tags: [network, mitre_remote_service]
@@ -959,9 +960,6 @@
 # This rule is disabled by default as many system management tools
 # like ansible, etc can read these files/paths. Enable it using this macro.
 
-- macro: consider_ssh_reads
-  condition: (never_true)
-
 - macro: user_known_read_ssh_information_activities
   condition: (never_true)
 
@@ -969,10 +967,10 @@
   desc: Any attempt to read files below ssh directories by non-ssh programs
   condition: >
     ((open_read or open_directory) and
-     consider_ssh_reads and
      (user_ssh_directory or fd.name startswith /root/.ssh) and
      not user_known_read_ssh_information_activities and
      not proc.name in (ssh_binaries))
+  enabled: false
   output: >
     ssh-related file/directory read by non-ssh program (user=%user.name user_loginuid=%user.loginuid
     command=%proc.cmdline file=%fd.name parent=%proc.pname pcmdline=%proc.pcmdline container_id=%container.id image=%container.image.repository)
@@ -2208,9 +2206,6 @@
 - list: test_connect_ports
   items: [0, 9, 80, 3306]
 
-- macro: do_unexpected_udp_check
-  condition: (never_true)
-
 - list: expected_udp_ports
   items: [53, openvpn_udp_ports, l2tp_udp_ports, statsd_ports, ntp_ports, test_connect_ports]
 
@@ -2219,7 +2214,8 @@
 
 - rule: Unexpected UDP Traffic
   desc: UDP traffic not on port 53 (DNS) or other commonly used ports
-  condition: (inbound_outbound) and do_unexpected_udp_check and fd.l4proto=udp and not expected_udp_traffic
+  condition: (inbound_outbound) and fd.l4proto=udp and not expected_udp_traffic
+  enabled: false
   output: >
     Unexpected UDP Traffic Seen
     (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline connection=%fd.name proto=%fd.l4proto evt=%evt.type %evt.args container_id=%container.id image=%container.image.repository)
