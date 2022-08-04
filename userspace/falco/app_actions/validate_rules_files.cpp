@@ -56,9 +56,7 @@ application::run_result application::validate_rules_files()
 			}
 			else
 			{
-				// Print the full output when verbose is true
-				if(m_options.verbose &&
-				   (!res->successful() || res->has_warnings()))
+				if(!res->successful() || (m_options.verbose && res->has_warnings()))
 				{
 					printf("%s\n", res->as_string(true).c_str());
 				}
