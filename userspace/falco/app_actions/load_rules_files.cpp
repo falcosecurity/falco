@@ -100,9 +100,7 @@ application::run_result application::load_rules_files()
 
 		res = m_state->engine->load_rules_file(filename);
 
-		// Print the full output if verbose is true
-		if(m_options.verbose &&
-		   (!res->successful() || res->has_warnings()))
+		if((!res->successful() || (m_options.verbose && res->has_warnings())))
 		{
 			printf("%s\n",
 			       (m_state->config->m_json_output ?
