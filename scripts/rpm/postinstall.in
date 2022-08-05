@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+set -e
 
 mod_version="@DRIVER_VERSION@"
 dkms add -m falco -v $mod_version --rpm_safe_upgrade
@@ -28,4 +29,36 @@ else
 	echo -e ""
 	echo -e "Module build for the currently running kernel was skipped since the"
 	echo -e "kernel source for this kernel does not seem to be installed."
+fi
+
+# validate rpm macros by `rpm -qp --scripts <rpm>`
+# RPM scriptlets: https://docs.fedoraproject.org/en-US/packaging-guidelines/Scriptlets/#_systemd
+#                 https://docs.fedoraproject.org/en-US/packaging-guidelines/Scriptlets/#_syntax
+
+# systemd_post macro expands to
+# if postinst:
+#   `systemd-update-helper install-system-units <service>`
+%systemd_post 'falco.service'
+
+# post install mirrored from .deb
+if [ $1 -eq 1 ]; then
+        # This will only remove masks created on package removal.
+        /usr/bin/systemctl --system unmask 'falco.service' >/dev/null || true
+
+        # enable falco on installation
+        # note: DEB postinstall script checks for changed symlinks
+        /usr/bin/systemctl --system enable 'falco.service' >/dev/null || true
+
+        # start falco on installation
+        /usr/bin/systemctl --system start 'falco.service' >/dev/null || true
+fi
+
+# post upgrade mirrored from .deb
+if [ $1 -gt 1 ]; then
+    if [ -d /run/systemd/system ]; then
+        /usr/bin/systemctl --system daemon-reload >/dev/null || true
+
+        # restart falco on upgrade if service is already running
+        /usr/bin/systemctl --system condrestart 'falco.service' >/dev/null || true
+    fi
 fi
