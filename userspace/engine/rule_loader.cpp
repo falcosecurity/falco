@@ -135,16 +135,26 @@ nlohmann::json rule_loader::context::as_json()
 	return ret;
 }
 
-std::string rule_loader::context::snippet(const std::string& content) const
+std::string rule_loader::context::snippet(const falco::load_result::rules_contents_t& rules_contents,
+					  size_t snippet_width) const
 {
 	std::string ret;
 
-	if(m_locs.empty() || content.size() == 0)
+	if(m_locs.empty())
 	{
 		return "<No context available>\n";
 	}
 
 	rule_loader::context::location loc = m_locs.back();
+
+	auto it = rules_contents.find(name);
+
+	if(it == rules_contents.end())
+	{
+		return "<No context available>\n";
+	}
+
+	const std::string& snip_content = it->second;
 
 	size_t from = loc.mark.pos;
 
@@ -152,29 +162,49 @@ std::string rule_loader::context::snippet(const std::string& content) const
 	// dangling property value:
 	//   tags:
 	// The YAML::Mark position can be past the end of the file.
-	for(; from > 0 && from >= content.size(); from--);
+	for(; from > 0 && from >= snip_content.size(); from--);
 
-	// Add the line that includes the mark and a marker
-	// at the column number.
-	size_t to = from;
+	// The snippet is generally the line that contains the
+	// position. So walk backwards from pos to the preceding
+	// newline, and walk forwards from pos to the following
+	// newline.
+	//
+	// However, some lines can be very very long, so the walk
+	// forwards/walk backwards is capped at a maximum of
+	// snippet_width/2 characters in either direction.
+	for(; from > 0 && snip_content.at(from) != '\n' && (loc.mark.pos - from) < (snippet_width/2); from--);
 
-	for(; from > 0 && content.at(from) != '\n'; from--);
-	for(; to < content.size()-1 && content.at(to) != '\n'; to++);
+	size_t to = loc.mark.pos;
+	for(; to < snip_content.size()-1 && snip_content.at(to) != '\n' && (to - loc.mark.pos) < (snippet_width/2); to++);
 
 	// Don't include the newlines
-	if(content.at(from) == '\n')
+	if(snip_content.at(from) == '\n')
 	{
 		from++;
 	}
-	if(content.at(to) == '\n')
+	if(snip_content.at(to) == '\n')
 	{
 		to--;
 	}
 
-	ret = content.substr(from, to-from+1) + "\n";
+	ret = snip_content.substr(from, to-from+1);
 
-	// Add a blank line with a marker at the column number
-	ret += std::string(loc.mark.column, ' ') + '^' + "\n";
+	// Replace the initial/end characters with '...' if the walk
+	// forwards/backwards was incomplete
+	if(loc.mark.pos - from >= (snippet_width/2))
+	{
+		ret.replace(0, 2, "...");
+	}
+
+	if(to - loc.mark.pos >= (snippet_width/2))
+	{
+		ret.replace(ret.size()-2, ret.size(), "...");
+	}
+
+	ret += "\n";
+
+	// Add a blank line with a marker at the position within the snippet
+	ret += std::string(loc.mark.pos-from, ' ') + '^' + "\n";
 
 	return ret;
 }
@@ -195,26 +225,26 @@ bool rule_loader::result::has_warnings()
 	return (warnings.size() > 0);
 }
 
-void rule_loader::result::add_error(load_result::error_code ec, const std::string& msg, const context& ctx, const std::string& rules_content)
+void rule_loader::result::add_error(load_result::error_code ec, const std::string& msg, const context& ctx)
 {
-	error err = {ec, msg, ctx, ctx.snippet(rules_content)};
+	error err = {ec, msg, ctx};
 	success = false;
 
 	errors.push_back(err);
 }
 
-void rule_loader::result::add_warning(load_result::warning_code wc, const std::string& msg, const context& ctx, const std::string& rules_content)
+void rule_loader::result::add_warning(load_result::warning_code wc, const std::string& msg, const context& ctx)
 {
-	warning warn = {wc, msg, ctx, ctx.snippet(rules_content)};
+	warning warn = {wc, msg, ctx};
 
 	warnings.push_back(warn);
 }
 
-const std::string& rule_loader::result::as_string(bool verbose)
+const std::string& rule_loader::result::as_string(bool verbose, const rules_contents_t& contents)
 {
 	if(verbose)
 	{
-		return as_verbose_string();
+		return as_verbose_string(contents);
 	}
 	else
 	{
@@ -282,7 +312,7 @@ const std::string& rule_loader::result::as_summary_string()
 	return res_summary_string;
 }
 
-const std::string& rule_loader::result::as_verbose_string()
+const std::string& rule_loader::result::as_verbose_string(const rules_contents_t& contents)
 {
 	std::ostringstream os;
 
@@ -310,7 +340,7 @@ const std::string& rule_loader::result::as_verbose_string()
 			os << err.ctx.as_string();
 
 			os << "------" << std::endl;
-			os << err.snippet;
+			os << err.ctx.snippet(contents);
 			os << "------" << std::endl;
 
 			os << load_result::error_code_str(err.ec)
@@ -331,7 +361,7 @@ const std::string& rule_loader::result::as_verbose_string()
 			os << warn.ctx.as_string();
 
 			os << "------" << std::endl;
-			os << warn.snippet;
+			os << warn.ctx.snippet(contents);
 			os << "------" << std::endl;
 
 			os << load_result::warning_code_str(warn.wc)
@@ -345,7 +375,7 @@ const std::string& rule_loader::result::as_verbose_string()
 	return res_verbose_string;
 }
 
-const nlohmann::json& rule_loader::result::as_json()
+const nlohmann::json& rule_loader::result::as_json(const rules_contents_t& contents)
 {
 	nlohmann::json j;
 
@@ -364,7 +394,7 @@ const nlohmann::json& rule_loader::result::as_json()
 		nlohmann::json jerr;
 
 		jerr["context"] = err.ctx.as_json();
-		jerr["context"]["snippet"] = err.snippet;
+		jerr["context"]["snippet"] = err.ctx.snippet(contents);
 
 		jerr["code"] = load_result::error_code_str(err.ec);
 		jerr["codedesc"] = load_result::error_desc(err.ec);
@@ -380,7 +410,7 @@ const nlohmann::json& rule_loader::result::as_json()
 		nlohmann::json jwarn;
 
 		jwarn["context"] = warn.ctx.as_json();
-		jwarn["context"]["snippet"] = warn.snippet;
+		jwarn["context"]["snippet"] = warn.ctx.snippet(contents);
 
 		jwarn["code"] = load_result::warning_code_str(warn.wc);
 		jwarn["codedesc"] = load_result::warning_desc(warn.wc);
@@ -842,8 +872,7 @@ void rule_loader::define(configuration& cfg, rule_info& info)
 	{
 		cfg.res->add_warning(load_result::LOAD_UNKNOWN_SOURCE,
 				     "Unknown source " + info.source + ", skipping",
-				     info.ctx,
-				     cfg.content);
+				     info.ctx);
 		return;
 	}
 
@@ -1044,7 +1073,7 @@ void rule_loader::compile_rule_infos(
 		{
 			for (auto &w : warn_codes)
 			{
-				cfg.res->add_warning(w, "", r.ctx, cfg.content);
+				cfg.res->add_warning(w, "", r.ctx);
 			}
 		}
 
@@ -1091,8 +1120,7 @@ void rule_loader::compile_rule_infos(
 				cfg.res->add_warning(
 					load_result::LOAD_UNKNOWN_FIELD,
 					e.what(),
-					r.cond_ctx,
-					cfg.content);
+					r.cond_ctx);
 			}
 			else
 			{
@@ -1125,8 +1153,7 @@ void rule_loader::compile_rule_infos(
 				cfg.res->add_warning(
 					load_result::LOAD_NO_EVTTYPE,
 					"Rule matches too many evt.type values. This has a significant performance penalty.",
-					r.ctx,
-					cfg.content);
+					r.ctx);
 			}
 		}
 	}
@@ -1146,7 +1173,7 @@ void rule_loader::compile(configuration& cfg, indexed_vector<falco_rule>& out) c
 	}
 	catch(rule_load_exception &e)
 	{
-		cfg.res->add_error(e.ec, e.msg, e.ctx, cfg.content);
+		cfg.res->add_error(e.ec, e.msg, e.ctx);
 	}
 
 	// print info on any dangling lists or macros that were not used anywhere
@@ -1157,8 +1184,7 @@ void rule_loader::compile(configuration& cfg, indexed_vector<falco_rule>& out) c
 			cfg.res->add_warning(
 				load_result::LOAD_UNUSED_MACRO,
 				"Macro not referred to by any other rule/macro",
-				m.ctx,
-				cfg.content);
+				m.ctx);
 		}
 	}
 	for (auto &l : lists)
@@ -1168,8 +1194,7 @@ void rule_loader::compile(configuration& cfg, indexed_vector<falco_rule>& out) c
 			cfg.res->add_warning(
 				load_result::LOAD_UNUSED_LIST,
 				"List not referred to by any other rule/macro",
-				l.ctx,
-				cfg.content);
+				l.ctx);
 		}
 	}
 }

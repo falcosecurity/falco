@@ -411,7 +411,7 @@ static void read_item(
 	else
 	{
 		rule_loader::context ctx(item, "unknown", "", parent);
-		cfg.res->add_warning(load_result::LOAD_UNKNOWN_ITEM, "Unknown top level item", ctx, cfg.content);
+		cfg.res->add_warning(load_result::LOAD_UNKNOWN_ITEM, "Unknown top level item", ctx);
 	}
 }
 
@@ -425,7 +425,7 @@ bool rule_reader::load(rule_loader::configuration& cfg, rule_loader& loader)
 	catch(const exception& e)
 	{
 		rule_loader::context ctx(cfg.name);
-		cfg.res->add_error(load_result::LOAD_ERR_YAML_PARSE, e.what(), ctx, cfg.content);
+		cfg.res->add_error(load_result::LOAD_ERR_YAML_PARSE, e.what(), ctx);
 		return false;
 	}
 
@@ -454,7 +454,7 @@ bool rule_reader::load(rule_loader::configuration& cfg, rule_loader& loader)
 			}
 			catch (rule_loader::rule_load_exception &e)
 			{
-				cfg.res->add_error(e.ec, e.msg, e.ctx, cfg.content);
+				cfg.res->add_error(e.ec, e.msg, e.ctx);
 
 				// Although we *could* continue on to the next doc,
 				// as it's effectively a new rules file, for
