@@ -233,6 +233,17 @@ public:
 		std::string& err);
 
 private:
+
+	// Throws falco_exception if the file can not be read
+	void read_file(const std::string& filename, std::string& contents);
+
+	// For load_rules methods that throw exceptions on error,
+	// interpret a load_result and throw an exception if needed.
+	void interpret_load_result(std::unique_ptr<falco::load_result>& res,
+				   const std::string& rules_filename,
+				   const std::string& rules_content,
+				   bool verbose);
+
 	indexed_vector<falco_source> m_sources;
 
 	falco_source* find_source(std::size_t index);

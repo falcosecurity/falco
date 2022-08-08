@@ -18,6 +18,7 @@ limitations under the License.
 #include <unistd.h>
 #include <string>
 #include <fstream>
+#include <functional>
 #include <utility>
 
 #include <sinsp.h>
@@ -171,20 +172,7 @@ void falco_engine::load_rules(const string &rules_content, bool verbose, bool al
 
 	std::unique_ptr<load_result> res = load_rules(rules_content, no_name);
 
-	if(verbose)
-	{
-		// Here, verbose controls whether to additionally
-		// "log" e.g. print to stderr. What's logged is always
-		// non-verbose so it fits on a single line.
-		// todo(jasondellaluce): introduce a logging callback in Falco
-		fprintf(stderr, "%s\n", res->as_string(false).c_str());
-	}
-
-	if(!res->successful())
-	{
-		// The output here is always the full e.g. "verbose" output.
-		throw falco_exception(res->as_string(true).c_str());
-	}
+	interpret_load_result(res, no_name, rules_content, verbose);
 }
 
 std::unique_ptr<load_result> falco_engine::load_rules(const std::string &rules_content, const std::string &name)
@@ -211,43 +199,32 @@ std::unique_ptr<load_result> falco_engine::load_rules(const std::string &rules_c
 
 void falco_engine::load_rules_file(const std::string &rules_filename, bool verbose, bool all_events)
 {
-	std::unique_ptr<load_result> res = load_rules_file(rules_filename);
+	std::string rules_content;
 
-	if(verbose)
-	{
-		// Here, verbose controls whether to additionally
-		// "log" e.g. print to stderr. What's logged is always
-		// non-verbose so it fits on a single line.
-		// todo(jasondellaluce): introduce a logging callback in Falco
-		fprintf(stderr, "%s\n", res->as_string(false).c_str());
-	}
+	read_file(rules_filename, rules_content);
 
-	if(!res->successful())
-	{
-		// The output here is always the full e.g. "verbose" output.
-		throw falco_exception(res->as_string(true).c_str());
-	}
+	std::unique_ptr<load_result> res = load_rules(rules_content, rules_filename);
+
+	interpret_load_result(res, rules_filename, rules_content, verbose);
 }
 
 std::unique_ptr<load_result> falco_engine::load_rules_file(const string &rules_filename)
 {
-	ifstream is;
+	std::string rules_content;
 
-	is.open(rules_filename);
-	if (!is.is_open())
+	try {
+		read_file(rules_filename, rules_content);
+	}
+	catch (falco_exception &e)
 	{
 		rule_loader::context ctx(rules_filename);
-		std::string empty;
 
 		std::unique_ptr<rule_loader::result> res(new rule_loader::result(rules_filename));
 
-		res->add_error(load_result::LOAD_ERR_FILE_READ, "Could not open for reading.", ctx, empty);
+		res->add_error(load_result::LOAD_ERR_FILE_READ, e.what(), ctx);
 
 		return std::move(res);
 	}
-
-	string rules_content((istreambuf_iterator<char>(is)),
-			     istreambuf_iterator<char>());
 
 	return load_rules(rules_content, rules_filename);
 }
@@ -425,6 +402,44 @@ bool falco_engine::is_source_valid(const std::string &source)
 {
 	return m_sources.at(source) != nullptr;
 }
+
+void falco_engine::read_file(const std::string& filename, std::string& contents)
+{
+	ifstream is;
+
+	is.open(filename);
+	if (!is.is_open())
+	{
+		throw falco_exception("Could not open " + filename + " for reading.");
+	}
+
+	contents.assign(istreambuf_iterator<char>(is),
+			istreambuf_iterator<char>());
+}
+
+void falco_engine::interpret_load_result(std::unique_ptr<load_result>& res,
+					 const std::string& rules_filename,
+					 const std::string& rules_content,
+					 bool verbose)
+{
+	falco::load_result::rules_contents_t rc = {{rules_filename, rules_content}};
+
+	if(!res->successful())
+	{
+		// The output here is always the full e.g. "verbose" output.
+		throw falco_exception(res->as_string(true, rc).c_str());
+	}
+
+	if(verbose && res->has_warnings())
+	{
+		// Here, verbose controls whether to additionally
+		// "log" e.g. print to stderr. What's logged is always
+		// non-verbose so it fits on a single line.
+		// todo(jasondellaluce): introduce a logging callback in Falco
+		fprintf(stderr, "%s\n", res->as_string(false, rc).c_str());
+	}
+}
+
 
 bool falco_engine::check_plugin_requirements(
 		const std::vector<plugin_version_requirement>& plugins,
