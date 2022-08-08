@@ -36,6 +36,8 @@ public:
 	class context
 	{
 	public:
+		static const size_t default_snippet_width = 160;
+
 		struct location
 		{
 			// The original location in the document
@@ -51,7 +53,7 @@ public:
 		};
 
 		context(const std::string& name);
-		context(const YAML::Node& mark,
+		context(const YAML::Node& item,
 			const std::string item_type,
 			const std::string item_name,
 			const context& parent);
@@ -59,7 +61,9 @@ public:
 
 		// Return a snippet of the provided rules content
 		// corresponding to this context.
-		std::string snippet(const std::string& content) const;
+		// Uses the provided rules_contents to look up the original
+		// rules content for a given location name.
+		std::string snippet(const falco::load_result::rules_contents_t& rules_contents, size_t snippet_width = default_snippet_width) const;
 
 		std::string as_string();
 		nlohmann::json as_json();
@@ -77,7 +81,6 @@ public:
 		falco::load_result::warning_code wc;
 		std::string msg;
 		context ctx;
-		std::string snippet;
 	};
 
 	struct error
@@ -85,7 +88,6 @@ public:
 		falco::load_result::error_code ec;
 		std::string msg;
 		context ctx;
-		std::string snippet;
 	};
 
 	class rule_load_exception : public std::exception
@@ -113,22 +115,21 @@ public:
 
 		virtual bool successful() override;
 		virtual bool has_warnings() override;
-		virtual const std::string& as_string(bool verbose) override;
-		virtual const nlohmann::json& as_json() override;
+
+		virtual const std::string& as_string(bool verbose, const falco::load_result::rules_contents_t& contents) override;
+		virtual const nlohmann::json& as_json(const falco::load_result::rules_contents_t& contents) override;
 
 		void add_error(falco::load_result::error_code ec,
 			       const std::string& msg,
-			       const context& ctx,
-			       const std::string& rules_content);
+			       const context& ctx);
 
 		void add_warning(falco::load_result::warning_code ec,
 				 const std::string& msg,
-				 const context& ctx,
-				 const std::string& rules_content);
+				 const context& ctx);
 	protected:
 
 		const std::string& as_summary_string();
-		const std::string& as_verbose_string();
+		const std::string& as_verbose_string(const falco::load_result::rules_contents_t& contents);
 		std::string name;
 		bool success;
 

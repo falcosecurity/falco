@@ -16,6 +16,7 @@ limitations under the License.
 
 #pragma once
 
+#include <functional>
 #include <string>
 #include <nlohmann/json.hpp>
 
@@ -75,8 +76,23 @@ public:
 	// has_warnings() can both be true if there were only warnings.
 	virtual bool has_warnings() = 0;
 
+	// This represents a set of rules contents as a mapping from
+	// rules content name (usually filename) to rules content. The
+	// rules content is actually a reference to the actual string
+	// to avoid copies. Using reference_wrapper allows the
+	// reference to be held in the stl map (bare references can't
+	// be copied/assigned, but reference_wrappers can).
+	//
+	// It's used in the as_string/as_json() methods below.
+	typedef std::map<std::string, std::reference_wrapper<const std::string>> rules_contents_t;
+
 	// This contains a human-readable version of the result,
 	// suitable for display to end users.
+	//
+	// The provided rules_contents_t should map from content name
+	// to rules content (reference) for each rules_content that has
+	// been passed to rule_loader::compile() or
+	// rule_reader::load().
 	//
 	// When verbose is true, the returned value has full details
 	// on the result including document locations/context.
@@ -84,11 +100,11 @@ public:
 	// When verbose is false, the returned value is a short string
 	// with the success value and a list of
 	// errors/warnings. Suitable for simple one-line display.
-	virtual const std::string& as_string(bool verbose) = 0;
+	virtual const std::string& as_string(bool verbose, const rules_contents_t& contents) = 0;
 
 	// This contains the full result structure as json, suitable
 	// for automated parsing/interpretation downstream.
-	virtual const nlohmann::json& as_json() = 0;
+	virtual const nlohmann::json& as_json(const rules_contents_t& contents) = 0;
 };
 
 } // namespace falco
