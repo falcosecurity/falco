@@ -134,6 +134,49 @@ private:
 		bool proceed;
 	};
 
+	// Convenience method. Read a sequence of filenames and fill
+	// in a vector of rules contents.
+        // Also fill in the provided rules_contents_t with a mapping from
+        // filename (reference) to content (reference).
+	// falco_exception if any file could not be read.
+	template<class InputIterator>
+	void read_files(InputIterator begin, InputIterator end,
+			std::vector<std::string>& rules_contents,
+			falco::load_result::rules_contents_t& rc)
+	{
+		// Read the contents in a first pass
+		for(auto it = begin; it != end; it++)
+		{
+			std::string &filename = *it;
+			std::ifstream is;
+			is.open(filename);
+			if (!is.is_open())
+			{
+				throw falco_exception("Could not open file " + filename + " for reading");
+			}
+
+			std::string rules_content((istreambuf_iterator<char>(is)),
+						  istreambuf_iterator<char>());
+			rules_contents.emplace_back(std::move(rules_content));
+		}
+
+		// Populate the map in a second pass to avoid
+		// references becoming invalid.
+		auto it = begin;
+		auto rit = rules_contents.begin();
+		for(; it != end && rit != rules_contents.end(); it++, rit++)
+		{
+			rc.emplace(*it, *rit);
+		}
+
+		// Both it and rit must be at the end, otherwise
+		// there's a bug in the above
+		if(it != end || rit != rules_contents.end())
+		{
+			throw falco_exception("Unexpected mismatch in rules content name/rules content sets?");
+		}
+	}
+
 	// These methods comprise the code the application "runs". The
 	// order in which the methods run is in application.cpp.
 	run_result create_signal_handlers();

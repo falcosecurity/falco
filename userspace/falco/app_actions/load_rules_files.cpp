@@ -93,25 +93,37 @@ application::run_result application::load_rules_files()
 		falco_configuration::read_rules_file_directory(path, m_state->config->m_loaded_rules_filenames, m_state->config->m_loaded_rules_folders);
 	}
 
-	for (const auto& filename : m_state->config->m_loaded_rules_filenames)
+	std::vector<std::string> rules_contents;
+	falco::load_result::rules_contents_t rc;
+
+	try {
+		read_files(m_state->config->m_loaded_rules_filenames.begin(),
+			   m_state->config->m_loaded_rules_filenames.end(),
+			   rules_contents,
+			   rc);
+	}
+	catch(falco_exception& e)
+	{
+		return run_result::fatal(e.what());
+	}
+
+	for(auto &filename : m_state->config->m_loaded_rules_filenames)
 	{
 		falco_logger::log(LOG_INFO, "Loading rules from file " + filename + "\n");
 		std::unique_ptr<falco::load_result> res;
 
-		res = m_state->engine->load_rules_file(filename);
-
-		if((!res->successful() || (m_options.verbose && res->has_warnings())))
-		{
-			printf("%s\n",
-			       (m_state->config->m_json_output ?
-				res->as_json().dump().c_str() :
-				res->as_string(true).c_str()));
-		}
+		res = m_state->engine->load_rules(rc.at(filename), filename);
 
 		if(!res->successful())
 		{
 			// Return the summary version as the error
-			return run_result::fatal(res->as_string(false));
+			return run_result::fatal(res->as_string(true, rc));
+		}
+
+		// If verbose is true, also print any warnings
+		if(m_options.verbose && res->has_warnings())
+		{
+			fprintf(stderr, "%s\n", res->as_string(true, rc).c_str());
 		}
 	}
 
