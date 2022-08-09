@@ -21,7 +21,7 @@ using namespace falco::app;
 application::run_result application::init_clients()
 {
 #ifndef MINIMAL_BUILD
-	// k8s clients is useful only if syscall source is enabled
+	// k8s client is useful only if the syscall source is enabled
 	if (!is_syscall_source_enabled())
 	{
 		return run_result::ok();
