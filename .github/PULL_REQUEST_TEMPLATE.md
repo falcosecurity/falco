@@ -22,6 +22,8 @@
 
 > /kind feature
 
+> /kind release
+
 > If contributing rules or changes to rules, please make sure to also uncomment one of the following line:
 
 > /kind rule-update
@@ -45,6 +47,8 @@ Please remove the leading whitespace before the `/kind <>` you uncommented.
 > /area tests
 
 > /area proposals
+
+> /area CI
 
 <!--
 Please remove the leading whitespace before the `/area <>` you uncommented.
