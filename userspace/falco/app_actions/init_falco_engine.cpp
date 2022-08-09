@@ -35,11 +35,6 @@ void application::configure_output_format()
 		output_format = "k8s.ns=%k8s.ns.name k8s.pod=%k8s.pod.name container=%container.id";
 		replace_container_info = true;
 	}
-	else if(m_options.print_additional == "m" || m_options.print_additional == "mesos")
-	{
-		output_format = "task=%mesos.task.name container=%container.id";
-		replace_container_info = true;
-	}
 	else if(!m_options.print_additional.empty())
 	{
 		output_format = m_options.print_additional;
