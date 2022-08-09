@@ -511,7 +511,7 @@
 # %container.info, without any leading term (file=%fd.name
 # %container.info user=%user.name user_loginuid=%user.loginuid, and not file=%fd.name
 # container=%container.info user=%user.name user_loginuid=%user.loginuid). The output will change
-# based on the context and whether or not -pk/-pm/-pc was specified on
+# based on the context and whether or not -pk/-pc was specified on
 # the command line.
 - macro: container
   condition: (container.id != host)
