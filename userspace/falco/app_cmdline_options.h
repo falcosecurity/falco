@@ -58,7 +58,6 @@ public:
 	std::string print_plugin_info;
 	bool list_syscall_events;
 	bool markdown;
-	std::string mesos_api;
 	int duration_to_tot;
 	bool names_only;
 	std::vector<std::string> cmdline_config_options;
