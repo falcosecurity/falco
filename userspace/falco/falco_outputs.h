@@ -21,7 +21,6 @@ limitations under the License.
 
 #include "gen_filter.h"
 #include "falco_common.h"
-#include "token_bucket.h"
 #include "falco_engine.h"
 #include "outputs.h"
 #include "formats.h"
@@ -46,8 +45,6 @@ public:
 		bool json_include_output_property,
 		bool json_include_tags_property,
 		uint32_t timeout,
-		uint32_t rate,
-		uint32_t max_burst, 
 		bool buffered,
 		bool time_format_iso_8601,
 		std::string hostname);
@@ -94,9 +91,6 @@ private:
 	bool m_time_format_iso_8601;
 	std::chrono::milliseconds m_timeout;
 	std::string m_hostname;
-	uint32_t m_token_bucket_rate;
-	uint32_t m_token_bucket_max_burst;
-	std::unordered_map<std::string, token_bucket> m_token_buckets;
 
 	enum ctrl_msg_type
 	{
@@ -120,5 +114,4 @@ private:
 	void worker() noexcept;
 	void stop_worker();
 	void add_output(falco::outputs::config oc);
-	bool should_throttle(const ctrl_msg& msg);
 };

@@ -48,8 +48,6 @@ falco_outputs::falco_outputs(
 	bool json_include_output_property,
 	bool json_include_tags_property,
 	uint32_t timeout,
-	uint32_t rate,
-	uint32_t max_burst, 
 	bool buffered,
 	bool time_format_iso_8601,
 	std::string hostname)
@@ -63,8 +61,6 @@ falco_outputs::falco_outputs(
 	m_buffered = buffered;
 	m_time_format_iso_8601 = time_format_iso_8601;
 	m_hostname = hostname;
-	m_token_bucket_rate = rate;
-	m_token_bucket_max_burst = max_burst;
 
 	for(const auto& output : outputs)
 	{
@@ -258,27 +254,6 @@ inline void falco_outputs::push(ctrl_msg_type cmt)
 	m_queue.push(cmsg);
 }
 
-bool falco_outputs::should_throttle(const ctrl_msg& msg)
-{
-	// note: "internal" alerts are not rate limited at this level
-	if (m_token_bucket_rate != 0 && strcmp(msg.source.c_str(), s_internal_source) != 0)
-	{
-		// note: there is one token bucket for each event source
-		auto it = m_token_buckets.find(msg.source);
-		if (it == m_token_buckets.end())
-		{
-			m_token_buckets.insert({msg.source, token_bucket()});
-			it = m_token_buckets.find(msg.source);
-			it->second.init(m_token_bucket_rate, m_token_bucket_max_burst);
-		}
-		if(!it->second.claim())
-		{
-			return true;
-		}
-	}
-	return false;
-}
-
 // todo(leogr,leodido): this function is not supposed to throw exceptions, and with "noexcept",
 // the program is terminated if that occurs. Although that's the wanted behavior,
 // we still need to improve the error reporting since some inner functions can throw exceptions.
@@ -305,14 +280,7 @@ void falco_outputs::worker() noexcept
 				switch(cmsg.type)
 				{
 					case ctrl_msg_type::CTRL_MSG_OUTPUT:
-						if(!should_throttle(cmsg))
-						{
-							o->output(&cmsg);
-						}
-						else
-						{
-							falco_logger::log(LOG_DEBUG, "Skipping rate-limited notification for rule " + cmsg.rule + "\n");
-						}
+						o->output(&cmsg);
 						break;
 					case ctrl_msg_type::CTRL_MSG_CLEANUP:
 					case ctrl_msg_type::CTRL_MSG_STOP:
