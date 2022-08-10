@@ -79,5 +79,5 @@ For example, `action required: change the API interface of the rule engine`.
 -->
 
 ```release-note
-NONE
+
 ```
