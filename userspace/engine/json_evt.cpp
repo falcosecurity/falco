@@ -515,16 +515,17 @@ int32_t json_event_filter_check::parse_field_name(const char *str, bool alloc_st
 
 	size_t idx_len = 0;
 
-	for(auto &info : m_info.m_fields)
+	for(const auto &info : get_info().m_fields)
 	{
-		if(m_aliases.find(info.m_name) == m_aliases.end())
+		auto iter = get_aliases().find(info.m_name);
+		if( iter == get_aliases().end())
 		{
 			throw falco_exception("Could not find alias for field name " + info.m_name);
 		}
 
 		m_uses_paths = info.m_uses_paths;
 
-		auto &al = m_aliases[info.m_name];
+		auto &al = iter->second;
 
 		// What follows the match must not be alphanumeric or a dot
 		if(strncmp(info.m_name.c_str(), str, info.m_name.size()) == 0 &&
@@ -692,11 +693,6 @@ size_t json_event_filter_check::parsed_size()
 	}
 }
 
-json_event_filter_check::check_info &json_event_filter_check::get_info()
-{
-	return m_info;
-}
-
 void json_event_filter_check::add_extracted_value(const std::string &str)
 {
 	m_evalues.first.emplace_back(json_event_value(str));
@@ -793,9 +789,9 @@ std::string jevt_filter_check::s_jevt_rawtime_field = "jevt.rawtime";
 std::string jevt_filter_check::s_jevt_value_field = "jevt.value";
 std::string jevt_filter_check::s_jevt_obj_field = "jevt.obj";
 
-jevt_filter_check::jevt_filter_check()
+const jevt_filter_check::check_info &jevt_filter_check::get_info() const
 {
-	m_info = {"jevt",
+	static const check_info info = {"jevt",
 		  "generic ways to access json events",
 		  "",
 		  {{s_jevt_time_field, "json event timestamp as a string that includes the nanosecond part"},
@@ -803,6 +799,11 @@ jevt_filter_check::jevt_filter_check()
 		   {s_jevt_rawtime_field, "absolute event timestamp, i.e. nanoseconds from epoch."},
 		   {s_jevt_value_field, "General way to access single property from json object. The syntax is [<json pointer expression>]. The property is returned as a string", IDX_REQUIRED, IDX_KEY},
 		   {s_jevt_obj_field, "The entire json object, stringified"}}};
+	return info;
+}
+
+jevt_filter_check::jevt_filter_check()
+{
 }
 
 jevt_filter_check::~jevt_filter_check()
@@ -1282,71 +1283,77 @@ bool k8s_audit_filter_check::extract_any_privileged(const json &j,
 	return true;
 }
 
-k8s_audit_filter_check::k8s_audit_filter_check()
+const json_event_filter_check::check_info &k8s_audit_filter_check::get_info() const
 {
-	m_info = {"ka",
-		  "Access K8s Audit Log Events",
-		  "Fields with an IDX_ALLOWED annotation can be indexed (e.g. ka.req.containers.image[k] returns the image for the kth container). The index is optional--without any index the field returns values for all items. The index must be numeric with an IDX_NUMERIC annotation, and can be any string with an IDX_KEY annotation. Fields with an IDX_REQUIRED annotation require an index.",
-		  {{"ka.auditid", "The unique id of the audit event"},
-		   {"ka.stage", "Stage of the request (e.g. RequestReceived, ResponseComplete, etc.)"},
-		   {"ka.auth.decision", "The authorization decision"},
-		   {"ka.auth.reason", "The authorization reason"},
-		   {"ka.user.name", "The user name performing the request"},
-		   {"ka.user.groups", "The groups to which the user belongs"},
-		   {"ka.impuser.name", "The impersonated user name"},
-		   {"ka.verb", "The action being performed"},
-		   {"ka.uri", "The request URI as sent from client to server"},
-		   {"ka.uri.param", "The value of a given query parameter in the uri (e.g. when uri=/foo?key=val, ka.uri.param[key] is val).", IDX_REQUIRED, IDX_KEY},
-		   {"ka.target.name", "The target object name"},
-		   {"ka.target.namespace", "The target object namespace"},
-		   {"ka.target.resource", "The target object resource"},
-		   {"ka.target.subresource", "The target object subresource"},
-		   {"ka.req.binding.subjects", "When the request object refers to a cluster role binding, the subject (e.g. account/users) being linked by the binding"},
-		   {"ka.req.binding.role", "When the request object refers to a cluster role binding, the role being linked by the binding"},
-		   {"ka.req.binding.subject.has_name", "Deprecated, always returns \"N/A\". Only provided for backwards compatibility", IDX_REQUIRED, IDX_KEY},
-		   {"ka.req.configmap.name", "If the request object refers to a configmap, the configmap name"},
-		   {"ka.req.configmap.obj", "If the request object refers to a configmap, the entire configmap object"},
-		   {"ka.req.pod.containers.image", "When the request object refers to a pod, the container's images.", IDX_ALLOWED, IDX_NUMERIC},
-		   {"ka.req.container.image", "Deprecated by ka.req.pod.containers.image. Returns the image of the first container only"},
-		   {"ka.req.pod.containers.image.repository", "The same as req.container.image, but only the repository part (e.g. falcosecurity/falco).", IDX_ALLOWED, IDX_NUMERIC},
-		   {"ka.req.container.image.repository", "Deprecated by ka.req.pod.containers.image.repository. Returns the repository of the first container only"},
-		   {"ka.req.pod.host_ipc", "When the request object refers to a pod, the value of the hostIPC flag."},
-		   {"ka.req.pod.host_network", "When the request object refers to a pod, the value of the hostNetwork flag."},
-		   {"ka.req.container.host_network", "Deprecated alias for ka.req.pod.host_network"},
-		   {"ka.req.pod.host_pid", "When the request object refers to a pod, the value of the hostPID flag."},
-		   {"ka.req.pod.containers.host_port", "When the request object refers to a pod, all container's hostPort values.", IDX_ALLOWED, IDX_NUMERIC},
-		   {"ka.req.pod.containers.privileged", "When the request object refers to a pod, the value of the privileged flag for all containers.", IDX_ALLOWED, IDX_NUMERIC},
-		   {"ka.req.container.privileged", "Deprecated by ka.req.pod.containers.privileged. Returns true if any container has privileged=true"},
-		   {"ka.req.pod.containers.allow_privilege_escalation", "When the request object refers to a pod, the value of the allowPrivilegeEscalation flag for all containers", IDX_ALLOWED, IDX_NUMERIC},
-		   {"ka.req.pod.containers.read_only_fs", "When the request object refers to a pod, the value of the readOnlyRootFilesystem flag for all containers", IDX_ALLOWED, IDX_NUMERIC},
-		   {"ka.req.pod.run_as_user", "When the request object refers to a pod, the runAsUser uid specified in the security context for the pod. See ....containers.run_as_user for the runAsUser for individual containers"},
-		   {"ka.req.pod.containers.run_as_user", "When the request object refers to a pod, the runAsUser uid for all containers", IDX_ALLOWED, IDX_NUMERIC},
-		   {"ka.req.pod.containers.eff_run_as_user", "When the request object refers to a pod, the initial uid that will be used for all containers. This combines information from both the pod and container security contexts and uses 0 if no uid is specified", IDX_ALLOWED, IDX_NUMERIC},
-		   {"ka.req.pod.run_as_group", "When the request object refers to a pod, the runAsGroup gid specified in the security context for the pod. See ....containers.run_as_group for the runAsGroup for individual containers"},
-		   {"ka.req.pod.containers.run_as_group", "When the request object refers to a pod, the runAsGroup gid for all containers", IDX_ALLOWED, IDX_NUMERIC},
-		   {"ka.req.pod.containers.eff_run_as_group", "When the request object refers to a pod, the initial gid that will be used for all containers. This combines information from both the pod and container security contexts and uses 0 if no gid is specified", IDX_ALLOWED, IDX_NUMERIC},
-		   {"ka.req.pod.containers.proc_mount", "When the request object refers to a pod, the procMount types for all containers", IDX_ALLOWED, IDX_NUMERIC},
-		   {"ka.req.role.rules", "When the request object refers to a role/cluster role, the rules associated with the role"},
-		   {"ka.req.role.rules.apiGroups", "When the request object refers to a role/cluster role, the api groups associated with the role's rules", IDX_ALLOWED, IDX_NUMERIC},
-		   {"ka.req.role.rules.nonResourceURLs", "When the request object refers to a role/cluster role, the non resource urls associated with the role's rules", IDX_ALLOWED, IDX_NUMERIC},
-		   {"ka.req.role.rules.verbs", "When the request object refers to a role/cluster role, the verbs associated with the role's rules", IDX_ALLOWED, IDX_NUMERIC},
-		   {"ka.req.role.rules.resources", "When the request object refers to a role/cluster role, the resources associated with the role's rules", IDX_ALLOWED, IDX_NUMERIC},
-		   {"ka.req.pod.fs_group", "When the request object refers to a pod, the fsGroup gid specified by the security context."},
-		   {"ka.req.pod.supplemental_groups", "When the request object refers to a pod, the supplementalGroup gids specified by the security context."},
-		   {"ka.req.pod.containers.add_capabilities", "When the request object refers to a pod, all capabilities to add when running the container.", IDX_ALLOWED, IDX_NUMERIC},
-		   {"ka.req.service.type", "When the request object refers to a service, the service type"},
-		   {"ka.req.service.ports", "When the request object refers to a service, the service's ports", IDX_ALLOWED, IDX_NUMERIC},
-		   {"ka.req.pod.volumes.hostpath", "When the request object refers to a pod, all hostPath paths specified for all volumes", IDX_ALLOWED, IDX_NUMERIC, true},
-		   {"ka.req.volume.hostpath", "Deprecated by ka.req.pod.volumes.hostpath. Return true if the provided (host) path prefix is used by any volume", IDX_ALLOWED, IDX_KEY},
-		   {"ka.req.pod.volumes.flexvolume_driver", "When the request object refers to a pod, all flexvolume drivers specified for all volumes", IDX_ALLOWED, IDX_NUMERIC},
-		   {"ka.req.pod.volumes.volume_type", "When the request object refers to a pod, all volume types for all volumes", IDX_ALLOWED, IDX_NUMERIC},
-		   {"ka.resp.name", "The response object name"},
-		   {"ka.response.code", "The response code"},
-		   {"ka.response.reason", "The response reason (usually present only for failures)"},
-		   {"ka.useragent", "The useragent of the client who made the request to the apiserver"}}};
+	static const json_event_filter_check::check_info
+		info = {"ka",
+			  "Access K8s Audit Log Events",
+			  "Fields with an IDX_ALLOWED annotation can be indexed (e.g. ka.req.containers.image[k] returns the image for the kth container). The index is optional--without any index the field returns values for all items. The index must be numeric with an IDX_NUMERIC annotation, and can be any string with an IDX_KEY annotation. Fields with an IDX_REQUIRED annotation require an index.",
+			  {{"ka.auditid", "The unique id of the audit event"},
+			   {"ka.stage", "Stage of the request (e.g. RequestReceived, ResponseComplete, etc.)"},
+			   {"ka.auth.decision", "The authorization decision"},
+			   {"ka.auth.reason", "The authorization reason"},
+			   {"ka.user.name", "The user name performing the request"},
+			   {"ka.user.groups", "The groups to which the user belongs"},
+			   {"ka.impuser.name", "The impersonated user name"},
+			   {"ka.verb", "The action being performed"},
+			   {"ka.uri", "The request URI as sent from client to server"},
+			   {"ka.uri.param", "The value of a given query parameter in the uri (e.g. when uri=/foo?key=val, ka.uri.param[key] is val).", IDX_REQUIRED, IDX_KEY},
+			   {"ka.target.name", "The target object name"},
+			   {"ka.target.namespace", "The target object namespace"},
+			   {"ka.target.resource", "The target object resource"},
+			   {"ka.target.subresource", "The target object subresource"},
+			   {"ka.req.binding.subjects", "When the request object refers to a cluster role binding, the subject (e.g. account/users) being linked by the binding"},
+			   {"ka.req.binding.role", "When the request object refers to a cluster role binding, the role being linked by the binding"},
+			   {"ka.req.binding.subject.has_name", "Deprecated, always returns \"N/A\". Only provided for backwards compatibility", IDX_REQUIRED, IDX_KEY},
+			   {"ka.req.configmap.name", "If the request object refers to a configmap, the configmap name"},
+			   {"ka.req.configmap.obj", "If the request object refers to a configmap, the entire configmap object"},
+			   {"ka.req.pod.containers.image", "When the request object refers to a pod, the container's images.", IDX_ALLOWED, IDX_NUMERIC},
+			   {"ka.req.container.image", "Deprecated by ka.req.pod.containers.image. Returns the image of the first container only"},
+			   {"ka.req.pod.containers.image.repository", "The same as req.container.image, but only the repository part (e.g. falcosecurity/falco).", IDX_ALLOWED, IDX_NUMERIC},
+			   {"ka.req.container.image.repository", "Deprecated by ka.req.pod.containers.image.repository. Returns the repository of the first container only"},
+			   {"ka.req.pod.host_ipc", "When the request object refers to a pod, the value of the hostIPC flag."},
+			   {"ka.req.pod.host_network", "When the request object refers to a pod, the value of the hostNetwork flag."},
+			   {"ka.req.container.host_network", "Deprecated alias for ka.req.pod.host_network"},
+			   {"ka.req.pod.host_pid", "When the request object refers to a pod, the value of the hostPID flag."},
+			   {"ka.req.pod.containers.host_port", "When the request object refers to a pod, all container's hostPort values.", IDX_ALLOWED, IDX_NUMERIC},
+			   {"ka.req.pod.containers.privileged", "When the request object refers to a pod, the value of the privileged flag for all containers.", IDX_ALLOWED, IDX_NUMERIC},
+			   {"ka.req.container.privileged", "Deprecated by ka.req.pod.containers.privileged. Returns true if any container has privileged=true"},
+			   {"ka.req.pod.containers.allow_privilege_escalation", "When the request object refers to a pod, the value of the allowPrivilegeEscalation flag for all containers", IDX_ALLOWED, IDX_NUMERIC},
+			   {"ka.req.pod.containers.read_only_fs", "When the request object refers to a pod, the value of the readOnlyRootFilesystem flag for all containers", IDX_ALLOWED, IDX_NUMERIC},
+			   {"ka.req.pod.run_as_user", "When the request object refers to a pod, the runAsUser uid specified in the security context for the pod. See ....containers.run_as_user for the runAsUser for individual containers"},
+			   {"ka.req.pod.containers.run_as_user", "When the request object refers to a pod, the runAsUser uid for all containers", IDX_ALLOWED, IDX_NUMERIC},
+			   {"ka.req.pod.containers.eff_run_as_user", "When the request object refers to a pod, the initial uid that will be used for all containers. This combines information from both the pod and container security contexts and uses 0 if no uid is specified", IDX_ALLOWED, IDX_NUMERIC},
+			   {"ka.req.pod.run_as_group", "When the request object refers to a pod, the runAsGroup gid specified in the security context for the pod. See ....containers.run_as_group for the runAsGroup for individual containers"},
+			   {"ka.req.pod.containers.run_as_group", "When the request object refers to a pod, the runAsGroup gid for all containers", IDX_ALLOWED, IDX_NUMERIC},
+			   {"ka.req.pod.containers.eff_run_as_group", "When the request object refers to a pod, the initial gid that will be used for all containers. This combines information from both the pod and container security contexts and uses 0 if no gid is specified", IDX_ALLOWED, IDX_NUMERIC},
+			   {"ka.req.pod.containers.proc_mount", "When the request object refers to a pod, the procMount types for all containers", IDX_ALLOWED, IDX_NUMERIC},
+			   {"ka.req.role.rules", "When the request object refers to a role/cluster role, the rules associated with the role"},
+			   {"ka.req.role.rules.apiGroups", "When the request object refers to a role/cluster role, the api groups associated with the role's rules", IDX_ALLOWED, IDX_NUMERIC},
+			   {"ka.req.role.rules.nonResourceURLs", "When the request object refers to a role/cluster role, the non resource urls associated with the role's rules", IDX_ALLOWED, IDX_NUMERIC},
+			   {"ka.req.role.rules.verbs", "When the request object refers to a role/cluster role, the verbs associated with the role's rules", IDX_ALLOWED, IDX_NUMERIC},
+			   {"ka.req.role.rules.resources", "When the request object refers to a role/cluster role, the resources associated with the role's rules", IDX_ALLOWED, IDX_NUMERIC},
+			   {"ka.req.pod.fs_group", "When the request object refers to a pod, the fsGroup gid specified by the security context."},
+			   {"ka.req.pod.supplemental_groups", "When the request object refers to a pod, the supplementalGroup gids specified by the security context."},
+			   {"ka.req.pod.containers.add_capabilities", "When the request object refers to a pod, all capabilities to add when running the container.", IDX_ALLOWED, IDX_NUMERIC},
+			   {"ka.req.service.type", "When the request object refers to a service, the service type"},
+			   {"ka.req.service.ports", "When the request object refers to a service, the service's ports", IDX_ALLOWED, IDX_NUMERIC},
+			   {"ka.req.pod.volumes.hostpath", "When the request object refers to a pod, all hostPath paths specified for all volumes", IDX_ALLOWED, IDX_NUMERIC, true},
+			   {"ka.req.volume.hostpath", "Deprecated by ka.req.pod.volumes.hostpath. Return true if the provided (host) path prefix is used by any volume", IDX_ALLOWED, IDX_KEY},
+			   {"ka.req.pod.volumes.flexvolume_driver", "When the request object refers to a pod, all flexvolume drivers specified for all volumes", IDX_ALLOWED, IDX_NUMERIC},
+			   {"ka.req.pod.volumes.volume_type", "When the request object refers to a pod, all volume types for all volumes", IDX_ALLOWED, IDX_NUMERIC},
+			   {"ka.resp.name", "The response object name"},
+			   {"ka.response.code", "The response code"},
+			   {"ka.response.reason", "The response reason (usually present only for failures)"},
+			   {"ka.useragent", "The useragent of the client who made the request to the apiserver"}}};
+	return info;
 
-	{
-		m_aliases = {
+}
+
+const std::unordered_map<std::string, k8s_audit_filter_check::alias> &k8s_audit_filter_check::get_aliases() const
+{
+	static const std::unordered_map<std::string, k8s_audit_filter_check::alias>
+		aliases = {
 			{"ka.auditid", {{"/auditID"_json_pointer}}},
 			{"ka.stage", {{"/stage"_json_pointer}}},
 			{"ka.auth.decision", {{"/annotations/authorization.k8s.io~1decision"_json_pointer}}},
@@ -1404,7 +1411,11 @@ k8s_audit_filter_check::k8s_audit_filter_check()
 			{"ka.response.code", {{"/responseStatus/code"_json_pointer}}},
 			{"ka.response.reason", {{"/responseStatus/reason"_json_pointer}}},
 			{"ka.useragent", {{"/userAgent"_json_pointer}}}};
-	}
+	return aliases;
+}
+
+k8s_audit_filter_check::k8s_audit_filter_check()
+{
 }
 
 k8s_audit_filter_check::~k8s_audit_filter_check()
@@ -1475,14 +1486,14 @@ std::list<gen_event_filter_factory::filter_fieldclass_info> json_event_filter_fa
 
 	for(auto &chk: m_defined_checks)
 	{
-		json_event_filter_check::check_info &info = chk->get_info();
+		const json_event_filter_check::check_info &info = chk->get_info();
 		gen_event_filter_factory::filter_fieldclass_info cinfo;
 
 		cinfo.name = info.m_name;
 		cinfo.desc = info.m_desc;
 		cinfo.shortdesc = info.m_shortdesc;
 
-		for(auto &field : info.m_fields)
+		for(const auto &field : info.m_fields)
 		{
 			gen_event_filter_factory::filter_field_info info;
 			info.name = field.m_name;

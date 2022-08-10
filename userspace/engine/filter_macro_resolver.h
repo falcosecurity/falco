@@ -18,8 +18,8 @@ limitations under the License.
 
 #include <filter/parser.h>
 #include <string>
-#include <set>
-#include <map>
+#include <unordered_set>
+#include <unordered_map>
 #include <memory>
 
 /*!
@@ -63,7 +63,7 @@ class filter_macro_resolver
 			substituted during the last invocation of run(). Should be
 			non-empty if the last invocation of run() returned true.
 		*/
-		const std::set<std::string>& get_resolved_macros() const;
+		const std::unordered_set<std::string>& get_resolved_macros() const;
 
 		/*!
 			\brief Returns a set containing the names of all the macros
@@ -71,10 +71,10 @@ class filter_macro_resolver
 			A macro remains unresolved if it is found inside the processed
 			filter but it was not defined with set_macro();
 		*/
-		const std::set<std::string>& get_unknown_macros() const;
+		const std::unordered_set<std::string>& get_unknown_macros() const;
 		
 	private:
-		typedef std::map<
+		typedef std::unordered_map<
 			std::string,
 			std::shared_ptr<libsinsp::filter::ast::expr>
 		> macro_defs;
@@ -82,8 +82,8 @@ class filter_macro_resolver
 		struct visitor : public libsinsp::filter::ast::expr_visitor
 		{
 			std::unique_ptr<libsinsp::filter::ast::expr> m_node_substitute;
-			std::set<std::string>* m_unknown_macros;
-			std::set<std::string>* m_resolved_macros;
+			std::unordered_set<std::string>* m_unknown_macros;
+			std::unordered_set<std::string>* m_resolved_macros;
 			macro_defs* m_macros;
 
 			void visit(libsinsp::filter::ast::and_expr* e) override;
@@ -95,7 +95,7 @@ class filter_macro_resolver
 			void visit(libsinsp::filter::ast::binary_check_expr* e) override;
 		};
 
-		std::set<std::string> m_unknown_macros;
-		std::set<std::string> m_resolved_macros;
+		std::unordered_set<std::string> m_unknown_macros;
+		std::unordered_set<std::string> m_resolved_macros;
 		macro_defs m_macros;
 };

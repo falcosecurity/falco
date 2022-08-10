@@ -173,7 +173,7 @@ public:
 	};
 
 	json_event_filter_check();
-	virtual ~json_event_filter_check();
+	virtual ~json_event_filter_check() = 0;
 
 	virtual int32_t parse_field_name(const char *str, bool alloc_state, bool needed_for_filtering);
 	void add_filter_value(const char *str, uint32_t len, uint32_t i = 0);
@@ -197,7 +197,7 @@ public:
 	// brackets (e.g. ka.image[foo])
 	size_t parsed_size();
 
-	check_info &get_info();
+	virtual const check_info &get_info() const = 0;
 
 	//
 	// Allocate a new check of the same type. Must be overridden.
@@ -260,9 +260,9 @@ protected:
 	//
 	// The version of parse_field_name in this base class will
 	// check a field specification against all the aliases.
-	std::map<std::string, struct alias> m_aliases;
+	virtual const std::unordered_map<std::string, alias> &get_aliases() const = 0;
 
-	check_info m_info;
+	//check_info m_info;
 
 	// The actual field name parsed in parse_field_name.
 	std::string m_field;
@@ -315,11 +315,18 @@ public:
 
 	int32_t parse_field_name(const char* str, bool alloc_state, bool needed_for_filtering) final;
 
-	json_event_filter_check *allocate_new();
+	json_event_filter_check *allocate_new() override;
+	const check_info &get_info() const override;
 
 protected:
 
 	bool extract_values(json_event *jevt) final;
+	const std::unordered_map<std::string, alias> &get_aliases() const override
+	{
+		static std::unordered_map<std::string, alias> a;
+		return a;
+	};
+
 
 private:
 
@@ -340,9 +347,12 @@ public:
 	k8s_audit_filter_check();
 	virtual ~k8s_audit_filter_check();
 
-	json_event_filter_check *allocate_new();
+	json_event_filter_check *allocate_new() override;
 
-	// Extract all images/image repositories from the provided containers
+	const check_info &get_info() const override;
+	const std::unordered_map<std::string, alias> &get_aliases() const override;
+
+		// Extract all images/image repositories from the provided containers
 	static bool extract_images(const nlohmann::json &j,
 				   json_event_filter_check &jchk);
 
