@@ -28,6 +28,8 @@ limitations under the License.
 #endif
 #include "statsfilewriter.h"
 #include "application.h"
+#include "falco_outputs.h"
+#include "token_bucket.h"
 
 #include <plugin_manager.h>
 
@@ -47,11 +49,21 @@ application::run_result application::do_inspect(syscall_evt_drop_mgr &sdropmgr,
 	uint32_t timeouts_since_last_success_or_msg = 0;
 	std::size_t source_idx;
 	bool source_idx_found = false;
+	token_bucket rate_limiter;
+	bool rate_limiter_enabled = m_state->config->m_notifications_rate > 0;
+
+	// if enabled, init rate limiter
+	if (rate_limiter_enabled)
+	{
+		rate_limiter.init(
+			m_state->config->m_notifications_rate,
+			m_state->config->m_notifications_max_burst);
+	}
 
 	num_evts = 0;
 
 	sdropmgr.init(m_state->inspector,
-		      m_state->outputs,
+		      m_state->outputs, // drop manager has its own rate limiting logic
 		      m_state->config->m_syscall_evt_drop_actions,
 		      m_state->config->m_syscall_evt_drop_threshold,
 		      m_state->config->m_syscall_evt_drop_rate,
@@ -184,7 +196,14 @@ application::run_result application::do_inspect(syscall_evt_drop_mgr &sdropmgr,
 		unique_ptr<falco_engine::rule_result> res = m_state->engine->process_event(source_idx, ev);
 		if(res)
 		{
-			m_state->outputs->handle_event(res->evt, res->rule, res->source, res->priority_num, res->format, res->tags);
+			if (!rate_limiter_enabled || rate_limiter.claim())
+			{
+				m_state->outputs->handle_event(res->evt, res->rule, res->source, res->priority_num, res->format, res->tags);
+			}
+			else
+			{
+				falco_logger::log(LOG_DEBUG, "Skipping rate-limited notification for rule " + res->rule + "\n");
+			}
 		}
 
 		num_evts++;
