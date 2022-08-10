@@ -16,10 +16,130 @@ limitations under the License.
 
 #pragma once
 
+#include <sinsp.h>
+
 #include <filter/parser.h>
 #include <string>
 #include <set>
 #include <memory>
+#include <functional>
+
+class falco_event_types
+{
+private:
+	using vec_t = std::vector<uint8_t>;
+	vec_t m_types{};
+
+	static inline void check_range(uint16_t e)
+	{
+		if(e > PPM_EVENT_MAX)
+		{
+			throw std::range_error("invalid event type");
+		}
+	}
+
+public:
+	falco_event_types(falco_event_types&&) = default;
+	falco_event_types(const falco_event_types&) = default;
+	falco_event_types& operator=(falco_event_types&&) = default;
+	falco_event_types& operator=(const falco_event_types&) = default;
+
+	inline falco_event_types():
+		m_types(PPM_EVENT_MAX + 1, 0)
+	{
+	}
+
+	inline void insert(uint16_t e)
+	{
+		check_range(e);
+		m_types[e] = 1;
+	}
+
+	void merge(const falco_event_types& other)
+	{
+		for(int i = 0; i <= PPM_EVENT_MAX; ++i)
+		{
+			m_types[i] |= other.m_types[i];
+		}
+	}
+
+	void merge(const std::set<uint16_t>& other)
+	{
+		for(const auto& e : other)
+		{
+			insert(e);
+		}
+	}
+
+	inline bool contains(uint16_t e) const
+	{
+		check_range(e);
+		return m_types[e] != 0;
+	}
+
+	void clear()
+	{
+		for(auto& v : m_types)
+		{
+			v = 0;
+		}
+	}
+
+	bool equals(const falco_event_types& other) const
+	{
+		return m_types == other.m_types;
+	}
+
+	falco_event_types diff(const falco_event_types& other)
+	{
+		falco_event_types ret;
+		for(size_t i = 0; i <= PPM_EVENT_MAX; ++i)
+		{
+			if(m_types[i] == 1 && other.m_types[i] == 0)
+			{
+				ret.m_types[i] = 1;
+			}
+		}
+		return ret;
+	}
+
+	falco_event_types intersect(const falco_event_types& other)
+	{
+		falco_event_types ret;
+		for(size_t i = 0; i <= PPM_EVENT_MAX; ++i)
+		{
+			if(m_types[i] == 1 && other.m_types[i] == 1)
+			{
+				ret.m_types[i] = 1;
+			}
+		}
+		return ret;
+	}
+
+	void for_each(std::function<bool(uint16_t)> consumer) const
+	{
+		for(uint16_t i = 0; i < m_types.size(); ++i)
+		{
+			if(m_types[i] != 0)
+			{
+				if(!consumer(i))
+				{
+					return;
+				}
+			}
+		}
+	}
+};
+
+inline bool operator==(const falco_event_types& lhs, const falco_event_types& rhs)
+{
+	return lhs.equals(rhs);
+}
+
+inline bool operator!=(const falco_event_types& lhs, const falco_event_types& rhs)
+{
+	return !(lhs == rhs);
+}
 
 /*!
 	\brief Helper class for finding event types
@@ -35,9 +155,12 @@ public:
 		string is passed, all the available evttypes are collected
 		\param out The set to be filled with the evttypes
 	*/
-	inline void evttypes(std::string evtname, std::set<uint16_t>& out) const
+	inline void evttypes(std::string evtname, falco_event_types& out) const
 	{
-		visitor().evttypes(evtname, out);
+		falco_event_types evt_types;
+		visitor().evttypes(evtname, evt_types);
+		evt_types.for_each([&out](uint16_t val)
+				   {out.insert(val); return true; });
 	}
 
 	/*!
@@ -64,7 +187,7 @@ private:
 	struct visitor : public libsinsp::filter::ast::expr_visitor
 	{
 		bool m_expect_value;
-		std::set<uint16_t> m_last_node_evttypes;
+		falco_event_types m_last_node_evttypes;
 
 		void visit(libsinsp::filter::ast::and_expr* e) override;
 		void visit(libsinsp::filter::ast::or_expr* e) override;
@@ -73,7 +196,7 @@ private:
 		void visit(libsinsp::filter::ast::list_expr* e) override;
 		void visit(libsinsp::filter::ast::unary_check_expr* e) override;
 		void visit(libsinsp::filter::ast::binary_check_expr* e) override;
-		void inversion(std::set<uint16_t>& types);
-		void evttypes(std::string evtname, std::set<uint16_t>& out);
+		void inversion(falco_event_types& types);
+		void evttypes(std::string evtname, falco_event_types& out);
 	};
 };

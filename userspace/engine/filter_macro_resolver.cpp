@@ -61,12 +61,12 @@ void filter_macro_resolver::set_macro(
 	m_macros[name] = macro;
 }
 
-const set<string>& filter_macro_resolver::get_unknown_macros() const
+const unordered_set<string>& filter_macro_resolver::get_unknown_macros() const
 {
 	return m_unknown_macros;
 }
 
-const set<string>& filter_macro_resolver::get_resolved_macros() const
+const unordered_set<string>& filter_macro_resolver::get_resolved_macros() const
 {
 	return m_resolved_macros;
 }

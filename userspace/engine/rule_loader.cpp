@@ -21,7 +21,7 @@ limitations under the License.
 #include "filter_evttype_resolver.h"
 #include "filter_warning_resolver.h"
 #include <version.h>
-#include <sstream>
+#include <regex.h>
 
 #define MAX_VISIBILITY		((uint32_t) -1)
 
@@ -682,77 +682,6 @@ static void build_rule_exception_infos(
 	}
 }
 
-// todo(jasondellaluce): this breaks string escaping in lists
-static bool resolve_list(string& cnd, const rule_loader::list_info& list)
-{
-	static string blanks = " \t\n\r";
-	static string delims = blanks + "(),=";
-	string new_cnd;
-	size_t start, end;
-	bool used = false;
-	start = cnd.find(list.name);
-	while (start != string::npos)
-	{
-		// the characters surrounding the name must
-		// be delims of beginning/end of string
-		end = start + list.name.length();
-		if ((start == 0 || delims.find(cnd[start - 1]) != string::npos)
-			&& (end >= cnd.length() || delims.find(cnd[end]) != string::npos))
-		{
-			// shift pointers to consume all whitespaces
-			while (start > 0
-				&& blanks.find(cnd[start - 1]) != string::npos)
-			{
-				start--;
-			}
-			while (end < cnd.length()
-				&& blanks.find(cnd[end]) != string::npos)
-			{
-				end++;
-			}
-			// create substitution string by concatenating all values
-			string sub = "";
-			for (auto &v : list.items)
-			{
-				if (!sub.empty())
-				{
-					sub += ", ";
-				}
-				sub += v;
-			}
-			// if substituted list is empty, we need to
-			// remove a comma from the left or the right
-			if (sub.empty())
-			{
-				if (start > 0 && cnd[start - 1] == ',')
-				{
-					start--;
-				}
-				else if (end < cnd.length() && cnd[end] == ',')
-				{
-					end++;
-				}
-			}
-			// compose new string with substitution
-			new_cnd = "";
-			if (start > 0)
-			{
-				new_cnd += cnd.substr(0, start) + " ";
-			}
-			new_cnd += sub + " ";
-			if (end <= cnd.length())
-			{
-				new_cnd += cnd.substr(end);
-			}
-			cnd = new_cnd;
-			start += sub.length() + 1;
-			used = true;
-		}
-		start = cnd.find(list.name, start + 1);
-	}
-	return used;
-}
-
 static void resolve_macros(
 	indexed_vector<rule_loader::macro_info>& macros,
 	shared_ptr<ast::expr>& ast,
@@ -782,20 +711,192 @@ static void resolve_macros(
 	}
 }
 
+
+/*
+ * delim_chars
+ * helper class to look for delimiters
+ */
+struct delim_chars
+{
+	std::vector<char> m_delims = std::vector<char>(256, 0);
+
+	explicit delim_chars(const std::string &char_array)
+	{
+		for (auto c : char_array)
+		{
+			m_delims[c] = 1;
+		}
+	}
+
+	bool contains(char c) const
+	{
+		return m_delims[c]!=0;
+	}
+
+	size_t find_in(const std::string& s) const
+	{
+		for (size_t i = 0, j = s.size(); i < j; ++i)
+		{
+			if (contains(s[i]))
+			{
+				return i;
+			}
+		}
+		return std::string::npos;
+	}
+};
+
+#define LIST_DELMS "\t\n\r ,"
+
+/*
+ * list_inserter
+ */
+struct list_inserter
+{
+	using list_info_t = rule_loader::list_info;
+	using lists_map_t = indexed_vector<list_info_t>;
+
+	constexpr static const char* list_full = R"([\(][^()]+[\)])";
+	constexpr static const char* list_sub = {"[_a-z0-9]+[" LIST_DELMS "]*"};
+
+	const delim_chars delims{LIST_DELMS};
+
+	regex_t re_list{};
+	regex_t re_sub{};
+
+	list_inserter()
+	{
+		if (regcomp(&re_list, list_full, REG_EXTENDED) != 0)
+		{
+			ASSERT(false);
+		}
+
+		if (regcomp(&re_sub, list_sub, REG_EXTENDED) != 0)
+		{
+			ASSERT(false);
+		}
+	}
+
+	~list_inserter()
+	{
+		regfree(&re_list);
+		regfree(&re_sub);
+	}
+
+	static bool list_to_ret(std::string& ret, list_info_t* li, bool first)
+	{
+		li->used = true;
+		if (li->items.empty())
+		{
+			return true;
+		}
+
+		for (const auto &item : li->items)
+		{
+			if (item.empty())
+			{
+				continue;
+			}
+
+			if (first)
+			{
+				first = false;
+			}
+			else
+			{
+				ret += ", ";
+			}
+			ret += item;
+		}
+		return !first;
+	}
+
+	// split string found in insert_lists by delimiters
+	// concatenate lists expansion
+	void cat_lists(std::string& ret, const std::string& cond, lists_map_t &lists) const
+	{
+		regmatch_t re_match;
+		size_t start = 0;
+		bool first = true;
+
+		auto put = [&ret, &first](const std::string &item)
+		{
+			if (first)
+			{
+				first = false;
+			}
+			else
+			{
+				ret += ", ";
+			}
+			ret += item;
+		};
+
+		while (start < cond.size() && regexec(&re_sub, cond.c_str() + start, 1, &re_match, 0) == 0)
+		{
+			auto s = cond.substr(start + re_match.rm_so, re_match.rm_eo - re_match.rm_so);
+			auto tok = s.substr(0, delims.find_in(s));
+			auto *li = lists.at(tok);
+
+			if (li)
+			{
+				li->used = true;
+				for (const auto &item : li->items)
+				{
+					if (item.empty())
+					{
+						continue;
+					}
+					put(item);
+				}
+			}
+			else // not a list
+			{
+				put(tok);
+			}
+
+			start += re_match.rm_eo;
+		}
+	}
+
+	// top level search
+	// find all "(..)" entries
+	std::string insert_lists(const std::string &cond, lists_map_t &lists) const
+	{
+		std::string ret;
+		regmatch_t re_match;
+		size_t start = 0;
+		while (start < cond.size() && regexec(&re_list, cond.c_str() + start, 1, &re_match, 0)==0)
+		{
+			ret += cond.substr(start, re_match.rm_so);
+			ret += "(";
+			cat_lists(ret, cond.substr(start + re_match.rm_so + 1, re_match.rm_eo - re_match.rm_so - 2), lists);
+			ret += ")";
+			start += re_match.rm_eo;
+		}
+
+		if (start <= cond.size())
+		{
+			ret += cond.substr(start);
+		}
+
+		return ret.empty() ? cond : ret;
+	}
+};
+
+
 // note: there is no visibility order between filter conditions and lists
 static shared_ptr<ast::expr> parse_condition(
 	string condition,
 	indexed_vector<rule_loader::list_info>& lists,
 	const rule_loader::context &ctx)
 {
-	for (auto &l : lists)
-	{
-		if (resolve_list(condition, l))
-		{
-			l.used = true;
-		}
-	}
-	libsinsp::filter::parser p(condition);
+
+	static const list_inserter list_inserter;
+
+	auto cond = list_inserter.insert_lists(condition, lists);
+
+	libsinsp::filter::parser p(cond);
 	p.set_max_depth(1000);
 	try
 	{
@@ -804,10 +905,9 @@ static shared_ptr<ast::expr> parse_condition(
 	}
 	catch (const sinsp_exception& e)
 	{
-		throw rule_loader::rule_load_exception(
-			load_result::LOAD_ERR_COMPILE_CONDITION,
-			e.what(),
-			ctx);
+		throw falco_exception("Compilation error when compiling \n"
+                        + condition	+ "\n"
+			+ cond + "\n: " + to_string(p.get_pos().col) + ": " + e.what());
 	}
 }
 

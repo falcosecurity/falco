@@ -27,21 +27,17 @@ static bool is_evttype_operator(const string& op)
 	return op == "==" || op == "=" || op == "!=" || op == "in";
 }
 
-void filter_evttype_resolver::visitor::inversion(set<uint16_t>& types)
+void filter_evttype_resolver::visitor::inversion(falco_event_types& types)
 {
-	set<uint16_t> all_types;
+	falco_event_types all_types;
 	evttypes("", all_types);
 	if (types != all_types) // we don't invert the "all types" set
 	{
-		set<uint16_t> diff = types;
-		types.clear();
-		set_difference(
-			all_types.begin(), all_types.end(), diff.begin(), diff.end(),
-			inserter(types, types.begin()));
+		types = all_types.diff(types);
 	}
 }
 
-void filter_evttype_resolver::visitor::evttypes(string evtname, set<uint16_t>& out)
+void filter_evttype_resolver::visitor::evttypes(string evtname, falco_event_types& out)
 {
 	// Fill in from 2 to PPM_EVENT_MAX-1. 0 and 1 are excluded as
 	// those are PPM_GENERIC_E/PPME_GENERIC_X
@@ -59,42 +55,38 @@ void filter_evttype_resolver::visitor::evttypes(string evtname, set<uint16_t>& o
 
 void filter_evttype_resolver::evttypes(
 	ast::expr* filter,
-	set<uint16_t>& out) const
+	std::set<uint16_t>& out) const
 {
 	visitor v;
 	v.m_expect_value = false;
 	v.m_last_node_evttypes.clear();
 	filter->accept(&v);
-	out.insert(v.m_last_node_evttypes.begin(), v.m_last_node_evttypes.end());
+	v.m_last_node_evttypes.for_each([&out](uint16_t val){out.insert(val); return true;});
 }
 
 void filter_evttype_resolver::evttypes(
 	shared_ptr<ast::expr> filter,
-	set<uint16_t>& out) const
+	std::set<uint16_t>& out) const
 {
 	visitor v;
 	v.m_expect_value = false;
 	v.m_last_node_evttypes.clear();
 	filter.get()->accept(&v);
-	out.insert(v.m_last_node_evttypes.begin(), v.m_last_node_evttypes.end());
+	v.m_last_node_evttypes.for_each([&out](uint16_t val){out.insert(val); return true;} );
 }
 
 // "and" nodes evttypes are the intersection of the evttypes of their children.
 // we initialize the set with "all event types"
 void filter_evttype_resolver::visitor::visit(ast::and_expr* e)
 {
-	set<uint16_t> types, inters;
+	falco_event_types types;
 	evttypes("", types);
 	m_last_node_evttypes.clear();
 	for (auto &c : e->children)
 	{
-		inters.clear();
+		falco_event_types inters;
 		c->accept(this);
-		set_intersection(
-			types.begin(), types.end(),
-			m_last_node_evttypes.begin(), m_last_node_evttypes.end(),
-			inserter(inters, inters.begin()));
-		types = inters;
+		types = types.intersect(m_last_node_evttypes);
 	}
 	m_last_node_evttypes = types;
 }
@@ -102,12 +94,12 @@ void filter_evttype_resolver::visitor::visit(ast::and_expr* e)
 // "or" nodes evttypes are the union of the evttypes their children
 void filter_evttype_resolver::visitor::visit(ast::or_expr* e)
 {
-	set<uint16_t> types;
+	falco_event_types types;
 	m_last_node_evttypes.clear();
 	for (auto &c : e->children)
 	{
 		c->accept(this);
-		types.insert(m_last_node_evttypes.begin(), m_last_node_evttypes.end());
+		types.merge(m_last_node_evttypes);
 	}
 	m_last_node_evttypes = types;
 }

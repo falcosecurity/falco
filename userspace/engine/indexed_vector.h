@@ -131,5 +131,5 @@ public:
 
 private:
 	std::vector<T> m_entries;
-	std::map<std::string, size_t> m_index;
+	std::unordered_map<std::string, size_t> m_index;
 };
