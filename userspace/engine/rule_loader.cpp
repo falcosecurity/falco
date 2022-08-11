@@ -21,7 +21,12 @@ limitations under the License.
 #include "filter_evttype_resolver.h"
 #include "filter_warning_resolver.h"
 #include <version.h>
-#include <regex.h>
+
+#ifndef _WIN32
+	#include <onigposix.h>
+#else   // _WIN32
+	#include <regex>
+#endif  // _WIN32
 
 #define MAX_VISIBILITY		((uint32_t) -1)
 
@@ -756,8 +761,8 @@ struct list_inserter
 	using list_info_t = rule_loader::list_info;
 	using lists_map_t = indexed_vector<list_info_t>;
 
-	constexpr static const char* list_full = R"([\(][^()]+[\)])";
-	constexpr static const char* list_sub = { "[^" LIST_DELMS "]+"};
+	constexpr static const char* list_full = "\\([^\\(\\)]+\\)";
+	constexpr static const char* list_sub  = { "[^" LIST_DELMS "]+"};
 
 	const delim_chars delims{LIST_DELMS};
 
@@ -791,7 +796,7 @@ struct list_inserter
 		size_t start = 0;
 		bool first = true;
 
-		while (start < cond.size() && regexec(&re_sub, cond.c_str() + start, 1, &re_match, 0) == 0)
+		while (start < cond.size() && regexec(const_cast<regex_t*>(&re_sub), cond.c_str() + start, 1, &re_match, 0) == 0)
 		{
 			ret += cond.substr(start, re_match.rm_so);
 
@@ -859,7 +864,7 @@ struct list_inserter
 		std::string ret;
 		regmatch_t re_match;
 		size_t start = 0;
-		while (start < cond.size() && regexec(&re_list, cond.c_str() + start, 1, &re_match, 0)==0)
+		while (start < cond.size() && regexec(const_cast<regex_t*>(&re_list), cond.c_str() + start, 1, &re_match, 0)==0)
 		{
 			ret += cond.substr(start, re_match.rm_so);
 			ret += "(";
