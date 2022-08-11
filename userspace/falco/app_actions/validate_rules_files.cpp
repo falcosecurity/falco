@@ -102,8 +102,9 @@ application::run_result application::validate_rules_files()
 				{
 					// If here, there must be only warnings.
 					// Add a line to the summary noting that the
-					// file was ok without printing the warnings.
-					summary += filename + ": Ok";
+					// file was ok with warnings, without actually
+					// printing the warnings.
+					summary += filename + ": Ok, with warnings";
 
 					// If verbose is true, print the warnings now.
 					if(m_options.verbose)

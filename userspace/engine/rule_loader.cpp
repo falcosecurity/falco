@@ -266,7 +266,19 @@ const std::string& rule_loader::result::as_summary_string()
 		os << name << ": ";
 	}
 
-	os << (success ? "Ok" : "Invalid");
+	if(success)
+	{
+		os << "Ok";
+
+		if (!warnings.empty())
+		{
+			os << ", with warnings";
+		}
+	}
+	else
+	{
+		os << "Invalid";
+	}
 
 	if(!errors.empty())
 	{
@@ -326,7 +338,19 @@ const std::string& rule_loader::result::as_verbose_string(const rules_contents_t
 		os << name << ": ";
 	}
 
-	os << (success ? "Ok" : "Invalid");
+	if(success)
+	{
+		os << "Ok";
+
+		if (!warnings.empty())
+		{
+			os << ", with warnings";
+		}
+	}
+	else
+	{
+		os << "Invalid";
+	}
 
 	if (!errors.empty())
 	{
