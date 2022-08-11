@@ -166,7 +166,7 @@ void cmdline_options::define()
 		("enable-source",                 "Enable a specific event source. If used, only event sources passed with this options get enabled. Available event sources are: syscall or any source from a configured plugin with event sourcing capability. It can be passed multiple times. It has no offect when reading events from a trace file. Can not be mixed with disable-source.", cxxopts::value(enable_sources), "<event_source>")
 #ifdef HAS_GVISOR
 		("g,gvisor-config",				  "Parse events from gVisor using the specified configuration file. A falco-compatible configuration file can be generated with --gvisor-generate-config and can be used for both runsc and Falco.", cxxopts::value(gvisor_config), "<gvisor_config>")
-		("gvisor-generate-config",		  "Generate a configuration file that can be used for gVisor.", cxxopts::value<std::string>(gvisor_generate_config_with_socket)->implicit_value("/tmp/gvisor.sock"), "<socket_path>")
+		("gvisor-generate-config",		  "Generate a configuration file that can be used for gVisor.", cxxopts::value<std::string>(gvisor_generate_config_with_socket)->implicit_value("/run/gvisor.sock"), "<socket_path>")
 		("gvisor-root",					  "gVisor root directory for storage of container state. Equivalent to runsc --root flag.", cxxopts::value(gvisor_root), "<gvisor_root>")
 #endif
 		("i",                             "Print all events that are ignored by default (i.e. without the -A flag) and exit.", cxxopts::value(print_ignored_events)->default_value("false"))
