@@ -16,8 +16,6 @@ limitations under the License.
 
 #pragma once
 
-#include <sinsp.h>
-
 #include <filter/parser.h>
 #include <string>
 #include <set>
@@ -32,7 +30,8 @@ private:
 
 	static inline void check_range(uint16_t e)
 	{
-		if(e > PPM_EVENT_MAX)
+	    	static const auto enum_max = get_ppm_event_max();
+		if(e > enum_max)
 		{
 			throw std::range_error("invalid event type");
 		}
@@ -44,8 +43,10 @@ public:
 	falco_event_types& operator=(falco_event_types&&) = default;
 	falco_event_types& operator=(const falco_event_types&) = default;
 
+	static size_t get_ppm_event_max();
+
 	inline falco_event_types():
-		m_types(PPM_EVENT_MAX + 1, 0)
+		m_types(get_ppm_event_max() + 1, 0)
 	{
 	}
 
@@ -57,7 +58,7 @@ public:
 
 	void merge(const falco_event_types& other)
 	{
-		for(int i = 0; i <= PPM_EVENT_MAX; ++i)
+		for(size_t i = 0; i <= get_ppm_event_max(); ++i)
 		{
 			m_types[i] |= other.m_types[i];
 		}
@@ -93,7 +94,7 @@ public:
 	falco_event_types diff(const falco_event_types& other)
 	{
 		falco_event_types ret;
-		for(size_t i = 0; i <= PPM_EVENT_MAX; ++i)
+		for(size_t i = 0; i <= get_ppm_event_max(); ++i)
 		{
 			if(m_types[i] == 1 && other.m_types[i] == 0)
 			{
@@ -106,7 +107,7 @@ public:
 	falco_event_types intersect(const falco_event_types& other)
 	{
 		falco_event_types ret;
-		for(size_t i = 0; i <= PPM_EVENT_MAX; ++i)
+		for(size_t i = 0; i <= get_ppm_event_max(); ++i)
 		{
 			if(m_types[i] == 1 && other.m_types[i] == 1)
 			{
