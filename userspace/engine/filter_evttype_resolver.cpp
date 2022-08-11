@@ -27,6 +27,13 @@ static bool is_evttype_operator(const string& op)
 	return op == "==" || op == "=" || op == "!=" || op == "in";
 }
 
+
+size_t falco_event_types::get_ppm_event_max()
+{
+	return PPM_EVENT_MAX;
+}
+
+
 void filter_evttype_resolver::visitor::inversion(falco_event_types& types)
 {
 	falco_event_types all_types;
