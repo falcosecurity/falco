@@ -757,7 +757,7 @@ struct list_inserter
 	using lists_map_t = indexed_vector<list_info_t>;
 
 	constexpr static const char* list_full = R"([\(][^()]+[\)])";
-	constexpr static const char* list_sub = {"[_a-z0-9]+[" LIST_DELMS "]*"};
+	constexpr static const char* list_sub = { "[^" LIST_DELMS "]+"};
 
 	const delim_chars delims{LIST_DELMS};
 
@@ -783,34 +783,6 @@ struct list_inserter
 		regfree(&re_sub);
 	}
 
-	static bool list_to_ret(std::string& ret, list_info_t* li, bool first)
-	{
-		li->used = true;
-		if (li->items.empty())
-		{
-			return true;
-		}
-
-		for (const auto &item : li->items)
-		{
-			if (item.empty())
-			{
-				continue;
-			}
-
-			if (first)
-			{
-				first = false;
-			}
-			else
-			{
-				ret += ", ";
-			}
-			ret += item;
-		}
-		return !first;
-	}
-
 	// split string found in insert_lists by delimiters
 	// concatenate lists expansion
 	void cat_lists(std::string& ret, const std::string& cond, lists_map_t &lists) const
@@ -819,43 +791,64 @@ struct list_inserter
 		size_t start = 0;
 		bool first = true;
 
-		auto put = [&ret, &first](const std::string &item)
-		{
-			if (first)
-			{
-				first = false;
-			}
-			else
-			{
-				ret += ", ";
-			}
-			ret += item;
-		};
-
 		while (start < cond.size() && regexec(&re_sub, cond.c_str() + start, 1, &re_match, 0) == 0)
 		{
+			ret += cond.substr(start, re_match.rm_so);
+
 			auto s = cond.substr(start + re_match.rm_so, re_match.rm_eo - re_match.rm_so);
-			auto tok = s.substr(0, delims.find_in(s));
-			auto *li = lists.at(tok);
+			auto *li = lists.at(s);
 
 			if (li)
 			{
 				li->used = true;
+				if(li->items.empty())
+				{
+					start += re_match.rm_eo;
+					while (start < cond.size() && delims.contains(cond[start]))
+					{
+						if (cond[start] == ',')
+						{
+							++start;
+							break;
+						}
+						ret.push_back(cond[start]);
+						++start;
+					}
+					continue;
+				}
+
 				for (const auto &item : li->items)
 				{
 					if (item.empty())
 					{
 						continue;
 					}
-					put(item);
+
+					if (first)
+					{
+						first = false;
+					}
+					else
+					{
+						while (!ret.empty() && delims.contains(ret.back()))
+						{
+							ret.pop_back();
+						}
+						ret += ", ";
+					}
+					ret += item;
 				}
 			}
-			else // not a list
+			else
 			{
-				put(tok);
+				ret += s;
 			}
-
 			start += re_match.rm_eo;
+		}
+
+		if (start <= cond.size())
+		{
+			ret += cond.substr(start);
 		}
 	}
 
