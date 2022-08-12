@@ -65,6 +65,9 @@ private:
 		bool terminate;
 		bool reopen_outputs;
 
+		std::string m_plugin_name;
+		std::string m_plugin_open_params;
+
 		std::shared_ptr<falco_configuration> config;
 		std::shared_ptr<falco_outputs> outputs;
 		std::shared_ptr<falco_engine> engine;

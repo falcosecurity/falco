@@ -55,7 +55,8 @@ application::run_result application::load_plugins()
 				}
 				loaded_plugin = plugin;
 				m_state->enabled_sources = {plugin->event_source()};
-				m_state->inspector->set_input_plugin(p.m_name, p.m_open_params);
+				m_state->m_plugin_name = p.m_name;
+				m_state->m_plugin_open_params = p.m_open_params; 
 			}
 
 			// Init filtercheck list for the plugin's source and add the
