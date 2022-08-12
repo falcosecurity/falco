@@ -22,73 +22,125 @@ limitations under the License.
 
 using namespace falco::app;
 
+#define FALCO_BPF_ENV_VARIABLE "FALCO_BPF_PROBE"
+#define MAX_PROBE_PATH_SIZE 4096
+
 typedef std::function<void(std::shared_ptr<sinsp> inspector)> open_t;
 
 application::run_result application::open_inspector()
 {
 	// Notify engine that we finished loading and enabling all rules
 	m_state->engine->complete_rule_loading();
-	
-	if(is_capture_mode())
+
+	/// TODO: in a future change we can unify how we open different engines...
+	/// today we use: flags, env variables, configuration files...
+	if(is_capture_mode()) /* Savefile engine. */
 	{
 		// Try to open the trace file as a
 		// capture file first.
-		try {
-			m_state->inspector->open(m_options.trace_filename);
+		try
+		{
+			m_state->inspector->open_savefile(m_options.trace_filename, 0);
 			falco_logger::log(LOG_INFO, "Reading system call events from file: " + m_options.trace_filename + "\n");
 		}
 		catch(sinsp_exception &e)
 		{
-			return run_result::fatal("Could not open trace filename " + m_options.trace_filename + " for reading: " + e.what());
+			return run_result::fatal("Cannot open trace filename " + m_options.trace_filename + " for reading: " + e.what());
 		}
 	}
-	else
+	else if(m_state->m_plugin_name != "") /* plugin engine. */
 	{
 		try
 		{
-			if(m_options.userspace)
-			{
-				// open_udig() is the underlying method used in the capture code to parse userspace events from the kernel.
-				//
-				// Falco uses a ptrace(2) based userspace implementation.
-				// Regardless of the implementation, the underlying method remains the same.
-				m_state->inspector->open_udig();
-			}
-			else if(m_options.gvisor_config != "")
-			{
-				falco_logger::log(LOG_INFO, "Enabled event collection from gVisor. Configuration path: " + m_options.gvisor_config);
-				m_state->inspector->open_gvisor(m_options.gvisor_config, m_options.gvisor_root);
-			}
-			else
-			{
-				m_state->inspector->open();
-			}
+			m_state->inspector->open_plugin(m_state->m_plugin_name, m_state->m_plugin_open_params);
+			falco_logger::log(LOG_INFO, "Starting capture with plugin: " + m_state->m_plugin_name + "\n");
 		}
 		catch(sinsp_exception &e)
 		{
-			// If syscall input source is enabled and not through userspace instrumentation
-			if (is_syscall_source_enabled() && !m_options.userspace)
+			return run_result::fatal("Cannot use '" + m_state->m_plugin_name + "' plugin: " + e.what());
+		}
+	}
+	else if(m_options.userspace) /* udig engine. */
+	{
+		// open_udig() is the underlying method used in the capture code to parse userspace events from the kernel.
+		//
+		// Falco uses a ptrace(2) based userspace implementation.
+		// Regardless of the implementation, the underlying method remains the same.
+		try
+		{
+			m_state->inspector->open_udig(m_state->config->m_single_buffer_dimension);
+			falco_logger::log(LOG_INFO, "Starting capture with udig\n");
+		}
+		catch(sinsp_exception &e)
+		{
+			return run_result::fatal("Cannot use udig: " + std::string(e.what()));
+		}
+	}
+	else if(m_options.gvisor_config != "") /* gvisor engine. */
+	{
+		try
+		{
+			m_state->inspector->open_gvisor(m_options.gvisor_config, m_options.gvisor_root);
+			falco_logger::log(LOG_INFO, "Starting capture with gVisor. Configuration path: " + m_options.gvisor_config);
+		}
+		catch(sinsp_exception &e)
+		{
+			return run_result::fatal("Cannot use gVisor: " + std::string(e.what()));
+		}
+	}
+	else if(m_options.modern_bpf) /* modern BPF engine. */
+	{
+		try
+		{
+			m_state->inspector->open_modern_bpf(m_state->config->m_single_buffer_dimension);
+			falco_logger::log(LOG_INFO, "Starting capture with modern BPF probe.");
+		}
+		catch(sinsp_exception &e)
+		{
+			return run_result::fatal("Cannot use the modern BPF probe: " + std::string(e.what()));
+		}
+	}
+	else if(getenv(FALCO_BPF_ENV_VARIABLE) != NULL) /* BPF engine. */
+	{
+		try
+		{
+			const char *bpf_probe_path = std::getenv(FALCO_BPF_ENV_VARIABLE);
+			/* If the path is empty try to load the probe from the default path. */
+			if(strncmp(bpf_probe_path, "", 1) == 0)
 			{
-				// Try to insert the Falco kernel module
-				if(system("modprobe " DRIVER_NAME " > /dev/null 2> /dev/null"))
+				const char *home = std::getenv("HOME");
+				if(!home)
 				{
-					falco_logger::log(LOG_ERR, "Unable to load the driver.\n");
+					return run_result::fatal("Cannot get the env variable 'HOME'");
 				}
-				m_state->inspector->open();
+				char full_path[MAX_PROBE_PATH_SIZE];
+				snprintf(full_path, MAX_PROBE_PATH_SIZE, "%s/%s", home, FALCO_PROBE_BPF_FILEPATH);
+				bpf_probe_path = full_path;
 			}
-			else
-			{
-				return run_result::fatal(e.what());
-			}
+			m_state->inspector->open_bpf(m_state->config->m_single_buffer_dimension, bpf_probe_path);
+			falco_logger::log(LOG_INFO, "Starting capture with BPF probe. BPF probe path: " + std::string(bpf_probe_path));
+		}
+		catch(sinsp_exception &e)
+		{
+			return run_result::fatal("Cannot use the BPF probe: " + std::string(e.what()));
+		}
+	}
+	else /* Kernel module (default). */
+	{
+		try
+		{
+			m_state->inspector->open_kmod(m_state->config->m_single_buffer_dimension);
+			falco_logger::log(LOG_INFO, "Starting capture with Kernel module.");
+		}
+		catch(sinsp_exception &e)
+		{
+			return run_result::fatal("Cannot use the kernel module: " + std::string(e.what()));
 		}
 	}
 
-	/// TODO: we can add a method to the inspector that tells us what 
-	/// is the underline engine used. Right now we print something only 
-	/// in case of BPF engine
-	if(m_state->inspector->is_bpf_enabled())
+	if(m_state->config->m_single_buffer_dimension != 0)
 	{
-		falco_logger::log(LOG_INFO, "Falco is using the BPF probe\n");	
+		falco_logger::log(LOG_INFO, "Buffer dimension: " + std::to_string(m_state->config->m_single_buffer_dimension) + " bytes\n");
 	}
 
 	// This must be done after the open
