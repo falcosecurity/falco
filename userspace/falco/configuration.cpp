@@ -212,6 +212,10 @@ void falco_configuration::init(string conf_filename, const vector<string> &cmdli
 	m_webserver_ssl_enabled = m_config->get_scalar<bool>("webserver.ssl_enabled", false);
 	m_webserver_ssl_certificate = m_config->get_scalar<string>("webserver.ssl_certificate", "/etc/falco/falco.pem");
 
+	// we put this value in the configuration file because in this way we can change the dimension
+	// at every reload.
+	m_single_buffer_dimension = m_config->get_scalar<uint64_t>("single_buffer_dimension", 0);
+
 	std::list<string> syscall_event_drop_acts;
 	m_config->get_sequence(syscall_event_drop_acts, "syscall_event_drops.actions");
 

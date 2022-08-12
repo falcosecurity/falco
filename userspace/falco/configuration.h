@@ -268,6 +268,9 @@ public:
 	uint32_t m_metadata_download_chunk_wait_us;
 	uint32_t m_metadata_download_watch_freq_sec;
 
+	// Dimension of a single buffer in our drivers (BPF, kmod, modern BPF)
+	uint64_t m_single_buffer_dimension;
+
 	std::vector<plugin_config> m_plugins;
 
 private:

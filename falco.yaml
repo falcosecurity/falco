@@ -309,3 +309,10 @@ metadata_download:
   max_mb: 100
   chunk_wait_us: 1000
   watch_freq_sec: 1
+
+# This is the dimension that a single buffer in our drivers will have. (BPF, kmod, modern BPF)
+# Please note:
+# - This number is expressed in bytes.
+# - This number must be a multiple of your system page size, otherwise the allocation will fail. 
+# - If you leave `0`, every driver will set its internal default dimension.
+single_buffer_dimension: 0
