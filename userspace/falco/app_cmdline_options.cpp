@@ -168,6 +168,9 @@ void cmdline_options::define()
 		("gvisor-generate-config",		  "Generate a configuration file that can be used for gVisor.", cxxopts::value<std::string>(gvisor_generate_config_with_socket)->implicit_value("/tmp/gvisor.sock"), "<socket_path>")
 		("gvisor-root",					  "gVisor root directory for storage of container state. Equivalent to runsc --root flag.", cxxopts::value(gvisor_root), "<gvisor_root>")
 #endif
+#ifdef HAS_MODERN_BPF
+		("modern-bpf",				  "Use BPF modern probe to capture new events.", cxxopts::value(modern_bpf)->default_value("false"))
+#endif
 		("i",                             "Print all events that are ignored by default (i.e. without the -A flag) and exit.", cxxopts::value(print_ignored_events)->default_value("false"))
 #ifndef MINIMAL_BUILD
 		("k,k8s-api",                     "Enable Kubernetes support by connecting to the API server specified as argument. E.g. \"http://admin:password@127.0.0.1:8080\". The API server can also be specified via the environment variable FALCO_K8S_API.", cxxopts::value(k8s_api), "<url>")

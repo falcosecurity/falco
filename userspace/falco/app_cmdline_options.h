@@ -77,6 +77,7 @@ public:
 	std::vector<std::string> validate_rules_filenames;
 	bool verbose;
 	bool print_version_info;
+	bool modern_bpf;
 
 	bool parse(int argc, char **argv, std::string &errstr);
 
