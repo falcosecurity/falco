@@ -235,7 +235,7 @@ load_kernel_module_download() {
 	get_target_id
 
 	local FALCO_KERNEL_MODULE_FILENAME="${DRIVER_NAME}_${TARGET_ID}_${KERNEL_RELEASE}_${KERNEL_VERSION}.ko"
-	local URL=$(echo "${DRIVERS_REPO}/${DRIVER_VERSION}/${ARCH}/${FALCO_KERNEL_MODULE_FILENAME}" | sed s/+/%2B/g)
+	local URL=$(echo "${1}/${DRIVER_VERSION}/${ARCH}/${FALCO_KERNEL_MODULE_FILENAME}" | sed s/+/%2B/g)
 
 	echo "* Trying to download a prebuilt ${DRIVER_NAME} module from ${URL}"
 	if curl -L --create-dirs "${FALCO_DRIVER_CURL_OPTIONS}" -o "${HOME}/.falco/${DRIVER_VERSION}/${ARCH}/${FALCO_KERNEL_MODULE_FILENAME}" "${URL}"; then
@@ -367,7 +367,10 @@ load_kernel_module() {
 	fi
 
 	if [ -n "$ENABLE_DOWNLOAD" ]; then
-		load_kernel_module_download
+		IFS=", " read -r -a urls <<< "${DRIVERS_REPO}"
+		for url in "${urls[@]}"; do
+			load_kernel_module_download $url
+		done
 	fi
 
 	if [ -n "$ENABLE_COMPILE" ]; then
@@ -502,14 +505,15 @@ load_bpf_probe_compile() {
 
 load_bpf_probe_download() {
 	local URL
-	URL=$(echo "${DRIVERS_REPO}/${DRIVER_VERSION}/${ARCH}/${BPF_PROBE_FILENAME}" | sed s/+/%2B/g)
+	URL=$(echo "${1}/${DRIVER_VERSION}/${ARCH}/${BPF_PROBE_FILENAME}" | sed s/+/%2B/g)
 
 	echo "* Trying to download a prebuilt eBPF probe from ${URL}"
 
 	if ! curl -L --create-dirs "${FALCO_DRIVER_CURL_OPTIONS}" -o "${HOME}/.falco/${DRIVER_VERSION}/${ARCH}/${BPF_PROBE_FILENAME}" "${URL}"; then
 		>&2 echo "Unable to find a prebuilt ${DRIVER_NAME} eBPF probe"
-		return
+		return 1
 	fi
+	return 0
 }
 
 load_bpf_probe() {
@@ -529,7 +533,13 @@ load_bpf_probe() {
 		if [ -f "${HOME}/.falco/${DRIVER_VERSION}/${ARCH}/${BPF_PROBE_FILENAME}" ]; then
 			echo "* Skipping download, eBPF probe is already present in ${HOME}/.falco/${DRIVER_VERSION}/${ARCH}/${BPF_PROBE_FILENAME}"
 		else
-			load_bpf_probe_download
+			IFS=", " read -r -a urls <<< "${DRIVERS_REPO}"
+			for url in "${urls[@]}"; do
+				load_bpf_probe_download $url
+				if [ $? -eq 0 ]; then
+                	break
+                fi
+			done
 		fi
 	fi
 
@@ -570,7 +580,7 @@ print_usage() {
 	echo "  --source-only  skip execution and allow sourcing in another script"
 	echo ""
 	echo "Environment variables:"
-	echo "  DRIVERS_REPO             specify a different URL where to look for prebuilt Falco drivers"
+	echo "  DRIVERS_REPO             specify different URL(s) where to look for prebuilt Falco drivers (comma separated)"
 	echo "  DRIVER_NAME              specify a different name for the driver"
 	echo "  DRIVER_INSECURE_DOWNLOAD whether you want to allow insecure downloads or not"
 	echo ""
