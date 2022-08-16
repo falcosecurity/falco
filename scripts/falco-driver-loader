@@ -238,10 +238,10 @@ load_kernel_module_download() {
 	local URL=$(echo "${DRIVERS_REPO}/${DRIVER_VERSION}/${ARCH}/${FALCO_KERNEL_MODULE_FILENAME}" | sed s/+/%2B/g)
 
 	echo "* Trying to download a prebuilt ${DRIVER_NAME} module from ${URL}"
-	if curl -L --create-dirs "${FALCO_DRIVER_CURL_OPTIONS}" -o "${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}" "${URL}"; then
+	if curl -L --create-dirs "${FALCO_DRIVER_CURL_OPTIONS}" -o "${HOME}/.falco/${DRIVER_VERSION}/${ARCH}/${FALCO_KERNEL_MODULE_FILENAME}" "${URL}"; then
 		echo "* Download succeeded"
-		chcon -t modules_object_t "${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}" > /dev/null 2>&1 || true
-		if insmod "${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}"; then
+		chcon -t modules_object_t "${HOME}/.falco/${DRIVER_VERSION}/${ARCH}/${FALCO_KERNEL_MODULE_FILENAME}" > /dev/null 2>&1 || true
+		if insmod "${HOME}/.falco/${DRIVER_VERSION}/${ARCH}/${FALCO_KERNEL_MODULE_FILENAME}"; then
 			echo "* Success: ${DRIVER_NAME} module found and inserted"
 			exit 0
 		else
@@ -359,10 +359,10 @@ load_kernel_module() {
 	echo "* Filename '${FALCO_KERNEL_MODULE_FILENAME}' is composed of:"
 	print_filename_components
 
-	if [ -f "${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}" ]; then
-		echo "* Found a prebuilt ${DRIVER_NAME} module at ${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}, loading it"
-		chcon -t modules_object_t "${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}" > /dev/null 2>&1 || true
-		insmod "${HOME}/.falco/${FALCO_KERNEL_MODULE_FILENAME}" && echo "* Success: ${DRIVER_NAME} module found and inserted"
+	if [ -f "${HOME}/.falco/${DRIVER_VERSION}/${ARCH}/${FALCO_KERNEL_MODULE_FILENAME}" ]; then
+		echo "* Found a prebuilt ${DRIVER_NAME} module at ${HOME}/.falco/${DRIVER_VERSION}/${ARCH}/${FALCO_KERNEL_MODULE_FILENAME}, loading it"
+		chcon -t modules_object_t "${HOME}/.falco/${DRIVER_VERSION}/${ARCH}/${FALCO_KERNEL_MODULE_FILENAME}" > /dev/null 2>&1 || true
+		insmod "${HOME}/.falco/${DRIVER_VERSION}/${ARCH}/${FALCO_KERNEL_MODULE_FILENAME}" && echo "* Success: ${DRIVER_NAME} module found and inserted"
 		exit $?
 	fi
 
@@ -491,8 +491,8 @@ load_bpf_probe_compile() {
 
 	make -C "/usr/src/${DRIVER_NAME}-${DRIVER_VERSION}/bpf" > /dev/null
 
-	mkdir -p "${HOME}/.falco"
-	mv "/usr/src/${DRIVER_NAME}-${DRIVER_VERSION}/bpf/probe.o" "${HOME}/.falco/${BPF_PROBE_FILENAME}"
+	mkdir -p "${HOME}/.falco/${DRIVER_VERSION}/${ARCH}"
+	mv "/usr/src/${DRIVER_NAME}-${DRIVER_VERSION}/bpf/probe.o" "${HOME}/.falco/${DRIVER_VERSION}/${ARCH}/${BPF_PROBE_FILENAME}"
 
 	if [ -n "${BPF_KERNEL_SOURCES_URL}" ]; then
 		rm -r /tmp/kernel
@@ -506,7 +506,7 @@ load_bpf_probe_download() {
 
 	echo "* Trying to download a prebuilt eBPF probe from ${URL}"
 
-	if ! curl -L --create-dirs "${FALCO_DRIVER_CURL_OPTIONS}" -o "${HOME}/.falco/${BPF_PROBE_FILENAME}" "${URL}"; then
+	if ! curl -L --create-dirs "${FALCO_DRIVER_CURL_OPTIONS}" -o "${HOME}/.falco/${DRIVER_VERSION}/${ARCH}/${BPF_PROBE_FILENAME}" "${URL}"; then
 		>&2 echo "Unable to find a prebuilt ${DRIVER_NAME} eBPF probe"
 		return
 	fi
@@ -526,25 +526,25 @@ load_bpf_probe() {
 	print_filename_components
 
 	if [ -n "$ENABLE_DOWNLOAD" ]; then
-		if [ -f "${HOME}/.falco/${BPF_PROBE_FILENAME}" ]; then
-			echo "* Skipping download, eBPF probe is already present in ${HOME}/.falco/${BPF_PROBE_FILENAME}"
+		if [ -f "${HOME}/.falco/${DRIVER_VERSION}/${ARCH}/${BPF_PROBE_FILENAME}" ]; then
+			echo "* Skipping download, eBPF probe is already present in ${HOME}/.falco/${DRIVER_VERSION}/${ARCH}/${BPF_PROBE_FILENAME}"
 		else
 			load_bpf_probe_download
 		fi
 	fi
 
 	if [ -n "$ENABLE_COMPILE" ]; then
-		if [ -f "${HOME}/.falco/${BPF_PROBE_FILENAME}" ]; then
-			echo "* Skipping compilation, eBPF probe is already present in ${HOME}/.falco/${BPF_PROBE_FILENAME}"
+		if [ -f "${HOME}/.falco/${DRIVER_VERSION}/${ARCH}/${BPF_PROBE_FILENAME}" ]; then
+			echo "* Skipping compilation, eBPF probe is already present in ${HOME}/.falco/${DRIVER_VERSION}/${ARCH}/${BPF_PROBE_FILENAME}"
 		else
 			load_bpf_probe_compile
 		fi
 	fi
 
-	if [ -f "${HOME}/.falco/${BPF_PROBE_FILENAME}" ]; then
-		echo "* eBPF probe located in ${HOME}/.falco/${BPF_PROBE_FILENAME}"
+	if [ -f "${HOME}/.falco/${DRIVER_VERSION}/${ARCH}/${BPF_PROBE_FILENAME}" ]; then
+		echo "* eBPF probe located in ${HOME}/.falco/${DRIVER_VERSION}/${ARCH}/${BPF_PROBE_FILENAME}"
 
-		ln -sf "${HOME}/.falco/${BPF_PROBE_FILENAME}" "${HOME}/.falco/${DRIVER_NAME}-bpf.o" \
+		ln -sf "${HOME}/.falco/${DRIVER_VERSION}/${ARCH}/${BPF_PROBE_FILENAME}" "${HOME}/.falco/${DRIVER_NAME}-bpf.o" \
 			&& echo "* Success: eBPF probe symlinked to ${HOME}/.falco/${DRIVER_NAME}-bpf.o"
 		exit $?
 	else
