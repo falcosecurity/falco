@@ -2152,20 +2152,13 @@
 # In some environments, any attempt by a interpreted program (perl,
 # python, ruby, etc) to listen for incoming connections or perform
 # outgoing connections might be suspicious. These rules are not
-# enabled by default, but you can modify the following macros to
-# enable them.
-
-- macro: consider_interpreted_inbound
-  condition: (never_true)
-
-- macro: consider_interpreted_outbound
-  condition: (never_true)
+# enabled by default.
 
 - rule: Interpreted procs inbound network activity
   desc: Any inbound network activity performed by any interpreted program (perl, python, ruby, etc.)
   condition: >
-    (inbound and consider_interpreted_inbound
-     and interpreted_procs)
+    (inbound and interpreted_procs)
+  enabled: false
   output: >
     Interpreted program received/listened for network traffic
     (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline connection=%fd.name container_id=%container.id image=%container.image.repository)
@@ -2175,8 +2168,8 @@
 - rule: Interpreted procs outbound network activity
   desc: Any outbound network activity performed by any interpreted program (perl, python, ruby, etc.)
   condition: >
-    (outbound and consider_interpreted_outbound
-     and interpreted_procs)
+    (outbound and interpreted_procs)
+  enabled: false
   output: >
     Interpreted program performed outgoing network connection
     (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline connection=%fd.name container_id=%container.id image=%container.image.repository)
@@ -2362,10 +2355,7 @@
 
 
 # This rule is not enabled by default, since this rule is for cloud environment(GCP, AWS and Azure) only.
-# If you want to enable this rule, overwrite the first macro,
-# And you can filter the container that you want to allow access to metadata by overwriting the second macro.
-- macro: consider_metadata_access
-  condition: (never_true)
+# You can filter the container that you want to allow access to metadata by overwriting user_known_metadata_access macro.
 
 - macro: user_known_metadata_access
   condition: (k8s.ns.name = "kube-system")
@@ -2374,7 +2364,8 @@
 # metadata about the instance. The metadata could be used to get credentials by attackers.
 - rule: Contact cloud metadata service from container
   desc: Detect attempts to contact the Cloud Instance Metadata Service from a container
-  condition: outbound and fd.sip="169.254.169.254" and container and consider_metadata_access and not user_known_metadata_access
+  condition: outbound and fd.sip="169.254.169.254" and container and not user_known_metadata_access
+  enabled: false
   output: Outbound connection to cloud instance metadata service (command=%proc.cmdline connection=%fd.name %container.info image=%container.image.repository:%container.image.tag)
   priority: NOTICE
   tags: [network, container, mitre_discovery]
