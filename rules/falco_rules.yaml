@@ -376,11 +376,9 @@
 # use the fd.*ip and fd.*ip.name fields to match connection
 # information against ips, netmasks, and complete domain names.
 #
-# To use this rule, you should modify consider_all_outbound_conns and
+# To use this rule, you should enable it and
 # populate allowed_{source,destination}_{ipaddrs,networks,domains} with the
 # values that make sense for your environment.
-- macro: consider_all_outbound_conns
-  condition: (never_true)
 
 # Note that this can be either individual IPs or netmasks
 - list: allowed_outbound_destination_ipaddrs
@@ -395,16 +393,14 @@
 - rule: Unexpected outbound connection destination
   desc: Detect any outbound connection to a destination outside of an allowed set of ips, networks, or domain names
   condition: >
-    consider_all_outbound_conns and outbound and not
+    outbound and not
     ((fd.sip in (allowed_outbound_destination_ipaddrs)) or
      (fd.snet in (allowed_outbound_destination_networks)) or
      (fd.sip.name in (allowed_outbound_destination_domains)))
+  enabled: false
   output: Disallowed outbound connection destination (command=%proc.cmdline connection=%fd.name user=%user.name user_loginuid=%user.loginuid container_id=%container.id image=%container.image.repository)
   priority: NOTICE
   tags: [network]
-
-- macro: consider_all_inbound_conns
-  condition: (never_true)
 
 - list: allowed_inbound_source_ipaddrs
   items: ['"127.0.0.1"']
@@ -418,10 +414,11 @@
 - rule: Unexpected inbound connection source
   desc: Detect any inbound connection from a source outside of an allowed set of ips, networks, or domain names
   condition: >
-    consider_all_inbound_conns and inbound and not
+    inbound and not
     ((fd.cip in (allowed_inbound_source_ipaddrs)) or
      (fd.cnet in (allowed_inbound_source_networks)) or
      (fd.cip.name in (allowed_inbound_source_domains)))
+  enabled: false
   output: Disallowed inbound connection source (command=%proc.cmdline connection=%fd.name user=%user.name user_loginuid=%user.loginuid container_id=%container.id image=%container.image.repository)
   priority: NOTICE
   tags: [network]
@@ -471,29 +468,22 @@
   tags: [file, mitre_persistence]
 
 # This rule is not enabled by default, as there are many legitimate
-# readers of shell config files. If you want to enable it, modify the
-# following macro.
-
-- macro: consider_shell_config_reads
-  condition: (never_true)
+# readers of shell config files.
 
 - rule: Read Shell Configuration File
   desc: Detect attempts to read shell configuration files by non-shell programs
   condition: >
     open_read and
-    consider_shell_config_reads and
     (fd.filename in (shell_config_filenames) or
      fd.name in (shell_config_files) or
      fd.directory in (shell_config_directories)) and
     (not proc.name in (shell_binaries))
+  enabled: false
   output: >
     a shell configuration file was read by a non-shell program (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline file=%fd.name container_id=%container.id image=%container.image.repository)
   priority:
     WARNING
   tags: [file, mitre_discovery]
-
-- macro: consider_all_cron_jobs
-  condition: (never_true)
 
 - macro: user_known_cron_jobs
   condition: (never_true)
@@ -503,8 +493,8 @@
   condition: >
     ((open_write and fd.name startswith /etc/cron) or
      (spawned_process and proc.name = "crontab")) and
-    consider_all_cron_jobs and
     not user_known_cron_jobs
+  enabled: false
   output: >
     Cron jobs were scheduled to run (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline
     file=%fd.name container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
@@ -2715,10 +2705,7 @@
 - list: exclude_hidden_directories
   items: [/root/.cassandra]
 
-# To use this rule, you should modify consider_hidden_file_creation.
-- macro: consider_hidden_file_creation
-  condition: (never_true)
-
+# The rule is disabled by default.
 - macro: user_known_create_hidden_file_activities
   condition: (never_true)
 
@@ -2728,9 +2715,9 @@
     ((modify and evt.arg.newpath contains "/.") or
      (mkdir and evt.arg.path contains "/.") or
      (open_write and evt.arg.flags contains "O_CREAT" and fd.name contains "/." and not fd.name pmatch (exclude_hidden_directories))) and
-    consider_hidden_file_creation and
     not user_known_create_hidden_file_activities
     and not exe_running_docker_save
+  enabled: false
   output: >
     Hidden file or directory created (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline
     file=%fd.name newpath=%evt.arg.newpath container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
@@ -2940,10 +2927,6 @@
   priority: NOTICE
   tags: [network, mitre_discovery]
 
-# Change to (always_true) to enable rule 'Network connection outside local subnet'
-- macro: enabled_rule_network_only_subnet
-  condition: (never_true)
-
 # Namespaces where the rule is enforce
 - list: namespace_scope_network_only_subnet
   items: []
@@ -2954,8 +2937,8 @@
     fd.ip = "0.0.0.0" or
     fd.net = "127.0.0.0/8"
 
+# # The rule is disabled by default.
 # # How to test:
-# # Change macro enabled_rule_network_only_subnet to condition: always_true
 # # Add 'default' to namespace_scope_network_only_subnet
 # # Run:
 # kubectl run --generator=run-pod/v1 -n default -i --tty busybox --image=busybox --rm -- wget google.com -O /var/google.html
@@ -2964,11 +2947,11 @@
 - rule: Network Connection outside Local Subnet
   desc: Detect traffic to image outside local subnet.
   condition: >
-    enabled_rule_network_only_subnet and
     inbound_outbound and
     container and
     not network_local_subnet and
     k8s.ns.name in (namespace_scope_network_only_subnet)
+  enabled: false
   output: >
     Network connection outside local subnet
     (command=%proc.cmdline connection=%fd.name user=%user.name user_loginuid=%user.loginuid container_id=%container.id
@@ -2976,9 +2959,6 @@
      fd.rip.name=%fd.rip.name fd.lip.name=%fd.lip.name fd.cip.name=%fd.cip.name fd.sip.name=%fd.sip.name)
   priority: WARNING
   tags: [network]
-
-- macro: allowed_port
-  condition: (never_true)
 
 - list: allowed_image
   items: [] # add image to monitor, i.e.: bitnami/nginx
@@ -3000,12 +2980,12 @@
 - rule: Outbound or Inbound Traffic not to Authorized Server Process and Port
   desc: Detect traffic that is not to authorized server process and port.
   condition: >
-    allowed_port and
     inbound_outbound and
     container and
     container.image.repository in (allowed_image) and
     not proc.name in (authorized_server_binary) and
     not fd.sport in (authorized_server_port)
+  enabled: false
   output: >
     Network connection outside authorized port and binary
     (command=%proc.cmdline connection=%fd.name user=%user.name user_loginuid=%user.loginuid container_id=%container.id
