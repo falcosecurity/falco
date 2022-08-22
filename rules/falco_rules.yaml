@@ -2672,9 +2672,6 @@
     WARNING
   tags: [process, mitre_defense_evasion]
 
-- macro: consider_all_chmods
-  condition: (always_true)
-
 - list: user_known_chmod_applications
   items: [hyperkube, kubelet, k3s-agent]
 
@@ -2690,7 +2687,7 @@
     this means that the application will run with the privileges of the owning user or group respectively.
     Detect setuid or setgid bits set via chmod
   condition: >
-    consider_all_chmods and chmod and (evt.arg.mode contains "S_ISUID" or evt.arg.mode contains "S_ISGID")
+    chmod and (evt.arg.mode contains "S_ISUID" or evt.arg.mode contains "S_ISGID")
     and not proc.name in (user_known_chmod_applications)
     and not exe_running_docker_save
     and not user_known_set_setuid_or_setgid_bit_conditions
@@ -3023,7 +3020,6 @@
   desc: New executable created in a container due to chmod
   condition: >
     chmod and
-    consider_all_chmods and
     container and
     not runc_writing_exec_fifo and
     not runc_writing_var_lib_docker and
@@ -3124,16 +3120,12 @@
   priority: WARNING
   tags: [container, cis, mitre_lateral_movement]
 
-- macro: consider_userfaultfd_activities
-  condition: (always_true)
-
 - list: user_known_userfaultfd_processes
   items: []
 
 - rule: Unprivileged Delegation of Page Faults Handling to a Userspace Process
   desc: Detect a successful unprivileged userfaultfd syscall which might act as an attack primitive to exploit other bugs
   condition: >
-    consider_userfaultfd_activities and
     evt.type = userfaultfd and
     user.uid != 0 and
     (evt.rawres >= 0 or evt.res != -1) and
