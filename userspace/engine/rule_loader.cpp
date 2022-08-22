@@ -21,6 +21,7 @@ limitations under the License.
 #include "filter_evttype_resolver.h"
 #include "filter_warning_resolver.h"
 #include <version.h>
+#include <string>
 #include <sstream>
 
 #define MAX_VISIBILITY		((uint32_t) -1)
@@ -35,16 +36,45 @@ static string s_default_extra_fmt  = "%container.name (id=%container.id)";
 using namespace std;
 using namespace libsinsp::filter;
 
+static const std::string item_type_strings[] = {
+	"value for",
+	"exceptions",
+	"exception",
+	"exception values",
+	"exception value",
+	"rules content",
+	"rules content item",
+	"required_engine_version",
+	"required plugin versions",
+	"required plugin versions entry",
+	"required plugin versions alternative",
+	"list",
+	"list item",
+	"macro",
+	"macro condition",
+	"rule",
+	"rule condition",
+	"condition expression",
+	"rule output",
+	"rule output expression",
+	"rule priority"
+};
+
+const std::string& rule_loader::context::item_type_as_string(enum item_type it)
+{
+	return item_type_strings[it];
+}
+
 rule_loader::context::context(const std::string& name)
 {
 	// This ensures that every context has one location, even if
 	// that location is effectively the whole document.
-	location loc = {name, position(), "rules content", ""};
+	location loc = {name, position(), rule_loader::context::RULES_CONTENT, ""};
 	m_locs.push_back(loc);
 }
 
 rule_loader::context::context(const YAML::Node &item,
-			      const std::string item_type,
+			      const item_type item_type,
 			      const std::string item_name,
 			      const context& parent)
 {
@@ -64,7 +94,6 @@ rule_loader::context::context(const libsinsp::filter::parser::pos_info& pos,
 	std::replace(name.begin(), name.end(), '\n', ' ');
 	std::replace(name.begin(), name.end(), '\r', ' ');
 
-	std::string item_type = "condition expression";
 	std::string item_name = "";
 
 	// Convert the parser position to a context location. Both
@@ -76,7 +105,7 @@ rule_loader::context::context(const libsinsp::filter::parser::pos_info& pos,
 	condpos.line = pos.line-1;
 	condpos.column = pos.col-1;
 
-	init(name, condpos, item_type, item_name, parent);
+	init(name, condpos, rule_loader::context::CONDITION_EXPRESSION, item_name, parent);
 }
 
 const std::string& rule_loader::context::name() const
@@ -92,7 +121,7 @@ const std::string& rule_loader::context::name() const
 
 void rule_loader::context::init(const std::string& name,
 				const position& pos,
-				const std::string item_type,
+				const item_type item_type,
 				const std::string item_name,
 				const context& parent)
 {
@@ -121,7 +150,7 @@ std::string rule_loader::context::as_string()
 		os << (first ? "In " : "    ");
 		first = false;
 
-		os << loc.item_type;
+		os << item_type_as_string(loc.item_type);
 		if(!loc.item_name.empty())
 		{
 			os << " '" << loc.item_name << "'";
@@ -154,7 +183,7 @@ nlohmann::json rule_loader::context::as_json()
 	{
 		nlohmann::json jloc, jpos;
 
-		jloc["item_type"] = loc.item_type;
+		jloc["item_type"] = item_type_as_string(loc.item_type);
 		jloc["item_name"] = loc.item_name;
 
 		jpos["name"] = loc.name;

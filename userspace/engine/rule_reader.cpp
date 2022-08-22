@@ -34,7 +34,7 @@ static void decode_val_generic(const YAML::Node& item, const char *key, T& out, 
 	THROW(!val.IsDefined(), std::string("Item has no mapping for key '") + key + "'", ctx);
 	THROW(val.IsNull(), std::string("Mapping for key '") + key + "' is empty", ctx);
 
-	rule_loader::context valctx(val, "value for", key, ctx);
+	rule_loader::context valctx(val, rule_loader::context::VALUE_FOR, key, ctx);
 	THROW(!val.IsScalar(), "Value is not a scalar value", valctx);
 	THROW(val.Scalar().empty(), "Value must be non-empty", valctx);
 
@@ -72,13 +72,13 @@ static void decode_seq(const YAML::Node& item, const char *key,
 
 	THROW(!val.IsDefined(), std::string("Item has no mapping for key '") + key + "'", ctx);
 
-	rule_loader::context valctx(val, "value for", key, ctx);
+	rule_loader::context valctx(val, rule_loader::context::VALUE_FOR, key, ctx);
 	THROW(!val.IsSequence(), "Value is not a sequence", valctx);
 
 	T value;
 	for(const YAML::Node& v : val)
 	{
-		rule_loader::context ictx(v, "list item", "", valctx);
+		rule_loader::context ictx(v, rule_loader::context::LIST_ITEM, "", valctx);
 		THROW(!v.IsScalar(), "sequence value is not scalar", ictx);
 		THROW(!YAML::convert<T>::decode(v, value), "Can't decode YAML sequence value", ictx);
 		inserter(value);
@@ -128,7 +128,7 @@ static void decode_exception_info_entry(
 
 	THROW(!val.IsDefined(), std::string("Item has no mapping for key '") + key + "'", ctx);
 
-	rule_loader::context valctx(val, "value for", (key == NULL ? "" : key), ctx);
+	rule_loader::context valctx(val, rule_loader::context::VALUE_FOR, (key == NULL ? "" : key), ctx);
 
 	if (val.IsScalar())
 	{
@@ -142,7 +142,7 @@ static void decode_exception_info_entry(
 		rule_loader::rule_exception_info::entry tmp;
 		for(const YAML::Node& v : val)
 		{
-			rule_loader::context lctx(v, "list exception entry", "", valctx);
+			rule_loader::context lctx(v, rule_loader::context::EXCEPTION, "", valctx);
 
 			// Optional is always false once you get past the outer values
 			optional = false;
@@ -196,7 +196,7 @@ static void read_rule_exceptions(
 		return;
 	}
 
-	rule_loader::context exes_ctx(exs, "exceptions", "", parent);
+	rule_loader::context exes_ctx(exs, rule_loader::context::EXCEPTIONS, "", parent);
 
 	THROW(!exs.IsSequence(), "Rule exceptions must be a sequence", exes_ctx);
 
@@ -205,13 +205,13 @@ static void read_rule_exceptions(
 		// Make a temp context to verify simple properties
 		// about the exception.
 		std::string name;
-		rule_loader::context tmp(ex, "exception", "", exes_ctx);
+		rule_loader::context tmp(ex, rule_loader::context::EXCEPTION, "", exes_ctx);
 
 		THROW(!ex.IsMap(), "Rule exception must be a mapping", tmp);
 		decode_val(ex, "name", name, tmp);
 
 		// Now use a real context including the exception name.
-		rule_loader::context ex_ctx(ex, "exception", name, parent);
+		rule_loader::context ex_ctx(ex, rule_loader::context::EXCEPTION, name, parent);
 		rule_loader::rule_exception_info v_ex(ex_ctx);
 		v_ex.name = name;
 
@@ -223,12 +223,12 @@ static void read_rule_exceptions(
 		const YAML::Node& exvals = ex["values"];
 		if (exvals.IsDefined())
 		{
-			rule_loader::context vals_ctx(exvals, "exception values", "", ex_ctx);
+			rule_loader::context vals_ctx(exvals, rule_loader::context::EXCEPTION_VALUES, "", ex_ctx);
 			THROW(!exvals.IsSequence(),
 			       "Rule exception values must be a sequence", vals_ctx);
 			for (auto &val : exvals)
 			{
-				rule_loader::context vctx(val, "exception value", "", vals_ctx);
+				rule_loader::context vctx(val, rule_loader::context::EXCEPTION_VALUE, "", vals_ctx);
 				rule_loader::rule_exception_info::entry v_ex_val;
 
 				decode_exception_values(val, v_ex_val, vctx);
@@ -245,13 +245,13 @@ static void read_item(
 	const YAML::Node& item,
 	const rule_loader::context& parent)
 {
-	rule_loader::context tmp(item, "item", "", parent);
+	rule_loader::context tmp(item, rule_loader::context::RULES_CONTENT_ITEM, "", parent);
 	THROW(!item.IsMap(), "Unexpected element type. "
 	      "Each element should be a yaml associative array.", tmp);
 
 	if (item["required_engine_version"].IsDefined())
 	{
-		rule_loader::context ctx(item, "required_engine_version", "", parent);
+		rule_loader::context ctx(item, rule_loader::context::REQUIRED_ENGINE_VERSION, "", parent);
 		rule_loader::engine_version_info v(ctx);
 
 		decode_val(item, "required_engine_version", v.version, ctx);
@@ -260,7 +260,7 @@ static void read_item(
 	else if(item["required_plugin_versions"].IsDefined())
 	{
 		const YAML::Node& req_plugin_vers = item["required_plugin_versions"];
-		rule_loader::context ctx(req_plugin_vers, "required_plugin_versions", "", parent);
+		rule_loader::context ctx(req_plugin_vers, rule_loader::context::REQUIRED_PLUGIN_VERSIONS, "", parent);
 
 		THROW(!req_plugin_vers.IsSequence(),
 		       "Value of required_plugin_versions must be a sequence",
@@ -271,10 +271,10 @@ static void read_item(
 			rule_loader::plugin_version_info::requirement r;
 
 			// Use a temp context until we can get a name
-			rule_loader::context tmp(plugin, "plugin version", "", ctx);
+			rule_loader::context tmp(plugin, rule_loader::context::REQUIRED_PLUGIN_VERSIONS_ENTRY, "", ctx);
 			THROW(!plugin.IsMap(), "Plugin version must be a mapping", tmp);
 			decode_val(plugin, "name", r.name, tmp);
-			rule_loader::context pctx(plugin, "plugin version", r.name, ctx);
+			rule_loader::context pctx(plugin, rule_loader::context::REQUIRED_PLUGIN_VERSIONS_ENTRY, r.name, ctx);
 			rule_loader::plugin_version_info v(pctx);
 			decode_val(plugin, "version", r.version, pctx);
 			v.alternatives.push_back(r);
@@ -287,10 +287,10 @@ static void read_item(
 					pctx);
 				for (const auto &req : alternatives)
 				{
-					tmp = rule_loader::context(req, "plugin version alternative", "", pctx);
+					tmp = rule_loader::context(req, rule_loader::context::REQUIRED_PLUGIN_VERSIONS_ALTERNATIVE, "", pctx);
 					THROW(!req.IsMap(), "Plugin version alternative must be a mapping", tmp);
 					decode_val(req, "name", r.name, tmp);
-					tmp = rule_loader::context(req, "plugin version alternative", r.name, pctx);
+					tmp = rule_loader::context(req, rule_loader::context::REQUIRED_PLUGIN_VERSIONS_ALTERNATIVE, r.name, pctx);
 					decode_val(req, "version", r.version, tmp);
 					v.alternatives.push_back(r);
 				}
@@ -303,10 +303,10 @@ static void read_item(
 	{
 		std::string name;
 		// Using tmp context until name is decoded
-		rule_loader::context tmp(item, "list", "", parent);
+		rule_loader::context tmp(item, rule_loader::context::LIST, "", parent);
 		decode_val(item, "list", name, tmp);
 
-		rule_loader::context ctx(item, "list", name, parent);
+		rule_loader::context ctx(item, rule_loader::context::LIST, name, parent);
 		rule_loader::list_info v(ctx);
 
 		bool append = false;
@@ -328,10 +328,10 @@ static void read_item(
 	{
 		std::string name;
 		// Using tmp context until name is decoded
-		rule_loader::context tmp(item, "macro", "", parent);
+		rule_loader::context tmp(item, rule_loader::context::MACRO, "", parent);
 		decode_val(item, "macro", name, tmp);
 
-		rule_loader::context ctx(item, "macro", name, parent);
+		rule_loader::context ctx(item, rule_loader::context::MACRO, name, parent);
 		rule_loader::macro_info v(ctx);
 		v.name = name;
 
@@ -339,7 +339,7 @@ static void read_item(
 		decode_val(item, "condition", v.cond, ctx);
 
 		// Now set the proper context for the condition now that we know it exists
-		v.cond_ctx = rule_loader::context(item["condition"], "condition", "", ctx);
+		v.cond_ctx = rule_loader::context(item["condition"], rule_loader::context::MACRO_CONDITION, "", ctx);
 
 		decode_optional_val(item, "append", append, ctx);
 
@@ -357,10 +357,10 @@ static void read_item(
 		std::string name;
 
 		// Using tmp context until name is decoded
-		rule_loader::context tmp(item, "rule", "", parent);
+		rule_loader::context tmp(item, rule_loader::context::RULE, "", parent);
 		decode_val(item, "rule", name, tmp);
 
-		rule_loader::context ctx(item, "rule", name, parent);
+		rule_loader::context ctx(item, rule_loader::context::RULE, name, parent);
 		rule_loader::rule_info v(ctx);
 		v.name = name;
 
@@ -376,7 +376,7 @@ static void read_item(
 			decode_optional_val(item, "condition", v.cond, ctx);
 			if(item["condition"].IsDefined())
 			{
-				v.cond_ctx = rule_loader::context(item["condition"], "condition", "", ctx);
+				v.cond_ctx = rule_loader::context(item["condition"], rule_loader::context::RULE_CONDITION, "", ctx);
 			}
 			read_rule_exceptions(item, v, ctx, append);
 			loader.append(cfg, v);
@@ -402,17 +402,17 @@ static void read_item(
 
 				// All of these are required
 				decode_val(item, "condition", v.cond, ctx);
-				v.cond_ctx = rule_loader::context(item["condition"], "condition", "", ctx);
+				v.cond_ctx = rule_loader::context(item["condition"], rule_loader::context::RULE_CONDITION, "", ctx);
 
 				decode_val(item, "output", v.output, ctx);
-				v.output_ctx = rule_loader::context(item["output"], "output", "", ctx);
+				v.output_ctx = rule_loader::context(item["output"], rule_loader::context::RULE_OUTPUT, "", ctx);
 
 				decode_val(item, "desc", v.desc, ctx);
 				decode_val(item, "priority", priority, ctx);
 
 				v.output = trim(v.output);
 				v.source = falco_common::syscall_source;
-				rule_loader::context prictx(item["priority"], "priority value", "", ctx);
+				rule_loader::context prictx(item["priority"], rule_loader::context::RULE_PRIORITY, "", ctx);
 				THROW(!falco_common::parse_priority(priority, v.priority),
 				       "Invalid priority", prictx);
 				decode_optional_val(item, "source", v.source, ctx);
@@ -427,7 +427,7 @@ static void read_item(
 	}
 	else
 	{
-		rule_loader::context ctx(item, "unknown", "", parent);
+		rule_loader::context ctx(item, rule_loader::context::RULES_CONTENT_ITEM, "", parent);
 		cfg.res->add_warning(load_result::LOAD_UNKNOWN_ITEM, "Unknown top level item", ctx);
 	}
 }
