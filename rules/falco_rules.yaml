@@ -29,13 +29,20 @@
 #   condition: (syscall.type=read and evt.dir=> and fd.type in (file, directory))
 
 - macro: open_write
-  condition: evt.type in (open,openat,openat2) and evt.is_open_write=true and fd.typechar='f' and fd.num>=0
+  condition: (evt.type in (open,openat,openat2) and evt.is_open_write=true and fd.typechar='f' and fd.num>=0)
 
 - macro: open_read
-  condition: evt.type in (open,openat,openat2) and evt.is_open_read=true and fd.typechar='f' and fd.num>=0
+  condition: (evt.type in (open,openat,openat2) and evt.is_open_read=true and fd.typechar='f' and fd.num>=0)
 
 - macro: open_directory
-  condition: evt.type in (open,openat,openat2) and evt.is_open_read=true and fd.typechar='d' and fd.num>=0
+  condition: (evt.type in (open,openat,openat2) and evt.is_open_read=true and fd.typechar='d' and fd.num>=0)
+
+# Failed file open attempts, useful to detect threat actors making mistakes
+# https://man7.org/linux/man-pages/man3/errno.3.html
+# evt.res=ENOENT - No such file or directory
+# evt.res=EACCESS - Permission denied
+- macro: open_file_failed
+  condition: (evt.type in (open,openat,openat2) and fd.typechar='f' and fd.num=-1 and evt.res startswith E)
 
 - macro: never_true
   condition: (evt.num=0)
@@ -51,32 +58,32 @@
   condition: (proc.name!="<NA>")
 
 - macro: rename
-  condition: evt.type in (rename, renameat, renameat2)
+  condition: (evt.type in (rename, renameat, renameat2))
 
 - macro: mkdir
-  condition: evt.type in (mkdir, mkdirat)
+  condition: (evt.type in (mkdir, mkdirat))
 
 - macro: remove
-  condition: evt.type in (rmdir, unlink, unlinkat)
+  condition: (evt.type in (rmdir, unlink, unlinkat))
 
 - macro: modify
-  condition: rename or remove
+  condition: (rename or remove)
 
 - macro: spawned_process
-  condition: evt.type in (execve, execveat) and evt.dir=<
+  condition: (evt.type in (execve, execveat) and evt.dir=<)
 
 - macro: create_symlink
-  condition: evt.type in (symlink, symlinkat) and evt.dir=<
+  condition: (evt.type in (symlink, symlinkat) and evt.dir=<)
 
 - macro: create_hardlink
-  condition: evt.type in (link, linkat) and evt.dir=<
+  condition: (evt.type in (link, linkat) and evt.dir=<)
 
 - macro: chmod
   condition: (evt.type in (chmod, fchmod, fchmodat) and evt.dir=<)
 
 # File categories
 - macro: bin_dir
-  condition: fd.directory in (/bin, /sbin, /usr/bin, /usr/sbin)
+  condition: (fd.directory in (/bin, /sbin, /usr/bin, /usr/sbin))
 
 - macro: bin_dir_mkdir
   condition: >
@@ -105,7 +112,7 @@
      evt.arg.newpath startswith /usr/sbin/)
 
 - macro: etc_dir
-  condition: fd.name startswith /etc/
+  condition: (fd.name startswith /etc/)
 
 # This detects writes immediately below / or any write anywhere below /root
 - macro: root_dir
@@ -964,7 +971,8 @@
   desc: >
     Web applications can be vulnerable to directory traversal attacks that allow accessing files outside of the web app's root directory (e.g. Arbitrary File Read bugs).
     System directories like /etc are typically accessed via absolute paths. Access patterns outside of this (here path traversal) can be regarded as suspicious.
-  condition: open_read and (etc_dir or user_ssh_directory or fd.name startswith /root/.ssh or fd.name contains "id_rsa") and directory_traversal and not proc.pname in (shell_binaries)
+    This rule includes failed file open attempts.
+  condition: (open_read or open_file_failed) and (etc_dir or user_ssh_directory or fd.name startswith /root/.ssh or fd.name contains "id_rsa") and directory_traversal and not proc.pname in (shell_binaries)
   enabled: true
   output: >
     Read monitored file via directory traversal (username=%user.name useruid=%user.uid user_loginuid=%user.loginuid program=%proc.name exe=%proc.exepath
