@@ -33,9 +33,40 @@ limitations under the License.
 class rule_loader
 {
 public:
+
 	class context
 	{
 	public:
+		// The kinds of items that can be in rules
+		// content. These generally map to yaml items but a
+		// few are more specific (e.g. "within condition
+		// expression", "value for yaml node", etc.)
+		enum item_type {
+			VALUE_FOR = 0,
+			EXCEPTIONS,
+			EXCEPTION,
+			EXCEPTION_VALUES,
+			EXCEPTION_VALUE,
+			RULES_CONTENT,
+			RULES_CONTENT_ITEM,
+			REQUIRED_ENGINE_VERSION,
+			REQUIRED_PLUGIN_VERSIONS,
+			REQUIRED_PLUGIN_VERSIONS_ENTRY,
+			REQUIRED_PLUGIN_VERSIONS_ALTERNATIVE,
+			LIST,
+			LIST_ITEM,
+			MACRO,
+			MACRO_CONDITION,
+			RULE,
+			RULE_CONDITION,
+			CONDITION_EXPRESSION,
+			RULE_OUTPUT,
+			RULE_OUTPUT_EXPRESSION,
+			RULE_PRIORITY
+		};
+
+		static const std::string& item_type_as_string(enum item_type it);
+
 		static const size_t default_snippet_width = 160;
 
 		struct position
@@ -61,7 +92,7 @@ public:
 
 			// The kind of item at this location
 			// (e.g. "list", "macro", "rule", "exception", etc)
-			std::string item_type;
+			context::item_type item_type;
 
 			// The name of this item (e.g. "Write Below Etc",
 			// etc).
@@ -70,7 +101,7 @@ public:
 
 		context(const std::string& name);
 		context(const YAML::Node& item,
-			const std::string item_type,
+			item_type item_type,
 			const std::string item_name,
 			const context& parent);
 
@@ -106,7 +137,7 @@ public:
 	private:
 		void init(const std::string& name,
 			  const position& pos,
-			  const std::string item_type,
+			  const item_type item_type,
 			  const std::string item_name,
 			  const context& parent);
 
