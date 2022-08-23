@@ -34,7 +34,8 @@ falco_formats::~falco_formats()
 }
 
 string falco_formats::format_event(gen_event *evt, const std::string &rule, const std::string &source,
-				   const std::string &level, const std::string &format, std::set<std::string> &tags)
+				   const std::string &level, const std::string &format, std::set<std::string> &tags,
+				   const std::string &hostname)
 {
 	string line;
 
@@ -83,6 +84,7 @@ string falco_formats::format_event(gen_event *evt, const std::string &rule, cons
 		event["rule"] = rule;
 		event["priority"] = level;
 		event["source"] = source;
+		event["hostname"] = hostname;
 
 		if(m_json_include_output_property)
 		{
