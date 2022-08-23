@@ -25,9 +25,12 @@ application::run_result application::init_outputs()
 {
 	// read hostname
 	std::string hostname;
-	if(char* env_hostname = getenv("FALCO_GRPC_HOSTNAME"))
+	char* env_hostname = getenv("FALCO_HOSTNAME");
+	// todo(leogr): keep FALCO_GRPC_HOSTNAME for backward compatibility. Shall we deprecate it?
+	if(env_hostname || (env_hostname = getenv("FALCO_GRPC_HOSTNAME")))
 	{
 		hostname = env_hostname;
+		falco_logger::log(LOG_INFO, "Hostname value has been overridden via environment variable to: " + hostname + "\n");
 	}
 	else
 	{
