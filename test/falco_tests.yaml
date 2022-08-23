@@ -285,7 +285,7 @@ trace_files: !mux
   invalid_not_yaml:
     exit_status: 1
     validate_errors:
-      - item_type: file
+      - item_type: rules content
         item_name: ""
         code: LOAD_ERR_YAML_VALIDATE
         message: "Rules content is not yaml"
@@ -296,7 +296,7 @@ trace_files: !mux
   invalid_not_array:
     exit_status: 1
     validate_errors:
-      - item_type: file
+      - item_type: rules content
         item_name: ""
         code: LOAD_ERR_YAML_VALIDATE
         message: "Rules content is not yaml array of objects"
@@ -307,7 +307,7 @@ trace_files: !mux
   invalid_array_item_not_object:
     exit_status: 1
     validate_errors:
-      - item_type: item
+      - item_type: rules content item
         item_name: ""
         code: LOAD_ERR_YAML_VALIDATE
         message: "Unexpected element type. Each element should be a yaml associative array."
@@ -329,7 +329,7 @@ trace_files: !mux
   invalid_yaml_parse_error:
     exit_status: 1
     validate_errors:
-      - item_type: file
+      - item_type: rules content
         item_name: ""
         code: LOAD_ERR_YAML_PARSE
         message: "yaml-cpp: error at line 1, column 11: illegal map value"
