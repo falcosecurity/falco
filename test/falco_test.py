@@ -650,7 +650,7 @@ class FalcoTest(Test):
         if self.time_iso_8601:
             cmd += ' -o time_format_iso_8601=true'
 
-        self.falco_proc = process.SubProcess(cmd)
+        self.falco_proc = process.SubProcess(cmd, env=dict(os.environ, FALCO_HOSTNAME="test-falco-hostname"))
 
         res = self.falco_proc.run(timeout=180, sig=9)
 
