@@ -149,7 +149,9 @@ void falco_outputs::handle_event(gen_event *evt, string &rule, string &source,
 		sformat += " " + format;
 	}
 
-	cmsg.msg = m_formats->format_event(evt, rule, source, falco_common::format_priority(priority), sformat, tags);
+	cmsg.msg = m_formats->format_event(
+		evt, rule, source, falco_common::format_priority(priority), sformat, tags, m_hostname
+	);
 	cmsg.fields = m_formats->get_field_values(evt, source, sformat);
 	cmsg.tags.insert(tags.begin(), tags.end());
 
