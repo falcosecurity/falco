@@ -11,4 +11,4 @@ jobs:
         skip: .git
         ignore_words_file: .codespellignore
         check_filenames: true
-        check_hidden: true
+        check_hidden: false
