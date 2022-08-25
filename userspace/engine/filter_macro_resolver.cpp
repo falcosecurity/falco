@@ -21,12 +21,10 @@ using namespace libsinsp::filter;
 
 bool filter_macro_resolver::run(libsinsp::filter::ast::expr*& filter)
 {
-	visitor v;
 	m_unknown_macros.clear();
 	m_resolved_macros.clear();
-	v.m_unknown_macros = &m_unknown_macros;
-	v.m_resolved_macros = &m_resolved_macros;
-	v.m_macros = &m_macros;
+
+	visitor v(m_unknown_macros, m_resolved_macros, m_macros);
 	v.m_node_substitute = nullptr;
 	filter->accept(&v);
 	if (v.m_node_substitute)
@@ -39,12 +37,10 @@ bool filter_macro_resolver::run(libsinsp::filter::ast::expr*& filter)
 
 bool filter_macro_resolver::run(std::shared_ptr<libsinsp::filter::ast::expr>& filter)
 {
-	visitor v;
 	m_unknown_macros.clear();
 	m_resolved_macros.clear();
-	v.m_unknown_macros = &m_unknown_macros;
-	v.m_resolved_macros = &m_resolved_macros;
-	v.m_macros = &m_macros;
+
+	visitor v(m_unknown_macros, m_resolved_macros, m_macros);
 	v.m_node_substitute = nullptr;
 	filter->accept(&v);
 	if (v.m_node_substitute)
@@ -61,12 +57,12 @@ void filter_macro_resolver::set_macro(
 	m_macros[name] = macro;
 }
 
-const unordered_set<string>& filter_macro_resolver::get_unknown_macros() const
+const filter_macro_resolver::macro_info_map& filter_macro_resolver::get_unknown_macros() const
 {
 	return m_unknown_macros;
 }
 
-const unordered_set<string>& filter_macro_resolver::get_resolved_macros() const
+const filter_macro_resolver::macro_info_map& filter_macro_resolver::get_resolved_macros() const
 {
 	return m_resolved_macros;
 }
@@ -129,8 +125,8 @@ void filter_macro_resolver::visitor::visit(ast::value_expr* e)
 	// we are supposed to get here only in case
 	// of identier-only children from either a 'not',
 	// an 'and' or an 'or'.
-	auto macro = m_macros->find(e->value);
-	if (macro != m_macros->end() && macro->second) // skip null-ptr macros
+	auto macro = m_macros.find(e->value);
+	if (macro != m_macros.end() && macro->second) // skip null-ptr macros
 	{
 		m_node_substitute = nullptr;
 		auto new_node = ast::clone(macro->second.get());
@@ -141,11 +137,11 @@ void filter_macro_resolver::visitor::visit(ast::value_expr* e)
 		{
 			m_node_substitute = std::move(new_node);
 		}
-		m_resolved_macros->insert(e->value);
+		m_resolved_macros[e->value] = e->get_pos();
 	}
 	else
 	{
 		m_node_substitute = nullptr;
-		m_unknown_macros->insert(e->value);
+		m_unknown_macros[e->value] = e->get_pos();
 	}
 }
