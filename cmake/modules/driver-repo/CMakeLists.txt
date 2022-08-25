@@ -19,7 +19,7 @@ message(STATUS "Driver version: ${DRIVER_VERSION}")
 
 ExternalProject_Add(
   driver
-  URL "https://github.com/falcosecurity/libs/archive/${DRIVER_VERSION}.tar.gz"
+  URL "https://github.com/jasondellaluce/libs/archive/${DRIVER_VERSION}.tar.gz"
   URL_HASH "${DRIVER_CHECKSUM}"
   CONFIGURE_COMMAND ""
   BUILD_COMMAND ""
