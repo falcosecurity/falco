@@ -41,6 +41,7 @@ public:
 
 	void add(
 		const falco_rule& rule,
+		std::shared_ptr<gen_event_filter> filter,
 		std::shared_ptr<libsinsp::filter::ast::expr> condition) override;
 
 	void clear() override;

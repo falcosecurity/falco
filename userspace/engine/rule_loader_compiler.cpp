@@ -234,6 +234,7 @@ static bool resolve_list(std::string& cnd, const rule_loader::list_info& list)
 static void resolve_macros(
 	indexed_vector<rule_loader::macro_info>& macros,
 	std::shared_ptr<ast::expr>& ast,
+	const std::string& condition,
 	uint32_t visibility,
 	const rule_loader::context &ctx)
 {
@@ -248,15 +249,22 @@ static void resolve_macros(
 	macro_resolver.run(ast);
 
 	// Note: only complaining about the first unknown macro
-	THROW(!macro_resolver.get_unknown_macros().empty(),
-	      std::string("Undefined macro '")
-	      + *macro_resolver.get_unknown_macros().begin()
-	      + "' used in filter.",
-	      ctx);
-
-	for (auto &m : macro_resolver.get_resolved_macros())
+	const filter_macro_resolver::macro_info_map& unresolved_macros = macro_resolver.get_unknown_macros();
+	if(!unresolved_macros.empty())
 	{
-		macros.at(m)->used = true;
+		auto it = unresolved_macros.begin();
+		const rule_loader::context cond_ctx(it->second, condition, ctx);
+
+		THROW(true,
+		      std::string("Undefined macro '")
+		                    + it->first
+		      + "' used in filter.",
+		      cond_ctx);
+	}
+
+	for (auto &it : macro_resolver.get_resolved_macros())
+	{
+		macros.at(it.first)->used = true;
 	}
 }
 
@@ -363,7 +371,7 @@ void rule_loader::compiler::compile_macros_infos(
 
 	for (auto &m : out)
 	{
-		resolve_macros(out, m.cond_ast, m.visibility, m.ctx);
+		resolve_macros(out, m.cond_ast, m.cond, m.visibility, m.ctx);
 	}
 }
 
@@ -404,7 +412,7 @@ void rule_loader::compiler::compile_rule_infos(
 				r.exceptions, rule.exception_fields, condition);
 		}
 		auto ast = parse_condition(condition, lists, r.cond_ctx);
-		resolve_macros(macros, ast, MAX_VISIBILITY, r.ctx);
+		resolve_macros(macros, ast, condition, MAX_VISIBILITY, r.ctx);
 
 		// check for warnings in the filtering condition
 		warn_codes.clear();
@@ -444,10 +452,12 @@ void rule_loader::compiler::compile_rule_infos(
 		// This also compiles the filter, and might throw a
 		// falco_exception with details on the compilation
 		// failure.
+		sinsp_filter_compiler compiler(cfg.sources.at(r.source)->filter_factory, ast.get());
 		try {
-			source->ruleset->add(*out.at(rule_id), ast);
+			shared_ptr<gen_event_filter> filter(compiler.compile());
+			source->ruleset->add(*out.at(rule_id), filter, ast);
 		}
-		catch (const falco_exception& e)
+		catch (const sinsp_exception& e)
 		{
 			// Allow errors containing "nonexistent field" if
 			// skip_if_unknown_filter is true
@@ -463,10 +473,14 @@ void rule_loader::compiler::compile_rule_infos(
 			}
 			else
 			{
+				rule_loader::context ctx(compiler.get_pos(),
+							 condition,
+							 r.cond_ctx);
+
 				throw rule_loader::rule_load_exception(
 					falco::load_result::load_result::LOAD_ERR_COMPILE_CONDITION,
 					e.what(),
-					r.cond_ctx);
+					ctx);
 			}
 		}
 

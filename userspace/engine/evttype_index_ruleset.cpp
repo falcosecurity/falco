@@ -153,12 +153,11 @@ void evttype_index_ruleset::ruleset_filters::evttypes_for_ruleset(std::set<uint1
 
 void evttype_index_ruleset::add(
 		const falco_rule& rule,
+		std::shared_ptr<gen_event_filter> filter,
 		std::shared_ptr<libsinsp::filter::ast::expr> condition)
 {
 	try
 	{
-		sinsp_filter_compiler compiler(m_filter_factory, condition.get());
-		shared_ptr<gen_event_filter> filter(compiler.compile());
 		std::shared_ptr<filter_wrapper> wrap(new filter_wrapper());
 		wrap->rule = rule;
 		wrap->filter = filter;

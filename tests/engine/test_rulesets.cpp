@@ -27,30 +27,51 @@ static uint16_t other_non_default_ruleset = 2;
 static std::set<std::string> tags = {"some_tag", "some_other_tag"};
 static std::set<uint16_t> evttypes = { ppm_event_type::PPME_GENERIC_E };
 
-static std::shared_ptr<libsinsp::filter::ast::expr> create_filter()
+static std::shared_ptr<gen_event_filter_factory> create_factory()
 {
-	libsinsp::filter::parser parser("evt.type=open");
-	std::shared_ptr<libsinsp::filter::ast::expr> ret(parser.parse());
+	std::shared_ptr<gen_event_filter_factory> ret(new sinsp_filter_factory(NULL));
+
 	return ret;
 }
 
-static std::shared_ptr<filter_ruleset> create_ruleset()
+static std::shared_ptr<libsinsp::filter::ast::expr> create_ast(
+	std::shared_ptr<gen_event_filter_factory> f)
 {
-	std::shared_ptr<gen_event_filter_factory> f(new sinsp_filter_factory(NULL));
+	libsinsp::filter::parser parser("evt.type=open");
+	std::shared_ptr<libsinsp::filter::ast::expr> ret(parser.parse());
+
+	return ret;
+}
+
+static std::shared_ptr<gen_event_filter> create_filter(
+	std::shared_ptr<gen_event_filter_factory> f,
+	std::shared_ptr<libsinsp::filter::ast::expr> ast)
+{
+	sinsp_filter_compiler compiler(f, ast.get());
+	std::shared_ptr<gen_event_filter> filter(compiler.compile());
+
+	return filter;
+}
+
+static std::shared_ptr<filter_ruleset> create_ruleset(
+	std::shared_ptr<gen_event_filter_factory> f)
+{
 	std::shared_ptr<filter_ruleset> ret(new evttype_index_ruleset(f));
 	return ret;
 }
 
 TEST_CASE("Should enable/disable on ruleset", "[rulesets]")
 {
-	auto r = create_ruleset();
-	auto filter = create_filter();
+	auto f = create_factory();
+	auto r = create_ruleset(f);
+	auto ast = create_ast(f);
+	auto filter = create_filter(f, ast);
 	falco_rule rule;
 	rule.name = "one_rule";
 	rule.source = falco_common::syscall_source;
 	rule.tags = tags;
 
-	r->add(rule, filter);
+	r->add(rule, filter, ast);
 
 	SECTION("Should enable/disable for exact match w/ default ruleset")
 	{
@@ -184,21 +205,23 @@ TEST_CASE("Should enable/disable on ruleset", "[rulesets]")
 
 TEST_CASE("Should enable/disable on ruleset for incremental adding tags", "[rulesets]")
 {
-	auto r = create_ruleset();
+	auto f = create_factory();
+	auto r = create_ruleset(f);
+	auto ast = create_ast(f);
 
-	auto rule1_filter = create_filter();
+	auto rule1_filter = create_filter(f, ast);
 	falco_rule rule1;
 	rule1.name = "one_rule";
 	rule1.source = falco_common::syscall_source;
 	rule1.tags =  {"rule1_tag"};
-	r->add(rule1, rule1_filter);
+	r->add(rule1, rule1_filter, ast);
 
-	auto rule2_filter = create_filter();
+	auto rule2_filter = create_filter(f, ast);
 	falco_rule rule2;
 	rule2.name = "two_rule";
 	rule2.source = falco_common::syscall_source;
 	rule2.tags =  {"rule2_tag"};
-	r->add(rule2, rule2_filter);
+	r->add(rule2, rule2_filter, ast);
 
 	std::set<std::string> want_tags;
 
