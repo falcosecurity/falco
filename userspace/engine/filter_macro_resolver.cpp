@@ -27,13 +27,12 @@ bool filter_macro_resolver::run(libsinsp::filter::ast::expr*& filter)
 	v.m_unknown_macros = &m_unknown_macros;
 	v.m_resolved_macros = &m_resolved_macros;
 	v.m_macros = &m_macros;
-	v.m_last_node_changed = false;
-	v.m_last_node = filter;
+	v.m_node_substitute = nullptr;
 	filter->accept(&v);
-	if (v.m_last_node_changed)
+	if (v.m_node_substitute)
 	{
 		delete filter;
-		filter = v.m_last_node;
+		filter = v.m_node_substitute.release();
 	}
 	return !m_resolved_macros.empty();
 }
@@ -46,12 +45,11 @@ bool filter_macro_resolver::run(std::shared_ptr<libsinsp::filter::ast::expr>& fi
 	v.m_unknown_macros = &m_unknown_macros;
 	v.m_resolved_macros = &m_resolved_macros;
 	v.m_macros = &m_macros;
-	v.m_last_node_changed = false;
-	v.m_last_node = filter.get();
+	v.m_node_substitute = nullptr;
 	filter->accept(&v);
-	if (v.m_last_node_changed)
+	if (v.m_node_substitute)
 	{
-		filter.reset(v.m_last_node);
+		filter = std::move(v.m_node_substitute);
 	}
 	return !m_resolved_macros.empty();
 }
@@ -78,14 +76,12 @@ void filter_macro_resolver::visitor::visit(ast::and_expr* e)
 	for (size_t i = 0; i < e->children.size(); i++)
 	{
 		e->children[i]->accept(this);
-		if (m_last_node_changed)
+		if (m_node_substitute)
 		{
-			delete e->children[i];
-			e->children[i] = m_last_node;
+			e->children[i] = std::move(m_node_substitute);
 		}
 	}
-	m_last_node = e;
-	m_last_node_changed = false;
+	m_node_substitute = nullptr;
 }
 
 void filter_macro_resolver::visitor::visit(ast::or_expr* e)
@@ -93,46 +89,39 @@ void filter_macro_resolver::visitor::visit(ast::or_expr* e)
 	for (size_t i = 0; i < e->children.size(); i++)
 	{
 		e->children[i]->accept(this);
-		if (m_last_node_changed)
+		if (m_node_substitute)
 		{
-			delete e->children[i];
-			e->children[i] = m_last_node;
+			e->children[i] = std::move(m_node_substitute);
 		}
 	}
-	m_last_node = e;
-	m_last_node_changed = false;
+	m_node_substitute = nullptr;
 }
 
 void filter_macro_resolver::visitor::visit(ast::not_expr* e)
 {
 	e->child->accept(this);
-	if (m_last_node_changed)
+	if (m_node_substitute)
 	{
-		delete e->child;
-		e->child = m_last_node;
+		e->child = std::move(m_node_substitute);
 	}
-	m_last_node = e;
-	m_last_node_changed = false;
+	m_node_substitute = nullptr;
 }
 
 void filter_macro_resolver::visitor::visit(ast::list_expr* e)
 {
-	m_last_node = e;
-	m_last_node_changed = false;
+	m_node_substitute = nullptr;
 }
 
 void filter_macro_resolver::visitor::visit(ast::binary_check_expr* e)
 {
 	// avoid exploring checks, so that we can be sure that each
 	// value_expr* node visited is a macro identifier
-	m_last_node = e;
-	m_last_node_changed = false;
+	m_node_substitute = nullptr;
 }
 
 void filter_macro_resolver::visitor::visit(ast::unary_check_expr* e)
 {
-	m_last_node = e;
-	m_last_node_changed = false;
+	m_node_substitute = nullptr;
 }
 
 void filter_macro_resolver::visitor::visit(ast::value_expr* e)
@@ -143,15 +132,20 @@ void filter_macro_resolver::visitor::visit(ast::value_expr* e)
 	auto macro = m_macros->find(e->value);
 	if (macro != m_macros->end() && macro->second) // skip null-ptr macros
 	{
-		ast::expr* new_node = ast::clone(macro->second.get());
-		new_node->accept(this); // this sets m_last_node
-		m_last_node_changed = true;
+		m_node_substitute = nullptr;
+		auto new_node = ast::clone(macro->second.get());
+		new_node->accept(this);
+		// new_node might already have set a non-NULL m_node_substitute.
+		// if not, the right substituted is the newly-cloned node.
+		if (!m_node_substitute)
+		{
+			m_node_substitute = std::move(new_node);
+		}
 		m_resolved_macros->insert(e->value);
 	}
 	else
 	{
-		m_last_node = e;
-		m_last_node_changed = false;
+		m_node_substitute = nullptr;
 		m_unknown_macros->insert(e->value);
 	}
 }
