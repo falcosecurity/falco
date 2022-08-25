@@ -35,10 +35,10 @@ string to_string(set<uint16_t> s)
 	return out;
 }
 
-void compare_evttypes(ast::expr* f, set<uint16_t> &expected)
+void compare_evttypes(std::unique_ptr<ast::expr> f, set<uint16_t> &expected)
 {
     set<uint16_t> actual;
-    filter_evttype_resolver().evttypes(f, actual);
+    filter_evttype_resolver().evttypes(f.get(), actual);
     for(auto &etype : expected)
     {
         REQUIRE(actual.find(etype) != actual.end());
@@ -49,7 +49,7 @@ void compare_evttypes(ast::expr* f, set<uint16_t> &expected)
     }
 }
 
-ast::expr* compile(const string &fltstr)
+std::unique_ptr<ast::expr> compile(const string &fltstr)
 {
     return libsinsp::filter::parser(fltstr).parse();
 }
@@ -98,138 +98,138 @@ TEST_CASE("Should find event types from filter", "[rule_loader]")
     SECTION("evt_type_eq")
     {
         auto f = compile("evt.type=openat");
-        compare_evttypes(f, openat_only);
+        compare_evttypes(std::move(f), openat_only);
     }
 
     SECTION("evt_type_in")
     {
         auto f = compile("evt.type in (openat, close)");
-        compare_evttypes(f, openat_close);
+        compare_evttypes(std::move(f), openat_close);
     }
 
     SECTION("evt_type_ne")
     {
         auto f = compile("evt.type!=openat");
-        compare_evttypes(f, not_openat);
+        compare_evttypes(std::move(f), not_openat);
     }
 
     SECTION("not_evt_type_eq")
     {
         auto f = compile("not evt.type=openat");
-        compare_evttypes(f, not_openat);
+        compare_evttypes(std::move(f), not_openat);
     }
 
     SECTION("not_evt_type_in")
     {
         auto f = compile("not evt.type in (openat, close)");
-        compare_evttypes(f, not_openat_close);
+        compare_evttypes(std::move(f), not_openat_close);
     }
 
     SECTION("not_evt_type_ne")
     {
         auto f = compile("not evt.type != openat");
-        compare_evttypes(f, openat_only);
+        compare_evttypes(std::move(f), openat_only);
     }
 
     SECTION("evt_type_or")
     {
         auto f = compile("evt.type=openat or evt.type=close");
-        compare_evttypes(f, openat_close);
+        compare_evttypes(std::move(f), openat_close);
     }
 
     SECTION("not_evt_type_or")
     {
         auto f = compile("evt.type!=openat or evt.type!=close");
-        compare_evttypes(f, all_events);
+        compare_evttypes(std::move(f), all_events);
     }
 
     SECTION("evt_type_or_ne")
     {
         auto f = compile("evt.type=close or evt.type!=openat");
-        compare_evttypes(f, not_openat);
+        compare_evttypes(std::move(f), not_openat);
     }
 
     SECTION("evt_type_and")
     {
         auto f = compile("evt.type=close and evt.type=openat");
-        compare_evttypes(f, no_events);
+        compare_evttypes(std::move(f), no_events);
     }
 
     SECTION("evt_type_and_non_evt_type")
     {
         auto f = compile("evt.type=openat and proc.name=nginx");
-        compare_evttypes(f, openat_only);
+        compare_evttypes(std::move(f), openat_only);
     }
 
     SECTION("evt_type_and_non_evt_type_not")
     {
         auto f = compile("evt.type=openat and not proc.name=nginx");
-        compare_evttypes(f, openat_only);
+        compare_evttypes(std::move(f), openat_only);
     }
 
     SECTION("evt_type_and_nested")
     {
         auto f = compile("evt.type=openat and (proc.name=nginx)");
-        compare_evttypes(f, openat_only);
+        compare_evttypes(std::move(f), openat_only);
     }
 
     SECTION("evt_type_and_nested_multi")
     {
         auto f = compile("evt.type=openat and (evt.type=close and proc.name=nginx)");
-        compare_evttypes(f, no_events);
+        compare_evttypes(std::move(f), no_events);
     }
 
     SECTION("non_evt_type")
     {
         auto f = compile("proc.name=nginx");
-        compare_evttypes(f, all_events);
+        compare_evttypes(std::move(f), all_events);
     }
 
     SECTION("non_evt_type_or")
     {
         auto f = compile("evt.type=openat or proc.name=nginx");
-        compare_evttypes(f, all_events);
+        compare_evttypes(std::move(f), all_events);
     }
 
     SECTION("non_evt_type_or_nested_first")
     {
         auto f = compile("(evt.type=openat) or proc.name=nginx");
-        compare_evttypes(f, all_events);
+        compare_evttypes(std::move(f), all_events);
     }
 
     SECTION("non_evt_type_or_nested_second")
     {
         auto f = compile("evt.type=openat or (proc.name=nginx)");
-        compare_evttypes(f, all_events);
+        compare_evttypes(std::move(f), all_events);
     }
 
     SECTION("non_evt_type_or_nested_multi")
     {
         auto f = compile("evt.type=openat or (evt.type=close and proc.name=nginx)");
-        compare_evttypes(f, openat_close);
+        compare_evttypes(std::move(f), openat_close);
     }
 
     SECTION("non_evt_type_or_nested_multi_not")
     {
         auto f = compile("evt.type=openat or not (evt.type=close and proc.name=nginx)");
-        compare_evttypes(f, not_close);
+        compare_evttypes(std::move(f), not_close);
     }
 
     SECTION("non_evt_type_and_nested_multi_not")
     {
         auto f = compile("evt.type=openat and not (evt.type=close and proc.name=nginx)");
-        compare_evttypes(f, openat_only);
+        compare_evttypes(std::move(f), openat_only);
     }
 
     SECTION("ne_and_and")
     {
         auto f = compile("evt.type!=openat and evt.type!=close");
-        compare_evttypes(f, not_openat_close);
+        compare_evttypes(std::move(f), not_openat_close);
     }
 
     SECTION("not_not")
     {
         auto f = compile("not (not evt.type=openat)");
-        compare_evttypes(f, openat_only);
+        compare_evttypes(std::move(f), openat_only);
     }
 }
