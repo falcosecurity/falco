@@ -32,16 +32,20 @@ public:
 	virtual ~filter_ruleset() = default;
 
 	/*!
-		\brief Adds a rule and its filtering condition inside the manager.
-		An exception is thrown is case of error. This method only adds the rule
-		inside the internal collection, but does not enable it for any ruleset.
-		The rule must be enabled for one or more rulesets with the enable() or
-		enable_tags() methods.
+		\brief Adds a rule and its filtering filter + condition inside the manager.
+	        This method only adds the rule inside the internal collection,
+		but does not enable it for any ruleset.	The rule must be enabled
+		for one or more rulesets with the enable() or enable_tags() methods.
+		The ast representation of the rule's condition is provided to allow
+		the filter_ruleset object to parse the ast to obtain event types
+		or do other analysis/indexing of the condition.
 		\param rule The rule to be added
+		\param the filter representing the rule's filtering condition.
 		\param condition The AST representing the rule's filtering condition
 	*/
 	virtual void add(
 		const falco_rule& rule,
+		std::shared_ptr<gen_event_filter> filter,
 		std::shared_ptr<libsinsp::filter::ast::expr> condition) = 0;
 
 	/*!
