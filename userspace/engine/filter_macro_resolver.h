@@ -40,7 +40,7 @@ class filter_macro_resolver
 			\return true if at least one of the defined macros is resolved
 		*/
 		bool run(libsinsp::filter::ast::expr*& filter);
-		
+
 		/*!
 			\brief Version of run() that works with shared pointers
 		*/
@@ -59,11 +59,16 @@ class filter_macro_resolver
 			std::shared_ptr<libsinsp::filter::ast::expr> macro);
 
 		/*!
+		        \brief used in get_{resolved,unknown}_macros
+		*/
+		typedef std::unordered_map<std::string,libsinsp::filter::ast::pos_info> macro_info_map;
+
+		/*!
 			\brief Returns a set containing the names of all the macros
 			substituted during the last invocation of run(). Should be
 			non-empty if the last invocation of run() returned true.
 		*/
-		const std::unordered_set<std::string>& get_resolved_macros() const;
+		const macro_info_map& get_resolved_macros() const;
 
 		/*!
 			\brief Returns a set containing the names of all the macros
@@ -71,8 +76,8 @@ class filter_macro_resolver
 			A macro remains unresolved if it is found inside the processed
 			filter but it was not defined with set_macro();
 		*/
-		const std::unordered_set<std::string>& get_unknown_macros() const;
-		
+		const macro_info_map& get_unknown_macros() const;
+
 	private:
 		typedef std::unordered_map<
 			std::string,
@@ -81,16 +86,18 @@ class filter_macro_resolver
 
 		struct visitor : public libsinsp::filter::ast::expr_visitor
 		{
-			visitor() = default;
+			visitor(macro_info_map& unknown_macros, macro_info_map& resolved_macros, macro_defs& macros)
+				: m_unknown_macros(unknown_macros), m_resolved_macros(resolved_macros), m_macros(macros) {}
 			visitor(visitor&&) = default;
 			visitor& operator = (visitor&&) = default;
 			visitor(const visitor&) = delete;
 			visitor& operator = (const visitor&) = delete;
 
 			std::unique_ptr<libsinsp::filter::ast::expr> m_node_substitute;
-			std::unordered_set<std::string>* m_unknown_macros;
-			std::unordered_set<std::string>* m_resolved_macros;
-			macro_defs* m_macros;
+			macro_info_map& m_unknown_macros;
+			macro_info_map& m_resolved_macros;
+
+			macro_defs& m_macros;
 
 			void visit(libsinsp::filter::ast::and_expr* e) override;
 			void visit(libsinsp::filter::ast::or_expr* e) override;
@@ -101,7 +108,7 @@ class filter_macro_resolver
 			void visit(libsinsp::filter::ast::binary_check_expr* e) override;
 		};
 
-		std::unordered_set<std::string> m_unknown_macros;
-		std::unordered_set<std::string> m_resolved_macros;
+		macro_info_map m_unknown_macros;
+		macro_info_map m_resolved_macros;
 		macro_defs m_macros;
 };
