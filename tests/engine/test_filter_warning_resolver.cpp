@@ -21,8 +21,7 @@ static bool warns(const std::string& condition)
 {
 	std::set<falco::load_result::warning_code> w;
 	auto ast = libsinsp::filter::parser(condition).parse();
-	filter_warning_resolver().run(ast, w);
-	delete ast;
+	filter_warning_resolver().run(ast.get(), w);
 	return !w.empty();
 }
 
