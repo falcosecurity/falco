@@ -129,8 +129,13 @@ get_target_id() {
 		fi
 		;;
 	("ubuntu")
-		if [[ $KERNEL_RELEASE == *"aws"* ]]; then
-			TARGET_ID="ubuntu-aws"
+		# Extract the flavor from the kernelrelease
+		# Examples:
+		# 5.0.0-1028-aws-5.0 -> ubuntu-aws-5.0
+		# 5.15.0-1009-aws -> ubuntu-aws
+		if [[ $KERNEL_RELEASE =~ -([a-zA-Z]+)(-.*)?$ ]];
+		then
+			TARGET_ID="ubuntu-${BASH_REMATCH[1]}${BASH_REMATCH[2]}"
 		else
 			TARGET_ID="ubuntu-generic"
 		fi
