@@ -2157,6 +2157,7 @@
     http_proxy_procs and
     not allowed_ssh_proxy_env and
     proc.env icontains HTTP_PROXY
+  enabled: false
   output: >
     Program run with disallowed HTTP_PROXY environment variable
     (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline env=%proc.env parent=%proc.pname container_id=%container.id image=%container.image.repository)
@@ -3011,7 +3012,7 @@
 # Two things to pay attention to:
 #   1) In most cases, 'docker cp' will not be identified, but the assumption is that if an attacker gained access to the container runtime daemon, they are already privileged
 #   2) Drift rules will be noisy in environments in which containers are built (e.g. docker build)
-# These two rules are not enabled by default. Use `never_true` in macro condition to enable them.
+# These two rules are not enabled by default.
 
 - macro: user_known_container_drift_activities
   condition: (always_true)
@@ -3028,6 +3029,7 @@
     ((evt.arg.mode contains "S_IXUSR") or
     (evt.arg.mode contains "S_IXGRP") or
     (evt.arg.mode contains "S_IXOTH"))
+  enabled: false
   output: Drift detected (chmod), new executable created in a container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline filename=%evt.arg.filename name=%evt.arg.name mode=%evt.arg.mode event=%evt.type)
   priority: ERROR
 
@@ -3044,6 +3046,7 @@
     not runc_writing_var_lib_docker and
     not user_known_container_drift_activities and
     evt.rawres>=0
+  enabled: false
   output: Drift detected (open+create), new executable created in a container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline filename=%evt.arg.filename name=%evt.arg.name mode=%evt.arg.mode event=%evt.type)
   priority: ERROR
 
