@@ -15,10 +15,9 @@
 # limitations under the License.
 #
 
-# The latest Falco Engine version is 9.
 # Starting with version 8, the Falco engine supports exceptions.
 # However the Falco rules file does not use them by default.
-- required_engine_version: 9
+- required_engine_version: 13
 
 # Currently disabled as read/write are ignored syscalls. The nearly
 # similar open_write/open_read check for files being opened for
@@ -956,6 +955,10 @@
     command=%proc.cmdline file=%fd.name parent=%proc.pname pcmdline=%proc.pcmdline gparent=%proc.aname[2] container_id=%container.id image=%container.image.repository)
   priority: ERROR
   tags: [filesystem, mitre_persistence]
+
+# ******************************************************************************
+# * "Directory traversal monitored file read" requires FALCO_ENGINE_VERSION 13 *
+# ******************************************************************************
 
 - rule: Directory traversal monitored file read
   desc: >
