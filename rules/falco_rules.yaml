@@ -2909,18 +2909,12 @@
   priority: WARNING
   tags: [container, mitre_execution]
 
-
-# This rule is enabled by default.
-# If you want to disable it, modify the following macro.
-- macro: consider_packet_socket_communication
-  condition: (always_true)
-
 - list: user_known_packet_socket_binaries
   items: []
 
 - rule: Packet socket created in container
   desc: Detect new packet socket at the device driver (OSI Layer 2) level in a container. Packet socket could be used for ARP Spoofing and privilege escalation(CVE-2020-14386) by attacker.
-  condition: evt.type=socket and evt.arg[0]=AF_PACKET and consider_packet_socket_communication and container and not proc.name in (user_known_packet_socket_binaries)
+  condition: evt.type=socket and evt.arg[0]=AF_PACKET and container and not proc.name in (user_known_packet_socket_binaries)
   output: Packet socket was created in a container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline socket_info=%evt.args container_id=%container.id container_name=%container.name image=%container.image.repository:%container.image.tag)
   priority: NOTICE
   tags: [network, mitre_discovery]
