@@ -2094,7 +2094,7 @@
 # This list allows for easy additions to the set of commands allowed
 # to run shells in containers without having to without having to copy
 # and override the entire run shell in container macro. Once
-# https://github.com/draios/falco/issues/255 is fixed this will be a
+# https://github.com/falcosecurity/falco/issues/255 is fixed this will be a
 # bit easier, as someone could append of any of the existing lists.
 - list: user_known_shell_spawn_binaries
   items: []
