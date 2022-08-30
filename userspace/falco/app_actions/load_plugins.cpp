@@ -39,7 +39,7 @@ application::run_result application::load_plugins()
 	m_state->plugin_configs.clear();
 
 	// Initialize the offline inspector. This is used to load all the configured
-	// plugins in order to have them available everytime we need to access
+	// plugins in order to have them available every time we need to access
 	// their static info. If Falco is in capture mode, this inspector is also
 	// used to open and read the trace file
 	m_state->offline_inspector.reset(new sinsp());
