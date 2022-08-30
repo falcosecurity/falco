@@ -54,16 +54,9 @@ trace_files: !mux
       - 'Cloudtrail Create Instance': 1
     conf_file: BUILD_DIR/test/confs/plugins/cloudtrail_json_create_instances_bigevent.yaml
 
-  multiple_source_plugins:
-    exit_status: 1
-    stderr_contains: "Can not load multiple plugins with event sourcing capability: 'cloudtrail' already loaded."
-    conf_file: BUILD_DIR/test/confs/plugins/multiple_source_plugins.yaml
-    rules_file:
-      - rules/plugins/cloudtrail_create_instances.yaml
-
   incompatible_extract_sources:
     exit_status: 1
-    stderr_contains: "Plugin '.*' has field extraction capability but is not compatible with any enabled event source"
+    stderr_contains: "Plugin '.*' has field extraction capability but is not compatible with any known event source"
     conf_file: BUILD_DIR/test/confs/plugins/incompatible_extract_sources.yaml
     rules_file:
       - rules/plugins/cloudtrail_create_instances.yaml
