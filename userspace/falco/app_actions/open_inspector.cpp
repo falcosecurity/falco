@@ -18,94 +18,96 @@ limitations under the License.
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#include <plugin_manager.h>
+
 #include "application.h"
 
 using namespace falco::app;
 
-typedef std::function<void(std::shared_ptr<sinsp> inspector)> open_t;
-
-application::run_result application::open_inspector()
+application::run_result application::open_offline_inspector()
 {
-	// Notify engine that we finished loading and enabling all rules
-	m_state->engine->complete_rule_loading();
-	
-	if(is_capture_mode())
+	try
 	{
-		// Try to open the trace file as a
-		// capture file first.
-		try {
-			m_state->inspector->open(m_options.trace_filename);
-			falco_logger::log(LOG_INFO, "Reading system call events from file: " + m_options.trace_filename + "\n");
-		}
-		catch(sinsp_exception &e)
+		m_state->offline_inspector->open(m_options.trace_filename);
+		falco_logger::log(LOG_INFO, "Reading system call events from file: " + m_options.trace_filename + "\n");
+		return run_result::ok();
+	}
+	catch (sinsp_exception &e)
+	{
+		return run_result::fatal("Could not open trace filename " + m_options.trace_filename + " for reading: " + e.what());
+	}
+}
+
+application::run_result application::open_live_inspector(
+		std::shared_ptr<sinsp> inspector,
+		const std::string& source)
+{
+	try
+	{
+		if (source != falco_common::syscall_source)
 		{
-			return run_result::fatal("Could not open trace filename " + m_options.trace_filename + " for reading: " + e.what());
+			for (const auto p: inspector->get_plugin_manager()->plugins())
+			{
+				if (p->caps() & CAP_SOURCING && p->event_source() == source)
+				{
+					auto cfg = m_state->plugin_configs.at(p->name());
+					inspector->set_input_plugin(cfg->m_name, cfg->m_open_params);
+					inspector->open();
+					return run_result::ok();
+				}
+			}
+			return run_result::fatal("Can't open inspector for plugin event source: " + source);
+		}
+
+		if (m_options.userspace)
+		{
+			// open_udig() is the underlying method used in the capture code to parse userspace events from the kernel.
+			//
+			// Falco uses a ptrace(2) based userspace implementation.
+			// Regardless of the implementation, the underlying method remains the same.
+			inspector->open_udig();
+		}
+		else if(m_options.gvisor_config != "")
+		{
+			falco_logger::log(LOG_INFO, "Enabled event collection from gVisor. Configuration path: " + m_options.gvisor_config);
+			inspector->open_gvisor(m_options.gvisor_config, m_options.gvisor_root);
+		}
+		else
+		{
+			inspector->open();
 		}
 	}
-	else
+	catch (sinsp_exception &e)
 	{
-		try
+		// If syscall input source is enabled and not through userspace instrumentation
+		if (m_options.gvisor_config.empty() && !m_options.userspace)
 		{
-			if(m_options.userspace)
+			// Try to insert the Falco kernel module
+			if(system("modprobe " DRIVER_NAME " > /dev/null 2> /dev/null"))
 			{
-				// open_udig() is the underlying method used in the capture code to parse userspace events from the kernel.
-				//
-				// Falco uses a ptrace(2) based userspace implementation.
-				// Regardless of the implementation, the underlying method remains the same.
-				m_state->inspector->open_udig();
+				falco_logger::log(LOG_ERR, "Unable to load the driver.\n");
 			}
-			else if(m_options.gvisor_config != "")
-			{
-				falco_logger::log(LOG_INFO, "Enabled event collection from gVisor. Configuration path: " + m_options.gvisor_config);
-				m_state->inspector->open_gvisor(m_options.gvisor_config, m_options.gvisor_root);
-			}
-			else
-			{
-				m_state->inspector->open();
-			}
+			inspector->open();
 		}
-		catch(sinsp_exception &e)
+		else
 		{
-			// If syscall input source is enabled and not through userspace instrumentation
-			if (is_syscall_source_enabled() && !m_options.userspace)
-			{
-				// Try to insert the Falco kernel module
-				if(system("modprobe " DRIVER_NAME " > /dev/null 2> /dev/null"))
-				{
-					falco_logger::log(LOG_ERR, "Unable to load the driver.\n");
-				}
-				m_state->inspector->open();
-			}
-			else
-			{
-				return run_result::fatal(e.what());
-			}
+			return run_result::fatal(e.what());
 		}
 	}
 
 	/// TODO: we can add a method to the inspector that tells us what 
 	/// is the underline engine used. Right now we print something only 
 	/// in case of BPF engine
-	if(m_state->inspector->is_bpf_enabled())
+	if (inspector->is_bpf_enabled())
 	{
 		falco_logger::log(LOG_INFO, "Falco is using the BPF probe\n");	
 	}
 
 	// This must be done after the open
-	if(!m_options.all_events)
+	if (!m_options.all_events)
 	{
-		m_state->inspector->start_dropping_mode(1);
+		inspector->start_dropping_mode(1);
 	}
 
 	return run_result::ok();
-}
-
-bool application::close_inspector(std::string &errstr)
-{
-	if(m_state->inspector != nullptr)
-	{
-		m_state->inspector->close();
-	}
-
-	return true;
 }
