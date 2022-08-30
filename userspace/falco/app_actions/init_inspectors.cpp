@@ -112,7 +112,7 @@ application::run_result application::init_inspectors()
 	
 	for (const auto &src : m_state->loaded_sources)
 	{
-		auto src_info = m_state->sources.at(src);
+		auto src_info = m_state->source_infos.at(src);
 
 		// in capture mode, every event source uses the offline inspector.
 		// in live mode, we create a new inspector for each event source

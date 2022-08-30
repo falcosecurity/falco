@@ -27,12 +27,12 @@ application::run_result application::load_plugins()
 		return run_result::fatal("Can not load/use plugins with musl optimized build");
 	}
 #endif
-	auto empty_src = state::source_info{};
+	auto empty_src_info = state::source_info{};
 
 	// Initialize the set of loaded event sources. 
 	// By default, the set includes the 'syscall' event source
-	m_state->sources.clear();
-	m_state->sources.insert(empty_src, falco_common::syscall_source);
+	m_state->source_infos.clear();
+	m_state->source_infos.insert(empty_src_info, falco_common::syscall_source);
 	m_state->loaded_sources = { falco_common::syscall_source };
 
 	// Initialize map of plugin configs
@@ -53,7 +53,7 @@ application::run_result application::load_plugins()
 		if(plugin->caps() & CAP_SOURCING)
 		{
 			auto sname = plugin->event_source();
-			m_state->sources.insert(empty_src, sname);
+			m_state->source_infos.insert(empty_src_info, sname);
 			m_state->loaded_sources.insert(sname);
 		}
 	}

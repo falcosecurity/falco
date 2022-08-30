@@ -58,13 +58,13 @@ application::run_result application::do_inspect(
 	bool rate_limiter_enabled = m_state->config->m_notifications_rate > 0;
 	bool source_engine_idx_found = false;
 	bool is_capture_mode = source.empty();
-	bool syscall_source_engine_idx = m_state->sources.at(falco_common::syscall_source)->engine_idx;
+	bool syscall_source_engine_idx = m_state->source_infos.at(falco_common::syscall_source)->engine_idx;
 	std::size_t source_engine_idx = 0;
 	std::vector<std::string> source_names = inspector->get_plugin_manager()->sources();
 	source_names.push_back(falco_common::syscall_source);
 	if (!is_capture_mode)
 	{
-		source_engine_idx = m_state->sources.at(source)->engine_idx;
+		source_engine_idx = m_state->source_infos.at(source)->engine_idx;
 	}
 
 	// if enabled, init rate limiter
@@ -333,7 +333,7 @@ application::run_result application::process_events()
 		ctxs.reserve(m_state->enabled_sources.size());
 		for (auto source : m_state->enabled_sources)
 		{
-			auto src_info = m_state->sources.at(source);
+			auto src_info = m_state->source_infos.at(source);
 			auto ctx_idx = ctxs.size();
 			ctxs.emplace_back();
 			ctxs[ctx_idx].source = source;
@@ -385,7 +385,7 @@ application::run_result application::process_events()
 					ctx.thread = nullptr;
 				}
 				falco_logger::log(LOG_DEBUG, "Closing event source '" + ctx.source + "'\n");
-				m_state->sources.at(ctx.source)->inspector->close();
+				m_state->source_infos.at(ctx.source)->inspector->close();
 				res = run_result::merge(res, ctx.res);
 				closed_count++;
 			}

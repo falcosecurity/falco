@@ -100,8 +100,9 @@ private:
 		// this is also used to open the capture file and read its events
 		std::shared_ptr<sinsp> offline_inspector;
 
-		// List of all event source info indexed by source name
-		indexed_vector<source_info> sources;
+		// List of all the information mapped to each event source
+		// indexed by event source name
+		indexed_vector<source_info> source_infos;
 
 		// List of all plugin configurations indexed by plugin name as returned
 		// by their sinsp_plugin::name method

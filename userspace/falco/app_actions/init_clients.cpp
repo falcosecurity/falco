@@ -27,7 +27,7 @@ application::run_result application::init_clients()
 		return run_result::ok();
 	}
 
-	auto inspector = m_state->sources.at(falco_common::syscall_source)->inspector;
+	auto inspector = m_state->source_infos.at(falco_common::syscall_source)->inspector;
 
 	falco_logger::log(LOG_DEBUG, "Setting metadata download max size to " + to_string(m_state->config->m_metadata_download_max_mb) + " MB\n");
 	falco_logger::log(LOG_DEBUG, "Setting metadata download chunk wait time to " + to_string(m_state->config->m_metadata_download_chunk_wait_us) + " μs\n");
