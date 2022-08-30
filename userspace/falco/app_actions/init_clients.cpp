@@ -22,15 +22,17 @@ application::run_result application::init_clients()
 {
 #ifndef MINIMAL_BUILD
 	// k8s and mesos clients are useful only if syscall source is enabled
-	if (!is_syscall_source_enabled())
+	if (m_state->enabled_sources.find(falco_common::syscall_source) == m_state->enabled_sources.end())
 	{
 		return run_result::ok();
 	}
 
+	auto inspector = m_state->sources.at(falco_common::syscall_source)->inspector;
+
 	falco_logger::log(LOG_DEBUG, "Setting metadata download max size to " + to_string(m_state->config->m_metadata_download_max_mb) + " MB\n");
 	falco_logger::log(LOG_DEBUG, "Setting metadata download chunk wait time to " + to_string(m_state->config->m_metadata_download_chunk_wait_us) + " μs\n");
 	falco_logger::log(LOG_DEBUG, "Setting metadata download watch frequency to " + to_string(m_state->config->m_metadata_download_watch_freq_sec) + " seconds\n");
-	m_state->inspector->set_metadata_download_params(m_state->config->m_metadata_download_max_mb * 1024 * 1024, m_state->config->m_metadata_download_chunk_wait_us, m_state->config->m_metadata_download_watch_freq_sec);
+	inspector->set_metadata_download_params(m_state->config->m_metadata_download_max_mb * 1024 * 1024, m_state->config->m_metadata_download_chunk_wait_us, m_state->config->m_metadata_download_watch_freq_sec);
 
 	//
 	// Run k8s, if required
@@ -53,7 +55,7 @@ application::run_result application::init_clients()
 				*k8s_api_cert_ptr = k8s_cert_env;
 			}
 		}
-		m_state->inspector->init_k8s_client(k8s_api_ptr, k8s_api_cert_ptr, k8s_node_name_ptr, m_options.verbose);
+		inspector->init_k8s_client(k8s_api_ptr, k8s_api_cert_ptr, k8s_node_name_ptr, m_options.verbose);
 	}
 
 	//
@@ -65,12 +67,12 @@ application::run_result application::init_clients()
 		// passes a pointer but the inspector does
 		// *not* own it and does not use it after
 		// init_mesos_client() returns.
-		m_state->inspector->init_mesos_client(&(m_options.mesos_api), m_options.verbose);
+		inspector->init_mesos_client(&(m_options.mesos_api), m_options.verbose);
 	}
 	else if(char* mesos_api_env = getenv("FALCO_MESOS_API"))
 	{
 		std::string mesos_api_copy = mesos_api_env;
-		m_state->inspector->init_mesos_client(&mesos_api_copy, m_options.verbose);
+		inspector->init_mesos_client(&mesos_api_copy, m_options.verbose);
 	}
 #endif
 
