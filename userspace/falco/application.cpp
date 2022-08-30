@@ -41,12 +41,14 @@ application::run_result::~run_result()
 application::state::state()
 	: restart(false),
 	  terminate(false),
-	  loaded_sources({falco_common::syscall_source}),
-	  enabled_sources({falco_common::syscall_source})
+	  loaded_sources(),
+	  enabled_sources(),
+	  sources(),
+	  plugin_configs()
 {
 	config = std::make_shared<falco_configuration>();
 	engine = std::make_shared<falco_engine>();
-	inspector = std::make_shared<sinsp>();
+	offline_inspector = std::make_shared<sinsp>();
 	outputs = nullptr;
 }
 

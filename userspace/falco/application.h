@@ -21,6 +21,7 @@ limitations under the License.
 #ifndef MINIMAL_BUILD
 #include "grpc_server.h"
 #include "webserver.h"
+#include "indexed_vector.h"
 #endif
 
 #include "app_cmdline_options.h"
@@ -59,7 +60,24 @@ private:
 	// standalone class to allow for a bit of separation between
 	// application state and instance variables, and to also defer
 	// initializing this state until application::init.
-	struct state {
+	struct state
+	{
+		// Holds the info mapped for each loaded event source
+		struct source_info
+		{
+			// The index of the given event source in the state's falco_engine,
+			// as returned by falco_engine::add_source
+			std::size_t engine_idx;
+			// The filtercheck list containing all fields compatible
+			// with the given event source
+			filter_check_list filterchecks;
+			// The inspector assigned to this event source. If in capture mode,
+			// all event source will share the same inspector. If the event
+			// source is a plugin one, the assigned inspector must have that
+			// plugin registered in its plugin manager
+			std::shared_ptr<sinsp> inspector;
+		};
+
 		state();
 		virtual ~state();
 
@@ -69,19 +87,25 @@ private:
 		std::shared_ptr<falco_configuration> config;
 		std::shared_ptr<falco_outputs> outputs;
 		std::shared_ptr<falco_engine> engine;
-		std::shared_ptr<sinsp> inspector;
+
+		// The set of loaded event sources (by default, the syscall event
+		// source plus all event sources coming from the loaded plugins)
 		std::set<std::string> loaded_sources;
+
+		// The set of enabled event sources (can be altered by using
+		// the --enable-source and --disable-source options)
 		std::set<std::string> enabled_sources;
 
-		// The event source index that correspond to "syscall"
-		std::size_t syscall_source_idx;
+		// Used to load all plugins to get their info. In capture mode,
+		// this is also used to open the capture file and read its events
+		std::shared_ptr<sinsp> offline_inspector;
 
-		// All filterchecks created by plugins go in this
-		// list. If we ever support multiple event sources at
-		// the same time, this, and the factories created in
-		// init_inspector/load_plugins, will have to be a map
-		// from event source to filtercheck list.
-		std::map<std::string, filter_check_list> plugin_filter_checks;
+		// List of all event source info indexed by source name
+		indexed_vector<source_info> sources;
+
+		// List of all plugin configurations indexed by plugin name as returned
+		// by their sinsp_plugin::name method
+		indexed_vector<falco_configuration::plugin_config> plugin_configs;
 
 		std::string cmdline;
 
@@ -194,7 +218,6 @@ private:
 	run_result load_plugins();
 	run_result load_rules_files();
 	run_result create_requested_paths();
-	run_result open_inspector();
 	run_result print_generated_gvisor_config();
 	run_result print_help();
 	run_result print_ignored_events();
@@ -226,16 +249,21 @@ private:
 	void check_for_ignored_events();
 	void print_all_ignored_events();
 	void format_plugin_info(std::shared_ptr<sinsp_plugin> p, std::ostream& os) const;
-	run_result do_inspect(syscall_evt_drop_mgr &sdropmgr,
-				std::shared_ptr<stats_writer> statsw,
-			    uint64_t duration_to_tot_ns,
-			    uint64_t &num_events);
-	
-	inline bool is_syscall_source_enabled() const 
-	{
-		return m_state->enabled_sources.find(falco_common::syscall_source)
-			!= m_state->enabled_sources.end();
-	}
+	run_result open_offline_inspector();
+	run_result open_live_inspector(std::shared_ptr<sinsp> inspector, const std::string& source);
+	void add_source_to_engine(const std::string& src);
+	run_result do_inspect(
+		std::shared_ptr<sinsp> inspector,
+		const std::string& source,
+		std::shared_ptr<stats_writer> statsw,
+		syscall_evt_drop_mgr &sdropmgr,
+		uint64_t duration_to_tot_ns,
+		uint64_t &num_evts);
+	void process_inspector_events(
+		std::shared_ptr<sinsp> inspector,
+		std::shared_ptr<stats_writer> statsw,
+		std::string source,
+		run_result* res) noexcept;
 
 	inline bool is_capture_mode() const 
 	{
