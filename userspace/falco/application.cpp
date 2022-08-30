@@ -43,7 +43,7 @@ application::state::state()
 	  terminate(false),
 	  loaded_sources(),
 	  enabled_sources(),
-	  sources(),
+	  source_infos(),
 	  plugin_configs()
 {
 	config = std::make_shared<falco_configuration>();

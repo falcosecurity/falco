@@ -58,7 +58,7 @@ void application::configure_output_format()
 
 void application::add_source_to_engine(const std::string& src)
 {
-	auto src_info = m_state->sources.at(src);
+	auto src_info = m_state->source_infos.at(src);
 	std::shared_ptr<gen_event_filter_factory> filter_factory = nullptr;
 	std::shared_ptr<gen_event_formatter_factory> formatter_factory = nullptr;
 
@@ -71,7 +71,7 @@ void application::add_source_to_engine(const std::string& src)
 	}
 	else
 	{
-		auto &filterchecks = m_state->sources.at(src)->filterchecks;
+		auto &filterchecks = m_state->source_infos.at(src)->filterchecks;
 		filter_factory = std::shared_ptr<gen_event_filter_factory>(
 			new sinsp_filter_factory(src_info->inspector.get(), filterchecks));
 		formatter_factory = std::shared_ptr<gen_event_formatter_factory>(
@@ -120,7 +120,7 @@ application::run_result application::init_falco_engine()
 			{
 				bool added = false;
 				auto source_idx = manager->source_idx_by_plugin_id(p->id(), added);
-				auto engine_idx = m_state->sources.at(p->event_source())->engine_idx;
+				auto engine_idx = m_state->source_infos.at(p->event_source())->engine_idx;
 				if (!added || source_idx != engine_idx)
 				{
 					return run_result::fatal("Could not add event source in the engine: " + p->event_source());
