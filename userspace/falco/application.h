@@ -269,15 +269,16 @@ private:
 	void add_source_to_engine(const std::string& src);
 	run_result do_inspect(
 		std::shared_ptr<sinsp> inspector,
-		const std::string& source,
+		const std::string& source, // an empty source represents capture mode
 		std::shared_ptr<stats_writer> statsw,
 		syscall_evt_drop_mgr &sdropmgr,
+		bool check_drops_and_timeouts,
 		uint64_t duration_to_tot_ns,
 		uint64_t &num_evts);
 	void process_inspector_events(
 		std::shared_ptr<sinsp> inspector,
 		std::shared_ptr<stats_writer> statsw,
-		std::string source,
+		std::string source, // an empty source represents capture mode
 		run_result* res) noexcept;
 
 	inline bool is_capture_mode() const 
