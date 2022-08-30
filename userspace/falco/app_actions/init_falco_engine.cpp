@@ -14,9 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#include <sstream>
-
 #include "application.h"
+#include <plugin_manager.h>
 
 using namespace falco::app;
 
@@ -57,25 +56,80 @@ void application::configure_output_format()
 	}
 }
 
-application::run_result application::init_falco_engine()
+void application::add_source_to_engine(const std::string& src)
 {
-	configure_output_format();
+	auto src_info = m_state->sources.at(src);
+	std::shared_ptr<gen_event_filter_factory> filter_factory = nullptr;
+	std::shared_ptr<gen_event_formatter_factory> formatter_factory = nullptr;
 
-	// Create "factories" that can create filters/formatters for syscalls
-
-	// libs requires raw pointer, we should modify libs to use reference/shared_ptr
-	std::shared_ptr<gen_event_filter_factory> syscall_filter_factory(new sinsp_filter_factory(m_state->inspector.get()));
-
-	// libs requires raw pointer, we should modify libs to use reference/shared_ptr
-	std::shared_ptr<gen_event_formatter_factory> syscall_formatter_factory(new sinsp_evt_formatter_factory(m_state->inspector.get()));
-
-	m_state->syscall_source_idx = m_state->engine->add_source(falco_common::syscall_source, syscall_filter_factory, syscall_formatter_factory);
-	
-	if(m_state->config->m_json_output)
+	if (src == falco_common::syscall_source)
 	{
-		syscall_formatter_factory->set_output_format(gen_event_formatter::OF_JSON);
+		filter_factory = std::shared_ptr<gen_event_filter_factory>(
+			new sinsp_filter_factory(src_info->inspector.get()));
+		formatter_factory = std::shared_ptr<gen_event_formatter_factory>(
+			new sinsp_evt_formatter_factory(src_info->inspector.get()));
+	}
+	else
+	{
+		auto &filterchecks = m_state->sources.at(src)->filterchecks;
+		filter_factory = std::shared_ptr<gen_event_filter_factory>(
+			new sinsp_filter_factory(src_info->inspector.get(), filterchecks));
+		formatter_factory = std::shared_ptr<gen_event_formatter_factory>(
+			new sinsp_evt_formatter_factory(src_info->inspector.get(), filterchecks));
 	}
 
+	if(m_state->config->m_json_output)
+	{
+		formatter_factory->set_output_format(gen_event_formatter::OF_JSON);
+	}
+
+	src_info->engine_idx = m_state->engine->add_source(
+		src, filter_factory, formatter_factory);
+}
+
+application::run_result application::init_falco_engine()
+{
+	// add all non-syscall event sources in engine
+	for (const auto& src : m_state->loaded_sources)
+	{
+		if (src != falco_common::syscall_source)
+		{
+			// we skip the syscall as we want it to be the one added for last
+			// in the engine. This makes the source index assignment easier.
+			add_source_to_engine(src);
+		}
+	}
+
+	// add syscall as last source
+	add_source_to_engine(falco_common::syscall_source);
+
+	// note: in capture mode, we can assume that the plugin source index will
+	// be the same in both the falco engine and the sinsp plugin manager.
+	// This assumption stands because the plugin manager stores sources in a
+	// vector, and the syscall source is appended in the engine *after* the sources
+	// coming from plugins. The reason why this can't work with live mode,
+	// is because in that case event sources are scattered across different
+	// inspectors. Since this is an implementation-based assumption, we
+	// check this and return an error to spot regressions in the future.
+	if (is_capture_mode())
+	{
+		auto manager = m_state->offline_inspector->get_plugin_manager();
+		for (const auto &p : manager->plugins())
+		{
+			if (p->caps() & CAP_SOURCING)
+			{
+				bool added = false;
+				auto source_idx = manager->source_idx_by_plugin_id(p->id(), added);
+				auto engine_idx = m_state->sources.at(p->event_source())->engine_idx;
+				if (!added || source_idx != engine_idx)
+				{
+					return run_result::fatal("Could not add event source in the engine: " + p->event_source());
+				}
+			}
+		}
+	}
+
+	configure_output_format();
 	m_state->engine->set_min_priority(m_state->config->m_min_priority);
 
 	return run_result::ok();
