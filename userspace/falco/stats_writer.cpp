@@ -21,6 +21,7 @@ limitations under the License.
 
 #include <nlohmann/json.hpp>
 
+#include "falco_common.h"
 #include "stats_writer.h"
 #include "logger.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
@@ -118,6 +119,8 @@ void stats_writer::worker() noexcept
 {
 	stats_writer::msg m;
 	nlohmann::json jmsg;
+	auto tick = stats_writer::get_ticker();
+	auto last_tick = tick;
 
 	while(true)
 	{
@@ -128,23 +131,32 @@ void stats_writer::worker() noexcept
 			return;
 		}
 
-		m_total_samples++;
-		try
+		// update records for this event source
+		jmsg[m.source]["cur"]["events"] = m.stats.n_evts;
+		jmsg[m.source]["delta"]["events"] = m.delta.n_evts;
+		if (m.source == falco_common::syscall_source)
 		{
-			jmsg["sample"] = m_total_samples;
-			jmsg["cur"]["events"] = m.stats.n_evts;
-			jmsg["cur"]["drops"] = m.stats.n_drops;
-			jmsg["cur"]["preemptions"] = m.stats.n_preemptions;
-			jmsg["cur"]["drop_pct"] = (m.stats.n_evts == 0 ? 0.0 : (100.0*m.stats.n_drops/m.stats.n_evts));
-			jmsg["delta"]["events"] = m.delta.n_evts;
-			jmsg["delta"]["drops"] = m.delta.n_drops;
-			jmsg["delta"]["preemptions"] = m.delta.n_preemptions;
-			jmsg["delta"]["drop_pct"] = (m.delta.n_evts == 0 ? 0.0 : (100.0*m.delta.n_drops/m.delta.n_evts));
-			m_output << jmsg.dump() << endl;
+			jmsg[m.source]["cur"]["drops"] = m.stats.n_drops;
+			jmsg[m.source]["cur"]["preemptions"] = m.stats.n_preemptions;
+			jmsg[m.source]["cur"]["drop_pct"] = (m.stats.n_evts == 0 ? 0.0 : (100.0*m.stats.n_drops/m.stats.n_evts));
+			jmsg[m.source]["delta"]["drops"] = m.delta.n_drops;
+			jmsg[m.source]["delta"]["preemptions"] = m.delta.n_preemptions;
+			jmsg[m.source]["delta"]["drop_pct"] = (m.delta.n_evts == 0 ? 0.0 : (100.0*m.delta.n_drops/m.delta.n_evts));
 		}
-		catch(const exception &e)
+		
+		tick = stats_writer::get_ticker();
+		if (last_tick != tick)
 		{
-			falco_logger::log(LOG_ERR, "stats_writer (worker): " + string(e.what()) + "\n");
+			m_total_samples++;
+			try
+			{
+				jmsg["sample"] = m_total_samples;
+				m_output << jmsg.dump() << endl;
+			}
+			catch(const exception &e)
+			{
+				falco_logger::log(LOG_ERR, "stats_writer (worker): " + string(e.what()) + "\n");
+			}
 		}
 	}
 }
@@ -155,7 +167,7 @@ stats_writer::collector::collector(std::shared_ptr<stats_writer> writer)
 
 }
 
-void stats_writer::collector::collect(std::shared_ptr<sinsp> inspector)
+void stats_writer::collector::collect(std::shared_ptr<sinsp> inspector, const std::string& src)
 {
 	// just skip if no output is configured
 	if (m_writer->has_output())
@@ -166,6 +178,7 @@ void stats_writer::collector::collect(std::shared_ptr<sinsp> inspector)
 		{
 			stats_writer::msg msg;
 			msg.stop = false;
+			msg.source = src;
 			inspector->get_capture_stats(&msg.stats);
 			m_samples++;
 			if(m_samples == 1)

@@ -54,8 +54,9 @@ public:
 
 		/*!
 			\brief Collects one stats sample from an inspector
+			and for the given event source name
 		*/
-		void collect(std::shared_ptr<sinsp> inspector);
+		void collect(std::shared_ptr<sinsp> inspector, const std::string& src);
 
 	private:
 		std::shared_ptr<stats_writer> m_writer;
@@ -111,6 +112,7 @@ private:
 		bool stop;
 		scap_stats delta;
 		scap_stats stats;
+		std::string source;
 	};
 
 	void worker() noexcept;
