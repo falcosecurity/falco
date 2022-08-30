@@ -129,9 +129,10 @@ application::run_result application::load_rules_files()
 	}
 
 	// Ensure that all plugins are compatible with the loaded set of rules
+	// note: offline inspector contains all the loaded plugins
 	std::string plugin_vers_err = "";
 	std::vector<falco_engine::plugin_version_requirement> plugin_reqs;
-	for (const auto &plugin : m_state->inspector->get_plugin_manager()->plugins())
+	for (const auto &plugin : m_state->offline_inspector->get_plugin_manager()->plugins())
  	{
 		falco_engine::plugin_version_requirement req;
 		req.name = plugin->name();
