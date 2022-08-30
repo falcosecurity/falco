@@ -224,7 +224,7 @@ private:
 	run_result attach_inotify_signals();
 	run_result daemonize();
 	run_result init_falco_engine();
-	run_result init_inspector();
+	run_result init_inspectors();
 	run_result init_clients();
 	run_result init_outputs();
 	run_result list_fields();

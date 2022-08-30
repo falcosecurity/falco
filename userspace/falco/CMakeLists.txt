@@ -20,7 +20,7 @@ set(
   app_actions/create_signal_handlers.cpp
   app_actions/daemonize.cpp
   app_actions/init_falco_engine.cpp
-  app_actions/init_inspector.cpp
+  app_actions/init_inspectors.cpp
   app_actions/init_clients.cpp
   app_actions/init_outputs.cpp
   app_actions/list_fields.cpp

@@ -104,8 +104,7 @@ static bool populate_filterchecks(
 	return true;
 }
 
-// todo(XXX): rename this to init_inspectors()
-application::run_result application::init_inspector()
+application::run_result application::init_inspectors()
 {
 	std::string err;
 	std::unordered_set<std::string> used_plugins;

@@ -137,7 +137,7 @@ bool application::run(std::string &errstr, bool &restart)
 		std::bind(&application::print_plugin_info, this),
 		std::bind(&application::list_plugins, this),
 		std::bind(&application::load_plugins, this),
-		std::bind(&application::init_inspector, this),
+		std::bind(&application::init_inspectors, this),
 		std::bind(&application::init_falco_engine, this),
 		std::bind(&application::list_fields, this),
 		std::bind(&application::select_event_sources, this),
