@@ -147,6 +147,21 @@ private:
 			return r;
 		}
 
+		// Merges two run results into one
+		inline static run_result merge(const run_result& a, const run_result& b)
+		{
+			auto res = ok();
+			res.proceed = a.proceed && b.proceed;
+			res.success = a.success && b.success;
+			res.errstr = a.errstr;
+			if (!b.errstr.empty())
+			{
+				res.errstr += res.errstr.empty() ? "" : "\n";
+				res.errstr += b.errstr;
+			}
+			return res;
+		}
+
 		run_result();
 		virtual ~run_result();
 
