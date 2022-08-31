@@ -105,8 +105,6 @@ The Falco Project supports various SDKs for this endpoint.
 | Language | Repository                                              |
 |----------|---------------------------------------------------------|
 | Go       | [client-go](https://github.com/falcosecurity/client-go) |
-| Rust     | [client-rs](https://github.com/falcosecurity/client-rs) |
-| Python   | [client-py](https://github.com/falcosecurity/client-py) |
 
 ### Plugins
 
