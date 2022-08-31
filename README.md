@@ -7,7 +7,7 @@
 
 Want to talk? Join us on the [#falco](https://kubernetes.slack.com/messages/falco) channel in the [Kubernetes Slack](https://slack.k8s.io).
 
-### Latest releases
+## Latest releases
 
 Read the [change log](CHANGELOG.md).
 
@@ -66,7 +66,7 @@ Falco can also be extended to other data sources by using plugins.
 Falco has a rich set of security rules specifically built for Kubernetes, Linux, and cloud-native.
 If a rule is violated in a system, Falco will send an alert notifying the user of the violation and its severity.
 
-### What can Falco detect?
+## What can Falco detect?
 
 Falco can detect and alert on any behavior that involves making Linux system calls.
 Falco alerts can be triggered by the use of specific system calls, their arguments, and by properties of the calling process.
@@ -80,11 +80,11 @@ For example, Falco can easily detect incidents including but not limited to:
 - A standard system binary, such as `ls`, is making an outbound network connection.
 - A privileged pod is started in a Kubernetes cluster.
 
-### Installing Falco
+## Installing Falco
 
 If you would like to run Falco in **production** please adhere to the [official installation guide](https://falco.org/docs/getting-started/installation/).
 
-##### Kubernetes
+### Kubernetes
 
 | Tool     | Link                                                                                       | Note                                                               |
 |----------|--------------------------------------------------------------------------------------------|--------------------------------------------------------------------|
@@ -93,20 +93,20 @@ If you would like to run Falco in **production** please adhere to the [official 
 | Kind     | [Tutorial](https://falco.org/docs/getting-started/third-party/#kind)                                       | Running Falco with kind requires a driver on the host system.      |
 | GKE      | [Tutorial](https://falco.org/docs/getting-started/third-party/#gke)                                        | We suggest using the eBPF driver for running Falco on GKE.         |
 
-### Developing
+## Developing
 
 Falco is designed to be extensible such that it can be built into cloud-native applications and infrastructure.
 
 Falco has a [gRPC](https://falco.org/docs/grpc/) endpoint and an API defined in [protobuf](https://github.com/falcosecurity/falco/blob/master/userspace/falco/outputs.proto).
 The Falco Project supports various SDKs for this endpoint.
 
-##### SDKs
+### SDKs
 
 | Language | Repository                                              |
 |----------|---------------------------------------------------------|
 | Go       | [client-go](https://github.com/falcosecurity/client-go) |
 
-### Plugins
+## Plugins
 
 Falco comes with a [plugin framework](https://falco.org/docs/plugins/) that extends it to potentially any cloud detection scenario. Plugins are shared libraries that conform to a documented API and allow for:
 
@@ -116,18 +116,18 @@ Falco comes with a [plugin framework](https://falco.org/docs/plugins/) that exte
 The Falco Project maintains [various plugins](https://github.com/falcosecurity/plugins) and provides SDKs for plugin development.
 
 
-##### SDKs
+### SDKs
 
 | Language | Repository                                                                    |
 |----------|-------------------------------------------------------------------------------|
 | Go       | [falcosecurity/plugin-sdk-go](https://github.com/falcosecurity/plugin-sdk-go) |
 
 
-### Documentation
+## Documentation
 
 The [Official Documentation](https://falco.org/docs/) is the best resource to learn about Falco.
 
-### Join the Community
+## Join the Community
 
 To get involved with The Falco Project please visit [the community repository](https://github.com/falcosecurity/community) to find more.
 
@@ -137,22 +137,35 @@ How to reach out?
  - [Join the Falco mailing list](https://lists.cncf.io/g/cncf-falco-dev)
  - [Read the Falco documentation](https://falco.org/docs/)
 
+## How to contribute
 
-### Contributing
-
-See the [CONTRIBUTING.md](https://github.com/falcosecurity/.github/blob/main/CONTRIBUTING.md).
-
-### Security Audit
+See the [contributing guide](https://github.com/falcosecurity/.github/blob/main/CONTRIBUTING.md) and the [code of conduct](https://github.com/falcosecurity/evolution/CODE_OF_CONDUCT.md).
+ 
+## Security Audit
 
 A third party security audit was performed by Cure53, you can see the full report [here](./audits/SECURITY_AUDIT_2019_07.pdf).
 
-### Reporting security vulnerabilities
+## Reporting security vulnerabilities
 
 Please report security vulnerabilities following the community process documented [here](https://github.com/falcosecurity/.github/blob/main/SECURITY.md).
 
-### License Terms
+## License
 
 Falco is licensed to you under the [Apache 2.0](./COPYING) open source license.
+
+## Project Evolution
+
+The [falcosecurity/evolution](https://github.com/falcosecurity/evolution) repository is the official space for the community to work together, discuss ideas, and document processes. It is also a place to make decisions. Check it out to find more helpful resources.
+
+## Resources
+
+ - [Governance](https://github.com/falcosecurity/evolution/blob/main/GOVERNANCE.md)
+ - [Code Of Conduct](https://github.com/falcosecurity/evolution/blob/main/CODE_OF_CONDUCT.md)
+ - [Maintainers Guidelines](https://github.com/falcosecurity/evolution/blob/main/MAINTAINERS_GUIDELINES.md)
+ - [Maintainers List](https://github.com/falcosecurity/evolution/blob/main/MAINTAINERS.md)
+ - [Repositories Guidelines](https://github.com/falcosecurity/evolution/blob/main/REPOSITORIES.md)
+ - [Repositories List](https://github.com/falcosecurity/evolution/blob/main/README.md#repositories)
+ - [Adopters List](https://github.com/falcosecurity/falco/blob/master/ADOPTERS.md)
 
 
 [1]: https://download.falco.org/?prefix=packages/rpm-dev/
