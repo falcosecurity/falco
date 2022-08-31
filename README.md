@@ -140,7 +140,7 @@ How to reach out?
 
 ### Contributing
 
-See the [CONTRIBUTING.md](https://github.com/falcosecurity/.github/blob/master/CONTRIBUTING.md).
+See the [CONTRIBUTING.md](https://github.com/falcosecurity/.github/blob/main/CONTRIBUTING.md).
 
 ### Security Audit
 
@@ -148,7 +148,7 @@ A third party security audit was performed by Cure53, you can see the full repor
 
 ### Reporting security vulnerabilities
 
-Please report security vulnerabilities following the community process documented [here](https://github.com/falcosecurity/.github/blob/master/SECURITY.md).
+Please report security vulnerabilities following the community process documented [here](https://github.com/falcosecurity/.github/blob/main/SECURITY.md).
 
 ### License Terms
 
