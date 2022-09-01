@@ -25,11 +25,10 @@ else()
       "--force"
       "--inconclusive"
       "--inline-suppr" # allows to specify suppressions directly in source code
-      "--project=${CMAKE_CURRENT_BINARY_DIR}/compile_commands.json" # use the compilation database as source
-      "--quiet"
       "--xml" # we want to generate a report
       "--output-file=${CMAKE_CURRENT_BINARY_DIR}/static-analysis-reports/cppcheck/cppcheck.xml" # generate the report under the reports folder in the build folder
       "-i${CMAKE_CURRENT_BINARY_DIR}"# exclude the build folder
+      "${CMAKE_SOURCE_DIR}"
   )
 endif() # CPPCHECK
 
