@@ -97,8 +97,8 @@ application::run_result application::do_inspect(
 	{
 		rc = inspector->next(&ev);
 
-		if(m_state->terminate.load(std::memory_order_acquire)
-			|| m_state->restart.load(std::memory_order_acquire))
+		if(m_state->terminate.load(std::memory_order_seq_cst)
+			|| m_state->restart.load(std::memory_order_seq_cst))
 		{
 			break;
 		}

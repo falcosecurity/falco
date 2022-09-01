@@ -69,7 +69,7 @@ void application::terminate()
 {
 	if(m_state != nullptr)
 	{
-		m_state->terminate.store(true, std::memory_order_release);
+		m_state->terminate.store(true, std::memory_order_seq_cst);
 	}
 }
 
@@ -87,7 +87,7 @@ void application::restart()
 {
 	if(m_state != nullptr)
 	{
-		m_state->restart.store(true, std::memory_order_release);
+		m_state->restart.store(true, std::memory_order_seq_cst);
 	}
 }
 

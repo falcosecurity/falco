@@ -66,7 +66,7 @@ void falco_webserver::start(
     }
 
     std::atomic<bool> failed;
-    failed.store(false, std::memory_order_relaxed);
+    failed.store(false, std::memory_order_release);
     m_server_thread = std::thread([this, listen_port, &failed]
     {
         try
