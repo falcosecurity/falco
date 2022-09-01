@@ -754,6 +754,7 @@ workflows:
       - "build-musl"
       - "build-arm64"
       - "build-centos7"
+      - "quality-static-analysis"
       - "tests-integration":
           requires:
             - "build-centos7"
