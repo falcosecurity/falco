@@ -76,6 +76,8 @@ This is a list of production adopters of Falco (in alphabetical order):
 
 * [SysFlow](https://sysflow.io) SysFlow is a cloud-native system telemetry framework that focuses on data abstraction, behavioral analytics, and noise reduction. At its core, SysFlow exposes a compact open telemetry format that records workload behaviors by connecting event and flow representations of process control flows, file interactions, and network communications. The resulting abstraction encodes a graph structure that enables provenance reasoning on host and container environments, and fast retrieval of security-relevant information.
 
+* [StackRox](https://stackrox.io) is the industry’s first Kubernetes-native security platform enabling organizations to build, deploy, and run cloud-native applications securely. The platform works with Kubernetes environments and integrates with DevOps and security tools, enabling teams to operationalize and secure their supply chain, infrastructure, and workloads. StackRox aims to harness containerized applications’ development speed while giving operations and security teams greater context and risk profiling. StackRox leverages cloud-native principles and declarative artifacts to automate DevSecOps best practices.
+
 ## Adding a name
 
 If you would like to add your name to this file, submit a pull request with your change.
