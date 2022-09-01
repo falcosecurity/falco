@@ -97,31 +97,6 @@ application::run_result application::do_inspect(
 	{
 		rc = inspector->next(&ev);
 
-		// if we are in live mode, we already have the right source engine idx
-		if (is_capture_mode)
-		{
-			source_engine_idx = syscall_source_engine_idx;
-			if (ev->get_type() == PPME_PLUGINEVENT_E)
-			{
-				// note: here we can assume that the source index will be the same
-				// in both the falco engine and the sinsp plugin manager. See the
-				// comment in init_falco_engine.cpp for more details.
-				source_engine_idx = inspector->get_plugin_manager()->source_idx_by_plugin_id(*(int32_t *)ev->get_param(0)->m_val, source_engine_idx_found);
-				if (!source_engine_idx_found)
-				{
-					return run_result::fatal("Unknown plugin ID in inspector: " + std::to_string(*(int32_t *)ev->get_param(0)->m_val));
-				}
-			}
-
-			// for capture mode, the source name can change at every event
-			stats_collector.collect(inspector, source_names[source_engine_idx]);
-		}
-		else
-		{
-			// for live mode, the source name is constant
-			stats_collector.collect(inspector, source);
-		}
-
 		if(m_state->terminate.load(std::memory_order_acquire)
 			|| m_state->restart.load(std::memory_order_acquire))
 		{
@@ -168,6 +143,31 @@ application::run_result application::do_inspect(
 			// Event read error.
 			//
 			return run_result::fatal(inspector->getlasterr());
+		}
+
+		// if we are in live mode, we already have the right source engine idx
+		if (is_capture_mode)
+		{
+			source_engine_idx = syscall_source_engine_idx;
+			if (ev->get_type() == PPME_PLUGINEVENT_E)
+			{
+				// note: here we can assume that the source index will be the same
+				// in both the falco engine and the sinsp plugin manager. See the
+				// comment in init_falco_engine.cpp for more details.
+				source_engine_idx = inspector->get_plugin_manager()->source_idx_by_plugin_id(*(int32_t *)ev->get_param(0)->m_val, source_engine_idx_found);
+				if (!source_engine_idx_found)
+				{
+					return run_result::fatal("Unknown plugin ID in inspector: " + std::to_string(*(int32_t *)ev->get_param(0)->m_val));
+				}
+			}
+
+			// for capture mode, the source name can change at every event
+			stats_collector.collect(inspector, source_names[source_engine_idx]);
+		}
+		else
+		{
+			// for live mode, the source name is constant
+			stats_collector.collect(inspector, source);
 		}
 
 		// Reset the timeouts counter, Falco successfully got an event to process
