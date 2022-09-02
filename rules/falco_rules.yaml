@@ -3199,6 +3199,21 @@
   priority: CRITICAL
   tags: [mitre_initial_access]
 
+- list: docker_binaries
+  items: [dockerd, containerd-shim, "runc:[1:CHILD]", pause]
+
+- macro: docker_procs
+  condition: proc.name in (docker_binaries)
+
+- rule: Modify Container Entrypoint
+  desc: This rule detect an attempt to write on container entrypoint symlink (/proc/self/exe). Possible CVE-2019-5736 Container Breakout exploitation attempt.
+  condition: >
+    open_write and container and (fd.name=/proc/self/exe or fd.name startswith /proc/self/fd/) and not docker_procs and not proc.cmdline = "runc:[1:CHILD] init"
+  output: >
+    Detect Potential Container Breakout Exploit (CVE-2019-5736) (user=%user.name process=%proc.name file=%fd.name cmdline=%proc.cmdline %container.info)
+  priority: WARNING
+  tags: [container, filesystem, mitre_initial_access]
+
 # Application rules have moved to application_rules.yaml. Please look
 # there if you want to enable them by adding to
 # falco_rules.local.yaml.
