@@ -3209,6 +3209,7 @@
   desc: This rule detect an attempt to write on container entrypoint symlink (/proc/self/exe). Possible CVE-2019-5736 Container Breakout exploitation attempt.
   condition: >
     open_write and container and (fd.name=/proc/self/exe or fd.name startswith /proc/self/fd/) and not docker_procs and not proc.cmdline = "runc:[1:CHILD] init"
+  enabled: false
   output: >
     Detect Potential Container Breakout Exploit (CVE-2019-5736) (user=%user.name process=%proc.name file=%fd.name cmdline=%proc.cmdline %container.info)
   priority: WARNING
