@@ -193,6 +193,7 @@ private:
 	run_result load_config();
 	run_result load_plugins();
 	run_result load_rules_files();
+	run_result create_requested_paths();
 	run_result open_inspector();
 	run_result print_generated_gvisor_config();
 	run_result print_help();
@@ -219,6 +220,7 @@ private:
 #endif
 
 	// Methods called by the above methods
+	int create_dir(const std::string &path);
 	bool create_handler(int sig, void (*func)(int), run_result &ret);
 	void configure_output_format();
 	void check_for_ignored_events();

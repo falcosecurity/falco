@@ -132,6 +132,7 @@ bool application::run(std::string &errstr, bool &restart)
 		std::bind(&application::print_syscall_events, this),
 		std::bind(&application::create_signal_handlers, this),
 		std::bind(&application::load_config, this),
+		std::bind(&application::create_requested_paths, this),
 		std::bind(&application::print_plugin_info, this),
 		std::bind(&application::list_plugins, this),
 		std::bind(&application::init_inspector, this),
