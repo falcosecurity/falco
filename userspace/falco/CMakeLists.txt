@@ -41,6 +41,7 @@ set(
   app_actions/start_grpc_server.cpp
   app_actions/start_webserver.cpp
   app_actions/validate_rules_files.cpp
+  app_actions/create_requested_paths.cpp
   configuration.cpp
   logger.cpp
   falco_outputs.cpp
