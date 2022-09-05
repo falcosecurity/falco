@@ -182,6 +182,18 @@ public:
 	*/
 	struct plugin_version_info
 	{
+		struct requirement
+		{
+			requirement() = default;
+			requirement(const std::string n, const std::string v):
+				name(n), version(v) { }
+
+			std::string name;
+			std::string version;
+		};
+
+		typedef std::vector<requirement> requirement_alternatives;
+
 		// This differs from the other _info structs by having
 		// a default constructor. This allows it to be used
 		// by falco_engine, which aliases the type.
@@ -190,8 +202,7 @@ public:
 		~plugin_version_info() = default;
 
 		context ctx;
-		std::string name;
-		std::string version;
+		requirement_alternatives alternatives;
 	};
 
 	/*!
@@ -303,7 +314,7 @@ public:
 		\brief Returns the set of all required versions for each plugin according
 		to the internal definitions.
 	*/
-	virtual const std::map<std::string, std::set<std::string>> required_plugin_versions() const;
+	virtual const std::vector<plugin_version_info::requirement_alternatives>& required_plugin_versions() const;
 
 	/*!
 		\brief Defines an info block. If a similar info block is found
@@ -348,5 +359,5 @@ private:
 	indexed_vector<rule_info> m_rule_infos;
 	indexed_vector<macro_info> m_macro_infos;
 	indexed_vector<list_info> m_list_infos;
-	std::map<std::string, std::set<std::string>> m_required_plugin_versions;
+	std::vector<plugin_version_info::requirement_alternatives> m_required_plugin_versions;
 };
