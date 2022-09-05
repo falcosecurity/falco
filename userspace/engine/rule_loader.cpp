@@ -836,7 +836,7 @@ void rule_loader::clear()
 	m_required_plugin_versions.clear();
 }
 
-const std::map<std::string, std::set<std::string>> rule_loader::required_plugin_versions() const
+const std::vector<rule_loader::plugin_version_info::requirement_alternatives>& rule_loader::required_plugin_versions() const
 {
 	return m_required_plugin_versions;
 }
@@ -851,11 +851,21 @@ void rule_loader::define(configuration& cfg, engine_version_info& info)
 
 void rule_loader::define(configuration& cfg, plugin_version_info& info)
 {
-	sinsp_version plugin_version(info.version);
-	THROW(!plugin_version.m_valid, "Invalid required version '" + info.version
-	      + "' for plugin '" + info.name + "'",
-	      info.ctx);
-	m_required_plugin_versions[info.name].insert(info.version);
+	std::unordered_set<std::string> plugin_names;
+	for (const auto& req : info.alternatives)
+	{
+		sinsp_version plugin_version(req.version);
+		THROW(!plugin_version.m_valid,
+			"Invalid required version '" + req.version
+				+ "' for plugin '" + req.name + "'",
+			info.ctx);
+		THROW(plugin_names.find(req.name) != plugin_names.end(),
+			"Defined multiple alternative version requirements for plugin '"
+				+ req.name + "'",
+			info.ctx);
+		plugin_names.insert(req.name);
+	}
+	m_required_plugin_versions.push_back(info.alternatives);
 }
 
 void rule_loader::define(configuration& cfg, list_info& info)
