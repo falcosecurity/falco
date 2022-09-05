@@ -234,7 +234,7 @@ public:
 							      const std::string &output) const;
 
 	// The rule loader definition is aliased as it is exactly what we need
-	typedef rule_loader::plugin_version_info plugin_version_requirement;
+	typedef rule_loader::plugin_version_info::requirement plugin_version_requirement;
 
 	//
 	// Returns true if the provided list of plugins satisfies all the

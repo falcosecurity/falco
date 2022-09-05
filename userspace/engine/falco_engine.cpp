@@ -455,44 +455,59 @@ void falco_engine::interpret_load_result(std::unique_ptr<load_result>& res,
 	}
 }
 
+static bool check_plugin_requirement_alternatives(
+		const std::vector<falco_engine::plugin_version_requirement>& plugins,
+		const rule_loader::plugin_version_info::requirement_alternatives& alternatives,
+		std::string& err)
+{
+	for (const auto &req : alternatives)
+	{
+		for (const auto &plugin : plugins)
+		{
+			if (req.name == plugin.name)
+			{
+				sinsp_version req_version(req.version);
+				sinsp_version plugin_version(plugin.version);
+				if(!plugin_version.m_valid)
+				{
+					err = "Plugin '" + plugin.name
+						+ "' has invalid version string '"
+						+ plugin.version + "'";
+					return false;
+				}
+				if (!plugin_version.check(req_version))
+				{
+					err = "Plugin '" + plugin.name
+					+ "' version '" + plugin.version
+					+ "' is not compatible with required plugin version '"
+					+ req.version + "'";
+					return false;
+				}
+				return true;
+			}
+		}
+	}
+	return false;
+}
 
 bool falco_engine::check_plugin_requirements(
 		const std::vector<plugin_version_requirement>& plugins,
 		std::string& err) const
 {
-	for (const auto &req : m_rule_loader.required_plugin_versions())
+	err = "";
+	for (const auto &alternatives : m_rule_loader.required_plugin_versions())
 	{
-		bool found = false;
-		for (const auto &plugin : plugins)
+		if (!check_plugin_requirement_alternatives(plugins, alternatives, err))
 		{
-			if (req.first == plugin.name)
+			if (err.empty())
 			{
-				found = true;
-				sinsp_version plugin_version(plugin.version);
-				if(!plugin_version.m_valid)
+				for (const auto& req : alternatives)
 				{
-					err = "Plugin '" + req.first
-						+ "' has invalid version string '"
-						+ plugin.version + "'";
-					return false;
+					err += err.empty() ? "" : ", ";
+					err += req.name + " (>= " + req.version + ")";
 				}
-				for (const auto &reqver: req.second)
-				{
-					sinsp_version req_version(reqver);
-					if (!plugin_version.check(req_version))
-					{
-						err = "Plugin '" + plugin.name
-						+ "' version '" + plugin.version
-						+ "' is not compatible with required plugin version '"
-						+ reqver + "'";
-						return false;
-					}
-				}
+				err = "Plugin requirement not satisfied, must load one of: " + err;
 			}
-		}
-		if (!found)
-		{
-			err = "Plugin '" + req.first + "' is required but not loaded";
 			return false;
 		}
 	}
