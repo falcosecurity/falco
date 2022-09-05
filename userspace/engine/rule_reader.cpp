@@ -268,16 +268,33 @@ static void read_item(
 
 		for(const YAML::Node& plugin : req_plugin_vers)
 		{
+			rule_loader::plugin_version_info::requirement r;
+
 			// Use a temp context until we can get a name
-			std::string name;
 			rule_loader::context tmp(plugin, "plugin version", "", ctx);
 			THROW(!plugin.IsMap(), "Plugin version must be a mapping", tmp);
-			decode_val(plugin, "name", name, tmp);
-
-			rule_loader::context pctx(plugin, "plugin version", name, ctx);
+			decode_val(plugin, "name", r.name, tmp);
+			rule_loader::context pctx(plugin, "plugin version", r.name, ctx);
 			rule_loader::plugin_version_info v(pctx);
-			decode_val(plugin, "version", v.version, pctx);
-			v.name = name;
+			decode_val(plugin, "version", r.version, pctx);
+			v.alternatives.push_back(r);
+
+			const YAML::Node& alternatives = plugin["alternatives"];
+			if(alternatives.IsDefined())
+			{
+				THROW(!alternatives.IsSequence(),
+					"Value of plugin version alternatives must be a sequence",
+					pctx);
+				for (const auto &req : alternatives)
+				{
+					tmp = rule_loader::context(req, "plugin version alternative", "", pctx);
+					THROW(!req.IsMap(), "Plugin version alternative must be a mapping", tmp);
+					decode_val(req, "name", r.name, tmp);
+					tmp = rule_loader::context(req, "plugin version alternative", r.name, pctx);
+					decode_val(req, "version", r.version, tmp);
+					v.alternatives.push_back(r);
+				}
+			}
 
 			loader.define(cfg, v);
 		}
