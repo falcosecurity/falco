@@ -18,6 +18,14 @@ limitations under the License.
 #include "falco_utils.h"
 #include <sys/stat.h>
 
+#ifndef CPPPATH_SEP
+#ifdef _MSC_VER
+#define CPPPATH_SEP "\\"
+#else
+#define CPPPATH_SEP "/"
+#endif
+#endif
+
 using namespace falco::app;
 
 application::run_result application::create_requested_paths()
@@ -91,8 +99,8 @@ int application::create_dir(const std::string &path)
 	// Examples:
 	// "/tmp/foo/bar" -> "", "tmp", "foo" -> mkdir("/") + mkdir("/tmp/") + midir("/tmp/foo/")
 	// "tmp/foo/bar" -> "tmp", "foo" -> mkdir("tmp/") + midir("tmp/foo/")
-	while (getline(f, s, '/') && !f.eof()) {
-		path_until_token += s + "/";
+	while (getline(f, s, *CPPPATH_SEP) && !f.eof()) {
+		path_until_token += s + CPPPATH_SEP;
 		int ret = mkdir(path_until_token.c_str(), 0600);
 		if (ret != 0 && errno != EEXIST)
 		{
