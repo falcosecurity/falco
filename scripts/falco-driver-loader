@@ -113,11 +113,15 @@ get_target_id() {
 	elif [ -f "${HOST_ROOT}/etc/centos-release" ]; then
 		# Older CentOS distros
 		OS_ID=centos
-	elif [ -f "${HOST_ROOT}/etc/VERSION" ]; then
-		OS_ID=minikube
 	else
 		>&2 echo "Detected an unsupported target system, please get in touch with the Falco community"
 		exit 1
+	fi
+
+	# Overwrite the OS_ID if /etc/VERSION file is present.
+	# Not sure if there is a better way to detect minikube.
+	if [ -f "${HOST_ROOT}/etc/VERSION" ]; then
+		OS_ID=minikube
 	fi
 
 	case "${OS_ID}" in
@@ -143,6 +147,14 @@ get_target_id() {
 	("flatcar")
 		KERNEL_RELEASE="${VERSION_ID}"
 		TARGET_ID=$(echo "${OS_ID}" | tr '[:upper:]' '[:lower:]')
+		;;
+	("minikube")
+		TARGET_ID="${OS_ID}"
+		# Extract the minikube version. Ex. With minikube version equal to "v1.26.0-1655407986-14197" the extracted version
+		# will be "1.26.0"
+		[[ $(cat ${HOST_ROOT}/etc/VERSION) =~ ([0-9]+(\.[0-9]+){2}) ]]
+		# kernel version for minikube is always in "1_minikubeversion" format. Ex "1_1.26.0".
+		KERNEL_VERSION="1_${BASH_REMATCH[1]}"
 		;;
 	(*)
 		TARGET_ID=$(echo "${OS_ID}" | tr '[:upper:]' '[:lower:]')
