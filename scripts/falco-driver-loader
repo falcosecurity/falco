@@ -152,9 +152,13 @@ get_target_id() {
 		TARGET_ID="${OS_ID}"
 		# Extract the minikube version. Ex. With minikube version equal to "v1.26.0-1655407986-14197" the extracted version
 		# will be "1.26.0"
-		[[ $(cat ${HOST_ROOT}/etc/VERSION) =~ ([0-9]+(\.[0-9]+){2}) ]]
-		# kernel version for minikube is always in "1_minikubeversion" format. Ex "1_1.26.0".
-		KERNEL_VERSION="1_${BASH_REMATCH[1]}"
+		if [[ $(cat ${HOST_ROOT}/etc/VERSION) =~ ([0-9]+(\.[0-9]+){2}) ]]; then
+			# kernel version for minikube is always in "1_minikubeversion" format. Ex "1_1.26.0".
+			KERNEL_VERSION="1_${BASH_REMATCH[1]}"
+		else
+			echo "* Unable to extract minikube version from ${HOST_ROOT}/etc/VERSION"
+			exit 1
+		fi
 		;;
 	(*)
 		TARGET_ID=$(echo "${OS_ID}" | tr '[:upper:]' '[:lower:]')
