@@ -360,7 +360,7 @@ jobs:
           name: Build and publish falco-driver-loader-dev
           command: |
             cd /source/falco
-            docker buildx build --push --build-arg FALCO_IMAGE_TAG=master \
+            docker buildx build --push --build-arg FALCO_IMAGE_TAG=x86_64-master \
               -t falcosecurity/falco-driver-loader:x86_64-master \
               -t public.ecr.aws/falcosecurity/falco-driver-loader:x86_64-master \
               docker/driver-loader
@@ -409,7 +409,7 @@ jobs:
           name: Build and publish falco-driver-loader-dev
           command: |
             cd /tmp/source-arm64/falco
-            docker buildx build --push --build-arg FALCO_IMAGE_TAG=master \
+            docker buildx build --push --build-arg FALCO_IMAGE_TAG=aarch64-master \
               -t falcosecurity/falco-driver-loader:aarch64-master \
               -t public.ecr.aws/falcosecurity/falco-driver-loader:aarch64-master \
               docker/driver-loader
@@ -579,7 +579,7 @@ jobs:
           name: Build and publish falco-driver-loader
           command: |
             cd /source/falco
-            docker buildx build --push --build-arg FALCO_IMAGE_TAG=${CIRCLE_TAG} \
+            docker buildx build --push --build-arg FALCO_IMAGE_TAG=x86_64-${CIRCLE_TAG} \
               -t "falcosecurity/falco-driver-loader:x86_64-${CIRCLE_TAG}" \
               -t "falcosecurity/falco-driver-loader:x86_64-latest" \
               -t "public.ecr.aws/falcosecurity/falco-driver-loader:x86_64-${CIRCLE_TAG}" \
@@ -634,7 +634,7 @@ jobs:
           name: Build and publish falco-driver-loader
           command: |
             cd /tmp/source-arm64/falco
-            docker buildx build --push --build-arg FALCO_IMAGE_TAG=${CIRCLE_TAG} \
+            docker buildx build --push --build-arg FALCO_IMAGE_TAG=aarch64-${CIRCLE_TAG} \
               -t "falcosecurity/falco-driver-loader:aarch64-${CIRCLE_TAG}" \
               -t "falcosecurity/falco-driver-loader:aarch64-latest" \
               -t "public.ecr.aws/falcosecurity/falco-driver-loader:aarch64-${CIRCLE_TAG}" \
