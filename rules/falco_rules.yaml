@@ -3219,17 +3219,11 @@
 # there if you want to enable them by adding to
 # falco_rules.local.yaml.
 
-- list: proc_environ_file_names
-  items: [/proc/self/environ, /proc/1/environ]
-
-- macro: proc_environ_files
-  condition: >
-    fd.name in (proc_environ_file_names)
-
 - rule: Read environment variable from /proc files
   desc: An attempt to read process environment variables from /proc files
   condition: >
-    container and open_read and proc_environ_files
+    open_read and (fd.name glob /proc/*/environ)
+    and not proc.name in (systemctl, systemd-detect-, cloud-id)
   enabled: true
   output: >
     Environment variables were retrieved from /proc files (user=%user.name user_loginuid=%user.loginuid program=%proc.name
