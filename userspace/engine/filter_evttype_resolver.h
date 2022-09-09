@@ -21,6 +21,7 @@ limitations under the License.
 #include <set>
 #include <memory>
 #include <functional>
+#include <stdexcept>
 
 class falco_event_types
 {
