@@ -3219,10 +3219,14 @@
 # there if you want to enable them by adding to
 # falco_rules.local.yaml.
 
+- list: known_binaries_to_read_environment_variables_from_proc_files
+  items: [scsi_id]
+
 - rule: Read environment variable from /proc files
   desc: An attempt to read process environment variables from /proc files
   condition: >
     container and open_read and (fd.name glob /proc/*/environ)
+    and not proc.name in (known_binaries_to_read_environment_variables_from_proc_files)
   enabled: true
   output: >
     Environment variables were retrieved from /proc files (user=%user.name user_loginuid=%user.loginuid program=%proc.name
