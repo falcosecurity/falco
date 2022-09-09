@@ -3220,7 +3220,7 @@
 # falco_rules.local.yaml.
 
 - list: known_binaries_to_read_environment_variables_from_proc_files
-  items: [scsi_id]
+  items: [scsi_id, argoexec]
 
 - rule: Read environment variable from /proc files
   desc: An attempt to read process environment variables from /proc files
