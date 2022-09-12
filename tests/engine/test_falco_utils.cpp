@@ -21,20 +21,20 @@ TEST_CASE("is_unix_scheme matches", "[utils]")
 {
 	SECTION("rvalue")
 	{
-		bool res = falco::utils::network::is_unix_scheme("unix:///var/run/falco.sock");
+		bool res = falco::utils::network::is_unix_scheme("unix:///run/falco/falco.sock");
 		REQUIRE(res);
 	}
 
 	SECTION("std::string")
 	{
-		std::string url("unix:///var/run/falco.sock");
+		std::string url("unix:///run/falco/falco.sock");
 		bool res = falco::utils::network::is_unix_scheme(url);
 		REQUIRE(res);
 	}
 
 	SECTION("char[]")
 	{
-		char url[] = "unix:///var/run/falco.sock";
+		char url[] = "unix:///run/falco/falco.sock";
 		bool res = falco::utils::network::is_unix_scheme(url);
 		REQUIRE(res);
 	}
@@ -42,7 +42,7 @@ TEST_CASE("is_unix_scheme matches", "[utils]")
 
 TEST_CASE("is_unix_scheme does not match", "[utils]")
 {
-	bool res = falco::utils::network::is_unix_scheme("something:///var/run/falco.sock");
+	bool res = falco::utils::network::is_unix_scheme("something:///run/falco/falco.sock");
 	REQUIRE_FALSE(res);
 }
 
