@@ -296,7 +296,7 @@ http_output:
 # gRPC server using an unix socket
 grpc:
   enabled: false
-  bind_address: "unix:///var/run/falco.sock"
+  bind_address: "unix:///run/falco/falco.sock"
   # when threadiness is 0, Falco automatically guesses it depending on the number of online cores
   threadiness: 0
 

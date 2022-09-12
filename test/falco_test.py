@@ -240,7 +240,7 @@ class FalcoTest(Test):
         self.grpcurl_res = None
         self.grpc_observer = None
         self.grpc_address = self.params.get(
-            'address', 'grpc/*', default='/var/run/falco.sock')
+            'address', 'grpc/*', default='/run/falco/falco.sock')
         if self.grpc_address.startswith("unix://"):
             self.is_grpc_using_unix_socket = True
             self.grpc_address = self.grpc_address[len("unix://"):]
