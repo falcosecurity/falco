@@ -28,7 +28,7 @@ void application::print_all_ignored_events()
 	std::set<string> ignored_event_names;
 	for(uint32_t j = 0; j < PPM_EVENT_MAX; j++)
 	{
-		if(!sinsp::simple_consumer_consider_evtnum(j))
+		if(!simple_consumer_consider(etable[j].flags))
 		{
 			std::string name = etable[j].name;
 			// Ignore event names NA*
@@ -39,9 +39,10 @@ void application::print_all_ignored_events()
 		}
 	}
 
+	auto simple_set = inspector->enforce_simple_ppm_sc_set();
 	for(uint32_t j = 0; j < PPM_SC_MAX; j++)
 	{
-		if(!sinsp::simple_consumer_consider_syscallid(j))
+		if(simple_set.find(j) == simple_set.end())
 		{
 			std::string name = stable[j].name;
 			// Ignore event names NA*
@@ -53,7 +54,7 @@ void application::print_all_ignored_events()
 	}
 
 	printf("Ignored Event(s):");
-	for(auto it : ignored_event_names)
+	for(const auto& it : ignored_event_names)
 	{
 		printf(" %s", it.c_str());
 	}

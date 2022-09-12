@@ -20,7 +20,7 @@ limitations under the License.
 
 using namespace falco::app;
 
-static void init_syscall_inspector(
+void application::init_syscall_inspector(
 		std::shared_ptr<sinsp> inspector,
 		const falco::app::cmdline_options& opts)
 {
@@ -48,12 +48,11 @@ static void init_syscall_inspector(
 
 	if(!opts.all_events)
 	{
-		// Drop EF_DROP_SIMPLE_CONS kernel side
-		inspector->set_simple_consumer();
-		// Eventually, drop any EF_DROP_SIMPLE_CONS event
-		// that reached userspace (there are some events that are not syscall-based
-		// like signaldeliver, that have the EF_DROP_SIMPLE_CONS flag)
-		inspector->set_drop_event_flags(EF_DROP_SIMPLE_CONS);
+		m_state->ppm_sc_of_interest = inspector->enforce_simple_ppm_sc_set();
+		m_state->tp_of_interest = inspector->enforce_sinsp_state_tracepoints();
+		// We are not interested in sched_switch tracepoint,
+		// highly noisy and not useful for state/events enrichment.
+		m_state->tp_of_interest.erase(SCHED_SWITCH);
 	}
 
 	inspector->set_hostname_and_port_resolution_mode(false);

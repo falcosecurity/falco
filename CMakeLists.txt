@@ -114,6 +114,11 @@ set(DRIVER_NAME "falco")
 set(DRIVER_DEVICE_NAME "falco")
 set(DRIVERS_REPO "https://download.falco.org/driver")
 
+# If no path is provided, try to search the BPF probe in: `home/.falco/falco-bpf.o`
+# This is the same fallback that we had in the libraries: `SCAP_PROBE_BPF_FILEPATH`.
+set(FALCO_PROBE_BPF_FILEPATH ".${DRIVER_NAME}/${DRIVER_NAME}-bpf.o")
+add_definitions(-DFALCO_PROBE_BPF_FILEPATH="${FALCO_PROBE_BPF_FILEPATH}")
+
 if(NOT DEFINED FALCO_COMPONENT_NAME)
     set(FALCO_COMPONENT_NAME "${CMAKE_PROJECT_NAME}")
 endif()

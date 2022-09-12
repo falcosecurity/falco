@@ -110,6 +110,12 @@ private:
 
 		std::string cmdline;
 
+		// Set of syscalls we want the driver to capture
+		std::unordered_set<uint32_t> ppm_sc_of_interest;
+
+		// Set of tracepoints we want the driver to capture
+		std::unordered_set<uint32_t> tp_of_interest;
+
 #ifndef MINIMAL_BUILD
 		falco::grpc::server grpc_server;
 		std::thread grpc_server_thread;
@@ -268,6 +274,7 @@ private:
 	run_result open_offline_inspector();
 	run_result open_live_inspector(std::shared_ptr<sinsp> inspector, const std::string& source);
 	void add_source_to_engine(const std::string& src);
+	void init_syscall_inspector(std::shared_ptr<sinsp> inspector, const falco::app::cmdline_options& opts);
 	run_result do_inspect(
 		std::shared_ptr<sinsp> inspector,
 		const std::string& source, // an empty source represents capture mode
@@ -290,6 +297,16 @@ private:
 	inline bool is_gvisor_enabled() const
 	{
 		return !m_options.gvisor_config.empty();
+	}
+
+	bool simple_consumer_consider(int flags, bool old_version = true) const
+	{
+		int ignored_flagset = EF_SKIPPARSERESET | EF_UNUSED;
+		if (old_version)
+		{
+			ignored_flagset |= EF_OLD_VERSION;
+		}
+		return !(flags & ignored_flagset);
 	}
 
 	std::unique_ptr<state> m_state;

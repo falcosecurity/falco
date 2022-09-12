@@ -189,7 +189,7 @@ application::run_result application::do_inspect(
 			return run_result::fatal("Drop manager internal error");
 		}
 
-		if(!ev->simple_consumer_consider() && !m_options.all_events)
+		if (!(simple_consumer_consider(ev->get_info_flags()) || m_options.all_events))
 		{
 			continue;
 		}

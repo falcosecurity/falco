@@ -44,7 +44,9 @@ application::state::state()
 	  loaded_sources(),
 	  enabled_sources(),
 	  source_infos(),
-	  plugin_configs()
+	  plugin_configs(),
+	  ppm_sc_of_interest(),
+	  tp_of_interest()
 {
 	config = std::make_shared<falco_configuration>();
 	engine = std::make_shared<falco_engine>();
