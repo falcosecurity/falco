@@ -3106,7 +3106,9 @@
   condition: (proc.args="" or proc.args intersects ("-V", "-l", "-h"))
 
 - macro: user_known_mount_in_privileged_containers
-  condition: (never_true)
+  condition:
+    (k8s.ns.name = kube-system
+    and container.image.repository = gke.gcr.io/gcp-compute-persistent-disk-csi-driver)
 
 - rule: Mount Launched in Privileged Container
   desc: Detect file system mount happened inside a privileged container which might lead to container escape.
