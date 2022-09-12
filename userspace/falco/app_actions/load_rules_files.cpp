@@ -39,7 +39,7 @@ void application::check_for_ignored_events()
 			continue;
 		}
 
-		if(!sinsp::simple_consumer_consider_evtnum(evtnum))
+		if(!simple_consumer_consider(etable[evtnum].flags, false))
 		{
 			std::string name = etable[evtnum].name;
 			if(warn_event_names.find(name) == warn_event_names.end())

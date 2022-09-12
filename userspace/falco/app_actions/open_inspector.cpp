@@ -22,13 +22,15 @@ limitations under the License.
 
 #include "application.h"
 
+#define FALCO_BPF_ENV_VARIABLE "FALCO_BPF_PROBE"
+
 using namespace falco::app;
 
 application::run_result application::open_offline_inspector()
 {
 	try
 	{
-		m_state->offline_inspector->open(m_options.trace_filename);
+		m_state->offline_inspector->open_savefile(m_options.trace_filename, 0);
 		falco_logger::log(LOG_INFO, "Reading system call events from file: " + m_options.trace_filename + "\n");
 		return run_result::ok();
 	}
@@ -46,13 +48,12 @@ application::run_result application::open_live_inspector(
 	{
 		if (source != falco_common::syscall_source)
 		{
-			for (const auto p: inspector->get_plugin_manager()->plugins())
+			for (const auto& p: inspector->get_plugin_manager()->plugins())
 			{
 				if (p->caps() & CAP_SOURCING && p->event_source() == source)
 				{
 					auto cfg = m_state->plugin_configs.at(p->name());
-					inspector->set_input_plugin(cfg->m_name, cfg->m_open_params);
-					inspector->open();
+					inspector->open_plugin(cfg->m_name, cfg->m_open_params);
 					return run_result::ok();
 				}
 			}
@@ -67,40 +68,50 @@ application::run_result application::open_live_inspector(
 			// Regardless of the implementation, the underlying method remains the same.
 			inspector->open_udig();
 		}
-		else if(m_options.gvisor_config != "")
+		else if(!m_options.gvisor_config.empty())
 		{
 			falco_logger::log(LOG_INFO, "Enabled event collection from gVisor. Configuration path: " + m_options.gvisor_config);
 			inspector->open_gvisor(m_options.gvisor_config, m_options.gvisor_root);
 		}
-		else
+		else if(getenv(FALCO_BPF_ENV_VARIABLE) != NULL) /* BPF engine. */
 		{
-			inspector->open();
+			const char *bpf_probe_path = std::getenv(FALCO_BPF_ENV_VARIABLE);
+			char full_path[PATH_MAX];
+			/* If the path is empty try to load the probe from the default path. */
+			if(strncmp(bpf_probe_path, "", 1) == 0)
+			{
+				const char *home = std::getenv("HOME");
+				if(!home)
+				{
+					return run_result::fatal("Cannot get the env variable 'HOME'");
+				}
+				snprintf(full_path, PATH_MAX, "%s/%s", home, FALCO_PROBE_BPF_FILEPATH);
+				bpf_probe_path = full_path;
+			}
+			inspector->open_bpf(2048, bpf_probe_path, m_state->ppm_sc_of_interest, m_state->tp_of_interest);
+			falco_logger::log(LOG_INFO, "Starting capture with BPF probe. BPF probe path: " + std::string(bpf_probe_path));
+		}
+		else /* Kernel module (default). */
+		{
+			try
+			{
+				inspector->open_kmod(2048, m_state->ppm_sc_of_interest, m_state->tp_of_interest);
+				falco_logger::log(LOG_INFO, "Starting capture with Kernel module.");
+			}
+			catch(sinsp_exception &e)
+			{
+				// Try to insert the Falco kernel module
+				if(system("modprobe " DRIVER_NAME " > /dev/null 2> /dev/null"))
+				{
+					falco_logger::log(LOG_ERR, "Unable to load the driver.\n");
+				}
+				inspector->open_kmod(2048, m_state->ppm_sc_of_interest, m_state->tp_of_interest);
+			}
 		}
 	}
 	catch (sinsp_exception &e)
 	{
-		// If syscall input source is enabled and not through userspace instrumentation
-		if (m_options.gvisor_config.empty() && !m_options.userspace)
-		{
-			// Try to insert the Falco kernel module
-			if(system("modprobe " DRIVER_NAME " > /dev/null 2> /dev/null"))
-			{
-				falco_logger::log(LOG_ERR, "Unable to load the driver.\n");
-			}
-			inspector->open();
-		}
-		else
-		{
-			return run_result::fatal(e.what());
-		}
-	}
-
-	/// TODO: we can add a method to the inspector that tells us what 
-	/// is the underline engine used. Right now we print something only 
-	/// in case of BPF engine
-	if (inspector->is_bpf_enabled())
-	{
-		falco_logger::log(LOG_INFO, "Falco is using the BPF probe\n");	
+		return run_result::fatal(e.what());
 	}
 
 	// This must be done after the open
