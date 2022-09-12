@@ -3102,9 +3102,6 @@
   priority: WARNING
   tags: [container, cis, mitre_lateral_movement]
 
-- macro: mount_info
-  condition: (proc.args="" or proc.args intersects ("-V", "-l", "-h"))
-
 - macro: user_known_mount_in_privileged_containers
   condition: (never_true)
 
@@ -3113,8 +3110,7 @@
   condition: >
     spawned_process and container
     and container.privileged=true
-    and proc.name=mount
-    and not mount_info
+    and evt.type = mount
     and not user_known_mount_in_privileged_containers
   output: Mount was executed inside a privileged container (user=%user.name user_loginuid=%user.loginuid command=%proc.cmdline %container.info image=%container.image.repository:%container.image.tag)
   priority: WARNING
