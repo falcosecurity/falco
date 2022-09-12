@@ -139,9 +139,9 @@ static void decode_exception_info_entry(
 	if (val.IsSequence())
 	{
 		out.is_list = true;
-		rule_loader::rule_exception_info::entry tmp;
 		for(const YAML::Node& v : val)
 		{
+			rule_loader::rule_exception_info::entry tmp;
 			rule_loader::context lctx(v, rule_loader::context::EXCEPTION, "", valctx);
 
 			// Optional is always false once you get past the outer values
