@@ -353,7 +353,6 @@ void rule_loader::compiler::compile_macros_infos(
 		indexed_vector<list_info>& lists,
 		indexed_vector<macro_info>& out) const
 {
-	std::set<std::string> used;
 	for (auto &m : col.macros())
 	{
 		macro_info entry = m;
