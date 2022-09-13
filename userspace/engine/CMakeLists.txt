@@ -21,9 +21,11 @@ set(FALCO_ENGINE_SOURCE_FILES
     filter_macro_resolver.cpp
     filter_evttype_resolver.cpp
     filter_warning_resolver.cpp
+    stats_manager.cpp
     rule_loader.cpp
-    rule_reader.cpp
-    stats_manager.cpp)
+    rule_loader_reader.cpp
+    rule_loader_collector.cpp
+    rule_loader_compiler.cpp)
 
 add_library(falco_engine STATIC ${FALCO_ENGINE_SOURCE_FILES})
 add_dependencies(falco_engine njson string-view-lite)
