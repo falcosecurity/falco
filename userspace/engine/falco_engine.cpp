@@ -27,7 +27,8 @@ limitations under the License.
 #include "falco_engine.h"
 #include "falco_utils.h"
 #include "falco_engine_version.h"
-#include "rule_reader.h"
+#include "rule_loader_reader.h"
+#include "rule_loader_compiler.h"
 
 #include "formats.h"
 
@@ -59,7 +60,7 @@ falco_engine::falco_engine(bool seed_rng)
 falco_engine::~falco_engine()
 {
 	m_rules.clear();
-	m_rule_loader.clear();
+	m_rule_collector.clear();
 	m_rule_stats_manager.clear();
 	m_sources.clear();
 }
@@ -185,15 +186,17 @@ std::unique_ptr<load_result> falco_engine::load_rules(const std::string &rules_c
 	cfg.replace_output_container_info = m_replace_container_info;
 	cfg.default_ruleset_id = m_default_ruleset_id;
 
-	rule_reader reader;
-	if (reader.load(cfg, m_rule_loader))
+	rule_loader::reader reader;
+	if (reader.read(cfg, m_rule_collector))
 	{
 		for (auto &src : m_sources)
 		{
 			src.ruleset = src.ruleset_factory->new_ruleset();
 		}
+
+		rule_loader::compiler compiler;
 		m_rules.clear();
-		m_rule_loader.compile(cfg, m_rules);
+		compiler.compile(cfg, m_rule_collector, m_rules);
 	}
 
 	if (cfg.res->successful())
@@ -515,7 +518,7 @@ bool falco_engine::check_plugin_requirements(
 		std::string& err) const
 {
 	err = "";
-	for (const auto &alternatives : m_rule_loader.required_plugin_versions())
+	for (const auto &alternatives : m_rule_collector.required_plugin_versions())
 	{
 		if (!check_plugin_requirement_alternatives(plugins, alternatives, err))
 		{
