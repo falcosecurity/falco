@@ -16,24 +16,16 @@ limitations under the License.
 
 #pragma once
 
-#include <map>
 #include <string>
 #include <vector>
 #include <yaml-cpp/yaml.h>
 #include <nlohmann/json.hpp>
-#include "falco_rule.h"
 #include "falco_source.h"
 #include "falco_load_result.h"
 #include "indexed_vector.h"
 
-
-/*!
-	\brief Ruleset loader of the falco engine
-*/
-class rule_loader
+namespace rule_loader
 {
-public:
-
 	class context
 	{
 	public:
@@ -372,67 +364,4 @@ public:
 		bool warn_evttypes;
 		bool skip_if_unknown_filter;
 	};
-
-	virtual ~rule_loader() = default;
-
-	/*!
-		\brief Erases all the internal state and definitions
-	*/
-	virtual void clear();
-
-	/*!
-		\brief Uses the internal state to compile a list of falco_rules
-	*/
-	virtual void compile(configuration& cfg, indexed_vector<falco_rule>& out) const;
-
-	/*!
-		\brief Returns the set of all required versions for each plugin according
-		to the internal definitions.
-	*/
-	virtual const std::vector<plugin_version_info::requirement_alternatives>& required_plugin_versions() const;
-
-	/*!
-		\brief Defines an info block. If a similar info block is found
-		in the internal state (e.g. another rule with same name), then
-		the previous definition gets overwritten
-	*/
-	virtual void define(configuration& cfg, engine_version_info& info);
-	virtual void define(configuration& cfg, plugin_version_info& info);
-	virtual void define(configuration& cfg, list_info& info);
-	virtual void define(configuration& cfg, macro_info& info);
-	virtual void define(configuration& cfg, rule_info& info);
-
-	/*!
-		\brief Appends an info block to an existing one. An exception
-		is thrown if no existing definition can be matched with the appended
-		one
-	*/
-	virtual void append(configuration& cfg, list_info& info);
-	virtual void append(configuration& cfg, macro_info& info);
-	virtual void append(configuration& cfg, rule_info& info);
-
-	/*!
-		\brief Updates the 'enabled' flag of an existing definition
-	*/
-	virtual void enable(configuration& cfg, rule_info& info);
-
-private:
-	void compile_list_infos(
-		configuration& cfg,
-		indexed_vector<list_info>& out) const;
-	void compile_macros_infos(
-		configuration& cfg,
-		indexed_vector<list_info>& lists,
-		indexed_vector<macro_info>& out) const;
-	void compile_rule_infos(
-		configuration& cfg,
-		indexed_vector<list_info>& lists,
-		indexed_vector<macro_info>& macros,
-		indexed_vector<falco_rule>& out) const;
-
-	uint32_t m_cur_index;
-	indexed_vector<rule_info> m_rule_infos;
-	indexed_vector<macro_info> m_macro_infos;
-	indexed_vector<list_info> m_list_infos;
-	std::vector<plugin_version_info::requirement_alternatives> m_required_plugin_versions;
 };
