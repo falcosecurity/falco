@@ -14,11 +14,13 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#include "rule_reader.h"
+#include <string>
+#include <vector>
 
-#define THROW(cond, err, ctx)    { if ((cond)) { throw rule_loader::rule_load_exception(load_result::LOAD_ERR_YAML_VALIDATE, (err), (ctx)); } }
+#include "rule_loader_reader.h"
 
-using namespace falco;
+#define THROW(cond, err, ctx)    { if ((cond)) { throw rule_loader::rule_load_exception(falco::load_result::LOAD_ERR_YAML_VALIDATE, (err), (ctx)); } }
+
 
 // Don't call this directly, call decode_val/decode_optional_val instead.
 template <typename T>
@@ -241,7 +243,7 @@ static void read_rule_exceptions(
 
 static void read_item(
 	rule_loader::configuration& cfg,
-	rule_loader& loader,
+	rule_loader::collector& collector,
 	const YAML::Node& item,
 	const rule_loader::context& parent)
 {
@@ -255,7 +257,7 @@ static void read_item(
 		rule_loader::engine_version_info v(ctx);
 
 		decode_val(item, "required_engine_version", v.version, ctx);
-		loader.define(cfg, v);
+		collector.define(cfg, v);
 	}
 	else if(item["required_plugin_versions"].IsDefined())
 	{
@@ -296,7 +298,7 @@ static void read_item(
 				}
 			}
 
-			loader.define(cfg, v);
+			collector.define(cfg, v);
 		}
 	}
 	else if(item["list"].IsDefined())
@@ -317,11 +319,11 @@ static void read_item(
 
 		if(append)
 		{
-			loader.append(cfg, v);
+			collector.append(cfg, v);
 		}
 		else
 		{
-			loader.define(cfg, v);
+			collector.define(cfg, v);
 		}
 	}
 	else if(item["macro"].IsDefined())
@@ -345,11 +347,11 @@ static void read_item(
 
 		if(append)
 		{
-			loader.append(cfg, v);
+			collector.append(cfg, v);
 		}
 		else
 		{
-			loader.define(cfg, v);
+			collector.define(cfg, v);
 		}
 	}
 	else if(item["rule"].IsDefined())
@@ -379,7 +381,7 @@ static void read_item(
 				v.cond_ctx = rule_loader::context(item["condition"], rule_loader::context::RULE_CONDITION, "", ctx);
 			}
 			read_rule_exceptions(item, v, ctx, append);
-			loader.append(cfg, v);
+			collector.append(cfg, v);
 		}
 		else
 		{
@@ -394,7 +396,7 @@ static void read_item(
 			    !item["priority"].IsDefined())
 			{
 				decode_val(item, "enabled", v.enabled, ctx);
-				loader.enable(cfg, v);
+				collector.enable(cfg, v);
 			}
 			else
 			{
@@ -421,18 +423,18 @@ static void read_item(
 				decode_optional_val(item, "skip-if-unknown-filter", v.skip_if_unknown_filter, ctx);
 				decode_tags(item, v.tags, ctx);
 				read_rule_exceptions(item, v, ctx, append);
-				loader.define(cfg, v);
+				collector.define(cfg, v);
 			}
 		}
 	}
 	else
 	{
 		rule_loader::context ctx(item, rule_loader::context::RULES_CONTENT_ITEM, "", parent);
-		cfg.res->add_warning(load_result::LOAD_UNKNOWN_ITEM, "Unknown top level item", ctx);
+		cfg.res->add_warning(falco::load_result::LOAD_UNKNOWN_ITEM, "Unknown top level item", ctx);
 	}
 }
 
-bool rule_reader::load(rule_loader::configuration& cfg, rule_loader& loader)
+bool rule_loader::reader::read(rule_loader::configuration& cfg, collector& collector)
 {
 	std::vector<YAML::Node> docs;
 	try
@@ -442,7 +444,7 @@ bool rule_reader::load(rule_loader::configuration& cfg, rule_loader& loader)
 	catch(const exception& e)
 	{
 		rule_loader::context ctx(cfg.name);
-		cfg.res->add_error(load_result::LOAD_ERR_YAML_PARSE, e.what(), ctx);
+		cfg.res->add_error(falco::load_result::LOAD_ERR_YAML_PARSE, e.what(), ctx);
 		return false;
 	}
 
@@ -465,7 +467,7 @@ bool rule_reader::load(rule_loader::configuration& cfg, rule_loader& loader)
 				{
 					if (!it->IsNull())
 					{
-						read_item(cfg, loader, *it, ctx);
+						read_item(cfg, collector, *it, ctx);
 					}
 				}
 			}

@@ -16,22 +16,25 @@ limitations under the License.
 
 #pragma once
 
-#include <map>
-#include <string>
-#include <vector>
 #include "rule_loader.h"
+#include "rule_loader_collector.h"
+
+namespace rule_loader
+{
 
 /*!
     \brief Reads the contents of a ruleset
 */
-class rule_reader
+class reader
 {
 public:
-    virtual ~rule_reader() = default;
+    virtual ~reader() = default;
 
     /*!
-		\brief Reads the contents of a ruleset and uses a loader to store
+		\brief Reads the contents of a ruleset and uses a collector to store
         thew new definitions
 	*/
-	virtual bool load(rule_loader::configuration& cfg, rule_loader& loader);
+	virtual bool read(configuration& cfg, collector& loader);
 };
+
+}; // namespace rule_loader
