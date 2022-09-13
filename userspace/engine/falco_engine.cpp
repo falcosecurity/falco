@@ -333,8 +333,6 @@ std::shared_ptr<gen_event_formatter> falco_engine::create_formatter(const std::s
 
 unique_ptr<falco_engine::rule_result> falco_engine::process_event(std::size_t source_idx, gen_event *ev, uint16_t ruleset_id)
 {
-	falco_rule rule;
-
 	// note: there are no thread-safety guarantees on the filter_ruleset::run()
 	// method, but the thread-safety assumptions of falco_engine::process_event()
 	// imply that concurrent invokers use different and non-switchable values of
@@ -359,13 +357,13 @@ unique_ptr<falco_engine::rule_result> falco_engine::process_event(std::size_t so
 
 	unique_ptr<struct rule_result> res(new rule_result());
 	res->evt = ev;
-	res->rule = rule.name;
-	res->source = rule.source;
-	res->format = rule.output;
-	res->priority_num = rule.priority;
-	res->tags = rule.tags;
-	res->exception_fields = rule.exception_fields;
-	m_rule_stats_manager.on_event(rule);
+	res->rule = source->m_rule.name;
+	res->source = source->m_rule.source;
+	res->format = source->m_rule.output;
+	res->priority_num = source->m_rule.priority;
+	res->tags = source->m_rule.tags;
+	res->exception_fields = source->m_rule.exception_fields;
+	m_rule_stats_manager.on_event(source->m_rule);
 	return res;
 }
 
