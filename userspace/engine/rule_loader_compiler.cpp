@@ -14,557 +14,35 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#include "falco_engine.h"
-#include "falco_utils.h"
-#include "rule_loader.h"
+#include <string>
+#include <memory>
+#include <set>
+#include <vector>
+
+#include "rule_loader_compiler.h"
 #include "filter_macro_resolver.h"
 #include "filter_evttype_resolver.h"
 #include "filter_warning_resolver.h"
-#include <version.h>
-#include <string>
-#include <sstream>
 
 #define MAX_VISIBILITY		((uint32_t) -1)
 
 #define THROW(cond, err, ctx)    { if ((cond)) { throw rule_loader::rule_load_exception(falco::load_result::LOAD_ERR_VALIDATE, (err), (ctx)); } }
 
-using namespace falco;
+static std::string s_container_info_fmt = "%container.info";
+static std::string s_default_extra_fmt  = "%container.name (id=%container.id)";
 
-static string s_container_info_fmt = "%container.info";
-static string s_default_extra_fmt  = "%container.name (id=%container.id)";
-
-using namespace std;
 using namespace libsinsp::filter;
 
-static const std::string item_type_strings[] = {
-	"value for",
-	"exceptions",
-	"exception",
-	"exception values",
-	"exception value",
-	"rules content",
-	"rules content item",
-	"required_engine_version",
-	"required plugin versions",
-	"required plugin versions entry",
-	"required plugin versions alternative",
-	"list",
-	"list item",
-	"macro",
-	"macro condition",
-	"rule",
-	"rule condition",
-	"condition expression",
-	"rule output",
-	"rule output expression",
-	"rule priority"
-};
-
-const std::string& rule_loader::context::item_type_as_string(enum item_type it)
-{
-	return item_type_strings[it];
-}
-
-rule_loader::context::context(const std::string& name)
-{
-	// This ensures that every context has one location, even if
-	// that location is effectively the whole document.
-	location loc = {name, position(), rule_loader::context::RULES_CONTENT, ""};
-	m_locs.push_back(loc);
-}
-
-rule_loader::context::context(const YAML::Node &item,
-			      const item_type item_type,
-			      const std::string item_name,
-			      const context& parent)
-{
-	init(parent.name(), position(item.Mark()), item_type, item_name, parent);
-}
-
-rule_loader::context::context(const libsinsp::filter::parser::pos_info& pos,
-			      const std::string& condition,
-			      const context& parent)
-	: alt_content(condition)
-{
-
-	// Contexts based on conditions don't use the
-	// filename. Instead the "name" is just the condition, and
-	// uses a short prefix of the condition.
-	std::string name = "\"" + condition.substr(0, 20) + "...\"";
-	std::replace(name.begin(), name.end(), '\n', ' ');
-	std::replace(name.begin(), name.end(), '\r', ' ');
-
-	std::string item_name = "";
-
-	// Convert the parser position to a context location. Both
-	// they have the same basic info (position, line, column).
-	// parser line/columns are 1-indexed while yaml marks are
-	// 0-indexed, though.
-	position condpos;
-	condpos.pos = pos.idx;
-	condpos.line = pos.line-1;
-	condpos.column = pos.col-1;
-
-	init(name, condpos, rule_loader::context::CONDITION_EXPRESSION, item_name, parent);
-}
-
-const std::string& rule_loader::context::name() const
-{
-	// All valid contexts should have at least one location.
-	if(m_locs.empty())
-	{
-		throw falco_exception("rule_loader::context without location?");
-	}
-
-	return m_locs.front().name;
-}
-
-void rule_loader::context::init(const std::string& name,
-				const position& pos,
-				const item_type item_type,
-				const std::string item_name,
-				const context& parent)
-{
-	// Copy parent locations
-	m_locs = parent.m_locs;
-
-	// Add current item to back
-	location loc = {name, pos, item_type, item_name};
-	m_locs.push_back(loc);
-}
-
-std::string rule_loader::context::as_string()
-{
-	std::ostringstream os;
-
-	// All valid contexts should have at least one location.
-	if(m_locs.empty())
-	{
-		throw falco_exception("rule_loader::context without location?");
-	}
-
-	bool first = true;
-
-	for(auto& loc : m_locs)
-	{
-		os << (first ? "In " : "    ");
-		first = false;
-
-		os << item_type_as_string(loc.item_type);
-		if(!loc.item_name.empty())
-		{
-			os << " '" << loc.item_name << "'";
-		}
-		os << ": ";
-
-		os << "("
-		   << loc.name << ":"
-		   << loc.pos.line << ":"
-		   << loc.pos.column
-		   << ")" << std::endl;
-	}
-
-	return os.str();
-}
-
-nlohmann::json rule_loader::context::as_json()
-{
-	nlohmann::json ret;
-
-	ret["locations"] = nlohmann::json::array();
-
-	// All valid contexts should have at least one location.
-	if(m_locs.empty())
-	{
-		throw falco_exception("rule_loader::context without location?");
-	}
-
-	for(auto& loc : m_locs)
-	{
-		nlohmann::json jloc, jpos;
-
-		jloc["item_type"] = item_type_as_string(loc.item_type);
-		jloc["item_name"] = loc.item_name;
-
-		jpos["name"] = loc.name;
-		jpos["line"] = loc.pos.line;
-		jpos["column"] = loc.pos.column;
-		jpos["offset"] = loc.pos.pos;
-
-		jloc["position"] = jpos;
-
-		ret["locations"].push_back(jloc);
-	}
-
-	return ret;
-}
-
-std::string rule_loader::context::snippet(const falco::load_result::rules_contents_t& rules_contents,
-					  size_t snippet_width) const
-{
-	// All valid contexts should have at least one location.
-	if(m_locs.empty())
-	{
-		throw falco_exception("rule_loader::context without location?");
-	}
-
-	rule_loader::context::location loc = m_locs.back();
-	auto it = rules_contents.find(loc.name);
-
-	if(alt_content.empty() && it == rules_contents.end())
-	{
-		return "<No context for file + " + loc.name + ">\n";
-	}
-
-	// If not using alt content, the last location's name must be found in rules_contents
-	const std::string& snip_content = (!alt_content.empty() ? alt_content : it->second.get());
-
-	if(snip_content.empty())
-	{
-		return "<No context available>\n";
-	}
-
-	size_t from = loc.pos.pos;
-
-	// In some cases like this, where the content ends with a
-	// dangling property value:
-	//   tags:
-	// The YAML::Mark position can be past the end of the file.
-	for(; from > 0 && from >= snip_content.size(); from--);
-
-	// The snippet is generally the line that contains the
-	// position. So walk backwards from pos to the preceding
-	// newline, and walk forwards from pos to the following
-	// newline.
-	//
-	// However, some lines can be very very long, so the walk
-	// forwards/walk backwards is capped at a maximum of
-	// snippet_width/2 characters in either direction.
-	for(; from > 0 && snip_content.at(from) != '\n' && (loc.pos.pos - from) < (snippet_width/2); from--);
-
-	size_t to = loc.pos.pos;
-	for(; to < snip_content.size()-1 && snip_content.at(to) != '\n' && (to - loc.pos.pos) < (snippet_width/2); to++);
-
-	// Don't include the newlines
-	if(snip_content.at(from) == '\n')
-	{
-		from++;
-	}
-	if(snip_content.at(to) == '\n')
-	{
-		to--;
-	}
-
-	std::string ret = snip_content.substr(from, to-from+1);
-
-	if(snip_content.empty())
-	{
-		return "<No context available>\n";
-	}
-
-	// Replace the initial/end characters with '...' if the walk
-	// forwards/backwards was incomplete
-	if(loc.pos.pos - from >= (snippet_width/2))
-	{
-		ret.replace(0, 3, "...");
-	}
-
-	if(to - loc.pos.pos >= (snippet_width/2))
-	{
-		ret.replace(ret.size()-3, 3, "...");
-	}
-
-	ret += "\n";
-
-	// Add a blank line with a marker at the position within the snippet
-	ret += std::string(loc.pos.pos-from, ' ') + '^' + "\n";
-
-	return ret;
-}
-
-rule_loader::result::result(const std::string &name)
-	: name(name),
-	  success(true)
-{
-}
-
-bool rule_loader::result::successful()
-{
-	return success;
-}
-
-bool rule_loader::result::has_warnings()
-{
-	return (warnings.size() > 0);
-}
-
-void rule_loader::result::add_error(load_result::error_code ec, const std::string& msg, const context& ctx)
-{
-	error err = {ec, msg, ctx};
-	success = false;
-
-	errors.push_back(err);
-}
-
-void rule_loader::result::add_warning(load_result::warning_code wc, const std::string& msg, const context& ctx)
-{
-	warning warn = {wc, msg, ctx};
-
-	warnings.push_back(warn);
-}
-
-const std::string& rule_loader::result::as_string(bool verbose, const rules_contents_t& contents)
-{
-	if(verbose)
-	{
-		return as_verbose_string(contents);
-	}
-	else
-	{
-		return as_summary_string();
-	}
-}
-
-const std::string& rule_loader::result::as_summary_string()
-{
-	std::ostringstream os;
-
-	if(!res_summary_string.empty())
-	{
-		return res_summary_string;
-	}
-
-	if(!name.empty())
-	{
-		os << name << ": ";
-	}
-
-	if(success)
-	{
-		os << "Ok";
-
-		if (!warnings.empty())
-		{
-			os << ", with warnings";
-		}
-	}
-	else
-	{
-		os << "Invalid";
-	}
-
-	if(!errors.empty())
-	{
-		os << std::endl;
-
-		os << " " << errors.size() << " errors: [";
-		bool first = true;
-		for(auto &err : errors)
-		{
-			if(!first)
-			{
-				os << " ";
-			}
-			first = false;
-
-			os << load_result::error_code_str(err.ec)
-			   << " (" << load_result::error_str(err.ec) << ")";
-		}
-		os << "]";
-	}
-
-	if(!warnings.empty())
-	{
-		os << std::endl;
-
-		os << " " << warnings.size() << " warnings: [";
-		bool first = true;
-		for(auto &warn : warnings)
-		{
-			if(!first)
-			{
-				os << " ";
-			}
-			first = false;
-
-			os << load_result::warning_code_str(warn.wc)
-			   << " (" << load_result::warning_str(warn.wc) << ")";
-		}
-		os << "]";
-	}
-
-	res_summary_string = os.str();
-	return res_summary_string;
-}
-
-const std::string& rule_loader::result::as_verbose_string(const rules_contents_t& contents)
-{
-	std::ostringstream os;
-
-	if(!res_verbose_string.empty())
-	{
-		return res_verbose_string;
-	}
-
-	if(!name.empty())
-	{
-		os << name << ": ";
-	}
-
-	if(success)
-	{
-		os << "Ok";
-
-		if (!warnings.empty())
-		{
-			os << ", with warnings";
-		}
-	}
-	else
-	{
-		os << "Invalid";
-	}
-
-	if (!errors.empty())
-	{
-		os << std::endl;
-
-		os << errors.size()
-		   << " Errors:" << std::endl;
-
-		for(auto &err : errors)
-		{
-			os << err.ctx.as_string();
-
-			os << "------" << std::endl;
-			os << err.ctx.snippet(contents);
-			os << "------" << std::endl;
-
-			os << load_result::error_code_str(err.ec)
-			   << " (" << load_result::error_str(err.ec) << "): "
-			   << err.msg
-			   << std::endl;
-		}
-	}
-	if (!warnings.empty())
-	{
-		os << std::endl;
-
-		os << warnings.size()
-		   << " Warnings:" << std::endl;
-
-		for(auto &warn : warnings)
-		{
-			os << warn.ctx.as_string();
-
-			os << "------" << std::endl;
-			os << warn.ctx.snippet(contents);
-			os << "------" << std::endl;
-
-			os << load_result::warning_code_str(warn.wc)
-			   << " (" << load_result::warning_str(warn.wc) << "): "
-			   << warn.msg;
-			os << std::endl;
-		}
-	}
-
-	res_verbose_string = os.str();
-	return res_verbose_string;
-}
-
-const nlohmann::json& rule_loader::result::as_json(const rules_contents_t& contents)
-{
-	nlohmann::json j;
-
-	if(!res_json.empty())
-	{
-		return res_json;
-	}
-
-	j["name"] = name;
-	j["successful"] = success;
-
-	j["errors"] = nlohmann::json::array();
-
-	for(auto &err : errors)
-	{
-		nlohmann::json jerr;
-
-		jerr["context"] = err.ctx.as_json();
-		jerr["context"]["snippet"] = err.ctx.snippet(contents);
-
-		jerr["code"] = load_result::error_code_str(err.ec);
-		jerr["codedesc"] = load_result::error_desc(err.ec);
-		jerr["message"] = err.msg;
-
-		j["errors"].push_back(jerr);
-	}
-
-	j["warnings"] = nlohmann::json::array();
-
-	for(auto &warn : warnings)
-	{
-		nlohmann::json jwarn;
-
-		jwarn["context"] = warn.ctx.as_json();
-		jwarn["context"]["snippet"] = warn.ctx.snippet(contents);
-
-		jwarn["code"] = load_result::warning_code_str(warn.wc);
-		jwarn["codedesc"] = load_result::warning_desc(warn.wc);
-		jwarn["message"] = warn.msg;
-
-		j["warnings"].push_back(jwarn);
-	}
-
-	res_json = j;
-	return res_json;
-}
-
-rule_loader::engine_version_info::engine_version_info(context &ctx)
-	: ctx(ctx)
-{
-}
-
-rule_loader::plugin_version_info::plugin_version_info()
-	: ctx("no-filename-given")
-{
-}
-
-rule_loader::plugin_version_info::plugin_version_info(context &ctx)
-	: ctx(ctx)
-{
-}
-
-rule_loader::list_info::list_info(context &ctx)
-	: ctx(ctx)
-{
-}
-
-rule_loader::macro_info::macro_info(context &ctx)
-	: ctx(ctx), cond_ctx(ctx)
-{
-}
-
-rule_loader::rule_exception_info::rule_exception_info(context &ctx)
-	: ctx(ctx)
-{
-}
-
-rule_loader::rule_info::rule_info(context &ctx)
-	: ctx(ctx), cond_ctx(ctx), output_ctx(ctx)
-{
-}
-
 // todo(jasondellaluce): this breaks string escaping in lists and exceptions
-static void quote_item(string& e)
+static void quote_item(std::string& e)
 {
-	if (e.find(" ") != string::npos && e[0] != '"' && e[0] != '\'')
+	if (e.find(" ") != std::string::npos && e[0] != '"' && e[0] != '\'')
 	{
 		e = '"' + e + '"';
 	}
 }
 
-static void paren_item(string& e)
+static void paren_item(std::string& e)
 {
 	if(e[0] != '(')
 	{
@@ -572,23 +50,23 @@ static void paren_item(string& e)
 	}
 }
 
-static inline bool is_operator_defined(const string& op)
+static inline bool is_operator_defined(const std::string& op)
 {
 	auto ops = libsinsp::filter::parser::supported_operators();
 	return find(ops.begin(), ops.end(), op) != ops.end();
 }
 
-static inline bool is_operator_for_list(const string& op)
+static inline bool is_operator_for_list(const std::string& op)
 {
 	auto ops = libsinsp::filter::parser::supported_operators(true);
 	return find(ops.begin(), ops.end(), op) != ops.end();
 }
 
-static bool is_format_valid(const falco_source& source, string fmt, string& err)
+static bool is_format_valid(const falco_source& source, std::string fmt, std::string& err)
 {
 	try
 	{
-		shared_ptr<gen_event_formatter> formatter;
+		std::shared_ptr<gen_event_formatter> formatter;
 		formatter = source.formatter_factory->create_formatter(fmt);
 		return true;
 	}
@@ -599,88 +77,15 @@ static bool is_format_valid(const falco_source& source, string fmt, string& err)
 	}
 }
 
-template <typename T>
-static inline void define_info(indexed_vector<T>& infos, T& info, uint32_t id)
-{
-	auto prev = infos.at(info.name);
-	if (prev)
-	{
-		info.index = prev->index;
-		info.visibility = id;
-		*prev = info;
-	}
-	else
-	{
-		info.index = id;
-		info.visibility = id;
-		infos.insert(info, info.name);
-	}
-}
-
-template <typename T>
-static inline void append_info(T* prev, T& info, uint32_t id)
-{
-	prev->visibility = id;
-}
-
-static void validate_exception_info(
-	const falco_source& source,
-	rule_loader::rule_exception_info &ex)
-{
-	if (ex.fields.is_list)
-	{
-		if (!ex.comps.is_valid())
-		{
-			ex.comps.is_list = true;
-			for (size_t i = 0; i < ex.fields.items.size(); i++)
-			{
-				ex.comps.items.push_back({false, "="});
-			}
-		}
-		THROW(ex.fields.items.size() != ex.comps.items.size(),
-		       "Fields and comps lists must have equal length",
-		       ex.ctx);
-		for (auto &v : ex.comps.items)
-		{
-			THROW(!is_operator_defined(v.item),
-			      std::string("'") + v.item + "' is not a supported comparison operator",
-			      ex.ctx);
-		}
-		for (auto &v : ex.fields.items)
-		{
-			THROW(!source.is_field_defined(v.item),
-			      std::string("'") + v.item + "' is not a supported filter field",
-			      ex.ctx);
-		}
-	}
-	else
-	{
-		if (!ex.comps.is_valid())
-		{
-			ex.comps.is_list = false;
-			ex.comps.item = "in";
-		}
-		THROW(ex.comps.is_list,
-		      "Fields and comps must both be strings",
-		      ex.ctx);
-		THROW((ex.comps.item != "in" && ex.comps.item != "pmatch" && ex.comps.item != "intersects"),
-		      "When fields is a single value, comps must be one of (in, pmatch, intersects)",
-		      ex.ctx);
-		THROW(!source.is_field_defined(ex.fields.item),
-		      std::string("'") + ex.fields.item + "' is not a supported filter field",
-		      ex.ctx);
-	}
-}
-
 static void build_rule_exception_infos(
-	const vector<rule_loader::rule_exception_info>& exceptions,
-	set<string>& exception_fields,
-	string& condition)
+	const std::vector<rule_loader::rule_exception_info>& exceptions,
+	std::set<std::string>& exception_fields,
+	std::string& condition)
 {
-	string tmp;
+	std::string tmp;
 	for (auto &ex : exceptions)
 	{
-		string icond;
+		std::string icond;
 		if(!ex.fields.is_list)
 		{
 			for (auto &val : ex.values)
@@ -710,7 +115,7 @@ static void build_rule_exception_infos(
 				icond += icond == "(" ? "" : " or ";
 				icond += "(";
 				uint32_t k = 0;
-				string istr;
+				std::string istr;
 				for (auto &field : ex.fields.items)
 				{
 					icond += k == 0 ? "" : " and ";
@@ -756,35 +161,35 @@ static void build_rule_exception_infos(
 }
 
 // todo(jasondellaluce): this breaks string escaping in lists
-static bool resolve_list(string& cnd, const rule_loader::list_info& list)
+static bool resolve_list(std::string& cnd, const rule_loader::list_info& list)
 {
-	static string blanks = " \t\n\r";
-	static string delims = blanks + "(),=";
-	string new_cnd;
+	static std::string blanks = " \t\n\r";
+	static std::string delims = blanks + "(),=";
+	std::string new_cnd;
 	size_t start, end;
 	bool used = false;
 	start = cnd.find(list.name);
-	while (start != string::npos)
+	while (start != std::string::npos)
 	{
 		// the characters surrounding the name must
 		// be delims of beginning/end of string
 		end = start + list.name.length();
-		if ((start == 0 || delims.find(cnd[start - 1]) != string::npos)
-			&& (end >= cnd.length() || delims.find(cnd[end]) != string::npos))
+		if ((start == 0 || delims.find(cnd[start - 1]) != std::string::npos)
+			&& (end >= cnd.length() || delims.find(cnd[end]) != std::string::npos))
 		{
 			// shift pointers to consume all whitespaces
 			while (start > 0
-				&& blanks.find(cnd[start - 1]) != string::npos)
+				&& blanks.find(cnd[start - 1]) != std::string::npos)
 			{
 				start--;
 			}
 			while (end < cnd.length()
-				&& blanks.find(cnd[end]) != string::npos)
+				&& blanks.find(cnd[end]) != std::string::npos)
 			{
 				end++;
 			}
 			// create substitution string by concatenating all values
-			string sub = "";
+			std::string sub = "";
 			for (auto &v : list.items)
 			{
 				if (!sub.empty())
@@ -828,7 +233,7 @@ static bool resolve_list(string& cnd, const rule_loader::list_info& list)
 
 static void resolve_macros(
 	indexed_vector<rule_loader::macro_info>& macros,
-	shared_ptr<ast::expr>& ast,
+	std::shared_ptr<ast::expr>& ast,
 	uint32_t visibility,
 	const rule_loader::context &ctx)
 {
@@ -856,8 +261,8 @@ static void resolve_macros(
 }
 
 // note: there is no visibility order between filter conditions and lists
-static shared_ptr<ast::expr> parse_condition(
-	string condition,
+static std::shared_ptr<ast::expr> parse_condition(
+	std::string condition,
 	indexed_vector<rule_loader::list_info>& lists,
 	const rule_loader::context &ctx)
 {
@@ -872,7 +277,7 @@ static shared_ptr<ast::expr> parse_condition(
 	p.set_max_depth(1000);
 	try
 	{
-		shared_ptr<ast::expr> res_ptr(p.parse());
+		std::shared_ptr<ast::expr> res_ptr(p.parse());
 		return res_ptr;
 	}
 	catch (const sinsp_exception& e)
@@ -880,7 +285,7 @@ static shared_ptr<ast::expr> parse_condition(
 		rule_loader::context parsectx(p.get_pos(), condition, ctx);
 
 		throw rule_loader::rule_load_exception(
-			load_result::LOAD_ERR_COMPILE_CONDITION,
+			falco::load_result::LOAD_ERR_COMPILE_CONDITION,
 			e.what(),
 			parsectx);
 	}
@@ -888,9 +293,9 @@ static shared_ptr<ast::expr> parse_condition(
 
 static void apply_output_substitutions(
 	rule_loader::configuration& cfg,
-	string& out)
+	std::string& out)
 {
-	if (out.find(s_container_info_fmt) != string::npos)
+	if (out.find(s_container_info_fmt) != std::string::npos)
 	{
 		if (cfg.replace_output_container_info)
 		{
@@ -902,196 +307,20 @@ static void apply_output_substitutions(
 	out += cfg.output_extra.empty() ? "" : " " + cfg.output_extra;
 }
 
-void rule_loader::clear()
+void rule_loader::compiler::compile_list_infos(
+		configuration& cfg,
+		const collector& col,
+		indexed_vector<list_info>& out) const
 {
-	m_cur_index = 0;
-	m_rule_infos.clear();
-	m_list_infos.clear();
-	m_macro_infos.clear();
-	m_required_plugin_versions.clear();
-}
-
-const std::vector<rule_loader::plugin_version_info::requirement_alternatives>& rule_loader::required_plugin_versions() const
-{
-	return m_required_plugin_versions;
-}
-
-void rule_loader::define(configuration& cfg, engine_version_info& info)
-{
-	auto v = falco_engine::engine_version();
-	THROW(v < info.version, "Rules require engine version "
-	      + to_string(info.version) + ", but engine version is " + to_string(v),
-	      info.ctx);
-}
-
-void rule_loader::define(configuration& cfg, plugin_version_info& info)
-{
-	std::unordered_set<std::string> plugin_names;
-	for (const auto& req : info.alternatives)
-	{
-		sinsp_version plugin_version(req.version);
-		THROW(!plugin_version.m_valid,
-			"Invalid required version '" + req.version
-				+ "' for plugin '" + req.name + "'",
-			info.ctx);
-		THROW(plugin_names.find(req.name) != plugin_names.end(),
-			"Defined multiple alternative version requirements for plugin '"
-				+ req.name + "'",
-			info.ctx);
-		plugin_names.insert(req.name);
-	}
-	m_required_plugin_versions.push_back(info.alternatives);
-}
-
-void rule_loader::define(configuration& cfg, list_info& info)
-{
-	define_info(m_list_infos, info, m_cur_index++);
-}
-
-void rule_loader::append(configuration& cfg, list_info& info)
-{
-	auto prev = m_list_infos.at(info.name);
-	THROW(!prev,
-	       "List has 'append' key but no list by that name already exists",
-	       info.ctx);
-	prev->items.insert(prev->items.end(), info.items.begin(), info.items.end());
-	append_info(prev, info, m_cur_index++);
-}
-
-void rule_loader::define(configuration& cfg, macro_info& info)
-{
-	define_info(m_macro_infos, info, m_cur_index++);
-}
-
-void rule_loader::append(configuration& cfg, macro_info& info)
-{
-	auto prev = m_macro_infos.at(info.name);
-	THROW(!prev,
-	       "Macro has 'append' key but no macro by that name already exists",
-	       info.ctx);
-	prev->cond += " ";
-	prev->cond += info.cond;
-	append_info(prev, info, m_cur_index++);
-}
-
-void rule_loader::define(configuration& cfg, rule_info& info)
-{
-	auto source = cfg.sources.at(info.source);
-	if (!source)
-	{
-		cfg.res->add_warning(load_result::LOAD_UNKNOWN_SOURCE,
-				     "Unknown source " + info.source + ", skipping",
-				     info.ctx);
-		return;
-	}
-
-	auto prev = m_rule_infos.at(info.name);
-	THROW(prev && prev->source != info.source,
-	       "Rule has been re-defined with a different source",
-	       info.ctx);
-
-	for (auto &ex : info.exceptions)
-	{
-		THROW(!ex.fields.is_valid(),
-		       "Rule exception item must have fields property with a list of fields",
-		       ex.ctx);
-		validate_exception_info(*source, ex);
-	}
-
-	define_info(m_rule_infos, info, m_cur_index++);
-}
-
-void rule_loader::append(configuration& cfg, rule_info& info)
-{
-	auto prev = m_rule_infos.at(info.name);
-
-	THROW(!prev,
-	       "Rule has 'append' key but no rule by that name already exists",
-	       info.ctx);
-	THROW(info.cond.empty() && info.exceptions.empty(),
-	       "Appended rule must have exceptions or condition property",
-	       info.ctx);
-
-	auto source = cfg.sources.at(prev->source);
-	// note: this is not supposed to happen
-	THROW(!source,
-	      std::string("Unknown source ") + prev->source,
-	      info.ctx);
-
-	if (!info.cond.empty())
-	{
-		prev->cond += " ";
-		prev->cond += info.cond;
-	}
-
-	for (auto &ex : info.exceptions)
-	{
-		auto prev_ex = find_if(prev->exceptions.begin(), prev->exceptions.end(),
-			[&ex](const rule_loader::rule_exception_info& i)
-				{ return i.name == ex.name; });
-		if (prev_ex == prev->exceptions.end())
-		{
-			THROW(!ex.fields.is_valid(),
-			       "Rule exception must have fields property with a list of fields",
-			       ex.ctx);
-			THROW(ex.values.empty(),
-			       "Rule exception must have values property with a list of values",
-			       ex.ctx);
-			validate_exception_info(*source, ex);
-			prev->exceptions.push_back(ex);
-		}
-		else
-		{
-			THROW(ex.fields.is_valid(),
-			       "Can not append exception fields to existing exception, only values",
-			       ex.ctx);
-			THROW(ex.comps.is_valid(),
-			       "Can not append exception comps to existing exception, only values",
-			       ex.ctx);
-			prev_ex->values.insert(
-				prev_ex->values.end(), ex.values.begin(), ex.values.end());
-		}
-	}
-	append_info(prev, info, m_cur_index++);
-}
-
-void rule_loader::enable(configuration& cfg, rule_info& info)
-{
-	auto prev = m_rule_infos.at(info.name);
-	THROW(!prev,
-	       "Rule has 'enabled' key but no rule by that name already exists",
-	       info.ctx);
-	prev->enabled = info.enabled;
-}
-
-rule_loader::rule_load_exception::rule_load_exception(load_result::error_code ec, std::string msg, const context& ctx)
-	: ec(ec), msg(msg), ctx(ctx)
-{
-}
-
-rule_loader::rule_load_exception::~rule_load_exception()
-{
-}
-
-const char* rule_loader::rule_load_exception::what()
-{
-	errstr = load_result::error_code_str(ec) + ": "
-		+ msg.c_str();
-
-	return errstr.c_str();
-}
-
-void rule_loader::compile_list_infos(configuration& cfg, indexed_vector<list_info>& out) const
-{
-	string tmp;
-	vector<string> used;
-	for (auto &list : m_list_infos)
+	std::string tmp;
+	std::vector<std::string> used;
+	for (auto &list : col.lists())
 	{
 		list_info v = list;
 		v.items.clear();
 		for (auto &item : list.items)
 		{
-			auto ref = m_list_infos.at(item);
+			const auto ref = col.lists().at(item);
 			if (ref && ref->index < list.visibility)
 			{
 				used.push_back(ref->name);
@@ -1118,13 +347,14 @@ void rule_loader::compile_list_infos(configuration& cfg, indexed_vector<list_inf
 }
 
 // note: there is a visibility ordering between macros
-void rule_loader::compile_macros_infos(
-	configuration& cfg,
-	indexed_vector<list_info>& lists,
-	indexed_vector<macro_info>& out) const
+void rule_loader::compiler::compile_macros_infos(
+		configuration& cfg,
+		const collector& col,
+		indexed_vector<list_info>& lists,
+		indexed_vector<macro_info>& out) const
 {
-	set<string> used;
-	for (auto &m : m_macro_infos)
+	std::set<std::string> used;
+	for (auto &m : col.macros())
 	{
 		macro_info entry = m;
 		entry.cond_ast = parse_condition(m.cond, lists, m.cond_ctx);
@@ -1139,16 +369,17 @@ void rule_loader::compile_macros_infos(
 }
 
 
-void rule_loader::compile_rule_infos(
-	configuration& cfg,
-	indexed_vector<list_info>& lists,
-	indexed_vector<macro_info>& macros,
-	indexed_vector<falco_rule>& out) const
+void rule_loader::compiler::compile_rule_infos(
+		configuration& cfg,
+		const collector& col,
+		indexed_vector<list_info>& lists,
+		indexed_vector<macro_info>& macros,
+		indexed_vector<falco_rule>& out) const
 {
-	string err, condition;
-	set<load_result::warning_code> warn_codes;
+	std::string err, condition;
+	std::set<falco::load_result::load_result::warning_code> warn_codes;
 	filter_warning_resolver warn_resolver;
-	for (auto &r : m_rule_infos)
+	for (auto &r : col.rules())
 	{
 		// skip the rule if below the minimum priority
 		if (r.priority > cfg.min_priority)
@@ -1196,7 +427,7 @@ void rule_loader::compile_rule_infos(
 		if(!is_format_valid(*cfg.sources.at(r.source), rule.output, err))
 		{
 			throw rule_load_exception(
-				load_result::LOAD_ERR_COMPILE_OUTPUT,
+				falco::load_result::load_result::LOAD_ERR_COMPILE_OUTPUT,
 				err,
 				r.output_ctx);
 		}
@@ -1223,18 +454,18 @@ void rule_loader::compile_rule_infos(
 			// skip_if_unknown_filter is true
 			std::string err = e.what();
 
-			if (err.find("nonexistent field") != string::npos &&
+			if (err.find("nonexistent field") != std::string::npos &&
 			    r.skip_if_unknown_filter)
 			{
 				cfg.res->add_warning(
-					load_result::LOAD_UNKNOWN_FIELD,
+					falco::load_result::load_result::LOAD_UNKNOWN_FIELD,
 					e.what(),
 					r.cond_ctx);
 			}
 			else
 			{
 				throw rule_loader::rule_load_exception(
-					load_result::LOAD_ERR_COMPILE_CONDITION,
+					falco::load_result::load_result::LOAD_ERR_COMPILE_CONDITION,
 					e.what(),
 					r.cond_ctx);
 			}
@@ -1251,7 +482,7 @@ void rule_loader::compile_rule_infos(
 		}
 
 		// populate set of event types and emit an special warning
-		set<uint16_t> evttypes = { ppm_event_type::PPME_PLUGINEVENT_E };
+		std::set<uint16_t> evttypes = { ppm_event_type::PPME_PLUGINEVENT_E };
 		if(rule.source == falco_common::syscall_source)
 		{
 			evttypes.clear();
@@ -1260,7 +491,7 @@ void rule_loader::compile_rule_infos(
 			    && r.warn_evttypes)
 			{
 				cfg.res->add_warning(
-					load_result::LOAD_NO_EVTTYPE,
+					falco::load_result::load_result::LOAD_NO_EVTTYPE,
 					"Rule matches too many evt.type values. This has a significant performance penalty.",
 					r.ctx);
 			}
@@ -1268,7 +499,10 @@ void rule_loader::compile_rule_infos(
 	}
 }
 
-void rule_loader::compile(configuration& cfg, indexed_vector<falco_rule>& out) const
+void rule_loader::compiler::compile(
+		configuration& cfg,
+		const collector& col,
+		indexed_vector<falco_rule>& out) const
 {
 	indexed_vector<list_info> lists;
 	indexed_vector<macro_info> macros;
@@ -1276,9 +510,9 @@ void rule_loader::compile(configuration& cfg, indexed_vector<falco_rule>& out) c
 	// expand all lists, macros, and rules
 	try
 	{
-		compile_list_infos(cfg, lists);
-		compile_macros_infos(cfg, lists, macros);
-		compile_rule_infos(cfg, lists, macros, out);
+		compile_list_infos(cfg, col, lists);
+		compile_macros_infos(cfg, col, lists, macros);
+		compile_rule_infos(cfg, col, lists, macros, out);
 	}
 	catch(rule_load_exception &e)
 	{
@@ -1291,7 +525,7 @@ void rule_loader::compile(configuration& cfg, indexed_vector<falco_rule>& out) c
 		if (!m.used)
 		{
 			cfg.res->add_warning(
-				load_result::LOAD_UNUSED_MACRO,
+				falco::load_result::load_result::LOAD_UNUSED_MACRO,
 				"Macro not referred to by any other rule/macro",
 				m.ctx);
 		}
@@ -1301,7 +535,7 @@ void rule_loader::compile(configuration& cfg, indexed_vector<falco_rule>& out) c
 		if (!l.used)
 		{
 			cfg.res->add_warning(
-				load_result::LOAD_UNUSED_LIST,
+				falco::load_result::LOAD_UNUSED_LIST,
 				"List not referred to by any other rule/macro",
 				l.ctx);
 		}
