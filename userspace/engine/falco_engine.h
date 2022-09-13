@@ -31,6 +31,7 @@ limitations under the License.
 #include "gen_filter.h"
 #include "filter_ruleset.h"
 #include "rule_loader.h"
+#include "rule_loader_collector.h"
 #include "stats_manager.h"
 #include "falco_common.h"
 #include "falco_source.h"
@@ -271,7 +272,7 @@ private:
 	//
 	inline bool should_drop_evt() const;
 
-	rule_loader m_rule_loader;
+	rule_loader::collector m_rule_collector;
 	indexed_vector<falco_rule> m_rules;
 	stats_manager m_rule_stats_manager;
 
