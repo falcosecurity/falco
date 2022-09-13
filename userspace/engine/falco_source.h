@@ -32,6 +32,10 @@ struct falco_source
 	std::shared_ptr<gen_event_filter_factory> filter_factory;
 	std::shared_ptr<gen_event_formatter_factory> formatter_factory;
 
+	// Used by the filter_ruleset interface. Filled in when a rule
+	// matches an event.
+	mutable falco_rule m_rule;
+
 	inline bool is_field_defined(std::string field) const
 	{
 		auto *chk = filter_factory->new_filtercheck(field.c_str());
