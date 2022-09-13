@@ -3240,3 +3240,17 @@
     command=%proc.cmdline pid=%proc.pid file=%fd.name parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4] container_id=%container.id image=%container.image.repository)
   priority: WARNING
   tags: [filesystem, mitre_credential_access, mitre_discovery]
+
+- rule: Detection bypass by symlinked files
+  desc: An attempt to bypass fd.name based rules by existing symlink files
+  condition: >
+    (fd.nameraw glob '*/proc*/root/*')
+    or (fd.nameraw glob '*/proc*/cwd/*')
+    or (fd.nameraw glob '*/dev*/fd/*..*')
+    or (fd.nameraw glob '*/var*/spool*/cron*/crontabs/*..*')
+  enabled: true
+  output: >
+    Detection bypass by symlinked files (user=%user.name user_loginuid=%user.loginuid program=%proc.name
+    command=%proc.cmdline file=%fd.name parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4] container_id=%container.id image=%container.image.repository)
+  priority: Alert
+  tags: [filesystem]
