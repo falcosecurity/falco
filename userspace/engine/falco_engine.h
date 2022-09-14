@@ -22,6 +22,7 @@ limitations under the License.
 
 #pragma once
 
+#include <atomic>
 #include <string>
 #include <memory>
 #include <set>
@@ -171,7 +172,7 @@ public:
 	// configured the engine. In particular, invoking this with a source_idx
 	// not previosly-returned by a call to add_source() would cause a
 	// falco_exception to be thrown.
-	// 
+	//
 	// This method is thread-safe only with the assumption that every invoker
 	// uses a different source_idx. Moreover, each invoker must not switch
 	// source_idx in subsequent invocations of this method.
@@ -263,6 +264,12 @@ private:
 
 	const falco_source* find_source(std::size_t index) const;
 	const falco_source* find_source(const std::string& name) const;
+
+	// To allow the engine to be extremely fast for syscalls (can
+	// be > 1M events/sec), we save the syscall source/source_idx
+	// separately and check it explicitly in process_event()
+	const falco_source* m_syscall_source;
+	std::atomic<size_t> m_syscall_source_idx;
 
 	//
 	// Determine whether the given event should be matched at all
