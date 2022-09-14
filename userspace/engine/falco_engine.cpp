@@ -41,7 +41,9 @@ using namespace std;
 using namespace falco;
 
 falco_engine::falco_engine(bool seed_rng)
-	: m_next_ruleset_id(0),
+	: m_syscall_source(NULL),
+	  m_syscall_source_idx(SIZE_MAX),
+	  m_next_ruleset_id(0),
 	  m_min_priority(falco_common::PRIORITY_DEBUG),
 	  m_sampling_ratio(1), m_sampling_multiplier(0),
 	  m_replace_container_info(false)
@@ -338,7 +340,19 @@ unique_ptr<falco_engine::rule_result> falco_engine::process_event(std::size_t so
 	// imply that concurrent invokers use different and non-switchable values of
 	// source_idx, which means that at any time each filter_ruleset will only
 	// be accessed by a single thread.
-	if(should_drop_evt() || !find_source(source_idx)->ruleset->run(ev, rule, ruleset_id))
+
+	const falco_source *source;
+
+	if(source_idx == m_syscall_source_idx)
+	{
+		source = m_syscall_source;
+	}
+	else
+	{
+		source = find_source(source_idx);
+	}
+
+	if(should_drop_evt() || !source || !source->ruleset->run(ev, source->m_rule, ruleset_id))
 	{
 		return unique_ptr<struct rule_result>();
 	}
@@ -367,7 +381,15 @@ std::size_t falco_engine::add_source(const std::string &source,
 	// evttype_index_ruleset is the default ruleset implementation
 	std::shared_ptr<filter_ruleset_factory> ruleset_factory(
 		new evttype_index_ruleset_factory(filter_factory));
-	return add_source(source, filter_factory, formatter_factory, ruleset_factory);
+	size_t idx = add_source(source, filter_factory, formatter_factory, ruleset_factory);
+
+	if(source == falco_common::syscall_source)
+	{
+		m_syscall_source_idx = idx;
+		m_syscall_source = find_source(m_syscall_source_idx);
+	}
+
+	return idx;
 }
 
 std::size_t falco_engine::add_source(const std::string &source,
