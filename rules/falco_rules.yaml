@@ -3225,7 +3225,7 @@
 - rule: Read environment variable from /proc files
   desc: An attempt to read process environment variables from /proc files
   condition: >
-    container and open_read and (fd.name glob /proc/*/environ)
+    open_read and container and (fd.name glob /proc/*/environ)
     and not proc.name in (known_binaries_to_read_environment_variables_from_proc_files)
   output: >
     Environment variables were retrieved from /proc files (user=%user.name user_loginuid=%user.loginuid program=%proc.name
