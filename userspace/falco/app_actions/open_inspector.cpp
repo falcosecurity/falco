@@ -30,7 +30,7 @@ application::run_result application::open_offline_inspector()
 {
 	try
 	{
-		m_state->offline_inspector->open_savefile(m_options.trace_filename, 0);
+		m_state->offline_inspector->open_savefile(m_options.trace_filename);
 		falco_logger::log(LOG_INFO, "Reading system call events from file: " + m_options.trace_filename + "\n");
 		return run_result::ok();
 	}
@@ -88,14 +88,14 @@ application::run_result application::open_live_inspector(
 				snprintf(full_path, PATH_MAX, "%s/%s", home, FALCO_PROBE_BPF_FILEPATH);
 				bpf_probe_path = full_path;
 			}
-			inspector->open_bpf(2048, bpf_probe_path, m_state->ppm_sc_of_interest, m_state->tp_of_interest);
+			inspector->open_bpf(bpf_probe_path, DEFAULT_DRIVER_BUFFER_BYTES_DIM, m_state->ppm_sc_of_interest, m_state->tp_of_interest);
 			falco_logger::log(LOG_INFO, "Starting capture with BPF probe. BPF probe path: " + std::string(bpf_probe_path));
 		}
 		else /* Kernel module (default). */
 		{
 			try
 			{
-				inspector->open_kmod(2048, m_state->ppm_sc_of_interest, m_state->tp_of_interest);
+				inspector->open_kmod(DEFAULT_DRIVER_BUFFER_BYTES_DIM, m_state->ppm_sc_of_interest, m_state->tp_of_interest);
 				falco_logger::log(LOG_INFO, "Starting capture with Kernel module.");
 			}
 			catch(sinsp_exception &e)
@@ -105,7 +105,7 @@ application::run_result application::open_live_inspector(
 				{
 					falco_logger::log(LOG_ERR, "Unable to load the driver.\n");
 				}
-				inspector->open_kmod(2048, m_state->ppm_sc_of_interest, m_state->tp_of_interest);
+				inspector->open_kmod(DEFAULT_DRIVER_BUFFER_BYTES_DIM, m_state->ppm_sc_of_interest, m_state->tp_of_interest);
 			}
 		}
 	}
