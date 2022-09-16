@@ -81,7 +81,7 @@ rule_loader::context::context(const YAML::Node &item,
 	init(parent.name(), position(item.Mark()), item_type, item_name, parent);
 }
 
-rule_loader::context::context(const libsinsp::filter::parser::pos_info& pos,
+rule_loader::context::context(const libsinsp::filter::ast::pos_info& pos,
 			      const std::string& condition,
 			      const context& parent)
 	: alt_content(condition)

@@ -112,7 +112,7 @@ public:
 		//     from the YAML node containing the condition expression.
 		//   - When compiling, the condition expression has expanded
 		//     macro and list references with their values.
-		context(const libsinsp::filter::parser::pos_info& pos,
+		context(const libsinsp::filter::ast::pos_info& pos,
 			const std::string& condition,
 			const context& parent);
 
