@@ -602,6 +602,8 @@ print_usage() {
 	echo ""
 	echo "Environment variables:"
 	echo "  DRIVERS_REPO             specify different URL(s) where to look for prebuilt Falco drivers (comma separated)"
+	echo "                           The default value is https://download.falco.org/driver - the public distribution"
+	echo "                           point of downloadable falco kernel drivers"
 	echo "  DRIVER_NAME              specify a different name for the driver"
 	echo "  DRIVER_INSECURE_DOWNLOAD whether you want to allow insecure downloads or not"
 	echo ""
@@ -621,7 +623,7 @@ if ! hash sed > /dev/null 2>&1; then
 fi
 KERNEL_VERSION=$(uname -v | sed 's/#\([[:digit:]]\+\).*/\1/')
 
-DRIVERS_REPO=${DRIVERS_REPO:-"@DRIVERS_REPO@"}
+DRIVERS_REPO=${DRIVERS_REPO:-"https://download.falco.org/driver"}
 
 if [ -n "$DRIVER_INSECURE_DOWNLOAD" ]
 then
