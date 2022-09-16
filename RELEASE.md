@@ -41,9 +41,11 @@ Alternatively Falco binaries or plugins can be downloaded from the Falco Artifac
 ### Falco Drivers Artifacts Repo - Quick Links
 
 
-The Falco project publishes all drivers for each release for all popular kernel versions / distros and `x86_64` and `aarch64` architectures to the Falco project managed Artifacts repo. The Artifacts repo follows standard directory level conventions. The respective driver object file is prefixed by distro and named / versioned by kernel release - `$(uname -r)`. Pre-compiled drivers are released with a [best effort](https://github.com/falcosecurity/falco/blob/master/proposals/20200818-artifacts-storage.md#notice) notice. This is because gcc (`kmod`) and clang (`bpf`) compilers or for example the eBPF verifier are not perfect. More details around driver versioning and driver compatibility are provided in the [Falco Components Versioning](#falco-components-versioning) section.
+The Falco project publishes all drivers for each release for all popular kernel versions / distros and `x86_64` and `aarch64` architectures to the Falco project managed Artifacts repo. The Artifacts repo follows standard directory level conventions. The respective driver object file is prefixed by distro and named / versioned by kernel release - `$(uname -r)`. Pre-compiled drivers are released with a [best effort](https://github.com/falcosecurity/falco/blob/master/proposals/20200818-artifacts-storage.md#notice) notice. This is because gcc (`kmod`) and clang (`bpf`) compilers or for example the eBPF verifier are not perfect. More details around driver versioning and driver compatibility are provided in the [Falco Components Versioning](#falco-components-versioning) section. Short preview: If you use the standard Falco setup leveraging driver-loader, [driver-loader script](https://github.com/falcosecurity/falco/blob/master/scripts/falco-driver-loader) will fetch the kernel space artifact (object file) corresponding to the default `DRIVER_VERSION` Falco was shipped with.
 
 - [Falco Artifacts Repo Drivers Root](https://download.falco.org/?prefix=driver/)
+    - Option 1: Kernel module (`.ko` files) - all under same driver version directory
+    - Option 2: eBPF (`.o` files) - all under same driver version directory
 
 
 ### Timeline
@@ -191,6 +193,7 @@ This section provides more details around the versioning of all components that 
 - During development and release preparation, libs and driver reference commits are often bumped in Falco's cmake setup ([falcosecurity-libs cmake](https://github.com/falcosecurity/falco/blob/master/cmake/modules/falcosecurity-libs.cmake#L30) and [driver cmake](https://github.com/falcosecurity/falco/blob/master/cmake/modules/driver.cmake#L29)) in order to merge new Falco features. In practice they are mostly bumped at the same time referencing the same `libs` commit. However, for the official Falco build `FALCOSECURITY_LIBS_VERSION` flag that references the stable Libs version is used (read below).
 - Similarly, Falco plugins versions are bumped in Falco's cmake setup ([plugins cmake](https://github.com/falcosecurity/falco/blob/master/cmake/modules/plugins.cmake)) and those versions are the ones used for the Falco release.
 - At release time Plugin, Libs and Driver versions are compatible with Falco.
+- If you use the standard Falco setup leveraging driver-loader, [driver-loader script](https://github.com/falcosecurity/falco/blob/master/scripts/falco-driver-loader) will fetch the kernel space artifact (object file) corresponding to the default `DRIVER_VERSION` Falco was shipped with (read more below under Libs).
 
 
 ```
@@ -200,7 +203,7 @@ Plugin API:    x.y.z (sem-ver like)
 Driver:
   API version:    x.y.z (sem-ver)
   Schema version: x.y.z (sem-ver)
-  Default driver: x.y.z+driver (sem-ver like, describes compatibility range rather than exact version)
+  Default driver: x.y.z+driver (sem-ver like, indirectly encodes compatibility range in addition to default version Falco is shipped with)
 ```
 
 
