@@ -42,6 +42,7 @@ set(
   app_actions/start_webserver.cpp
   app_actions/validate_rules_files.cpp
   app_actions/create_requested_paths.cpp
+  app_actions/configure_interesting_sets.cpp
   configuration.cpp
   logger.cpp
   falco_outputs.cpp

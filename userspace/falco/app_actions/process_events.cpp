@@ -189,7 +189,9 @@ application::run_result application::do_inspect(
 			return run_result::fatal("Drop manager internal error");
 		}
 
-		if (!(simple_consumer_consider(ev->get_info_flags()) || m_options.all_events))
+		/* If we have not set the `-A` flag and the event is unused or old, interrupt the flow */
+		uint16_t evt_type = ev->get_type();
+		if(!m_options.all_events && (sinsp::is_unused_event(evt_type) || sinsp::is_old_version_event(evt_type)))
 		{
 			continue;
 		}

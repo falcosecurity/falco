@@ -249,6 +249,7 @@ private:
 	run_result print_version();
 	run_result process_events();
 	run_result select_event_sources();
+	void configure_interesting_sets();
 #ifndef MINIMAL_BUILD
 	run_result start_grpc_server();
 	run_result start_webserver();
@@ -269,7 +270,6 @@ private:
 	bool create_handler(int sig, void (*func)(int), run_result &ret);
 	void configure_output_format();
 	void check_for_ignored_events();
-	void print_all_ignored_events();
 	void format_plugin_info(std::shared_ptr<sinsp_plugin> p, std::ostream& os) const;
 	run_result open_offline_inspector();
 	run_result open_live_inspector(std::shared_ptr<sinsp> inspector, const std::string& source);
@@ -297,16 +297,6 @@ private:
 	inline bool is_gvisor_enabled() const
 	{
 		return !m_options.gvisor_config.empty();
-	}
-
-	bool simple_consumer_consider(int flags, bool old_version = true) const
-	{
-		int ignored_flagset = EF_SKIPPARSERESET | EF_UNUSED;
-		if (old_version)
-		{
-			ignored_flagset |= EF_OLD_VERSION;
-		}
-		return !(flags & ignored_flagset);
 	}
 
 	std::unique_ptr<state> m_state;
