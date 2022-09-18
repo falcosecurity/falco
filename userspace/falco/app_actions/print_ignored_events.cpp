@@ -18,55 +18,50 @@ limitations under the License.
 
 using namespace falco::app;
 
-void application::print_all_ignored_events()
-{
-	std::unique_ptr<sinsp> inspector(new sinsp());
-	sinsp_evttables* einfo = inspector->get_event_info_tables();
-	const struct ppm_event_info* etable = einfo->m_event_info;
-	const struct ppm_syscall_desc* stable = einfo->m_syscall_info_table;
-
-	std::set<string> ignored_event_names;
-	for(uint32_t j = 0; j < PPM_EVENT_MAX; j++)
-	{
-		if(!simple_consumer_consider(etable[j].flags))
-		{
-			std::string name = etable[j].name;
-			// Ignore event names NA*
-			if(name.find("NA") != 0)
-			{
-				ignored_event_names.insert(name);
-			}
-		}
-	}
-
-	auto simple_set = inspector->enforce_simple_ppm_sc_set();
-	for(uint32_t j = 0; j < PPM_SC_MAX; j++)
-	{
-		if(simple_set.find(j) == simple_set.end())
-		{
-			std::string name = stable[j].name;
-			// Ignore event names NA*
-			if(name.find("NA") != 0)
-			{
-				ignored_event_names.insert(name);
-			}
-		}
-	}
-
-	printf("Ignored Event(s):");
-	for(const auto& it : ignored_event_names)
-	{
-		printf(" %s", it.c_str());
-	}
-	printf("\n");
-}
-
+/// TODO: probably in the next future would be more meaningful to print the ignored syscalls rather than
+/// the ignored events, or maybe change the name of the events since right now they are almost the same of
+/// the syscalls.
 application::run_result application::print_ignored_events()
 {
-	if(m_options.print_ignored_events)
+	/* If the option is true we print the events ignored with Falco `-A`, otherwise
+	 * we return immediately.
+	 */
+	if(!m_options.print_ignored_events)
 	{
-		print_all_ignored_events();
-		return run_result::exit();
+		return run_result::ok();
 	}
-	return run_result::ok();
+
+	/* Fill the application syscall and tracepoint sets.
+	 * The execution will be interrupted after this call so
+	 * we don't care if we populate these sets even if the `-A` flag
+	 * is not set.
+	 */
+	configure_interesting_sets();
+
+	/* Search for all the ignored syscalls. */
+	std::unique_ptr<sinsp> inspector(new sinsp());
+	std::unordered_set<uint32_t> all_ppm_sc = inspector->get_all_ppm_sc();
+	std::unordered_set<uint32_t> ignored_ppm_sc;
+
+	for(const auto& it : all_ppm_sc)
+	{
+		/* If the syscall is not in this set we ignore it. */
+		if(m_state->ppm_sc_of_interest.find(it) == m_state->ppm_sc_of_interest.end())
+		{
+			ignored_ppm_sc.insert(it);
+		}
+	}
+
+	/* Obtain the ignored events names from the ignored syscalls. */
+	auto ignored_events = inspector->get_event_set_from_ppm_sc_set(ignored_ppm_sc);
+	auto event_names = inspector->get_events_names(ignored_events);
+
+	std::cout << "Ignored Event(s):" << std::endl;
+	for(const auto& it : event_names)
+	{
+		std::cout << "- " << it.c_str() << std::endl;
+	}
+	std::cout << std::endl;
+
+	return run_result::exit();
 }

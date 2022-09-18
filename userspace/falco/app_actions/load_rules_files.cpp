@@ -21,52 +21,58 @@ using namespace falco::app;
 
 void application::check_for_ignored_events()
 {
-	std::set<uint16_t> evttypes;
-	std::unique_ptr<sinsp> inspector(new sinsp());
-	sinsp_evttables* einfo = inspector->get_event_info_tables();
-	const struct ppm_event_info* etable = einfo->m_event_info;
-
+	/* Get the events from the rules. */
+	std::set<uint16_t> rule_events;
 	std::string source = falco_common::syscall_source;
-	m_state->engine->evttypes_for_ruleset(source, evttypes);
+	m_state->engine->evttypes_for_ruleset(source, rule_events);
 
-	// Save event names so we don't warn for both the enter and exit event.
-	std::set<std::string> warn_event_names;
+	/* Get the events we consider interesting from the application state `ppm_sc` codes. */
+	std::unique_ptr<sinsp> inspector(new sinsp());
+	auto interesting_events = inspector->get_event_set_from_ppm_sc_set(m_state->ppm_sc_of_interest);
+	std::unordered_set<uint32_t> ignored_events;
 
-	for(auto evtnum : evttypes)
+	for(const auto& it : rule_events)
 	{
-		if(evtnum == PPME_GENERIC_E || evtnum == PPME_GENERIC_X)
+		/* If we have the old version of the event we will have also the recent one
+		 * so we can avoid analyzing the presence of old events.
+		 */
+		if(sinsp::is_old_version_event(it))
 		{
 			continue;
 		}
 
-		if(!simple_consumer_consider(etable[evtnum].flags, false))
+		/* Here we are interested only in syscall events the internal events are not
+		 * altered without the `-A` flag.
+		 *
+		 * TODO: We could consider also the tracepoint events here but right now we don't have
+		 * the support from the libraries.
+		 */
+		if(!sinsp::is_syscall_event(it))
 		{
-			std::string name = etable[evtnum].name;
-			if(warn_event_names.find(name) == warn_event_names.end())
-			{
-				warn_event_names.insert(name);
-			}
+			continue;
+		}
+
+		/* If the event is not in this set it is not considered by Falco. */
+		if(interesting_events.find(it) == interesting_events.end())
+		{
+			ignored_events.insert(it);
 		}
 	}
 
-	// Print a single warning with the list of ignored events
-	if (!warn_event_names.empty())
+	if(ignored_events.empty())
 	{
-		std::string skipped_events;
-		bool first = true;
-		for (const auto& evtname : warn_event_names)
-		{
-			if (first)
-			{
-				skipped_events += evtname;
-				first = false;
-			} else
-			{
-				skipped_events += "," + evtname;
-			}
-		}
-		fprintf(stderr,"Rules match ignored syscall: warning (ignored-evttype):\n         loaded rules match the following events: %s;\n         but these events are not returned unless running falco with -A\n", skipped_events.c_str());
+		return;
 	}
+
+	/* Get the names of the ignored events and print them. */
+	auto event_names = inspector->get_events_names(ignored_events);
+	std::cerr << std::endl << "Rules match ignored syscall: warning (ignored-evttype):" << std::endl;
+	std::cerr << "Loaded rules match the following events:" << std::endl;
+	for(const auto& it : event_names)
+	{
+		std::cerr << "\t- " << it.c_str() << std::endl;
+	}
+	std::cerr << "But these events are not returned unless running falco with -A" << std::endl << std::endl;
 }
 
 application::run_result application::load_rules_files()
@@ -173,9 +179,10 @@ application::run_result application::load_rules_files()
 
 	if(!m_options.all_events)
 	{
-		// For syscalls, see if any event types used by the
-		// loaded rules are ones with the EF_DROP_SIMPLE_CONS
-		// label.
+		/* Here we have already initialized the application state with the interesting syscalls,
+		 * so we have to check if any event types used by the loaded rules are not considered by 
+		 * Falco interesting set.
+		 */
 		check_for_ignored_events();
 	}
 

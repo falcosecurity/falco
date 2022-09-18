@@ -48,11 +48,7 @@ void application::init_syscall_inspector(
 
 	if(!opts.all_events)
 	{
-		m_state->ppm_sc_of_interest = inspector->enforce_simple_ppm_sc_set();
-		m_state->tp_of_interest = inspector->enforce_sinsp_state_tracepoints();
-		// We are not interested in sched_switch tracepoint,
-		// highly noisy and not useful for state/events enrichment.
-		m_state->tp_of_interest.erase(SCHED_SWITCH);
+		configure_interesting_sets();
 	}
 
 	inspector->set_hostname_and_port_resolution_mode(false);

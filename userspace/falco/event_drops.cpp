@@ -117,7 +117,7 @@ bool syscall_evt_drop_mgr::process_event(std::shared_ptr<sinsp> inspector, sinsp
 				{
 					m_num_actions++;
 
-					return perform_actions(evt->get_ts(), delta, inspector->is_bpf_enabled());
+					return perform_actions(evt->get_ts(), delta, inspector->check_current_engine(BPF_ENGINE));
 				}
 				else
 				{

@@ -46,29 +46,30 @@ application::run_result application::open_live_inspector(
 {
 	try
 	{
-		if (source != falco_common::syscall_source)
+		if (source != falco_common::syscall_source) /* Plugin engine */
 		{
 			for (const auto& p: inspector->get_plugin_manager()->plugins())
 			{
 				if (p->caps() & CAP_SOURCING && p->event_source() == source)
 				{
 					auto cfg = m_state->plugin_configs.at(p->name());
+					falco_logger::log(LOG_INFO, "Falco uses the '" + cfg->m_name + "' plugin\n");
 					inspector->open_plugin(cfg->m_name, cfg->m_open_params);
 					return run_result::ok();
 				}
 			}
 			return run_result::fatal("Can't open inspector for plugin event source: " + source);
 		}
-
-		if (m_options.userspace)
+		else if (m_options.userspace) /* udig engine. */
 		{
 			// open_udig() is the underlying method used in the capture code to parse userspace events from the kernel.
 			//
 			// Falco uses a ptrace(2) based userspace implementation.
 			// Regardless of the implementation, the underlying method remains the same.
+			falco_logger::log(LOG_INFO, "Starting capture with udig\n");
 			inspector->open_udig();
 		}
-		else if(!m_options.gvisor_config.empty())
+		else if(!m_options.gvisor_config.empty()) /* gvisor engine. */
 		{
 			falco_logger::log(LOG_INFO, "Enabled event collection from gVisor. Configuration path: " + m_options.gvisor_config);
 			inspector->open_gvisor(m_options.gvisor_config, m_options.gvisor_root);
@@ -88,19 +89,20 @@ application::run_result application::open_live_inspector(
 				snprintf(full_path, PATH_MAX, "%s/%s", home, FALCO_PROBE_BPF_FILEPATH);
 				bpf_probe_path = full_path;
 			}
-			inspector->open_bpf(bpf_probe_path, DEFAULT_DRIVER_BUFFER_BYTES_DIM, m_state->ppm_sc_of_interest, m_state->tp_of_interest);
 			falco_logger::log(LOG_INFO, "Starting capture with BPF probe. BPF probe path: " + std::string(bpf_probe_path));
+			inspector->open_bpf(bpf_probe_path, DEFAULT_DRIVER_BUFFER_BYTES_DIM, m_state->ppm_sc_of_interest, m_state->tp_of_interest);
 		}
 		else /* Kernel module (default). */
 		{
 			try
 			{
-				inspector->open_kmod(DEFAULT_DRIVER_BUFFER_BYTES_DIM, m_state->ppm_sc_of_interest, m_state->tp_of_interest);
 				falco_logger::log(LOG_INFO, "Starting capture with Kernel module.");
+				inspector->open_kmod(DEFAULT_DRIVER_BUFFER_BYTES_DIM, m_state->ppm_sc_of_interest, m_state->tp_of_interest);
 			}
 			catch(sinsp_exception &e)
 			{
 				// Try to insert the Falco kernel module
+				falco_logger::log(LOG_INFO, "Trying to inject the Kernel module and starting the capture again...");
 				if(system("modprobe " DRIVER_NAME " > /dev/null 2> /dev/null"))
 				{
 					falco_logger::log(LOG_ERR, "Unable to load the driver.\n");
