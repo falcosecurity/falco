@@ -131,6 +131,7 @@ bool application::run(std::string &errstr, bool &restart)
 	std::list<std::function<run_result()>> run_steps = {
 		std::bind(&application::print_help, this),
 		std::bind(&application::print_version, this),
+		std::bind(&application::print_page_size, this),
 		std::bind(&application::print_generated_gvisor_config, this),
 		std::bind(&application::print_ignored_events, this),
 		std::bind(&application::print_syscall_events, this),
@@ -151,6 +152,7 @@ bool application::run(std::string &errstr, bool &restart)
 		std::bind(&application::daemonize, this),
 		std::bind(&application::init_outputs, this),
 		std::bind(&application::init_clients, this),
+		std::bind(&application::configure_syscall_buffer_size, this),
 #ifndef MINIMAL_BUILD
 		std::bind(&application::start_grpc_server, this),
 		std::bind(&application::start_webserver, this),
