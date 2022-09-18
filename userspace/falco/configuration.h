@@ -269,6 +269,9 @@ public:
 	uint32_t m_metadata_download_chunk_wait_us;
 	uint32_t m_metadata_download_watch_freq_sec;
 
+	// Index corresponding to the syscall buffer dimension.
+	uint64_t m_syscall_buffer_index;
+
 	std::vector<plugin_config> m_plugins;
 
 private:
