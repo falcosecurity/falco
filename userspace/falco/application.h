@@ -116,6 +116,9 @@ private:
 		// Set of tracepoints we want the driver to capture
 		std::unordered_set<uint32_t> tp_of_interest;
 
+		// Dimension of the syscall buffer in bytes.
+		uint64_t syscall_buffer_bytes_size;
+
 #ifndef MINIMAL_BUILD
 		falco::grpc::server grpc_server;
 		std::thread grpc_server_thread;
@@ -247,9 +250,11 @@ private:
 	run_result print_support();
 	run_result print_syscall_events();
 	run_result print_version();
+	run_result print_page_size();
 	run_result process_events();
 	run_result select_event_sources();
 	void configure_interesting_sets();
+	application::run_result configure_syscall_buffer_size();
 #ifndef MINIMAL_BUILD
 	run_result start_grpc_server();
 	run_result start_webserver();
@@ -289,6 +294,7 @@ private:
 		std::string source, // an empty source represents capture mode
 		run_result* res) noexcept;
 
+	/* Returns true if we are in capture mode. */
 	inline bool is_capture_mode() const 
 	{
 		return !m_options.trace_filename.empty();

@@ -78,6 +78,7 @@ public:
 	std::vector<std::string> validate_rules_filenames;
 	bool verbose;
 	bool print_version_info;
+	bool print_page_size;
 
 	bool parse(int argc, char **argv, std::string &errstr);
 

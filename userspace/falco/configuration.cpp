@@ -285,6 +285,11 @@ void falco_configuration::init(string conf_filename, const vector<string> &cmdli
 		throw logic_error("Error reading config file(" + m_config_file + "): metadata download watch frequency seconds must be an unsigned integer > 0");
 	}
 
+	/* We put this value in the configuration file because in this way we can change the dimension at every reload.
+	 * The default value is `4` -> 8 MB.
+	 */
+	m_syscall_buffer_index = m_config->get_scalar<uint64_t>("syscall_buffer_index", 4);
+
 	std::set<std::string> load_plugins;
 
 	bool load_plugins_node_defined = m_config->is_defined("load_plugins");

@@ -203,7 +203,9 @@ void cmdline_options::define()
 		("u,userspace",                   "Parse events from userspace. To be used in conjunction with the ptrace(2) based driver (pdig)", cxxopts::value(userspace)->default_value("false"))
 		("V,validate",                    "Read the contents of the specified rules(s) file and exit. Can be specified multiple times to validate multiple files.", cxxopts::value(validate_rules_filenames), "<rules_file>")
 		("v",                             "Verbose output.", cxxopts::value(verbose)->default_value("false"))
-		("version",                       "Print version number.", cxxopts::value(print_version_info)->default_value("false"));
+		("version",                       "Print version number.", cxxopts::value(print_version_info)->default_value("false"))
+		("page-size",                     "Print the system page size used to choose the syscall buffer size.", cxxopts::value(print_page_size)->default_value("false"));
+
 
 	m_cmdline_opts.set_width(140);
 }

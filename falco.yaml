@@ -169,6 +169,61 @@ syscall_event_drops:
 syscall_event_timeouts:
   max_consecutives: 1000
 
+# --- [Description]
+#
+# This is an index that controls the dimension of the syscall buffers.
+# The syscall buffer is the shared space between Falco and its drivers where all the syscall events
+# are stored.
+# Falco uses a syscall buffer for every online CPU, and all these buffers share the same dimension.
+# So this parameter allows you to control the size of all the buffers!
+#
+# --- [Usage]
+#
+# You can choose between different indexes: from `1` to `10` (`0` is reserved for future uses).
+# Every index corresponds to a dimension in bytes:
+#
+# [(*), 1 MB, 2 MB, 4 MB, 8 MB, 16 MB, 32 MB, 64 MB, 128 MB, 256 MB, 512 MB]
+#   ^    ^     ^     ^     ^     ^      ^      ^       ^       ^       ^
+#   |    |     |     |     |     |      |      |       |       |       |
+#   0    1     2     3     4     5      6      7       8       9       10
+#
+# As you can see the `0` index is reserved, while the index `1` corresponds to
+# `1 MB` and so on.
+#
+# These dimensions in bytes derive from the fact that the buffer size must be:
+# (1) a power of 2.
+# (2) a multiple of your system_page_dimension.
+# (3) greater than `2 * (system_page_dimension)`.
+#
+# According to these constraints is possible that sometimes you cannot use all the indexes, let's consider an
+# example to better understand it:
+# If you have a `page_size` of 1 MB the first available buffer size is 4 MB because 2 MB is exactly
+# `2 * (system_page_size)` -> `2 * 1 MB`, but this is not enough we need more than `2 * (system_page_size)`!
+# So from this example is clear that if you have a page size of 1 MB the first index that you can use is `3`.
+#
+# Please note: this is a very extreme case just to let you understand the mechanism, usually the page size is something
+# like 4 KB so you have no problem at all and you can use all the indexes (from `1` to `10`).
+#
+# To check your system page size use the Falco `--page-size` command line option. The output on a system with a page
+# size of 4096 Bytes (4 KB) should be the following:
+#
+# "Your system page size is: 4096 bytes."
+#
+# --- [Suggestions]
+#
+# Before the introduction of this param the buffer size was fixed to 8 MB (so index `4`, as you can see 
+# in the default value below).
+# Unless you are sure about what you are doing please keep this value as it is, Falco should work as
+# well as it always has with this value!
+# You can try to increase the buffer size when you face a lot of syscalls drops, but remember that this has
+# a price, larger buffers could slow down the entire machine. Moreover, consider that the buffer size is mapped
+# twice in the process' virtual memory so a buffer of 8 MB will result in a 16 MB area in the process virtual memory.
+# On the other side you can try to reduce the buffer size to speed up the system, but this could
+# increase the number of syscall drops!
+# So just to conclude, change this index only if you have the necessity otherwise leave it as it is!
+
+syscall_buffer_index: 4
+
 # Falco continuously monitors outputs performance. When an output channel does not allow
 # to deliver an alert within a given deadline, an error is reported indicating
 # which output is blocking notifications.
