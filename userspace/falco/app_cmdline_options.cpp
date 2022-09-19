@@ -155,7 +155,7 @@ void cmdline_options::define()
 #else
 		("c",                             "Configuration file. If not specified tries " FALCO_SOURCE_CONF_FILE ", " FALCO_INSTALL_CONF_FILE ".", cxxopts::value(conf_filename), "<path>")
 #endif
-		("A",                             "Monitor all events, including those with EF_DROP_SIMPLE_CONS flag.", cxxopts::value(all_events)->default_value("false"))
+		("A",                             "Monitor all events, including not interesting ones. Please use the `--i` command line option to see the ignored events. This option has no effect if the capture is not live", cxxopts::value(all_events)->default_value("false"))
 		("b,print-base64",                "Print data buffers in base64. This is useful for encoding binary data that needs to be used over media designed to consume this format.")
 		("cri",                           "Path to CRI socket for container metadata. Use the specified socket to fetch data from a CRI-compatible runtime. If not specified, uses libs default. It can be passed multiple times to specify socket to be tried until a successful one is found.", cxxopts::value(cri_socket_paths), "<path>")
 		("d,daemon",                      "Run as a daemon.", cxxopts::value(daemon)->default_value("false"))

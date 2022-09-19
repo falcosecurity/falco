@@ -1098,7 +1098,7 @@ trace_files: !mux
       - rules/catchall_order.yaml
     detect_counts:
       - open_dev_null: 1
-        dev_null: 0
+        dev_null: 6
     trace_file: trace_files/cat_write.scap
 
   validate_skip_unknown_noevt:

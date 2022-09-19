@@ -177,7 +177,8 @@ application::run_result application::load_rules_files()
 		m_state->engine->enable_rule_by_tag(m_options.enabled_rule_tags, true);
 	}
 
-	if(!m_options.all_events)
+	/* Reading a scap file we have no concepts of ignored events we read all we need. */
+	if(!m_options.all_events && !is_capture_mode())
 	{
 		/* Here we have already initialized the application state with the interesting syscalls,
 		 * so we have to check if any event types used by the loaded rules are not considered by 
