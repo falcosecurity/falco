@@ -123,8 +123,10 @@ traces: !mux
   # falco-event-generator.scap so the rule is still being tested.
   run-shell-untrusted:
     trace_file: traces-positive/run-shell-untrusted.scap
-    detect: False
+    detect: True
     detect_level: DEBUG
+    detect_counts:
+      - "Run shell untrusted": 1
 
   system-binaries-network-activity:
     trace_file: traces-positive/system-binaries-network-activity.scap
