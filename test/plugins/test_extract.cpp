@@ -19,7 +19,7 @@ limitations under the License.
 #include <string.h>
 #include <plugin_info.h>
 
-static const char *pl_required_api_version = "1.0.0";
+static const char *pl_required_api_version = PLUGIN_API_VERSION_STR;
 static const char *pl_name_base            = "test_extract";
 static char pl_name[1024];
 static const char *pl_desc                 = "Test Plugin For Regression Tests";
