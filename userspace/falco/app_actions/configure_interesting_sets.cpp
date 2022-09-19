@@ -21,7 +21,7 @@ using namespace falco::app;
 void application::configure_interesting_sets()
 {
 	/// TODO: in the next future we need to change the interface of `enforce_simple_ppm_sc_set`
-	/// and `enforce_sinsp_state_tracepoints` APIs, they shouldn't require an inspector to be called!
+	/// and `enforce_sinsp_state_tp` APIs, they shouldn't require an inspector to be called!
 	std::unique_ptr<sinsp> inspector(new sinsp());
 
 	/* Please note: here we fill these 2 sets because we are interested in only some features, if we leave
@@ -38,6 +38,6 @@ void application::configure_interesting_sets()
 	 * the `sched_switch` tracepoint since it is highly noisy and not so useful
 	 * for our state/events enrichment.
 	 */
-	m_state->tp_of_interest = inspector->enforce_sinsp_state_tracepoints();
+	m_state->tp_of_interest = inspector->enforce_sinsp_state_tp();
 	m_state->tp_of_interest.erase(SCHED_SWITCH);
 }
