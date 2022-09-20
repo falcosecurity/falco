@@ -21,6 +21,7 @@ using namespace falco::app;
 /* These indexes could change over the Falco releases. */
 #define MIN_INDEX 1
 #define MAX_INDEX 10
+#define DEFAULT_BYTE_SIZE 1 << 23
 
 application::run_result application::configure_syscall_buffer_size()
 {
@@ -39,7 +40,7 @@ application::run_result application::configure_syscall_buffer_size()
 	}
 
 	/* Sizes from `1 MB` to `512 MB`. The index `0` is reserved, users cannot use it! */
-	std::vector<uint32_t> vect{0, 1 << 20, 1 << 21, 1 << 22, 1 << 23, 1 << 24, 1 << 25, 1 << 26, 1 << 27, 1 << 28, 1 << 29};
+	std::vector<uint32_t> vect{0, 1 << 20, 1 << 21, 1 << 22, DEFAULT_BYTE_SIZE, 1 << 24, 1 << 25, 1 << 26, 1 << 27, 1 << 28, 1 << 29};
 
 	uint64_t chosen_size = vect[index];
 
@@ -47,7 +48,8 @@ application::run_result application::configure_syscall_buffer_size()
 	long page_size = getpagesize();
 	if(page_size <= 0)
 	{
-		return run_result::fatal("\nUnable to get the system page size through 'getpagesize()'\n");
+		falco_logger::log(LOG_WARNING, "Unable to get the system page size through 'getpagesize()'. Try to use the default syscall buffer dimension: " + std::to_string(DEFAULT_BYTE_SIZE) + " bytes.\n");
+		return run_result::ok();
 	}
 
 	/* Check if the chosen size is a multiple of the page size. */
