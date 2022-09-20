@@ -204,7 +204,7 @@ void cmdline_options::define()
 		("V,validate",                    "Read the contents of the specified rules(s) file and exit. Can be specified multiple times to validate multiple files.", cxxopts::value(validate_rules_filenames), "<rules_file>")
 		("v",                             "Verbose output.", cxxopts::value(verbose)->default_value("false"))
 		("version",                       "Print version number.", cxxopts::value(print_version_info)->default_value("false"))
-		("page-size",                     "Print the system page size used to choose the syscall buffer size.", cxxopts::value(print_page_size)->default_value("false"));
+		("page-size",                     "Print the system page size (may help you to choose the right syscall buffer size).", cxxopts::value(print_page_size)->default_value("false"));
 
 
 	m_cmdline_opts.set_width(140);
