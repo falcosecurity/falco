@@ -288,7 +288,7 @@ void falco_configuration::init(string conf_filename, const vector<string> &cmdli
 	/* We put this value in the configuration file because in this way we can change the dimension at every reload.
 	 * The default value is `4` -> 8 MB.
 	 */
-	m_syscall_buffer_index = m_config->get_scalar<uint64_t>("syscall_buffer_index", 4);
+	m_syscall_buf_size_preset = m_config->get_scalar<uint64_t>("syscall_buf_size_preset", 4);
 
 	std::set<std::string> load_plugins;
 

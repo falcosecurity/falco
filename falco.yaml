@@ -211,18 +211,18 @@ syscall_event_timeouts:
 #
 # --- [Suggestions]
 #
-# Before the introduction of this param the buffer size was fixed to 8 MB (so index `4`, as you can see 
+# Before the introduction of this param the buffer size was fixed to 8 MB (so index `4`, as you can see
 # in the default value below).
-# Unless you are sure about what you are doing please keep this value as it is, Falco should work as
-# well as it always has with this value!
-# You can try to increase the buffer size when you face a lot of syscalls drops, but remember that this has
-# a price, larger buffers could slow down the entire machine. Moreover, consider that the buffer size is mapped
-# twice in the process' virtual memory so a buffer of 8 MB will result in a 16 MB area in the process virtual memory.
+# You can increase the buffer size when you face syscall drops. A size of 16 MB (so index `5`) can reduce
+# syscall drops in production-heavy systems without noticeable impact. Very large buffers however could
+# slow down the entire machine.
 # On the other side you can try to reduce the buffer size to speed up the system, but this could
 # increase the number of syscall drops!
-# So just to conclude, change this index only if you have the necessity otherwise leave it as it is!
+# As a final remark consider that the buffer size is mapped twice in the process' virtual memory so a buffer of 8 MB
+# will result in a 16 MB area in the process virtual memory.
+# Please pay attention when you use this parameter and change it only if the default size doesn't fit your use case.
 
-syscall_buffer_index: 4
+syscall_buf_size_preset: 4
 
 # Falco continuously monitors outputs performance. When an output channel does not allow
 # to deliver an alert within a given deadline, an error is reported indicating

@@ -33,7 +33,7 @@ application::run_result application::configure_syscall_buffer_size()
 		return run_result::ok();
 	}
 
-	uint16_t index = m_state->config->m_syscall_buffer_index;
+	uint16_t index = m_state->config->m_syscall_buf_size_preset;
 	if(index < MIN_INDEX || index > MAX_INDEX)
 	{
 		return run_result::fatal("The index must be between '" + std::to_string(MIN_INDEX) + "' and '" + std::to_string(MAX_INDEX) + "'\n");
