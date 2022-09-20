@@ -335,7 +335,12 @@ application::run_result application::process_events()
 			try
 			{
 				falco_logger::log(LOG_DEBUG, "Opening event source '" + source + "'\n");
-				open_live_inspector(src_info->inspector, source);
+				res = open_live_inspector(src_info->inspector, source);
+				if (!res.success)
+				{
+					return res;
+				}
+
 				if (m_state->enabled_sources.size() == 1)
 				{
 					// optimization: with only one source we don't spawn additional threads
