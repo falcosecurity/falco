@@ -96,8 +96,7 @@ RUN rm -rf /usr/bin/clang \
 # Some base images have an empty /lib/modules by default
 # If it's not empty, docker build will fail instead of
 # silently overwriting the existing directory
-RUN rm -df /lib/modules \
-	&& ln -s $HOST_ROOT/lib/modules /lib/modules
+RUN rm -df /lib/modules
 
 ADD falco-${FALCO_VERSION}-*.deb /
 RUN dpkg -i /falco-${FALCO_VERSION}-$(uname -m).deb

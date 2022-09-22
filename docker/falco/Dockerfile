@@ -103,8 +103,7 @@ RUN sed -e 's/time_format_iso_8601: false/time_format_iso_8601: true/' < /etc/fa
 # Some base images have an empty /lib/modules by default
 # If it's not empty, docker build will fail instead of
 # silently overwriting the existing directory
-RUN rm -df /lib/modules \
-	&& ln -s $HOST_ROOT/lib/modules /lib/modules
+RUN rm -df /lib/modules
 
 # debian:stable head contains binutils 2.31, which generates
 # binaries that are incompatible with kernels < 4.16. So manually

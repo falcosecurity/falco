@@ -30,4 +30,19 @@ if [[ -z "${SKIP_DRIVER_LOADER}" ]]; then
     /usr/bin/falco-driver-loader
 fi
 
+if [ -n "$HOST_ROOT" ]; then
+    echo "* Setting up /lib/modules links from host"
+    ln -s /lib/modules $HOST_ROOT/lib/modules
+    
+    # If HOST_ROOT is set, but HOST_ROOT/proc does not exist
+    # link real /proc to HOST_ROOT/proc, so that Falco can run gracefully.
+    # This is mostly useful when dealing with an hypervisor, like aws Fargate,
+    # where the container running Falco does not need to bind-mount the host proc volume,
+    # and its /proc already sees all task processes because it shares the same namespace.
+    if [ ! -d "$HOST_ROOT/proc" ]; then
+        echo "* Setting up /proc links from host"
+        ln -s "/proc" "$HOST_ROOT/proc"
+    fi
+fi
+
 exec "$@"
