@@ -114,8 +114,7 @@ get_target_id() {
 		# Older CentOS distros
 		OS_ID=centos
 	else
-		>&2 echo "Detected an unsupported target system, please get in touch with the Falco community"
-		exit 1
+		return 1
 	fi
 
 	# Overwrite the OS_ID if /etc/VERSION file is present.
@@ -164,6 +163,7 @@ get_target_id() {
 		TARGET_ID=$(echo "${OS_ID}" | tr '[:upper:]' '[:lower:]')
 		;;
 	esac
+	return 0
 }
 
 flatcar_relocate_tools() {
@@ -253,8 +253,6 @@ load_kernel_module_compile() {
 }
 
 load_kernel_module_download() {
-	get_target_id
-
 	local FALCO_KERNEL_MODULE_FILENAME="${DRIVER_NAME}_${TARGET_ID}_${KERNEL_RELEASE}_${KERNEL_VERSION}.ko"
 	local URL=$(echo "${1}/${DRIVER_VERSION}/${ARCH}/${FALCO_KERNEL_MODULE_FILENAME}" | sed s/+/%2B/g)
 
@@ -373,8 +371,6 @@ load_kernel_module() {
 	clean_kernel_module
 
 	echo "* Looking for a ${DRIVER_NAME} module locally (kernel ${KERNEL_RELEASE})"
-
-	get_target_id
 
 	local FALCO_KERNEL_MODULE_FILENAME="${DRIVER_NAME}_${TARGET_ID}_${KERNEL_RELEASE}_${KERNEL_VERSION}.ko"
 	echo "* Filename '${FALCO_KERNEL_MODULE_FILENAME}' is composed of:"
@@ -544,8 +540,6 @@ load_bpf_probe() {
 		mount -t debugfs nodev /sys/kernel/debug
 	fi
 
-	get_target_id
-
 	BPF_PROBE_FILENAME="${DRIVER_NAME}_${TARGET_ID}_${KERNEL_RELEASE}_${KERNEL_VERSION}.o"
 	echo "* Filename '${BPF_PROBE_FILENAME}' is composed of:"
 	print_filename_components
@@ -638,6 +632,8 @@ DRIVER_VERSION=${DRIVER_VERSION:-"@DRIVER_VERSION@"}
 DRIVER_NAME=${DRIVER_NAME:-"@DRIVER_NAME@"}
 FALCO_VERSION="@FALCO_VERSION@"
 
+TARGET_ID="placeholder" # when no target id can be fetched, we try to build the driver from source anyway, using a placeholder name
+
 DRIVER="module"
 if [ -v FALCO_BPF_PROBE ]; then
 	DRIVER="bpf"
@@ -709,6 +705,13 @@ if [ -z "$source_only" ]; then
 	if [ "$(id -u)" != 0 ]; then
 		>&2 echo "This program must be run as root (or with sudo)"
 		exit 1
+	fi
+
+	get_target_id
+	res=$?
+	if [ $res != 0 ]; then
+		>&2 echo "Detected an unsupported target system, please get in touch with the Falco community. Trying to compile anyway."
+		ENABLE_DOWNLOAD=
 	fi
 
 	if [ -n "$clean" ]; then
