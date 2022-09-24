@@ -270,7 +270,7 @@ public:
 	uint32_t m_metadata_download_watch_freq_sec;
 
 	// Index corresponding to the syscall buffer dimension.
-	uint64_t m_syscall_buf_size_preset;
+	uint16_t m_syscall_buf_size_preset;
 
 	std::vector<plugin_config> m_plugins;
 
