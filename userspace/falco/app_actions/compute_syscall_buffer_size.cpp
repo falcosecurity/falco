@@ -48,6 +48,7 @@ application::run_result application::configure_syscall_buffer_size()
 	long page_size = getpagesize();
 	if(page_size <= 0)
 	{
+		m_state->syscall_buffer_bytes_size = DEFAULT_BYTE_SIZE;
 		falco_logger::log(LOG_WARNING, "Unable to get the system page size through 'getpagesize()'. Try to use the default syscall buffer dimension: " + std::to_string(DEFAULT_BYTE_SIZE) + " bytes.\n");
 		return run_result::ok();
 	}
