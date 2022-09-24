@@ -75,6 +75,11 @@ application::run_result application::open_live_inspector(
 			falco_logger::log(LOG_INFO, "Enabled event collection from gVisor. Configuration path: " + m_options.gvisor_config);
 			inspector->open_gvisor(m_options.gvisor_config, m_options.gvisor_root);
 		}
+		else if(m_options.modern_bpf) /* modern BPF engine. */
+		{
+			falco_logger::log(LOG_INFO, "Starting capture with modern BPF probe.");
+			inspector->open_modern_bpf(DEFAULT_DRIVER_BUFFER_BYTES_DIM, m_state->ppm_sc_of_interest, m_state->tp_of_interest);
+		}
 		else if(getenv(FALCO_BPF_ENV_VARIABLE) != NULL) /* BPF engine. */
 		{
 			const char *bpf_probe_path = std::getenv(FALCO_BPF_ENV_VARIABLE);

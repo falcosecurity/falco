@@ -27,6 +27,14 @@ if(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" AND CMAKE_SYSTEM_NAME MATCHES "Linux
   endif()
 endif()
 
+# Modern BPF is not supported on not Linux systems and in MINIMAL_BUILD
+if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT MINIMAL_BUILD)
+  option(BUILD_FALCO_MODERN_BPF "Build modern BPF support for Falco" OFF)
+  if(BUILD_FALCO_MODERN_BPF)
+    add_definitions(-DHAS_MODERN_BPF)
+  endif()
+endif()
+
 # We shouldn't need to set this, see https://gitlab.kitware.com/cmake/cmake/-/issues/16419
 option(EP_UPDATE_DISCONNECTED "ExternalProject update disconnected" OFF)
 if (${EP_UPDATE_DISCONNECTED})
