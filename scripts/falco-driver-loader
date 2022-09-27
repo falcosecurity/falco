@@ -710,8 +710,13 @@ if [ -z "$source_only" ]; then
 	get_target_id
 	res=$?
 	if [ $res != 0 ]; then
-		>&2 echo "Detected an unsupported target system, please get in touch with the Falco community. Trying to compile anyway."
-		ENABLE_DOWNLOAD=
+		if [ -n "$ENABLE_COMPILE" ]; then
+			ENABLE_DOWNLOAD=
+			>&2 echo "Detected an unsupported target system, please get in touch with the Falco community. Trying to compile anyway."
+		else
+			>&2 echo "Detected an unsupported target system, please get in touch with the Falco community."
+			exit 1
+		fi
 	fi
 
 	if [ -n "$clean" ]; then
