@@ -31,6 +31,7 @@ cmdline_options::cmdline_options()
 	: event_buffer_format(sinsp_evt::PF_NORMAL),
 	  gvisor_config(""),	
 	  list_plugins(false),
+	  modern_bpf(false),
 	  m_cmdline_opts("falco", "Falco - Cloud Native Runtime Security")
 {
 	define();
