@@ -3307,6 +3307,21 @@
   priority: WARNING
   tags: [mitre_credential_access, process, aws]
 
+- rule: Execution from /dev/shm
+  desc: This rule detects file execution from the /dev/shm directory, a common tactic for threat actors to stash their readable+writable+(sometimes)executable files.
+  condition: >
+    spawned_process and 
+    (proc.exe startswith "/dev/shm/" or 
+    (proc.cwd startswith "/dev/shm/" and proc.exe startswith "./" ) or 
+    (shell_procs and proc.args startswith "-c /dev/shm") or 
+    (shell_procs and proc.args startswith "-i /dev/shm") or 
+    (shell_procs and proc.args startswith "/dev/shm") or 
+    (proc.cwd startswith "/dev/shm/" and proc.args startswith "./" )) and 
+    not container.image.repository in (falco_privileged_images, trusted_images)
+  output: "File execution detected from /dev/shm (proc.cmdline=%proc.cmdline connection=%fd.name user.name=%user.name user.loginuid=%user.loginuid container.id=%container.id evt.type=%evt.type evt.res=%evt.res proc.pid=%proc.pid proc.cwd=%proc.cwd proc.ppid=%proc.ppid proc.pcmdline=%proc.pcmdline proc.sid=%proc.sid proc.exepath=%proc.exepath user.uid=%user.uid user.loginname=%user.loginname group.gid=%group.gid group.name=%group.name container.name=%container.name image=%container.image.repository)"
+  priority: WARNING
+  tags: [mitre_execution]
+
 # Application rules have moved to application_rules.yaml. Please look
 # there if you want to enable them by adding to
 # falco_rules.local.yaml.
