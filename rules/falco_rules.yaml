@@ -3253,3 +3253,10 @@
   output: Detected ptrace PTRACE_ATTACH attempt (proc.cmdline=%proc.cmdline container=%container.info evt.type=%evt.type evt.arg.request=%evt.arg.request proc.pid=%proc.pid proc.cwd=%proc.cwd proc.ppid=%proc.ppid proc.pcmdline=%proc.pcmdline proc.sid=%proc.sid proc.exepath=%proc.exepath user.uid=%user.uid user.loginuid=%user.loginuid user.loginname=%user.loginname user.name=%user.name group.gid=%group.gid group.name=%group.name container.id=%container.id container.name=%container.name image=%container.image.repository)
   priority: WARNING
   tags: [process]
+
+- rule: PTRACE anti-debug attempt
+  desc: "Detect usage of the PTRACE system call with the PTRACE_TRACEME argument, indicating a program actively attempting to avoid debuggers attaching to the process. This behavior is typically indicative of malware activity."
+  condition: evt.type=ptrace and evt.dir=> and evt.arg.request=1 and proc_name_exists
+  output: Detected potential PTRACE_TRACEME anti-debug attempt (proc.cmdline=%proc.cmdline container=%container.info evt.type=%evt.type evt.arg.request=%evt.arg.request proc.pid=%proc.pid proc.cwd=%proc.cwd proc.ppid=%proc.ppid proc.pcmdline=%proc.pcmdline proc.sid=%proc.sid proc.exepath=%proc.exepath user.uid=%user.uid user.loginuid=%user.loginuid user.loginname=%user.loginname user.name=%user.name group.gid=%group.gid group.name=%group.name container.id=%container.id container.name=%container.name image=%container.image.repository)
+  priority: NOTICE
+  tags: [process]
