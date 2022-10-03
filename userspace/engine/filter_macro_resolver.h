@@ -81,6 +81,12 @@ class filter_macro_resolver
 
 		struct visitor : public libsinsp::filter::ast::expr_visitor
 		{
+			visitor() = default;
+			visitor(visitor&&) = default;
+			visitor& operator = (visitor&&) = default;
+			visitor(const visitor&) = delete;
+			visitor& operator = (const visitor&) = delete;
+
 			std::unique_ptr<libsinsp::filter::ast::expr> m_node_substitute;
 			std::unordered_set<std::string>* m_unknown_macros;
 			std::unordered_set<std::string>* m_resolved_macros;

@@ -66,6 +66,11 @@ namespace rule_loader
 			position() : pos(0), line(0), column(0) {};
 			position(const YAML::Mark& mark) : pos(mark.pos), line(mark.line), column(mark.column) {};
 			~position() = default;
+			position(position&&) = default;
+			position& operator = (position&&) = default;
+			position(const position&) = default;
+			position& operator = (const position&) = default;
+
 			int pos;
 			int line;
 			int column;
@@ -73,6 +78,18 @@ namespace rule_loader
 
 		struct location
 		{
+			location(): item_type(context::item_type::VALUE_FOR) {}
+			location(
+				const std::string n,
+				const position& p,
+				context::item_type i,
+				const std::string in):
+					name(n), pos(p), item_type(i), item_name(in) {}
+			location(location&&) = default;
+			location& operator = (location&&) = default;
+			location(const location&) = default;
+			location& operator = (const location&) = default;
+
 			// A name for the content this location refers
 			// to. Will generally be a filename, can also
 			// refer to a rule/macro condition when the
@@ -110,6 +127,11 @@ namespace rule_loader
 
 		virtual ~context() = default;
 
+		context(context&&) = default;
+		context& operator = (context&&) = default;
+		context(const context&) = default;
+		context& operator = (const context&) = default;
+
 		// Return the content name (generally filename) for
 		// this context
 		const std::string& name() const;
@@ -145,6 +167,16 @@ namespace rule_loader
 
 	struct warning
 	{
+		warning(): ctx("no-filename-given") {}
+		warning(
+			falco::load_result::warning_code w,
+			const std::string& m,
+			const context& c): wc(w), msg(m), ctx(c) {}
+		warning(warning&&) = default;
+		warning& operator = (warning&&) = default;
+		warning(const warning&) = default;
+		warning& operator = (const warning&) = default;
+
 		falco::load_result::warning_code wc;
 		std::string msg;
 		context ctx;
@@ -152,6 +184,16 @@ namespace rule_loader
 
 	struct error
 	{
+		error(): ctx("no-filename-given") {}
+		error(
+			falco::load_result::error_code e,
+			const std::string& m,
+			const context& c): ec(e), msg(m), ctx(c) {}
+		error(error&&) = default;
+		error& operator = (error&&) = default;
+		error(const error&) = default;
+		error& operator = (const error&) = default;
+
 		falco::load_result::error_code ec;
 		std::string msg;
 		context ctx;
@@ -162,6 +204,11 @@ namespace rule_loader
 	public:
 		rule_load_exception(falco::load_result::error_code ec, std::string msg, const context& ctx);
 		virtual ~rule_load_exception();
+		rule_load_exception(rule_load_exception&&) = default;
+		rule_load_exception& operator = (rule_load_exception&&) = default;
+		rule_load_exception(const rule_load_exception&) = default;
+		rule_load_exception& operator = (const rule_load_exception&) = default;
+
 		const char* what();
 
 		falco::load_result::error_code ec;
@@ -179,6 +226,10 @@ namespace rule_loader
 	public:
 		result(const std::string &name);
 		virtual ~result() = default;
+		result(result&&) = default;
+		result& operator = (result&&) = default;
+		result(const result&) = default;
+		result& operator = (const result&) = default;
 
 		virtual bool successful() override;
 		virtual bool has_warnings() override;
@@ -217,10 +268,16 @@ namespace rule_loader
 			const std::string& cont,
 			const indexed_vector<falco_source>& srcs,
 			std::string name)
-				: content(cont), sources(srcs), name(name)
+				: content(cont), sources(srcs), name(name),
+				  default_ruleset_id(0), replace_output_container_info(false),
+				  min_priority(falco_common::PRIORITY_DEBUG)
 			{
 				res.reset(new result(name));
 			}
+		configuration(configuration&&) = default;
+		configuration& operator = (configuration&&) = default;
+		configuration(const configuration&) = delete;
+		configuration& operator = (const configuration&) = delete;
 
 		const std::string& content;
 		const indexed_vector<falco_source>& sources;
@@ -239,6 +296,10 @@ namespace rule_loader
 	{
 		engine_version_info(context &ctx);
 		~engine_version_info() = default;
+		engine_version_info(engine_version_info&&) = default;
+		engine_version_info& operator = (engine_version_info&&) = default;
+		engine_version_info(const engine_version_info&) = default;
+		engine_version_info& operator = (const engine_version_info&) = default;
 
 		context ctx;
 		uint32_t version;
@@ -254,6 +315,10 @@ namespace rule_loader
 			requirement() = default;
 			requirement(const std::string n, const std::string v):
 				name(n), version(v) { }
+			requirement(requirement&&) = default;
+			requirement& operator = (requirement&&) = default;
+			requirement(const requirement&) = default;
+			requirement& operator = (const requirement&) = default;
 
 			std::string name;
 			std::string version;
@@ -267,6 +332,10 @@ namespace rule_loader
 		plugin_version_info();
 		plugin_version_info(context &ctx);
 		~plugin_version_info() = default;
+		plugin_version_info(plugin_version_info&&) = default;
+		plugin_version_info& operator = (plugin_version_info&&) = default;
+		plugin_version_info(const plugin_version_info&) = default;
+		plugin_version_info& operator = (const plugin_version_info&) = default;
 
 		context ctx;
 		requirement_alternatives alternatives;
@@ -279,6 +348,10 @@ namespace rule_loader
 	{
 		list_info(context &ctx);
 		~list_info() = default;
+		list_info(list_info&&) = default;
+		list_info& operator = (list_info&&) = default;
+		list_info(const list_info&) = default;
+		list_info& operator = (const list_info&) = default;
 
 		context ctx;
 		bool used;
@@ -295,6 +368,10 @@ namespace rule_loader
 	{
 		macro_info(context &ctx);
 		~macro_info() = default;
+		macro_info(macro_info&&) = default;
+		macro_info& operator = (macro_info&&) = default;
+		macro_info(const macro_info&) = default;
+		macro_info& operator = (const macro_info&) = default;
 
 		context ctx;
 		context cond_ctx;
@@ -313,6 +390,10 @@ namespace rule_loader
 	{
 		rule_exception_info(context &ctx);
 		~rule_exception_info() = default;
+		rule_exception_info(rule_exception_info&&) = default;
+		rule_exception_info& operator = (rule_exception_info&&) = default;
+		rule_exception_info(const rule_exception_info&) = default;
+		rule_exception_info& operator = (const rule_exception_info&) = default;
 
 		/*!
 			\brief This is necessary due to the dynamic-typed nature of
@@ -321,6 +402,14 @@ namespace rule_loader
 			this easier to implement in C++, that is not non-dynamic-typed.
 		*/
 		struct entry {
+			entry(): is_list(false) {}
+			explicit entry(const std::string& i): is_list(false), item(i) {}
+			explicit entry(const std::vector<entry>& v): is_list(true), items(v) {}
+			entry(entry&&) = default;
+			entry& operator = (entry&&) = default;
+			entry(const entry&) = default;
+			entry& operator = (const entry&) = default;
+
 			bool is_list;
 			std::string item;
 			std::vector<entry> items;
@@ -346,6 +435,10 @@ namespace rule_loader
 	{
 		rule_info(context &ctx);
 		~rule_info() = default;
+		rule_info(rule_info&&) = default;
+		rule_info& operator = (rule_info&&) = default;
+		rule_info(const rule_info&) = default;
+		rule_info& operator = (const rule_info&) = default;
 
 		context ctx;
 		context cond_ctx;

@@ -151,5 +151,7 @@ public:
 class filter_ruleset_factory
 {
 public:
+	virtual ~filter_ruleset_factory() = default;
+
 	virtual std::shared_ptr<filter_ruleset> new_ruleset() = 0;
 };

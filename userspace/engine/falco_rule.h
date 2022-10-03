@@ -26,6 +26,12 @@ limitations under the License.
 */
 struct falco_rule
 {
+	falco_rule(): id(0), priority(falco_common::PRIORITY_DEBUG) {}
+	falco_rule(falco_rule&&) = default;
+	falco_rule& operator = (falco_rule&&) = default;
+	falco_rule(const falco_rule&) = default;
+	falco_rule& operator = (const falco_rule&) = default;
+
 	std::size_t id;
 	std::string source;
 	std::string name;

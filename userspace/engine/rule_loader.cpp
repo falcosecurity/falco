@@ -504,7 +504,7 @@ const nlohmann::json& rule_loader::result::as_json(const rules_contents_t& conte
 }
 
 rule_loader::engine_version_info::engine_version_info(context &ctx)
-	: ctx(ctx)
+	: ctx(ctx), version(0)
 {
 }
 
@@ -519,12 +519,12 @@ rule_loader::plugin_version_info::plugin_version_info(context &ctx)
 }
 
 rule_loader::list_info::list_info(context &ctx)
-	: ctx(ctx)
+	: ctx(ctx), used(false), index(0), visibility(0)
 {
 }
 
 rule_loader::macro_info::macro_info(context &ctx)
-	: ctx(ctx), cond_ctx(ctx)
+	: ctx(ctx), cond_ctx(ctx), used(false), index(0), visibility(0)
 {
 }
 
@@ -534,7 +534,9 @@ rule_loader::rule_exception_info::rule_exception_info(context &ctx)
 }
 
 rule_loader::rule_info::rule_info(context &ctx)
-	: ctx(ctx), cond_ctx(ctx), output_ctx(ctx)
+	: ctx(ctx), cond_ctx(ctx), output_ctx(ctx), index(0), visibility(0),
+	  priority(falco_common::PRIORITY_DEBUG), enabled(true),
+	  warn_evttypes(true), skip_if_unknown_filter(false)
 {
 }
 

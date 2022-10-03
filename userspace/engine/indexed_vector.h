@@ -28,7 +28,12 @@ template <typename T>
 class indexed_vector
 {
 public:
+	indexed_vector() = default;
 	virtual ~indexed_vector() = default;
+	indexed_vector(indexed_vector&&) = default;
+	indexed_vector& operator = (indexed_vector&&) = default;
+	indexed_vector(const indexed_vector&) = default;
+	indexed_vector& operator = (const indexed_vector&) = default;
 
 	/*!
 		\brief Returns the number of elements
@@ -68,7 +73,7 @@ public:
 		\param index String index of the element to be added in the vector
 		\return The numeric index assigned to the element
 	*/
-	virtual inline size_t insert(T& entry, const std::string& index)
+	virtual inline size_t insert(const T& entry, const std::string& index)
 	{
 		size_t id;
 		auto prev = m_index.find(index);
@@ -89,7 +94,7 @@ public:
 	*/
 	virtual inline T* at(size_t id) const
 	{
-		if (id <= m_entries.size())
+		if (id < m_entries.size())
 		{
 			return (T* const) &m_entries[id];
 		}
