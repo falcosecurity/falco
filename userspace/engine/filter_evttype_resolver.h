@@ -188,6 +188,12 @@ public:
 private:
 	struct visitor : public libsinsp::filter::ast::expr_visitor
 	{
+		visitor(): m_expect_value(false) {}
+		visitor(visitor&&) = default;
+		visitor& operator = (visitor&&) = default;
+		visitor(const visitor&) = default;
+		visitor& operator = (const visitor&) = default;
+
 		bool m_expect_value;
 		falco_event_types m_last_node_evttypes;
 

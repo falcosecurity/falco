@@ -48,6 +48,12 @@ public:
 private:
 	struct visitor : public libsinsp::filter::ast::base_expr_visitor
 	{
+		visitor(): m_is_equality_check(false) {}
+		visitor(visitor&&) = default;
+		visitor& operator = (visitor&&) = default;
+		visitor(const visitor&) = delete;
+		visitor& operator = (const visitor&) = delete;
+
 		bool m_is_equality_check;
 		std::set<falco::load_result::warning_code>* m_warnings;
 

@@ -34,6 +34,10 @@ class stats_manager
 public:
 	stats_manager();
 	virtual ~stats_manager();
+	stats_manager(stats_manager&&) = default;
+	stats_manager& operator = (stats_manager&&) = default;
+	stats_manager(const stats_manager&) = default;
+	stats_manager& operator = (const stats_manager&) = default;
 
 	/*!
 		\brief Erases the internal state and statistics data

@@ -67,11 +67,11 @@ public:
 
 	stats_writer(const stats_writer&) = delete;
 
-	stats_writer(stats_writer&&) = delete;
+	stats_writer(stats_writer&&) = default;
 
 	stats_writer& operator=(const stats_writer&) = delete;
 
-	stats_writer& operator=(stats_writer&&) = delete;
+	stats_writer& operator=(stats_writer&&) = default;
 
 	~stats_writer();
 
@@ -109,6 +109,12 @@ public:
 private:
 	struct msg
 	{
+		msg(): stop(false) {}
+		msg(msg&&) = default;
+		msg& operator = (msg&&) = default;
+		msg(const msg&) = default;
+		msg& operator = (const msg&) = default;
+
 		bool stop;
 		scap_stats delta;
 		scap_stats stats;

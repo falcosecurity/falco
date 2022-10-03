@@ -36,6 +36,10 @@ class application {
 public:
 	application();
 	virtual ~application();
+	application(application&&) = default;
+	application& operator = (application&&) = default;
+	application(const application&) = delete;
+	application& operator = (const application&) = delete;
 
 	// These are only used in signal handlers. Other than there,
 	// the control flow of the application should not be changed
@@ -174,6 +178,11 @@ private:
 
 		run_result();
 		virtual ~run_result();
+		run_result(run_result&&) = default;
+		run_result& operator = (run_result&&) = default;
+		run_result(const run_result&) = default;
+		run_result& operator = (const run_result&) = default;
+
 
 		// If true, the method completed successfully.
 		bool success;

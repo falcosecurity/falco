@@ -56,6 +56,8 @@ public:
 		LOAD_UNKNOWN_ITEM
 	};
 
+	virtual ~load_result() = default;
+
 	// The warning code as a string
 	static const std::string& warning_code_str(warning_code ec);
 

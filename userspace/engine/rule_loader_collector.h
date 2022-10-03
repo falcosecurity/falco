@@ -29,7 +29,12 @@ namespace rule_loader
 class collector
 {
 public:
+	collector(): m_cur_index(0) { }
 	virtual ~collector() = default;
+	collector(collector&&) = default;
+	collector& operator = (collector&&) = default;
+	collector(const collector&) = delete;
+	collector& operator = (const collector&) = delete;
 
 	/*!
 		\brief Erases all the internal state and definitions

@@ -46,7 +46,8 @@ application::state::state()
 	  source_infos(),
 	  plugin_configs(),
 	  ppm_sc_of_interest(),
-	  tp_of_interest()
+	  tp_of_interest(),
+	  syscall_buffer_bytes_size(DEFAULT_DRIVER_BUFFER_BYTES_DIM)
 {
 	config = std::make_shared<falco_configuration>();
 	engine = std::make_shared<falco_engine>();

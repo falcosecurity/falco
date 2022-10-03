@@ -64,7 +64,7 @@ static void validate_exception_info(
 			ex.comps.is_list = true;
 			for (size_t i = 0; i < ex.fields.items.size(); i++)
 			{
-				ex.comps.items.push_back({false, "="});
+				ex.comps.items.push_back(rule_loader::rule_exception_info::entry("="));
 			}
 		}
 		THROW(ex.fields.items.size() != ex.comps.items.size(),

@@ -28,7 +28,12 @@ namespace rule_loader
 class reader
 {
 public:
+    reader() = default;
     virtual ~reader() = default;
+    reader(reader&&) = default;
+	reader& operator = (reader&&) = default;
+	reader(const reader&) = default;
+	reader& operator = (const reader&) = default;
 
     /*!
 		\brief Reads the contents of a ruleset and uses a collector to store

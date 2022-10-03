@@ -30,7 +30,12 @@ namespace rule_loader
 class compiler
 {
 public:
+	compiler() = default;
 	virtual ~compiler() = default;
+	compiler(compiler&&) = default;
+	compiler& operator = (compiler&&) = default;
+	compiler(const compiler&) = default;
+	compiler& operator = (const compiler&) = default;
 
 	/*!
 		\brief Compiles a list of falco rules
