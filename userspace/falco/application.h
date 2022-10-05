@@ -284,6 +284,7 @@ private:
 	bool create_handler(int sig, void (*func)(int), run_result &ret);
 	void configure_output_format();
 	void check_for_ignored_events();
+	bool check_rules_plugin_requirements(std::string& err);
 	void format_plugin_info(std::shared_ptr<sinsp_plugin> p, std::ostream& os) const;
 	run_result open_offline_inspector();
 	run_result open_live_inspector(std::shared_ptr<sinsp> inspector, const std::string& source);
