@@ -70,6 +70,7 @@ application::run_result application::validate_rules_files()
 
 		// The json output encompasses all files so the
 		// validation result is a single json object.
+		std::string err = "";
 		nlohmann::json results = nlohmann::json::array();
 
 		for(auto &filename : m_options.validate_rules_filenames)
@@ -77,6 +78,10 @@ application::run_result application::validate_rules_files()
 			std::unique_ptr<falco::load_result> res;
 
 			res = m_state->engine->load_rules(rc.at(filename), filename);
+			if (!check_rules_plugin_requirements(err))
+			{
+				return run_result::fatal(err);
+			}
 
 			successful &= res->successful();
 
