@@ -62,7 +62,7 @@ traces: !mux
   falco-event-generator:
     trace_file: traces-positive/falco-event-generator.scap
     detect: True
-    detect_level: [ERROR, WARNING, INFO, NOTICE, DEBUG]
+    detect_level: [ERROR, WARNING, NOTICE, DEBUG]
     detect_counts:
       - "Write below binary dir": 1
       - "Read sensitive file untrusted": 3
@@ -71,7 +71,7 @@ traces: !mux
       - "Write below etc": 1
       - "System procs network activity": 1
       - "Mkdir binary dirs": 1
-      - "System user interactive": 1
+      - "System user interactive": 0
       - "DB program spawned process": 1
       - "Non sudo setuid": 1
       - "Create files below dev": 1
