@@ -724,7 +724,7 @@ trace_files: !mux
       - "Write below etc": 1
       - "System procs network activity": 1
       - "Mkdir binary dirs": 1
-      - "System user interactive": 1
+      - "System user interactive": 0
       - "DB program spawned process": 1
       - "Non sudo setuid": 1
       - "Create files below dev": 1

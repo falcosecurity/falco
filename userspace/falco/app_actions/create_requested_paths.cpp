@@ -67,7 +67,7 @@ application::run_result application::create_requested_paths()
 		}
 	}
 
-	if (!m_state->config->m_grpc_bind_address.empty())
+	if (m_state->config->m_grpc_enabled && !m_state->config->m_grpc_bind_address.empty())
 	{
 		if(falco::utils::network::is_unix_scheme(m_state->config->m_grpc_bind_address))
 		{
