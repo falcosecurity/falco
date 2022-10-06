@@ -29,7 +29,7 @@ application::run_result application::print_page_size()
 		}
 		else
 		{
-			falco_logger::log(LOG_INFO, "Your system page size is: " + std::to_string(page_size) + " bytes.\n");
+			falco_logger::log(LOG_INFO, "Your system page size is: " + std::to_string(page_size) + " bytes\n");
 		}
 		return run_result::exit();
 	}
