@@ -16,7 +16,7 @@ limitations under the License.
 #pragma once
 
 #include <memory>
-#include <set>
+#include <unordered_set>
 
 #include <sinsp.h>
 #include <token_bucket.h>
@@ -34,7 +34,7 @@ enum class syscall_evt_drop_action : uint8_t
 	EXIT
 };
 
-using syscall_evt_drop_actions = std::set<syscall_evt_drop_action>;
+using syscall_evt_drop_actions = std::unordered_set<syscall_evt_drop_action>;
 
 class syscall_evt_drop_mgr
 {
