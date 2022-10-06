@@ -448,7 +448,7 @@ void falco_engine::read_file(const std::string& filename, std::string& contents)
 	is.open(filename);
 	if (!is.is_open())
 	{
-		throw falco_exception("Could not open " + filename + " for reading.");
+		throw falco_exception("Could not open " + filename + " for reading");
 	}
 
 	contents.assign(istreambuf_iterator<char>(is),

@@ -93,7 +93,7 @@ application::run_result application::attach_inotify_signals()
 		inot_fd = inotify_init();
 		if (inot_fd == -1)
 		{
-			return run_result::fatal("Could not create inotify handler.");
+			return run_result::fatal("Could not create inotify handler");
 		}
 
 		struct sigaction sa;
@@ -102,13 +102,13 @@ application::run_result application::attach_inotify_signals()
 		sa.sa_handler = restart_falco;
 		if (sigaction(SIGIO, &sa, NULL) == -1)
 		{
-			return run_result::fatal("Failed to link SIGIO to inotify handler.");
+			return run_result::fatal("Failed to link SIGIO to inotify handler");
 		}
 
 		/* Set owner process that is to receive "I/O possible" signal */
 		if (fcntl(inot_fd, F_SETOWN, getpid()) == -1)
 		{
-			return run_result::fatal("Failed to setting owner on inotify handler.");
+			return run_result::fatal("Failed to setting owner on inotify handler");
 		}
 
 		/*
@@ -118,14 +118,14 @@ application::run_result application::attach_inotify_signals()
 		int flags = fcntl(inot_fd, F_GETFL);
 		if (fcntl(inot_fd, F_SETFL, flags | O_ASYNC | O_NONBLOCK) == -1)
 		{
-			return run_result::fatal("Failed to setting flags on inotify handler.");
+			return run_result::fatal("Failed to setting flags on inotify handler");
 		}
 
 		// Watch conf file
 		int wd = inotify_add_watch(inot_fd, m_options.conf_filename.c_str(), IN_CLOSE_WRITE);
 		if (wd == -1)
 		{
-			return run_result::fatal("Failed to watch conf file.");
+			return run_result::fatal("Failed to watch conf file");
 		}
 		falco_logger::log(LOG_DEBUG, "Watching " + m_options.conf_filename +"\n");
 

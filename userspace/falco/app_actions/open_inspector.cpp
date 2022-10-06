@@ -108,7 +108,7 @@ application::run_result application::open_live_inspector(
 			catch(sinsp_exception &e)
 			{
 				// Try to insert the Falco kernel module
-				falco_logger::log(LOG_INFO, "Trying to inject the Kernel module and starting the capture again...");
+				falco_logger::log(LOG_INFO, "Trying to inject the Kernel module and opening the capture again...");
 				if(system("modprobe " DRIVER_NAME " > /dev/null 2> /dev/null"))
 				{
 					falco_logger::log(LOG_ERR, "Unable to load the driver\n");
