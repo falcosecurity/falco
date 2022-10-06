@@ -2412,7 +2412,9 @@
      quay.io/prometheus-operator/prometheus-operator,
      k8s.gcr.io/ingress-nginx/kube-webhook-certgen, quay.io/spotahome/redis-operator,
      registry.opensource.zalan.do/acid/postgres-operator, registry.opensource.zalan.do/acid/postgres-operator-ui,
-     rabbitmqoperator/cluster-operator)
+     rabbitmqoperator/cluster-operator,
+     falcosecurity/falco-no-driver, docker.io/falcosecurity/falco-no-driver,
+     public.ecr.aws/falcosecurity/falco-no-driver)
      or (k8s.ns.name = "kube-system"))
 
 - macro: k8s_api_server
