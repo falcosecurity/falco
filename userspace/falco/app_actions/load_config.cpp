@@ -26,9 +26,8 @@ application::run_result application::load_config()
 		falco_logger::set_time_format_iso_8601(m_state->config->m_time_format_iso_8601);
 
 		// log after config init because config determines where logs go
-		falco_logger::log(LOG_INFO, "Falco version: " + std::string(FALCO_VERSION) + "\n");
+		falco_logger::log(LOG_INFO, "Falco version: " + std::string(FALCO_VERSION) + " (" + std::string(FALCO_TARGET_ARCH) + ")\n");
 		falco_logger::log(LOG_INFO, "Falco initialized with configuration file: " + m_options.conf_filename + "\n");
-		falco_logger::log(LOG_INFO, "Falco compiled for: " + std::string(FALCO_TARGET_ARCH) + "\n");
 	}
 	else
 	{

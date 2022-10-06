@@ -137,7 +137,7 @@ application::run_result application::attach_inotify_signals()
 			{
 				return run_result::fatal("Failed to watch rule file: " + rule);
 			}
-			falco_logger::log(LOG_DEBUG, "Watching " + rule +".\n");
+			falco_logger::log(LOG_DEBUG, "Watching " + rule +"\n");
 		}
 
 		// Watch specified rules folders, if any:
@@ -151,7 +151,7 @@ application::run_result application::attach_inotify_signals()
 			{
 				return run_result::fatal("Failed to watch rule folder: " + fld);
 			}
-			falco_logger::log(LOG_DEBUG, "Watching " + fld +" folder.\n");
+			falco_logger::log(LOG_DEBUG, "Watching " + fld +" folder\n");
 		}
 	}
 	return run_result::ok();

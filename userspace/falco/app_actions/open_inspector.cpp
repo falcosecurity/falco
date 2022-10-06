@@ -54,7 +54,7 @@ application::run_result application::open_live_inspector(
 				if (p->caps() & CAP_SOURCING && p->event_source() == source)
 				{
 					auto cfg = m_state->plugin_configs.at(p->name());
-					falco_logger::log(LOG_INFO, "Falco uses the '" + cfg->m_name + "' plugin\n");
+					falco_logger::log(LOG_INFO, "Opening capture with plugin '" + cfg->m_name + "'\n");
 					inspector->open_plugin(cfg->m_name, cfg->m_open_params);
 					return run_result::ok();
 				}
@@ -67,17 +67,17 @@ application::run_result application::open_live_inspector(
 			//
 			// Falco uses a ptrace(2) based userspace implementation.
 			// Regardless of the implementation, the underlying method remains the same.
-			falco_logger::log(LOG_INFO, "Starting capture with udig\n");
+			falco_logger::log(LOG_INFO, "Opening capture with udig\n");
 			inspector->open_udig();
 		}
 		else if(!m_options.gvisor_config.empty()) /* gvisor engine. */
 		{
-			falco_logger::log(LOG_INFO, "Enabled event collection from gVisor. Configuration path: " + m_options.gvisor_config);
+			falco_logger::log(LOG_INFO, "Opening capture with gVisor. Configuration path: " + m_options.gvisor_config);
 			inspector->open_gvisor(m_options.gvisor_config, m_options.gvisor_root);
 		}
 		else if(m_options.modern_bpf) /* modern BPF engine. */
 		{
-			falco_logger::log(LOG_INFO, "Starting capture with modern BPF probe.");
+			falco_logger::log(LOG_INFO, "Opening capture with modern BPF probe");
 			inspector->open_modern_bpf(m_state->syscall_buffer_bytes_size, m_state->ppm_sc_of_interest, m_state->tp_of_interest);
 		}
 		else if(getenv(FALCO_BPF_ENV_VARIABLE) != NULL) /* BPF engine. */
@@ -95,14 +95,14 @@ application::run_result application::open_live_inspector(
 				snprintf(full_path, PATH_MAX, "%s/%s", home, FALCO_PROBE_BPF_FILEPATH);
 				bpf_probe_path = full_path;
 			}
-			falco_logger::log(LOG_INFO, "Starting capture with BPF probe. BPF probe path: " + std::string(bpf_probe_path));
+			falco_logger::log(LOG_INFO, "Opening capture with BPF probe. BPF probe path: " + std::string(bpf_probe_path));
 			inspector->open_bpf(bpf_probe_path, m_state->syscall_buffer_bytes_size, m_state->ppm_sc_of_interest, m_state->tp_of_interest);
 		}
 		else /* Kernel module (default). */
 		{
 			try
 			{
-				falco_logger::log(LOG_INFO, "Starting capture with Kernel module.");
+				falco_logger::log(LOG_INFO, "Opening capture with Kernel module");
 				inspector->open_kmod(m_state->syscall_buffer_bytes_size, m_state->ppm_sc_of_interest, m_state->tp_of_interest);
 			}
 			catch(sinsp_exception &e)
@@ -111,7 +111,7 @@ application::run_result application::open_live_inspector(
 				falco_logger::log(LOG_INFO, "Trying to inject the Kernel module and starting the capture again...");
 				if(system("modprobe " DRIVER_NAME " > /dev/null 2> /dev/null"))
 				{
-					falco_logger::log(LOG_ERR, "Unable to load the driver.\n");
+					falco_logger::log(LOG_ERR, "Unable to load the driver\n");
 				}
 				inspector->open_kmod(m_state->syscall_buffer_bytes_size, m_state->ppm_sc_of_interest, m_state->tp_of_interest);
 			}
