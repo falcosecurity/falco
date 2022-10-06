@@ -37,7 +37,7 @@ application::run_result application::create_requested_paths()
 		std::ifstream reader(m_options.gvisor_config);
 		if (reader.fail())
 		{
-			return run_result::fatal(m_options.gvisor_config + ": cannot open file.");
+			return run_result::fatal(m_options.gvisor_config + ": cannot open file");
 		}
 
 		nlohmann::json parsed_json;
