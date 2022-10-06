@@ -75,15 +75,14 @@ bool application::create_handler(int sig, void (*func)(int), run_result &ret)
 application::run_result application::create_signal_handlers()
 {
 	run_result ret;
+	s_app = *this;
 	if(! create_handler(SIGINT, ::signal_callback, ret) ||
 	   ! create_handler(SIGTERM, ::signal_callback, ret) ||
 	   ! create_handler(SIGUSR1, ::reopen_outputs, ret) ||
 	   ! create_handler(SIGHUP, ::restart_falco, ret))
 	{
-		return ret;
+		s_app = dummy;
 	}
-
-	s_app = *this;
 	return ret;
 }
 
