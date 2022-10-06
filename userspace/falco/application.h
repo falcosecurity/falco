@@ -28,6 +28,7 @@ limitations under the License.
 
 #include <string>
 #include <atomic>
+#include <unordered_set>
 
 namespace falco {
 namespace app {
@@ -94,11 +95,11 @@ private:
 
 		// The set of loaded event sources (by default, the syscall event
 		// source plus all event sources coming from the loaded plugins)
-		std::set<std::string> loaded_sources;
+		std::unordered_set<std::string> loaded_sources;
 
 		// The set of enabled event sources (can be altered by using
 		// the --enable-source and --disable-source options)
-		std::set<std::string> enabled_sources;
+		std::unordered_set<std::string> enabled_sources;
 
 		// Used to load all plugins to get their info. In capture mode,
 		// this is also used to open the capture file and read its events
@@ -152,7 +153,7 @@ private:
 		}
 
 		// Failure result that causes the program to stop with an error
-		inline static run_result fatal(std::string err)
+		inline static run_result fatal(const std::string& err)
 		{
 			run_result r;
 			r.success = false;
