@@ -330,6 +330,8 @@ application::run_result application::process_events()
 			std::unique_ptr<std::thread> thread;
 		};
 
+		print_enabled_event_sources();
+
 		// start event processing for all enabled sources
 		std::vector<live_context> ctxs;
 		ctxs.reserve(m_state->enabled_sources.size());

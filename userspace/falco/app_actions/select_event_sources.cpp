@@ -15,6 +15,18 @@ limitations under the License.
 
 using namespace falco::app;
 
+void application::print_enabled_event_sources()
+{
+	/* Print all enabled sources. */
+	std::string str;
+	for (const auto &s : m_state->enabled_sources)
+	{
+		str += str.empty() ? "" : ", ";
+		str += s;
+	}
+	falco_logger::log(LOG_INFO, "Enabled event sources: " + str + "\n");
+}
+
 application::run_result application::select_event_sources()
 {
 	m_state->enabled_sources = m_state->loaded_sources;
@@ -58,15 +70,6 @@ application::run_result application::select_event_sources()
 	{
 		return run_result::fatal("Must enable at least one event source");
 	}
-
-	/* Print all enabled sources. */
-	std::string result;
-	for (const auto &s : m_state->enabled_sources)
-	{
-		result += result.empty() ? "" : ", ";
-		result += s;
-	}
-	falco_logger::log(LOG_INFO, "Enabled event sources: " + result + "\n");
 
 	return run_result::ok();
 }

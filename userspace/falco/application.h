@@ -290,6 +290,7 @@ private:
 	run_result open_offline_inspector();
 	run_result open_live_inspector(std::shared_ptr<sinsp> inspector, const std::string& source);
 	void add_source_to_engine(const std::string& src);
+	void print_enabled_event_sources();
 	void init_syscall_inspector(std::shared_ptr<sinsp> inspector, const falco::app::cmdline_options& opts);
 	run_result do_inspect(
 		std::shared_ptr<sinsp> inspector,
