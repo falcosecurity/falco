@@ -157,7 +157,7 @@ public:
 		string is passed, all the available evttypes are collected
 		\param out The set to be filled with the evttypes
 	*/
-	inline void evttypes(std::string evtname, falco_event_types& out) const
+	inline void evttypes(const std::string& evtname, falco_event_types& out) const
 	{
 		falco_event_types evt_types;
 		visitor().evttypes(evtname, evt_types);
@@ -205,6 +205,6 @@ private:
 		void visit(libsinsp::filter::ast::unary_check_expr* e) override;
 		void visit(libsinsp::filter::ast::binary_check_expr* e) override;
 		void inversion(falco_event_types& types);
-		void evttypes(std::string evtname, falco_event_types& out);
+		void evttypes(const std::string& evtname, falco_event_types& out);
 	};
 };

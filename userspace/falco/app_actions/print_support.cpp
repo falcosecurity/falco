@@ -21,7 +21,7 @@ limitations under the License.
 
 using namespace falco::app;
 
-static std::string read_file(std::string &filename)
+static std::string read_file(const std::string &filename)
 {
 	std::ifstream t(filename);
 	std::string str((std::istreambuf_iterator<char>(t)),
