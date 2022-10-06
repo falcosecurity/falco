@@ -17,12 +17,11 @@ limitations under the License.
 #include "filter_evttype_resolver.h"
 #include <sinsp.h>
 
-using namespace std;
 using namespace libsinsp::filter;
 
 extern sinsp_evttables g_infotables;
 
-static bool is_evttype_operator(const string& op)
+static bool is_evttype_operator(const std::string& op)
 {
 	return op == "==" || op == "=" || op == "!=" || op == "in";
 }
@@ -44,7 +43,7 @@ void filter_evttype_resolver::visitor::inversion(falco_event_types& types)
 	}
 }
 
-void filter_evttype_resolver::visitor::evttypes(string evtname, falco_event_types& out)
+void filter_evttype_resolver::visitor::evttypes(const std::string& evtname, falco_event_types& out)
 {
 	// Fill in from 2 to PPM_EVENT_MAX-1. 0 and 1 are excluded as
 	// those are PPM_GENERIC_E/PPME_GENERIC_X
@@ -53,7 +52,7 @@ void filter_evttype_resolver::visitor::evttypes(string evtname, falco_event_type
 	{
 		// Skip unused events or events not matching the requested evtname
 		if(!(etable[i].flags & EF_UNUSED)
-			&& (evtname.empty() || string(etable[i].name) == evtname))
+			&& (evtname.empty() || std::string(etable[i].name) == evtname))
 		{
 			out.insert(i);
 		}
