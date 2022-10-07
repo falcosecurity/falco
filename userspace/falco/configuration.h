@@ -371,7 +371,7 @@ namespace YAML {
 				return false;
 			}
 			rhs.m_library_path = node["library_path"].as<std::string>();
-			if(rhs.m_library_path.at(0) != '/')
+			if(!rhs.m_library_path.empty() && rhs.m_library_path.at(0) != '/')
 			{
 				// prepend share dir if path is not absolute
 				rhs.m_library_path = string(FALCO_ENGINE_PLUGINS_DIR) + rhs.m_library_path;

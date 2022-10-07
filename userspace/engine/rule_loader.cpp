@@ -73,7 +73,10 @@ rule_loader::context::context(const libsinsp::filter::ast::pos_info& pos,
 	// Contexts based on conditions don't use the
 	// filename. Instead the "name" is just the condition, and
 	// uses a short prefix of the condition.
-	std::string name = "\"" + condition.substr(0, 20) + "...\"";
+	std::string name = "\"" + (
+		condition.length() > 20
+		? condition.substr(0, 20 - 3) + "...\""
+		: condition + "\"");
 	std::replace(name.begin(), name.end(), '\n', ' ');
 	std::replace(name.begin(), name.end(), '\r', ' ');
 
@@ -207,13 +210,12 @@ std::string rule_loader::context::snippet(const falco::load_result::rules_conten
 		return "<No context available>\n";
 	}
 
-	size_t from = loc.pos.pos;
-
 	// In some cases like this, where the content ends with a
 	// dangling property value:
 	//   tags:
 	// The YAML::Mark position can be past the end of the file.
-	for(; from > 0 && from >= snip_content.size(); from--);
+	size_t pos = loc.pos.pos;
+	for(; pos > 0 && (pos >= snip_content.size() || snip_content.at(pos) == '\n'); pos--);
 
 	// The snippet is generally the line that contains the
 	// position. So walk backwards from pos to the preceding
@@ -223,36 +225,37 @@ std::string rule_loader::context::snippet(const falco::load_result::rules_conten
 	// However, some lines can be very very long, so the walk
 	// forwards/walk backwards is capped at a maximum of
 	// snippet_width/2 characters in either direction.
-	for(; from > 0 && snip_content.at(from) != '\n' && (loc.pos.pos - from) < (snippet_width/2); from--);
+	size_t from = pos;
+	for(; from > 0 && snip_content.at(from) != '\n' && (pos - from) < (snippet_width/2); from--);
 
-	size_t to = loc.pos.pos;
-	for(; to < snip_content.size()-1 && snip_content.at(to) != '\n' && (to - loc.pos.pos) < (snippet_width/2); to++);
+	size_t to = pos;
+	for(; to < snip_content.size()-1 && snip_content.at(to) != '\n' && (to - pos) < (snippet_width/2); to++);
 
 	// Don't include the newlines
-	if(snip_content.at(from) == '\n')
+	if(from < snip_content.size() && snip_content.at(from) == '\n')
 	{
 		from++;
 	}
-	if(snip_content.at(to) == '\n')
+	if(to < snip_content.size() && snip_content.at(to) == '\n')
 	{
 		to--;
 	}
 
 	std::string ret = snip_content.substr(from, to-from+1);
 
-	if(snip_content.empty())
+	if(ret.empty())
 	{
 		return "<No context available>\n";
 	}
 
 	// Replace the initial/end characters with '...' if the walk
 	// forwards/backwards was incomplete
-	if(loc.pos.pos - from >= (snippet_width/2))
+	if(pos - from >= (snippet_width/2))
 	{
 		ret.replace(0, 3, "...");
 	}
 
-	if(to - loc.pos.pos >= (snippet_width/2))
+	if(to - pos >= (snippet_width/2))
 	{
 		ret.replace(ret.size()-3, 3, "...");
 	}
@@ -260,7 +263,10 @@ std::string rule_loader::context::snippet(const falco::load_result::rules_conten
 	ret += "\n";
 
 	// Add a blank line with a marker at the position within the snippet
-	ret += std::string(loc.pos.pos-from, ' ') + '^' + "\n";
+	if(pos-from <= ret.size() - 1)
+	{
+		ret += std::string(pos-from, ' ') + '^' + "\n";
+	}
 
 	return ret;
 }
