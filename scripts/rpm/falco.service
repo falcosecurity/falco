@@ -6,6 +6,7 @@ Documentation=https://falco.org/docs/
 Type=simple
 User=root
 ExecStartPre=/sbin/modprobe falco
+ExecStartPre=/usr/bin/sleep 5
 ExecStart=/usr/bin/falco --pidfile=/var/run/falco.pid
 ExecStopPost=/sbin/rmmod falco
 UMask=0077
