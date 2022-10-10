@@ -30,8 +30,18 @@ limitations under the License.
 #include <atomic>
 #include <unordered_set>
 
+#define APP_SIGNAL_NOT_SET          0   // The signal flag is not set
+#define APP_SIGNAL_SET              1   // The signal flag has been set
+#define APP_SIGNAL_ACTION_TAKEN     2   // The signal flag has been set and the application took action
+
 namespace falco {
 namespace app {
+
+// these are used to control the lifecycle of the application
+// through signal handlers or internal calls
+extern std::atomic<int> g_terminate;
+extern std::atomic<int> g_restart;
+extern std::atomic<int> g_reopen_outputs;
 
 class application {
 public:
@@ -41,13 +51,6 @@ public:
 	application& operator = (application&&) = default;
 	application(const application&) = delete;
 	application& operator = (const application&) = delete;
-
-	// These are only used in signal handlers. Other than there,
-	// the control flow of the application should not be changed
-	// from the outside.
-	void terminate();
-	void reopen_outputs();
-	void restart();
 
 	bool init(int argc, char **argv, std::string &errstr);
 
@@ -85,9 +88,6 @@ private:
 
 		state();
 		virtual ~state();
-
-		std::atomic<bool> restart;
-		std::atomic<bool> terminate;
 
 		std::shared_ptr<falco_configuration> config;
 		std::shared_ptr<falco_outputs> outputs;
@@ -315,6 +315,23 @@ private:
 	inline bool is_gvisor_enabled() const
 	{
 		return !m_options.gvisor_config.empty();
+	}
+
+	// used in signal handlers to control the flow of the application
+	void terminate();
+	void restart();
+	void reopen_outputs();
+	inline bool should_terminate()
+	{
+		return g_terminate.load(std::memory_order_seq_cst) != APP_SIGNAL_NOT_SET;
+	}
+	inline bool should_restart()
+	{
+		return g_restart.load(std::memory_order_seq_cst) != APP_SIGNAL_NOT_SET;
+	}
+	inline bool should_reopen_outputs()
+	{
+		return g_reopen_outputs.load(std::memory_order_seq_cst) != APP_SIGNAL_NOT_SET;
 	}
 
 	std::unique_ptr<state> m_state;

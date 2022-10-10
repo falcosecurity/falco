@@ -97,10 +97,19 @@ application::run_result application::do_inspect(
 	{
 		rc = inspector->next(&ev);
 
-		if(m_state->terminate.load(std::memory_order_seq_cst)
-			|| m_state->restart.load(std::memory_order_seq_cst))
+		if(should_terminate())
 		{
+			terminate();
 			break;
+		}
+		else if(should_restart())
+		{
+			restart();
+			break;
+		}
+		else if (should_reopen_outputs())
+		{
+			reopen_outputs();
 		}
 		else if(rc == SCAP_TIMEOUT)
 		{

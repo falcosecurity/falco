@@ -30,26 +30,24 @@ using namespace falco::app;
 // provided application, and in unregister_signal_handlers it will be
 // rebound back to the dummy application.
 
-static application dummy;
-static std::reference_wrapper<application> s_app = dummy;
 static int inot_fd;
 
-static void signal_callback(int signal)
+static void terminate_signal_handler(int signal)
 {
-	falco_logger::log(LOG_INFO, "SIGINT received, exiting...\n");
-	s_app.get().terminate();
+	ASSERT(falco::app::g_terminate.is_lock_free());
+	falco::app::g_terminate.store(APP_SIGNAL_SET, std::memory_order_seq_cst);
 }
 
-static void reopen_outputs(int signal)
+static void reopen_outputs_signal_handler(int signal)
 {
-	falco_logger::log(LOG_INFO, "SIGUSR1 received, reopening outputs...\n");
-	s_app.get().reopen_outputs();
+	ASSERT(falco::app::g_reopen_outputs.is_lock_free());
+	falco::app::g_reopen_outputs.store(APP_SIGNAL_SET, std::memory_order_seq_cst);
 }
 
-static void restart_falco(int signal)
+static void restart_signal_handler(int signal)
 {
-	falco_logger::log(LOG_INFO, "SIGHUP received, restarting...\n");
-	s_app.get().restart();
+	ASSERT(falco::app::g_restart.is_lock_free());
+	falco::app::g_restart.store(APP_SIGNAL_SET, std::memory_order_seq_cst);
 }
 
 bool application::create_handler(int sig, void (*func)(int), run_result &ret)
@@ -74,21 +72,29 @@ bool application::create_handler(int sig, void (*func)(int), run_result &ret)
 
 application::run_result application::create_signal_handlers()
 {
-	run_result ret;
-	s_app = *this;
-	if(! create_handler(SIGINT, ::signal_callback, ret) ||
-	   ! create_handler(SIGTERM, ::signal_callback, ret) ||
-	   ! create_handler(SIGUSR1, ::reopen_outputs, ret) ||
-	   ! create_handler(SIGHUP, ::restart_falco, ret))
+	falco::app::g_terminate.store(APP_SIGNAL_NOT_SET, std::memory_order_seq_cst);
+	falco::app::g_restart.store(APP_SIGNAL_NOT_SET, std::memory_order_seq_cst);
+	falco::app::g_reopen_outputs.store(APP_SIGNAL_NOT_SET, std::memory_order_seq_cst);
+	
+	if (!g_terminate.is_lock_free()
+		|| !g_restart.is_lock_free()
+		|| !g_reopen_outputs.is_lock_free())
 	{
-		s_app = dummy;
+		falco_logger::log(LOG_WARNING, "Bundled atomics implementation is not lock-free, signal handlers may be unstable\n");
 	}
+
+	// we use the if just to make sure we return at the first failed statement
+	run_result ret;
+	if(! create_handler(SIGINT, ::terminate_signal_handler, ret) ||
+	   ! create_handler(SIGTERM, ::terminate_signal_handler, ret) ||
+	   ! create_handler(SIGUSR1, ::reopen_outputs_signal_handler, ret) ||
+	   ! create_handler(SIGHUP, ::restart_signal_handler, ret));
 	return ret;
 }
 
 application::run_result application::attach_inotify_signals()
 {
-        if (m_state->config->m_watch_config_files)
+    if (m_state->config->m_watch_config_files)
 	{
 		inot_fd = inotify_init();
 		if (inot_fd == -1)
@@ -99,7 +105,7 @@ application::run_result application::attach_inotify_signals()
 		struct sigaction sa;
 		sigemptyset(&sa.sa_mask);
 		sa.sa_flags = SA_RESTART;
-		sa.sa_handler = restart_falco;
+		sa.sa_handler = restart_signal_handler;
 		if (sigaction(SIGIO, &sa, NULL) == -1)
 		{
 			return run_result::fatal("Failed to link SIGIO to inotify handler");
@@ -169,7 +175,5 @@ bool application::unregister_signal_handlers(std::string &errstr)
 		errstr = ret.errstr;
 		return false;
 	}
-
-	s_app = dummy;
 	return true;
 }

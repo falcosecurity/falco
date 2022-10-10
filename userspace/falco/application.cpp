@@ -26,8 +26,40 @@ limitations under the License.
 
 using namespace std::placeholders;
 
+static inline bool should_take_action_to_signal(std::atomic<int>& v)
+{
+	// we expected the signal to be received, and we try to set action-taken flag
+	int value = APP_SIGNAL_SET;
+	while (!v.compare_exchange_weak(
+			value,
+			APP_SIGNAL_ACTION_TAKEN,
+			std::memory_order_seq_cst,
+			std::memory_order_seq_cst))
+	{
+		// application already took action, there's no need to do it twice
+		if (value == APP_SIGNAL_ACTION_TAKEN)
+		{
+			return false;
+		}
+
+		// signal did was not really received, so we "fake" receiving it
+		if (value == APP_SIGNAL_NOT_SET)
+		{
+			v.store(APP_SIGNAL_SET, std::memory_order_seq_cst);
+		}
+
+		// reset "expected" CAS variable and keep looping until we succeed
+		value = APP_SIGNAL_SET;
+	}
+	return true;
+}
+
 namespace falco {
 namespace app {
+
+std::atomic<int> g_terminate(APP_SIGNAL_NOT_SET);
+std::atomic<int> g_restart(APP_SIGNAL_NOT_SET);
+std::atomic<int> g_reopen_outputs(APP_SIGNAL_NOT_SET);
 
 application::run_result::run_result()
 	: success(true), errstr(""), proceed(true)
@@ -39,9 +71,7 @@ application::run_result::~run_result()
 }
 
 application::state::state()
-	: restart(false),
-	  terminate(false),
-	  loaded_sources(),
+	: loaded_sources(),
 	  enabled_sources(),
 	  source_infos(),
 	  plugin_configs(),
@@ -70,27 +100,29 @@ application::~application()
 
 void application::terminate()
 {
-	if(m_state != nullptr)
+	if (should_take_action_to_signal(falco::app::g_terminate))
 	{
-		m_state->terminate.store(true, std::memory_order_seq_cst);
+		falco_logger::log(LOG_INFO, "SIGINT received, exiting...\n");
 	}
 }
 
 void application::reopen_outputs()
 {
-	if(m_state != nullptr && m_state->outputs != nullptr)
+	if (should_take_action_to_signal(falco::app::g_reopen_outputs))
 	{
-		// note: it is ok to do this inside the signal handler because
-		// in the current falco_outputs implementation this is non-blocking
-		m_state->outputs->reopen_outputs();
+		falco_logger::log(LOG_INFO, "SIGUSR1 received, reopening outputs...\n");
+		if(m_state != nullptr && m_state->outputs != nullptr)
+		{
+			m_state->outputs->reopen_outputs();
+		}
 	}
 }
 
 void application::restart()
 {
-	if(m_state != nullptr)
+	if (should_take_action_to_signal(falco::app::g_restart))
 	{
-		m_state->restart.store(true, std::memory_order_seq_cst);
+		falco_logger::log(LOG_INFO, "SIGHUP received, restarting...\n");
 	}
 }
 
@@ -196,7 +228,7 @@ bool application::run(std::string &errstr, bool &restart)
 		errstr = res.errstr;
 	}
 
-	restart = m_state->restart;
+	restart = should_restart();
 
 	return res.success;
 }
