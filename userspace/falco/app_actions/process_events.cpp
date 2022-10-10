@@ -407,7 +407,7 @@ application::run_result application::process_events()
 		{
 			if (!res.success && !termination_forced)
 			{
-				falco_logger::log(LOG_INFO, "An error occurred in one event source, forcing termination...\n");
+				falco_logger::log(LOG_INFO, "An error occurred in an event source, forcing termination...\n");
 				terminate();
 				termination_forced = true;
 			}
