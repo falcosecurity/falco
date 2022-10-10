@@ -1,0 +1,7 @@
+[Unit]
+Description=Falco generic startup target [kmod,ebpf]
+Requires=multi-user.target falco-%i.service
+After=multi-user.target
+
+[Install]
+WantedBy=multi-user.target

@@ -47,17 +47,17 @@ esac
 
 if [ "$1" = "configure" ] || [ "$1" = "abort-upgrade" ] || [ "$1" = "abort-deconfigure" ] || [ "$1" = "abort-remove" ] ; then
         # This will only remove masks created by d-s-h on package removal.
-        deb-systemd-helper unmask 'falco.service' >/dev/null || true
+        deb-systemd-helper unmask 'falco@kmod.target' >/dev/null || true
 
         # was-enabled defaults to true, so new installations run enable.
-        if deb-systemd-helper --quiet was-enabled 'falco.service'; then
+        if deb-systemd-helper --quiet was-enabled 'falco@kmod.target'; then
                 # Enables the unit on first installation, creates new
                 # symlinks on upgrades if the unit file has changed.
-                deb-systemd-helper enable 'falco.service' >/dev/null || true
+                deb-systemd-helper enable 'falco@kmod.target' >/dev/null || true
         else
                 # Update the statefile to add new symlinks (if any), which need to be
                 # cleaned up on purge. Also remove old symlinks.
-                deb-systemd-helper update-state 'falco.service' >/dev/null || true
+                deb-systemd-helper update-state 'falco@kmod.target' >/dev/null || true
         fi
 fi
 
@@ -69,6 +69,6 @@ if [ "$1" = "configure" ] || [ "$1" = "abort-upgrade" ] || [ "$1" = "abort-decon
                 else
                         _dh_action=start
                 fi
-                deb-systemd-invoke $_dh_action 'falco.service' >/dev/null || true
+                deb-systemd-invoke $_dh_action 'falco@kmod.target' >/dev/null || true
         fi
 fi

@@ -22,7 +22,7 @@ set -e
 # Currently running falco service uses the driver, so stop it before driver cleanup
 
 if [ -d /run/systemd/system ] && [ "$1" = remove ]; then
-        deb-systemd-invoke stop 'falco.service' >/dev/null || true
+        deb-systemd-invoke stop 'falco@kmod.target' >/dev/null || true
 fi
 
 case "$1" in
