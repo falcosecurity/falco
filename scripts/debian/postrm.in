@@ -22,18 +22,11 @@
 set -e
 
 if [ -d /run/systemd/system ] && [ "$1" = remove ]; then
-        systemctl --system daemon-reload >/dev/null || true
-fi
-
-if [ "$1" = "remove" ]; then
-        if [ -x "/usr/bin/deb-systemd-helper" ]; then
-                deb-systemd-helper mask 'falco.service' >/dev/null || true
-        fi
-fi
-
-if [ "$1" = "purge" ]; then
-        if [ -x "/usr/bin/deb-systemd-helper" ]; then
-                deb-systemd-helper purge 'falco.service' >/dev/null || true
-                deb-systemd-helper unmask 'falco.service' >/dev/null || true
-        fi
+        echo "[POST-REMOVE] Disable all Falco services:"
+        systemctl --system disable 'falco-kmod.service' || true
+        systemctl --system disable 'falco-bpf.service' || true
+        systemctl --system disable 'falco-modern-bpf.service' || true
+        systemctl --system disable 'falco-plugin.service' || true
+        echo "[POST-REMOVE] Trigger deamon-reload:"
+        systemctl --system daemon-reload || true
 fi

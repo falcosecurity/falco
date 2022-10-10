@@ -1,0 +1,26 @@
+[Unit]
+Description=Falco: Container Native Runtime Security with modern ebpf
+Documentation=https://falco.org/docs/
+Conflicts=falco-kmod.service
+Conflicts=falco-bpf.service
+Conflicts=falco-plugin.service
+
+[Service]
+Type=simple
+User=root
+ExecStart=/usr/bin/falco --pidfile=/var/run/falco.pid --modern-bpf
+UMask=0077
+TimeoutSec=30
+RestartSec=15s
+Restart=on-failure
+PrivateTmp=true
+NoNewPrivileges=yes
+ProtectHome=read-only
+ProtectSystem=full
+ProtectKernelTunables=true
+RestrictRealtime=true
+RestrictAddressFamilies=~AF_PACKET
+StandardOutput=null
+
+[Install]
+WantedBy=multi-user.target

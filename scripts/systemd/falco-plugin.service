@@ -1,14 +1,14 @@
 [Unit]
-Description=Falco: Container Native Runtime Security
+Description=Falco: Container Native Runtime Security with plugin
 Documentation=https://falco.org/docs/
-After=falco_inject_kmod.service
-Requires=falco_inject_kmod.service
+Conflicts=falco-kmod.service
+Conflicts=falco-bpf.service
+Conflicts=falco-modern-bpf.service
 
 [Service]
 Type=simple
-User=root
+User=%u
 ExecStart=/usr/bin/falco --pidfile=/var/run/falco.pid
-ExecStopPost=/sbin/rmmod falco
 UMask=0077
 TimeoutSec=30
 RestartSec=15s
@@ -18,9 +18,9 @@ NoNewPrivileges=yes
 ProtectHome=read-only
 ProtectSystem=full
 ProtectKernelTunables=true
-ReadWritePaths=/sys/module/falco
 RestrictRealtime=true
 RestrictAddressFamilies=~AF_PACKET
+StandardOutput=null
 
 [Install]
 WantedBy=multi-user.target

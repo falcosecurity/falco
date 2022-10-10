@@ -17,58 +17,65 @@
 #
 set -e
 
-DKMS_PACKAGE_NAME="@PACKAGE_NAME@"
-DKMS_VERSION="@DRIVER_VERSION@"
-NAME="@PACKAGE_NAME@"
+chosen_driver=
 
-postinst_found=0
+if [ "$1" = "configure" ]; then
+        if [ -x /usr/bin/dialog ]; then
+          # If dialog is installed, create a dialog to let users choose the correct driver for them
+          CHOICE=$(dialog --clear --backtitle "Choose your preferred driver" --title "Falco driver" --menu "Choose one of the following options:" 15 40 4 \
+                1 "Don't start" \
+                2 "Kmod" \
+                3 "eBPF" \
+                4 "Modern eBPF" \
+                5 "Plugin" \
+                2>&1 >/dev/tty)
+            clear
+            case $CHOICE in
+                2)
+                    chosen_driver="kmod"
+                    ;;
+                3)
+                    chosen_driver="bpf"
+                    ;;
+                4)
+                    chosen_driver="modern-bpf"
+                    ;;
+                5)
+                    chosen_driver="plugin"
+                    ;;
+            esac
+        fi
+fi
 
-case "$1" in
-	configure)
-		for DKMS_POSTINST in /usr/lib/dkms/common.postinst /usr/share/$DKMS_PACKAGE_NAME/postinst; do
-			if [ -f $DKMS_POSTINST ]; then
-				$DKMS_POSTINST $DKMS_PACKAGE_NAME $DKMS_VERSION /usr/share/$DKMS_PACKAGE_NAME "" $2
-				postinst_found=1
-				break
-			fi
-		done
-		if [ "$postinst_found" -eq 0 ]; then
-			echo "ERROR: DKMS version is too old and $DKMS_PACKAGE_NAME was not"
-			echo "built with legacy DKMS support."
-			echo "You must either rebuild $DKMS_PACKAGE_NAME with legacy postinst"
-			echo "support or upgrade DKMS to a more current version."
-			exit 1
-		fi
-	;;
+# If needed, try to load/compile the driver through falco-driver-loader
+case "$chosen_driver" in
+    "kmod")
+      echo "[POST-INSTALL] Call 'falco-driver-loader module':"
+      falco-driver-loader module
+      ;;
+    "bpf")
+      echo "[POST-INSTALL] Call 'falco-driver-loader bpf':"
+      falco-driver-loader bpf
+      ;;
 esac
 
-# Based off what debhelper dh_systemd_enable/13.3.4 would have added
-# ref: https://www.debian.org/doc/manuals/debmake-doc/ch05.en.html#debhelper
-
 if [ "$1" = "configure" ] || [ "$1" = "abort-upgrade" ] || [ "$1" = "abort-deconfigure" ] || [ "$1" = "abort-remove" ] ; then
-        # This will only remove masks created by d-s-h on package removal.
-        deb-systemd-helper unmask 'falco.service' >/dev/null || true
-
-        # was-enabled defaults to true, so new installations run enable.
-        if deb-systemd-helper --quiet was-enabled 'falco.service'; then
-                # Enables the unit on first installation, creates new
-                # symlinks on upgrades if the unit file has changed.
-                deb-systemd-helper enable 'falco.service' >/dev/null || true
-        else
-                # Update the statefile to add new symlinks (if any), which need to be
-                # cleaned up on purge. Also remove old symlinks.
-                deb-systemd-helper update-state 'falco.service' >/dev/null || true
+        if [ -n "$chosen_driver" ]; then
+            echo "[POST-INSTALL] Enable 'falco-$chosen_driver.service':"
+            systemctl --system enable "falco-$chosen_driver.service" || true
+            echo "[POST-INSTALL] Start 'falco-$chosen_driver.service':"
+            systemctl --system start "falco-$chosen_driver.service" || true
         fi
 fi
 
 if [ "$1" = "configure" ] || [ "$1" = "abort-upgrade" ] || [ "$1" = "abort-deconfigure" ] || [ "$1" = "abort-remove" ] ; then
-        if [ -d /run/systemd/system ]; then
-                systemctl --system daemon-reload >/dev/null || true
-                if [ -n "$2" ]; then
-                        _dh_action=restart
-                else
-                        _dh_action=start
-                fi
-                deb-systemd-invoke $_dh_action 'falco.service' >/dev/null || true
-        fi
+    if [ -d /run/systemd/system ]; then
+      echo "[POST-INSTALL] Trigger deamon-reload:"
+      systemctl --system daemon-reload || true
+      if [ -n "$chosen_driver" ]; then
+        echo "[POST-INSTALL] Trigger 'falco-$chosen_driver.service' condrestart:"
+        # restart falco on upgrade if service is already running
+        systemctl --system condrestart "falco-$chosen_driver.service" || true
+      fi
+    fi
 fi
