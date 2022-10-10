@@ -304,6 +304,7 @@ private:
 		std::shared_ptr<sinsp> inspector,
 		std::shared_ptr<stats_writer> statsw,
 		std::string source, // an empty source represents capture mode
+		std::atomic<bool>* finished,
 		run_result* res) noexcept;
 
 	/* Returns true if we are in capture mode. */
