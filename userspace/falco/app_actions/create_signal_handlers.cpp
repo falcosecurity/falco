@@ -75,7 +75,7 @@ application::run_result application::create_signal_handlers()
 	falco::app::g_terminate.store(APP_SIGNAL_NOT_SET, std::memory_order_seq_cst);
 	falco::app::g_restart.store(APP_SIGNAL_NOT_SET, std::memory_order_seq_cst);
 	falco::app::g_reopen_outputs.store(APP_SIGNAL_NOT_SET, std::memory_order_seq_cst);
-	
+
 	if (!g_terminate.is_lock_free()
 		|| !g_restart.is_lock_free()
 		|| !g_reopen_outputs.is_lock_free())
@@ -83,12 +83,15 @@ application::run_result application::create_signal_handlers()
 		falco_logger::log(LOG_WARNING, "Bundled atomics implementation is not lock-free, signal handlers may be unstable\n");
 	}
 
-	// we use the if just to make sure we return at the first failed statement
 	run_result ret;
 	if(! create_handler(SIGINT, ::terminate_signal_handler, ret) ||
 	   ! create_handler(SIGTERM, ::terminate_signal_handler, ret) ||
 	   ! create_handler(SIGUSR1, ::reopen_outputs_signal_handler, ret) ||
-	   ! create_handler(SIGHUP, ::restart_signal_handler, ret));
+	   ! create_handler(SIGHUP, ::restart_signal_handler, ret))
+	{
+		// we use the if just to make sure we return at the first failed statement
+	}
+
 	return ret;
 }
 
