@@ -3052,10 +3052,39 @@
 - list: c2_server_ip_list
   items: []
 
+- list: c2_server_fqdn_list
+  items: []
+
+# For example, you can fetch a list of IP addresses and FQDN on this website:
+# https://feodotracker.abuse.ch/downloads/ipblocklist_recommended.json.
+# Use Falco HELM chart to update (append) the c2 server lists with your values.
+# See an example below.
+#
+#  ```yaml
+#  # values.yaml Falco HELM chart file
+#  [...]
+#  customRules:
+#    c2-servers-list.yaml: |-
+#      - list: c2_server_ip_list
+#        append: true
+#        items: 
+#        - "'51.178.161.32'"
+#        - "'46.101.90.205'"
+#        
+#      - list: c2_server_fqdn_list
+#        append: true
+#        items: 
+#        - "srv-web.ffconsulting.com"
+#        - "57.ip-142-44-247.net"
+#  ```
+
 - rule: Outbound Connection to C2 Servers
-  desc: Detect outbound connection to command & control servers
-  condition: outbound and fd.sip in (c2_server_ip_list)
-  output: Outbound connection to C2 server (command=%proc.cmdline pid=%proc.pid connection=%fd.name user=%user.name user_loginuid=%user.loginuid container_id=%container.id image=%container.image.repository)
+  desc: Detect outbound connection to command & control servers thanks to a list of IP addresses & a list of FQDN.
+  condition: >
+    outbound and 
+    ((fd.sip in (c2_server_ip_list)) or
+     (fd.sip.name in (c2_server_fqdn_list)))
+  output: Outbound connection to C2 server (c2_domain=%fd.sip.name c2_addr=%fd.sip command=%proc.cmdline connection=%fd.name user=%user.name user_loginuid=%user.loginuid container_id=%container.id image=%container.image.repository)
   priority: WARNING
   tags: [network]
 
