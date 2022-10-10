@@ -20,7 +20,7 @@ set -e
 # post uninstall mirrored from .deb
 if [ -d /run/systemd/system ] && [ "$1" = 0 ]; then
         /usr/bin/systemctl --system daemon-reload >/dev/null || true
-        /usr/bin/systemctl --system mask 'falco.service' >/dev/null || true
+        /usr/bin/systemctl --system mask 'falco@kmod.target' >/dev/null || true
 fi
 
 # validate rpm macros by `rpm -qp --scripts <rpm>`
@@ -30,4 +30,4 @@ fi
 # systemd_postun_with_restart macro expands to
 # if package upgrade, not uninstall:
 #   `systemd-update-helper mark-restart-system-units <service>`
-%systemd_postun_with_restart 'falco.service'
+%systemd_postun_with_restart 'falco@kmod.target'
