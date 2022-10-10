@@ -130,6 +130,7 @@ bool application::run(std::string &errstr, bool &restart)
 	// dependencies are honored (e.g. don't process events before
 	// loading plugins, opening inspector, etc.).
 	std::list<std::function<run_result()>> run_steps = {
+		std::bind(&application::gain_lock, this),
 		std::bind(&application::print_help, this),
 		std::bind(&application::print_version, this),
 		std::bind(&application::print_page_size, this),
@@ -165,8 +166,9 @@ bool application::run(std::string &errstr, bool &restart)
 		std::bind(&application::unregister_signal_handlers, this, _1),
 #ifndef MINIMAL_BUILD
 		std::bind(&application::stop_grpc_server, this, _1),
-		std::bind(&application::stop_webserver, this, _1)
+		std::bind(&application::stop_webserver, this, _1),
 #endif
+		std::bind(&application::release_lock, this, _1)
 	};
 
 	for (auto &func : run_steps)

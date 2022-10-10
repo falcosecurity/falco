@@ -45,6 +45,7 @@ set(
   app_actions/validate_rules_files.cpp
   app_actions/create_requested_paths.cpp
   app_actions/configure_interesting_sets.cpp
+  app_actions/gain_lock.cpp
   configuration.cpp
   logger.cpp
   falco_outputs.cpp

@@ -240,6 +240,7 @@ private:
 
 	// These methods comprise the code the application "runs". The
 	// order in which the methods run is in application.cpp.
+	run_result gain_lock();
 	run_result create_signal_handlers();
 	run_result attach_inotify_signals();
 	run_result daemonize();
@@ -279,6 +280,7 @@ private:
 	bool stop_grpc_server(std::string &errstr);
 	bool stop_webserver(std::string &errstr);
 #endif
+	bool release_lock(std::string &errstr);
 
 	// Methods called by the above methods
 	int create_dir(const std::string &path);
@@ -320,6 +322,7 @@ private:
 	std::unique_ptr<state> m_state;
 	cmdline_options m_options;
 	bool m_initialized;
+	int m_lock_fd;
 };
 
 }; // namespace app
