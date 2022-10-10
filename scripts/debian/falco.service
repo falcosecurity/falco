@@ -17,6 +17,7 @@ NoNewPrivileges=yes
 ProtectHome=read-only
 ProtectSystem=full
 ProtectKernelTunables=true
+ReadWritePaths=/sys/module
 RestrictRealtime=true
 RestrictAddressFamilies=~AF_PACKET
 
