@@ -15,25 +15,25 @@
 # limitations under the License.
 #
 
+# Systemd
+file(COPY "${PROJECT_SOURCE_DIR}/scripts/systemd/falco@.target"
+		DESTINATION "${PROJECT_BINARY_DIR}/scripts/systemd")
+file(COPY "${PROJECT_SOURCE_DIR}/scripts/systemd/falco-kmod-inject.service"
+		DESTINATION "${PROJECT_BINARY_DIR}/scripts/systemd")
+file(COPY "${PROJECT_SOURCE_DIR}/scripts/systemd/falco-kmod.service"
+		DESTINATION "${PROJECT_BINARY_DIR}/scripts/systemd")
+file(COPY "${PROJECT_SOURCE_DIR}/scripts/systemd/falco-ebpf.service"
+		DESTINATION "${PROJECT_BINARY_DIR}/scripts/systemd")
+
+# Debian
 configure_file(debian/postinst.in debian/postinst)
 configure_file(debian/postrm.in debian/postrm)
 configure_file(debian/prerm.in debian/prerm)
 
-file(COPY "${PROJECT_SOURCE_DIR}/scripts/debian/falco.service"
-	DESTINATION "${PROJECT_BINARY_DIR}/scripts/debian")
-
-file(COPY "${PROJECT_SOURCE_DIR}/scripts/debian/falco_inject_kmod.service"
-	DESTINATION "${PROJECT_BINARY_DIR}/scripts/debian")
-
+# Rpm
 configure_file(rpm/postinstall.in rpm/postinstall)
 configure_file(rpm/postuninstall.in rpm/postuninstall)
 configure_file(rpm/preuninstall.in rpm/preuninstall)
-
-file(COPY "${PROJECT_SOURCE_DIR}/scripts/rpm/falco.service"
-	DESTINATION "${PROJECT_BINARY_DIR}/scripts/rpm")
-
-file(COPY "${PROJECT_SOURCE_DIR}/scripts/rpm/falco_inject_kmod.service"
-	DESTINATION "${PROJECT_BINARY_DIR}/scripts/rpm")
 
 configure_file(falco-driver-loader falco-driver-loader @ONLY)
 
