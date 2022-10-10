@@ -1,11 +1,12 @@
 [Unit]
 Description=Falco: Container Native Runtime Security
 Documentation=https://falco.org/docs/
+After=falco_inject_kmod.service
+Requires=falco_inject_kmod.service
 
 [Service]
 Type=simple
 User=root
-ExecStartPre=/sbin/modprobe falco
 ExecStart=/usr/bin/falco --pidfile=/var/run/falco.pid
 ExecStopPost=/sbin/rmmod falco
 UMask=0077
@@ -17,7 +18,7 @@ NoNewPrivileges=yes
 ProtectHome=read-only
 ProtectSystem=full
 ProtectKernelTunables=true
-ReadWritePaths=/sys/module
+ReadWritePaths=/sys/module/falco
 RestrictRealtime=true
 RestrictAddressFamilies=~AF_PACKET
 StandardOutput=null
