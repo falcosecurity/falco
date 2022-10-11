@@ -115,6 +115,9 @@ private:
 
 		std::string cmdline;
 
+		// Set of events we want the driver to capture
+		std::unordered_set<uint32_t> ppm_event_info_of_interest;
+
 		// Set of syscalls we want the driver to capture
 		std::unordered_set<uint32_t> ppm_sc_of_interest;
 

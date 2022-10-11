@@ -33,6 +33,24 @@ void application::configure_interesting_sets()
 	 * plus syscalls for Falco default rules.
 	 */
 	m_state->ppm_sc_of_interest = inspector->enforce_simple_ppm_sc_set();
+	m_state->ppm_event_info_of_interest = inspector->get_event_set_from_ppm_sc_set(m_state->ppm_sc_of_interest);
+
+	/* Fill-up the set of event infos of interest */
+	for (uint32_t ev = 2; ev < PPM_EVENT_MAX; ev++)
+	{
+		if (!sinsp::is_old_version_event(ev)
+				&& !sinsp::is_unused_event(ev)
+				&& !sinsp::is_unknown_event(ev))
+		{
+			/* So far we only covered syscalls, so we add other kinds of
+			interesting events. In this case, we are also interested in
+			metaevents and in the procexit tracepoint event. */
+			if (sinsp::is_metaevent(ev) || ev == PPME_PROCEXIT_1_E)
+			{
+				m_state->ppm_event_info_of_interest.insert(ev);
+			}
+		}
+	}
 
 	/* In this case we get the tracepoints for the `libsinsp` state and we remove
 	 * the `sched_switch` tracepoint since it is highly noisy and not so useful
