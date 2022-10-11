@@ -374,6 +374,7 @@ application::run_result application::process_events()
 					// note: we don't return here because we need to reach
 					// the thread termination loop below to make sure all
 					// already-spawned threads get terminated gracefully
+					ctx.finished->store(true, std::memory_order_seq_cst);
 					break;
 				}
 
@@ -395,6 +396,7 @@ application::run_result application::process_events()
 				// the thread termination loop below to make sure all
 				// already-spawned threads get terminated gracefully
 				ctx.res = run_result::fatal(e.what());
+				ctx.finished->store(true, std::memory_order_seq_cst);
 				break;
 			}
 		}
