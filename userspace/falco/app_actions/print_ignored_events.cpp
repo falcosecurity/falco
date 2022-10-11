@@ -39,25 +39,26 @@ application::run_result application::print_ignored_events()
 	configure_interesting_sets();
 
 	/* Search for all the ignored syscalls. */
-	std::unique_ptr<sinsp> inspector(new sinsp());
-	std::unordered_set<uint32_t> all_ppm_sc = inspector->get_all_ppm_sc();
-	std::unordered_set<uint32_t> ignored_ppm_sc;
-
-	for(const auto& it : all_ppm_sc)
+	std::unordered_set<uint32_t> all_events;
+	for (uint32_t j = 0; j < PPM_EVENT_MAX; j++)
 	{
-		/* If the syscall is not in this set we ignore it. */
-		if(m_state->ppm_sc_of_interest.find(it) == m_state->ppm_sc_of_interest.end())
+		if (!sinsp::is_old_version_event(j)
+				&& !sinsp::is_unused_event(j)
+				&& !sinsp::is_unknown_event(j))
 		{
-			ignored_ppm_sc.insert(it);
+			all_events.insert(j);
 		}
 	}
 
-	/* Obtain the ignored events names from the ignored syscalls. */
-	auto ignored_events = inspector->get_event_set_from_ppm_sc_set(ignored_ppm_sc);
-	auto event_names = inspector->get_events_names(ignored_events);
+	std::unique_ptr<sinsp> inspector(new sinsp());
+	auto ignored_event_names = inspector->get_events_names(all_events);
+	for (const auto &n : inspector->get_events_names(m_state->ppm_event_info_of_interest))
+	{
+		ignored_event_names.erase(n);
+	}
 
 	std::cout << "Ignored Event(s):" << std::endl;
-	for(const auto& it : event_names)
+	for(const auto& it : ignored_event_names)
 	{
 		std::cout << "- " << it.c_str() << std::endl;
 	}
