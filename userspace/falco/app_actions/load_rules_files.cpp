@@ -59,13 +59,15 @@ void application::check_for_ignored_events()
 	}
 
 	/* Get the names of the ignored events and print them. */
-	std::cerr << std::endl << "Rules match ignored syscall: warning (ignored-evttype):" << std::endl;
-	std::cerr << "Loaded rules match the following events:" << std::endl;
+	std::cerr << "Rules match ignored syscall: warning (ignored-evttype):" << std::endl;
+	std::cerr << "Loaded rules match the following events: ";
+	bool first = true;
 	for(const auto& it : event_names)
 	{
-		std::cerr << "\t- " << it.c_str() << std::endl;
+		std::cerr << (first ? "" : ", ") << it.c_str();
+		first = false;
 	}
-	std::cerr << "But these events are not returned unless running falco with -A" << std::endl << std::endl;
+	std::cerr << std::endl << "But these events are not returned unless running falco with -A" << std::endl;
 }
 
 application::run_result application::load_rules_files()
