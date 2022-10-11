@@ -98,6 +98,11 @@ application::run_result application::do_inspect(
 	{
 		rc = inspector->next(&ev);
 
+		if (should_reopen_outputs())
+		{
+			reopen_outputs();
+		}
+
 		if(should_terminate())
 		{
 			terminate();
@@ -107,10 +112,6 @@ application::run_result application::do_inspect(
 		{
 			restart();
 			break;
-		}
-		else if (should_reopen_outputs())
-		{
-			reopen_outputs();
 		}
 		else if(rc == SCAP_TIMEOUT)
 		{
