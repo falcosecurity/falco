@@ -73,13 +73,15 @@ TEST_CASE("Should find event types from filter", "[rule_loader]")
 	set<uint16_t> not_close;
 	set<uint16_t> all_events;
 	set<uint16_t> no_events;
+
     for(uint32_t i = 2; i < PPM_EVENT_MAX; i++)
     {
         // Skip events that are unused.
-        if(g_infotables.m_event_info[i].flags & EF_UNUSED)
+        if(sinsp::is_unused_event(i))
         {
             continue;
         }
+
         all_events.insert(i);
         if(openat_only.find(i) == openat_only.end())
         {
