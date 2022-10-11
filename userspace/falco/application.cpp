@@ -115,6 +115,7 @@ void application::reopen_outputs()
 		{
 			m_state->outputs->reopen_outputs();
 		}
+		falco::app::g_reopen_outputs.store(APP_SIGNAL_NOT_SET);
 	}
 }
 
