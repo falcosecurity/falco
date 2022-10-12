@@ -48,7 +48,7 @@ public:
 private:
 	struct visitor : public libsinsp::filter::ast::base_expr_visitor
 	{
-		visitor(): m_is_equality_check(false) {}
+		visitor(): m_is_equality_check(false), m_warnings(nullptr) {}
 		visitor(visitor&&) = default;
 		visitor& operator = (visitor&&) = default;
 		visitor(const visitor&) = delete;

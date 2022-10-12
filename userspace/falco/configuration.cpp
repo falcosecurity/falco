@@ -32,13 +32,31 @@ limitations under the License.
 using namespace std;
 
 falco_configuration::falco_configuration():
+	m_json_output(false),
+	m_json_include_output_property(true),
+	m_json_include_tags_property(true),
+	m_notifications_rate(0),
+	m_notifications_max_burst(1000),
+	m_watch_config_files(true),
 	m_buffered_outputs(false),
 	m_time_format_iso_8601(false),
+	m_output_timeout(2000),
+	m_grpc_enabled(false),
+	m_grpc_threadiness(0),
 	m_webserver_enabled(false),
 	m_webserver_threadiness(0),
 	m_webserver_listen_port(8765),
 	m_webserver_k8s_healthz_endpoint("/healthz"),
 	m_webserver_ssl_enabled(false),
+	m_syscall_evt_drop_threshold(.1),
+	m_syscall_evt_drop_rate(.03333),
+	m_syscall_evt_drop_max_burst(1),
+	m_syscall_evt_simulate_drops(false),
+	m_syscall_evt_timeout_max_consecutives(1000),
+	m_metadata_download_max_mb(100),
+	m_metadata_download_chunk_wait_us(1000),
+	m_metadata_download_watch_freq_sec(1),
+	m_syscall_buf_size_preset(4),
 	m_config(NULL)
 {
 }

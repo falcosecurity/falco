@@ -167,7 +167,7 @@ namespace rule_loader
 
 	struct warning
 	{
-		warning(): ctx("no-filename-given") {}
+		warning(): wc(falco::load_result::warning_code::LOAD_UNKNOWN_SOURCE), ctx("no-filename-given") {}
 		warning(
 			falco::load_result::warning_code w,
 			const std::string& m,
@@ -184,7 +184,7 @@ namespace rule_loader
 
 	struct error
 	{
-		error(): ctx("no-filename-given") {}
+		error(): ec(falco::load_result::error_code::LOAD_ERR_FILE_READ), ctx("no-filename-given") {}
 		error(
 			falco::load_result::error_code e,
 			const std::string& m,
