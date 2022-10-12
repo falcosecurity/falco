@@ -50,7 +50,7 @@ falco_outputs::falco_outputs(
 	uint32_t timeout,
 	bool buffered,
 	bool time_format_iso_8601,
-	std::string hostname)
+	const std::string& hostname)
 {
 	m_formats.reset(new falco_formats(engine, json_include_output_property, json_include_tags_property));
 
@@ -271,7 +271,7 @@ inline void falco_outputs::push(const ctrl_msg& cmsg)
 void falco_outputs::worker() noexcept
 {
 	watchdog<std::string> wd;
-	wd.start([&](std::string payload) -> void {
+	wd.start([&](const std::string& payload) -> void {
 		falco_logger::log(LOG_CRIT, "\"" + payload + "\" output timeout, all output channels are blocked\n");
 	});
 

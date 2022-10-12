@@ -128,12 +128,12 @@ void falco::grpc::server::thread_process(int thread_index)
 }
 
 void falco::grpc::server::init(
-	std::string server_addr,
+	const std::string& server_addr,
 	int threadiness,
-	std::string private_key,
-	std::string cert_chain,
-	std::string root_certs,
-	std::string log_level)
+	const std::string& private_key,
+	const std::string& cert_chain,
+	const std::string& root_certs,
+	const std::string& log_level)
 {
 	m_server_addr = server_addr;
 	m_threadiness = threadiness;

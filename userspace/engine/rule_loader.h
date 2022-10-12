@@ -64,7 +64,7 @@ namespace rule_loader
 		struct position
 		{
 			position() : pos(0), line(0), column(0) {};
-			position(const YAML::Mark& mark) : pos(mark.pos), line(mark.line), column(mark.column) {};
+			explicit position(const YAML::Mark& mark) : pos(mark.pos), line(mark.line), column(mark.column) {};
 			~position() = default;
 			position(position&&) = default;
 			position& operator = (position&&) = default;
@@ -80,10 +80,10 @@ namespace rule_loader
 		{
 			location(): item_type(context::item_type::VALUE_FOR) {}
 			location(
-				const std::string n,
+				const std::string& n,
 				const position& p,
 				context::item_type i,
-				const std::string in):
+				const std::string& in):
 					name(n), pos(p), item_type(i), item_name(in) {}
 			location(location&&) = default;
 			location& operator = (location&&) = default;
@@ -108,10 +108,10 @@ namespace rule_loader
 			std::string item_name;
 		};
 
-		context(const std::string& name);
+		explicit context(const std::string& name);
 		context(const YAML::Node& item,
 			item_type item_type,
-			const std::string item_name,
+			const std::string& item_name,
 			const context& parent);
 
 		// Build a context from a condition expression +
@@ -152,7 +152,7 @@ namespace rule_loader
 		void init(const std::string& name,
 			  const position& pos,
 			  const item_type item_type,
-			  const std::string item_name,
+			  const std::string& item_name,
 			  const context& parent);
 
 		// A chain of locations from the current item, its
@@ -202,7 +202,7 @@ namespace rule_loader
 	class rule_load_exception : public std::exception
 	{
 	public:
-		rule_load_exception(falco::load_result::error_code ec, std::string msg, const context& ctx);
+		rule_load_exception(falco::load_result::error_code ec, const std::string& msg, const context& ctx);
 		virtual ~rule_load_exception();
 		rule_load_exception(rule_load_exception&&) = default;
 		rule_load_exception& operator = (rule_load_exception&&) = default;
@@ -267,7 +267,7 @@ namespace rule_loader
 		explicit configuration(
 			const std::string& cont,
 			const indexed_vector<falco_source>& srcs,
-			std::string name)
+			const std::string& name)
 				: content(cont), sources(srcs), name(name),
 				  default_ruleset_id(0), replace_output_container_info(false),
 				  min_priority(falco_common::PRIORITY_DEBUG)
@@ -313,7 +313,7 @@ namespace rule_loader
 		struct requirement
 		{
 			requirement() = default;
-			requirement(const std::string n, const std::string v):
+			requirement(const std::string& n, const std::string& v):
 				name(n), version(v) { }
 			requirement(requirement&&) = default;
 			requirement& operator = (requirement&&) = default;

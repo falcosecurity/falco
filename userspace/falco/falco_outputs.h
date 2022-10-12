@@ -47,7 +47,7 @@ public:
 		uint32_t timeout,
 		bool buffered,
 		bool time_format_iso_8601,
-		std::string hostname);
+		const std::string& hostname);
 
 	virtual ~falco_outputs();
 

@@ -216,7 +216,7 @@ public:
 	falco_configuration();
 	virtual ~falco_configuration();
 
-	void init(std::string conf_filename, const std::vector<std::string>& cmdline_options);
+	void init(const std::string& conf_filename, const std::vector<std::string>& cmdline_options);
 	void init(const std::vector<std::string>& cmdline_options);
 
 	static void read_rules_file_directory(const string& path, list<string>& rules_filenames, list<string> &rules_folders);
