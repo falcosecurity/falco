@@ -21,24 +21,37 @@ DKMS_PACKAGE_NAME="@PACKAGE_NAME@"
 DKMS_VERSION="@DRIVER_VERSION@"
 NAME="@PACKAGE_NAME@"
 
-postinst_found=0
+chosen_driver="kmod"
 
 case "$1" in
 	configure)
-		for DKMS_POSTINST in /usr/lib/dkms/common.postinst /usr/share/$DKMS_PACKAGE_NAME/postinst; do
-			if [ -f $DKMS_POSTINST ]; then
-				$DKMS_POSTINST $DKMS_PACKAGE_NAME $DKMS_VERSION /usr/share/$DKMS_PACKAGE_NAME "" $2
-				postinst_found=1
-				break
-			fi
-		done
-		if [ "$postinst_found" -eq 0 ]; then
-			echo "ERROR: DKMS version is too old and $DKMS_PACKAGE_NAME was not"
-			echo "built with legacy DKMS support."
-			echo "You must either rebuild $DKMS_PACKAGE_NAME with legacy postinst"
-			echo "support or upgrade DKMS to a more current version."
-			exit 1
-		fi
+	    if [ -x /usr/bin/dialog ]; then
+	        CHOICE=$(dialog --clear --backtitle "Choose your preferred driver" --title "Falco driver" --menu "Choose one of the following options:" 15 40 4 \
+                1 "Kmod" \
+                2 "eBPF" \
+                3 "Don't start" \
+                2>&1 >/dev/tty)
+            clear
+            case $CHOICE in
+                1)
+                    chosen_driver="kmod"
+                    ;;
+                2)
+                    chosen_driver="ebpf"
+                    ;;
+                3)
+                    chosen_driver=
+                    ;;
+            esac
+        fi
+        case "$chosen_driver" in
+          "kmod")
+            falco-driver-loader module
+            ;;
+          "ebpf")
+            falco-driver-loader bpf
+            ;;
+        esac
 	;;
 esac
 
@@ -47,28 +60,33 @@ esac
 
 if [ "$1" = "configure" ] || [ "$1" = "abort-upgrade" ] || [ "$1" = "abort-deconfigure" ] || [ "$1" = "abort-remove" ] ; then
         # This will only remove masks created by d-s-h on package removal.
-        deb-systemd-helper unmask 'falco@kmod.target' >/dev/null || true
+        deb-systemd-helper unmask "falco@kmod.target" >/dev/null || true
+        deb-systemd-helper unmask "falco@ebpf.target" >/dev/null || true
 
         # was-enabled defaults to true, so new installations run enable.
-        if deb-systemd-helper --quiet was-enabled 'falco@kmod.target'; then
-                # Enables the unit on first installation, creates new
-                # symlinks on upgrades if the unit file has changed.
-                deb-systemd-helper enable 'falco@kmod.target' >/dev/null || true
-        else
-                # Update the statefile to add new symlinks (if any), which need to be
-                # cleaned up on purge. Also remove old symlinks.
-                deb-systemd-helper update-state 'falco@kmod.target' >/dev/null || true
+        if [ -n "$chosen_driver" ]; then
+            if deb-systemd-helper --quiet was-enabled "falco@$chosen_driver.target"; then
+                    # Enables the unit on first installation, creates new
+                    # symlinks on upgrades if the unit file has changed.
+                    deb-systemd-helper enable "falco@$chosen_driver.target" >/dev/null || true
+            else
+                    # Update the statefile to add new symlinks (if any), which need to be
+                    # cleaned up on purge. Also remove old symlinks.
+                    deb-systemd-helper update-state "falco@$chosen_driver.target" >/dev/null || true
+            fi
         fi
 fi
 
 if [ "$1" = "configure" ] || [ "$1" = "abort-upgrade" ] || [ "$1" = "abort-deconfigure" ] || [ "$1" = "abort-remove" ] ; then
-        if [ -d /run/systemd/system ]; then
-                systemctl --system daemon-reload >/dev/null || true
-                if [ -n "$2" ]; then
-                        _dh_action=restart
-                else
-                        _dh_action=start
-                fi
-                deb-systemd-invoke $_dh_action 'falco@kmod.target' >/dev/null || true
+    if [ -d /run/systemd/system ]; then
+      systemctl --system daemon-reload >/dev/null || true
+      if [ -n "$chosen_driver" ]; then
+        if [ -n "$2" ]; then
+          _dh_action=restart
+        else
+          _dh_action=start
         fi
+        deb-systemd-invoke $_dh_action "falco@$chosen_driver.target" >/dev/null || true
+      fi
+    fi
 fi
