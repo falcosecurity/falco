@@ -516,6 +516,7 @@ void rule_loader::compiler::compile(
 	catch(rule_load_exception &e)
 	{
 		cfg.res->add_error(e.ec, e.msg, e.ctx);
+		return;
 	}
 
 	// print info on any dangling lists or macros that were not used anywhere
