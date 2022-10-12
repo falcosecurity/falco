@@ -8,9 +8,6 @@ Wants=falco.service
 Type=oneshot
 User=root
 ExecStart=/sbin/modprobe falco
-Restart=on-failure
-TimeoutSec=30s
-RestartSec=15s
 
 [Install]
 WantedBy=multi-user.target
