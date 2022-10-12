@@ -19,6 +19,8 @@ limitations under the License.
 
 using namespace libsinsp::filter;
 
+extern sinsp_evttables g_infotables;
+
 static bool is_evttype_operator(const std::string& op)
 {
 	return op == "==" || op == "=" || op == "!=" || op == "in";
@@ -44,8 +46,7 @@ void filter_evttype_resolver::visitor::evttypes(const std::string& evtname, falc
 {
 	// Fill in from 2 to PPM_EVENT_MAX-1. 0 and 1 are excluded as
 	// those are PPM_GENERIC_E/PPME_GENERIC_X
-	static sinsp s_inspector;
-	const auto etable = s_inspector.get_event_info_tables()->m_event_info;
+	const struct ppm_event_info* etable = g_infotables.m_event_info;
 	for(uint16_t i = 2; i < PPM_EVENT_MAX; i++)
 	{
 		// Skip unused events or events not matching the requested evtname
