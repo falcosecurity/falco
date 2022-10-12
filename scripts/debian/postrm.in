@@ -28,6 +28,7 @@ fi
 if [ "$1" = "remove" ]; then
         if [ -x "/usr/bin/deb-systemd-helper" ]; then
                 deb-systemd-helper mask 'falco@kmod.target' >/dev/null || true
+                deb-systemd-helper mask 'falco@ebpf.target' >/dev/null || true
         fi
 fi
 
@@ -35,5 +36,7 @@ if [ "$1" = "purge" ]; then
         if [ -x "/usr/bin/deb-systemd-helper" ]; then
                 deb-systemd-helper purge 'falco@kmod.target' >/dev/null || true
                 deb-systemd-helper unmask 'falco@kmod.target' >/dev/null || true
+                deb-systemd-helper purge 'falco@ebpf.target' >/dev/null || true
+                deb-systemd-helper unmask 'falco@ebpf.target' >/dev/null || true
         fi
 fi
