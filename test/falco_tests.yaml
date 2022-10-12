@@ -457,11 +457,6 @@ trace_files: !mux
         item_name: some macro
         code: LOAD_ERR_VALIDATE
         message: "Undefined macro 'foo' used in filter."
-    validate_warnings:
-      - item_type: macro
-        item_name: some macro
-        code: LOAD_UNUSED_MACRO
-        message: "Macro not referred to by any other rule/macro"
     validate_rules_file:
       - rules/invalid_overwrite_macro_multiple_docs.yaml
     trace_file: trace_files/cat_write.scap
