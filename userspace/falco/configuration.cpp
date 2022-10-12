@@ -51,7 +51,7 @@ falco_configuration::~falco_configuration()
 	}
 }
 
-void falco_configuration::init(string conf_filename, const vector<string> &cmdline_options)
+void falco_configuration::init(const string& conf_filename, const vector<string> &cmdline_options)
 {
 	string m_config_file = conf_filename;
 	m_config = new yaml_configuration();

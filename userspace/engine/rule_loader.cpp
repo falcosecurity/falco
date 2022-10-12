@@ -58,7 +58,7 @@ rule_loader::context::context(const std::string& name)
 
 rule_loader::context::context(const YAML::Node &item,
 			      const item_type item_type,
-			      const std::string item_name,
+			      const std::string& item_name,
 			      const context& parent)
 {
 	init(parent.name(), position(item.Mark()), item_type, item_name, parent);
@@ -108,7 +108,7 @@ const std::string& rule_loader::context::name() const
 void rule_loader::context::init(const std::string& name,
 				const position& pos,
 				const item_type item_type,
-				const std::string item_name,
+				const std::string& item_name,
 				const context& parent)
 {
 	// Copy parent locations
@@ -546,7 +546,7 @@ rule_loader::rule_info::rule_info(context &ctx)
 {
 }
 
-rule_loader::rule_load_exception::rule_load_exception(falco::load_result::error_code ec, std::string msg, const context& ctx)
+rule_loader::rule_load_exception::rule_load_exception(falco::load_result::error_code ec, const std::string& msg, const context& ctx)
 	: ec(ec), msg(msg), ctx(ctx)
 {
 }

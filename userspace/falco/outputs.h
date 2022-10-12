@@ -63,7 +63,7 @@ class abstract_output
 public:
 	virtual ~abstract_output() {}
 
-	void init(config oc, bool buffered, std::string hostname, bool json_output)
+	void init(const config& oc, bool buffered, const std::string& hostname, bool json_output)
 	{
 		m_oc = oc;
 		m_buffered = buffered;
