@@ -319,9 +319,9 @@ private:
 	}
 
 	// used in signal handlers to control the flow of the application
-	void terminate();
-	void restart();
-	void reopen_outputs();
+	void terminate(bool verbose=true);
+	void restart(bool verbose=true);
+	void reopen_outputs(bool verbose=true);
 	inline bool should_terminate()
 	{
 		return g_terminate.load(std::memory_order_seq_cst) != APP_SIGNAL_NOT_SET;

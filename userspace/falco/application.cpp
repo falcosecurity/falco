@@ -98,19 +98,25 @@ application::~application()
 {
 }
 
-void application::terminate()
+void application::terminate(bool verbose)
 {
 	if (should_take_action_to_signal(falco::app::g_terminate))
 	{
-		falco_logger::log(LOG_INFO, "SIGINT received, exiting...\n");
+		if (verbose)
+		{
+			falco_logger::log(LOG_INFO, "SIGINT received, exiting...\n");
+		}
 	}
 }
 
-void application::reopen_outputs()
+void application::reopen_outputs(bool verbose)
 {
 	if (should_take_action_to_signal(falco::app::g_reopen_outputs))
 	{
-		falco_logger::log(LOG_INFO, "SIGUSR1 received, reopening outputs...\n");
+		if (verbose)
+		{
+			falco_logger::log(LOG_INFO, "SIGUSR1 received, reopening outputs...\n");
+		}
 		if(m_state != nullptr && m_state->outputs != nullptr)
 		{
 			m_state->outputs->reopen_outputs();
@@ -119,11 +125,14 @@ void application::reopen_outputs()
 	}
 }
 
-void application::restart()
+void application::restart(bool verbose)
 {
 	if (should_take_action_to_signal(falco::app::g_restart))
 	{
-		falco_logger::log(LOG_INFO, "SIGHUP received, restarting...\n");
+		if (verbose)
+		{
+			falco_logger::log(LOG_INFO, "SIGHUP received, restarting...\n");
+		}
 	}
 }
 
