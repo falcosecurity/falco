@@ -89,33 +89,30 @@ application::run_result application::validate_rules_files()
 			{
 				results.push_back(res->as_json(rc));
 			}
+			
+			if(summary != "")
+			{
+				summary += "\n";
+			}
+
+			// Add to the summary if not successful, or successful
+			// with no warnings.
+			if(!res->successful() || (res->successful() && !res->has_warnings()))
+			{
+				summary += res->as_string(true, rc);
+			}
 			else
 			{
-				if(summary != "")
-				{
-					summary += "\n";
-				}
+				// If here, there must be only warnings.
+				// Add a line to the summary noting that the
+				// file was ok with warnings, without actually
+				// printing the warnings.
+				summary += filename + ": Ok, with warnings";
 
-				// Add to the summary if not successful, or successful
-				// with no warnings.
-				if(!res->successful() ||
-				   (res->successful() && !res->has_warnings()))
+				// If verbose is true, print the warnings now.
+				if(m_options.verbose)
 				{
-					summary += res->as_string(true, rc);
-				}
-				else
-				{
-					// If here, there must be only warnings.
-					// Add a line to the summary noting that the
-					// file was ok with warnings, without actually
-					// printing the warnings.
-					summary += filename + ": Ok, with warnings";
-
-					// If verbose is true, print the warnings now.
-					if(m_options.verbose)
-					{
-						fprintf(stderr, "%s\n", res->as_string(true, rc).c_str());
-					}
+					fprintf(stderr, "%s\n", res->as_string(true, rc).c_str());
 				}
 			}
 		}
