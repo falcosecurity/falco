@@ -211,7 +211,14 @@ load_kernel_module_compile() {
 	fi
 
 	# Try to compile using all the available gcc versions
-	for CURRENT_GCC in $(which gcc) $(ls "$(dirname "$(which gcc)")"/gcc-* | grep 'gcc-[0-9]\+' | sort -n -r -k 2 -t -); do
+	for CURRENT_GCC in $(ls "$(dirname "$(which gcc)")"/gcc*); do
+		# Filter away gcc-{ar,nm,...}
+		# first line of gcc --version output is always like:
+		# "gcc (GCC) 12.2.0"
+		${CURRENT_GCC} --version 2>&1 | grep GCC
+		if [ "$?" -ne "0" ]; then
+			continue
+		fi
 		echo "* Trying to dkms install ${DRIVER_NAME} module with GCC ${CURRENT_GCC}"
 		echo "#!/usr/bin/env bash" > /tmp/falco-dkms-make
 		echo "make CC=${CURRENT_GCC} \$@" >> /tmp/falco-dkms-make
