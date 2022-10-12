@@ -24,7 +24,8 @@ syscall_evt_drop_mgr::syscall_evt_drop_mgr():
 	m_inspector(NULL),
 	m_outputs(NULL),
 	m_next_check_ts(0),
-	m_simulate_drops(false)
+	m_simulate_drops(false),
+	m_threshold(0)
 {
 }
 

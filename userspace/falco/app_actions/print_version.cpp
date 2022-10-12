@@ -38,8 +38,8 @@ application::run_result application::print_version()
 		unsigned long driver_schema_minor = PPM_API_VERSION_MINOR(driver_schema_version);
 		unsigned long driver_schema_patch = PPM_API_VERSION_PATCH(driver_schema_version);
 		printf("Driver:\n");
-		printf("  API version:    %ld.%ld.%ld\n", driver_api_major, driver_api_minor, driver_api_patch);
-		printf("  Schema version: %ld.%ld.%ld\n", driver_schema_major, driver_schema_minor, driver_schema_patch);
+		printf("  API version:    %lu.%lu.%lu\n", driver_api_major, driver_api_minor, driver_api_patch);
+		printf("  Schema version: %lu.%lu.%lu\n", driver_schema_major, driver_schema_minor, driver_schema_patch);
 		printf("  Default driver: %s\n", DRIVER_VERSION);
 
 		return run_result::exit();
