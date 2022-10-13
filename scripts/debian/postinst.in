@@ -17,42 +17,43 @@
 #
 set -e
 
-DKMS_PACKAGE_NAME="@PACKAGE_NAME@"
-DKMS_VERSION="@DRIVER_VERSION@"
-NAME="@PACKAGE_NAME@"
-
 chosen_driver="kmod"
 
-case "$1" in
-	configure)
-	    if [ -x /usr/bin/dialog ]; then
-	        CHOICE=$(dialog --clear --backtitle "Choose your preferred driver" --title "Falco driver" --menu "Choose one of the following options:" 15 40 4 \
-                1 "Kmod" \
-                2 "eBPF" \
-                3 "Don't start" \
-                2>&1 >/dev/tty)
-            clear
-            case $CHOICE in
-                1)
-                    chosen_driver="kmod"
-                    ;;
-                2)
-                    chosen_driver="ebpf"
-                    ;;
-                3)
-                    chosen_driver=
-                    ;;
-            esac
-        fi
-        case "$chosen_driver" in
-          "kmod")
-            falco-driver-loader module
-            ;;
-          "ebpf")
-            falco-driver-loader bpf
-            ;;
-        esac
-	;;
+if [ -z "$PS1" ]; then
+  echo "Skipping driver selection in non-interactive mode"
+else
+  case "$1" in
+    configure)
+        if [ -x /usr/bin/dialog ]; then
+            CHOICE=$(dialog --clear --backtitle "Choose your preferred driver" --title "Falco driver" --menu "Choose one of the following options:" 15 40 4 \
+                  1 "Kmod" \
+                  2 "eBPF" \
+                  3 "Don't start" \
+                  2>&1 >/dev/tty)
+              clear
+              case $CHOICE in
+                  1)
+                      chosen_driver="kmod"
+                      ;;
+                  2)
+                      chosen_driver="ebpf"
+                      ;;
+                  3)
+                      chosen_driver=
+                      ;;
+              esac
+          fi
+    ;;
+  esac
+fi
+
+case "$chosen_driver" in
+    "kmod")
+      falco-driver-loader module
+      ;;
+    "ebpf")
+      falco-driver-loader bpf
+      ;;
 esac
 
 # Based off what debhelper dh_systemd_enable/13.3.4 would have added

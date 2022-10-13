@@ -15,7 +15,7 @@ RUN if [ "$TARGETARCH" = "amd64" ] ; then curl -L -o grpcurl.tar.gz \
     https://github.com/fullstorydev/grpcurl/releases/download/v1.8.6/grpcurl_1.8.6_linux_arm64.tar.gz; \
     fi;
 
-RUN dnf install -y python-pip python docker findutils jq unzip && dnf clean all
+RUN dnf install -y python-pip python docker findutils jq unzip sed curl && dnf clean all
 ENV PATH="/root/.local/bin/:${PATH}"
 RUN pip install --user avocado-framework==69.0
 RUN pip install --user avocado-framework-plugin-varianter-yaml-to-mux==69.0
