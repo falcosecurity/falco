@@ -27,6 +27,10 @@ application::run_result application::load_config()
 
 		// log after config init because config determines where logs go
 		falco_logger::log(LOG_INFO, "Falco version: " + std::string(FALCO_VERSION) + " (" + std::string(FALCO_TARGET_ARCH) + ")\n");
+		if (!m_state->cmdline.empty())
+		{
+			falco_logger::log(LOG_DEBUG, "CLI args: " + m_state->cmdline);
+		}
 		falco_logger::log(LOG_INFO, "Falco initialized with configuration file: " + m_options.conf_filename + "\n");
 	}
 	else
