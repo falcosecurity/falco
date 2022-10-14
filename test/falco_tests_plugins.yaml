@@ -54,13 +54,6 @@ trace_files: !mux
       - 'Cloudtrail Create Instance': 1
     conf_file: BUILD_DIR/test/confs/plugins/cloudtrail_json_create_instances_bigevent.yaml
 
-  incompatible_extract_sources:
-    exit_status: 1
-    stderr_contains: "Plugin '.*' has field extraction capability but is not compatible with any known event source"
-    conf_file: BUILD_DIR/test/confs/plugins/incompatible_extract_sources.yaml
-    rules_file:
-      - rules/plugins/cloudtrail_create_instances.yaml
-
   overlap_extract_sources:
     exit_status: 1
     stderr_contains: "Plugin '.*' supports extraction of field 'test.field' that is overlapping for source 'test_source'"

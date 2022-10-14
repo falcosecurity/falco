@@ -186,8 +186,9 @@ application::run_result application::init_inspectors()
 			&& p->caps() & CAP_EXTRACTION
 			&& !(p->caps() & CAP_SOURCING && p->is_source_compatible(p->event_source())))
 		{
-			return run_result::fatal("Plugin '" + p->name()
-				+ "' has field extraction capability but is not compatible with any known event source");
+			falco_logger::log(LOG_WARNING, 
+				"Plugin '" + p->name()
+				+ "' has field extraction capability but is not compatible with any known event source\n");
 		}
 	}
 
