@@ -16,31 +16,37 @@
 #
 set -e
 
-chosen_driver="kmod"
+chosen_driver=
 
-if [ -z "$PS1" ]; then
-  echo "Skipping driver selection in non-interactive mode"
-else
-  if [ -x /usr/bin/dialog ]; then
-      CHOICE=$(dialog --clear --backtitle "Choose your preferred driver" --title "Falco driver" --menu "Choose one of the following options:" 15 40 4 \
-            1 "Kmod" \
-            2 "eBPF" \
-            3 "Don't start" \
-            2>&1 >/dev/tty)
-        clear
-        case $CHOICE in
-             1)
-                  chosen_driver="kmod"
-                  ;;
-             2)
-                  chosen_driver="ebpf"
-                  ;;
-             3)
-                  chosen_driver=
-                  ;;
-        esac
-  fi
-fi
+case "$1" in
+    configure)
+         if [ ! -t 0 ] ; then
+          echo "Skipping driver selection in non-interactive mode"
+        else
+          if [ -x /usr/bin/dialog ]; then
+            CHOICE=$(dialog --clear --backtitle "Choose your preferred driver" --title "Falco driver" --menu "Choose one of the following options:" 15 40 4 \
+                  1 "Kmod" \
+                  2 "eBPF" \
+                  3 "Don't start" \
+                  2>&1 >/dev/tty)
+              clear
+              case $CHOICE in
+                  1)
+                      chosen_driver="kmod"
+                      ;;
+                  2)
+                      chosen_driver="ebpf"
+                      ;;
+                  3)
+                      chosen_driver=
+                      ;;
+              esac
+          else
+            chosen_driver="kmod"
+          fi
+        fi
+    ;;
+esac
 
 case "$chosen_driver" in
     "kmod")
