@@ -150,6 +150,7 @@ syscall_event_drops:
     - alert
   rate: .03333
   max_burst: 1
+  simulate_drops: false
 
 # Falco uses a shared buffer between the kernel and userspace to receive
 # the events (eg., system call information) in userspace.
