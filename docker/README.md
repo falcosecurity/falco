@@ -13,5 +13,6 @@ This directory contains various ways to package Falco as a container and related
 | [falcosecurity/falco-builder:latest](https://hub.docker.com/repository/docker/falcosecurity/falco-builder) | docker/builder | The complete build tool chain for compiling Falco from source. See [the documentation](https://falco.org/docs/getting-started/source/) for more details on building from source. Used to build Falco (CI). |
 | [falcosecurity/falco-tester:latest](https://hub.docker.com/repository/docker/falcosecurity/falco-tester) | docker/tester | Container image for running the Falco test suite. Used to run Falco integration tests (CI). |
 | _not to be published_ | docker/local | Built on-the-fly and used by falco-tester. |
+| _not to be published_ | docker/dev | Built on-the-fly to test local Falco development. |
 
-> Note: `falco-builder`, `falco-tester` (and the `docker/local` image that it's built on the fly) are not integrated into the release process because they are development and CI tools that need to be manually pushed only when updated.
+> Note: `falco-builder`, `falco-tester`, `docker/local`, `docker/dev` images are not integrated into the release process because they are development and CI tools that need to be manually pushed only when updated.

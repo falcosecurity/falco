@@ -233,3 +233,5 @@ endif()
 
 # Packages configuration
 include(CPackConfig)
+
+add_subdirectory(docker/dev)
