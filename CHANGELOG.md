@@ -1,5 +1,147 @@
 # Change Log
 
+## v0.33.0
+
+Released on 2022-10-17
+
+### Major Changes
+
+
+* new: add a `drop_pct` referred to the global number of events [[#2130](https://github.com/falcosecurity/falco/pull/2130)] - [@Andreagit97](https://github.com/Andreagit97)
+* new: print some info about eBPF and enabled sources when Falco starts [[#2133](https://github.com/falcosecurity/falco/pull/2133)] - [@Andreagit97](https://github.com/Andreagit97)
+* new(userspace): print architecture information [[#2147](https://github.com/falcosecurity/falco/pull/2147)] - [@Andreagit97](https://github.com/Andreagit97)
+* new(CI): add CodeQL security scanning to Falco. [[#2171](https://github.com/falcosecurity/falco/pull/2171)] - [@Andreagit97](https://github.com/Andreagit97)
+* new: configure syscall buffer dimension from Falco [[#2214](https://github.com/falcosecurity/falco/pull/2214)] - [@Andreagit97](https://github.com/Andreagit97)
+* new(cmdline): add development support for modern BPF probe [[#2221](https://github.com/falcosecurity/falco/pull/2221)] - [@Andreagit97](https://github.com/Andreagit97)
+* new(falco-driver-loader): `DRIVERS_REPO` now supports the use of multiple download URLs (comma separated) [[#2165](https://github.com/falcosecurity/falco/pull/2165)] - [@IanRobertson-wpe](https://github.com/IanRobertson-wpe)
+* new(userspace/engine): support alternative plugin version requirements in checks [[#2190](https://github.com/falcosecurity/falco/pull/2190)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* new: support running multiple event sources in parallel [[#2182](https://github.com/falcosecurity/falco/pull/2182)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* new(userspace/falco): automatically create paths for grpc unix socket and gvisor endpoint. [[#2189](https://github.com/falcosecurity/falco/pull/2189)] - [@FedeDP](https://github.com/FedeDP)
+* new(scripts): allow falco-driver-loader to properly distinguish any ubuntu flavor [[#2178](https://github.com/falcosecurity/falco/pull/2178)] - [@FedeDP](https://github.com/FedeDP)
+* new: add option to enable event sources selectively [[#2085](https://github.com/falcosecurity/falco/pull/2085)] - [@jasondellaluce](https://github.com/jasondellaluce)
+
+
+### Minor Changes
+
+* docs(falco-driver-loader): add some comments in `falco-driver-loader` [[#2153](https://github.com/falcosecurity/falco/pull/2153)] - [@Andreagit97](https://github.com/Andreagit97)
+* update(cmake): use latest libs tag `0.9.0` [[#2257](https://github.com/falcosecurity/falco/pull/2257)] - [@Andreagit97](https://github.com/Andreagit97)
+* update(.circleci): re-enabled cppcheck [[#2186](https://github.com/falcosecurity/falco/pull/2186)] - [@leogr](https://github.com/leogr)
+* update(userspace/engine): improve falco files loading performance [[#2151](https://github.com/falcosecurity/falco/pull/2151)] - [@VadimZy](https://github.com/VadimZy)
+* update(cmake): use latest driver tag 3.0.1+driver [[#2251](https://github.com/falcosecurity/falco/pull/2251)] - [@Andreagit97](https://github.com/Andreagit97)
+* update(userspace/falco)!: adapt stats writer for multiple parallel event sources [[#2182](https://github.com/falcosecurity/falco/pull/2182)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* refactor(userspace/engine): remove falco engine APIs that returned a required_engine_version [[#2096](https://github.com/falcosecurity/falco/pull/2096)] - [@mstemm](https://github.com/mstemm)
+* update(userspace/engine): add some small changes to rules matching that reduce cpu usage with high event volumes (> 1M syscalls/sec) [[#2210](https://github.com/falcosecurity/falco/pull/2210)] - [@mstemm](https://github.com/mstemm)
+* rules: added process IDs to default rules [[#2211](https://github.com/falcosecurity/falco/pull/2211)] - [@spyder-kyle](https://github.com/spyder-kyle)
+* update(scripts/debian): falco.service systemd unit is now cleaned-up during (re)install and removal via the DEB and RPM packages [[#2138](https://github.com/falcosecurity/falco/pull/2138)] - [@Happy-Dude](https://github.com/Happy-Dude)
+* update(userspace/falco): move on from deprecated libs API for printing event list [[#2253](https://github.com/falcosecurity/falco/pull/2253)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* chore(userspace/falco): improve cli helper and log options with debug level [[#2252](https://github.com/falcosecurity/falco/pull/2252)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* update(userspace): minor pre-release improvements [[#2236](https://github.com/falcosecurity/falco/pull/2236)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* update: bumped libs to fd46dd139a8e35692a7d40ab2f0ed2016df827cf. [[#2201](https://github.com/falcosecurity/falco/pull/2201)] - [@FedeDP](https://github.com/FedeDP)
+* update!: gVisor sock default path changed from `/tmp/gvisor.sock` to `/run/falco/gvisor.sock`  [[#2163](https://github.com/falcosecurity/falco/pull/2163)] - [@vjjmiras](https://github.com/vjjmiras)
+* update!: gRPC server sock default path changed from `/run/falco.sock.sock` to `/run/falco/falco.sock` [[#2163](https://github.com/falcosecurity/falco/pull/2163)] - [@vjjmiras](https://github.com/vjjmiras)
+* update(scripts/falco-driver-loader): minikube environment is now correctly detected [[#2191](https://github.com/falcosecurity/falco/pull/2191)] - [@alacuku](https://github.com/alacuku)
+* update(rules/falco_rules.yaml): `required_engine_version` changed to 13 [[#2179](https://github.com/falcosecurity/falco/pull/2179)] - [@incertum](https://github.com/incertum)
+* refactor(userspace/falco): re-design stats writer and make it thread-safe [[#2109](https://github.com/falcosecurity/falco/pull/2109)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* refactor(userspace/falco): make signal handlers thread safe [[#2091](https://github.com/falcosecurity/falco/pull/2091)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* refactor(userspace/engine): strengthen and document thread-safety guarantees of falco_engine::process_event [[#2082](https://github.com/falcosecurity/falco/pull/2082)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* update(userspace/falco): make webserver threadiness configurable [[#2090](https://github.com/falcosecurity/falco/pull/2090)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* refactor(userspace/falco): reduce app actions dependency on app state and inspector [[#2097](https://github.com/falcosecurity/falco/pull/2097)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* update(userspace/falco): use move semantics in falco logger [[#2095](https://github.com/falcosecurity/falco/pull/2095)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* update: use `FALCO_HOSTNAME` env var to override the hostname value [[#2174](https://github.com/falcosecurity/falco/pull/2174)] - [@leogr](https://github.com/leogr)
+* update: bump libs and driver versions to 6599e2efebce30a95f27739d655d53f0d5f686e4 [[#2177](https://github.com/falcosecurity/falco/pull/2177)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* refactor(userspace/falco): make output rate limiter optional and output engine explicitly thread-safe [[#2139](https://github.com/falcosecurity/falco/pull/2139)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* update(falco.yaml)!: notification rate limiter disabled by default. [[#2139](https://github.com/falcosecurity/falco/pull/2139)] - [@jasondellaluce](https://github.com/jasondellaluce)
+
+
+### Bug Fixes
+
+* fix: compute the `drop ratio` in the right way [[#2128](https://github.com/falcosecurity/falco/pull/2128)] - [@Andreagit97](https://github.com/Andreagit97)
+* fix(falco_service): falco service needs to write under /sys/module/falco [[#2238](https://github.com/falcosecurity/falco/pull/2238)] - [@Andreagit97](https://github.com/Andreagit97)
+* fix(userspace): cleanup output of ruleset validation result [[#2248](https://github.com/falcosecurity/falco/pull/2248)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* fix(userspace): properly print ignored syscalls messages when not in `-A` mode [[#2243](https://github.com/falcosecurity/falco/pull/2243)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* fix(falco): clarify pid/tid and container info in gvisor [[#2223](https://github.com/falcosecurity/falco/pull/2223)] - [@LucaGuerra](https://github.com/LucaGuerra)
+* fix(userspace/engine): avoid reading duplicate exception values [[#2200](https://github.com/falcosecurity/falco/pull/2200)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* fix: hostname was not present when `json_output: true` [[#2174](https://github.com/falcosecurity/falco/pull/2174)] - [@leogr](https://github.com/leogr)
+
+
+### Rule Changes
+
+* rule(macro: known_gke_mount_in_privileged_containers): add new macro [[#2198](https://github.com/falcosecurity/falco/pull/2198)] - [@hi120ki](https://github.com/hi120ki)
+* rule(Mount Launched in Privileged Container): add GKE default pod into allowlist in Mount Launched of Privileged Container rule [[#2198](https://github.com/falcosecurity/falco/pull/2198)] - [@hi120ki](https://github.com/hi120ki)
+* rule(list: known_binaries_to_read_environment_variables_from_proc_files): add new list [[#2193](https://github.com/falcosecurity/falco/pull/2193)] - [@hi120ki](https://github.com/hi120ki)
+* rule(Read environment variable from /proc files): add rule to detect an attempt to read process environment variables from /proc files [[#2193](https://github.com/falcosecurity/falco/pull/2193)] - [@hi120ki](https://github.com/hi120ki)
+* rule(macro: k8s_containers): add falco no-driver images [[#2234](https://github.com/falcosecurity/falco/pull/2234)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* rule(macro: open_file_failed): add new macro [[#2118](https://github.com/falcosecurity/falco/pull/2118)] - [@incertum](https://github.com/incertum)
+* rule(macro: directory_traversal): add new macro [[#2118](https://github.com/falcosecurity/falco/pull/2118)] - [@incertum](https://github.com/incertum)
+* rule(Directory traversal monitored file read): add new rule [[#2118](https://github.com/falcosecurity/falco/pull/2118)] - [@incertum](https://github.com/incertum)
+* rule(Modify Container Entrypoint): new rule created to detect CVE-2019-5736 [[#2188](https://github.com/falcosecurity/falco/pull/2188)] - [@darryk10](https://github.com/darryk10)
+* rule(Program run with disallowed http proxy env)!: disabled by default [[#2179](https://github.com/falcosecurity/falco/pull/2179)] - [@incertum](https://github.com/incertum)
+* rule(Container Drift Detected (chmod))!: disabled by default [[#2179](https://github.com/falcosecurity/falco/pull/2179)] - [@incertum](https://github.com/incertum)
+* rule(Container Drift Detected (open+create))!: disabled by default [[#2179](https://github.com/falcosecurity/falco/pull/2179)] - [@incertum](https://github.com/incertum)
+* rule(Packet socket created in container)!: removed consider_packet_socket_communication macro [[#2179](https://github.com/falcosecurity/falco/pull/2179)] - [@incertum](https://github.com/incertum)
+* rule(macro: consider_packet_socket_communication)!: remove unused macro [[#2179](https://github.com/falcosecurity/falco/pull/2179)] - [@incertum](https://github.com/incertum)
+* rule(Interpreted procs outbound network activity)!: disabled by default [[#2166](https://github.com/falcosecurity/falco/pull/2166)] - [@incertum](https://github.com/incertum)
+* rule(Interpreted procs inbound network activity)!: disabled by default [[#2166](https://github.com/falcosecurity/falco/pull/2166)] - [@incertum](https://github.com/incertum)
+* rule(Contact cloud metadata service from container)!: disabled by default [[#2166](https://github.com/falcosecurity/falco/pull/2166)] - [@incertum](https://github.com/incertum)
+* rule(macro: consider_interpreted_outbound)!: remove unused macro [[#2166](https://github.com/falcosecurity/falco/pull/2166)] - [@incertum](https://github.com/incertum)
+* rule(macro: consider_interpreted_inbound)!: remove unused macro [[#2166](https://github.com/falcosecurity/falco/pull/2166)] - [@incertum](https://github.com/incertum)
+* rule(macro: consider_metadata_access)!: remove unused macro [[#2166](https://github.com/falcosecurity/falco/pull/2166)] - [@incertum](https://github.com/incertum)
+* rule(Unexpected outbound connection destination)!: disabled by default [[#2168](https://github.com/falcosecurity/falco/pull/2168)] - [@incertum](https://github.com/incertum)
+* rule(Unexpected inbound connection source)!: disabled by default [[#2168](https://github.com/falcosecurity/falco/pull/2168)] - [@incertum](https://github.com/incertum)
+* rule(Read Shell Configuration File)!: disabled by default [[#2168](https://github.com/falcosecurity/falco/pull/2168)] - [@incertum](https://github.com/incertum)
+* rule(Schedule Cron Jobs)!: disabled by default [[#2168](https://github.com/falcosecurity/falco/pull/2168)] - [@incertum](https://github.com/incertum)
+* rule(Launch Suspicious Network Tool on Host)!: disabled by default [[#2168](https://github.com/falcosecurity/falco/pull/2168)] - [@incertum](https://github.com/incertum)
+* rule(Create Hidden Files or Directories)!: disabled by default [[#2168](https://github.com/falcosecurity/falco/pull/2168)] - [@incertum](https://github.com/incertum)
+* rule(Outbound or Inbound Traffic not to Authorized Server Process and Port)!: disabled by default [[#2168](https://github.com/falcosecurity/falco/pull/2168)] - [@incertum](https://github.com/incertum)
+* rule(Network Connection outside Local Subnet)!: disabled by default [[#2168](https://github.com/falcosecurity/falco/pull/2168)] - [@incertum](https://github.com/incertum)
+* rule(macro: consider_all_outbound_conns)!: remove unused macro [[#2168](https://github.com/falcosecurity/falco/pull/2168)] - [@incertum](https://github.com/incertum)
+* rule(macro: consider_all_inbound_conns)!: remove unused macro [[#2168](https://github.com/falcosecurity/falco/pull/2168)] - [@incertum](https://github.com/incertum)
+* rule(macro: consider_shell_config_reads)!: remove unused macro [[#2168](https://github.com/falcosecurity/falco/pull/2168)] - [@incertum](https://github.com/incertum)
+* rule(macro: consider_all_cron_jobs)!: remove unused macro [[#2168](https://github.com/falcosecurity/falco/pull/2168)] - [@incertum](https://github.com/incertum)
+* rule(macro: consider_all_inbound_conns)!: remove unused macro [[#2168](https://github.com/falcosecurity/falco/pull/2168)] - [@incertum](https://github.com/incertum)
+* rule(macro: consider_hidden_file_creation)!: remove unused macro [[#2168](https://github.com/falcosecurity/falco/pull/2168)] - [@incertum](https://github.com/incertum)
+* rule(macro: allowed_port)!: remove unused macro [[#2168](https://github.com/falcosecurity/falco/pull/2168)] - [@incertum](https://github.com/incertum)
+* rule(macro: enabled_rule_network_only_subnet)!: remove unused macro [[#2168](https://github.com/falcosecurity/falco/pull/2168)] - [@incertum](https://github.com/incertum)
+* rule(macro: consider_userfaultfd_activities)!: remove unused macro [[#2168](https://github.com/falcosecurity/falco/pull/2168)] - [@incertum](https://github.com/incertum)
+* rule(macro: consider_all_chmods)!: remove unused macro [[#2168](https://github.com/falcosecurity/falco/pull/2168)] - [@incertum](https://github.com/incertum)
+* rule(Set Setuid or Setgid bit)!: removed consider_all_chmods macro [[#2168](https://github.com/falcosecurity/falco/pull/2168)] - [@incertum](https://github.com/incertum)
+* rule(Container Drift Detected (chmod))!: removed consider_all_chmods macro [[#2168](https://github.com/falcosecurity/falco/pull/2168)] - [@incertum](https://github.com/incertum)
+* rule(Unprivileged Delegation of Page Faults Handling to a Userspace Process)!: removed consider_userfaultfd_activities macro [[#2168](https://github.com/falcosecurity/falco/pull/2168)] - [@incertum](https://github.com/incertum)
+
+
+### Non user-facing changes
+
+* new(userspace): support `SCAP_FILTERED_EVENT` return code [[#2148](https://github.com/falcosecurity/falco/pull/2148)] - [@Andreagit97](https://github.com/Andreagit97)
+* chore(test/utils): remove unused script [[#2157](https://github.com/falcosecurity/falco/pull/2157)] - [@Andreagit97](https://github.com/Andreagit97)
+* Enrich pull request template [[#2162](https://github.com/falcosecurity/falco/pull/2162)] - [@Andreagit97](https://github.com/Andreagit97)
+* vote: update(OWNERS): add Andrea Terzolo to owners [[#2185](https://github.com/falcosecurity/falco/pull/2185)] - [@Andreagit97](https://github.com/Andreagit97)
+* fix(CI): codespell should ignore `ro` word [[#2173](https://github.com/falcosecurity/falco/pull/2173)] - [@Andreagit97](https://github.com/Andreagit97)
+* chore: bump plugin version [[#2256](https://github.com/falcosecurity/falco/pull/2256)] - [@Andreagit97](https://github.com/Andreagit97)
+* fix(userspace/falco): avoid using CPU when main thread waits for parallel event sources [[#2255](https://github.com/falcosecurity/falco/pull/2255)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* fix(scripts): inject kmod script fails with some systemd versions [[#2250](https://github.com/falcosecurity/falco/pull/2250)] - [@Andreagit97](https://github.com/Andreagit97)
+* chore(userspace/falco): make logging optional when terminating, restarting, and reopening outputs [[#2249](https://github.com/falcosecurity/falco/pull/2249)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* chore: bump libs version [[#2244](https://github.com/falcosecurity/falco/pull/2244)] - [@Andreagit97](https://github.com/Andreagit97)
+* update(userspace): solve warnings and performance tips from cppcheck [[#2247](https://github.com/falcosecurity/falco/pull/2247)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* fix(userspace/falco): make signal termination more robust with multi-threading [[#2235](https://github.com/falcosecurity/falco/pull/2235)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* fix(userspace/falco): make termination and signal handlers more stable [[#2239](https://github.com/falcosecurity/falco/pull/2239)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* fix(userspace): safely check string bounded access [[#2237](https://github.com/falcosecurity/falco/pull/2237)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* chore: bump libs/driver to the latest release branch commit [[#2232](https://github.com/falcosecurity/falco/pull/2232)] - [@Andreagit97](https://github.com/Andreagit97)
+* fix(userspace/falco): check plugin requirements when validating rule files [[#2233](https://github.com/falcosecurity/falco/pull/2233)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* fix(userspace): add explicit constructors and initializations [[#2229](https://github.com/falcosecurity/falco/pull/2229)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* Add StackRox to adopters [[#2187](https://github.com/falcosecurity/falco/pull/2187)] - [@Molter73](https://github.com/Molter73)
+* fix(process_events): check the return value of `open_live_inspector` [[#2215](https://github.com/falcosecurity/falco/pull/2215)] - [@Andreagit97](https://github.com/Andreagit97)
+* fix(userspace/engine): properly include stdexcept header to fix build. [[#2197](https://github.com/falcosecurity/falco/pull/2197)] - [@FedeDP](https://github.com/FedeDP)
+* refactor(userspace/engine): split rule loader classes for a more testable design [[#2206](https://github.com/falcosecurity/falco/pull/2206)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* chore(OWNERS): cleanup inactive reviewer [[#2204](https://github.com/falcosecurity/falco/pull/2204)] - [@leogr](https://github.com/leogr)
+* fix(circleci): falco-driver-loader image build must be done starting from just-pushed falco master image. [[#2194](https://github.com/falcosecurity/falco/pull/2194)] - [@FedeDP](https://github.com/FedeDP)
+* Support condition parse errors in rule loading results [[#2155](https://github.com/falcosecurity/falco/pull/2155)] - [@mstemm](https://github.com/mstemm)
+* docs: readme update [[#2183](https://github.com/falcosecurity/falco/pull/2183)] - [@leogr](https://github.com/leogr)
+* cleanup: rename legacy references [[#2180](https://github.com/falcosecurity/falco/pull/2180)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* refactor(userspace/engine): increase const coherence in falco engine [[#2081](https://github.com/falcosecurity/falco/pull/2081)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* Rules result handle multiple files [[#2158](https://github.com/falcosecurity/falco/pull/2158)] - [@mstemm](https://github.com/mstemm)
+* fix: print full rule load errors/warnings without verbose/-v [[#2156](https://github.com/falcosecurity/falco/pull/2156)] - [@mstemm](https://github.com/mstemm)
+
+
 ## v0.32.2
 
 Released on 2022-08-09
