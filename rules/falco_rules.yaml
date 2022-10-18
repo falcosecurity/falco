@@ -3244,7 +3244,7 @@
 - list: known_ptrace_binaries
   items: []
 
-- marco: known_ptrace_procs
+- macro: known_ptrace_procs
   condition: (proc.name in (known_ptrace_binaries))
 
 - rule: PTRACE attached to process
