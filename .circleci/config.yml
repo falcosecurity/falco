@@ -555,7 +555,7 @@ jobs:
           name: Build and publish no-driver
           command: |
             cd /source/falco
-            docker buildx build --push --build-arg VERSION_BUCKET=bin-dev --build-arg FALCO_VERSION=${CIRCLE_TAG} \
+            docker buildx build --push --build-arg VERSION_BUCKET=bin --build-arg FALCO_VERSION=${CIRCLE_TAG} \
               -t "falcosecurity/falco-no-driver:x86_64-${CIRCLE_TAG}" \
               -t falcosecurity/falco-no-driver:x86_64-latest \
               -t "falcosecurity/falco:x86_64-${CIRCLE_TAG}-slim" \
@@ -569,7 +569,7 @@ jobs:
           name: Build and publish falco
           command: |
             cd /source/falco
-            docker buildx build --push --build-arg VERSION_BUCKET=deb-dev --build-arg FALCO_VERSION=${CIRCLE_TAG} \
+            docker buildx build --push --build-arg VERSION_BUCKET=deb --build-arg FALCO_VERSION=${CIRCLE_TAG} \
               -t "falcosecurity/falco:x86_64-${CIRCLE_TAG}" \
               -t "falcosecurity/falco:x86_64-latest" \
               -t "public.ecr.aws/falcosecurity/falco:x86_64-${CIRCLE_TAG}" \
@@ -624,7 +624,7 @@ jobs:
           name: Build and publish falco
           command: |
             cd /tmp/source-arm64/falco
-            docker buildx build --push --build-arg VERSION_BUCKET=deb-dev --build-arg FALCO_VERSION=${CIRCLE_TAG} \
+            docker buildx build --push --build-arg VERSION_BUCKET=deb --build-arg FALCO_VERSION=${CIRCLE_TAG} \
               -t "falcosecurity/falco:aarch64-${CIRCLE_TAG}" \
               -t "falcosecurity/falco:aarch64-latest" \
               -t "public.ecr.aws/falcosecurity/falco:aarch64-${CIRCLE_TAG}" \
