@@ -400,7 +400,8 @@ namespace YAML {
 
 			if(node["open_params"] && !node["open_params"].IsNull())
 			{
-				rhs.m_open_params = node["open_params"].as<std::string>();
+				string open_params = node["open_params"].as<std::string>();
+				rhs.m_open_params = trim(open_params);
 			}
 
 			return true;
