@@ -3244,8 +3244,8 @@
 - rule: Detection bypass by symlinked files
   desc: An attempt to bypass fd.name based rules by existing symlink files
   condition: >
-    (fd.nameraw glob '*/proc*/root/*')
-    or (fd.nameraw glob '*/proc*/cwd/*')
+    (fd.nameraw glob '*/proc/*/root/*')
+    or (fd.nameraw glob '*/proc/*/cwd/*')
     or (fd.nameraw glob '*/dev*/fd/*..*')
     or (fd.nameraw glob '*/var*/spool*/cron*/crontabs/*..*')
   enabled: true
