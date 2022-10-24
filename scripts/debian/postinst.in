@@ -28,7 +28,7 @@ case "$1" in
             CHOICE=$(dialog --clear --backtitle "Choose your preferred driver" --title "Falco driver" --menu "Choose one of the following options:" 15 40 4 \
                   1 "Kmod" \
                   2 "eBPF" \
-                  3 "Don't start" \
+                  3 "Plugin" \
                   2>&1 >/dev/tty)
               clear
               case $CHOICE in
