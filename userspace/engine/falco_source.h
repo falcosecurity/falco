@@ -31,12 +31,14 @@ struct falco_source
 	falco_source& operator = (falco_source&&) = default;
 	falco_source(const falco_source& s):
 		name(s.name),
+		ruleset(s.ruleset),
 		ruleset_factory(s.ruleset_factory),
 		filter_factory(s.filter_factory),
 		formatter_factory(s.formatter_factory) { };
 	falco_source& operator = (const falco_source& s)
 	{
 		name = s.name;
+		ruleset = s.ruleset;
 		ruleset_factory = s.ruleset_factory;
 		filter_factory = s.filter_factory;
 		formatter_factory = s.formatter_factory;
