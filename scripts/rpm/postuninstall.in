@@ -22,6 +22,7 @@ if [ -d /run/systemd/system ] && [ "$1" = 0 ]; then
         /usr/bin/systemctl --system daemon-reload >/dev/null || true
         /usr/bin/systemctl --system mask 'falco@kmod.target' >/dev/null || true
         /usr/bin/systemctl --system mask 'falco@ebpf.target' >/dev/null || true
+        /usr/bin/systemctl --system mask 'falco@plugin.target' >/dev/null || true
 fi
 
 # validate rpm macros by `rpm -qp --scripts <rpm>`
@@ -33,3 +34,4 @@ fi
 #   `systemd-update-helper mark-restart-system-units <service>`
 %systemd_postun_with_restart 'falco@kmod.target'
 %systemd_postun_with_restart 'falco@ebpf.target'
+%systemd_postun_with_restart 'falco@plugin.target'

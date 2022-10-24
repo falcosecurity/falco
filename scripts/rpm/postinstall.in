@@ -38,7 +38,7 @@ case "$1" in
                       chosen_driver="ebpf"
                       ;;
                   3)
-                      chosen_driver=
+                      chosen_driver="plugin"
                       ;;
               esac
           else
@@ -71,6 +71,7 @@ if [ $1 -eq 1 ]; then
         # This will only remove masks created on package removal.
         /usr/bin/systemctl --system unmask "falco@kmod.target" >/dev/null || true
         /usr/bin/systemctl --system unmask "falco@ebpf.target" >/dev/null || true
+        /usr/bin/systemctl --system unmask "falco@plugin.target" >/dev/null || true
 
         if [ -n "$chosen_driver" ]; then
             # enable falco on installation

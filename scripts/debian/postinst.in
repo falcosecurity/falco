@@ -39,7 +39,7 @@ case "$1" in
                       chosen_driver="ebpf"
                       ;;
                   3)
-                      chosen_driver=
+                      chosen_driver="plugin"
                       ;;
               esac
           else
@@ -65,6 +65,7 @@ if [ "$1" = "configure" ] || [ "$1" = "abort-upgrade" ] || [ "$1" = "abort-decon
         # This will only remove masks created by d-s-h on package removal.
         deb-systemd-helper unmask "falco@kmod.target" >/dev/null || true
         deb-systemd-helper unmask "falco@ebpf.target" >/dev/null || true
+        deb-systemd-helper unmask "falco@plugin.target" >/dev/null || true
 
         # was-enabled defaults to true, so new installations run enable.
         if [ -n "$chosen_driver" ]; then
