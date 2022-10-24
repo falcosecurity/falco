@@ -24,6 +24,7 @@ set -e
 if [ -d /run/systemd/system ] && [ "$1" = remove ]; then
         deb-systemd-invoke stop 'falco@kmod.target' >/dev/null || true
         deb-systemd-invoke stop 'falco@ebpf.target' >/dev/null || true
+        deb-systemd-invoke stop 'falco@plugin.target' >/dev/null || true
 fi
 
 case "$1" in
