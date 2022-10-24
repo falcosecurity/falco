@@ -25,10 +25,12 @@ case "$1" in
           echo "Skipping driver selection in non-interactive mode"
         else
           if [ -x /usr/bin/dialog ]; then
+            # If dialog is installed, create a dialog to let users choose the correct driver for them
             CHOICE=$(dialog --clear --backtitle "Choose your preferred driver" --title "Falco driver" --menu "Choose one of the following options:" 15 40 4 \
                   1 "Kmod" \
                   2 "eBPF" \
                   3 "Plugin" \
+                  4 "Don't start" \
                   2>&1 >/dev/tty)
               clear
               case $CHOICE in
@@ -43,12 +45,14 @@ case "$1" in
                       ;;
               esac
           else
+            # Default at old behavior: enable kmod driver
             chosen_driver="kmod"
           fi
         fi
     ;;
 esac
 
+# If needed, try to load/compile the driver through falco-driver-loader
 case "$chosen_driver" in
     "kmod")
       falco-driver-loader module
