@@ -25,7 +25,7 @@ do
     ln -s "$i" "/usr/src/$base"
 done
 
-if [ -n "$HOST_ROOT" ]; then
+if [ -n "$HOST_ROOT" ] && [ "$HOST_ROOT" != "/" ]; then
     echo "* Setting up /lib/modules links from host"
     ln -s /lib/modules $HOST_ROOT/lib/modules 
     
