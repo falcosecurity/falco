@@ -21,33 +21,29 @@ chosen_driver=
 
 case "$1" in
     configure)
-        if [ ! -t 0 ] ; then
-          echo "Skipping driver selection in non-interactive mode"
+        if [ -x /usr/bin/dialog ]; then
+          # If dialog is installed, create a dialog to let users choose the correct driver for them
+          CHOICE=$(dialog --clear --backtitle "Choose your preferred driver" --title "Falco driver" --menu "Choose one of the following options:" 15 40 4 \
+                1 "Don't start" \
+                2 "Kmod" \
+                3 "eBPF" \
+                4 "Plugin" \
+                2>&1 >/dev/tty)
+            clear
+            case $CHOICE in
+                1)
+                    chosen_driver="kmod"
+                    ;;
+                2)
+                    chosen_driver="ebpf"
+                    ;;
+                3)
+                    chosen_driver="plugin"
+                    ;;
+            esac
         else
-          if [ -x /usr/bin/dialog ]; then
-            # If dialog is installed, create a dialog to let users choose the correct driver for them
-            CHOICE=$(dialog --clear --backtitle "Choose your preferred driver" --title "Falco driver" --menu "Choose one of the following options:" 15 40 4 \
-                  1 "Kmod" \
-                  2 "eBPF" \
-                  3 "Plugin" \
-                  4 "Don't start" \
-                  2>&1 >/dev/tty)
-              clear
-              case $CHOICE in
-                  1)
-                      chosen_driver="kmod"
-                      ;;
-                  2)
-                      chosen_driver="ebpf"
-                      ;;
-                  3)
-                      chosen_driver="plugin"
-                      ;;
-              esac
-          else
-            # Default at old behavior: enable kmod driver
-            chosen_driver="kmod"
-          fi
+          # Default at old behavior: enable kmod driver
+          chosen_driver="kmod"
         fi
     ;;
 esac
