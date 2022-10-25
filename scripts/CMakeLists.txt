@@ -24,6 +24,8 @@ file(COPY "${PROJECT_SOURCE_DIR}/scripts/systemd/falco-kmod.service"
 		DESTINATION "${PROJECT_BINARY_DIR}/scripts/systemd")
 file(COPY "${PROJECT_SOURCE_DIR}/scripts/systemd/falco-ebpf.service"
 		DESTINATION "${PROJECT_BINARY_DIR}/scripts/systemd")
+file(COPY "${PROJECT_SOURCE_DIR}/scripts/systemd/falco-plugin.service"
+		DESTINATION "${PROJECT_BINARY_DIR}/scripts/systemd")
 
 # Debian
 configure_file(debian/postinst.in debian/postinst)
