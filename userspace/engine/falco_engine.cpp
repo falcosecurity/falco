@@ -346,6 +346,11 @@ unique_ptr<falco_engine::rule_result> falco_engine::process_event(std::size_t so
 
 	if(source_idx == m_syscall_source_idx)
 	{
+		if(m_syscall_source == NULL)
+		{
+			m_syscall_source = find_source(m_syscall_source_idx);
+		}
+
 		source = m_syscall_source;
 	}
 	else
@@ -387,7 +392,6 @@ std::size_t falco_engine::add_source(const std::string &source,
 	if(source == falco_common::syscall_source)
 	{
 		m_syscall_source_idx = idx;
-		m_syscall_source = find_source(m_syscall_source_idx);
 	}
 
 	return idx;
