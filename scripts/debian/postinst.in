@@ -41,9 +41,6 @@ case "$1" in
                     chosen_driver="plugin"
                     ;;
             esac
-        else
-          # Default at old behavior: enable kmod driver
-          chosen_driver="kmod"
         fi
     ;;
 esac
