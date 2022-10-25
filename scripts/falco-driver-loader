@@ -213,9 +213,8 @@ load_kernel_module_compile() {
 	# Try to compile using all the available gcc versions
 	for CURRENT_GCC in $(ls "$(dirname "$(which gcc)")"/gcc*); do
 		# Filter away gcc-{ar,nm,...}
-		# first line of gcc --version output is always like:
-		# "gcc (GCC) 12.2.0"
-		${CURRENT_GCC} --version 2>&1 | grep GCC
+		# Only gcc compiler has `-print-search-dirs` option.
+		${CURRENT_GCC} -print-search-dirs 2>&1 | grep "install:"
 		if [ "$?" -ne "0" ]; then
 			continue
 		fi
