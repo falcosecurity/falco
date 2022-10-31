@@ -22,7 +22,7 @@ ENV CMAKE_VERSION=${CMAKE_VERSION}
 
 # build toolchain
 RUN yum -y install centos-release-scl && \
-    INSTALL_PKGS="devtoolset-7-gcc devtoolset-7-gcc-c++ devtoolset-7-toolchain devtoolset-7-libstdc++-devel devtoolset-7-elfutils-libelf-devel llvm-toolset-7.0 glibc-static autoconf automake libtool createrepo expect git which libcurl-devel zlib-devel rpm-build libyaml-devel" && \
+    INSTALL_PKGS="devtoolset-7-gcc devtoolset-7-gcc-c++ devtoolset-7-toolchain devtoolset-7-libstdc++-devel llvm-toolset-7.0 glibc-static autoconf automake libtool createrepo expect git which libcurl-devel rpm-build libyaml-devel" && \
     yum -y install --setopt=tsflags=nodocs $INSTALL_PKGS && \
     rpm -V $INSTALL_PKGS
 
