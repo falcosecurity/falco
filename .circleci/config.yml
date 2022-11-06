@@ -39,7 +39,7 @@ jobs:
       - run:
           name: Build Falco packages 🏗️
           command: |
-            DOCKER_BUILDKIT=1 docker build -f /tmp/source-arm64/falco/docker/builder/centos7-builder.Dockerfile --output type=local,dest=/tmp --build-arg CMAKE_OPTIONS="-DCMAKE_BUILD_TYPE=Release -DUSE_BUNDLED_DEPS=On -DCREATE_TEST_TARGETS=Off -DFALCO_ETC_DIR=/etc/falco -DBUILD_FALCO_MODERN_BPF=ON -DMODERN_BPF_SKEL_DIR=/falco/skeleton-build/skel_dir -DBUILD_DRIVER=Off -DBUILD_BPF=Off" --build-arg DEST_BUILD_DIR=/build-arm64/release /tmp/source-arm64/falco
+            DOCKER_BUILDKIT=1 docker build -f /tmp/source-arm64/falco/docker/builder/centos7-builder.Dockerfile --output type=local,dest=/tmp --build-arg CMAKE_OPTIONS="-DCMAKE_BUILD_TYPE=Release -DUSE_BUNDLED_DEPS=On -DFALCO_ETC_DIR=/etc/falco -DBUILD_FALCO_MODERN_BPF=ON -DMODERN_BPF_SKEL_DIR=/falco/skeleton-build/skel_dir -DBUILD_DRIVER=Off -DBUILD_BPF=Off" --build-arg DEST_BUILD_DIR=/build-arm64/release /tmp/source-arm64/falco
 
       - store_artifacts:
           path: /tmp/packages

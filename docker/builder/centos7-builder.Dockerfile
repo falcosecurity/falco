@@ -2,6 +2,7 @@ FROM centos:7 AS build-stage
 
 # To build Falco you need to pass the cmake option
 ARG CMAKE_OPTIONS=""
+ARG MAKE_JOBS=4
 
 # Install all the dependencies
 WORKDIR /
@@ -28,8 +29,9 @@ RUN source scl_source enable devtoolset-8; \
     rm -rf build; \
     mkdir build && cd build; \
     cmake ${CMAKE_OPTIONS} ..; \
-    make falco; \
-    make package
+    make falco -j${MAKE_JOBS}; \
+    make package; \
+    make tests -j${MAKE_JOBS}
 
 FROM scratch AS export-stage
 
