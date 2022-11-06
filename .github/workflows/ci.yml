@@ -168,3 +168,47 @@ jobs:
 
       - name: Build packages
         run: /usr/bin/entrypoint package
+
+# Before merging the PR we must remove this, right now we keep it just to have packages also from there
+  build-modern-bpf-packages:
+    runs-on: ubuntu-22.04
+    steps:
+
+      - name: Install deps ⛓️
+        run: |
+          sudo apt update
+          sudo apt install -y --no-install-recommends ca-certificates cmake build-essential clang-14 git pkg-config autoconf automake libtool libelf-dev
+
+      - name: Checkout Falco 🦅
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      # Build the modern BPF skeleton
+      - name: Build modern BPF skeleton 🐝
+        run: |
+          mkdir -p skeleton-build
+          cd skeleton-build && cmake -DUSE_BUNDLED_DEPS=ON -DBUILD_FALCO_MODERN_BPF=ON -DCREATE_TEST_TARGETS=Off ../
+          make ProbeSkeleton
+
+      - name: Build the artifact from the docker image 🏗️
+        run: |
+          DOCKER_BUILDKIT=1 docker build -f ./docker/builder/centos7-builder.Dockerfile --output type=local,dest=export-artifacts --build-arg CMAKE_OPTIONS="-DCMAKE_BUILD_TYPE=Release -DUSE_BUNDLED_DEPS=On -DCREATE_TEST_TARGETS=Off -DFALCO_ETC_DIR=/etc/falco -DBUILD_FALCO_MODERN_BPF=ON -DMODERN_BPF_SKEL_DIR=/falco/skeleton-build/skel_dir -DBUILD_DRIVER=Off -DBUILD_BPF=Off" .
+
+      - name: Upload deb ⏫
+        uses: actions/upload-artifact@v3
+        with:
+          name: falco.deb
+          path: ./export-artifacts/packages/falco-*.deb
+
+      - name: Upload rpm ⏫
+        uses: actions/upload-artifact@v3
+        with:
+          name: falco.rpm
+          path: ./export-artifacts/packages/falco-*.rpm
+
+      - name: Upload tar.gz ⏫
+        uses: actions/upload-artifact@v3
+        with:
+          name: falco.tar.gz
+          path: ./export-artifacts/packages/falco-*.tar.gz
