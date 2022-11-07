@@ -10,8 +10,6 @@ WORKDIR /
 RUN yum -y install centos-release-scl; \
     yum -y install devtoolset-8-gcc devtoolset-8-gcc-c++; \
     source scl_source enable devtoolset-8; \
-    # We can remove `elfutils-libelf-devel-static` and `xz` when the PR on libelf bundled is merged
-    yum install -y elfutils-libelf-devel-static xz; \
     yum install -y git wget make m4 rpm-build
 
 # With some previous cmake versions it fails when downloading `zlib` with curl in the libs building phase

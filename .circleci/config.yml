@@ -12,7 +12,7 @@ jobs:
           name: Install deps ⛓️
           command: |
             sudo apt update
-            sudo apt install -y --no-install-recommends ca-certificates cmake build-essential clang-14 git pkg-config autoconf automake libtool libelf-dev
+            sudo apt install -y --no-install-recommends ca-certificates cmake build-essential clang-14 git pkg-config autoconf automake libelf-dev
             sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-14 90
             sudo update-alternatives --install /usr/bin/llvm-strip llvm-strip /usr/bin/llvm-strip-14 90
             git clone https://github.com/libbpf/bpftool.git --branch v7.0.0 --single-branch
@@ -69,7 +69,7 @@ jobs:
           command: |
             mkdir -p /build-static/release
             cd /build-static/release
-            cmake -DCPACK_GENERATOR=TGZ -DBUILD_BPF=Off -DBUILD_DRIVER=Off -DCMAKE_BUILD_TYPE=Release -DUSE_BUNDLED_DEPS=On -DMUSL_OPTIMIZED_BUILD=On -DFALCO_ETC_DIR=/etc/falco /source-static/falco
+            cmake -DCPACK_GENERATOR=TGZ -DBUILD_BPF=Off -DBUILD_DRIVER=Off -DCMAKE_BUILD_TYPE=Release -DUSE_BUNDLED_LIBELF=Off -DUSE_BUNDLED_DEPS=On -DMUSL_OPTIMIZED_BUILD=On -DFALCO_ETC_DIR=/etc/falco /source-static/falco
       - run:
           name: Build
           command: |
@@ -110,7 +110,7 @@ jobs:
           name: Install deps ⛓️
           command: |
             sudo apt update
-            sudo apt install -y --no-install-recommends ca-certificates cmake build-essential clang-14 git pkg-config autoconf automake libtool libelf-dev
+            sudo apt install -y --no-install-recommends ca-certificates cmake build-essential clang-14 git pkg-config autoconf automake libelf-dev
             sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-14 90
             sudo update-alternatives --install /usr/bin/llvm-strip llvm-strip /usr/bin/llvm-strip-14 90
             git clone https://github.com/libbpf/bpftool.git --branch v7.0.0 --single-branch
