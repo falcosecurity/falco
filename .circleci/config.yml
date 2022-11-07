@@ -39,7 +39,7 @@ jobs:
       - run:
           name: Build Falco packages 🏗️
           command: |
-            DOCKER_BUILDKIT=1 docker build -f /tmp/source-arm64/falco/docker/builder/centos7-builder.Dockerfile --output type=local,dest=/tmp --build-arg CMAKE_OPTIONS="-DCMAKE_BUILD_TYPE=Release -DUSE_BUNDLED_DEPS=On -DFALCO_ETC_DIR=/etc/falco -DBUILD_FALCO_MODERN_BPF=ON -DMODERN_BPF_SKEL_DIR=/falco/skeleton-build/skel_dir -DBUILD_DRIVER=Off -DBUILD_BPF=Off" --build-arg DEST_BUILD_DIR=/build-arm64/release /tmp/source-arm64/falco
+            DOCKER_BUILDKIT=1 docker build -f /tmp/source-arm64/falco/docker/builder/centos7-builder.Dockerfile --output type=local,dest=/tmp --build-arg CMAKE_OPTIONS="-DCMAKE_BUILD_TYPE=Release -DUSE_BUNDLED_DEPS=On -DFALCO_ETC_DIR=/etc/falco -DBUILD_FALCO_MODERN_BPF=ON -DMODERN_BPF_SKEL_DIR=/source/skeleton-build/skel_dir -DBUILD_DRIVER=Off -DBUILD_BPF=Off" --build-arg DEST_BUILD_DIR=/build-arm64/release /tmp/source-arm64/falco
 
       - store_artifacts:
           path: /tmp/packages
@@ -120,38 +120,30 @@ jobs:
 
       # Path for the source code
       - checkout:
-          path: /source/falco
+          path: /tmp/source/falco
 
       - run:
           name: Build modern BPF skeleton 🐝
           command: |
-            mkdir -p /source/falco/skeleton-build
-            cd /source/falco/skeleton-build && cmake -DUSE_BUNDLED_DEPS=ON -DBUILD_FALCO_MODERN_BPF=ON -DCREATE_TEST_TARGETS=Off ../
+            mkdir -p /tmp/source/falco/skeleton-build
+            cd /tmp/source/falco/skeleton-build && cmake -DUSE_BUNDLED_DEPS=ON -DBUILD_FALCO_MODERN_BPF=ON -DCREATE_TEST_TARGETS=Off ../
             make ProbeSkeleton
 
       # Build the Falco packages (tar, deb, rpm) inside the centos7 builder.
       # This dockerfile returns as output:
-      # - the build directory. (under /${DEST_BUILD_DIR})
-      # - the 3 packages: tar, deb, rpm. (under /packages)
+      # - the build directory. (under /tmp/${DEST_BUILD_DIR})
+      # - the 3 packages: tar, deb, rpm. (under /tmp/packages)
       - run:
           name: Build Falco packages 🏗️
           command: |
-            DOCKER_BUILDKIT=1 docker build -f /source/falco/docker/builder/centos7-builder.Dockerfile --output type=local,dest=/ --build-arg CMAKE_OPTIONS="-DCMAKE_BUILD_TYPE=Release -DUSE_BUNDLED_DEPS=On -DCREATE_TEST_TARGETS=Off -DFALCO_ETC_DIR=/etc/falco -DBUILD_FALCO_MODERN_BPF=ON -DMODERN_BPF_SKEL_DIR=/falco/skeleton-build/skel_dir -DBUILD_DRIVER=Off -DBUILD_BPF=Off" --build-arg DEST_BUILD_DIR=/build/release /source/falco
-
-      # Move packages under /tmp/packages
-      - run:
-          name: Prepare Artifacts
-          command: |
-            cp /packages/*.deb /tmp/packages
-            cp /packages/*.tar.gz /tmp/packages
-            cp /packages/*.rpm /tmp/packages
+            DOCKER_BUILDKIT=1 docker build -f /tmp/source/falco/docker/builder/centos7-builder.Dockerfile --output type=local,dest=/tmp --build-arg CMAKE_OPTIONS="-DCMAKE_BUILD_TYPE=Release -DUSE_BUNDLED_DEPS=On -DFALCO_ETC_DIR=/etc/falco -DBUILD_FALCO_MODERN_BPF=ON -DMODERN_BPF_SKEL_DIR=/source/skeleton-build/skel_dir -DBUILD_DRIVER=Off -DBUILD_BPF=Off" --build-arg DEST_BUILD_DIR=/build/release /tmp/source/falco
 
       - store_artifacts:
           path: /tmp/packages
           destination: /packages
 
       - persist_to_workspace:
-          root: /
+          root: /tmp
           paths:
             - build/release
             - source
@@ -170,7 +162,8 @@ jobs:
           at: /
       - run:
           name: Execute integration tests
-          command: /usr/bin/entrypoint test
+          command: |
+            /usr/bin/entrypoint test
       - store_test_results:
           path: /build/release/integration-tests-xunit
 

@@ -22,22 +22,22 @@ RUN curl -L -o /tmp/cmake.tar.gz https://github.com/Kitware/CMake/releases/downl
     rm -rf /tmp/cmake-3.22.5-linux-$(uname -m)/
 
 # Copy Falco folder from the build context
-COPY . /falco
-WORKDIR /falco
+COPY . /source
+WORKDIR /build/release
 
+# We need `make tests` and `make all` for integration tests.
 RUN source scl_source enable devtoolset-8; \
-    rm -rf build; \
-    mkdir build && cd build; \
-    cmake ${CMAKE_OPTIONS} ..; \
+    cmake ${CMAKE_OPTIONS} /source; \
     make falco -j${MAKE_JOBS}; \
     make package; \
-    make tests -j${MAKE_JOBS}
+    make tests -j${MAKE_JOBS}; \
+    make all -j${MAKE_JOBS}
 
 FROM scratch AS export-stage
 
 ARG DEST_BUILD_DIR="/build"
 
-COPY --from=build-stage /falco/build/falco-*.tar.gz /packages/
-COPY --from=build-stage /falco/build/falco-*.deb /packages/
-COPY --from=build-stage /falco/build/falco-*.rpm /packages/
-COPY --from=build-stage /falco/build/ ${DEST_BUILD_DIR}
+COPY --from=build-stage /build/release/falco-*.tar.gz /packages/
+COPY --from=build-stage /build/release/falco-*.deb /packages/
+COPY --from=build-stage /build/release/falco-*.rpm /packages/
+COPY --from=build-stage /build/release/ ${DEST_BUILD_DIR}

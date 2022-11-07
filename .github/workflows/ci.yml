@@ -193,7 +193,7 @@ jobs:
 
       - name: Build the artifact from the docker image 🏗️
         run: |
-          DOCKER_BUILDKIT=1 docker build -f ./docker/builder/centos7-builder.Dockerfile --output type=local,dest=export-artifacts --build-arg CMAKE_OPTIONS="-DCMAKE_BUILD_TYPE=Release -DUSE_BUNDLED_DEPS=On -DCREATE_TEST_TARGETS=Off -DFALCO_ETC_DIR=/etc/falco -DBUILD_FALCO_MODERN_BPF=ON -DMODERN_BPF_SKEL_DIR=/falco/skeleton-build/skel_dir -DBUILD_DRIVER=Off -DBUILD_BPF=Off" .
+          DOCKER_BUILDKIT=1 docker build -f ./docker/builder/centos7-builder.Dockerfile --output type=local,dest=export-artifacts --build-arg CMAKE_OPTIONS="-DCMAKE_BUILD_TYPE=Release -DUSE_BUNDLED_DEPS=On -DFALCO_ETC_DIR=/etc/falco -DBUILD_FALCO_MODERN_BPF=ON -DMODERN_BPF_SKEL_DIR=/source/skeleton-build/skel_dir -DBUILD_DRIVER=Off -DBUILD_BPF=Off" .
 
       - name: Upload deb ⏫
         uses: actions/upload-artifact@v3
