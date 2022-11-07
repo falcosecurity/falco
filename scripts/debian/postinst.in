@@ -31,13 +31,13 @@ case "$1" in
                 2>&1 >/dev/tty)
             clear
             case $CHOICE in
-                1)
+                2)
                     chosen_driver="kmod"
                     ;;
-                2)
+                3)
                     chosen_driver="ebpf"
                     ;;
-                3)
+                4)
                     chosen_driver="plugin"
                     ;;
             esac
