@@ -26,7 +26,8 @@ case "$1" in
                     1 "Don't start" \
                     2 "Kmod" \
                     3 "eBPF" \
-                    4 "Plugin" \
+                    4 "Modern eBPF" \
+                    5 "Plugin" \
                     2>&1 >/dev/tty)
                 clear
                 case $CHOICE in
@@ -34,9 +35,12 @@ case "$1" in
                         chosen_driver="kmod"
                         ;;
                     3)
-                        chosen_driver="ebpf"
+                        chosen_driver="bpf"
                         ;;
                     4)
+                        chosen_driver="modern_bpf"
+                        ;;
+                    5)
                         chosen_driver="plugin"
                         ;;
                 esac
@@ -49,7 +53,7 @@ case "$chosen_driver" in
     "kmod")
       falco-driver-loader module
       ;;
-    "ebpf")
+    "bpf")
       falco-driver-loader bpf
       ;;
 esac
@@ -67,7 +71,8 @@ esac
 if [ $1 -eq 1 ]; then
         # This will only remove masks created on package removal.
         /usr/bin/systemctl --system unmask "falco@kmod.target" >/dev/null || true
-        /usr/bin/systemctl --system unmask "falco@ebpf.target" >/dev/null || true
+        /usr/bin/systemctl --system unmask "falco@bpf.target" >/dev/null || true
+        /usr/bin/systemctl --system unmask "falco@modern_bpf.target" >/dev/null || true
         /usr/bin/systemctl --system unmask "falco@plugin.target" >/dev/null || true
 
         if [ -n "$chosen_driver" ]; then
