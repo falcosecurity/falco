@@ -21,7 +21,8 @@ set -e
 if [ -d /run/systemd/system ] && [ $1 -eq 0 ]; then
         # stop falco service before uninstall
         /usr/bin/systemctl --system stop 'falco@kmod.target' >/dev/null || true
-        /usr/bin/systemctl --system stop 'falco@ebpf.target' >/dev/null || true
+        /usr/bin/systemctl --system stop 'falco@bpf.target' >/dev/null || true
+        /usr/bin/systemctl --system stop 'falco@modern_bpf.target' >/dev/null || true
         /usr/bin/systemctl --system stop 'falco@plugin.target' >/dev/null || true
 fi
 
@@ -35,5 +36,6 @@ fi
 # if preuninstall:
 #  `systemd-update-helper remove-system-units <service>`
 %systemd_preun 'falco@kmod.target'
-%systemd_preun 'falco@ebpf.target'
+%systemd_preun 'falco@bpf.target'
+%systemd_preun 'falco@modern_bpf.target'
 %systemd_preun 'falco@plugin.target'
