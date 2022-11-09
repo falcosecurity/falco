@@ -22,7 +22,9 @@ file(COPY "${PROJECT_SOURCE_DIR}/scripts/systemd/falco-kmod-inject.service"
 		DESTINATION "${PROJECT_BINARY_DIR}/scripts/systemd")
 file(COPY "${PROJECT_SOURCE_DIR}/scripts/systemd/falco-kmod.service"
 		DESTINATION "${PROJECT_BINARY_DIR}/scripts/systemd")
-file(COPY "${PROJECT_SOURCE_DIR}/scripts/systemd/falco-ebpf.service"
+file(COPY "${PROJECT_SOURCE_DIR}/scripts/systemd/falco-bpf.service"
+		DESTINATION "${PROJECT_BINARY_DIR}/scripts/systemd")
+file(COPY "${PROJECT_SOURCE_DIR}/scripts/systemd/falco-modern_bpf.service"
 		DESTINATION "${PROJECT_BINARY_DIR}/scripts/systemd")
 file(COPY "${PROJECT_SOURCE_DIR}/scripts/systemd/falco-plugin.service"
 		DESTINATION "${PROJECT_BINARY_DIR}/scripts/systemd")
