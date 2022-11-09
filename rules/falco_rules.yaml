@@ -2548,6 +2548,7 @@
 - macro: private_key_or_password
   condition: >
     (proc.args icontains "BEGIN PRIVATE" or
+     proc.args icontains "BEGIN OPENSSH PRIVATE" or
      proc.args icontains "BEGIN RSA PRIVATE" or
      proc.args icontains "BEGIN DSA PRIVATE" or
      proc.args icontains "BEGIN EC PRIVATE" or
