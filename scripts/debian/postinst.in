@@ -64,22 +64,16 @@ esac
 
 if [ "$1" = "configure" ] || [ "$1" = "abort-upgrade" ] || [ "$1" = "abort-deconfigure" ] || [ "$1" = "abort-remove" ] ; then
         # This will only remove masks created by d-s-h on package removal.
-        deb-systemd-helper unmask "falco@kmod.target" >/dev/null || true
-        deb-systemd-helper unmask "falco@bpf.target" >/dev/null || true
-        deb-systemd-helper unmask "falco@modern_bpf.target" >/dev/null || true
-        deb-systemd-helper unmask "falco@plugin.target" >/dev/null || true
+        systemctl --system unmask "falco@.target" >/dev/null || true
+        systemctl --system unmask "falco-kmod.service" >/dev/null || true
+        systemctl --system unmask "falco-bpf.service" >/dev/null || true
+        systemctl --system unmask "falco-modern_bpf.service" >/dev/null || true
+        systemctl --system unmask "falco-plugin.service" >/dev/null || true
 
         # was-enabled defaults to true, so new installations run enable.
         if [ -n "$chosen_driver" ]; then
-            if deb-systemd-helper --quiet was-enabled "falco@$chosen_driver.target"; then
-                    # Enables the unit on first installation, creates new
-                    # symlinks on upgrades if the unit file has changed.
-                    deb-systemd-helper enable "falco@$chosen_driver.target" >/dev/null || true
-            else
-                    # Update the statefile to add new symlinks (if any), which need to be
-                    # cleaned up on purge. Also remove old symlinks.
-                    deb-systemd-helper update-state "falco@$chosen_driver.target" >/dev/null || true
-            fi
+            systemctl --system enable "falco@$chosen_driver.target" >/dev/null || true
+            systemctl --system start "falco@$chosen_driver.target" >/dev/null || true
         fi
 fi
 
@@ -87,12 +81,8 @@ if [ "$1" = "configure" ] || [ "$1" = "abort-upgrade" ] || [ "$1" = "abort-decon
     if [ -d /run/systemd/system ]; then
       systemctl --system daemon-reload >/dev/null || true
       if [ -n "$chosen_driver" ]; then
-        if [ -n "$2" ]; then
-          _dh_action=restart
-        else
-          _dh_action=start
-        fi
-        deb-systemd-invoke $_dh_action "falco@$chosen_driver.target" >/dev/null || true
+        # restart falco on upgrade if service is already running
+        /usr/bin/systemctl --system condrestart "falco@$chosen_driver.target" >/dev/null || true
       fi
     fi
 fi
