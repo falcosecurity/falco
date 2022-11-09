@@ -4,6 +4,7 @@ Documentation=https://falco.org/docs/
 PartOf=falco@plugin.target
 Conflicts=falco-kmod.service
 Conflicts=falco-ebpf.service
+Conflicts=falco-modern_bpf.service
 
 [Service]
 Type=simple

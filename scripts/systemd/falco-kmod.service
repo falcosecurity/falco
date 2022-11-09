@@ -4,7 +4,8 @@ Documentation=https://falco.org/docs/
 After=falco-kmod-inject.service
 Requires=falco-kmod-inject.service
 PartOf=falco@kmod.target
-Conflicts=falco-ebpf.service
+Conflicts=falco-bpf.service
+Conflicts=falco-modern_bpf.service
 Conflicts=falco-plugin.service
 
 [Service]

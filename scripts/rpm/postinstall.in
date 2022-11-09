@@ -70,10 +70,11 @@ esac
 # post install mirrored from .deb
 if [ $1 -eq 1 ]; then
         # This will only remove masks created on package removal.
-        /usr/bin/systemctl --system unmask "falco@kmod.target" >/dev/null || true
-        /usr/bin/systemctl --system unmask "falco@bpf.target" >/dev/null || true
-        /usr/bin/systemctl --system unmask "falco@modern_bpf.target" >/dev/null || true
-        /usr/bin/systemctl --system unmask "falco@plugin.target" >/dev/null || true
+        /usr/bin/systemctl --system unmask "falco@.target" >/dev/null || true
+        /usr/bin/systemctl --system unmask "falco-kmod.service" >/dev/null || true
+        /usr/bin/systemctl --system unmask "falco-bpf.service" >/dev/null || true
+        /usr/bin/systemctl --system unmask "falco-modern_bpf.service" >/dev/null || true
+        /usr/bin/systemctl --system unmask "falco-plugin.service" >/dev/null || true
 
         if [ -n "$chosen_driver" ]; then
             # enable falco on installation
@@ -89,7 +90,6 @@ fi
 if [ $1 -gt 1 ]; then
     if [ -d /run/systemd/system ]; then
         /usr/bin/systemctl --system daemon-reload >/dev/null || true
-
         if [ -n "$chosen_driver" ]; then
             # restart falco on upgrade if service is already running
             /usr/bin/systemctl --system condrestart "falco@$chosen_driver.target" >/dev/null || true

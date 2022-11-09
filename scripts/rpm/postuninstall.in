@@ -20,10 +20,11 @@ set -e
 # post uninstall mirrored from .deb
 if [ -d /run/systemd/system ] && [ "$1" = 0 ]; then
         /usr/bin/systemctl --system daemon-reload >/dev/null || true
-        /usr/bin/systemctl --system mask 'falco@kmod.target' >/dev/null || true
-        /usr/bin/systemctl --system mask 'falco@bpf.target' >/dev/null || true
-        /usr/bin/systemctl --system mask 'falco@modern_bpf.target' >/dev/null || true
-        /usr/bin/systemctl --system mask 'falco@plugin.target' >/dev/null || true
+        /usr/bin/systemctl --system mask 'falco@.target' >/dev/null || true
+        /usr/bin/systemctl --system mask 'falco-kmod.service' >/dev/null || true
+        /usr/bin/systemctl --system mask 'falco-bpf.service' >/dev/null || true
+        /usr/bin/systemctl --system mask 'falco-modern_bpf.service' >/dev/null || true
+        /usr/bin/systemctl --system mask 'falco-plugin.service' >/dev/null || true
 fi
 
 # validate rpm macros by `rpm -qp --scripts <rpm>`

@@ -27,22 +27,10 @@ fi
 
 if [ "$1" = "remove" ]; then
         if [ -x "/usr/bin/deb-systemd-helper" ]; then
-                deb-systemd-helper mask 'falco@kmod.target' >/dev/null || true
-                deb-systemd-helper mask 'falco@bpf.target' >/dev/null || true
-                deb-systemd-helper mask 'falco@modern_bpf.target' >/dev/null || true
-                deb-systemd-helper mask "falco@plugin.target" >/dev/null || true
-        fi
-fi
-
-if [ "$1" = "purge" ]; then
-        if [ -x "/usr/bin/deb-systemd-helper" ]; then
-                deb-systemd-helper purge 'falco@kmod.target' >/dev/null || true
-                deb-systemd-helper unmask 'falco@kmod.target' >/dev/null || true
-                deb-systemd-helper purge 'falco@bpf.target' >/dev/null || true
-                deb-systemd-helper unmask 'falco@bpf.target' >/dev/null || true
-                deb-systemd-helper purge 'falco@modern_bpf.target' >/dev/null || true
-                deb-systemd-helper unmask 'falco@modern_bpf.target' >/dev/null || true
-                deb-systemd-helper purge 'falco@plugin.target' >/dev/null || true
-                deb-systemd-helper unmask 'falco@plugin.target' >/dev/null || true
+                systemctl --system mask 'falco@.target' >/dev/null || true
+                systemctl --system mask 'falco-kmod.service' >/dev/null || true
+                systemctl --system mask 'falco-bpf.service' >/dev/null || true
+                systemctl --system mask 'falco-modern_bpf.service' >/dev/null || true
+                systemctl --system mask "falco-plugin.service" >/dev/null || true
         fi
 fi
