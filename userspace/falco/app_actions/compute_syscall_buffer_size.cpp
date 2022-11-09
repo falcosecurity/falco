@@ -28,7 +28,7 @@ application::run_result application::configure_syscall_buffer_size()
 	/* We don't need to compute the syscall buffer dimension if we are in capture mode or if the
 	 * the syscall source is not enabled.
 	 */
-	if(is_capture_mode() || m_state->enabled_sources.find(falco_common::syscall_source) == m_state->enabled_sources.end())
+	if(is_capture_mode() || m_state->enabled_sources.find(falco_common::syscall_source) == m_state->enabled_sources.end() || is_gvisor_enabled())
 	{
 		return run_result::ok();
 	}
