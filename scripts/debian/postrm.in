@@ -30,7 +30,7 @@ if [ "$1" = "remove" ]; then
                 systemctl --system mask 'falco@.target' >/dev/null || true
                 systemctl --system mask 'falco-kmod.service' >/dev/null || true
                 systemctl --system mask 'falco-bpf.service' >/dev/null || true
-                systemctl --system mask 'falco-modern_bpf.service' >/dev/null || true
+                systemctl --system mask 'falco-modern-bpf.service' >/dev/null || true
                 systemctl --system mask "falco-plugin.service" >/dev/null || true
         fi
 fi

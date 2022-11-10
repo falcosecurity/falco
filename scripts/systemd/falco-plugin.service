@@ -3,8 +3,8 @@ Description=Falco: Container Native Runtime Security with plugin
 Documentation=https://falco.org/docs/
 PartOf=falco@plugin.target
 Conflicts=falco-kmod.service
-Conflicts=falco-ebpf.service
-Conflicts=falco-modern_bpf.service
+Conflicts=falco-bpf.service
+Conflicts=falco-modern-bpf.service
 
 [Service]
 Type=simple
