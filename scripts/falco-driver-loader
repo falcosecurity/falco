@@ -240,13 +240,17 @@ load_kernel_module_compile() {
 			echo "* ${DRIVER_NAME} module found: ${KO_FILE}"
 			echo "* Trying to modprobe"
 			chcon -t modules_object_t "$KO_FILE" > /dev/null 2>&1 || true
-			depmod ${KERNEL_RELEASE}
 			if modprobe "${DRIVER_NAME}" > /dev/null 2>&1; then
-				echo "* Success: ${DRIVER_NAME} module found and loaded in dkms"
+				echo "* Success: ${DRIVER_NAME} module found in dkms and loaded"
 				exit 0
-			else
-				echo "* Unable to load ${DRIVER_NAME} module"
 			fi
+			echo "* Unable to load ${DRIVER_NAME} module"
+			echo "* Trying insmod"
+			if insmod "$KO_FILE" > /dev/null 2>&1; then
+				echo "* Success: ${DRIVER_NAME} module found in dkms and inserted"
+				exit 0
+			fi
+			echo "* Unable to insmod ${DRIVER_NAME} module"
 		else
 			DKMS_LOG="/var/lib/dkms/${DRIVER_NAME}/${DRIVER_VERSION}/build/make.log"
 			if [ -f "${DKMS_LOG}" ]; then
@@ -271,11 +275,15 @@ load_kernel_module_download() {
 		cp ${HOME}/.falco/${DRIVER_VERSION}/${ARCH}/${FALCO_KERNEL_MODULE_FILENAME} /lib/modules/${KERNEL_RELEASE}/kernel/drivers/falco/falco.ko
 		depmod ${KERNEL_RELEASE}
 		if modprobe "${DRIVER_NAME}" > /dev/null 2>&1; then
-			echo "* Success: ${DRIVER_NAME} module found and loaded with modprobe"
+			echo "* Success: ${DRIVER_NAME} module found and loaded"
 			exit 0
-		else
-			>&2 echo "Unable to load the prebuilt ${DRIVER_NAME} module"
-		fi	
+		fi
+		>&2 echo "Unable to load the prebuilt ${DRIVER_NAME} module"
+		if insmod "${HOME}/.falco/${DRIVER_VERSION}/${ARCH}/${FALCO_KERNEL_MODULE_FILENAME}"; then
+			echo "* Success: ${DRIVER_NAME} module found and inserted"
+			exit 0
+		fi
+		>&2 echo "Unable to insmod the prebuilt ${DRIVER_NAME} module"
 	else
 		>&2 echo "Unable to find a prebuilt ${DRIVER_NAME} module"
 		return
@@ -389,10 +397,14 @@ load_kernel_module() {
 	if [ -f "${HOME}/.falco/${DRIVER_VERSION}/${ARCH}/${FALCO_KERNEL_MODULE_FILENAME}" ]; then
 		echo "* Found a prebuilt ${DRIVER_NAME} module at ${HOME}/.falco/${DRIVER_VERSION}/${ARCH}/${FALCO_KERNEL_MODULE_FILENAME}, loading it"
 		chcon -t modules_object_t "${HOME}/.falco/${DRIVER_VERSION}/${ARCH}/${FALCO_KERNEL_MODULE_FILENAME}" > /dev/null 2>&1 || true
-		mkdir -p /lib/modules/${KERNEL_RELEASE}/kernel/drivers/falco/
-		cp ${HOME}/.falco/${DRIVER_VERSION}/${ARCH}/${FALCO_KERNEL_MODULE_FILENAME} /lib/modules/${KERNEL_RELEASE}/kernel/drivers/falco/falco.ko
+		mkdir -p /lib/modules/${KERNEL_RELEASE}/kernel/drivers/falco/ || true
+		cp ${HOME}/.falco/${DRIVER_VERSION}/${ARCH}/${FALCO_KERNEL_MODULE_FILENAME} /lib/modules/${KERNEL_RELEASE}/kernel/drivers/falco/falco.ko || true
 		depmod ${KERNEL_RELEASE}
-		modprobe "${DRIVER_NAME}" && echo "* Success: ${DRIVER_NAME} module found and loaded"
+		if modprobe "${DRIVER_NAME}" > /dev/null 2>&1; then
+			echo "* Success: ${DRIVER_NAME} module found and loaded"
+			exit 0
+		fi
+		insmod "${HOME}/.falco/${DRIVER_VERSION}/${ARCH}/${FALCO_KERNEL_MODULE_FILENAME}" && echo "* Success: ${DRIVER_NAME} module found and inserted"
 		exit $?
 	fi
 
@@ -410,7 +422,7 @@ load_kernel_module() {
 	# Last try (might load a previous driver version)
 	echo "* Trying to load a system ${DRIVER_NAME} module, if present"
 	if modprobe "${DRIVER_NAME}" > /dev/null 2>&1; then
-		echo "* Success: ${DRIVER_NAME} module found and loaded with modprobe"
+		echo "* Success: ${DRIVER_NAME} module found and loaded"
 		exit 0
 	fi
 
