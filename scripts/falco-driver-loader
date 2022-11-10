@@ -240,6 +240,7 @@ load_kernel_module_compile() {
 			echo "* ${DRIVER_NAME} module found: ${KO_FILE}"
 			echo "* Trying to modprobe"
 			chcon -t modules_object_t "$KO_FILE" > /dev/null 2>&1 || true
+			depmod ${KERNEL_RELEASE}
 			if modprobe "${DRIVER_NAME}" > /dev/null 2>&1; then
 				echo "* Success: ${DRIVER_NAME} module found and loaded in dkms"
 				exit 0
