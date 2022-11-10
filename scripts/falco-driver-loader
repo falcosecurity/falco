@@ -238,13 +238,14 @@ load_kernel_module_compile() {
 				return
 			fi
 			echo "* ${DRIVER_NAME} module found: ${KO_FILE}"
-			echo "* Trying insmod"
+			echo "* Trying to modprobe"
 			chcon -t modules_object_t "$KO_FILE" > /dev/null 2>&1 || true
-			if insmod "$KO_FILE" > /dev/null 2>&1; then
+			depmod ${KERNEL_RELEASE}
+			if modprobe "${DRIVER_NAME}" > /dev/null 2>&1; then
 				echo "* Success: ${DRIVER_NAME} module found and loaded in dkms"
 				exit 0
 			else
-				echo "* Unable to insmod ${DRIVER_NAME} module"
+				echo "* Unable to load ${DRIVER_NAME} module"
 			fi
 		else
 			DKMS_LOG="/var/lib/dkms/${DRIVER_NAME}/${DRIVER_VERSION}/build/make.log"
@@ -266,11 +267,14 @@ load_kernel_module_download() {
 	if curl -L --create-dirs "${FALCO_DRIVER_CURL_OPTIONS}" -o "${HOME}/.falco/${DRIVER_VERSION}/${ARCH}/${FALCO_KERNEL_MODULE_FILENAME}" "${URL}"; then
 		echo "* Download succeeded"
 		chcon -t modules_object_t "${HOME}/.falco/${DRIVER_VERSION}/${ARCH}/${FALCO_KERNEL_MODULE_FILENAME}" > /dev/null 2>&1 || true
-		if insmod "${HOME}/.falco/${DRIVER_VERSION}/${ARCH}/${FALCO_KERNEL_MODULE_FILENAME}"; then
-			echo "* Success: ${DRIVER_NAME} module found and inserted"
+		mkdir -p /lib/modules/${KERNEL_RELEASE}/kernel/drivers/falco/
+		cp ${HOME}/.falco/${DRIVER_VERSION}/${ARCH}/${FALCO_KERNEL_MODULE_FILENAME} /lib/modules/${KERNEL_RELEASE}/kernel/drivers/falco/falco.ko
+		depmod ${KERNEL_RELEASE}
+		if modprobe "${DRIVER_NAME}" > /dev/null 2>&1; then
+			echo "* Success: ${DRIVER_NAME} module found and loaded with modprobe"
 			exit 0
 		else
-			>&2 echo "Unable to insmod the prebuilt ${DRIVER_NAME} module"
+			>&2 echo "Unable to load the prebuilt ${DRIVER_NAME} module"
 		fi	
 	else
 		>&2 echo "Unable to find a prebuilt ${DRIVER_NAME} module"
@@ -385,7 +389,10 @@ load_kernel_module() {
 	if [ -f "${HOME}/.falco/${DRIVER_VERSION}/${ARCH}/${FALCO_KERNEL_MODULE_FILENAME}" ]; then
 		echo "* Found a prebuilt ${DRIVER_NAME} module at ${HOME}/.falco/${DRIVER_VERSION}/${ARCH}/${FALCO_KERNEL_MODULE_FILENAME}, loading it"
 		chcon -t modules_object_t "${HOME}/.falco/${DRIVER_VERSION}/${ARCH}/${FALCO_KERNEL_MODULE_FILENAME}" > /dev/null 2>&1 || true
-		insmod "${HOME}/.falco/${DRIVER_VERSION}/${ARCH}/${FALCO_KERNEL_MODULE_FILENAME}" && echo "* Success: ${DRIVER_NAME} module found and inserted"
+		mkdir -p /lib/modules/${KERNEL_RELEASE}/kernel/drivers/falco/
+		cp ${HOME}/.falco/${DRIVER_VERSION}/${ARCH}/${FALCO_KERNEL_MODULE_FILENAME} /lib/modules/${KERNEL_RELEASE}/kernel/drivers/falco/falco.ko
+		depmod ${KERNEL_RELEASE}
+		modprobe "${DRIVER_NAME}" && echo "* Success: ${DRIVER_NAME} module found and loaded"
 		exit $?
 	fi
 
