@@ -39,7 +39,7 @@ case "$1" in
                     chosen_driver="bpf"
                     ;;
                 4)
-                    chosen_driver="modern_bpf"
+                    chosen_driver="modern-bpf"
                     ;;
                 5)
                     chosen_driver="plugin"
@@ -67,7 +67,7 @@ if [ "$1" = "configure" ] || [ "$1" = "abort-upgrade" ] || [ "$1" = "abort-decon
         systemctl --system unmask "falco@.target" >/dev/null || true
         systemctl --system unmask "falco-kmod.service" >/dev/null || true
         systemctl --system unmask "falco-bpf.service" >/dev/null || true
-        systemctl --system unmask "falco-modern_bpf.service" >/dev/null || true
+        systemctl --system unmask "falco-modern-bpf.service" >/dev/null || true
         systemctl --system unmask "falco-plugin.service" >/dev/null || true
 
         # was-enabled defaults to true, so new installations run enable.

@@ -24,7 +24,7 @@ set -e
 if [ -d /run/systemd/system ] && [ "$1" = remove ]; then
         systemctl --system stop 'falco@kmod.target' >/dev/null || true
         systemctl --system stop 'falco@bpf.target' >/dev/null || true
-        systemctl --system stop 'falco@modern_bpf.target' >/dev/null || true
+        systemctl --system stop 'falco@modern-bpf.target' >/dev/null || true
         systemctl --system stop 'falco@plugin.target' >/dev/null || true
 fi
 

@@ -23,7 +23,7 @@ if [ -d /run/systemd/system ] && [ "$1" = 0 ]; then
         /usr/bin/systemctl --system mask 'falco@.target' >/dev/null || true
         /usr/bin/systemctl --system mask 'falco-kmod.service' >/dev/null || true
         /usr/bin/systemctl --system mask 'falco-bpf.service' >/dev/null || true
-        /usr/bin/systemctl --system mask 'falco-modern_bpf.service' >/dev/null || true
+        /usr/bin/systemctl --system mask 'falco-modern-bpf.service' >/dev/null || true
         /usr/bin/systemctl --system mask 'falco-plugin.service' >/dev/null || true
 fi
 
@@ -36,5 +36,5 @@ fi
 #   `systemd-update-helper mark-restart-system-units <service>`
 %systemd_postun_with_restart 'falco@kmod.target'
 %systemd_postun_with_restart 'falco@bpf.target'
-%systemd_postun_with_restart 'falco@modern_bpf.target'
+%systemd_postun_with_restart 'falco@modern-bpf.target'
 %systemd_postun_with_restart 'falco@plugin.target'
