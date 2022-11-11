@@ -29,9 +29,19 @@ void application::configure_output_format()
 		output_format = "container=%container.name (id=%container.id)";
 		replace_container_info = true;
 	}
+	else if(m_options.print_additional == "container-gvisor")
+	{
+		output_format = "container=%container.name (id=%container.id) vpid=%proc.vpid vtid=%thread.vtid";
+		replace_container_info = true;
+	}
 	else if(m_options.print_additional == "k" || m_options.print_additional == "kubernetes")
 	{
 		output_format = "k8s.ns=%k8s.ns.name k8s.pod=%k8s.pod.name container=%container.id";
+		replace_container_info = true;
+	}
+	else if(m_options.print_additional == "kubernetes-gvisor")
+	{
+		output_format = "k8s.ns=%k8s.ns.name k8s.pod=%k8s.pod.name container=%container.id vpid=%proc.vpid vtid=%thread.vtid";
 		replace_container_info = true;
 	}
 	else if(m_options.print_additional == "m" || m_options.print_additional == "mesos")
@@ -43,11 +53,6 @@ void application::configure_output_format()
 	{
 		output_format = m_options.print_additional;
 		replace_container_info = false;
-	}
-	else if(m_options.gvisor_config != "")
-	{
-		output_format = "container=%container.name (id=%container.id) vpid=%proc.vpid vtid=%thread.vtid";
-		replace_container_info = true;
 	}
 
 	if(!output_format.empty())
