@@ -19,14 +19,15 @@ set -e
 # pre uninstall mirrored from .deb
 # Currently running falco service uses the driver, so stop it before driver cleanup
 if [ -d /run/systemd/system ] && [ $1 -eq 0 ]; then
-        # stop falco service before uninstall
-        /usr/bin/systemctl --system stop 'falco@kmod.target' >/dev/null || true
-        /usr/bin/systemctl --system stop 'falco@bpf.target' >/dev/null || true
-        /usr/bin/systemctl --system stop 'falco@modern-bpf.target' >/dev/null || true
-        /usr/bin/systemctl --system stop 'falco@plugin.target' >/dev/null || true
+        echo "[POST-REMOVE] Stop all Falco services:"
+        systemctl --system stop 'falco-kmod.service' || true
+        systemctl --system stop 'falco-bpf.service' || true
+        systemctl --system stop 'falco-modern-bpf.service' || true
+        systemctl --system stop 'falco-plugin.service' || true
 fi
 
-/usr/bin/falco-driver-loader --clean
+echo "[POST-REMOVE] Call 'falco-driver-loader --clean:'"
+falco-driver-loader --clean
 
 # validate rpm macros by `rpm -qp --scripts <rpm>`
 # RPM scriptlets: https://docs.fedoraproject.org/en-US/packaging-guidelines/Scriptlets/#_systemd
@@ -35,7 +36,7 @@ fi
 # systemd_preun macro expands to
 # if preuninstall:
 #  `systemd-update-helper remove-system-units <service>`
-%systemd_preun 'falco@kmod.target'
-%systemd_preun 'falco@bpf.target'
-%systemd_preun 'falco@modern-bpf.target'
-%systemd_preun 'falco@plugin.target'
+%systemd_preun 'falco-kmod.service'
+%systemd_preun 'falco-bpf.service'
+%systemd_preun 'falco-modern-bpf.service'
+%systemd_preun 'falco-plugin.service'

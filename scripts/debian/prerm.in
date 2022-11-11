@@ -22,14 +22,16 @@ set -e
 # Currently running falco service uses the driver, so stop it before driver cleanup
 
 if [ -d /run/systemd/system ] && [ "$1" = remove ]; then
-        systemctl --system stop 'falco@kmod.target' >/dev/null || true
-        systemctl --system stop 'falco@bpf.target' >/dev/null || true
-        systemctl --system stop 'falco@modern-bpf.target' >/dev/null || true
-        systemctl --system stop 'falco@plugin.target' >/dev/null || true
+        echo "[POST-REMOVE] Stop all Falco services:"
+        systemctl --system stop 'falco-kmod.service' || true
+        systemctl --system stop 'falco-bpf.service' || true
+        systemctl --system stop 'falco-modern-bpf.service' || true
+        systemctl --system stop 'falco-plugin.service' || true
 fi
 
 case "$1" in
 	remove|upgrade|deconfigure)
-		/usr/bin/falco-driver-loader --clean
+                echo "[POST-REMOVE] Call 'falco-driver-loader --clean:'"
+		falco-driver-loader --clean
 	;;
 esac
