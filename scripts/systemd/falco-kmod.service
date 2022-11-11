@@ -11,6 +11,7 @@ Conflicts=falco-plugin.service
 Type=simple
 User=root
 ExecStart=/usr/bin/falco --pidfile=/var/run/falco.pid
+ExecStopPost=/sbin/rmmod falco
 UMask=0077
 TimeoutSec=30
 RestartSec=15s

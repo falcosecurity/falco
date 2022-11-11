@@ -19,14 +19,16 @@ set -e
 # pre uninstall mirrored from .deb
 # Currently running falco service uses the driver, so stop it before driver cleanup
 if [ -d /run/systemd/system ] && [ $1 -eq 0 ]; then
-        echo "[POST-REMOVE] Stop all Falco services:"
+        echo "[PRE-REMOVE] Stop all Falco services:"
         systemctl --system stop 'falco-kmod.service' || true
         systemctl --system stop 'falco-bpf.service' || true
         systemctl --system stop 'falco-modern-bpf.service' || true
         systemctl --system stop 'falco-plugin.service' || true
+        # this should be stopped after 'falco-kmod.service'
+        systemctl --system stop 'falco-kmod-inject.service' || true
 fi
 
-echo "[POST-REMOVE] Call 'falco-driver-loader --clean:'"
+echo "[PRE-REMOVE] Call 'falco-driver-loader --clean:'"
 falco-driver-loader --clean
 
 # validate rpm macros by `rpm -qp --scripts <rpm>`
