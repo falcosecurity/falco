@@ -17,24 +17,12 @@
 
 set -e
 
-# post uninstall mirrored from .deb
-if [ -d /run/systemd/system ] && [ "$1" = 0 ]; then
-        /usr/bin/systemctl --system daemon-reload >/dev/null || true
-        /usr/bin/systemctl --system mask 'falco@.target' >/dev/null || true
-        /usr/bin/systemctl --system mask 'falco-kmod.service' >/dev/null || true
-        /usr/bin/systemctl --system mask 'falco-bpf.service' >/dev/null || true
-        /usr/bin/systemctl --system mask 'falco-modern-bpf.service' >/dev/null || true
-        /usr/bin/systemctl --system mask 'falco-plugin.service' >/dev/null || true
+if [ -d /run/systemd/system ] && [ $1 -eq 0 ]; then
+        echo "[POST-REMOVE] Disable all Falco services:"
+        systemctl --system disable 'falco-kmod.service'|| true
+        systemctl --system disable 'falco-bpf.service' || true
+        systemctl --system disable 'falco-modern-bpf.service' || true
+        systemctl --system disable 'falco-plugin.service' || true
+        echo "[POST-REMOVE] Trigger deamon-reload:"
+        systemctl --system daemon-reload || true
 fi
-
-# validate rpm macros by `rpm -qp --scripts <rpm>`
-# RPM scriptlets: https://docs.fedoraproject.org/en-US/packaging-guidelines/Scriptlets/#_systemd
-#                 https://docs.fedoraproject.org/en-US/packaging-guidelines/Scriptlets/#_syntax
-
-# systemd_postun_with_restart macro expands to
-# if package upgrade, not uninstall:
-#   `systemd-update-helper mark-restart-system-units <service>`
-%systemd_postun_with_restart 'falco@kmod.target'
-%systemd_postun_with_restart 'falco@bpf.target'
-%systemd_postun_with_restart 'falco@modern-bpf.target'
-%systemd_postun_with_restart 'falco@plugin.target'

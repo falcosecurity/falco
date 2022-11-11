@@ -16,8 +16,6 @@
 #
 
 # Systemd
-file(COPY "${PROJECT_SOURCE_DIR}/scripts/systemd/falco@.target"
-		DESTINATION "${PROJECT_BINARY_DIR}/scripts/systemd")
 file(COPY "${PROJECT_SOURCE_DIR}/scripts/systemd/falco-kmod-inject.service"
 		DESTINATION "${PROJECT_BINARY_DIR}/scripts/systemd")
 file(COPY "${PROJECT_SOURCE_DIR}/scripts/systemd/falco-kmod.service"

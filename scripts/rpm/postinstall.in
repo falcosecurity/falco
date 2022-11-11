@@ -49,9 +49,11 @@ fi
 # If needed, try to load/compile the driver through falco-driver-loader
 case "$chosen_driver" in
     "kmod")
+      echo "[POST-INSTALL] Call 'falco-driver-loader module':"
       falco-driver-loader module
       ;;
     "bpf")
+      echo "[POST-INSTALL] Call 'falco-driver-loader bpf':"
       falco-driver-loader bpf
       ;;
 esac
@@ -63,34 +65,27 @@ esac
 # systemd_post macro expands to
 # if postinst:
 #   `systemd-update-helper install-system-units <service>`
-%systemd_post "falco@$chosen_driver.target"
+%systemd_post "falco-$chosen_driver.service"
 
 # post install mirrored from .deb
 if [ $1 -eq 1 ]; then
-        # This will only remove masks created on package removal.
-        /usr/bin/systemctl --system unmask "falco@.target" >/dev/null || true
-        /usr/bin/systemctl --system unmask "falco-kmod.service" >/dev/null || true
-        /usr/bin/systemctl --system unmask "falco-bpf.service" >/dev/null || true
-        /usr/bin/systemctl --system unmask "falco-modern-bpf.service" >/dev/null || true
-        /usr/bin/systemctl --system unmask "falco-plugin.service" >/dev/null || true
-
         if [ -n "$chosen_driver" ]; then
-            # enable falco on installation
-            # note: DEB postinstall script checks for changed symlinks
-            /usr/bin/systemctl --system enable "falco@$chosen_driver.target" >/dev/null || true
-
-            # start falco on installation
-            /usr/bin/systemctl --system start "falco@$chosen_driver.target" >/dev/null || true
+            echo "[POST-INSTALL] Enable 'falco-$chosen_driver.service':"
+            systemctl --system enable "falco-$chosen_driver.service" || true
+            echo "[POST-INSTALL] Start 'falco-$chosen_driver.service':"
+            systemctl --system start "falco-$chosen_driver.service" || true
         fi
 fi
 
 # post upgrade mirrored from .deb
 if [ $1 -gt 1 ]; then
     if [ -d /run/systemd/system ]; then
-        /usr/bin/systemctl --system daemon-reload >/dev/null || true
+        echo "[POST-INSTALL] Trigger deamon-reload:"
+        systemctl --system daemon-reload || true
         if [ -n "$chosen_driver" ]; then
-            # restart falco on upgrade if service is already running
-            /usr/bin/systemctl --system condrestart "falco@$chosen_driver.target" >/dev/null || true
+          echo "[POST-INSTALL] Trigger 'falco-$chosen_driver.service' condrestart:"
+          # restart falco on upgrade if service is already running
+          systemctl --system condrestart "falco-$chosen_driver.service" || true
         fi
     fi
 fi

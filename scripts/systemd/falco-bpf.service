@@ -1,7 +1,6 @@
 [Unit]
 Description=Falco: Container Native Runtime Security with ebpf
 Documentation=https://falco.org/docs/
-PartOf=falco@bpf.target
 Conflicts=falco-kmod.service
 Conflicts=falco-modern-bpf.service
 Conflicts=falco-plugin.service
@@ -23,3 +22,6 @@ ProtectKernelTunables=true
 RestrictRealtime=true
 RestrictAddressFamilies=~AF_PACKET
 StandardOutput=null
+
+[Install]
+WantedBy=multi-user.target
