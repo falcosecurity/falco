@@ -1,7 +1,6 @@
 [Unit]
 Description=Falco: Container Native Runtime Security with kmod, inject.
 Documentation=https://falco.org/docs/
-PartOf=falco@kmod.target
 
 [Service]
 Type=oneshot

@@ -18,8 +18,7 @@ set -e
 
 chosen_driver=
 
-case "$1" in
-    configure)
+if [ $1 -eq 1 ]; then
         if [ -x /usr/bin/dialog ]; then
             # If dialog is installed, create a dialog to let users choose the correct driver for them
             CHOICE=$(dialog --clear --backtitle "Choose your preferred driver" --title "Falco driver" --menu "Choose one of the following options:" 15 40 4 \
@@ -45,8 +44,7 @@ case "$1" in
                         ;;
                 esac
         fi
-    ;;
-esac
+fi
 
 # If needed, try to load/compile the driver through falco-driver-loader
 case "$chosen_driver" in
@@ -65,34 +63,23 @@ esac
 # systemd_post macro expands to
 # if postinst:
 #   `systemd-update-helper install-system-units <service>`
-%systemd_post "falco@$chosen_driver.target"
+%systemd_post "falco-$chosen_driver.service"
 
 # post install mirrored from .deb
 if [ $1 -eq 1 ]; then
-        # This will only remove masks created on package removal.
-        /usr/bin/systemctl --system unmask "falco@.target" >/dev/null || true
-        /usr/bin/systemctl --system unmask "falco-kmod.service" >/dev/null || true
-        /usr/bin/systemctl --system unmask "falco-bpf.service" >/dev/null || true
-        /usr/bin/systemctl --system unmask "falco-modern-bpf.service" >/dev/null || true
-        /usr/bin/systemctl --system unmask "falco-plugin.service" >/dev/null || true
-
         if [ -n "$chosen_driver" ]; then
-            # enable falco on installation
-            # note: DEB postinstall script checks for changed symlinks
-            /usr/bin/systemctl --system enable "falco@$chosen_driver.target" >/dev/null || true
-
-            # start falco on installation
-            /usr/bin/systemctl --system start "falco@$chosen_driver.target" >/dev/null || true
+            systemctl --system enable "falco-$chosen_driver.service" || true
+            systemctl --system start "falco-$chosen_driver.service" || true
         fi
 fi
 
 # post upgrade mirrored from .deb
 if [ $1 -gt 1 ]; then
     if [ -d /run/systemd/system ]; then
-        /usr/bin/systemctl --system daemon-reload >/dev/null || true
+        systemctl --system daemon-reload || true
         if [ -n "$chosen_driver" ]; then
-            # restart falco on upgrade if service is already running
-            /usr/bin/systemctl --system condrestart "falco@$chosen_driver.target" >/dev/null || true
+          # restart falco on upgrade if service is already running
+          systemctl --system condrestart "falco-$chosen_driver.service" || true
         fi
     fi
 fi
