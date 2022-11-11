@@ -237,7 +237,7 @@ std::unique_ptr<load_result> falco_engine::load_rules_file(const string &rules_f
 
 		res->add_error(load_result::LOAD_ERR_FILE_READ, e.what(), ctx);
 
-		return std::move(res);
+		return res;
 	}
 
 	return load_rules(rules_content, rules_filename);
