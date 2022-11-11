@@ -4,7 +4,5 @@ Documentation=https://falco.org/docs/
 
 [Service]
 Type=oneshot
-RemainAfterExit=yes
 User=root
 ExecStart=/sbin/modprobe falco
-ExecStop=/sbin/rmmod falco
