@@ -21,19 +21,15 @@ set -e
 # ref: https://www.debian.org/doc/manuals/debmake-doc/ch05.en.html#debhelper
 # Currently running falco service uses the driver, so stop it before driver cleanup
 
-if [ -d /run/systemd/system ] && [ "$1" = remove ]; then
-        echo "[PRE-REMOVE] Stop all Falco services:"
-        systemctl --system stop 'falco-kmod.service' || true
-        systemctl --system stop 'falco-bpf.service' || true
-        systemctl --system stop 'falco-modern-bpf.service' || true
-        systemctl --system stop 'falco-plugin.service' || true
-        # this should be stopped after 'falco-kmod.service'
-        systemctl --system stop 'falco-kmod-inject.service' || true
-fi
-
 case "$1" in
-	remove|upgrade|deconfigure)
-                echo "[PRE-REMOVE] Call 'falco-driver-loader --clean:'"
-		falco-driver-loader --clean
-	;;
+    remove|upgrade|deconfigure)
+      echo "[PRE-REMOVE] Stop all Falco services:"
+      systemctl --system stop 'falco-kmod.service' || true
+      systemctl --system stop 'falco-bpf.service' || true
+      systemctl --system stop 'falco-modern-bpf.service' || true
+      systemctl --system stop 'falco-plugin.service' || true
+
+      echo "[PRE-REMOVE] Call 'falco-driver-loader --clean:'"
+      falco-driver-loader --clean
+    ;;
 esac
