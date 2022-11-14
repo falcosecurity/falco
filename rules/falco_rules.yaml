@@ -220,7 +220,7 @@
   items: [probe_rpminfo, probe_rpmverify, probe_rpmverifyfile, probe_rpmverifypackage]
 
 - macro: rpm_procs
-  condition: (proc.name in (rpm_binaries, openscap_rpm_binaries) or proc.name in (salt-minion))
+  condition: (proc.name in (rpm_binaries, openscap_rpm_binaries) or proc.name in (salt-call, salt-minion))
 
 - list: deb_binaries
   items: [dpkg, dpkg-preconfigu, dpkg-reconfigur, dpkg-divert, apt, apt-get, aptitude,
