@@ -20,4 +20,7 @@ FROM debian:11-slim
 
 COPY --from=builder /falco /
 
+ENV HOST_ROOT /host
+ENV HOME /root
+
 CMD ["/usr/bin/falco", "-o", "time_format_iso_8601=true", "--modern-bpf"]
