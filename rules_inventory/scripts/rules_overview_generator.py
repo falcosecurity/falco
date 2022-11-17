@@ -5,7 +5,7 @@ import datetime
 
 """
 Usage:
-python rules-inventory/scripts/rules_mitre_overview_generator.py --rules_file=rules/falco_rules.yaml
+python rules_inventory/scripts/rules_overview_generator.py --rules_file=rules/falco_rules.yaml
 """
 
 BASE_MITRE_URL_TECHNIQUE="https://attack.mitre.org/techniques/"
