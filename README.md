@@ -80,6 +80,8 @@ For example, Falco can easily detect incidents including but not limited to:
 - A standard system binary, such as `ls`, is making an outbound network connection.
 - A privileged pod is started in a Kubernetes cluster.
 
+The Falco rules inventory [document](rules-inventory/rules_mitre_overview.md) provides additional details around the default rules Falco ships with.
+
 ## Installing Falco
 
 If you would like to run Falco in **production** please adhere to the [official installation guide](https://falco.org/docs/getting-started/installation/).
