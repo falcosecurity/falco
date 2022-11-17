@@ -15,37 +15,40 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-set -e
 
 chosen_driver=
 
 if [ "$1" = "configure" ]; then
         if [ -x /usr/bin/dialog ]; then
           # If dialog is installed, create a dialog to let users choose the correct driver for them
-          CHOICE=$(dialog --clear --backtitle "Choose your preferred driver" --title "Falco driver" --menu "Choose one of the following options:" 15 40 4 \
+          CHOICE=$(dialog --clear --backtitle "Choose your preferred driver" --title "Falco driver" --menu "Choose one of the following options:" 15 40 5 \
                 1 "Don't start" \
                 2 "Kmod" \
                 3 "eBPF" \
                 4 "Modern eBPF" \
                 5 "Plugin" \
                 2>&1 >/dev/tty)
+            if [ $? -eq 0 ]; then
+              case $CHOICE in
+                  2)
+                      chosen_driver="kmod"
+                      ;;
+                  3)
+                      chosen_driver="bpf"
+                      ;;
+                  4)
+                      chosen_driver="modern-bpf"
+                      ;;
+                  5)
+                      chosen_driver="plugin"
+                      ;;
+              esac
+            fi
             clear
-            case $CHOICE in
-                2)
-                    chosen_driver="kmod"
-                    ;;
-                3)
-                    chosen_driver="bpf"
-                    ;;
-                4)
-                    chosen_driver="modern-bpf"
-                    ;;
-                5)
-                    chosen_driver="plugin"
-                    ;;
-            esac
         fi
 fi
+
+set -e
 
 # If needed, try to load/compile the driver through falco-driver-loader
 case "$chosen_driver" in
