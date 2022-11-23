@@ -1,5 +1,14 @@
 # Change Log
 
+## v0.33.1
+
+Released on 2022-11-24
+
+### Minor Changes
+
+* update(falco): fix container-gvisor and kubernetes-gvisor print options [[#2288](https://github.com/falcosecurity/falco/pull/2288)]
+* Update libs to 0.9.2, fixing potential CLBO on gVisor+Kubernetes and crash with eBPF when some CPUs are offline [[#2299](https://github.com/falcosecurity/falco/pull/2299)] - [@LucaGuerra](https://github.com/LucaGuerra)
+
 ## v0.33.0
 
 Released on 2022-10-19
