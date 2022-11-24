@@ -231,6 +231,7 @@ void application::process_inspector_events(
 		application::source_sync_context* sync,
 		application::run_result* res) noexcept
 {
+	inspector->start_capture();
 	try
 	{
 		double duration;
@@ -276,7 +277,7 @@ void application::process_inspector_events(
 	{
 		*res = run_result::fatal(e.what());
 	}
-
+	inspector->stop_capture();
 	if (sync)
 	{
 		sync->finish();
