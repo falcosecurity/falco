@@ -181,9 +181,6 @@ include(cxxopts)
 # One TBB
 include(tbb)
 
-#string-view-lite
-include(DownloadStringViewLite)
-
 if(NOT MINIMAL_BUILD)
   include(zlib)
   include(cares)

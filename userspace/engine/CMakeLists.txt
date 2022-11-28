@@ -28,7 +28,6 @@ set(FALCO_ENGINE_SOURCE_FILES
     rule_loader_compiler.cpp)
 
 add_library(falco_engine STATIC ${FALCO_ENGINE_SOURCE_FILES})
-add_dependencies(falco_engine njson string-view-lite)
 
 if(USE_BUNDLED_DEPS)
   add_dependencies(falco_engine yamlcpp)

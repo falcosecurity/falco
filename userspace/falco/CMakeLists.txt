@@ -73,7 +73,6 @@ list(APPEND FALCO_INCLUDE_DIRECTORIES "${FALCO_EXTRA_INCLUDE_DIRS}")
 
 set(
   FALCO_DEPENDENCIES
-  string-view-lite
   b64
   cxxopts
 )
