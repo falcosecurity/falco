@@ -49,7 +49,7 @@ uint32_t hardware_concurrency();
 namespace network
 {
 static const std::string UNIX_SCHEME("unix://");
-bool is_unix_scheme(nonstd::string_view url);
+bool is_unix_scheme(const std::string& url);
 } // namespace network
 } // namespace utils
 } // namespace falco
