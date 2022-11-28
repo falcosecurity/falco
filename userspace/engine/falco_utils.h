@@ -24,7 +24,6 @@ limitations under the License.
 #include <iostream>
 #include <string>
 #include <thread>
-#include <nonstd/string_view.hpp>
 
 #ifdef __GNUC__
 #define likely(x) __builtin_expect(!!(x), 1)
