@@ -75,7 +75,7 @@ void readfile(const std::string& filename, std::string& data)
 }
 namespace network
 {
-bool is_unix_scheme(nonstd::string_view url)
+bool is_unix_scheme(const std::string& url)
 {
 	return url.starts_with(UNIX_SCHEME);
 }
