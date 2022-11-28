@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include "falco_utils.h"
-#include <nonstd/string_view.hpp>
 #include <catch.hpp>
 
 TEST_CASE("is_unix_scheme matches", "[utils]")

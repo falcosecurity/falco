@@ -20,6 +20,7 @@ limitations under the License.
 #include <iomanip>
 
 #include "falco_utils.h"
+#include "utils.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
 
 namespace falco
@@ -77,7 +78,7 @@ namespace network
 {
 bool is_unix_scheme(const std::string& url)
 {
-	return url.starts_with(UNIX_SCHEME);
+	return sinsp_utils::startswith(url, UNIX_SCHEME);
 }
 } // namespace network
 } // namespace utils
