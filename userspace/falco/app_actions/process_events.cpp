@@ -50,8 +50,8 @@ application::run_result application::do_inspect(
 		uint64_t duration_to_tot_ns,
 		uint64_t &num_evts)
 {
-	int32_t rc;
-	sinsp_evt* ev;
+	int32_t rc = 0;
+	sinsp_evt* ev = NULL;
 	stats_writer::collector stats_collector(statsw);
 	uint64_t duration_start = 0;
 	uint32_t timeouts_since_last_success_or_msg = 0;
@@ -90,6 +90,11 @@ application::run_result application::do_inspect(
 				m_state->config->m_syscall_evt_drop_max_burst,
 				m_state->config->m_syscall_evt_simulate_drops);
 	}
+
+	//
+	// Start capture
+	//
+	inspector->start_capture();
 
 	//
 	// Loop through the events
@@ -153,6 +158,7 @@ application::run_result application::do_inspect(
 			//
 			// Event read error.
 			//
+			inspector->stop_capture();
 			return run_result::fatal(inspector->getlasterr());
 		}
 
@@ -197,6 +203,7 @@ application::run_result application::do_inspect(
 
 		if(check_drops_and_timeouts && !sdropmgr.process_event(inspector, ev))
 		{
+			inspector->stop_capture();
 			return run_result::fatal("Drop manager internal error");
 		}
 
@@ -221,6 +228,11 @@ application::run_result application::do_inspect(
 		num_evts++;
 	}
 
+	//
+	// Stop capture
+	//
+	inspector->stop_capture();
+
 	return run_result::ok();
 }
 
@@ -231,7 +243,6 @@ void application::process_inspector_events(
 		application::source_sync_context* sync,
 		application::run_result* res) noexcept
 {
-	inspector->start_capture();
 	try
 	{
 		double duration;
@@ -277,7 +288,7 @@ void application::process_inspector_events(
 	{
 		*res = run_result::fatal(e.what());
 	}
-	inspector->stop_capture();
+
 	if (sync)
 	{
 		sync->finish();
