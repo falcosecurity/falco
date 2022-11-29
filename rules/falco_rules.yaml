@@ -3223,10 +3223,6 @@
   priority: WARNING
   tags: [container, filesystem, mitre_initial_access]
 
-# Application rules have moved to application_rules.yaml. Please look
-# there if you want to enable them by adding to
-# falco_rules.local.yaml.
-
 - list: known_binaries_to_read_environment_variables_from_proc_files
   items: [scsi_id, argoexec]
 
@@ -3240,3 +3236,17 @@
     command=%proc.cmdline pid=%proc.pid file=%fd.name parent=%proc.pname gparent=%proc.aname[2] ggparent=%proc.aname[3] gggparent=%proc.aname[4] container_id=%container.id image=%container.image.repository)
   priority: WARNING
   tags: [filesystem, mitre_credential_access, mitre_discovery]
+
+- rule: Drop and execute of a binary within a container
+  desc:
+    Detect if an executable not belonging to the base image of a container is being executed.
+    The drop and execute pattern can be observed very often after an attacker gained an initial foothold.
+  condition: >
+    spawned_process and container and proc.is_exe_upper_layer=true
+  output: Executing binary not part of base image (user=%user.name user_loginuid=%user.loginuid comm=%proc.cmdline exe=%proc.exe container_id=%container.id image=%container.image.repository)
+  priority: CRITICAL 
+  tags: [container, mitre_privilege_escalation, mitre_lateral_movement]
+
+# Application rules have moved to application_rules.yaml. Please look
+# there if you want to enable them by adding to
+# falco_rules.local.yaml.
