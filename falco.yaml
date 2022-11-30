@@ -63,6 +63,16 @@ plugins:
 # load_plugins: [cloudtrail, json]
 load_plugins: []
 
+#
+# Enabling hashing instructs Falco to generate checksums of executable files,
+# which is used by malware detection rules.
+# Hashing can require substantial resources when many different files are executed, so
+# keep this disabled if performance is an issue.
+#
+hash_executables: false
+#hashing_checksum_files:
+#  - /etc/falco/malware_signatures.txt
+
 # Watch config file and rules files for modification.
 # When a file is modified, Falco will propagate new config,
 # by reloading itself.

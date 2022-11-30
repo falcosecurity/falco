@@ -274,6 +274,9 @@ public:
 
 	std::vector<plugin_config> m_plugins;
 
+	bool m_hash_executables;
+	std::vector<string> m_hashing_checksum_files;
+
 private:
 	void init_cmdline_options(const std::vector<std::string>& cmdline_options);
 

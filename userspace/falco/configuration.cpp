@@ -57,6 +57,7 @@ falco_configuration::falco_configuration():
 	m_metadata_download_chunk_wait_us(1000),
 	m_metadata_download_watch_freq_sec(1),
 	m_syscall_buf_size_preset(4),
+	m_hash_executables(false),
 	m_config(NULL)
 {
 }
@@ -338,6 +339,19 @@ void falco_configuration::init(const string& conf_filename, const vector<string>
 	}
 
 	m_watch_config_files = m_config->get_scalar<bool>("watch_config_files", true);
+
+	m_hash_executables = m_config->get_scalar<bool>("hash_executables", false);
+	m_config->get_sequence<vector<string>>(m_hashing_checksum_files, string("hashing_checksum_files"));
+	for(auto fname : m_hashing_checksum_files)
+	{
+		ifstream fs(fname);
+		if(!fs.good())
+		{
+			throw invalid_argument("Error reading config file(" + m_config_file + "): hashing file " + fname + " doesn not exist");
+		}
+		fs.close();
+	}
+
 }
 
 void falco_configuration::read_rules_file_directory(const string &path, list<string> &rules_filenames, list<string> &rules_folders)

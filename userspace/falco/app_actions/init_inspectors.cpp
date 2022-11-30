@@ -51,6 +51,11 @@ void application::init_syscall_inspector(
 		configure_interesting_sets();
 	}
 
+	if(m_state->config->m_hash_executables)
+	{
+		inspector->set_exec_hashing(true, m_state->config->m_hashing_checksum_files);
+	}
+
 	inspector->set_hostname_and_port_resolution_mode(false);
 }
 
