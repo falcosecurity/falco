@@ -67,7 +67,7 @@ public:
 		std::string& out) const;
 
 private:
-	atomic<uint64_t> m_total;
-	std::vector<std::unique_ptr<atomic<uint64_t>>> m_by_priority;
-	std::vector<std::unique_ptr<atomic<uint64_t>>> m_by_rule_id;
+	std::atomic<uint64_t> m_total;
+	std::vector<std::unique_ptr<std::atomic<uint64_t>>> m_by_priority;
+	std::vector<std::unique_ptr<std::atomic<uint64_t>>> m_by_rule_id;
 };

@@ -49,7 +49,7 @@ struct message
 	std::string msg;
 	std::string rule;
 	std::string source;
-	map<std::string, std::string> fields;
+	std::map<std::string, std::string> fields;
 	std::set<std::string> tags;
 };
 

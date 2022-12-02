@@ -52,7 +52,7 @@ struct falco_exception : std::exception
 
 namespace falco_common
 {
-	const string syscall_source = "syscall";
+	const std::string syscall_source = "syscall";
 
 	// Same as numbers/indices into the above vector
 	enum priority_type

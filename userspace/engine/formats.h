@@ -33,7 +33,7 @@ public:
 				 const std::string &level, const std::string &format, std::set<std::string> &tags,
 				 const std::string &hostname) const;
 
-	map<string, string> get_field_values(gen_event *evt, const std::string &source,
+	std::map<std::string, std::string> get_field_values(gen_event *evt, const std::string &source,
 					     const std::string &format) const ;
 
 protected:

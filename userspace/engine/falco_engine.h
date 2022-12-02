@@ -150,7 +150,7 @@ public:
 	// add k8s/mesos/container information to outputs when
 	// available.
 	//
-	void set_extra(string &extra, bool replace_container_info);
+	void set_extra(std::string &extra, bool replace_container_info);
 
 	// Represents the result of matching an event against a set of
 	// rules.
@@ -284,7 +284,7 @@ private:
 	stats_manager m_rule_stats_manager;
 
 	uint16_t m_next_ruleset_id;
-	std::map<string, uint16_t> m_known_rulesets;
+	std::map<std::string, uint16_t> m_known_rulesets;
 	falco_common::priority_type m_min_priority;
 
 	//

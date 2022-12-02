@@ -281,8 +281,8 @@ private:
 				throw falco_exception("Could not open file " + filename + " for reading");
 			}
 
-			std::string rules_content((istreambuf_iterator<char>(is)),
-						  istreambuf_iterator<char>());
+			std::string rules_content((std::istreambuf_iterator<char>(is)),
+						  std::istreambuf_iterator<char>());
 			rules_contents.emplace_back(std::move(rules_content));
 		}
 
