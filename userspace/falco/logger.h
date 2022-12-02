@@ -26,11 +26,11 @@ class falco_logger
 	static void set_time_format_iso_8601(bool val);
 
 	// Will throw exception if level is unknown.
-	static void set_level(string &level);
+	static void set_level(std::string &level);
 
 	static void set_sinsp_logging(bool enable, const std::string& severity, const std::string& prefix);
 
-	static void log(int priority, const string&& msg);
+	static void log(int priority, const std::string&& msg);
 
 	static int level;
 	static bool log_stderr;

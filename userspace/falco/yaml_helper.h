@@ -112,7 +112,6 @@ public:
 
 private:
 	YAML::Node m_root;
-	std::string m_input;
 
 	/**
 	 * Key is a string representing a node in the YAML document.
@@ -146,9 +145,9 @@ private:
 				{
 					if (i > 0 && nodeKey.empty() && key[i - 1] != '.')
 					{
-						throw runtime_error(
+						throw std::runtime_error(
 							"Parsing error: expected '.' character at pos " 
-							+ to_string(i - 1));
+							+ std::to_string(i - 1));
 					}
 					nodeKey += c;
 				}
@@ -157,9 +156,9 @@ private:
 				{
 					if (nodeKey.empty())
 					{
-						throw runtime_error(
+						throw std::runtime_error(
 							"Parsing error: unexpected character at pos " 
-							+ to_string(i));
+							+ std::to_string(i));
 					}
 					ret.reset(ret[nodeKey]);
 					nodeKey.clear();
@@ -179,7 +178,7 @@ private:
 		}
 		catch(const std::exception& e)
 		{
-			throw runtime_error("Config error at key \"" + key + "\": " + string(e.what()));
+			throw std::runtime_error("Config error at key \"" + key + "\": " + std::string(e.what()));
 		}
 	}
 	
