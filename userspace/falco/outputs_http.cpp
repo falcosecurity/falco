@@ -46,7 +46,7 @@ void falco::outputs::output_http::output(const message *msg)
 
 		if(res != CURLE_OK)
 		{
-			falco_logger::log(LOG_ERR, "libcurl error: " + string(curl_easy_strerror(res)));
+			falco_logger::log(LOG_ERR, "libcurl error: " + std::string(curl_easy_strerror(res)));
 		}
 		curl_easy_cleanup(curl);
 		curl = NULL;

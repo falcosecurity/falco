@@ -29,9 +29,9 @@ application::run_result application::init_clients()
 
 	auto inspector = m_state->source_infos.at(falco_common::syscall_source)->inspector;
 
-	falco_logger::log(LOG_DEBUG, "Setting metadata download max size to " + to_string(m_state->config->m_metadata_download_max_mb) + " MB\n");
-	falco_logger::log(LOG_DEBUG, "Setting metadata download chunk wait time to " + to_string(m_state->config->m_metadata_download_chunk_wait_us) + " μs\n");
-	falco_logger::log(LOG_DEBUG, "Setting metadata download watch frequency to " + to_string(m_state->config->m_metadata_download_watch_freq_sec) + " seconds\n");
+	falco_logger::log(LOG_DEBUG, "Setting metadata download max size to " + std::to_string(m_state->config->m_metadata_download_max_mb) + " MB\n");
+	falco_logger::log(LOG_DEBUG, "Setting metadata download chunk wait time to " + std::to_string(m_state->config->m_metadata_download_chunk_wait_us) + " μs\n");
+	falco_logger::log(LOG_DEBUG, "Setting metadata download watch frequency to " + std::to_string(m_state->config->m_metadata_download_watch_freq_sec) + " seconds\n");
 	inspector->set_metadata_download_params(m_state->config->m_metadata_download_max_mb * 1024 * 1024, m_state->config->m_metadata_download_chunk_wait_us, m_state->config->m_metadata_download_watch_freq_sec);
 
 	//
@@ -44,9 +44,9 @@ application::run_result application::init_clients()
 		// Create string pointers for some config vars
 		// and pass to inspector. The inspector then
 		// owns the pointers.
-		std::string *k8s_api_ptr = new string((!m_options.k8s_api.empty() ? m_options.k8s_api : k8s_api_env));
-		std::string *k8s_api_cert_ptr = new string(m_options.k8s_api_cert);
-		std::string *k8s_node_name_ptr = new string(m_options.k8s_node_name);
+		std::string *k8s_api_ptr = new std::string((!m_options.k8s_api.empty() ? m_options.k8s_api : k8s_api_env));
+		std::string *k8s_api_cert_ptr = new std::string(m_options.k8s_api_cert);
+		std::string *k8s_node_name_ptr = new std::string(m_options.k8s_node_name);
 
 		if(k8s_api_cert_ptr->empty())
 		{

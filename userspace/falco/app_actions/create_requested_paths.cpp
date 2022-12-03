@@ -92,9 +92,9 @@ int application::create_dir(const std::string &path)
 	// Properly reset errno
 	errno = 0;
 
-	istringstream f(path);
-	string path_until_token;
-	string s;
+	std::istringstream f(path);
+	std::string path_until_token;
+	std::string s;
 	// Create all the subfolder stopping at last token (f.eof());
 	// Examples:
 	// "/tmp/foo/bar" -> "", "tmp", "foo" -> mkdir("/") + mkdir("/tmp/") + midir("/tmp/foo/")

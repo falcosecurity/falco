@@ -16,7 +16,7 @@ limitations under the License.
 #include "configuration.h"
 #include <catch.hpp>
 
-string sample_yaml = 
+std::string sample_yaml = 
     "base_value:\n"
     "    id: 1\n"
     "    name: 'sample_name'\n"
@@ -36,7 +36,7 @@ TEST_CASE("configuration must load YAML data", "[configuration]")
 
     SECTION("broken YAML")
     {
-        string sample_broken_yaml = sample_yaml + " /  bad_symbol";
+        std::string sample_broken_yaml = sample_yaml + " /  bad_symbol";
         REQUIRE_THROWS(conf.load_from_string(sample_broken_yaml));
     }
 
@@ -71,20 +71,20 @@ TEST_CASE("configuration must read YAML fields", "[configuration]")
     SECTION("arbitrary depth nesting")
     {
         REQUIRE(conf.get_scalar<int>("base_value.id", -1) == 1);
-        REQUIRE(conf.get_scalar<string>("base_value.name", "none") == "sample_name");
+        REQUIRE(conf.get_scalar<std::string>("base_value.name", "none") == "sample_name");
         REQUIRE(conf.get_scalar<bool>("base_value.subvalue.subvalue2.boolean", false) == true);
     }
     
     SECTION("list field elements")
     {
-        REQUIRE(conf.get_scalar<string>("base_value_2.sample_list[0]", "none") == "elem1");
-        REQUIRE(conf.get_scalar<string>("base_value_2.sample_list[1]", "none") == "elem2");
-        REQUIRE(conf.get_scalar<string>("base_value_2.sample_list[2]", "none") == "elem3");
+        REQUIRE(conf.get_scalar<std::string>("base_value_2.sample_list[0]", "none") == "elem1");
+        REQUIRE(conf.get_scalar<std::string>("base_value_2.sample_list[1]", "none") == "elem2");
+        REQUIRE(conf.get_scalar<std::string>("base_value_2.sample_list[2]", "none") == "elem3");
     }
 
     SECTION("sequence")
     {
-        vector<string> seq;
+        std::vector<std::string> seq;
         conf.get_sequence(seq, "base_value_2.sample_list");
         REQUIRE(seq.size() == 3);
         REQUIRE(seq[0] == "elem1");
@@ -95,7 +95,7 @@ TEST_CASE("configuration must read YAML fields", "[configuration]")
 
 TEST_CASE("configuration must modify YAML fields", "[configuration]")
 {
-    string key = "base_value.subvalue.subvalue2.boolean";
+    std::string key = "base_value.subvalue.subvalue2.boolean";
 	yaml_helper conf;
     conf.load_from_string(sample_yaml);
     REQUIRE(conf.get_scalar<bool>(key, false) == true);

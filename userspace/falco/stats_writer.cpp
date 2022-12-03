@@ -37,7 +37,7 @@ static void timer_handler(int signum)
 	s_timer.fetch_add(1, std::memory_order_relaxed);
 }
 
-bool stats_writer::init_ticker(uint32_t interval_msec, string &err)
+bool stats_writer::init_ticker(uint32_t interval_msec, std::string &err)
 {
 	struct itimerval timer;
 	struct sigaction handler;
@@ -46,7 +46,7 @@ bool stats_writer::init_ticker(uint32_t interval_msec, string &err)
 	handler.sa_handler = &timer_handler;
 	if (sigaction(SIGALRM, &handler, NULL) == -1)
 	{
-		err = string("Could not set up signal handler for periodic timer: ") + strerror(errno);
+		err = std::string("Could not set up signal handler for periodic timer: ") + strerror(errno);
 		return false;
 	}
 
@@ -55,7 +55,7 @@ bool stats_writer::init_ticker(uint32_t interval_msec, string &err)
 	timer.it_interval = timer.it_value;
 	if (setitimer(ITIMER_REAL, &timer, NULL) == -1)
 	{
-		err = string("Could not set up periodic timer: ") + strerror(errno);
+		err = std::string("Could not set up periodic timer: ") + strerror(errno);
 		return false;
 	}
 
@@ -76,8 +76,8 @@ stats_writer::stats_writer()
 stats_writer::stats_writer(const std::string &filename)
 	: m_initialized(true), m_total_samples(0)
 {
-	m_output.exceptions(ofstream::failbit | ofstream::badbit);
-	m_output.open(filename, ios_base::app);
+	m_output.exceptions(std::ofstream::failbit | std::ofstream::badbit);
+	m_output.open(filename, std::ios_base::app);
 	m_worker = std::thread(&stats_writer::worker, this);
 }
 
@@ -151,11 +151,11 @@ void stats_writer::worker() noexcept
 			try
 			{
 				jmsg["sample"] = m_total_samples;
-				m_output << jmsg.dump() << endl;
+				m_output << jmsg.dump() << std::endl;
 			}
-			catch(const exception &e)
+			catch(const std::exception &e)
 			{
-				falco_logger::log(LOG_ERR, "stats_writer (worker): " + string(e.what()) + "\n");
+				falco_logger::log(LOG_ERR, "stats_writer (worker): " + std::string(e.what()) + "\n");
 			}
 		}
 	}

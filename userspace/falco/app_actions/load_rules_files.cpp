@@ -72,7 +72,7 @@ void application::check_for_ignored_events()
 
 application::run_result application::load_rules_files()
 {
-	string all_rules;
+	std::string all_rules;
 
 	if (!m_options.rules_filenames.empty())
 	{
@@ -87,7 +87,7 @@ application::run_result application::load_rules_files()
 	falco_logger::log(LOG_DEBUG, "Configured rules filenames:\n");
 	for (const auto& path : m_state->config->m_rules_filenames)
 	{
-		falco_logger::log(LOG_DEBUG, string("   ") + path + "\n");
+		falco_logger::log(LOG_DEBUG, std::string("   ") + path + "\n");
 	}
 
 	for (const auto &path : m_state->config->m_rules_filenames)

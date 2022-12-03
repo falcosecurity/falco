@@ -23,7 +23,7 @@ limitations under the License.
 int falco_logger::level = LOG_INFO;
 bool falco_logger::time_format_iso_8601 = false;
 
-static sinsp_logger::severity decode_sinsp_severity(const string& s)
+static sinsp_logger::severity decode_sinsp_severity(const std::string& s)
 {
 	if(s == "trace")
 	{
@@ -65,7 +65,7 @@ void falco_logger::set_time_format_iso_8601(bool val)
 	falco_logger::time_format_iso_8601 = val;
 }
 
-void falco_logger::set_level(string &level)
+void falco_logger::set_level(std::string &level)
 {
 	if(level == "emergency")
 	{
@@ -134,7 +134,7 @@ void falco_logger::set_sinsp_logging(bool enable, const std::string& severity, c
 bool falco_logger::log_stderr = true;
 bool falco_logger::log_syslog = true;
 
-void falco_logger::log(int priority, const string&& msg)
+void falco_logger::log(int priority, const std::string&& msg)
 {
 
 	if(priority > falco_logger::level)
@@ -142,7 +142,7 @@ void falco_logger::log(int priority, const string&& msg)
 		return;
 	}
 
-	string copy = msg;
+	std::string copy = msg;
 
 	if (falco_logger::log_syslog)
 	{
@@ -178,7 +178,7 @@ void falco_logger::log(int priority, const string&& msg)
 		{
 			struct tm *ltm = std::localtime(&result);
 			char *atime = (ltm ? std::asctime(ltm) : NULL);
-			string tstr;
+			std::string tstr;
 			if(atime)
 			{
 				tstr = atime;

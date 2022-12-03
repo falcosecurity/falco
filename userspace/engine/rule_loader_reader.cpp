@@ -21,7 +21,6 @@ limitations under the License.
 
 #define THROW(cond, err, ctx)    { if ((cond)) { throw rule_loader::rule_load_exception(falco::load_result::LOAD_ERR_YAML_VALIDATE, (err), (ctx)); } }
 
-
 // Don't call this directly, call decode_val/decode_optional_val instead.
 template <typename T>
 static void decode_val_generic(const YAML::Node& item, const char *key, T& out, const rule_loader::context& ctx, bool optional)
@@ -88,7 +87,7 @@ static void decode_seq(const YAML::Node& item, const char *key,
 }
 
 template <typename T>
-static void decode_items(const YAML::Node& item, vector<T>& out,
+static void decode_items(const YAML::Node& item, std::vector<T>& out,
 		       const rule_loader::context& ctx)
 {
 	bool optional = false;
@@ -101,7 +100,7 @@ static void decode_items(const YAML::Node& item, vector<T>& out,
 }
 
 template <typename T>
-static void decode_tags(const YAML::Node& item, set<T>& out,
+static void decode_tags(const YAML::Node& item, std::set<T>& out,
 		       const rule_loader::context& ctx)
 {
 	bool optional = true;
@@ -136,7 +135,7 @@ static void decode_exception_info_entry(
 	{
 		THROW(val.Scalar().empty(), "Value must be non-empty", valctx);
 		out.is_list = false;
-		THROW(!YAML::convert<string>::decode(val, out.item), "Could not decode scalar value", valctx);
+		THROW(!YAML::convert<std::string>::decode(val, out.item), "Could not decode scalar value", valctx);
 	}
 	if (val.IsSequence())
 	{
@@ -400,7 +399,7 @@ static void read_item(
 			}
 			else
 			{
-				string priority;
+				std::string priority;
 
 				// All of these are required
 				decode_val(item, "condition", v.cond, ctx);

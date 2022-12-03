@@ -40,7 +40,7 @@ application::run_result application::print_support()
 
 		if(uname(&sysinfo) != 0)
 		{
-			return run_result::fatal(string("Could not uname() to find system info: ") + strerror(errno));
+			return run_result::fatal(std::string("Could not uname() to find system info: ") + strerror(errno));
 		}
 
 		const versions_info infos(m_state->offline_inspector);

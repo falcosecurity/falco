@@ -21,13 +21,13 @@ using namespace falco;
 
 static const char* no_value = "<NA>";
 
-static inline bool is_unsafe_field(const string& f)
+static inline bool is_unsafe_field(const std::string& f)
 {
 	return !strncmp(f.c_str(), "ka.", strlen("ka."))
 		|| !strncmp(f.c_str(), "jevt.", strlen("jevt."));
 }
 
-static inline bool is_equality_operator(const string& op)
+static inline bool is_equality_operator(const std::string& op)
 {
 	return op == "==" || op == "=" || op == "!="
 		|| op == "in" || op == "intersects" || op == "pmatch";

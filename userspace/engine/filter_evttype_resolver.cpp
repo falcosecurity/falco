@@ -69,7 +69,7 @@ void filter_evttype_resolver::evttypes(
 }
 
 void filter_evttype_resolver::evttypes(
-	shared_ptr<ast::expr> filter,
+	std::shared_ptr<ast::expr> filter,
 	std::set<uint16_t>& out) const
 {
 	visitor v;

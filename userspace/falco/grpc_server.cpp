@@ -69,7 +69,7 @@ static void gpr_log_dispatcher_func(gpr_log_func_args* args)
 		break;
 	}
 
-	string copy = "grpc: ";
+	std::string copy = "grpc: ";
 	copy.append(args->message);
 	copy.push_back('\n');
 	falco_logger::log(priority, std::move(copy));
@@ -171,9 +171,9 @@ void falco::grpc::server::init(
 
 void falco::grpc::server::init_mtls_server_builder()
 {
-	string private_key;
-	string cert_chain;
-	string root_certs;
+	std::string private_key;
+	std::string cert_chain;
+	std::string root_certs;
 	falco::utils::readfile(m_cert_chain, cert_chain);
 	falco::utils::readfile(m_private_key, private_key);
 	falco::utils::readfile(m_root_certs, root_certs);

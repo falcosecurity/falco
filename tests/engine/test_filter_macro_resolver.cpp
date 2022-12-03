@@ -17,7 +17,6 @@ limitations under the License.
 #include "filter_macro_resolver.h"
 #include <catch.hpp>
 
-using namespace std;
 using namespace libsinsp::filter::ast;
 
 static std::vector<filter_macro_resolver::value_info>::const_iterator find_value(
@@ -32,7 +31,7 @@ static std::vector<filter_macro_resolver::value_info>::const_iterator find_value
 
 TEST_CASE("Should resolve macros on a filter AST", "[rule_loader]")
 {
-	string macro_name = "test_macro";
+	std::string macro_name = "test_macro";
 	pos_info macro_pos(12, 85, 27);
 
 	SECTION("in the general case")
@@ -99,8 +98,8 @@ TEST_CASE("Should resolve macros on a filter AST", "[rule_loader]")
 
 	SECTION("with multiple macros")
 	{
-		string a_macro_name = macro_name + "_1";
-		string b_macro_name = macro_name + "_2";
+		std::string a_macro_name = macro_name + "_1";
+		std::string b_macro_name = macro_name + "_2";
 
 		pos_info a_macro_pos(11, 75, 43);
 		pos_info b_macro_pos(91, 21, 9);
@@ -148,8 +147,8 @@ TEST_CASE("Should resolve macros on a filter AST", "[rule_loader]")
 
 	SECTION("with nested macros")
 	{
-		string a_macro_name = macro_name + "_1";
-		string b_macro_name = macro_name + "_2";
+		std::string a_macro_name = macro_name + "_1";
+		std::string b_macro_name = macro_name + "_2";
 
 		pos_info a_macro_pos(47, 1, 76);
 		pos_info b_macro_pos(111, 65, 2);
@@ -200,7 +199,7 @@ TEST_CASE("Should resolve macros on a filter AST", "[rule_loader]")
 
 TEST_CASE("Should find unknown macros", "[rule_loader]")
 {
-	string macro_name = "test_macro";
+	std::string macro_name = "test_macro";
 	pos_info macro_pos(9, 4, 2);
 
 	SECTION("in the general case")
@@ -220,8 +219,8 @@ TEST_CASE("Should find unknown macros", "[rule_loader]")
 
 	SECTION("with nested macros")
 	{
-		string a_macro_name = macro_name + "_1";
-		string b_macro_name = macro_name + "_2";
+		std::string a_macro_name = macro_name + "_1";
+		std::string b_macro_name = macro_name + "_2";
 
 		pos_info a_macro_pos(32, 84, 9);
 		pos_info b_macro_pos(1, 0, 5);
@@ -251,7 +250,7 @@ TEST_CASE("Should find unknown macros", "[rule_loader]")
 
 TEST_CASE("Should undefine macro", "[rule_loader]")
 {
-	string macro_name = "test_macro";
+	std::string macro_name = "test_macro";
 	pos_info macro_pos_1(12, 9, 3);
 	pos_info macro_pos_2(9, 6, 3);
 
@@ -279,7 +278,7 @@ TEST_CASE("Should undefine macro", "[rule_loader]")
 // checks that the macro AST is cloned and not shared across resolved filters
 TEST_CASE("Should clone macro AST", "[rule_loader]")
 {
-	string macro_name = "test_macro";
+	std::string macro_name = "test_macro";
 	pos_info macro_pos(5, 2, 8888);
 	std::shared_ptr<unary_check_expr> macro = std::move(unary_check_expr::create("test.field", "", "exists"));
 	std::shared_ptr<expr> filter = std::move(value_expr::create(macro_name, macro_pos));

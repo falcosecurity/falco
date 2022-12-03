@@ -27,7 +27,7 @@ void falco::outputs::output_file::open_file()
 	}
 	if(!m_outfile.is_open())
 	{
-		m_outfile.open(m_oc.options["filename"], fstream::app);
+		m_outfile.open(m_oc.options["filename"], std::fstream::app);
 		if (m_outfile.fail())
 		{
 			throw falco_exception("failed to open output file " + m_oc.options["filename"]);

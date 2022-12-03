@@ -28,9 +28,9 @@ application::run_result application::start_webserver()
 	{
 		std::string ssl_option = (m_state->config->m_webserver_ssl_enabled ? " (SSL)" : "");
 		falco_logger::log(LOG_INFO, "Starting health webserver with threadiness "
-			+ to_string(m_state->config->m_webserver_threadiness)
+			+ std::to_string(m_state->config->m_webserver_threadiness)
 			+ ", listening on port "
-			+ to_string(m_state->config->m_webserver_listen_port)
+			+ std::to_string(m_state->config->m_webserver_listen_port)
 			+ ssl_option + "\n");
 
 		m_state->webserver.start(

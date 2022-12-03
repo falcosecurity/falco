@@ -20,24 +20,23 @@ limitations under the License.
 #include <sinsp.h>
 #include <filter/parser.h>
 
-using namespace std;
 using namespace libsinsp::filter;
 
-string to_string(set<uint16_t> s)
+std::string to_string(std::set<uint16_t> s)
 {
-	string out = "[";
+	std::string out = "[";
 	for(auto &val : s)
 	{
         out += out.size() == 1 ? "" : ", ";
-		out += to_string(val);
+		out += std::to_string(val);
 	}
 	out += "]";
 	return out;
 }
 
-void compare_evttypes(std::unique_ptr<ast::expr> f, set<uint16_t> &expected)
+void compare_evttypes(std::unique_ptr<ast::expr> f, std::set<uint16_t> &expected)
 {
-    set<uint16_t> actual;
+    std::set<uint16_t> actual;
     filter_evttype_resolver().evttypes(f.get(), actual);
     for(auto &etype : expected)
     {
@@ -49,30 +48,30 @@ void compare_evttypes(std::unique_ptr<ast::expr> f, set<uint16_t> &expected)
     }
 }
 
-std::unique_ptr<ast::expr> compile(const string &fltstr)
+std::unique_ptr<ast::expr> compile(const std::string &fltstr)
 {
     return libsinsp::filter::parser(fltstr).parse();
 }
 
 TEST_CASE("Should find event types from filter", "[rule_loader]")
 {
-    set<uint16_t> openat_only{
+    std::set<uint16_t> openat_only{
         PPME_SYSCALL_OPENAT_E, PPME_SYSCALL_OPENAT_X,
 		PPME_SYSCALL_OPENAT_2_E, PPME_SYSCALL_OPENAT_2_X };
 
-	set<uint16_t> close_only{
+	std::set<uint16_t> close_only{
 		PPME_SYSCALL_CLOSE_E, PPME_SYSCALL_CLOSE_X };
 
-	set<uint16_t> openat_close{
+	std::set<uint16_t> openat_close{
         PPME_SYSCALL_OPENAT_E, PPME_SYSCALL_OPENAT_X,
         PPME_SYSCALL_OPENAT_2_E, PPME_SYSCALL_OPENAT_2_X,
         PPME_SYSCALL_CLOSE_E, PPME_SYSCALL_CLOSE_X };
 
-	set<uint16_t> not_openat;
-	set<uint16_t> not_openat_close;
-	set<uint16_t> not_close;
-	set<uint16_t> all_events;
-	set<uint16_t> no_events;
+	std::set<uint16_t> not_openat;
+	std::set<uint16_t> not_openat_close;
+	std::set<uint16_t> not_close;
+	std::set<uint16_t> all_events;
+	std::set<uint16_t> no_events;
 
     for(uint32_t i = 2; i < PPM_EVENT_MAX; i++)
     {

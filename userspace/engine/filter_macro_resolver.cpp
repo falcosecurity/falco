@@ -17,7 +17,6 @@ limitations under the License.
 #include "filter_macro_resolver.h"
 #include "falco_common.h"
 
-using namespace std;
 using namespace libsinsp::filter;
 
 bool filter_macro_resolver::run(libsinsp::filter::ast::expr*& filter)
@@ -54,8 +53,8 @@ bool filter_macro_resolver::run(std::shared_ptr<libsinsp::filter::ast::expr>& fi
 }
 
 void filter_macro_resolver::set_macro(
-		string name,
-		shared_ptr<libsinsp::filter::ast::expr> macro)
+		std::string name,
+		std::shared_ptr<libsinsp::filter::ast::expr> macro)
 {
 	m_macros[name] = macro;
 }

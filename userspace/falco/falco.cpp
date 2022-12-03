@@ -23,7 +23,7 @@ limitations under the License.
 #include "logger.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
 
-static void display_fatal_err(const string &&msg)
+static void display_fatal_err(const std::string &&msg)
 {
 	/**
 	 * If stderr logging is not enabled, also log to stderr. When
@@ -67,9 +67,9 @@ int falco_init(int argc, char **argv, bool &restart)
 			return EXIT_FAILURE;
 		}
 	}
-	catch(exception &e)
+	catch(std::exception &e)
 	{
-		display_fatal_err("Runtime error: " + string(e.what()) + ". Exiting.\n");
+		display_fatal_err("Runtime error: " + std::string(e.what()) + ". Exiting.\n");
 		return EXIT_FAILURE;
 	}
 
