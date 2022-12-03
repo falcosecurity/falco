@@ -16,7 +16,7 @@ limitations under the License.
 
 #include "falco_common.h"
 
-static vector<string> priority_names = {
+static std::vector<std::string> priority_names = {
 	"Emergency",
 	"Alert",
 	"Critical",
@@ -27,7 +27,7 @@ static vector<string> priority_names = {
 	"Debug"
 };
 
-bool falco_common::parse_priority(string v, priority_type& out)
+bool falco_common::parse_priority(std::string v, priority_type& out)
 {
 	for (size_t i = 0; i < priority_names.size(); i++)
 	{
@@ -44,7 +44,7 @@ bool falco_common::parse_priority(string v, priority_type& out)
 	return false;
 }
 
-falco_common::priority_type falco_common::parse_priority(string v)
+falco_common::priority_type falco_common::parse_priority(std::string v)
 {
 	falco_common::priority_type out;
 	if (!parse_priority(v, out))
@@ -54,7 +54,7 @@ falco_common::priority_type falco_common::parse_priority(string v)
 	return out;
 }
 
-bool falco_common::format_priority(priority_type v, string& out, bool shortfmt)
+bool falco_common::format_priority(priority_type v, std::string& out, bool shortfmt)
 {
 	if ((size_t) v < priority_names.size())
 	{
@@ -71,12 +71,12 @@ bool falco_common::format_priority(priority_type v, string& out, bool shortfmt)
 	return false;
 }
 
-string falco_common::format_priority(priority_type v, bool shortfmt)
+std::string falco_common::format_priority(priority_type v, bool shortfmt)
 {
-	string out;
+	std::string out;
 	if(!format_priority(v, out, shortfmt))
 	{
-		throw falco_exception("Unknown priority enum value: " + to_string(v));
+		throw falco_exception("Unknown priority enum value: " + std::to_string(v));
 	}
 	return out;
 }

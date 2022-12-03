@@ -37,8 +37,6 @@ limitations under the License.
 
 #include "banned.h" // This raises a compilation error when certain functions are used
 
-using namespace std;
-
 static const char* s_internal_source = "internal";
 
 falco_outputs::falco_outputs(
@@ -119,8 +117,8 @@ void falco_outputs::add_output(falco::outputs::config oc)
 	m_outputs.push_back(oo);
 }
 
-void falco_outputs::handle_event(gen_event *evt, string &rule, string &source,
-				 falco_common::priority_type priority, string &format, std::set<std::string> &tags)
+void falco_outputs::handle_event(gen_event *evt, std::string &rule, std::string &source,
+				 falco_common::priority_type priority, std::string &format, std::set<std::string> &tags)
 {
 	falco_outputs::ctrl_msg cmsg = {};
 	cmsg.ts = evt->get_ts();
@@ -128,7 +126,7 @@ void falco_outputs::handle_event(gen_event *evt, string &rule, string &source,
 	cmsg.source = source;
 	cmsg.rule = rule;
 
-	string sformat;
+	std::string sformat;
 	if(m_time_format_iso_8601)
 	{
 		sformat = "*%evt.time.iso8601: ";
@@ -180,7 +178,7 @@ void falco_outputs::handle_msg(uint64_t ts,
 		time_t evttime = ts / 1000000000;
 		char time_sec[20]; // sizeof "YYYY-MM-DDTHH:MM:SS"
 		char time_ns[12];  // sizeof ".sssssssssZ"
-		string iso8601evttime;
+		std::string iso8601evttime;
 
 		strftime(time_sec, sizeof(time_sec), "%FT%T", gmtime(&evttime));
 		snprintf(time_ns, sizeof(time_ns), ".%09luZ", ts % 1000000000);
@@ -304,9 +302,9 @@ void falco_outputs::worker() noexcept
 						falco_logger::log(LOG_DEBUG, "Outputs worker received an unknown message type\n");
 				}
 			}
-			catch(const exception &e)
+			catch(const std::exception &e)
 			{
-				falco_logger::log(LOG_ERR, o->get_name() + ": " + string(e.what()) + "\n");
+				falco_logger::log(LOG_ERR, o->get_name() + ": " + std::string(e.what()) + "\n");
 			}
 		}
 		wd.cancel_timeout();

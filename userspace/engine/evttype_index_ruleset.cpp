@@ -20,8 +20,6 @@ limitations under the License.
 
 #include <algorithm>
 
-using namespace std;
-
 evttype_index_ruleset::evttype_index_ruleset(
 	std::shared_ptr<gen_event_filter_factory> f): m_filter_factory(f)
 {
@@ -174,7 +172,7 @@ void evttype_index_ruleset::add(
 	}
 	catch (const sinsp_exception& e)
 	{
-		throw falco_exception(string(e.what()));
+		throw falco_exception(std::string(e.what()));
 	}
 }
 
@@ -193,17 +191,17 @@ void evttype_index_ruleset::clear()
 	m_filters.clear();
 }
 
-void evttype_index_ruleset::enable(const string &substring, bool match_exact, uint16_t ruleset_id)
+void evttype_index_ruleset::enable(const std::string &substring, bool match_exact, uint16_t ruleset_id)
 {
 	enable_disable(substring, match_exact, true, ruleset_id);
 }
 
-void evttype_index_ruleset::disable(const string &substring, bool match_exact, uint16_t ruleset_id)
+void evttype_index_ruleset::disable(const std::string &substring, bool match_exact, uint16_t ruleset_id)
 {
 	enable_disable(substring, match_exact, false, ruleset_id);
 }
 
-void evttype_index_ruleset::enable_disable(const string &substring, bool match_exact, bool enabled, uint16_t ruleset_id)
+void evttype_index_ruleset::enable_disable(const std::string &substring, bool match_exact, bool enabled, uint16_t ruleset_id)
 {
 	while(m_rulesets.size() < (size_t)ruleset_id + 1)
 	{
@@ -223,7 +221,7 @@ void evttype_index_ruleset::enable_disable(const string &substring, bool match_e
 		}
 		else
 		{
-			matches = (substring == "" || (wrap->rule.name.find(substring) != string::npos));
+			matches = (substring == "" || (wrap->rule.name.find(substring) != std::string::npos));
 		}
 
 		if(matches)
@@ -240,17 +238,17 @@ void evttype_index_ruleset::enable_disable(const string &substring, bool match_e
 	}
 }
 
-void evttype_index_ruleset::enable_tags(const set<string> &tags, uint16_t ruleset_id)
+void evttype_index_ruleset::enable_tags(const std::set<std::string> &tags, uint16_t ruleset_id)
 {
 	enable_disable_tags(tags, true, ruleset_id);
 }
 
-void evttype_index_ruleset::disable_tags(const set<string> &tags, uint16_t ruleset_id)
+void evttype_index_ruleset::disable_tags(const std::set<std::string> &tags, uint16_t ruleset_id)
 {
 	enable_disable_tags(tags, false, ruleset_id);
 }
 
-void evttype_index_ruleset::enable_disable_tags(const set<string> &tags, bool enabled, uint16_t ruleset_id)
+void evttype_index_ruleset::enable_disable_tags(const std::set<std::string> &tags, bool enabled, uint16_t ruleset_id)
 {
 	while(m_rulesets.size() < (size_t)ruleset_id + 1)
 	{
@@ -259,7 +257,7 @@ void evttype_index_ruleset::enable_disable_tags(const set<string> &tags, bool en
 
 	for(const auto &wrap : m_filters)
 	{
-		std::set<string> intersect;
+		std::set<std::string> intersect;
 
 		set_intersection(tags.begin(), tags.end(),
 				 wrap->rule.tags.begin(), wrap->rule.tags.end(),
@@ -299,7 +297,7 @@ bool evttype_index_ruleset::run(gen_event *evt, falco_rule& match, uint16_t rule
 	return m_rulesets[ruleset_id]->run(evt, match);
 }
 
-void evttype_index_ruleset::enabled_evttypes(set<uint16_t> &evttypes, uint16_t ruleset_id)
+void evttype_index_ruleset::enabled_evttypes(std::set<uint16_t> &evttypes, uint16_t ruleset_id)
 {
 	if(m_rulesets.size() < (size_t)ruleset_id + 1)
 	{

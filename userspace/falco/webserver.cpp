@@ -77,7 +77,7 @@ void falco_webserver::start(
         {
             falco_logger::log(
                 LOG_ERR,
-                "falco_webserver: " + string(e.what()) + "\n");
+                "falco_webserver: " + std::string(e.what()) + "\n");
         }
         failed.store(true, std::memory_order_release);
     });

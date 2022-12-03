@@ -38,7 +38,6 @@ limitations under the License.
 
 const std::string falco_engine::s_default_ruleset = "falco-default-ruleset";
 
-using namespace std;
 using namespace falco;
 
 falco_engine::falco_engine(bool seed_rng)
@@ -85,7 +84,7 @@ const falco_source* falco_engine::find_source(std::size_t index) const
 	auto ret = m_sources.at(index);
 	if(!ret)
 	{
-		throw falco_exception("Unknown event source index " + to_string(index));
+		throw falco_exception("Unknown event source index " + std::to_string(index));
 	}
 	return ret;
 }
@@ -169,7 +168,7 @@ void falco_engine::list_fields(std::string &source, bool verbose, bool names_onl
 	}
 }
 
-void falco_engine::load_rules(const string &rules_content, bool verbose, bool all_events)
+void falco_engine::load_rules(const std::string &rules_content, bool verbose, bool all_events)
 {
 	static const std::string no_name = "N/A";
 
@@ -222,7 +221,7 @@ void falco_engine::load_rules_file(const std::string &rules_filename, bool verbo
 	interpret_load_result(res, rules_filename, rules_content, verbose);
 }
 
-std::unique_ptr<load_result> falco_engine::load_rules_file(const string &rules_filename)
+std::unique_ptr<load_result> falco_engine::load_rules_file(const std::string &rules_filename)
 {
 	std::string rules_content;
 
@@ -243,7 +242,7 @@ std::unique_ptr<load_result> falco_engine::load_rules_file(const string &rules_f
 	return load_rules(rules_content, rules_filename);
 }
 
-void falco_engine::enable_rule(const string &substring, bool enabled, const string &ruleset)
+void falco_engine::enable_rule(const std::string &substring, bool enabled, const std::string &ruleset)
 {
 	uint16_t ruleset_id = find_ruleset_id(ruleset);
 	bool match_exact = false;
@@ -261,7 +260,7 @@ void falco_engine::enable_rule(const string &substring, bool enabled, const stri
 	}
 }
 
-void falco_engine::enable_rule_exact(const string &rule_name, bool enabled, const string &ruleset)
+void falco_engine::enable_rule_exact(const std::string &rule_name, bool enabled, const std::string &ruleset)
 {
 	uint16_t ruleset_id = find_ruleset_id(ruleset);
 	bool match_exact = true;
@@ -279,7 +278,7 @@ void falco_engine::enable_rule_exact(const string &rule_name, bool enabled, cons
 	}
 }
 
-void falco_engine::enable_rule_by_tag(const set<string> &tags, bool enabled, const string &ruleset)
+void falco_engine::enable_rule_by_tag(const std::set<std::string> &tags, bool enabled, const std::string &ruleset)
 {
 	uint16_t ruleset_id = find_ruleset_id(ruleset);
 
@@ -334,7 +333,7 @@ std::shared_ptr<gen_event_formatter> falco_engine::create_formatter(const std::s
 	return find_source(source)->formatter_factory->create_formatter(output);
 }
 
-unique_ptr<falco_engine::rule_result> falco_engine::process_event(std::size_t source_idx, gen_event *ev, uint16_t ruleset_id)
+std::unique_ptr<falco_engine::rule_result> falco_engine::process_event(std::size_t source_idx, gen_event *ev, uint16_t ruleset_id)
 {
 	// note: there are no thread-safety guarantees on the filter_ruleset::run()
 	// method, but the thread-safety assumptions of falco_engine::process_event()
@@ -360,10 +359,10 @@ unique_ptr<falco_engine::rule_result> falco_engine::process_event(std::size_t so
 
 	if(should_drop_evt() || !source || !source->ruleset->run(ev, source->m_rule, ruleset_id))
 	{
-		return unique_ptr<struct rule_result>();
+		return std::unique_ptr<struct rule_result>();
 	}
 
-	unique_ptr<struct rule_result> res(new rule_result());
+	std::unique_ptr<struct rule_result> res(new rule_result());
 	res->evt = ev;
 	res->rule = source->m_rule.name;
 	res->source = source->m_rule.source;
@@ -375,7 +374,7 @@ unique_ptr<falco_engine::rule_result> falco_engine::process_event(std::size_t so
 	return res;
 }
 
-unique_ptr<falco_engine::rule_result> falco_engine::process_event(std::size_t source_idx, gen_event *ev)
+std::unique_ptr<falco_engine::rule_result> falco_engine::process_event(std::size_t source_idx, gen_event *ev)
 {
 	return process_event(source_idx, ev, m_default_ruleset_id);
 }
@@ -411,7 +410,7 @@ std::size_t falco_engine::add_source(const std::string &source,
 	return m_sources.insert(src, source);
 }
 
-void falco_engine::describe_rule(string *rule) const
+void falco_engine::describe_rule(std::string *rule) const
 {
 	static const char* rule_fmt = "%-50s %s\n";
 	fprintf(stdout, rule_fmt, "Rule", "Description");
@@ -434,7 +433,7 @@ void falco_engine::describe_rule(string *rule) const
 
 void falco_engine::print_stats() const
 {
-	string out;
+	std::string out;
 	m_rule_stats_manager.format(m_rules, out);
 	// todo(jasondellaluce): introduce a logging callback in Falco
 	fprintf(stdout, "%s", out.c_str());
@@ -447,7 +446,7 @@ bool falco_engine::is_source_valid(const std::string &source) const
 
 void falco_engine::read_file(const std::string& filename, std::string& contents)
 {
-	ifstream is;
+	std::ifstream is;
 
 	is.open(filename);
 	if (!is.is_open())
@@ -455,8 +454,8 @@ void falco_engine::read_file(const std::string& filename, std::string& contents)
 		throw falco_exception("Could not open " + filename + " for reading");
 	}
 
-	contents.assign(istreambuf_iterator<char>(is),
-			istreambuf_iterator<char>());
+	contents.assign(std::istreambuf_iterator<char>(is),
+			std::istreambuf_iterator<char>());
 }
 
 void falco_engine::interpret_load_result(std::unique_ptr<load_result>& res,
@@ -559,7 +558,7 @@ void falco_engine::set_sampling_multiplier(double sampling_multiplier)
 	m_sampling_multiplier = sampling_multiplier;
 }
 
-void falco_engine::set_extra(string &extra, bool replace_container_info)
+void falco_engine::set_extra(std::string &extra, bool replace_container_info)
 {
 	m_extra = extra;
 	m_replace_container_info = replace_container_info;

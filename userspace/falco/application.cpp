@@ -24,8 +24,6 @@ limitations under the License.
 #include "application.h"
 #include "falco_common.h"
 
-using namespace std::placeholders;
-
 static inline bool should_take_action_to_signal(std::atomic<int>& v)
 {
 	// we expected the signal to be received, and we try to set action-taken flag
@@ -205,10 +203,10 @@ bool application::run(std::string &errstr, bool &restart)
 	};
 
 	std::list<std::function<bool(std::string &)>> teardown_steps = {
-		std::bind(&application::unregister_signal_handlers, this, _1),
+		std::bind(&application::unregister_signal_handlers, this, std::placeholders::_1),
 #ifndef MINIMAL_BUILD
-		std::bind(&application::stop_grpc_server, this, _1),
-		std::bind(&application::stop_webserver, this, _1)
+		std::bind(&application::stop_grpc_server, this, std::placeholders::_1),
+		std::bind(&application::stop_webserver, this, std::placeholders::_1)
 #endif
 	};
 

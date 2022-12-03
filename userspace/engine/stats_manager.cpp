@@ -17,8 +17,6 @@ limitations under the License.
 #include "stats_manager.h"
 #include "falco_common.h"
 
-using namespace std;
-
 stats_manager::stats_manager()
 	: m_total(0)
 {
@@ -38,9 +36,9 @@ void stats_manager::clear()
 
 void stats_manager::format(
 	const indexed_vector<falco_rule>& rules,
-	string& out) const
+	std::string& out) const
 {
-	string fmt;
+	std::string fmt;
 	out = "Events detected: " + to_string(m_total) + "\n";
 	out += "Rule counts by severity:\n";
 	for (size_t i = 0; i < m_by_priority.size(); i++)
@@ -51,7 +49,7 @@ void stats_manager::format(
 			falco_common::format_priority(
 				(falco_common::priority_type) i, fmt, true);
 			transform(fmt.begin(), fmt.end(), fmt.begin(), ::toupper);
-			out += "   " + fmt + ": " + to_string(val) + "\n";
+			out += "   " + fmt + ": " + std::to_string(val) + "\n";
 		}
 	}
 	out += "Triggered rules by rule name:\n";
@@ -60,7 +58,7 @@ void stats_manager::format(
 		auto val = m_by_rule_id[i].get()->load();
 		if (val > 0)
 		{
-			out += "   " + rules.at(i)->name + ": " + to_string(val) + "\n";
+			out += "   " + rules.at(i)->name + ": " + std::to_string(val) + "\n";
 		}
 	}
 }
@@ -70,12 +68,12 @@ void stats_manager::on_rule_loaded(const falco_rule& rule)
 	while (m_by_rule_id.size() <= rule.id)
 	{
 		m_by_rule_id.emplace_back();
-		m_by_rule_id[m_by_rule_id.size() - 1].reset(new atomic<uint64_t>(0));
+		m_by_rule_id[m_by_rule_id.size() - 1].reset(new std::atomic<uint64_t>(0));
 	}
 	while (m_by_priority.size() <= (size_t) rule.priority)
 	{
 		m_by_priority.emplace_back();
-		m_by_priority[m_by_priority.size() - 1].reset(new atomic<uint64_t>(0));
+		m_by_priority[m_by_priority.size() - 1].reset(new std::atomic<uint64_t>(0));
 	}
 }
 

@@ -70,7 +70,7 @@ static bool is_format_valid(const falco_source& source, std::string fmt, std::st
 		formatter = source.formatter_factory->create_formatter(fmt);
 		return true;
 	}
-	catch(exception &e)
+	catch(std::exception &e)
 	{
 		err = e.what();
 		return false;
@@ -455,7 +455,7 @@ void rule_loader::compiler::compile_rule_infos(
 		// failure.
 		sinsp_filter_compiler compiler(cfg.sources.at(r.source)->filter_factory, ast.get());
 		try {
-			shared_ptr<gen_event_filter> filter(compiler.compile());
+			std::shared_ptr<gen_event_filter> filter(compiler.compile());
 			source->ruleset->add(*out.at(rule_id), filter, ast);
 		}
 		catch (const sinsp_exception& e)

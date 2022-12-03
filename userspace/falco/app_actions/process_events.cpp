@@ -210,7 +210,7 @@ application::run_result application::do_inspect(
 		// engine, which will match the event against the set
 		// of rules. If a match is found, pass the event to
 		// the outputs.
-		unique_ptr<falco_engine::rule_result> res = m_state->engine->process_event(source_engine_idx, ev);
+		std::unique_ptr<falco_engine::rule_result> res = m_state->engine->process_event(source_engine_idx, ev);
 		if(res)
 		{
 			if (!rate_limiter_enabled || rate_limiter.claim())
