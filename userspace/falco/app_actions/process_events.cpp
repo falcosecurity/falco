@@ -158,7 +158,6 @@ application::run_result application::do_inspect(
 			//
 			// Event read error.
 			//
-			inspector->stop_capture();
 			return run_result::fatal(inspector->getlasterr());
 		}
 
@@ -203,7 +202,6 @@ application::run_result application::do_inspect(
 
 		if(check_drops_and_timeouts && !sdropmgr.process_event(inspector, ev))
 		{
-			inspector->stop_capture();
 			return run_result::fatal("Drop manager internal error");
 		}
 
@@ -227,11 +225,6 @@ application::run_result application::do_inspect(
 
 		num_evts++;
 	}
-
-	//
-	// Stop capture
-	//
-	inspector->stop_capture();
 
 	return run_result::ok();
 }
