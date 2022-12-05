@@ -110,7 +110,7 @@ Exceptions are allowed for:
 
 All published artifacts must be labeled with version numbers following the **[Semantic Versioning 2 specification](https://semver.org/)**.
 
-For the [HTTP Distribution](#http-distribution), the version number must be reflected in the file name (including build metadata like the targetted arch and platform).
+For the [HTTP Distribution](#http-distribution), the version number must be reflected in the file name (including build metadata like the targeted arch and platform).
 
 For the [OCI Distribution](#oci-distribution), the version number must be reflected in the image tag (build metadata may be avoided if included in the manifest).
 
