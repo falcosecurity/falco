@@ -20,6 +20,16 @@ limitations under the License.
 using namespace std;
 using namespace libsinsp::filter::ast;
 
+static std::vector<filter_macro_resolver::value_info>::const_iterator find_value(
+		const std::vector<filter_macro_resolver::value_info>& values,
+		const std::string& ref)
+{
+	return std::find_if(
+		values.begin(),
+		values.end(),
+		[&ref](const filter_macro_resolver::value_info& v) { return v.first == ref; });
+}
+
 TEST_CASE("Should resolve macros on a filter AST", "[rule_loader]")
 {
 	string macro_name = "test_macro";
@@ -117,12 +127,12 @@ TEST_CASE("Should resolve macros on a filter AST", "[rule_loader]")
 		// first run
 		REQUIRE(resolver.run(filter) == true);
 		REQUIRE(resolver.get_resolved_macros().size() == 2);
-		auto a_resolved_itr = resolver.get_resolved_macros().find(a_macro_name);
+		auto a_resolved_itr = find_value(resolver.get_resolved_macros(), a_macro_name);
 		REQUIRE(a_resolved_itr != resolver.get_resolved_macros().end());
 		REQUIRE(a_resolved_itr->first == a_macro_name);
 		REQUIRE(a_resolved_itr->second == a_macro_pos);
 
-		auto b_resolved_itr = resolver.get_resolved_macros().find(b_macro_name);
+		auto b_resolved_itr = find_value(resolver.get_resolved_macros(), b_macro_name);
 		REQUIRE(b_resolved_itr != resolver.get_resolved_macros().end());
 		REQUIRE(resolver.get_unknown_macros().empty());
 		REQUIRE(b_resolved_itr->first == b_macro_name);
@@ -166,12 +176,12 @@ TEST_CASE("Should resolve macros on a filter AST", "[rule_loader]")
 		// first run
 		REQUIRE(resolver.run(filter) == true);
 		REQUIRE(resolver.get_resolved_macros().size() == 2);
-		auto a_resolved_itr = resolver.get_resolved_macros().find(a_macro_name);
+		auto a_resolved_itr = find_value(resolver.get_resolved_macros(), a_macro_name);
 		REQUIRE(a_resolved_itr != resolver.get_resolved_macros().end());
 		REQUIRE(a_resolved_itr->first == a_macro_name);
 		REQUIRE(a_resolved_itr->second == a_macro_pos);
 
-		auto b_resolved_itr = resolver.get_resolved_macros().find(b_macro_name);
+		auto b_resolved_itr = find_value(resolver.get_resolved_macros(), b_macro_name);
 		REQUIRE(b_resolved_itr != resolver.get_resolved_macros().end());
 		REQUIRE(resolver.get_unknown_macros().empty());
 		REQUIRE(b_resolved_itr->first == b_macro_name);
