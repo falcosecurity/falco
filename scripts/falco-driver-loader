@@ -274,9 +274,9 @@ load_kernel_module_download() {
 	if curl -L --create-dirs "${FALCO_DRIVER_CURL_OPTIONS}" -o "${HOME}/.falco/${DRIVER_VERSION}/${ARCH}/${FALCO_KERNEL_MODULE_FILENAME}" "${URL}"; then
 		echo "* Download succeeded"
 		chcon -t modules_object_t "${HOME}/.falco/${DRIVER_VERSION}/${ARCH}/${FALCO_KERNEL_MODULE_FILENAME}" > /dev/null 2>&1 || true
-		mkdir -p /lib/modules/${KERNEL_RELEASE}/kernel/drivers/falco/
-		cp ${HOME}/.falco/${DRIVER_VERSION}/${ARCH}/${FALCO_KERNEL_MODULE_FILENAME} /lib/modules/${KERNEL_RELEASE}/kernel/drivers/falco/falco.ko
-		depmod ${KERNEL_RELEASE}
+		mkdir -p /lib/modules/${KERNEL_RELEASE}/kernel/drivers/falco/ || true
+		cp ${HOME}/.falco/${DRIVER_VERSION}/${ARCH}/${FALCO_KERNEL_MODULE_FILENAME} /lib/modules/${KERNEL_RELEASE}/kernel/drivers/falco/falco.ko || true
+		depmod ${KERNEL_RELEASE} || true
 		if modprobe "${DRIVER_NAME}" > /dev/null 2>&1; then
 			echo "* Success: ${DRIVER_NAME} module found and loaded"
 			exit 0
@@ -402,7 +402,7 @@ load_kernel_module() {
 		chcon -t modules_object_t "${HOME}/.falco/${DRIVER_VERSION}/${ARCH}/${FALCO_KERNEL_MODULE_FILENAME}" > /dev/null 2>&1 || true
 		mkdir -p /lib/modules/${KERNEL_RELEASE}/kernel/drivers/falco/ || true
 		cp ${HOME}/.falco/${DRIVER_VERSION}/${ARCH}/${FALCO_KERNEL_MODULE_FILENAME} /lib/modules/${KERNEL_RELEASE}/kernel/drivers/falco/falco.ko || true
-		depmod ${KERNEL_RELEASE}
+		depmod ${KERNEL_RELEASE} || true
 		if modprobe "${DRIVER_NAME}" > /dev/null 2>&1; then
 			echo "* Success: ${DRIVER_NAME} module found and loaded"
 			exit 0
