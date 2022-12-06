@@ -248,18 +248,19 @@ static void resolve_macros(
 	}
 	macro_resolver.run(ast);
 
-	// Note: only complaining about the first unknown macro
-	const filter_macro_resolver::macro_info_map& unresolved_macros = macro_resolver.get_unknown_macros();
-	if(!unresolved_macros.empty())
+	// Note: only complaining about the first error or unknown macro
+	const auto& errors_macros = macro_resolver.get_errors();
+	const auto& unresolved_macros = macro_resolver.get_unknown_macros();
+	if(!errors_macros.empty() || !unresolved_macros.empty())
 	{
-		auto it = unresolved_macros.begin();
-		const rule_loader::context cond_ctx(it->second, condition, ctx);
-
-		THROW(true,
-		      std::string("Undefined macro '")
-		                    + it->first
-		      + "' used in filter.",
-		      cond_ctx);
+		auto errpos = !errors_macros.empty()
+			? errors_macros.begin()->second
+			: unresolved_macros.begin()->second;
+		std::string errmsg = !errors_macros.empty()
+			? errors_macros.begin()->first
+			: ("Undefined macro '" + unresolved_macros.begin()->first + "' used in filter.");
+		const rule_loader::context cond_ctx(errpos, condition, ctx);
+		THROW(true, errmsg, cond_ctx);
 	}
 
 	for (auto &it : macro_resolver.get_resolved_macros())

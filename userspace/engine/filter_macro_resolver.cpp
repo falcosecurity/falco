@@ -24,8 +24,9 @@ bool filter_macro_resolver::run(libsinsp::filter::ast::expr*& filter)
 {
 	m_unknown_macros.clear();
 	m_resolved_macros.clear();
+	m_errors.clear();
 
-	visitor v(m_unknown_macros, m_resolved_macros, m_macros);
+	visitor v(m_errors, m_unknown_macros, m_resolved_macros, m_macros);
 	v.m_node_substitute = nullptr;
 	filter->accept(&v);
 	if (v.m_node_substitute)
@@ -40,8 +41,9 @@ bool filter_macro_resolver::run(std::shared_ptr<libsinsp::filter::ast::expr>& fi
 {
 	m_unknown_macros.clear();
 	m_resolved_macros.clear();
+	m_errors.clear();
 
-	visitor v(m_unknown_macros, m_resolved_macros, m_macros);
+	visitor v(m_errors, m_unknown_macros, m_resolved_macros, m_macros);
 	v.m_node_substitute = nullptr;
 	filter->accept(&v);
 	if (v.m_node_substitute)
@@ -58,12 +60,17 @@ void filter_macro_resolver::set_macro(
 	m_macros[name] = macro;
 }
 
-const filter_macro_resolver::macro_info_map& filter_macro_resolver::get_unknown_macros() const
+const std::vector<filter_macro_resolver::value_info>& filter_macro_resolver::get_unknown_macros() const
 {
 	return m_unknown_macros;
 }
 
-const filter_macro_resolver::macro_info_map& filter_macro_resolver::get_resolved_macros() const
+const std::vector<filter_macro_resolver::value_info>& filter_macro_resolver::get_errors() const
+{
+	return m_errors;
+}
+
+const std::vector<filter_macro_resolver::value_info>& filter_macro_resolver::get_resolved_macros() const
 {
 	return m_resolved_macros;
 }
@@ -133,8 +140,13 @@ void filter_macro_resolver::visitor::visit(ast::value_expr* e)
 		const auto& prevref = std::find(m_macros_path.begin(), m_macros_path.end(), macro->first);
 		if (prevref != m_macros_path.end())
 		{
-			throw falco_exception("detected reference loop in macro '" + macro->first + "'");
+			auto msg = "reference loop in macro '" + macro->first + "'";
+			m_errors.push_back({msg, e->get_pos()});
+			m_node_substitute = nullptr;
+			m_unknown_macros.push_back({e->value, e->get_pos()});
+			return;
 		}
+
 		m_macros_path.push_back(macro->first);
 		m_node_substitute = nullptr;
 		auto new_node = ast::clone(macro->second.get());
@@ -145,12 +157,12 @@ void filter_macro_resolver::visitor::visit(ast::value_expr* e)
 		{
 			m_node_substitute = std::move(new_node);
 		}
-		m_resolved_macros[e->value] = e->get_pos();
+		m_resolved_macros.push_back({e->value, e->get_pos()});
 		m_macros_path.pop_back();
 	}
 	else
 	{
 		m_node_substitute = nullptr;
-		m_unknown_macros[e->value] = e->get_pos();
+		m_unknown_macros.push_back({e->value, e->get_pos()});
 	}
 }
