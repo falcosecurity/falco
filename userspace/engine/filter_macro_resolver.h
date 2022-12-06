@@ -60,7 +60,7 @@ class filter_macro_resolver
 
 		/*!
 		    \brief used in get_{resolved,unknown}_macros and get_errors
-			to represent an identifer/string value along with an AST position. 
+			to represent an identifier/string value along with an AST position. 
 		*/
 		typedef std::pair<std::string,libsinsp::filter::ast::pos_info> value_info;
 
