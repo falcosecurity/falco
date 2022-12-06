@@ -93,6 +93,7 @@ class filter_macro_resolver
 			visitor(const visitor&) = delete;
 			visitor& operator = (const visitor&) = delete;
 
+			std::vector<std::string> m_macros_path;
 			std::unique_ptr<libsinsp::filter::ast::expr> m_node_substitute;
 			macro_info_map& m_unknown_macros;
 			macro_info_map& m_resolved_macros;

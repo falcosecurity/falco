@@ -15,6 +15,7 @@ limitations under the License.
 */
 
 #include "filter_macro_resolver.h"
+#include "falco_common.h"
 
 using namespace std;
 using namespace libsinsp::filter;
@@ -125,9 +126,16 @@ void filter_macro_resolver::visitor::visit(ast::value_expr* e)
 	// we are supposed to get here only in case
 	// of identier-only children from either a 'not',
 	// an 'and' or an 'or'.
-	auto macro = m_macros.find(e->value);
+	const auto& macro = m_macros.find(e->value);
 	if (macro != m_macros.end() && macro->second) // skip null-ptr macros
 	{
+		// note: checks for loop detection
+		const auto& prevref = std::find(m_macros_path.begin(), m_macros_path.end(), macro->first);
+		if (prevref != m_macros_path.end())
+		{
+			throw falco_exception("detected reference loop in macro '" + macro->first + "'");
+		}
+		m_macros_path.push_back(macro->first);
 		m_node_substitute = nullptr;
 		auto new_node = ast::clone(macro->second.get());
 		new_node->accept(this);
@@ -138,6 +146,7 @@ void filter_macro_resolver::visitor::visit(ast::value_expr* e)
 			m_node_substitute = std::move(new_node);
 		}
 		m_resolved_macros[e->value] = e->get_pos();
+		m_macros_path.pop_back();
 	}
 	else
 	{
