@@ -113,6 +113,9 @@ get_target_id() {
 	elif [ -f "${HOST_ROOT}/etc/centos-release" ]; then
 		# Older CentOS distros
 		OS_ID=centos
+	elif [ -f "${HOST_ROOT}/etc/redhat-release" ]; then
+		# Older RHEL distros
+		OS_ID=rhel
 	else
 		return 1
 	fi
