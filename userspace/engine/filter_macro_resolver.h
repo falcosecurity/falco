@@ -59,16 +59,17 @@ class filter_macro_resolver
 			std::shared_ptr<libsinsp::filter::ast::expr> macro);
 
 		/*!
-		        \brief used in get_{resolved,unknown}_macros
+		    \brief used in get_{resolved,unknown}_macros and get_errors
+			to represent an identifer/string value along with an AST position. 
 		*/
-		typedef std::unordered_map<std::string,libsinsp::filter::ast::pos_info> macro_info_map;
+		typedef std::pair<std::string,libsinsp::filter::ast::pos_info> value_info;
 
 		/*!
 			\brief Returns a set containing the names of all the macros
 			substituted during the last invocation of run(). Should be
 			non-empty if the last invocation of run() returned true.
 		*/
-		const macro_info_map& get_resolved_macros() const;
+		const std::vector<value_info>& get_resolved_macros() const;
 
 		/*!
 			\brief Returns a set containing the names of all the macros
@@ -76,7 +77,13 @@ class filter_macro_resolver
 			A macro remains unresolved if it is found inside the processed
 			filter but it was not defined with set_macro();
 		*/
-		const macro_info_map& get_unknown_macros() const;
+		const std::vector<value_info>& get_unknown_macros() const;
+
+		/*!
+			\brief Returns a list of errors occurred during
+			the latest invocation of run().
+		*/
+		const std::vector<value_info>& get_errors() const;
 
 	private:
 		typedef std::unordered_map<
@@ -86,8 +93,15 @@ class filter_macro_resolver
 
 		struct visitor : public libsinsp::filter::ast::expr_visitor
 		{
-			visitor(macro_info_map& unknown_macros, macro_info_map& resolved_macros, macro_defs& macros)
-				: m_unknown_macros(unknown_macros), m_resolved_macros(resolved_macros), m_macros(macros) {}
+			visitor(
+				std::vector<value_info>& errors,
+				std::vector<value_info>& unknown_macros,
+				std::vector<value_info>& resolved_macros,
+				macro_defs& macros):
+					m_errors(errors),
+					m_unknown_macros(unknown_macros),
+					m_resolved_macros(resolved_macros),
+					m_macros(macros) {}
 			visitor(visitor&&) = default;
 			visitor& operator = (visitor&&) = default;
 			visitor(const visitor&) = delete;
@@ -95,9 +109,9 @@ class filter_macro_resolver
 
 			std::vector<std::string> m_macros_path;
 			std::unique_ptr<libsinsp::filter::ast::expr> m_node_substitute;
-			macro_info_map& m_unknown_macros;
-			macro_info_map& m_resolved_macros;
-
+			std::vector<value_info>& m_errors;
+			std::vector<value_info>& m_unknown_macros;
+			std::vector<value_info>& m_resolved_macros;
 			macro_defs& m_macros;
 
 			void visit(libsinsp::filter::ast::and_expr* e) override;
@@ -109,7 +123,8 @@ class filter_macro_resolver
 			void visit(libsinsp::filter::ast::binary_check_expr* e) override;
 		};
 
-		macro_info_map m_unknown_macros;
-		macro_info_map m_resolved_macros;
+		std::vector<value_info> m_errors;
+		std::vector<value_info> m_unknown_macros;
+		std::vector<value_info> m_resolved_macros;
 		macro_defs m_macros;
 };
