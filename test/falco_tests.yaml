@@ -358,6 +358,16 @@ trace_files: !mux
     validate_rules_file:
       - rules/invalid_macro_without_condition.yaml
     trace_file: trace_files/cat_write.scap
+  
+  invalid_macro_loop:
+    exit_status: 1
+    validate_errors:
+      - item_type: macro
+        item_name: macro_a
+        code: LOAD_ERR_VALIDATE
+        message_contains: "reference loop in macro"
+    validate_rules_file:
+      - rules/invalid_macro_loop.yaml
 
   invalid_rule_without_output:
     exit_status: 1
@@ -402,6 +412,16 @@ trace_files: !mux
     validate_rules_file:
       - rules/list_append_failure.yaml
     trace_file: trace_files/cat_write.scap
+
+  invalid_list_loop:
+    exit_status: 1
+    validate_errors:
+      - item_type: rule
+        item_name: sample rule
+        code: LOAD_ERR_COMPILE_CONDITION
+        message: "unknown event type list_a"
+    validate_rules_file:
+      - rules/invalid_list_loop.yaml
 
   invalid_rule_append_dangling:
     exit_status: 1
