@@ -162,6 +162,16 @@ get_target_id() {
 			exit 1
 		fi
 		;;
+	("bottlerocket")
+		TARGET_ID="${OS_ID}"
+		# variant_id has been sourced from os-release. Get only the first variant part
+		if [[ -n ${VARIANT_ID} ]];  then
+			# take just first part (eg: VARIANT_ID=aws-k8s-1.15 -> aws)
+			VARIANT_ID_CUT=${VARIANT_ID%%-*}
+		fi
+		# version_id has been sourced from os-release. Build a kernel version like: 1_1.11.0-aws
+		KERNEL_VERSION="1_${VERSION_ID}-${VARIANT_ID_CUT}"
+		;;
 	(*)
 		TARGET_ID=$(echo "${OS_ID}" | tr '[:upper:]' '[:lower:]')
 		;;
