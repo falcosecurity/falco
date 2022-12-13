@@ -3,51 +3,54 @@ jobs:
   "build-arm64":
     machine:
       enabled: true
-      image: ubuntu-2004:202101-01
+      image: ubuntu-2204:2022.10.2
     resource_class: arm.medium
     steps:
+
+      # Install dependencies to build the modern BPF probe skeleton.
+      - run:
+          name: Install deps ⛓️
+          command: |
+            sudo apt update
+            sudo apt install -y --no-install-recommends ca-certificates cmake build-essential clang-14 git pkg-config autoconf automake libelf-dev
+            sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-14 90
+            sudo update-alternatives --install /usr/bin/llvm-strip llvm-strip /usr/bin/llvm-strip-14 90
+            git clone https://github.com/libbpf/bpftool.git --branch v7.0.0 --single-branch
+            cd bpftool
+            git submodule update --init
+            cd src && sudo make install
+
+      # Path to the source code
       - checkout:
           path: /tmp/source-arm64/falco
+
+      # Build the skeleton
       - run:
-          name: Prepare project
+          name: Build modern BPF skeleton 🐝
           command: |
-            mkdir -p /tmp/build-arm64 && mkdir -p /tmp/build-arm64/release && \
-            docker run -e BUILD_TYPE="release" -it -v /tmp/source-arm64:/source -v /tmp/build-arm64:/build \
-              falcosecurity/falco-builder:latest \
-              cmake
+            mkdir -p /tmp/source-arm64/falco/skeleton-build
+            cd /tmp/source-arm64/falco/skeleton-build && cmake -DUSE_BUNDLED_DEPS=ON -DBUILD_FALCO_MODERN_BPF=ON -DCREATE_TEST_TARGETS=Off ../
+            make ProbeSkeleton
+
+      # Build the Falco packages (tar, deb, rpm) inside the centos7 builder.
+      # This dockerfile returns as output:
+      # - the build directory. (under /tmp/${DEST_BUILD_DIR})
+      # - the 3 packages: tar, deb, rpm. (under /tmp/packages)
       - run:
-          name: Build
+          name: Build Falco packages 🏗️
           command: |
-            docker run -e BUILD_TYPE="release" -it -v /tmp/source-arm64:/source -v /tmp/build-arm64:/build \
-              falcosecurity/falco-builder:latest \
-              all
-      - run:
-          name: Run unit tests
-          command: |
-            docker run -e BUILD_TYPE="release" -it -v /tmp/source-arm64:/source -v /tmp/build-arm64:/build \
-              falcosecurity/falco-builder:latest \
-              tests
-      - run:
-          name: Build packages
-          command: |
-            docker run -e BUILD_TYPE="release" -it -v /tmp/source-arm64:/source -v /tmp/build-arm64:/build \
-              falcosecurity/falco-builder:latest \
-              package
-      - run:
-          name: Prepare Artifacts
-          command: |
-            mkdir -p /tmp/packages
-            cp /tmp/build-arm64/release/*.deb /tmp/packages
-            cp /tmp/build-arm64/release/*.tar.gz /tmp/packages
-            cp /tmp/build-arm64/release/*.rpm /tmp/packages
+            DOCKER_BUILDKIT=1 docker build -f /tmp/source-arm64/falco/docker/builder/modern-falco-builder.Dockerfile --output type=local,dest=/tmp --build-arg CMAKE_OPTIONS="-DCMAKE_BUILD_TYPE=Release -DUSE_BUNDLED_DEPS=On -DFALCO_ETC_DIR=/etc/falco -DBUILD_FALCO_MODERN_BPF=ON -DMODERN_BPF_SKEL_DIR=/source/skeleton-build/skel_dir -DBUILD_DRIVER=Off -DBUILD_BPF=Off" --build-arg DEST_BUILD_DIR=/build-arm64/release /tmp/source-arm64/falco
+
       - store_artifacts:
           path: /tmp/packages
           destination: /packages
+
       - persist_to_workspace:
           root: /tmp
           paths:
             - build-arm64/release
             - source-arm64
+
   # Build a statically linked Falco release binary using musl
   # This build is 100% static, there are no host dependencies
   "build-musl":
@@ -96,43 +99,57 @@ jobs:
           paths:
             - build-static/release
             - source-static
-  # Build using our own builder base image using centos 7
+
   # This build is static, dependencies are bundled in the Falco binary
   "build-centos7":
-    docker:
-      - image: falcosecurity/falco-builder:latest
-        environment:
-          BUILD_TYPE: "release"
+    machine:
+      enabled: true
+      image: ubuntu-2204:2022.10.2
     steps:
-      - checkout:
-          path: /source/falco
+
+      # Install dependencies to build the modern BPF probe skeleton.
       - run:
-          name: Prepare project
-          command: /usr/bin/entrypoint cmake
-      - run:
-          name: Build
-          command: /usr/bin/entrypoint all
-      - run:
-          name: Run unit tests
-          command: /usr/bin/entrypoint tests
-      - run:
-          name: Build packages
-          command: /usr/bin/entrypoint package
-      - persist_to_workspace:
-          root: /
-          paths:
-            - build/release
-            - source
-      - run:
-          name: Prepare artifacts
+          name: Install deps ⛓️
           command: |
-            mkdir -p /tmp/packages
-            cp /build/release/*.deb /tmp/packages
-            cp /build/release/*.tar.gz /tmp/packages
-            cp /build/release/*.rpm /tmp/packages
+            sudo apt update
+            sudo apt install -y --no-install-recommends ca-certificates cmake build-essential clang-14 git pkg-config autoconf automake libelf-dev
+            sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-14 90
+            sudo update-alternatives --install /usr/bin/llvm-strip llvm-strip /usr/bin/llvm-strip-14 90
+            git clone https://github.com/libbpf/bpftool.git --branch v7.0.0 --single-branch
+            cd bpftool
+            git submodule update --init
+            cd src && sudo make install
+
+      # Path for the source code
+      - checkout:
+          path: /tmp/source/falco
+
+      - run:
+          name: Build modern BPF skeleton 🐝
+          command: |
+            mkdir -p /tmp/source/falco/skeleton-build
+            cd /tmp/source/falco/skeleton-build && cmake -DUSE_BUNDLED_DEPS=ON -DBUILD_FALCO_MODERN_BPF=ON -DCREATE_TEST_TARGETS=Off ../
+            make ProbeSkeleton
+
+      # Build the Falco packages (tar, deb, rpm) inside the centos7 builder.
+      # This dockerfile returns as output:
+      # - the build directory. (under /tmp/${DEST_BUILD_DIR})
+      # - the 3 packages: tar, deb, rpm. (under /tmp/packages)
+      - run:
+          name: Build Falco packages 🏗️
+          command: |
+            DOCKER_BUILDKIT=1 docker build -f /tmp/source/falco/docker/builder/modern-falco-builder.Dockerfile --output type=local,dest=/tmp --build-arg CMAKE_OPTIONS="-DCMAKE_BUILD_TYPE=Release -DUSE_BUNDLED_DEPS=On -DFALCO_ETC_DIR=/etc/falco -DBUILD_FALCO_MODERN_BPF=ON -DMODERN_BPF_SKEL_DIR=/source/skeleton-build/skel_dir -DBUILD_DRIVER=Off -DBUILD_BPF=Off" --build-arg DEST_BUILD_DIR=/build/release /tmp/source/falco
+
       - store_artifacts:
           path: /tmp/packages
           destination: /packages
+
+      - persist_to_workspace:
+          root: /tmp
+          paths:
+            - build/release
+            - source
+
   # Execute integration tests based on the build results coming from the "build-centos7" job
   "tests-integration":
     docker:
