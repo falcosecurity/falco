@@ -55,7 +55,7 @@ jobs:
   # This build is 100% static, there are no host dependencies
   "build-musl":
     docker:
-      - image: alpine:3.12
+      - image: alpine:3.17
     steps:
       - checkout:
           path: /source-static/falco
@@ -64,13 +64,13 @@ jobs:
           command: apk update
       - run:
           name: Install build dependencies
-          command: apk add g++ gcc cmake make git bash perl linux-headers autoconf automake m4 libtool elfutils-dev libelf-static patch binutils
+          command: apk add g++ gcc cmake make git bash perl linux-headers autoconf automake m4 libtool elfutils-dev libelf-static patch binutils bpftool clang
       - run:
           name: Prepare project
           command: |
             mkdir -p /build-static/release
             cd /build-static/release
-            cmake -DCPACK_GENERATOR=TGZ -DBUILD_BPF=Off -DBUILD_DRIVER=Off -DCMAKE_BUILD_TYPE=Release -DUSE_BUNDLED_DEPS=On -DUSE_BUNDLED_LIBELF=Off -DMUSL_OPTIMIZED_BUILD=On -DFALCO_ETC_DIR=/etc/falco /source-static/falco
+            cmake -DCPACK_GENERATOR=TGZ -DBUILD_BPF=Off -DBUILD_DRIVER=Off -DCMAKE_BUILD_TYPE=Release -DUSE_BUNDLED_DEPS=On -DUSE_BUNDLED_LIBELF=Off -DBUILD_LIBSCAP_MODERN_BPF=ON -DMUSL_OPTIMIZED_BUILD=On -DFALCO_ETC_DIR=/etc/falco /source-static/falco
       - run:
           name: Build
           command: |
