@@ -194,37 +194,40 @@ jobs:
       - run:
           name: Execute driver-loader integration tests
           command: /tmp/ws/source/falco/test/driver-loader/run_test.sh /tmp/ws/build/release/
+
   # Code quality
   "quality-static-analysis":
-    docker:
-      - image: falcosecurity/falco-builder:latest
-        environment:
-          BUILD_TYPE: "release"
+    machine:
+      enabled: true
+      image: ubuntu-2204:2022.10.2
     steps:
+
       - run:
-          name: Install cppcheck
+          name: Install deps ⛓️
           command: |
-            yum update -y
-            yum install epel-release -y
-            yum install cppcheck cppcheck-htmlreport -y
+            sudo apt update -y
+            sudo apt install build-essential git cppcheck cmake -y
+
       - checkout:
-          path: /source/falco
+          path: /tmp/source/falco
+
+      # We can use `USE_BUNDLED_DEPS=On` since the build is very fast
       - run:
-          name: Prepare project
-          command: /usr/bin/entrypoint cmake
-      - run:
-          name: cppcheck
-          command: /usr/bin/entrypoint cppcheck
-      - run:
-          name: cppcheck html report
-          command: /usr/bin/entrypoint cppcheck_htmlreport
+          name: Build and run cppcheck
+          command: |
+              mkdir -p /tmp/source/falco/build
+              cd /tmp/source/falco/build && cmake -DUSE_BUNDLED_DEPS=On -DBUILD_WARNINGS_AS_ERRORS=ON -DCREATE_TEST_TARGETS=Off -DCMAKE_BUILD_TYPE="release" -DBUILD_BPF=Off -DBUILD_DRIVER=Off ..
+              make -j4 cppcheck
+              make -j4 cppcheck_htmlreport
+
       - store_artifacts:
-          path: /build/release/static-analysis-reports
+          path: /tmp/source/falco/build/static-analysis-reports
           destination: /static-analysis-reports
+
   # Sign rpm packages
   "rpm-sign":
     docker:
-      - image: falcosecurity/falco-builder:latest
+      - image: docker.io/centos:7
     steps:
       - attach_workspace:
           at: /
@@ -265,6 +268,7 @@ jobs:
           paths:
             - build/release/*.rpm
             - build-arm64/release/*.rpm
+
   # Publish the dev packages
   "publish-packages-dev":
     docker:
