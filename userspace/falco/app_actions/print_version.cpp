@@ -16,6 +16,7 @@ limitations under the License.
 
 #include "config_falco.h"
 #include "application.h"
+#include "falco_engine_version.h"
 
 using namespace falco::app;
 
@@ -27,6 +28,7 @@ application::run_result application::print_version()
 		printf("Falco version: %s\n", FALCO_VERSION);
 		printf("Libs version:  %s\n", FALCOSECURITY_LIBS_VERSION);
 		printf("Plugin API:    %s\n", s->get_plugin_api_version());
+		printf("Engine:        %d\n", FALCO_ENGINE_VERSION);
 
 		// todo(leogr): move string conversion to scap
 		auto driver_api_version = s->get_scap_api_version();
