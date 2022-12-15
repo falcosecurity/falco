@@ -200,6 +200,7 @@ This section provides more details around the versioning of all components that 
 Falco version: x.y.z (sem-ver like)
 Libs version:  x.y.z (sem-ver like)
 Plugin API:    x.y.z (sem-ver like)
+Engine:        x
 Driver:
   API version:    x.y.z (sem-ver)
   Schema version: x.y.z (sem-ver)
