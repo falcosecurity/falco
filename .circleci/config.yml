@@ -4,7 +4,7 @@ jobs:
     machine:
       enabled: true
       image: ubuntu-2204:2022.10.2
-    resource_class: arm.medium
+    resource_class: arm.large
     steps:
 
       # Install dependencies to build the modern BPF probe skeleton.
@@ -105,6 +105,7 @@ jobs:
     machine:
       enabled: true
       image: ubuntu-2204:2022.10.2
+    resource_class: large
     steps:
 
       # Install dependencies to build the modern BPF probe skeleton.

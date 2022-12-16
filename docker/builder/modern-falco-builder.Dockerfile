@@ -3,7 +3,7 @@ FROM centos:7 AS build-stage
 
 # To build Falco you need to pass the cmake option
 ARG CMAKE_OPTIONS=""
-ARG MAKE_JOBS=4
+ARG MAKE_JOBS=6
 
 # Install all the dependencies
 WORKDIR /
