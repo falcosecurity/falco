@@ -195,35 +195,6 @@ jobs:
           name: Execute driver-loader integration tests
           command: /tmp/ws/source/falco/test/driver-loader/run_test.sh /tmp/ws/build/release/
 
-  # Code quality
-  "quality-static-analysis":
-    machine:
-      enabled: true
-      image: ubuntu-2204:2022.10.2
-    steps:
-
-      - run:
-          name: Install deps ⛓️
-          command: |
-            sudo apt update -y
-            sudo apt install build-essential git cppcheck cmake -y
-
-      - checkout:
-          path: /tmp/source/falco
-
-      # We can use `USE_BUNDLED_DEPS=On` since the build is very fast
-      - run:
-          name: Build and run cppcheck
-          command: |
-              mkdir -p /tmp/source/falco/build
-              cd /tmp/source/falco/build && cmake -DUSE_BUNDLED_DEPS=On -DBUILD_WARNINGS_AS_ERRORS=ON -DCREATE_TEST_TARGETS=Off -DCMAKE_BUILD_TYPE="release" -DBUILD_BPF=Off -DBUILD_DRIVER=Off ..
-              make -j4 cppcheck
-              make -j4 cppcheck_htmlreport
-
-      - store_artifacts:
-          path: /tmp/source/falco/build/static-analysis-reports
-          destination: /static-analysis-reports
-
   # Sign rpm packages
   "rpm-sign":
     docker:
@@ -758,7 +729,6 @@ workflows:
       - "build-musl"
       - "build-arm64"
       - "build-centos7"
-      - "quality-static-analysis"
       - "tests-integration":
           requires:
             - "build-centos7"
