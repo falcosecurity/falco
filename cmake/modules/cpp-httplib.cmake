@@ -24,8 +24,8 @@ else()
 
 	ExternalProject_Add(cpp-httplib
 		PREFIX "${PROJECT_BINARY_DIR}/cpp-httplib-prefix"
-		URL "https://github.com/yhirose/cpp-httplib/archive/refs/tags/v0.10.4.tar.gz"
-		URL_HASH "SHA256=7719ff9f309c807dd8a574048764836b6a12bcb7d6ae9e129e7e4289cfdb4bd4"
+		URL "https://github.com/yhirose/cpp-httplib/archive/refs/tags/v0.11.3.tar.gz"
+		URL_HASH "SHA256=799b2daa0441d207f6cd1179ae3a34869722084a434da6614978be1682c1e12d"
 		CONFIGURE_COMMAND ""
 		BUILD_COMMAND ""
 		INSTALL_COMMAND "")	
