@@ -67,7 +67,7 @@ void application::check_for_ignored_events()
 		std::cerr << (first ? "" : ", ") << it.c_str();
 		first = false;
 	}
-	std::cerr << std::endl << "But these events are not returned unless running falco with -A" << std::endl;
+	std::cerr << std::endl << "These events could be associated with syscalls not defined on your architecture (please take a look here: https://marcin.juszkiewicz.com.pl/download/tables/syscalls.html). If syscalls are defined you have to run Falco with `-A` to catch these events" << std::endl;
 }
 
 application::run_result application::load_rules_files()
