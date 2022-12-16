@@ -1,0 +1,31 @@
+name: StaticAnalysis
+on:
+  pull_request:
+jobs:
+  staticanalysis:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout ⤵️
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Install build dependencies ⛓️
+        run: |
+          sudo apt update -y
+          sudo apt install build-essential git cppcheck cmake -y
+
+      - name: Build and run cppcheck 🏎️
+        run: |
+          mkdir build
+          cd build && cmake -DUSE_BUNDLED_DEPS=On -DBUILD_WARNINGS_AS_ERRORS=ON -DCREATE_TEST_TARGETS=Off -DCMAKE_BUILD_TYPE="release" -DBUILD_BPF=Off -DBUILD_DRIVER=Off ..
+          make -j4 cppcheck
+          make -j4 cppcheck_htmlreport
+
+      - name: Upload bpf_test ⬆️
+        uses: actions/upload-artifact@v3
+        with:
+          name: static-analysis-reports
+          path: ./build/static-analysis-reports
