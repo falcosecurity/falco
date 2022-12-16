@@ -24,7 +24,7 @@ jobs:
           make -j4 cppcheck
           make -j4 cppcheck_htmlreport
 
-      - name: Upload bpf_test ⬆️
+      - name: Upload reports ⬆️
         uses: actions/upload-artifact@v3
         with:
           name: static-analysis-reports
