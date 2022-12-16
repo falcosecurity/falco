@@ -56,6 +56,7 @@ jobs:
   "build-musl":
     docker:
       - image: alpine:3.17
+    resource_class: large
     steps:
       - checkout:
           path: /source-static/falco
@@ -75,12 +76,12 @@ jobs:
           name: Build
           command: |
             cd /build-static/release
-            make -j4 all
+            make -j6 all
       - run:
           name: Package
           command: |
             cd /build-static/release
-            make -j4 package
+            make -j6 package
       - run:
           name: Run unit tests
           command: |
