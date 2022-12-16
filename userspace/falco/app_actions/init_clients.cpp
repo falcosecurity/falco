@@ -21,7 +21,7 @@ using namespace falco::app;
 application::run_result application::init_clients()
 {
 #ifndef MINIMAL_BUILD
-	// k8s and mesos clients are useful only if syscall source is enabled
+	// k8s is useful only if the syscall source is enabled
 	if (m_state->enabled_sources.find(falco_common::syscall_source) == m_state->enabled_sources.end())
 	{
 		return run_result::ok();
@@ -59,7 +59,9 @@ application::run_result application::init_clients()
 	}
 
 	//
+	// DEPRECATED!
 	// Run mesos, if required
+	// todo(leogr): remove in Falco 0,.35
 	//
 	if(!m_options.mesos_api.empty())
 	{
@@ -67,10 +69,12 @@ application::run_result application::init_clients()
 		// passes a pointer but the inspector does
 		// *not* own it and does not use it after
 		// init_mesos_client() returns.
+		falco_logger::log(LOG_WARNING, "Mesos support has been DEPRECATED and will be removed in the next version!\n");
 		inspector->init_mesos_client(&(m_options.mesos_api), m_options.verbose);
 	}
 	else if(char* mesos_api_env = getenv("FALCO_MESOS_API"))
 	{
+		falco_logger::log(LOG_WARNING, "Mesos support has been DEPRECATED and will be removed in the next version!\n");
 		std::string mesos_api_copy = mesos_api_env;
 		inspector->init_mesos_client(&mesos_api_copy, m_options.verbose);
 	}
