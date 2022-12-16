@@ -14,6 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+#include <nlohmann/json.hpp>
+
 #include "config_falco.h"
 #include "application.h"
 #include "falco_engine_version.h"
@@ -27,24 +29,33 @@ application::run_result application::print_version()
 		std::unique_ptr<sinsp> s(new sinsp());
 		printf("Falco version: %s\n", FALCO_VERSION);
 		printf("Libs version:  %s\n", FALCOSECURITY_LIBS_VERSION);
-		printf("Plugin API:    %s\n", s->get_plugin_api_version());
+		printf("Plugin API:    %s\n", application::get_plugin_api_version().c_str());
 		printf("Engine:        %d\n", FALCO_ENGINE_VERSION);
 
-		// todo(leogr): move string conversion to scap
-		auto driver_api_version = s->get_scap_api_version();
-		unsigned long driver_api_major = PPM_API_VERSION_MAJOR(driver_api_version);
-		unsigned long driver_api_minor = PPM_API_VERSION_MINOR(driver_api_version);
-		unsigned long driver_api_patch = PPM_API_VERSION_PATCH(driver_api_version);
-		auto driver_schema_version = s->get_scap_schema_version();
-		unsigned long driver_schema_major = PPM_API_VERSION_MAJOR(driver_schema_version);
-		unsigned long driver_schema_minor = PPM_API_VERSION_MINOR(driver_schema_version);
-		unsigned long driver_schema_patch = PPM_API_VERSION_PATCH(driver_schema_version);
 		printf("Driver:\n");
-		printf("  API version:    %lu.%lu.%lu\n", driver_api_major, driver_api_minor, driver_api_patch);
-		printf("  Schema version: %lu.%lu.%lu\n", driver_schema_major, driver_schema_minor, driver_schema_patch);
+		printf("  API version:    %s\n", application::get_driver_api_version().c_str());
+		printf("  Schema version: %s\n", application::get_driver_api_version().c_str());
 		printf("  Default driver: %s\n", DRIVER_VERSION);
 
 		return run_result::exit();
 	}
+	
+	if(m_options.print_version_info_json)
+	{
+		nlohmann::json version_info;
+
+		version_info["falco_version"] = FALCO_VERSION;
+		version_info["libs_version"] = FALCOSECURITY_LIBS_VERSION;
+		version_info["plugin_api_version"] = application::get_plugin_api_version();
+		version_info["driver_api_version"] = application::get_driver_api_version();
+		version_info["driver_schema_version"] = application::get_driver_schema_version();
+		version_info["default_driver_version"] = DRIVER_VERSION;
+		version_info["engine_version"] = std::to_string(FALCO_ENGINE_VERSION);
+
+		printf("%s\n", version_info.dump().c_str());
+
+		return run_result::exit();
+	}
+
 	return run_result::ok();
 }

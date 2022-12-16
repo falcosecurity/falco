@@ -48,23 +48,10 @@ application::run_result application::print_support()
 		support["version"] = FALCO_VERSION;
 
 		support["libs_version"] = FALCOSECURITY_LIBS_VERSION;
-		support["plugin_api_version"] = s->get_plugin_api_version();
+		support["plugin_api_version"] = application::get_plugin_api_version();
 		
-		auto driver_api_version = s->get_scap_api_version();
-		unsigned long driver_api_major = PPM_API_VERSION_MAJOR(driver_api_version);
-		unsigned long driver_api_minor = PPM_API_VERSION_MINOR(driver_api_version);
-		unsigned long driver_api_patch = PPM_API_VERSION_PATCH(driver_api_version);
-		snprintf(driver_api_version_string, sizeof(driver_api_version_string), "%lu.%lu.%lu", driver_api_major, driver_api_minor, driver_api_patch);
-
-		support["driver_api_version"] = driver_api_version_string;
-
-		auto driver_schema_version = s->get_scap_schema_version();
-		unsigned long driver_schema_major = PPM_API_VERSION_MAJOR(driver_schema_version);
-		unsigned long driver_schema_minor = PPM_API_VERSION_MINOR(driver_schema_version);
-		unsigned long driver_schema_patch = PPM_API_VERSION_PATCH(driver_schema_version);
-		snprintf(driver_schema_version_string, sizeof(driver_schema_version_string), "%lu.%lu.%lu", driver_schema_major, driver_schema_minor, driver_schema_patch);
-		
-		support["driver_schema_version"] = driver_schema_version_string;
+		support["driver_api_version"] = application::get_driver_api_version();
+		support["driver_schema_version"] = application::get_driver_schema_version();
 		support["default_driver_version"] = DRIVER_VERSION;
 
 		support["system_info"]["sysname"] = sysinfo.sysname;
