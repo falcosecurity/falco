@@ -656,11 +656,11 @@ KERNEL_VERSION=$(uname -v | sed 's/#\([[:digit:]]\+\).*/\1/')
 
 DRIVERS_REPO=${DRIVERS_REPO:-"@DRIVERS_REPO@"}
 
+FALCO_DRIVER_CURL_OPTIONS="-fsS --connect-timeout 5 --max-time 60 --retry 3 --retry-max-time 120"
+
 if [ -n "$DRIVER_INSECURE_DOWNLOAD" ]
 then
-	FALCO_DRIVER_CURL_OPTIONS=-fsSk
-else
-	FALCO_DRIVER_CURL_OPTIONS=-fsS
+	FALCO_DRIVER_CURL_OPTIONS+=" -k"
 fi
 
 FALCO_DRIVER_CURL_OPTIONS+=" "${DRIVER_CURL_OPTIONS}
