@@ -9,8 +9,8 @@ ARG MAKE_JOBS=6
 WORKDIR /
 
 RUN yum -y install centos-release-scl; \
-    yum -y install devtoolset-8-gcc devtoolset-8-gcc-c++; \
-    source scl_source enable devtoolset-8; \
+    yum -y install devtoolset-9-gcc devtoolset-9-gcc-c++; \
+    source scl_source enable devtoolset-9; \
     yum install -y git wget make m4 rpm-build
 
 # With some previous cmake versions it fails when downloading `zlib` with curl in the libs building phase
@@ -25,7 +25,7 @@ COPY . /source
 WORKDIR /build/release
 
 # We need `make tests` and `make all` for integration tests.
-RUN source scl_source enable devtoolset-8; \
+RUN source scl_source enable devtoolset-9; \
     cmake ${CMAKE_OPTIONS} /source; \
     make falco -j${MAKE_JOBS}; \
     make package; \
