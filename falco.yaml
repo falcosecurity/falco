@@ -225,6 +225,24 @@ syscall_event_timeouts:
 
 syscall_buf_size_preset: 4
 
+
+############## [EXPERIMENTAL] Modern BPF probe specific ##############
+
+# These configs are experimental they could change over releases
+
+# Possible values: {0, 1, 2, ..., MAX_CPUS_NUMBER}
+cpus_for_each_syscall_buffer: 1
+
+# Possible values:
+# - true: allocate ring buffers only for online CPUs
+# - false: allocate ring buffers for all available CPUs
+online_cpus_only: true
+
+############## [EXPERIMENTAL] Modern BPF probe specific ##############
+
+
+
+
 # Falco continuously monitors outputs performance. When an output channel does not allow
 # to deliver an alert within a given deadline, an error is reported indicating
 # which output is blocking notifications.
