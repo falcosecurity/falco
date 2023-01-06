@@ -18,6 +18,7 @@ option(USE_BUNDLED_DEPS "Bundle hard to find dependencies into the Falco binary"
 option(BUILD_WARNINGS_AS_ERRORS "Enable building with -Wextra -Werror flags" OFF)
 option(MINIMAL_BUILD "Build a minimal version of Falco, containing only the engine and basic input/output (EXPERIMENTAL)" OFF)
 option(MUSL_OPTIMIZED_BUILD "Enable if you want a musl optimized build" OFF)
+option(BUILD_FALCO_UNIT_TESTS "Build falco unit tests" OFF)
 
 # gVisor is currently only supported on Linux x86_64
 if(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" AND CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT MINIMAL_BUILD)
@@ -223,3 +224,7 @@ include(falcoctl)
 
 # Packages configuration
 include(CPackConfig)
+
+if(BUILD_FALCO_UNIT_TESTS)
+  add_subdirectory(unit_tests)
+endif()
