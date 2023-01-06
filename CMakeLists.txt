@@ -148,16 +148,7 @@ include(falcosecurity-libs)
 include(jq)
 
 # nlohmann-json
-set(NJSON_SRC "${PROJECT_BINARY_DIR}/njson-prefix/src/njson")
-message(STATUS "Using bundled nlohmann-json in '${NJSON_SRC}'")
-set(NJSON_INCLUDE "${NJSON_SRC}/single_include")
-ExternalProject_Add(
-  njson
-  URL "https://github.com/nlohmann/json/archive/v3.3.0.tar.gz"
-  URL_HASH "SHA256=2fd1d207b4669a7843296c41d3b6ac5b23d00dec48dba507ba051d14564aa801"
-  CONFIGURE_COMMAND ""
-  BUILD_COMMAND ""
-  INSTALL_COMMAND "")
+include(njson)
 
 # b64
 include(b64)
