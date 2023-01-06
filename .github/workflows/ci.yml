@@ -26,7 +26,7 @@ jobs:
         run: |
           mkdir build-minimal
           pushd build-minimal
-          cmake -DMINIMAL_BUILD=On -DBUILD_BPF=Off -DBUILD_DRIVER=Off -DCMAKE_BUILD_TYPE=Release ..
+          cmake -DMINIMAL_BUILD=On -DBUILD_BPF=Off -DBUILD_DRIVER=Off -DCMAKE_BUILD_TYPE=Release -DBUILD_FALCO_UNIT_TESTS=On ..
           popd
 
       - name: Build
@@ -38,7 +38,7 @@ jobs:
       - name: Run unit tests
         run: |
           pushd build-minimal
-          make tests
+          sudo ./unit_tests/falco_unit_tests 
           popd
 
   build-ubuntu-focal:
@@ -60,7 +60,7 @@ jobs:
         run: |
           mkdir build
           pushd build
-          cmake -DBUILD_BPF=On ..
+          cmake -DBUILD_BPF=On -DBUILD_FALCO_UNIT_TESTS=On ..
           popd
 
       - name: Build
@@ -72,7 +72,7 @@ jobs:
       - name: Run unit tests
         run: |
           pushd build
-          make tests
+          sudo ./unit_tests/falco_unit_tests 
           popd
 
   build-ubuntu-focal-debug:
@@ -94,7 +94,7 @@ jobs:
         run: |
           mkdir build
           pushd build
-          cmake -DCMAKE_BUILD_TYPE=debug -DBUILD_BPF=On ..
+          cmake -DCMAKE_BUILD_TYPE=debug -DBUILD_BPF=On -DBUILD_FALCO_UNIT_TESTS=On ..
           popd
 
       - name: Build
@@ -106,5 +106,5 @@ jobs:
       - name: Run unit tests
         run: |
           pushd build
-          make tests
+          sudo ./unit_tests/falco_unit_tests 
           popd
