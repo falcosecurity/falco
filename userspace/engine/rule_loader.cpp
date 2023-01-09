@@ -64,6 +64,11 @@ rule_loader::context::context(const YAML::Node &item,
 	init(parent.name(), position(item.Mark()), item_type, item_name, parent);
 }
 
+rule_loader::context::context(const YAML::Mark &mark, const context& parent)
+{
+	init(parent.name(), position(mark), item_type::VALUE_FOR, "", parent);
+}
+
 rule_loader::context::context(const libsinsp::filter::ast::pos_info& pos,
 			      const std::string& condition,
 			      const context& parent)
