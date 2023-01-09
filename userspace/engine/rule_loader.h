@@ -113,6 +113,9 @@ namespace rule_loader
 			item_type item_type,
 			const std::string& item_name,
 			const context& parent);
+		context(
+			const YAML::Mark &mark,
+			const context& parent);
 
 		// Build a context from a condition expression +
 		// parser position. This does not use the original

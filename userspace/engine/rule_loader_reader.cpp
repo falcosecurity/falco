@@ -437,14 +437,25 @@ static void read_item(
 bool rule_loader::reader::read(rule_loader::configuration& cfg, collector& collector)
 {
 	std::vector<YAML::Node> docs;
+	rule_loader::context ctx(cfg.name);
 	try
 	{
 		docs = YAML::LoadAll(cfg.content);
 	}
-	catch(const exception& e)
+	catch (YAML::ParserException& e)
 	{
-		rule_loader::context ctx(cfg.name);
+		rule_loader::context ictx(e.mark, ctx);
+		cfg.res->add_error(falco::load_result::LOAD_ERR_YAML_PARSE, e.what(), ictx);
+		return false;
+	}
+	catch (std::exception& e)
+	{
 		cfg.res->add_error(falco::load_result::LOAD_ERR_YAML_PARSE, e.what(), ctx);
+		return false;
+	}
+	catch (...)
+	{
+		cfg.res->add_error(falco::load_result::LOAD_ERR_YAML_PARSE, "unknown YAML parsing error", ctx);
 		return false;
 	}
 
@@ -452,8 +463,6 @@ bool rule_loader::reader::read(rule_loader::configuration& cfg, collector& colle
 	{
 		if (doc->IsDefined() && !doc->IsNull())
 		{
-			rule_loader::context ctx(cfg.name);
-
 			try {
 				THROW(!doc->IsMap() && !doc->IsSequence(),
 				       "Rules content is not yaml",
@@ -479,7 +488,23 @@ bool rule_loader::reader::read(rule_loader::configuration& cfg, collector& colle
 				// as it's effectively a new rules file, for
 				// consistency we stop at the first error.
 				return false;
-			};
+			}
+			catch (YAML::ParserException& e)
+			{
+				rule_loader::context ictx(e.mark, ctx);
+				cfg.res->add_error(falco::load_result::LOAD_ERR_YAML_VALIDATE, e.what(), ictx);
+				return false;
+			}
+			catch (std::exception& e)
+			{
+				cfg.res->add_error(falco::load_result::LOAD_ERR_VALIDATE, e.what(), ctx);
+				return false;
+			}
+			catch (...)
+			{
+				cfg.res->add_error(falco::load_result::LOAD_ERR_VALIDATE, "unknown validation error", ctx);
+				return false;
+			}
 		}
 	}
 
