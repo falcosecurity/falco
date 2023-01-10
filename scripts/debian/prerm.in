@@ -28,6 +28,7 @@ case "$1" in
       systemctl --system stop 'falco-bpf.service' || true
       systemctl --system stop 'falco-modern-bpf.service' || true
       systemctl --system stop 'falco-plugin.service' || true
+      systemctl --system stop 'falcoctl.service' || true
 
       echo "[PRE-REMOVE] Call 'falco-driver-loader --clean:'"
       falco-driver-loader --clean
