@@ -26,6 +26,8 @@ file(COPY "${PROJECT_SOURCE_DIR}/scripts/systemd/falco-modern-bpf.service"
 		DESTINATION "${PROJECT_BINARY_DIR}/scripts/systemd")
 file(COPY "${PROJECT_SOURCE_DIR}/scripts/systemd/falco-plugin.service"
 		DESTINATION "${PROJECT_BINARY_DIR}/scripts/systemd")
+file(COPY "${PROJECT_SOURCE_DIR}/scripts/systemd/falcoctl.service"
+		DESTINATION "${PROJECT_BINARY_DIR}/scripts/systemd")
 
 # Debian
 configure_file(debian/postinst.in debian/postinst)

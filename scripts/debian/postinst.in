@@ -17,19 +17,19 @@
 #
 
 chosen_driver=
+enable_falcoctl=0
 
 if [ "$1" = "configure" ]; then
         if [ -x /usr/bin/dialog ]; then
           # If dialog is installed, create a dialog to let users choose the correct driver for them
-          CHOICE=$(dialog --clear --backtitle "Choose your preferred driver" --title "Falco drivers" --menu "Choose one of the following options:" 15 40 5 \
+          CHOICE=$(dialog --clear --title "Falco drivers" --menu "Choose your preferred driver:" 12 40 5 \
                 1 "Don't start" \
                 2 "Kmod" \
                 3 "eBPF" \
                 4 "Modern eBPF" \
                 5 "Plugin" \
                 2>&1 >/dev/tty)
-            if [ $? -eq 0 ]; then
-              case $CHOICE in
+          case $CHOICE in
                   2)
                       chosen_driver="kmod"
                       ;;
@@ -42,9 +42,20 @@ if [ "$1" = "configure" ]; then
                   5)
                       chosen_driver="plugin"
                       ;;
-              esac
-            fi
-            clear
+          esac
+
+          if [ -n "$chosen_driver" ]; then
+            CHOICE=$(dialog --clear --title "Falcoctl" --menu "Do you want to subscribe to automatic ruleset feed?" 10 40 2 \
+                    1 "No" \
+                    2 "Yes" \
+                    2>&1 >/dev/tty)
+            case $CHOICE in
+               2)
+                enable_falcoctl=1
+                ;;
+            esac
+          fi
+          clear
         fi
 fi
 
@@ -68,6 +79,13 @@ if [ "$1" = "configure" ] || [ "$1" = "abort-upgrade" ] || [ "$1" = "abort-decon
             systemctl --system enable "falco-$chosen_driver.service" || true
             echo "[POST-INSTALL] Start 'falco-$chosen_driver.service':"
             systemctl --system start "falco-$chosen_driver.service" || true
+
+            if [ $enable_falcoctl -eq 1 ]; then
+              echo "[POST-INSTALL] Enable 'falcoctl.service':"
+              systemctl --system enable "falcoctl.service" || true
+              echo "[POST-INSTALL] Start 'falcoctl.service':"
+              systemctl --system start "falcoctl.service" || true
+            fi
         fi
 fi
 
@@ -79,6 +97,12 @@ if [ "$1" = "configure" ] || [ "$1" = "abort-upgrade" ] || [ "$1" = "abort-decon
         echo "[POST-INSTALL] Trigger 'falco-$chosen_driver.service' condrestart:"
         # restart falco on upgrade if service is already running
         systemctl --system condrestart "falco-$chosen_driver.service" || true
+
+        if [ $enable_falcoctl -eq 1 ]; then
+           echo "[POST-INSTALL] Trigger 'falcoctl.service' condrestart:"
+           # restart falcoctl on upgrade if service is already running
+          systemctl --system condrestart "falcoctl.service" || true
+        fi
       fi
     fi
 fi
