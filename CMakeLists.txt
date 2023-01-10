@@ -228,5 +228,7 @@ if(NOT MUSL_OPTIMIZED_BUILD)
   include(plugins)
 endif()
 
+include(falcoctl)
+
 # Packages configuration
 include(CPackConfig)
