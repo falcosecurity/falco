@@ -31,8 +31,7 @@ std::set<uint16_t> get_set_difference(std::set<uint16_t> exclude_set = {})
 {
 	std::set<uint16_t> set_difference = {};
 
-	/* Not considering GENERIC_E GENERIC_X */
-	for(uint32_t i = 2; i < PPM_EVENT_MAX; i++)
+	for(uint32_t i = PPME_GENERIC_E; i < PPM_EVENT_MAX; i++)
 	{
 		/* Skip events that are unused. */
 		if(sinsp::is_unused_event(i))
