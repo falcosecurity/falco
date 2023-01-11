@@ -22,6 +22,7 @@ limitations under the License.
 #include <memory>
 #include <functional>
 #include <stdexcept>
+#include <sinsp.h>
 
 class falco_event_types
 {
@@ -188,7 +189,7 @@ public:
 private:
 	struct visitor : public libsinsp::filter::ast::expr_visitor
 	{
-		visitor(): m_expect_value(false) {}
+		visitor(): m_expect_value(false),m_inspector() {}
 		visitor(visitor&&) = default;
 		visitor& operator = (visitor&&) = default;
 		visitor(const visitor&) = default;
@@ -196,6 +197,7 @@ private:
 
 		bool m_expect_value;
 		falco_event_types m_last_node_evttypes;
+		sinsp m_inspector;
 
 		void visit(libsinsp::filter::ast::and_expr* e) override;
 		void visit(libsinsp::filter::ast::or_expr* e) override;

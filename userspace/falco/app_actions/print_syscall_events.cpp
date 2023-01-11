@@ -73,7 +73,7 @@ application::run_result application::print_syscall_events()
 	if(m_options.list_syscall_events)
 	{
 		configure_interesting_sets();
-		const auto events = get_event_entries(false, m_state->ppm_event_info_of_interest);
+		const auto events = get_event_entries(true, m_state->ppm_event_info_of_interest);
 
 		if(m_options.markdown)
 		{

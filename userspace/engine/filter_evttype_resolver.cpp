@@ -44,16 +44,25 @@ void filter_evttype_resolver::visitor::inversion(falco_event_types& types)
 
 void filter_evttype_resolver::visitor::evttypes(const std::string& evtname, falco_event_types& out)
 {
-	// Fill in from 2 to PPM_EVENT_MAX-1. 0 and 1 are excluded as
-	// those are PPM_GENERIC_E/PPME_GENERIC_X
-	const struct ppm_event_info* etable = g_infotables.m_event_info;
-	for(uint16_t i = 2; i < PPM_EVENT_MAX; i++)
+	for(uint16_t i = PPME_GENERIC_E; i < PPM_EVENT_MAX; i++)
 	{
-		// Skip unused events or events not matching the requested evtname
-		if(!sinsp::is_unused_event(i) && (evtname.empty() || std::string(etable[i].name) == evtname))
+		// Skip unused events
+		if(sinsp::is_unused_event(i))
 		{
-			out.insert(i);
+			continue;
 		}
+
+		// Fetch event names associated with event id
+		const auto evtnames = m_inspector.get_events_names({i});
+		for (const auto& name : evtnames)
+		{
+			// Skip events not matching the requested evtname
+			if(evtname.empty() || name == evtname)
+			{
+				out.insert(i);
+			}
+		}
+
 	}
 }
 
