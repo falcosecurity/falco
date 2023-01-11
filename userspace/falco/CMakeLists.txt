@@ -180,14 +180,14 @@ if(NOT MINIMAL_BUILD)
     COMMENT "Generate gRPC API"
     # Falco gRPC Version API
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/version.proto
-    COMMAND ${PROTOC} -I ${CMAKE_CURRENT_SOURCE_DIR} --cpp_out=. ${CMAKE_CURRENT_SOURCE_DIR}/version.proto
-    COMMAND ${PROTOC} -I ${CMAKE_CURRENT_SOURCE_DIR} --grpc_out=. --plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN}
+    COMMAND ${PROTOC} -I/usr/include -I ${CMAKE_CURRENT_SOURCE_DIR} --cpp_out=. ${CMAKE_CURRENT_SOURCE_DIR}/version.proto
+    COMMAND ${PROTOC} -I/usr/include -I ${CMAKE_CURRENT_SOURCE_DIR} --grpc_out=. --plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN}
     ${CMAKE_CURRENT_SOURCE_DIR}/version.proto
     # Falco gRPC Outputs API
     DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/outputs.proto
-    COMMAND ${PROTOC} -I ${CMAKE_CURRENT_SOURCE_DIR} --cpp_out=. ${CMAKE_CURRENT_SOURCE_DIR}/outputs.proto
+    COMMAND ${PROTOC} -I/usr/include -I ${CMAKE_CURRENT_SOURCE_DIR} --cpp_out=. ${CMAKE_CURRENT_SOURCE_DIR}/outputs.proto
     ${CMAKE_CURRENT_SOURCE_DIR}/schema.proto
-    COMMAND ${PROTOC} -I ${CMAKE_CURRENT_SOURCE_DIR} --grpc_out=. --plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN}
+    COMMAND ${PROTOC} -I/usr/include -I ${CMAKE_CURRENT_SOURCE_DIR} --grpc_out=. --plugin=protoc-gen-grpc=${GRPC_CPP_PLUGIN}
     ${CMAKE_CURRENT_SOURCE_DIR}/outputs.proto
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   )
