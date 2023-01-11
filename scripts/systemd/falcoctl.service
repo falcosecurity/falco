@@ -1,10 +1,11 @@
 [Unit]
-Description=Falcoctl: Administrative tooling for Falco
-Documentation=https://github.com/falcosecurity/falcoctl
+Description=Falco: Automatic rules update service
+Documentation=https://falco.org/docs/
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/falcoctl --follow
+ExecStartPre=/usr/bin/falco --version-json > /etc/falco/falco_versions.json
+ExecStart=/usr/bin/falcoctl --config=/etc/falcoctl/config.yaml artifact follow --list=/etc/falcoctl/follow.yaml --requirements=/etc/falco/falco_versions.json --pidfile=/var/run/falcoctl.pid
 UMask=0077
 TimeoutSec=30
 RestartSec=15s
