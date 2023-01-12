@@ -32,7 +32,7 @@ string sample_yaml =
 
 TEST_CASE("configuration must load YAML data", "[configuration]")
 {
-    yaml_configuration conf;
+    yaml_helper conf;
 
     SECTION("broken YAML")
     {
@@ -58,7 +58,7 @@ TEST_CASE("configuration must load YAML data", "[configuration]")
 
 TEST_CASE("configuration must read YAML fields", "[configuration]")
 {
-	yaml_configuration conf;
+	yaml_helper conf;
     conf.load_from_string(sample_yaml);
 
     SECTION("base level")
@@ -96,7 +96,7 @@ TEST_CASE("configuration must read YAML fields", "[configuration]")
 TEST_CASE("configuration must modify YAML fields", "[configuration]")
 {
     string key = "base_value.subvalue.subvalue2.boolean";
-	yaml_configuration conf;
+	yaml_helper conf;
     conf.load_from_string(sample_yaml);
     REQUIRE(conf.get_scalar<bool>(key, false) == true);
     conf.set_scalar<bool>(key, false);
