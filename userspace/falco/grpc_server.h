@@ -56,7 +56,6 @@ private:
 	std::string m_cert_chain;
 	std::string m_root_certs;
 
-	std::unique_ptr<::grpc::Server> m_server;
 	std::vector<std::thread> m_threads;
 	::grpc::ServerBuilder m_server_builder;
 	void init_mtls_server_builder();
