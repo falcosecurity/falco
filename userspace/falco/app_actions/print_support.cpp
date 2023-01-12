@@ -38,7 +38,6 @@ application::run_result application::print_support()
 		struct utsname sysinfo;
 		std::string cmdline;
 		std::unique_ptr<sinsp> s(new sinsp());
-		char driver_api_version_string[32], driver_schema_version_string[32];
 
 		if(uname(&sysinfo) != 0)
 		{
