@@ -32,7 +32,10 @@ limitations under the License.
 #include "event_drops.h"
 #include "falco_outputs.h"
 
-class yaml_configuration
+/**
+ * @brief An helper class for reading and editing YAML documents
+ */
+class yaml_helper
 {
 public:
 	/**
@@ -110,7 +113,6 @@ public:
 private:
 	YAML::Node m_root;
 	std::string m_input;
-	bool m_is_from_file;
 
 	/**
 	 * Key is a string representing a node in the YAML document.
@@ -201,93 +203,7 @@ private:
 	}
 };
 
-class falco_configuration
-{
-public:
-
-	typedef struct {
-	public:
-		std::string m_name;
-		std::string m_library_path;
-		std::string m_init_config;
-		std::string m_open_params;
-	} plugin_config;
-
-	falco_configuration();
-	virtual ~falco_configuration() = default;
-
-	void init(const std::string& conf_filename, const std::vector<std::string>& cmdline_options);
-	void init(const std::vector<std::string>& cmdline_options);
-
-	static void read_rules_file_directory(const string& path, list<string>& rules_filenames, list<string> &rules_folders);
-
-	// Rules list as passed by the user
-	std::list<std::string> m_rules_filenames;
-	// Actually loaded rules, with folders inspected
-	std::list<std::string> m_loaded_rules_filenames;
-	// List of loaded rule folders
-	std::list<std::string> m_loaded_rules_folders;
-	bool m_json_output;
-	bool m_json_include_output_property;
-	bool m_json_include_tags_property;
-	std::string m_log_level;
-	std::vector<falco::outputs::config> m_outputs;
-	uint32_t m_notifications_rate;
-	uint32_t m_notifications_max_burst;
-
-	falco_common::priority_type m_min_priority;
-
-	bool m_watch_config_files;
-	bool m_buffered_outputs;
-	bool m_time_format_iso_8601;
-	uint32_t m_output_timeout;
-
-	bool m_grpc_enabled;
-	uint32_t m_grpc_threadiness;
-	std::string m_grpc_bind_address;
-	std::string m_grpc_private_key;
-	std::string m_grpc_cert_chain;
-	std::string m_grpc_root_certs;
-
-	bool m_webserver_enabled;
-	uint32_t m_webserver_threadiness;
-	uint32_t m_webserver_listen_port;
-	std::string m_webserver_k8s_healthz_endpoint;
-	bool m_webserver_ssl_enabled;
-	std::string m_webserver_ssl_certificate;
-
-	syscall_evt_drop_actions m_syscall_evt_drop_actions;
-	double m_syscall_evt_drop_threshold;
-	double m_syscall_evt_drop_rate;
-	double m_syscall_evt_drop_max_burst;
-	// Only used for testing
-	bool m_syscall_evt_simulate_drops;
-
-	uint32_t m_syscall_evt_timeout_max_consecutives;
-
-	uint32_t m_metadata_download_max_mb;
-	uint32_t m_metadata_download_chunk_wait_us;
-	uint32_t m_metadata_download_watch_freq_sec;
-
-	// Index corresponding to the syscall buffer dimension.
-	uint16_t m_syscall_buf_size_preset;
-
-	std::vector<plugin_config> m_plugins;
-
-private:
-	void load_yaml(const std::string& config_name, const yaml_configuration& config);
-
-	void init_cmdline_options(yaml_configuration& config, const std::vector<std::string>& cmdline_options);
-
-	/**
-	 * Given a <key>=<value> specifier, set the appropriate option
-	 * in the underlying yaml config. <key> can contain '.'
-	 * characters for nesting. Currently only 1- or 2- level keys
-	 * are supported and only scalar values are supported.
-	 */
-	void set_cmdline_option(yaml_configuration& config, const std::string& spec);
-};
-
+// define a yaml-cpp conversion function for nlohmann json objects
 namespace YAML {
 	template<>
 	struct convert<nlohmann::json> {
@@ -336,74 +252,6 @@ namespace YAML {
 					break;
 			}
 			
-			return true;
-		}
-	};
-
-	template<>
-	struct convert<falco_configuration::plugin_config> {
-
-		// Note that this loses the distinction between init configs
-		// defined as YAML maps or as opaque strings.
-		static Node encode(const falco_configuration::plugin_config & rhs) {
-			Node node;
-			node["name"] = rhs.m_name;
-			node["library_path"] = rhs.m_library_path;
-			node["init_config"] = rhs.m_init_config;
-			node["open_params"] = rhs.m_open_params;
-			return node;
-		}
-
-		static bool decode(const Node& node, falco_configuration::plugin_config & rhs) {
-			if(!node.IsMap())
-			{
-				return false;
-			}
-
-			if(!node["name"])
-			{
-				return false;
-			}
-			rhs.m_name = node["name"].as<std::string>();
-
-			if(!node["library_path"])
-			{
-				return false;
-			}
-			rhs.m_library_path = node["library_path"].as<std::string>();
-			if(!rhs.m_library_path.empty() && rhs.m_library_path.at(0) != '/')
-			{
-				// prepend share dir if path is not absolute
-				rhs.m_library_path = string(FALCO_ENGINE_PLUGINS_DIR) + rhs.m_library_path;
-			}
-
-			if(node["init_config"] && !node["init_config"].IsNull())
-			{
-				// By convention, if the init config is a YAML map we convert it
-				// in a JSON object string. This is useful for plugins implementing
-				// the `get_init_schema` API symbol, which right now support the
-				// JSON Schema specific. If we ever support other schema/data types,
-				// we may want to bundle the conversion logic in an ad-hoc class.
-				// The benefit of this is being able of parsing/editing the config as
-				// a YAML map instead of having an opaque string.
-				if (node["init_config"].IsMap())
-				{
-					nlohmann::json json;
-					YAML::convert<nlohmann::json>::decode(node["init_config"], json);
-					rhs.m_init_config = json.dump();
-				}
-				else
-				{
-					rhs.m_init_config = node["init_config"].as<std::string>();
-				}
-			}
-
-			if(node["open_params"] && !node["open_params"].IsNull())
-			{
-				string open_params = node["open_params"].as<std::string>();
-				rhs.m_open_params = trim(open_params);
-			}
-
 			return true;
 		}
 	};
