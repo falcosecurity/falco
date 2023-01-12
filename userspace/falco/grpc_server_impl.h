@@ -43,6 +43,8 @@ protected:
 	// Version
 	void version(const context& ctx, const version::request& req, version::response& res);
 
+	std::unique_ptr<::grpc::Server> m_server;
+
 private:
 	std::atomic<bool> m_stop{false};
 };

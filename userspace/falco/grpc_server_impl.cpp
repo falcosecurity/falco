@@ -87,4 +87,5 @@ void falco::grpc::server_impl::version(const context& ctx, const version::reques
 void falco::grpc::server_impl::shutdown()
 {
 	m_stop = true;
+	m_server->Shutdown();
 }

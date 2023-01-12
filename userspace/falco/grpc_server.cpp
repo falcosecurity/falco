@@ -222,10 +222,7 @@ void falco::grpc::server::run()
 	}
 	// todo(leodido) > log "gRPC server running: threadiness=m_threads.size()"
 
-	while(server_impl::is_running())
-	{
-		std::this_thread::sleep_for(std::chrono::milliseconds(100));
-	}
+	m_server->Wait();
 	// todo(leodido) > log "stopping gRPC server"
 	stop();
 }
@@ -233,7 +230,6 @@ void falco::grpc::server::run()
 void falco::grpc::server::stop()
 {
 	falco_logger::log(LOG_INFO, "Shutting down gRPC server. Waiting until external connections are closed by clients\n");
-	m_server->Shutdown();
 	m_completion_queue->Shutdown();
 
 	falco_logger::log(LOG_INFO, "Waiting for the gRPC threads to complete\n");
