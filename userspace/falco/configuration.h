@@ -63,7 +63,7 @@ public:
 	* Get a scalar value from the node identified by key.
 	*/
 	template<typename T>
-	const T get_scalar(const std::string& key, const T& default_value)
+	const T get_scalar(const std::string& key, const T& default_value) const
 	{
 		YAML::Node node;
 		get_node(node, key);
@@ -90,7 +90,7 @@ public:
 	* Get the sequence value from the node identified by key.
 	*/
 	template<typename T>
-	void get_sequence(T& ret, const std::string& key)
+	void get_sequence(T& ret, const std::string& key) const
 	{
 		YAML::Node node;
 		get_node(node, key);
@@ -100,7 +100,7 @@ public:
 	/**
 	* Return true if the node identified by key is defined.
 	*/
-	bool is_defined(const std::string& key)
+	bool is_defined(const std::string& key) const
 	{
 		YAML::Node node;
 		get_node(node, key);
@@ -127,7 +127,7 @@ private:
 	 * - MatrixValue[1][3]
 	 * - value1.subvalue2.subvalue3
 	 */
-	void get_node(YAML::Node &ret, const std::string &key)
+	void get_node(YAML::Node &ret, const std::string &key) const
 	{
 		try
 		{
@@ -182,7 +182,7 @@ private:
 	}
 	
 	template<typename T>
-	void get_sequence_from_node(T& ret, const YAML::Node& node)
+	void get_sequence_from_node(T& ret, const YAML::Node& node) const
 	{
 		if(node.IsDefined())
 		{
@@ -214,7 +214,7 @@ public:
 	} plugin_config;
 
 	falco_configuration();
-	virtual ~falco_configuration();
+	virtual ~falco_configuration() = default;
 
 	void init(const std::string& conf_filename, const std::vector<std::string>& cmdline_options);
 	void init(const std::vector<std::string>& cmdline_options);
@@ -275,7 +275,9 @@ public:
 	std::vector<plugin_config> m_plugins;
 
 private:
-	void init_cmdline_options(const std::vector<std::string>& cmdline_options);
+	void load_yaml(const std::string& config_name, const yaml_configuration& config);
+
+	void init_cmdline_options(yaml_configuration& config, const std::vector<std::string>& cmdline_options);
 
 	/**
 	 * Given a <key>=<value> specifier, set the appropriate option
@@ -283,9 +285,7 @@ private:
 	 * characters for nesting. Currently only 1- or 2- level keys
 	 * are supported and only scalar values are supported.
 	 */
-	void set_cmdline_option(const std::string& spec);
-
-	yaml_configuration* m_config;
+	void set_cmdline_option(yaml_configuration& config, const std::string& spec);
 };
 
 namespace YAML {
