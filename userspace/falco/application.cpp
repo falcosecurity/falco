@@ -159,8 +159,6 @@ bool application::init(int argc, char **argv, std::string &errstr)
 		m_state->cmdline += *arg;
 	}
 
-	// initialize default config with cmdline overrides (-o option)
-	m_state->config->init(m_options.cmdline_config_options);
 	m_initialized = true;
 	return true;
 }
