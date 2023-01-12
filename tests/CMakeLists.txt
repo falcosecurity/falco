@@ -23,7 +23,7 @@ set(
   engine/test_filter_evttype_resolver.cpp
   engine/test_filter_warning_resolver.cpp
   engine/test_plugin_requirements.cpp
-  falco/test_configuration.cpp
+  falco/test_yaml_helper.cpp
 )
 
 set(FALCO_TESTED_LIBRARIES falco_engine ${YAMLCPP_LIB})
