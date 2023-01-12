@@ -319,7 +319,10 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 	std::list<falco_configuration::plugin_config> plugins;
 	try
 	{
-		config.get_sequence<std::list<falco_configuration::plugin_config>>(plugins, string("plugins"));
+		if (config.is_defined("plugins"))
+		{
+			config.get_sequence<std::list<falco_configuration::plugin_config>>(plugins, string("plugins"));
+		}
 	}
 	catch (exception &e)
 	{

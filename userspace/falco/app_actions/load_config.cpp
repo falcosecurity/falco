@@ -20,17 +20,31 @@ using namespace falco::app;
 
 application::run_result application::load_config()
 {
+	try
+	{
+		if (!m_options.conf_filename.empty())
+		{
+			m_state->config->init(m_options.conf_filename, m_options.cmdline_config_options);
+		}
+		else
+		{
+			m_state->config->init(m_options.cmdline_config_options);
+		}
+	}
+	catch (std::exception& e)
+	{
+		return run_result::fatal(e.what());
+	}
+
+	// log after config init because config determines where logs go
+	falco_logger::set_time_format_iso_8601(m_state->config->m_time_format_iso_8601);
+	falco_logger::log(LOG_INFO, "Falco version: " + std::string(FALCO_VERSION) + " (" + std::string(FALCO_TARGET_ARCH) + ")\n");
+	if (!m_state->cmdline.empty())
+	{
+		falco_logger::log(LOG_DEBUG, "CLI args: " + m_state->cmdline);
+	}
 	if (!m_options.conf_filename.empty())
 	{
-		m_state->config->init(m_options.conf_filename, m_options.cmdline_config_options);
-		falco_logger::set_time_format_iso_8601(m_state->config->m_time_format_iso_8601);
-
-		// log after config init because config determines where logs go
-		falco_logger::log(LOG_INFO, "Falco version: " + std::string(FALCO_VERSION) + " (" + std::string(FALCO_TARGET_ARCH) + ")\n");
-		if (!m_state->cmdline.empty())
-		{
-			falco_logger::log(LOG_DEBUG, "CLI args: " + m_state->cmdline);
-		}
 		falco_logger::log(LOG_INFO, "Falco initialized with configuration file: " + m_options.conf_filename + "\n");
 	}
 
