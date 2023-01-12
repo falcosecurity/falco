@@ -174,13 +174,13 @@ bool application::run(std::string &errstr, bool &restart)
 	// dependencies are honored (e.g. don't process events before
 	// loading plugins, opening inspector, etc.).
 	std::list<std::function<run_result()>> run_steps = {
+		std::bind(&application::load_config, this),
 		std::bind(&application::print_help, this),
 		std::bind(&application::print_version, this),
 		std::bind(&application::print_page_size, this),
 		std::bind(&application::print_generated_gvisor_config, this),
 		std::bind(&application::print_ignored_events, this),
 		std::bind(&application::print_syscall_events, this),
-		std::bind(&application::load_config, this),
 		std::bind(&application::print_plugin_info, this),
 		std::bind(&application::list_plugins, this),
 		std::bind(&application::load_plugins, this),
