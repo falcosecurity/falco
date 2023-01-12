@@ -62,7 +62,7 @@ falco_configuration::falco_configuration():
 
 void falco_configuration::init(const std::vector<std::string>& cmdline_options)
 {
-	yaml_configuration config;
+	yaml_helper config;
 	config.load_from_string("");
 	init_cmdline_options(config, cmdline_options);
 	load_yaml("default", config);
@@ -70,7 +70,7 @@ void falco_configuration::init(const std::vector<std::string>& cmdline_options)
 
 void falco_configuration::init(const std::string& conf_filename, const std::vector<std::string> &cmdline_options)
 {
-	yaml_configuration config;
+	yaml_helper config;
 	try
 	{
 		config.load_from_file(conf_filename);
@@ -85,12 +85,15 @@ void falco_configuration::init(const std::string& conf_filename, const std::vect
 	load_yaml(conf_filename, config);
 }
 
-void falco_configuration::load_yaml(const std::string& config_name, const yaml_configuration& config)
+void falco_configuration::load_yaml(const std::string& config_name, const yaml_helper& config)
 {
 	list<string> rules_files;
 
 	config.get_sequence<list<string>>(rules_files, string("rules_file"));
 
+	m_rules_filenames.clear();
+	m_loaded_rules_filenames.clear();
+	m_loaded_rules_folders.clear();
 	for(auto &file : rules_files)
 	{
 		// Here, we only include files that exist
@@ -105,6 +108,7 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_c
 	m_json_include_output_property = config.get_scalar<bool>("json_include_output_property", true);
 	m_json_include_tags_property = config.get_scalar<bool>("json_include_tags_property", true);
 
+	m_outputs.clear();
 	falco::outputs::config file_output;
 	file_output.name = "file";
 	if(config.get_scalar<bool>("file_output.enabled", false))
@@ -236,6 +240,7 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_c
 	std::list<string> syscall_event_drop_acts;
 	config.get_sequence(syscall_event_drop_acts, "syscall_event_drops.actions");
 
+	m_syscall_evt_drop_actions.clear();
 	for(std::string &act : syscall_event_drop_acts)
 	{
 		if(act == "ignore")
@@ -323,6 +328,7 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_c
 	}
 
 	// If load_plugins was specified, only save plugins matching those in values
+	m_plugins.clear();
 	for (auto &p : plugins)
 	{
 		// If load_plugins was not specified at all, every
@@ -417,7 +423,7 @@ static bool split(const string &str, char delim, pair<string, string> &parts)
 	return true;
 }
 
-void falco_configuration::init_cmdline_options(yaml_configuration& config, const vector<string> &cmdline_options)
+void falco_configuration::init_cmdline_options(yaml_helper& config, const vector<string> &cmdline_options)
 {
 	for(const string &option : cmdline_options)
 	{
@@ -425,7 +431,7 @@ void falco_configuration::init_cmdline_options(yaml_configuration& config, const
 	}
 }
 
-void falco_configuration::set_cmdline_option(yaml_configuration& config, const string &opt)
+void falco_configuration::set_cmdline_option(yaml_helper& config, const string &opt)
 {
 	pair<string, string> keyval;
 
