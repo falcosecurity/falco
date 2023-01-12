@@ -211,7 +211,6 @@ void cmdline_options::define()
 		("V,validate",                    "Read the contents of the specified rules(s) file and exit. This option can be passed multiple times to validate multiple files.", cxxopts::value(validate_rules_filenames), "<rules_file>")
 		("v",                             "Verbose output.", cxxopts::value(verbose)->default_value("false"))
 		("version",                       "Print version number.", cxxopts::value(print_version_info)->default_value("false"))
-		("version-json",                  "Print version information in JSON format", cxxopts::value(print_version_info_json)->default_value("false"))
 		("page-size",                     "Print the system page size (may help you to choose the right syscall ring-buffer size).", cxxopts::value(print_page_size)->default_value("false"));
 
 

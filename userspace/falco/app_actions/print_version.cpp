@@ -26,34 +26,29 @@ application::run_result application::print_version()
 {
 	if(m_options.print_version_info)
 	{
-		std::unique_ptr<sinsp> s(new sinsp());
-		printf("Falco version: %s\n", FALCO_VERSION);
-		printf("Libs version:  %s\n", FALCOSECURITY_LIBS_VERSION);
-		printf("Plugin API:    %s\n", application::get_plugin_api_version().c_str());
-		printf("Engine:        %d\n", FALCO_ENGINE_VERSION);
-
-		printf("Driver:\n");
-		printf("  API version:    %s\n", application::get_driver_api_version().c_str());
-		printf("  Schema version: %s\n", application::get_driver_api_version().c_str());
-		printf("  Default driver: %s\n", DRIVER_VERSION);
-
-		return run_result::exit();
-	}
-	
-	if(m_options.print_version_info_json)
-	{
-		nlohmann::json version_info;
-
-		version_info["falco_version"] = FALCO_VERSION;
-		version_info["libs_version"] = FALCOSECURITY_LIBS_VERSION;
-		version_info["plugin_api_version"] = application::get_plugin_api_version();
-		version_info["driver_api_version"] = application::get_driver_api_version();
-		version_info["driver_schema_version"] = application::get_driver_schema_version();
-		version_info["default_driver_version"] = DRIVER_VERSION;
-		version_info["engine_version"] = std::to_string(FALCO_ENGINE_VERSION);
-
-		printf("%s\n", version_info.dump().c_str());
-
+		if(m_state->config->m_json_output)
+		{
+			nlohmann::json version_info;
+			version_info["falco_version"] = FALCO_VERSION;
+			version_info["libs_version"] = FALCOSECURITY_LIBS_VERSION;
+			version_info["plugin_api_version"] = application::get_plugin_api_version();
+			version_info["driver_api_version"] = application::get_driver_api_version();
+			version_info["driver_schema_version"] = application::get_driver_schema_version();
+			version_info["default_driver_version"] = DRIVER_VERSION;
+			version_info["engine_version"] = std::to_string(FALCO_ENGINE_VERSION);
+			printf("%s\n", version_info.dump().c_str());
+		}
+		else
+		{
+			printf("Falco version: %s\n", FALCO_VERSION);
+			printf("Libs version:  %s\n", FALCOSECURITY_LIBS_VERSION);
+			printf("Plugin API:    %s\n", application::get_plugin_api_version().c_str());
+			printf("Engine:        %d\n", FALCO_ENGINE_VERSION);
+			printf("Driver:\n");
+			printf("  API version:    %s\n", application::get_driver_api_version().c_str());
+			printf("  Schema version: %s\n", application::get_driver_api_version().c_str());
+			printf("  Default driver: %s\n", DRIVER_VERSION);
+		}
 		return run_result::exit();
 	}
 
