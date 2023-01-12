@@ -117,7 +117,9 @@ get_target_id() {
 		# Older RHEL distros
 		OS_ID=rhel
 	else
-		return 1
+		# No target id can be determinand
+		TARGET_ID="undetermined"
+		return
 	fi
 
 	# Overwrite the OS_ID if /etc/VERSION file is present.
@@ -227,7 +229,6 @@ get_target_id() {
 		TARGET_ID=$(echo "${OS_ID}" | tr '[:upper:]' '[:lower:]')
 		;;
 	esac
-	return 0
 }
 
 flatcar_relocate_tools() {
@@ -343,9 +344,9 @@ load_kernel_module_download() {
 print_clean_termination() {
 	echo
 	echo "[SUCCESS] Cleaning phase correctly terminated."
-	echo 
+	echo
 	echo "================ Cleaning phase ================"
-	echo 
+	echo
 }
 
 print_filename_components() {
@@ -355,10 +356,24 @@ print_filename_components() {
 	echo " - kernel version: ${KERNEL_VERSION}"
 }
 
+print_as_env_vars() {
+	echo "ARCH=\"${ARCH}\""
+	echo "KERNEL_RELEASE=\"${KERNEL_RELEASE}\""
+	echo "KERNEL_VERSION=\"${KERNEL_VERSION}\""
+	echo "ENABLE_COMPILE=\"${ENABLE_COMPILE}\""
+	echo "ENABLE_DOWNLOAD=\"${ENABLE_DOWNLOAD}\""
+	echo "TARGET_ID=\"${TARGET_ID}\""
+	echo "DRIVER=\"${DRIVER}\""
+	echo "DRIVERS_REPO=\"${DRIVERS_REPO}\""
+	echo "DRIVER_VERSION=\"${DRIVER_VERSION}\""
+	echo "DRIVER_NAME=\"${DRIVER_NAME}\""
+	echo "FALCO_VERSION=\"${FALCO_VERSION}\""
+}
+
 clean_kernel_module() {
-	echo 
+	echo
 	echo "================ Cleaning phase ================"
-	echo 
+	echo
 
 	if ! hash lsmod > /dev/null 2>&1; then
 		>&2 echo "This program requires lsmod."
@@ -401,7 +416,7 @@ clean_kernel_module() {
 		echo "[WARNING] '${KMOD_NAME}' module is still loaded, you could have incompatibility issues."
 		echo
 	fi
-	
+
 	if ! hash dkms >/dev/null 2>&1; then
 		echo "- Skipping dkms remove (dkms not found)."
 		print_clean_termination
@@ -666,7 +681,8 @@ print_usage() {
 	echo "  --clean        try to remove an already present driver installation"
 	echo "  --compile      try to compile the driver locally (default true)"
 	echo "  --download     try to download a prebuilt driver (default true)"
-	echo "  --source-only  skip execution and allow sourcing in another script"
+	echo "  --source-only  skip execution and allow sourcing in another script using `. falco-driver-loader`"
+	echo "  --print-env    skip execution and print env variables for other tools to consume"
 	echo ""
 	echo "Environment variables:"
 	echo "  DRIVERS_REPO             specify different URL(s) where to look for prebuilt Falco drivers (comma separated)"
@@ -714,7 +730,8 @@ DRIVER_VERSION=${DRIVER_VERSION:-"@DRIVER_VERSION@"}
 DRIVER_NAME=${DRIVER_NAME:-"@DRIVER_NAME@"}
 FALCO_VERSION="@FALCO_VERSION@"
 
-TARGET_ID="placeholder" # when no target id can be fetched, we try to build the driver from source anyway, using a placeholder name
+TARGET_ID=
+get_target_id
 
 DRIVER="module"
 if [ -v FALCO_BPF_PROBE ]; then
@@ -729,6 +746,7 @@ ENABLE_DOWNLOAD=
 clean=
 has_args=
 has_opts=
+print_env=
 source_only=
 while test $# -gt 0; do
 	case "$1" in
@@ -765,6 +783,10 @@ while test $# -gt 0; do
 			source_only="true"
 			shift
 			;;
+		--print-env)
+			print_env="true"
+			shift
+			;;
 		--*)
 			>&2 echo "Unknown option: $1"
 			print_usage
@@ -783,55 +805,61 @@ if [ -z "$has_opts" ]; then
 	ENABLE_DOWNLOAD="yes"
 fi
 
-if [ -z "$source_only" ]; then
-	echo "* Running falco-driver-loader for: falco version=${FALCO_VERSION}, driver version=${DRIVER_VERSION}, arch=${ARCH}, kernel release=${KERNEL_RELEASE}, kernel version=${KERNEL_VERSION}"
+if [ -n "$source_only" ]; then
+	# Return or exit, depending if we've been sourced.
+	(return 0 2>/dev/null) && return || exit 0
+fi
 
-	if [ "$(id -u)" != 0 ]; then
-		>&2 echo "This program must be run as root (or with sudo)"
+if [ -n "$print_env" ]; then
+	print_as_env_vars
+	exit 0
+fi
+
+echo "* Running falco-driver-loader for: falco version=${FALCO_VERSION}, driver version=${DRIVER_VERSION}, arch=${ARCH}, kernel release=${KERNEL_RELEASE}, kernel version=${KERNEL_VERSION}"
+
+if [ "$(id -u)" != 0 ]; then
+	>&2 echo "This program must be run as root (or with sudo)"
+	exit 1
+fi
+
+if [ "$TARGET_ID" = "undetermined" ]; then
+	if [ -n "$ENABLE_COMPILE" ]; then
+		ENABLE_DOWNLOAD=
+		>&2 echo "Detected an unsupported target system, please get in touch with the Falco community. Trying to compile anyway."
+	else
+		>&2 echo "Detected an unsupported target system, please get in touch with the Falco community."
+		exit 1
+	fi
+fi
+
+if [ -n "$clean" ]; then
+	if [ -n "$has_opts" ]; then
+		>&2 echo "Cannot use --clean with other options"
 		exit 1
 	fi
 
-	get_target_id
-	res=$?
-	if [ $res != 0 ]; then
-		if [ -n "$ENABLE_COMPILE" ]; then
-			ENABLE_DOWNLOAD=
-			>&2 echo "Detected an unsupported target system, please get in touch with the Falco community. Trying to compile anyway."
-		else
-			>&2 echo "Detected an unsupported target system, please get in touch with the Falco community."
-			exit 1
-		fi
+	echo "* Running falco-driver-loader with: driver=$DRIVER, clean=yes"
+	case $DRIVER in
+	module)
+		clean_kernel_module
+		;;
+	bpf)
+		>&2 echo "--clean not supported for driver=bpf"
+		exit 1
+	esac
+else
+	if ! hash curl > /dev/null 2>&1; then
+		>&2 echo "This program requires curl"
+		exit 1
 	fi
 
-	if [ -n "$clean" ]; then
-		if [ -n "$has_opts" ]; then
-			>&2 echo "Cannot use --clean with other options"
-			exit 1
-		fi
-
-		echo "* Running falco-driver-loader with: driver=$DRIVER, clean=yes"
-		case $DRIVER in
+	echo "* Running falco-driver-loader with: driver=$DRIVER, compile=${ENABLE_COMPILE:-"no"}, download=${ENABLE_DOWNLOAD:-"no"}"
+	case $DRIVER in
 		module)
-			clean_kernel_module
+			load_kernel_module
 			;;
 		bpf)
-			>&2 echo "--clean not supported for driver=bpf"
-			exit 1
-		esac
-	else
-		if ! hash curl > /dev/null 2>&1; then
-			>&2 echo "This program requires curl"
-			exit 1
-		fi
-
-		echo "* Running falco-driver-loader with: driver=$DRIVER, compile=${ENABLE_COMPILE:-"no"}, download=${ENABLE_DOWNLOAD:-"no"}"
-		case $DRIVER in
-			module)
-				load_kernel_module
-				;;
-			bpf)
-				load_bpf_probe
-				;;
-		esac
-	fi
+			load_bpf_probe
+			;;
+	esac
 fi
