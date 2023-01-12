@@ -315,6 +315,7 @@ private:
 	run_result list_fields();
 	run_result list_plugins();
 	run_result load_config();
+	run_result require_config_file();
 	run_result load_plugins();
 	run_result load_rules_files();
 	run_result create_requested_paths();

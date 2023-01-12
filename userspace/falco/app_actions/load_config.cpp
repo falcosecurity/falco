@@ -33,7 +33,15 @@ application::run_result application::load_config()
 		}
 		falco_logger::log(LOG_INFO, "Falco initialized with configuration file: " + m_options.conf_filename + "\n");
 	}
-	else
+
+	m_state->config->m_buffered_outputs = !m_options.unbuffered_outputs;
+
+	return run_result::ok();
+}
+
+application::run_result application::require_config_file()
+{
+	if (m_options.conf_filename.empty())
 	{
 #ifndef BUILD_TYPE_RELEASE
 		return run_result::fatal(std::string("You must create a config file at ")  + FALCO_SOURCE_CONF_FILE + ", " + FALCO_INSTALL_CONF_FILE + " or by passing -c");
@@ -41,8 +49,5 @@ application::run_result application::load_config()
 		return run_result::fatal(std::string("You must create a config file at ")  + FALCO_INSTALL_CONF_FILE + " or by passing -c");
 #endif
 	}
-
-	m_state->config->m_buffered_outputs = !m_options.unbuffered_outputs;
-
 	return run_result::ok();
 }
