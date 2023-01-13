@@ -6,7 +6,7 @@ ARG VERSION_BUCKET=bin
 ENV FALCO_VERSION=${FALCO_VERSION}
 ENV VERSION_BUCKET=${VERSION_BUCKET}
 
-RUN apt-get -y update && apt-get -y install gridsite-clients curl
+RUN apt-get -y update && apt-get -y install gridsite-clients curl ca-certificates
 
 WORKDIR /
 
