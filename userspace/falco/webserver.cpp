@@ -16,6 +16,7 @@ limitations under the License.
 
 #include "webserver.h"
 #include "falco_utils.h"
+#include "versions_info.h"
 #include <atomic>
 
 falco_webserver::~falco_webserver()
@@ -24,6 +25,7 @@ falco_webserver::~falco_webserver()
 }
 
 void falco_webserver::start(
+        const std::shared_ptr<sinsp>& inspector,
         uint32_t threadiness,
         uint32_t listen_port,
         std::string& healthz_endpoint,
@@ -55,6 +57,13 @@ void falco_webserver::start(
     m_server->Get(healthz_endpoint,
         [](const httplib::Request &, httplib::Response &res) {
             res.set_content("{\"status\": \"ok\"}", "application/json");
+        });
+    
+    // setup versions endpoint
+    const auto versions_json_str = falco::versions_info(inspector).as_json().dump();
+    m_server->Get("/versions",
+        [versions_json_str](const httplib::Request &, httplib::Response &res) {
+            res.set_content(versions_json_str, "application/json");
         });
 
     // run server in a separate thread

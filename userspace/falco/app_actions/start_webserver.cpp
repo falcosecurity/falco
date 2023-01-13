@@ -34,6 +34,7 @@ application::run_result application::start_webserver()
 			+ ssl_option + "\n");
 
 		m_state->webserver.start(
+			m_state->offline_inspector,
 			m_state->config->m_webserver_threadiness,
 			m_state->config->m_webserver_listen_port, 
 			m_state->config->m_webserver_k8s_healthz_endpoint,
