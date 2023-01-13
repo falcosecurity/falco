@@ -19,6 +19,8 @@ limitations under the License.
 #define CPPHTTPLIB_ZLIB_SUPPORT
 #include <httplib.h>
 #include <thread>
+#include <memory>
+#include <sinsp.h>
 #include "configuration.h"
 
 class falco_webserver
@@ -26,6 +28,7 @@ class falco_webserver
 public:
 	virtual ~falco_webserver();
 	virtual void start(
+		const std::shared_ptr<sinsp>& inspector,
 		uint32_t threadiness,
 		uint32_t listen_port,
 		std::string& healthz_endpoint,
