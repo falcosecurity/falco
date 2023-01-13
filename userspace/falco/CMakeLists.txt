@@ -54,6 +54,7 @@ set(
   outputs_syslog.cpp
   event_drops.cpp
   stats_writer.cpp
+  versions_info.cpp
   falco.cpp
 )
 
