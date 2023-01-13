@@ -16,7 +16,7 @@ limitations under the License.
 
 #include <sys/utsname.h>
 
-#include "falco_engine_version.h"
+#include "versions_info.h"
 #include "application.h"
 
 using namespace falco::app;
@@ -37,21 +37,15 @@ application::run_result application::print_support()
 		nlohmann::json support;
 		struct utsname sysinfo;
 		std::string cmdline;
-		std::unique_ptr<sinsp> s(new sinsp());
 
 		if(uname(&sysinfo) != 0)
 		{
 			return run_result::fatal(string("Could not uname() to find system info: ") + strerror(errno));
 		}
 
-		support["version"] = FALCO_VERSION;
-
-		support["libs_version"] = FALCOSECURITY_LIBS_VERSION;
-		support["plugin_api_version"] = application::get_plugin_api_version();
-		
-		support["driver_api_version"] = application::get_driver_api_version();
-		support["driver_schema_version"] = application::get_driver_schema_version();
-		support["default_driver_version"] = DRIVER_VERSION;
+		const versions_info infos(m_state->offline_inspector);
+		support["version"] = infos.falco_version;
+		support["engine_info"] = infos.as_json();
 
 		support["system_info"]["sysname"] = sysinfo.sysname;
 		support["system_info"]["nodename"] = sysinfo.nodename;
@@ -59,7 +53,6 @@ application::run_result application::print_support()
 		support["system_info"]["version"] = sysinfo.version;
 		support["system_info"]["machine"] = sysinfo.machine;
 		support["cmdline"] = m_state->cmdline;
-		support["engine_info"]["engine_version"] = FALCO_ENGINE_VERSION;
 		support["config"] = read_file(m_options.conf_filename);
 		support["rules_files"] = nlohmann::json::array();
 		for(auto filename : m_state->config->m_loaded_rules_filenames)

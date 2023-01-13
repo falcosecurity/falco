@@ -401,41 +401,6 @@ private:
 		return g_reopen_outputs.load(std::memory_order_seq_cst) != APP_SIGNAL_NOT_SET;
 	}
 
-	static inline std::string get_plugin_api_version()
-	{
-		std::unique_ptr<sinsp> s(new sinsp());
-		return std::string(s->get_plugin_api_version());
-	}
-
-	// TODO: move string conversion to scap
-	static inline std::string get_driver_api_version()
-	{
-		char driver_api_version_string[32];
-		std::unique_ptr<sinsp> s(new sinsp());
-
-		auto driver_api_version = s->get_scap_api_version();
-		unsigned long driver_api_major = PPM_API_VERSION_MAJOR(driver_api_version);
-		unsigned long driver_api_minor = PPM_API_VERSION_MINOR(driver_api_version);
-		unsigned long driver_api_patch = PPM_API_VERSION_PATCH(driver_api_version);
-
-		snprintf(driver_api_version_string, sizeof(driver_api_version_string), "%lu.%lu.%lu", driver_api_major, driver_api_minor, driver_api_patch);
-		return std::string(driver_api_version_string);
-	}
-
-	static inline std::string get_driver_schema_version()
-	{
-		char driver_schema_version_string[32];
-		std::unique_ptr<sinsp> s(new sinsp());
-
-		auto driver_schema_version = s->get_scap_schema_version();
-		unsigned long driver_schema_major = PPM_API_VERSION_MAJOR(driver_schema_version);
-		unsigned long driver_schema_minor = PPM_API_VERSION_MINOR(driver_schema_version);
-		unsigned long driver_schema_patch = PPM_API_VERSION_PATCH(driver_schema_version);
-		snprintf(driver_schema_version_string, sizeof(driver_schema_version_string), "%lu.%lu.%lu", driver_schema_major, driver_schema_minor, driver_schema_patch);
-
-		return std::string(driver_schema_version_string);
-	}
-
 	std::unique_ptr<state> m_state;
 	cmdline_options m_options;
 	bool m_initialized;

@@ -16,9 +16,8 @@ limitations under the License.
 
 #include <nlohmann/json.hpp>
 
-#include "config_falco.h"
 #include "application.h"
-#include "falco_engine_version.h"
+#include "versions_info.h"
 
 using namespace falco::app;
 
@@ -26,28 +25,21 @@ application::run_result application::print_version()
 {
 	if(m_options.print_version_info)
 	{
+		const versions_info info(m_state->offline_inspector);
 		if(m_state->config->m_json_output)
 		{
-			nlohmann::json version_info;
-			version_info["falco_version"] = FALCO_VERSION;
-			version_info["libs_version"] = FALCOSECURITY_LIBS_VERSION;
-			version_info["plugin_api_version"] = application::get_plugin_api_version();
-			version_info["driver_api_version"] = application::get_driver_api_version();
-			version_info["driver_schema_version"] = application::get_driver_schema_version();
-			version_info["default_driver_version"] = DRIVER_VERSION;
-			version_info["engine_version"] = std::to_string(FALCO_ENGINE_VERSION);
-			printf("%s\n", version_info.dump().c_str());
+			printf("%s\n", info.as_json().dump().c_str());
 		}
 		else
 		{
-			printf("Falco version: %s\n", FALCO_VERSION);
-			printf("Libs version:  %s\n", FALCOSECURITY_LIBS_VERSION);
-			printf("Plugin API:    %s\n", application::get_plugin_api_version().c_str());
-			printf("Engine:        %d\n", FALCO_ENGINE_VERSION);
+			printf("Falco version: %s\n", info.falco_version.c_str());
+			printf("Libs version:  %s\n", info.libs_version.c_str());
+			printf("Plugin API:    %s\n", info.plugin_api_version.c_str());
+			printf("Engine:        %s\n", info.engine_version.c_str());
 			printf("Driver:\n");
-			printf("  API version:    %s\n", application::get_driver_api_version().c_str());
-			printf("  Schema version: %s\n", application::get_driver_api_version().c_str());
-			printf("  Default driver: %s\n", DRIVER_VERSION);
+			printf("  API version:    %s\n", info.driver_api_version.c_str());
+			printf("  Schema version: %s\n", info.driver_schema_version.c_str());
+			printf("  Default driver: %s\n", info.default_driver_version.c_str());
 		}
 		return run_result::exit();
 	}
