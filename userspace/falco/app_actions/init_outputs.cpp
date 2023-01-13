@@ -25,7 +25,7 @@ application::run_result application::init_outputs()
 {
 	if (m_state->config->m_outputs.empty())
 	{
-		return run_result::fatal("No outputs configured. Please configure at least one output file output enabled but no filename in configuration block");
+		return run_result::fatal("No output configured, please make sure at least one output is configured and enabled.");
 	}
 
 	// read hostname
