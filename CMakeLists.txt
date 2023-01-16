@@ -201,7 +201,7 @@ if(NOT MINIMAL_BUILD)
 endif()
 
 # Rules
-add_subdirectory(rules)
+include(rules)
 
 # Dockerfiles
 add_subdirectory(docker)
