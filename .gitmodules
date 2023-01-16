@@ -1,0 +1,4 @@
+[submodule "submodules/falcosecurity-rules"]
+	path = submodules/falcosecurity-rules
+	url = https://github.com/falcosecurity/rules.git
+	branch = main
