@@ -283,10 +283,17 @@ file_output:
 stdout_output:
   enabled: true
 
-# Falco contains an embedded webserver that is used to implement an health
-# endpoint for checking if Falco is up and running. These config options control
-# the behavior of that webserver. By default, the webserver is enabled and
-# the endpoint is /healthz.
+# Falco supports an embedded webserver and exposes the following endpoints:
+# - /healthz: health endpoint useful for checking if Falco is up and running
+#   (the endpoint name is configurable).
+# - /versions: responds with a JSON object containing version numbers of the
+#   internal Falco components (similar output as `falco --version -o json_output=true`).
+# 
+# # NOTE: the /versions endpoint is useful to other services (such as falcoctl)
+# to retrieve info about a running Falco instance. Make sure the webserver is
+# enabled if you're using falcoctl either locally or with Kubernetes.
+# 
+# The following options control the behavior of that webserver (enabled by default).
 #
 # The ssl_certificate is a combination SSL Certificate and corresponding
 # key contained in a single file. You can generate a key/cert as follows:
