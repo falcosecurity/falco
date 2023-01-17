@@ -2,7 +2,7 @@
 set -e
 
 usage() {
-    echo "usage: $0 -f <package_x86_64.deb> -f <package_aarch64.deb> -r <deb|deb-dev>"
+    echo "usage: $0 -f <package_x86_64.deb> -f <package_aarch64.deb> -r <deb|deb-dev> [-s]"
     exit 1
 }
 
@@ -21,6 +21,18 @@ join_arr() {
   echo "$*"
 }
 
+# Updates the signature of a DEB package in the local repository
+#
+# $1: path of the repository.
+# $2: suite (eg. "stable")
+# $3: path of the DEB file.
+sign_deb() {
+    pushd $1/$2 > /dev/null
+    rm -f $(basename -- $3).asc
+    gpg --detach-sign --digest-algo SHA256 --armor $(basename -- $3)
+    popd > /dev/null
+}
+
 # Add a package to the local DEB repository
 #
 # $1: path of the repository.
@@ -28,10 +40,7 @@ join_arr() {
 # $3: path of the DEB file.
 add_deb() {
     cp -f $3 $1/$2
-    pushd $1/$2 > /dev/null
-    rm -f $(basename -- $3).asc
-    gpg --detach-sign --digest-algo SHA256 --armor $(basename -- $3)
-    popd > /dev/null
+    sign_deb $1 $2 $3
 
     # Get package architecture from dpkg
     local arch=$(dpkg --info $3 |  awk '/Architecture/ {printf "%s", $2}')
@@ -102,7 +111,7 @@ update_repo() {
 }
 
 # parse options
-while getopts ":f::r:" opt; do
+while getopts ":f::r::s" opt; do
     case "${opt}" in
         f )
           files+=("${OPTARG}")
@@ -110,6 +119,9 @@ while getopts ":f::r:" opt; do
         r )
           repo="${OPTARG}"
           [[ "${repo}" == "deb" || "${repo}" == "deb-dev" ]] || usage
+          ;;
+        s )
+          sign_all="true"
           ;;
         : )
           echo "invalid option: ${OPTARG} requires an argument" 1>&2
@@ -147,7 +159,19 @@ echo "Fetching ${s3_bucket_repo}..."
 mkdir -p ${tmp_repo_path}
 aws s3 cp ${s3_bucket_repo} ${tmp_repo_path} --recursive
 
-# update the repo
+# update signatures for all existing packages
+if [ "${sign_all}" ]; then
+  for file in ${tmp_repo_path}/${debSuite}/*; do
+    if [ -f "$file" ]; then # exclude directories, symlinks, etc...
+      if [[ ! $file == *.asc ]]; then # exclude signature files
+        echo "Signing ${file}..."
+        sign_deb ${tmp_repo_path} ${debSuite} ${file}
+      fi
+    fi
+  done
+fi
+
+# update the repo by adding new packages
 for file in "${files[@]}"; do
   echo "Adding ${file}..."
   add_deb ${tmp_repo_path} ${debSuite} ${file}
