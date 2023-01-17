@@ -225,23 +225,72 @@ syscall_event_timeouts:
 
 syscall_buf_size_preset: 4
 
-
 ############## [EXPERIMENTAL] Modern BPF probe specific ##############
+# Please note: these configs regard only the modern BPF probe. They
+# are experimental so they could change over releases.
+#
+# `cpus_for_each_syscall_buffer`
+#
+# --- [Description]
+# 
+# This is an index that controls how many CPUs you want to assign to a single
+# syscall buffer (ring buffer). By default every CPU has its syscall buffer, 
+# so the mapping is 1:1. The modern BPF probe allows you to choose a different 
+# mapping, for example, 2:1 would mean a syscall buffer every 2 CPUs
+#
+# --- [Usage]
+#
+# You can choose between different indexes: from `0` to `MAX_NUMBER_ONLINE_CPUs`.
+# `0` is a special value and it means a single syscall buffer shared between all 
+# your online CPUs. `0` has the same effect as `MAX_NUMBER_ONLINE_CPUs`, the rationale
+# is that `0` allows you to create a single buffer without knowing the number of online
+# CPUs on your system.
+# Let's consider an example to better understand it:
+#
+# Consider a system with 7 online CPUs:
+#
+#          CPUs     0  X  2  3  X  X  6  7  8  9   (X means offline CPU) 
+#
+# - `1` (Default value) means a syscall buffer for each CPU so 7 buffers
+#
+#          CPUs     0  X  2  3  X  X  6  7  8  9   (X means offline CPU) 
+#                   |     |  |        |  |  |  |
+#       BUFFERs     0     1  2        3  4  5  6
+# 
+# - `2` means a syscall buffer for each CPU pair, so 4 buffers
+#
+#          CPUs     0  X  2  3  X  X  6  7  8  9   (X means offline CPU) 
+#                   |     |  |        |  |  |  |
+#       BUFFERs     0     0  1        1  2  2  3
+#
+# Please note that we need 4 buffers, 3 buffers are associated with CPU pairs, the last
+# one is mapped with just 1 CPU since we have an odd number of CPUs.
+#
+# - `0` or `MAX_NUMBER_ONLINE_CPUs` mean a syscall buffer shared between all CPUs, so 1 buffer
+#
+#          CPUs     0  X  2  3  X  X  6  7  8  9   (X means offline CPU) 
+#                   |     |  |        |  |  |  |
+#       BUFFERs     0     0  0        0  0  0  0
+#
+# Moreover you can combine this param with `syscall_buf_size_preset`
+# index, for example, you could create a huge single syscall buffer
+# shared between all your online CPUs of 512 MB (so `syscall_buf_size_preset=10`). 
+#
+# --- [Suggestions]
+#
+# We chose index `1` (so one syscall buffer for each CPU) as default to keep parity
+# between our drivers (bpf and kernel module). By the way, you are free to find the preferred
+# configuration for your system. Considering a fixed `syscall_buf_size_preset` and so
+# a fixed buffer dimension:
+# - a lower number of buffers can speed up your system (lower memory footprint)
+# - a too lower number of buffers could increase contention in the kernel causing an
+#   overall slowdown of the system.
+# If you don't have huge events throughtputs and you are not experimenting with tons of drops
+# you can try to reduce the number of buffers to have a lower memory footprint
 
-# These configs are experimental they could change over releases
-
-# Possible values: {0, 1, 2, ..., MAX_CPUS_NUMBER}
-cpus_for_each_syscall_buffer: 1
-
-# Possible values:
-# - true: allocate ring buffers only for online CPUs
-# - false: allocate ring buffers for all available CPUs
-online_cpus_only: true
-
+modern_bpf:
+  cpus_for_each_syscall_buffer: 1
 ############## [EXPERIMENTAL] Modern BPF probe specific ##############
-
-
-
 
 # Falco continuously monitors outputs performance. When an output channel does not allow
 # to deliver an alert within a given deadline, an error is reported indicating
