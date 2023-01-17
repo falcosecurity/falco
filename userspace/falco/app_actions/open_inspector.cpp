@@ -77,11 +77,9 @@ application::run_result application::open_live_inspector(
 		}
 		else if(m_options.modern_bpf) /* modern BPF engine. */
 		{
-			std::string interesting_CPUs = m_state->config->m_online_cpus_only ? "online" : "available";
 			falco_logger::log(LOG_INFO, "Opening capture with modern BPF probe.");
 			falco_logger::log(LOG_INFO, "One ring buffer every '" + std::to_string(m_state->config->m_cpus_for_each_syscall_buffer) +  "' CPUs.");
-			falco_logger::log(LOG_INFO, "Allocate ring buffers for " + interesting_CPUs + " only.");
-			inspector->open_modern_bpf(m_state->syscall_buffer_bytes_size, m_state->config->m_cpus_for_each_syscall_buffer, m_state->config->m_online_cpus_only, m_state->ppm_sc_of_interest, m_state->tp_of_interest);
+			inspector->open_modern_bpf(m_state->syscall_buffer_bytes_size, m_state->config->m_cpus_for_each_syscall_buffer, true, m_state->ppm_sc_of_interest, m_state->tp_of_interest);
 		}
 		else if(getenv(FALCO_BPF_ENV_VARIABLE) != NULL) /* BPF engine. */
 		{

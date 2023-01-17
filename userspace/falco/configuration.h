@@ -106,9 +106,6 @@ public:
 	// Number of CPUs associated with a single ring buffer.
 	uint16_t m_cpus_for_each_syscall_buffer;
 
-	// If true allocate ring buffers only for online CPUs
-	bool m_online_cpus_only;
-
 	std::vector<plugin_config> m_plugins;
 
 private:
