@@ -78,7 +78,7 @@ application::run_result application::open_live_inspector(
 		else if(m_options.modern_bpf) /* modern BPF engine. */
 		{
 			falco_logger::log(LOG_INFO, "Opening capture with modern BPF probe");
-			inspector->open_modern_bpf(m_state->syscall_buffer_bytes_size, m_state->ppm_sc_of_interest, m_state->tp_of_interest);
+			inspector->open_modern_bpf(m_state->syscall_buffer_bytes_size, DEFAULT_CPU_FOR_EACH_BUFFER, true, m_state->ppm_sc_of_interest, m_state->tp_of_interest);
 		}
 		else if(getenv(FALCO_BPF_ENV_VARIABLE) != NULL) /* BPF engine. */
 		{
