@@ -2,7 +2,7 @@
 set -e
 
 usage() {
-    echo "usage: $0 -f <package_x86_64.rpm> -f <package_aarch64.rpm> -r <rpm|rpm-dev>"
+    echo "usage: $0 -f <package_x86_64.rpm> -f <package_aarch64.rpm> -r <rpm|rpm-dev> [-s]"
     exit 1
 }
 
@@ -14,16 +14,24 @@ check_program() {
   fi
 }
 
+# Updates the signature of a RPM package in the local repository
+#
+# $1: path of the repository.
+# $2: path of the RPM file.
+sign_rpm() {
+    pushd $1 > /dev/null
+    rm -f $(basename -- $2).asc
+    gpg --detach-sign --digest-algo SHA256 --armor $(basename -- $2)
+    popd > /dev/null
+}
+
 # Add a package to the local RPM repository
 #
 # $1: path of the repository.
 # $2: path of the RPM file.
 add_rpm() {
     cp -f $2 $1
-    pushd $1 > /dev/null
-    rm -f $(basename -- $2).asc
-    gpg --detach-sign --digest-algo SHA256 --armor $(basename -- $2)
-    popd > /dev/null
+    sign_rpm $1 $2
 }
 
 # Update the local RPM repository
@@ -39,7 +47,7 @@ update_repo() {
 
 
 # parse options
-while getopts ":f::r:" opt; do
+while getopts ":f::r::s" opt; do
     case "${opt}" in
         f )
           files+=("${OPTARG}")
@@ -47,6 +55,9 @@ while getopts ":f::r:" opt; do
         r )
           repo="${OPTARG}"
           [[ "${repo}" == "rpm" || "${repo}" == "rpm-dev" ]] || usage
+          ;;
+        s )
+          sign_all="true"
           ;;
         : )
           echo "invalid option: ${OPTARG} requires an argument" 1>&2
@@ -79,7 +90,19 @@ echo "Fetching ${s3_bucket_repo}..."
 mkdir -p ${tmp_repo_path}
 aws s3 cp ${s3_bucket_repo} ${tmp_repo_path} --recursive
 
-# update the repo
+# update signatures for all existing packages
+if [ "${sign_all}" ]; then
+  for file in ${tmp_repo_path}/*; do
+    if [ -f "$file" ]; then # exclude directories, symlinks, etc...
+      if [[ ! $file == *.asc ]]; then # exclude signature files
+        echo "Signing ${file}..."
+        sign_rpm ${tmp_repo_path} ${file}
+      fi
+    fi
+  done
+fi
+
+# update the repo by adding new packages
 for file in "${files[@]}"; do
   echo "Adding ${file}..."
   add_rpm ${tmp_repo_path} ${file}
