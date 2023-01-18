@@ -4,20 +4,19 @@ Documentation=https://falco.org/docs/
 
 [Service]
 Type=simple
-ExecStartPre=/usr/bin/falco --version-json > /etc/falco/falco_versions.json
-ExecStart=/usr/bin/falcoctl --config=/etc/falcoctl/config.yaml artifact follow --list=/etc/falcoctl/follow.yaml --requirements=/etc/falco/falco_versions.json --pidfile=/var/run/falcoctl.pid
+User=root
+ExecStart=/usr/bin/falcoctl artifact follow
 UMask=0077
 TimeoutSec=30
 RestartSec=15s
 Restart=on-failure
 PrivateTmp=true
 NoNewPrivileges=yes
-ProtectHome=read-only
-ProtectSystem=full
+ProtectSystem=true
 ProtectKernelTunables=true
 RestrictRealtime=true
-RestrictAddressFamilies=~AF_PACKET
-StandardOutput=null
+#RestrictAddressFamilies=~AF_PACKET
+#StandardOutput=null
 
 [Install]
 WantedBy=multi-user.target
