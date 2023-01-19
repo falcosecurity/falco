@@ -136,7 +136,7 @@ done
 shift $((OPTIND-1))
 
 # check options
-if [ ${#files[@]} -eq 0 ] || [ -z "${repo}" ]; then
+if ([ ${#files[@]} -eq 0 ] && [ -z "${sign_all}" ]) || [ -z "${repo}" ]; then
     usage
 fi
 
@@ -177,23 +177,25 @@ if [ "${sign_all}" ]; then
 fi
 
 # update the repo by adding new packages
-for file in "${files[@]}"; do
-  echo "Adding ${file}..."
-  add_deb ${tmp_repo_path} ${debSuite} ${file}
-done
-update_repo ${tmp_repo_path} ${debSuite}
+if ! [ ${#files[@]} -eq 0 ]; then
+  for file in "${files[@]}"; do
+    echo "Adding ${file}..."
+    add_deb ${tmp_repo_path} ${debSuite} ${file}
+  done
+  update_repo ${tmp_repo_path} ${debSuite}
 
-# publish
-for file in "${files[@]}"; do
-  package=$(basename -- ${file})
-  echo "Publishing ${package} to ${s3_bucket_repo}..."
-  aws s3 cp ${tmp_repo_path}/${debSuite}/${package} ${s3_bucket_repo}/${debSuite}/${package} --acl public-read
-  aws s3 cp ${tmp_repo_path}/${debSuite}/${package}.asc ${s3_bucket_repo}/${debSuite}/${package}.asc --acl public-read
+  # publish
+  for file in "${files[@]}"; do
+    package=$(basename -- ${file})
+    echo "Publishing ${package} to ${s3_bucket_repo}..."
+    aws s3 cp ${tmp_repo_path}/${debSuite}/${package} ${s3_bucket_repo}/${debSuite}/${package} --acl public-read
+    aws s3 cp ${tmp_repo_path}/${debSuite}/${package}.asc ${s3_bucket_repo}/${debSuite}/${package}.asc --acl public-read
 
-  aws cloudfront create-invalidation --distribution-id ${AWS_CLOUDFRONT_DIST_ID} --paths ${cloudfront_path}/${debSuite}/${package}
-  aws cloudfront create-invalidation --distribution-id ${AWS_CLOUDFRONT_DIST_ID} --paths ${cloudfront_path}/${debSuite}/${package}.asc
-done
+    aws cloudfront create-invalidation --distribution-id ${AWS_CLOUDFRONT_DIST_ID} --paths ${cloudfront_path}/${debSuite}/${package}
+    aws cloudfront create-invalidation --distribution-id ${AWS_CLOUDFRONT_DIST_ID} --paths ${cloudfront_path}/${debSuite}/${package}.asc
+  done
 
-# sync dists
-aws s3 sync ${tmp_repo_path}/dists ${s3_bucket_repo}/dists --delete --acl public-read
-aws cloudfront create-invalidation --distribution-id ${AWS_CLOUDFRONT_DIST_ID} --paths ${cloudfront_path}/dists/*
+  # sync dists
+  aws s3 sync ${tmp_repo_path}/dists ${s3_bucket_repo}/dists --delete --acl public-read
+  aws cloudfront create-invalidation --distribution-id ${AWS_CLOUDFRONT_DIST_ID} --paths ${cloudfront_path}/dists/*
+fi
