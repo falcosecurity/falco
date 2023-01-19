@@ -63,6 +63,27 @@ falco_arch_from_deb_arch() {
     esac  
 }
 
+# Sign the local DEB repository
+#
+# $1: path of the repository
+# $2: suite (eg. "stable")
+sign_repo() {
+    local release_dir=dists/$2
+    pushd $1 > /dev/null
+
+    # release signature - Release.gpg file
+    gpg --detach-sign --digest-algo SHA256 --armor ${release_dir}/Release
+    rm -f ${release_dir}/Release.gpg
+    mv ${release_dir}/Release.asc ${release_dir}/Release.gpg
+    
+    # release signature - InRelease file
+    gpg --armor --sign --clearsign --digest-algo SHA256 ${release_dir}/Release
+    rm -f ${release_dir}/InRelease
+    mv ${release_dir}/Release.asc ${release_dir}/InRelease
+
+    popd > /dev/null
+}
+
 # Update the local DEB repository
 #
 # $1: path of the repository
@@ -96,16 +117,6 @@ update_repo() {
       -o APT::FTPArchive::Release::Components=${component} \
       -o APT::FTPArchive::Release::Architectures="$(join_arr , "${architectures[@]}")" \
       ${release_dir} > ${release_dir}/Release
-
-    # release signature - Release.gpg file
-    gpg --detach-sign --digest-algo SHA256 --armor ${release_dir}/Release
-    rm -f ${release_dir}/Release.gpg
-    mv ${release_dir}/Release.asc ${release_dir}/Release.gpg
-    
-    # release signature - InRelease file
-    gpg --armor --sign --clearsign --digest-algo SHA256 ${release_dir}/Release
-    rm -f ${release_dir}/InRelease
-    mv ${release_dir}/Release.asc ${release_dir}/InRelease
 
     popd > /dev/null
 }
@@ -174,6 +185,7 @@ if [ "${sign_all}" ]; then
       fi
     fi
   done
+  sign_repo ${tmp_repo_path} ${debSuite}
 fi
 
 # update the repo by adding new packages
@@ -183,6 +195,7 @@ if ! [ ${#files[@]} -eq 0 ]; then
     add_deb ${tmp_repo_path} ${debSuite} ${file}
   done
   update_repo ${tmp_repo_path} ${debSuite}
+  sign_repo ${tmp_repo_path} ${debSuite}
 
   # publish
   for file in "${files[@]}"; do
