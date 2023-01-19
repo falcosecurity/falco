@@ -168,7 +168,7 @@ if [ "${sign_all}" ]; then
         echo "Signing ${package}..."
         sign_deb ${tmp_repo_path} ${debSuite} ${file}
 
-        echo "Synching ${package}.asc to ${s3_bucket_repo}..."
+        echo "Syncing ${package}.asc to ${s3_bucket_repo}..."
         aws s3 sync ${tmp_repo_path}/${debSuite}/${package}.asc ${s3_bucket_repo}/${debSuite}/${package}.asc --delete ---acl public-read
         aws cloudfront create-invalidation --distribution-id ${AWS_CLOUDFRONT_DIST_ID} --paths ${cloudfront_path}/${debSuite}/${package}.asc
       fi
