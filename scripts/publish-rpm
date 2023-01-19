@@ -107,7 +107,7 @@ if [ "${sign_all}" ]; then
         sign_rpm ${tmp_repo_path} ${file}
 
         echo "Syncing ${package}.asc to ${s3_bucket_repo}..."
-        aws s3 sync ${tmp_repo_path}/${package}.asc ${s3_bucket_repo}/${package}.asc --delete --acl public-read
+        aws s3 cp ${tmp_repo_path}/${package}.asc ${s3_bucket_repo}/${package}.asc --acl public-read
         aws cloudfront create-invalidation --distribution-id ${AWS_CLOUDFRONT_DIST_ID} --paths ${cloudfront_path}/${package}.asc
       fi
     fi
