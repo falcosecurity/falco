@@ -24,11 +24,7 @@ set -e
 case "$1" in
     remove|upgrade|deconfigure)
       echo "[PRE-REMOVE] Stop all Falco services:"
-      systemctl --system stop 'falco-kmod.service' || true
-      systemctl --system stop 'falco-bpf.service' || true
-      systemctl --system stop 'falco-modern-bpf.service' || true
-      systemctl --system stop 'falco-plugin.service' || true
-      systemctl --system stop 'falcoctl.service' || true
+      systemctl --system stop 'falco.target' || true
 
       echo "[PRE-REMOVE] Call 'falco-driver-loader --clean:'"
       falco-driver-loader --clean
