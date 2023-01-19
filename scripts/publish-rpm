@@ -95,8 +95,13 @@ if [ "${sign_all}" ]; then
   for file in ${tmp_repo_path}/*; do
     if [ -f "$file" ]; then # exclude directories, symlinks, etc...
       if [[ ! $file == *.asc ]]; then # exclude signature files
-        echo "Signing ${file}..."
+        package=$(basename -- ${file})
+        echo "Signing ${package}..."
         sign_rpm ${tmp_repo_path} ${file}
+
+        echo "Synching ${package}.asc to ${s3_bucket_repo}..."
+        aws s3 sync ${tmp_repo_path}/${package}.asc ${s3_bucket_repo}/${package}.asc --delete ---acl public-read
+        aws cloudfront create-invalidation --distribution-id ${AWS_CLOUDFRONT_DIST_ID} --paths ${cloudfront_path}/${package}.asc
       fi
     fi
   done
