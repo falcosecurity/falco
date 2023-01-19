@@ -3,6 +3,7 @@ Description=Falco: Container Native Runtime Security with kmod
 Documentation=https://falco.org/docs/
 After=falco-kmod-inject.service
 Requires=falco-kmod-inject.service
+PartOf=falco.target
 Conflicts=falco-bpf.service
 Conflicts=falco-modern-bpf.service
 Conflicts=falco-plugin.service
@@ -24,6 +25,3 @@ ReadWritePaths=/sys/module/falco
 RestrictRealtime=true
 RestrictAddressFamilies=~AF_PACKET
 StandardOutput=null
-
-[Install]
-WantedBy=multi-user.target

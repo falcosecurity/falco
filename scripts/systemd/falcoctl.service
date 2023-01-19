@@ -1,6 +1,8 @@
 [Unit]
 Description=Falco: Automatic rules update service
 Documentation=https://falco.org/docs/
+After=falco.target
+BindsTo=falco.target
 
 [Service]
 Type=simple
@@ -15,8 +17,7 @@ NoNewPrivileges=yes
 ProtectSystem=true
 ProtectKernelTunables=true
 RestrictRealtime=true
-#RestrictAddressFamilies=~AF_PACKET
-#StandardOutput=null
+StandardOutput=null
 
 [Install]
 WantedBy=multi-user.target
