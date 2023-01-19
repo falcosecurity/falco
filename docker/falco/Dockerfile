@@ -88,7 +88,7 @@ RUN rm -rf /usr/bin/clang \
 	&& ln -s /usr/bin/clang-7 /usr/bin/clang \
 	&& ln -s /usr/bin/llc-7 /usr/bin/llc
 
-RUN curl -s https://falco.org/repo/falcosecurity-3672BA8F.asc | apt-key add - \
+RUN curl -s https://falco.org/repo/falcosecurity-packages.asc | apt-key add - \
 	&& echo "deb https://download.falco.org/packages/${VERSION_BUCKET} stable main" | tee -a /etc/apt/sources.list.d/falcosecurity.list \
 	&& apt-get update -y \
 	&& if [ "$FALCO_VERSION" = "latest" ]; then apt-get install -y --no-install-recommends falco; else apt-get install -y --no-install-recommends falco=${FALCO_VERSION}; fi \
