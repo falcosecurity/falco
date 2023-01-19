@@ -107,7 +107,7 @@ if [ "${sign_all}" ]; then
         sign_rpm ${tmp_repo_path} ${file}
 
         echo "Syncing ${package}.asc to ${s3_bucket_repo}..."
-        aws s3 sync ${tmp_repo_path}/${package}.asc ${s3_bucket_repo}/${package}.asc --delete ---acl public-read
+        aws s3 sync ${tmp_repo_path}/${package}.asc ${s3_bucket_repo}/${package}.asc --delete --acl public-read
         aws cloudfront create-invalidation --distribution-id ${AWS_CLOUDFRONT_DIST_ID} --paths ${cloudfront_path}/${package}.asc
       fi
     fi
@@ -134,8 +134,8 @@ if ! [ ${#files[@]} -eq 0 ]; then
     aws cloudfront create-invalidation --distribution-id ${AWS_CLOUDFRONT_DIST_ID} --paths ${cloudfront_path}/${package}
     aws cloudfront create-invalidation --distribution-id ${AWS_CLOUDFRONT_DIST_ID} --paths ${cloudfront_path}/${package}.asc
   done
-
-  # sync repodata
-  aws s3 sync ${tmp_repo_path}/repodata ${s3_bucket_repo}/repodata --delete --acl public-read
-  aws cloudfront create-invalidation --distribution-id ${AWS_CLOUDFRONT_DIST_ID} --paths ${cloudfront_path}/repodata/*
 fi
+
+# sync repodata
+aws s3 sync ${tmp_repo_path}/repodata ${s3_bucket_repo}/repodata --delete --acl public-read
+aws cloudfront create-invalidation --distribution-id ${AWS_CLOUDFRONT_DIST_ID} --paths ${cloudfront_path}/repodata/*
