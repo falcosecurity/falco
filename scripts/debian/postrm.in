@@ -27,7 +27,7 @@ if [ -d /run/systemd/system ] && [ "$1" = remove ]; then
         systemctl --system disable 'falco-bpf.service' || true
         systemctl --system disable 'falco-modern-bpf.service' || true
         systemctl --system disable 'falco-plugin.service' || true
-        systemctl --system disable 'falcoctl.service' || true
+        systemctl --system disable 'falcoctl-artifact-follow.service' || true
 
         echo "[POST-REMOVE] Trigger deamon-reload:"
         systemctl --system daemon-reload || true
