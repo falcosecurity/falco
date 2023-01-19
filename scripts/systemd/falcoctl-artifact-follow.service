@@ -1,5 +1,5 @@
 [Unit]
-Description=Falco: Automatic rules update service
+Description=Falcoctl Artifact Follow: automatic artifacts update service
 Documentation=https://falco.org/docs/
 After=falco.target
 BindsTo=falco.target

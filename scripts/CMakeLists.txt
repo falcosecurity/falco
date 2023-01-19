@@ -28,7 +28,7 @@ file(COPY "${PROJECT_SOURCE_DIR}/scripts/systemd/falco-modern-bpf.service"
 		DESTINATION "${PROJECT_BINARY_DIR}/scripts/systemd")
 file(COPY "${PROJECT_SOURCE_DIR}/scripts/systemd/falco-plugin.service"
 		DESTINATION "${PROJECT_BINARY_DIR}/scripts/systemd")
-file(COPY "${PROJECT_SOURCE_DIR}/scripts/systemd/falcoctl.service"
+file(COPY "${PROJECT_SOURCE_DIR}/scripts/systemd/falcoctl-artifact-follow.service"
 		DESTINATION "${PROJECT_BINARY_DIR}/scripts/systemd")
 
 # Debian

@@ -34,4 +34,4 @@ falco-driver-loader --clean
 %systemd_preun 'falco-bpf.service'
 %systemd_preun 'falco-modern-bpf.service'
 %systemd_preun 'falco-plugin.service'
-%systemd_preun 'falcoctl.service'
+%systemd_preun 'falcoctl-artifact-follow.service'
