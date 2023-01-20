@@ -16,7 +16,7 @@
 #
 
 chosen_driver=
-enable_falcoctl=1
+enable_falcoctl=0
 
 if [ $1 -eq 1 ]; then
         if [ -x /usr/bin/dialog ]; then
@@ -26,32 +26,34 @@ if [ $1 -eq 1 ]; then
                     2 "Kmod" \
                     3 "eBPF" \
                     4 "Modern eBPF" \
-                    5 "Plugin" \
+                    5 "Plugin (needs manual configuration)" \
                     2>&1 >/dev/tty)
-                case $CHOICE in
-                    2)
-                        chosen_driver="kmod"
-                        ;;
-                    3)
-                        chosen_driver="bpf"
-                        ;;
-                    4)
-                        chosen_driver="modern-bpf"
-                        ;;
-                    5)
-                        chosen_driver="plugin (needs manual configuration)"
-                        ;;
-                esac
-                CHOICE=$(dialog --clear --title "Falcoctl" --menu "Do you want to follow automatic ruleset updates?" 10 40 2 \
-                        1 "Yes" \
-                        2 "No" \
-                        2>&1 >/dev/tty)
-                case $CHOICE in
-                    2)
-                    enable_falcoctl=0
+            case $CHOICE in
+                2)
+                    chosen_driver="kmod"
                     ;;
-                esac
-                clear
+                3)
+                    chosen_driver="bpf"
+                    ;;
+                4)
+                    chosen_driver="modern-bpf"
+                    ;;
+                5)
+                    chosen_driver="plugin"
+                    ;;
+            esac
+            if [ -n "$chosen_driver" ]; then
+              CHOICE=$(dialog --clear --title "Falcoctl" --menu "Do you want to follow automatic ruleset updates?" 10 40 2 \
+                      1 "Yes" \
+                      2 "No" \
+                      2>&1 >/dev/tty)
+              case $CHOICE in
+                  1)
+                  enable_falcoctl=1
+                  ;;
+              esac
+            fi
+            clear
         fi
 fi
 
@@ -85,12 +87,12 @@ if [ $1 -eq 1 ]; then
             systemctl --system enable "falco-$chosen_driver.service" || true
             echo "[POST-INSTALL] Start 'falco-$chosen_driver.service':"
             systemctl --system start "falco-$chosen_driver.service" || true
-        fi
-        if [ $enable_falcoctl -eq 1 ]; then
-          echo "[POST-INSTALL] Enable 'falcoctl-artifact-follow.service':"
-          systemctl --system enable "falcoctl-artifact-follow.service" || true
-          echo "[POST-INSTALL] Start 'falcoctl-artifact-follow.service':"
-          systemctl --system start "falcoctl-artifact-follow.service" || true
+            if [ $enable_falcoctl -eq 1 ]; then
+              echo "[POST-INSTALL] Enable 'falcoctl-artifact-follow.service':"
+              systemctl --system enable "falcoctl-artifact-follow.service" || true
+              echo "[POST-INSTALL] Start 'falcoctl-artifact-follow.service':"
+              systemctl --system start "falcoctl-artifact-follow.service" || true
+            fi
         fi
 fi
 
@@ -103,11 +105,11 @@ if [ $1 -gt 1 ]; then
           echo "[POST-INSTALL] Trigger 'falco-$chosen_driver.service' condrestart:"
           # restart falco on upgrade if service is already running
           systemctl --system condrestart "falco-$chosen_driver.service" || true
-        fi
-        if [ $enable_falcoctl -eq 1 ]; then
-          echo "[POST-INSTALL] Trigger 'falcoctl-artifact-follow.service' condrestart:"
-          # restart falcoctl-artifact-follow on upgrade if service is already running
-          systemctl --system condrestart "falcoctl-artifact-follow.service" || true
+          if [ $enable_falcoctl -eq 1 ]; then
+            echo "[POST-INSTALL] Trigger 'falcoctl-artifact-follow.service' condrestart:"
+            # restart falcoctl-artifact-follow on upgrade if service is already running
+            systemctl --system condrestart "falcoctl-artifact-follow.service" || true
+          fi
         fi
     fi
 fi
