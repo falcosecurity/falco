@@ -221,6 +221,6 @@ Driver:
 - See [plugins release doc](https://github.com/falcosecurity/plugins/blob/master/release.md) for more information.
 
 ### Rules repo
-- Rulesets are versioned individually throgh git tags
+- Rulesets are versioned individually through git tags
 - See [rules release doc](https://github.com/falcosecurity/rules/blob/main/RELEASE.md) for more information.
 - See [plugins release doc](https://github.com/falcosecurity/plugins/blob/master/release.md) for more information about plugins rulesets.
