@@ -16,7 +16,7 @@ include(ExternalProject)
 
 # falco_rules.yaml
 set(FALCOSECURITY_RULES_FALCO_VERSION "falco-rules-0.1.0")
-set(FALCOSECURITY_RULES_FALCO_CHECKSUM "SHA256=d933c73659366a167a882beed878bc8f32c26f92166d6a23244c2b6cf189ae72")
+set(FALCOSECURITY_RULES_FALCO_CHECKSUM "SHA256=f909a996213ab659ef9f958ae64b16c83dca0035525cc044d4dc074250e8b152")
 set(FALCOSECURITY_RULES_FALCO_PATH "${PROJECT_BINARY_DIR}/falcosecurity-rules-falco-prefix/src/falcosecurity-rules-falco/rules/falco_rules.yaml")
 ExternalProject_Add(
   falcosecurity-rules-falco
@@ -30,7 +30,7 @@ ExternalProject_Add(
 
 # application_rules.yaml
 set(FALCOSECURITY_RULES_APPLICATION_VERSION "application-rules-0.1.0")
-set(FALCOSECURITY_RULES_APPLICATION_CHECKSUM "SHA256=ae3f41165422e05393831bbc27afab0824d0e41b57bd1cc53f2bd647ae808857")
+set(FALCOSECURITY_RULES_APPLICATION_CHECKSUM "SHA256=33fcdc121cedb8e49c735c7948ede7d9427fd61962914fc3b66fe3d94d331cbf")
 set(FALCOSECURITY_RULES_APPLICATION_PATH "${PROJECT_BINARY_DIR}/falcosecurity-rules-application-prefix/src/falcosecurity-rules-application/rules/application_rules.yaml")
 ExternalProject_Add(
   falcosecurity-rules-application
