@@ -21,15 +21,17 @@ Finally, the release process follows a transparent process described in more det
 
 ### Falco Binaries, Rules and Sources Artifacts - Quick Links
 
-The Falco project publishes all sources and the Falco userspace binaries as GitHub releases. Rules are also released in the GitHub tree Falco release tag.
+The Falco project publishes all sources and the Falco userspace binaries as GitHub releases.
 
 - [Falco Releases](https://github.com/falcosecurity/falco/releases)
     - `tgz`, `rpm` and `deb` Falco binary packages (contains sources, including driver sources, Falco rules as well as k8saudit and cloudtrail plugins)
     - `tgz`, `zip` source code
 - [Libs Releases](https://github.com/falcosecurity/libs/releases)
     - `tgz`, `zip` source code
-- Falco Rules (GitHub tree approach)
-    - RELEASE="x.y.z", `https://github.com/falcosecurity/falco/tree/${RELEASE}/rules`
+- [Libs Releases](https://github.com/falcosecurity/libs/releases)
+    - `tgz`, `zip` source code
+- [Falco Rules Releases](https://github.com/falcosecurity/rules/releases)
+    - `tgz`, `zip` source code, each ruleset is tagged separately in a mono-repo fashion, see the [rules release guidelines](https://github.com/falcosecurity/rules/blob/main/RELEASE.md)
 
 
 Alternatively Falco binaries or plugins can be downloaded from the Falco Artifacts repo.
@@ -65,7 +67,7 @@ At a high level each Falco release needs to follow a pre-determined sequencing o
 
 - [1 - 3] `libs` (+ `driver`) and `plugins` components releases
 - [4] Falco driver pre-compiled object files push to Falco's Artifacts repo
-- [5] Falco userspace binary + rules release
+- [5] Falco userspace binary release
 
 Finally, on the proposed due date the assignees for the upcoming release proceed with the processes described below.
 
@@ -189,7 +191,7 @@ This section provides more details around the versioning of all components that 
 
 ### Falco repo (this repo)
 - Falco version is a git tag (`x.y.z`), see [Procedures](#procedures) section. Note that the Falco version is a sem-ver-like schema, but not fully compatible with sem-ver.
-- [FALCO_ENGINE_VERSION](https://github.com/falcosecurity/falco/blob/master/userspace/engine/falco_engine_version.h) is not sem-ver and must be bumped either when a backward incompatible change has been introduced to the rules files syntax or `falco --list -N | sha256sum` has changed. Breaking changes introduced in the Falco engine are not necessarily tied to the drivers or libs versions. The primary idea behind the hash is that when new filter / display fields (see currently supported [Falco fields](https://falco.org/docs/rules/supported-fields/)) are introduced a version bump indicates that this field was not available in previous engine versions. In case a new Falco rule uses new fields, the [Falco rules](https://github.com/falcosecurity/falco/blob/master/rules/falco_rules.yaml) file needs to bump this version as well via setting `required_engine_version` to the new version.
+- [FALCO_ENGINE_VERSION](https://github.com/falcosecurity/falco/blob/master/userspace/engine/falco_engine_version.h) is not sem-ver and must be bumped either when a backward incompatible change has been introduced to the rules files syntax or `falco --list -N | sha256sum` has changed. Breaking changes introduced in the Falco engine are not necessarily tied to the drivers or libs versions. The primary idea behind the hash is that when new filter / display fields (see currently supported [Falco fields](https://falco.org/docs/rules/supported-fields/)) are introduced a version bump indicates that this field was not available in previous engine versions. See the [rules release guidelines](https://github.com/falcosecurity/rules/blob/main/RELEASE.md#versioning-a-ruleset) to understand how this affects the versioning of Falco rules.
 - During development and release preparation, libs and driver reference commits are often bumped in Falco's cmake setup ([falcosecurity-libs cmake](https://github.com/falcosecurity/falco/blob/master/cmake/modules/falcosecurity-libs.cmake#L30) and [driver cmake](https://github.com/falcosecurity/falco/blob/master/cmake/modules/driver.cmake#L29)) in order to merge new Falco features. In practice they are mostly bumped at the same time referencing the same `libs` commit. However, for the official Falco build `FALCOSECURITY_LIBS_VERSION` flag that references the stable Libs version is used (read below).
 - Similarly, Falco plugins versions are bumped in Falco's cmake setup ([plugins cmake](https://github.com/falcosecurity/falco/blob/master/cmake/modules/plugins.cmake)) and those versions are the ones used for the Falco release.
 - At release time Plugin, Libs and Driver versions are compatible with Falco.
@@ -217,3 +219,8 @@ Driver:
 
 - Plugins version is a git tag (`x.y.z`)
 - See [plugins release doc](https://github.com/falcosecurity/plugins/blob/master/release.md) for more information.
+
+### Rules repo
+- Rulesets are versioned individually throgh git tags
+- See [rules release doc](https://github.com/falcosecurity/rules/blob/main/RELEASE.md) for more information.
+- See [plugins release doc](https://github.com/falcosecurity/plugins/blob/master/release.md) for more information about plugins rulesets.
