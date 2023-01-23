@@ -1,7 +1,7 @@
 [Unit]
 Description=Falcoctl Artifact Follow: automatic artifacts update service
 Documentation=https://falco.org/docs/
-PartOf=falco-bpf.service falco-kmod.service falco-modern-bpf.service falco-plugin.service
+PartOf=falco-bpf.service falco-kmod.service falco-modern-bpf.service falco-custom.service
 
 [Service]
 Type=simple

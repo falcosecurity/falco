@@ -1,5 +1,5 @@
 [Unit]
-Description=Falco: Container Native Runtime Security with plugin
+Description=Falco: Container Native Runtime Security with custom configuration
 Documentation=https://falco.org/docs/
 Before=falcoctl-artifact-follow.service
 Wants=falcoctl-artifact-follow.service

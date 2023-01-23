@@ -5,7 +5,7 @@ Before=falcoctl-artifact-follow.service
 Wants=falcoctl-artifact-follow.service
 Conflicts=falco-kmod.service
 Conflicts=falco-bpf.service
-Conflicts=falco-plugin.service
+Conflicts=falco-custom.service
 
 [Service]
 Type=simple

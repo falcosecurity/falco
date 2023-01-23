@@ -21,7 +21,7 @@ echo "[PRE-REMOVE] Stop all Falco services:"
 systemctl --system stop 'falco-kmod.service' || true
 systemctl --system stop 'falco-bpf.service' || true
 systemctl --system stop 'falco-modern-bpf.service' || true
-systemctl --system stop 'falco-plugin.service' || true
+systemctl --system stop 'falco-custom.service' || true
 systemctl --system stop 'falcoctl-artifact-follow.service' || true
 
 echo "[PRE-REMOVE] Call 'falco-driver-loader --clean:'"
@@ -37,5 +37,5 @@ falco-driver-loader --clean
 %systemd_preun 'falco-kmod.service'
 %systemd_preun 'falco-bpf.service'
 %systemd_preun 'falco-modern-bpf.service'
-%systemd_preun 'falco-plugin.service'
+%systemd_preun 'falco-custom.service'
 %systemd_preun 'falcoctl-artifact-follow.service'
