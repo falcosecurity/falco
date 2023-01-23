@@ -23,3 +23,6 @@ ProtectKernelTunables=true
 RestrictRealtime=true
 RestrictAddressFamilies=~AF_PACKET
 StandardOutput=null
+
+[Install]
+WantedBy=multi-user.target
