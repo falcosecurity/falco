@@ -17,7 +17,21 @@
 #
 
 chosen_driver=
-enable_falcoctl=0
+
+echo "[POST-INSTALL] Disable all possible enabled 'falco' service:"
+systemctl --system stop 'falco-kmod.service' || true
+systemctl --system stop 'falco-bpf.service' || true
+systemctl --system stop 'falco-modern-bpf.service' || true
+systemctl --system stop 'falco-plugin.service' || true
+systemctl --system stop 'falcoctl-artifact-follow.service' || true
+systemctl --system disable 'falco-kmod.service' || true
+systemctl --system disable 'falco-bpf.service' || true
+systemctl --system disable 'falco-modern-bpf.service' || true
+systemctl --system disable 'falco-plugin.service' || true
+systemctl --system disable 'falcoctl-artifact-follow.service' || true
+
+# unmask falcoctl if it was masked
+systemctl --system unmask falcoctl-artifact-follow.service || true
 
 if [ "$1" = "configure" ]; then
         if [ -x /usr/bin/dialog ]; then
@@ -49,8 +63,9 @@ if [ "$1" = "configure" ]; then
                     2 "No" \
                     2>&1 >/dev/tty)
             case $CHOICE in
-                1)
-                enable_falcoctl=1
+                2)
+                # we don't want falcoctl enabled by defualt, we mask it
+                systemctl --system mask falcoctl-artifact-follow.service || true
                 ;;
             esac
           fi
@@ -59,6 +74,9 @@ if [ "$1" = "configure" ]; then
 fi
 
 set -e
+
+echo "[POST-INSTALL] Trigger deamon-reload:"
+systemctl --system daemon-reload || true
 
 # If needed, try to load/compile the driver through falco-driver-loader
 case "$chosen_driver" in
@@ -74,32 +92,10 @@ esac
 
 if [ "$1" = "configure" ] || [ "$1" = "abort-upgrade" ] || [ "$1" = "abort-deconfigure" ] || [ "$1" = "abort-remove" ] ; then
         if [ -n "$chosen_driver" ]; then
+            # we do this in 2 steps because `enable --now` is not always supported
             echo "[POST-INSTALL] Enable 'falco-$chosen_driver.service':"
             systemctl --system enable "falco-$chosen_driver.service" || true
             echo "[POST-INSTALL] Start 'falco-$chosen_driver.service':"
-            systemctl --system start "falco-$chosen_driver.service" || true
-            if [ $enable_falcoctl -eq 1 ]; then
-               echo "[POST-INSTALL] Enable 'falcoctl-artifact-follow.service':"
-               systemctl --system enable "falcoctl-artifact-follow.service" || true
-               echo "[POST-INSTALL] Start 'falcoctl-artifact-follow.service':"
-               systemctl --system start "falcoctl-artifact-follow.service" || true
-            fi
+            systemctl --system start "falco-$chosen_driver.service" || true           
         fi
-fi
-
-if [ "$1" = "configure" ] || [ "$1" = "abort-upgrade" ] || [ "$1" = "abort-deconfigure" ] || [ "$1" = "abort-remove" ] ; then
-    if [ -d /run/systemd/system ]; then
-      echo "[POST-INSTALL] Trigger deamon-reload:"
-      systemctl --system daemon-reload || true
-      if [ -n "$chosen_driver" ]; then
-        echo "[POST-INSTALL] Trigger 'falco-$chosen_driver.service' condrestart:"
-        # restart falco on upgrade if service is already running
-        systemctl --system condrestart "falco-$chosen_driver.service" || true
-        if [ $enable_falcoctl -eq 1 ]; then
-          echo "[POST-INSTALL] Trigger 'falcoctl-artifact-follow.service' condrestart:"
-          # restart falcoctl-artifact-follow on upgrade if service is already running
-          systemctl --system condrestart "falcoctl-artifact-follow.service" || true
-        fi
-      fi
-    fi
 fi
