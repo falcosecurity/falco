@@ -22,12 +22,12 @@ echo "[POST-INSTALL] Disable all possible enabled 'falco' service:"
 systemctl --system stop 'falco-kmod.service' || true
 systemctl --system stop 'falco-bpf.service' || true
 systemctl --system stop 'falco-modern-bpf.service' || true
-systemctl --system stop 'falco-plugin.service' || true
+systemctl --system stop 'falco-custom.service' || true
 systemctl --system stop 'falcoctl-artifact-follow.service' || true
 systemctl --system disable 'falco-kmod.service' || true
 systemctl --system disable 'falco-bpf.service' || true
 systemctl --system disable 'falco-modern-bpf.service' || true
-systemctl --system disable 'falco-plugin.service' || true
+systemctl --system disable 'falco-custom.service' || true
 systemctl --system disable 'falcoctl-artifact-follow.service' || true
 
 # unmask falcoctl if it was masked
@@ -36,12 +36,11 @@ systemctl --system unmask falcoctl-artifact-follow.service || true
 if [ $1 -eq 1 ]; then
         if [ -x /usr/bin/dialog ]; then
             # If dialog is installed, create a dialog to let users choose the correct driver for them
-            CHOICE=$(dialog --clear --title "Falco drivers" --menu "Choose your preferred driver:" 12 40 5 \
-                    1 "Don't start" \
+            CHOICE=$(dialog --clear --title "Falco drivers" --menu "Choose your preferred driver:" 12 55 4 \
+                    1 "Manual configuration (no unit is started)" \
                     2 "Kmod" \
                     3 "eBPF" \
                     4 "Modern eBPF" \
-                    5 "Plugin (needs manual configuration)" \
                     2>&1 >/dev/tty)
             case $CHOICE in
                 2)

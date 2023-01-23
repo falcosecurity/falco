@@ -22,7 +22,7 @@ if [ -d /run/systemd/system ] && [ $1 -eq 0 ]; then
         systemctl --system disable 'falco-kmod.service'|| true
         systemctl --system disable 'falco-bpf.service' || true
         systemctl --system disable 'falco-modern-bpf.service' || true
-        systemctl --system disable 'falco-plugin.service' || true
+        systemctl --system disable 'falco-custom.service' || true
         systemctl --system disable 'falcoctl-artifact-follow.service' || true
 
         echo "[POST-REMOVE] Trigger deamon-reload:"

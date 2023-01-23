@@ -24,7 +24,7 @@ configure_file("${PROJECT_SOURCE_DIR}/scripts/systemd/falco-bpf.service"
 		"${PROJECT_BINARY_DIR}/scripts/systemd" COPYONLY)
 configure_file("${PROJECT_SOURCE_DIR}/scripts/systemd/falco-modern-bpf.service"
 		"${PROJECT_BINARY_DIR}/scripts/systemd" COPYONLY)
-configure_file("${PROJECT_SOURCE_DIR}/scripts/systemd/falco-plugin.service"
+configure_file("${PROJECT_SOURCE_DIR}/scripts/systemd/falco-custom.service"
 		"${PROJECT_BINARY_DIR}/scripts/systemd" COPYONLY)
 configure_file("${PROJECT_SOURCE_DIR}/scripts/systemd/falcoctl-artifact-follow.service"
 		"${PROJECT_BINARY_DIR}/scripts/systemd" COPYONLY)
