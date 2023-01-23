@@ -3,6 +3,7 @@ Description=Falcoctl Artifact Follow: automatic artifacts update service
 Documentation=https://falco.org/docs/
 After=falco.target
 BindsTo=falco.target
+DefaultDependencies=no
 
 [Service]
 Type=simple
