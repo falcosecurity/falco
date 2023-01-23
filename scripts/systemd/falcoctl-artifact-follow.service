@@ -1,9 +1,7 @@
 [Unit]
 Description=Falcoctl Artifact Follow: automatic artifacts update service
 Documentation=https://falco.org/docs/
-After=falco.target
-BindsTo=falco.target
-DefaultDependencies=no
+PartOf=falco-bpf.service falco-kmod.service falco-modern-bpf.service falco-plugin.service
 
 [Service]
 Type=simple
@@ -18,7 +16,6 @@ NoNewPrivileges=yes
 ProtectSystem=true
 ProtectKernelTunables=true
 RestrictRealtime=true
-StandardOutput=null
 
 [Install]
 WantedBy=multi-user.target

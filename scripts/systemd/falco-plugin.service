@@ -1,7 +1,8 @@
 [Unit]
 Description=Falco: Container Native Runtime Security with plugin
 Documentation=https://falco.org/docs/
-PartOf=falco.target
+Before=falcoctl-artifact-follow.service
+Wants=falcoctl-artifact-follow.service
 Conflicts=falco-kmod.service
 Conflicts=falco-bpf.service
 Conflicts=falco-modern-bpf.service
