@@ -16,20 +16,18 @@
 #
 
 # Systemd
-file(COPY "${PROJECT_SOURCE_DIR}/scripts/systemd/falco.target"
-		DESTINATION "${PROJECT_BINARY_DIR}/scripts/systemd")
-file(COPY "${PROJECT_SOURCE_DIR}/scripts/systemd/falco-kmod-inject.service"
-		DESTINATION "${PROJECT_BINARY_DIR}/scripts/systemd")
-file(COPY "${PROJECT_SOURCE_DIR}/scripts/systemd/falco-kmod.service"
-		DESTINATION "${PROJECT_BINARY_DIR}/scripts/systemd")
-file(COPY "${PROJECT_SOURCE_DIR}/scripts/systemd/falco-bpf.service"
-		DESTINATION "${PROJECT_BINARY_DIR}/scripts/systemd")
-file(COPY "${PROJECT_SOURCE_DIR}/scripts/systemd/falco-modern-bpf.service"
-		DESTINATION "${PROJECT_BINARY_DIR}/scripts/systemd")
-file(COPY "${PROJECT_SOURCE_DIR}/scripts/systemd/falco-plugin.service"
-		DESTINATION "${PROJECT_BINARY_DIR}/scripts/systemd")
-file(COPY "${PROJECT_SOURCE_DIR}/scripts/systemd/falcoctl-artifact-follow.service"
-		DESTINATION "${PROJECT_BINARY_DIR}/scripts/systemd")
+configure_file("${PROJECT_SOURCE_DIR}/scripts/systemd/falco-kmod-inject.service"
+		"${PROJECT_BINARY_DIR}/scripts/systemd" COPYONLY)
+configure_file("${PROJECT_SOURCE_DIR}/scripts/systemd/falco-kmod.service"
+		"${PROJECT_BINARY_DIR}/scripts/systemd" COPYONLY)
+configure_file("${PROJECT_SOURCE_DIR}/scripts/systemd/falco-bpf.service"
+		"${PROJECT_BINARY_DIR}/scripts/systemd" COPYONLY)
+configure_file("${PROJECT_SOURCE_DIR}/scripts/systemd/falco-modern-bpf.service"
+		"${PROJECT_BINARY_DIR}/scripts/systemd" COPYONLY)
+configure_file("${PROJECT_SOURCE_DIR}/scripts/systemd/falco-plugin.service"
+		"${PROJECT_BINARY_DIR}/scripts/systemd" COPYONLY)
+configure_file("${PROJECT_SOURCE_DIR}/scripts/systemd/falcoctl-artifact-follow.service"
+		"${PROJECT_BINARY_DIR}/scripts/systemd" COPYONLY)
 
 # Debian
 configure_file(debian/postinst.in debian/postinst)
