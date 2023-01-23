@@ -17,6 +17,7 @@
 
 chosen_driver=
 
+# Every time we call this script we want to stat from a clean state.
 echo "[POST-INSTALL] Disable all possible enabled 'falco' service:"
 systemctl --system stop 'falco-kmod.service' || true
 systemctl --system stop 'falco-bpf.service' || true
@@ -63,7 +64,7 @@ if [ $1 -eq 1 ]; then
                       2>&1 >/dev/tty)
               case $CHOICE in
                   2)
-                      # we don't want falcoctl enabled by defualt, we mask it
+                      # we don't want falcoctl enabled, we mask it
                       systemctl --system mask falcoctl-artifact-follow.service || true
                   ;;
               esac
