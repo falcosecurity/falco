@@ -48,11 +48,6 @@ static void init_syscall_inspector(falco::app::state& s, std::shared_ptr<sinsp> 
 		inspector->set_snaplen(s.options.snaplen);
 	}
 
-	if(!s.options.all_events)
-	{
-		configure_interesting_sets(s);
-	}
-
 	inspector->set_hostname_and_port_resolution_mode(false);
 }
 

@@ -33,14 +33,7 @@ falco::app::run_result falco::app::actions::print_ignored_events(falco::app::sta
 		return run_result::ok();
 	}
 
-	/* Fill the application syscall and tracepoint sets.
-	 * The execution will be interrupted after this call so
-	 * we don't care if we populate these sets even if the `-A` flag
-	 * is not set.
-	 */
-	configure_interesting_sets(s);
-
-	/* Search for all the ignored syscalls. */
+	/* Search for all the ignored syscalls after having set the syscalls and events of interest in configure_interesting_sets() app action. */
 	std::unordered_set<uint32_t> all_events;
 	for (uint32_t j = 0; j < PPM_EVENT_MAX; j++)
 	{

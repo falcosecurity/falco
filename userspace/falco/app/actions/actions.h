@@ -24,6 +24,7 @@ namespace app {
 namespace actions {
 
 falco::app::run_result attach_inotify_signals(falco::app::state& s);
+falco::app::run_result configure_interesting_sets(falco::app::state& s);
 falco::app::run_result configure_syscall_buffer_size(falco::app::state& s);
 falco::app::run_result create_requested_paths(falco::app::state& s);
 falco::app::run_result create_signal_handlers(falco::app::state& s);
