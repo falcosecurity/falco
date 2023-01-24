@@ -66,6 +66,7 @@ bool falco::app::run(int argc, char** argv, bool& restart, std::string& errstr)
 		falco::app::actions::daemonize,
 		falco::app::actions::init_outputs,
 		falco::app::actions::init_clients,
+		falco::app::actions::configure_interesting_sets,
 		falco::app::actions::configure_syscall_buffer_size,
 		falco::app::actions::start_grpc_server,
 		falco::app::actions::start_webserver,
