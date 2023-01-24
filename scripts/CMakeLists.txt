@@ -16,6 +16,7 @@
 #
 
 # Systemd
+file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/scripts/systemd)
 configure_file("${PROJECT_SOURCE_DIR}/scripts/systemd/falco-kmod-inject.service"
 		"${PROJECT_BINARY_DIR}/scripts/systemd" COPYONLY)
 configure_file("${PROJECT_SOURCE_DIR}/scripts/systemd/falco-kmod.service"
