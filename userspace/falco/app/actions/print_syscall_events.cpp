@@ -74,7 +74,6 @@ falco::app::run_result falco::app::actions::print_syscall_events(falco::app::sta
 {
 	if(s.options.list_syscall_events)
 	{
-		configure_interesting_sets(s);
 		const auto events = get_event_entries(true, s.ppm_event_info_of_interest);
 
 		if(s.options.markdown)
