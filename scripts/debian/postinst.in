@@ -38,7 +38,7 @@ if [ "$1" = "configure" ]; then
         if [ -x /usr/bin/dialog ]; then
           # If dialog is installed, create a dialog to let users choose the correct driver for them
           CHOICE=$(dialog --clear --title "Falco drivers" --menu "Choose your preferred driver:" 12 55 4 \
-                1 "Manual configuration (no unit is stared)" \
+                1 "Manual configuration (no unit is started)" \
                 2 "Kmod" \
                 3 "eBPF" \
                 4 "Modern eBPF" \
