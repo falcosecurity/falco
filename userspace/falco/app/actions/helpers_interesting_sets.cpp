@@ -189,7 +189,35 @@ void falco::app::actions::activate_interesting_syscalls(falco::app::state& s, st
 		falco_logger::log(LOG_INFO, "+(" + std::to_string(non_rules_syscalls_names.size()) + ") syscalls activated (Falco's set of additional syscalls including syscalls needed for state engine): " + concat_syscalls_names(non_rules_syscalls_names) + "\n");
 	}
 
+	/* -A flag behavior:
+	 * default: all syscalls in rules included, sinsp state enforcement without high volume I/O syscalls
+	 * -A flag set: all syscalls in rules included, sinsp state enforcement and allowing high volume I/O syscalls
+	*/
+
+	if(!s.options.all_events)
+	{
+		std::unordered_set<std::string> erased_io_syscalls_names = {};
+		std::unordered_set<uint32_t> cur_ppm_sc_set = s.ppm_sc_of_interest;
+
+		const int bitmask = EC_SYSCALL - 1;
+		for (const auto &ppm_sc_code : cur_ppm_sc_set)
+		{
+			switch(g_infotables.m_syscall_info_table[ppm_sc_code].category & bitmask)
+			{
+			case EC_IO_READ:
+			case EC_IO_WRITE:
+				s.ppm_sc_of_interest.erase(ppm_sc_code);
+				erased_io_syscalls_names.insert(g_infotables.m_syscall_info_table[ppm_sc_code].name);
+			}
+		}
+		if (erased_io_syscalls_names.size() > 0)
+		{
+			falco_logger::log(LOG_INFO, "-(" + std::to_string(erased_io_syscalls_names.size()) + ") high volume I/O syscalls (`-A` flag not set): " + concat_syscalls_names(erased_io_syscalls_names) + "\n");
+		}
+	}
+
 	std::unordered_set<std::string> final_syscalls_names = inspector->get_syscalls_names(s.ppm_sc_of_interest);
+
 	if (final_syscalls_names.size() > 0)
 	{
 		falco_logger::log(LOG_INFO, "(" + std::to_string(final_syscalls_names.size()) + ") syscalls in total activated (final set): " + concat_syscalls_names(final_syscalls_names) + "\n");
