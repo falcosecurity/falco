@@ -99,7 +99,7 @@ class FalcoTest(Test):
         self.addl_cmdline_opts = self.params.get('addl_cmdline_opts', '*', default='')
         self.enable_source = self.params.get('enable_source', '*', default='')
         self.rules_file = self.params.get(
-            'rules_file', '*', default='BUILD_DIR/falcosecurity-rules-falco-prefix/src/falcosecurity-rules-falco/rules/falco_rules.yaml')
+            'rules_file', '*', default='BUILD_DIR/falcosecurity-rules-falco-prefix/src/falcosecurity-rules-falco/falco_rules.yaml')
 
         if not isinstance(self.rules_file, list):
             self.rules_file = [self.rules_file]
