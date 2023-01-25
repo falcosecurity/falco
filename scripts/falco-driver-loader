@@ -134,6 +134,25 @@ get_target_id() {
 			TARGET_ID="amazonlinux"
 		fi
 		;;
+	("debian")
+		# Workaround: debian kernelreleases might now be actual kernel running;
+		# instead, they might be the Debian kernel package
+		# providing the compatible kernel ABI
+		# See https://lists.debian.org/debian-user/2017/03/msg00485.html
+		# Real kernel release is embedded inside the kernel version.
+		# Moreover, kernel arch, when present, is attached to the former,
+		# therefore make sure to properly take it and attach it to the latter.
+		TARGET_ID=$(echo "${OS_ID}" | tr '[:upper:]' '[:lower:]')
+		local ARCH_extra=""
+		if [[ $KERNEL_RELEASE =~ -(amd64|arm64) ]];
+		then
+			ARCH_extra="-${BASH_REMATCH[1]}"
+		fi
+		if [[ $(uname -v) =~ ([0-9]+\.[0-9]+\.[0-9]+\-[0-9]+) ]];
+		then
+			KERNEL_RELEASE="${BASH_REMATCH[1]}${ARCH_extra}"
+		fi
+		;;
 	("ubuntu")
 		# Extract the flavor from the kernelrelease
 		# Examples:
@@ -151,7 +170,7 @@ get_target_id() {
 		TARGET_ID=$(echo "${OS_ID}" | tr '[:upper:]' '[:lower:]')
 		;;
 	("minikube")
-		TARGET_ID="${OS_ID}"
+		TARGET_ID=$(echo "${OS_ID}" | tr '[:upper:]' '[:lower:]')
 		# Extract the minikube version. Ex. With minikube version equal to "v1.26.0-1655407986-14197" the extracted version
 		# will be "1.26.0"
 		if [[ $(cat ${HOST_ROOT}/etc/VERSION) =~ ([0-9]+(\.[0-9]+){2}) ]]; then
@@ -163,7 +182,7 @@ get_target_id() {
 		fi
 		;;
 	("bottlerocket")
-		TARGET_ID="${OS_ID}"
+		TARGET_ID=$(echo "${OS_ID}" | tr '[:upper:]' '[:lower:]')
 		# variant_id has been sourced from os-release. Get only the first variant part
 		if [[ -n ${VARIANT_ID} ]];  then
 			# take just first part (eg: VARIANT_ID=aws-k8s-1.15 -> aws)
