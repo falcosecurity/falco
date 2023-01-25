@@ -27,10 +27,11 @@ WORKDIR /build/release
 # We need `make tests` and `make all` for integration tests.
 RUN source scl_source enable devtoolset-9; \
     cmake ${CMAKE_OPTIONS} /source; \
-    make falco -j${MAKE_JOBS}; \
-    make package; \
-    make tests -j${MAKE_JOBS}; \
-    make all -j${MAKE_JOBS}
+    make falco -j${MAKE_JOBS}
+
+RUN make package
+RUN make tests -j${MAKE_JOBS}
+RUN make all -j${MAKE_JOBS}
 
 FROM scratch AS export-stage
 
