@@ -24,12 +24,12 @@ RUN curl -L -o /tmp/cmake.tar.gz https://github.com/Kitware/CMake/releases/downl
 COPY . /source
 WORKDIR /build/release
 
-# We need `make tests` and `make all` for integration tests.
 RUN source scl_source enable devtoolset-9; \
     cmake ${CMAKE_OPTIONS} /source; \
     make falco -j${MAKE_JOBS}
-
 RUN make package
+
+# We need `make tests` and `make all` for integration tests.
 RUN make tests -j${MAKE_JOBS}
 RUN make all -j${MAKE_JOBS}
 
@@ -40,4 +40,23 @@ ARG DEST_BUILD_DIR="/build"
 COPY --from=build-stage /build/release/falco-*.tar.gz /packages/
 COPY --from=build-stage /build/release/falco-*.deb /packages/
 COPY --from=build-stage /build/release/falco-*.rpm /packages/
-COPY --from=build-stage /build/release/ ${DEST_BUILD_DIR}
+
+# This is what we need for integration tests. We don't export all the build directory
+# outside the container since its size is almost 6 GB, we export only what is strictly necessary
+# for integration tests.
+# This is just a workaround to fix the CI build until we replace our actual testing framework.
+COPY --from=build-stage /build/release/cloudtrail-plugin-prefix ${DEST_BUILD_DIR}/cloudtrail-plugin-prefix
+COPY --from=build-stage /build/release/cloudtrail-rules-prefix ${DEST_BUILD_DIR}/cloudtrail-rules-prefix
+COPY --from=build-stage /build/release/falcosecurity-rules-application-prefix ${DEST_BUILD_DIR}/falcosecurity-rules-application-prefix
+COPY --from=build-stage /build/release/falcosecurity-rules-falco-prefix ${DEST_BUILD_DIR}/falcosecurity-rules-falco-prefix
+COPY --from=build-stage /build/release/falcosecurity-rules-local-prefix ${DEST_BUILD_DIR}/falcosecurity-rules-local-prefix
+COPY --from=build-stage /build/release/json-plugin-prefix ${DEST_BUILD_DIR}/json-plugin-prefix
+COPY --from=build-stage /build/release/k8saudit-plugin-prefix ${DEST_BUILD_DIR}/k8saudit-plugin-prefix
+COPY --from=build-stage /build/release/k8saudit-rules-prefix ${DEST_BUILD_DIR}/k8saudit-rules-prefix
+COPY --from=build-stage /build/release/scripts ${DEST_BUILD_DIR}/scripts
+COPY --from=build-stage /build/release/test ${DEST_BUILD_DIR}/test
+COPY --from=build-stage /build/release/userspace/falco/falco ${DEST_BUILD_DIR}/userspace/falco/falco
+COPY --from=build-stage /build/release/userspace/falco/config_falco.h ${DEST_BUILD_DIR}/userspace/falco/config_falco.h
+COPY --from=build-stage /build/release/falco-*.tar.gz ${DEST_BUILD_DIR}/
+COPY --from=build-stage /build/release/falco-*.deb ${DEST_BUILD_DIR}/
+COPY --from=build-stage /build/release/falco-*.rpm ${DEST_BUILD_DIR}/
