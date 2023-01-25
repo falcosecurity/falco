@@ -311,7 +311,7 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 	 */
 	m_syscall_buf_size_preset = config.get_scalar<uint16_t>("syscall_buf_size_preset", 4);
 
-	m_cpus_for_each_syscall_buffer = config.get_scalar<uint16_t>("cpus_for_each_syscall_buffer", 1);
+	m_cpus_for_each_syscall_buffer = config.get_scalar<uint16_t>("modern_bpf.cpus_for_each_syscall_buffer", 1);
 
 	std::set<std::string> load_plugins;
 
