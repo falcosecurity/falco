@@ -24,12 +24,6 @@
 
 > /kind release
 
-> If contributing rules or changes to rules, please make sure to also uncomment one of the following line:
-
-> /kind rule-update
-
-> /kind rule-create
-
 <!--
 Please remove the leading whitespace before the `/kind <>` you uncommented.
 -->
@@ -41,8 +35,6 @@ Please remove the leading whitespace before the `/kind <>` you uncommented.
 > /area build
 
 > /area engine
-
-> /area rules
 
 > /area tests
 
