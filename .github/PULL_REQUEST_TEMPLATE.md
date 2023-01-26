@@ -1,8 +1,7 @@
-<!--  Thanks for sending a pull request!  Here are some tips for you:
-
-1. If this is your first time, please read our contributor guidelines in the [CONTRIBUTING.md](https://github.com/falcosecurity/.github/blob/master/CONTRIBUTING.md) file and learn how to compile Falco from source [here](https://falco.org/docs/source).
+<!--  Thanks for sending a pull request! Here are some tips for you:
+1. If this is your first time, please read our contributor guidelines in the https://github.com/falcosecurity/.github/blob/main/CONTRIBUTING.md file.
 2. Please label this pull request according to what type of issue you are addressing.
-3. . Please add a release note!
+3. Please add a release note!
 4. If the PR is unfinished while opening it specify a wip in the title before the actual title, for example, "wip: my awesome feature"
 -->
 
@@ -63,11 +62,13 @@ Fixes #
 **Does this PR introduce a user-facing change?**:
 
 <!--
-If no, just write "NONE" in the release-note block below.
-If yes, a release note is required:
-Enter your extended release note in the block below.
-If the PR requires additional action from users switching to the new release, prepend the string "action required:".
-For example, `action required: change the API interface of the rule engine`.
+If NO, just write "NONE" in the release-note block below.
+
+If YES, a release note is required, enter your release note in the block below. 
+The convention is the same as for commit messages: https://github.com/falcosecurity/.github/blob/main/CONTRIBUTING.md#commit-convention
+If the PR introduces non-backward compatible changes, please add a line starting with "BREAKING CHANGE:" and describe what changed.
+For example, `BREAKING CHANGE: the API interface of the rule engine has changed`.
+Your note will be included in the changelog.
 -->
 
 ```release-note
