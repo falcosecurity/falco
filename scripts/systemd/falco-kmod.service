@@ -5,9 +5,6 @@ After=falco-kmod-inject.service
 Requires=falco-kmod-inject.service
 Before=falcoctl-artifact-follow.service
 Wants=falcoctl-artifact-follow.service
-Conflicts=falco-bpf.service
-Conflicts=falco-modern-bpf.service
-Conflicts=falco-custom.service
 
 [Service]
 Type=simple
