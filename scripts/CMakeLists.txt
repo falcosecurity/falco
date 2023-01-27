@@ -31,14 +31,14 @@ configure_file("${PROJECT_SOURCE_DIR}/scripts/systemd/falcoctl-artifact-follow.s
 		"${PROJECT_BINARY_DIR}/scripts/systemd" COPYONLY)
 
 # Debian
-configure_file(debian/postinst.in debian/postinst)
-configure_file(debian/postrm.in debian/postrm)
-configure_file(debian/prerm.in debian/prerm)
+configure_file(debian/postinst.in debian/postinst COPYONLY)
+configure_file(debian/postrm.in debian/postrm COPYONLY)
+configure_file(debian/prerm.in debian/prerm COPYONLY)
 
 # Rpm
-configure_file(rpm/postinstall.in rpm/postinstall)
-configure_file(rpm/postuninstall.in rpm/postuninstall)
-configure_file(rpm/preuninstall.in rpm/preuninstall)
+configure_file(rpm/postinstall.in rpm/postinstall COPYONLY)
+configure_file(rpm/postuninstall.in rpm/postuninstall COPYONLY)
+configure_file(rpm/preuninstall.in rpm/preuninstall COPYONLY)
 
 configure_file(falco-driver-loader falco-driver-loader @ONLY)
 
