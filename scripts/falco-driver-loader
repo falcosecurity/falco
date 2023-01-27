@@ -394,7 +394,29 @@ clean_kernel_module() {
 			echo "[WARNING] Removing '${KMOD_NAME}' version '${CURRENT_VER}' failed."
 		fi
 	done
-
+	
+	# While modinfo sees falco modules installed,
+	# clean them up.
+	echo "Cleaning up any leftover reference to falco.ko around /lib/modules"
+	modinfo --filename ${KMOD_NAME}
+	while [ $? -eq 0 ]
+	do
+		falco_path=$(modinfo --filename ${KMOD_NAME})
+		echo "Removing file: ${falco_path}"
+		rm -f $falco_path
+		if [ $? -ne 0 ]; then
+			echo "[WARNING] Removing '${falco_path}' failed."
+			break
+		fi
+		depmod ${KERNEL_RELEASE}
+		if [ $? -ne 0 ]; then
+			echo "[WARNING] Depmod after '${falco_path}' removal failed."
+			break
+		fi
+		modinfo --filename ${KMOD_NAME}
+	done
+	echo "Cleaned up /lib/modules"
+	
 	print_clean_termination
 }
 
