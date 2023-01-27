@@ -34,7 +34,7 @@ systemctl --system disable 'falcoctl-artifact-follow.service' || true
 systemctl --system unmask falcoctl-artifact-follow.service || true
 
 if [ $1 -eq 1 ]; then
-        if [ -x /usr/bin/dialog ]; then
+        if [ -x /usr/bin/dialog ] && [ "${FALCO_FRONTEND}" != "noninteractive" ]; then
             # If dialog is installed, create a dialog to let users choose the correct driver for them
             CHOICE=$(dialog --clear --title "Falco drivers" --menu "Choose your preferred driver:" 12 55 4 \
                     1 "Manual configuration (no unit is started)" \
