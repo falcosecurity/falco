@@ -28,20 +28,6 @@ ExternalProject_Add(
   TEST_COMMAND ""
 )
 
-# application_rules.yaml
-set(FALCOSECURITY_RULES_APPLICATION_VERSION "application-rules-0.1.0")
-set(FALCOSECURITY_RULES_APPLICATION_CHECKSUM "SHA256=cf45c1a6997799610a7724ba7a2ceaa64a3bdc73d26cdfe06adb3f43e2321278")
-set(FALCOSECURITY_RULES_APPLICATION_PATH "${PROJECT_BINARY_DIR}/falcosecurity-rules-application-prefix/src/falcosecurity-rules-application/application_rules.yaml")
-ExternalProject_Add(
-  falcosecurity-rules-application
-  URL "https://download.falco.org/rules/${FALCOSECURITY_RULES_APPLICATION_VERSION}.tar.gz"
-  URL_HASH "${FALCOSECURITY_RULES_APPLICATION_CHECKSUM}"
-  CONFIGURE_COMMAND ""
-  BUILD_COMMAND ""
-  INSTALL_COMMAND ""
-  TEST_COMMAND ""
-)
-
 # falco_rules.local.yaml
 set(FALCOSECURITY_RULES_LOCAL_PATH "${PROJECT_BINARY_DIR}/falcosecurity-rules-local-prefix/falco_rules.local.yaml")
 file(WRITE "${FALCOSECURITY_RULES_LOCAL_PATH}" "# Your custom rules!\n")
@@ -53,7 +39,6 @@ endif()
 if(NOT DEFINED FALCO_RULES_DEST_FILENAME)
   set(FALCO_RULES_DEST_FILENAME "falco_rules.yaml")
   set(FALCO_LOCAL_RULES_DEST_FILENAME "falco_rules.local.yaml")
-  set(FALCO_APP_RULES_DEST_FILENAME "application_rules.yaml")
 endif()
 
 if(DEFINED FALCO_COMPONENT) # Allow a slim version of Falco to be embedded in other projects, intentionally *not* installing all rulesets.
@@ -79,12 +64,6 @@ else() # Default Falco installation
     FILES "${FALCOSECURITY_RULES_LOCAL_PATH}"
     DESTINATION "${FALCO_ETC_DIR}"
     RENAME "${FALCO_LOCAL_RULES_DEST_FILENAME}"
-    COMPONENT "${FALCO_COMPONENT_NAME}")
-
-  install(
-    FILES "${FALCOSECURITY_RULES_APPLICATION_PATH}"
-    DESTINATION "${FALCO_ETC_DIR}/rules.available"
-    RENAME "${FALCO_APP_RULES_DEST_FILENAME}"
     COMPONENT "${FALCO_COMPONENT_NAME}")
 
   install(DIRECTORY DESTINATION "${FALCO_ETC_DIR}/rules.d" COMPONENT "${FALCO_COMPONENT_NAME}")
