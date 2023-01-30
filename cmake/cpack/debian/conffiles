@@ -1,3 +1,2 @@
 /etc/falco/falco.yaml
-/etc/falco/rules.available/application_rules.yaml
 /etc/falco/falco_rules.local.yaml
