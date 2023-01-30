@@ -75,15 +75,11 @@ set -e
 echo "[POST-INSTALL] Trigger deamon-reload:"
 systemctl --system daemon-reload || true
 
-# If needed, try to load/compile the driver through falco-driver-loader
+# If needed, try to load/compile the driver through falco-driver-loader (only compile for kmod, that uses dkms)
 case "$chosen_driver" in
     "kmod")
-      echo "[POST-INSTALL] Call 'falco-driver-loader module':"
-      falco-driver-loader module
-      ;;
-    "bpf")
-      echo "[POST-INSTALL] Call 'falco-driver-loader bpf':"
-      falco-driver-loader bpf
+      echo "[POST-INSTALL] Call 'falco-driver-loader --compile module':"
+      falco-driver-loader --compile module
       ;;
 esac
 
