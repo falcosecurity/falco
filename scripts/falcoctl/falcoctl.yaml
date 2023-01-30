@@ -1,7 +1,7 @@
 artifact:
   follow:
     every: 6h0m0s
-    falcoversions: http://localhost:8765/versions
+    falcoVersions: http://localhost:8765/versions
     refs:
     - falco-rules:0
 indexes:
