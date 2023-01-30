@@ -8,7 +8,6 @@ Wants=falcoctl-artifact-follow.service
 Type=simple
 User=root
 Environment=FALCO_BPF_PROBE=
-ExecStartPre=/usr/bin/falco-driver-loader bpf
 ExecStart=/usr/bin/falco --pidfile=/var/run/falco.pid
 UMask=0077
 TimeoutSec=30
