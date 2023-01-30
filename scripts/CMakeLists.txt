@@ -42,6 +42,9 @@ configure_file(rpm/preuninstall.in rpm/preuninstall COPYONLY)
 
 configure_file(falco-driver-loader falco-driver-loader @ONLY)
 
+# Install Falcoctl config file
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/falcoctl/falcoctl.yaml DESTINATION "${FALCO_ETC_DIR}" COMPONENT "${FALCO_COMPONENT_NAME}")
+
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
 	install(PROGRAMS ${PROJECT_BINARY_DIR}/scripts/falco-driver-loader
 		DESTINATION ${FALCO_BIN_DIR} COMPONENT "${FALCO_COMPONENT_NAME}")
