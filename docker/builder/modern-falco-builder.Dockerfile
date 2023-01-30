@@ -47,7 +47,6 @@ COPY --from=build-stage /build/release/falco-*.rpm /packages/
 # This is just a workaround to fix the CI build until we replace our actual testing framework.
 COPY --from=build-stage /build/release/cloudtrail-plugin-prefix ${DEST_BUILD_DIR}/cloudtrail-plugin-prefix
 COPY --from=build-stage /build/release/cloudtrail-rules-prefix ${DEST_BUILD_DIR}/cloudtrail-rules-prefix
-COPY --from=build-stage /build/release/falcosecurity-rules-application-prefix ${DEST_BUILD_DIR}/falcosecurity-rules-application-prefix
 COPY --from=build-stage /build/release/falcosecurity-rules-falco-prefix ${DEST_BUILD_DIR}/falcosecurity-rules-falco-prefix
 COPY --from=build-stage /build/release/falcosecurity-rules-local-prefix ${DEST_BUILD_DIR}/falcosecurity-rules-local-prefix
 COPY --from=build-stage /build/release/json-plugin-prefix ${DEST_BUILD_DIR}/json-plugin-prefix
