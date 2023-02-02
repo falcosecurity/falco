@@ -93,7 +93,7 @@ public:
 		return m_types == other.m_types;
 	}
 
-	falco_event_types diff(const falco_event_types& other)
+	falco_event_types diff(const falco_event_types& other) const
 	{
 		falco_event_types ret;
 		for(size_t i = 0; i <= get_ppm_event_max(); ++i)
@@ -106,7 +106,7 @@ public:
 		return ret;
 	}
 
-	falco_event_types intersect(const falco_event_types& other)
+	falco_event_types intersect(const falco_event_types& other) const
 	{
 		falco_event_types ret;
 		for(size_t i = 0; i <= get_ppm_event_max(); ++i)
@@ -189,14 +189,26 @@ public:
 private:
 	struct visitor : public libsinsp::filter::ast::expr_visitor
 	{
-		visitor(): m_expect_value(false),m_inspector() {}
+		visitor():
+			m_expect_value(false),
+			m_inside_negation(false),
+			m_last_node_has_evttypes(false),
+			m_last_node_evttypes({}),
+			m_all_events({}),
+			m_inspector()
+		{
+			evttypes("", m_all_events);
+		}
 		visitor(visitor&&) = default;
 		visitor& operator = (visitor&&) = default;
 		visitor(const visitor&) = default;
 		visitor& operator = (const visitor&) = default;
 
 		bool m_expect_value;
+		bool m_inside_negation;
+		bool m_last_node_has_evttypes;
 		falco_event_types m_last_node_evttypes;
+		falco_event_types m_all_events;
 		sinsp m_inspector;
 
 		void visit(libsinsp::filter::ast::and_expr* e) override;
@@ -206,7 +218,10 @@ private:
 		void visit(libsinsp::filter::ast::list_expr* e) override;
 		void visit(libsinsp::filter::ast::unary_check_expr* e) override;
 		void visit(libsinsp::filter::ast::binary_check_expr* e) override;
+		void try_inversion(falco_event_types& types);
 		void inversion(falco_event_types& types);
 		void evttypes(const std::string& evtname, falco_event_types& out);
+		void conjunction(const std::vector<std::unique_ptr<libsinsp::filter::ast::expr>>&);
+		void disjunction(const std::vector<std::unique_ptr<libsinsp::filter::ast::expr>>&);
 	};
 };
