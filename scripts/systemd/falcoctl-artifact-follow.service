@@ -14,6 +14,7 @@ Restart=on-failure
 PrivateTmp=true
 NoNewPrivileges=yes
 ProtectSystem=true
+ReadWriteDirectories=/usr/share/falco
 ProtectKernelTunables=true
 RestrictRealtime=true
 
