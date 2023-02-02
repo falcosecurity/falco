@@ -22,7 +22,7 @@ limitations under the License.
  * responsible of returning the set of event types for which the
  * filtering condition can be evaluated to true.
  * 
- * This implementation is based on the boolean algebric properties of sets 
+ * This implementation is based on the boolean algebraic properties of sets 
  * and works as follows depending on the type of nodes:
  * - the evt types of "and" nodes are the intersection set of the evt types of
  *   their children nodes.
