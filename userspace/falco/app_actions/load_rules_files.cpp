@@ -172,6 +172,14 @@ application::run_result application::load_rules_files()
 		check_for_ignored_events();
 	}
 
+	if(m_options.all_events && m_options.modern_bpf)
+	{
+		/* Right now the modern BPF probe doesn't support the -A flag, we implemented just 
+		 * the "simple set" syscalls.
+		 */
+		falco_logger::log(LOG_INFO, "The '-A' flag has no effect with the modern BPF probe, no further syscalls will be added\n");
+	}
+
 	if (m_options.describe_all_rules)
 	{
 		m_state->engine->describe_rule(NULL);
