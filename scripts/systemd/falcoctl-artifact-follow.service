@@ -6,7 +6,7 @@ PartOf=falco-bpf.service falco-kmod.service falco-modern-bpf.service falco-custo
 [Service]
 Type=simple
 User=root
-ExecStart=/usr/bin/falcoctl artifact follow
+ExecStart=/usr/bin/falcoctl artifact follow --allowed-types=rulesfile
 UMask=0077
 TimeoutSec=30
 RestartSec=15s
