@@ -1,5 +1,111 @@
 # Change Log
 
+## v0.34.0
+
+Released on 2023-02-07
+
+### Major Changes
+
+* BREAKING CHANGE: if you relied upon `application_rules.yaml` you can download it from https://github.com/falcosecurity/rules/tree/main/rules and manually install it. [[#2389](https://github.com/falcosecurity/falco/pull/2389)] - [@leogr](https://github.com/leogr)
+
+* new(rules): New rule to detect attempts to inject code into a process using PTRACE [[#2226](https://github.com/falcosecurity/falco/pull/2226)] - [@Brucedh](https://github.com/Brucedh)
+* new(engine): Also include exact locations for rule condition compile errors (missing macros, etc). [[#2216](https://github.com/falcosecurity/falco/pull/2216)] - [@mstemm](https://github.com/mstemm)
+* new(scripts): Support older RHEL distros in falco-driver-loader script [[#2312](https://github.com/falcosecurity/falco/pull/2312)] - [@gentooise](https://github.com/gentooise)
+* new(scripts): add `falcoctl` config into Falco package [[#2390](https://github.com/falcosecurity/falco/pull/2390)] - [@Andreagit97](https://github.com/Andreagit97)
+* new(userspace/falco): [EXPERIMENTAL] allow modern bpf probe to assign more than one CPU to a single ring buffer [[#2363](https://github.com/falcosecurity/falco/pull/2363)] - [@Andreagit97](https://github.com/Andreagit97)
+* new(userspace/falco): add webserver endpoint for retrieving internal version numbers [[#2356](https://github.com/falcosecurity/falco/pull/2356)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* new(falco): add --version-json to print version information in json format [[#2331](https://github.com/falcosecurity/falco/pull/2331)] - [@LucaGuerra](https://github.com/LucaGuerra)
+* new(scripts): support multiple drivers in systemd units [[#2242](https://github.com/falcosecurity/falco/pull/2242)] - [@FedeDP](https://github.com/FedeDP)
+* new(scripts): add bottlerocket support in falco-driver-loader [[#2318](https://github.com/falcosecurity/falco/pull/2318)] - [@FedeDP](https://github.com/FedeDP)
+* new(falco): add more version fields to --support and --version [[#2325](https://github.com/falcosecurity/falco/pull/2325)] - [@LucaGuerra](https://github.com/LucaGuerra)
+* new(config): explicitly add the `simulate_drops` config [[#2260](https://github.com/falcosecurity/falco/pull/2260)] - [@Andreagit97](https://github.com/Andreagit97)
+
+
+### Minor Changes
+
+* build: upgrade to `falcoctl` v0.4.0 [[#2406](https://github.com/falcosecurity/falco/pull/2406)] - [@loresuso](https://github.com/loresuso)
+* update(userspace): change `modern_bpf.cpus_for_each_syscall_buffer` default value [[#2404](https://github.com/falcosecurity/falco/pull/2404)] - [@Andreagit97](https://github.com/Andreagit97)
+* update(build): update falcoctl to 0.3.0 [[#2401](https://github.com/falcosecurity/falco/pull/2401)] - [@LucaGuerra](https://github.com/LucaGuerra)
+* update(build): update falcoctl to 0.3.0-rc7 [[#2396](https://github.com/falcosecurity/falco/pull/2396)] - [@LucaGuerra](https://github.com/LucaGuerra)
+* update(cmake): bump libs to 0.10.3 [[#2392](https://github.com/falcosecurity/falco/pull/2392)] - [@FedeDP](https://github.com/FedeDP)
+* build: `/etc/falco/rules.available` has been deprecated [[#2389](https://github.com/falcosecurity/falco/pull/2389)] - [@leogr](https://github.com/leogr)
+* build: `application_rules.yaml` is not shipped anymore with Falco [[#2389](https://github.com/falcosecurity/falco/pull/2389)] - [@leogr](https://github.com/leogr)
+* build: upgrade k8saudit plugin to v0.5.0 [[#2381](https://github.com/falcosecurity/falco/pull/2381)] - [@leogr](https://github.com/leogr)
+* build: upgrade cloudtrail plugin to v0.6.0 [[#2381](https://github.com/falcosecurity/falco/pull/2381)] - [@leogr](https://github.com/leogr)
+* new!: ship falcoctl inside Falco [[#2345](https://github.com/falcosecurity/falco/pull/2345)] - [@FedeDP](https://github.com/FedeDP)
+* refactor: remove rules and add submodule to falcosecurity/rules [[#2359](https://github.com/falcosecurity/falco/pull/2359)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* update(scripts): add option for regenerating signatures of all dev and release packages [[#2364](https://github.com/falcosecurity/falco/pull/2364)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* update: print JSON version output when json_output is enabled [[#2351](https://github.com/falcosecurity/falco/pull/2351)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* update(cmake): updated libs to 0.10.1 tag. [[#2362](https://github.com/falcosecurity/falco/pull/2362)] - [@FedeDP](https://github.com/FedeDP)
+* Install the certificates of authorities in falco:no-driver docker image [[#2355](https://github.com/falcosecurity/falco/pull/2355)] - [@Issif](https://github.com/Issif)
+* update: Mesos support is now deprecated and will be removed in the next version. [[#2328](https://github.com/falcosecurity/falco/pull/2328)] - [@leogr](https://github.com/leogr)
+* update(scripts/falco-driver-loader): optimize the resiliency of module download script for air-gapped environments [[#2336](https://github.com/falcosecurity/falco/pull/2336)] - [@Dentrax](https://github.com/Dentrax)
+* doc(userspace): provide users with a correct message when some syscalls are not defined [[#2329](https://github.com/falcosecurity/falco/pull/2329)] - [@Andreagit97](https://github.com/Andreagit97)
+* update(ci): update ci jobs to generate Falco images with the modern BPF probe [[#2320](https://github.com/falcosecurity/falco/pull/2320)] - [@Andreagit97](https://github.com/Andreagit97)
+* rules: add Falco container lists [[#2290](https://github.com/falcosecurity/falco/pull/2290)] - [@oscr](https://github.com/oscr)
+* rules(macro: private_key_or_password): now also check for OpenSSH private keys [[#2284](https://github.com/falcosecurity/falco/pull/2284)] - [@oscr](https://github.com/oscr)
+* update(cmake): bump libs and driver to latest RC. [[#2302](https://github.com/falcosecurity/falco/pull/2302)] - [@FedeDP](https://github.com/FedeDP)
+* Ensure that a ruleset object is copied properly in falco_engine::add_source(). [[#2271](https://github.com/falcosecurity/falco/pull/2271)] - [@mstemm](https://github.com/mstemm)
+* update(userspace/falco): enable using zlib with webserver [[#2125](https://github.com/falcosecurity/falco/pull/2125)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* update(falco): add container-gvisor and kubernetes-gvisor print options [[#2288](https://github.com/falcosecurity/falco/pull/2288)] - [@LucaGuerra](https://github.com/LucaGuerra)
+* cleanup: always use bundled libz and libelf in BUNDLED_DEPS mode. [[#2277](https://github.com/falcosecurity/falco/pull/2277)] - [@FedeDP](https://github.com/FedeDP)
+* update: updated libs and driver to version dd443b67c6b04464cb8ee2771af8ada8777e7fac [[#2277](https://github.com/falcosecurity/falco/pull/2277)] - [@FedeDP](https://github.com/FedeDP)
+* update(falco.yaml): `open_params` under plugins configuration is now trimmed from surrounding whitespace [[#2267](https://github.com/falcosecurity/falco/pull/2267)] - [@yardenshoham](https://github.com/yardenshoham)
+
+
+### Bug Fixes
+
+* fix(engine): Avoid crash related to caching syscall source when the falco engine uses multiple sources at the same time. [[#2272](https://github.com/falcosecurity/falco/pull/2272)] - [@mstemm](https://github.com/mstemm)
+* fix(scripts): use falco-driver-loader only into install scripts [[#2391](https://github.com/falcosecurity/falco/pull/2391)] - [@Andreagit97](https://github.com/Andreagit97)
+* fix(userspace/falco): fix grpc server shutdown [[#2350](https://github.com/falcosecurity/falco/pull/2350)] - [@FedeDP](https://github.com/FedeDP)
+* fix(docker/falco): trust latest GPG key [[#2365](https://github.com/falcosecurity/falco/pull/2365)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* fix(userspace/engine): improve rule loading validation results [[#2344](https://github.com/falcosecurity/falco/pull/2344)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* fix: graceful error handling for macros/lists reference loops [[#2311](https://github.com/falcosecurity/falco/pull/2311)] - [@jasondellaluce](https://github.com/jasondellaluce)
+
+
+### Rule Changes
+
+* rules(tagging): enhanced rules tagging for inventory / threat modeling [[#2167](https://github.com/falcosecurity/falco/pull/2167)] - [@incertum](https://github.com/incertum)
+* rule(Outbound Connection to C2 Server): Update the "Outbound connection to C2 server" rule to match both FQDN and IP addresses. Prior to this change, the rule only matched IP addresses and not FQDN. [[#2241](https://github.com/falcosecurity/falco/pull/2241)] - [@Nicolas-Peiffer](https://github.com/Nicolas-Peiffer)
+* rule(Execution from /dev/shm): new rule to detect execution from /dev/shm [[#2225](https://github.com/falcosecurity/falco/pull/2225)] - [@AlbertoPellitteri](https://github.com/AlbertoPellitteri)
+* rule(Find AWS Credentials): new rule to detect executions looking for AWS credentials [[#2224](https://github.com/falcosecurity/falco/pull/2224)] - [@AlbertoPellitteri](https://github.com/AlbertoPellitteri)
+* rule(Linux Kernel Module Injection Detected): improve insmod detection within container using CAP_SYS_MODULE [[#2305](https://github.com/falcosecurity/falco/pull/2305)] - [@loresuso](https://github.com/loresuso)
+* rule(Read sensitive file untrusted): let salt-call read sensitive files [[#2291](https://github.com/falcosecurity/falco/pull/2291)] - [@vin01](https://github.com/vin01)
+* rule(macro: rpm_procs): let salt-call write to rpm database [[#2291](https://github.com/falcosecurity/falco/pull/2291)] - [@vin01](https://github.com/vin01)
+
+
+### Non user-facing changes
+
+* fix(ci): fix rpm sign job dependencies [[#2324](https://github.com/falcosecurity/falco/pull/2324)] - [@cappellinsamuele](https://github.com/cappellinsamuele)
+* chore(userspace): add `njson` lib as a dependency for `falco_engine` [[#2316](https://github.com/falcosecurity/falco/pull/2316)] - [@Andreagit97](https://github.com/Andreagit97)
+* fix(scripts): force rpm postinstall script to always show dialog, even on upgrade [[#2405](https://github.com/falcosecurity/falco/pull/2405)] - [@FedeDP](https://github.com/FedeDP)
+* fix(scripts): fixed falcoctl config install dir. [[#2399](https://github.com/falcosecurity/falco/pull/2399)] - [@FedeDP](https://github.com/FedeDP)
+* fix(scripts): make /usr writable [[#2398](https://github.com/falcosecurity/falco/pull/2398)] - [@therealbobo](https://github.com/therealbobo)
+* fix(scripts): driver loader insmod [[#2388](https://github.com/falcosecurity/falco/pull/2388)] - [@FedeDP](https://github.com/FedeDP)
+* update(systemd): solve some issues with systemd unit [[#2385](https://github.com/falcosecurity/falco/pull/2385)] - [@Andreagit97](https://github.com/Andreagit97)
+* build(cmake): upgrade falcoctl to v0.3.0-rc6 [[#2383](https://github.com/falcosecurity/falco/pull/2383)] - [@leogr](https://github.com/leogr)
+* docs(.github): rules are no longer in this repo [[#2382](https://github.com/falcosecurity/falco/pull/2382)] - [@leogr](https://github.com/leogr)
+* update(CI): mitigate frequent failure in CircleCI jobs [[#2375](https://github.com/falcosecurity/falco/pull/2375)] - [@Andreagit97](https://github.com/Andreagit97)
+* fix(userspace): use the right path for the `cpus_for_each_syscall_buffer` config [[#2378](https://github.com/falcosecurity/falco/pull/2378)] - [@Andreagit97](https://github.com/Andreagit97)
+* fix(scripts): fixed incorrect bash var expansion [[#2367](https://github.com/falcosecurity/falco/pull/2367)] - [@therealbobo](https://github.com/therealbobo)
+* update(CI): upgrade toolchain in modern falco builder dockerfile [[#2337](https://github.com/falcosecurity/falco/pull/2337)] - [@Andreagit97](https://github.com/Andreagit97)
+* cleanup(ci): move static analysis job from circle CI to GHA [[#2332](https://github.com/falcosecurity/falco/pull/2332)] - [@Andreagit97](https://github.com/Andreagit97)
+* update(falco): update cpp-httplib to 0.11.3 [[#2327](https://github.com/falcosecurity/falco/pull/2327)] - [@LucaGuerra](https://github.com/LucaGuerra)
+* update(script): makes user able to pass custom option to driver-loade… [[#1901](https://github.com/falcosecurity/falco/pull/1901)] - [@andreabonanno](https://github.com/andreabonanno)
+* cleanup(ci): remove some unused jobs and remove some `falco-builder` reference where possible [[#2322](https://github.com/falcosecurity/falco/pull/2322)] - [@Andreagit97](https://github.com/Andreagit97)
+* docs(proposal): new artifacts distribution proposal [[#2304](https://github.com/falcosecurity/falco/pull/2304)] - [@leogr](https://github.com/leogr)
+* fix(cmake): properly fetch dev version by appending latest Falco tag, delta between master and tag, and hash [[#2292](https://github.com/falcosecurity/falco/pull/2292)] - [@FedeDP](https://github.com/FedeDP)
+* chore(deps): Bump certifi from 2020.4.5.1 to 2022.12.7 in /test [[#2313](https://github.com/falcosecurity/falco/pull/2313)] - [@dependabot[bot]](https://github.com/apps/dependabot)
+* chore: remove string view lite [[#2307](https://github.com/falcosecurity/falco/pull/2307)] - [@leogr](https://github.com/leogr)
+* new(CHANGELOG): add entry for 0.33.1 (in master branch this time) [[#2303](https://github.com/falcosecurity/falco/pull/2303)] - [@LucaGuerra](https://github.com/LucaGuerra)
+* update(docs): add overview and versioning sections to falco release.md [[#2205](https://github.com/falcosecurity/falco/pull/2205)] - [@incertum](https://github.com/incertum)
+* Add Xenit AB to adopters [[#2285](https://github.com/falcosecurity/falco/pull/2285)] - [@NissesSenap](https://github.com/NissesSenap)
+* fix(userspace/falco): verify engine fields only for syscalls [[#2281](https://github.com/falcosecurity/falco/pull/2281)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* fix(output): do not print syscall_buffer_size when gvisor is enabled [[#2283](https://github.com/falcosecurity/falco/pull/2283)] - [@alacuku](https://github.com/alacuku)
+* fix(engine): fix warning about redundant std::move [[#2286](https://github.com/falcosecurity/falco/pull/2286)] - [@LucaGuerra](https://github.com/LucaGuerra)
+* fix(scripts): force falco-driver-loader script to try to compile the driver anyway even on unsupported platforms [[#2219](https://github.com/falcosecurity/falco/pull/2219)] - [@FedeDP](https://github.com/FedeDP)
+* fix(ci): fixed version bucket for release jobs. [[#2266](https://github.com/falcosecurity/falco/pull/2266)] - [@FedeDP](https://github.com/FedeDP)
+
 ## v0.33.1
 
 Released on 2022-11-24
