@@ -37,6 +37,15 @@ limitations under the License.
 #include "event_drops.h"
 #include "falco_outputs.h"
 
+enum class driver_mode_type : uint8_t
+{
+	INVALID = 0,
+	KMOD,
+	BPF,
+	MODERN_BPF,
+	CUSTOM
+};
+
 class falco_configuration
 {
 public:
@@ -63,7 +72,7 @@ public:
 	std::list<std::string> m_loaded_rules_filenames;
 	// List of loaded rule folders
 	std::list<std::string> m_loaded_rules_folders;
-
+	driver_mode_type m_driver_mode;
 	bool m_json_output;
 	bool m_json_include_output_property;
 	bool m_json_include_tags_property;
