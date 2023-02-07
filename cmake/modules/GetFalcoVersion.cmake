@@ -21,7 +21,8 @@ if(NOT FALCO_VERSION)
   if(NOT FALCO_TAG)
       # Obtain the closest tag
       git_describe(FALCO_VERSION "--always" "--tags" "--abbrev=7")
-      if(FALCO_VERSION MATCHES "NOTFOUND$")
+      string(REGEX MATCH "^[0-9]+.[0-9]+.[0-9]+$" FALCO_TAG ${FALCO_VERSION})
+      if(FALCO_VERSION MATCHES "NOTFOUND$" OR FALCO_TAG STREQUAL "")
         # Fetch current hash
         get_git_head_revision(refspec FALCO_HASH)
         if(NOT FALCO_HASH OR FALCO_HASH MATCHES "NOTFOUND$")
