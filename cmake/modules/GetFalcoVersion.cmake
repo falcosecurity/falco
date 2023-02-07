@@ -19,29 +19,35 @@ if(NOT FALCO_VERSION)
   # Try to obtain the exact git tag
   git_get_exact_tag(FALCO_TAG)
   if(NOT FALCO_TAG)
-      # Fetch current hash
-      get_git_head_revision(refspec FALCO_HASH)
-      if(NOT FALCO_HASH OR FALCO_HASH MATCHES "NOTFOUND$")
-        set(FALCO_VERSION "0.0.0")
-      else()
-        # Obtain the closest tag
-        git_get_latest_tag(FALCO_LATEST_TAG)
-        if(NOT FALCO_LATEST_TAG OR FALCO_LATEST_TAG MATCHES "NOTFOUND$")
+      # Obtain the closest tag
+      git_describe(FALCO_VERSION "--always" "--tags" "--abbrev=7")
+      if(FALCO_VERSION MATCHES "NOTFOUND$")
+        # Fetch current hash
+        get_git_head_revision(refspec FALCO_HASH)
+        if(NOT FALCO_HASH OR FALCO_HASH MATCHES "NOTFOUND$")
           set(FALCO_VERSION "0.0.0")
         else()
-          # Compute commit delta since tag
-          git_get_delta_from_tag(FALCO_DELTA ${FALCO_LATEST_TAG} ${FALCO_HASH})
-          if(NOT FALCO_DELTA OR FALCO_DELTA MATCHES "NOTFOUND$")
+          # Obtain the closest tag
+          git_get_latest_tag(FALCO_LATEST_TAG)
+          if(NOT FALCO_LATEST_TAG OR FALCO_LATEST_TAG MATCHES "NOTFOUND$")
             set(FALCO_VERSION "0.0.0")
           else()
-            # Cut hash to 7 bytes
-            string(SUBSTRING ${FALCO_HASH} 0 7 FALCO_HASH)
-            # Format FALCO_VERSION to be semver with prerelease and build part
-            set(FALCO_VERSION
-                  "${FALCO_LATEST_TAG}-${FALCO_DELTA}+${FALCO_HASH}")
-           endif()
+            # Compute commit delta since tag
+            git_get_delta_from_tag(FALCO_DELTA ${FALCO_LATEST_TAG} ${FALCO_HASH})
+            if(NOT FALCO_DELTA OR FALCO_DELTA MATCHES "NOTFOUND$")
+              set(FALCO_VERSION "0.0.0")
+            else()
+              # Cut hash to 7 bytes
+              string(SUBSTRING ${FALCO_HASH} 0 7 FALCO_HASH)
+              # Format FALCO_VERSION to be semver with prerelease and build part
+              set(FALCO_VERSION
+                    "${FALCO_LATEST_TAG}-${FALCO_DELTA}+${FALCO_HASH}")
+            endif()
+          endif()
         endif()
       endif()
+      # Format FALCO_VERSION to be semver with prerelease and build part
+      string(REPLACE "-g" "+" FALCO_VERSION "${FALCO_VERSION}")
   else()
     # A tag has been found: use it as the Falco version
     set(FALCO_VERSION "${FALCO_TAG}")
