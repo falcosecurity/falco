@@ -73,10 +73,22 @@ To report security vulnerabilities, please follow the community process outlined
 
 Stay updated with Falco's evolving capabilities by exploring the [Falco Roadmap](https://github.com/orgs/falcosecurity/projects/5), which provides insights into the features currently under development and planned for future releases.
 
-
 ## License
 
 Falco is licensed to you under the [Apache 2.0](./COPYING) open source license.
+
+## Why is Falco in C++ rather than Go or {language}?
+
+1. The first lines of code at the base of Falco were written some time ago, where Go didn't yet have the same level of maturity and adoption as today.
+2. The Falco execution model is sequential and mono-thread due to the statefulness requirements of the tool, and so most of the concurrency-related selling points of the Go runtime would not be leveraged at all.
+3. The Falco code deals with very low-level programming in many places (e.g. some headers are shared with the eBPF probe and the Kernel module), and we all know that interfacing Go with C is possible but brings tons of complexity and tradeoffs to the table.
+4. As a security tool meant to consume a crazy high throughput of events per second, Falco needs to squeeze performance in all hot paths at runtime and requires deep control on memory allocation, which the Go runtime can't provide (there's also garbage collection involved).
+5. Although Go didn't suit the engineering requirements of the core of Falco, we still thought that it could be a good candidate for writing Falco extensions through the plugin system. This is the main reason we gave special attention and high priority to the development of the plugin-sdk-go.
+6. Go is not a requirement for having statically-linked binaries. In fact, we provide fully-static Falco builds since few years. The only issue with those is that the plugin system can't be supported with the current dynamic library model we currently have.
+7. Your opening point is very tied to plugins developed in Go, but we need to be mindful that the plugin system has been envisioned to support multiple languages too, so on our end maintaining a C-compatible codebase is the best strategy to ensure maximum cross-language compatibility.
+8. In general, plugins have GLIBC requirements/dependencies because they have low-level C bindings required for dynamic loading. A potential solution for the future could be to also support plugin to be statically-linked at compilation time and so released as bundled in the Falco binary. Although no work started yet in this direction, this would solve most issues you reported and would provide a totally-static binary too. Of course, this would not be compatible with dynamic loading anymore, but it may be a viable solution for our static-build flavor of Falco.
+9. Memory safety is definitely a concern and we try our best to keep an high level of quality even though C++ is quite error prone. For instance, we try to use smart pointers whenever possible, we build the libraries with an address sanitizer in our CI, we run Falco through Valgrind before each release, and have ways to stress-test it to detect performance regressions or weird memory usage (e.g. https://github.com/falcosecurity/event-generator). On top of that, we also have third parties auditing the codebase by time to time. None of this make a perfect safety standpoint of course, but we try to maximize our odds. Go would definitely make our life easier from this perspective, however the tradeoffs never made it worth it so far due to the points above.
+10. The C++ codebase of falcosecurity/libs, which is at the core of Falco, is quite large and complex. Porting all that code to another language would be a major effort requiring lots of development resource and with an high chance of failure and regression. As such, our approach so far has been to choose refactors and code polishing instead, up until we'll reach an optimal level of stability, quality, and modularity, on that portion of code. This would allow further developments to be smoother and more feasibile in the future.
 
 ## Resources
 
