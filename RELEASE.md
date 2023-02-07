@@ -110,7 +110,7 @@ Now assume `x.y.z` is the new version.
 
     ```
     git pull
-    git checkout master
+    git checkout release/x.y.z
     git tag x.y.z
     git push origin x.y.z
     ```
