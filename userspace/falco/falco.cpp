@@ -19,7 +19,7 @@ limitations under the License.
 
 #include <iostream>
 
-#include "application.h"
+#include "app/app.h"
 #include "logger.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
 
@@ -42,26 +42,11 @@ static void display_fatal_err(const std::string &&msg)
 //
 int falco_init(int argc, char **argv, bool &restart)
 {
-	falco::app::application app;
 	restart = false;
-
 	std::string errstr;
-	bool successful = app.init(argc, argv, errstr);
-
-	if(!successful)
-	{
-		fprintf(stderr, "Runtime error: %s. Exiting.\n", errstr.c_str());
-		return EXIT_FAILURE;
-	}
-
 	try
 	{
-		bool success;
-		std::string errstr;
-
-		success = app.run(errstr, restart);
-
-		if(!success)
+		if (!falco::app::run(argc, argv, restart, errstr))
 		{
 			fprintf(stderr, "Error: %s\n", errstr.c_str());
 			return EXIT_FAILURE;
