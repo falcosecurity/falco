@@ -15,27 +15,14 @@ limitations under the License.
 */
 
 #include "actions.h"
+#include "helpers.h"
+
 #include <plugin_manager.h>
 
 #include <unordered_set>
 
 using namespace falco::app;
 using namespace falco::app::actions;
-
-bool falco::app::actions::check_rules_plugin_requirements(falco::app::state& s, std::string& err)
-{
-	// Ensure that all plugins are compatible with the loaded set of rules
-	// note: offline inspector contains all the loaded plugins
-	std::vector<falco_engine::plugin_version_requirement> plugin_reqs;
-	for (const auto &plugin : s.offline_inspector->get_plugin_manager()->plugins())
- 	{
-		falco_engine::plugin_version_requirement req;
-		req.name = plugin->name();
-		req.version = plugin->plugin_version().as_string();
-		plugin_reqs.push_back(req);
- 	}
-	return s.engine->check_plugin_requirements(plugin_reqs, err);
-}
 
 static void check_for_ignored_events(falco::app::state& s)
 {

@@ -16,7 +16,6 @@ limitations under the License.
 
 #include <sys/utsname.h>
 
-#include "versions_info.h"
 #include "actions.h"
 #include "../../versions_info.h"
 

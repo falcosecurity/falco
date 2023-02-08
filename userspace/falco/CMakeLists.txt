@@ -19,6 +19,9 @@ set(
   app/state.cpp
   app/signals.cpp
   app/options.cpp
+  app/actions/helpers_generic.cpp
+  app/actions/helpers_inspector.cpp
+  app/actions/helpers_interesting_sets.cpp
   app/actions/create_signal_handlers.cpp
   app/actions/daemonize.cpp
   app/actions/init_falco_engine.cpp
@@ -30,7 +33,6 @@ set(
   app/actions/load_config.cpp
   app/actions/load_plugins.cpp
   app/actions/load_rules_files.cpp
-  app/actions/open_inspector.cpp
   app/actions/process_events.cpp
   app/actions/print_generated_gvisor_config.cpp
   app/actions/print_help.cpp
@@ -46,7 +48,6 @@ set(
   app/actions/start_webserver.cpp
   app/actions/validate_rules_files.cpp
   app/actions/create_requested_paths.cpp
-  app/actions/configure_interesting_sets.cpp
   configuration.cpp
   logger.cpp
   falco_outputs.cpp

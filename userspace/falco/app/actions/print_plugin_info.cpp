@@ -15,28 +15,12 @@ limitations under the License.
 */
 
 #include "actions.h"
+#include "helpers.h"
+
 #include <plugin_manager.h>
 
 using namespace falco::app;
 using namespace falco::app::actions;
-
-void falco::app::actions::format_plugin_info(std::shared_ptr<sinsp_plugin> p, std::ostream& os)
-{
-	os << "Name: " << p->name() << std::endl;
-	os << "Description: " << p->description() << std::endl;
-	os << "Contact: " << p->contact() << std::endl;
-	os << "Version: " << p->plugin_version().as_string() << std::endl;
-	os << "Capabilities: " << std::endl;
-	if(p->caps() & CAP_SOURCING)
-	{
-		os << "  - Event Sourcing (ID=" << p->id();
-		os << ", source='" << p->event_source() << "')" << std::endl;
-	}
-	if(p->caps() & CAP_EXTRACTION)
-	{
-		os << "  - Field Extraction" << std::endl;
-	}
-}
 
 falco::app::run_result falco::app::actions::print_plugin_info(falco::app::state& s)
 {

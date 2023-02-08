@@ -20,7 +20,7 @@ limitations under the License.
 
 #include <plugin_manager.h>
 
-#include "actions.h"
+#include "helpers.h"
 
 /* DEPRECATED: we will remove it in Falco 0.34. */
 #define FALCO_BPF_ENV_VARIABLE "FALCO_BPF_PROBE"
