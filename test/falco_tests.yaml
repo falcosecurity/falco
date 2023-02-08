@@ -624,7 +624,7 @@ trace_files: !mux
 
   disabled_and_enabled_rules_1:
     exit_status: 1
-    stderr_contains: "Runtime error: You can not specify both disabled .-D/-T. and enabled .-t. rules. Exiting."
+    stderr_contains: "Error: You can not specify both disabled .-D/-T. and enabled .-t. rules"
     disable_tags: [a]
     run_tags: [a]
     rules_file:
@@ -633,7 +633,7 @@ trace_files: !mux
 
   disabled_and_enabled_rules_2:
     exit_status: 1
-    stderr_contains: "Runtime error: You can not specify both disabled .-D/-T. and enabled .-t. rules. Exiting."
+    stderr_contains: "Error: You can not specify both disabled .-D/-T. and enabled .-t. rules"
     disabled_rules:
       - "open.*"
     run_tags: [a]
