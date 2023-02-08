@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2022 The Falco Authors.
+Copyright (C) 2023 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -29,28 +29,7 @@ limitations under the License.
 using namespace falco::app;
 using namespace falco::app::actions;
 
-static int create_dir(const std::string &path)
-{
-	// Properly reset errno
-	errno = 0;
-
-	std::istringstream f(path);
-	std::string path_until_token;
-	std::string s;
-	// Create all the subfolder stopping at last token (f.eof());
-	// Examples:
-	// "/tmp/foo/bar" -> "", "tmp", "foo" -> mkdir("/") + mkdir("/tmp/") + midir("/tmp/foo/")
-	// "tmp/foo/bar" -> "tmp", "foo" -> mkdir("tmp/") + midir("tmp/foo/")
-	while (getline(f, s, *CPPPATH_SEP) && !f.eof()) {
-		path_until_token += s + CPPPATH_SEP;
-		int ret = mkdir(path_until_token.c_str(), 0600);
-		if (ret != 0 && errno != EEXIST)
-		{
-			return ret;
-		}
-	}
-	return 0;
-}
+static int create_dir(const std::string &path);
 
 falco::app::run_result falco::app::actions::create_requested_paths(falco::app::state& s)
 {
@@ -111,3 +90,25 @@ falco::app::run_result falco::app::actions::create_requested_paths(falco::app::s
 	return run_result::ok();
 }
 
+static int create_dir(const std::string &path)
+{
+	// Properly reset errno
+	errno = 0;
+
+	std::istringstream f(path);
+	std::string path_until_token;
+	std::string s;
+	// Create all the subfolder stopping at last token (f.eof());
+	// Examples:
+	// "/tmp/foo/bar" -> "", "tmp", "foo" -> mkdir("/") + mkdir("/tmp/") + midir("/tmp/foo/")
+	// "tmp/foo/bar" -> "tmp", "foo" -> mkdir("tmp/") + midir("tmp/foo/")
+	while (getline(f, s, *CPPPATH_SEP) && !f.eof()) {
+		path_until_token += s + CPPPATH_SEP;
+		int ret = mkdir(path_until_token.c_str(), 0600);
+		if (ret != 0 && errno != EEXIST)
+		{
+			return ret;
+		}
+	}
+	return 0;
+}

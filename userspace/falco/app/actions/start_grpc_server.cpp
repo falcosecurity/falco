@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2022 The Falco Authors.
+Copyright (C) 2023 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -60,4 +60,3 @@ falco::app::run_result falco::app::actions::stop_grpc_server(falco::app::state& 
 	return run_result::ok();
 }
 
-#endif

@@ -22,7 +22,6 @@ std::atomic<int> falco::app::g_terminate(APP_SIGNAL_NOT_SET);
 std::atomic<int> falco::app::g_restart(APP_SIGNAL_NOT_SET);
 std::atomic<int> falco::app::g_reopen_outputs(APP_SIGNAL_NOT_SET);
 
-
 static inline bool should_take_action_to_signal(std::atomic<int>& v)
 {
 	// we expected the signal to be received, and we try to set action-taken flag

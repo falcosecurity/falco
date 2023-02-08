@@ -16,7 +16,6 @@ configure_file(config_falco.h.in config_falco.h)
 set(
   FALCO_SOURCES
   app/app.cpp
-  app/state.cpp
   app/signals.cpp
   app/options.cpp
   app/actions/helpers_generic.cpp

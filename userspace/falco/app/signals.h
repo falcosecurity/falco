@@ -41,10 +41,12 @@ inline bool should_terminate()
 {
     return g_terminate.load(std::memory_order_seq_cst) != APP_SIGNAL_NOT_SET;
 }
+
 inline bool should_restart()
 {
     return g_restart.load(std::memory_order_seq_cst) != APP_SIGNAL_NOT_SET;
 }
+
 inline bool should_reopen_outputs()
 {
     return g_reopen_outputs.load(std::memory_order_seq_cst) != APP_SIGNAL_NOT_SET;

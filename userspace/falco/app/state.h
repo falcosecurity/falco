@@ -58,7 +58,20 @@ struct state
         std::shared_ptr<sinsp> inspector;
     };
 
-    state();
+    state():
+        loaded_sources(),
+        enabled_sources(),
+        source_infos(),
+        plugin_configs(),
+        ppm_sc_of_interest(),
+        tp_of_interest(),
+        syscall_buffer_bytes_size(DEFAULT_DRIVER_BUFFER_BYTES_DIM)
+    {
+        config = std::make_shared<falco_configuration>();
+        engine = std::make_shared<falco_engine>();
+        offline_inspector = std::make_shared<sinsp>();
+        outputs = nullptr;
+    }
     ~state() = default;
     state(state&&) = default;
     state& operator = (state&&) = default;
@@ -112,14 +125,14 @@ struct state
 #endif
 
     inline bool is_capture_mode() const 
-	{
-		return !options.trace_filename.empty();
-	}
+    {
+        return !options.trace_filename.empty();
+    }
 
-	inline bool is_gvisor_enabled() const
-	{
-		return !options.gvisor_config.empty();
-	}
+    inline bool is_gvisor_enabled() const
+    {
+        return !options.gvisor_config.empty();
+    }
 };
 
 }; // namespace app
