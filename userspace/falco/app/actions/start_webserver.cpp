@@ -45,13 +45,13 @@ falco::app::run_result falco::app::actions::start_webserver(falco::app::state& s
 	return run_result::ok();
 }
 
-bool falco::app::actions::stop_webserver(falco::app::state& s, std::string &errstr)
+falco::app::run_result falco::app::actions::stop_webserver(falco::app::state& s)
 {
 	if(!s.is_capture_mode())
 	{
 		s.webserver.stop();
 	}
-	return true;
+	return run_result::ok();
 }
 
 #endif

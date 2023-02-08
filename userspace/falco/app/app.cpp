@@ -19,11 +19,11 @@ limitations under the License.
 #include "signals.h"
 #include "actions/actions.h"
 
+using app_action = std::function<falco::app::run_result(falco::app::state&)>;
+
 bool falco::app::run(int argc, char** argv, bool& restart, std::string& errstr)
 {
-	falco::app::state s;
-    falco::app::run_result res;
-    
+	falco::app::state s;    
 	if(!s.options.parse(argc, argv, errstr))
 	{
 		return false;
@@ -41,7 +41,7 @@ bool falco::app::run(int argc, char** argv, bool& restart, std::string& errstr)
 	// called. Before changing the order, ensure that all
 	// dependencies are honored (e.g. don't process events before
 	// loading plugins, opening inspector, etc.).
-	std::list<std::function<run_result(falco::app::state&)>> run_steps = {
+	std::list<app_action> run_steps = {
 		falco::app::actions::load_config,
 		falco::app::actions::print_help,
 		falco::app::actions::print_version,
@@ -72,15 +72,16 @@ bool falco::app::run(int argc, char** argv, bool& restart, std::string& errstr)
 		falco::app::actions::process_events,
 	};
 
-	std::list<std::function<bool(falco::app::state&, std::string&)>> teardown_steps = {
+	std::list<app_action> teardown_steps = {
 		falco::app::actions::unregister_signal_handlers,
 		falco::app::actions::stop_grpc_server,
 		falco::app::actions::stop_webserver,
 	};
 
+	falco::app::run_result res = falco::app::run_result::ok();
 	for (auto &func : run_steps)
 	{
-		res = func(s);
+		res = falco::app::run_result::merge(res, func(s));
 		if(!res.proceed)
 		{
 			break;
@@ -89,14 +90,8 @@ bool falco::app::run(int argc, char** argv, bool& restart, std::string& errstr)
 
 	for (auto &func : teardown_steps)
 	{
-		std::string errstr;
-
-		if(!func(s, errstr))
-		{
-			// Note only printing warning here--we want all functions
-			// to occur even if some return errors.
-			fprintf(stderr, "Could not tear down in run(): %s\n", errstr.c_str());
-		}
+		res = falco::app::run_result::merge(res, func(s));
+		// note: we always proceed because we don't want to miss teardown steps
 	}
 
 	if(!res.success)
