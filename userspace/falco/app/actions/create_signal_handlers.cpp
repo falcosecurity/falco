@@ -168,7 +168,7 @@ falco::app::run_result falco::app::actions::attach_inotify_signals(falco::app::s
 	return run_result::ok();
 }
 
-bool falco::app::actions::unregister_signal_handlers(falco::app::state& s, std::string &errstr)
+falco::app::run_result falco::app::actions::unregister_signal_handlers(falco::app::state& s)
 {
 	run_result ret;
 	close(inot_fd);
@@ -177,8 +177,7 @@ bool falco::app::actions::unregister_signal_handlers(falco::app::state& s, std::
 	   ! create_handler(SIGUSR1, SIG_DFL, ret) ||
 	   ! create_handler(SIGHUP, SIG_DFL, ret))
 	{
-		errstr = ret.errstr;
-		return false;
+		return ret;
 	}
-	return true;
+	return run_result::ok();
 }

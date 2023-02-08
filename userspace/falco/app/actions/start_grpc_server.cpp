@@ -46,7 +46,7 @@ falco::app::run_result falco::app::actions::start_grpc_server(falco::app::state&
 	return run_result::ok();
 }
 
-bool falco::app::actions::stop_grpc_server(falco::app::state& s, std::string &errstr)
+falco::app::run_result falco::app::actions::stop_grpc_server(falco::app::state& s)
 {
 	if(s.grpc_server_thread.joinable())
 	{
@@ -54,7 +54,7 @@ bool falco::app::actions::stop_grpc_server(falco::app::state& s, std::string &er
 		s.grpc_server_thread.join();
 	}
 
-	return true;
+	return run_result::ok();
 }
 
 #endif

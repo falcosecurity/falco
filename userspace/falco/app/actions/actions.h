@@ -53,9 +53,9 @@ falco::app::run_result start_webserver(falco::app::state& s);
 falco::app::run_result validate_rules_files(falco::app::state& s);
 
 // teardown
-bool unregister_signal_handlers(falco::app::state& s, std::string &errstr);
-bool stop_grpc_server(falco::app::state& s, std::string &errstr);
-bool stop_webserver(falco::app::state& s, std::string &errstr);
+falco::app::run_result unregister_signal_handlers(falco::app::state& s);
+falco::app::run_result stop_grpc_server(falco::app::state& s);
+falco::app::run_result stop_webserver(falco::app::state& s);
 
 // helpers
 bool check_rules_plugin_requirements(falco::app::state& s, std::string& err);
