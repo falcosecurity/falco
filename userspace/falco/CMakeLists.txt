@@ -15,36 +15,38 @@ configure_file(config_falco.h.in config_falco.h)
 
 set(
   FALCO_SOURCES
-  application.cpp
-  app_cmdline_options.cpp
-  app_actions/create_signal_handlers.cpp
-  app_actions/daemonize.cpp
-  app_actions/init_falco_engine.cpp
-  app_actions/init_inspectors.cpp
-  app_actions/init_clients.cpp
-  app_actions/init_outputs.cpp
-  app_actions/list_fields.cpp
-  app_actions/list_plugins.cpp
-  app_actions/load_config.cpp
-  app_actions/load_plugins.cpp
-  app_actions/load_rules_files.cpp
-  app_actions/open_inspector.cpp
-  app_actions/process_events.cpp
-  app_actions/print_generated_gvisor_config.cpp
-  app_actions/print_help.cpp
-  app_actions/print_ignored_events.cpp
-  app_actions/print_plugin_info.cpp
-  app_actions/print_support.cpp
-  app_actions/print_syscall_events.cpp
-  app_actions/print_version.cpp
-  app_actions/print_page_size.cpp
-  app_actions/compute_syscall_buffer_size.cpp
-  app_actions/select_event_sources.cpp
-  app_actions/start_grpc_server.cpp
-  app_actions/start_webserver.cpp
-  app_actions/validate_rules_files.cpp
-  app_actions/create_requested_paths.cpp
-  app_actions/configure_interesting_sets.cpp
+  app/app.cpp
+  app/state.cpp
+  app/signals.cpp
+  app/options.cpp
+  app/actions/create_signal_handlers.cpp
+  app/actions/daemonize.cpp
+  app/actions/init_falco_engine.cpp
+  app/actions/init_inspectors.cpp
+  app/actions/init_clients.cpp
+  app/actions/init_outputs.cpp
+  app/actions/list_fields.cpp
+  app/actions/list_plugins.cpp
+  app/actions/load_config.cpp
+  app/actions/load_plugins.cpp
+  app/actions/load_rules_files.cpp
+  app/actions/open_inspector.cpp
+  app/actions/process_events.cpp
+  app/actions/print_generated_gvisor_config.cpp
+  app/actions/print_help.cpp
+  app/actions/print_ignored_events.cpp
+  app/actions/print_plugin_info.cpp
+  app/actions/print_support.cpp
+  app/actions/print_syscall_events.cpp
+  app/actions/print_version.cpp
+  app/actions/print_page_size.cpp
+  app/actions/compute_syscall_buffer_size.cpp
+  app/actions/select_event_sources.cpp
+  app/actions/start_grpc_server.cpp
+  app/actions/start_webserver.cpp
+  app/actions/validate_rules_files.cpp
+  app/actions/create_requested_paths.cpp
+  app/actions/configure_interesting_sets.cpp
   configuration.cpp
   logger.cpp
   falco_outputs.cpp
