@@ -17,14 +17,15 @@ limitations under the License.
 #include "actions.h"
 
 #ifndef MINIMAL_BUILD
-
 #include "grpc_server.h"
+#endif
 
 using namespace falco::app;
 using namespace falco::app::actions;
 
 falco::app::run_result falco::app::actions::start_grpc_server(falco::app::state& s)
 {
+#ifndef MINIMAL_BUILD
 	// gRPC server
 	if(s.config->m_grpc_enabled)
 	{
@@ -43,17 +44,19 @@ falco::app::run_result falco::app::actions::start_grpc_server(falco::app::state&
 			s.grpc_server.run();
 		});
 	}
+#endif
 	return run_result::ok();
 }
 
 falco::app::run_result falco::app::actions::stop_grpc_server(falco::app::state& s)
 {
+#ifndef MINIMAL_BUILD
 	if(s.grpc_server_thread.joinable())
 	{
 		s.grpc_server.shutdown();
 		s.grpc_server_thread.join();
 	}
-
+#endif
 	return run_result::ok();
 }
 
