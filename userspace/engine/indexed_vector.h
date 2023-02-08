@@ -19,6 +19,7 @@ limitations under the License.
 #include <map>
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 /*!
 	\brief Simple wrapper of std::vector that allows random access
