@@ -15,6 +15,8 @@ limitations under the License.
 */
 
 #include "actions.h"
+#include "helpers.h"
+
 #include <string>
 
 using namespace falco::app;

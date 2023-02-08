@@ -24,14 +24,16 @@ limitations under the License.
 #include <unordered_map>
 
 #include "falco_utils.h"
-#include "event_drops.h"
-#include "actions.h"
-#include "falco_outputs.h"
 #include "token_bucket.h"
+
+#include "actions.h"
+#include "helpers.h"
 #include "../options.h"
 #include "../signals.h"
 #include "../../semaphore.h"
 #include "../../stats_writer.h"
+#include "../../falco_outputs.h"
+#include "../../event_drops.h"
 #ifndef MINIMAL_BUILD
 #include "../../webserver.h"
 #endif
@@ -460,8 +462,10 @@ falco::app::run_result falco::app::actions::process_events(falco::app::state& s)
 				}
 				else
 				{
-					ctx.thread.reset(new std::thread([&s, &src_info, &statsw, &source, &ctx](){
-						process_inspector_events(s, src_info->inspector, statsw, source, ctx.sync.get(), &ctx.res);
+					auto res_ptr = &ctx.res;
+					auto sync_ptr = ctx.sync.get();
+					ctx.thread.reset(new std::thread([&s, src_info, &statsw, source, sync_ptr, res_ptr](){
+						process_inspector_events(s, src_info->inspector, statsw, source, sync_ptr, res_ptr);
 					}));
 				}
 			}

@@ -12,21 +12,10 @@ limitations under the License.
 */
 
 #include "actions.h"
+#include "helpers.h"
 
 using namespace falco::app;
 using namespace falco::app::actions;
-
-void falco::app::actions::print_enabled_event_sources(falco::app::state& s)
-{
-	/* Print all enabled sources. */
-	std::string str;
-	for (const auto &s : s.enabled_sources)
-	{
-		str += str.empty() ? "" : ", ";
-		str += s;
-	}
-	falco_logger::log(LOG_INFO, "Enabled event sources: " + str + "\n");
-}
 
 falco::app::run_result falco::app::actions::select_event_sources(falco::app::state& s)
 {
