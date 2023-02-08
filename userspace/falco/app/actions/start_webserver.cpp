@@ -17,14 +17,15 @@ limitations under the License.
 #include "actions.h"
 
 #ifndef MINIMAL_BUILD
-
 #include "webserver.h"
+#endif
 
 using namespace falco::app;
 using namespace falco::app::actions;
 
 falco::app::run_result falco::app::actions::start_webserver(falco::app::state& s)
 {
+#ifndef MINIMAL_BUILD
 	if(!s.is_capture_mode() && s.config->m_webserver_enabled)
 	{
 		std::string ssl_option = (s.config->m_webserver_ssl_enabled ? " (SSL)" : "");
@@ -42,15 +43,18 @@ falco::app::run_result falco::app::actions::start_webserver(falco::app::state& s
 			s.config->m_webserver_ssl_certificate, 
 			s.config->m_webserver_ssl_enabled);
 	}
+#endif
 	return run_result::ok();
 }
 
 falco::app::run_result falco::app::actions::stop_webserver(falco::app::state& s)
 {
+#ifndef MINIMAL_BUILD
 	if(!s.is_capture_mode())
 	{
 		s.webserver.stop();
 	}
+#endif
 	return run_result::ok();
 }
 
