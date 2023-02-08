@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2022 The Falco Authors.
+Copyright (C) 2023 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -30,11 +30,11 @@ namespace app {
 class options {
 public:
 	options();
-    virtual ~options();
-    options(options&&) = default;
-    options& operator = (options&&) = default;
-    options(const options&) = default;
-    options& operator = (const options&) = default;
+	virtual ~options();
+	options(options&&) = default;
+	options& operator = (options&&) = default;
+	options(const options&) = default;
+	options& operator = (const options&) = default;
 
 	// Each of these maps directly to a command line option.
 	bool help;
