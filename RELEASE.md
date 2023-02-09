@@ -28,7 +28,7 @@ The Falco project publishes all sources and the Falco userspace binaries as GitH
     - `tgz`, `zip` source code
 - [Libs Releases](https://github.com/falcosecurity/libs/releases)
     - `tgz`, `zip` source code
-- [Libs Releases](https://github.com/falcosecurity/libs/releases)
+- [Driver Releases](https://github.com/falcosecurity/libs/releases), marked with `+driver` [build metadata](https://semver.org/). 
     - `tgz`, `zip` source code
 - [Falco Rules Releases](https://github.com/falcosecurity/rules/releases)
     - `tgz`, `zip` source code, each ruleset is tagged separately in a mono-repo fashion, see the [rules release guidelines](https://github.com/falcosecurity/rules/blob/main/RELEASE.md)
@@ -69,7 +69,7 @@ At a high level each Falco release needs to follow a pre-determined sequencing o
 - [4] Falco driver pre-compiled object files push to Falco's Artifacts repo
 - [5] Falco userspace binary release
 
-Finally, on the proposed due date the assignees for the upcoming release proceed with the processes described below.
+Finally, on the proposed due date the assignees for the upcoming release proceed with the processes described below.  
 
 ## Pre-Release Checklist
 
@@ -87,7 +87,19 @@ Prior to cutting a release the following preparatory steps should take 5 minutes
 
 - Move the [tasks not completed](https://github.com/falcosecurity/falco/pulls?q=is%3Apr+is%3Aopen) to a new minor milestone
 
-### 3. Release PR
+
+### 3. Release branch
+
+Assuming we are releasing a non-patch version (like: Falco 0.34.0), a new release branch needs to be created.  
+Its naming will be `release/M.m.x`; for example: `release/0.34.x`.  
+The same branch will then be used for any eventual cherry pick for patch releases.  
+
+For patch releases, instead, the `release/M.m.x` branch should already be in place; no more steps are needed.  
+Double check that any PR that should be part of the tag has been cherry-picked from master!
+
+### 4. Release PR
+
+The release PR is meant to be made against the respective `release/M.m.x` branch, **then cherry-picked on master**.  
 
 - Double-check if any hard-coded version number is present in the code, it should be not present anywhere:
     - If any, manually correct it then open an issue to automate version number bumping later
@@ -98,21 +110,22 @@ Prior to cutting a release the following preparatory steps should take 5 minutes
 - Add the latest changes on top the previous `CHANGELOG.md`
 - Submit a PR with the above modifications
 - Await PR approval
-- Close the completed milestone as soon as the PR is merged
+- Close the completed milestone as soon as the PR is merged into the release branch
+- Cherry pick the PR on master too
 
 ## Release
 
-Now assume `x.y.z` is the new version.
+Assume `M.m.p` is the new version.
 
 ### 1. Create a tag
 
-- Once the release PR has got merged, and the CI has done its job on the master, git tag the new release
+- Once the release PR has got merged both on the release branch and on master, and the master CI has done its job, git tag the new release on the release branch:
 
     ```
     git pull
-    git checkout release/x.y.z
-    git tag x.y.z
-    git push origin x.y.z
+    git checkout release/M.m.x
+    git tag M.m.p
+    git push origin M.m.p
     ```
 
 > **N.B.**: do NOT use an annotated tag. For reference https://git-scm.com/book/en/v2/Git-Basics-Tagging
@@ -122,26 +135,26 @@ Now assume `x.y.z` is the new version.
 ### 2. Update the GitHub release
 
 - [Draft a new release](https://github.com/falcosecurity/falco/releases/new)
-- Use `x.y.z` both as tag version and release title
+- Use `M.m.p` both as tag version and release title
 - Use the following template to fill the release description:
     ```
-    <!-- Substitute x.y.z with the current release version -->
+    <!-- Substitute M.m.p with the current release version -->
 
     | Packages | Download                                                                                                                                               |
     | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-    | rpm-x86_64      | [![rpm](https://img.shields.io/badge/Falco-x.y.z-%2300aec7?style=flat-square)](https://download.falco.org/packages/rpm/falco-x.y.z-x86_64.rpm)        |
-    | deb-x86_64      | [![deb](https://img.shields.io/badge/Falco-x.y.z-%2300aec7?style=flat-square)](https://download.falco.org/packages/deb/stable/falco-x.y.z-x86_64.deb) |
-    | tgz-x86_64      | [![tgz](https://img.shields.io/badge/Falco-x.y.z-%2300aec7?style=flat-square)](https://download.falco.org/packages/bin/x86_64/falco-x.y.z-x86_64.tar.gz) |
-    | rpm-aarch64      | [![rpm](https://img.shields.io/badge/Falco-x.y.z-%2300aec7?style=flat-square)](https://download.falco.org/packages/rpm/falco-x.y.z-aarch64.rpm)        |
-    | deb-aarch64      | [![deb](https://img.shields.io/badge/Falco-x.y.z-%2300aec7?style=flat-square)](https://download.falco.org/packages/deb/stable/falco-x.y.z-aarch64.deb) |
-    | tgz-aarch64      | [![tgz](https://img.shields.io/badge/Falco-x.y.z-%2300aec7?style=flat-square)](https://download.falco.org/packages/bin/aarch64/falco-x.y.z-aarch64.tar.gz) |
+    | rpm-x86_64      | [![rpm](https://img.shields.io/badge/Falco-M.m.p-%2300aec7?style=flat-square)](https://download.falco.org/packages/rpm/falco-M.m.p-x86_64.rpm)        |
+    | deb-x86_64      | [![deb](https://img.shields.io/badge/Falco-M.m.p-%2300aec7?style=flat-square)](https://download.falco.org/packages/deb/stable/falco-M.m.p-x86_64.deb) |
+    | tgz-x86_64      | [![tgz](https://img.shields.io/badge/Falco-M.m.p-%2300aec7?style=flat-square)](https://download.falco.org/packages/bin/x86_64/falco-M.m.p-x86_64.tar.gz) |
+    | rpm-aarch64      | [![rpm](https://img.shields.io/badge/Falco-M.m.p-%2300aec7?style=flat-square)](https://download.falco.org/packages/rpm/falco-M.m.p-aarch64.rpm)        |
+    | deb-aarch64      | [![deb](https://img.shields.io/badge/Falco-M.m.p-%2300aec7?style=flat-square)](https://download.falco.org/packages/deb/stable/falco-M.m.p-aarch64.deb) |
+    | tgz-aarch64      | [![tgz](https://img.shields.io/badge/Falco-M.m.p-%2300aec7?style=flat-square)](https://download.falco.org/packages/bin/aarch64/falco-M.m.p-aarch64.tar.gz) |
 
     | Images                                                                      |
     | --------------------------------------------------------------------------- |
-    | `docker pull docker.io/falcosecurity/falco:x.y.z`                           |
-    | `docker pull public.ecr.aws/falcosecurity/falco:x.y.z`                      |
-    | `docker pull docker.io/falcosecurity/falco-driver-loader:x.y.z`             |
-    | `docker pull docker.io/falcosecurity/falco-no-driver:x.y.z`                 |
+    | `docker pull docker.io/falcosecurity/falco:M.m.p`                           |
+    | `docker pull public.ecr.aws/falcosecurity/falco:M.m.p`                      |
+    | `docker pull docker.io/falcosecurity/falco-driver-loader:M.m.p`             |
+    | `docker pull docker.io/falcosecurity/falco-no-driver:M.m.p`                 |
 
     <changelog>
 
@@ -170,7 +183,7 @@ For each release we archive the meeting notes in git for historical purposes.
 
  - The notes from the Falco meetings can be [found here](https://hackmd.io/3qYPnZPUQLGKCzR14va_qg).
     - Note: There may be other notes from working groups that can optionally be added as well as needed.
- - Add the entire content of the document to a new file in [github.com/falcosecurity/community/tree/master/meeting-notes](https://github.com/falcosecurity/community/tree/master/meeting-notes) as a new file labeled `release-x.y.z.md`
+ - Add the entire content of the document to a new file in [github.com/falcosecurity/community/tree/master/meeting-notes](https://github.com/falcosecurity/community/tree/master/meeting-notes) as a new file labeled `release-M.m.p.md`
  - Open up a pull request with the new change.
 
 
@@ -212,7 +225,7 @@ Driver:
 
 ### Libs repo
 - Libs version is a git tag (`x.y.z`) and when building Falco the libs version is set via the `FALCOSECURITY_LIBS_VERSION` flag (see above).
-- Driver version in and of itself is not directly tied to the Falco binary as opposed to the libs version being part of the source code used to compile Falco's userspace binary. This is because of the strict separation between userspace and kernel space artifacts, so things become a bit more interesting here. This is why the concept of a `Default driver` has been introduced to still implicitly declare the compatible driver versions. For example, if the default driver version is `2.0.0+driver`, Falco works with all driver versions >= 2.0.0 and < 3.0.0. This is a consequence of how the driver version is constructed starting from the `Driver API version` and `Driver Schema version`. Driver API and Schema versions are explained in the respective [libs driver doc](https://github.com/falcosecurity/libs/blob/master/driver/README.VERSION.md) -> Falco's `driver-loader` will always fetch the default driver, therefore a Falco release is always "shipped" with the driver version corresponding to the default driver.
+- Driver version itself is not directly tied to the Falco binary as opposed to the libs version being part of the source code used to compile Falco's userspace binary. This is because of the strict separation between userspace and kernel space artifacts, so things become a bit more interesting here. This is why the concept of a `Default driver` has been introduced to still implicitly declare the compatible driver versions. For example, if the default driver version is `2.0.0+driver`, Falco works with all driver versions >= 2.0.0 and < 3.0.0. This is a consequence of how the driver version is constructed starting from the `Driver API version` and `Driver Schema version`. Driver API and Schema versions are explained in the respective [libs driver doc](https://github.com/falcosecurity/libs/blob/master/driver/README.VERSION.md) -> Falco's `driver-loader` will always fetch the default driver, therefore a Falco release is always "shipped" with the driver version corresponding to the default driver.
 - See [libs release doc](https://github.com/falcosecurity/libs/blob/master/release.md) for more information.
 
 ### Plugins repo
