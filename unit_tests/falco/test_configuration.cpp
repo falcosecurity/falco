@@ -17,8 +17,7 @@ limitations under the License.
 #include <gtest/gtest.h>
 #include <falco/configuration.h>
 
-
-static std:: string sample_yaml =
+static std::string sample_yaml =
 	"base_value:\n"
 	"    id: 1\n"
 	"    name: 'sample_name'\n"
@@ -33,7 +32,7 @@ static std:: string sample_yaml =
 
 TEST(Configuration, configuration_exceptions)
 {
-	yaml_configuration conf;
+	yaml_helper conf;
 
 	/* Broken YAML */
 	string sample_broken_yaml = sample_yaml + " /  bad_symbol";
@@ -45,7 +44,7 @@ TEST(Configuration, configuration_exceptions)
 
 TEST(Configuration, configuration_reload)
 {
-	yaml_configuration conf;
+	yaml_helper conf;
 
 	/* Clear and reload config */
 	conf.load_from_string(sample_yaml);
@@ -58,7 +57,7 @@ TEST(Configuration, configuration_reload)
 
 TEST(Configuration, read_yaml_fields)
 {
-	yaml_configuration conf;
+	yaml_helper conf;
 	conf.load_from_string(sample_yaml);
 
 	/* is_defined */
@@ -88,7 +87,7 @@ TEST(Configuration, read_yaml_fields)
 TEST(Configuration, modify_yaml_fields)
 {
 	string key = "base_value.subvalue.subvalue2.boolean";
-	yaml_configuration conf;
+	yaml_helper conf;
 	
     /* Get original value */
     conf.load_from_string(sample_yaml);
