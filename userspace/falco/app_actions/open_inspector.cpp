@@ -123,11 +123,5 @@ application::run_result application::open_live_inspector(
 		return run_result::fatal(e.what());
 	}
 
-	// This must be done after the open
-	if (!m_options.all_events)
-	{
-		inspector->start_dropping_mode(1);
-	}
-
 	return run_result::ok();
 }
