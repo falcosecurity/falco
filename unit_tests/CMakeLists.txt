@@ -61,5 +61,3 @@ add_executable(falco_unit_tests ${FALCO_UNIT_TESTS_SOURCES})
 target_include_directories(falco_unit_tests ${FALCO_UNIT_TESTS_INCLUDES})
 target_link_libraries(falco_unit_tests ${FALCO_UNIT_TESTS_DEPENDENCIES})
 add_dependencies(falco_unit_tests ${FALCO_UNIT_TESTS_LIBRARIES})
-
-# add_test(multiply_gtests falco_unit_tests)

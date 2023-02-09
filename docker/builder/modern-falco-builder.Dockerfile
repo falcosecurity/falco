@@ -29,8 +29,7 @@ RUN source scl_source enable devtoolset-9; \
     make falco -j${MAKE_JOBS}
 RUN make package
 
-# We need `make tests` and `make all` for integration tests.
-RUN make tests -j${MAKE_JOBS}
+# We need `make all` for integration tests.
 RUN make all -j${MAKE_JOBS}
 
 FROM scratch AS export-stage
