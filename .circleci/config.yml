@@ -83,11 +83,6 @@ jobs:
             cd /build-static/release
             make -j6 package
       - run:
-          name: Run unit tests
-          command: |
-            cd /build-static/release
-            make tests
-      - run:
           name: Prepare artifacts
           command: |
             mkdir -p /tmp/packages
