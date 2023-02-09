@@ -40,7 +40,7 @@ static void display_fatal_err(const std::string &&msg)
 //
 // ARGUMENT PARSING AND PROGRAM SETUP
 //
-int falco_init(int argc, char **argv, bool &restart)
+int falco_run(int argc, char **argv, bool &restart)
 {
 	restart = false;
 	std::string errstr;
@@ -69,11 +69,11 @@ int main(int argc, char **argv)
 	int rc;
 	bool restart;
 
-	// Generally falco exits when falco_init returns with the rc
-	// returned by falco_init. However, when restart (set by
+	// Generally falco exits when falco_run returns with the rc
+	// returned by falco_run. However, when restart (set by
 	// signal handlers, returned in application::run()) is true,
-	// falco_init() is called again.
-	while((rc = falco_init(argc, argv, restart)) == EXIT_SUCCESS && restart)
+	// falco_run() is called again.
+	while((rc = falco_run(argc, argv, restart)) == EXIT_SUCCESS && restart)
 	{
 	}
 
