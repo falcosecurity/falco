@@ -159,7 +159,7 @@ void options::define()
 #else
 		("c",                             "Configuration file. If not specified tries " FALCO_SOURCE_CONF_FILE ", " FALCO_INSTALL_CONF_FILE ".", cxxopts::value(conf_filename), "<path>")
 #endif
-		("A",                             "Monitor all events, including those not interesting to Falco. Please use the -i option to list all ignored events. This option has effect only on live captures.", cxxopts::value(all_events)->default_value("false"))
+		("A",                             "Monitor each event defined in rules and configs + high volume I/O syscalls. Please use the -i option to list the I/O syscalls Falco supports. This option affects live captures only. Setting -A can impact performance.", cxxopts::value(all_events)->default_value("false"))
 		("b,print-base64",                "Print data buffers in base64. This is useful for encoding binary data that needs to be used over media designed to consume this format.")
 		("cri",                           "Path to CRI socket for container metadata. Use the specified socket to fetch data from a CRI-compatible runtime. If not specified, uses the libs default. This option can be passed multiple times to specify socket to be tried until a successful one is found.", cxxopts::value(cri_socket_paths), "<path>")
 		("d,daemon",                      "Run as a daemon.", cxxopts::value(daemon)->default_value("false"))
@@ -176,7 +176,7 @@ void options::define()
 #ifdef HAS_MODERN_BPF
 		("modern-bpf",				  "[EXPERIMENTAL] Use BPF modern probe to capture system events.", cxxopts::value(modern_bpf)->default_value("false"))
 #endif
-		("i",                             "Print all events that are ignored by default (i.e. without the -A flag) and exit.", cxxopts::value(print_ignored_events)->default_value("false"))
+		("i",                             "Print all high volume I/O syscalls that are ignored by default (i.e. without the -A flag) and exit.", cxxopts::value(print_ignored_events)->default_value("false"))
 #ifndef MINIMAL_BUILD
 		("k,k8s-api",                     "Enable Kubernetes support by connecting to the API server specified as argument. E.g. \"http://admin:password@127.0.0.1:8080\". The API server can also be specified via the environment variable FALCO_K8S_API.", cxxopts::value(k8s_api), "<url>")
 		("K,k8s-api-cert",                "Use the provided files names to authenticate user and (optionally) verify the K8S API server identity. Each entry must specify full (absolute, or relative to the current directory) path to the respective file. Private key password is optional (needed only if key is password protected). CA certificate is optional. For all files, only PEM file format is supported. Specifying CA certificate only is obsoleted - when single entry is provided for this option, it will be interpreted as the name of a file containing bearer token. Note that the format of this command-line option prohibits use of files whose names contain ':' or '#' characters in the file name.", cxxopts::value(k8s_api_cert), "(<bt_file> | <cert_file>:<key_file[#password]>[:<ca_cert_file>])")
