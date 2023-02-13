@@ -33,7 +33,7 @@ falco::app::run_result falco::app::actions::print_ignored_events(falco::app::sta
 		return run_result::ok();
 	}
 
-	/* Search for all the ignored syscalls after having set the syscalls and events of interest in configure_interesting_sets() app action. */
+	/* Search for all the ignored syscalls. */
 	std::unordered_set<uint32_t> all_events;
 	for (uint32_t j = 0; j < PPM_EVENT_MAX; j++)
 	{
