@@ -350,11 +350,11 @@ private:
 	int create_dir(const std::string &path);
 	bool create_handler(int sig, void (*func)(int), run_result &ret);
 	void configure_output_format();
-	void check_for_ignored_events();
+	void check_for_unsupported_events(std::unique_ptr<sinsp>& inspector, const std::unordered_set<std::string>& rules_evttypes_names);
 	bool check_rules_plugin_requirements(std::string& err);
-	void extract_rules_event_names(std::unique_ptr<sinsp>& inspector, std::unordered_set<std::string>& rules_evttypes_names); // should be called before syscalls and events activations
+	std::unordered_set<std::string> extract_rules_event_names(std::unique_ptr<sinsp>& inspector); // should be called before syscalls and events activations
 	void activate_interesting_syscalls(std::unique_ptr<sinsp>& inspector, const std::unordered_set<std::string>& rules_evttypes_names);
-	void activate_interesting_events(std::unique_ptr<sinsp>& inspector); // should be called after calling activate_interesting_syscalls
+	void activate_interesting_events(std::unique_ptr<sinsp>& inspector, const std::unordered_set<std::string>& rules_evttypes_names); // should be called after calling activate_interesting_syscalls
 	void activate_interesting_kernel_tracepoints(std::unique_ptr<sinsp>& inspector); // independent of syscalls and events activations in terms of order
 	void format_plugin_info(std::shared_ptr<sinsp_plugin> p, std::ostream& os) const;
 	run_result open_offline_inspector();

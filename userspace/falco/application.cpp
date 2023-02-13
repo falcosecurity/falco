@@ -176,6 +176,8 @@ bool application::run(std::string &errstr, bool &restart)
 		std::bind(&application::print_help, this),
 		std::bind(&application::print_version, this),
 		std::bind(&application::print_page_size, this),
+		std::bind(&application::print_ignored_events, this),
+		std::bind(&application::print_syscall_events, this),
 		std::bind(&application::print_generated_gvisor_config, this),
 		std::bind(&application::require_config_file, this),
 		std::bind(&application::print_plugin_info, this),
@@ -195,8 +197,6 @@ bool application::run(std::string &errstr, bool &restart)
 		std::bind(&application::init_outputs, this),
 		std::bind(&application::init_clients, this),
 		std::bind(&application::configure_interesting_sets, this),
-		std::bind(&application::print_ignored_events, this),
-		std::bind(&application::print_syscall_events, this),
 		std::bind(&application::configure_syscall_buffer_size, this),
 #ifndef MINIMAL_BUILD
 		std::bind(&application::start_grpc_server, this),
