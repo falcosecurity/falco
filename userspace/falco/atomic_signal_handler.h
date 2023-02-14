@@ -107,7 +107,7 @@ namespace falco
                     try
                     {
                         f();
-                        // note: the action may have forcely resetted
+                        // note: the action may have forcely reset
                         // the signal handler, so we don't want to create
                         // an inconsistent state
                         if (triggered())
