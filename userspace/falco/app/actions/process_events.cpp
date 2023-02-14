@@ -187,25 +187,30 @@ static falco::app::run_result do_inspect(
 	{
 		rc = inspector->next(&ev);
 
-		if (should_reopen_outputs())
+		if (falco::app::g_reopen_outputs_signal.triggered())
 		{
-			falco::app::reopen_outputs([&s]()
+			falco::app::g_reopen_outputs_signal.handle([&s](){
+				falco_logger::log(LOG_INFO, "SIGUSR1 received, reopening outputs...\n");
+				if(s.outputs != nullptr)
 				{
-					if(s.outputs != nullptr)
-					{
-						s.outputs->reopen_outputs();
-					}
-				});
+					s.outputs->reopen_outputs();
+				}
+				falco::app::g_reopen_outputs_signal.reset();
+			});
 		}
 
-		if(should_terminate())
+		if(falco::app::g_terminate_signal.triggered())
 		{
-			falco::app::terminate();
+			falco::app::g_terminate_signal.handle([&](){
+				falco_logger::log(LOG_INFO, "SIGINT received, exiting...\n");
+			});
 			break;
 		}
-		else if(should_restart())
+		else if(falco::app::g_restart_signal.triggered())
 		{
-			falco::app::restart();
+			falco::app::g_restart_signal.handle([&](){
+				falco_logger::log(LOG_INFO, "SIGHUP received, restarting...\n");
+			});
 			break;
 		}
 		else if(rc == SCAP_TIMEOUT)
@@ -498,7 +503,8 @@ falco::app::run_result falco::app::actions::process_events(falco::app::state& s)
 			if (!res.success && !termination_forced)
 			{
 				falco_logger::log(LOG_INFO, "An error occurred in an event source, forcing termination...\n");
-				terminate(false);
+				falco::app::g_terminate_signal.trigger();
+				falco::app::g_terminate_signal.handle([&](){});
 				termination_forced = true;
 			}
 
