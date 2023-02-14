@@ -36,20 +36,17 @@ static int inot_fd;
 
 static void terminate_signal_handler(int signal)
 {
-	ASSERT(falco::app::g_terminate.is_lock_free());
-	falco::app::g_terminate.store(APP_SIGNAL_SET, std::memory_order_seq_cst);
+	falco::app::g_terminate_signal.trigger();
 }
 
 static void reopen_outputs_signal_handler(int signal)
 {
-	ASSERT(falco::app::g_reopen_outputs.is_lock_free());
-	falco::app::g_reopen_outputs.store(APP_SIGNAL_SET, std::memory_order_seq_cst);
+	falco::app::g_reopen_outputs_signal.trigger();
 }
 
 static void restart_signal_handler(int signal)
 {
-	ASSERT(falco::app::g_restart.is_lock_free());
-	falco::app::g_restart.store(APP_SIGNAL_SET, std::memory_order_seq_cst);
+	falco::app::g_restart_signal.trigger();
 }
 
 bool create_handler(int sig, void (*func)(int), run_result &ret)
@@ -74,13 +71,13 @@ bool create_handler(int sig, void (*func)(int), run_result &ret)
 
 falco::app::run_result falco::app::actions::create_signal_handlers(falco::app::state& s)
 {
-	falco::app::g_terminate.store(APP_SIGNAL_NOT_SET, std::memory_order_seq_cst);
-	falco::app::g_restart.store(APP_SIGNAL_NOT_SET, std::memory_order_seq_cst);
-	falco::app::g_reopen_outputs.store(APP_SIGNAL_NOT_SET, std::memory_order_seq_cst);
+	falco::app::g_terminate_signal.reset();
+	falco::app::g_restart_signal.reset();
+	falco::app::g_reopen_outputs_signal.reset();
 
-	if (!g_terminate.is_lock_free()
-		|| !g_restart.is_lock_free()
-		|| !g_reopen_outputs.is_lock_free())
+	if (!g_terminate_signal.is_lock_free()
+		|| !g_restart_signal.is_lock_free()
+		|| !g_reopen_outputs_signal.is_lock_free())
 	{
 		falco_logger::log(LOG_WARNING, "Bundled atomics implementation is not lock-free, signal handlers may be unstable\n");
 	}
