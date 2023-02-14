@@ -41,15 +41,16 @@ set(FALCO_UNIT_TESTS_INCLUDES
 set(FALCO_UNIT_TESTS_DEPENDENCIES
   gtest
   gtest_main
-  falco_engine
-  sinsp
+  falco_application
 )
+
+get_target_property(FALCO_APPLICATION_LIBRARIES falco_application LINK_LIBRARIES)
 
 set(FALCO_UNIT_TESTS_LIBRARIES
   gtest
   gtest_main
-  falco_engine
-  sinsp
+  falco_application
+  ${FALCO_APPLICATION_LIBRARIES}
 )
 
 message(STATUS "FALCO_UNIT_TESTS_SOURCES: ${FALCO_UNIT_TESTS_SOURCES}")
