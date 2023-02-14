@@ -35,10 +35,10 @@ TEST(AtomicSignalHandler, handle_once_wait_consistency)
 	constexpr const auto thread_wait_sec = 2;
 	constexpr const auto handler_wait_sec = 1;
 
-	// have a shared signal hander
+	// have a shared signal handler
 	falco::atomic_signal_handler handler;
 
-	// launch a bunch of threads all synching on the same handler
+	// launch a bunch of threads all syncing on the same handler
 	typedef struct
 	{
 		bool handled;
