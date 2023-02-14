@@ -16,41 +16,14 @@ limitations under the License.
 
 #pragma once
 
-#include <atomic>
-#include <functional>
-
-#define APP_SIGNAL_NOT_SET          0   // The signal flag is not set
-#define APP_SIGNAL_SET              1   // The signal flag has been set
-#define APP_SIGNAL_ACTION_TAKEN     2   // The signal flag has been set and the application took action
+#include "../atomic_signal_handler.h"
 
 namespace falco {
 namespace app {
 
-// todo(jasondellaluce): hide this into a class
-extern std::atomic<int> g_terminate;
-extern std::atomic<int> g_restart;
-extern std::atomic<int> g_reopen_outputs;
-
-void terminate(bool verbose=true);
-
-void restart(bool verbose=true);
-
-void reopen_outputs(std::function<void()> on_reopen, bool verbose=true);
-
-inline bool should_terminate()
-{
-    return g_terminate.load(std::memory_order_seq_cst) != APP_SIGNAL_NOT_SET;
-}
-
-inline bool should_restart()
-{
-    return g_restart.load(std::memory_order_seq_cst) != APP_SIGNAL_NOT_SET;
-}
-
-inline bool should_reopen_outputs()
-{
-    return g_reopen_outputs.load(std::memory_order_seq_cst) != APP_SIGNAL_NOT_SET;
-}
+extern atomic_signal_handler g_terminate_signal;
+extern atomic_signal_handler g_restart_signal;
+extern atomic_signal_handler g_reopen_outputs_signal;
 
 }; // namespace app
 }; // namespace falco
