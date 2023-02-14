@@ -19,6 +19,10 @@ limitations under the License.
 #include "signals.h"
 #include "actions/actions.h"
 
+falco::atomic_signal_handler falco::app::g_terminate_signal;
+falco::atomic_signal_handler falco::app::g_restart_signal;
+falco::atomic_signal_handler falco::app::g_reopen_outputs_signal;
+
 using app_action = std::function<falco::app::run_result(falco::app::state&)>;
 
 bool falco::app::run(int argc, char** argv, bool& restart, std::string& errstr)
@@ -99,7 +103,7 @@ bool falco::app::run(int argc, char** argv, bool& restart, std::string& errstr)
 		errstr = res.errstr;
 	}
 
-	restart = falco::app::should_restart();
+	restart = falco::app::g_restart_signal.triggered();
 
 	return res.success;
 }
