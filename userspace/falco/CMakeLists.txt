@@ -57,7 +57,6 @@ set(
   event_drops.cpp
   stats_writer.cpp
   versions_info.cpp
-  falco.cpp
 )
 
 set(
@@ -138,23 +137,28 @@ if(NOT MINIMAL_BUILD)
   )
 endif()
 
-add_executable(
-  falco
+add_library(
+  falco_application STATIC
   ${FALCO_SOURCES}
 )
 
-add_dependencies(falco ${FALCO_DEPENDENCIES})
+add_dependencies(falco_application ${FALCO_DEPENDENCIES})
 
 target_link_libraries(
-  falco
+  falco_application
   ${FALCO_LIBRARIES}
 )
 
 target_include_directories(
-  falco
+  falco_application
   PUBLIC
   ${FALCO_INCLUDE_DIRECTORIES}
 )
+
+add_executable(falco falco.cpp)
+add_dependencies(falco falco_application ${FALCO_DEPENDENCIES})
+target_link_libraries(falco falco_application ${FALCO_LIBRARIES})
+target_include_directories(falco PUBLIC ${FALCO_INCLUDE_DIRECTORIES})
 
 if(NOT MINIMAL_BUILD)
   add_custom_command(
