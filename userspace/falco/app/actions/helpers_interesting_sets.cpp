@@ -17,7 +17,6 @@ limitations under the License.
 
 #include "helpers.h"
 #include "actions.h"
-#include "configure_interesting_sets.h"
 #include "falco_utils.h"
 #include <unordered_set>
 #include <sinsp.h>
