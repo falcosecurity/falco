@@ -96,27 +96,6 @@ std::unordered_set<std::string> extract_rules_event_names(std::unique_ptr<sinsp>
 	return inspector->get_events_names(ppme_events_codes);
 }
 
-void compare_syscalls_subset_names(std::unordered_set<std::string> &total_enforced, std::unordered_set<std::string> &subset, bool inverted = false)
-{
-	ASSERT_GE(total_enforced.size(), subset.size());
-	/* Check if each item in subset is in the total_enforced set. */
-	unsigned long int counter = 0;
-	for (const auto &ppm_sc_name : subset)
-	{
-		if (total_enforced.find(ppm_sc_name) != total_enforced.end())
-		{
-			counter++;
-		}
-	}
-	if (inverted)
-	{
-		ASSERT_EQ(0, counter);
-	} else
-	{
-		ASSERT_EQ(subset.size(), counter);	
-	}
-}
-
 std::unordered_set<std::string> erase_io_syscalls(std::unordered_set<uint32_t> &ppm_sc_of_interest)
 {
 	std::unordered_set<std::string> erased_io_syscalls_names = {};
