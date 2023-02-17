@@ -81,7 +81,7 @@ falco::app::run_result falco::app::actions::open_live_inspector(
 		{
 			falco_logger::log(LOG_INFO, "Opening capture with modern BPF probe.");
 			falco_logger::log(LOG_INFO, "One ring buffer every '" + std::to_string(s.config->m_cpus_for_each_syscall_buffer) +  "' CPUs.");
-			inspector->open_modern_bpf(s.syscall_buffer_bytes_size, s.config->m_cpus_for_each_syscall_buffer, true, s.ppm_sc_of_interest, s.tp_of_interest);
+			inspector->open_modern_bpf(s.syscall_buffer_bytes_size, s.config->m_cpus_for_each_syscall_buffer, true, s.selected_sc_set, s.selected_tp_set);
 		}
 		else if(getenv(FALCO_BPF_ENV_VARIABLE) != NULL) /* BPF engine. */
 		{
@@ -99,14 +99,14 @@ falco::app::run_result falco::app::actions::open_live_inspector(
 				bpf_probe_path = full_path;
 			}
 			falco_logger::log(LOG_INFO, "Opening capture with BPF probe. BPF probe path: " + std::string(bpf_probe_path));
-			inspector->open_bpf(bpf_probe_path, s.syscall_buffer_bytes_size, s.ppm_sc_of_interest, s.tp_of_interest);
+			inspector->open_bpf(bpf_probe_path, s.syscall_buffer_bytes_size, s.selected_sc_set, s.selected_tp_set);
 		}
 		else /* Kernel module (default). */
 		{
 			try
 			{
 				falco_logger::log(LOG_INFO, "Opening capture with Kernel module");
-				inspector->open_kmod(s.syscall_buffer_bytes_size, s.ppm_sc_of_interest, s.tp_of_interest);
+				inspector->open_kmod(s.syscall_buffer_bytes_size, s.selected_sc_set, s.selected_tp_set);
 			}
 			catch(sinsp_exception &e)
 			{
@@ -116,7 +116,7 @@ falco::app::run_result falco::app::actions::open_live_inspector(
 				{
 					falco_logger::log(LOG_ERR, "Unable to load the driver\n");
 				}
-				inspector->open_kmod(s.syscall_buffer_bytes_size, s.ppm_sc_of_interest, s.tp_of_interest);
+				inspector->open_kmod(s.syscall_buffer_bytes_size, s.selected_sc_set, s.selected_tp_set);
 			}
 		}
 	}
