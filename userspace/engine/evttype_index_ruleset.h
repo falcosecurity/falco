@@ -93,7 +93,7 @@ private:
 	struct filter_wrapper
 	{
 		falco_rule rule;
-		std::set<uint16_t> evttypes;
+		libsinsp::events::set<ppm_event_code> evttypes;
 		std::shared_ptr<gen_event_filter> filter;
 	};
 

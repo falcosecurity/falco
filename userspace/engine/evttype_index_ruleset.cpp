@@ -15,7 +15,6 @@ limitations under the License.
 */
 
 #include "evttype_index_ruleset.h"
-#include "filter_evttype_resolver.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
 
 #include <algorithm>
@@ -145,7 +144,10 @@ void evttype_index_ruleset::ruleset_filters::evttypes_for_ruleset(std::set<uint1
 
 	for(auto &wrap : m_filters)
 	{
-		evttypes.insert(wrap->evttypes.begin(), wrap->evttypes.end());
+		for (const auto& e : wrap->evttypes)
+		{
+			evttypes.insert((uint16_t) e);
+		}
 	}
 }
 
@@ -161,12 +163,11 @@ void evttype_index_ruleset::add(
 		wrap->filter = filter;
 		if(rule.source == falco_common::syscall_source)
 		{
-			filter_evttype_resolver resolver;
-			resolver.evttypes(condition, wrap->evttypes);
+			wrap->evttypes = libsinsp::filter::ast::ppm_event_codes(condition.get());
 		}
 		else
 		{
-			wrap->evttypes = { ppm_event_type::PPME_PLUGINEVENT_E };
+			wrap->evttypes = { ppm_event_code::PPME_PLUGINEVENT_E };
 		}
 		m_filters.insert(wrap);
 	}

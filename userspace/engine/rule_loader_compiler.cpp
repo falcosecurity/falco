@@ -21,7 +21,6 @@ limitations under the License.
 
 #include "rule_loader_compiler.h"
 #include "filter_macro_resolver.h"
-#include "filter_evttype_resolver.h"
 #include "filter_warning_resolver.h"
 
 #define MAX_VISIBILITY		((uint32_t) -1)
@@ -496,11 +495,10 @@ void rule_loader::compiler::compile_rule_infos(
 		}
 
 		// populate set of event types and emit an special warning
-		std::set<uint16_t> evttypes = { ppm_event_type::PPME_PLUGINEVENT_E };
+		libsinsp::events::set<ppm_event_code> evttypes = { ppm_event_code::PPME_PLUGINEVENT_E };
 		if(rule.source == falco_common::syscall_source)
 		{
-			evttypes.clear();
-			filter_evttype_resolver().evttypes(ast, evttypes);
+			evttypes = libsinsp::filter::ast::ppm_event_codes(ast.get());
 			if ((evttypes.empty() || evttypes.size() > 100)
 			    && r.warn_evttypes)
 			{
