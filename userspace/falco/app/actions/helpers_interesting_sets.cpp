@@ -136,8 +136,8 @@ void falco::app::actions::activate_interesting_kernel_tracepoints(falco::app::st
 	 * Activate all tracepoints except `sched_switch` tracepoint since it is highly noisy and not so useful
 	 * for our state/events enrichment.
 	 */
-	s.tp_of_interest = inspector->enforce_sinsp_state_tp();
-	s.tp_of_interest.erase(SCHED_SWITCH);
+	s.selected_tp_set = libsinsp::events::sinsp_state_tp_set();
+	s.selected_tp_set.remove(ppm_tp_code::SCHED_SWITCH);
 }
 
 falco::app::run_result falco::app::actions::configure_interesting_sets(falco::app::state& s)
