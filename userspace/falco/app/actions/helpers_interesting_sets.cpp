@@ -14,142 +14,137 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-
-#include "helpers.h"
 #include "actions.h"
-#include "falco_utils.h"
-#include <unordered_set>
-#include <sinsp.h>
 #include <sstream>
 
 using namespace falco::app;
 using namespace falco::app::actions;
-using namespace falco::utils;
 
-extern sinsp_evttables g_infotables;
-
-void falco::app::actions::extract_rules_event_names(falco::app::state& s, std::unique_ptr<sinsp>& inspector, std::unordered_set<std::string>& rules_evttypes_names)
+static libsinsp::events::set<ppm_event_code> extract_rules_event_set(falco::app::state& s)
 {
 	/* Get all (positive) PPME events from all rules as idx codes.
 	 * Events names from negative filter expression statements are NOT included.
-	 * PPME events in libsinsp are needed to map each event type into it's enter and exit event if applicable (e.g. for syscall events).
-	*/
-	std::set<uint16_t> rule_events;
-	std::string source = falco_common::syscall_source;
-	s.engine->evttypes_for_ruleset(source, rule_events);
-	std::unordered_set<uint32_t> ppme_events_codes(rule_events.begin(), rule_events.end());
-
-	/* Translate PPME event idx codes to consolidated event names.
-	 * Those are the exact event type (evt.type) names from the rules and hence also contain non syscall names, e.g. "container".
-	*/
-	rules_evttypes_names = inspector->get_events_names(ppme_events_codes);
+	 * PPME events in libsinsp are needed to map each event type into it's enter
+	 * and exit event if applicable (e.g. for syscall events). */
+	std::set<uint16_t> tmp;
+	libsinsp::events::set<ppm_event_code> events;
+	auto source = falco_common::syscall_source;
+	s.engine->evttypes_for_ruleset(source, tmp);
+	for (const auto &ev : tmp)
+	{
+		events.insert((ppm_event_code) ev);
+	}
+	return events;
 }
 
-void falco::app::actions::check_for_unsupported_events(falco::app::state& s, std::unique_ptr<sinsp>& inspector, const std::unordered_set<std::string>& rules_evttypes_names)
+static void check_for_rules_unsupported_events(falco::app::state& s, const libsinsp::events::set<ppm_event_code>& rules_event_set)
 {
-	std::unordered_set<std::string> intersection = unordered_set_intersection(inspector->get_events_names(s.ppm_event_info_of_interest), rules_evttypes_names);
-	if(intersection.empty())
+	/* Unsupported events are those events that are used in the rules
+	 * but that are not part of the selected event set. For now, this
+	 * is expected to happen only for high volume I/O syscalls for
+	 * performance reasons. */
+	auto unsupported_event_set = rules_event_set.diff(s.selected_event_set);
+	if (unsupported_event_set.empty())
 	{
 		return;
 	}
-	std::unordered_set<std::string> unsupported = unordered_set_difference(rules_evttypes_names, inspector->get_events_names(s.ppm_event_info_of_interest));
 
 	/* Get the names of the events (syscall and non syscall events) that were not activated and print them. */
-	std::cerr << "Loaded rules match event types that are not activated or unsupported with current configuration: warning (unsupported-evttype): " + concat_set_in_order(unsupported) << std::endl;
+	auto names = libsinsp::events::event_set_to_names(unsupported_event_set);
+	std::cerr << "Loaded rules match event types that are not activated or unsupported with current configuration: warning (unsupported-evttype): " + concat_set_in_order(names) << std::endl;
 	std::cerr << "If syscalls in rules include high volume I/O syscalls (-> activate via `-A` flag), else (2) syscalls might be associated with syscalls undefined on your architecture (https://marcin.juszkiewicz.com.pl/download/tables/syscalls.html)" << std::endl;
 }
 
-void falco::app::actions::activate_interesting_events(falco::app::state& s, std::unique_ptr<sinsp>& inspector, const std::unordered_set<std::string>& rules_evttypes_names)
+static void select_event_set(falco::app::state& s, const libsinsp::events::set<ppm_event_code>& rules_event_set)
 {
-	std::unordered_set<uint32_t> ppm_event_info_of_interest = inspector->get_event_set_from_ppm_sc_set(s.ppm_sc_of_interest);
-	s.ppm_event_info_of_interest = enforce_sinsp_state_ppme(ppm_event_info_of_interest);
-	check_for_unsupported_events(s, inspector, rules_evttypes_names);
-}
-
-void falco::app::actions::activate_interesting_syscalls(falco::app::state& s, std::unique_ptr<sinsp>& inspector, const std::unordered_set<std::string>& rules_evttypes_names)
-{
-
-	/* Translate PPME event names to PPM syscall idx codes.
-	 * PPM syscall idx codes can be viewed as condensed libsinsp lookup table to map a system call name to it's actual system syscall id (as defined by the Linux kernel).
-	 * Hence here we don't need syscall enter and exit distinction.
-	*/
-	std::unordered_set<uint32_t> rules_ppm_sc_set = get_ppm_sc_set_from_syscalls(rules_evttypes_names);
-	std::unordered_set<std::string> rules_syscalls_names = inspector->get_syscalls_names(rules_ppm_sc_set);
-	if (rules_syscalls_names.size() > 0)
+	/* PPM syscall codes (sc) can be viewed as condensed libsinsp lookup table
+	 * to map a system call name to it's actual system syscall id (as defined
+	 * by the Linux kernel). Hence here we don't need syscall enter and exit distinction. */
+	auto rules_names = libsinsp::events::event_set_to_names(rules_event_set);
+	if (!rules_event_set.empty())
 	{
-		falco_logger::log(LOG_DEBUG, "(" + std::to_string(rules_syscalls_names.size()) + ") syscalls activated in rules: " + concat_set_in_order(rules_syscalls_names) + "\n");
+		falco_logger::log(LOG_DEBUG, "(" + std::to_string(rules_names.size())
+			+ ") syscalls activated in rules: " + concat_set_in_order(rules_names) + "\n");
 	}
 
-	/*
-	*
-	* DEFAULT OPTION:
-	*
-	* Current enforce_simple_ppm_sc_set approach includes multiple steps:
-	* (1) Enforce all positive syscalls from each Falco rule
-	* (2) Enforce a static set of syscalls in addition to the syscalls defined in Falco's rules
-	* (3) Enforce `libsinsp` state set (non-adaptive, not conditioned by rules, but based on PPME event table flags indicating generic sinsp state modifications)
-	* -> Final set is union of (1), (2) and (3)
-	*
-	*/
+	/* DEFAULT OPTION:
+	 * Current sinsp_state_sc_set() approach includes multiple steps:
+	 * (1) Enforce all positive syscalls from each Falco rule
+	 * (2) Enforce `libsinsp` state set (non-adaptive, not conditioned by rules,
+	       but based on PPME event table flags indicating generic sinsp state modifications)
+	 * -> Final set is union of (1) and (2) */
+	auto base_event_set = libsinsp::events::sinsp_state_event_set();
+	s.selected_event_set = rules_event_set.merge(base_event_set);
 
-	// TODO change to enforce_sinsp_state_ppm_sc
-	s.ppm_sc_of_interest = inspector->enforce_simple_ppm_sc_set(rules_ppm_sc_set);
-
-	/* Derive the diff between the additional syscalls added via libsinsp state enforcement and the syscalls from each Falco rule. */
-	std::unordered_set<std::string> non_rules_syscalls_names = unordered_set_difference(inspector->get_syscalls_names(s.ppm_sc_of_interest), rules_syscalls_names);
-
-	if (non_rules_syscalls_names.size() > 0)
+	/* Derive the diff between the additional syscalls added via libsinsp state
+	enforcement and the syscalls from each Falco rule. */
+	auto non_rules_event_set = s.selected_event_set.diff(rules_event_set);
+	if (!non_rules_event_set.empty())
 	{
-		falco_logger::log(LOG_DEBUG, "+(" + std::to_string(non_rules_syscalls_names.size()) + ") syscalls activated (Falco's set of additional syscalls including syscalls needed for state engine): " + concat_set_in_order(non_rules_syscalls_names) + "\n");
+		falco_logger::log(LOG_DEBUG, "+(" + std::to_string(non_rules_event_set.size())
+			+ ") syscalls activated (Falco's set of additional syscalls including syscalls needed for state engine): "
+			+ concat_set_in_order(libsinsp::events::event_set_to_names(non_rules_event_set)) + "\n");
 	}
 
 	/* -A flag behavior:
-	 * default: all syscalls in rules included, sinsp state enforcement without high volume I/O syscalls
-	 * -A flag set: all syscalls in rules included, sinsp state enforcement and allowing high volume I/O syscalls
-	*/
-
+	 * (1) default: all syscalls in rules included, sinsp state enforcement
+	       without high volume I/O syscalls
+	 * (2) -A flag set: all syscalls in rules included, sinsp state enforcement
+	       and allowing high volume I/O syscalls */
 	if(!s.options.all_events)
 	{
-		std::unordered_set<uint32_t> io_ppm_sc_set = enforce_io_ppm_sc_set();
-		std::unordered_set<std::string> erased_io_syscalls_names = inspector->get_syscalls_names(unordered_set_intersection(s.ppm_sc_of_interest, io_ppm_sc_set));
-		s.ppm_sc_of_interest = unordered_set_difference(s.ppm_sc_of_interest, io_ppm_sc_set);
-
-		if (erased_io_syscalls_names.size() > 0)
+		auto ignored_event_set = libsinsp::events::sc_set_to_event_set(libsinsp::events::io_sc_set());
+		auto erased_event_set = s.selected_event_set.intersect(ignored_event_set);
+		s.selected_event_set = s.selected_event_set.diff(ignored_event_set);
+		if (!erased_event_set.empty())
 		{
-			falco_logger::log(LOG_DEBUG, "-(" + std::to_string(erased_io_syscalls_names.size()) + ") high volume I/O syscalls (`-A` flag not set): " + concat_set_in_order(erased_io_syscalls_names) + "\n");
+			falco_logger::log(LOG_DEBUG, "-(" + std::to_string(erased_event_set.size())
+				+ ") ignored high volume I/O syscalls (`-A` flag not set): "
+				+ concat_set_in_order(libsinsp::events::event_set_to_names(erased_event_set)) + "\n");
 		}
 	}
 
-	std::unordered_set<std::string> final_syscalls_names = inspector->get_syscalls_names(s.ppm_sc_of_interest);
-
-	if (final_syscalls_names.size() > 0)
+	if (!s.selected_event_set.empty())
 	{
-		falco_logger::log(LOG_DEBUG, "(" + std::to_string(final_syscalls_names.size()) + ") syscalls in total activated (final set): " + concat_set_in_order(final_syscalls_names) + "\n");
+		falco_logger::log(LOG_DEBUG, "(" + std::to_string(s.selected_event_set.size())
+			+ ") syscalls in total activated (final set): "
+			+ concat_set_in_order(libsinsp::events::event_set_to_names(s.selected_event_set)) + "\n");
 	}
-
 }
 
-void falco::app::actions::activate_interesting_kernel_tracepoints(falco::app::state& s, std::unique_ptr<sinsp>& inspector)
+static void select_syscall_set(falco::app::state& s, const libsinsp::events::set<ppm_event_code>& rules_event_set)
+{
+	s.selected_sc_set = libsinsp::events::event_set_to_sc_set(s.selected_event_set);	
+}
+
+static void select_kernel_tracepoint_set(falco::app::state& s)
 {
 	/* Kernel tracepoints activation
-	 *
-	 * Activate all tracepoints except `sched_switch` tracepoint since it is highly noisy and not so useful
-	 * for our state/events enrichment.
-	 */
+	 * Activate all tracepoints except `sched_switch` tracepoint since it
+	 * is highly noisy and not so useful
+	 * for our state/events enrichment. */
 	s.selected_tp_set = libsinsp::events::sinsp_state_tp_set();
 	s.selected_tp_set.remove(ppm_tp_code::SCHED_SWITCH);
 }
 
 falco::app::run_result falco::app::actions::configure_interesting_sets(falco::app::state& s)
 {
-
-	std::unique_ptr<sinsp> inspector(new sinsp());
-	std::unordered_set<std::string> rules_evttypes_names;
-
-	falco::app::actions::extract_rules_event_names(s, inspector, rules_evttypes_names); // when reaching this code all evttypes are valid
-	falco::app::actions::activate_interesting_syscalls(s, inspector, rules_evttypes_names);
-	falco::app::actions::activate_interesting_events(s, inspector, rules_evttypes_names);
-	falco::app::actions::activate_interesting_kernel_tracepoints(s, inspector);
-
+	s.selected_event_set.clear();
+	s.selected_sc_set.clear();
+	s.selected_tp_set.clear();
+	
+	/* note: the set of events is the richest source of truth about
+	 * the events generable by an inspector, because they also carry information
+	 * about events that are old, unused, internal, and so on. As such, the
+	 * strategy is to first craft the actual set of selected events, and
+	 * then use it to obtain a set of enabled kernel tracepoints and a set
+	 * of syscall codes. Those last two sets will be passed down to the
+	 * inspector to instruct the kernel drivers on which kernel event should
+	 * be collected at runtime. */
+	auto rules_event_set = extract_rules_event_set(s);
+	select_event_set(s, rules_event_set);
+	check_for_rules_unsupported_events(s, rules_event_set);
+	select_syscall_set(s, rules_event_set);
+	select_kernel_tracepoint_set(s);
 	return run_result::ok();
 }

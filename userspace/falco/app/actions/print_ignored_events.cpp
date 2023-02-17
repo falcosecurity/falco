@@ -25,17 +25,13 @@ using namespace falco::utils;
 
 falco::app::run_result falco::app::actions::print_ignored_events(falco::app::state& s)
 {
-
 	if(!s.options.print_ignored_events)
 	{
 		return run_result::ok();
 	}
 
-	std::unique_ptr<sinsp> inspector(new sinsp());
-	std::unordered_set<uint32_t> io_ppm_sc_set = enforce_io_ppm_sc_set();
-
 	std::cout << "Ignored I/O syscall(s):" << std::endl;
-	for(const auto& it : inspector->get_syscalls_names(io_ppm_sc_set))
+	for(const auto& it : libsinsp::events::sc_set_to_names(libsinsp::events::io_sc_set()))
 	{
 		std::cout << "- " << it.c_str() << std::endl;
 	}

@@ -25,19 +25,16 @@ FetchContent_MakeAvailable(googletest)
 
 file(GLOB_RECURSE ENGINE_TESTS ${CMAKE_CURRENT_SOURCE_DIR}/engine/*.cpp)
 file(GLOB_RECURSE FALCO_TESTS ${CMAKE_CURRENT_SOURCE_DIR}/falco/*.cpp)
-file(GLOB_RECURSE FALCO_APP_ACTIONS_TESTS ${CMAKE_CURRENT_SOURCE_DIR}/falco/app/actions/*.cpp)
 
 set(FALCO_UNIT_TESTS_SOURCES
   "${ENGINE_TESTS}"
   "${FALCO_TESTS}"
-  "${FALCO_APP_ACTIONS_TESTS}"
 )
 
 set(FALCO_UNIT_TESTS_INCLUDES
     PRIVATE
     ${CMAKE_SOURCE_DIR}/userspace
     ${CMAKE_BINARY_DIR}/userspace/falco # we need it to include indirectly `config_falco.h` file
-    ${CMAKE_BINARY_DIR}/userspace/falco/app/actions
     ${CMAKE_SOURCE_DIR}/userspace/engine # we need it to include indirectly `falco_common.h` file
 )
 
