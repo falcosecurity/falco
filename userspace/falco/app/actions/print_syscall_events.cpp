@@ -25,27 +25,26 @@ struct event_entry
 	bool is_enter;
 	bool available;
 	std::string name;
-	struct ppm_event_info info;
+	const ppm_event_info* info;
 };
 
-static std::vector<event_entry> get_event_entries(bool include_generics, const std::unordered_set<uint32_t>& available)
+static std::vector<event_entry> get_event_entries(bool include_generics, const libsinsp::events::set<ppm_event_code>& available)
 {
 	event_entry entry;
 	std::vector<event_entry> events;
-	std::unique_ptr<sinsp> inspector(new sinsp());
-	const struct ppm_event_info* etable = inspector->get_event_info_tables()->m_event_info;
 
 	// skip generic events
-	for(uint32_t evt = PPME_GENERIC_X + 1; evt < PPM_EVENT_MAX; evt++)
+	for (const auto& e: libsinsp::events::all_event_set())
 	{
-		if (!sinsp::is_old_version_event(evt)
-				&& !sinsp::is_unused_event(evt)
-				&& !sinsp::is_unknown_event(evt))
+		if (!libsinsp::events::is_generic(e)
+			&& !libsinsp::events::is_old_version_event(e)
+			&& !libsinsp::events::is_unused_event(e)
+			&& !libsinsp::events::is_unknown_event(e))
 		{
-			entry.is_enter = PPME_IS_ENTER(evt);
-			entry.available = available.find(evt) != available.end();
-			entry.name = etable[evt].name;
-			entry.info = etable[evt];
+			entry.is_enter = PPME_IS_ENTER(e);
+			entry.available = available.contains(e);
+			entry.info = libsinsp::events::info(e);
+			entry.name = entry.info->name;
 			events.push_back(entry);
 		}
 	}
@@ -53,17 +52,20 @@ static std::vector<event_entry> get_event_entries(bool include_generics, const s
 	if (include_generics)
 	{
 		// append generic events
-		const auto generic_syscalls = inspector->get_events_names({PPME_GENERIC_E});
-		for (const auto& name : generic_syscalls)
+		const auto names = libsinsp::events::event_set_to_names({ppm_event_code::PPME_GENERIC_E});
+		for (const auto& name : names)
 		{
-			for(uint32_t evt = PPME_GENERIC_E; evt <= PPME_GENERIC_X; evt++)
-			{
-				entry.is_enter = PPME_IS_ENTER(evt);
-				entry.available = available.find(evt) != available.end();
-				entry.name = name;
-				entry.info = etable[evt];
-				events.push_back(entry);
-			}
+			entry.is_enter = PPME_IS_ENTER(ppm_event_code::PPME_GENERIC_E);
+			entry.available = available.contains(ppm_event_code::PPME_GENERIC_E);
+			entry.info = libsinsp::events::info(ppm_event_code::PPME_GENERIC_E);
+			entry.name = name;
+			events.push_back(entry);
+
+			entry.is_enter = PPME_IS_ENTER(ppm_event_code::PPME_GENERIC_X);
+			entry.available = available.contains(ppm_event_code::PPME_GENERIC_X);
+			entry.info = libsinsp::events::info(ppm_event_code::PPME_GENERIC_X);
+			entry.name = name;
+			events.push_back(entry);
 		}
 	}
 
@@ -95,15 +97,15 @@ falco::app::run_result falco::app::actions::print_syscall_events(falco::app::sta
 				printf("%c %s(", dir, e.name.c_str());
 			}
 
-			for(uint32_t k = 0; k < e.info.nparams; k++)
+			for(uint32_t k = 0; k < e.info->nparams; k++)
 			{
 				if(k != 0)
 				{
 					printf(", ");
 				}
 
-				printf("%s %s", param_type_to_string(e.info.params[k].type),
-					e.info.params[k].name);
+				printf("%s %s", param_type_to_string(e.info->params[k].type),
+					e.info->params[k].name);
 			}
 			printf(")\n");
 		}
