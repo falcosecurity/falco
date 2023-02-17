@@ -18,7 +18,7 @@ limitations under the License.
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <plugin_info.h>
+#include <engine/source_plugin/plugin_info.h>
 
 static const char *pl_required_api_version = PLUGIN_API_VERSION_STR;
 static uint32_t    pl_id                   = 999;
