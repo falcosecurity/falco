@@ -14,8 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#include "fields_info.h"
-
 #include "actions.h"
 
 using namespace falco::app;

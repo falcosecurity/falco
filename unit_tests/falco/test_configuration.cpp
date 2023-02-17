@@ -35,7 +35,7 @@ TEST(Configuration, configuration_exceptions)
 	yaml_helper conf;
 
 	/* Broken YAML */
-	string sample_broken_yaml = sample_yaml + " /  bad_symbol";
+	std::string sample_broken_yaml = sample_yaml + " /  bad_symbol";
 	EXPECT_ANY_THROW(conf.load_from_string(sample_broken_yaml));
 
 	/* Right YAML */
@@ -67,16 +67,16 @@ TEST(Configuration, read_yaml_fields)
 
 	/* get some fields */
 	ASSERT_EQ(conf.get_scalar<int>("base_value.id", -1), 1);
-	ASSERT_STREQ(conf.get_scalar<string>("base_value.name", "none").c_str(), "sample_name");
+	ASSERT_STREQ(conf.get_scalar<std::string>("base_value.name", "none").c_str(), "sample_name");
 	ASSERT_EQ(conf.get_scalar<bool>("base_value.subvalue.subvalue2.boolean", false), true);
 
 	/* get list field elements */
-	ASSERT_STREQ(conf.get_scalar<string>("base_value_2.sample_list[0]", "none").c_str(), "elem1");
-	ASSERT_STREQ(conf.get_scalar<string>("base_value_2.sample_list[1]", "none").c_str(), "elem2");
-	ASSERT_STREQ(conf.get_scalar<string>("base_value_2.sample_list[2]", "none").c_str(), "elem3");
+	ASSERT_STREQ(conf.get_scalar<std::string>("base_value_2.sample_list[0]", "none").c_str(), "elem1");
+	ASSERT_STREQ(conf.get_scalar<std::string>("base_value_2.sample_list[1]", "none").c_str(), "elem2");
+	ASSERT_STREQ(conf.get_scalar<std::string>("base_value_2.sample_list[2]", "none").c_str(), "elem3");
 
 	/* get sequence */
-	vector<string> seq;
+	std::vector<std::string> seq;
 	conf.get_sequence(seq, "base_value_2.sample_list");
 	ASSERT_EQ(seq.size(), 3);
 	ASSERT_STREQ(seq[0].c_str(), "elem1");
@@ -86,7 +86,7 @@ TEST(Configuration, read_yaml_fields)
 
 TEST(Configuration, modify_yaml_fields)
 {
-	string key = "base_value.subvalue.subvalue2.boolean";
+	std::string key = "base_value.subvalue.subvalue2.boolean";
 	yaml_helper conf;
 	
     /* Get original value */

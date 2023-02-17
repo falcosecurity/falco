@@ -116,7 +116,7 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 		filename = config.get_scalar<std::string>("file_output.filename", "");
 		if(filename == std::string(""))
 		{
-			throw logic_error("Error reading config file (" + config_name + "): file output enabled but no filename in configuration block");
+			throw std::logic_error("Error reading config file (" + config_name + "): file output enabled but no filename in configuration block");
 		}
 		file_output.options["filename"] = filename;
 
@@ -148,7 +148,7 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 		program = config.get_scalar<std::string>("program_output.program", "");
 		if(program == std::string(""))
 		{
-			throw logic_error("Error reading config file (" + config_name + "): program output enabled but no program in configuration block");
+			throw std::logic_error("Error reading config file (" + config_name + "): program output enabled but no program in configuration block");
 		}
 		program_output.options["program"] = program;
 
@@ -167,7 +167,7 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 
 		if(url == std::string(""))
 		{
-			throw logic_error("Error reading config file (" + config_name + "): http output enabled but no url in configuration block");
+			throw std::logic_error("Error reading config file (" + config_name + "): http output enabled but no url in configuration block");
 		}
 		http_output.options["url"] = url;
 
