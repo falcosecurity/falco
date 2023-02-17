@@ -43,39 +43,6 @@ namespace falco
 namespace utils
 {
 
-// TODO interim helper methods -> shall be integrated into sinsp APIs
-std::unordered_set<uint32_t> get_ppm_sc_set_from_syscalls(const std::unordered_set<std::string>& syscalls);
-std::unordered_set<uint32_t> enforce_sinsp_state_ppme(std::unordered_set<uint32_t> ppm_event_info_of_interest = {});
-std::unordered_set<uint32_t> enforce_io_ppm_sc_set(std::unordered_set<uint32_t> ppm_sc_set = {}); // needs libs bump hence duplicated in meantime
-// end interim helper methods
-
-// TODO interim libs utils methods
-template<typename T>
-std::set<T> unordered_set_to_ordered(const std::unordered_set<T>& unordered_set);
-
-template<typename T>
-std::unordered_set<T> unordered_set_difference(const std::unordered_set<T>& a, const std::unordered_set<T>& b);
-
-template<typename T>
-std::set<T> set_difference(const std::set<T>& a, const std::set<T>& b);
-
-template<typename T>
-std::unordered_set<T> unordered_set_union(const std::unordered_set<T>& a, const std::unordered_set<T>& b);
-
-template<typename T>
-std::set<T> set_union(const std::set<T>& a, const std::set<T>& b);
-
-template<typename T>
-std::unordered_set<T> unordered_set_intersection(const std::unordered_set<T>& a, const std::unordered_set<T>& b);
-
-template<typename T>
-std::set<T> set_intersection(const std::set<T>& a, const std::set<T>& b);
-
-std::string concat_set_in_order(const std::unordered_set<std::string>& s, const std::string& delim = ", ");
-std::string concat_set_in_order(const std::set<std::string>& s, const std::string& delim = ", ");
-
-// end interim libs utils methods
-
 std::string wrap_text(const std::string& in, uint32_t indent, uint32_t linelen);
 
 void readfile(const std::string& filename, std::string& data);

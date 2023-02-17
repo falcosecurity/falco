@@ -25,10 +25,6 @@ namespace actions {
 
 bool check_rules_plugin_requirements(falco::app::state& s, std::string& err);
 void print_enabled_event_sources(falco::app::state& s);
-void extract_rules_event_names(falco::app::state& s, std::unique_ptr<sinsp>& inspector, std::unordered_set<std::string>& rules_evttypes_names);
-void activate_interesting_events(falco::app::state& s, std::unique_ptr<sinsp>& inspector, const std::unordered_set<std::string>& rules_evttypes_names);
-void check_for_unsupported_events(falco::app::state& s, std::unique_ptr<sinsp>& inspector, const std::unordered_set<std::string>& rules_evttypes_names);
-void activate_interesting_syscalls(falco::app::state& s, std::unique_ptr<sinsp>& inspector, const std::unordered_set<std::string>& rules_evttypes_names);
 void activate_interesting_kernel_tracepoints(falco::app::state& s, std::unique_ptr<sinsp>& inspector);
 void check_for_ignored_events(falco::app::state& s);
 void format_plugin_info(std::shared_ptr<sinsp_plugin> p, std::ostream& os);

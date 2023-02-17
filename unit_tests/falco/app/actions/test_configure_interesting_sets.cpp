@@ -24,6 +24,12 @@ using namespace std;
 using namespace libsinsp::filter;
 using namespace falco::utils;
 
+// todo(jasondellaluce): these tests do not test the actual
+// `configure_interesting_sets` action, but instead reproduces its logic
+// and asserts the pre and post conditions. For now, this is the only thing
+// we can do due to the falco_engine class lacking adequate accessor methods.
+// In the future, we need to refactor this.
+
 static std::shared_ptr<gen_event_filter_factory> create_factory()
 {
 	std::shared_ptr<gen_event_filter_factory> ret(new sinsp_filter_factory(NULL));
@@ -56,133 +62,90 @@ static std::shared_ptr<filter_ruleset> create_ruleset(
 
 static std::shared_ptr<filter_ruleset> get_test_rulesets(const std::unordered_set<std::string>& fltstrs)
 {
-    auto f = create_factory();
-    auto r = create_ruleset(f);
+	auto f = create_factory();
+	auto r = create_ruleset(f);
 	
 	for (const auto &fltstr : fltstrs)
 	{
-        auto rule_ast = create_ast(f, fltstr);
-        auto rule_filter = create_filter(f, rule_ast);
-        falco_rule rule;
-        rule.name = fltstr;
-        rule.source = falco_common::syscall_source;
-        r->add(rule, rule_filter, rule_ast);
+		auto rule_ast = create_ast(f, fltstr);
+		auto rule_filter = create_filter(f, rule_ast);
+		falco_rule rule;
+		rule.name = fltstr;
+		rule.source = falco_common::syscall_source;
+		r->add(rule, rule_filter, rule_ast);
 		r->enable(fltstr, true, 0);
-    }
-    return r;
-}
-
-void compare_evttypes_names(const std::unordered_set<std::string>& actual, const std::unordered_set<std::string>& expected)
-{
-
-	ASSERT_EQ(actual.size(), expected.size());
-	std::set<std::string> actual_sorted = unordered_set_to_ordered(actual);
-	std::set<std::string> expected_sorted = unordered_set_to_ordered(expected);
-
-	auto final = actual_sorted.begin();
-	auto matching = expected_sorted.begin();
-
-	for(; final != actual_sorted.end(); final++, matching++)
-	{
-		ASSERT_TRUE(*matching == *final);
 	}
+	return r;
 }
 
-std::unordered_set<std::string> extract_rules_event_names(std::unique_ptr<sinsp>& inspector, std::shared_ptr<filter_ruleset>& r)
+static libsinsp::events::set<ppm_event_code> extract_rules_event_set(std::shared_ptr<filter_ruleset>& r)
 {
-	std::set<uint16_t> rule_events;
-	r->enabled_evttypes(rule_events, 0);
-	std::unordered_set<uint32_t> ppme_events_codes(rule_events.begin(), rule_events.end());
-	return inspector->get_events_names(ppme_events_codes);
-}
-
-std::unordered_set<std::string> erase_io_syscalls(std::unordered_set<uint32_t> &ppm_sc_of_interest)
-{
-	std::unordered_set<std::string> erased_io_syscalls_names = {};
-	std::unordered_set<uint32_t> cur_ppm_sc_set = ppm_sc_of_interest;
-	const int bitmask = EC_SYSCALL - 1;
-	for (const auto &ppm_sc_code : cur_ppm_sc_set)
+	std::set<uint16_t> tmp;
+	libsinsp::events::set<ppm_event_code> events;
+	auto source = falco_common::syscall_source;
+	r->enabled_evttypes(tmp, 0);
+	for (const auto &ev : tmp)
 	{
-		switch(g_infotables.m_syscall_info_table[ppm_sc_code].category & bitmask)
-		{
-		case EC_IO_READ:
-		case EC_IO_WRITE:
-			ppm_sc_of_interest.erase(ppm_sc_code);
-			erased_io_syscalls_names.insert(g_infotables.m_syscall_info_table[ppm_sc_code].name);
-		}
+		events.insert((ppm_event_code) ev);
 	}
-	return erased_io_syscalls_names;
+	return events;
+}
+
+#define ASSERT_NAMES_EQ(a, b) { \
+	ASSERT_EQ(std::set<std::string>(a.begin(), a.end()), std::set<std::string>(b.begin(), b.end())); \
 }
 
 TEST(ConfigureInterestingSets, configure_interesting_sets)
 {
-
-	std::unique_ptr<sinsp> inspector(new sinsp());
-
 	/* Test scenario:
-	*
 	* Include one I/O syscall
 	* Include one non syscall event type
 	* Include one exclusionary syscall definition test ruleset
 	* Check sinsp enforced syscalls dependencies for:
 	*  - spawned processes
 	*  - network related syscalls
-	* Check that non syscalls events are enforced
-	*/
+	* Check that non syscalls events are enforced */
 	std::unordered_set<std::string> fltstrs = {
 		"(evt.type=connect or evt.type=accept)",
 		"evt.type in (open, ptrace, mmap, execve, read, container)",
 		"evt.type in (open, execve, mprotect) and not evt.type=mprotect"};
-	std::string test_io_syscall = "read";
-	std::string test_non_syscall = "container";
 	std::unordered_set<std::string> expected_syscalls_names = {
-		"connect", "accept", "open", "ptrace", "mmap", "execve"};
-	expected_syscalls_names.insert(test_io_syscall);
-	std::unordered_set<std::string> expected_evttypes_names = expected_syscalls_names;
-	expected_evttypes_names.insert(test_non_syscall);
+		"connect", "accept", "open", "ptrace", "mmap", "execve", "read", "container"};
 	std::unordered_set<std::string> base_syscalls_sinsp_state_spawned_process = {"clone", "clone3", "fork", "vfork"};
 	std::unordered_set<std::string> base_syscalls_sinsp_state_network = {"socket", "bind", "close"};
 	std::unordered_set<std::string> base_events = {"procexit", "container"};
-	std::unordered_set<std::string> intersection = {};
 
 	auto r = get_test_rulesets(fltstrs);
 	ASSERT_EQ(r->enabled_count(0), fltstrs.size());
 
 	/* Test if event types names were extracted from each rule in test ruleset. */
-	std::unordered_set<std::string> rules_evttypes_names = extract_rules_event_names(inspector, r);
-	compare_evttypes_names(rules_evttypes_names, expected_evttypes_names);
-
-	/* Same test again for syscalls events. */
-	std::unordered_set<uint32_t> rules_ppm_sc_set = get_ppm_sc_set_from_syscalls(rules_evttypes_names);
-	std::unordered_set<std::string> rules_syscalls_names = inspector->get_syscalls_names(rules_ppm_sc_set);
-	compare_evttypes_names(rules_syscalls_names, expected_syscalls_names);
+	auto rules_event_set = extract_rules_event_set(r);
+	auto rules_names = libsinsp::events::event_set_to_names(rules_event_set);
+	ASSERT_NAMES_EQ(rules_names, expected_syscalls_names);
 
 	/* Enforce sinsp state syscalls and test if ruleset syscalls are in final set of syscalls. */
-	// TODO change to enforce_sinsp_state_ppm_sc
-	std::unordered_set<uint32_t> ppm_sc_of_interest = inspector->enforce_simple_ppm_sc_set(rules_ppm_sc_set);
-	std::unordered_set<std::string> rules_syscalls_names_enforced = inspector->get_syscalls_names(ppm_sc_of_interest);
-	intersection = unordered_set_intersection(rules_syscalls_names_enforced, expected_syscalls_names);
-	compare_evttypes_names(intersection, expected_syscalls_names);
+	auto base_event_set = libsinsp::events::sinsp_state_event_set();
+	auto selected_event_set = base_event_set.merge(rules_event_set);
+	auto selected_names = libsinsp::events::event_set_to_names(selected_event_set);
+	auto intersection = unordered_set_intersection(selected_names, expected_syscalls_names);
+	ASSERT_NAMES_EQ(intersection, expected_syscalls_names);
 
 	/* Test if sinsp state enforcement activated required syscalls for test ruleset. */
-	intersection = unordered_set_intersection(rules_syscalls_names_enforced, base_syscalls_sinsp_state_spawned_process);
-	compare_evttypes_names(intersection, base_syscalls_sinsp_state_spawned_process);
-	intersection = unordered_set_intersection(rules_syscalls_names_enforced, base_syscalls_sinsp_state_network);
-	compare_evttypes_names(intersection, base_syscalls_sinsp_state_network);
+	intersection = unordered_set_intersection(selected_names, base_syscalls_sinsp_state_spawned_process);
+	ASSERT_NAMES_EQ(intersection, base_syscalls_sinsp_state_spawned_process);
+	intersection = unordered_set_intersection(selected_names, base_syscalls_sinsp_state_network);
+	ASSERT_NAMES_EQ(intersection, base_syscalls_sinsp_state_network);
 
 	/* Test that no I/O syscalls are in the final set. */
-	std::unordered_set<uint32_t> io_ppm_sc_set = enforce_io_ppm_sc_set();
-	std::unordered_set<std::string> erased_io_syscalls_names = inspector->get_syscalls_names(unordered_set_intersection(ppm_sc_of_interest, io_ppm_sc_set));
-	ppm_sc_of_interest = unordered_set_difference(ppm_sc_of_interest, io_ppm_sc_set);
-	rules_syscalls_names_enforced = inspector->get_syscalls_names(ppm_sc_of_interest);
-	intersection = unordered_set_intersection(rules_syscalls_names_enforced, erased_io_syscalls_names);
+	auto io_event_set = libsinsp::events::sc_set_to_event_set(libsinsp::events::io_sc_set());
+	auto erased_event_set = selected_event_set.intersect(io_event_set);
+	selected_event_set = selected_event_set.diff(io_event_set);
+	selected_names = libsinsp::events::event_set_to_names(selected_event_set);
+	intersection = unordered_set_intersection(selected_names, libsinsp::events::event_set_to_names(erased_event_set));
 	ASSERT_EQ(intersection.size(), 0);
 
 	/* Test that enforced non syscalls events are in final events set. */
-	std::unordered_set<uint32_t> ppm_event_info_of_interest = inspector->get_event_set_from_ppm_sc_set(ppm_sc_of_interest);
-	ppm_event_info_of_interest = enforce_sinsp_state_ppme(ppm_event_info_of_interest);
-	std::unordered_set<std::string> final_events_names = inspector->get_events_names(ppm_event_info_of_interest);
-	intersection = unordered_set_intersection(final_events_names, base_events);
-	compare_evttypes_names(intersection, base_events);
+	intersection = unordered_set_intersection(selected_names, base_events);
+	ASSERT_NAMES_EQ(intersection, base_events);
 
 }
