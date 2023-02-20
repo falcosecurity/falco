@@ -1,5 +1,17 @@
 # Change Log
 
+## v0.34.1
+
+Released on 2023-02-20
+
+### Minor Changes
+
+* fix(userspace/engine): correctly bump FALCO_ENGINE_VERSION after introduction of new fields [[#2418](https://github.com/falcosecurity/falco/pull/2418)] - [@loresuso](https://github.com/loresuso/)
+
+### Non user-facing changes
+
+* fix(dockerfile/no-driver): install ca-certificates [[#2412](https://github.com/falcosecurity/falco/pull/2412)] - [@alacuku](https://github.com/alacuku)
+
 ## v0.34.0
 
 Released on 2023-02-07
