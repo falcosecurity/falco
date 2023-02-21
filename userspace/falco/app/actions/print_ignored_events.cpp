@@ -16,12 +16,9 @@ limitations under the License.
 
 #include "actions.h"
 #include "helpers.h"
-#include "falco_utils.h"
 
 using namespace falco::app;
 using namespace falco::app::actions;
-using namespace falco::utils;
-
 
 falco::app::run_result falco::app::actions::print_ignored_events(falco::app::state& s)
 {
