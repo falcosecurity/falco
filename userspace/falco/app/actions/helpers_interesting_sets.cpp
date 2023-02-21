@@ -15,7 +15,6 @@ limitations under the License.
 */
 
 #include "actions.h"
-#include <sstream>
 
 using namespace falco::app;
 using namespace falco::app::actions;
@@ -52,7 +51,7 @@ static void check_for_rules_unsupported_events(falco::app::state& s, const libsi
 	/* Get the names of the events (syscall and non syscall events) that were not activated and print them. */
 	auto names = libsinsp::events::event_set_to_names(unsupported_event_set);
 	std::cerr << "Loaded rules match event types that are not activated or unsupported with current configuration: warning (unsupported-evttype): " + concat_set_in_order(names) << std::endl;
-	std::cerr << "If syscalls in rules include high volume I/O syscalls (-> activate via `-A` flag), else (2) syscalls might be associated with syscalls undefined on your architecture (https://marcin.juszkiewicz.com.pl/download/tables/syscalls.html)" << std::endl;
+	std::cerr << "If syscalls in rules include high volume I/O syscalls (-> activate via `-A` flag), else syscalls might be associated with syscalls undefined on your architecture (https://marcin.juszkiewicz.com.pl/download/tables/syscalls.html)" << std::endl;
 }
 
 static void select_event_set(falco::app::state& s, const libsinsp::events::set<ppm_event_code>& rules_event_set)
@@ -64,7 +63,7 @@ static void select_event_set(falco::app::state& s, const libsinsp::events::set<p
 	if (!rules_event_set.empty())
 	{
 		falco_logger::log(LOG_DEBUG, "(" + std::to_string(rules_names.size())
-			+ ") syscalls activated in rules: " + concat_set_in_order(rules_names) + "\n");
+			+ ") events in rules: " + concat_set_in_order(rules_names) + "\n");
 	}
 
 	/* DEFAULT OPTION:
@@ -81,9 +80,10 @@ static void select_event_set(falco::app::state& s, const libsinsp::events::set<p
 	auto non_rules_event_set = s.selected_event_set.diff(rules_event_set);
 	if (!non_rules_event_set.empty())
 	{
-		falco_logger::log(LOG_DEBUG, "+(" + std::to_string(non_rules_event_set.size())
-			+ ") syscalls activated (Falco's set of additional syscalls including syscalls needed for state engine): "
-			+ concat_set_in_order(libsinsp::events::event_set_to_names(non_rules_event_set)) + "\n");
+		auto non_rules_event_set_names = libsinsp::events::event_set_to_names(non_rules_event_set);
+		falco_logger::log(LOG_DEBUG, "+(" + std::to_string(non_rules_event_set_names.size())
+			+ ") events (includes Falco's state engine set of events): "
+			+ concat_set_in_order(non_rules_event_set_names) + "\n");
 	}
 
 	/* -A flag behavior:
@@ -98,17 +98,19 @@ static void select_event_set(falco::app::state& s, const libsinsp::events::set<p
 		s.selected_event_set = s.selected_event_set.diff(ignored_event_set);
 		if (!erased_event_set.empty())
 		{
-			falco_logger::log(LOG_DEBUG, "-(" + std::to_string(erased_event_set.size())
-				+ ") ignored high volume I/O syscalls (`-A` flag not set): "
-				+ concat_set_in_order(libsinsp::events::event_set_to_names(erased_event_set)) + "\n");
+			auto erased_event_set_names = libsinsp::events::event_set_to_names(erased_event_set);
+			falco_logger::log(LOG_DEBUG, "-(" + std::to_string(erased_event_set_names.size())
+				+ ") ignored events (-> activate via `-A` flag): "
+				+ concat_set_in_order(erased_event_set_names) + "\n");
 		}
 	}
 
 	if (!s.selected_event_set.empty())
 	{
-		falco_logger::log(LOG_DEBUG, "(" + std::to_string(s.selected_event_set.size())
-			+ ") syscalls in total activated (final set): "
-			+ concat_set_in_order(libsinsp::events::event_set_to_names(s.selected_event_set)) + "\n");
+		auto selected_event_set_names = libsinsp::events::event_set_to_names(s.selected_event_set);
+		falco_logger::log(LOG_DEBUG, "(" + std::to_string(selected_event_set_names.size())
+			+ ") events selected in total (final set): "
+			+ concat_set_in_order(selected_event_set_names) + "\n");
 	}
 }
 
