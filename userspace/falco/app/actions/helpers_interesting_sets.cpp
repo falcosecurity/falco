@@ -19,6 +19,19 @@ limitations under the License.
 using namespace falco::app;
 using namespace falco::app::actions;
 
+static std::unordered_set<std::string> extract_negative_base_syscalls_names(const std::unordered_set<std::string>& base_syscalls_names)
+{
+	std::unordered_set<std::string> negative_names = {};
+	for (const std::string &ev : base_syscalls_names)
+	{
+		if(ev.at(0) == '!')
+		{
+			negative_names.insert(ev.substr(1, ev.size()));
+		}
+	}
+	return negative_names;
+}
+
 static libsinsp::events::set<ppm_event_code> extract_rules_event_set(falco::app::state& s)
 {
 	/* Get all (positive) PPME events from all rules as idx codes.
@@ -75,6 +88,37 @@ static void select_event_set(falco::app::state& s, const libsinsp::events::set<p
 	auto base_event_set = libsinsp::events::sinsp_state_event_set();
 	s.selected_event_set = rules_event_set.merge(base_event_set);
 
+	auto user_base_syscalls_names = s.config->m_base_syscalls;
+	if (!user_base_syscalls_names.empty())
+	{
+		auto valid_events = libsinsp::events::names_to_event_set(user_base_syscalls_names);
+		auto negative_names = extract_negative_base_syscalls_names(user_base_syscalls_names);
+		auto valid_negative_events = libsinsp::events::names_to_event_set(negative_names);
+
+		auto n_invalid_positive_names = (user_base_syscalls_names.size() - negative_names.size()) - libsinsp::events::names_to_sc_set(user_base_syscalls_names).size();
+		if (n_invalid_positive_names > 0)
+		{
+			std::cerr << "User config base_syscalls includes ("
+			+ std::to_string(n_invalid_positive_names) + ") invalid <positive> event names -> check for typos: warning (invalid-evttype)" << std::endl;
+		}
+		auto n_invalid_negative_names = (negative_names.size()) - libsinsp::events::names_to_sc_set(negative_names).size();
+		if (n_invalid_negative_names > 0)
+		{
+			std::cerr << "User config base_syscalls includes ("
+			+ std::to_string(n_invalid_negative_names) + ") invalid <negative> event names -> check for typos: warning (invalid-evttype)" << std::endl;
+		}
+		s.selected_event_set = rules_event_set.merge(valid_events).diff(valid_negative_events);
+		auto valid_negative_events_names = libsinsp::events::event_set_to_names(valid_negative_events);
+		falco_logger::log(LOG_DEBUG, "-(" + std::to_string(valid_negative_events_names.size())
+			+ ") events removed from rules (base_syscalls override): "
+			+ concat_set_in_order(valid_negative_events_names) + "\n");
+	}
+	else
+	{
+		base_event_set = libsinsp::events::sinsp_state_event_set();
+		s.selected_event_set = rules_event_set.merge(base_event_set);
+	}
+
 	/* Derive the diff between the additional syscalls added via libsinsp state
 	enforcement and the syscalls from each Falco rule. */
 	auto non_rules_event_set = s.selected_event_set.diff(rules_event_set);
@@ -82,7 +126,7 @@ static void select_event_set(falco::app::state& s, const libsinsp::events::set<p
 	{
 		auto non_rules_event_set_names = libsinsp::events::event_set_to_names(non_rules_event_set);
 		falco_logger::log(LOG_DEBUG, "+(" + std::to_string(non_rules_event_set_names.size())
-			+ ") events (includes Falco's state engine set of events): "
+			+ ") events (Falco's state engine set of events) or added via base_syscalls option: "
 			+ concat_set_in_order(non_rules_event_set_names) + "\n");
 	}
 
