@@ -18,6 +18,8 @@ limitations under the License.
 
 #include <list>
 #include <set>
+#include <string>
+#include <unordered_set>
 
 #include <dirent.h>
 #include <sys/types.h>
@@ -310,6 +312,8 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 	m_syscall_buf_size_preset = config.get_scalar<uint16_t>("syscall_buf_size_preset", 4);
 
 	m_cpus_for_each_syscall_buffer = config.get_scalar<uint16_t>("modern_bpf.cpus_for_each_syscall_buffer", 2);
+
+	config.get_sequence<std::unordered_set<std::string>>(m_base_syscalls, std::string("base_syscalls"));
 
 	std::set<std::string> load_plugins;
 
