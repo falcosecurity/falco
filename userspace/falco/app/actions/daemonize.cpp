@@ -27,6 +27,12 @@ static bool s_daemonized = false;
 
 falco::app::run_result falco::app::actions::daemonize(falco::app::state& s)
 {
+	if (s.options.dry_run)
+	{
+		falco_logger::log(LOG_DEBUG, "Skipping daemonizing in dry-run\n");
+		return run_result::ok();
+	}
+
 	// If daemonizing, do it here so any init errors will
 	// be returned in the foreground process.
 	if (s.options.daemon && !s_daemonized) {

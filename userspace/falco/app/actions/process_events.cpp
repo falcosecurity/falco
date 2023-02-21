@@ -410,6 +410,12 @@ falco::app::run_result falco::app::actions::process_events(falco::app::state& s)
 	// Initialize stats writer
 	auto statsw = init_stats_writer(s.options);
 
+	if (s.options.dry_run)
+	{
+		falco_logger::log(LOG_DEBUG, "Skipping event processing in dry-run\n");
+		return run_result::ok();
+	}
+
 	// Start processing events
 	if(s.is_capture_mode())
 	{

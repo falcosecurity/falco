@@ -28,6 +28,12 @@ falco::app::run_result falco::app::actions::start_webserver(falco::app::state& s
 #ifndef MINIMAL_BUILD
 	if(!s.is_capture_mode() && s.config->m_webserver_enabled)
 	{
+		if (s.options.dry_run)
+		{
+			falco_logger::log(LOG_DEBUG, "Skipping starting webserver in dry-run\n");
+			return run_result::ok();
+		}
+	
 		std::string ssl_option = (s.config->m_webserver_ssl_enabled ? " (SSL)" : "");
 		falco_logger::log(LOG_INFO, "Starting health webserver with threadiness "
 			+ std::to_string(s.config->m_webserver_threadiness)
@@ -50,8 +56,14 @@ falco::app::run_result falco::app::actions::start_webserver(falco::app::state& s
 falco::app::run_result falco::app::actions::stop_webserver(falco::app::state& s)
 {
 #ifndef MINIMAL_BUILD
-	if(!s.is_capture_mode())
+	if(!s.is_capture_mode() && s.config->m_webserver_enabled)
 	{
+		if (s.options.dry_run)
+		{
+			falco_logger::log(LOG_DEBUG, "Skipping stopping webserver in dry-run\n");
+			return run_result::ok();
+		}
+
 		s.webserver.stop();
 	}
 #endif
