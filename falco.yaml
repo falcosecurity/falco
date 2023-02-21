@@ -442,3 +442,68 @@ metadata_download:
   max_mb: 100
   chunk_wait_us: 1000
   watch_freq_sec: 1
+
+
+# base_syscalls ! Use with caution !
+#
+# --- [Description]
+#
+# With this option you are in full control of the total set of syscalls that
+# Falco will enable in the kernel for active tracing.
+
+# All syscalls and events from each enabled Falco rule will automatically be activated
+# even when choosing this option. This option provides full end user control to specifically
+# define a static set of base syscalls that will be activated in addition to the
+# syscalls defined in the rules.
+#
+# When using this option, Falco does not add any other syscalls that may be needed for
+# Falco's state engine. The union of all syscalls from the rules (including resolved macros)
+# and the ones specified here compose the final set of syscalls that are traced in the kernel.
+# This puts the end user in the driver seat, but if not used correctly Falco logs may be
+# incomplete or wrong. This option however can be very useful to lower CPU utilization and
+# allowing you to tailor Falco to specific environments according to your
+# organization's threat model and security posture as well as cost budget.
+
+# !!! When NOT using this option, Falco defaults to adding a static set of syscalls in addition
+# to the rules system calls you need for Falco's state engine build-up and life-cycle management.
+#
+#
+# --- [Usage]
+#
+# List of system calls names (<syscall-name>) plus negative ("!<syscall-name>") notation supported.
+#
+# base_syscalls: [<syscall-name>, <syscall-name>, "!<syscall-name>"]
+#
+#
+# --- [Suggestions]
+#
+# Here are a few recommendations that may help you to use the full power of this option:
+#
+# Consider to at minimum add the following syscalls regardless of the syscalls used in the rules.
+#
+# [clone, clone3, fork, vfork, execve, execveat, close]
+#
+# This is because some Falco fields you may output for an execve* system call are retrieved
+# from the associated "clone", "clone3", "fork", "vfork" syscall when spawning a new process.
+# The "close" system call is used to purge file descriptors from Falco's internal
+# thread / process cache table and therefore should always be added when you have rules around fds
+# (e.g. open, openat, openat2, socket, connect, accept, accept4 ... and many more)
+#
+# When network syscalls are used in rules we recommend to at minimum set
+#
+# [clone, clone3, fork, vfork, execve, execveat, close, socket, bind, getsockopt]
+#
+# It turns out that while you absolutely can log connect or accept* syscalls without the socket
+# system call, the log however would not contain the ip tuples.
+# For listen and accept* system calls you also need the bind system call.
+#
+# Lastly, if you care about the correct uid, gid or sid, pgid of a process when that process then
+# opens a file or makes a network connection or any other action, consider also
+# adding the following syscalls:
+#
+# setresuid, setsid, setuid, setgid, setpgid, setresgid, setsid, capset, chdir, chroot, fchdir
+#
+# Only exclude syscalls, e.g. "!mprotect" if you need a fast deployment update (overriding rules),
+# else rather remove unwanted or not needed syscalls from the Falco rules.
+
+base_syscalls: []
