@@ -35,6 +35,12 @@ falco::app::run_result falco::app::actions::init_clients(falco::app::state& s)
 	falco_logger::log(LOG_DEBUG, "Setting metadata download watch frequency to " + std::to_string(s.config->m_metadata_download_watch_freq_sec) + " seconds\n");
 	inspector->set_metadata_download_params(s.config->m_metadata_download_max_mb * 1024 * 1024, s.config->m_metadata_download_chunk_wait_us, s.config->m_metadata_download_watch_freq_sec);
 
+	if (s.options.dry_run)
+	{
+		falco_logger::log(LOG_DEBUG, "Skipping clients initialization in dry-run\n");
+		return run_result::ok();
+	}
+
 	//
 	// Run k8s, if required
 	//

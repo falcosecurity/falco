@@ -49,6 +49,12 @@ falco::app::run_result falco::app::actions::init_outputs(falco::app::state& s)
 		hostname = c_hostname;
 	}
 
+	if (s.options.dry_run)
+	{
+		falco_logger::log(LOG_DEBUG, "Skipping daemonizing in dry-run\n");
+		return run_result::ok();
+	}
+
 	s.outputs.reset(new falco_outputs(
 		s.engine,
 		s.config->m_outputs,

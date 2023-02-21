@@ -71,6 +71,12 @@ bool create_handler(int sig, void (*func)(int), run_result &ret)
 
 falco::app::run_result falco::app::actions::create_signal_handlers(falco::app::state& s)
 {
+	if (s.options.dry_run)
+	{
+		falco_logger::log(LOG_DEBUG, "Skipping signal handlers creation in dry-run\n");
+		return run_result::ok();
+	}
+
 	falco::app::g_terminate_signal.reset();
 	falco::app::g_restart_signal.reset();
 	falco::app::g_reopen_outputs_signal.reset();
@@ -96,6 +102,12 @@ falco::app::run_result falco::app::actions::create_signal_handlers(falco::app::s
 
 falco::app::run_result falco::app::actions::attach_inotify_signals(falco::app::state& s)
 {
+	if (s.options.dry_run)
+	{
+		falco_logger::log(LOG_DEBUG, "Skipping attaching inotify signals in dry-run\n");
+		return run_result::ok();
+	}
+
     if (s.config->m_watch_config_files)
 	{
 		inot_fd = inotify_init();
@@ -167,6 +179,12 @@ falco::app::run_result falco::app::actions::attach_inotify_signals(falco::app::s
 
 falco::app::run_result falco::app::actions::unregister_signal_handlers(falco::app::state& s)
 {
+	if (s.options.dry_run)
+	{
+		falco_logger::log(LOG_DEBUG, "Skipping unregistering signal handlers in dry-run\n");
+		return run_result::ok();
+	}
+
 	run_result ret;
 	close(inot_fd);
 	if(! create_handler(SIGINT, SIG_DFL, ret) ||
