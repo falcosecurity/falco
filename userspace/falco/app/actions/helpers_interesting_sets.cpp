@@ -160,7 +160,15 @@ static void select_event_set(falco::app::state& s, const libsinsp::events::set<p
 
 static void select_syscall_set(falco::app::state& s, const libsinsp::events::set<ppm_event_code>& rules_event_set)
 {
-	s.selected_sc_set = libsinsp::events::event_set_to_sc_set(s.selected_event_set);	
+	s.selected_sc_set = libsinsp::events::event_set_to_sc_set(s.selected_event_set);
+
+	if (!s.selected_sc_set.empty())
+	{
+	auto selected_sc_set_names = libsinsp::events::sc_set_to_names(s.selected_sc_set);
+	falco_logger::log(LOG_DEBUG, "(" + std::to_string(selected_sc_set_names.size())
+		+ ") syscalls selected in total (final set): "
+		+ concat_set_in_order(selected_sc_set_names) + "\n");
+	}
 }
 
 static void select_kernel_tracepoint_set(falco::app::state& s)
