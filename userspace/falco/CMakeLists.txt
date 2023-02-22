@@ -17,6 +17,7 @@ set(
   FALCO_SOURCES
   app/app.cpp
   app/options.cpp
+  app/restart_handler.cpp
   app/actions/helpers_generic.cpp
   app/actions/helpers_inspector.cpp
   app/actions/helpers_interesting_sets.cpp
