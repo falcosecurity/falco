@@ -40,7 +40,11 @@ bool falco::app::run(int argc, char** argv, bool& restart, std::string& errstr)
 		}
 		s.cmdline += *arg;
 	}
+	return falco::app::run(s, restart, errstr);
+}
 
+bool falco::app::run(falco::app::state& s, bool& restart, std::string& errstr)
+{
 	// The order here is the order in which the methods will be
 	// called. Before changing the order, ensure that all
 	// dependencies are honored (e.g. don't process events before
@@ -64,11 +68,10 @@ bool falco::app::run(int argc, char** argv, bool& restart, std::string& errstr)
 		falco::app::actions::validate_rules_files,
 		falco::app::actions::load_rules_files,
 		falco::app::actions::print_support,
+		falco::app::actions::init_outputs,
 		falco::app::actions::create_signal_handlers,
-		falco::app::actions::attach_inotify_signals,
 		falco::app::actions::create_requested_paths,
 		falco::app::actions::daemonize,
-		falco::app::actions::init_outputs,
 		falco::app::actions::init_clients,
 		falco::app::actions::configure_interesting_sets,
 		falco::app::actions::configure_syscall_buffer_size,
@@ -104,7 +107,7 @@ bool falco::app::run(int argc, char** argv, bool& restart, std::string& errstr)
 		errstr = res.errstr;
 	}
 
-	restart = falco::app::g_restart_signal.triggered();
+	restart = s.restart;
 
 	return res.success;
 }

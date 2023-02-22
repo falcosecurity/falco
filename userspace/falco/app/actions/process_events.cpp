@@ -208,8 +208,9 @@ static falco::app::run_result do_inspect(
 		}
 		else if(falco::app::g_restart_signal.triggered())
 		{
-			falco::app::g_restart_signal.handle([&](){
+			falco::app::g_restart_signal.handle([&s](){
 				falco_logger::log(LOG_INFO, "SIGHUP received, restarting...\n");
+				s.restart.store(true);
 			});
 			break;
 		}

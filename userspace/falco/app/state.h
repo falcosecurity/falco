@@ -19,6 +19,7 @@ limitations under the License.
 #include "indexed_vector.h"
 
 #include "options.h"
+#include "restart_handler.h"
 #include "../configuration.h"
 #include "../stats_writer.h"
 #ifndef MINIMAL_BUILD
@@ -30,6 +31,7 @@ limitations under the License.
 
 #include <string>
 #include <memory>
+#include <atomic>
 #include <unordered_set>
 
 namespace falco {
@@ -59,6 +61,7 @@ struct state
     };
 
     state():
+        restart(false),
         loaded_sources(),
         enabled_sources(),
         source_infos(),
@@ -72,7 +75,15 @@ struct state
         engine = std::make_shared<falco_engine>();
         offline_inspector = std::make_shared<sinsp>();
         outputs = nullptr;
+        restarter = nullptr;
     }
+
+    state(const std::string& cmd, const falco::app::options& opts): state()
+    {
+        cmdline = cmd;
+        options = opts;
+    }
+
     ~state() = default;
     state(state&&) = default;
     state& operator = (state&&) = default;
@@ -81,6 +92,8 @@ struct state
 
     std::string cmdline;
     falco::app::options options;
+    std::atomic<bool> restart;
+
 
     std::shared_ptr<falco_configuration> config;
     std::shared_ptr<falco_outputs> outputs;
@@ -117,6 +130,9 @@ struct state
 
     // Dimension of the syscall buffer in bytes.
     uint64_t syscall_buffer_bytes_size;
+
+    // Helper responsible for watching of handling hot application restarts
+    std::shared_ptr<restart_handler> restarter;
 
 #ifndef MINIMAL_BUILD
     falco::grpc::server grpc_server;
