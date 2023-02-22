@@ -16,23 +16,15 @@ limitations under the License.
 
 #include <functional>
 
-#include <string.h>
-#include <signal.h>
-#include <sys/inotify.h>
-#include <fcntl.h>
 
 #include "actions.h"
+#include "../app.h"
 #include "../signals.h"
 
 using namespace falco::app;
 using namespace falco::app::actions;
 
-// This is initially set to a dummy application. When
-// create_signal_handlers is called, it will be rebound to the
-// provided application, and in unregister_signal_handlers it will be
-// rebound back to the dummy application.
-
-static int inot_fd;
+static std::shared_ptr<falco::app::restart_handler> s_restarter;
 
 static void terminate_signal_handler(int signal)
 {
@@ -46,7 +38,10 @@ static void reopen_outputs_signal_handler(int signal)
 
 static void restart_signal_handler(int signal)
 {
-	falco::app::g_restart_signal.trigger();
+	if (s_restarter != nullptr)
+	{
+		s_restarter->trigger();
+	}
 }
 
 bool create_handler(int sig, void (*func)(int), run_result &ret)
@@ -94,87 +89,63 @@ falco::app::run_result falco::app::actions::create_signal_handlers(falco::app::s
 	   ! create_handler(SIGUSR1, ::reopen_outputs_signal_handler, ret) ||
 	   ! create_handler(SIGHUP, ::restart_signal_handler, ret))
 	{
-		// we use the if just to make sure we return at the first failed statement
+		return ret;
 	}
 
+	falco::app::restart_handler::watch_list_t files_to_watch;
+	falco::app::restart_handler::watch_list_t dirs_to_watch;
+	if (s.config->m_watch_config_files)
+	{
+		files_to_watch.push_back(s.options.conf_filename);
+		files_to_watch.insert(
+			files_to_watch.end(),
+			s.config->m_loaded_rules_filenames.begin(),
+			s.config->m_loaded_rules_filenames.end());
+		dirs_to_watch.insert(
+			dirs_to_watch.end(),
+			s.config->m_loaded_rules_folders.begin(),
+			s.config->m_loaded_rules_folders.end());
+	}
+
+	s.restarter = std::make_shared<falco::app::restart_handler>([&s]{
+		bool tmp = false;
+		bool success = false;
+		std::string err;
+		falco::app::state tmp_state(s.cmdline, s.options);
+		tmp_state.options.dry_run = true;
+		try
+		{
+			success = falco::app::run(tmp_state, tmp, err);
+		}
+		catch (std::exception& e)
+		{
+			err = e.what();
+		}
+		catch (...)
+		{
+			err = "unknown error";
+		}
+
+		if (!success && s.outputs != nullptr)
+		{
+			std::string rule = "Falco internal: hot restart failure";
+			std::string msg = rule + ": " + err;
+			std::map<std::string, std::string> o = {};
+			auto now = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+			s.outputs->handle_msg(now, falco_common::PRIORITY_CRITICAL, msg, rule, o);
+		}
+
+		return success;
+	}, files_to_watch, dirs_to_watch);
+
+	ret = run_result::ok();
+	ret.success = s.restarter->start(ret.errstr);
+	ret.proceed = ret.success;
+	if (ret.success)
+	{
+		s_restarter = s.restarter;
+	}
 	return ret;
-}
-
-falco::app::run_result falco::app::actions::attach_inotify_signals(falco::app::state& s)
-{
-	if (s.options.dry_run)
-	{
-		falco_logger::log(LOG_DEBUG, "Skipping attaching inotify signals in dry-run\n");
-		return run_result::ok();
-	}
-
-    if (s.config->m_watch_config_files)
-	{
-		inot_fd = inotify_init();
-		if (inot_fd == -1)
-		{
-			return run_result::fatal("Could not create inotify handler");
-		}
-
-		struct sigaction sa;
-		sigemptyset(&sa.sa_mask);
-		sa.sa_flags = SA_RESTART;
-		sa.sa_handler = restart_signal_handler;
-		if (sigaction(SIGIO, &sa, NULL) == -1)
-		{
-			return run_result::fatal("Failed to link SIGIO to inotify handler");
-		}
-
-		/* Set owner process that is to receive "I/O possible" signal */
-		if (fcntl(inot_fd, F_SETOWN, getpid()) == -1)
-		{
-			return run_result::fatal("Failed to setting owner on inotify handler");
-		}
-
-		/*
-		 * Enable "I/O possible" signaling and make I/O nonblocking
-		 *  for file descriptor
-		 */
-		int flags = fcntl(inot_fd, F_GETFL);
-		if (fcntl(inot_fd, F_SETFL, flags | O_ASYNC | O_NONBLOCK) == -1)
-		{
-			return run_result::fatal("Failed to setting flags on inotify handler");
-		}
-
-		// Watch conf file
-		int wd = inotify_add_watch(inot_fd, s.options.conf_filename.c_str(), IN_CLOSE_WRITE);
-		if (wd == -1)
-		{
-			return run_result::fatal("Failed to watch conf file");
-		}
-		falco_logger::log(LOG_DEBUG, "Watching " + s.options.conf_filename +"\n");
-
-		// Watch rules files
-		for (const auto &rule : s.config->m_loaded_rules_filenames)
-		{
-			wd = inotify_add_watch(inot_fd, rule.c_str(), IN_CLOSE_WRITE | IN_ONESHOT);
-			if (wd == -1)
-			{
-				return run_result::fatal("Failed to watch rule file: " + rule);
-			}
-			falco_logger::log(LOG_DEBUG, "Watching " + rule +"\n");
-		}
-
-		// Watch specified rules folders, if any:
-		// any newly created/removed file within the folder
-		// will trigger a Falco restart.
-		for (const auto &fld : s.config->m_loaded_rules_folders)
-		{
-			// For folders, we watch if any file is created or destroyed within
-			wd = inotify_add_watch(inot_fd, fld.c_str(), IN_CREATE | IN_DELETE | IN_ONESHOT);
-			if (wd == -1)
-			{
-				return run_result::fatal("Failed to watch rule folder: " + fld);
-			}
-			falco_logger::log(LOG_DEBUG, "Watching " + fld +" folder\n");
-		}
-	}
-	return run_result::ok();
 }
 
 falco::app::run_result falco::app::actions::unregister_signal_handlers(falco::app::state& s)
@@ -185,8 +156,13 @@ falco::app::run_result falco::app::actions::unregister_signal_handlers(falco::ap
 		return run_result::ok();
 	}
 
+	s_restarter = nullptr;
+	if (s.restarter != nullptr)
+	{
+		s.restarter->stop();
+	}
+
 	run_result ret;
-	close(inot_fd);
 	if(! create_handler(SIGINT, SIG_DFL, ret) ||
 	   ! create_handler(SIGTERM, SIG_DFL, ret) ||
 	   ! create_handler(SIGUSR1, SIG_DFL, ret) ||

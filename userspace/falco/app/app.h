@@ -16,12 +16,15 @@ limitations under the License.
 
 #pragma once
 
+#include "state.h"
+
 #include <string>
 
 namespace falco {
 namespace app {
 
 bool run(int argc, char** argv, bool& restart, std::string& errstr);
+bool run(falco::app::state& s, bool& restart, std::string& errstr);
 
 }; // namespace app
 }; // namespace falco
