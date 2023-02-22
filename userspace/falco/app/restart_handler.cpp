@@ -23,6 +23,11 @@ limitations under the License.
 #include <sys/inotify.h>
 #include <sys/select.h>
 
+#if __GLIBC__ == 2 && __GLIBC_MINOR__ < 30
+#include <sys/syscall.h>
+#define gettid() syscall(SYS_gettid)
+#endif
+
 void falco::app::restart_handler::trigger()
 {
     m_forced.store(true, std::memory_order_release);
