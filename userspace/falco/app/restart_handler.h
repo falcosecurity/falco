@@ -22,8 +22,6 @@ limitations under the License.
 #include <string>
 #include <functional>
 
-#include <unistd.h>
-
 namespace falco
 {
 namespace app
@@ -57,13 +55,7 @@ public:
               m_on_check(on_check),
               m_watched_dirs(watch_dirs),
               m_watched_files(watch_files) { }
-
-    virtual ~restart_handler()
-    {
-        close(m_inotify_fd);
-        stop();
-    }
-
+    virtual ~restart_handler();
     restart_handler(restart_handler&&) = default;
     restart_handler& operator = (restart_handler&&) = default;
     restart_handler(const restart_handler&) = delete;
@@ -84,5 +76,6 @@ private:
     watch_list_t m_watched_dirs;
     watch_list_t m_watched_files;
 };
+
 }; // namespace app
 }; // namespace falco
