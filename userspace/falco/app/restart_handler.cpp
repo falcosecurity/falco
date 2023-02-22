@@ -20,6 +20,7 @@ limitations under the License.
 
 #include <string.h>
 #include <fcntl.h>
+#include <unistd.h>
 #include <sys/inotify.h>
 #include <sys/select.h>
 
@@ -27,6 +28,12 @@ limitations under the License.
 #include <sys/syscall.h>
 #define gettid() syscall(SYS_gettid)
 #endif
+
+falco::app::restart_handler::~restart_handler()
+{
+    close(m_inotify_fd);
+    stop();
+}
 
 void falco::app::restart_handler::trigger()
 {

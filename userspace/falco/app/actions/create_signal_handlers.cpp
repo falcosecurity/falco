@@ -16,10 +16,11 @@ limitations under the License.
 
 #include <functional>
 
-
 #include "actions.h"
 #include "../app.h"
 #include "../signals.h"
+
+#include <signal.h>
 
 using namespace falco::app;
 using namespace falco::app::actions;
