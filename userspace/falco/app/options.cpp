@@ -18,6 +18,8 @@ limitations under the License.
 #include "../configuration.h"
 #include "config_falco.h"
 
+#include <cxxopts.hpp>
+
 #include <fstream>
 
 namespace falco {
@@ -34,10 +36,8 @@ options::options()
 	  list_plugins(false),
 	  list_syscall_events(false),
 	  markdown(false),
-	  modern_bpf(false),
-	  m_cmdline_opts("falco", "Falco - Cloud Native Runtime Security")
+	  modern_bpf(false)
 {
-	define();
 }
 
 options::~options()
@@ -46,8 +46,13 @@ options::~options()
 
 bool options::parse(int argc, char **argv, std::string &errstr)
 {
+	cxxopts::Options opts("falco", "Falco - Cloud Native Runtime Security");
+	define(opts);
+	m_usage_str = opts.help();
+
+	cxxopts::ParseResult m_cmdline_parsed;
 	try {
-		m_cmdline_parsed = m_cmdline_opts.parse(argc, argv);
+		m_cmdline_parsed = opts.parse(argc, argv);
 	}
 	catch (std::exception &e)
 	{
@@ -145,14 +150,14 @@ bool options::parse(int argc, char **argv, std::string &errstr)
 	return true;
 }
 
-std::string options::usage()
+const std::string& options::usage()
 {
-	return m_cmdline_opts.help();
+	return m_usage_str;
 }
 
-void options::define()
+void options::define(cxxopts::Options& opts)
 {
-	m_cmdline_opts.add_options()
+	opts.add_options()
 		("h,help",                        "Print this page", cxxopts::value(help)->default_value("false"))
 #ifdef BUILD_TYPE_RELEASE
 		("c",                             "Configuration file. If not specified uses " FALCO_INSTALL_CONF_FILE ".", cxxopts::value(conf_filename), "<path>")
@@ -215,7 +220,7 @@ void options::define()
 		("page-size",                     "Print the system page size (may help you to choose the right syscall ring-buffer size).", cxxopts::value(print_page_size)->default_value("false"));
 
 
-	m_cmdline_opts.set_width(140);
+	opts.set_width(140);
 }
 
 }; // namespace app
