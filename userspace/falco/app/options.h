@@ -18,11 +18,11 @@ limitations under the License.
 
 #include <event.h>
 
-#include <cxxopts.hpp>
-
 #include <string>
 #include <vector>
 #include <set>
+
+namespace cxxopts { class Options; };
 
 namespace falco {
 namespace app {
@@ -88,12 +88,11 @@ public:
 
 	bool parse(int argc, char **argv, std::string &errstr);
 
-	std::string usage();
-private:
-	void define();
+	const std::string& usage();
 
-	cxxopts::Options m_cmdline_opts;
-	cxxopts::ParseResult m_cmdline_parsed;
+private:
+	void define(cxxopts::Options& opts);
+	std::string m_usage_str;
 };
 
 }; // namespace application
