@@ -23,13 +23,16 @@ void extract_base_syscalls_names(const std::unordered_set<std::string>& base_sys
 {
 	for (const std::string &ev : base_syscalls_names)
 	{
-		if(ev.at(0) == '!')
+		if (!ev.empty())
 		{
-			negative_names.insert(ev.substr(1, ev.size()));
-		}
-		else
-		{
-			positive_names.insert(ev);
+			if (ev.at(0) == '!')
+			{
+				negative_names.insert(ev.substr(1, ev.size()));
+			}
+			else
+			{
+				positive_names.insert(ev);
+			}
 		}
 	}
 }
