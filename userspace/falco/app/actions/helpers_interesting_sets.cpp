@@ -19,17 +19,19 @@ limitations under the License.
 using namespace falco::app;
 using namespace falco::app::actions;
 
-static std::unordered_set<std::string> extract_negative_base_syscalls_names(const std::unordered_set<std::string>& base_syscalls_names)
+void extract_base_syscalls_names(const std::unordered_set<std::string>& base_syscalls_names, std::unordered_set<std::string>& positive_names, std::unordered_set<std::string>& negative_names)
 {
-	std::unordered_set<std::string> negative_names = {};
 	for (const std::string &ev : base_syscalls_names)
 	{
 		if(ev.at(0) == '!')
 		{
 			negative_names.insert(ev.substr(1, ev.size()));
 		}
+		else
+		{
+			positive_names.insert(ev);
+		}
 	}
-	return negative_names;
 }
 
 static libsinsp::events::set<ppm_event_code> extract_rules_event_set(falco::app::state& s)
@@ -67,7 +69,7 @@ static void check_for_rules_unsupported_events(falco::app::state& s, const libsi
 	std::cerr << "If syscalls in rules include high volume I/O syscalls (-> activate via `-A` flag), else syscalls might be associated with syscalls undefined on your architecture (https://marcin.juszkiewicz.com.pl/download/tables/syscalls.html)" << std::endl;
 }
 
-static void select_event_set(falco::app::state& s, const libsinsp::events::set<ppm_event_code>& rules_event_set)
+static void select_event_set(falco::app::state& s, libsinsp::events::set<ppm_event_code>& rules_event_set)
 {
 	/* PPM syscall codes (sc) can be viewed as condensed libsinsp lookup table
 	 * to map a system call name to it's actual system syscall id (as defined
@@ -80,53 +82,76 @@ static void select_event_set(falco::app::state& s, const libsinsp::events::set<p
 	}
 
 	/* DEFAULT OPTION:
-	 * Current sinsp_state_sc_set() approach includes multiple steps:
-	 * (1) Enforce all positive syscalls from each Falco rule
-	 * (2) Enforce `libsinsp` state set (non-adaptive, not conditioned by rules,
-	       but based on PPME event table flags indicating generic sinsp state modifications)
-	 * -> Final set is union of (1) and (2) */
+	* Current sinsp_state_sc_set() approach includes multiple steps:
+	* (1) Enforce all positive syscalls from each Falco rule
+	* (2) Enforce static `libsinsp` state set (non-adaptive, not conditioned by rules,
+	* but based on PPME event table flags indicating generic sinsp state modifications)
+	* -> Final set is union of (1) and (2)
+	*
+	* Fall-back if no valid positive syscalls in "base_syscalls",
+	* e.g. when using "base_syscalls" only for negative syscalls.
+	*/
 	auto base_event_set = libsinsp::events::sinsp_state_event_set();
 	s.selected_event_set = rules_event_set.merge(base_event_set);
 
 	auto user_base_syscalls_names = s.config->m_base_syscalls;
+	libsinsp::events::set<ppm_sc_code> valid_positive_syscalls;
 	if (!user_base_syscalls_names.empty())
 	{
-		auto valid_events = libsinsp::events::names_to_event_set(user_base_syscalls_names);
-		auto negative_names = extract_negative_base_syscalls_names(user_base_syscalls_names);
-		auto valid_negative_events = libsinsp::events::names_to_event_set(negative_names);
+		/* USER OVERRIDE INPUT OPTION "base_syscalls". */
+		std::unordered_set<std::string> positive_names = {};
+		std::unordered_set<std::string> negative_names = {};
+		extract_base_syscalls_names(user_base_syscalls_names, positive_names, negative_names);
 
-		auto n_invalid_positive_names = (user_base_syscalls_names.size() - negative_names.size()) - libsinsp::events::names_to_sc_set(user_base_syscalls_names).size();
-		if (n_invalid_positive_names > 0)
+		valid_positive_syscalls = libsinsp::events::names_to_sc_set(positive_names);
+		auto valid_negative_syscalls = libsinsp::events::names_to_sc_set(negative_names);
+
+		if (!valid_positive_syscalls.empty())
 		{
-			std::cerr << "User config base_syscalls includes ("
-			+ std::to_string(n_invalid_positive_names) + ") invalid <positive> event names -> check for typos: warning (invalid-evttype)" << std::endl;
+			/* Convert valid syscalls codes to event codes. */
+			auto valid_positive_events = libsinsp::events::sc_set_to_event_set(valid_positive_syscalls);
+
+			/* For now remove the sinsp_state_sc_set again. A possible future libs refactor can remove this need.
+			 * That way we consistently use sinsp_state_event_set() which adds critical non syscalls events.
+			 * This step prepares the sinsp state enforcement override w/ "base_syscalls" user input.
+			*/
+			auto sc_state_event_set = libsinsp::events::sc_set_to_event_set(libsinsp::events::sinsp_state_sc_set());
+			s.selected_event_set = s.selected_event_set.diff(sc_state_event_set);
+			s.selected_event_set = rules_event_set.merge(s.selected_event_set);
+
+			/* Add valid base_syscalls events. */
+			s.selected_event_set = s.selected_event_set.merge(valid_positive_events);
+
+			auto valid_positive_syscalls_names = libsinsp::events::sc_set_to_names(valid_positive_syscalls);
+			falco_logger::log(LOG_DEBUG, "+(" + std::to_string(valid_positive_syscalls_names.size())
+				+ ") syscalls added (base_syscalls override): "
+				+ concat_set_in_order(valid_positive_syscalls_names) + "\n");
 		}
-		auto n_invalid_negative_names = (negative_names.size()) - libsinsp::events::names_to_sc_set(negative_names).size();
-		if (n_invalid_negative_names > 0)
+
+		if (!valid_negative_syscalls.empty())
 		{
-			std::cerr << "User config base_syscalls includes ("
-			+ std::to_string(n_invalid_negative_names) + ") invalid <negative> event names -> check for typos: warning (invalid-evttype)" << std::endl;
+			/* Convert valid syscalls codes to event codes. */
+			auto valid_negative_events = libsinsp::events::sc_set_to_event_set(valid_negative_syscalls);
+
+			/* Remove negative base_syscalls events. */
+			s.selected_event_set = s.selected_event_set.diff(valid_negative_events);
+			rules_event_set = rules_event_set.diff(valid_negative_events);
+
+			auto valid_negative_syscalls_names = libsinsp::events::sc_set_to_names(valid_negative_syscalls);
+			falco_logger::log(LOG_DEBUG, "-(" + std::to_string(valid_negative_syscalls_names.size())
+				+ ") syscalls removed (base_syscalls override): "
+				+ concat_set_in_order(valid_negative_syscalls_names) + "\n");
 		}
-		s.selected_event_set = rules_event_set.merge(valid_events).diff(valid_negative_events);
-		auto valid_negative_events_names = libsinsp::events::event_set_to_names(valid_negative_events);
-		falco_logger::log(LOG_DEBUG, "-(" + std::to_string(valid_negative_events_names.size())
-			+ ") events removed from rules (base_syscalls override): "
-			+ concat_set_in_order(valid_negative_events_names) + "\n");
-	}
-	else
-	{
-		base_event_set = libsinsp::events::sinsp_state_event_set();
-		s.selected_event_set = rules_event_set.merge(base_event_set);
 	}
 
 	/* Derive the diff between the additional syscalls added via libsinsp state
 	enforcement and the syscalls from each Falco rule. */
 	auto non_rules_event_set = s.selected_event_set.diff(rules_event_set);
-	if (!non_rules_event_set.empty())
+	if (!non_rules_event_set.empty() && valid_positive_syscalls.empty())
 	{
 		auto non_rules_event_set_names = libsinsp::events::event_set_to_names(non_rules_event_set);
 		falco_logger::log(LOG_DEBUG, "+(" + std::to_string(non_rules_event_set_names.size())
-			+ ") events (Falco's state engine set of events) or added via base_syscalls option: "
+			+ ") events (Falco's state engine set of events): "
 			+ concat_set_in_order(non_rules_event_set_names) + "\n");
 	}
 
@@ -161,13 +186,12 @@ static void select_event_set(falco::app::state& s, const libsinsp::events::set<p
 static void select_syscall_set(falco::app::state& s, const libsinsp::events::set<ppm_event_code>& rules_event_set)
 {
 	s.selected_sc_set = libsinsp::events::event_set_to_sc_set(s.selected_event_set);
-
 	if (!s.selected_sc_set.empty())
 	{
-	auto selected_sc_set_names = libsinsp::events::sc_set_to_names(s.selected_sc_set);
-	falco_logger::log(LOG_DEBUG, "(" + std::to_string(selected_sc_set_names.size())
-		+ ") syscalls selected in total (final set): "
-		+ concat_set_in_order(selected_sc_set_names) + "\n");
+		auto selected_sc_set_names = libsinsp::events::sc_set_to_names(s.selected_sc_set);
+		falco_logger::log(LOG_DEBUG, "(" + std::to_string(selected_sc_set_names.size())
+			+ ") syscalls selected in total (final set): "
+			+ concat_set_in_order(selected_sc_set_names) + "\n");
 	}
 }
 
