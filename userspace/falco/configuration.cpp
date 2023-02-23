@@ -313,6 +313,7 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 
 	m_cpus_for_each_syscall_buffer = config.get_scalar<uint16_t>("modern_bpf.cpus_for_each_syscall_buffer", 2);
 
+	m_base_syscalls.clear();
 	config.get_sequence<std::unordered_set<std::string>>(m_base_syscalls, std::string("base_syscalls"));
 
 	std::set<std::string> load_plugins;
