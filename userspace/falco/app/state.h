@@ -63,7 +63,6 @@ struct state
         enabled_sources(),
         source_infos(),
         plugin_configs(),
-        selected_event_set(),
         selected_sc_set(),
         selected_tp_set(),
         syscall_buffer_bytes_size(DEFAULT_DRIVER_BUFFER_BYTES_DIM)
@@ -105,9 +104,6 @@ struct state
     // List of all plugin configurations indexed by plugin name as returned
     // by their sinsp_plugin::name method
     indexed_vector<falco_configuration::plugin_config> plugin_configs;
-
-    // Set of events we want the driver to capture
-    libsinsp::events::set<ppm_event_code> selected_event_set;
 
     // Set of syscalls we want the driver to capture
     libsinsp::events::set<ppm_sc_code> selected_sc_set;
