@@ -21,6 +21,7 @@ limitations under the License.
 #include <filter.h>
 #include <event.h>
 #include <gen_filter.h>
+#include <events/sinsp_events.h>
 
 /*!
 	\brief Manages a set of rulesets. A ruleset is a set of
@@ -83,9 +84,28 @@ public:
 		\brief Returns the union of the evttypes of all the rules enabled
 		in a given ruleset
 		\param ruleset_id The id of the ruleset to be used
+		\deprecated Must use the new typing-improved `enabled_event_codes`
+		and `enabled_sc_codes` instead
+		\note todo(jasondellaluce): remove this in future refactors
 	*/
 	virtual void enabled_evttypes(
 		std::set<uint16_t> &evttypes,
+		uint16_t ruleset) = 0;
+	
+	/*!
+		\brief Returns the all the ppm_sc_codes matching the rules
+		enabled in a given ruleset.
+		\param ruleset_id The id of the ruleset to be used
+	*/
+	virtual libsinsp::events::set<ppm_sc_code> enabled_sc_codes(
+		uint16_t ruleset) = 0;
+	
+	/*!
+		\brief Returns the all the ppm_event_codes matching the rules
+		enabled in a given ruleset.
+		\param ruleset_id The id of the ruleset to be used
+	*/
+	virtual libsinsp::events::set<ppm_event_code> enabled_event_codes(
 		uint16_t ruleset) = 0;
 
 	/*!

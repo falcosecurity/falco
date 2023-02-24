@@ -222,9 +222,28 @@ public:
 	//
 	// Given an event source and ruleset, fill in a bitset
 	// containing the event types for which this ruleset can run.
+	// note(jasondellaluce): this is deprecated, must use the new
+	// typing-improved `enabled_event_codes` and `enabled_sc_codes` instead
+	// todo(jasondellaluce): remove this in future code refactors
 	//
 	void evttypes_for_ruleset(std::string &source,
 				  std::set<uint16_t> &evttypes,
+				  const std::string &ruleset = s_default_ruleset);
+
+	//
+	// Given an event source and ruleset, return the set of ppm_sc_codes
+	// for which this ruleset can run and match events.
+	//
+	libsinsp::events::set<ppm_sc_code> sc_codes_for_ruleset(
+				  const std::string &source,
+				  const std::string &ruleset = s_default_ruleset);
+	
+	//
+	// Given an event source and ruleset, return the set of ppm_event_codes
+	// for which this ruleset can run and match events.
+	//
+	libsinsp::events::set<ppm_event_code> event_codes_for_ruleset(
+				  const std::string &source,
 				  const std::string &ruleset = s_default_ruleset);
 
 	//
