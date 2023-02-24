@@ -67,7 +67,7 @@ static void select_event_set(falco::app::state& s, const libsinsp::events::set<p
 	if (!rules_sc_set.empty())
 	{
 		falco_logger::log(LOG_DEBUG, "(" + std::to_string(rules_names.size())
-			+ ") events in rules: " + concat_set_in_order(rules_names) + "\n");
+			+ ") syscalls in rules: " + concat_set_in_order(rules_names) + "\n");
 	}
 
 	/* DEFAULT OPTION:
@@ -94,7 +94,7 @@ static void select_event_set(falco::app::state& s, const libsinsp::events::set<p
 		// user overrides base event set
 		base_sc_set = user_positive_sc_set;
 
-		// we re-transform from events set to names to make
+		// we re-transform from sc_set to names to make
 		// sure that bad user inputs are ignored
 		auto user_positive_sc_set_names = libsinsp::events::sc_set_to_names(user_positive_sc_set);
 		falco_logger::log(LOG_DEBUG, "+(" + std::to_string(user_positive_sc_set_names.size())
@@ -111,7 +111,7 @@ static void select_event_set(falco::app::state& s, const libsinsp::events::set<p
 		/* Remove negative base_syscalls events. */
 		s.selected_sc_set = s.selected_sc_set.diff(user_negative_sc_set);
 
-		// we re-transform from events set to names to make
+		// we re-transform from sc_set to names to make
 		// sure that bad user inputs are ignored
 		auto user_negative_sc_set_names = libsinsp::events::sc_set_to_names(user_negative_sc_set);
 		falco_logger::log(LOG_DEBUG, "-(" + std::to_string(user_negative_sc_set_names.size())
