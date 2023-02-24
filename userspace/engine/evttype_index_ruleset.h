@@ -70,10 +70,16 @@ public:
 		const std::set<std::string> &tags,
 		uint16_t rulset_id) override;
 
-	// evttypes for a ruleset
+	// note(jasondellaluce): this is deprecated, must use the new
+	// typing-improved `enabled_event_codes` and `enabled_sc_codes` instead
+	// todo(jasondellaluce): remove this in future code refactors
 	void enabled_evttypes(
 		std::set<uint16_t> &evttypes,
 		uint16_t ruleset) override;
+
+	libsinsp::events::set<ppm_sc_code> enabled_sc_codes(uint16_t ruleset) override;
+
+	libsinsp::events::set<ppm_event_code> enabled_event_codes(uint16_t ruleset) override;
 
 private:
 
@@ -93,7 +99,8 @@ private:
 	struct filter_wrapper
 	{
 		falco_rule rule;
-		libsinsp::events::set<ppm_event_code> evttypes;
+		libsinsp::events::set<ppm_sc_code> sc_codes;
+		libsinsp::events::set<ppm_event_code> event_codes;
 		std::shared_ptr<gen_event_filter> filter;
 	};
 
@@ -113,7 +120,9 @@ private:
 
 		bool run(gen_event *evt, falco_rule& match);
 
-		void evttypes_for_ruleset(std::set<uint16_t> &evttypes);
+		libsinsp::events::set<ppm_sc_code> sc_codes();
+
+		libsinsp::events::set<ppm_event_code> event_codes();
 
 	private:
 		void add_wrapper_to_list(filter_wrapper_list &wrappers, std::shared_ptr<filter_wrapper> wrap);

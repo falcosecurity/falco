@@ -327,6 +327,16 @@ void falco_engine::evttypes_for_ruleset(std::string &source, std::set<uint16_t> 
 	find_source(source)->ruleset->enabled_evttypes(evttypes, find_ruleset_id(ruleset));
 }
 
+libsinsp::events::set<ppm_sc_code> falco_engine::sc_codes_for_ruleset(const std::string &source, const std::string &ruleset)
+{
+	return find_source(source)->ruleset->enabled_sc_codes(find_ruleset_id(ruleset));
+}
+	
+libsinsp::events::set<ppm_event_code> falco_engine::event_codes_for_ruleset(const std::string &source, const std::string &ruleset)
+{
+	return find_source(source)->ruleset->enabled_event_codes(find_ruleset_id(ruleset));
+}
+
 std::shared_ptr<gen_event_formatter> falco_engine::create_formatter(const std::string &source,
 								    const std::string &output) const
 {

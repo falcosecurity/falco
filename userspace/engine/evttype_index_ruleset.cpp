@@ -65,14 +65,14 @@ void evttype_index_ruleset::ruleset_filters::remove_wrapper_from_list(filter_wra
 
 void evttype_index_ruleset::ruleset_filters::add_filter(std::shared_ptr<filter_wrapper> wrap)
 {
-	if(wrap->evttypes.empty())
+	if(wrap->event_codes.empty())
 	{
 		// Should run for all event types
 		add_wrapper_to_list(m_filter_all_event_types, wrap);
 	}
 	else
 	{
-		for(auto &etype : wrap->evttypes)
+		for(auto &etype : wrap->event_codes)
 		{
 			if(m_filter_by_event_type.size() <= etype)
 			{
@@ -88,13 +88,13 @@ void evttype_index_ruleset::ruleset_filters::add_filter(std::shared_ptr<filter_w
 
 void evttype_index_ruleset::ruleset_filters::remove_filter(std::shared_ptr<filter_wrapper> wrap)
 {
-	if(wrap->evttypes.empty())
+	if(wrap->event_codes.empty())
 	{
 		remove_wrapper_from_list(m_filter_all_event_types, wrap);
 	}
 	else
 	{
-		for(auto &etype : wrap->evttypes)
+		for(auto &etype : wrap->event_codes)
 		{
 			if( etype < m_filter_by_event_type.size() )
 			{
@@ -138,17 +138,24 @@ bool evttype_index_ruleset::ruleset_filters::run(gen_event *evt, falco_rule& mat
 	return false;
 }
 
-void evttype_index_ruleset::ruleset_filters::evttypes_for_ruleset(std::set<uint16_t> &evttypes)
+libsinsp::events::set<ppm_sc_code> evttype_index_ruleset::ruleset_filters::sc_codes()
 {
-	evttypes.clear();
-
+	libsinsp::events::set<ppm_sc_code> res;
 	for(auto &wrap : m_filters)
 	{
-		for (const auto& e : wrap->evttypes)
-		{
-			evttypes.insert((uint16_t) e);
-		}
+		res.insert(wrap->sc_codes.begin(), wrap->sc_codes.end());
 	}
+	return res;
+}
+
+libsinsp::events::set<ppm_event_code> evttype_index_ruleset::ruleset_filters::event_codes()
+{
+	libsinsp::events::set<ppm_event_code> res;
+	for(auto &wrap : m_filters)
+	{
+		res.insert(wrap->event_codes.begin(), wrap->event_codes.end());
+	}
+	return res;
 }
 
 void evttype_index_ruleset::add(
@@ -163,11 +170,15 @@ void evttype_index_ruleset::add(
 		wrap->filter = filter;
 		if(rule.source == falco_common::syscall_source)
 		{
-			wrap->evttypes = libsinsp::filter::ast::ppm_event_codes(condition.get());
+			wrap->sc_codes = libsinsp::filter::ast::ppm_sc_codes(condition.get());
+			// todo(jasondellaluce): once libsinsp has its fixes, optimize this
+			// by using libsinsp::events::ppm_set_to_event_set(wrap->sc_codes)
+			wrap->event_codes = libsinsp::filter::ast::ppm_event_codes(condition.get());
 		}
 		else
 		{
-			wrap->evttypes = { ppm_event_code::PPME_PLUGINEVENT_E };
+			wrap->sc_codes = { };
+			wrap->event_codes = { ppm_event_code::PPME_PLUGINEVENT_E };
 		}
 		m_filters.insert(wrap);
 	}
@@ -300,10 +311,27 @@ bool evttype_index_ruleset::run(gen_event *evt, falco_rule& match, uint16_t rule
 
 void evttype_index_ruleset::enabled_evttypes(std::set<uint16_t> &evttypes, uint16_t ruleset_id)
 {
-	if(m_rulesets.size() < (size_t)ruleset_id + 1)
+	evttypes.clear();
+	for (const auto& e : enabled_event_codes(ruleset_id))
 	{
-		return;
+		evttypes.insert((uint16_t) e);
 	}
+}
 
-	return m_rulesets[ruleset_id]->evttypes_for_ruleset(evttypes);
+libsinsp::events::set<ppm_sc_code> evttype_index_ruleset::enabled_sc_codes(uint16_t ruleset)
+{
+	if(m_rulesets.size() < (size_t)ruleset + 1)
+	{
+		return {};
+	}
+	return m_rulesets[ruleset]->sc_codes();
+}
+	
+libsinsp::events::set<ppm_event_code> evttype_index_ruleset::enabled_event_codes(uint16_t ruleset)
+{
+	if(m_rulesets.size() < (size_t)ruleset + 1)
+	{
+		return {};
+	}
+	return m_rulesets[ruleset]->event_codes();
 }
