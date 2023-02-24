@@ -19,7 +19,7 @@ set(
   app/options.cpp
   app/actions/helpers_generic.cpp
   app/actions/helpers_inspector.cpp
-  app/actions/helpers_interesting_sets.cpp
+  app/actions/configure_interesting_sets.cpp
   app/actions/create_signal_handlers.cpp
   app/actions/daemonize.cpp
   app/actions/init_falco_engine.cpp
