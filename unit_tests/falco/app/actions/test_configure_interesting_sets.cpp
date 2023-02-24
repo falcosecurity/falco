@@ -153,7 +153,7 @@ TEST(ConfigureInterestingSets, engine_codes_nonsyscalls_set)
 	auto rules_event_set = engine->event_codes_for_ruleset(s_sample_source);
 	auto rules_event_names = libsinsp::events::event_set_to_names(rules_event_set);
 	// note: including even one generic event will cause PPME_GENERIC_E to be
-	// inluded in the ruleset's event codes. As such, when translating to names,
+	// included in the ruleset's event codes. As such, when translating to names,
 	// PPME_GENERIC_E will cause all names of generic events to be added!
 	// This is a good example of information loss from ppm_event_code <-> ppm_sc_code.
 	auto generic_names = libsinsp::events::event_set_to_names({ppm_event_code::PPME_GENERIC_E});
@@ -344,7 +344,7 @@ TEST(ConfigureInterestingSets, selection_custom_base_set)
 	selected_sc_names = libsinsp::events::sc_set_to_names(s.selected_sc_set);
 	expected_sc_names = strset_t({
 		// note: read is both part of the custom base set and the rules set,
-		// but we expect the unset -A option to take precence
+		// but we expect the unset -A option to take precedence
 		"connect", "accept", "open", "ptrace", "mmap", "execve",
 	});
 	ASSERT_NAMES_CONTAIN(selected_sc_names, expected_sc_names);
