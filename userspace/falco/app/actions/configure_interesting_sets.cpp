@@ -54,8 +54,8 @@ static void check_for_rules_unsupported_events(falco::app::state& s, const libsi
 
 	/* Get the names of the events (syscall and non syscall events) that were not activated and print them. */
 	auto names = libsinsp::events::sc_set_to_names(unsupported_sc_set);
-	std::cerr << "Loaded rules match event types that are not activated or unsupported with current configuration: warning (unsupported-evttype): " + concat_set_in_order(names) << std::endl;
-	std::cerr << "If syscalls in rules include high volume I/O syscalls (-> activate via `-A` flag), else syscalls might be associated with syscalls undefined on your architecture (https://marcin.juszkiewicz.com.pl/download/tables/syscalls.html)" << std::endl;
+	std::cerr << "Loaded rules match syscalls that are not activated (e.g. were removed via config settings such as no -A flag or negative base_syscalls elements) or unsupported with current configuration: warning (unsupported-evttype): " + concat_set_in_order(names) << std::endl;
+	std::cerr << "If syscalls in rules include high volume I/O syscalls (-> activate via `-A` flag), else syscalls may have been removed via base_syscalls option or might be associated with syscalls undefined on your architecture (https://marcin.juszkiewicz.com.pl/download/tables/syscalls.html)" << std::endl;
 }
 
 static void select_event_set(falco::app::state& s, const libsinsp::events::set<ppm_sc_code>& rules_sc_set)
@@ -127,7 +127,7 @@ static void select_event_set(falco::app::state& s, const libsinsp::events::set<p
 	{
 		auto non_rules_sc_set_names = libsinsp::events::sc_set_to_names(non_rules_sc_set);
 		falco_logger::log(LOG_DEBUG, "+(" + std::to_string(non_rules_sc_set_names.size())
-			+ ") events (Falco's state engine set of events): "
+			+ ") syscalls (Falco's state engine set of syscalls): "
 			+ concat_set_in_order(non_rules_sc_set_names) + "\n");
 	}
 
@@ -145,7 +145,7 @@ static void select_event_set(falco::app::state& s, const libsinsp::events::set<p
 		{
 			auto erased_sc_set_names = libsinsp::events::sc_set_to_names(erased_sc_set);
 			falco_logger::log(LOG_DEBUG, "-(" + std::to_string(erased_sc_set_names.size())
-				+ ") ignored events (-> activate via `-A` flag): "
+				+ ") ignored syscalls (-> activate via `-A` flag): "
 				+ concat_set_in_order(erased_sc_set_names) + "\n");
 		}
 	}
@@ -154,7 +154,7 @@ static void select_event_set(falco::app::state& s, const libsinsp::events::set<p
 	{
 		auto selected_sc_set_names = libsinsp::events::sc_set_to_names(s.selected_sc_set);
 		falco_logger::log(LOG_DEBUG, "(" + std::to_string(selected_sc_set_names.size())
-			+ ") events selected in total (final set): "
+			+ ") syscalls selected in total (final set): "
 			+ concat_set_in_order(selected_sc_set_names) + "\n");
 	}
 }
