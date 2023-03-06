@@ -107,7 +107,7 @@ TEST(ConfigureInterestingSets, engine_codes_syscalls_set)
 	auto rules_sc_set = engine->sc_codes_for_ruleset(s_sample_source);
 	auto rules_sc_names = libsinsp::events::sc_set_to_names(rules_sc_set);
 	ASSERT_NAMES_EQ(rules_sc_names, strset_t({
-		"connect", "accept", "open", "ptrace", "mmap", "execve", "read"}));
+		"connect", "accept", "accept4", "open", "ptrace", "mmap", "execve", "read"}));
 }
 
 TEST(ConfigureInterestingSets, preconditions_postconditions)
@@ -166,7 +166,7 @@ TEST(ConfigureInterestingSets, engine_codes_nonsyscalls_set)
 	auto rules_sc_set = engine->sc_codes_for_ruleset(s_sample_source);
 	auto rules_sc_names = libsinsp::events::sc_set_to_names(rules_sc_set);
 	ASSERT_NAMES_EQ(rules_sc_names, strset_t({
-		"connect", "accept", "open", "ptrace", "mmap", "execve", "read",
+		"connect", "accept", "accept4", "open", "ptrace", "mmap", "execve", "read",
 		"syncfs", "fanotify_init", // from generic event filters
 	}));
 }
@@ -333,6 +333,7 @@ TEST(ConfigureInterestingSets, selection_custom_base_set)
 		libsinsp::events::sc_set_to_names(default_base_set),
 		strset_t({ "connect", "open", "ptrace", "mmap", "execve", "read"}));
 	expected_sc_names.erase("accept");
+	expected_sc_names.erase("accept4");
 	ASSERT_NAMES_CONTAIN(selected_sc_names, expected_sc_names);
 
 	// non-empty custom base set (positive, without -A)
