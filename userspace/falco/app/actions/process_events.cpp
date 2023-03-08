@@ -494,7 +494,7 @@ falco::app::run_result falco::app::actions::process_events(falco::app::state& s)
 
 		// wait for event processing to terminate for all sources
 		// if a thread terminates with an error, we trigger the app termination
-		// to force all other event streams to termiante too.
+		// to force all other event streams to terminate too.
 		// We accomulate the errors in a single run_result.
 		size_t closed_count = 0;
 		while (closed_count < ctxs.size())

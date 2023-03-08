@@ -127,7 +127,7 @@ void falco::app::restart_handler::watcher_loop() noexcept
         // no new watch event is received during the timeout
         if (rv == 0 && !forced)
         {
-            // perform a dry run. In case no error occurrs, we loop back
+            // perform a dry run. In case no error occurs, we loop back
             // to the select in order to debounce new inotify events before
             // actually triggering a restart.
             if (should_check)
