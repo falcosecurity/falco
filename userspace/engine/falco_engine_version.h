@@ -16,9 +16,9 @@ limitations under the License.
 
 // The version of rules/filter fields/etc supported by this Falco
 // engine.
-#define FALCO_ENGINE_VERSION (16)
+#define FALCO_ENGINE_VERSION (17)
 
 // This is the result of running "falco --list -N | sha256sum" and
 // represents the fields supported by this version of Falco. It's used
 // at build time to detect a changed set of fields.
-#define FALCO_FIELDS_CHECKSUM "f552e8b33856f675fff2ffe16a1abe72fc8cc1b0ca7c5b336914cc36b0ad6167"
+#define FALCO_FIELDS_CHECKSUM "f054e066bd153f851285973bb2f628462574d4679c18e1ca5dbca0585acc8a72"
