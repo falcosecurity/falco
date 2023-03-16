@@ -15,7 +15,14 @@ limitations under the License.
 */
 
 #include <cstdlib>
+#ifndef _WIN32
 #include <unistd.h>
+#else
+#include <stdlib.h>
+#include <io.h>
+#define srandom srand
+#define random rand
+#endif
 #include <string>
 #include <fstream>
 #include <functional>
