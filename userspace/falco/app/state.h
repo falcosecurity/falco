@@ -67,7 +67,6 @@ struct state
         source_infos(),
         plugin_configs(),
         selected_sc_set(),
-        selected_tp_set(),
         syscall_buffer_bytes_size(DEFAULT_DRIVER_BUFFER_BYTES_DIM)
     {
         config = std::make_shared<falco_configuration>();
@@ -120,9 +119,6 @@ struct state
 
     // Set of syscalls we want the driver to capture
     libsinsp::events::set<ppm_sc_code> selected_sc_set;
-
-    // Set of tracepoints we want the driver to capture
-    libsinsp::events::set<ppm_tp_code> selected_tp_set;
 
     // Dimension of the syscall buffer in bytes.
     uint64_t syscall_buffer_bytes_size;
