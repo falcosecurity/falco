@@ -159,16 +159,6 @@ static void select_event_set(falco::app::state& s, const libsinsp::events::set<p
 	}
 }
 
-static void select_kernel_tracepoint_set(falco::app::state& s)
-{
-	/* Kernel tracepoints activation
-	 * Activate all tracepoints except `sched_switch` tracepoint since it
-	 * is highly noisy and not so useful
-	 * for our state/events enrichment. */
-	s.selected_tp_set = libsinsp::events::sinsp_state_tp_set();
-	s.selected_tp_set.remove(ppm_tp_code::SCHED_SWITCH);
-}
-
 falco::app::run_result falco::app::actions::configure_interesting_sets(falco::app::state& s)
 {
 	if (s.engine == nullptr || s.config == nullptr)
@@ -177,8 +167,7 @@ falco::app::run_result falco::app::actions::configure_interesting_sets(falco::ap
 	}
 
 	s.selected_sc_set.clear();
-	s.selected_tp_set.clear();
-	
+
 	/* note: the set of events is the richest source of truth about
 	 * the events generable by an inspector, because they also carry information
 	 * about events that are old, unused, internal, and so on. As such, the
@@ -190,6 +179,5 @@ falco::app::run_result falco::app::actions::configure_interesting_sets(falco::ap
 	auto rules_sc_set = s.engine->sc_codes_for_ruleset(falco_common::syscall_source);
 	select_event_set(s, rules_sc_set);
 	check_for_rules_unsupported_events(s, rules_sc_set);
-	select_kernel_tracepoint_set(s);
 	return run_result::ok();
 }
