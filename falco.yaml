@@ -408,6 +408,15 @@ http_output:
   enabled: false
   url: http://some.url
   user_agent: "falcosecurity/falco"
+  # Tell Falco to not verify the remote server.
+  insecure: false
+  # Path to the CA certificate that can verify the remote server. 
+  ca_cert: ""
+  # Path to a specific file that will be used as the CA certificate store.
+  ca_bundle: ""
+  # Path to a folder that will be used as the CA certificate store. CA certificate need to be
+  # stored as indivitual PEM files in this directory.
+  ca_path: "/etc/ssl/certs"
 
 # Falco supports running a gRPC server with two main binding types
 # 1. Over the network with mandatory mutual TLS authentication (mTLS)

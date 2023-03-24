@@ -34,15 +34,58 @@ void falco::outputs::output_http::output(const message *msg)
 		} else {
 			slist1 = curl_slist_append(slist1, "Content-Type: text/plain");
 		}
+		res = curl_easy_setopt(curl, CURLOPT_HTTPHEADER, slist1);
 
-		curl_easy_setopt(curl, CURLOPT_HTTPHEADER, slist1);
-		curl_easy_setopt(curl, CURLOPT_URL, m_oc.options["url"].c_str());
-		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, msg->msg.c_str());
-		curl_easy_setopt(curl, CURLOPT_USERAGENT, m_oc.options["user_agent"].c_str());
-		curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, -1L);
+		if(res == CURLE_OK)
+		{
+			res = curl_easy_setopt(curl, CURLOPT_URL, m_oc.options["url"].c_str());
+		}
+		
+		if(res == CURLE_OK)
+		{
+			res = curl_easy_setopt(curl, CURLOPT_POSTFIELDS, msg->msg.c_str());
+		}
 
+		if(res == CURLE_OK)
+		{
+			res = curl_easy_setopt(curl, CURLOPT_USERAGENT, m_oc.options["user_agent"].c_str());
+		}
 
-		res = curl_easy_perform(curl);
+		if(res == CURLE_OK)
+		{
+		   res = curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, -1L);
+		}
+		
+		if(res == CURLE_OK)
+		{
+			if(m_oc.options["insecure"] == std::string("true"))
+			{
+				res = curl_easy_setopt(curl,CURLOPT_SSL_VERIFYPEER, 0L);
+
+				if(res == CURLE_OK)
+				{
+					res = curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+				}
+			}
+		}
+
+		if(res == CURLE_OK)
+		{
+			if (!m_oc.options["ca_cert"].empty())
+			{
+				res = curl_easy_setopt(curl, CURLOPT_CAINFO, m_oc.options["ca_cert"].c_str());
+			}else if(!m_oc.options["ca_bundle"].empty())
+			{
+				res = curl_easy_setopt(curl, CURLOPT_CAINFO, m_oc.options["ca_bundle"].c_str());
+			}else{
+				res = curl_easy_setopt(curl, CURLOPT_CAPATH, m_oc.options["ca_path"].c_str());
+			}
+		}
+		
+  		if(res == CURLE_OK)
+		{
+			res = curl_easy_perform(curl);
+		}
 
 		if(res != CURLE_OK)
 		{
