@@ -178,6 +178,22 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 		user_agent = config.get_scalar<std::string>("http_output.user_agent","falcosecurity/falco");
 		http_output.options["user_agent"] = user_agent;
 
+		bool insecure;
+		insecure = config.get_scalar<bool>("http_output.insecure", false);
+		http_output.options["insecure"] = insecure? std::string("true") : std::string("false");
+		
+		std::string ca_cert;
+		ca_cert = config.get_scalar<std::string>("http_output.ca_cert", "");
+		http_output.options["ca_cert"] = ca_cert;
+
+		std::string ca_bundle;
+		ca_bundle = config.get_scalar<std::string>("http_output.ca_bundle", "");
+		http_output.options["ca_bundle"] = ca_bundle;
+
+		std::string ca_path;
+		ca_path = config.get_scalar<std::string>("http_output.ca_path", "/etc/ssl/certs");
+		http_output.options["ca_path"] = ca_path;
+
 		m_outputs.push_back(http_output);
 	}
 
