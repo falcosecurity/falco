@@ -106,6 +106,8 @@ public:
 	// Number of CPUs associated with a single ring buffer.
 	uint16_t m_cpus_for_each_syscall_buffer;
 
+	bool m_syscall_drop_failed;
+
 	// User supplied base_syscalls, overrides any Falco state engine enforcement.
 	std::unordered_set<std::string> m_base_syscalls;
 

@@ -57,7 +57,8 @@ falco_configuration::falco_configuration():
 	m_metadata_download_chunk_wait_us(1000),
 	m_metadata_download_watch_freq_sec(1),
 	m_syscall_buf_size_preset(4),
-	m_cpus_for_each_syscall_buffer(2)
+	m_cpus_for_each_syscall_buffer(2),
+	m_syscall_drop_failed(false)
 {
 }
 
@@ -312,6 +313,8 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 	m_syscall_buf_size_preset = config.get_scalar<uint16_t>("syscall_buf_size_preset", 4);
 
 	m_cpus_for_each_syscall_buffer = config.get_scalar<uint16_t>("modern_bpf.cpus_for_each_syscall_buffer", 2);
+
+	m_syscall_drop_failed = config.get_scalar<bool>("syscall_drop_failed", false);
 
 	m_base_syscalls.clear();
 	config.get_sequence<std::unordered_set<std::string>>(m_base_syscalls, std::string("base_syscalls"));
