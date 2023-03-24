@@ -125,5 +125,10 @@ falco::app::run_result falco::app::actions::open_live_inspector(
 		return run_result::fatal(e.what());
 	}
 
+	if (s.config->m_syscall_drop_failed)
+	{
+		falco_logger::log(LOG_DEBUG, "Failed syscalls exit event will be dropped.\n");
+		inspector->set_dropfailed(true);
+	}
 	return run_result::ok();
 }
