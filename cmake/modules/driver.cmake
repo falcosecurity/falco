@@ -26,8 +26,8 @@ else()
   # In case you want to test against another driver version (or branch, or commit) just pass the variable -
   # ie., `cmake -DDRIVER_VERSION=dev ..`
   if(NOT DRIVER_VERSION)
-    set(DRIVER_VERSION "c8b0d6a8fdc1bb3ea9067bc2fdc3ae5858cff48f")
-    set(DRIVER_CHECKSUM "SHA256=e1b408896d700d50909feec5f28a6e761995bf367a60ce8d0a9365149e822145")
+    set(DRIVER_VERSION "e006bf38219d392cd5aeb3c1109e4bdaa9ef1617")
+    set(DRIVER_CHECKSUM "SHA256=185963f6d658e8963f218ec1d45056b7f6e391d05244f6499aec74807d2190fb")
   endif()
 
   # cd /path/to/build && cmake /path/to/source
