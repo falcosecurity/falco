@@ -175,7 +175,7 @@ syscall_event_timeouts:
 # This can enable some small optimization both in CPU usage and ring buffer usage,
 # possibly leading to lower number of event losses.
 # Be careful: enabling it also means losing a bit of visibility on the system.
-syscall_drop_failed: false
+syscall_drop_failed_exit: false
 
 # --- [Description]
 #
