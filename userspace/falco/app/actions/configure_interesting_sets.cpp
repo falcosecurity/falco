@@ -107,6 +107,10 @@ static void select_event_set(falco::app::state& s, const libsinsp::events::set<p
 		{
 			std::cerr << "Invalid (positive) syscall names: warning (base_syscalls override): " + concat_set_in_order(invalid_positive_sc_set_names) << std::endl;
 		}
+
+		/* Hidden safety enforcement for `base_syscalls.custom_set` user input override option -> sched_process_exit trace point activation
+		 * (procexit event) is necessary for continuous state engine cleanup, else memory would grow rapidly and linearly over time. */
+		base_sc_set.insert(PPM_SC_SCHED_PROCESS_EXIT);
 	}
 
 	// selected events are the union of the rules events set and the
