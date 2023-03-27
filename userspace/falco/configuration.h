@@ -109,7 +109,8 @@ public:
 	bool m_syscall_drop_failed_exit;
 
 	// User supplied base_syscalls, overrides any Falco state engine enforcement.
-	std::unordered_set<std::string> m_base_syscalls;
+	std::unordered_set<std::string> m_base_syscalls_custom_set;
+	bool m_base_syscalls_repair;
 
 	std::vector<plugin_config> m_plugins;
 

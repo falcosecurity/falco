@@ -85,13 +85,15 @@ static void select_event_set(falco::app::state& s, const libsinsp::events::set<p
 	/* USER OVERRIDE INPUT OPTION "base_syscalls". */
 	std::unordered_set<std::string> user_positive_names = {};
 	std::unordered_set<std::string> user_negative_names = {};
-	extract_base_syscalls_names(s.config->m_base_syscalls, user_positive_names, user_negative_names);
+	extract_base_syscalls_names(s.config->m_base_syscalls_custom_set, user_positive_names, user_negative_names);
 	auto user_positive_sc_set = libsinsp::events::names_to_sc_set(user_positive_names);
 	auto user_negative_sc_set = libsinsp::events::names_to_sc_set(user_negative_names);
 
-	if (!user_positive_sc_set.empty())
+	if (!user_positive_sc_set.empty() || s.config->m_base_syscalls_repair)
 	{
 		// user overrides base event set
+		// in case `user_positive_sc_set` is empty, but `base_syscalls.repair` is set
+		// this has the effect of clearing the default `sinsp_state_sc_set()`
 		base_sc_set = user_positive_sc_set;
 
 		// we re-transform from sc_set to names to make
@@ -110,6 +112,17 @@ static void select_event_set(falco::app::state& s, const libsinsp::events::set<p
 	// selected events are the union of the rules events set and the
 	// base events set (either the default or the user-defined one)
 	s.selected_sc_set = rules_sc_set.merge(base_sc_set);
+
+	if (s.config->m_base_syscalls_repair)
+	{
+		/* If base_syscalls.repair set enforce `libsinsp` state based on rules set
+		 * and merge with user supplied base_syscalls.custom_set
+		 *
+		 * Also applies when base_syscalls.custom_set empty but base_syscalls.repair set
+		 * effectively bypassing the default `libsinsp` state enforcement and using
+		 * `sinsp_repair_state_sc_set` instead. */
+		s.selected_sc_set = libsinsp::events::sinsp_repair_state_sc_set(rules_sc_set).merge(base_sc_set);
+	}
 
 	if (!user_negative_sc_set.empty())
 	{
