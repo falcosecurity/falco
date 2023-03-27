@@ -100,6 +100,11 @@ static void select_event_set(falco::app::state& s, const libsinsp::events::set<p
 		falco_logger::log(LOG_DEBUG, "+(" + std::to_string(user_positive_sc_set_names.size())
 			+ ") syscalls added (base_syscalls override): "
 			+ concat_set_in_order(user_positive_sc_set_names) + "\n");
+		auto invalid_positive_sc_set_names = unordered_set_difference(user_positive_names, user_positive_sc_set_names);
+		if (!invalid_positive_sc_set_names.empty())
+		{
+			std::cerr << "Invalid (positive) syscall names: warning (base_syscalls override): " + concat_set_in_order(invalid_positive_sc_set_names) << std::endl;
+		}
 	}
 
 	// selected events are the union of the rules events set and the
@@ -117,6 +122,11 @@ static void select_event_set(falco::app::state& s, const libsinsp::events::set<p
 		falco_logger::log(LOG_DEBUG, "-(" + std::to_string(user_negative_sc_set_names.size())
 			+ ") syscalls removed (base_syscalls override): "
 			+ concat_set_in_order(user_negative_sc_set_names) + "\n");
+		auto invalid_negative_sc_set_names = unordered_set_difference(user_negative_names, user_negative_sc_set_names);
+		if (!invalid_negative_sc_set_names.empty())
+		{
+			std::cerr << "Invalid (negative) syscall names: warning (base_syscalls override): " + concat_set_in_order(invalid_negative_sc_set_names) << std::endl;
+		}
 	}
 
 	/* Derive the diff between the additional syscalls added via libsinsp state
