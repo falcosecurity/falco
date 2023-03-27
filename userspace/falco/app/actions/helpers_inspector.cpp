@@ -127,7 +127,7 @@ falco::app::run_result falco::app::actions::open_live_inspector(
 
 	if (s.config->m_syscall_drop_failed)
 	{
-		falco_logger::log(LOG_DEBUG, "Failed syscalls exit event will be dropped.\n");
+		falco_logger::log(LOG_DEBUG, "Failed syscall exit events are dropped in the kernel driver\n");
 		inspector->set_dropfailed(true);
 	}
 	return run_result::ok();
