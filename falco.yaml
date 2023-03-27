@@ -170,7 +170,8 @@ syscall_event_drops:
 syscall_event_timeouts:
   max_consecutives: 1000
 
-# Enabling this option allows Falco to drop failed syscalls exit events.
+# Enabling this option allows Falco to drop failed syscalls exit events
+# in the kernel driver before the event is pushed onto the ring buffer.
 # This can enable some small optimization both in CPU usage and ring buffer usage,
 # possibly leading to lower number of event losses.
 # Be careful: enabling it also means losing a bit of visibility on the system.
