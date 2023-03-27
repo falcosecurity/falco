@@ -332,8 +332,9 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 
 	m_syscall_drop_failed_exit = config.get_scalar<bool>("syscall_drop_failed_exit", false);
 
-	m_base_syscalls.clear();
-	config.get_sequence<std::unordered_set<std::string>>(m_base_syscalls, std::string("base_syscalls"));
+	m_base_syscalls_custom_set.clear();
+	config.get_sequence<std::unordered_set<std::string>>(m_base_syscalls_custom_set, std::string("base_syscalls.custom_set"));
+	m_base_syscalls_repair = config.get_scalar<bool>("base_syscalls.repair", false);
 
 	std::set<std::string> load_plugins;
 
