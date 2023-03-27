@@ -251,6 +251,7 @@ TEST(ConfigureInterestingSets, selection_generic_evts)
 {
 	// run app action with fake engine and without the `-A` option
 	falco::app::state s;
+	s.options.all_events = false;
 	auto filters = s_sample_filters;
 	filters.insert(s_sample_generic_filters.begin(), s_sample_generic_filters.end());
 	s.engine = mock_engine_from_filters(filters);
@@ -269,6 +270,8 @@ TEST(ConfigureInterestingSets, selection_generic_evts)
 		"socket", "bind", "close" // from sinsp state set (network, files)
 	});
 	ASSERT_NAMES_CONTAIN(selected_sc_names, expected_sc_names);
+	auto unexpected_sc_names = libsinsp::events::sc_set_to_names(libsinsp::events::io_sc_set());
+	ASSERT_NAMES_NOCONTAIN(selected_sc_names, unexpected_sc_names);
 }
 
 // expected combinations precedence:
@@ -349,4 +352,30 @@ TEST(ConfigureInterestingSets, selection_custom_base_set)
 		"connect", "accept", "open", "ptrace", "mmap", "execve", "sched_process_exit"
 	});
 	ASSERT_NAMES_CONTAIN(selected_sc_names, expected_sc_names);
+	auto unexpected_sc_names = libsinsp::events::sc_set_to_names(libsinsp::events::io_sc_set());
+	ASSERT_NAMES_NOCONTAIN(selected_sc_names, unexpected_sc_names);
+}
+
+TEST(ConfigureInterestingSets, selection_custom_base_set_repair)
+{
+	// run app action with fake engine and without the `-A` option
+	falco::app::state s;
+	s.options.all_events = false;
+	s.engine = mock_engine_from_filters(s_sample_filters);
+
+	// simulate empty custom set but repair option set
+	s.config->m_base_syscalls_custom_set = {};
+	s.config->m_base_syscalls_repair = true;
+	auto result = falco::app::actions::configure_interesting_sets(s);
+	ASSERT_TRUE(result.success);
+	ASSERT_EQ(result.errstr, "");
+	auto selected_sc_names = libsinsp::events::sc_set_to_names(s.selected_sc_set);
+	auto expected_sc_names = strset_t({
+		// note: expecting syscalls from mock rules and `sinsp_repair_state_sc_set` enforced syscalls
+		"connect", "accept", "accept4", "umount2", "open", "ptrace", "mmap", "execve", "sched_process_exit", \
+		"bind", "socket", "clone3", "setuid"
+	});
+	ASSERT_NAMES_CONTAIN(selected_sc_names, expected_sc_names);
+	auto unexpected_sc_names = libsinsp::events::sc_set_to_names(libsinsp::events::io_sc_set());
+	ASSERT_NAMES_NOCONTAIN(selected_sc_names, unexpected_sc_names);
 }
