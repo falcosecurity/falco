@@ -48,6 +48,12 @@ static void init_syscall_inspector(falco::app::state& s, std::shared_ptr<sinsp> 
 		inspector->set_snaplen(s.options.snaplen);
 	}
 
+	if (s.config->m_syscall_drop_failed_exit)
+	{
+		falco_logger::log(LOG_INFO, "Failed syscall exit events are dropped in the kernel driver\n");
+		inspector->set_dropfailed(true);
+	}
+
 	inspector->set_hostname_and_port_resolution_mode(false);
 }
 
