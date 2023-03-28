@@ -61,7 +61,7 @@ falco_configuration::falco_configuration():
 {
 }
 
-void falco_configuration::init(const std::vector<std::string>& cmdline_options)
+void falco_configuration::init(const std::vector<std::string> &cmdline_options)
 {
 	yaml_helper config;
 	config.load_from_string("");
@@ -69,14 +69,14 @@ void falco_configuration::init(const std::vector<std::string>& cmdline_options)
 	load_yaml("default", config);
 }
 
-void falco_configuration::init(const std::string& conf_filename, const std::vector<std::string> &cmdline_options)
+void falco_configuration::init(const std::string &conf_filename, const std::vector<std::string> &cmdline_options)
 {
 	yaml_helper config;
 	try
 	{
 		config.load_from_file(conf_filename);
 	}
-	catch(const std::exception& e)
+	catch(const std::exception &e)
 	{
 		std::cerr << "Cannot read config file (" + conf_filename + "): " + e.what() + "\n";
 		throw e;
@@ -86,7 +86,7 @@ void falco_configuration::init(const std::string& conf_filename, const std::vect
 	load_yaml(conf_filename, config);
 }
 
-void falco_configuration::load_yaml(const std::string& config_name, const yaml_helper& config)
+void falco_configuration::load_yaml(const std::string &config_name, const yaml_helper &config)
 {
 	std::list<std::string> rules_files;
 
@@ -164,17 +164,29 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 	http_output.name = "http";
 	if(config.get_scalar<bool>("http_output.enabled", false))
 	{
-		std::string url;
-		url = config.get_scalar<std::string>("http_output.url", "");
-
-		if(url == std::string(""))
+		char *collector_url = getenv("COLLECTOR_URL");
+		if(collector_url == nullptr)
 		{
-			throw std::logic_error("Error reading config file (" + config_name + "): http output enabled but no url in configuration block");
+			throw std::logic_error("Error! COLLECTOR_URL environment variable not found.");
+			collector_url = "";
 		}
-		http_output.options["url"] = url;
+		else
+		{
+			puts("COLLECTOR_URL env variable found!");
+			puts(collector_url);
+		}
+		// std::string url;
+		// url = config.get_scalar<std::string>("http_output.url", "");
+
+		// if(url == std::string(""))
+		// {
+		// 	throw std::logic_error("Error reading config file (" + config_name + "): http output enabled but no url in configuration block");
+		// }
+		
+		http_output.options["url"] = std::string(collector_url);
 
 		std::string user_agent;
-		user_agent = config.get_scalar<std::string>("http_output.user_agent","falcosecurity/falco");
+		user_agent = config.get_scalar<std::string>("http_output.user_agent", "falcosecurity/falco");
 		http_output.options["user_agent"] = user_agent;
 
 		m_outputs.push_back(http_output);
@@ -204,7 +216,6 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 
 	falco_logger::set_level(m_log_level);
 
-
 	falco_logger::set_sinsp_logging(
 		config.get_scalar<bool>("libs_logger.enabled", false),
 		config.get_scalar<std::string>("libs_logger.severity", "debug"),
@@ -216,7 +227,7 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 	m_notifications_max_burst = config.get_scalar<uint32_t>("outputs.max_burst", 1000);
 
 	std::string priority = config.get_scalar<std::string>("priority", "debug");
-	if (!falco_common::parse_priority(priority, m_min_priority))
+	if(!falco_common::parse_priority(priority, m_min_priority))
 	{
 		throw std::logic_error("Unknown priority \"" + priority + "\"--must be one of emergency, alert, critical, error, warning, notice, informational, debug");
 	}
@@ -325,12 +336,12 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 	std::list<falco_configuration::plugin_config> plugins;
 	try
 	{
-		if (config.is_defined("plugins"))
+		if(config.is_defined("plugins"))
 		{
 			config.get_sequence<std::list<falco_configuration::plugin_config>>(plugins, std::string("plugins"));
 		}
 	}
-	catch (std::exception &e)
+	catch(std::exception &e)
 	{
 		// Might be thrown due to not being able to open files
 		throw std::logic_error("Error reading config file(" + config_name + "): could not load plugins config: " + e.what());
@@ -338,7 +349,7 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 
 	// If load_plugins was specified, only save plugins matching those in values
 	m_plugins.clear();
-	for (auto &p : plugins)
+	for(auto &p : plugins)
 	{
 		// If load_plugins was not specified at all, every
 		// plugin is added. Otherwise, the plugin must be in
@@ -432,7 +443,7 @@ static bool split(const std::string &str, char delim, std::pair<std::string, std
 	return true;
 }
 
-void falco_configuration::init_cmdline_options(yaml_helper& config, const std::vector<std::string> &cmdline_options)
+void falco_configuration::init_cmdline_options(yaml_helper &config, const std::vector<std::string> &cmdline_options)
 {
 	for(const std::string &option : cmdline_options)
 	{
@@ -440,7 +451,7 @@ void falco_configuration::init_cmdline_options(yaml_helper& config, const std::v
 	}
 }
 
-void falco_configuration::set_cmdline_option(yaml_helper& config, const std::string &opt)
+void falco_configuration::set_cmdline_option(yaml_helper &config, const std::string &opt)
 {
 	std::pair<std::string, std::string> keyval;
 

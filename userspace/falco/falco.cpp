@@ -18,7 +18,7 @@ limitations under the License.
 #include <string>
 
 #include <iostream>
-
+#include<string>
 #include "app/app.h"
 #include "logger.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
@@ -40,6 +40,8 @@ static void display_fatal_err(const std::string &&msg)
 //
 // ARGUMENT PARSING AND PROGRAM SETUP
 //
+
+
 int falco_run(int argc, char **argv, bool &restart)
 {
 	restart = false;
@@ -61,6 +63,16 @@ int falco_run(int argc, char **argv, bool &restart)
 	return EXIT_SUCCESS;
 }
 
+void read_http_config(){
+	puts("Reading http config from environment variables...");
+	char* collector_url = getenv("COLLECTOR_URL");
+	if(collector_url==NULL){
+		puts("COLLECTOR_URL environment variable not found");
+	}
+	else{
+		puts(collector_url);
+	}
+}
 //
 // MAIN
 //
@@ -68,11 +80,11 @@ int main(int argc, char **argv)
 {
 	int rc;
 	bool restart;
-
 	// Generally falco exits when falco_run returns with the rc
 	// returned by falco_run. However, when restart (set by
 	// signal handlers, returned in application::run()) is true,
 	// falco_run() is called again.
+	// load_http_env();
 	while((rc = falco_run(argc, argv, restart)) == EXIT_SUCCESS && restart)
 	{
 	}
