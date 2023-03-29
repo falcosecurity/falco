@@ -185,7 +185,7 @@ TEST(ConfigureInterestingSets, selection_not_allevents)
 	// also check if a warning has been printed in stderr
 
 	// check that the final selected set is the one expected
-	ASSERT_NE(s.selected_sc_set.size(), 0);
+	ASSERT_GT(s.selected_sc_set.size(), 1);
 	auto selected_sc_names = libsinsp::events::sc_set_to_names(s.selected_sc_set);
 	auto expected_sc_names = strset_t({
 		// note: we expect the "read" syscall to have been erased
@@ -228,7 +228,7 @@ TEST(ConfigureInterestingSets, selection_allevents)
 	// also check if a warning has not been printed in stderr
 
 	// check that the final selected set is the one expected
-	ASSERT_NE(s.selected_sc_set.size(), 0);
+	ASSERT_GT(s.selected_sc_set.size(), 1);
 	auto selected_sc_names = libsinsp::events::sc_set_to_names(s.selected_sc_set);
 	auto expected_sc_names = strset_t({
 		// note: we expect the "read" syscall to not be erased
@@ -260,7 +260,7 @@ TEST(ConfigureInterestingSets, selection_generic_evts)
 	ASSERT_EQ(result.errstr, "");
 
 	// check that the final selected set is the one expected
-	ASSERT_NE(s.selected_sc_set.size(), 0);
+	ASSERT_GT(s.selected_sc_set.size(), 1);
 	auto selected_sc_names = libsinsp::events::sc_set_to_names(s.selected_sc_set);
 	auto expected_sc_names = strset_t({
 		// note: we expect the "read" syscall to not be erased
