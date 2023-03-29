@@ -489,13 +489,14 @@ metadata_download:
 # very useful to lower CPU utilization and allowing you to tailor Falco to specific environments
 # according to your organization's threat model and cost budget.
 #
-# !!! When NOT using this option, Falco defaults to adding a static set of syscalls in addition
-# to the rules system calls Falco needs for its state engine build-up and life-cycle management.
+# !!! When NOT using this option, Falco defaults to adding a static (more verbose) set of syscalls
+# in addition to the rules system calls Falco needs for its state engine build-up and life-cycle management.
 #
-# If you like the recommendations below you can automate them via setting `base_syscalls.repair`
-# to true. `base_syscalls.repair` is an experimental alternative to Falco's default state engine
-# enforcement. `base_syscalls.repair` is designed to be the most resourceful option to ensure
-# Falco runs correctly while activating a most minimal set of additional syscalls.
+# `base_syscalls.repair` is an experimental alternative to Falco's default state engine enforcement.
+# `base_syscalls.repair` is designed to be the most resourceful option to ensure Falco runs correctly
+# while activating a most minimal set of additional syscalls. The recommendations listed in the suggestions
+# section is effectively what `base_syscalls.repair` is doing in an automated manner. `base_syscalls.repair`
+# can be used with an empty custom set.
 #
 # --- [Usage]
 #
@@ -508,7 +509,7 @@ metadata_download:
 # --- [Suggestions]
 #
 # Here are a few recommendations that may help you.
-# Setting `base_syscalls.repair: true` automates the recommendations.
+# Setting `base_syscalls.repair: true` automates these recommendations for you.
 #
 # Consider to at minimum add the following syscalls regardless of the syscalls used in the rules.
 #
@@ -525,16 +526,16 @@ metadata_download:
 #
 # [clone, clone3, fork, vfork, execve, execveat, close, socket, bind, getsockopt]
 #
-# It turns out that while you can log `connect` or `accept*` syscalls without the socket
-# system call, the log however would not contain the ip tuples.
-# For listen and accept* system calls you also need the `bind` system call.
-#`
-# Lastly, if you care about the correct `uid`, `gid` or `sid`, `pgid of a process when the
+# It turns out that while you can log `connect` or `accept*` syscalls without the
+# socket system call, the log however would not contain the ip tuples.
+# For `listen` and `accept*` system calls you also need the `bind` system call.
+#
+# Lastly, if you care about the correct `uid`, `gid` or `sid`, `pgid` of a process when the
 # running process opens a file or makes a network connection, consider adding the following syscalls:
 #
 # setresuid, setsid, setuid, setgid, setpgid, setresgid, setsid, capset, chdir, chroot, fchdir
 #
-# We recommend to exclude syscalls, e.g. "!mprotect" only if you need a fast deployment update
+# We recommend to only exclude syscalls, e.g. "!mprotect" if you need a fast deployment update
 # (overriding rules), else remove unwanted syscalls from the Falco rules.
 #
 # Passing `-o "log_level=debug"` to Falco's cmd args during a dry-run will print the
