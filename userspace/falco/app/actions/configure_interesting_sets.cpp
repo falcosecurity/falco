@@ -112,6 +112,19 @@ static void select_event_set(falco::app::state& s, const libsinsp::events::set<p
 	// base events set (either the default or the user-defined one)
 	s.selected_sc_set = rules_sc_set.merge(base_sc_set);
 
+	/* REPLACE DEFAULT STATE, nothing else. Need to override s.selected_sc_set and have a separate logic block. */
+	if (s.config->m_base_syscalls_repair && user_positive_sc_set.empty())
+	{
+		/* If `base_syscalls.repair` is specified, but `base_syscalls.custom_set` is empty we are replacing
+		 * the default `sinsp_state_sc_set()` enforcement with the alternative `sinsp_repair_state_sc_set`.
+		 * This approach only activates additional syscalls Falco needs beyond the
+		 * syscalls defined in each Falco rule that are absolutely necessary based
+		 * on the current rules configuration. */
+
+		// returned set already has rules_sc_set merged
+		s.selected_sc_set = libsinsp::events::sinsp_repair_state_sc_set(rules_sc_set);
+	}
+
 	if (!user_negative_sc_set.empty())
 	{
 		/* Remove negative base_syscalls events. */
@@ -129,19 +142,6 @@ static void select_event_set(falco::app::state& s, const libsinsp::events::set<p
 			falco_logger::log(LOG_WARNING, "Invalid (negative) syscall names: warning (base_syscalls override): "
 				+ concat_set_in_order(invalid_negative_sc_set_names));
 		}
-	}
-
-	/* REPLACE DEFAULT STATE, nothing else. */
-	if (s.config->m_base_syscalls_repair && s.config->m_base_syscalls_custom_set.empty())
-	{
-		/* If `base_syscalls.repair` is specified, but `base_syscalls.custom_set` is empty we are replacing
-		 * the default `sinsp_state_sc_set()` enforcement with the alternative `sinsp_repair_state_sc_set`.
-		 * This approach only activates additional syscalls Falco needs beyond the
-		 * syscalls defined in each Falco rule that are absolutely necessary based
-		 * on the current rules configuration. */
-
-		// returned set already has rules_sc_set merged
-		s.selected_sc_set = libsinsp::events::sinsp_repair_state_sc_set(rules_sc_set);
 	}
 
 	/* Derive the diff between the additional syscalls added via libsinsp state
