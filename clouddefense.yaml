@@ -28,9 +28,9 @@
 # The files will be read in the order presented here, so make sure if
 # you have overrides they appear in later files.
 rules_file:
-  - /etc/falco/falco_rules.yaml
-  - /etc/falco/falco_rules.local.yaml
-  - /etc/falco/rules.d
+  - /etc/clouddefense/falco_rules.yaml
+  - /etc/clouddefense/falco_rules.local.yaml
+  - /etc/clouddefense/rules.d
 
 #
 # Plugins that are available for use. These plugins are not loaded by
@@ -47,7 +47,7 @@ plugins:
     init_config:
     #   maxEventSize: 262144
     #   webhookMaxBatchSize: 12582912
-    #   sslCertificate: /etc/falco/falco.pem
+    #   sslCertificate: /etc/clouddefense/falco.pem
     open_params: "http://:9765/k8s-audit"
   - name: cloudtrail
     library_path: libcloudtrail.so
@@ -367,7 +367,7 @@ stdout_output:
 #
 # $ openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out certificate.pem
 # $ cat certificate.pem key.pem > falco.pem
-# $ sudo cp falco.pem /etc/falco/falco.pem
+# $ sudo cp falco.pem /etc/clouddefense/falco.pem
 webserver:
   enabled: true
   # when threadiness is 0, Falco automatically guesses it depending on the number of online cores
@@ -375,7 +375,7 @@ webserver:
   listen_port: 8765
   k8s_healthz_endpoint: /healthz
   ssl_enabled: false
-  ssl_certificate: /etc/falco/falco.pem
+  ssl_certificate: /etc/clouddefense/falco.pem
 
 # Possible additional things you might want to do with program output:
 #   - send to a slack webhook:
@@ -418,9 +418,9 @@ http_output:
 #   bind_address: "0.0.0.0:5060"
 #   # when threadiness is 0, Falco sets it by automatically figuring out the number of online cores
 #   threadiness: 0
-#   private_key: "/etc/falco/certs/server.key"
-#   cert_chain: "/etc/falco/certs/server.crt"
-#   root_certs: "/etc/falco/certs/ca.crt"
+#   private_key: "/etc/clouddefense/certs/server.key"
+#   cert_chain: "/etc/clouddefense/certs/server.crt"
+#   root_certs: "/etc/clouddefense/certs/ca.crt"
 
 # gRPC server using an unix socket
 grpc:

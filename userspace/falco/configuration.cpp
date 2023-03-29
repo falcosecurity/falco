@@ -200,9 +200,9 @@ void falco_configuration::load_yaml(const std::string &config_name, const yaml_h
 		m_grpc_threadiness = falco::utils::hardware_concurrency();
 	}
 	// todo > else limit threadiness to avoid oversubscription?
-	m_grpc_private_key = config.get_scalar<std::string>("grpc.private_key", "/etc/falco/certs/server.key");
-	m_grpc_cert_chain = config.get_scalar<std::string>("grpc.cert_chain", "/etc/falco/certs/server.crt");
-	m_grpc_root_certs = config.get_scalar<std::string>("grpc.root_certs", "/etc/falco/certs/ca.crt");
+	m_grpc_private_key = config.get_scalar<std::string>("grpc.private_key", "/etc/clouddefense/certs/server.key");
+	m_grpc_cert_chain = config.get_scalar<std::string>("grpc.cert_chain", "/etc/clouddefense/certs/server.crt");
+	m_grpc_root_certs = config.get_scalar<std::string>("grpc.root_certs", "/etc/clouddefense/certs/ca.crt");
 
 	falco::outputs::config grpc_output;
 	grpc_output.name = "grpc";
@@ -243,7 +243,7 @@ void falco_configuration::load_yaml(const std::string &config_name, const yaml_h
 	m_webserver_listen_port = config.get_scalar<uint32_t>("webserver.listen_port", 8765);
 	m_webserver_k8s_healthz_endpoint = config.get_scalar<std::string>("webserver.k8s_healthz_endpoint", "/healthz");
 	m_webserver_ssl_enabled = config.get_scalar<bool>("webserver.ssl_enabled", false);
-	m_webserver_ssl_certificate = config.get_scalar<std::string>("webserver.ssl_certificate", "/etc/falco/falco.pem");
+	m_webserver_ssl_certificate = config.get_scalar<std::string>("webserver.ssl_certificate", "/etc/clouddefense/falco.pem");
 	if(m_webserver_threadiness == 0)
 	{
 		m_webserver_threadiness = falco::utils::hardware_concurrency();

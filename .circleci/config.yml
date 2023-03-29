@@ -39,7 +39,7 @@ jobs:
       - run:
           name: Build Falco packages 🏗️
           command: |
-            DOCKER_BUILDKIT=1 docker build -f /tmp/source-arm64/falco/docker/builder/modern-falco-builder.Dockerfile --output type=local,dest=/tmp --build-arg CMAKE_OPTIONS="-DCMAKE_BUILD_TYPE=Release -DUSE_BUNDLED_DEPS=On -DFALCO_ETC_DIR=/etc/falco -DBUILD_FALCO_MODERN_BPF=ON -DMODERN_BPF_SKEL_DIR=/source/skeleton-build/skel_dir -DBUILD_DRIVER=Off -DBUILD_BPF=Off" --build-arg DEST_BUILD_DIR=/build-arm64/release /tmp/source-arm64/falco
+            DOCKER_BUILDKIT=1 docker build -f /tmp/source-arm64/falco/docker/builder/modern-falco-builder.Dockerfile --output type=local,dest=/tmp --build-arg CMAKE_OPTIONS="-DCMAKE_BUILD_TYPE=Release -DUSE_BUNDLED_DEPS=On -DFALCO_ETC_DIR=/etc/clouddefense -DBUILD_FALCO_MODERN_BPF=ON -DMODERN_BPF_SKEL_DIR=/source/skeleton-build/skel_dir -DBUILD_DRIVER=Off -DBUILD_BPF=Off" --build-arg DEST_BUILD_DIR=/build-arm64/release /tmp/source-arm64/falco
 
       - store_artifacts:
           path: /tmp/packages
@@ -71,7 +71,7 @@ jobs:
           command: |
             mkdir -p /build-static/release
             cd /build-static/release
-            cmake -DCPACK_GENERATOR=TGZ -DBUILD_BPF=Off -DBUILD_DRIVER=Off -DCMAKE_BUILD_TYPE=Release -DUSE_BUNDLED_DEPS=On -DUSE_BUNDLED_LIBELF=Off -DBUILD_LIBSCAP_MODERN_BPF=ON -DMUSL_OPTIMIZED_BUILD=On -DFALCO_ETC_DIR=/etc/falco /source-static/falco
+            cmake -DCPACK_GENERATOR=TGZ -DBUILD_BPF=Off -DBUILD_DRIVER=Off -DCMAKE_BUILD_TYPE=Release -DUSE_BUNDLED_DEPS=On -DUSE_BUNDLED_LIBELF=Off -DBUILD_LIBSCAP_MODERN_BPF=ON -DMUSL_OPTIMIZED_BUILD=On -DFALCO_ETC_DIR=/etc/clouddefense /source-static/falco
       - run:
           name: Build
           command: |
@@ -135,7 +135,7 @@ jobs:
       - run:
           name: Build Falco packages 🏗️
           command: |
-            DOCKER_BUILDKIT=1 docker build -f /tmp/source/falco/docker/builder/modern-falco-builder.Dockerfile --output type=local,dest=/tmp --build-arg CMAKE_OPTIONS="-DCMAKE_BUILD_TYPE=Release -DUSE_BUNDLED_DEPS=On -DFALCO_ETC_DIR=/etc/falco -DBUILD_FALCO_MODERN_BPF=ON -DMODERN_BPF_SKEL_DIR=/source/skeleton-build/skel_dir -DBUILD_DRIVER=Off -DBUILD_BPF=Off" --build-arg DEST_BUILD_DIR=/build/release /tmp/source/falco
+            DOCKER_BUILDKIT=1 docker build -f /tmp/source/falco/docker/builder/modern-falco-builder.Dockerfile --output type=local,dest=/tmp --build-arg CMAKE_OPTIONS="-DCMAKE_BUILD_TYPE=Release -DUSE_BUNDLED_DEPS=On -DFALCO_ETC_DIR=/etc/clouddefense -DBUILD_FALCO_MODERN_BPF=ON -DMODERN_BPF_SKEL_DIR=/source/skeleton-build/skel_dir -DBUILD_DRIVER=Off -DBUILD_BPF=Off" --build-arg DEST_BUILD_DIR=/build/release /tmp/source/falco
 
       - store_artifacts:
           path: /tmp/packages
