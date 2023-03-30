@@ -1,3 +1,3 @@
 /etc/clouddefense/clouddefense.yaml
 /etc/clouddefense/falcoctl.yaml
-/etc/clouddefense/falco_rules.local.yaml
+/etc/clouddefense/custom_rules.yaml

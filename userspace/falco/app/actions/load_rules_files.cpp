@@ -35,7 +35,7 @@ falco::app::run_result falco::app::actions::load_rules_files(falco::app::state& 
 
 	if(s.config->m_rules_filenames.empty())
 	{
-		return run_result::fatal("You must specify at least one rules file/directory via -r or a rules_file entry in falco.yaml");
+		return run_result::fatal("You must specify at least one rules file/directory via -r or a rules_file entry in clouddefense.yaml");
 	}
 
 	falco_logger::log(LOG_DEBUG, "Configured rules filenames:\n");

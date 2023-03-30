@@ -29,7 +29,7 @@ ExternalProject_Add(
 )
 
 # falco_rules.local.yaml
-set(FALCOSECURITY_RULES_LOCAL_PATH "${PROJECT_BINARY_DIR}/falcosecurity-rules-local-prefix/falco_rules.local.yaml")
+set(FALCOSECURITY_RULES_LOCAL_PATH "${PROJECT_BINARY_DIR}/falcosecurity-rules-local-prefix/custom_rules.yaml")
 file(WRITE "${FALCOSECURITY_RULES_LOCAL_PATH}" "# Your custom rules!\n")
 
 if(NOT DEFINED FALCO_ETC_DIR)
@@ -38,7 +38,7 @@ endif()
 
 if(NOT DEFINED FALCO_RULES_DEST_FILENAME)
   set(FALCO_RULES_DEST_FILENAME "falco_rules.yaml")
-  set(FALCO_LOCAL_RULES_DEST_FILENAME "falco_rules.local.yaml")
+  set(FALCO_LOCAL_RULES_DEST_FILENAME "custom_rules.yaml")
 endif()
 
 if(DEFINED FALCO_COMPONENT) # Allow a slim version of Falco to be embedded in other projects, intentionally *not* installing all rulesets.
