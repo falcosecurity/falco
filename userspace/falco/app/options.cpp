@@ -195,9 +195,6 @@ void options::define(cxxopts::Options& opts)
 #ifndef MUSL_OPTIMIZED
 		("list-plugins",                  "Print info on all loaded plugins and exit.", cxxopts::value(list_plugins)->default_value("false"))
 #endif
-#ifndef MINIMAL_BUILD
-		("m,mesos-api",                   "This feature has been DEPRECATED and will be removed in the next version.", cxxopts::value(mesos_api), "<url[,marathon_url]>")
-#endif
 		("M",                             "Stop collecting after <num_seconds> reached.", cxxopts::value(duration_to_tot)->default_value("0"), "<num_seconds>")
 		("markdown",                      "When used with --list/--list-syscall-events, print the content in Markdown format", cxxopts::value<bool>(markdown))
 		("N",                             "When used with --list, only print field names.", cxxopts::value(names_only)->default_value("false"))
