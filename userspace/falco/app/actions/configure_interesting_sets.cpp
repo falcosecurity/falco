@@ -53,7 +53,7 @@ static void check_for_rules_unsupported_events(falco::app::state& s, const libsi
 	}
 
 	/* Get the names of the events (syscall and non syscall events) that were not activated and print them. */
-	auto names = libsinsp::events::sc_set_to_names(unsupported_sc_set);
+	auto names = libsinsp::events::sc_set_to_event_names(unsupported_sc_set);
 	std::cerr << "Loaded rules match syscalls that are not activated (e.g. were removed via config settings such as no -A flag or negative base_syscalls elements) or unsupported with current configuration: warning (unsupported-evttype): " + concat_set_in_order(names) << std::endl;
 	std::cerr << "If syscalls in rules include high volume I/O syscalls (-> activate via `-A` flag), else syscalls may have been removed via base_syscalls option or might be associated with syscalls undefined on your architecture (https://marcin.juszkiewicz.com.pl/download/tables/syscalls.html)" << std::endl;
 }
@@ -63,7 +63,7 @@ static void select_event_set(falco::app::state& s, const libsinsp::events::set<p
 	/* PPM syscall codes (sc) can be viewed as condensed libsinsp lookup table
 	 * to map a system call name to it's actual system syscall id (as defined
 	 * by the Linux kernel). Hence here we don't need syscall enter and exit distinction. */
-	auto rules_names = libsinsp::events::sc_set_to_names(rules_sc_set);
+	auto rules_names = libsinsp::events::sc_set_to_event_names(rules_sc_set);
 	if (!rules_sc_set.empty())
 	{
 		falco_logger::log(LOG_DEBUG, "(" + std::to_string(rules_names.size())
@@ -86,8 +86,8 @@ static void select_event_set(falco::app::state& s, const libsinsp::events::set<p
 	std::unordered_set<std::string> user_positive_names = {};
 	std::unordered_set<std::string> user_negative_names = {};
 	extract_base_syscalls_names(s.config->m_base_syscalls_custom_set, user_positive_names, user_negative_names);
-	auto user_positive_sc_set = libsinsp::events::names_to_sc_set(user_positive_names);
-	auto user_negative_sc_set = libsinsp::events::names_to_sc_set(user_negative_names);
+	auto user_positive_sc_set = libsinsp::events::event_names_to_sc_set(user_positive_names);
+	auto user_negative_sc_set = libsinsp::events::event_names_to_sc_set(user_negative_names);
 
 	if (!user_positive_sc_set.empty())
 	{
@@ -96,7 +96,7 @@ static void select_event_set(falco::app::state& s, const libsinsp::events::set<p
 
 		// we re-transform from sc_set to names to make
 		// sure that bad user inputs are ignored
-		auto user_positive_sc_set_names = libsinsp::events::sc_set_to_names(user_positive_sc_set);
+		auto user_positive_sc_set_names = libsinsp::events::sc_set_to_event_names(user_positive_sc_set);
 		falco_logger::log(LOG_DEBUG, "+(" + std::to_string(user_positive_sc_set_names.size())
 			+ ") syscalls added (base_syscalls override): "
 			+ concat_set_in_order(user_positive_sc_set_names) + "\n");
@@ -132,7 +132,7 @@ static void select_event_set(falco::app::state& s, const libsinsp::events::set<p
 
 		// we re-transform from sc_set to names to make
 		// sure that bad user inputs are ignored
-		auto user_negative_sc_set_names = libsinsp::events::sc_set_to_names(user_negative_sc_set);
+		auto user_negative_sc_set_names = libsinsp::events::sc_set_to_event_names(user_negative_sc_set);
 		falco_logger::log(LOG_DEBUG, "-(" + std::to_string(user_negative_sc_set_names.size())
 			+ ") syscalls removed (base_syscalls override): "
 			+ concat_set_in_order(user_negative_sc_set_names) + "\n");
@@ -150,7 +150,7 @@ static void select_event_set(falco::app::state& s, const libsinsp::events::set<p
 	auto non_rules_sc_set = s.selected_sc_set.diff(rules_sc_set);
 	if (!non_rules_sc_set.empty() && user_positive_sc_set.empty())
 	{
-		auto non_rules_sc_set_names = libsinsp::events::sc_set_to_names(non_rules_sc_set);
+		auto non_rules_sc_set_names = libsinsp::events::sc_set_to_event_names(non_rules_sc_set);
 		falco_logger::log(LOG_DEBUG, "+(" + std::to_string(non_rules_sc_set_names.size())
 			+ ") syscalls (Falco's state engine set of syscalls): "
 			+ concat_set_in_order(non_rules_sc_set_names) + "\n");
@@ -168,7 +168,7 @@ static void select_event_set(falco::app::state& s, const libsinsp::events::set<p
 		s.selected_sc_set = s.selected_sc_set.diff(ignored_sc_set);
 		if (!erased_sc_set.empty())
 		{
-			auto erased_sc_set_names = libsinsp::events::sc_set_to_names(erased_sc_set);
+			auto erased_sc_set_names = libsinsp::events::sc_set_to_event_names(erased_sc_set);
 			falco_logger::log(LOG_DEBUG, "-(" + std::to_string(erased_sc_set_names.size())
 				+ ") ignored syscalls (-> activate via `-A` flag): "
 				+ concat_set_in_order(erased_sc_set_names) + "\n");
@@ -188,7 +188,7 @@ static void select_event_set(falco::app::state& s, const libsinsp::events::set<p
 		auto repaired_sc_set = s.selected_sc_set.diff(selected_sc_set);
 		if (!repaired_sc_set.empty())
 		{
-			auto repaired_sc_set_names = libsinsp::events::sc_set_to_names(repaired_sc_set);
+			auto repaired_sc_set_names = libsinsp::events::sc_set_to_event_names(repaired_sc_set);
 			falco_logger::log(LOG_INFO, "+(" + std::to_string(repaired_sc_set_names.size())
 				+ ") repaired syscalls: " + concat_set_in_order(repaired_sc_set_names) + "\n");
 		}
@@ -203,7 +203,7 @@ static void select_event_set(falco::app::state& s, const libsinsp::events::set<p
 
 	if (!s.selected_sc_set.empty())
 	{
-		auto selected_sc_set_names = libsinsp::events::sc_set_to_names(s.selected_sc_set);
+		auto selected_sc_set_names = libsinsp::events::sc_set_to_event_names(s.selected_sc_set);
 		falco_logger::log(LOG_DEBUG, "(" + std::to_string(selected_sc_set_names.size())
 			+ ") syscalls selected in total (final set): "
 			+ concat_set_in_order(selected_sc_set_names) + "\n");
