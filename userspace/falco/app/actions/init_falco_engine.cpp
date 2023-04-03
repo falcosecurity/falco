@@ -45,11 +45,6 @@ void configure_output_format(falco::app::state& s)
 		output_format = "k8s.ns=%k8s.ns.name k8s.pod=%k8s.pod.name container=%container.id vpid=%proc.vpid vtid=%thread.vtid";
 		replace_container_info = true;
 	}
-	else if(s.options.print_additional == "m" || s.options.print_additional == "mesos")
-	{
-		output_format = "task=%mesos.task.name container=%container.id";
-		replace_container_info = true;
-	}
 	else if(!s.options.print_additional.empty())
 	{
 		output_format = s.options.print_additional;
