@@ -64,27 +64,6 @@ falco::app::run_result falco::app::actions::init_clients(falco::app::state& s)
 		}
 		inspector->init_k8s_client(k8s_api_ptr, k8s_api_cert_ptr, k8s_node_name_ptr, s.options.verbose);
 	}
-
-	//
-	// DEPRECATED!
-	// Run mesos, if required
-	// todo(leogr): remove in Falco 0,.35
-	//
-	if(!s.options.mesos_api.empty())
-	{
-		// Differs from init_k8s_client in that it
-		// passes a pointer but the inspector does
-		// *not* own it and does not use it after
-		// init_mesos_client() returns.
-		falco_logger::log(LOG_WARNING, "Mesos support has been DEPRECATED and will be removed in the next version!\n");
-		inspector->init_mesos_client(&(s.options.mesos_api), s.options.verbose);
-	}
-	else if(char* mesos_api_env = getenv("FALCO_MESOS_API"))
-	{
-		falco_logger::log(LOG_WARNING, "Mesos support has been DEPRECATED and will be removed in the next version!\n");
-		std::string mesos_api_copy = mesos_api_env;
-		inspector->init_mesos_client(&mesos_api_copy, s.options.verbose);
-	}
 #endif
 
 	return run_result::ok();

@@ -147,7 +147,7 @@ public:
 	// of all output expressions. You can also choose to replace
 	// %container.info with the extra information or add it to the
 	// end of the expression. This is used in open source falco to
-	// add k8s/mesos/container information to outputs when
+	// add k8s/container information to outputs when
 	// available.
 	//
 	void set_extra(std::string &extra, bool replace_container_info);
