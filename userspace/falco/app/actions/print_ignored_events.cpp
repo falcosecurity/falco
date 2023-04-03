@@ -28,7 +28,7 @@ falco::app::run_result falco::app::actions::print_ignored_events(falco::app::sta
 	}
 
 	std::cout << "Ignored I/O syscall(s):" << std::endl;
-	for(const auto& it : libsinsp::events::sc_set_to_names(libsinsp::events::io_sc_set()))
+	for(const auto& it : libsinsp::events::sc_set_to_event_names(libsinsp::events::io_sc_set()))
 	{
 		std::cout << "- " << it.c_str() << std::endl;
 	}
