@@ -7,6 +7,13 @@ on:
   workflow_dispatch:
 
 jobs:
+  test-arm:
+    runs-on: [self-hosted, linux, ARM64]
+
+    steps:
+    - name: Check platform
+      run: uname -a
+
   build-minimal:
     runs-on: ubuntu-20.04
     steps:
