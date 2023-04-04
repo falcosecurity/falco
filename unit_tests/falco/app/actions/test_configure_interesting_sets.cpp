@@ -410,7 +410,7 @@ TEST(ConfigureInterestingSets, selection_empty_custom_base_set_repair)
 	auto selected_sc_names = libsinsp::events::sc_set_to_event_names(s7.selected_sc_set);
 	auto expected_sc_names = strset_t({
 		// note: expecting syscalls from mock rules and `sinsp_repair_state_sc_set` enforced syscalls
-		"connect", "accept", "accept4", "umount2", "open", "ptrace", "mmap", "execve", "sched_process_exit", \
+		"connect", "accept", "accept4", "umount2", "open", "ptrace", "mmap", "execve", "procexit", \
 		"bind", "socket", "clone3", "close", "setuid"
 	});
 	ASSERT_NAMES_CONTAIN(selected_sc_names, expected_sc_names);
