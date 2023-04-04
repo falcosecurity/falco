@@ -1,0 +1,2 @@
+#!/bin/sh
+insmod /etc/clouddefense/falco.ko
