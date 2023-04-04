@@ -6,6 +6,12 @@ on:
     branches: [master]
   workflow_dispatch:
 
+# Checks if any concurrent jobs under the same pull request or branch are being executed
+# NOTE: this will cancel every workflow that is being ran as group is just the github ref (without the workflow name)
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true  
+
 jobs:
   build-minimal:
     runs-on: ubuntu-20.04
