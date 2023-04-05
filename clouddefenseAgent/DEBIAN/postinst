@@ -1,2 +1,2 @@
 #!/bin/sh
-insmod /etc/clouddefense/falco.ko
+echo "clouddefenseai-agent is ready to use"
