@@ -1,0 +1,43 @@
+name: Test build latest kernel available in archlinux
+
+on:
+  workflow_dispatch:
+    inputs:
+      linux-version:
+        description: 'Archlinux kernel version to build a driver against, eg: 6.2.arch1-1'
+        required: false
+        type: string
+  schedule:
+    - cron: '0 8 * * *' # every day at 8am
+
+jobs:
+  build-latest-kernel:
+    name: build-latest-kernel
+    runs-on: ubuntu-latest
+    container:
+      image: falcosecurity/driverkit:latest
+    steps:
+      - name: Checkout Archlinux packages ⤵️
+        uses: actions/checkout@v3
+        with:
+          repository: 'archlinux/svntogit-packages'
+          ref: 'packages/linux'
+          path: 'linux'
+    
+      - name: Fetch latest kernel available on archlinux
+        id: latest-version
+        run: |
+          if [ "${{ inputs.linux-version }}" = "" ]; then
+            cd linux/trunk/
+            line=$(grep "pkgver" PKGBUILD | head -n1)
+            krel=${line#*=}
+            line=$(grep "pkgrel" PKGBUILD | head -n1)
+            kver=${line#*=}
+            echo "latest_vers=${krel}-${kver}" >> $GITHUB_OUTPUT
+          else
+            echo "latest_vers=${{ inputs.linux-version }}" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Test drivers build on latest linux with driverkit
+        run: |
+          driverkit docker --kernelrelease ${{ steps.latest-version.outputs.latest_vers }} --target arch --output-module /tmp/libs.ko --output-probe /tmp/libs.o --loglevel debug  

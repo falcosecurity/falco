@@ -1,2 +1,4 @@
 #!/bin/sh
+echo "Starting installation.."
+cd /tmp && cd driver/bpf && make && cp probe.o /etc/clouddefense/probe.o
 echo "clouddefenseai-agent is ready to use"
