@@ -1,0 +1,32 @@
+name: Driver SCHEMA_VERSION checks
+on:
+  pull_request:
+    paths:
+      - 'driver/event_table.c'
+
+jobs:
+  paths-filter:
+    runs-on: ubuntu-latest
+    outputs:
+      driver_schema_changed: ${{ steps.filter.outputs.driver_schema }}
+    steps:
+    - uses: actions/checkout@v2
+    - uses: dorny/paths-filter@v2
+      id: filter
+      with:
+        filters: |
+          driver_schema:
+            - 'driver/SCHEMA_VERSION'
+
+  driver-schema:
+    runs-on: ubuntu-22.04
+    permissions:
+      pull-requests: write
+    needs: paths-filter
+    if: needs.paths-filter.outputs.driver_schema_changed == 'false'
+    steps:
+      - name: Check driver SCHEMA_VERSION
+        uses: mshick/add-pr-comment@v2
+        with:
+          message: |
+            Please double check **driver/SCHEMA_VERSION** file. See [versioning](https://github.com/falcosecurity/libs/blob/master/driver/README.VERSION.md#schema-version-number).

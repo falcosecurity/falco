@@ -1,0 +1,39 @@
+name: Driverkit
+on:
+  pull_request:
+    paths:
+      - 'driver/**'
+
+jobs:
+  build-drivers:
+    strategy:
+      matrix:
+        name: [linux-2.6.x, linux-3.x, linux-4.x, linux-5.x, linux-6.x]
+        include:
+          - name: linux-2.6.x
+            kernelrelease: 2.6.32-754.el6.x86_64
+            target: centos
+            kernelurls: https://download.falco.org/fixtures/libs/kernel-devel-2.6.32-754.el6.x86_64.rpm
+          - name: linux-3.x
+            kernelrelease: 3.10.0-957.el7.x86_64
+            target: centos
+            kernelurls: https://download.falco.org/fixtures/libs/kernel-devel-3.10.0-957.el7.x86_64.rpm
+          - name: linux-4.x
+            kernelrelease: 4.18.0-305.25.1.el8_4.x86_64
+            target: centos
+            kernelurls: https://download.falco.org/fixtures/libs/kernel-devel-4.18.0-305.25.1.el8_4.x86_64.rpm
+          - name: linux-5.x
+            kernelrelease: 5.19.12.arch1-1
+            target: arch
+            kernelurls: https://download.falco.org/fixtures/libs/linux-headers-5.19.12.arch1-1-x86_64.pkg.tar.zst
+          - name: linux-6.x
+            kernelrelease: 6.2.arch1-1
+            target: arch
+            kernelurls: https://download.falco.org/fixtures/libs/linux-headers-6.2.arch1-1-x86_64.pkg.tar.zst
+    runs-on: ubuntu-latest
+    container:
+      image: falcosecurity/driverkit:latest
+    steps:
+      - name: Test drivers build on ${{ matrix.name }}
+        run: |
+          driverkit docker --kernelrelease ${{ matrix.kernelrelease }} --target ${{ matrix.target }} --output-module /tmp/libs.ko --output-probe /tmp/libs.o --driverversion $GITHUB_SHA --loglevel debug --kernelurls ${{ matrix.kernelurls }}

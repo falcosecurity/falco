@@ -1,0 +1,157 @@
+version: 2.1
+jobs:
+  # Here we test drivers and also engines
+  "test-drivers-engines-arm64":
+    machine:
+      enabled: true
+      image: ubuntu-2204:2022.10.2
+    resource_class: arm.large
+    steps:
+      - run:
+          name: Install deps ⛓️
+          command: |
+            sudo apt update -y
+            sudo DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends ca-certificates cmake build-essential git pkg-config autoconf automake libelf-dev libcap-dev linux-headers-$(uname -r) clang-14 llvm-14
+            sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-14 90
+            sudo update-alternatives --install /usr/bin/llvm-strip llvm-strip /usr/bin/llvm-strip-14 90
+            git clone https://github.com/libbpf/bpftool.git --branch v7.0.0 --single-branch
+            cd bpftool
+            git submodule update --init
+            cd src && sudo make install
+
+      - checkout:
+          path: /tmp/libs
+
+      - run:
+          name: Print kernel info 🔢
+          command: |
+            uname -a
+
+      # Gvisor is not supported on ARM64
+      - run:
+          name: Build drivers and engines tests 🏗️
+          command: |
+            mkdir -p /tmp/libs/build
+            cd /tmp/libs/build && cmake -DUSE_BUNDLED_DEPS=On -DENABLE_DRIVERS_TESTS=On -DBUILD_LIBSCAP_GVISOR=Off -DBUILD_BPF=True -DBUILD_LIBSCAP_MODERN_BPF=On -DCREATE_TEST_TARGETS=On -DENABLE_LIBSCAP_TESTS=On ..
+            make drivers_test driver bpf libscap_test scap-open -j6
+
+      - run:
+          name: Run drivers_test with modern bpf 🏎️
+          command: |
+            cd /tmp/libs/build
+            sudo ./test/drivers/drivers_test -m
+
+      - run:
+          name: Run drivers_test with bpf 🏎️
+          command: |
+            cd /tmp/libs/build
+            sudo ./test/drivers/drivers_test -b
+
+      - run:
+          name: Run drivers_test with kernel module 🏎️
+          command: |
+            cd /tmp/libs/build
+            sudo ./test/drivers/drivers_test -k
+
+      - run:
+          name: Run engine tests 🏎️
+          command: |
+            cd /tmp/libs/build
+            sudo ./test/libscap/libscap_test
+
+      - run:
+          name: Run scap-open with modern bpf 🏎️
+          command: |
+            cd /tmp/libs/build
+            sudo ./libscap/examples/01-open/scap-open --modern_bpf --num_events 0
+
+      - run:
+          name: Run scap-open with bpf 🏎️
+          command: |
+            cd /tmp/libs/build
+            sudo ./libscap/examples/01-open/scap-open --bpf ./driver/bpf/probe.o --num_events 0
+
+      - run:
+          name: Run scap-open with kmod 🏎️
+          command: |
+            cd /tmp/libs/build
+            sudo insmod ./driver/scap.ko || true
+            sudo ./libscap/examples/01-open/scap-open --kmod --num_events 0
+            sudo rmmod scap
+
+  # Here we test libraries
+  "test-libraries-arm64":
+    machine:
+      enabled: true
+      image: ubuntu-2204:2022.10.2
+    resource_class: arm.large
+    steps:
+      - run:
+          name: Install deps ⛓️
+          command: |
+            sudo apt update -y
+            sudo DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends ca-certificates cmake build-essential git clang llvm pkg-config autoconf automake libtool libelf-dev wget libb64-dev libc-ares-dev libcurl4-openssl-dev libssl-dev libtbb-dev libjq-dev libjsoncpp-dev libgrpc++-dev protobuf-compiler-grpc libgtest-dev libprotobuf-dev liblua5.1-dev
+
+      - checkout:
+          path: /tmp/libs
+
+      - run:
+          name: Install valijson and other external deps ⛓️
+          command: |
+            cd /tmp/libs
+            sudo .github/install-deps.sh
+
+      - run:
+          name: Build and run libraries tests 🏗️🏎️
+          command: |
+            mkdir -p /tmp/libs/build
+            cd /tmp/libs/build && cmake -DUSE_BUNDLED_DEPS=Off -DBUILD_BPF=Off -DBUILD_DRIVER=Off ..
+            make run-unit-tests -j6
+
+  "test-clang-7":
+    machine:
+      image: ubuntu-2004:202107-02
+    steps:
+      - run:
+          name: Install deps ⛓️
+          command: |
+            sudo apt update -y
+            sudo DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends ca-certificates git make build-essential clang-7 libelf-dev libcap-dev cmake linux-headers-$(uname -r)
+            ls /usr/bin/ | grep clang
+            ls /usr/bin/ | grep llc
+            sudo ln -s /usr/bin/clang-7 /usr/bin/clang
+
+      - checkout:
+          path: /tmp/libs
+
+      - run:
+          name: Print kernel info 🔢
+          command: |
+            uname -a
+
+      - run:
+          name: Build drivers and engines tests 🏗️
+          command: |
+            mkdir -p /tmp/libs/build
+            cd /tmp/libs/build && cmake -DUSE_BUNDLED_DEPS=On -DENABLE_DRIVERS_TESTS=On -DBUILD_LIBSCAP_GVISOR=Off -DBUILD_BPF=True -DBUILD_LIBSCAP_MODERN_BPF=Off -DCREATE_TEST_TARGETS=On ..
+            make drivers_test driver bpf -j6
+
+      - run:
+          name: Run drivers_test with kernel module 🏎️
+          command: |
+            cd /tmp/libs/build
+            sudo ./test/drivers/drivers_test -k --gtest_filter=-'GenericTracepoints.page_fault_kernel'
+
+      - run:
+          name: Run drivers_test with bpf 🏎️
+          command: |
+            cd /tmp/libs/build
+            sudo ./test/drivers/drivers_test -b --gtest_filter=-'GenericTracepoints.page_fault_kernel'
+
+workflows:
+  version: 2.1
+  build_and_test:
+    jobs:
+      - "test-drivers-engines-arm64"
+      - "test-libraries-arm64"
+      - "test-clang-7"

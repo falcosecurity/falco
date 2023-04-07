@@ -1,0 +1,33 @@
+/*
+
+Copyright (C) 2022 The Falco Authors.
+
+This file is dual licensed under either the MIT or GPL 2. See MIT.txt
+or GPL2.txt for full copies of the license.
+
+*/
+#pragma once
+
+/* taken from driver/API_VERSION */
+#define PPM_API_CURRENT_VERSION_MAJOR ${PPM_API_CURRENT_VERSION_MAJOR}
+#define PPM_API_CURRENT_VERSION_MINOR ${PPM_API_CURRENT_VERSION_MINOR}
+#define PPM_API_CURRENT_VERSION_PATCH ${PPM_API_CURRENT_VERSION_PATCH}
+
+/* taken from driver/SCHEMA_VERSION */
+#define PPM_SCHEMA_CURRENT_VERSION_MAJOR ${PPM_SCHEMA_CURRENT_VERSION_MAJOR}
+#define PPM_SCHEMA_CURRENT_VERSION_MINOR ${PPM_SCHEMA_CURRENT_VERSION_MINOR}
+#define PPM_SCHEMA_CURRENT_VERSION_PATCH ${PPM_SCHEMA_CURRENT_VERSION_PATCH}
+
+#include "ppm_api_version.h"
+
+#define DRIVER_VERSION "${DRIVER_VERSION}"
+
+#define DRIVER_NAME "${DRIVER_NAME}"
+
+#define DRIVER_DEVICE_NAME "${DRIVER_DEVICE_NAME}"
+
+#define DRIVER_COMMIT "${GIT_COMMIT}"
+
+#ifndef KBUILD_MODNAME
+#define KBUILD_MODNAME DRIVER_NAME
+#endif
