@@ -128,11 +128,20 @@ get_target_id() {
 
 	case "${OS_ID}" in
 	("amzn")
-		if [[ $VERSION_ID == "2" ]]; then
+		case "${VERSION_ID}" in
+		("2")
 			TARGET_ID="amazonlinux2"
-		else
+			;;
+		("2022")
+			TARGET_ID="amazonlinux2022"
+			;;
+		("2023")
+			TARGET_ID="amazonlinux2023"
+			;;
+		(*)
 			TARGET_ID="amazonlinux"
-		fi
+			;;
+		esac
 		;;
 	("ubuntu")
 		# Extract the flavor from the kernelrelease
