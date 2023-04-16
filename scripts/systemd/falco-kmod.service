@@ -22,7 +22,6 @@ ProtectKernelTunables=true
 ReadWriteDirectories=/sys/module/falco
 RestrictRealtime=true
 RestrictAddressFamilies=~AF_PACKET
-StandardOutput=null
 
 [Install]
 WantedBy=multi-user.target
