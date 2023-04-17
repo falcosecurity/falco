@@ -1,0 +1,63 @@
+name: Dev Packages
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  build-dev-packages:
+    uses: falcosecurity/falco/.github/workflows/reusable_build_packages.yaml@main
+    with:
+      arch: x86_64
+    secrets: inherit
+  
+  build-dev-packages-arm64:
+    uses: falcosecurity/falco/.github/workflows/reusable_build_packages.yaml@main
+    with:
+      arch: aarch64
+    secrets: inherit
+    
+  publish-dev-packages:
+    needs: [build-dev-packages, build-dev-packages-arm64]
+    outputs:
+      version: ${{ steps.expose_version.outputs.version }}
+    
+    steps:
+      - name: Publish packages
+        uses: falcosecurity/falco/.github/workflows/reusable_publish_packages.yaml@main
+        with:
+          bucket: '-dev'
+          version: ${{ needs.build-dev-packages.outputs.version }}
+        secrets: inherit
+      
+      - name: Expose FALCO_VERSION
+        id: expose_version
+        run: |
+          echo "version=${{ needs.build-dev-packages.outputs.version }}" >> $GITHUB_OUTPUT
+    
+  build-dev-docker:
+    needs: publish-dev-packages
+    uses: falcosecurity/falco/.github/workflows/reusable_build_docker.yaml@main
+    with:
+      arch: x86_64
+      tagname: master
+      bucket: '-dev'
+      version: ${{ needs.publish-dev-packages.outputs.version }}
+    secrets: inherit
+    
+  build-dev-docker-arm64:
+    needs: publish-dev-packages
+    uses: falcosecurity/falco/.github/workflows/reusable_build_docker.yaml@main
+    with:
+      arch: aarch64
+      tagname: master
+      bucket: '-dev'
+      version: ${{ needs.publish-dev-packages.outputs.version }}
+    secrets: inherit
+    
+  publish-dev-docker:
+    needs: [build-dev-docker, build-dev-docker-arm64]
+    uses: falcosecurity/falco/.github/workflows/reusable_publish_docker.yaml@main
+    with:
+      tagname: master
+    secrets: inherit
