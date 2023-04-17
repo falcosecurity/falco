@@ -1,0 +1,105 @@
+# This is a reusable workflow used by dev_packages and release_packages
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: 'Falco version extracted from userspace/falco/config_falco.h'
+        required: true
+        type: string
+      bucket:
+        description: bucket suffix for packages
+        required: false
+        default: ''
+        type: string
+
+jobs:
+  publish-packages:
+    runs-on: ubuntu-latest
+    container:
+      image: docker.io/centos:7
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          path: source
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+    
+      - name: Install dependencies
+        run: |
+          yum install epel-release -y
+          yum update -y
+          yum install rpm-sign expect which createrepo gpg python python-pip -y
+          pip install awscli==1.19.47
+      
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: $RUNNER_TEMP
+        
+      - name: Import gpg key 
+        run: |
+          echo $GPG_KEY | base64 -d | gpg --import
+        
+      - name: Sign rpms
+        run: |
+          echo "%_signature gpg" > ~/.rpmmacros
+          echo "%_gpg_name  Falcosecurity Package Signing" >> ~/.rpmmacros
+          echo "%__gpg_sign_cmd %{__gpg} --force-v3-sigs --batch --no-armor --passphrase-fd 3 --no-secmem-warning -u \"%{_gpg_name}\" -sb --digest-algo sha256 %{__plaintext_filename}'" >> ~/.rpmmacros
+          cat > ~/sign \<<EOF
+          #!/usr/bin/expect -f
+          spawn rpmsign --addsign {*}\$argv
+          expect -exact "Enter pass phrase: "
+          send -- "\n"
+          expect eof
+          EOF
+          chmod +x ~/sign
+          ~/sign $RUNNER_TEMP/falco-*.rpm
+          rpm --qf %{SIGPGP:pgpsig} -qp $RUNNER_TEMP/falco-*.rpm | grep SHA256
+          
+      - name: Publish rpm
+        run: |
+          ./scripts/publish-rpm -f $RUNNER_TEMP/falco-${{ inputs.version }}-x86_64.rpm -f $RUNNER_TEMP/falco-${{ inputs.version }}-aarch64.rpm -r rpm${{ inputs.bucket }}
+      
+      - name: Publish bin
+        run: |
+          ./scripts/publish-bin -f $RUNNER_TEMP/falco-${{ inputs.version }}-x86_64.tar.gz -r bin${{ inputs.bucket }} -a x86_64
+          ./scripts/publish-bin -f $RUNNER_TEMP/falco-${{ inputs.version }}-aarch64.tar.gz -r bin${{ inputs.bucket }} -a aarch64
+          
+      - name: Publish static
+        run: |
+          ./scripts/publish-bin -f $RUNNER_TEMP/falco-${{ inputs.version }}-static-x86_64.tar.gz -r bin${{ inputs.bucket }} -a x86_64
+          
+  publish-packages-deb:
+    runs-on: ubuntu-latest
+    container:
+      image: docker.io/debian:stable
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          path: source
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+    
+      - name: Install dependencies
+        run: |
+          apt update -y
+          apt-get install apt-utils bzip2 gpg python python3-pip -y
+          pip install awscli
+      
+      - name: Download deb artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: falco-${{ inputs.version }}-*.deb
+          path: $RUNNER_TEMP
+        
+      - name: Import gpg key 
+        run: |
+          echo $GPG_KEY | base64 -d | gpg --import
+          
+      - name: Publish deb
+        run: |
+          ./scripts/publish-deb -f $RUNNER_TEMP/falco-${{ inputs.version }}-x86_64.deb -f $RUNNER_TEMP/falco-${{ inputs.version }}-aarch64.deb -r deb${{ inputs.bucket }}
+          
+     
