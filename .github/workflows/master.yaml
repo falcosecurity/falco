@@ -1,8 +1,12 @@
-name: Dev Packages
+name: Dev Packages and Docker images
 on:
   push:
     branches: [master]
-  workflow_dispatch:
+
+# Checks if any concurrent jobs under the same pull request or branch are being executed
+concurrency:
+  group: ci-master
+  cancel-in-progress: true  
 
 jobs:
   build-dev-packages:
