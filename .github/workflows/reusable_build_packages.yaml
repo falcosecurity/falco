@@ -17,14 +17,14 @@ jobs:
     runs-on: ${{ (inputs.arch == "aarch64") && fromJSON('[ "self-hosted", "linux", "ARM64" ]') || 'ubuntu-latest' }}
     container: fedora:latest
     steps:
+      - name: Install build dependencies
+        run: |
+          dnf install -y bpftool ca-certificates cmake make automake gcc gcc-c++ kernel-devel clang git pkg-config autoconf automake libbpf-devel
+    
       - name: Checkout
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-
-      - name: Install build dependencies
-        run: |
-          dnf install -y bpftool ca-certificates cmake make automake gcc gcc-c++ kernel-devel clang git pkg-config autoconf automake libbpf-devel
 
       - name: Build modern BPF skeleton
         run: |
@@ -47,6 +47,13 @@ jobs:
     outputs:
       version: ${{ steps.store_version.outputs.version }}  
     steps:
+      - name: Install build dependencies
+        run: |
+          yum -y install centos-release-scl
+          yum -y install devtoolset-9-gcc devtoolset-9-gcc-c++
+          source /opt/rh/devtoolset-9/enable
+          yum install -y git wget make m4 rpm-build
+    
       - name: Checkout
         uses: actions/checkout@v3
         with:
@@ -57,13 +64,6 @@ jobs:
         with:
           name: bpf_probe_${{ inputs.arch }}.skel.h
           path: /tmp
-          
-      - name: Install build dependencies
-        run: |
-          yum -y install centos-release-scl
-          yum -y install devtoolset-9-gcc devtoolset-9-gcc-c++
-          source /opt/rh/devtoolset-9/enable
-          yum install -y git wget make m4 rpm-build
           
       - name: Install updated cmake
         run: |
@@ -132,14 +132,14 @@ jobs:
     runs-on: ubuntu-latest
     container: alpine:3.17
     steps:
+      - name: Install build dependencies
+        run: |
+          apk add g++ gcc cmake make git bash perl linux-headers autoconf automake m4 libtool elfutils-dev libelf-static patch binutils bpftool clang
+    
       - name: Checkout
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-
-      - name: Install build dependencies
-        run: |
-          apk add g++ gcc cmake make git bash perl linux-headers autoconf automake m4 libtool elfutils-dev libelf-static patch binutils bpftool clang
           
       - name: Prepare project
         run: |
