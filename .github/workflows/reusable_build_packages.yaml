@@ -12,11 +12,37 @@ on:
         value: ${{ jobs.build-packages.outputs.version }}    
 
 jobs:
+  build-modern-bpf-skeleton:
+    # See https://github.com/actions/runner/issues/409#issuecomment-1158849936
+    runs-on: ${{ (inputs.arch == "aarch64") && fromJSON('[ "self-hosted", "linux", "ARM64" ]') || 'ubuntu-latest' }}
+    container: fedora:latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Install build dependencies
+        run: |
+          dnf install -y bpftool ca-certificates cmake make automake gcc gcc-c++ kernel-devel clang git pkg-config autoconf automake libbpf-devel
+
+      - name: Build modern BPF skeleton
+        run: |
+          mkdir skeleton-build && cd skeleton-build
+          cmake -DUSE_BUNDLED_DEPS=ON -DBUILD_FALCO_MODERN_BPF=ON -DCREATE_TEST_TARGETS=Off ..
+          make ProbeSkeleton -j6
+          
+      - name: Upload skeleton
+        uses: actions/upload-artifact@v3
+        with:
+          name: bpf_probe_${{ inputs.arch }}.skel.h
+          path: skeleton-build/skel_dir/bpf_probe.skel.h
+          
   build-packages:
     # See https://github.com/actions/runner/issues/409#issuecomment-1158849936
     runs-on: ${{ (inputs.arch == "aarch64") && fromJSON('[ "self-hosted", "linux", "ARM64" ]') || 'ubuntu-latest' }}
-    container:
-      image: ubuntu:22.04
+    needs: build-modern-bpf-skeleton
+    container: centos:7
     # Map the job outputs to step outputs
     outputs:
       version: ${{ steps.store_version.outputs.version }}  
@@ -24,88 +50,92 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
         with:
-          path: source
           fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.sha }}
-
+    
+      - name: Download skeleton
+        uses: actions/download-artifact@v3
+        with:
+          name: bpf_probe_${{ inputs.arch }}.skel.h
+          path: /tmp
+          
       - name: Install build dependencies
         run: |
-          mkdir deps && cd deps
-          apt update -y
-          DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends ca-certificates cmake build-essential clang-14 git pkg-config autoconf automake libelf-dev
-          update-alternatives --install /usr/bin/clang clang /usr/bin/clang-14 90
-          update-alternatives --install /usr/bin/llvm-strip llvm-strip /usr/bin/llvm-strip-14 90
-          git clone https://github.com/libbpf/bpftool.git --branch v7.0.0 --single-branch
-          cd bpftool
-          git submodule update --init
-          cd src && make install
-
-      - name: Build modern BPF skeleton
+          yum -y install centos-release-scl
+          yum -y install devtoolset-9-gcc devtoolset-9-gcc-c++
+          source /opt/rh/devtoolset-9/enable
+          yum install -y git wget make m4 rpm-build
+          
+      - name: Install updated cmake
         run: |
-          cd source
-          mkdir skeleton-build && cd skeleton-build
-          cmake -DUSE_BUNDLED_DEPS=ON -DBUILD_FALCO_MODERN_BPF=ON -DCREATE_TEST_TARGETS=Off ..
-          make ProbeSkeleton
-
-      - name: Build Falco packages
+          curl -L -o /tmp/cmake.tar.gz https://github.com/Kitware/CMake/releases/download/v3.22.5/cmake-3.22.5-linux-$(uname -m).tar.gz
+          gzip -d /tmp/cmake.tar.gz
+          tar -xpf /tmp/cmake.tar --directory=/tmp
+          cp -R /tmp/cmake-3.22.5-linux-$(uname -m)/* /usr
+          rm -rf /tmp/cmake-3.22.5-linux-$(uname -m)
+    
+      - name: Prepare project
         run: |
-          mkdir -p source/build
-          DOCKER_BUILDKIT=1 docker build \
-            -f ${{ github.workspace }}/source/docker/builder/modern-falco-builder.Dockerfile \
-            --output type=local,dest=${{ github.workspace }}/source/build \
-            --build-arg CMAKE_OPTIONS="\
+          mv /tmp/bpf_probe_${{ inputs.arch }}.skel.h /tmp/bpf_probe.skel.h
+          mkdir build && cd build
+          source /opt/rh/devtoolset-9/enable
+          cmake \
               -DCMAKE_BUILD_TYPE=Release \
               -DUSE_BUNDLED_DEPS=On \
               -DFALCO_ETC_DIR=/etc/falco \
               -DBUILD_FALCO_MODERN_BPF=ON \
-              -DMODERN_BPF_SKEL_DIR=/source/skeleton-build/skel_dir \
+              -DMODERN_BPF_SKEL_DIR=/tmp \
               -DBUILD_DRIVER=Off \
-              -DBUILD_BPF=Off" \
-            --build-arg DEST_BUILD_DIR=${{ github.workspace }}/source/build \
-            ${{ github.workspace }}/source
-            
+              -DBUILD_BPF=Off \
+              ..
+              
       - name: Load and store Falco version output
         id: store_version
         run: |
-          FALCO_VERSION=$(cat ${{ github.workspace }}/source/build/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
-          echo "version=${FALCO_VERSION}" >> $GITHUB_OUTPUT     
+          FALCO_VERSION=$(cat build/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
+          echo "version=${FALCO_VERSION}" >> $GITHUB_OUTPUT           
+              
+      - name: Build project
+        run: |
+          cd build
+          make falco -j6
+      
+      - name: Build packages
+        run: |
+          cd build
+          make package
 
       - name: Upload Falco tar.gz package
         uses: actions/upload-artifact@v3
         with:
           name: falco-${{ steps.store_version.outputs.version }}-${{ inputs.arch }}.tar.gz
           path: |
-            ${{ github.workspace }}/source/build/packages/falco-*.tar.gz
+            ${{ github.workspace }}/build/packages/falco-*.tar.gz
             
       - name: Upload Falco deb package
         uses: actions/upload-artifact@v3
         with:
           name: falco-${{ steps.store_version.outputs.version }}-${{ inputs.arch }}.deb
           path: |
-            ${{ github.workspace }}/source/build/packages/falco-*.deb
+            ${{ github.workspace }}/build/packages/falco-*.deb
       
       - name: Upload Falco rpm package
         uses: actions/upload-artifact@v3
         with:
           name: falco-${{ steps.store_version.outputs.version }}-${{ inputs.arch }}.rpm
           path: |
-            ${{ github.workspace }}/source/build/packages/falco-*.rpm
+            ${{ github.workspace }}/build/packages/falco-*.rpm
             
   build-musl-package:
     needs: build-packages
     # x86_64 only for now
     if: ${{ inputs.arch == 'x86_64' }}
     runs-on: ubuntu-latest
-    container:
-      image: alpine:3.17
-    
+    container: alpine:3.17
     steps:
       - name: Checkout
         uses: actions/checkout@v3
         with:
-          path: source
           fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.sha }}
 
       - name: Install build dependencies
         run: |
@@ -114,7 +144,7 @@ jobs:
       - name: Prepare project
         run: |
           mkdir build && cd build
-          cmake -DCPACK_GENERATOR=TGZ -DBUILD_BPF=Off -DBUILD_DRIVER=Off -DCMAKE_BUILD_TYPE=Release -DUSE_BUNDLED_DEPS=On -DUSE_BUNDLED_LIBELF=Off -DBUILD_LIBSCAP_MODERN_BPF=ON -DMUSL_OPTIMIZED_BUILD=On -DFALCO_ETC_DIR=/etc/falco /source-static/falco
+          cmake -DCPACK_GENERATOR=TGZ -DBUILD_BPF=Off -DBUILD_DRIVER=Off -DCMAKE_BUILD_TYPE=Release -DUSE_BUNDLED_DEPS=On -DUSE_BUNDLED_LIBELF=Off -DBUILD_LIBSCAP_MODERN_BPF=ON -DMUSL_OPTIMIZED_BUILD=On -DFALCO_ETC_DIR=/etc/falco ../
           
       - name: Build project
         run: |

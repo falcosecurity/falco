@@ -1,11 +1,6 @@
 # This is a reusable workflow used by master and release CI
 on:
   workflow_call:
-    inputs:
-      tagname:
-        description: master or tag name
-        required: true
-        type: string
 
 jobs:
   publish-docker:
@@ -24,29 +19,29 @@ jobs:
       - name: Create and push no-driver manifest
         uses: Noelware/docker-manifest-action@master
         with:
-          inputs: falcosecurity/falco-no-driver:${{ inputs.tagname }}
-          images: falcosecurity/falco-no-driver:aarch64-${{ inputs.tagname }},falcosecurity/falco-no-driver:x86_64-${{ inputs.tagname }}
+          inputs: falcosecurity/falco-no-driver:${{ github.ref_name }}
+          images: falcosecurity/falco-no-driver:aarch64-${{ github.ref_name }},falcosecurity/falco-no-driver:x86_64-${{ github.ref_name }}
           push: true
           
       - name: Create and push slim manifest
         uses: Noelware/docker-manifest-action@master
         with:
-          inputs: falcosecurity/falco:${{ inputs.tagname }}-slim
-          images: falcosecurity/falco:aarch64-${{ inputs.tagname }}-slim,falcosecurity/falco:x86_64-${{ inputs.tagname }}-slim
+          inputs: falcosecurity/falco:${{ github.ref_name }}-slim
+          images: falcosecurity/falco:aarch64-${{ github.ref_name }}-slim,falcosecurity/falco:x86_64-${{ github.ref_name }}-slim
           push: true     
           
       - name: Create and push no-driver manifest for ecr
         uses: Noelware/docker-manifest-action@master
         with:
-          inputs: public.ecr.aws/falcosecurity/falco-no-driver:${{ inputs.tagname }}
-          images: public.ecr.aws/falcosecurity/falco-no-driver:aarch64-${{ inputs.tagname }},public.ecr.aws/falcosecurity/falco-no-driver:x86_64-${{ inputs.tagname }}
+          inputs: public.ecr.aws/falcosecurity/falco-no-driver:${{ github.ref_name }}
+          images: public.ecr.aws/falcosecurity/falco-no-driver:aarch64-${{ github.ref_name }},public.ecr.aws/falcosecurity/falco-no-driver:x86_64-${{ github.ref_name }}
           push: true
           
       - name: Create and push slim manifest for ecr
         uses: Noelware/docker-manifest-action@master
         with:
-          inputs: public.ecr.aws/falcosecurity/falco:${{ inputs.tagname }}-slim
-          images: public.ecr.aws/falcosecurity/falco:aarch64-${{ inputs.tagname }}-slim,public.ecr.aws/falcosecurity/falco:x86_64-${{ inputs.tagname }}-slim
+          inputs: public.ecr.aws/falcosecurity/falco:${{ github.ref_name }}-slim
+          images: public.ecr.aws/falcosecurity/falco:aarch64-${{ github.ref_name }}-slim,public.ecr.aws/falcosecurity/falco:x86_64-${{ github.ref_name }}-slim
           push: true      
 
       - name: Create and push no-driver latest manifest
@@ -84,15 +79,15 @@ jobs:
       - name: Create and push falco manifest
         uses: Noelware/docker-manifest-action@master
         with:
-          inputs: falcosecurity/falco:${{ inputs.tagname }}
-          images: falcosecurity/falco:aarch64-${{ inputs.tagname }},falcosecurity/falco:x86_64-${{ inputs.tagname }}
+          inputs: falcosecurity/falco:${{ github.ref_name }}
+          images: falcosecurity/falco:aarch64-${{ github.ref_name }},falcosecurity/falco:x86_64-${{ github.ref_name }}
           push: true
           
       - name: Create and push falco manifest for ecr
         uses: Noelware/docker-manifest-action@master
         with:
-          inputs: public.ecr.aws/falcosecurity/falco:${{ inputs.tagname }}
-          images: public.ecr.aws/falcosecurity/falco:aarch64-${{ inputs.tagname }},public.ecr.aws/falcosecurity/falco:x86_64-${{ inputs.tagname }}
+          inputs: public.ecr.aws/falcosecurity/falco:${{ github.ref_name }}
+          images: public.ecr.aws/falcosecurity/falco:aarch64-${{ github.ref_name }},public.ecr.aws/falcosecurity/falco:x86_64-${{ github.ref_name }}
           push: true    
       
       - name: Create and push falco latest manifest
@@ -114,15 +109,15 @@ jobs:
       - name: Create and push falco-driver-loader manifest
         uses: Noelware/docker-manifest-action@master
         with:
-          inputs: falcosecurity/falco-driver-loader:${{ inputs.tagname }}
-          images: falcosecurity/falco-driver-loader:aarch64-${{ inputs.tagname }},falcosecurity/falco-driver-loader:x86_64-${{ inputs.tagname }}
+          inputs: falcosecurity/falco-driver-loader:${{ github.ref_name }}
+          images: falcosecurity/falco-driver-loader:aarch64-${{ github.ref_name }},falcosecurity/falco-driver-loader:x86_64-${{ github.ref_name }}
           push: true
           
       - name: Create and push falco-driver-loader manifest for ecr
         uses: Noelware/docker-manifest-action@master
         with:
-          inputs: public.ecr.aws/falcosecurity/falco-driver-loader:${{ inputs.tagname }}
-          images: public.ecr.aws/falcosecurity/falco-driver-loader:aarch64-${{ inputs.tagname }},public.ecr.aws/falcosecurity/falco-driver-loader:x86_64-${{ inputs.tagname }}
+          inputs: public.ecr.aws/falcosecurity/falco-driver-loader:${{ github.ref_name }}
+          images: public.ecr.aws/falcosecurity/falco-driver-loader:aarch64-${{ github.ref_name }},public.ecr.aws/falcosecurity/falco-driver-loader:x86_64-${{ github.ref_name }}
           push: true    
       
       - name: Create and push falco-driver-loader latest manifest

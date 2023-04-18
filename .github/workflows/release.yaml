@@ -34,7 +34,6 @@ jobs:
     uses: falcosecurity/falco/.github/workflows/reusable_build_docker.yaml@main
     with:
       arch: x86_64
-      tagname: ${{ github.ref_name }}
       version: ${{ needs.build-packages.outputs.version }}
     secrets: inherit
     
@@ -43,14 +42,11 @@ jobs:
     uses: falcosecurity/falco/.github/workflows/reusable_build_docker.yaml@main
     with:
       arch: aarch64
-      tagname: ${{ github.ref_name }}
       version: ${{ needs.build-packages.outputs.version }}
     secrets: inherit
 
   publish-docker:
     needs: [build-docker, build-docker-arm64]
     uses: falcosecurity/falco/.github/workflows/reusable_publish_docker.yaml@main
-    with:
-      tagname: ${{ github.ref_name }}
     secrets: inherit
     

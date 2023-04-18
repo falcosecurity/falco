@@ -34,7 +34,6 @@ jobs:
     uses: falcosecurity/falco/.github/workflows/reusable_build_docker.yaml@main
     with:
       arch: x86_64
-      tagname: master
       bucket: '-dev'
       version: ${{ needs.build-dev-packages.outputs.version }}
     secrets: inherit
@@ -44,7 +43,6 @@ jobs:
     uses: falcosecurity/falco/.github/workflows/reusable_build_docker.yaml@main
     with:
       arch: aarch64
-      tagname: master
       bucket: '-dev'
       version: ${{ needs.build-dev-packages.outputs.version }}
     secrets: inherit
@@ -52,6 +50,4 @@ jobs:
   publish-dev-docker:
     needs: [build-dev-docker, build-dev-docker-arm64]
     uses: falcosecurity/falco/.github/workflows/reusable_publish_docker.yaml@main
-    with:
-      tagname: master
     secrets: inherit

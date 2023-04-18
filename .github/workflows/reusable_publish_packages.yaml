@@ -15,15 +15,10 @@ on:
 jobs:
   publish-packages:
     runs-on: ubuntu-latest
-    container:
-      image: docker.io/centos:7
+    container: docker.io/centos:7
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-        with:
-          path: source
-          fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.sha }}
     
       - name: Install dependencies
         run: |
@@ -35,7 +30,8 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v3
         with:
-          path: $RUNNER_TEMP
+          name: falco-*
+          path: /tmp
         
       - name: Import gpg key 
         run: |
@@ -54,33 +50,28 @@ jobs:
           expect eof
           EOF
           chmod +x ~/sign
-          ~/sign $RUNNER_TEMP/falco-*.rpm
-          rpm --qf %{SIGPGP:pgpsig} -qp $RUNNER_TEMP/falco-*.rpm | grep SHA256
+          ~/sign /tmp/falco-*.rpm
+          rpm --qf %{SIGPGP:pgpsig} -qp /tmp/falco-*.rpm | grep SHA256
           
       - name: Publish rpm
         run: |
-          ./scripts/publish-rpm -f $RUNNER_TEMP/falco-${{ inputs.version }}-x86_64.rpm -f $RUNNER_TEMP/falco-${{ inputs.version }}-aarch64.rpm -r rpm${{ inputs.bucket }}
+          ./scripts/publish-rpm -f /tmp/falco-${{ inputs.version }}-x86_64.rpm -f /tmp/falco-${{ inputs.version }}-aarch64.rpm -r rpm${{ inputs.bucket }}
       
       - name: Publish bin
         run: |
-          ./scripts/publish-bin -f $RUNNER_TEMP/falco-${{ inputs.version }}-x86_64.tar.gz -r bin${{ inputs.bucket }} -a x86_64
-          ./scripts/publish-bin -f $RUNNER_TEMP/falco-${{ inputs.version }}-aarch64.tar.gz -r bin${{ inputs.bucket }} -a aarch64
+          ./scripts/publish-bin -f /tmp/falco-${{ inputs.version }}-x86_64.tar.gz -r bin${{ inputs.bucket }} -a x86_64
+          ./scripts/publish-bin -f /tmp/falco-${{ inputs.version }}-aarch64.tar.gz -r bin${{ inputs.bucket }} -a aarch64
           
       - name: Publish static
         run: |
-          ./scripts/publish-bin -f $RUNNER_TEMP/falco-${{ inputs.version }}-static-x86_64.tar.gz -r bin${{ inputs.bucket }} -a x86_64
+          ./scripts/publish-bin -f /tmp/falco-${{ inputs.version }}-static-x86_64.tar.gz -r bin${{ inputs.bucket }} -a x86_64
           
   publish-packages-deb:
     runs-on: ubuntu-latest
-    container:
-      image: docker.io/debian:stable
+    container: docker.io/debian:stable
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-        with:
-          path: source
-          fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.sha }}
     
       - name: Install dependencies
         run: |
@@ -92,7 +83,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: falco-${{ inputs.version }}-*.deb
-          path: $RUNNER_TEMP
+          path: /tmp
         
       - name: Import gpg key 
         run: |
@@ -100,6 +91,6 @@ jobs:
           
       - name: Publish deb
         run: |
-          ./scripts/publish-deb -f $RUNNER_TEMP/falco-${{ inputs.version }}-x86_64.deb -f $RUNNER_TEMP/falco-${{ inputs.version }}-aarch64.deb -r deb${{ inputs.bucket }}
+          ./scripts/publish-deb -f /tmp/falco-${{ inputs.version }}-x86_64.deb -f /tmp/falco-${{ inputs.version }}-aarch64.deb -r deb${{ inputs.bucket }}
           
      
