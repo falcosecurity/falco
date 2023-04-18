@@ -1,4 +1,4 @@
-# This is a reusable workflow used by master_packages and release_packages
+# This is a reusable workflow used by master and release CI
 on:
   workflow_call:
     inputs:
@@ -30,8 +30,7 @@ jobs:
 
       - name: Install build dependencies
         run: |
-          mkdir deps
-          pushd deps
+          mkdir deps && cd deps
           apt update -y
           DEBIAN_FRONTEND=noninteractive apt install -y --no-install-recommends ca-certificates cmake build-essential clang-14 git pkg-config autoconf automake libelf-dev
           update-alternatives --install /usr/bin/clang clang /usr/bin/clang-14 90
@@ -40,17 +39,13 @@ jobs:
           cd bpftool
           git submodule update --init
           cd src && make install
-          popd
 
       - name: Build modern BPF skeleton
         run: |
-          pushd source
-          mkdir skeleton-build
-          pushd skeleton-build
+          cd source
+          mkdir skeleton-build && cd skeleton-build
           cmake -DUSE_BUNDLED_DEPS=ON -DBUILD_FALCO_MODERN_BPF=ON -DCREATE_TEST_TARGETS=Off ..
           make ProbeSkeleton
-          popd
-          popd
 
       - name: Build Falco packages
         run: |
@@ -118,22 +113,18 @@ jobs:
           
       - name: Prepare project
         run: |
-          mkdir build
-          pushd build
+          mkdir build && cd build
           cmake -DCPACK_GENERATOR=TGZ -DBUILD_BPF=Off -DBUILD_DRIVER=Off -DCMAKE_BUILD_TYPE=Release -DUSE_BUNDLED_DEPS=On -DUSE_BUNDLED_LIBELF=Off -DBUILD_LIBSCAP_MODERN_BPF=ON -DMUSL_OPTIMIZED_BUILD=On -DFALCO_ETC_DIR=/etc/falco /source-static/falco
-          popd
           
       - name: Build project
         run: |
-          pushd build
+          cd build
           make -j6 all
-          popd
       
       - name: Build packages
         run: |
-          pushd build
+          cd build
           make -j6 package
-          popd
           
       - name: Upload Falco static package
         uses: actions/upload-artifact@v3

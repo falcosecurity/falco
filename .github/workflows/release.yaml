@@ -24,37 +24,27 @@ jobs:
     
   publish-packages:
     needs: [build-packages, build-packages-arm64]
-    outputs:
-      version: ${{ steps.expose_version.outputs.version }}
-    
-    steps:
-      - name: Publish packages
-        uses: falcosecurity/falco/.github/workflows/reusable_publish_packages.yaml@main
-        with:
-          version: ${{ needs.build-packages.outputs.version }}
-        secrets: inherit
-      
-      - name: Expose FALCO_VERSION
-        id: expose_version
-        run: |
-          echo "version=${{ needs.build-packages.outputs.version }}" >> $GITHUB_OUTPUT
+    uses: falcosecurity/falco/.github/workflows/reusable_publish_packages.yaml@main
+    with:
+      version: ${{ needs.build-packages.outputs.version }}
+    secrets: inherit
           
   build-docker:
-    needs: publish-packages
+    needs: [build-packages, publish-packages]
     uses: falcosecurity/falco/.github/workflows/reusable_build_docker.yaml@main
     with:
       arch: x86_64
       tagname: ${{ github.ref_name }}
-      version: ${{ needs.publish-packages.outputs.version }}
+      version: ${{ needs.build-packages.outputs.version }}
     secrets: inherit
     
   build-docker-arm64:
-    needs: publish-dev-packages
+    needs: [build-packages, publish-packages]
     uses: falcosecurity/falco/.github/workflows/reusable_build_docker.yaml@main
     with:
       arch: aarch64
       tagname: ${{ github.ref_name }}
-      version: ${{ needs.publish-packages.outputs.version }}
+      version: ${{ needs.build-packages.outputs.version }}
     secrets: inherit
 
   publish-docker:
