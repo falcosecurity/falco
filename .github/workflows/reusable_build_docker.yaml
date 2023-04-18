@@ -1,4 +1,4 @@
-# This is a reusable workflow used by dev_packages and release_packages
+# This is a reusable workflow used by master and release CI
 on:
   workflow_call:
     inputs:
