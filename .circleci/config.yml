@@ -755,78 +755,78 @@ workflows:
       - "tests-driver-loader-integration":
           requires:
             - "build-centos7"
-      - "rpm-sign":
-          context: falco
-          filters:
-            tags:
-              ignore: /.*/
-            branches:
-              only: master
-          requires:
-            - "tests-integration"
-            - "tests-integration-arm64"
-      - "publish-packages-dev":
-          context:
-            - falco
-            - test-infra
-          filters:
-            tags:
-              ignore: /.*/
-            branches:
-              only: master
-          requires:
-            - "rpm-sign"
-            - "tests-integration-static"
-      - "publish-packages-deb-dev":
-          context:
-            - falco
-            - test-infra
-          filters:
-            tags:
-              ignore: /.*/
-            branches:
-              only: master
-          requires:
-            - "tests-integration"
-            - "tests-integration-arm64"
-      - "build-docker-dev":
-          context:
-            - falco
-            - test-infra
-          filters:
-            tags:
-              ignore: /.*/
-            branches:
-              only: master
-          requires:
-            - "publish-packages-dev"
-            - "publish-packages-deb-dev"
-            - "tests-driver-loader-integration"
-      - "build-docker-dev-arm64":
-          context:
-            - falco
-            - test-infra
-          filters:
-            tags:
-              ignore: /.*/
-            branches:
-              only: master
-          requires:
-            - "publish-packages-dev"
-            - "publish-packages-deb-dev"
-            - "tests-driver-loader-integration"      
-      - "publish-docker-dev":
-          context:
-            - falco
-            - test-infra
-          filters:
-            tags:
-              ignore: /.*/
-            branches:
-              only: master
-          requires:
-            - "build-docker-dev"
-            - "build-docker-dev-arm64"
+      # - "rpm-sign":
+      #     context: falco
+      #     filters:
+      #       tags:
+      #         ignore: /.*/
+      #       branches:
+      #         only: master
+      #     requires:
+      #       - "tests-integration"
+      #       - "tests-integration-arm64"
+      # - "publish-packages-dev":
+      #     context:
+      #       - falco
+      #       - test-infra
+      #     filters:
+      #       tags:
+      #         ignore: /.*/
+      #       branches:
+      #         only: master
+      #     requires:
+      #       - "rpm-sign"
+      #       - "tests-integration-static"
+      # - "publish-packages-deb-dev":
+      #     context:
+      #       - falco
+      #       - test-infra
+      #     filters:
+      #       tags:
+      #         ignore: /.*/
+      #       branches:
+      #         only: master
+      #     requires:
+      #       - "tests-integration"
+      #       - "tests-integration-arm64"
+      # - "build-docker-dev":
+      #     context:
+      #       - falco
+      #       - test-infra
+      #     filters:
+      #       tags:
+      #         ignore: /.*/
+      #       branches:
+      #         only: master
+      #     requires:
+      #       - "publish-packages-dev"
+      #       - "publish-packages-deb-dev"
+      #       - "tests-driver-loader-integration"
+      # - "build-docker-dev-arm64":
+      #     context:
+      #       - falco
+      #       - test-infra
+      #     filters:
+      #       tags:
+      #         ignore: /.*/
+      #       branches:
+      #         only: master
+      #     requires:
+      #       - "publish-packages-dev"
+      #       - "publish-packages-deb-dev"
+      #       - "tests-driver-loader-integration"      
+      # - "publish-docker-dev":
+      #     context:
+      #       - falco
+      #       - test-infra
+      #     filters:
+      #       tags:
+      #         ignore: /.*/
+      #       branches:
+      #         only: master
+      #     requires:
+      #       - "build-docker-dev"
+      #       - "build-docker-dev-arm64"
       # - "quality/static-analysis" # This is temporarily disabled: https://github.com/falcosecurity/falco/issues/1526
   release:
     jobs:
@@ -848,73 +848,73 @@ workflows:
               only: /.*/
             branches:
               ignore: /.*/
-      - "rpm-sign":
-          context: falco
-          requires:
-            - "build-centos7"
-            - "build-arm64"
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
-      - "publish-packages":
-          context:
-            - falco
-            - test-infra
-          requires:
-            - "build-musl"
-            - "rpm-sign"
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
-      - "publish-packages-deb":
-          context:
-            - falco
-            - test-infra
-          requires:
-            - "build-centos7"
-            - "build-arm64"
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
-      - "build-docker":
-          context:
-            - falco
-            - test-infra
-          requires:
-            - "publish-packages"
-            - "publish-packages-deb"
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
-      - "build-docker-arm64":
-          context:
-            - falco
-            - test-infra
-          requires:
-            - "publish-packages"
-            - "publish-packages-deb"
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
-      - "publish-docker":
-          context:
-            - falco
-            - test-infra
-          requires:
-            - "build-docker"
-            - "build-docker-arm64"
-          filters:
-            tags:
-              only: /.*/
-            branches:
-              ignore: /.*/
+      # - "rpm-sign":
+      #     context: falco
+      #     requires:
+      #       - "build-centos7"
+      #       - "build-arm64"
+      #     filters:
+      #       tags:
+      #         only: /.*/
+      #       branches:
+      #         ignore: /.*/
+      # - "publish-packages":
+      #     context:
+      #       - falco
+      #       - test-infra
+      #     requires:
+      #       - "build-musl"
+      #       - "rpm-sign"
+      #     filters:
+      #       tags:
+      #         only: /.*/
+      #       branches:
+      #         ignore: /.*/
+      # - "publish-packages-deb":
+      #     context:
+      #       - falco
+      #       - test-infra
+      #     requires:
+      #       - "build-centos7"
+      #       - "build-arm64"
+      #     filters:
+      #       tags:
+      #         only: /.*/
+      #       branches:
+      #         ignore: /.*/
+      # - "build-docker":
+      #     context:
+      #       - falco
+      #       - test-infra
+      #     requires:
+      #       - "publish-packages"
+      #       - "publish-packages-deb"
+      #     filters:
+      #       tags:
+      #         only: /.*/
+      #       branches:
+      #         ignore: /.*/
+      # - "build-docker-arm64":
+      #     context:
+      #       - falco
+      #       - test-infra
+      #     requires:
+      #       - "publish-packages"
+      #       - "publish-packages-deb"
+      #     filters:
+      #       tags:
+      #         only: /.*/
+      #       branches:
+      #         ignore: /.*/
+      # - "publish-docker":
+      #     context:
+      #       - falco
+      #       - test-infra
+      #     requires:
+      #       - "build-docker"
+      #       - "build-docker-arm64"
+      #     filters:
+      #       tags:
+      #         only: /.*/
+      #       branches:
+      #         ignore: /.*/
