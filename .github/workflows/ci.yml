@@ -11,6 +11,22 @@ concurrency:
   cancel-in-progress: true  
 
 jobs:
+  build-dev-docker:
+    uses: falcosecurity/falco/.github/workflows/reusable_build_docker.yaml@3f5c61ad71b6a276b6c32b31e0b9bca59244f671
+    with:
+      arch: x86_64
+      bucket: '-dev'
+      version: 'test'
+    secrets: inherit
+    
+  build-dev-docker-arm64:
+    uses: falcosecurity/falco/.github/workflows/reusable_build_docker.yaml@3f5c61ad71b6a276b6c32b31e0b9bca59244f671
+    with:
+      arch: aarch64
+      bucket: '-dev'
+      version: 'test'
+    secrets: inherit
+ 
   build-minimal:
     runs-on: ubuntu-20.04
     steps:
