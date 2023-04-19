@@ -45,7 +45,7 @@ jobs:
           push: true      
 
       - name: Create and push no-driver latest manifest
-        if: ${{ inputs.tagname != 'master' }}
+        if: ${{ github.ref_name != 'master' }}
         uses: Noelware/docker-manifest-action@master
         with:
           inputs: falcosecurity/falco-no-driver:latest
@@ -53,7 +53,7 @@ jobs:
           push: true
           
       - name: Create and push slim latest manifest
-        if: ${{ inputs.tagname != 'master' }}
+        if: ${{ github.ref_name != 'master' }}
         uses: Noelware/docker-manifest-action@master
         with:
           inputs: falcosecurity/falco:latest-slim
@@ -61,7 +61,7 @@ jobs:
           push: true
           
       - name: Create and push no-driver latest manifest for ecr
-        if: ${{ inputs.tagname != 'master' }}
+        if: ${{ github.ref_name != 'master' }}
         uses: Noelware/docker-manifest-action@master
         with:
           inputs: public.ecr.aws/falcosecurity/falco-no-driver:latest
@@ -69,7 +69,7 @@ jobs:
           push: true
           
       - name: Create and push slim latest manifest for ecr
-        if: ${{ inputs.tagname != 'master' }}
+        if: ${{ github.ref_name != 'master' }}
         uses: Noelware/docker-manifest-action@master
         with:
           inputs: public.ecr.aws/falcosecurity/falco:latest-slim
@@ -91,7 +91,7 @@ jobs:
           push: true    
       
       - name: Create and push falco latest manifest
-        if: ${{ inputs.tagname != 'master' }}
+        if: ${{ github.ref_name != 'master' }}
         uses: Noelware/docker-manifest-action@master
         with:
           inputs: falcosecurity/falco:latest
@@ -99,7 +99,7 @@ jobs:
           push: true
           
       - name: Create and push falco latest manifest for ecr
-        if: ${{ inputs.tagname != 'master' }}
+        if: ${{ github.ref_name != 'master' }}
         uses: Noelware/docker-manifest-action@master
         with:
           inputs: public.ecr.aws/falcosecurity/falco:latest
@@ -121,7 +121,7 @@ jobs:
           push: true    
       
       - name: Create and push falco-driver-loader latest manifest
-        if: ${{ inputs.tagname != 'master' }}
+        if: ${{ github.ref_name != 'master' }}
         uses: Noelware/docker-manifest-action@master
         with:
           inputs: falcosecurity/falco-driver-loader:latest
@@ -129,7 +129,7 @@ jobs:
           push: true
           
       - name: Create and push falco-driver-loader latest manifest for ecr
-        if: ${{ inputs.tagname != 'master' }}
+        if: ${{ github.ref_name != 'master' }}
         uses: Noelware/docker-manifest-action@master
         with:
           inputs: public.ecr.aws/falcosecurity/falco-driver-loader:latest

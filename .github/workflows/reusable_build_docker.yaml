@@ -6,10 +6,6 @@ on:
         description: x86_64 or aarch64
         required: true
         type: string
-      tagname:
-        description: master or tag name
-        required: true
-        type: string
       bucket:
         description: bucket suffix for packages
         required: false
@@ -23,7 +19,7 @@ on:
 jobs:
   build-docker:
     # See https://github.com/actions/runner/issues/409#issuecomment-1158849936
-    runs-on: ${{ (inputs.arch == "aarch64") && fromJSON('[ "self-hosted", "linux", "ARM64" ]') || 'ubuntu-latest' }}
+    runs-on: ${{ (inputs.arch == 'aarch64' && fromJSON('[ "self-hosted", "linux", "ARM64" ]')) || 'ubuntu-latest' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -79,7 +75,7 @@ jobs:
 #             public.ecr.aws/falcosecurity/falco-driver-loader:${{ inputs.arch }}-${{ github.ref_name }}
 #             
 #       - name: Build and publish no-driver latest
-#         if: ${{ inputs.tagname != 'master' }}
+#         if: ${{ github.ref_name != 'master' }}
 #         uses: docker/build-push-action@v3
 #         with:
 #           context: ${{ github.workspace }}/docker/no-driver/
@@ -95,7 +91,7 @@ jobs:
 #             public.ecr.aws/falcosecurity/falco:${{ inputs.arch }}-latest-slim
 #             
 #       - name: Build and publish falco latest
-#         if: ${{ inputs.tagname != 'master' }}
+#         if: ${{ github.ref_name != 'master' }}
 #         uses: docker/build-push-action@v3
 #         with:
 #           context: ${{ github.workspace }}/docker/falco/
@@ -109,7 +105,7 @@ jobs:
 #             public.ecr.aws/falcosecurity/falco:${{ inputs.arch }}-latest
 #             
 #       - name: Build and publish falco-driver-loader latest
-#         if: ${{ inputs.tagname != 'master' }}
+#         if: ${{ github.ref_name != 'master' }}
 #         uses: docker/build-push-action@v3
 #         with:
 #           context: ${{ github.workspace }}/docker/driver-loader/
