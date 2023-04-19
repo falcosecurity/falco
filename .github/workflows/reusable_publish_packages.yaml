@@ -11,6 +11,9 @@ on:
         required: false
         default: ''
         type: string
+        
+env:
+  AWS_S3_REGION: eu-west-1
 
 jobs:
   publish-packages:
@@ -26,7 +29,13 @@ jobs:
           yum update -y
           yum install rpm-sign expect which createrepo gpg python python-pip -y
           pip install awscli==1.19.47
-      
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: "arn:aws:iam::292999226676:role/github_actions-falco${{ inputs.bucket }}-s3"
+          aws-region: ${{ env.AWS_S3_REGION }}    
+          
       - name: Download all artifacts
         uses: actions/download-artifact@v3
         with:
@@ -78,6 +87,12 @@ jobs:
           apt update -y
           apt-get install apt-utils bzip2 gpg python python3-pip -y
           pip install awscli
+          
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: "arn:aws:iam::292999226676:role/github_actions-falco${{ inputs.bucket }}-s3"
+          aws-region: ${{ env.AWS_S3_REGION }}     
       
       - name: Download deb artifacts
         uses: actions/download-artifact@v3
