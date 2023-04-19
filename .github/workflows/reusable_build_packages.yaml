@@ -14,7 +14,7 @@ on:
 jobs:
   build-modern-bpf-skeleton:
     # See https://github.com/actions/runner/issues/409#issuecomment-1158849936
-    runs-on: ${{ (inputs.arch == "aarch64") && fromJSON('[ "self-hosted", "linux", "ARM64" ]') || 'ubuntu-latest' }}
+    runs-on: ${{ (inputs.arch == 'aarch64' && fromJSON('[ "self-hosted", "linux", "ARM64" ]')) || 'ubuntu-latest' }}
     container: fedora:latest
     steps:
       - name: Install build dependencies
@@ -40,7 +40,7 @@ jobs:
           
   build-packages:
     # See https://github.com/actions/runner/issues/409#issuecomment-1158849936
-    runs-on: ${{ (inputs.arch == "aarch64") && fromJSON('[ "self-hosted", "linux", "ARM64" ]') || 'ubuntu-latest' }}
+    runs-on: ${{ (inputs.arch == 'aarch64' && fromJSON('[ "self-hosted", "linux", "ARM64" ]')) || 'ubuntu-latest' }}
     needs: build-modern-bpf-skeleton
     container: centos:7
     # Map the job outputs to step outputs

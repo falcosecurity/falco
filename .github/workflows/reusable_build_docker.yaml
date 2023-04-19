@@ -38,85 +38,85 @@ jobs:
         run: |
           aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/falcosecurity
           
-#       - name: Build and publish no-driver
-#         uses: docker/build-push-action@v3
-#         with:
-#           context: ${{ github.workspace }}/docker/no-driver/
-#           push: true
-#           provenance: false # https://github.com/Noelware/docker-manifest-action/issues/131
-#           build-args: |
-#             VERSION_BUCKET=bin${{ inputs.bucket }}
-#             FALCO_VERSION=${{ inputs.version }}
-#           tags: |
-#             falcosecurity/falco-no-driver:${{ inputs.arch }}-${{ github.ref_name }}
-#             falcosecurity/falco:${{ inputs.arch }}-${{ github.ref_name }}-slim
-#             public.ecr.aws/falcosecurity/falco-no-driver:${{ inputs.arch }}-${{ github.ref_name }}
-#             public.ecr.aws/falcosecurity/falco:${{ inputs.arch }}-${{ github.ref_name }}-slim
-#             
-#       - name: Build and publish falco
-#         uses: docker/build-push-action@v3
-#         with:
-#           context: ${{ github.workspace }}/docker/falco/
-#           push: true
-#           provenance: false # https://github.com/Noelware/docker-manifest-action/issues/131
-#           build-args: |
-#             VERSION_BUCKET=deb${{ inputs.bucket }}
-#             FALCO_VERSION=${{ inputs.version }}
-#           tags: |
-#             falcosecurity/falco:${{ inputs.arch }}-${{ github.ref_name }}
-#             public.ecr.aws/falcosecurity/falco:${{ inputs.arch }}-${{ github.ref_name }}
-#             
-#       - name: Build and publish falco-driver-loader
-#         uses: docker/build-push-action@v3
-#         with:
-#           context: ${{ github.workspace }}/docker/driver-loader/
-#           push: true
-#           provenance: false # https://github.com/Noelware/docker-manifest-action/issues/131
-#           build-args: |
-#             FALCO_IMAGE_TAG=${{ inputs.arch }}-${{ github.ref_name }}
-#           tags: |
-#             falcosecurity/falco-driver-loader:${{ inputs.arch }}-${{ github.ref_name }}
-#             public.ecr.aws/falcosecurity/falco-driver-loader:${{ inputs.arch }}-${{ github.ref_name }}
-#             
-#       - name: Build and publish no-driver latest
-#         if: ${{ github.ref_name != 'master' }}
-#         uses: docker/build-push-action@v3
-#         with:
-#           context: ${{ github.workspace }}/docker/no-driver/
-#           push: true
-#           provenance: false # https://github.com/Noelware/docker-manifest-action/issues/131
-#           build-args: |
-#             VERSION_BUCKET=bin
-#             FALCO_VERSION=${{ github.ref_name }}
-#           tags: |
-#             falcosecurity/falco-no-driver:${{ inputs.arch }}-latest
-#             falcosecurity/falco:${{ inputs.arch }}-latest-slim
-#             public.ecr.aws/falcosecurity/falco-no-driver:${{ inputs.arch }}-latest
-#             public.ecr.aws/falcosecurity/falco:${{ inputs.arch }}-latest-slim
-#             
-#       - name: Build and publish falco latest
-#         if: ${{ github.ref_name != 'master' }}
-#         uses: docker/build-push-action@v3
-#         with:
-#           context: ${{ github.workspace }}/docker/falco/
-#           push: true
-#           provenance: false # https://github.com/Noelware/docker-manifest-action/issues/131
-#           build-args: |
-#             VERSION_BUCKET=deb
-#             FALCO_VERSION=${{ github.ref_name }}
-#           tags: |
-#             falcosecurity/falco:${{ inputs.arch }}-latest
-#             public.ecr.aws/falcosecurity/falco:${{ inputs.arch }}-latest
-#             
-#       - name: Build and publish falco-driver-loader latest
-#         if: ${{ github.ref_name != 'master' }}
-#         uses: docker/build-push-action@v3
-#         with:
-#           context: ${{ github.workspace }}/docker/driver-loader/
-#           push: true
-#           provenance: false # https://github.com/Noelware/docker-manifest-action/issues/131
-#           build-args: |
-#             FALCO_IMAGE_TAG=${{ inputs.arch }}-latest
-#           tags: |
-#             falcosecurity/falco-driver-loader:${{ inputs.arch }}-latest
-#             public.ecr.aws/falcosecurity/falco-driver-loader:${{ inputs.arch }}-latest     
+      - name: Build and publish no-driver
+        uses: docker/build-push-action@v3
+        with:
+          context: ${{ github.workspace }}/docker/no-driver/
+          push: true
+          provenance: false # https://github.com/Noelware/docker-manifest-action/issues/131
+          build-args: |
+            VERSION_BUCKET=bin${{ inputs.bucket }}
+            FALCO_VERSION=${{ inputs.version }}
+          tags: |
+            falcosecurity/falco-no-driver:${{ inputs.arch }}-${{ github.ref_name }}
+            falcosecurity/falco:${{ inputs.arch }}-${{ github.ref_name }}-slim
+            public.ecr.aws/falcosecurity/falco-no-driver:${{ inputs.arch }}-${{ github.ref_name }}
+            public.ecr.aws/falcosecurity/falco:${{ inputs.arch }}-${{ github.ref_name }}-slim
+            
+      - name: Build and publish falco
+        uses: docker/build-push-action@v3
+        with:
+          context: ${{ github.workspace }}/docker/falco/
+          push: true
+          provenance: false # https://github.com/Noelware/docker-manifest-action/issues/131
+          build-args: |
+            VERSION_BUCKET=deb${{ inputs.bucket }}
+            FALCO_VERSION=${{ inputs.version }}
+          tags: |
+            falcosecurity/falco:${{ inputs.arch }}-${{ github.ref_name }}
+            public.ecr.aws/falcosecurity/falco:${{ inputs.arch }}-${{ github.ref_name }}
+            
+      - name: Build and publish falco-driver-loader
+        uses: docker/build-push-action@v3
+        with:
+          context: ${{ github.workspace }}/docker/driver-loader/
+          push: true
+          provenance: false # https://github.com/Noelware/docker-manifest-action/issues/131
+          build-args: |
+            FALCO_IMAGE_TAG=${{ inputs.arch }}-${{ github.ref_name }}
+          tags: |
+            falcosecurity/falco-driver-loader:${{ inputs.arch }}-${{ github.ref_name }}
+            public.ecr.aws/falcosecurity/falco-driver-loader:${{ inputs.arch }}-${{ github.ref_name }}
+            
+      - name: Build and publish no-driver latest
+        if: ${{ github.ref_name != 'master' }}
+        uses: docker/build-push-action@v3
+        with:
+          context: ${{ github.workspace }}/docker/no-driver/
+          push: true
+          provenance: false # https://github.com/Noelware/docker-manifest-action/issues/131
+          build-args: |
+            VERSION_BUCKET=bin
+            FALCO_VERSION=${{ github.ref_name }}
+          tags: |
+            falcosecurity/falco-no-driver:${{ inputs.arch }}-latest
+            falcosecurity/falco:${{ inputs.arch }}-latest-slim
+            public.ecr.aws/falcosecurity/falco-no-driver:${{ inputs.arch }}-latest
+            public.ecr.aws/falcosecurity/falco:${{ inputs.arch }}-latest-slim
+            
+      - name: Build and publish falco latest
+        if: ${{ github.ref_name != 'master' }}
+        uses: docker/build-push-action@v3
+        with:
+          context: ${{ github.workspace }}/docker/falco/
+          push: true
+          provenance: false # https://github.com/Noelware/docker-manifest-action/issues/131
+          build-args: |
+            VERSION_BUCKET=deb
+            FALCO_VERSION=${{ github.ref_name }}
+          tags: |
+            falcosecurity/falco:${{ inputs.arch }}-latest
+            public.ecr.aws/falcosecurity/falco:${{ inputs.arch }}-latest
+            
+      - name: Build and publish falco-driver-loader latest
+        if: ${{ github.ref_name != 'master' }}
+        uses: docker/build-push-action@v3
+        with:
+          context: ${{ github.workspace }}/docker/driver-loader/
+          push: true
+          provenance: false # https://github.com/Noelware/docker-manifest-action/issues/131
+          build-args: |
+            FALCO_IMAGE_TAG=${{ inputs.arch }}-latest
+          tags: |
+            falcosecurity/falco-driver-loader:${{ inputs.arch }}-latest
+            public.ecr.aws/falcosecurity/falco-driver-loader:${{ inputs.arch }}-latest     
