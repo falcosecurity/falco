@@ -10,20 +10,20 @@ concurrency:
 
 jobs:
   build-dev-packages:
-    uses: falcosecurity/falco/.github/workflows/reusable_build_packages.yaml@main
+    uses: falcosecurity/falco/.github/workflows/reusable_build_packages.yaml@master
     with:
       arch: x86_64
     secrets: inherit
   
   build-dev-packages-arm64:
-    uses: falcosecurity/falco/.github/workflows/reusable_build_packages.yaml@main
+    uses: falcosecurity/falco/.github/workflows/reusable_build_packages.yaml@master
     with:
       arch: aarch64
     secrets: inherit
     
   publish-dev-packages:
     needs: [build-dev-packages, build-dev-packages-arm64]
-    uses: falcosecurity/falco/.github/workflows/reusable_publish_packages.yaml@main
+    uses: falcosecurity/falco/.github/workflows/reusable_publish_packages.yaml@master
     with:
       bucket: '-dev'
       version: ${{ needs.build-dev-packages.outputs.version }}
@@ -31,7 +31,7 @@ jobs:
     
   build-dev-docker:
     needs: [build-dev-packages, publish-dev-packages]
-    uses: falcosecurity/falco/.github/workflows/reusable_build_docker.yaml@main
+    uses: falcosecurity/falco/.github/workflows/reusable_build_docker.yaml@master
     with:
       arch: x86_64
       bucket: '-dev'
@@ -40,7 +40,7 @@ jobs:
     
   build-dev-docker-arm64:
     needs: [build-dev-packages, publish-dev-packages]
-    uses: falcosecurity/falco/.github/workflows/reusable_build_docker.yaml@main
+    uses: falcosecurity/falco/.github/workflows/reusable_build_docker.yaml@master
     with:
       arch: aarch64
       bucket: '-dev'
@@ -49,5 +49,5 @@ jobs:
     
   publish-dev-docker:
     needs: [build-dev-docker, build-dev-docker-arm64]
-    uses: falcosecurity/falco/.github/workflows/reusable_publish_docker.yaml@main
+    uses: falcosecurity/falco/.github/workflows/reusable_publish_docker.yaml@master
     secrets: inherit
