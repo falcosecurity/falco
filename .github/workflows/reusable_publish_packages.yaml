@@ -11,7 +11,11 @@ on:
         required: false
         default: ''
         type: string
-        
+       
+permissions:
+  id-token: write
+  contents: read
+
 env:
   AWS_S3_REGION: eu-west-1
 
