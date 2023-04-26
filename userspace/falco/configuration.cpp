@@ -336,11 +336,11 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 	config.get_sequence<std::unordered_set<std::string>>(m_base_syscalls_custom_set, std::string("base_syscalls.custom_set"));
 	m_base_syscalls_repair = config.get_scalar<bool>("base_syscalls.repair", false);
 
-	std::set<std::string> load_plugins;
+	std::vector<std::string> load_plugins;
 
 	bool load_plugins_node_defined = config.is_defined("load_plugins");
 
-	config.get_sequence<std::set<std::string>>(load_plugins, "load_plugins");
+	config.get_sequence<std::vector<std::string>>(load_plugins, "load_plugins");
 
 	std::list<falco_configuration::plugin_config> plugins;
 	try
@@ -358,14 +358,32 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 
 	// If load_plugins was specified, only save plugins matching those in values
 	m_plugins.clear();
-	for (auto &p : plugins)
+	if (!load_plugins_node_defined)
 	{
-		// If load_plugins was not specified at all, every
-		// plugin is added. Otherwise, the plugin must be in
-		// the load_plugins list.
-		if(!load_plugins_node_defined || load_plugins.find(p.m_name) != load_plugins.end())
+		// If load_plugins was not specified at all, every plugin is added.
+		// The loading order is the same as the sequence in the YAML config.
+		m_plugins = { plugins.begin(), plugins.end() };
+	}
+	else
+	{
+		// If load_plugins is specified, only plugins contained in its list
+		// are added, with the same order as in the list.
+		for (const auto& pname : load_plugins)
 		{
-			m_plugins.push_back(p);
+			bool found = false;
+			for (const auto& p : plugins)
+			{
+				if (pname == p.m_name)
+				{
+					m_plugins.push_back(p);
+					found = true;
+					break;
+				}
+			}
+			if (!found)
+			{
+				throw std::logic_error("Cannot load plugin '" + pname + "': plugin config not found for given name");
+			}
 		}
 	}
 
