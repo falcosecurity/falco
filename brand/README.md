@@ -5,7 +5,7 @@
 
 Falco is an open source security project whose brand and identity are governed by the [Cloud Native Computing Foundation](https://www.linuxfoundation.org/legal/trademark-usage).
 
-Please see the [Falco Branding](https://falco.org/falco-brand) page on our website for full details and guidelines.
+This document describes the official branding guidelines of The Falco Project. Please see the [Falco Branding](https://falco.org/falco-brand) page on our website for further details.
 
 ### What is Runtime Security?
 
