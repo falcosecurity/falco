@@ -146,7 +146,7 @@ falco::app::run_result falco::app::actions::init_inspectors(falco::app::state& s
 				// event source, we must register the plugin supporting
 				// that event source and also plugins with field extraction
 				// capability that are compatible with that event source
-				if (is_input || (p->caps() & CAP_EXTRACTION && p->is_source_compatible(src)))
+				if (is_input || (p->caps() & CAP_EXTRACTION && sinsp_plugin::is_source_compatible(p->extract_event_sources(), src)))
 				{
 					plugin = src_info->inspector->register_plugin(config->m_library_path);
 				}
@@ -187,7 +187,7 @@ falco::app::run_result falco::app::actions::init_inspectors(falco::app::state& s
 	{
 		if(used_plugins.find(p->name()) == used_plugins.end() 
 			&& p->caps() & CAP_EXTRACTION
-			&& !(p->caps() & CAP_SOURCING && p->is_source_compatible(p->event_source())))
+			&& !(p->caps() & CAP_SOURCING && sinsp_plugin::is_source_compatible(p->extract_event_sources(), p->event_source())))
 		{
 			return run_result::fatal("Plugin '" + p->name()
 				+ "' has field extraction capability but is not compatible with any known event source");

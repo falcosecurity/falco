@@ -44,10 +44,18 @@ TEST(ActionSelectEventSources, pre_post_conditions)
         falco::app::state s;
         s.loaded_sources = {"syscall", "some_source"};
         EXPECT_ACTION_OK(action(s));
-        EXPECT_EQ(s.loaded_sources, s.enabled_sources);
-        s.loaded_sources.insert("another_source");
+        EXPECT_EQ(s.loaded_sources.size(), s.enabled_sources.size());
+        for (const auto& v : s.loaded_sources)
+        {
+            ASSERT_TRUE(s.enabled_sources.find(v) != s.enabled_sources.end());
+        }
+        s.loaded_sources.push_back("another_source");
         EXPECT_ACTION_OK(action(s));
-        EXPECT_EQ(s.loaded_sources, s.enabled_sources);
+        EXPECT_EQ(s.loaded_sources.size(), s.enabled_sources.size());
+        for (const auto& v : s.loaded_sources)
+        {
+            ASSERT_TRUE(s.enabled_sources.find(v) != s.enabled_sources.end());
+        }
     }
 
     // enable only selected sources

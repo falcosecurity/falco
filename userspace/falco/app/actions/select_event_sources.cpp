@@ -22,7 +22,7 @@ using namespace falco::app::actions;
 
 falco::app::run_result falco::app::actions::select_event_sources(falco::app::state& s)
 {
-	s.enabled_sources = s.loaded_sources;
+	s.enabled_sources = { s.loaded_sources.begin(), s.loaded_sources.end() };
 
 	// event sources selection is meaningless when reading trace files
 	if (s.is_capture_mode())
@@ -40,7 +40,7 @@ falco::app::run_result falco::app::actions::select_event_sources(falco::app::sta
 		s.enabled_sources.clear();
 		for(const auto &src : s.options.enable_sources)
 		{
-			if (s.loaded_sources.find(src) == s.loaded_sources.end())
+			if (std::find(s.loaded_sources.begin(), s.loaded_sources.end(), src) == s.loaded_sources.end())
 			{
 				return run_result::fatal("Attempted enabling an unknown event source: " + src);
 			}
@@ -51,7 +51,7 @@ falco::app::run_result falco::app::actions::select_event_sources(falco::app::sta
 	{
 		for(const auto &src : s.options.disable_sources)
 		{
-			if (s.loaded_sources.find(src) == s.loaded_sources.end())
+			if (std::find(s.loaded_sources.begin(), s.loaded_sources.end(), src) == s.loaded_sources.end())
 			{
 				return run_result::fatal("Attempted disabling an unknown event source: " + src);
 			}

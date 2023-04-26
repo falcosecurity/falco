@@ -140,15 +140,14 @@ static falco::app::run_result do_inspect(
 	uint64_t duration_start = 0;
 	uint32_t timeouts_since_last_success_or_msg = 0;
 	token_bucket rate_limiter;
-	bool rate_limiter_enabled = s.config->m_notifications_rate > 0;
-	bool source_engine_idx_found = false;
-	bool is_capture_mode = source.empty();
-	bool syscall_source_engine_idx = s.source_infos.at(falco_common::syscall_source)->engine_idx;
-	std::size_t source_engine_idx = 0;
-	std::vector<std::string> source_names = inspector->get_plugin_manager()->sources();
-	source_names.push_back(falco_common::syscall_source);
+	const bool rate_limiter_enabled = s.config->m_notifications_rate > 0;
+	const bool is_capture_mode = source.empty();
+	size_t source_engine_idx = 0;
+
 	if (!is_capture_mode)
 	{
+		// note: in live mode, each inspector gets assigned a distinct event
+		// source that does not change for the whole capture.
 		source_engine_idx = s.source_infos.at(source)->engine_idx;
 	}
 
@@ -260,24 +259,38 @@ static falco::app::run_result do_inspect(
 		// if we are in live mode, we already have the right source engine idx
 		if (is_capture_mode)
 		{
-			source_engine_idx = syscall_source_engine_idx;
-			if (ev->get_type() == PPME_PLUGINEVENT_E)
+			// note: here we can assume that the source index will be the same
+			// in both the falco engine and the inspector. See the
+			// comment in init_falco_engine.cpp for more details.
+			source_engine_idx = ev->get_source_idx();
+			if (source_engine_idx == sinsp_no_event_source_idx)
 			{
-				// note: here we can assume that the source index will be the same
-				// in both the falco engine and the sinsp plugin manager. See the
-				// comment in init_falco_engine.cpp for more details.
-				source_engine_idx = inspector->get_plugin_manager()->source_idx_by_plugin_id(*(int32_t *)ev->get_param(0)->m_val, source_engine_idx_found);
-				if (!source_engine_idx_found)
+				std::string msg = "Unknown event source for inspector's event";
+				if (ev->get_type() == PPME_PLUGINEVENT_E)
 				{
-					return run_result::fatal("Unknown plugin ID in inspector: " + std::to_string(*(int32_t *)ev->get_param(0)->m_val));
+					auto pluginID = *(int32_t *)ev->get_param(0)->m_val;
+					msg += " (plugin ID: " + std::to_string(pluginID) + ")";
 				}
+				return run_result::fatal(msg);
 			}
-
+	
 			// for capture mode, the source name can change at every event
-			stats_collector.collect(inspector, source_names[source_engine_idx]);
+			stats_collector.collect(inspector, inspector->event_sources()[source_engine_idx]);
 		}
 		else
 		{
+			// in live mode, each inspector gets assigned a distinct event source,
+			// so we report an error if we fetch an event of a different source.
+			if (source_engine_idx != ev->get_source_idx())
+			{
+				std::string msg = "Unexpected event source for inspector's event: expected='" + source + "'";
+				if (ev->get_source_name() != NULL)
+				{
+					msg += ", actual='" + std::string(ev->get_source_name()) + "'";
+				}
+				return run_result::fatal(msg);
+			}
+
 			// for live mode, the source name is constant
 			stats_collector.collect(inspector, source);
 		}

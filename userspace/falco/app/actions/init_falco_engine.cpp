@@ -90,19 +90,19 @@ void add_source_to_engine(falco::app::state& s, const std::string& src)
 
 falco::app::run_result falco::app::actions::init_falco_engine(falco::app::state& s)
 {
+	// add syscall as first source, this is also what each inspector do
+	// in their own list of registered event sources
+	add_source_to_engine(s, falco_common::syscall_source);
+
 	// add all non-syscall event sources in engine
 	for (const auto& src : s.loaded_sources)
 	{
+		// we skip the syscall source because we already added it
 		if (src != falco_common::syscall_source)
 		{
-			// we skip the syscall as we want it to be the one added for last
-			// in the engine. This makes the source index assignment easier.
 			add_source_to_engine(s, src);
 		}
 	}
-
-	// add syscall as last source
-	add_source_to_engine(s, falco_common::syscall_source);
 
 	// note: in capture mode, we can assume that the plugin source index will
 	// be the same in both the falco engine and the sinsp plugin manager.
