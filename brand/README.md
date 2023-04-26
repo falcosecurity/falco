@@ -7,6 +7,41 @@ Falco is an open source security project whose brand and identity are governed b
 
 This document describes the official branding guidelines of The Falco Project. Please see the [Falco Branding](https://falco.org/falco-brand) page on our website for further details.
 
+Content in this document can be used to publicly share about Falco.
+
+
+
+### Logo
+
+There are 3 logos available for use in this directory. Use the primary logo unless required otherwise due to background issues, or printing.
+
+The Falco logo is Apache 2 licensed and free to use in media and publication for the CNCF Falco project.
+
+### Colors
+
+| Name      | PMS  | RGB         |
+|-----------|------|-------------|
+| Teal      | 3125 |   0 174 199 |
+| Cool Gray |   11 |  83  86  90 |
+| Black     |      |   0   0   0 |
+| Blue-Gray | 7700 |  22 92 125  |
+| Gold      | 1375 | 255 158  27 |
+| Orange    |  171 | 255  92  57 |
+| Emerald   | 3278 |   0 155 119 |
+| Green     |  360 | 108 194  74 |
+
+The primary colors are those in the first two rows.
+
+### Slogan
+
+> Cloud Native Runtime Security
+
+### What is Falco?
+
+Falco is a runtime security project originally created by Sysdig, Inc.
+Falco was contributed to the CNCF in October 2018.
+The CNCF now owns The Falco Project.
+
 ### What is Runtime Security?
 
 Runtime security refers to an approach to preventing unwanted activity on a computer system. 
@@ -49,6 +84,45 @@ Examples of malicious behavior include:
 
 Falco is capable of [consuming the Kubernetes audit logs](https://kubernetes.io/docs/tasks/debug-application-cluster/falco/#use-falco-to-collect-audit-events).
 By adding Kubernetes application context, and Kubernetes audit logs teams can understand who did what.
+
+### Writing about Falco
+
+##### Yes
+
+Notice the capitalization of the following terms.
+
+ - The Falco Project
+ - Falco
+
+##### No
+
+ - falco
+ - the falco project
+ - the Falco project
+
+### Encouraged Phrasing
+
+Below are phrases that the project has reviewed, and found to be effective ways of messaging Falco's value add.
+Even when processes are in place for vulnerability scanning and implementing pod security and network policies, not every risk will be addressed. You still need mechanisms to confirm these security barriers are effective, help configure them, and provide with a last line of defense when they fail.
+
+##### Falco as a factory
+
+This term refers to the concept that Falco is a stateless processing engine. A large amount of data comes into the engine, but meticulously crafted security alerts come out.
+
+##### The engine that powers...
+
+Falco ultimately is a security engine. It reasons about signals coming from a system at runtime, and can alert if an anomaly is detected.
+
+##### Anomaly detection
+
+This refers to an event that occurs with something unusual, concerning, or odd occurs.
+We can associate anomalies with unwanted behavior, and alert in their presence.
+
+##### Detection tooling
+
+Falco does not prevent unwanted behavior.
+Falco however alerts when unusual behavior occurs.
+This is commonly referred to as **detection** or **forensics**.
 
 ---
 
