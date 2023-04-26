@@ -98,8 +98,10 @@ struct state
     std::shared_ptr<falco_engine> engine;
 
     // The set of loaded event sources (by default, the syscall event
-    // source plus all event sources coming from the loaded plugins)
-    std::unordered_set<std::string> loaded_sources;
+    // source plus all event sources coming from the loaded plugins).
+    // note: this has to be a vector to preserve the loading order,
+    // however it's not supposed to contain duplicate values.
+    std::vector<std::string> loaded_sources;
 
     // The set of enabled event sources (can be altered by using
     // the --enable-source and --disable-source options)

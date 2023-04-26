@@ -55,7 +55,11 @@ falco::app::run_result falco::app::actions::load_plugins(falco::app::state& s)
 		{
 			auto sname = plugin->event_source();
 			s.source_infos.insert(empty_src_info, sname);
-			s.loaded_sources.insert(sname);
+			// note: this avoids duplicate values
+			if (std::find(s.loaded_sources.begin(), s.loaded_sources.end(), sname) == s.loaded_sources.end())
+			{
+				s.loaded_sources.push_back(sname);
+			}
 		}
 	}
 
