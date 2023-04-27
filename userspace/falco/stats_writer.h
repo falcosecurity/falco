@@ -23,6 +23,10 @@ limitations under the License.
 #include <sinsp.h>
 
 #include "tbb/concurrent_queue.h"
+#include "falco_outputs.h"
+#include "configuration.h"
+
+#define MAX_STATS_PRESET_INDEX 6
 
 /*!
 	\brief Writes stats samples collected from inspectors into a given output.
@@ -56,13 +60,27 @@ public:
 			\brief Collects one stats sample from an inspector
 			and for the given event source name
 		*/
-		void collect(std::shared_ptr<sinsp> inspector, const std::string& src);
+		void collect(std::shared_ptr<sinsp> inspector, const std::string& src, uint64_t num_evts);
+
+		/*!
+			\brief Collect snapshot stats v2 wrapper fields as internal rule formatted output fields.
+		*/
+		std::map<std::string, std::string> get_stats_v2_output_fields_wrapper(std::shared_ptr<sinsp> inspector, uint64_t now, std::string src, uint64_t num_evts, uint64_t stats_snapshot_time_delta_sec);
+
+		/*!
+			\brief Collect snapshot stats v2 syscalls related metrics as internal rule formatted output fields.
+		*/
+		std::map<std::string, std::string> get_stats_v2_output_fields_syscalls(std::shared_ptr<sinsp> inspector, std::map<std::string, std::string> output_fields, uint64_t stats_snapshot_time_delta_sec);
 
 	private:
 		std::shared_ptr<stats_writer> m_writer;
 		stats_writer::ticker_t m_last_tick;
 		uint64_t m_samples;
 		scap_stats m_last_stats;
+		uint64_t m_last_now;
+		uint64_t m_last_n_evts;
+		uint64_t m_last_n_drops;
+		uint64_t m_last_num_evts;
 	};
 
 	stats_writer(const stats_writer&) = delete;
@@ -76,19 +94,18 @@ public:
 	~stats_writer();
 
 	/*!
-		\brief Initializes a writer without any output.
-		With this constructor, has_output() always returns false
+		\brief Initializes a writer without file output.
 	*/
-	stats_writer();
+	stats_writer(std::shared_ptr<falco_outputs> outputs, std::shared_ptr<falco_configuration> config);
 
 	/*!
-		\brief Initializes a writer that prints to a file at the given filename.
+		\brief Initializes a writer that can print to a file at the given filename.
 		With this constructor, has_output() always returns true
 	*/
-	explicit stats_writer(const std::string &filename);
+	explicit stats_writer(const std::string &filename, std::shared_ptr<falco_outputs> outputs, std::shared_ptr<falco_configuration> config);
 	
 	/*!
-		\brief Returns true if the writer is configured with a valid output
+		\brief Returns true if the writer is configured with a valid file output
 	*/
 	inline bool has_output() const;
 
@@ -129,7 +146,9 @@ private:
 	uint64_t m_total_samples;
 	std::thread m_worker;
 	std::ofstream m_output;
-	tbb::concurrent_bounded_queue<stats_writer::msg> m_queue;	
+	tbb::concurrent_bounded_queue<stats_writer::msg> m_queue;
+	std::shared_ptr<falco_outputs> m_outputs;
+	std::shared_ptr<falco_configuration> m_config;
 
 	// note: in this way, only collectors can push into the queue
 	friend class stats_writer::collector;
