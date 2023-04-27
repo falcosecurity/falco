@@ -460,87 +460,109 @@ metadata_download:
   watch_freq_sec: 1
 
 
-# base_syscalls ! Use with caution, read carefully !
+# base_syscalls ! [EXPERIMENTAL] Use with caution, read carefully !
 #
 # --- [Description]
 #
-# With this option you are in full control of the set of syscalls that
-# Falco will enable in the kernel for active tracing.
-
-# All syscalls and events from each enabled Falco rule are activated
-# even when choosing this option. This option allows you to define a
-# set of base syscalls that will be activated in addition to the
-# syscalls defined in the rules.
+# This option configures the set of syscalls that Falco traces.
 #
-# You may ask yourself why do we need to activate syscalls in addition to the rules?
+# --- [Falco's State Engine]
 #
-# Falco requires a set of syscalls to build up state in userspace. This is because for
-# example when spawning a new process or creating a network connection more than one syscall
-# is involved. Furthermore, properties of a process during its life time can be modified
-# by syscalls. Falco takes care of this by activating more syscalls than the ones defined
-# in the rules and by managing a smart process cache table in userspace.
-# Processes are purged when a process exits.
+# Falco requires a set of syscalls to build up state in userspace.
+# For example, when spawning a new process or network connection, multiple syscalls are involved.
+# Furthermore, properties of a process during its lifetime can be modified by
+# syscalls. Falco accounts for this by enabling the collection of additional syscalls than the
+# ones defined in the rules and by managing a smart process cache table in
+# userspace. Processes are purged from this table when a process exits.
 #
-# Looking back to what this option does, it activates all syscalls from the rules
-# (including resolved macros) and the ones specified here.
+# By default, with
+#   ```
+#   base_syscalls.custom_set = []
+#   base_syscalls.repair = false
+#   ```
+# Falco enables tracing for a syscall set gathered:
+#   (1) from (enabled) Falco rules
+#   (2) from a static, more verbose set defined in `libsinsp::events::sinsp_state_sc_set` in libs/userspace/libsinsp/events/sinsp_events_ppm_sc.cpp
+# This allows Falco to successfully build up it's state engine and life-cycle management.
 #
-# This puts the end user in the driver seat to tell Falco what it needs, but if not used correctly
-# Falco logs may be incomplete or wrong or Falco won't work at all. This option however can be
-# very useful to lower CPU utilization and allowing you to tailor Falco to specific environments
-# according to your organization's threat model and cost budget.
+# If the default behavior described above does not fit the user's use case for Falco,
+# the `base_syscalls` option allows for finer end-user control of syscalls traced by Falco.
 #
-# !!! When NOT using this option, Falco defaults to adding a static (more verbose) set of syscalls
-# in addition to the rules system calls Falco needs for its state engine build-up and life-cycle management.
+# --- [ base_syscalls.custom_set ]
 #
-# `base_syscalls.repair` is an experimental alternative to Falco's default state engine enforcement.
-# `base_syscalls.repair` is designed to be the most resourceful option to ensure Falco runs correctly
-# while activating a most minimal set of additional syscalls. The recommendations listed in the suggestions
-# section is effectively what `base_syscalls.repair` is doing in an automated manner. `base_syscalls.repair`
-# can be used with an empty custom set.
+# CAUTION: Misconfiguration of this setting may result in incomplete Falco event
+# logs or Falco being unable to trace events entirely.
+#
+# `base_syscalls.custom_set` allows the user to explicitly define an additional
+# set of syscalls to be traced in addition to the syscalls from each enabled Falco rule.
+#
+# This is useful in lowering CPU utilization and further tailoring Falco to
+# specific environments according to your threat model and budget constraints.
+#
+# --- [ base_syscalls.repair ]
+#
+# `base_syscalls.repair` is an alternative to Falco's default state engine enforcement.
+# When enabled, this option is designed to
+#   (1) ensure that Falco's state engine is correctly and successfully built-up
+#   (2) be the most system resource-friendly by activating the least number of
+#       additional syscalls (outside of those enabled for enabled rules)
+#
+# Setting `base_syscalls.repair` to `true` allows Falco to automatically configure
+# what is described in the [Suggestions] section below.
+#
+# `base_syscalls.repair` can be enabled with an empty custom set, meaning with the following,
+#   ```
+#   base_syscalls.custom_set = []
+#   base_syscalls.repair = true
+#   ```
+# Falco enables tracing for a syscall set gathered:
+#   (1) from (enabled) Falco rules
+#   (2) from minimal set of additional syscalls needed to "repair" the
+#       state engine and properly log event conditions specified in enabled Falco rules
 #
 # --- [Usage]
 #
-# List of system calls names (<syscall-name>) plus negative ("!<syscall-name>") notation supported.
+# List of system calls names (<syscall-name>), negative ("!<syscall-name>") notation supported.
 #
-# base_syscalls.repair: <bool>
+# Example:
 # base_syscalls.custom_set: [<syscall-name>, <syscall-name>, "!<syscall-name>"]
-#
-#
-# --- [Suggestions]
-#
-# Here are a few recommendations that may help you.
-# Setting `base_syscalls.repair: true` automates these recommendations for you.
-#
-# Consider to at minimum add the following syscalls regardless of the syscalls used in the rules.
-#
-# [clone, clone3, fork, vfork, execve, execveat, close]
-#
-# This is because some Falco fields for an execve* system call are retrieved
-# from the associated `clone`, `clone3`, `fork`, `vfork` syscall when spawning a
-# new process. The `close` system call is used to purge file descriptors from Falco's
-# internal thread / process cache table and should always be added when you have
-# rules around file descriptors.
-# (e.g. open, openat, openat2, socket, connect, accept, accept4 ... and many more)
-#
-# When network syscalls are used in rules we recommend to at minimum set
-#
-# [clone, clone3, fork, vfork, execve, execveat, close, socket, bind, getsockopt]
-#
-# It turns out that while you can log `connect` or `accept*` syscalls without the
-# socket system call, the log however would not contain the ip tuples.
-# For `listen` and `accept*` system calls you also need the `bind` system call.
-#
-# Lastly, if you care about the correct `uid`, `gid` or `sid`, `pgid` of a process when the
-# running process opens a file or makes a network connection, consider adding the following syscalls:
-#
-# setresuid, setsid, setuid, setgid, setpgid, setresgid, setsid, capset, chdir, chroot, fchdir
+# base_syscalls.repair: <bool>
 #
 # We recommend to only exclude syscalls, e.g. "!mprotect" if you need a fast deployment update
 # (overriding rules), else remove unwanted syscalls from the Falco rules.
 #
-# Passing `-o "log_level=debug"` to Falco's cmd args during a dry-run will print the
-# final set of syscalls to STDOUT.
-
+# Passing `-o "log_level=debug" -o "log_stderr=true" --dry-run` to Falco's
+# cmd args will print the final set of syscalls to STDOUT.
+#
+# --- [Suggestions]
+#
+# NOTE: setting `base_syscalls.repair: true` automates the following suggestions for you.
+#
+# These suggestions are subject to change as Falco and its state engine evolve.
+#
+# For execve* events:
+# Some Falco fields for an execve* syscall are retrieved from the associated
+# `clone`, `clone3`, `fork`, `vfork` syscalls when spawning a new process.
+# The `close` syscall is used to purge file descriptors from Falco's internal
+# thread / process cache table and is necessary for rules relating to file
+# descriptors (e.g. open, openat, openat2, socket, connect, accept, accept4 ... and many more)
+#
+# Consider enabling the following syscalls in `base_syscalls.custom_set` for process rules:
+# [clone, clone3, fork, vfork, execve, execveat, close]
+#
+# For networking related events:
+# While you can log `connect` or `accept*` syscalls without the socket syscall,
+# the log will not contain the ip tuples.
+# Additionally, for `listen` and `accept*` syscalls, the `bind` syscall is also necessary.
+#
+# We recommend the following as the minimum set for networking-related rules:
+# [clone, clone3, fork, vfork, execve, execveat, close, socket, bind, getsockopt]
+#
+# Lastly, for tracking the correct `uid`, `gid` or `sid`, `pgid` of a process when the
+# running process opens a file or makes a network connection, consider adding the
+# following to the above recommended syscall sets:
+# ... setresuid, setsid, setuid, setgid, setpgid, setresgid, setsid, capset, chdir, chroot, fchdir ...
+#
 base_syscalls:
-  repair: false
   custom_set: []
+  repair: false
