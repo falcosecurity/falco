@@ -59,7 +59,8 @@ falco_configuration::falco_configuration():
 	m_syscall_buf_size_preset(4),
 	m_cpus_for_each_syscall_buffer(2),
 	m_syscall_drop_failed_exit(false),
-	m_base_syscalls_repair(false)
+	m_base_syscalls_repair(false),
+	m_stats_v2_enabled(false)
 {
 	init({});
 }
@@ -337,6 +338,15 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 	m_base_syscalls_custom_set.clear();
 	config.get_sequence<std::unordered_set<std::string>>(m_base_syscalls_custom_set, std::string("base_syscalls.custom_set"));
 	m_base_syscalls_repair = config.get_scalar<bool>("base_syscalls.repair", false);
+
+	m_stats_v2_enabled = config.get_scalar<bool>("stats_v2.enabled", false);
+	m_stats_v2_stats_interval_preset = config.get_scalar<uint16_t>("stats_v2.stats_interval_preset", 0);
+	m_stats_v2_stats_interval_ms = config.get_scalar<uint64_t>("stats_v2.stats_interval_ms", 0);
+	m_stats_v2_stats_internal_rule = config.get_scalar<bool>("stats_v2.stats_internal_rule", true);
+	m_stats_v2_stats_filename = config.get_scalar<std::string>("stats_v2.stats_filename", "");
+	m_stats_v2_include_resource_utilization = config.get_scalar<bool>("stats_v2.include_resource_utilization", true);
+	m_stats_v2_include_kernel_evts_counters = config.get_scalar<bool>("stats_v2.include_kernel_evts_counters", true);
+	m_stats_v2_include_libbpf_stats = config.get_scalar<bool>("stats_v2.include_libbpf_stats", true);
 
 	std::vector<std::string> load_plugins;
 
