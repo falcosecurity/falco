@@ -585,6 +585,9 @@ base_syscalls:
 #
 # Disabled by default.
 #
+# Env variable `-E FALCO_HOSTNAME=myhostname` customizes hostname in case
+# you deploy in Kubernetes where the hostname can be equivalent to the pod name.
+#
 # `stats_interval_preset`:
 # preset 0: default -> means skip, not enabled
 # preset 1: 15 <min> -> 900000 <msec>
@@ -613,7 +616,10 @@ base_syscalls:
 # `include_resource_utilization`:
 # Emit CPU and memory usages. CPU usage is percentage of one CPU,
 # can be normalized to total number of CPUs to determine overall usage.
-# Memory metrics are currently kept in raw units, kb or bytes.
+# Memory metrics are currently kept in raw units, `kb` for RSS, PSS and VSZ
+# or `bytes` for container_memory_used.
+# `-E FALCO_CGROUP_MEM=customfile` let's you customize container_memory_used
+# which defaults to Kubernetes `/sys/fs/cgroup/memory/memory.usage_in_bytes`.
 #
 # `include_kernel_evts_counters`:
 # Emit kernel side event and drop counters, compare to `syscall_event_drops`,
