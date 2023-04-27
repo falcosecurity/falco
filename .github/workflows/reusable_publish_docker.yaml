@@ -2,6 +2,13 @@
 on:
   workflow_call:
 
+permissions:
+  id-token: write
+  contents: read
+  
+env:
+  AWS_S3_REGION: eu-west-1
+  
 jobs:
   publish-docker:
     runs-on: ubuntu-latest
@@ -24,6 +31,18 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USER }}
           password: ${{ secrets.DOCKERHUB_SECRET }}
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: "arn:aws:iam::292999226676:role/github_actions-falco-ecr"
+          aws-region: ${{ env.AWS_S3_REGION }}
+          
+      - name: Login to Amazon ECR
+        id: login-ecr-public
+        uses: aws-actions/amazon-ecr-login@2f9f10ea3fa2eed41ac443fee8bfbd059af2d0a4 # v1.6.0
+        with:
+          registry-type: public    
           
       - name: Login to Amazon ECR Public
         run: |
