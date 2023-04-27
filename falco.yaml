@@ -565,3 +565,76 @@ metadata_download:
 base_syscalls:
   custom_set: []
   repair: false
+
+# stats_v2: periodic stats and resource utilization metrics, initial release
+#
+# --- [Description]
+#
+# stats_v2 reflects a stats re-design from the ground up. Falco now natively supports
+# resource utilization metrics and enhanced specialized metrics to monitor Falco's
+# performance in production. The new metrics are exposed as monotonic counters or snapshots
+# emitted at a pre-defined interval. Each metric is captured in the same consolidated log message.
+# In addition, relevant wrapper fields are added, allowing you to perform sophisticated and customized
+# statistical analyses and correlations. Lastly, the new stats framework can be easily extended
+# with new metrics.
+#
+# Notice: Schema and output field names are not guaranteed to be stable
+# and might change until stats_v2 reaches a stable release.
+#
+# --- [Usage]
+#
+# Disabled by default.
+#
+# `stats_interval_preset`:
+# preset 0: default -> means skip, not enabled
+# preset 1: 15 <min> -> 900000 <msec>
+# preset 2: 30 <min> -> 1800000 <msec>
+# preset 3: 1 <hr> -> 3600000 <msec> - We recommend this option for large production environments
+# preset 4: 4 <hrs> -> 14400000 <msec>
+# preset 5: 6 <hrs> -> 21600000 <msec>
+# preset 6: 12 <hrs> -> 43200000 <msec>
+#
+# `stats_interval_ms`:
+# If greater than 0 it overrides `stats_interval_preset`.
+# We recommend this option for testing and debugging only,
+# use small intervals with caution also for debugging.
+#
+# `stats_internal_rule`:
+# Emit new stats as rule `Falco internal: resource utilization stats metrics`.
+# We recommend this option for a seamless performance monitoring especially
+# if you preserve Falco logs in a data lake. Can be used in conjunction with
+# `stats_filename` and Prometheus exporter support is planned for the future.
+#
+# `stats_filename`:
+# Append stats to a `jsonl` file. Use with caution in production and log rotate file.
+# Can be used in conjunction with `stats_internal_rule` and Prometheus exporter
+# support is planned for the future.
+#
+# `include_resource_utilization`:
+# Emit CPU and memory usages. CPU usage is percentage of one CPU,
+# can be normalized to total number of CPUs to determine overall usage.
+# Memory metrics are currently kept in raw units, kb or bytes.
+#
+# `include_kernel_evts_counters`:
+# Emit kernel side event and drop counters, compare to `syscall_event_drops`,
+# however this option reflects monotonic counters since Falco start
+# flushed at a constant stats interval and therefore can be an alternative.
+#
+# `include_libbpf_stats`:
+# Exposes `bpftool prog show` like stats, e.g. number of invocations
+# of each bpf program Falco attached as well as time spent in each program in nanoseconds.
+# Requires kernels >= 5.1 plus kernel config `bpf_stats_enabled`.
+# This option or equivalent stats are not supported for non `*bpf*` drivers.
+#
+# todo: Prometheus export option
+# todo: syscall counters option
+
+stats_v2:
+  enabled: false
+  stats_interval_preset: 3
+  stats_interval_ms: 0
+  stats_internal_rule: true
+  # stats_filename: /tmp/falco_stats.jsonl
+  include_resource_utilization: true
+  include_kernel_evts_counters: true
+  include_libbpf_stats: true
