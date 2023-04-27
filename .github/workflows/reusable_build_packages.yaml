@@ -54,7 +54,9 @@ jobs:
           yum -y install centos-release-scl
           yum -y install devtoolset-9-gcc devtoolset-9-gcc-c++
           source /opt/rh/devtoolset-9/enable
-          yum install -y git wget make m4 rpm-build
+          yum install -y wget make m4 rpm-build
+          yum -y install https://packages.endpointdev.com/rhel/7/os/x86_64/endpoint-repo.x86_64.rpm
+          yum install -y git
     
       - name: Checkout
         uses: actions/checkout@v3
@@ -112,21 +114,21 @@ jobs:
         with:
           name: falco-${{ steps.store_version.outputs.version }}-${{ inputs.arch }}.tar.gz
           path: |
-            ${{ github.workspace }}/build/packages/falco-*.tar.gz
+            ${{ github.workspace }}/build/falco-*.tar.gz
             
       - name: Upload Falco deb package
         uses: actions/upload-artifact@v3
         with:
           name: falco-${{ steps.store_version.outputs.version }}-${{ inputs.arch }}.deb
           path: |
-            ${{ github.workspace }}/build/packages/falco-*.deb
+            ${{ github.workspace }}/build/falco-*.deb
       
       - name: Upload Falco rpm package
         uses: actions/upload-artifact@v3
         with:
           name: falco-${{ steps.store_version.outputs.version }}-${{ inputs.arch }}.rpm
           path: |
-            ${{ github.workspace }}/build/packages/falco-*.rpm
+            ${{ github.workspace }}/build/falco-*.rpm
             
   build-musl-package:
     needs: build-packages
