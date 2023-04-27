@@ -121,6 +121,7 @@ public:
 	bool m_stats_v2_include_resource_utilization;
 	bool m_stats_v2_include_kernel_evts_counters;
 	bool m_stats_v2_include_libbpf_stats;
+	bool m_stats_v2_convert_memory_to_mb;
 
 	std::vector<plugin_config> m_plugins;
 

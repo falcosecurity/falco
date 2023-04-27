@@ -617,9 +617,10 @@ base_syscalls:
 # Emit CPU and memory usages. CPU usage is percentage of one CPU,
 # can be normalized to total number of CPUs to determine overall usage.
 # Memory metrics are currently kept in raw units, `kb` for RSS, PSS and VSZ
-# or `bytes` for container_memory_used.
-# `-E FALCO_CGROUP_MEM=customfile` let's you customize container_memory_used
-# which defaults to Kubernetes `/sys/fs/cgroup/memory/memory.usage_in_bytes`.
+# or `bytes` for container_memory_used. Use `convert_memory_to_mb` to
+# uniformly convert each memory metric to MB.
+# `-E FALCO_CGROUP_MEM=customfile` let's you customize the container_memory_used
+# file which defaults to Kubernetes `/sys/fs/cgroup/memory/memory.usage_in_bytes`.
 #
 # `include_kernel_evts_counters`:
 # Emit kernel side event and drop counters, compare to `syscall_event_drops`,
@@ -644,3 +645,4 @@ stats_v2:
   include_resource_utilization: true
   include_kernel_evts_counters: true
   include_libbpf_stats: true
+  convert_memory_to_mb: true

@@ -347,6 +347,7 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 	m_stats_v2_include_resource_utilization = config.get_scalar<bool>("stats_v2.include_resource_utilization", true);
 	m_stats_v2_include_kernel_evts_counters = config.get_scalar<bool>("stats_v2.include_kernel_evts_counters", true);
 	m_stats_v2_include_libbpf_stats = config.get_scalar<bool>("stats_v2.include_libbpf_stats", true);
+	m_stats_v2_convert_memory_to_mb = config.get_scalar<bool>("stats_v2.convert_memory_to_mb", true);
 
 	std::vector<std::string> load_plugins;
 

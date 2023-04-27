@@ -225,10 +225,24 @@ std::map<std::string, std::string> stats_writer::collector::get_stats_v2_output_
 				switch(utilization[stat].type)
 				{
 				case STATS_VALUE_TYPE_U64:
-					output_fields[utilization[stat].name] = std::to_string(utilization[stat].value.u64);
+					if (m_writer->m_config->m_stats_v2_convert_memory_to_mb && strncmp(utilization[stat].name, "container_memory_used", 21) == 0)
+					{
+						output_fields[utilization[stat].name] = std::to_string(utilization[stat].value.u64 / (double)1024 / (double)1024);
+					}
+					else
+					{
+						output_fields[utilization[stat].name] = std::to_string(utilization[stat].value.u64);
+					}
 					break;
 				case STATS_VALUE_TYPE_U32:
-					output_fields[utilization[stat].name] = std::to_string(utilization[stat].value.u32);
+					if (m_writer->m_config->m_stats_v2_convert_memory_to_mb && strncmp(utilization[stat].name, "memory_", 7) == 0)
+					{
+						output_fields[utilization[stat].name] = std::to_string(utilization[stat].value.u32 / (double)1024);
+					}
+					else
+					{
+						output_fields[utilization[stat].name] = std::to_string(utilization[stat].value.u32);
+					}
 					break;
 				case STATS_VALUE_TYPE_D:
 					output_fields[utilization[stat].name] = std::to_string(utilization[stat].value.d);
