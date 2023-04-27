@@ -6,7 +6,7 @@ on:
         description: 'Falco version extracted from userspace/falco/config_falco.h'
         required: true
         type: string
-      bucket:
+      bucket_suffix:
         description: bucket suffix for packages
         required: false
         default: ''
@@ -37,7 +37,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          role-to-assume: "arn:aws:iam::292999226676:role/github_actions-falco${{ inputs.bucket }}-s3"
+          role-to-assume: "arn:aws:iam::292999226676:role/github_actions-falco${{ inputs.bucket_suffix }}-s3"
           aws-region: ${{ env.AWS_S3_REGION }}    
           
       - name: Download all artifacts
@@ -68,16 +68,16 @@ jobs:
           
       - name: Publish rpm
         run: |
-          ./scripts/publish-rpm -f /tmp/falco-${{ inputs.version }}-x86_64.rpm -f /tmp/falco-${{ inputs.version }}-aarch64.rpm -r rpm${{ inputs.bucket }}
+          ./scripts/publish-rpm -f /tmp/falco-${{ inputs.version }}-x86_64.rpm -f /tmp/falco-${{ inputs.version }}-aarch64.rpm -r rpm${{ inputs.bucket_suffix }}
       
       - name: Publish bin
         run: |
-          ./scripts/publish-bin -f /tmp/falco-${{ inputs.version }}-x86_64.tar.gz -r bin${{ inputs.bucket }} -a x86_64
-          ./scripts/publish-bin -f /tmp/falco-${{ inputs.version }}-aarch64.tar.gz -r bin${{ inputs.bucket }} -a aarch64
+          ./scripts/publish-bin -f /tmp/falco-${{ inputs.version }}-x86_64.tar.gz -r bin${{ inputs.bucket_suffix }} -a x86_64
+          ./scripts/publish-bin -f /tmp/falco-${{ inputs.version }}-aarch64.tar.gz -r bin${{ inputs.bucket_suffix }} -a aarch64
           
       - name: Publish static
         run: |
-          ./scripts/publish-bin -f /tmp/falco-${{ inputs.version }}-static-x86_64.tar.gz -r bin${{ inputs.bucket }} -a x86_64
+          ./scripts/publish-bin -f /tmp/falco-${{ inputs.version }}-static-x86_64.tar.gz -r bin${{ inputs.bucket_suffix }} -a x86_64
           
   publish-packages-deb:
     runs-on: ubuntu-latest
@@ -95,7 +95,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
-          role-to-assume: "arn:aws:iam::292999226676:role/github_actions-falco${{ inputs.bucket }}-s3"
+          role-to-assume: "arn:aws:iam::292999226676:role/github_actions-falco${{ inputs.bucket_suffix }}-s3"
           aws-region: ${{ env.AWS_S3_REGION }}     
       
       - name: Download deb artifacts
@@ -110,6 +110,6 @@ jobs:
           
       - name: Publish deb
         run: |
-          ./scripts/publish-deb -f /tmp/falco-${{ inputs.version }}-x86_64.deb -f /tmp/falco-${{ inputs.version }}-aarch64.deb -r deb${{ inputs.bucket }}
+          ./scripts/publish-deb -f /tmp/falco-${{ inputs.version }}-x86_64.deb -f /tmp/falco-${{ inputs.version }}-aarch64.deb -r deb${{ inputs.bucket_suffix }}
           
      
