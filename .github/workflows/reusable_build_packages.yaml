@@ -77,7 +77,6 @@ jobs:
     
       - name: Prepare project
         run: |
-          mv /tmp/bpf_probe_${{ inputs.arch }}.skel.h /tmp/bpf_probe.skel.h
           mkdir build && cd build
           source /opt/rh/devtoolset-9/enable
           cmake \
