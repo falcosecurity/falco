@@ -65,12 +65,12 @@ public:
 		/*!
 			\brief Collect snapshot stats v2 wrapper fields as internal rule formatted output fields.
 		*/
-		std::map<std::string, std::string> get_stats_v2_output_fields_wrapper(std::shared_ptr<sinsp> inspector, uint64_t now, std::string src, uint64_t num_evts, uint64_t stats_snapshot_time_delta_sec);
+		std::map<std::string, std::string> get_stats_v2_output_fields_wrapper(std::shared_ptr<sinsp> inspector, uint64_t now, std::string src, uint64_t num_evts, double stats_snapshot_time_delta_sec);
 
 		/*!
 			\brief Collect snapshot stats v2 syscalls related metrics as internal rule formatted output fields.
 		*/
-		std::map<std::string, std::string> get_stats_v2_output_fields_syscalls(std::shared_ptr<sinsp> inspector, std::map<std::string, std::string> output_fields, uint64_t stats_snapshot_time_delta_sec);
+		std::map<std::string, std::string> get_stats_v2_output_fields_additional(std::shared_ptr<sinsp> inspector, std::map<std::string, std::string> output_fields, double stats_snapshot_time_delta_sec, std::string src);
 
 	private:
 		std::shared_ptr<stats_writer> m_writer;
@@ -136,6 +136,7 @@ private:
 		scap_stats delta;
 		scap_stats stats;
 		std::string source;
+		std::map<std::string, std::string> output_fields;
 	};
 
 	void worker() noexcept;
