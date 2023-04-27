@@ -17,6 +17,7 @@ jobs:
     runs-on: ${{ (inputs.arch == 'aarch64' && fromJSON('[ "self-hosted", "linux", "ARM64" ]')) || 'ubuntu-latest' }}
     container: fedora:latest
     steps:
+      # Always install deps before invoking checkout action, to properly perform a full clone.
       - name: Install build dependencies
         run: |
           dnf install -y bpftool ca-certificates cmake make automake gcc gcc-c++ kernel-devel clang git pkg-config autoconf automake libbpf-devel
@@ -47,6 +48,7 @@ jobs:
     outputs:
       version: ${{ steps.store_version.outputs.version }}  
     steps:
+      # Always install deps before invoking checkout action, to properly perform a full clone.
       - name: Install build dependencies
         run: |
           yum -y install centos-release-scl
@@ -132,6 +134,7 @@ jobs:
     runs-on: ubuntu-latest
     container: alpine:3.17
     steps:
+      # Always install deps before invoking checkout action, to properly perform a full clone.
       - name: Install build dependencies
         run: |
           apk add g++ gcc cmake make git bash perl linux-headers autoconf automake m4 libtool elfutils-dev libelf-static patch binutils bpftool clang

@@ -34,6 +34,8 @@ jobs:
           yum install rpm-sign expect which createrepo gpg python python-pip -y
           pip install awscli==1.19.47
 
+      # Configure AWS role; see https://github.com/falcosecurity/test-infra/pull/1102
+      # Note: master CI can only push dev packages as we have 2 different roles for master and release.
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
@@ -91,7 +93,9 @@ jobs:
           apt update -y
           apt-get install apt-utils bzip2 gpg python python3-pip -y
           pip install awscli
-          
+      
+      # Configure AWS role; see https://github.com/falcosecurity/test-infra/pull/1102
+      # Note: master CI can only push dev packages as we have 2 different roles for master and release.
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:

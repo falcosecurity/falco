@@ -3,7 +3,7 @@ on:
   push:
     branches: [master]
 
-# Checks if any concurrent jobs under the same pull request or branch are being executed
+# Checks if any concurrent jobs is running for master CI and eventually cancel it
 concurrency:
   group: ci-master
   cancel-in-progress: true  
@@ -28,7 +28,8 @@ jobs:
       bucket: '-dev'
       version: ${{ needs.build-dev-packages.outputs.version }}
     secrets: inherit
-    
+  
+  # Both build-dev-docker and its arm64 counterpart require build-dev-packages because they use its output
   build-dev-docker:
     needs: [build-dev-packages, publish-dev-packages]
     uses: falcosecurity/falco/.github/workflows/reusable_build_docker.yaml@master
