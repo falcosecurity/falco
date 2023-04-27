@@ -133,19 +133,6 @@ void stats_writer::worker() noexcept
 		{
 			return;
 		}
-
-		// update records for this event source
-		jmsg[m.source]["cur"]["events"] = m.stats.n_evts;
-		jmsg[m.source]["delta"]["events"] = m.delta.n_evts;
-		if (m.source == falco_common::syscall_source)
-		{
-			jmsg[m.source]["cur"]["drops"] = m.stats.n_drops;
-			jmsg[m.source]["cur"]["preemptions"] = m.stats.n_preemptions;
-			jmsg[m.source]["cur"]["drop_pct"] = (m.stats.n_evts == 0 ? 0.0 : (100.0*m.stats.n_drops/m.stats.n_evts));
-			jmsg[m.source]["delta"]["drops"] = m.delta.n_drops;
-			jmsg[m.source]["delta"]["preemptions"] = m.delta.n_preemptions;
-			jmsg[m.source]["delta"]["drop_pct"] = (m.delta.n_evts == 0 ? 0.0 : (100.0*m.delta.n_drops/m.delta.n_evts));
-		}
 		
 		tick = stats_writer::get_ticker();
 		if (last_tick != tick)
@@ -154,6 +141,7 @@ void stats_writer::worker() noexcept
 			try
 			{
 				jmsg["sample"] = m_total_samples;
+				jmsg["output_fields"] = m.output_fields;
 				m_output << jmsg.dump() << std::endl;
 			}
 			catch(const std::exception &e)
@@ -169,21 +157,21 @@ stats_writer::collector::collector(std::shared_ptr<stats_writer> writer)
 {
 }
 
-std::map<std::string, std::string> stats_writer::collector::get_stats_v2_output_fields_wrapper(std::shared_ptr<sinsp> inspector, uint64_t now, std::string src, uint64_t num_evts, uint64_t stats_snapshot_time_delta_sec)
+std::map<std::string, std::string> stats_writer::collector::get_stats_v2_output_fields_wrapper(std::shared_ptr<sinsp> inspector, uint64_t now, std::string src, uint64_t num_evts, double stats_snapshot_time_delta_sec)
 {
 	std::map<std::string, std::string> output_fields;
 	const scap_agent_info* agent_info = inspector->get_agent_info();
 	const scap_machine_info* machine_info = inspector->get_machine_info();
 
-	/* Wrapper fields needed for statistical analyses and attributions. Always enabled. */
-	output_fields["evt.time"] = std::to_string(now); /* Some ETLs may prefer a consistent timestamp within output. */
+	/* Wrapper fields useful for statistical analyses and attributions. Always enabled. */
+	output_fields["evt.time"] = std::to_string(now); /* Some ETLs may prefer a consistent timestamp within output_fields. */
 	output_fields["falco_version"] = FALCO_VERSION;
 	output_fields["falco_start_ts"] = std::to_string(agent_info->start_ts_epoch);
 	output_fields["kernel_release"] = agent_info->uname_r;
 	output_fields["host_boot_ts"] = std::to_string(machine_info->boot_ts_epoch);
 	output_fields["hostname"] = machine_info->hostname; /* Explicitly add hostname to log msg in case hostname rule output field is disabled. */
 	output_fields["host_num_cpus"] = std::to_string(machine_info->num_cpus);
-	if(inspector->check_current_engine(BPF_ENGINE))
+	if (inspector->check_current_engine(BPF_ENGINE))
 	{
 		output_fields["driver"] = "bpf";
 	}
@@ -201,11 +189,11 @@ std::map<std::string, std::string> stats_writer::collector::get_stats_v2_output_
 	}
 	output_fields["src"] = src;
 
-	/* Falco userspace events counters. Always enabled. */
+	/* Falco userspace event counters. Always enabled. */
 	if (m_last_num_evts != 0 && stats_snapshot_time_delta_sec > 0)
 	{
-		/* Successfully processed userspace events. */
-		output_fields["falco_evts_rate_sec"] = std::to_string((num_evts - m_last_num_evts) / stats_snapshot_time_delta_sec);
+		/* Successfully processed userspace event rate. */
+		output_fields["falco_evts_rate_sec"] = std::to_string((num_evts - m_last_num_evts) / (double)stats_snapshot_time_delta_sec);
 	}
 	output_fields["falco_num_evts"] = std::to_string(num_evts);
 	output_fields["falco_num_evts_prev"] = std::to_string(m_last_num_evts);
@@ -215,7 +203,7 @@ std::map<std::string, std::string> stats_writer::collector::get_stats_v2_output_
 
 }
 
-std::map<std::string, std::string> stats_writer::collector::get_stats_v2_output_fields_syscalls(std::shared_ptr<sinsp> inspector, std::map<std::string, std::string> output_fields, uint64_t stats_snapshot_time_delta_sec)
+std::map<std::string, std::string> stats_writer::collector::get_stats_v2_output_fields_additional(std::shared_ptr<sinsp> inspector, std::map<std::string, std::string> output_fields, double stats_snapshot_time_delta_sec, std::string src)
 {
 	const scap_agent_info* agent_info = inspector->get_agent_info();
 	const scap_machine_info* machine_info = inspector->get_machine_info();
@@ -250,6 +238,11 @@ std::map<std::string, std::string> stats_writer::collector::get_stats_v2_output_
 				}
 			}
 		}
+	}
+
+	if (src != falco_common::syscall_source)
+	{
+		return output_fields;
 	}
 
 	/* Kernel side stats counters and libbpf stats if applicable. */
@@ -309,10 +302,9 @@ std::map<std::string, std::string> stats_writer::collector::get_stats_v2_output_
 
 void stats_writer::collector::collect(std::shared_ptr<sinsp> inspector, const std::string &src, uint64_t num_evts)
 {
-	// just skip if no output is configured
 	if (m_writer->m_config->m_stats_v2_enabled || m_writer->has_output())
 	{
-		// collect stats once per each ticker period
+		/* Collect stats / metrics once per ticker period. */
 		auto tick = stats_writer::get_ticker();
 		if (tick != m_last_tick)
 		{
@@ -323,11 +315,13 @@ void stats_writer::collector::collect(std::shared_ptr<sinsp> inspector, const st
 				stats_snapshot_time_delta = now - m_last_now;
 			}
 			m_last_now = now;
-			std::map<std::string, std::string> output_fields = stats_writer::collector::get_stats_v2_output_fields_wrapper(inspector, now, src, num_evts, (stats_snapshot_time_delta / ONE_SECOND_IN_NS));
-			if (src == falco_common::syscall_source)
-			{
-				output_fields = stats_writer::collector::get_stats_v2_output_fields_syscalls(inspector, output_fields, (stats_snapshot_time_delta / ONE_SECOND_IN_NS));
-			}
+			double stats_snapshot_time_delta_sec = (stats_snapshot_time_delta / (double)ONE_SECOND_IN_NS);
+
+			/* Get respective metrics output_fields. */
+			std::map<std::string, std::string> output_fields = stats_writer::collector::get_stats_v2_output_fields_wrapper(inspector, now, src, num_evts, stats_snapshot_time_delta_sec);
+			output_fields = stats_writer::collector::get_stats_v2_output_fields_additional(inspector, output_fields, stats_snapshot_time_delta_sec, src);
+
+			/* Pipe to respective output. */
 			if (m_writer->m_config->m_stats_v2_enabled && m_writer->m_config->m_stats_v2_stats_internal_rule && m_writer->m_outputs)
 			{
 				std::string rule = "Falco internal: resource utilization stats metrics";
@@ -337,21 +331,7 @@ void stats_writer::collector::collect(std::shared_ptr<sinsp> inspector, const st
 			if (m_writer->has_output())
 			{
 				stats_writer::msg msg;
-				msg.stop = false;
-				msg.source = src;
-				inspector->get_capture_stats(&msg.stats);
-				m_samples++;
-				if(m_samples == 1)
-				{
-					msg.delta = msg.stats;
-				}
-				else
-				{
-					msg.delta.n_evts = msg.stats.n_evts - m_last_stats.n_evts;
-					msg.delta.n_drops = msg.stats.n_drops - m_last_stats.n_drops;
-					msg.delta.n_preemptions = msg.stats.n_preemptions - m_last_stats.n_preemptions;
-				}
-				m_last_stats = msg.stats;
+				msg.output_fields = output_fields;
 				m_writer->push(msg);
 			}
 			m_last_tick = tick;
