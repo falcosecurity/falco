@@ -4,7 +4,7 @@ on:
     tags:
       - '[0-9]+.[0-9]+.[0-9]+'
 
-# Checks if any concurrent jobs under the same pull request or branch are being executed
+# Checks if any concurrent jobs is running for release CI and eventually cancel it.
 concurrency:
   group: ci-release
   cancel-in-progress: true  
@@ -28,7 +28,8 @@ jobs:
     with:
       version: ${{ needs.build-packages.outputs.version }}
     secrets: inherit
-          
+  
+  # Both build-docker and its arm64 counterpart require build-packages because they use its output
   build-docker:
     needs: [build-packages, publish-packages]
     uses: falcosecurity/falco/.github/workflows/reusable_build_docker.yaml@master
