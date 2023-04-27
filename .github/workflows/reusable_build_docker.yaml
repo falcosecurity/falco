@@ -6,7 +6,7 @@ on:
         description: x86_64 or aarch64
         required: true
         type: string
-      bucket:
+      bucket_suffix:
         description: bucket suffix for packages
         required: false
         default: ''
@@ -32,7 +32,7 @@ jobs:
         with:
           context: ${{ github.workspace }}/docker/no-driver/
           build-args: |
-            VERSION_BUCKET=bin${{ inputs.bucket }}
+            VERSION_BUCKET=bin${{ inputs.bucket_suffix }}
             FALCO_VERSION=${{ inputs.version }}
           tags: |
             falcosecurity/falco-no-driver:${{ inputs.arch }}-${{ github.ref_name }}
@@ -46,7 +46,7 @@ jobs:
         with:
           context: ${{ github.workspace }}/docker/falco/
           build-args: |
-            VERSION_BUCKET=deb${{ inputs.bucket }}
+            VERSION_BUCKET=deb${{ inputs.bucket_suffix }}
             FALCO_VERSION=${{ inputs.version }}
           tags: |
             falcosecurity/falco:${{ inputs.arch }}-${{ github.ref_name }}
