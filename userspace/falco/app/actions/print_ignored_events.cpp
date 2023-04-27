@@ -16,6 +16,7 @@ limitations under the License.
 
 #include "actions.h"
 #include "helpers.h"
+#include "../app.h"
 
 using namespace falco::app;
 using namespace falco::app::actions;
@@ -27,8 +28,8 @@ falco::app::run_result falco::app::actions::print_ignored_events(falco::app::sta
 		return run_result::ok();
 	}
 
-	std::cout << "Ignored I/O syscall(s):" << std::endl;
-	for(const auto& it : libsinsp::events::sc_set_to_event_names(libsinsp::events::io_sc_set()))
+	std::cout << "Ignored syscall(s):" << std::endl;
+	for(const auto& it : libsinsp::events::sc_set_to_event_names(falco::app::ignored_sc_set()))
 	{
 		std::cout << "- " << it.c_str() << std::endl;
 	}

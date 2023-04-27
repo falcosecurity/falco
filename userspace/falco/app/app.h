@@ -23,7 +23,10 @@ limitations under the License.
 namespace falco {
 namespace app {
 
+libsinsp::events::set<ppm_sc_code> ignored_sc_set();
+
 bool run(int argc, char** argv, bool& restart, std::string& errstr);
+
 bool run(falco::app::state& s, bool& restart, std::string& errstr);
 
 }; // namespace app
