@@ -275,7 +275,7 @@ static falco::app::run_result do_inspect(
 			}
 	
 			// for capture mode, the source name can change at every event
-			stats_collector.collect(inspector, inspector->event_sources()[source_engine_idx]);
+			stats_collector.collect(inspector, inspector->event_sources()[source_engine_idx], num_evts);
 		}
 		else
 		{
@@ -291,7 +291,7 @@ static falco::app::run_result do_inspect(
 			}
 
 			// for live mode, the source name is constant
-			stats_collector.collect(inspector, source);
+			stats_collector.collect(inspector, source, num_evts);
 		}
 
 		// Reset the timeouts counter, Falco successfully got an event to process
@@ -397,17 +397,54 @@ static void process_inspector_events(
 	}
 }
 
-static std::shared_ptr<stats_writer> init_stats_writer(const options& opts)
+static std::shared_ptr<stats_writer> init_stats_writer(const options& opts, std::shared_ptr<falco_outputs> outputs, std::shared_ptr<falco_configuration> config)
 {
-	auto statsw = std::make_shared<stats_writer>();
-	if (!opts.stats_filename.empty())
+	auto statsw = std::make_shared<stats_writer>(outputs, config);
+	std::string err;
+	uint64_t stats_interval_ms = 0;
+	if (config->m_stats_v2_enabled && config->m_stats_v2_stats_interval_preset > 0)
 	{
-		std::string err;
-		if (!stats_writer::init_ticker(opts.stats_interval, err))
+		uint16_t index = config->m_stats_v2_stats_interval_preset;
+		if(index <= MAX_STATS_PRESET_INDEX)
+		{
+			/* Index 0 reserved, milliseconds representation for 15min, 30min, 1hr, 4hrs, 6hrs, 12hrs. */
+			std::vector<uint64_t> vect{0LLU, 900000LU, 1800000LU, 3600000LU, 14400000LU, 21600000LU, 43200000LU};
+			stats_interval_ms = vect[index];
+		}
+		else
+		{
+			// todo: warning message
+			stats_interval_ms = 0;
+		}
+	}
+
+	/* Continue cmd args support and old defaults for backward compatibility, scheduled for deprecation. */
+	if (stats_interval_ms == 0 && opts.stats_interval > 0)
+	{
+		stats_interval_ms = opts.stats_interval;
+	}
+	/* New config. Exact stats_interval_ms in falco.yaml overrides presets. */
+	if (config->m_stats_v2_enabled && config->m_stats_v2_stats_interval_ms > 0)
+	{
+		stats_interval_ms = config->m_stats_v2_stats_interval_ms;
+	}
+
+	if (stats_interval_ms > 0)
+	{
+		if (!stats_writer::init_ticker(stats_interval_ms, err))
 		{
 			throw falco_exception(err);
 		}
-		statsw.reset(new stats_writer(opts.stats_filename));
+	}
+	/* Continue cmd args support for backward compatibility, scheduled for deprecation. */
+	if (!config->m_stats_v2_enabled && !opts.stats_filename.empty())
+	{
+		statsw.reset(new stats_writer(opts.stats_filename, outputs, config));
+	}
+	/* New config. */
+	else if (config->m_stats_v2_enabled && !config->m_stats_v2_stats_filename.empty())
+	{
+		statsw.reset(new stats_writer(config->m_stats_v2_stats_filename, outputs, config));
 	}
 	return statsw;
 }
@@ -421,7 +458,7 @@ falco::app::run_result falco::app::actions::process_events(falco::app::state& s)
 	s.engine->complete_rule_loading();
 
 	// Initialize stats writer
-	auto statsw = init_stats_writer(s.options);
+	auto statsw = init_stats_writer(s.options, s.outputs, s.config);
 
 	if (s.options.dry_run)
 	{
