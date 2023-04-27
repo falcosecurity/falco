@@ -98,11 +98,13 @@ jobs:
       - name: Build project
         run: |
           cd build
+          source /opt/rh/devtoolset-9/enable
           make falco -j6
       
       - name: Build packages
         run: |
           cd build
+          source /opt/rh/devtoolset-9/enable
           make package
 
       - name: Upload Falco tar.gz package
