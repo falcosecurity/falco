@@ -59,6 +59,23 @@ jobs:
           yum -y install devtoolset-9-gcc devtoolset-9-gcc-c++
           source /opt/rh/devtoolset-9/enable
           yum install -y wget git make m4 rpm-build
+          
+      - name: Install recent git
+        run: |
+          yum -y install epel-release
+          yum -y groupinstall "Development Tools"
+          yum -y install wget perl-CPAN gettext-devel perl-devel  openssl-devel  zlib-devel curl-devel expat-devel getopt asciidoc xmlto docbook2X  wget curl
+          ln -s /usr/bin/db2x_docbook2texi /usr/bin/docbook2x-texi
+          wget https://github.com/git/git/archive/v2.36.1.tar.gz
+          tar -xvf v2.36.1.tar.gz
+          rm -f v2.36.1.tar.gz
+          cd git-*
+          make configure
+          ./configure --prefix=/usr
+          make
+          make install
+          cd ..
+          rm -rf git*
     
       - name: Checkout
         uses: actions/checkout@v3
