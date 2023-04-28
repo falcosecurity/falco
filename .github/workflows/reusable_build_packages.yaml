@@ -26,6 +26,10 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+          
+      - name: Git safe directory
+        run: |
+          git config --global --add safe.directory $GITHUB_WORKSPACE    
 
       - name: Build modern BPF skeleton
         run: |
@@ -54,9 +58,7 @@ jobs:
           yum -y install centos-release-scl
           yum -y install devtoolset-9-gcc devtoolset-9-gcc-c++
           source /opt/rh/devtoolset-9/enable
-          yum install -y wget make m4 rpm-build
-          yum -y install https://packages.endpointdev.com/rhel/7/os/x86_64/endpoint-repo.x86_64.rpm
-          yum install -y git
+          yum install -y wget git make m4 rpm-build
     
       - name: Checkout
         uses: actions/checkout@v3
@@ -76,6 +78,10 @@ jobs:
           tar -xpf /tmp/cmake.tar --directory=/tmp
           cp -R /tmp/cmake-3.22.5-linux-$(uname -m)/* /usr
           rm -rf /tmp/cmake-3.22.5-linux-$(uname -m)
+          
+      - name: Git safe directory
+        run: |
+          git config --global --add safe.directory $GITHUB_WORKSPACE    
     
       - name: Prepare project
         run: |
@@ -146,6 +152,10 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
+          
+      - name: Git safe directory
+        run: |
+          git config --global --add safe.directory $GITHUB_WORKSPACE    
           
       - name: Prepare project
         run: |
