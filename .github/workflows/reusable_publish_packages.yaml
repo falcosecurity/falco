@@ -18,7 +18,6 @@ permissions:
 
 env:
   AWS_S3_REGION: eu-west-1
-  GPG_KEY: ${{ secrets.GPG_KEY }}
 
 jobs:
   publish-packages:
@@ -74,6 +73,8 @@ jobs:
           path: /tmp
         
       - name: Import gpg key 
+        env:
+          GPG_KEY: ${{ secrets.GPG_KEY }}
         run: printenv GPG_KEY | gpg --import -
         
       - name: Sign rpms
@@ -139,6 +140,8 @@ jobs:
           path: /tmp
 
       - name: Import gpg key 
+        env:
+          GPG_KEY: ${{ secrets.GPG_KEY }}
         run: printenv GPG_KEY | gpg --import -
           
       - name: Publish deb
