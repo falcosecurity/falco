@@ -12,6 +12,11 @@ on:
         value: ${{ jobs.fetch-version.outputs.version }}    
 
 jobs:
+  # We need to use an ubuntu-latest to fetch Falco version because
+  # Falco version is computed by some cmake scripts that do git sorceries
+  # to get the current version.
+  # But centos7 jobs have a git version too old and actions/checkout does not 
+  # fully clone the repo, but uses http rest api instead.
   fetch-version:
     runs-on: ubuntu-latest
     # Map the job outputs to step outputs
