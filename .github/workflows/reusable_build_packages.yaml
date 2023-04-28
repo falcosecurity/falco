@@ -132,21 +132,21 @@ jobs:
       - name: Upload Falco tar.gz package
         uses: actions/upload-artifact@v3
         with:
-          name: falco-${{ steps.store_version.outputs.version }}-${{ inputs.arch }}.tar.gz
+          name: falco-${{ needs.fetch-version.outputs.version }}-${{ inputs.arch }}.tar.gz
           path: |
             ${{ github.workspace }}/build/falco-*.tar.gz
             
       - name: Upload Falco deb package
         uses: actions/upload-artifact@v3
         with:
-          name: falco-${{ steps.store_version.outputs.version }}-${{ inputs.arch }}.deb
+          name: falco-${{ needs.fetch-version.outputs.version }}-${{ inputs.arch }}.deb
           path: |
             ${{ github.workspace }}/build/falco-*.deb
       
       - name: Upload Falco rpm package
         uses: actions/upload-artifact@v3
         with:
-          name: falco-${{ steps.store_version.outputs.version }}-${{ inputs.arch }}.rpm
+          name: falco-${{ needs.fetch-version.outputs.version }}-${{ inputs.arch }}.rpm
           path: |
             ${{ github.workspace }}/build/falco-*.rpm
             
@@ -185,6 +185,6 @@ jobs:
       - name: Upload Falco static package
         uses: actions/upload-artifact@v3
         with:
-          name: falco-${{ needs.build-packages.outputs.version }}-static-x86_64.tar.gz
+          name: falco-${{ needs.fetch-version.outputs.version }}-static-x86_64.tar.gz
           path: |
             ${{ github.workspace }}/build/falco-*.tar.gz
