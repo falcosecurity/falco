@@ -252,6 +252,7 @@ load_kernel_module_compile() {
 	fi
 
 	# Try to compile using all the available gcc versions
+	MAKEWRAPPER="${TMPDIR:-"/tmp"}/falco-dkms-make"
 	for CURRENT_GCC in $(ls "$(dirname "$(which gcc)")"/gcc*); do
 		# Filter away gcc-{ar,nm,...}
 		# Only gcc compiler has `-print-search-dirs` option.
@@ -260,10 +261,10 @@ load_kernel_module_compile() {
 			continue
 		fi
 		echo "* Trying to dkms install ${DRIVER_NAME} module with GCC ${CURRENT_GCC}"
-		echo "#!/usr/bin/env bash" > /tmp/falco-dkms-make
-		echo "make CC=${CURRENT_GCC} \$@" >> /tmp/falco-dkms-make
-		chmod +x /tmp/falco-dkms-make
-		if dkms install --directive="MAKE='/tmp/falco-dkms-make'" -m "${DRIVER_NAME}" -v "${DRIVER_VERSION}" -k "${KERNEL_RELEASE}" 2>/dev/null; then
+		echo "#!/usr/bin/env bash" > "$MAKEWRAPPER"
+		echo "make CC=${CURRENT_GCC} \$@" >> "$MAKEWRAPPER"
+		chmod +x "$MAKEWRAPPER"
+		if dkms install --directive="MAKE=${MAKEWRAPPER}" -m "${DRIVER_NAME}" -v "${DRIVER_VERSION}" -k "${KERNEL_RELEASE}" 2>/dev/null; then
 			echo "* ${DRIVER_NAME} module installed in dkms"
 			KO_FILE="/var/lib/dkms/${DRIVER_NAME}/${DRIVER_VERSION}/${KERNEL_RELEASE}/${ARCH}/module/${DRIVER_NAME}"
 			if [ -f "$KO_FILE.ko" ]; then
@@ -296,6 +297,7 @@ load_kernel_module_compile() {
 			fi
 		fi
 	done
+	rm -f "$MAKEWRAPPER"
 }
 
 load_kernel_module_download() {
