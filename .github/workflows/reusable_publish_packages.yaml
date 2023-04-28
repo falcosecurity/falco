@@ -43,10 +43,34 @@ jobs:
           role-to-assume: "arn:aws:iam::292999226676:role/github_actions-falco${{ inputs.bucket_suffix }}-s3"
           aws-region: ${{ env.AWS_S3_REGION }}    
           
-      - name: Download all artifacts
+      - name: Download RPM x86_64
         uses: actions/download-artifact@v3
         with:
-          name: falco-*
+          name: falco-${{ inputs.version }}-x86_64.rpm
+          path: /tmp
+
+      - name: Download RPM aarch64
+        uses: actions/download-artifact@v3
+        with:
+          name: falco-${{ inputs.version }}-aarch64.rpm
+          path: /tmp
+
+      - name: Download binary x86_64
+        uses: actions/download-artifact@v3
+        with:
+          name: falco-${{ inputs.version }}-x86_64.tar.gz
+          path: /tmp
+
+      - name: Download binary aarch64
+        uses: actions/download-artifact@v3
+        with:
+          name: falco-${{ inputs.version }}-aarch64.tar.gz
+          path: /tmp
+
+      - name: Download static binary x86_64
+        uses: actions/download-artifact@v3
+        with:
+          name: falco-${{ inputs.version }}-static-x86_64.tar.gz
           path: /tmp
         
       - name: Import gpg key 
@@ -102,17 +126,21 @@ jobs:
           role-to-assume: "arn:aws:iam::292999226676:role/github_actions-falco${{ inputs.bucket_suffix }}-s3"
           aws-region: ${{ env.AWS_S3_REGION }}     
       
-      - name: Download deb artifacts
+      - name: Download deb x86_64
         uses: actions/download-artifact@v3
         with:
-          name: falco-${{ inputs.version }}-*.deb
+          name: falco-${{ inputs.version }}-x86_64.deb
           path: /tmp
-        
+
+      - name: Download deb aarch64
+        uses: actions/download-artifact@v3
+        with:
+          name: falco-${{ inputs.version }}-aarch64.deb
+          path: /tmp
+
       - name: Import gpg key 
         run: printenv GPG_KEY | gpg --import -
           
       - name: Publish deb
         run: |
           ./scripts/publish-deb -f /tmp/falco-${{ inputs.version }}-x86_64.deb -f /tmp/falco-${{ inputs.version }}-aarch64.deb -r deb${{ inputs.bucket_suffix }}
-          
-     
