@@ -151,7 +151,7 @@ jobs:
             ${{ github.workspace }}/build/falco-*.rpm
             
   build-musl-package:
-    needs: [fetch-version, build-packages]
+    needs: fetch-version
     # x86_64 only for now
     if: ${{ inputs.arch == 'x86_64' }}
     runs-on: ubuntu-latest
