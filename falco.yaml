@@ -362,11 +362,11 @@ stdout_output:
 #   (the endpoint name is configurable).
 # - /versions: responds with a JSON object containing version numbers of the
 #   internal Falco components (similar output as `falco --version -o json_output=true`).
-# 
+#
 # # NOTE: the /versions endpoint is useful to other services (such as falcoctl)
 # to retrieve info about a running Falco instance. Make sure the webserver is
 # enabled if you're using falcoctl either locally or with Kubernetes.
-# 
+#
 # The following options control the behavior of that webserver (enabled by default).
 #
 # The ssl_certificate is a combination SSL Certificate and corresponding
@@ -410,7 +410,7 @@ http_output:
   user_agent: "falcosecurity/falco"
   # Tell Falco to not verify the remote server.
   insecure: false
-  # Path to the CA certificate that can verify the remote server. 
+  # Path to the CA certificate that can verify the remote server.
   ca_cert: ""
   # Path to a specific file that will be used as the CA certificate store.
   ca_bundle: ""
