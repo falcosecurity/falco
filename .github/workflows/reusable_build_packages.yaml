@@ -9,12 +9,41 @@ on:
     outputs:
       version:
         description: 'Falco version extracted from config_falco.h'
-        value: ${{ jobs.build-packages.outputs.version }}    
+        value: ${{ jobs.fetch-version.outputs.version }}    
 
 jobs:
+  fetch-version:
+    runs-on: ubuntu-latest
+    # Map the job outputs to step outputs
+    outputs:
+      version: ${{ steps.store_version.outputs.version }}  
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          
+      - name: Install build dependencies
+        run: |
+          sudo apt update 
+          sudo apt install -y cmake build-essential
+      
+      - name: Configure project
+        run: |
+          mkdir build && cd build
+          cmake -DUSE_BUNDLED_DEPS=On ..
+          
+      - name: Load and store Falco version output
+        id: store_version
+        run: |
+          FALCO_VERSION=$(cat build/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
+          echo "version=${FALCO_VERSION}" >> $GITHUB_OUTPUT     
+        
+
   build-modern-bpf-skeleton:
     # See https://github.com/actions/runner/issues/409#issuecomment-1158849936
     runs-on: ${{ (inputs.arch == 'aarch64' && fromJSON('[ "self-hosted", "linux", "ARM64" ]')) || 'ubuntu-latest' }}
+    needs: fetch-version
     container: fedora:latest
     steps:
       # Always install deps before invoking checkout action, to properly perform a full clone.
@@ -24,17 +53,11 @@ jobs:
     
       - name: Checkout
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          
-      - name: Git safe directory
-        run: |
-          git config --global --add safe.directory $GITHUB_WORKSPACE    
 
       - name: Build modern BPF skeleton
         run: |
           mkdir skeleton-build && cd skeleton-build
-          cmake -DUSE_BUNDLED_DEPS=ON -DBUILD_FALCO_MODERN_BPF=ON -DCREATE_TEST_TARGETS=Off ..
+          cmake -DUSE_BUNDLED_DEPS=ON -DBUILD_FALCO_MODERN_BPF=ON -DCREATE_TEST_TARGETS=Off -DFALCO_VERSION=${{ needs.fetch-version.outputs.version }} ..
           make ProbeSkeleton -j6
           
       - name: Upload skeleton
@@ -46,11 +69,8 @@ jobs:
   build-packages:
     # See https://github.com/actions/runner/issues/409#issuecomment-1158849936
     runs-on: ${{ (inputs.arch == 'aarch64' && fromJSON('[ "self-hosted", "linux", "ARM64" ]')) || 'ubuntu-latest' }}
-    needs: build-modern-bpf-skeleton
+    needs: [fetch-version, build-modern-bpf-skeleton]
     container: centos:7
-    # Map the job outputs to step outputs
-    outputs:
-      version: ${{ steps.store_version.outputs.version }}  
     steps:
       # Always install deps before invoking checkout action, to properly perform a full clone.
       - name: Install build dependencies
@@ -59,28 +79,9 @@ jobs:
           yum -y install devtoolset-9-gcc devtoolset-9-gcc-c++
           source /opt/rh/devtoolset-9/enable
           yum install -y wget git make m4 rpm-build
-          
-      - name: Install recent git
-        run: |
-          yum -y install epel-release
-          yum -y groupinstall "Development Tools"
-          yum -y install wget perl-CPAN gettext-devel perl-devel  openssl-devel  zlib-devel curl-devel expat-devel getopt asciidoc xmlto docbook2X  wget curl
-          ln -s /usr/bin/db2x_docbook2texi /usr/bin/docbook2x-texi
-          wget https://github.com/git/git/archive/v2.36.1.tar.gz
-          tar -xvf v2.36.1.tar.gz
-          rm -f v2.36.1.tar.gz
-          cd git-*
-          make configure
-          ./configure --prefix=/usr
-          make
-          make install
-          cd ..
-          rm -rf git*
     
       - name: Checkout
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
     
       - name: Download skeleton
         uses: actions/download-artifact@v3
@@ -95,10 +96,6 @@ jobs:
           tar -xpf /tmp/cmake.tar --directory=/tmp
           cp -R /tmp/cmake-3.22.5-linux-$(uname -m)/* /usr
           rm -rf /tmp/cmake-3.22.5-linux-$(uname -m)
-          
-      - name: Git safe directory
-        run: |
-          git config --global --add safe.directory $GITHUB_WORKSPACE    
     
       - name: Prepare project
         run: |
@@ -112,13 +109,8 @@ jobs:
               -DMODERN_BPF_SKEL_DIR=/tmp \
               -DBUILD_DRIVER=Off \
               -DBUILD_BPF=Off \
+              -DFALCO_VERSION=${{ needs.fetch-version.outputs.version }} \
               ..
-              
-      - name: Load and store Falco version output
-        id: store_version
-        run: |
-          FALCO_VERSION=$(cat build/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
-          echo "version=${FALCO_VERSION}" >> $GITHUB_OUTPUT           
               
       - name: Build project
         run: |
@@ -154,7 +146,7 @@ jobs:
             ${{ github.workspace }}/build/falco-*.rpm
             
   build-musl-package:
-    needs: build-packages
+    needs: [fetch-version, build-packages]
     # x86_64 only for now
     if: ${{ inputs.arch == 'x86_64' }}
     runs-on: ubuntu-latest
@@ -170,14 +162,10 @@ jobs:
         with:
           fetch-depth: 0
           
-      - name: Git safe directory
-        run: |
-          git config --global --add safe.directory $GITHUB_WORKSPACE    
-          
       - name: Prepare project
         run: |
           mkdir build && cd build
-          cmake -DCPACK_GENERATOR=TGZ -DBUILD_BPF=Off -DBUILD_DRIVER=Off -DCMAKE_BUILD_TYPE=Release -DUSE_BUNDLED_DEPS=On -DUSE_BUNDLED_LIBELF=Off -DBUILD_LIBSCAP_MODERN_BPF=ON -DMUSL_OPTIMIZED_BUILD=On -DFALCO_ETC_DIR=/etc/falco ../
+          cmake -DCPACK_GENERATOR=TGZ -DBUILD_BPF=Off -DBUILD_DRIVER=Off -DCMAKE_BUILD_TYPE=Release -DUSE_BUNDLED_DEPS=On -DUSE_BUNDLED_LIBELF=Off -DBUILD_LIBSCAP_MODERN_BPF=ON -DMUSL_OPTIMIZED_BUILD=On -DFALCO_ETC_DIR=/etc/falco ../ -DFALCO_VERSION=${{ needs.fetch-version.outputs.version }}
           
       - name: Build project
         run: |
