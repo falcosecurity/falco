@@ -21,6 +21,7 @@ RUN apt-get update \
 	bash-completion \
 	bc \
 	bison \
+	binutils \
 	clang-7 \
 	ca-certificates \
 	curl \
@@ -105,22 +106,6 @@ RUN sed -e 's/time_format_iso_8601: false/time_format_iso_8601: true/' < /etc/fa
 # silently overwriting the existing directory
 RUN rm -df /lib/modules \
 	&& ln -s $HOST_ROOT/lib/modules /lib/modules
-
-# debian:stable head contains binutils 2.31, which generates
-# binaries that are incompatible with kernels < 4.16. So manually
-# forcibly install binutils 2.30-22 instead.
-
-RUN if [ "$TARGETARCH" = "amd64" ] ; then \
-    curl -L -o binutils-x86-64-linux-gnu_2.30-22_${TARGETARCH}.deb https://download.falco.org/dependencies/binutils-x86-64-linux-gnu_2.30-22_${TARGETARCH}.deb; \
-    else  \
-    curl -L -o  binutils-aarch64-linux-gnu_2.30-22_${TARGETARCH}.deb https://download.falco.org/dependencies/binutils-aarch64-linux-gnu_2.30-22_${TARGETARCH}.deb; \
-    fi
-
-RUN curl -L -o binutils_2.30-22_${TARGETARCH}.deb https://download.falco.org/dependencies/binutils_2.30-22_${TARGETARCH}.deb \
-	&& curl -L -o libbinutils_2.30-22_${TARGETARCH}.deb https://download.falco.org/dependencies/libbinutils_2.30-22_${TARGETARCH}.deb \
-	&& curl -L -o binutils-common_2.30-22_${TARGETARCH}.deb https://download.falco.org/dependencies/binutils-common_2.30-22_${TARGETARCH}.deb \
-	&& dpkg -i *binutils*.deb \
-	&& rm -f *binutils*.deb
 
 COPY ./docker-entrypoint.sh /
 
