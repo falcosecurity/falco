@@ -18,6 +18,7 @@ permissions:
 
 env:
   AWS_S3_REGION: eu-west-1
+  AWS_CLOUDFRONT_DIST_ID: E1CQNPFWRXLGQD
 
 jobs:
   publish-packages:
