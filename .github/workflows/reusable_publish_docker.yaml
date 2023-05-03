@@ -20,7 +20,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: falco-images
-          path: /tmp
+          path: /tmp/falco-images
       
       - name: Load all images
         run: |
@@ -43,10 +43,6 @@ jobs:
         uses: aws-actions/amazon-ecr-login@2f9f10ea3fa2eed41ac443fee8bfbd059af2d0a4 # v1.6.0
         with:
           registry-type: public    
-          
-      - name: Login to Amazon ECR Public
-        run: |
-          aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/falcosecurity
           
       - name: Create and push no-driver manifest
         uses: Noelware/docker-manifest-action@0.3.1
