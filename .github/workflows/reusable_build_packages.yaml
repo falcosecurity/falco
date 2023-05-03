@@ -181,10 +181,15 @@ jobs:
         run: |
           cd build
           make -j6 package
+
+      - name: Rename static package
+        run: |
+          cd build
+          mv falco-${{ needs.fetch-version.outputs.version }}-x86_64.tar.gz falco-${{ needs.fetch-version.outputs.version }}-static-x86_64.tar.gz 
           
       - name: Upload Falco static package
         uses: actions/upload-artifact@v3
         with:
           name: falco-${{ needs.fetch-version.outputs.version }}-static-x86_64.tar.gz
           path: |
-            ${{ github.workspace }}/build/falco-*.tar.gz
+            ${{ github.workspace }}/build/falco-${{ needs.fetch-version.outputs.version }}-static-x86_64.tar.gz
