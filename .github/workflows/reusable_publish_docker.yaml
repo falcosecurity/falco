@@ -6,9 +6,6 @@ permissions:
   id-token: write
   contents: read
   
-env:
-  AWS_S3_REGION: eu-west-1
-  
 jobs:
   publish-docker:
     runs-on: ubuntu-latest
@@ -36,7 +33,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: "arn:aws:iam::292999226676:role/github_actions-falco-ecr"
-          aws-region: ${{ env.AWS_S3_REGION }}
+          aws-region: us-east-1 # The region must be set to us-east-1 in order to access ECR Public.
           
       - name: Login to Amazon ECR
         id: login-ecr-public
