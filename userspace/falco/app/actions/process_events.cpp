@@ -42,7 +42,6 @@ limitations under the License.
 
 using namespace falco::app;
 using namespace falco::app::actions;
-
 class source_sync_context
 {
 public:
@@ -183,6 +182,7 @@ static falco::app::run_result do_inspect(
 	//
 	// Loop through the events
 	//
+	std::string prev_rule = "";
 	while(1)
 	{
 		rc = inspector->next(&ev);
@@ -309,16 +309,26 @@ static falco::app::run_result do_inspect(
 		std::unique_ptr<falco_engine::rule_result> res = s.engine->process_event(source_engine_idx, ev);
 		if(res)
 		{
-			if (!rate_limiter_enabled || rate_limiter.claim())
+			if(prev_rule == "")
+			{
+				prev_rule = res->rule;
+			}
+			else if ((!rate_limiter_enabled || rate_limiter.claim()) && prev_rule != res->rule)
 			{
 				s.outputs->handle_event(res->evt, res->rule, res->source, res->priority_num, res->format, res->tags);
+				prev_rule = res->rule;
 			}
-			else
+			else if(!(!rate_limiter_enabled || rate_limiter.claim()))
 			{
 				falco_logger::log(LOG_DEBUG, "Skipping rate-limited notification for rule " + res->rule + "\n");
 			}
+			else
+			{
+				num_evts++;
+				continue;
+			}
 		}
-
+	
 		num_evts++;
 	}
 
@@ -438,7 +448,7 @@ falco::app::run_result falco::app::actions::process_events(falco::app::state& s)
 		}
 	}
 	else
-	{
+	
 		print_enabled_event_sources(s);
 
 		// start event processing for all enabled sources
