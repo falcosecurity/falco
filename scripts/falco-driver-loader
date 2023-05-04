@@ -296,7 +296,6 @@ load_kernel_module_compile() {
 			fi
 		fi
 	done
-	rm -f "$MAKEWRAPPER"
 }
 
 load_kernel_module_download() {
