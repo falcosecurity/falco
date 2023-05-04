@@ -200,6 +200,11 @@ get_target_id() {
 		# version_id has been sourced from os-release. Build a kernel version like: 1_1.11.0-aws
 		KERNEL_VERSION="1_${VERSION_ID}-${VARIANT_ID_CUT}"
 		;;
+	("talos")
+		TARGET_ID=$(echo "${OS_ID}" | tr '[:upper:]' '[:lower:]')
+		# version_id has been sourced from os-release. Build a kernel version like: 1_1.4.1
+		KERNEL_VERSION="1_${VERSION_ID}"
+		;;
 	(*)
 		TARGET_ID=$(echo "${OS_ID}" | tr '[:upper:]' '[:lower:]')
 		;;
