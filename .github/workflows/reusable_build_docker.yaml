@@ -15,6 +15,11 @@ on:
         description: 'Falco version extracted from userspace/falco/config_falco.h'
         required: true
         type: string
+      is_latest:
+        description: Update the latest tag with the new image
+        required: false
+        type: boolean
+        default: false
 
 # Here we just build all docker images as tarballs, 
 # then we upload all the tarballs to be later downloaded by reusable_publish_docker workflow.
@@ -69,7 +74,7 @@ jobs:
           outputs: type=docker,dest=/tmp/falco-driver-loader-${{ inputs.arch }}.tar  
             
       - name: Build no-driver latest image
-        if: ${{ github.ref_name != 'master' }}
+        if: ${{ inputs.is_latest }}
         uses: docker/build-push-action@v3
         with:
           context: ${{ github.workspace }}/docker/no-driver/
@@ -84,7 +89,7 @@ jobs:
           outputs: type=docker,dest=/tmp/falco-no-driver-latest-${{ inputs.arch }}.tar
             
       - name: Build falco latest image
-        if: ${{ github.ref_name != 'master' }}
+        if: ${{ inputs.is_latest }}
         uses: docker/build-push-action@v3
         with:
           context: ${{ github.workspace }}/docker/falco/
@@ -97,7 +102,7 @@ jobs:
           outputs: type=docker,dest=/tmp/falco-latest-${{ inputs.arch }}.tar
             
       - name: Build falco-driver-loader latest image
-        if: ${{ github.ref_name != 'master' }}
+        if: ${{ inputs.is_latest }}
         uses: docker/build-push-action@v3
         with:
           context: ${{ github.workspace }}/docker/driver-loader/
