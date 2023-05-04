@@ -1,6 +1,12 @@
 # This is a reusable workflow used by master and release CI
 on:
   workflow_call:
+    inputs:
+      is_latest:
+        description: Update the latest tag with the new image
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   id-token: write
@@ -70,7 +76,7 @@ jobs:
           push: true      
 
       - name: Create and push no-driver latest manifest
-        if: ${{ github.ref_name != 'master' }}
+        if: ${{ inputs.is_latest }}
         uses: Noelware/docker-manifest-action@0.3.1
         with:
           inputs: falcosecurity/falco-no-driver:latest
@@ -78,7 +84,7 @@ jobs:
           push: true
           
       - name: Create and push slim latest manifest
-        if: ${{ github.ref_name != 'master' }}
+        if: ${{ inputs.is_latest }}
         uses: Noelware/docker-manifest-action@0.3.1
         with:
           inputs: falcosecurity/falco:latest-slim
@@ -86,7 +92,7 @@ jobs:
           push: true
           
       - name: Create and push no-driver latest manifest for ecr
-        if: ${{ github.ref_name != 'master' }}
+        if: ${{ inputs.is_latest }}
         uses: Noelware/docker-manifest-action@0.3.1
         with:
           inputs: public.ecr.aws/falcosecurity/falco-no-driver:latest
@@ -94,7 +100,7 @@ jobs:
           push: true
           
       - name: Create and push slim latest manifest for ecr
-        if: ${{ github.ref_name != 'master' }}
+        if: ${{ inputs.is_latest }}
         uses: Noelware/docker-manifest-action@0.3.1
         with:
           inputs: public.ecr.aws/falcosecurity/falco:latest-slim
@@ -116,7 +122,7 @@ jobs:
           push: true    
       
       - name: Create and push falco latest manifest
-        if: ${{ github.ref_name != 'master' }}
+        if: ${{ inputs.is_latest }}
         uses: Noelware/docker-manifest-action@0.3.1
         with:
           inputs: falcosecurity/falco:latest
@@ -124,7 +130,7 @@ jobs:
           push: true
           
       - name: Create and push falco latest manifest for ecr
-        if: ${{ github.ref_name != 'master' }}
+        if: ${{ inputs.is_latest }}
         uses: Noelware/docker-manifest-action@0.3.1
         with:
           inputs: public.ecr.aws/falcosecurity/falco:latest
@@ -146,7 +152,7 @@ jobs:
           push: true    
       
       - name: Create and push falco-driver-loader latest manifest
-        if: ${{ github.ref_name != 'master' }}
+        if: ${{ inputs.is_latest }}
         uses: Noelware/docker-manifest-action@0.3.1
         with:
           inputs: falcosecurity/falco-driver-loader:latest
@@ -154,7 +160,7 @@ jobs:
           push: true
           
       - name: Create and push falco-driver-loader latest manifest for ecr
-        if: ${{ github.ref_name != 'master' }}
+        if: ${{ inputs.is_latest }}
         uses: Noelware/docker-manifest-action@0.3.1
         with:
           inputs: public.ecr.aws/falcosecurity/falco-driver-loader:latest

@@ -2,7 +2,8 @@ name: Release Packages and Docker images
 on:
   push:
     tags:
-      - '[0-9]+.[0-9]+.[0-9]+'
+      - '[0-9]+.[0-9]+.[0-9]+'   # final release
+      - '[0-9]+.[0-9]+.[0-9]+-*' # prerelease/RC
 
 # Checks if any concurrent jobs is running for release CI and eventually cancel it.
 concurrency:
@@ -10,6 +11,36 @@ concurrency:
   cancel-in-progress: true  
 
 jobs:
+  release-settings:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get latest release
+        uses: rez0n/actions-github-release@v2.0
+        id: latest_release
+        env:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          type: "stable"
+
+      - name: Get settings for this release
+        id: get_settings
+        shell: python
+        run: |
+          import os
+          is_prerelease = '-' in '${{ github.ref_name }}'
+
+          # Safeguard: you need to both set "latest" in GH and not have suffixes to overwrite latest
+          is_latest = '${{ steps.latest_release.outputs.release }}' == '${{ github.ref_name }}' and not is_prerelease
+
+          bucket_suffix = '-dev' if is_prerelease else ''
+
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as ofp:
+            print(f'is_latest={is_latest}'.lower(), file=ofp)
+            print(f'bucket_suffix={bucket_suffix}', file=ofp)
+    outputs:
+      is_latest: ${{ steps.get_settings.outputs.is_latest }} 
+      bucket_suffix: ${{ steps.get_settings.outputs.bucket_suffix }}
+
   build-packages:
     uses: falcosecurity/falco/.github/workflows/reusable_build_packages.yaml@master
     with:
@@ -26,6 +57,7 @@ jobs:
     needs: [build-packages, build-packages-arm64]
     uses: falcosecurity/falco/.github/workflows/reusable_publish_packages.yaml@master
     with:
+      bucket_suffix: ${{ steps.get_settings.outputs.bucket_suffix }}
       version: ${{ needs.build-packages.outputs.version }}
     secrets: inherit
   
@@ -35,6 +67,8 @@ jobs:
     uses: falcosecurity/falco/.github/workflows/reusable_build_docker.yaml@master
     with:
       arch: x86_64
+      is_latest: ${{ needs.release-settings.outputs.is_latest == 'true' }}
+      bucket_suffix: ${{ steps.get_settings.outputs.bucket_suffix }}
       version: ${{ needs.build-packages.outputs.version }}
     secrets: inherit
     
@@ -43,6 +77,8 @@ jobs:
     uses: falcosecurity/falco/.github/workflows/reusable_build_docker.yaml@master
     with:
       arch: aarch64
+      is_latest: ${{ needs.release-settings.outputs.is_latest == 'true' }}
+      bucket_suffix: ${{ steps.get_settings.outputs.bucket_suffix }}
       version: ${{ needs.build-packages.outputs.version }}
     secrets: inherit
 
@@ -50,4 +86,5 @@ jobs:
     needs: [build-docker, build-docker-arm64]
     uses: falcosecurity/falco/.github/workflows/reusable_publish_docker.yaml@master
     secrets: inherit
-    
+    with:
+      is_latest: ${{ needs.release-settings.outputs.is_latest == 'true' }}
