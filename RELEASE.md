@@ -113,26 +113,27 @@ The release PR is meant to be made against the respective `release/M.m.x` branch
 - Close the completed milestone as soon as the PR is merged into the release branch
 - Cherry pick the PR on master too
 
+## Publishing Pre-Releases (RCs and tagged development versions)
+
+Core maintainers and/or the release manager can decide to publish pre-releases at any time before the final release
+is live for development and testing purposes.
+
+The prerelease tag must be formatted as `M.m.p-r`where `r` is the prerelease version information (e.g. `0.35.0-rc1`.)
+
+To do so:
+
+- [Draft a new release](https://github.com/falcosecurity/falco/releases/new)
+- Use `M.m.p-r` both as tag version and release title.
+- Check the "Set as a pre-release" checkbox and make sure "Set as the latest release" is unchecked
+- It is recommended to add a brief description so that other contributors will understand the reason why the prerelease is published
+- Publish the prerelease!
+- The release pipeline will start automatically. Packages will be uploaded to the `-dev` bucket and container images will be tagged with the specified tag.
+
 ## Release
 
 Assume `M.m.p` is the new version.
 
-### 1. Create a tag
-
-- Once the release PR has got merged both on the release branch and on master, and the master CI has done its job, git tag the new release on the release branch:
-
-    ```
-    git pull
-    git checkout release/M.m.x
-    git tag M.m.p
-    git push origin M.m.p
-    ```
-
-> **N.B.**: do NOT use an annotated tag. For reference https://git-scm.com/book/en/v2/Git-Basics-Tagging
-
-- Wait for the CI to complete
-
-### 2. Update the GitHub release
+### 1. Create the release with GitHub
 
 - [Draft a new release](https://github.com/falcosecurity/falco/releases/new)
 - Use `M.m.p` both as tag version and release title
@@ -176,8 +177,9 @@ Assume `M.m.p` is the new version.
     ```
 
 - Finally, publish the release!
+- The release pipeline will start automatically upon publication and all packages and container images will be uploaded to the stable repositories.
 
-### 3. Update the meeting notes
+### 2. Update the meeting notes
 
 For each release we archive the meeting notes in git for historical purposes.
 
