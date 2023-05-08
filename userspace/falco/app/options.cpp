@@ -180,7 +180,7 @@ void options::define(cxxopts::Options& opts)
 		("gvisor-root",					  "gVisor root directory for storage of container state. Equivalent to runsc --root flag.", cxxopts::value(gvisor_root), "<gvisor_root>")
 #endif
 #ifdef HAS_MODERN_BPF
-		("modern-bpf",				  "[EXPERIMENTAL] Use BPF modern probe to capture system events.", cxxopts::value(modern_bpf)->default_value("false"))
+		("modern-bpf",				  "Use BPF modern probe to capture system events.", cxxopts::value(modern_bpf)->default_value("false"))
 #endif
 		("i",                             "Print all high volume syscalls that are ignored by default for performance reasons (i.e. without the -A flag) and exit.", cxxopts::value(print_ignored_events)->default_value("false"))
 #ifndef MINIMAL_BUILD
