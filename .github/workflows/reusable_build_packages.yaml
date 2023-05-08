@@ -6,49 +6,15 @@ on:
         description: x86_64 or aarch64
         required: true
         type: string
-    outputs:
       version:
-        description: 'Falco version extracted from config_falco.h'
-        value: ${{ jobs.fetch-version.outputs.version }}    
+        description: The Falco version to use when building packages
+        required: true
+        type: string
 
 jobs:
-  # We need to use an ubuntu-latest to fetch Falco version because
-  # Falco version is computed by some cmake scripts that do git sorceries
-  # to get the current version.
-  # But centos7 jobs have a git version too old and actions/checkout does not 
-  # fully clone the repo, but uses http rest api instead.
-  fetch-version:
-    runs-on: ubuntu-latest
-    # Map the job outputs to step outputs
-    outputs:
-      version: ${{ steps.store_version.outputs.version }}  
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          
-      - name: Install build dependencies
-        run: |
-          sudo apt update 
-          sudo apt install -y cmake build-essential
-      
-      - name: Configure project
-        run: |
-          mkdir build && cd build
-          cmake -DUSE_BUNDLED_DEPS=On ..
-          
-      - name: Load and store Falco version output
-        id: store_version
-        run: |
-          FALCO_VERSION=$(cat build/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
-          echo "version=${FALCO_VERSION}" >> $GITHUB_OUTPUT     
-        
-
   build-modern-bpf-skeleton:
     # See https://github.com/actions/runner/issues/409#issuecomment-1158849936
     runs-on: ${{ (inputs.arch == 'aarch64' && fromJSON('[ "self-hosted", "linux", "ARM64" ]')) || 'ubuntu-latest' }}
-    needs: fetch-version
     container: fedora:latest
     steps:
       # Always install deps before invoking checkout action, to properly perform a full clone.
@@ -62,7 +28,7 @@ jobs:
       - name: Build modern BPF skeleton
         run: |
           mkdir skeleton-build && cd skeleton-build
-          cmake -DUSE_BUNDLED_DEPS=ON -DBUILD_FALCO_MODERN_BPF=ON -DCREATE_TEST_TARGETS=Off -DFALCO_VERSION=${{ needs.fetch-version.outputs.version }} ..
+          cmake -DUSE_BUNDLED_DEPS=ON -DBUILD_FALCO_MODERN_BPF=ON -DCREATE_TEST_TARGETS=Off -DFALCO_VERSION=${{ inputs.version }} ..
           make ProbeSkeleton -j6
           
       - name: Upload skeleton
@@ -74,7 +40,7 @@ jobs:
   build-packages:
     # See https://github.com/actions/runner/issues/409#issuecomment-1158849936
     runs-on: ${{ (inputs.arch == 'aarch64' && fromJSON('[ "self-hosted", "linux", "ARM64" ]')) || 'ubuntu-latest' }}
-    needs: [fetch-version, build-modern-bpf-skeleton]
+    needs: [build-modern-bpf-skeleton]
     container: centos:7
     steps:
       # Always install deps before invoking checkout action, to properly perform a full clone.
@@ -114,7 +80,7 @@ jobs:
               -DMODERN_BPF_SKEL_DIR=/tmp \
               -DBUILD_DRIVER=Off \
               -DBUILD_BPF=Off \
-              -DFALCO_VERSION=${{ needs.fetch-version.outputs.version }} \
+              -DFALCO_VERSION=${{ inputs.version }} \
               ..
               
       - name: Build project
@@ -132,26 +98,25 @@ jobs:
       - name: Upload Falco tar.gz package
         uses: actions/upload-artifact@v3
         with:
-          name: falco-${{ needs.fetch-version.outputs.version }}-${{ inputs.arch }}.tar.gz
+          name: falco-${{ inputs.version }}-${{ inputs.arch }}.tar.gz
           path: |
             ${{ github.workspace }}/build/falco-*.tar.gz
             
       - name: Upload Falco deb package
         uses: actions/upload-artifact@v3
         with:
-          name: falco-${{ needs.fetch-version.outputs.version }}-${{ inputs.arch }}.deb
+          name: falco-${{ inputs.version }}-${{ inputs.arch }}.deb
           path: |
             ${{ github.workspace }}/build/falco-*.deb
       
       - name: Upload Falco rpm package
         uses: actions/upload-artifact@v3
         with:
-          name: falco-${{ needs.fetch-version.outputs.version }}-${{ inputs.arch }}.rpm
+          name: falco-${{ inputs.version }}-${{ inputs.arch }}.rpm
           path: |
             ${{ github.workspace }}/build/falco-*.rpm
             
   build-musl-package:
-    needs: fetch-version
     # x86_64 only for now
     if: ${{ inputs.arch == 'x86_64' }}
     runs-on: ubuntu-latest
@@ -170,7 +135,7 @@ jobs:
       - name: Prepare project
         run: |
           mkdir build && cd build
-          cmake -DCPACK_GENERATOR=TGZ -DBUILD_BPF=Off -DBUILD_DRIVER=Off -DCMAKE_BUILD_TYPE=Release -DUSE_BUNDLED_DEPS=On -DUSE_BUNDLED_LIBELF=Off -DBUILD_LIBSCAP_MODERN_BPF=ON -DMUSL_OPTIMIZED_BUILD=On -DFALCO_ETC_DIR=/etc/falco ../ -DFALCO_VERSION=${{ needs.fetch-version.outputs.version }}
+          cmake -DCPACK_GENERATOR=TGZ -DBUILD_BPF=Off -DBUILD_DRIVER=Off -DCMAKE_BUILD_TYPE=Release -DUSE_BUNDLED_DEPS=On -DUSE_BUNDLED_LIBELF=Off -DBUILD_LIBSCAP_MODERN_BPF=ON -DMUSL_OPTIMIZED_BUILD=On -DFALCO_ETC_DIR=/etc/falco ../ -DFALCO_VERSION=${{ inputs.version }}
           
       - name: Build project
         run: |
@@ -185,11 +150,11 @@ jobs:
       - name: Rename static package
         run: |
           cd build
-          mv falco-${{ needs.fetch-version.outputs.version }}-x86_64.tar.gz falco-${{ needs.fetch-version.outputs.version }}-static-x86_64.tar.gz 
+          mv falco-${{ inputs.version }}-x86_64.tar.gz falco-${{ inputs.version }}-static-x86_64.tar.gz 
           
       - name: Upload Falco static package
         uses: actions/upload-artifact@v3
         with:
-          name: falco-${{ needs.fetch-version.outputs.version }}-static-x86_64.tar.gz
+          name: falco-${{ inputs.version }}-static-x86_64.tar.gz
           path: |
-            ${{ github.workspace }}/build/falco-${{ needs.fetch-version.outputs.version }}-static-x86_64.tar.gz
+            ${{ github.workspace }}/build/falco-${{ inputs.version }}-static-x86_64.tar.gz

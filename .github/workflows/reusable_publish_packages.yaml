@@ -3,7 +3,7 @@ on:
   workflow_call:
     inputs:
       version:
-        description: 'Falco version extracted from userspace/falco/config_falco.h'
+        description: The Falco version to use when publishing packages
         required: true
         type: string
       bucket_suffix:
