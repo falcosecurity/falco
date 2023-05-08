@@ -11,6 +11,10 @@ concurrency:
 jobs:
   release-settings:
     runs-on: ubuntu-latest
+    outputs:
+      is_latest: ${{ steps.get_settings.outputs.is_latest }} 
+      bucket_suffix: ${{ steps.get_settings.outputs.bucket_suffix }}
+      should_publish: ${{ steps.get_settings.outputs.should_publish }}
     steps:
       - name: Get latest release
         uses: rez0n/actions-github-release@v2.0
