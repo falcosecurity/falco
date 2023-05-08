@@ -54,6 +54,7 @@ jobs:
     uses: falcosecurity/falco/.github/workflows/reusable_build_packages.yaml@master
     with:
       arch: x86_64
+      version: ${{ github.event.release.tag_name }}
     secrets: inherit
 
   build-packages-arm64:
@@ -62,6 +63,7 @@ jobs:
     uses: falcosecurity/falco/.github/workflows/reusable_build_packages.yaml@master
     with:
       arch: aarch64
+      version: ${{ github.event.release.tag_name }}
     secrets: inherit
     
   publish-packages:
@@ -70,7 +72,7 @@ jobs:
     uses: falcosecurity/falco/.github/workflows/reusable_publish_packages.yaml@master
     with:
       bucket_suffix: ${{ needs.release-settings.outputs.bucket_suffix }}
-      version: ${{ needs.build-packages.outputs.version }}
+      version: ${{ github.event.release.tag_name }}
     secrets: inherit
   
   # Both build-docker and its arm64 counterpart require build-packages because they use its output
@@ -82,7 +84,8 @@ jobs:
       arch: x86_64
       is_latest: ${{ needs.release-settings.outputs.is_latest == 'true' }}
       bucket_suffix: ${{ needs.release-settings.outputs.bucket_suffix }}
-      version: ${{ needs.build-packages.outputs.version }}
+      version: ${{ github.event.release.tag_name }}
+      tag: ${{ github.event.release.tag_name }}
     secrets: inherit
     
   build-docker-arm64:
@@ -93,7 +96,8 @@ jobs:
       arch: aarch64
       is_latest: ${{ needs.release-settings.outputs.is_latest == 'true' }}
       bucket_suffix: ${{ needs.release-settings.outputs.bucket_suffix }}
-      version: ${{ needs.build-packages.outputs.version }}
+      version: ${{ github.event.release.tag_name }}
+      tag: ${{ github.event.release.tag_name }}
     secrets: inherit
 
   publish-docker:
@@ -103,3 +107,4 @@ jobs:
     secrets: inherit
     with:
       is_latest: ${{ needs.release-settings.outputs.is_latest == 'true' }}
+      tag: ${{ github.event.release.tag_name }}
