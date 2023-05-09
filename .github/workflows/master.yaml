@@ -65,9 +65,8 @@ jobs:
       version: ${{ needs.fetch-version.outputs.version }}
     secrets: inherit
   
-  # Both build-dev-docker and its arm64 counterpart require build-dev-packages because they use its output
   build-dev-docker:
-    needs: [fetch-version, build-dev-packages, publish-dev-packages]
+    needs: [fetch-version, publish-dev-packages]
     uses: falcosecurity/falco/.github/workflows/reusable_build_docker.yaml@master
     with:
       arch: x86_64
@@ -77,7 +76,7 @@ jobs:
     secrets: inherit
     
   build-dev-docker-arm64:
-    needs: [fetch-version, build-dev-packages, publish-dev-packages]
+    needs: [fetch-version, publish-dev-packages]
     uses: falcosecurity/falco/.github/workflows/reusable_build_docker.yaml@master
     with:
       arch: aarch64
