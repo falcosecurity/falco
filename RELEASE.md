@@ -129,6 +129,8 @@ To do so:
 - Publish the prerelease!
 - The release pipeline will start automatically. Packages will be uploaded to the `-dev` bucket and container images will be tagged with the specified tag.
 
+In order to check the status of the release pipeline click on the [GitHub Actions tab](https://github.com/falcosecurity/falco/actions?query=event%3Arelease) in the Falco repository and filter by release.
+
 ## Release
 
 Assume `M.m.p` is the new version.
@@ -178,6 +180,8 @@ Assume `M.m.p` is the new version.
 
 - Finally, publish the release!
 - The release pipeline will start automatically upon publication and all packages and container images will be uploaded to the stable repositories.
+
+In order to check the status of the release pipeline click on the [GitHub Actions tab](https://github.com/falcosecurity/falco/actions?query=event%3Arelease) in the Falco repository and filter by release.
 
 ### 2. Update the meeting notes
 
