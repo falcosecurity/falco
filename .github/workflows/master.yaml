@@ -73,7 +73,7 @@ jobs:
       arch: x86_64
       bucket_suffix: '-dev'
       version: ${{ needs.fetch-version.outputs.version }}
-      tag: ${{ github.ref_name }}
+      tag: master
     secrets: inherit
     
   build-dev-docker-arm64:
@@ -83,12 +83,12 @@ jobs:
       arch: aarch64
       bucket_suffix: '-dev'
       version: ${{ needs.fetch-version.outputs.version }}
-      tag: ${{ github.ref_name }}
+      tag: master
     secrets: inherit
     
   publish-dev-docker:
     needs: [fetch-version, build-dev-docker, build-dev-docker-arm64]
     uses: falcosecurity/falco/.github/workflows/reusable_publish_docker.yaml@master
     with:
-      tag: ${{ github.ref_name }}
+      tag: master
     secrets: inherit
