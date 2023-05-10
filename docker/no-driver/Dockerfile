@@ -20,9 +20,7 @@ RUN curl -L -o falco.tar.gz \
 RUN sed -e 's/time_format_iso_8601: false/time_format_iso_8601: true/' < /falco/etc/falco/falco.yaml > /falco/etc/falco/falco.yaml.new \
     && mv /falco/etc/falco/falco.yaml.new /falco/etc/falco/falco.yaml
 
-# Our default glibc-dynamic image doesn't include libstdc++ so temporarily using this image
-# Working on an alternative (e.g. new image or adding the lib to glibc-dynamic)
-FROM cgr.dev/chainguard/cc-dynamic
+FROM cgr.dev/chainguard/glibc-dynamic
 
 LABEL maintainer="cncf-falco-dev@lists.cncf.io"
 LABEL org.opencontainers.image.source="https://github.com/falcosecurity/falco"
@@ -33,9 +31,7 @@ LABEL usage="docker run -i -t --privileged -v /var/run/docker.sock:/host/var/run
 ENV HOST_ROOT /host
 ENV HOME /root
 
-# Ideally these libs would be part of base image and not copied
-COPY --from=builder /usr/lib/libstdc++.so.6 /usr/lib/libstdc++.so.6 
-
 COPY --from=builder /falco /
+
 
 CMD ["/usr/bin/falco", "-o", "time_format_iso_8601=true"]
