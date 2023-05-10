@@ -6,12 +6,13 @@ ARG VERSION_BUCKET=bin
 ENV FALCO_VERSION=${FALCO_VERSION}
 ENV VERSION_BUCKET=${VERSION_BUCKET}
 
-RUN apk update && apk add build-base gcc curl ca-certificates
+RUN apk update && apk add build-base gcc curl ca-certificates jq
 
 WORKDIR /
 
-RUN curl -L -o falco.tar.gz \
-    https://download.falco.org/packages/${VERSION_BUCKET}/$(uname -m)/falco-${FALCO_VERSION}-$(uname -m).tar.gz && \
+RUN FALCO_VERSION_URLENCODED=$(echo -n ${FALCO_VERSION}|jq -sRr @uri) && \
+    curl -L -o falco.tar.gz \
+    https://download.falco.org/packages/${VERSION_BUCKET}/$(uname -m)/falco-${FALCO_VERSION_URLENCODED}-$(uname -m).tar.gz && \
     tar -xvf falco.tar.gz && \
     rm -f falco.tar.gz && \
     mv falco-${FALCO_VERSION}-$(uname -m) falco && \
