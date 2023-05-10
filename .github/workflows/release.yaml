@@ -14,7 +14,6 @@ jobs:
     outputs:
       is_latest: ${{ steps.get_settings.outputs.is_latest }} 
       bucket_suffix: ${{ steps.get_settings.outputs.bucket_suffix }}
-      should_publish: ${{ steps.get_settings.outputs.should_publish }}
     steps:
       - name: Get latest release
         uses: rez0n/actions-github-release@v2.0
@@ -30,11 +29,15 @@ jobs:
         run: |
           import os
           import re
+          import sys
 
           semver_no_meta = '''^(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)(?:-(?P<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?$'''
           tag_name = '${{ github.event.release.tag_name }}'
 
-          should_publish = re.match(semver_no_meta, tag_name) is not None
+          is_valid_version = re.match(semver_no_meta, tag_name) is not None
+          if not is_valid_version:
+            print(f'Release version {tag_name} is not a valid full or pre-release. See RELEASE.md for more information.')
+            sys.exit(1)
 
           is_prerelease = '-' in tag_name
 
@@ -45,12 +48,10 @@ jobs:
 
           with open(os.environ['GITHUB_OUTPUT'], 'a') as ofp:
             print(f'is_latest={is_latest}'.lower(), file=ofp)
-            print(f'should_publish={should_publish}'.lower(), file=ofp)
             print(f'bucket_suffix={bucket_suffix}', file=ofp)
 
   build-packages:
     needs: [release-settings]
-    if: ${{ needs.release-settings.outputs.should_publish == 'true' }}
     uses: falcosecurity/falco/.github/workflows/reusable_build_packages.yaml@master
     with:
       arch: x86_64
@@ -59,7 +60,6 @@ jobs:
 
   build-packages-arm64:
     needs: [release-settings]
-    if: ${{ needs.release-settings.outputs.should_publish == 'true' }}
     uses: falcosecurity/falco/.github/workflows/reusable_build_packages.yaml@master
     with:
       arch: aarch64
@@ -68,7 +68,6 @@ jobs:
     
   publish-packages:
     needs: [release-settings, build-packages, build-packages-arm64]
-    if: ${{ needs.release-settings.outputs.should_publish == 'true' }}
     uses: falcosecurity/falco/.github/workflows/reusable_publish_packages.yaml@master
     with:
       bucket_suffix: ${{ needs.release-settings.outputs.bucket_suffix }}
@@ -78,7 +77,6 @@ jobs:
   # Both build-docker and its arm64 counterpart require build-packages because they use its output
   build-docker:
     needs: [release-settings, build-packages, publish-packages]
-    if: ${{ needs.release-settings.outputs.should_publish == 'true' }}
     uses: falcosecurity/falco/.github/workflows/reusable_build_docker.yaml@master
     with:
       arch: x86_64
@@ -90,7 +88,6 @@ jobs:
     
   build-docker-arm64:
     needs: [release-settings, build-packages, publish-packages]
-    if: ${{ needs.release-settings.outputs.should_publish == 'true' }}
     uses: falcosecurity/falco/.github/workflows/reusable_build_docker.yaml@master
     with:
       arch: aarch64
@@ -102,7 +99,6 @@ jobs:
 
   publish-docker:
     needs: [release-settings, build-docker, build-docker-arm64]
-    if: ${{ needs.release-settings.outputs.should_publish == 'true' }}
     uses: falcosecurity/falco/.github/workflows/reusable_publish_docker.yaml@master
     secrets: inherit
     with:
