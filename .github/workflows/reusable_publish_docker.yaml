@@ -50,123 +50,63 @@ jobs:
         uses: aws-actions/amazon-ecr-login@2f9f10ea3fa2eed41ac443fee8bfbd059af2d0a4 # v1.6.0
         with:
           registry-type: public    
-          
-      - name: Create and push no-driver manifest
-        uses: Noelware/docker-manifest-action@0.3.1
+      
+      - name: Setup Crane
+        uses: imjasonh/setup-crane@v0.3
         with:
-          inputs: falcosecurity/falco-no-driver:${{ inputs.tag }}
-          images: falcosecurity/falco-no-driver:aarch64-${{ inputs.tag }},falcosecurity/falco-no-driver:x86_64-${{ inputs.tag }}
-          push: true
-          
-      - name: Create and push slim manifest
-        uses: Noelware/docker-manifest-action@0.3.1
-        with:
-          inputs: falcosecurity/falco:${{ inputs.tag }}-slim
-          images: falcosecurity/falco:aarch64-${{ inputs.tag }}-slim,falcosecurity/falco:x86_64-${{ inputs.tag }}-slim
-          push: true     
-          
-      - name: Create and push no-driver manifest for ecr
-        uses: Noelware/docker-manifest-action@0.3.1
-        with:
-          inputs: public.ecr.aws/falcosecurity/falco-no-driver:${{ inputs.tag }}
-          images: public.ecr.aws/falcosecurity/falco-no-driver:aarch64-${{ inputs.tag }},public.ecr.aws/falcosecurity/falco-no-driver:x86_64-${{ inputs.tag }}
-          push: true
-          
-      - name: Create and push slim manifest for ecr
-        uses: Noelware/docker-manifest-action@0.3.1
-        with:
-          inputs: public.ecr.aws/falcosecurity/falco:${{ inputs.tag }}-slim
-          images: public.ecr.aws/falcosecurity/falco:aarch64-${{ inputs.tag }}-slim,public.ecr.aws/falcosecurity/falco:x86_64-${{ inputs.tag }}-slim
-          push: true      
+          version: v0.15.1
 
-      - name: Create and push no-driver latest manifest
-        if: ${{ inputs.is_latest }}
+      # We're pushing the arch-specific manifests to Docker Hub so that we'll be able to easily create the index/multiarch later
+      - name: Push arch-specific images to Docker Hub
+        run: |
+          docker push docker.io/falcosecurity/falco-no-driver:aarch64-${{ inputs.tag }}
+          docker push docker.io/falcosecurity/falco-no-driver:x86_64-${{ inputs.tag }}
+          docker push docker.io/falcosecurity/falco:aarch64-${{ inputs.tag }}
+          docker push docker.io/falcosecurity/falco:x86_64-${{ inputs.tag }}
+          docker push docker.io/falcosecurity/falco-driver-loader:aarch64-${{ inputs.tag }}
+          docker push docker.io/falcosecurity/falco-driver-loader:x86_64-${{ inputs.tag }}
+
+      - name: Create no-driver manifest on Docker Hub
         uses: Noelware/docker-manifest-action@0.3.1
         with:
-          inputs: falcosecurity/falco-no-driver:latest
-          images: falcosecurity/falco-no-driver:aarch64-latest,falcosecurity/falco-no-driver:x86_64-latest
+          inputs: docker.io/falcosecurity/falco-no-driver:${{ inputs.tag }}
+          images: docker.io/falcosecurity/falco-no-driver:aarch64-${{ inputs.tag }},docker.io/falcosecurity/falco-no-driver:x86_64-${{ inputs.tag }}
           push: true
           
-      - name: Create and push slim latest manifest
-        if: ${{ inputs.is_latest }}
+      - name: Tag slim manifest on Docker Hub
+        run: |
+          crane tag docker.io/falcosecurity/falco-no-driver:${{ inputs.tag }} docker.io/falcosecurity/falco:${{ inputs.tag }}-slim
+
+      - name: Create falco manifest on Docker Hub
         uses: Noelware/docker-manifest-action@0.3.1
         with:
-          inputs: falcosecurity/falco:latest-slim
-          images: falcosecurity/falco:aarch64-latest-slim,falcosecurity/falco:x86_64-latest-slim
+          inputs: docker.io/falcosecurity/falco:${{ inputs.tag }}
+          images: docker.io/falcosecurity/falco:aarch64-${{ inputs.tag }},docker.io/falcosecurity/falco:x86_64-${{ inputs.tag }}
           push: true
           
-      - name: Create and push no-driver latest manifest for ecr
-        if: ${{ inputs.is_latest }}
+      - name: Create falco-driver-loader manifest on Docker Hub
         uses: Noelware/docker-manifest-action@0.3.1
         with:
-          inputs: public.ecr.aws/falcosecurity/falco-no-driver:latest
-          images: public.ecr.aws/falcosecurity/falco-no-driver:aarch64-latest,public.ecr.aws/falcosecurity/falco-no-driver:x86_64-latest
+          inputs: docker.io/falcosecurity/falco-driver-loader:${{ inputs.tag }}
+          images: docker.io/falcosecurity/falco-driver-loader:aarch64-${{ inputs.tag }},docker.io/falcosecurity/falco-driver-loader:x86_64-${{ inputs.tag }}
           push: true
-          
-      - name: Create and push slim latest manifest for ecr
-        if: ${{ inputs.is_latest }}
-        uses: Noelware/docker-manifest-action@0.3.1
-        with:
-          inputs: public.ecr.aws/falcosecurity/falco:latest-slim
-          images: public.ecr.aws/falcosecurity/falco:aarch64-latest-slim,public.ecr.aws/falcosecurity/falco:x86_64-latest-slim
-          push: true        
-    
-      - name: Create and push falco manifest
-        uses: Noelware/docker-manifest-action@0.3.1
-        with:
-          inputs: falcosecurity/falco:${{ inputs.tag }}
-          images: falcosecurity/falco:aarch64-${{ inputs.tag }},falcosecurity/falco:x86_64-${{ inputs.tag }}
-          push: true
-          
-      - name: Create and push falco manifest for ecr
-        uses: Noelware/docker-manifest-action@0.3.1
-        with:
-          inputs: public.ecr.aws/falcosecurity/falco:${{ inputs.tag }}
-          images: public.ecr.aws/falcosecurity/falco:aarch64-${{ inputs.tag }},public.ecr.aws/falcosecurity/falco:x86_64-${{ inputs.tag }}
-          push: true    
-      
-      - name: Create and push falco latest manifest
-        if: ${{ inputs.is_latest }}
-        uses: Noelware/docker-manifest-action@0.3.1
-        with:
-          inputs: falcosecurity/falco:latest
-          images: falcosecurity/falco:aarch64-latest,falcosecurity/falco:x86_64-latest
-          push: true
-          
-      - name: Create and push falco latest manifest for ecr
-        if: ${{ inputs.is_latest }}
-        uses: Noelware/docker-manifest-action@0.3.1
-        with:
-          inputs: public.ecr.aws/falcosecurity/falco:latest
-          images: public.ecr.aws/falcosecurity/falco:aarch64-latest,public.ecr.aws/falcosecurity/falco:x86_64-latest
-          push: true  
-          
-      - name: Create and push falco-driver-loader manifest
-        uses: Noelware/docker-manifest-action@0.3.1
-        with:
-          inputs: falcosecurity/falco-driver-loader:${{ inputs.tag }}
-          images: falcosecurity/falco-driver-loader:aarch64-${{ inputs.tag }},falcosecurity/falco-driver-loader:x86_64-${{ inputs.tag }}
-          push: true
-          
-      - name: Create and push falco-driver-loader manifest for ecr
-        uses: Noelware/docker-manifest-action@0.3.1
-        with:
-          inputs: public.ecr.aws/falcosecurity/falco-driver-loader:${{ inputs.tag }}
-          images: public.ecr.aws/falcosecurity/falco-driver-loader:aarch64-${{ inputs.tag }},public.ecr.aws/falcosecurity/falco-driver-loader:x86_64-${{ inputs.tag }}
-          push: true    
-      
-      - name: Create and push falco-driver-loader latest manifest
-        if: ${{ inputs.is_latest }}
-        uses: Noelware/docker-manifest-action@0.3.1
-        with:
-          inputs: falcosecurity/falco-driver-loader:latest
-          images: falcosecurity/falco-driver-loader:aarch64-latest,falcosecurity/falco-driver-loader:x86_64-latest
-          push: true
-          
-      - name: Create and push falco-driver-loader latest manifest for ecr
-        if: ${{ inputs.is_latest }}
-        uses: Noelware/docker-manifest-action@0.3.1
-        with:
-          inputs: public.ecr.aws/falcosecurity/falco-driver-loader:latest
-          images: public.ecr.aws/falcosecurity/falco-driver-loader:aarch64-latest,public.ecr.aws/falcosecurity/falco-driver-loader:x86_64-latest
-          push: true      
+
+      - name: Publish images to ECR
+        run: |
+          crane copy docker.io/falcosecurity/falco-no-driver:${{ inputs.tag }} public.ecr.aws/falcosecurity/falco-no-driver:${{ inputs.tag }}
+          crane copy docker.io/falcosecurity/falco:${{ inputs.tag }} public.ecr.aws/falcosecurity/falco:${{ inputs.tag }}
+          crane copy docker.io/falcosecurity/falco-driver-loader:${{ inputs.tag }} public.ecr.aws/falcosecurity/falco-driver-loader:${{ inputs.tag }}
+          crane tag public.ecr.aws/falcosecurity/falco-no-driver:${{ inputs.tag }} public.ecr.aws/falcosecurity/falco:${{ inputs.tag }}-slim
+
+      - name: Tag latest on Docker Hub and ECR
+        if: inputs.is_latest
+        run: |
+          crane tag docker.io/falcosecurity/falco-no-driver:${{ inputs.tag }} latest
+          crane tag docker.io/falcosecurity/falco:${{ inputs.tag }} latest
+          crane tag docker.io/falcosecurity/falco-driver-loader:${{ inputs.tag }} latest
+          crane tag docker.io/falcosecurity/falco:${{ inputs.tag }}-slim latest-slim
+
+          crane tag public.ecr.aws/falcosecurity/falco-no-driver:${{ inputs.tag }} latest
+          crane tag public.ecr.aws/falcosecurity/falco:${{ inputs.tag }} latest
+          crane tag public.ecr.aws/falcosecurity/falco-driver-loader:${{ inputs.tag }} latest
+          crane tag public.ecr.aws/falcosecurity/falco:${{ inputs.tag }}-slim latest-slim
