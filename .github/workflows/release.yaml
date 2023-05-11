@@ -80,7 +80,6 @@ jobs:
     uses: falcosecurity/falco/.github/workflows/reusable_build_docker.yaml@master
     with:
       arch: x86_64
-      is_latest: ${{ needs.release-settings.outputs.is_latest == 'true' }}
       bucket_suffix: ${{ needs.release-settings.outputs.bucket_suffix }}
       version: ${{ github.event.release.tag_name }}
       tag: ${{ github.event.release.tag_name }}
@@ -91,7 +90,6 @@ jobs:
     uses: falcosecurity/falco/.github/workflows/reusable_build_docker.yaml@master
     with:
       arch: aarch64
-      is_latest: ${{ needs.release-settings.outputs.is_latest == 'true' }}
       bucket_suffix: ${{ needs.release-settings.outputs.bucket_suffix }}
       version: ${{ github.event.release.tag_name }}
       tag: ${{ github.event.release.tag_name }}

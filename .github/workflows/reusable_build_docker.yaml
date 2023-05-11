@@ -19,11 +19,6 @@ on:
         description: The tag to use (e.g. "master" or "0.35.0")
         required: true
         type: string
-      is_latest:
-        description: Update the latest tag with the new image
-        required: false
-        type: boolean
-        default: false
 
 # Here we just build all docker images as tarballs, 
 # then we upload all the tarballs to be later downloaded by reusable_publish_docker workflow.
@@ -48,10 +43,7 @@ jobs:
             VERSION_BUCKET=bin${{ inputs.bucket_suffix }}
             FALCO_VERSION=${{ inputs.version }}
           tags: |
-            falcosecurity/falco-no-driver:${{ inputs.arch }}-${{ inputs.tag }}
-            falcosecurity/falco:${{ inputs.arch }}-${{ inputs.tag }}-slim
-            public.ecr.aws/falcosecurity/falco-no-driver:${{ inputs.arch }}-${{ inputs.tag }}
-            public.ecr.aws/falcosecurity/falco:${{ inputs.arch }}-${{ inputs.tag }}-slim
+            docker.io/falcosecurity/falco-no-driver:${{ inputs.arch }}-${{ inputs.tag }}
           outputs: type=docker,dest=/tmp/falco-no-driver-${{ inputs.arch }}.tar
             
       - name: Build falco image
@@ -62,8 +54,7 @@ jobs:
             VERSION_BUCKET=deb${{ inputs.bucket_suffix }}
             FALCO_VERSION=${{ inputs.version }}
           tags: |
-            falcosecurity/falco:${{ inputs.arch }}-${{ inputs.tag }}
-            public.ecr.aws/falcosecurity/falco:${{ inputs.arch }}-${{ inputs.tag }}
+            docker.io/falcosecurity/falco:${{ inputs.arch }}-${{ inputs.tag }}
           outputs: type=docker,dest=/tmp/falco-${{ inputs.arch }}.tar
             
       - name: Build falco-driver-loader image
@@ -73,50 +64,9 @@ jobs:
           build-args: |
             FALCO_IMAGE_TAG=${{ inputs.arch }}-${{ inputs.tag }}
           tags: |
-            falcosecurity/falco-driver-loader:${{ inputs.arch }}-${{ inputs.tag }}
-            public.ecr.aws/falcosecurity/falco-driver-loader:${{ inputs.arch }}-${{ inputs.tag }}
+            docker.io/falcosecurity/falco-driver-loader:${{ inputs.arch }}-${{ inputs.tag }}
           outputs: type=docker,dest=/tmp/falco-driver-loader-${{ inputs.arch }}.tar  
             
-      - name: Build no-driver latest image
-        if: ${{ inputs.is_latest }}
-        uses: docker/build-push-action@v3
-        with:
-          context: ${{ github.workspace }}/docker/no-driver/
-          build-args: |
-            VERSION_BUCKET=bin
-            FALCO_VERSION=${{ inputs.version }}
-          tags: |
-            falcosecurity/falco-no-driver:${{ inputs.arch }}-latest
-            falcosecurity/falco:${{ inputs.arch }}-latest-slim
-            public.ecr.aws/falcosecurity/falco-no-driver:${{ inputs.arch }}-latest
-            public.ecr.aws/falcosecurity/falco:${{ inputs.arch }}-latest-slim
-          outputs: type=docker,dest=/tmp/falco-no-driver-latest-${{ inputs.arch }}.tar
-            
-      - name: Build falco latest image
-        if: ${{ inputs.is_latest }}
-        uses: docker/build-push-action@v3
-        with:
-          context: ${{ github.workspace }}/docker/falco/
-          build-args: |
-            VERSION_BUCKET=deb
-            FALCO_VERSION=${{ inputs.version }}
-          tags: |
-            falcosecurity/falco:${{ inputs.arch }}-latest
-            public.ecr.aws/falcosecurity/falco:${{ inputs.arch }}-latest
-          outputs: type=docker,dest=/tmp/falco-latest-${{ inputs.arch }}.tar
-            
-      - name: Build falco-driver-loader latest image
-        if: ${{ inputs.is_latest }}
-        uses: docker/build-push-action@v3
-        with:
-          context: ${{ github.workspace }}/docker/driver-loader/
-          build-args: |
-            FALCO_IMAGE_TAG=${{ inputs.arch }}-latest
-          tags: |
-            falcosecurity/falco-driver-loader:${{ inputs.arch }}-latest
-            public.ecr.aws/falcosecurity/falco-driver-loader:${{ inputs.arch }}-latest
-          outputs: type=docker,dest=/tmp/falco-driver-loader-latest-${{ inputs.arch }}.tar
-       
       - name: Upload images tarballs
         uses: actions/upload-artifact@v3
         with:
