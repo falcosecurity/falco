@@ -102,3 +102,4 @@ jobs:
     with:
       is_latest: ${{ needs.release-settings.outputs.is_latest == 'true' }}
       tag: ${{ github.event.release.tag_name }}
+      sign: true

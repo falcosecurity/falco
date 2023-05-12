@@ -11,6 +11,11 @@ on:
         required: false
         type: boolean
         default: false
+      sign:
+        description: Add signature with cosign
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   id-token: write
@@ -91,6 +96,13 @@ jobs:
           images: docker.io/falcosecurity/falco-driver-loader:aarch64-${{ inputs.tag }},docker.io/falcosecurity/falco-driver-loader:x86_64-${{ inputs.tag }}
           push: true
 
+      - name: Get Digests for images
+        id: digests
+        run: |
+          echo "falco-no-driver=$(crane digest docker.io/falcosecurity/falco-no-driver:${{ inputs.version }})" >> $GITHUB_OUTPUT
+          echo "falco=$(crane digest docker.io/falcosecurity/falco:${{ inputs.version }})" >> $GITHUB_OUTPUT
+          echo "falco-driver-loader=$(crane digest docker.io/falcosecurity/falco-driver-loader:${{ inputs.version }})" >> $GITHUB_OUTPUT
+
       - name: Publish images to ECR
         run: |
           crane copy docker.io/falcosecurity/falco-no-driver:${{ inputs.tag }} public.ecr.aws/falcosecurity/falco-no-driver:${{ inputs.tag }}
@@ -110,3 +122,23 @@ jobs:
           crane tag public.ecr.aws/falcosecurity/falco:${{ inputs.tag }} latest
           crane tag public.ecr.aws/falcosecurity/falco-driver-loader:${{ inputs.tag }} latest
           crane tag public.ecr.aws/falcosecurity/falco:${{ inputs.tag }}-slim latest-slim
+
+      - name: Setup Cosign
+        if: inputs.sign
+        uses: sigstore/cosign-installer@main
+        with:
+          cosign-release: v2.0.2
+
+      - name: Sign images with cosign
+        if: inputs.sign
+        env:
+          COSIGN_EXPERIMENTAL: "true"
+          COSIGN_YES: "true"
+        run: |
+          cosign sign docker.io/falcosecurity/falco-no-driver@${{ steps.digests.outputs.falco-no-driver }}
+          cosign sign docker.io/falcosecurity/falco@${{ steps.digests.outputs.falco }}
+          cosign sign docker.io/falcosecurity/falco-driver-loader@${{ steps.digests.outputs.falco-driver-loader }}
+
+          cosign sign public.ecr.aws/falcosecurity/falco-no-driver@${{ steps.digests.outputs.falco-no-driver }}
+          cosign sign public.ecr.aws/falcosecurity/falco@${{ steps.digests.outputs.falco }}
+          cosign sign public.ecr.aws/falcosecurity/falco-driver-loader@${{ steps.digests.outputs.falco-driver-loader }}
