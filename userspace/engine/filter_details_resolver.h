@@ -1,0 +1,72 @@
+/*
+Copyright (C) 2023 The Falco Authors.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+#pragma once
+
+#include <filter/parser.h>
+#include <string>
+#include <unordered_set>
+#include <unordered_map>
+
+struct filter_details 
+{
+	// input macros and lists
+	std::unordered_map<std::string, std::shared_ptr<libsinsp::filter::ast::expr>> known_macros;
+	std::unordered_set<std::string> known_lists;
+	
+	// output details
+	std::unordered_set<std::string> fields;
+	std::unordered_set<std::string> macros;
+	std::unordered_set<std::string> operators;
+	std::unordered_set<std::string> lists;
+};
+
+/*!
+	\brief Helper class for getting details about rules' filters.
+*/
+class filter_details_resolver
+{
+public:
+	/*!
+		\brief Visits a filter AST and stores details about macros, lists,
+		fields and operators used.
+		\param filter The filter AST to be processed. 
+		\param details Helper structure used to state known macros and 
+		lists on input, and to store all the retrieved details as output.
+	*/
+	void run(libsinsp::filter::ast::expr* filter,
+		filter_details& details);
+	
+private:
+	struct visitor : public libsinsp::filter::ast::expr_visitor
+	{
+		visitor(filter_details& details) : m_details(details) {}
+		visitor(visitor&&) = default;
+		visitor& operator = (visitor&&) = default;
+		visitor(const visitor&) = delete;
+		visitor& operator = (const visitor&) = delete;
+
+		void visit(libsinsp::filter::ast::and_expr* e) override;
+		void visit(libsinsp::filter::ast::or_expr* e) override;
+		void visit(libsinsp::filter::ast::not_expr* e) override;
+		void visit(libsinsp::filter::ast::value_expr* e) override;
+		void visit(libsinsp::filter::ast::list_expr* e) override;
+		void visit(libsinsp::filter::ast::unary_check_expr* e) override;
+		void visit(libsinsp::filter::ast::binary_check_expr* e) override;
+
+		filter_details& m_details;
+	};
+};
