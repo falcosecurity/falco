@@ -123,7 +123,7 @@ public:
 	// Print details on the given rule. If rule is NULL, print
 	// details on all rules.
 	//
-	void describe_rule(std::string *rule) const;
+	void describe_rule(std::string *rule, bool json) const;
 
 	//
 	// Print statistics on how many events matched each rule.
@@ -297,6 +297,9 @@ private:
 	// ratio/multiplier.
 	//
 	inline bool should_drop_evt() const;
+
+	// Retrieve details of a rule in json format
+	Json::Value get_json_rule_details(const falco_rule& r) const;
 
 	rule_loader::collector m_rule_collector;
 	indexed_vector<falco_rule> m_rules;
