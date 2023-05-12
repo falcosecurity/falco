@@ -27,6 +27,9 @@ limitations under the License.
 #include <fstream>
 #include <functional>
 #include <utility>
+#include <vector>
+
+#include <nlohmann/json.hpp>
 
 #include <sinsp.h>
 #include <plugin.h>
@@ -42,6 +45,7 @@ limitations under the License.
 #include "utils.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
 #include "evttype_index_ruleset.h"
+#include "filter_details_resolver.h"
 
 const std::string falco_engine::s_default_ruleset = "falco-default-ruleset";
 
@@ -427,25 +431,149 @@ std::size_t falco_engine::add_source(const std::string &source,
 	return m_sources.insert(src, source);
 }
 
-void falco_engine::describe_rule(std::string *rule) const
+void falco_engine::describe_rule(std::string *rule, bool json) const
 {
-	static const char* rule_fmt = "%-50s %s\n";
-	fprintf(stdout, rule_fmt, "Rule", "Description");
-	fprintf(stdout, rule_fmt, "----",  "-----------");
-	if (!rule)
+	if(!json)
 	{
-		for (auto &r : m_rules)
+		static const char *rule_fmt = "%-50s %s\n";
+		fprintf(stdout, rule_fmt, "Rule", "Description");
+		fprintf(stdout, rule_fmt, "----", "-----------");
+		if(!rule)
 		{
-			auto str = falco::utils::wrap_text(r.description, 51, 110) + "\n";
-			fprintf(stdout, rule_fmt, r.name.c_str(), str.c_str());
+			for(auto &r : m_rules)
+			{
+				auto str = falco::utils::wrap_text(r.description, 51, 110) + "\n";
+				fprintf(stdout, rule_fmt, r.name.c_str(), str.c_str());
+			}
 		}
+		else
+		{
+			auto r = m_rules.at(*rule);
+			if(r == nullptr)
+			{
+				return;
+			}
+			auto str = falco::utils::wrap_text(r->description, 51, 110) + "\n";
+			fprintf(stdout, rule_fmt, r->name.c_str(), str.c_str());
+		}
+
+		return;
 	}
+
+	Json::FastWriter writer;
+	std::string json_str;
+
+	if(!rule)
+	{
+		Json::Value output_array = Json::arrayValue;
+		for(const auto& r : m_rules)
+		{
+			auto json_details = get_json_rule_details(r);
+			output_array.append(json_details);
+		}
+		
+		json_str = writer.write(output_array);
+	} 
 	else
 	{
 		auto r = m_rules.at(*rule);
-		auto str = falco::utils::wrap_text(r->description, 51, 110) + "\n";
-		fprintf(stdout, rule_fmt, r->name.c_str(), str.c_str());
+		if(r == nullptr)
+		{
+			throw falco_exception("Rule \"" + *rule + "\" is not loaded");
+		}
+
+		auto json_details = get_json_rule_details(*r);
+		json_str = writer.write(json_details);
 	}
+
+	fprintf(stdout, "%s", json_str.c_str());
+}
+
+Json::Value falco_engine::get_json_rule_details(const falco_rule& r) const
+{
+	// Parse rule condition and build the AST
+	// Assumption: the parsing will not throw an exception because
+	// rules have already been loaded.
+	auto rule_info = m_rule_collector.rules().at(r.name);
+	auto ast = libsinsp::filter::parser(rule_info->cond).parse();
+
+	// Prepare known macros and lists for the details resolver
+	filter_details_resolver resolver;
+	filter_details details;
+
+	for(const auto &m : m_rule_collector.macros())
+	{
+		// Assumption: same as above.
+		auto cond_ast = libsinsp::filter::parser(m.cond).parse();
+		std::shared_ptr<libsinsp::filter::ast::expr> cond_ast_ptr = std::move(cond_ast);
+		details.known_macros[m.name] = cond_ast_ptr;
+	}
+
+	for(const auto &l : m_rule_collector.lists())
+	{
+		details.known_lists.insert(l.name);
+	}
+
+	// Resolve the AST details
+	resolver.run(ast.get(), details);
+
+	// Get fields from output string
+	auto insp = new sinsp;
+	sinsp_evt_formatter fmt(insp, r.output);
+	std::vector<std::string> out_fields;
+	fmt.get_field_names(out_fields);
+	delete insp;
+
+	// Build JSON object for the output
+	Json::Value output;
+
+	output["name"] = r.name;
+	output["description"] = r.description;
+	output["priority"] = format_priority(r.priority, false);
+
+	Json::Value macros = Json::arrayValue;
+	for(const auto &m : details.macros)
+	{
+		macros.append(m);
+	}
+	output["macros"] = macros;
+
+	Json::Value operators = Json::arrayValue;
+	for(const auto &o : details.operators)
+	{
+		operators.append(o);
+	}
+	output["operators"] = operators;
+
+	Json::Value condition_fields = Json::arrayValue;
+	for(const auto &f : details.fields)
+	{
+		condition_fields.append(f);
+	}
+	output["conditionFields"] = condition_fields;
+
+	Json::Value output_fields = Json::arrayValue;
+	for(const auto &f : out_fields)
+	{
+		output_fields.append(f);
+	}
+	output["outputFields"] = output_fields;
+
+	Json::Value exception_fields = Json::arrayValue;
+	for(const auto &f : r.exception_fields)
+	{
+		exception_fields.append(f);
+	}
+	output["exceptionFields"] = exception_fields;
+
+	Json::Value lists = Json::arrayValue;
+	for(const auto &l : details.lists)
+	{
+		lists.append(l);
+	}
+	output["lists"] = lists;
+
+	return output;
 }
 
 void falco_engine::print_stats() const
