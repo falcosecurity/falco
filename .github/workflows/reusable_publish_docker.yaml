@@ -75,7 +75,7 @@ jobs:
           
       - name: Tag slim manifest on Docker Hub
         run: |
-          crane tag docker.io/falcosecurity/falco-no-driver:${{ inputs.tag }} docker.io/falcosecurity/falco:${{ inputs.tag }}-slim
+          crane copy docker.io/falcosecurity/falco-no-driver:${{ inputs.tag }} docker.io/falcosecurity/falco:${{ inputs.tag }}-slim
 
       - name: Create falco manifest on Docker Hub
         uses: Noelware/docker-manifest-action@0.3.1
@@ -96,7 +96,7 @@ jobs:
           crane copy docker.io/falcosecurity/falco-no-driver:${{ inputs.tag }} public.ecr.aws/falcosecurity/falco-no-driver:${{ inputs.tag }}
           crane copy docker.io/falcosecurity/falco:${{ inputs.tag }} public.ecr.aws/falcosecurity/falco:${{ inputs.tag }}
           crane copy docker.io/falcosecurity/falco-driver-loader:${{ inputs.tag }} public.ecr.aws/falcosecurity/falco-driver-loader:${{ inputs.tag }}
-          crane tag public.ecr.aws/falcosecurity/falco-no-driver:${{ inputs.tag }} public.ecr.aws/falcosecurity/falco:${{ inputs.tag }}-slim
+          crane copy public.ecr.aws/falcosecurity/falco-no-driver:${{ inputs.tag }} public.ecr.aws/falcosecurity/falco:${{ inputs.tag }}-slim
 
       - name: Tag latest on Docker Hub and ECR
         if: inputs.is_latest
