@@ -18,6 +18,14 @@ limitations under the License.
 
 using namespace libsinsp::filter;
 
+void filter_details::reset()
+{
+	fields.clear();
+	macros.clear();
+	operators.clear();
+	lists.clear();
+}
+
 void filter_details_resolver::run(ast::expr* filter, filter_details& details)
 {
 	visitor v(details);
