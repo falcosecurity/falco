@@ -462,13 +462,26 @@ void falco_engine::describe_rule(std::string *rule, bool json) const
 
 	Json::FastWriter writer;
 	std::string json_str;
+	filter_details details;
+	for(const auto &m : m_rule_collector.macros())
+	{
+		// Assumption: no exception because rules have already been loaded.
+		auto cond_ast = libsinsp::filter::parser(m.cond).parse();
+		std::shared_ptr<libsinsp::filter::ast::expr> cond_ast_ptr = std::move(cond_ast);
+		details.known_macros[m.name] = cond_ast_ptr;
+	}
+
+	for(const auto &l : m_rule_collector.lists())
+	{
+		details.known_lists.insert(l.name);
+	}
 
 	if(!rule)
 	{
 		Json::Value output_array = Json::arrayValue;
 		for(const auto& r : m_rules)
 		{
-			auto json_details = get_json_rule_details(r);
+			auto json_details = get_json_rule_details(r, details);
 			output_array.append(json_details);
 		}
 		
@@ -482,14 +495,14 @@ void falco_engine::describe_rule(std::string *rule, bool json) const
 			throw falco_exception("Rule \"" + *rule + "\" is not loaded");
 		}
 
-		auto json_details = get_json_rule_details(*r);
+		auto json_details = get_json_rule_details(*r, details);
 		json_str = writer.write(json_details);
 	}
 
 	fprintf(stdout, "%s", json_str.c_str());
 }
 
-Json::Value falco_engine::get_json_rule_details(const falco_rule& r) const
+Json::Value falco_engine::get_json_rule_details(const falco_rule& r, filter_details& details) const
 {
 	// Parse rule condition and build the AST
 	// Assumption: the parsing will not throw an exception because
@@ -497,24 +510,8 @@ Json::Value falco_engine::get_json_rule_details(const falco_rule& r) const
 	auto rule_info = m_rule_collector.rules().at(r.name);
 	auto ast = libsinsp::filter::parser(rule_info->cond).parse();
 
-	// Prepare known macros and lists for the details resolver
-	filter_details_resolver resolver;
-	filter_details details;
-
-	for(const auto &m : m_rule_collector.macros())
-	{
-		// Assumption: same as above.
-		auto cond_ast = libsinsp::filter::parser(m.cond).parse();
-		std::shared_ptr<libsinsp::filter::ast::expr> cond_ast_ptr = std::move(cond_ast);
-		details.known_macros[m.name] = cond_ast_ptr;
-	}
-
-	for(const auto &l : m_rule_collector.lists())
-	{
-		details.known_lists.insert(l.name);
-	}
-
 	// Resolve the AST details
+	filter_details_resolver resolver;
 	resolver.run(ast.get(), details);
 
 	// Get fields from output string
@@ -572,6 +569,8 @@ Json::Value falco_engine::get_json_rule_details(const falco_rule& r) const
 		lists.append(l);
 	}
 	output["lists"] = lists;
+
+	details.reset();
 
 	return output;
 }

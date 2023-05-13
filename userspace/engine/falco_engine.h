@@ -37,6 +37,7 @@ limitations under the License.
 #include "falco_common.h"
 #include "falco_source.h"
 #include "falco_load_result.h"
+#include "filter_details_resolver.h"
 
 //
 // This class acts as the primary interface between a program and the
@@ -299,7 +300,7 @@ private:
 	inline bool should_drop_evt() const;
 
 	// Retrieve details of a rule in json format
-	Json::Value get_json_rule_details(const falco_rule& r) const;
+	Json::Value get_json_rule_details(const falco_rule& r, filter_details& details) const;
 
 	rule_loader::collector m_rule_collector;
 	indexed_vector<falco_rule> m_rules;
