@@ -478,14 +478,43 @@ void falco_engine::describe_rule(std::string *rule, bool json) const
 
 	if(!rule)
 	{
-		Json::Value output_array = Json::arrayValue;
+		Json::Value output;
+
+		Json::Value rules_array = Json::arrayValue;
 		for(const auto& r : m_rules)
 		{
 			auto json_details = get_json_rule_details(r, details);
-			output_array.append(json_details);
+			rules_array.append(json_details);
 		}
+		output["rules"] = rules_array;
 		
-		json_str = writer.write(output_array);
+		// Store information about macros
+		Json::Value macros_array;
+		for(const auto &m : m_rule_collector.macros())
+		{
+			macros_array.append(m.name);
+		}
+		output["macros"] = macros_array;
+
+		// Store information about lists 
+		Json::Value lists_array = Json::arrayValue;
+		for(const auto &l : m_rule_collector.lists())
+		{
+			Json::Value list;
+			list["name"] = l.name;
+
+			Json::Value items = Json::arrayValue;
+			for(const auto& i : l.items)
+			{
+				items.append(i);
+			}
+			list["items"] = items;
+
+			lists_array.append(list);
+		}
+		output["lists"] = lists_array;
+
+		json_str = writer.write(output);
 	} 
 	else
 	{
