@@ -527,6 +527,8 @@ Json::Value falco_engine::get_json_rule_details(const falco_rule& r, filter_deta
 	output["name"] = r.name;
 	output["description"] = r.description;
 	output["priority"] = format_priority(r.priority, false);
+	output["output"] = r.output;
+	output["enabled"] = rule_info->enabled;
 
 	Json::Value macros = Json::arrayValue;
 	for(const auto &m : details.macros)
