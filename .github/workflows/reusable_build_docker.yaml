@@ -56,7 +56,12 @@ jobs:
           tags: |
             docker.io/falcosecurity/falco:${{ inputs.arch }}-${{ inputs.tag }}
           outputs: type=docker,dest=/tmp/falco-${{ inputs.arch }}.tar
-            
+
+      # The falcosecurity/falco image is required for the driver-loader image, so we need to load it
+      - name: Load the falcosecurity/falco image
+        run: |
+          docker load --input /tmp/falco-${{ inputs.arch }}.tar
+
       - name: Build falco-driver-loader image
         uses: docker/build-push-action@v3
         with:

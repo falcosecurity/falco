@@ -1,5 +1,5 @@
 ARG FALCO_IMAGE_TAG=latest
-FROM falcosecurity/falco:${FALCO_IMAGE_TAG}
+FROM docker.io/falcosecurity/falco:${FALCO_IMAGE_TAG}
 
 LABEL maintainer="cncf-falco-dev@lists.cncf.io"
 
