@@ -112,16 +112,16 @@ public:
 	std::unordered_set<std::string> m_base_syscalls_custom_set;
 	bool m_base_syscalls_repair;
 
-	// stats_v2 configs
-	bool m_stats_v2_enabled;
-	uint16_t m_stats_v2_stats_interval_preset;
-	uint64_t m_stats_v2_stats_interval_ms;
-	bool m_stats_v2_stats_internal_rule;
-	std::string m_stats_v2_stats_filename;
-	bool m_stats_v2_include_resource_utilization;
-	bool m_stats_v2_include_kernel_evts_counters;
-	bool m_stats_v2_include_libbpf_stats;
-	bool m_stats_v2_convert_memory_to_mb;
+	// metrics configs
+	bool m_metrics_enabled;
+	std::string m_metrics_interval_str;
+	uint64_t m_metrics_interval;
+	bool m_metrics_stats_rule_enabled;
+	std::string m_metrics_output_file;
+	bool m_metrics_resource_utilization_enabled;
+	bool m_metrics_kernel_event_counters_enabled;
+	bool m_metrics_libbpf_stats_enabled;
+	bool m_metrics_convert_memory_to_mb;
 
 	std::vector<plugin_config> m_plugins;
 

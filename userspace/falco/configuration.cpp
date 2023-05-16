@@ -26,6 +26,7 @@ limitations under the License.
 #include <sys/stat.h>
 #include <unistd.h>
 #include "falco_utils.h"
+#include "falco_metrics.h"
 
 #include "configuration.h"
 #include "logger.h"
@@ -60,7 +61,7 @@ falco_configuration::falco_configuration():
 	m_cpus_for_each_syscall_buffer(2),
 	m_syscall_drop_failed_exit(false),
 	m_base_syscalls_repair(false),
-	m_stats_v2_enabled(false)
+	m_metrics_enabled(false)
 {
 	init({});
 }
@@ -339,15 +340,15 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 	config.get_sequence<std::unordered_set<std::string>>(m_base_syscalls_custom_set, std::string("base_syscalls.custom_set"));
 	m_base_syscalls_repair = config.get_scalar<bool>("base_syscalls.repair", false);
 
-	m_stats_v2_enabled = config.get_scalar<bool>("stats_v2.enabled", false);
-	m_stats_v2_stats_interval_preset = config.get_scalar<uint16_t>("stats_v2.stats_interval_preset", 0);
-	m_stats_v2_stats_interval_ms = config.get_scalar<uint64_t>("stats_v2.stats_interval_ms", 0);
-	m_stats_v2_stats_internal_rule = config.get_scalar<bool>("stats_v2.stats_internal_rule", true);
-	m_stats_v2_stats_filename = config.get_scalar<std::string>("stats_v2.stats_filename", "");
-	m_stats_v2_include_resource_utilization = config.get_scalar<bool>("stats_v2.include_resource_utilization", true);
-	m_stats_v2_include_kernel_evts_counters = config.get_scalar<bool>("stats_v2.include_kernel_evts_counters", true);
-	m_stats_v2_include_libbpf_stats = config.get_scalar<bool>("stats_v2.include_libbpf_stats", true);
-	m_stats_v2_convert_memory_to_mb = config.get_scalar<bool>("stats_v2.convert_memory_to_mb", true);
+	m_metrics_enabled = config.get_scalar<bool>("metrics.enabled", false);
+	m_metrics_interval_str = config.get_scalar<std::string>("metrics.interval", "0");
+	m_metrics_interval = falco::metrics::parse_metrics_interval(m_metrics_interval_str);
+	m_metrics_stats_rule_enabled = config.get_scalar<bool>("metrics.stats_rule_enabled", true);
+	m_metrics_output_file = config.get_scalar<std::string>("metrics.output_file", "");
+	m_metrics_resource_utilization_enabled = config.get_scalar<bool>("metrics.resource_utilization_enabled", true);
+	m_metrics_kernel_event_counters_enabled = config.get_scalar<bool>("metrics.kernel_event_counters_enabled", true);
+	m_metrics_libbpf_stats_enabled = config.get_scalar<bool>("metrics.libbpf_stats_enabled", true);
+	m_metrics_convert_memory_to_mb = config.get_scalar<bool>("metrics.convert_memory_to_mb", true);
 
 	std::vector<std::string> load_plugins;
 
