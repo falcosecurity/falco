@@ -116,14 +116,6 @@ falco::app::run_result falco::app::actions::load_rules_files(falco::app::state& 
 		s.engine->enable_rule_by_tag(s.options.enabled_rule_tags, true);
 	}
 
-	if(s.options.all_events && s.options.modern_bpf)
-	{
-		/* Right now the modern BPF probe doesn't support the -A flag, we implemented just 
-		 * the "simple set" syscalls.
-		 */
-		falco_logger::log(LOG_INFO, "The '-A' flag has no effect with the modern BPF probe, no further syscalls will be added\n");
-	}
-
 	if (s.options.describe_all_rules)
 	{
 		s.engine->describe_rule(NULL);
