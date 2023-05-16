@@ -39,7 +39,8 @@ jobs:
       - run:
           name: Build Falco packages 🏗️
           command: |
-            DOCKER_BUILDKIT=1 docker build -f /tmp/source-arm64/falco/docker/builder/modern-falco-builder.Dockerfile --output type=local,dest=/tmp --build-arg CMAKE_OPTIONS="-DCMAKE_BUILD_TYPE=Release -DUSE_BUNDLED_DEPS=On -DFALCO_ETC_DIR=/etc/falco -DBUILD_FALCO_MODERN_BPF=ON -DMODERN_BPF_SKEL_DIR=/source/skeleton-build/skel_dir -DBUILD_DRIVER=Off -DBUILD_BPF=Off" --build-arg DEST_BUILD_DIR=/build-arm64/release /tmp/source-arm64/falco
+            FALCO_VERSION=$(cat /tmp/source-arm64/falco/skeleton-build/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
+            DOCKER_BUILDKIT=1 docker build -f /tmp/source-arm64/falco/docker/builder/modern-falco-builder.Dockerfile --output type=local,dest=/tmp --build-arg CMAKE_OPTIONS="-DCMAKE_BUILD_TYPE=Release -DUSE_BUNDLED_DEPS=On -DFALCO_ETC_DIR=/etc/falco -DBUILD_FALCO_MODERN_BPF=ON -DMODERN_BPF_SKEL_DIR=/source/skeleton-build/skel_dir -DBUILD_DRIVER=Off -DBUILD_BPF=Off -DFALCO_VERSION=${FALCO_VERSION}" --build-arg DEST_BUILD_DIR=/build-arm64/release /tmp/source-arm64/falco
 
       - store_artifacts:
           path: /tmp/packages
@@ -135,7 +136,8 @@ jobs:
       - run:
           name: Build Falco packages 🏗️
           command: |
-            DOCKER_BUILDKIT=1 docker build -f /tmp/source/falco/docker/builder/modern-falco-builder.Dockerfile --output type=local,dest=/tmp --build-arg CMAKE_OPTIONS="-DCMAKE_BUILD_TYPE=Release -DUSE_BUNDLED_DEPS=On -DFALCO_ETC_DIR=/etc/falco -DBUILD_FALCO_MODERN_BPF=ON -DMODERN_BPF_SKEL_DIR=/source/skeleton-build/skel_dir -DBUILD_DRIVER=Off -DBUILD_BPF=Off" --build-arg DEST_BUILD_DIR=/build/release /tmp/source/falco
+            FALCO_VERSION=$(cat /tmp/source/falco/skeleton-build/userspace/falco/config_falco.h | grep 'FALCO_VERSION ' | cut -d' ' -f3 | sed -e 's/^"//' -e 's/"$//')
+            DOCKER_BUILDKIT=1 docker build -f /tmp/source/falco/docker/builder/modern-falco-builder.Dockerfile --output type=local,dest=/tmp --build-arg CMAKE_OPTIONS="-DCMAKE_BUILD_TYPE=Release -DUSE_BUNDLED_DEPS=On -DFALCO_ETC_DIR=/etc/falco -DBUILD_FALCO_MODERN_BPF=ON -DMODERN_BPF_SKEL_DIR=/source/skeleton-build/skel_dir -DBUILD_DRIVER=Off -DBUILD_BPF=Off -DFALCO_VERSION=${FALCO_VERSION}" --build-arg DEST_BUILD_DIR=/build/release /tmp/source/falco
 
       - store_artifacts:
           path: /tmp/packages
