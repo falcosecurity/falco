@@ -401,50 +401,41 @@ static std::shared_ptr<stats_writer> init_stats_writer(const options& opts, std:
 {
 	auto statsw = std::make_shared<stats_writer>(outputs, config);
 	std::string err;
-	uint64_t stats_interval_ms = 0;
-	if (config->m_stats_v2_enabled && config->m_stats_v2_stats_interval_preset > 0)
-	{
-		uint16_t index = config->m_stats_v2_stats_interval_preset;
-		if(index <= MAX_STATS_PRESET_INDEX)
-		{
-			/* Index 0 reserved, milliseconds representation for 15min, 30min, 1hr, 4hrs, 6hrs, 12hrs. */
-			std::vector<uint64_t> vect{0LLU, 900000LU, 1800000LU, 3600000LU, 14400000LU, 21600000LU, 43200000LU};
-			stats_interval_ms = vect[index];
-		}
-		else
-		{
-			// todo: warning message
-			stats_interval_ms = 0;
-		}
-	}
+	uint64_t interval = 0;
 
 	/* Continue cmd args support and old defaults for backward compatibility, scheduled for deprecation. */
-	if (stats_interval_ms == 0 && opts.stats_interval > 0)
+	if(!config->m_metrics_enabled && opts.stats_interval > 0)
 	{
-		stats_interval_ms = opts.stats_interval;
+		interval = opts.stats_interval;
 	}
-	/* New config. Exact stats_interval_ms in falco.yaml overrides presets. */
-	if (config->m_stats_v2_enabled && config->m_stats_v2_stats_interval_ms > 0)
+	/* New metrics and configs over falco.yaml. */
+	else if(config->m_metrics_enabled && config->m_metrics_interval > 0)
 	{
-		stats_interval_ms = config->m_stats_v2_stats_interval_ms;
+		interval = config->m_metrics_interval;
 	}
 
-	if (stats_interval_ms > 0)
+	/* Enforce minimum bound of 100ms. */
+	if(interval > 100)
 	{
-		if (!stats_writer::init_ticker(stats_interval_ms, err))
+		if(!stats_writer::init_ticker(interval, err))
 		{
 			throw falco_exception(err);
 		}
+		/* Only support new info message for new metrics and configs over falco.yaml. */
+		if(config->m_metrics_enabled)
+		{
+			falco_logger::log(LOG_INFO, "Setting metrics interval to " + config->m_metrics_interval_str + ", equivalent to " + std::to_string(interval) + " (ms)\n");
+		}
 	}
 	/* Continue cmd args support for backward compatibility, scheduled for deprecation. */
-	if (!config->m_stats_v2_enabled && !opts.stats_filename.empty())
+	if(!config->m_metrics_enabled && !opts.output_file.empty())
 	{
-		statsw.reset(new stats_writer(opts.stats_filename, outputs, config));
+		statsw.reset(new stats_writer(opts.output_file, outputs, config));
 	}
-	/* New config. */
-	else if (config->m_stats_v2_enabled && !config->m_stats_v2_stats_filename.empty())
+	/* New metrics and configs over falco.yaml. */
+	else if(config->m_metrics_enabled && !config->m_metrics_output_file.empty())
 	{
-		statsw.reset(new stats_writer(config->m_stats_v2_stats_filename, outputs, config));
+		statsw.reset(new stats_writer(config->m_metrics_output_file, outputs, config));
 	}
 	return statsw;
 }

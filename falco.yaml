@@ -566,83 +566,90 @@ base_syscalls:
   custom_set: []
   repair: false
 
-# stats_v2: periodic stats and resource utilization metrics, initial release
+# metrics: periodic stats and resource utilization metrics, initial release
 #
 # --- [Description]
 #
-# stats_v2 reflects a stats re-design from the ground up. Falco now natively supports
+# `metrics` reflects a stats/metrics re-design from the ground up. Falco natively supports
 # resource utilization metrics and enhanced specialized metrics to monitor Falco's
-# performance in production. The new metrics are exposed as monotonic counters or snapshots
+# performance in production. Metrics are exposed as monotonic counters or snapshots
 # emitted at a pre-defined interval. Each metric is captured in the same consolidated log message.
-# In addition, relevant wrapper fields are added, allowing you to perform sophisticated and customized
-# statistical analyses and correlations. Lastly, the new stats framework can be easily extended
-# with new metrics.
+# In addition, relevant wrapper fields are added, allowing the end user to perform customized
+# statistical analyses and correlations. Lastly, the metrics framework can be easily extended in the future.
 #
 # Notice: Schema and output field names are not guaranteed to be stable
-# and might change until stats_v2 reaches a stable release.
+# and might change until `metrics` reaches a stable release.
 #
 # --- [Usage]
 #
 # Disabled by default.
 #
-# Env variable `-E FALCO_HOSTNAME=myhostname` customizes hostname in case
-# you deploy in Kubernetes where the hostname can be equivalent to the pod name.
+# Env variable `-E FALCO_HOSTNAME=myhostname` customizes hostname for Kubernetes
+# deployments where the hostname can be equivalent to the pod name.
 #
-# `stats_interval_preset`:
-# preset 0: default -> means skip, not enabled
-# preset 1: 15 <min> -> 900000 <msec>
-# preset 2: 30 <min> -> 1800000 <msec>
-# preset 3: 1 <hr> -> 3600000 <msec> - We recommend this option for large production environments
-# preset 4: 4 <hrs> -> 14400000 <msec>
-# preset 5: 6 <hrs> -> 21600000 <msec>
-# preset 6: 12 <hrs> -> 43200000 <msec>
+# `interval`:
+# Define the stats interval following the Prometheus time duration definitions.
+# https://prometheus.io/docs/prometheus/latest/querying/basics/#time-durations
 #
-# `stats_interval_ms`:
-# If greater than 0 it overrides `stats_interval_preset`.
-# We recommend this option for testing and debugging only,
-# use small intervals with caution also for debugging.
+# Time durations are specified as a number, followed immediately by one of the following units:
+# ms - milliseconds
+# s - seconds
+# m - minutes
+# h - hours
+# d - days - assuming a day has always 24h
+# w - weeks - assuming a week has always 7d
+# y - years - assuming a year has always 365d
 #
-# `stats_internal_rule`:
-# Emit new stats as rule `Falco internal: resource utilization stats metrics`.
-# We recommend this option for a seamless performance monitoring especially
-# if you preserve Falco logs in a data lake. Can be used in conjunction with
-# `stats_filename` and Prometheus exporter support is planned for the future.
+# Example of a valid time duration: 1h30m20s10ms
 #
-# `stats_filename`:
-# Append stats to a `jsonl` file. Use with caution in production and log rotate file.
-# Can be used in conjunction with `stats_internal_rule` and Prometheus exporter
-# support is planned for the future.
+# A minimum of 100ms is enforced, however we recommend choosing one of the following intervals for production:
+# 15m
+# 30m
+# 1h
+# 4h
+# 6h
 #
-# `include_resource_utilization`:
+# `output_rule`:
+# Emit metrics as rule `Falco internal: resource utilization stats metrics`.
+# We recommend this option for seamless performance monitoring especially
+# if Falco logs are preserved in a data lake.
+# Note: This option requires setting `log_level` at minimum to `info`.
+#
+# `output_file`:
+# Append stats to a `jsonl` file. Use with caution in production, Falco does not rotate the file.
+#
+# `resource_utilization_enabled`:
 # Emit CPU and memory usages. CPU usage is percentage of one CPU,
 # can be normalized to total number of CPUs to determine overall usage.
 # Memory metrics are currently kept in raw units, `kb` for RSS, PSS and VSZ
 # or `bytes` for container_memory_used. Use `convert_memory_to_mb` to
 # uniformly convert each memory metric to MB.
-# `-E FALCO_CGROUP_MEM=customfile` let's you customize the container_memory_used
-# file which defaults to Kubernetes `/sys/fs/cgroup/memory/memory.usage_in_bytes`.
+# `-E FALCO_CGROUP_MEM_PATH=customfile` let's you customize the container_memory_used
+# file which defaults to Kubernetes `/sys/fs/cgroup/memory/memory.usage_in_bytes` that is
+# similar to Kubernetes `container_memory_working_set_bytes` of the Falco container.
 #
-# `include_kernel_evts_counters`:
+# `kernel_event_counters_enabled`:
 # Emit kernel side event and drop counters, compare to `syscall_event_drops`,
-# however this option reflects monotonic counters since Falco start
-# flushed at a constant stats interval and therefore can be an alternative.
+# however this option reflects monotonic counters since Falco start,
+# exported at a constant stats interval and therefore can be regarded as an alternative.
+# kernel event conters are prefixed with `n_` e.g. `n_evts`, `n_drops`, `n_drops_buffer_total` ...
 #
-# `include_libbpf_stats`:
+# `libbpf_stats_enabled`:
 # Exposes `bpftool prog show` like stats, e.g. number of invocations
 # of each bpf program Falco attached as well as time spent in each program in nanoseconds.
 # Requires kernels >= 5.1 plus kernel config `bpf_stats_enabled`.
 # This option or equivalent stats are not supported for non `*bpf*` drivers.
+# Note that currently `libbpf` does not support stats granularity at the bpf tail call level.
 #
 # todo: Prometheus export option
-# todo: syscall counters option
+# todo: userspace_syscall_event_counters_enabled option
 
-stats_v2:
+metrics:
   enabled: false
-  stats_interval_preset: 3
-  stats_interval_ms: 0
-  stats_internal_rule: true
-  # stats_filename: /tmp/falco_stats.jsonl
-  include_resource_utilization: true
-  include_kernel_evts_counters: true
-  include_libbpf_stats: true
+  interval: 1h
+  output_rule: true
+  # output_file: /tmp/falco_stats.jsonl
+  resource_utilization_enabled: true
+  kernel_event_counters_enabled: true
+  libbpf_stats_enabled: true
   convert_memory_to_mb: true
