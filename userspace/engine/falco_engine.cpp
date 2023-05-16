@@ -601,6 +601,31 @@ Json::Value falco_engine::get_json_rule_details(const falco_rule& r, filter_deta
 	}
 	output["lists"] = lists;
 
+	if (rule_info->source == falco_common::syscall_source)
+	{
+		Json::Value events = Json::arrayValue;
+		std::unordered_set<std::string> evts;
+		for(const auto &e : rule_info->evttypes)
+		{
+			auto evt_info = libsinsp::events::info(e);
+			auto res = evts.insert(std::string(evt_info->name));
+			if(res.second)
+			{
+				events.append(evt_info->name);
+			}
+		}
+		output["events"] = events;
+	}
+
+	output["source"] = rule_info->source;
+
+	Json::Value tags = Json::arrayValue;
+	for(const auto &t : rule_info->tags)
+	{
+		tags.append(t);
+	}	
+	output["tags"] = tags;
+
 	details.reset();
 
 	return output;
