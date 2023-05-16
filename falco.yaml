@@ -632,7 +632,7 @@ base_syscalls:
 # Emit kernel side event and drop counters, compare to `syscall_event_drops`,
 # however this option reflects monotonic counters since Falco start,
 # exported at a constant stats interval and therefore can be regarded as an alternative.
-# kernel event conters are prefixed with `n_` e.g. `n_evts`, `n_drops`, `n_drops_buffer_total` ...
+# kernel event counters are prefixed with `n_` e.g. `n_evts`, `n_drops`, `n_drops_buffer_total` ...
 #
 # `libbpf_stats_enabled`:
 # Exposes `bpftool prog show` like stats, e.g. number of invocations

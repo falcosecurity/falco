@@ -168,6 +168,7 @@ std::map<std::string, std::string> stats_writer::collector::get_metrics_output_f
 	output_fields["evt.time"] = std::to_string(now); /* Some ETLs may prefer a consistent timestamp within output_fields. */
 	output_fields["falco_version"] = FALCO_VERSION;
 	output_fields["falco_start_ts"] = std::to_string(agent_info->start_ts_epoch);
+	output_fields["falco_duration_sec"] = std::to_string((now - agent_info->start_ts_epoch) / ONE_SECOND_IN_NS);
 	output_fields["kernel_release"] = agent_info->uname_r;
 	output_fields["host_boot_ts"] = std::to_string(machine_info->boot_ts_epoch);
 	output_fields["hostname"] = machine_info->hostname; /* Explicitly add hostname to log msg in case hostname rule output field is disabled. */
