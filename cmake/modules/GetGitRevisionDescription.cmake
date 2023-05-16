@@ -91,15 +91,16 @@ function(git_get_latest_tag _var)
     find_package(Git QUIET)
   endif()
 
-  # We use git describe --tags `git rev-list --tags --max-count=1`
+  # We use git describe --tags `git rev-list --exclude "*.*.*-*" --tags --max-count=1`
+  # Note how we eclude prereleases tags (the ones with "-alphaX")
   execute_process(COMMAND
           "${GIT_EXECUTABLE}"
           rev-list
+          --exclude "*.*.*-*"
           --tags
           --max-count=1
           WORKING_DIRECTORY
           "${CMAKE_CURRENT_SOURCE_DIR}"
-          COMMAND tail -n1
           RESULT_VARIABLE
           res
           OUTPUT_VARIABLE
