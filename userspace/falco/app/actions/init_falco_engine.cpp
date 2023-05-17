@@ -117,7 +117,7 @@ falco::app::run_result falco::app::actions::init_falco_engine(falco::app::state&
 		auto manager = s.offline_inspector->get_plugin_manager();
 		for (const auto &p : manager->plugins())
 		{
-			if (p->caps() & CAP_SOURCING)
+			if (p->caps() & CAP_SOURCING && p->id() != 0)
 			{
 				bool added = false;
 				auto source_idx = manager->source_idx_by_plugin_id(p->id(), added);
