@@ -171,8 +171,6 @@ void evttype_index_ruleset::add(
 		if(rule.source == falco_common::syscall_source)
 		{
 			wrap->sc_codes = libsinsp::filter::ast::ppm_sc_codes(condition.get());
-			// todo(jasondellaluce): once libsinsp has its fixes, optimize this
-			// by using libsinsp::events::ppm_set_to_event_set(wrap->sc_codes)
 			wrap->event_codes = libsinsp::filter::ast::ppm_event_codes(condition.get());
 		}
 		else
