@@ -44,6 +44,8 @@ if (${EP_UPDATE_DISCONNECTED})
     PROPERTY EP_UPDATE_DISCONNECTED TRUE)
 endif()
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 # Elapsed time
 # set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CMAKE_COMMAND} -E time") # TODO(fntlnz, leodido): add a flag to enable this
@@ -108,7 +110,7 @@ if(BUILD_WARNINGS_AS_ERRORS)
 endif()
 
 set(CMAKE_C_FLAGS "${CMAKE_COMMON_FLAGS}")
-set(CMAKE_CXX_FLAGS "--std=c++0x ${CMAKE_COMMON_FLAGS} -Wno-class-memaccess")
+set(CMAKE_CXX_FLAGS "-std=c++17 ${CMAKE_COMMON_FLAGS} -Wno-class-memaccess")
 
 set(CMAKE_C_FLAGS_DEBUG "${FALCO_EXTRA_DEBUG_FLAGS}")
 set(CMAKE_CXX_FLAGS_DEBUG "${FALCO_EXTRA_DEBUG_FLAGS}")
