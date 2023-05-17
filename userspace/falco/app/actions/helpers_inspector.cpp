@@ -53,15 +53,37 @@ falco::app::run_result falco::app::actions::open_live_inspector(
 		{
 			for (const auto& p: inspector->get_plugin_manager()->plugins())
 			{
+				// note: if more than one loaded plugin supports the given
+				// event source, only the first one will be opened, following
+				// the loading order specified in the Falco config.
 				if (p->caps() & CAP_SOURCING && p->id() != 0 && p->event_source() == source)
 				{
 					auto cfg = s.plugin_configs.at(p->name());
-					falco_logger::log(LOG_INFO, "Opening capture with plugin '" + cfg->m_name + "'\n");
+					falco_logger::log(LOG_INFO, "Opening '" + source + "' source with plugin '" + cfg->m_name + "'");
 					inspector->open_plugin(cfg->m_name, cfg->m_open_params);
 					return run_result::ok();
 				}
 			}
-			return run_result::fatal("Can't open inspector for plugin event source: " + source);
+			return run_result::fatal("Can't find plugin for event source: " + source);
+		}
+		else if (s.options.nodriver) /* nodriver engine. */
+		{
+			// when opening a capture with no driver, Falco will first check
+			// if a plugin is capable of generating raw events from the libscap
+			// event table (including system events), and if none is found it
+			// will use the nodriver engine.
+			for (const auto& p: inspector->get_plugin_manager()->plugins())
+			{
+				if (p->caps() & CAP_SOURCING && p->id() == 0)
+				{
+					auto cfg = s.plugin_configs.at(p->name());
+					falco_logger::log(LOG_INFO, "Opening '" + source + "' source with plugin '" + cfg->m_name + "'");
+					inspector->open_plugin(cfg->m_name, cfg->m_open_params);
+					return run_result::ok();
+				}
+			}
+			falco_logger::log(LOG_INFO, "Opening '" + source + "' source with no driver\n");
+			inspector->open_nodriver();
 		}
 		else if (s.options.userspace) /* udig engine. */
 		{
@@ -69,17 +91,17 @@ falco::app::run_result falco::app::actions::open_live_inspector(
 			//
 			// Falco uses a ptrace(2) based userspace implementation.
 			// Regardless of the implementation, the underlying method remains the same.
-			falco_logger::log(LOG_INFO, "Opening capture with udig\n");
+			falco_logger::log(LOG_INFO, "Opening '" + source + "' source with udig\n");
 			inspector->open_udig();
 		}
 		else if(!s.options.gvisor_config.empty()) /* gvisor engine. */
 		{
-			falco_logger::log(LOG_INFO, "Opening capture with gVisor. Configuration path: " + s.options.gvisor_config);
+			falco_logger::log(LOG_INFO, "Opening '" + source + "' source with gVisor. Configuration path: " + s.options.gvisor_config);
 			inspector->open_gvisor(s.options.gvisor_config, s.options.gvisor_root);
 		}
 		else if(s.options.modern_bpf) /* modern BPF engine. */
 		{
-			falco_logger::log(LOG_INFO, "Opening capture with modern BPF probe.");
+			falco_logger::log(LOG_INFO, "Opening '" + source + "' source with modern BPF probe.");
 			falco_logger::log(LOG_INFO, "One ring buffer every '" + std::to_string(s.config->m_cpus_for_each_syscall_buffer) +  "' CPUs.");
 			inspector->open_modern_bpf(s.syscall_buffer_bytes_size, s.config->m_cpus_for_each_syscall_buffer, true, s.selected_sc_set);
 		}
@@ -98,14 +120,14 @@ falco::app::run_result falco::app::actions::open_live_inspector(
 				snprintf(full_path, PATH_MAX, "%s/%s", home, FALCO_PROBE_BPF_FILEPATH);
 				bpf_probe_path = full_path;
 			}
-			falco_logger::log(LOG_INFO, "Opening capture with BPF probe. BPF probe path: " + std::string(bpf_probe_path));
+			falco_logger::log(LOG_INFO, "Opening '" + source + "' source with BPF probe. BPF probe path: " + std::string(bpf_probe_path));
 			inspector->open_bpf(bpf_probe_path, s.syscall_buffer_bytes_size, s.selected_sc_set);
 		}
 		else /* Kernel module (default). */
 		{
 			try
 			{
-				falco_logger::log(LOG_INFO, "Opening capture with Kernel module");
+				falco_logger::log(LOG_INFO, "Opening '" + source + "' source with Kernel module");
 				inspector->open_kmod(s.syscall_buffer_bytes_size, s.selected_sc_set);
 			}
 			catch(sinsp_exception &e)
