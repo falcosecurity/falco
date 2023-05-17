@@ -118,12 +118,10 @@ falco::app::run_result falco::app::actions::init_inspectors(falco::app::state& s
 			? s.offline_inspector
 			: std::make_shared<sinsp>();
 
-		// handle syscall and plugin sources differently
-		// todo(jasondellaluce): change this once we support extracting plugin fields from syscalls too
+		// do extra preparation for the syscall source
 		if (src == falco_common::syscall_source)
 		{
 			init_syscall_inspector(s, src_info->inspector);
-			continue;
 		}
 
 		// load and init all plugins compatible with this event source
@@ -132,7 +130,9 @@ falco::app::run_result falco::app::actions::init_inspectors(falco::app::state& s
 		{
 			std::shared_ptr<sinsp_plugin> plugin = nullptr;
 			auto config = s.plugin_configs.at(p->name());
-			auto is_input = p->caps() & CAP_SOURCING && p->event_source() == src;
+			auto is_input = (p->caps() & CAP_SOURCING)
+				&& ((p->id() != 0 && src == p->event_source())
+					|| (p->id() == 0 && src == falco_common::syscall_source));
 
 			if (s.is_capture_mode())
 			{
@@ -146,7 +146,10 @@ falco::app::run_result falco::app::actions::init_inspectors(falco::app::state& s
 				// event source, we must register the plugin supporting
 				// that event source and also plugins with field extraction
 				// capability that are compatible with that event source
-				if (is_input || (p->caps() & CAP_EXTRACTION && sinsp_plugin::is_source_compatible(p->extract_event_sources(), src)))
+				if (is_input
+					|| (p->caps() & CAP_EXTRACTION && sinsp_plugin::is_source_compatible(p->extract_event_sources(), src))
+					|| (p->caps() & CAP_PARSING && sinsp_plugin::is_source_compatible(p->parse_event_sources(), src))
+					|| (p->caps() & CAP_ASYNC && sinsp_plugin::is_source_compatible(p->async_event_sources(), src)))
 				{
 					plugin = src_info->inspector->register_plugin(config->m_library_path);
 				}
@@ -182,15 +185,12 @@ falco::app::run_result falco::app::actions::init_inspectors(falco::app::state& s
 
 	}
 
-	// check if some plugin with field extraction capability remains unused
+	// check if some plugin remains unused
 	for (const auto& p : all_plugins)
 	{
-		if(used_plugins.find(p->name()) == used_plugins.end() 
-			&& p->caps() & CAP_EXTRACTION
-			&& !(p->caps() & CAP_SOURCING && sinsp_plugin::is_source_compatible(p->extract_event_sources(), p->event_source())))
+		if (used_plugins.find(p->name()) == used_plugins.end())
 		{
-			return run_result::fatal("Plugin '" + p->name()
-				+ "' has field extraction capability but is not compatible with any known event source");
+			return run_result::fatal("Plugin '" + p->name() + "' is loaded but unused as not compatible with any known event source");
 		}
 	}
 

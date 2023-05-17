@@ -283,11 +283,10 @@ static falco::app::run_result do_inspect(
 			// so we report an error if we fetch an event of a different source.
 			if (source_engine_idx != ev->get_source_idx())
 			{
-				std::string msg = "Unexpected event source for inspector's event: expected='" + source + "'";
-				if (ev->get_source_name() != NULL)
-				{
-					msg += ", actual='" + std::string(ev->get_source_name()) + "'";
-				}
+				auto msg = "Unexpected event source for inspector's event: expected='" + source + "', actual=";
+				msg += (ev->get_source_name() != NULL)
+					? ("'" + std::string(ev->get_source_name()) + "'")
+					: ("<NA>");
 				return run_result::fatal(msg);
 			}
 

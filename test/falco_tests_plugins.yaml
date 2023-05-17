@@ -56,7 +56,7 @@ trace_files: !mux
 
   incompatible_extract_sources:
     exit_status: 1
-    stderr_contains: "Plugin '.*' has field extraction capability but is not compatible with any known event source"
+    stderr_contains: "Plugin '.*' is loaded but unused as not compatible with any known event source"
     conf_file: BUILD_DIR/test/confs/plugins/incompatible_extract_sources.yaml
     rules_file:
       - rules/plugins/cloudtrail_create_instances.yaml

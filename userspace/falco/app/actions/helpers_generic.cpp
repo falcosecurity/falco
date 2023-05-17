@@ -58,8 +58,13 @@ void falco::app::actions::format_plugin_info(std::shared_ptr<sinsp_plugin> p, st
 	os << "Capabilities: " << std::endl;
 	if(p->caps() & CAP_SOURCING)
 	{
-		os << "  - Event Sourcing (ID=" << p->id();
-		os << ", source='" << p->event_source() << "')" << std::endl;
+		os << "  - Event Sourcing";
+		if (p->id() != 0)
+		{
+			os << " (ID=" << p->id();
+			os << ", source='" << p->event_source() << "')";
+		}
+		os << std::endl;
 	}
 	if(p->caps() & CAP_EXTRACTION)
 	{

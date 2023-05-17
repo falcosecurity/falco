@@ -53,7 +53,7 @@ falco::app::run_result falco::app::actions::open_live_inspector(
 		{
 			for (const auto& p: inspector->get_plugin_manager()->plugins())
 			{
-				if (p->caps() & CAP_SOURCING && p->event_source() == source)
+				if (p->caps() & CAP_SOURCING && p->id() != 0 && p->event_source() == source)
 				{
 					auto cfg = s.plugin_configs.at(p->name());
 					falco_logger::log(LOG_INFO, "Opening capture with plugin '" + cfg->m_name + "'\n");
