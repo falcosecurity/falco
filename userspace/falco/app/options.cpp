@@ -36,7 +36,9 @@ options::options()
 	  list_plugins(false),
 	  list_syscall_events(false),
 	  markdown(false),
-	  modern_bpf(false)
+	  modern_bpf(false),
+	  dry_run(false),
+	  nodriver(false)
 {
 }
 
@@ -147,6 +149,19 @@ bool options::parse(int argc, char **argv, std::string &errstr)
 
 	list_fields = m_cmdline_parsed.count("list") > 0 ? true : false;
 
+	int open_modes = 0;
+	open_modes += !trace_filename.empty();
+	open_modes += userspace;
+	open_modes += !gvisor_config.empty();
+	open_modes += modern_bpf;
+	open_modes += getenv("FALCO_BPF_PROBE") != NULL;
+	open_modes += nodriver;
+	if (open_modes > 1)
+	{
+		errstr = std::string("You can not specify more than one of -e, -u (--userspace), -g (--gvisor-config), --modern-bpf, --nodriver, and the FALCO_BPF_PROBE env var");
+		return false;
+	}
+
 	return true;
 }
 
@@ -198,6 +213,7 @@ void options::define(cxxopts::Options& opts)
 		("M",                             "Stop collecting after <num_seconds> reached.", cxxopts::value(duration_to_tot)->default_value("0"), "<num_seconds>")
 		("markdown",                      "When used with --list/--list-syscall-events, print the content in Markdown format", cxxopts::value<bool>(markdown))
 		("N",                             "When used with --list, only print field names.", cxxopts::value(names_only)->default_value("false"))
+		("nodriver",                      "Capture for system events without drivers. If a loaded plugin has event sourcing capability and can produce system events, it will be used to for event collection.", cxxopts::value(nodriver)->default_value("false"))
 		("o,option",                      "Set the value of option <opt> to <val>. Overrides values in configuration file. <opt> can be identified using its location in configuration file using dot notation. Elements which are entries of lists can be accessed via square brackets [].\n    E.g. base.id = val\n         base.subvalue.subvalue2 = val\n         base.list[1]=val", cxxopts::value(cmdline_config_options), "<opt>=<val>")
 		("plugin-info",                   "Print info for a single plugin and exit.\nThis includes all descriptivo info like name and author, along with the\nschema format for the init configuration and a list of suggested open parameters.\n<plugin_name> can be the name of the plugin or its configured library_path.", cxxopts::value(print_plugin_info), "<plugin_name>")
 		("p,print",                       "Add additional information to each falco notification's output.\nWith -pc or -pcontainer will use a container-friendly format.\nWith -pk or -pkubernetes will use a kubernetes-friendly format.\nAdditionally, specifying -pc/-pk will change the interpretation of %container.info in rule output fields.", cxxopts::value(print_additional), "<output_format>")

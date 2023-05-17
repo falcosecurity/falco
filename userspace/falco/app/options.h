@@ -84,6 +84,7 @@ public:
 	bool print_page_size;
 	bool modern_bpf;
 	bool dry_run;
+	bool nodriver;
 
 	bool parse(int argc, char **argv, std::string &errstr);
 
