@@ -58,8 +58,10 @@ falco_configuration::falco_configuration():
 	m_metadata_download_watch_freq_sec(1),
 	m_syscall_buf_size_preset(4),
 	m_cpus_for_each_syscall_buffer(2),
-	m_syscall_drop_failed_exit(false)
+	m_syscall_drop_failed_exit(false),
+	m_base_syscalls_repair(false)
 {
+	init({});
 }
 
 void falco_configuration::init(const std::vector<std::string>& cmdline_options)
