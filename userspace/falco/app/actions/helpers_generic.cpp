@@ -41,12 +41,45 @@ void falco::app::actions::print_enabled_event_sources(falco::app::state& s)
 {
 	/* Print all enabled sources. */
 	std::string str;
-	for (const auto &s : s.enabled_sources)
+	for (const auto &src : s.enabled_sources)
 	{
 		str += str.empty() ? "" : ", ";
-		str += s;
+		str += src;
 	}
-	falco_logger::log(LOG_INFO, "Enabled event sources: " + str + "\n");
+	falco_logger::log(LOG_INFO, "Enabled event sources: " + str);
+
+	// print some warnings to the user
+	for (const auto& src : s.enabled_sources)
+	{
+		std::shared_ptr<sinsp_plugin> first_plugin = nullptr;
+		const auto& plugins = s.offline_inspector->get_plugin_manager()->plugins();
+		for (const auto& p : plugins)
+		{
+			if ((p->caps() & CAP_SOURCING)
+					&& ((p->id() != 0 && src == p->event_source())
+						|| (p->id() == 0 && src == falco_common::syscall_source)))
+			{
+				if (first_plugin == nullptr)
+				{
+					first_plugin = p;
+				}
+				else
+				{
+					if (src != falco_common::syscall_source || s.options.nodriver)
+					{
+						falco_logger::log(LOG_WARNING, "Enabled event source '"
+							+ src + "' can be opened with multiple loaded plugins, will use only '"
+							+ first_plugin->name() + "'");
+					}
+				}
+			}
+		}
+		if (!first_plugin && s.options.nodriver)
+		{
+			falco_logger::log(LOG_WARNING, "Enabled event source '"
+				+ src + "' will be opened with no driver, no event will be produced");
+		}
+	}
 }
 
 void falco::app::actions::format_plugin_info(std::shared_ptr<sinsp_plugin> p, std::ostream& os)
