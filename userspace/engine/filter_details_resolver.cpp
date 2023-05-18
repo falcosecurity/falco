@@ -36,7 +36,9 @@ void filter_details_resolver::visitor::visit(ast::and_expr* e)
 {
 	for(size_t i = 0; i < e->children.size(); i++)
 	{
+		m_expect_macro = true;
 		e->children[i]->accept(this);
+		m_expect_macro = false;
 	}
 }
 
@@ -44,7 +46,9 @@ void filter_details_resolver::visitor::visit(ast::or_expr* e)
 {
 	for(size_t i = 0; i < e->children.size(); i++)
 	{
+		m_expect_macro = true;
 		e->children[i]->accept(this);
+		m_expect_macro = false;
 	}
 }
 
@@ -55,42 +59,45 @@ void filter_details_resolver::visitor::visit(ast::not_expr* e)
 
 void filter_details_resolver::visitor::visit(ast::list_expr* e)
 {
-
-}
-
-void filter_details_resolver::visitor::visit(ast::binary_check_expr* e)
-{
-	m_details.fields.insert(e->field);
-	m_details.operators.insert(e->op);
-	
-	auto list = dynamic_cast<ast::list_expr*>(e->value.get());
-	if(list == nullptr)
+	if(m_expect_list)
 	{
-		return;
-	}
-
-	for(const auto& item : list->values)
-	{
-		if(m_details.known_lists.find(item) != m_details.known_lists.end())
+		for(const auto& item : e->values)
 		{
-			m_details.lists.insert(item);
+			if(m_details.known_lists.find(item) != m_details.known_lists.end())
+			{
+				m_details.lists.insert(item);
+			}
 		}
 	}
 }
 
+void filter_details_resolver::visitor::visit(ast::binary_check_expr* e)
+{
+	m_expect_macro = false;
+	m_details.fields.insert(e->field);
+	m_details.operators.insert(e->op);
+	m_expect_list = true;
+	e->value->accept(this);
+	m_expect_list = false;
+}
+
 void filter_details_resolver::visitor::visit(ast::unary_check_expr* e)
 {
+	m_expect_macro = false;
 	m_details.fields.insert(e->field);
 	m_details.operators.insert(e->op);
 }
 
 void filter_details_resolver::visitor::visit(ast::value_expr* e)
 {
-	auto it = m_details.known_macros.find(e->value);
-	if(it == m_details.known_macros.end())
+	if(m_expect_macro)
 	{
-		return;
-	}
+		auto it = m_details.known_macros.find(e->value);
+		if(it == m_details.known_macros.end())
+		{
+			return;
+		}
 
-	m_details.macros.insert(e->value);
+		m_details.macros.insert(e->value);
+	}
 }

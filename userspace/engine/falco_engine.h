@@ -302,6 +302,7 @@ private:
 	// Retrieve json details from rules, macros, lists
 	void get_json_details(const falco_rule& r,
 					const rule_loader::rule_info& ri,
+					sinsp* insp,
 					Json::Value& rule) const;
 	void get_json_details(const rule_loader::macro_info& m,
 					Json::Value& macro) const;
