@@ -64,7 +64,7 @@ jobs:
         run: |
           mkdir build
           pushd build
-          cmake -DBUILD_BPF=On -DBUILD_FALCO_UNIT_TESTS=On ..
+          cmake -DBUILD_BPF=On -DCMAKE_BUILD_TYPE=Debug -DBUILD_FALCO_UNIT_TESTS=On ..
           popd
 
       - name: Build
