@@ -386,11 +386,7 @@ void rule_loader::compiler::compile_rule_infos(
 	std::string err, condition;
 	std::set<falco::load_result::load_result::warning_code> warn_codes;
 	filter_warning_resolver warn_resolver;
-
-	// note: cast away the const qualifier in the for loop
-	// this is needed because we want to store information about evttypes
-	// used by any rules, which might come in handy when describing rules.
-	for (auto &r : const_cast<indexed_vector<rule_info>&>(col.rules()))
+	for (auto &r : col.rules())
 	{
 		// skip the rule if below the minimum priority
 		if (r.priority > cfg.min_priority)
@@ -509,7 +505,6 @@ void rule_loader::compiler::compile_rule_infos(
 					"Rule matches too many evt.type values. This has a significant performance penalty.",
 					r.ctx);
 			}
-			r.evttypes = evttypes;
 		}
 	}
 }

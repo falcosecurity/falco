@@ -92,8 +92,5 @@ void filter_details_resolver::visitor::visit(ast::value_expr* e)
 		return;
 	}
 
-	m_details.macros.insert(it->first);
-
-	// Recursively visit the macro AST as well
-	it->second->accept(this);
+	m_details.macros.insert(e->value);
 }
