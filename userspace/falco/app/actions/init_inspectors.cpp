@@ -159,9 +159,14 @@ falco::app::run_result falco::app::actions::init_inspectors(falco::app::state& s
 			// (in capture mode, this is true for every plugin)
 			if (plugin)
 			{
-				if (!plugin->init(config->m_init_config, err))
+				// avoid initializing the same plugin twice in the same
+				// inspector if we're in capture mode
+				if (!s.is_capture_mode() || used_plugins.find(p->name()) == used_plugins.end())
 				{
-					return run_result::fatal(err);
+					if (!plugin->init(config->m_init_config, err))
+					{
+						return run_result::fatal(err);
+					}
 				}
 				if (is_input)
 				{
