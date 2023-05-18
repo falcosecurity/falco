@@ -101,7 +101,7 @@ TEST(ConfigureInterestingSets, engine_codes_syscalls_set)
 	auto rules_event_set = engine->event_codes_for_ruleset(s_sample_source);
 	auto rules_event_names = libsinsp::events::event_set_to_names(rules_event_set);
 	ASSERT_NAMES_EQ(rules_event_names, strset_t({
-		"connect", "accept", "accept4", "umount2", "open", "ptrace", "mmap", "execve", "read", "container"}));
+		"connect", "accept", "accept4", "umount2", "open", "ptrace", "mmap", "execve", "read", "container", "asyncevent"}));
 
 	// test if sc code names were extracted from each rule in test ruleset.
 	// note, this is not supposed to contain "container", as that's an event
@@ -161,7 +161,7 @@ TEST(ConfigureInterestingSets, engine_codes_nonsyscalls_set)
 	auto generic_names = libsinsp::events::event_set_to_names({ppm_event_code::PPME_GENERIC_E});
 	auto expected_names = strset_t({
 		"connect", "accept", "accept4", "umount2", "open", "ptrace", "mmap", "execve", "read", "container", // ruleset
-		"procexit", "switch", "pluginevent"}); // from non-syscall event filters
+		"procexit", "switch", "pluginevent", "asyncevent"}); // from non-syscall event filters
 	expected_names.insert(generic_names.begin(), generic_names.end());
 	ASSERT_NAMES_EQ(rules_event_names, expected_names);
 

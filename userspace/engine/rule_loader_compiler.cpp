@@ -495,12 +495,11 @@ void rule_loader::compiler::compile_rule_infos(
 		}
 
 		// populate set of event types and emit an special warning
-		libsinsp::events::set<ppm_event_code> evttypes = { ppm_event_code::PPME_PLUGINEVENT_E };
 		if(rule.source == falco_common::syscall_source)
 		{
-			evttypes = libsinsp::filter::ast::ppm_event_codes(ast.get());
-			if ((evttypes.empty() || evttypes.size() > 100)
-			    && r.warn_evttypes)
+			auto evttypes = libsinsp::filter::ast::ppm_event_codes(ast.get());
+			evttypes.insert(ppm_event_code::PPME_ASYNCEVENT_E);
+			if ((evttypes.empty() || evttypes.size() > 100) && r.warn_evttypes)
 			{
 				cfg.res->add_warning(
 					falco::load_result::load_result::LOAD_NO_EVTTYPE,
