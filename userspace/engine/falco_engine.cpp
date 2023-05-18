@@ -460,6 +460,7 @@ void falco_engine::describe_rule(std::string *rule, bool json) const
 		return;
 	}
 
+	std::unique_ptr<sinsp> insp(new sinsp());
 	Json::FastWriter writer;
 	std::string json_str;
 
@@ -475,7 +476,7 @@ void falco_engine::describe_rule(std::string *rule, bool json) const
 		{
 			auto ri = m_rule_collector.rules().at(r.name);
 			Json::Value rule;
-			get_json_details(r, *ri, rule);
+			get_json_details(r, *ri, insp.get(), rule);
 
 			// Append to rule array
 			rules_array.append(rule);
@@ -514,7 +515,7 @@ void falco_engine::describe_rule(std::string *rule, bool json) const
 		}
 		auto r = m_rules.at(ri->name);
 		Json::Value rule; 
-		get_json_details(*r, *ri, rule);
+		get_json_details(*r, *ri, insp.get(), rule);
 		json_str = writer.write(rule);
 	}
 
@@ -523,6 +524,7 @@ void falco_engine::describe_rule(std::string *rule, bool json) const
 
 void falco_engine::get_json_details(const falco_rule &r,
 	const rule_loader::rule_info &ri,
+	sinsp *insp,
 	Json::Value &rule) const
 {
 	Json::Value rule_info;
@@ -551,17 +553,15 @@ void falco_engine::get_json_details(const falco_rule &r,
 	rule["details"] = json_details;
 
 	// Get fields from output string
-	auto insp = new sinsp;
 	sinsp_evt_formatter fmt(insp, r.output);
 	std::vector<std::string> out_fields;
 	fmt.get_field_names(out_fields);
-	delete insp;
 	Json::Value outputFields = Json::arrayValue;
 	for(const auto &of : out_fields)
 	{
 		outputFields.append(of);
 	}
-	rule["details"]["outputFields"] = outputFields;
+	rule["details"]["output_fields"] = outputFields;
 
 	// Get fields from exceptions
 	Json::Value exception_fields = Json::arrayValue;
@@ -569,7 +569,7 @@ void falco_engine::get_json_details(const falco_rule &r,
 	{
 		exception_fields.append(f);
 	}
-	rule["details"]["exceptionFields"] = exception_fields;
+	rule["details"]["exception_fields"] = exception_fields;
 
 	// Get operators from exceptions
 	Json::Value exception_operators = Json::arrayValue;
@@ -579,7 +579,18 @@ void falco_engine::get_json_details(const falco_rule &r,
 		{
 			for(const auto& c : e.comps.items)
 			{
-				exception_operators.append(c.item);
+				if(c.is_list)
+				{
+					// considering max two levels of lists
+					for(const auto& i : c.items)
+					{
+						exception_operators.append(i.item);
+					}
+				}
+				else
+				{
+					exception_operators.append(c.item);
+				}
 			}
 		}
 		else
@@ -587,7 +598,7 @@ void falco_engine::get_json_details(const falco_rule &r,
 			exception_operators.append(e.comps.item);
 		}	
 	}
-	rule["details"]["exceptionOperators"] = exception_operators;
+	rule["details"]["exception_operators"] = exception_operators;
 
 	if(ri.source == falco_common::syscall_source)
 	{
@@ -625,7 +636,6 @@ void falco_engine::get_json_details(const rule_loader::list_info& l,
 {
 	Json::Value list_info;
 	list_info["name"] = l.name;
-	list["info"] = list_info;
 
 	Json::Value items = Json::arrayValue;
 	Json::Value lists = Json::arrayValue;
@@ -639,7 +649,8 @@ void falco_engine::get_json_details(const rule_loader::list_info& l,
 		items.append(i);
 	}
 
-	list["details"]["items"] = items;
+	list_info["items"] = items;
+	list["info"] = list_info;
 	list["details"]["lists"] = lists;
 }
 
@@ -680,7 +691,7 @@ void falco_engine::get_json_details(libsinsp::filter::ast::expr* ast,
 	{
 		condition_fields.append(f);
 	}
-	output["conditionFields"] = condition_fields;
+	output["condition_fields"] = condition_fields;
 
 	Json::Value lists = Json::arrayValue;
 	for(const auto &l : details.lists)
@@ -696,18 +707,15 @@ void falco_engine::get_json_evt_types(libsinsp::filter::ast::expr* ast,
 					Json::Value& output) const
 {
 	output = Json::arrayValue;
-	auto evttypes = libsinsp::filter::ast::ppm_event_codes(ast);
-	if(evttypes.size() != libsinsp::events::all_event_set().size())
+	auto evtcodes = libsinsp::filter::ast::ppm_event_codes(ast);
+	if(evtcodes.size() != libsinsp::events::all_event_set().size())
 	{
-		std::unordered_set<std::string> evts;
-		for(const auto &e : evttypes)
+		auto syscodes = libsinsp::filter::ast::ppm_sc_codes(ast);
+		auto syscodes_to_evt_names = libsinsp::events::sc_set_to_event_names(syscodes);
+		auto evtcodes_to_evt_names = libsinsp::events::event_set_to_names(evtcodes, false);
+		for (const auto& n : unordered_set_union(syscodes_to_evt_names, evtcodes_to_evt_names))
 		{
-			auto evt_info = libsinsp::events::info(e);
-			auto res = evts.insert(std::string(evt_info->name));
-			if(res.second)
-			{
-				output.append(evt_info->name);
-			}
+			output.append(n);
 		}
 	}
 }

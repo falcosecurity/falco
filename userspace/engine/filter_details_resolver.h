@@ -55,7 +55,10 @@ public:
 private:
 	struct visitor : public libsinsp::filter::ast::expr_visitor
 	{
-		visitor(filter_details& details) : m_details(details) {}
+		visitor(filter_details& details) : 
+			m_details(details),
+			m_expect_list(false),
+			m_expect_macro(false) {}
 		visitor(visitor&&) = default;
 		visitor& operator = (visitor&&) = default;
 		visitor(const visitor&) = delete;
@@ -70,5 +73,7 @@ private:
 		void visit(libsinsp::filter::ast::binary_check_expr* e) override;
 
 		filter_details& m_details;
+		bool m_expect_list;
+		bool m_expect_macro;
 	};
 };
