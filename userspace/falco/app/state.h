@@ -144,6 +144,11 @@ struct state
     {
         return !options.gvisor_config.empty();
     }
+    
+    inline bool is_source_enabled(const std::string& src) const 
+    {
+        return enabled_sources.find(falco_common::syscall_source) != enabled_sources.end();
+    }
 };
 
 }; // namespace app
