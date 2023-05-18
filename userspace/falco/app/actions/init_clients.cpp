@@ -23,7 +23,7 @@ falco::app::run_result falco::app::actions::init_clients(falco::app::state& s)
 {
 #ifndef MINIMAL_BUILD
 	// k8s is useful only if the syscall source is enabled
-	if (s.enabled_sources.find(falco_common::syscall_source) == s.enabled_sources.end())
+	if (s.is_capture_mode() || !s.is_source_enabled(falco_common::syscall_source))
 	{
 		return run_result::ok();
 	}

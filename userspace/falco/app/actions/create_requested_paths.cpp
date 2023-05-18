@@ -33,7 +33,7 @@ static int create_dir(const std::string &path);
 
 falco::app::run_result falco::app::actions::create_requested_paths(falco::app::state& s)
 {
-	if(!s.options.gvisor_config.empty())
+	if(s.is_gvisor_enabled())
 	{
 		// This is bad: parsing gvisor config to get endpoint
 		// to be able to auto-create the path to the file for the user.

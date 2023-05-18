@@ -94,7 +94,7 @@ falco::app::run_result falco::app::actions::open_live_inspector(
 			falco_logger::log(LOG_INFO, "Opening '" + source + "' source with udig\n");
 			inspector->open_udig();
 		}
-		else if(!s.options.gvisor_config.empty()) /* gvisor engine. */
+		else if(s.is_gvisor_enabled()) /* gvisor engine. */
 		{
 			falco_logger::log(LOG_INFO, "Opening '" + source + "' source with gVisor. Configuration path: " + s.options.gvisor_config);
 			inspector->open_gvisor(s.options.gvisor_config, s.options.gvisor_root);
