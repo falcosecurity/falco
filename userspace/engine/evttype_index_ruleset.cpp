@@ -178,6 +178,7 @@ void evttype_index_ruleset::add(
 			wrap->sc_codes = { };
 			wrap->event_codes = { ppm_event_code::PPME_PLUGINEVENT_E };
 		}
+		wrap->event_codes.insert(ppm_event_code::PPME_ASYNCEVENT_E);
 		m_filters.insert(wrap);
 	}
 	catch (const sinsp_exception& e)
