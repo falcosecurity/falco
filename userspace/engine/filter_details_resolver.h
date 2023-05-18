@@ -24,7 +24,7 @@ limitations under the License.
 struct filter_details 
 {
 	// input macros and lists
-	std::unordered_map<std::string, std::shared_ptr<libsinsp::filter::ast::expr>> known_macros;
+	std::unordered_set<std::string> known_macros;
 	std::unordered_set<std::string> known_lists;
 	
 	// output details

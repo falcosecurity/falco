@@ -456,7 +456,6 @@ namespace rule_loader
 		std::set<std::string> tags;
 		std::vector<rule_exception_info> exceptions;
 		falco_common::priority_type priority;
-		libsinsp::events::set<ppm_event_code> evttypes;
 		bool enabled;
 		bool warn_evttypes;
 		bool skip_if_unknown_filter;

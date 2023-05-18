@@ -299,8 +299,18 @@ private:
 	//
 	inline bool should_drop_evt() const;
 
-	// Retrieve details of a rule in json format
-	Json::Value get_json_rule_details(const falco_rule& r, filter_details& details) const;
+	// Retrieve json details from rules, macros, lists
+	void get_json_details(const falco_rule& r,
+					const rule_loader::rule_info& ri,
+					Json::Value& rule) const;
+	void get_json_details(const rule_loader::macro_info& m,
+					Json::Value& macro) const;
+	void get_json_details(const rule_loader::list_info& l,
+					Json::Value& list) const;
+	void get_json_details(libsinsp::filter::ast::expr* ast,
+					Json::Value& output) const;
+	void get_json_evt_types(libsinsp::filter::ast::expr* ast,
+					Json::Value& output) const;
 
 	rule_loader::collector m_rule_collector;
 	indexed_vector<falco_rule> m_rules;
