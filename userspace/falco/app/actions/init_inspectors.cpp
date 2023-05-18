@@ -58,7 +58,7 @@ static void init_syscall_inspector(falco::app::state& s, std::shared_ptr<sinsp> 
 }
 
 static bool populate_filterchecks(
-		std::shared_ptr<sinsp> inspector,
+		const std::shared_ptr<sinsp>& inspector,
 		const std::string& source,
 		filter_check_list& filterchecks,
 		std::unordered_set<std::string>& used_plugins,
@@ -166,7 +166,7 @@ falco::app::run_result falco::app::actions::init_inspectors(falco::app::state& s
 				if (is_input)
 				{
 					auto gen_check = src_info->inspector->new_generic_filtercheck();
-					src_info->filterchecks.add_filter_check(gen_check);
+					src_info->filterchecks->add_filter_check(gen_check);
 				}
 				used_plugins.insert(plugin->name());
 			}
@@ -176,13 +176,12 @@ falco::app::run_result falco::app::actions::init_inspectors(falco::app::state& s
 		if (!populate_filterchecks(
 				src_info->inspector,
 				src,
-				src_info->filterchecks,
+				*src_info->filterchecks.get(),
 				used_plugins,
 				err))
 		{
 			return run_result::fatal(err);
-		}	
-
+		}
 	}
 
 	// check if some plugin remains unused

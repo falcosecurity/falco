@@ -28,12 +28,12 @@ falco::app::run_result falco::app::actions::load_plugins(falco::app::state& s)
 		return run_result::fatal("Can not load/use plugins with musl optimized build");
 	}
 #endif
-	auto empty_src_info = state::source_info{};
-
 	// Initialize the set of loaded event sources. 
 	// By default, the set includes the 'syscall' event source
+	state::source_info syscall_src_info;
+	syscall_src_info.filterchecks.reset(new sinsp_filter_check_list());
 	s.source_infos.clear();
-	s.source_infos.insert(empty_src_info, falco_common::syscall_source);
+	s.source_infos.insert(syscall_src_info, falco_common::syscall_source);
 	s.loaded_sources = { falco_common::syscall_source };
 
 	// Initialize map of plugin configs
@@ -53,8 +53,10 @@ falco::app::run_result falco::app::actions::load_plugins(falco::app::state& s)
 		s.plugin_configs.insert(p, plugin->name());
 		if(plugin->caps() & CAP_SOURCING && plugin->id() != 0)
 		{
+			state::source_info src_info;
+			src_info.filterchecks.reset(new filter_check_list());
 			auto sname = plugin->event_source();
-			s.source_infos.insert(empty_src_info, sname);
+			s.source_infos.insert(src_info, sname);
 			// note: this avoids duplicate values
 			if (std::find(s.loaded_sources.begin(), s.loaded_sources.end(), sname) == s.loaded_sources.end())
 			{

@@ -47,12 +47,21 @@ struct state
     // Holds the info mapped for each loaded event source
     struct source_info
     {
+        source_info():
+            engine_idx(-1),
+            filterchecks(new filter_check_list()),
+            inspector(nullptr) { }
+        source_info(source_info&&) = default;
+        source_info& operator = (source_info&&) = default;
+        source_info(const source_info&) = default;
+        source_info& operator = (const source_info&) = default;
+    
         // The index of the given event source in the state's falco_engine,
         // as returned by falco_engine::add_source
         std::size_t engine_idx;
         // The filtercheck list containing all fields compatible
         // with the given event source
-        filter_check_list filterchecks;
+        std::shared_ptr<filter_check_list> filterchecks;
         // The inspector assigned to this event source. If in capture mode,
         // all event source will share the same inspector. If the event
         // source is a plugin one, the assigned inspector must have that
