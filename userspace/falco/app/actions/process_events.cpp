@@ -412,6 +412,11 @@ static falco::app::run_result init_stats_writer(
 		return falco::app::run_result::fatal("Metrics interval must have a minimum value of 100ms");
 	}
 
+	if(std::all_of(config->m_metrics_interval_str.begin(), config->m_metrics_interval_str.end(), ::isdigit))
+	{
+		falco_logger::log(LOG_WARNING, "Metrics interval was passed as numeric value without Prometheus time unit, this option will be deprecated in the future");
+	}
+
 	if (config->m_metrics_enabled && !sw->has_output())
 	{
 		falco_logger::log(LOG_WARNING, "Metrics are enabled with no output configured, no snapshot will be collected");
