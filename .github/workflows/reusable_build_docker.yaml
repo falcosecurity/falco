@@ -36,26 +36,22 @@ jobs:
         uses: docker/setup-buildx-action@v2
           
       - name: Build no-driver image
-        uses: docker/build-push-action@v3
-        with:
-          context: ${{ github.workspace }}/docker/no-driver/
-          build-args: |
-            VERSION_BUCKET=bin${{ inputs.bucket_suffix }}
-            FALCO_VERSION=${{ inputs.version }}
-          tags: |
-            docker.io/falcosecurity/falco-no-driver:${{ inputs.arch }}-${{ inputs.tag }}
-          outputs: type=docker,dest=/tmp/falco-no-driver-${{ inputs.arch }}.tar
+        run: |
+          cd ${{ github.workspace }}/docker/no-driver/
+          docker build -t docker.io/falcosecurity/falco-no-driver:${{ inputs.arch }}-${{ inputs.tag }} \
+            --build-arg VERSION_BUCKET=bin${{ inputs.bucket_suffix }} 
+            --build-arg FALCO_VERSION=${{ inputs.version }} \
+            --output type=docker,dest=/tmp/falco-no-driver-${{ inputs.arch }}.tar \
+            .
             
       - name: Build falco image
-        uses: docker/build-push-action@v3
-        with:
-          context: ${{ github.workspace }}/docker/falco/
-          build-args: |
-            VERSION_BUCKET=deb${{ inputs.bucket_suffix }}
-            FALCO_VERSION=${{ inputs.version }}
-          tags: |
-            docker.io/falcosecurity/falco:${{ inputs.arch }}-${{ inputs.tag }}
-          outputs: type=docker,dest=/tmp/falco-${{ inputs.arch }}.tar
+        run: |
+          cd ${{ github.workspace }}/docker/falco/
+          docker build -t docker.io/falcosecurity/falco:${{ inputs.arch }}-${{ inputs.tag }} \
+            --build-arg VERSION_BUCKET=deb${{ inputs.bucket_suffix }} 
+            --build-arg FALCO_VERSION=${{ inputs.version }} \
+            --output type=docker,dest=/tmp/falco-${{ inputs.arch }}.tar \
+            .
 
       # The falcosecurity/falco image is required for the driver-loader image, so we need to load it
       - name: Load the falcosecurity/falco image
@@ -63,14 +59,12 @@ jobs:
           docker load --input /tmp/falco-${{ inputs.arch }}.tar
 
       - name: Build falco-driver-loader image
-        uses: docker/build-push-action@v3
-        with:
-          context: ${{ github.workspace }}/docker/driver-loader/
-          build-args: |
-            FALCO_IMAGE_TAG=${{ inputs.arch }}-${{ inputs.tag }}
-          tags: |
-            docker.io/falcosecurity/falco-driver-loader:${{ inputs.arch }}-${{ inputs.tag }}
-          outputs: type=docker,dest=/tmp/falco-driver-loader-${{ inputs.arch }}.tar  
+        run: |
+          cd ${{ github.workspace }}/docker/driver-loader/
+          docker build -t docker.io/falcosecurity/falco-driver-loader:${{ inputs.arch }}-${{ inputs.tag }} \
+            --build-arg FALCO_IMAGE_TAG=${{ inputs.arch }}-${{ inputs.tag }}
+            --output type=docker,dest=/tmp/falco-driver-loader-${{ inputs.arch }}.tar \
+            .
             
       - name: Upload images tarballs
         uses: actions/upload-artifact@v3
