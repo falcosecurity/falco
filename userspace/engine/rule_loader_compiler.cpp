@@ -498,7 +498,6 @@ void rule_loader::compiler::compile_rule_infos(
 		if(rule.source == falco_common::syscall_source)
 		{
 			auto evttypes = libsinsp::filter::ast::ppm_event_codes(ast.get());
-			evttypes.insert(ppm_event_code::PPME_ASYNCEVENT_E);
 			if ((evttypes.empty() || evttypes.size() > 100) && r.warn_evttypes)
 			{
 				cfg.res->add_warning(
