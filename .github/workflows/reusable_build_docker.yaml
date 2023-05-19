@@ -29,7 +29,7 @@ jobs:
     # See https://github.com/actions/runner/issues/409#issuecomment-1158849936
     runs-on: ${{ (inputs.arch == 'aarch64' && fromJSON('[ "self-hosted", "linux", "ARM64" ]')) || 'ubuntu-latest' }}
     env:
-      TARGET_ARCH: ${{ (inputs.arch == 'aarch64' && 'arm64') || 'amd64' }}
+      TARGETARCH: ${{ (inputs.arch == 'aarch64' && 'arm64') || 'amd64' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -43,7 +43,7 @@ jobs:
           docker build -t docker.io/falcosecurity/falco-no-driver:${{ inputs.arch }}-${{ inputs.tag }} \
             --build-arg VERSION_BUCKET=bin${{ inputs.bucket_suffix }} \
             --build-arg FALCO_VERSION=${{ inputs.version }} \
-            --build-arg TARGET_ARCH=${TARGET_ARCH} \
+            --build-arg TARGETARCH=${TARGETARCH} \
             --output type=docker,dest=/tmp/falco-no-driver-${{ inputs.arch }}.tar \
             .
             
@@ -53,7 +53,7 @@ jobs:
           docker build -t docker.io/falcosecurity/falco:${{ inputs.arch }}-${{ inputs.tag }} \
             --build-arg VERSION_BUCKET=deb${{ inputs.bucket_suffix }} \
             --build-arg FALCO_VERSION=${{ inputs.version }} \
-            --build-arg TARGET_ARCH=${TARGET_ARCH} \
+            --build-arg TARGETARCH=${TARGETARCH} \
             --output type=docker,dest=/tmp/falco-${{ inputs.arch }}.tar \
             .
 
@@ -67,7 +67,7 @@ jobs:
           cd ${{ github.workspace }}/docker/driver-loader/
           docker build -t docker.io/falcosecurity/falco-driver-loader:${{ inputs.arch }}-${{ inputs.tag }} \
             --build-arg FALCO_IMAGE_TAG=${{ inputs.arch }}-${{ inputs.tag }} \
-            --build-arg TARGET_ARCH=${TARGET_ARCH} \
+            --build-arg TARGETARCH=${TARGETARCH} \
             --output type=docker,dest=/tmp/falco-driver-loader-${{ inputs.arch }}.tar \
             .
             
