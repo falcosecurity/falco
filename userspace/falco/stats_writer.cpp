@@ -68,21 +68,32 @@ stats_writer::ticker_t stats_writer::get_ticker()
 	return s_timer.load(std::memory_order_relaxed);
 }
 
-stats_writer::stats_writer(std::shared_ptr<falco_outputs> outputs, std::shared_ptr<falco_configuration> config)
+stats_writer::stats_writer(
+		const std::shared_ptr<falco_outputs>& outputs,
+		const std::shared_ptr<const falco_configuration>& config)
 	: m_initialized(false), m_total_samples(0)
 {
-	m_outputs = outputs;
 	m_config = config;
-}
+	if (config->m_metrics_enabled)
+	{
+		if (!config->m_metrics_output_file.empty())
+		{
+			m_file_output.exceptions(std::ofstream::failbit | std::ofstream::badbit);
+			m_file_output.open(config->m_metrics_output_file, std::ios_base::app);
+			m_initialized = true;
+		}
 
-stats_writer::stats_writer(const std::string &filename, std::shared_ptr<falco_outputs> outputs, std::shared_ptr<falco_configuration> config)
-	: m_initialized(true), m_total_samples(0)
-{
-	m_output.exceptions(std::ofstream::failbit | std::ofstream::badbit);
-	m_output.open(filename, std::ios_base::app);
-	m_worker = std::thread(&stats_writer::worker, this);
-	m_outputs = outputs;
-	m_config = config;
+		if (config->m_metrics_stats_rule_enabled)
+		{
+			m_outputs = outputs;
+			m_initialized = true;
+		}
+	}
+
+	if (m_initialized)
+	{
+		m_worker = std::thread(&stats_writer::worker, this);
+	}
 }
 
 stats_writer::~stats_writer()
@@ -90,13 +101,11 @@ stats_writer::~stats_writer()
 	if (m_initialized)
 	{
 		stop_worker();
-		m_output.close();
+		if (!m_config->m_metrics_output_file.empty())
+		{
+			m_file_output.close();
+		}
 	}
-}
-
-bool stats_writer::has_output() const
-{
-	return m_initialized;
 }
 
 void stats_writer::stop_worker()
@@ -123,8 +132,11 @@ void stats_writer::worker() noexcept
 {
 	stats_writer::msg m;
 	nlohmann::json jmsg;
+	bool use_outputs = m_config->m_metrics_stats_rule_enabled;
+	bool use_file = !m_config->m_metrics_output_file.empty();
 	auto tick = stats_writer::get_ticker();
 	auto last_tick = tick;
+	auto first_tick = tick;
 
 	while(true)
 	{
@@ -135,15 +147,33 @@ void stats_writer::worker() noexcept
 			return;
 		}
 		
+		// this helps waiting for the first tick
 		tick = stats_writer::get_ticker();
-		if (last_tick != tick)
+		if (first_tick != tick)
 		{
-			m_total_samples++;
+			if (last_tick != tick)
+			{
+				m_total_samples++;
+			}
+			last_tick = tick;
+
 			try
 			{
-				jmsg["sample"] = m_total_samples;
-				jmsg["output_fields"] = m.output_fields;
-				m_output << jmsg.dump() << std::endl;
+				if (use_outputs)
+				{
+					std::string rule = "Falco internal: metrics snapshot";
+					std::string msg = "Falco metrics snapshot";
+					uint64_t ts = 0; // todo: pass timestamp in message
+					std::map<std::string,std::string> fields = {m.output_fields.begin(), m.output_fields.end()}; 
+					m_outputs->handle_msg(ts, falco_common::PRIORITY_INFORMATIONAL, msg, rule, fields);
+				}
+
+				if (use_file)
+				{
+					jmsg["sample"] = m_total_samples;
+					jmsg[m.source] = m.output_fields;
+					m_file_output << jmsg.dump() << std::endl;
+				}
 			}
 			catch(const std::exception &e)
 			{
@@ -153,14 +183,20 @@ void stats_writer::worker() noexcept
 	}
 }
 
-stats_writer::collector::collector(std::shared_ptr<stats_writer> writer)
-	: m_writer(writer), m_last_tick(0), m_samples(0), m_last_now(0), m_last_n_evts(0), m_last_n_drops(0), m_last_num_evts(0)
+stats_writer::collector::collector(const std::shared_ptr<stats_writer>& writer)
+	: m_writer(writer), m_last_tick(0), m_samples(0),
+	  m_last_now(0), m_last_n_evts(0), m_last_n_drops(0), m_last_num_evts(0)
 {
 }
 
-std::map<std::string, std::string> stats_writer::collector::get_metrics_output_fields_wrapper(std::shared_ptr<sinsp> inspector, uint64_t now, std::string src, uint64_t num_evts, double stats_snapshot_time_delta_sec)
+void stats_writer::collector::get_metrics_output_fields_wrapper(
+		std::unordered_map<std::string, std::string>& output_fields,
+		const std::shared_ptr<sinsp>& inspector, uint64_t now,
+		const std::string& src, uint64_t num_evts, double stats_snapshot_time_delta_sec)
 {
-	std::map<std::string, std::string> output_fields;
+	static const char* all_driver_engines[] = {
+		BPF_ENGINE, KMOD_ENGINE, MODERN_BPF_ENGINE,
+		SOURCE_PLUGIN_ENGINE, NODRIVER_ENGINE, UDIG_ENGINE, GVISOR_ENGINE };
 	const scap_agent_info* agent_info = inspector->get_agent_info();
 	const scap_machine_info* machine_info = inspector->get_machine_info();
 
@@ -173,23 +209,16 @@ std::map<std::string, std::string> stats_writer::collector::get_metrics_output_f
 	output_fields["host_boot_ts"] = std::to_string(machine_info->boot_ts_epoch);
 	output_fields["hostname"] = machine_info->hostname; /* Explicitly add hostname to log msg in case hostname rule output field is disabled. */
 	output_fields["host_num_cpus"] = std::to_string(machine_info->num_cpus);
-	if (inspector->check_current_engine(BPF_ENGINE))
-	{
-		output_fields["driver"] = "bpf";
-	}
-	else if (inspector->check_current_engine(MODERN_BPF_ENGINE))
-	{
-		output_fields["driver"] = "modern_bpf";
-	}
-	else if (inspector->check_current_engine(KMOD_ENGINE))
-	{
-		output_fields["driver"] = "kmod";
-	}
-	else
-	{
-		output_fields["driver"] = "no_driver";
-	}
+
 	output_fields["src"] = src;
+	for (size_t i = 0; i < sizeof(all_driver_engines) / sizeof(const char*); i++)
+	{
+		if (inspector->check_current_engine(all_driver_engines[i]))
+		{
+			output_fields["driver"] = all_driver_engines[i];
+			break;
+		}
+	}
 
 	/* Falco userspace event counters. Always enabled. */
 	if (m_last_num_evts != 0 && stats_snapshot_time_delta_sec > 0)
@@ -200,12 +229,12 @@ std::map<std::string, std::string> stats_writer::collector::get_metrics_output_f
 	output_fields["falco_num_evts"] = std::to_string(num_evts);
 	output_fields["falco_num_evts_prev"] = std::to_string(m_last_num_evts);
 	m_last_num_evts = num_evts;
-
-	return output_fields;
-
 }
 
-std::map<std::string, std::string> stats_writer::collector::get_metrics_output_fields_additional(std::shared_ptr<sinsp> inspector, std::map<std::string, std::string> output_fields, double stats_snapshot_time_delta_sec, std::string src)
+void stats_writer::collector::get_metrics_output_fields_additional(
+		std::unordered_map<std::string, std::string>& output_fields,
+		const std::shared_ptr<sinsp>& inspector,
+		double stats_snapshot_time_delta_sec, const std::string& src)
 {
 	const scap_agent_info* agent_info = inspector->get_agent_info();
 	const scap_machine_info* machine_info = inspector->get_machine_info();
@@ -258,7 +287,7 @@ std::map<std::string, std::string> stats_writer::collector::get_metrics_output_f
 
 	if (src != falco_common::syscall_source)
 	{
-		return output_fields;
+		return;
 	}
 
 	/* Kernel side stats counters and libbpf stats if applicable. */
@@ -312,19 +341,19 @@ std::map<std::string, std::string> stats_writer::collector::get_metrics_output_f
 		}
 	}
 #endif
-
-	return output_fields;
 }
 
-void stats_writer::collector::collect(std::shared_ptr<sinsp> inspector, const std::string &src, uint64_t num_evts)
+void stats_writer::collector::collect(const std::shared_ptr<sinsp>& inspector, const std::string &src, uint64_t num_evts)
 {
-	if (m_writer->m_config->m_metrics_enabled || m_writer->has_output())
+	if (m_writer->has_output())
 	{
 		/* Collect stats / metrics once per ticker period. */
 		auto tick = stats_writer::get_ticker();
 		if (tick != m_last_tick)
 		{
-			auto now = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+			m_last_tick = tick;
+			auto now = std::chrono::duration_cast<std::chrono::nanoseconds>(
+				std::chrono::system_clock::now().time_since_epoch()).count();
 			uint64_t stats_snapshot_time_delta = 0;
 			if (m_last_now != 0)
 			{
@@ -334,23 +363,15 @@ void stats_writer::collector::collect(std::shared_ptr<sinsp> inspector, const st
 			double stats_snapshot_time_delta_sec = (stats_snapshot_time_delta / (double)ONE_SECOND_IN_NS);
 
 			/* Get respective metrics output_fields. */
-			std::map<std::string, std::string> output_fields = stats_writer::collector::get_metrics_output_fields_wrapper(inspector, now, src, num_evts, stats_snapshot_time_delta_sec);
-			output_fields = stats_writer::collector::get_metrics_output_fields_additional(inspector, output_fields, stats_snapshot_time_delta_sec, src);
+			std::unordered_map<std::string, std::string> output_fields;
+			get_metrics_output_fields_wrapper(output_fields, inspector, now, src, num_evts, stats_snapshot_time_delta_sec);
+			get_metrics_output_fields_additional(output_fields, inspector, stats_snapshot_time_delta_sec, src);
 
-			/* Pipe to respective output. */
-			if (m_writer->m_config->m_metrics_enabled && m_writer->m_config->m_metrics_stats_rule_enabled && m_writer->m_outputs)
-			{
-				std::string rule = "Falco internal: resource utilization stats metrics";
-				std::string msg = "";
-				m_writer->m_outputs->handle_msg(now, falco_common::PRIORITY_INFORMATIONAL, msg, rule, output_fields);
-			}
-			if (m_writer->has_output())
-			{
-				stats_writer::msg msg;
-				msg.output_fields = output_fields;
-				m_writer->push(msg);
-			}
-			m_last_tick = tick;
+			/* Send message in the queue */
+			stats_writer::msg msg;
+			msg.source = src;
+			msg.output_fields = std::move(output_fields);
+			m_writer->push(msg);
 		}
 	}
 }
