@@ -397,59 +397,36 @@ static void process_inspector_events(
 	}
 }
 
-static std::shared_ptr<stats_writer> init_stats_writer(const options& opts, std::shared_ptr<falco_outputs> outputs, std::shared_ptr<falco_configuration> config)
+static falco::app::run_result init_stats_writer(
+		const std::shared_ptr<const stats_writer>& sw,
+		const std::shared_ptr<const falco_configuration>& config)
 {
-	auto statsw = std::make_shared<stats_writer>(outputs, config);
-	std::string err;
-	uint64_t interval = 0;
-
-	/* Continue cmd args support and old defaults for backward compatibility, scheduled for deprecation. */
-	if(!config->m_metrics_enabled && opts.stats_interval > 0)
+	if (!config->m_metrics_enabled)
 	{
-		interval = opts.stats_interval;
-	}
-	/* New metrics and configs over falco.yaml. */
-	else if(config->m_metrics_enabled && config->m_metrics_interval > 0)
-	{
-		interval = config->m_metrics_interval;
+		return  falco::app::run_result::ok();
 	}
 
 	/* Enforce minimum bound of 100ms. */
-	if(interval > 100)
+	if(config->m_metrics_interval < 100)
 	{
-		if(!stats_writer::init_ticker(interval, err))
-		{
-			throw falco_exception(err);
-		}
-		/* Only support new info message for new metrics and configs over falco.yaml. */
-		if(config->m_metrics_enabled)
-		{
-			falco_logger::log(LOG_INFO, "Setting metrics interval to " + config->m_metrics_interval_str + ", equivalent to " + std::to_string(interval) + " (ms)\n");
-		}
+		return falco::app::run_result::fatal("Metrics interval must have a minimum value of 100ms");
 	}
-	/* Continue cmd args support for backward compatibility, scheduled for deprecation. */
-	if(!config->m_metrics_enabled && !opts.output_file.empty())
+
+	if (config->m_metrics_enabled && !sw->has_output())
 	{
-		statsw.reset(new stats_writer(opts.output_file, outputs, config));
+		falco_logger::log(LOG_WARNING, "Metrics are enabled with no output configured, no snapshot will be collected");
 	}
-	/* New metrics and configs over falco.yaml. */
-	else if(config->m_metrics_enabled && !config->m_metrics_output_file.empty())
-	{
-		statsw.reset(new stats_writer(config->m_metrics_output_file, outputs, config));
-	}
-	return statsw;
+
+	auto res = falco::app::run_result::ok();
+	res.success = stats_writer::init_ticker(config->m_metrics_interval, res.errstr);
+	res.proceed = res.success;
+	return res;
 }
 
 falco::app::run_result falco::app::actions::process_events(falco::app::state& s)
 {
-	run_result res = run_result::ok();
-	bool termination_forced = false;
-
 	// Notify engine that we finished loading and enabling all rules
 	s.engine->complete_rule_loading();
-
-	// Initialize stats writer
-	auto statsw = init_stats_writer(s.options, s.outputs, s.config);
 
 	if (s.options.dry_run)
 	{
@@ -457,7 +434,16 @@ falco::app::run_result falco::app::actions::process_events(falco::app::state& s)
 		return run_result::ok();
 	}
 
+	// Initialize stats writer
+	auto statsw = std::make_shared<stats_writer>(s.outputs, s.config);
+	auto res = init_stats_writer(statsw, s.config);
+	if (!res.success)
+	{
+		return res;
+	}
+
 	// Start processing events
+	bool termination_forced = false;
 	if(s.is_capture_mode())
 	{
 		res = open_offline_inspector(s);

@@ -18,7 +18,7 @@ limitations under the License.
 
 #include <fstream>
 #include <string>
-#include <map>
+#include <unordered_map>
 
 #include <sinsp.h>
 
@@ -54,25 +54,26 @@ public:
 		/*!
 			\brief Initializes the collector with the given writer
 		*/
-		explicit collector(std::shared_ptr<stats_writer> writer);
+		explicit collector(const std::shared_ptr<stats_writer>& writer);
 
 		/*!
 			\brief Collects one stats sample from an inspector
 			and for the given event source name
 		*/
-		void collect(std::shared_ptr<sinsp> inspector, const std::string& src, uint64_t num_evts);
+		void collect(const std::shared_ptr<sinsp>& inspector, const std::string& src, uint64_t num_evts);
 
+	private:
 		/*!
 			\brief Collect snapshot metrics wrapper fields as internal rule formatted output fields.
 		*/
-		std::map<std::string, std::string> get_metrics_output_fields_wrapper(std::shared_ptr<sinsp> inspector, uint64_t now, std::string src, uint64_t num_evts, double stats_snapshot_time_delta_sec);
+		void get_metrics_output_fields_wrapper(std::unordered_map<std::string, std::string>& output_fields, const std::shared_ptr<sinsp>& inspector, uint64_t now, const std::string& src, uint64_t num_evts, double stats_snapshot_time_delta_sec);
 
 		/*!
 			\brief Collect snapshot metrics syscalls related metrics as internal rule formatted output fields.
 		*/
-		std::map<std::string, std::string> get_metrics_output_fields_additional(std::shared_ptr<sinsp> inspector, std::map<std::string, std::string> output_fields, double stats_snapshot_time_delta_sec, std::string src);
+		void get_metrics_output_fields_additional(std::unordered_map<std::string, std::string>& output_fields, const std::shared_ptr<sinsp>& inspector, double stats_snapshot_time_delta_sec, const std::string& src);
 
-	private:
+	
 		std::shared_ptr<stats_writer> m_writer;
 		stats_writer::ticker_t m_last_tick;
 		uint64_t m_samples;
@@ -94,20 +95,18 @@ public:
 	~stats_writer();
 
 	/*!
-		\brief Initializes a writer without file output.
+		\brief Initializes a writer.
 	*/
-	stats_writer(std::shared_ptr<falco_outputs> outputs, std::shared_ptr<falco_configuration> config);
+	stats_writer(const std::shared_ptr<falco_outputs>& outputs,
+		const std::shared_ptr<const falco_configuration>& config);
 
 	/*!
-		\brief Initializes a writer that can print to a file at the given filename.
-		With this constructor, has_output() always returns true
+		\brief Returns true if the writer is configured with a valid output.
 	*/
-	explicit stats_writer(const std::string &filename, std::shared_ptr<falco_outputs> outputs, std::shared_ptr<falco_configuration> config);
-	
-	/*!
-		\brief Returns true if the writer is configured with a valid file output
-	*/
-	inline bool has_output() const;
+	inline bool has_output() const
+	{
+		return m_initialized;
+	}
 
 	/*!
 		\brief Initializes the ticker with a given interval period defined
@@ -133,10 +132,8 @@ private:
 		msg& operator = (const msg&) = default;
 
 		bool stop;
-		scap_stats delta;
-		scap_stats stats;
 		std::string source;
-		std::map<std::string, std::string> output_fields;
+		std::unordered_map<std::string, std::string> output_fields;
 	};
 
 	void worker() noexcept;
@@ -146,10 +143,10 @@ private:
 	bool m_initialized;
 	uint64_t m_total_samples;
 	std::thread m_worker;
-	std::ofstream m_output;
+	std::ofstream m_file_output;
 	tbb::concurrent_bounded_queue<stats_writer::msg> m_queue;
 	std::shared_ptr<falco_outputs> m_outputs;
-	std::shared_ptr<falco_configuration> m_config;
+	std::shared_ptr<const falco_configuration> m_config;
 
 	// note: in this way, only collectors can push into the queue
 	friend class stats_writer::collector;

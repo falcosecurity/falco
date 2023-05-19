@@ -191,6 +191,7 @@ void falco_outputs::handle_msg(uint64_t ts,
 		jmsg["time"] = iso8601evttime;
 		jmsg["output_fields"] = output_fields;
 		jmsg["hostname"] = m_hostname;
+		jmsg["source"] = s_internal_source;
 
 		cmsg.msg = jmsg.dump();
 	}

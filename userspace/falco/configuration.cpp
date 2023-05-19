@@ -61,7 +61,15 @@ falco_configuration::falco_configuration():
 	m_cpus_for_each_syscall_buffer(2),
 	m_syscall_drop_failed_exit(false),
 	m_base_syscalls_repair(false),
-	m_metrics_enabled(false)
+	m_metrics_enabled(false),
+	m_metrics_interval_str("5000"),
+	m_metrics_interval(5000),
+	m_metrics_stats_rule_enabled(false),
+	m_metrics_output_file(""),
+	m_metrics_resource_utilization_enabled(true),
+	m_metrics_kernel_event_counters_enabled(true),
+	m_metrics_libbpf_stats_enabled(true),
+	m_metrics_convert_memory_to_mb(true)
 {
 	init({});
 }
@@ -341,9 +349,9 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 	m_base_syscalls_repair = config.get_scalar<bool>("base_syscalls.repair", false);
 
 	m_metrics_enabled = config.get_scalar<bool>("metrics.enabled", false);
-	m_metrics_interval_str = config.get_scalar<std::string>("metrics.interval", "0");
+	m_metrics_interval_str = config.get_scalar<std::string>("metrics.interval", "5000");
 	m_metrics_interval = falco::metrics::parse_metrics_interval(m_metrics_interval_str);
-	m_metrics_stats_rule_enabled = config.get_scalar<bool>("metrics.stats_rule_enabled", true);
+	m_metrics_stats_rule_enabled = config.get_scalar<bool>("metrics.output_rule", false);
 	m_metrics_output_file = config.get_scalar<std::string>("metrics.output_file", "");
 	m_metrics_resource_utilization_enabled = config.get_scalar<bool>("metrics.resource_utilization_enabled", true);
 	m_metrics_kernel_event_counters_enabled = config.get_scalar<bool>("metrics.kernel_event_counters_enabled", true);

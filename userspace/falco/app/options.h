@@ -70,8 +70,8 @@ public:
 	std::string pidfilename;
 	// Rules list as passed by the user, via cmdline option '-r'
 	std::list<std::string> rules_filenames;
-	std::string output_file;
-	uint64_t stats_interval;
+	std::string stats_output_file;
+	std::string stats_interval;
 	uint64_t snaplen;
 	bool print_support;
 	std::set<std::string> disabled_rule_tags;

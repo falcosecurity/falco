@@ -15,9 +15,31 @@ limitations under the License.
 */
 
 #include "actions.h"
+#include "falco_metrics.h"
 
 using namespace falco::app;
 using namespace falco::app::actions;
+
+// applies legacy/in-deprecation options to the current config
+static void apply_deprecated_options(
+		const falco::app::options& opts,
+		const std::shared_ptr<falco_configuration>& cfg)
+{
+	if (!opts.stats_output_file.empty() || !opts.stats_interval.empty())
+	{
+		falco_logger::log(LOG_WARNING, "Options '-s' and '--stats-interval' are deprecated, metrics must be configured in the config file");
+		if (!opts.stats_output_file.empty())
+		{
+			cfg->m_metrics_enabled = true;
+			cfg->m_metrics_output_file = opts.stats_output_file;
+			if (!opts.stats_interval.empty())
+			{
+				cfg->m_metrics_interval_str = opts.stats_interval;
+				cfg->m_metrics_interval = falco::metrics::parse_metrics_interval(cfg->m_metrics_interval_str);
+			}
+		}
+	}
+}
 
 falco::app::run_result falco::app::actions::load_config(falco::app::state& s)
 {
@@ -50,6 +72,8 @@ falco::app::run_result falco::app::actions::load_config(falco::app::state& s)
 	}
 
 	s.config->m_buffered_outputs = !s.options.unbuffered_outputs;
+
+	apply_deprecated_options(s.options, s.config);
 
 	return run_result::ok();
 }

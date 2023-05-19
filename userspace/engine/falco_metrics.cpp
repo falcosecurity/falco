@@ -50,7 +50,7 @@ static re2::RE2 s_rgx_prometheus_unit(RGX_PROMETHEUS_UNIT_PATTERN, re2::RE2::POS
 #define HOUR_TO_MS MINUTE_TO_MS * 60
 #define DAY_TO_MS HOUR_TO_MS * 24
 #define WEEK_TO_MS DAY_TO_MS * 7
-#define YEAR_TO_MS WEEK_TO_MS * 365
+#define YEAR_TO_MS DAY_TO_MS * 365
 
 namespace falco
 {
