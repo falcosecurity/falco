@@ -39,7 +39,7 @@ jobs:
         run: |
           cd ${{ github.workspace }}/docker/no-driver/
           docker build -t docker.io/falcosecurity/falco-no-driver:${{ inputs.arch }}-${{ inputs.tag }} \
-            --build-arg VERSION_BUCKET=bin${{ inputs.bucket_suffix }} 
+            --build-arg VERSION_BUCKET=bin${{ inputs.bucket_suffix }} \
             --build-arg FALCO_VERSION=${{ inputs.version }} \
             --output type=docker,dest=/tmp/falco-no-driver-${{ inputs.arch }}.tar \
             .
@@ -48,7 +48,7 @@ jobs:
         run: |
           cd ${{ github.workspace }}/docker/falco/
           docker build -t docker.io/falcosecurity/falco:${{ inputs.arch }}-${{ inputs.tag }} \
-            --build-arg VERSION_BUCKET=deb${{ inputs.bucket_suffix }} 
+            --build-arg VERSION_BUCKET=deb${{ inputs.bucket_suffix }} \
             --build-arg FALCO_VERSION=${{ inputs.version }} \
             --output type=docker,dest=/tmp/falco-${{ inputs.arch }}.tar \
             .
@@ -62,7 +62,7 @@ jobs:
         run: |
           cd ${{ github.workspace }}/docker/driver-loader/
           docker build -t docker.io/falcosecurity/falco-driver-loader:${{ inputs.arch }}-${{ inputs.tag }} \
-            --build-arg FALCO_IMAGE_TAG=${{ inputs.arch }}-${{ inputs.tag }}
+            --build-arg FALCO_IMAGE_TAG=${{ inputs.arch }}-${{ inputs.tag }} \
             --output type=docker,dest=/tmp/falco-driver-loader-${{ inputs.arch }}.tar \
             .
             
