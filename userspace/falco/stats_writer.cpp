@@ -163,9 +163,8 @@ void stats_writer::worker() noexcept
 				{
 					std::string rule = "Falco internal: metrics snapshot";
 					std::string msg = "Falco metrics snapshot";
-					uint64_t ts = 0; // todo: pass timestamp in message
 					std::map<std::string,std::string> fields = {m.output_fields.begin(), m.output_fields.end()}; 
-					m_outputs->handle_msg(ts, falco_common::PRIORITY_INFORMATIONAL, msg, rule, fields);
+					m_outputs->handle_msg(m.ts, falco_common::PRIORITY_INFORMATIONAL, msg, rule, fields);
 				}
 
 				if (use_file)
@@ -369,6 +368,7 @@ void stats_writer::collector::collect(const std::shared_ptr<sinsp>& inspector, c
 
 			/* Send message in the queue */
 			stats_writer::msg msg;
+			msg.ts = now;
 			msg.source = src;
 			msg.output_fields = std::move(output_fields);
 			m_writer->push(msg);

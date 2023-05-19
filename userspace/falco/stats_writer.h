@@ -125,13 +125,14 @@ public:
 private:
 	struct msg
 	{
-		msg(): stop(false) {}
+		msg(): stop(false), ts(0) {}
 		msg(msg&&) = default;
 		msg& operator = (msg&&) = default;
 		msg(const msg&) = default;
 		msg& operator = (const msg&) = default;
 
 		bool stop;
+		uint64_t ts;
 		std::string source;
 		std::unordered_map<std::string, std::string> output_fields;
 	};

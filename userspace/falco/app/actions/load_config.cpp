@@ -27,7 +27,7 @@ static void apply_deprecated_options(
 {
 	if (!opts.stats_output_file.empty() || !opts.stats_interval.empty())
 	{
-		falco_logger::log(LOG_WARNING, "Options '-s' and '--stats-interval' are deprecated, metrics must be configured in the config file");
+		falco_logger::log(LOG_WARNING, "Options '-s' and '--stats-interval' will be deprecated in the future, metrics must be configured through config file");
 		if (!opts.stats_output_file.empty())
 		{
 			cfg->m_metrics_enabled = true;

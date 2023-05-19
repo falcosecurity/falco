@@ -70,7 +70,6 @@ uint64_t parse_metrics_interval(std::string interval_str)
         {
             /* todo: deprecate for Falco 0.36. */
             interval = std::stoull(interval_str, nullptr, 0);
-            std::cerr << "Metrics interval was passed as numeric value without Prometheus time unit, this option will no longer be supported starting Falco 0.36" << std::endl;
         }
         /* Option 2: Passing a Prometheus time duration. 
          * https://prometheus.io/docs/prometheus/latest/querying/basics/#time-durations
