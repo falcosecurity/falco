@@ -566,7 +566,7 @@ base_syscalls:
   custom_set: []
   repair: false
 
-# metrics: periodic stats and resource utilization metrics, initial release
+# metrics: [EXPERIMENTAL] periodic metric snapshots (stats and resource utilization)
 #
 # --- [Description]
 #
@@ -582,10 +582,8 @@ base_syscalls:
 #
 # --- [Usage]
 #
+# `enabled`:
 # Disabled by default.
-#
-# Env variable `-E FALCO_HOSTNAME=myhostname` customizes hostname for Kubernetes
-# deployments where the hostname can be equivalent to the pod name.
 #
 # `interval`:
 # Define the stats interval following the Prometheus time duration definitions.
@@ -610,36 +608,43 @@ base_syscalls:
 # 6h
 #
 # `output_rule`:
-# Emit metrics as rule `Falco internal: resource utilization stats metrics`.
-# We recommend this option for seamless performance monitoring especially
+# Emit metrics as rule `Falco internal: metrics snapshot`.
+# We recommend this option for seamless metrics and performance monitoring especially
 # if Falco logs are preserved in a data lake.
-# Note: This option requires setting `log_level` at minimum to `info`.
+# Note: This option at minimum requires setting `log_level` to `info`.
 #
 # `output_file`:
 # Append stats to a `jsonl` file. Use with caution in production, Falco does not rotate the file.
 #
 # `resource_utilization_enabled`:
-# Emit CPU and memory usages. CPU usage is percentage of one CPU,
-# can be normalized to total number of CPUs to determine overall usage.
+# Emit CPU and memory usages. CPU usage is percentage of one CPU and can
+# be normalized to total number of CPUs to determine the overall usage.
 # Memory metrics are currently kept in raw units, `kb` for RSS, PSS and VSZ
 # or `bytes` for container_memory_used. Use `convert_memory_to_mb` to
 # uniformly convert each memory metric to MB.
-# `-E FALCO_CGROUP_MEM_PATH=customfile` let's you customize the container_memory_used
-# file which defaults to Kubernetes `/sys/fs/cgroup/memory/memory.usage_in_bytes` that is
+# Creating and setting an environmnet variable `FALCO_CGROUP_MEM_PATH=customfile`
+# let's you customize the container_memory_used file which defaults to Kubernetes
+# `/sys/fs/cgroup/memory/memory.usage_in_bytes` holding the memory metric that is
 # similar to Kubernetes `container_memory_working_set_bytes` of the Falco container.
 #
 # `kernel_event_counters_enabled`:
 # Emit kernel side event and drop counters, compare to `syscall_event_drops`,
 # however this option reflects monotonic counters since Falco start,
 # exported at a constant stats interval and therefore can be regarded as an alternative.
-# kernel event counters are prefixed with `n_` e.g. `n_evts`, `n_drops`, `n_drops_buffer_total` ...
+# kernel event counters are prefixed with `k.` vs userspace counters with `u.` ...
 #
 # `libbpf_stats_enabled`:
 # Exposes `bpftool prog show` like stats, e.g. number of invocations
 # of each bpf program Falco attached as well as time spent in each program in nanoseconds.
-# Requires kernels >= 5.1 plus kernel config `bpf_stats_enabled`.
+# Requires kernels >= 5.1 plus setting kernel config `/proc/sys/kernel/bpf_stats_enabled`.
 # This option or equivalent stats are not supported for non `*bpf*` drivers.
 # Note that currently `libbpf` does not support stats granularity at the bpf tail call level.
+#
+# Customization with relevant environment variables:
+# Creating an env variable `FALCO_HOSTNAME=myhostname` customizes the hostname,
+# especially useful for Kubernetes deployments where the hostname can be equivalent to the pod name.
+# Refer to section `resource_utilization_enabled` re customization via creating an
+# env variable `FALCO_CGROUP_MEM_PATH=customfile` to point to a custom file holding the memory metric.
 #
 # todo: Prometheus export option
 # todo: userspace_syscall_event_counters_enabled option
