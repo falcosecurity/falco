@@ -26,7 +26,6 @@ limitations under the License.
 #include <sys/stat.h>
 #include <unistd.h>
 #include "falco_utils.h"
-#include "falco_metrics.h"
 
 #include "configuration.h"
 #include "logger.h"
@@ -350,7 +349,7 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 
 	m_metrics_enabled = config.get_scalar<bool>("metrics.enabled", false);
 	m_metrics_interval_str = config.get_scalar<std::string>("metrics.interval", "5000");
-	m_metrics_interval = falco::metrics::parse_metrics_interval(m_metrics_interval_str);
+	m_metrics_interval = falco::utils::parse_prometheus_interval(m_metrics_interval_str);
 	m_metrics_stats_rule_enabled = config.get_scalar<bool>("metrics.output_rule", false);
 	m_metrics_output_file = config.get_scalar<std::string>("metrics.output_file", "");
 	m_metrics_resource_utilization_enabled = config.get_scalar<bool>("metrics.resource_utilization_enabled", true);

@@ -43,6 +43,8 @@ namespace falco
 namespace utils
 {
 
+uint64_t parse_prometheus_interval(std::string interval_str);
+
 std::string wrap_text(const std::string& in, uint32_t indent, uint32_t linelen);
 
 void readfile(const std::string& filename, std::string& data);
