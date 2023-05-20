@@ -170,7 +170,7 @@ void stats_writer::worker() noexcept
 				if (use_file)
 				{
 					jmsg["sample"] = m_total_samples;
-					jmsg[m.source] = m.output_fields;
+					jmsg["output_fields"] = m.output_fields;
 					m_file_output << jmsg.dump() << std::endl;
 				}
 			}
@@ -201,9 +201,9 @@ void stats_writer::collector::get_metrics_output_fields_wrapper(
 
 	/* Wrapper fields useful for statistical analyses and attributions. Always enabled. */
 	output_fields["evt.time"] = std::to_string(now); /* Some ETLs may prefer a consistent timestamp within output_fields. */
-	output_fields["falco_version"] = FALCO_VERSION;
-	output_fields["falco_start_ts"] = std::to_string(agent_info->start_ts_epoch);
-	output_fields["falco_duration_sec"] = std::to_string((now - agent_info->start_ts_epoch) / ONE_SECOND_IN_NS);
+	output_fields["version"] = FALCO_VERSION;
+	output_fields["start_ts"] = std::to_string(agent_info->start_ts_epoch);
+	output_fields["duration_sec"] = std::to_string((now - agent_info->start_ts_epoch) / ONE_SECOND_IN_NS);
 	output_fields["kernel_release"] = agent_info->uname_r;
 	output_fields["host_boot_ts"] = std::to_string(machine_info->boot_ts_epoch);
 	output_fields["hostname"] = machine_info->hostname; /* Explicitly add hostname to log msg in case hostname rule output field is disabled. */
@@ -223,10 +223,10 @@ void stats_writer::collector::get_metrics_output_fields_wrapper(
 	if (m_last_num_evts != 0 && stats_snapshot_time_delta_sec > 0)
 	{
 		/* Successfully processed userspace event rate. */
-		output_fields["falco_evts_rate_sec"] = std::to_string((num_evts - m_last_num_evts) / (double)stats_snapshot_time_delta_sec);
+		output_fields["u.evts_rate_sec"] = std::to_string((num_evts - m_last_num_evts) / (double)stats_snapshot_time_delta_sec);
 	}
-	output_fields["falco_num_evts"] = std::to_string(num_evts);
-	output_fields["falco_num_evts_prev"] = std::to_string(m_last_num_evts);
+	output_fields["u.num_evts"] = std::to_string(num_evts);
+	output_fields["u.num_evts_prev"] = std::to_string(m_last_num_evts);
 	m_last_num_evts = num_evts;
 }
 
@@ -249,12 +249,12 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 		utilization = libsinsp::resource_utilization::get_resource_utilization(agent_info, buffer, &nstats, &rc);
 		if (utilization && rc == 0 && nstats > 0)
 		{
-			// todo: support unit conversions for memory metrics
 			for(uint32_t stat = 0; stat < nstats; stat++)
 			{
 				switch(utilization[stat].type)
 				{
 				case STATS_VALUE_TYPE_U64:
+
 					if (m_writer->m_config->m_metrics_convert_memory_to_mb && strncmp(utilization[stat].name, "container_memory_used", 21) == 0)
 					{
 						output_fields[utilization[stat].name] = std::to_string(utilization[stat].value.u64 / (double)1024 / (double)1024);
@@ -298,46 +298,61 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 	{
 		flags |= PPM_SCAP_STATS_KERNEL_COUNTERS;
 	}
-	if (m_writer->m_config->m_metrics_libbpf_stats_enabled && !inspector->check_current_engine(KMOD_ENGINE) && (machine_info->flags & PPM_BPF_STATS_ENABLED))
+	if (m_writer->m_config->m_metrics_libbpf_stats_enabled && (inspector->check_current_engine(BPF_ENGINE) || inspector->check_current_engine(MODERN_BPF_ENGINE)) && (machine_info->flags & PPM_BPF_STATS_ENABLED))
 	{
 		flags |= PPM_SCAP_STATS_LIBBPF_STATS;
 	}
 	const scap_stats_v2* stats_v2 = inspector->get_capture_stats_v2(flags, &nstats, &rc);
 	if (stats_v2 && nstats > 0 && rc == 0)
 	{
+		/* Cache n_evts and n_drops to derice n_drops_perc. */
+		uint64_t n_evts = 0;
+		uint64_t n_drops = 0;
 		for(uint32_t stat = 0; stat < nstats; stat++)
 		{
+			// todo: as we expand scap_stats_v2 prefix may be pushed to scap or we may need to expand
+			// functionality here for example if we add userspace syscall counters that should be prefixed w/ `u.`
+			char metric_name[STATS_NAME_MAX] = "k.";
+			size_t dest_len = strlen(metric_name);
 			switch(stats_v2[stat].type)
 			{
 			case STATS_VALUE_TYPE_U64:
 				if (strncmp(stats_v2[stat].name, "n_evts", 6) == 0)
 				{
-					output_fields["falco_evts_rate_kernel_sec"] = std::to_string(0);
+					n_evts = stats_v2[stat].value.u64;
+					output_fields["k.evts_rate_sec"] = std::to_string(0);
 					if (m_last_n_evts != 0 && stats_snapshot_time_delta_sec > 0)
 					{
 						/* n_evts is total number of kernel side events. */
-						output_fields["falco_evts_rate_kernel_sec"] = std::to_string((stats_v2[stat].value.u64 - m_last_n_evts) / stats_snapshot_time_delta_sec);
+						output_fields["k.evts_rate_sec"] = std::to_string((n_evts - m_last_n_evts) / stats_snapshot_time_delta_sec);
 					}
-					output_fields["n_evts_prev"] = std::to_string(m_last_n_evts);
-					m_last_n_evts = stats_v2[stat].value.u64;
+					output_fields["k.n_evts_prev"] = std::to_string(m_last_n_evts);
 				}
 				else if (strncmp(stats_v2[stat].name, "n_drops", 7) == 0)
 				{
-					output_fields["falco_evts_drop_rate_kernel_sec"] = std::to_string(0);
+					n_drops = stats_v2[stat].value.u64;
+					output_fields["k.evts_drop_rate_sec"] = std::to_string(0);
 					if (m_last_n_drops != 0 && stats_snapshot_time_delta_sec > 0)
 					{
 						/* n_drops is total number of kernel side event drops. */
-						output_fields["falco_evts_drop_rate_kernel_sec"] = std::to_string((stats_v2[stat].value.u64 - m_last_n_evts) / stats_snapshot_time_delta_sec);
+						output_fields["k.evts_drop_rate_sec"] = std::to_string((n_drops - m_last_n_drops) / stats_snapshot_time_delta_sec);
 					}
-					output_fields["n_drops_prev"] = std::to_string(m_last_n_drops);
-					m_last_n_drops = stats_v2[stat].value.u64;
+					output_fields["k.n_drops_prev"] = std::to_string(m_last_n_drops);
 				}
-				output_fields[stats_v2[stat].name] = std::to_string(stats_v2[stat].value.u64);
+				strncat(metric_name, stats_v2[stat].name, sizeof(stats_v2[stat].name) - dest_len);
+				output_fields[metric_name] = std::to_string(stats_v2[stat].value.u64);
 				break;
 			default:
 				break;
 			}
 		}
+		output_fields["k.n_drops_perc"] = std::to_string(0);
+		if((n_evts - m_last_n_evts) > 0)
+		{
+			output_fields["k.n_drops_perc"] = std::to_string((100.0 * (n_drops - m_last_n_drops)) / (n_evts - m_last_n_evts));
+		}
+		m_last_n_evts = n_evts;
+		m_last_n_drops = n_drops;
 	}
 #endif
 }
