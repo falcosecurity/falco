@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 #include "actions.h"
-#include "falco_metrics.h"
+#include "falco_utils.h"
 
 using namespace falco::app;
 using namespace falco::app::actions;
@@ -35,7 +35,7 @@ static void apply_deprecated_options(
 			if (!opts.stats_interval.empty())
 			{
 				cfg->m_metrics_interval_str = opts.stats_interval;
-				cfg->m_metrics_interval = falco::metrics::parse_metrics_interval(cfg->m_metrics_interval_str);
+				cfg->m_metrics_interval = falco::utils::parse_prometheus_interval(cfg->m_metrics_interval_str);
 			}
 		}
 	}
