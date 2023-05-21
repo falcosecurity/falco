@@ -36,3 +36,35 @@ TEST(FalcoUtils, is_unix_scheme)
 	char url_char[] = "unix:///falco.sock";
 	ASSERT_EQ(falco::utils::network::is_unix_scheme(url_char), true);
 }
+
+TEST(FalcoUtils, parse_prometheus_interval)
+{
+	/* Test matrix around correct time conversions. */
+	ASSERT_EQ(falco::utils::parse_prometheus_interval("1ms"), 1UL);
+	ASSERT_EQ(falco::utils::parse_prometheus_interval("1s"), 1000UL);
+	ASSERT_EQ(falco::utils::parse_prometheus_interval("1m"), 60000UL);
+	ASSERT_EQ(falco::utils::parse_prometheus_interval("1h"), 3600000UL);
+	ASSERT_EQ(falco::utils::parse_prometheus_interval("1d"), 86400000UL);
+	ASSERT_EQ(falco::utils::parse_prometheus_interval("1w"), 604800000UL);
+	ASSERT_EQ(falco::utils::parse_prometheus_interval("1y"), 31536000000UL);
+
+	ASSERT_EQ(falco::utils::parse_prometheus_interval("300ms"), 300UL);
+	ASSERT_EQ(falco::utils::parse_prometheus_interval("255s"), 255000UL);
+	ASSERT_EQ(falco::utils::parse_prometheus_interval("5m"), 300000UL);
+	ASSERT_EQ(falco::utils::parse_prometheus_interval("15m"), 900000UL);
+	ASSERT_EQ(falco::utils::parse_prometheus_interval("30m"), 1800000UL);
+	ASSERT_EQ(falco::utils::parse_prometheus_interval("60m"), 3600000UL);
+
+	/* Test matrix for concatenated time interval examples. */
+	ASSERT_EQ(falco::utils::parse_prometheus_interval("1h3m2s1ms"), 3600000UL + 3 * 60000UL + 2 * 1000UL + 1UL);
+	ASSERT_EQ(falco::utils::parse_prometheus_interval("1y1w1d1h1m1s1ms"), 31536000000UL + 604800000UL + 86400000UL + 3600000UL + 60000UL + 1000UL + 1UL);
+	ASSERT_EQ(falco::utils::parse_prometheus_interval("2h5m"), 2 * 3600000UL + 5 * 60000UL);
+	ASSERT_EQ(falco::utils::parse_prometheus_interval("2h 5m"), 2 * 3600000UL + 5 * 60000UL);
+
+	ASSERT_EQ(falco::utils::parse_prometheus_interval("200"), 200UL);
+
+	/* Invalid, non prometheus compliant time ordering will result in 0ms. */
+	ASSERT_EQ(falco::utils::parse_prometheus_interval("1ms1y"), 0UL);
+	ASSERT_EQ(falco::utils::parse_prometheus_interval("1t1y"), 0UL);
+	ASSERT_EQ(falco::utils::parse_prometheus_interval("1t"), 0UL);
+}
