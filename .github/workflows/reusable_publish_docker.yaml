@@ -99,9 +99,9 @@ jobs:
       - name: Get Digests for images
         id: digests
         run: |
-          echo "falco-no-driver=$(crane digest docker.io/falcosecurity/falco-no-driver:${{ inputs.version }})" >> $GITHUB_OUTPUT
-          echo "falco=$(crane digest docker.io/falcosecurity/falco:${{ inputs.version }})" >> $GITHUB_OUTPUT
-          echo "falco-driver-loader=$(crane digest docker.io/falcosecurity/falco-driver-loader:${{ inputs.version }})" >> $GITHUB_OUTPUT
+          echo "falco-no-driver=$(crane digest docker.io/falcosecurity/falco-no-driver:${{ inputs.tag }})" >> $GITHUB_OUTPUT
+          echo "falco=$(crane digest docker.io/falcosecurity/falco:${{ inputs.tag }})" >> $GITHUB_OUTPUT
+          echo "falco-driver-loader=$(crane digest docker.io/falcosecurity/falco-driver-loader:${{ inputs.tag }})" >> $GITHUB_OUTPUT
 
       - name: Publish images to ECR
         run: |
