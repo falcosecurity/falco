@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2022 The Falco Authors.
+Copyright (C) 2023 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -25,8 +25,6 @@ limitations under the License.
 #include "tbb/concurrent_queue.h"
 #include "falco_outputs.h"
 #include "configuration.h"
-
-#define MAX_STATS_PRESET_INDEX 6
 
 /*!
 	\brief Writes stats samples collected from inspectors into a given output.

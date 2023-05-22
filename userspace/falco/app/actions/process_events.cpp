@@ -409,7 +409,7 @@ static falco::app::run_result init_stats_writer(
 	/* Enforce minimum bound of 100ms. */
 	if(config->m_metrics_interval < 100)
 	{
-		return falco::app::run_result::fatal("Metrics interval must have a minimum value of 100ms");
+		return falco::app::run_result::fatal("Metrics interval must have a minimum value of 100ms and reflect a Prometheus compliant time duration format: https://prometheus.io/docs/prometheus/latest/querying/basics/#time-durations. ");
 	}
 
 	if(std::all_of(config->m_metrics_interval_str.begin(), config->m_metrics_interval_str.end(), ::isdigit))
@@ -421,6 +421,9 @@ static falco::app::run_result init_stats_writer(
 	{
 		falco_logger::log(LOG_WARNING, "Metrics are enabled with no output configured, no snapshot will be collected");
 	}
+
+
+	falco_logger::log(LOG_INFO, "Setting metrics interval to " + config->m_metrics_interval_str + ", equivalent to " + std::to_string(config->m_metrics_interval) + " (ms)\n");
 
 	auto res = falco::app::run_result::ok();
 	res.success = stats_writer::init_ticker(config->m_metrics_interval, res.errstr);
