@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2022 The Falco Authors.
+Copyright (C) 2023 The Falco Authors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -26,7 +26,6 @@ limitations under the License.
 #include "logger.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
 #include "config_falco.h"
-#include <re2/re2.h>
 
 // note: ticker_t is an uint16_t, which is enough because we don't care about
 // overflows here. Threads calling stats_writer::handle() will just
@@ -201,20 +200,20 @@ void stats_writer::collector::get_metrics_output_fields_wrapper(
 
 	/* Wrapper fields useful for statistical analyses and attributions. Always enabled. */
 	output_fields["evt.time"] = std::to_string(now); /* Some ETLs may prefer a consistent timestamp within output_fields. */
-	output_fields["version"] = FALCO_VERSION;
-	output_fields["start_ts"] = std::to_string(agent_info->start_ts_epoch);
-	output_fields["duration_sec"] = std::to_string((now - agent_info->start_ts_epoch) / ONE_SECOND_IN_NS);
-	output_fields["kernel_release"] = agent_info->uname_r;
-	output_fields["host_boot_ts"] = std::to_string(machine_info->boot_ts_epoch);
-	output_fields["hostname"] = machine_info->hostname; /* Explicitly add hostname to log msg in case hostname rule output field is disabled. */
-	output_fields["host_num_cpus"] = std::to_string(machine_info->num_cpus);
+	output_fields["falco.version"] = FALCO_VERSION;
+	output_fields["falco.start_ts"] = std::to_string(agent_info->start_ts_epoch);
+	output_fields["falco.duration_sec"] = std::to_string((now - agent_info->start_ts_epoch) / ONE_SECOND_IN_NS);
+	output_fields["falco.kernel_release"] = agent_info->uname_r;
+	output_fields["falco.host_boot_ts"] = std::to_string(machine_info->boot_ts_epoch);
+	output_fields["falco.hostname"] = machine_info->hostname; /* Explicitly add hostname to log msg in case hostname rule output field is disabled. */
+	output_fields["falco.host_num_cpus"] = std::to_string(machine_info->num_cpus);
 
-	output_fields["src"] = src;
+	output_fields["evt.source"] = src;
 	for (size_t i = 0; i < sizeof(all_driver_engines) / sizeof(const char*); i++)
 	{
 		if (inspector->check_current_engine(all_driver_engines[i]))
 		{
-			output_fields["driver"] = all_driver_engines[i];
+			output_fields["scap.engine_name"] = all_driver_engines[i];
 			break;
 		}
 	}
@@ -223,10 +222,10 @@ void stats_writer::collector::get_metrics_output_fields_wrapper(
 	if (m_last_num_evts != 0 && stats_snapshot_time_delta_sec > 0)
 	{
 		/* Successfully processed userspace event rate. */
-		output_fields["u.evts_rate_sec"] = std::to_string((num_evts - m_last_num_evts) / (double)stats_snapshot_time_delta_sec);
+		output_fields["falco.evts_rate_sec"] = std::to_string((num_evts - m_last_num_evts) / (double)stats_snapshot_time_delta_sec);
 	}
-	output_fields["u.num_evts"] = std::to_string(num_evts);
-	output_fields["u.num_evts_prev"] = std::to_string(m_last_num_evts);
+	output_fields["falco.num_evts"] = std::to_string(num_evts);
+	output_fields["falco.num_evts_prev"] = std::to_string(m_last_num_evts);
 	m_last_num_evts = num_evts;
 }
 
@@ -251,31 +250,33 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 		{
 			for(uint32_t stat = 0; stat < nstats; stat++)
 			{
+				char metric_name[STATS_NAME_MAX] = "falco.";
+				strncat(metric_name, utilization[stat].name, sizeof(metric_name) - strlen(metric_name));
 				switch(utilization[stat].type)
 				{
 				case STATS_VALUE_TYPE_U64:
 
 					if (m_writer->m_config->m_metrics_convert_memory_to_mb && strncmp(utilization[stat].name, "container_memory_used", 21) == 0)
 					{
-						output_fields[utilization[stat].name] = std::to_string(utilization[stat].value.u64 / (double)1024 / (double)1024);
+						output_fields[metric_name] = std::to_string(utilization[stat].value.u64 / (double)1024 / (double)1024);
 					}
 					else
 					{
-						output_fields[utilization[stat].name] = std::to_string(utilization[stat].value.u64);
+						output_fields[metric_name] = std::to_string(utilization[stat].value.u64);
 					}
 					break;
 				case STATS_VALUE_TYPE_U32:
 					if (m_writer->m_config->m_metrics_convert_memory_to_mb && strncmp(utilization[stat].name, "memory_", 7) == 0)
 					{
-						output_fields[utilization[stat].name] = std::to_string(utilization[stat].value.u32 / (double)1024);
+						output_fields[metric_name] = std::to_string(utilization[stat].value.u32 / (double)1024);
 					}
 					else
 					{
-						output_fields[utilization[stat].name] = std::to_string(utilization[stat].value.u32);
+						output_fields[metric_name] = std::to_string(utilization[stat].value.u32);
 					}
 					break;
 				case STATS_VALUE_TYPE_D:
-					output_fields[utilization[stat].name] = std::to_string(utilization[stat].value.d);
+					output_fields[metric_name] = std::to_string(utilization[stat].value.d);
 					break;
 				default:
 					break;
@@ -311,45 +312,53 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 		for(uint32_t stat = 0; stat < nstats; stat++)
 		{
 			// todo: as we expand scap_stats_v2 prefix may be pushed to scap or we may need to expand
-			// functionality here for example if we add userspace syscall counters that should be prefixed w/ `u.`
-			char metric_name[STATS_NAME_MAX] = "k.";
-			size_t dest_len = strlen(metric_name);
+			// functionality here for example if we add userspace syscall counters that should be prefixed w/ `falco.`
+			char metric_name[STATS_NAME_MAX] = "scap.";
+			strncat(metric_name, stats_v2[stat].name, sizeof(metric_name) - strlen(metric_name));
 			switch(stats_v2[stat].type)
 			{
 			case STATS_VALUE_TYPE_U64:
 				if (strncmp(stats_v2[stat].name, "n_evts", 6) == 0)
 				{
 					n_evts = stats_v2[stat].value.u64;
-					output_fields["k.evts_rate_sec"] = std::to_string(0);
 					if (m_last_n_evts != 0 && stats_snapshot_time_delta_sec > 0)
 					{
 						/* n_evts is total number of kernel side events. */
-						output_fields["k.evts_rate_sec"] = std::to_string((n_evts - m_last_n_evts) / stats_snapshot_time_delta_sec);
+						output_fields["scap.evts_rate_sec"] = std::to_string((n_evts - m_last_n_evts) / stats_snapshot_time_delta_sec);
 					}
-					output_fields["k.n_evts_prev"] = std::to_string(m_last_n_evts);
+					else
+					{
+						output_fields["scap.evts_rate_sec"] = std::to_string(0);
+					}
+					output_fields["scap.n_evts_prev"] = std::to_string(m_last_n_evts);
 				}
 				else if (strncmp(stats_v2[stat].name, "n_drops", 7) == 0)
 				{
 					n_drops = stats_v2[stat].value.u64;
-					output_fields["k.evts_drop_rate_sec"] = std::to_string(0);
 					if (m_last_n_drops != 0 && stats_snapshot_time_delta_sec > 0)
 					{
 						/* n_drops is total number of kernel side event drops. */
-						output_fields["k.evts_drop_rate_sec"] = std::to_string((n_drops - m_last_n_drops) / stats_snapshot_time_delta_sec);
+						output_fields["scap.evts_drop_rate_sec"] = std::to_string((n_drops - m_last_n_drops) / stats_snapshot_time_delta_sec);
 					}
-					output_fields["k.n_drops_prev"] = std::to_string(m_last_n_drops);
+					else
+					{
+						output_fields["scap.evts_drop_rate_sec"] = std::to_string(0);
+					}
+					output_fields["scap.n_drops_prev"] = std::to_string(m_last_n_drops);
 				}
-				strncat(metric_name, stats_v2[stat].name, sizeof(stats_v2[stat].name) - dest_len);
 				output_fields[metric_name] = std::to_string(stats_v2[stat].value.u64);
 				break;
 			default:
 				break;
 			}
 		}
-		output_fields["k.n_drops_perc"] = std::to_string(0);
 		if((n_evts - m_last_n_evts) > 0)
 		{
-			output_fields["k.n_drops_perc"] = std::to_string((100.0 * (n_drops - m_last_n_drops)) / (n_evts - m_last_n_evts));
+			output_fields["scap.n_drops_perc"] = std::to_string((100.0 * (n_drops - m_last_n_drops)) / (n_evts - m_last_n_evts));
+		}
+		else
+		{
+			output_fields["scap.n_drops_perc"] = std::to_string(0);
 		}
 		m_last_n_evts = n_evts;
 		m_last_n_drops = n_drops;
