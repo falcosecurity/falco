@@ -97,11 +97,23 @@ void falco::app::actions::format_plugin_info(std::shared_ptr<sinsp_plugin> p, st
 			os << " (ID=" << p->id();
 			os << ", source='" << p->event_source() << "')";
 		}
+		else
+		{
+			os << " (system events)";
+		}
 		os << std::endl;
 	}
 	if(p->caps() & CAP_EXTRACTION)
 	{
 		os << "  - Field Extraction" << std::endl;
+	}
+	if(p->caps() & CAP_PARSING)
+	{
+		os << "  - Event Parsing" << std::endl;
+	}
+	if(p->caps() & CAP_ASYNC)
+	{
+		os << "  - Async Events" << std::endl;
 	}
 }
 
