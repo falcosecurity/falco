@@ -72,6 +72,41 @@ public:
 		get_node(node, key);
 		if(node.IsDefined())
 		{
+			std::string value = node.as<std::string>();
+
+			// Helper function to convert string to the desired type T
+			auto convert_str_to_t = [&default_value](const std::string& str) -> T {
+				std::stringstream ss(str);
+				T result;
+				if (ss >> result) return result;
+				return default_value;
+			};
+
+			// If the value starts with `$$`, check for a subsequent `{...}`
+			if (value.size() >= 3 && value[0] == '$' && value[1] == '$')
+			{
+				// If after stripping the first `$`, the string format is like `${VAR}`, treat it as a plain string and don't resolve.
+				if (value[2] == '{' && value[value.size() - 1] == '}')
+				{
+					value = value.substr(1);
+					return convert_str_to_t(value);
+				}
+				else return convert_str_to_t(value);
+			}
+
+			// Check if the value is an environment variable reference
+			if(value.size() >= 2 && value[0] == '$' && value[1] == '{' && value[value.size() - 1] == '}')
+			{
+				// Format: ${ENV_VAR_NAME}
+				std::string env_var = value.substr(2, value.size() - 3);
+
+				const char* env_value = std::getenv(env_var.c_str()); // Get the environment variable value
+				if(env_value) return convert_str_to_t(env_value);
+
+				return default_value;
+			}
+
+			// If it's not an environment variable reference, return the value as is
 			return node.as<T>();
 		}
 
@@ -118,10 +153,10 @@ private:
 	 * The provided key string can navigate the document in its
 	 * nested nodes, with arbitrary depth. The key string follows
 	 * this regular language:
-	 * 
+	 *
 	 * Key 		:= NodeKey ('.' NodeKey)*
 	 * NodeKey	:= (any)+ ('[' (integer)+ ']')*
-	 * 
+	 *
 	 * Some examples of accepted key strings:
 	 * - NodeName
 	 * - ListValue[3].subvalue
@@ -146,7 +181,7 @@ private:
 					if (i > 0 && nodeKey.empty() && key[i - 1] != '.')
 					{
 						throw std::runtime_error(
-							"Parsing error: expected '.' character at pos " 
+							"Parsing error: expected '.' character at pos "
 							+ std::to_string(i - 1));
 					}
 					nodeKey += c;
@@ -157,7 +192,7 @@ private:
 					if (nodeKey.empty())
 					{
 						throw std::runtime_error(
-							"Parsing error: unexpected character at pos " 
+							"Parsing error: unexpected character at pos "
 							+ std::to_string(i));
 					}
 					ret.reset(ret[nodeKey]);
@@ -181,7 +216,7 @@ private:
 			throw std::runtime_error("Config error at key \"" + key + "\": " + std::string(e.what()));
 		}
 	}
-	
+
 	template<typename T>
 	void get_sequence_from_node(T& ret, const YAML::Node& node) const
 	{
@@ -250,7 +285,7 @@ namespace YAML {
 				default:
 					break;
 			}
-			
+
 			return true;
 		}
 	};
