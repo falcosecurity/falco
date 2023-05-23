@@ -52,7 +52,7 @@ jobs:
 
   build-packages:
     needs: [release-settings]
-    uses: falcosecurity/falco/.github/workflows/reusable_build_packages.yaml@master
+    uses: ./.github/workflows/reusable_build_packages.yaml
     with:
       arch: x86_64
       version: ${{ github.event.release.tag_name }}
@@ -60,7 +60,7 @@ jobs:
 
   build-packages-arm64:
     needs: [release-settings]
-    uses: falcosecurity/falco/.github/workflows/reusable_build_packages.yaml@master
+    uses: ./.github/workflows/reusable_build_packages.yaml
     with:
       arch: aarch64
       version: ${{ github.event.release.tag_name }}
@@ -68,7 +68,7 @@ jobs:
     
   publish-packages:
     needs: [release-settings, build-packages, build-packages-arm64]
-    uses: falcosecurity/falco/.github/workflows/reusable_publish_packages.yaml@master
+    uses: ./.github/workflows/reusable_publish_packages.yaml
     with:
       bucket_suffix: ${{ needs.release-settings.outputs.bucket_suffix }}
       version: ${{ github.event.release.tag_name }}
@@ -77,7 +77,7 @@ jobs:
   # Both build-docker and its arm64 counterpart require build-packages because they use its output
   build-docker:
     needs: [release-settings, build-packages, publish-packages]
-    uses: falcosecurity/falco/.github/workflows/reusable_build_docker.yaml@master
+    uses: ./.github/workflows/reusable_build_docker.yaml
     with:
       arch: x86_64
       bucket_suffix: ${{ needs.release-settings.outputs.bucket_suffix }}
@@ -87,7 +87,7 @@ jobs:
     
   build-docker-arm64:
     needs: [release-settings, build-packages, publish-packages]
-    uses: falcosecurity/falco/.github/workflows/reusable_build_docker.yaml@master
+    uses: ./.github/workflows/reusable_build_docker.yaml
     with:
       arch: aarch64
       bucket_suffix: ${{ needs.release-settings.outputs.bucket_suffix }}
@@ -97,7 +97,7 @@ jobs:
 
   publish-docker:
     needs: [release-settings, build-docker, build-docker-arm64]
-    uses: falcosecurity/falco/.github/workflows/reusable_publish_docker.yaml@master
+    uses: ./.github/workflows/reusable_publish_docker.yaml
     secrets: inherit
     with:
       is_latest: ${{ needs.release-settings.outputs.is_latest == 'true' }}
