@@ -85,7 +85,9 @@ void falco::outputs::output_grpc::output(const message *msg)
 		{
 			throw falco_exception("output_grpc: output fields must be key-value maps");
 		}
-		fields[kv.key()] = kv.value().dump();
+		fields[kv.key()] = (kv.value().is_string())
+			? kv.value().get<std::string>()
+			: kv.value().dump();
 	}
 
 	// hostname
