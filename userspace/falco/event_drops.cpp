@@ -156,7 +156,7 @@ bool syscall_evt_drop_mgr::perform_actions(uint64_t now, scap_stats &delta, bool
 
 		case syscall_evt_drop_action::ALERT:
 		{
-			std::map<std::string, std::string> output_fields;
+			nlohmann::json output_fields;
 			output_fields["n_evts"] = std::to_string(delta.n_evts);		/* Total number of kernel side events actively traced (not including events discarded due to simple consumer mode in eBPF case). */
 			output_fields["n_drops"] = std::to_string(delta.n_drops);		/* Number of all kernel side event drops out of n_evts. */
 			output_fields["n_drops_buffer_total"] = std::to_string(delta.n_drops_buffer);		/* Total number of kernel side drops due to full buffer, includes all categories below, likely higher than sum of syscall categories. */

@@ -66,7 +66,7 @@ public:
 			falco_common::priority_type priority,
 			std::string &msg,
 			std::string &rule,
-			std::map<std::string, std::string> &output_fields);
+			nlohmann::json &output_fields);
 
 	/*!
 		\brief Sends a cleanup message to all outputs.

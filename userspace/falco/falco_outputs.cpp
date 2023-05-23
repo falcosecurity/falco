@@ -161,8 +161,13 @@ void falco_outputs::handle_msg(uint64_t ts,
 			       falco_common::priority_type priority,
 			       std::string &msg,
 			       std::string &rule,
-			       std::map<std::string, std::string> &output_fields)
+			       nlohmann::json &output_fields)
 {
+	if (!output_fields.is_object())
+	{
+		throw falco_exception("falco_outputs: output fields must be key-value maps");
+	}
+
 	falco_outputs::ctrl_msg cmsg = {};
 	cmsg.ts = ts;
 	cmsg.priority = priority;
@@ -202,7 +207,7 @@ void falco_outputs::handle_msg(uint64_t ts,
 
 		sinsp_utils::ts_to_string(ts, &timestr, false, true);
 		cmsg.msg = timestr + ": " + falco_common::format_priority(priority) + " " + msg + " (";
-		for(auto &pair : output_fields)
+		for(auto &pair : output_fields.items())
 		{
 			if(first)
 			{
@@ -212,7 +217,11 @@ void falco_outputs::handle_msg(uint64_t ts,
 			{
 				cmsg.msg += " ";
 			}
-			cmsg.msg += pair.first + "=" + pair.second;
+			if (!pair.value().is_primitive())
+			{
+				throw falco_exception("falco_outputs: output fields must be key-value maps");
+			}
+			cmsg.msg += pair.key() + "=" + pair.value().dump();
 		}
 		cmsg.msg += ")";
 	}

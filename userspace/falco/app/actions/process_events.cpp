@@ -228,11 +228,10 @@ static falco::app::run_result do_inspect(
 					{
 						sinsp_utils::ts_to_string(duration_start, &last_event_time_str, false, true);
 					}
-					std::map<std::string, std::string> o = {
-						{"last_event_time", last_event_time_str},
-					};
+					nlohmann::json fields;
+					fields["last_event_time"] = last_event_time_str;
 					auto now = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-					s.outputs->handle_msg(now, falco_common::PRIORITY_DEBUG, msg, rule, o);
+					s.outputs->handle_msg(now, falco_common::PRIORITY_DEBUG, msg, rule, fields);
 					// Reset the timeouts counter, Falco alerted
 					timeouts_since_last_success_or_msg = 0;
 				}
