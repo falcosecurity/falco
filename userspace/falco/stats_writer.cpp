@@ -343,6 +343,14 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 					{
 						output_fields["scap.evts_drop_rate_sec"] = (double)(0);
 					}
+					if((n_evts - m_last_n_evts) > 0)
+					{
+						output_fields["scap.n_drops_perc"] = (double)((100.0 * (n_drops - m_last_n_drops)) / (n_evts - m_last_n_evts));
+					}
+					else
+					{
+						output_fields["scap.n_drops_perc"] = (double)(0);
+					}
 					output_fields["scap.n_drops_prev"] = m_last_n_drops;
 				}
 				output_fields[metric_name] = stats_v2[stat].value.u64;
@@ -350,14 +358,6 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 			default:
 				break;
 			}
-		}
-		if((n_evts - m_last_n_evts) > 0)
-		{
-			output_fields["scap.n_drops_perc"] = (double)((100.0 * (n_drops - m_last_n_drops)) / (n_evts - m_last_n_evts));
-		}
-		else
-		{
-			output_fields["scap.n_drops_perc"] = (double)(0);
 		}
 		m_last_n_evts = n_evts;
 		m_last_n_drops = n_drops;
