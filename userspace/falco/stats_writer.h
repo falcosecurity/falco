@@ -64,12 +64,12 @@ public:
 		/*!
 			\brief Collect snapshot metrics wrapper fields as internal rule formatted output fields.
 		*/
-		void get_metrics_output_fields_wrapper(std::unordered_map<std::string, std::string>& output_fields, const std::shared_ptr<sinsp>& inspector, uint64_t now, const std::string& src, uint64_t num_evts, double stats_snapshot_time_delta_sec);
+		void get_metrics_output_fields_wrapper(nlohmann::json& output_fields, const std::shared_ptr<sinsp>& inspector, uint64_t now, const std::string& src, uint64_t num_evts, double stats_snapshot_time_delta_sec);
 
 		/*!
 			\brief Collect snapshot metrics syscalls related metrics as internal rule formatted output fields.
 		*/
-		void get_metrics_output_fields_additional(std::unordered_map<std::string, std::string>& output_fields, const std::shared_ptr<sinsp>& inspector, double stats_snapshot_time_delta_sec, const std::string& src);
+		void get_metrics_output_fields_additional(nlohmann::json& output_fields, const std::shared_ptr<sinsp>& inspector, double stats_snapshot_time_delta_sec, const std::string& src);
 
 	
 		std::shared_ptr<stats_writer> m_writer;
@@ -132,7 +132,7 @@ private:
 		bool stop;
 		uint64_t ts;
 		std::string source;
-		std::unordered_map<std::string, std::string> output_fields;
+		nlohmann::json output_fields;
 	};
 
 	void worker() noexcept;

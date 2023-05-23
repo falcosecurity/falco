@@ -79,9 +79,13 @@ void falco::outputs::output_grpc::output(const message *msg)
 
 	// output fields
 	auto &fields = *grpc_res.mutable_output_fields();
-	for(const auto &kv : msg->fields)
+	for(const auto &kv : msg->fields.items())
 	{
-		fields[kv.first] = kv.second;
+		if (!kv.value().is_primitive())
+		{
+			throw falco_exception("output_grpc: output fields must be key-value maps");
+		}
+		fields[kv.key()] = kv.value().dump();
 	}
 
 	// hostname

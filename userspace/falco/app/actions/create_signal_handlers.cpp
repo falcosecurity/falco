@@ -131,9 +131,9 @@ falco::app::run_result falco::app::actions::create_signal_handlers(falco::app::s
 		{
 			std::string rule = "Falco internal: hot restart failure";
 			std::string msg = rule + ": " + err;
-			std::map<std::string, std::string> o = {};
+			auto fields = nlohmann::json::object();
 			auto now = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-			s.outputs->handle_msg(now, falco_common::PRIORITY_CRITICAL, msg, rule, o);
+			s.outputs->handle_msg(now, falco_common::PRIORITY_CRITICAL, msg, rule, fields);
 		}
 
 		return success;

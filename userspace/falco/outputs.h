@@ -21,6 +21,7 @@ limitations under the License.
 
 #include "falco_common.h"
 #include "gen_filter.h"
+#include <nlohmann/json.hpp>
 
 namespace falco
 {
@@ -49,7 +50,7 @@ struct message
 	std::string msg;
 	std::string rule;
 	std::string source;
-	std::map<std::string, std::string> fields;
+	nlohmann::json fields;
 	std::set<std::string> tags;
 };
 
