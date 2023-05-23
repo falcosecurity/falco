@@ -54,9 +54,6 @@ The maintainers are responsible for adapting those components' release schedules
 
 We use the [GitHub Project called *Falco Roadmap*](https://github.com/orgs/falcosecurity/projects/5) to plan and track the progress of each release cycle. The GitHub Project needs to be configured with the above mentioned iterations and break periods, compiled with actual dates. It's recommended to preconfigure the GitHub Project to accommodate the current plus the following three release cycles.
 
-Maintainers will meet in [planning sessions](###roadmap-planning) to update the roadmap with the latest information.
-
-
 ### Roadmap Planning
 
 The roadmap serves as a strategic planning tool that outlines the goals and objectives for Falco. Its purpose is to visually represent the overall direction and timeline, enhance transparency and engage the community.
@@ -81,7 +78,9 @@ Furthermore, given the strong reliance of Falco on [falcosecurity/libs](https://
 
 The Falco 0.36 release cycle, running from June to September 2023, will mark the initiation of the new process. This cycle will also serve as an experimental phase for refining the process.
 
-Furthermore, as soon as possible we will kick off a Working Group specifically for this purpose to ensure a smooth execution. This group will involve community members in assisting maintainers with roadmap management. The Working Group's responsibilities will include:
+Furthermore, as soon as possible, we will kick off a Working Group specifically to ensure smooth execution. This group will involve community members in assisting maintainers with roadmap management. It will provide curated feature suggestions for the roadmap, informed by community needs. This approach would facilitate the core maintainers' decisions, as they would mostly need just to review and adopt these pre-vetted recommendations, enhancing efficiency.
+
+The Working Group's responsibilities will include (non-exhaustive list):
 
 - Address input from the [2023-04-27 Core Maintainers meeting](https://github.com/falcosecurity/community/blob/main/meeting-notes/2023-04-27-Falco-Roadmap-Discussion.md)
 - Sorting and reviewing pending issues to identify key topics for discussion and potential inclusion in the roadmap
