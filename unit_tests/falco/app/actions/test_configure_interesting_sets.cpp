@@ -18,10 +18,7 @@ limitations under the License.
 #include <falco_engine.h>
 
 #include <falco/app/app.h>
-#include <falco/app/state.h>
-#include <falco/app/actions/actions.h>
-
-#include <gtest/gtest.h>
+#include "app_action_helpers.h"
 
 #define ASSERT_NAMES_EQ(a, b) { \
 	EXPECT_EQ(_order(a).size(), _order(b).size()); \

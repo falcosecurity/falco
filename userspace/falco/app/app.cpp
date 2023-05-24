@@ -84,6 +84,7 @@ bool falco::app::run(falco::app::state& s, bool& restart, std::string& errstr)
 		falco::app::actions::init_clients,
 		falco::app::actions::configure_interesting_sets,
 		falco::app::actions::configure_syscall_buffer_size,
+		falco::app::actions::configure_syscall_buffer_num,
 		falco::app::actions::start_grpc_server,
 		falco::app::actions::start_webserver,
 		falco::app::actions::process_events,
