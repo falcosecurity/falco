@@ -41,7 +41,7 @@ set(
   app/actions/print_syscall_events.cpp
   app/actions/print_version.cpp
   app/actions/print_page_size.cpp
-  app/actions/compute_syscall_buffer_size.cpp
+  app/actions/configure_syscall_buffer_size.cpp
   app/actions/configure_syscall_buffer_num.cpp
   app/actions/select_event_sources.cpp
   app/actions/start_grpc_server.cpp
