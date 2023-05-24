@@ -532,14 +532,6 @@ falco::app::run_result falco::app::actions::process_events(falco::app::state& s)
 		size_t closed_count = 0;
 		while (closed_count < ctxs.size())
 		{
-			// This is shared across all running event source threads an
-			// keeps the main thread sleepy until one of the parallel
-			// threads terminates and invokes release(). At that point,
-			// we know that at least one thread finished running and we can
-			// attempt joining it. Not that this also works when only one
-			// event source is enabled, in which we have no additional threads.
-			termination_sem.acquire();
-
 			if (!res.success && !termination_forced)
 			{
 				falco_logger::log(LOG_INFO, "An error occurred in an event source, forcing termination...\n");
@@ -547,6 +539,14 @@ falco::app::run_result falco::app::actions::process_events(falco::app::state& s)
 				falco::app::g_terminate_signal.handle([&](){});
 				termination_forced = true;
 			}
+
+			// This is shared across all running event source threads an
+			// keeps the main thread sleepy until one of the parallel
+			// threads terminates and invokes release(). At that point,
+			// we know that at least one thread finished running and we can
+			// attempt joining it. Not that this also works when only one
+			// event source is enabled, in which we have no additional threads.
+			termination_sem.acquire();
 
 			for (auto &ctx : ctxs)
 			{
