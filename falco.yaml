@@ -22,45 +22,48 @@
 # Here is an index of the configuration categories to help you navigate
 # the Falco configuration file:
 #
-# Falco rules + config files
+# Falco rules files
 #     rules_file
+# Falco config files
 #     watch_config_files
-# Falco outputs (basic)
+# Falco outputs settings
 #     time_format_iso_8601
 #     priority
 #     json_output
 #     json_include_output_property
 #     json_include_tags_property
+#     buffered_outputs
+#     outputs (throttling)
+# Falco outputs channels
 #     stdout_output
 #     syslog_output
 #     file_output
-#     buffered_outputs
-#     outputs (throttling)
-# Falco internal logging / alerting / metrics (basic)
+#     http_output
+#     program_output
+#     grpc_output
+# Falco exposed services
+#     grpc
+#     webserver
+# Falco logging / alerting / metrics related to software functioning (basic)
 #     log_stderr
 #     log_syslog
 #     log_level
 #     libs_logger
-# Falco outputs (advanced)
-#     grpc_output
-#     grpc
-#     http_output
-#     program_output
-#     webserver
-# Falco internal logging / alerting / metrics (advanced)
+# Falco logging / alerting / metrics related to software functioning (advanced)
 #     syscall_event_timeouts
 #     syscall_event_drops
 #     metrics
 #     output_timeout
-# Falco cloud native relevant configs
-#     metadata_download
-#     load_plugins
-#     plugins
-# Falco performance tuning
+# Falco performance tuning (advanced)
 #     syscall_buf_size_preset
 #     syscall_drop_failed_exit
 #     base_syscalls
 #     modern_bpf.cpus_for_each_syscall_buffer
+#     metadata_download
+# Falco plugins
+#     load_plugins
+#     plugins
+
 
 ################################
 # Falco command-line arguments #
@@ -71,15 +74,15 @@
 # configuration options from this config file as command-line arguments by using
 # the `-o` flag followed by the option name and value. In the following example,
 # three config options (`json_output`, `log_level`, and `log_stderr`) are passed as
-# command-line arguments with their corresponding values :
+# command-line arguments with their corresponding values:
 # `falco -o "json_output=true" -o "log_level=debug" -o "log_stderr=true"`. Please
 # note that command-line arguments take precedence over the options specified in
 # this config file.
 
 
-##############################
-# Falco rules + config files #
-##############################
+#####################
+# Falco rules files #
+#####################
 
 # Falco rules can be specified using files or directories, which are loaded at
 # startup. The name "rules_file" is maintained for backwards compatibility. If
@@ -110,6 +113,11 @@ rules_file:
   - /etc/falco/falco_rules.local.yaml
   - /etc/falco/rules.d
 
+
+######################
+# Falco config files #
+######################
+
 # Falco monitors configuration and rule files for changes and automatically
 # reloads itself to apply the updated configuration when any modifications are
 # detected. This feature is particularly useful when you want to make real-time
@@ -119,20 +127,21 @@ rules_file:
 watch_config_files: true
 
 
-#########################
-# Falco outputs (basic) #
-#########################
+##########################
+# Falco outputs settings #
+##########################
 
 # When enabled, Falco will display log and output messages with times in the ISO
 # 8601 format. By default, times are shown in the local time zone determined by
 # the /etc/localtime configuration.
 time_format_iso_8601: false
 
-# Any rule with a priority level more severe than the specified minimum level
-# will be loaded and run by Falco. This allows you to filter and control the
-# rules based on their severity, ensuring that only rules of a certain priority
-# or higher are active and evaluated by Falco. Supported levels: "emergency",
-# "alert", "critical", "error", "warning", "notice", "info", "debug"
+# Any rule with a priority level more severe than or equal to the specified
+# minimum level will be loaded and run by Falco. This allows you to filter and
+# control the rules based on their severity, ensuring that only rules of a
+# certain priority or higher are active and evaluated by Falco. Supported
+# levels: "emergency", "alert", "critical", "error", "warning", "notice",
+# "info", "debug"
 priority: debug
 
 # When enabled, Falco will output alert messages and rules file
@@ -153,29 +162,6 @@ json_include_output_property: true
 # if the tags associated with the rule are not needed for your use case or can
 # be added at a later stage, it is recommended to turn it off.
 json_include_tags_property: true
-
-# Falco supports various output sinks, such as syslog, stdout, file, gRPC,
-# webhook, and more (explore the advanced Falco outputs options). You can enable
-# or disable these sinks as needed to control where Falco alerts and log
-# messages are directed. This flexibility allows seamless integration with your
-# preferred logging and alerting systems. Multiple outputs can be enabled
-# simultaneously.
-stdout_output:
-  enabled: true
-
-syslog_output:
-  enabled: true
-
-# When appending Falco alerts to a file, each new output will be added to a new
-# line. It's important to note that Falco does not perform log rotation for this
-# file. If the `keep_alive` option is set to true, the file will be opened once
-# and continuously written to, else the file will be reopened for each output
-# message. Furthermore, the file will be closed and reopened if Falco receives
-# the SIGUSR1 signal.
-file_output:
-  enabled: false
-  keep_alive: false
-  filename: ./events.txt
 
 # Enabling buffering for the output queue can offer performance optimization,
 # efficient resource usage, and smoother data flow, resulting in a more reliable
@@ -206,52 +192,97 @@ outputs:
   max_burst: 1000
 
 
-#######################################################
-# Falco internal logging / alerting / metrics (basic) #
-#######################################################
+##########################
+# Falco outputs channels #
+##########################
 
-# Falco's internal informational logs, which are not related to Falco alert
-# outputs but rather its lifecycle and potential errors, can be directed to
-# stderr and/or syslog.
-log_stderr: true
-log_syslog: true
+# Falco supports various output channels, such as syslog, stdout, file, gRPC,
+# webhook, and more. You can enable or disable these channels as needed to
+# control where Falco alerts and log messages are directed. This flexibility
+# allows seamless integration with your preferred logging and alerting systems.
+# Multiple outputs can be enabled simultaneously.
 
-# The `log_level` setting determines the minimum log level to include in Falco's
-# internal logs. This setting is separate from the `priority` field of rules and
-# specifically controls the log level of Falco's internal logging. By specifying
-# a log level, you can control the verbosity of Falco's internal logs. Only logs
-# of a certain severity level or higher will be emitted. Supported levels:
-# "emergency", "alert", "critical", "error", "warning", "notice", "info",
-# "debug".
-log_level: info
-
-# The `libs_logger` setting in Falco determines the minimum log level to include
-# in the internal logs of the underlying `libs`` library, which Falco utilizes.
-# This setting is independent of the `priority`` field of rules and the `log_level``
-# setting that controls Falco's internal logs. It allows you to specify the
-# desired log level for the `libs` library specifically, providing more granular
-# control over the logging behavior of the underlying components used by Falco.
-# Only logs of a certain severity level or higher will be emitted. Supported
-# levels: "emergency", "alert", "critical", "error", "warning", "notice",
-# "info", "debug". It is not recommended for production use.
-libs_logger:
-  enabled: false
-  severity: debug
-
-
-############################
-# Falco outputs (advanced) #
-############################
-
-# [Stable] `grpc_output` and `grpc`
+# [Stable] `stdout_output`
 #
-# gRPC output service.
+# Redirect logs to standard output.
+stdout_output:
+  enabled: true
+
+# [Stable] `syslog_output`
+#
+# Send logs to syslog.
+syslog_output:
+  enabled: true
+
+# [Stable] `file_output`
+#
+# When appending Falco alerts to a file, each new alert will be added to a new
+# line. It's important to note that Falco does not perform log rotation for this
+# file. If the `keep_alive` option is set to true, the file will be opened once
+# and continuously written to, else the file will be reopened for each output
+# message. Furthermore, the file will be closed and reopened if Falco receives
+# the SIGUSR1 signal.
+file_output:
+  enabled: false
+  keep_alive: false
+  filename: ./events.txt
+
+# [Stable] `http_output`
+#
+# Send logs to an HTTP endpoint or webhook.
+http_output:
+  enabled: false
+  url: http://some.url
+  user_agent: "falcosecurity/falco"
+  # Tell Falco to not verify the remote server.
+  insecure: false
+  # Path to the CA certificate that can verify the remote server.
+  ca_cert: ""
+  # Path to a specific file that will be used as the CA certificate store.
+  ca_bundle: ""
+  # Path to a folder that will be used as the CA certificate store. CA certificate need to be
+  # stored as indivitual PEM files in this directory.
+  ca_path: "/etc/ssl/certs"
+
+# [Stable] `program_output`
+#
+# Redirect the output to another program or command.
+#
+# Possible additional things you might want to do with program output:
+#   - send to a slack webhook:
+#         program: "jq '{text: .output}' | curl -d @- -X POST https://hooks.slack.com/services/XXX"
+#   - logging (alternate method than syslog):
+#         program: logger -t falco-test
+#   - send over a network connection:
+#         program: nc host.example.com 80
+# If keep_alive is set to true, the program will be started once and
+# continuously written to, with each output message on its own
+# line. If keep_alive is set to false, the program will be re-spawned
+# for each output message.
+#
+# Also, the program will be closed and reopened if falco is signaled with
+# SIGUSR1.
+program_output:
+  enabled: false
+  keep_alive: false
+  program: "jq '{text: .output}' | curl -d @- -X POST https://hooks.slack.com/services/XXX"
+
+# [Stable] `grpc_output`
+#
+# Use gRPC as an output service.
 # By default it is off.
 # By enabling this all the output events will be kept in memory until you read them with a gRPC client.
 # Make sure to have a consumer for them or leave this disabled.
 grpc_output:
   enabled: false
 
+
+##########################
+# Falco exposed services #
+##########################
+
+# [Stable] `grpc`
+#
 # Falco supports running a gRPC server with two main binding types
 # 1. Over the network with mandatory mutual TLS authentication (mTLS)
 # 2. Over a local unix socket with no authentication
@@ -279,43 +310,6 @@ grpc:
   bind_address: "unix:///run/falco/falco.sock"
   # when threadiness is 0, Falco automatically guesses it depending on the number of online cores
   threadiness: 0
-
-# [Stable] `http_output`
-#
-http_output:
-  enabled: false
-  url: http://some.url
-  user_agent: "falcosecurity/falco"
-  # Tell Falco to not verify the remote server.
-  insecure: false
-  # Path to the CA certificate that can verify the remote server.
-  ca_cert: ""
-  # Path to a specific file that will be used as the CA certificate store.
-  ca_bundle: ""
-  # Path to a folder that will be used as the CA certificate store. CA certificate need to be
-  # stored as indivitual PEM files in this directory.
-  ca_path: "/etc/ssl/certs"
-
-# [Stable] `program_output`
-#
-# Possible additional things you might want to do with program output:
-#   - send to a slack webhook:
-#         program: "jq '{text: .output}' | curl -d @- -X POST https://hooks.slack.com/services/XXX"
-#   - logging (alternate method than syslog):
-#         program: logger -t falco-test
-#   - send over a network connection:
-#         program: nc host.example.com 80
-# If keep_alive is set to true, the program will be started once and
-# continuously written to, with each output message on its own
-# line. If keep_alive is set to false, the program will be re-spawned
-# for each output message.
-#
-# Also, the program will be closed and reopened if falco is signaled with
-# SIGUSR1.
-program_output:
-  enabled: false
-  keep_alive: false
-  program: "jq '{text: .output}' | curl -d @- -X POST https://hooks.slack.com/services/XXX"
 
 # [Stable] `webserver`
 #
@@ -347,9 +341,43 @@ webserver:
   ssl_certificate: /etc/falco/falco.pem
 
 
-##########################################################
-# Falco internal logging / alerting / metrics (advanced) #
-##########################################################
+##############################################################################
+# Falco logging / alerting / metrics related to software functioning (basic) #
+##############################################################################
+
+# Falco's logs related to the functioning of the software, which are not related
+# to Falco alert outputs but rather its lifecycle, settings and potential
+# errors, can be directed to stderr and/or syslog.
+log_stderr: true
+log_syslog: true
+
+# The `log_level` setting determines the minimum log level to include in Falco's
+# internal logs. This setting is separate from the `priority` field of rules and
+# specifically controls the log level of Falco's internal logging. By specifying
+# a log level, you can control the verbosity of Falco's internal logs. Only logs
+# of a certain severity level or higher will be emitted. Supported levels:
+# "emergency", "alert", "critical", "error", "warning", "notice", "info",
+# "debug".
+log_level: info
+
+# The `libs_logger` setting in Falco determines the minimum log level to include
+# in the logs related to the functioning of the software of the underlying
+# `libs` library, which Falco utilizes. This setting is independent of the
+# `priority` field of rules and the `log_level` setting that controls Falco's
+# internal logs. It allows you to specify the desired log level for the `libs`
+# library specifically, providing more granular control over the logging
+# behavior of the underlying components used by Falco. Only logs of a certain
+# severity level or higher will be emitted. Supported levels: "emergency",
+# "alert", "critical", "error", "warning", "notice", "info", "debug". It is not
+# recommended for production use.
+libs_logger:
+  enabled: false
+  severity: debug
+
+
+#################################################################################
+# Falco logging / alerting / metrics related to software functioning (advanced) #
+#################################################################################
 
 # [Stable] `syscall_event_timeouts`
 #
@@ -532,51 +560,8 @@ output_timeout: 2000
 
 
 #######################################
-# Falco cloud native relevant configs #
+# Falco performance tuning (advanced) #
 #######################################
-
-# [Stable] `metadata_download`
-#
-# Container orchestrator metadata fetching params
-metadata_download:
-  max_mb: 100
-  chunk_wait_us: 1000
-  watch_freq_sec: 1
-
-# [Experimental] `load_plugins` and `plugins`
-#
-# Setting this list to empty ensures that the above plugins are *not*
-# loaded and enabled by default. If you want to use the above plugins,
-# set a meaningful init_config/open_params for the cloudtrail plugin
-# and then change this to:
-# load_plugins: [cloudtrail, json]
-load_plugins: []
-
-# Plugins that are available for use. These plugins are not loaded by
-# default, as they require explicit configuration to point to
-# cloudtrail log files.
-# To learn more about the supported formats for
-# init_config/open_params for the cloudtrail plugin, see the README at
-# https://github.com/falcosecurity/plugins/blob/master/plugins/cloudtrail/README.md.
-plugins:
-  - name: k8saudit
-    library_path: libk8saudit.so
-    init_config:
-    #   maxEventSize: 262144
-    #   webhookMaxBatchSize: 12582912
-    #   sslCertificate: /etc/falco/falco.pem
-    open_params: "http://:9765/k8s-audit"
-  - name: cloudtrail
-    library_path: libcloudtrail.so
-    # see docs for init_config and open_params:
-    # https://github.com/falcosecurity/plugins/blob/master/plugins/cloudtrail/README.md
-  - name: json
-    library_path: libjson.so
-
-
-############################
-# Falco performance tuning #
-############################
 
 # [Stable] `syscall_buf_size_preset`
 #
@@ -813,3 +798,49 @@ base_syscalls:
 
 modern_bpf:
   cpus_for_each_syscall_buffer: 2
+
+# [Stable] `metadata_download`
+#
+# Container orchestrator metadata fetching params
+metadata_download:
+  max_mb: 100
+  chunk_wait_us: 1000
+  watch_freq_sec: 1
+
+
+#################
+# Falco plugins #
+#################
+
+# [Stable] `load_plugins`
+#
+# Setting this list to empty ensures that the below plugins are *not*
+# loaded and enabled by default. If you want to use the below plugins,
+# set a meaningful init_config/open_params. For example, if you want to
+# use the k8saudit plugin, ensure it is configured appropriately and then
+# change this to:
+# load_plugins: [k8saudit, json]
+load_plugins: []
+
+# [Stable] `plugins`
+#
+# Plugins that are available for use. These plugins are not loaded by
+# default, as they require explicit configuration to point to
+# cloudtrail log files.
+# To learn more about the supported formats for
+# init_config/open_params for the cloudtrail plugin, see the README at
+# https://github.com/falcosecurity/plugins/blob/master/plugins/cloudtrail/README.md.
+plugins:
+  - name: k8saudit
+    library_path: libk8saudit.so
+    init_config:
+    #   maxEventSize: 262144
+    #   webhookMaxBatchSize: 12582912
+    #   sslCertificate: /etc/falco/falco.pem
+    open_params: "http://:9765/k8s-audit"
+  - name: cloudtrail
+    library_path: libcloudtrail.so
+    # see docs for init_config and open_params:
+    # https://github.com/falcosecurity/plugins/blob/master/plugins/cloudtrail/README.md
+  - name: json
+    library_path: libjson.so
