@@ -81,26 +81,41 @@
 # Falco rules + config files #
 ##############################
 
-# File(s) or Directories containing Falco rules, loaded at startup.
-# The name "rules_file" is only for backwards compatibility.
-# If the entry is a file, it will be read directly. If the entry is a directory,
-# every file in that directory will be read, in alphabetical order.
+# Falco rules can be specified using files or directories, which are loaded at
+# startup. The name "rules_file" is maintained for backwards compatibility. If
+# the entry is a file, it will be read directly. If the entry is a directory,
+# all files within that directory will be read in alphabetical order.
 #
-# falco_rules.yaml ships with the falco package and is overridden with
-# every new software version. falco_rules.local.yaml is only created
-# if it doesn't exist. If you want to customize the set of rules, add
-# your customizations to falco_rules.local.yaml.
+# The falco_rules.yaml file ships with the Falco package and is overridden with
+# every new software version. falco_rules.local.yaml is only created if it
+# doesn't already exist.
 #
-# The files will be read in the order presented here, so make sure if
-# you have overrides they appear in later files.
+# To customize the set of rules, you can add your modifications to any file.
+# It's important to note that the files or directories are read in the order
+# specified here. In addition, rules are loaded by Falco in order.
+#
+# If you have any customizations intended to override a previous configuration,
+# make sure they appear in later files to take precedence. On the other hand, if
+# the conditions of rules with the same event type(s) have the potential to
+# overshadow each other, ensure that the more important rule appears first. This
+# is because rules are evaluated on a "first match wins" basis, where the first
+# rule that matches the conditions will be applied, and subsequent rules will
+# not be evaluated for the same event type.
+#
+# By arranging the order of files and rules thoughtfully, you can ensure that
+# desired customizations and rule behaviors are prioritized and applied as
+# intended.
 rules_file:
   - /etc/falco/falco_rules.yaml
   - /etc/falco/falco_rules.local.yaml
   - /etc/falco/rules.d
 
-# Watch config file and rules files for modification.
-# When a file is modified, Falco will propagate new config,
-# by reloading itself.
+# Falco monitors configuration and rule files for changes and automatically
+# reloads itself to apply the updated configuration when any modifications are
+# detected. This feature is particularly useful when you want to make real-time
+# changes to the configuration or rules of Falco without interrupting its
+# operation or losing its state. For more information about Falco's state
+# engine, please refer to the `base_syscalls` section.
 watch_config_files: true
 
 
@@ -108,71 +123,84 @@ watch_config_files: true
 # Falco outputs (basic) #
 #########################
 
-# If true, the times displayed in log messages and output messages
-# will be in ISO 8601. By default, times are displayed in the local
-# time zone, as governed by /etc/localtime.
+# When enabled, Falco will display log and output messages with times in the ISO
+# 8601 format. By default, times are shown in the local time zone determined by
+# the /etc/localtime configuration.
 time_format_iso_8601: false
 
-# Minimum rule priority level to load and run. All rules having a
-# priority more severe than this level will be loaded/run.  Can be one
-# of "emergency", "alert", "critical", "error", "warning", "notice",
-# "informational", "debug".
+# Any rule with a priority level more severe than the specified minimum level
+# will be loaded and run by Falco. This allows you to filter and control the
+# rules based on their severity, ensuring that only rules of a certain priority
+# or higher are active and evaluated by Falco. Supported levels: "emergency",
+# "alert", "critical", "error", "warning", "notice", "info", "debug"
 priority: debug
 
-# If "true", print falco alert messages and rules file
-# loading/validation results as json, which allows for easier
-# consumption by downstream programs. Default is "false".
+# When enabled, Falco will output alert messages and rules file
+# loading/validation results in JSON format, making it easier for downstream
+# programs to process and consume the data. By default, this option is disabled.
 json_output: false
 
-# When using json output, whether or not to include the "output" property
-# itself (e.g. "File below a known binary directory opened for writing
-# (user=root ....") in the json output.
+# When using JSON output in Falco, you have the option to include the "output"
+# property itself in the generated JSON output. The "output" property provides
+# additional information about the purpose of the rule. To reduce the logging
+# volume, it is recommended to turn it off if it's not necessary for your use
+# case.
 json_include_output_property: true
 
-# When using json output, whether or not to include the "tags" property
-# itself in the json output. If set to true, outputs caused by rules
-# with no tags will have a "tags" field set to an empty array. If set to
-# false, the "tags" field will not be included in the json output at all.
+# When using JSON output in Falco, you have the option to include the "tags"
+# field of the rules in the generated JSON output. The "tags" field provides
+# additional metadata associated with the rule. To reduce the logging volume,
+# if the tags associated with the rule are not needed for your use case or can
+# be added at a later stage, it is recommended to turn it off.
 json_include_tags_property: true
 
-# Where security notifications should go.
-# Multiple outputs can be enabled.
+# Falco supports various output sinks, such as syslog, stdout, file, gRPC,
+# webhook, and more (explore the advanced Falco outputs options). You can enable
+# or disable these sinks as needed to control where Falco alerts and log
+# messages are directed. This flexibility allows seamless integration with your
+# preferred logging and alerting systems. Multiple outputs can be enabled
+# simultaneously.
 stdout_output:
   enabled: true
 
 syslog_output:
   enabled: true
 
-# If keep_alive is set to true, the file will be opened once and
-# continuously written to, with each output message on its own
-# line. If keep_alive is set to false, the file will be re-opened
-# for each output message.
-#
-# Also, the file will be closed and reopened if falco is signaled with
-# SIGUSR1.
+# When appending Falco alerts to a file, each new output will be added to a new
+# line. It's important to note that Falco does not perform log rotation for this
+# file. If the `keep_alive` option is set to true, the file will be opened once
+# and continuously written to, else the file will be reopened for each output
+# message. Furthermore, the file will be closed and reopened if Falco receives
+# the SIGUSR1 signal.
 file_output:
   enabled: false
   keep_alive: false
   filename: ./events.txt
 
-# Whether or not output to any of the output channels below is
-# buffered. Defaults to false
+# Enabling buffering for the output queue can offer performance optimization,
+# efficient resource usage, and smoother data flow, resulting in a more reliable
+# output mechanism. By default, buffering is disabled (false).
 buffered_outputs: false
 
-# A throttling mechanism implemented as a token bucket limits the
-# rate of Falco notifications. One rate limiter is assigned to each event
-# source, so that alerts coming from one can't influence the throttling
-# mechanism of the others. This is controlled by the following options:
-#  - rate: the number of tokens (i.e. right to send a notification)
-#    gained per second. When 0, the throttling mechanism is disabled.
-#    Defaults to 0.
+# A throttling mechanism, implemented as a token bucket, can be used to control
+# the rate of Falco outputs. Each event source has its own rate limiter,
+# ensuring that alerts from one source do not affect the throttling of others.
+# The following options control the mechanism:
+#  - rate: the number of tokens (i.e. right to send a notification) gained per
+#    second. When 0, the throttling mechanism is disabled. Defaults to 0.
 #  - max_burst: the maximum number of tokens outstanding. Defaults to 1000.
 #
-# With these defaults, the throttling mechanism is disabled.
-# For example, by setting rate to 1 Falco could send up to 1000 notifications
-# after an initial quiet period, and then up to 1 notification per second
-# afterward. It would gain the full burst back after 1000 seconds of
-# no activity.
+# For example, setting the rate to 1 allows Falco to send up to 1000
+# notifications initially, followed by 1 notification per second. The burst
+# capacity is fully restored after 1000 seconds of no activity.
+#
+# Throttling can be useful in various scenarios, such as preventing notification
+# floods, managing system load, controlling event processing, or complying with
+# rate limits imposed by external systems or APIs. It allows for better resource
+# utilization, avoids overwhelming downstream systems, and helps maintain a
+# balanced and controlled flow of notifications.
+#
+# With the default settings, the throttling mechanism is disabled.
 outputs:
   rate: 0
   max_burst: 1000
@@ -182,26 +210,32 @@ outputs:
 # Falco internal logging / alerting / metrics (basic) #
 #######################################################
 
-# Send information logs to stderr and/or syslog Note these are *not* security
-# notification logs! These are just Falco lifecycle (and possibly error) logs.
+# Falco's internal informational logs, which are not related to Falco alert
+# outputs but rather its lifecycle and potential errors, can be directed to
+# stderr and/or syslog.
 log_stderr: true
 log_syslog: true
 
-# Minimum log level to include in logs. Note: these levels are
-# separate from the priority field of rules. This refers only to the
-# log level of falco's internal logging. Can be one of "emergency",
-# "alert", "critical", "error", "warning", "notice", "info", "debug".
+# The `log_level` setting determines the minimum log level to include in Falco's
+# internal logs. This setting is separate from the `priority` field of rules and
+# specifically controls the log level of Falco's internal logging. By specifying
+# a log level, you can control the verbosity of Falco's internal logs. Only logs
+# of a certain severity level or higher will be emitted. Supported levels:
+# "emergency", "alert", "critical", "error", "warning", "notice", "info",
+# "debug".
 log_level: info
 
-# Falco is capable of managing the logs coming from libs. If enabled,
-# the libs logger send its log records the same outputs supported by
-# Falco (stderr and syslog). Disabled by default.
+# The `libs_logger` setting in Falco determines the minimum log level to include
+# in the internal logs of the underlying `libs`` library, which Falco utilizes.
+# This setting is independent of the `priority`` field of rules and the `log_level``
+# setting that controls Falco's internal logs. It allows you to specify the
+# desired log level for the `libs` library specifically, providing more granular
+# control over the logging behavior of the underlying components used by Falco.
+# Only logs of a certain severity level or higher will be emitted. Supported
+# levels: "emergency", "alert", "critical", "error", "warning", "notice",
+# "info", "debug". It is not recommended for production use.
 libs_logger:
   enabled: false
-  # Minimum log severity to include in the libs logs. Note: this value is
-  # separate from the log level of the Falco logger and does not affect it.
-  # Can be one of "fatal", "critical", "error", "warning", "notice",
-  # "info", "debug", "trace".
   severity: debug
 
 
