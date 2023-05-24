@@ -22,6 +22,8 @@
 # Here is an index of the configuration categories to help you navigate
 # the Falco configuration file:
 #
+#     (Falco command-line arguments)
+#     (Falco environment variables)
 # Falco rules files
 #     rules_file
 # Falco config files
@@ -50,16 +52,18 @@
 #     log_level
 #     libs_logger
 # Falco logging / alerting / metrics related to software functioning (advanced)
+#     output_timeout
 #     syscall_event_timeouts
 #     syscall_event_drops
 #     metrics
-#     output_timeout
 # Falco performance tuning (advanced)
 #     syscall_buf_size_preset
 #     syscall_drop_failed_exit
 #     base_syscalls
 #     modern_bpf.cpus_for_each_syscall_buffer
+# Falco cloud orchestration systems integration
 #     metadata_download
+#     (Guidance for Kubernetes container engine command-line args settings)
 # Falco plugins
 #     load_plugins
 #     plugins
@@ -80,10 +84,30 @@
 # this config file.
 
 
+###############################
+# Falco environment variables #
+###############################
+
+# Customize Falco settings using environment variables:
+# 
+# - "HOST_ROOT": Specifies the prefix to the underlying host `/proc` filesystem
+#   when deploying Falco over a container instead of directly on the host.
+#   Defaults to "/host". 
+# - "FALCO_BPF_PROBE": Specify a custom path to the BPF object code file (`bpf`
+#   driver). This is not needed for the modern_bpf driver. 
+# - "FALCO_HOSTNAME": Customize the hostname output field logged by Falco by
+#   setting the "FALCO_HOSTNAME" environment variable.
+# - "FALCO_CGROUP_MEM_PATH": Specifies the file path holding the container
+#   memory usage metric for the `metrics` feature. Defaults to
+#   "/sys/fs/cgroup/memory/memory.usage_in_bytes" (Kubernetes).
+
+
 #####################
 # Falco rules files #
 #####################
 
+# [Stable] `rules_file`
+#
 # Falco rules can be specified using files or directories, which are loaded at
 # startup. The name "rules_file" is maintained for backwards compatibility. If
 # the entry is a file, it will be read directly. If the entry is a directory,
@@ -118,6 +142,8 @@ rules_file:
 # Falco config files #
 ######################
 
+# [Stable] `watch_config_files`
+#
 # Falco monitors configuration and rule files for changes and automatically
 # reloads itself to apply the updated configuration when any modifications are
 # detected. This feature is particularly useful when you want to make real-time
@@ -131,11 +157,15 @@ watch_config_files: true
 # Falco outputs settings #
 ##########################
 
+# [Stable] `time_format_iso_8601`
+#
 # When enabled, Falco will display log and output messages with times in the ISO
 # 8601 format. By default, times are shown in the local time zone determined by
 # the /etc/localtime configuration.
 time_format_iso_8601: false
 
+# [Stable] `priority`
+#
 # Any rule with a priority level more severe than or equal to the specified
 # minimum level will be loaded and run by Falco. This allows you to filter and
 # control the rules based on their severity, ensuring that only rules of a
@@ -144,11 +174,15 @@ time_format_iso_8601: false
 # "info", "debug"
 priority: debug
 
+# [Stable] `json_output`
+#
 # When enabled, Falco will output alert messages and rules file
 # loading/validation results in JSON format, making it easier for downstream
 # programs to process and consume the data. By default, this option is disabled.
 json_output: false
 
+# [Stable] `json_include_output_property`
+#
 # When using JSON output in Falco, you have the option to include the "output"
 # property itself in the generated JSON output. The "output" property provides
 # additional information about the purpose of the rule. To reduce the logging
@@ -156,6 +190,8 @@ json_output: false
 # case.
 json_include_output_property: true
 
+# [Stable] `json_include_tags_property`
+#
 # When using JSON output in Falco, you have the option to include the "tags"
 # field of the rules in the generated JSON output. The "tags" field provides
 # additional metadata associated with the rule. To reduce the logging volume,
@@ -163,11 +199,15 @@ json_include_output_property: true
 # be added at a later stage, it is recommended to turn it off.
 json_include_tags_property: true
 
+# [Stable] `buffered_outputs`
+#
 # Enabling buffering for the output queue can offer performance optimization,
 # efficient resource usage, and smoother data flow, resulting in a more reliable
 # output mechanism. By default, buffering is disabled (false).
 buffered_outputs: false
 
+# [Stable] `outputs`
+#
 # A throttling mechanism, implemented as a token bucket, can be used to control
 # the rate of Falco outputs. Each event source has its own rate limiter,
 # ensuring that alerts from one source do not affect the throttling of others.
@@ -218,7 +258,7 @@ syslog_output:
 #
 # When appending Falco alerts to a file, each new alert will be added to a new
 # line. It's important to note that Falco does not perform log rotation for this
-# file. If the `keep_alive` option is set to true, the file will be opened once
+# file. If the `keep_alive` option is set to `true`, the file will be opened once
 # and continuously written to, else the file will be reopened for each output
 # message. Furthermore, the file will be closed and reopened if Falco receives
 # the SIGUSR1 signal.
@@ -255,13 +295,11 @@ http_output:
 #         program: logger -t falco-test
 #   - send over a network connection:
 #         program: nc host.example.com 80
-# If keep_alive is set to true, the program will be started once and
-# continuously written to, with each output message on its own
-# line. If keep_alive is set to false, the program will be re-spawned
-# for each output message.
-#
-# Also, the program will be closed and reopened if falco is signaled with
-# SIGUSR1.
+# If `keep_alive` is set to `true`, the program will be started once and
+# continuously written to, with each output message on its own line. If
+# `keep_alive` is set to `false`, the program will be re-spawned for each output
+# message. Furthermore, the program will be re-spawned if Falco receives
+# the SIGUSR1 signal.
 program_output:
   enabled: false
   keep_alive: false
@@ -270,9 +308,13 @@ program_output:
 # [Stable] `grpc_output`
 #
 # Use gRPC as an output service.
-# By default it is off.
-# By enabling this all the output events will be kept in memory until you read them with a gRPC client.
-# Make sure to have a consumer for them or leave this disabled.
+#
+# gRPC is a modern and high-performance framework for remote procedure calls
+# (RPC). It utilizes protocol buffers for efficient data serialization. The gRPC
+# output in Falco provides a modern and efficient way to integrate with other
+# systems. By default the setting is turned off. Enabling this option stores
+# output events in memory until they are consumed by a gRPC client. Ensure that
+# you have a consumer for the output events or leave it disabled.
 grpc_output:
   enabled: false
 
@@ -283,57 +325,74 @@ grpc_output:
 
 # [Stable] `grpc`
 #
-# Falco supports running a gRPC server with two main binding types
-# 1. Over the network with mandatory mutual TLS authentication (mTLS)
-# 2. Over a local unix socket with no authentication
-# By default, the gRPC server is disabled, with no enabled services (see grpc_output)
-# please comment/uncomment and change accordingly the options below to configure it.
-# Important note: if Falco has any troubles creating the gRPC server
-# this information will be logged, however the main Falco daemon will not be stopped.
-# gRPC server over network with (mandatory) mutual TLS configuration.
-# This gRPC server is secure by default so you need to generate certificates and update their paths here.
-# By default the gRPC server is off.
-# You can configure the address to bind and expose it.
-# By modifying the threadiness configuration you can fine-tune the number of threads (and context) it will use.
+# Falco provides support for running a gRPC server using two main binding types:
+# 1. Over the network with mandatory mutual TLS authentication (mTLS), which
+#    ensures secure communication
+# 2. Local Unix socket binding with no authentication.
+# By default, the gRPCserver in Falco is turned off with no enabled services
+# (see `grpc_output`setting). To configure the gRPC server in Falco, you can
+# make the following changes to the options:
+#
+# - Uncomment the relevant configuration options related to the gRPC server.
+# - Update the paths of the generated certificates for mutual TLS authentication
+#   if you choose to use mTLS.
+# - Specify the address to bind and expose the gRPC server.
+# - Adjust the threadiness configuration to control the number of threads and
+#   contexts used by the server.
+#
+# Keep in mind that if any issues arise while creating the gRPC server, the
+# information will be logged, but it will not stop the main Falco daemon.
+
+# gRPC server using mTLS
 # grpc:
 #   enabled: true
 #   bind_address: "0.0.0.0:5060"
-#   # when threadiness is 0, Falco sets it by automatically figuring out the number of online cores
+#   # When the `threadiness` value is set to 0, Falco will automatically determine
+#   # the appropriate number of threads based on the number of online cores in the system.
 #   threadiness: 0
 #   private_key: "/etc/falco/certs/server.key"
 #   cert_chain: "/etc/falco/certs/server.crt"
 #   root_certs: "/etc/falco/certs/ca.crt"
 
-# gRPC server using an unix socket
+# gRPC server using a local unix socket
 grpc:
   enabled: false
   bind_address: "unix:///run/falco/falco.sock"
-  # when threadiness is 0, Falco automatically guesses it depending on the number of online cores
+  # When the `threadiness` value is set to 0, Falco will automatically determine
+  # the appropriate number of threads based on the number of online cores in the system.
   threadiness: 0
 
 # [Stable] `webserver`
 #
-# Falco supports an embedded webserver and exposes the following endpoints:
-# - /healthz: health endpoint useful for checking if Falco is up and running
-#   (the endpoint name is configurable).
-# - /versions: responds with a JSON object containing version numbers of the
-#   internal Falco components (similar output as `falco --version -o json_output=true`).
+# Falco supports an embedded webserver that runs within the Falco process,
+# providing a lightweight and efficient way to expose web-based functionalities
+# without the need for an external web server. The following endpoints are
+# exposed:
+# - /healthz: designed to be used for checking the health and availability of
+#   the Falco application (the name of the endpoint is configurable).
+# - /versions: responds with a JSON object containing the version numbers of the
+#   internal Falco components (similar output as `falco --version -o
+#   json_output=true`).
 #
-# # NOTE: the /versions endpoint is useful to other services (such as falcoctl)
-# to retrieve info about a running Falco instance. Make sure the webserver is
-# enabled if you're using falcoctl either locally or with Kubernetes.
+# Please note that the /versions endpoint is particularly useful for other Falco
+# services, such as `falcoctl`, to retrieve information about a running Falco
+# instance. If you plan to use `falcoctl` locally or with Kubernetes, make sure
+# the Falco webserver is enabled.
 #
-# The following options control the behavior of that webserver (enabled by default).
+# The behavior of the webserver can be controlled with the following options,
+# which are enabled by default:
 #
-# The ssl_certificate is a combination SSL Certificate and corresponding
-# key contained in a single file. You can generate a key/cert as follows:
+# The `ssl_certificate` option specifies a combined SSL certificate and
+# corresponding key that are contained in a single file. You can generate a
+# key/cert as follows:
 #
-# $ openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out certificate.pem
-# $ cat certificate.pem key.pem > falco.pem
-# $ sudo cp falco.pem /etc/falco/falco.pem
+# $ openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out
+# certificate.pem $ cat certificate.pem key.pem > falco.pem $ sudo cp falco.pem
+# /etc/falco/falco.pem
 webserver:
   enabled: true
-  # when threadiness is 0, Falco automatically guesses it depending on the number of online cores
+  # When the `threadiness` value is set to 0, Falco will automatically determine
+  # the appropriate number of threads based on the number of online cores in the system.
   threadiness: 0
   listen_port: 8765
   k8s_healthz_endpoint: /healthz
@@ -345,26 +404,32 @@ webserver:
 # Falco logging / alerting / metrics related to software functioning (basic) #
 ##############################################################################
 
+# [Stable] `log_stderr` and `log_syslog`
+#
 # Falco's logs related to the functioning of the software, which are not related
 # to Falco alert outputs but rather its lifecycle, settings and potential
 # errors, can be directed to stderr and/or syslog.
 log_stderr: true
 log_syslog: true
 
+# [Stable] `log_level`
+#
 # The `log_level` setting determines the minimum log level to include in Falco's
-# internal logs. This setting is separate from the `priority` field of rules and
-# specifically controls the log level of Falco's internal logging. By specifying
-# a log level, you can control the verbosity of Falco's internal logs. Only logs
-# of a certain severity level or higher will be emitted. Supported levels:
-# "emergency", "alert", "critical", "error", "warning", "notice", "info",
-# "debug".
+# logs related to the functioning of the software. This setting is separate from
+# the `priority` field of rules and specifically controls the log level of
+# Falco's operational logging. By specifying a log level, you can control the
+# verbosity of Falco's operational logs. Only logs of a certain severity level
+# or higher will be emitted. Supported levels: "emergency", "alert", "critical",
+# "error", "warning", "notice", "info", "debug".
 log_level: info
 
+# [Stable] `libs_logger`
+#
 # The `libs_logger` setting in Falco determines the minimum log level to include
 # in the logs related to the functioning of the software of the underlying
 # `libs` library, which Falco utilizes. This setting is independent of the
 # `priority` field of rules and the `log_level` setting that controls Falco's
-# internal logs. It allows you to specify the desired log level for the `libs`
+# operational logs. It allows you to specify the desired log level for the `libs`
 # library specifically, providing more granular control over the logging
 # behavior of the underlying components used by Falco. Only logs of a certain
 # severity level or higher will be emitted. Supported levels: "emergency",
@@ -379,31 +444,59 @@ libs_logger:
 # Falco logging / alerting / metrics related to software functioning (advanced) #
 #################################################################################
 
+# [Stable] `output_timeout`
+#
+# Generates Falco operational logs when `log_level=notice` at minimum
+#
+# A timeout error occurs when a process or operation takes longer to complete
+# than the allowed or expected time limit. In the context of Falco, an output
+# timeout error refers to the situation where an output channel fails to deliver
+# an alert within a specified deadline. Various reasons, such as network issues,
+# resource constraints, or performance bottlenecks can cause timeouts.
+#
+# The `output_timeout` parameter specifies the duration, in milliseconds, to
+# wait before considering the deadline exceeded. By default, the timeout is set
+# to 2000ms (2 seconds), meaning that the consumer of Falco outputs can block
+# the Falco output channel for up to 2 seconds without triggering a timeout
+# error.
+#
+# Falco actively monitors the performance of output channels. With this setting
+# the timeout error can be logged, but please note that this requires setting
+# Falco's operational logs `log_level` to a minimum of `notice`.
+#
+# It's important to note that Falco outputs will not be discarded from the
+# output queue. This means that if an output channel becomes blocked
+# indefinitely, it indicates a potential issue that needs to be addressed by the
+# user.
+output_timeout: 2000
+
 # [Stable] `syscall_event_timeouts`
 #
-# Falco uses a shared buffer between the kernel and userspace to receive
-# the events (eg., system call information) in userspace.
+# Generates Falco operational logs when `log_level=notice` at minimum
 #
-# Anyways, the underlying libraries can also timeout for various reasons.
-# For example, there could have been issues while reading an event.
-# Or the particular event needs to be skipped.
-# Normally, it's very unlikely that Falco does not receive events consecutively.
-#
-# Falco is able to detect such uncommon situation.
-#
-# Here you can configure the maximum number of consecutive timeouts without an event
-# after which you want Falco to alert.
-# By default this value is set to 1000 consecutive timeouts without an event at all.
-# How this value maps to a time interval depends on the CPU frequency.
+# Falco utilizes a shared buffer between the kernel and userspace to receive
+# events, such as system call information, in userspace. However, there may be
+# cases where timeouts occur in the underlying libraries due to issues in
+# reading events or the need to skip a particular event. While it is uncommon
+# for Falco to experience consecutive event timeouts, it has the capability to
+# detect such situations. You can configure the maximum number of consecutive
+# timeouts without an event after which Falco will generate an alert, but please
+# note that this requires setting Falco's operational logs `log_level` to a
+# minimum of `notice`. The default value is set to 1000 consecutive timeouts
+# without receiving any events. The mapping of this value to a time interval
+# depends on the CPU frequency.
 syscall_event_timeouts:
   max_consecutives: 1000
 
 # [Stable] `syscall_event_drops`
 #
-# Falco uses a shared buffer between the kernel and userspace to pass
-# system call information. When Falco detects that this buffer is
-# full and system calls have been dropped, it can take one or more of
-# the following actions:
+# Generates "Falco internal: syscall event drop" rule output when `priority=debug` at minimum
+#
+# --- [Description]
+#
+# Falco uses a shared buffer between the kernel and userspace to pass system
+# call information. When Falco detects that this buffer is full and system calls
+# have been dropped, it can take one or more of the following actions:
 #   - ignore: do nothing (default when list of actions is empty)
 #   - log: log a DEBUG message noting that the buffer was full
 #   - alert: emit a Falco alert noting that the buffer was full
@@ -411,16 +504,28 @@ syscall_event_timeouts:
 #
 # Notice it is not possible to ignore and log/alert messages at the same time.
 #
-# The rate at which log/alert messages are emitted is governed by a
-# token bucket. The rate corresponds to one message every 30 seconds
-# with a burst of one message (by default).
+# The rate at which log/alert messages are emitted is governed by a token
+# bucket. The rate corresponds to one message every 30 seconds with a burst of
+# one message (by default).
 #
-# The messages are emitted when the percentage of dropped system calls
-# with respect the number of events in the last second
-# is greater than the given threshold (a double in the range [0, 1]).
+# The messages are emitted when the percentage of dropped system calls with
+# respect the number of events in the last second is greater than the given
+# threshold (a double in the range [0, 1]). If you want to be alerted on any
+# drops, set the threshold to 0.
 #
-# For debugging/testing it is possible to simulate the drops using
-# the `simulate_drops: true`. In this case the threshold does not apply.
+# For debugging/testing it is possible to simulate the drops using the
+# `simulate_drops: true`. In this case the threshold does not apply.
+#
+# --- [Usage]
+#
+# Enabled by default, but requires Falco rules config `priority` set to `debug`.
+# Emits a Falco rule named "Falco internal: syscall event drop" as many times in
+# a given time period as dictated by the settings. Statistics here reflect the
+# delta in a 1s time period.
+#
+# If instead you prefer periodic metrics of monotonic counters at a regular
+# interval, which include syscall drop statistics and additional metrics,
+# explore the `metrics` configuration option.
 syscall_event_drops:
   threshold: .1
   actions:
@@ -432,101 +537,97 @@ syscall_event_drops:
 
 # [Experimental] `metrics`
 #
-# periodic metric snapshots (including stats and resource utilization)
-# captured at regular intervals
+# Generates "Falco internal: metrics snapshot" rule output when `priority=info` at minimum
+#
+# periodic metric snapshots (including stats and resource utilization) captured
+# at regular intervals
 #
 # --- [Description]
 #
 # Consider these key points about the `metrics` feature in Falco:
 #
 # - It introduces a redesigned stats/metrics system.
-# - Native support for resource utilization metrics and specialized performance metrics.
-# - Metrics are emitted as monotonic counters at predefined intervals (snapshots).
-# - All metrics are consolidated into a single log message, adhering to the established
-#   rules schema and naming conventions.
+# - Native support for resource utilization metrics and specialized performance
+#   metrics.
+# - Metrics are emitted as monotonic counters at predefined intervals
+#   (snapshots).
+# - All metrics are consolidated into a single log message, adhering to the
+#   established rules schema and naming conventions.
 # - Additional info fields complement the metrics and facilitate customized
 #   statistical analyses and correlations.
 # - The metrics framework is designed for easy future extension.
 #
-# The `metrics` feature follows a specific schema and field naming convention. All metrics
-# are collected as subfields under the `output_fields` key, similar to regular Falco rules.
-# Each metric field name adheres to the grammar used in Falco rules.
-# There are two new field classes introduced: `falco.` and `scap.`.
-# The `falco.` class represents userspace counters, statistics, resource utilization,
-# or useful information fields.
-# The `scap.` class represents counters and statistics mostly obtained from Falco's
-# kernel instrumentation before events are sent to userspace, but can include scap
-# userspace stats as well.
+# The `metrics` feature follows a specific schema and field naming convention.
+# All metrics are collected as subfields under the `output_fields` key, similar
+# to regular Falco rules. Each metric field name adheres to the grammar used in
+# Falco rules. There are two new field classes introduced: `falco.` and `scap.`.
+# The `falco.` class represents userspace counters, statistics, resource
+# utilization, or useful information fields. The `scap.` class represents
+# counters and statistics mostly obtained from Falco's kernel instrumentation
+# before events are sent to userspace, but can include scap userspace stats as
+# well.
 #
-# It's important to note that the output fields and their names can be subject to change
-# until the metrics feature reaches a stable release.
+# It's important to note that the output fields and their names can be subject
+# to change until the metrics feature reaches a stable release.
 #
-# To customize the hostname in Falco, you can set the environment variable `FALCO_HOSTNAME`
-# to your desired hostname. This is particularly useful in Kubernetes deployments
-# where the hostname can be set to the pod name.
+# To customize the hostname in Falco, you can set the environment variable
+# `FALCO_HOSTNAME` to your desired hostname. This is particularly useful in
+# Kubernetes deployments where the hostname can be set to the pod name.
 #
 # --- [Usage]
 #
-# `enabled`:
-# Disabled by default.
+# `enabled`: Disabled by default.
 #
-# `interval`:
-# The stats interval in Falco follows the time duration definitions used by Prometheus.
+# `interval`: The stats interval in Falco follows the time duration definitions
+# used by Prometheus.
 # https://prometheus.io/docs/prometheus/latest/querying/basics/#time-durations
 #
-# Time durations are specified as a number, followed immediately by one of the following units:
-# ms - milliseconds
-# s - seconds
-# m - minutes
-# h - hours
-# d - days - assuming a day has always 24h
-# w - weeks - assuming a week has always 7d
-# y - years - assuming a year has always 365d
+# Time durations are specified as a number, followed immediately by one of the
+# following units: ms - milliseconds s - seconds m - minutes h - hours d - days
+# - assuming a day has always 24h w - weeks - assuming a week has always 7d y -
+# years - assuming a year has always 365d
 #
 # Example of a valid time duration: 1h30m20s10ms
 #
-# A minimum interval of 100ms is enforced for metric collection. However, for production environments,
-# we recommend selecting one of the following intervals for optimal monitoring:
-# 15m
-# 30m
-# 1h
-# 4h
-# 6h
+# A minimum interval of 100ms is enforced for metric collection. However, for
+# production environments, we recommend selecting one of the following intervals
+# for optimal monitoring: 15m 30m 1h 4h 6h
 #
-# `output_rule`:
-# To enable seamless metrics and performance monitoring, we recommend emitting metrics as the rule
-# "Falco internal: metrics snapshot." This option is particularly useful when Falco logs are preserved
-# in a data lake.
-# Please note that to use this option, the `log_level` must be set to `info` at a minimum.
+# `output_rule`: To enable seamless metrics and performance monitoring, we
+# recommend emitting metrics as the rule "Falco internal: metrics snapshot".
+# This option is particularly useful when Falco logs are preserved in a data
+# lake. Please note that to use this option, the Falco rules config `priority`
+# must be set to `info` at a minimum.
 #
-# `output_file`:
-# Append stats to a `jsonl` file. Use with caution in production as Falco does not automatically rotate the file.
+# `output_file`: Append stats to a `jsonl` file. Use with caution in production
+# as Falco does not automatically rotate the file.
 #
-# `resource_utilization_enabled`:
-# Emit CPU and memory usage metrics. CPU usage is reported as a percentage of one CPU and
-# can be normalized to the total number of CPUs to determine overall usage.
-# Memory metrics are provided in raw units (`kb` for `RSS`, `PSS` and `VSZ` or
-# `bytes` for `container_memory_used`) and can be uniformly converted
-# to megabytes (MB) using the `convert_memory_to_mb` functionality.
-# In environments such as Kubernetes, it is crucial to track Falco's container memory usage.
-# To customize the path of the memory metric file, you can create an environment variable
-# named `FALCO_CGROUP_MEM_PATH` and set it to the desired file path. By default, Falco uses
-# the file `/sys/fs/cgroup/memory/memory.usage_in_bytes` to monitor container memory usage,
-# which aligns with Kubernetes' `container_memory_working_set_bytes` metric.
+# `resource_utilization_enabled`: Emit CPU and memory usage metrics. CPU usage
+# is reported as a percentage of one CPU and can be normalized to the total
+# number of CPUs to determine overall usage. Memory metrics are provided in raw
+# units (`kb` for `RSS`, `PSS` and `VSZ` or `bytes` for `container_memory_used`)
+# and can be uniformly converted to megabytes (MB) using the
+# `convert_memory_to_mb` functionality. In environments such as Kubernetes, it
+# is crucial to track Falco's container memory usage. To customize the path of
+# the memory metric file, you can create an environment variable named
+# `FALCO_CGROUP_MEM_PATH` and set it to the desired file path. By default, Falco
+# uses the file `/sys/fs/cgroup/memory/memory.usage_in_bytes` to monitor
+# container memory usage, which aligns with Kubernetes'
+# `container_memory_working_set_bytes` metric.
 #
-# `kernel_event_counters_enabled`:
-# Emit kernel side event and drop counters, as an alternative to `syscall_event_drops`,
-# but with some differences. These counters reflect monotonic values since Falco's start
-# and are exported at a constant stats interval.
+# `kernel_event_counters_enabled`: Emit kernel side event and drop counters, as
+# an alternative to `syscall_event_drops`, but with some differences. These
+# counters reflect monotonic values since Falco's start and are exported at a
+# constant stats interval.
 #
-# `libbpf_stats_enabled`:
-# Exposes statistics similar to `bpftool prog show`, providing information such as the number
-# of invocations of each BPF program attached by Falco and the time spent in each program
-# measured in nanoseconds.
-# To enable this feature, the kernel must be >= 5.1, and the kernel configuration `/proc/sys/kernel/bpf_stats_enabled`
-# must be set. This option, or an equivalent statistics feature, is not available for non `*bpf*` drivers.
-# Additionally, please be aware that the current implementation of `libbpf` does not
-# support granularity of statistics at the bpf tail call level.
+# `libbpf_stats_enabled`: Exposes statistics similar to `bpftool prog show`,
+# providing information such as the number of invocations of each BPF program
+# attached by Falco and the time spent in each program measured in nanoseconds.
+# To enable this feature, the kernel must be >= 5.1, and the kernel
+# configuration `/proc/sys/kernel/bpf_stats_enabled` must be set. This option,
+# or an equivalent statistics feature, is not available for non `*bpf*` drivers.
+# Additionally, please be aware that the current implementation of `libbpf` does
+# not support granularity of statistics at the bpf tail call level.
 #
 # todo: prometheus export option
 # todo: syscall_counters_enabled option
@@ -540,24 +641,6 @@ metrics:
   libbpf_stats_enabled: true
   convert_memory_to_mb: true
 
-# [Stable] `output_timeout`
-#
-# Falco continuously monitors outputs performance. When an output channel does not allow
-# to deliver an alert within a given deadline, an error is reported indicating
-# which output is blocking notifications.
-# The timeout error will be reported to the log according to the above log_* settings.
-# Note that the notification will not be discarded from the output queue; thus,
-# output channels may indefinitely remain blocked.
-# An output timeout error indeed indicate a misconfiguration issue or I/O problems
-# that cannot be recovered by Falco and should be fixed by the user.
-#
-# The "output_timeout" value specifies the duration in milliseconds to wait before
-# considering the deadline exceed.
-#
-# With a 2000ms default, the notification consumer can block the Falco output
-# for up to 2 seconds without reaching the timeout.
-output_timeout: 2000
-
 
 #######################################
 # Falco performance tuning (advanced) #
@@ -567,66 +650,63 @@ output_timeout: 2000
 #
 # --- [Description]
 #
-# This is an index that controls the dimension of the syscall buffers.
-# The syscall buffer is the shared space between Falco and its drivers where all the syscall events
-# are stored.
-# Falco uses a syscall buffer for every online CPU, and all these buffers share the same dimension.
-# So this parameter allows you to control the size of all the buffers!
+# The syscall buffer index determines the size of the shared space between Falco
+# and its drivers. This shared space serves as a temporary storage for syscall
+# events, allowing them to be transferred from the kernel to the userspace
+# efficiently. The buffer size for each online CPU is determined by the buffer
+# index, and each CPU has its own dedicated buffer. Adjusting this index allows
+# you to control the overall size of the syscall buffers.
 #
 # --- [Usage]
 #
-# You can choose between different indexes: from `1` to `10` (`0` is reserved for future uses).
-# Every index corresponds to a dimension in bytes:
+# The index 0 is reserved, and each subsequent index corresponds to an
+# increasing size in bytes. For example, index 1 corresponds to a size of 1 MB,
+# index 2 corresponds to 2 MB, and so on:
 #
 # [(*), 1 MB, 2 MB, 4 MB, 8 MB, 16 MB, 32 MB, 64 MB, 128 MB, 256 MB, 512 MB]
 #   ^    ^     ^     ^     ^     ^      ^      ^       ^       ^       ^
 #   |    |     |     |     |     |      |      |       |       |       |
 #   0    1     2     3     4     5      6      7       8       9       10
 #
-# As you can see the `0` index is reserved, while the index `1` corresponds to
-# `1 MB` and so on.
 #
-# These dimensions in bytes derive from the fact that the buffer size must be:
+# The buffer dimensions in bytes are determined by the following requirements:
 # (1) a power of 2.
 # (2) a multiple of your system_page_dimension.
-# (3) greater than `2 * (system_page_dimension)`.
+# (3) greater than `2 * (system_page_dimension).
 #
-# According to these constraints is possible that sometimes you cannot use all the indexes, let's consider an
-# example to better understand it:
-# If you have a `page_size` of 1 MB the first available buffer size is 4 MB because 2 MB is exactly
-# `2 * (system_page_size)` -> `2 * 1 MB`, but this is not enough we need more than `2 * (system_page_size)`!
-# So from this example is clear that if you have a page size of 1 MB the first index that you can use is `3`.
+# The buffer size constraints may limit the usability of certain indexes. Let's
+# consider an example to illustrate this:
 #
-# Please note: this is a very extreme case just to let you understand the mechanism, usually the page size is something
-# like 4 KB so you have no problem at all and you can use all the indexes (from `1` to `10`).
+# If your system has a page size of 1 MB, the first available buffer size would
+# be 4 MB because 2 MB is exactly equal to 2 * (system_page_size), which is not
+# sufficient as we require more than 2 * (system_page_size). In this example, it
+# is evident that if the page size is 1 MB, the first index that can be used is 3.
 #
-# To check your system page size use the Falco `--page-size` command line option. The output on a system with a page
-# size of 4096 Bytes (4 KB) should be the following:
-#
-# "Your system page size is: 4096 bytes."
-#
+# However, in most cases, these constraints do not pose a limitation, and all
+# indexes from 1 to 10 can be used. You can check your system's page size using
+# the Falco `--page-size` command-line option.
+# 
 # --- [Suggestions]
 #
-# Before the introduction of this param the buffer size was fixed to 8 MB (so index `4`, as you can see
-# in the default value below).
-# You can increase the buffer size when you face syscall drops. A size of 16 MB (so index `5`) can reduce
-# syscall drops in production-heavy systems without noticeable impact. Very large buffers however could
-# slow down the entire machine.
-# On the other side you can try to reduce the buffer size to speed up the system, but this could
-# increase the number of syscall drops!
-# As a final remark consider that the buffer size is mapped twice in the process' virtual memory so a buffer of 8 MB
-# will result in a 16 MB area in the process virtual memory.
-# Please pay attention when you use this parameter and change it only if the default size doesn't fit your use case.
+# The buffer size was previously fixed at 8 MB (index 4). You now have the
+# option to adjust the size based on your needs. Increasing the size, such as to
+# 16 MB (index 5), can reduce syscall drops in heavy production systems, but may
+# impact performance. Decreasing the size can speed up the system but may
+# increase syscall drops. It's important to note that the buffer size is mapped
+# twice in the process' virtual memory, so a buffer of 8 MB will result in a 16
+# MB area in virtual memory. Use this parameter with caution and only modify it
+# if the default size is not suitable for your use case.
 
 syscall_buf_size_preset: 4
 
 # [Experimental] `syscall_drop_failed_exit`
 #
-# Enabling this option allows Falco to drop failed syscalls exit events
-# in the kernel driver before the event is pushed onto the ring buffer.
-# This can enable some small optimization both in CPU usage and ring buffer usage,
-# possibly leading to lower number of event losses.
-# Be careful: enabling it also means losing a bit of visibility on the system.
+# Enabling this option in Falco allows it to drop failed system call exit events
+# in the kernel driver before pushing them onto the ring buffer. This
+# optimization can result in lower CPU usage and more efficient utilization of
+# the ring buffer, potentially reducing the number of event losses. However, it
+# is important to note that enabling this option also means sacrificing some
+# visibility into the system.
 
 syscall_drop_failed_exit: false
 
@@ -638,25 +718,28 @@ syscall_drop_failed_exit: false
 #
 # --- [Falco's State Engine]
 #
-# Falco requires a set of syscalls to build up state in userspace.
-# For example, when spawning a new process or network connection, multiple syscalls are involved.
-# Furthermore, properties of a process during its lifetime can be modified by
-# syscalls. Falco accounts for this by enabling the collection of additional syscalls than the
-# ones defined in the rules and by managing a smart process cache table in
-# userspace. Processes are purged from this table when a process exits.
+# Falco requires a set of syscalls to build up state in userspace. For example,
+# when spawning a new process or network connection, multiple syscalls are
+# involved. Furthermore, properties of a process during its lifetime can be
+# modified by syscalls. Falco accounts for this by enabling the collection of
+# additional syscalls than the ones defined in the rules and by managing a smart
+# process cache table in userspace. Processes are purged from this table when a
+# process exits.
 #
 # By default, with
 #   ```
 #   base_syscalls.custom_set = []
 #   base_syscalls.repair = false
 #   ```
-# Falco enables tracing for a syscall set gathered:
-#   (1) from (enabled) Falco rules
-#   (2) from a static, more verbose set defined in `libsinsp::events::sinsp_state_sc_set` in libs/userspace/libsinsp/events/sinsp_events_ppm_sc.cpp
-# This allows Falco to successfully build up it's state engine and life-cycle management.
+# Falco enables tracing for a syscall set gathered: (1) from (enabled) Falco
+#   rules (2) from a static, more verbose set defined in
+#   `libsinsp::events::sinsp_state_sc_set` in
+#   libs/userspace/libsinsp/events/sinsp_events_ppm_sc.cpp This allows Falco to
+#   successfully build up it's state engine and life-cycle management.
 #
-# If the default behavior described above does not fit the user's use case for Falco,
-# the `base_syscalls` option allows for finer end-user control of syscalls traced by Falco.
+# If the default behavior described above does not fit the user's use case for
+# Falco, the `base_syscalls` option allows for finer end-user control of
+# syscalls traced by Falco.
 #
 # --- [base_syscalls.custom_set]
 #
@@ -664,74 +747,80 @@ syscall_drop_failed_exit: false
 # logs or Falco being unable to trace events entirely.
 #
 # `base_syscalls.custom_set` allows the user to explicitly define an additional
-# set of syscalls to be traced in addition to the syscalls from each enabled Falco rule.
+# set of syscalls to be traced in addition to the syscalls from each enabled
+# Falco rule.
 #
 # This is useful in lowering CPU utilization and further tailoring Falco to
 # specific environments according to your threat model and budget constraints.
 #
 # --- [base_syscalls.repair]
 #
-# `base_syscalls.repair` is an alternative to Falco's default state engine enforcement.
-# When enabled, this option is designed to
-#   (1) ensure that Falco's state engine is correctly and successfully built-up
-#   (2) be the most system resource-friendly by activating the least number of
-#       additional syscalls (outside of those enabled for enabled rules)
+# `base_syscalls.repair` is an alternative to Falco's default state engine
+# enforcement. When enabled, this option is designed to (1) ensure that Falco's
+# state engine is correctly and successfully built-up (2) be the most system
+# resource-friendly by activating the least number of additional syscalls
+# (outside of those enabled for enabled rules)
 #
-# Setting `base_syscalls.repair` to `true` allows Falco to automatically configure
-# what is described in the [Suggestions] section below.
+# Setting `base_syscalls.repair` to `true` allows Falco to automatically
+# configure what is described in the [Suggestions] section below.
 #
-# `base_syscalls.repair` can be enabled with an empty custom set, meaning with the following,
+# `base_syscalls.repair` can be enabled with an empty custom set, meaning with
+# the following,
 #   ```
 #   base_syscalls.custom_set = []
 #   base_syscalls.repair = true
 #   ```
-# Falco enables tracing for a syscall set gathered:
-#   (1) from (enabled) Falco rules
-#   (2) from minimal set of additional syscalls needed to "repair" the
-#       state engine and properly log event conditions specified in enabled Falco rules
+# Falco enables tracing for a syscall set gathered: (1) from (enabled) Falco
+#   rules (2) from minimal set of additional syscalls needed to "repair" the
+#   state engine and properly log event conditions specified in enabled Falco
+#   rules
 #
 # --- [Usage]
 #
-# List of system calls names (<syscall-name>), negative ("!<syscall-name>") notation supported.
+# List of system calls names (<syscall-name>), negative ("!<syscall-name>")
+# notation supported.
 #
-# Example:
-# base_syscalls.custom_set: [<syscall-name>, <syscall-name>, "!<syscall-name>"]
-# base_syscalls.repair: <bool>
+# Example: base_syscalls.custom_set: [<syscall-name>, <syscall-name>,
+# "!<syscall-name>"] base_syscalls.repair: <bool>
 #
-# We recommend to only exclude syscalls, e.g. "!mprotect" if you need a fast deployment update
-# (overriding rules), else remove unwanted syscalls from the Falco rules.
+# We recommend to only exclude syscalls, e.g. "!mprotect" if you need a fast
+# deployment update (overriding rules), else remove unwanted syscalls from the
+# Falco rules.
 #
-# Passing `-o "log_level=debug" -o "log_stderr=true" --dry-run` to Falco's
-# cmd args will print the final set of syscalls to STDOUT.
+# Passing `-o "log_level=debug" -o "log_stderr=true" --dry-run` to Falco's cmd
+# args will print the final set of syscalls to STDOUT.
 #
 # --- [Suggestions]
 #
-# NOTE: setting `base_syscalls.repair: true` automates the following suggestions for you.
+# NOTE: setting `base_syscalls.repair: true` automates the following suggestions
+# for you.
 #
 # These suggestions are subject to change as Falco and its state engine evolve.
 #
-# For execve* events:
-# Some Falco fields for an execve* syscall are retrieved from the associated
-# `clone`, `clone3`, `fork`, `vfork` syscalls when spawning a new process.
-# The `close` syscall is used to purge file descriptors from Falco's internal
-# thread / process cache table and is necessary for rules relating to file
-# descriptors (e.g. open, openat, openat2, socket, connect, accept, accept4 ... and many more)
+# For execve* events: Some Falco fields for an execve* syscall are retrieved
+# from the associated `clone`, `clone3`, `fork`, `vfork` syscalls when spawning
+# a new process. The `close` syscall is used to purge file descriptors from
+# Falco's internal thread / process cache table and is necessary for rules
+# relating to file descriptors (e.g. open, openat, openat2, socket, connect,
+# accept, accept4 ... and many more)
 #
-# Consider enabling the following syscalls in `base_syscalls.custom_set` for process rules:
-# [clone, clone3, fork, vfork, execve, execveat, close]
+# Consider enabling the following syscalls in `base_syscalls.custom_set` for
+# process rules: [clone, clone3, fork, vfork, execve, execveat, close]
 #
-# For networking related events:
-# While you can log `connect` or `accept*` syscalls without the socket syscall,
-# the log will not contain the ip tuples.
-# Additionally, for `listen` and `accept*` syscalls, the `bind` syscall is also necessary.
+# For networking related events: While you can log `connect` or `accept*`
+# syscalls without the socket syscall, the log will not contain the ip tuples.
+# Additionally, for `listen` and `accept*` syscalls, the `bind` syscall is also
+# necessary.
 #
 # We recommend the following as the minimum set for networking-related rules:
-# [clone, clone3, fork, vfork, execve, execveat, close, socket, bind, getsockopt]
+# [clone, clone3, fork, vfork, execve, execveat, close, socket, bind,
+# getsockopt]
 #
-# Lastly, for tracking the correct `uid`, `gid` or `sid`, `pgid` of a process when the
-# running process opens a file or makes a network connection, consider adding the
-# following to the above recommended syscall sets:
-# ... setresuid, setsid, setuid, setgid, setpgid, setresgid, setsid, capset, chdir, chroot, fchdir ...
+# Lastly, for tracking the correct `uid`, `gid` or `sid`, `pgid` of a process
+# when the running process opens a file or makes a network connection, consider
+# adding the following to the above recommended syscall sets: ... setresuid,
+# setsid, setuid, setgid, setpgid, setresgid, setsid, capset, chdir, chroot,
+# fchdir ...
 
 base_syscalls:
   custom_set: []
@@ -741,19 +830,29 @@ base_syscalls:
 #
 # --- [Description]
 #
+# The modern_bpf driver in Falco utilizes the new BPF ring buffer, which has a
+# different memory footprint compared to the current BPF driver that uses the
+# perf buffer. The Falco core maintainers have discussed the differences and
+# their implications, particularly in Kubernetes environments where limits need
+# to be carefully set to avoid interference with the Falco daemonset deployment
+# from the OOM killer. Based on guidance received from the mailing list, it is
+# recommended to assign multiple CPUs to one buffer instead of allocating a
+# buffer for each CPU individually. This helps optimize resource allocation and
+# prevent potential issues related to memory usage.
+# 
 # This is an index that controls how many CPUs you want to assign to a single
-# syscall buffer (ring buffer). By default, every syscall buffer is associated to
-# 2 CPUs, so the mapping is 1:2. The modern BPF probe allows you to choose different
-# mappings, for example, 1:1 would mean a syscall buffer for each CPU.
+# syscall buffer (ring buffer). By default, for modern_bpf every syscall buffer
+# is associated to 2 CPUs, so the mapping is 1:2. The modern BPF probe allows
+# you to choose different mappings, for example, changing the value to `1`
+# results in a 1:1 mapping and would mean one syscall buffer for each CPU (this is
+# the default for the `bpf` driver).
 #
 # --- [Usage]
 #
-# You can choose between different indexes: from `0` to `MAX_NUMBER_ONLINE_CPUs`.
-# `0` is a special value and it means a single syscall buffer shared between all
-# your online CPUs. `0` has the same effect as `MAX_NUMBER_ONLINE_CPUs`, the rationale
-# is that `0` allows you to create a single buffer without knowing the number of online
-# CPUs on your system.
-# Let's consider an example to better understand it:
+# You can choose an index from 0 to MAX_NUMBER_ONLINE_CPUs to set the dimension
+# of the syscall buffers. The value 0 represents a single buffer shared among
+# all online CPUs. It serves as a flexible option when the exact number of
+# online CPUs is unknown. Here's an example to illustrate this:
 #
 # Consider a system with 7 online CPUs:
 #
@@ -771,65 +870,128 @@ base_syscalls:
 #                   |     |  |        |  |  |  |
 #       BUFFERs     0     0  1        1  2  2  3
 #
-# Please note that we need 4 buffers, 3 buffers are associated with CPU pairs, the last
-# one is mapped with just 1 CPU since we have an odd number of CPUs.
+# Please note that in this example, there are 4 buffers in total. Three of the
+# buffers are associated with pairs of CPUs, while the last buffer is mapped to
+# a single CPU. This arrangement is necessary because we have an odd number of
+# CPUs.
 #
-# - `0` or `MAX_NUMBER_ONLINE_CPUs` mean a syscall buffer shared between all CPUs, so 1 buffer
+# - `0` or `MAX_NUMBER_ONLINE_CPUs` mean a syscall buffer shared between all
+#   CPUs, so 1 buffer
 #
 #          CPUs     0  X  2  3  X  X  6  7  8  9   (X means offline CPU)
 #                   |     |  |        |  |  |  |
 #       BUFFERs     0     0  0        0  0  0  0
 #
-# Moreover you can combine this param with `syscall_buf_size_preset`
-# index, for example, you could create a huge single syscall buffer
-# shared between all your online CPUs of 512 MB (so `syscall_buf_size_preset=10`).
+# Moreover, you have the option to combine this parameter with
+# `syscall_buf_size_preset` index. For instance, you can create a large shared
+# syscall buffer of 512 MB (using `syscall_buf_size_preset`=10) that is
+# allocated among all the online CPUs.
 #
 # --- [Suggestions]
 #
-# We chose index `2` (so one syscall buffer for each CPU pair) as default because the modern bpf probe
-# follows a different memory allocation strategy with respect to the other 2 drivers (bpf and kernel module).
-# By the way, you are free to find the preferred configuration for your system.
-# Considering a fixed `syscall_buf_size_preset` and so a fixed buffer dimension:
-# - a lower number of buffers can speed up your system (lower memory footprint)
-# - a too lower number of buffers could increase contention in the kernel causing an
-#   overall slowdown of the system.
-# If you don't have huge events throughputs and you are not experimenting with tons of drops
-# you can try to reduce the number of buffers to have a lower memory footprint
+# The default choice of index 2 (one syscall buffer for each CPU pair) was made
+# because the modern bpf probe utilizes a different memory allocation strategy
+# compared to the other two drivers (bpf and kernel module). However, you have
+# the flexibility to experiment and find the optimal configuration for your
+# system.
+# 
+# When considering a fixed syscall_buf_size_preset and a fixed buffer dimension:
+# - Increasing this configs value results in lower number of buffers and you can
+#   speed up your system and reduce memory usage
+# - However, using too few buffers may increase contention in the kernel,
+#   leading to a slowdown.
+# 
+# If you have low event throughputs and minimal drops, reducing the number of
+# buffers (higher `cpus_for_each_syscall_buffer`) can lower the memory footprint.
 
 modern_bpf:
   cpus_for_each_syscall_buffer: 2
 
+
+#################################################
+# Falco cloud orchestration systems integration #
+#################################################
+
 # [Stable] `metadata_download`
-#
-# Container orchestrator metadata fetching params
+# These parameters are currently specific to the `k8saudit` plugin.
+# 
+# When connected to an orchestrator like Kubernetes, Falco provides parameters
+# to configure the download behavior. Please note that support for Mesos is
+# deprecated. The following parameters can be used to customize the download
+# behavior:
 metadata_download:
   max_mb: 100
   chunk_wait_us: 1000
   watch_freq_sec: 1
+
+# [Stable] Guidance for Kubernetes container engine command-line args settings
+#
+# Modern cloud environments, particularly Kubernetes, heavily rely on
+# containerized workload deployments. When capturing events with Falco, it
+# becomes essential to identify the owner of the workload for which events are
+# being captured, such as syscall events. Falco integrates with the container
+# runtime to enrich its events with container information, including fields like
+# `container.image.repository`, `container.image.tag`, ... , `k8s.ns.name`,
+# `k8s.pod.name`, `k8s.pod.*` in the Falco output (Falco retrieves Kubernetes
+# namespace and pod name directly from the container runtime, not the k8saudit
+# plugin).
+#
+# Furthermore, Falco exposes container events themselves as a data source for
+# alerting. To achieve this integration with the container runtime, Falco
+# requires access to the runtime socket. By default, for Kubernetes, Falco
+# attempts to connect to the following sockets:
+# "/run/containerd/containerd.sock", "/run/crio/crio.sock",
+# "/run/k3s/containerd/containerd.sock". If you have a custom path, you can use
+# the `--cri` option to specify the correct location.
+#
+# In some cases, you may encounter empty fields for container metadata. To
+# address this, you can explore the `--disable-cri-async` option, which disables
+# asynchronous fetching if the fetch operation is not completing quickly enough.
+#
+# To get more information on these command-line arguments, you can run `falco
+# --help` in your terminal to view their current descriptions.
 
 
 #################
 # Falco plugins #
 #################
 
-# [Stable] `load_plugins`
+# [Stable] `load_plugins` and `plugins`
 #
-# Setting this list to empty ensures that the below plugins are *not*
-# loaded and enabled by default. If you want to use the below plugins,
-# set a meaningful init_config/open_params. For example, if you want to
-# use the k8saudit plugin, ensure it is configured appropriately and then
-# change this to:
+# --- [Description]
+#
+# Falco plugins enable integration with other services in the your ecosystem.
+# They allow Falco to extend its functionality and leverage data sources such as
+# Kubernetes audit logs or AWS CloudTrail logs. This enables Falco to perform
+# fast on-host detections beyond syscalls and container events. The plugin
+# system will continue to evolve with more specialized functionality in future
+# releases.
+#
+# Please refer to the plugins repo at
+# https://github.com/falcosecurity/plugins/blob/master/plugins/ for detailed
+# documentation on the available plugins. This repository provides comprehensive
+# information about each plugin and how to utilize them with Falco.
+#
+# Please note that if your intention is to enrich Falco syscall logs with fields
+# such as `k8s.ns.name`, `k8s.pod.name`, and `k8s.pod.*`, you do not need to use
+# the `k8saudit` plugin. This information is automatically extracted from the
+# container runtime socket. The `k8saudit` plugin is specifically designed to
+# integrate with Kubernetes audit logs and is not required for basic enrichment
+# of syscall logs with Kubernetes-related fields.
+#
+# --- [Usage]
+#
+# Disabled by default, indicated by an empty list. Each plugin meant
+# to be enabled needs to be listed as explicit list item.
+# 
+# For example, if you want to use the `k8saudit` plugin,
+# ensure it is configured appropriately and then change this to: 
 # load_plugins: [k8saudit, json]
 load_plugins: []
 
-# [Stable] `plugins`
-#
-# Plugins that are available for use. These plugins are not loaded by
-# default, as they require explicit configuration to point to
-# cloudtrail log files.
-# To learn more about the supported formats for
-# init_config/open_params for the cloudtrail plugin, see the README at
-# https://github.com/falcosecurity/plugins/blob/master/plugins/cloudtrail/README.md.
+# Customize subsettings for each enabled plugin. These settings will only be
+# applied when the corresponding plugin is enabled using the `load_plugins`
+# option.
 plugins:
   - name: k8saudit
     library_path: libk8saudit.so
