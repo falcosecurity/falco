@@ -87,7 +87,7 @@ falco::app::run_result falco::app::actions::load_rules_files(falco::app::state& 
 
 	// note: we have an egg-and-chicken problem here. We would like to check
 	// plugin requirements before loading any rule, so that we avoid having
-	// all the "unkwown field XXX" errors caused when a plugin is required but
+	// all the "unknown field XXX" errors caused when a plugin is required but
 	// not loaded. On the other hand, we can't check the requirements before
 	// loading the rules file, because that's where the plugin dependencies
 	// are specified. This issue is visible only for dependencies over extractor
