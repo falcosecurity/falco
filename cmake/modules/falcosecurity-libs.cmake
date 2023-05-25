@@ -25,10 +25,10 @@ if(FALCOSECURITY_LIBS_SOURCE_DIR)
 else()
   # FALCOSECURITY_LIBS_VERSION accepts a git reference (branch name, commit hash, or tag) to the falcosecurity/libs repository.
   # In case you want to test against another falcosecurity/libs version (or branch, or commit) just pass the variable -
-  # ie., `cmake -DFALCOSECURITY_LIBS_VERSION=dev ..`
+  # ie., `cmake -DFALCOSECURITY_LIBS_VERSION=dev ..` 
   if(NOT FALCOSECURITY_LIBS_VERSION)
-    set(FALCOSECURITY_LIBS_VERSION "6a1fade7a849130512a065f242aff0c17d576fad")
-    set(FALCOSECURITY_LIBS_CHECKSUM "SHA256=eb494ad5aa0bc0c28c5e510a4bda9da88a66ddfd705ac4259ce295e6b8ea9e79")
+    set(FALCOSECURITY_LIBS_VERSION "0.11.0-rc3")
+    set(FALCOSECURITY_LIBS_CHECKSUM "SHA256=92d78d64dbbdcbf08256be91e1b74f4d99caaea35f27324219fc6a5c195c99b8")
   endif()
 
   # cd /path/to/build && cmake /path/to/source
