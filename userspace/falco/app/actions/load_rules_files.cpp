@@ -63,6 +63,7 @@ falco::app::run_result falco::app::actions::load_rules_files(falco::app::state& 
 		return run_result::fatal(e.what());
 	}
 
+	std::string err = "";
 	for(auto &filename : s.config->m_loaded_rules_filenames)
 	{
 		falco_logger::log(LOG_INFO, "Loading rules from file " + filename + "\n");
@@ -73,7 +74,8 @@ falco::app::run_result falco::app::actions::load_rules_files(falco::app::state& 
 		if(!res->successful())
 		{
 			// Return the summary version as the error
-			return run_result::fatal(res->as_string(true, rc));
+			err = res->as_string(true, rc);
+			break;
 		}
 
 		// If verbose is true, also print any warnings
@@ -83,8 +85,44 @@ falco::app::run_result falco::app::actions::load_rules_files(falco::app::state& 
 		}
 	}
 
-	std::string err = "";
-	if (!check_rules_plugin_requirements(s, err))
+	// note: we have an egg-and-chicken problem here. We would like to check
+	// plugin requirements before loading any rule, so that we avoid having
+	// all the "unkwown field XXX" errors caused when a plugin is required but
+	// not loaded. On the other hand, we can't check the requirements before
+	// loading the rules file, because that's where the plugin dependencies
+	// are specified. This issue is visible only for dependencies over extractor
+	// plugins, due to the fact that if a source plugin is not loaded, its
+	// source will be unknown for the engine and so it will skip loading all of
+	// the rules to that source, to finally end up here and return a fatal error
+	// due to plugin dependency not satisfied being the actual problem.
+	//
+	// The long-term solution would be to pass information about all the loaded
+	// plugins to the falco engine before or when loading a rules file, so that
+	// plugin version checks can be performed properly by the engine, just
+	// like it does for the engine version requirement. On the other hand,
+	// This also requires refactoring a big chunk of the API and code of the
+	// engine responsible of loading rules.
+	// 
+	// Since we're close to releasing Falco v0.35, the chosen workaround is
+	// to first collect any error from the engine, then checking if there is
+	// also a version dependency not being satisfied, and give that failure
+	// cause priority in case we encounter it. This is indeed not perfect, but
+	// suits us for the time being. The non-covered corner case is when
+	// the `required_plugin_versions` YAML block is defined after the first
+	// rule definition (which is wrong anyways but currently allowed by the
+	// engine), in which case Falco would stop at the first error (which
+	// behavior we'll still want to change in the near future), not collect the
+	// plugin deps info, and the checks below will pass with success wrongly.
+	//
+	// todo(jasondellaluce): perform plugin deps checks inside the
+	// falco engine in the middle of the loading procedure of a rules file
+	std::string req_err = "";
+	if (!check_rules_plugin_requirements(s, req_err))
+	{
+		err = req_err;
+	}
+
+	if (!err.empty())
 	{
 		return run_result::fatal(err);
 	}
