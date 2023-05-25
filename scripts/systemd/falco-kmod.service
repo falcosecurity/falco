@@ -10,6 +10,7 @@ Wants=falcoctl-artifact-follow.service
 Type=simple
 User=root
 ExecStart=/usr/bin/falco
+ExecReload=kill -1 $MAINPID
 UMask=0077
 TimeoutSec=30
 RestartSec=15s
