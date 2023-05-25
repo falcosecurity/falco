@@ -470,6 +470,31 @@ void falco_engine::describe_rule(std::string *rule, bool json) const
 		// all rules, macros and lists
 		Json::Value output;
 
+		// Store required engine version
+		auto required_engine_version = m_rule_collector.required_engine_version();
+		output["required_engine_version"] = required_engine_version.version;
+
+		// Store required plugin versions
+		Json::Value plugin_versions = Json::arrayValue;
+		auto required_plugin_versions = m_rule_collector.required_plugin_versions();
+		for(const auto& req : required_plugin_versions)
+		{
+			Json::Value r;
+			r["name"] = req.at(0).name;
+			r["version"] = req.at(0).version;
+
+			Json::Value alternatives;
+			for(size_t i = 1; i < req.size(); i++)
+			{
+				alternatives["name"] = req[i].name;
+				alternatives["version"] = req[i].version;
+			}
+			r["alternatives"] = alternatives;
+			
+			plugin_versions.append(r);
+		}
+		output["required_plugin_versions"] = plugin_versions;
+
 		// Store information about rules
 		Json::Value rules_array = Json::arrayValue;
 		for(const auto& r : m_rules)
@@ -571,10 +596,12 @@ void falco_engine::get_json_details(const falco_rule &r,
 	}
 	rule["details"]["exception_fields"] = exception_fields;
 
-	// Get operators from exceptions
+	// Get names and operators from exceptions
+	Json::Value exception_names = Json::arrayValue;
 	Json::Value exception_operators = Json::arrayValue;
 	for(const auto &e : ri.exceptions)
 	{
+		exception_names.append(e.name);
 		if(e.comps.is_list)
 		{
 			for(const auto& c : e.comps.items)
@@ -598,6 +625,7 @@ void falco_engine::get_json_details(const falco_rule &r,
 			exception_operators.append(e.comps.item);
 		}	
 	}
+	rule["details"]["exceptions"] = exception_names;
 	rule["details"]["exception_operators"] = exception_operators;
 
 	if(ri.source == falco_common::syscall_source)
