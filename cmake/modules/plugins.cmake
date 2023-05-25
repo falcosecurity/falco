@@ -23,11 +23,11 @@ if(NOT DEFINED PLUGINS_COMPONENT_NAME)
 endif()
 
 # k8saudit
-set(PLUGIN_K8S_AUDIT_VERSION "0.5.3-0.5.3-27%2B7b07a4b")
+set(PLUGIN_K8S_AUDIT_VERSION "0.6.0-0.5.3-33%2B81ffddd")
 if(${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "x86_64")
-    set(PLUGIN_K8S_AUDIT_HASH "22c15e5aa2c86cf2216cd767f8766047696e9ba637d63c5ae5e00893f0efad9c")
+    set(PLUGIN_K8S_AUDIT_HASH "990e5c67d3b3c7cf5d30c73d73871b58767171ce7c998c1ca1d94d70c67db290")
 else() # aarch64
-    set(PLUGIN_K8S_AUDIT_HASH "564f95031b973296fd7ccdda6c4a4f6820bb6da8106bcd48a549a7fca8c02540")
+    set(PLUGIN_K8S_AUDIT_HASH "c3634dfa83c8c8898811ab6b7587ea6d1c6dfffbdfa56def28cab43aaf01f88c")
 endif()
 
 ExternalProject_Add(
@@ -43,7 +43,7 @@ install(FILES "${PROJECT_BINARY_DIR}/k8saudit-plugin-prefix/src/k8saudit-plugin/
 ExternalProject_Add(
   k8saudit-rules
   URL "https://download.falco.org/plugins/${PLUGINS_DOWNLOAD_BUCKET}/k8saudit-rules-${PLUGIN_K8S_AUDIT_VERSION}.tar.gz"
-  URL_HASH "SHA256=d1add6c4dfe7e8aca85f536fd7577dd0d93662927ab604e6db6757e89b99f2b2"
+  URL_HASH "SHA256=2e3214fee00a012b32402aad5198df889773fc5f86b8ab87583fbc56ae5fb78c"
   CONFIGURE_COMMAND ""
   BUILD_COMMAND ""
   INSTALL_COMMAND "")
@@ -51,11 +51,11 @@ ExternalProject_Add(
 install(FILES "${PROJECT_BINARY_DIR}/k8saudit-rules-prefix/src/k8saudit-rules/k8s_audit_rules.yaml" DESTINATION "${FALCO_ETC_DIR}" COMPONENT "${PLUGINS_COMPONENT_NAME}")
 
 # cloudtrail
-set(PLUGIN_CLOUDTRAIL_VERSION "0.7.3-0.7.3-27%2B7b07a4b")
+set(PLUGIN_CLOUDTRAIL_VERSION "0.8.0-0.7.3-33%2B81ffddd")
 if(${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "x86_64")
-    set(PLUGIN_CLOUDTRAIL_HASH "856f5f5505c72776a188ba29633d81e5f21924b20c2cfb5a2da3f8f21410e248")
+    set(PLUGIN_CLOUDTRAIL_HASH "144c297ae4285ea84b04af272f708a8b824f58bc9427a2eb91b467a6285d9e10")
 else() # aarch64
-    set(PLUGIN_CLOUDTRAIL_HASH "935a96d68f182cec0f650186355bb245e36fdd884a596442992b55f066993fc1")
+    set(PLUGIN_CLOUDTRAIL_HASH "19e7e8e11aaecd16442f65a265d3cd80ffb736ca4d3d8215893900fa0f04b926")
 endif()
 
 ExternalProject_Add(
@@ -71,7 +71,7 @@ install(FILES "${PROJECT_BINARY_DIR}/cloudtrail-plugin-prefix/src/cloudtrail-plu
 ExternalProject_Add(
   cloudtrail-rules
   URL "https://download.falco.org/plugins/${PLUGINS_DOWNLOAD_BUCKET}/cloudtrail-rules-${PLUGIN_CLOUDTRAIL_VERSION}.tar.gz"
-  URL_HASH "SHA256=4b92cb5f81be0734a87babbd48eb1dc15e1297168024072c3fd02ccee7550b73"
+  URL_HASH "SHA256=4f51d4bd9679f7f244c225b6fe530323f3536663da26a5b9d94d6953ed4e2cbc"
   CONFIGURE_COMMAND ""
   BUILD_COMMAND ""
   INSTALL_COMMAND "")
@@ -79,11 +79,11 @@ ExternalProject_Add(
 install(FILES "${PROJECT_BINARY_DIR}/cloudtrail-rules-prefix/src/cloudtrail-rules/aws_cloudtrail_rules.yaml" DESTINATION "${FALCO_ETC_DIR}" COMPONENT "${PLUGINS_COMPONENT_NAME}")
 
 # json
-set(PLUGIN_JSON_VERSION "0.6.2-0.6.2-30%2B7b07a4b")
+set(PLUGIN_JSON_VERSION "0.7.0-0.6.2-36%2B81ffddd")
 if(${CMAKE_HOST_SYSTEM_PROCESSOR} STREQUAL "x86_64")
-    set(PLUGIN_JSON_HASH "9d3ef271667d9662fd47672b59ccace800ae1cc4f6d4c6d34edc1d9e26a87179")
+    set(PLUGIN_JSON_HASH "a9d8c595a139df5dc0cf2117127b496c94a9d3a3d0e84c1f18b3ccc9163f5f4a")
 else() # aarch64
-    set(PLUGIN_JSON_HASH "113a632f4dd05ef7c4537fafdc0114fbe736a1da10b8225d8aa1679442157d5b")
+    set(PLUGIN_JSON_HASH "7d78620395526d1e6a948cc915d1d52a343c2b637c9ac0e3892e76826fcdc2df")
 endif()
 
 ExternalProject_Add(
