@@ -398,7 +398,8 @@ static void process_inspector_events(
 
 static falco::app::run_result init_stats_writer(
 		const std::shared_ptr<const stats_writer>& sw,
-		const std::shared_ptr<const falco_configuration>& config)
+		const std::shared_ptr<const falco_configuration>& config,
+		bool is_dry_run)
 {
 	if (!config->m_metrics_enabled)
 	{
@@ -425,6 +426,10 @@ static falco::app::run_result init_stats_writer(
 	falco_logger::log(LOG_INFO, "Setting metrics interval to " + config->m_metrics_interval_str + ", equivalent to " + std::to_string(config->m_metrics_interval) + " (ms)\n");
 
 	auto res = falco::app::run_result::ok();
+	if (is_dry_run)
+	{
+		return res;
+	}
 	res.success = stats_writer::init_ticker(config->m_metrics_interval, res.errstr);
 	res.proceed = res.success;
 	return res;
@@ -435,15 +440,16 @@ falco::app::run_result falco::app::actions::process_events(falco::app::state& s)
 	// Notify engine that we finished loading and enabling all rules
 	s.engine->complete_rule_loading();
 
+	// Initialize stats writer
+	auto statsw = std::make_shared<stats_writer>(s.outputs, s.config);
+	auto res = init_stats_writer(statsw, s.config, s.options.dry_run);
+
 	if (s.options.dry_run)
 	{
 		falco_logger::log(LOG_DEBUG, "Skipping event processing in dry-run\n");
-		return run_result::ok();
+		return res;
 	}
 
-	// Initialize stats writer
-	auto statsw = std::make_shared<stats_writer>(s.outputs, s.config);
-	auto res = init_stats_writer(statsw, s.config);
 	if (!res.success)
 	{
 		return res;
