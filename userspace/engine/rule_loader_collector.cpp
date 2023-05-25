@@ -116,6 +116,11 @@ const std::vector<rule_loader::plugin_version_info::requirement_alternatives>& r
 	return m_required_plugin_versions;
 }
 
+const rule_loader::engine_version_info& rule_loader::collector::required_engine_version() const
+{
+	return m_required_engine_version;
+}
+
 const indexed_vector<rule_loader::list_info>& rule_loader::collector::lists() const
 {
 	return m_list_infos;
@@ -137,6 +142,10 @@ void rule_loader::collector::define(configuration& cfg, engine_version_info& inf
 	THROW(v < info.version, "Rules require engine version "
 	      + std::to_string(info.version) + ", but engine version is " + std::to_string(v),
 	      info.ctx);
+	if(m_required_engine_version.version < info.version)
+	{
+		m_required_engine_version = info;
+	}
 }
 
 void rule_loader::collector::define(configuration& cfg, plugin_version_info& info)
