@@ -26,6 +26,9 @@
 #     (Falco environment variables)
 # Falco rules files
 #     rules_file
+# Falco plugins
+#     load_plugins
+#     plugins
 # Falco config files
 #     watch_config_files
 # Falco outputs settings
@@ -64,9 +67,6 @@
 # Falco cloud orchestration systems integration
 #     metadata_download
 #     (Guidance for Kubernetes container engine command-line args settings)
-# Falco plugins
-#     load_plugins
-#     plugins
 
 
 ################################
@@ -89,10 +89,10 @@
 ###############################
 
 # Customize Falco settings using environment variables:
-# 
+#
 # - "HOST_ROOT": Specifies the prefix to the underlying host `/proc` filesystem
-#   when deploying Falco over a container instead of directly on the host.
-#   Defaults to "/host". 
+#   when deploying Falco over a container with read-only host mounts instead of
+#   directly on the host. Defaults to "/host". 
 # - "FALCO_BPF_PROBE": Specify a custom path to the BPF object code file (`bpf`
 #   driver). This is not needed for the modern_bpf driver. 
 # - "FALCO_HOSTNAME": Customize the hostname output field logged by Falco by
@@ -119,7 +119,8 @@
 #
 # To customize the set of rules, you can add your modifications to any file.
 # It's important to note that the files or directories are read in the order
-# specified here. In addition, rules are loaded by Falco in order.
+# specified here. In addition, rules are loaded by Falco in the order they
+# appear within each rule file.
 #
 # If you have any customizations intended to override a previous configuration,
 # make sure they appear in later files to take precedence. On the other hand, if
@@ -136,6 +137,62 @@ rules_file:
   - /etc/falco/falco_rules.yaml
   - /etc/falco/falco_rules.local.yaml
   - /etc/falco/rules.d
+
+
+#################
+# Falco plugins #
+#################
+
+# [Stable] `load_plugins` and `plugins`
+#
+# --- [Description]
+#
+# Falco plugins enable integration with other services in the your ecosystem.
+# They allow Falco to extend its functionality and leverage data sources such as
+# Kubernetes audit logs or AWS CloudTrail logs. This enables Falco to perform
+# fast on-host detections beyond syscalls and container events. The plugin
+# system will continue to evolve with more specialized functionality in future
+# releases.
+#
+# Please refer to the plugins repo at
+# https://github.com/falcosecurity/plugins/blob/master/plugins/ for detailed
+# documentation on the available plugins. This repository provides comprehensive
+# information about each plugin and how to utilize them with Falco.
+#
+# Please note that if your intention is to enrich Falco syscall logs with fields
+# such as `k8s.ns.name`, `k8s.pod.name`, and `k8s.pod.*`, you do not need to use
+# the `k8saudit` plugin. This information is automatically extracted from the
+# container runtime socket. The `k8saudit` plugin is specifically designed to
+# integrate with Kubernetes audit logs and is not required for basic enrichment
+# of syscall logs with Kubernetes-related fields.
+#
+# --- [Usage]
+#
+# Disabled by default, indicated by an empty `load_plugins` list. Each plugin meant
+# to be enabled needs to be listed as explicit list item.
+# 
+# For example, if you want to use the `k8saudit` plugin,
+# ensure it is configured appropriately and then change this to: 
+# load_plugins: [k8saudit, json]
+load_plugins: []
+
+# Customize subsettings for each enabled plugin. These settings will only be
+# applied when the corresponding plugin is enabled using the `load_plugins`
+# option.
+plugins:
+  - name: k8saudit
+    library_path: libk8saudit.so
+    init_config:
+    #   maxEventSize: 262144
+    #   webhookMaxBatchSize: 12582912
+    #   sslCertificate: /etc/falco/falco.pem
+    open_params: "http://:9765/k8s-audit"
+  - name: cloudtrail
+    library_path: libcloudtrail.so
+    # see docs for init_config and open_params:
+    # https://github.com/falcosecurity/plugins/blob/master/plugins/cloudtrail/README.md
+  - name: json
+    library_path: libjson.so
 
 
 ######################
@@ -328,10 +385,12 @@ grpc_output:
 # Falco provides support for running a gRPC server using two main binding types:
 # 1. Over the network with mandatory mutual TLS authentication (mTLS), which
 #    ensures secure communication
-# 2. Local Unix socket binding with no authentication.
-# By default, the gRPCserver in Falco is turned off with no enabled services
-# (see `grpc_output`setting). To configure the gRPC server in Falco, you can
-# make the following changes to the options:
+# 2. Local Unix socket binding with no authentication. By default, the
+#    gRPCserver in Falco is turned off with no enabled services (see
+#    `grpc_output`setting). 
+#
+# To configure the gRPC server in Falco, you can make the following changes to
+# the options:
 #
 # - Uncomment the relevant configuration options related to the gRPC server.
 # - Update the paths of the generated certificates for mutual TLS authentication
@@ -696,7 +755,6 @@ metrics:
 # twice in the process' virtual memory, so a buffer of 8 MB will result in a 16
 # MB area in virtual memory. Use this parameter with caution and only modify it
 # if the default size is not suitable for your use case.
-
 syscall_buf_size_preset: 4
 
 # [Experimental] `syscall_drop_failed_exit`
@@ -707,7 +765,6 @@ syscall_buf_size_preset: 4
 # the ring buffer, potentially reducing the number of event losses. However, it
 # is important to note that enabling this option also means sacrificing some
 # visibility into the system.
-
 syscall_drop_failed_exit: false
 
 # [Experimental] `base_syscalls`, use with caution, read carefully
@@ -821,7 +878,6 @@ syscall_drop_failed_exit: false
 # adding the following to the above recommended syscall sets: ... setresuid,
 # setsid, setuid, setgid, setpgid, setresgid, setsid, capset, chdir, chroot,
 # fchdir ...
-
 base_syscalls:
   custom_set: []
   repair: false
@@ -835,17 +891,17 @@ base_syscalls:
 # perf buffer. The Falco core maintainers have discussed the differences and
 # their implications, particularly in Kubernetes environments where limits need
 # to be carefully set to avoid interference with the Falco daemonset deployment
-# from the OOM killer. Based on guidance received from the mailing list, it is
-# recommended to assign multiple CPUs to one buffer instead of allocating a
-# buffer for each CPU individually. This helps optimize resource allocation and
-# prevent potential issues related to memory usage.
-# 
+# from the OOM killer. Based on guidance received from the kernel mailing list,
+# it is recommended to assign multiple CPUs to one buffer instead of allocating
+# a buffer for each CPU individually. This helps optimize resource allocation
+# and prevent potential issues related to memory usage.
+#
 # This is an index that controls how many CPUs you want to assign to a single
 # syscall buffer (ring buffer). By default, for modern_bpf every syscall buffer
 # is associated to 2 CPUs, so the mapping is 1:2. The modern BPF probe allows
 # you to choose different mappings, for example, changing the value to `1`
-# results in a 1:1 mapping and would mean one syscall buffer for each CPU (this is
-# the default for the `bpf` driver).
+# results in a 1:1 mapping and would mean one syscall buffer for each CPU (this
+# is the default for the `bpf` driver).
 #
 # --- [Usage]
 #
@@ -903,7 +959,6 @@ base_syscalls:
 # 
 # If you have low event throughputs and minimal drops, reducing the number of
 # buffers (higher `cpus_for_each_syscall_buffer`) can lower the memory footprint.
-
 modern_bpf:
   cpus_for_each_syscall_buffer: 2
 
@@ -913,12 +968,24 @@ modern_bpf:
 #################################################
 
 # [Stable] `metadata_download`
-# These parameters are currently specific to the `k8saudit` plugin.
-# 
-# When connected to an orchestrator like Kubernetes, Falco provides parameters
-# to configure the download behavior. Please note that support for Mesos is
-# deprecated. The following parameters can be used to customize the download
-# behavior:
+#
+# When connected to an orchestrator like Kubernetes, Falco has the capability to
+# collect metadata and enrich system call events with contextual data. The
+# parameters mentioned here control the downloading process of this metadata.
+#
+# Please note that support for Mesos is deprecated, so these parameters
+# currently apply only to Kubernetes. When using Falco with Kubernetes, you can
+# enable this functionality by using the `-k` or `-K` command-line flag.
+#
+# However, it's worth mentioning that for important Kubernetes metadata fields
+# such as namespace or pod name, these fields are automatically extracted from
+# the container runtime, providing the necessary enrichment for common use cases
+# of syscall-based threat detection.
+#
+# In summary, the `-k` flag is typically not required for most scenarios involving
+# Kubernetes workload owner enrichment. The `-k` flag is primarily used when
+# additional metadata is required beyond the standard fields, catering to more
+# specific use cases, see https://falco.org/docs/reference/rules/supported-fields/#field-class-k8s.
 metadata_download:
   max_mb: 100
   chunk_wait_us: 1000
@@ -933,8 +1000,8 @@ metadata_download:
 # runtime to enrich its events with container information, including fields like
 # `container.image.repository`, `container.image.tag`, ... , `k8s.ns.name`,
 # `k8s.pod.name`, `k8s.pod.*` in the Falco output (Falco retrieves Kubernetes
-# namespace and pod name directly from the container runtime, not the k8saudit
-# plugin).
+# namespace and pod name directly from the container runtime, see
+# https://falco.org/docs/reference/rules/supported-fields/#field-class-container).
 #
 # Furthermore, Falco exposes container events themselves as a data source for
 # alerting. To achieve this integration with the container runtime, Falco
@@ -950,59 +1017,7 @@ metadata_download:
 #
 # To get more information on these command-line arguments, you can run `falco
 # --help` in your terminal to view their current descriptions.
-
-
-#################
-# Falco plugins #
-#################
-
-# [Stable] `load_plugins` and `plugins`
 #
-# --- [Description]
-#
-# Falco plugins enable integration with other services in the your ecosystem.
-# They allow Falco to extend its functionality and leverage data sources such as
-# Kubernetes audit logs or AWS CloudTrail logs. This enables Falco to perform
-# fast on-host detections beyond syscalls and container events. The plugin
-# system will continue to evolve with more specialized functionality in future
-# releases.
-#
-# Please refer to the plugins repo at
-# https://github.com/falcosecurity/plugins/blob/master/plugins/ for detailed
-# documentation on the available plugins. This repository provides comprehensive
-# information about each plugin and how to utilize them with Falco.
-#
-# Please note that if your intention is to enrich Falco syscall logs with fields
-# such as `k8s.ns.name`, `k8s.pod.name`, and `k8s.pod.*`, you do not need to use
-# the `k8saudit` plugin. This information is automatically extracted from the
-# container runtime socket. The `k8saudit` plugin is specifically designed to
-# integrate with Kubernetes audit logs and is not required for basic enrichment
-# of syscall logs with Kubernetes-related fields.
-#
-# --- [Usage]
-#
-# Disabled by default, indicated by an empty list. Each plugin meant
-# to be enabled needs to be listed as explicit list item.
-# 
-# For example, if you want to use the `k8saudit` plugin,
-# ensure it is configured appropriately and then change this to: 
-# load_plugins: [k8saudit, json]
-load_plugins: []
-
-# Customize subsettings for each enabled plugin. These settings will only be
-# applied when the corresponding plugin is enabled using the `load_plugins`
-# option.
-plugins:
-  - name: k8saudit
-    library_path: libk8saudit.so
-    init_config:
-    #   maxEventSize: 262144
-    #   webhookMaxBatchSize: 12582912
-    #   sslCertificate: /etc/falco/falco.pem
-    open_params: "http://:9765/k8s-audit"
-  - name: cloudtrail
-    library_path: libcloudtrail.so
-    # see docs for init_config and open_params:
-    # https://github.com/falcosecurity/plugins/blob/master/plugins/cloudtrail/README.md
-  - name: json
-    library_path: libjson.so
+# !!! The options mentioned here are not available in the falco.yaml
+# configuration file. Instead, they can can be used as a command-line argument
+# when running the Falco command.
