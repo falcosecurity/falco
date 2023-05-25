@@ -297,6 +297,7 @@ namespace rule_loader
 	*/
 	struct engine_version_info
 	{
+		engine_version_info() : ctx("no-filename-given"), version(0) { };
 		engine_version_info(context &ctx);
 		~engine_version_info() = default;
 		engine_version_info(engine_version_info&&) = default;

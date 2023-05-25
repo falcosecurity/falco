@@ -47,6 +47,11 @@ public:
 	virtual const std::vector<plugin_version_info::requirement_alternatives>& required_plugin_versions() const;
 
 	/*!
+		\brief Returns the required engine versions
+	*/
+	virtual const engine_version_info& required_engine_version() const;
+
+	/*!
 		\brief Returns the list of defined lists
 	*/
 	virtual const indexed_vector<list_info>& lists() const;
@@ -92,6 +97,7 @@ private:
 	indexed_vector<macro_info> m_macro_infos;
 	indexed_vector<list_info> m_list_infos;
 	std::vector<plugin_version_info::requirement_alternatives> m_required_plugin_versions;
+	engine_version_info m_required_engine_version;
 };
 
 }; // namespace rule_loader
