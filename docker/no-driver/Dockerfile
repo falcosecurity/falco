@@ -23,6 +23,7 @@ RUN sed -e 's/time_format_iso_8601: false/time_format_iso_8601: true/' < /falco/
 FROM debian:11-slim
 
 LABEL maintainer="cncf-falco-dev@lists.cncf.io"
+LABEL org.opencontainers.image.source="https://github.com/falcosecurity/falco"
 
 LABEL usage="docker run -i -t --privileged -v /var/run/docker.sock:/host/var/run/docker.sock -v /dev:/host/dev -v /proc:/host/proc:ro --name NAME IMAGE"
 # NOTE: for the "least privileged" use case, please refer to the official documentation
