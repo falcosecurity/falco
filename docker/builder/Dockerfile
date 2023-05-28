@@ -3,6 +3,7 @@ FROM centos:7
 LABEL name="falcosecurity/falco-builder"
 LABEL usage="docker run -v $PWD/..:/source -v $PWD/build:/build falcosecurity/falco-builder cmake"
 LABEL maintainer="cncf-falco-dev@lists.cncf.io"
+LABEL org.opencontainers.image.source="https://github.com/falcosecurity/falco"
 
 ARG BUILD_TYPE=release
 ARG BUILD_DRIVER=OFF

@@ -34,6 +34,8 @@ RUN make all -j${MAKE_JOBS}
 
 FROM scratch AS export-stage
 
+LABEL org.opencontainers.image.source="https://github.com/falcosecurity/falco"
+
 ARG DEST_BUILD_DIR="/build"
 
 COPY --from=build-stage /build/release/falco-*.tar.gz /packages/

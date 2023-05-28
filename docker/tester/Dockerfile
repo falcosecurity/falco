@@ -3,6 +3,7 @@ FROM fedora:31
 LABEL name="falcosecurity/falco-tester"
 LABEL usage="docker run -v /boot:/boot:ro -v /var/run/docker.sock:/var/run/docker.sock -v $PWD/..:/source -v $PWD/build:/build --name <name> falcosecurity/falco-tester test"
 LABEL maintainer="cncf-falco-dev@lists.cncf.io"
+LABEL org.opencontainers.image.source="https://github.com/falcosecurity/falco"
 
 ARG TARGETARCH
 
