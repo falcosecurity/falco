@@ -26,6 +26,7 @@ limitations under the License.
 
 #include <nlohmann/json.hpp>
 
+#include "falco_common.h"
 #include "prefix_search.h"
 #include <sinsp.h>
 
@@ -435,6 +436,10 @@ public:
 	bool tostring(gen_event *evt, std::string &output) override;
 	bool tostring_withformat(gen_event *evt, std::string &output, gen_event_formatter::output_format of) override;
 	bool get_field_values(gen_event *evt, std::map<std::string, std::string> &fields) override;
+	void get_field_names(std::vector<std::string> &fields) override 
+	{
+		throw falco_exception("json_event_formatter::get_field_names operation not supported");
+	}
 	output_format get_output_format() override;
 
 	std::string tojson(json_event *ev);

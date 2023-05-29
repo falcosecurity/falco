@@ -578,9 +578,9 @@ void falco_engine::get_json_details(const falco_rule &r,
 	rule["details"] = json_details;
 
 	// Get fields from output string
-	sinsp_evt_formatter fmt(insp, r.output);
+	auto fmt = create_formatter(r.source, r.output);
 	std::vector<std::string> out_fields;
-	fmt.get_field_names(out_fields);
+	fmt->get_field_names(out_fields);
 	Json::Value outputFields = Json::arrayValue;
 	for(const auto &of : out_fields)
 	{
@@ -736,15 +736,12 @@ void falco_engine::get_json_evt_types(libsinsp::filter::ast::expr* ast,
 {
 	output = Json::arrayValue;
 	auto evtcodes = libsinsp::filter::ast::ppm_event_codes(ast);
-	if(evtcodes.size() != libsinsp::events::all_event_set().size())
+	auto syscodes = libsinsp::filter::ast::ppm_sc_codes(ast);
+	auto syscodes_to_evt_names = libsinsp::events::sc_set_to_event_names(syscodes);
+	auto evtcodes_to_evt_names = libsinsp::events::event_set_to_names(evtcodes, false);
+	for (const auto& n : unordered_set_union(syscodes_to_evt_names, evtcodes_to_evt_names))
 	{
-		auto syscodes = libsinsp::filter::ast::ppm_sc_codes(ast);
-		auto syscodes_to_evt_names = libsinsp::events::sc_set_to_event_names(syscodes);
-		auto evtcodes_to_evt_names = libsinsp::events::event_set_to_names(evtcodes, false);
-		for (const auto& n : unordered_set_union(syscodes_to_evt_names, evtcodes_to_evt_names))
-		{
-			output.append(n);
-		}
+		output.append(n);
 	}
 }
 
