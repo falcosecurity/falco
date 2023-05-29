@@ -2,7 +2,7 @@
 
 ## Summary 
 
-This document proposes introducing a structured process for the management of the roadmap management and related changes in our development process to make effective the execution of our roadmap.
+This document proposes the introduction of a structured process for managing Falco's roadmap and implementing related changes in our development process. The goal is to ensure the efficient execution of our roadmap objectives.
 
 ### Goals
 
@@ -10,7 +10,7 @@ The pillars of this proposal are:
 
 - Define processes for release cycles and development iterations
 - Provide guidelines for planning and prioritizing efforts
-- Introducing regular meetings for core maintainers
+- Introduce regular meetings for core maintainers
 - Using *GitHub Project* as the primary tool for managing *The Falco Project* roadmap
 
 
