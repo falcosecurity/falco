@@ -688,6 +688,12 @@ syscall_event_drops:
 # Additionally, please be aware that the current implementation of `libbpf` does
 # not support granularity of statistics at the bpf tail call level.
 #
+# `send_numeric_zero_values`: When the option is set to true, fields with a numeric
+# value of zero will be included in the output. However, this rule does not apply to
+# high-level fields such as `n_evts` or `n_drops`; they will always be included in the
+# output even if their value is zero. This option can be beneficial for exploring
+# the data schema and ensuring that fields with zero values are included in the output.
+#
 # todo: prometheus export option
 # todo: syscall_counters_enabled option
 metrics:
@@ -699,6 +705,7 @@ metrics:
   kernel_event_counters_enabled: true
   libbpf_stats_enabled: true
   convert_memory_to_mb: true
+  send_numeric_zero_values: false
 
 
 #######################################
@@ -940,7 +947,7 @@ base_syscalls:
 #
 # Moreover, you have the option to combine this parameter with
 # `syscall_buf_size_preset` index. For instance, you can create a large shared
-# syscall buffer of 512 MB (using `syscall_buf_size_preset`=10) that is
+# syscall buffer of 512 MB (using syscall_buf_size_preset=10) that is
 # allocated among all the online CPUs.
 #
 # --- [Suggestions]
@@ -1017,7 +1024,3 @@ metadata_download:
 #
 # To get more information on these command-line arguments, you can run `falco
 # --help` in your terminal to view their current descriptions.
-#
-# !!! The options mentioned here are not available in the falco.yaml
-# configuration file. Instead, they can can be used as a command-line argument
-# when running the Falco command.
