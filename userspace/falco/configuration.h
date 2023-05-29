@@ -122,6 +122,7 @@ public:
 	bool m_metrics_kernel_event_counters_enabled;
 	bool m_metrics_libbpf_stats_enabled;
 	bool m_metrics_convert_memory_to_mb;
+	bool m_metrics_send_numeric_zero_values;
 
 	std::vector<plugin_config> m_plugins;
 
