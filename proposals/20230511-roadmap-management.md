@@ -14,6 +14,13 @@ The pillars of this proposal are:
 - Using *GitHub Project* as the primary tool for managing *The Falco Project* roadmap
 
 
+### Non-Goals
+
+- Providing an exact set of criteria for task prioritization
+- Detailing testing procedures
+- Providing detailed instructions for GitHub Project usage
+- Addressing hotfix releases
+
 ### Scope of this Proposal
 
 Primarily, the roadmap targets the planning of Falco development and releases. However, given Falco's dependence on numerous components, it's inevitable that scheduling and planning activities span across multiple repositories. We anticipate that all [core repositories](https://github.com/falcosecurity/evolution#official) will be interconnected with the roadmap, making it comprehensive enough to incorporate items from all related [Falcosecurity repositories](https://github.com/falcosecurity) as necessary.
