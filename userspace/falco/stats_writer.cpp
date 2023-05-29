@@ -254,8 +254,11 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 				switch(utilization[stat].type)
 				{
 				case STATS_VALUE_TYPE_U64:
-
-					if (m_writer->m_config->m_metrics_convert_memory_to_mb && strncmp(utilization[stat].name, "container_memory_used", 21) == 0)
+					if (utilization[stat].value.u64 == 0 && !m_writer->m_config->m_metrics_send_numeric_zero_values)
+					{
+						break;
+					}
+					if (m_writer->m_config->m_metrics_convert_memory_to_mb && strncmp(utilization[stat].name, "container_memory_used", 22) == 0) // exact str match
 					{
 						output_fields[metric_name] = (uint64_t)(utilization[stat].value.u64 / (double)1024 / (double)1024);
 					}
@@ -265,7 +268,11 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 					}
 					break;
 				case STATS_VALUE_TYPE_U32:
-					if (m_writer->m_config->m_metrics_convert_memory_to_mb && strncmp(utilization[stat].name, "memory_", 7) == 0)
+					if (utilization[stat].value.u32 == 0 && !m_writer->m_config->m_metrics_send_numeric_zero_values)
+					{
+						break;
+					}
+					if (m_writer->m_config->m_metrics_convert_memory_to_mb && strncmp(utilization[stat].name, "memory_", 7) == 0) // prefix match
 					{
 						output_fields[metric_name] = (uint32_t)(utilization[stat].value.u32 / (double)1024);
 					}
@@ -275,6 +282,10 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 					}
 					break;
 				case STATS_VALUE_TYPE_D:
+					if (utilization[stat].value.d == 0 && !m_writer->m_config->m_metrics_send_numeric_zero_values)
+					{
+						break;
+					}
 					output_fields[metric_name] = utilization[stat].value.d;
 					break;
 				default:
@@ -317,9 +328,12 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 			switch(stats_v2[stat].type)
 			{
 			case STATS_VALUE_TYPE_U64:
-				if (strncmp(stats_v2[stat].name, "n_evts", 6) == 0)
+				/* Always send high level n_evts related fields, even if zero. */
+				if (strncmp(stats_v2[stat].name, "n_evts", 7) == 0) // exact not prefix match here
 				{
 					n_evts = stats_v2[stat].value.u64;
+					output_fields[metric_name] = n_evts;
+					output_fields["scap.n_evts_prev"] = m_last_n_evts;
 					if (m_last_n_evts != 0 && stats_snapshot_time_delta_sec > 0)
 					{
 						/* n_evts is total number of kernel side events. */
@@ -329,11 +343,14 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 					{
 						output_fields["scap.evts_rate_sec"] = (double)(0);
 					}
-					output_fields["scap.n_evts_prev"] = m_last_n_evts;
+					m_last_n_evts = n_evts;
 				}
-				else if (strncmp(stats_v2[stat].name, "n_drops", 7) == 0)
+				/* Always send high level n_drops related fields, even if zero. */
+				else if (strncmp(stats_v2[stat].name, "n_drops", 8) == 0) // exact not prefix match here
 				{
 					n_drops = stats_v2[stat].value.u64;
+					output_fields[metric_name] = n_drops;
+					output_fields["scap.n_drops_prev"] = m_last_n_drops;
 					if (m_last_n_drops != 0 && stats_snapshot_time_delta_sec > 0)
 					{
 						/* n_drops is total number of kernel side event drops. */
@@ -351,7 +368,11 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 					{
 						output_fields["scap.n_drops_perc"] = (double)(0);
 					}
-					output_fields["scap.n_drops_prev"] = m_last_n_drops;
+					m_last_n_drops = n_drops;
+				}
+				if (stats_v2[stat].value.u64 == 0 && !m_writer->m_config->m_metrics_send_numeric_zero_values)
+				{
+					break;
 				}
 				output_fields[metric_name] = stats_v2[stat].value.u64;
 				break;
@@ -359,8 +380,6 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 				break;
 			}
 		}
-		m_last_n_evts = n_evts;
-		m_last_n_drops = n_drops;
 	}
 #endif
 }
