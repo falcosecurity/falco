@@ -472,7 +472,7 @@ void falco_engine::describe_rule(std::string *rule, bool json) const
 
 		// Store required engine version
 		auto required_engine_version = m_rule_collector.required_engine_version();
-		output["required_engine_version"] = required_engine_version.version;
+		output["required_engine_version"] = std::to_string(required_engine_version.version);
 
 		// Store required plugin versions
 		Json::Value plugin_versions = Json::arrayValue;
