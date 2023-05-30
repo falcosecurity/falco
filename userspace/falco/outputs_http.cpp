@@ -38,9 +38,18 @@ void falco::outputs::output_http::output(const message *msg)
 
 		if(res == CURLE_OK)
 		{
-			res = curl_easy_setopt(curl, CURLOPT_URL, m_oc.options["url"].c_str());
+			// if the URL is quoted the quotes should be removed to satisfy libcurl expected format
+			std::string unquotedUrl = m_oc.options["url"];
+			if (!unquotedUrl.empty() && (
+				(unquotedUrl.front() == '\"' && unquotedUrl.back() == '\"') ||
+				(unquotedUrl.front() == '\'' && unquotedUrl.back() == '\'')
+			))
+			{
+				unquotedUrl = libsinsp::filter::unescape_str(unquotedUrl);
+			}
+			res = curl_easy_setopt(curl, CURLOPT_URL, unquotedUrl.c_str());
 		}
-		
+
 		if(res == CURLE_OK)
 		{
 			res = curl_easy_setopt(curl, CURLOPT_POSTFIELDS, msg->msg.c_str());
@@ -55,7 +64,7 @@ void falco::outputs::output_http::output(const message *msg)
 		{
 		   res = curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, -1L);
 		}
-		
+
 		if(res == CURLE_OK)
 		{
 			if(m_oc.options["insecure"] == std::string("true"))
@@ -81,7 +90,7 @@ void falco::outputs::output_http::output(const message *msg)
 				res = curl_easy_setopt(curl, CURLOPT_CAPATH, m_oc.options["ca_path"].c_str());
 			}
 		}
-		
+
   		if(res == CURLE_OK)
 		{
 			res = curl_easy_perform(curl);
