@@ -5,11 +5,7 @@
 
 [![Build Status](https://img.shields.io/circleci/build/github/falcosecurity/falco/master?style=for-the-badge)](https://circleci.com/gh/falcosecurity/falco) [![CII Best Practices Summary](https://img.shields.io/cii/summary/2317?label=CCI%20Best%20Practices&style=for-the-badge)](https://bestpractices.coreinfrastructure.org/projects/2317) [![GitHub](https://img.shields.io/github/license/falcosecurity/falco?style=for-the-badge)](COPYING) [![Latest](https://img.shields.io/github/v/release/falcosecurity/falco?style=for-the-badge)](https://github.com/falcosecurity/falco/releases/latest) ![Architectures](https://img.shields.io/badge/ARCHS-x86__64%7Caarch64-blueviolet?style=for-the-badge)
 
-Want to talk? Join us on the [#falco](https://kubernetes.slack.com/messages/falco) channel in the [Kubernetes Slack](https://slack.k8s.io).
-
 ## Latest releases
-
-Read the [change log](CHANGELOG.md).
 
 <!-- 
 Badges in the following table are constructed by using the
@@ -58,106 +54,76 @@ Notes:
 | deb-aarch64    | [![deb-dev](https://img.shields.io/badge/dynamic/xml?color=%2300aec7&style=flat-square&label=Falco&query=substring-before%28substring-after%28%28%2F%2A%5Bname%28%29%3D%27ListBucketResult%27%5D%2F%2A%5Bname%28%29%3D%27Contents%27%5D%29%5Blast%28%29%5D%2F%2A%5Bname%28%29%3D%27Key%27%5D%2C%22falco-%22%29%2C%22.asc%22%29&url=https%3A%2F%2Ffalco-distribution.s3-eu-west-1.amazonaws.com%2F%3Fprefix%3Dpackages%2Fdeb-dev%2Fstable%2Ffalco-%26delimiter=x86_64)][3]  | [![deb](https://img.shields.io/badge/dynamic/xml?color=%2300aec7&style=flat-square&label=Falco&query=substring-before%28substring-after%28%28%2F%2A%5Bname%28%29%3D%27ListBucketResult%27%5D%2F%2A%5Bname%28%29%3D%27Contents%27%5D%29%5Blast%28%29%5D%2F%2A%5Bname%28%29%3D%27Key%27%5D%2C%22falco-%22%29%2C%22.asc%22%29&url=https%3A%2F%2Ffalco-distribution.s3-eu-west-1.amazonaws.com%2F%3Fprefix%3Dpackages%2Fdeb%2Fstable%2Ffalco-%26delimiter=x86_64)][4]  |
 | binary-aarch64 | [![bin-dev](https://img.shields.io/badge/dynamic/xml?color=%2300aec7&style=flat-square&label=Falco&query=substring-after%28%28%2F%2A%5Bname%28%29%3D%27ListBucketResult%27%5D%2F%2A%5Bname%28%29%3D%27Contents%27%5D%29%5Blast%28%29%5D%2F%2A%5Bname%28%29%3D%27Key%27%5D%2C%20%22falco-%22%29&url=https%3A%2F%2Ffalco-distribution.s3-eu-west-1.amazonaws.com%2F%3Fprefix%3Dpackages%2Fbin-dev%2Faarch64%2Ffalco-)][7]                                                    | [![bin](https://img.shields.io/badge/dynamic/xml?color=%2300aec7&style=flat-square&label=Falco&query=substring-after%28%28%2F%2A%5Bname%28%29%3D%27ListBucketResult%27%5D%2F%2A%5Bname%28%29%3D%27Contents%27%5D%29%5Blast%28%29%5D%2F%2A%5Bname%28%29%3D%27Key%27%5D%2C%20%22falco-%22%29&url=https%3A%2F%2Ffalco-distribution.s3-eu-west-1.amazonaws.com%2F%3Fprefix%3Dpackages%2Fbin%2Faarch64%2Ffalco-)][8]                                                    |
 
----
+For comprehensive information on the latest updates and changes to the project, please refer to the [change log](CHANGELOG.md). Additionally, we have documented the [release process](RELEASE.md) for delivering new versions of Falco.
 
-The Falco Project, originally created by [Sysdig](https://sysdig.com), is an incubating [CNCF](https://cncf.io) open source cloud native runtime security tool.
-Falco makes it easy to consume kernel events, and enrich those events with information from Kubernetes and the rest of the cloud native stack. 
-Falco can also be extended to other data sources by using plugins.
-Falco has a rich set of security rules specifically built for Kubernetes, Linux, and cloud-native.
-If a rule is violated in a system, Falco will send an alert notifying the user of the violation and its severity.
+## Introduction to Falco
 
-## What can Falco detect?
+The [Falco Project](https://falco.org/), originally created by [Sysdig](https://sysdig.com), is an incubating project under the [CNCF](https://cncf.io).
 
-Falco can detect and alert on any behavior that involves making Linux system calls.
-Falco alerts can be triggered by the use of specific system calls, their arguments, and by properties of the calling process.
-For example, Falco can easily detect incidents including but not limited to:
+Falco is a cloud-native runtime security tool for Linux operating systems. It is designed to detect and alert on abnormal behavior and potential security threats in real-time.
 
-- A shell is running inside a container or pod in Kubernetes.
-- A container is running in privileged mode, or is mounting a sensitive path, such as `/proc`, from the host.
-- A server process is spawning a child process of an unexpected type.
-- Unexpected read of a sensitive file, such as `/etc/shadow`.
-- A non-device file is written to `/dev`.
-- A standard system binary, such as `ls`, is making an outbound network connection.
-- A privileged pod is started in a Kubernetes cluster.
-
-The official Falco rules are maintained and released in [falcosecurity/rules](https://github.com/falcosecurity/rules/). That repository also contains the Falco rules inventory [document](https://github.com/falcosecurity/rules/blob/main/rules_inventory/rules_overview.md), which provides additional details around the default rules Falco ships with.
-
-## Installing Falco
-
-If you would like to run Falco in **production** please adhere to the [official installation guide](https://falco.org/docs/getting-started/installation/).
-
-### Kubernetes
-
-| Tool     | Link                                                                                       | Note                                                               |
-|----------|--------------------------------------------------------------------------------------------|--------------------------------------------------------------------|
-| Helm     | [Chart Repository](https://github.com/falcosecurity/charts/tree/master/falco#introduction) | The Falco community offers regular helm chart releases.            |
-| Minikube | [Tutorial](https://falco.org/docs/getting-started/third-party/#minikube)                                   | The Falco driver has been baked into minikube for easy deployment. |
-| Kind     | [Tutorial](https://falco.org/docs/getting-started/third-party/#kind)                                       | Running Falco with kind requires a driver on the host system.      |
-| GKE      | [Tutorial](https://falco.org/docs/getting-started/third-party/#gke)                                        | We suggest using the eBPF driver for running Falco on GKE.         |
-
-## Developing
-
-Falco is designed to be extensible such that it can be built into cloud-native applications and infrastructure.
-
-Falco has a [gRPC](https://falco.org/docs/grpc/) endpoint and an API defined in [protobuf](https://github.com/falcosecurity/falco/blob/master/userspace/falco/outputs.proto).
-The Falco Project supports various SDKs for this endpoint.
-
-### SDKs
-
-| Language | Repository                                              |
-|----------|---------------------------------------------------------|
-| Go       | [client-go](https://github.com/falcosecurity/client-go) |
-
-## Plugins
-
-Falco comes with a [plugin framework](https://falco.org/docs/plugins/) that extends it to potentially any cloud detection scenario. Plugins are shared libraries that conform to a documented API and allow for:
-
-- Adding new event sources that can be used in rules;
-- Adding the ability to define new fields and extract information from events.
-
-The Falco Project maintains [various plugins](https://github.com/falcosecurity/plugins) and provides SDKs for plugin development.
+At its core, Falco is a kernel event monitoring and detection agent that captures events, such as syscalls, based on custom rules. These events can be analyzed off-host in a SIEM or data lake. The [Falco ecosystem](https://github.com/falcosecurity/evolution/) is continuously evolving, aiming to enhance its functionality and interoperability by integrating with CNCF cloud native components. For detailed technical information and insights into the cyber threats that Falco can detect, visit the official [Falco Project](https://falco.org/) website.
 
 
-### SDKs
+## Falco Repo: Powering the Core of the Falco Project
 
-| Language | Repository                                                                    |
-|----------|-------------------------------------------------------------------------------|
-| Go       | [falcosecurity/plugin-sdk-go](https://github.com/falcosecurity/plugin-sdk-go) |
+This repo acts as the core of Falco, containing the source code for building the Falco binary. By utilizing its [libraries](https://github.com/falcosecurity/libs) and the [falco.yaml](falco.yaml) configuration file, this repository forms the foundation of Falco's functionality. The Falco repository is closely interconnected with the following repositories within the Falco ecosystem:
+
+- [falcosecurity/libs](https://github.com/falcosecurity/libs): Falco's libraries are key to its core operations, accounting for over 80% of the source code and supporting essential features such as the kernel drivers.
+- [falcosecurity/rules](https://github.com/falcosecurity/rules): Contains the official ruleset for Falco, providing pre-defined detection rules for various security threats and abnormal behaviors.
+- [falcosecurity/plugins](https://github.com/falcosecurity/plugins/): Falco plugins facilitate integration with external services, expand Falco's capabilities beyond syscalls and container events, and are designed to evolve with specialized functionality in future releases.
+- [falcosecurity/falcoctl](https://github.com/falcosecurity/falcoctl): Command-line utility for managing and interacting with Falco.
+- [falcosecurity/falcosidekick](https://github.com/falcosecurity/falcosidekick): Companion tool that offers multiple output options for Falco.
+- [falcosecurity/driverkit](https://github.com/falcosecurity/driverkit): Command line tool to build the Falco kernel module and eBPF probe.
+
+For more information, visit the official hub of the Falco ecosystem: [falcosecurity/evolution](https://github.com/falcosecurity/evolution). It provides valuable insights and information about the project's repositories.
+
+## Getting Started with Falco
+
+Carefully review and follow the [official guide and documentation](https://falco.org/docs/getting-started/). Integration timelines may vary based on your organization's needs, typically taking several weeks of ramp-up time.
+
+Considerations and guidance for Falco adopters:
+
+1. Understand dependencies: Assess the environment where you'll run Falco and consider kernel versions and architectures.
+
+2. Define threat detection objectives: Clearly identify the threats you want to detect and evaluate Falco's strengths and limitations.
+
+3. Consider performance and cost: Evaluate compute performance overhead and align with system administrators or SREs. Budget accordingly.
+
+4. Choose build and customization approach: Decide between the open-source Falco build or creating a custom build pipeline. Customize the build and deployment process as necessary, including incorporating unique tests or approaches, to ensure a resilient deployment with fast deployment cycles.
+
+5. Integrate with output destinations: Integrate Falco with SIEM, data lakes, or other preferred output destinations to establish a robust foundation for comprehensive data analysis and enable effective incident response workflows.
 
 
-## Documentation
+## How to Contribute
 
-The [Official Documentation](https://falco.org/docs/) is the best resource to learn about Falco.
+Please refer to the [contributing guide](https://github.com/falcosecurity/.github/blob/main/CONTRIBUTING.md) and the [code of conduct](https://github.com/falcosecurity/evolution/CODE_OF_CONDUCT.md) for more information on how to contribute.
+
 
 ## Join the Community
 
-To get involved with The Falco Project please visit [the community repository](https://github.com/falcosecurity/community) to find more.
+To get involved with the Falco Project please visit the [community repository](https://github.com/falcosecurity/community) to find more information and ways to get involved.
+
+If you have any questions about Falco or contributing, do not hesitate to file an issue or contact the Falco maintainers and community members for assistance.
 
 How to reach out?
 
- - Join the [#falco](https://kubernetes.slack.com/messages/falco) channel on the [Kubernetes Slack](https://slack.k8s.io)
- - [Join the Falco mailing list](https://lists.cncf.io/g/cncf-falco-dev)
- - [Read the Falco documentation](https://falco.org/docs/)
+ - Join the [#falco](https://kubernetes.slack.com/messages/falco) channel on the [Kubernetes Slack](https://slack.k8s.io).
+ - Join the [Falco mailing list](https://lists.cncf.io/g/cncf-falco-dev).
+ - File an [issue](https://github.com/falcosecurity/falco/issues) or make feature requests.
 
-## How to contribute
+## Commitment to Falco's Own Security
 
-See the [contributing guide](https://github.com/falcosecurity/.github/blob/main/CONTRIBUTING.md) and the [code of conduct](https://github.com/falcosecurity/evolution/CODE_OF_CONDUCT.md).
- 
-## Security Audit
+Full reports of various security audits can be found [here](./audits/).
 
-A third party security audit was performed by Cure53, you can see the full report [here](./audits/SECURITY_AUDIT_2019_07.pdf).
+In addition, you can refer to the [falco security](https://github.com/falcosecurity/falco/security) and [libs security](https://github.com/falcosecurity/libs/security) sections for detailed updates on security advisories and policies.
 
-## Reporting security vulnerabilities
+To report security vulnerabilities, please follow the community process outlined in the documentation found [here](https://github.com/falcosecurity/.github/blob/main/SECURITY.md).
 
-Please report security vulnerabilities following the community process documented [here](https://github.com/falcosecurity/.github/blob/main/SECURITY.md).
 
 ## License
 
 Falco is licensed to you under the [Apache 2.0](./COPYING) open source license.
-
-## Project Evolution
-
-The [falcosecurity/evolution](https://github.com/falcosecurity/evolution) repository is the official space for the community to work together, discuss ideas, and document processes. It is also a place to make decisions. Check it out to find more helpful resources.
 
 ## Resources
 
