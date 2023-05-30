@@ -77,11 +77,12 @@
 # configuration, you can run `falco --help` in your terminal. You can also pass
 # configuration options from this config file as command-line arguments by using
 # the `-o` flag followed by the option name and value. In the following example,
-# three config options (`json_output`, `log_level`, and `log_stderr`) are passed as
-# command-line arguments with their corresponding values:
-# `falco -o "json_output=true" -o "log_level=debug" -o "log_stderr=true"`. Please
-# note that command-line arguments take precedence over the options specified in
-# this config file.
+# three config options (`json_output`, `log_level`, and
+# `modern_bpf.cpus_for_each_syscall_buffer`) are passed as command-line
+# arguments with their corresponding values: falco -o "json_output=true"
+# -o "log_level=debug" -o "modern_bpf.cpus_for_each_syscall_buffer=4" 
+# Please note that command-line arguments take precedence over the options
+# specified in this config file.
 
 
 ###############################
@@ -596,7 +597,8 @@ syscall_event_drops:
 
 # [Experimental] `metrics`
 #
-# Generates "Falco internal: metrics snapshot" rule output when `priority=info` at minimum
+# Generates "Falco internal: metrics snapshot" rule output when `priority=info`
+# at minimum
 #
 # periodic metric snapshots (including stats and resource utilization) captured
 # at regular intervals
@@ -642,15 +644,25 @@ syscall_event_drops:
 # https://prometheus.io/docs/prometheus/latest/querying/basics/#time-durations
 #
 # Time durations are specified as a number, followed immediately by one of the
-# following units: ms - milliseconds s - seconds m - minutes h - hours d - days
-# - assuming a day has always 24h w - weeks - assuming a week has always 7d y -
-# years - assuming a year has always 365d
+# following units:
+# ms - millisecond
+# s - second
+# m - minute
+# h - hour
+# d - day - assuming a day has always 24h
+# w - week - assuming a week has always 7d
+# y - year - assuming a year has always 365d
 #
 # Example of a valid time duration: 1h30m20s10ms
 #
 # A minimum interval of 100ms is enforced for metric collection. However, for
 # production environments, we recommend selecting one of the following intervals
-# for optimal monitoring: 15m 30m 1h 4h 6h
+# for optimal monitoring:
+# 15m
+# 30m
+# 1h
+# 4h
+# 6h
 #
 # `output_rule`: To enable seamless metrics and performance monitoring, we
 # recommend emitting metrics as the rule "Falco internal: metrics snapshot".
@@ -688,14 +700,14 @@ syscall_event_drops:
 # Additionally, please be aware that the current implementation of `libbpf` does
 # not support granularity of statistics at the bpf tail call level.
 #
-# `send_numeric_zero_values`: When the option is set to true, fields with a numeric
-# value of zero will be included in the output. However, this rule does not apply to
-# high-level fields such as `n_evts` or `n_drops`; they will always be included in the
-# output even if their value is zero. This option can be beneficial for exploring
-# the data schema and ensuring that fields with zero values are included in the output.
+# `include_empty_values`: When the option is set to true, fields with an empty
+# numeric value will be included in the output. However, this rule does not
+# apply to high-level fields such as `n_evts` or `n_drops`; they will always be
+# included in the output even if their value is empty. This option can be
+# beneficial for exploring the data schema and ensuring that fields with empty
+# values are included in the output.
 #
-# todo: prometheus export option
-# todo: syscall_counters_enabled option
+# todo: prometheus export option todo: syscall_counters_enabled option
 metrics:
   enabled: false
   interval: 1h
@@ -705,7 +717,7 @@ metrics:
   kernel_event_counters_enabled: true
   libbpf_stats_enabled: true
   convert_memory_to_mb: true
-  send_numeric_zero_values: false
+  include_empty_values: false
 
 
 #######################################

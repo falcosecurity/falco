@@ -69,7 +69,7 @@ falco_configuration::falco_configuration():
 	m_metrics_kernel_event_counters_enabled(true),
 	m_metrics_libbpf_stats_enabled(true),
 	m_metrics_convert_memory_to_mb(true),
-	m_metrics_send_numeric_zero_values(false)
+	m_metrics_include_empty_values(false)
 {
 	init({});
 }
@@ -357,7 +357,7 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 	m_metrics_kernel_event_counters_enabled = config.get_scalar<bool>("metrics.kernel_event_counters_enabled", true);
 	m_metrics_libbpf_stats_enabled = config.get_scalar<bool>("metrics.libbpf_stats_enabled", true);
 	m_metrics_convert_memory_to_mb = config.get_scalar<bool>("metrics.convert_memory_to_mb", true);
-	m_metrics_send_numeric_zero_values = config.get_scalar<bool>("metrics.send_numeric_zero_values", false);
+	m_metrics_include_empty_values = config.get_scalar<bool>("metrics.include_empty_values", false);
 
 	std::vector<std::string> load_plugins;
 

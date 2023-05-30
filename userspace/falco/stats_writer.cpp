@@ -254,7 +254,7 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 				switch(utilization[stat].type)
 				{
 				case STATS_VALUE_TYPE_U64:
-					if (utilization[stat].value.u64 == 0 && !m_writer->m_config->m_metrics_send_numeric_zero_values)
+					if (utilization[stat].value.u64 == 0 && !m_writer->m_config->m_metrics_include_empty_values)
 					{
 						break;
 					}
@@ -268,7 +268,7 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 					}
 					break;
 				case STATS_VALUE_TYPE_U32:
-					if (utilization[stat].value.u32 == 0 && !m_writer->m_config->m_metrics_send_numeric_zero_values)
+					if (utilization[stat].value.u32 == 0 && !m_writer->m_config->m_metrics_include_empty_values)
 					{
 						break;
 					}
@@ -282,7 +282,7 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 					}
 					break;
 				case STATS_VALUE_TYPE_D:
-					if (utilization[stat].value.d == 0 && !m_writer->m_config->m_metrics_send_numeric_zero_values)
+					if (utilization[stat].value.d == 0 && !m_writer->m_config->m_metrics_include_empty_values)
 					{
 						break;
 					}
@@ -316,7 +316,7 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 	const scap_stats_v2* stats_v2 = inspector->get_capture_stats_v2(flags, &nstats, &rc);
 	if (stats_v2 && nstats > 0 && rc == 0)
 	{
-		/* Cache n_evts and n_drops to derice n_drops_perc. */
+		/* Cache n_evts and n_drops to derive n_drops_perc. */
 		uint64_t n_evts = 0;
 		uint64_t n_drops = 0;
 		for(uint32_t stat = 0; stat < nstats; stat++)
@@ -370,7 +370,7 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 					}
 					m_last_n_drops = n_drops;
 				}
-				if (stats_v2[stat].value.u64 == 0 && !m_writer->m_config->m_metrics_send_numeric_zero_values)
+				if (stats_v2[stat].value.u64 == 0 && !m_writer->m_config->m_metrics_include_empty_values)
 				{
 					break;
 				}
