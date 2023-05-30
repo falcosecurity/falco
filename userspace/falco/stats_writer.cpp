@@ -319,6 +319,8 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 		/* Cache n_evts and n_drops to derive n_drops_perc. */
 		uint64_t n_evts = 0;
 		uint64_t n_drops = 0;
+		uint64_t n_evts_delta = 0;
+		uint64_t n_drops_delta = 0;
 		for(uint32_t stat = 0; stat < nstats; stat++)
 		{
 			// todo: as we expand scap_stats_v2 prefix may be pushed to scap or we may need to expand
@@ -334,10 +336,11 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 					n_evts = stats_v2[stat].value.u64;
 					output_fields[metric_name] = n_evts;
 					output_fields["scap.n_evts_prev"] = m_last_n_evts;
-					if (m_last_n_evts != 0 && stats_snapshot_time_delta_sec > 0)
+					n_evts_delta = n_evts - m_last_n_evts;
+					if (n_evts_delta != 0 && stats_snapshot_time_delta_sec > 0)
 					{
 						/* n_evts is total number of kernel side events. */
-						output_fields["scap.evts_rate_sec"] = (double)((n_evts - m_last_n_evts) / stats_snapshot_time_delta_sec);
+						output_fields["scap.evts_rate_sec"] = (double)(n_evts_delta / stats_snapshot_time_delta_sec);
 					}
 					else
 					{
@@ -351,22 +354,15 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 					n_drops = stats_v2[stat].value.u64;
 					output_fields[metric_name] = n_drops;
 					output_fields["scap.n_drops_prev"] = m_last_n_drops;
-					if (m_last_n_drops != 0 && stats_snapshot_time_delta_sec > 0)
+					n_drops_delta = n_drops - m_last_n_drops;
+					if (n_drops_delta != 0 && stats_snapshot_time_delta_sec > 0)
 					{
 						/* n_drops is total number of kernel side event drops. */
-						output_fields["scap.evts_drop_rate_sec"] = (double)((n_drops - m_last_n_drops) / stats_snapshot_time_delta_sec);
+						output_fields["scap.evts_drop_rate_sec"] = (double)(n_drops_delta / stats_snapshot_time_delta_sec);
 					}
 					else
 					{
 						output_fields["scap.evts_drop_rate_sec"] = (double)(0);
-					}
-					if((n_evts - m_last_n_evts) > 0)
-					{
-						output_fields["scap.n_drops_perc"] = (double)((100.0 * (n_drops - m_last_n_drops)) / (n_evts - m_last_n_evts));
-					}
-					else
-					{
-						output_fields["scap.n_drops_perc"] = (double)(0);
 					}
 					m_last_n_drops = n_drops;
 				}
@@ -379,6 +375,16 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 			default:
 				break;
 			}
+		}
+		/* n_drops_perc needs to be calculated outside the loop given no field ordering guarantees.
+		 * Always send n_drops_perc, even if zero. */
+		if(n_evts_delta > 0)
+		{
+			output_fields["scap.n_drops_perc"] = (double)((100.0 * n_drops_delta) / n_evts_delta);
+		}
+		else
+		{
+			output_fields["scap.n_drops_perc"] = (double)(0);
 		}
 	}
 #endif
