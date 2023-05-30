@@ -120,6 +120,10 @@ In addition, you can refer to the [falco security](https://github.com/falcosecur
 
 To report security vulnerabilities, please follow the community process outlined in the documentation found [here](https://github.com/falcosecurity/.github/blob/main/SECURITY.md).
 
+## What's next for Falco?
+
+Stay updated with Falco's evolving capabilities by exploring the [Falco Roadmap](https://github.com/orgs/falcosecurity/projects/5), which provides insights into the features currently under development and planned for future releases.
+
 
 ## License
 
