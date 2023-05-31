@@ -597,8 +597,7 @@ syscall_event_drops:
 
 # [Experimental] `metrics`
 #
-# Generates "Falco internal: metrics snapshot" rule output when `priority=info`
-# at minimum
+# Generates "Falco internal: metrics snapshot" rule output when `priority=info` at minimum
 #
 # periodic metric snapshots (including stats and resource utilization) captured
 # at regular intervals
@@ -645,6 +644,7 @@ syscall_event_drops:
 #
 # Time durations are specified as a number, followed immediately by one of the
 # following units:
+# 
 # ms - millisecond
 # s - second
 # m - minute
@@ -658,6 +658,7 @@ syscall_event_drops:
 # A minimum interval of 100ms is enforced for metric collection. However, for
 # production environments, we recommend selecting one of the following intervals
 # for optimal monitoring:
+# 
 # 15m
 # 30m
 # 1h
@@ -707,7 +708,8 @@ syscall_event_drops:
 # beneficial for exploring the data schema and ensuring that fields with empty
 # values are included in the output.
 #
-# todo: prometheus export option todo: syscall_counters_enabled option
+# todo: prometheus export option
+# todo: syscall_counters_enabled option
 metrics:
   enabled: false
   interval: 1h
@@ -1036,3 +1038,7 @@ metadata_download:
 #
 # To get more information on these command-line arguments, you can run `falco
 # --help` in your terminal to view their current descriptions.
+#
+# !!! The options mentioned here are not available in the falco.yaml
+# configuration file. Instead, they can can be used as a command-line argument
+# when running the Falco command.
