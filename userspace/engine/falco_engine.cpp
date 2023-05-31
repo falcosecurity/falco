@@ -483,11 +483,13 @@ void falco_engine::describe_rule(std::string *rule, bool json) const
 			r["name"] = req.at(0).name;
 			r["version"] = req.at(0).version;
 
-			Json::Value alternatives;
+			Json::Value alternatives = Json::arrayValue;
 			for(size_t i = 1; i < req.size(); i++)
 			{
-				alternatives["name"] = req[i].name;
-				alternatives["version"] = req[i].version;
+				Json::Value alternative;
+				alternative["name"] = req[i].name;
+				alternative["version"] = req[i].version;
+				alternatives.append(alternative);
 			}
 			r["alternatives"] = alternatives;
 			
