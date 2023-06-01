@@ -903,7 +903,7 @@ base_syscalls:
   custom_set: []
   repair: false
 
-# [Experimental] `modern_bpf.cpus_for_each_syscall_buffer`, modern_bpf only
+# [Stable] `modern_bpf.cpus_for_each_syscall_buffer`, modern_bpf only
 #
 # --- [Description]
 #
