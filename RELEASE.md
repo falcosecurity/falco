@@ -5,18 +5,22 @@
 
 This document provides the process to create a new Falco release. In addition, it provides information about the versioning of the Falco components. At a high level each Falco release consists of the following main components:
 
-- Falco binary (userspace)
-- Falco kernel driver object files (kernel space)
+- Falco binary (userspace), includes `modern_bpf` driver object code (kernel space) starting with Falco 0.35.x releases
+- Falco kernel driver object files, separate artifacts for `kmod` and `bpf` drivers, not applicable for `modern_bpf` driver (kernel space)
     - Option 1: Kernel module (`.ko` files)
     - Option 2: eBPF (`.o` files)
-- Falco config and primary rules `.yaml` files (userspace)
+- Falco config and rules `.yaml` files (userspace)
 - Falco plugins (userspace - optional)
 
-One nice trait about releasing separate artifacts for userspace and kernel space is that Falco is amenable to supporting a large array of environments, that is, multiple kernel versions, distros and architectures (see `libs` [driver - kernel version support matrix](https://github.com/falcosecurity/libs#drivers-officially-supported-architectures)). The Falco project manages the release of both the Falco userspace binary and pre-compiled Falco kernel drivers for the most popular kernel versions and distros. The build and publish process is managed by the [test-infra](https://github.com/falcosecurity/test-infra) repo. The Falco userspace executable includes bundled dependencies, so that it can be run from anywhere.
+> Note: Starting with Falco 0.35.x releases, the Falco userspace binary includes the `modern_bpf` driver object code during the linking process. This integration is made possible by the CO-RE (Compile Once - Run Everywhere) feature of the modern BPF driver. CO-RE allows the driver to function on kernels that have backported BTF (BPF Type Format) support or have a kernel version >= 5.8. For the older `kmod` and `bpf` drivers, separate artifacts are released for the kernel space. This is because these drivers need to be explicitly compiled for the specific kernel release, using the exact kernel headers. This approach ensures that Falco can support a wide range of environments, including multiple kernel versions, distributions, and architectures.  (see `libs` [driver - kernel version support matrix](https://github.com/falcosecurity/libs#drivers-officially-supported-architectures)). 
 
-The Falco project also publishes all sources for each component. In fact, sources are included in the Falco release in the same way as some plugins (k8saudit and cloudtrail) as well as the rules that are shipped together with Falco. This empowers the end user to audit the integrity of the project as well as build kernel drivers for custom kernels or not officially supported kernels / distros (see [driverkit](https://github.com/falcosecurity/driverkit) for more information). While the Falco project is deeply embedded into an ecosystem of supporting [Falco sub-projects](https://github.com/falcosecurity/evolution) that aim to make the deployment of Falco easy, user-friendly, extendible and cloud-native, core Falco is split across two repos, [falco](https://github.com/falcosecurity/falco) (this repo) and [libs](https://github.com/falcosecurity/libs). The `libs` repo contains >90% of Falco's core features and is the home of each of the kernel drivers and engines. More details are provided in the [Falco Components Versioning](#falco-components-versioning) section.
+The Falco Project manages the release of both the Falco userspace binary and pre-compiled Falco kernel drivers for the most popular kernel versions and distros. The build and publish process is managed by the [test-infra](https://github.com/falcosecurity/test-infra) repo.
 
-Finally, the release process follows a transparent process described in more detail in the following sections and the official [Falco docs](https://falco.org/) contain rich information around building, installing and using Falco.
+The Falco userspace executable includes bundled dependencies, so that it can be run from anywhere.
+
+Falco publishes all sources, enabling users to audit the project's integrity and build kernel drivers for custom or unsupported kernels/distributions, specifically for non-modern BPF drivers (see [driverkit](https://github.com/falcosecurity/driverkit) for more information).
+
+Finally, the release process follows a transparent process described in more detail in the following sections and the official [Falco guide and documentation](https://falco.org/) provide rich information around building, installing and using Falco.
 
 
 ### Falco Binaries, Rules and Sources Artifacts - Quick Links
@@ -42,8 +46,9 @@ Alternatively Falco binaries or plugins can be downloaded from the Falco Artifac
 
 ### Falco Drivers Artifacts Repo - Quick Links
 
+> Note: This section specifically applies to non-modern BPF drivers.
 
-The Falco project publishes all drivers for each release for all popular kernel versions / distros and `x86_64` and `aarch64` architectures to the Falco project managed Artifacts repo. The Artifacts repo follows standard directory level conventions. The respective driver object file is prefixed by distro and named / versioned by kernel release - `$(uname -r)`. Pre-compiled drivers are released with a [best effort](https://github.com/falcosecurity/falco/blob/master/proposals/20200818-artifacts-storage.md#notice) notice. This is because gcc (`kmod`) and clang (`bpf`) compilers or for example the eBPF verifier are not perfect. More details around driver versioning and driver compatibility are provided in the [Falco Components Versioning](#falco-components-versioning) section. Short preview: If you use the standard Falco setup leveraging driver-loader, [driver-loader script](https://github.com/falcosecurity/falco/blob/master/scripts/falco-driver-loader) will fetch the kernel space artifact (object file) corresponding to the default `DRIVER_VERSION` Falco was shipped with.
+The Falco Project publishes all drivers for each release for popular kernel versions / distros and `x86_64` and `aarch64` architectures to the Falco project's managed Artifacts repo. The Artifacts repo follows standard directory level conventions. The respective driver object file is prefixed by distro and named / versioned by kernel release - `$(uname -r)`. Pre-compiled drivers are released with a [best effort](https://github.com/falcosecurity/falco/blob/master/proposals/20200818-artifacts-storage.md#notice) notice. This is because gcc (`kmod`) and clang (`bpf`) compilers or for example the eBPF verifier are not perfect. More details around driver versioning and driver compatibility are provided in the [Falco Components Versioning](#falco-components-versioning) section. Short preview: If you use the standard Falco setup leveraging driver-loader, [driver-loader script](https://github.com/falcosecurity/falco/blob/master/scripts/falco-driver-loader) will fetch the kernel space artifact (object file) corresponding to the default `DRIVER_VERSION` Falco was shipped with.
 
 - [Falco Artifacts Repo Drivers Root](https://download.falco.org/?prefix=driver/)
     - Option 1: Kernel module (`.ko` files) - all under same driver version directory
@@ -52,16 +57,16 @@ The Falco project publishes all drivers for each release for all popular kernel 
 
 ### Timeline
 
-Falco releases are due to happen 3 times per year. Our current schedule sees a new release by the end of January, May, and September each year. Hotfix releases can happen whenever it's needed.
+Falco follows a release schedule of three times per year, with releases expected at the end of January, May, and September. Hotfix releases are issued as needed.
 
-Changes and new features are grouped in [milestones](https://github.com/falcosecurity/falco/milestones), the milestone with the next version represents what is going to be released.
+Changes and new features are organized into [milestones](https://github.com/falcosecurity/falco/milestones). The milestone corresponding to the next version represents the content that will be included in the upcoming release.
 
 
 ### Procedures
 
-The release process is mostly automated requiring only a few manual steps to initiate and complete it.
+The release process is mostly automated, requiring only a few manual steps to initiate and complete.
 
-Moreover, we need to assign owners for each release (usually we pair a new person with an experienced one). Assignees and the due date are proposed during the [weekly community call](https://github.com/falcosecurity/community).
+Moreover, we assign owners for each release (typically pairing a new person with an experienced one). Assignees and due dates for releases are proposed during the [weekly community call](https://github.com/falcosecurity/community).
 
 At a high level each Falco release needs to follow a pre-determined sequencing of releases and build order:
 
@@ -69,11 +74,13 @@ At a high level each Falco release needs to follow a pre-determined sequencing o
 - [4] Falco driver pre-compiled object files push to Falco's Artifacts repo
 - [5] Falco userspace binary release
 
-Finally, on the proposed due date the assignees for the upcoming release proceed with the processes described below.  
+Assignees are responsible for creating a Falco GitHub issue to track the release tasks and monitor the progress of the release. This issue serves as a central point for communication and provides updates on the release dates. You can refer to the [Falco v0.35 release](https://github.com/falcosecurity/falco/issues/2554) or [Libs Release (0.11.0+5.0.1+driver)](https://github.com/falcosecurity/libs/issues/1092) issues as examples/templates for creating the release issue.
+
+Finally, on the proposed due date, the assignees for the upcoming release proceed with the processes described below.  
 
 ## Pre-Release Checklist
 
-Prior to cutting a release the following preparatory steps should take 5 minutes using the GitHub UI.
+Before proceeding with the release, make sure to complete the following preparatory steps, which can be easily done using the GitHub UI:
 
 ### 1. Release notes
 - Find the previous release date (`YYYY-MM-DD`) by looking at the [Falco releases](https://github.com/falcosecurity/falco/releases)
@@ -205,13 +212,13 @@ Announce the new release to the world!
 
 ## Falco Components Versioning
 
-This section provides more details around the versioning of all components that make up core Falco. It can also be a useful guide for the uninitiated to be more informed about Falco's source. Because the `libs` repo contains >90% of Falco's core features and is the home of each of the kernel drivers and engines, the [libs release doc](https://github.com/falcosecurity/libs/blob/master/release.md) is an excellent additional resource. In addition, the [plugins release doc](https://github.com/falcosecurity/plugins/blob/master/release.md) provides similar details around Falco's plugins. `SHA256` checksums are provided throughout Falco's source code to empower the end user to perform integrity checks. All Falco releases also contain the sources as part of the packages.
+This section provides more details around the versioning of the components that make up Falco's core. It can also be a useful guide for the uninitiated to be more informed about Falco's source. Because `libs` makes up the greater portion of the source code of the Falco binary and is the home of each of the kernel drivers and engines, the [libs release doc](https://github.com/falcosecurity/libs/blob/master/release.md) is an excellent additional resource. In addition, the [plugins release doc](https://github.com/falcosecurity/plugins/blob/master/release.md) provides similar details around Falco's plugins. `SHA256` checksums are provided throughout Falco's source code to empower the end user to perform integrity checks. All Falco releases also contain the sources as part of the packages.
 
 
 ### Falco repo (this repo)
 - Falco version is a git tag (`x.y.z`), see [Procedures](#procedures) section. Note that the Falco version is a sem-ver-like schema, but not fully compatible with sem-ver.
-- [FALCO_ENGINE_VERSION](https://github.com/falcosecurity/falco/blob/master/userspace/engine/falco_engine_version.h) is not sem-ver and must be bumped either when a backward incompatible change has been introduced to the rules files syntax or `falco --list -N | sha256sum` has changed. Breaking changes introduced in the Falco engine are not necessarily tied to the drivers or libs versions. The primary idea behind the hash is that when new filter / display fields (see currently supported [Falco fields](https://falco.org/docs/rules/supported-fields/)) are introduced a version bump indicates that this field was not available in previous engine versions. See the [rules release guidelines](https://github.com/falcosecurity/rules/blob/main/RELEASE.md#versioning-a-ruleset) to understand how this affects the versioning of Falco rules.
-- During development and release preparation, libs and driver reference commits are often bumped in Falco's cmake setup ([falcosecurity-libs cmake](https://github.com/falcosecurity/falco/blob/master/cmake/modules/falcosecurity-libs.cmake#L30) and [driver cmake](https://github.com/falcosecurity/falco/blob/master/cmake/modules/driver.cmake#L29)) in order to merge new Falco features. In practice they are mostly bumped at the same time referencing the same `libs` commit. However, for the official Falco build `FALCOSECURITY_LIBS_VERSION` flag that references the stable Libs version is used (read below).
+- [FALCO_ENGINE_VERSION](https://github.com/falcosecurity/falco/blob/master/userspace/engine/falco_engine_version.h) is not sem-ver and must be bumped either when a backward incompatible change has been introduced to the rules files syntax or `falco --list -N | sha256sum` has changed. Breaking changes introduced in the Falco engine are not necessarily tied to the drivers or libs versions. The primary idea behind the hash is that when new filter / display fields (see currently supported [Falco fields](https://falco.org/docs/rules/supported-fields/)) are introduced a version bump indicates that this field was not available in previous engine versions. See the [rules release guidelines](https://github.com/falcosecurity/rules/blob/main/RELEASE.md#versioning-a-ruleset) to understand how this affects the versioning of Falco rules. Lastly, `FALCO_ENGINE_VERSION` is incremented only once during a Falco release cycle.
+- During development and release preparation, libs and driver reference commits are often bumped in Falco's cmake setup ([falcosecurity-libs cmake](https://github.com/falcosecurity/falco/blob/master/cmake/modules/falcosecurity-libs.cmake#L30) and [driver cmake](https://github.com/falcosecurity/falco/blob/master/cmake/modules/driver.cmake#L29)) in order to merge new Falco features. In practice, they are mostly bumped at the same time referencing the same `libs` commit. However, for the official Falco build `FALCOSECURITY_LIBS_VERSION` flag that references the stable libs version is used (read below).
 - Similarly, Falco plugins versions are bumped in Falco's cmake setup ([plugins cmake](https://github.com/falcosecurity/falco/blob/master/cmake/modules/plugins.cmake)) and those versions are the ones used for the Falco release.
 - At release time Plugin, Libs and Driver versions are compatible with Falco.
 - If you use the standard Falco setup leveraging driver-loader, [driver-loader script](https://github.com/falcosecurity/falco/blob/master/scripts/falco-driver-loader) will fetch the kernel space artifact (object file) corresponding to the default `DRIVER_VERSION` Falco was shipped with (read more below under Libs).
@@ -231,7 +238,7 @@ Driver:
 
 ### Libs repo
 - Libs version is a git tag (`x.y.z`) and when building Falco the libs version is set via the `FALCOSECURITY_LIBS_VERSION` flag (see above).
-- Driver version itself is not directly tied to the Falco binary as opposed to the libs version being part of the source code used to compile Falco's userspace binary. This is because of the strict separation between userspace and kernel space artifacts, so things become a bit more interesting here. This is why the concept of a `Default driver` has been introduced to still implicitly declare the compatible driver versions. For example, if the default driver version is `2.0.0+driver`, Falco works with all driver versions >= 2.0.0 and < 3.0.0. This is a consequence of how the driver version is constructed starting from the `Driver API version` and `Driver Schema version`. Driver API and Schema versions are explained in the respective [libs driver doc](https://github.com/falcosecurity/libs/blob/master/driver/README.VERSION.md) -> Falco's `driver-loader` will always fetch the default driver, therefore a Falco release is always "shipped" with the driver version corresponding to the default driver.
+- The driver version is not directly linked to the userspace components of the Falco binary. This is because of the clear separation between userspace and kernel space, which adds an additional layer of complexity. To address this, the concept of a `Default driver` has been introduced, allowing for implicit declaration of compatible driver versions. For example, if the default driver version is `5.0.1+driver`, Falco works with all driver versions >= 5.0.1 and < 6.0.0. This is a consequence of how the driver version is constructed starting from the `Driver API version` and `Driver Schema version`. Driver API and Schema versions are explained in the respective [libs driver doc](https://github.com/falcosecurity/libs/blob/master/driver/README.VERSION.md) -> Falco's `driver-loader` will always fetch the default driver, therefore a Falco release is always "shipped" with the driver version corresponding to the default driver.
 - See [libs release doc](https://github.com/falcosecurity/libs/blob/master/release.md) for more information.
 
 ### Plugins repo
