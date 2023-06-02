@@ -199,11 +199,6 @@ std::unique_ptr<load_result> falco_engine::load_rules(const std::string &rules_c
 	rule_loader::reader reader;
 	if (reader.read(cfg, m_rule_collector))
 	{
-		for (auto &src : m_sources)
-		{
-			src.ruleset = src.ruleset_factory->new_ruleset();
-		}
-
 		rule_loader::compiler compiler;
 		m_rules.clear();
 		compiler.compile(cfg, m_rule_collector, m_rules);
