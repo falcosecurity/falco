@@ -15,8 +15,8 @@ include(GNUInstallDirs)
 include(ExternalProject)
 
 # falco_rules.yaml
-set(FALCOSECURITY_RULES_FALCO_VERSION "falco-rules-0.1.0")
-set(FALCOSECURITY_RULES_FALCO_CHECKSUM "SHA256=0d3705a4650f09d10e7831b16e7af59c1da34ff19e788896e9ee77010014db4d")
+set(FALCOSECURITY_RULES_FALCO_VERSION "falco-rules-1.0.0-rc1")
+set(FALCOSECURITY_RULES_FALCO_CHECKSUM "SHA256=3474d170e6cd1ac5c6ee0cfe6a226e3fd8ef5f7191b0363ecd69672601e7914f")
 set(FALCOSECURITY_RULES_FALCO_PATH "${PROJECT_BINARY_DIR}/falcosecurity-rules-falco-prefix/src/falcosecurity-rules-falco/falco_rules.yaml")
 ExternalProject_Add(
   falcosecurity-rules-falco
