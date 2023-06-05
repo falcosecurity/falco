@@ -1,71 +1,20 @@
-<p align="center"><img src="https://raw.githubusercontent.com/falcosecurity/community/master/logo/primary-logo.png" width="360"></p>
-<p align="center"><b>Cloud Native Runtime Security.</b></p>
+# Falco
 
-<hr>
+[![Latest release](https://img.shields.io/github/v/release/falcosecurity/falco?style=for-the-badge)](https://github.com/falcosecurity/falco/releases/latest) [![Supported Architectures](https://img.shields.io/badge/ARCHS-x86__64%7Caarch64-blueviolet?style=for-the-badge)](https://github.com/falcosecurity/falco/releases/latest) [![License](https://img.shields.io/github/license/falcosecurity/falco?style=for-the-badge)](COPYING) [![Docs](https://img.shields.io/badge/docs-latest-green.svg?style=for-the-badge)](https://falco.org/docs)
 
-[![Build Status](https://img.shields.io/circleci/build/github/falcosecurity/falco/master?style=for-the-badge)](https://circleci.com/gh/falcosecurity/falco) [![CII Best Practices Summary](https://img.shields.io/cii/summary/2317?label=CCI%20Best%20Practices&style=for-the-badge)](https://bestpractices.coreinfrastructure.org/projects/2317) [![GitHub](https://img.shields.io/github/license/falcosecurity/falco?style=for-the-badge)](COPYING) [![Latest](https://img.shields.io/github/v/release/falcosecurity/falco?style=for-the-badge)](https://github.com/falcosecurity/falco/releases/latest) ![Architectures](https://img.shields.io/badge/ARCHS-x86__64%7Caarch64-blueviolet?style=for-the-badge)
+[![Falco Core Repository](https://github.com/falcosecurity/evolution/blob/main/repos/badges/falco-core-blue.svg)](https://github.com/falcosecurity/evolution/blob/main/REPOSITORIES.md#core-scope) [![Stable](https://img.shields.io/badge/status-stable-brightgreen?style=for-the-badge)](https://github.com/falcosecurity/evolution/blob/main/REPOSITORIES.md#stable)  [![OpenSSF Best Practices](https://img.shields.io/cii/summary/2317?label=OpenSSF%20Best%20Practices&style=for-the-badge)](https://bestpractices.coreinfrastructure.org/projects/2317)
 
-## Latest releases
+[![Falco](https://falco.org/img/brand/falco-horizontal-color.svg)](https://falco.org)
 
-<!-- 
-Badges in the following table are constructed by using the
-https://img.shields.io/badge/dynamic/xml endpoint.
-
-Parameters are configured for fetching packages from S3 before 
-(filtered by prefix, sorted in ascending order) and for picking 
-the latest package by using an XPath selector after.
-
-- Common query parameters:
-
-color=#300aec7
-style=flat-square
-label=Falco
-
-- DEB packages parameters:
-
-url=https://falco-distribution.s3-eu-west-1.amazonaws.com/?prefix=packages/deb/stable/falco-
-query=substring-before(substring-after((/*[name()='ListBucketResult']/*[name()='Contents'])[last()]/*[name()='Key'],"falco-"),".asc")
-
-- RPM packages parameters:
-
-url=https://falco-distribution.s3-eu-west-1.amazonaws.com/?prefix=packages/rpm/falco-
-query=substring-before(substring-after((/*[name()='ListBucketResult']/*[name()='Contents'])[last()]/*[name()='Key'],"falco-"),".asc")
-
-- BIN packages parameters:
-
-url=https://falco-distribution.s3-eu-west-1.amazonaws.com/?prefix=packages/bin/x86_64/falco-
-query=substring-after((/*[name()='ListBucketResult']/*[name()='Contents'])[last()]/*[name()='Key'], "falco-")
-
-Notes:
- - if more than 1000 items are present under as S3 prefix, 
-   the actual latest package will be not picked;
-   see https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectsV2.html
- - for `-dev` packages, the S3 prefix is modified accordingly
- - finally, all parameters are URL encoded and appended to the badge endpoint
-
--->
-
-|              | stable                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-|--------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| rpm-x86_64          | [![rpm](https://img.shields.io/badge/dynamic/xml?color=%2300aec7&style=flat-square&label=Falco&query=substring-before%28substring-after%28%28%2F%2A%5Bname%28%29%3D%27ListBucketResult%27%5D%2F%2A%5Bname%28%29%3D%27Contents%27%5D%29%5Blast%28%29%5D%2F%2A%5Bname%28%29%3D%27Key%27%5D%2C%22falco-%22%29%2C%22.asc%22%29&url=https%3A%2F%2Ffalco-distribution.s3-eu-west-1.amazonaws.com%2F%3Fprefix%3Dpackages%2Frpm%2Ffalco-%26delimiter=aarch64)][2]          |
-| deb-x86_64          | [![deb](https://img.shields.io/badge/dynamic/xml?color=%2300aec7&style=flat-square&label=Falco&query=substring-before%28substring-after%28%28%2F%2A%5Bname%28%29%3D%27ListBucketResult%27%5D%2F%2A%5Bname%28%29%3D%27Contents%27%5D%29%5Blast%28%29%5D%2F%2A%5Bname%28%29%3D%27Key%27%5D%2C%22falco-%22%29%2C%22.asc%22%29&url=https%3A%2F%2Ffalco-distribution.s3-eu-west-1.amazonaws.com%2F%3Fprefix%3Dpackages%2Fdeb%2Fstable%2Ffalco-%26delimiter=aarch64)][4] |
-| binary-x86_64       | [![bin](https://img.shields.io/badge/dynamic/xml?color=%2300aec7&style=flat-square&label=Falco&query=substring-after%28%28%2F%2A%5Bname%28%29%3D%27ListBucketResult%27%5D%2F%2A%5Bname%28%29%3D%27Contents%27%5D%29%5Blast%28%29%5D%2F%2A%5Bname%28%29%3D%27Key%27%5D%2C%20%22falco-%22%29&url=https%3A%2F%2Ffalco-distribution.s3-eu-west-1.amazonaws.com%2F%3Fprefix%3Dpackages%2Fbin%2Fx86_64%2Ffalco-)][6]                                                     |
-| rpm-aarch64    | [![rpm](https://img.shields.io/badge/dynamic/xml?color=%2300aec7&style=flat-square&label=Falco&query=substring-before%28substring-after%28%28%2F%2A%5Bname%28%29%3D%27ListBucketResult%27%5D%2F%2A%5Bname%28%29%3D%27Contents%27%5D%29%5Blast%28%29%5D%2F%2A%5Bname%28%29%3D%27Key%27%5D%2C%22falco-%22%29%2C%22.asc%22%29&url=https%3A%2F%2Ffalco-distribution.s3-eu-west-1.amazonaws.com%2F%3Fprefix%3Dpackages%2Frpm%2Ffalco-%26delimiter=x86_64)][2]           |
-| deb-aarch64    | [![deb](https://img.shields.io/badge/dynamic/xml?color=%2300aec7&style=flat-square&label=Falco&query=substring-before%28substring-after%28%28%2F%2A%5Bname%28%29%3D%27ListBucketResult%27%5D%2F%2A%5Bname%28%29%3D%27Contents%27%5D%29%5Blast%28%29%5D%2F%2A%5Bname%28%29%3D%27Key%27%5D%2C%22falco-%22%29%2C%22.asc%22%29&url=https%3A%2F%2Ffalco-distribution.s3-eu-west-1.amazonaws.com%2F%3Fprefix%3Dpackages%2Fdeb%2Fstable%2Ffalco-%26delimiter=x86_64)][4]  |
-| binary-aarch64 | [![bin](https://img.shields.io/badge/dynamic/xml?color=%2300aec7&style=flat-square&label=Falco&query=substring-after%28%28%2F%2A%5Bname%28%29%3D%27ListBucketResult%27%5D%2F%2A%5Bname%28%29%3D%27Contents%27%5D%29%5Blast%28%29%5D%2F%2A%5Bname%28%29%3D%27Key%27%5D%2C%20%22falco-%22%29&url=https%3A%2F%2Ffalco-distribution.s3-eu-west-1.amazonaws.com%2F%3Fprefix%3Dpackages%2Fbin%2Faarch64%2Ffalco-)][8]                                                    |
-
-For comprehensive information on the latest updates and changes to the project, please refer to the [change log](CHANGELOG.md). Additionally, we have documented the [release process](RELEASE.md) for delivering new versions of Falco.
-
-## Introduction to Falco
-
-[Falco](https://falco.org/), originally created by [Sysdig](https://sysdig.com), is an incubating project under the [CNCF](https://cncf.io).
-
-Falco is a cloud native runtime security tool for Linux operating systems. It is designed to detect and alert on abnormal behavior and potential security threats in real-time.
+[Falco](https://falco.org/) is a cloud native runtime security tool for Linux operating systems. It is designed to detect and alert on abnormal behavior and potential security threats in real-time.
 
 At its core, Falco is a kernel event monitoring and detection agent that captures events, such as syscalls, based on custom rules. Falco can enhance these events by integrating metadata from the container runtime and Kubernetes. The collected events can be analyzed off-host in SIEM or data lake systems.
 
+Falco, originally created by [Sysdig](https://sysdig.com), is an incubating project under the [Cloud Native Computing Foundation](https://cncf.io) (CNCF) used in producation by various [organisations](https://github.com/falcosecurity/falco/blob/master/ADOPTERS.md).
+
 For detailed technical information and insights into the cyber threats that Falco can detect, visit the official [Falco](https://falco.org/) website.
 
+For comprehensive information on the latest updates and changes to the project, please refer to the [change log](CHANGELOG.md). Additionally, we have documented the [release process](RELEASE.md) for delivering new versions of Falco.
 
 ## Falco Repo: Powering the Core of The Falco Project
 
@@ -138,13 +87,3 @@ Falco is licensed to you under the [Apache 2.0](./COPYING) open source license.
  - [Repositories Guidelines](https://github.com/falcosecurity/evolution/blob/main/REPOSITORIES.md)
  - [Repositories List](https://github.com/falcosecurity/evolution/blob/main/README.md#repositories)
  - [Adopters List](https://github.com/falcosecurity/falco/blob/master/ADOPTERS.md)
-
-
-[1]: https://download.falco.org/?prefix=packages/rpm-dev/
-[2]: https://download.falco.org/?prefix=packages/rpm/
-[3]: https://download.falco.org/?prefix=packages/deb-dev/stable/
-[4]: https://download.falco.org/?prefix=packages/deb/stable/
-[5]: https://download.falco.org/?prefix=packages/bin-dev/x86_64/
-[6]: https://download.falco.org/?prefix=packages/bin/x86_64/
-[7]: https://download.falco.org/?prefix=packages/bin-dev/aarch64/
-[8]: https://download.falco.org/?prefix=packages/bin/aarch64/
