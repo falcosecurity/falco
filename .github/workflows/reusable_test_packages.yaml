@@ -1,0 +1,67 @@
+# This is a reusable workflow used by master and release CI
+on:
+  workflow_call:
+    inputs:
+      arch:
+        description: x86_64 or aarch64
+        required: true
+        type: string
+      version:
+        description: The Falco version to use when testing packages
+        required: true
+        type: string
+
+jobs:
+  test-packages:
+    # See https://github.com/actions/runner/issues/409#issuecomment-1158849936
+    runs-on: ${{ (inputs.arch == 'aarch64' && fromJSON('[ "self-hosted", "linux", "ARM64" ]')) || 'ubuntu-latest' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          submodules: 'true'
+      
+      - name: Setup Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: '>=1.17.0'
+
+      - name: Download binary
+        uses: actions/download-artifact@v3
+        with:
+          name: falco-${{ inputs.version }}-${{ inputs.arch }}.tar.gz
+      
+      - name: Install Falco package
+        run: |
+          tar -xvf $(ls falco-*.tar.gz)
+          cd $(ls falco-*.tar.gz | sed -e 's/\.tar\.gz$//')
+          sudo cp -r * /
+
+      - name: Install go-junit-report
+        run: |
+          pushd submodules/falcosecurity-testing
+          go install github.com/jstemmer/go-junit-report/v2@latest
+          popd
+  
+      - name: Generate regression test files
+        run: |
+          pushd submodules/falcosecurity-testing
+          go generate ./...
+          popd
+
+      - name: Run regression tests
+        run: |
+          pushd submodules/falcosecurity-testing
+          ./build/falco.test -test.timeout=90s -test.v >> ./report.txt 2>&1 || true
+          ./build/falcoctl.test -test.timeout=90s -test.v >> ./report.txt 2>&1 || true
+          ./build/k8saudit.test -test.timeout=90s -test.v >> ./report.txt 2>&1 || true
+          cat ./report.txt | go-junit-report -set-exit-code > report.xml
+          popd
+
+      - name: Test Summary
+        if: always() # run this even if previous step fails
+        uses: test-summary/action@v2
+        with:
+          paths: "submodules/falcosecurity-testing/report.xml"
+          show: "fail"
