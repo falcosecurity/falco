@@ -2,3 +2,7 @@
 	path = submodules/falcosecurity-rules
 	url = https://github.com/falcosecurity/rules.git
 	branch = main
+[submodule "submodules/falcosecurity-testing"]
+	path = submodules/falcosecurity-testing
+	url = https://github.com/falcosecurity/testing.git
+	branch = main
