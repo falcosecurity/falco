@@ -11,8 +11,31 @@ concurrency:
   cancel-in-progress: true  
 
 jobs:
-  build-minimal:
-    runs-on: ubuntu-20.04
+  fetch-version:
+    uses: ./.github/workflows/reusable_fetch_version.yaml
+
+  build-dev-packages:
+    needs: [fetch-version]
+    uses: ./.github/workflows/reusable_build_packages.yaml
+    with:
+      arch: x86_64
+      version: ${{ needs.fetch-version.outputs.version }}
+
+  test-dev-packages:
+    needs: [fetch-version, build-dev-packages]
+    uses: ./.github/workflows/reusable_test_packages.yaml
+    with:
+      arch: x86_64
+      version: ${{ needs.fetch-version.outputs.version }}
+
+  build-dev:
+    strategy:
+      fail-fast: false
+      matrix:
+        machine: ['ubuntu-20.04']
+        buildmode: ['Debug', 'Release']
+        minimal: ['', 'minimal']
+    runs-on: ${{ matrix.machine }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -22,83 +45,25 @@ jobs:
 
       - name: Update base image
         run: sudo apt update -y
-
+      
       - name: Install build dependencies
-        run: sudo DEBIAN_FRONTEND=noninteractive apt install libjq-dev libyaml-cpp-dev libelf-dev cmake build-essential git -y
+        run: sudo DEBIAN_FRONTEND=noninteractive apt install libjq-dev libelf-dev libyaml-cpp-dev cmake build-essential git -y
 
-      - name: Prepare project
-        run: |
-          mkdir build-minimal
-          pushd build-minimal
-          cmake -DMINIMAL_BUILD=On -DBUILD_BPF=Off -DBUILD_DRIVER=Off -DCMAKE_BUILD_TYPE=Release -DBUILD_FALCO_UNIT_TESTS=On ..
-          popd
-
-      - name: Build
-        run: |
-          pushd build-minimal
-          make -j4 all
-          popd
-
-      - name: Run unit tests
-        run: |
-          pushd build-minimal
-          sudo ./unit_tests/falco_unit_tests 
-          popd
-
-  build-ubuntu-focal:
-    runs-on: ubuntu-20.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: Update base image
-        run: sudo apt update -y
-
-      - name: Install build dependencies
-        run: sudo DEBIAN_FRONTEND=noninteractive apt install libssl-dev libyaml-dev libc-ares-dev libprotobuf-dev protobuf-compiler libjq-dev libyaml-cpp-dev libgrpc++-dev protobuf-compiler-grpc rpm libelf-dev cmake build-essential libcurl4-openssl-dev linux-headers-$(uname -r) clang llvm git -y
-
+      - name: Install build dependencies (non-minimal)
+        if: matrix.minimal != 'minimal'
+        run: sudo DEBIAN_FRONTEND=noninteractive apt install libssl-dev libyaml-dev libc-ares-dev libprotobuf-dev protobuf-compiler libgrpc++-dev protobuf-compiler-grpc rpm libcurl4-openssl-dev linux-headers-$(uname -r) clang llvm -y
+      
       - name: Prepare project
         run: |
           mkdir build
           pushd build
-          cmake -DBUILD_BPF=On -DCMAKE_BUILD_TYPE=Release -DBUILD_FALCO_UNIT_TESTS=On ..
-          popd
-
-      - name: Build
-        run: |
-          pushd build
-          KERNELDIR=/lib/modules/$(uname -r)/build make -j4 all
-          popd
-
-      - name: Run unit tests
-        run: |
-          pushd build
-          sudo ./unit_tests/falco_unit_tests 
-          popd
-
-  build-ubuntu-focal-debug:
-    runs-on: ubuntu-20.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: Update base image
-        run: sudo apt update -y
-
-      - name: Install build dependencies
-        run: sudo DEBIAN_FRONTEND=noninteractive apt install libssl-dev libyaml-dev libc-ares-dev libprotobuf-dev protobuf-compiler libjq-dev libyaml-cpp-dev libgrpc++-dev protobuf-compiler-grpc rpm libelf-dev cmake build-essential libcurl4-openssl-dev linux-headers-$(uname -r) clang llvm git -y
-
-      - name: Prepare project
-        run: |
-          mkdir build
-          pushd build
-          cmake -DCMAKE_BUILD_TYPE=Debug -DBUILD_BPF=On -DBUILD_FALCO_UNIT_TESTS=On ..
+          cmake \
+            -DBUILD_FALCO_UNIT_TESTS=On \
+            -DCMAKE_BUILD_TYPE=${{ matrix.buildmode }} \
+            -DBUILD_BPF=${{ matrix.minimal == 'minimal' && 'OFF' || 'ON' }} \
+            -DBUILD_DRIVER=${{ matrix.minimal == 'minimal' && 'OFF' || 'ON' }} \
+            -DMINIMAL_BUILD=${{ matrix.minimal == 'minimal' && 'ON' || 'OFF' }} \
+            ..
           popd
 
       - name: Build
