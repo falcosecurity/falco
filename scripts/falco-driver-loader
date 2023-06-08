@@ -151,11 +151,17 @@ get_target_id() {
 		# Real kernel release is embedded inside the kernel version.
 		# Moreover, kernel arch, when present, is attached to the former,
 		# therefore make sure to properly take it and attach it to the latter.
+		# Moreover, we support 3 flavors for debian kernels: cloud, rt and normal.
+		# KERNEL-RELEASE will have a `-rt`, or `-cloud` if we are in one of these flavors.
+		# Manage it to download the correct driver.
+		#
+		# Example: KERNEL_RELEASE="5.10.0-0.deb10.22-rt-amd64" and `uname -v`="5.10.178-3"
+		# should lead to: KERNEL_RELEASE="5.10.178-3-rt-amd64"
 		TARGET_ID=$(echo "${OS_ID}" | tr '[:upper:]' '[:lower:]')
 		local ARCH_extra=""
-		if [[ $KERNEL_RELEASE =~ -(amd64|arm64) ]];
+		if [[ $KERNEL_RELEASE =~ -?(rt-|cloud-|)(amd64|arm64) ]];
 		then
-			ARCH_extra="-${BASH_REMATCH[1]}"
+			ARCH_extra="-${BASH_REMATCH[1]}${BASH_REMATCH[2]}"
 		fi
 		if [[ $(uname -v) =~ ([0-9]+\.[0-9]+\.[0-9]+\-[0-9]+) ]];
 		then
