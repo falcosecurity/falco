@@ -29,11 +29,16 @@ jobs:
     secrets: inherit
 
   test-dev-packages:
-      needs: [fetch-version, build-dev-packages]
-      uses: ./.github/workflows/reusable_test_packages.yaml
-      with:
-        arch: x86_64
-        version: ${{ needs.fetch-version.outputs.version }}
+    needs: [fetch-version, build-dev-packages]
+    uses: ./.github/workflows/reusable_test_packages.yaml
+    strategy:
+      fail-fast: false
+      matrix:
+        static: ["static", ""]
+    with:
+      arch: x86_64
+      static: ${{ matrix.static != '' && true || false }}
+      version: ${{ needs.fetch-version.outputs.version }}
   
   test-dev-packages-arm64:
     needs: [fetch-version, build-dev-packages-arm64]
