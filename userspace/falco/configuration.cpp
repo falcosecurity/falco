@@ -194,7 +194,7 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 		bool insecure;
 		insecure = config.get_scalar<bool>("http_output.insecure", false);
 		http_output.options["insecure"] = insecure? std::string("true") : std::string("false");
-		
+
 		std::string ca_cert;
 		ca_cert = config.get_scalar<std::string>("http_output.ca_cert", "");
 		http_output.options["ca_cert"] = ca_cert;
@@ -206,6 +206,18 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 		std::string ca_path;
 		ca_path = config.get_scalar<std::string>("http_output.ca_path", "/etc/ssl/certs");
 		http_output.options["ca_path"] = ca_path;
+
+		bool mtls;
+		mtls = config.get_scalar<bool>("http_output.mtls", false);
+		http_output.options["mtls"] = mtls? std::string("true") : std::string("false");
+
+		std::string client_cert;
+		client_cert = config.get_scalar<std::string>("http_output.client_cert", "/etc/ssl/certs/client.crt");
+		http_output.options["client_cert"] = client_cert;
+
+		std::string client_key;
+		client_key = config.get_scalar<std::string>("http_output.client_key", "/etc/ssl/certs/client.key");
+		http_output.options["client_key"] = client_key;
 
 		m_outputs.push_back(http_output);
 	}
