@@ -171,13 +171,25 @@ get_target_id() {
 	("ubuntu")
 		# Extract the flavor from the kernelrelease
 		# Examples:
-		# 5.0.0-1028-aws-5.0 -> ubuntu-aws-5.0
+		# 5.0.0-1028-aws-5.0 -> ubuntu-aws
 		# 5.15.0-1009-aws -> ubuntu-aws
 		if [[ $KERNEL_RELEASE =~ -([a-zA-Z]+)(-.*)?$ ]];
 		then
-			TARGET_ID="ubuntu-${BASH_REMATCH[1]}${BASH_REMATCH[2]}"
+			TARGET_ID="ubuntu-${BASH_REMATCH[1]}"
 		else
 			TARGET_ID="ubuntu-generic"
+		fi
+
+
+		# In the case that the kernelversion isn't just a number
+		# we keep also the remaining part excluding `-Ubuntu`.
+		# E.g.:
+		# from the following `uname -v` result
+		# `#26~22.04.1-Ubuntu SMP Mon Apr 24 01:58:15 UTC 2023`
+		# we obtain the kernelversion`26~22.04.1`
+		if [[ $(uname -v) =~ (^\#[0-9]+\~[^-]*-Ubuntu .*$) ]];
+		then
+			KERNEL_VERSION=$(uname -v | sed 's/#\([^-\\ ]*\).*/\1/g')
 		fi
 		;;
 	("flatcar")
