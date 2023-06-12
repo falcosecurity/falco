@@ -163,7 +163,7 @@ get_target_id() {
 		then
 			ARCH_extra="-${BASH_REMATCH[1]}${BASH_REMATCH[2]}"
 		fi
-		if [[ $(uname -v) =~ ([0-9]+\.[0-9]+\.[0-9]+\-[0-9]+) ]];
+		if [[ ${DRIVER_KERNEL_VERSION} =~ ([0-9]+\.[0-9]+\.[0-9]+\-[0-9]+) ]];
 		then
 			KERNEL_RELEASE="${BASH_REMATCH[1]}${ARCH_extra}"
 		fi
@@ -187,9 +187,9 @@ get_target_id() {
 		# from the following `uname -v` result
 		# `#26~22.04.1-Ubuntu SMP Mon Apr 24 01:58:15 UTC 2023`
 		# we obtain the kernelversion`26~22.04.1`
-		if [[ $(uname -v) =~ (^\#[0-9]+\~[^-]*-Ubuntu .*$) ]];
+		if [[ ${DRIVER_KERNEL_VERSION} =~ (^\#[0-9]+\~[^-]*-Ubuntu .*$) ]];
 		then
-			KERNEL_VERSION=$(uname -v | sed 's/#\([^-\\ ]*\).*/\1/g')
+			KERNEL_VERSION=$(echo "${DRIVER_KERNEL_VERSION}" | sed 's/#\([^-\\ ]*\).*/\1/g')
 		fi
 		;;
 	("flatcar")
@@ -258,7 +258,7 @@ flatcar_relocate_tools() {
 
 load_kernel_module_compile() {
 	# Skip dkms on UEK hosts because it will always fail
-	if [[ $(uname -r) == *uek* ]]; then
+	if [[ ${DRIVER_KERNEL_RELEASE} == *uek* ]]; then
 		>&2 echo "Skipping because the dkms install always fail (on UEK hosts)"
 		return
 	fi
@@ -269,7 +269,7 @@ load_kernel_module_compile() {
 	fi
 
 	if [ "${TARGET_ID}" == "flatcar" ]; then
-		KERNEL_RELEASE=$(uname -r)
+		KERNEL_RELEASE=${DRIVER_KERNEL_RELEASE}
 		echo "* Flatcar detected (version ${VERSION_ID}); relocating kernel tools"
 		flatcar_relocate_tools
 	fi
@@ -522,7 +522,7 @@ load_bpf_probe_compile() {
 		MINIKUBE_VERSION="$(cat "${HOST_ROOT}/etc/VERSION")"
 		echo "* Minikube detected (${MINIKUBE_VERSION}), using linux kernel sources for minikube kernel"
 		local kernel_version
-		kernel_version=$(uname -r)
+		kernel_version=${DRIVER_KERNEL_RELEASE}
 		local -r kernel_version_major=$(echo "${kernel_version}" | cut -d. -f1)
 		local -r kernel_version_minor=$(echo "${kernel_version}" | cut -d. -f2)
 		local -r kernel_version_patch=$(echo "${kernel_version}" | cut -d. -f3)
@@ -535,9 +535,9 @@ load_bpf_probe_compile() {
 	fi
 
 	if [ -n "${BPF_USE_LOCAL_KERNEL_SOURCES}" ]; then
-		local -r kernel_version_major=$(uname -r | cut -d. -f1)
-		local -r kernel_version=$(uname -r | cut -d- -f1)
-		KERNEL_EXTRA_VERSION="-$(uname -r | cut -d- -f2)"
+		local -r kernel_version_major=$(echo "${DRIVER_KERNEL_RELEASE}" | cut -d. -f1)
+		local -r kernel_version=$(echo "${DRIVER_KERNEL_RELEASE}" | cut -d- -f1)
+		KERNEL_EXTRA_VERSION="-$(echo "${DRIVER_KERNEL_RELEASE}" | cut -d- -f2)"
 
 		echo "* Using downloaded kernel sources for kernel version ${kernel_version}..."
 
@@ -667,6 +667,8 @@ print_usage() {
 	echo "  DRIVER_NAME              specify a different name for the driver"
 	echo "  DRIVER_INSECURE_DOWNLOAD whether you want to allow insecure downloads or not"
 	echo "  DRIVER_CURL_OPTIONS      specify additional options to be passed to curl command used to download Falco drivers"
+	echo "  DRIVER_KERNEL_RELEASE    specify the kernel release for which to download/build the driver in the same format used by 'uname -r' (e.g. '6.1.0-10-cloud-amd64')"
+	echo "  DRIVER_KERNEL_VERSION    specify the kernel version for which to download/build the driver in the same format used by 'uname -v' (e.g. '#1 SMP PREEMPT_DYNAMIC Debian 6.1.38-2 (2023-07-27)')"
 	echo ""
 	echo "Versions:"
 	echo "  Falco version  ${FALCO_VERSION}"
@@ -676,13 +678,16 @@ print_usage() {
 
 ARCH=$(uname -m)
 
-KERNEL_RELEASE=$(uname -r)
+DRIVER_KERNEL_RELEASE=${DRIVER_KERNEL_RELEASE:-$(uname -r)}
+KERNEL_RELEASE=${DRIVER_KERNEL_RELEASE}
 
 if ! hash sed > /dev/null 2>&1; then
 	>&2 echo "This program requires sed"
 	exit 1
 fi
-KERNEL_VERSION=$(uname -v | sed 's/#\([[:digit:]]\+\).*/\1/')
+
+DRIVER_KERNEL_VERSION=${DRIVER_KERNEL_VERSION:-$(uname -v)}
+KERNEL_VERSION=$(echo "${DRIVER_KERNEL_VERSION}" | sed 's/#\([[:digit:]]\+\).*/\1/')
 
 DRIVERS_REPO=${DRIVERS_REPO:-"@DRIVERS_REPO@"}
 
