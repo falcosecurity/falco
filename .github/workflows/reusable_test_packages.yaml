@@ -6,6 +6,11 @@ on:
         description: x86_64 or aarch64
         required: true
         type: string
+      static:
+        description: Falco packages use a static build
+        required: false
+        type: boolean
+        default: false
       version:
         description: The Falco version to use when testing packages
         required: true
@@ -30,12 +35,13 @@ jobs:
       - name: Download binary
         uses: actions/download-artifact@v3
         with:
-          name: falco-${{ inputs.version }}-${{ inputs.arch }}.tar.gz
+          name: falco-${{ inputs.version }}${{ inputs.static && '-static' || '' }}-${{ inputs.arch }}.tar.gz
       
       - name: Install Falco package
         run: |
+          ls falco-*.tar.gz
           tar -xvf $(ls falco-*.tar.gz)
-          cd $(ls falco-*.tar.gz | sed -e 's/\.tar\.gz$//')
+          cd falco-${{ inputs.version }}-${{ inputs.arch }}
           sudo cp -r * /
 
       - name: Install go-junit-report
@@ -53,9 +59,9 @@ jobs:
       - name: Run regression tests
         run: |
           pushd submodules/falcosecurity-testing
-          ./build/falco.test -test.timeout=90s -test.v >> ./report.txt 2>&1 || true
-          ./build/falcoctl.test -test.timeout=90s -test.v >> ./report.txt 2>&1 || true
-          ./build/k8saudit.test -test.timeout=90s -test.v >> ./report.txt 2>&1 || true
+          ./build/falco.test -falco-static=${{ inputs.static && 'true' || 'false' }} -test.timeout=90s -test.v >> ./report.txt 2>&1 || true
+          ./build/falcoctl.test -falco-static=${{ inputs.static && 'true' || 'false' }} -test.timeout=90s -test.v >> ./report.txt 2>&1 || true
+          ./build/k8saudit.test -falco-static=${{ inputs.static && 'true' || 'false' }} -test.timeout=90s -test.v >> ./report.txt 2>&1 || true
           cat ./report.txt | go-junit-report -set-exit-code > report.xml
           popd
 
