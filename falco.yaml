@@ -359,6 +359,12 @@ http_output:
   # Path to a folder that will be used as the CA certificate store. CA certificate need to be
   # stored as indivitual PEM files in this directory.
   ca_path: "/etc/ssl/certs"
+  # Tell Falco to use mTLS
+  mtls: false
+  # Path to the client cert.
+  client_cert: "/etc/ssl/certs/client.crt"
+  # Path to the client key.
+  client_key: "/etc/ssl/certs/client.key"
 
 # [Stable] `program_output`
 #

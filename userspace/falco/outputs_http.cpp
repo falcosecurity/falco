@@ -62,18 +62,31 @@ void falco::outputs::output_http::output(const message *msg)
 
 		if(res == CURLE_OK)
 		{
-		   res = curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, -1L);
+			res = curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, -1L);
 		}
 
 		if(res == CURLE_OK)
 		{
 			if(m_oc.options["insecure"] == std::string("true"))
 			{
-				res = curl_easy_setopt(curl,CURLOPT_SSL_VERIFYPEER, 0L);
+				res = curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
 
 				if(res == CURLE_OK)
 				{
 					res = curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+				}
+			}
+		}
+
+		if(res == CURLE_OK)
+		{
+			if(m_oc.options["mtls"] == std::string("true"))
+			{
+				res = curl_easy_setopt(curl, CURLOPT_SSLCERT, m_oc.options["client_cert"].c_str());
+
+				if(res == CURLE_OK)
+				{
+					res = curl_easy_setopt(curl, CURLOPT_SSLKEY, m_oc.options["client_key"].c_str());
 				}
 			}
 		}
