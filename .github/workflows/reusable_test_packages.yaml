@@ -60,8 +60,10 @@ jobs:
         run: |
           pushd submodules/falcosecurity-testing
           ./build/falco.test -falco-static=${{ inputs.static && 'true' || 'false' }} -test.timeout=90s -test.v >> ./report.txt 2>&1 || true
-          ./build/falcoctl.test -falco-static=${{ inputs.static && 'true' || 'false' }} -test.timeout=90s -test.v >> ./report.txt 2>&1 || true
-          ./build/k8saudit.test -falco-static=${{ inputs.static && 'true' || 'false' }} -test.timeout=90s -test.v >> ./report.txt 2>&1 || true
+          if ${{ inputs.static && 'true' || 'false' }}; then
+            ./build/falcoctl.test -test.timeout=90s -test.v >> ./report.txt 2>&1 || true
+            ./build/k8saudit.test -test.timeout=90s -test.v >> ./report.txt 2>&1 || true
+          fi
           cat ./report.txt | go-junit-report -set-exit-code > report.xml
           popd
 
