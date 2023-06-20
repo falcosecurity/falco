@@ -16,7 +16,7 @@ limitations under the License.
 
 #include "actions.h"
 
-#ifndef MINIMAL_BUILD
+#if !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
 #include "webserver.h"
 #endif
 
@@ -25,7 +25,7 @@ using namespace falco::app::actions;
 
 falco::app::run_result falco::app::actions::start_webserver(falco::app::state& s)
 {
-#ifndef MINIMAL_BUILD
+#if !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
 	if(!s.is_capture_mode() && s.config->m_webserver_enabled)
 	{
 		if (s.options.dry_run)
@@ -55,7 +55,7 @@ falco::app::run_result falco::app::actions::start_webserver(falco::app::state& s
 
 falco::app::run_result falco::app::actions::stop_webserver(falco::app::state& s)
 {
-#ifndef MINIMAL_BUILD
+#if !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
 	if(!s.is_capture_mode() && s.config->m_webserver_enabled)
 	{
 		if (s.options.dry_run)

@@ -29,6 +29,10 @@ set(FALCO_ENGINE_SOURCE_FILES
 
 add_library(falco_engine STATIC ${FALCO_ENGINE_SOURCE_FILES})
 
+if (EMSCRIPTEN)
+	target_compile_options(falco_engine PRIVATE "-sDISABLE_EXCEPTION_CATCHING=0")
+endif()
+
 add_dependencies(falco_engine yamlcpp njson)
 
 if(MINIMAL_BUILD)

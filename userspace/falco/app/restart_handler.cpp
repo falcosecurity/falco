@@ -42,6 +42,7 @@ void falco::app::restart_handler::trigger()
 
 bool falco::app::restart_handler::start(std::string& err)
 {
+#ifdef __linux__
     m_inotify_fd = inotify_init();
     if (m_inotify_fd < 0)
     {
@@ -73,16 +74,19 @@ bool falco::app::restart_handler::start(std::string& err)
 
     // launch the watcher thread
     m_watcher = std::thread(&falco::app::restart_handler::watcher_loop, this);
+#endif
     return true;
 }
 
 void falco::app::restart_handler::stop()
 {
+#ifdef __linux__
     m_stop.store(true, std::memory_order_release);
     if (m_watcher.joinable())
     {
         m_watcher.join();
     }
+#endif
 }
 
 void falco::app::restart_handler::watcher_loop() noexcept

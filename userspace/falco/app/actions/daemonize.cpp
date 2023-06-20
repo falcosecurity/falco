@@ -27,6 +27,7 @@ static bool s_daemonized = false;
 
 falco::app::run_result falco::app::actions::daemonize(falco::app::state& s)
 {
+#ifdef __linux__
 	if (s.options.dry_run)
 	{
 		falco_logger::log(LOG_DEBUG, "Skipping daemonizing in dry-run\n");
@@ -82,6 +83,7 @@ falco::app::run_result falco::app::actions::daemonize(falco::app::state& s)
 
 		s_daemonized = true;
 	}
+#endif // __linux__
 
 	return run_result::ok();
 }

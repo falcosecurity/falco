@@ -204,7 +204,11 @@ void evttype_index_ruleset::add(
 		wrap->filter = filter;
 		if(rule.source == falco_common::syscall_source)
 		{
+#ifdef __linux__
 			wrap->sc_codes = libsinsp::filter::ast::ppm_sc_codes(condition.get());
+#else
+			wrap->sc_codes = { };
+#endif
 			wrap->event_codes = libsinsp::filter::ast::ppm_event_codes(condition.get());
 		}
 		else

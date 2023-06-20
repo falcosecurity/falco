@@ -214,6 +214,7 @@ static void select_event_set(falco::app::state& s, const libsinsp::events::set<p
 
 falco::app::run_result falco::app::actions::configure_interesting_sets(falco::app::state& s)
 {
+#ifdef __linux__
 	if (s.engine == nullptr || s.config == nullptr)
 	{
 		return run_result::fatal("Broken 'configure_interesting_sets' preconditions: engine and config must be non-null");
@@ -232,5 +233,7 @@ falco::app::run_result falco::app::actions::configure_interesting_sets(falco::ap
 	auto rules_sc_set = s.engine->sc_codes_for_ruleset(falco_common::syscall_source);
 	select_event_set(s, rules_sc_set);
 	check_for_rules_unsupported_events(s, rules_sc_set);
+
+#endif
 	return run_result::ok();
 }

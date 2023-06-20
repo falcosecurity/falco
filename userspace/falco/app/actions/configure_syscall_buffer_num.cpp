@@ -21,6 +21,7 @@ using namespace falco::app::actions;
 
 falco::app::run_result falco::app::actions::configure_syscall_buffer_num(falco::app::state& s)
 {
+#ifdef __linux__
 	if(!s.options.modern_bpf)
 	{
 		return run_result::ok();
@@ -37,6 +38,6 @@ falco::app::run_result falco::app::actions::configure_syscall_buffer_num(falco::
 		falco_logger::log(LOG_WARNING, "you required a buffer every '" + std::to_string(s.config->m_cpus_for_each_syscall_buffer) + "' CPUs but there are only '" + std::to_string(online_cpus) + "' online CPUs. Falco changed the config to: one buffer every '" + std::to_string(online_cpus) + "' CPUs\n");
 		s.config->m_cpus_for_each_syscall_buffer = online_cpus;
 	}
-
+#endif
 	return run_result::ok();
 }

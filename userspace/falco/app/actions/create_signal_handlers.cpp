@@ -20,7 +20,9 @@ limitations under the License.
 #include "../app.h"
 #include "../signals.h"
 
+#ifdef __linux__
 #include <signal.h>
+#endif // __linux__
 
 using namespace falco::app;
 using namespace falco::app::actions;
@@ -48,6 +50,7 @@ static void restart_signal_handler(int signal)
 bool create_handler(int sig, void (*func)(int), run_result &ret)
 {
 	ret = run_result::ok();
+#ifdef __linux__
 	if(signal(sig, func) == SIG_ERR)
 	{
 		char errbuf[1024];
@@ -61,12 +64,15 @@ bool create_handler(int sig, void (*func)(int), run_result &ret)
 			   ": " +
 			   errbuf);
 	}
-
+#endif
 	return ret.success;
 }
 
 falco::app::run_result falco::app::actions::create_signal_handlers(falco::app::state& s)
 {
+	auto ret = run_result::ok();
+
+#ifdef __linux__
 	if (s.options.dry_run)
 	{
 		falco_logger::log(LOG_DEBUG, "Skipping signal handlers creation in dry-run\n");
@@ -84,7 +90,6 @@ falco::app::run_result falco::app::actions::create_signal_handlers(falco::app::s
 		falco_logger::log(LOG_WARNING, "Bundled atomics implementation is not lock-free, signal handlers may be unstable\n");
 	}
 
-	run_result ret;
 	if(! create_handler(SIGINT, ::terminate_signal_handler, ret) ||
 	   ! create_handler(SIGTERM, ::terminate_signal_handler, ret) ||
 	   ! create_handler(SIGUSR1, ::reopen_outputs_signal_handler, ret) ||
@@ -146,11 +151,14 @@ falco::app::run_result falco::app::actions::create_signal_handlers(falco::app::s
 	{
 		s_restarter = s.restarter;
 	}
+#endif
+
 	return ret;
 }
 
 falco::app::run_result falco::app::actions::unregister_signal_handlers(falco::app::state& s)
 {
+#ifdef __linux__
 	if (s.options.dry_run)
 	{
 		falco_logger::log(LOG_DEBUG, "Skipping unregistering signal handlers in dry-run\n");
@@ -171,5 +179,7 @@ falco::app::run_result falco::app::actions::unregister_signal_handlers(falco::ap
 	{
 		return ret;
 	}
+#endif // __linux__
+
 	return run_result::ok();
 }

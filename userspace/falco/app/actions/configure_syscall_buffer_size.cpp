@@ -26,6 +26,7 @@ using namespace falco::app::actions;
 
 falco::app::run_result falco::app::actions::configure_syscall_buffer_size(falco::app::state& s)
 {
+#ifdef __linux__
 	/* We don't need to compute the syscall buffer dimension if we are in capture mode or if the
 	 * the syscall source is not enabled.
 	 */
@@ -71,5 +72,7 @@ falco::app::run_result falco::app::actions::configure_syscall_buffer_size(falco:
 
 	s.syscall_buffer_bytes_size = chosen_size;
 	falco_logger::log(LOG_INFO, "The chosen syscall buffer dimension is: " + std::to_string(chosen_size) + " bytes (" +  std::to_string(chosen_size / (uint64_t)(1024 * 1024)) + " MBs)\n");
+	
+#endif // __linux__
 	return run_result::ok();
 }

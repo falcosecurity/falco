@@ -28,8 +28,16 @@ file(GLOB_RECURSE FALCO_TESTS ${CMAKE_CURRENT_SOURCE_DIR}/falco/*.cpp)
 
 set(FALCO_UNIT_TESTS_SOURCES
   "${ENGINE_TESTS}"
-  "${FALCO_TESTS}"
+  falco/test_configuration.cpp
+  falco/app/actions/test_select_event_sources.cpp
 )
+
+if (CMAKE_SYSTEM_NAME MATCHES "Linux")
+  list(APPEND FALCO_UNIT_TESTS_SOURCES
+    falco/test_atomic_signal_handler.cpp
+    falco/app/actions/test_configure_interesting_sets.cpp
+    falco/app/actions/test_configure_syscall_buffer.cpp)
+endif()
 
 set(FALCO_UNIT_TESTS_INCLUDES
     PRIVATE
@@ -62,3 +70,9 @@ add_executable(falco_unit_tests ${FALCO_UNIT_TESTS_SOURCES})
 target_include_directories(falco_unit_tests ${FALCO_UNIT_TESTS_INCLUDES})
 target_link_libraries(falco_unit_tests ${FALCO_UNIT_TESTS_LIBRARIES})
 add_dependencies(falco_unit_tests ${FALCO_UNIT_TESTS_DEPENDENCIES})
+
+if (EMSCRIPTEN)
+	target_compile_options(falco_unit_tests PRIVATE "-sDISABLE_EXCEPTION_CATCHING=0")
+	target_link_options(falco_unit_tests PRIVATE "-sDISABLE_EXCEPTION_CATCHING=0")
+	target_link_options(falco_unit_tests PRIVATE "-sEXPORTED_FUNCTIONS=['_main','_htons','_ntohs']")
+endif()

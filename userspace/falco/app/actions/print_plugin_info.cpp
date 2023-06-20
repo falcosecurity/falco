@@ -24,12 +24,6 @@ using namespace falco::app::actions;
 
 falco::app::run_result falco::app::actions::print_plugin_info(falco::app::state& s)
 {
-#ifdef MUSL_OPTIMIZED
-	if(!s.options.print_plugin_info.empty())
-	{
-		return run_result::fatal("Can not load or use plugins with musl optimized build");
-	}
-#else  // MUSL_OPTIMIZED
 	if(!s.options.print_plugin_info.empty())
 	{
 		std::unique_ptr<sinsp> inspector(new sinsp());
@@ -110,7 +104,6 @@ falco::app::run_result falco::app::actions::print_plugin_info(falco::app::state&
 		}
 		return run_result::fatal("can't find plugin and print its info: " + s.options.print_plugin_info);
 	}
-#endif // MUSL_OPTIMIZED
 
 	return run_result::ok();
 }

@@ -22,10 +22,10 @@ using namespace falco::app::actions;
 
 falco::app::run_result falco::app::actions::load_plugins(falco::app::state& s)
 {
-#ifdef MUSL_OPTIMIZED
+#if !defined(MUSL_OPTIMIZED) and !defined(__EMSCRIPTEN__)
 	if (!s.config->m_plugins.empty())
 	{
-		return run_result::fatal("Can not load/use plugins with musl optimized build");
+		return run_result::fatal("Loading plugins dynamic libraries is not supported with this Falco build");
 	}
 #endif
 	// Initialize the set of loaded event sources. 
