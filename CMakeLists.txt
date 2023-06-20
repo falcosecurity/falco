@@ -23,6 +23,9 @@ option(BUILD_FALCO_UNIT_TESTS "Build falco unit tests" OFF)
 if(EMSCRIPTEN)
   set(USE_BUNDLED_DEPS ON CACHE BOOL "" FORCE)
   set(BUILD_DRIVER OFF CACHE BOOL "" FORCE)
+  set(ENABLE_DKMS OFF CACHE BOOL "" FORCE)
+  set(BUILD_BPF OFF CACHE BOOL "" FORCE)
+  set(CPACK_GENERATOR TGZ CACHE BOOL "" FORCE)
 endif()
 
 # gVisor is currently only supported on Linux x86_64
@@ -223,11 +226,13 @@ add_subdirectory(scripts)
 add_subdirectory(userspace/engine)
 add_subdirectory(userspace/falco)
 
-if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT MUSL_OPTIMIZED_BUILD)
-  include(plugins)
-endif()
+if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+  if(NOT MUSL_OPTIMIZED_BUILD)
+    include(plugins)
+  endif()
 
-include(falcoctl)
+  include(falcoctl)
+endif()
 
 # Packages configuration
 include(CPackConfig)
