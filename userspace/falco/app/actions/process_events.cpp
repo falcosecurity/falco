@@ -30,13 +30,10 @@ limitations under the License.
 #include "helpers.h"
 #include "../options.h"
 #include "../signals.h"
-#include "../../semaphore.h"
+#include "../../falco_semaphore.h"
 #include "../../stats_writer.h"
 #include "../../falco_outputs.h"
 #include "../../event_drops.h"
-#ifndef MINIMAL_BUILD
-#include "../../webserver.h"
-#endif
 
 #include <plugin_manager.h>
 

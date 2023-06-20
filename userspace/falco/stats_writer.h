@@ -22,7 +22,9 @@ limitations under the License.
 
 #include <sinsp.h>
 
+#ifndef __EMSCRIPTEN__
 #include "tbb/concurrent_queue.h"
+#endif
 #include "falco_outputs.h"
 #include "configuration.h"
 
@@ -143,7 +145,9 @@ private:
 	uint64_t m_total_samples;
 	std::thread m_worker;
 	std::ofstream m_file_output;
+#ifndef __EMSCRIPTEN__
 	tbb::concurrent_bounded_queue<stats_writer::msg> m_queue;
+#endif
 	std::shared_ptr<falco_outputs> m_outputs;
 	std::shared_ptr<const falco_configuration> m_config;
 

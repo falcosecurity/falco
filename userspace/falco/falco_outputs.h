@@ -24,7 +24,9 @@ limitations under the License.
 #include "falco_engine.h"
 #include "outputs.h"
 #include "formats.h"
+#ifndef __EMSCRIPTEN__
 #include "tbb/concurrent_queue.h"
+#endif
 
 /*!
 	\brief This class acts as the primary interface between a program and the
@@ -105,9 +107,10 @@ private:
 		ctrl_msg_type type;
 	};
 
+#ifndef __EMSCRIPTEN__
 	typedef tbb::concurrent_bounded_queue<ctrl_msg> falco_outputs_cbq;
-
 	falco_outputs_cbq m_queue;
+#endif
 
 	std::thread m_worker_thread;
 	inline void push(const ctrl_msg& cmsg);

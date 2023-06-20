@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#ifndef MINIMAL_BUILD
+#if !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
 #include <google/protobuf/util/time_util.h>
 #endif
 
@@ -30,7 +30,7 @@ limitations under the License.
 #include "outputs_program.h"
 #include "outputs_stdout.h"
 #include "outputs_syslog.h"
-#ifndef MINIMAL_BUILD
+#if !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
 #include "outputs_http.h"
 #include "outputs_grpc.h"
 #endif
@@ -98,7 +98,7 @@ void falco_outputs::add_output(falco::outputs::config oc)
 	{
 		oo = new falco::outputs::output_syslog();
 	}
-#ifndef MINIMAL_BUILD
+#if !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
 	else if(oc.name == "http")
 	{
 		oo = new falco::outputs::output_http();
@@ -245,7 +245,9 @@ void falco_outputs::stop_worker()
 	watchdog<void *> wd;
 	wd.start([&](void *) -> void {
 		falco_logger::log(LOG_NOTICE, "output channels still blocked, discarding all remaining notifications\n");
+#ifndef __EMSCRIPTEN__
 		m_queue.clear();
+#endif
 		this->push_ctrl(falco_outputs::ctrl_msg_type::CTRL_MSG_STOP);
 	});
 	wd.set_timeout(m_timeout, nullptr);
@@ -266,11 +268,13 @@ inline void falco_outputs::push_ctrl(ctrl_msg_type cmt)
 
 inline void falco_outputs::push(const ctrl_msg& cmsg)
 {
+#ifndef __EMSCRIPTEN__
 	if (!m_queue.try_push(cmsg))
 	{
 		fprintf(stderr, "Fatal error: Output queue reached maximum capacity. Exiting.\n");
 		exit(EXIT_FAILURE);
 	}
+#endif
 }
 
 // todo(leogr,leodido): this function is not supposed to throw exceptions, and with "noexcept",
@@ -289,7 +293,9 @@ void falco_outputs::worker() noexcept
 	do
 	{
 		// Block until a message becomes available.
+#ifndef __EMSCRIPTEN__
 		m_queue.pop(cmsg);
+#endif
 
 		for(const auto o : m_outputs)
 		{

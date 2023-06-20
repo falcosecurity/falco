@@ -143,6 +143,10 @@ add_library(
   ${FALCO_SOURCES}
 )
 
+if (EMSCRIPTEN)
+	target_compile_options(falco_application PRIVATE "-sDISABLE_EXCEPTION_CATCHING=0")
+endif()
+
 add_dependencies(falco_application ${FALCO_DEPENDENCIES})
 
 target_link_libraries(
@@ -160,6 +164,12 @@ add_executable(falco falco.cpp)
 add_dependencies(falco falco_application ${FALCO_DEPENDENCIES})
 target_link_libraries(falco falco_application ${FALCO_LIBRARIES})
 target_include_directories(falco PUBLIC ${FALCO_INCLUDE_DIRECTORIES})
+
+if (EMSCRIPTEN)
+	target_compile_options(falco PRIVATE "-sDISABLE_EXCEPTION_CATCHING=0")
+	target_link_options(falco PRIVATE "-sDISABLE_EXCEPTION_CATCHING=0")
+	target_link_options(falco PRIVATE "-sEXPORTED_FUNCTIONS=['_main','_htons','_ntohs']")
+endif()
 
 if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT MINIMAL_BUILD)
   add_custom_command(

@@ -102,7 +102,9 @@ stats_writer::stats_writer(
 
 	if (m_initialized)
 	{
+#ifndef __EMSCRIPTEN__
 		m_worker = std::thread(&stats_writer::worker, this);
+#endif
 	}
 }
 
@@ -110,7 +112,9 @@ stats_writer::~stats_writer()
 {
 	if (m_initialized)
 	{
+#ifndef __EMSCRIPTEN__
 		stop_worker();
+#endif
 		if (!m_config->m_metrics_output_file.empty())
 		{
 			m_file_output.close();
@@ -131,11 +135,13 @@ void stats_writer::stop_worker()
 
 inline void stats_writer::push(const stats_writer::msg& m)
 {
+	#ifndef __EMSCRIPTEN__
 	if (!m_queue.try_push(m))
 	{
 		fprintf(stderr, "Fatal error: Stats queue reached maximum capacity. Exiting.\n");
 		exit(EXIT_FAILURE);
 	}
+	#endif
 }
 
 void stats_writer::worker() noexcept
@@ -151,7 +157,9 @@ void stats_writer::worker() noexcept
 	while(true)
 	{
 		// blocks until a message becomes availables
+		#ifndef __EMSCRIPTEN__
 		m_queue.pop(m);
+		#endif
 		if (m.stop)
 		{
 			return;
@@ -247,7 +255,7 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 	const scap_agent_info* agent_info = inspector->get_agent_info();
 	const scap_machine_info* machine_info = inspector->get_machine_info();
 
-#ifndef MINIMAL_BUILD
+#if !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
 	/* Resource utilization, CPU and memory usage etc. */
 	uint32_t nstats = 0;
 	int32_t rc = 0;

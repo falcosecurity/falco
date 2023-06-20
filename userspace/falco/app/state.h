@@ -22,7 +22,7 @@ limitations under the License.
 #include "restart_handler.h"
 #include "../configuration.h"
 #include "../stats_writer.h"
-#ifndef MINIMAL_BUILD
+#if !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
 #include "../grpc_server.h"
 #include "../webserver.h"
 #endif
@@ -137,7 +137,7 @@ struct state
     // Helper responsible for watching of handling hot application restarts
     std::shared_ptr<restart_handler> restarter;
 
-#ifndef MINIMAL_BUILD
+#if !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
     falco::grpc::server grpc_server;
     std::thread grpc_server_thread;
 
