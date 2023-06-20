@@ -90,7 +90,7 @@ if(USE_BUNDLED_DEPS)
   list(APPEND FALCO_DEPENDENCIES yamlcpp)
 endif()
 
-if(NOT MINIMAL_BUILD)
+if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT MINIMAL_BUILD)
   list(
     APPEND FALCO_SOURCES
     outputs_grpc.cpp
@@ -119,7 +119,7 @@ if(NOT MINIMAL_BUILD)
     "${CARES_INCLUDE}"
   )
 
-  if(USE_BUNDLED_GRPC)
+  if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND USE_BUNDLED_GRPC)
     list(APPEND FALCO_DEPENDENCIES grpc)
     list(APPEND FALCO_LIBRARIES "${GRPC_LIBRARIES}")
   endif()
@@ -161,7 +161,7 @@ add_dependencies(falco falco_application ${FALCO_DEPENDENCIES})
 target_link_libraries(falco falco_application ${FALCO_LIBRARIES})
 target_include_directories(falco PUBLIC ${FALCO_INCLUDE_DIRECTORIES})
 
-if(NOT MINIMAL_BUILD)
+if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT MINIMAL_BUILD)
   add_custom_command(
     OUTPUT
     ${CMAKE_CURRENT_BINARY_DIR}/version.grpc.pb.cc

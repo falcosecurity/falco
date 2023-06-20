@@ -20,6 +20,11 @@ option(MINIMAL_BUILD "Build a minimal version of Falco, containing only the engi
 option(MUSL_OPTIMIZED_BUILD "Enable if you want a musl optimized build" OFF)
 option(BUILD_FALCO_UNIT_TESTS "Build falco unit tests" OFF)
 
+if(EMSCRIPTEN)
+  set(USE_BUNDLED_DEPS ON CACHE BOOL "" FORCE)
+  set(BUILD_DRIVER OFF CACHE BOOL "" FORCE)
+endif()
+
 # gVisor is currently only supported on Linux x86_64
 if(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64" AND CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT MINIMAL_BUILD)
   option(BUILD_FALCO_GVISOR "Build gVisor support for Falco" ON)
@@ -160,23 +165,26 @@ include(b64)
 # yaml-cpp
 include(yaml-cpp)
 
-if(NOT MINIMAL_BUILD)
+if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT MINIMAL_BUILD)
   # OpenSSL
   include(openssl)
 
   # libcurl
   include(curl)
 
+  # todo(jasondellaluce,rohith-raju): support webserver for non-linux builds too
   # cpp-httlib
   include(cpp-httplib)
 endif()
 
 include(cxxopts)
 
-# One TBB
-include(tbb)
+if (NOT EMSCRIPTEN)
+  include(tbb)
+endif()
 
-if(NOT MINIMAL_BUILD)
+# One TBB
+if (CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT MINIMAL_BUILD)
   include(zlib)
   include(cares)
   include(protobuf)
@@ -212,7 +220,7 @@ add_subdirectory(scripts)
 add_subdirectory(userspace/engine)
 add_subdirectory(userspace/falco)
 
-if(NOT MUSL_OPTIMIZED_BUILD)
+if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT MUSL_OPTIMIZED_BUILD)
   include(plugins)
 endif()
 
