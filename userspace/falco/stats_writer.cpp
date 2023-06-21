@@ -15,7 +15,8 @@ limitations under the License.
 */
 
 #include <sys/time.h>
-#include <signal.h>
+#include <ctime>
+#include <csignal>
 #include <nlohmann/json.hpp>
 #include <atomic>
 
@@ -39,10 +40,10 @@ static void timer_handler(int signum)
 
 bool stats_writer::init_ticker(uint32_t interval_msec, std::string &err)
 {
-	struct itimerval timer;
-	struct sigaction handler;
+	struct itimerspec timer = {};
+	struct sigaction handler = {};
 
-	memset (&handler, 0, sizeof (handler));
+	memset (&handler, 0, sizeof(handler));
 	handler.sa_handler = &timer_handler;
 	if (sigaction(SIGALRM, &handler, NULL) == -1)
 	{
@@ -50,14 +51,29 @@ bool stats_writer::init_ticker(uint32_t interval_msec, std::string &err)
 		return false;
 	}
 
+	timer_t timerid;
+	struct sigevent sev = {};
+	/* Create the timer */
+	sev.sigev_notify = SIGEV_SIGNAL;
+	sev.sigev_signo = SIGALRM;
+	sev.sigev_value.sival_ptr = &timerid;
+	if (timer_create(CLOCK_MONOTONIC, &sev, &timerid) == -1) {
+		err = std::string("Could not create periodic timer: ") + strerror(errno);
+		return false;
+	}
 	timer.it_value.tv_sec = interval_msec / 1000;
-	timer.it_value.tv_usec = (interval_msec % 1000) * 1000;
+	timer.it_value.tv_nsec = (interval_msec % 1000) * 1000 * 1000;
 	timer.it_interval = timer.it_value;
-	if (setitimer(ITIMER_REAL, &timer, NULL) == -1)
-	{
+
+	if (timer_settime(timerid, 0, &timer, NULL) == -1) {
 		err = std::string("Could not set up periodic timer: ") + strerror(errno);
 		return false;
 	}
+	//if (setitimer(ITIMER_REAL, &timer, NULL) == -1)
+	//{
+	//	err = std::string("Could not set up periodic timer: ") + strerror(errno);
+	//	return false;
+	//}
 
 	return true;
 }
