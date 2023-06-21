@@ -148,7 +148,7 @@ rules_file:
 #
 # --- [Description]
 #
-# Falco plugins enable integration with other services in the your ecosystem.
+# Falco plugins enable integration with other services in your ecosystem.
 # They allow Falco to extend its functionality and leverage data sources such as
 # Kubernetes audit logs or AWS CloudTrail logs. This enables Falco to perform
 # fast on-host detections beyond syscalls and container events. The plugin
@@ -162,10 +162,11 @@ rules_file:
 #
 # Please note that if your intention is to enrich Falco syscall logs with fields
 # such as `k8s.ns.name`, `k8s.pod.name`, and `k8s.pod.*`, you do not need to use
-# the `k8saudit` plugin. This information is automatically extracted from the
-# container runtime socket. The `k8saudit` plugin is specifically designed to
-# integrate with Kubernetes audit logs and is not required for basic enrichment
-# of syscall logs with Kubernetes-related fields.
+# the `k8saudit` plugin nor the `-k`/`-K` Kubernetes metadata enrichment. This
+# information is automatically extracted from the container runtime socket. The
+# `k8saudit` plugin is specifically designed to integrate with Kubernetes audit
+# logs and is not required for basic enrichment of syscall logs with
+# Kubernetes-related fields.
 #
 # --- [Usage]
 #
@@ -328,6 +329,9 @@ file_output:
 # [Stable] `http_output`
 #
 # Send logs to an HTTP endpoint or webhook.
+#
+# When using falcosidekick, it is necessary to set `json_output` to true, which is
+# conveniently done automatically for you when using `falcosidekick.enabled=true`.
 http_output:
   enabled: false
   url: http://some.url
@@ -598,6 +602,7 @@ syscall_event_drops:
 # [Experimental] `metrics`
 #
 # Generates "Falco internal: metrics snapshot" rule output when `priority=info` at minimum
+# By selecting `output_file`, equivalent JSON output will be appended to a file.
 #
 # periodic metric snapshots (including stats and resource utilization) captured
 # at regular intervals
@@ -629,6 +634,9 @@ syscall_event_drops:
 #
 # It's important to note that the output fields and their names can be subject
 # to change until the metrics feature reaches a stable release.
+# In addition, the majority of fields represent an instant snapshot, with the
+# exception of event rates per second and drop percentage stats. These values
+# are computed based on the delta between two snapshots.
 #
 # To customize the hostname in Falco, you can set the environment variable
 # `FALCO_HOSTNAME` to your desired hostname. This is particularly useful in
@@ -672,7 +680,8 @@ syscall_event_drops:
 # must be set to `info` at a minimum.
 #
 # `output_file`: Append stats to a `jsonl` file. Use with caution in production
-# as Falco does not automatically rotate the file.
+# as Falco does not automatically rotate the file. It can be used in combination
+# with `output_rule`.
 #
 # `resource_utilization_enabled`: Emit CPU and memory usage metrics. CPU usage
 # is reported as a percentage of one CPU and can be normalized to the total
