@@ -50,7 +50,7 @@ bool stats_writer::init_ticker(uint32_t interval_msec, std::string &err)
 		err = std::string("Could not set up signal handler for periodic timer: ") + strerror(errno);
 		return false;
 	}
-
+	
 	timer_t timerid;
 	struct sigevent sev = {};
 	/* Create the timer */
@@ -69,11 +69,6 @@ bool stats_writer::init_ticker(uint32_t interval_msec, std::string &err)
 		err = std::string("Could not set up periodic timer: ") + strerror(errno);
 		return false;
 	}
-	//if (setitimer(ITIMER_REAL, &timer, NULL) == -1)
-	//{
-	//	err = std::string("Could not set up periodic timer: ") + strerror(errno);
-	//	return false;
-	//}
 
 	return true;
 }
