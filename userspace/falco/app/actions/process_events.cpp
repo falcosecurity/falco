@@ -493,6 +493,13 @@ falco::app::run_result falco::app::actions::process_events(falco::app::state& s)
 	{
 		print_enabled_event_sources(s);
 
+#ifdef __EMSCRIPTEN__
+		if(s.enabled_sources.size() > 1)
+		{
+			return run_result::fatal("enabling multiple event sources is not supported by this Falco build");
+		}
+#endif
+
 		// start event processing for all enabled sources
 		falco::semaphore termination_sem(s.enabled_sources.size());
 		std::vector<live_context> ctxs;

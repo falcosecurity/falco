@@ -64,13 +64,16 @@ falco_outputs::falco_outputs(
 	{
 		add_output(output);
 	}
-
+#ifndef __EMSCRIPTEN__
 	m_worker_thread = std::thread(&falco_outputs::worker, this);
+#endif
 }
 
 falco_outputs::~falco_outputs()
 {
+#ifndef __EMSCRIPTEN__
 	this->stop_worker();
+#endif
 	for(auto o : m_outputs)
 	{
 		delete o;
@@ -274,6 +277,11 @@ inline void falco_outputs::push(const ctrl_msg& cmsg)
 		fprintf(stderr, "Fatal error: Output queue reached maximum capacity. Exiting.\n");
 		exit(EXIT_FAILURE);
 	}
+#else
+	for (auto o : m_outputs)
+	{
+		process_msg(o, cmsg);
+	}
 #endif
 }
 
@@ -297,26 +305,12 @@ void falco_outputs::worker() noexcept
 		m_queue.pop(cmsg);
 #endif
 
-		for(const auto o : m_outputs)
+		for(auto o : m_outputs)
 		{
 			wd.set_timeout(timeout, o->get_name());
 			try
 			{
-				switch(cmsg.type)
-				{
-					case ctrl_msg_type::CTRL_MSG_OUTPUT:
-						o->output(&cmsg);
-						break;
-					case ctrl_msg_type::CTRL_MSG_CLEANUP:
-					case ctrl_msg_type::CTRL_MSG_STOP:
-						o->cleanup();
-						break;
-					case ctrl_msg_type::CTRL_MSG_REOPEN:
-						o->reopen();
-						break;
-					default:
-						falco_logger::log(LOG_DEBUG, "Outputs worker received an unknown message type\n");
-				}
+				process_msg(o, cmsg);
 			}
 			catch(const std::exception &e)
 			{
@@ -325,4 +319,23 @@ void falco_outputs::worker() noexcept
 		}
 		wd.cancel_timeout();
 	} while(cmsg.type != ctrl_msg_type::CTRL_MSG_STOP);
+}
+
+inline void falco_outputs::process_msg(falco::outputs::abstract_output* o, const ctrl_msg& cmsg)
+{
+	switch(cmsg.type)
+	{
+		case ctrl_msg_type::CTRL_MSG_OUTPUT:
+			o->output(&cmsg);
+			break;
+		case ctrl_msg_type::CTRL_MSG_CLEANUP:
+		case ctrl_msg_type::CTRL_MSG_STOP:
+			o->cleanup();
+			break;
+		case ctrl_msg_type::CTRL_MSG_REOPEN:
+			o->reopen();
+			break;
+		default:
+			falco_logger::log(LOG_DEBUG, "Outputs worker received an unknown message type\n");
+	}
 }
