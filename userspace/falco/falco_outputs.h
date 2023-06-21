@@ -118,4 +118,5 @@ private:
 	void worker() noexcept;
 	void stop_worker();
 	void add_output(falco::outputs::config oc);
+	inline void process_msg(falco::outputs::abstract_output* o, const ctrl_msg& cmsg);
 };

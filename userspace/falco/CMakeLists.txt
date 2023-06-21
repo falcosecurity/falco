@@ -167,6 +167,7 @@ target_include_directories(falco PUBLIC ${FALCO_INCLUDE_DIRECTORIES})
 
 if (EMSCRIPTEN)
 	target_compile_options(falco PRIVATE "-sDISABLE_EXCEPTION_CATCHING=0")
+  target_link_options(falco PRIVATE "-sALLOW_MEMORY_GROWTH=1")
 	target_link_options(falco PRIVATE "-sDISABLE_EXCEPTION_CATCHING=0")
 	target_link_options(falco PRIVATE "-sEXPORTED_FUNCTIONS=['_main','_htons','_ntohs']")
 endif()
