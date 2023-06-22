@@ -144,7 +144,7 @@ static falco::app::run_result do_inspect(
 	const bool is_capture_mode = source.empty();
 	size_t source_engine_idx = 0;
 
-	// note(jasondellaluce): The "syscall" event sourc will always be loaded
+	// note(jasondellaluce): The "syscall" event source will always be loaded
 	// by default in an inspector, and at index 0. As such, in live mode we would
 	// expect the event source index to always be 0 in case of "syscall" source,
 	// and 1 in case of any other plugin event source, because it would be
