@@ -144,6 +144,13 @@ static falco::app::run_result do_inspect(
 	const bool is_capture_mode = source.empty();
 	size_t source_engine_idx = 0;
 
+	// note(jasondellaluce): The "syscall" event sourc will always be loaded
+	// by default in an inspector, and at index 0. As such, in live mode we would
+	// expect the event source index to always be 0 in case of "syscall" source,
+	// and 1 in case of any other plugin event source, because it would be
+	// the only other source loaded in its relative live inspector.
+	size_t expected_live_evt_src_idx = source == falco_common::syscall_source ? 0 : 1;
+
 	if (!is_capture_mode)
 	{
 		// note: in live mode, each inspector gets assigned a distinct event
@@ -283,12 +290,15 @@ static falco::app::run_result do_inspect(
 		{
 			// in live mode, each inspector gets assigned a distinct event source,
 			// so we report an error if we fetch an event of a different source.
-			if (source_engine_idx != ev->get_source_idx())
+			if (expected_live_evt_src_idx != ev->get_source_idx())
 			{
-				auto msg = "Unexpected event source for inspector's event: expected='" + source + "', actual=";
-				msg += (ev->get_source_name() != NULL)
+				std::string actual = (ev->get_source_name() != NULL)
 					? ("'" + std::string(ev->get_source_name()) + "'")
 					: ("<NA>");
+				std::string msg = "Unexpected event source for inspector's event:";
+				msg += " type=" + std::to_string(ev->get_type());
+				msg += ", expected='" + source + " (idx=" + std::to_string(expected_live_evt_src_idx) + ")";
+				msg += "', actual=" + actual + " (idx=" + std::to_string(ev->get_source_idx()) + ")";
 				return run_result::fatal(msg);
 			}
 
