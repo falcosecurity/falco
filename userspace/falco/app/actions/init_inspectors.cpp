@@ -190,7 +190,7 @@ falco::app::run_result falco::app::actions::init_inspectors(falco::app::state& s
 
 		// in live mode, each inspector should have registered at most two event sources:
 		// the "syscall" on, loaded at default at index 0, and optionally another
-		// one defined by a plugin, at index 0
+		// one defined by a plugin, at index 1
 		if (!s.is_capture_mode())
 		{
 			const auto& sources = src_info->inspector->event_sources();
