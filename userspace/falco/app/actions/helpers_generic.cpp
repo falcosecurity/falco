@@ -39,8 +39,17 @@ bool falco::app::actions::check_rules_plugin_requirements(falco::app::state& s, 
 
 void falco::app::actions::print_enabled_event_sources(falco::app::state& s)
 {
-	/* Print all enabled sources. */
+	/* Print all loaded sources. */
 	std::string str;
+	for (const auto &src : s.loaded_sources)
+	{
+		str += str.empty() ? "" : ", ";
+		str += src;
+	}
+	falco_logger::log(LOG_INFO, "Loaded event sources: " + str);
+
+	/* Print all enabled sources. */
+	str.clear();
 	for (const auto &src : s.enabled_sources)
 	{
 		str += str.empty() ? "" : ", ";
