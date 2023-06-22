@@ -187,6 +187,23 @@ falco::app::run_result falco::app::actions::init_inspectors(falco::app::state& s
 		{
 			return run_result::fatal(err);
 		}
+
+		// in live mode, each inspector should have registered at most two event sources:
+		// the "syscall" on, loaded at default at index 0, and optionally another
+		// one defined by a plugin, at index 0
+		if (!s.is_capture_mode())
+		{
+			const auto& sources = src_info->inspector->event_sources();
+			if (sources.size() == 0 || sources.size() > 2 || sources[0] != falco_common::syscall_source)
+			{
+				std::string err;
+				for (const auto &s : sources)
+				{
+					err += (err.empty() ? "" : ", ") + s;
+				}
+				return run_result::fatal("Illegal sources setup in live inspector for source '" + src + "': " + err);
+			}
+		}
 	}
 
 	// check if some plugin remains unused
