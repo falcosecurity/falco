@@ -45,8 +45,8 @@ TEST(FalcoUtils, parse_prometheus_interval)
 	ASSERT_EQ(falco::utils::parse_prometheus_interval("1m"), 60000UL);
 	ASSERT_EQ(falco::utils::parse_prometheus_interval("1h"), 3600000UL);
 	ASSERT_EQ(falco::utils::parse_prometheus_interval("1d"), 86400000UL);
-	ASSERT_EQ(falco::utils::parse_prometheus_interval("1w"), 604800000UL);
-	ASSERT_EQ(falco::utils::parse_prometheus_interval("1y"), 31536000000UL);
+	ASSERT_EQ(falco::utils::parse_prometheus_interval("1w"), 604800000UL);	
+	ASSERT_EQ(falco::utils::parse_prometheus_interval("1y"), (unsigned long)31536000000UL);
 
 	ASSERT_EQ(falco::utils::parse_prometheus_interval("300ms"), 300UL);
 	ASSERT_EQ(falco::utils::parse_prometheus_interval("255s"), 255000UL);
@@ -57,7 +57,7 @@ TEST(FalcoUtils, parse_prometheus_interval)
 
 	/* Test matrix for concatenated time interval examples. */
 	ASSERT_EQ(falco::utils::parse_prometheus_interval("1h3m2s1ms"), 3600000UL + 3 * 60000UL + 2 * 1000UL + 1UL);
-	ASSERT_EQ(falco::utils::parse_prometheus_interval("1y1w1d1h1m1s1ms"), 31536000000UL + 604800000UL + 86400000UL + 3600000UL + 60000UL + 1000UL + 1UL);
+	ASSERT_EQ(falco::utils::parse_prometheus_interval("1y1w1d1h1m1s1ms"),(unsigned long) 31536000000UL + 604800000UL + 86400000UL + 3600000UL + 60000UL + 1000UL + 1UL);
 	ASSERT_EQ(falco::utils::parse_prometheus_interval("2h5m"), 2 * 3600000UL + 5 * 60000UL);
 	ASSERT_EQ(falco::utils::parse_prometheus_interval("2h 5m"), 2 * 3600000UL + 5 * 60000UL);
 
