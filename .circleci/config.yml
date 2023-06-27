@@ -203,7 +203,7 @@ jobs:
           path: /tmp/build-arm64/release/integration-tests-xunit
   "tests-driver-loader-integration":
     machine:
-      image: ubuntu-2004:202107-02
+      image: ubuntu-2004:2023.04.2
     steps:
       - attach_workspace:
           at: /tmp/ws
