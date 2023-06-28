@@ -57,19 +57,22 @@ bool stats_writer::init_ticker(uint32_t interval_msec, std::string &err)
 	sev.sigev_notify = SIGEV_SIGNAL;
 	sev.sigev_signo = SIGALRM;
 	sev.sigev_value.sival_ptr = &timerid;
+#ifndef __EMSCRIPTEN__
 	if (timer_create(CLOCK_MONOTONIC, &sev, &timerid) == -1) {
 		err = std::string("Could not create periodic timer: ") + strerror(errno);
 		return false;
 	}
+#endif
 	timer.it_value.tv_sec = interval_msec / 1000;
 	timer.it_value.tv_nsec = (interval_msec % 1000) * 1000 * 1000;
 	timer.it_interval = timer.it_value;
 
+#ifndef __EMSCRIPTEN__
 	if (timer_settime(timerid, 0, &timer, NULL) == -1) {
 		err = std::string("Could not set up periodic timer: ") + strerror(errno);
 		return false;
 	}
-
+#endif
 	return true;
 }
 
