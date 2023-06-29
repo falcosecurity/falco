@@ -1,7 +1,9 @@
 name: CI Build
 on:
   pull_request:
-    branches: [master]
+    branches:
+      - master
+      - release/*
   workflow_dispatch:
 
 # Checks if any concurrent jobs under the same pull request or branch are being executed

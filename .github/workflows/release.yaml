@@ -65,9 +65,28 @@ jobs:
       arch: aarch64
       version: ${{ github.event.release.tag_name }}
     secrets: inherit
+
+  test-packages:
+    needs: [release-settings, build-packages]
+    uses: ./.github/workflows/reusable_test_packages.yaml
+    strategy:
+      fail-fast: false
+      matrix:
+        static: ["static", ""]
+    with:
+      arch: x86_64
+      static: ${{ matrix.static != '' && true || false }}
+      version: ${{ github.event.release.tag_name }}
+  
+  test-packages-arm64:
+    needs: [release-settings, build-packages-arm64]
+    uses: ./.github/workflows/reusable_test_packages.yaml
+    with:
+      arch: aarch64
+      version: ${{ github.event.release.tag_name }}
     
   publish-packages:
-    needs: [release-settings, build-packages, build-packages-arm64]
+    needs: [release-settings, test-packages, test-packages-arm64]
     uses: ./.github/workflows/reusable_publish_packages.yaml
     with:
       bucket_suffix: ${{ needs.release-settings.outputs.bucket_suffix }}
