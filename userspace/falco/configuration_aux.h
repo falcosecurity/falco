@@ -25,3 +25,5 @@ limitations under the License.
 #define CONFIG_JSON_OUTPUT_PROPERTIES_HOSTNAME (1 << 3)
 #define CONFIG_JSON_OUTPUT_PROPERTIES_SOURCE (1 << 4)
 #define CONFIG_JSON_OUTPUT_PROPERTIES_OUTPUT_FIELDS (1 << 5)
+#define CONFIG_JSON_OUTPUT_PROPERTIES_OUTPUT_OLD_OPTION (1 << 6) // todo: deprecate for Falco 0.37
+#define CONFIG_JSON_OUTPUT_PROPERTIES_TAGS_OLD_OPTION (1 << 7) // todo: deprecate for Falco 0.37

@@ -42,8 +42,6 @@ public:
 		std::shared_ptr<falco_engine> engine,
 		const std::vector<falco::outputs::config>& outputs,
 		bool json_output,
-		bool json_include_output_property,
-		bool json_include_tags_property,
 		uint32_t json_output_flags,
 		uint32_t timeout,
 		bool buffered,

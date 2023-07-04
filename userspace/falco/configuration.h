@@ -59,8 +59,6 @@ public:
 	// List of loaded rule folders
 	std::list<std::string> m_loaded_rules_folders;
 	bool m_json_output;
-	bool m_json_include_output_property;
-	bool m_json_include_tags_property;
 	uint32_t m_json_output_flags;
 	std::string m_log_level;
 	std::vector<falco::outputs::config> m_outputs;
