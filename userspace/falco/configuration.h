@@ -61,6 +61,7 @@ public:
 	bool m_json_output;
 	bool m_json_include_output_property;
 	bool m_json_include_tags_property;
+	uint32_t m_json_output_flags;
 	std::string m_log_level;
 	std::vector<falco::outputs::config> m_outputs;
 	uint32_t m_notifications_rate;

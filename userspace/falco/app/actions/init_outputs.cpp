@@ -61,6 +61,7 @@ falco::app::run_result falco::app::actions::init_outputs(falco::app::state& s)
 		s.config->m_json_output,
 		s.config->m_json_include_output_property,
 		s.config->m_json_include_tags_property,
+		s.config->m_json_output_flags,
 		s.config->m_output_timeout,
 		s.config->m_buffered_outputs,
 		s.config->m_time_format_iso_8601,

@@ -44,6 +44,7 @@ public:
 		bool json_output,
 		bool json_include_output_property,
 		bool json_include_tags_property,
+		uint32_t json_output_flags,
 		uint32_t timeout,
 		bool buffered,
 		bool time_format_iso_8601,
