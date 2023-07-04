@@ -240,7 +240,28 @@ priority: debug
 # programs to process and consume the data. By default, this option is disabled.
 json_output: false
 
-# [Stable] `json_include_output_property`
+# [Experimental] `json_output_properties`
+#
+# Customize the verbosity of JSON log lines.
+# The fields `rule` and `time` are not configurable. The fields `desc` and
+# `condition` cannot be included in the logs.
+# The `output` field represents the resolved output values as a string line,
+# while `output_fields` represents a formatted sub JSON containing fields
+# according to the rules' `output` definition.
+#
+# It is not recommended to include tags in order to save space and 
+# reduce logging volume. In addition, likely you only need either `output`
+# or `output_fields`. If you only have syscall rules, you can also skip
+# including the `source` field.
+json_output_properties:
+  output: true
+  priority: true
+  tags: true
+  hostname: true
+  source: true
+  output_fields: true
+
+# [Deprecation Notice for Falco 0.37] `json_include_output_property`
 #
 # When using JSON output in Falco, you have the option to include the "output"
 # property itself in the generated JSON output. The "output" property provides
@@ -249,7 +270,7 @@ json_output: false
 # case.
 json_include_output_property: true
 
-# [Stable] `json_include_tags_property`
+# [Deprecation Notice for Falco 0.37] `json_include_tags_property`
 #
 # When using JSON output in Falco, you have the option to include the "tags"
 # field of the rules in the generated JSON output. The "tags" field provides
