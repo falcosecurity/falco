@@ -1,5 +1,4 @@
 /build*
-/emcc_build*
 *~
 *.pyc
 
