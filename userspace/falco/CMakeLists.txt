@@ -219,6 +219,6 @@ else()
   install(FILES
     "$<TARGET_FILE_DIR:falco>/falco.js"
     "$<TARGET_FILE_DIR:falco>/falco.wasm"
-    DESTINATION /
+    DESTINATION ${FALCO_BIN_DIR}
     COMPONENT "${FALCO_COMPONENT_NAME}")
 endif()
