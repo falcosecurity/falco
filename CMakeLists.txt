@@ -76,7 +76,11 @@ if(NOT DEFINED FALCO_ETC_DIR)
 endif()
 
 # This will be used to print the architecture for which Falco is compiled.
-set(FALCO_TARGET_ARCH ${CMAKE_SYSTEM_PROCESSOR})
+if (EMSCRIPTEN)
+  set(FALCO_TARGET_ARCH "wasm")
+else()
+  set(FALCO_TARGET_ARCH ${CMAKE_SYSTEM_PROCESSOR})
+endif()
 
 if(NOT FALCO_EXTRA_DEBUG_FLAGS)
   set(FALCO_EXTRA_DEBUG_FLAGS "-D_DEBUG")
