@@ -158,3 +158,59 @@ jobs:
           name: falco-${{ inputs.version }}-static-x86_64.tar.gz
           path: |
             ${{ github.workspace }}/build/falco-${{ inputs.version }}-static-x86_64.tar.gz
+
+  build-wasm-package:
+    if: ${{ inputs.arch == 'x86_64' }}
+    runs-on: ubuntu-latest
+    steps:
+      # Always install deps before invoking checkout action, to properly perform a full clone.
+      - name: Install build dependencies
+        run: |
+          sudo apt update
+          sudo DEBIAN_FRONTEND=noninteractive apt install cmake build-essential git emscripten -y
+
+      - name: Select node version
+        uses: actions/setup-node@v3
+        with:
+          node-version: 14
+    
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          
+      - name: Prepare project
+        run: |
+          mkdir build && cd build
+          emcmake cmake \
+            -DBUILD_BPF=Off \
+            -DBUILD_DRIVER=Off \
+            -DBUILD_LIBSCAP_MODERN_BPF=OFF \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DUSE_BUNDLED_DEPS=On \
+            -DFALCO_ETC_DIR=/etc/falco \
+            -DBUILD_FALCO_UNIT_TESTS=On \
+            -DFALCO_VERSION=${{ inputs.version }} \
+            ..
+          
+      - name: Build project
+        run: |
+          cd build
+          emmake make -j6 all
+      
+      - name: Run unit Tests
+        run: |
+          cd build
+          node ./unit_tests/falco_unit_tests.js
+      
+      - name: Build packages
+        run: |
+          cd build
+          emmake make -j6 package
+          
+      - name: Upload Falco WASM package
+        uses: actions/upload-artifact@v3
+        with:
+          name: falco-${{ inputs.version }}-wasm.tar.gz
+          path: |
+            ${{ github.workspace }}/build/falco-${{ inputs.version }}-wasm.tar.gz
