@@ -90,6 +90,7 @@ Falco is licensed to you under the [Apache 2.0](./COPYING) open source license.
 9. Memory safety is definitely a concern and we try our best to keep an high level of quality even though C++ is quite error prone. For instance, we try to use smart pointers whenever possible, we build the libraries with an address sanitizer in our CI, we run Falco through Valgrind before each release, and have ways to stress-test it to detect performance regressions or weird memory usage (e.g. https://github.com/falcosecurity/event-generator). On top of that, we also have third parties auditing the codebase by time to time. None of this make a perfect safety standpoint of course, but we try to maximize our odds. Go would definitely make our life easier from this perspective, however the tradeoffs never made it worth it so far due to the points above.
 10. The C++ codebase of falcosecurity/libs, which is at the core of Falco, is quite large and complex. Porting all that code to another language would be a major effort requiring lots of development resource and with an high chance of failure and regression. As such, our approach so far has been to choose refactors and code polishing instead, up until we'll reach an optimal level of stability, quality, and modularity, on that portion of code. This would allow further developments to be smoother and more feasibile in the future.
 
+
 ## Resources
 
  - [Governance](https://github.com/falcosecurity/evolution/blob/main/GOVERNANCE.md)
