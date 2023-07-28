@@ -195,7 +195,7 @@ void options::define(cxxopts::Options& opts)
 		("gvisor-root",					  "gVisor root directory for storage of container state. Equivalent to runsc --root flag.", cxxopts::value(gvisor_root), "<gvisor_root>")
 #endif
 #ifdef HAS_MODERN_BPF
-		("modern-bpf",				  "Use BPF modern probe to capture system events.", cxxopts::value(modern_bpf)->default_value("false"))
+		("modern-bpf",				  "Use BPF modern probe driver to instrument the kernel.", cxxopts::value(modern_bpf)->default_value("false"))
 #endif
 		("i",                             "Print all high volume syscalls that are ignored by default for performance reasons (i.e. without the -A flag) and exit.", cxxopts::value(print_ignored_events)->default_value("false"))
 #ifndef MINIMAL_BUILD
@@ -213,7 +213,7 @@ void options::define(cxxopts::Options& opts)
 		("M",                             "Stop collecting after <num_seconds> reached.", cxxopts::value(duration_to_tot)->default_value("0"), "<num_seconds>")
 		("markdown",                      "When used with --list/--list-syscall-events, print the content in Markdown format", cxxopts::value<bool>(markdown))
 		("N",                             "When used with --list, only print field names.", cxxopts::value(names_only)->default_value("false"))
-		("nodriver",                      "Capture for system events without drivers. If a loaded plugin has event sourcing capability and can produce system events, it will be used to for event collection.", cxxopts::value(nodriver)->default_value("false"))
+		("nodriver",                      "Do not use a driver to instrument the kernel. If a loaded plugin has event sourcing capability and can produce system events, it will be used to for event collection.", cxxopts::value(nodriver)->default_value("false"))
 		("o,option",                      "Set the value of option <opt> to <val>. Overrides values in configuration file. <opt> can be identified using its location in configuration file using dot notation. Elements which are entries of lists can be accessed via square brackets [].\n    E.g. base.id = val\n         base.subvalue.subvalue2 = val\n         base.list[1]=val", cxxopts::value(cmdline_config_options), "<opt>=<val>")
 		("plugin-info",                   "Print info for a single plugin and exit.\nThis includes all descriptivo info like name and author, along with the\nschema format for the init configuration and a list of suggested open parameters.\n<plugin_name> can be the name of the plugin or its configured library_path.", cxxopts::value(print_plugin_info), "<plugin_name>")
 		("p,print",                       "Add additional information to each falco notification's output.\nWith -pc or -pcontainer will use a container-friendly format.\nWith -pk or -pkubernetes will use a kubernetes-friendly format.\nAdditionally, specifying -pc/-pk will change the interpretation of %container.info in rule output fields.", cxxopts::value(print_additional), "<output_format>")
