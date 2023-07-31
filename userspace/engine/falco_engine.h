@@ -232,6 +232,14 @@ public:
 				  const std::string &ruleset = s_default_ruleset);
 
 	//
+	// Return all rules form the rule collector.
+	//
+	inline indexed_vector<rule_loader::rule_info> get_rules() const
+	{
+		return m_rule_collector.rules();
+	}
+
+	//
 	// Given an event source and ruleset, return the set of ppm_sc_codes
 	// for which this ruleset can run and match events.
 	//
