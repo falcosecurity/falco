@@ -374,12 +374,27 @@ static void read_item(
 
 		if(append)
 		{
+			// option to append to condition property
 			decode_optional_val(item, "condition", v.cond, ctx);
 			if(item["condition"].IsDefined())
 			{
 				v.cond_ctx = rule_loader::context(item["condition"], rule_loader::context::RULE_CONDITION, "", ctx);
 			}
 			read_rule_exceptions(item, v, ctx, append);
+
+			// option to append to output property
+			decode_optional_val(item, "output", v.output, ctx);
+			if(item["output"].IsDefined())
+			{
+				v.output_ctx = rule_loader::context(item["output"], rule_loader::context::RULE_OUTPUT, "", ctx);
+			}
+			v.output = trim(v.output);
+			read_rule_exceptions(item, v, ctx, append);
+
+			// option to append to tags property
+			decode_tags(item, v.tags, ctx);
+			read_rule_exceptions(item, v, ctx, append);
+
 			collector.append(cfg, v);
 		}
 		else

@@ -232,8 +232,8 @@ void rule_loader::collector::append(configuration& cfg, rule_info& info)
 	THROW(!prev,
 	       "Rule has 'append' key but no rule by that name already exists",
 	       info.ctx);
-	THROW(info.cond.empty() && info.exceptions.empty(),
-	       "Appended rule must have exceptions or condition property",
+	THROW(info.cond.empty() && info.exceptions.empty() && info.output.empty() && info.tags.empty(),
+	       "Appended rule must have exceptions or condition or output or tags property",
 	       info.ctx);
 
 	auto source = cfg.sources.at(prev->source);
@@ -246,6 +246,23 @@ void rule_loader::collector::append(configuration& cfg, rule_info& info)
 	{
 		prev->cond += " ";
 		prev->cond += info.cond;
+	}
+
+	if (!info.output.empty())
+	{
+		prev->output += " ";
+		prev->output += info.output;
+	}
+
+	if (!info.tags.empty())
+	{
+		for (auto itr : info.tags)
+		{
+			if (!itr.empty())
+			{
+				prev->tags.insert(itr);
+			}
+		}
 	}
 
 	for (auto &ex : info.exceptions)
