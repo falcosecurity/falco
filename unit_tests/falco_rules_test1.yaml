@@ -1,0 +1,34 @@
+# Test rules 1
+
+- rule: Dummy Rule 0
+  desc: My test desc 0
+  condition: evt.type in (execve, execveat)
+  enabled: true
+  output: '%evt.type %evt.num %proc.aname[5] %proc.name %proc.tty %proc.exepath %fd.name'
+  priority: NOTICE
+  tags: [maturity_stable, host, container, network, mitre_lateral_movement, T1021.004]
+
+- rule: Dummy Rule 1
+  desc: My test desc 1
+  condition: evt.type in (open, openat, openat2)
+  enabled: true
+  output: '%evt.type %evt.num %proc.aname[5] %proc.name %proc.tty %proc.exepath %fd.name'
+  priority: NOTICE
+  tags: [maturity_incubating, host, container]
+
+- rule: Dummy Rule 0
+  append: true
+  condition: and proc.name=cat and proc.cmdline contains test
+  output: 'proc_exeline=%proc.exeline proc_exepath=%proc.exepath'
+  tags: [test1, test2]
+
+- rule: Dummy Rule 2
+  desc: My test desc 2
+  condition: evt.type in (mprotect, mmap)
+  enabled: true
+  output: '%evt.type %evt.num %proc.exepath'
+  priority: NOTICE
+  tags: [maturity_incubating, host, container]
+
+- rule: Dummy Rule 2
+  enabled: false
