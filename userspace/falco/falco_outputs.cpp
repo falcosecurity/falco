@@ -19,8 +19,8 @@ limitations under the License.
 #endif
 
 #include "falco_outputs.h"
-
 #include "config_falco.h"
+#include "configuration_aux.h"
 
 #include "formats.h"
 #include "logger.h"
@@ -47,6 +47,8 @@ falco_outputs::falco_outputs(
 	bool json_include_tags_property,
 	uint32_t timeout,
 	bool buffered,
+	size_t queue_capacity_outputs_items,
+	uint32_t queue_capacity_outputs_recovery,
 	bool time_format_iso_8601,
 	const std::string& hostname)
 {
@@ -66,6 +68,8 @@ falco_outputs::falco_outputs(
 	}
 #ifndef __EMSCRIPTEN__
 	m_worker_thread = std::thread(&falco_outputs::worker, this);
+	m_queue.set_capacity(queue_capacity_outputs_items);
+	m_recovery = queue_capacity_outputs_recovery;
 #endif
 }
 
@@ -282,8 +286,18 @@ inline void falco_outputs::push(const ctrl_msg& cmsg)
 #ifndef __EMSCRIPTEN__
 	if (!m_queue.try_push(cmsg))
 	{
-		fprintf(stderr, "Fatal error: Output queue reached maximum capacity. Exiting.\n");
-		exit(EXIT_FAILURE);
+		switch (m_recovery)
+		{
+		case RECOVERY_EXIT:
+			fprintf(stderr, "Fatal error: Output queue reached maximum capacity. Exiting ... \n");
+			exit(EXIT_FAILURE);
+		case RECOVERY_EMPTY:
+			fprintf(stderr, "Output queue reached maximum capacity. Empty queue and continue ... \n");
+			m_queue.empty();
+		default:
+			fprintf(stderr, "Output queue reached maximum capacity. Continue on ... \n");
+			break;
+		}
 	}
 #else
 	for (auto o : m_outputs)

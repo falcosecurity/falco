@@ -63,6 +63,8 @@ falco::app::run_result falco::app::actions::init_outputs(falco::app::state& s)
 		s.config->m_json_include_tags_property,
 		s.config->m_output_timeout,
 		s.config->m_buffered_outputs,
+		s.config->m_queue_capacity_outputs_items,
+		s.config->m_queue_capacity_outputs_recovery,
 		s.config->m_time_format_iso_8601,
 		hostname));
 
