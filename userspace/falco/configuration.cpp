@@ -28,6 +28,7 @@ limitations under the License.
 #include "falco_utils.h"
 
 #include "configuration.h"
+#include "configuration_aux.h"
 #include "logger.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
 
@@ -40,6 +41,8 @@ falco_configuration::falco_configuration():
 	m_watch_config_files(true),
 	m_rule_matching(falco_common::rule_matching::FIRST),
 	m_buffered_outputs(false),
+	m_queue_capacity_outputs_items(DEFAULT_ITEMS_QUEUE_CAPAXITY_OUTPUTS),
+	m_queue_capacity_outputs_recovery(RECOVERY_DROP_CURRENT),
 	m_time_format_iso_8601(false),
 	m_output_timeout(2000),
 	m_grpc_enabled(false),
@@ -258,6 +261,8 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 	}
 
 	m_buffered_outputs = config.get_scalar<bool>("buffered_outputs", false);
+	m_queue_capacity_outputs_items = config.get_scalar<size_t>("queue_capacity_outputs.items", DEFAULT_ITEMS_QUEUE_CAPAXITY_OUTPUTS);
+	m_queue_capacity_outputs_recovery = config.get_scalar<uint32_t>("queue_capacity_outputs.recovery", RECOVERY_DROP_CURRENT);
 	m_time_format_iso_8601 = config.get_scalar<bool>("time_format_iso_8601", false);
 
 	falco_logger::log_stderr = config.get_scalar<bool>("log_stderr", false);

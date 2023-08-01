@@ -48,6 +48,8 @@ public:
 		bool json_include_tags_property,
 		uint32_t timeout,
 		bool buffered,
+		size_t queue_capacity_outputs_items,
+		uint32_t queue_capacity_outputs_recovery,
 		bool time_format_iso_8601,
 		const std::string& hostname);
 
@@ -110,6 +112,7 @@ private:
 #ifndef __EMSCRIPTEN__
 	typedef tbb::concurrent_bounded_queue<ctrl_msg> falco_outputs_cbq;
 	falco_outputs_cbq m_queue;
+	uint32_t m_recovery;
 #endif
 
 	std::thread m_worker_thread;
