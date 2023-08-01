@@ -64,7 +64,8 @@ namespace falco_common
 		PRIORITY_WARNING = 4,
 		PRIORITY_NOTICE = 5,
 		PRIORITY_INFORMATIONAL = 6,
-		PRIORITY_DEBUG = 7
+		PRIORITY_DEBUG = 7,
+		PRIORITY_INVALID = 8,
 	};
 	
 	bool parse_priority(std::string v, priority_type& out);

@@ -222,7 +222,41 @@ void rule_loader::collector::define(configuration& cfg, rule_info& info)
 		validate_exception_info(*source, ex);
 	}
 
-	define_info(m_rule_infos, info, m_cur_index++);
+	// Reconstruct prev info if no new info and only merge re-defined fields
+	if (prev)
+	{
+		if (info.desc.empty())
+		{
+			info.desc = prev->desc;
+		}
+		if (info.cond.empty())
+		{
+			info.cond = prev->cond;
+		}
+		if (info.output.empty())
+		{
+			info.output = prev->output;
+		}
+		if (info.tags.empty())
+		{
+			info.tags = prev->tags;
+		}
+		if (info.priority == falco_common::priority_type::PRIORITY_INVALID)
+		{
+			info.priority = prev->priority;
+		}
+	}
+
+	// Only add a valid rule that at least has the rule name plus
+	// desc, condition, output, and priority
+	if (!info.desc.empty() &&
+		!info.cond.empty() &&
+		!info.output.empty() &&
+		info.priority >= falco_common::priority_type::PRIORITY_EMERGENCY && info.priority < falco_common::priority_type::PRIORITY_INVALID
+		)
+	{
+		define_info(m_rule_infos, info, m_cur_index++);
+	}
 }
 
 void rule_loader::collector::append(configuration& cfg, rule_info& info)

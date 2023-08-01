@@ -5,7 +5,7 @@
   condition: evt.type in (execve, execveat)
   enabled: true
   output: '%evt.type %evt.num %proc.aname[5] %proc.name %proc.tty %proc.exepath %fd.name'
-  priority: NOTICE
+  priority: CRITICAL
   tags: [maturity_stable, host, container, network, mitre_lateral_movement, T1021.004]
 
 - rule: Dummy Rule 1
@@ -13,14 +13,8 @@
   condition: evt.type in (open, openat, openat2)
   enabled: true
   output: '%evt.type %evt.num %proc.aname[5] %proc.name %proc.tty %proc.exepath %fd.name'
-  priority: NOTICE
+  priority: CRITICAL
   tags: [maturity_incubating, host, container]
-
-- rule: Dummy Rule 0
-  append: true
-  condition: and proc.name=cat and proc.cmdline contains test
-  output: 'proc_exeline=%proc.exeline proc_exepath=%proc.exepath'
-  tags: [test1, test2]
 
 - rule: Dummy Rule 2
   desc: My test desc 2
@@ -29,6 +23,37 @@
   output: '%evt.type %evt.num %proc.exepath'
   priority: NOTICE
   tags: [maturity_incubating, host, container]
+
+# Test invalid / incomplete rule
+- rule: Dummy Rule 3 Invalid
+  condition: evt.type in (execve, execveat) and proc.name=cat and proc.cmdline contains invalid
+
+- rule: Dummy Rule 4 Disabled
+  desc: My test desc 4
+  condition: evt.type in (mprotect, mmap)
+  enabled: false
+  output: '%evt.type %evt.num %proc.exepath'
+  priority: NOTICE
+  tags: [maturity_incubating, host, container]
+
+# Test appending to rule
+- rule: Dummy Rule 0
+  append: true
+  condition: and proc.name=cat and proc.cmdline contains test
+  output: 'proc_exeline=%proc.exeline proc_exepath=%proc.exepath'
+  tags: [test1, test2]
+
+# Test merge / partial override
+- rule: Dummy Rule 1
+  condition: evt.type in (ptrace)
+  output: '%evt.type %evt.num'
+  enabled: false
+
+- rule: Dummy Rule 2
+  enabled: false
+
+- rule: Dummy Rule 2
+  enabled: true
 
 - rule: Dummy Rule 2
   enabled: false

@@ -369,6 +369,7 @@ static void read_item(
 		v.enabled = true;
 		v.warn_evttypes = true;
 		v.skip_if_unknown_filter = false;
+		v.priority = falco_common::priority_type::PRIORITY_INVALID;
 
 		decode_optional_val(item, "append", append, ctx);
 
@@ -399,46 +400,46 @@ static void read_item(
 		}
 		else
 		{
-			// If the rule does *not* have any of
-			// condition/output/desc/priority, it *must*
-			// have an enabled property. Use the enabled
-			// property to set the enabled status of an
-			// earlier rule.
-			if (!item["condition"].IsDefined() &&
-			    !item["output"].IsDefined() &&
-			    !item["desc"].IsDefined() &&
-			    !item["priority"].IsDefined())
-			{
-				decode_val(item, "enabled", v.enabled, ctx);
-				collector.enable(cfg, v);
-			}
-			else
-			{
-				std::string priority;
+			std::string priority;
+			v.source = falco_common::syscall_source;
 
-				// All of these are required
+			if(item["source"].IsDefined())
+			{
+				decode_optional_val(item, "source", v.source, ctx);
+			}
+			if(item["condition"].IsDefined())
+			{
 				decode_val(item, "condition", v.cond, ctx);
 				v.cond_ctx = rule_loader::context(item["condition"], rule_loader::context::RULE_CONDITION, "", ctx);
-
+			}
+			if(item["output"].IsDefined())
+			{
 				decode_val(item, "output", v.output, ctx);
 				v.output_ctx = rule_loader::context(item["output"], rule_loader::context::RULE_OUTPUT, "", ctx);
-
-				decode_val(item, "desc", v.desc, ctx);
-				decode_val(item, "priority", priority, ctx);
-
 				v.output = trim(v.output);
-				v.source = falco_common::syscall_source;
+			}
+			if(item["desc"].IsDefined())
+			{
+				decode_val(item, "desc", v.desc, ctx);
+			}
+			if(item["priority"].IsDefined())
+			{
+				decode_val(item, "priority", priority, ctx);
 				rule_loader::context prictx(item["priority"], rule_loader::context::RULE_PRIORITY, "", ctx);
 				THROW(!falco_common::parse_priority(priority, v.priority),
-				       "Invalid priority", prictx);
-				decode_optional_val(item, "source", v.source, ctx);
-				decode_optional_val(item, "enabled", v.enabled, ctx);
-				decode_optional_val(item, "warn_evttypes", v.warn_evttypes, ctx);
-				decode_optional_val(item, "skip-if-unknown-filter", v.skip_if_unknown_filter, ctx);
-				decode_tags(item, v.tags, ctx);
-				read_rule_exceptions(item, v, ctx, append);
-				collector.define(cfg, v);
+					"Invalid priority", prictx);
 			}
+			if(item["tags"].IsDefined())
+			{
+				decode_tags(item, v.tags, ctx);
+			}
+
+			decode_optional_val(item, "enabled", v.enabled, ctx);
+			decode_optional_val(item, "warn_evttypes", v.warn_evttypes, ctx);
+			decode_optional_val(item, "skip-if-unknown-filter", v.skip_if_unknown_filter, ctx);
+			read_rule_exceptions(item, v, ctx, append);
+
+			collector.define(cfg, v);
 		}
 	}
 	else

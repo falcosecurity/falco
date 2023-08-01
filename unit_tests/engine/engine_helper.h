@@ -19,7 +19,7 @@ limitations under the License.
 #include <gtest/gtest.h>
 
 // When updating unit_tests/falco_rules_test.yaml bump this
-#define N_TEST_RULES_FALCO_RULES_TEST_YAML 3
+#define N_VALID_TEST_RULES_FALCO_RULES_TEST_YAML 4
 
 #define ASSERT_CONTAINS(a, b)            \
     {                                    \
@@ -32,6 +32,18 @@ limitations under the License.
         }                                \
         ASSERT_EQ(prev_size, a1.size()); \
     }
+
+#define ASSERT_NOT_CONTAINS(a, b)                    \
+	{                                                \
+		auto a1 = a;                                 \
+		auto b1 = b;                                 \
+		uint32_t prev_size = a1.size();              \
+		for(const auto& val : b1)                    \
+		{                                            \
+			a1.insert(val);                          \
+		}                                            \
+		ASSERT_EQ(prev_size + b1.size(), a1.size()); \
+	}
 
 #define ASSERT_STRING_EQUAL(a, b)        \
     {                                    \
