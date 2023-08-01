@@ -19,7 +19,7 @@ limitations under the License.
 #include <gtest/gtest.h>
 
 // When updating unit_tests/falco_rules_test.yaml bump this
-#define N_VALID_TEST_RULES_FALCO_RULES_TEST_YAML 4
+#define N_VALID_TEST_RULES_FALCO_RULES_TEST_YAML 5
 
 #define ASSERT_CONTAINS(a, b)            \
     {                                    \

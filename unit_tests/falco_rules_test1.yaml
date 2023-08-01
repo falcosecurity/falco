@@ -36,6 +36,14 @@
   priority: NOTICE
   tags: [maturity_incubating, host, container]
 
+- rule: Dummy Rule 5
+  desc: My test desc 5
+  condition: evt.type in (open, openat, openat2)
+  enabled: false
+  output: '%evt.type %evt.num %proc.cmdline'
+  priority: INFORMATIONAL
+  tags: [maturity_sandbox]
+
 # Test appending to rule
 - rule: Dummy Rule 0
   append: true
@@ -57,3 +65,17 @@
 
 - rule: Dummy Rule 2
   enabled: false
+
+# Test append for "appendable" fields `condition`, `output`, `tags`
+# + partial override for eligible fields `enabled` and `priority`
+- rule: Dummy Rule 5
+  append: true
+  desc: My test desc 5
+  condition: and proc.name=cat
+  enabled: true
+  priority: CRITICAL
+  tags: [maturity_sandbox, host, container]
+
+- rule: Dummy Rule 5
+  append: true
+  output: '%container.ip'

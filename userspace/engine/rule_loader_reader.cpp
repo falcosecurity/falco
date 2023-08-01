@@ -376,26 +376,39 @@ static void read_item(
 		if(append)
 		{
 			// option to append to condition property
-			decode_optional_val(item, "condition", v.cond, ctx);
 			if(item["condition"].IsDefined())
 			{
+				decode_optional_val(item, "condition", v.cond, ctx);
 				v.cond_ctx = rule_loader::context(item["condition"], rule_loader::context::RULE_CONDITION, "", ctx);
 			}
-			read_rule_exceptions(item, v, ctx, append);
 
 			// option to append to output property
-			decode_optional_val(item, "output", v.output, ctx);
 			if(item["output"].IsDefined())
 			{
+				decode_optional_val(item, "output", v.output, ctx);
 				v.output_ctx = rule_loader::context(item["output"], rule_loader::context::RULE_OUTPUT, "", ctx);
+				v.output = trim(v.output);
 			}
-			v.output = trim(v.output);
-			read_rule_exceptions(item, v, ctx, append);
 
 			// option to append to tags property
-			decode_tags(item, v.tags, ctx);
-			read_rule_exceptions(item, v, ctx, append);
+			if(item["tags"].IsDefined())
+			{
+				decode_tags(item, v.tags, ctx);
+			}
 
+			// option to override priority in append mode
+			if(item["priority"].IsDefined())
+			{
+				std::string priority;
+				decode_val(item, "priority", priority, ctx);
+				rule_loader::context prictx(item["priority"], rule_loader::context::RULE_PRIORITY, "", ctx);
+				THROW(!falco_common::parse_priority(priority, v.priority),
+					"Invalid priority", prictx);
+			}
+
+			read_rule_exceptions(item, v, ctx, append);
+			// option to override enabled in append mode
+			decode_optional_val(item, "enabled", v.enabled, ctx);
 			collector.append(cfg, v);
 		}
 		else

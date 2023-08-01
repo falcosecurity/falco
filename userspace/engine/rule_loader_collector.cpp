@@ -276,6 +276,17 @@ void rule_loader::collector::append(configuration& cfg, rule_info& info)
 	      std::string("Unknown source ") + prev->source,
 	      info.ctx);
 
+	// enabled and priority are the cases where we allow override also when using append
+	// for better user experience given the introduction of the rules maturity framework
+	prev->enabled = info.enabled;
+
+	if (info.priority < falco_common::priority_type::PRIORITY_INVALID)
+	{
+		prev->priority = info.priority;
+	}
+
+	// Below fields are fields were we append items
+
 	if (!info.cond.empty())
 	{
 		prev->cond += " ";
