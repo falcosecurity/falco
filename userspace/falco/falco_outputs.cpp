@@ -68,7 +68,11 @@ falco_outputs::falco_outputs(
 	}
 #ifndef __EMSCRIPTEN__
 	m_worker_thread = std::thread(&falco_outputs::worker, this);
-	m_queue.set_capacity(queue_capacity_outputs_items);
+	if (queue_capacity_outputs_items > 0)
+	{
+		m_queue.set_capacity(queue_capacity_outputs_items);
+	}
+
 	m_recovery = queue_capacity_outputs_recovery;
 #endif
 }
@@ -281,13 +285,13 @@ inline void falco_outputs::push(const ctrl_msg& cmsg)
 		switch (m_recovery)
 		{
 		case RECOVERY_EXIT:
-			fprintf(stderr, "Fatal error: Output queue reached maximum capacity. Exiting ... \n");
+			fprintf(stderr, "Fatal error: Output queue out of memory. Exiting ... \n");
 			exit(EXIT_FAILURE);
 		case RECOVERY_EMPTY:
-			fprintf(stderr, "Output queue reached maximum capacity. Empty queue and continue ... \n");
+			fprintf(stderr, "Output queue out of memory. Empty queue and continue ... \n");
 			m_queue.empty();
 		default:
-			fprintf(stderr, "Output queue reached maximum capacity. Continue on ... \n");
+			fprintf(stderr, "Output queue out of memory. Continue on ... \n");
 			break;
 		}
 	}

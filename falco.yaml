@@ -307,24 +307,31 @@ rule_matching: first
 
 # [Experimental] `queue_capacity_outputs`
 #
-# Falco utilizes tbb::concurrent_bounded_queue for the outputs, and this parameter
-# allows you to customize the capacity. Refer to the official documentation:
+# Falco utilizes tbb::concurrent_bounded_queue for handling outputs, and this parameter
+# allows you to customize the queue capacity. Please refer to the official documentation:
 # https://oneapi-src.github.io/oneTBB/main/tbb_userguide/Concurrent_Queue_Classes.html.
-# On a healthy system with tuned Falco rules, the queue should not fill up.
-# If it does, it most likely happens if the entire event flow is too slow. This
-# could indicate that the server is under heavy load.
-#
-# Lowering the number of items can prevent steadily increasing memory until the OOM
-# killer stops the Falco process. We expose recovery actions to self-limit or self
-# OOM kill earlier similar to how we expose the kernel buffer size as parameter.
-# However, it will not address the root cause of the event pipe not holding up.
+# On a healthy system with optimized Falco rules, the queue should not fill up.
+# If it does, it is most likely happening due to the entire event flow being too slow,
+# indicating that the server is under heavy load.
+# 
+# Lowering the number of items can prevent memory from steadily increasing until the OOM
+# killer stops the Falco process. We provide recovery actions to self-limit or self-kill
+# in order to handle this situation earlier, similar to how we expose the kernel buffer size
+# as a parameter.
+# However, it will not address the root cause of the event pipe not keeping up.
+# 
+# `items`: the maximum number of items allowed in the queue, defaulting to 0. This means that
+# the queue is unbounded.
+# You can experiment with values greater or smaller than the anchor value 1000000.
+# 
+# `recovery`: the strategy to follow when the queue becomes filled up. This also applies when
+# the queue is unbounded, and all available memory on the system is consumed.
+# recovery: 0 means continue.
+# recovery: 1 means simply exit (default behavior).
+# recovery: 2 means empty the queue and then continue.
 queue_capacity_outputs:
-  # number of max items in queue
-  items: 1000000
-  # continue: 0 (default)
-  # exit: 1
-  # empty queue then continue: 2
-  recovery: 0
+  items: 0
+  recovery: 1
 
 
 ##########################
