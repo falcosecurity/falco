@@ -120,6 +120,7 @@ falco::app::run_result falco::app::actions::init_falco_engine(falco::app::state&
 
 	configure_output_format(s);
 	s.engine->set_min_priority(s.config->m_min_priority);
+	s.engine->set_rule_matching(s.config->m_rule_matching);
 
 	return run_result::ok();
 }
