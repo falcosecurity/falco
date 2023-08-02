@@ -13,7 +13,7 @@ limitations under the License.
 
 #pragma once
 
-#define DEFAULT_ITEMS_QUEUE_CAPAXITY_OUTPUTS 1000000UL
+#define DEFAULT_ITEMS_QUEUE_CAPAXITY_OUTPUTS 0
 
 enum outputs_recovery_code {
 	RECOVERY_DROP_CURRENT = 0,  /* queue_capacity_outputs recovery strategy of continuing on. */
