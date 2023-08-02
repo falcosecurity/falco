@@ -49,23 +49,29 @@ Notice the capitalization of the following terms.
 
 ---
 
-# Glossary 
+# Glossary
 
-#### Probe
+This section contains key terms specifically used within the context of The Falco Project. For a more comprehensive list of Falco-related terminology, we invite you to visit the [Glossary](https://falco.org/docs/reference/glossary/) page on our official website.
+
+#### eBPF Probe
 
 Used to describe the `.o` object that would be dynamically loaded into the kernel as a secure and stable (e)BPF probe. 
 This is one option used to pass kernel events up to userspace for Falco to consume.
-Sometimes this word is incorrectly used to refer to a `module`.
 
-#### Module
+#### Modern eBPF Probe
+
+More robust [eBPF probe](#ebpf-probe), which brings the CO-RE paradigm, better performances, and maintainability. 
+Unlike the legacy probe, the modern eBPF probe is not shipped as a separate artifact but bundled into the Falco binary itself.
+This is one option used to pass kernel events up to userspace for Falco to consume.
+
+#### Kernel Module
 
 Used to describe the `.ko` object that would be loaded into the kernel as a potentially risky kernel module.
 This is one option used to pass kernel events up to userspace for Falco to consume.
-Sometimes this word is incorrectly used to refer to a `probe`.
 
 #### Driver 
 
-The global term for the software that sends events from the kernel. Such as the eBPF `probe` or the `kernel module`.
+The global term for the software that sends events from the kernel. Such as the [eBPF probe](#ebpf-probe), the [Modern eBPF probe](#modern-ebpf-probe), or the [Kernel Module](#kernel-module).
 
 #### Plugin
 
@@ -73,13 +79,5 @@ Used to describe a dynamic shared library (`.so` files in Unix, `.dll` files in 
 
 #### Falco
 
-The name of the project, and also the name of [the main engine](https://github.com/falcosecurity/falco) that the rest of the project is built on.
-
-#### Sysdig, Inc
-
-The name of the company that originally created The Falco Project, and later donated to the CNCF.
-
-#### sysdig 
-
-A [CLI tool](https://github.com/draios/sysdig) used to evaluate kernel system events at runtime. 
+The name of the project and also the name of [the main engine](https://github.com/falcosecurity/falco) that the rest of the project is built on.
 
