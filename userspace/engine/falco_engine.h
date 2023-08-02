@@ -106,6 +106,11 @@ public:
 	// Only load rules having this priority or more severe.
 	void set_min_priority(falco_common::priority_type priority);
 
+	// Whether or not continuing to evaluate rules for other potential matches 
+	// even if a match already occurred. This option can be set to avoid shadowing
+	// of rules.
+	void set_rule_matching(falco_common::rule_matching rule_matching);
+
 	//
 	// Return the ruleset id corresponding to this ruleset name,
 	// creating a new one if necessary. If you provide any ruleset
@@ -189,14 +194,14 @@ public:
 	// event source is not thread-safe of its own, so invoking this method
 	// concurrently with the same source_idx would inherently cause data races
 	// and lead to undefined behavior.
-	std::unique_ptr<rule_result> process_event(std::size_t source_idx, gen_event *ev, uint16_t ruleset_id);
+	std::unique_ptr<std::vector<rule_result>> process_event(std::size_t source_idx, gen_event *ev, uint16_t ruleset_id);
 
 	//
 	// Wrapper assuming the default ruleset.
 	//
 	// This inherits the same thread-safety guarantees.
 	//
-	std::unique_ptr<rule_result> process_event(std::size_t source_idx, gen_event *ev);
+	std::unique_ptr<std::vector<rule_result>> process_event(std::size_t source_idx, gen_event *ev);
 
 	//
 	// Configure the engine to support events with the provided
@@ -320,6 +325,7 @@ private:
 	uint16_t m_next_ruleset_id;
 	std::map<std::string, uint16_t> m_known_rulesets;
 	falco_common::priority_type m_min_priority;
+	falco_common::rule_matching m_rule_matching;
 
 	//
 	// Here's how the sampling ratio and multiplier influence

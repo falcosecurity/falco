@@ -46,7 +46,8 @@ public:
 
 	void clear() override;
 
-	bool run(gen_event *evt, falco_rule& match, uint16_t rulset_id);
+	bool run(gen_event *evt, falco_rule& match, uint16_t ruleset_id) override;
+	bool run(gen_event *evt, std::vector<falco_rule>&matches, uint16_t ruleset_id) override;
 
 	uint64_t enabled_count(uint16_t ruleset_id) override;
 
@@ -118,7 +119,13 @@ private:
 
 		uint64_t num_filters();
 
+		// Evaluate an event against the ruleset and return the first rule
+		// that matched.
 		bool run(gen_event *evt, falco_rule& match);
+
+		//  Evaluate an event against the ruleset and return all the 
+		//	matching rules. 
+		bool run(gen_event *evt, std::vector<falco_rule>& matches);
 
 		libsinsp::events::set<ppm_sc_code> sc_codes();
 

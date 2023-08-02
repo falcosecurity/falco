@@ -330,19 +330,22 @@ static falco::app::run_result do_inspect(
 		// engine, which will match the event against the set
 		// of rules. If a match is found, pass the event to
 		// the outputs.
-		std::unique_ptr<falco_engine::rule_result> res = s.engine->process_event(source_engine_idx, ev);
-		if(res)
+		auto res = s.engine->process_event(source_engine_idx, ev);
+		if(res != nullptr)
 		{
-			if (!rate_limiter_enabled || rate_limiter.claim())
+			for(auto& rule_res : *res.get())
 			{
-				s.outputs->handle_event(res->evt, res->rule, res->source, res->priority_num, res->format, res->tags);
-			}
-			else
-			{
-				falco_logger::log(LOG_DEBUG, "Skipping rate-limited notification for rule " + res->rule + "\n");
+				if (!rate_limiter_enabled || rate_limiter.claim())
+				{
+					s.outputs->handle_event(rule_res.evt, rule_res.rule, rule_res.source, rule_res.priority_num, rule_res.format, rule_res.tags);
+				}
+				else
+				{
+					falco_logger::log(LOG_DEBUG, "Skipping rate-limited notification for rule " + rule_res.rule + "\n");
+				}
 			}
 		}
-
+		
 		num_evts++;
 	}
 

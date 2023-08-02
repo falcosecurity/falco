@@ -138,6 +138,45 @@ bool evttype_index_ruleset::ruleset_filters::run(gen_event *evt, falco_rule& mat
 	return false;
 }
 
+bool evttype_index_ruleset::ruleset_filters::run(gen_event *evt, std::vector<falco_rule>& matches)
+{
+	bool match_found = false;
+
+	if(evt->get_type() < m_filter_by_event_type.size())
+	{
+		for(auto &wrap : m_filter_by_event_type[evt->get_type()])
+		{
+			if(wrap->filter->run(evt))
+			{
+				matches.push_back(wrap->rule);
+				match_found = true;
+			}
+		}
+	}
+
+	if(match_found)
+	{
+		return true;
+	}
+
+	// Finally, try filters that are not specific to an event type.
+	for(auto &wrap : m_filter_all_event_types)
+	{
+		if(wrap->filter->run(evt))
+		{
+			matches.push_back(wrap->rule);
+			match_found = true;
+		}
+	}
+
+	if(match_found)
+	{
+		return true;
+	}
+
+	return false;
+}
+
 libsinsp::events::set<ppm_sc_code> evttype_index_ruleset::ruleset_filters::sc_codes()
 {
 	libsinsp::events::set<ppm_sc_code> res;
@@ -306,6 +345,16 @@ bool evttype_index_ruleset::run(gen_event *evt, falco_rule& match, uint16_t rule
 	}
 
 	return m_rulesets[ruleset_id]->run(evt, match);
+}
+
+bool evttype_index_ruleset::run(gen_event *evt, std::vector<falco_rule>& matches, uint16_t ruleset_id)
+{
+	if(m_rulesets.size() < (size_t)ruleset_id + 1)
+	{
+		return false;
+	}
+
+	return m_rulesets[ruleset_id]->run(evt, matches);
 }
 
 void evttype_index_ruleset::enabled_evttypes(std::set<uint16_t> &evttypes, uint16_t ruleset_id)

@@ -56,6 +56,7 @@ falco_engine::falco_engine(bool seed_rng)
 	  m_syscall_source_idx(SIZE_MAX),
 	  m_next_ruleset_id(0),
 	  m_min_priority(falco_common::PRIORITY_DEBUG),
+	  m_rule_matching(falco_common::FIRST),
 	  m_sampling_ratio(1), m_sampling_multiplier(0),
 	  m_replace_container_info(false)
 {
@@ -310,6 +311,11 @@ void falco_engine::set_min_priority(falco_common::priority_type priority)
 	m_min_priority = priority;
 }
 
+void falco_engine::set_rule_matching(falco_common::rule_matching rule_matching)
+{
+	m_rule_matching = rule_matching;
+}
+
 uint16_t falco_engine::find_ruleset_id(const std::string &ruleset)
 {
 	auto it = m_known_rulesets.lower_bound(ruleset);
@@ -353,7 +359,7 @@ std::shared_ptr<gen_event_formatter> falco_engine::create_formatter(const std::s
 	return find_source(source)->formatter_factory->create_formatter(output);
 }
 
-std::unique_ptr<falco_engine::rule_result> falco_engine::process_event(std::size_t source_idx, gen_event *ev, uint16_t ruleset_id)
+std::unique_ptr<std::vector<falco_engine::rule_result>> falco_engine::process_event(std::size_t source_idx, gen_event *ev, uint16_t ruleset_id)
 {
 	// note: there are no thread-safety guarantees on the filter_ruleset::run()
 	// method, but the thread-safety assumptions of falco_engine::process_event()
@@ -377,24 +383,51 @@ std::unique_ptr<falco_engine::rule_result> falco_engine::process_event(std::size
 		source = find_source(source_idx);
 	}
 
-	if(should_drop_evt() || !source || !source->ruleset->run(ev, source->m_rule, ruleset_id))
+	if(should_drop_evt() || !source)
 	{
-		return std::unique_ptr<struct rule_result>();
+		return nullptr;
 	}
 
-	std::unique_ptr<struct rule_result> res(new rule_result());
-	res->evt = ev;
-	res->rule = source->m_rule.name;
-	res->source = source->m_rule.source;
-	res->format = source->m_rule.output;
-	res->priority_num = source->m_rule.priority;
-	res->tags = source->m_rule.tags;
-	res->exception_fields = source->m_rule.exception_fields;
-	m_rule_stats_manager.on_event(source->m_rule);
+	if (m_rule_matching == falco_common::rule_matching::ALL)
+	{
+		if (!source->ruleset->run(ev, source->m_rules, ruleset_id))
+		{
+			return nullptr;
+		}
+	}
+	else if (m_rule_matching == falco_common::rule_matching::FIRST)
+	{
+		falco_rule rule;
+		if (!source->ruleset->run(ev, rule, ruleset_id))
+		{
+			return nullptr;
+		}
+		source->m_rules.push_back(rule);
+	}
+
+	auto res = std::make_unique<std::vector<falco_engine::rule_result>>();
+	for(auto rule : source->m_rules)
+	{
+		rule_result rule_result;
+		rule_result.evt = ev;
+		rule_result.rule = rule.name;
+		rule_result.source = rule.source;
+		rule_result.format = rule.output;
+		rule_result.priority_num = rule.priority;
+		rule_result.tags = rule.tags;
+		rule_result.exception_fields = rule.exception_fields;
+		m_rule_stats_manager.on_event(rule);
+		res->push_back(rule_result);
+	}
+
+	if (source->m_rules.size() > 0)
+	{
+		source->m_rules.clear();
+	}
 	return res;
 }
 
-std::unique_ptr<falco_engine::rule_result> falco_engine::process_event(std::size_t source_idx, gen_event *ev)
+std::unique_ptr<std::vector<falco_engine::rule_result>> falco_engine::process_event(std::size_t source_idx, gen_event *ev)
 {
 	return process_event(source_idx, ev, m_default_ruleset_id);
 }
