@@ -58,6 +58,7 @@ public:
 	std::list<std::string> m_loaded_rules_filenames;
 	// List of loaded rule folders
 	std::list<std::string> m_loaded_rules_folders;
+
 	bool m_json_output;
 	bool m_json_include_output_property;
 	bool m_json_include_tags_property;
@@ -67,6 +68,7 @@ public:
 	uint32_t m_notifications_max_burst;
 
 	falco_common::priority_type m_min_priority;
+	falco_common::rule_matching m_rule_matching;
 
 	bool m_watch_config_files;
 	bool m_buffered_outputs;

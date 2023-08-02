@@ -244,6 +244,12 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 	m_notifications_rate = config.get_scalar<uint32_t>("outputs.rate", 0);
 	m_notifications_max_burst = config.get_scalar<uint32_t>("outputs.max_burst", 1000);
 
+	std::string rule_matching = config.get_scalar<std::string>("rule_matching", "first");
+	if (!falco_common::parse_rule_matching(rule_matching, m_rule_matching))
+	{
+		throw std::logic_error("Unknown rule matching strategy \"" + rule_matching + "\"--must be one of first, all");
+	}
+
 	std::string priority = config.get_scalar<std::string>("priority", "debug");
 	if (!falco_common::parse_priority(priority, m_min_priority))
 	{
