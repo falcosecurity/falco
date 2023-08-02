@@ -1,5 +1,0 @@
-- list: good_list
-  items: [foo]
-
-- list: bad_list
-  no_items: foo

@@ -1,5 +1,0 @@
-- rule: some rule
-  desc: some desc
-  condition: evt.type=open
-  output: some output
-  priority: INFO

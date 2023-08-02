@@ -2,14 +2,6 @@
 *~
 *.pyc
 
-test/traces-negative
-test/traces-positive
-test/traces-info
-test/job-results
-test/.phoronix-test-suite
-test/results*.json.*
-test/build
-
 .vscode/*
 
 *.idea*

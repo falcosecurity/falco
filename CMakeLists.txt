@@ -189,9 +189,6 @@ install(FILES falco.yaml DESTINATION "${FALCO_ETC_DIR}" COMPONENT "${FALCO_COMPO
 if(NOT MINIMAL_BUILD)
   # Coverage
   include(Coverage)
-
-  # Tests
-  add_subdirectory(test)
 endif()
 
 # Rules

@@ -1,3 +1,0 @@
-- list: allowed_namespaces
-  items: [foo]
-  append: true
