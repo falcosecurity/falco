@@ -1,2 +1,0 @@
-- macro: consider_activity_events
-  condition: (not jevt.rawtime exists)

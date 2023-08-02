@@ -1,3 +1,0 @@
-- macro: allowed_k8s_containers
-  condition: (ka.req.container.image.repository=nginx)
-

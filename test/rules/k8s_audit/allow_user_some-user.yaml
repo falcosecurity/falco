@@ -1,3 +1,0 @@
-- list: allowed_k8s_users
-  items: [some-user]
-  append: true

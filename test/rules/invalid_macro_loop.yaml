@@ -1,8 +1,0 @@
-- macro: macro_a
-  condition: evt.type=open
-
-- macro: macro_b
-  condition: macro_a
-
-- macro: macro_a
-  condition: macro_b

@@ -1,2 +1,0 @@
-- macro: some macro
-  condition: evt.type=execve

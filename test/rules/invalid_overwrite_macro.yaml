@@ -1,3 +1,0 @@
-- macro: some macro
-  condition: foo
-  append: false

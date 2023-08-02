@@ -1,4 +1,0 @@
-- rule:
-  desc: some desc
-  condition: evt.type=execve
-  output: some output
