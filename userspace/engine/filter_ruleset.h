@@ -65,13 +65,26 @@ public:
 		\brief Processes an event and tries to find a match in a given ruleset.
 		\return true if a match is found, false otherwise
 		\param evt The event to be processed
-		\param match If true is returned, this is filled-out with the rule
+		\param match If true is returned, this is filled-out with the first rule
 		that matched the event
 		\param ruleset_id The id of the ruleset to be used
 	*/
 	virtual bool run(
 		gen_event *evt,
 		falco_rule& match,
+		uint16_t ruleset_id) = 0;
+	
+	/*!
+		\brief Processes an event and tries to find a match in a given ruleset.
+		\return true if a match is found, false otherwise
+		\param evt The event to be processed
+		\param matches If true is returned, this is filled-out with all the rules
+		that matched the event
+		\param ruleset_id The id of the ruleset to be used
+	*/
+	virtual bool run(
+		gen_event *evt,
+		std::vector<falco_rule>& matches,
 		uint16_t ruleset_id) = 0;
 
 	/*!

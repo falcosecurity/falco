@@ -53,7 +53,7 @@ struct falco_source
 
 	// Used by the filter_ruleset interface. Filled in when a rule
 	// matches an event.
-	mutable falco_rule m_rule;
+	mutable std::vector<falco_rule> m_rules;
 
 	inline bool is_field_defined(const std::string& field) const
 	{
