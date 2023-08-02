@@ -71,4 +71,12 @@ namespace falco_common
 	priority_type parse_priority(std::string v);
 	bool format_priority(priority_type v, std::string& out, bool shortfmt=false);
 	std::string format_priority(priority_type v, bool shortfmt=false);
+
+	enum rule_matching
+	{
+		FIRST = 0,
+		ALL = 1
+	};
+
+	bool parse_rule_matching(std::string v, rule_matching& out);
 };
