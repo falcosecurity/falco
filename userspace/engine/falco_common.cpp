@@ -27,6 +27,11 @@ static std::vector<std::string> priority_names = {
 	"Debug"
 };
 
+static std::vector<std::string> rule_matching_names = {
+	"first",
+	"all"
+};
+
 bool falco_common::parse_priority(std::string v, priority_type& out)
 {
 	for (size_t i = 0; i < priority_names.size(); i++)
@@ -79,4 +84,17 @@ std::string falco_common::format_priority(priority_type v, bool shortfmt)
 		throw falco_exception("Unknown priority enum value: " + std::to_string(v));
 	}
 	return out;
+}
+
+bool falco_common::parse_rule_matching(std::string v, rule_matching& out)
+{
+	for (size_t i = 0; i < rule_matching_names.size(); i++)
+	{
+		if (!strcasecmp(v.c_str(), rule_matching_names[i].c_str()))
+		{
+			out = (rule_matching) i;
+			return true;
+		}
+	}
+	return false;
 }
