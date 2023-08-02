@@ -19,6 +19,7 @@ limitations under the License.
 #include <falco/app/app.h>
 #include "engine_helper.h"
 #include <gtest/gtest.h>
+#include "../falco/app/actions/app_action_helpers.h"
 
 static std::shared_ptr<falco_engine> mock_engine()
 {
@@ -34,9 +35,14 @@ static std::shared_ptr<falco_engine> mock_engine()
 
 TEST(RuleLoaderReader, append_merge_override_enabled)
 {
-    auto engine1 = mock_engine();
-    engine1->load_rules_file("../unit_tests/falco_rules_test1.yaml");
-    auto rules1 = engine1->get_rules();
+    falco::app::state s;
+    s.engine = mock_engine();
+    s.options.rules_filenames.push_back("../unit_tests/falco_rules_test1.yaml");
+
+    auto result = falco::app::actions::load_rules_files(s);
+    ASSERT_TRUE(result.success);
+
+    auto rules1 = s.engine->get_rules();
     std::unordered_set<std::string> rules_names = {};
     std::unordered_set<std::string> expected_rules_names = {"Dummy Rule 0", "Dummy Rule 1", \
     "Dummy Rule 2", "Dummy Rule 4 Disabled", "Dummy Rule 5"};
