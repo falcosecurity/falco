@@ -72,8 +72,8 @@ public:
 
 	bool m_watch_config_files;
 	bool m_buffered_outputs;
-	size_t m_queue_capacity_outputs_items;
-	uint32_t m_queue_capacity_outputs_recovery;
+	size_t m_outputs_queue_capacity;
+	falco_common::outputs_recovery_type m_outputs_queue_recovery;
 	bool m_time_format_iso_8601;
 	uint32_t m_output_timeout;
 

@@ -20,7 +20,6 @@ limitations under the License.
 
 #include "falco_outputs.h"
 #include "config_falco.h"
-#include "configuration_aux.h"
 
 #include "formats.h"
 #include "logger.h"
@@ -47,8 +46,8 @@ falco_outputs::falco_outputs(
 	bool json_include_tags_property,
 	uint32_t timeout,
 	bool buffered,
-	size_t queue_capacity_outputs_items,
-	uint32_t queue_capacity_outputs_recovery,
+	size_t outputs_queue_capacity,
+	falco_common::outputs_recovery_type outputs_queue_recovery,
 	bool time_format_iso_8601,
 	const std::string& hostname)
 {
@@ -68,12 +67,11 @@ falco_outputs::falco_outputs(
 	}
 #ifndef __EMSCRIPTEN__
 	m_worker_thread = std::thread(&falco_outputs::worker, this);
-	if (queue_capacity_outputs_items > 0)
+	if (outputs_queue_capacity > 0)
 	{
-		m_queue.set_capacity(queue_capacity_outputs_items);
+		m_queue.set_capacity(outputs_queue_capacity);
 	}
-
-	m_recovery = queue_capacity_outputs_recovery;
+	m_recovery = outputs_queue_recovery;
 #endif
 }
 
@@ -284,12 +282,13 @@ inline void falco_outputs::push(const ctrl_msg& cmsg)
 	{
 		switch (m_recovery)
 		{
-		case RECOVERY_EXIT:
+		case falco_common::RECOVERY_EXIT:
 			fprintf(stderr, "Fatal error: Output queue out of memory. Exiting ... \n");
 			exit(EXIT_FAILURE);
-		case RECOVERY_EMPTY:
+		case falco_common::RECOVERY_EMPTY:
 			fprintf(stderr, "Output queue out of memory. Empty queue and continue ... \n");
 			m_queue.empty();
+			break;
 		default:
 			fprintf(stderr, "Output queue out of memory. Continue on ... \n");
 			break;

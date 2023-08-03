@@ -21,6 +21,8 @@ limitations under the License.
 #include <mutex>
 #include <sinsp.h>
 
+#define DEFAULT_OUTPUTS_QUEUE_CAPACITY 0
+
 //
 // Most falco_* classes can throw exceptions. Unless directly related
 // to low-level failures like inability to open file, etc, they will
@@ -52,6 +54,13 @@ struct falco_exception : std::exception
 
 namespace falco_common
 {
+
+	enum outputs_recovery_type {
+		RECOVERY_CONTINUE = 0,  /* queue_capacity_outputs recovery strategy of continuing on. */
+		RECOVERY_EXIT = 1,  /* queue_capacity_outputs recovery strategy of exiting, self OOM kill. */
+		RECOVERY_EMPTY = 2,  /* queue_capacity_outputs recovery strategy of emptying queue then continuing. */
+	};
+
 	const std::string syscall_source = sinsp_syscall_event_source_name;
 
 	// Same as numbers/indices into the above vector
@@ -69,6 +78,7 @@ namespace falco_common
 	
 	bool parse_priority(std::string v, priority_type& out);
 	priority_type parse_priority(std::string v);
+	bool parse_recovery(std::string v, outputs_recovery_type& out);
 	bool format_priority(priority_type v, std::string& out, bool shortfmt=false);
 	std::string format_priority(priority_type v, bool shortfmt=false);
 

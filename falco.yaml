@@ -39,7 +39,8 @@
 #     json_include_tags_property
 #     buffered_outputs
 #     outputs (throttling)
-#     queue_capacity_outputs
+#     rule_matching
+#     outputs_queue
 # Falco outputs channels
 #     stdout_output
 #     syslog_output
@@ -305,7 +306,7 @@ outputs:
 # defined.
 rule_matching: first
 
-# [Experimental] `queue_capacity_outputs`
+# [Experimental] `outputs_queue`
 #
 # Falco utilizes tbb::concurrent_bounded_queue for handling outputs, and this parameter
 # allows you to customize the queue capacity. Please refer to the official documentation:
@@ -320,18 +321,17 @@ rule_matching: first
 # as a parameter.
 # However, it will not address the root cause of the event pipe not keeping up.
 # 
-# `items`: the maximum number of items allowed in the queue, defaulting to 0. This means that
-# the queue is unbounded.
+# `capacity`: the maximum number of items allowed in the queue, defaulting to 0. This means that
+# the queue remains unbounded aka this setting is disabled.
 # You can experiment with values greater or smaller than the anchor value 1000000.
 # 
 # `recovery`: the strategy to follow when the queue becomes filled up. This also applies when
 # the queue is unbounded, and all available memory on the system is consumed.
-# recovery: 0 means continue.
-# recovery: 1 means simply exit (default behavior).
-# recovery: 2 means empty the queue and then continue.
-queue_capacity_outputs:
-  items: 0
-  recovery: 1
+# `exit` is default, `continue` does nothing special and `empty` empties the queue and then
+# continues.
+outputs_queue:
+  capacity: 0
+  recovery: exit
 
 
 ##########################
