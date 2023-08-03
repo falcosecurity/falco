@@ -194,9 +194,6 @@ endif()
 # Rules
 include(rules)
 
-# Dockerfiles
-add_subdirectory(docker)
-
 # Clang format
 # add_custom_target(format COMMAND clang-format --style=file -i $<TARGET_PROPERTY:falco,SOURCES> COMMENT "Formatting ..." VERBATIM)
 
