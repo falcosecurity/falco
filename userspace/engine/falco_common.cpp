@@ -27,10 +27,18 @@ static std::vector<std::string> priority_names = {
 	"Debug"
 };
 
+<<<<<<< HEAD
 static std::vector<std::string> rule_matching_names = {
 	"first",
 	"all"
 };
+=======
+static std::vector<std::string> outputs_recovery_names = {
+		"continue",
+		"exit",
+		"empty",
+	};
+>>>>>>> 92bd5767 (cleanup(outputs): adopt different style for outputs_queue params encodings)
 
 bool falco_common::parse_priority(std::string v, priority_type& out)
 {
@@ -57,6 +65,19 @@ falco_common::priority_type falco_common::parse_priority(std::string v)
 		throw falco_exception("Unknown priority value: " + v);
 	}
 	return out;
+}
+
+bool falco_common::parse_recovery(std::string v, outputs_recovery_type& out)
+{
+	for (size_t i = 0; i < outputs_recovery_names.size(); i++)
+	{
+		if (!strcasecmp(v.c_str(), outputs_recovery_names[i].c_str()))
+		{
+			out = (outputs_recovery_type) i;
+			return true;
+		}
+	}
+	return false;
 }
 
 bool falco_common::format_priority(priority_type v, std::string& out, bool shortfmt)

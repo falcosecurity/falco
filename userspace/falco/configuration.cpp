@@ -28,7 +28,6 @@ limitations under the License.
 #include "falco_utils.h"
 
 #include "configuration.h"
-#include "configuration_aux.h"
 #include "logger.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
 
@@ -41,8 +40,8 @@ falco_configuration::falco_configuration():
 	m_rule_matching(falco_common::rule_matching::FIRST),
 	m_watch_config_files(true),
 	m_buffered_outputs(false),
-	m_queue_capacity_outputs_items(DEFAULT_ITEMS_QUEUE_CAPAXITY_OUTPUTS),
-	m_queue_capacity_outputs_recovery(RECOVERY_EXIT),
+	m_outputs_queue_capacity(DEFAULT_OUTPUTS_QUEUE_CAPACITY),
+	m_outputs_queue_recovery(falco_common::RECOVERY_EXIT),
 	m_time_format_iso_8601(false),
 	m_output_timeout(2000),
 	m_grpc_enabled(false),
@@ -284,8 +283,13 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 	}
 
 	m_buffered_outputs = config.get_scalar<bool>("buffered_outputs", false);
-	m_queue_capacity_outputs_items = config.get_scalar<size_t>("queue_capacity_outputs.items", DEFAULT_ITEMS_QUEUE_CAPAXITY_OUTPUTS);
-	m_queue_capacity_outputs_recovery = config.get_scalar<uint32_t>("queue_capacity_outputs.recovery", RECOVERY_EXIT);
+	m_outputs_queue_capacity = config.get_scalar<size_t>("outputs_queue.capacity", DEFAULT_OUTPUTS_QUEUE_CAPACITY);
+	std::string recovery = config.get_scalar<std::string>("outputs_queue.recovery", "exit");
+	if (!falco_common::parse_recovery(recovery, m_outputs_queue_recovery))
+	{
+		throw std::logic_error("Unknown recovery \"" + recovery + "\"--must be one of exit, continue, empty");
+	}
+
 	m_time_format_iso_8601 = config.get_scalar<bool>("time_format_iso_8601", false);
 
 	m_webserver_enabled = config.get_scalar<bool>("webserver.enabled", false);

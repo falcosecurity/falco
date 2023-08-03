@@ -48,8 +48,8 @@ public:
 		bool json_include_tags_property,
 		uint32_t timeout,
 		bool buffered,
-		size_t queue_capacity_outputs_items,
-		uint32_t queue_capacity_outputs_recovery,
+		size_t outputs_queue_capacity,
+		falco_common::outputs_recovery_type outputs_queue_recovery,
 		bool time_format_iso_8601,
 		const std::string& hostname);
 

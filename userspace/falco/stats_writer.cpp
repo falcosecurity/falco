@@ -91,9 +91,9 @@ stats_writer::stats_writer(
 	m_config = config;
 	// capacity and controls should not be relevant for stats outputs, adopt capacity
 	// for completeness, but do not implement config recovery strategies.
-	if (config->m_queue_capacity_outputs_items > 0)
+	if (config->m_outputs_queue_capacity > 0)
 	{
-		m_queue.set_capacity(config->m_queue_capacity_outputs_items);
+		m_queue.set_capacity(config->m_outputs_queue_capacity);
 	}
 	if (config->m_metrics_enabled)
 	{
