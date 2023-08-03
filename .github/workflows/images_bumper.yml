@@ -1,4 +1,4 @@
-name: Builder and Tester Images Bumper
+name: Builder Image Bumper
 
 on:
   push:
@@ -9,7 +9,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       builder_changed: ${{ steps.filter.outputs.builder }}
-      tester_changed: ${{ steps.filter.outputs.tester }}
     steps:
     - uses: actions/checkout@v2
     - uses: dorny/paths-filter@v2
@@ -18,13 +17,11 @@ jobs:
         filters: |
           builder:
             - 'docker/builder/**'
-          tester:
-            - 'docker/tester/**'
 
-  update-builder-tester-images:
+  update-builder-images:
     runs-on: ubuntu-22.04
     needs: paths-filter
-    if: needs.paths-filter.outputs.builder_changed == 'true' || needs.paths-filter.outputs.tester_changed == 'true'
+    if: needs.paths-filter.outputs.builder_changed == 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -50,15 +47,6 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: docker/builder
-          platforms: linux/amd64,linux/arm64
-          tags: latest
-          push: true
-
-      - name: Build and push new tester image
-        if: needs.paths-filter.outputs.tester_changed == 'true'
-        uses: docker/build-push-action@v3
-        with:
-          context: docker/tester
           platforms: linux/amd64,linux/arm64
           tags: latest
           push: true
