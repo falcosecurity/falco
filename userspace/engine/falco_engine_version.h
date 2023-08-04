@@ -22,8 +22,9 @@ limitations under the License.
 // at build time to detect a changed set of fields.
 
 // This is the result of running the following command:
-//   echo $(falco -c ./falco.yaml --version | grep 'Engine:' | awk '{print $2}') $(echo $(falco -c ./falco.yaml --version | grep 'Schema version:' | awk '{print $3}') $(falco -c ./falco.yaml --list --markdown | grep '^`' | sort) $(falco -c ./falco.yaml --list-syscall-events | sort) | sha256sum)
+//   FALCO="falco -c ./falco.yaml"
+//   echo $($FALCO --version | grep 'Engine:' | awk '{print $2}') $(echo $($FALCO --version | grep 'Schema version:' | awk '{print $3}') $($FALCO --list --markdown | grep '^`' | sort) $($FALCO --list-syscall-events | sort) | sha256sum)
 // It represents the fields supported by this version of Falco,
 // the event types, and the underlying driverevent schema. It's used to
 // detetect changes in engine version in our CI jobs.
-#define FALCO_ENGINE_CHECKSUM "1d7f91f22d40074c56c705f5e494b7fae51aee1b7ababc8c70cfa63c6d6671c2"
+#define FALCO_ENGINE_CHECKSUM "96d8d3fc828e5c8c16184d66d0e7d5970864249e9b20cd736acaf70dc6431e0f"
