@@ -65,7 +65,15 @@ jobs:
             --build-arg TARGETARCH=${TARGETARCH} \
             .
             docker save docker.io/falcosecurity/falco-driver-loader:${{ inputs.arch }}-${{ inputs.tag }} --output /tmp/falco-driver-loader-${{ inputs.arch }}.tar
-            
+
+      - name: Build falco-driver-loader-legacy image
+        run: |
+          cd ${{ github.workspace }}/docker/driver-loader/
+          docker build -t docker.io/falcosecurity/falco-driver-loader-legacy:${{ inputs.arch }}-${{ inputs.tag }} \
+            --build-arg TARGETARCH=${TARGETARCH} \
+            .
+            docker save docker.io/falcosecurity/falco-driver-loader-legacy:${{ inputs.arch }}-${{ inputs.tag }} --output /tmp/falco-driver-loader-legacy-${{ inputs.arch }}.tar
+
       - name: Upload images tarballs
         uses: actions/upload-artifact@v3
         with:
