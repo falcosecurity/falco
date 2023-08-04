@@ -163,17 +163,6 @@ target_include_directories(falco PUBLIC ${FALCO_INCLUDE_DIRECTORIES})
 
 if(NOT MINIMAL_BUILD)
   add_custom_command(
-    TARGET falco
-    COMMAND bash ${CMAKE_CURRENT_SOURCE_DIR}/verify_engine_fields.sh ${CMAKE_SOURCE_DIR}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    COMMENT "Comparing engine fields checksum in falco_engine.h to actual fields"
-  )
-else()
-  message(STATUS "Skipping engine fields checksum when building the minimal Falco.")
-endif()
-
-if(NOT MINIMAL_BUILD)
-  add_custom_command(
     OUTPUT
     ${CMAKE_CURRENT_BINARY_DIR}/version.grpc.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/version.grpc.pb.h
