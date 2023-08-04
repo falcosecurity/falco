@@ -1,0 +1,41 @@
+# NOTE: it is UNSAFE to run ANY kind of script when using the pull_request_target trigger!
+# DO NOT TOUCH THIS FILE UNLESS THE TRIGGER IS CHANGED.
+# See warning in https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request_target.
+
+name: Engine version checks (weak)
+on:
+  pull_request_target:
+    paths:
+      - 'userspace/engine/*.cpp'
+      - 'userspace/engine/*.h'
+
+jobs:
+  paths-filter:
+    runs-on: ubuntu-latest
+    outputs:
+      engine_version_changed: ${{ steps.filter.outputs.engine_version }}
+    steps:
+    - uses: actions/checkout@v2
+    - uses: dorny/paths-filter@v2
+      id: filter
+      with:
+        filters: |
+          engine_version:
+            - 'userspace/engine/falco_engine_version.h'
+
+  check-engine-version-weak:
+    runs-on: ubuntu-22.04
+    permissions:
+      pull-requests: write
+    needs: paths-filter
+    if: needs.paths-filter.outputs.engine_version_changed == 'false'
+    steps:
+      - name: Check driver Falco engine version
+        uses: mshick/add-pr-comment@v2
+        with:
+          message: |
+            This PR may bring feature or behavior changes in the Falco engine and may require the engine version to be bumped.
+
+            Please double check **userspace/engine/falco_engine_version.h** file. See [versioning for FALCO_ENGINE_VERSION](https://github.com/falcosecurity/falco/blob/master/RELEASE.md#falco-repo-this-repo).
+
+            /hold
