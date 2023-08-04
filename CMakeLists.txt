@@ -189,17 +189,19 @@ endif()
 
 include(cxxopts)
 
+# One TBB
 if (NOT EMSCRIPTEN)
   include(tbb)
 endif()
 
-# One TBB
-if (CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT MINIMAL_BUILD)
+if (NOT MINIMAL_BUILD)
   include(zlib)
-  include(cares)
-  include(protobuf)
-  # gRPC
-  include(grpc)
+  if (CMAKE_SYSTEM_NAME MATCHES "Linux")
+    include(cares)
+    include(protobuf)
+    # gRPC
+    include(grpc)
+  endif()
 endif()
 
 # Installation
