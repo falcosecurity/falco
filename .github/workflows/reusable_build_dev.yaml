@@ -1,0 +1,85 @@
+# This is a reusable workflow used by the master CI
+on:
+  workflow_call:
+    outputs:
+      cmdout:
+        description: "Post-build command output"
+        value: ${{ jobs.build-and-test.outputs.cmdout }}
+    inputs:
+      arch:
+        description: x86_64 or aarch64
+        required: true
+        type: string
+      minimal:
+        description: Minimal build
+        required: true
+        type: boolean
+      build_type:
+        description: One of 'Debug' or 'Release'
+        required: true
+        type: boolean
+      git_ref:
+        description: Git ref used for checking out the code
+        required: true
+        type: string
+      cmd:
+        description: If defined, this command is executed after a successful build and its output is set in the `cmdout` output
+        required: false
+        default: ''
+        type: string
+       
+jobs:
+  build-and-test:
+    # See https://github.com/actions/runner/issues/409#issuecomment-1158849936
+    runs-on: ${{ (inputs.arch == 'aarch64' && fromJSON('[ "self-hosted", "linux", "ARM64" ]')) || 'ubuntu-22.04' }}
+    container: ${{ (inputs.arch == 'aarch64' && 'ubuntu:22.04') || '' }}
+    outputs:
+      cmdout: ${{ steps.run_cmd.outputs.out }}  
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.git_ref }}
+
+      - name: Update base image
+        run: sudo apt update -y
+      
+      - name: Install build dependencies
+        run: sudo DEBIAN_FRONTEND=noninteractive apt install libjq-dev libelf-dev libyaml-cpp-dev cmake build-essential git -y
+
+      - name: Install build dependencies (non-minimal)
+        if: inputs.minimal == 'true'
+        run: sudo DEBIAN_FRONTEND=noninteractive apt install libssl-dev libyaml-dev libc-ares-dev libprotobuf-dev protobuf-compiler libgrpc++-dev protobuf-compiler-grpc rpm libcurl4-openssl-dev linux-headers-$(uname -r) clang llvm -y
+      
+      - name: Prepare project
+        run: |
+          mkdir build
+          pushd build
+          cmake \
+            -DBUILD_FALCO_UNIT_TESTS=On \
+            -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} \
+            -DBUILD_BPF=${{ inputs.minimal == 'true' && 'OFF' || 'ON' }} \
+            -DBUILD_DRIVER=${{ inputs.minimal == 'true' && 'OFF' || 'ON' }} \
+            -DMINIMAL_BUILD=${{ inputs.minimal == 'true' && 'ON' || 'OFF' }} \
+            ..
+          popd
+
+      - name: Build
+        run: |
+          pushd build
+          KERNELDIR=/lib/modules/$(uname -r)/build make -j4 all
+          popd
+
+      - name: Run unit tests
+        run: |
+          pushd build
+          sudo ./unit_tests/falco_unit_tests 
+          popd
+
+      - name: Run command
+        id: run_cmd
+        if: inputs.cmd != ''
+        run: |
+          OUT=$(${{ inputs.cmd }})
+          echo "out=${OUT}" >> $GITHUB_OUTPUT

@@ -35,52 +35,80 @@ jobs:
       static: ${{ matrix.static != '' && true || false }}
       version: ${{ needs.fetch-version.outputs.version }}
 
+  build-dev-minimal:
+    uses: ./.github/workflows/reusable_build_dev.yaml
+    with:
+      arch: x86_64
+      git_ref: ${{ github.event.pull_request.head.sha }}
+      minimal: 'true'
+      build_type: 'Debug'
+  
+  # builds using system deps, checking out the PR's code
+  # note: this also runs a command that generates an output of form: "<engine_version> <some_hash>",
+  # of which <some_hash> is computed by hashing in order the following:
+  # - Driver schema version supported by the built-in falcosecurity/libs
+  # - The supported event types usable in Falco rules (evt.type=xxx)
+  # - The supported rules fields with their name, type, and description
   build-dev:
-    strategy:
-      fail-fast: false
-      matrix:
-        machine: ['ubuntu-20.04']
-        buildmode: ['Debug', 'Release']
-        minimal: ['', 'minimal']
-    runs-on: ${{ matrix.machine }}
-    steps:
-      - name: Checkout
+    uses: ./.github/workflows/reusable_build_dev.yaml
+    with:
+      arch: x86_64
+      git_ref: ${{ github.event.pull_request.head.sha }}
+      minimal: 'false'
+      build_type: 'Debug'
+      cmd: "echo $(build/userspace/falco/falco -c ./falco.yaml --version | grep 'Engine:' | awk '{print $2}') $(echo $(build/userspace/falco/falco -c ./falco.yaml --version | grep 'Schema version:' | awk '{print $3}') $(build/userspace/falco/falco -c ./falco.yaml --list --markdown | grep '^`' | sort) $(build/userspace/falco/falco -c ./falco.yaml --list-syscall-events | sort) | sha256sum)"
+
+  # checks the falco engine checksum for consistency
+  check-engine-checksum:
+    runs-on: ubuntu-latest
+    needs: [build-dev]
+    steps:    
+      - name: Checkout PR head ref
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.sha }}
 
-      - name: Update base image
-        run: sudo apt update -y
-      
-      - name: Install build dependencies
-        run: sudo DEBIAN_FRONTEND=noninteractive apt install libjq-dev libelf-dev libyaml-cpp-dev cmake build-essential git -y
-
-      - name: Install build dependencies (non-minimal)
-        if: matrix.minimal != 'minimal'
-        run: sudo DEBIAN_FRONTEND=noninteractive apt install libssl-dev libyaml-dev libc-ares-dev libprotobuf-dev protobuf-compiler libgrpc++-dev protobuf-compiler-grpc rpm libcurl4-openssl-dev linux-headers-$(uname -r) clang llvm -y
-      
-      - name: Prepare project
+      - name: Check Engine checksum
         run: |
-          mkdir build
-          pushd build
-          cmake \
-            -DBUILD_FALCO_UNIT_TESTS=On \
-            -DCMAKE_BUILD_TYPE=${{ matrix.buildmode }} \
-            -DBUILD_BPF=${{ matrix.minimal == 'minimal' && 'OFF' || 'ON' }} \
-            -DBUILD_DRIVER=${{ matrix.minimal == 'minimal' && 'OFF' || 'ON' }} \
-            -DMINIMAL_BUILD=${{ matrix.minimal == 'minimal' && 'ON' || 'OFF' }} \
-            ..
-          popd
+          prev_hash=$(grep FALCO_FIELDS_CHECKSUM "./userspace/engine/falco_engine_version.h" | awk '{print $3}' | sed -e 's/"//g')
+          cur_hash=$(echo "${{ needs.build-dev.outputs.cmdout }}" | cut -d ' ' -f 2)
+          
+          if [ $prev_hash != $cur_hash ]; then
+            echo "actual engine checksum differs from the one encoded in userspace/engine/falco_engine_version.h:"
+            echo "encoded: $prev_hash"
+            echo "current: $cur_hash"
+          fi
 
-      - name: Build
-        run: |
-          pushd build
-          KERNELDIR=/lib/modules/$(uname -r)/build make -j4 all
-          popd
+  # checks the falco engine version and enforce bumping when necessary
+  check-engine-version:
+    runs-on: ubuntu-latest
+    needs: [build-dev]
+    steps:    
+      - name: Checkout base ref
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ github.base_ref }}
 
-      - name: Run unit tests
+      - name: Check Engine version
         run: |
-          pushd build
-          sudo ./unit_tests/falco_unit_tests 
-          popd
+          base_hash=$(grep FALCO_FIELDS_CHECKSUM "./userspace/engine/falco_engine_version.h" | awk '{print $3}' | sed -e 's/"//g')
+          base_engine_ver=$(grep FALCO_ENGINE_VERSION "./userspace/engine/falco_engine_version.h" | awk '{print $3}' | sed -e 's/(//g' -e 's/)//g')
+
+          cur_hash=$(echo "${{ needs.build-dev.outputs.cmdout }}" | cut -d ' ' -f 2)
+          cur_engine_ver=$(echo "${{ needs.build-dev.outputs.cmdout }}" | cut -d ' ' -f 1)
+
+          if [ $base_hash != $cur_hash ]; then
+            echo "engine checksum for baseref and headref differ:"
+            echo "baseref: $base_hash"
+            echo "headref: $cur_hash"
+            if [ $base_engine_ver == $cur_engine_ver ]; then
+              echo "engine version must be bumped:"
+              echo $cur_engine_ver
+            else
+              echo "engine version for baseref and headref differ too, so no bump is required:"
+              echo "baseref: $base_engine_ver"
+              echo "headref: $cur_engine_ver"
+            fi
+          fi
