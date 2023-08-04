@@ -71,7 +71,7 @@ jobs:
 
       - name: Check Engine checksum
         run: |
-          prev_hash=$(grep FALCO_FIELDS_CHECKSUM "./userspace/engine/falco_engine_version.h" | awk '{print $3}' | sed -e 's/"//g')
+          prev_hash=$(grep FALCO_ENGINE_CHECKSUM "./userspace/engine/falco_engine_version.h" | awk '{print $3}' | sed -e 's/"//g')
           cur_hash=$(echo "${{ needs.build-dev.outputs.cmdout }}" | cut -d ' ' -f 2)
           
           if [ $prev_hash != $cur_hash ]; then
@@ -93,7 +93,7 @@ jobs:
 
       - name: Check Engine version
         run: |
-          base_hash=$(grep FALCO_FIELDS_CHECKSUM "./userspace/engine/falco_engine_version.h" | awk '{print $3}' | sed -e 's/"//g')
+          base_hash=$(grep FALCO_ENGINE_CHECKSUM "./userspace/engine/falco_engine_version.h" | awk '{print $3}' | sed -e 's/"//g')
           base_engine_ver=$(grep FALCO_ENGINE_VERSION "./userspace/engine/falco_engine_version.h" | awk '{print $3}' | sed -e 's/(//g' -e 's/)//g')
 
           cur_hash=$(echo "${{ needs.build-dev.outputs.cmdout }}" | cut -d ' ' -f 2)
