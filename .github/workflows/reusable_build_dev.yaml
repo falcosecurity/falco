@@ -17,7 +17,7 @@ on:
       build_type:
         description: One of 'Debug' or 'Release'
         required: true
-        type: boolean
+        type: string
       git_ref:
         description: Git ref used for checking out the code
         required: true
@@ -49,7 +49,7 @@ jobs:
         run: sudo DEBIAN_FRONTEND=noninteractive apt install libjq-dev libelf-dev libyaml-cpp-dev cmake build-essential git -y
 
       - name: Install build dependencies (non-minimal)
-        if: inputs.minimal == 'true'
+        if: inputs.minimal != true
         run: sudo DEBIAN_FRONTEND=noninteractive apt install libssl-dev libyaml-dev libc-ares-dev libprotobuf-dev protobuf-compiler libgrpc++-dev protobuf-compiler-grpc rpm libcurl4-openssl-dev linux-headers-$(uname -r) clang llvm -y
       
       - name: Prepare project
@@ -59,9 +59,9 @@ jobs:
           cmake \
             -DBUILD_FALCO_UNIT_TESTS=On \
             -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} \
-            -DBUILD_BPF=${{ inputs.minimal == 'true' && 'OFF' || 'ON' }} \
-            -DBUILD_DRIVER=${{ inputs.minimal == 'true' && 'OFF' || 'ON' }} \
-            -DMINIMAL_BUILD=${{ inputs.minimal == 'true' && 'ON' || 'OFF' }} \
+            -DBUILD_BPF=${{ inputs.minimal == true && 'OFF' || 'ON' }} \
+            -DBUILD_DRIVER=${{ inputs.minimal == true && 'OFF' || 'ON' }} \
+            -DMINIMAL_BUILD=${{ inputs.minimal == true && 'ON' || 'OFF' }} \
             ..
           popd
 

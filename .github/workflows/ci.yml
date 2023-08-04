@@ -40,8 +40,8 @@ jobs:
     with:
       arch: x86_64
       git_ref: ${{ github.event.pull_request.head.sha }}
-      minimal: 'true'
-      build_type: 'Debug'
+      minimal: true
+      build_type: Debug
   
   # builds using system deps, checking out the PR's code
   # note: this also runs a command that generates an output of form: "<engine_version> <some_hash>",
@@ -54,8 +54,8 @@ jobs:
     with:
       arch: x86_64
       git_ref: ${{ github.event.pull_request.head.sha }}
-      minimal: 'false'
-      build_type: 'Debug'
+      minimal: false
+      build_type: Debug
       cmd: "echo $(build/userspace/falco/falco -c ./falco.yaml --version | grep 'Engine:' | awk '{print $2}') $(echo $(build/userspace/falco/falco -c ./falco.yaml --version | grep 'Schema version:' | awk '{print $3}') $(build/userspace/falco/falco -c ./falco.yaml --list --markdown | grep '^`' | sort) $(build/userspace/falco/falco -c ./falco.yaml --list-syscall-events | sort) | sha256sum)"
 
   # checks the falco engine checksum for consistency
@@ -71,13 +71,16 @@ jobs:
 
       - name: Check Engine checksum
         run: |
-          prev_hash=$(grep FALCO_ENGINE_CHECKSUM "./userspace/engine/falco_engine_version.h" | awk '{print $3}' | sed -e 's/"//g')
+          prev_hash=$(grep CHECKSUM "./userspace/engine/falco_engine_version.h" | awk '{print $3}' | sed -e 's/"//g')
           cur_hash=$(echo "${{ needs.build-dev.outputs.cmdout }}" | cut -d ' ' -f 2)
           
+          echo "encoded checksum: $prev_hash"
+          echo "current checksum: $cur_hash"
           if [ $prev_hash != $cur_hash ]; then
-            echo "actual engine checksum differs from the one encoded in userspace/engine/falco_engine_version.h:"
-            echo "encoded: $prev_hash"
-            echo "current: $cur_hash"
+            echo "current engine checksum differs from the one encoded in userspace/engine/falco_engine_version.h"
+            exit 1
+          else
+            echo "current and encoded engine checksum are matching"
           fi
 
   # checks the falco engine version and enforce bumping when necessary
@@ -93,22 +96,22 @@ jobs:
 
       - name: Check Engine version
         run: |
-          base_hash=$(grep FALCO_ENGINE_CHECKSUM "./userspace/engine/falco_engine_version.h" | awk '{print $3}' | sed -e 's/"//g')
-          base_engine_ver=$(grep FALCO_ENGINE_VERSION "./userspace/engine/falco_engine_version.h" | awk '{print $3}' | sed -e 's/(//g' -e 's/)//g')
+          base_hash=$(grep CHECKSUM "./userspace/engine/falco_engine_version.h" | awk '{print $3}' | sed -e 's/"//g')
+          base_engine_ver=$(grep ENGINE_VERSION "./userspace/engine/falco_engine_version.h" | awk '{print $3}' | sed -e 's/(//g' -e 's/)//g')
 
           cur_hash=$(echo "${{ needs.build-dev.outputs.cmdout }}" | cut -d ' ' -f 2)
           cur_engine_ver=$(echo "${{ needs.build-dev.outputs.cmdout }}" | cut -d ' ' -f 1)
 
-          if [ $base_hash != $cur_hash ]; then
-            echo "engine checksum for baseref and headref differ:"
-            echo "baseref: $base_hash"
-            echo "headref: $cur_hash"
-            if [ $base_engine_ver == $cur_engine_ver ]; then
-              echo "engine version must be bumped:"
-              echo $cur_engine_ver
-            else
-              echo "engine version for baseref and headref differ too, so no bump is required:"
-              echo "baseref: $base_engine_ver"
-              echo "headref: $cur_engine_ver"
-            fi
+          echo "baseref checksum: $base_hash"
+          echo "baseref engine version: $base_engine_ver"
+          echo "headref checksum: $cur_hash"
+          echo "headref engine version: $cur_engine_ver"
+          if [ "$base_hash" != "$cur_hash" ]; then
+              echo "engine checksum for baseref and headref differ"
+              if [ "$base_engine_ver" == "$cur_engine_ver" ]; then
+                  echo "engine version must be bumped"
+                  exit 1
+              else
+                  echo "engine version for baseref and headref differ too, so no bump is required"
+              fi
           fi
