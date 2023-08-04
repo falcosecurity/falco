@@ -18,7 +18,6 @@ limitations under the License.
 #include <vector>
 
 #include "rule_loader_reader.h"
-
 #define THROW(cond, err, ctx)    { if ((cond)) { throw rule_loader::rule_load_exception(falco::load_result::LOAD_ERR_YAML_VALIDATE, (err), (ctx)); } }
 
 // Don't call this directly, call decode_val/decode_optional_val instead.
@@ -318,6 +317,10 @@ static void read_item(
 
 		if(append)
 		{
+			if(!item["items"].IsDefined())
+			{
+				throw falco_exception("Appended list must have items property");
+			}
 			collector.append(cfg, v);
 		}
 		else
@@ -346,6 +349,10 @@ static void read_item(
 
 		if(append)
 		{
+			if(!item["condition"].IsDefined())
+			{
+				throw falco_exception("Appended macro must have condition property");
+			}
 			collector.append(cfg, v);
 		}
 		else
@@ -375,6 +382,13 @@ static void read_item(
 
 		if(append)
 		{
+			if(!item["condition"].IsDefined() && !item["exceptions"].IsDefined() \
+			&& !item["output"].IsDefined() && !item["tags"].IsDefined() \
+			&& !item["enabled"].IsDefined() && !item["priority"].IsDefined())
+			{
+				throw falco_exception("Appended rule must have exceptions or condition or output or tags or enabled or priority property");
+			}
+
 			// option to append to condition property
 			if(item["condition"].IsDefined())
 			{

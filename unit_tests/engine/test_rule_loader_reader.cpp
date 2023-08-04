@@ -45,7 +45,7 @@ TEST(RuleLoaderReader, append_merge_override_enabled)
     auto rules1 = s.engine->get_rules();
     std::unordered_set<std::string> rules_names = {};
     std::unordered_set<std::string> expected_rules_names = {"Dummy Rule 0", "Dummy Rule 1", \
-    "Dummy Rule 2", "Dummy Rule 4 Disabled", "Dummy Rule 5"};
+    "Dummy Rule 2", "Dummy Rule 4 Disabled", "Dummy Rule 5", "Dummy Rule 6"};
     std::unordered_set<std::string> not_expected_rules_names = {"Dummy Rule 3 Invalid"};
     ASSERT_EQ(rules1.size(), N_VALID_TEST_RULES_FALCO_RULES_TEST_YAML);
 
@@ -93,6 +93,16 @@ TEST(RuleLoaderReader, append_merge_override_enabled)
             ASSERT_STRING_EQUAL(r.cond, std::string("evt.type in (open, openat, openat2) and proc.name=cat"));  // ensure correct append
             ASSERT_STRING_EQUAL(r.output, std::string("%evt.type %evt.num %proc.cmdline %container.ip")); // ensure correct append
             ASSERT_CONTAINS(r.tags, some_desired_tags); // ensure correct append
+        }
+        else if (r.name.compare(std::string("Dummy Rule 6")) == 0)
+        {
+            // Test if we correctly support append mode when used only to override enabled and priority
+            std::set<std::string> some_desired_tags = {"maturity_sandbox", "host"};
+            ASSERT_STRING_EQUAL(r.cond, std::string("evt.type in (ptrace)"));  // ensure prev definition
+            ASSERT_STRING_EQUAL(r.output, std::string("%evt.type %proc.cmdline"));  // ensure prev definition
+            ASSERT_TRUE(r.enabled); // ensure new definition
+            ASSERT_EQ(r.priority, falco_common::priority_type::PRIORITY_CRITICAL); // ensure new definition
+            ASSERT_CONTAINS(r.tags, some_desired_tags); // ensure prev definition
         }
     }
     ASSERT_CONTAINS(rules_names, expected_rules_names);

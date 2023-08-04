@@ -1,4 +1,18 @@
-# Test rules 1
+# Test ruleset 1
+
+- list: http_server_binaries
+  items: [nginx, httpd, httpd-foregroun, lighttpd, apache, apache2]
+
+- list: http_server_binaries
+  append: true
+  items: [test]
+
+- macro: interpreted_procs
+  condition: (proc.name in (test1, test2))
+
+- macro: interpreted_procs
+  append: true
+  condition: and evt.num > 0
 
 - rule: Dummy Rule 0
   desc: My test desc 0
@@ -44,6 +58,14 @@
   priority: INFORMATIONAL
   tags: [maturity_sandbox]
 
+- rule: Dummy Rule 6
+  desc: My test desc 6
+  condition: evt.type in (ptrace)
+  enabled: false
+  output: '%evt.type %proc.cmdline'
+  priority: INFORMATIONAL
+  tags: [maturity_sandbox, host]
+
 # Test appending to rule
 - rule: Dummy Rule 0
   append: true
@@ -79,3 +101,11 @@
 - rule: Dummy Rule 5
   append: true
   output: '%container.ip'
+
+- rule: Dummy Rule 6
+  append: true
+  priority: CRITICAL
+
+- rule: Dummy Rule 6
+  append: true
+  enabled: true
