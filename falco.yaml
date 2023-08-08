@@ -139,23 +139,6 @@ rules_file:
   - /etc/falco/falco_rules.local.yaml
   - /etc/falco/rules.d
 
-# [Experimental] `rule_matching`
-#
-# Falco has to be performant when evaluating rules against events. To quickly 
-# understand which rules could trigger on a specific event, Falco maintains 
-# buckets of rules sharing the same event type in a map. Then, the lookup 
-# in each bucket is performed through linear search. The `rule_matching`
-# configuration key's values are:
-#  - "first": when evaluating conditions of rules in a bucket, Falco will stop
-#    to evaluate rules if it finds a matching rules. Since rules are stored 
-#    in buckets in the order they are defined in the rules files, this option 
-#    could prevent other rules to trigger even if their condition is met, causing
-#    a shadowing problem.
-#  - "all": with this value Falco will continue evaluating all the rules 
-#    stored in the bucket, so that multiple rules could be triggered upon one
-#    event.
-rule_matching: first
-
 #################
 # Falco plugins #
 #################
@@ -305,6 +288,21 @@ buffered_outputs: false
 outputs:
   rate: 0
   max_burst: 1000
+
+# [Experimental] `rule_matching`
+#
+# The `rule_matching` configuration key's values are:
+#  - `first`: Falco stops checking conditions of rules against upcoming event
+#    at the first matching rule
+#  - `all`: Falco will continue checking conditions of rules even if a matching 
+#    one was already found
+#
+# Rules conditions are evaluated in the order they are defined in the rulesfiles.
+# For this reason, when using `first` as value, only the first defined rule will 
+# trigger, possibly shadowing other rules.
+# In case `all` is used as value, rules still trigger in the order they were
+# defined.
+rule_matching: first
 
 
 ##########################
