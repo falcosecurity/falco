@@ -169,12 +169,7 @@ bool evttype_index_ruleset::ruleset_filters::run(gen_event *evt, std::vector<fal
 		}
 	}
 
-	if(match_found)
-	{
-		return true;
-	}
-
-	return false;
+	return match_found;
 }
 
 libsinsp::events::set<ppm_sc_code> evttype_index_ruleset::ruleset_filters::sc_codes()
