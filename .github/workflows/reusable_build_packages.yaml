@@ -49,7 +49,7 @@ jobs:
           yum -y install centos-release-scl
           yum -y install devtoolset-9-gcc devtoolset-9-gcc-c++
           source /opt/rh/devtoolset-9/enable
-          yum install -y wget git make m4 rpm-build
+          yum install -y wget git make m4 rpm-build perl-IPC-Cmd
     
       - name: Checkout
         uses: actions/checkout@v3
