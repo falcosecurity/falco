@@ -388,21 +388,28 @@ std::unique_ptr<std::vector<falco_engine::rule_result>> falco_engine::process_ev
 		return nullptr;
 	}
 
-	if (m_rule_matching == falco_common::rule_matching::ALL)
+	switch (m_rule_matching)
 	{
+	case falco_common::rule_matching::ALL:
+		if (source->m_rules.size() > 0)
+		{
+			source->m_rules.clear();
+		}
 		if (!source->ruleset->run(ev, source->m_rules, ruleset_id))
 		{
 			return nullptr;
 		}
-	}
-	else if (m_rule_matching == falco_common::rule_matching::FIRST)
-	{
-		falco_rule rule;
-		if (!source->ruleset->run(ev, rule, ruleset_id))
+		break;
+	case falco_common::rule_matching::FIRST:
+		if (source->m_rules.size() != 1)
+		{
+			source->m_rules.resize(1);
+		}
+		if (!source->ruleset->run(ev, source->m_rules[0], ruleset_id))
 		{
 			return nullptr;
 		}
-		source->m_rules.push_back(rule);
+		break;
 	}
 
 	auto res = std::make_unique<std::vector<falco_engine::rule_result>>();
@@ -420,10 +427,6 @@ std::unique_ptr<std::vector<falco_engine::rule_result>> falco_engine::process_ev
 		res->push_back(rule_result);
 	}
 
-	if (source->m_rules.size() > 0)
-	{
-		source->m_rules.clear();
-	}
 	return res;
 }
 

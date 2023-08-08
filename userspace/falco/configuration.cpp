@@ -38,6 +38,7 @@ falco_configuration::falco_configuration():
 	m_notifications_rate(0),
 	m_notifications_max_burst(1000),
 	m_watch_config_files(true),
+	m_rule_matching(falco_common::rule_matching::FIRST),
 	m_buffered_outputs(false),
 	m_time_format_iso_8601(false),
 	m_output_timeout(2000),
