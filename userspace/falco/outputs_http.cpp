@@ -28,11 +28,20 @@ void falco::outputs::output_http::output(const message *msg)
 	curl = curl_easy_init();
 	if(curl)
 	{
-		if (m_json_output)
+		if(m_json_output)
 		{
 			slist1 = curl_slist_append(slist1, "Content-Type: application/json");
-		} else {
+		}
+		else
+		{
 			slist1 = curl_slist_append(slist1, "Content-Type: text/plain");
+		}
+		for(auto it = m_oc.options.find("additional_header_"); it != m_oc.options.end(); ++it)
+		{
+			std::string headerName = it->first.substr(18);
+			std::string headerValue = it->second;
+			std::string header = headerName + ": " + headerValue;
+			slist1 = curl_slist_append(slist1, header.c_str());			
 		}
 		res = curl_easy_setopt(curl, CURLOPT_HTTPHEADER, slist1);
 
@@ -40,10 +49,8 @@ void falco::outputs::output_http::output(const message *msg)
 		{
 			// if the URL is quoted the quotes should be removed to satisfy libcurl expected format
 			std::string unquotedUrl = m_oc.options["url"];
-			if (!unquotedUrl.empty() && (
-				(unquotedUrl.front() == '\"' && unquotedUrl.back() == '\"') ||
-				(unquotedUrl.front() == '\'' && unquotedUrl.back() == '\'')
-			))
+			if(!unquotedUrl.empty() && ((unquotedUrl.front() == '\"' && unquotedUrl.back() == '\"') ||
+						    (unquotedUrl.front() == '\'' && unquotedUrl.back() == '\'')))
 			{
 				unquotedUrl = libsinsp::filter::unescape_str(unquotedUrl);
 			}
@@ -62,14 +69,14 @@ void falco::outputs::output_http::output(const message *msg)
 
 		if(res == CURLE_OK)
 		{
-		   res = curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, -1L);
+			res = curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, -1L);
 		}
 
 		if(res == CURLE_OK)
 		{
 			if(m_oc.options["insecure"] == std::string("true"))
 			{
-				res = curl_easy_setopt(curl,CURLOPT_SSL_VERIFYPEER, 0L);
+				res = curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
 
 				if(res == CURLE_OK)
 				{
@@ -80,18 +87,21 @@ void falco::outputs::output_http::output(const message *msg)
 
 		if(res == CURLE_OK)
 		{
-			if (!m_oc.options["ca_cert"].empty())
+			if(!m_oc.options["ca_cert"].empty())
 			{
 				res = curl_easy_setopt(curl, CURLOPT_CAINFO, m_oc.options["ca_cert"].c_str());
-			}else if(!m_oc.options["ca_bundle"].empty())
+			}
+			else if(!m_oc.options["ca_bundle"].empty())
 			{
 				res = curl_easy_setopt(curl, CURLOPT_CAINFO, m_oc.options["ca_bundle"].c_str());
-			}else{
+			}
+			else
+			{
 				res = curl_easy_setopt(curl, CURLOPT_CAPATH, m_oc.options["ca_path"].c_str());
 			}
 		}
 
-  		if(res == CURLE_OK)
+		if(res == CURLE_OK)
 		{
 			res = curl_easy_perform(curl);
 		}
