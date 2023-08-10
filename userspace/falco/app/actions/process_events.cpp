@@ -330,7 +330,7 @@ static falco::app::run_result do_inspect(
 		// engine, which will match the event against the set
 		// of rules. If a match is found, pass the event to
 		// the outputs.
-		auto res = s.engine->process_event(source_engine_idx, ev);
+		auto res = s.engine->process_event(source_engine_idx, ev, s.config->m_rule_matching);
 		if(res != nullptr)
 		{
 			for(auto& rule_res : *res.get())
