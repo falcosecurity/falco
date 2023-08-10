@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2019 The Falco Authors.
+# Copyright (C) 2023 The Falco Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
 # the License. You may obtain a copy of the License at
@@ -118,8 +118,6 @@ set(CMAKE_CXX_FLAGS_DEBUG "${FALCO_EXTRA_DEBUG_FLAGS}")
 set(CMAKE_C_FLAGS_RELEASE "-O3 -fno-strict-aliasing -DNDEBUG")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -fno-strict-aliasing -DNDEBUG")
 
-include(GetFalcoVersion)
-
 set(PACKAGE_NAME "falco")
 set(DRIVER_NAME "falco")
 set(DRIVER_DEVICE_NAME "falco")
@@ -146,6 +144,9 @@ include(ExternalProject)
 
 # libs
 include(falcosecurity-libs)
+
+# compute FALCO_VERSION (depends on libs)
+include(falco-version)
 
 # jq
 include(jq)
