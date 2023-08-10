@@ -56,7 +56,6 @@ falco_engine::falco_engine(bool seed_rng)
 	  m_syscall_source_idx(SIZE_MAX),
 	  m_next_ruleset_id(0),
 	  m_min_priority(falco_common::PRIORITY_DEBUG),
-	  m_rule_matching(falco_common::FIRST),
 	  m_sampling_ratio(1), m_sampling_multiplier(0),
 	  m_replace_container_info(false)
 {
@@ -311,11 +310,6 @@ void falco_engine::set_min_priority(falco_common::priority_type priority)
 	m_min_priority = priority;
 }
 
-void falco_engine::set_rule_matching(falco_common::rule_matching rule_matching)
-{
-	m_rule_matching = rule_matching;
-}
-
 uint16_t falco_engine::find_ruleset_id(const std::string &ruleset)
 {
 	auto it = m_known_rulesets.lower_bound(ruleset);
@@ -359,7 +353,8 @@ std::shared_ptr<gen_event_formatter> falco_engine::create_formatter(const std::s
 	return find_source(source)->formatter_factory->create_formatter(output);
 }
 
-std::unique_ptr<std::vector<falco_engine::rule_result>> falco_engine::process_event(std::size_t source_idx, gen_event *ev, uint16_t ruleset_id)
+std::unique_ptr<std::vector<falco_engine::rule_result>> falco_engine::process_event(std::size_t source_idx,
+	gen_event *ev, uint16_t ruleset_id, falco_common::rule_matching strategy)
 {
 	// note: there are no thread-safety guarantees on the filter_ruleset::run()
 	// method, but the thread-safety assumptions of falco_engine::process_event()
@@ -388,7 +383,7 @@ std::unique_ptr<std::vector<falco_engine::rule_result>> falco_engine::process_ev
 		return nullptr;
 	}
 
-	switch (m_rule_matching)
+	switch (strategy)
 	{
 	case falco_common::rule_matching::ALL:
 		if (source->m_rules.size() > 0)
@@ -430,9 +425,10 @@ std::unique_ptr<std::vector<falco_engine::rule_result>> falco_engine::process_ev
 	return res;
 }
 
-std::unique_ptr<std::vector<falco_engine::rule_result>> falco_engine::process_event(std::size_t source_idx, gen_event *ev)
+std::unique_ptr<std::vector<falco_engine::rule_result>> falco_engine::process_event(std::size_t source_idx,
+	gen_event *ev, falco_common::rule_matching strategy)
 {
-	return process_event(source_idx, ev, m_default_ruleset_id);
+	return process_event(source_idx, ev, m_default_ruleset_id, strategy);
 }
 
 std::size_t falco_engine::add_source(const std::string &source,
