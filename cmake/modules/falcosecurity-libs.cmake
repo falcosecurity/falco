@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2021 The Falco Authors.
+# Copyright (C) 2023 The Falco Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
 # the License. You may obtain a copy of the License at
@@ -27,8 +27,8 @@ else()
   # In case you want to test against another falcosecurity/libs version (or branch, or commit) just pass the variable -
   # ie., `cmake -DFALCOSECURITY_LIBS_VERSION=dev ..` 
   if(NOT FALCOSECURITY_LIBS_VERSION)
-    set(FALCOSECURITY_LIBS_VERSION "aeff81476d0dcd3bfe7002e8642163b6bd11094e")
-    set(FALCOSECURITY_LIBS_CHECKSUM "SHA256=b28f5e3335af8ebba9afa457ba1e687142a1399663cb23ddb133e5c72a7b206a")
+    set(FALCOSECURITY_LIBS_VERSION "942a2249b7b9f65def0a01acfb1fba84f629b3bf")
+    set(FALCOSECURITY_LIBS_CHECKSUM "SHA256=8670d7b24fad659674cea90b9b3d86e5d0775a6b2faedc0d5303f910242282ff")
   endif()
 
   # cd /path/to/build && cmake /path/to/source
