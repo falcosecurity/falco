@@ -769,10 +769,7 @@ void falco_engine::get_json_evt_types(libsinsp::filter::ast::expr* ast,
 {
 	output = Json::arrayValue;
 	auto evtcodes = libsinsp::filter::ast::ppm_event_codes(ast);
-	libsinsp::events::set<ppm_sc_code> syscodes;
-#ifdef __linux__
-	syscodes = libsinsp::filter::ast::ppm_sc_codes(ast);
-#endif
+	auto syscodes = libsinsp::filter::ast::ppm_sc_codes(ast);
 	auto syscodes_to_evt_names = libsinsp::events::sc_set_to_event_names(syscodes);
 	auto evtcodes_to_evt_names = libsinsp::events::event_set_to_names(evtcodes, false);
 	for (const auto& n : unordered_set_union(syscodes_to_evt_names, evtcodes_to_evt_names))

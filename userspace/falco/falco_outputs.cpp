@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#if !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
+#if !defined(_WIN32) && !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
 #include <google/protobuf/util/time_util.h>
 #endif
 
@@ -30,7 +30,7 @@ limitations under the License.
 #include "outputs_program.h"
 #include "outputs_stdout.h"
 #include "outputs_syslog.h"
-#if !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
+#if !defined(_WIN32) && !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
 #include "outputs_http.h"
 #include "outputs_grpc.h"
 #endif
@@ -101,7 +101,7 @@ void falco_outputs::add_output(falco::outputs::config oc)
 	{
 		oo = new falco::outputs::output_syslog();
 	}
-#if !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
+#if !defined(_WIN32) && !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
 	else if(oc.name == "http")
 	{
 		oo = new falco::outputs::output_http();

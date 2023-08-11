@@ -108,7 +108,7 @@ endif()
 # explicitly set hardening flags
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(FALCO_SECURITY_FLAGS "")
-if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+if(NOT EMSCRIPTEN)
   set(FALCO_SECURITY_FLAGS "${FALCO_SECURITY_FLAGS} -Wl,-z,relro,-z,now -fstack-protector-strong")
 endif()
 if(CMAKE_BUILD_TYPE STREQUAL "release")
@@ -175,7 +175,7 @@ include(b64)
 # yaml-cpp
 include(yaml-cpp)
 
-if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT MINIMAL_BUILD)
+if(NOT WIN32 AND NOT APPLE AND NOT MINIMAL_BUILD AND NOT EMSCRIPTEN)
   # OpenSSL
   include(openssl)
 
@@ -196,7 +196,7 @@ endif()
 
 if (NOT MINIMAL_BUILD)
   include(zlib)
-  if (CMAKE_SYSTEM_NAME MATCHES "Linux")
+  if (NOT WIN32 AND NOT APPLE AND NOT EMSCRIPTEN)
     include(cares)
     include(protobuf)
     # gRPC
@@ -232,11 +232,8 @@ add_subdirectory(scripts)
 add_subdirectory(userspace/engine)
 add_subdirectory(userspace/falco)
 
-if(CMAKE_SYSTEM_NAME MATCHES "Linux")
-  if(NOT MUSL_OPTIMIZED_BUILD)
-    include(plugins)
-  endif()
-
+if(NOT WIN32 AND NOT APPLE AND NOT EMSCRIPTEN AND NOT MUSL_OPTIMIZED_BUILD)
+  include(plugins)
   include(falcoctl)
 endif()
 

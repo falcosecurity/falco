@@ -16,7 +16,7 @@ limitations under the License.
 
 #include "actions.h"
 
-#if !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
+#if !defined(_WIN32) && !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
 #include "grpc_server.h"
 #endif
 
@@ -25,7 +25,7 @@ using namespace falco::app::actions;
 
 falco::app::run_result falco::app::actions::start_grpc_server(falco::app::state& s)
 {
-#if !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
+#if !defined(_WIN32) && !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
 	// gRPC server
 	if(s.config->m_grpc_enabled)
 	{
@@ -56,7 +56,7 @@ falco::app::run_result falco::app::actions::start_grpc_server(falco::app::state&
 
 falco::app::run_result falco::app::actions::stop_grpc_server(falco::app::state& s)
 {
-#if !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
+#if !defined(_WIN32) && !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
 	if(s.config->m_grpc_enabled)
 	{
 		if (s.options.dry_run)

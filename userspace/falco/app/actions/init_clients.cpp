@@ -21,7 +21,7 @@ using namespace falco::app::actions;
 
 falco::app::run_result falco::app::actions::init_clients(falco::app::state& s)
 {
-#if !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
+#if !defined(_WIN32) && !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
 	// k8s is useful only if the syscall source is enabled
 	if (s.is_capture_mode() || !s.is_source_enabled(falco_common::syscall_source))
 	{
