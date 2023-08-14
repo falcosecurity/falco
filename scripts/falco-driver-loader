@@ -486,6 +486,12 @@ load_bpf_probe_compile() {
 		make modules_prepare > /dev/null
 	}
 
+	if [ "${TARGET_ID}" == "flatcar" ]; then
+		KERNEL_RELEASE=${DRIVER_KERNEL_RELEASE}
+		echo "* Flatcar detected (version ${VERSION_ID}); relocating kernel tools"
+		flatcar_relocate_tools
+	fi
+
 	if [ "${TARGET_ID}" == "cos" ]; then
 		echo "* COS detected (build ${BUILD_ID}), using COS kernel headers"
 
