@@ -22,27 +22,32 @@ using namespace falco::app::actions;
 
 void configure_output_format(falco::app::state& s)
 {
+	// See https://falco.org/docs/rules/style-guide/
+	const std::string container_info = "container_id=%container.id container_image=%container.image.repository container_image_tag=%container.image.tag container_name=%container.name";
+	const std::string k8s_info = "k8s_ns=%k8s.ns.name k8s_pod_name=%k8s.pod.name";
+	const std::string gvisor_info = "vpid=%proc.vpid vtid=%thread.vtid";
+
 	std::string output_format;
 	bool replace_container_info = false;
 
 	if(s.options.print_additional == "c" || s.options.print_additional == "container")
 	{
-		output_format = "container=%container.name (id=%container.id)";
+		output_format = container_info;
 		replace_container_info = true;
 	}
 	else if(s.options.print_additional == "cg" || s.options.print_additional == "container-gvisor")
 	{
-		output_format = "container=%container.name (id=%container.id) vpid=%proc.vpid vtid=%thread.vtid";
+		output_format = gvisor_info + " " + container_info;
 		replace_container_info = true;
 	}
 	else if(s.options.print_additional == "k" || s.options.print_additional == "kubernetes")
 	{
-		output_format = "k8s.ns=%k8s.ns.name k8s.pod=%k8s.pod.name container=%container.id";
+		output_format = container_info + " " + k8s_info;
 		replace_container_info = true;
 	}
 	else if(s.options.print_additional == "kg" || s.options.print_additional == "kubernetes-gvisor")
 	{
-		output_format = "k8s.ns=%k8s.ns.name k8s.pod=%k8s.pod.name container=%container.id vpid=%proc.vpid vtid=%thread.vtid";
+		output_format = gvisor_info + " " + container_info + " " + k8s_info;
 		replace_container_info = true;
 	}
 	else if(!s.options.print_additional.empty())
