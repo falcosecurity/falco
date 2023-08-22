@@ -510,8 +510,8 @@ log_level: info
 # operational logs. It allows you to specify the desired log level for the `libs`
 # library specifically, providing more granular control over the logging
 # behavior of the underlying components used by Falco. Only logs of a certain
-# severity level or higher will be emitted. Supported levels: "emergency",
-# "alert", "critical", "error", "warning", "notice", "info", "debug". It is not
+# severity level or higher will be emitted. Supported levels: "fatal",
+# "critical", "error", "warning", "notice", "info", "debug", "trace". It is not
 # recommended for production use.
 libs_logger:
   enabled: false
