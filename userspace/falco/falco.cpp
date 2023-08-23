@@ -26,8 +26,7 @@ limitations under the License.
 static void display_fatal_err(const std::string &&msg)
 {
 	/**
-	 * If stderr logging is not enabled, also log to stderr. When
-	 * daemonized this will simply write to /dev/null.
+	 * If stderr logging is not enabled, also log to stderr.
 	 */
 	if (! falco_logger::log_stderr)
 	{

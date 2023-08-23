@@ -51,7 +51,7 @@ falco::app::run_result falco::app::actions::init_outputs(falco::app::state& s)
 
 	if (s.options.dry_run)
 	{
-		falco_logger::log(LOG_DEBUG, "Skipping daemonizing in dry-run\n");
+		falco_logger::log(LOG_DEBUG, "Skipping outputs initialization in dry-run\n");
 		return run_result::ok();
 	}
 

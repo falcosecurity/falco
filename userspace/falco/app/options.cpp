@@ -142,11 +142,6 @@ bool options::parse(int argc, char **argv, std::string &errstr)
 		return false;
 	}
 
-	if (daemon && pidfilename == "") {
-		errstr = std::string("If -d is provided, a pid file must also be provided");
-		return false;
-	}
-
 	list_fields = m_cmdline_parsed.count("list") > 0 ? true : false;
 
 	int open_modes = 0;
@@ -183,7 +178,6 @@ void options::define(cxxopts::Options& opts)
 		("b,print-base64",                "Print data buffers in base64. This is useful for encoding binary data that needs to be used over media designed to consume this format.")
 #if !defined(_WIN32) && !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
 		("cri",                           "Path to CRI socket for container metadata. Use the specified socket to fetch data from a CRI-compatible runtime. If not specified, uses the libs default. This option can be passed multiple times to specify socket to be tried until a successful one is found.", cxxopts::value(cri_socket_paths), "<path>")
-		("d,daemon",                      "Run as a daemon.", cxxopts::value(daemon)->default_value("false"))
 		("disable-cri-async",             "Disable asynchronous CRI metadata fetching. This is useful to let the input event wait for the container metadata fetch to finish before moving forward. Async fetching, in some environments leads to empty fields for container metadata when the fetch is not fast enough to be completed asynchronously. This can have a performance penalty on your environment depending on the number of containers and the frequency at which they are created/started/stopped.", cxxopts::value(disable_cri_async)->default_value("false"))
 #endif
 		("disable-source",                "Disable a specific event source. By default, all loaded sources get enabled. Available sources are 'syscall' and all sources defined by loaded plugins supporting the event sourcing capability. This option can be passed multiple times. This has no offect when reading events from a trace file. Can not disable all event sources. Can not be mixed with --enable-source.", cxxopts::value(disable_sources), "<event_source>")
@@ -217,7 +211,7 @@ void options::define(cxxopts::Options& opts)
 		("o,option",                      "Set the value of option <opt> to <val>. Overrides values in configuration file. <opt> can be identified using its location in configuration file using dot notation. Elements which are entries of lists can be accessed via square brackets [].\n    E.g. base.id = val\n         base.subvalue.subvalue2 = val\n         base.list[1]=val", cxxopts::value(cmdline_config_options), "<opt>=<val>")
 		("plugin-info",                   "Print info for a single plugin and exit.\nThis includes all descriptivo info like name and author, along with the\nschema format for the init configuration and a list of suggested open parameters.\n<plugin_name> can be the name of the plugin or its configured library_path.", cxxopts::value(print_plugin_info), "<plugin_name>")
 		("p,print",                       "Print (or replace) additional information in rule's output.\nUse -pc or -pcontainer to append container details.\nUse -pk or -pkubernetes to add both container and Kubernetes details.\nIf using gVisor, choose -pcg or -pkg variants (or -pcontainer-gvisor and -pkubernetes-gvisor, respectively).\nIf a rule's output contains %container.info, it will be replaced with the corresponding details. Otherwise, these details will be directly appended to the rule's output.\nAlternatively, use -p \"...\" for a custom format. In this case, the given content will be appended to the rule's output without any replacement.", cxxopts::value(print_additional), "<output_format>")
-		("P,pidfile",                     "When run as a daemon, write pid to specified file", cxxopts::value(pidfilename)->default_value("/var/run/falco.pid"), "<pid_file>")
+		("P,pidfile",                     "Write pid to specified file, by default no pidfile is created.", cxxopts::value(pidfilename)->default_value(""), "<pid_file>")
 		("r",                             "Rules file/directory (defaults to value set in configuration file, or /etc/falco_rules.yaml). This option can be passed multiple times to read from multiple files/directories.", cxxopts::value<std::vector<std::string>>(), "<rules_file>")
 		("S,snaplen",                     "Capture the first <len> bytes of each I/O buffer. By default, the first 80 bytes are captured. Use this option with caution, it can have a strong performance impact.", cxxopts::value(snaplen)->default_value("0"), "<len>")
 		("support",                       "Print support information including version, rules files used, etc. and exit.", cxxopts::value(print_support)->default_value("false"))

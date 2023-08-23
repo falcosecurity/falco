@@ -28,7 +28,7 @@ falco::app::run_result configure_syscall_buffer_size(falco::app::state& s);
 falco::app::run_result configure_syscall_buffer_num(falco::app::state& s);
 falco::app::run_result create_requested_paths(falco::app::state& s);
 falco::app::run_result create_signal_handlers(falco::app::state& s);
-falco::app::run_result daemonize(falco::app::state& s);
+falco::app::run_result pidfile(falco::app::state& s);
 falco::app::run_result init_clients(falco::app::state& s);
 falco::app::run_result init_falco_engine(falco::app::state& s);
 falco::app::run_result init_inspectors(falco::app::state& s);
