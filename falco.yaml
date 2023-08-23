@@ -811,7 +811,7 @@ syscall_buf_size_preset: 4
 # visibility into the system.
 syscall_drop_failed_exit: false
 
-# [Experimental] `base_syscalls`, use with caution, read carefully
+# [Stable] `base_syscalls`, use with caution, read carefully
 #
 # --- [Description]
 #
