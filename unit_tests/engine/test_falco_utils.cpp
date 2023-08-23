@@ -61,10 +61,13 @@ TEST(FalcoUtils, parse_prometheus_interval)
 	ASSERT_EQ(falco::utils::parse_prometheus_interval("2h5m"), 2 * 3600000UL + 5 * 60000UL);
 	ASSERT_EQ(falco::utils::parse_prometheus_interval("2h 5m"), 2 * 3600000UL + 5 * 60000UL);
 
-	ASSERT_EQ(falco::utils::parse_prometheus_interval("200"), 200UL);
-
 	/* Invalid, non prometheus compliant time ordering will result in 0ms. */
 	ASSERT_EQ(falco::utils::parse_prometheus_interval("1ms1y"), 0UL);
 	ASSERT_EQ(falco::utils::parse_prometheus_interval("1t1y"), 0UL);
 	ASSERT_EQ(falco::utils::parse_prometheus_interval("1t"), 0UL);
+
+	/* Deprecated option to pass a numeric value in ms without prometheus compliant time unit,
+	 * will result in 0ms and as a result the end user will receive an error warning.
+	 */
+	ASSERT_EQ(falco::utils::parse_prometheus_interval("200"), 0UL);
 }
