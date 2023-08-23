@@ -42,7 +42,6 @@ public:
 	bool all_events;
 	sinsp_evt::param_fmt event_buffer_format;
 	std::vector<std::string> cri_socket_paths;
-	bool daemon;
 	bool disable_cri_async;
 	std::vector<std::string> disable_sources;
 	std::vector<std::string> disabled_rule_substrings;
