@@ -613,7 +613,7 @@ syscall_event_drops:
   max_burst: 1
   simulate_drops: false
 
-# [Experimental] `metrics`
+# [Stable] `metrics`
 #
 # Generates "Falco internal: metrics snapshot" rule output when `priority=info` at minimum
 # By selecting `output_file`, equivalent JSON output will be appended to a file.
