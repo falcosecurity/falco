@@ -118,10 +118,10 @@ private:
 #ifndef __EMSCRIPTEN__
 	typedef tbb::concurrent_bounded_queue<ctrl_msg> falco_outputs_cbq;
 	falco_outputs_cbq m_queue;
-	falco_common::outputs_queue_recovery_type m_recovery;
-	uint64_t m_outputs_queue_num_drops;
 #endif
 
+	falco_common::outputs_queue_recovery_type m_outputs_queue_recovery;
+	uint64_t m_outputs_queue_num_drops;
 	std::thread m_worker_thread;
 	inline void push(const ctrl_msg& cmsg);
 	inline void push_ctrl(ctrl_msg_type cmt);

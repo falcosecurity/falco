@@ -60,9 +60,9 @@ namespace falco_common
 {
 
 	enum outputs_queue_recovery_type {
-		RECOVERY_CONTINUE = 0,  /* queue_capacity_outputs recovery strategy of continuing on. */
-		RECOVERY_EXIT = 1,  /* queue_capacity_outputs recovery strategy of exiting, self OOM kill. */
-		RECOVERY_EMPTY = 2,  /* queue_capacity_outputs recovery strategy of emptying queue then continuing. */
+		RECOVERY_CONTINUE = 0,  /* outputs_queue_capacity recovery strategy of continuing on. */
+		RECOVERY_EXIT = 1,  /* outputs_queue_capacity recovery strategy of exiting, self OOM kill. */
+		RECOVERY_EMPTY = 2,  /* outputs_queue_capacity recovery strategy of emptying queue then continuing. */
 	};
 
 	const std::string syscall_source = sinsp_syscall_event_source_name;
