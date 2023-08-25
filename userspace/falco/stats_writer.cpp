@@ -87,9 +87,6 @@ stats_writer::stats_writer(
 	: m_initialized(false), m_total_samples(0)
 {
 	m_config = config;
-	// capacity and controls should not be relevant for stats outputs, adopt capacity
-	// for completeness, but do not implement config recovery strategies.
-	m_queue.set_capacity(config->m_outputs_queue_capacity);
 	if (config->m_metrics_enabled)
 	{
 		if (!config->m_metrics_output_file.empty())
@@ -109,6 +106,9 @@ stats_writer::stats_writer(
 	if (m_initialized)
 	{
 #ifndef __EMSCRIPTEN__
+		// capacity and controls should not be relevant for stats outputs, adopt capacity
+		// for completeness, but do not implement config recovery strategies.
+		m_queue.set_capacity(config->m_outputs_queue_capacity);
 		m_worker = std::thread(&stats_writer::worker, this);
 #endif
 	}

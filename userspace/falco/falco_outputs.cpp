@@ -65,11 +65,11 @@ falco_outputs::falco_outputs(
 	{
 		add_output(output);
 	}
-#ifndef __EMSCRIPTEN__
-	m_worker_thread = std::thread(&falco_outputs::worker, this);
-	m_queue.set_capacity(outputs_queue_capacity);
-	m_recovery = outputs_queue_recovery;
 	m_outputs_queue_num_drops = 0UL;
+	m_outputs_queue_recovery = outputs_queue_recovery;
+#ifndef __EMSCRIPTEN__
+	m_queue.set_capacity(outputs_queue_capacity);
+	m_worker_thread = std::thread(&falco_outputs::worker, this);
 #endif
 }
 
@@ -278,19 +278,23 @@ inline void falco_outputs::push(const ctrl_msg& cmsg)
 #ifndef __EMSCRIPTEN__
 	if (!m_queue.try_push(cmsg))
 	{
-		switch (m_recovery)
+		switch (m_outputs_queue_recovery)
 		{
 		case falco_common::RECOVERY_EXIT:
-			fprintf(stderr, "Fatal error: Output queue out of memory. Exiting ... \n");
+			falco_logger::log(LOG_ERR, "Fatal error: Output queue out of memory. Exiting ...");
 			exit(EXIT_FAILURE);
 		case falco_common::RECOVERY_EMPTY:
 			m_outputs_queue_num_drops += m_queue.size();
-			fprintf(stderr, "Output queue out of memory. Empty queue and continue ... \n");
+			falco_logger::log(LOG_ERR, "Output queue out of memory. Dropping events in queue due to emptying the queue and continue on ...");
 			m_queue.empty();
 			break;
-		default:
+		case falco_common::RECOVERY_CONTINUE:
 			m_outputs_queue_num_drops++;
-			fprintf(stderr, "Output queue out of memory. Continue on ... \n");
+			falco_logger::log(LOG_ERR, "Output queue out of memory. Drop event and continue on ...");
+			break;
+		default:
+			falco_logger::log(LOG_ERR, "Fatal error: strategy unknown. Exiting ...");
+			exit(EXIT_FAILURE);
 			break;
 		}
 	}
