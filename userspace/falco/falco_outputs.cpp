@@ -47,7 +47,7 @@ falco_outputs::falco_outputs(
 	uint32_t timeout,
 	bool buffered,
 	size_t outputs_queue_capacity,
-	falco_common::outputs_recovery_type outputs_queue_recovery,
+	falco_common::outputs_queue_recovery_type outputs_queue_recovery,
 	bool time_format_iso_8601,
 	const std::string& hostname)
 {

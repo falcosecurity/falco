@@ -267,7 +267,7 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 		m_outputs_queue_capacity = DEFAULT_OUTPUTS_QUEUE_CAPACITY;
 	}
 	std::string recovery = config.get_scalar<std::string>("outputs_queue.recovery", "exit");
-	if (!falco_common::parse_recovery(recovery, m_outputs_queue_recovery))
+	if (!falco_common::parse_queue_recovery(recovery, m_outputs_queue_recovery))
 	{
 		throw std::logic_error("Unknown recovery \"" + recovery + "\"--must be one of exit, continue, empty");
 	}

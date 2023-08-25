@@ -49,7 +49,7 @@ public:
 		uint32_t timeout,
 		bool buffered,
 		size_t outputs_queue_capacity,
-		falco_common::outputs_recovery_type outputs_queue_recovery,
+		falco_common::outputs_queue_recovery_type outputs_queue_recovery,
 		bool time_format_iso_8601,
 		const std::string& hostname);
 
@@ -118,7 +118,7 @@ private:
 #ifndef __EMSCRIPTEN__
 	typedef tbb::concurrent_bounded_queue<ctrl_msg> falco_outputs_cbq;
 	falco_outputs_cbq m_queue;
-	uint32_t m_recovery;
+	falco_common::outputs_queue_recovery_type m_recovery;
 	uint64_t m_outputs_queue_num_drops;
 #endif
 
