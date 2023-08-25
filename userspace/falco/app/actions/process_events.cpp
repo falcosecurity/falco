@@ -281,7 +281,7 @@ static falco::app::run_result do_inspect(
 			}
 	
 			// for capture mode, the source name can change at every event
-			stats_collector.collect(inspector, inspector->event_sources()[source_engine_idx], s.outputs, num_evts);
+			stats_collector.collect(inspector, inspector->event_sources()[source_engine_idx], num_evts);
 		}
 		else
 		{
@@ -300,7 +300,7 @@ static falco::app::run_result do_inspect(
 			}
 
 			// for live mode, the source name is constant
-			stats_collector.collect(inspector, source, s.outputs, num_evts);
+			stats_collector.collect(inspector, source, num_evts);
 		}
 
 		// Reset the timeouts counter, Falco successfully got an event to process

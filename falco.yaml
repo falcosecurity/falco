@@ -333,17 +333,18 @@ rule_matching: first
 # Lowering the number of items can prevent memory from steadily increasing until the OOM
 # killer stops the Falco process. We provide recovery actions to self-limit or self-kill
 # in order to handle this situation earlier, similar to how we expose the kernel buffer size
-# as a parameter.
-# However, it will not address the root cause of the event pipe not keeping up.
+# as a parameter. However, it will not address the root cause of the event pipe not keeping up.
 # 
-# `capacity`: the maximum number of items allowed in the queue, defaulting to 0. This means that
-# the queue remains unbounded aka this setting is disabled.
-# You can experiment with values greater or smaller than the anchor value 1000000.
+# `capacity`: the maximum number of items allowed in the queue is determined by this value. 
+# Setting the value to 0 (which is the default) is equivalent to keeping the queue unbounded. 
+# In other words, when this configuration is set to 0, the number of allowed items is effectively 
+# set to the largest possible long value, disabling this setting.
 # 
-# `recovery`: the strategy to follow when the queue becomes filled up. This also applies when
-# the queue is unbounded, and all available memory on the system is consumed.
-# `exit` is default, `continue` does nothing special and `empty` empties the queue and then
-# continues.
+# `recovery`: strategy to follow when the queue becomes filled up. It applies only when the
+# queue is bounded and there is still available system memory. In the case of an unbounded
+# queue, if the available memory on the system is consumed, the Falco process would be
+# OOM killed. The value `exit` is the default, `continue` does nothing special and `empty` 
+# empties the queue and then continues.
 outputs_queue:
   capacity: 0
   recovery: exit

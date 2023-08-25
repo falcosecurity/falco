@@ -32,7 +32,7 @@ static std::vector<std::string> rule_matching_names = {
 	"all"
 };
 
-static std::vector<std::string> outputs_recovery_names = {
+static std::vector<std::string> outputs_queue_recovery_names = {
 		"continue",
 		"exit",
 		"empty",
@@ -65,13 +65,13 @@ falco_common::priority_type falco_common::parse_priority(std::string v)
 	return out;
 }
 
-bool falco_common::parse_recovery(std::string v, outputs_recovery_type& out)
+bool falco_common::parse_queue_recovery(std::string v, outputs_queue_recovery_type& out)
 {
-	for (size_t i = 0; i < outputs_recovery_names.size(); i++)
+	for (size_t i = 0; i < outputs_queue_recovery_names.size(); i++)
 	{
-		if (!strcasecmp(v.c_str(), outputs_recovery_names[i].c_str()))
+		if (!strcasecmp(v.c_str(), outputs_queue_recovery_names[i].c_str()))
 		{
-			out = (outputs_recovery_type) i;
+			out = (outputs_queue_recovery_type) i;
 			return true;
 		}
 	}
