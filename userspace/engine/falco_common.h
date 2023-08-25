@@ -21,7 +21,11 @@ limitations under the License.
 #include <mutex>
 #include <sinsp.h>
 
-#define DEFAULT_OUTPUTS_QUEUE_CAPACITY 0
+//
+// equivalent to an "unbounded queue" in TBB terms or largest long value
+// https://github.com/oneapi-src/oneTBB/blob/b2474bfc636937052d05daf8b3f4d6b76e20273a/include/oneapi/tbb/concurrent_queue.h#L554
+//
+#define DEFAULT_OUTPUTS_QUEUE_CAPACITY std::ptrdiff_t(~size_t(0) / 2)
 
 //
 // Most falco_* classes can throw exceptions. Unless directly related
