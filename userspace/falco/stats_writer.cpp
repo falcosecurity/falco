@@ -223,7 +223,7 @@ stats_writer::collector::collector(const std::shared_ptr<stats_writer>& writer)
 void stats_writer::collector::get_metrics_output_fields_wrapper(
 		nlohmann::json& output_fields,
 		const std::shared_ptr<sinsp>& inspector, uint64_t now,
-		const std::string& src, uint64_t num_evts, double stats_snapshot_time_delta_sec)
+		const std::string& src, uint64_t outputs_queue_num_drops, uint64_t num_evts, double stats_snapshot_time_delta_sec)
 {
 	static const char* all_driver_engines[] = {
 		BPF_ENGINE, KMOD_ENGINE, MODERN_BPF_ENGINE,
@@ -240,6 +240,7 @@ void stats_writer::collector::get_metrics_output_fields_wrapper(
 	output_fields["falco.host_boot_ts"] = machine_info->boot_ts_epoch;
 	output_fields["falco.hostname"] = machine_info->hostname; /* Explicitly add hostname to log msg in case hostname rule output field is disabled. */
 	output_fields["falco.host_num_cpus"] = machine_info->num_cpus;
+	output_fields["falco.outputs_queue_num_drops"] = outputs_queue_num_drops;
 
 	output_fields["evt.source"] = src;
 	for (size_t i = 0; i < sizeof(all_driver_engines) / sizeof(const char*); i++)
@@ -424,7 +425,7 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 #endif
 }
 
-void stats_writer::collector::collect(const std::shared_ptr<sinsp>& inspector, const std::string &src, uint64_t num_evts)
+void stats_writer::collector::collect(const std::shared_ptr<sinsp>& inspector, const std::string &src, const std::shared_ptr<falco_outputs>& outputs, uint64_t num_evts)
 {
 	if (m_writer->has_output())
 	{
@@ -445,7 +446,8 @@ void stats_writer::collector::collect(const std::shared_ptr<sinsp>& inspector, c
 
 			/* Get respective metrics output_fields. */
 			nlohmann::json output_fields;
-			get_metrics_output_fields_wrapper(output_fields, inspector, now, src, num_evts, stats_snapshot_time_delta_sec);
+			uint64_t outputs_queue_num_drops = outputs->get_outputs_queue_num_drops();
+			get_metrics_output_fields_wrapper(output_fields, inspector, now, src, outputs_queue_num_drops, num_evts, stats_snapshot_time_delta_sec);
 			get_metrics_output_fields_additional(output_fields, inspector, stats_snapshot_time_delta_sec, src);
 
 			/* Send message in the queue */

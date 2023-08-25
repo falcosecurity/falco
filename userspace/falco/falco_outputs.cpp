@@ -72,6 +72,7 @@ falco_outputs::falco_outputs(
 		m_queue.set_capacity(outputs_queue_capacity);
 	}
 	m_recovery = outputs_queue_recovery;
+	m_outputs_queue_num_drops = 0UL;
 #endif
 }
 
@@ -294,10 +295,12 @@ inline void falco_outputs::push(const ctrl_msg& cmsg)
 			fprintf(stderr, "Fatal error: Output queue out of memory. Exiting ... \n");
 			exit(EXIT_FAILURE);
 		case falco_common::RECOVERY_EMPTY:
+			m_outputs_queue_num_drops += m_queue.size();
 			fprintf(stderr, "Output queue out of memory. Empty queue and continue ... \n");
 			m_queue.empty();
 			break;
 		default:
+			m_outputs_queue_num_drops++;
 			fprintf(stderr, "Output queue out of memory. Continue on ... \n");
 			break;
 		}
@@ -363,4 +366,9 @@ inline void falco_outputs::process_msg(falco::outputs::abstract_output* o, const
 		default:
 			falco_logger::log(LOG_DEBUG, "Outputs worker received an unknown message type\n");
 	}
+}
+
+uint64_t falco_outputs::get_outputs_queue_num_drops()
+{
+	return m_outputs_queue_num_drops;
 }

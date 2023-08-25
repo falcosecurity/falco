@@ -27,18 +27,16 @@ static std::vector<std::string> priority_names = {
 	"Debug"
 };
 
-<<<<<<< HEAD
 static std::vector<std::string> rule_matching_names = {
 	"first",
 	"all"
 };
-=======
+
 static std::vector<std::string> outputs_recovery_names = {
 		"continue",
 		"exit",
 		"empty",
-	};
->>>>>>> 92bd5767 (cleanup(outputs): adopt different style for outputs_queue params encodings)
+};
 
 bool falco_common::parse_priority(std::string v, priority_type& out)
 {

@@ -60,13 +60,13 @@ public:
 			\brief Collects one stats sample from an inspector
 			and for the given event source name
 		*/
-		void collect(const std::shared_ptr<sinsp>& inspector, const std::string& src, uint64_t num_evts);
+		void collect(const std::shared_ptr<sinsp>& inspector, const std::string& src, const std::shared_ptr<falco_outputs>& outputs, uint64_t num_evts);
 
 	private:
 		/*!
 			\brief Collect snapshot metrics wrapper fields as internal rule formatted output fields.
 		*/
-		void get_metrics_output_fields_wrapper(nlohmann::json& output_fields, const std::shared_ptr<sinsp>& inspector, uint64_t now, const std::string& src, uint64_t num_evts, double stats_snapshot_time_delta_sec);
+		void get_metrics_output_fields_wrapper(nlohmann::json& output_fields, const std::shared_ptr<sinsp>& inspector, uint64_t now, const std::string& src, uint64_t outputs_queue_num_drops, uint64_t num_evts, double stats_snapshot_time_delta_sec);
 
 		/*!
 			\brief Collect snapshot metrics syscalls related metrics as internal rule formatted output fields.

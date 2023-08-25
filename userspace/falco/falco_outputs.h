@@ -85,6 +85,12 @@ public:
 	*/
 	void reopen_outputs();
 
+	/*!
+		\brief Return the number of currently dropped events as a result of failed push attempts
+		into the outputs queue when using `continue` or `empty` recovery strategies.
+	*/
+	uint64_t get_outputs_queue_num_drops();
+
 private:
 	std::unique_ptr<falco_formats> m_formats;
 
@@ -113,6 +119,7 @@ private:
 	typedef tbb::concurrent_bounded_queue<ctrl_msg> falco_outputs_cbq;
 	falco_outputs_cbq m_queue;
 	uint32_t m_recovery;
+	uint64_t m_outputs_queue_num_drops;
 #endif
 
 	std::thread m_worker_thread;
