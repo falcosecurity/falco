@@ -261,6 +261,11 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 
 	m_buffered_outputs = config.get_scalar<bool>("buffered_outputs", false);
 	m_outputs_queue_capacity = config.get_scalar<size_t>("outputs_queue.capacity", DEFAULT_OUTPUTS_QUEUE_CAPACITY);
+	// We use 0 in falco.yaml to indicate an unbounded queue; equivalent to the largest long value 
+	if (m_outputs_queue_capacity == 0)
+	{
+		m_outputs_queue_capacity = DEFAULT_OUTPUTS_QUEUE_CAPACITY;
+	}
 	std::string recovery = config.get_scalar<std::string>("outputs_queue.recovery", "exit");
 	if (!falco_common::parse_recovery(recovery, m_outputs_queue_recovery))
 	{
