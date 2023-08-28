@@ -71,3 +71,4 @@ jobs:
         with:
           name: falco-images
           path: /tmp/falco-*.tar
+          retention-days: 1
