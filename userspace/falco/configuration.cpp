@@ -40,7 +40,7 @@ falco_configuration::falco_configuration():
 	m_watch_config_files(true),
 	m_rule_matching(falco_common::rule_matching::FIRST),
 	m_buffered_outputs(false),
-	m_outputs_queue_capacity(DEFAULT_OUTPUTS_QUEUE_CAPACITY),
+	m_outputs_queue_capacity(DEFAULT_OUTPUTS_QUEUE_CAPACITY_UNBOUNDED_MAX_LONG_VALUE),
 	m_outputs_queue_recovery(falco_common::RECOVERY_EXIT),
 	m_time_format_iso_8601(false),
 	m_output_timeout(2000),
@@ -260,11 +260,11 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 	}
 
 	m_buffered_outputs = config.get_scalar<bool>("buffered_outputs", false);
-	m_outputs_queue_capacity = config.get_scalar<size_t>("outputs_queue.capacity", DEFAULT_OUTPUTS_QUEUE_CAPACITY);
+	m_outputs_queue_capacity = config.get_scalar<size_t>("outputs_queue.capacity", DEFAULT_OUTPUTS_QUEUE_CAPACITY_UNBOUNDED_MAX_LONG_VALUE);
 	// We use 0 in falco.yaml to indicate an unbounded queue; equivalent to the largest long value 
 	if (m_outputs_queue_capacity == 0)
 	{
-		m_outputs_queue_capacity = DEFAULT_OUTPUTS_QUEUE_CAPACITY;
+		m_outputs_queue_capacity = DEFAULT_OUTPUTS_QUEUE_CAPACITY_UNBOUNDED_MAX_LONG_VALUE;
 	}
 	std::string recovery = config.get_scalar<std::string>("outputs_queue.recovery", "exit");
 	if (!falco_common::parse_queue_recovery(recovery, m_outputs_queue_recovery))
