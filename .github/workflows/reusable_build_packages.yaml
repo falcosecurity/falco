@@ -36,6 +36,7 @@ jobs:
         with:
           name: bpf_probe_${{ inputs.arch }}.skel.h
           path: skeleton-build/skel_dir/bpf_probe.skel.h
+          retention-days: 1
           
   build-packages:
     # See https://github.com/actions/runner/issues/409#issuecomment-1158849936
