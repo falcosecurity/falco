@@ -427,7 +427,7 @@ static falco::app::run_result init_stats_writer(
 
 	if(std::all_of(config->m_metrics_interval_str.begin(), config->m_metrics_interval_str.end(), ::isdigit))
 	{
-		falco_logger::log(LOG_WARNING, "Metrics interval was passed as numeric value without Prometheus time unit, this option will be deprecated in the future");
+		return falco::app::run_result::fatal("Metrics interval was passed as numeric value without Prometheus time unit. Please specify a time unit");
 	}
 
 	if (config->m_metrics_enabled && !sw->has_output())
