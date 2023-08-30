@@ -169,9 +169,6 @@ include(jq)
 # nlohmann-json
 include(njson)
 
-# b64
-include(b64)
-
 # yaml-cpp
 include(yaml-cpp)
 
