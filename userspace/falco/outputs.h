@@ -62,14 +62,17 @@ struct message
 class abstract_output
 {
 public:
-	virtual ~abstract_output() {}
+	virtual ~abstract_output() = default;
 
-	void init(const config& oc, bool buffered, const std::string& hostname, bool json_output)
+	virtual bool init(const config& oc, bool buffered, const std::string& hostname, bool json_output, std::string &err)
 	{
 		m_oc = oc;
 		m_buffered = buffered;
 		m_hostname = hostname;
 		m_json_output = json_output;
+
+		err = "";
+		return true;
 	}
 
 	// Return the output's name as per its configuration.

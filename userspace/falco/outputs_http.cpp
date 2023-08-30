@@ -18,104 +18,105 @@ limitations under the License.
 #include "logger.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
 
+#define CHECK_RES(fn) res = res == CURLE_OK ? fn : res
+
+static size_t noop_write_callback(void *contents, size_t size, size_t nmemb, void *userp)
+{
+	// We don't want to echo anything. Just return size of bytes ignored
+	return size * nmemb;
+}
+
+bool falco::outputs::output_http::init(const config& oc, bool buffered, const std::string& hostname, bool json_output, std::string &err)
+{
+	falco::outputs::abstract_output::init(oc, buffered, hostname, json_output, err);
+
+	m_curl = nullptr;
+	m_http_headers = nullptr;
+	CURLcode res = CURLE_FAILED_INIT;
+
+	m_curl = curl_easy_init();
+	if(!m_curl)
+	{
+		falco_logger::log(LOG_ERR, "libcurl failed to initialize the handle: " + std::string(curl_easy_strerror(res)));
+		return false;
+	}
+	if(m_json_output)
+	{
+		m_http_headers = curl_slist_append(m_http_headers, "Content-Type: application/json");
+	}
+	else
+	{
+		m_http_headers = curl_slist_append(m_http_headers, "Content-Type: text/plain");
+	}
+	res = curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, m_http_headers);
+	
+	// if the URL is quoted the quotes should be removed to satisfy libcurl expected format
+	std::string unquotedUrl = m_oc.options["url"];
+	if (!unquotedUrl.empty() && (
+		(unquotedUrl.front() == '\"' && unquotedUrl.back() == '\"') ||
+		(unquotedUrl.front() == '\'' && unquotedUrl.back() == '\'')
+	))
+	{
+		unquotedUrl = libsinsp::filter::unescape_str(unquotedUrl);
+	}
+	CHECK_RES(curl_easy_setopt(m_curl, CURLOPT_URL, unquotedUrl.c_str()));
+
+	CHECK_RES(curl_easy_setopt(m_curl, CURLOPT_USERAGENT, m_oc.options["user_agent"].c_str()));
+	CHECK_RES(curl_easy_setopt(m_curl, CURLOPT_POSTFIELDSIZE, -1L));
+
+	if(m_oc.options["insecure"] == std::string("true"))
+	{
+		CHECK_RES(curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYPEER, 0L));
+		CHECK_RES(curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYHOST, 0L));
+	}
+
+	if(m_oc.options["mtls"] == std::string("true"))
+	{
+		CHECK_RES(curl_easy_setopt(m_curl, CURLOPT_SSLCERT, m_oc.options["client_cert"].c_str()));
+		CHECK_RES(curl_easy_setopt(m_curl, CURLOPT_SSLKEY, m_oc.options["client_key"].c_str()));
+	}
+
+	if (!m_oc.options["ca_cert"].empty())
+	{
+		CHECK_RES(curl_easy_setopt(m_curl, CURLOPT_CAINFO, m_oc.options["ca_cert"].c_str()));
+	}
+	else if(!m_oc.options["ca_bundle"].empty())
+	{
+		CHECK_RES(curl_easy_setopt(m_curl, CURLOPT_CAINFO, m_oc.options["ca_bundle"].c_str()));
+	}
+	else
+	{
+		CHECK_RES(curl_easy_setopt(m_curl, CURLOPT_CAPATH, m_oc.options["ca_path"].c_str()));
+	}
+
+	if(m_oc.options["echo"] == std::string("false"))
+	{
+		// If echo==true, libcurl defaults to fwrite to stdout, ie: echoing
+		CHECK_RES(curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, noop_write_callback));
+	}
+
+	if(res != CURLE_OK)
+	{
+		err = "libcurl error: " + std::string(curl_easy_strerror(res));
+		return false;
+	}
+	return true;
+}
+
 void falco::outputs::output_http::output(const message *msg)
 {
-	CURL *curl = NULL;
-	CURLcode res = CURLE_FAILED_INIT;
-	struct curl_slist *slist1;
-	slist1 = NULL;
-
-	curl = curl_easy_init();
-	if(curl)
+	CURLcode res = curl_easy_setopt(m_curl, CURLOPT_POSTFIELDS, msg->msg.c_str());
+	CHECK_RES(curl_easy_perform(m_curl));
+	if(res != CURLE_OK)
 	{
-		if (m_json_output)
-		{
-			slist1 = curl_slist_append(slist1, "Content-Type: application/json");
-		} else {
-			slist1 = curl_slist_append(slist1, "Content-Type: text/plain");
-		}
-		res = curl_easy_setopt(curl, CURLOPT_HTTPHEADER, slist1);
-
-		if(res == CURLE_OK)
-		{
-			// if the URL is quoted the quotes should be removed to satisfy libcurl expected format
-			std::string unquotedUrl = m_oc.options["url"];
-			if (!unquotedUrl.empty() && (
-				(unquotedUrl.front() == '\"' && unquotedUrl.back() == '\"') ||
-				(unquotedUrl.front() == '\'' && unquotedUrl.back() == '\'')
-			))
-			{
-				unquotedUrl = libsinsp::filter::unescape_str(unquotedUrl);
-			}
-			res = curl_easy_setopt(curl, CURLOPT_URL, unquotedUrl.c_str());
-		}
-
-		if(res == CURLE_OK)
-		{
-			res = curl_easy_setopt(curl, CURLOPT_POSTFIELDS, msg->msg.c_str());
-		}
-
-		if(res == CURLE_OK)
-		{
-			res = curl_easy_setopt(curl, CURLOPT_USERAGENT, m_oc.options["user_agent"].c_str());
-		}
-
-		if(res == CURLE_OK)
-		{
-			res = curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, -1L);
-		}
-
-		if(res == CURLE_OK)
-		{
-			if(m_oc.options["insecure"] == std::string("true"))
-			{
-				res = curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
-
-				if(res == CURLE_OK)
-				{
-					res = curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
-				}
-			}
-		}
-
-		if(res == CURLE_OK)
-		{
-			if(m_oc.options["mtls"] == std::string("true"))
-			{
-				res = curl_easy_setopt(curl, CURLOPT_SSLCERT, m_oc.options["client_cert"].c_str());
-
-				if(res == CURLE_OK)
-				{
-					res = curl_easy_setopt(curl, CURLOPT_SSLKEY, m_oc.options["client_key"].c_str());
-				}
-			}
-		}
-
-		if(res == CURLE_OK)
-		{
-			if (!m_oc.options["ca_cert"].empty())
-			{
-				res = curl_easy_setopt(curl, CURLOPT_CAINFO, m_oc.options["ca_cert"].c_str());
-			}else if(!m_oc.options["ca_bundle"].empty())
-			{
-				res = curl_easy_setopt(curl, CURLOPT_CAINFO, m_oc.options["ca_bundle"].c_str());
-			}else{
-				res = curl_easy_setopt(curl, CURLOPT_CAPATH, m_oc.options["ca_path"].c_str());
-			}
-		}
-
-  		if(res == CURLE_OK)
-		{
-			res = curl_easy_perform(curl);
-		}
-
-		if(res != CURLE_OK)
-		{
-			falco_logger::log(LOG_ERR, "libcurl error: " + std::string(curl_easy_strerror(res)));
-		}
-		curl_easy_cleanup(curl);
-		curl = NULL;
-		curl_slist_free_all(slist1);
-		slist1 = NULL;
+		falco_logger::log(LOG_ERR, "libcurl failed to perform call: " + std::string(curl_easy_strerror(res)));
 	}
+}
+
+void falco::outputs::output_http::cleanup()
+{
+	curl_easy_cleanup(m_curl);
+	m_curl = nullptr;
+	curl_slist_free_all(m_http_headers);
+	m_http_headers = nullptr;
 }
