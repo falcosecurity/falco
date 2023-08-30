@@ -246,7 +246,13 @@ std::unique_ptr<load_result> falco_engine::load_rules_file(const std::string &ru
 
 		res->add_error(load_result::LOAD_ERR_FILE_READ, e.what(), ctx);
 
+// Old gcc versions (e.g. 4.8.3) won't allow move elision but newer versions
+// (e.g. 10.2.1) would complain about the redundant move.
+#if __GNUC__ > 4
 		return res;
+#else
+		return std::move(res);
+#endif
 	}
 
 	return load_rules(rules_content, rules_filename);
