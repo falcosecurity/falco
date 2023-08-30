@@ -195,6 +195,10 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 		insecure = config.get_scalar<bool>("http_output.insecure", false);
 		http_output.options["insecure"] = insecure? std::string("true") : std::string("false");
 
+		bool echo;
+		echo = config.get_scalar<bool>("http_output.echo", false);
+		http_output.options["echo"] = echo? std::string("true") : std::string("false");
+		
 		std::string ca_cert;
 		ca_cert = config.get_scalar<std::string>("http_output.ca_cert", "");
 		http_output.options["ca_cert"] = ca_cert;
