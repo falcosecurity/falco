@@ -62,7 +62,7 @@ static const std::string warning_codes[] = {
 	"LOAD_UNKNOWN_SOURCE",
 	"LOAD_UNSAFE_NA_CHECK",
 	"LOAD_NO_EVTTYPE",
-	"LOAD_UNKNOWN_FIELD",
+	"LOAD_UNKNOWN_FILTER",
 	"LOAD_UNUSED_MACRO",
 	"LOAD_UNUSED_LIST",
 	"LOAD_UNKNOWN_ITEM"
@@ -77,7 +77,7 @@ static const std::string warning_strings[] = {
 	"Unknown event source",
 	"Unsafe <NA> comparison in condition",
 	"Condition has no event-type restriction",
-	"Unknown field in condition",
+	"Unknown field or event-type in condition or output",
 	"Unused macro",
 	"Unused list",
 	"Unknown rules file item"
@@ -92,7 +92,7 @@ static const std::string warning_descs[] = {
 	"A rule has a unknown event source. This can occur when reading rules content without having a corresponding plugin loaded, etc. The rule will be silently ignored.",
 	"Comparing a field value with <NA> is unsafe and can lead to unpredictable behavior of the rule condition. If you need to check for the existence of a field, consider using the 'exists' operator instead.",
 	"A rule condition matches too many evt.type values. This has a significant performance penalty. Make the condition more specific by adding an evt.type field or further restricting the number of evt.type values in the condition.",
-	"A rule condition refers to a field that does not exist. This is normally an error, but if a rule has a skip-if-unknown-filter property, the error is downgraded to a warning.",
+	"A rule condition or output refers to a field or evt.type that does not exist. This is normally an error, but if a rule has a skip-if-unknown-filter property, the error is downgraded to a warning.",
 	"A macro is defined in the rules content but is not used by any other macro or rule.",
 	"A list is defined in the rules content but is not used by any other list, macro, or rule.",
 	"An unknown top-level object is in the rules content. It will be ignored."
