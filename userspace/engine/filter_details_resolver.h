@@ -33,6 +33,7 @@ struct filter_details
 	std::unordered_set<std::string> macros;
 	std::unordered_set<std::string> operators;
 	std::unordered_set<std::string> lists;
+	std::unordered_set<std::string> evtnames;
 
 	void reset();
 };
@@ -76,5 +77,6 @@ private:
 		filter_details& m_details;
 		bool m_expect_list;
 		bool m_expect_macro;
+		bool m_expect_evtname;
 	};
 };
