@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 // The version of this Falco engine.
-#define FALCO_ENGINE_VERSION (23)
+#define FALCO_ENGINE_VERSION (24)
 
 // This is the result of running the following command:
 //   FALCO="falco -c ./falco.yaml"
