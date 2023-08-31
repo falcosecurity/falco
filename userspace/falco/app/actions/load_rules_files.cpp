@@ -157,13 +157,15 @@ falco::app::run_result falco::app::actions::load_rules_files(falco::app::state& 
 
 	if (s.options.describe_all_rules)
 	{
-		s.engine->describe_rule(NULL, s.config->m_json_output);
+		const auto& plugins = s.offline_inspector->get_plugin_manager()->plugins();
+		s.engine->describe_rule(NULL, plugins, s.config->m_json_output);
 		return run_result::exit();
 	}
 
 	if (!s.options.describe_rule.empty())
 	{
-		s.engine->describe_rule(&(s.options.describe_rule), s.config->m_json_output);
+		const auto& plugins = s.offline_inspector->get_plugin_manager()->plugins();
+		s.engine->describe_rule(&(s.options.describe_rule), plugins, s.config->m_json_output);
 		return run_result::exit();
 	}
 

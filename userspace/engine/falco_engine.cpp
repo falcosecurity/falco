@@ -469,7 +469,7 @@ std::size_t falco_engine::add_source(const std::string &source,
 	return m_sources.insert(src, source);
 }
 
-void falco_engine::describe_rule(std::string *rule, bool json) const
+void falco_engine::describe_rule(std::string *rule, const std::vector<std::shared_ptr<sinsp_plugin>>& plugins, bool json) const
 {
 	if(!json)
 	{
@@ -498,7 +498,6 @@ void falco_engine::describe_rule(std::string *rule, bool json) const
 		return;
 	}
 
-	std::unique_ptr<sinsp> insp(new sinsp());
 	Json::FastWriter writer;
 	std::string json_str;
 
@@ -541,7 +540,7 @@ void falco_engine::describe_rule(std::string *rule, bool json) const
 		{
 			auto ri = m_rule_collector.rules().at(r.name);
 			Json::Value rule;
-			get_json_details(r, *ri, insp.get(), rule);
+			get_json_details(rule, r, *ri, plugins);
 
 			// Append to rule array
 			rules_array.append(rule);
@@ -553,7 +552,7 @@ void falco_engine::describe_rule(std::string *rule, bool json) const
 		for(const auto &m : m_rule_collector.macros())
 		{
 			Json::Value macro;
-			get_json_details(m, macro);
+			get_json_details(macro, m, plugins);
 			macros_array.append(macro);
 		}
 		output["macros"] = macros_array;
@@ -563,7 +562,7 @@ void falco_engine::describe_rule(std::string *rule, bool json) const
 		for(const auto &l : m_rule_collector.lists())
 		{
 			Json::Value list;
-			get_json_details(l, list);
+			get_json_details(list, l);
 			lists_array.append(list);			
 		}
 		output["lists"] = lists_array;
@@ -580,17 +579,18 @@ void falco_engine::describe_rule(std::string *rule, bool json) const
 		}
 		auto r = m_rules.at(ri->name);
 		Json::Value rule; 
-		get_json_details(*r, *ri, insp.get(), rule);
+		get_json_details(rule, *r, *ri, plugins);
 		json_str = writer.write(rule);
 	}
 
 	fprintf(stdout, "%s", json_str.c_str());
 }
 
-void falco_engine::get_json_details(const falco_rule &r,
+void falco_engine::get_json_details(
+	Json::Value &out,
+	const falco_rule &r,
 	const rule_loader::rule_info &ri,
-	sinsp *insp,
-	Json::Value &rule) const
+	const std::vector<std::shared_ptr<sinsp_plugin>>& plugins) const
 {
 	Json::Value rule_info;
 
@@ -608,25 +608,26 @@ void falco_engine::get_json_details(const falco_rule &r,
 		tags.append(t);
 	}
 	rule_info["tags"] = tags;
-	rule["info"] = rule_info;
+	out["info"] = rule_info;
 
 	// Parse rule condition and build the AST
 	// Assumption: no exception because rules have already been loaded.
 	auto ast = libsinsp::filter::parser(ri.cond).parse();
 	Json::Value json_details;
-	get_json_details(ast.get(), json_details);
-	rule["details"] = json_details;
+	get_json_details(json_details, ast.get());
+	out["details"] = json_details;
 
 	// Get fields from output string
 	auto fmt = create_formatter(r.source, r.output);
 	std::vector<std::string> out_fields;
 	fmt->get_field_names(out_fields);
+	// TODO: check these too for plugins
 	Json::Value outputFields = Json::arrayValue;
 	for(const auto &of : out_fields)
 	{
 		outputFields.append(of);
 	}
-	rule["details"]["output_fields"] = outputFields;
+	out["details"]["output_fields"] = outputFields;
 
 	// Get fields from exceptions
 	Json::Value exception_fields = Json::arrayValue;
@@ -634,7 +635,7 @@ void falco_engine::get_json_details(const falco_rule &r,
 	{
 		exception_fields.append(f);
 	}
-	rule["details"]["exception_fields"] = exception_fields;
+	out["details"]["exception_fields"] = exception_fields;
 
 	// Get names and operators from exceptions
 	Json::Value exception_names = Json::arrayValue;
@@ -665,42 +666,45 @@ void falco_engine::get_json_details(const falco_rule &r,
 			exception_operators.append(e.comps.item);
 		}	
 	}
-	rule["details"]["exceptions"] = exception_names;
-	rule["details"]["exception_operators"] = exception_operators;
+	out["details"]["exceptions"] = exception_names;
+	out["details"]["exception_operators"] = exception_operators;
 
 	if(ri.source == falco_common::syscall_source)
 	{
 		// Store event types
 		Json::Value events;
-		get_json_evt_types(ast.get(), events);
-		rule["details"]["events"] = events;
+		get_json_evt_types(events, ast.get());
+		out["details"]["events"] = events;
 	}
 }
 
-void falco_engine::get_json_details(const rule_loader::macro_info& m,
-	Json::Value& macro) const
+void falco_engine::get_json_details(
+	Json::Value& out,
+	const rule_loader::macro_info& m,
+	const std::vector<std::shared_ptr<sinsp_plugin>>& plugins) const
 {
 	Json::Value macro_info;
 
 	macro_info["name"] = m.name;
 	macro_info["condition"] = m.cond;
-	macro["info"] = macro_info;
+	out["info"] = macro_info;
 
 	// Assumption: no exception because rules have already been loaded.
 	auto ast = libsinsp::filter::parser(m.cond).parse();
 
 	Json::Value json_details;
-	get_json_details(ast.get(), json_details);
-	macro["details"] = json_details;
+	get_json_details(json_details, ast.get());
+	out["details"] = json_details;
 
 	// Store event types
 	Json::Value events;
-	get_json_evt_types(ast.get(), events);
-	macro["details"]["events"] = events;
+	get_json_evt_types(events, ast.get());
+	out["details"]["events"] = events;
 }
 
-void falco_engine::get_json_details(const rule_loader::list_info& l, 
-	Json::Value& list) const
+void falco_engine::get_json_details(
+	Json::Value& out,
+	const rule_loader::list_info& l) const
 {
 	Json::Value list_info;
 	list_info["name"] = l.name;
@@ -718,12 +722,14 @@ void falco_engine::get_json_details(const rule_loader::list_info& l,
 	}
 
 	list_info["items"] = items;
-	list["info"] = list_info;
-	list["details"]["lists"] = lists;
+	out["info"] = list_info;
+	out["details"]["lists"] = lists;
+	out["details"]["plugins"] = Json::arrayValue;
 }
 
-void falco_engine::get_json_details(libsinsp::filter::ast::expr* ast,
-	Json::Value& output) const
+void falco_engine::get_json_details(
+	Json::Value& out,
+	libsinsp::filter::ast::expr* ast) const
 {
 	filter_details details;
 	for(const auto &m : m_rule_collector.macros())
@@ -745,44 +751,54 @@ void falco_engine::get_json_details(libsinsp::filter::ast::expr* ast,
 	{
 		macros.append(m);
 	}
-	output["macros"] = macros;
+	out["macros"] = macros;
 
 	Json::Value operators = Json::arrayValue;
 	for(const auto &o : details.operators)
 	{
 		operators.append(o);
 	}
-	output["operators"] = operators;
+	out["operators"] = operators;
 
 	Json::Value condition_fields = Json::arrayValue;
 	for(const auto &f : details.fields)
 	{
 		condition_fields.append(f);
 	}
-	output["condition_fields"] = condition_fields;
+	out["condition_fields"] = condition_fields;
 
 	Json::Value lists = Json::arrayValue;
 	for(const auto &l : details.lists)
 	{
 		lists.append(l);
 	}
-	output["lists"] = lists;
-	
-	details.reset();
+	out["lists"] = lists;
 }
 
-void falco_engine::get_json_evt_types(libsinsp::filter::ast::expr* ast,
-					Json::Value& output) const
+void falco_engine::get_json_evt_types(
+	Json::Value& out,
+	libsinsp::filter::ast::expr* ast) const
 {
-	output = Json::arrayValue;
+	out = Json::arrayValue;
 	auto evtcodes = libsinsp::filter::ast::ppm_event_codes(ast);
 	auto syscodes = libsinsp::filter::ast::ppm_sc_codes(ast);
 	auto syscodes_to_evt_names = libsinsp::events::sc_set_to_event_names(syscodes);
 	auto evtcodes_to_evt_names = libsinsp::events::event_set_to_names(evtcodes, false);
 	for (const auto& n : unordered_set_union(syscodes_to_evt_names, evtcodes_to_evt_names))
 	{
-		output.append(n);
+		out.append(n);
 	}
+}
+
+void falco_engine::get_json_used_plugins(
+	Json::Value& out,
+	const std::string& source,
+	const std::unordered_set<std::string>& evttypes,
+	const std::unordered_set<std::string>& fields,
+	const std::vector<std::shared_ptr<sinsp_plugin>>& plugins) const
+{
+	// TODO
+	out = Json::arrayValue;
 }
 
 
