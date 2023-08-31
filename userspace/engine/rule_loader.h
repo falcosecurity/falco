@@ -449,6 +449,7 @@ namespace rule_loader
 		context output_ctx;
 		size_t index;
 		size_t visibility;
+		bool unknown_source;
 		std::string name;
 		std::string cond;
 		std::string source;

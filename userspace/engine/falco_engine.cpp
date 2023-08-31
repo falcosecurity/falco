@@ -568,12 +568,12 @@ void falco_engine::describe_rule(std::string *rule, bool json) const
 		output["lists"] = lists_array;
 
 		json_str = writer.write(output);
-	} 
+	}
 	else
 	{
 		// build json information for just the specified rule
 		auto ri = m_rule_collector.rules().at(*rule);
-		if(ri == nullptr)
+		if(ri == nullptr || ri->unknown_source)
 		{
 			throw falco_exception("Rule \"" + *rule + "\" is not loaded");
 		}
