@@ -125,7 +125,7 @@ public:
 	// Print details on the given rule. If rule is NULL, print
 	// details on all rules.
 	//
-	void describe_rule(std::string *rule, bool json) const;
+	void describe_rule(std::string *rule, const std::vector<std::shared_ptr<sinsp_plugin>>& plugins, bool json) const;
 
 	//
 	// Print statistics on how many events matched each rule.
@@ -303,18 +303,30 @@ private:
 	inline bool should_drop_evt() const;
 
 	// Retrieve json details from rules, macros, lists
-	void get_json_details(const falco_rule& r,
-					const rule_loader::rule_info& ri,
-					sinsp* insp,
-					Json::Value& rule) const;
-	void get_json_details(const rule_loader::macro_info& m,
-					Json::Value& macro) const;
-	void get_json_details(const rule_loader::list_info& l,
-					Json::Value& list) const;
-	void get_json_details(libsinsp::filter::ast::expr* ast,
-					Json::Value& output) const;
-	void get_json_evt_types(libsinsp::filter::ast::expr* ast,
-					Json::Value& output) const;
+	void get_json_details(
+		Json::Value& out,
+		const falco_rule& r,
+		const rule_loader::rule_info& ri,
+		const std::vector<std::shared_ptr<sinsp_plugin>>& plugins) const;
+	void get_json_details(
+		Json::Value& out,
+		const rule_loader::macro_info& m,
+		const std::vector<std::shared_ptr<sinsp_plugin>>& plugins) const;
+	void get_json_details(
+		Json::Value& out,
+		const rule_loader::list_info& l) const;
+	void get_json_details(
+		Json::Value& out,
+		libsinsp::filter::ast::expr* ast) const;
+	void get_json_evt_types(
+		Json::Value& out,
+		libsinsp::filter::ast::expr* ast) const;
+	void get_json_used_plugins(
+		Json::Value& out,
+		const std::string& source,
+		const std::unordered_set<std::string>& evttypes,
+		const std::unordered_set<std::string>& fields,
+		const std::vector<std::shared_ptr<sinsp_plugin>>& plugins) const;
 
 	rule_loader::collector m_rule_collector;
 	indexed_vector<falco_rule> m_rules;
