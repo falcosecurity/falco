@@ -25,6 +25,7 @@ void filter_details::reset()
 	macros.clear();
 	operators.clear();
 	lists.clear();
+	evtnames.clear();
 }
 
 void filter_details_resolver::run(ast::expr* filter, filter_details& details)
@@ -70,6 +71,16 @@ void filter_details_resolver::visitor::visit(ast::list_expr* e)
 			}
 		}
 	}
+	if (m_expect_evtname)
+	{
+		for(const auto& item : e->values)
+		{
+			if(m_details.known_lists.find(item) == m_details.known_lists.end())
+			{
+				m_details.evtnames.insert(item);
+			}
+		}
+	}
 }
 
 void filter_details_resolver::visitor::visit(ast::binary_check_expr* e)
@@ -77,9 +88,18 @@ void filter_details_resolver::visitor::visit(ast::binary_check_expr* e)
 	m_expect_macro = false;
 	m_details.fields.insert(e->field);
 	m_details.operators.insert(e->op);
-	m_expect_list = true;
-	e->value->accept(this);
-	m_expect_list = false;
+	if (e->field == "evt.type" || e->field == "evt.asynctype")
+	{
+		m_expect_evtname = true;
+		e->value->accept(this);
+		m_expect_evtname = false;
+	}
+	else
+	{
+		m_expect_list = true;
+		e->value->accept(this);
+		m_expect_list = false;
+	}
 }
 
 void filter_details_resolver::visitor::visit(ast::unary_check_expr* e)
@@ -100,5 +120,9 @@ void filter_details_resolver::visitor::visit(ast::value_expr* e)
 		}
 
 		m_details.macros.insert(e->value);
+	}
+	if(m_expect_evtname)
+	{
+		m_details.evtnames.insert(e->value);
 	}
 }
