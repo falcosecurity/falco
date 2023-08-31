@@ -28,7 +28,9 @@ static size_t noop_write_callback(void *contents, size_t size, size_t nmemb, voi
 
 bool falco::outputs::output_http::init(const config& oc, bool buffered, const std::string& hostname, bool json_output, std::string &err)
 {
-	falco::outputs::abstract_output::init(oc, buffered, hostname, json_output, err);
+	if (!falco::outputs::abstract_output::init(oc, buffered, hostname, json_output, err)) {
+		return false;
+	}
 
 	m_curl = nullptr;
 	m_http_headers = nullptr;
