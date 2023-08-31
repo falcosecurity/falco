@@ -54,7 +54,7 @@ static inline void append_info(T* prev, T& info, uint32_t id)
 }
 
 static void validate_exception_info(
-	const falco_source& source,
+	const falco_source* source,
 	rule_loader::rule_exception_info &ex)
 {
 	if (ex.fields.is_list)
@@ -76,11 +76,14 @@ static void validate_exception_info(
 			      std::string("'") + v.item + "' is not a supported comparison operator",
 			      ex.ctx);
 		}
-		for (auto &v : ex.fields.items)
+		if (source)
 		{
-			THROW(!source.is_field_defined(v.item),
-			      std::string("'") + v.item + "' is not a supported filter field",
-			      ex.ctx);
+			for (auto &v : ex.fields.items)
+			{
+				THROW(!source->is_field_defined(v.item),
+					std::string("'") + v.item + "' is not a supported filter field",
+					ex.ctx);
+			}
 		}
 	}
 	else
@@ -96,9 +99,12 @@ static void validate_exception_info(
 		THROW((ex.comps.item != "in" && ex.comps.item != "pmatch" && ex.comps.item != "intersects"),
 		      "When fields is a single value, comps must be one of (in, pmatch, intersects)",
 		      ex.ctx);
-		THROW(!source.is_field_defined(ex.fields.item),
-		      std::string("'") + ex.fields.item + "' is not a supported filter field",
-		      ex.ctx);
+		if (source)
+		{
+			THROW(!source->is_field_defined(ex.fields.item),
+				std::string("'") + ex.fields.item + "' is not a supported filter field",
+				ex.ctx);
+		}
 	}
 }
 
@@ -200,26 +206,25 @@ void rule_loader::collector::append(configuration& cfg, macro_info& info)
 
 void rule_loader::collector::define(configuration& cfg, rule_info& info)
 {
+	auto prev = m_rule_infos.at(info.name);
+	THROW(prev && prev->source != info.source,
+		"Rule has been re-defined with a different source",
+		info.ctx);
+
 	auto source = cfg.sources.at(info.source);
 	if (!source)
 	{
+		info.unknown_source = true;
 		cfg.res->add_warning(falco::load_result::LOAD_UNKNOWN_SOURCE,
 				     "Unknown source " + info.source + ", skipping",
 				     info.ctx);
-		return;
 	}
-
-	auto prev = m_rule_infos.at(info.name);
-	THROW(prev && prev->source != info.source,
-	       "Rule has been re-defined with a different source",
-	       info.ctx);
-
 	for (auto &ex : info.exceptions)
 	{
 		THROW(!ex.fields.is_valid(),
-		       "Rule exception item must have fields property with a list of fields",
-		       ex.ctx);
-		validate_exception_info(*source, ex);
+			"Rule exception item must have fields property with a list of fields",
+			ex.ctx);
+		validate_exception_info(source, ex);
 	}
 
 	define_info(m_rule_infos, info, m_cur_index++);
@@ -236,11 +241,17 @@ void rule_loader::collector::append(configuration& cfg, rule_info& info)
 	       "Appended rule must have exceptions or condition property",
 	       info.ctx);
 
-	auto source = cfg.sources.at(prev->source);
-	// note: this is not supposed to happen
-	THROW(!source,
-	      std::string("Unknown source ") + prev->source,
-	      info.ctx);
+	// note: source can be nullptr in case we've collected a
+	// rule for which the source is unknown
+	falco_source* source = nullptr;
+	if (!prev->unknown_source)
+	{
+		// note: if the source is not unknown, this should not return nullptr
+		source = cfg.sources.at(prev->source);
+		THROW(!source,
+	    	std::string("Unknown source ") + prev->source,
+	    	info.ctx);
+	}
 
 	if (!info.cond.empty())
 	{
@@ -261,7 +272,7 @@ void rule_loader::collector::append(configuration& cfg, rule_info& info)
 			THROW(ex.values.empty(),
 			       "Rule exception must have values property with a list of values",
 			       ex.ctx);
-			validate_exception_info(*source, ex);
+			validate_exception_info(source, ex);
 			prev->exceptions.push_back(ex);
 		}
 		else

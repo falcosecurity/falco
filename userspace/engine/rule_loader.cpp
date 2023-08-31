@@ -547,8 +547,8 @@ rule_loader::rule_exception_info::rule_exception_info(context &ctx)
 
 rule_loader::rule_info::rule_info(context &ctx)
 	: ctx(ctx), cond_ctx(ctx), output_ctx(ctx), index(0), visibility(0),
-	  priority(falco_common::PRIORITY_DEBUG), enabled(true),
-	  warn_evttypes(true), skip_if_unknown_filter(false)
+	  unknown_source(false), priority(falco_common::PRIORITY_DEBUG),
+	  enabled(true), warn_evttypes(true), skip_if_unknown_filter(false)
 {
 }
 

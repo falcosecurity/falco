@@ -388,17 +388,22 @@ void rule_loader::compiler::compile_rule_infos(
 	filter_warning_resolver warn_resolver;
 	for (auto &r : col.rules())
 	{
+		// skip the rule if it has an unknown source
+		if (r.unknown_source)
+		{
+			continue;
+		}
+
 		// skip the rule if below the minimum priority
 		if (r.priority > cfg.min_priority)
 		{
 			continue;
 		}
 
+		// note: this should not be nullptr if the source is not unknown
 		auto source = cfg.sources.at(r.source);
-		// note: this is not supposed to happen
-
 		THROW(!source,
-		      std::string("Unknown source ") + r.source,
+		      std::string("Unknown source at compile-time") + r.source,
 		      r.ctx);
 
 		// build filter AST by parsing the condition, building exceptions,
