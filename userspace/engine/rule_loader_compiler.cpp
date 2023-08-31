@@ -375,6 +375,12 @@ void rule_loader::compiler::compile_macros_infos(
 	}
 }
 
+static bool err_is_unknown_type_or_field(const std::string& err)
+{
+	return err.find("nonexistent field") != std::string::npos
+		|| err.find("invalid formatting token") != std::string::npos
+		|| err.find("unknown event type") != std::string::npos;
+}
 
 void rule_loader::compiler::compile_rule_infos(
 		configuration& cfg,
@@ -433,6 +439,14 @@ void rule_loader::compiler::compile_rule_infos(
 
 		if(!is_format_valid(*cfg.sources.at(r.source), rule.output, err))
 		{
+			if (err_is_unknown_type_or_field(err) && r.skip_if_unknown_filter)
+			{
+				cfg.res->add_warning(
+					falco::load_result::load_result::LOAD_UNKNOWN_FILTER,
+					err,
+					r.output_ctx);
+				continue;
+			}
 			throw rule_load_exception(
 				falco::load_result::load_result::LOAD_ERR_COMPILE_OUTPUT,
 				err,
@@ -463,25 +477,20 @@ void rule_loader::compiler::compile_rule_infos(
 			// skip_if_unknown_filter is true
 			std::string err = e.what();
 
-			if (err.find("nonexistent field") != std::string::npos &&
-			    r.skip_if_unknown_filter)
+			if (err_is_unknown_type_or_field(err) && r.skip_if_unknown_filter)
 			{
 				cfg.res->add_warning(
-					falco::load_result::load_result::LOAD_UNKNOWN_FIELD,
-					e.what(),
+					falco::load_result::load_result::LOAD_UNKNOWN_FILTER,
+					err,
 					r.cond_ctx);
+				continue;
 			}
-			else
-			{
-				rule_loader::context ctx(compiler.get_pos(),
-							 condition,
-							 r.cond_ctx);
 
-				throw rule_loader::rule_load_exception(
-					falco::load_result::load_result::LOAD_ERR_COMPILE_CONDITION,
-					e.what(),
-					ctx);
-			}
+			rule_loader::context ctx(compiler.get_pos(), condition, r.cond_ctx);
+			throw rule_loader::rule_load_exception(
+				falco::load_result::load_result::LOAD_ERR_COMPILE_CONDITION,
+				err,
+				ctx);
 		}
 
 		// By default rules are enabled/disabled for the default ruleset
