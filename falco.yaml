@@ -266,6 +266,9 @@ buffered_outputs: false
 
 # [Stable] `outputs`
 #
+# [DEPRECATED]
+# This config is deprecated and it will be removed in Falco 0.37
+#
 # A throttling mechanism, implemented as a token bucket, can be used to control
 # the rate of Falco outputs. Each event source has its own rate limiter,
 # ensuring that alerts from one source do not affect the throttling of others.
