@@ -44,6 +44,11 @@ jobs:
           cd falco-${{ inputs.version }}-${{ inputs.arch }}
           sudo cp -r * /
 
+      - name: Install dependencies for falco-driver-loader tests
+        run: |
+          sudo apt update -y
+          sudo apt install -y --no-install-recommends cmake build-essential linux-headers-$(uname -r) clang llvm gcc dkms pkg-config autoconf automake libtool
+
       - name: Install go-junit-report
         run: |
           pushd submodules/falcosecurity-testing
@@ -63,6 +68,7 @@ jobs:
           if ${{ inputs.static && 'false' || 'true' }}; then
             ./build/falcoctl.test -test.timeout=90s -test.v >> ./report.txt 2>&1 || true
             ./build/k8saudit.test -test.timeout=90s -test.v >> ./report.txt 2>&1 || true
+            sudo ./build/falco-driver-loader.test -test.timeout=90s -test.v >> ./report.txt 2>&1 || true
           fi
           cat ./report.txt | go-junit-report -set-exit-code > report.xml
           popd
