@@ -36,6 +36,7 @@ options::options()
 	  list_plugins(false),
 	  list_syscall_events(false),
 	  markdown(false),
+	  userspace(false),
 	  modern_bpf(false),
 	  dry_run(false),
 	  nodriver(false)
