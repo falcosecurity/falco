@@ -137,7 +137,9 @@
 # 
 # With Falco 0.36 and beyond, it's now possible to apply multiple rules that match 
 # the same event type, eliminating concerns about rule prioritization based on the 
-# "first match wins" principle. Read more under the `rule_matching` configuration.
+# "first match wins" principle. However, enabling the `all` matching option may result
+# in a performance penalty. We recommend carefully testing this alternative setting  
+# before deploying it in production. Read more under the `rule_matching` configuration.
 rules_file:
   - /etc/falco/falco_rules.yaml
   - /etc/falco/falco_rules.local.yaml
@@ -306,6 +308,12 @@ outputs:
 # trigger, possibly shadowing other rules.
 # In case `all` is used as value, rules still trigger in the order they were
 # defined.
+# 
+# Effectively, with this setting, it is now possible to apply multiple rules that match
+# the same event type. This eliminates concerns about rule prioritization based on the
+# "first match wins" principle. However, enabling the `all` matching option may result in
+# a performance penalty. We recommend carefully testing this alternative setting before
+# deploying it in production.
 rule_matching: first
 
 
