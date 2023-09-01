@@ -32,6 +32,7 @@ limitations under the License.
 // overflows here. Threads calling stats_writer::handle() will just
 // check that this value changed since their last observation.
 static std::atomic<stats_writer::ticker_t> s_timer((stats_writer::ticker_t) 0);
+static timer_t s_timerid;
 
 static void timer_handler(int signum)
 {
@@ -51,14 +52,15 @@ bool stats_writer::init_ticker(uint32_t interval_msec, std::string &err)
 		return false;
 	}
 	
-	timer_t timerid;
 	struct sigevent sev = {};
 	/* Create the timer */
 	sev.sigev_notify = SIGEV_SIGNAL;
 	sev.sigev_signo = SIGALRM;
-	sev.sigev_value.sival_ptr = &timerid;
+	sev.sigev_value.sival_ptr = &s_timerid;
 #ifndef __EMSCRIPTEN__
-	if (timer_create(CLOCK_MONOTONIC, &sev, &timerid) == -1) {
+	// delete any previously set timer
+	timer_delete(s_timerid);
+	if (timer_create(CLOCK_MONOTONIC, &sev, &s_timerid) == -1) {
 		err = std::string("Could not create periodic timer: ") + strerror(errno);
 		return false;
 	}
@@ -68,7 +70,7 @@ bool stats_writer::init_ticker(uint32_t interval_msec, std::string &err)
 	timer.it_interval = timer.it_value;
 
 #ifndef __EMSCRIPTEN__
-	if (timer_settime(timerid, 0, &timer, NULL) == -1) {
+	if (timer_settime(s_timerid, 0, &timer, NULL) == -1) {
 		err = std::string("Could not set up periodic timer: ") + strerror(errno);
 		return false;
 	}
@@ -122,6 +124,10 @@ stats_writer::~stats_writer()
 		{
 			m_file_output.close();
 		}
+		// delete timerID and reset timer
+#ifndef __EMSCRIPTEN__
+		timer_delete(s_timerid);
+#endif
 	}
 }
 
