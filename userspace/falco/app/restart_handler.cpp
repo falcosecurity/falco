@@ -31,8 +31,9 @@ limitations under the License.
 
 falco::app::restart_handler::~restart_handler()
 {
-    close(m_inotify_fd);
     stop();
+    close(m_inotify_fd);
+    m_inotify_fd = -1;
 }
 
 void falco::app::restart_handler::trigger()
