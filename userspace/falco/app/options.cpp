@@ -220,7 +220,7 @@ void options::define(cxxopts::Options& opts)
 		("t",                             "Only run those rules with a tag=<tag>. This option can be passed multiple times. Can not be mixed with -T/-D.", cxxopts::value<std::vector<std::string>>(), "<tag>")
 		("U,unbuffered",                  "Turn off output buffering to configured outputs. This causes every single line emitted by falco to be flushed which generates higher CPU usage but is useful when piping those outputs into another process or into a script.", cxxopts::value(unbuffered_outputs)->default_value("false"))
 #if !defined(_WIN32) && !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
-		("u,userspace",                   "Parse events from userspace. To be used in conjunction with the ptrace(2) based driver (pdig)", cxxopts::value(userspace)->default_value("false"))
+		("u,userspace",                   "[DEPRECATED, will be removed in Falco 0.37] Parse events from userspace. To be used in conjunction with the ptrace(2) based driver (pdig)", cxxopts::value(userspace)->default_value("false"))
 #endif
 		("V,validate",                    "Read the contents of the specified rules(s) file and exit. This option can be passed multiple times to validate multiple files.", cxxopts::value(validate_rules_filenames), "<rules_file>")
 		("v",                             "Verbose output.", cxxopts::value(verbose)->default_value("false"))
