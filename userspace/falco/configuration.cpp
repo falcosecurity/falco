@@ -256,9 +256,16 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 		config.get_scalar<std::string>("libs_logger.severity", "debug"),
 		"[libs]: ");
 
+	falco_logger::log_stderr = config.get_scalar<bool>("log_stderr", false);
+	falco_logger::log_syslog = config.get_scalar<bool>("log_syslog", true);
+
 	m_output_timeout = config.get_scalar<uint32_t>("output_timeout", 2000);
 
 	m_notifications_rate = config.get_scalar<uint32_t>("outputs.rate", 0);
+	if(m_notifications_rate != 0)
+	{
+		falco_logger::log(LOG_WARNING, "'output.rate' config is deprecated and it will be removed in Falco 0.37\n");
+	}
 	m_notifications_max_burst = config.get_scalar<uint32_t>("outputs.max_burst", 1000);
 
 	std::string rule_matching = config.get_scalar<std::string>("rule_matching", "first");
@@ -275,9 +282,6 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 
 	m_buffered_outputs = config.get_scalar<bool>("buffered_outputs", false);
 	m_time_format_iso_8601 = config.get_scalar<bool>("time_format_iso_8601", false);
-
-	falco_logger::log_stderr = config.get_scalar<bool>("log_stderr", false);
-	falco_logger::log_syslog = config.get_scalar<bool>("log_syslog", true);
 
 	m_webserver_enabled = config.get_scalar<bool>("webserver.enabled", false);
 	m_webserver_threadiness = config.get_scalar<uint32_t>("webserver.threadiness", 0);
