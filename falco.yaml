@@ -134,6 +134,10 @@
 # By arranging the order of files and rules thoughtfully, you can ensure that
 # desired customizations and rule behaviors are prioritized and applied as
 # intended.
+# 
+# With Falco 0.36 and beyond, it's now possible to apply multiple rules that match 
+# the same event type, eliminating concerns about rule prioritization based on the 
+# "first match wins" principle. Read more under the `rule_matching` configuration.
 rules_file:
   - /etc/falco/falco_rules.yaml
   - /etc/falco/falco_rules.local.yaml
@@ -297,7 +301,7 @@ outputs:
 #  - `all`: Falco will continue checking conditions of rules even if a matching 
 #    one was already found
 #
-# Rules conditions are evaluated in the order they are defined in the rulesfiles.
+# Rules conditions are evaluated in the order they are defined in the rules files.
 # For this reason, when using `first` as value, only the first defined rule will 
 # trigger, possibly shadowing other rules.
 # In case `all` is used as value, rules still trigger in the order they were
@@ -744,6 +748,8 @@ syscall_event_drops:
 metrics:
   enabled: false
   interval: 1h
+  # Typically, in production, you only use `output_rule` or `output_file`, but not both. 
+  # However, if you have a very unique use case, you can use both together.
   output_rule: true
   # output_file: /tmp/falco_stats.jsonl
   resource_utilization_enabled: true
