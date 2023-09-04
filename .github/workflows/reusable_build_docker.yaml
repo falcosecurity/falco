@@ -46,6 +46,16 @@ jobs:
             --build-arg TARGETARCH=${TARGETARCH} \
             .
             docker save docker.io/falcosecurity/falco-no-driver:${{ inputs.arch }}-${{ inputs.tag }} --output /tmp/falco-no-driver-${{ inputs.arch }}.tar
+
+      - name: Build distroless image
+        run: |
+          cd ${{ github.workspace }}/docker/no-driver/
+          docker build -f Dockerfile.distroless -t docker.io/falcosecurity/falco-distroless:${{ inputs.arch }}-${{ inputs.tag }} \
+            --build-arg VERSION_BUCKET=bin${{ inputs.bucket_suffix }} \
+            --build-arg FALCO_VERSION=${{ inputs.version }} \
+            --build-arg TARGETARCH=${TARGETARCH} \
+            .
+            docker save docker.io/falcosecurity/falco-distroless:${{ inputs.arch }}-${{ inputs.tag }} --output /tmp/falco-distroless-${{ inputs.arch }}.tar
             
       - name: Build falco image
         run: |
