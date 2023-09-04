@@ -44,10 +44,19 @@ jobs:
           cd falco-${{ inputs.version }}-${{ inputs.arch }}
           sudo cp -r * /
 
-      - name: Install dependencies for falco-driver-loader tests
+      # aarch64 job run on amazon-linux-2
+      - name: Install dependencies for falco-driver-loader tests on aarch64
+        if: ${{ inputs.arch == 'aarch64' }}
+        run: |
+          sudo yum update -y
+          sudo yum install -y build-essential clang make llvm gcc dkms kernel-devel-$(uname -r)
+
+      # x86_64 job run on ubuntu-22.04
+      - name: Install dependencies for falco-driver-loader tests on x86
+        if: ${{ inputs.arch == 'x86_64' }}
         run: |
           sudo apt update -y
-          sudo apt install -y --no-install-recommends cmake build-essential linux-headers-$(uname -r) clang llvm gcc dkms pkg-config autoconf automake libtool
+          sudo apt install -y --no-install-recommends build-essential clang make llvm gcc dkms linux-headers-$(uname -r)
 
       - name: Install go-junit-report
         run: |
