@@ -86,6 +86,8 @@ bool syscall_evt_drop_mgr::process_event(std::shared_ptr<sinsp> inspector, sinsp
 		delta.n_drops_buffer_dir_file_exit = stats.n_drops_buffer_dir_file_exit - m_last_stats.n_drops_buffer_dir_file_exit;
 		delta.n_drops_buffer_other_interest_enter = stats.n_drops_buffer_other_interest_enter - m_last_stats.n_drops_buffer_other_interest_enter;
 		delta.n_drops_buffer_other_interest_exit = stats.n_drops_buffer_other_interest_exit - m_last_stats.n_drops_buffer_other_interest_exit;
+		delta.n_drops_buffer_close_exit = stats.n_drops_buffer_close_exit - m_last_stats.n_drops_buffer_close_exit;
+		delta.n_drops_buffer_proc_exit = stats.n_drops_buffer_proc_exit - m_last_stats.n_drops_buffer_proc_exit;
 		delta.n_drops_scratch_map = stats.n_drops_scratch_map - m_last_stats.n_drops_scratch_map;
 		delta.n_drops_pf = stats.n_drops_pf - m_last_stats.n_drops_pf;
 		delta.n_drops_bug = stats.n_drops_bug - m_last_stats.n_drops_bug;
@@ -183,6 +185,8 @@ bool syscall_evt_drop_mgr::perform_actions(uint64_t now, scap_stats &delta, bool
 			 */
 			output_fields["n_drops_buffer_other_interest_enter"] = std::to_string(delta.n_drops_buffer_other_interest_enter);
 			output_fields["n_drops_buffer_other_interest_exit"] = std::to_string(delta.n_drops_buffer_other_interest_exit);
+			output_fields["n_drops_buffer_close_exit"] = std::to_string(delta.n_drops_buffer_close_exit);
+			output_fields["n_drops_buffer_proc_exit"] = std::to_string(delta.n_drops_buffer_proc_exit);
 			output_fields["n_drops_scratch_map"] = std::to_string(delta.n_drops_scratch_map);		/* Number of kernel side scratch map drops. */
 			output_fields["n_drops_page_faults"] = std::to_string(delta.n_drops_pf);		/* Number of kernel side page faults drops (invalid memory access). */
 			output_fields["n_drops_bug"] = std::to_string(delta.n_drops_bug);		/* Number of kernel side bug drops (invalid condition in the kernel instrumentation). */
