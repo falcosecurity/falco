@@ -46,8 +46,7 @@ Considerations and guidance for Falco adopters:
 
 ## How to Contribute
 
-Please refer to the [contributing guide](https://github.com/falcosecurity/.github/blob/main/CONTRIBUTING.md) and the [code of conduct](https://github.com/falcosecurity/evolution/CODE_OF_CONDUCT.md) for more information on how to contribute.
-
+Please refer to the [contributing guide](https://github.com/falcosecurity/.github/blob/main/CONTRIBUTING.md) and the [code of conduct](https://github.com/falcosecurity/evolution/blob/main/CODE_OF_CONDUCT.md) for more information on how to contribute.
 
 ## Join the Community
 
