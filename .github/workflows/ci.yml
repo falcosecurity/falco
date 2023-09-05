@@ -19,6 +19,9 @@ jobs:
       - name: etc os release
         run: cat /etc/os-release
       
+      - name: uname
+        run: uname -a
+      
       - name: install deps
         run: sudo yum update && sudo yum install make
 
