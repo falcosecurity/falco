@@ -66,6 +66,25 @@ if [ $1 -ge 1 ]; then
               esac
             fi
             clear
+        else
+            case $FALCO_DRIVER_CHOICE in
+                module | kmod )
+                    chosen_driver="kmod"
+                    ;;
+                bpf | ebpf | eBPF )
+                    chosen_driver="bpf"
+                    ;;
+                modern-bpf | modern-ebpf | modern-eBPF )
+                    chosen_driver="modern-bpf"
+                    ;;
+            esac
+            case $FALCOCTL_ENABLED in
+                yes )
+                    ;;
+                no )
+                    systemctl --system mask falcoctl-artifact-follow.service || true
+                    ;;
+            esac
         fi
 fi
 
