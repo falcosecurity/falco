@@ -19,6 +19,16 @@ limitations under the License.
 
 using namespace libsinsp::filter;
 
+std::string get_field_name(const std::string& name, const std::string& arg)
+{
+	std::string fld = name;
+	if (!arg.empty())
+	{
+		fld += "[" + arg + "]";
+	}
+	return fld;
+}
+
 void filter_details::reset()
 {
 	fields.clear();
@@ -86,7 +96,7 @@ void filter_details_resolver::visitor::visit(ast::list_expr* e)
 void filter_details_resolver::visitor::visit(ast::binary_check_expr* e)
 {
 	m_expect_macro = false;
-	m_details.fields.insert(e->field);
+	m_details.fields.insert(get_field_name(e->field, e->arg));
 	m_details.operators.insert(e->op);
 	if (e->field == "evt.type" || e->field == "evt.asynctype")
 	{
@@ -105,7 +115,7 @@ void filter_details_resolver::visitor::visit(ast::binary_check_expr* e)
 void filter_details_resolver::visitor::visit(ast::unary_check_expr* e)
 {
 	m_expect_macro = false;
-	m_details.fields.insert(e->field);
+	m_details.fields.insert(get_field_name(e->field, e->arg));
 	m_details.operators.insert(e->op);
 }
 
