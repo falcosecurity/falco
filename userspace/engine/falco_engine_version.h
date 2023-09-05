@@ -15,7 +15,7 @@ limitations under the License.
 */
 
 // The version of this Falco engine.
-#define FALCO_ENGINE_VERSION (25)
+#define FALCO_ENGINE_VERSION (26)
 
 // This is the result of running the following command:
 //   FALCO="falco -c ./falco.yaml"
@@ -23,4 +23,4 @@ limitations under the License.
 // It represents the fields supported by this version of Falco,
 // the event types, and the underlying driverevent schema. It's used to
 // detetect changes in engine version in our CI jobs.
-#define FALCO_ENGINE_CHECKSUM "41b5dc700216b243d294b40c46264d4e89d0ee00098fdc1c21bb4b1e7639da06"
+#define FALCO_ENGINE_CHECKSUM "98c6e665031b95c666a9ab02d5470e7008e8636bf02f4cc410912005b90dff5c"
