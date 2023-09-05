@@ -31,6 +31,23 @@ namespace rule_loader
 class compiler
 {
 public:
+	/*!
+		\brief The output of a compilation.
+	*/
+	struct compile_output
+	{
+		compile_output() = default;
+		virtual ~compile_output() = default;
+		compile_output(compile_output&&) = default;
+		compile_output& operator = (compile_output&&) = default;
+		compile_output(const compile_output&) = default;
+		compile_output& operator = (const compile_output&) = default;
+
+		indexed_vector<falco_list> lists;
+		indexed_vector<falco_macro> macros;
+		indexed_vector<falco_rule> rules;
+	};
+
 	compiler() = default;
 	virtual ~compiler() = default;
 	compiler(compiler&&) = default;
@@ -44,25 +61,25 @@ public:
 	virtual void compile(
 		configuration& cfg,
 		const collector& col,
-		indexed_vector<falco_rule>& out) const;
+		compile_output& out) const;
 
 private:
 	void compile_list_infos(
 		configuration& cfg,
 		const collector& col,
-		indexed_vector<list_info>& out) const;
+		indexed_vector<falco_list>& out) const;
 
 	void compile_macros_infos(
 		configuration& cfg,
 		const collector& col,
-		indexed_vector<list_info>& lists,
-		indexed_vector<macro_info>& out) const;
+		indexed_vector<falco_list>& lists,
+		indexed_vector<falco_macro>& out) const;
 
 	void compile_rule_infos(
 		configuration& cfg,
 		const collector& col,
-		indexed_vector<list_info>& lists,
-		indexed_vector<macro_info>& macros,
+		indexed_vector<falco_list>& lists,
+		indexed_vector<falco_macro>& macros,
 		indexed_vector<falco_rule>& out) const;
 };
 

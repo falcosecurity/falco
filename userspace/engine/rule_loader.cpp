@@ -532,12 +532,12 @@ rule_loader::plugin_version_info::plugin_version_info(context &ctx)
 }
 
 rule_loader::list_info::list_info(context &ctx)
-	: ctx(ctx), used(false), index(0), visibility(0)
+	: ctx(ctx), index(0), visibility(0)
 {
 }
 
 rule_loader::macro_info::macro_info(context &ctx)
-	: ctx(ctx), cond_ctx(ctx), used(false), index(0), visibility(0)
+	: ctx(ctx), cond_ctx(ctx), index(0), visibility(0)
 {
 }
 
