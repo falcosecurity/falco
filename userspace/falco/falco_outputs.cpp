@@ -65,7 +65,7 @@ falco_outputs::falco_outputs(
 	{
 		add_output(output);
 	}
-	m_outputs_queue_num_drops = 0UL;
+	m_outputs_queue_num_drops = {0};
 	m_outputs_queue_recovery = outputs_queue_recovery;
 #ifndef __EMSCRIPTEN__
 	m_queue.set_capacity(outputs_queue_capacity);
@@ -363,5 +363,5 @@ inline void falco_outputs::process_msg(falco::outputs::abstract_output* o, const
 
 uint64_t falco_outputs::get_outputs_queue_num_drops()
 {
-	return m_outputs_queue_num_drops;
+	return m_outputs_queue_num_drops.load();
 }
