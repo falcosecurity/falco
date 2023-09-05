@@ -310,17 +310,17 @@ private:
 		const std::vector<std::shared_ptr<sinsp_plugin>>& plugins) const;
 	void get_json_details(
 		Json::Value& out,
-		const rule_loader::macro_info& m,
-		const std::vector<std::shared_ptr<sinsp_plugin>>& plugins) const;
+		const rule_loader::macro_info& m) const;
 	void get_json_details(
 		Json::Value& out,
 		const rule_loader::list_info& l) const;
-	void get_json_details(
+	void get_json_filter_details(
 		Json::Value& out,
-		libsinsp::filter::ast::expr* ast) const;
+		const filter_details& details) const;
 	void get_json_evt_types(
 		Json::Value& out,
-		libsinsp::filter::ast::expr* ast) const;
+		const std::string& source,
+		const filter_details& details) const;
 	void get_json_used_plugins(
 		Json::Value& out,
 		const std::string& source,
