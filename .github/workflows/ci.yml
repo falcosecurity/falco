@@ -13,6 +13,15 @@ concurrency:
   cancel-in-progress: true  
 
 jobs:
+  my-test:
+    runs-on: [ "self-hosted", "linux", "ARM64" ]
+    steps:
+      - name: etc os release
+        run: cat /etc/os-release
+      
+      - name: install deps
+        run: sudo yum update && sudo yum install make
+
   fetch-version:
     uses: ./.github/workflows/reusable_fetch_version.yaml
 
