@@ -819,6 +819,19 @@ void falco_engine::get_json_used_plugins(
 	const std::unordered_set<std::string>& fields,
 	const std::vector<std::shared_ptr<sinsp_plugin>>& plugins) const
 {
+	// note: condition and output fields may have an argument, so
+	// we need to isolate the field names
+	std::unordered_set<std::string> fieldnames;
+	for (auto f: fields)
+	{
+		auto argpos = f.find('[');
+		if (argpos != std::string::npos)
+		{
+			f = f.substr(0, argpos);
+		}
+		fieldnames.insert(f);
+	}
+
 	out = Json::arrayValue;	
 	for (const auto& p : plugins)
 	{
@@ -846,7 +859,7 @@ void falco_engine::get_json_used_plugins(
 			{
 				for (const auto &f : p->fields())
 				{
-					if (!used && fields.find(f.m_name) != fields.end())
+					if (!used && fieldnames.find(f.m_name) != fieldnames.end())
 					{
 						out.append(p->name());
 						used = true;
