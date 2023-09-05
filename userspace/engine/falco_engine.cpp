@@ -190,22 +190,60 @@ void falco_engine::load_rules(const std::string &rules_content, bool verbose, bo
 std::unique_ptr<load_result> falco_engine::load_rules(const std::string &rules_content, const std::string &name)
 {
 	rule_loader::configuration cfg(rules_content, m_sources, name);
-	cfg.min_priority = m_min_priority;
 	cfg.output_extra = m_extra;
 	cfg.replace_output_container_info = m_replace_container_info;
-	cfg.default_ruleset_id = m_default_ruleset_id;
 
+	// read rules YAML file and collect its definitions
 	rule_loader::reader reader;
 	if (reader.read(cfg, m_rule_collector))
-	{
+	{	
+		// compile the definitions (resolve macro/list refs, exceptions, ...)
+		rule_loader::compiler::compile_output out;
+		rule_loader::compiler().compile(cfg, m_rule_collector, out);
+
+		// clear the rules known by the engine and each ruleset
+		m_rules.clear();
 		for (auto &src : m_sources)
 		{
 			src.ruleset = src.ruleset_factory->new_ruleset();
 		}
 
-		rule_loader::compiler compiler;
-		m_rules.clear();
-		compiler.compile(cfg, m_rule_collector, m_rules);
+		// add rules to the engine and the rulesets
+		for (const auto& rule : out.rules)
+		{
+			// skip the rule if below the minimum priority
+			if (rule.priority > m_min_priority)
+			{
+				continue;
+			}
+
+			auto info = m_rule_collector.rules().at(rule.name);
+			if (!info)
+			{
+				// this is just defensive, it should never happen
+				throw falco_exception("can't find internal rule info at name: " + name);
+			}
+
+			// the rule is ok, we can add it to the engine and the rulesets
+			// note: the compiler should guarantee that the rule's condition
+			// is a valid sinsp filter
+			auto source = find_source(rule.source);
+			std::shared_ptr<gen_event_filter> filter(
+				sinsp_filter_compiler(source->filter_factory, rule.condition.get()).compile());
+			auto rule_id = m_rules.insert(rule, rule.name);
+			m_rules.at(rule_id)->id = rule_id;
+			source->ruleset->add(rule, filter, rule.condition);
+
+			// By default rules are enabled/disabled for the default ruleset
+			if(info->enabled)
+			{
+				source->ruleset->enable(rule.name, true, m_default_ruleset_id);
+			}
+			else
+			{
+				source->ruleset->disable(rule.name, true, m_default_ruleset_id);
+			}
+		}
 	}
 
 	if (cfg.res->successful())

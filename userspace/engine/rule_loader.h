@@ -273,8 +273,7 @@ namespace rule_loader
 			const indexed_vector<falco_source>& srcs,
 			const std::string& name)
 				: content(cont), sources(srcs), name(name),
-				  default_ruleset_id(0), replace_output_container_info(false),
-				  min_priority(falco_common::PRIORITY_DEBUG)
+				  output_extra(), replace_output_container_info(false)
 			{
 				res.reset(new result(name));
 			}
@@ -283,14 +282,15 @@ namespace rule_loader
 		configuration(const configuration&) = delete;
 		configuration& operator = (const configuration&) = delete;
 
+		// inputs
 		const std::string& content;
 		const indexed_vector<falco_source>& sources;
 		std::string name;
-		std::unique_ptr<result> res;
 		std::string output_extra;
-		uint16_t default_ruleset_id;
 		bool replace_output_container_info;
-		falco_common::priority_type min_priority;
+
+		// outputs
+		std::unique_ptr<result> res;
 	};
 
 	/*!
@@ -359,7 +359,6 @@ namespace rule_loader
 		list_info& operator = (const list_info&) = default;
 
 		context ctx;
-		bool used;
 		size_t index;
 		size_t visibility;
 		std::string name;
@@ -380,12 +379,10 @@ namespace rule_loader
 
 		context ctx;
 		context cond_ctx;
-		bool used;
 		size_t index;
 		size_t visibility;
 		std::string name;
 		std::string cond;
-		std::shared_ptr<libsinsp::filter::ast::expr> cond_ast;
 	};
 
 	/*!

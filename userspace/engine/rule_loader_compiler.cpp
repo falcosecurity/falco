@@ -160,8 +160,30 @@ static void build_rule_exception_infos(
 	}
 }
 
+static inline rule_loader::list_info* list_info_from_name(
+	const rule_loader::collector& c, const std::string& name)
+{
+	auto ret = c.lists().at(name);
+	if (!ret)
+	{
+		throw falco_exception("can't find internal list info at name: " + name);
+	}
+	return ret;
+}
+
+static inline rule_loader::macro_info* macro_info_from_name(
+	const rule_loader::collector& c, const std::string& name)
+{
+	auto ret = c.macros().at(name);
+	if (!ret)
+	{
+		throw falco_exception("can't find internal macro info at name: " + name);
+	}
+	return ret;
+}
+
 // todo(jasondellaluce): this breaks string escaping in lists
-static bool resolve_list(std::string& cnd, const rule_loader::list_info& list)
+static bool resolve_list(std::string& cnd, const falco_list& list)
 {
 	static std::string blanks = " \t\n\r";
 	static std::string delims = blanks + "(),=";
@@ -232,18 +254,20 @@ static bool resolve_list(std::string& cnd, const rule_loader::list_info& list)
 }
 
 static void resolve_macros(
-	indexed_vector<rule_loader::macro_info>& macros,
+	const indexed_vector<rule_loader::macro_info>& infos,
+	indexed_vector<falco_macro>& macros,
 	std::shared_ptr<ast::expr>& ast,
 	const std::string& condition,
 	uint32_t visibility,
 	const rule_loader::context &ctx)
 {
 	filter_macro_resolver macro_resolver;
-	for (auto &m : macros)
+	for (auto &m : infos)
 	{
 		if (m.index < visibility)
 		{
-			macro_resolver.set_macro(m.name, m.cond_ast);
+			auto macro = macros.at(m.name);
+			macro_resolver.set_macro(m.name, macro->condition);
 		}
 	}
 	macro_resolver.run(ast);
@@ -272,7 +296,7 @@ static void resolve_macros(
 // note: there is no visibility order between filter conditions and lists
 static std::shared_ptr<ast::expr> parse_condition(
 	std::string condition,
-	indexed_vector<rule_loader::list_info>& lists,
+	indexed_vector<falco_list>& lists,
 	const rule_loader::context &ctx)
 {
 	for (auto &l : lists)
@@ -319,13 +343,14 @@ static void apply_output_substitutions(
 void rule_loader::compiler::compile_list_infos(
 		configuration& cfg,
 		const collector& col,
-		indexed_vector<list_info>& out) const
+		indexed_vector<falco_list>& out) const
 {
 	std::string tmp;
 	std::vector<std::string> used;
 	for (auto &list : col.lists())
 	{
-		list_info v = list;
+		falco_list v;
+		v.name = list.name;
 		v.items.clear();
 		for (auto &item : list.items)
 		{
@@ -347,7 +372,8 @@ void rule_loader::compiler::compile_list_infos(
 			}
 		}
 		v.used = false;
-		out.insert(v, v.name);
+		auto list_id = out.insert(v, v.name);
+		out.at(list_id)->id = list_id;
 	}
 	for (auto &v : used)
 	{
@@ -359,20 +385,23 @@ void rule_loader::compiler::compile_list_infos(
 void rule_loader::compiler::compile_macros_infos(
 		configuration& cfg,
 		const collector& col,
-		indexed_vector<list_info>& lists,
-		indexed_vector<macro_info>& out) const
+		indexed_vector<falco_list>& lists,
+		indexed_vector<falco_macro>& out) const
 {
 	for (auto &m : col.macros())
 	{
-		macro_info entry = m;
-		entry.cond_ast = parse_condition(m.cond, lists, m.cond_ctx);
+		falco_macro entry;
+		entry.name = m.name;
+		entry.condition = parse_condition(m.cond, lists, m.cond_ctx);
 		entry.used = false;
-		out.insert(entry, m.name);
+		auto macro_id = out.insert(entry, m.name);
+		out.at(macro_id)->id = macro_id;
 	}
 
 	for (auto &m : out)
 	{
-		resolve_macros(out, m.cond_ast, m.cond, m.visibility, m.ctx);
+		auto info = macro_info_from_name(col, m.name);
+		resolve_macros(col.macros(), out, m.condition, info->cond, info->visibility, info->ctx);
 	}
 }
 
@@ -386,8 +415,8 @@ static bool err_is_unknown_type_or_field(const std::string& err)
 void rule_loader::compiler::compile_rule_infos(
 		configuration& cfg,
 		const collector& col,
-		indexed_vector<list_info>& lists,
-		indexed_vector<macro_info>& macros,
+		indexed_vector<falco_list>& lists,
+		indexed_vector<falco_macro>& macros,
 		indexed_vector<falco_rule>& out) const
 {
 	std::string err, condition;
@@ -397,12 +426,6 @@ void rule_loader::compiler::compile_rule_infos(
 	{
 		// skip the rule if it has an unknown source
 		if (r.unknown_source)
-		{
-			continue;
-		}
-
-		// skip the rule if below the minimum priority
-		if (r.priority > cfg.min_priority)
 		{
 			continue;
 		}
@@ -423,12 +446,12 @@ void rule_loader::compiler::compile_rule_infos(
 			build_rule_exception_infos(
 				r.exceptions, rule.exception_fields, condition);
 		}
-		auto ast = parse_condition(condition, lists, r.cond_ctx);
-		resolve_macros(macros, ast, condition, MAX_VISIBILITY, r.ctx);
+		rule.condition = parse_condition(condition, lists, r.cond_ctx);
+		resolve_macros(col.macros(), macros, rule.condition, condition, MAX_VISIBILITY, r.ctx);
 
 		// check for warnings in the filtering condition
 		warn_codes.clear();
-		if (warn_resolver.run(ast.get(), warn_codes))
+		if (warn_resolver.run(rule.condition.get(), warn_codes))
 		{
 			for (auto &w : warn_codes)
 			{
@@ -443,8 +466,11 @@ void rule_loader::compiler::compile_rule_infos(
 			apply_output_substitutions(cfg, rule.output);
 		}
 
+		// validate the rule's output
 		if(!is_format_valid(*cfg.sources.at(r.source), rule.output, err))
 		{
+			// skip the rule silently if skip_if_unknown_filter is true and
+			// we encountered some specific kind of errors
 			if (err_is_unknown_type_or_field(err) && r.skip_if_unknown_filter)
 			{
 				cfg.res->add_warning(
@@ -459,30 +485,18 @@ void rule_loader::compiler::compile_rule_infos(
 				r.output_ctx);
 		}
 
-		// construct rule definition and compile it to a filter
-		rule.name = r.name;
-		rule.source = r.source;
-		rule.description = r.desc;
-		rule.priority = r.priority;
-		rule.tags = r.tags;
-
-		auto rule_id = out.insert(rule, rule.name);
-		out.at(rule_id)->id = rule_id;
-
-		// This also compiles the filter, and might throw a
-		// falco_exception with details on the compilation
-		// failure.
-		sinsp_filter_compiler compiler(cfg.sources.at(r.source)->filter_factory, ast.get());
-		try {
-			std::shared_ptr<gen_event_filter> filter(compiler.compile());
-			source->ruleset->add(*out.at(rule_id), filter, ast);
+		// validate the rule's condiiton: we compile it into a sinsp filter
+		// on-the-fly and we throw an exception with details on failure
+		sinsp_filter_compiler compiler(cfg.sources.at(r.source)->filter_factory, rule.condition.get());
+		try
+		{
+			compiler.compile();
 		}
 		catch (const sinsp_exception& e)
 		{
-			// Allow errors containing "nonexistent field" if
-			// skip_if_unknown_filter is true
+			// skip the rule silently if skip_if_unknown_filter is true and
+			// we encountered some specific kind of errors
 			std::string err = e.what();
-
 			if (err_is_unknown_type_or_field(err) && r.skip_if_unknown_filter)
 			{
 				cfg.res->add_warning(
@@ -491,7 +505,6 @@ void rule_loader::compiler::compile_rule_infos(
 					r.cond_ctx);
 				continue;
 			}
-
 			rule_loader::context ctx(compiler.get_pos(), condition, r.cond_ctx);
 			throw rule_loader::rule_load_exception(
 				falco::load_result::load_result::LOAD_ERR_COMPILE_CONDITION,
@@ -499,20 +512,10 @@ void rule_loader::compiler::compile_rule_infos(
 				ctx);
 		}
 
-		// By default rules are enabled/disabled for the default ruleset
-		if(r.enabled)
-		{
-			source->ruleset->enable(rule.name, true, cfg.default_ruleset_id);
-		}
-		else
-		{
-			source->ruleset->disable(rule.name, true, cfg.default_ruleset_id);
-		}
-
 		// populate set of event types and emit an special warning
-		if(rule.source == falco_common::syscall_source)
+		if(r.source == falco_common::syscall_source)
 		{
-			auto evttypes = libsinsp::filter::ast::ppm_event_codes(ast.get());
+			auto evttypes = libsinsp::filter::ast::ppm_event_codes(rule.condition.get());
 			if ((evttypes.empty() || evttypes.size() > 100) && r.warn_evttypes)
 			{
 				cfg.res->add_warning(
@@ -521,23 +524,29 @@ void rule_loader::compiler::compile_rule_infos(
 					r.ctx);
 			}
 		}
+
+		// finalize the rule definition and add it to output
+		rule.name = r.name;
+		rule.source = r.source;
+		rule.description = r.desc;
+		rule.priority = r.priority;
+		rule.tags = r.tags;
+		auto rule_id = out.insert(rule, rule.name);
+		out.at(rule_id)->id = rule_id;
 	}
 }
 
 void rule_loader::compiler::compile(
 		configuration& cfg,
 		const collector& col,
-		indexed_vector<falco_rule>& out) const
+		compile_output& out) const
 {
-	indexed_vector<list_info> lists;
-	indexed_vector<macro_info> macros;
-
 	// expand all lists, macros, and rules
 	try
 	{
-		compile_list_infos(cfg, col, lists);
-		compile_macros_infos(cfg, col, lists, macros);
-		compile_rule_infos(cfg, col, lists, macros, out);
+		compile_list_infos(cfg, col, out.lists);
+		compile_macros_infos(cfg, col, out.lists, out.macros);
+		compile_rule_infos(cfg, col, out.lists, out.macros, out.rules);
 	}
 	catch(rule_load_exception &e)
 	{
@@ -546,24 +555,24 @@ void rule_loader::compiler::compile(
 	}
 
 	// print info on any dangling lists or macros that were not used anywhere
-	for (auto &m : macros)
+	for (auto &m : out.macros)
 	{
 		if (!m.used)
 		{
 			cfg.res->add_warning(
 				falco::load_result::load_result::LOAD_UNUSED_MACRO,
 				"Macro not referred to by any other rule/macro",
-				m.ctx);
+				macro_info_from_name(col, m.name)->ctx);
 		}
 	}
-	for (auto &l : lists)
+	for (auto &l : out.lists)
 	{
 		if (!l.used)
 		{
 			cfg.res->add_warning(
 				falco::load_result::LOAD_UNUSED_LIST,
 				"List not referred to by any other rule/macro",
-				l.ctx);
+				list_info_from_name(col, l.name)->ctx);
 		}
 	}
 }

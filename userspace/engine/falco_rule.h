@@ -21,6 +21,46 @@ limitations under the License.
 #include <string>
 #include "falco_common.h"
 
+#include <filter/ast.h>
+
+/*!
+	\brief Represents a list in the Falco Engine.
+	The rule ID must be unique across all the lists loaded in the engine.
+*/
+struct falco_list
+{
+	falco_list(): used(false), id(0) { }
+	falco_list(falco_list&&) = default;
+	falco_list& operator = (falco_list&&) = default;
+	falco_list(const falco_list&) = default;
+	falco_list& operator = (const falco_list&) = default;
+	~falco_list() = default;
+
+	bool used;
+	std::size_t id;
+	std::string name;
+	std::vector<std::string> items;
+};
+
+/*!
+	\brief Represents a macro in the Falco Engine.
+	The rule ID must be unique across all the macros loaded in the engine.
+*/
+struct falco_macro
+{
+	falco_macro(): used(false), id(0) { }
+	falco_macro(falco_macro&&) = default;
+	falco_macro& operator = (falco_macro&&) = default;
+	falco_macro(const falco_macro&) = default;
+	falco_macro& operator = (const falco_macro&) = default;
+	~falco_macro() = default;
+
+	bool used;
+	std::size_t id;
+	std::string name;
+	std::shared_ptr<libsinsp::filter::ast::expr> condition;
+};
+
 /*!
 	\brief Represents a rule in the Falco Engine.
 	The rule ID must be unique across all the rules loaded in the engine.
@@ -32,6 +72,7 @@ struct falco_rule
 	falco_rule& operator = (falco_rule&&) = default;
 	falco_rule(const falco_rule&) = default;
 	falco_rule& operator = (const falco_rule&) = default;
+	~falco_rule() = default;
 
 	std::size_t id;
 	std::string source;
@@ -41,4 +82,5 @@ struct falco_rule
 	std::set<std::string> tags;
 	std::set<std::string> exception_fields;
 	falco_common::priority_type priority;
+	std::shared_ptr<libsinsp::filter::ast::expr> condition;
 };
