@@ -56,7 +56,7 @@ jobs:
       git_ref: ${{ github.event.pull_request.head.sha }}
       minimal: false
       build_type: Debug
-      cmd: "echo $(build/userspace/falco/falco -c ./falco.yaml --version | grep 'Engine:' | awk '{print $2}') $(echo $(build/userspace/falco/falco -c ./falco.yaml --version | grep 'Schema version:' | awk '{print $3}') $(build/userspace/falco/falco -c ./falco.yaml --list --markdown | grep '^`' | sort) $(build/userspace/falco/falco -c ./falco.yaml --list-syscall-events | sort) | sha256sum)"
+      cmd: "echo $(build/userspace/falco/falco -c ./falco.yaml --version | grep 'Engine:' | awk '{print $2}') $(echo $(build/userspace/falco/falco -c ./falco.yaml --version | grep 'Schema version:' | awk '{print $3}') $(build/userspace/falco/falco -c ./falco.yaml --list --markdown | grep '^`' | sort) $(build/userspace/falco/falco -c ./falco.yaml --list-events | sort) | sha256sum)"
 
   # checks the falco engine checksum for consistency
   check-engine-checksum:
