@@ -46,6 +46,7 @@ void filter_details_resolver::run(ast::expr* filter, filter_details& details)
 
 void filter_details_resolver::visitor::visit(ast::and_expr* e)
 {
+	m_expect_macro = false;
 	for(size_t i = 0; i < e->children.size(); i++)
 	{
 		m_expect_macro = true;
@@ -56,6 +57,7 @@ void filter_details_resolver::visitor::visit(ast::and_expr* e)
 
 void filter_details_resolver::visitor::visit(ast::or_expr* e)
 {
+	m_expect_macro = false;
 	for(size_t i = 0; i < e->children.size(); i++)
 	{
 		m_expect_macro = true;
@@ -98,18 +100,11 @@ void filter_details_resolver::visitor::visit(ast::binary_check_expr* e)
 	m_expect_macro = false;
 	m_details.fields.insert(get_field_name(e->field, e->arg));
 	m_details.operators.insert(e->op);
-	if (e->field == "evt.type" || e->field == "evt.asynctype")
-	{
-		m_expect_evtname = true;
-		e->value->accept(this);
-		m_expect_evtname = false;
-	}
-	else
-	{
-		m_expect_list = true;
-		e->value->accept(this);
-		m_expect_list = false;
-	}
+	m_expect_list = true;
+	m_expect_evtname = e->field == "evt.type" || e->field == "evt.asynctype";
+	e->value->accept(this);
+	m_expect_evtname = false;
+	m_expect_list = false;
 }
 
 void filter_details_resolver::visitor::visit(ast::unary_check_expr* e)
@@ -121,17 +116,16 @@ void filter_details_resolver::visitor::visit(ast::unary_check_expr* e)
 
 void filter_details_resolver::visitor::visit(ast::value_expr* e)
 {
-	if(m_expect_macro)
+	if (m_expect_macro)
 	{
-		auto it = m_details.known_macros.find(e->value);
-		if(it == m_details.known_macros.end())
+		if(m_details.known_macros.find(e->value) != m_details.known_macros.end())
 		{
-			return;
+			m_details.macros.insert(e->value);
 		}
-
-		m_details.macros.insert(e->value);
+		// todo(jasondellaluce): should we throw an error if we
+		// encounter an unknown macro?
 	}
-	if(m_expect_evtname)
+	else if (m_expect_evtname)
 	{
 		m_details.evtnames.insert(e->value);
 	}
