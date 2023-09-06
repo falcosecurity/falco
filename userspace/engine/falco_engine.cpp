@@ -506,6 +506,16 @@ std::size_t falco_engine::add_source(const std::string &source,
 	return m_sources.insert(src, source);
 }
 
+template <typename T> inline Json::Value sequence_to_json_array(const T& seq)
+{
+	Json::Value ret = Json::arrayValue;
+	for (auto it = seq.begin(); it != seq.end(); it++)
+	{
+		ret.append(*it);
+	}
+	return ret;
+}
+
 void falco_engine::describe_rule(std::string *rule, const std::vector<std::shared_ptr<sinsp_plugin>>& plugins, bool json) const
 {
 	if(!json)
@@ -535,9 +545,20 @@ void falco_engine::describe_rule(std::string *rule, const std::vector<std::share
 		return;
 	}
 
+	// use previously-loaded collector definitions to obtain a compiled
+	// output of rules, macros, and lists.
+	// note: we ignore the loading result (errors, warnings), as they should have
+	// already been checked when previously-loading the rules files. Thus, we
+	// assume that the definitions will give no compilation error.
+	rule_loader::configuration cfg("", m_sources, "");
+	cfg.output_extra = m_extra;
+	cfg.replace_output_container_info = m_replace_container_info;
+	rule_loader::compiler::compile_output compiled;
+	rule_loader::compiler().compile(cfg, m_rule_collector, compiled);
+
+	// use collected and compiled info to print a json output
 	Json::FastWriter writer;
 	std::string json_str;
-
 	if(!rule)
 	{
 		// In this case we build json information about
@@ -573,33 +594,33 @@ void falco_engine::describe_rule(std::string *rule, const std::vector<std::share
 
 		// Store information about rules
 		Json::Value rules_array = Json::arrayValue;
-		for(const auto& r : m_rules)
+		for(const auto& r : compiled.rules)
 		{
-			auto ri = m_rule_collector.rules().at(r.name);
+			auto info = m_rule_collector.rules().at(r.name);
 			Json::Value rule;
-			get_json_details(rule, r, *ri, plugins);
-
-			// Append to rule array
+			get_json_details(rule, r, *info, plugins);
 			rules_array.append(rule);
 		}
 		output["rules"] = rules_array;
 		
 		// Store information about macros
 		Json::Value macros_array = Json::arrayValue;
-		for(const auto &m : m_rule_collector.macros())
+		for(const auto &m : compiled.macros)
 		{
+			auto info = m_rule_collector.macros().at(m.name);
 			Json::Value macro;
-			get_json_details(macro, m);
+			get_json_details(macro, m, *info, plugins);
 			macros_array.append(macro);
 		}
 		output["macros"] = macros_array;
 
 		// Store information about lists 
 		Json::Value lists_array = Json::arrayValue;
-		for(const auto &l : m_rule_collector.lists())
+		for(const auto &l : compiled.lists)
 		{
+			auto info = m_rule_collector.lists().at(l.name);
 			Json::Value list;
-			get_json_details(list, l);
+			get_json_details(list, l, *info, plugins);
 			lists_array.append(list);			
 		}
 		output["lists"] = lists_array;
@@ -626,69 +647,61 @@ void falco_engine::describe_rule(std::string *rule, const std::vector<std::share
 void falco_engine::get_json_details(
 	Json::Value &out,
 	const falco_rule &r,
-	const rule_loader::rule_info &ri,
+	const rule_loader::rule_info &info,
 	const std::vector<std::shared_ptr<sinsp_plugin>>& plugins) const
 {
 	Json::Value rule_info;
 
 	// Fill general rule information
 	rule_info["name"] = r.name;
-	rule_info["condition"] = ri.cond;
+	rule_info["condition"] = info.cond;
 	rule_info["priority"] = format_priority(r.priority, false);
-	rule_info["output"] = r.output;
+	rule_info["output"] = info.output;
 	rule_info["description"] = r.description;
-	rule_info["enabled"] = ri.enabled;
+	rule_info["enabled"] = info.enabled;
 	rule_info["source"] = r.source;
-	Json::Value tags = Json::arrayValue;
-	for(const auto &t : ri.tags)
-	{
-		tags.append(t);
-	}
-	rule_info["tags"] = tags;
+	rule_info["tags"] = sequence_to_json_array(info.tags);
 	out["info"] = rule_info;
 
-	// Parse rule condition and build the AST
-	// Assumption: no exception because rules have already been loaded.
-	auto ast = libsinsp::filter::parser(ri.cond).parse();
+	// Parse rule condition and build the non-compiled AST
+	// Assumption: no error because rules have already been loaded.
+	auto ast = libsinsp::filter::parser(info.cond).parse();
 
 	// get details related to the condition's filter
 	filter_details details;
+	filter_details compiled_details;
 	Json::Value json_details;
 	for(const auto &m : m_rule_collector.macros())
 	{
 		details.known_macros.insert(m.name);
+		compiled_details.known_macros.insert(m.name);
 	}
 	for(const auto &l : m_rule_collector.lists())
 	{
 		details.known_lists.insert(l.name);
+		compiled_details.known_lists.insert(l.name);
 	}
 	filter_details_resolver().run(ast.get(), details);
-	get_json_filter_details(json_details, details);
-	out["details"] = json_details;
+	filter_details_resolver().run(r.condition.get(), compiled_details);
+
+	out["details"]["macros"] = sequence_to_json_array(details.macros);
+	out["details"]["lists"] = sequence_to_json_array(details.lists);
+	out["details"]["operators"] = sequence_to_json_array(compiled_details.operators);
+	out["details"]["condition_fields"] = sequence_to_json_array(compiled_details.fields);
 
 	// Get fields from output string
 	auto fmt = create_formatter(r.source, r.output);
 	std::vector<std::string> out_fields;
 	fmt->get_field_names(out_fields);
-	Json::Value outputFields = Json::arrayValue;
-	for(const auto &of : out_fields)
-	{
-		outputFields.append(of);
-	}
-	out["details"]["output_fields"] = outputFields;
+	out["details"]["output_fields"] = sequence_to_json_array(out_fields);
 
 	// Get fields from exceptions
-	Json::Value exception_fields = Json::arrayValue;
-	for(const auto &f : r.exception_fields)
-	{
-		exception_fields.append(f);
-	}
-	out["details"]["exception_fields"] = exception_fields;
+	out["details"]["exception_fields"] = sequence_to_json_array(r.exception_fields);
 
 	// Get names and operators from exceptions
 	Json::Value exception_names = Json::arrayValue;
 	Json::Value exception_operators = Json::arrayValue;
-	for(const auto &e : ri.exceptions)
+	for(const auto &e : info.exceptions)
 	{
 		exception_names.append(e.name);
 		if(e.comps.is_list)
@@ -719,8 +732,12 @@ void falco_engine::get_json_details(
 
 	// Store event types
 	Json::Value events;
-	get_json_evt_types(events, ri.source, details);
+	get_json_evt_types(events, info.source, r.condition.get());
 	out["details"]["events"] = events;
+
+	// Store compiled condition and output
+	out["details"]["condition_compiled"] = libsinsp::filter::ast::as_string(r.condition.get());
+	out["details"]["output_compiled"] = r.output;
 
 	// Compute the plugins that are actually used by this rule. This is involves:
 	// - The rule's event source, that can be implemented by a plugin
@@ -729,59 +746,86 @@ void falco_engine::get_json_details(
 	//   match plugin-provided async events
 	Json::Value used_plugins;
 	// note: making a union of conditions's and output's fields
-	// note: the condition's AST should include all resolved refs and exceptions
-	details.fields.insert(out_fields.begin(), out_fields.end());
-	get_json_used_plugins(used_plugins, ri.source, details.evtnames, details.fields, plugins);
+	// note: the condition's AST accounts for all the resolved refs and exceptions
+	compiled_details.fields.insert(out_fields.begin(), out_fields.end());
+	get_json_used_plugins(used_plugins, info.source, compiled_details.evtnames, compiled_details.fields, plugins);
 	out["details"]["plugins"] = used_plugins;
 }
 
 void falco_engine::get_json_details(
 	Json::Value& out,
-	const rule_loader::macro_info& m) const
+	const falco_macro& m,
+	const rule_loader::macro_info& info,
+	const std::vector<std::shared_ptr<sinsp_plugin>>& plugins) const
 {
 	Json::Value macro_info;
 
 	macro_info["name"] = m.name;
-	macro_info["condition"] = m.cond;
+	macro_info["condition"] = info.cond;
 	out["info"] = macro_info;
 
-	// Parse rule condition and build the AST
+	// Parse the macro condition and build the non-compiled AST
 	// Assumption: no exception because rules have already been loaded.
-	auto ast = libsinsp::filter::parser(m.cond).parse();
+	auto ast = libsinsp::filter::parser(info.cond).parse();
 
 	// get details related to the condition's filter
 	filter_details details;
+	filter_details compiled_details;
 	Json::Value json_details;
 	for(const auto &m : m_rule_collector.macros())
 	{
 		details.known_macros.insert(m.name);
+		compiled_details.known_macros.insert(m.name);
 	}
 	for(const auto &l : m_rule_collector.lists())
 	{
 		details.known_lists.insert(l.name);
+		compiled_details.known_lists.insert(l.name);
 	}
 	filter_details_resolver().run(ast.get(), details);
-	get_json_filter_details(json_details, details);
-	out["details"] = json_details;
+	filter_details_resolver().run(m.condition.get(), compiled_details);
+
+	out["details"]["used"] = m.used;
+	out["details"]["macros"] = sequence_to_json_array(details.macros);
+	out["details"]["lists"] = sequence_to_json_array(details.lists);
+	out["details"]["operators"] = sequence_to_json_array(compiled_details.operators);
+	out["details"]["condition_fields"] = sequence_to_json_array(compiled_details.fields);
 
 	// Store event types
 	Json::Value events;
-	get_json_evt_types(events, "", details);
+	get_json_evt_types(events, "", m.condition.get());
 	out["details"]["events"] = events;
+
+	// Store compiled condition
+	out["details"]["condition_compiled"] = libsinsp::filter::ast::as_string(m.condition.get());
+
+	// Compute the plugins that are actually used by this macro.
+	// Note: macros have no specidic source, we need to set an empty list of used
+	// plugins because we can't be certain about their actual usage. For example,
+	// if a macro uses a plugin's field, we can't be sure which plugin actually
+	// is used until we resolve the macro ref in a rule providing a source for
+	// disambiguation.
+	out["details"]["plugins"] = Json::arrayValue;
 }
 
 void falco_engine::get_json_details(
 	Json::Value& out,
-	const rule_loader::list_info& l) const
+	const falco_list& l,
+	const rule_loader::list_info& info,
+	const std::vector<std::shared_ptr<sinsp_plugin>>& plugins) const
 {
 	Json::Value list_info;
 	list_info["name"] = l.name;
 
+	// note: the syntactic definitions still has the list refs unresolved
 	Json::Value items = Json::arrayValue;
 	Json::Value lists = Json::arrayValue;
-	for(const auto &i : l.items)
+	for(const auto &i : info.items)
 	{
-		if(m_rule_collector.lists().at(i) != nullptr)
+		// if an item is present in the syntactic def of a list, but not
+		// on the compiled_items of the same list, then we can assume it
+		// being a resolved list ref
+		if(std::find(l.items.begin(), l.items.end(), i) == l.items.end())
 		{
 			lists.append(i);
 			continue;
@@ -791,62 +835,32 @@ void falco_engine::get_json_details(
 
 	list_info["items"] = items;
 	out["info"] = list_info;
+	out["details"]["used"] = l.used;
 	out["details"]["lists"] = lists;
-}
-
-void falco_engine::get_json_filter_details(
-	Json::Value& out,
-	const filter_details& details) const
-{
-	Json::Value macros = Json::arrayValue;
-	for(const auto &m : details.macros)
-	{
-		macros.append(m);
-	}
-	out["macros"] = macros;
-
-	Json::Value operators = Json::arrayValue;
-	for(const auto &o : details.operators)
-	{
-		operators.append(o);
-	}
-	out["operators"] = operators;
-
-	Json::Value condition_fields = Json::arrayValue;
-	for(const auto &f : details.fields)
-	{
-		condition_fields.append(f);
-	}
-	out["condition_fields"] = condition_fields;
-
-	Json::Value lists = Json::arrayValue;
-	for(const auto &l : details.lists)
-	{
-		lists.append(l);
-	}
-	out["lists"] = lists;
+	out["details"]["items_compiled"] = sequence_to_json_array(l.items);
+	out["details"]["plugins"] = Json::arrayValue; // always empty
 }
 
 void falco_engine::get_json_evt_types(
 	Json::Value& out,
 	const std::string& source,
-	const filter_details& details) const
+	libsinsp::filter::ast::expr* ast) const
 {
-	out = Json::arrayValue;
-	for (const auto& n : details.evtnames)
+	// note: this duplicates part of the logic of evttype_index_ruleset,
+	// not good but it's our best option for now
+	if (source.empty() || source == falco_common::syscall_source)
 	{
-		out.append(n);
+		auto evtcodes = libsinsp::filter::ast::ppm_event_codes(ast);
+		evtcodes.insert(ppm_event_code::PPME_ASYNCEVENT_E);
+		auto syscodes = libsinsp::filter::ast::ppm_sc_codes(ast);
+		auto syscodes_to_evt_names = libsinsp::events::sc_set_to_event_names(syscodes);
+		auto evtcodes_to_evt_names = libsinsp::events::event_set_to_names(evtcodes, false);
+		out = sequence_to_json_array(unordered_set_union(syscodes_to_evt_names, evtcodes_to_evt_names));
 	}
-
-	// plugin-implemented sources always match pluginevent.
-	// note: macros have no source and can potentially be referenced in a rule
-	// used for a plugin-implemented source.
-	if(source.empty() || source != falco_common::syscall_source)
+	else
 	{
-		for (const auto& n : libsinsp::events::event_set_to_names({PPME_PLUGINEVENT_E}, false))
-		{
-			out.append(n);
-		}
+		out = sequence_to_json_array(libsinsp::events::event_set_to_names(
+			{ppm_event_code::PPME_PLUGINEVENT_E, ppm_event_code::PPME_ASYNCEVENT_E}));
 	}
 }
 
