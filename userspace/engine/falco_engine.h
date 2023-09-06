@@ -306,21 +306,22 @@ private:
 	void get_json_details(
 		Json::Value& out,
 		const falco_rule& r,
-		const rule_loader::rule_info& ri,
+		const rule_loader::rule_info& info,
 		const std::vector<std::shared_ptr<sinsp_plugin>>& plugins) const;
 	void get_json_details(
 		Json::Value& out,
-		const rule_loader::macro_info& m) const;
+		const falco_macro& m,
+		const rule_loader::macro_info& info,
+		const std::vector<std::shared_ptr<sinsp_plugin>>& plugins) const;
 	void get_json_details(
 		Json::Value& out,
-		const rule_loader::list_info& l) const;
-	void get_json_filter_details(
-		Json::Value& out,
-		const filter_details& details) const;
+		const falco_list& l,
+		const rule_loader::list_info& info,
+		const std::vector<std::shared_ptr<sinsp_plugin>>& plugins) const;
 	void get_json_evt_types(
 		Json::Value& out,
 		const std::string& source,
-		const filter_details& details) const;
+		libsinsp::filter::ast::expr* ast) const;
 	void get_json_used_plugins(
 		Json::Value& out,
 		const std::string& source,
