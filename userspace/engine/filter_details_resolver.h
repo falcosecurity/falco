@@ -60,7 +60,8 @@ private:
 		visitor(filter_details& details) : 
 			m_details(details),
 			m_expect_list(false),
-			m_expect_macro(false) {}
+			m_expect_macro(false),
+			m_expect_evtname(false) {}
 		visitor(visitor&&) = default;
 		visitor& operator = (visitor&&) = default;
 		visitor(const visitor&) = delete;
