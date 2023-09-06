@@ -686,7 +686,7 @@ void falco_engine::get_json_details(
 
 	out["details"]["macros"] = sequence_to_json_array(details.macros);
 	out["details"]["lists"] = sequence_to_json_array(details.lists);
-	out["details"]["operators"] = sequence_to_json_array(compiled_details.operators);
+	out["details"]["condition_operators"] = sequence_to_json_array(compiled_details.operators);
 	out["details"]["condition_fields"] = sequence_to_json_array(compiled_details.fields);
 
 	// Get fields from output string
@@ -699,11 +699,11 @@ void falco_engine::get_json_details(
 	out["details"]["exception_fields"] = sequence_to_json_array(r.exception_fields);
 
 	// Get names and operators from exceptions
-	Json::Value exception_names = Json::arrayValue;
-	Json::Value exception_operators = Json::arrayValue;
+	std::unordered_set<std::string> exception_names;
+	std::unordered_set<std::string> exception_operators;
 	for(const auto &e : info.exceptions)
 	{
-		exception_names.append(e.name);
+		exception_names.insert(e.name);
 		if(e.comps.is_list)
 		{
 			for(const auto& c : e.comps.items)
@@ -713,22 +713,22 @@ void falco_engine::get_json_details(
 					// considering max two levels of lists
 					for(const auto& i : c.items)
 					{
-						exception_operators.append(i.item);
+						exception_operators.insert(i.item);
 					}
 				}
 				else
 				{
-					exception_operators.append(c.item);
+					exception_operators.insert(c.item);
 				}
 			}
 		}
 		else
 		{
-			exception_operators.append(e.comps.item);
+			exception_operators.insert(e.comps.item);
 		}	
 	}
-	out["details"]["exceptions"] = exception_names;
-	out["details"]["exception_operators"] = exception_operators;
+	out["details"]["exception_names"] = sequence_to_json_array(exception_names);
+	out["details"]["exception_operators"] = sequence_to_json_array(exception_operators);
 
 	// Store event types
 	Json::Value events;
@@ -788,7 +788,7 @@ void falco_engine::get_json_details(
 	out["details"]["used"] = m.used;
 	out["details"]["macros"] = sequence_to_json_array(details.macros);
 	out["details"]["lists"] = sequence_to_json_array(details.lists);
-	out["details"]["operators"] = sequence_to_json_array(compiled_details.operators);
+	out["details"]["condition_operators"] = sequence_to_json_array(compiled_details.operators);
 	out["details"]["condition_fields"] = sequence_to_json_array(compiled_details.fields);
 
 	// Store event types
@@ -819,7 +819,7 @@ void falco_engine::get_json_details(
 
 	// note: the syntactic definitions still has the list refs unresolved
 	Json::Value items = Json::arrayValue;
-	Json::Value lists = Json::arrayValue;
+	std::unordered_set<std::string> lists;
 	for(const auto &i : info.items)
 	{
 		// if an item is present in the syntactic def of a list, but not
@@ -827,7 +827,7 @@ void falco_engine::get_json_details(
 		// being a resolved list ref
 		if(std::find(l.items.begin(), l.items.end(), i) == l.items.end())
 		{
-			lists.append(i);
+			lists.insert(i);
 			continue;
 		}
 		items.append(i);
@@ -836,7 +836,7 @@ void falco_engine::get_json_details(
 	list_info["items"] = items;
 	out["info"] = list_info;
 	out["details"]["used"] = l.used;
-	out["details"]["lists"] = lists;
+	out["details"]["lists"] = sequence_to_json_array(lists);
 	out["details"]["items_compiled"] = sequence_to_json_array(l.items);
 	out["details"]["plugins"] = Json::arrayValue; // always empty
 }
@@ -884,7 +884,7 @@ void falco_engine::get_json_used_plugins(
 		fieldnames.insert(f);
 	}
 
-	out = Json::arrayValue;	
+	std::unordered_set<std::string> used_plugins;
 	for (const auto& p : plugins)
 	{
 		bool used = false;
@@ -896,7 +896,7 @@ void falco_engine::get_json_used_plugins(
 			// they will both be included in the list.
 			if (!used && p->event_source() == source)
 			{
-				out.append(p->name());
+				used_plugins.insert(p->name());
 				used = true;
 			}
 		}
@@ -913,7 +913,7 @@ void falco_engine::get_json_used_plugins(
 				{
 					if (!used && fieldnames.find(f.m_name) != fieldnames.end())
 					{
-						out.append(p->name());
+						used_plugins.insert(p->name());
 						used = true;
 						break;
 					}
@@ -932,7 +932,7 @@ void falco_engine::get_json_used_plugins(
 				{
 					if (!used && evtnames.find(n) != evtnames.end())
 					{
-						out.append(p->name());
+						used_plugins.insert(p->name());
 						used = true;
 						break;
 					}
@@ -940,6 +940,8 @@ void falco_engine::get_json_used_plugins(
 			}
 		}
 	}
+
+	out = sequence_to_json_array(used_plugins);
 }
 
 void falco_engine::print_stats() const
