@@ -1,4 +1,4 @@
-FROM ubuntu:18.04 as ubuntu
+FROM debian:12 as builder
 
 ARG FALCO_VERSION
 ARG VERSION_BUCKET=bin
@@ -20,7 +20,7 @@ RUN curl -L -o falco.tar.gz \
 RUN sed -e 's/time_format_iso_8601: false/time_format_iso_8601: true/' < /falco/etc/falco/falco.yaml > /falco/etc/falco/falco.yaml.new \
     && mv /falco/etc/falco/falco.yaml.new /falco/etc/falco/falco.yaml
 
-FROM debian:11-slim
+FROM debian:12-slim
 
 LABEL maintainer="cncf-falco-dev@lists.cncf.io"
 LABEL org.opencontainers.image.source="https://github.com/falcosecurity/falco"
@@ -34,6 +34,6 @@ RUN apt-get -y update && apt-get -y install ca-certificates curl jq \
 ENV HOST_ROOT /host
 ENV HOME /root
 
-COPY --from=ubuntu /falco /
+COPY --from=builder /falco /
 
 CMD ["/usr/bin/falco", "-o", "time_format_iso_8601=true"]
