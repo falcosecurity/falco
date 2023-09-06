@@ -27,7 +27,8 @@ if [[ -z "${SKIP_DRIVER_LOADER}" ]]; then
         ln -s "$i" "/usr/src/$base"
     done
 
-    /usr/bin/falco-driver-loader
+    falco_driver_loader_option_arr=($FALCO_DRIVER_LOADER_OPTIONS)
+    /usr/bin/falco-driver-loader "${falco_driver_loader_option_arr[@]}"
 fi
 
 exec "$@"
