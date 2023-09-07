@@ -189,26 +189,69 @@ void falco_engine::load_rules(const std::string &rules_content, bool verbose, bo
 
 std::unique_ptr<load_result> falco_engine::load_rules(const std::string &rules_content, const std::string &name)
 {
-	rule_loader::configuration cfg(rules_content, m_sources, name);
-	cfg.min_priority = m_min_priority;
-	cfg.output_extra = m_extra;
-	cfg.replace_output_container_info = m_replace_container_info;
-	cfg.default_ruleset_id = m_default_ruleset_id;
+	std::vector<std::reference_wrapper<const std::string>> rules_contents;
+	std::vector<std::reference_wrapper<const std::string>> names;
 
-	rule_loader::reader reader;
-	if (reader.read(cfg, m_rule_collector))
+	rules_contents.emplace_back(rules_content);
+	names.emplace_back(name);
+
+	return load_rules_refs(rules_contents, names);
+}
+
+std::unique_ptr<load_result> falco_engine::load_rules(const std::vector<std::string> &rules_contents,
+							       const std::vector<std::string> &names)
+{
+	std::vector<std::reference_wrapper<const std::string>> rules_contents_refs(rules_contents.begin(), rules_contents.end());
+	std::vector<std::reference_wrapper<const std::string>> names_refs(names.begin(), names.end());
+
+	return load_rules_refs(rules_contents_refs, names_refs);
+}
+
+std::unique_ptr<load_result> falco_engine::load_rules_refs(const std::vector<std::reference_wrapper<const std::string>> &rules_contents,
+							   const std::vector<std::reference_wrapper<const std::string>> &names)
+{
+	if(rules_contents.size() != names.size() ||
+	   rules_contents.size() == 0)
 	{
-		for (auto &src : m_sources)
-		{
-			src.ruleset = src.ruleset_factory->new_ruleset();
-		}
+		rule_loader::context ctx("Provided rules contents arrays");
 
-		rule_loader::compiler compiler;
-		m_rules.clear();
-		compiler.compile(cfg, m_rule_collector, m_rules);
+		std::unique_ptr<rule_loader::result> res(new rule_loader::result("Provided rules contents arrays"));
+
+		res->add_error(load_result::LOAD_ERR_FILE_READ, "Lists of rules contents and names must have same non-zero length", ctx);
+
+// Old gcc versions (e.g. 4.8.3) won't allow move elision but newer versions
+// (e.g. 10.2.1) would complain about the redundant move.
+#if __GNUC__ > 4
+		return res;
+#else
+		return std::move(res);
+#endif
 	}
 
-	if (cfg.res->successful())
+	std::unique_ptr<rule_loader::configuration> cfg;
+	for(size_t idx = 0; idx < rules_contents.size(); idx++)
+	{
+		cfg = std::make_unique<rule_loader::configuration>(rules_contents[idx], m_sources, names[idx]);
+		cfg->min_priority = m_min_priority;
+		cfg->output_extra = m_extra;
+		cfg->replace_output_container_info = m_replace_container_info;
+		cfg->default_ruleset_id = m_default_ruleset_id;
+
+		rule_loader::reader reader;
+		if (reader.read(*(cfg.get()), m_rule_collector))
+		{
+			for (auto &src : m_sources)
+			{
+				src.ruleset = src.ruleset_factory->new_ruleset();
+			}
+		}
+	}
+
+	rule_loader::compiler compiler;
+	m_rules.clear();
+	compiler.compile(*(cfg.get()), m_rule_collector, m_rules);
+
+	if (cfg->res->successful())
 	{
 		m_rule_stats_manager.clear();
 		for (const auto &r : m_rules)
@@ -217,7 +260,7 @@ std::unique_ptr<load_result> falco_engine::load_rules(const std::string &rules_c
 		}
 	}
 
-	return std::move(cfg.res);
+	return std::move(cfg->res);
 }
 
 void falco_engine::load_rules_file(const std::string &rules_filename, bool verbose, bool all_events)
@@ -233,29 +276,44 @@ void falco_engine::load_rules_file(const std::string &rules_filename, bool verbo
 
 std::unique_ptr<load_result> falco_engine::load_rules_file(const std::string &rules_filename)
 {
-	std::string rules_content;
+	std::vector<std::string> rules_filenames;
 
-	try {
-		read_file(rules_filename, rules_content);
-	}
-	catch (falco_exception &e)
+	rules_filenames.emplace_back(rules_filename);
+
+	return load_rules_files(rules_filenames);
+}
+
+std::unique_ptr<load_result> falco_engine::load_rules_files(const std::vector<std::string> &rules_filenames)
+{
+	std::vector<std::string> rules_contents;
+
+	for(auto &filename : rules_filenames)
 	{
-		rule_loader::context ctx(rules_filename);
+		std::string rules_content;
 
-		std::unique_ptr<rule_loader::result> res(new rule_loader::result(rules_filename));
+		try {
+			read_file(filename, rules_content);
+			rules_contents.emplace_back(std::move(rules_content));
+		}
+		catch (falco_exception &e)
+		{
+			rule_loader::context ctx(filename);
 
-		res->add_error(load_result::LOAD_ERR_FILE_READ, e.what(), ctx);
+			std::unique_ptr<rule_loader::result> res(new rule_loader::result(filename));
+
+			res->add_error(load_result::LOAD_ERR_FILE_READ, e.what(), ctx);
 
 // Old gcc versions (e.g. 4.8.3) won't allow move elision but newer versions
 // (e.g. 10.2.1) would complain about the redundant move.
 #if __GNUC__ > 4
-		return res;
+			return res;
 #else
-		return std::move(res);
+			return std::move(res);
 #endif
+		}
 	}
 
-	return load_rules(rules_content, rules_filename);
+	return load_rules(rules_contents, rules_filenames);
 }
 
 void falco_engine::enable_rule(const std::string &substring, bool enabled, const std::string &ruleset)

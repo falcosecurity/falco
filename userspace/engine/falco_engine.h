@@ -23,9 +23,11 @@ limitations under the License.
 #pragma once
 
 #include <atomic>
+#include <functional>
 #include <string>
 #include <memory>
 #include <set>
+#include <vector>
 
 #include <nlohmann/json.hpp>
 
@@ -72,6 +74,15 @@ public:
 	// throwing exceptions on error.
 	std::unique_ptr<falco::load_result> load_rules_file(const std::string &rules_filename);
 	std::unique_ptr<falco::load_result> load_rules(const std::string &rules_content, const std::string &name);
+
+	//
+	// Identical to above, but allows providing a vector of files
+	// instead of a single file at a time. (This speeds up loading
+	// a bit because rule compilation can be deferred until all
+	// the files are read).
+	std::unique_ptr<falco::load_result> load_rules_files(const std::vector<std::string> &rules_filenames);
+	std::unique_ptr<falco::load_result> load_rules(const std::vector<std::string> &rules_contents,
+						       const std::vector<std::string> &names);
 
 	//
 	// Enable/Disable any rules matching the provided substring.
@@ -272,6 +283,11 @@ public:
 		std::string& err) const;
 
 private:
+
+	// Used by all the load_rules_* variants above with
+	// reference_wrapper to avoid copies.
+	std::unique_ptr<falco::load_result> load_rules_refs(const std::vector<std::reference_wrapper<const std::string>> &rules_contents,
+							    const std::vector<std::reference_wrapper<const std::string>> &names);
 
 	// Throws falco_exception if the file can not be read
 	void read_file(const std::string& filename, std::string& contents);
