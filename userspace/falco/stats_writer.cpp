@@ -91,6 +91,11 @@ stats_writer::stats_writer(
 	m_config = config;
 	if (config->m_metrics_enabled)
 	{
+		/* m_outputs should always be initialized because we use it
+		 * to extract output-queue stats in both cases: rule output and file output.
+		 */
+		m_outputs = outputs;
+
 		if (!config->m_metrics_output_file.empty())
 		{
 			m_file_output.exceptions(std::ofstream::failbit | std::ofstream::badbit);
@@ -100,7 +105,6 @@ stats_writer::stats_writer(
 
 		if (config->m_metrics_stats_rule_enabled)
 		{
-			m_outputs = outputs;
 			m_initialized = true;
 		}
 	}
@@ -159,7 +163,6 @@ inline void stats_writer::push(const stats_writer::msg& m)
 void stats_writer::worker() noexcept
 {
 	stats_writer::msg m;
-	nlohmann::json jmsg;
 	bool use_outputs = m_config->m_metrics_stats_rule_enabled;
 	bool use_file = !m_config->m_metrics_output_file.empty();
 	auto tick = stats_writer::get_ticker();
@@ -198,6 +201,7 @@ void stats_writer::worker() noexcept
 
 				if (use_file)
 				{
+					nlohmann::json jmsg;
 					jmsg["sample"] = m_total_samples;
 					jmsg["output_fields"] = m.output_fields;
 					m_file_output << jmsg.dump() << std::endl;
