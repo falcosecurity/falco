@@ -50,11 +50,25 @@ falco::app::run_result falco::app::actions::load_rules_files(falco::app::state& 
 	}
 
 	std::vector<std::string> rules_contents;
+	std::vector<std::string> rules_filenames;
 	falco::load_result::rules_contents_t rc;
+	std::string filenames;
+
+	for(auto &filename : s.config->m_loaded_rules_filenames)
+	{
+		if(!filenames.empty())
+		{
+			filenames += ", ";
+		}
+
+		filenames += filename;
+
+		rules_filenames.push_back(filename);
+	}
 
 	try {
-		read_files(s.config->m_loaded_rules_filenames.begin(),
-			   s.config->m_loaded_rules_filenames.end(),
+		read_files(rules_filenames.begin(),
+			   rules_filenames.end(),
 			   rules_contents,
 			   rc);
 	}
@@ -64,25 +78,22 @@ falco::app::run_result falco::app::actions::load_rules_files(falco::app::state& 
 	}
 
 	std::string err = "";
-	for(auto &filename : s.config->m_loaded_rules_filenames)
+
+	falco_logger::log(LOG_INFO, "Loading rules from file(s): " + filenames);
+	std::unique_ptr<falco::load_result> res;
+
+	res = s.engine->load_rules(rules_contents, rules_filenames);
+
+	if(!res->successful())
 	{
-		falco_logger::log(LOG_INFO, "Loading rules from file " + filename + "\n");
-		std::unique_ptr<falco::load_result> res;
+		// Return the summary version as the error
+		err = res->as_string(true, rc);
+	}
 
-		res = s.engine->load_rules(rc.at(filename), filename);
-
-		if(!res->successful())
-		{
-			// Return the summary version as the error
-			err = res->as_string(true, rc);
-			break;
-		}
-
-		// If verbose is true, also print any warnings
-		if(s.options.verbose && res->has_warnings())
-		{
-			fprintf(stderr, "%s\n", res->as_string(true, rc).c_str());
-		}
+	// If verbose is true, also print any warnings
+	if(s.options.verbose && res->has_warnings())
+	{
+		fprintf(stderr, "%s\n", res->as_string(true, rc).c_str());
 	}
 
 	// note: we have an egg-and-chicken problem here. We would like to check
