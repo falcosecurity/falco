@@ -66,6 +66,9 @@ jobs:
       # Right now we are not able to install kernel-headers on our ARM64 self-hosted runner.
       # For this reason, we disable the falco-driver-loader tests, which require kernel headers on the host.
       - name: Run regression tests
+        env:
+          # fixme(leogr): this is a workaround for https://github.com/falcosecurity/falco/issues/2784
+          HOST_ROOT: ""
         run: |
           pushd submodules/falcosecurity-testing
           ./build/falco.test -falco-static=${{ inputs.static && 'true' || 'false' }} -test.timeout=90s -test.v >> ./report.txt 2>&1 || true
