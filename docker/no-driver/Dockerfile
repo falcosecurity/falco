@@ -32,6 +32,7 @@ LABEL usage="docker run -i -t --privileged -v /var/run/docker.sock:/host/var/run
 ENV HOST_ROOT /host
 ENV HOME /root
 
+USER root
 COPY --from=builder /falco /
 
 
