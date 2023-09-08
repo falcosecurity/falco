@@ -28,7 +28,7 @@ limitations under the License.
 #define THROW(cond, err, ctx)    { if ((cond)) { throw rule_loader::rule_load_exception(falco::load_result::LOAD_ERR_VALIDATE, (err), (ctx)); } }
 
 static std::string s_container_info_fmt = "%container.info";
-static std::string s_default_extra_fmt  = "%container.name (id=%container.id)";
+static std::string s_default_extra_fmt  = "container_id=%container.id container_name=%container.name";
 
 using namespace libsinsp::filter;
 
