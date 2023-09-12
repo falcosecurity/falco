@@ -16,18 +16,13 @@
 # limitations under the License.
 #
 
-# Set the SKIP_DRIVER_LOADER variable to skip loading the driver
 
-if [[ -z "${SKIP_DRIVER_LOADER}" ]]; then
-    echo "* Setting up /usr/src links from host"
+echo "* Setting up /usr/src links from host"
 
-    for i in "$HOST_ROOT/usr/src"/*
-    do
-        base=$(basename "$i")
-        ln -s "$i" "/usr/src/$base"
-    done
+for i in "$HOST_ROOT/usr/src"/*
+do
+    base=$(basename "$i")
+    ln -s "$i" "/usr/src/$base"
+done
 
-    /usr/bin/falco-driver-loader
-fi
-
-exec "$@"
+/usr/bin/falco-driver-loader "$@"
