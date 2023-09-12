@@ -78,7 +78,7 @@ jobs:
 
       - name: Build falco-driver-loader-legacy image
         run: |
-          cd ${{ github.workspace }}/docker/driver-loader/
+          cd ${{ github.workspace }}/docker/driver-loader-legacy/
           docker build -t docker.io/falcosecurity/falco-driver-loader-legacy:${{ inputs.arch }}-${{ inputs.tag }} \
             --build-arg VERSION_BUCKET=deb${{ inputs.bucket_suffix }} \
             --build-arg FALCO_VERSION=${{ inputs.version }} \
