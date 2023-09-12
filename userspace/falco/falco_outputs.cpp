@@ -289,21 +289,25 @@ inline void falco_outputs::push(const ctrl_msg& cmsg)
 		switch (m_outputs_queue_recovery)
 		{
 		case falco_common::RECOVERY_EXIT:
-			falco_logger::log(LOG_ERR, "Fatal error: Output queue out of memory. Exiting ...");
-			exit(EXIT_FAILURE);
+			throw falco_exception("Fatal error: Output queue out of memory. Exiting ...");
 		case falco_common::RECOVERY_EMPTY:
+			/* Print a log just the first time */
+			if(m_outputs_queue_num_drops.load() == 0)
+			{
+				falco_logger::log(LOG_ERR, "Output queue out of memory. Drop event plus events in queue due to emptying the queue; continue on ...");
+			}
 			m_outputs_queue_num_drops += m_queue.size() + 1;
-			falco_logger::log(LOG_ERR, "Output queue out of memory. Drop event plus events in queue due to emptying the queue; continue on ...");
 			m_queue.clear();
 			break;
 		case falco_common::RECOVERY_CONTINUE:
+			if(m_outputs_queue_num_drops.load() == 0)
+			{
+				falco_logger::log(LOG_ERR, "Output queue out of memory. Drop event and continue on ...");
+			}
 			m_outputs_queue_num_drops++;
-			falco_logger::log(LOG_ERR, "Output queue out of memory. Drop event and continue on ...");
 			break;
 		default:
-			falco_logger::log(LOG_ERR, "Fatal error: strategy unknown. Exiting ...");
-			exit(EXIT_FAILURE);
-			break;
+			throw falco_exception("Fatal error: strategy unknown. Exiting ...");
 		}
 	}
 #else
