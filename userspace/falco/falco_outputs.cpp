@@ -294,7 +294,7 @@ inline void falco_outputs::push(const ctrl_msg& cmsg)
 		case falco_common::RECOVERY_EMPTY:
 			m_outputs_queue_num_drops += m_queue.size() + 1;
 			falco_logger::log(LOG_ERR, "Output queue out of memory. Drop event plus events in queue due to emptying the queue; continue on ...");
-			m_queue.empty();
+			m_queue.clear();
 			break;
 		case falco_common::RECOVERY_CONTINUE:
 			m_outputs_queue_num_drops++;
