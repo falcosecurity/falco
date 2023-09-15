@@ -122,3 +122,38 @@ jobs:
       is_latest: ${{ needs.release-settings.outputs.is_latest == 'true' }}
       tag: ${{ github.event.release.tag_name }}
       sign: true
+      
+  release-body:
+    needs: [release-settings, publish-docker]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone repo
+        uses: actions/checkout@v4
+          
+      - name: Extract LIBS and DRIVER versions
+        run: |
+          cp .github/release_template.md release-body.md
+          LIBS_VERS=$(cat cmake/modules/falcosecurity-libs.cmake | grep 'set(FALCOSECURITY_LIBS_VERSION' | tail -n1 | grep -o '[[:digit:]]*\.[[:digit:]]*\.[[:digit:]]*')
+          DRIVER_VERS=$(cat cmake/modules/driver.cmake | grep 'set(DRIVER_VERSION' | tail -n1 | grep -o '[[:digit:]]*\.[[:digit:]]*\.[[:digit:]]*')
+          sed -i s/LIBSVER/$LIBS_VERS/g release-body.md
+          sed -i s/DRIVERVER/$DRIVER_VERS/g release-body.md
+          
+      - name: Append release matrixes
+        run: |
+          sed -i s/FALCOBUCKET/${{ needs.release-settings.outputs.bucket_suffix }}/g release-body.md
+          sed -i s/FALCOVER/${{ github.event.release.tag_name }}/g release-body.md
+          
+      - name: Generate release notes
+        uses: leodido/rn2md@master
+        with:
+          milestone: ${{ github.event.release.tag_name }}
+          output: ./notes.md
+        
+      - name: Merge release notes to pre existent body
+        run: cat notes.md >> release-body.md
+        
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          body_path: ./release-body.md
+          tag_name: ${{ github.event.release.tag_name }}  
