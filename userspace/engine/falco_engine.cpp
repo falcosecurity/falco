@@ -800,7 +800,7 @@ void falco_engine::get_json_details(
 	out["details"]["condition_compiled"] = libsinsp::filter::ast::as_string(m.condition.get());
 
 	// Compute the plugins that are actually used by this macro.
-	// Note: macros have no specidic source, we need to set an empty list of used
+	// Note: macros have no specific source, we need to set an empty list of used
 	// plugins because we can't be certain about their actual usage. For example,
 	// if a macro uses a plugin's field, we can't be sure which plugin actually
 	// is used until we resolve the macro ref in a rule providing a source for

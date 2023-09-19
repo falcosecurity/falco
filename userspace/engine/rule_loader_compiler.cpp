@@ -485,7 +485,7 @@ void rule_loader::compiler::compile_rule_infos(
 				r.output_ctx);
 		}
 
-		// validate the rule's condiiton: we compile it into a sinsp filter
+		// validate the rule's condition: we compile it into a sinsp filter
 		// on-the-fly and we throw an exception with details on failure
 		sinsp_filter_compiler compiler(cfg.sources.at(r.source)->filter_factory, rule.condition.get());
 		try
