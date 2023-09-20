@@ -126,6 +126,8 @@ jobs:
   release-body:
     needs: [release-settings, publish-docker]
     if: ${{ needs.release-settings.outputs.is_latest == 'true' }} # only for latest releases
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     steps:
       - name: Clone repo
