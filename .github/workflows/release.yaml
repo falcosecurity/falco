@@ -125,6 +125,7 @@ jobs:
       
   release-body:
     needs: [release-settings, publish-docker]
+    if: ${{ needs.release-settings.outputs.is_latest == 'true' }} # only for latest releases
     runs-on: ubuntu-latest
     steps:
       - name: Clone repo
@@ -156,4 +157,5 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           body_path: ./release-body.md
-          tag_name: ${{ github.event.release.tag_name }}  
+          tag_name: ${{ github.event.release.tag_name }}
+          name: ${{ github.event.release.name }}
