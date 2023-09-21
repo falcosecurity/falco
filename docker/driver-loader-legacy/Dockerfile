@@ -126,5 +126,3 @@ RUN curl -L -o binutils_2.30-22_${TARGETARCH}.deb https://download.falco.org/dep
 COPY ./docker-entrypoint.sh /
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
-
-CMD ["/usr/bin/falco"]
