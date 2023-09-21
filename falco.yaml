@@ -674,6 +674,12 @@ syscall_event_drops:
 # periodic metric snapshots (including stats and resource utilization) captured
 # at regular intervals
 #
+# --- [Warning]
+#
+# Due to a regression (https://github.com/falcosecurity/falco/issues/2821) some metrics
+# like `falco.host_num_cpus` or `falco.start_ts` will not be available when you use
+# source plugins (like k8saudit).
+#
 # --- [Description]
 #
 # Consider these key points about the `metrics` feature in Falco:
