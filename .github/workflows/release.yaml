@@ -147,7 +147,7 @@ jobs:
           sed -i s/FALCOVER/${{ github.event.release.tag_name }}/g release-body.md
           
       - name: Generate release notes
-        uses: leodido/rn2md@master
+        uses: leodido/rn2md@1a17f0e75758c15128a5146e8af5ca3a47209b3f
         with:
           milestone: ${{ github.event.release.tag_name }}
           output: ./notes.md
