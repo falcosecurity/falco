@@ -155,6 +155,11 @@ jobs:
       - name: Merge release notes to pre existent body
         run: cat notes.md >> release-body.md
         
+      - name: Attach release creator to release body
+        run: |
+          echo "" >> release-body.md
+          echo "#### Release Manager @${{ github.event.release.author.login }}" >> release-body.md
+        
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
