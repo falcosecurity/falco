@@ -7,7 +7,7 @@ Released on 2023-09-25
 
 ### Breaking Changes
 
-- The default rules file that is shipped in the Falco image and/or can be downloaded via falcoctl as `falco-rules` is now a _stable_ rule file. This file **contains a much smaller number of rules** that are less noisy and have been vetted by the community. This serves as a much requested "starter" Falco rule set that covers many common use case. The rest of that file has been expanded and split into `falco-incubating-rules` and `falco-sandbox-rules`.
+- The default rules file that is shipped in the Falco image and/or can be downloaded via falcoctl as `falco-rules` is now a _stable_ rule file. This file **contains a much smaller number of rules** that are less noisy and have been vetted by the community. This serves as a much requested "starter" Falco rule set that covers many common use case. The rest of that file has been expanded and split into `falco-incubating-rules` and `falco-sandbox-rules`. For more information, see the [rules repository](https://github.com/falcosecurity/rules)
 - The main `falcosecurity/falco` container image and its `falco-driver-loader` counterpart have been upgraded. Now they are able to compile the kernel module or classic eBPF probe for relatively newer version of the kernel (5.x and above) while we no longer ship toolchains to compile the kernel module for older versions in the default images. Downloading of prebuilt drivers and the modern eBPF will work exactly like before. The older image, meant for compatibility with older kernels (4.x and below), is currently retained as `falcosecurity/falco-driver-loader-legacy`.
 - The Falco HTTP output no longer logs to stdout by default for performance reasons. You can set stdout logging preferences and restore the previous behavior with the configuration option `http_output.echo` in `falco.yaml`.
 - The `--list-syscall-events` command line option has been replaced by `--list-events` which prints all supported system events (syscall, tracepoints, metaevents, internal plugin events) in addition to extra information about flags.
@@ -76,6 +76,7 @@ Released on 2023-09-25
 
 ### Non user-facing changes
 
+* build(deps): Bump submodules/falcosecurity-rules from `69c9be8` to `77ba57a` [[#2833](https://github.com/falcosecurity/falco/pull/2833)] - [@dependabot[bot]](https://github.com/apps/dependabot)
 * chore: bump submodule testing to 62edc65 [[#2831](https://github.com/falcosecurity/falco/pull/2831)] - [@Andreagit97](https://github.com/Andreagit97)
 * update(gha): add version for rn2md [[#2830](https://github.com/falcosecurity/falco/pull/2830)] - [@LucaGuerra](https://github.com/LucaGuerra)
 * chore: automatically attach release author to release body. [[#2828](https://github.com/falcosecurity/falco/pull/2828)] - [@FedeDP](https://github.com/FedeDP)
