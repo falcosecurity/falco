@@ -298,7 +298,7 @@ namespace rule_loader
 	*/
 	struct engine_version_info
 	{
-		engine_version_info() : ctx("no-filename-given"), version(0) { };
+		engine_version_info() : ctx("no-filename-given") { };
 		engine_version_info(context &ctx);
 		~engine_version_info() = default;
 		engine_version_info(engine_version_info&&) = default;
@@ -307,7 +307,7 @@ namespace rule_loader
 		engine_version_info& operator = (const engine_version_info&) = default;
 
 		context ctx;
-		uint32_t version;
+		std::string version;
 	};
 
 	/*!

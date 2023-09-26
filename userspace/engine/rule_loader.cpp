@@ -517,7 +517,7 @@ const nlohmann::json& rule_loader::result::as_json(const rules_contents_t& conte
 }
 
 rule_loader::engine_version_info::engine_version_info(context &ctx)
-	: ctx(ctx), version(0)
+	: ctx(ctx)
 {
 }
 

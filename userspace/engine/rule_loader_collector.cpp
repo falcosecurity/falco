@@ -145,11 +145,19 @@ const indexed_vector<rule_loader::rule_info>& rule_loader::collector::rules() co
 
 void rule_loader::collector::define(configuration& cfg, engine_version_info& info)
 {
-	auto v = falco_engine::engine_version();
-	THROW(v < info.version, "Rules require engine version "
-	      + std::to_string(info.version) + ", but engine version is " + std::to_string(v),
-	      info.ctx);
-	if(m_required_engine_version.version < info.version)
+	auto engine_version = sinsp_version(falco_engine::engine_version());
+	sinsp_version required_engine_version(info.version);
+	THROW(!required_engine_version.m_valid, "Unable to parse " + info.version
+		  + " as a semver string. Expected \"x.y.z\" semver format.", info.ctx);
+
+	THROW(!engine_version.check(required_engine_version), "Rules require engine version "
+		  + required_engine_version.as_string() + " but engine version is "
+		  + engine_version.as_string(), info.ctx);
+
+	sinsp_version current_required_engine_version(m_required_engine_version.version);
+
+	// Store max required_engine_version
+	if(current_required_engine_version.check(required_engine_version))
 	{
 		m_required_engine_version = info;
 	}
