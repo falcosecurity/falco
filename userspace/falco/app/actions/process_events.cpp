@@ -25,7 +25,6 @@ limitations under the License.
 #include <unordered_map>
 
 #include "falco_utils.h"
-#include "token_bucket.h"
 
 #include "actions.h"
 #include "helpers.h"
@@ -137,8 +136,6 @@ static falco::app::run_result do_inspect(
 	stats_writer::collector stats_collector(statsw);
 	uint64_t duration_start = 0;
 	uint32_t timeouts_since_last_success_or_msg = 0;
-	token_bucket rate_limiter;
-	const bool rate_limiter_enabled = s.config->m_notifications_rate > 0;
 	const bool is_capture_mode = source.empty();
 	size_t source_engine_idx = 0;
 
@@ -154,14 +151,6 @@ static falco::app::run_result do_inspect(
 		// note: in live mode, each inspector gets assigned a distinct event
 		// source that does not change for the whole capture.
 		source_engine_idx = s.source_infos.at(source)->engine_idx;
-	}
-
-	// if enabled, init rate limiter
-	if (rate_limiter_enabled)
-	{
-		rate_limiter.init(
-			s.config->m_notifications_rate,
-			s.config->m_notifications_max_burst);
 	}
 
 	// reset event counter
@@ -333,14 +322,7 @@ static falco::app::run_result do_inspect(
 		{
 			for(auto& rule_res : *res.get())
 			{
-				if (!rate_limiter_enabled || rate_limiter.claim())
-				{
-					s.outputs->handle_event(rule_res.evt, rule_res.rule, rule_res.source, rule_res.priority_num, rule_res.format, rule_res.tags);
-				}
-				else
-				{
-					falco_logger::log(LOG_DEBUG, "Skipping rate-limited notification for rule " + rule_res.rule + "\n");
-				}
+				s.outputs->handle_event(rule_res.evt, rule_res.rule, rule_res.source, rule_res.priority_num, rule_res.format, rule_res.tags);
 			}
 		}
 		
