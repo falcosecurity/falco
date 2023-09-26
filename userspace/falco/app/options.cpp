@@ -37,7 +37,6 @@ options::options()
 	  list_plugins(false),
 	  list_syscall_events(false),
 	  markdown(false),
-	  userspace(false),
 	  modern_bpf(false),
 	  dry_run(false),
 	  nodriver(false)
@@ -148,14 +147,13 @@ bool options::parse(int argc, char **argv, std::string &errstr)
 
 	int open_modes = 0;
 	open_modes += !trace_filename.empty();
-	open_modes += userspace;
 	open_modes += !gvisor_config.empty();
 	open_modes += modern_bpf;
 	open_modes += getenv("FALCO_BPF_PROBE") != NULL;
 	open_modes += nodriver;
 	if (open_modes > 1)
 	{
-		errstr = std::string("You can not specify more than one of -e, -u (--userspace), -g (--gvisor-config), --modern-bpf, --nodriver, and the FALCO_BPF_PROBE env var");
+		errstr = std::string("You can not specify more than one of -e, -g (--gvisor-config), --modern-bpf, --nodriver, and the FALCO_BPF_PROBE env var");
 		return false;
 	}
 
@@ -220,9 +218,6 @@ void options::define(cxxopts::Options& opts)
 		("T",                             "Turn off any rules with a tag=<tag>. This option can be passed multiple times. This option can not be mixed with -t.", cxxopts::value<std::vector<std::string>>(), "<tag>")
 		("t",                             "Only enable those rules with a tag=<tag>. This option can be passed multiple times. This option can not be mixed with -T/-D.", cxxopts::value<std::vector<std::string>>(), "<tag>")
 		("U,unbuffered",                  "Turn off output buffering for configured outputs. This causes every single line emitted by Falco to be flushed, which generates higher CPU usage but is useful when piping those outputs into another process or a script.", cxxopts::value(unbuffered_outputs)->default_value("false"))
-#if !defined(_WIN32) && !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
-		("u,userspace",                   "[DEPRECATED: this option will be removed in Falco 0.37] Use a userspace driver to collect 'syscall' events. To be used in conjunction with the ptrace(2) based driver (pdig).", cxxopts::value(userspace)->default_value("false"))
-#endif
 		("V,validate",                    "Read the contents of the specified <rules_file> file(s), validate the loaded rules, and exit. This option can be passed multiple times to validate multiple files.", cxxopts::value(validate_rules_filenames), "<rules_file>")
 		("v",                             "Enable verbose output.", cxxopts::value(verbose)->default_value("false"))
 		("version",                       "Print version information and exit.", cxxopts::value(print_version_info)->default_value("false"))

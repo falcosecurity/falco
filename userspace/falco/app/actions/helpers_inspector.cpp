@@ -86,15 +86,6 @@ falco::app::run_result falco::app::actions::open_live_inspector(
 			falco_logger::log(LOG_INFO, "Opening '" + source + "' source with no driver\n");
 			inspector->open_nodriver();
 		}
-		else if (s.options.userspace) /* udig engine. */
-		{
-			// open_udig() is the underlying method used in the capture code to parse userspace events from the kernel.
-			//
-			// Falco uses a ptrace(2) based userspace implementation.
-			// Regardless of the implementation, the underlying method remains the same.
-			falco_logger::log(LOG_WARNING, "The udig engine is deprecated and will be removed in Falco 0.37. Opening '" + source + "' source with udig\n");
-			inspector->open_udig();
-		}
 		else if(s.is_gvisor_enabled()) /* gvisor engine. */
 		{
 			falco_logger::log(LOG_INFO, "Opening '" + source + "' source with gVisor. Configuration path: " + s.options.gvisor_config);
