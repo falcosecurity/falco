@@ -79,6 +79,10 @@ void falco::grpc::server_impl::version(const context& ctx, const version::reques
 
 	res.set_engine_version(FALCO_ENGINE_VERSION);
 	res.set_engine_fields_checksum(FALCO_ENGINE_CHECKSUM); 
+	auto engine_version = sinsp_version(FALCO_ENGINE_VERSION);
+	res.set_engine_major(engine_version.m_version_major);
+	res.set_engine_minor(engine_version.m_version_minor);
+	res.set_engine_patch(engine_version.m_version_patch);
 
 	res.set_major(FALCO_VERSION_MAJOR);
 	res.set_minor(FALCO_VERSION_MINOR);
