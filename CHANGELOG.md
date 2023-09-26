@@ -3,7 +3,7 @@
 
 ## v0.36.0
 
-Released on 2023-09-25
+Released on 2023-09-26
 
 ### Breaking Changes
 
