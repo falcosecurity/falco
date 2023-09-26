@@ -75,9 +75,9 @@ falco_engine::~falco_engine()
 	m_sources.clear();
 }
 
-uint32_t falco_engine::engine_version()
+std::string falco_engine::engine_version()
 {
-	return (uint32_t) FALCO_ENGINE_VERSION;
+	return FALCO_ENGINE_VERSION;
 }
 
 const falco_source* falco_engine::find_source(const std::string& name) const
@@ -567,7 +567,7 @@ void falco_engine::describe_rule(std::string *rule, const std::vector<std::share
 
 		// Store required engine version
 		auto required_engine_version = m_rule_collector.required_engine_version();
-		output["required_engine_version"] = std::to_string(required_engine_version.version);
+		output["required_engine_version"] = required_engine_version.version;
 
 		// Store required plugin versions
 		Json::Value plugin_versions = Json::arrayValue;
