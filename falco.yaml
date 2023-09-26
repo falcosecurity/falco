@@ -273,34 +273,6 @@ json_include_tags_property: true
 # output mechanism. By default, buffering is disabled (false).
 buffered_outputs: false
 
-# [Stable] `outputs`
-#
-# [DEPRECATED]
-# This config is deprecated and it will be removed in Falco 0.37
-#
-# A throttling mechanism, implemented as a token bucket, can be used to control
-# the rate of Falco outputs. Each event source has its own rate limiter,
-# ensuring that alerts from one source do not affect the throttling of others.
-# The following options control the mechanism:
-#  - rate: the number of tokens (i.e. right to send a notification) gained per
-#    second. When 0, the throttling mechanism is disabled. Defaults to 0.
-#  - max_burst: the maximum number of tokens outstanding. Defaults to 1000.
-#
-# For example, setting the rate to 1 allows Falco to send up to 1000
-# notifications initially, followed by 1 notification per second. The burst
-# capacity is fully restored after 1000 seconds of no activity.
-#
-# Throttling can be useful in various scenarios, such as preventing notification
-# floods, managing system load, controlling event processing, or complying with
-# rate limits imposed by external systems or APIs. It allows for better resource
-# utilization, avoids overwhelming downstream systems, and helps maintain a
-# balanced and controlled flow of notifications.
-#
-# With the default settings, the throttling mechanism is disabled.
-outputs:
-  rate: 0
-  max_burst: 1000
-
 # [Experimental] `rule_matching`
 #
 # The `rule_matching` configuration key's values are:

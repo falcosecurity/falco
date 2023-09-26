@@ -36,8 +36,6 @@ falco_configuration::falco_configuration():
 	m_json_output(false),
 	m_json_include_output_property(true),
 	m_json_include_tags_property(true),
-	m_notifications_rate(0),
-	m_notifications_max_burst(1000),
 	m_rule_matching(falco_common::rule_matching::FIRST),
 	m_watch_config_files(true),
 	m_buffered_outputs(false),
@@ -263,13 +261,6 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 	falco_logger::log_syslog = config.get_scalar<bool>("log_syslog", true);
 
 	m_output_timeout = config.get_scalar<uint32_t>("output_timeout", 2000);
-
-	m_notifications_rate = config.get_scalar<uint32_t>("outputs.rate", 0);
-	if(m_notifications_rate != 0)
-	{
-		falco_logger::log(LOG_WARNING, "'output.rate' config is deprecated and it will be removed in Falco 0.37\n");
-	}
-	m_notifications_max_burst = config.get_scalar<uint32_t>("outputs.max_burst", 1000);
 
 	std::string rule_matching = config.get_scalar<std::string>("rule_matching", "first");
 	if (!falco_common::parse_rule_matching(rule_matching, m_rule_matching))
