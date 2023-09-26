@@ -1,5 +1,132 @@
 # Change Log
 
+
+## v0.36.0
+
+Released on 2023-09-25
+
+### Breaking Changes
+
+- The default rules file that is shipped in the Falco image and/or can be downloaded via falcoctl as `falco-rules` is now a _stable_ rule file. This file **contains a much smaller number of rules** that are less noisy and have been vetted by the community. This serves as a much requested "starter" Falco rule set that covers many common use case. The rest of that file has been expanded and split into `falco-incubating-rules` and `falco-sandbox-rules`. For more information, see the [rules repository](https://github.com/falcosecurity/rules)
+- The main `falcosecurity/falco` container image and its `falco-driver-loader` counterpart have been upgraded. Now they are able to compile the kernel module or classic eBPF probe for relatively newer version of the kernel (5.x and above) while we no longer ship toolchains to compile the kernel module for older versions in the default images. Downloading of prebuilt drivers and the modern eBPF will work exactly like before. The older image, meant for compatibility with older kernels (4.x and below), is currently retained as `falcosecurity/falco-driver-loader-legacy`.
+- The Falco HTTP output no longer logs to stdout by default for performance reasons. You can set stdout logging preferences and restore the previous behavior with the configuration option `http_output.echo` in `falco.yaml`.
+- The `--list-syscall-events` command line option has been replaced by `--list-events` which prints all supported system events (syscall, tracepoints, metaevents, internal plugin events) in addition to extra information about flags.
+- The semantics of `proc.exepath` have changed. Now that field contains the executable path on disk even if the binary was launched from a symbolic link.
+- The `-d` daemonize option has been removed.
+- The `-p` option is now changed:
+    - when only `-pc` is set Falco will print `container_id=%container.id container_image=%container.image.repository container_image_tag=%container.image.tag container_name=%container.name`
+    - when `-pk` is set it will print as above, but with `k8s_ns=%k8s.ns.name k8s_pod_name=%k8s.pod.name` appended
+
+
+### Major Changes
+
+
+* new(falco-driver-loader): --source-only now prints the values as env vars [[#2353](https://github.com/falcosecurity/falco/pull/2353)] - [@steakunderscore](https://github.com/steakunderscore)
+* new(docker): allow passing options to falco-driver-loader from the driver loader cointainer [[#2781](https://github.com/falcosecurity/falco/pull/2781)] - [@LucaGuerra](https://github.com/LucaGuerra)
+* new(docker): add experimental falco-distroless image based on Wolfi [[#2768](https://github.com/falcosecurity/falco/pull/2768)] - [@LucaGuerra](https://github.com/LucaGuerra)
+* new: the legacy falco image is available as driver-loader-legacy [[#2718](https://github.com/falcosecurity/falco/pull/2718)] - [@LucaGuerra](https://github.com/LucaGuerra)
+* new: added option to enable/disable echoing of server answer to stdout (disabled by default) when using HTTP output [[#2602](https://github.com/falcosecurity/falco/pull/2602)] - [@FedeDP](https://github.com/FedeDP)
+* new: support systemctl reload for Falco services [[#2588](https://github.com/falcosecurity/falco/pull/2588)] - [@jabdr](https://github.com/jabdr)
+* new(falco/config): add new configurations for http_output that allow mTLS [[#2633](https://github.com/falcosecurity/falco/pull/2633)] - [@annadorottya](https://github.com/annadorottya)
+* new: allow falco to match multiple rules on same event [[#2705](https://github.com/falcosecurity/falco/pull/2705)] - [@loresuso](https://github.com/loresuso)
+
+
+### Minor Changes
+
+* update(cmake): bumped bundled falcoctl to 0.6.2 [[#2829](https://github.com/falcosecurity/falco/pull/2829)] - [@FedeDP](https://github.com/FedeDP)
+* update(rules)!: major rule update to version 2.0.0 [[#2823](https://github.com/falcosecurity/falco/pull/2823)] - [@LucaGuerra](https://github.com/LucaGuerra)
+* update(cmake): bumped plugins to latest stable versions [[#2820](https://github.com/falcosecurity/falco/pull/2820)] - [@FedeDP](https://github.com/FedeDP)
+* update(cmake): bumped libs to 0.13.0-rc2 and driver to 6.0.1+driver [[#2806](https://github.com/falcosecurity/falco/pull/2806)] - [@FedeDP](https://github.com/FedeDP)
+* update!: default substitution for `%container.info` is now equal `container_id=%container.id container_name=%container.name` [[#2793](https://github.com/falcosecurity/falco/pull/2793)] - [@leogr](https://github.com/leogr)
+* update!: the --list-syscall-events flag is now called --list-events and lists all events [[#2771](https://github.com/falcosecurity/falco/pull/2771)] - [@LucaGuerra](https://github.com/LucaGuerra)
+* update!: the Falco base image is now based on Debian 12 with gcc 11-12 [[#2718](https://github.com/falcosecurity/falco/pull/2718)] - [@LucaGuerra](https://github.com/LucaGuerra)
+* update(docker): the Falco no-driver image is now based on Debian 12 [[#2782](https://github.com/falcosecurity/falco/pull/2782)] - [@LucaGuerra](https://github.com/LucaGuerra)
+* feat(userspace)!: remove `-d` daemonize option [[#2677](https://github.com/falcosecurity/falco/pull/2677)] - [@incertum](https://github.com/incertum)
+* build(deps): Bump submodules/falcosecurity-rules from 3f52480 to 0d0e333 [[#2693](https://github.com/falcosecurity/falco/pull/2693)] - [@dependabot[bot]](https://github.com/apps/dependabot)
+* build(deps): Bump submodules/falcosecurity-rules from 3f52480 to b42893a [[#2756](https://github.com/falcosecurity/falco/pull/2756)] - [@dependabot[bot]](https://github.com/apps/dependabot)
+* build(deps): Bump submodules/falcosecurity-rules from b42893a to 6ed73fe [[#2780](https://github.com/falcosecurity/falco/pull/2780)] - [@dependabot[bot]](https://github.com/apps/dependabot)
+* update(cmake): bumped libs to 0.13.0-rc1 and driver to 6.0.0+driver. [[#2783](https://github.com/falcosecurity/falco/pull/2783)] - [@FedeDP](https://github.com/FedeDP)
+* feat: support parsing of system environment variables in yaml [[#2562](https://github.com/falcosecurity/falco/pull/2562)] - [@therealdwright](https://github.com/therealdwright)
+* feat(userspace)!: deprecate stats command args option in favor of metrics configs in falco.yaml [[#2739](https://github.com/falcosecurity/falco/pull/2739)] - [@incertum](https://github.com/incertum)
+* update: upgrade `falcoctl` to version 0.6.0 [[#2764](https://github.com/falcosecurity/falco/pull/2764)] - [@leogr](https://github.com/leogr)
+* cleanup: deprecate rate limiter mechanism [[#2762](https://github.com/falcosecurity/falco/pull/2762)] - [@Andreagit97](https://github.com/Andreagit97)
+* cleanup(config): add more info [[#2758](https://github.com/falcosecurity/falco/pull/2758)] - [@incertum](https://github.com/incertum)
+* update(userspace/engine): improve skip-if-unknown-filter YAML field [[#2749](https://github.com/falcosecurity/falco/pull/2749)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* chore: improved HTTP output performance [[#2602](https://github.com/falcosecurity/falco/pull/2602)] - [@FedeDP](https://github.com/FedeDP)
+* update!: HTTP output will no more echo to stdout by default [[#2602](https://github.com/falcosecurity/falco/pull/2602)] - [@FedeDP](https://github.com/FedeDP)
+* chore: remove b64 from falco dependencies [[#2746](https://github.com/falcosecurity/falco/pull/2746)] - [@Andreagit97](https://github.com/Andreagit97)
+* update(cmake): support building libs and driver from forks [[#2747](https://github.com/falcosecurity/falco/pull/2747)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* update: `-p` presets have been updated to reflect the new rules style guide [[#2737](https://github.com/falcosecurity/falco/pull/2737)] - [@leogr](https://github.com/leogr)
+* feat: Allow specifying explicit kernel release and version for falco-driver-loader [[#2728](https://github.com/falcosecurity/falco/pull/2728)] - [@johananl](https://github.com/johananl)
+* cleanup(config): assign Stable to `base_syscalls` config [[#2740](https://github.com/falcosecurity/falco/pull/2740)] - [@incertum](https://github.com/incertum)
+* update : support build for wasm [[#2663](https://github.com/falcosecurity/falco/pull/2663)] - [@Rohith-Raju](https://github.com/Rohith-Raju)
+* docs(config.yaml): fix wrong severity levels for sinsp logger [[#2736](https://github.com/falcosecurity/falco/pull/2736)] - [@Andreagit97](https://github.com/Andreagit97)
+* update(cmake): bump libs and driver to 0.12.0 [[#2721](https://github.com/falcosecurity/falco/pull/2721)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* update(docker): remove experimental image based on RedHat UBI [[#2720](https://github.com/falcosecurity/falco/pull/2720)] - [@leogr](https://github.com/leogr)
+
+
+### Bug Fixes
+
+* fix(outputs): expose queue_capacity_outputs config for memory control [[#2711](https://github.com/falcosecurity/falco/pull/2711)] - [@incertum](https://github.com/incertum)
+* fix(userspace/falco): cleanup metrics timer upon leaving. [[#2759](https://github.com/falcosecurity/falco/pull/2759)] - [@FedeDP](https://github.com/FedeDP)
+* fix: restore Falco MINIMAL_BUILD and deprecate `userspace` option [[#2761](https://github.com/falcosecurity/falco/pull/2761)] - [@Andreagit97](https://github.com/Andreagit97)
+* fix(userspace/engine): support appending to unknown sources [[#2753](https://github.com/falcosecurity/falco/pull/2753)] - [@jasondellaluce](https://github.com/jasondellaluce)
+
+
+
+### Non user-facing changes
+
+* build(deps): Bump submodules/falcosecurity-rules from `69c9be8` to `77ba57a` [[#2833](https://github.com/falcosecurity/falco/pull/2833)] - [@dependabot[bot]](https://github.com/apps/dependabot)
+* chore: bump submodule testing to 62edc65 [[#2831](https://github.com/falcosecurity/falco/pull/2831)] - [@Andreagit97](https://github.com/Andreagit97)
+* update(gha): add version for rn2md [[#2830](https://github.com/falcosecurity/falco/pull/2830)] - [@LucaGuerra](https://github.com/LucaGuerra)
+* chore: automatically attach release author to release body. [[#2828](https://github.com/falcosecurity/falco/pull/2828)] - [@FedeDP](https://github.com/FedeDP)
+* new(ci): autogenerate release body. [[#2812](https://github.com/falcosecurity/falco/pull/2812)] - [@FedeDP](https://github.com/FedeDP)
+* fix(dockerfile): remove useless CMD [[#2824](https://github.com/falcosecurity/falco/pull/2824)] - [@Andreagit97](https://github.com/Andreagit97)
+* chore: bump to the latest libs [[#2822](https://github.com/falcosecurity/falco/pull/2822)] - [@Andreagit97](https://github.com/Andreagit97)
+* update: add SPDX license identifier [[#2809](https://github.com/falcosecurity/falco/pull/2809)] - [@leogr](https://github.com/leogr)
+* chore: bump to latest libs [[#2815](https://github.com/falcosecurity/falco/pull/2815)] - [@Andreagit97](https://github.com/Andreagit97)
+* build(deps): Bump submodules/falcosecurity-rules from `ee5fb38` to `bea364e` [[#2814](https://github.com/falcosecurity/falco/pull/2814)] - [@dependabot[bot]](https://github.com/apps/dependabot)
+* fix(build): set the right bucket and version for driver legacy [[#2800](https://github.com/falcosecurity/falco/pull/2800)] - [@LucaGuerra](https://github.com/LucaGuerra)
+* build(deps): Bump submodules/falcosecurity-rules from `43580b4` to `ee5fb38` [[#2810](https://github.com/falcosecurity/falco/pull/2810)] - [@dependabot[bot]](https://github.com/apps/dependabot)
+* cleanup(userspace): thrown exceptions and avoid multiple logs [[#2803](https://github.com/falcosecurity/falco/pull/2803)] - [@Andreagit97](https://github.com/Andreagit97)
+* build(deps): Bump submodules/falcosecurity-rules from `c6e01fa` to `43580b4` [[#2801](https://github.com/falcosecurity/falco/pull/2801)] - [@dependabot[bot]](https://github.com/apps/dependabot)
+* build(deps): Bump submodules/falcosecurity-testing from `76d1743` to `30c3643` [[#2802](https://github.com/falcosecurity/falco/pull/2802)] - [@dependabot[bot]](https://github.com/apps/dependabot)
+* fix(userspace/falco): clearing full output queue [[#2798](https://github.com/falcosecurity/falco/pull/2798)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* update(docs): add driver-loader-legacy to readme and fix bad c&p [[#2799](https://github.com/falcosecurity/falco/pull/2799)] - [@LucaGuerra](https://github.com/LucaGuerra)
+* build(deps): Bump submodules/falcosecurity-rules from `d31dbc2` to `c6e01fa` [[#2797](https://github.com/falcosecurity/falco/pull/2797)] - [@dependabot[bot]](https://github.com/apps/dependabot)
+* docs: add LICENSE file [[#2796](https://github.com/falcosecurity/falco/pull/2796)] - [@leogr](https://github.com/leogr)
+* build(deps): Bump submodules/falcosecurity-rules from `b6372d2` to `d31dbc2` [[#2794](https://github.com/falcosecurity/falco/pull/2794)] - [@dependabot[bot]](https://github.com/apps/dependabot)
+* fix(stats): always initialize m_output field [[#2789](https://github.com/falcosecurity/falco/pull/2789)] - [@Andreagit97](https://github.com/Andreagit97)
+* build(deps): Bump submodules/falcosecurity-rules from `6ed73fe` to `b6372d2` [[#2786](https://github.com/falcosecurity/falco/pull/2786)] - [@dependabot[bot]](https://github.com/apps/dependabot)
+* update(cmake/modules): bump rules to falco-rules-2.0.0-rc1 [[#2775](https://github.com/falcosecurity/falco/pull/2775)] - [@leogr](https://github.com/leogr)
+* update(OWNERS): add LucaGuerra to owners [[#2650](https://github.com/falcosecurity/falco/pull/2650)] - [@LucaGuerra](https://github.com/LucaGuerra)
+* build(deps): Bump submodules/falcosecurity-rules from `9126bef` to `0328c59` [[#2709](https://github.com/falcosecurity/falco/pull/2709)] - [@dependabot[bot]](https://github.com/apps/dependabot)
+* build(deps): Bump submodules/falcosecurity-rules from `0d0e333` to `64ce419` [[#2731](https://github.com/falcosecurity/falco/pull/2731)] - [@dependabot[bot]](https://github.com/apps/dependabot)
+* build(deps): Bump submodules/falcosecurity-rules from `3ceea88` to `40a9817` [[#2745](https://github.com/falcosecurity/falco/pull/2745)] - [@dependabot[bot]](https://github.com/apps/dependabot)
+* docs(README.md): correct URL [[#2772](https://github.com/falcosecurity/falco/pull/2772)] - [@vjjmiras](https://github.com/vjjmiras)
+* #2393 Document why Falco is written in C++ rather than anything else [[#2410](https://github.com/falcosecurity/falco/pull/2410)] - [@RichardoC](https://github.com/RichardoC)
+* chore: bump Falco to latest libs [[#2769](https://github.com/falcosecurity/falco/pull/2769)] - [@Andreagit97](https://github.com/Andreagit97)
+* ci: disable falco-driver-loader tests on ARM64 [[#2770](https://github.com/falcosecurity/falco/pull/2770)] - [@Andreagit97](https://github.com/Andreagit97)
+* update(userspace/falco): revised CLI help messages [[#2755](https://github.com/falcosecurity/falco/pull/2755)] - [@leogr](https://github.com/leogr)
+* fix(engine): fix reorder warning for m_watch_config_files / m_rule_matching [[#2767](https://github.com/falcosecurity/falco/pull/2767)] - [@LucaGuerra](https://github.com/LucaGuerra)
+* update: introduce new stats updated to the latest libs version [[#2766](https://github.com/falcosecurity/falco/pull/2766)] - [@Andreagit97](https://github.com/Andreagit97)
+* ci: support tests on amazon-linux [[#2765](https://github.com/falcosecurity/falco/pull/2765)] - [@Andreagit97](https://github.com/Andreagit97)
+* chore: bump Falco to latest libs master [[#2754](https://github.com/falcosecurity/falco/pull/2754)] - [@Andreagit97](https://github.com/Andreagit97)
+* build(deps): Bump submodules/falcosecurity-testing from `b39c807` to `9110022` [[#2760](https://github.com/falcosecurity/falco/pull/2760)] - [@dependabot[bot]](https://github.com/apps/dependabot)
+* fix: fix "ebpf_enabled" output stat [[#2751](https://github.com/falcosecurity/falco/pull/2751)] - [@Andreagit97](https://github.com/Andreagit97)
+* fix(userspace/engine): support both old and new gcc + std::move [[#2748](https://github.com/falcosecurity/falco/pull/2748)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* cleanup: turn some warnings into errors [[#2744](https://github.com/falcosecurity/falco/pull/2744)] - [@Andreagit97](https://github.com/Andreagit97)
+* update(ci): minimize retention days for build-only CI artifacts [[#2743](https://github.com/falcosecurity/falco/pull/2743)] - [@jasondellaluce](https://github.com/jasondellaluce)
+* cleanup: remove unused `--pidfile` option from systemd units [[#2742](https://github.com/falcosecurity/falco/pull/2742)] - [@Andreagit97](https://github.com/Andreagit97)
+* build(deps): Bump submodules/falcosecurity-rules from `bf1639a` to `3ceea88` [[#2741](https://github.com/falcosecurity/falco/pull/2741)] - [@dependabot[bot]](https://github.com/apps/dependabot)
+* build(deps): Bump submodules/falcosecurity-rules from `64ce419` to `bf1639a` [[#2738](https://github.com/falcosecurity/falco/pull/2738)] - [@dependabot[bot]](https://github.com/apps/dependabot)
+* Relocate tools on Flatcar in BPF mode [[#2729](https://github.com/falcosecurity/falco/pull/2729)] - [@johananl](https://github.com/johananl)
+* build: update versioning with cmake [[#2727](https://github.com/falcosecurity/falco/pull/2727)] - [@leogr](https://github.com/leogr)
+* update(userspace/engine): make rule_matching strategy stateless  [[#2726](https://github.com/falcosecurity/falco/pull/2726)] - [@loresuso](https://github.com/loresuso)
+* chore: bump Falco to latest libs version [[#2722](https://github.com/falcosecurity/falco/pull/2722)] - [@Andreagit97](https://github.com/Andreagit97)
+* update: enforce bumping engine version whenever appropriate [[#2719](https://github.com/falcosecurity/falco/pull/2719)] - [@jasondellaluce](https://github.com/jasondellaluce)
+
+
 ## v0.35.1
 
 Released on 2023-06-29
