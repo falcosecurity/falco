@@ -29,13 +29,17 @@ limitations under the License.
 #include "falco_utils.h"
 
 #include "configuration.h"
+#include "configuration_aux.h"
 #include "logger.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
 
 falco_configuration::falco_configuration():
 	m_json_output(false),
-	m_json_include_output_property(true),
-	m_json_include_tags_property(true),
+	m_json_output_flags(CONFIG_JSON_OUTPUT_PROPERTIES_OUTPUT \
+			| CONFIG_JSON_OUTPUT_PROPERTIES_PRIORITY | CONFIG_JSON_OUTPUT_PROPERTIES_TAGS \
+			| CONFIG_JSON_OUTPUT_PROPERTIES_HOSTNAME | CONFIG_JSON_OUTPUT_PROPERTIES_SOURCE \
+			| CONFIG_JSON_OUTPUT_PROPERTIES_OUTPUT_FIELDS | CONFIG_JSON_OUTPUT_PROPERTIES_OUTPUT_OLD_OPTION \
+			| CONFIG_JSON_OUTPUT_PROPERTIES_TAGS_OLD_OPTION),
 	m_notifications_rate(0),
 	m_notifications_max_burst(1000),
 	m_rule_matching(falco_common::rule_matching::FIRST),
@@ -123,8 +127,43 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 	}
 
 	m_json_output = config.get_scalar<bool>("json_output", false);
-	m_json_include_output_property = config.get_scalar<bool>("json_include_output_property", true);
-	m_json_include_tags_property = config.get_scalar<bool>("json_include_tags_property", true);
+	m_json_output_flags = 0;
+	if(m_json_output)
+	{
+		if(config.get_scalar<bool>("json_output_properties.output", true))
+		{
+			m_json_output_flags |= CONFIG_JSON_OUTPUT_PROPERTIES_OUTPUT;
+		}
+		if(config.get_scalar<bool>("json_output_properties.priority", true))
+		{
+			m_json_output_flags |= CONFIG_JSON_OUTPUT_PROPERTIES_PRIORITY;
+		}
+		if(config.get_scalar<bool>("json_output_properties.tags", true))
+		{
+			m_json_output_flags |= CONFIG_JSON_OUTPUT_PROPERTIES_TAGS;
+		}
+		if(config.get_scalar<bool>("json_output_properties.hostname", true))
+		{
+			m_json_output_flags |= CONFIG_JSON_OUTPUT_PROPERTIES_HOSTNAME;
+		}
+		if(config.get_scalar<bool>("json_output_properties.source", true))
+		{
+			m_json_output_flags |= CONFIG_JSON_OUTPUT_PROPERTIES_SOURCE;
+		}
+		if(config.get_scalar<bool>("json_output_properties.output_fields", true))
+		{
+			m_json_output_flags |= CONFIG_JSON_OUTPUT_PROPERTIES_OUTPUT_FIELDS;
+		}
+		// todo: deprecate `json_include_output_property` and `json_include_tags_property` for Falco 0.37
+		if(config.get_scalar<bool>("json_include_output_property", true))
+		{
+			m_json_output_flags |= CONFIG_JSON_OUTPUT_PROPERTIES_OUTPUT_OLD_OPTION;
+		}
+		if(config.get_scalar<bool>("json_include_tags_property", true))
+		{
+			m_json_output_flags |= CONFIG_JSON_OUTPUT_PROPERTIES_TAGS_OLD_OPTION;
+		}
+	}
 
 	m_outputs.clear();
 	falco::outputs::config file_output;

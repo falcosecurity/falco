@@ -43,8 +43,7 @@ falco_outputs::falco_outputs(
 	std::shared_ptr<falco_engine> engine,
 	const std::vector<falco::outputs::config>& outputs,
 	bool json_output,
-	bool json_include_output_property,
-	bool json_include_tags_property,
+	uint32_t json_output_flags,
 	uint32_t timeout,
 	bool buffered,
 	size_t outputs_queue_capacity,
@@ -52,7 +51,7 @@ falco_outputs::falco_outputs(
 	bool time_format_iso_8601,
 	const std::string& hostname)
 {
-	m_formats.reset(new falco_formats(engine, json_include_output_property, json_include_tags_property));
+	m_formats.reset(new falco_formats(engine, json_output_flags));
 
 	m_json_output = json_output;
 

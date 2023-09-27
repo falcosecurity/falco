@@ -17,16 +17,15 @@ limitations under the License.
 
 #include <json/json.h>
 
+#include "../falco/configuration_aux.h"
 #include "formats.h"
 #include "falco_engine.h"
 #include "banned.h" // This raises a compilation error when certain functions are used
 
 falco_formats::falco_formats(std::shared_ptr<const falco_engine> engine,
-			     bool json_include_output_property,
-			     bool json_include_tags_property)
+				 uint32_t json_output_flags)
 	: m_falco_engine(engine),
-	m_json_include_output_property(json_include_output_property),
-	m_json_include_tags_property(json_include_tags_property)
+	m_json_output_flags(json_output_flags)
 {
 }
 
@@ -83,17 +82,24 @@ std::string falco_formats::format_event(gen_event *evt, const std::string &rule,
 		iso8601evttime += time_ns;
 		event["time"] = iso8601evttime;
 		event["rule"] = rule;
-		event["priority"] = level;
-		event["source"] = source;
-		event["hostname"] = hostname;
 
-		if(m_json_include_output_property)
+		if(m_json_output_flags & CONFIG_JSON_OUTPUT_PROPERTIES_PRIORITY)
 		{
-			// This is the filled-in output line.
+			event["priority"] = level;
+		}
+		if(m_json_output_flags & CONFIG_JSON_OUTPUT_PROPERTIES_SOURCE)
+		{
+			event["source"] = source;
+		}
+		if(m_json_output_flags & CONFIG_JSON_OUTPUT_PROPERTIES_HOSTNAME)
+		{
+			event["hostname"] = hostname;
+		}
+		if(m_json_output_flags & CONFIG_JSON_OUTPUT_PROPERTIES_OUTPUT && m_json_output_flags & CONFIG_JSON_OUTPUT_PROPERTIES_OUTPUT_OLD_OPTION)
+		{
 			event["output"] = line;
 		}
-
-		if(m_json_include_tags_property)
+		if(m_json_output_flags & CONFIG_JSON_OUTPUT_PROPERTIES_TAGS && m_json_output_flags & CONFIG_JSON_OUTPUT_PROPERTIES_TAGS_OLD_OPTION)
 		{
 			if (tags.size() == 0)
 			{
@@ -123,8 +129,11 @@ std::string falco_formats::format_event(gen_event *evt, const std::string &rule,
 		// string. Avoids an unnecessary json parse just to
 		// merge the formatted fields at the object level.
 		full_line.pop_back();
-		full_line.append(", \"output_fields\": ");
-		full_line.append(json_line);
+		if(m_json_output_flags & CONFIG_JSON_OUTPUT_PROPERTIES_OUTPUT_FIELDS)
+		{
+			full_line.append(", \"output_fields\": ");
+			full_line.append(json_line);
+		}
 		full_line.append("}");
 		line = full_line;
 	}

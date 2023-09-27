@@ -26,8 +26,7 @@ class falco_formats
 {
 public:
 	falco_formats(std::shared_ptr<const falco_engine> engine,
-		      bool json_include_output_property,
-		      bool json_include_tags_property);
+			  uint32_t json_output_flags);
 	virtual ~falco_formats();
 
 	std::string format_event(gen_event *evt, const std::string &rule, const std::string &source,
@@ -39,6 +38,5 @@ public:
 
 protected:
 	std::shared_ptr<const falco_engine> m_falco_engine;
-	bool m_json_include_output_property;
-	bool m_json_include_tags_property;
+	uint32_t m_json_output_flags;
 };
