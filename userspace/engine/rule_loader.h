@@ -24,6 +24,7 @@ limitations under the License.
 #include "falco_source.h"
 #include "falco_load_result.h"
 #include "indexed_vector.h"
+#include "version.h"
 
 namespace rule_loader
 {
@@ -298,7 +299,7 @@ namespace rule_loader
 	*/
 	struct engine_version_info
 	{
-		engine_version_info() : ctx("no-filename-given") { };
+		engine_version_info() : ctx("no-filename-given"), version("0.0.0") { };
 		engine_version_info(context &ctx);
 		~engine_version_info() = default;
 		engine_version_info(engine_version_info&&) = default;
@@ -307,7 +308,7 @@ namespace rule_loader
 		engine_version_info& operator = (const engine_version_info&) = default;
 
 		context ctx;
-		std::string version;
+		sinsp_version version;
 	};
 
 	/*!
