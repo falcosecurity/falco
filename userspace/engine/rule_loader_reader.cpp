@@ -20,6 +20,7 @@ limitations under the License.
 
 #include "rule_loader_reader.h"
 #include "falco_engine_version.h"
+#include "logger.h"
 
 #define THROW(cond, err, ctx)    { if ((cond)) { throw rule_loader::rule_load_exception(falco::load_result::LOAD_ERR_YAML_VALIDATE, (err), (ctx)); } }
 
@@ -264,12 +265,17 @@ static void read_item(
 			decode_val(item, "required_engine_version", ver, ctx);
 
 			// Build proper semver representation
-			v.version = std::to_string(FALCO_DEFAULT_ENGINE_MAJOR) + "." + std::to_string(ver) + "." + std::to_string(FALCO_DEFAULT_ENGINE_PATCH);
+			v.version = rule_loader::reader::get_implicit_engine_version(ver);
 		} 
 		catch(std::exception& e)
 		{
 			// Convert to string
-			decode_val(item, "required_engine_version", v.version, ctx);
+			std::string ver;
+			decode_val(item, "required_engine_version", ver, ctx);
+
+			v.version = sinsp_version(ver);
+
+			THROW(!v.version.is_valid(), "Unable to parse engine version '" + ver + "' as a semver string. Expected \"x.y.z\" semver format.", ctx);
 		}
 
 		collector.define(cfg, v);

@@ -97,7 +97,10 @@ jobs:
       - name: Check Engine version
         run: |
           base_hash=$(grep CHECKSUM "./userspace/engine/falco_engine_version.h" | awk '{print $3}' | sed -e 's/"//g')
-          base_engine_ver=$(grep ENGINE_VERSION "./userspace/engine/falco_engine_version.h" | awk '{print $3}' | sed -e 's/(//g' -e 's/)//g')
+          base_engine_ver_major=$(grep ENGINE_VERSION_MAJOR "./userspace/engine/falco_engine_version.h" | head -n 1 | awk '{print $3}' | sed -e 's/(//g' -e 's/)//g')
+          base_engine_ver_minor=$(grep ENGINE_VERSION_MINOR "./userspace/engine/falco_engine_version.h" | head -n 1 | awk '{print $3}' | sed -e 's/(//g' -e 's/)//g')
+          base_engine_ver_patch=$(grep ENGINE_VERSION_PATCH "./userspace/engine/falco_engine_version.h" | head -n 1 | awk '{print $3}' | sed -e 's/(//g' -e 's/)//g')
+          base_engine_ver="${base_engine_ver_major}.${base_engine_ver_minor}.${base_engine_ver_patch}"
 
           cur_hash=$(echo "${{ needs.build-dev.outputs.cmdout }}" | cut -d ' ' -f 2)
           cur_engine_ver=$(echo "${{ needs.build-dev.outputs.cmdout }}" | cut -d ' ' -f 1)

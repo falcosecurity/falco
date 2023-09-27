@@ -19,6 +19,9 @@ limitations under the License.
 
 #include "rule_loader.h"
 #include "rule_loader_collector.h"
+#include "logger.h"
+#include "version.h"
+#include "falco_engine_version.h"
 
 namespace rule_loader
 {
@@ -41,6 +44,19 @@ public:
         thew new definitions
 	*/
 	virtual bool read(configuration& cfg, collector& loader);
+    
+    /*!
+        \brief Engine version used to be represented as a simple progressive
+	    number. With the new semver schema, the number now represents
+	    the semver minor number. This function converts the legacy version 
+	    number to the new semver schema.
+    */
+	static inline sinsp_version get_implicit_engine_version(uint32_t minor)
+	{
+		return sinsp_version(std::to_string(FALCO_ENGINE_VERSION_MAJOR) + "."
+			+ std::to_string(minor) + "." 
+			+ std::to_string(FALCO_ENGINE_VERSION_PATCH));
+	}
 };
 
 }; // namespace rule_loader

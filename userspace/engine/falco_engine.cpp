@@ -75,9 +75,9 @@ falco_engine::~falco_engine()
 	m_sources.clear();
 }
 
-std::string falco_engine::engine_version()
+sinsp_version falco_engine::engine_version()
 {
-	return FALCO_ENGINE_VERSION;
+	return sinsp_version(FALCO_ENGINE_VERSION);
 }
 
 const falco_source* falco_engine::find_source(const std::string& name) const
@@ -567,7 +567,7 @@ void falco_engine::describe_rule(std::string *rule, const std::vector<std::share
 
 		// Store required engine version
 		auto required_engine_version = m_rule_collector.required_engine_version();
-		output["required_engine_version"] = required_engine_version.version;
+		output["required_engine_version"] = required_engine_version.version.as_string();
 
 		// Store required plugin versions
 		Json::Value plugin_versions = Json::arrayValue;
@@ -1007,14 +1007,14 @@ static bool check_plugin_requirement_alternatives(
 			{
 				sinsp_version req_version(req.version);
 				sinsp_version plugin_version(plugin.version);
-				if(!plugin_version.m_valid)
+				if(!plugin_version.is_valid())
 				{
 					err = "Plugin '" + plugin.name
 						+ "' has invalid version string '"
 						+ plugin.version + "'";
 					return false;
 				}
-				if (!plugin_version.check(req_version))
+				if (!plugin_version.compatible_with(req_version))
 				{
 					err = "Plugin '" + plugin.name
 					+ "' version '" + plugin.version

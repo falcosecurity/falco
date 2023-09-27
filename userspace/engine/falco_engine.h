@@ -39,6 +39,7 @@ limitations under the License.
 #include "falco_source.h"
 #include "falco_load_result.h"
 #include "filter_details_resolver.h"
+#include "rule_loader_reader.h"
 
 //
 // This class acts as the primary interface between a program and the
@@ -56,7 +57,16 @@ public:
 	// and rules file format it supports. This version will change
 	// any time the code that handles rules files, expression
 	// fields, etc, changes.
-	static std::string engine_version();
+	static sinsp_version engine_version();
+
+	// Engine version used to be represented as a simple progressive
+	// number. With the new semver schema, the number now represents
+	// the semver minor number. This function converts the legacy version 
+	// number to the new semver schema.
+	static inline sinsp_version get_implicit_version(uint32_t minor)
+	{
+		return rule_loader::reader::get_implicit_engine_version(minor);
+	}
 
 	// Print to stdout (using printf) a description of each field supported by this engine.
 	// If source is non-empty, only fields for the provided source are printed.

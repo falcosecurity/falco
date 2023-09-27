@@ -15,12 +15,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// The version of this Falco engine.
-#define FALCO_ENGINE_VERSION "0.26.0"
+#define __FALCO_ENGINE_STRINGIFY1(str) #str
+#define __FALCO_ENGINE_STRINGIFY(str) __FALCO_ENGINE_STRINGIFY1(str)
 
-// Default version values assumed when parsing numeric required_engine_version
-#define FALCO_DEFAULT_ENGINE_MAJOR 0
-#define FALCO_DEFAULT_ENGINE_PATCH 0
+// The version of this Falco engine
+#define FALCO_ENGINE_VERSION_MAJOR 0
+#define FALCO_ENGINE_VERSION_MINOR 26
+#define FALCO_ENGINE_VERSION_PATCH 0
+
+#define FALCO_ENGINE_VERSION \
+	__FALCO_ENGINE_STRINGIFY(FALCO_ENGINE_VERSION_MAJOR) "." \
+	__FALCO_ENGINE_STRINGIFY(FALCO_ENGINE_VERSION_MINOR) "." \
+	__FALCO_ENGINE_STRINGIFY(FALCO_ENGINE_VERSION_PATCH)
 
 // This is the result of running the following command:
 //   FALCO="falco -c ./falco.yaml"
