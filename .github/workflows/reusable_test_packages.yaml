@@ -28,12 +28,12 @@ jobs:
           submodules: 'true'
       
       - name: Setup Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v3 # TODO needs to be updated
         with:
           go-version: '>=1.17.0'
 
       - name: Download binary
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: falco-${{ inputs.version }}${{ inputs.static && '-static' || '' }}-${{ inputs.arch }}.tar.gz
       
@@ -84,7 +84,7 @@ jobs:
 
       - name: Test Summary
         if: always() # run this even if previous step fails
-        uses: test-summary/action@v2
+        uses: test-summary/action@62bc5c68de2a6a0d02039763b8c754569df99e3f # v2.1
         with:
           paths: "submodules/falcosecurity-testing/report.xml"
           show: "fail"
