@@ -161,7 +161,7 @@ jobs:
           echo "#### Release Manager @${{ github.event.release.author.login }}" >> release-body.md
         
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v0.1.15
         with:
           body_path: ./release-body.md
           tag_name: ${{ github.event.release.tag_name }}
