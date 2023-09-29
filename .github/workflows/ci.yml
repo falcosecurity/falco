@@ -64,7 +64,7 @@ jobs:
     needs: [build-dev]
     steps:    
       - name: Checkout PR head ref
-        uses: actions/checkout@v3
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
         with:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.sha }}
@@ -89,7 +89,7 @@ jobs:
     needs: [build-dev]
     steps:    
       - name: Checkout base ref
-        uses: actions/checkout@v3
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
         with:
           fetch-depth: 0
           ref: ${{ github.base_ref }}

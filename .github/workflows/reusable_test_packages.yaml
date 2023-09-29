@@ -22,7 +22,7 @@ jobs:
     runs-on: ${{ (inputs.arch == 'aarch64' && fromJSON('[ "self-hosted", "linux", "ARM64" ]')) || 'ubuntu-latest' }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
         with:
           fetch-depth: 0
           submodules: 'true'
