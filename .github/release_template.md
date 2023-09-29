@@ -1,5 +1,5 @@
-![LIBS](https://img.shields.io/badge/LIBS-LIBSVER-yellow)
-![DRIVER](https://img.shields.io/badge/DRIVER-DRIVERVER-yellow)
+[![LIBS](https://img.shields.io/badge/LIBS-LIBSVER-yellow)](https://github.com/falcosecurity/libs/releases/tag/LIBSVER)
+[![DRIVER](https://img.shields.io/badge/DRIVER-DRIVERVER-yellow)](https://github.com/falcosecurity/libs/releases/tag/DRIVERVER)
 
 | Packages | Download                                                                                                                                               |
 | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
