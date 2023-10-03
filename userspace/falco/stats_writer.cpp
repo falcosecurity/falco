@@ -60,7 +60,10 @@ bool stats_writer::init_ticker(uint32_t interval_msec, std::string &err)
 	sev.sigev_value.sival_ptr = &s_timerid;
 #ifndef __EMSCRIPTEN__
 	// delete any previously set timer
-	timer_delete(s_timerid);
+	if (s_timerid)
+	{
+		timer_delete(s_timerid);
+	}
 	if (timer_create(CLOCK_MONOTONIC, &sev, &s_timerid) == -1) {
 		err = std::string("Could not create periodic timer: ") + strerror(errno);
 		return false;
@@ -134,7 +137,11 @@ stats_writer::~stats_writer()
 		}
 		// delete timerID and reset timer
 #ifndef __EMSCRIPTEN__
-		timer_delete(s_timerid);
+		if (s_timerid)
+		{
+			timer_delete(s_timerid);
+			s_timerid = nullptr;
+		}
 #endif
 	}
 }
