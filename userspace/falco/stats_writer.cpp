@@ -37,6 +37,8 @@ static timer_t s_timerid;
 // note: Workaround for older GLIBC versions (< 2.35), where calling timer_delete() 
 // with an invalid timer ID not returned by timer_create() causes a segfault because of 
 // a bug in GLIBC (https://sourceware.org/bugzilla/show_bug.cgi?id=28257).
+// Just performing a nullptr check is not enough as even after creating the timer, s_timerid
+// remains a nullptr somehow.
 bool s_timerid_exists = false;
 
 static void timer_handler(int signum)
