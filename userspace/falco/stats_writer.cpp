@@ -34,6 +34,10 @@ limitations under the License.
 // check that this value changed since their last observation.
 static std::atomic<stats_writer::ticker_t> s_timer((stats_writer::ticker_t) 0);
 static timer_t s_timerid;
+// note: Workaround for older GLIBC versions (< 2.35), where calling timer_delete() 
+// with an invalid timer ID not returned by timer_create() causes a segfault because of 
+// a bug in GLIBC (https://sourceware.org/bugzilla/show_bug.cgi?id=28257).
+bool s_timerid_exists = false;
 
 static void timer_handler(int signum)
 {
@@ -60,18 +64,31 @@ bool stats_writer::init_ticker(uint32_t interval_msec, std::string &err)
 	sev.sigev_value.sival_ptr = &s_timerid;
 #ifndef __EMSCRIPTEN__
 	// delete any previously set timer
-	timer_delete(s_timerid);
-	if (timer_create(CLOCK_MONOTONIC, &sev, &s_timerid) == -1) {
+	if (s_timerid_exists)
+	{
+		if (timer_delete(s_timerid) == -1) 
+		{
+			err = std::string("Could not delete previous timer: ") + strerror(errno);
+			return false;
+		}
+		s_timerid_exists = false;
+	}
+
+	if (timer_create(CLOCK_MONOTONIC, &sev, &s_timerid) == -1) 
+	{
 		err = std::string("Could not create periodic timer: ") + strerror(errno);
 		return false;
 	}
+	s_timerid_exists = true;
+
 #endif
 	timer.it_value.tv_sec = interval_msec / 1000;
 	timer.it_value.tv_nsec = (interval_msec % 1000) * 1000 * 1000;
 	timer.it_interval = timer.it_value;
 
 #ifndef __EMSCRIPTEN__
-	if (timer_settime(s_timerid, 0, &timer, NULL) == -1) {
+	if (timer_settime(s_timerid, 0, &timer, NULL) == -1) 
+	{
 		err = std::string("Could not set up periodic timer: ") + strerror(errno);
 		return false;
 	}
@@ -134,7 +151,10 @@ stats_writer::~stats_writer()
 		}
 		// delete timerID and reset timer
 #ifndef __EMSCRIPTEN__
-		timer_delete(s_timerid);
+		if (s_timerid_exists)
+		{
+			timer_delete(s_timerid);
+		}
 #endif
 	}
 }
