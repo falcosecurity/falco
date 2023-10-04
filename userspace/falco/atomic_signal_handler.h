@@ -87,9 +87,9 @@ namespace falco
         /**
          * @brief If a signal is triggered, performs an handler action.
          * The action function will be invoked exactly once among all the
-         * simultaneus calls. The action will not be performed if the
+         * simultaneous calls. The action will not be performed if the
          * signal is not triggered, or if the triggered has already been
-         * handled. When an action is being performed, all the simultaneus
+         * handled. When an action is being performed, all the simultaneous
          * callers will wait and be blocked up until its execution is finished.
          * If the handler action throws an exception, it will be considered
          * performed. After the first handler has been performed, every
