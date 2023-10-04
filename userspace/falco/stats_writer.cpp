@@ -62,7 +62,11 @@ bool stats_writer::init_ticker(uint32_t interval_msec, std::string &err)
 	// delete any previously set timer
 	if (s_timerid)
 	{
-		timer_delete(s_timerid);
+		if (timer_delete(s_timerid) == -1)
+		{
+			err = std::string("Failed to delete existing timer: ") + strerror(errno);
+			return false;
+		}
 	}
 	if (timer_create(CLOCK_MONOTONIC, &sev, &s_timerid) == -1) {
 		err = std::string("Could not create periodic timer: ") + strerror(errno);
