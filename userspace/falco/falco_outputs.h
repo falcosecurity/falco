@@ -36,7 +36,7 @@ limitations under the License.
 
 	All methods in this class are thread-safe. The output framework supports
 	a multi-producer model where messages are stored in a queue and consumed
-	by each configured output asynchrounously.
+	by each configured output asynchronously.
 */
 class falco_outputs
 {
