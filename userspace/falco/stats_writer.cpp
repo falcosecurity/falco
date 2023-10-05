@@ -156,6 +156,7 @@ stats_writer::~stats_writer()
 		if (s_timerid_exists)
 		{
 			timer_delete(s_timerid);
+			s_timerid_exists = false;
 		}
 #endif
 	}
