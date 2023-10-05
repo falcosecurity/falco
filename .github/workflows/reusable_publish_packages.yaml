@@ -71,25 +71,14 @@ jobs:
           name: falco-${{ inputs.version }}-static-x86_64.tar.gz
           path: /tmp/falco-build-bin-static
 
-      - name: Import gpg key 
+      - name: Import gpg key
         env:
           GPG_KEY: ${{ secrets.GPG_KEY }}
         run: printenv GPG_KEY | gpg --import -
 
       - name: Sign rpms
         run: |
-          echo "%_signature gpg" > ~/.rpmmacros
-          echo "%_gpg_name  Falcosecurity Package Signing" >> ~/.rpmmacros
-          echo "%__gpg_sign_cmd %{__gpg} --force-v3-sigs --batch --no-armor --passphrase-fd 3 --no-secmem-warning -u \"%{_gpg_name}\" -sb --digest-algo sha256 %{__plaintext_filename}'" >> ~/.rpmmacros
-          cat > ~/sign <<EOF
-          #!/usr/bin/expect -f
-          spawn rpmsign --addsign {*}\$argv
-          expect -exact "Enter pass phrase: "
-          send -- "\n"
-          expect eof
-          EOF
-          chmod +x ~/sign
-          ~/sign /tmp/falco-build-rpm/falco-*.rpm
+          rpmsign --define '_gpg_name Falcosecurity Package Signing' --addsign /tmp/falco-build-rpm/falco-*.rpm
           rpm --qf %{SIGPGP:pgpsig} -qp /tmp/falco-build-rpm/falco-*.rpm | grep SHA256
 
       - name: Publish rpm
