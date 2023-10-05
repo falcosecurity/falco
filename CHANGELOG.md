@@ -22,7 +22,7 @@ Released on 2023-09-26
 
 
 * new(falco-driver-loader): --source-only now prints the values as env vars [[#2353](https://github.com/falcosecurity/falco/pull/2353)] - [@steakunderscore](https://github.com/steakunderscore)
-* new(docker): allow passing options to falco-driver-loader from the driver loader cointainer [[#2781](https://github.com/falcosecurity/falco/pull/2781)] - [@LucaGuerra](https://github.com/LucaGuerra)
+* new(docker): allow passing options to falco-driver-loader from the driver loader container [[#2781](https://github.com/falcosecurity/falco/pull/2781)] - [@LucaGuerra](https://github.com/LucaGuerra)
 * new(docker): add experimental falco-distroless image based on Wolfi [[#2768](https://github.com/falcosecurity/falco/pull/2768)] - [@LucaGuerra](https://github.com/LucaGuerra)
 * new: the legacy falco image is available as driver-loader-legacy [[#2718](https://github.com/falcosecurity/falco/pull/2718)] - [@LucaGuerra](https://github.com/LucaGuerra)
 * new: added option to enable/disable echoing of server answer to stdout (disabled by default) when using HTTP output [[#2602](https://github.com/falcosecurity/falco/pull/2602)] - [@FedeDP](https://github.com/FedeDP)
@@ -1086,7 +1086,7 @@ Released on 2021-01-18
 ### Minor Changes
 
 * build: bump b64 to v2.0.0.1 [[#1441](https://github.com/falcosecurity/falco/pull/1441)] - [@fntlnz](https://github.com/fntlnz)
-* rules(macro container_started): re-use `spawned_process` macro inside `container_started` macro [[#1449](https://github.com/falcosecurity/falco/pull/1449)] - [@leodido](https://github.com/leodido)
+* rules(macro container_started): reuse `spawned_process` macro inside `container_started` macro [[#1449](https://github.com/falcosecurity/falco/pull/1449)] - [@leodido](https://github.com/leodido)
 * docs: reach out documentation [[#1472](https://github.com/falcosecurity/falco/pull/1472)] - [@fntlnz](https://github.com/fntlnz)
 * docs: Broken outputs.proto link [[#1493](https://github.com/falcosecurity/falco/pull/1493)] - [@deepskyblue86](https://github.com/deepskyblue86)
 * docs(README.md): correct broken links [[#1506](https://github.com/falcosecurity/falco/pull/1506)] - [@leogr](https://github.com/leogr)

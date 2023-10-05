@@ -69,7 +69,7 @@ The allowed publishing channels are:
 Both channels are equivalent and may publish the same artifacts. However, for historical reasons and to avoid confusion, the **`docker.io` registry should only be used for container images** and not for other kinds of artifacts (e.g., plugins, rules, etc.).
 
 
-Mirrors are allowed and encouraged if they facilitate artifacts consumption by our users. This proposal reccomends to enable mirrors on the major public OCI registry, such as [Amazon ECR](https://gallery.ecr.aws/) (which is already implentend in our infra at the time of writing).
+Mirrors are allowed and encouraged if they facilitate artifacts consumption by our users. This proposal recommends to enable mirrors on the major public OCI registry, such as [Amazon ECR](https://gallery.ecr.aws/) (which is already implemented in our infra at the time of writing).
 
 
 Official **channels and mirrors must be listed at [falco.org](https://falco.org/)**. 
