@@ -23,17 +23,15 @@ env:
 jobs:
   publish-packages:
     runs-on: ubuntu-latest
-    container: docker.io/centos:7
+    container: docker.io/library/fedora:38
     steps:
       - name: Checkout
         uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
     
       - name: Install dependencies
         run: |
-          yum install epel-release -y
-          yum update -y
-          yum install rpm-sign expect which createrepo gpg python python-pip -y
-          pip install awscli==1.19.47
+          dnf install rpm-sign expect which createrepo gpg python python-pip -y
+          pip install awscli==1.29.60
 
       # Configure AWS role; see https://github.com/falcosecurity/test-infra/pull/1102
       # Note: master CI can only push dev packages as we have 2 different roles for master and release.
@@ -72,12 +70,12 @@ jobs:
         with:
           name: falco-${{ inputs.version }}-static-x86_64.tar.gz
           path: /tmp/falco-build-bin-static
-        
+
       - name: Import gpg key 
         env:
           GPG_KEY: ${{ secrets.GPG_KEY }}
         run: printenv GPG_KEY | gpg --import -
-        
+
       - name: Sign rpms
         run: |
           echo "%_signature gpg" > ~/.rpmmacros
@@ -93,7 +91,7 @@ jobs:
           chmod +x ~/sign
           ~/sign /tmp/falco-build-rpm/falco-*.rpm
           rpm --qf %{SIGPGP:pgpsig} -qp /tmp/falco-build-rpm/falco-*.rpm | grep SHA256
-          
+
       - name: Publish rpm
         run: |
           ./scripts/publish-rpm -f /tmp/falco-build-rpm/falco-${{ inputs.version }}-x86_64.rpm -f /tmp/falco-build-rpm/falco-${{ inputs.version }}-aarch64.rpm -r rpm${{ inputs.bucket_suffix }}
