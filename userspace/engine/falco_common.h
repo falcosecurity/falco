@@ -60,12 +60,6 @@ struct falco_exception : std::exception
 namespace falco_common
 {
 
-	enum outputs_queue_recovery_type {
-		RECOVERY_CONTINUE = 0,  /* outputs_queue_capacity recovery strategy of continuing on. */
-		RECOVERY_EXIT = 1,  /* outputs_queue_capacity recovery strategy of exiting, self OOM kill. */
-		RECOVERY_EMPTY = 2,  /* outputs_queue_capacity recovery strategy of emptying queue then continuing. */
-	};
-
 	const std::string syscall_source = sinsp_syscall_event_source_name;
 
 	// Same as numbers/indices into the above vector
@@ -83,7 +77,6 @@ namespace falco_common
 	
 	bool parse_priority(std::string v, priority_type& out);
 	priority_type parse_priority(std::string v);
-	bool parse_queue_recovery(std::string v, outputs_queue_recovery_type& out);
 	bool format_priority(priority_type v, std::string& out, bool shortfmt=false);
 	std::string format_priority(priority_type v, bool shortfmt=false);
 
