@@ -303,24 +303,17 @@ rule_matching: first
 # If it does, it is most likely happening due to the entire event flow being too slow,
 # indicating that the server is under heavy load.
 # 
-# Lowering the number of items can prevent memory from steadily increasing until the OOM
-# killer stops the Falco process. We provide recovery actions to self-limit or self-kill
-# in order to handle this situation earlier, similar to how we expose the kernel buffer size
-# as a parameter. However, it will not address the root cause of the event pipe not keeping up.
-# 
 # `capacity`: the maximum number of items allowed in the queue is determined by this value. 
 # Setting the value to 0 (which is the default) is equivalent to keeping the queue unbounded. 
-# In other words, when this configuration is set to 0, the number of allowed items is effectively 
-# set to the largest possible long value, disabling this setting.
+# In other words, when this configuration is set to 0, the number of allowed items is 
+# effectively set to the largest possible long value, disabling this setting.
 # 
-# `recovery`: strategy to follow when the queue becomes filled up. It applies only when the
-# queue is bounded and there is still available system memory. In the case of an unbounded
-# queue, if the available memory on the system is consumed, the Falco process would be
-# OOM killed. The value `exit` is the default, `continue` does nothing special and `empty` 
-# empties the queue and then continues.
+# In the case of an unbounded queue, if the available memory on the system is consumed, 
+# the Falco process would be OOM killed. When using this option and setting the capacity, 
+# the current event would be dropped, and the event loop would continue. This behavior mirrors 
+# kernel-side event drops when the buffer between kernel space and user space is full.
 outputs_queue:
   capacity: 0
-  recovery: exit
 
 
 ##########################
