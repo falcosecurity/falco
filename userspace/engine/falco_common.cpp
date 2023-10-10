@@ -33,12 +33,6 @@ static std::vector<std::string> rule_matching_names = {
 	"all"
 };
 
-static std::vector<std::string> outputs_queue_recovery_names = {
-		"continue",
-		"exit",
-		"empty",
-};
-
 bool falco_common::parse_priority(std::string v, priority_type& out)
 {
 	for (size_t i = 0; i < priority_names.size(); i++)
@@ -64,19 +58,6 @@ falco_common::priority_type falco_common::parse_priority(std::string v)
 		throw falco_exception("Unknown priority value: " + v);
 	}
 	return out;
-}
-
-bool falco_common::parse_queue_recovery(std::string v, outputs_queue_recovery_type& out)
-{
-	for (size_t i = 0; i < outputs_queue_recovery_names.size(); i++)
-	{
-		if (!strcasecmp(v.c_str(), outputs_queue_recovery_names[i].c_str()))
-		{
-			out = (outputs_queue_recovery_type) i;
-			return true;
-		}
-	}
-	return false;
 }
 
 bool falco_common::format_priority(priority_type v, std::string& out, bool shortfmt)

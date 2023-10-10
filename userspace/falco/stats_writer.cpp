@@ -132,8 +132,7 @@ stats_writer::stats_writer(
 	if (m_initialized)
 	{
 #ifndef __EMSCRIPTEN__
-		// capacity and controls should not be relevant for stats outputs, adopt capacity
-		// for completeness, but do not implement config recovery strategies.
+		// Adopt capacity for completeness, even if it's likely not relevant
 		m_queue.set_capacity(config->m_outputs_queue_capacity);
 		m_worker = std::thread(&stats_writer::worker, this);
 #endif

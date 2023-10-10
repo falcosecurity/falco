@@ -42,7 +42,6 @@ falco_configuration::falco_configuration():
 	m_watch_config_files(true),
 	m_buffered_outputs(false),
 	m_outputs_queue_capacity(DEFAULT_OUTPUTS_QUEUE_CAPACITY_UNBOUNDED_MAX_LONG_VALUE),
-	m_outputs_queue_recovery(falco_common::RECOVERY_EXIT),
 	m_time_format_iso_8601(false),
 	m_output_timeout(2000),
 	m_grpc_enabled(false),
@@ -289,11 +288,6 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 	if (m_outputs_queue_capacity == 0)
 	{
 		m_outputs_queue_capacity = DEFAULT_OUTPUTS_QUEUE_CAPACITY_UNBOUNDED_MAX_LONG_VALUE;
-	}
-	std::string recovery = config.get_scalar<std::string>("outputs_queue.recovery", "exit");
-	if (!falco_common::parse_queue_recovery(recovery, m_outputs_queue_recovery))
-	{
-		throw std::logic_error("Unknown recovery \"" + recovery + "\"--must be one of exit, continue, empty");
 	}
 
 	m_time_format_iso_8601 = config.get_scalar<bool>("time_format_iso_8601", false);
