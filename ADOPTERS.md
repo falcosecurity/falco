@@ -86,6 +86,8 @@ This is a list of production adopters of Falco (in alphabetical order):
 
 * [StackRox](https://stackrox.io) is the industry’s first Kubernetes-native security platform enabling organizations to build, deploy, and run cloud-native applications securely. The platform works with Kubernetes environments and integrates with DevOps and security tools, enabling teams to operationalize and secure their supply chain, infrastructure, and workloads. StackRox aims to harness containerized applications’ development speed while giving operations and security teams greater context and risk profiling. StackRox leverages cloud-native principles and declarative artifacts to automate DevSecOps best practices.
 
+* [Wireshark](https://www.wireshark.org) is the world's most powerful and popular network protocol analyzer. The Wireshark team is combining Wireshark's features and Falco libs to create Logray, a cloud and system log analyzer with advanced filtering, capture, and scripting capabilities.
+
 ## Adding a name
 
 If you would like to add your name to this file, submit a pull request with your change.
