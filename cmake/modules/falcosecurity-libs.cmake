@@ -28,15 +28,15 @@ else()
   # In case you want to test against a fork of falcosecurity/libs just pass the variable -
   # ie., `cmake -DFALCOSECURITY_LIBS_REPO=<your-gh-handle>/libs ..` 
   if (NOT FALCOSECURITY_LIBS_REPO)
-    set(FALCOSECURITY_LIBS_REPO "falcosecurity/libs")
+    set(FALCOSECURITY_LIBS_REPO "Andreagit97/libs")
   endif()
 
   # FALCOSECURITY_LIBS_VERSION accepts a git reference (branch name, commit hash, or tag) to the falcosecurity/libs repository.
   # In case you want to test against another falcosecurity/libs version (or branch, or commit) just pass the variable -
   # ie., `cmake -DFALCOSECURITY_LIBS_VERSION=dev ..` 
   if(NOT FALCOSECURITY_LIBS_VERSION)
-    set(FALCOSECURITY_LIBS_VERSION "0.13.1")
-    set(FALCOSECURITY_LIBS_CHECKSUM "SHA256=2be42a27be3ffe6bd7e53eaa5d8358cab05a0dca821819c6e9059e51b9786219")
+    set(FALCOSECURITY_LIBS_VERSION "8b3375596fec7b02ac403dc4158c5bcdf037cf65")
+    set(FALCOSECURITY_LIBS_CHECKSUM "SHA256=587ac097e1ef35ba70ddd3403e569d377a0c4a5935cb17c9ee8f9521dac4140c")
   endif()
 
   # cd /path/to/build && cmake /path/to/source
