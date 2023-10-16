@@ -1,5 +1,19 @@
 # Change Log
 
+## v0.36.1
+
+Released on 2023-10-16
+
+### Major Changes
+
+### Minor Changes
+
+* feat(userspace): remove experimental outputs queue recovery strategies [[#2863](https://github.com/falcosecurity/falco/pull/2863)] - [@incertum](https://github.com/incertum)
+
+### Bug Fixes
+
+* fix(userspace/falco): timer_delete() workaround due to bug in older GLIBC [[#2851](https://github.com/falcosecurity/falco/pull/2851)] - [@incertum](https://github.com/incertum)
+
 
 ## v0.36.0
 
