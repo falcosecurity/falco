@@ -490,7 +490,7 @@ void rule_loader::compiler::compile_rule_infos(
 		sinsp_filter_compiler compiler(cfg.sources.at(r.source)->filter_factory, rule.condition.get());
 		try
 		{
-			compiler.compile();
+			std::shared_ptr<sinsp_filter> sfPtr(compiler.compile());
 		}
 		catch (const sinsp_exception& e)
 		{
