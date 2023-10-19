@@ -1,0 +1,23 @@
+{{- if eq .Values.controller.kind "daemonset" }}
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "falco.fullname" . }}
+  namespace: {{ include "falco.namespace" . }}
+  labels:
+    {{- include "falco.labels" . | nindent 4 }}
+  {{- if .Values.controller.annotations }}
+  annotations:
+  {{ toYaml .Values.controller.annotations | nindent 4 }}
+  {{- end }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "falco.selectorLabels" . | nindent 6 }}
+  template:
+    {{- include "falco.podTemplate" . | nindent 4 }}
+  {{- with .Values.controller.daemonset.updateStrategy }}
+  updateStrategy:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}  
+{{- end }}
