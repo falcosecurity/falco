@@ -1,0 +1,26 @@
+name: Insecure API check
+on:
+  pull_request:
+    branches:
+      - master
+      - 'release/**'
+      - 'maintainers/**'
+
+jobs:
+  insecure-api:
+    name: check-insecure-api
+    runs-on: ubuntu-latest
+    container:
+      image: returntocorp/semgrep:1.41.0@sha256:85956fbe795a0e8a3825d5252f175887c0e0c6ce7a766a07062c0fb68415cd67
+    steps:
+      - name: Checkout Falco ⤵️
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
+        with:
+          fetch-depth: 0
+      - name: Scan PR for insecure API usage 🕵️
+        run: |
+          semgrep scan \
+            --error \
+            --metrics=off \
+            --baseline-commit ${{ github.event.pull_request.base.sha }} \
+            --config=./semgrep
