@@ -19,7 +19,6 @@ limitations under the License.
 
 #include "formats.h"
 #include "falco_engine.h"
-#include "banned.h" // This raises a compilation error when certain functions are used
 
 falco_formats::falco_formats(std::shared_ptr<const falco_engine> engine,
 			     bool json_include_output_property,

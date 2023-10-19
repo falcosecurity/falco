@@ -21,7 +21,6 @@ limitations under the License.
 #include "grpc_server_impl.h"
 #include "grpc_queue.h"
 #include "logger.h"
-#include "banned.h" // This raises a compilation error when certain functions are used
 
 bool falco::grpc::server_impl::is_running()
 {
