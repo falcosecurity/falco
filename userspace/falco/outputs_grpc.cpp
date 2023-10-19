@@ -20,7 +20,6 @@ limitations under the License.
 #include "grpc_queue.h"
 #include "falco_common.h"
 #include "formats.h"
-#include "banned.h" // This raises a compilation error when certain functions are used
 
 #if __has_attribute(deprecated)
 #define DISABLE_WARNING_PUSH                        _Pragma("GCC diagnostic push")

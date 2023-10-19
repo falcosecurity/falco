@@ -17,7 +17,6 @@ limitations under the License.
 
 #include "outputs_syslog.h"
 #include <syslog.h>
-#include "banned.h" // This raises a compilation error when certain functions are used
 
 void falco::outputs::output_syslog::output(const message *msg)
 {

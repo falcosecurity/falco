@@ -26,7 +26,6 @@ limitations under the License.
 #include "falco_common.h"
 #include "stats_writer.h"
 #include "logger.h"
-#include "banned.h" // This raises a compilation error when certain functions are used
 #include "config_falco.h"
 
 // note: ticker_t is an uint16_t, which is enough because we don't care about

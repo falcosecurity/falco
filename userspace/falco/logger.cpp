@@ -19,7 +19,6 @@ limitations under the License.
 #include "logger.h"
 
 #include "falco_common.h"
-#include "banned.h" // This raises a compilation error when certain functions are used
 
 int falco_logger::level = LOG_INFO;
 bool falco_logger::time_format_iso_8601 = false;

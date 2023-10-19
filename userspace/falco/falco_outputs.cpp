@@ -35,8 +35,6 @@ limitations under the License.
 #include "outputs_grpc.h"
 #endif
 
-#include "banned.h" // This raises a compilation error when certain functions are used
-
 static const char* s_internal_source = "internal";
 
 falco_outputs::falco_outputs(

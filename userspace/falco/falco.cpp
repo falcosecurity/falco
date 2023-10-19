@@ -22,7 +22,6 @@ limitations under the License.
 
 #include "app/app.h"
 #include "logger.h"
-#include "banned.h" // This raises a compilation error when certain functions are used
 
 static void display_fatal_err(const std::string &&msg)
 {

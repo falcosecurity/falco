@@ -30,7 +30,6 @@ limitations under the License.
 
 #include "configuration.h"
 #include "logger.h"
-#include "banned.h" // This raises a compilation error when certain functions are used
 
 falco_configuration::falco_configuration():
 	m_json_output(false),

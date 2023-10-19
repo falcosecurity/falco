@@ -17,7 +17,6 @@ limitations under the License.
 
 #include "outputs_stdout.h"
 #include <iostream>
-#include "banned.h" // This raises a compilation error when certain functions are used
 
 void falco::outputs::output_stdout::output(const message *msg)
 {

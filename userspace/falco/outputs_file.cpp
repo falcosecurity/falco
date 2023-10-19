@@ -18,7 +18,6 @@ limitations under the License.
 #include "outputs_file.h"
 #include <iostream>
 #include <fstream>
-#include "banned.h" // This raises a compilation error when certain functions are used
 
 void falco::outputs::output_file::open_file()
 {

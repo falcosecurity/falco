@@ -16,7 +16,6 @@ limitations under the License.
 */
 
 #include "evttype_index_ruleset.h"
-#include "banned.h" // This raises a compilation error when certain functions are used
 
 #include <algorithm>
 

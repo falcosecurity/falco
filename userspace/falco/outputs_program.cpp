@@ -17,7 +17,6 @@ limitations under the License.
 
 #include "outputs_program.h"
 #include <stdio.h>
-#include "banned.h" // This raises a compilation error when certain functions are used
 
 void falco::outputs::output_program::open_pfile()
 {

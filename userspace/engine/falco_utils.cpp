@@ -22,7 +22,6 @@ limitations under the License.
 
 #include "falco_utils.h"
 #include "utils.h"
-#include "banned.h" // This raises a compilation error when certain functions are used
 
 #include <re2/re2.h>
 

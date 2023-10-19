@@ -44,7 +44,6 @@ limitations under the License.
 #include "formats.h"
 
 #include "utils.h"
-#include "banned.h" // This raises a compilation error when certain functions are used
 #include "evttype_index_ruleset.h"
 
 const std::string falco_engine::s_default_ruleset = "falco-default-ruleset";

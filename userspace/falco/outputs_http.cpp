@@ -17,7 +17,6 @@ limitations under the License.
 
 #include "outputs_http.h"
 #include "logger.h"
-#include "banned.h" // This raises a compilation error when certain functions are used
 
 #define CHECK_RES(fn) res = res == CURLE_OK ? fn : res
 
