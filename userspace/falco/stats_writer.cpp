@@ -27,6 +27,7 @@ limitations under the License.
 #include "stats_writer.h"
 #include "logger.h"
 #include "config_falco.h"
+#include "strl.h"
 
 // note: ticker_t is an uint16_t, which is enough because we don't care about
 // overflows here. Threads calling stats_writer::handle() will just
@@ -308,7 +309,7 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 			for(uint32_t stat = 0; stat < nstats; stat++)
 			{
 				char metric_name[STATS_NAME_MAX] = "falco.";
-				strncat(metric_name, utilization[stat].name, sizeof(metric_name) - strlen(metric_name) - 1);
+				strlcat(metric_name, utilization[stat].name, sizeof(metric_name));
 				switch(utilization[stat].type)
 				{
 				case STATS_VALUE_TYPE_U64:
@@ -384,7 +385,7 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 			// todo: as we expand scap_stats_v2 prefix may be pushed to scap or we may need to expand
 			// functionality here for example if we add userspace syscall counters that should be prefixed w/ `falco.`
 			char metric_name[STATS_NAME_MAX] = "scap.";
-			strncat(metric_name, stats_v2[stat].name, sizeof(metric_name) - strlen(metric_name) - 1);
+			strlcat(metric_name, stats_v2[stat].name, sizeof(metric_name));
 			switch(stats_v2[stat].type)
 			{
 			case STATS_VALUE_TYPE_U64:
