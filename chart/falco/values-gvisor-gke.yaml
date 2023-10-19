@@ -1,0 +1,67 @@
+# Default values to deploy Falco on GKE with gVisor.
+
+# Affinity constraint for pods' scheduling.
+# Needed to deploy Falco on the gVisor enabled nodes.
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: sandbox.gke.io/runtime
+          operator: In
+          values:
+          - gvisor
+
+# Tolerations to allow Falco to run on Kubernetes 1.6 masters.
+# Adds the neccesssary tolerations to allow Falco pods to be scheduled on the gVisor enabled nodes.
+tolerations:
+  - effect: NoSchedule
+    key: node-role.kubernetes.io/master
+  - effect: NoSchedule
+    key: sandbox.gke.io/runtime
+    operator: Equal
+    value: gvisor
+
+# Disable the driver since it is not needed.
+driver:
+  enabled: false
+
+# Enable gVisor and set the appropriate paths. 
+gvisor:
+  enabled: true
+  runsc:
+    path: /home/containerd/usr/local/sbin
+    root: /run/containerd/runsc
+    config: /run/containerd/runsc/config.toml
+
+# Enable the containerd collector to enrich the syscall events with metadata.
+collectors:
+  enabled: true
+  containerd:
+    enabled: true
+    socket: /run/containerd/containerd.sock
+
+falcoctl:
+  artifact:
+    install:
+      # -- Enable the init container. We do not recommend installing plugins for security reasons since they are executable objects.
+      # We install only "rulesfiles".
+      enabled: true
+    follow:
+      # -- Enable the sidecar container. We do not support it yet for plugins. It is used only for rules feed such as k8saudit-rules rules.
+      enabled: true
+  config:
+    artifact:
+      install:
+        # -- Do not resolve the depenencies for artifacts. By default is true, but for our use case we disable it.
+        resolveDeps: false
+        # -- List of artifacts to be installed by the falcoctl init container.
+        # We do not recommend installing (or following) plugins for security reasons since they are executable objects.
+        refs: [falco-rules:1]
+      follow:
+        # -- List of artifacts to be followed by the falcoctl sidecar container.
+        # We do not recommend installing (or following) plugins for security reasons since they are executable objects.
+        refs: [falco-rules:1]
+
+# Set this to true to force Falco so output the logs as soon as they are emmitted.
+tty: false

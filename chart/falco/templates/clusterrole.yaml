@@ -1,0 +1,43 @@
+{{- if .Values.rbac.create }}
+kind: ClusterRole
+apiVersion: {{ include "rbac.apiVersion" . }}
+metadata:
+  name: {{ include "falco.fullname" . }}
+  labels:
+    {{- include "falco.labels" . | nindent 4 }}
+rules:
+  - apiGroups:
+      - extensions
+      - ""
+    resources:
+      - nodes
+      - namespaces
+      - pods
+      - replicationcontrollers
+      - replicasets
+      - services
+      - daemonsets
+      - deployments
+      - events
+      - configmaps
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - apps
+    resources:
+      - daemonsets
+      - deployments
+      - replicasets
+      - statefulsets
+    verbs:
+      - get
+      - list
+      - watch
+  - nonResourceURLs:
+      - /healthz
+      - /healthz/*
+    verbs:
+      - get
+{{- end }}

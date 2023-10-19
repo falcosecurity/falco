@@ -1,0 +1,23 @@
+{{- if eq .Values.controller.kind "deployment" }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "falco.fullname" . }}
+  namespace: {{ include "falco.namespace" . }}
+  labels:
+    {{- include "falco.labels" . | nindent 4 }}
+  {{- if .Values.controller.annotations }}
+  annotations:
+  {{ toYaml .Values.controller.annotations | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.controller.deployment.replicas }}
+  {{- if .Values.controller.deployment.revisionHistoryLimit }}
+  revisionHistoryLimit: {{ .Values.controller.deployment.revisionHistoryLimit }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "falco.selectorLabels" . | nindent 6 }}
+  template:
+    {{- include "falco.podTemplate" . | nindent 4 }}
+{{- end }}

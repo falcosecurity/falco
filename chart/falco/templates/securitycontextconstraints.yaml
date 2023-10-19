@@ -1,0 +1,43 @@
+{{- if and .Values.scc.create (.Capabilities.APIVersions.Has "security.openshift.io/v1") }}
+apiVersion: security.openshift.io/v1
+kind: SecurityContextConstraints
+metadata:
+  annotations:
+    kubernetes.io/description: |
+      This provides the minimum requirements Falco to run in Openshift.
+  name: {{ include "falco.serviceAccountName" . }}
+  namespace: {{ include "falco.namespace" . }}
+  labels:
+    {{- include "falco.labels" . | nindent 4 }}
+allowHostDirVolumePlugin: true
+allowHostIPC: false
+allowHostNetwork: true
+allowHostPID: true
+allowHostPorts: false
+allowPrivilegeEscalation: true
+allowPrivilegedContainer: true
+allowedCapabilities: []
+allowedUnsafeSysctls: []
+defaultAddCapabilities: []
+fsGroup:
+  type: RunAsAny
+groups: []
+priority: 0
+readOnlyRootFilesystem: false
+requiredDropCapabilities: []
+runAsUser:
+  type: RunAsAny
+seLinuxContext:
+  type: RunAsAny
+seccompProfiles:
+- '*'
+supplementalGroups:
+  type: RunAsAny
+users:
+- system:serviceaccount:{{ include "falco.namespace" . }}:{{ include "falco.serviceAccountName" . }}
+volumes:
+- hostPath
+- emptyDir
+- secret
+- configMap
+{{- end }}

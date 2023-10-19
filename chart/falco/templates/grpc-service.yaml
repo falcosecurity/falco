@@ -1,0 +1,16 @@
+{{- if and .Values.falco.grpc.enabled .Values.falco.grpc.bind_address (not (hasPrefix "unix://" .Values.falco.grpc.bind_address)) }}
+kind: Service
+apiVersion: v1
+metadata:
+  name: {{ include "falco.fullname" . }}-grpc
+  namespace: {{ include "falco.namespace" . }}
+  labels:
+    {{- include "falco.labels" . | nindent 4 }}
+spec:
+  clusterIP: None
+  selector:
+    {{- include "falco.selectorLabels" . | nindent 4 }}
+  ports:
+  - protocol: TCP
+    port: {{ include "grpc.port" . }}
+{{- end }}
