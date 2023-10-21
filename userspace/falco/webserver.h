@@ -37,6 +37,7 @@ public:
 		const std::shared_ptr<sinsp>& inspector,
 		uint32_t threadiness,
 		uint32_t listen_port,
+		std::string& list_address,
 		std::string& healthz_endpoint,
 		std::string &ssl_certificate,
 		bool ssl_enabled);

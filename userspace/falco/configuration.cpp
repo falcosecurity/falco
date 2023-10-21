@@ -31,6 +31,12 @@ limitations under the License.
 #include "configuration.h"
 #include "logger.h"
 
+#include <re2/re2.h>
+
+// Reference: https://www.oreilly.com/library/view/regular-expressions-cookbook/9780596802837/ch07s16.html
+static re2::RE2 ipv4_address_re("^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$");
+
+
 falco_configuration::falco_configuration():
 	m_json_output(false),
 	m_json_include_output_property(true),
@@ -46,6 +52,7 @@ falco_configuration::falco_configuration():
 	m_webserver_enabled(false),
 	m_webserver_threadiness(0),
 	m_webserver_listen_port(8765),
+	m_webserver_listen_address("0.0.0.0"),
 	m_webserver_k8s_healthz_endpoint("/healthz"),
 	m_webserver_ssl_enabled(false),
 	m_syscall_evt_drop_threshold(.1),
@@ -285,6 +292,12 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 	m_webserver_enabled = config.get_scalar<bool>("webserver.enabled", false);
 	m_webserver_threadiness = config.get_scalar<uint32_t>("webserver.threadiness", 0);
 	m_webserver_listen_port = config.get_scalar<uint32_t>("webserver.listen_port", 8765);
+	m_webserver_listen_address = config.get_scalar<std::string>("webserver.listen_address", "0.0.0.0");
+	if(!re2::RE2::FullMatch(m_webserver_listen_address, ipv4_address_re))
+	{
+		throw std::logic_error("Error reading config file (" + config_name + "): webserver listen address \"" + m_webserver_listen_address + "\" is not a valid IP address");
+	}
+
 	m_webserver_k8s_healthz_endpoint = config.get_scalar<std::string>("webserver.k8s_healthz_endpoint", "/healthz");
 	m_webserver_ssl_enabled = config.get_scalar<bool>("webserver.ssl_enabled", false);
 	m_webserver_ssl_certificate = config.get_scalar<std::string>("webserver.ssl_certificate", "/etc/falco/falco.pem");
