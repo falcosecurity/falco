@@ -29,6 +29,7 @@ void falco_webserver::start(
         const std::shared_ptr<sinsp>& inspector,
         uint32_t threadiness,
         uint32_t listen_port,
+        std::string& listen_address,
         std::string& healthz_endpoint,
         std::string &ssl_certificate,
         bool ssl_enabled)
@@ -77,11 +78,11 @@ void falco_webserver::start(
 
     std::atomic<bool> failed;
     failed.store(false, std::memory_order_release);
-    m_server_thread = std::thread([this, listen_port, &failed]
+    m_server_thread = std::thread([this, listen_address, listen_port, &failed]
     {
         try
         {
-            this->m_server->listen("0.0.0.0", listen_port);
+            this->m_server->listen(listen_address, listen_port);
         }
         catch(std::exception &e)
         {
