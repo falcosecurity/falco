@@ -725,13 +725,22 @@ syscall_event_drops:
 # number of CPUs to determine overall usage. Memory metrics are provided in raw
 # units (`kb` for `RSS`, `PSS` and `VSZ` or `bytes` for `container_memory_used`)
 # and can be uniformly converted to megabytes (MB) using the
-# `convert_memory_to_mb` functionality. In environments such as Kubernetes, it
-# is crucial to track Falco's container memory usage. To customize the path of
-# the memory metric file, you can create an environment variable named
-# `FALCO_CGROUP_MEM_PATH` and set it to the desired file path. By default, Falco
-# uses the file `/sys/fs/cgroup/memory/memory.usage_in_bytes` to monitor
-# container memory usage, which aligns with Kubernetes'
-# `container_memory_working_set_bytes` metric.
+# `convert_memory_to_mb` functionality. In environments such as Kubernetes when 
+# deployed as daemonset, it is crucial to track Falco's container memory usage. 
+# To customize the path of the memory metric file, you can create an environment 
+# variable named `FALCO_CGROUP_MEM_PATH` and set it to the desired file path. By 
+# default, Falco uses the file `/sys/fs/cgroup/memory/memory.usage_in_bytes` to 
+# monitor container memory usage, which aligns with Kubernetes' 
+# `container_memory_working_set_bytes` metric. Finally, we emit the overall host 
+# CPU and memory usages, along with the total number of processes and open file 
+# descriptors (fds) on the host, obtained from the proc file system unrelated to 
+# Falco's monitoring. These metrics help assess Falco's usage in relation to the 
+# server's workload intensity.
+#
+# `state_counters_enabled`: Emit counters related to Falco's state engine, including 
+# added, removed threads or file descriptors (fds), and failed lookup, store, or 
+# retrieve actions in relation to Falco's underlying process cache table (threadtable). 
+# We also log the number of currently cached containers if applicable.
 #
 # `kernel_event_counters_enabled`: Emit kernel side event and drop counters, as
 # an alternative to `syscall_event_drops`, but with some differences. These
@@ -764,6 +773,7 @@ metrics:
   output_rule: true
   # output_file: /tmp/falco_stats.jsonl
   resource_utilization_enabled: true
+  state_counters_enabled: true
   kernel_event_counters_enabled: true
   libbpf_stats_enabled: true
   convert_memory_to_mb: true

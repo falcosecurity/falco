@@ -73,6 +73,7 @@ falco_configuration::falco_configuration():
 	m_metrics_stats_rule_enabled(false),
 	m_metrics_output_file(""),
 	m_metrics_resource_utilization_enabled(true),
+	m_metrics_state_counters_enabled(true),
 	m_metrics_kernel_event_counters_enabled(true),
 	m_metrics_libbpf_stats_enabled(true),
 	m_metrics_convert_memory_to_mb(true),
@@ -381,6 +382,7 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 	m_metrics_stats_rule_enabled = config.get_scalar<bool>("metrics.output_rule", false);
 	m_metrics_output_file = config.get_scalar<std::string>("metrics.output_file", "");
 	m_metrics_resource_utilization_enabled = config.get_scalar<bool>("metrics.resource_utilization_enabled", true);
+	m_metrics_state_counters_enabled = config.get_scalar<bool>("metrics.state_counters_enabled", true);
 	m_metrics_kernel_event_counters_enabled = config.get_scalar<bool>("metrics.kernel_event_counters_enabled", true);
 	m_metrics_libbpf_stats_enabled = config.get_scalar<bool>("metrics.libbpf_stats_enabled", true);
 	m_metrics_convert_memory_to_mb = config.get_scalar<bool>("metrics.convert_memory_to_mb", true);
