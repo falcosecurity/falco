@@ -358,60 +358,86 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 	const scap_agent_info* agent_info = inspector->get_agent_info();
 
 #if !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
-	/* Resource utilization, CPU and memory usage etc. */
 	uint32_t nstats = 0;
 	int32_t rc = 0;
+	uint32_t flags = 0;
+
 	if (m_writer->m_config->m_metrics_resource_utilization_enabled)
 	{
-		const scap_stats_v2* utilization;
-		auto buffer = inspector->get_sinsp_stats_v2_buffer();
-		utilization = libsinsp::resource_utilization::get_resource_utilization(agent_info, buffer, &nstats, &rc);
-		if (utilization && rc == 0 && nstats > 0)
+		/* Resource utilization, CPU and memory usage etc. */
+		flags |= PPM_SCAP_STATS_RESOURCE_UTILIZATION;
+	}
+
+	if (m_writer->m_config->m_metrics_state_counters_enabled)
+	{
+		/* Counters related to sinsp state (threadtable including fds per thread as well as container cache) */
+		flags |= PPM_SCAP_STATS_STATE_COUNTERS;
+	}
+
+	auto buffer = inspector->get_sinsp_stats_v2_buffer();
+	sinsp_stats_v2 sinsp_stats_v2 = inspector->get_sinsp_stats_v2();
+	sinsp_thread_manager* thread_manager = inspector->m_thread_manager;
+	const scap_stats_v2* sinsp_stats_v2_snapshot = libsinsp::stats::get_sinsp_stats_v2(flags, agent_info, thread_manager, sinsp_stats_v2, buffer, &nstats, &rc);
+
+	if (sinsp_stats_v2_snapshot && rc == 0 && nstats > 0)
+	{
+		for(uint32_t stat = 0; stat < nstats; stat++)
 		{
-			for(uint32_t stat = 0; stat < nstats; stat++)
+			if (sinsp_stats_v2_snapshot[stat].name[0] == '\0')
 			{
-				char metric_name[STATS_NAME_MAX] = "falco.";
-				strlcat(metric_name, utilization[stat].name, sizeof(metric_name));
-				switch(utilization[stat].type)
+				break;
+			}
+			char metric_name[STATS_NAME_MAX] = "falco.";
+			strlcat(metric_name, sinsp_stats_v2_snapshot[stat].name, sizeof(metric_name));
+			switch(sinsp_stats_v2_snapshot[stat].type)
+			{
+			case STATS_VALUE_TYPE_U64:
+				if (sinsp_stats_v2_snapshot[stat].value.u64 == 0 && !m_writer->m_config->m_metrics_include_empty_values)
 				{
-				case STATS_VALUE_TYPE_U64:
-					if (utilization[stat].value.u64 == 0 && !m_writer->m_config->m_metrics_include_empty_values)
-					{
-						break;
-					}
-					if (m_writer->m_config->m_metrics_convert_memory_to_mb && strncmp(utilization[stat].name, "container_memory_used", 22) == 0) // exact str match
-					{
-						output_fields[metric_name] = (uint64_t)(utilization[stat].value.u64 / (double)1024 / (double)1024);
-					}
-					else
-					{
-						output_fields[metric_name] = utilization[stat].value.u64;
-					}
-					break;
-				case STATS_VALUE_TYPE_U32:
-					if (utilization[stat].value.u32 == 0 && !m_writer->m_config->m_metrics_include_empty_values)
-					{
-						break;
-					}
-					if (m_writer->m_config->m_metrics_convert_memory_to_mb && strncmp(utilization[stat].name, "memory_", 7) == 0) // prefix match
-					{
-						output_fields[metric_name] = (uint32_t)(utilization[stat].value.u32 / (double)1024);
-					}
-					else
-					{
-						output_fields[metric_name] = utilization[stat].value.u32;
-					}
-					break;
-				case STATS_VALUE_TYPE_D:
-					if (utilization[stat].value.d == 0 && !m_writer->m_config->m_metrics_include_empty_values)
-					{
-						break;
-					}
-					output_fields[metric_name] = utilization[stat].value.d;
-					break;
-				default:
 					break;
 				}
+				if (m_writer->m_config->m_metrics_convert_memory_to_mb)
+				{
+					if (strncmp(sinsp_stats_v2_snapshot[stat].name, "container_memory_used", 22) == 0) // exact str match
+					{
+						output_fields[metric_name] = (uint64_t)(sinsp_stats_v2_snapshot[stat].value.u64 / (double)1024 / (double)1024);
+
+					} else if (strncmp(sinsp_stats_v2_snapshot[stat].name, "memory_", 7) == 0) // prefix match
+					{
+						output_fields[metric_name] = (uint64_t)(sinsp_stats_v2_snapshot[stat].value.u64 / (double)1024);
+					} else
+					{
+						output_fields[metric_name] = sinsp_stats_v2_snapshot[stat].value.u64;
+					}
+				}
+				else
+				{
+					output_fields[metric_name] = sinsp_stats_v2_snapshot[stat].value.u64;
+				}
+				break;
+			case STATS_VALUE_TYPE_U32:
+				if (sinsp_stats_v2_snapshot[stat].value.u32 == 0 && !m_writer->m_config->m_metrics_include_empty_values)
+				{
+					break;
+				}
+				if (m_writer->m_config->m_metrics_convert_memory_to_mb && strncmp(sinsp_stats_v2_snapshot[stat].name, "memory_", 7) == 0) // prefix match
+				{
+					output_fields[metric_name] = (uint32_t)(sinsp_stats_v2_snapshot[stat].value.u32 / (double)1024);
+				}
+				else
+				{
+					output_fields[metric_name] = sinsp_stats_v2_snapshot[stat].value.u32;
+				}
+				break;
+			case STATS_VALUE_TYPE_D:
+				if (sinsp_stats_v2_snapshot[stat].value.d == 0 && !m_writer->m_config->m_metrics_include_empty_values)
+				{
+					break;
+				}
+				output_fields[metric_name] = sinsp_stats_v2_snapshot[stat].value.d;
+				break;
+			default:
+				break;
 			}
 		}
 	}
@@ -424,7 +450,7 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 	/* Kernel side stats counters and libbpf stats if applicable. */
 	nstats = 0;
 	rc = 0;
-	uint32_t flags = 0;
+	flags = 0;
 
 	if (m_writer->m_config->m_metrics_kernel_event_counters_enabled)
 	{
@@ -434,8 +460,8 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 	{
 		flags |= PPM_SCAP_STATS_LIBBPF_STATS;
 	}
-	const scap_stats_v2* stats_v2 = inspector->get_capture_stats_v2(flags, &nstats, &rc);
-	if (stats_v2 && nstats > 0 && rc == 0)
+	const scap_stats_v2* stats_v2_snapshot = inspector->get_capture_stats_v2(flags, &nstats, &rc);
+	if (stats_v2_snapshot && nstats > 0 && rc == 0)
 	{
 		/* Cache n_evts and n_drops to derive n_drops_perc. */
 		uint64_t n_evts = 0;
@@ -444,17 +470,21 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 		uint64_t n_drops_delta = 0;
 		for(uint32_t stat = 0; stat < nstats; stat++)
 		{
+			if (stats_v2_snapshot[stat].name[0] == '\0')
+			{
+				break;
+			}
 			// todo: as we expand scap_stats_v2 prefix may be pushed to scap or we may need to expand
 			// functionality here for example if we add userspace syscall counters that should be prefixed w/ `falco.`
 			char metric_name[STATS_NAME_MAX] = "scap.";
-			strlcat(metric_name, stats_v2[stat].name, sizeof(metric_name));
-			switch(stats_v2[stat].type)
+			strlcat(metric_name, stats_v2_snapshot[stat].name, sizeof(metric_name));
+			switch(stats_v2_snapshot[stat].type)
 			{
 			case STATS_VALUE_TYPE_U64:
 				/* Always send high level n_evts related fields, even if zero. */
-				if (strncmp(stats_v2[stat].name, "n_evts", 7) == 0) // exact not prefix match here
+				if (strncmp(stats_v2_snapshot[stat].name, "n_evts", 7) == 0) // exact not prefix match here
 				{
-					n_evts = stats_v2[stat].value.u64;
+					n_evts = stats_v2_snapshot[stat].value.u64;
 					output_fields[metric_name] = n_evts;
 					output_fields["scap.n_evts_prev"] = m_last_n_evts;
 					n_evts_delta = n_evts - m_last_n_evts;
@@ -470,9 +500,9 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 					m_last_n_evts = n_evts;
 				}
 				/* Always send high level n_drops related fields, even if zero. */
-				else if (strncmp(stats_v2[stat].name, "n_drops", 8) == 0) // exact not prefix match here
+				else if (strncmp(stats_v2_snapshot[stat].name, "n_drops", 8) == 0) // exact not prefix match here
 				{
-					n_drops = stats_v2[stat].value.u64;
+					n_drops = stats_v2_snapshot[stat].value.u64;
 					output_fields[metric_name] = n_drops;
 					output_fields["scap.n_drops_prev"] = m_last_n_drops;
 					n_drops_delta = n_drops - m_last_n_drops;
@@ -487,11 +517,11 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 					}
 					m_last_n_drops = n_drops;
 				}
-				if (stats_v2[stat].value.u64 == 0 && !m_writer->m_config->m_metrics_include_empty_values)
+				if (stats_v2_snapshot[stat].value.u64 == 0 && !m_writer->m_config->m_metrics_include_empty_values)
 				{
 					break;
 				}
-				output_fields[metric_name] = stats_v2[stat].value.u64;
+				output_fields[metric_name] = stats_v2_snapshot[stat].value.u64;
 				break;
 			default:
 				break;
