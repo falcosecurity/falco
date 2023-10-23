@@ -121,10 +121,7 @@ public:
 	uint64_t m_metrics_interval;
 	bool m_metrics_stats_rule_enabled;
 	std::string m_metrics_output_file;
-	bool m_metrics_resource_utilization_enabled;
-	bool m_metrics_state_counters_enabled;
-	bool m_metrics_kernel_event_counters_enabled;
-	bool m_metrics_libbpf_stats_enabled;
+	uint32_t m_metrics_flags;
 	bool m_metrics_convert_memory_to_mb;
 	bool m_metrics_include_empty_values;
 

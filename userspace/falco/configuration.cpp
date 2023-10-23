@@ -72,10 +72,7 @@ falco_configuration::falco_configuration():
 	m_metrics_interval(5000),
 	m_metrics_stats_rule_enabled(false),
 	m_metrics_output_file(""),
-	m_metrics_resource_utilization_enabled(true),
-	m_metrics_state_counters_enabled(true),
-	m_metrics_kernel_event_counters_enabled(true),
-	m_metrics_libbpf_stats_enabled(true),
+	m_metrics_flags((PPM_SCAP_STATS_KERNEL_COUNTERS | PPM_SCAP_STATS_LIBBPF_STATS | PPM_SCAP_STATS_RESOURCE_UTILIZATION | PPM_SCAP_STATS_STATE_COUNTERS)),
 	m_metrics_convert_memory_to_mb(true),
 	m_metrics_include_empty_values(false)
 {
@@ -381,10 +378,29 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 	m_metrics_interval = falco::utils::parse_prometheus_interval(m_metrics_interval_str);
 	m_metrics_stats_rule_enabled = config.get_scalar<bool>("metrics.output_rule", false);
 	m_metrics_output_file = config.get_scalar<std::string>("metrics.output_file", "");
-	m_metrics_resource_utilization_enabled = config.get_scalar<bool>("metrics.resource_utilization_enabled", true);
-	m_metrics_state_counters_enabled = config.get_scalar<bool>("metrics.state_counters_enabled", true);
-	m_metrics_kernel_event_counters_enabled = config.get_scalar<bool>("metrics.kernel_event_counters_enabled", true);
-	m_metrics_libbpf_stats_enabled = config.get_scalar<bool>("metrics.libbpf_stats_enabled", true);
+
+	m_metrics_flags = 0;
+	if (config.get_scalar<bool>("metrics.resource_utilization_enabled", true))
+	{
+		m_metrics_flags |= PPM_SCAP_STATS_RESOURCE_UTILIZATION;
+
+	}
+	if (config.get_scalar<bool>("metrics.state_counters_enabled", true))
+	{
+		m_metrics_flags |= PPM_SCAP_STATS_STATE_COUNTERS;
+
+	}
+	if (config.get_scalar<bool>("metrics.kernel_event_counters_enabled", true))
+	{
+		m_metrics_flags |= PPM_SCAP_STATS_KERNEL_COUNTERS;
+
+	}
+	if (config.get_scalar<bool>("metrics.libbpf_stats_enabled", true))
+	{
+		m_metrics_flags |= PPM_SCAP_STATS_LIBBPF_STATS;
+
+	}
+
 	m_metrics_convert_memory_to_mb = config.get_scalar<bool>("metrics.convert_memory_to_mb", true);
 	m_metrics_include_empty_values = config.get_scalar<bool>("metrics.include_empty_values", false);
 
