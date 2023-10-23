@@ -313,6 +313,13 @@ certs:
   ca:
     # -- CA certificate used by gRPC, webserver and AuditSink validation.
     crt: ""
+  existingClientSecret: ""
+  client:
+    # -- Key used by http mTLS client.
+    key: ""
+    # -- Certificate used by http mTLS client.
+    crt: ""
+
 # -- Third party rules enabled for Falco. More info on the dedicated section in README.md file.
 customRules:
   {}
@@ -708,13 +715,13 @@ falco:
     ca_bundle: ""
     # -- Path to a folder that will be used as the CA certificate store. CA certificate need to be
     # stored as indivitual PEM files in this directory.
-    ca_path: "/etc/ssl/certs"
+    ca_path: "/etc/falco/certs/"
     # -- Tell Falco to use mTLS
     mtls: false
     # -- Path to the client cert.
-    client_cert: "/etc/ssl/certs/client.crt"
+    client_cert: "/etc/falco/certs/client/client.crt"
     # -- Path to the client key.
-    client_key: "/etc/ssl/certs/client.key"
+    client_key: "/etc/falco/certs/client/client.key"
     # -- Whether to echo server answers to stdout
     echo: false
 

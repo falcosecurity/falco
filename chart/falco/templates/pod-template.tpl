@@ -201,6 +201,11 @@ spec:
           name: certs-volume
           readOnly: true
         {{- end }}
+        {{- if or .Values.certs.existingSecret (and .Values.certs.client.key .Values.certs.client.crt .Values.certs.ca.crt) }}
+        - mountPath: /etc/falco/certs/client
+          name: client-certs-volume
+          readOnly: true
+        {{- end }}
         {{- include "falco.unixSocketVolumeMount"  . | nindent 8 -}}
         {{- with .Values.mounts.volumeMounts }}
           {{- toYaml . | nindent 8 }}
@@ -333,6 +338,15 @@ spec:
         secretName: {{ .Values.certs.existingSecret }}
         {{- else }}
         secretName: {{ include "falco.fullname" . }}-certs
+        {{- end }}
+    {{- end }}
+    {{- if or .Values.certs.existingSecret (and .Values.certs.client.key .Values.certs.client.crt .Values.certs.ca.crt) }}
+    - name: client-certs-volume
+      secret:
+        {{- if .Values.certs.existingClientSecret }}
+        secretName: {{ .Values.certs.existingClientSecret }}
+        {{- else }}
+        secretName: {{ include "falco.fullname" . }}-client-certs
         {{- end }}
     {{- end }}
     {{- include "falco.unixSocketVolume" . | nindent 4 -}}
