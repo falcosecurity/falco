@@ -474,6 +474,37 @@ helm install falco \
   falcosecurity/falco
 ```
 
+## Enable http_output
+
+HTTP output enables Falco to send events through HTTP(S) via the following configuration:
+
+```shell
+helm install falco \
+  --set falco.http_output.enabled=true \
+  --set falco.http_output.url="http://some.url/some/path/" \
+  --set falco.json_output=true \
+  --set json_include_output_property=true
+  falcosecurity/falco
+```
+
+Additionaly, you can enable mTLS communication and load HTTP client cryptographic material via:
+
+```shell
+helm install falco \
+  --set falco.http_output.enabled=true \
+  --set falco.http_output.url="https://some.url/some/path/" \
+  --set falco.json_output=true \
+  --set json_include_output_property=true \
+  --set falco.http_output.mtls=true \
+  --set falco.http_output.client_cert="/etc/falco/certs/client/client.crt" \
+  --set falco.http_output.client_key="/etc/falco/certs/client/client.key" \
+  --set falco.http_output.ca_cert="/etc/falco/certs/client/ca.crt" \
+  --set-file certs.client.key="/path/to/client.key",certs.client.crt="/path/to/client.crt",certs.ca.crt="/path/to/cacert.crt" \
+  falcosecurity/falco
+```
+
+Or instead of directly setting the files via `--set-file`, mounting an existing volume with the `certs.existingClientSecret` value.
+
 ## Deploy Falcosidekick with Falco
 
 [`Falcosidekick`](https://github.com/falcosecurity/falcosidekick) can be installed with `Falco` by setting `--set falcosidekick.enabled=true`. This setting automatically configures all options of `Falco` for working with `Falcosidekick`.
