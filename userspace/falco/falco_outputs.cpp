@@ -90,10 +90,12 @@ void falco_outputs::add_output(falco::outputs::config oc)
 	{
 		oo = new falco::outputs::output_file();
 	}
+#ifndef _WIN32
 	else if(oc.name == "program")
 	{
 		oo = new falco::outputs::output_program();
 	}
+#endif
 	else if(oc.name == "stdout")
 	{
 		oo = new falco::outputs::output_stdout();
