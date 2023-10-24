@@ -16,7 +16,11 @@ limitations under the License.
 */
 
 #include <stdlib.h>
+#ifdef _WIN32
+#include <io.h>
+#else
 #include <unistd.h>
+#endif
 
 #include "actions.h"
 

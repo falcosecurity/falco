@@ -21,7 +21,11 @@ limitations under the License.
 
 #include <string.h>
 #include <fcntl.h>
+#ifdef _WIN32
+#include <io.h>
+#else
 #include <unistd.h>
+#endif
 #if !defined(__APPLE__)
 #include <sys/inotify.h>
 #endif
