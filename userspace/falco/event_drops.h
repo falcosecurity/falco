@@ -29,7 +29,7 @@ limitations under the License.
 // detecting a syscall event drop.
 enum class syscall_evt_drop_action : uint8_t
 {
-	IGNORE = 0,
+	DISREGARD = 0,
 	LOG,
 	ALERT,
 	EXIT

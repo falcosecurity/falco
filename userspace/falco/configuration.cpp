@@ -313,11 +313,11 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 	{
 		if(act == "ignore")
 		{
-			m_syscall_evt_drop_actions.insert(syscall_evt_drop_action::IGNORE);
+			m_syscall_evt_drop_actions.insert(syscall_evt_drop_action::DISREGARD);
 		}
 		else if(act == "log")
 		{
-			if(m_syscall_evt_drop_actions.count(syscall_evt_drop_action::IGNORE))
+			if(m_syscall_evt_drop_actions.count(syscall_evt_drop_action::DISREGARD))
 			{
 				throw std::logic_error("Error reading config file (" + config_name + "): syscall event drop action \"" + act + "\" does not make sense with the \"ignore\" action");
 			}
@@ -325,7 +325,7 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 		}
 		else if(act == "alert")
 		{
-			if(m_syscall_evt_drop_actions.count(syscall_evt_drop_action::IGNORE))
+			if(m_syscall_evt_drop_actions.count(syscall_evt_drop_action::DISREGARD))
 			{
 				throw std::logic_error("Error reading config file (" + config_name + "): syscall event drop action \"" + act + "\" does not make sense with the \"ignore\" action");
 			}
@@ -343,7 +343,7 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 
 	if(m_syscall_evt_drop_actions.empty())
 	{
-		m_syscall_evt_drop_actions.insert(syscall_evt_drop_action::IGNORE);
+		m_syscall_evt_drop_actions.insert(syscall_evt_drop_action::DISREGARD);
 	}
 
 	m_syscall_evt_drop_threshold = config.get_scalar<double>("syscall_event_drops.threshold", .1);
