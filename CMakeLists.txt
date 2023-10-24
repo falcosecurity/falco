@@ -184,9 +184,6 @@ include(falcosecurity-libs)
 # compute FALCO_VERSION (depends on libs)
 include(falco-version)
 
-# jq
-include(jq)
-
 # nlohmann-json
 include(njson)
 
