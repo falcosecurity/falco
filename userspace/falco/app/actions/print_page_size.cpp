@@ -24,7 +24,15 @@ falco::app::run_result falco::app::actions::print_page_size(falco::app::state& s
 {
 	if(s.options.print_page_size)
 	{
+#ifndef _WIN32
 		long page_size = getpagesize();
+#else
+		SYSTEM_INFO sysInfo;
+
+		GetSystemInfo(&sysInfo);
+
+		long page_size = sysInfo.dwPageSize;
+#endif
 		if(page_size <= 0)
 		{
 			return run_result::fatal("\nUnable to get the system page size through 'getpagesize()'\n");
