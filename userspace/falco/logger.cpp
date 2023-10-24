@@ -144,6 +144,7 @@ void falco_logger::log(int priority, const std::string&& msg)
 
 	std::string copy = msg;
 
+#ifndef _WIN32
 	if (falco_logger::log_syslog)
 	{
 		// Syslog output should not have any trailing newline
@@ -154,6 +155,7 @@ void falco_logger::log(int priority, const std::string&& msg)
 
 		::syslog(priority, "%s", copy.c_str());
 	}
+#endif
 
 	if (falco_logger::log_stderr)
 	{
