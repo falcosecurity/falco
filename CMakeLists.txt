@@ -109,30 +109,50 @@ endif()
 # explicitly set hardening flags
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(FALCO_SECURITY_FLAGS "")
-if(NOT EMSCRIPTEN AND NOT APPLE)
+if(LINUX)
   set(FALCO_SECURITY_FLAGS "${FALCO_SECURITY_FLAGS} -Wl,-z,relro,-z,now -fstack-protector-strong")
 endif()
-if(CMAKE_BUILD_TYPE STREQUAL "release")
-  set(FALCO_SECURITY_FLAGS "${FALCO_SECURITY_FLAGS} -D_FORTIFY_SOURCE=2")
+
+if(NOT WIN32)
+  if(CMAKE_BUILD_TYPE STREQUAL "release")
+    set(FALCO_SECURITY_FLAGS "${FALCO_SECURITY_FLAGS} -D_FORTIFY_SOURCE=2")
+  endif()
+
+  set(CMAKE_COMMON_FLAGS "${FALCO_SECURITY_FLAGS} -Wall -ggdb ${FALCO_EXTRA_FEATURE_FLAGS} ${MINIMAL_BUILD_FLAGS} ${MUSL_FLAGS}")
+
+  if(BUILD_WARNINGS_AS_ERRORS)
+    set(CMAKE_SUPPRESSED_WARNINGS
+        "-Wno-unused-parameter -Wno-unused-variable -Wno-unused-but-set-variable -Wno-missing-field-initializers -Wno-sign-compare -Wno-type-limits -Wno-implicit-fallthrough -Wno-format-truncation -Wno-stringop-truncation -Wno-stringop-overflow -Wno-restrict"
+    )
+    set(CMAKE_COMMON_FLAGS "${CMAKE_COMMON_FLAGS} -Wextra -Werror ${CMAKE_SUPPRESSED_WARNINGS}")
+  endif()
+
+  set(CMAKE_C_FLAGS "${CMAKE_COMMON_FLAGS}")
+  set(CMAKE_CXX_FLAGS "-std=c++17 ${CMAKE_COMMON_FLAGS} -Wno-class-memaccess")
+
+  set(CMAKE_C_FLAGS_DEBUG "${FALCO_EXTRA_DEBUG_FLAGS}")
+  set(CMAKE_CXX_FLAGS_DEBUG "${FALCO_EXTRA_DEBUG_FLAGS}")
+
+  set(CMAKE_C_FLAGS_RELEASE "-O3 -fno-strict-aliasing -DNDEBUG")
+  set(CMAKE_CXX_FLAGS_RELEASE "-O3 -fno-strict-aliasing -DNDEBUG")
+
+else()
+  add_compile_definitions(_HAS_STD_BYTE=0)
+
+  set(FALCO_SECURITY_FLAGS_WIN "-D_CRT_SECURE_NO_WARNINGS -DWIN32 -DMINIMAL_BUILD /EHsc /W3 /Zi")
+  set(FALCO_SECURITY_FLAGS_WIN_DEBUG "/MTd /Od")
+  set(FALCO_SECURITY_FLAGS_WIN_RELEASE "/MT")
+
+  set(CMAKE_C_FLAGS "${FALCO_SECURITY_FLAGS_WIN}")
+  set(CMAKE_CXX_FLAGS "${FALCO_SECURITY_FLAGS_WIN}")
+
+  set(CMAKE_C_FLAGS_DEBUG "${FALCO_SECURITY_FLAGS_WIN_DEBUG}")
+  set(CMAKE_CXX_FLAGS_DEBUG "${FALCO_SECURITY_FLAGS_WIN_DEBUG}")
+
+  set(CMAKE_C_FLAGS_RELEASE "${FALCO_SECURITY_FLAGS_WIN_RELEASE}")
+  set(CMAKE_CXX_FLAGS_RELEASE "${FALCO_SECURITY_FLAGS_WIN_RELEASE}")
+
 endif()
-
-set(CMAKE_COMMON_FLAGS "${FALCO_SECURITY_FLAGS} -Wall -ggdb ${FALCO_EXTRA_FEATURE_FLAGS} ${MINIMAL_BUILD_FLAGS} ${MUSL_FLAGS}")
-
-if(BUILD_WARNINGS_AS_ERRORS)
-  set(CMAKE_SUPPRESSED_WARNINGS
-      "-Wno-unused-parameter -Wno-unused-variable -Wno-unused-but-set-variable -Wno-missing-field-initializers -Wno-sign-compare -Wno-type-limits -Wno-implicit-fallthrough -Wno-format-truncation -Wno-stringop-truncation -Wno-stringop-overflow -Wno-restrict"
-  )
-  set(CMAKE_COMMON_FLAGS "${CMAKE_COMMON_FLAGS} -Wextra -Werror ${CMAKE_SUPPRESSED_WARNINGS}")
-endif()
-
-set(CMAKE_C_FLAGS "${CMAKE_COMMON_FLAGS}")
-set(CMAKE_CXX_FLAGS "-std=c++17 ${CMAKE_COMMON_FLAGS} -Wno-class-memaccess")
-
-set(CMAKE_C_FLAGS_DEBUG "${FALCO_EXTRA_DEBUG_FLAGS}")
-set(CMAKE_CXX_FLAGS_DEBUG "${FALCO_EXTRA_DEBUG_FLAGS}")
-
-set(CMAKE_C_FLAGS_RELEASE "-O3 -fno-strict-aliasing -DNDEBUG")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -fno-strict-aliasing -DNDEBUG")
 
 set(PACKAGE_NAME "falco")
 set(DRIVER_NAME "falco")
@@ -174,6 +194,9 @@ include(njson)
 include(yaml-cpp)
 
 if(NOT WIN32 AND NOT APPLE AND NOT MINIMAL_BUILD AND NOT EMSCRIPTEN)
+  # jq
+  include(jq)
+
   # OpenSSL
   include(openssl)
 
