@@ -26,10 +26,10 @@ limitations under the License.
 #else
 #include <unistd.h>
 #endif
-#if !defined(__APPLE__) && !defined(_WIN32)
+#ifdef __linux__
 #include <sys/inotify.h>
-#endif
 #include <sys/select.h>
+#endif
 
 #if __GLIBC__ == 2 && __GLIBC_MINOR__ < 30
 #include <sys/syscall.h>
