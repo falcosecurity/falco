@@ -26,7 +26,7 @@ limitations under the License.
 #else
 #include <unistd.h>
 #endif
-#if !defined(__APPLE__)
+#if !defined(__APPLE__) && !defined(_WIN32)
 #include <sys/inotify.h>
 #endif
 #include <sys/select.h>

@@ -15,7 +15,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+#ifndef _WIN32
 #include <sys/time.h>
+#endif
 #include <ctime>
 #include <csignal>
 #include <nlohmann/json.hpp>
@@ -33,7 +35,7 @@ limitations under the License.
 // overflows here. Threads calling stats_writer::handle() will just
 // check that this value changed since their last observation.
 static std::atomic<stats_writer::ticker_t> s_timer((stats_writer::ticker_t) 0);
-#if !defined(__APPLE__)
+#if !defined(__APPLE__) && !defined(_WIN32)
 static timer_t s_timerid;
 #else
 static uint16_t s_timerid;
@@ -52,6 +54,7 @@ static void timer_handler(int signum)
 
 bool stats_writer::init_ticker(uint32_t interval_msec, std::string &err)
 {
+#if !defined(_WIN32)
 #if !defined(__APPLE__)
 	struct itimerspec timer = {};
 #endif
@@ -104,6 +107,7 @@ bool stats_writer::init_ticker(uint32_t interval_msec, std::string &err)
 		return false;
 	}
 #endif
+#endif // !defined(_WIN32)
 	return true;
 }
 
@@ -160,7 +164,7 @@ stats_writer::~stats_writer()
 			m_file_output.close();
 		}
 		// delete timerID and reset timer
-#if !defined(__EMSCRIPTEN__) && !defined(__APPLE__)
+#if !defined(__EMSCRIPTEN__) && !defined(__APPLE__) && !defined(_WIN32)
 		if (s_timerid_exists)
 		{
 			timer_delete(s_timerid);
