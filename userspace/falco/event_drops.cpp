@@ -149,7 +149,7 @@ bool syscall_evt_drop_mgr::perform_actions(uint64_t now, scap_stats &delta, bool
 	{
 		switch(act)
 		{
-		case syscall_evt_drop_action::IGNORE:
+		case syscall_evt_drop_action::DISREGARD:
 			return true;
 
 		case syscall_evt_drop_action::LOG:
