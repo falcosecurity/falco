@@ -22,16 +22,20 @@ limitations under the License.
 #include <string>
 #include <unordered_set>
 
-#include <dirent.h>
+#include <filesystem>
 #include <sys/types.h>
 #include <sys/stat.h>
+#ifndef _WIN32
 #include <unistd.h>
+#endif
 #include "falco_utils.h"
 
 #include "configuration.h"
 #include "logger.h"
 
 #include <re2/re2.h>
+
+namespace fs = std::filesystem;
 
 // Reference: https://digitalfortress.tech/tips/top-15-commonly-used-regex/
 static re2::RE2 ip_address_re("((^\\s*((([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))\\s*$)|(^\\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3}))|:)))(%.+)?\\s*$))");
@@ -453,17 +457,9 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 
 void falco_configuration::read_rules_file_directory(const std::string &path, std::list<std::string> &rules_filenames, std::list<std::string> &rules_folders)
 {
-	struct stat st;
+	fs::path rules_path = std::string(path);
 
-	int rc = stat(path.c_str(), &st);
-
-	if(rc != 0)
-	{
-		std::cerr << "Could not get info on rules file " << path << ": " << strerror(errno) << std::endl;
-		exit(-1);
-	}
-
-	if(st.st_mode & S_IFDIR)
+	if(fs::is_directory(rules_path))
 	{
 		rules_folders.push_back(path);
 
@@ -472,33 +468,16 @@ void falco_configuration::read_rules_file_directory(const std::string &path, std
 		// rules_filenames
 		std::vector<std::string> dir_filenames;
 
-		DIR *dir = opendir(path.c_str());
+		const auto it_options = fs::directory_options::follow_directory_symlink
+											| fs::directory_options::follow_directory_symlink;
 
-		if(!dir)
+		for (auto const& dir_entry : fs::directory_iterator(rules_path, it_options))
 		{
-			std::cerr << "Could not get read contents of directory " << path << ": " << strerror(errno) << std::endl;
-			exit(-1);
-		}
-
-		for(struct dirent *ent = readdir(dir); ent; ent = readdir(dir))
-		{
-			std::string efile = path + "/" + ent->d_name;
-
-			rc = stat(efile.c_str(), &st);
-
-			if(rc != 0)
+			if(std::filesystem::is_regular_file(dir_entry.path()))
 			{
-				std::cerr << "Could not get info on rules file " << efile << ": " << strerror(errno) << std::endl;
-				exit(-1);
-			}
-
-			if(st.st_mode & S_IFREG)
-			{
-				dir_filenames.push_back(efile);
+				dir_filenames.push_back(dir_entry.path().string());
 			}
 		}
-
-		closedir(dir);
 
 		std::sort(dir_filenames.begin(),
 			  dir_filenames.end());

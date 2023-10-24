@@ -18,6 +18,7 @@ limitations under the License.
 #include "actions.h"
 #include "falco_utils.h"
 #include <sys/stat.h>
+#include <filesystem>
 
 #ifndef CPPPATH_SEP
 #ifdef _MSC_VER
@@ -93,23 +94,15 @@ falco::app::run_result falco::app::actions::create_requested_paths(falco::app::s
 
 static int create_dir(const std::string &path)
 {
-	// Properly reset errno
-	errno = 0;
 
-	std::istringstream f(path);
-	std::string path_until_token;
-	std::string s;
-	// Create all the subfolder stopping at last token (f.eof());
-	// Examples:
-	// "/tmp/foo/bar" -> "", "tmp", "foo" -> mkdir("/") + mkdir("/tmp/") + midir("/tmp/foo/")
-	// "tmp/foo/bar" -> "tmp", "foo" -> mkdir("tmp/") + midir("tmp/foo/")
-	while (getline(f, s, *CPPPATH_SEP) && !f.eof()) {
-		path_until_token += s + CPPPATH_SEP;
-		int ret = mkdir(path_until_token.c_str(), 0600);
-		if (ret != 0 && errno != EEXIST)
-		{
-			return ret;
-		}
-	}
-	return 0;
+    std::filesystem::path dirPath(path);
+
+    try {
+        std::filesystem::create_directories(dirPath);
+    } catch (const std::exception& ex) {
+		return -1;
+    }
+
+    return 0;
+
 }
