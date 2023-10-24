@@ -23,6 +23,10 @@ limitations under the License.
 
 #include "helpers.h"
 
+#ifdef _WIN32
+#define PATH_MAX 260
+#endif
+
 /* DEPRECATED: we will remove it in Falco 0.34. */
 #define FALCO_BPF_ENV_VARIABLE "FALCO_BPF_PROBE"
 
