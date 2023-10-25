@@ -109,7 +109,7 @@ endif()
 # explicitly set hardening flags
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(FALCO_SECURITY_FLAGS "")
-if(NOT EMSCRIPTEN)
+if(NOT EMSCRIPTEN AND NOT APPLE)
   set(FALCO_SECURITY_FLAGS "${FALCO_SECURITY_FLAGS} -Wl,-z,relro,-z,now -fstack-protector-strong")
 endif()
 if(CMAKE_BUILD_TYPE STREQUAL "release")

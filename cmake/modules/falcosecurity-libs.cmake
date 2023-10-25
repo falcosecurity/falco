@@ -95,10 +95,11 @@ include(CheckSymbolExists)
 check_symbol_exists(strlcpy "string.h" HAVE_STRLCPY)
 
 if(HAVE_STRLCPY)
-  message(STATUS "Existing strlcpy found, will *not* use local definition by setting -DHAVE_STRLCPY.")
+  message(STATUS "Existing strlcpy and strlcat found, will *not* use local definition by setting -DHAVE_STRLCPY and -DHAVE_STRLCAT.")
   add_definitions(-DHAVE_STRLCPY)
+  add_definitions(-DHAVE_STRLCAT)
 else()
-  message(STATUS "No strlcpy found, will use local definition")
+  message(STATUS "No strlcpy and strlcat found, will use local definition")
 endif()
 
 include(driver)
