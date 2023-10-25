@@ -33,7 +33,11 @@ limitations under the License.
 // overflows here. Threads calling stats_writer::handle() will just
 // check that this value changed since their last observation.
 static std::atomic<stats_writer::ticker_t> s_timer((stats_writer::ticker_t) 0);
+#if !defined(__APPLE__)
 static timer_t s_timerid;
+#else
+static uint16_t s_timerid;
+#endif
 // note: Workaround for older GLIBC versions (< 2.35), where calling timer_delete() 
 // with an invalid timer ID not returned by timer_create() causes a segfault because of 
 // a bug in GLIBC (https://sourceware.org/bugzilla/show_bug.cgi?id=28257).
@@ -48,7 +52,9 @@ static void timer_handler(int signum)
 
 bool stats_writer::init_ticker(uint32_t interval_msec, std::string &err)
 {
+#if !defined(__APPLE__)
 	struct itimerspec timer = {};
+#endif
 	struct sigaction handler = {};
 
 	memset (&handler, 0, sizeof(handler));
@@ -64,7 +70,7 @@ bool stats_writer::init_ticker(uint32_t interval_msec, std::string &err)
 	sev.sigev_notify = SIGEV_SIGNAL;
 	sev.sigev_signo = SIGALRM;
 	sev.sigev_value.sival_ptr = &s_timerid;
-#ifndef __EMSCRIPTEN__
+#if !defined(__EMSCRIPTEN__) && !defined(__APPLE__)
 	// delete any previously set timer
 	if (s_timerid_exists)
 	{
@@ -84,11 +90,14 @@ bool stats_writer::init_ticker(uint32_t interval_msec, std::string &err)
 	s_timerid_exists = true;
 
 #endif
+
+#if !defined(__APPLE__)
 	timer.it_value.tv_sec = interval_msec / 1000;
 	timer.it_value.tv_nsec = (interval_msec % 1000) * 1000 * 1000;
 	timer.it_interval = timer.it_value;
+#endif
 
-#ifndef __EMSCRIPTEN__
+#if !defined(__EMSCRIPTEN__) && !defined(__APPLE__)
 	if (timer_settime(s_timerid, 0, &timer, NULL) == -1) 
 	{
 		err = std::string("Could not set up periodic timer: ") + strerror(errno);
@@ -151,7 +160,7 @@ stats_writer::~stats_writer()
 			m_file_output.close();
 		}
 		// delete timerID and reset timer
-#ifndef __EMSCRIPTEN__
+#if !defined(__EMSCRIPTEN__) && !defined(__APPLE__)
 		if (s_timerid_exists)
 		{
 			timer_delete(s_timerid);

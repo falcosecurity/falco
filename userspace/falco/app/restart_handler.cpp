@@ -22,7 +22,9 @@ limitations under the License.
 #include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
+#if !defined(__APPLE__)
 #include <sys/inotify.h>
+#endif
 #include <sys/select.h>
 
 #if __GLIBC__ == 2 && __GLIBC_MINOR__ < 30
@@ -93,6 +95,7 @@ void falco::app::restart_handler::stop()
 
 void falco::app::restart_handler::watcher_loop() noexcept
 {
+#ifdef __linux__
     if (fcntl(m_inotify_fd, F_SETOWN, gettid()) < 0)
     {
         // an error occurred, we can't recover
@@ -207,4 +210,5 @@ void falco::app::restart_handler::watcher_loop() noexcept
         // next timeout.
         should_check = true;
     }
+#endif
 }
