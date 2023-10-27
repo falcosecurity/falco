@@ -1,5 +1,12 @@
 # Change Log
 
+## v0.36.2
+
+Released on 2023-10-27
+
+NO CHANGES IN FALCO, ALL CHANGES IN LIBS.
+
+
 ## v0.36.1
 
 Released on 2023-10-16
