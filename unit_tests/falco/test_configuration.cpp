@@ -174,3 +174,45 @@ TEST(Configuration, configuration_environment_variables)
     /* Clear the set environment variable after testing */
     unsetenv(env_var_name.c_str());
 }
+
+TEST(Configuration, configuration_webserver_ip)
+{
+    falco_configuration falco_config;
+
+    std::vector<std::string> valid_addresses = {"127.0.0.1",
+                                                "1.127.0.1",
+                                                "1.1.127.1",
+                                                "1.1.1.127"};
+
+    for (const std::string &address: valid_addresses) {
+        std::string option = "webserver.listen_address=";
+        option.append(address);
+
+        std::vector<std::string> cmdline_config_options;
+        cmdline_config_options.push_back(option);
+
+        EXPECT_NO_THROW(falco_config.init(cmdline_config_options));
+
+        ASSERT_EQ(falco_config.m_webserver_listen_address, address);
+    }
+
+    std::vector<std::string> invalid_addresses = {"327.0.0.1",
+                                                  "1.327.0.1",
+                                                  "1.1.327.1",
+                                                  "1.1.1.327",
+                                                  "12 7.0.0.1",
+                                                  "127. 0.0.1",
+                                                  "127.0. 0.1",
+                                                  "127.0.0. 1",
+                                                  "!27.0.0.1"};
+
+    for (const std::string &address: invalid_addresses) {
+        std::string option = "webserver.listen_address=";
+        option.append(address);
+
+        std::vector<std::string> cmdline_config_options;
+        cmdline_config_options.push_back(option);
+
+        EXPECT_ANY_THROW(falco_config.init(cmdline_config_options));
+    }
+}
