@@ -109,7 +109,7 @@ TEST(Configuration, configuration_environment_variables)
     std::string env_var_value = "envVarValue";
     std::string env_var_name = "ENV_VAR";
     std::string default_value = "default";
-    setenv(env_var_name.c_str(), env_var_value.c_str(), 1);
+    SET_ENV_VAR(env_var_name.c_str(), env_var_value.c_str());
     yaml_helper conf;
 
     std::string sample_yaml =
@@ -172,7 +172,7 @@ TEST(Configuration, configuration_environment_variables)
     ASSERT_EQ(base_value_2_list_2, "$UNSED_XX_X_X_VAR"); // Does not follow the `${VAR}` format, so should be treated as a regular string
 
     /* Clear the set environment variable after testing */
-    unsetenv(env_var_name.c_str());
+    SET_ENV_VAR(env_var_name.c_str(), env_var_value.c_str());
 }
 
 TEST(Configuration, configuration_webserver_ip)
