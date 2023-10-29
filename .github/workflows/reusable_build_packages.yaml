@@ -216,3 +216,63 @@ jobs:
           name: falco-${{ inputs.version }}-wasm.tar.gz
           path: |
             ${{ github.workspace }}/build/falco-${{ inputs.version }}-wasm.tar.gz
+
+  build-win32-package:
+    if: ${{ inputs.arch == 'x86_64' }}
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
+        with:
+          fetch-depth: 0
+
+      - name: Prepare project
+        run: |
+          mkdir build
+          cd build
+          cmake -DCMAKE_BUILD_TYPE=Release -DMINIMAL_BUILD=On -DUSE_BUNDLED_DEPS=On -DBUILD_FALCO_UNIT_TESTS=On -DFALCO_VERSION=${{ inputs.version }} ..
+
+      - name: Build project
+        run: |
+          cmake --build build --config Release
+
+      - name: Run unit Tests
+        run: |
+          build/unit_tests/Release/falco_unit_tests.exe
+
+      - name: Upload Falco win32 package
+        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        with:
+          name: falco-${{ inputs.version }}-win32.exe
+          path: |
+            ${{ github.workspace }}/build/userspace/falco/Release/falco.exe
+
+  build-macos-package:
+    if: ${{ inputs.arch == 'x86_64' }}
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
+        with:
+          fetch-depth: 0
+
+      - name: Prepare project
+        run: |
+          mkdir build
+          cd build
+          cmake -DMINIMAL_BUILD=On -DUSE_BUNDLED_DEPS=On -DBUILD_FALCO_UNIT_TESTS=On -DFALCO_VERSION=${{ inputs.version }} ..
+
+      - name: Build project
+        run: |
+          cmake --build build
+
+      - name: Run unit Tests
+        run: |
+          sudo build/unit_tests/falco_unit_tests
+
+      - name: Upload Falco macos package
+        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        with:
+          name: falco-${{ inputs.version }}-macos
+          path: |
+            ${{ github.workspace }}/build/userspace/falco/falco
