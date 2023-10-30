@@ -87,7 +87,7 @@ void falco_webserver::start(
         catch(std::exception &e)
         {
             falco_logger::log(
-                LOG_ERR,
+                falco_logger::level::ERR,
                 "falco_webserver: " + std::string(e.what()) + "\n");
         }
         failed.store(true, std::memory_order_release);

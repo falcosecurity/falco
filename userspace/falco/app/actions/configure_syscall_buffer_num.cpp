@@ -36,7 +36,7 @@ falco::app::run_result falco::app::actions::configure_syscall_buffer_num(falco::
 
 	if(s.config->m_cpus_for_each_syscall_buffer > online_cpus)
 	{
-		falco_logger::log(LOG_WARNING, "you required a buffer every '" + std::to_string(s.config->m_cpus_for_each_syscall_buffer) + "' CPUs but there are only '" + std::to_string(online_cpus) + "' online CPUs. Falco changed the config to: one buffer every '" + std::to_string(online_cpus) + "' CPUs\n");
+		falco_logger::log(falco_logger::level::WARNING, "you required a buffer every '" + std::to_string(s.config->m_cpus_for_each_syscall_buffer) + "' CPUs but there are only '" + std::to_string(online_cpus) + "' online CPUs. Falco changed the config to: one buffer every '" + std::to_string(online_cpus) + "' CPUs\n");
 		s.config->m_cpus_for_each_syscall_buffer = online_cpus;
 	}
 #endif

@@ -31,12 +31,12 @@ falco::app::run_result falco::app::actions::start_webserver(falco::app::state& s
 	{
 		if (s.options.dry_run)
 		{
-			falco_logger::log(LOG_DEBUG, "Skipping starting webserver in dry-run\n");
+			falco_logger::log(falco_logger::level::DEBUG, "Skipping starting webserver in dry-run\n");
 			return run_result::ok();
 		}
 	
 		std::string ssl_option = (s.config->m_webserver_ssl_enabled ? " (SSL)" : "");
-		falco_logger::log(LOG_INFO, "Starting health webserver with threadiness "
+		falco_logger::log(falco_logger::level::INFO, "Starting health webserver with threadiness "
 			+ std::to_string(s.config->m_webserver_threadiness)
 			+ ", listening on "
 			+ s.config->m_webserver_listen_address
@@ -64,7 +64,7 @@ falco::app::run_result falco::app::actions::stop_webserver(falco::app::state& s)
 	{
 		if (s.options.dry_run)
 		{
-			falco_logger::log(LOG_DEBUG, "Skipping stopping webserver in dry-run\n");
+			falco_logger::log(falco_logger::level::DEBUG, "Skipping stopping webserver in dry-run\n");
 			return run_result::ok();
 		}
 

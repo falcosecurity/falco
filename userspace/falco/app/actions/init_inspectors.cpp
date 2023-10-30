@@ -51,7 +51,7 @@ static void init_syscall_inspector(falco::app::state& s, std::shared_ptr<sinsp> 
 
 	if (s.config->m_syscall_drop_failed_exit)
 	{
-		falco_logger::log(LOG_INFO, "Failed syscall exit events are dropped in the kernel driver\n");
+		falco_logger::log(falco_logger::level::INFO, "Failed syscall exit events are dropped in the kernel driver\n");
 		inspector->set_dropfailed(true);
 	}
 

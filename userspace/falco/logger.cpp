@@ -20,7 +20,7 @@ limitations under the License.
 
 #include "falco_common.h"
 
-int falco_logger::level = LOG_INFO;
+falco_logger::level falco_logger::current_level = falco_logger::level::INFO;
 bool falco_logger::time_format_iso_8601 = false;
 
 static sinsp_logger::severity decode_sinsp_severity(const std::string& s)
@@ -69,35 +69,35 @@ void falco_logger::set_level(std::string &level)
 {
 	if(level == "emergency")
 	{
-		falco_logger::level = LOG_EMERG;
+		falco_logger::current_level = falco_logger::level::EMERG;
 	}
 	else if(level == "alert")
 	{
-		falco_logger::level = LOG_ALERT;
+		falco_logger::current_level = falco_logger::level::ALERT;
 	}
 	else if(level == "critical")
 	{
-		falco_logger::level = LOG_CRIT;
+		falco_logger::current_level = falco_logger::level::CRIT;
 	}
 	else if(level == "error")
 	{
-		falco_logger::level = LOG_ERR;
+		falco_logger::current_level = falco_logger::level::ERR;
 	}
 	else if(level == "warning")
 	{
-		falco_logger::level = LOG_WARNING;
+		falco_logger::current_level = falco_logger::level::WARNING;
 	}
 	else if(level == "notice")
 	{
-		falco_logger::level = LOG_NOTICE;
+		falco_logger::current_level = falco_logger::level::NOTICE;
 	}
 	else if(level == "info")
 	{
-		falco_logger::level = LOG_INFO;
+		falco_logger::current_level = falco_logger::level::INFO;
 	}
 	else if(level == "debug")
 	{
-		falco_logger::level = LOG_DEBUG;
+		falco_logger::current_level = falco_logger::level::DEBUG;
 	}
 	else
 	{
@@ -121,7 +121,7 @@ void falco_logger::set_sinsp_logging(bool enable, const std::string& severity, c
 				// logs are always printed by the Falco logger. These
 				// logs are pre-filtered at the sinsp level depending
 				// on the configured severity
-				falco_logger::log(falco_logger::level, s_sinsp_logger_prefix + str);
+				falco_logger::log(falco_logger::current_level, s_sinsp_logger_prefix + str);
 			});
 	}
 	else
@@ -134,10 +134,10 @@ void falco_logger::set_sinsp_logging(bool enable, const std::string& severity, c
 bool falco_logger::log_stderr = true;
 bool falco_logger::log_syslog = true;
 
-void falco_logger::log(int priority, const std::string&& msg)
+void falco_logger::log(falco_logger::level priority, const std::string&& msg)
 {
 
-	if(priority > falco_logger::level)
+	if(priority > falco_logger::current_level)
 	{
 		return;
 	}
@@ -153,7 +153,7 @@ void falco_logger::log(int priority, const std::string&& msg)
 			copy.pop_back();
 		}
 
-		::syslog(priority, "%s", copy.c_str());
+		::syslog(static_cast<int>(priority), "%s", copy.c_str());
 	}
 #endif
 

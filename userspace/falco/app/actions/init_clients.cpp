@@ -31,14 +31,14 @@ falco::app::run_result falco::app::actions::init_clients(falco::app::state& s)
 
 	auto inspector = s.source_infos.at(falco_common::syscall_source)->inspector;
 
-	falco_logger::log(LOG_DEBUG, "Setting metadata download max size to " + std::to_string(s.config->m_metadata_download_max_mb) + " MB\n");
-	falco_logger::log(LOG_DEBUG, "Setting metadata download chunk wait time to " + std::to_string(s.config->m_metadata_download_chunk_wait_us) + " μs\n");
-	falco_logger::log(LOG_DEBUG, "Setting metadata download watch frequency to " + std::to_string(s.config->m_metadata_download_watch_freq_sec) + " seconds\n");
+	falco_logger::log(falco_logger::level::DEBUG, "Setting metadata download max size to " + std::to_string(s.config->m_metadata_download_max_mb) + " MB\n");
+	falco_logger::log(falco_logger::level::DEBUG, "Setting metadata download chunk wait time to " + std::to_string(s.config->m_metadata_download_chunk_wait_us) + " μs\n");
+	falco_logger::log(falco_logger::level::DEBUG, "Setting metadata download watch frequency to " + std::to_string(s.config->m_metadata_download_watch_freq_sec) + " seconds\n");
 	inspector->set_metadata_download_params(s.config->m_metadata_download_max_mb * 1024 * 1024, s.config->m_metadata_download_chunk_wait_us, s.config->m_metadata_download_watch_freq_sec);
 
 	if (s.options.dry_run)
 	{
-		falco_logger::log(LOG_DEBUG, "Skipping clients initialization in dry-run\n");
+		falco_logger::log(falco_logger::level::DEBUG, "Skipping clients initialization in dry-run\n");
 		return run_result::ok();
 	}
 

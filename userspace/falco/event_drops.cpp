@@ -99,7 +99,7 @@ bool syscall_evt_drop_mgr::process_event(std::shared_ptr<sinsp> inspector, sinsp
 
 		if(m_simulate_drops)
 		{
-			falco_logger::log(LOG_INFO, "Simulating syscall event drop");
+			falco_logger::log(falco_logger::level::INFO, "Simulating syscall event drop");
 			delta.n_drops++;
 		}
 
@@ -124,7 +124,7 @@ bool syscall_evt_drop_mgr::process_event(std::shared_ptr<sinsp> inspector, sinsp
 				}
 				else
 				{
-					falco_logger::log(LOG_DEBUG, "Syscall event drop but token bucket depleted, skipping actions");
+					falco_logger::log(falco_logger::level::DEBUG, "Syscall event drop but token bucket depleted, skipping actions");
 				}
 			}
 		}
@@ -153,7 +153,7 @@ bool syscall_evt_drop_mgr::perform_actions(uint64_t now, scap_stats &delta, bool
 			return true;
 
 		case syscall_evt_drop_action::LOG:
-			falco_logger::log(LOG_DEBUG, std::move(msg));
+			falco_logger::log(falco_logger::level::DEBUG, std::move(msg));
 			return true;
 
 		case syscall_evt_drop_action::ALERT:
@@ -195,12 +195,12 @@ bool syscall_evt_drop_mgr::perform_actions(uint64_t now, scap_stats &delta, bool
 			return true;
 		}
 		case syscall_evt_drop_action::EXIT:
-			falco_logger::log(LOG_CRIT, std::move(msg));
-			falco_logger::log(LOG_CRIT, "Exiting.");
+			falco_logger::log(falco_logger::level::CRIT, std::move(msg));
+			falco_logger::log(falco_logger::level::CRIT, "Exiting.");
 			return false;
 
 		default:
-			falco_logger::log(LOG_ERR, "Ignoring unknown action " + std::to_string(int(act)));
+			falco_logger::log(falco_logger::level::ERR, "Ignoring unknown action " + std::to_string(int(act)));
 			return true;
 		}
 	}

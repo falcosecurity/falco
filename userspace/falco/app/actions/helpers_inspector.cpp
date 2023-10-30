@@ -38,7 +38,7 @@ falco::app::run_result falco::app::actions::open_offline_inspector(falco::app::s
 	try
 	{
 		s.offline_inspector->open_savefile(s.options.trace_filename);
-		falco_logger::log(LOG_INFO, "Reading system call events from file: " + s.options.trace_filename + "\n");
+		falco_logger::log(falco_logger::level::INFO, "Reading system call events from file: " + s.options.trace_filename + "\n");
 		return run_result::ok();
 	}
 	catch (sinsp_exception &e)
@@ -64,7 +64,7 @@ falco::app::run_result falco::app::actions::open_live_inspector(
 				if (p->caps() & CAP_SOURCING && p->id() != 0 && p->event_source() == source)
 				{
 					auto cfg = s.plugin_configs.at(p->name());
-					falco_logger::log(LOG_INFO, "Opening '" + source + "' source with plugin '" + cfg->m_name + "'");
+					falco_logger::log(falco_logger::level::INFO, "Opening '" + source + "' source with plugin '" + cfg->m_name + "'");
 					inspector->open_plugin(cfg->m_name, cfg->m_open_params);
 					return run_result::ok();
 				}
@@ -82,23 +82,23 @@ falco::app::run_result falco::app::actions::open_live_inspector(
 				if (p->caps() & CAP_SOURCING && p->id() == 0)
 				{
 					auto cfg = s.plugin_configs.at(p->name());
-					falco_logger::log(LOG_INFO, "Opening '" + source + "' source with plugin '" + cfg->m_name + "'");
+					falco_logger::log(falco_logger::level::INFO, "Opening '" + source + "' source with plugin '" + cfg->m_name + "'");
 					inspector->open_plugin(cfg->m_name, cfg->m_open_params);
 					return run_result::ok();
 				}
 			}
-			falco_logger::log(LOG_INFO, "Opening '" + source + "' source with no driver\n");
+			falco_logger::log(falco_logger::level::INFO, "Opening '" + source + "' source with no driver\n");
 			inspector->open_nodriver();
 		}
 		else if(s.is_gvisor_enabled()) /* gvisor engine. */
 		{
-			falco_logger::log(LOG_INFO, "Opening '" + source + "' source with gVisor. Configuration path: " + s.options.gvisor_config);
+			falco_logger::log(falco_logger::level::INFO, "Opening '" + source + "' source with gVisor. Configuration path: " + s.options.gvisor_config);
 			inspector->open_gvisor(s.options.gvisor_config, s.options.gvisor_root);
 		}
 		else if(s.options.modern_bpf) /* modern BPF engine. */
 		{
-			falco_logger::log(LOG_INFO, "Opening '" + source + "' source with modern BPF probe.");
-			falco_logger::log(LOG_INFO, "One ring buffer every '" + std::to_string(s.config->m_cpus_for_each_syscall_buffer) +  "' CPUs.");
+			falco_logger::log(falco_logger::level::INFO, "Opening '" + source + "' source with modern BPF probe.");
+			falco_logger::log(falco_logger::level::INFO, "One ring buffer every '" + std::to_string(s.config->m_cpus_for_each_syscall_buffer) +  "' CPUs.");
 			inspector->open_modern_bpf(s.syscall_buffer_bytes_size, s.config->m_cpus_for_each_syscall_buffer, true, s.selected_sc_set);
 		}
 		else if(getenv(FALCO_BPF_ENV_VARIABLE) != NULL) /* BPF engine. */
@@ -116,23 +116,23 @@ falco::app::run_result falco::app::actions::open_live_inspector(
 				snprintf(full_path, PATH_MAX, "%s/%s", home, FALCO_PROBE_BPF_FILEPATH);
 				bpf_probe_path = full_path;
 			}
-			falco_logger::log(LOG_INFO, "Opening '" + source + "' source with BPF probe. BPF probe path: " + std::string(bpf_probe_path));
+			falco_logger::log(falco_logger::level::INFO, "Opening '" + source + "' source with BPF probe. BPF probe path: " + std::string(bpf_probe_path));
 			inspector->open_bpf(bpf_probe_path, s.syscall_buffer_bytes_size, s.selected_sc_set);
 		}
 		else /* Kernel module (default). */
 		{
 			try
 			{
-				falco_logger::log(LOG_INFO, "Opening '" + source + "' source with Kernel module");
+				falco_logger::log(falco_logger::level::INFO, "Opening '" + source + "' source with Kernel module");
 				inspector->open_kmod(s.syscall_buffer_bytes_size, s.selected_sc_set);
 			}
 			catch(sinsp_exception &e)
 			{
 				// Try to insert the Falco kernel module
-				falco_logger::log(LOG_INFO, "Trying to inject the Kernel module and opening the capture again...");
+				falco_logger::log(falco_logger::level::INFO, "Trying to inject the Kernel module and opening the capture again...");
 				if(system("modprobe " DRIVER_NAME " > /dev/null 2> /dev/null"))
 				{
-					falco_logger::log(LOG_ERR, "Unable to load the driver\n");
+					falco_logger::log(falco_logger::level::ERR, "Unable to load the driver\n");
 				}
 				inspector->open_kmod(s.syscall_buffer_bytes_size, s.selected_sc_set);
 			}

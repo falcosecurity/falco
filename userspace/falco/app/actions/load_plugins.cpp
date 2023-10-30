@@ -49,7 +49,7 @@ falco::app::run_result falco::app::actions::load_plugins(falco::app::state& s)
 	// Load all the configured plugins
 	for(auto &p : s.config->m_plugins)
 	{
-		falco_logger::log(LOG_INFO, "Loading plugin '" + p.m_name + "' from file " + p.m_library_path + "\n");
+		falco_logger::log(falco_logger::level::INFO, "Loading plugin '" + p.m_name + "' from file " + p.m_library_path + "\n");
 		auto plugin = s.offline_inspector->register_plugin(p.m_library_path);
 		s.plugin_configs.insert(p, plugin->name());
 		if(plugin->caps() & CAP_SOURCING && plugin->id() != 0)

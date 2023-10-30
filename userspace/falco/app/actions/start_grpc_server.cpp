@@ -32,11 +32,11 @@ falco::app::run_result falco::app::actions::start_grpc_server(falco::app::state&
 	{
 		if (s.options.dry_run)
 		{
-			falco_logger::log(LOG_DEBUG, "Skipping starting gRPC server in dry-run\n");
+			falco_logger::log(falco_logger::level::DEBUG, "Skipping starting gRPC server in dry-run\n");
 			return run_result::ok();
 		}
 
-		falco_logger::log(LOG_INFO, "gRPC server threadiness equals to " + std::to_string(s.config->m_grpc_threadiness) + "\n");
+		falco_logger::log(falco_logger::level::INFO, "gRPC server threadiness equals to " + std::to_string(s.config->m_grpc_threadiness) + "\n");
 		// TODO(fntlnz,leodido): when we want to spawn multiple threads we need to have a queue per thread, or implement
 		// different queuing mechanisms, round robin, fanout? What we want to achieve?
 		s.grpc_server.init(
@@ -62,7 +62,7 @@ falco::app::run_result falco::app::actions::stop_grpc_server(falco::app::state& 
 	{
 		if (s.options.dry_run)
 		{
-			falco_logger::log(LOG_DEBUG, "Skipping stopping gRPC server in dry-run\n");
+			falco_logger::log(falco_logger::level::DEBUG, "Skipping stopping gRPC server in dry-run\n");
 			return run_result::ok();
 		}
 

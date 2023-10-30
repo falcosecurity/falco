@@ -245,7 +245,7 @@ void stats_writer::worker() noexcept
 			}
 			catch(const std::exception &e)
 			{
-				falco_logger::log(LOG_ERR, "stats_writer (worker): " + std::string(e.what()) + "\n");
+				falco_logger::log(falco_logger::level::ERR, "stats_writer (worker): " + std::string(e.what()) + "\n");
 			}
 		}
 	}

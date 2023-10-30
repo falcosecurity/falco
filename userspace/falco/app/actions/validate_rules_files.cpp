@@ -66,10 +66,10 @@ falco::app::run_result falco::app::actions::validate_rules_files(falco::app::sta
 		// printed when verbose is true.
 		std::string summary;
 
-		falco_logger::log(LOG_INFO, "Validating rules file(s):\n");
+		falco_logger::log(falco_logger::level::INFO, "Validating rules file(s):\n");
 		for(auto file : s.options.validate_rules_filenames)
 		{
-			falco_logger::log(LOG_INFO, "   " + file + "\n");
+			falco_logger::log(falco_logger::level::INFO, "   " + file + "\n");
 		}
 
 		// The json output encompasses all files so the
