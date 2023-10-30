@@ -49,14 +49,14 @@ falco::app::run_result falco::app::actions::load_config(falco::app::state& s)
 
 	// log after config init because config determines where logs go
 	falco_logger::set_time_format_iso_8601(s.config->m_time_format_iso_8601);
-	falco_logger::log(LOG_INFO, "Falco version: " + std::string(FALCO_VERSION) + " (" + std::string(FALCO_TARGET_ARCH) + ")\n");
+	falco_logger::log(falco_logger::level::INFO, "Falco version: " + std::string(FALCO_VERSION) + " (" + std::string(FALCO_TARGET_ARCH) + ")\n");
 	if (!s.cmdline.empty())
 	{
-		falco_logger::log(LOG_DEBUG, "CLI args: " + s.cmdline);
+		falco_logger::log(falco_logger::level::DEBUG, "CLI args: " + s.cmdline);
 	}
 	if (!s.options.conf_filename.empty())
 	{
-		falco_logger::log(LOG_INFO, "Falco initialized with configuration file: " + s.options.conf_filename + "\n");
+		falco_logger::log(falco_logger::level::INFO, "Falco initialized with configuration file: " + s.options.conf_filename + "\n");
 	}
 
 	s.config->m_buffered_outputs = !s.options.unbuffered_outputs;

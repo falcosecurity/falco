@@ -66,7 +66,7 @@ bool falco::app::restart_handler::start(std::string& err)
             err = "could not watch file: " + f;
             return false;
         }
-        falco_logger::log(LOG_DEBUG, "Watching file '" + f +"'\n");
+        falco_logger::log(falco_logger::level::DEBUG, "Watching file '" + f +"'\n");
     }
 
     for (const auto &f : m_watched_dirs)
@@ -77,7 +77,7 @@ bool falco::app::restart_handler::start(std::string& err)
             err = "could not watch directory: " + f;
             return false;
         }
-        falco_logger::log(LOG_DEBUG, "Watching directory '" + f +"'\n");
+        falco_logger::log(falco_logger::level::DEBUG, "Watching directory '" + f +"'\n");
     }
 
     // launch the watcher thread
@@ -104,7 +104,7 @@ void falco::app::restart_handler::watcher_loop() noexcept
     {
         // an error occurred, we can't recover
         // todo(jasondellaluce): should we terminate the process?
-        falco_logger::log(LOG_ERR, "Failed owning inotify handler, shutting down watcher...");
+        falco_logger::log(falco_logger::level::ERR, "Failed owning inotify handler, shutting down watcher...");
         return;
     }
 
@@ -129,7 +129,7 @@ void falco::app::restart_handler::watcher_loop() noexcept
         {
             // an error occurred, we can't recover
             // todo(jasondellaluce): should we terminate the process?
-            falco_logger::log(LOG_ERR, "Failed select with inotify handler, shutting down watcher...");
+            falco_logger::log(falco_logger::level::ERR, "Failed select with inotify handler, shutting down watcher...");
             return;
         }
         
@@ -190,7 +190,7 @@ void falco::app::restart_handler::watcher_loop() noexcept
             {
                 // an error occurred, we can't recover
                 // todo(jasondellaluce): should we terminate the process?
-                falco_logger::log(LOG_ERR, "Failed read with inotify handler, shutting down watcher...");
+                falco_logger::log(falco_logger::level::ERR, "Failed read with inotify handler, shutting down watcher...");
                 return;
             }
             // this is an odd case, but if we got here with

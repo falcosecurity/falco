@@ -126,7 +126,7 @@ void falco_outputs::add_output(falco::outputs::config oc)
 	}
 	else
 	{
-		falco_logger::log(LOG_ERR, "Failed to init output: " + init_err);
+		falco_logger::log(falco_logger::level::ERR, "Failed to init output: " + init_err);
 		delete(oo);
 	}
 }
@@ -258,7 +258,7 @@ void falco_outputs::stop_worker()
 {
 	watchdog<void *> wd;
 	wd.start([&](void *) -> void {
-		falco_logger::log(LOG_NOTICE, "output channels still blocked, discarding all remaining notifications\n");
+		falco_logger::log(falco_logger::level::NOTICE, "output channels still blocked, discarding all remaining notifications\n");
 #ifndef __EMSCRIPTEN__
 		m_queue.clear();
 #endif
@@ -287,7 +287,7 @@ inline void falco_outputs::push(const ctrl_msg& cmsg)
 	{
 		if(m_outputs_queue_num_drops.load() == 0)
 		{
-			falco_logger::log(LOG_ERR, "Outputs queue out of memory. Drop event and continue on ...");
+			falco_logger::log(falco_logger::level::ERR, "Outputs queue out of memory. Drop event and continue on ...");
 		}
 		m_outputs_queue_num_drops++;
 	}
@@ -306,7 +306,7 @@ void falco_outputs::worker() noexcept
 {
 	watchdog<std::string> wd;
 	wd.start([&](const std::string& payload) -> void {
-		falco_logger::log(LOG_CRIT, "\"" + payload + "\" output timeout, all output channels are blocked\n");
+		falco_logger::log(falco_logger::level::CRIT, "\"" + payload + "\" output timeout, all output channels are blocked\n");
 	});
 
 	auto timeout = m_timeout;
@@ -328,7 +328,7 @@ void falco_outputs::worker() noexcept
 			}
 			catch(const std::exception &e)
 			{
-				falco_logger::log(LOG_ERR, o->get_name() + ": " + std::string(e.what()) + "\n");
+				falco_logger::log(falco_logger::level::ERR, o->get_name() + ": " + std::string(e.what()) + "\n");
 			}
 		}
 		wd.cancel_timeout();
@@ -350,7 +350,7 @@ inline void falco_outputs::process_msg(falco::outputs::abstract_output* o, const
 			o->reopen();
 			break;
 		default:
-			falco_logger::log(LOG_DEBUG, "Outputs worker received an unknown message type\n");
+			falco_logger::log(falco_logger::level::DEBUG, "Outputs worker received an unknown message type\n");
 	}
 }
 

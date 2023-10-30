@@ -76,7 +76,7 @@ falco::app::run_result falco::app::actions::create_signal_handlers(falco::app::s
 #ifdef __linux__
 	if (s.options.dry_run)
 	{
-		falco_logger::log(LOG_DEBUG, "Skipping signal handlers creation in dry-run\n");
+		falco_logger::log(falco_logger::level::DEBUG, "Skipping signal handlers creation in dry-run\n");
 		return run_result::ok();
 	}
 
@@ -88,7 +88,7 @@ falco::app::run_result falco::app::actions::create_signal_handlers(falco::app::s
 		|| !g_restart_signal.is_lock_free()
 		|| !g_reopen_outputs_signal.is_lock_free())
 	{
-		falco_logger::log(LOG_WARNING, "Bundled atomics implementation is not lock-free, signal handlers may be unstable\n");
+		falco_logger::log(falco_logger::level::WARNING, "Bundled atomics implementation is not lock-free, signal handlers may be unstable\n");
 	}
 
 	if(! create_handler(SIGINT, ::terminate_signal_handler, ret) ||
@@ -162,7 +162,7 @@ falco::app::run_result falco::app::actions::unregister_signal_handlers(falco::ap
 #ifdef __linux__
 	if (s.options.dry_run)
 	{
-		falco_logger::log(LOG_DEBUG, "Skipping unregistering signal handlers in dry-run\n");
+		falco_logger::log(falco_logger::level::DEBUG, "Skipping unregistering signal handlers in dry-run\n");
 		return run_result::ok();
 	}
 

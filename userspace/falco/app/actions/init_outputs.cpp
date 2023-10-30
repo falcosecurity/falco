@@ -41,7 +41,7 @@ falco::app::run_result falco::app::actions::init_outputs(falco::app::state& s)
 	if(env_hostname || (env_hostname = getenv("FALCO_GRPC_HOSTNAME")))
 	{
 		hostname = env_hostname;
-		falco_logger::log(LOG_INFO, "Hostname value has been overridden via environment variable to: " + hostname + "\n");
+		falco_logger::log(falco_logger::level::INFO, "Hostname value has been overridden via environment variable to: " + hostname + "\n");
 	}
 	else
 	{
@@ -56,7 +56,7 @@ falco::app::run_result falco::app::actions::init_outputs(falco::app::state& s)
 
 	if (s.options.dry_run)
 	{
-		falco_logger::log(LOG_DEBUG, "Skipping outputs initialization in dry-run\n");
+		falco_logger::log(falco_logger::level::DEBUG, "Skipping outputs initialization in dry-run\n");
 		return run_result::ok();
 	}
 

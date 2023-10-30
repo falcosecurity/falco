@@ -39,7 +39,7 @@ bool falco::outputs::output_http::init(const config& oc, bool buffered, const st
 	m_curl = curl_easy_init();
 	if(!m_curl)
 	{
-		falco_logger::log(LOG_ERR, "libcurl failed to initialize the handle: " + std::string(curl_easy_strerror(res)));
+		falco_logger::log(falco_logger::level::ERR, "libcurl failed to initialize the handle: " + std::string(curl_easy_strerror(res)));
 		return false;
 	}
 	if(m_json_output)
@@ -111,7 +111,7 @@ void falco::outputs::output_http::output(const message *msg)
 	CHECK_RES(curl_easy_perform(m_curl));
 	if(res != CURLE_OK)
 	{
-		falco_logger::log(LOG_ERR, "libcurl failed to perform call: " + std::string(curl_easy_strerror(res)));
+		falco_logger::log(falco_logger::level::ERR, "libcurl failed to perform call: " + std::string(curl_easy_strerror(res)));
 	}
 }
 

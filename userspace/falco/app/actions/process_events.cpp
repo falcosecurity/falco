@@ -183,7 +183,7 @@ static falco::app::run_result do_inspect(
 		if (falco::app::g_reopen_outputs_signal.triggered())
 		{
 			falco::app::g_reopen_outputs_signal.handle([&s](){
-				falco_logger::log(LOG_INFO, "SIGUSR1 received, reopening outputs...\n");
+				falco_logger::log(falco_logger::level::INFO, "SIGUSR1 received, reopening outputs...\n");
 				if(s.outputs != nullptr)
 				{
 					s.outputs->reopen_outputs();
@@ -195,14 +195,14 @@ static falco::app::run_result do_inspect(
 		if(falco::app::g_terminate_signal.triggered())
 		{
 			falco::app::g_terminate_signal.handle([&](){
-				falco_logger::log(LOG_INFO, "SIGINT received, exiting...\n");
+				falco_logger::log(falco_logger::level::INFO, "SIGINT received, exiting...\n");
 			});
 			break;
 		}
 		else if(falco::app::g_restart_signal.triggered())
 		{
 			falco::app::g_restart_signal.handle([&s](){
-				falco_logger::log(LOG_INFO, "SIGHUP received, restarting...\n");
+				falco_logger::log(falco_logger::level::INFO, "SIGHUP received, restarting...\n");
 				s.restart.store(true);
 			});
 			break;
@@ -418,7 +418,7 @@ static falco::app::run_result init_stats_writer(
 		return falco::app::run_result::fatal("Metrics are enabled with no output configured. Please enable at least one output channel");
 	}
 
-	falco_logger::log(LOG_INFO, "Setting metrics interval to " + config->m_metrics_interval_str + ", equivalent to " + std::to_string(config->m_metrics_interval) + " (ms)\n");
+	falco_logger::log(falco_logger::level::INFO, "Setting metrics interval to " + config->m_metrics_interval_str + ", equivalent to " + std::to_string(config->m_metrics_interval) + " (ms)\n");
 
 	auto res = falco::app::run_result::ok();
 	if (is_dry_run)
@@ -441,7 +441,7 @@ falco::app::run_result falco::app::actions::process_events(falco::app::state& s)
 
 	if (s.options.dry_run)
 	{
-		falco_logger::log(LOG_DEBUG, "Skipping event processing in dry-run\n");
+		falco_logger::log(falco_logger::level::DEBUG, "Skipping event processing in dry-run\n");
 		return res;
 	}
 
@@ -496,7 +496,7 @@ falco::app::run_result falco::app::actions::process_events(falco::app::state& s)
 
 			try
 			{
-				falco_logger::log(LOG_DEBUG, "Opening event source '" + source + "'\n");
+				falco_logger::log(falco_logger::level::DEBUG, "Opening event source '" + source + "'\n");
 				termination_sem.acquire();
 				res = open_live_inspector(s, src_info->inspector, source);
 				if (!res.success)
@@ -542,7 +542,7 @@ falco::app::run_result falco::app::actions::process_events(falco::app::state& s)
 		{
 			if (!res.success && !termination_forced)
 			{
-				falco_logger::log(LOG_INFO, "An error occurred in an event source, forcing termination...\n");
+				falco_logger::log(falco_logger::level::INFO, "An error occurred in an event source, forcing termination...\n");
 				falco::app::g_terminate_signal.trigger();
 				falco::app::g_terminate_signal.handle([&](){});
 				termination_forced = true;
@@ -573,7 +573,7 @@ falco::app::run_result falco::app::actions::process_events(falco::app::state& s)
 						ctx.thread->join();
 					}
 
-					falco_logger::log(LOG_DEBUG, "Closing event source '" + ctx.source + "'\n");
+					falco_logger::log(falco_logger::level::DEBUG, "Closing event source '" + ctx.source + "'\n");
 					s.source_infos.at(ctx.source)->inspector->close();
 
 					res = run_result::merge(res, ctx.res);

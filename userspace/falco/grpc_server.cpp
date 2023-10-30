@@ -55,17 +55,17 @@ limitations under the License.
 
 static void gpr_log_dispatcher_func(gpr_log_func_args* args)
 {
-	int priority;
+	falco_logger::level priority;
 	switch(args->severity)
 	{
 	case GPR_LOG_SEVERITY_ERROR:
-		priority = LOG_ERR;
+		priority = falco_logger::level::ERR;
 		break;
 	case GPR_LOG_SEVERITY_DEBUG:
-		priority = LOG_DEBUG;
+		priority = falco_logger::level::DEBUG;
 		break;
 	default:
-		priority = LOG_INFO;
+		priority = falco_logger::level::INFO;
 		break;
 	}
 
@@ -199,10 +199,10 @@ void falco::grpc::server::run()
 	m_server = m_server_builder.BuildAndStart();
 	if(m_server == nullptr)
 	{
-		falco_logger::log(LOG_EMERG, "Error starting gRPC server\n");
+		falco_logger::log(falco_logger::level::EMERG, "Error starting gRPC server\n");
 		return;
 	}
-	falco_logger::log(LOG_INFO, "Starting gRPC server at " + m_server_addr + "\n");
+	falco_logger::log(falco_logger::level::INFO, "Starting gRPC server at " + m_server_addr + "\n");
 
 	// The number of contexts is multiple of the number of threads
 	// This defines the number of simultaneous completion queue requests of the same type (service::AsyncService::Request##RPC)
@@ -229,10 +229,10 @@ void falco::grpc::server::run()
 
 void falco::grpc::server::stop()
 {
-	falco_logger::log(LOG_INFO, "Shutting down gRPC server. Waiting until external connections are closed by clients\n");
+	falco_logger::log(falco_logger::level::INFO, "Shutting down gRPC server. Waiting until external connections are closed by clients\n");
 	m_completion_queue->Shutdown();
 
-	falco_logger::log(LOG_INFO, "Waiting for the gRPC threads to complete\n");
+	falco_logger::log(falco_logger::level::INFO, "Waiting for the gRPC threads to complete\n");
 	for(std::thread& t : m_threads)
 	{
 		if(t.joinable())
@@ -242,7 +242,7 @@ void falco::grpc::server::stop()
 	}
 	m_threads.clear();
 
-	falco_logger::log(LOG_INFO, "Draining all the remaining gRPC events\n");
+	falco_logger::log(falco_logger::level::INFO, "Draining all the remaining gRPC events\n");
 	// Ignore remaining events
 	void* ignore_tag = nullptr;
 	bool ignore_ok = false;
@@ -250,5 +250,5 @@ void falco::grpc::server::stop()
 	{
 	}
 
-	falco_logger::log(LOG_INFO, "Shutting down gRPC server complete\n");
+	falco_logger::log(falco_logger::level::INFO, "Shutting down gRPC server complete\n");
 }

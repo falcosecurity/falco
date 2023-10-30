@@ -55,7 +55,7 @@ falco::app::run_result falco::app::actions::configure_syscall_buffer_size(falco:
 	if(page_size <= 0)
 	{
 		s.syscall_buffer_bytes_size = DEFAULT_BYTE_SIZE;
-		falco_logger::log(LOG_WARNING, "Unable to get the system page size through 'getpagesize()'. Try to use the default syscall buffer dimension: " + std::to_string(DEFAULT_BYTE_SIZE) + " bytes\n");
+		falco_logger::log(falco_logger::level::WARNING, "Unable to get the system page size through 'getpagesize()'. Try to use the default syscall buffer dimension: " + std::to_string(DEFAULT_BYTE_SIZE) + " bytes\n");
 		return run_result::ok();
 	}
 
@@ -72,7 +72,7 @@ falco::app::run_result falco::app::actions::configure_syscall_buffer_size(falco:
 	}
 
 	s.syscall_buffer_bytes_size = chosen_size;
-	falco_logger::log(LOG_INFO, "The chosen syscall buffer dimension is: " + std::to_string(chosen_size) + " bytes (" +  std::to_string(chosen_size / (uint64_t)(1024 * 1024)) + " MBs)\n");
+	falco_logger::log(falco_logger::level::INFO, "The chosen syscall buffer dimension is: " + std::to_string(chosen_size) + " bytes (" +  std::to_string(chosen_size / (uint64_t)(1024 * 1024)) + " MBs)\n");
 	
 #endif // __linux__
 	return run_result::ok();

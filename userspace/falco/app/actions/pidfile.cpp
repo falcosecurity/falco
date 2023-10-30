@@ -28,7 +28,7 @@ falco::app::run_result falco::app::actions::pidfile(falco::app::state& s)
 {
 	if (s.options.dry_run)
 	{
-		falco_logger::log(LOG_DEBUG, "Skipping pidfile creation in dry-run\n");
+		falco_logger::log(falco_logger::level::DEBUG, "Skipping pidfile creation in dry-run\n");
 		return run_result::ok();
 	}
 
@@ -41,7 +41,7 @@ falco::app::run_result falco::app::actions::pidfile(falco::app::state& s)
 
 		if (!pidfile.good())
 		{
-			falco_logger::log(LOG_ERR, "Could not write pid to pidfile " + s.options.pidfilename + ". Exiting.\n");
+			falco_logger::log(falco_logger::level::ERR, "Could not write pid to pidfile " + s.options.pidfilename + ". Exiting.\n");
 			exit(-1);
 		}
 		pidfile << self_pid;

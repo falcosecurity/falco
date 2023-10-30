@@ -47,7 +47,7 @@ void falco::app::actions::print_enabled_event_sources(falco::app::state& s)
 		str += str.empty() ? "" : ", ";
 		str += src;
 	}
-	falco_logger::log(LOG_INFO, "Loaded event sources: " + str);
+	falco_logger::log(falco_logger::level::INFO, "Loaded event sources: " + str);
 
 	/* Print all enabled sources. */
 	str.clear();
@@ -56,7 +56,7 @@ void falco::app::actions::print_enabled_event_sources(falco::app::state& s)
 		str += str.empty() ? "" : ", ";
 		str += src;
 	}
-	falco_logger::log(LOG_INFO, "Enabled event sources: " + str);
+	falco_logger::log(falco_logger::level::INFO, "Enabled event sources: " + str);
 
 	// print some warnings to the user
 	for (const auto& src : s.enabled_sources)
@@ -77,7 +77,7 @@ void falco::app::actions::print_enabled_event_sources(falco::app::state& s)
 				{
 					if (src != falco_common::syscall_source || s.options.nodriver)
 					{
-						falco_logger::log(LOG_WARNING, "Enabled event source '"
+						falco_logger::log(falco_logger::level::WARNING, "Enabled event source '"
 							+ src + "' can be opened with multiple loaded plugins, will use only '"
 							+ first_plugin->name() + "'");
 					}
@@ -86,7 +86,7 @@ void falco::app::actions::print_enabled_event_sources(falco::app::state& s)
 		}
 		if (!first_plugin && s.options.nodriver)
 		{
-			falco_logger::log(LOG_WARNING, "Enabled event source '"
+			falco_logger::log(falco_logger::level::WARNING, "Enabled event source '"
 				+ src + "' will be opened with no driver, no event will be produced");
 		}
 	}

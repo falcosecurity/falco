@@ -33,7 +33,7 @@ static void display_fatal_err(const std::string &&msg)
 		std::cerr << msg;
 	}
 
-	falco_logger::log(LOG_ERR, std::move(msg));
+	falco_logger::log(falco_logger::level::ERR, std::move(msg));
 }
 
 //

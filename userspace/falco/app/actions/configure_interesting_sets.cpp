@@ -69,7 +69,7 @@ static void select_event_set(falco::app::state& s, const libsinsp::events::set<p
 	auto rules_names = libsinsp::events::sc_set_to_event_names(rules_sc_set);
 	if (!rules_sc_set.empty())
 	{
-		falco_logger::log(LOG_DEBUG, "(" + std::to_string(rules_names.size())
+		falco_logger::log(falco_logger::level::DEBUG, "(" + std::to_string(rules_names.size())
 			+ ") syscalls in rules: " + concat_set_in_order(rules_names) + "\n");
 	}
 
@@ -100,14 +100,14 @@ static void select_event_set(falco::app::state& s, const libsinsp::events::set<p
 
 		// we re-transform from sc_set to names to make
 		// sure that bad user inputs are ignored
-		falco_logger::log(LOG_DEBUG, "+(" + std::to_string(user_positive_sc_set_names.size())
+		falco_logger::log(falco_logger::level::DEBUG, "+(" + std::to_string(user_positive_sc_set_names.size())
 			+ ") syscalls added (base_syscalls override): "
 			+ concat_set_in_order(user_positive_sc_set_names) + "\n");
 	}
 	auto invalid_positive_sc_set_names = unordered_set_difference(user_positive_names, user_positive_sc_set_names);
 	if (!invalid_positive_sc_set_names.empty())
 	{
-		falco_logger::log(LOG_WARNING, "Invalid (positive) syscall names: warning (base_syscalls override): "
+		falco_logger::log(falco_logger::level::WARNING, "Invalid (positive) syscall names: warning (base_syscalls override): "
 			+ concat_set_in_order(invalid_positive_sc_set_names));
 	}
 
@@ -136,14 +136,14 @@ static void select_event_set(falco::app::state& s, const libsinsp::events::set<p
 
 		// we re-transform from sc_set to names to make
 		// sure that bad user inputs are ignored
-		falco_logger::log(LOG_DEBUG, "-(" + std::to_string(user_negative_sc_set_names.size())
+		falco_logger::log(falco_logger::level::DEBUG, "-(" + std::to_string(user_negative_sc_set_names.size())
 			+ ") syscalls removed (base_syscalls override): "
 			+ concat_set_in_order(user_negative_sc_set_names) + "\n");
 	}
 	auto invalid_negative_sc_set_names = unordered_set_difference(user_negative_names, user_negative_sc_set_names);
 	if (!invalid_negative_sc_set_names.empty())
 	{
-		falco_logger::log(LOG_WARNING, "Invalid (negative) syscall names: warning (base_syscalls override): "
+		falco_logger::log(falco_logger::level::WARNING, "Invalid (negative) syscall names: warning (base_syscalls override): "
 			+ concat_set_in_order(invalid_negative_sc_set_names));
 	}
 
@@ -154,7 +154,7 @@ static void select_event_set(falco::app::state& s, const libsinsp::events::set<p
 	if (!non_rules_sc_set.empty() && user_positive_sc_set.empty())
 	{
 		auto non_rules_sc_set_names = libsinsp::events::sc_set_to_event_names(non_rules_sc_set);
-		falco_logger::log(LOG_DEBUG, "+(" + std::to_string(non_rules_sc_set_names.size())
+		falco_logger::log(falco_logger::level::DEBUG, "+(" + std::to_string(non_rules_sc_set_names.size())
 			+ ") syscalls (Falco's state engine set of syscalls): "
 			+ concat_set_in_order(non_rules_sc_set_names) + "\n");
 	}
@@ -172,7 +172,7 @@ static void select_event_set(falco::app::state& s, const libsinsp::events::set<p
 		if (!erased_sc_set.empty())
 		{
 			auto erased_sc_set_names = libsinsp::events::sc_set_to_event_names(erased_sc_set);
-			falco_logger::log(LOG_DEBUG, "-(" + std::to_string(erased_sc_set_names.size())
+			falco_logger::log(falco_logger::level::DEBUG, "-(" + std::to_string(erased_sc_set_names.size())
 				+ ") ignored syscalls (-> activate via `-A` flag): "
 				+ concat_set_in_order(erased_sc_set_names) + "\n");
 		}
@@ -192,7 +192,7 @@ static void select_event_set(falco::app::state& s, const libsinsp::events::set<p
 		if (!repaired_sc_set.empty())
 		{
 			auto repaired_sc_set_names = libsinsp::events::sc_set_to_event_names(repaired_sc_set);
-			falco_logger::log(LOG_INFO, "+(" + std::to_string(repaired_sc_set_names.size())
+			falco_logger::log(falco_logger::level::INFO, "+(" + std::to_string(repaired_sc_set_names.size())
 				+ ") repaired syscalls: " + concat_set_in_order(repaired_sc_set_names) + "\n");
 		}
 	}
@@ -207,7 +207,7 @@ static void select_event_set(falco::app::state& s, const libsinsp::events::set<p
 	if (!s.selected_sc_set.empty())
 	{
 		auto selected_sc_set_names = libsinsp::events::sc_set_to_event_names(s.selected_sc_set);
-		falco_logger::log(LOG_DEBUG, "(" + std::to_string(selected_sc_set_names.size())
+		falco_logger::log(falco_logger::level::DEBUG, "(" + std::to_string(selected_sc_set_names.size())
 			+ ") syscalls selected in total (final set): "
 			+ concat_set_in_order(selected_sc_set_names) + "\n");
 	}
