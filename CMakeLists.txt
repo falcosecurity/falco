@@ -137,9 +137,15 @@ if(NOT WIN32)
   set(CMAKE_CXX_FLAGS_RELEASE "-O3 -fno-strict-aliasing -DNDEBUG")
 
 else()
-  add_compile_definitions(_HAS_STD_BYTE=0)
+  add_compile_definitions(
+	  _HAS_STD_BYTE=0
+	  _CRT_SECURE_NO_WARNINGS
+	  WIN32
+	  MINIMAL_BUILD
+	  WIN32_LEAN_AND_MEAN 
+  )
 
-  set(FALCO_SECURITY_FLAGS_WIN "-D_CRT_SECURE_NO_WARNINGS -DWIN32 -DMINIMAL_BUILD /EHsc /W3 /Zi")
+  set(FALCO_SECURITY_FLAGS_WIN "/EHsc /W3 /Zi")
   set(FALCO_SECURITY_FLAGS_WIN_DEBUG "/MTd /Od")
   set(FALCO_SECURITY_FLAGS_WIN_RELEASE "/MT")
 

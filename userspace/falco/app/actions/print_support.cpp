@@ -17,6 +17,9 @@ limitations under the License.
 
 #ifndef _WIN32
 #include <sys/utsname.h>
+#else
+#define WIN32_MEAN_AND_LEAN
+#include <windows.h>
 #endif
 #include <iostream>
 
