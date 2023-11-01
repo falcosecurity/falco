@@ -234,11 +234,17 @@ jobs:
 
       - name: Build project
         run: |
-          cmake --build build --config Release
+          cmake --build build --target package --config Release
 
       - name: Run unit Tests
         run: |
           build/unit_tests/Release/falco_unit_tests.exe
+
+      - name: Upload Falco win32 installer
+        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
+        with:
+          name: falco-installer-${{ inputs.version }}-win32.exe
+          path: build/falco-*.exe
 
       - name: Upload Falco win32 package
         uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3.1.3
@@ -264,7 +270,7 @@ jobs:
 
       - name: Build project
         run: |
-          cmake --build build
+          cmake --build build --target package
 
       - name: Run unit Tests
         run: |
