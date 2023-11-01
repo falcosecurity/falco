@@ -21,7 +21,11 @@ option(MINIMAL_BUILD "Build a minimal version of Falco, containing only the engi
 option(MUSL_OPTIMIZED_BUILD "Enable if you want a musl optimized build" OFF)
 option(BUILD_FALCO_UNIT_TESTS "Build falco unit tests" OFF)
 
-if(EMSCRIPTEN)
+if(WIN32)
+	set(CPACK_GENERATOR "NSIS") # this needs NSIS installed, and available
+elseif (APPLE)
+	set(CPACK_GENERATOR "DragNDrop")
+elseif(EMSCRIPTEN)
   set(USE_BUNDLED_DEPS ON CACHE BOOL "" FORCE)
   set(BUILD_DRIVER OFF CACHE BOOL "" FORCE)
   set(ENABLE_DKMS OFF CACHE BOOL "" FORCE)
@@ -229,7 +233,16 @@ if (NOT MINIMAL_BUILD)
 endif()
 
 # Installation
-install(FILES falco.yaml DESTINATION "${FALCO_ETC_DIR}" COMPONENT "${FALCO_COMPONENT_NAME}")
+if(WIN32)
+	set(FALCO_INSTALL_CONF_FILE "%PROGRAMFILES%/${PACKAGE_NAME}-${FALCO_VERSION}/etc/falco/falco.yaml")
+	install(FILES falco.yaml DESTINATION etc/falco/ COMPONENT "${FALCO_COMPONENT_NAME}")
+elseif(APPLE)
+	set(FALCO_INSTALL_CONF_FILE "/etc/falco/falco.yaml")
+	install(FILES falco.yaml DESTINATION etc/falco/ COMPONENT "${FALCO_COMPONENT_NAME}")
+else()
+	set(FALCO_INSTALL_CONF_FILE "/etc/falco/falco.yaml")
+	install(FILES falco.yaml DESTINATION "${FALCO_ETC_DIR}" COMPONENT "${FALCO_COMPONENT_NAME}")
+endif()
 
 if(NOT MINIMAL_BUILD)
   # Coverage
