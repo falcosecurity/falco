@@ -18,6 +18,12 @@ limitations under the License.
 #include <gtest/gtest.h>
 #include <falco/configuration.h>
 
+#ifdef _WIN32
+#define SET_ENV_VAR(env_var_name, env_var_value) _putenv_s(env_var_name, env_var_value)
+#else
+#define SET_ENV_VAR(env_var_name, env_var_value) setenv(env_var_name, env_var_value, 1)
+#endif
+
 static std::string sample_yaml =
 	"base_value:\n"
 	"    id: 1\n"
