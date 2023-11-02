@@ -197,8 +197,8 @@ std::unique_ptr<load_result> falco_engine::load_rules(const std::string &rules_c
 	if (reader.read(cfg, m_rule_collector))
 	{	
 		// compile the definitions (resolve macro/list refs, exceptions, ...)
-		rule_loader::compiler::compile_output out;
-		rule_loader::compiler().compile(cfg, m_rule_collector, out);
+		m_last_compile_output = std::make_unique<rule_loader::compiler::compile_output>();
+		rule_loader::compiler().compile(cfg, m_rule_collector, *m_last_compile_output.get());
 
 		// clear the rules known by the engine and each ruleset
 		m_rules.clear();
@@ -208,7 +208,7 @@ std::unique_ptr<load_result> falco_engine::load_rules(const std::string &rules_c
 		}
 
 		// add rules to the engine and the rulesets
-		for (const auto& rule : out.rules)
+		for (const auto& rule : m_last_compile_output->rules)
 		{
 			// skip the rule if below the minimum priority
 			if (rule.priority > m_min_priority)
@@ -517,6 +517,13 @@ template <typename T> inline Json::Value sequence_to_json_array(const T& seq)
 
 void falco_engine::describe_rule(std::string *rule, const std::vector<std::shared_ptr<sinsp_plugin>>& plugins, bool json) const
 {
+	// use previously-loaded collector definitions and the compiled
+	// output of rules, macros, and lists.
+	if (m_last_compile_output == nullptr)
+	{
+		throw falco_exception("rules most be loaded before describing them");
+	}
+
 	if(!json)
 	{
 		static const char *rule_fmt = "%-50s %s\n";
@@ -543,17 +550,6 @@ void falco_engine::describe_rule(std::string *rule, const std::vector<std::share
 
 		return;
 	}
-
-	// use previously-loaded collector definitions to obtain a compiled
-	// output of rules, macros, and lists.
-	// note: we ignore the loading result (errors, warnings), as they should have
-	// already been checked when previously-loading the rules files. Thus, we
-	// assume that the definitions will give no compilation error.
-	rule_loader::configuration cfg("", m_sources, "");
-	cfg.output_extra = m_extra;
-	cfg.replace_output_container_info = m_replace_container_info;
-	rule_loader::compiler::compile_output compiled;
-	rule_loader::compiler().compile(cfg, m_rule_collector, compiled);
 
 	// use collected and compiled info to print a json output
 	Json::FastWriter writer;
@@ -593,7 +589,7 @@ void falco_engine::describe_rule(std::string *rule, const std::vector<std::share
 
 		// Store information about rules
 		Json::Value rules_array = Json::arrayValue;
-		for(const auto& r : compiled.rules)
+		for(const auto& r : m_last_compile_output->rules)
 		{
 			auto info = m_rule_collector.rules().at(r.name);
 			Json::Value rule;
@@ -604,7 +600,7 @@ void falco_engine::describe_rule(std::string *rule, const std::vector<std::share
 		
 		// Store information about macros
 		Json::Value macros_array = Json::arrayValue;
-		for(const auto &m : compiled.macros)
+		for(const auto &m : m_last_compile_output->macros)
 		{
 			auto info = m_rule_collector.macros().at(m.name);
 			Json::Value macro;
@@ -615,7 +611,7 @@ void falco_engine::describe_rule(std::string *rule, const std::vector<std::share
 
 		// Store information about lists 
 		Json::Value lists_array = Json::arrayValue;
-		for(const auto &l : compiled.lists)
+		for(const auto &l : m_last_compile_output->lists)
 		{
 			auto info = m_rule_collector.lists().at(l.name);
 			Json::Value list;
