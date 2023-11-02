@@ -38,7 +38,7 @@ static std::string read_file(const std::string &filename)
 }
 
 #ifndef _WIN32
-static int get_unix_sysinfo(nlohmann::json &support)
+static int get_sysinfo(nlohmann::json &support)
 {
 	struct utsname sysinfo;
 	if(uname(&sysinfo) != 0)
@@ -53,10 +53,8 @@ static int get_unix_sysinfo(nlohmann::json &support)
 	support["system_info"]["machine"] = sysinfo.machine;
 	return 0;
 }
-#endif
-
-#ifdef _WIN32
-static int get_win32_sysinfo(nlohmann::json &support)
+#else
+static int get_sysinfo(nlohmann::json &support)
 {
 	OSVERSIONINFO osvi;
 	SYSTEM_INFO sysInfo;
@@ -102,12 +100,7 @@ falco::app::run_result falco::app::actions::print_support(falco::app::state& s)
 		nlohmann::json support;
 		std::string cmdline;
 
-#ifndef _WIN32
-		int rc = get_unix_sysinfo(support);
-#else
-		int rc = get_win32_sysinfo(support);
-#endif
-		if(rc != 0)
+		if(get_sysinfo(support) != 0)
 		{
 			return run_result::fatal(std::string("Could not get system info: ") + strerror(errno));
 		}
