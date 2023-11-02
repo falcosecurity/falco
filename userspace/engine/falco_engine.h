@@ -40,6 +40,7 @@ limitations under the License.
 #include "falco_load_result.h"
 #include "filter_details_resolver.h"
 #include "rule_loader_reader.h"
+#include "rule_loader_compiler.h"
 
 //
 // This class acts as the primary interface between a program and the
@@ -346,6 +347,8 @@ private:
 	uint16_t m_next_ruleset_id;
 	std::map<std::string, uint16_t> m_known_rulesets;
 	falco_common::priority_type m_min_priority;
+
+	std::unique_ptr<rule_loader::compiler::compile_output> m_last_compile_output;
 
 	//
 	// Here's how the sampling ratio and multiplier influence
