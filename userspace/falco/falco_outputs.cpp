@@ -27,9 +27,11 @@ limitations under the License.
 #include "watchdog.h"
 
 #include "outputs_file.h"
-#include "outputs_program.h"
 #include "outputs_stdout.h"
+#if !defined(_WIN32)
+#include "outputs_program.h"
 #include "outputs_syslog.h"
+#endif
 #if !defined(_WIN32) && !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
 #include "outputs_http.h"
 #include "outputs_grpc.h"
@@ -100,10 +102,12 @@ void falco_outputs::add_output(falco::outputs::config oc)
 	{
 		oo = new falco::outputs::output_stdout();
 	}
+#ifndef _WIN32
 	else if(oc.name == "syslog")
 	{
 		oo = new falco::outputs::output_syslog();
 	}
+#endif
 #if !defined(_WIN32) && !defined(__EMSCRIPTEN__) && !defined(MINIMAL_BUILD)
 	else if(oc.name == "http")
 	{

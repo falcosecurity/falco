@@ -16,14 +16,10 @@ limitations under the License.
 */
 
 #include "outputs_syslog.h"
-#ifndef _WIN32
 #include <syslog.h>
-#endif
 
 void falco::outputs::output_syslog::output(const message *msg)
 {
-#ifndef _WIN32
 	// Syslog output should not have any trailing newline
 	::syslog(msg->priority, "%s", msg->msg.c_str());
-#endif
 }

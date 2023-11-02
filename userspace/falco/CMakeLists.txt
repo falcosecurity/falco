@@ -53,9 +53,7 @@ set(
   logger.cpp
   falco_outputs.cpp
   outputs_file.cpp
-  outputs_program.cpp
   outputs_stdout.cpp
-  outputs_syslog.cpp
   event_drops.cpp
   stats_writer.cpp
   versions_info.cpp
@@ -88,6 +86,14 @@ set(
 
 if(USE_BUNDLED_DEPS)
   list(APPEND FALCO_DEPENDENCIES yamlcpp)
+endif()
+
+if(NOT WIN32)
+  list(
+    APPEND FALCO_SOURCES
+	outputs_program.cpp
+	outputs_syslog.cpp
+)
 endif()
 
 if(CMAKE_SYSTEM_NAME MATCHES "Linux" AND NOT MINIMAL_BUILD)
