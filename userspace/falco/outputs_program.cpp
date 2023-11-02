@@ -20,7 +20,6 @@ limitations under the License.
 
 void falco::outputs::output_program::open_pfile()
 {
-#ifndef _WIN32
 	if(m_pfile == nullptr)
 	{
 		m_pfile = popen(m_oc.options["program"].c_str(), "w");
@@ -30,7 +29,6 @@ void falco::outputs::output_program::open_pfile()
 			setvbuf(m_pfile, NULL, _IONBF, 0);
 		}
 	}
-#endif
 }
 
 void falco::outputs::output_program::output(const message *msg)
@@ -47,13 +45,11 @@ void falco::outputs::output_program::output(const message *msg)
 
 void falco::outputs::output_program::cleanup()
 {
-#ifndef _WIN32
 	if(m_pfile != nullptr)
 	{
 		pclose(m_pfile);
 		m_pfile = nullptr;
 	}
-#endif
 }
 
 void falco::outputs::output_program::reopen()
