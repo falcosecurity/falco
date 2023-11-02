@@ -41,6 +41,8 @@ void filter_details::reset()
 void filter_details_resolver::run(ast::expr* filter, filter_details& details)
 {
 	visitor v(details);
+	// note: we may have ASTs composed on only one macro ref
+	v.m_expect_macro = true;
 	filter->accept(&v);
 }
 
