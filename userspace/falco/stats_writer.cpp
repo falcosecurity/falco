@@ -52,12 +52,16 @@ static void timer_handler(int signum)
 	s_timer.fetch_add(1, std::memory_order_relaxed);
 }
 
+#if defined(_WIN32)
 bool stats_writer::init_ticker(uint32_t interval_msec, std::string &err)
 {
-#if !defined(_WIN32)
-#if !defined(__APPLE__)
-	struct itimerspec timer = {};
+	return true;
+}
 #endif
+
+#if defined(__APPLE__)
+bool stats_writer::init_ticker(uint32_t interval_msec, std::string &err)
+{
 	struct sigaction handler = {};
 
 	memset (&handler, 0, sizeof(handler));
@@ -67,13 +71,64 @@ bool stats_writer::init_ticker(uint32_t interval_msec, std::string &err)
 		err = std::string("Could not set up signal handler for periodic timer: ") + strerror(errno);
 		return false;
 	}
-	
+
 	struct sigevent sev = {};
 	/* Create the timer */
 	sev.sigev_notify = SIGEV_SIGNAL;
 	sev.sigev_signo = SIGALRM;
 	sev.sigev_value.sival_ptr = &s_timerid;
-#if !defined(__EMSCRIPTEN__) && !defined(__APPLE__)
+
+	return true;
+}
+#endif
+
+#if defined(EMSCRIPTEN)
+bool stats_writer::init_ticker(uint32_t interval_msec, std::string &err)
+{
+	struct itimerspec timer = {};
+	struct sigaction handler = {};
+
+	memset (&handler, 0, sizeof(handler));
+	handler.sa_handler = &timer_handler;
+	if (sigaction(SIGALRM, &handler, NULL) == -1)
+	{
+		err = std::string("Could not set up signal handler for periodic timer: ") + strerror(errno);
+		return false;
+	}
+
+	struct sigevent sev = {};
+	/* Create the timer */
+	sev.sigev_notify = SIGEV_SIGNAL;
+	sev.sigev_signo = SIGALRM;
+	sev.sigev_value.sival_ptr = &s_timerid;
+
+	timer.it_value.tv_sec = interval_msec / 1000;
+	timer.it_value.tv_nsec = (interval_msec % 1000) * 1000 * 1000;
+	timer.it_interval = timer.it_value;
+
+	return true;
+}
+#endif
+
+#if defined(__linux__)
+bool stats_writer::init_ticker(uint32_t interval_msec, std::string &err)
+{
+	struct itimerspec timer = {};
+	struct sigaction handler = {};
+
+	memset (&handler, 0, sizeof(handler));
+	handler.sa_handler = &timer_handler;
+	if (sigaction(SIGALRM, &handler, NULL) == -1)
+	{
+		err = std::string("Could not set up signal handler for periodic timer: ") + strerror(errno);
+		return false;
+	}
+
+	struct sigevent sev = {};
+	/* Create the timer */
+	sev.sigev_notify = SIGEV_SIGNAL;
+	sev.sigev_signo = SIGALRM;
+	sev.sigev_value.sival_ptr = &s_timerid;
 	// delete any previously set timer
 	if (s_timerid_exists)
 	{
@@ -92,24 +147,19 @@ bool stats_writer::init_ticker(uint32_t interval_msec, std::string &err)
 	}
 	s_timerid_exists = true;
 
-#endif
-
-#if !defined(__APPLE__)
 	timer.it_value.tv_sec = interval_msec / 1000;
 	timer.it_value.tv_nsec = (interval_msec % 1000) * 1000 * 1000;
 	timer.it_interval = timer.it_value;
-#endif
 
-#if !defined(__EMSCRIPTEN__) && !defined(__APPLE__)
 	if (timer_settime(s_timerid, 0, &timer, NULL) == -1) 
 	{
 		err = std::string("Could not set up periodic timer: ") + strerror(errno);
 		return false;
 	}
-#endif
-#endif // !defined(_WIN32)
+
 	return true;
 }
+#endif
 
 stats_writer::ticker_t stats_writer::get_ticker()
 {
@@ -164,7 +214,7 @@ stats_writer::~stats_writer()
 			m_file_output.close();
 		}
 		// delete timerID and reset timer
-#if !defined(__EMSCRIPTEN__) && !defined(__APPLE__) && !defined(_WIN32)
+#ifdef __linux__
 		if (s_timerid_exists)
 		{
 			timer_delete(s_timerid);
