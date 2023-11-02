@@ -72,7 +72,12 @@ nlohmann::json falco::versions_info::as_json() const
     version_info["driver_api_version"] = driver_api_version;
     version_info["driver_schema_version"] = driver_schema_version;
     version_info["default_driver_version"] = default_driver_version;
-    version_info["engine_version"] = engine_version;
+    // note: the 'engine_version' key below must be removed in the next major bump (0.x.y -> 1.0.0)
+    // the two keys are kept for existing tooling that relies on the old key
+    // (falcoctl will match old rules artifacts configs by using this key, and the new ones using 
+    // the engine_version_semver key)
+    version_info["engine_version"] = std::to_string(FALCO_ENGINE_VERSION_MINOR);
+    version_info["engine_version_semver"] = engine_version;
     for (const auto& pv : plugin_versions)
     {
         version_info["plugin_versions"][pv.first] = pv.second;
