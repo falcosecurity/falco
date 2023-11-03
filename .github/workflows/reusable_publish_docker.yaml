@@ -152,7 +152,7 @@ jobs:
 
       - name: Setup Cosign
         if: inputs.sign
-        uses: sigstore/cosign-installer@main
+        uses: sigstore/cosign-installer@11086d25041f77fe8fe7b9ea4e48e3b9192b8f19 # v3.1.2
         with:
           cosign-release: v2.0.2
 
