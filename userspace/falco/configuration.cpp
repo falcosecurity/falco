@@ -113,6 +113,8 @@ static driver_mode_type get_driver_mode(const std::string& input){
 		{"kmod",driver_mode_type::KMOD},
 		{"bpf",driver_mode_type::BPF},
 		{"modern_bpf",driver_mode_type::MODERN_BPF},
+		{"gvisor",driver_mode_type::GVISOR},
+		{"nodriver",driver_mode_type::NODRIVER},
 		{"custom",driver_mode_type::CUSTOM},
 	};
 

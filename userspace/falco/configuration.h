@@ -43,6 +43,8 @@ enum class driver_mode_type : uint8_t
 	KMOD,
 	BPF,
 	MODERN_BPF,
+	GVISOR,
+	NODRIVER,
 	CUSTOM
 };
 
