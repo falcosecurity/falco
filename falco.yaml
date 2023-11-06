@@ -62,6 +62,8 @@
 #     syscall_event_timeouts
 #     syscall_event_drops
 #     metrics
+# Falco driver selection
+#     driver_mode
 # Falco performance tuning (advanced)
 #     syscall_buf_size_preset
 #     syscall_drop_failed_exit
@@ -769,6 +771,39 @@ metrics:
   convert_memory_to_mb: true
   include_empty_values: false
 
+  ###############################################
+# Falco driver selection                    #
+###############################################
+
+# [Stable] `driver_mode`
+#
+# --- [Description]
+#
+# Falco supports different driver modes for capturing syscall events. The choice
+# of driver mode can significantly impact the performance and compatibility of
+# Falco with your system. Choose the appropriate driver mode based on your
+# system's configuration and requirements.
+#
+# Available driver modes:
+# - `kmod`: Kernel Module (Kernel Module)
+# - `bpf`: eBPF (Extended Berkeley Packet Filter)
+# - `modern_bpf`: Modern eBPF (Modern Extended Berkeley Packet Filter)
+# - `nodriver`: No Driver (No driver, just for testing)
+# - `gvisor`: gVisor (gVisor sandbox)
+# - `custom`: Custom Driver (Specify a custom driver module)
+
+# Example usage:
+# driver_mode: kmod
+
+# Select the appropriate driver mode by uncommenting the corresponding line.
+# Make sure to specify only one driver mode at a time.
+
+driver_mode: kmod
+# driver_mode: bpf
+# driver_mode: modern_bpf
+# driver_mode: nodriver
+# driver_mode: gvisor
+# driver_mode: custom
 
 #######################################
 # Falco performance tuning (advanced) #
