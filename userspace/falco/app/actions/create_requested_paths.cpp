@@ -92,13 +92,15 @@ falco::app::run_result falco::app::actions::create_requested_paths(falco::app::s
 	return run_result::ok();
 }
 
+// This function operates like `mkdir -p` excluding the last part of
+// the path which we assume to be the filename.
 static int create_dir(const std::string &path)
 {
 
     std::filesystem::path dirPath(path);
 
     try {
-        std::filesystem::create_directories(dirPath);
+        std::filesystem::create_directories(dirPath.parent_path());
     } catch (const std::exception& ex) {
 		return -1;
     }
