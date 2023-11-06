@@ -22,6 +22,7 @@ limitations under the License.
 #include <cxxopts.hpp>
 
 #include <fstream>
+#include <sys/syslog.h>
 
 namespace falco {
 namespace app {
@@ -149,7 +150,11 @@ bool options::parse(int argc, char **argv, std::string &errstr)
 	open_modes += !trace_filename.empty();
 	open_modes += !gvisor_config.empty();
 	open_modes += modern_bpf;
-	open_modes += getenv("FALCO_BPF_PROBE") != NULL;
+	if(getenv("FALCO_BPF_PROBE") != NULL)
+	{
+		falco_logger::log(LOG_WARNING, "DEPRECATION NOTICE: the FALCO_BPF_PROBE environment variable will be soon deprecated!\n");
+		open_modes += 1;
+	}
 	open_modes += nodriver;
 	if (open_modes > 1)
 	{
