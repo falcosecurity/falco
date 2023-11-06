@@ -108,24 +108,23 @@ void falco_configuration::init(const std::string& conf_filename, const std::vect
 
 static driver_mode_type get_driver_mode(const std::string& input){
 	// Set driver mode if not already set.
-	if( input == "bpf" )
-	{
-		return driver_mode_type::BPF;
+	const std::unordered_map<std::string, driver_mode_type> driver_mode_lut = {
+		{"kmod",driver_mode_type::KMOD},
+		{"bpf",driver_mode_type::BPF},
+		{"modern_bpf",driver_mode_type::MODERN_BPF},
+		{"custom",driver_mode_type::CUSTOM},
+	};
+
+	if(driver_mode_lut.find(input) != driver_mode_lut.end()) {
+		return driver_mode_lut.at(input);
+	} else {
+		return driver_mode_type::KMOD;
 	}
-	else if( input == "modern_bpf" )
-	{
-		return driver_mode_type::MODERN_BPF;
-	}
-	else if( input == "custom" )
-	{
-		return driver_mode_type::CUSTOM;
-	}
-	return driver_mode_type::KMOD;
 }
 
 void falco_configuration::load_yaml(const std::string& config_name, const yaml_helper& config)
 {
-	m_driver_mode = get_driver_mode(config.get_scalar<string>("driver_mode", ""));
+	m_driver_mode = get_driver_mode(config.get_scalar<std::string>("driver_mode", ""));
 
 	std::list<std::string> rules_files;
 
