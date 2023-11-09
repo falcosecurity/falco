@@ -15,7 +15,7 @@ RUN curl -L -o falco.tar.gz \
     tar -xvf falco.tar.gz && \
     rm -f falco.tar.gz && \
     mv falco-${FALCO_VERSION}-$(uname -m) falco && \
-    rm -rf /falco/usr/src/falco-* /falco/usr/bin/falco-driver-loader
+    rm -rf /falco/usr/src/falco-* /falco/usr/bin/falcoctl
 
 RUN sed -e 's/time_format_iso_8601: false/time_format_iso_8601: true/' < /falco/etc/falco/falco.yaml > /falco/etc/falco/falco.yaml.new \
     && mv /falco/etc/falco/falco.yaml.new /falco/etc/falco/falco.yaml

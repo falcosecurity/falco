@@ -31,7 +31,7 @@ case "$1" in
       systemctl --system stop 'falco-custom.service' || true
       systemctl --system stop 'falcoctl-artifact-follow.service' || true
 
-      echo "[PRE-REMOVE] Call 'falco-driver-loader --clean:'"
-      falco-driver-loader --clean
+      echo "[PRE-REMOVE] Call 'falcoctl driver cleanup:'"
+      falcoctl driver cleanup
     ;;
 esac

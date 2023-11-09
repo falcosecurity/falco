@@ -26,4 +26,5 @@ do
     ln -s "$i" "/usr/src/$base"
 done
 
-/usr/bin/falco-driver-loader "$@"
+/usr/bin/falcoctl driver config "$@"
+/usr/bin/falcoctl driver install

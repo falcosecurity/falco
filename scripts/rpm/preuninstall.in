@@ -25,8 +25,8 @@ systemctl --system stop 'falco-modern-bpf.service' || true
 systemctl --system stop 'falco-custom.service' || true
 systemctl --system stop 'falcoctl-artifact-follow.service' || true
 
-echo "[PRE-REMOVE] Call 'falco-driver-loader --clean:'"
-falco-driver-loader --clean
+echo "[PRE-REMOVE] Call 'falcoctl driver cleanup:'"
+falcoctl driver cleanup
 
 # validate rpm macros by `rpm -qp --scripts <rpm>`
 # RPM scriptlets: https://docs.fedoraproject.org/en-US/packaging-guidelines/Scriptlets/#_systemd

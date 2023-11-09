@@ -1,3 +1,10 @@
+driver:
+    type: "kmod"
+    name: "@DRIVER_NAME@"
+    repos:
+        - "@DRIVERS_REPO@"
+    version: "@DRIVER_VERSION@"
+    hostroot: ""
 artifact:
   follow:
     every: 6h0m0s
