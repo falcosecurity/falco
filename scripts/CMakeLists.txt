@@ -41,11 +41,6 @@ if(CMAKE_SYSTEM_NAME MATCHES "Linux")
 	configure_file(rpm/postinstall.in rpm/postinstall COPYONLY)
 	configure_file(rpm/postuninstall.in rpm/postuninstall COPYONLY)
 	configure_file(rpm/preuninstall.in rpm/preuninstall COPYONLY)
-
-	# driver loader
-	configure_file(falco-driver-loader falco-driver-loader @ONLY)
-	install(PROGRAMS ${PROJECT_BINARY_DIR}/scripts/falco-driver-loader
-		DESTINATION ${FALCO_BIN_DIR} COMPONENT "${FALCO_COMPONENT_NAME}")
 endif()
 
 # Install Falcoctl config file
@@ -53,5 +48,6 @@ if (NOT WIN32 AND NOT APPLE AND NOT EMSCRIPTEN AND NOT MUSL_OPTIMIZED_BUILD)
 	if(NOT DEFINED FALCOCTL_ETC_DIR)
 		set(FALCOCTL_ETC_DIR "${CMAKE_INSTALL_FULL_SYSCONFDIR}/falcoctl")
 	endif()
-	install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/falcoctl/falcoctl.yaml DESTINATION "${FALCOCTL_ETC_DIR}" COMPONENT "${FALCO_COMPONENT_NAME}")
+	configure_file(${CMAKE_CURRENT_SOURCE_DIR}/falcoctl/falcoctl.yaml.in ${PROJECT_BINARY_DIR}/scripts/falcoctl/falcoctl.yaml)
+	install(FILES ${PROJECT_BINARY_DIR}/scripts/falcoctl/falcoctl.yaml DESTINATION "${FALCOCTL_ETC_DIR}" COMPONENT "${FALCO_COMPONENT_NAME}")
 endif()

@@ -95,16 +95,18 @@ set -e
 echo "[POST-INSTALL] Trigger deamon-reload:"
 systemctl --system daemon-reload || true
 
-# If needed, try to load/compile the driver through falco-driver-loader
+# If needed, try to load/compile the driver through falcoctl
+echo "[POST-INSTALL] Configure falcoctl driver type:"
+falcoctl driver config --type $chosen_driver
 case "$chosen_driver" in
     "kmod")
       # Only compile for kmod, in this way we use dkms
-      echo "[POST-INSTALL] Call 'falco-driver-loader --compile module':"
-      falco-driver-loader --compile module
+      echo "[POST-INSTALL] Call 'falcoctl driver install for kmod:"
+      falcoctl driver install --download=false
       ;;
     "bpf")
-      echo "[POST-INSTALL] Call 'falco-driver-loader bpf':"
-      falco-driver-loader bpf
+      echo "[POST-INSTALL] Call 'falcoctl driver install for bpf':"
+      falcoctl driver install
       ;;
 esac
 

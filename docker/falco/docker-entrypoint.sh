@@ -29,9 +29,10 @@ if [[ -z "${SKIP_DRIVER_LOADER}" ]]; then
     done
 
     # convert the optional space-separated env variable FALCO_DRIVER_LOADER_OPTIONS to array, prevent 
-    # shell expansion and use it as argument list for falco-driver-loader
+    # shell expansion and use it as argument list for falcoctl
     read -a falco_driver_loader_option_arr <<< $FALCO_DRIVER_LOADER_OPTIONS
-    /usr/bin/falco-driver-loader "${falco_driver_loader_option_arr[@]}"
+    /usr/bin/falcoctl driver config "${falco_driver_loader_option_arr[@]}"
+    /usr/bin/falcoctl driver install
 fi
 
 exec "$@"
