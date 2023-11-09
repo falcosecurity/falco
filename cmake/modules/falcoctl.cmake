@@ -28,8 +28,9 @@ endif()
 
 ExternalProject_Add(
         falcoctl
-        URL "https://github.com/falcosecurity/falcoctl/releases/download/v${FALCOCTL_VERSION}/falcoctl_${FALCOCTL_VERSION}_${FALCOCTL_SYSTEM_NAME}_${FALCOCTL_SYSTEM_PROC_GO}.tar.gz"
-        URL_HASH "SHA256=${FALCOCTL_HASH}"
+        URL "https://github.com/falcosecurity/falcoctl/archive/555594a2860284947ff83eefd4bd9a5abc6e9fe1.zip"
+        #URL "https://github.com/falcosecurity/falcoctl/releases/download/v${FALCOCTL_VERSION}/falcoctl_${FALCOCTL_VERSION}_${FALCOCTL_SYSTEM_NAME}_${FALCOCTL_SYSTEM_PROC_GO}.tar.gz"
+        #URL_HASH "SHA256=${FALCOCTL_HASH}"
         CONFIGURE_COMMAND ""
         BUILD_COMMAND ""
         INSTALL_COMMAND "")
