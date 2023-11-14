@@ -39,13 +39,12 @@ limitations under the License.
 
 enum class driver_mode_type : uint8_t
 {
-	INVALID = 0,
 	KMOD,
-	BPF,
-	MODERN_BPF,
+	EBPF,
+	MODERN_EBPF,
+	REPLAY,
 	GVISOR,
-	NODRIVER,
-	CUSTOM
+	NONE
 };
 
 class falco_configuration
@@ -59,6 +58,37 @@ public:
 		std::string m_init_config;
 		std::string m_open_params;
 	} plugin_config;
+
+	typedef struct {
+	public:
+		int16_t m_buf_size_preset;
+		bool m_drop_failed_exit;
+	} kmod_config;
+
+	typedef struct {
+	public:
+		std::string m_probe_path;
+		int16_t m_buf_size_preset;
+		bool m_drop_failed_exit;
+	} bpf_config;
+
+	typedef struct {
+	public:
+		uint16_t m_cpus_for_each_syscall_buffer;
+		int16_t m_buf_size_preset;
+		bool m_drop_failed_exit;
+	} modern_bpf_config;
+
+	typedef struct {
+	public:
+		std::string m_scap_file;
+	} replay_config;
+
+	typedef struct {
+	public:
+		std::string m_config;
+		std::string m_root;
+	} gvisor_config;
 
 	falco_configuration();
 	virtual ~falco_configuration() = default;
@@ -114,14 +144,6 @@ public:
 
 	uint32_t m_syscall_evt_timeout_max_consecutives;
 
-	// Index corresponding to the syscall buffer dimension.
-	uint16_t m_syscall_buf_size_preset;
-
-	// Number of CPUs associated with a single ring buffer.
-	uint16_t m_cpus_for_each_syscall_buffer;
-
-	bool m_syscall_drop_failed_exit;
-
 	// User supplied base_syscalls, overrides any Falco state engine enforcement.
 	std::unordered_set<std::string> m_base_syscalls_custom_set;
 	bool m_base_syscalls_repair;
@@ -138,10 +160,17 @@ public:
 	bool m_metrics_convert_memory_to_mb;
 	bool m_metrics_include_empty_values;
 
+	kmod_config m_kmod;
+	bpf_config m_bpf;
+	modern_bpf_config m_modern_bpf;
+	replay_config m_replay;
+	gvisor_config m_gvisor;
 	std::vector<plugin_config> m_plugins;
 
 private:
 	void load_yaml(const std::string& config_name, const yaml_helper& config);
+
+	void load_driver_config(const std::string& config_name, const yaml_helper& config);
 
 	void init_cmdline_options(yaml_helper& config, const std::vector<std::string>& cmdline_options);
 

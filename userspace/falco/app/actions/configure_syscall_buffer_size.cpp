@@ -28,18 +28,12 @@ using namespace falco::app::actions;
 falco::app::run_result falco::app::actions::configure_syscall_buffer_size(falco::app::state& s)
 {
 #ifdef __linux__
-	/* We don't need to compute the syscall buffer dimension if we are in capture mode or if the
-	 * the syscall source is not enabled.
-	 */
-	if(s.is_capture_mode()
-			|| !s.is_source_enabled(falco_common::syscall_source)
-			|| s.is_gvisor_enabled()
-			|| s.options.nodriver)
+	auto index = s.driver_buf_size_preset();
+	if (index == -1)
 	{
+		// Chosen driver kind does not support this option.
 		return run_result::ok();
 	}
-
-	uint16_t index = s.config->m_syscall_buf_size_preset;
 	if(index < MIN_INDEX || index > MAX_INDEX)
 	{
 		return run_result::fatal("The 'syscall_buf_size_preset' value must be between '" + std::to_string(MIN_INDEX) + "' and '" + std::to_string(MAX_INDEX) + "'\n");
