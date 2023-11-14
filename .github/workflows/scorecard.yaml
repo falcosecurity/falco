@@ -4,14 +4,19 @@
 
 name: Scorecard supply-chain security
 on:
-  # For Branch-Protection check. Only the default branch is supported. See
-  # https://github.com/ossf/scorecard/blob/main/docs/checks.md#branch-protection
-  branch_protection_rule:
   # To guarantee Maintained check is occasionally updated. See
   # https://github.com/ossf/scorecard/blob/main/docs/checks.md#maintained
   schedule:
     # Weekly on Mondays at 00:00.
     - cron: '0 0 * * 1'
+
+  # The OSSF recommendation encourages to enable branch protection rules trigger
+  # to update the scorecard
+  # (https://github.com/ossf/scorecard/blob/main/docs/checks.md#branch-protection)
+  # but due to our GitHub org management this check is triggered too often and is
+  # therefore disabled.
+  # branch_protection_rule:
+  
   push:
     branches: [ "master" ]
 
