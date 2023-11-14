@@ -39,9 +39,9 @@ TEST(ActionConfigureSyscallBufferNum, variable_number_of_CPUs)
 	{
 		falco::app::state s;
 		s.options.modern_bpf = true;
-		s.config->m_cpus_for_each_syscall_buffer = online_cpus + 1;
+		s.config->m_modern_bpf.m_cpus_for_each_syscall_buffer = online_cpus + 1;
 		EXPECT_ACTION_OK(action(s));
-		EXPECT_EQ(s.config->m_cpus_for_each_syscall_buffer, online_cpus);
+		EXPECT_EQ(s.config->m_modern_bpf.m_cpus_for_each_syscall_buffer, online_cpus);
 	}
 
 	// modern bpf engine, with an valid number of CPUs
@@ -49,8 +49,8 @@ TEST(ActionConfigureSyscallBufferNum, variable_number_of_CPUs)
 	{
 		falco::app::state s;
 		s.options.modern_bpf = true;
-		s.config->m_cpus_for_each_syscall_buffer = online_cpus - 1;
+		s.config->m_modern_bpf.m_cpus_for_each_syscall_buffer = online_cpus - 1;
 		EXPECT_ACTION_OK(action(s));
-		EXPECT_EQ(s.config->m_cpus_for_each_syscall_buffer, online_cpus - 1);
+		EXPECT_EQ(s.config->m_modern_bpf.m_cpus_for_each_syscall_buffer, online_cpus - 1);
 	}
 }

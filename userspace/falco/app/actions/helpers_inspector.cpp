@@ -28,9 +28,6 @@ limitations under the License.
 #define PATH_MAX 260
 #endif
 
-/* DEPRECATED: we will remove it in Falco 0.34. */
-#define FALCO_BPF_ENV_VARIABLE "FALCO_BPF_PROBE"
-
 using namespace falco::app;
 using namespace falco::app::actions;
 
@@ -38,13 +35,13 @@ falco::app::run_result falco::app::actions::open_offline_inspector(falco::app::s
 {
 	try
 	{
-		s.offline_inspector->open_savefile(s.options.trace_filename);
-		falco_logger::log(falco_logger::level::INFO, "Reading system call events from file: " + s.options.trace_filename + "\n");
+		s.offline_inspector->open_savefile(s.config->m_replay.m_scap_file);
+		falco_logger::log(falco_logger::level::INFO, "Reading system call events from file: " + s.config->m_replay.m_scap_file + "\n");
 		return run_result::ok();
 	}
 	catch (sinsp_exception &e)
 	{
-		return run_result::fatal("Could not open trace filename " + s.options.trace_filename + " for reading: " + e.what());
+		return run_result::fatal("Could not open trace filename " + s.config->m_replay.m_scap_file + " for reading: " + e.what());
 	}
 }
 
@@ -53,13 +50,6 @@ falco::app::run_result falco::app::actions::open_live_inspector(
 		std::shared_ptr<sinsp> inspector,
 		const std::string& source)
 {
-
-	bool is_driver_mode_from_cmdline = (s.options.nodriver ||
-				    s.is_gvisor_enabled() ||
-					s.options.modern_bpf ||
-					getenv(FALCO_BPF_ENV_VARIABLE) != NULL
-	);
-
 	try
 	{
 		if (source != falco_common::syscall_source) /* Plugin engine */
@@ -79,7 +69,7 @@ falco::app::run_result falco::app::actions::open_live_inspector(
 			}
 			return run_result::fatal("Can't find plugin for event source: " + source);
 		}
-		else if (s.options.nodriver || (!is_driver_mode_from_cmdline && s.config->m_driver_mode == driver_mode_type::NODRIVER)) /* nodriver engine. */
+		else if (s.config->m_driver_mode == driver_mode_type::NONE) /* nodriver engine. */
 		{
 			// when opening a capture with no driver, Falco will first check
 			// if a plugin is capable of generating raw events from the libscap
@@ -98,20 +88,20 @@ falco::app::run_result falco::app::actions::open_live_inspector(
 			falco_logger::log(falco_logger::level::INFO, "Opening '" + source + "' source with no driver\n");
 			inspector->open_nodriver();
 		}
-		else if(s.is_gvisor_enabled() || (!is_driver_mode_from_cmdline && s.config->m_driver_mode == driver_mode_type::GVISOR)) /* gvisor engine. */
+		else if(s.is_gvisor_enabled()) /* gvisor engine. */
 		{
-			falco_logger::log(falco_logger::level::INFO, "Opening '" + source + "' source with gVisor. Configuration path: " + s.options.gvisor_config);
-			inspector->open_gvisor(s.options.gvisor_config, s.options.gvisor_root);
+			falco_logger::log(falco_logger::level::INFO, "Opening '" + source + "' source with gVisor. Configuration path: " + s.config->m_gvisor.m_config);
+			inspector->open_gvisor(s.config->m_gvisor.m_config, s.config->m_gvisor.m_root);
 		}
-		else if(s.options.modern_bpf || (!is_driver_mode_from_cmdline && s.config->m_driver_mode == driver_mode_type::MODERN_BPF)) /* modern BPF engine. */
+		else if(s.config->m_driver_mode == driver_mode_type::MODERN_EBPF) /* modern BPF engine. */
 		{
 			falco_logger::log(falco_logger::level::INFO, "Opening '" + source + "' source with modern BPF probe.");
-			falco_logger::log(falco_logger::level::INFO, "One ring buffer every '" + std::to_string(s.config->m_cpus_for_each_syscall_buffer) +  "' CPUs.");
-			inspector->open_modern_bpf(s.syscall_buffer_bytes_size, s.config->m_cpus_for_each_syscall_buffer, true, s.selected_sc_set);
+			falco_logger::log(falco_logger::level::INFO, "One ring buffer every '" + std::to_string(s.config->m_modern_bpf.m_cpus_for_each_syscall_buffer) +  "' CPUs.");
+			inspector->open_modern_bpf(s.syscall_buffer_bytes_size, s.config->m_modern_bpf.m_cpus_for_each_syscall_buffer, true, s.selected_sc_set);
 		}
-		else if(getenv(FALCO_BPF_ENV_VARIABLE) != NULL || (!is_driver_mode_from_cmdline && s.config->m_driver_mode == driver_mode_type::BPF)) /* BPF engine. */
+		else if(s.config->m_driver_mode == driver_mode_type::EBPF) /* BPF engine. */
 		{
-			const char *bpf_probe_path = std::getenv(FALCO_BPF_ENV_VARIABLE);
+			const char *bpf_probe_path = s.config->m_bpf.m_probe_path.c_str();
 			char full_path[PATH_MAX];
 			/* If the path is empty try to load the probe from the default path. */
 			if(strncmp(bpf_probe_path, "", 1) == 0)

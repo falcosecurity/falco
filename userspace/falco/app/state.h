@@ -147,17 +147,59 @@ struct state
 
     inline bool is_capture_mode() const 
     {
-        return !options.trace_filename.empty();
+        return config->m_driver_mode == driver_mode_type::REPLAY;
     }
 
     inline bool is_gvisor_enabled() const
     {
-        return !options.gvisor_config.empty();
+        return config->m_driver_mode == driver_mode_type::GVISOR;
     }
     
     inline bool is_source_enabled(const std::string& src) const 
     {
         return enabled_sources.find(falco_common::syscall_source) != enabled_sources.end();
+    }
+
+    inline bool is_driver_drop_failed_exit_enabled() const
+    {
+	bool drop_failed;
+	switch (config->m_driver_mode)
+	{
+	case driver_mode_type::KMOD:
+		drop_failed = config->m_kmod.m_drop_failed_exit;
+		break;
+	case driver_mode_type::EBPF:
+		drop_failed = config->m_bpf.m_drop_failed_exit;
+		break;
+	case driver_mode_type::MODERN_EBPF:
+		drop_failed = config->m_modern_bpf.m_drop_failed_exit;
+		break;
+	default:
+		drop_failed = false;
+		break;
+	}
+	return drop_failed;
+    }
+
+    inline int16_t driver_buf_size_preset() const
+    {
+	int16_t index;
+	switch (config->m_driver_mode) {
+	case driver_mode_type::KMOD:
+		index = config->m_kmod.m_buf_size_preset;
+		break;
+	case driver_mode_type::EBPF:
+		index = config->m_bpf.m_buf_size_preset;
+		break;
+	case driver_mode_type::MODERN_EBPF:
+		index = config->m_modern_bpf.m_buf_size_preset;
+		break;
+	default:
+		// unsupported
+		index = - 1;
+		break;
+	}
+	return index;
     }
 };
 

@@ -18,15 +18,42 @@ limitations under the License.
 #include "actions.h"
 #include "falco_utils.h"
 
+/* DEPRECATED: we will remove it in Falco 0.38. */
+#define FALCO_BPF_ENV_VARIABLE "FALCO_BPF_PROBE"
+
 using namespace falco::app;
 using namespace falco::app::actions;
 
-// applies legacy/in-deprecation options to the current config
-static void apply_deprecated_options(
-		const falco::app::options& opts,
-		const std::shared_ptr<falco_configuration>& cfg)
+// applies legacy/in-deprecation options to the current state
+static falco::app::run_result apply_deprecated_options(falco::app::state& s)
 {
-	// Keep for future use cases.
+	// If overridden from CLI options (soon to be removed),
+	// use the requested driver.
+	if (getenv(FALCO_BPF_ENV_VARIABLE))
+	{
+		s.config->m_driver_mode = driver_mode_type::EBPF;
+		s.config->m_bpf.m_probe_path = getenv(FALCO_BPF_ENV_VARIABLE);
+	}
+	else if (s.options.modern_bpf)
+	{
+		s.config->m_driver_mode = driver_mode_type::MODERN_EBPF;
+	}
+	if (!s.options.gvisor_config.empty())
+	{
+		s.config->m_driver_mode =  driver_mode_type::GVISOR;
+		s.config->m_gvisor.m_config = s.options.gvisor_config;
+		s.config->m_gvisor.m_root = s.options.gvisor_root;
+	}
+	if (s.options.nodriver)
+	{
+		s.config->m_driver_mode =  driver_mode_type::NONE;
+	}
+	if (!s.options.trace_filename.empty())
+	{
+		s.config->m_driver_mode = driver_mode_type::REPLAY;
+		s.config->m_replay.m_scap_file = s.options.trace_filename;
+	}
+	return run_result::ok();
 }
 
 falco::app::run_result falco::app::actions::load_config(falco::app::state& s)
@@ -61,9 +88,7 @@ falco::app::run_result falco::app::actions::load_config(falco::app::state& s)
 
 	s.config->m_buffered_outputs = !s.options.unbuffered_outputs;
 
-	apply_deprecated_options(s.options, s.config);
-
-	return run_result::ok();
+	return apply_deprecated_options(s);
 }
 
 falco::app::run_result falco::app::actions::require_config_file(falco::app::state& s)
