@@ -17,11 +17,11 @@ limitations under the License.
 
 #include <ctype.h>
 
-#include "uri.h"
 #include "utils.h"
 
 #include "falco_common.h"
 #include "json_evt.h"
+#include "falco_utils.h"
 
 using json = nlohmann::json;
 using namespace std;
@@ -1006,7 +1006,7 @@ bool k8s_audit_filter_check::extract_query_param(const nlohmann::json &j,
 	{
 		std::vector<std::string> param_parts = sinsp_split(part, '=');
 
-		if(param_parts.size() == 2 && uri::decode(param_parts[0], true) == jchk.idx())
+		if(param_parts.size() == 2 && falco::utils::decode_uri(param_parts[0], true) == jchk.idx())
 		{
 			jchk.add_extracted_value(param_parts[1]);
 			return true;

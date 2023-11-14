@@ -52,6 +52,8 @@ void readfile(const std::string& filename, std::string& data);
 
 uint32_t hardware_concurrency();
 
+std::string decode_uri(const std::string& str, bool plus_as_space);
+
 namespace network
 {
 static const std::string UNIX_SCHEME("unix://");
