@@ -20,6 +20,7 @@ limitations under the License.
 #include <cstring>
 #include <iomanip>
 
+#include "falco_common.h"
 #include "falco_utils.h"
 #include "utils.h"
 
@@ -159,6 +160,81 @@ void readfile(const std::string& filename, std::string& data)
 
 	return;
 }
+
+// URI-decodes the given string by replacing percent-encoded
+// characters with the actual character. Returns the decoded string.
+//
+// When plus_as_space is true, non-encoded plus signs in the query are decoded as spaces.
+// (http://www.w3.org/TR/html401/interact/forms.html#h-17.13.4.1)
+std::string decode_uri(const std::string& str, bool plus_as_space)
+{
+	std::string decoded_str;
+	bool in_query = false;
+	std::string::const_iterator it  = str.begin();
+	std::string::const_iterator end = str.end();
+	while(it != end)
+	{
+		char c = *it++;
+		if(c == '?')
+		{
+			in_query = true;
+		}
+		// spaces may be encoded as plus signs in the query
+		if(in_query && plus_as_space && c == '+')
+		{
+			c = ' ';
+		}
+		else if(c == '%')
+		{
+			if (it == end)
+			{
+				throw falco_exception("URI encoding: no hex digit following percent sign in " + str);
+			}
+			char hi = *it++;
+			if (it == end)
+			{
+				throw falco_exception("URI encoding: two hex digits must follow percent sign in " + str);
+			}
+			char lo = *it++;
+			if (hi >= '0' && hi <= '9')
+			{
+				c = hi - '0';
+			}
+			else if (hi >= 'A' && hi <= 'F')
+			{
+				c = hi - 'A' + 10;
+			}
+			else if (hi >= 'a' && hi <= 'f')
+			{
+				c = hi - 'a' + 10;
+			}
+			else
+			{
+				throw falco_exception("URI encoding: not a hex digit found in " + str);
+			}
+			c *= 16;
+			if (lo >= '0' && lo <= '9')
+			{
+				c += lo - '0';
+			}
+			else if (lo >= 'A' && lo <= 'F')
+			{
+				c += lo - 'A' + 10;
+			}
+			else if (lo >= 'a' && lo <= 'f')
+			{
+				c += lo - 'a' + 10;
+			}
+			else
+			{
+				throw falco_exception("URI encoding: not a hex digit");
+			}
+		}
+		decoded_str += c;
+	}
+	return decoded_str;
+}
+
 namespace network
 {
 bool is_unix_scheme(const std::string& url)
