@@ -20,7 +20,7 @@ limitations under the License.
 #include <string>
 #include <exception>
 #include <mutex>
-#include <sinsp.h>
+#include <libsinsp/sinsp.h>
 
 //
 // equivalent to an "unbounded queue" in TBB terms or largest long value

@@ -19,7 +19,7 @@ limitations under the License.
 
 #include <string>
 #include <map>
-#include <gen_filter.h>
+#include <libsinsp/gen_filter.h>
 #include "falco_engine.h"
 
 class falco_formats

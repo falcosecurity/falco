@@ -19,7 +19,7 @@ limitations under the License.
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include <plugin_manager.h>
+#include <libsinsp/plugin_manager.h>
 #include <configuration.h>
 
 #include "helpers.h"

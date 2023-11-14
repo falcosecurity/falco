@@ -19,8 +19,8 @@ limitations under the License.
 #include <memory>
 #include <unordered_set>
 
-#include <sinsp.h>
-#include <token_bucket.h>
+#include <libsinsp/sinsp.h>
+#include <libsinsp/token_bucket.h>
 
 #include "logger.h"
 #include "falco_outputs.h"

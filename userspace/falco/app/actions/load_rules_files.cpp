@@ -18,7 +18,7 @@ limitations under the License.
 #include "actions.h"
 #include "helpers.h"
 
-#include <plugin_manager.h>
+#include <libsinsp/plugin_manager.h>
 
 #include <unordered_set>
 

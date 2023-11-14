@@ -30,7 +30,7 @@ limitations under the License.
 
 #include <nlohmann/json.hpp>
 
-#include "gen_filter.h"
+#include <libsinsp/gen_filter.h>
 #include "filter_ruleset.h"
 #include "rule_loader.h"
 #include "rule_loader_reader.h"

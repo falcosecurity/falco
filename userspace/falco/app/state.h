@@ -28,7 +28,7 @@ limitations under the License.
 #include "../webserver.h"
 #endif
 
-#include <sinsp.h>
+#include <libsinsp/sinsp.h>
 
 #include <string>
 #include <memory>

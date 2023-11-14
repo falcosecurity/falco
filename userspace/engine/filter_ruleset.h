@@ -19,12 +19,11 @@ limitations under the License.
 
 #include "falco_rule.h"
 #include "rule_loader_compile_output.h"
-#include <filter/ast.h>
-#include <filter.h>
-#include <functional>
-#include <event.h>
-#include <gen_filter.h>
-#include <events/sinsp_events.h>
+#include <libsinsp/filter/ast.h>
+#include <libsinsp/filter.h>
+#include <libsinsp/event.h>
+#include <libsinsp/gen_filter.h>
+#include <libsinsp/events/sinsp_events.h>
 
 /*!
 	\brief Manages a set of rulesets. A ruleset is a set of

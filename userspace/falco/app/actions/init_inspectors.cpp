@@ -20,7 +20,7 @@ limitations under the License.
 
 #include <unordered_set>
 
-#include <plugin_manager.h>
+#include <libsinsp/plugin_manager.h>
 
 using namespace falco::app;
 using namespace falco::app::actions;

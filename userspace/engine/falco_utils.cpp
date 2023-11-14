@@ -21,7 +21,7 @@ limitations under the License.
 #include <iomanip>
 
 #include "falco_utils.h"
-#include "utils.h"
+#include <libsinsp/utils.h>
 
 #include <re2/re2.h>
 

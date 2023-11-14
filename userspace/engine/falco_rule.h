@@ -21,7 +21,7 @@ limitations under the License.
 #include <string>
 #include "falco_common.h"
 
-#include <filter/ast.h>
+#include <libsinsp/filter/ast.h>
 
 /*!
 	\brief Represents a list in the Falco Engine.

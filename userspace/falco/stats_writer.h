@@ -21,7 +21,7 @@ limitations under the License.
 #include <string>
 #include <unordered_map>
 
-#include <sinsp.h>
+#include <libsinsp/sinsp.h>
 
 #ifndef __EMSCRIPTEN__
 #include "tbb/concurrent_queue.h"

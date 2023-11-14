@@ -20,7 +20,7 @@ limitations under the License.
 #include "config_falco.h"
 #include "falco_engine_version.h"
 
-#include <plugin_manager.h>
+#include <libsinsp/plugin_manager.h>
 
 // todo: move string conversion to scap
 static std::string get_driver_api_version(const std::shared_ptr<sinsp>& s)

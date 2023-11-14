@@ -16,7 +16,7 @@ limitations under the License.
 */
 
 #include "actions.h"
-#include <plugin_manager.h>
+#include <libsinsp/plugin_manager.h>
 
 using namespace falco::app;
 using namespace falco::app::actions;

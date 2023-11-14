@@ -16,7 +16,7 @@ limitations under the License.
 */
 
 #include <string>
-#include <version.h>
+#include <libsinsp/version.h>
 
 #include "falco_engine.h"
 #include "rule_loader_collector.h"

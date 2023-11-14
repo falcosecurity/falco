@@ -24,11 +24,10 @@ limitations under the License.
 #include <map>
 
 #include "filter_ruleset.h"
-#include "sinsp.h"
-#include "filter.h"
-#include "event.h"
-
-#include "gen_filter.h"
+#include <libsinsp/sinsp.h>
+#include <libsinsp/filter.h>
+#include <libsinsp/event.h>
+#include <libsinsp/gen_filter.h>
 
 /*!
 	\brief A filter_ruleset that indexes enabled rules by event type,

@@ -20,7 +20,7 @@ limitations under the License.
 #include <memory>
 #include <map>
 
-#include "gen_filter.h"
+#include <libsinsp/gen_filter.h>
 #include "falco_common.h"
 #include "falco_engine.h"
 #include "outputs.h"
