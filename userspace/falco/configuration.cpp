@@ -64,9 +64,6 @@ falco_configuration::falco_configuration():
 	m_syscall_evt_drop_max_burst(1),
 	m_syscall_evt_simulate_drops(false),
 	m_syscall_evt_timeout_max_consecutives(1000),
-	m_syscall_buf_size_preset(4),
-	m_cpus_for_each_syscall_buffer(2),
-	m_syscall_drop_failed_exit(false),
 	m_base_syscalls_repair(false),
 	m_metrics_enabled(false),
 	m_metrics_interval_str("5000"),
@@ -106,27 +103,72 @@ void falco_configuration::init(const std::string& conf_filename, const std::vect
 	load_yaml(conf_filename, config);
 }
 
-static driver_mode_type get_driver_mode(const std::string& input){
+void falco_configuration::load_driver_config(const std::string& config_name, const yaml_helper& config)
+{
 	// Set driver mode if not already set.
 	const std::unordered_map<std::string, driver_mode_type> driver_mode_lut = {
 		{"kmod",driver_mode_type::KMOD},
-		{"bpf",driver_mode_type::BPF},
-		{"modern_bpf",driver_mode_type::MODERN_BPF},
+		{"ebpf",driver_mode_type::EBPF},
+		{"modern-ebpf",driver_mode_type::MODERN_EBPF},
+		{"replay",driver_mode_type::REPLAY},
 		{"gvisor",driver_mode_type::GVISOR},
-		{"nodriver",driver_mode_type::NODRIVER},
-		{"custom",driver_mode_type::CUSTOM},
+		{"none",driver_mode_type::NONE},
 	};
 
-	if(driver_mode_lut.find(input) != driver_mode_lut.end()) {
-		return driver_mode_lut.at(input);
-	} else {
-		return driver_mode_type::KMOD;
+	auto driver_mode_str = config.get_scalar<std::string>("driver.kind", "kmod");
+	if (driver_mode_lut.find(driver_mode_str) != driver_mode_lut.end())
+	{
+		m_driver_mode = driver_mode_lut.at(driver_mode_str);
+	}
+	else
+	{
+		throw std::logic_error("Error reading config file (" + config_name + "): wrong driver.kind specified.");
+	}
+
+	switch (m_driver_mode)
+	{
+	case driver_mode_type::KMOD:
+		m_kmod.m_buf_size_preset = config.get_scalar<int16_t>("driver.kmod.buf_size_preset", 4);
+		m_kmod.m_drop_failed_exit = config.get_scalar<bool>("driver.kmod.drop_failed", false);
+		break;
+	case driver_mode_type::EBPF:
+		// TODO: default value for `probe` should be $HOME/FALCO_PROBE_BPF_FILEPATH,
+		// to be done once we drop the CLI option otherwise we would need to make the check twice,
+		// once here, and once when we merge the CLI options in the config file.
+		m_bpf.m_probe_path = config.get_scalar<std::string>("driver.ebpf.probe", "");
+		m_bpf.m_buf_size_preset = config.get_scalar<int16_t>("driver.ebpf.buf_size_preset", 4);
+		m_bpf.m_drop_failed_exit = config.get_scalar<bool>("driver.ebpf.drop_failed", false);
+		break;
+	case driver_mode_type::MODERN_EBPF:
+		m_modern_bpf.m_cpus_for_each_syscall_buffer = config.get_scalar<uint16_t>("driver.modern-ebpf.cpus_for_each_syscall_buffer", 2);
+		m_modern_bpf.m_buf_size_preset = config.get_scalar<int16_t>("driver.modern-ebpf.buf_size_preset", 4);
+		m_modern_bpf.m_drop_failed_exit = config.get_scalar<bool>("driver.modern-ebpf.drop_failed", false);
+		break;
+	case driver_mode_type::REPLAY:
+		m_replay.m_scap_file = config.get_scalar<std::string>("driver.replay.scap_file", "");
+		if (m_replay.m_scap_file.empty())
+		{
+			throw std::logic_error("Error reading config file (" + config_name + "): driver.kind is 'replay' but no driver.replay.scap_file specified.");
+		}
+		break;
+	case driver_mode_type::GVISOR:
+		m_gvisor.m_config = config.get_scalar<std::string>("driver.gvisor.config", "");
+		if (m_gvisor.m_config.empty())
+		{
+			throw std::logic_error("Error reading config file (" + config_name + "): driver.kind is 'gvisor' but no driver.gvisor.config specified.");
+		}
+		m_gvisor.m_root = config.get_scalar<std::string>("driver.gvisor.root", "");
+		break;
+	case driver_mode_type::NONE:
+	default:
+		break;
 	}
 }
 
 void falco_configuration::load_yaml(const std::string& config_name, const yaml_helper& config)
 {
-	m_driver_mode = get_driver_mode(config.get_scalar<std::string>("driver_mode", ""));
+	load_driver_config(config_name, config);
+	m_log_level = config.get_scalar<std::string>("log_level", "info");
 
 	std::list<std::string> rules_files;
 
@@ -385,11 +427,14 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 	/* We put this value in the configuration file because in this way we can change the dimension at every reload.
 	 * The default value is `4` -> 8 MB.
 	 */
-	m_syscall_buf_size_preset = config.get_scalar<uint16_t>("syscall_buf_size_preset", 4);
-
-	m_cpus_for_each_syscall_buffer = config.get_scalar<uint16_t>("modern_bpf.cpus_for_each_syscall_buffer", 2);
-
-	m_syscall_drop_failed_exit = config.get_scalar<bool>("syscall_drop_failed_exit", false);
+	// TODO: remove in Falco 0.38 since they are deprecated.
+	m_kmod.m_buf_size_preset = config.get_scalar<uint16_t>("syscall_buf_size_preset", 4);
+	m_bpf.m_buf_size_preset = config.get_scalar<uint16_t>("syscall_buf_size_preset", 4);
+	m_modern_bpf.m_buf_size_preset = config.get_scalar<uint16_t>("syscall_buf_size_preset", 4);
+	m_modern_bpf.m_cpus_for_each_syscall_buffer = config.get_scalar<uint16_t>("modern_bpf.cpus_for_each_syscall_buffer", 2);
+	m_kmod.m_drop_failed_exit = config.get_scalar<bool>("syscall_drop_failed_exit", false);
+	m_bpf.m_drop_failed_exit = config.get_scalar<bool>("syscall_drop_failed_exit", false);
+	m_modern_bpf.m_drop_failed_exit = config.get_scalar<bool>("syscall_drop_failed_exit", false);
 
 	m_base_syscalls_custom_set.clear();
 	config.get_sequence<std::unordered_set<std::string>>(m_base_syscalls_custom_set, std::string("base_syscalls.custom_set"));

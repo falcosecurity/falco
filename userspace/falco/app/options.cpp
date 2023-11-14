@@ -22,7 +22,6 @@ limitations under the License.
 #include <cxxopts.hpp>
 
 #include <fstream>
-#include <sys/syslog.h>
 
 namespace falco {
 namespace app {
@@ -138,24 +137,41 @@ bool options::parse(int argc, char **argv, std::string &errstr)
 
 	// You can't both disable and enable rules
 	if((disabled_rule_substrings.size() + disabled_rule_tags.size() > 0) &&
-	   enabled_rule_tags.size() > 0)
+	   !enabled_rule_tags.empty())
 	{
 		errstr = std::string("You can not specify both disabled (-D/-T) and enabled (-t) rules");
 		return false;
 	}
 
-	list_fields = m_cmdline_parsed.count("list") > 0 ? true : false;
+	list_fields = m_cmdline_parsed.count("list") > 0;
 
+	// TODO: remove for Falco 0.38 since these CLI options are deprecated.
 	int open_modes = 0;
-	open_modes += !trace_filename.empty();
-	open_modes += !gvisor_config.empty();
-	open_modes += modern_bpf;
+	if (!trace_filename.empty())
+	{
+		open_modes++;
+		falco_logger::log(falco_logger::level::WARNING, "DEPRECATION NOTICE: the '-e' cmdline option is deprecated and will be removed in Falco 0.38!\n");
+	}
+	if (!gvisor_config.empty())
+	{
+		open_modes++;
+		falco_logger::log(falco_logger::level::WARNING, "DEPRECATION NOTICE: the '-g,--gvisor-config' cmdline option is deprecated and will be removed in Falco 0.38!\n");
+	}
 	if(getenv("FALCO_BPF_PROBE") != NULL)
 	{
-		falco_logger::log(LOG_WARNING, "DEPRECATION NOTICE: the FALCO_BPF_PROBE environment variable will be soon deprecated!\n");
-		open_modes += 1;
+		open_modes++;
+		falco_logger::log(falco_logger::level::WARNING, "DEPRECATION NOTICE: the FALCO_BPF_PROBE environment variable is deprecated and will be removed in Falco 0.38!\n");
 	}
-	open_modes += nodriver;
+	if (modern_bpf)
+	{
+		open_modes++;
+		falco_logger::log(falco_logger::level::WARNING, "DEPRECATION NOTICE: the '--modern-bpf' cmdline option is deprecated and will be removed in Falco 0.38!\n");
+	}
+	if (nodriver)
+	{
+		open_modes++;
+		falco_logger::log(falco_logger::level::WARNING, "DEPRECATION NOTICE: the '--nodriver' cmdline option is deprecated and will be removed in Falco 0.38!\n");
+	}
 	if (open_modes > 1)
 	{
 		errstr = std::string("You can not specify more than one of -e, -g (--gvisor-config), --modern-bpf, --nodriver, and the FALCO_BPF_PROBE env var");
@@ -188,15 +204,15 @@ void options::define(cxxopts::Options& opts)
 		("disable-source",                "Turn off a specific <event_source>. By default, all loaded sources get enabled. Available sources are 'syscall' plus all sources defined by loaded plugins supporting the event sourcing capability. This option can be passed multiple times, but turning off all event sources simultaneously is not permitted. This option can not be mixed with --enable-source. This option has no effect when reproducing events from a capture file.", cxxopts::value(disable_sources), "<event_source>")
 		("dry-run",                       "Run Falco without processing events. It can help check that the configuration and rules do not have any errors.", cxxopts::value(dry_run)->default_value("false"))
 		("D",                             "Turn off any rules with names having the substring <substring>. This option can be passed multiple times. It cannot be mixed with -t.", cxxopts::value(disabled_rule_substrings), "<substring>")
-		("e",                             "Reproduce the events by reading from the given <capture_file> instead of opening a live session. Only capture files in .scap format are supported.", cxxopts::value(trace_filename), "<events_file>")
+		("e",                             "DEPRECATED. Reproduce the events by reading from the given <capture_file> instead of opening a live session. Only capture files in .scap format are supported.", cxxopts::value(trace_filename), "<events_file>")
 		("enable-source",                 "Enable a specific <event_source>. By default, all loaded sources get enabled. Available sources are 'syscall' plus all sources defined by loaded plugins supporting the event sourcing capability. This option can be passed multiple times. When using this option, only the event sources specified by it will be enabled. This option can not be mixed with --disable-source. This option has no effect when reproducing events from a capture file.", cxxopts::value(enable_sources), "<event_source>")
 #ifdef HAS_GVISOR
-		("g,gvisor-config",				  "Collect 'syscall' events from gVisor using the specified <gvisor_config> file. A Falco-compatible configuration file can be generated with --gvisor-generate-config and utilized for both runsc and Falco.", cxxopts::value(gvisor_config), "<gvisor_config>")
+		("g,gvisor-config",				  "DEPRECATED. Collect 'syscall' events from gVisor using the specified <gvisor_config> file. A Falco-compatible configuration file can be generated with --gvisor-generate-config and utilized for both runsc and Falco.", cxxopts::value(gvisor_config), "<gvisor_config>")
 		("gvisor-generate-config",		  "Generate a configuration file that can be used for gVisor and exit. See --gvisor-config for more details.", cxxopts::value<std::string>(gvisor_generate_config_with_socket)->implicit_value("/run/falco/gvisor.sock"), "<socket_path>")
-		("gvisor-root",					  "Set gVisor root directory for storage of container state when used in conjunction with --gvisor-config. The <gvisor_root> to be passed is the one usually passed to runsc --root flag.", cxxopts::value(gvisor_root), "<gvisor_root>")
+		("gvisor-root",					  "DEPRECATED. Set gVisor root directory for storage of container state when used in conjunction with --gvisor-config. The <gvisor_root> to be passed is the one usually passed to runsc --root flag.", cxxopts::value(gvisor_root), "<gvisor_root>")
 #endif
 #ifdef HAS_MODERN_BPF
-		("modern-bpf",				  "Use the BPF modern probe driver to instrument the kernel and observe 'syscall' events.", cxxopts::value(modern_bpf)->default_value("false"))
+		("modern-bpf",				  "DEPRECATED. Use the BPF modern probe driver to instrument the kernel and observe 'syscall' events.", cxxopts::value(modern_bpf)->default_value("false"))
 #endif
 		("i",                             "Print those events that are ignored by default for performance reasons and exit. See -A for more details.", cxxopts::value(print_ignored_events)->default_value("false"))
 		("L",                             "Show the name and description of all rules and exit. If json_output is set to true, it prints details about all rules, macros, and lists in JSON format.", cxxopts::value(describe_all_rules)->default_value("false"))
@@ -207,7 +223,7 @@ void options::define(cxxopts::Options& opts)
 		("M",                             "Stop Falco execution after <num_seconds> are passed.", cxxopts::value(duration_to_tot)->default_value("0"), "<num_seconds>")
 		("markdown",                      "Print output in Markdown format when used in conjunction with --list or --list-events options. It has no effect when used with other options.", cxxopts::value<bool>(markdown))
 		("N",                             "Only print field names when used in conjunction with the --list option. It has no effect when used with other options.", cxxopts::value(names_only)->default_value("false"))
-		("nodriver",                      "Do not use a driver to instrument the kernel. If a loaded plugin has event-sourcing capability and can produce system events, it will be used for event collection. Otherwise, no event will be collected.", cxxopts::value(nodriver)->default_value("false"))
+		("nodriver",                      "DEPRECATED. Do not use a driver to instrument the kernel. If a loaded plugin has event-sourcing capability and can produce system events, it will be used for event collection. Otherwise, no event will be collected.", cxxopts::value(nodriver)->default_value("false"))
 		("o,option",                      "Set the value of option <opt> to <val>. Overrides values in the configuration file. <opt> can be identified using its location in the configuration file using dot notation. Elements of list entries can be accessed via square brackets [].\n    E.g. base.id = val\n         base.subvalue.subvalue2 = val\n         base.list[1]=val", cxxopts::value(cmdline_config_options), "<opt>=<val>")
 		("plugin-info",                   "Print info for the plugin specified by <plugin_name> and exit.\nThis includes all descriptive information like name and author, along with the\nschema format for the init configuration and a list of suggested open parameters.\n<plugin_name> can be the plugin's name or its configured 'library_path'.", cxxopts::value(print_plugin_info), "<plugin_name>")
 		("p,print",                       "Print (or replace) additional information in the rule's output.\nUse -pc or -pcontainer to append container details.\nUse -pk or -pkubernetes to add both container and Kubernetes details.\nIf using gVisor, choose -pcg or -pkg variants (or -pcontainer-gvisor and -pkubernetes-gvisor, respectively).\nIf a rule's output contains %container.info, it will be replaced with the corresponding details. Otherwise, these details will be directly appended to the rule's output.\nAlternatively, use -p <output_format> for a custom format. In this case, the given <output_format> will be appended to the rule's output without any replacement.", cxxopts::value(print_additional), "<output_format>")
