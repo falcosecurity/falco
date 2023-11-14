@@ -25,7 +25,7 @@ limitations under the License.
 #include "falco_source.h"
 #include "falco_load_result.h"
 #include "indexed_vector.h"
-#include "version.h"
+#include <libsinsp/version.h>
 
 namespace rule_loader
 {

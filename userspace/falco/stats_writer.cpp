@@ -28,7 +28,8 @@ limitations under the License.
 #include "stats_writer.h"
 #include "logger.h"
 #include "config_falco.h"
-#include "strl.h"
+#include <libscap/strl.h>
+#include <libscap/scap_vtable.h>
 
 // note: ticker_t is an uint16_t, which is enough because we don't care about
 // overflows here. Threads calling stats_writer::handle() will just

@@ -17,7 +17,7 @@ limitations under the License.
 
 #pragma once
 
-#include "sinsp.h"
+#include <libsinsp/sinsp.h>
 #ifndef _WIN32
 #include <syslog.h>
 #endif

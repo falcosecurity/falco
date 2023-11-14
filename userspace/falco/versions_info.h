@@ -20,7 +20,7 @@ limitations under the License.
 #include <memory>
 #include <string>
 #include <unordered_map>
-#include <sinsp.h>
+#include <libsinsp/sinsp.h>
 #include <nlohmann/json.hpp>
 
 namespace falco

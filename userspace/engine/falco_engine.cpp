@@ -33,8 +33,9 @@ limitations under the License.
 
 #include <nlohmann/json.hpp>
 
-#include <sinsp.h>
-#include <plugin.h>
+#include <libsinsp/sinsp.h>
+#include <libsinsp/plugin.h>
+#include <libsinsp/utils.h>
 
 #include "falco_engine.h"
 #include "falco_utils.h"
@@ -42,7 +43,6 @@ limitations under the License.
 
 #include "formats.h"
 
-#include "utils.h"
 #include "evttype_index_ruleset.h"
 
 const std::string falco_engine::s_default_ruleset = "falco-default-ruleset";

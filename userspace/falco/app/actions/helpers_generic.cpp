@@ -17,7 +17,7 @@ limitations under the License.
 
 #include "helpers.h"
 #include "falco_utils.h"
-#include <plugin_manager.h>
+#include <libsinsp/plugin_manager.h>
 
 #include <unordered_set>
 

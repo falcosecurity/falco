@@ -37,8 +37,7 @@ add_dependencies(falco_engine yamlcpp njson)
 
 target_include_directories(falco_engine
 PUBLIC
-    ${LIBSCAP_INCLUDE_DIRS}
-    ${LIBSINSP_INCLUDE_DIRS}
+    ${LIBS_DIR}/userspace
     ${PROJECT_BINARY_DIR}/userspace/engine
     ${nlohmann_json_INCLUDE_DIRS}
     ${TBB_INCLUDE_DIR}

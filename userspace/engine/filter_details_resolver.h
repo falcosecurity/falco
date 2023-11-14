@@ -17,7 +17,7 @@ limitations under the License.
 
 #pragma once
 
-#include <filter/parser.h>
+#include <libsinsp/filter/parser.h>
 #include <string>
 #include <unordered_set>
 #include <unordered_map>

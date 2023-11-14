@@ -21,7 +21,7 @@ limitations under the License.
 #include <httplib.h>
 #include <thread>
 #include <memory>
-#include <sinsp.h>
+#include <libsinsp/sinsp.h>
 #include "configuration.h"
 
 class falco_webserver

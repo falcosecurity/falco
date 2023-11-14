@@ -15,7 +15,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-#include <sinsp.h>
+#include <libsinsp/sinsp.h>
 #include "filter_warning_resolver.h"
 
 using namespace falco;

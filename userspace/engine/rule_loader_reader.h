@@ -19,8 +19,8 @@ limitations under the License.
 
 #include "rule_loader.h"
 #include "rule_loader_collector.h"
-#include "logger.h"
-#include "version.h"
+#include <libsinsp/logger.h>
+#include <libsinsp/version.h>
 #include "falco_engine_version.h"
 
 namespace rule_loader
