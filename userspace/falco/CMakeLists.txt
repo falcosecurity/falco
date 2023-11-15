@@ -26,7 +26,6 @@ set(
   app/actions/pidfile.cpp
   app/actions/init_falco_engine.cpp
   app/actions/init_inspectors.cpp
-  app/actions/init_clients.cpp
   app/actions/init_outputs.cpp
   app/actions/list_fields.cpp
   app/actions/list_plugins.cpp

@@ -103,10 +103,6 @@ public:
 
 	uint32_t m_syscall_evt_timeout_max_consecutives;
 
-	uint32_t m_metadata_download_max_mb;
-	uint32_t m_metadata_download_chunk_wait_us;
-	uint32_t m_metadata_download_watch_freq_sec;
-
 	// Index corresponding to the syscall buffer dimension.
 	uint16_t m_syscall_buf_size_preset;
 

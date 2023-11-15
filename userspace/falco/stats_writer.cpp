@@ -356,7 +356,6 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 		double stats_snapshot_time_delta_sec, const std::string& src)
 {
 	const scap_agent_info* agent_info = inspector->get_agent_info();
-	const scap_machine_info* machine_info = inspector->get_machine_info();
 
 #if !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
 	/* Resource utilization, CPU and memory usage etc. */
@@ -431,7 +430,7 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 	{
 		flags |= PPM_SCAP_STATS_KERNEL_COUNTERS;
 	}
-	if (m_writer->m_config->m_metrics_libbpf_stats_enabled && (inspector->check_current_engine(BPF_ENGINE) || inspector->check_current_engine(MODERN_BPF_ENGINE)) && (machine_info->flags & PPM_BPF_STATS_ENABLED))
+	if (m_writer->m_config->m_metrics_libbpf_stats_enabled && (inspector->check_current_engine(BPF_ENGINE) || inspector->check_current_engine(MODERN_BPF_ENGINE)))
 	{
 		flags |= PPM_SCAP_STATS_LIBBPF_STATS;
 	}

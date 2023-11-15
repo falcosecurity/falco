@@ -123,9 +123,6 @@ include(njson)
 include(yaml-cpp)
 
 if(NOT WIN32 AND NOT APPLE AND NOT MINIMAL_BUILD AND NOT EMSCRIPTEN)
-  # jq
-  include(jq)
-
   # OpenSSL
   include(openssl)
 
@@ -144,8 +141,8 @@ if (NOT EMSCRIPTEN)
   include(tbb)
 endif()
 
+include(zlib)
 if (NOT MINIMAL_BUILD)
-  include(zlib)
   if (NOT WIN32 AND NOT APPLE AND NOT EMSCRIPTEN)
     include(cares)
     include(protobuf)
