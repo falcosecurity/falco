@@ -23,9 +23,9 @@ limitations under the License.
 #define RULESET_2 2
 
 /* Helpers methods */
-static std::shared_ptr<gen_event_filter_factory> create_factory()
+static std::shared_ptr<gen_event_filter_factory> create_factory(filter_check_list& list)
 {
-	std::shared_ptr<gen_event_filter_factory> ret(new sinsp_filter_factory(NULL));
+	std::shared_ptr<gen_event_filter_factory> ret(new sinsp_filter_factory(NULL, list));
 	return ret;
 }
 
@@ -53,7 +53,8 @@ static std::shared_ptr<gen_event_filter> create_filter(
 
 TEST(Ruleset, enable_disable_rules_using_names)
 {
-	auto f = create_factory();
+	sinsp_filter_check_list filterlist;
+	auto f = create_factory(filterlist);
 	auto r = create_ruleset(f);
 	auto ast = create_ast(f);
 	auto filter = create_filter(f, ast);
@@ -119,7 +120,8 @@ TEST(Ruleset, enable_disable_rules_using_names)
 
 TEST(Ruleset, enable_disable_rules_using_tags)
 {
-	auto f = create_factory();
+	sinsp_filter_check_list filterlist;
+	auto f = create_factory(filterlist);
 	auto r = create_ruleset(f);
 	auto ast = create_ast(f);
 	auto filter = create_filter(f, ast);

@@ -63,9 +63,6 @@ falco_configuration::falco_configuration():
 	m_syscall_evt_drop_max_burst(1),
 	m_syscall_evt_simulate_drops(false),
 	m_syscall_evt_timeout_max_consecutives(1000),
-	m_metadata_download_max_mb(100),
-	m_metadata_download_chunk_wait_us(1000),
-	m_metadata_download_watch_freq_sec(1),
 	m_syscall_buf_size_preset(4),
 	m_cpus_for_each_syscall_buffer(2),
 	m_syscall_drop_failed_exit(false),
@@ -363,18 +360,6 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 	if(m_syscall_evt_timeout_max_consecutives == 0)
 	{
 		throw std::logic_error("Error reading config file(" + config_name + "): the maximum consecutive timeouts without an event must be an unsigned integer > 0");
-	}
-
-	m_metadata_download_max_mb = config.get_scalar<uint32_t>("metadata_download.max_mb", 100);
-	if(m_metadata_download_max_mb > 1024)
-	{
-		throw std::logic_error("Error reading config file(" + config_name + "): metadata download maximum size should be < 1024 Mb");
-	}
-	m_metadata_download_chunk_wait_us = config.get_scalar<uint32_t>("metadata_download.chunk_wait_us", 1000);
-	m_metadata_download_watch_freq_sec = config.get_scalar<uint32_t>("metadata_download.watch_freq_sec", 1);
-	if(m_metadata_download_watch_freq_sec == 0)
-	{
-		throw std::logic_error("Error reading config file(" + config_name + "): metadata download watch frequency seconds must be an unsigned integer > 0");
 	}
 
 	/* We put this value in the configuration file because in this way we can change the dimension at every reload.

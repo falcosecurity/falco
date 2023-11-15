@@ -51,9 +51,6 @@ public:
 	std::string gvisor_config;
 	std::string gvisor_generate_config_with_socket;
 	std::string gvisor_root;
-	std::string k8s_api;
-	std::string k8s_api_cert;
-	std::string k8s_node_name;
 	bool describe_all_rules;
 	std::string describe_rule;
 	bool print_ignored_events;
