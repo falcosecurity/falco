@@ -67,9 +67,6 @@
 #     syscall_drop_failed_exit
 #     base_syscalls
 #     modern_bpf.cpus_for_each_syscall_buffer
-# Falco cloud orchestration systems integration
-#     metadata_download
-#     (Guidance for Kubernetes container engine command-line args settings)
 
 
 ################################
@@ -170,11 +167,10 @@ rules_file:
 #
 # Please note that if your intention is to enrich Falco syscall logs with fields
 # such as `k8s.ns.name`, `k8s.pod.name`, and `k8s.pod.*`, you do not need to use
-# the `k8saudit` plugin nor the `-k`/`-K` Kubernetes metadata enrichment. This
-# information is automatically extracted from the container runtime socket. The
-# `k8saudit` plugin is specifically designed to integrate with Kubernetes audit
-# logs and is not required for basic enrichment of syscall logs with
-# Kubernetes-related fields.
+# the `k8saudit` plugin. This information is automatically extracted from
+# the container runtime socket. The `k8saudit` plugin is specifically designed
+# to integrate with Kubernetes audit logs and is not required for basic enrichment
+# of syscall logs with Kubernetes-related fields.
 #
 # --- [Usage]
 #
@@ -1034,35 +1030,6 @@ base_syscalls:
 # buffers (higher `cpus_for_each_syscall_buffer`) can lower the memory footprint.
 modern_bpf:
   cpus_for_each_syscall_buffer: 2
-
-
-#################################################
-# Falco cloud orchestration systems integration #
-#################################################
-
-# [Stable] `metadata_download`
-#
-# When connected to an orchestrator like Kubernetes, Falco has the capability to
-# collect metadata and enrich system call events with contextual data. The
-# parameters mentioned here control the downloading process of this metadata.
-#
-# Please note that support for Mesos is deprecated, so these parameters
-# currently apply only to Kubernetes. When using Falco with Kubernetes, you can
-# enable this functionality by using the `-k` or `-K` command-line flag.
-#
-# However, it's worth mentioning that for important Kubernetes metadata fields
-# such as namespace or pod name, these fields are automatically extracted from
-# the container runtime, providing the necessary enrichment for common use cases
-# of syscall-based threat detection.
-#
-# In summary, the `-k` flag is typically not required for most scenarios involving
-# Kubernetes workload owner enrichment. The `-k` flag is primarily used when
-# additional metadata is required beyond the standard fields, catering to more
-# specific use cases, see https://falco.org/docs/reference/rules/supported-fields/#field-class-k8s.
-metadata_download:
-  max_mb: 100
-  chunk_wait_us: 1000
-  watch_freq_sec: 1
 
 # [Stable] Guidance for Kubernetes container engine command-line args settings
 #
