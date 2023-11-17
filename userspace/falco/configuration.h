@@ -160,7 +160,7 @@ public:
 	bool m_metrics_include_empty_values;
 
 	// Falco engine
-	engine_kind_t m_engine_mode;
+	engine_kind_t m_engine_mode = engine_kind_t::KMOD;
 	kmod_config m_kmod;
 	ebpf_config m_ebpf;
 	modern_ebpf_config m_modern_ebpf;

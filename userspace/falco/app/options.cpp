@@ -32,15 +32,11 @@ namespace app {
 // initialize their linked variables.
 options::options()
 	: event_buffer_format(sinsp_evt::PF_NORMAL),
-	  gvisor_config(""),	
 	  list_fields(false),
 	  list_plugins(false),
 	  list_syscall_events(false),
 	  markdown(false),
-	  modern_bpf(false),
-	  dry_run(false),
-	  nodriver(false),
-	  trace_filename("")
+	  dry_run(false)
 {
 }
 
