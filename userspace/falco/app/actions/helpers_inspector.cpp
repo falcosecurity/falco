@@ -96,12 +96,12 @@ falco::app::run_result falco::app::actions::open_live_inspector(
 		else if(s.config->m_engine_mode == engine_kind_t::MODERN_EBPF) /* modern BPF engine. */
 		{
 			falco_logger::log(falco_logger::level::INFO, "Opening '" + source + "' source with modern BPF probe.");
-			falco_logger::log(falco_logger::level::INFO, "One ring buffer every '" + std::to_string(s.config->m_modern_bpf.m_cpus_for_each_syscall_buffer) +  "' CPUs.");
-			inspector->open_modern_bpf(s.syscall_buffer_bytes_size, s.config->m_modern_bpf.m_cpus_for_each_syscall_buffer, true, s.selected_sc_set);
+			falco_logger::log(falco_logger::level::INFO, "One ring buffer every '" + std::to_string(s.config->m_modern_ebpf.m_cpus_for_each_syscall_buffer) +  "' CPUs.");
+			inspector->open_modern_bpf(s.syscall_buffer_bytes_size, s.config->m_modern_ebpf.m_cpus_for_each_syscall_buffer, true, s.selected_sc_set);
 		}
 		else if(s.config->m_engine_mode == engine_kind_t::EBPF) /* BPF engine. */
 		{
-			const char *bpf_probe_path = s.config->m_bpf.m_probe_path.c_str();
+			const char *bpf_probe_path = s.config->m_ebpf.m_probe_path.c_str();
 			char full_path[PATH_MAX];
 			/* If the path is empty try to load the probe from the default path. */
 			if(strncmp(bpf_probe_path, "", 1) == 0)

@@ -136,14 +136,14 @@ void falco_configuration::load_engine_config(const std::string& config_name, con
 		// TODO: default value for `probe` should be $HOME/FALCO_PROBE_BPF_FILEPATH,
 		// to be done once we drop the CLI option otherwise we would need to make the check twice,
 		// once here, and once when we merge the CLI options in the config file.
-		m_bpf.m_probe_path = config.get_scalar<std::string>("engine.ebpf.probe", "");
-		m_bpf.m_buf_size_preset = config.get_scalar<int16_t>("engine.ebpf.buf_size_preset", 4);
-		m_bpf.m_drop_failed_exit = config.get_scalar<bool>("engine.ebpf.drop_failed", false);
+		m_ebpf.m_probe_path = config.get_scalar<std::string>("engine.ebpf.probe", "");
+		m_ebpf.m_buf_size_preset = config.get_scalar<int16_t>("engine.ebpf.buf_size_preset", 4);
+		m_ebpf.m_drop_failed_exit = config.get_scalar<bool>("engine.ebpf.drop_failed", false);
 		break;
 	case engine_kind_t::MODERN_EBPF:
-		m_modern_bpf.m_cpus_for_each_syscall_buffer = config.get_scalar<uint16_t>("engine.modern-ebpf.cpus_for_each_syscall_buffer", 2);
-		m_modern_bpf.m_buf_size_preset = config.get_scalar<int16_t>("engine.modern-ebpf.buf_size_preset", 4);
-		m_modern_bpf.m_drop_failed_exit = config.get_scalar<bool>("engine.modern-ebpf.drop_failed", false);
+		m_modern_ebpf.m_cpus_for_each_syscall_buffer = config.get_scalar<uint16_t>("engine.modern-ebpf.cpus_for_each_syscall_buffer", 2);
+		m_modern_ebpf.m_buf_size_preset = config.get_scalar<int16_t>("engine.modern-ebpf.buf_size_preset", 4);
+		m_modern_ebpf.m_drop_failed_exit = config.get_scalar<bool>("engine.modern-ebpf.drop_failed", false);
 		break;
 	case engine_kind_t::REPLAY:
 		m_replay.m_trace_file = config.get_scalar<std::string>("engine.replay.trace_file", "");
@@ -430,12 +430,12 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 	 */
 	// TODO: remove in Falco 0.38 since they are deprecated.
 	m_kmod.m_buf_size_preset = config.get_scalar<uint16_t>("syscall_buf_size_preset", 4);
-	m_bpf.m_buf_size_preset = config.get_scalar<uint16_t>("syscall_buf_size_preset", 4);
-	m_modern_bpf.m_buf_size_preset = config.get_scalar<uint16_t>("syscall_buf_size_preset", 4);
-	m_modern_bpf.m_cpus_for_each_syscall_buffer = config.get_scalar<uint16_t>("modern_bpf.cpus_for_each_syscall_buffer", 2);
+	m_ebpf.m_buf_size_preset = config.get_scalar<uint16_t>("syscall_buf_size_preset", 4);
+	m_modern_ebpf.m_buf_size_preset = config.get_scalar<uint16_t>("syscall_buf_size_preset", 4);
+	m_modern_ebpf.m_cpus_for_each_syscall_buffer = config.get_scalar<uint16_t>("modern_bpf.cpus_for_each_syscall_buffer", 2);
 	m_kmod.m_drop_failed_exit = config.get_scalar<bool>("syscall_drop_failed_exit", false);
-	m_bpf.m_drop_failed_exit = config.get_scalar<bool>("syscall_drop_failed_exit", false);
-	m_modern_bpf.m_drop_failed_exit = config.get_scalar<bool>("syscall_drop_failed_exit", false);
+	m_ebpf.m_drop_failed_exit = config.get_scalar<bool>("syscall_drop_failed_exit", false);
+	m_modern_ebpf.m_drop_failed_exit = config.get_scalar<bool>("syscall_drop_failed_exit", false);
 
 	m_base_syscalls_custom_set.clear();
 	config.get_sequence<std::unordered_set<std::string>>(m_base_syscalls_custom_set, std::string("base_syscalls.custom_set"));
