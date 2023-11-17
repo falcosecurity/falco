@@ -27,6 +27,8 @@
 #     (Falco environment variables)
 # Falco rules files
 #     rules_file
+# Falco engine
+#     engine
 # Falco plugins
 #     load_plugins
 #     plugins
@@ -62,8 +64,6 @@
 #     syscall_event_timeouts
 #     syscall_event_drops
 #     metrics
-# Falco engine
-#     engine
 # Falco performance tuning (advanced)
 #     syscall_buf_size_preset
 #     syscall_drop_failed_exit
@@ -146,6 +146,48 @@ rules_file:
   - /etc/falco/falco_rules.yaml
   - /etc/falco/falco_rules.local.yaml
   - /etc/falco/rules.d
+
+################
+# Falco engine #
+################
+
+# [Stable] `engine`
+#
+# --- [Description]
+#
+# Falco supports different engines to generate events.
+# Choose the appropriate engine kind based on your system's configuration and requirements.
+#
+# Available engines:
+# - `kmod`: Kernel Module (Kernel Module)
+# - `ebpf`: eBPF (Extended Berkeley Packet Filter)
+# - `modern-ebpf`: Modern eBPF (Modern Extended Berkeley Packet Filter), available only for recent kernels
+# - `gvisor`: gVisor (gVisor sandbox)
+# - `replay`: Replay a scap trace file
+# - `none`: No engine loaded, useful to run `syscall` source plugin or just plugins without loading any other event producer.
+
+# Select the appropriate engine kind by uncommenting the corresponding line.
+# Make sure to specify only one engine kind at a time.
+# Moreover, for each engine multiple options might be available,
+# grouped under engine specific configuration keys.
+engine:
+  kind: kmod
+  kmod:
+    buf_size_preset: 4 # Overridden by deprecated syscall_buf_size_preset if set
+    drop_failed_exit: false # Overridden by deprecated syscall_drop_failed_exit if set
+  ebpf:
+    probe: /path/to/probe.o
+    buf_size_preset: 4 # Overridden by deprecated syscall_buf_size_preset if set
+    drop_failed_exit: false # Overridden by deprecated syscall_drop_failed_exit if set
+  modern-ebpf:
+    cpus_for_each_syscall_buffer: 2 # Overridden by deprecated cpus_for_each_syscall_buffer if set
+    buf_size_preset: 4 # Overridden by deprecated syscall_buf_size_preset if set
+    drop_failed_exit: false # Overridden by deprecated syscall_drop_failed_exit if set
+  replay:
+    trace_file: /path/to/file.scap
+  gvisor:
+    config: /path/to/gvisor.yaml
+    root: /gvisor/root
 
 #################
 # Falco plugins #
@@ -770,49 +812,6 @@ metrics:
   libbpf_stats_enabled: true
   convert_memory_to_mb: true
   include_empty_values: false
-
-################
-# Falco engine #
-################
-
-# [Stable] `engine`
-#
-# --- [Description]
-#
-# Falco supports different engines to generate events.
-# Choose the appropriate engine kind based on your system's configuration and requirements.
-#
-# Available engines:
-# - `kmod`: Kernel Module (Kernel Module)
-# - `ebpf`: eBPF (Extended Berkeley Packet Filter)
-# - `modern-ebpf`: Modern eBPF (Modern Extended Berkeley Packet Filter), available only for recent kernels
-# - `gvisor`: gVisor (gVisor sandbox)
-# - `replay`: Replay a scap trace file
-# - `none`: No engine loaded, useful to run `syscall` source plugin or just plugins without loading any other event producer.
-
-# Select the appropriate engine kind by uncommenting the corresponding line.
-# Make sure to specify only one engine kind at a time.
-# Moreover, for each engine multiple options might be available,
-# grouped under the `engine.kind` configuration key.
-
-engine:
-  kind: kmod
-  kmod:
-    buf_size_preset: 4 # Overridden by deprecated syscall_buf_size_preset
-    drop_failed_exit: false # Overridden by deprecated syscall_drop_failed_exit
-  ebpf:
-    probe: /path/to/probe.o
-    buf_size_preset: 4 # Overridden by deprecated syscall_buf_size_preset
-    drop_failed_exit: false # Overridden by deprecated syscall_drop_failed_exit
-  modern-ebpf:
-    cpus_for_each_syscall_buffer: 2 # Overridden by deprecated cpus_for_each_syscall_buffer
-    buf_size_preset: 4 # Overridden by deprecated syscall_buf_size_preset
-    drop_failed_exit: false # Overridden by deprecated syscall_drop_failed_exit
-  replay:
-    trace_file: /path/to/file.scap
-  gvisor:
-    config: /path/to/gvisor.yaml
-    root: /gvisor/root
 
 #######################################
 # Falco performance tuning (advanced) #
