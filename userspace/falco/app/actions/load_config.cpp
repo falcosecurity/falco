@@ -27,6 +27,10 @@ using namespace falco::app::actions;
 // applies legacy/in-deprecation options to the current state
 static falco::app::run_result apply_deprecated_options(falco::app::state& s)
 {
+	// Please note: is not possible to mix command line options and configs to obtain a configuration
+	// we need to use only one method. For example, is not possible to set the gvisor-config through
+	// the command line and the gvisor-root through the config file.
+	//
 	// If overridden from CLI options (soon to be removed),
 	// use the requested driver.
 	if (getenv(FALCO_BPF_ENV_VARIABLE))

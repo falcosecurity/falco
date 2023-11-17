@@ -155,6 +155,16 @@ struct state
         return config->m_engine_mode == engine_kind_t::GVISOR;
     }
     
+    inline bool is_modern_ebpf() const
+    {
+        return config->m_engine_mode == engine_kind_t::MODERN_EBPF;
+    }
+
+    inline bool is_nodriver() const
+    {
+        return config->m_engine_mode == engine_kind_t::NONE;
+    }
+
     inline bool is_source_enabled(const std::string& src) const 
     {
         return enabled_sources.find(falco_common::syscall_source) != enabled_sources.end();

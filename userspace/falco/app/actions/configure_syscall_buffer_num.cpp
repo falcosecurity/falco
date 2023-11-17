@@ -23,7 +23,7 @@ using namespace falco::app::actions;
 falco::app::run_result falco::app::actions::configure_syscall_buffer_num(falco::app::state& s)
 {
 #ifdef __linux__
-	if(!s.options.modern_bpf)
+	if(!s.is_modern_ebpf())
 	{
 		return run_result::ok();
 	}

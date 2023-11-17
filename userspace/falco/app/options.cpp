@@ -39,7 +39,8 @@ options::options()
 	  markdown(false),
 	  modern_bpf(false),
 	  dry_run(false),
-	  nodriver(false)
+	  nodriver(false),
+	  trace_filename("")
 {
 }
 
