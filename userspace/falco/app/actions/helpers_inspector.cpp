@@ -35,13 +35,13 @@ falco::app::run_result falco::app::actions::open_offline_inspector(falco::app::s
 {
 	try
 	{
-		s.offline_inspector->open_savefile(s.config->m_replay.m_scap_file);
-		falco_logger::log(falco_logger::level::INFO, "Reading system call events from file: " + s.config->m_replay.m_scap_file + "\n");
+		s.offline_inspector->open_savefile(s.config->m_replay.m_trace_file);
+		falco_logger::log(falco_logger::level::INFO, "Reading system call events from file: " + s.config->m_replay.m_trace_file + "\n");
 		return run_result::ok();
 	}
 	catch (sinsp_exception &e)
 	{
-		return run_result::fatal("Could not open trace filename " + s.config->m_replay.m_scap_file + " for reading: " + e.what());
+		return run_result::fatal("Could not open trace filename " + s.config->m_replay.m_trace_file + " for reading: " + e.what());
 	}
 }
 
@@ -69,7 +69,7 @@ falco::app::run_result falco::app::actions::open_live_inspector(
 			}
 			return run_result::fatal("Can't find plugin for event source: " + source);
 		}
-		else if (s.config->m_driver_mode == driver_mode_type::NONE) /* nodriver engine. */
+		else if (s.config->m_engine_mode == engine_kind_t::NONE) /* nodriver engine. */
 		{
 			// when opening a capture with no driver, Falco will first check
 			// if a plugin is capable of generating raw events from the libscap
@@ -93,13 +93,13 @@ falco::app::run_result falco::app::actions::open_live_inspector(
 			falco_logger::log(falco_logger::level::INFO, "Opening '" + source + "' source with gVisor. Configuration path: " + s.config->m_gvisor.m_config);
 			inspector->open_gvisor(s.config->m_gvisor.m_config, s.config->m_gvisor.m_root);
 		}
-		else if(s.config->m_driver_mode == driver_mode_type::MODERN_EBPF) /* modern BPF engine. */
+		else if(s.config->m_engine_mode == engine_kind_t::MODERN_EBPF) /* modern BPF engine. */
 		{
 			falco_logger::log(falco_logger::level::INFO, "Opening '" + source + "' source with modern BPF probe.");
 			falco_logger::log(falco_logger::level::INFO, "One ring buffer every '" + std::to_string(s.config->m_modern_bpf.m_cpus_for_each_syscall_buffer) +  "' CPUs.");
 			inspector->open_modern_bpf(s.syscall_buffer_bytes_size, s.config->m_modern_bpf.m_cpus_for_each_syscall_buffer, true, s.selected_sc_set);
 		}
-		else if(s.config->m_driver_mode == driver_mode_type::EBPF) /* BPF engine. */
+		else if(s.config->m_engine_mode == engine_kind_t::EBPF) /* BPF engine. */
 		{
 			const char *bpf_probe_path = s.config->m_bpf.m_probe_path.c_str();
 			char full_path[PATH_MAX];

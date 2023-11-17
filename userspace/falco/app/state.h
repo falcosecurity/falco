@@ -147,12 +147,12 @@ struct state
 
     inline bool is_capture_mode() const 
     {
-        return config->m_driver_mode == driver_mode_type::REPLAY;
+        return config->m_engine_mode == engine_kind_t::REPLAY;
     }
 
     inline bool is_gvisor_enabled() const
     {
-        return config->m_driver_mode == driver_mode_type::GVISOR;
+        return config->m_engine_mode == engine_kind_t::GVISOR;
     }
     
     inline bool is_source_enabled(const std::string& src) const 
@@ -163,15 +163,15 @@ struct state
     inline bool is_driver_drop_failed_exit_enabled() const
     {
 	bool drop_failed;
-	switch (config->m_driver_mode)
+	switch (config->m_engine_mode)
 	{
-	case driver_mode_type::KMOD:
+	case engine_kind_t::KMOD:
 		drop_failed = config->m_kmod.m_drop_failed_exit;
 		break;
-	case driver_mode_type::EBPF:
+	case engine_kind_t::EBPF:
 		drop_failed = config->m_bpf.m_drop_failed_exit;
 		break;
-	case driver_mode_type::MODERN_EBPF:
+	case engine_kind_t::MODERN_EBPF:
 		drop_failed = config->m_modern_bpf.m_drop_failed_exit;
 		break;
 	default:
@@ -184,14 +184,14 @@ struct state
     inline int16_t driver_buf_size_preset() const
     {
 	int16_t index;
-	switch (config->m_driver_mode) {
-	case driver_mode_type::KMOD:
+	switch (config->m_engine_mode) {
+	case engine_kind_t::KMOD:
 		index = config->m_kmod.m_buf_size_preset;
 		break;
-	case driver_mode_type::EBPF:
+	case engine_kind_t::EBPF:
 		index = config->m_bpf.m_buf_size_preset;
 		break;
-	case driver_mode_type::MODERN_EBPF:
+	case engine_kind_t::MODERN_EBPF:
 		index = config->m_modern_bpf.m_buf_size_preset;
 		break;
 	default:
