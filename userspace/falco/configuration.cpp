@@ -123,7 +123,7 @@ void falco_configuration::load_engine_config(const std::string& config_name, con
 	}
 	else
 	{
-		throw std::logic_error("Error reading config file (" + config_name + "): wrong engine.kind specified.");
+		throw std::logic_error("Error reading config file (" + config_name + "): engine.kind '"+ driver_mode_str + "' is not a valid kind.");
 	}
 
 	switch (m_engine_mode)
