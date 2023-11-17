@@ -27,30 +27,30 @@ TEST(ActionConfigureSyscallBufferNum, variable_number_of_CPUs)
 		FAIL() << "cannot get the number of online CPUs from the system\n";
 	}
 
-	// not modern bpf engine, we do nothing
+	// not modern ebpf engine, we do nothing
 	{
 		falco::app::state s;
 		s.options.modern_bpf = false;
 		EXPECT_ACTION_OK(action(s));
 	}
 
-	// modern bpf engine, with an invalid number of CPUs
+	// modern ebpf engine, with an invalid number of CPUs
 	// default `m_cpus_for_each_syscall_buffer` to online CPU number
 	{
 		falco::app::state s;
 		s.options.modern_bpf = true;
-		s.config->m_modern_bpf.m_cpus_for_each_syscall_buffer = online_cpus + 1;
+		s.config->m_modern_ebpf.m_cpus_for_each_syscall_buffer = online_cpus + 1;
 		EXPECT_ACTION_OK(action(s));
-		EXPECT_EQ(s.config->m_modern_bpf.m_cpus_for_each_syscall_buffer, online_cpus);
+		EXPECT_EQ(s.config->m_modern_ebpf.m_cpus_for_each_syscall_buffer, online_cpus);
 	}
 
-	// modern bpf engine, with an valid number of CPUs
+	// modern ebpf engine, with a valid number of CPUs
 	// we don't modify `m_cpus_for_each_syscall_buffer`
 	{
 		falco::app::state s;
 		s.options.modern_bpf = true;
-		s.config->m_modern_bpf.m_cpus_for_each_syscall_buffer = online_cpus - 1;
+		s.config->m_modern_ebpf.m_cpus_for_each_syscall_buffer = online_cpus - 1;
 		EXPECT_ACTION_OK(action(s));
-		EXPECT_EQ(s.config->m_modern_bpf.m_cpus_for_each_syscall_buffer, online_cpus - 1);
+		EXPECT_EQ(s.config->m_modern_ebpf.m_cpus_for_each_syscall_buffer, online_cpus - 1);
 	}
 }
