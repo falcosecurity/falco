@@ -39,10 +39,10 @@ falco::app::run_result falco::app::actions::create_requested_paths(falco::app::s
 	{
 		// This is bad: parsing gvisor config to get endpoint
 		// to be able to auto-create the path to the file for the user.
-		std::ifstream reader(s.options.gvisor_config);
+		std::ifstream reader(s.config->m_gvisor.m_config);
 		if (reader.fail())
 		{
-			return run_result::fatal(s.options.gvisor_config + ": cannot open file");
+			return run_result::fatal(s.config->m_gvisor.m_config + ": cannot open file");
 		}
 
 		nlohmann::json parsed_json;
@@ -53,7 +53,7 @@ falco::app::run_result falco::app::actions::create_requested_paths(falco::app::s
 		}
 		catch (const std::exception &e)
 		{
-			return run_result::fatal(s.options.gvisor_config + ": cannot parse JSON: " + e.what());
+			return run_result::fatal(s.config->m_gvisor.m_config + ": cannot parse JSON: " + e.what());
 		}
 
 		try
@@ -62,7 +62,7 @@ falco::app::run_result falco::app::actions::create_requested_paths(falco::app::s
 		}
 		catch (const std::exception &e)
 		{
-			return run_result::fatal(s.options.gvisor_config + ": failed to fetch config.endpoint: " + e.what());
+			return run_result::fatal(s.config->m_gvisor.m_config + ": failed to fetch config.endpoint: " + e.what());
 		}
 
 		int ret = create_dir(gvisor_socket);
