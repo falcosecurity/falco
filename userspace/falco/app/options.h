@@ -47,10 +47,7 @@ public:
 	std::vector<std::string> disable_sources;
 	std::vector<std::string> disabled_rule_substrings;
 	std::vector<std::string> enable_sources;
-	std::string trace_filename;
-	std::string gvisor_config;
 	std::string gvisor_generate_config_with_socket;
-	std::string gvisor_root;
 	bool describe_all_rules;
 	std::string describe_rule;
 	bool print_ignored_events;
@@ -76,9 +73,15 @@ public:
 	bool verbose;
 	bool print_version_info;
 	bool print_page_size;
-	bool modern_bpf;
 	bool dry_run;
-	bool nodriver;
+
+	// todo!: remove them in Falco 0.38.0 since they are deprecated
+	std::string trace_filename = "";
+	std::string gvisor_config = "";
+	std::string gvisor_root = "";
+	bool modern_bpf = false;
+	bool nodriver = false;
+
 
 	bool parse(int argc, char **argv, std::string &errstr);
 
