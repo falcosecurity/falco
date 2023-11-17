@@ -70,14 +70,14 @@ public:
 		std::string m_probe_path;
 		int16_t m_buf_size_preset;
 		bool m_drop_failed_exit;
-	} bpf_config;
+	} ebpf_config;
 
 	typedef struct {
 	public:
 		uint16_t m_cpus_for_each_syscall_buffer;
 		int16_t m_buf_size_preset;
 		bool m_drop_failed_exit;
-	} modern_bpf_config;
+	} modern_ebpf_config;
 
 	typedef struct {
 	public:
@@ -104,7 +104,6 @@ public:
 	std::list<std::string> m_loaded_rules_filenames;
 	// List of loaded rule folders
 	std::list<std::string> m_loaded_rules_folders;
-	engine_kind_t m_engine_mode;
 	bool m_json_output;
 	bool m_json_include_output_property;
 	bool m_json_include_tags_property;
@@ -160,9 +159,11 @@ public:
 	bool m_metrics_convert_memory_to_mb;
 	bool m_metrics_include_empty_values;
 
+	// Falco engine
+	engine_kind_t m_engine_mode;
 	kmod_config m_kmod;
-	bpf_config m_bpf;
-	modern_bpf_config m_modern_bpf;
+	ebpf_config m_ebpf;
+	modern_ebpf_config m_modern_ebpf;
 	replay_config m_replay;
 	gvisor_config m_gvisor;
 	std::vector<plugin_config> m_plugins;

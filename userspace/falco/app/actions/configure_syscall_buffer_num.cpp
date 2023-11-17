@@ -34,10 +34,10 @@ falco::app::run_result falco::app::actions::configure_syscall_buffer_num(falco::
 		return run_result::fatal("cannot get the number of online CPUs from the system\n");
 	}
 
-	if(s.config->m_modern_bpf.m_cpus_for_each_syscall_buffer > online_cpus)
+	if(s.config->m_modern_ebpf.m_cpus_for_each_syscall_buffer > online_cpus)
 	{
-		falco_logger::log(falco_logger::level::WARNING, "you required a buffer every '" + std::to_string(s.config->m_modern_bpf.m_cpus_for_each_syscall_buffer) + "' CPUs but there are only '" + std::to_string(online_cpus) + "' online CPUs. Falco changed the config to: one buffer every '" + std::to_string(online_cpus) + "' CPUs\n");
-		s.config->m_modern_bpf.m_cpus_for_each_syscall_buffer = online_cpus;
+		falco_logger::log(falco_logger::level::WARNING, "you required a buffer every '" + std::to_string(s.config->m_modern_ebpf.m_cpus_for_each_syscall_buffer) + "' CPUs but there are only '" + std::to_string(online_cpus) + "' online CPUs. Falco changed the config to: one buffer every '" + std::to_string(online_cpus) + "' CPUs\n");
+		s.config->m_modern_ebpf.m_cpus_for_each_syscall_buffer = online_cpus;
 	}
 #endif
 	return run_result::ok();

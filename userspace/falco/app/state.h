@@ -169,10 +169,10 @@ struct state
 		drop_failed = config->m_kmod.m_drop_failed_exit;
 		break;
 	case engine_kind_t::EBPF:
-		drop_failed = config->m_bpf.m_drop_failed_exit;
+		drop_failed = config->m_ebpf.m_drop_failed_exit;
 		break;
 	case engine_kind_t::MODERN_EBPF:
-		drop_failed = config->m_modern_bpf.m_drop_failed_exit;
+		drop_failed = config->m_modern_ebpf.m_drop_failed_exit;
 		break;
 	default:
 		drop_failed = false;
@@ -189,10 +189,10 @@ struct state
 		index = config->m_kmod.m_buf_size_preset;
 		break;
 	case engine_kind_t::EBPF:
-		index = config->m_bpf.m_buf_size_preset;
+		index = config->m_ebpf.m_buf_size_preset;
 		break;
 	case engine_kind_t::MODERN_EBPF:
-		index = config->m_modern_bpf.m_buf_size_preset;
+		index = config->m_modern_ebpf.m_buf_size_preset;
 		break;
 	default:
 		// unsupported

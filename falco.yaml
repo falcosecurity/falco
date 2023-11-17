@@ -62,8 +62,8 @@
 #     syscall_event_timeouts
 #     syscall_event_drops
 #     metrics
-# Falco driver
-#     driver
+# Falco engine
+#     engine
 # Falco performance tuning (advanced)
 #     syscall_buf_size_preset
 #     syscall_drop_failed_exit
@@ -772,7 +772,7 @@ metrics:
   include_empty_values: false
 
 ################
-# Falco driver #
+# Falco engine #
 ################
 
 # [Stable] `engine`
@@ -793,7 +793,7 @@ metrics:
 # Select the appropriate engine kind by uncommenting the corresponding line.
 # Make sure to specify only one engine kind at a time.
 # Moreover, for each engine multiple options might be available,
-# grouped under the `engine.$kind` configuration key.
+# grouped under the `engine.kind` configuration key.
 
 engine:
   kind: kmod

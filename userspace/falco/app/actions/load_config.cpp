@@ -32,7 +32,7 @@ static falco::app::run_result apply_deprecated_options(falco::app::state& s)
 	if (getenv(FALCO_BPF_ENV_VARIABLE))
 	{
 		s.config->m_engine_mode = engine_kind_t::EBPF;
-		s.config->m_bpf.m_probe_path = getenv(FALCO_BPF_ENV_VARIABLE);
+		s.config->m_ebpf.m_probe_path = getenv(FALCO_BPF_ENV_VARIABLE);
 	}
 	else if (s.options.modern_bpf)
 	{
