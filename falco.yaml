@@ -775,29 +775,27 @@ metrics:
 # Falco driver #
 ################
 
-# [Stable] `driver`
+# [Stable] `engine`
 #
 # --- [Description]
 #
-# Falco supports different driver modes for capturing syscall events. The choice
-# of driver mode can significantly impact the performance and compatibility of
-# Falco with your system. Choose the appropriate driver mode based on your
-# system's configuration and requirements.
+# Falco supports different engines to generate events.
+# Choose the appropriate engine kind based on your system's configuration and requirements.
 #
-# Available driver kinds:
+# Available engines:
 # - `kmod`: Kernel Module (Kernel Module)
 # - `ebpf`: eBPF (Extended Berkeley Packet Filter)
 # - `modern-ebpf`: Modern eBPF (Modern Extended Berkeley Packet Filter), available only for recent kernels
-# - `none`: No Driver (No driver loaded, useful to run `syscall` source plugin or just plugins without loading any driver)
 # - `gvisor`: gVisor (gVisor sandbox)
-# - `replay`: Replay a scap file
+# - `replay`: Replay a scap trace file
+# - `none`: No engine loaded, useful to run `syscall` source plugin or just plugins without loading any other event producer.
 
-# Select the appropriate driver mode by uncommenting the corresponding line.
-# Make sure to specify only one driver mode at a time.
-# Moreover, for each driver multiple options might be available and are grouped 
-# under the `driver.$kind` configuration key.
+# Select the appropriate engine kind by uncommenting the corresponding line.
+# Make sure to specify only one engine kind at a time.
+# Moreover, for each engine multiple options might be available,
+# grouped under the `engine.$kind` configuration key.
 
-driver:
+engine:
   kind: kmod
   kmod:
     buf_size_preset: 4 # Overridden by deprecated syscall_buf_size_preset
@@ -811,7 +809,7 @@ driver:
     buf_size_preset: 4 # Overridden by deprecated syscall_buf_size_preset
     drop_failed_exit: false # Overridden by deprecated syscall_drop_failed_exit
   replay:
-    scap_file: /path/to/file.scap
+    trace_file: /path/to/file.scap
   gvisor:
     config: /path/to/gvisor.yaml
     root: /gvisor/root
@@ -822,7 +820,7 @@ driver:
 
 # [DEPRECATED] `syscall_buf_size_preset`
 #
-# Deprecated in favor of driver.{kmod,ebpf,modern-ebpf}.buf_size_preset
+# Deprecated in favor of engine.{kmod,ebpf,modern-ebpf}.buf_size_preset
 #
 # --- [Description]
 #
@@ -875,7 +873,7 @@ driver:
 syscall_buf_size_preset: 4
 
 # [DEPRECATED] `syscall_drop_failed_exit`
-# Deprecated in favor of driver.{kmod,ebpf,modern-ebpf}.drop_failed_exit
+# Deprecated in favor of engine.{kmod,ebpf,modern-ebpf}.drop_failed_exit
 #
 # Enabling this option in Falco allows it to drop failed system call exit events
 # in the kernel drivers before pushing them onto the ring buffer. This
@@ -1002,7 +1000,7 @@ base_syscalls:
 
 # [DEPRECATED] `modern_bpf.cpus_for_each_syscall_buffer`, modern_bpf only
 #
-# Deprecated in favor of driver.modern-ebpf.cpus_for_each_syscall_buffer
+# Deprecated in favor of engine.modern-ebpf.cpus_for_each_syscall_buffer
 #
 # --- [Description]
 #

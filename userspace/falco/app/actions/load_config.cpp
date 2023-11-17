@@ -31,27 +31,27 @@ static falco::app::run_result apply_deprecated_options(falco::app::state& s)
 	// use the requested driver.
 	if (getenv(FALCO_BPF_ENV_VARIABLE))
 	{
-		s.config->m_driver_mode = driver_mode_type::EBPF;
+		s.config->m_engine_mode = engine_kind_t::EBPF;
 		s.config->m_bpf.m_probe_path = getenv(FALCO_BPF_ENV_VARIABLE);
 	}
 	else if (s.options.modern_bpf)
 	{
-		s.config->m_driver_mode = driver_mode_type::MODERN_EBPF;
+		s.config->m_engine_mode = engine_kind_t::MODERN_EBPF;
 	}
 	if (!s.options.gvisor_config.empty())
 	{
-		s.config->m_driver_mode =  driver_mode_type::GVISOR;
+		s.config->m_engine_mode =  engine_kind_t::GVISOR;
 		s.config->m_gvisor.m_config = s.options.gvisor_config;
 		s.config->m_gvisor.m_root = s.options.gvisor_root;
 	}
 	if (s.options.nodriver)
 	{
-		s.config->m_driver_mode =  driver_mode_type::NONE;
+		s.config->m_engine_mode =  engine_kind_t::NONE;
 	}
 	if (!s.options.trace_filename.empty())
 	{
-		s.config->m_driver_mode = driver_mode_type::REPLAY;
-		s.config->m_replay.m_scap_file = s.options.trace_filename;
+		s.config->m_engine_mode = engine_kind_t::REPLAY;
+		s.config->m_replay.m_trace_file = s.options.trace_filename;
 	}
 	return run_result::ok();
 }
