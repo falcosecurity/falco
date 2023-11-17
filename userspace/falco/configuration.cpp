@@ -41,7 +41,7 @@ namespace fs = std::filesystem;
 static re2::RE2 ip_address_re("((^\\s*((([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))\\s*$)|(^\\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3}))|:)))(%.+)?\\s*$))");
 
 falco_configuration::falco_configuration():
-	m_driver_mode(driver_mode_type::KMOD),
+	m_engine_mode(engine_kind_t::KMOD),
 	m_json_output(false),
 	m_json_include_output_property(true),
 	m_json_include_tags_property(true),
@@ -103,63 +103,63 @@ void falco_configuration::init(const std::string& conf_filename, const std::vect
 	load_yaml(conf_filename, config);
 }
 
-void falco_configuration::load_driver_config(const std::string& config_name, const yaml_helper& config)
+void falco_configuration::load_engine_config(const std::string& config_name, const yaml_helper& config)
 {
 	// Set driver mode if not already set.
-	const std::unordered_map<std::string, driver_mode_type> driver_mode_lut = {
-		{"kmod",driver_mode_type::KMOD},
-		{"ebpf",driver_mode_type::EBPF},
-		{"modern-ebpf",driver_mode_type::MODERN_EBPF},
-		{"replay",driver_mode_type::REPLAY},
-		{"gvisor",driver_mode_type::GVISOR},
-		{"none",driver_mode_type::NONE},
+	const std::unordered_map<std::string, engine_kind_t> engine_mode_lut = {
+		{"kmod",engine_kind_t::KMOD},
+		{"ebpf",engine_kind_t::EBPF},
+		{"modern-ebpf",engine_kind_t::MODERN_EBPF},
+		{"replay",engine_kind_t::REPLAY},
+		{"gvisor",engine_kind_t::GVISOR},
+		{"none",engine_kind_t::NONE},
 	};
 
-	auto driver_mode_str = config.get_scalar<std::string>("driver.kind", "kmod");
-	if (driver_mode_lut.find(driver_mode_str) != driver_mode_lut.end())
+	auto driver_mode_str = config.get_scalar<std::string>("engine.kind", "kmod");
+	if (engine_mode_lut.find(driver_mode_str) != engine_mode_lut.end())
 	{
-		m_driver_mode = driver_mode_lut.at(driver_mode_str);
+		m_engine_mode = engine_mode_lut.at(driver_mode_str);
 	}
 	else
 	{
-		throw std::logic_error("Error reading config file (" + config_name + "): wrong driver.kind specified.");
+		throw std::logic_error("Error reading config file (" + config_name + "): wrong engine.kind specified.");
 	}
 
-	switch (m_driver_mode)
+	switch (m_engine_mode)
 	{
-	case driver_mode_type::KMOD:
-		m_kmod.m_buf_size_preset = config.get_scalar<int16_t>("driver.kmod.buf_size_preset", 4);
-		m_kmod.m_drop_failed_exit = config.get_scalar<bool>("driver.kmod.drop_failed", false);
+	case engine_kind_t::KMOD:
+		m_kmod.m_buf_size_preset = config.get_scalar<int16_t>("engine.kmod.buf_size_preset", 4);
+		m_kmod.m_drop_failed_exit = config.get_scalar<bool>("engine.kmod.drop_failed", false);
 		break;
-	case driver_mode_type::EBPF:
+	case engine_kind_t::EBPF:
 		// TODO: default value for `probe` should be $HOME/FALCO_PROBE_BPF_FILEPATH,
 		// to be done once we drop the CLI option otherwise we would need to make the check twice,
 		// once here, and once when we merge the CLI options in the config file.
-		m_bpf.m_probe_path = config.get_scalar<std::string>("driver.ebpf.probe", "");
-		m_bpf.m_buf_size_preset = config.get_scalar<int16_t>("driver.ebpf.buf_size_preset", 4);
-		m_bpf.m_drop_failed_exit = config.get_scalar<bool>("driver.ebpf.drop_failed", false);
+		m_bpf.m_probe_path = config.get_scalar<std::string>("engine.ebpf.probe", "");
+		m_bpf.m_buf_size_preset = config.get_scalar<int16_t>("engine.ebpf.buf_size_preset", 4);
+		m_bpf.m_drop_failed_exit = config.get_scalar<bool>("engine.ebpf.drop_failed", false);
 		break;
-	case driver_mode_type::MODERN_EBPF:
-		m_modern_bpf.m_cpus_for_each_syscall_buffer = config.get_scalar<uint16_t>("driver.modern-ebpf.cpus_for_each_syscall_buffer", 2);
-		m_modern_bpf.m_buf_size_preset = config.get_scalar<int16_t>("driver.modern-ebpf.buf_size_preset", 4);
-		m_modern_bpf.m_drop_failed_exit = config.get_scalar<bool>("driver.modern-ebpf.drop_failed", false);
+	case engine_kind_t::MODERN_EBPF:
+		m_modern_bpf.m_cpus_for_each_syscall_buffer = config.get_scalar<uint16_t>("engine.modern-ebpf.cpus_for_each_syscall_buffer", 2);
+		m_modern_bpf.m_buf_size_preset = config.get_scalar<int16_t>("engine.modern-ebpf.buf_size_preset", 4);
+		m_modern_bpf.m_drop_failed_exit = config.get_scalar<bool>("engine.modern-ebpf.drop_failed", false);
 		break;
-	case driver_mode_type::REPLAY:
-		m_replay.m_scap_file = config.get_scalar<std::string>("driver.replay.scap_file", "");
-		if (m_replay.m_scap_file.empty())
+	case engine_kind_t::REPLAY:
+		m_replay.m_trace_file = config.get_scalar<std::string>("engine.replay.trace_file", "");
+		if (m_replay.m_trace_file.empty())
 		{
-			throw std::logic_error("Error reading config file (" + config_name + "): driver.kind is 'replay' but no driver.replay.scap_file specified.");
+			throw std::logic_error("Error reading config file (" + config_name + "): engine.kind is 'replay' but no engine.replay.trace_file specified.");
 		}
 		break;
-	case driver_mode_type::GVISOR:
-		m_gvisor.m_config = config.get_scalar<std::string>("driver.gvisor.config", "");
+	case engine_kind_t::GVISOR:
+		m_gvisor.m_config = config.get_scalar<std::string>("engine.gvisor.config", "");
 		if (m_gvisor.m_config.empty())
 		{
-			throw std::logic_error("Error reading config file (" + config_name + "): driver.kind is 'gvisor' but no driver.gvisor.config specified.");
+			throw std::logic_error("Error reading config file (" + config_name + "): engine.kind is 'gvisor' but no engine.gvisor.config specified.");
 		}
-		m_gvisor.m_root = config.get_scalar<std::string>("driver.gvisor.root", "");
+		m_gvisor.m_root = config.get_scalar<std::string>("engine.gvisor.root", "");
 		break;
-	case driver_mode_type::NONE:
+	case engine_kind_t::NONE:
 	default:
 		break;
 	}
@@ -167,7 +167,7 @@ void falco_configuration::load_driver_config(const std::string& config_name, con
 
 void falco_configuration::load_yaml(const std::string& config_name, const yaml_helper& config)
 {
-	load_driver_config(config_name, config);
+	load_engine_config(config_name, config);
 	m_log_level = config.get_scalar<std::string>("log_level", "info");
 
 	std::list<std::string> rules_files;

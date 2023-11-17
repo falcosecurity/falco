@@ -30,7 +30,7 @@ TEST(ActionSelectEventSources, pre_post_conditions)
     // ignore source selection in capture mode
     {
         falco::app::state s;
-        s.config->m_driver_mode = driver_mode_type::REPLAY;
+        s.config->m_engine_mode = engine_kind_t::REPLAY;
         EXPECT_TRUE(s.is_capture_mode());
         EXPECT_ACTION_OK(action(s));
     }

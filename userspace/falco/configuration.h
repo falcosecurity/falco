@@ -37,7 +37,7 @@ limitations under the License.
 #include "event_drops.h"
 #include "falco_outputs.h"
 
-enum class driver_mode_type : uint8_t
+enum class engine_kind_t : uint8_t
 {
 	KMOD,
 	EBPF,
@@ -81,7 +81,7 @@ public:
 
 	typedef struct {
 	public:
-		std::string m_scap_file;
+		std::string m_trace_file;
 	} replay_config;
 
 	typedef struct {
@@ -104,7 +104,7 @@ public:
 	std::list<std::string> m_loaded_rules_filenames;
 	// List of loaded rule folders
 	std::list<std::string> m_loaded_rules_folders;
-	driver_mode_type m_driver_mode;
+	engine_kind_t m_engine_mode;
 	bool m_json_output;
 	bool m_json_include_output_property;
 	bool m_json_include_tags_property;
@@ -170,7 +170,7 @@ public:
 private:
 	void load_yaml(const std::string& config_name, const yaml_helper& config);
 
-	void load_driver_config(const std::string& config_name, const yaml_helper& config);
+	void load_engine_config(const std::string& config_name, const yaml_helper& config);
 
 	void init_cmdline_options(yaml_helper& config, const std::vector<std::string>& cmdline_options);
 
