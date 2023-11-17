@@ -150,11 +150,16 @@ struct state
         return config->m_engine_mode == engine_kind_t::REPLAY;
     }
 
-    inline bool is_gvisor_enabled() const
+    inline bool is_gvisor() const
     {
         return config->m_engine_mode == engine_kind_t::GVISOR;
     }
-    
+
+    inline bool is_ebpf() const
+    {
+        return config->m_engine_mode == engine_kind_t::EBPF;
+    }
+
     inline bool is_modern_ebpf() const
     {
         return config->m_engine_mode == engine_kind_t::MODERN_EBPF;

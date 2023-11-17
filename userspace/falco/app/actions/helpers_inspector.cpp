@@ -69,7 +69,7 @@ falco::app::run_result falco::app::actions::open_live_inspector(
 			}
 			return run_result::fatal("Can't find plugin for event source: " + source);
 		}
-		else if (s.config->m_engine_mode == engine_kind_t::NONE) /* nodriver engine. */
+		else if (s.is_nodriver()) /* nodriver engine. */
 		{
 			// when opening a capture with no driver, Falco will first check
 			// if a plugin is capable of generating raw events from the libscap
@@ -88,18 +88,18 @@ falco::app::run_result falco::app::actions::open_live_inspector(
 			falco_logger::log(falco_logger::level::INFO, "Opening '" + source + "' source with no driver\n");
 			inspector->open_nodriver();
 		}
-		else if(s.is_gvisor_enabled()) /* gvisor engine. */
+		else if(s.is_gvisor()) /* gvisor engine. */
 		{
 			falco_logger::log(falco_logger::level::INFO, "Opening '" + source + "' source with gVisor. Configuration path: " + s.config->m_gvisor.m_config);
 			inspector->open_gvisor(s.config->m_gvisor.m_config, s.config->m_gvisor.m_root);
 		}
-		else if(s.config->m_engine_mode == engine_kind_t::MODERN_EBPF) /* modern BPF engine. */
+		else if(s.is_modern_ebpf()) /* modern BPF engine. */
 		{
 			falco_logger::log(falco_logger::level::INFO, "Opening '" + source + "' source with modern BPF probe.");
 			falco_logger::log(falco_logger::level::INFO, "One ring buffer every '" + std::to_string(s.config->m_modern_ebpf.m_cpus_for_each_syscall_buffer) +  "' CPUs.");
 			inspector->open_modern_bpf(s.syscall_buffer_bytes_size, s.config->m_modern_ebpf.m_cpus_for_each_syscall_buffer, true, s.selected_sc_set);
 		}
-		else if(s.config->m_engine_mode == engine_kind_t::EBPF) /* BPF engine. */
+		else if(s.is_ebpf()) /* BPF engine. */
 		{
 			const char *bpf_probe_path = s.config->m_ebpf.m_probe_path.c_str();
 			char full_path[PATH_MAX];
