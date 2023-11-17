@@ -158,15 +158,15 @@ public:
 	bool m_metrics_libbpf_stats_enabled;
 	bool m_metrics_convert_memory_to_mb;
 	bool m_metrics_include_empty_values;
+	std::vector<plugin_config> m_plugins;
 
 	// Falco engine
 	engine_kind_t m_engine_mode = engine_kind_t::KMOD;
-	kmod_config m_kmod;
-	ebpf_config m_ebpf;
-	modern_ebpf_config m_modern_ebpf;
-	replay_config m_replay;
-	gvisor_config m_gvisor;
-	std::vector<plugin_config> m_plugins;
+	kmod_config m_kmod = {};
+	ebpf_config m_ebpf = {};
+	modern_ebpf_config m_modern_ebpf = {};
+	replay_config m_replay = {};
+	gvisor_config m_gvisor = {};
 
 private:
 	void load_yaml(const std::string& config_name, const yaml_helper& config);
