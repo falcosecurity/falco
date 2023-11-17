@@ -114,6 +114,10 @@ void falco_configuration::load_engine_config(const std::string& config_name, con
 		{"none",engine_kind_t::NONE},
 	};
 
+	constexpr int default_buf_size_preset = 4;
+	constexpr int default_cpus_for_each_syscall_buffer = 2;
+	constexpr bool default_drop_failed = false;
+
 	auto driver_mode_str = config.get_scalar<std::string>("engine.kind", "kmod");
 	if (engine_mode_lut.find(driver_mode_str) != engine_mode_lut.end())
 	{
@@ -127,21 +131,21 @@ void falco_configuration::load_engine_config(const std::string& config_name, con
 	switch (m_engine_mode)
 	{
 	case engine_kind_t::KMOD:
-		m_kmod.m_buf_size_preset = config.get_scalar<int16_t>("engine.kmod.buf_size_preset", 4);
-		m_kmod.m_drop_failed_exit = config.get_scalar<bool>("engine.kmod.drop_failed", false);
+		m_kmod.m_buf_size_preset = config.get_scalar<int16_t>("engine.kmod.buf_size_preset", default_buf_size_preset);
+		m_kmod.m_drop_failed_exit = config.get_scalar<bool>("engine.kmod.drop_failed", default_drop_failed);
 		break;
 	case engine_kind_t::EBPF:
 		// TODO: default value for `probe` should be $HOME/FALCO_PROBE_BPF_FILEPATH,
 		// to be done once we drop the CLI option otherwise we would need to make the check twice,
 		// once here, and once when we merge the CLI options in the config file.
 		m_ebpf.m_probe_path = config.get_scalar<std::string>("engine.ebpf.probe", "");
-		m_ebpf.m_buf_size_preset = config.get_scalar<int16_t>("engine.ebpf.buf_size_preset", 4);
-		m_ebpf.m_drop_failed_exit = config.get_scalar<bool>("engine.ebpf.drop_failed", false);
+		m_ebpf.m_buf_size_preset = config.get_scalar<int16_t>("engine.ebpf.buf_size_preset", default_buf_size_preset);
+		m_ebpf.m_drop_failed_exit = config.get_scalar<bool>("engine.ebpf.drop_failed", default_drop_failed);
 		break;
 	case engine_kind_t::MODERN_EBPF:
-		m_modern_ebpf.m_cpus_for_each_syscall_buffer = config.get_scalar<uint16_t>("engine.modern-ebpf.cpus_for_each_syscall_buffer", 2);
-		m_modern_ebpf.m_buf_size_preset = config.get_scalar<int16_t>("engine.modern-ebpf.buf_size_preset", 4);
-		m_modern_ebpf.m_drop_failed_exit = config.get_scalar<bool>("engine.modern-ebpf.drop_failed", false);
+		m_modern_ebpf.m_cpus_for_each_syscall_buffer = config.get_scalar<uint16_t>("engine.modern-ebpf.cpus_for_each_syscall_buffer", default_cpus_for_each_syscall_buffer);
+		m_modern_ebpf.m_buf_size_preset = config.get_scalar<int16_t>("engine.modern-ebpf.buf_size_preset", default_buf_size_preset);
+		m_modern_ebpf.m_drop_failed_exit = config.get_scalar<bool>("engine.modern-ebpf.drop_failed", default_drop_failed);
 		break;
 	case engine_kind_t::REPLAY:
 		m_replay.m_trace_file = config.get_scalar<std::string>("engine.replay.trace_file", "");
@@ -161,6 +165,28 @@ void falco_configuration::load_engine_config(const std::string& config_name, con
 	case engine_kind_t::NONE:
 	default:
 		break;
+	}
+
+	// TODO: remove in Falco 0.38 since they are deprecated.
+	// old config keys always have priority over new ones, when set to a non-default value
+	auto buf_size_preset = config.get_scalar<int16_t>("syscall_buf_size_preset", default_buf_size_preset);
+	if (buf_size_preset != default_buf_size_preset)
+	{
+		m_kmod.m_buf_size_preset = buf_size_preset;
+		m_ebpf.m_buf_size_preset = buf_size_preset;
+		m_modern_ebpf.m_buf_size_preset = buf_size_preset;
+	}
+	auto cpus_for_syscall_buffer = config.get_scalar<uint16_t>("modern_bpf.cpus_for_each_syscall_buffer", default_cpus_for_each_syscall_buffer);
+	if (cpus_for_syscall_buffer != default_cpus_for_each_syscall_buffer)
+	{
+		m_modern_ebpf.m_cpus_for_each_syscall_buffer = cpus_for_syscall_buffer;
+	}
+	auto drop_failed = config.get_scalar<bool>("syscall_drop_failed_exit", default_drop_failed);
+	if (drop_failed)
+	{
+		m_kmod.m_drop_failed_exit = drop_failed;
+		m_ebpf.m_drop_failed_exit = drop_failed;
+		m_modern_ebpf.m_drop_failed_exit = drop_failed;
 	}
 }
 
@@ -423,18 +449,6 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 		throw std::logic_error("Error reading config file(" + config_name + "): the maximum consecutive timeouts without an event must be an unsigned integer > 0");
 	}
 
-	/* We put this value in the configuration file because in this way we can change the dimension at every reload.
-	 * The default value is `4` -> 8 MB.
-	 */
-	// TODO: remove in Falco 0.38 since they are deprecated.
-	m_kmod.m_buf_size_preset = config.get_scalar<uint16_t>("syscall_buf_size_preset", 4);
-	m_ebpf.m_buf_size_preset = config.get_scalar<uint16_t>("syscall_buf_size_preset", 4);
-	m_modern_ebpf.m_buf_size_preset = config.get_scalar<uint16_t>("syscall_buf_size_preset", 4);
-	m_modern_ebpf.m_cpus_for_each_syscall_buffer = config.get_scalar<uint16_t>("modern_bpf.cpus_for_each_syscall_buffer", 2);
-	m_kmod.m_drop_failed_exit = config.get_scalar<bool>("syscall_drop_failed_exit", false);
-	m_ebpf.m_drop_failed_exit = config.get_scalar<bool>("syscall_drop_failed_exit", false);
-	m_modern_ebpf.m_drop_failed_exit = config.get_scalar<bool>("syscall_drop_failed_exit", false);
-
 	m_base_syscalls_custom_set.clear();
 	config.get_sequence<std::unordered_set<std::string>>(m_base_syscalls_custom_set, std::string("base_syscalls.custom_set"));
 	m_base_syscalls_repair = config.get_scalar<bool>("base_syscalls.repair", false);
@@ -453,7 +467,6 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 	std::vector<std::string> load_plugins;
 
 	bool load_plugins_node_defined = config.is_defined("load_plugins");
-
 	config.get_sequence<std::vector<std::string>>(load_plugins, "load_plugins");
 
 	std::list<falco_configuration::plugin_config> plugins;
