@@ -1,0 +1,3 @@
+#pragma once
+
+#define ENGINE_SELECTION_TEST_CONFIG "${CMAKE_SOURCE_DIR}/unit_tests/falco/test_configs/test_engine_selection_precedence.yaml"

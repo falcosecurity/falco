@@ -1,0 +1,51 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Copyright (C) 2023 The Falco Authors.
+#
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+################
+# Falco engine #
+################
+
+engine:
+  kind: modern-ebpf
+  kmod:
+    buf_size_preset: 4
+    drop_failed_exit: false
+  ebpf:
+    probe: /path/to/probe.o
+    buf_size_preset: 4 
+    drop_failed_exit: false
+  modern-ebpf:
+    cpus_for_each_syscall_buffer: 1
+    buf_size_preset: 5 # This should win over the other config
+    drop_failed_exit: false
+  replay:
+    trace_file: /path/to/file.scap
+  gvisor:
+    config: /path/to/gvisor.yaml
+    root: /gvisor/root
+
+#######################################
+# Falco performance tuning (advanced) #
+#######################################
+
+syscall_buf_size_preset: 4
+
+syscall_drop_failed_exit: true # This should win over the other config
+
+modern_bpf:
+  cpus_for_each_syscall_buffer: 3 # Should win this 3 over the 1 in the other config

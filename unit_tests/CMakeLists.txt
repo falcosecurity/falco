@@ -27,10 +27,18 @@ FetchContent_MakeAvailable(googletest)
 file(GLOB_RECURSE ENGINE_TESTS ${CMAKE_CURRENT_SOURCE_DIR}/engine/*.cpp)
 file(GLOB_RECURSE FALCO_TESTS ${CMAKE_CURRENT_SOURCE_DIR}/falco/*.cpp)
 
+# Create a libscap_test_var.h file with some variables used by our tests
+# for example the kmod path or the bpf path.
+configure_file (
+    "${CMAKE_CURRENT_SOURCE_DIR}/falco_test_var.h.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/falco_test_var.h"
+)
+
 set(FALCO_UNIT_TESTS_SOURCES
   "${ENGINE_TESTS}"
   falco/test_configuration.cpp
   falco/app/actions/test_select_event_sources.cpp
+  falco/app/actions/test_load_config.cpp
 )
 
 if (CMAKE_SYSTEM_NAME MATCHES "Linux")
@@ -45,6 +53,7 @@ set(FALCO_UNIT_TESTS_INCLUDES
     ${CMAKE_SOURCE_DIR}/userspace
     ${CMAKE_BINARY_DIR}/userspace/falco # we need it to include indirectly `config_falco.h` file
     ${CMAKE_SOURCE_DIR}/userspace/engine # we need it to include indirectly `falco_common.h` file
+	"${CMAKE_CURRENT_BINARY_DIR}" # we need it to include `falco_test_var.h`
 )
 
 set(FALCO_UNIT_TESTS_DEPENDENCIES
