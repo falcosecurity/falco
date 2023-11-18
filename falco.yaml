@@ -290,8 +290,8 @@ rules_file:
 #       BUFFERs     0     0  0        0  0  0  0
 #
 # Moreover, you have the option to combine this parameter with
-# `syscall_buf_size_preset` index. For instance, you can create a large shared
-# syscall buffer of 512 MB (using syscall_buf_size_preset=10) that is
+# `buf_size_preset` index. For instance, you can create a large shared
+# syscall buffer of 512 MB (using buf_size_preset=10) that is
 # allocated among all the online CPUs.
 #
 # --- [Suggestions]
@@ -302,7 +302,7 @@ rules_file:
 # the flexibility to experiment and find the optimal configuration for your
 # system.
 # 
-# When considering a fixed syscall_buf_size_preset and a fixed buffer dimension:
+# When considering a fixed buf_size_preset and a fixed buffer dimension:
 # - Increasing this configs value results in lower number of buffers and you can
 #   speed up your system and reduce memory usage
 # - However, using too few buffers may increase contention in the kernel,
