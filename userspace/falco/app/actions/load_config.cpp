@@ -29,18 +29,34 @@ static falco::app::run_result apply_deprecated_options(falco::app::state& s)
 {
 	// Please note: is not possible to mix command line options and configs to obtain a configuration
 	// we need to use only one method. For example, is not possible to set the gvisor-config through
-	// the command line and the gvisor-root through the config file.
-	//
+	// the command line and the gvisor-root through the config file. For this reason, if we detect
+	// at least one change in the default config we don't allow to use the command line options.
+	if(s.config->m_changes_in_engine_config)
+	{
+		return run_result::ok(); 
+	}
+
+	// Replace the kmod default values in case the engine was open with the kmod.
+	// We don't have a command line option to open the kmod so we have to always enforce the
+	// default values.
+	s.config->m_kmod.m_drop_failed_exit = s.config->m_syscall_drop_failed_exit;
+	s.config->m_kmod.m_buf_size_preset = s.config->m_syscall_buf_size_preset;
+
 	// If overridden from CLI options (soon to be removed),
 	// use the requested driver.
 	if (getenv(FALCO_BPF_ENV_VARIABLE))
 	{
 		s.config->m_engine_mode = engine_kind_t::EBPF;
 		s.config->m_ebpf.m_probe_path = getenv(FALCO_BPF_ENV_VARIABLE);
+		s.config->m_ebpf.m_drop_failed_exit = s.config->m_syscall_drop_failed_exit;
+		s.config->m_ebpf.m_buf_size_preset = s.config->m_syscall_buf_size_preset;
 	}
 	else if (s.options.modern_bpf)
 	{
 		s.config->m_engine_mode = engine_kind_t::MODERN_EBPF;
+		s.config->m_modern_ebpf.m_drop_failed_exit = s.config->m_syscall_drop_failed_exit;
+		s.config->m_modern_ebpf.m_buf_size_preset = s.config->m_syscall_buf_size_preset;
+		s.config->m_modern_ebpf.m_cpus_for_each_syscall_buffer = s.config->m_cpus_for_each_syscall_buffer;
 	}
 	if (!s.options.gvisor_config.empty())
 	{
