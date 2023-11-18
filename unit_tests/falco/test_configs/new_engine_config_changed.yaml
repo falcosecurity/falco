@@ -49,4 +49,4 @@ syscall_buf_size_preset: 6
 syscall_drop_failed_exit: true
 
 modern_bpf:
-  cpus_for_each_buffer: 7
+  cpus_for_each_syscall_buffer: 7

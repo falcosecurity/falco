@@ -18,14 +18,12 @@ limitations under the License.
 #include "app_action_helpers.h"
 #include "falco_test_var.h"
 
-auto action = falco::app::actions::load_config;
 
 TEST(ActionLoadConfig, check_engine_config_is_correctly_parsed)
 {
 	falco::app::state s = {};
 	s.options.conf_filename = NEW_ENGINE_CONFIG_CHANGED;
-	// TODO: understand why load_yaml is called more times
-	EXPECT_ACTION_OK(action(s));
+	EXPECT_ACTION_OK(falco::app::actions::load_config(s));
 
 	// Check that the engine is the kmod
 	EXPECT_TRUE(s.config->m_engine_mode == engine_kind_t::KMOD);
@@ -61,7 +59,7 @@ TEST(ActionLoadConfig, check_command_line_options_are_not_used)
 	falco::app::state s;
 	s.options.modern_bpf = true;
 	s.options.conf_filename = NEW_ENGINE_CONFIG_CHANGED;
-	EXPECT_ACTION_OK(action(s));
+	EXPECT_ACTION_OK(falco::app::actions::load_config(s));
 
 	// Check that the engine is the kmod
 	EXPECT_TRUE(s.config->m_engine_mode == engine_kind_t::KMOD);
@@ -95,7 +93,7 @@ TEST(ActionLoadConfig, check_kmod_with_syscall_configs)
 {
 	falco::app::state s;
 	s.options.conf_filename = NEW_ENGINE_CONFIG_UNCHANGED;
-	EXPECT_ACTION_OK(action(s));
+	EXPECT_ACTION_OK(falco::app::actions::load_config(s));
 
 	// Check that the engine is the kmod
 	EXPECT_TRUE(s.config->m_engine_mode == engine_kind_t::KMOD);
@@ -132,7 +130,7 @@ TEST(ActionLoadConfig, check_override_command_line_modern)
 	// config is unchanged
 	s.options.modern_bpf = true;
 	s.options.conf_filename = NEW_ENGINE_CONFIG_UNCHANGED;
-	EXPECT_ACTION_OK(action(s));
+	EXPECT_ACTION_OK(falco::app::actions::load_config(s));
 
 	// Check that the engine is the kmod
 	EXPECT_TRUE(s.is_modern_ebpf());
@@ -170,7 +168,7 @@ TEST(ActionLoadConfig, check_override_command_line_gvisor)
 	// config is unchanged
 	s.options.gvisor_config = "config";
 	s.options.conf_filename = NEW_ENGINE_CONFIG_UNCHANGED;
-	EXPECT_ACTION_OK(action(s));
+	EXPECT_ACTION_OK(falco::app::actions::load_config(s));
 
 	// Check that the engine is the kmod
 	EXPECT_TRUE(s.is_gvisor());
