@@ -1,3 +1,4 @@
 #pragma once
 
-#define ENGINE_SELECTION_TEST_CONFIG "${CMAKE_SOURCE_DIR}/unit_tests/falco/test_configs/test_engine_selection_precedence.yaml"
+#define NEW_ENGINE_CONFIG_CHANGED "${CMAKE_SOURCE_DIR}/unit_tests/falco/test_configs/new_engine_config_changed.yaml"
+#define NEW_ENGINE_CONFIG_UNCHANGED "${CMAKE_SOURCE_DIR}/unit_tests/falco/test_configs/new_engine_config_unchanged.yaml"
