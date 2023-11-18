@@ -39,7 +39,7 @@ TEST(ActionLoadConfig, check_engine_config_is_correctly_parsed)
 	EXPECT_EQ(s.config->m_ebpf.m_buf_size_preset, 0);
 	EXPECT_FALSE(s.config->m_ebpf.m_drop_failed_exit);
 
-	EXPECT_EQ(s.config->m_modern_ebpf.m_cpus_for_each_syscall_buffer, 0);
+	EXPECT_EQ(s.config->m_modern_ebpf.m_cpus_for_each_buffer, 0);
 	EXPECT_EQ(s.config->m_modern_ebpf.m_buf_size_preset, 0);
 	EXPECT_FALSE(s.config->m_modern_ebpf.m_drop_failed_exit);
 
@@ -75,7 +75,7 @@ TEST(ActionLoadConfig, check_command_line_options_are_not_used)
 	EXPECT_EQ(s.config->m_ebpf.m_buf_size_preset, 0);
 	EXPECT_FALSE(s.config->m_ebpf.m_drop_failed_exit);
 
-	EXPECT_EQ(s.config->m_modern_ebpf.m_cpus_for_each_syscall_buffer, 0);
+	EXPECT_EQ(s.config->m_modern_ebpf.m_cpus_for_each_buffer, 0);
 	EXPECT_EQ(s.config->m_modern_ebpf.m_buf_size_preset, 0);
 	EXPECT_FALSE(s.config->m_modern_ebpf.m_drop_failed_exit);
 
@@ -110,7 +110,7 @@ TEST(ActionLoadConfig, check_kmod_with_syscall_configs)
 	EXPECT_EQ(s.config->m_ebpf.m_buf_size_preset, 0);
 	EXPECT_FALSE(s.config->m_ebpf.m_drop_failed_exit);
 
-	EXPECT_EQ(s.config->m_modern_ebpf.m_cpus_for_each_syscall_buffer, 0);
+	EXPECT_EQ(s.config->m_modern_ebpf.m_cpus_for_each_buffer, 0);
 	EXPECT_EQ(s.config->m_modern_ebpf.m_buf_size_preset, 0);
 	EXPECT_FALSE(s.config->m_modern_ebpf.m_drop_failed_exit);
 
@@ -139,7 +139,7 @@ TEST(ActionLoadConfig, check_override_command_line_modern)
 
 	// Check that the modern ebpf engine uses the default syscall configs
 	// and not the ones in the `engine` block
-	EXPECT_EQ(s.config->m_modern_ebpf.m_cpus_for_each_syscall_buffer, 3);
+	EXPECT_EQ(s.config->m_modern_ebpf.m_cpus_for_each_buffer, 3);
 	EXPECT_EQ(s.config->m_modern_ebpf.m_buf_size_preset, 6);
 	EXPECT_TRUE(s.config->m_modern_ebpf.m_drop_failed_exit);
 
@@ -186,7 +186,7 @@ TEST(ActionLoadConfig, check_override_command_line_gvisor)
 	EXPECT_EQ(s.config->m_ebpf.m_buf_size_preset, 0);
 	EXPECT_FALSE(s.config->m_ebpf.m_drop_failed_exit);
 
-	EXPECT_EQ(s.config->m_modern_ebpf.m_cpus_for_each_syscall_buffer, 0);
+	EXPECT_EQ(s.config->m_modern_ebpf.m_cpus_for_each_buffer, 0);
 	EXPECT_EQ(s.config->m_modern_ebpf.m_buf_size_preset, 0);
 	EXPECT_FALSE(s.config->m_modern_ebpf.m_drop_failed_exit);
 
