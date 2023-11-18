@@ -172,9 +172,9 @@ public:
 	// used to keep track if the `engine` config is used.
 	bool m_changes_in_engine_config = false;
 	// Index corresponding to the syscall buffer dimension.
-	uint16_t m_syscall_buf_size_preset = 4;
+	uint16_t m_syscall_buf_size_preset = 0;
 	// Number of CPUs associated with a single ring buffer.
-	uint16_t m_cpus_for_each_syscall_buffer = 2;
+	uint16_t m_cpus_for_each_syscall_buffer = 0;
 	bool m_syscall_drop_failed_exit = false;
 
 private:

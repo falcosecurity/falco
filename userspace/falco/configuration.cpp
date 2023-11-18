@@ -184,7 +184,12 @@ void falco_configuration::load_engine_config(const std::string& config_name, con
 	}
 	
 	// If we arrive here it means we have at least one change in the `engine` config.
+	// Please note that `load_config` is called more than one time during initialization
+	// so the last time wins
 	m_changes_in_engine_config = true;
+	m_syscall_buf_size_preset = 0;
+	m_cpus_for_each_syscall_buffer = 0;
+	m_syscall_drop_failed_exit = false;
 }
 
 void falco_configuration::load_yaml(const std::string& config_name, const yaml_helper& config)
