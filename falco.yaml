@@ -173,21 +173,28 @@ rules_file:
 engine:
   kind: kmod
   kmod:
-    buf_size_preset: 4 # Overridden by deprecated syscall_buf_size_preset if set
-    drop_failed_exit: false # Overridden by deprecated syscall_drop_failed_exit if set
+    buf_size_preset: 4
+    drop_failed_exit: false
   ebpf:
+    # path to the elf file to load.
     probe: /path/to/probe.o
-    buf_size_preset: 4 # Overridden by deprecated syscall_buf_size_preset if set
-    drop_failed_exit: false # Overridden by deprecated syscall_drop_failed_exit if set
+    buf_size_preset: 4
+    drop_failed_exit: false
   modern-ebpf:
-    cpus_for_each_syscall_buffer: 2 # Overridden by deprecated cpus_for_each_syscall_buffer if set
-    buf_size_preset: 4 # Overridden by deprecated syscall_buf_size_preset if set
-    drop_failed_exit: false # Overridden by deprecated syscall_drop_failed_exit if set
+    cpus_for_each_buffer: 2 ## todo! rename it without syscall
+    buf_size_preset: 4
+    drop_failed_exit: false
   replay:
+    # path to the trace file to replay.
     trace_file: /path/to/file.scap
   gvisor:
-    config: /path/to/gvisor.yaml
-    root: /gvisor/root
+    # A Falco-compatible configuration file can be generated with
+    # '--gvisor-generate-config' and utilized for both runsc and Falco.
+    config: /path/to/gvisor_config.yaml
+    # Set gVisor root directory for storage of container state when used
+    # in conjunction with 'gvisor.config'. The 'gvisor.root' to be passed
+    # is the one usually passed to 'runsc --root' flag.
+    root: ""
 
 #################
 # Falco plugins #

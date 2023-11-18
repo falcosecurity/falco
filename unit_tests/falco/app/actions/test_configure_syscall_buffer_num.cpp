@@ -39,9 +39,9 @@ TEST(ActionConfigureSyscallBufferNum, variable_number_of_CPUs)
 	{
 		falco::app::state s;
 		s.config->m_engine_mode = engine_kind_t::MODERN_EBPF;
-		s.config->m_modern_ebpf.m_cpus_for_each_syscall_buffer = online_cpus + 1;
+		s.config->m_modern_ebpf.m_cpus_for_each_buffer = online_cpus + 1;
 		EXPECT_ACTION_OK(action(s));
-		EXPECT_EQ(s.config->m_modern_ebpf.m_cpus_for_each_syscall_buffer, online_cpus);
+		EXPECT_EQ(s.config->m_modern_ebpf.m_cpus_for_each_buffer, online_cpus);
 	}
 
 	// modern ebpf engine, with a valid number of CPUs
@@ -49,8 +49,8 @@ TEST(ActionConfigureSyscallBufferNum, variable_number_of_CPUs)
 	{
 		falco::app::state s;
 		s.config->m_engine_mode = engine_kind_t::MODERN_EBPF;
-		s.config->m_modern_ebpf.m_cpus_for_each_syscall_buffer = online_cpus - 1;
+		s.config->m_modern_ebpf.m_cpus_for_each_buffer = online_cpus - 1;
 		EXPECT_ACTION_OK(action(s));
-		EXPECT_EQ(s.config->m_modern_ebpf.m_cpus_for_each_syscall_buffer, online_cpus - 1);
+		EXPECT_EQ(s.config->m_modern_ebpf.m_cpus_for_each_buffer, online_cpus - 1);
 	}
 }
