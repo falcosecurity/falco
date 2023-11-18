@@ -74,7 +74,7 @@ public:
 
 	typedef struct {
 	public:
-		uint16_t m_cpus_for_each_syscall_buffer;
+		uint16_t m_cpus_for_each_buffer;
 		int16_t m_buf_size_preset;
 		bool m_drop_failed_exit;
 	} modern_ebpf_config;

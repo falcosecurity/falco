@@ -31,7 +31,7 @@ engine:
     buf_size_preset: 4
     drop_failed_exit: false
   modern-ebpf:
-    cpus_for_each_syscall_buffer: 2
+    cpus_for_each_buffer: 2
     buf_size_preset: 4
     drop_failed_exit: false
   replay:
@@ -50,4 +50,4 @@ syscall_buf_size_preset: 6
 syscall_drop_failed_exit: true
 
 modern_bpf:
-  cpus_for_each_syscall_buffer: 3
+  cpus_for_each_buffer: 3

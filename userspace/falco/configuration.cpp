@@ -160,7 +160,7 @@ void falco_configuration::load_engine_config(const std::string& config_name, con
 		m_ebpf.m_drop_failed_exit = config.get_scalar<bool>("engine.ebpf.drop_failed_exit", default_drop_failed_exit);
 		break;
 	case engine_kind_t::MODERN_EBPF:
-		m_modern_ebpf.m_cpus_for_each_syscall_buffer = config.get_scalar<uint16_t>("engine.modern-ebpf.cpus_for_each_syscall_buffer", default_cpus_for_each_syscall_buffer);
+		m_modern_ebpf.m_cpus_for_each_buffer = config.get_scalar<uint16_t>("engine.modern-ebpf.cpus_for_each_buffer", default_cpus_for_each_syscall_buffer);
 		m_modern_ebpf.m_buf_size_preset = config.get_scalar<int16_t>("engine.modern-ebpf.buf_size_preset", default_buf_size_preset);
 		m_modern_ebpf.m_drop_failed_exit = config.get_scalar<bool>("engine.modern-ebpf.drop_failed_exit", default_drop_failed_exit);
 		break;

@@ -56,7 +56,7 @@ static falco::app::run_result apply_deprecated_options(falco::app::state& s)
 		s.config->m_engine_mode = engine_kind_t::MODERN_EBPF;
 		s.config->m_modern_ebpf.m_drop_failed_exit = s.config->m_syscall_drop_failed_exit;
 		s.config->m_modern_ebpf.m_buf_size_preset = s.config->m_syscall_buf_size_preset;
-		s.config->m_modern_ebpf.m_cpus_for_each_syscall_buffer = s.config->m_cpus_for_each_syscall_buffer;
+		s.config->m_modern_ebpf.m_cpus_for_each_buffer = s.config->m_cpus_for_each_syscall_buffer;
 	}
 	if (!s.options.gvisor_config.empty())
 	{

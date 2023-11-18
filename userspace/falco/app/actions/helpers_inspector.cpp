@@ -96,8 +96,8 @@ falco::app::run_result falco::app::actions::open_live_inspector(
 		else if(s.is_modern_ebpf()) /* modern BPF engine. */
 		{
 			falco_logger::log(falco_logger::level::INFO, "Opening '" + source + "' source with modern BPF probe.");
-			falco_logger::log(falco_logger::level::INFO, "One ring buffer every '" + std::to_string(s.config->m_modern_ebpf.m_cpus_for_each_syscall_buffer) +  "' CPUs.");
-			inspector->open_modern_bpf(s.syscall_buffer_bytes_size, s.config->m_modern_ebpf.m_cpus_for_each_syscall_buffer, true, s.selected_sc_set);
+			falco_logger::log(falco_logger::level::INFO, "One ring buffer every '" + std::to_string(s.config->m_modern_ebpf.m_cpus_for_each_buffer) +  "' CPUs.");
+			inspector->open_modern_bpf(s.syscall_buffer_bytes_size, s.config->m_modern_ebpf.m_cpus_for_each_buffer, true, s.selected_sc_set);
 		}
 		else if(s.is_ebpf()) /* BPF engine. */
 		{
