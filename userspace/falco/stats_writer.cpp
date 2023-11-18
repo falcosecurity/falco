@@ -15,7 +15,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+#ifndef _WIN32
 #include <sys/time.h>
+#endif
 #include <ctime>
 #include <csignal>
 #include <nlohmann/json.hpp>
@@ -33,7 +35,11 @@ limitations under the License.
 // overflows here. Threads calling stats_writer::handle() will just
 // check that this value changed since their last observation.
 static std::atomic<stats_writer::ticker_t> s_timer((stats_writer::ticker_t) 0);
+#if !defined(__APPLE__) && !defined(_WIN32)
 static timer_t s_timerid;
+#else
+static uint16_t s_timerid;
+#endif
 // note: Workaround for older GLIBC versions (< 2.35), where calling timer_delete() 
 // with an invalid timer ID not returned by timer_create() causes a segfault because of 
 // a bug in GLIBC (https://sourceware.org/bugzilla/show_bug.cgi?id=28257).
@@ -46,6 +52,37 @@ static void timer_handler(int signum)
 	s_timer.fetch_add(1, std::memory_order_relaxed);
 }
 
+#if defined(_WIN32)
+bool stats_writer::init_ticker(uint32_t interval_msec, std::string &err)
+{
+	return true;
+}
+#endif
+
+#if defined(__APPLE__)
+bool stats_writer::init_ticker(uint32_t interval_msec, std::string &err)
+{
+	struct sigaction handler = {};
+
+	memset (&handler, 0, sizeof(handler));
+	handler.sa_handler = &timer_handler;
+	if (sigaction(SIGALRM, &handler, NULL) == -1)
+	{
+		err = std::string("Could not set up signal handler for periodic timer: ") + strerror(errno);
+		return false;
+	}
+
+	struct sigevent sev = {};
+	/* Create the timer */
+	sev.sigev_notify = SIGEV_SIGNAL;
+	sev.sigev_signo = SIGALRM;
+	sev.sigev_value.sival_ptr = &s_timerid;
+
+	return true;
+}
+#endif
+
+#if defined(EMSCRIPTEN)
 bool stats_writer::init_ticker(uint32_t interval_msec, std::string &err)
 {
 	struct itimerspec timer = {};
@@ -58,13 +95,40 @@ bool stats_writer::init_ticker(uint32_t interval_msec, std::string &err)
 		err = std::string("Could not set up signal handler for periodic timer: ") + strerror(errno);
 		return false;
 	}
-	
+
 	struct sigevent sev = {};
 	/* Create the timer */
 	sev.sigev_notify = SIGEV_SIGNAL;
 	sev.sigev_signo = SIGALRM;
 	sev.sigev_value.sival_ptr = &s_timerid;
-#ifndef __EMSCRIPTEN__
+
+	timer.it_value.tv_sec = interval_msec / 1000;
+	timer.it_value.tv_nsec = (interval_msec % 1000) * 1000 * 1000;
+	timer.it_interval = timer.it_value;
+
+	return true;
+}
+#endif
+
+#if defined(__linux__)
+bool stats_writer::init_ticker(uint32_t interval_msec, std::string &err)
+{
+	struct itimerspec timer = {};
+	struct sigaction handler = {};
+
+	memset (&handler, 0, sizeof(handler));
+	handler.sa_handler = &timer_handler;
+	if (sigaction(SIGALRM, &handler, NULL) == -1)
+	{
+		err = std::string("Could not set up signal handler for periodic timer: ") + strerror(errno);
+		return false;
+	}
+
+	struct sigevent sev = {};
+	/* Create the timer */
+	sev.sigev_notify = SIGEV_SIGNAL;
+	sev.sigev_signo = SIGALRM;
+	sev.sigev_value.sival_ptr = &s_timerid;
 	// delete any previously set timer
 	if (s_timerid_exists)
 	{
@@ -83,20 +147,19 @@ bool stats_writer::init_ticker(uint32_t interval_msec, std::string &err)
 	}
 	s_timerid_exists = true;
 
-#endif
 	timer.it_value.tv_sec = interval_msec / 1000;
 	timer.it_value.tv_nsec = (interval_msec % 1000) * 1000 * 1000;
 	timer.it_interval = timer.it_value;
 
-#ifndef __EMSCRIPTEN__
 	if (timer_settime(s_timerid, 0, &timer, NULL) == -1) 
 	{
 		err = std::string("Could not set up periodic timer: ") + strerror(errno);
 		return false;
 	}
-#endif
+
 	return true;
 }
+#endif
 
 stats_writer::ticker_t stats_writer::get_ticker()
 {
@@ -151,7 +214,7 @@ stats_writer::~stats_writer()
 			m_file_output.close();
 		}
 		// delete timerID and reset timer
-#ifndef __EMSCRIPTEN__
+#ifdef __linux__
 		if (s_timerid_exists)
 		{
 			timer_delete(s_timerid);
@@ -232,7 +295,7 @@ void stats_writer::worker() noexcept
 			}
 			catch(const std::exception &e)
 			{
-				falco_logger::log(LOG_ERR, "stats_writer (worker): " + std::string(e.what()) + "\n");
+				falco_logger::log(falco_logger::level::ERR, "stats_writer (worker): " + std::string(e.what()) + "\n");
 			}
 		}
 	}
@@ -280,7 +343,7 @@ void stats_writer::collector::get_metrics_output_fields_wrapper(
 	if (m_last_num_evts != 0 && stats_snapshot_time_delta_sec > 0)
 	{
 		/* Successfully processed userspace event rate. */
-		output_fields["falco.evts_rate_sec"] = (double)((num_evts - m_last_num_evts) / (double)stats_snapshot_time_delta_sec);
+		output_fields["falco.evts_rate_sec"] = std::round((double)((num_evts - m_last_num_evts) / (double)stats_snapshot_time_delta_sec) * 10.0) / 10.0; // round to 1 decimal
 	}
 	output_fields["falco.num_evts"] = num_evts;
 	output_fields["falco.num_evts_prev"] = m_last_num_evts;
@@ -293,7 +356,6 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 		double stats_snapshot_time_delta_sec, const std::string& src)
 {
 	const scap_agent_info* agent_info = inspector->get_agent_info();
-	const scap_machine_info* machine_info = inspector->get_machine_info();
 
 #if !defined(MINIMAL_BUILD) and !defined(__EMSCRIPTEN__)
 	uint32_t nstats = 0;
@@ -380,10 +442,9 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 	{
 		flags &= ~PPM_SCAP_STATS_LIBBPF_STATS;
 	}
-	if (!(machine_info->flags & PPM_BPF_STATS_ENABLED))
-	{
-		flags &= ~PPM_SCAP_STATS_LIBBPF_STATS;
-	}
+
+	// Note: ENGINE_FLAG_BPF_STATS_ENABLED check has been moved to libs, that is, when libbpf stats is not enabled
+	// in the kernel settings we won't collect them even if the end user enabled the libbpf stats option
 
 	const scap_stats_v2* scap_stats_v2_snapshot = inspector->get_capture_stats_v2(flags, &nstats, &rc);
 	if (scap_stats_v2_snapshot && nstats > 0 && rc == 0)
@@ -416,7 +477,7 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 					if (n_evts_delta != 0 && stats_snapshot_time_delta_sec > 0)
 					{
 						/* n_evts is total number of kernel side events. */
-						output_fields["scap.evts_rate_sec"] = (double)(n_evts_delta / stats_snapshot_time_delta_sec);
+						output_fields["scap.evts_rate_sec"] = std::round((double)(n_evts_delta / stats_snapshot_time_delta_sec) * 10.0) / 10.0; // round to 1 decimal
 					}
 					else
 					{
@@ -434,7 +495,7 @@ void stats_writer::collector::get_metrics_output_fields_additional(
 					if (n_drops_delta != 0 && stats_snapshot_time_delta_sec > 0)
 					{
 						/* n_drops is total number of kernel side event drops. */
-						output_fields["scap.evts_drop_rate_sec"] = (double)(n_drops_delta / stats_snapshot_time_delta_sec);
+						output_fields["scap.evts_drop_rate_sec"] = std::round((double)(n_drops_delta / stats_snapshot_time_delta_sec) * 10.0) / 10.0; // round to 1 decimal
 					}
 					else
 					{
