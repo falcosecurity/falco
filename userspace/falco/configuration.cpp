@@ -115,9 +115,9 @@ void falco_configuration::load_engine_config(const std::string& config_name, con
 		{"none",engine_kind_t::NONE},
 	};
 
-	constexpr int default_buf_size_preset = 4;
-	constexpr int default_cpus_for_each_syscall_buffer = 2;
-	constexpr bool default_drop_failed = false;
+	constexpr int16_t default_buf_size_preset = 4;
+	constexpr int16_t default_cpus_for_each_syscall_buffer = 2;
+	constexpr bool default_drop_failed_exit = false;
 
 	auto driver_mode_str = config.get_scalar<std::string>("engine.kind", "kmod");
 	if (engine_mode_lut.find(driver_mode_str) != engine_mode_lut.end())
@@ -133,7 +133,7 @@ void falco_configuration::load_engine_config(const std::string& config_name, con
 	{
 	case engine_kind_t::KMOD:
 		m_kmod.m_buf_size_preset = config.get_scalar<int16_t>("engine.kmod.buf_size_preset", default_buf_size_preset);
-		m_kmod.m_drop_failed_exit = config.get_scalar<bool>("engine.kmod.drop_failed", default_drop_failed);
+		m_kmod.m_drop_failed_exit = config.get_scalar<bool>("engine.kmod.drop_failed_exit", default_drop_failed_exit);
 		break;
 	case engine_kind_t::EBPF:
 		// TODO: default value for `probe` should be $HOME/FALCO_PROBE_BPF_FILEPATH,
@@ -141,12 +141,12 @@ void falco_configuration::load_engine_config(const std::string& config_name, con
 		// once here, and once when we merge the CLI options in the config file.
 		m_ebpf.m_probe_path = config.get_scalar<std::string>("engine.ebpf.probe", "");
 		m_ebpf.m_buf_size_preset = config.get_scalar<int16_t>("engine.ebpf.buf_size_preset", default_buf_size_preset);
-		m_ebpf.m_drop_failed_exit = config.get_scalar<bool>("engine.ebpf.drop_failed", default_drop_failed);
+		m_ebpf.m_drop_failed_exit = config.get_scalar<bool>("engine.ebpf.drop_failed_exit", default_drop_failed_exit);
 		break;
 	case engine_kind_t::MODERN_EBPF:
 		m_modern_ebpf.m_cpus_for_each_syscall_buffer = config.get_scalar<uint16_t>("engine.modern-ebpf.cpus_for_each_syscall_buffer", default_cpus_for_each_syscall_buffer);
 		m_modern_ebpf.m_buf_size_preset = config.get_scalar<int16_t>("engine.modern-ebpf.buf_size_preset", default_buf_size_preset);
-		m_modern_ebpf.m_drop_failed_exit = config.get_scalar<bool>("engine.modern-ebpf.drop_failed", default_drop_failed);
+		m_modern_ebpf.m_drop_failed_exit = config.get_scalar<bool>("engine.modern-ebpf.drop_failed_exit", default_drop_failed_exit);
 		break;
 	case engine_kind_t::REPLAY:
 		m_replay.m_trace_file = config.get_scalar<std::string>("engine.replay.trace_file", "");
@@ -182,7 +182,7 @@ void falco_configuration::load_engine_config(const std::string& config_name, con
 	{
 		m_modern_ebpf.m_cpus_for_each_syscall_buffer = cpus_for_syscall_buffer;
 	}
-	auto drop_failed = config.get_scalar<bool>("syscall_drop_failed_exit", default_drop_failed);
+	auto drop_failed = config.get_scalar<bool>("syscall_drop_failed_exit", default_drop_failed_exit);
 	if (drop_failed)
 	{
 		m_kmod.m_drop_failed_exit = drop_failed;
