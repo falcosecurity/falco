@@ -126,7 +126,7 @@ TEST(ActionLoadConfig, check_kmod_with_syscall_configs)
 TEST(ActionLoadConfig, check_override_command_line_modern)
 {
 	falco::app::state s;
-	// The comman line options should be correctly applied since the
+	// The command line options should be correctly applied since the
 	// config is unchanged
 	s.options.modern_bpf = true;
 	s.options.conf_filename = NEW_ENGINE_CONFIG_UNCHANGED;
@@ -164,7 +164,7 @@ TEST(ActionLoadConfig, check_override_command_line_modern)
 TEST(ActionLoadConfig, check_override_command_line_gvisor)
 {
 	falco::app::state s;
-	// The comman line options should be correctly applied since the
+	// The command line options should be correctly applied since the
 	// config is unchanged
 	s.options.gvisor_config = "config";
 	s.options.conf_filename = NEW_ENGINE_CONFIG_UNCHANGED;
