@@ -62,6 +62,7 @@ bool falco::app::run(falco::app::state& s, bool& restart, std::string& errstr)
 	std::list<app_action> run_steps = {
 		falco::app::actions::load_config,
 		falco::app::actions::print_help,
+		falco::app::actions::print_kernel_version,
 		falco::app::actions::print_version,
 		falco::app::actions::print_page_size,
 		falco::app::actions::print_generated_gvisor_config,

@@ -36,6 +36,7 @@ set(
   app/actions/print_generated_gvisor_config.cpp
   app/actions/print_help.cpp
   app/actions/print_ignored_events.cpp
+  app/actions/print_kernel_version.cpp
   app/actions/print_plugin_info.cpp
   app/actions/print_support.cpp
   app/actions/print_syscall_events.cpp
