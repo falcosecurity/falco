@@ -78,7 +78,6 @@ falco_configuration::falco_configuration():
 	m_metrics_convert_memory_to_mb(true),
 	m_metrics_include_empty_values(false)
 {
-	init({});
 }
 
 void falco_configuration::init(const std::vector<std::string>& cmdline_options)
