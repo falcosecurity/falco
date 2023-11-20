@@ -125,7 +125,7 @@ falco::app::run_result falco::app::actions::validate_rules_files(falco::app::sta
 
 		// printout of `-L` option
 		nlohmann::json describe_res;
-		if (s.options.describe_all_rules || !s.options.describe_rule.empty())
+		if (successful && (s.options.describe_all_rules || !s.options.describe_rule.empty()))
 		{
 			std::string* rptr = !s.options.describe_rule.empty() ? &(s.options.describe_rule) : nullptr;
 			const auto& plugins = s.offline_inspector->get_plugin_manager()->plugins();
@@ -136,16 +136,16 @@ falco::app::run_result falco::app::actions::validate_rules_files(falco::app::sta
 		{
 			nlohmann::json res;
 			res["falco_load_results"] = results;
-			if (!describe_res.empty())
+			if (!describe_res.empty() && successful)
 			{
-				res["falco_describe_results"] = describe_res;
+				res["falco_describe_results"] = std::move(describe_res);
 			}
 			std::cout << res.dump() << std::endl;
 		}
 		else
 		{
 			std::cout << summary << std::endl;
-			if (!describe_res.empty())
+			if (!describe_res.empty() && successful)
 			{
 				std::cout << std::endl;
 				format_described_rules_as_text(describe_res, std::cout);

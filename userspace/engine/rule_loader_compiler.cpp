@@ -83,12 +83,12 @@ static void build_rule_exception_infos(
 	std::string& condition)
 {
 	std::string tmp;
-	for (auto &ex : exceptions)
+	for (const auto &ex : exceptions)
 	{
 		std::string icond;
 		if(!ex.fields.is_list)
 		{
-			for (auto &val : ex.values)
+			for (const auto &val : ex.values)
 			{
 				THROW(val.is_list,
 				       "Expected values array to contain a list of strings",
@@ -107,7 +107,7 @@ static void build_rule_exception_infos(
 		else
 		{
 			icond = "(";
-			for (auto &values : ex.values)
+			for (const auto &values : ex.values)
 			{
 				THROW(ex.fields.items.size() != values.items.size(),
 				       "Fields and values lists must have equal length",
@@ -116,13 +116,13 @@ static void build_rule_exception_infos(
 				icond += "(";
 				uint32_t k = 0;
 				std::string istr;
-				for (auto &field : ex.fields.items)
+				for (const auto &field : ex.fields.items)
 				{
 					icond += k == 0 ? "" : " and ";
 					if (values.items[k].is_list)
 					{
 						istr = "(";
-						for (auto &v : values.items[k].items)
+						for (const auto &v : values.items[k].items)
 						{
 							tmp = v.item;
 							quote_item(tmp);
@@ -212,7 +212,7 @@ static bool resolve_list(std::string& cnd, const falco_list& list)
 			}
 			// create substitution string by concatenating all values
 			std::string sub = "";
-			for (auto &v : list.items)
+			for (const auto &v : list.items)
 			{
 				if (!sub.empty())
 				{
@@ -262,7 +262,7 @@ static void resolve_macros(
 	const rule_loader::context &ctx)
 {
 	filter_macro_resolver macro_resolver;
-	for (auto &m : infos)
+	for (const auto &m : infos)
 	{
 		if (m.index < visibility)
 		{
@@ -287,7 +287,7 @@ static void resolve_macros(
 		THROW(true, errmsg, cond_ctx);
 	}
 
-	for (auto &it : macro_resolver.get_resolved_macros())
+	for (const auto &it : macro_resolver.get_resolved_macros())
 	{
 		macros.at(it.first)->used = true;
 	}
@@ -346,13 +346,13 @@ void rule_loader::compiler::compile_list_infos(
 		indexed_vector<falco_list>& out) const
 {
 	std::string tmp;
-	std::vector<std::string> used;
-	for (auto &list : col.lists())
+	std::list<std::string> used;
+	falco_list v;
+	for (const auto &list : col.lists())
 	{
-		falco_list v;
 		v.name = list.name;
 		v.items.clear();
-		for (auto &item : list.items)
+		for (const auto &item : list.items)
 		{
 			const auto ref = col.lists().at(item);
 			if (ref && ref->index < list.visibility)
@@ -375,7 +375,7 @@ void rule_loader::compiler::compile_list_infos(
 		auto list_id = out.insert(v, v.name);
 		out.at(list_id)->id = list_id;
 	}
-	for (auto &v : used)
+	for (const auto &v : used)
 	{
 		out.at(v)->used = true;
 	}
@@ -388,7 +388,7 @@ void rule_loader::compiler::compile_macros_infos(
 		indexed_vector<falco_list>& lists,
 		indexed_vector<falco_macro>& out) const
 {
-	for (auto &m : col.macros())
+	for (const auto &m : col.macros())
 	{
 		falco_macro entry;
 		entry.name = m.name;
@@ -422,7 +422,7 @@ void rule_loader::compiler::compile_rule_infos(
 	std::string err, condition;
 	std::set<falco::load_result::load_result::warning_code> warn_codes;
 	filter_warning_resolver warn_resolver;
-	for (auto &r : col.rules())
+	for (const auto &r : col.rules())
 	{
 		// skip the rule if it has an unknown source
 		if (r.unknown_source)
@@ -453,7 +453,7 @@ void rule_loader::compiler::compile_rule_infos(
 		warn_codes.clear();
 		if (warn_resolver.run(rule.condition.get(), warn_codes))
 		{
-			for (auto &w : warn_codes)
+			for (const auto &w : warn_codes)
 			{
 				cfg.res->add_warning(w, "", r.ctx);
 			}
@@ -555,7 +555,7 @@ void rule_loader::compiler::compile(
 	}
 
 	// print info on any dangling lists or macros that were not used anywhere
-	for (auto &m : out.macros)
+	for (const auto &m : out.macros)
 	{
 		if (!m.used)
 		{
@@ -565,7 +565,7 @@ void rule_loader::compiler::compile(
 				macro_info_from_name(col, m.name)->ctx);
 		}
 	}
-	for (auto &l : out.lists)
+	for (const auto &l : out.lists)
 	{
 		if (!l.used)
 		{
