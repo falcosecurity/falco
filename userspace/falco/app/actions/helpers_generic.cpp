@@ -16,6 +16,7 @@ limitations under the License.
 */
 
 #include "helpers.h"
+#include "falco_utils.h"
 #include <plugin_manager.h>
 
 #include <unordered_set>
@@ -124,5 +125,24 @@ void falco::app::actions::format_plugin_info(std::shared_ptr<sinsp_plugin> p, st
 	if(p->caps() & CAP_ASYNC)
 	{
 		os << "  - Async Events" << std::endl;
+	}
+}
+
+static void format_two_columns(std::ostream& os, const std::string& l, const std::string& r)
+{
+	static constexpr const int s_max_line_len = 4096;
+	char buf[s_max_line_len];
+	snprintf(buf, sizeof(buf) - 1, "%-50s %s", l.c_str(), r.c_str());
+	os << buf << std::endl;
+}
+
+void falco::app::actions::format_described_rules_as_text(const nlohmann::json& v, std::ostream& os)
+{
+	format_two_columns(os, "Rule", "Description");
+	format_two_columns(os,  "----", "-----------");
+	for(const auto &r : v["rules"])
+	{
+		auto str = falco::utils::wrap_text(r["info"]["description"], 51, 110) + "\n";
+		format_two_columns(os, r["info"]["name"], str);
 	}
 }
