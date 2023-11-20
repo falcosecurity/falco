@@ -155,17 +155,22 @@ falco::app::run_result falco::app::actions::load_rules_files(falco::app::state& 
 		s.engine->enable_rule_by_tag(s.options.enabled_rule_tags, true);
 	}
 
-	if (s.options.describe_all_rules)
+	// printout of `-L` option
+	if (s.options.describe_all_rules || !s.options.describe_rule.empty())
 	{
+		std::string* rptr = !s.options.describe_rule.empty() ? &(s.options.describe_rule) : nullptr;
 		const auto& plugins = s.offline_inspector->get_plugin_manager()->plugins();
-		s.engine->describe_rule(NULL, plugins, s.config->m_json_output);
-		return run_result::exit();
-	}
+		auto out = s.engine->describe_rule(rptr, plugins);
 
-	if (!s.options.describe_rule.empty())
-	{
-		const auto& plugins = s.offline_inspector->get_plugin_manager()->plugins();
-		s.engine->describe_rule(&(s.options.describe_rule), plugins, s.config->m_json_output);
+		if (!s.config->m_json_output)
+		{
+			format_described_rules_as_text(out, std::cout);
+		}
+		else
+		{
+			std::cout << out.dump() << std::endl;
+		}
+
 		return run_result::exit();
 	}
 

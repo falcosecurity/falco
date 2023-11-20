@@ -505,17 +505,17 @@ std::size_t falco_engine::add_source(const std::string &source,
 	return m_sources.insert(src, source);
 }
 
-template <typename T> inline Json::Value sequence_to_json_array(const T& seq)
+template <typename T> inline nlohmann::json sequence_to_json_array(const T& seq)
 {
-	Json::Value ret = Json::arrayValue;
+	nlohmann::json ret = nlohmann::json::array();
 	for (auto it = seq.begin(); it != seq.end(); it++)
 	{
-		ret.append(*it);
+		ret.push_back(*it);
 	}
 	return ret;
 }
 
-void falco_engine::describe_rule(std::string *rule, const std::vector<std::shared_ptr<sinsp_plugin>>& plugins, bool json) const
+nlohmann::json falco_engine::describe_rule(std::string *rule, const std::vector<std::shared_ptr<sinsp_plugin>>& plugins) const
 {
 	// use previously-loaded collector definitions and the compiled
 	// output of rules, macros, and lists.
@@ -524,103 +524,69 @@ void falco_engine::describe_rule(std::string *rule, const std::vector<std::share
 		throw falco_exception("rules most be loaded before describing them");
 	}
 
-	if(!json)
-	{
-		static const char *rule_fmt = "%-50s %s\n";
-		fprintf(stdout, rule_fmt, "Rule", "Description");
-		fprintf(stdout, rule_fmt, "----", "-----------");
-		if(!rule)
-		{
-			for(auto &r : m_rules)
-			{
-				auto str = falco::utils::wrap_text(r.description, 51, 110) + "\n";
-				fprintf(stdout, rule_fmt, r.name.c_str(), str.c_str());
-			}
-		}
-		else
-		{
-			auto r = m_rules.at(*rule);
-			if(r == nullptr)
-			{
-				return;
-			}
-			auto str = falco::utils::wrap_text(r->description, 51, 110) + "\n";
-			fprintf(stdout, rule_fmt, r->name.c_str(), str.c_str());
-		}
-
-		return;
-	}
-
 	// use collected and compiled info to print a json output
-	Json::FastWriter writer;
-	std::string json_str;
+	nlohmann::json output;
 	if(!rule)
 	{
-		// In this case we build json information about
-		// all rules, macros and lists
-		Json::Value output;
-
 		// Store required engine version
 		auto required_engine_version = m_rule_collector.required_engine_version();
 		output["required_engine_version"] = required_engine_version.version.as_string();
 
 		// Store required plugin versions
-		Json::Value plugin_versions = Json::arrayValue;
+		nlohmann::json plugin_versions = nlohmann::json::array();
 		auto required_plugin_versions = m_rule_collector.required_plugin_versions();
 		for(const auto& req : required_plugin_versions)
 		{
-			Json::Value r;
+			nlohmann::json r;
 			r["name"] = req.at(0).name;
 			r["version"] = req.at(0).version;
 
-			Json::Value alternatives = Json::arrayValue;
+			nlohmann::json alternatives = nlohmann::json::array();
 			for(size_t i = 1; i < req.size(); i++)
 			{
-				Json::Value alternative;
+				nlohmann::json alternative;
 				alternative["name"] = req[i].name;
 				alternative["version"] = req[i].version;
-				alternatives.append(alternative);
+				alternatives.push_back(alternative);
 			}
 			r["alternatives"] = alternatives;
 			
-			plugin_versions.append(r);
+			plugin_versions.push_back(r);
 		}
 		output["required_plugin_versions"] = plugin_versions;
 
 		// Store information about rules
-		Json::Value rules_array = Json::arrayValue;
+		nlohmann::json rules_array = nlohmann::json::array();
 		for(const auto& r : m_last_compile_output->rules)
 		{
 			auto info = m_rule_collector.rules().at(r.name);
-			Json::Value rule;
+			nlohmann::json rule;
 			get_json_details(rule, r, *info, plugins);
-			rules_array.append(rule);
+			rules_array.push_back(rule);
 		}
 		output["rules"] = rules_array;
 		
 		// Store information about macros
-		Json::Value macros_array = Json::arrayValue;
+		nlohmann::json macros_array = nlohmann::json::array();
 		for(const auto &m : m_last_compile_output->macros)
 		{
 			auto info = m_rule_collector.macros().at(m.name);
-			Json::Value macro;
+			nlohmann::json macro;
 			get_json_details(macro, m, *info, plugins);
-			macros_array.append(macro);
+			macros_array.push_back(macro);
 		}
 		output["macros"] = macros_array;
 
 		// Store information about lists 
-		Json::Value lists_array = Json::arrayValue;
+		nlohmann::json lists_array = nlohmann::json::array();
 		for(const auto &l : m_last_compile_output->lists)
 		{
 			auto info = m_rule_collector.lists().at(l.name);
-			Json::Value list;
+			nlohmann::json list;
 			get_json_details(list, l, *info, plugins);
-			lists_array.append(list);			
+			lists_array.push_back(list);			
 		}
 		output["lists"] = lists_array;
-
-		json_str = writer.write(output);
 	}
 	else
 	{
@@ -631,21 +597,24 @@ void falco_engine::describe_rule(std::string *rule, const std::vector<std::share
 			throw falco_exception("Rule \"" + *rule + "\" is not loaded");
 		}
 		auto r = m_rules.at(ri->name);
-		Json::Value rule; 
+
+		nlohmann::json rule;
 		get_json_details(rule, *r, *ri, plugins);
-		json_str = writer.write(rule);
+		nlohmann::json rules_array = nlohmann::json::array();
+		rules_array.push_back(rule);
+		output["rules"] = rules_array;
 	}
 
-	fprintf(stdout, "%s", json_str.c_str());
+	return output;
 }
 
 void falco_engine::get_json_details(
-	Json::Value &out,
+	nlohmann::json &out,
 	const falco_rule &r,
 	const rule_loader::rule_info &info,
 	const std::vector<std::shared_ptr<sinsp_plugin>>& plugins) const
 {
-	Json::Value rule_info;
+	nlohmann::json rule_info;
 
 	// Fill general rule information
 	rule_info["name"] = r.name;
@@ -665,7 +634,7 @@ void falco_engine::get_json_details(
 	// get details related to the condition's filter
 	filter_details details;
 	filter_details compiled_details;
-	Json::Value json_details;
+	nlohmann::json json_details;
 	for(const auto &m : m_rule_collector.macros())
 	{
 		details.known_macros.insert(m.name);
@@ -726,7 +695,7 @@ void falco_engine::get_json_details(
 	out["details"]["exception_operators"] = sequence_to_json_array(exception_operators);
 
 	// Store event types
-	Json::Value events;
+	nlohmann::json events;
 	get_json_evt_types(events, info.source, r.condition.get());
 	out["details"]["events"] = events;
 
@@ -739,7 +708,7 @@ void falco_engine::get_json_details(
 	// - The fields used in the rule's condition, output, and exceptions
 	// - The evt types used in the rule's condition checks, that can potentially
 	//   match plugin-provided async events
-	Json::Value used_plugins;
+	nlohmann::json used_plugins;
 	// note: making a union of conditions's and output's fields
 	// note: the condition's AST accounts for all the resolved refs and exceptions
 	compiled_details.fields.insert(out_fields.begin(), out_fields.end());
@@ -748,12 +717,12 @@ void falco_engine::get_json_details(
 }
 
 void falco_engine::get_json_details(
-	Json::Value& out,
+	nlohmann::json& out,
 	const falco_macro& m,
 	const rule_loader::macro_info& info,
 	const std::vector<std::shared_ptr<sinsp_plugin>>& plugins) const
 {
-	Json::Value macro_info;
+	nlohmann::json macro_info;
 
 	macro_info["name"] = m.name;
 	macro_info["condition"] = info.cond;
@@ -766,7 +735,7 @@ void falco_engine::get_json_details(
 	// get details related to the condition's filter
 	filter_details details;
 	filter_details compiled_details;
-	Json::Value json_details;
+	nlohmann::json json_details;
 	for(const auto &m : m_rule_collector.macros())
 	{
 		details.known_macros.insert(m.name);
@@ -787,7 +756,7 @@ void falco_engine::get_json_details(
 	out["details"]["condition_fields"] = sequence_to_json_array(compiled_details.fields);
 
 	// Store event types
-	Json::Value events;
+	nlohmann::json events;
 	get_json_evt_types(events, "", m.condition.get());
 	out["details"]["events"] = events;
 
@@ -800,20 +769,20 @@ void falco_engine::get_json_details(
 	// if a macro uses a plugin's field, we can't be sure which plugin actually
 	// is used until we resolve the macro ref in a rule providing a source for
 	// disambiguation.
-	out["details"]["plugins"] = Json::arrayValue;
+	out["details"]["plugins"] = nlohmann::json::array();
 }
 
 void falco_engine::get_json_details(
-	Json::Value& out,
+	nlohmann::json& out,
 	const falco_list& l,
 	const rule_loader::list_info& info,
 	const std::vector<std::shared_ptr<sinsp_plugin>>& plugins) const
 {
-	Json::Value list_info;
+	nlohmann::json list_info;
 	list_info["name"] = l.name;
 
 	// note: the syntactic definitions still has the list refs unresolved
-	Json::Value items = Json::arrayValue;
+	nlohmann::json items = nlohmann::json::array();
 	std::unordered_set<std::string> lists;
 	for(const auto &i : info.items)
 	{
@@ -825,7 +794,7 @@ void falco_engine::get_json_details(
 			lists.insert(i);
 			continue;
 		}
-		items.append(i);
+		items.push_back(i);
 	}
 
 	list_info["items"] = items;
@@ -833,11 +802,11 @@ void falco_engine::get_json_details(
 	out["details"]["used"] = l.used;
 	out["details"]["lists"] = sequence_to_json_array(lists);
 	out["details"]["items_compiled"] = sequence_to_json_array(l.items);
-	out["details"]["plugins"] = Json::arrayValue; // always empty
+	out["details"]["plugins"] = nlohmann::json::array(); // always empty
 }
 
 void falco_engine::get_json_evt_types(
-	Json::Value& out,
+	nlohmann::json& out,
 	const std::string& source,
 	libsinsp::filter::ast::expr* ast) const
 {
@@ -860,7 +829,7 @@ void falco_engine::get_json_evt_types(
 }
 
 void falco_engine::get_json_used_plugins(
-	Json::Value& out,
+	nlohmann::json& out,
 	const std::string& source,
 	const std::unordered_set<std::string>& evtnames,
 	const std::unordered_set<std::string>& fields,
