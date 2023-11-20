@@ -120,6 +120,14 @@ TEST(Configuration, configuration_environment_variables)
     std::string embedded_env_var_name = "ENV_VAR_EMBEDDED";
     SET_ENV_VAR(embedded_env_var_name.c_str(), embedded_env_var_value.c_str());
 
+    std::string bool_env_var_value = "true";
+    std::string bool_env_var_name = "ENV_VAR_BOOL";
+    SET_ENV_VAR(bool_env_var_name.c_str(), bool_env_var_value.c_str());
+
+    std::string int_env_var_value = "12";
+    std::string int_env_var_name = "ENV_VAR_INT";
+    SET_ENV_VAR(int_env_var_name.c_str(), int_env_var_value.c_str());
+
     std::string default_value = "default";
     std::string env_var_sample_yaml =
         "base_value:\n"
@@ -143,7 +151,10 @@ TEST(Configuration, configuration_environment_variables)
 	"    - $ENV_VAR/foo\n"
 	"    - /foo/${ENV_VAR}/\n"
 	"    - /${ENV_VAR}/${ENV_VAR}${ENV_VAR}/foo\n"
-	"    - ${ENV_VAR_EMBEDDED}/foo\n";
+	"    - ${ENV_VAR_EMBEDDED}/foo\n"
+	"is_test: ${ENV_VAR_BOOL}\n"
+	"num_test: ${ENV_VAR_INT}\n";
+
     yaml_helper conf;
     conf.load_from_string(env_var_sample_yaml);
 
@@ -208,9 +219,24 @@ TEST(Configuration, configuration_environment_variables)
     auto path_list_4 = conf.get_scalar<std::string>("paths[4]", default_value);
     ASSERT_EQ(path_list_4, env_var_value + "/foo"); // Even when the env var contains another env var, it gets correctly double-expanded
 
-    /* Clear the set environment variable after testing */
+    /* Check that variable expansion is type-aware */
+    auto boolean = conf.get_scalar<bool>("is_test", false);
+    ASSERT_EQ(boolean, true); // `true` can be parsed to bool.
+
+    auto boolean_as_str = conf.get_scalar<std::string>("is_test", "false");
+    ASSERT_EQ(boolean_as_str, "true"); // `true` can be parsed to string.
+
+    auto boolean_as_int = conf.get_scalar<int32_t>("is_test", 0);
+    ASSERT_EQ(boolean_as_int, 0); // `true` cannot be parsed to integer.
+
+    auto integer = conf.get_scalar<int32_t>("num_test", -1);
+    ASSERT_EQ(integer, 12);
+
+    /* Clear the set environment variables after testing */
     SET_ENV_VAR(env_var_name.c_str(), "");
     SET_ENV_VAR(embedded_env_var_name.c_str(), "");
+    SET_ENV_VAR(bool_env_var_name.c_str(), "");
+    SET_ENV_VAR(int_env_var_name.c_str(), "");
 }
 
 TEST(Configuration, configuration_webserver_ip)
