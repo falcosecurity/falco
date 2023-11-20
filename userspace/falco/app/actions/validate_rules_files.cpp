@@ -18,6 +18,8 @@ limitations under the License.
 #include "actions.h"
 #include "helpers.h"
 
+#include <plugin_manager.h>
+
 #include <string>
 
 using namespace falco::app;
@@ -121,15 +123,33 @@ falco::app::run_result falco::app::actions::validate_rules_files(falco::app::sta
 			}
 		}
 
+		// printout of `-L` option
+		nlohmann::json describe_res;
+		if (s.options.describe_all_rules || !s.options.describe_rule.empty())
+		{
+			std::string* rptr = !s.options.describe_rule.empty() ? &(s.options.describe_rule) : nullptr;
+			const auto& plugins = s.offline_inspector->get_plugin_manager()->plugins();
+			describe_res = s.engine->describe_rule(rptr, plugins);
+		}
+
 		if(s.config->m_json_output)
 		{
 			nlohmann::json res;
 			res["falco_load_results"] = results;
-			printf("%s\n", res.dump().c_str());
+			if (!describe_res.empty())
+			{
+				res["falco_describe_results"] = describe_res;
+			}
+			std::cout << res.dump() << std::endl;
 		}
 		else
 		{
-			printf("%s\n", summary.c_str());
+			std::cout << summary << std::endl;
+			if (!describe_res.empty())
+			{
+				std::cout << std::endl;
+				format_described_rules_as_text(describe_res, std::cout);
+			}
 		}
 
 		if(successful)
