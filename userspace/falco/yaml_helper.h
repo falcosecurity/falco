@@ -93,7 +93,7 @@ public:
 				}
 				std::stringstream ss(str);
 				T result;
-				if (ss >> result) return result;
+				if (ss >> std::boolalpha >> result) return result;
 				return default_value;
 			};
 
