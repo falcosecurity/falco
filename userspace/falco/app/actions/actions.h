@@ -41,6 +41,7 @@ falco::app::run_result load_rules_files(falco::app::state& s);
 falco::app::run_result print_generated_gvisor_config(falco::app::state& s);
 falco::app::run_result print_help(falco::app::state& s);
 falco::app::run_result print_ignored_events(falco::app::state& s);
+falco::app::run_result print_kernel_version(falco::app::state& s);
 falco::app::run_result print_page_size(falco::app::state& s);
 falco::app::run_result print_plugin_info(falco::app::state& s);
 falco::app::run_result print_support(falco::app::state& s);

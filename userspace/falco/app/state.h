@@ -155,6 +155,11 @@ struct state
         return config->m_engine_mode == engine_kind_t::GVISOR;
     }
 
+    inline bool is_kmod() const
+    {
+        return config->m_engine_mode == engine_kind_t::KMOD;
+    }
+
     inline bool is_ebpf() const
     {
         return config->m_engine_mode == engine_kind_t::EBPF;
