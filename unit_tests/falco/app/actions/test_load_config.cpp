@@ -18,7 +18,7 @@ limitations under the License.
 #include "app_action_helpers.h"
 #include "falco_test_var.h"
 
-
+#ifndef __EMSCRIPTEN__
 TEST(ActionLoadConfig, check_engine_config_is_correctly_parsed)
 {
 	falco::app::state s = {};
@@ -195,3 +195,4 @@ TEST(ActionLoadConfig, check_override_command_line_gvisor)
 	EXPECT_EQ(s.config->m_cpus_for_each_syscall_buffer, 3);
 	EXPECT_TRUE(s.config->m_syscall_drop_failed_exit);
 }
+#endif
