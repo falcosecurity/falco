@@ -76,7 +76,7 @@ public:
 	bool dry_run;
 
 	// todo!: remove them in Falco 0.38.0 since they are deprecated
-	std::string trace_filename = "";
+	std::string capture_file = "";
 	std::string gvisor_config = "";
 	std::string gvisor_root = "";
 	bool modern_bpf = false;

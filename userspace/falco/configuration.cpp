@@ -164,10 +164,10 @@ void falco_configuration::load_engine_config(const std::string& config_name, con
 		m_modern_ebpf.m_drop_failed_exit = config.get_scalar<bool>("engine.modern-ebpf.drop_failed_exit", default_drop_failed_exit);
 		break;
 	case engine_kind_t::REPLAY:
-		m_replay.m_trace_file = config.get_scalar<std::string>("engine.replay.trace_file", "");
-		if (m_replay.m_trace_file.empty())
+		m_replay.m_capture_file = config.get_scalar<std::string>("engine.replay.capture_file", "");
+		if (m_replay.m_capture_file.empty())
 		{
-			throw std::logic_error("Error reading config file (" + config_name + "): engine.kind is 'replay' but no engine.replay.trace_file specified.");
+			throw std::logic_error("Error reading config file (" + config_name + "): engine.kind is 'replay' but no engine.replay.capture_file specified.");
 		}
 		break;
 	case engine_kind_t::GVISOR:

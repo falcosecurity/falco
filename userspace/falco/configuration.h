@@ -81,7 +81,7 @@ public:
 
 	typedef struct {
 	public:
-		std::string m_trace_file;
+		std::string m_capture_file;
 	} replay_config;
 
 	typedef struct {
