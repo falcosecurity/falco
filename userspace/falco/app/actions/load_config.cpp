@@ -68,10 +68,10 @@ static falco::app::run_result apply_deprecated_options(falco::app::state& s)
 	{
 		s.config->m_engine_mode =  engine_kind_t::NONE;
 	}
-	if (!s.options.trace_filename.empty())
+	if (!s.options.capture_file.empty())
 	{
 		s.config->m_engine_mode = engine_kind_t::REPLAY;
-		s.config->m_replay.m_trace_file = s.options.trace_filename;
+		s.config->m_replay.m_capture_file = s.options.capture_file;
 	}
 	return run_result::ok();
 }
