@@ -96,14 +96,22 @@ public:
 	//
 	void enable_rule(const std::string &substring, bool enabled, const std::string &ruleset = s_default_ruleset);
 
+	// Same as above but providing a ruleset id instead
+	void enable_rule(const std::string &substring, bool enabled, const uint16_t ruleset_id);
 
 	// Like enable_rule, but the rule name must be an exact match.
 	void enable_rule_exact(const std::string &rule_name, bool enabled, const std::string &ruleset = s_default_ruleset);
+
+	// Same as above but providing a ruleset id instead
+	void enable_rule_exact(const std::string &rule_name, bool enabled, const uint16_t ruleset_id);
 
 	//
 	// Enable/Disable any rules with any of the provided tags (set, exact matches only)
 	//
 	void enable_rule_by_tag(const std::set<std::string> &tags, bool enabled, const std::string &ruleset = s_default_ruleset);
+
+	// Same as above but providing a ruleset id instead
+	void enable_rule_by_tag(const std::set<std::string> &tags, bool enabled, const uint16_t ruleset_id);
 
 	//
 	// Must be called after the engine has been configured and all rulesets
