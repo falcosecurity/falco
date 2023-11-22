@@ -298,6 +298,12 @@ std::unique_ptr<load_result> falco_engine::load_rules_file(const std::string &ru
 void falco_engine::enable_rule(const std::string &substring, bool enabled, const std::string &ruleset)
 {
 	uint16_t ruleset_id = find_ruleset_id(ruleset);
+
+	enable_rule(substring, enabled, ruleset_id);
+}
+
+void falco_engine::enable_rule(const std::string &substring, bool enabled, const uint16_t ruleset_id)
+{
 	bool match_exact = false;
 
 	for(const auto &it : m_sources)
@@ -316,6 +322,12 @@ void falco_engine::enable_rule(const std::string &substring, bool enabled, const
 void falco_engine::enable_rule_exact(const std::string &rule_name, bool enabled, const std::string &ruleset)
 {
 	uint16_t ruleset_id = find_ruleset_id(ruleset);
+
+	enable_rule_exact(rule_name, enabled, ruleset_id);
+}
+
+void falco_engine::enable_rule_exact(const std::string &rule_name, bool enabled, const uint16_t ruleset_id)
+{
 	bool match_exact = true;
 
 	for(const auto &it : m_sources)
@@ -335,6 +347,11 @@ void falco_engine::enable_rule_by_tag(const std::set<std::string> &tags, bool en
 {
 	uint16_t ruleset_id = find_ruleset_id(ruleset);
 
+	enable_rule_by_tag(tags, enabled, ruleset_id);
+}
+
+void falco_engine::enable_rule_by_tag(const std::set<std::string> &tags, bool enabled, const uint16_t ruleset_id)
+{
 	for(const auto &it : m_sources)
 	{
 		if(enabled)
