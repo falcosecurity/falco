@@ -41,7 +41,7 @@ TEST(ActionLoadConfig, check_engine_config_is_correctly_parsed)
 	EXPECT_EQ(s.config->m_modern_ebpf.m_buf_size_preset, 0);
 	EXPECT_FALSE(s.config->m_modern_ebpf.m_drop_failed_exit);
 
-	EXPECT_TRUE(s.config->m_replay.m_trace_file.empty());
+	EXPECT_TRUE(s.config->m_replay.m_capture_file.empty());
 
 	EXPECT_TRUE(s.config->m_gvisor.m_config.empty());
 	EXPECT_TRUE(s.config->m_gvisor.m_root.empty());
@@ -77,7 +77,7 @@ TEST(ActionLoadConfig, check_command_line_options_are_not_used)
 	EXPECT_EQ(s.config->m_modern_ebpf.m_buf_size_preset, 0);
 	EXPECT_FALSE(s.config->m_modern_ebpf.m_drop_failed_exit);
 
-	EXPECT_TRUE(s.config->m_replay.m_trace_file.empty());
+	EXPECT_TRUE(s.config->m_replay.m_capture_file.empty());
 
 	EXPECT_TRUE(s.config->m_gvisor.m_config.empty());
 	EXPECT_TRUE(s.config->m_gvisor.m_root.empty());
@@ -112,7 +112,7 @@ TEST(ActionLoadConfig, check_kmod_with_syscall_configs)
 	EXPECT_EQ(s.config->m_modern_ebpf.m_buf_size_preset, 0);
 	EXPECT_FALSE(s.config->m_modern_ebpf.m_drop_failed_exit);
 
-	EXPECT_TRUE(s.config->m_replay.m_trace_file.empty());
+	EXPECT_TRUE(s.config->m_replay.m_capture_file.empty());
 
 	EXPECT_TRUE(s.config->m_gvisor.m_config.empty());
 	EXPECT_TRUE(s.config->m_gvisor.m_root.empty());
@@ -150,7 +150,7 @@ TEST(ActionLoadConfig, check_override_command_line_modern)
 	EXPECT_EQ(s.config->m_ebpf.m_buf_size_preset, 0);
 	EXPECT_FALSE(s.config->m_ebpf.m_drop_failed_exit);
 
-	EXPECT_TRUE(s.config->m_replay.m_trace_file.empty());
+	EXPECT_TRUE(s.config->m_replay.m_capture_file.empty());
 
 	EXPECT_TRUE(s.config->m_gvisor.m_config.empty());
 	EXPECT_TRUE(s.config->m_gvisor.m_root.empty());
@@ -188,7 +188,7 @@ TEST(ActionLoadConfig, check_override_command_line_gvisor)
 	EXPECT_EQ(s.config->m_modern_ebpf.m_buf_size_preset, 0);
 	EXPECT_FALSE(s.config->m_modern_ebpf.m_drop_failed_exit);
 
-	EXPECT_TRUE(s.config->m_replay.m_trace_file.empty());
+	EXPECT_TRUE(s.config->m_replay.m_capture_file.empty());
 
 	// Check that deprecated configs are populated
 	EXPECT_EQ(s.config->m_syscall_buf_size_preset, 6);

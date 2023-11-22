@@ -35,13 +35,13 @@ falco::app::run_result falco::app::actions::open_offline_inspector(falco::app::s
 {
 	try
 	{
-		s.offline_inspector->open_savefile(s.config->m_replay.m_trace_file);
-		falco_logger::log(falco_logger::level::INFO, "Reading system call events from file: " + s.config->m_replay.m_trace_file + "\n");
+		s.offline_inspector->open_savefile(s.config->m_replay.m_capture_file);
+		falco_logger::log(falco_logger::level::INFO, "Reading system call events from file: " + s.config->m_replay.m_capture_file + "\n");
 		return run_result::ok();
 	}
 	catch (sinsp_exception &e)
 	{
-		return run_result::fatal("Could not open trace filename " + s.config->m_replay.m_trace_file + " for reading: " + e.what());
+		return run_result::fatal("Could not open trace filename " + s.config->m_replay.m_capture_file + " for reading: " + e.what());
 	}
 }
 

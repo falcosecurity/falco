@@ -144,31 +144,11 @@ bool options::parse(int argc, char **argv, std::string &errstr)
 
 	// TODO: remove for Falco 0.38 since these CLI options are deprecated.
 	int open_modes = 0;
-	if (!trace_filename.empty())
-	{
-		open_modes++;
-		falco_logger::log(falco_logger::level::WARNING, "DEPRECATION NOTICE: the '-e' cmdline option is deprecated and will be removed in Falco 0.38!\n");
-	}
-	if (!gvisor_config.empty())
-	{
-		open_modes++;
-		falco_logger::log(falco_logger::level::WARNING, "DEPRECATION NOTICE: the '-g,--gvisor-config' cmdline option is deprecated and will be removed in Falco 0.38!\n");
-	}
-	if(getenv("FALCO_BPF_PROBE") != NULL)
-	{
-		open_modes++;
-		falco_logger::log(falco_logger::level::WARNING, "DEPRECATION NOTICE: the FALCO_BPF_PROBE environment variable is deprecated and will be removed in Falco 0.38!\n");
-	}
-	if (modern_bpf)
-	{
-		open_modes++;
-		falco_logger::log(falco_logger::level::WARNING, "DEPRECATION NOTICE: the '--modern-bpf' cmdline option is deprecated and will be removed in Falco 0.38!\n");
-	}
-	if (nodriver)
-	{
-		open_modes++;
-		falco_logger::log(falco_logger::level::WARNING, "DEPRECATION NOTICE: the '--nodriver' cmdline option is deprecated and will be removed in Falco 0.38!\n");
-	}
+	open_modes += !capture_file.empty();
+	open_modes += !gvisor_config.empty();
+	open_modes += modern_bpf;
+	open_modes += getenv("FALCO_BPF_PROBE") != NULL;
+	open_modes += nodriver;
 	if (open_modes > 1)
 	{
 		errstr = std::string("You can not specify more than one of -e, -g (--gvisor-config), --modern-bpf, --nodriver, and the FALCO_BPF_PROBE env var");
@@ -201,7 +181,7 @@ void options::define(cxxopts::Options& opts)
 		("disable-source",                "Turn off a specific <event_source>. By default, all loaded sources get enabled. Available sources are 'syscall' plus all sources defined by loaded plugins supporting the event sourcing capability. This option can be passed multiple times, but turning off all event sources simultaneously is not permitted. This option can not be mixed with --enable-source. This option has no effect when reproducing events from a capture file.", cxxopts::value(disable_sources), "<event_source>")
 		("dry-run",                       "Run Falco without processing events. It can help check that the configuration and rules do not have any errors.", cxxopts::value(dry_run)->default_value("false"))
 		("D",                             "Turn off any rules with names having the substring <substring>. This option can be passed multiple times. It cannot be mixed with -t.", cxxopts::value(disabled_rule_substrings), "<substring>")
-		("e",                             "DEPRECATED. Reproduce the events by reading from the given <capture_file> instead of opening a live session. Only capture files in .scap format are supported.", cxxopts::value(trace_filename), "<events_file>")
+		("e",                             "DEPRECATED. Reproduce the events by reading from the given <capture_file> instead of opening a live session. Only capture files in .scap format are supported.", cxxopts::value(capture_file), "<events_file>")
 		("enable-source",                 "Enable a specific <event_source>. By default, all loaded sources get enabled. Available sources are 'syscall' plus all sources defined by loaded plugins supporting the event sourcing capability. This option can be passed multiple times. When using this option, only the event sources specified by it will be enabled. This option can not be mixed with --disable-source. This option has no effect when reproducing events from a capture file.", cxxopts::value(enable_sources), "<event_source>")
 #ifdef HAS_GVISOR
 		("g,gvisor-config",				  "DEPRECATED. Collect 'syscall' events from gVisor using the specified <gvisor_config> file. A Falco-compatible configuration file can be generated with --gvisor-generate-config and utilized for both runsc and Falco.", cxxopts::value(gvisor_config), "<gvisor_config>")
