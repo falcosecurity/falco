@@ -52,7 +52,7 @@ static falco::app::run_result apply_deprecated_options(falco::app::state& s)
 		{
 			falco_logger::log(falco_logger::level::WARNING,
 				  "Since the new 'engine' config key is being used, deprecated CLI options "
-				  "[-e,-g,--gvisor-config,--nodriver,--modern-bpf] and FALCO_BPF_PROBE environment variable will be ignored.\n");
+				  "[-e,-g,--gvisor-config,--nodriver,--modern-bpf] and 'FALCO_BPF_PROBE' environment variable will be ignored.\n");
 		}
 
 		// If these configs are specified, print a warning because they will be ignored
@@ -102,7 +102,7 @@ static falco::app::run_result apply_deprecated_options(falco::app::state& s)
 	// use the requested driver.
 	if (getenv(FALCO_BPF_ENV_VARIABLE))
 	{
-		falco_logger::log(falco_logger::level::WARNING, "DEPRECATION NOTICE: the FALCO_BPF_PROBE environment variable is deprecated and will be removed in Falco 0.38!\n");
+		falco_logger::log(falco_logger::level::WARNING, "DEPRECATION NOTICE: the 'FALCO_BPF_PROBE' environment variable is deprecated and will be removed in Falco 0.38!\n");
 		s.config->m_engine_mode = engine_kind_t::EBPF;
 		s.config->m_ebpf.m_probe_path = getenv(FALCO_BPF_ENV_VARIABLE);
 		s.config->m_ebpf.m_drop_failed_exit = s.config->m_syscall_drop_failed_exit;
