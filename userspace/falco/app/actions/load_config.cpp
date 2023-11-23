@@ -33,6 +33,9 @@ static falco::app::run_result apply_deprecated_options(falco::app::state& s)
 	// at least one change in the default config we don't allow to use the command line options.
 	if(s.config->m_changes_in_engine_config)
 	{
+		falco_logger::log(falco_logger::level::WARNING,
+				  "Since the new 'engine' config key is being used, deprecated CLI options "
+				  "[-e,-g,--gvisor-config,--nodriver,--modern-bpf] and FALCO_BPF_PROBE environment variable will be ignored.\n");
 		return run_result::ok(); 
 	}
 
@@ -54,7 +57,7 @@ static falco::app::run_result apply_deprecated_options(falco::app::state& s)
 	}
 	else if (s.options.modern_bpf)
 	{
-		falco_logger::log(falco_logger::level::WARNING, "DEPRECATION NOTICE: the '--modern-bpf' cmdline option is deprecated and will be removed in Falco 0.38!\n");
+		falco_logger::log(falco_logger::level::WARNING, "DEPRECATION NOTICE: the '--modern-bpf' command line option is deprecated and will be removed in Falco 0.38!\n");
 		s.config->m_engine_mode = engine_kind_t::MODERN_EBPF;
 		s.config->m_modern_ebpf.m_drop_failed_exit = s.config->m_syscall_drop_failed_exit;
 		s.config->m_modern_ebpf.m_buf_size_preset = s.config->m_syscall_buf_size_preset;
@@ -62,19 +65,19 @@ static falco::app::run_result apply_deprecated_options(falco::app::state& s)
 	}
 	if (!s.options.gvisor_config.empty())
 	{
-		falco_logger::log(falco_logger::level::WARNING, "DEPRECATION NOTICE: the '-g,--gvisor-config' cmdline option is deprecated and will be removed in Falco 0.38!\n");
+		falco_logger::log(falco_logger::level::WARNING, "DEPRECATION NOTICE: the '-g,--gvisor-config' command line option is deprecated and will be removed in Falco 0.38!\n");
 		s.config->m_engine_mode =  engine_kind_t::GVISOR;
 		s.config->m_gvisor.m_config = s.options.gvisor_config;
 		s.config->m_gvisor.m_root = s.options.gvisor_root;
 	}
 	if (s.options.nodriver)
 	{
-		falco_logger::log(falco_logger::level::WARNING, "DEPRECATION NOTICE: the '--nodriver' cmdline option is deprecated and will be removed in Falco 0.38!\n");
+		falco_logger::log(falco_logger::level::WARNING, "DEPRECATION NOTICE: the '--nodriver' command line option is deprecated and will be removed in Falco 0.38!\n");
 		s.config->m_engine_mode =  engine_kind_t::NONE;
 	}
 	if (!s.options.capture_file.empty())
 	{
-		falco_logger::log(falco_logger::level::WARNING, "DEPRECATION NOTICE: the '-e' cmdline option is deprecated and will be removed in Falco 0.38!\n");
+		falco_logger::log(falco_logger::level::WARNING, "DEPRECATION NOTICE: the '-e' command line option is deprecated and will be removed in Falco 0.38!\n");
 		s.config->m_engine_mode = engine_kind_t::REPLAY;
 		s.config->m_replay.m_capture_file = s.options.capture_file;
 	}

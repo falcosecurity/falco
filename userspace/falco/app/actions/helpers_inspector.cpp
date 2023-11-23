@@ -36,7 +36,7 @@ falco::app::run_result falco::app::actions::open_offline_inspector(falco::app::s
 	try
 	{
 		s.offline_inspector->open_savefile(s.config->m_replay.m_capture_file);
-		falco_logger::log(falco_logger::level::INFO, "Reading system call events from file: " + s.config->m_replay.m_capture_file + "\n");
+		falco_logger::log(falco_logger::level::INFO, "Replaying events from the capture file: " + s.config->m_replay.m_capture_file + "\n");
 		return run_result::ok();
 	}
 	catch (sinsp_exception &e)
