@@ -142,19 +142,6 @@ bool options::parse(int argc, char **argv, std::string &errstr)
 
 	list_fields = m_cmdline_parsed.count("list") > 0;
 
-	// TODO: remove for Falco 0.38 since these CLI options are deprecated.
-	int open_modes = 0;
-	open_modes += !capture_file.empty();
-	open_modes += !gvisor_config.empty();
-	open_modes += modern_bpf;
-	open_modes += getenv("FALCO_BPF_PROBE") != NULL;
-	open_modes += nodriver;
-	if (open_modes > 1)
-	{
-		errstr = std::string("You can not specify more than one of -e, -g (--gvisor-config), --modern-bpf, --nodriver, and the FALCO_BPF_PROBE env var");
-		return false;
-	}
-
 	return true;
 }
 
