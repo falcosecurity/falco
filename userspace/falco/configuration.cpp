@@ -114,10 +114,6 @@ void falco_configuration::load_engine_config(const std::string& config_name, con
 		{"none",engine_kind_t::NONE},
 	};
 
-	constexpr int16_t default_buf_size_preset = 4;
-	constexpr int16_t default_cpus_for_each_syscall_buffer = 2;
-	constexpr bool default_drop_failed_exit = false;
-
 	auto driver_mode_str = config.get_scalar<std::string>("engine.kind", "kmod");
 	if (engine_mode_lut.find(driver_mode_str) != engine_mode_lut.end())
 	{
@@ -131,21 +127,16 @@ void falco_configuration::load_engine_config(const std::string& config_name, con
 	switch (m_engine_mode)
 	{
 	case engine_kind_t::KMOD:
-		m_kmod.m_buf_size_preset = config.get_scalar<int16_t>("engine.kmod.buf_size_preset", default_buf_size_preset);
-		m_kmod.m_drop_failed_exit = config.get_scalar<bool>("engine.kmod.drop_failed_exit", default_drop_failed_exit);
+		m_kmod.m_buf_size_preset = config.get_scalar<int16_t>("engine.kmod.buf_size_preset", DEFAULT_BUF_SIZE_PRESET);
+		m_kmod.m_drop_failed_exit = config.get_scalar<bool>("engine.kmod.drop_failed_exit", DEFAULT_DROP_FAILED_EXIT);
 
-		if(m_kmod.m_buf_size_preset == default_buf_size_preset && m_kmod.m_drop_failed_exit==default_drop_failed_exit)
+		if(m_kmod.m_buf_size_preset == DEFAULT_BUF_SIZE_PRESET && m_kmod.m_drop_failed_exit==DEFAULT_DROP_FAILED_EXIT)
 		{
 			// This could happen in 2 cases:
 			// 1. The user doesn't use the new config (it could also have commented it)
 			// 2. The user uses the new config unchanged.
 			// In these 2 cases the users are allowed to use the command line arguments to open an engine
 			m_changes_in_engine_config = false;
-
-			// Catch deprecated values from the config, to use them with the command line if needed
-			m_syscall_buf_size_preset = config.get_scalar<int16_t>("syscall_buf_size_preset", default_buf_size_preset);
-			m_cpus_for_each_syscall_buffer = config.get_scalar<uint16_t>("modern_bpf.cpus_for_each_syscall_buffer", default_cpus_for_each_syscall_buffer);
-			m_syscall_drop_failed_exit = config.get_scalar<bool>("syscall_drop_failed_exit", default_drop_failed_exit);
 			return;
 		}
 
@@ -155,13 +146,13 @@ void falco_configuration::load_engine_config(const std::string& config_name, con
 		// to be done once we drop the CLI option otherwise we would need to make the check twice,
 		// once here, and once when we merge the CLI options in the config file.
 		m_ebpf.m_probe_path = config.get_scalar<std::string>("engine.ebpf.probe", "");
-		m_ebpf.m_buf_size_preset = config.get_scalar<int16_t>("engine.ebpf.buf_size_preset", default_buf_size_preset);
-		m_ebpf.m_drop_failed_exit = config.get_scalar<bool>("engine.ebpf.drop_failed_exit", default_drop_failed_exit);
+		m_ebpf.m_buf_size_preset = config.get_scalar<int16_t>("engine.ebpf.buf_size_preset", DEFAULT_BUF_SIZE_PRESET);
+		m_ebpf.m_drop_failed_exit = config.get_scalar<bool>("engine.ebpf.drop_failed_exit", DEFAULT_DROP_FAILED_EXIT);
 		break;
 	case engine_kind_t::MODERN_EBPF:
-		m_modern_ebpf.m_cpus_for_each_buffer = config.get_scalar<uint16_t>("engine.modern-ebpf.cpus_for_each_buffer", default_cpus_for_each_syscall_buffer);
-		m_modern_ebpf.m_buf_size_preset = config.get_scalar<int16_t>("engine.modern-ebpf.buf_size_preset", default_buf_size_preset);
-		m_modern_ebpf.m_drop_failed_exit = config.get_scalar<bool>("engine.modern-ebpf.drop_failed_exit", default_drop_failed_exit);
+		m_modern_ebpf.m_cpus_for_each_buffer = config.get_scalar<uint16_t>("engine.modern-ebpf.cpus_for_each_buffer", DEFAULT_CPUS_FOR_EACH_SYSCALL_BUFFER);
+		m_modern_ebpf.m_buf_size_preset = config.get_scalar<int16_t>("engine.modern-ebpf.buf_size_preset", DEFAULT_BUF_SIZE_PRESET);
+		m_modern_ebpf.m_drop_failed_exit = config.get_scalar<bool>("engine.modern-ebpf.drop_failed_exit", DEFAULT_DROP_FAILED_EXIT);
 		break;
 	case engine_kind_t::REPLAY:
 		m_replay.m_capture_file = config.get_scalar<std::string>("engine.replay.capture_file", "");
@@ -184,12 +175,14 @@ void falco_configuration::load_engine_config(const std::string& config_name, con
 	}
 	
 	// If we arrive here it means we have at least one change in the `engine` config.
-	// Please note that `load_config` is called more than one time during initialization
-	// so the last time wins
+	// Please note that `load_config` could be called more than one time during initialization
+	// so the last time wins, the load config phase should be idempotent
 	m_changes_in_engine_config = true;
-	m_syscall_buf_size_preset = 0;
-	m_cpus_for_each_syscall_buffer = 0;
-	m_syscall_drop_failed_exit = false;
+
+	// Catch deprecated values from the config, to use them with the command line if needed
+	m_syscall_buf_size_preset = config.get_scalar<int16_t>("syscall_buf_size_preset", DEFAULT_BUF_SIZE_PRESET);
+	m_cpus_for_each_syscall_buffer = config.get_scalar<uint16_t>("modern_bpf.cpus_for_each_syscall_buffer", DEFAULT_CPUS_FOR_EACH_SYSCALL_BUFFER);
+	m_syscall_drop_failed_exit = config.get_scalar<bool>("syscall_drop_failed_exit", DEFAULT_DROP_FAILED_EXIT);
 }
 
 void falco_configuration::load_yaml(const std::string& config_name, const yaml_helper& config)
