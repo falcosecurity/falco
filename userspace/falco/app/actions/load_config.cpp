@@ -17,6 +17,8 @@ limitations under the License.
 
 #include "actions.h"
 #include "falco_utils.h"
+// USED just to include some shared macros, remove this include in Falco 0.38.0
+#include "configuration.h"
 
 /* DEPRECATED: we will remove it in Falco 0.38. */
 #define FALCO_BPF_ENV_VARIABLE "FALCO_BPF_PROBE"
