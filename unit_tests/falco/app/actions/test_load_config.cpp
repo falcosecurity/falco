@@ -46,11 +46,10 @@ TEST(ActionLoadConfig, check_engine_config_is_correctly_parsed)
 	EXPECT_TRUE(s.config->m_gvisor.m_config.empty());
 	EXPECT_TRUE(s.config->m_gvisor.m_root.empty());
 
-	// Check that deprecated configs are not populated since we are using
-	// the new config.
-	EXPECT_EQ(s.config->m_syscall_buf_size_preset, 0);
-	EXPECT_EQ(s.config->m_cpus_for_each_syscall_buffer, 0);
-	EXPECT_FALSE(s.config->m_syscall_drop_failed_exit);
+	// Check that deprecated configs are always set since
+	EXPECT_EQ(s.config->m_syscall_buf_size_preset, 6);
+	EXPECT_EQ(s.config->m_cpus_for_each_syscall_buffer, 7);
+	EXPECT_TRUE(s.config->m_syscall_drop_failed_exit);
 }
 
 // Equal to the one above but checks that the command line options are not parsed
@@ -82,11 +81,10 @@ TEST(ActionLoadConfig, check_command_line_options_are_not_used)
 	EXPECT_TRUE(s.config->m_gvisor.m_config.empty());
 	EXPECT_TRUE(s.config->m_gvisor.m_root.empty());
 
-	// Check that deprecated configs are not populated since we are using
-	// the new config.
-	EXPECT_EQ(s.config->m_syscall_buf_size_preset, 0);
-	EXPECT_EQ(s.config->m_cpus_for_each_syscall_buffer, 0);
-	EXPECT_FALSE(s.config->m_syscall_drop_failed_exit);
+	// Check that deprecated configs are always set since
+	EXPECT_EQ(s.config->m_syscall_buf_size_preset, 6);
+	EXPECT_EQ(s.config->m_cpus_for_each_syscall_buffer, 7);
+	EXPECT_TRUE(s.config->m_syscall_drop_failed_exit);
 }
 
 TEST(ActionLoadConfig, check_kmod_with_syscall_configs)

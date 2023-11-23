@@ -124,6 +124,11 @@ void falco_configuration::load_engine_config(const std::string& config_name, con
 		throw std::logic_error("Error reading config file (" + config_name + "): engine.kind '"+ driver_mode_str + "' is not a valid kind.");
 	}
 
+	// Catch deprecated values from the config, to use them with the command line if needed
+	m_syscall_buf_size_preset = config.get_scalar<int16_t>("syscall_buf_size_preset", DEFAULT_BUF_SIZE_PRESET);
+	m_cpus_for_each_syscall_buffer = config.get_scalar<uint16_t>("modern_bpf.cpus_for_each_syscall_buffer", DEFAULT_CPUS_FOR_EACH_SYSCALL_BUFFER);
+	m_syscall_drop_failed_exit = config.get_scalar<bool>("syscall_drop_failed_exit", DEFAULT_DROP_FAILED_EXIT);
+
 	switch (m_engine_mode)
 	{
 	case engine_kind_t::KMOD:
@@ -178,11 +183,6 @@ void falco_configuration::load_engine_config(const std::string& config_name, con
 	// Please note that `load_config` could be called more than one time during initialization
 	// so the last time wins, the load config phase should be idempotent
 	m_changes_in_engine_config = true;
-
-	// Catch deprecated values from the config, to use them with the command line if needed
-	m_syscall_buf_size_preset = config.get_scalar<int16_t>("syscall_buf_size_preset", DEFAULT_BUF_SIZE_PRESET);
-	m_cpus_for_each_syscall_buffer = config.get_scalar<uint16_t>("modern_bpf.cpus_for_each_syscall_buffer", DEFAULT_CPUS_FOR_EACH_SYSCALL_BUFFER);
-	m_syscall_drop_failed_exit = config.get_scalar<bool>("syscall_drop_failed_exit", DEFAULT_DROP_FAILED_EXIT);
 }
 
 void falco_configuration::load_yaml(const std::string& config_name, const yaml_helper& config)
