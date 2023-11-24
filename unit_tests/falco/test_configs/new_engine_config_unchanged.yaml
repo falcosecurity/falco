@@ -30,7 +30,7 @@ engine:
     probe: /path/to/probe.o
     buf_size_preset: 4
     drop_failed_exit: false
-  modern-ebpf:
+  modern_ebpf:
     cpus_for_each_buffer: 2
     buf_size_preset: 4
     drop_failed_exit: false

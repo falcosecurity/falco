@@ -161,7 +161,7 @@ rules_file:
 # Available engines:
 # - `kmod`: Kernel Module (Kernel Module)
 # - `ebpf`: eBPF (eBPF probe)
-# - `modern-ebpf`: Modern eBPF (CO-RE eBPF probe)
+# - `modern_ebpf`: Modern eBPF (CO-RE eBPF probe)
 # - `gvisor`: gVisor (gVisor sandbox)
 # - `replay`: Replay a scap trace file
 # - `none`: No event producer loaded, useful to run with plugins.
@@ -233,7 +233,7 @@ rules_file:
 # is important to note that enabling this option also means sacrificing some
 # visibility into the system.
 #
-################### `cpus_for_each_buffer` (modern-ebpf only)
+################### `cpus_for_each_buffer` (modern_ebpf only)
 #
 # --- [Description]
 #
@@ -321,7 +321,7 @@ engine:
     probe: /root/.falco/falco-bpf.o
     buf_size_preset: 4
     drop_failed_exit: false
-  modern-ebpf:
+  modern_ebpf:
     cpus_for_each_buffer: 2
     buf_size_preset: 4
     drop_failed_exit: false
@@ -967,7 +967,7 @@ metrics:
 
 # [DEPRECATED] `syscall_buf_size_preset`
 #
-# Deprecated in favor of engine.{kmod,ebpf,modern-ebpf}.buf_size_preset.
+# Deprecated in favor of engine.{kmod,ebpf,modern_ebpf}.buf_size_preset.
 # This config is evaluated only if the default `engine` config block is not changed,
 # otherwise it is ignored.
 #
@@ -1023,7 +1023,7 @@ syscall_buf_size_preset: 4
 
 # [DEPRECATED] `syscall_drop_failed_exit`
 #
-# Deprecated in favor of engine.{kmod,ebpf,modern-ebpf}.drop_failed_exit.
+# Deprecated in favor of engine.{kmod,ebpf,modern_ebpf}.drop_failed_exit.
 # This config is evaluated only if the default `engine` config block is not changed,
 # otherwise it is ignored.
 #
@@ -1152,7 +1152,7 @@ base_syscalls:
 
 # [DEPRECATED] `modern_bpf.cpus_for_each_syscall_buffer`, modern_bpf only
 #
-# Deprecated in favor of engine.modern-ebpf.cpus_for_each_buffer.
+# Deprecated in favor of engine.modern_ebpf.cpus_for_each_buffer.
 # This config is evaluated only if the default `engine` config block is not changed,
 # otherwise it is ignored.
 #
