@@ -108,7 +108,7 @@ void falco_configuration::load_engine_config(const std::string& config_name, con
 	const std::unordered_map<std::string, engine_kind_t> engine_mode_lut = {
 		{"kmod",engine_kind_t::KMOD},
 		{"ebpf",engine_kind_t::EBPF},
-		{"modern-ebpf",engine_kind_t::MODERN_EBPF},
+		{"modern_ebpf",engine_kind_t::MODERN_EBPF},
 		{"replay",engine_kind_t::REPLAY},
 		{"gvisor",engine_kind_t::GVISOR},
 		{"none",engine_kind_t::NONE},
@@ -155,9 +155,9 @@ void falco_configuration::load_engine_config(const std::string& config_name, con
 		m_ebpf.m_drop_failed_exit = config.get_scalar<bool>("engine.ebpf.drop_failed_exit", DEFAULT_DROP_FAILED_EXIT);
 		break;
 	case engine_kind_t::MODERN_EBPF:
-		m_modern_ebpf.m_cpus_for_each_buffer = config.get_scalar<uint16_t>("engine.modern-ebpf.cpus_for_each_buffer", DEFAULT_CPUS_FOR_EACH_SYSCALL_BUFFER);
-		m_modern_ebpf.m_buf_size_preset = config.get_scalar<int16_t>("engine.modern-ebpf.buf_size_preset", DEFAULT_BUF_SIZE_PRESET);
-		m_modern_ebpf.m_drop_failed_exit = config.get_scalar<bool>("engine.modern-ebpf.drop_failed_exit", DEFAULT_DROP_FAILED_EXIT);
+		m_modern_ebpf.m_cpus_for_each_buffer = config.get_scalar<uint16_t>("engine.modern_ebpf.cpus_for_each_buffer", DEFAULT_CPUS_FOR_EACH_SYSCALL_BUFFER);
+		m_modern_ebpf.m_buf_size_preset = config.get_scalar<int16_t>("engine.modern_ebpf.buf_size_preset", DEFAULT_BUF_SIZE_PRESET);
+		m_modern_ebpf.m_drop_failed_exit = config.get_scalar<bool>("engine.modern_ebpf.drop_failed_exit", DEFAULT_DROP_FAILED_EXIT);
 		break;
 	case engine_kind_t::REPLAY:
 		m_replay.m_capture_file = config.get_scalar<std::string>("engine.replay.capture_file", "");

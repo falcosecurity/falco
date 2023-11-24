@@ -89,7 +89,7 @@ static falco::app::run_result apply_deprecated_options(falco::app::state& s)
 	if(s.config->m_cpus_for_each_syscall_buffer != DEFAULT_CPUS_FOR_EACH_SYSCALL_BUFFER)
 	{
 		falco_logger::log(falco_logger::level::WARNING,
-				"DEPRECATION NOTICE: 'modern_bpf.cpus_for_each_syscall_buffer' config is deprecated and will be removed in Falco 0.38! Use `engine.modern-ebpf.cpus_for_each_buffer' config instead\n");
+				"DEPRECATION NOTICE: 'modern_bpf.cpus_for_each_syscall_buffer' config is deprecated and will be removed in Falco 0.38! Use `engine.modern_ebpf.cpus_for_each_buffer' config instead\n");
 	}
 
 	// Replace the kmod default values in case the engine was open with the kmod.
