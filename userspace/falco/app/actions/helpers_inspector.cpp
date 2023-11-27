@@ -63,7 +63,7 @@ falco::app::run_result falco::app::actions::open_live_inspector(
 				{
 					auto cfg = s.plugin_configs.at(p->name());
 					falco_logger::log(falco_logger::level::INFO, "Opening '" + source + "' source with plugin '" + cfg->m_name + "'");
-					inspector->open_plugin(cfg->m_name, cfg->m_open_params);
+					inspector->open_plugin(p->name(), cfg->m_open_params);
 					return run_result::ok();
 				}
 			}
@@ -81,7 +81,7 @@ falco::app::run_result falco::app::actions::open_live_inspector(
 				{
 					auto cfg = s.plugin_configs.at(p->name());
 					falco_logger::log(falco_logger::level::INFO, "Opening '" + source + "' source with plugin '" + cfg->m_name + "'");
-					inspector->open_plugin(cfg->m_name, cfg->m_open_params);
+					inspector->open_plugin(p->name(), cfg->m_open_params);
 					return run_result::ok();
 				}
 			}
