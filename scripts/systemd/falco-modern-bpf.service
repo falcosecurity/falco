@@ -7,7 +7,7 @@ Wants=falcoctl-artifact-follow.service
 [Service]
 Type=simple
 User=root
-ExecStart=/usr/bin/falco --modern-bpf
+ExecStart=/usr/bin/falco -o engine.kind=modern_ebpf
 ExecReload=kill -1 $MAINPID
 UMask=0077
 TimeoutSec=30
