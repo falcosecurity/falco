@@ -128,6 +128,10 @@ TEST(Configuration, configuration_environment_variables)
     std::string int_env_var_name = "ENV_VAR_INT";
     SET_ENV_VAR(int_env_var_name.c_str(), int_env_var_value.c_str());
 
+    std::string empty_env_var_value = "";
+    std::string empty_env_var_name = "ENV_VAR_EMPTY";
+    SET_ENV_VAR(empty_env_var_name.c_str(), empty_env_var_value.c_str());
+
     std::string default_value = "default";
     std::string env_var_sample_yaml =
         "base_value:\n"
@@ -153,7 +157,8 @@ TEST(Configuration, configuration_environment_variables)
 	"    - /${ENV_VAR}/${ENV_VAR}${ENV_VAR}/foo\n"
 	"    - ${ENV_VAR_EMBEDDED}/foo\n"
 	"is_test: ${ENV_VAR_BOOL}\n"
-	"num_test: ${ENV_VAR_INT}\n";
+	"num_test: ${ENV_VAR_INT}\n"
+	"empty_test: ${ENV_VAR_EMPTY}\n";
 
     yaml_helper conf;
     conf.load_from_string(env_var_sample_yaml);
@@ -198,7 +203,7 @@ TEST(Configuration, configuration_environment_variables)
     ASSERT_EQ(base_value_2_list_1, " " + env_var_value); // Environment variable preceded by a space, still extracted env var with leading space
 
     auto base_value_2_list_2 = conf.get_scalar<std::string>("base_value_2.sample_list[2]", default_value);
-    ASSERT_EQ(base_value_2_list_2, env_var_value + " "); // Environment variable proceeded by a space, still extracted env var with trailing space
+    ASSERT_EQ(base_value_2_list_2, env_var_value + " "); // Environment variable followed by a space, still extracted env var with trailing space
 
     auto base_value_2_list_3 = conf.get_scalar<std::string>("base_value_2.sample_list[3]", default_value);
     ASSERT_EQ(base_value_2_list_3, "$UNSED_XX_X_X_VAR"); // Does not follow the `${VAR}` format, so should be treated as a regular string
@@ -232,11 +237,16 @@ TEST(Configuration, configuration_environment_variables)
     auto integer = conf.get_scalar<int32_t>("num_test", -1);
     ASSERT_EQ(integer, 12);
 
+    // An env var that resolves to an empty string returns default value
+    auto empty_default_str = conf.get_scalar<std::string>("empty_test", "test");
+    ASSERT_EQ(empty_default_str, "test");
+
     /* Clear the set environment variables after testing */
     SET_ENV_VAR(env_var_name.c_str(), "");
     SET_ENV_VAR(embedded_env_var_name.c_str(), "");
     SET_ENV_VAR(bool_env_var_name.c_str(), "");
     SET_ENV_VAR(int_env_var_name.c_str(), "");
+    SET_ENV_VAR(empty_env_var_name.c_str(), "");
 }
 
 TEST(Configuration, configuration_webserver_ip)
