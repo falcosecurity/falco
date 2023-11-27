@@ -18,6 +18,7 @@
 #
 
 chosen_driver=
+chosen_unit=
 
 # Every time we call this script we want to stat from a clean state.
 echo "[POST-INSTALL] Disable all possible 'falco' services:"
@@ -47,12 +48,15 @@ if [ "$1" = "configure" ]; then
           case $CHOICE in
                   2)
                       chosen_driver="kmod"
+                      chosen_unit="kmod"
                       ;;
                   3)
-                      chosen_driver="bpf"
+                      chosen_driver="ebpf"
+                      chosen_unit="bpf"
                       ;;
                   4)
-                      chosen_driver="modern-bpf"
+                      chosen_driver="modern_ebpf"
+                      chosen_unit="modern-bpf"
                       ;;
           esac
           if [ -n "$chosen_driver" ]; then
@@ -104,18 +108,18 @@ case "$chosen_driver" in
       echo "[POST-INSTALL] Call 'falcoctl driver install for kmod:"
       falcoctl driver install --download=false
       ;;
-    "bpf")
-      echo "[POST-INSTALL] Call 'falcoctl driver install for bpf':"
+    "ebpf")
+      echo "[POST-INSTALL] Call 'falcoctl driver install for ebpf':"
       falcoctl driver install
       ;;
 esac
 
 if [ "$1" = "configure" ] || [ "$1" = "abort-upgrade" ] || [ "$1" = "abort-deconfigure" ] || [ "$1" = "abort-remove" ] ; then
-        if [ -n "$chosen_driver" ]; then
+        if [ -n "$chosen_unit" ]; then
             # we do this in 2 steps because `enable --now` is not always supported
-            echo "[POST-INSTALL] Enable 'falco-$chosen_driver.service':"
-            systemctl --system enable "falco-$chosen_driver.service" || true
-            echo "[POST-INSTALL] Start 'falco-$chosen_driver.service':"
-            systemctl --system start "falco-$chosen_driver.service" || true           
+            echo "[POST-INSTALL] Enable 'falco-$chosen_unit.service':"
+            systemctl --system enable "falco-$chosen_unit.service" || true
+            echo "[POST-INSTALL] Start 'falco-$chosen_unit.service':"
+            systemctl --system start "falco-$chosen_unit.service" || true
         fi
 fi
