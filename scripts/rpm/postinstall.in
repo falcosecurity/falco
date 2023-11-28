@@ -59,6 +59,8 @@ if [ $1 -ge 1 ]; then
                     ;;
             esac
             if [ -n "$chosen_driver" ]; then
+              echo "[POST-INSTALL] Configure falcoctl driver type:"
+              falcoctl driver config --type $chosen_driver
               CHOICE=$(dialog --clear --title "Falcoctl" --menu "Do you want to follow automatic ruleset updates?" 10 40 2 \
                       1 "Yes" \
                       2 "No" \
@@ -99,8 +101,6 @@ echo "[POST-INSTALL] Trigger deamon-reload:"
 systemctl --system daemon-reload || true
 
 # If needed, try to load/compile the driver through falcoctl
-echo "[POST-INSTALL] Configure falcoctl driver type:"
-falcoctl driver config --type $chosen_driver
 case "$chosen_driver" in
     "kmod")
       # Only compile for kmod, in this way we use dkms
