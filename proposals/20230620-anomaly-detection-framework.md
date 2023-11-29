@@ -8,7 +8,6 @@ Feel that light breeze? That is the continued advancement of cloud native securi
 
 This framework lays the foundation on how to create high-value, kernel signals that are difficult to bypass  - but not in the traditional way. Advanced data analytics is an emerging crosswind that enables us to soar past attackers by detecting deviations in current behavior from past behavior. 
 
-
 ## Benefits to the Ecosystem
 
 Advanced data analytics enables us to combine the intricacies of the Linux kernel with on-host anomaly detection in cloud native and cloud environments to determine patterns of past behavior in running applications. By detecting deviations in current behavior from past behavior, we can shift the focus away from relying solely on signatures and rule matching to catch attackers.
@@ -27,51 +26,47 @@ This approach enables a novel threat detection framework that incorporates the c
 
 Similar to Falco rules, the analysis of events may require multiple behavior profiles of different dimensions based on sets of events. These profiles can either vote in parallel or in a cascading fashion, a common practice in established algorithms. This is just the beginning and and paves the way for more sophisticated approaches, such as running Falco in a DAST-like capacity to build a pre-state pattern file on a workload with test data and soften the cold-start via distributing it to production.
 
-
-## Initial Scope
-
-The initial scope is focused on cloud-native environments rather than bare-metal infrastructure due to the inherent properties of modern cloud orchestration systems like Kubernetes. Containerized deployments offer a natural semantic distinction and attribution of processes belonging to individual applications. Consequently, it becomes possible to allocate separate behavior filters per container and perform clearing and purging of filters. This effectively addresses concerns regarding shared space and potential lossy compression.
-
-Furthermore, The Falco Project will provide good initial thresholds for adopters, including callouts for known issues in thresholds based on environment and business case. One important consideration is the identification of SRE anti-patterns. Another consideration is to provide *very clear* guidance to adopters for setting and configuring parameters, including recommended minimums. Additionally, guidance should be provided on indicators to look for in order to determine if adjustments need to be made and in which direction, particularly when defining application behavior profiles.
-
-
 ## Challenges and Considerations
 
-First, The Falco Project is committed to continuously ensuring access to the most accurate data possible for on-host threat detection. As an example, ongoing efforts involve expanding kernel signal logging, such as verifying if an execve call pertains to a file descriptor existing exclusively in memory or improving the efficient and reliable resolution of symlinks for file opens and executable paths. The proposed anomaly detection framework operates under the assumption of having the *correct* data, thereby complementing the ongoing efforts to expand logging coverage and improve its quality. In summary, the primary focus of the framework is to derive increased value from the existing *right* data that is currently available.
+First, The Falco Project is committed to continuously ensuring access to the most accurate data possible for on-host threat detection. As an example, recent efforts involved expanding kernel signal logging, such as verifying if an execve call is linked to a file descriptor existing exclusively in memory or improving the efficient and reliable resolution of symlinks for executable paths. Therefore, the proposed anomaly detection framework operates under the assumption of having the *correct* data, thereby complementing the ongoing efforts to expand logging coverage and improve its quality. In summary, the primary focus of the framework is to derive increased value from the existing *right* data that is currently available.
 
-There is a common perception that attacks on running cloud applications, as well as their indicators of compromise, are typically rare when the appropriate data or combination of signals is considered. While this holds true, there are inherent challenges in applying this concept of rarity to robust data analytics approaches. This is not only due to the diverse range of attacks and attack vectors but also because of their nature. An attacker may introduce a new malicious binary (which is comparatively easier to detect using traditional rules and high-value kernel signals) after gaining initial access. Alternatively, they may exploit existing binaries, shell built-ins, and employ obfuscation techniques to "live off the land." The Turing completeness of the latter scenario, in particular, leads to an infinite number of attack possibilities.
+There is a common perception that attacks on running cloud applications, as well as their indicators of compromise, are typically rare when the appropriate data or combination of signals is considered. While this holds true, there are inherent challenges in applying this concept of rarity to robust data analytics approaches. 
 
-However, what poses even more challenges in anomaly detection is not the rarity of attacks, but rather the difficulty of identifying the right signals and their appropriate combinations for robust analytics. This challenge becomes particularly evident when considering the natural fluctuations in application behavior over time and the occurrence of ad-hoc legitimate debugging activities. Such fluctuations can arise from various factors, including routine deployment updates. Moreover, certain applications may produce random file names or execute arbitrary executable paths as part of their regular operations, adding to the challenge of anomaly detection. This is compounded by the inherent "cold start" issue when initially observing an application. In such cases, the algorithms must demonstrate flexibility and robustness by recognizing and encoding consistent patterns, similar to how humans can identify the sameness by examining combinations of file names, command arguments, parent process lineage, and other attributes. Furthermore, factors like data inconsistency and the diverse forms of data representations (comprising a mix of numeric data and strings with varying meanings) further complicate the task.
+On the one hand, this is due to the diverse range of attacks and attack vectors. An attacker may introduce a new malicious binary (which is comparatively easier to detect using traditional rules and high-value kernel signals) after gaining initial access. Alternatively, they may exploit existing binaries, shell built-ins, and employ obfuscation techniques to "live off the land". The Turing completeness of the latter scenario, in particular, leads to an infinite number of attack possibilities.
+
+However, what poses even more challenges in anomaly detection lies not necessarily in the nature of attacks but rather in identifying the right signals and their appropriate combinations for robust analytics to distinguish between normal and anomalous behavior. This challenge becomes particularly evident when considering the natural fluctuations in application behavior over time and the occurrence of ad-hoc legitimate debugging activities. Such fluctuations can arise from various factors, including routine deployment updates. Moreover, certain applications may produce random file names or execute arbitrary executable paths as part of their regular operations, adding to the challenge of anomaly detection. This is compounded by the inherent "cold start" issue when initially observing an application. In such cases, the algorithms must demonstrate flexibility and robustness by recognizing and encoding consistent patterns, similar to how humans can identify the sameness by examining combinations of file names, command arguments, parent process lineage, and other attributes. Furthermore, factors like data inconsistency and the diverse forms of data representations (comprising a mix of numeric data and strings with varying meanings) further complicate the task.
 
 We believe it is important to incorporate operator heuristics or domain knowledge into the algorithm's definition of rarity. For example, while current algorithms are capable of generating human faces, they used to frequently produce images with different eye colors. However, if we were to inform the machine that humans typically have matching eye colors, it could easily correct this discrepancy. This highlights the role of the security engineer as a guiding hand to the algorithms, both in terms of handling noise tolerance and choosing the appropriate data to be ingested into the algorithm. This is crucial as machines are currently limited in their ability to draw meaningful observations from limited data and constrained memory. In summary, this is where the fusion of data-driven anomaly detection and rules matching will come into play.
 
 Lastly, the value proposition of conducting real-time anomaly analysis on the host lies in the unique options it offers, which cannot be achieved through alternative methods. On the host, we can observe anomalies based on all relevant and observed kernel events. In contrast, sending a large volume of kernel events to a centralized system would be impractical, resulting in significant costs for data pipeline management and data lake compute expenses.
 
+## Initial Scope
+
+The initial scope is to implement the Count Min Sketch algorithm using n shared sketches and expose its count estimates as new filterchecks for use in Falco rules. An MVP can be explored in this libs draft PR [wip: new(userspace/libsinsp): MVP CountMinSketch Powered Probabilistic Counting and Filtering](https://github.com/falcosecurity/libs/pull/1453). Moreover, the initial anomaly detection framework will include a transparent plugin user interface for defining application behavior profiles and utilizing sketch count estimates in Falco rules. The primary direct benefit lies in establishing a safety boundary for Falco rules in production environments, allowing for broader rule monitoring while preventing Falco rules from blowing up in production.
+
+Furthermore, The Falco Project will provide adopters with valuable initial use cases, recommended thresholds, and callouts for known issues. One important consideration is the identification of SRE anti-patterns. Another consideration is to provide *very clear* guidance to adopters for setting and configuring parameters, including recommended minimums. Additionally, guidance should be provided on indicators to look for in order to determine if adjustments need to be made and in which direction, particularly when defining application behavior profiles.
 
 ## High-Level Technical Design
 
+This document provides a high-level proposal with limited technical details.
 
-This document provides a high-level proposal with limited technical details. Upon acceptance, two additional proposals will be opened, one for the libs repository and another for the plugins repository, to ensure alignment on the precise code implementation changes.
+*Probabilistic Data Structures*
 
-
-*Probabilistic Data Structures (libs)*
-
-One option for implementing the probabilistic filter is by utilizing a robust two-dimensional probabilistic data structure known as the Count-Min sketch. This data structure is widely employed in distributed stream processing frameworks such as Apache Spark, Apache Storm, Apache Flink, and others, as well as databases like Redis and PostgreSQL.
+One option for implementing the probabilistic filter is by utilizing a robust two-dimensional probabilistic data structure known as the Count Min Sketch. This data structure is widely employed in distributed stream processing frameworks such as Apache Spark, Apache Storm, Apache Flink, and others, as well as databases like Redis and PostgreSQL.
 
 Technical details and implications are extensively covered in numerous research papers and textbooks. Therefore, here are some key points to consider in order to make informed choices:
 
-- Each entity of interest, whether it be a container or the underlying host processes treated as a distinct entity, should ideally be allocated its own sketch. This allocation helps address concerns regarding shared space and potential implications of lossy compression. 
 - The challenges posed by both hard and soft collisions can be mitigated by using multiple non-cryptographic hash functions, which has been mathematically proven to be effective.
-- To ensure accuracy and minimize estimation errors, it is crucial to conduct due diligence by de-biasing the data (e.g., using Count-Min Sketch with Conservative Updates) and/or considering a logarithmic scale to handle data skew in kernel event data. The logarithmic scale could be well-suited for threat detection, targeting low-frequency or long-tail items relevant to various attacks.
-- The sketchy data structure guarantees that counts are never underestimated, providing a one-sided error guarantee. However, there is a potential for overestimating counts, although this can be mitigated through mathematical adjustments. Nonetheless, adopters still need to define a tolerance level specific to their use case. This enables them to determine what qualifies as rare or noteworthy. This issue is closely interconnected with the challenges of data encoding and inconsistency that we *will* encounter.
-- ... and numerous other aspects that will be discussed in subsequent detailed implementation proposals.
+- Despite providing one-sided error bounds and preventing undercounting, the sketchy data structure requires adopters to define a tolerance level for overcounting. This tolerance level determines what qualifies as rare or noteworthy.
+- To enhance accuracy and reduce estimation errors, consider debiasing data (e.g. Count Min Sketch with Conservative Updates) or applying a logarithmic scale to address kernel event data skew. The logarithmic scale may suit threat detection, targeting low-frequency or long-tail attack-related items. However, only use if performance overhead is acceptable.
+- Use larger shared sketches and incorporate container IDs as part of the behavior profiles to differentiate between workloads / applications. Conversely, use separate sketches for distinct behavior profiles, also known as the "what we are counting".
+- ... and numerous other aspects that will be discussed in subsequent implementation PRs.
 
+*Plumbing and Interface*
 
+The ultimate goal is to introduce these new capabilities as plugin. A significant amount of work will be dedicated to addressing the necessary plumbing required to support the new framework and integrate it with the existing rules filtering and plugin mechanisms. This integration aims to provide a user-friendly interface that allows users to easily configure and utilize the opt-in framework for different use cases. 
 
-*Plumbing and Interface (falco, plugins)*
-
-A significant amount of work will be dedicated to addressing the necessary plumbing required to support the new framework and integrate it with the existing rules filtering and plugin mechanisms. This integration aims to provide a user-friendly interface that allows users to easily configure and utilize the opt-in framework for different use cases. The interface will enable end users to access and adjust the dimensions (m and p) of the sketches, as well as other tuning parameters, bounds and settings, and define the behavior profile(s).
-
+For instance, the interface should empower end users to define error tolerances and, consequently, sketch dimensions, along with other tuning parameters, bounds, and settings. Ultimately, it should enable the definition of n behavior profiles to facilitate the use of count estimates in Falco rules.
 
 ## What this Framework is Not
 
@@ -79,28 +74,28 @@ A significant amount of work will be dedicated to addressing the necessary plumb
 - The development of this framework will not be swayed by overly specific use cases that limit its broader adoption and coverage.
 - While it may not offer flawless attack threat detection from the beginning, it serves as an initial step towards comprehensive event logging and analysis, capturing all events that exhibit any form of new or changing behavior we observe. Therefore, initially, the greatest value lies in combining it with regular Falco rules based on the anomaly-filtered event stream.
 
-
 ## Why now?
 
 Over the past several Falco releases, significant improvements have been made in terms of stability, configurability, and capabilities. Now is an opportune time to enhance the already proven capabilities of threat detection. In case you haven't noticed, advanced data analytics is quite the big deal these days, and we can leverage robust established algorithms used in real production settings across various industries. The novelty lies in addressing the specific data encoding challenges unique to the field of cybersecurity.
 
+*Initial community feedback concerning the KubeCon NA 2023 Full Talk*
+
+Overall, the feedback for [A Wind of Change for Threat Detection](https://kccncna2023.sched.com/event/1R2mX/a-wind-of-change-for-threat-detection-melissa-kilby-apple) was very positive and appreciative, particularly regarding the direct real-life benefits (a safety boundary for Falco rules enabling broader monitoring that won't blow up in production). Suggestions for future development included integrating the sketch directly into the kernel driver (which would be a remarkable achievement if feasible) and inquiries about the feature's availability timeline.
+
+Refer to the [KubeCon NA 2023 Slides](https://static.sched.com/hosted_files/kccncna2023/c5/A%20Wind%20of%20Change%20for%20Threat%20Detection%20-%20Melissa%20Kilby%20-%20KubeCon%20NA%202023.pdf) or [attached PDF](kubeconna23-anomaly-detection-slides.pdf) for more information. Here's the [Talk Recording](https://www.youtube.com/watch?v=1y1m9Vz93Yo) (please note that the first four minutes of the video are missing, but the slides and audio recordings are complete).
 
 ## Proposed Timelines
 
-- Falco 0.36: Design details and scaffolding
-- Falco 0.37: Experimental release
-- Falco 0.38: First release
-
+- Falco 0.37.0: Design details and scaffolding
+- Falco 0.38.0: Experimental release
+- Falco 0.39.0: First release
 
 ## Resources / References
 
-
-- [Count-Min sketch](https://towardsdatascience.com/big-data-with-sketchy-structures-part-1-the-count-min-sketch-b73fb3a33e2a) blog post
 - [Probabilistic Data Structures and Algorithms
 for Big Data Applications](https://www.gakhov.com/books/pdsa.html) book
-- [Count-Min-Log sketch](https://arxiv.org/pdf/1502.04885.pdf) paper
-- [Count-Min Sketch with Conservative Updates](https://hal.science/hal-03613957/document#:~:text=Count%2DMin%20Sketch%20with%20Conservative%20Updates%20(CMS%2DCU),because%20of%20its%20inherent%20difficulty) paper
-
-
-
-
+- [Count Min Sketch blog 1](https://towardsdatascience.com/big-data-with-sketchy-structures-part-1-the-count-min-sketch-b73fb3a33e2a)
+- [Count Min Sketch blog 2](https://www.synnada.ai/blog/probabilistic-data-structures-in-streaming-count-min-sketch)
+- [Count Min Log Sketch](https://arxiv.org/pdf/1502.04885.pdf) paper
+- [Count Min Sketch with Conservative Updates](https://hal.science/hal-03613957/document#:~:text=Count%2DMin%20Sketch%20with%20Conservative%20Updates%20(CMS%2DCU),because%20of%20its%20inherent%20difficulty) paper
+- [xxHash](https://github.com/Cyan4973/xxHash) as new dependency for fast and reliable hashing (using xxh3)
