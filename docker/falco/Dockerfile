@@ -19,17 +19,26 @@ RUN cp /etc/skel/.bashrc /root && cp /etc/skel/.profile /root
 
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends \
+	bc \
+	bison \
 	ca-certificates \
 	clang \
 	curl \
 	dkms \
+	dwarves \
+	flex \
 	gcc \
 	gcc-11 \
 	gnupg2 \
 	jq \
-	libelf1 \
+	libc6-dev \
+	libelf-dev \
+	libssl-dev \
 	llvm \
 	make \
+	netcat-openbsd \
+	patchelf \
+	xz-utils \
 	&& rm -rf /var/lib/apt/lists/*
 
 RUN curl -s https://falco.org/repo/falcosecurity-packages.asc | apt-key add - \
