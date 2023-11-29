@@ -72,22 +72,3 @@ TEST(FalcoUtils, parse_prometheus_interval)
 	 */
 	ASSERT_EQ(falco::utils::parse_prometheus_interval("200"), 0UL);
 }
-
-TEST(FalcoUtils, decode_url)
-{
-	ASSERT_EQ(
-		falco::utils::decode_uri("https://www.example.com?key1=value+1&key2=value%40%21%242&key3=value%253", true),
-		"https://www.example.com?key1=value 1&key2=value@!$2&key3=value%3");
-	
-	ASSERT_EQ(
-		falco::utils::decode_uri("https://download.falco.org/?prefix=driver/3.0.1%2Bdriver/x86_64/", true),
-		"https://download.falco.org/?prefix=driver/3.0.1+driver/x86_64/");
-
-	ASSERT_EQ(
-		falco::utils::decode_uri("https://example.com/hello%20world", true),
-		"https://example.com/hello world");
-
-	ASSERT_EQ(
-		falco::utils::decode_uri("https://example.com/helloworld", true),
-		"https://example.com/helloworld");
-}
