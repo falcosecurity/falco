@@ -18,6 +18,28 @@
 #
 
 
+print_usage() {
+	echo ""
+	echo "Usage:"
+	echo "  falco-driver-loader [driver] [options]"
+	echo ""
+	echo "Available drivers:"
+	echo "  kmod           kernel module (default)"
+	echo "  ebpf           eBPF probe"
+	echo ""
+	echo "Options:"
+	echo "  --help         show this help message"
+	echo "  --clean        try to remove an already present driver installation"
+	echo "  --compile      try to compile the driver locally (default true)"
+	echo "  --download     try to download a prebuilt driver (default true)"
+	echo "  --print-env    skip execution and print env variables for other tools to consume"
+	echo ""
+	echo "Environment variables:"
+	echo "  FALCOCTL_DRIVER_REPOS             specify different URL(s) where to look for prebuilt Falco drivers (comma separated)"
+	echo "  FALCOCTL_DRIVER_NAME              specify a different name for the driver"
+	echo ""
+}
+
 echo "* Setting up /usr/src links from host"
 
 for i in "$HOST_ROOT/usr/src"/*
@@ -26,5 +48,64 @@ do
     ln -s "$i" "/usr/src/$base"
 done
 
-/usr/bin/falcoctl driver config "$@"
-/usr/bin/falcoctl driver install
+ENABLE_COMPILE="false"
+ENABLE_DOWNLOAD="false"
+has_driver=
+has_opts=
+while test $# -gt 0; do
+	case "$1" in
+		kmod|ebpf)
+			if [ -n "$has_driver" ]; then
+				>&2 echo "Only one driver per invocation"
+				print_usage
+				exit 1
+			else
+				/usr/bin/falcoctl driver config "--type $1"
+				has_driver="true"
+			fi
+			;;
+		-h|--help)
+			print_usage
+			exit 0
+			;;
+		--clean)
+			/usr/bin/falcoctl driver cleanup
+			exit 0
+			;;
+		--compile)
+			ENABLE_COMPILE="true"
+			has_opts="true"
+			;;
+		--download)
+			ENABLE_DOWNLOAD="true"
+			has_opts="true"
+			;;
+		--source-only)
+		    >&2 echo "Support dropped in Falco 0.37.0."
+			print_usage
+			exit 1
+			;;
+		--print-env)
+			/usr/bin/falcoctl driver printenv
+			exit 0
+			;;
+		--*)
+			>&2 echo "Unknown option: $1"
+			print_usage
+			exit 1
+			;;
+		*)
+			>&2 echo "Unknown driver: $1"
+			print_usage
+			exit 1
+			;;
+	esac
+    shift
+done
+
+if [ -z "$has_opts" ]; then
+	ENABLE_COMPILE="true"
+	ENABLE_DOWNLOAD="true"
+fi
+
+/usr/bin/falcoctl driver install --compile=$ENABLE_COMPILE --download=$ENABLE_DOWNLOAD
