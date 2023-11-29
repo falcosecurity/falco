@@ -4,7 +4,7 @@ driver:
     repos:
         - "@DRIVERS_REPO@"
     version: "@DRIVER_VERSION@"
-    hostroot: ""
+    hostroot: "/"
 artifact:
   follow:
     every: 6h0m0s
