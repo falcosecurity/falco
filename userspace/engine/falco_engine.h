@@ -235,6 +235,31 @@ public:
 	bool is_source_valid(const std::string &source) const;
 
 	//
+	// Given a source, return a formatter factory that can create
+	// filters for events of that source.
+	//
+	std::shared_ptr<gen_event_filter_factory> filter_factory_for_source(const std::string& source);
+	std::shared_ptr<gen_event_filter_factory> filter_factory_for_source(std::size_t source_idx);
+
+	//
+	// Given a source, return a formatter factory that can create
+	// formatters for an event.
+	//
+	std::shared_ptr<gen_event_formatter_factory> formatter_factory_for_source(const std::string& source);
+	std::shared_ptr<gen_event_formatter_factory> formatter_factory_for_source(std::size_t source_idx);
+
+	//
+	// Given a source, return a ruleset factory that can create
+	// rulesets for that source.
+	//
+	std::shared_ptr<filter_ruleset_factory> ruleset_factory_for_source(const std::string& source);
+	std::shared_ptr<filter_ruleset_factory> ruleset_factory_for_source(std::size_t source_idx);
+
+	// Return the filter_ruleset used for a given source.
+	std::shared_ptr<filter_ruleset> ruleset_for_source(const std::string& source);
+	std::shared_ptr<filter_ruleset> ruleset_for_source(std::size_t source_idx);
+
+	//
 	// Given an event source and ruleset, fill in a bitset
 	// containing the event types for which this ruleset can run.
 	// note(jasondellaluce): this is deprecated, must use the new

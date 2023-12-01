@@ -918,6 +918,50 @@ bool falco_engine::is_source_valid(const std::string &source) const
 	return m_sources.at(source) != nullptr;
 }
 
+std::shared_ptr<gen_event_filter_factory> falco_engine::filter_factory_for_source(const std::string& source)
+{
+	return find_source(source)->filter_factory;
+}
+
+std::shared_ptr<gen_event_filter_factory> falco_engine::filter_factory_for_source(std::size_t source_idx)
+{
+	return find_source(source_idx)->filter_factory;
+}
+
+std::shared_ptr<gen_event_formatter_factory> falco_engine::formatter_factory_for_source(const std::string& source)
+{
+	return find_source(source)->formatter_factory;
+}
+
+std::shared_ptr<gen_event_formatter_factory> falco_engine::formatter_factory_for_source(std::size_t source_idx)
+{
+	return find_source(source_idx)->formatter_factory;
+}
+
+std::shared_ptr<filter_ruleset_factory> falco_engine::ruleset_factory_for_source(const std::string& source)
+{
+	return find_source(source)->ruleset_factory;
+}
+
+std::shared_ptr<filter_ruleset_factory> falco_engine::ruleset_factory_for_source(std::size_t source_idx)
+{
+	return find_source(source_idx)->ruleset_factory;
+}
+
+std::shared_ptr<filter_ruleset> falco_engine::ruleset_for_source(const std::string& source_name)
+{
+	const falco_source *source = find_source(source_name);
+
+	return source->ruleset;
+}
+
+std::shared_ptr<filter_ruleset> falco_engine::ruleset_for_source(std::size_t source_idx)
+{
+	const falco_source *source = find_source(source_idx);
+
+	return source->ruleset;
+}
+
 void falco_engine::read_file(const std::string& filename, std::string& contents)
 {
 	std::ifstream is;
