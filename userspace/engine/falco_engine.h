@@ -297,8 +297,44 @@ private:
 
 	indexed_vector<falco_source> m_sources;
 
-	const falco_source* find_source(std::size_t index) const;
-	const falco_source* find_source(const std::string& name) const;
+	inline const falco_source* find_source(std::size_t index)
+	{
+		const falco_source *source;
+
+		if(index == m_syscall_source_idx)
+		{
+			if(m_syscall_source == NULL)
+			{
+				m_syscall_source = m_sources.at(m_syscall_source_idx);
+				if(!m_syscall_source)
+				{
+					throw falco_exception("Unknown event source index " + std::to_string(index));
+				}
+			}
+
+			source = m_syscall_source;
+		}
+		else
+		{
+			source = m_sources.at(index);
+			if(!source)
+			{
+				throw falco_exception("Unknown event source index " + std::to_string(index));
+			}
+		}
+
+		return source;
+	}
+
+	inline const falco_source* find_source(const std::string& name) const
+	{
+		auto ret = m_sources.at(name);
+		if(!ret)
+		{
+			throw falco_exception("Unknown event source " + name);
+		}
+		return ret;
+	}
 
 	// To allow the engine to be extremely fast for syscalls (can
 	// be > 1M events/sec), we save the syscall source/source_idx
