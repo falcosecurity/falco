@@ -79,26 +79,6 @@ sinsp_version falco_engine::engine_version()
 	return sinsp_version(FALCO_ENGINE_VERSION);
 }
 
-const falco_source* falco_engine::find_source(const std::string& name) const
-{
-	auto ret = m_sources.at(name);
-	if(!ret)
-	{
-		throw falco_exception("Unknown event source " + name);
-	}
-	return ret;
-}
-
-const falco_source* falco_engine::find_source(std::size_t index) const
-{
-	auto ret = m_sources.at(index);
-	if(!ret)
-	{
-		throw falco_exception("Unknown event source index " + std::to_string(index));
-	}
-	return ret;
-}
-
 // Return a key that uniquely represents a field class.
 // For now, we assume name + shortdesc is unique.
 static std::string fieldclass_key(const gen_event_filter_factory::filter_fieldclass_info &fld_info)
@@ -422,21 +402,7 @@ std::unique_ptr<std::vector<falco_engine::rule_result>> falco_engine::process_ev
 	// source_idx, which means that at any time each filter_ruleset will only
 	// be accessed by a single thread.
 
-	const falco_source *source;
-
-	if(source_idx == m_syscall_source_idx)
-	{
-		if(m_syscall_source == NULL)
-		{
-			m_syscall_source = find_source(m_syscall_source_idx);
-		}
-
-		source = m_syscall_source;
-	}
-	else
-	{
-		source = find_source(source_idx);
-	}
+	const falco_source *source = find_source(source_idx);
 
 	if(should_drop_evt() || !source)
 	{
