@@ -48,7 +48,7 @@ jobs:
         # If you wish to specify custom queries, you can do so here or in a config file.
         # By default, queries listed here will override any specified in a config file.
         # Prefix the list here with "+" to use these queries and those in the config file.
-        
+
         # Details on CodeQL's query packs refer to : https://docs.github.com/en/code-security/code-scanning/automatically-scanning-your-code-for-vulnerabilities-and-errors/configuring-code-scanning#using-queries-in-ql-packs
         # queries: security-extended,security-and-quality
 
@@ -56,7 +56,7 @@ jobs:
       run: sudo apt update -y
 
     - name: Install build dependencies
-      run: sudo DEBIAN_FRONTEND=noninteractive apt install libssl-dev libyaml-dev libc-ares-dev libprotobuf-dev protobuf-compiler libjq-dev libyaml-cpp-dev libgrpc++-dev protobuf-compiler-grpc rpm libelf-dev cmake build-essential libcurl4-openssl-dev linux-headers-$(uname -r) clang llvm git -y
+      run: sudo DEBIAN_FRONTEND=noninteractive apt install libssl-dev libc-ares-dev libprotobuf-dev protobuf-compiler libyaml-cpp-dev libgrpc++-dev protobuf-compiler-grpc rpm libelf-dev cmake build-essential libcurl4-openssl-dev linux-headers-$(uname -r) clang llvm git -y
 
     - name: Prepare project
       run: |

@@ -26,14 +26,14 @@ if(FALCOSECURITY_LIBS_SOURCE_DIR)
 else()
   # FALCOSECURITY_LIBS_REPO accepts a repository name (<org name>/<repo name>) alternative to the falcosecurity/libs repository.
   # In case you want to test against a fork of falcosecurity/libs just pass the variable -
-  # ie., `cmake -DFALCOSECURITY_LIBS_REPO=<your-gh-handle>/libs ..` 
+  # ie., `cmake -DFALCOSECURITY_LIBS_REPO=<your-gh-handle>/libs ..`
   if (NOT FALCOSECURITY_LIBS_REPO)
     set(FALCOSECURITY_LIBS_REPO "falcosecurity/libs")
   endif()
 
   # FALCOSECURITY_LIBS_VERSION accepts a git reference (branch name, commit hash, or tag) to the falcosecurity/libs repository.
   # In case you want to test against another falcosecurity/libs version (or branch, or commit) just pass the variable -
-  # ie., `cmake -DFALCOSECURITY_LIBS_VERSION=dev ..` 
+  # ie., `cmake -DFALCOSECURITY_LIBS_VERSION=dev ..`
   if(NOT FALCOSECURITY_LIBS_VERSION)
     set(FALCOSECURITY_LIBS_VERSION "fb175515055254f74d3f2587862d32a173dafa54")
     set(FALCOSECURITY_LIBS_CHECKSUM "SHA256=4db26e92f340594a95666978ac235c1a045dd76c8e10f66c2da6054aedc96485")
@@ -84,12 +84,10 @@ set(CREATE_TEST_TARGETS OFF CACHE BOOL "")
 set(BUILD_LIBSCAP_EXAMPLES OFF CACHE BOOL "")
 
 set(USE_BUNDLED_TBB ON CACHE BOOL "")
-set(USE_BUNDLED_B64 ON CACHE BOOL "")
 set(USE_BUNDLED_JSONCPP ON CACHE BOOL "")
 set(USE_BUNDLED_VALIJSON ON CACHE BOOL "")
 set(USE_BUNDLED_RE2 ON CACHE BOOL "")
 set(USE_BUNDLED_UTHASH ON CACHE BOOL "")
-set(USE_BUNDLED_TINYDIR ON CACHE BOOL "")
 
 list(APPEND CMAKE_MODULE_PATH "${FALCOSECURITY_LIBS_SOURCE_DIR}/cmake/modules")
 
