@@ -27,14 +27,14 @@ on:
         required: false
         default: ''
         type: string
-       
+
 jobs:
   build-and-test:
     # See https://github.com/actions/runner/issues/409#issuecomment-1158849936
     runs-on: ${{ (inputs.arch == 'aarch64' && fromJSON('[ "self-hosted", "linux", "ARM64" ]')) || 'ubuntu-22.04' }}
     container: ${{ (inputs.arch == 'aarch64' && 'ubuntu:22.04') || '' }}
     outputs:
-      cmdout: ${{ steps.run_cmd.outputs.out }}  
+      cmdout: ${{ steps.run_cmd.outputs.out }}
     steps:
       - name: Checkout
         uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
@@ -44,14 +44,14 @@ jobs:
 
       - name: Update base image
         run: sudo apt update -y
-      
+
       - name: Install build dependencies
-        run: sudo DEBIAN_FRONTEND=noninteractive apt install libjq-dev libelf-dev libyaml-cpp-dev cmake build-essential git -y
+        run: sudo DEBIAN_FRONTEND=noninteractive apt install libelf-dev libyaml-cpp-dev cmake build-essential git -y
 
       - name: Install build dependencies (non-minimal)
         if: inputs.minimal != true
-        run: sudo DEBIAN_FRONTEND=noninteractive apt install libssl-dev libyaml-dev libc-ares-dev libprotobuf-dev protobuf-compiler libgrpc++-dev protobuf-compiler-grpc rpm libcurl4-openssl-dev linux-headers-$(uname -r) clang llvm -y
-      
+        run: sudo DEBIAN_FRONTEND=noninteractive apt install libssl-dev libc-ares-dev libprotobuf-dev protobuf-compiler libgrpc++-dev protobuf-compiler-grpc rpm libcurl4-openssl-dev linux-headers-$(uname -r) clang llvm -y
+
       - name: Prepare project
         run: |
           mkdir build
@@ -74,7 +74,7 @@ jobs:
       - name: Run unit tests
         run: |
           pushd build
-          sudo ./unit_tests/falco_unit_tests 
+          sudo ./unit_tests/falco_unit_tests
           popd
 
       - name: Run command
