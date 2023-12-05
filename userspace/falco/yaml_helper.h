@@ -31,12 +31,45 @@ limitations under the License.
 #include <set>
 #include <iostream>
 #include <fstream>
-#include <type_traits>
 
 #include "config_falco.h"
 
 #include "event_drops.h"
 #include "falco_outputs.h"
+
+class yaml_helper;
+
+class yaml_visitor {
+private:
+	using Callback = std::function<void(YAML::Node&)>;
+	yaml_visitor(Callback cb): seen(), cb(std::move(cb)) {}
+
+	void operator()(YAML::Node &cur) {
+		seen.push_back(cur);
+		if (cur.IsMap()) {
+			for (YAML::detail::iterator_value pair : cur) {
+				descend(pair.second);
+			}
+		} else if (cur.IsSequence()) {
+			for (YAML::detail::iterator_value child : cur) {
+				descend(child);
+			}
+		} else if (cur.IsScalar()) {
+			cb(cur);
+		}
+	}
+
+	void descend(YAML::Node &target) {
+		if (std::find(seen.begin(), seen.end(), target) == seen.end()) {
+			(*this)(target);
+		}
+	}
+
+	std::vector<YAML::Node> seen;
+	Callback cb;
+
+	friend class yaml_helper;
+};
 
 /**
  * @brief An helper class for reading and editing YAML documents
@@ -50,6 +83,7 @@ public:
 	void load_from_string(const std::string& input)
 	{
 		m_root = YAML::Load(input);
+		pre_process_env_vars();
 	}
 
 	/**
@@ -58,6 +92,7 @@ public:
 	void load_from_file(const std::string& path)
 	{
 		m_root = YAML::LoadFile(path);
+		pre_process_env_vars();
 	}
 
 	/**
@@ -78,79 +113,8 @@ public:
 		get_node(node, key);
 		if(node.IsDefined())
 		{
-			auto value = node.as<std::string>();
-
-			// Helper function to convert string to the desired type T
-			auto convert_str_to_t = [&default_value](const std::string& str) -> T {
-				if (str.empty())
-				{
-					return default_value;
-				}
-
-				if constexpr (std::is_same_v<T, std::string>)
-				{
-					return str;
-				}
-				std::stringstream ss(str);
-				T result;
-				if (ss >> std::boolalpha >> result) return result;
-				return default_value;
-			};
-
-			auto start_pos = value.find('$');
-			while (start_pos != std::string::npos)
-			{
-				auto substr = value.substr(start_pos);
-				// Case 1 -> ${}
-				if (substr.rfind("${", 0) == 0)
-				{
-					auto end_pos = substr.find('}');
-					if (end_pos != std::string::npos)
-					{
-						// Eat "${" and "}" when getting the env var name
-						auto env_str = substr.substr(2, end_pos - 2);
-						const char* env_value = std::getenv(env_str.c_str()); // Get the environment variable value
-						if(env_value)
-						{
-							// env variable name + "${}"
-							value.replace(start_pos, env_str.length() + 3, env_value);
-						}
-						else
-						{
-							value.erase(start_pos, env_str.length() + 3);
-						}
-					}
-					else
-					{
-						// There are no "}" chars anymore; just break leaving rest of value untouched.
-						break;
-					}
-				}
-				// Case 2 -> $${}
-				else if (substr.rfind("$${", 0) == 0)
-				{
-					auto end_pos = substr.find('}');
-					if (end_pos != std::string::npos)
-					{
-						// Consume first "$" token
-						value.erase(start_pos, 1);
-					}
-					else
-					{
-						// There are no "}" chars anymore; just break leaving rest of value untouched.
-						break;
-					}
-					start_pos++; // consume the second '$' token
-				}
-				else
-				{
-					start_pos += substr.length();
-				}
-				start_pos = value.find("$", start_pos);
-			}
-			return convert_str_to_t(value);
+			return node.as<T>(default_value);
 		}
-
 		return default_value;
 	}
 
@@ -188,6 +152,71 @@ public:
 
 private:
 	YAML::Node m_root;
+
+	/*
+	 * When loading a yaml file,
+	 * we immediately pre process all scalar values through a visitor private API,
+	 * and resolve any "${env_var}" to its value;
+	 * moreover, any "$${str}" is resolved to simply "${str}".
+	 */
+	void pre_process_env_vars()
+	{
+		yaml_visitor([](YAML::Node &scalar) {
+				auto value = scalar.as<std::string>();
+				auto start_pos = value.find('$');
+				while (start_pos != std::string::npos)
+				{
+					auto substr = value.substr(start_pos);
+					// Case 1 -> ${}
+					if (substr.rfind("${", 0) == 0)
+					{
+						auto end_pos = substr.find('}');
+						if (end_pos != std::string::npos)
+						{
+							// Eat "${" and "}" when getting the env var name
+							auto env_str = substr.substr(2, end_pos - 2);
+							const char* env_value = std::getenv(env_str.c_str()); // Get the environment variable value
+							if(env_value)
+							{
+								// env variable name + "${}"
+								value.replace(start_pos, env_str.length() + 3, env_value);
+							}
+							else
+							{
+								value.erase(start_pos, env_str.length() + 3);
+							}
+						}
+						else
+						{
+							// There are no "}" chars anymore; just break leaving rest of value untouched.
+							break;
+						}
+					}
+					// Case 2 -> $${}
+					else if (substr.rfind("$${", 0) == 0)
+					{
+						auto end_pos = substr.find('}');
+						if (end_pos != std::string::npos)
+						{
+							// Consume first "$" token
+							value.erase(start_pos, 1);
+						}
+						else
+						{
+							// There are no "}" chars anymore; just break leaving rest of value untouched.
+							break;
+						}
+						start_pos++; // consume the second '$' token
+					}
+					else
+					{
+						start_pos += substr.length();
+					}
+					start_pos = value.find("$", start_pos);
+				}
+				scalar = value;
+			})(m_root);
+	}
 
 	/**
 	 * Key is a string representing a node in the YAML document.
