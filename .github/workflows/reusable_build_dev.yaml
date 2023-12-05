@@ -31,8 +31,7 @@ on:
 jobs:
   build-and-test:
     # See https://github.com/actions/runner/issues/409#issuecomment-1158849936
-    runs-on: ${{ (inputs.arch == 'aarch64' && fromJSON('[ "self-hosted", "linux", "ARM64" ]')) || 'ubuntu-22.04' }}
-    container: ${{ (inputs.arch == 'aarch64' && 'ubuntu:22.04') || '' }}
+    runs-on: ${{ (inputs.arch == 'aarch64' && 'actuated-arm64-8cpu-16gb') || 'ubuntu-22.04' }}
     outputs:
       cmdout: ${{ steps.run_cmd.outputs.out }}  
     steps:

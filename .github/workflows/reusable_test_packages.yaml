@@ -19,7 +19,7 @@ on:
 jobs:
   test-packages:
     # See https://github.com/actions/runner/issues/409#issuecomment-1158849936
-    runs-on: ${{ (inputs.arch == 'aarch64' && fromJSON('[ "self-hosted", "linux", "ARM64" ]')) || 'ubuntu-latest' }}
+    runs-on: ${{ (inputs.arch == 'aarch64' && 'actuated-arm64-8cpu-16gb') || 'ubuntu-latest' }}
     steps:
       - name: Checkout
         uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
@@ -65,6 +65,7 @@ jobs:
 
       # Right now we are not able to install kernel-headers on our ARM64 self-hosted runner.
       # For this reason, we disable the falco-driver-loader tests, which require kernel headers on the host.
+      # TODO: check if it's possible to do so in actuated runners
       - name: Run regression tests
         env:
           # fixme(leogr): this is a workaround for https://github.com/falcosecurity/falco/issues/2784

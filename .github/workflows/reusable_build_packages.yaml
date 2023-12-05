@@ -14,7 +14,7 @@ on:
 jobs:
   build-modern-bpf-skeleton:
     # See https://github.com/actions/runner/issues/409#issuecomment-1158849936
-    runs-on: ${{ (inputs.arch == 'aarch64' && fromJSON('[ "self-hosted", "linux", "ARM64" ]')) || 'ubuntu-latest' }}
+    runs-on: ${{ (inputs.arch == 'aarch64' && 'actuated-arm64-8cpu-16gb') || 'ubuntu-latest' }}
     container: fedora:latest
     steps:
       # Always install deps before invoking checkout action, to properly perform a full clone.
@@ -40,7 +40,7 @@ jobs:
           
   build-packages:
     # See https://github.com/actions/runner/issues/409#issuecomment-1158849936
-    runs-on: ${{ (inputs.arch == 'aarch64' && fromJSON('[ "self-hosted", "linux", "ARM64" ]')) || 'ubuntu-latest' }}
+    runs-on: ${{ (inputs.arch == 'aarch64' && 'actuated-arm64-8cpu-16gb') || 'ubuntu-latest' }}
     needs: [build-modern-bpf-skeleton]
     container: centos:7
     steps:
