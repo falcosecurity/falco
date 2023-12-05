@@ -30,13 +30,6 @@ namespace falco
     class atomic_signal_handler
     {
     public:
-        atomic_signal_handler(): m_triggered(false), m_handled(false) { }
-        atomic_signal_handler(atomic_signal_handler&&) = default;
-        atomic_signal_handler& operator = (atomic_signal_handler&&) = default;
-        atomic_signal_handler(const atomic_signal_handler&) = delete;
-        atomic_signal_handler& operator = (const atomic_signal_handler&) = delete;
-        ~atomic_signal_handler() = default;
-        
         /**
          * @brief Returns true if the underlying atomic implementation
          * is lock-free as per C++ standard semantics.
@@ -95,7 +88,7 @@ namespace falco
          * performed. After the first handler has been performed, every
          * other invocation of handle() will be skipped and return false
          * up until the next invocation of reset().
-         * 
+         *
          * @param f The action to perform.
          * @return true If the action has been performed.
          * @return false If the action has not been performed.
@@ -134,7 +127,7 @@ namespace falco
 
     private:
         std::mutex m_mtx;
-        std::atomic<bool> m_triggered;
-        std::atomic<bool> m_handled;
+        std::atomic<bool> m_triggered{false};
+        std::atomic<bool> m_handled{false};
     };
 };

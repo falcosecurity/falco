@@ -20,7 +20,6 @@ limitations under the License.
 #endif
 #include <ctime>
 #include <csignal>
-#include <nlohmann/json.hpp>
 #include <atomic>
 
 #include <nlohmann/json.hpp>
@@ -40,8 +39,8 @@ static timer_t s_timerid;
 #else
 static uint16_t s_timerid;
 #endif
-// note: Workaround for older GLIBC versions (< 2.35), where calling timer_delete() 
-// with an invalid timer ID not returned by timer_create() causes a segfault because of 
+// note: Workaround for older GLIBC versions (< 2.35), where calling timer_delete()
+// with an invalid timer ID not returned by timer_create() causes a segfault because of
 // a bug in GLIBC (https://sourceware.org/bugzilla/show_bug.cgi?id=28257).
 // Just performing a nullptr check is not enough as even after creating the timer, s_timerid
 // remains a nullptr somehow.
@@ -132,7 +131,7 @@ bool stats_writer::init_ticker(uint32_t interval_msec, std::string &err)
 	// delete any previously set timer
 	if (s_timerid_exists)
 	{
-		if (timer_delete(s_timerid) == -1) 
+		if (timer_delete(s_timerid) == -1)
 		{
 			err = std::string("Could not delete previous timer: ") + strerror(errno);
 			return false;
@@ -140,7 +139,7 @@ bool stats_writer::init_ticker(uint32_t interval_msec, std::string &err)
 		s_timerid_exists = false;
 	}
 
-	if (timer_create(CLOCK_MONOTONIC, &sev, &s_timerid) == -1) 
+	if (timer_create(CLOCK_MONOTONIC, &sev, &s_timerid) == -1)
 	{
 		err = std::string("Could not create periodic timer: ") + strerror(errno);
 		return false;
@@ -151,7 +150,7 @@ bool stats_writer::init_ticker(uint32_t interval_msec, std::string &err)
 	timer.it_value.tv_nsec = (interval_msec % 1000) * 1000 * 1000;
 	timer.it_interval = timer.it_value;
 
-	if (timer_settime(s_timerid, 0, &timer, NULL) == -1) 
+	if (timer_settime(s_timerid, 0, &timer, NULL) == -1)
 	{
 		err = std::string("Could not set up periodic timer: ") + strerror(errno);
 		return false;
@@ -265,7 +264,7 @@ void stats_writer::worker() noexcept
 		{
 			return;
 		}
-		
+
 		// this helps waiting for the first tick
 		tick = stats_writer::get_ticker();
 		if (first_tick != tick)
@@ -302,7 +301,7 @@ void stats_writer::worker() noexcept
 }
 
 stats_writer::collector::collector(const std::shared_ptr<stats_writer>& writer)
-	: m_writer(writer), m_last_tick(0), m_samples(0),
+	: m_writer(writer), m_last_tick(0),
 	  m_last_now(0), m_last_n_evts(0), m_last_n_drops(0), m_last_num_evts(0)
 {
 }

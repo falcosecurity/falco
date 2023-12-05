@@ -209,18 +209,12 @@ namespace rule_loader
 	public:
 		rule_load_exception(falco::load_result::error_code ec, const std::string& msg, const context& ctx);
 		virtual ~rule_load_exception();
-		rule_load_exception(rule_load_exception&&) = default;
-		rule_load_exception& operator = (rule_load_exception&&) = default;
-		rule_load_exception(const rule_load_exception&) = default;
-		rule_load_exception& operator = (const rule_load_exception&) = default;
 
-		const char* what();
+		const char* what() const noexcept override;
 
 		falco::load_result::error_code ec;
 		std::string msg;
 		context ctx;
-
-		std::string errstr;
 	};
 
 	/*!
@@ -278,10 +272,6 @@ namespace rule_loader
 			{
 				res.reset(new result(name));
 			}
-		configuration(configuration&&) = default;
-		configuration& operator = (configuration&&) = default;
-		configuration(const configuration&) = delete;
-		configuration& operator = (const configuration&) = delete;
 
 		// inputs
 		const std::string& content;

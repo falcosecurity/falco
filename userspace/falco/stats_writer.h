@@ -50,7 +50,7 @@ public:
 		This class is not thread-safe.
 	*/
 	class collector
-	{	
+	{
 	public:
 		/*!
 			\brief Initializes the collector with the given writer
@@ -74,11 +74,8 @@ public:
 		*/
 		void get_metrics_output_fields_additional(nlohmann::json& output_fields, const std::shared_ptr<sinsp>& inspector, double stats_snapshot_time_delta_sec, const std::string& src);
 
-	
 		std::shared_ptr<stats_writer> m_writer;
 		stats_writer::ticker_t m_last_tick;
-		uint64_t m_samples;
-		scap_stats m_last_stats;
 		uint64_t m_last_now;
 		uint64_t m_last_n_evts;
 		uint64_t m_last_n_drops;

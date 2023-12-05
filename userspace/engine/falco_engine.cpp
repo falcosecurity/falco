@@ -195,7 +195,7 @@ std::unique_ptr<load_result> falco_engine::load_rules(const std::string &rules_c
 	// read rules YAML file and collect its definitions
 	rule_loader::reader reader;
 	if (reader.read(cfg, m_rule_collector))
-	{	
+	{
 		// compile the definitions (resolve macro/list refs, exceptions, ...)
 		m_last_compile_output = std::make_unique<rule_loader::compiler::compile_output>();
 		rule_loader::compiler().compile(cfg, m_rule_collector, *m_last_compile_output.get());
@@ -384,7 +384,7 @@ libsinsp::events::set<ppm_sc_code> falco_engine::sc_codes_for_ruleset(const std:
 {
 	return find_source(source)->ruleset->enabled_sc_codes(find_ruleset_id(ruleset));
 }
-	
+
 libsinsp::events::set<ppm_event_code> falco_engine::event_codes_for_ruleset(const std::string &source, const std::string &ruleset)
 {
 	return find_source(source)->ruleset->enabled_event_codes(find_ruleset_id(ruleset));
@@ -550,7 +550,7 @@ nlohmann::json falco_engine::describe_rule(std::string *rule, const std::vector<
 				alternatives.push_back(std::move(alternative));
 			}
 			r["alternatives"] = std::move(alternatives);
-			
+
 			plugin_versions.push_back(std::move(r));
 		}
 		output["required_plugin_versions"] = std::move(plugin_versions);
@@ -565,7 +565,7 @@ nlohmann::json falco_engine::describe_rule(std::string *rule, const std::vector<
 			rules_array.push_back(std::move(rule));
 		}
 		output["rules"] = std::move(rules_array);
-		
+
 		// Store information about macros
 		nlohmann::json macros_array = nlohmann::json::array();
 		for(const auto &m : m_last_compile_output->macros)
@@ -577,14 +577,14 @@ nlohmann::json falco_engine::describe_rule(std::string *rule, const std::vector<
 		}
 		output["macros"] = std::move(macros_array);
 
-		// Store information about lists 
+		// Store information about lists
 		nlohmann::json lists_array = nlohmann::json::array();
 		for(const auto &l : m_last_compile_output->lists)
 		{
 			auto info = m_rule_collector.lists().at(l.name);
 			nlohmann::json list;
 			get_json_details(list, l, *info, plugins);
-			lists_array.push_back(std::move(list));			
+			lists_array.push_back(std::move(list));
 		}
 		output["lists"] = std::move(lists_array);
 	}
@@ -619,12 +619,12 @@ void falco_engine::get_json_details(
 	// Fill general rule information
 	rule_info["name"] = r.name;
 	rule_info["condition"] = info.cond;
-	rule_info["priority"] = std::move(format_priority(r.priority, false));
+	rule_info["priority"] = format_priority(r.priority, false);
 	rule_info["output"] = info.output;
 	rule_info["description"] = r.description;
 	rule_info["enabled"] = info.enabled;
 	rule_info["source"] = r.source;
-	rule_info["tags"] = std::move(sequence_to_json_array(info.tags));
+	rule_info["tags"] = sequence_to_json_array(info.tags);
 	out["info"] = std::move(rule_info);
 
 	// Parse rule condition and build the non-compiled AST
@@ -648,19 +648,19 @@ void falco_engine::get_json_details(
 	filter_details_resolver().run(ast.get(), details);
 	filter_details_resolver().run(r.condition.get(), compiled_details);
 
-	out["details"]["macros"] = std::move(sequence_to_json_array(details.macros));
-	out["details"]["lists"] = std::move(sequence_to_json_array(details.lists));
-	out["details"]["condition_operators"] = std::move(sequence_to_json_array(compiled_details.operators));
-	out["details"]["condition_fields"] = std::move(sequence_to_json_array(compiled_details.fields));
+	out["details"]["macros"] = sequence_to_json_array(details.macros);
+	out["details"]["lists"] = sequence_to_json_array(details.lists);
+	out["details"]["condition_operators"] = sequence_to_json_array(compiled_details.operators);
+	out["details"]["condition_fields"] = sequence_to_json_array(compiled_details.fields);
 
 	// Get fields from output string
 	auto fmt = create_formatter(r.source, r.output);
 	std::vector<std::string> out_fields;
 	fmt->get_field_names(out_fields);
-	out["details"]["output_fields"] = std::move(sequence_to_json_array(out_fields));
+	out["details"]["output_fields"] = sequence_to_json_array(out_fields);
 
 	// Get fields from exceptions
-	out["details"]["exception_fields"] = std::move(sequence_to_json_array(r.exception_fields));
+	out["details"]["exception_fields"] = sequence_to_json_array(r.exception_fields);
 
 	// Get names and operators from exceptions
 	std::unordered_set<std::string> exception_names;
@@ -689,10 +689,10 @@ void falco_engine::get_json_details(
 		else
 		{
 			exception_operators.insert(e.comps.item);
-		}	
+		}
 	}
-	out["details"]["exception_names"] = std::move(sequence_to_json_array(exception_names));
-	out["details"]["exception_operators"] = std::move(sequence_to_json_array(exception_operators));
+	out["details"]["exception_names"] = sequence_to_json_array(exception_names);
+	out["details"]["exception_operators"] = sequence_to_json_array(exception_operators);
 
 	// Store event types
 	nlohmann::json events;
@@ -700,7 +700,7 @@ void falco_engine::get_json_details(
 	out["details"]["events"] = std::move(events);
 
 	// Store compiled condition and output
-	out["details"]["condition_compiled"] = std::move(libsinsp::filter::ast::as_string(r.condition.get()));
+	out["details"]["condition_compiled"] = libsinsp::filter::ast::as_string(r.condition.get());
 	out["details"]["output_compiled"] = r.output;
 
 	// Compute the plugins that are actually used by this rule. This is involves:
@@ -750,10 +750,10 @@ void falco_engine::get_json_details(
 	filter_details_resolver().run(m.condition.get(), compiled_details);
 
 	out["details"]["used"] = m.used;
-	out["details"]["macros"] = std::move(sequence_to_json_array(details.macros));
-	out["details"]["lists"] = std::move(sequence_to_json_array(details.lists));
-	out["details"]["condition_operators"] = std::move(sequence_to_json_array(compiled_details.operators));
-	out["details"]["condition_fields"] = std::move(sequence_to_json_array(compiled_details.fields));
+	out["details"]["macros"] = sequence_to_json_array(details.macros);
+	out["details"]["lists"] = sequence_to_json_array(details.lists);
+	out["details"]["condition_operators"] = sequence_to_json_array(compiled_details.operators);
+	out["details"]["condition_fields"] = sequence_to_json_array(compiled_details.fields);
 
 	// Store event types
 	nlohmann::json events;
@@ -761,7 +761,7 @@ void falco_engine::get_json_details(
 	out["details"]["events"] = std::move(events);
 
 	// Store compiled condition
-	out["details"]["condition_compiled"] = std::move(libsinsp::filter::ast::as_string(m.condition.get()));
+	out["details"]["condition_compiled"] = libsinsp::filter::ast::as_string(m.condition.get());
 
 	// Compute the plugins that are actually used by this macro.
 	// Note: macros have no specific source, we need to set an empty list of used
@@ -769,7 +769,7 @@ void falco_engine::get_json_details(
 	// if a macro uses a plugin's field, we can't be sure which plugin actually
 	// is used until we resolve the macro ref in a rule providing a source for
 	// disambiguation.
-	out["details"]["plugins"] = std::move(nlohmann::json::array());
+	out["details"]["plugins"] = nlohmann::json::array();
 }
 
 void falco_engine::get_json_details(
@@ -800,9 +800,9 @@ void falco_engine::get_json_details(
 	list_info["items"] = std::move(items);
 	out["info"] = std::move(list_info);
 	out["details"]["used"] = l.used;
-	out["details"]["lists"] = std::move(sequence_to_json_array(lists));
-	out["details"]["items_compiled"] = std::move(sequence_to_json_array(l.items));
-	out["details"]["plugins"] = std::move(nlohmann::json::array()); // always empty
+	out["details"]["lists"] = sequence_to_json_array(lists);
+	out["details"]["items_compiled"] = sequence_to_json_array(l.items);
+	out["details"]["plugins"] = nlohmann::json::array(); // always empty
 }
 
 void falco_engine::get_json_evt_types(

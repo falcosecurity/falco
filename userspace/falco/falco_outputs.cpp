@@ -65,7 +65,7 @@ falco_outputs::falco_outputs(
 	{
 		add_output(output);
 	}
-	m_outputs_queue_num_drops = {0};
+	m_outputs_queue_num_drops = 0;
 #ifndef __EMSCRIPTEN__
 	m_queue.set_capacity(outputs_queue_capacity);
 	m_worker_thread = std::thread(&falco_outputs::worker, this);

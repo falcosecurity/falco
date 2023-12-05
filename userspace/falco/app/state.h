@@ -56,7 +56,7 @@ struct state
         source_info& operator = (source_info&&) = default;
         source_info(const source_info&) = default;
         source_info& operator = (const source_info&) = default;
-    
+
         // The index of the given event source in the state's falco_engine,
         // as returned by falco_engine::add_source
         std::size_t engine_idx;
@@ -93,10 +93,6 @@ struct state
     }
 
     ~state() = default;
-    state(state&&) = default;
-    state& operator = (state&&) = default;
-    state(const state&) = default;
-    state& operator = (const state&) = default;
 
     std::string cmdline;
     falco::app::options options;
@@ -145,7 +141,7 @@ struct state
     falco_webserver webserver;
 #endif
 
-    inline bool is_capture_mode() const 
+    inline bool is_capture_mode() const
     {
         return config->m_engine_mode == engine_kind_t::REPLAY;
     }
@@ -175,7 +171,7 @@ struct state
         return config->m_engine_mode == engine_kind_t::NONE;
     }
 
-    inline bool is_source_enabled(const std::string& src) const 
+    inline bool is_source_enabled(const std::string& src) const
     {
         return enabled_sources.find(falco_common::syscall_source) != enabled_sources.end();
     }

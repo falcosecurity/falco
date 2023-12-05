@@ -32,11 +32,6 @@ namespace falco
          * @brief Creates a semaphore with the given initial counter value
          */
         semaphore(int c = 0): count(c) {}
-        semaphore(semaphore&&) = default;
-        semaphore& operator = (semaphore&&) = default;
-        semaphore(const semaphore&) = delete;
-        semaphore& operator = (const semaphore&) = delete;
-        ~semaphore() = default;
 
         /**
          * @brief Increments the internal counter and unblocks acquirers

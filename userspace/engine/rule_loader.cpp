@@ -562,10 +562,8 @@ rule_loader::rule_load_exception::~rule_load_exception()
 {
 }
 
-const char* rule_loader::rule_load_exception::what()
+const char* rule_loader::rule_load_exception::what() const noexcept
 {
-	errstr = falco::load_result::error_code_str(ec) + ": "
-		+ msg.c_str();
-
-	return errstr.c_str();
+	// const + noexcept: can't use functions that change the object or throw
+	return msg.c_str();
 }

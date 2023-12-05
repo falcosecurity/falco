@@ -45,16 +45,12 @@ class source_sync_context
 public:
 	source_sync_context(falco::semaphore& s)
 		: m_finished(false), m_joined(false), m_semaphore(s) { }
-	source_sync_context(source_sync_context&&) = default;
-	source_sync_context& operator = (source_sync_context&&) = default;
-	source_sync_context(const source_sync_context&) = delete;
-	source_sync_context& operator = (const source_sync_context&) = delete;
 
 	inline void finish()
 	{
 		bool v = false;
 		while (!m_finished.compare_exchange_weak(
-				v, true, 
+				v, true,
 				std::memory_order_seq_cst,
 				std::memory_order_seq_cst))
 		{
@@ -70,7 +66,7 @@ public:
 	{
 		bool v = false;
 		while (!m_joined.compare_exchange_weak(
-				v, true, 
+				v, true,
 				std::memory_order_seq_cst,
 				std::memory_order_seq_cst))
 		{
@@ -90,7 +86,7 @@ public:
 	{
 		return m_finished.load(std::memory_order_seq_cst);
 	}
-	
+
 private:
 	// set to true when the event processing loop finishes
 	std::atomic<bool> m_finished;
@@ -102,12 +98,6 @@ private:
 
 struct live_context
 {
-	live_context() = default;
-	live_context(live_context&&) = default;
-	live_context& operator = (live_context&&) = default;
-	live_context(const live_context&) = default;
-	live_context& operator = (const live_context&) = default;
-
 	// the name of the source of which events are processed
 	std::string source;
 	// the result of the event processing loop
@@ -269,7 +259,7 @@ static falco::app::run_result do_inspect(
 				}
 				return run_result::fatal(msg);
 			}
-	
+
 			// for capture mode, the source name can change at every event
 			stats_collector.collect(inspector, inspector->event_sources()[source_engine_idx], num_evts);
 		}
@@ -325,7 +315,7 @@ static falco::app::run_result do_inspect(
 				s.outputs->handle_event(rule_res.evt, rule_res.rule, rule_res.source, rule_res.priority_num, rule_res.format, rule_res.tags);
 			}
 		}
-		
+
 		num_evts++;
 	}
 
