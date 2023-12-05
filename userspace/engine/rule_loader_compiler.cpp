@@ -50,12 +50,6 @@ static void paren_item(std::string& e)
 	}
 }
 
-static inline bool is_operator_defined(const std::string& op)
-{
-	auto ops = libsinsp::filter::parser::supported_operators();
-	return find(ops.begin(), ops.end(), op) != ops.end();
-}
-
 static inline bool is_operator_for_list(const std::string& op)
 {
 	auto ops = libsinsp::filter::parser::supported_operators(true);

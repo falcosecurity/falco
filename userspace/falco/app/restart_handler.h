@@ -57,15 +57,11 @@ public:
               m_watched_dirs(watch_dirs),
               m_watched_files(watch_files) { }
     virtual ~restart_handler();
-    restart_handler(restart_handler&&) = default;
-    restart_handler& operator = (restart_handler&&) = default;
-    restart_handler(const restart_handler&) = delete;
-    restart_handler& operator = (const restart_handler&) = delete;
 
     bool start(std::string& err);
     void stop();
     void trigger();
-    
+
 private:
     void watcher_loop() noexcept;
 

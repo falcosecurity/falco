@@ -22,12 +22,12 @@ limitations under the License.
 #include <unordered_set>
 #include <unordered_map>
 
-struct filter_details 
+struct filter_details
 {
 	// input macros and lists
 	std::unordered_set<std::string> known_macros;
 	std::unordered_set<std::string> known_lists;
-	
+
 	// output details
 	std::unordered_set<std::string> fields;
 	std::unordered_set<std::string> macros;
@@ -47,25 +47,23 @@ public:
 	/*!
 		\brief Visits a filter AST and stores details about macros, lists,
 		fields and operators used.
-		\param filter The filter AST to be processed. 
-		\param details Helper structure used to state known macros and 
+		\param filter The filter AST to be processed.
+		\param details Helper structure used to state known macros and
 		lists on input, and to store all the retrieved details as output.
 	*/
 	void run(libsinsp::filter::ast::expr* filter,
 		filter_details& details);
-	
+
 private:
 	struct visitor : public libsinsp::filter::ast::expr_visitor
 	{
-		visitor(filter_details& details) : 
+		visitor(filter_details& details) :
 			m_details(details),
 			m_expect_list(false),
 			m_expect_macro(false),
 			m_expect_evtname(false) {}
 		visitor(visitor&&) = default;
-		visitor& operator = (visitor&&) = default;
 		visitor(const visitor&) = delete;
-		visitor& operator = (const visitor&) = delete;
 
 		void visit(libsinsp::filter::ast::and_expr* e) override;
 		void visit(libsinsp::filter::ast::or_expr* e) override;

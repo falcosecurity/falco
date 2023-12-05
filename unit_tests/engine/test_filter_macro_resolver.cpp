@@ -37,17 +37,17 @@ TEST(MacroResolver, should_resolve_macros_on_a_filter_AST)
 {
 	libsinsp::filter::ast::pos_info macro_pos(12, 85, 27);
 
-	std::shared_ptr<libsinsp::filter::ast::expr> macro = std::move(libsinsp::filter::ast::unary_check_expr::create("test.field", "", "exists"));
+	std::shared_ptr<libsinsp::filter::ast::expr> macro = libsinsp::filter::ast::unary_check_expr::create("test.field", "", "exists");
 
 	std::vector<std::unique_ptr<libsinsp::filter::ast::expr>> filter_and;
 	filter_and.push_back(libsinsp::filter::ast::unary_check_expr::create("evt.name", "", "exists"));
 	filter_and.push_back(libsinsp::filter::ast::not_expr::create(libsinsp::filter::ast::value_expr::create(MACRO_NAME, macro_pos)));
-	std::shared_ptr<libsinsp::filter::ast::expr> filter = std::move(libsinsp::filter::ast::and_expr::create(filter_and));
+	std::shared_ptr<libsinsp::filter::ast::expr> filter = libsinsp::filter::ast::and_expr::create(filter_and);
 
 	std::vector<std::unique_ptr<libsinsp::filter::ast::expr>> expected_and;
 	expected_and.push_back(libsinsp::filter::ast::unary_check_expr::create("evt.name", "", "exists"));
 	expected_and.push_back(libsinsp::filter::ast::not_expr::create(clone(macro.get())));
-	std::shared_ptr<libsinsp::filter::ast::expr> expected = std::move(libsinsp::filter::ast::and_expr::create(expected_and));
+	std::shared_ptr<libsinsp::filter::ast::expr> expected = libsinsp::filter::ast::and_expr::create(expected_and);
 
 	filter_macro_resolver resolver;
 	resolver.set_macro(MACRO_NAME, macro);
@@ -71,9 +71,9 @@ TEST(MacroResolver, should_resolve_macros_on_a_filter_AST_single_node)
 {
 	libsinsp::filter::ast::pos_info macro_pos(12, 85, 27);
 
-	std::shared_ptr<libsinsp::filter::ast::expr> macro = std::move(libsinsp::filter::ast::unary_check_expr::create("test.field", "", "exists"));
+	std::shared_ptr<libsinsp::filter::ast::expr> macro = libsinsp::filter::ast::unary_check_expr::create("test.field", "", "exists");
 
-	std::shared_ptr<libsinsp::filter::ast::expr> filter = std::move(libsinsp::filter::ast::value_expr::create(MACRO_NAME, macro_pos));
+	std::shared_ptr<libsinsp::filter::ast::expr> filter = libsinsp::filter::ast::value_expr::create(MACRO_NAME, macro_pos);
 
 	filter_macro_resolver resolver;
 	resolver.set_macro(MACRO_NAME, macro);
@@ -102,18 +102,18 @@ TEST(MacroResolver, should_resolve_macros_on_a_filter_AST_multiple_macros)
 	libsinsp::filter::ast::pos_info a_macro_pos(11, 75, 43);
 	libsinsp::filter::ast::pos_info b_macro_pos(91, 21, 9);
 
-	std::shared_ptr<libsinsp::filter::ast::expr> a_macro = std::move(libsinsp::filter::ast::unary_check_expr::create("one.field", "", "exists"));
-	std::shared_ptr<libsinsp::filter::ast::expr> b_macro = std::move(libsinsp::filter::ast::unary_check_expr::create("another.field", "", "exists"));
+	std::shared_ptr<libsinsp::filter::ast::expr> a_macro = libsinsp::filter::ast::unary_check_expr::create("one.field", "", "exists");
+	std::shared_ptr<libsinsp::filter::ast::expr> b_macro = libsinsp::filter::ast::unary_check_expr::create("another.field", "", "exists");
 
 	std::vector<std::unique_ptr<libsinsp::filter::ast::expr>> filter_or;
 	filter_or.push_back(libsinsp::filter::ast::value_expr::create(MACRO_A_NAME, a_macro_pos));
 	filter_or.push_back(libsinsp::filter::ast::value_expr::create(MACRO_B_NAME, b_macro_pos));
-	std::shared_ptr<libsinsp::filter::ast::expr> filter = std::move(libsinsp::filter::ast::or_expr::create(filter_or));
+	std::shared_ptr<libsinsp::filter::ast::expr> filter = libsinsp::filter::ast::or_expr::create(filter_or);
 
 	std::vector<std::unique_ptr<libsinsp::filter::ast::expr>> expected_or;
 	expected_or.push_back(clone(a_macro.get()));
 	expected_or.push_back(clone(b_macro.get()));
-	std::shared_ptr<libsinsp::filter::ast::expr> expected_filter = std::move(libsinsp::filter::ast::or_expr::create(expected_or));
+	std::shared_ptr<libsinsp::filter::ast::expr> expected_filter = libsinsp::filter::ast::or_expr::create(expected_or);
 
 	filter_macro_resolver resolver;
 	resolver.set_macro(MACRO_A_NAME, a_macro);
@@ -149,17 +149,17 @@ TEST(MacroResolver, should_resolve_macros_on_a_filter_AST_nested_macros)
 	std::vector<std::unique_ptr<libsinsp::filter::ast::expr>> a_macro_and;
 	a_macro_and.push_back(libsinsp::filter::ast::unary_check_expr::create("one.field", "", "exists"));
 	a_macro_and.push_back(libsinsp::filter::ast::value_expr::create(MACRO_B_NAME, b_macro_pos));
-	std::shared_ptr<libsinsp::filter::ast::expr> a_macro = std::move(libsinsp::filter::ast::and_expr::create(a_macro_and));
+	std::shared_ptr<libsinsp::filter::ast::expr> a_macro = libsinsp::filter::ast::and_expr::create(a_macro_and);
 
-	std::shared_ptr<libsinsp::filter::ast::expr> b_macro = std::move(
-		libsinsp::filter::ast::unary_check_expr::create("another.field", "", "exists"));
+	std::shared_ptr<libsinsp::filter::ast::expr> b_macro =
+		libsinsp::filter::ast::unary_check_expr::create("another.field", "", "exists");
 
-	std::shared_ptr<libsinsp::filter::ast::expr> filter = std::move(libsinsp::filter::ast::value_expr::create(MACRO_A_NAME, a_macro_pos));
+	std::shared_ptr<libsinsp::filter::ast::expr> filter = libsinsp::filter::ast::value_expr::create(MACRO_A_NAME, a_macro_pos);
 
 	std::vector<std::unique_ptr<libsinsp::filter::ast::expr>> expected_and;
 	expected_and.push_back(libsinsp::filter::ast::unary_check_expr::create("one.field", "", "exists"));
 	expected_and.push_back(libsinsp::filter::ast::unary_check_expr::create("another.field", "", "exists"));
-	std::shared_ptr<libsinsp::filter::ast::expr> expected_filter = std::move(libsinsp::filter::ast::and_expr::create(expected_and));
+	std::shared_ptr<libsinsp::filter::ast::expr> expected_filter = libsinsp::filter::ast::and_expr::create(expected_and);
 
 	filter_macro_resolver resolver;
 	resolver.set_macro(MACRO_A_NAME, a_macro);
@@ -196,7 +196,7 @@ TEST(MacroResolver, should_find_unknown_macros)
 	std::vector<std::unique_ptr<libsinsp::filter::ast::expr>> filter_and;
 	filter_and.push_back(libsinsp::filter::ast::unary_check_expr::create("evt.name", "", "exists"));
 	filter_and.push_back(libsinsp::filter::ast::not_expr::create(libsinsp::filter::ast::value_expr::create(MACRO_NAME, macro_pos)));
-	std::shared_ptr<libsinsp::filter::ast::expr> filter = std::move(libsinsp::filter::ast::and_expr::create(filter_and));
+	std::shared_ptr<libsinsp::filter::ast::expr> filter = libsinsp::filter::ast::and_expr::create(filter_and);
 
 	filter_macro_resolver resolver;
 	ASSERT_FALSE(resolver.run(filter));
@@ -214,9 +214,9 @@ TEST(MacroResolver, should_find_unknown_nested_macros)
 	std::vector<std::unique_ptr<libsinsp::filter::ast::expr>> a_macro_and;
 	a_macro_and.push_back(libsinsp::filter::ast::unary_check_expr::create("one.field", "", "exists"));
 	a_macro_and.push_back(libsinsp::filter::ast::value_expr::create(MACRO_B_NAME, b_macro_pos));
-	std::shared_ptr<libsinsp::filter::ast::expr> a_macro = std::move(libsinsp::filter::ast::and_expr::create(a_macro_and));
+	std::shared_ptr<libsinsp::filter::ast::expr> a_macro = libsinsp::filter::ast::and_expr::create(a_macro_and);
 
-	std::shared_ptr<libsinsp::filter::ast::expr> filter = std::move(libsinsp::filter::ast::value_expr::create(MACRO_A_NAME, a_macro_pos));
+	std::shared_ptr<libsinsp::filter::ast::expr> filter = libsinsp::filter::ast::value_expr::create(MACRO_A_NAME, a_macro_pos);
 	auto expected_filter = clone(a_macro.get());
 
 	filter_macro_resolver resolver;
@@ -237,9 +237,9 @@ TEST(MacroResolver, should_undefine_macro)
 	libsinsp::filter::ast::pos_info macro_pos_1(12, 9, 3);
 	libsinsp::filter::ast::pos_info macro_pos_2(9, 6, 3);
 
-	std::shared_ptr<libsinsp::filter::ast::expr> macro = std::move(libsinsp::filter::ast::unary_check_expr::create("test.field", "", "exists"));
-	std::shared_ptr<libsinsp::filter::ast::expr> a_filter = std::move(libsinsp::filter::ast::value_expr::create(MACRO_NAME, macro_pos_1));
-	std::shared_ptr<libsinsp::filter::ast::expr> b_filter = std::move(libsinsp::filter::ast::value_expr::create(MACRO_NAME, macro_pos_2));
+	std::shared_ptr<libsinsp::filter::ast::expr> macro = libsinsp::filter::ast::unary_check_expr::create("test.field", "", "exists");
+	std::shared_ptr<libsinsp::filter::ast::expr> a_filter = libsinsp::filter::ast::value_expr::create(MACRO_NAME, macro_pos_1);
+	std::shared_ptr<libsinsp::filter::ast::expr> b_filter = libsinsp::filter::ast::value_expr::create(MACRO_NAME, macro_pos_2);
 	filter_macro_resolver resolver;
 
 	resolver.set_macro(MACRO_NAME, macro);
@@ -262,8 +262,8 @@ TEST(MacroResolver, should_undefine_macro)
 TEST(MacroResolver, should_clone_macro_AST)
 {
 	libsinsp::filter::ast::pos_info macro_pos(5, 2, 8888);
-	std::shared_ptr<libsinsp::filter::ast::unary_check_expr> macro = std::move(libsinsp::filter::ast::unary_check_expr::create("test.field", "", "exists"));
-	std::shared_ptr<libsinsp::filter::ast::expr> filter = std::move(libsinsp::filter::ast::value_expr::create(MACRO_NAME, macro_pos));
+	std::shared_ptr<libsinsp::filter::ast::unary_check_expr> macro = libsinsp::filter::ast::unary_check_expr::create("test.field", "", "exists");
+	std::shared_ptr<libsinsp::filter::ast::expr> filter = libsinsp::filter::ast::value_expr::create(MACRO_NAME, macro_pos);
 	filter_macro_resolver resolver;
 
 	resolver.set_macro(MACRO_NAME, macro);

@@ -55,45 +55,38 @@ enum class engine_kind_t : uint8_t
 class falco_configuration
 {
 public:
-
-	typedef struct {
-	public:
+	struct plugin_config {
 		std::string m_name;
 		std::string m_library_path;
 		std::string m_init_config;
 		std::string m_open_params;
-	} plugin_config;
+	};
 
-	typedef struct {
-	public:
+	struct kmod_config {
 		int16_t m_buf_size_preset;
 		bool m_drop_failed_exit;
-	} kmod_config;
+	};
 
-	typedef struct {
-	public:
+	struct ebpf_config {
 		std::string m_probe_path;
 		int16_t m_buf_size_preset;
 		bool m_drop_failed_exit;
-	} ebpf_config;
+	};
 
-	typedef struct {
-	public:
+	struct modern_ebpf_config {
 		uint16_t m_cpus_for_each_buffer;
 		int16_t m_buf_size_preset;
 		bool m_drop_failed_exit;
-	} modern_ebpf_config;
+	};
 
-	typedef struct {
-	public:
+	struct replay_config {
 		std::string m_capture_file;
-	} replay_config;
+	};
 
-	typedef struct {
-	public:
+	struct gvisor_config {
 		std::string m_config;
 		std::string m_root;
-	} gvisor_config;
+	};
 
 	falco_configuration();
 	virtual ~falco_configuration() = default;

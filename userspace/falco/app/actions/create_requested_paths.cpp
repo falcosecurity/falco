@@ -20,14 +20,6 @@ limitations under the License.
 #include <sys/stat.h>
 #include <filesystem>
 
-#ifndef CPPPATH_SEP
-#ifdef _MSC_VER
-#define CPPPATH_SEP "\\"
-#else
-#define CPPPATH_SEP "/"
-#endif
-#endif
-
 using namespace falco::app;
 using namespace falco::app::actions;
 

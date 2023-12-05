@@ -61,7 +61,7 @@ class filter_macro_resolver
 
 		/*!
 		    \brief used in get_{resolved,unknown}_macros and get_errors
-			to represent an identifier/string value along with an AST position. 
+			to represent an identifier/string value along with an AST position.
 		*/
 		typedef std::pair<std::string,libsinsp::filter::ast::pos_info> value_info;
 
@@ -103,10 +103,6 @@ class filter_macro_resolver
 					m_unknown_macros(unknown_macros),
 					m_resolved_macros(resolved_macros),
 					m_macros(macros) {}
-			visitor(visitor&&) = default;
-			visitor& operator = (visitor&&) = default;
-			visitor(const visitor&) = delete;
-			visitor& operator = (const visitor&) = delete;
 
 			std::vector<std::string> m_macros_path;
 			std::unique_ptr<libsinsp::filter::ast::expr> m_node_substitute;
