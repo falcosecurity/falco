@@ -11,7 +11,9 @@
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 
-set(FALCO_ENGINE_SOURCE_FILES
+find_package(nlohmann_json CONFIG REQUIRED)
+
+add_library(falco_engine STATIC
     falco_common.cpp
     falco_engine.cpp
     falco_load_result.cpp
@@ -25,24 +27,26 @@ set(FALCO_ENGINE_SOURCE_FILES
     rule_loader.cpp
     rule_loader_reader.cpp
     rule_loader_collector.cpp
-    rule_loader_compiler.cpp)
-
-add_library(falco_engine STATIC ${FALCO_ENGINE_SOURCE_FILES})
+    rule_loader_compiler.cpp
+)
 
 if (EMSCRIPTEN)
 	target_compile_options(falco_engine PRIVATE "-sDISABLE_EXCEPTION_CATCHING=0")
 endif()
 
-add_dependencies(falco_engine yamlcpp njson)
+add_dependencies(falco_engine yamlcpp)
 
-target_include_directories(
-    falco_engine
-    PUBLIC
-      "${NJSON_INCLUDE}"
-      "${TBB_INCLUDE_DIR}"
-      "${LIBSCAP_INCLUDE_DIRS}"
-      "${LIBSINSP_INCLUDE_DIRS}"
-      "${YAMLCPP_INCLUDE_DIR}"
-      "${PROJECT_BINARY_DIR}/userspace/engine")
+target_include_directories(falco_engine
+PUBLIC
+    ${LIBSCAP_INCLUDE_DIRS}
+    ${LIBSINSP_INCLUDE_DIRS}
+    ${PROJECT_BINARY_DIR}/userspace/engine
+    ${TBB_INCLUDE_DIR}
+    ${YAMLCPP_INCLUDE_DIR}
+)
 
-target_link_libraries(falco_engine "${FALCO_SINSP_LIBRARY}" "${YAMLCPP_LIB}")
+target_link_libraries(falco_engine
+    nlohmann_json::nlohmann_json
+    ${FALCO_SINSP_LIBRARY}
+    ${YAMLCPP_LIB}
+)
