@@ -158,7 +158,11 @@ TEST(Configuration, configuration_environment_variables)
 	"    - ${ENV_VAR_EMBEDDED}/foo\n"
 	"is_test: ${ENV_VAR_BOOL}\n"
 	"num_test: ${ENV_VAR_INT}\n"
-	"empty_test: ${ENV_VAR_EMPTY}\n";
+	"empty_test: ${ENV_VAR_EMPTY}\n"
+	"plugins:\n"
+	"  - name: k8saudit\n"
+	"    library_path: /foo/${ENV_VAR}/libk8saudit.so\n"
+	"    open_params: ${ENV_VAR_INT}\n";
 
     yaml_helper conf;
     conf.load_from_string(env_var_sample_yaml);
@@ -191,9 +195,9 @@ TEST(Configuration, configuration_environment_variables)
     auto base_value_escaped = conf.get_scalar<std::string>("base_value.escaped", default_value);
     ASSERT_EQ(base_value_escaped, env_var_value); // Environment variable within quotes
 
-    /* Test fetching of an undefined environment variable. Expected to return the default value.*/
+    /* Test fetching of an undefined environment variable. Resolves to empty string. */
     auto unknown_boolean = conf.get_scalar<std::string>("base_value.subvalue.subvalue2.boolean", default_value);
-    ASSERT_EQ(unknown_boolean, default_value);
+    ASSERT_EQ(unknown_boolean, "");
 
     /* Test fetching of environment variables from a list */
     auto base_value_2_list_0 = conf.get_scalar<std::string>("base_value_2.sample_list[0]", default_value);
@@ -237,9 +241,17 @@ TEST(Configuration, configuration_environment_variables)
     auto integer = conf.get_scalar<int32_t>("num_test", -1);
     ASSERT_EQ(integer, 12);
 
-    // An env var that resolves to an empty string returns default value
-    auto empty_default_str = conf.get_scalar<std::string>("empty_test", "test");
-    ASSERT_EQ(empty_default_str, "test");
+    // An env var that resolves to an empty string returns ""
+    auto empty_default_str = conf.get_scalar<std::string>("empty_test", default_value);
+    ASSERT_EQ(empty_default_str, "");
+
+    std::list<falco_configuration::plugin_config> plugins;
+    conf.get_sequence<std::list<falco_configuration::plugin_config>>(plugins, std::string("plugins"));
+    std::vector<falco_configuration::plugin_config> m_plugins{ std::make_move_iterator(std::begin(plugins)),
+							      std::make_move_iterator(std::end(plugins)) };
+    ASSERT_EQ(m_plugins[0].m_name, "k8saudit");
+    ASSERT_EQ(m_plugins[0].m_library_path, "/foo/" + env_var_value + "/libk8saudit.so");
+    ASSERT_EQ(m_plugins[0].m_open_params, "12");
 
     /* Clear the set environment variables after testing */
     SET_ENV_VAR(env_var_name.c_str(), "");
