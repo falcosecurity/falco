@@ -18,6 +18,7 @@
 
 chosen_driver=
 chosen_unit=
+CHOICE=
 
 # Every time we call this script we want to stat from a clean state.
 echo "[POST-INSTALL] Disable all possible enabled 'falco' service:"
@@ -36,7 +37,18 @@ systemctl --system disable 'falcoctl-artifact-follow.service' || true
 systemctl --system unmask falcoctl-artifact-follow.service || true
 
 if [ $1 -ge 1 ]; then
-        if [ -x /usr/bin/dialog ] && [ "${FALCO_FRONTEND}" != "noninteractive" ]; then
+        case $FALCO_DRIVER_CHOICE in
+              kmod)
+                  CHOICE=2
+                  ;;
+              ebpf)
+                  CHOICE=3
+                  ;;
+              modern_ebpf)
+                  CHOICE=4
+                  ;;
+        esac     
+        if [ -z $CHOICE ] && [ -x /usr/bin/dialog ] && [ "${FALCO_FRONTEND}" != "noninteractive" ]; then          
             # If dialog is installed, create a dialog to let users choose the correct driver for them
             CHOICE=$(dialog --clear --title "Falco drivers" --menu "Choose your preferred driver:" 12 55 4 \
                     1 "Manual configuration (no unit is started)" \
@@ -44,55 +56,44 @@ if [ $1 -ge 1 ]; then
                     3 "eBPF" \
                     4 "Modern eBPF" \
                     2>&1 >/dev/tty)
+        fi         
+        case $CHOICE in
+            2)
+                chosen_driver="kmod"
+                chosen_unit="kmod"
+                ;;
+            3)
+                chosen_driver="ebpf"
+                chosen_unit="bpf"
+                ;;
+            4)
+                chosen_driver="modern_ebpf"
+                chosen_unit="modern-bpf"
+                ;;
+        esac
+        if [ -n "$CHOICE" ]; then
+            echo "[POST-INSTALL] Configure falcoctl driver type:"
+            falcoctl driver config --type $chosen_driver
+            CHOICE=
+            case $FALCOCTL_ENABLED in
+                no)
+                    CHOICE=2
+                    ;;
+            esac
+            if [ -z $CHOICE ] &&  [ -x /usr/bin/dialog ] && [ "${FALCO_FRONTEND}" != "noninteractive" ]; then
+                CHOICE=$(dialog --clear --title "Falcoctl" --menu "Do you want to follow automatic ruleset updates?" 10 40 2 \
+                        1 "Yes" \
+                        2 "No" \
+                        2>&1 >/dev/tty)
+            fi  
             case $CHOICE in
                 2)
-                    chosen_driver="kmod"
-                    chosen_unit="kmod"
-                    ;;
-                3)
-                    chosen_driver="ebpf"
-                    chosen_unit="bpf"
-                    ;;
-                4)
-                    chosen_driver="modern_ebpf"
-                    chosen_unit="modern-bpf"
-                    ;;
-            esac
-            if [ -n "$chosen_driver" ]; then
-              echo "[POST-INSTALL] Configure falcoctl driver type:"
-              falcoctl driver config --type $chosen_driver
-              CHOICE=$(dialog --clear --title "Falcoctl" --menu "Do you want to follow automatic ruleset updates?" 10 40 2 \
-                      1 "Yes" \
-                      2 "No" \
-                      2>&1 >/dev/tty)
-              case $CHOICE in
-                  2)
-                      # we don't want falcoctl enabled, we mask it
-                      systemctl --system mask falcoctl-artifact-follow.service || true
-                  ;;
-              esac
-            fi
-            clear
-        else
-            case $FALCO_DRIVER_CHOICE in
-                module | kmod )
-                    chosen_driver="kmod"
-                    ;;
-                bpf | ebpf | eBPF )
-                    chosen_driver="bpf"
-                    ;;
-                modern-bpf | modern-ebpf | modern-eBPF )
-                    chosen_driver="modern-bpf"
-                    ;;
-            esac
-            case $FALCOCTL_ENABLED in
-                yes )
-                    ;;
-                no )
+                    # we don't want falcoctl enabled, we mask it
                     systemctl --system mask falcoctl-artifact-follow.service || true
-                    ;;
+                ;;
             esac
-        fi
+        fi    
+        clear
 fi
 
 set -e
