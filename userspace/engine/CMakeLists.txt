@@ -11,8 +11,6 @@
 # "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
 # specific language governing permissions and limitations under the License.
 
-find_package(nlohmann_json CONFIG REQUIRED)
-
 add_library(falco_engine STATIC
     falco_common.cpp
     falco_engine.cpp
@@ -34,19 +32,19 @@ if (EMSCRIPTEN)
 	target_compile_options(falco_engine PRIVATE "-sDISABLE_EXCEPTION_CATCHING=0")
 endif()
 
-add_dependencies(falco_engine yamlcpp)
+add_dependencies(falco_engine yamlcpp njson)
 
 target_include_directories(falco_engine
 PUBLIC
     ${LIBSCAP_INCLUDE_DIRS}
     ${LIBSINSP_INCLUDE_DIRS}
     ${PROJECT_BINARY_DIR}/userspace/engine
+    ${nlohmann_json_DIR}
     ${TBB_INCLUDE_DIR}
     ${YAMLCPP_INCLUDE_DIR}
 )
 
 target_link_libraries(falco_engine
-    nlohmann_json::nlohmann_json
     ${FALCO_SINSP_LIBRARY}
     ${YAMLCPP_LIB}
 )
