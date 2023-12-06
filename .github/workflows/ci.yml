@@ -23,6 +23,13 @@ jobs:
       arch: x86_64
       version: ${{ needs.fetch-version.outputs.version }}
 
+  build-dev-packages-arm64:
+    needs: [fetch-version]
+    uses: ./.github/workflows/reusable_build_packages.yaml
+    with:
+      arch: aarch64
+      version: ${{ needs.fetch-version.outputs.version }}
+
   test-dev-packages:
     needs: [fetch-version, build-dev-packages]
     uses: ./.github/workflows/reusable_test_packages.yaml
@@ -35,6 +42,16 @@ jobs:
       static: ${{ matrix.static != '' && true || false }}
       version: ${{ needs.fetch-version.outputs.version }}
 
+  test-dev-packages-arm64:
+    needs: [fetch-version, build-dev-packages]
+    uses: ./.github/workflows/reusable_test_packages.yaml
+    strategy:
+      fail-fast: false
+    with:
+      arch: aarch64
+      static: ${{ matrix.static != '' && true || false }}
+      version: ${{ needs.fetch-version.outputs.version }}
+
   build-dev-minimal:
     uses: ./.github/workflows/reusable_build_dev.yaml
     with:
@@ -42,7 +59,15 @@ jobs:
       git_ref: ${{ github.event.pull_request.head.sha }}
       minimal: true
       build_type: Debug
-  
+
+  build-dev-minimal-arm64:
+    uses: ./.github/workflows/reusable_build_dev.yaml
+    with:
+      arch: aarch64
+      git_ref: ${{ github.event.pull_request.head.sha }}
+      minimal: true
+      build_type: Debug
+
   # builds using system deps, checking out the PR's code
   # note: this also runs a command that generates an output of form: "<engine_version> <some_hash>",
   # of which <some_hash> is computed by hashing in order the following:
