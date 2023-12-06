@@ -16,6 +16,11 @@ if(USE_BUNDLED_NLOHMANN_JSON)
     ExternalProject_Add(njson
         URL "https://github.com/nlohmann/json/archive/v3.3.0.tar.gz"
         URL_HASH "SHA256=2fd1d207b4669a7843296c41d3b6ac5b23d00dec48dba507ba051d14564aa801"
-        CMAKE_ARGS -DCMAKE_BUILD_TYPE=Release -DJSON_BuildTests=OFF -DBUILD_TESTING=OFF
+        CMAKE_ARGS -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/njson-prefix -DJSON_BuildTests=OFF -DBUILD_TESTING=OFF
     )
+
+    set(nlohmann_json_DIR ${PROJECT_BINARY_DIR}/njson-prefix/include)
+else()
+    find_package(nlohmann_json CONFIG REQUIRED)
+    add_custom_target(njson)
 endif()
