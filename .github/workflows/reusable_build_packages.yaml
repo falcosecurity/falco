@@ -119,7 +119,7 @@ jobs:
             ${{ github.workspace }}/build/falco-*.rpm
             
   build-musl-package:
-    runs-on: ${{ (inputs.arch == 'aarch64' && fromJSON('[ "self-hosted", "linux", "ARM64" ]')) || 'ubuntu-latest' }}
+    runs-on: ${{ (inputs.arch == 'aarch64' && 'actuated-arm64-8cpu-16gb') || 'ubuntu-latest' }}
     container: alpine:3.17
     steps:
       # Always install deps before invoking checkout action, to properly perform a full clone.

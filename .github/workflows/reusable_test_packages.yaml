@@ -44,9 +44,7 @@ jobs:
           cd falco-${{ inputs.version }}-${{ inputs.arch }}
           sudo cp -r * /
 
-      # x86_64 job run on ubuntu-22.04 and here we can install kernel-headers
-      - name: Install dependencies for falco-driver-loader tests on x86
-        if: ${{ inputs.arch == 'x86_64' }}
+      - name: Install dependencies for falco-driver-loader tests
         run: |
           sudo apt update -y
           sudo apt install -y --no-install-recommends build-essential clang make llvm gcc dkms linux-headers-$(uname -r)
@@ -63,9 +61,6 @@ jobs:
           go generate ./...
           popd
 
-      # Right now we are not able to install kernel-headers on our ARM64 self-hosted runner.
-      # For this reason, we disable the falco-driver-loader tests, which require kernel headers on the host.
-      # TODO: check if it's possible to do so in actuated runners
       - name: Run regression tests
         env:
           # fixme(leogr): this is a workaround for https://github.com/falcosecurity/falco/issues/2784
@@ -76,9 +71,7 @@ jobs:
           if ${{ inputs.static && 'false' || 'true' }}; then
             ./build/falcoctl.test -test.timeout=90s -test.v >> ./report.txt 2>&1 || true
             ./build/k8saudit.test -test.timeout=90s -test.v >> ./report.txt 2>&1 || true
-            if ${{ inputs.arch == 'x86_64' && 'true' || 'false' }}; then
-                sudo ./build/falco-driver-loader.test -test.timeout=90s -test.v >> ./report.txt 2>&1 || true
-            fi
+            sudo ./build/falco-driver-loader.test -test.timeout=90s -test.v >> ./report.txt 2>&1 || true
           fi
           cat ./report.txt | go-junit-report -set-exit-code > report.xml
           popd
