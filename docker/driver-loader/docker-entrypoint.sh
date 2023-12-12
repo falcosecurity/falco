@@ -21,7 +21,7 @@
 print_usage() {
 	echo ""
 	echo "Usage:"
-	echo "  falco-driver-loader [driver] [options]"
+	echo "  docker run -i -t --privileged -v /root/.falco:/root/.falco -v /proc:/host/proc:ro -v /boot:/host/boot:ro -v /lib/modules:/host/lib/modules:ro -v /usr:/host/usr:ro -v /etc:/host/etc:ro falcosecurity/falco-driver-loader:latest [driver] [options]"
 	echo ""
 	echo "Available drivers:"
 	echo "  kmod           kernel module (default)"
