@@ -60,7 +60,7 @@ while test $# -gt 0; do
 				print_usage
 				exit 1
 			else
-				/usr/bin/falcoctl driver config "--type $1"
+				/usr/bin/falcoctl driver config --type $1
 				has_driver="true"
 			fi
 			;;

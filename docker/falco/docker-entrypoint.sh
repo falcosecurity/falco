@@ -60,14 +60,15 @@ if [[ -z "${SKIP_DRIVER_LOADER}" ]]; then
     has_driver=
     has_opts=
     for opt in "${falco_driver_loader_option_arr[@]}"
-        case "$1" in
+    do
+        case "$opt" in
             kmod|ebpf)
                 if [ -n "$has_driver" ]; then
                     >&2 echo "Only one driver per invocation"
                     print_usage
                     exit 1
                 else
-                    /usr/bin/falcoctl driver config "--type $opt"
+                    /usr/bin/falcoctl driver config --type $opt
                     has_driver="true"
                 fi
                 ;;
