@@ -60,7 +60,7 @@ bool falco::app::restart_handler::start(std::string& err)
 
     for (const auto& f : m_watched_files)
     {
-        auto wd = inotify_add_watch(m_inotify_fd, f.c_str(), IN_CLOSE_WRITE);
+        auto wd = inotify_add_watch(m_inotify_fd, f.c_str(), IN_CLOSE_WRITE | IN_MOVE_SELF | IN_DELETE_SELF);
         if (wd < 0)
         {
             err = "could not watch file: " + f;
@@ -71,7 +71,7 @@ bool falco::app::restart_handler::start(std::string& err)
 
     for (const auto &f : m_watched_dirs)
     {
-        auto wd = inotify_add_watch(m_inotify_fd, f.c_str(), IN_CREATE | IN_DELETE);
+        auto wd = inotify_add_watch(m_inotify_fd, f.c_str(), IN_CREATE | IN_DELETE | IN_MOVE);
         if (wd < 0)
         {
             err = "could not watch directory: " + f;
