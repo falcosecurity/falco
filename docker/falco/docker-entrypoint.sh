@@ -21,7 +21,7 @@
 print_usage() {
 	echo ""
 	echo "Usage:"
-	echo "  falco-driver-loader [driver] [options]"
+	echo "  falco [driver] [options]"
 	echo ""
 	echo "Available drivers:"
 	echo "  kmod           kernel module (default)"
