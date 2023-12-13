@@ -85,12 +85,17 @@ public:
 	*/
 	virtual void append(configuration& cfg, list_info& info);
 	virtual void append(configuration& cfg, macro_info& info);
-	virtual void append(configuration& cfg, rule_info& info);
+	virtual void append(configuration& cfg, rule_update_info& info);
 
 	/*!
 		\brief Updates the 'enabled' flag of an existing definition
 	*/
 	virtual void enable(configuration& cfg, rule_info& info);
+
+	/*!
+		\brief Selectively replaces some fields of an existing definition
+	*/
+	virtual void selective_replace(configuration& cfg, rule_update_info& info);
 
 private:
 	uint32_t m_cur_index;

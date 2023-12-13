@@ -48,8 +48,14 @@ static inline void define_info(indexed_vector<T>& infos, T& info, uint32_t id)
 	}
 }
 
-template <typename T>
-static inline void append_info(T* prev, T& info, uint32_t id)
+template <typename T, typename U>
+static inline void append_info(T* prev, U& info, uint32_t id)
+{
+	prev->visibility = id;
+}
+
+template <typename T, typename U>
+static inline void replace_info(T* prev, U& info, uint32_t id)
 {
 	prev->visibility = id;
 }
@@ -185,7 +191,7 @@ void rule_loader::collector::append(configuration& cfg, list_info& info)
 {
 	auto prev = m_list_infos.at(info.name);
 	THROW(!prev,
-	       "List has 'append' key but no list by that name already exists",
+	       "List has 'append' key or an append override but no list by that name already exists",
 	       info.ctx);
 	prev->items.insert(prev->items.end(), info.items.begin(), info.items.end());
 	append_info(prev, info, m_cur_index++);
@@ -233,15 +239,15 @@ void rule_loader::collector::define(configuration& cfg, rule_info& info)
 	define_info(m_rule_infos, info, m_cur_index++);
 }
 
-void rule_loader::collector::append(configuration& cfg, rule_info& info)
+void rule_loader::collector::append(configuration& cfg, rule_update_info& info)
 {
 	auto prev = m_rule_infos.at(info.name);
 
 	THROW(!prev,
-	       "Rule has 'append' key but no rule by that name already exists",
+	       "Rule has 'append' key or an append override but no rule by that name already exists",
 	       info.ctx);
-	THROW(info.cond.empty() && info.exceptions.empty(),
-	       "Appended rule must have exceptions or condition property",
+	THROW(!info.has_any_value(),
+	       "Appended rule must have at least one field that can be appended to",
 	       info.ctx);
 
 	// note: source can be nullptr in case we've collected a
@@ -256,41 +262,136 @@ void rule_loader::collector::append(configuration& cfg, rule_info& info)
 	    	info.ctx);
 	}
 
-	if (!info.cond.empty())
+	if (info.cond.has_value() && !info.cond->empty())
 	{
 		prev->cond += " ";
-		prev->cond += info.cond;
+		prev->cond += *info.cond;
 	}
 
-	for (auto &ex : info.exceptions)
+	if (info.output.has_value() && !info.output->empty())
 	{
-		auto prev_ex = find_if(prev->exceptions.begin(), prev->exceptions.end(),
-			[&ex](const rule_loader::rule_exception_info& i)
-				{ return i.name == ex.name; });
-		if (prev_ex == prev->exceptions.end())
+		prev->output += " ";
+		prev->output += *info.output;
+	}
+
+	if (info.desc.has_value() && !info.desc->empty())
+	{
+		prev->desc += " ";
+		prev->desc += *info.desc;
+	}
+
+	if (info.tags.has_value())
+	{
+		for (auto &tag: *info.tags)
 		{
-			THROW(!ex.fields.is_valid(),
-			       "Rule exception must have fields property with a list of fields",
-			       ex.ctx);
-			THROW(ex.values.empty(),
-			       "Rule exception must have values property with a list of values",
-			       ex.ctx);
-			validate_exception_info(source, ex);
-			prev->exceptions.push_back(ex);
-		}
-		else
-		{
-			THROW(ex.fields.is_valid(),
-			       "Can not append exception fields to existing exception, only values",
-			       ex.ctx);
-			THROW(ex.comps.is_valid(),
-			       "Can not append exception comps to existing exception, only values",
-			       ex.ctx);
-			prev_ex->values.insert(
-				prev_ex->values.end(), ex.values.begin(), ex.values.end());
+			prev->tags.insert(tag);
 		}
 	}
+
+	if (info.exceptions.has_value())
+	{
+		for (auto &ex : *info.exceptions)
+		{
+			auto prev_ex = find_if(prev->exceptions.begin(), prev->exceptions.end(),
+				[&ex](const rule_loader::rule_exception_info& i)
+					{ return i.name == ex.name; });
+			if (prev_ex == prev->exceptions.end())
+			{
+				THROW(!ex.fields.is_valid(),
+					"Rule exception must have fields property with a list of fields",
+					ex.ctx);
+				THROW(ex.values.empty(),
+					"Rule exception must have values property with a list of values",
+					ex.ctx);
+				validate_exception_info(source, ex);
+				prev->exceptions.push_back(ex);
+			}
+			else
+			{
+				THROW(ex.fields.is_valid(),
+					"Can not append exception fields to existing exception, only values",
+					ex.ctx);
+				THROW(ex.comps.is_valid(),
+					"Can not append exception comps to existing exception, only values",
+					ex.ctx);
+				prev_ex->values.insert(
+					prev_ex->values.end(), ex.values.begin(), ex.values.end());
+			}
+		}
+	}
+
 	append_info(prev, info, m_cur_index++);
+}
+
+void rule_loader::collector::selective_replace(configuration& cfg, rule_update_info& info)
+{
+	auto prev = m_rule_infos.at(info.name);
+
+	THROW(!prev,
+	       "An replace to a rule was requested but no rule by that name already exists",
+	       info.ctx);
+	THROW(!info.has_any_value(),
+	       "The rule must have at least one field that can be replaced",
+	       info.ctx);
+
+	// note: source can be nullptr in case we've collected a
+	// rule for which the source is unknown
+	falco_source* source = nullptr;
+	if (!prev->unknown_source)
+	{
+		// note: if the source is not unknown, this should not return nullptr
+		source = cfg.sources.at(prev->source);
+		THROW(!source,
+	    	std::string("Unknown source ") + prev->source,
+	    	info.ctx);
+	}
+
+	if (info.cond.has_value())
+	{
+		prev->cond = *info.cond;
+	}
+
+	if (info.output.has_value())
+	{
+		prev->output = *info.output;
+	}
+
+	if (info.desc.has_value())
+	{
+		prev->desc = *info.desc;
+	}
+
+	if (info.tags.has_value())
+	{
+		prev->tags = *info.tags;
+	}
+
+	if (info.exceptions.has_value())
+	{
+		prev->exceptions = *info.exceptions;
+	}
+
+	if (info.priority.has_value())
+	{
+		prev->priority = *info.priority;
+	}
+
+	if (info.enabled.has_value())
+	{
+		prev->enabled = *info.enabled;
+	}
+
+	if (info.warn_evttypes.has_value())
+	{
+		prev->warn_evttypes = *info.warn_evttypes;
+	}
+
+	if (info.skip_if_unknown_filter.has_value())
+	{
+		prev->skip_if_unknown_filter = *info.skip_if_unknown_filter;
+	}
+
+	replace_info(prev, info, m_cur_index++);
 }
 
 void rule_loader::collector::enable(configuration& cfg, rule_info& info)

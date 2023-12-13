@@ -17,6 +17,8 @@ limitations under the License.
 
 #include <string>
 #include <vector>
+#include <set>
+#include <sstream>
 
 #include "rule_loader_reader.h"
 #include "falco_engine_version.h"
@@ -43,6 +45,14 @@ static void decode_val_generic(const YAML::Node& item, const char *key, T& out, 
 	THROW(val.Scalar().empty(), "Value must be non-empty", valctx);
 
 	THROW(!YAML::convert<T>::decode(val, out), "Can't decode YAML scalar value", valctx);
+}
+
+template <typename T>
+static void decode_val_generic(const YAML::Node& item, const char *key, std::optional<T>& out, const rule_loader::context& ctx, bool optional)
+{
+	T decoded;
+	decode_val_generic(item, key, decoded, ctx, optional);
+	out = decoded;
 }
 
 template <typename T>
@@ -113,6 +123,73 @@ static void decode_tags(const YAML::Node& item, std::set<T>& out,
 	};
 
 	decode_seq(item, "tags", inserter, ctx, optional);
+}
+
+template <typename T>
+static void decode_tags(const YAML::Node& item, std::optional<std::set<T>>& out,
+		       const rule_loader::context& ctx)
+{
+	std::set<T> decoded;
+	decode_tags(item, decoded, ctx);
+	out = decoded;
+}
+
+static void decode_overrides(const YAML::Node& item,
+				std::set<std::string>& overridable_append,
+				std::set<std::string>& overridable_replace,
+				std::set<std::string>& out_append,
+				std::set<std::string>& out_replace,
+				const rule_loader::context& ctx)
+{
+	const YAML::Node& val = item["override"];
+
+	if(!val.IsDefined())
+	{
+		return;
+	}
+
+	rule_loader::context overridectx(item, rule_loader::context::OVERRIDE, "", ctx);
+
+	for(YAML::const_iterator it=val.begin();it!=val.end();++it)
+	{
+		std::string key = it->first.as<std::string>();
+		std::string operation = it->second.as<std::string>();
+
+		bool is_overridable_append = overridable_append.find(it->first.as<std::string>()) != overridable_append.end();
+		bool is_overridable_replace = overridable_replace.find(it->first.as<std::string>()) != overridable_replace.end();
+
+		if (operation == "append")
+		{
+			rule_loader::context keyctx(it->first, rule_loader::context::OVERRIDE, key, overridectx);
+			THROW(!is_overridable_append, std::string("Key '") + key + std::string("' cannot be appended to"), keyctx);
+
+			out_append.insert(key);
+		}
+		else if (operation == "replace")
+		{
+			rule_loader::context keyctx(it->first, rule_loader::context::OVERRIDE, key, overridectx);
+			THROW(!is_overridable_replace, std::string("Key '") + key + std::string("' cannot be replaced"), keyctx);
+
+			out_replace.insert(key);
+		}
+		else
+		{
+			rule_loader::context operationctx(it->second, rule_loader::context::VALUE_FOR, key, overridectx);
+			std::stringstream err_ss;
+			err_ss << "Invalid override operation for key '" << key << "': '" << operation << "'. "
+				   << "Allowed values are: ";
+			if (is_overridable_append)
+			{
+				err_ss << "append ";
+			}
+			if (is_overridable_replace)
+			{
+				err_ss << "replace ";
+			}
+
+			THROW(true, err_ss.str(), operationctx);
+		}
+	}
 }
 
 // Don't call this directly, call decode_exception_{fields,comps,values} instead
@@ -187,7 +264,7 @@ static void decode_exception_values(
 
 static void read_rule_exceptions(
 	const YAML::Node& item,
-	rule_loader::rule_info& v,
+	std::vector<rule_loader::rule_exception_info>& exceptions,
 	const rule_loader::context& parent,
 	bool append)
 {
@@ -239,8 +316,31 @@ static void read_rule_exceptions(
 				v_ex.values.push_back(v_ex_val);
 			}
 		}
-		v.exceptions.push_back(v_ex);
+		exceptions.push_back(v_ex);
 	}
+}
+
+static void read_rule_exceptions(
+	const YAML::Node& item,
+	std::optional<std::vector<rule_loader::rule_exception_info>>& exceptions,
+	const rule_loader::context& parent,
+	bool append)
+{
+	std::vector<rule_loader::rule_exception_info> decoded;
+	read_rule_exceptions(item, decoded, parent, append);
+	exceptions = decoded;
+}
+
+inline static bool check_override_defined(const YAML::Node& item, const std::set<std::string>& overrides, const std::string& override_type, const std::string& key, const rule_loader::context& ctx)
+{
+	if (overrides.find(key) == overrides.end())
+	{
+		return false;
+	}
+	
+	THROW(!item[key].IsDefined(), std::string("An ") + override_type + " override for '" + key + "' was specified but '" + key + "' is not defined", ctx);
+
+	return true;
 }
 
 static void read_item(
@@ -337,6 +437,19 @@ static void read_item(
 		decode_items(item, v.items, ctx);
 
 		decode_optional_val(item, "append", append, ctx);
+		
+		std::set<std::string> override_append, override_replace;
+		std::set<std::string> overridable {"items"};
+		decode_overrides(item, overridable, overridable, override_append, override_replace, ctx);
+
+		if(append == true && !override_replace.empty())
+		{
+			THROW(true, "Cannot specify a replace override when 'append: true' is set", ctx);
+		}
+
+		// Since a list only has items, if we have chosen to append them we can append the entire object
+		// otherwise we just want to redefine the list.
+		append |= override_append.find("items") != override_append.end();
 
 		if(append)
 		{
@@ -366,6 +479,19 @@ static void read_item(
 
 		decode_optional_val(item, "append", append, ctx);
 
+		std::set<std::string> override_append, override_replace;
+		std::set<std::string> overridable {"condition"};
+		decode_overrides(item, overridable, overridable, override_append, override_replace, ctx);
+
+		if(append == true && !override_replace.empty())
+		{
+			THROW(true, "Cannot specify a replace override when 'append: true' is set", ctx);
+		}
+
+		// Since a macro only has a condition, if we have chosen to append to it we can append the entire object
+		// otherwise we just want to redefine the macro.
+		append |= override_append.find("condition") != override_append.end();
+
 		if(append)
 		{
 			collector.append(cfg, v);
@@ -384,28 +510,142 @@ static void read_item(
 		decode_val(item, "rule", name, tmp);
 
 		rule_loader::context ctx(item, rule_loader::context::RULE, name, parent);
-		rule_loader::rule_info v(ctx);
-		v.name = name;
 
-		bool append = false;
-		v.enabled = true;
-		v.warn_evttypes = true;
-		v.skip_if_unknown_filter = false;
+		bool has_append_flag = false;
+		decode_optional_val(item, "append", has_append_flag, ctx);
 
-		decode_optional_val(item, "append", append, ctx);
+		std::set<std::string> override_append, override_replace;
+		std::set<std::string> overridable_append {"condition", "output", "desc", "tags", "exceptions"};
+		std::set<std::string> overridable_replace {
+			"condition", "output", "desc", "priority", "tags", "exceptions", "enabled", "warn_evttypes", "skip-if-unknown-filter"};
+		decode_overrides(item, overridable_append, overridable_replace, override_append, override_replace, ctx);
+		bool has_overrides_append = !override_append.empty();
+		bool has_overrides_replace = !override_replace.empty();
+		bool has_overrides = has_overrides_append || has_overrides_replace;
 
-		if(append)
+		THROW((has_append_flag && has_overrides), "Keys 'override' and 'append' cannot be used together.", ctx);
+
+		if(has_overrides)
 		{
-			decode_optional_val(item, "condition", v.cond, ctx);
+			if (has_overrides_append)
+			{
+				rule_loader::rule_update_info v(ctx);
+				v.name = name;
+				if (check_override_defined(item, override_append, "append", "condition", ctx))
+				{
+					decode_val(item, "condition", v.cond, ctx);
+				}
+
+				if (check_override_defined(item, override_append, "append", "exceptions", ctx))
+				{
+					read_rule_exceptions(item, v.exceptions, ctx, true);
+				}
+
+				if (check_override_defined(item, override_append, "append", "output", ctx))
+				{
+					decode_val(item, "output", v.output, ctx);
+				}
+
+				if (check_override_defined(item, override_append, "append", "desc", ctx))
+				{
+					decode_val(item, "desc", v.desc, ctx);
+				}
+
+				if (check_override_defined(item, override_append, "append", "tags", ctx))
+				{
+					decode_tags(item, v.tags, ctx);
+				}
+				
+				collector.append(cfg, v);
+			}
+
+			if (has_overrides_replace)
+			{
+				rule_loader::rule_update_info v(ctx);
+				v.name = name;
+				if (check_override_defined(item, override_replace, "replace", "condition", ctx))
+				{
+					decode_val(item, "condition", v.cond, ctx);
+				}
+
+				if (check_override_defined(item, override_replace, "replace", "exceptions", ctx))
+				{
+					read_rule_exceptions(item, v.exceptions, ctx, true);
+				}
+
+				if (check_override_defined(item, override_replace, "replace", "output", ctx))
+				{
+					decode_val(item, "output", v.output, ctx);
+				}
+
+				if (check_override_defined(item, override_replace, "replace", "desc", ctx))
+				{
+					decode_val(item, "desc", v.desc, ctx);
+				}
+
+				if (check_override_defined(item, override_replace, "replace", "tags", ctx))
+				{
+					decode_tags(item, v.tags, ctx);
+				}
+
+				if (check_override_defined(item, override_replace, "replace", "priority", ctx))
+				{
+					std::string priority;
+					decode_val(item, "priority", priority, ctx);
+					rule_loader::context prictx(item["priority"], rule_loader::context::RULE_PRIORITY, "", ctx);
+					falco_common::priority_type parsed_priority;
+					THROW(!falco_common::parse_priority(priority, parsed_priority), "Invalid priority", prictx);
+					v.priority = parsed_priority;
+				}
+
+				if (check_override_defined(item, override_replace, "replace", "enabled", ctx))
+				{
+					decode_val(item, "enabled", v.enabled, ctx);
+				}
+
+				if (check_override_defined(item, override_replace, "replace", "warn_evttypes", ctx))
+				{
+					decode_val(item, "warn_evttypes", v.warn_evttypes, ctx);
+				}
+
+				if (check_override_defined(item, override_replace, "replace", "skip-if-unknown-filter", ctx))
+				{
+					decode_val(item, "skip-if-unknown-filter", v.skip_if_unknown_filter, ctx);
+				}
+
+				collector.selective_replace(cfg, v);
+			}
+		}
+		else if(has_append_flag)
+		{
+			rule_loader::rule_update_info v(ctx);
+			v.name = name;
+
 			if(item["condition"].IsDefined())
 			{
 				v.cond_ctx = rule_loader::context(item["condition"], rule_loader::context::RULE_CONDITION, "", ctx);
+				decode_val(item, "condition", v.cond, ctx);
 			}
-			read_rule_exceptions(item, v, ctx, append);
+
+			if(item["exceptions"].IsDefined())
+			{
+				read_rule_exceptions(item, v.exceptions, ctx, true);
+			}
+
+			THROW((!v.cond.has_value() && !v.exceptions.has_value()),
+			       "Appended rule must have exceptions or condition property",
+			       v.ctx);
+
 			collector.append(cfg, v);
 		}
 		else
 		{
+			rule_loader::rule_info v(ctx);
+			v.name = name;
+			v.enabled = true;
+			v.warn_evttypes = true;
+			v.skip_if_unknown_filter = false;
+
 			// If the rule does *not* have any of
 			// condition/output/desc/priority, it *must*
 			// have an enabled property. Use the enabled
@@ -443,7 +683,7 @@ static void read_item(
 				decode_optional_val(item, "warn_evttypes", v.warn_evttypes, ctx);
 				decode_optional_val(item, "skip-if-unknown-filter", v.skip_if_unknown_filter, ctx);
 				decode_tags(item, v.tags, ctx);
-				read_rule_exceptions(item, v, ctx, append);
+				read_rule_exceptions(item, v.exceptions, ctx, has_append_flag);
 				collector.define(cfg, v);
 			}
 		}
