@@ -25,7 +25,7 @@ else()
   # In case you want to test against a fork of falcosecurity/libs just pass the variable -
   # ie., `cmake -DDRIVER_REPO=<your-gh-handle>/libs ..` 
   if (NOT DRIVER_REPO)
-    set(DRIVER_REPO "falcosecurity/libs")
+    set(DRIVER_REPO "Andreagit97/libs")
   endif()
 
   # DRIVER_VERSION accepts a git reference (branch name, commit hash, or tag) to the falcosecurity/libs repository
@@ -34,8 +34,8 @@ else()
   # In case you want to test against another driver version (or branch, or commit) just pass the variable -
   # ie., `cmake -DDRIVER_VERSION=dev ..`
   if(NOT DRIVER_VERSION)
-    set(DRIVER_VERSION "000d576ef877cb115cbb56f97187a1d62221e2bd")
-    set(DRIVER_CHECKSUM "SHA256=4f078e3e448ba1d4ca2eff55a361a9a9d048f3a967fb4d91f0c91aa6fa22d5d2")
+    set(DRIVER_VERSION "c749825140a9c11b1d822224fa16046ed25ef9c9")
+    set(DRIVER_CHECKSUM "SHA256=6e8fd497a82179310922d8ecbad88db7f3fd2b12b9c57d2d6d5131e01eabfd1c")
   endif()
 
   # cd /path/to/build && cmake /path/to/source
