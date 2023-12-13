@@ -19,6 +19,7 @@ limitations under the License.
 
 #include <string>
 #include <vector>
+#include <optional>
 #include <yaml-cpp/yaml.h>
 #include <nlohmann/json.hpp>
 #include "falco_source.h"
@@ -56,7 +57,8 @@ namespace rule_loader
 			CONDITION_EXPRESSION,
 			RULE_OUTPUT,
 			RULE_OUTPUT_EXPRESSION,
-			RULE_PRIORITY
+			RULE_PRIORITY,
+			OVERRIDE
 		};
 
 		static const std::string& item_type_as_string(enum item_type it);
@@ -450,5 +452,39 @@ namespace rule_loader
 		bool enabled;
 		bool warn_evttypes;
 		bool skip_if_unknown_filter;
+	};
+
+	/*!
+		\brief Represents infos about a rule update (append or replace) request
+	*/
+
+	struct rule_update_info
+	{
+		rule_update_info(context &ctx);
+		~rule_update_info() = default;
+		rule_update_info(rule_update_info&&) = default;
+		rule_update_info& operator = (rule_update_info&&) = default;
+		rule_update_info(const rule_update_info&) = default;
+		rule_update_info& operator = (const rule_update_info&) = default;
+
+		bool has_any_value()
+		{
+			return cond.has_value() || output.has_value() || desc.has_value() || tags.has_value() ||
+				   exceptions.has_value() || priority.has_value() || enabled.has_value() ||
+				   warn_evttypes.has_value() || skip_if_unknown_filter.has_value();
+		}
+
+		context ctx;
+		context cond_ctx;
+		std::string name;
+		std::optional<std::string> cond;
+		std::optional<std::string> output;
+		std::optional<std::string> desc;
+		std::optional<std::set<std::string>> tags;
+		std::optional<std::vector<rule_exception_info>> exceptions;
+		std::optional<falco_common::priority_type> priority;
+		std::optional<bool> enabled;
+		std::optional<bool> warn_evttypes;
+		std::optional<bool> skip_if_unknown_filter;
 	};
 };
