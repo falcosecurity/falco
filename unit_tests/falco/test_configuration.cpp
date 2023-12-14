@@ -139,7 +139,10 @@ TEST(Configuration, configuration_environment_variables)
         "    name: '${ENV_VAR}'\n"
         "    string: my_string\n"
         "    invalid: $${ENV_VAR}\n"
-		"    invalid_env: $$ENV_VAR\n"
+	"    invalid_env: $$ENV_VAR\n"
+	"    invalid_double_env: $${ENV_VAR}$${ENV_VAR}\n"
+	"    invalid_embedded_env: $${${ENV_VAR}}\n"
+	"    invalid_valid_env: $${ENV_VAR}${ENV_VAR}\n"
         "    escaped: \"${ENV_VAR}\"\n"
         "    subvalue:\n"
         "        subvalue2:\n"
@@ -184,6 +187,24 @@ TEST(Configuration, configuration_environment_variables)
     /* Test fetching of invalid escaped environment variable format. Should return the string as-is */
     auto base_value_invalid_env = conf.get_scalar<std::string>("base_value.invalid_env", default_value);
     ASSERT_EQ(base_value_invalid_env, "$$ENV_VAR");
+
+    /* Test fetching of 2 escaped environment variables side by side. Should return the string as-is after stripping the leading `$` */
+    auto base_value_double_invalid = conf.get_scalar<std::string>("base_value.invalid_double_env", default_value);
+    ASSERT_EQ(base_value_double_invalid, "${ENV_VAR}${ENV_VAR}");
+
+    /*
+     * Test fetching of escaped environment variable format with inside an env variable.
+     * Should return the string as-is after stripping the leading `$` with the resolved env variable within
+     */
+    auto base_value_embedded_invalid = conf.get_scalar<std::string>("base_value.invalid_embedded_env", default_value);
+    ASSERT_EQ(base_value_embedded_invalid, "${" + env_var_value + "}");
+
+    /*
+     * Test fetching of an escaped env variable plus an env variable side by side.
+     * Should return the escaped one trimming the leading `$` plus the second one resolved.
+     */
+    auto base_value_valid_invalid = conf.get_scalar<std::string>("base_value.invalid_valid_env", default_value);
+    ASSERT_EQ(base_value_valid_invalid, "${ENV_VAR}" + env_var_value);
 
     /* Test fetching of strings that contain environment variables */
     auto base_value_id = conf.get_scalar<std::string>("base_value.id", default_value);
