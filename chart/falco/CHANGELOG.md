@@ -3,6 +3,10 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v3.8.6
+
+* no changes to the chart itself. Updated README.md and makefile.
+
 ## v3.8.5
 
 * Add mTLS cryptographic material load via Helm for Falco
