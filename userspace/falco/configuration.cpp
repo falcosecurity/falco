@@ -313,6 +313,10 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 		compress_uploads = config.get_scalar<bool>("http_output.compress_uploads", false);
 		http_output.options["compress_uploads"] = compress_uploads? std::string("true") : std::string("false");
 
+		bool keep_alive;
+		keep_alive = config.get_scalar<bool>("http_output.keep_alive", false);
+		http_output.options["keep_alive"] = keep_alive? std::string("true") : std::string("false");
+
 		m_outputs.push_back(http_output);
 	}
 

@@ -102,6 +102,11 @@ bool falco::outputs::output_http::init(const config& oc, bool buffered, const st
 		CHECK_RES(curl_easy_setopt(m_curl, CURLOPT_TRANSFER_ENCODING, 1L));
 	}
 
+	if(m_oc.options["keep_alive"] == std::string("true"))
+	{
+		CHECK_RES(curl_easy_setopt(m_curl, CURLOPT_TCP_KEEPALIVE, 1L));
+	}
+
 	if(res != CURLE_OK)
 	{
 		err = "libcurl error: " + std::string(curl_easy_strerror(res));
