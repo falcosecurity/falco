@@ -97,6 +97,11 @@ bool falco::outputs::output_http::init(const config& oc, bool buffered, const st
 		CHECK_RES(curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, noop_write_callback));
 	}
 
+	if(m_oc.options["compress_uploads"] == std::string("true"))
+	{
+		CHECK_RES(curl_easy_setopt(m_curl, CURLOPT_TRANSFER_ENCODING, 1L));
+	}
+
 	if(res != CURLE_OK)
 	{
 		err = "libcurl error: " + std::string(curl_easy_strerror(res));
