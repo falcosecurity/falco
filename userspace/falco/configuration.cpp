@@ -309,6 +309,10 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 		client_key = config.get_scalar<std::string>("http_output.client_key", "/etc/ssl/certs/client.key");
 		http_output.options["client_key"] = client_key;
 
+		bool compress_uploads;
+		compress_uploads = config.get_scalar<bool>("http_output.compress_uploads", false);
+		http_output.options["compress_uploads"] = compress_uploads? std::string("true") : std::string("false");
+
 		m_outputs.push_back(http_output);
 	}
 

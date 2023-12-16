@@ -566,6 +566,7 @@ http_output:
   client_key: "/etc/ssl/certs/client.key"
   # Whether to echo server answers to stdout
   echo: false
+  compress_uploads: false
 
 # [Stable] `program_output`
 #
