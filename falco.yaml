@@ -567,6 +567,7 @@ http_output:
   # Whether to echo server answers to stdout
   echo: false
   compress_uploads: false
+  keep_alive: false
 
 # [Stable] `program_output`
 #
