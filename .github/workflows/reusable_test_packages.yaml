@@ -49,15 +49,9 @@ jobs:
           sudo apt update -y
           sudo apt install -y --no-install-recommends build-essential clang make llvm gcc dkms
 
-      - name: Install kernel headers (workaround)
+      - name: Install kernel headers (actuated)
+        uses: self-actuated/get-kernel-sources@master
         if: inputs.arch == 'aarch64'
-        run: |
-          sudo mkdir -p /usr/src
-          sudo git clone --depth 1 --branch v$(uname -r) git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git /usr/src/linux
-          sudo rm /lib/modules/$(uname -r)/build
-          sudo ln -s /usr/src/linux-headers-$(uname -r)/ /lib/modules/$(uname -r)/build
-          sudo rm /lib/modules/$(uname -r)/source
-          sudo ln -s /usr/src/linux-headers-$(uname -r)/ /lib/modules/$(uname -r)/source
 
       - name: Install kernel headers
         if: inputs.arch == 'x86_64'
