@@ -76,19 +76,36 @@ jobs:
           go generate ./...
           popd
 
-      - name: Run regression tests
+      - name: Run Falco regression tests
         env:
-          # fixme(leogr): this is a workaround for https://github.com/falcosecurity/falco/issues/2784
           HOST_ROOT: ""
         run: |
           pushd submodules/falcosecurity-testing
           ./build/falco.test -falco-static=${{ inputs.static && 'true' || 'false' }} -test.timeout=90s -test.v >> ./report.txt 2>&1 || true
-          if ${{ inputs.static && 'false' || 'true' }}; then
-            ./build/falcoctl.test -test.timeout=90s -test.v >> ./report.txt 2>&1 || true
-            ./build/k8saudit.test -test.timeout=90s -test.v >> ./report.txt 2>&1 || true
-            sudo ./build/falco-driver-loader.test -test.timeout=90s -test.v >> ./report.txt 2>&1 || true
-          fi
-          cat ./report.txt | go-junit-report -set-exit-code > report.xml
+          popd
+
+      - name: Run Falcoctl regression tests
+        env:
+          HOST_ROOT: ""
+        run: |
+          pushd submodules/falcosecurity-testing
+          ./build/falcoctl.test -test.timeout=90s -test.v >> ./report.txt 2>&1 || true
+          popd
+
+      - name: Run K8saudit regression tests
+        env:
+          HOST_ROOT: ""
+        run: |
+          pushd submodules/falcosecurity-testing
+          ./build/k8saudit.test -test.timeout=90s -test.v >> ./report.txt 2>&1 || true
+          popd
+
+      - name: Run Falco driver loader regression tests
+        env:
+          HOST_ROOT: ""
+        run: |
+          pushd submodules/falcosecurity-testing
+          sudo ./build/falco-driver-loader.test -test.timeout=90s -test.v
           popd
 
       - name: Test Summary
