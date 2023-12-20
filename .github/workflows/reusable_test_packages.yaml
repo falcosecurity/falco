@@ -69,6 +69,8 @@ jobs:
           pushd submodules/falcosecurity-testing
           go generate ./...
           popd
+          
+      - uses: self-actuated/connect-ssh@master    
 
       - name: Run regression tests
         env:
