@@ -16,6 +16,11 @@ on:
         required: true
         type: string
 
+permissions:
+  id-token: write
+  contents: read
+  actions: read
+
 jobs:
   test-packages:
     # See https://github.com/actions/runner/issues/409#issuecomment-1158849936
