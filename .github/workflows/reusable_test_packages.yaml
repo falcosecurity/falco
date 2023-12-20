@@ -74,8 +74,6 @@ jobs:
           pushd submodules/falcosecurity-testing
           go generate ./...
           popd
-          
-      - uses: self-actuated/connect-ssh@master    
 
       - name: Run regression tests
         env:
@@ -92,6 +90,10 @@ jobs:
           cat ./report.txt | go-junit-report -set-exit-code > report.xml
           popd
 
+      - name: ssh test
+        uses: self-actuated/connect-ssh@master    
+        if: always()
+          
       - name: Test Summary
         if: always() # run this even if previous step fails
         uses: test-summary/action@62bc5c68de2a6a0d02039763b8c754569df99e3f # v2.1
