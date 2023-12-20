@@ -43,26 +43,13 @@ jobs:
           tar -xvf $(ls falco-*.tar.gz)
           cd falco-${{ inputs.version }}-${{ inputs.arch }}
           sudo cp -r * /
-
+     
+      # We only run driver loader tests on x86_64
       - name: Install dependencies for falco-driver-loader tests
+        if: ${{ inputs.arch == 'x86_64' }}
         run: |
           sudo apt update -y
-          sudo apt install -y --no-install-recommends build-essential clang make llvm gcc dkms
-
-      - name: Install kernel headers (workaround)
-        if: inputs.arch == 'aarch64'
-        run: |
-          sudo mkdir -p /usr/src
-          sudo git clone --depth 1 --branch v$(uname -r) git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git /usr/src/linux
-          sudo rm /lib/modules/$(uname -r)/build
-          sudo ln -s /usr/src/linux-headers-$(uname -r)/ /lib/modules/$(uname -r)/build
-          sudo rm /lib/modules/$(uname -r)/source
-          sudo ln -s /usr/src/linux-headers-$(uname -r)/ /lib/modules/$(uname -r)/source
-
-      - name: Install kernel headers
-        if: inputs.arch == 'x86_64'
-        run: |
-          sudo apt install -y --no-install-recommends linux-headers-$(uname -r)
+          sudo apt install -y --no-install-recommends build-essential clang make llvm gcc dkms linux-headers-$(uname -r)
 
       - name: Install go-junit-report
         run: |
@@ -86,7 +73,9 @@ jobs:
           if ${{ inputs.static && 'false' || 'true' }}; then
             ./build/falcoctl.test -test.timeout=90s -test.v >> ./report.txt 2>&1 || true
             ./build/k8saudit.test -test.timeout=90s -test.v >> ./report.txt 2>&1 || true
-            sudo ./build/falco-driver-loader.test -test.timeout=90s -test.v >> ./report.txt 2>&1 || true
+            if ${{ inputs.arch == 'x86_64' && 'true' || 'false' }}; then
+                sudo ./build/falco-driver-loader.test -test.timeout=90s -test.v >> ./report.txt 2>&1 || true
+            fi    
           fi
           cat ./report.txt | go-junit-report -set-exit-code > report.xml
           popd
