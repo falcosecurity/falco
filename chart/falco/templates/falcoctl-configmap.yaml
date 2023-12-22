@@ -8,5 +8,6 @@ metadata:
     {{- include "falco.labels" . | nindent 4 }}
 data:
   falcoctl.yaml: |-
+    {{- include "k8smeta.configuration" . -}}
     {{- toYaml .Values.falcoctl.config | nindent 4 }}
 {{- end }}

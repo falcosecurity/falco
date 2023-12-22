@@ -215,7 +215,7 @@ driver:
         # -- The image repository to pull from.
         repository: falcosecurity/falco-driver-loader
         #  -- Overrides the image tag whose default is the chart appVersion.
-        tag: ""
+        tag: "master"
       # -- Extra environment variables that will be pass onto Falco driver loader init container.
       env: []
       # -- Arguments to pass to the Falco driver loader init container.
@@ -262,30 +262,31 @@ collectors:
     # -- The path of the CRI-O socket.
     socket: /run/crio/crio.sock
 
+  # -- kubernetes holds the configuration for the kubernetes collector. Starting from version 0.37.0 of Falco, the legacy
+  # kubernetes client has been removed. A new standalone component named k8s-metacollector and a Falco plugin have been developed
+  # to solve the issues that were present in the old implementation. More info here: https://github.com/falcosecurity/falco/issues/2973
   kubernetes:
-    # -- Enable Kubernetes meta data collection via a connection to the Kubernetes API server.
-    # When this option is disabled, Falco falls back to the container annotations to grap the meta data.
+    # -- enabled specifies whether the Kubernetes metadata should be collected using the k8smeta plugin and the k8s-metacollector component.
+    # It will deploy the k8s-metacollector external component that fetches Kubernetes metadata and pushes them to Falco instances.
+    # For more info see:
+    # https://github.com/falcosecurity/k8s-metacollector
+    # https://github.com/falcosecurity/charts/tree/master/charts/k8s-metacollector
+    # When this option is disabled, Falco falls back to the container annotations to grab the metadata.
     # In such a case, only the ID, name, namespace, labels of the pod will be available.
     enabled: true
-    # -- The apiAuth value is to provide the authentication method Falco should use to connect to the Kubernetes API.
-    # The argument's documentation from Falco is provided here for reference:
-    #
-    #  <bt_file> | <cert_file>:<key_file[#password]>[:<ca_cert_file>], --k8s-api-cert <bt_file> | <cert_file>:<key_file[#password]>[:<ca_cert_file>]
-    #     Use the provided files names to authenticate user and (optionally) verify the K8S API server identity.
-    #     Each entry must specify full (absolute, or relative to the current directory) path to the respective file.
-    #     Private key password is optional (needed only if key is password protected).
-    #     CA certificate is optional. For all files, only PEM file format is supported.
-    #     Specifying CA certificate only is obsoleted - when single entry is provided
-    #     for this option, it will be interpreted as the name of a file containing bearer token.
-    #     Note that the format of this command-line option prohibits use of files whose names contain
-    #     ':' or '#' characters in the file name.
-    # -- Provide the authentication method Falco should use to connect to the Kubernetes API.
-    apiAuth: /var/run/secrets/kubernetes.io/serviceaccount/token
-    ## -- Provide the URL Falco should use to connect to the Kubernetes API.
-    apiUrl: "https://$(KUBERNETES_SERVICE_HOST)"
-    # -- If true, only the current node (on which Falco is running) will be considered when requesting metadata of pods
-    # to the API server. Disabling this option may have a performance penalty on large clusters.
-    enableNodeFilter: true
+    # --pluginRef is the OCI reference for the k8smeta plugin. It could be a full reference such as:
+    # "ghcr.io/falcosecurity/plugins/plugin/k8smeta:0.1.0". Or just name + tag: k8smeta:0.1.0.
+    pluginRef: "ghcr.io/falcosecurity/plugins/plugin/k8smeta:0.1.0"
+    # -- collectorHostname is the address of the k8s-metacollector. When not specified it will be set to match
+    # k8s-metacollector service. e.x: falco-k8smetacollecto.falco.svc. If for any reason you need to override
+    # it, make sure to set here the address of the k8s-metacollector.
+    # It is used by the k8smeta plugin to connect to the k8s-metacollector.
+    collectorHostname: ""
+    # -- collectorPort designates the port on which the k8s-metacollector gRPC service listens. If not specified
+    # the value of the port named `broker-grpc` in k8s-metacollector.service.ports is used. The default values is 45000.
+    # It is used by the k8smeta plugin to connect to the k8s-metacollector.
+    collectorPort: ""
+
 
 ###########################
 # Extras and customization #

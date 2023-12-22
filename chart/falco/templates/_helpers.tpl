@@ -319,3 +319,55 @@ be temporary and will stay here until we move this logic to the falcoctl tool.
   {{- include "falco.renderTemplate" ( dict "value" .Values.falcoctl.artifact.follow.env "context" $) | nindent 4 }}
   {{- end }}
 {{- end -}}
+
+
+{{/*
+ Build configuration for k8smeta plugin and update the relevant variables.
+ * The configuration that needs to be built up is the initconfig section:
+    init_config:
+     collectorPort: 0
+     collectorHostname: ""
+     nodeName: ""
+    The falco chart exposes this configuriotino through two variable:
+       * collectors.kubenetetes.collectorHostname;
+       * collectors.kubernetes.collectorPort;
+    If those two variable are not set, then we take those values from the k8smetacollector subchart.
+    The hostname is built using the name of the service that exposes the collector endpoints and the
+    port is directly taken form the service's port that exposes the gRPC endpoint.
+    We reuse the helpers from the k8smetacollector subchart, by passing down the variables. There is a
+    hardcoded values that is the chart name for the k8s-metacollector chart.
+
+ * The falcoctl configuration is updated to allow  plugin artifacts to be installed. The refs in the install
+   section are updated by adding the reference for the k8s meta plugin that needs to be installed.
+ NOTE: It seems that the named templates run during the validation process. And then again during the
+ render fase. In our case we are setting global variable that persist during the various phases.
+ We need to make the helper idempotent.
+*/}}
+{{- define "k8smeta.configuration" -}}
+{{- if and .Values.collectors.kubernetes.enabled .Values.driver.enabled -}}
+{{- $hostname := "" -}}
+{{- if .Values.collectors.kubernetes.collectorHostname -}}
+{{- $hostname = .Values.collectors.kubernetes.collectorHostname -}}
+{{- else -}}
+{{- $collectorContext := (dict "Release" .Release "Values" (index .Values "k8s-metacollector") "Chart" (dict "Name" "k8s-metacollector")) -}}
+{{- $hostname = printf "%s.%s.svc" (include "k8s-metacollector.fullname" $collectorContext) (include "k8s-metacollector.namespace" $collectorContext) -}}
+{{- end -}}
+{{- $hasConfig := false -}}
+{{- range .Values.falco.plugins -}}
+{{- if eq (get . "name") "k8smeta" -}}
+{{ $hasConfig = true -}}
+{{- end -}}
+{{- end -}}
+{{- if not $hasConfig -}}
+{{- $listenPort := default (index .Values "k8s-metacollector" "service" "ports" "broker-grpc" "port") .Values.collectors.kubernetes.collectorPort -}}
+{{- $listenPort = int $listenPort -}}
+{{- $pluginConfig := dict "name" "k8smeta" "library_path" "libk8smeta.so" "init_config" (dict "collectorHostname" $hostname "collectorPort" $listenPort "nodeName" "${FALCO_K8S_NODE_NAME}") -}}
+{{- $newConfig := append .Values.falco.plugins $pluginConfig -}}
+{{- $_ := set .Values.falco "plugins" ($newConfig | uniq) -}}
+{{- $loadedPlugins := append .Values.falco.load_plugins "k8smeta" -}}
+{{- $_ = set .Values.falco "load_plugins" ($loadedPlugins | uniq) -}}
+{{- end -}}
+{{- $_ := set .Values.falcoctl.config.artifact.install "refs" ((append .Values.falcoctl.config.artifact.install.refs .Values.collectors.kubernetes.pluginRef) | uniq)}}
+{{- $_ = set .Values.falcoctl.config.artifact "allowedTypes" ((append .Values.falcoctl.config.artifact.allowedTypes "plugin") | uniq)}}
+{{- end -}}
+{{- end -}}
