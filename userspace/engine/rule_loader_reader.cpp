@@ -331,14 +331,17 @@ static void read_rule_exceptions(
 	exceptions = decoded;
 }
 
-inline static bool check_override_defined(const YAML::Node& item, const std::set<std::string>& overrides, const std::string& override_type, const std::string& key, const rule_loader::context& ctx)
+inline static bool check_update_expected(std::set<std::string>& expected_keys, const std::set<std::string>& overrides, const std::string& override_type, const std::string& key, const rule_loader::context& ctx)
 {
 	if (overrides.find(key) == overrides.end())
 	{
 		return false;
 	}
 	
-	THROW(!item[key].IsDefined(), std::string("An ") + override_type + " override for '" + key + "' was specified but '" + key + "' is not defined", ctx);
+	THROW(expected_keys.find(key) == expected_keys.end(),
+		std::string("An ") + override_type + " override for '" + key + "' was specified but '" + key + "' is not defined", ctx);
+
+	expected_keys.erase(key);
 
 	return true;
 }
@@ -530,31 +533,50 @@ static void read_item(
 
 		if(has_overrides)
 		{
+			std::set<std::string> expected_keys;
+			for (auto& key : overridable_append)
+			{
+				if (item[key].IsDefined())
+				{
+					expected_keys.insert(key);
+				}
+			}
+
+			for (auto& key : overridable_replace)
+			{
+				if (item[key].IsDefined())
+				{
+					expected_keys.insert(key);
+				}
+			}
+
+			// expected_keys is (appendable U replaceable) ^ (defined)
+			
 			if (has_overrides_append)
 			{
 				rule_loader::rule_update_info v(ctx);
 				v.name = name;
-				if (check_override_defined(item, override_append, "append", "condition", ctx))
+				if (check_update_expected(expected_keys, override_append, "append", "condition", ctx))
 				{
 					decode_val(item, "condition", v.cond, ctx);
 				}
 
-				if (check_override_defined(item, override_append, "append", "exceptions", ctx))
+				if (check_update_expected(expected_keys, override_append, "append", "exceptions", ctx))
 				{
 					read_rule_exceptions(item, v.exceptions, ctx, true);
 				}
 
-				if (check_override_defined(item, override_append, "append", "output", ctx))
+				if (check_update_expected(expected_keys, override_append, "append", "output", ctx))
 				{
 					decode_val(item, "output", v.output, ctx);
 				}
 
-				if (check_override_defined(item, override_append, "append", "desc", ctx))
+				if (check_update_expected(expected_keys, override_append, "append", "desc", ctx))
 				{
 					decode_val(item, "desc", v.desc, ctx);
 				}
 
-				if (check_override_defined(item, override_append, "append", "tags", ctx))
+				if (check_update_expected(expected_keys, override_append, "append", "tags", ctx))
 				{
 					decode_tags(item, v.tags, ctx);
 				}
@@ -566,32 +588,32 @@ static void read_item(
 			{
 				rule_loader::rule_update_info v(ctx);
 				v.name = name;
-				if (check_override_defined(item, override_replace, "replace", "condition", ctx))
+				if (check_update_expected(expected_keys, override_replace, "replace", "condition", ctx))
 				{
 					decode_val(item, "condition", v.cond, ctx);
 				}
 
-				if (check_override_defined(item, override_replace, "replace", "exceptions", ctx))
+				if (check_update_expected(expected_keys, override_replace, "replace", "exceptions", ctx))
 				{
 					read_rule_exceptions(item, v.exceptions, ctx, true);
 				}
 
-				if (check_override_defined(item, override_replace, "replace", "output", ctx))
+				if (check_update_expected(expected_keys, override_replace, "replace", "output", ctx))
 				{
 					decode_val(item, "output", v.output, ctx);
 				}
 
-				if (check_override_defined(item, override_replace, "replace", "desc", ctx))
+				if (check_update_expected(expected_keys, override_replace, "replace", "desc", ctx))
 				{
 					decode_val(item, "desc", v.desc, ctx);
 				}
 
-				if (check_override_defined(item, override_replace, "replace", "tags", ctx))
+				if (check_update_expected(expected_keys, override_replace, "replace", "tags", ctx))
 				{
 					decode_tags(item, v.tags, ctx);
 				}
 
-				if (check_override_defined(item, override_replace, "replace", "priority", ctx))
+				if (check_update_expected(expected_keys, override_replace, "replace", "priority", ctx))
 				{
 					std::string priority;
 					decode_val(item, "priority", priority, ctx);
@@ -601,22 +623,28 @@ static void read_item(
 					v.priority = parsed_priority;
 				}
 
-				if (check_override_defined(item, override_replace, "replace", "enabled", ctx))
+				if (check_update_expected(expected_keys, override_replace, "replace", "enabled", ctx))
 				{
 					decode_val(item, "enabled", v.enabled, ctx);
 				}
 
-				if (check_override_defined(item, override_replace, "replace", "warn_evttypes", ctx))
+				if (check_update_expected(expected_keys, override_replace, "replace", "warn_evttypes", ctx))
 				{
 					decode_val(item, "warn_evttypes", v.warn_evttypes, ctx);
 				}
 
-				if (check_override_defined(item, override_replace, "replace", "skip-if-unknown-filter", ctx))
+				if (check_update_expected(expected_keys, override_replace, "replace", "skip-if-unknown-filter", ctx))
 				{
 					decode_val(item, "skip-if-unknown-filter", v.skip_if_unknown_filter, ctx);
 				}
 
 				collector.selective_replace(cfg, v);
+			}
+
+			// if any expected key has not been defined throw an error
+			for (auto &key : expected_keys) {
+				rule_loader::context keyctx(item[key], rule_loader::context::OVERRIDE, key, ctx);
+				THROW(true, "Unexpected key '" + key + "': no corresponding entry under 'override' is defined.", keyctx);
 			}
 		}
 		else if(has_append_flag)
