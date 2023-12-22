@@ -32,6 +32,7 @@ protected:
 		falco::load_result::rules_contents_t rc = {{rules_filename, rules_content}};
 		m_load_result = m_engine->load_rules(rules_content, rules_filename);
 		m_load_result_string = m_load_result->as_string(true, rc);
+		m_load_result_json = m_load_result->as_json(rc);
 		ret = m_load_result->successful();
 
 		if (ret)
@@ -50,6 +51,7 @@ protected:
 	std::unique_ptr<falco_engine> m_engine;
 	std::unique_ptr<falco::load_result> m_load_result;
 	std::string m_load_result_string;
+	nlohmann::json m_load_result_json;
 	std::unique_ptr<sinsp> m_inspector;
 };
 
@@ -232,4 +234,118 @@ TEST_F(engine_loader_test, rule_override_append_replace)
 
 	ASSERT_EQ(rule_description["rules"][0]["info"]["priority"].template get<std::string>(),
 	 	"Warning");
+}
+
+TEST_F(engine_loader_test, rule_incorrect_override_type)
+{
+    std::string rules_content = R"END(
+- rule: failing_rule
+  desc: legit rule description
+  condition: evt.type = close
+  output: user=%user.name command=%proc.cmdline file=%fd.name
+  priority: INFO
+
+- rule: failing_rule
+  desc: an appended incorrect field
+  condition: and proc.name = cat
+  priority: WARNING
+  override:
+    desc: replace
+    condition: append
+    priority: append
+)END";
+
+	std::string rule_name = "failing_rule";
+
+	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
+	ASSERT_EQ(m_load_result_json["errors"][0]["message"], "Key 'priority' cannot be appended to");
+	ASSERT_TRUE(std::string(m_load_result_json["errors"][0]["context"]["snippet"]).find("priority: append") != std::string::npos);
+}
+
+TEST_F(engine_loader_test, rule_incorrect_append_override)
+{
+    std::string rules_content = R"END(
+- rule: failing_rule
+  desc: legit rule description
+  condition: evt.type = close
+  output: user=%user.name command=%proc.cmdline file=%fd.name
+  priority: INFO
+
+- rule: failing_rule
+  desc: an appended incorrect field
+  condition: and proc.name = cat
+  append: true
+  override:
+    desc: replace
+    condition: append
+)END";
+
+	std::string rule_name = "failing_rule";
+
+	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
+	ASSERT_TRUE(std::string(m_load_result_json["errors"][0]["message"]).find("'override' and 'append: true' cannot be used together") != std::string::npos);
+}
+
+TEST_F(engine_loader_test, rule_override_without_rule)
+{
+    std::string rules_content = R"END(
+- rule: failing_rule
+  desc: an appended field
+  condition: and proc.name = cat
+  override:
+    desc: replace
+    condition: append
+)END";
+
+	std::string rule_name = "failing_rule";
+
+	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
+	// std::cout << m_load_result_json.dump(4) << std::endl;
+	ASSERT_TRUE(std::string(m_load_result_json["errors"][0]["message"]).find("no rule by that name already exists") != std::string::npos);
+}
+
+TEST_F(engine_loader_test, rule_override_without_field)
+{
+    std::string rules_content = R"END(
+- rule: failing_rule
+  desc: legit rule description
+  condition: evt.type = close
+  output: user=%user.name command=%proc.cmdline file=%fd.name
+  priority: INFO
+
+- rule: failing_rule
+  desc: an appended incorrect field
+  override:
+    desc: replace
+    condition: append
+)END";
+
+	std::string rule_name = "failing_rule";
+
+	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
+	ASSERT_EQ(m_load_result_json["errors"][0]["message"], "An append override for 'condition' was specified but 'condition' is not defined");
+}
+
+TEST_F(engine_loader_test, rule_override_extra_field)
+{
+    std::string rules_content = R"END(
+- rule: failing_rule
+  desc: legit rule description
+  condition: evt.type = close
+  output: user=%user.name command=%proc.cmdline file=%fd.name
+  priority: INFO
+
+- rule: failing_rule
+  desc: an appended incorrect field
+  condition: and proc.name = cat
+  priority: WARNING
+  override:
+    desc: replace
+    condition: append
+)END";
+
+	std::string rule_name = "failing_rule";
+
+	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
+	ASSERT_TRUE(std::string(m_load_result_json["errors"][0]["message"]).find("Unexpected key 'priority'") != std::string::npos);
 }
