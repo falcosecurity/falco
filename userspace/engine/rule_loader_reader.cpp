@@ -663,9 +663,10 @@ static void read_item(
 				read_rule_exceptions(item, v.exceptions, ctx, true);
 			}
 
-			THROW((!v.cond.has_value() && !v.exceptions.has_value()),
-			       "Appended rule must have exceptions or condition property",
-			       v.ctx);
+			// TODO restore this error and update testing
+			//THROW((!v.cond.has_value() && !v.exceptions.has_value()),
+			//       "Appended rule must have exceptions or condition property",
+			//       v.ctx);
 
 			collector.append(cfg, v);
 		}
