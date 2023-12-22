@@ -161,7 +161,7 @@ static void decode_overrides(const YAML::Node& item,
 		if (operation == "append")
 		{
 			rule_loader::context keyctx(it->first, rule_loader::context::OVERRIDE, key, overridectx);
-			THROW(!is_overridable_append, std::string("Key '") + key + std::string("' cannot be appended to"), keyctx);
+			THROW(!is_overridable_append, std::string("Key '") + key + std::string("' cannot be appended to, use 'replace' instead"), keyctx);
 
 			out_append.insert(key);
 		}

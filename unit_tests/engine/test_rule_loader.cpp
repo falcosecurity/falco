@@ -258,7 +258,7 @@ TEST_F(engine_loader_test, rule_incorrect_override_type)
 	std::string rule_name = "failing_rule";
 
 	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
-	ASSERT_EQ(m_load_result_json["errors"][0]["message"], "Key 'priority' cannot be appended to");
+	ASSERT_EQ(m_load_result_json["errors"][0]["message"], "Key 'priority' cannot be appended to, use 'replace' instead");
 	ASSERT_TRUE(std::string(m_load_result_json["errors"][0]["context"]["snippet"]).find("priority: append") != std::string::npos);
 }
 
@@ -300,7 +300,6 @@ TEST_F(engine_loader_test, rule_override_without_rule)
 	std::string rule_name = "failing_rule";
 
 	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
-	// std::cout << m_load_result_json.dump(4) << std::endl;
 	ASSERT_TRUE(std::string(m_load_result_json["errors"][0]["message"]).find("no rule by that name already exists") != std::string::npos);
 }
 
