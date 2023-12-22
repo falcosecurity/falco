@@ -79,17 +79,17 @@ static falco::app::run_result apply_deprecated_options(falco::app::state& s)
 	if(s.config->m_syscall_drop_failed_exit != DEFAULT_DROP_FAILED_EXIT)
 	{
 		falco_logger::log(falco_logger::level::WARNING,
-				"DEPRECATION NOTICE: 'syscall_drop_failed_exit' config is deprecated and will be removed in Falco 0.38! Use `engine.<driver>.drop_failed_exit' config instead\n");
+				"DEPRECATION NOTICE: 'syscall_drop_failed_exit' config is deprecated and will be removed in Falco 0.38! Use 'engine.<driver>.drop_failed_exit' config instead\n");
 	}
 	if(s.config->m_syscall_buf_size_preset != DEFAULT_BUF_SIZE_PRESET)
 	{
 		falco_logger::log(falco_logger::level::WARNING,
-				"DEPRECATION NOTICE: 'syscall_buf_size_preset' config is deprecated and will be removed in Falco 0.38! Use `engine.<driver>.buf_size_preset' config instead\n");
+				"DEPRECATION NOTICE: 'syscall_buf_size_preset' config is deprecated and will be removed in Falco 0.38! Use 'engine.<driver>.buf_size_preset' config instead\n");
 	}
 	if(s.config->m_cpus_for_each_syscall_buffer != DEFAULT_CPUS_FOR_EACH_SYSCALL_BUFFER)
 	{
 		falco_logger::log(falco_logger::level::WARNING,
-				"DEPRECATION NOTICE: 'modern_bpf.cpus_for_each_syscall_buffer' config is deprecated and will be removed in Falco 0.38! Use `engine.modern_ebpf.cpus_for_each_buffer' config instead\n");
+				"DEPRECATION NOTICE: 'modern_bpf.cpus_for_each_syscall_buffer' config is deprecated and will be removed in Falco 0.38! Use 'engine.modern_ebpf.cpus_for_each_buffer' config instead\n");
 	}
 
 	// Replace the kmod default values in case the engine was open with the kmod.
@@ -102,7 +102,7 @@ static falco::app::run_result apply_deprecated_options(falco::app::state& s)
 	// use the requested driver.
 	if (getenv(FALCO_BPF_ENV_VARIABLE))
 	{
-		falco_logger::log(falco_logger::level::WARNING, "DEPRECATION NOTICE: the 'FALCO_BPF_PROBE' environment variable is deprecated and will be removed in Falco 0.38! Set `engine.kind: ebpf' and use `engine.ebpf' config instead in falco.yaml\n");
+		falco_logger::log(falco_logger::level::WARNING, "DEPRECATION NOTICE: the 'FALCO_BPF_PROBE' environment variable is deprecated and will be removed in Falco 0.38! Set 'engine.kind: ebpf' and use 'engine.ebpf' config instead in falco.yaml\n");
 		s.config->m_engine_mode = engine_kind_t::EBPF;
 		s.config->m_ebpf.m_probe_path = getenv(FALCO_BPF_ENV_VARIABLE);
 		s.config->m_ebpf.m_drop_failed_exit = s.config->m_syscall_drop_failed_exit;
@@ -110,7 +110,7 @@ static falco::app::run_result apply_deprecated_options(falco::app::state& s)
 	}
 	else if (s.options.modern_bpf)
 	{
-		falco_logger::log(falco_logger::level::WARNING, "DEPRECATION NOTICE: the '--modern-bpf' command line option is deprecated and will be removed in Falco 0.38! Set `engine.kind: modern_ebpf' and use `engine.modern_ebpf' config instead in falco.yaml\n");
+		falco_logger::log(falco_logger::level::WARNING, "DEPRECATION NOTICE: the '--modern-bpf' command line option is deprecated and will be removed in Falco 0.38! Set 'engine.kind: modern_ebpf' and use 'engine.modern_ebpf' config instead in falco.yaml\n");
 		s.config->m_engine_mode = engine_kind_t::MODERN_EBPF;
 		s.config->m_modern_ebpf.m_drop_failed_exit = s.config->m_syscall_drop_failed_exit;
 		s.config->m_modern_ebpf.m_buf_size_preset = s.config->m_syscall_buf_size_preset;
@@ -118,19 +118,19 @@ static falco::app::run_result apply_deprecated_options(falco::app::state& s)
 	}
 	if (!s.options.gvisor_config.empty())
 	{
-		falco_logger::log(falco_logger::level::WARNING, "DEPRECATION NOTICE: the '-g,--gvisor-config' command line option is deprecated and will be removed in Falco 0.38! Set `engine.kind: gvisor' and use `engine.gvisor' config instead in falco.yaml\n");
+		falco_logger::log(falco_logger::level::WARNING, "DEPRECATION NOTICE: the '-g,--gvisor-config' command line option is deprecated and will be removed in Falco 0.38! Set 'engine.kind: gvisor' and use 'engine.gvisor' config instead in falco.yaml\n");
 		s.config->m_engine_mode =  engine_kind_t::GVISOR;
 		s.config->m_gvisor.m_config = s.options.gvisor_config;
 		s.config->m_gvisor.m_root = s.options.gvisor_root;
 	}
 	if (s.options.nodriver)
 	{
-		falco_logger::log(falco_logger::level::WARNING, "DEPRECATION NOTICE: the '--nodriver' command line option is deprecated and will be removed in Falco 0.38! Set `engine.kind: none' instead in falco.yaml\n");
+		falco_logger::log(falco_logger::level::WARNING, "DEPRECATION NOTICE: the '--nodriver' command line option is deprecated and will be removed in Falco 0.38! Set 'engine.kind: none' instead in falco.yaml\n");
 		s.config->m_engine_mode =  engine_kind_t::NONE;
 	}
 	if (!s.options.capture_file.empty())
 	{
-		falco_logger::log(falco_logger::level::WARNING, "DEPRECATION NOTICE: the '-e' command line option is deprecated and will be removed in Falco 0.38! Set `engine.kind: replay' and use `engine.replay' config instead in falco.yaml\n");
+		falco_logger::log(falco_logger::level::WARNING, "DEPRECATION NOTICE: the '-e' command line option is deprecated and will be removed in Falco 0.38! Set 'engine.kind: replay' and use 'engine.replay' config instead in falco.yaml\n");
 		s.config->m_engine_mode = engine_kind_t::REPLAY;
 		s.config->m_replay.m_capture_file = s.options.capture_file;
 	}
