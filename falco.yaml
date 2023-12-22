@@ -41,7 +41,6 @@
 #     json_include_output_property
 #     json_include_tags_property
 #     buffered_outputs
-#     outputs (throttling)
 #     rule_matching
 #     outputs_queue
 # Falco outputs channels
@@ -65,10 +64,10 @@
 #     syscall_event_drops
 #     metrics
 # Falco performance tuning (advanced)
-#     syscall_buf_size_preset [DEPRECATED]
-#     syscall_drop_failed_exit [DEPRECATED]
+#     syscall_buf_size_preset [DEPRECATED] -> Replaced by `engine.<driver>.buf_size_preset` starting Falco 0.38!
+#     syscall_drop_failed_exit [DEPRECATED] -> Replaced by `engine.<driver>.drop_failed_exit` starting Falco 0.38! 
 #     base_syscalls
-#     modern_bpf.cpus_for_each_syscall_buffer [DEPRECATED]
+#     modern_bpf.cpus_for_each_syscall_buffer [DEPRECATED] -> Replaced by `engine.modern_ebpf.cpus_for_each_buffer` starting Falco 0.38! 
 
 
 ################################
@@ -80,9 +79,9 @@
 # configuration options from this config file as command-line arguments by using
 # the `-o` flag followed by the option name and value. In the following example,
 # three config options (`json_output`, `log_level`, and
-# `modern_bpf.cpus_for_each_syscall_buffer`) are passed as command-line
+# `engine.kind`) are passed as command-line
 # arguments with their corresponding values: falco -o "json_output=true"
-# -o "log_level=debug" -o "modern_bpf.cpus_for_each_syscall_buffer=4" 
+# -o "log_level=debug" -o "engine.kind=kmod" 
 # Please note that command-line arguments take precedence over the options
 # specified in this config file.
 
@@ -93,16 +92,32 @@
 
 # Customize Falco settings using environment variables:
 #
-# - "HOST_ROOT": Specifies the prefix to the underlying host `/proc` filesystem
+# - HOST_ROOT: Specifies the prefix to the underlying host `/proc` filesystem
 #   when deploying Falco over a container with read-only host mounts instead of
 #   directly on the host. Defaults to "/host". 
-# - "FALCO_BPF_PROBE": DEPRECATED. Specify a custom path to the BPF object code file (`bpf`
+#
+# - !!! [DEPRECATED] FALCO_BPF_PROBE: Specify a custom path to the BPF object code file (`bpf`
 #   driver). This is not needed for the modern_bpf driver. 
-# - "FALCO_HOSTNAME": Customize the hostname output field logged by Falco by
+#   -> Replaced by `engine.kind: ebpf` and `engine.ebpf` starting Falco 0.38!
+#
+# - FALCO_HOSTNAME: Customize the hostname output field logged by Falco by
 #   setting the "FALCO_HOSTNAME" environment variable.
-# - "FALCO_CGROUP_MEM_PATH": Specifies the file path holding the container
+#
+# - FALCO_CGROUP_MEM_PATH: Specifies the file path holding the container
 #   memory usage metric for the `metrics` feature. Defaults to
 #   "/sys/fs/cgroup/memory/memory.usage_in_bytes" (Kubernetes).
+#
+# - SKIP_DRIVER_LOADER is used by the Falco fat image to skip the driver loading part.
+#
+# - FALCO_FRONTEND is useful when set to noninteractive to skip the dialog choice during 
+# the installation of Falco deb/rpm packages. This setting is somewhat similar to DEBIAN_FRONTEND.
+#
+# - FALCO_DRIVER_CHOICE is useful when set to kmod, ebpf, or modern_ebpf (matching the names 
+# used in engine.kind in the Falco config) during the installation of Falco deb/rpm packages. 
+# It skips the dialog choice but retains the driver configuration.
+#
+# - FALCOCTL_ENABLED is useful when set to 'no' during the installation of Falco deb/rpm packages, 
+# disabling the automatic artifacts followed by falcoctl.
 
 
 #####################
@@ -977,7 +992,7 @@ metrics:
 # Falco performance tuning (advanced) #
 #######################################
 
-# [DEPRECATED] `syscall_buf_size_preset`
+# [DEPRECATED] `syscall_buf_size_preset` -> Replaced by `engine.<driver>.buf_size_preset` starting Falco 0.38!
 #
 # Deprecated in favor of engine.{kmod,ebpf,modern_ebpf}.buf_size_preset.
 # This config is evaluated only if the default `engine` config block is not changed,
@@ -1033,7 +1048,7 @@ metrics:
 # if the default size is not suitable for your use case.
 syscall_buf_size_preset: 4
 
-# [DEPRECATED] `syscall_drop_failed_exit`
+# [DEPRECATED] `syscall_drop_failed_exit` -> Replaced by `engine.<driver>.drop_failed_exit` starting Falco 0.38! 
 #
 # Deprecated in favor of engine.{kmod,ebpf,modern_ebpf}.drop_failed_exit.
 # This config is evaluated only if the default `engine` config block is not changed,
@@ -1162,7 +1177,7 @@ base_syscalls:
   custom_set: []
   repair: false
 
-# [DEPRECATED] `modern_bpf.cpus_for_each_syscall_buffer`, modern_bpf only
+# [DEPRECATED] `modern_bpf.cpus_for_each_syscall_buffer`, modern_bpf only -> Replaced by `engine.modern_ebpf.cpus_for_each_buffer` starting Falco 0.38! 
 #
 # Deprecated in favor of engine.modern_ebpf.cpus_for_each_buffer.
 # This config is evaluated only if the default `engine` config block is not changed,
