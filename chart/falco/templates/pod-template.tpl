@@ -80,16 +80,6 @@ spec:
         - --cri
         - /run/crio/crio.sock
         {{- end }}
-        {{- if .kubernetes.enabled }}
-        - -K
-        - {{ .kubernetes.apiAuth }}
-        - -k
-        - {{ .kubernetes.apiUrl }}
-        {{- if .kubernetes.enableNodeFilter }}
-        - --k8s-node
-        - "$(FALCO_K8S_NODE_NAME)"
-        {{- end }}
-        {{- end }}
         - -pk
         {{- end }}
         {{- end }}
