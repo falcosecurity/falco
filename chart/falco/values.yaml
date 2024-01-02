@@ -23,19 +23,6 @@ fullnameOverride: ""
 # -- Override the deployment namespace
 namespaceOverride: ""
 
-rbac:
-  # Create and use rbac resources when set to true. Needed to fetch k8s metadata from the api-server.
-  create: true
-
-serviceAccount:
-  # -- Specifies whether a service account should be created.
-  create: true
-  # -- Annotations to add to the service account.
-  annotations: {}
-  # -- The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
-  name: ""
-
 # -- Add additional pod annotations
 podAnnotations: {}
 
@@ -215,7 +202,7 @@ driver:
         # -- The image repository to pull from.
         repository: falcosecurity/falco-driver-loader
         #  -- Overrides the image tag whose default is the chart appVersion.
-        tag: "master"
+        tag: ""
       # -- Extra environment variables that will be pass onto Falco driver loader init container.
       env: []
       # -- Arguments to pass to the Falco driver loader init container.
@@ -1379,30 +1366,6 @@ falco:
   #################################################
   # Falco cloud orchestration systems integration #
   #################################################
-
-  # [Stable] `metadata_download`
-  #
-  # -- When connected to an orchestrator like Kubernetes, Falco has the capability to
-  # collect metadata and enrich system call events with contextual data. The
-  # parameters mentioned here control the downloading process of this metadata.
-  #
-  # Please note that support for Mesos is deprecated, so these parameters
-  # currently apply only to Kubernetes. When using Falco with Kubernetes, you can
-  # enable this functionality by using the `-k` or `-K` command-line flag.
-  #
-  # However, it's worth mentioning that for important Kubernetes metadata fields
-  # such as namespace or pod name, these fields are automatically extracted from
-  # the container runtime, providing the necessary enrichment for common use cases
-  # of syscall-based threat detection.
-  #
-  # In summary, the `-k` flag is typically not required for most scenarios involving
-  # Kubernetes workload owner enrichment. The `-k` flag is primarily used when
-  # additional metadata is required beyond the standard fields, catering to more
-  # specific use cases, see https://falco.org/docs/reference/rules/supported-fields/#field-class-k8s.
-  metadata_download:
-    max_mb: 100
-    chunk_wait_us: 1000
-    watch_freq_sec: 1
 
   # [Stable] Guidance for Kubernetes container engine command-line args settings
   #
