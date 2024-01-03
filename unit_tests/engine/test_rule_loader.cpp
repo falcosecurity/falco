@@ -283,7 +283,7 @@ TEST_F(engine_loader_test, rule_incorrect_append_override)
 	std::string rule_name = "failing_rule";
 
 	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
-	ASSERT_TRUE(std::string(m_load_result_json["errors"][0]["message"]).find("'override' and 'append: true' cannot be used together") != std::string::npos);
+	ASSERT_TRUE(std::string(m_load_result_json["errors"][0]["message"]).find(OVERRIDE_APPEND_ERROR_MESSAGE) != std::string::npos);
 }
 
 TEST_F(engine_loader_test, rule_override_without_rule)
