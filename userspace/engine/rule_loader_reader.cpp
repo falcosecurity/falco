@@ -22,7 +22,6 @@ limitations under the License.
 
 #include "rule_loader_reader.h"
 #include "falco_engine_version.h"
-#include "logger.h"
 
 #define THROW(cond, err, ctx)    { if ((cond)) { throw rule_loader::rule_load_exception(falco::load_result::LOAD_ERR_YAML_VALIDATE, (err), (ctx)); } }
 
