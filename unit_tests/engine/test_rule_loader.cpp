@@ -43,6 +43,25 @@ protected:
 		return ret;
 	}
 
+	bool check_warning_message(std::string warning_msg)
+	{
+		if(!m_load_result->has_warnings())
+		{
+			return false;
+		}
+
+		for(auto &warn : m_load_result_json["warnings"])
+		{
+			std::string msg = warn["message"];
+			if(msg.find(warning_msg) != std::string::npos)
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	std::string m_sample_ruleset;
 	std::string m_sample_source;
 	sinsp_filter_check_list m_filterlist;
@@ -134,6 +153,9 @@ TEST_F(engine_loader_test, rule_override_append)
 	std::string rule_name = "legit_rule";
 	ASSERT_TRUE(load_rules(rules_content, "legit_rules.yaml")) << m_load_result_string;
 
+	// Here we don't use the deprecated `append` flag, so we don't expect the warning.
+	ASSERT_FALSE(check_warning_message(WARNING_APPEND_MESSAGE));
+
 	auto rule_description = m_engine->describe_rule(&rule_name, {});
 	ASSERT_EQ(rule_description["rules"][0]["info"]["condition"].template get<std::string>(),
 	 	"evt.type=open and proc.name = cat");
@@ -162,6 +184,9 @@ TEST_F(engine_loader_test, rule_append)
 
 	std::string rule_name = "legit_rule";
 	ASSERT_TRUE(load_rules(rules_content, "legit_rules.yaml")) << m_load_result_string;
+
+	// We should have at least one warning because the 'append' flag is deprecated.
+	ASSERT_TRUE(check_warning_message(WARNING_APPEND_MESSAGE));
 
 	auto rule_description = m_engine->describe_rule(&rule_name, {});
 	ASSERT_EQ(rule_description["rules"][0]["details"]["condition_compiled"].template get<std::string>(),
@@ -283,6 +308,10 @@ TEST_F(engine_loader_test, rule_incorrect_append_override)
 	std::string rule_name = "failing_rule";
 
 	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
+	
+	// We should have at least one warning because the 'append' flag is deprecated.
+	ASSERT_TRUE(check_warning_message(WARNING_APPEND_MESSAGE));
+	
 	ASSERT_TRUE(std::string(m_load_result_json["errors"][0]["message"]).find(OVERRIDE_APPEND_ERROR_MESSAGE) != std::string::npos);
 }
 

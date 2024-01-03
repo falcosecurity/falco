@@ -54,7 +54,8 @@ public:
 		LOAD_UNKNOWN_FILTER,
 		LOAD_UNUSED_MACRO,
 		LOAD_UNUSED_LIST,
-		LOAD_UNKNOWN_ITEM
+		LOAD_UNKNOWN_ITEM,
+		LOAD_DEPRECATED_ITEM
 	};
 
 	virtual ~load_result() = default;

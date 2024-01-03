@@ -66,7 +66,8 @@ static const std::string warning_codes[] = {
 	"LOAD_UNKNOWN_FILTER",
 	"LOAD_UNUSED_MACRO",
 	"LOAD_UNUSED_LIST",
-	"LOAD_UNKNOWN_ITEM"
+	"LOAD_UNKNOWN_ITEM",
+	"LOAD_DEPRECATED_ITEM"
 };
 
 const std::string& falco::load_result::warning_code_str(warning_code wc)
@@ -81,7 +82,8 @@ static const std::string warning_strings[] = {
 	"Unknown field or event-type in condition or output",
 	"Unused macro",
 	"Unused list",
-	"Unknown rules file item"
+	"Unknown rules file item",
+	"Used deprecated item"
 };
 
 const std::string& falco::load_result::warning_str(warning_code wc)
@@ -96,7 +98,8 @@ static const std::string warning_descs[] = {
 	"A rule condition or output refers to a field or evt.type that does not exist. This is normally an error, but if a rule has a skip-if-unknown-filter property, the error is downgraded to a warning.",
 	"A macro is defined in the rules content but is not used by any other macro or rule.",
 	"A list is defined in the rules content but is not used by any other list, macro, or rule.",
-	"An unknown top-level object is in the rules content. It will be ignored."
+	"An unknown top-level object is in the rules content. It will be ignored.",
+	"A deprecated item is employed by lists, macros, or rules."
 };
 
 const std::string& falco::load_result::warning_desc(warning_code wc)
