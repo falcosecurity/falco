@@ -23,6 +23,9 @@ limitations under the License.
 #include "version.h"
 #include "falco_engine_version.h"
 
+// Error message used when both 'override' and 'append' are specified.
+#define OVERRIDE_APPEND_ERROR_MESSAGE "Keys 'override' and 'append: true' cannot be used together. Add an append entry (e.g. 'condition: append') under override instead."
+
 namespace rule_loader
 {
 

@@ -448,7 +448,7 @@ static void read_item(
 
 		if(append == true && has_overrides)
 		{
-			THROW(true, "Keys 'override' and 'append: true' cannot be used together.", ctx);
+			THROW(true, OVERRIDE_APPEND_ERROR_MESSAGE, ctx);
 		}
 
 		// Since a list only has items, if we have chosen to append them we can append the entire object
@@ -490,7 +490,7 @@ static void read_item(
 
 		if(append == true && has_overrides)
 		{
-			THROW(true, "Keys 'override' and 'append: true' cannot be used together.", ctx);
+			THROW(true, OVERRIDE_APPEND_ERROR_MESSAGE, ctx);
 		}
 
 		// Since a macro only has a condition, if we have chosen to append to it we can append the entire object
@@ -528,8 +528,7 @@ static void read_item(
 		bool has_overrides_replace = !override_replace.empty();
 		bool has_overrides = has_overrides_append || has_overrides_replace;
 
-		THROW((has_append_flag && has_overrides),
-			"Keys 'override' and 'append: true' cannot be used together. Add an append entry (e.g. 'condition: append') under override instead.", ctx);
+		THROW((has_append_flag && has_overrides), OVERRIDE_APPEND_ERROR_MESSAGE, ctx);
 
 		if(has_overrides)
 		{
