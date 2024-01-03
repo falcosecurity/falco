@@ -434,27 +434,28 @@ static void read_item(
 		rule_loader::context ctx(item, rule_loader::context::LIST, name, parent);
 		rule_loader::list_info v(ctx);
 
-		bool append = false;
+		bool has_append_flag = false;
 		decode_val(item, "list", v.name, ctx);
 		decode_items(item, v.items, ctx);
 
-		decode_optional_val(item, "append", append, ctx);
-		
+		decode_optional_val(item, "append", has_append_flag, ctx);
+		if(has_append_flag)
+		{
+			cfg.res->add_warning(falco::load_result::LOAD_DEPRECATED_ITEM, WARNING_APPEND_MESSAGE, ctx);
+		}
+
 		std::set<std::string> override_append, override_replace;
 		std::set<std::string> overridable {"items"};
 		decode_overrides(item, overridable, overridable, override_append, override_replace, ctx);
 		bool has_overrides = !override_append.empty() || !override_replace.empty();
 
-		if(append == true && has_overrides)
-		{
-			THROW(true, OVERRIDE_APPEND_ERROR_MESSAGE, ctx);
-		}
+		THROW(has_append_flag && has_overrides, OVERRIDE_APPEND_ERROR_MESSAGE, ctx);
 
 		// Since a list only has items, if we have chosen to append them we can append the entire object
 		// otherwise we just want to redefine the list.
-		append |= override_append.find("items") != override_append.end();
+		has_append_flag |= override_append.find("items") != override_append.end();
 
-		if(append)
+		if(has_append_flag)
 		{
 			collector.append(cfg, v);
 		}
@@ -474,29 +475,30 @@ static void read_item(
 		rule_loader::macro_info v(ctx);
 		v.name = name;
 
-		bool append = false;
+		bool has_append_flag = false;
 		decode_val(item, "condition", v.cond, ctx);
 
 		// Now set the proper context for the condition now that we know it exists
 		v.cond_ctx = rule_loader::context(item["condition"], rule_loader::context::MACRO_CONDITION, "", ctx);
 
-		decode_optional_val(item, "append", append, ctx);
+		decode_optional_val(item, "append", has_append_flag, ctx);
+		if(has_append_flag)
+		{
+			cfg.res->add_warning(falco::load_result::LOAD_DEPRECATED_ITEM, WARNING_APPEND_MESSAGE, ctx);
+		}
 
 		std::set<std::string> override_append, override_replace;
 		std::set<std::string> overridable {"condition"};
 		decode_overrides(item, overridable, overridable, override_append, override_replace, ctx);
 		bool has_overrides = !override_append.empty() || !override_replace.empty();
 
-		if(append == true && has_overrides)
-		{
-			THROW(true, OVERRIDE_APPEND_ERROR_MESSAGE, ctx);
-		}
+		THROW((has_append_flag && has_overrides), OVERRIDE_APPEND_ERROR_MESSAGE, ctx);
 
 		// Since a macro only has a condition, if we have chosen to append to it we can append the entire object
 		// otherwise we just want to redefine the macro.
-		append |= override_append.find("condition") != override_append.end();
+		has_append_flag |= override_append.find("condition") != override_append.end();
 
-		if(append)
+		if(has_append_flag)
 		{
 			collector.append(cfg, v);
 		}
@@ -517,6 +519,10 @@ static void read_item(
 
 		bool has_append_flag = false;
 		decode_optional_val(item, "append", has_append_flag, ctx);
+		if(has_append_flag)
+		{
+			cfg.res->add_warning(falco::load_result::LOAD_DEPRECATED_ITEM, WARNING_APPEND_MESSAGE, ctx);
+		}
 
 		std::set<std::string> override_append, override_replace;
 		std::set<std::string> overridable_append {"condition", "output", "desc", "tags", "exceptions"};
