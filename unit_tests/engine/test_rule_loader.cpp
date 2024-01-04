@@ -202,7 +202,6 @@ TEST_F(engine_loader_test, rule_override_append)
 	 	"legit rule description with append");
 }
 
-
 TEST_F(engine_loader_test, rule_append)
 {
     std::string rules_content = R"END(
@@ -227,7 +226,6 @@ TEST_F(engine_loader_test, rule_append)
 	ASSERT_EQ(rule_description["rules"][0]["details"]["condition_compiled"].template get<std::string>(),
 	 	"(evt.type = open and proc.name = cat)");
 }
-
 
 TEST_F(engine_loader_test, rule_override_replace)
 {
@@ -318,7 +316,7 @@ TEST_F(engine_loader_test, rule_incorrect_override_type)
 	std::string rule_name = "failing_rule";
 
 	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
-	ASSERT_EQ(m_load_result_json["errors"][0]["message"], "Key 'priority' cannot be appended to, use 'replace' instead");
+	ASSERT_TRUE(check_error_message("Key 'priority' cannot be appended to, use 'replace' instead"));
 	ASSERT_TRUE(std::string(m_load_result_json["errors"][0]["context"]["snippet"]).find("priority: append") != std::string::npos);
 }
 
@@ -347,7 +345,7 @@ TEST_F(engine_loader_test, rule_incorrect_append_override)
 	// We should have at least one warning because the 'append' flag is deprecated.
 	ASSERT_TRUE(check_warning_message(WARNING_APPEND_MESSAGE));
 	
-	ASSERT_TRUE(std::string(m_load_result_json["errors"][0]["message"]).find(OVERRIDE_APPEND_ERROR_MESSAGE) != std::string::npos);
+	ASSERT_TRUE(check_error_message(OVERRIDE_APPEND_ERROR_MESSAGE));
 }
 
 TEST_F(engine_loader_test, rule_override_without_rule)
@@ -364,7 +362,7 @@ TEST_F(engine_loader_test, rule_override_without_rule)
 	std::string rule_name = "failing_rule";
 
 	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
-	ASSERT_TRUE(std::string(m_load_result_json["errors"][0]["message"]).find("no rule by that name already exists") != std::string::npos);
+	ASSERT_TRUE(check_error_message("no rule by that name already exists"));
 }
 
 TEST_F(engine_loader_test, rule_override_without_field)
@@ -386,7 +384,7 @@ TEST_F(engine_loader_test, rule_override_without_field)
 	std::string rule_name = "failing_rule";
 
 	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
-	ASSERT_EQ(m_load_result_json["errors"][0]["message"], "An append override for 'condition' was specified but 'condition' is not defined");
+	ASSERT_TRUE(check_error_message("An append override for 'condition' was specified but 'condition' is not defined"));
 }
 
 TEST_F(engine_loader_test, rule_override_extra_field)
@@ -410,7 +408,7 @@ TEST_F(engine_loader_test, rule_override_extra_field)
 	std::string rule_name = "failing_rule";
 
 	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
-	ASSERT_TRUE(std::string(m_load_result_json["errors"][0]["message"]).find("Unexpected key 'priority'") != std::string::npos);
+	ASSERT_TRUE(check_error_message("Unexpected key 'priority'"));
 }
 
 TEST_F(engine_loader_test, missing_enabled_key_with_override)
