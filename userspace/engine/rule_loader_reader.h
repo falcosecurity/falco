@@ -32,6 +32,9 @@ limitations under the License.
 // Warning message used when `enabled` is used without override.
 #define WARNING_ENABLED_MESSAGE "The standalone 'enabled' key usage is deprecated. The correct approach requires also a 'replace' entry under the 'override' key (i.e. 'enabled: replace')."
 
+// Warning message used when the `required_engine_version` is not semver compatible.
+#define WARNING_ENGINE_VERSION_NOT_SEMVER "The 'required_engine_version' should be SemVer compatible. All non-SemVer compatible values are deprecated."
+
 namespace rule_loader
 {
 
