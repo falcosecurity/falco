@@ -177,15 +177,6 @@ void falco_engine::list_fields(std::string &source, bool verbose, bool names_onl
 	}
 }
 
-void falco_engine::load_rules(const std::string &rules_content, bool verbose, bool all_events)
-{
-	static const std::string no_name = "N/A";
-
-	std::unique_ptr<load_result> res = load_rules(rules_content, no_name);
-
-	interpret_load_result(res, no_name, rules_content, verbose);
-}
-
 std::unique_ptr<load_result> falco_engine::load_rules(const std::string &rules_content, const std::string &name)
 {
 	rule_loader::configuration cfg(rules_content, m_sources, name);
@@ -255,44 +246,6 @@ std::unique_ptr<load_result> falco_engine::load_rules(const std::string &rules_c
 	}
 
 	return std::move(cfg.res);
-}
-
-void falco_engine::load_rules_file(const std::string &rules_filename, bool verbose, bool all_events)
-{
-	std::string rules_content;
-
-	read_file(rules_filename, rules_content);
-
-	std::unique_ptr<load_result> res = load_rules(rules_content, rules_filename);
-
-	interpret_load_result(res, rules_filename, rules_content, verbose);
-}
-
-std::unique_ptr<load_result> falco_engine::load_rules_file(const std::string &rules_filename)
-{
-	std::string rules_content;
-
-	try {
-		read_file(rules_filename, rules_content);
-	}
-	catch (falco_exception &e)
-	{
-		rule_loader::context ctx(rules_filename);
-
-		std::unique_ptr<rule_loader::result> res(new rule_loader::result(rules_filename));
-
-		res->add_error(load_result::LOAD_ERR_FILE_READ, e.what(), ctx);
-
-// Old gcc versions (e.g. 4.8.3) won't allow move elision but newer versions
-// (e.g. 10.2.1) would complain about the redundant move.
-#if __GNUC__ > 4
-		return res;
-#else
-		return std::move(res);
-#endif
-	}
-
-	return load_rules(rules_content, rules_filename);
 }
 
 void falco_engine::enable_rule(const std::string &substring, bool enabled, const std::string &ruleset)
@@ -953,29 +906,6 @@ void falco_engine::read_file(const std::string& filename, std::string& contents)
 
 	contents.assign(std::istreambuf_iterator<char>(is),
 			std::istreambuf_iterator<char>());
-}
-
-void falco_engine::interpret_load_result(std::unique_ptr<load_result>& res,
-					 const std::string& rules_filename,
-					 const std::string& rules_content,
-					 bool verbose)
-{
-	falco::load_result::rules_contents_t rc = {{rules_filename, rules_content}};
-
-	if(!res->successful())
-	{
-		// The output here is always the full e.g. "verbose" output.
-		throw falco_exception(res->as_string(true, rc).c_str());
-	}
-
-	if(verbose && res->has_warnings())
-	{
-		// Here, verbose controls whether to additionally
-		// "log" e.g. print to stderr. What's logged is always
-		// non-verbose so it fits on a single line.
-		// todo(jasondellaluce): introduce a logging callback in Falco
-		fprintf(stderr, "%s\n", res->as_string(false, rc).c_str());
-	}
 }
 
 static bool check_plugin_requirement_alternatives(

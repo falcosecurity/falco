@@ -74,15 +74,8 @@ public:
 	void list_fields(std::string &source, bool verbose, bool names_only, bool markdown) const;
 
 	//
-	// Load rules either directly or from a filename.
+	// Load rules and returns a result object.
 	//
-	void load_rules_file(const std::string &rules_filename, bool verbose, bool all_events);
-	void load_rules(const std::string &rules_content, bool verbose, bool all_events);
-
-	//
-	// Identical to above, but returns a result object instead of
-	// throwing exceptions on error.
-	std::unique_ptr<falco::load_result> load_rules_file(const std::string &rules_filename);
 	std::unique_ptr<falco::load_result> load_rules(const std::string &rules_content, const std::string &name);
 
 	//
@@ -296,13 +289,6 @@ private:
 	// Throws falco_exception if the file can not be read
 	void read_file(const std::string& filename, std::string& contents);
 
-	// For load_rules methods that throw exceptions on error,
-	// interpret a load_result and throw an exception if needed.
-	void interpret_load_result(std::unique_ptr<falco::load_result>& res,
-				   const std::string& rules_filename,
-				   const std::string& rules_content,
-				   bool verbose);
-
 	indexed_vector<falco_source> m_sources;
 
 	const falco_source* find_source(std::size_t index) const;
@@ -387,4 +373,3 @@ private:
 	std::string m_extra;
 	bool m_replace_container_info;
 };
-
