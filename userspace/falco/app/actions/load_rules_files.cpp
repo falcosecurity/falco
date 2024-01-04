@@ -79,10 +79,9 @@ falco::app::run_result falco::app::actions::load_rules_files(falco::app::state& 
 			break;
 		}
 
-		// If verbose is true, also print any warnings
-		if(s.options.verbose && res->has_warnings())
+		if(res->has_warnings())
 		{
-			fprintf(stderr, "%s\n", res->as_string(true, rc).c_str());
+			falco_logger::log(falco_logger::level::WARNING,res->as_string(true, rc) + "\n");
 		}
 	}
 

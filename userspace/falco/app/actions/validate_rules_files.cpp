@@ -114,12 +114,7 @@ falco::app::run_result falco::app::actions::validate_rules_files(falco::app::sta
 				// file was ok with warnings, without actually
 				// printing the warnings.
 				summary += filename + ": Ok, with warnings";
-
-				// If verbose is true, print the warnings now.
-				if(s.options.verbose)
-				{
-					fprintf(stderr, "%s\n", res->as_string(true, rc).c_str());
-				}
+				falco_logger::log(falco_logger::level::WARNING, res->as_string(true, rc) + "\n");
 			}
 		}
 
