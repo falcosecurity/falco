@@ -24,10 +24,13 @@ limitations under the License.
 #include "falco_engine_version.h"
 
 // Error message used when both 'override' and 'append' are specified.
-#define OVERRIDE_APPEND_ERROR_MESSAGE "Keys 'override' and 'append: true' cannot be used together. Add an append entry (e.g. 'condition: append') under 'override' instead."
+#define OVERRIDE_APPEND_ERROR_MESSAGE "Keys 'override' and 'append: true' cannot be used together. Add an 'append' entry (e.g. 'condition: append') under 'override' instead."
 
 // Warning message used when `append` is used.
-#define WARNING_APPEND_MESSAGE "'append' key is deprecated. Add an append entry (e.g. 'condition: append') under 'override' instead."
+#define WARNING_APPEND_MESSAGE "'append' key is deprecated. Add an 'append' entry (e.g. 'condition: append') under 'override' instead."
+
+// Warning message used when `enabled` is used without override.
+#define WARNING_ENABLED_MESSAGE "The standalone 'enabled' key usage is deprecated. The correct approach requires also a 'replace' entry under the 'override' key (i.e. 'enabled: replace')."
 
 namespace rule_loader
 {

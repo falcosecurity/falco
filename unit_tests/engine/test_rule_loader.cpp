@@ -43,6 +43,17 @@ protected:
 		return ret;
 	}
 
+	// This must be kept in line with the (private) falco_engine::s_default_ruleset
+	uint64_t num_rules_for_ruleset(std::string ruleset = "falco-default-ruleset")
+	{
+		return m_engine->num_rules_for_ruleset(ruleset);
+	}
+
+	bool has_warnings()
+	{
+		return m_load_result->has_warnings();
+	}
+
 	bool check_warning_message(std::string warning_msg)
 	{
 		if(!m_load_result->has_warnings())
@@ -53,7 +64,31 @@ protected:
 		for(auto &warn : m_load_result_json["warnings"])
 		{
 			std::string msg = warn["message"];
+			// Debug:
+			// printf("msg: %s\n", msg.c_str());
 			if(msg.find(warning_msg) != std::string::npos)
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	bool check_error_message(std::string error_msg)
+	{
+		// if the loading is successful there are no errors
+		if(m_load_result->successful())
+		{
+			return false;
+		}
+
+		for(auto &err : m_load_result_json["errors"])
+		{
+			std::string msg = err["message"];
+			// Debug:
+			// printf("msg: %s\n", msg.c_str());
+			if(msg.find(error_msg) != std::string::npos)
 			{
 				return true;
 			}
@@ -376,4 +411,143 @@ TEST_F(engine_loader_test, rule_override_extra_field)
 
 	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
 	ASSERT_TRUE(std::string(m_load_result_json["errors"][0]["message"]).find("Unexpected key 'priority'") != std::string::npos);
+}
+
+TEST_F(engine_loader_test, missing_enabled_key_with_override)
+{
+    std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule description
+  condition: evt.type = close
+  output: user=%user.name command=%proc.cmdline file=%fd.name
+  priority: INFO
+  enabled: false
+
+- rule: test_rule
+  desc: missing enabled key
+  condition: and proc.name = cat
+  override:
+    desc: replace
+    condition: append
+    enabled: replace
+)END";
+
+	// In the rule override we miss `enabled: true`
+	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
+	ASSERT_TRUE(check_error_message("'enabled' was specified but 'enabled' is not defined"));
+}
+
+TEST_F(engine_loader_test, rule_override_with_enabled)
+{
+    std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule description
+  condition: evt.type = close
+  output: user=%user.name command=%proc.cmdline file=%fd.name
+  priority: INFO
+  enabled: false
+
+- rule: test_rule
+  desc: correct override
+  condition: and proc.name = cat
+  enabled: true
+  override:
+    desc: replace
+    condition: append
+    enabled: replace
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
+	ASSERT_FALSE(has_warnings());
+	// The rule should be enabled at the end.
+	EXPECT_EQ(num_rules_for_ruleset(), 1);
+}
+
+TEST_F(engine_loader_test, rule_not_enabled)
+{
+    std::string rules_content = R"END(
+- rule: test_rule
+  desc: rule not enabled
+  condition: evt.type = close
+  output: user=%user.name command=%proc.cmdline file=%fd.name
+  priority: INFO
+  enabled: false
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
+	ASSERT_FALSE(has_warnings());
+	EXPECT_EQ(num_rules_for_ruleset(), 0);
+}
+
+TEST_F(engine_loader_test, rule_enabled_warning)
+{
+    std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule description
+  condition: evt.type = close
+  output: user=%user.name command=%proc.cmdline file=%fd.name
+  priority: INFO
+  enabled: false
+
+- rule: test_rule
+  enabled: true
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
+	ASSERT_TRUE(check_warning_message(WARNING_ENABLED_MESSAGE));
+	// The rule should be enabled at the end.
+	EXPECT_EQ(num_rules_for_ruleset(), 1);
+}
+
+// todo!: Probably we shouldn't allow this syntax
+TEST_F(engine_loader_test, rule_enabled_is_ignored_by_append)
+{
+    std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule description
+  condition: evt.type = close
+  output: user=%user.name command=%proc.cmdline file=%fd.name
+  priority: INFO
+  enabled: false
+
+- rule: test_rule
+  condition: and proc.name = cat
+  append: true
+  enabled: true
+)END";
+
+	// 'enabled' is ignored by the append, this syntax is not supported
+	// so the rule is not enabled.
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
+	EXPECT_EQ(num_rules_for_ruleset(), 0);
+}
+
+// todo!: Probably we shouldn't allow this syntax
+TEST_F(engine_loader_test, rewrite_rule)
+{
+    std::string rules_content = R"END(
+- rule: test_rule
+  desc: test rule description
+  condition: evt.type = close
+  output: user=%user.name command=%proc.cmdline file=%fd.name
+  priority: INFO
+  enabled: false
+
+- rule: test_rule
+  desc: redefined rule syntax
+  condition: proc.name = cat
+  output: user=%user.name command=%proc.cmdline file=%fd.name
+  priority: WARNING
+  enabled: true
+)END";
+
+	// The above syntax is not supported, we cannot override the content
+	// of a rule in this way.
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
+	// In this case the rule is completely overridden but this syntax is not supported.
+	EXPECT_EQ(num_rules_for_ruleset(), 1);
+
+	std::string rule_name = "test_rule";
+	auto rule_description = m_engine->describe_rule(&rule_name, {});
+	ASSERT_EQ(rule_description["rules"][0]["details"]["condition_compiled"].template get<std::string>(), "proc.name = cat");
 }
