@@ -693,6 +693,7 @@ static void read_item(
 			    !item["priority"].IsDefined())
 			{
 				decode_val(item, "enabled", v.enabled, ctx);
+				cfg.res->add_warning(falco::load_result::LOAD_DEPRECATED_ITEM, WARNING_ENABLED_MESSAGE, ctx);
 				collector.enable(cfg, v);
 			}
 			else
