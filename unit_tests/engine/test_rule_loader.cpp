@@ -549,3 +549,57 @@ TEST_F(engine_loader_test, rewrite_rule)
 	auto rule_description = m_engine->describe_rule(&rule_name, {});
 	ASSERT_EQ(rule_description["rules"][0]["details"]["condition_compiled"].template get<std::string>(), "proc.name = cat");
 }
+
+TEST_F(engine_loader_test, required_engine_version_semver)
+{
+    std::string rules_content = R"END(
+- required_engine_version: 0.26.0
+
+- rule: test_rule
+  desc: test rule description
+  condition: evt.type = close
+  output: user=%user.name command=%proc.cmdline file=%fd.name
+  priority: INFO
+  enabled: false
+
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
+	ASSERT_FALSE(has_warnings());
+}
+
+TEST_F(engine_loader_test, required_engine_version_not_semver)
+{
+    std::string rules_content = R"END(
+- required_engine_version: 26
+
+- rule: test_rule
+  desc: test rule description
+  condition: evt.type = close
+  output: user=%user.name command=%proc.cmdline file=%fd.name
+  priority: INFO
+  enabled: false
+
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
+	ASSERT_TRUE(check_warning_message(WARNING_ENGINE_VERSION_NOT_SEMVER));
+}
+
+TEST_F(engine_loader_test, required_engine_version_invalid)
+{
+    std::string rules_content = R"END(
+- required_engine_version: seven
+
+- rule: test_rule
+  desc: test rule description
+  condition: evt.type = close
+  output: user=%user.name command=%proc.cmdline file=%fd.name
+  priority: INFO
+  enabled: false
+
+)END";
+
+	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
+	ASSERT_TRUE(check_error_message("Unable to parse engine version"));
+}
