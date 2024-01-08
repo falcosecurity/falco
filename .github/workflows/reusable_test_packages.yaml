@@ -43,6 +43,14 @@ jobs:
           tar -xvf $(ls falco-*.tar.gz)
           cd falco-${{ inputs.version }}-${{ inputs.arch }}
           sudo cp -r * /
+      
+      # Note: most probably the plugin related tests should be moved to the plugin repo sooner or later.
+      - name: Install needed artifacts using falcoctl
+        if: ${{ inputs.static == false }}
+        run: |
+          sudo mkdir -p /usr/share/falco/plugins
+          sudo falcoctl artifact install k8saudit-rules
+          sudo falcoctl artifact install cloudtrail-rules
      
       # We only run driver loader tests on x86_64
       - name: Install dependencies for falco-driver-loader tests
