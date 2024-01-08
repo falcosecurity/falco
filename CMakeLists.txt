@@ -189,7 +189,6 @@ add_subdirectory(userspace/engine)
 add_subdirectory(userspace/falco)
 
 if(NOT WIN32 AND NOT APPLE AND NOT EMSCRIPTEN AND NOT MUSL_OPTIMIZED_BUILD)
-  include(plugins)
   include(falcoctl)
 endif()
 
