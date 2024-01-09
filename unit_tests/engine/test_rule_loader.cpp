@@ -583,7 +583,7 @@ TEST_F(engine_loader_test, required_engine_version_not_semver)
 )END";
 
 	ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
-	ASSERT_TRUE(check_warning_message(WARNING_ENGINE_VERSION_NOT_SEMVER));
+	ASSERT_FALSE(has_warnings());
 }
 
 TEST_F(engine_loader_test, required_engine_version_invalid)
