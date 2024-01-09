@@ -394,9 +394,10 @@ falcoctl:
       # in the list it will refuse to downloade and install that artifact.
       allowedTypes:
         - rulesfile
+        - plugin
       install:
-        # -- Do not resolve the depenencies for artifacts. By default is true, but for our use case we disable it.
-        resolveDeps: false
+        # -- Resolve the dependencies for artifacts.
+        resolveDeps: true
         # -- List of artifacts to be installed by the falcoctl init container.
         refs: [falco-rules:2]
         # -- Directory where the rulesfiles are saved. The path is relative to the container, which in this case is an emptyDir

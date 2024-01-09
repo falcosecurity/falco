@@ -18,22 +18,20 @@ controller:
 falcoctl:
   artifact:
     install:
-      # -- Enable the init container. We do not recommend installing (or following) plugins for security reasons since they are executable objects.
+      # -- Enable the init container.
       enabled: true
     follow:
-      # -- Enable the sidecar container. We do not support it yet for plugins. It is used only for rules feed such as k8saudit-rules rules.
+      # -- Enable the sidecar container.
       enabled: true
   config:
     artifact:
       install:
-        # -- Do not resolve the depenencies for artifacts. By default is true, but for our use case we disable it.
-        resolveDeps: false
+        # -- Resolve the dependencies for artifacts.
+        resolveDeps: true
         # -- List of artifacts to be installed by the falcoctl init container.
-        # Only rulesfiles, we do no recommend plugins for security reasonts since they are executable objects.
         refs: [k8saudit-rules:0.6]
       follow:
         # -- List of artifacts to be followed by the falcoctl sidecar container.
-        # Only rulesfiles, we do no recommend plugins for security reasonts since they are executable objects.
         refs: [k8saudit-rules:0.6]
 
 services:
