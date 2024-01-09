@@ -368,7 +368,6 @@ static void read_item(
 
 			// Build proper semver representation
 			v.version = rule_loader::reader::get_implicit_engine_version(ver);
-			cfg.res->add_warning(falco::load_result::LOAD_DEPRECATED_ITEM, WARNING_ENGINE_VERSION_NOT_SEMVER, ctx);
 		} 
 		catch(std::exception& e)
 		{
