@@ -346,7 +346,7 @@ falcoctl:
     # -- The image repository to pull from.
     repository: falcosecurity/falcoctl
     # -- The image tag to pull.
-    tag: "0.6.2"
+    tag: "main"
   artifact:
     # -- Runs "falcoctl artifact install" command as an init container. It is used to install artfacts before
     # Falco starts. It provides them to Falco by using an emptyDir volume.
@@ -355,7 +355,7 @@ falcoctl:
       # -- Extra environment variables that will be pass onto falcoctl-artifact-install init container.
       env: []
       # -- Arguments to pass to the falcoctl-artifact-install init container.
-      args: ["--verbose"]
+      args: ["--log-format=json"]
       # -- Resources requests and limits for the falcoctl-artifact-install init container.
       resources: {}
       # -- Security context for the falcoctl init container.
@@ -373,7 +373,7 @@ falcoctl:
       # -- Extra environment variables that will be pass onto falcoctl-artifact-follow sidecar container.
       env: []
       # -- Arguments to pass to the falcoctl-artifact-follow sidecar container.
-      args: ["--verbose"]
+      args: ["--log-format=json"]
       # -- Resources requests and limits for the falcoctl-artifact-follow sidecar container.
       resources: {}
       # -- Security context for the falcoctl-artifact-follow sidecar container.
