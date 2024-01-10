@@ -563,14 +563,14 @@ TEST_F(engine_loader_test, rule_append_after_rule_definition)
 	ASSERT_EQ(get_compiled_rule_condition("test_rule"),"(evt.type in (open, openat) and proc.name = cat)");
 }
 
-TEST_F(engine_loader_test, list_override_append_typo)
+TEST_F(engine_loader_test, list_override_append_wrong_key)
 {
 	// todo: maybe we want to manage some non-existent keys
-	// Please note the typo in `override` in the first list definition.
+	// Please note how the non-existent key 'non-existent keys' is ignored.
     std::string rules_content = R"END(
 - list: dev_creation_binaries
   items: ["csi-provisioner", "csi-attacher"]
-  overridde:
+  override_written_wrong:
     items: append
 
 - list: dev_creation_binaries
@@ -584,7 +584,7 @@ TEST_F(engine_loader_test, list_override_append_typo)
 
 )END";
 
-	// Since there is a typo in the first list definition the `override` is not
+	// Since there is a wrong key in the first list definition the `override` is not
 	// considered. so in this situation, we are defining the list 2 times. The 
 	// second one overrides the first one.
 	ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
