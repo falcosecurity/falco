@@ -190,10 +190,7 @@ void rule_loader::collector::define(configuration& cfg, list_info& info)
 void rule_loader::collector::append(configuration& cfg, list_info& info)
 {
 	auto prev = m_list_infos.at(info.name);
-	THROW(!prev,
-	       // "List has 'append' key or an append override but no list by that name already exists", // TODO update this error and update testing
-		   "List has 'append' key but no list by that name already exists",
-	       info.ctx);
+	THROW(!prev, ERROR_NO_PREVIOUS_LIST, info.ctx);
 	prev->items.insert(prev->items.end(), info.items.begin(), info.items.end());
 	append_info(prev, info, m_cur_index++);
 }
@@ -206,9 +203,7 @@ void rule_loader::collector::define(configuration& cfg, macro_info& info)
 void rule_loader::collector::append(configuration& cfg, macro_info& info)
 {
 	auto prev = m_macro_infos.at(info.name);
-	THROW(!prev,
-	       "Macro has 'append' key but no macro by that name already exists",
-	       info.ctx);
+	THROW(!prev, ERROR_NO_PREVIOUS_MACRO, info.ctx);
 	prev->cond += " ";
 	prev->cond += info.cond;
 	append_info(prev, info, m_cur_index++);
@@ -244,10 +239,7 @@ void rule_loader::collector::append(configuration& cfg, rule_update_info& info)
 {
 	auto prev = m_rule_infos.at(info.name);
 
-	THROW(!prev,
-	       // "Rule has 'append' key or an append override but no rule by that name already exists", // TODO replace with this and update testing
-		   "Rule has 'append' key but no rule by that name already exists",
-	       info.ctx);
+	THROW(!prev, ERROR_NO_PREVIOUS_RULE, info.ctx);
 	THROW(!info.has_any_value(),
 	       "Appended rule must have exceptions or condition property",
 	       // "Appended rule must have at least one field that can be appended to", // TODO replace with this and update testing

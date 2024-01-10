@@ -3,6 +3,7 @@
 #include "falco_engine.h"
 #include "rule_loader_reader.h"
 #include "rule_loader_compiler.h"
+#include "rule_loading_messages.h"
 
 class engine_loader_test : public ::testing::Test {
 protected:
@@ -370,7 +371,7 @@ TEST_F(engine_loader_test, macro_override_append_before_macro_definition)
 
 	// We cannot define a macro override before the macro definition.
 	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
-	ASSERT_TRUE(check_error_message("Macro has 'append' key but no macro by that name already exists"));
+	ASSERT_TRUE(check_error_message(ERROR_NO_PREVIOUS_MACRO));
 }
 
 TEST_F(engine_loader_test, macro_append_before_macro_definition)
@@ -394,7 +395,7 @@ TEST_F(engine_loader_test, macro_append_before_macro_definition)
 
 	// We cannot define a macro override before the macro definition.
 	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
-	ASSERT_TRUE(check_error_message("Macro has 'append' key but no macro by that name already exists"));
+	ASSERT_TRUE(check_error_message(ERROR_NO_PREVIOUS_MACRO));
 }
 
 TEST_F(engine_loader_test, macro_override_append_after_macro_definition)
@@ -469,7 +470,7 @@ TEST_F(engine_loader_test, rule_override_append_before_rule_definition)
 )END";
 
 	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
-	ASSERT_TRUE(check_error_message("Rule has 'append' key but no rule by that name already exists"));
+	ASSERT_TRUE(check_error_message(ERROR_NO_PREVIOUS_RULE));
 }
 
 TEST_F(engine_loader_test, rule_append_before_rule_definition)
@@ -488,7 +489,7 @@ TEST_F(engine_loader_test, rule_append_before_rule_definition)
 )END";
 
 	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
-	ASSERT_TRUE(check_error_message("Rule has 'append' key but no rule by that name already exists"));
+	ASSERT_TRUE(check_error_message(ERROR_NO_PREVIOUS_RULE));
 }
 
 TEST_F(engine_loader_test, rule_override_append_after_rule_definition)
@@ -590,7 +591,7 @@ TEST_F(engine_loader_test, list_override_append_before_list_definition)
 
 	// We cannot define a list override before the list definition.
 	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
-	ASSERT_TRUE(check_error_message("List has 'append' key but no list by that name already exists"));
+	ASSERT_TRUE(check_error_message(ERROR_NO_PREVIOUS_LIST));
 }
 
 TEST_F(engine_loader_test, list_append_before_list_definition)
@@ -613,7 +614,7 @@ TEST_F(engine_loader_test, list_append_before_list_definition)
 
 	// We cannot define a list append before the list definition.
 	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
-	ASSERT_TRUE(check_error_message("List has 'append' key but no list by that name already exists"));
+	ASSERT_TRUE(check_error_message(ERROR_NO_PREVIOUS_LIST));
 }
 
 TEST_F(engine_loader_test, list_override_append_after_list_definition)
