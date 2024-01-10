@@ -1,11 +1,18 @@
 #pragma once
 
-// todo: rename putting error at the beginning
-#define OVERRIDE_APPEND_ERROR_MESSAGE "Keys 'override' and 'append: true' cannot be used together. Add an 'append' entry (e.g. 'condition: append') under 'override' instead."
+////////////////
+// Warnings
+////////////////
 
-#define WARNING_APPEND_MESSAGE "'append' key is deprecated. Add an 'append' entry (e.g. 'condition: append') under 'override' instead."
+#define WARNING_APPEND "'append' key is deprecated. Add an 'append' entry (e.g. 'condition: append') under 'override' instead."
 
-#define WARNING_ENABLED_MESSAGE "The standalone 'enabled' key usage is deprecated. The correct approach requires also a 'replace' entry under the 'override' key (i.e. 'enabled: replace')."
+#define WARNING_ENABLED "The standalone 'enabled' key usage is deprecated. The correct approach requires also a 'replace' entry under the 'override' key (i.e. 'enabled: replace')."
+
+////////////////
+// Errors
+////////////////
+
+#define ERROR_OVERRIDE_APPEND "Keys 'override' and 'append: true' cannot be used together. Add an 'append' entry (e.g. 'condition: append') under 'override' instead."
 
 #define ERROR_NO_PREVIOUS_MACRO "Macro uses 'append' or 'override.condition: append' but no macro by that name already exists"
 

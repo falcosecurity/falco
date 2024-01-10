@@ -442,7 +442,7 @@ static void read_item(
 		decode_optional_val(item, "append", has_append_flag, ctx);
 		if(has_append_flag)
 		{
-			cfg.res->add_warning(falco::load_result::LOAD_DEPRECATED_ITEM, WARNING_APPEND_MESSAGE, ctx);
+			cfg.res->add_warning(falco::load_result::LOAD_DEPRECATED_ITEM, WARNING_APPEND, ctx);
 		}
 
 		std::set<std::string> override_append, override_replace;
@@ -450,7 +450,7 @@ static void read_item(
 		decode_overrides(item, overridable, overridable, override_append, override_replace, ctx);
 		bool has_overrides = !override_append.empty() || !override_replace.empty();
 
-		THROW(has_append_flag && has_overrides, OVERRIDE_APPEND_ERROR_MESSAGE, ctx);
+		THROW(has_append_flag && has_overrides, ERROR_OVERRIDE_APPEND, ctx);
 
 		// Since a list only has items, if we have chosen to append them we can append the entire object
 		// otherwise we just want to redefine the list.
@@ -485,7 +485,7 @@ static void read_item(
 		decode_optional_val(item, "append", has_append_flag, ctx);
 		if(has_append_flag)
 		{
-			cfg.res->add_warning(falco::load_result::LOAD_DEPRECATED_ITEM, WARNING_APPEND_MESSAGE, ctx);
+			cfg.res->add_warning(falco::load_result::LOAD_DEPRECATED_ITEM, WARNING_APPEND, ctx);
 		}
 
 		std::set<std::string> override_append, override_replace;
@@ -493,7 +493,7 @@ static void read_item(
 		decode_overrides(item, overridable, overridable, override_append, override_replace, ctx);
 		bool has_overrides = !override_append.empty() || !override_replace.empty();
 
-		THROW((has_append_flag && has_overrides), OVERRIDE_APPEND_ERROR_MESSAGE, ctx);
+		THROW((has_append_flag && has_overrides), ERROR_OVERRIDE_APPEND, ctx);
 
 		// Since a macro only has a condition, if we have chosen to append to it we can append the entire object
 		// otherwise we just want to redefine the macro.
@@ -522,7 +522,7 @@ static void read_item(
 		decode_optional_val(item, "append", has_append_flag, ctx);
 		if(has_append_flag)
 		{
-			cfg.res->add_warning(falco::load_result::LOAD_DEPRECATED_ITEM, WARNING_APPEND_MESSAGE, ctx);
+			cfg.res->add_warning(falco::load_result::LOAD_DEPRECATED_ITEM, WARNING_APPEND, ctx);
 		}
 
 		std::set<std::string> override_append, override_replace;
@@ -534,7 +534,7 @@ static void read_item(
 		bool has_overrides_replace = !override_replace.empty();
 		bool has_overrides = has_overrides_append || has_overrides_replace;
 
-		THROW((has_append_flag && has_overrides), OVERRIDE_APPEND_ERROR_MESSAGE, ctx);
+		THROW((has_append_flag && has_overrides), ERROR_OVERRIDE_APPEND, ctx);
 
 		if(has_overrides)
 		{
@@ -694,7 +694,7 @@ static void read_item(
 			    !item["priority"].IsDefined())
 			{
 				decode_val(item, "enabled", v.enabled, ctx);
-				cfg.res->add_warning(falco::load_result::LOAD_DEPRECATED_ITEM, WARNING_ENABLED_MESSAGE, ctx);
+				cfg.res->add_warning(falco::load_result::LOAD_DEPRECATED_ITEM, WARNING_ENABLED, ctx);
 				collector.enable(cfg, v);
 			}
 			else
