@@ -190,7 +190,7 @@ TEST_F(engine_loader_test, rule_override_append)
 	ASSERT_TRUE(load_rules(rules_content, "legit_rules.yaml")) << m_load_result_string;
 
 	// Here we don't use the deprecated `append` flag, so we don't expect the warning.
-	ASSERT_FALSE(check_warning_message(WARNING_APPEND_MESSAGE));
+	ASSERT_FALSE(check_warning_message(WARNING_APPEND));
 
 	auto rule_description = m_engine->describe_rule(&rule_name, {});
 	ASSERT_EQ(rule_description["rules"][0]["info"]["condition"].template get<std::string>(),
@@ -221,7 +221,7 @@ TEST_F(engine_loader_test, rule_append)
 	ASSERT_TRUE(load_rules(rules_content, "legit_rules.yaml")) << m_load_result_string;
 
 	// We should have at least one warning because the 'append' flag is deprecated.
-	ASSERT_TRUE(check_warning_message(WARNING_APPEND_MESSAGE));
+	ASSERT_TRUE(check_warning_message(WARNING_APPEND));
 
 	auto rule_description = m_engine->describe_rule(&rule_name, {});
 	ASSERT_EQ(rule_description["rules"][0]["details"]["condition_compiled"].template get<std::string>(),
@@ -344,9 +344,9 @@ TEST_F(engine_loader_test, rule_incorrect_append_override)
 	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
 	
 	// We should have at least one warning because the 'append' flag is deprecated.
-	ASSERT_TRUE(check_warning_message(WARNING_APPEND_MESSAGE));
+	ASSERT_TRUE(check_warning_message(WARNING_APPEND));
 	
-	ASSERT_TRUE(check_error_message(OVERRIDE_APPEND_ERROR_MESSAGE));
+	ASSERT_TRUE(check_error_message(ERROR_OVERRIDE_APPEND));
 }
 
 TEST_F(engine_loader_test, macro_override_append_before_macro_definition)
@@ -872,7 +872,7 @@ TEST_F(engine_loader_test, rule_enabled_warning)
 )END";
 
 	ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
-	ASSERT_TRUE(check_warning_message(WARNING_ENABLED_MESSAGE));
+	ASSERT_TRUE(check_warning_message(WARNING_ENABLED));
 	// The rule should be enabled at the end.
 	EXPECT_EQ(num_rules_for_ruleset(), 1);
 }
