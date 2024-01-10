@@ -457,7 +457,7 @@ nlohmann::json falco_engine::describe_rule(std::string *rule, const std::vector<
 	// output of rules, macros, and lists.
 	if (m_last_compile_output == nullptr)
 	{
-		throw falco_exception("rules most be loaded before describing them");
+		throw falco_exception("rules must be loaded before describing them");
 	}
 
 	// use collected and compiled info to print a json output
