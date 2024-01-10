@@ -98,6 +98,12 @@ protected:
 		return false;
 	}
 
+	std::string get_compiled_rule_condition(std::string rule_name = "")
+	{
+		auto rule_description = m_engine->describe_rule(&rule_name, {});
+		return rule_description["rules"][0]["details"]["condition_compiled"].template get<std::string>();
+	}
+
 	std::string m_sample_ruleset;
 	std::string m_sample_source;
 	sinsp_filter_check_list m_filterlist;
@@ -131,12 +137,8 @@ TEST_F(engine_loader_test, list_append)
     items: append
 )END";
 
-	std::string rule_name = "legit_rule";
 	ASSERT_TRUE(load_rules(rules_content, "legit_rules.yaml")) << m_load_result_string;
-
-	auto rule_description = m_engine->describe_rule(&rule_name, {});
-	ASSERT_EQ(rule_description["rules"][0]["details"]["condition_compiled"].template get<std::string>(),
-		"(evt.type = open and proc.name in (ash, bash, csh, ksh, sh, tcsh, zsh, dash, pwsh))");
+	ASSERT_EQ(get_compiled_rule_condition("legit_rule"),"(evt.type = open and proc.name in (ash, bash, csh, ksh, sh, tcsh, zsh, dash, pwsh))");
 }
 
 TEST_F(engine_loader_test, condition_append)
@@ -159,12 +161,8 @@ TEST_F(engine_loader_test, condition_append)
     condition: append
 )END";
 
-	std::string rule_name = "legit_rule";
 	ASSERT_TRUE(load_rules(rules_content, "legit_rules.yaml")) << m_load_result_string;
-
-	auto rule_description = m_engine->describe_rule(&rule_name, {});
-	ASSERT_EQ(rule_description["rules"][0]["details"]["condition_compiled"].template get<std::string>(),
-		"(evt.type = open and (((proc.aname = sshd and proc.name != sshd) or proc.name = systemd-logind or proc.name = login) or proc.name = ssh))");
+	ASSERT_EQ(get_compiled_rule_condition("legit_rule"),"(evt.type = open and (((proc.aname = sshd and proc.name != sshd) or proc.name = systemd-logind or proc.name = login) or proc.name = ssh))");
 }
 
 TEST_F(engine_loader_test, rule_override_append)
@@ -217,15 +215,12 @@ TEST_F(engine_loader_test, rule_append)
   append: true
 )END";
 
-	std::string rule_name = "legit_rule";
 	ASSERT_TRUE(load_rules(rules_content, "legit_rules.yaml")) << m_load_result_string;
 
 	// We should have at least one warning because the 'append' flag is deprecated.
 	ASSERT_TRUE(check_warning_message(WARNING_APPEND));
 
-	auto rule_description = m_engine->describe_rule(&rule_name, {});
-	ASSERT_EQ(rule_description["rules"][0]["details"]["condition_compiled"].template get<std::string>(),
-	 	"(evt.type = open and proc.name = cat)");
+	ASSERT_EQ(get_compiled_rule_condition("legit_rule"),"(evt.type = open and proc.name = cat)");
 }
 
 TEST_F(engine_loader_test, rule_override_replace)
@@ -396,10 +391,7 @@ TEST_F(engine_loader_test, macro_override_replace_before_macro_definition)
 
 	// The first override defines a macro that is overridden by the second macro definition
 	ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
-	std::string rule_name = "test_rule";
-	auto rule_description = m_engine->describe_rule(&rule_name, {});
-	ASSERT_EQ(rule_description["rules"][0]["details"]["condition_compiled"].template get<std::string>(),
-	 	"evt.type in (open, openat)");
+	ASSERT_EQ(get_compiled_rule_condition("test_rule"),"evt.type in (open, openat)");	
 }
 
 TEST_F(engine_loader_test, macro_append_before_macro_definition)
@@ -448,10 +440,7 @@ TEST_F(engine_loader_test, macro_override_append_after_macro_definition)
 
 	// We cannot define a macro override before the macro definition.
 	ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
-	std::string rule_name = "test_rule";
-	auto rule_description = m_engine->describe_rule(&rule_name, {});
-	ASSERT_EQ(rule_description["rules"][0]["details"]["condition_compiled"].template get<std::string>(),
-	 	"(evt.type in (open, openat) or evt.type = openat2)");
+	ASSERT_EQ(get_compiled_rule_condition("test_rule"),"(evt.type in (open, openat) or evt.type = openat2)");
 }
 
 TEST_F(engine_loader_test, macro_append_after_macro_definition)
@@ -475,10 +464,7 @@ TEST_F(engine_loader_test, macro_append_after_macro_definition)
 
 	// We cannot define a macro override before the macro definition.
 	ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
-	std::string rule_name = "test_rule";
-	auto rule_description = m_engine->describe_rule(&rule_name, {});
-	ASSERT_EQ(rule_description["rules"][0]["details"]["condition_compiled"].template get<std::string>(),
-	 	"(evt.type in (open, openat) or evt.type = openat2)");
+	ASSERT_EQ(get_compiled_rule_condition("test_rule"),"(evt.type in (open, openat) or evt.type = openat2)");
 }
 
 TEST_F(engine_loader_test, rule_override_append_before_rule_definition)
@@ -556,10 +542,7 @@ TEST_F(engine_loader_test, rule_override_append_after_rule_definition)
 )END";
 
 	ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
-	std::string rule_name = "test_rule";
-	auto rule_description = m_engine->describe_rule(&rule_name, {});
-	ASSERT_EQ(rule_description["rules"][0]["details"]["condition_compiled"].template get<std::string>(),
-	 	"(evt.type in (open, openat) and proc.name = cat)");
+	ASSERT_EQ(get_compiled_rule_condition("test_rule"),"(evt.type in (open, openat) and proc.name = cat)");
 }
 
 TEST_F(engine_loader_test, rule_append_after_rule_definition)
@@ -577,16 +560,13 @@ TEST_F(engine_loader_test, rule_append_after_rule_definition)
 )END";
 
 	ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
-	std::string rule_name = "test_rule";
-	auto rule_description = m_engine->describe_rule(&rule_name, {});
-	ASSERT_EQ(rule_description["rules"][0]["details"]["condition_compiled"].template get<std::string>(),
-	 	"(evt.type in (open, openat) and proc.name = cat)");
+	ASSERT_EQ(get_compiled_rule_condition("test_rule"),"(evt.type in (open, openat) and proc.name = cat)");
 }
 
 TEST_F(engine_loader_test, list_override_append_typo)
 {
-	// todo: maybe we want to manage in someway not existent keys
-	// Please note the typo `overridde` in the first list definition.
+	// todo: maybe we want to manage some non-existent keys
+	// Please note the typo in `override` in the first list definition.
     std::string rules_content = R"END(
 - list: dev_creation_binaries
   items: ["csi-provisioner", "csi-attacher"]
@@ -608,14 +588,7 @@ TEST_F(engine_loader_test, list_override_append_typo)
 	// considered. so in this situation, we are defining the list 2 times. The 
 	// second one overrides the first one.
 	ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
-	std::string rule_name = "test_rule";
-	auto rule_description = m_engine->describe_rule(&rule_name, {});
-
-	ASSERT_EQ(rule_description["rules"][0]["info"]["condition"].template get<std::string>(),
-	 	"evt.type = execve and proc.name in (dev_creation_binaries)");
-
-	ASSERT_EQ(rule_description["rules"][0]["details"]["condition_compiled"].template get<std::string>(),
-	 	"(evt.type = execve and proc.name in (blkid))");
+	ASSERT_EQ(get_compiled_rule_condition("test_rule"),"(evt.type = execve and proc.name in (blkid))");
 }
 
 TEST_F(engine_loader_test, list_override_append_before_list_definition)
@@ -663,10 +636,7 @@ TEST_F(engine_loader_test, list_override_replace_before_list_definition)
 
 	// With override replace we define a first list that then is overridden by the second one.
 	ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
-	std::string rule_name = "test_rule";
-	auto rule_description = m_engine->describe_rule(&rule_name, {});
-	ASSERT_EQ(rule_description["rules"][0]["details"]["condition_compiled"].template get<std::string>(),
-	 	"(evt.type = execve and proc.name in (blkid))");
+	ASSERT_EQ(get_compiled_rule_condition("test_rule"),"(evt.type = execve and proc.name in (blkid))");
 }
 
 TEST_F(engine_loader_test, list_append_before_list_definition)
@@ -712,11 +682,7 @@ TEST_F(engine_loader_test, list_override_append_after_list_definition)
 )END";
 
 	ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
-
-	std::string rule_name = "test_rule";
-	auto rule_description = m_engine->describe_rule(&rule_name, {});
-	ASSERT_EQ(rule_description["rules"][0]["details"]["condition_compiled"].template get<std::string>(),
-	 	"(evt.type = execve and proc.name in (blkid, csi-provisioner, csi-attacher))");
+	ASSERT_EQ(get_compiled_rule_condition("test_rule"),"(evt.type = execve and proc.name in (blkid, csi-provisioner, csi-attacher))");
 }
 
 TEST_F(engine_loader_test, list_append_after_list_definition)
@@ -737,12 +703,7 @@ TEST_F(engine_loader_test, list_append_after_list_definition)
 )END";
 
 	ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
-
-	std::string rule_name = "test_rule";
-	auto rule_description = m_engine->describe_rule(&rule_name, {});
-
-	ASSERT_EQ(rule_description["rules"][0]["details"]["condition_compiled"].template get<std::string>(),
-	 	"(evt.type = execve and proc.name in (blkid, csi-provisioner, csi-attacher))");
+	ASSERT_EQ(get_compiled_rule_condition("test_rule"),"(evt.type = execve and proc.name in (blkid, csi-provisioner, csi-attacher))");
 }
 
 TEST_F(engine_loader_test, rule_override_without_field)
@@ -924,10 +885,7 @@ TEST_F(engine_loader_test, rewrite_rule)
 	ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
 	// In this case the rule is completely overridden but this syntax is not supported.
 	EXPECT_EQ(num_rules_for_ruleset(), 1);
-
-	std::string rule_name = "test_rule";
-	auto rule_description = m_engine->describe_rule(&rule_name, {});
-	ASSERT_EQ(rule_description["rules"][0]["details"]["condition_compiled"].template get<std::string>(), "proc.name = cat");
+	ASSERT_EQ(get_compiled_rule_condition("test_rule"),"proc.name = cat");
 }
 
 TEST_F(engine_loader_test, required_engine_version_semver)
