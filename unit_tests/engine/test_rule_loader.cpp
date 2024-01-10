@@ -348,32 +348,193 @@ TEST_F(engine_loader_test, rule_incorrect_append_override)
 	ASSERT_TRUE(check_error_message(OVERRIDE_APPEND_ERROR_MESSAGE));
 }
 
-/// todo: MACRO order
+TEST_F(engine_loader_test, macro_override_append_before_macro_definition)
+{
+    std::string rules_content = R"END(
 
-/// todo: RULES order
+- macro: open_simple
+  condition: or evt.type = openat2
+  override:
+    condition: append
 
+- macro: open_simple
+  condition: evt.type in (open,openat)
 
-// TEST_F(engine_loader_test, rule_append_before_rule)
-// {
-//     std::string rules_content = R"END(
-// - rule: test_rule
-//   condition: and proc.name = cat
-//   append: true
-//   output: user=%user.name command=%proc.cmdline priority: INFO
+- rule: test_rule
+  desc: simple rule
+  condition: open_simple
+  output: command=%proc.cmdline
+  priority: INFO
 
-// - rule: test_rule
-//   desc: simple rule
-//   condition: evt.type=clone
-// )END";
+)END";
 
-// 	ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
-// 	ASSERT_FALSE(has_warnings());
-// 	// The rule should be enabled at the end.
-// 	EXPECT_EQ(num_rules_for_ruleset(), 1);
-// }
+	// We cannot define a macro override before the macro definition.
+	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
+	ASSERT_TRUE(check_error_message("Macro has 'append' key but no macro by that name already exists"));
+}
 
+TEST_F(engine_loader_test, macro_append_before_macro_definition)
+{
+    std::string rules_content = R"END(
 
-TEST_F(engine_loader_test, list_override_typo)
+- macro: open_simple
+  condition: or evt.type = openat2
+  append: true
+
+- macro: open_simple
+  condition: evt.type in (open,openat)
+
+- rule: test_rule
+  desc: simple rule
+  condition: open_simple
+  output: command=%proc.cmdline
+  priority: INFO
+
+)END";
+
+	// We cannot define a macro override before the macro definition.
+	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
+	ASSERT_TRUE(check_error_message("Macro has 'append' key but no macro by that name already exists"));
+}
+
+TEST_F(engine_loader_test, macro_override_append_after_macro_definition)
+{
+    std::string rules_content = R"END(
+
+- macro: open_simple
+  condition: evt.type in (open,openat)
+
+- macro: open_simple
+  condition: or evt.type = openat2
+  override:
+    condition: append
+
+- rule: test_rule
+  desc: simple rule
+  condition: open_simple
+  output: command=%proc.cmdline
+  priority: INFO
+
+)END";
+
+	// We cannot define a macro override before the macro definition.
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
+	std::string rule_name = "test_rule";
+	auto rule_description = m_engine->describe_rule(&rule_name, {});
+	ASSERT_EQ(rule_description["rules"][0]["details"]["condition_compiled"].template get<std::string>(),
+	 	"(evt.type in (open, openat) or evt.type = openat2)");
+}
+
+TEST_F(engine_loader_test, macro_append_after_macro_definition)
+{
+    std::string rules_content = R"END(
+
+- macro: open_simple
+  condition: evt.type in (open,openat)
+
+- macro: open_simple
+  condition: or evt.type = openat2
+  append: true
+
+- rule: test_rule
+  desc: simple rule
+  condition: open_simple
+  output: command=%proc.cmdline
+  priority: INFO
+
+)END";
+
+	// We cannot define a macro override before the macro definition.
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
+	std::string rule_name = "test_rule";
+	auto rule_description = m_engine->describe_rule(&rule_name, {});
+	ASSERT_EQ(rule_description["rules"][0]["details"]["condition_compiled"].template get<std::string>(),
+	 	"(evt.type in (open, openat) or evt.type = openat2)");
+}
+
+TEST_F(engine_loader_test, rule_override_append_before_rule_definition)
+{
+    std::string rules_content = R"END(
+- rule: test_rule
+  condition: and proc.name = cat
+  override:
+    condition: append
+
+- rule: test_rule
+  desc: simple rule
+  condition: evt.type in (open,openat)
+  output: command=%proc.cmdline
+  priority: INFO
+
+)END";
+
+	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
+	ASSERT_TRUE(check_error_message("Rule has 'append' key but no rule by that name already exists"));
+}
+
+TEST_F(engine_loader_test, rule_append_before_rule_definition)
+{
+    std::string rules_content = R"END(
+- rule: test_rule
+  condition: and proc.name = cat
+  append: true
+
+- rule: test_rule
+  desc: simple rule
+  condition: evt.type in (open,openat)
+  output: command=%proc.cmdline
+  priority: INFO
+
+)END";
+
+	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
+	ASSERT_TRUE(check_error_message("Rule has 'append' key but no rule by that name already exists"));
+}
+
+TEST_F(engine_loader_test, rule_override_append_after_rule_definition)
+{
+    std::string rules_content = R"END(
+- rule: test_rule
+  desc: simple rule
+  condition: evt.type in (open,openat)
+  output: command=%proc.cmdline
+  priority: INFO
+
+- rule: test_rule
+  condition: and proc.name = cat
+  override:
+    condition: append
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
+	std::string rule_name = "test_rule";
+	auto rule_description = m_engine->describe_rule(&rule_name, {});
+	ASSERT_EQ(rule_description["rules"][0]["details"]["condition_compiled"].template get<std::string>(),
+	 	"(evt.type in (open, openat) and proc.name = cat)");
+}
+
+TEST_F(engine_loader_test, rule_append_after_rule_definition)
+{
+    std::string rules_content = R"END(
+- rule: test_rule
+  desc: simple rule
+  condition: evt.type in (open,openat)
+  output: command=%proc.cmdline
+  priority: INFO
+
+- rule: test_rule
+  condition: and proc.name = cat
+  append: true
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
+	std::string rule_name = "test_rule";
+	auto rule_description = m_engine->describe_rule(&rule_name, {});
+	ASSERT_EQ(rule_description["rules"][0]["details"]["condition_compiled"].template get<std::string>(),
+	 	"(evt.type in (open, openat) and proc.name = cat)");
+}
+
+TEST_F(engine_loader_test, list_override_append_typo)
 {
 	// todo: maybe we want to manage in someway not existent keys
 	// Please note the typo `overridde` in the first list definition.
@@ -408,7 +569,7 @@ TEST_F(engine_loader_test, list_override_typo)
 	 	"(evt.type = execve and proc.name in (blkid))");
 }
 
-TEST_F(engine_loader_test, list_override_before_list_definition)
+TEST_F(engine_loader_test, list_override_append_before_list_definition)
 {
     std::string rules_content = R"END(
 - list: dev_creation_binaries
@@ -455,7 +616,7 @@ TEST_F(engine_loader_test, list_append_before_list_definition)
 	ASSERT_TRUE(check_error_message("List has 'append' key but no list by that name already exists"));
 }
 
-TEST_F(engine_loader_test, list_override_after_list_definition)
+TEST_F(engine_loader_test, list_override_append_after_list_definition)
 {
     std::string rules_content = R"END(
 - list: dev_creation_binaries
