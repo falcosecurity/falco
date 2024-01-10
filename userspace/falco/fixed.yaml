@@ -1,0 +1,161 @@
+rules_file:
+  - /etc/falco/falco_rules.yaml
+  - /etc/falco/falco_rules.local.yaml
+  - /etc/falco/rules.d
+
+
+engine:
+  kind: kmod
+  kmod:
+    buf_size_preset: 4
+    drop_failed_exit: false
+  ebpf:
+    # path to the elf file to load.
+    probe: ${HOME}/.falco/falco-bpf.o
+    buf_size_preset: 4
+    drop_failed_exit: false
+  modern_ebpf:
+    cpus_for_each_buffer: 2
+    buf_size_preset: 4
+    drop_failed_exit: false
+  replay:
+    # path to the capture file to replay (eg: /path/to/file.scap)
+    capture_file: ""
+  gvisor:
+    config: ""
+    root: ""
+
+load_plugins: []
+
+
+plugins:
+  - name: k8saudit
+    library_path: libk8saudit.so
+    init_config:
+       maxEventSize: 262144
+       webhookMaxBatchSize: 12582912
+       sslCertificate: /etc/falco/falco.pem
+    open_params: "http://:9765/k8s-audit"
+  - name: cloudtrail
+    library_path: libcloudtrail.so
+  - name: json
+    library_path: libjson.so
+
+watch_config_files: true
+
+time_format_iso_8601: false
+
+priority: debug
+
+json_output: false
+
+
+json_include_output_property: true
+
+json_include_tags_property: true
+
+buffered_outputs: false
+
+
+rule_matching: first
+
+outputs_queue:
+  capacity: 0
+
+
+stdout_output:
+  enabled: true
+
+syslog_output:
+  enabled: true
+
+file_output:
+  enabled: false
+  keep_alive: false
+  filename: ./events.txt
+
+http_output:
+  enabled: false
+  url: http://some.url
+  user_agent: "falcosecurity/falco"
+  insecure: false
+  ca_cert: ""
+  ca_bundle: ""
+  ca_path: "/etc/ssl/certs"
+  mtls: false
+  client_cert: "/etc/ssl/certs/client.crt"
+  client_key: "/etc/ssl/certs/client.key"
+  echo: false
+  compress_uploads: false
+  keep_alive: false
+
+program_output:
+  enabled: false
+  keep_alive: false
+  program: "jq '{text: .output}' | curl -d @- -X POST https://hooks.slack.com/services/XXX"
+
+grpc_output:
+  enabled: false
+
+
+
+grpc:
+  enabled: false
+  bind_address: "unix:///run/falco/falco.sock"
+  threadiness: 0
+
+
+webserver:
+  enabled: true
+  threadiness: 0
+  listen_port: 8765
+  listen_address: 0.0.0.0
+  k8s_healthz_endpoint: /healthz
+  ssl_enabled: false
+  ssl_certificate: /etc/falco/falco.pem
+
+log_stderr: true
+log_syslog: true
+
+log_level: info
+
+libs_logger:
+  enabled: false
+  severity: debug
+
+output_timeout: 2000
+
+syscall_event_timeouts:
+  max_consecutives: 1000
+
+syscall_event_drops:
+  threshold: .1
+  actions:
+    - log
+    - alert
+  rate: .03333
+  max_burst: 1
+  simulate_drops: false
+
+metrics:
+  enabled: false
+  interval: 1h
+  output_rule: true
+  output_file: /tmp/falco_stats.jsonl
+  resource_utilization_enabled: true
+  state_counters_enabled: true
+  kernel_event_counters_enabled: true
+  libbpf_stats_enabled: true
+  convert_memory_to_mb: true
+  include_empty_values: false
+
+syscall_buf_size_preset: 4
+
+syscall_drop_failed_exit: false 
+
+base_syscalls:
+  custom_set: []
+  repair: false
+
+modern_bpf:
+  cpus_for_each_syscall_buffer: 2

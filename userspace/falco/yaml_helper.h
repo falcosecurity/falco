@@ -77,6 +77,14 @@ private:
 class yaml_helper
 {
 public:
+    /**
+     * Get the root node.
+     */
+    const YAML::Node& get_node() const
+    {
+        return m_root;
+    }
+	
 	/**
 	* Load the YAML document represented by the input string.
 	*/

@@ -177,8 +177,38 @@ void falco_configuration::load_engine_config(const std::string& config_name, con
 	}
 }
 
-void falco_configuration::load_yaml(const std::string& config_name, const yaml_helper& config)
+std::unordered_set<std::string> extractKeys(const YAML::Node& node) {
+    std::unordered_set<std::string> keys;
+
+    for (auto it = node.begin(); it != node.end(); ++it) {
+        const auto& key = it->first.as<std::string>();
+        keys.insert(key);
+    }
+
+    return keys;
+}
+
+void validateLoadedYAML(const YAML::Node& loadedYAML, const std::unordered_set<std::string>& fixedSchemaKeys)
 {
+    std::unordered_set<std::string> loadedYAMLKeys = extractKeys(loadedYAML);
+
+    // Check for keys in loaded YAML that are not in the fixed schema
+    for (const auto& key : loadedYAMLKeys) {
+        if (fixedSchemaKeys.find(key) == fixedSchemaKeys.end()) {
+            throw std::logic_error("Error: Key '" + key + "' does not exist in the fixed schema");
+        }
+    }
+}
+void falco_configuration::load_yaml(const std::string& config_name, const yaml_helper& config)
+{   
+    YAML::Node fixedSchema = YAML::LoadFile("userspace/falco/fixed.yaml");
+	
+    // Extract keys from the fixed schema
+    std::unordered_set<std::string> fixedSchemaKeys = extractKeys(fixedSchema);
+
+    // Validate the loaded YAML against the fixed schema
+    validateLoadedYAML(config.get_node(), fixedSchemaKeys);
+
 	load_engine_config(config_name, config);
 	m_log_level = config.get_scalar<std::string>("log_level", "info");
 
