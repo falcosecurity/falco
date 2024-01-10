@@ -181,7 +181,7 @@ Regarding the above policies, component versioning must adhere to [Semantic Vers
 
 Thus, given a version number `MAJOR.MINOR.PATCH` increment the:
 
-- *MAJOR* version when the deprecation period ends, thus introducing incompatible user-facing or API changes.
+- *MAJOR* version when the deprecation period of one or more _stable_ features ends, thus introducing incompatible user-facing or API changes.
 - *MINOR* version when adding functionality in a backward-compatible manner.
 - *PATCH* version when making backward-compatible bug fixes.
 
