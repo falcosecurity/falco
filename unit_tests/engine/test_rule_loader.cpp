@@ -348,21 +348,164 @@ TEST_F(engine_loader_test, rule_incorrect_append_override)
 	ASSERT_TRUE(check_error_message(OVERRIDE_APPEND_ERROR_MESSAGE));
 }
 
-TEST_F(engine_loader_test, rule_override_without_rule)
+/// todo: MACRO order
+
+/// todo: RULES order
+
+
+// TEST_F(engine_loader_test, rule_append_before_rule)
+// {
+//     std::string rules_content = R"END(
+// - rule: test_rule
+//   condition: and proc.name = cat
+//   append: true
+//   output: user=%user.name command=%proc.cmdline priority: INFO
+
+// - rule: test_rule
+//   desc: simple rule
+//   condition: evt.type=clone
+// )END";
+
+// 	ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
+// 	ASSERT_FALSE(has_warnings());
+// 	// The rule should be enabled at the end.
+// 	EXPECT_EQ(num_rules_for_ruleset(), 1);
+// }
+
+
+TEST_F(engine_loader_test, list_override_typo)
 {
+	// todo: maybe we want to manage in someway not existent keys
+	// Please note the typo `overridde` in the first list definition.
     std::string rules_content = R"END(
-- rule: failing_rule
-  desc: an appended field
-  condition: and proc.name = cat
-  override:
-    desc: replace
-    condition: append
+- list: dev_creation_binaries
+  items: ["csi-provisioner", "csi-attacher"]
+  overridde:
+    items: append
+
+- list: dev_creation_binaries
+  items: [blkid]
+
+- rule: test_rule
+  desc: simple rule
+  condition: evt.type = execve and proc.name in (dev_creation_binaries)
+  output: command=%proc.cmdline
+  priority: INFO
+
 )END";
 
-	std::string rule_name = "failing_rule";
+	// Since there is a typo in the first list definition the `override` is not
+	// considered. so in this situation, we are defining the list 2 times. The 
+	// second one overrides the first one.
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
+	std::string rule_name = "test_rule";
+	auto rule_description = m_engine->describe_rule(&rule_name, {});
 
+	ASSERT_EQ(rule_description["rules"][0]["info"]["condition"].template get<std::string>(),
+	 	"evt.type = execve and proc.name in (dev_creation_binaries)");
+
+	ASSERT_EQ(rule_description["rules"][0]["details"]["condition_compiled"].template get<std::string>(),
+	 	"(evt.type = execve and proc.name in (blkid))");
+}
+
+TEST_F(engine_loader_test, list_override_before_list_definition)
+{
+    std::string rules_content = R"END(
+- list: dev_creation_binaries
+  items: ["csi-provisioner", "csi-attacher"]
+  override:
+    items: append
+
+- list: dev_creation_binaries
+  items: [blkid]
+
+- rule: test_rule
+  desc: simple rule
+  condition: evt.type = execve and proc.name in (dev_creation_binaries)
+  output: command=%proc.cmdline
+  priority: INFO
+
+)END";
+
+	// We cannot define a list override before the list definition.
 	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
-	ASSERT_TRUE(check_error_message("no rule by that name already exists"));
+	ASSERT_TRUE(check_error_message("List has 'append' key but no list by that name already exists"));
+}
+
+TEST_F(engine_loader_test, list_append_before_list_definition)
+{
+    std::string rules_content = R"END(
+- list: dev_creation_binaries
+  items: ["csi-provisioner", "csi-attacher"]
+  append: true
+
+- list: dev_creation_binaries
+  items: [blkid]
+
+- rule: test_rule
+  desc: simple rule
+  condition: evt.type = execve and proc.name in (dev_creation_binaries)
+  output: command=%proc.cmdline
+  priority: INFO
+
+)END";
+
+	// We cannot define a list append before the list definition.
+	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
+	ASSERT_TRUE(check_error_message("List has 'append' key but no list by that name already exists"));
+}
+
+TEST_F(engine_loader_test, list_override_after_list_definition)
+{
+    std::string rules_content = R"END(
+- list: dev_creation_binaries
+  items: [blkid]
+
+- list: dev_creation_binaries
+  items: ["csi-provisioner", "csi-attacher"]
+  override:
+    items: append
+
+- rule: test_rule
+  desc: simple rule
+  condition: evt.type = execve and proc.name in (dev_creation_binaries)
+  output: command=%proc.cmdline
+  priority: INFO
+
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
+
+	std::string rule_name = "test_rule";
+	auto rule_description = m_engine->describe_rule(&rule_name, {});
+	ASSERT_EQ(rule_description["rules"][0]["details"]["condition_compiled"].template get<std::string>(),
+	 	"(evt.type = execve and proc.name in (blkid, csi-provisioner, csi-attacher))");
+}
+
+TEST_F(engine_loader_test, list_append_after_list_definition)
+{
+    std::string rules_content = R"END(
+- list: dev_creation_binaries
+  items: [blkid]
+
+- list: dev_creation_binaries
+  items: ["csi-provisioner", "csi-attacher"]
+  append: true
+
+- rule: test_rule
+  desc: simple rule
+  condition: evt.type = execve and proc.name in (dev_creation_binaries)
+  output: command=%proc.cmdline
+  priority: INFO
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
+
+	std::string rule_name = "test_rule";
+	auto rule_description = m_engine->describe_rule(&rule_name, {});
+
+	ASSERT_EQ(rule_description["rules"][0]["details"]["condition_compiled"].template get<std::string>(),
+	 	"(evt.type = execve and proc.name in (blkid, csi-provisioner, csi-attacher))");
 }
 
 TEST_F(engine_loader_test, rule_override_without_field)
