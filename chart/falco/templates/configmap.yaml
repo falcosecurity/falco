@@ -9,4 +9,5 @@ data:
   falco.yaml: |-
     {{- include "falco.falcosidekickConfig" . }}
     {{- include "k8smeta.configuration" . -}}
+    {{- include "falco.engineConfiguration" . -}}
     {{- toYaml .Values.falco | nindent 4 }}

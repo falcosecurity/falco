@@ -45,7 +45,7 @@ spec:
   imagePullSecrets: 
     {{- toYaml . | nindent 4 }}
   {{- end }}
-  {{- if .Values.gvisor.enabled }}
+  {{- if eq .Values.driver.kind "gvisor" }}
   hostNetwork: true
   hostPID: true
   {{- end }}
@@ -59,15 +59,6 @@ spec:
         {{- include "falco.securityContext" . | nindent 8 }}
       args:
         - /usr/bin/falco
-        {{- if and .Values.driver.enabled (eq .Values.driver.kind "modern-bpf") }}
-        - --modern-bpf
-        {{- end }}
-        {{- if .Values.gvisor.enabled }}
-        - --gvisor-config
-        - /gvisor-config/pod-init.json
-        - --gvisor-root
-        - /host{{ .Values.gvisor.runsc.root }}/k8s.io
-        {{- end }}
         {{- include "falco.configSyscallSource" . | indent 8 }}
         {{- with .Values.collectors }}
         {{- if .enabled }}
@@ -90,10 +81,6 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
-      {{- if and .Values.driver.enabled (eq .Values.driver.kind "ebpf") }}
-        - name: FALCO_BPF_PROBE
-          value: {{ .Values.driver.ebpf.path }}
-      {{- end }}
       {{- if .Values.extra.env }}
       {{- include "falco.renderTemplate" ( dict "value" .Values.extra.env "context" $) | nindent 8 }}
       {{- end }}
@@ -151,7 +138,7 @@ spec:
           name: etc-fs
           readOnly: true
         {{- end }}
-        {{- if and .Values.driver.enabled (eq .Values.driver.kind "module") }}
+        {{- if and .Values.driver.enabled (eq .Values.driver.kind "kmod") }}
         - mountPath: /host/dev
           name: dev-fs
           readOnly: true
@@ -199,13 +186,13 @@ spec:
         {{- with .Values.mounts.volumeMounts }}
           {{- toYaml . | nindent 8 }}
         {{- end }}
-        {{- if .Values.gvisor.enabled }}
+        {{- if eq .Values.driver.kind "gvisor" }}
         - mountPath: /usr/local/bin/runsc
           name: runsc-path
           readOnly: true
-        - mountPath: /host{{ .Values.gvisor.runsc.root }}
+        - mountPath: /host{{ .Values.driver.gvisor.runsc.root }}
           name: runsc-root
-        - mountPath: /host{{ .Values.gvisor.runsc.config }}
+        - mountPath: /host{{ .Values.driver.gvisor.runsc.config }}
           name: runsc-config
         - mountPath: /gvisor-config
           name: falco-gvisor-config
@@ -217,13 +204,11 @@ spec:
   {{- with .Values.extra.initContainers }}
     {{- toYaml . | nindent 4 }}
   {{- end }}
-  {{- if and .Values.gvisor.enabled }}
+  {{- if eq .Values.driver.kind "gvisor" }}
   {{- include "falco.gvisor.initContainer" . | nindent 4 }}
   {{- end }}
-  {{- if and .Values.driver.enabled (ne .Values.driver.kind "modern-bpf") }}
-  {{- if.Values.driver.loader.enabled }}
+  {{- if eq (include "driverLoader.enabled" .) "true" }}
     {{- include "falco.driverLoader.initContainer" . | nindent 4 }}
-  {{- end }}
   {{- end }}
   {{- if .Values.falcoctl.artifact.install.enabled }}
     {{- include "falcoctl.initContainer" . | nindent 4 }}
@@ -251,7 +236,7 @@ spec:
       hostPath:
         path: /etc
     {{- end }}
-    {{- if and .Values.driver.enabled (eq .Values.driver.kind "module") }}
+    {{- if and .Values.driver.enabled (eq .Values.driver.kind "kmod") }}
     - name: dev-fs
       hostPath:
         path: /dev
@@ -288,17 +273,17 @@ spec:
       hostPath:
         path: /proc
     {{- end }}
-    {{- if .Values.gvisor.enabled }}
+    {{- if eq .Values.driver.kind "gvisor" }}
     - name: runsc-path
       hostPath:
-        path: {{ .Values.gvisor.runsc.path }}/runsc
+        path: {{ .Values.driver.gvisor.runsc.path }}/runsc
         type: File
     - name: runsc-root
       hostPath:
-        path: {{ .Values.gvisor.runsc.root }}
+        path: {{ .Values.driver.gvisor.runsc.root }}
     - name: runsc-config
       hostPath:
-        path: {{ .Values.gvisor.runsc.config }}
+        path: {{ .Values.driver.gvisor.runsc.config }}
         type: File
     - name: falco-gvisor-config
       emptyDir: {}
@@ -348,10 +333,13 @@ spec:
 - name: {{ .Chart.Name }}-driver-loader
   image: {{ include "falco.driverLoader.image" . }}
   imagePullPolicy: {{ .Values.driver.loader.initContainer.image.pullPolicy }}
-  {{- with .Values.driver.loader.initContainer.args }}
   args:
+  {{- with .Values.driver.loader.initContainer.args }}
     {{- toYaml . | nindent 4 }}
   {{- end }}
+  {{- if eq .Values.driver.kind "ebpf" }}
+    - ebpf
+   {{- end }}
   {{- with .Values.driver.loader.initContainer.resources }}
   resources:
     {{- toYaml . | nindent 4 }}
@@ -359,7 +347,7 @@ spec:
   securityContext:
   {{- if .Values.driver.loader.initContainer.securityContext }}
     {{- toYaml .Values.driver.loader.initContainer.securityContext | nindent 4 }}
-  {{- else if eq .Values.driver.kind "module" }}
+  {{- else if eq .Values.driver.kind "kmod" }}
     privileged: true
   {{- end }}
   volumeMounts:
@@ -380,10 +368,6 @@ spec:
       name: etc-fs
       readOnly: true
   env:
-  {{- if eq .Values.driver.kind "ebpf" }}
-    - name: FALCO_BPF_PROBE
-      value: {{ .Values.driver.ebpf.path }}
-  {{- end }}
   {{- if .Values.driver.loader.initContainer.env }}
   {{- include "falco.renderTemplate" ( dict "value" .Values.driver.loader.initContainer.env "context" $) | nindent 4 }}
   {{- end }}
@@ -392,7 +376,7 @@ spec:
 {{- define "falco.securityContext" -}}
 {{- $securityContext := dict -}}
 {{- if .Values.driver.enabled -}}
-  {{- if eq .Values.driver.kind "module" -}}
+  {{- if eq .Values.driver.kind "kmod" -}}
     {{- $securityContext := set $securityContext "privileged" true -}}
   {{- end -}}
   {{- if eq .Values.driver.kind "ebpf" -}}
@@ -402,8 +386,8 @@ spec:
       {{- $securityContext := set $securityContext "privileged" true -}}
     {{- end -}}
   {{- end -}}
-  {{- if eq .Values.driver.kind "modern-bpf" -}}
-    {{- if .Values.driver.modern_bpf.leastPrivileged -}}
+  {{- if eq .Values.driver.kind "modern_ebpf" -}}
+    {{- if .Values.driver.modernEbpf.leastPrivileged -}}
       {{- $securityContext := set $securityContext "capabilities" (dict "add" (list "BPF" "SYS_RESOURCE" "PERFMON" "SYS_PTRACE")) -}}
     {{- else -}}
       {{- $securityContext := set $securityContext "privileged" true -}}
