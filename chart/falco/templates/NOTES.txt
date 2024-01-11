@@ -22,7 +22,22 @@ You can easily forward Falco events to Slack, Kafka, AWS Lambda and more with fa
 Full list of outputs: https://github.com/falcosecurity/charts/tree/master/falcosidekick.
 You can enable its deployment with `--set falcosidekick.enabled=true` or in your values.yaml. 
 See: https://github.com/falcosecurity/charts/blob/master/falcosidekick/values.yaml for configuration values.
+
 {{- end}}
+
+
+{{- if  (has .Values.driver.kind (list "module" "modern-bpf")) -}}
+{{- println }}
+WARNING(drivers):
+{{- printf "\nThe driver kind: \"%s\" is an alias and might be removed in the future.\n" .Values.driver.kind -}}
+{{- $driver := "" -}}
+{{- if eq .Values.driver.kind "module" -}}
+{{- $driver = "kmod" -}}
+{{- else if eq .Values.driver.kind "modern-bpf" -}}
+{{- $driver = "modern_ebpf" -}}
+{{- end -}}
+{{- printf "Please use \"%s\" instead." $driver}}
+{{- end -}}
 
 {{- if and (not (empty .Values.falco.load_plugins)) (or .Values.falcoctl.artifact.follow.enabled .Values.falcoctl.artifact.install.enabled) }}
 

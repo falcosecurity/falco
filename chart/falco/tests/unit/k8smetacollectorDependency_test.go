@@ -1,3 +1,18 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright 2024 The Falco Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package unit
 
 import (
@@ -5,13 +20,13 @@ import (
 	"fmt"
 	"path/filepath"
 	"regexp"
-	"slices"
 	"strings"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/helm"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
+	"slices"
 )
 
 const chartPath = "../../"
@@ -23,16 +38,13 @@ func TestRenderedResourcesWithDefaultValues(t *testing.T) {
 	helmChartPath, err := filepath.Abs(chartPath)
 	require.NoError(t, err)
 
-	releaseName := "rendered-resources"
-
 	options := &helm.Options{}
 	// Template the chart using the default values.yaml file.
 	output, err := helm.RenderTemplateE(t, options, helmChartPath, releaseName, nil)
 	require.NoError(t, err)
 
 	// Extract all rendered files from the output.
-	pattern := `# Source: falco/charts/k8s-metacollector/templates/([^\n]+)`
-	re := regexp.MustCompile(pattern)
+	re := regexp.MustCompile(patternK8sMetacollectorFiles)
 	matches := re.FindAllStringSubmatch(output, -1)
 	require.Len(t, matches, 0)
 
@@ -43,8 +55,6 @@ func TestRenderedResourcesWhenNotEnabled(t *testing.T) {
 
 	helmChartPath, err := filepath.Abs(chartPath)
 	require.NoError(t, err)
-
-	releaseName := "rendered-resources"
 
 	// Template files that we expect to be rendered.
 	templateFiles := []string{
@@ -66,8 +76,7 @@ func TestRenderedResourcesWhenNotEnabled(t *testing.T) {
 	require.NoError(t, err)
 
 	// Extract all rendered files from the output.
-	pattern := `# Source: falco/charts/k8s-metacollector/templates/([^\n]+)`
-	re := regexp.MustCompile(pattern)
+	re := regexp.MustCompile(patternK8sMetacollectorFiles)
 	matches := re.FindAllStringSubmatch(output, -1)
 
 	var renderedTemplates []string
@@ -91,8 +100,6 @@ func TestPluginConfigurationInFalcoConfig(t *testing.T) {
 
 	helmChartPath, err := filepath.Abs(chartPath)
 	require.NoError(t, err)
-
-	releaseName := "rendered-resources"
 
 	testCases := []struct {
 		name     string
@@ -322,7 +329,7 @@ func TestPluginConfigurationInFalcoConfig(t *testing.T) {
 			found := false
 			// Find the k8smeta plugin configuration.
 			for _, plugin := range pluginsArray {
-				if name, ok := plugin.(map[string]interface{})["name"]; ok && name == "k8smeta" {
+				if name, ok := plugin.(map[string]interface{})["name"]; ok && name == k8sMetaPluginName {
 					testCase.expected(t, plugin)
 					found = true
 				}
@@ -330,11 +337,11 @@ func TestPluginConfigurationInFalcoConfig(t *testing.T) {
 			if found {
 				// Check that the plugin has been added to the ones that need to be loaded.
 				loadplugins := config["load_plugins"]
-				require.True(t, slices.Contains(loadplugins.([]interface{}), "k8smeta"))
+				require.True(t, slices.Contains(loadplugins.([]interface{}), k8sMetaPluginName))
 			} else {
 				testCase.expected(t, nil)
 				loadplugins := config["load_plugins"]
-				require.True(t, !slices.Contains(loadplugins.([]interface{}), "k8smeta"))
+				require.True(t, !slices.Contains(loadplugins.([]interface{}), k8sMetaPluginName))
 			}
 		})
 	}
@@ -378,8 +385,6 @@ func TestPluginConfigurationUniqueEntries(t *testing.T) {
 	helmChartPath, err := filepath.Abs(chartPath)
 	require.NoError(t, err)
 
-	releaseName := "rendered-resources"
-
 	options := &helm.Options{SetJsonValues: map[string]string{
 		"falco.plugins":      pluginsJSON,
 		"falco.load_plugins": loadPluginsJSON,
@@ -400,7 +405,7 @@ func TestPluginConfigurationUniqueEntries(t *testing.T) {
 	// Find the k8smeta plugin configuration.
 	numConfigK8smeta := 0
 	for _, plugin := range pluginsArray {
-		if name, ok := plugin.(map[string]interface{})["name"]; ok && name == "k8smeta" {
+		if name, ok := plugin.(map[string]interface{})["name"]; ok && name == k8sMetaPluginName {
 			numConfigK8smeta++
 		}
 	}
@@ -410,7 +415,7 @@ func TestPluginConfigurationUniqueEntries(t *testing.T) {
 	// Check that the plugin has been added to the ones that need to be loaded.
 	loadplugins := config["load_plugins"]
 	require.Len(t, loadplugins.([]interface{}), 2)
-	require.True(t, slices.Contains(loadplugins.([]interface{}), "k8smeta"))
+	require.True(t, slices.Contains(loadplugins.([]interface{}), k8sMetaPluginName))
 }
 
 // Test that the helper does not overwrite user's configuration.
@@ -495,8 +500,6 @@ func TestFalcoctlRefs(t *testing.T) {
 
 	helmChartPath, err := filepath.Abs(chartPath)
 	require.NoError(t, err)
-
-	releaseName := "rendered-resources"
 
 	for _, testCase := range testCases {
 		testCase := testCase

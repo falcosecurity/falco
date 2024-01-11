@@ -185,7 +185,7 @@ we just disable the sycall source.
 */}}
 {{- define "falco.configSyscallSource" -}}
 {{- $userspaceDisabled := true -}}
-{{- $gvisorDisabled := (not .Values.gvisor.enabled) -}}
+{{- $gvisorDisabled := (ne .Values.driver.kind  "gvisor") -}}
 {{- $driverDisabled :=  (not .Values.driver.enabled) -}}
 {{- if or (has "-u" .Values.extra.args) (has "--userspace" .Values.extra.args) -}}
 {{- $userspaceDisabled = false -}}
@@ -214,8 +214,8 @@ be temporary and will stay here until we move this logic to the falcoctl tool.
       set -o nounset
       set -o pipefail
 
-      root={{ .Values.gvisor.runsc.root }}
-      config={{ .Values.gvisor.runsc.config }}
+      root={{ .Values.driver.gvisor.runsc.root }}
+      config={{ .Values.driver.gvisor.runsc.config }}
 
       echo "* Configuring Falco+gVisor integration...".
       # Check if gVisor is configured on the node.
@@ -240,12 +240,12 @@ be temporary and will stay here until we move this logic to the falcoctl tool.
       echo "* Falco+gVisor correctly configured."
       exit 0
   volumeMounts:
-    - mountPath: /host{{ .Values.gvisor.runsc.path }}
+    - mountPath: /host{{ .Values.driver.gvisor.runsc.path }}
       name: runsc-path
       readOnly: true
-    - mountPath: /host{{ .Values.gvisor.runsc.root }}
+    - mountPath: /host{{ .Values.driver.gvisor.runsc.root }}
       name: runsc-root
-    - mountPath: /host{{ .Values.gvisor.runsc.config }}
+    - mountPath: /host{{ .Values.driver.gvisor.runsc.config }}
       name: runsc-config
     - mountPath: /gvisor-config
       name: falco-gvisor-config
@@ -369,5 +369,49 @@ be temporary and will stay here until we move this logic to the falcoctl tool.
 {{- end -}}
 {{- $_ := set .Values.falcoctl.config.artifact.install "refs" ((append .Values.falcoctl.config.artifact.install.refs .Values.collectors.kubernetes.pluginRef) | uniq)}}
 {{- $_ = set .Values.falcoctl.config.artifact "allowedTypes" ((append .Values.falcoctl.config.artifact.allowedTypes "plugin") | uniq)}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Based on the user input it populates the driver configuration in the falco config map.
+*/}}
+{{- define "falco.engineConfiguration" -}}
+{{- if .Values.driver.enabled -}}
+{{- $supportedDrivers := list "kmod" "ebpf" "modern_ebpf" "gvisor" -}}
+{{- $aliasDrivers := list "module" "modern-bpf" -}}
+{{- if and (not (has .Values.driver.kind $supportedDrivers)) (not (has .Values.driver.kind $aliasDrivers)) -}}
+{{- fail (printf "unsupported driver kind: \"%s\". Supported drivers %s, alias %s" .Values.driver.kind $supportedDrivers $aliasDrivers) -}}
+{{- end -}}
+{{- if or (eq .Values.driver.kind "kmod") (eq .Values.driver.kind "module") -}}
+{{- $kmodConfig := dict "kind" "kmod" "kmod" (dict "buf_size_preset" .Values.driver.kmod.bufSizePreset "drop_failed_exit" .Values.driver.kmod.dropFailedExit) -}}
+{{- $_ := set .Values.falco "engine" $kmodConfig -}}
+{{- else if eq .Values.driver.kind "ebpf" -}}
+{{- $ebpfConfig := dict "kind" "ebpf" "ebpf" (dict "buf_size_preset" .Values.driver.ebpf.bufSizePreset "drop_failed_exit" .Values.driver.ebpf.dropFailedExit "probe" .Values.driver.ebpf.path) -}}
+{{- $_ := set .Values.falco "engine" $ebpfConfig -}}
+{{- else if or (eq .Values.driver.kind "modern_ebpf") (eq .Values.driver.kind "modern-bpf") -}}
+{{- $ebpfConfig := dict "kind" "modern_ebpf" "modern_ebpf" (dict "buf_size_preset" .Values.driver.modernEbpf.bufSizePreset "drop_failed_exit" .Values.driver.modernEbpf.dropFailedExit "cpus_for_each_buffer" .Values.driver.modernEbpf.cpusForEachBuffer) -}}
+{{- $_ := set .Values.falco "engine" $ebpfConfig -}}
+{{- else if eq .Values.driver.kind "gvisor" -}}
+{{- $root := printf "/host%s/k8s.io" .Values.driver.gvisor.runsc.root -}}
+{{- $gvisorConfig := dict "kind" "gvisor" "gvisor" (dict "config" "/gvisor-config/pod-init.json" "root" $root) -}}
+{{- $_ := set .Values.falco "engine" $gvisorConfig -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+It returns "true" if the driver loader has to be enabled, otherwise false.
+*/}}
+{{- define "driverLoader.enabled" -}}
+{{- if or
+        (eq .Values.driver.kind "modern_ebpf")
+        (eq .Values.driver.kind "modern-bpf")
+        (eq .Values.driver.kind "gvisor")
+        (not .Values.driver.enabled)
+        (not .Values.driver.loader.enabled)
+-}}
+false
+{{- else -}}
+true
 {{- end -}}
 {{- end -}}
