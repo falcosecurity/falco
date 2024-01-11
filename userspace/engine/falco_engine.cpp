@@ -205,8 +205,13 @@ std::unique_ptr<load_result> falco_engine::load_rules(const std::string &rules_c
 		// clear the rules known by the engine and each ruleset
 		m_rules.clear();
 		for (auto &src : m_sources)
+
+		// add rules to each ruleset
 		{
 			src.ruleset = src.ruleset_factory->new_ruleset();
+			src.ruleset->add_compile_output(*(m_last_compile_output.get()),
+							m_min_priority,
+							src.name);
 		}
 
 		// add rules to the engine and the rulesets
@@ -225,15 +230,9 @@ std::unique_ptr<load_result> falco_engine::load_rules(const std::string &rules_c
 				throw falco_exception("can't find internal rule info at name: " + name);
 			}
 
-			// the rule is ok, we can add it to the engine and the rulesets
-			// note: the compiler should guarantee that the rule's condition
-			// is a valid sinsp filter
 			auto source = find_source(rule.source);
-			std::shared_ptr<gen_event_filter> filter(
-				sinsp_filter_compiler(source->filter_factory, rule.condition.get()).compile());
 			auto rule_id = m_rules.insert(rule, rule.name);
 			m_rules.at(rule_id)->id = rule_id;
-			source->ruleset->add(rule, filter, rule.condition);
 
 			// By default rules are enabled/disabled for the default ruleset
 			if(info->enabled)

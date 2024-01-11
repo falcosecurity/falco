@@ -416,7 +416,7 @@ private:
 	std::map<std::string, uint16_t> m_known_rulesets;
 	falco_common::priority_type m_min_priority;
 
-	std::unique_ptr<rule_loader::compiler::compile_output> m_last_compile_output;
+	std::unique_ptr<rule_loader::compile_output> m_last_compile_output;
 
 	//
 	// Here's how the sampling ratio and multiplier influence

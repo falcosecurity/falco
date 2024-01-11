@@ -529,6 +529,11 @@ void rule_loader::compiler::compile_rule_infos(
 	}
 }
 
+std::unique_ptr<rule_loader::compile_output> rule_loader::compiler::new_compile_output()
+{
+	return std::make_unique<compile_output>();
+}
+
 void rule_loader::compiler::compile(
 		configuration& cfg,
 		const collector& col,
