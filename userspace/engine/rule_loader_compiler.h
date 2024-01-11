@@ -50,6 +50,27 @@ public:
 		configuration& cfg,
 		const collector& col,
 		compile_output& out) const;
+protected:
+	 /*!
+                \brief Compile a single condition expression,
+                including expanding macro and list references.
+
+		returns true if the condition could be compiled, and sets
+		ast_out/filter_out with the compiled filter + ast. Returns false if
+		the condition could not be compiled and should be skipped.
+        */
+	bool compile_condition(
+		configuration& cfg,
+		indexed_vector<falco_list>& lists,
+		const indexed_vector<rule_loader::macro_info>& macros,
+		const std::string& condition,
+		std::shared_ptr<gen_event_filter_factory> filter_factory,
+		rule_loader::context cond_ctx,
+		rule_loader::context parent_ctx,
+		bool allow_unknown_fields,
+		indexed_vector<falco_macro>& macros_out,
+		std::shared_ptr<libsinsp::filter::ast::expr>& ast_out,
+		std::shared_ptr<gen_event_filter>& filter_out) const;
 
 private:
 	void compile_list_infos(

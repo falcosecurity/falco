@@ -405,17 +405,72 @@ static bool err_is_unknown_type_or_field(const std::string& err)
 		|| err.find("unknown event type") != std::string::npos;
 }
 
-void rule_loader::compiler::compile_rule_infos(
-		configuration& cfg,
-		const collector& col,
-		indexed_vector<falco_list>& lists,
-		indexed_vector<falco_macro>& macros,
-		indexed_vector<falco_rule>& out) const
+bool rule_loader::compiler::compile_condition(
+	configuration& cfg,
+	indexed_vector<falco_list>& lists,
+	const indexed_vector<rule_loader::macro_info>& macros,
+	const std::string& condition,
+	std::shared_ptr<gen_event_filter_factory> filter_factory,
+	rule_loader::context cond_ctx,
+	rule_loader::context parent_ctx,
+	bool allow_unknown_fields,
+	indexed_vector<falco_macro>& macros_out,
+	std::shared_ptr<libsinsp::filter::ast::expr>& ast_out,
+	std::shared_ptr<gen_event_filter>& filter_out) const
 {
-	std::string err, condition;
 	std::set<falco::load_result::load_result::warning_code> warn_codes;
 	filter_warning_resolver warn_resolver;
-	for (const auto &r : col.rules())
+	ast_out = parse_condition(condition, lists, cond_ctx);
+	resolve_macros(macros, macros_out, ast_out, condition, MAX_VISIBILITY, parent_ctx);
+
+	// check for warnings in the filtering condition
+	if(warn_resolver.run(ast_out.get(), warn_codes))
+	{
+		for(const auto& w : warn_codes)
+		{
+			cfg.res->add_warning(w, "", parent_ctx);
+		}
+	}
+
+	// validate the rule's condition: we compile it into a sinsp filter
+	// on-the-fly and we throw an exception with details on failure
+	sinsp_filter_compiler compiler(filter_factory, ast_out.get());
+	try
+	{
+		filter_out.reset(compiler.compile());
+	}
+	catch(const sinsp_exception& e)
+	{
+		// skip the rule silently if skip_if_unknown_filter is true and
+		// we encountered some specific kind of errors
+		std::string err = e.what();
+		if(err_is_unknown_type_or_field(err) && allow_unknown_fields)
+		{
+			cfg.res->add_warning(
+				falco::load_result::load_result::LOAD_UNKNOWN_FILTER,
+				err,
+				cond_ctx);
+			return false;
+		}
+		rule_loader::context ctx(compiler.get_pos(), condition, cond_ctx);
+		throw rule_loader::rule_load_exception(
+			falco::load_result::load_result::LOAD_ERR_COMPILE_CONDITION,
+			err,
+			ctx);
+	}
+
+	return true;
+}
+
+void rule_loader::compiler::compile_rule_infos(
+	configuration& cfg,
+	const collector& col,
+	indexed_vector<falco_list>& lists,
+	indexed_vector<falco_macro>& macros,
+	indexed_vector<falco_rule>& out) const
+{
+	std::string err, condition;
+	for(const auto& r : col.rules())
 	{
 		// skip the rule if it has an unknown source
 		if (r.unknown_source)
@@ -438,18 +493,6 @@ void rule_loader::compiler::compile_rule_infos(
 		{
 			build_rule_exception_infos(
 				r.exceptions, rule.exception_fields, condition);
-		}
-		rule.condition = parse_condition(condition, lists, r.cond_ctx);
-		resolve_macros(col.macros(), macros, rule.condition, condition, MAX_VISIBILITY, r.ctx);
-
-		// check for warnings in the filtering condition
-		warn_codes.clear();
-		if (warn_resolver.run(rule.condition.get(), warn_codes))
-		{
-			for (const auto &w : warn_codes)
-			{
-				cfg.res->add_warning(w, "", r.ctx);
-			}
 		}
 
 		// build rule output message
@@ -478,31 +521,19 @@ void rule_loader::compiler::compile_rule_infos(
 				r.output_ctx);
 		}
 
-		// validate the rule's condition: we compile it into a sinsp filter
-		// on-the-fly and we throw an exception with details on failure
-		sinsp_filter_compiler compiler(cfg.sources.at(r.source)->filter_factory, rule.condition.get());
-		try
+		if (!compile_condition(cfg,
+				  lists,
+				  col.macros(),
+				  condition,
+				  cfg.sources.at(r.source)->filter_factory,
+				  r.cond_ctx,
+				  r.ctx,
+				  r.skip_if_unknown_filter,
+				  macros,
+				  rule.condition,
+				  rule.filter))
 		{
-			std::shared_ptr<sinsp_filter> sfPtr(compiler.compile());
-		}
-		catch (const sinsp_exception& e)
-		{
-			// skip the rule silently if skip_if_unknown_filter is true and
-			// we encountered some specific kind of errors
-			std::string err = e.what();
-			if (err_is_unknown_type_or_field(err) && r.skip_if_unknown_filter)
-			{
-				cfg.res->add_warning(
-					falco::load_result::load_result::LOAD_UNKNOWN_FILTER,
-					err,
-					r.cond_ctx);
-				continue;
-			}
-			rule_loader::context ctx(compiler.get_pos(), condition, r.cond_ctx);
-			throw rule_loader::rule_load_exception(
-				falco::load_result::load_result::LOAD_ERR_COMPILE_CONDITION,
-				err,
-				ctx);
+			continue;
 		}
 
 		// populate set of event types and emit an special warning
