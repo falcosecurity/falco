@@ -27,6 +27,7 @@ limitations under the License.
 #include <string>
 #include <fstream>
 #include <functional>
+#include <memory>
 #include <utility>
 #include <vector>
 
@@ -38,8 +39,6 @@ limitations under the License.
 #include "falco_engine.h"
 #include "falco_utils.h"
 #include "falco_engine_version.h"
-#include "rule_loader_reader.h"
-#include "rule_loader_compiler.h"
 
 #include "formats.h"
 
@@ -53,6 +52,9 @@ using namespace falco;
 falco_engine::falco_engine(bool seed_rng)
 	: m_syscall_source(NULL),
 	  m_syscall_source_idx(SIZE_MAX),
+	  m_rule_reader(std::make_shared<rule_loader::reader>()),
+	  m_rule_collector(std::make_shared<rule_loader::collector>()),
+	  m_rule_compiler(std::make_shared<rule_loader::compiler>()),
 	  m_next_ruleset_id(0),
 	  m_min_priority(falco_common::PRIORITY_DEBUG),
 	  m_sampling_ratio(1), m_sampling_multiplier(0),
@@ -69,7 +71,7 @@ falco_engine::falco_engine(bool seed_rng)
 falco_engine::~falco_engine()
 {
 	m_rules.clear();
-	m_rule_collector.clear();
+	m_rule_collector->clear();
 	m_rule_stats_manager.clear();
 	m_sources.clear();
 }
@@ -77,6 +79,36 @@ falco_engine::~falco_engine()
 sinsp_version falco_engine::engine_version()
 {
 	return sinsp_version(FALCO_ENGINE_VERSION);
+}
+
+void falco_engine::set_rule_reader(std::shared_ptr<rule_loader::reader> reader)
+{
+	m_rule_reader = reader;
+}
+
+std::shared_ptr<rule_loader::reader> falco_engine::get_rule_reader()
+{
+	return m_rule_reader;
+}
+
+void falco_engine::set_rule_collector(std::shared_ptr<rule_loader::collector> collector)
+{
+	m_rule_collector = collector;
+}
+
+std::shared_ptr<rule_loader::collector> falco_engine::get_rule_collector()
+{
+	return m_rule_collector;
+}
+
+void falco_engine::set_rule_compiler(std::shared_ptr<rule_loader::compiler> compiler)
+{
+	m_rule_compiler = compiler;
+}
+
+std::shared_ptr<rule_loader::compiler> falco_engine::get_rule_compiler()
+{
+	return m_rule_compiler;
 }
 
 // Return a key that uniquely represents a field class.
@@ -164,12 +196,11 @@ std::unique_ptr<load_result> falco_engine::load_rules(const std::string &rules_c
 	cfg.replace_output_container_info = m_replace_container_info;
 
 	// read rules YAML file and collect its definitions
-	rule_loader::reader reader;
-	if (reader.read(cfg, m_rule_collector))
+	if(m_rule_reader->read(cfg, *(m_rule_collector.get())))
 	{
 		// compile the definitions (resolve macro/list refs, exceptions, ...)
-		m_last_compile_output = std::make_unique<rule_loader::compiler::compile_output>();
-		rule_loader::compiler().compile(cfg, m_rule_collector, *m_last_compile_output.get());
+		m_last_compile_output = m_rule_compiler->new_compile_output();
+		m_rule_compiler->compile(cfg, *(m_rule_collector.get()), *m_last_compile_output.get());
 
 		// clear the rules known by the engine and each ruleset
 		m_rules.clear();
@@ -187,7 +218,7 @@ std::unique_ptr<load_result> falco_engine::load_rules(const std::string &rules_c
 				continue;
 			}
 
-			auto info = m_rule_collector.rules().at(rule.name);
+			auto info = m_rule_collector->rules().at(rule.name);
 			if (!info)
 			{
 				// this is just defensive, it should never happen
@@ -465,12 +496,12 @@ nlohmann::json falco_engine::describe_rule(std::string *rule, const std::vector<
 	if(!rule)
 	{
 		// Store required engine version
-		auto required_engine_version = m_rule_collector.required_engine_version();
+		auto required_engine_version = m_rule_collector->required_engine_version();
 		output["required_engine_version"] = required_engine_version.version.as_string();
 
 		// Store required plugin versions
 		nlohmann::json plugin_versions = nlohmann::json::array();
-		auto required_plugin_versions = m_rule_collector.required_plugin_versions();
+		auto required_plugin_versions = m_rule_collector->required_plugin_versions();
 		for(const auto& req : required_plugin_versions)
 		{
 			nlohmann::json r;
@@ -495,7 +526,7 @@ nlohmann::json falco_engine::describe_rule(std::string *rule, const std::vector<
 		nlohmann::json rules_array = nlohmann::json::array();
 		for(const auto& r : m_last_compile_output->rules)
 		{
-			auto info = m_rule_collector.rules().at(r.name);
+			auto info = m_rule_collector->rules().at(r.name);
 			nlohmann::json rule;
 			get_json_details(rule, r, *info, plugins);
 			rules_array.push_back(std::move(rule));
@@ -506,7 +537,7 @@ nlohmann::json falco_engine::describe_rule(std::string *rule, const std::vector<
 		nlohmann::json macros_array = nlohmann::json::array();
 		for(const auto &m : m_last_compile_output->macros)
 		{
-			auto info = m_rule_collector.macros().at(m.name);
+			auto info = m_rule_collector->macros().at(m.name);
 			nlohmann::json macro;
 			get_json_details(macro, m, *info, plugins);
 			macros_array.push_back(std::move(macro));
@@ -517,7 +548,7 @@ nlohmann::json falco_engine::describe_rule(std::string *rule, const std::vector<
 		nlohmann::json lists_array = nlohmann::json::array();
 		for(const auto &l : m_last_compile_output->lists)
 		{
-			auto info = m_rule_collector.lists().at(l.name);
+			auto info = m_rule_collector->lists().at(l.name);
 			nlohmann::json list;
 			get_json_details(list, l, *info, plugins);
 			lists_array.push_back(std::move(list));
@@ -527,7 +558,7 @@ nlohmann::json falco_engine::describe_rule(std::string *rule, const std::vector<
 	else
 	{
 		// build json information for just the specified rule
-		auto ri = m_rule_collector.rules().at(*rule);
+		auto ri = m_rule_collector->rules().at(*rule);
 		if(ri == nullptr || ri->unknown_source)
 		{
 			throw falco_exception("Rule \"" + *rule + "\" is not loaded");
@@ -571,12 +602,12 @@ void falco_engine::get_json_details(
 	filter_details details;
 	filter_details compiled_details;
 	nlohmann::json json_details;
-	for(const auto &m : m_rule_collector.macros())
+	for(const auto &m : m_rule_collector->macros())
 	{
 		details.known_macros.insert(m.name);
 		compiled_details.known_macros.insert(m.name);
 	}
-	for(const auto &l : m_rule_collector.lists())
+	for(const auto &l : m_rule_collector->lists())
 	{
 		details.known_lists.insert(l.name);
 		compiled_details.known_lists.insert(l.name);
@@ -672,12 +703,12 @@ void falco_engine::get_json_details(
 	filter_details details;
 	filter_details compiled_details;
 	nlohmann::json json_details;
-	for(const auto &m : m_rule_collector.macros())
+	for(const auto &m : m_rule_collector->macros())
 	{
 		details.known_macros.insert(m.name);
 		compiled_details.known_macros.insert(m.name);
 	}
-	for(const auto &l : m_rule_collector.lists())
+	for(const auto &l : m_rule_collector->lists())
 	{
 		details.known_lists.insert(l.name);
 		compiled_details.known_lists.insert(l.name);
@@ -958,7 +989,7 @@ bool falco_engine::check_plugin_requirements(
 		std::string& err) const
 {
 	err = "";
-	for (const auto &alternatives : m_rule_collector.required_plugin_versions())
+	for(const auto &alternatives : m_rule_collector->required_plugin_versions())
 	{
 		if (!check_plugin_requirement_alternatives(plugins, alternatives, err))
 		{

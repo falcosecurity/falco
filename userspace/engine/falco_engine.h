@@ -33,14 +33,14 @@ limitations under the License.
 #include "gen_filter.h"
 #include "filter_ruleset.h"
 #include "rule_loader.h"
+#include "rule_loader_reader.h"
 #include "rule_loader_collector.h"
+#include "rule_loader_compiler.h"
 #include "stats_manager.h"
 #include "falco_common.h"
 #include "falco_source.h"
 #include "falco_load_result.h"
 #include "filter_details_resolver.h"
-#include "rule_loader_reader.h"
-#include "rule_loader_compiler.h"
 
 //
 // This class acts as the primary interface between a program and the
@@ -72,6 +72,17 @@ public:
 	// Print to stdout (using printf) a description of each field supported by this engine.
 	// If source is non-empty, only fields for the provided source are printed.
 	void list_fields(std::string &source, bool verbose, bool names_only, bool markdown) const;
+
+	// Provide an alternate rule reader, collector, and compiler
+	// to compile any rules provided via load_rules*
+	void set_rule_reader(std::shared_ptr<rule_loader::reader> reader);
+	std::shared_ptr<rule_loader::reader> get_rule_reader();
+
+	void set_rule_collector(std::shared_ptr<rule_loader::collector> collector);
+	std::shared_ptr<rule_loader::collector> get_rule_collector();
+
+	void set_rule_compiler(std::shared_ptr<rule_loader::compiler> compiler);
+	std::shared_ptr<rule_loader::compiler> get_rule_compiler();
 
 	//
 	// Load rules and returns a result object.
@@ -395,8 +406,10 @@ private:
 		const std::unordered_set<std::string>& fields,
 		const std::vector<std::shared_ptr<sinsp_plugin>>& plugins) const;
 
-	rule_loader::collector m_rule_collector;
 	indexed_vector<falco_rule> m_rules;
+	std::shared_ptr<rule_loader::reader> m_rule_reader;
+	std::shared_ptr<rule_loader::collector> m_rule_collector;
+	std::shared_ptr<rule_loader::compiler> m_rule_compiler;
 	stats_manager m_rule_stats_manager;
 
 	uint16_t m_next_ruleset_id;
