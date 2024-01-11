@@ -42,7 +42,8 @@ static const std::string item_type_strings[] = {
 	"rule output",
 	"rule output expression",
 	"rule priority",
-	"overrides"
+	"overrides",
+	"extension item"
 };
 
 const std::string& rule_loader::context::item_type_as_string(enum item_type it)

@@ -58,7 +58,8 @@ namespace rule_loader
 			RULE_OUTPUT,
 			RULE_OUTPUT_EXPRESSION,
 			RULE_PRIORITY,
-			OVERRIDE
+			OVERRIDE,
+			EXTENSION_ITEM
 		};
 
 		static const std::string& item_type_as_string(enum item_type it);
