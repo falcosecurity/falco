@@ -57,6 +57,19 @@ public:
 			+ std::to_string(minor) + "." 
 			+ std::to_string(FALCO_ENGINE_VERSION_PATCH));
 	}
+
+	template <typename T>
+	static void decode_val(const YAML::Node& item, const char *key, T& out, const rule_loader::context& ctx);
+
+	template <typename T>
+	static void decode_optional_val(const YAML::Node& item, const char *key, T& out, const rule_loader::context& ctx);
+
+protected:
+
+	virtual void read_item(rule_loader::configuration& cfg,
+			       rule_loader::collector& collector,
+			       const YAML::Node& item,
+			       const rule_loader::context& parent);
 };
 
 }; // namespace rule_loader

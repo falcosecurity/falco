@@ -56,20 +56,26 @@ static void decode_val_generic(const YAML::Node& item, const char *key, std::opt
 }
 
 template <typename T>
-static void decode_val(const YAML::Node& item, const char *key, T& out, const rule_loader::context& ctx)
+void rule_loader::reader::decode_val(const YAML::Node& item, const char *key, T& out, const rule_loader::context& ctx)
 {
 	bool optional = false;
 
 	decode_val_generic(item, key, out, ctx, optional);
 }
 
+template void rule_loader::reader::decode_val<std::string>(const YAML::Node& item, const char *key, std::string& out, const rule_loader::context& ctx);
+
 template <typename T>
-static void decode_optional_val(const YAML::Node& item, const char *key, T& out, const rule_loader::context& ctx)
+void rule_loader::reader::decode_optional_val(const YAML::Node& item, const char *key, T& out, const rule_loader::context& ctx)
 {
 	bool optional = true;
 
 	decode_val_generic(item, key, out, ctx, optional);
 }
+
+template void rule_loader::reader::decode_optional_val<std::string>(const YAML::Node& item, const char *key, std::string& out, const rule_loader::context& ctx);
+
+template void rule_loader::reader::decode_optional_val<bool>(const YAML::Node& item, const char *key, bool& out, const rule_loader::context& ctx);
 
 // Don't call this directly, call decode_items/decode_tags instead.
 template <typename T>
@@ -289,7 +295,7 @@ static void read_rule_exceptions(
 		rule_loader::context tmp(ex, rule_loader::context::EXCEPTION, "", exes_ctx);
 
 		THROW(!ex.IsMap(), "Rule exception must be a mapping", tmp);
-		decode_val(ex, "name", name, tmp);
+		rule_loader::reader::decode_val(ex, "name", name, tmp);
 
 		// Now use a real context including the exception name.
 		rule_loader::context ex_ctx(ex, rule_loader::context::EXCEPTION, name, parent);
@@ -346,7 +352,7 @@ inline static bool check_update_expected(std::set<std::string>& expected_keys, c
 	return true;
 }
 
-static void read_item(
+void rule_loader::reader::read_item(
 	rule_loader::configuration& cfg,
 	rule_loader::collector& collector,
 	const YAML::Node& item,
