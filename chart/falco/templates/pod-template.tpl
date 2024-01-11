@@ -134,10 +134,12 @@ spec:
         - mountPath: /host/usr
           name: usr-fs
           readOnly: true
+        {{- end }}
+        {{- if .Values.driver.enabled }}
         - mountPath: /host/etc
           name: etc-fs
           readOnly: true
-        {{- end }}
+        {{- end -}}
         {{- if and .Values.driver.enabled (eq .Values.driver.kind "kmod") }}
         - mountPath: /host/dev
           name: dev-fs
