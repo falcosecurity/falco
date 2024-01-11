@@ -18,6 +18,7 @@ limitations under the License.
 #pragma once
 
 #include "falco_rule.h"
+#include "rule_loader_compile_output.h"
 #include <filter/ast.h>
 #include <filter.h>
 #include <event.h>
@@ -49,6 +50,35 @@ public:
 		const falco_rule& rule,
 		std::shared_ptr<gen_event_filter> filter,
 		std::shared_ptr<libsinsp::filter::ast::expr> condition) = 0;
+
+	/*!
+		\brief Adds all rules contained in the provided
+		rule_loader::compile_output struct. Only
+		those rules with the provided source and those rules
+		with priority >= min_priority should be added. The
+		intent is that this replaces add(). However, we retain
+		add() for backwards compatibility. Any rules added via
+		add() are also added to this ruleset. The default
+		implementation iterates over rules and calls add(),
+		but can be overridden.
+		\param rule The compile output.
+		\param min_priority Only add rules with priority above this priority.
+		\param source Only add rules with source equal to this source.
+	*/
+	virtual void add_compile_output(
+		const rule_loader::compile_output& compile_output,
+		falco_common::priority_type min_priority,
+		const std::string& source)
+	{
+		for (const auto& rule : compile_output.rules)
+		{
+			if(rule.priority <= min_priority &&
+			   rule.source == source)
+			{
+				add(rule, rule.filter, rule.condition);
+			}
+		}
+	};
 
 	/*!
 		\brief Erases the internal state. All rules are disabled in each

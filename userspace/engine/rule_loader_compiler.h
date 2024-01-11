@@ -18,6 +18,7 @@ limitations under the License.
 #pragma once
 
 #include "rule_loader.h"
+#include "rule_loader_compile_output.h"
 #include "rule_loader_collector.h"
 #include "indexed_vector.h"
 #include "falco_rule.h"
@@ -31,29 +32,16 @@ namespace rule_loader
 class compiler
 {
 public:
-	/*!
-		\brief The output of a compilation.
-	*/
-	struct compile_output
-	{
-		compile_output() = default;
-		virtual ~compile_output() = default;
-		compile_output(compile_output&&) = default;
-		compile_output& operator = (compile_output&&) = default;
-		compile_output(const compile_output&) = default;
-		compile_output& operator = (const compile_output&) = default;
-
-		indexed_vector<falco_list> lists;
-		indexed_vector<falco_macro> macros;
-		indexed_vector<falco_rule> rules;
-	};
-
 	compiler() = default;
 	virtual ~compiler() = default;
 	compiler(compiler&&) = default;
 	compiler& operator = (compiler&&) = default;
 	compiler(const compiler&) = default;
 	compiler& operator = (const compiler&) = default;
+
+	// Return a new result object, suitable for passing to
+	// compile().
+        virtual std::unique_ptr<compile_output> new_compile_output();
 
 	/*!
 		\brief Compiles a list of falco rules
