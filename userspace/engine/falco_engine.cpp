@@ -66,6 +66,8 @@ falco_engine::falco_engine(bool seed_rng)
 	}
 
 	m_default_ruleset_id = find_ruleset_id(s_default_ruleset);
+
+	fill_engine_state_funcs(m_engine_state);
 }
 
 falco_engine::~falco_engine()
@@ -208,7 +210,7 @@ std::unique_ptr<load_result> falco_engine::load_rules(const std::string &rules_c
 
 		// add rules to each ruleset
 		{
-			src.ruleset = src.ruleset_factory->new_ruleset();
+			src.ruleset = create_ruleset(src.ruleset_factory);
 			src.ruleset->add_compile_output(*(m_last_compile_output.get()),
 							m_min_priority,
 							src.name);
@@ -467,7 +469,7 @@ std::size_t falco_engine::add_source(const std::string &source,
 	src.filter_factory = filter_factory;
 	src.formatter_factory = formatter_factory;
 	src.ruleset_factory = ruleset_factory;
-	src.ruleset = ruleset_factory->new_ruleset();
+	src.ruleset = create_ruleset(src.ruleset_factory);
 	return m_sources.insert(src, source);
 }
 
@@ -1006,6 +1008,31 @@ bool falco_engine::check_plugin_requirements(
 	}
 	return true;
 }
+
+std::shared_ptr<filter_ruleset> falco_engine::create_ruleset(std::shared_ptr<filter_ruleset_factory> &ruleset_factory)
+{
+	auto ret = ruleset_factory->new_ruleset();
+
+	ret->set_engine_state(m_engine_state);
+
+	return ret;
+}
+
+void falco_engine::fill_engine_state_funcs(filter_ruleset::engine_state_funcs &engine_state)
+{
+	engine_state.get_ruleset = [this](const std::string &source_name, std::shared_ptr<filter_ruleset> &ruleset) -> bool
+	{
+		falco_source *src = m_sources.at(source_name);
+		if(src == nullptr)
+		{
+			return false;
+		}
+
+		ruleset = src->ruleset;
+
+		return true;
+	};
+};
 
 void falco_engine::complete_rule_loading() const
 {

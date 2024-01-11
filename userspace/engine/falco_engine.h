@@ -321,6 +321,14 @@ public:
 		std::string& err) const;
 
 private:
+	// Create a ruleset using the provided factory and set the
+	// engine state funcs for it.
+	std::shared_ptr<filter_ruleset> create_ruleset(std::shared_ptr<filter_ruleset_factory>& ruleset_factory);
+
+	// Functions to retrieve state from this engine
+	void fill_engine_state_funcs(filter_ruleset::engine_state_funcs& engine_state);
+
+	filter_ruleset::engine_state_funcs m_engine_state;
 
 	// Throws falco_exception if the file can not be read
 	void read_file(const std::string& filename, std::string& contents);
