@@ -21,6 +21,7 @@ limitations under the License.
 #include "rule_loader_compile_output.h"
 #include <filter/ast.h>
 #include <filter.h>
+#include <functional>
 #include <event.h>
 #include <gen_filter.h>
 #include <events/sinsp_events.h>
@@ -29,10 +30,23 @@ limitations under the License.
 	\brief Manages a set of rulesets. A ruleset is a set of
 	enabled rules that is able to process events and find matches for those rules.
 */
+
 class filter_ruleset
 {
 public:
+	// A set of functions that can be used to retrieve state from
+	// the falco engine that created this ruleset.
+	struct engine_state_funcs
+	{
+		using ruleset_retriever_func_t = std::function<bool(const std::string &, std::shared_ptr<filter_ruleset> &ruleset)>;
+
+		ruleset_retriever_func_t get_ruleset;
+	};
+
 	virtual ~filter_ruleset() = default;
+
+	void set_engine_state(engine_state_funcs &engine_state);
+	engine_state_funcs &get_engine_state();
 
 	/*!
 		\brief Adds a rule and its filtering filter + condition inside the manager.
@@ -211,6 +225,9 @@ public:
 	virtual void disable_tags(
 		const std::set<std::string> &tags,
 		uint16_t ruleset_id) = 0;
+
+private:
+	engine_state_funcs m_engine_state;
 };
 
 /*!
