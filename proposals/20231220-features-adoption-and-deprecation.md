@@ -41,6 +41,10 @@ Undocumented behaviors may be included in this definition if there's strong evid
 
 User-facing changes refer to any feature changes, behavior changes, modifications, or additions that are directly noticeable and interactable by the end users. These changes affect how Falco operates from the user's perspective (notably any change that can lead to user disruption). Unlike internal changes (i.e., code refactoring, CI, maintenance-related changes), which are under-the-hood improvements not directly visible to the user, user-facing changes are evident in the Falco and its core components interface and functionality.
 
+### Feature
+
+TODO: Add a definition of feature.
+
 ### CLI/Config Area
 
 Falco is comprised of the Falco binary and other programs and tools cooperating (notably [falcoctl](https://github.com/falcosecurity/falcoctl)). These programs are the primary user interface for Falco. Any feature or behavior changes to the following elements of these programs are assumed to be user-facing changes to the CLI/Config area:
@@ -94,56 +98,45 @@ The actual duration of a release cycle can vary. Still, it's assumed to be about
 
 ## Proposal
 
+### Maturation Levels
+
+Maturation levels (inspired by those we already have in place for [repositories](https://github.com/falcosecurity/evolution/blob/main/REPOSITORIES.md#status)) are used to characterize the maturity of a feature. Each feature will have an assigned level  at any specific time (i.e., a Falco release). Levels are shown in the table below.
+
+| Maturity Level | Intended for |
+| --- | --- |
+| Sandbox |  Experimental/alpha features, not recommended for production use, can be removed at any time without further notice. |
+| Incubating | Beta features, long-term support is not guaranteed. |
+| Stable | General Availability (GA) features for which long-term support is expected. |
+| Deprecated | See the [deprecation policy](#Deprecation-policy) section below. |
+
 ### Adoption Policy
 
-Feature additions will follow a straightforward adoption model with defined status levels (inspired by those we already have in place for [repositories](https://github.com/falcosecurity/evolution/blob/main/REPOSITORIES.md#status)) aiming to characterize the current maturity level.
-
-Each feature will have an assigned status level at any specific time (i.e., a Falco release). Statuses are shown in the table below.
-
-| Status | Feature Gate | Intended for |
-| --- | --- | --- |
-| Sandbox | Disabled by default | Experimental/alpha features, not recommended for production use, can be removed at any time without further notice. |
-| Incubating | Enabled by default | Beta features, long-term support is not guaranteed. |
-| Stable | No feature gate needed. All features with this status are always enabled. | General Availability (GA) features for which long-term support is expected. |
-| Deprecated | Enabled by default | See the [deprecation policy](#Deprecation-policy) section below. |
+The adoption policy applies to any backward compatible user-facing changes which add functionalities. For non-backward compatible changes see the [deprecation policy](#Deprecation-policy) below.
 
 **Adoption rules**:
-1. Only Sandbox or Incubating status can be assigned (at the maintainers' discretion) when introducing a new feature. Incubating is the recommended path.
-2. A feature can be promoted to a higher status level only after at least one release cycle has passed without user-facing changes to the feature.
-3. Demoting a feature to a lower status is not allowed; use deprecation instead.
+1. A feature can be introduced at any level at only one of the following levels:
+   - Sandbox: The feature must be opt-in (e.g., a feature flag), labeled as *Sandbox* and the user must be proactively informed by the experimental nature of the feature (i.e. emitting a notice when the feature is being enabled).
+   - Incubating: The feature must be labeled as *Incubating*.
+2. A feature can be promoted *from Sandbox to Incubating* or *from Incubating to Stable* only after at least one release cycle has passed without user-facing changes to the feature.
+3. A feature cannot be demoted to a previous level.
+
 
 _Note_: 
  - Behavior additions are assumed to be a consequence of a feature introduction, so this adoption policy does not directly apply to behaviors. However, behavior changes are still relevant in the context of deprecation.
 
-#### Feature Gates
-
-Implementing a features gate config option is mandatory for the Falco binary and recommended for other tools where applicable.
-
-For Falco, the suggested configuration option and defaults are as follows:
-
-```yaml
-feature_gates:
-    sandbox: false
-    incubating: true
-    deprecated: true
-```
-The feature gates are a global configuration. For instance, if a specific status level is enabled, all features with that status will be activated in bulk. 
-
-Other configuration schemes are allowed for specific areas. For instance, the rules area can be configured either by [loading files or using rules tags](https://github.com/falcosecurity/rules/blob/main/CONTRIBUTING.md#overall-guidelines). This aligns perfectly with this proposal, provided the feature gate configuration is officially documented.
-
 
 ### Deprecation Policy
 
-The deprecation policy applies to any non-backward compatible user-facing changes. Adding functionality in a backward-compatible manner or bug fixes do not fall under the scope of this deprecation policy.
+The deprecation policy applies to any non-backward compatible user-facing changes. Any other changes introduced in a backward-compatible manner does not fall under the scope of this deprecation policy.
 
 **Deprecation Rules**:
-1. Sandbox features can be deprecated at any time without notice.
-2. Incubating/Stable features and documented behaviors must enter a deprecation period and function for no less than the indicated release cycle (see tables below) after their announced deprecation.
-3. Deprecated behaviors must be reported in the documentation for at least the entire deprecation period.
-4. Deprecated configurations or CLI elements must emit warnings when used and be signaled in the documentation for at least the entire deprecation period.
-5. Deprecated APIs should have a way to signal the deprecation status, which may vary depending on the specific subsystem.
-6. Any Pull Request introducing a deprecation notice must be labeled and include a note in the format `DEPRECATION NOTICE: <description>`.
-7. Any Pull Request introducing a breaking change due to the end of the deprecation notice period must be labeled and include a note in the format `BREAKING CHANGE:`. 
+1. Sandbox features can be removed at any time without notice. No deprecation period is required.
+2. Incubating or Stable features and documented behaviors must enter a deprecation period and function for no less than the indicated release cycles (see tables below) after their announced deprecation.
+3. Deprecated configurations or CLI elements must emit warnings when used and be signaled in the documentation for at least the entire deprecation period.
+4. Deprecated APIs should have a way to signal the deprecation status, which may vary depending on the specific subsystem.
+5. Deprecated behaviors must be reported in the documentation for at least the entire deprecation period.
+6. Any Pull Request introducing a deprecation notice must be labeled and include a note in the format `DEPRECATION NOTICE: ...`.
+7. Any Pull Request introducing a breaking change due to the end of the deprecation notice period must be labeled and include a note in the format `BREAKING CHANGE: ...`. 
    - It is also recommended for code commits that introduce a breaking change to follow the related [conventional commit spec](https://www.conventionalcommits.org/en/v1.0.0/#specification).
 
 The minimum deprecation period length depends on the specific subsystem. If changes span multiple areas, the area with the most extended deprecation period is assumed.
@@ -200,8 +193,8 @@ Documentation must be tied to a specific release and reflect the adoption level 
 
 Since software components may need to adapt to implement the requirements this proposal mandates, we assume the following stages are required to transition from the current state to the desired state fully:
 
-- With Falco 0.38, the policy must be partially implemented, at least in Falco and relevant documentation. Exceptions may be made temporarily.
-- Within Falco 0.39, the feature gates system must be implemented in the Falco executable, and the policy must be part of the official documentation (i.e., published both on GitHub and [falco.org](https://falco.org)).
-- Within Falco 1.0.0 (still not scheduled to date), the policy must be strictly implemented in Falco and all [core projects](https://github.com/falcosecurity/evolution#core) with [stable](https://github.com/falcosecurity/evolution/blob/main/REPOSITORIES.md#stable) status.
+- Within Falco 0.38, at least stable features must be identified, and the adoption policy and relevant documentation should be implemented in Falco. Exceptions may be made temporarily.
+- Within Falco 0.39, all both adoption and deprecation must be implemented (at least in Falco) part of the official documentation (i.e., published both on GitHub and [falco.org](https://falco.org)).
+- Within Falco 1.0.0 (still not scheduled to date), the policies must be strictly implemented in Falco and all [core projects](https://github.com/falcosecurity/evolution#core) with [stable](https://github.com/falcosecurity/evolution/blob/main/REPOSITORIES.md#stable) status.
 
 During the transition phases, maintainers can fine-tune these policies and add further exceptions, eventually. After this initial transition phases, the policy is assumed to be established. From then on, any policy modifications, updates, and exceptions must be subject to a core maintainer majority vote to ensure the policy remains relevant and practical.
