@@ -277,7 +277,7 @@ collectors:
     # https://github.com/falcosecurity/charts/tree/master/charts/k8s-metacollector
     # When this option is disabled, Falco falls back to the container annotations to grab the metadata.
     # In such a case, only the ID, name, namespace, labels of the pod will be available.
-    enabled: true
+    enabled: false
     # --pluginRef is the OCI reference for the k8smeta plugin. It could be a full reference such as:
     # "ghcr.io/falcosecurity/plugins/plugin/k8smeta:0.1.0". Or just name + tag: k8smeta:0.1.0.
     pluginRef: "ghcr.io/falcosecurity/plugins/plugin/k8smeta:0.1.0"
