@@ -3,6 +3,17 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v4.0.0
+The new chart introduces some breaking changes. For folks upgrading Falco please see the BREAKING-CHANGES.md file.
+
+* Uniform driver names and configuration to the Falco one: https://github.com/falcosecurity/falco/pull/2413;
+* Fix usernames and groupnames resolution by mounting the `/etc` filesystem;
+* Drop old kubernetes collector related resources;
+* Introduce the new k8s-metacollector and k8smeta plugin (experimental);
+* Enable the dependency resolver for artifacts in falcoctl since the Falco image does not ship anymore the plugins;
+* Bump Falco to 0.37.0;
+* Bump falcoctl to 0.7.0.
+
 ## v3.8.7
 
 *  Upgrade falcosidekick chart to `v0.7.11`.
