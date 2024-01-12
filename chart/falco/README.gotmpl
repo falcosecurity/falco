@@ -87,12 +87,13 @@ Note that **the driver is not required when using plugins**.
 gVisor is an application kernel, written in Go, that implements a substantial portion of the Linux system call interface. It provides an additional layer of isolation between running applications and the host operating system. For more information please consult the [official docs](https://gvisor.dev/docs/). In version `0.32.1`, Falco first introduced support for gVisor by leveraging the stream of system call information coming from gVisor.
 Falco requires the version of [runsc](https://gvisor.dev/docs/user_guide/install/) to be equal to or above `20220704.0`. The following snippet shows the gVisor configuration variables found in `values.yaml`:
 ```yaml
-gvisor:
-  enabled: true
-  runsc:
-    path: /home/containerd/usr/local/sbin
-    root: /run/containerd/runsc
-    config: /run/containerd/runsc/config.toml
+driver:
+  gvisor:
+    enabled: true
+    runsc:
+      path: /home/containerd/usr/local/sbin
+      root: /run/containerd/runsc
+      config: /run/containerd/runsc/config.toml
 ```
 Falco uses the [runsc](https://gvisor.dev/docs/user_guide/install/) binary to interact with sandboxed containers. The following variables need to be set:
 * `runsc.path`: absolute path of the `runsc` binary in the k8s nodes;
@@ -142,20 +143,21 @@ When using the [drivers](#about-the-driver), Falco is deployed as `daemonset`. B
 
 To run Falco with the [kernel module](https://falco.org/docs/event-sources/drivers/#kernel-module) you can use the default values of the helm chart:
 
-```yaml
-driver:
-  enabled: true
-  kind: module
+```bash
+helm install falco falcosecurity/falco \
+    --create-namespace \
+    --namespace falco
 ```
 
 **eBPF probe**
 
 To run Falco with the [eBPF probe](https://falco.org/docs/event-sources/drivers/#ebpf-probe) you just need to set `driver.kind=ebpf` as shown in the following snippet:
 
-```yaml
-driver:
-  enabled: true
-  kind: ebpf
+```bash
+helm install falco falcosecurity/falco \
+    --create-namespace \
+    --namespace falco \
+    --set driver.kind=ebpf
 ```
 
 There are other configurations related to the eBPF probe, for more info please check the `values.yaml` file. After you have made your changes to the configuration file you just need to run:
@@ -168,10 +170,11 @@ helm install falco falcosecurity/falco --namespace "your-custom-name-space" --cr
 
 To run Falco with the [modern eBPF probe](https://falco.org/docs/event-sources/drivers/#modern-ebpf-probe-experimental) you just need to set `driver.kind=modern-bpf` as shown in the following snippet:
 
-```yaml
-driver:
-  enabled: true
-  kind: modern-bpf
+```bash
+helm install falco falcosecurity/falco \
+    --create-namespace \
+    --namespace falco \
+    --set driver.kind=modern_ebpf
 ```
 
 #### Deployment
@@ -211,6 +214,54 @@ A scenario when we need the `-p (--previous)` flag is when we have a restart of 
 ### Enabling real time logs
 By default in Falco the output is buffered. When live streaming logs we will notice delays between the logs output (rules triggering) and the event happening.
 In order to enable the logs to be emitted without delays you need to set `.Values.tty=true` in `values.yaml` file.
+
+## K8s-metacollector
+Starting from Falco `0.37` the old [k8s-client](https://github.com/falcosecurity/falco/issues/2973) has been removed.
+A new component named [k8s-metacollector](https://github.com/falcosecurity/k8s-metacollector) replaces it.
+The *k8s-metacollector* is a self-contained module that can be deployed within a Kubernetes cluster to perform the task of gathering metadata
+from various Kubernetes resources and subsequently transmitting this collected metadata to designated subscribers.
+
+Kubernetes' resources for which metadata will be collected and sent to Falco:
+* pods;
+* namespaces;
+* deployments;
+* replicationcontrollers;
+* replicasets;
+* services;
+
+### Plugin
+Since the *k8s-metacollector* is standalone, deployed in the cluster as a deployment, Falco instances need to connect to the component
+in order to retrieve the `metadata`. Here it comes the [k8smeta](https://github.com/falcosecurity/plugins/tree/master/plugins/k8smeta) plugin.
+The plugin gathers details about Kubernetes resources from the *k8s-metacollector*. It then stores this information
+in tables and provides access to Falco upon request. The plugin specifically acquires data for the node where the
+associated Falco instance is deployed, resulting in node-level granularity.
+
+### Exported Fields: Old and New
+The old [k8s-client](https://github.com/falcosecurity/falco/issues/2973) used to populate the
+[k8s](https://falco.org/docs/reference/rules/supported-fields/#field-class-k8s) fields. The **k8s** field class is still
+available in Falco, for compatibility reasons, but most of the fields will return `N/A`. The following fields are still
+usable and will return meaningful data when the `container runtime collectors` are enabled:
+* k8s.pod.name;
+* k8s.pod.id;
+* k8s.pod.label;
+* k8s.pod.labels;
+* k8s.pod.ip;
+* k8s.pod.cni.json;
+* k8s.pod.namespace.name;
+
+The [k8smeta](https://github.com/falcosecurity/plugins/tree/master/plugins/k8smeta) plugin exports a whole new
+[field class]https://github.com/falcosecurity/plugins/tree/master/plugins/k8smeta#supported-fields. Note that the new
+`k8smeta.*` fields are usable only when the **k8smeta** plugin is loaded in Falco.
+
+### Enabling the k8s-metacollector
+The following command will deploy Falco + k8s-metacollector + k8smeta:
+```bash
+helm install falco falcosecurity/falco \
+    --namespace falco \
+    --create-namespace \
+    --set collectors.kubernetes.enabled=true
+```
+
 ## Loading custom rules
 
 Falco ships with a nice default ruleset. It is a good starting point but sooner or later, we are going to need to add custom rules which fit our needs.
