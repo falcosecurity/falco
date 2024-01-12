@@ -1,11 +1,45 @@
 # Helm chart Breaking Changes
-
+ - [4.0.0](#400)
+   - [Drivers](#drivers)
+   - [K8s Collector](#k8s-collector)
+   - [Plugins](#plugins)
  - [3.0.0](#300)
     - [Falcoctl](#falcoctl-support)
     - [Rulesfiles](#rulesfiles)
     - [Falco Images](#drop-support-for-falcosecurityfalco-image)
     - [Driver Loader Init Container](#driver-loader-simplified-logic)
 
+## 4.0.0
+### Drivers
+The `driver` section has been reworked based on the following PR: https://github.com/falcosecurity/falco/pull/2413. 
+It is an attempt to uniform how a driver is configured in Falco. 
+It also groups the configuration based on the driver type.
+Some of the drivers has been renamed:
+* kernel modules has been renamed from `module` to `kmod`;
+* the ebpf probe has not been changed. It's still `ebpf`;
+* the modern ebpf probe has been renamed from `modern-bpf` to `modern_ebpf`.
+
+The `gvisor` configuration has been moved under the `driver` section since it is considered a driver on its own.
+ 
+### K8s Collector
+The old Kubernetes client has been removed in Falco 0.37.0. For more info checkout this issue: https://github.com/falcosecurity/falco/issues/2973#issuecomment-1877803422.
+The [k8s-metacollector](https://github.com/falcosecurity/k8s-metacollector) and [k8s-meta](https://github.com/falcosecurity/plugins/tree/master/plugins/k8smeta) substitute
+the old implementation. 
+
+The following resources needed by Falco to connect to the API server are no longer needed and has been removed from the chart:
+* service account;
+* cluster role;
+* cluster role binding.
+
+When the `collectors.kubernetes` is enabled the chart deploys the [k8s-metacollector](https://github.com/falcosecurity/k8s-metacollector) and configures Falco to load the
+[k8s-meta](https://github.com/falcosecurity/plugins/tree/master/plugins/k8smeta) plugin.
+
+By default, the `collectors.kubernetes.enabled` is off; for more info, see the following issue: https://github.com/falcosecurity/falco/issues/2995.
+
+### Plugins
+The Falco docker image does not ship anymore the plugins: https://github.com/falcosecurity/falco/pull/2997. 
+For this reason, the `resolveDeps` is now enabled in relevant values files (ie. `values-k8saudit.yaml`). 
+When installing `rulesfile` artifacts `falcoctl` will try to resolve its dependencies and install the required plugins.
 
 ## 3.0.0
 The new chart deploys new *k8s* resources and new configuration variables have been added to the `values.yaml` file. People upgrading the chart from `v2.x.y` have to port their configuration variables to the new `values.yaml` file used by the `v3.0.0` chart.
