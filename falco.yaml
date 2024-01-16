@@ -61,7 +61,7 @@
 # Falco logging / alerting / metrics related to software functioning (advanced)
 #     output_timeout
 #     syscall_event_timeouts
-#     syscall_event_drops
+#     syscall_event_drops [DEPRECATED] -> Use `metrics` instead, `syscall_event_drops` will be removed in Falco 0.38!
 #     metrics
 # Falco performance tuning (advanced)
 #     syscall_buf_size_preset [DEPRECATED] -> Replaced by `engine.<driver>.buf_size_preset` starting Falco 0.38!
@@ -793,7 +793,7 @@ output_timeout: 2000
 syscall_event_timeouts:
   max_consecutives: 1000
 
-# [Stable] `syscall_event_drops`
+# [Stable] `syscall_event_drops` -> Use `metrics` instead, `syscall_event_drops` will be removed in Falco 0.38!
 #
 # Generates "Falco internal: syscall event drop" rule output when `priority=debug` at minimum
 #

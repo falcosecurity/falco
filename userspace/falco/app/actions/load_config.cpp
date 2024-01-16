@@ -41,6 +41,12 @@ static falco::app::run_result apply_deprecated_options(falco::app::state& s)
 		return run_result::fatal("You can not specify more than one of -e, -g (--gvisor-config), --modern-bpf, --nodriver, and the FALCO_BPF_PROBE env var");
 	}
 
+	if(s.config->m_min_priority == falco_common::PRIORITY_DEBUG)
+	{
+		falco_logger::log(falco_logger::level::WARNING,
+				"DEPRECATION NOTICE: 'syscall_event_drops' config is deprecated and will be removed in Falco 0.38! Use 'metrics' config instead. Note that the 'syscall_event_drops' config is enabled by default when the 'priority' is set to 'debug'. You can turn it off by setting the 'priority' to any higher level\n");
+	}
+
 	// Please note: is not possible to mix command line options and configs to obtain a configuration
 	// we need to use only one method. For example, is not possible to set the gvisor-config through
 	// the command line and the gvisor-root through the config file. For this reason, if we detect
