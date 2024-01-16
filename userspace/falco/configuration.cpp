@@ -126,7 +126,6 @@ void falco_configuration::load_engine_config(const std::string& config_name, con
 	m_syscall_buf_size_preset = config.get_scalar<int16_t>("syscall_buf_size_preset", DEFAULT_BUF_SIZE_PRESET);
 	m_cpus_for_each_syscall_buffer = config.get_scalar<uint16_t>("modern_bpf.cpus_for_each_syscall_buffer", DEFAULT_CPUS_FOR_EACH_SYSCALL_BUFFER);
 	m_syscall_drop_failed_exit = config.get_scalar<bool>("syscall_drop_failed_exit", DEFAULT_DROP_FAILED_EXIT);
-
 	switch (m_engine_mode)
 	{
 	case engine_kind_t::KMOD:
@@ -156,6 +155,24 @@ void falco_configuration::load_engine_config(const std::string& config_name, con
 		m_modern_ebpf.m_cpus_for_each_buffer = config.get_scalar<uint16_t>("engine.modern_ebpf.cpus_for_each_buffer", DEFAULT_CPUS_FOR_EACH_SYSCALL_BUFFER);
 		m_modern_ebpf.m_buf_size_preset = config.get_scalar<int16_t>("engine.modern_ebpf.buf_size_preset", DEFAULT_BUF_SIZE_PRESET);
 		m_modern_ebpf.m_drop_failed_exit = config.get_scalar<bool>("engine.modern_ebpf.drop_failed_exit", DEFAULT_DROP_FAILED_EXIT);
+		if (config.is_defined("filters"))
+		{
+			std::list<falco_configuration::filter_config_pre> filters;
+			config.get_sequence<std::list<falco_configuration::filter_config_pre>>(filters, std::string("filters"));
+			int filter_index = 0;
+			for (std::list<falco_configuration::filter_config_pre>::iterator it = filters.begin(); it != filters.end(); ++it) 
+			{
+				m_modern_ebpf.m_filters[filter_index].m_syscall = it->m_syscall;
+				m_modern_ebpf.m_filters[filter_index].m_arg = it->m_arg;
+				m_modern_ebpf.m_filters[filter_index].m_num_prefixes = (uint16_t) it->m_prefixes.size();
+				int i = 0;
+				for (std::_List_iterator<std::string> prefix_it = it->m_prefixes.begin(); prefix_it!=it->m_prefixes.end(); ++prefix_it) {
+					memcpy(&m_modern_ebpf.m_filters[filter_index].m_prefixes[i][0], (*prefix_it).c_str(), (*prefix_it).length());
+					i++;
+				}
+				filter_index++;
+			}
+		}
 		break;
 	case engine_kind_t::REPLAY:
 		m_replay.m_capture_file = config.get_scalar<std::string>("engine.replay.capture_file", "");
@@ -612,3 +629,4 @@ void falco_configuration::set_cmdline_option(yaml_helper& config, const std::str
 
 	config.set_scalar(keyval.first, keyval.second);
 }
+
