@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+set -e
+
+usage() {
+    echo "usage: $0 -f <package.tar.gz>"
+    exit 1
+}
+
+# parse options
+while getopts ":f:" opt; do
+    case "${opt}" in
+        f )
+          file=${OPTARG}
+          ;;
+        \?)
+          echo "invalid option: ${OPTARG}" >&2
+          exit 1
+          ;;
+    esac
+done
+shift $((OPTIND-1))
+
+if [ -z "${file}" ]; then
+    usage
+fi
+
+repo="dev-wasm" 
+
+# settings
+s3_bucket_repo="s3://falco-distribution/packages/${repo}"
+cloudfront_path="/packages/${repo}"
+
+# publish
+package=$(basename -- ${file})
+echo "Publishing ${package} to ${s3_bucket_repo}..."
+aws s3 cp ${file} ${s3_bucket_repo}/${package} --acl public-read
+
+aws cloudfront create-invalidation --distribution-id ${AWS_CLOUDFRONT_DIST_ID} --paths ${cloudfront_path}/${package}
