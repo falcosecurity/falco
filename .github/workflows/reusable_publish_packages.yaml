@@ -71,6 +71,12 @@ jobs:
           name: falco-${{ inputs.version }}-static-x86_64.tar.gz
           path: /tmp/falco-build-bin-static
 
+      - name: Download WASM package
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
+        with:
+          name: falco-${{ inputs.version }}-wasm.tar.gz
+          path: /tmp/falco-wasm
+
       - name: Import gpg key
         env:
           GPG_KEY: ${{ secrets.GPG_KEY }}
@@ -81,6 +87,10 @@ jobs:
           rpmsign --define '_gpg_name Falcosecurity Package Signing' --addsign /tmp/falco-build-rpm/falco-*.rpm
           rpm --qf %{SIGPGP:pgpsig} -qp /tmp/falco-build-rpm/falco-*.rpm | grep SHA256
 
+      - name: Publish wasm
+        run: |
+          ./scripts/publish-wasm -f /tmp/falco-wasm/falco-${{ inputs.version }}-wasm.tar.gz
+          
       - name: Publish rpm
         run: |
           ./scripts/publish-rpm -f /tmp/falco-build-rpm/falco-${{ inputs.version }}-x86_64.rpm -f /tmp/falco-build-rpm/falco-${{ inputs.version }}-aarch64.rpm -r rpm${{ inputs.bucket_suffix }}
@@ -93,7 +103,7 @@ jobs:
       - name: Publish static
         run: |
           ./scripts/publish-bin -f /tmp/falco-build-bin-static/falco-${{ inputs.version }}-static-x86_64.tar.gz -r bin${{ inputs.bucket_suffix }} -a x86_64
-          
+
   publish-packages-deb:
     runs-on: ubuntu-latest
     container: docker.io/debian:stable
