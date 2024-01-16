@@ -168,7 +168,7 @@ struct state
 
     inline bool is_nodriver() const
     {
-        return config->m_engine_mode == engine_kind_t::NONE;
+        return config->m_engine_mode == engine_kind_t::NODRIVER;
     }
 
     inline bool is_source_enabled(const std::string& src) const

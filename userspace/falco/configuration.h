@@ -49,7 +49,7 @@ enum class engine_kind_t : uint8_t
 	MODERN_EBPF,
 	REPLAY,
 	GVISOR,
-	NONE
+	NODRIVER
 };
 
 class falco_configuration

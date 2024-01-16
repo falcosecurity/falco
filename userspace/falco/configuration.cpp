@@ -109,7 +109,7 @@ void falco_configuration::load_engine_config(const std::string& config_name, con
 		{"modern_ebpf",engine_kind_t::MODERN_EBPF},
 		{"replay",engine_kind_t::REPLAY},
 		{"gvisor",engine_kind_t::GVISOR},
-		{"none",engine_kind_t::NONE},
+		{"nodriver",engine_kind_t::NODRIVER},
 	};
 
 	auto driver_mode_str = config.get_scalar<std::string>("engine.kind", "kmod");
@@ -172,7 +172,7 @@ void falco_configuration::load_engine_config(const std::string& config_name, con
 		}
 		m_gvisor.m_root = config.get_scalar<std::string>("engine.gvisor.root", "");
 		break;
-	case engine_kind_t::NONE:
+	case engine_kind_t::NODRIVER:
 	default:
 		break;
 	}

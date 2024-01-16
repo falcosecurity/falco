@@ -179,7 +179,8 @@ rules_file:
 # - `modern_ebpf`: Modern eBPF (CO-RE eBPF probe)
 # - `gvisor`: gVisor (gVisor sandbox)
 # - `replay`: Replay a scap trace file
-# - `none`: No event producer loaded, useful to run with plugins.
+# - `nodriver`: No driver is injected into the system.
+#   This is useful to debug and to run plugins with 'syscall' source.
 #
 # Only one engine can be specified in the `kind` key.
 # Moreover, for each engine multiple options might be available,

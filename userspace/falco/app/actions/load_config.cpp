@@ -125,8 +125,8 @@ static falco::app::run_result apply_deprecated_options(falco::app::state& s)
 	}
 	if (s.options.nodriver)
 	{
-		falco_logger::log(falco_logger::level::WARNING, "DEPRECATION NOTICE: the '--nodriver' command line option is deprecated and will be removed in Falco 0.38! Set 'engine.kind: none' instead in falco.yaml\n");
-		s.config->m_engine_mode =  engine_kind_t::NONE;
+		falco_logger::log(falco_logger::level::WARNING, "DEPRECATION NOTICE: the '--nodriver' command line option is deprecated and will be removed in Falco 0.38! Set 'engine.kind: nodriver' instead in falco.yaml\n");
+		s.config->m_engine_mode =  engine_kind_t::NODRIVER;
 	}
 	if (!s.options.capture_file.empty())
 	{
