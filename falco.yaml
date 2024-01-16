@@ -497,7 +497,7 @@ buffered_outputs: false
 # deploying it in production.
 rule_matching: first
 
-# [Experimental] `outputs_queue`
+# [Stable] `outputs_queue`
 #
 # Falco utilizes tbb::concurrent_bounded_queue for handling outputs, and this parameter
 # allows you to customize the queue capacity. Please refer to the official documentation:
