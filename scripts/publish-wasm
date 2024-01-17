@@ -24,7 +24,7 @@ if [ -z "${file}" ]; then
     usage
 fi
 
-repo="dev-wasm" 
+repo="wasm-dev" 
 
 # settings
 s3_bucket_repo="s3://falco-distribution/packages/${repo}"
