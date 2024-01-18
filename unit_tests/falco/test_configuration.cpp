@@ -209,6 +209,30 @@ TEST(Configuration, configuration_include_files)
 
 	ASSERT_ANY_THROW(conf.load_from_file("main.yaml"));
 
+	/* Test that a single file can be included as a scalar (thanks to get_sequence_from_node magic)*/
+	const std::string main_conf_yaml_no_list =
+		"includes: conf_2.yaml\n"
+		"foo: bar\n"
+		"base_value:\n"
+		"    id: 1\n"
+		"    name: foo\n";
+	outfile.open("main.yaml");
+	outfile << main_conf_yaml_no_list;
+	outfile.close();
+
+	ASSERT_NO_THROW(conf.load_from_file("main.yaml"));
+
+	ASSERT_TRUE(conf.is_defined("foo"));
+	ASSERT_EQ(conf.get_scalar<std::string>("foo", ""), "bar");
+	ASSERT_TRUE(conf.is_defined("base_value.id"));
+	ASSERT_EQ(conf.get_scalar<int>("base_value.id", 0), 1);
+	ASSERT_TRUE(conf.is_defined("base_value.name"));
+	ASSERT_EQ(conf.get_scalar<std::string>("base_value.name", ""), "foo");
+	ASSERT_TRUE(conf.is_defined("foo2"));
+	ASSERT_EQ(conf.get_scalar<std::string>("foo2", ""), "bar2");
+	ASSERT_TRUE(conf.is_defined("base_value_2.id"));
+	ASSERT_EQ(conf.get_scalar<int>("base_value_2.id", 0), 2);
+	
 	// Cleanup everything
 	std::filesystem::remove("main.yaml");
 	std::filesystem::remove("conf_2.yaml");
