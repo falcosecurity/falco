@@ -1,4 +1,4 @@
-# On Host Anomaly Detection Framework
+# On Host Anomaly Detection Framework - New `libadetect` Plugin
 
 ## Motivation
 
@@ -6,7 +6,7 @@
 
 Feel that light breeze? That is the continued advancement of cloud native security blowing steady. But despite our progress, threat actors are outpacing our innovation constantly finding new ways to thwart and tornado past our achievements — rule-based detections focus on what we *think* attackers will do, not on what they *are* doing and generate enough alerts to bury security analysts in a sandstorm of poor signal-to-noise. Can this dynamic be blown back to shift the information asymmetry in favor of defenders?
 
-This framework lays the foundation on how to create high-value, kernel signals that are difficult to bypass  - but not in the traditional way. Advanced data analytics is an emerging crosswind that enables us to soar past attackers by detecting deviations in current behavior from past behavior. 
+This framework lays the foundation on how to create high-value, kernel signals that are difficult to bypass - but not in the traditional way. Advanced data analytics is an emerging crosswind that enables us to soar past attackers by detecting deviations in current behavior from past behavior. 
 
 ## Benefits to the Ecosystem
 
@@ -22,7 +22,7 @@ When Falco processes events in userspace, its rules engine filters the events wh
 
 To achieve this, end users define a "behavior profile" in the configuration by combining existing event fields such as process name, file descriptor (fd), executable path, parent lineage, cmdline, and others. During event parsing on the hot path, Falco compresses and stores this information in a "filter" - an efficient probabilistic data structure that optimizes space, time, robustness and accuracy. As time progresses, Falco provides more accurate estimates of application behavior counts and identifies events as rare or heavy hitters. Instead of analyzing the original event stream, you can write Falco rules based on pre-filtered data. 
 
-This approach enables a novel threat detection framework that incorporates the concept of abnormal application behavior derived and observed in a data-driven fashion. It complements the operator's expertise and extends capabilities similar to our current practices. The new capability draws inspiration from big data stream and database query optimizations, ensuring that Falco maintains a streamlined real-time one-pass stream with zero allocations.
+This approach introduces a novel threat detection framework that analyzes abnormal application behavior in real-time, derived and observed in a data-driven fashion, without requiring operator reconfiguration of Falco. It complements the operator's expertise and extends capabilities similar to our current practices. The new capability draws inspiration from big data stream and database query optimizations, ensuring that Falco maintains a streamlined real-time one-pass stream with zero allocations.
 
 Similar to Falco rules, the analysis of events may require multiple behavior profiles of different dimensions based on sets of events. These profiles can either vote in parallel or in a cascading fashion, a common practice in established algorithms. This is just the beginning and and paves the way for more sophisticated approaches, such as running Falco in a DAST-like capacity to build a pre-state pattern file on a workload with test data and soften the cold-start via distributing it to production.
 
@@ -42,11 +42,11 @@ Lastly, the value proposition of conducting real-time anomaly analysis on the ho
 
 ## Initial Scope
 
-The initial scope is to implement the Count Min Sketch algorithm using n shared sketches and expose its count estimates as new filterchecks for use in Falco rules. An MVP can be explored in this libs draft PR [wip: new(userspace/libsinsp): MVP CountMinSketch Powered Probabilistic Counting and Filtering](https://github.com/falcosecurity/libs/pull/1453). Moreover, the initial anomaly detection framework will include a transparent plugin user interface for defining application behavior profiles and utilizing sketch count estimates in Falco rules. The primary direct benefit lies in establishing a safety boundary for Falco rules in production environments, allowing for broader rule monitoring while preventing Falco rules from blowing up in production.
+The initial scope is to implement the Count Min Sketch algorithm using n shared sketches and expose its count estimates as new filterchecks for use in Falco rules. An MVP can be explored in this libs draft PR [wip: new(userspace/libsinsp): MVP CountMinSketch Powered Probabilistic Counting and Filtering](https://github.com/falcosecurity/libs/pull/1453). Moreover, the initial anomaly detection framework will include a transparent `plugin` user interface for defining application behavior profiles and utilizing sketch count estimates in Falco rules. The primary direct benefit lies in establishing a safety boundary for Falco rules in production environments, allowing for broader rule monitoring while preventing Falco rules from blowing up in production.
 
 Furthermore, The Falco Project will provide adopters with valuable initial use cases, recommended thresholds, and callouts for known issues. One important consideration is the identification of SRE anti-patterns. Another consideration is to provide *very clear* guidance to adopters for setting and configuring parameters, including recommended minimums. Additionally, guidance should be provided on indicators to look for in order to determine if adjustments need to be made and in which direction, particularly when defining application behavior profiles.
 
-## High-Level Technical Design
+## High-Level Technical Design of a New `libadetect` Plugin
 
 This document provides a high-level proposal with limited technical details.
 
@@ -64,25 +64,36 @@ Technical details and implications are extensively covered in numerous research 
 
 *Plumbing and Interface*
 
-The ultimate goal is to introduce these new capabilities as plugin. A significant amount of work will be dedicated to addressing the necessary plumbing required to support the new framework and integrate it with the existing rules filtering and plugin mechanisms. This integration aims to provide a user-friendly interface that allows users to easily configure and utilize the opt-in framework for different use cases. 
+The ultimate goal is to introduce these new capabilities as plugin. A significant amount of work will be dedicated to addressing the necessary plumbing required to support the new framework and integrate it with the existing rules filtering, `libsinsp` and `plugin` mechanisms. This integration aims to provide a user-friendly interface that allows users to easily configure and utilize the opt-in framework for different use cases. 
 
 For instance, the interface should empower end users to define error tolerances and, consequently, sketch dimensions, along with other tuning parameters, bounds, and settings. Ultimately, it should enable the definition of n behavior profiles to facilitate the use of count estimates in Falco rules.
 
 ## What this Framework is Not
 
-- This framework is not intended to function as an event aggregator or enhancer, such as netflow data. Its purpose is solely to act as an anomaly filter for individual events, leveraging the existing sinsp state and current rules engine.
+- This framework is not intended to function as an event aggregator or enhancer, such as netflow data. Its sole purpose is to serve as an anomaly filter for individual events, utilizing the existing sinsp state, the newly built state through sketches, and the current rules engine.
 - The development of this framework will not be swayed by overly specific use cases that limit its broader adoption and coverage.
 - While it may not offer flawless attack threat detection from the beginning, it serves as an initial step towards comprehensive event logging and analysis, capturing all events that exhibit any form of new or changing behavior we observe. Therefore, initially, the greatest value lies in combining it with regular Falco rules based on the anomaly-filtered event stream.
 
 ## Why now?
 
-Over the past several Falco releases, significant improvements have been made in terms of stability, configurability, and capabilities. Now is an opportune time to enhance the already proven capabilities of threat detection. In case you haven't noticed, advanced data analytics is quite the big deal these days, and we can leverage robust established algorithms used in real production settings across various industries. The novelty lies in addressing the specific data encoding challenges unique to the field of cybersecurity.
+In case you haven't noticed, advanced data analytics is quite the big deal these days, and we can leverage robust established algorithms used in real production settings across various industries. The novelty lies in addressing the specific data encoding challenges unique to the field of cybersecurity, not re-inventing already established algorithms.
+
+Furthermore, over the past several Falco releases, we have significantly improved stability, configurability, and capabilities. Notably, the plugins system has been refined over the past year to efficiently access the complete `libsinsp` state, now also featuring an improved CPP SDK. Additionally, it now seamlessly collaborates with the existing primary syscalls event source, deviating from its original purpose of processing new data sources. This improvement allows for more intuitive functionality, as demonstrated by the new `k8smeta` plugin. Now is the opportune time to further enhance proven threat detection capabilities and expand the plugins system even more. 
 
 *Initial community feedback concerning the KubeCon NA 2023 Full Talk*
 
-Overall, the feedback for [A Wind of Change for Threat Detection](https://kccncna2023.sched.com/event/1R2mX/a-wind-of-change-for-threat-detection-melissa-kilby-apple) was very positive and appreciative, particularly regarding the direct real-life benefits (a safety boundary for Falco rules enabling broader monitoring that won't blow up in production). Suggestions for future development included integrating the sketch directly into the kernel driver (which would be a remarkable achievement if feasible) and inquiries about the feature's availability timeline.
+- Overall, the feedback for [A Wind of Change for Threat Detection](https://kccncna2023.sched.com/event/1R2mX/a-wind-of-change-for-threat-detection-melissa-kilby-apple) was very positive and appreciative, particularly regarding the direct real-life benefits (a safety boundary for Falco rules enabling broader monitoring that won't blow up in production). Suggestions for future development included integrating the sketch directly into the kernel driver (which would be a remarkable achievement if feasible). Lastly, people have inquired about the timeline for the availability of this feature.
+- Refer to the [KubeCon NA 2023 Slides](https://static.sched.com/hosted_files/kccncna2023/c5/A%20Wind%20of%20Change%20for%20Threat%20Detection%20-%20Melissa%20Kilby%20-%20KubeCon%20NA%202023.pdf) or [attached PDF](kubeconna23-anomaly-detection-slides.pdf) for more information. Here's the [Talk Recording](https://www.youtube.com/watch?v=1y1m9Vz93Yo) (please note that the first four minutes of the video are missing, but the slides and audio recordings are complete).
 
-Refer to the [KubeCon NA 2023 Slides](https://static.sched.com/hosted_files/kccncna2023/c5/A%20Wind%20of%20Change%20for%20Threat%20Detection%20-%20Melissa%20Kilby%20-%20KubeCon%20NA%202023.pdf) or [attached PDF](kubeconna23-anomaly-detection-slides.pdf) for more information. Here's the [Talk Recording](https://www.youtube.com/watch?v=1y1m9Vz93Yo) (please note that the first four minutes of the video are missing, but the slides and audio recordings are complete).
+*Falco Community Call - January 17, 2024*
+
+See dedicated [Anomaly Detector Library Plugin `libadetect` HackMD](https://hackmd.io/Ss0_1avySUuxArBQm-oaGQ?view):
+
+- While not blocking the start of the plugin or an alpha dev version, there's feedback from @jasondellaluce that plugins cannot access the existing `libsinsp` filtercheck. It would be advantageous to enable this access to avoid reimplementing them and the constant risk of falling out of sync with `libs`. @leogr mentioned that supporting this over time should be possible.
+- We have discussed the plugins config and are currently undecided on whether the definition of the behavior profile per sketch, meaning the fields that are string concatenated together and counted, should reside in the plugins config or in the rules files. The latter would potentially require a new rules component. Final decisions will be deferred to a later stage to ensure the config is intuitive, and we want to guarantee proper sketch definition when attempting to run Falco rules using the `libadetect` plugin.  
+- One use case, namely determining if a rule has previously occurred in a container, could be addressed by this framework as well. However, we are currently unsure how to expose the rule names, as `libsinsp` is not aware of them. This may be an optimization we can address later and does not block the development of an initial version.
+- Future use cases might involve counting distinct values, utilizing the hyper log log algorithm. However, there will be additional technical challenges to overcome.
+- Finally, just to reiterate some feedback from the KubeCon talk, there's a suggestion that, perhaps in the future, we could pass intelligence back and forth between the drivers and userspace. This idea has been discussed independently, especially in the context of kernel-side filtering. However, such capabilities would be a long-term consideration.
 
 ## Proposed Timelines
 
