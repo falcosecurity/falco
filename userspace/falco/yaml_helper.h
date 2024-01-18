@@ -31,6 +31,7 @@ limitations under the License.
 #include <set>
 #include <iostream>
 #include <fstream>
+#include <filesystem>
 
 #include "config_falco.h"
 
@@ -83,7 +84,7 @@ public:
 	void load_from_string(const std::string& input)
 	{
 		m_root = YAML::Load(input);
-		pre_process_env_vars();
+		pre_process_env_vars(m_root);
 	}
 
 	/**
@@ -91,8 +92,52 @@ public:
 	*/
 	void load_from_file(const std::string& path)
 	{
-		m_root = YAML::LoadFile(path);
-		pre_process_env_vars();
+		m_root = load_from_file_int(path);
+
+		const auto ppath = std::filesystem::path(path);
+		const auto config_folder = ppath.std::filesystem::path::parent_path();
+		// Parse files to be included
+		std::vector<std::string> include_files;
+		get_sequence<std::vector<std::string>>(include_files, "includes");
+		for(const std::string& include_file : include_files)
+		{
+			// If user specifies a relative include file,
+			// make it relative to main config file folder,
+			// instead of cwd.
+			auto include_file_path = std::filesystem::path(include_file);
+			if (!include_file_path.is_absolute())
+			{
+				include_file_path = config_folder;
+				include_file_path += include_file;
+			}
+			auto loaded_nodes = load_from_file_int(include_file_path.string());
+			for(auto n : loaded_nodes)
+			{
+				/*
+		                 * To avoid recursion hell,
+				 * we don't support `includes` directives from included config files
+				 * (that use load_from_file_int recursively).
+				 */
+				const auto &key = n.first.Scalar();
+				if (key == "includes")
+				{
+					throw std::runtime_error("Config error: 'includes' directive in included config file " + include_file + ".");
+				}
+
+				YAML::Node node;
+				get_node(node, key);
+				if (!node.IsDefined())
+				{
+					// There was no such node in root config file; proceed.
+					node = n.second;
+				}
+				else
+				{
+					throw std::runtime_error("Config error: included config files cannot override root config nodes: "
+								 + include_file + " tried to override '" + key + "'.");
+				}
+			}
+		}
 	}
 
 	/**
@@ -153,13 +198,20 @@ public:
 private:
 	YAML::Node m_root;
 
+	YAML::Node load_from_file_int(const std::string& path)
+	{
+		auto root = YAML::LoadFile(path);
+		pre_process_env_vars(root);
+		return root;
+	}
+
 	/*
 	 * When loading a yaml file,
 	 * we immediately pre process all scalar values through a visitor private API,
 	 * and resolve any "${env_var}" to its value;
 	 * moreover, any "$${str}" is resolved to simply "${str}".
 	 */
-	void pre_process_env_vars()
+	void pre_process_env_vars(YAML::Node& root)
 	{
 		yaml_visitor([](YAML::Node &scalar) {
 				auto value = scalar.as<std::string>();
@@ -215,7 +267,7 @@ private:
 					start_pos = value.find("$", start_pos);
 				}
 				scalar = value;
-			})(m_root);
+			})(root);
 	}
 
 	/**

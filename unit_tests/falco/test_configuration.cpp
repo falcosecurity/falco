@@ -109,6 +109,113 @@ TEST(Configuration, modify_yaml_fields)
 	ASSERT_EQ(conf.get_scalar<bool>(key, false), true);
 }
 
+TEST(Configuration, configuration_include_files)
+{
+	const std::string main_conf_yaml =
+		"includes:\n"
+		"  - conf_2.yaml\n"
+		"  - conf_3.yaml\n"
+		"foo: bar\n"
+		"base_value:\n"
+		"    id: 1\n"
+		"    name: foo\n";
+	const std::string conf_yaml_2 =
+		"includes:\n"
+		"  - conf_4.yaml\n"
+		"foo2: bar2\n"
+		"base_value_2:\n"
+		"    id: 2\n";
+	const std::string conf_yaml_3 =
+		"foo3: bar3\n"
+		"base_value_3:\n"
+		"    id: 3\n"
+		"    name: foo3\n";
+
+	std::ofstream outfile("main.yaml");
+	outfile << main_conf_yaml;
+	outfile.close();
+
+	outfile.open("conf_2.yaml");
+	outfile << conf_yaml_2;
+	outfile.close();
+
+	outfile.open("conf_3.yaml");
+	outfile << conf_yaml_3;
+	outfile.close();
+
+	yaml_helper conf;
+
+	/* Test that a secondary config file is not able to include anything, triggering an exception. */
+	const std::string conf_yaml_4 =
+		"base_value_4:\n"
+		"    id: 4\n";
+
+	outfile.open("conf_4.yaml");
+	outfile << conf_yaml_4;
+	outfile.close();
+
+	ASSERT_ANY_THROW(conf.load_from_file("main.yaml"));
+
+	/* Test that every included config file was correctly parsed */
+	const std::string conf_yaml_2_ok =
+		"foo2: bar2\n"
+		"base_value_2:\n"
+		"    id: 2\n";
+
+	outfile.open("conf_2.yaml");
+	outfile << conf_yaml_2_ok;
+	outfile.close();
+
+	ASSERT_NO_THROW(conf.load_from_file("main.yaml"));
+
+	ASSERT_TRUE(conf.is_defined("foo"));
+	ASSERT_EQ(conf.get_scalar<std::string>("foo", ""), "bar");
+	ASSERT_TRUE(conf.is_defined("base_value.id"));
+	ASSERT_EQ(conf.get_scalar<int>("base_value.id", 0), 1);
+	ASSERT_TRUE(conf.is_defined("base_value.name"));
+	ASSERT_EQ(conf.get_scalar<std::string>("base_value.name", ""), "foo");
+	ASSERT_TRUE(conf.is_defined("foo2"));
+	ASSERT_EQ(conf.get_scalar<std::string>("foo2", ""), "bar2");
+	ASSERT_TRUE(conf.is_defined("base_value_2.id"));
+	ASSERT_EQ(conf.get_scalar<int>("base_value_2.id", 0), 2);
+	ASSERT_TRUE(conf.is_defined("foo3"));
+	ASSERT_EQ(conf.get_scalar<std::string>("foo3", ""), "bar3");
+	ASSERT_TRUE(conf.is_defined("base_value_3.id"));
+	ASSERT_EQ(conf.get_scalar<int>("base_value_3.id", 0), 3);
+	ASSERT_TRUE(conf.is_defined("base_value_3.name"));
+	ASSERT_EQ(conf.get_scalar<std::string>("base_value_3.name", ""), "foo3");
+
+	/* Test that included config files are not able to override configs from main file */
+	const std::string conf_yaml_3_override =
+		"base_value:\n"
+		"    id: 3\n";
+	outfile.open("conf_3.yaml");
+	outfile << conf_yaml_3_override;
+	outfile.close();
+
+	ASSERT_ANY_THROW(conf.load_from_file("main.yaml"));
+
+	/* Test that including an unexistent file triggers an exception */
+	const std::string main_conf_unexistent_yaml =
+		"includes:\n"
+		"  - conf_5.yaml\n"
+		"base_value:\n"
+		"    id: 1\n"
+		"    name: foo\n";
+
+	outfile.open("main.yaml");
+	outfile << main_conf_unexistent_yaml;
+	outfile.close();
+
+	ASSERT_ANY_THROW(conf.load_from_file("main.yaml"));
+
+	// Cleanup everything
+	std::filesystem::remove("main.yaml");
+	std::filesystem::remove("conf_2.yaml");
+	std::filesystem::remove("conf_3.yaml");
+	std::filesystem::remove("conf_4.yaml");
+}
+
 TEST(Configuration, configuration_environment_variables)
 {
     // Set an environment variable for testing purposes
