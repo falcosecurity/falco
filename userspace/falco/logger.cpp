@@ -112,9 +112,9 @@ void falco_logger::set_sinsp_logging(bool enable, const std::string& severity, c
 	if (enable)
 	{
 		s_sinsp_logger_prefix = prefix;
-		g_logger.set_severity(decode_sinsp_severity(severity));
-		g_logger.disable_timestamps();
-		g_logger.add_callback_log(
+		libsinsp_logger()->set_severity(decode_sinsp_severity(severity));
+		libsinsp_logger()->disable_timestamps();
+		libsinsp_logger()->add_callback_log(
 			[](std::string&& str, const sinsp_logger::severity sev)
 			{
 				// note: using falco_logger::level ensures that the sinsp
@@ -126,7 +126,7 @@ void falco_logger::set_sinsp_logging(bool enable, const std::string& severity, c
 	}
 	else
 	{
-		g_logger.remove_callback_log();
+		libsinsp_logger()->remove_callback_log();
 	}
 }
 
