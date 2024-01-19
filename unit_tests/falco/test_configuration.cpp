@@ -185,7 +185,38 @@ TEST(Configuration, configuration_include_files)
 	ASSERT_TRUE(conf.is_defined("base_value_3.name"));
 	ASSERT_EQ(conf.get_scalar<std::string>("base_value_3.name", ""), "foo3");
 
-	/* Test that included config files are not able to override configs from main file */
+	/*
+	 * Test that when main config file is in a different folder,
+	 * other config files are searched relative to its folder,
+	 * when they are specified as relative paths
+	 */
+	const auto temp_main = std::filesystem::temp_directory_path() / "main.yaml";
+	const std::string main_conf_yaml_relative_absolute =
+		"includes:\n"
+		"  - conf_2.yaml\n"
+		"  - " + std::filesystem::current_path().string() + "/conf_3.yaml\n"
+		"foo: bar\n"
+		"base_value:\n"
+		"    id: 1\n"
+		"    name: foo\n";
+	outfile.open(temp_main.string());
+	outfile << main_conf_yaml_relative_absolute;
+	outfile.close();
+
+	ASSERT_NO_THROW(conf.load_from_file(temp_main.string()));
+
+	ASSERT_TRUE(conf.is_defined("foo"));
+	ASSERT_EQ(conf.get_scalar<std::string>("foo", ""), "bar");
+	ASSERT_TRUE(conf.is_defined("base_value.id"));
+	ASSERT_EQ(conf.get_scalar<int>("base_value.id", 0), 1);
+	ASSERT_TRUE(conf.is_defined("base_value.name"));
+	ASSERT_EQ(conf.get_scalar<std::string>("base_value.name", ""), "foo");
+	ASSERT_FALSE(conf.is_defined("foo2")); // failed to include the config file since it is relative and is not under /tmp
+	ASSERT_FALSE(conf.is_defined("base_value_2")); // failed to include the config file since it is relative and is not under /tmp
+	ASSERT_TRUE(conf.is_defined("base_value_3.id")); // conf_3 was correctly included since it is absolute
+	ASSERT_EQ(conf.get_scalar<int>("base_value_3.id", 0), 3);
+
+	/* Test that included config files are able to override configs from main file */
 	const std::string conf_yaml_3_override =
 		"base_value:\n"
 		"    id: 3\n";
@@ -193,9 +224,19 @@ TEST(Configuration, configuration_include_files)
 	outfile << conf_yaml_3_override;
 	outfile.close();
 
-	ASSERT_ANY_THROW(conf.load_from_file("main.yaml"));
+	ASSERT_NO_THROW(conf.load_from_file("main.yaml"));
+	ASSERT_TRUE(conf.is_defined("foo"));
+	ASSERT_EQ(conf.get_scalar<std::string>("foo", ""), "bar");
+	ASSERT_TRUE(conf.is_defined("base_value.id"));
+	ASSERT_EQ(conf.get_scalar<int>("base_value.id", 0), 3); // overridden!
+	ASSERT_FALSE(conf.is_defined("base_value.name")); // no more present since entire `base_value` block was overridden
+	ASSERT_TRUE(conf.is_defined("foo2"));
+	ASSERT_EQ(conf.get_scalar<std::string>("foo2", ""), "bar2");
+	ASSERT_TRUE(conf.is_defined("base_value_2.id"));
+	ASSERT_EQ(conf.get_scalar<int>("base_value_2.id", 0), 2);
+	ASSERT_FALSE(conf.is_defined("base_value_3.id")); // not defined
 
-	/* Test that including an unexistent file triggers an exception */
+	/* Test that including an unexistent file just skips it */
 	const std::string main_conf_unexistent_yaml =
 		"includes:\n"
 		"  - conf_5.yaml\n"
@@ -207,9 +248,13 @@ TEST(Configuration, configuration_include_files)
 	outfile << main_conf_unexistent_yaml;
 	outfile.close();
 
-	ASSERT_ANY_THROW(conf.load_from_file("main.yaml"));
+	ASSERT_NO_THROW(conf.load_from_file("main.yaml"));
+	ASSERT_TRUE(conf.is_defined("base_value.id"));
+	ASSERT_EQ(conf.get_scalar<int>("base_value.id", 0), 1);
+	ASSERT_TRUE(conf.is_defined("base_value.name"));
+	ASSERT_EQ(conf.get_scalar<std::string>("base_value.name", ""), "foo");
 
-	/* Test that a single file can be included as a scalar (thanks to get_sequence_from_node magic)*/
+	/* Test that a single file can be included as a scalar (thanks to get_sequence_from_node magic) */
 	const std::string main_conf_yaml_no_list =
 		"includes: conf_2.yaml\n"
 		"foo: bar\n"
@@ -232,12 +277,13 @@ TEST(Configuration, configuration_include_files)
 	ASSERT_EQ(conf.get_scalar<std::string>("foo2", ""), "bar2");
 	ASSERT_TRUE(conf.is_defined("base_value_2.id"));
 	ASSERT_EQ(conf.get_scalar<int>("base_value_2.id", 0), 2);
-	
+
 	// Cleanup everything
 	std::filesystem::remove("main.yaml");
 	std::filesystem::remove("conf_2.yaml");
 	std::filesystem::remove("conf_3.yaml");
 	std::filesystem::remove("conf_4.yaml");
+	std::filesystem::remove(temp_main.string());
 }
 
 TEST(Configuration, configuration_environment_variables)
