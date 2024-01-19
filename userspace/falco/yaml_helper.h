@@ -95,7 +95,7 @@ public:
 		m_root = load_from_file_int(path);
 
 		const auto ppath = std::filesystem::path(path);
-		const auto config_folder = ppath.std::filesystem::path::parent_path();
+		const auto config_folder = ppath.parent_path();
 		// Parse files to be included
 		std::vector<std::string> include_files;
 		get_sequence<std::vector<std::string>>(include_files, "includes");
@@ -107,35 +107,32 @@ public:
 			auto include_file_path = std::filesystem::path(include_file);
 			if (!include_file_path.is_absolute())
 			{
-				include_file_path = config_folder;
-				include_file_path += include_file;
+				include_file_path = config_folder / include_file;
 			}
-			auto loaded_nodes = load_from_file_int(include_file_path.string());
-			for(auto n : loaded_nodes)
+			if (std::filesystem::exists(include_file_path) && std::filesystem::is_regular_file(include_file_path))
 			{
-				/*
-		                 * To avoid recursion hell,
-				 * we don't support `includes` directives from included config files
-				 * (that use load_from_file_int recursively).
-				 */
-				const auto &key = n.first.Scalar();
-				if (key == "includes")
+				auto loaded_nodes = load_from_file_int(include_file_path.string());
+				for(auto n : loaded_nodes)
 				{
-					throw std::runtime_error("Config error: 'includes' directive in included config file " + include_file + ".");
+					/*
+			                 * To avoid recursion hell,
+					 * we don't support `includes` directives from included config files
+					 * (that use load_from_file_int recursively).
+					 */
+					const auto &key = n.first.Scalar();
+					if (key == "includes")
+					{
+						throw std::runtime_error("Config error: 'includes' directive in included config file " + include_file + ".");
+					}
+					// We allow to override keys.
+					// We don't need to use `get_node()` here,
+					// since key is a top-level one.
+					m_root[key] = n.second;
 				}
-
-				YAML::Node node;
-				get_node(node, key);
-				if (!node.IsDefined())
-				{
-					// There was no such node in root config file; proceed.
-					node = n.second;
-				}
-				else
-				{
-					throw std::runtime_error("Config error: included config files cannot override root config nodes: "
-								 + include_file + " tried to override '" + key + "'.");
-				}
+			}
+			else
+			{
+				falco_logger::log(falco_logger::level::WARNING, "Included config file unexistent or wrong type: " + include_file_path.string());
 			}
 		}
 	}
