@@ -181,6 +181,7 @@ static bool resolve_list(std::string& cnd, const falco_list& list)
 {
 	static std::string blanks = " \t\n\r";
 	static std::string delims = blanks + "(),=";
+	std::string tmp;
 	std::string new_cnd;
 	size_t start, end;
 	bool used = false;
@@ -212,7 +213,9 @@ static bool resolve_list(std::string& cnd, const falco_list& list)
 				{
 					sub += ", ";
 				}
-				sub += v;
+				tmp = v;
+				quote_item(tmp);
+				sub += tmp;
 			}
 			// if substituted list is empty, we need to
 			// remove a comma from the left or the right
@@ -339,7 +342,6 @@ void rule_loader::compiler::compile_list_infos(
 		const collector& col,
 		indexed_vector<falco_list>& out) const
 {
-	std::string tmp;
 	std::list<std::string> used;
 	falco_list v;
 	for (const auto &list : col.lists())
@@ -352,17 +354,14 @@ void rule_loader::compiler::compile_list_infos(
 			if (ref && ref->index < list.visibility)
 			{
 				used.push_back(ref->name);
-				for (auto val : ref->items)
+				for (const auto &val : ref->items)
 				{
-					quote_item(val);
 					v.items.push_back(val);
 				}
 			}
 			else
 			{
-				tmp = item;
-				quote_item(tmp);
-				v.items.push_back(tmp);
+				v.items.push_back(item);
 			}
 		}
 		v.used = false;
