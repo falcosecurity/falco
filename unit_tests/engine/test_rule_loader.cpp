@@ -941,3 +941,30 @@ TEST_F(engine_loader_test, required_engine_version_invalid)
 	ASSERT_FALSE(load_rules(rules_content, "rules.yaml"));
 	ASSERT_TRUE(check_error_message("Unable to parse engine version"));
 }
+
+// checks for issue described in https://github.com/falcosecurity/falco/pull/3028
+TEST_F(engine_loader_test, list_value_with_escaping)
+{
+    std::string rules_content = R"END(
+- list: my_list
+  items: [non_escaped_val, "escaped val"]
+)END";
+
+	ASSERT_TRUE(load_rules(rules_content, "rules.yaml"));
+	ASSERT_TRUE(m_load_result->successful());
+  ASSERT_TRUE(m_load_result->has_warnings()); // a warning for the unused list
+
+  auto rule_description = m_engine->describe_rule(nullptr, {});
+  ASSERT_TRUE(m_load_result->successful());
+  ASSERT_EQ(rule_description["rules"].size(), 0);
+  ASSERT_EQ(rule_description["macros"].size(), 0);
+  ASSERT_EQ(rule_description["lists"].size(), 1);
+
+  // escaped values must not be interpreted as list refs by mistake
+  ASSERT_EQ(rule_description["lists"][0]["details"]["lists"].size(), 0);
+
+  // values should be escaped correctly
+  ASSERT_EQ(rule_description["lists"][0]["details"]["items_compiled"].size(), 2);
+  ASSERT_EQ(rule_description["lists"][0]["details"]["items_compiled"][0].template get<std::string>(), "non_escaped_val");
+  ASSERT_EQ(rule_description["lists"][0]["details"]["items_compiled"][1].template get<std::string>(), "escaped val");
+}
