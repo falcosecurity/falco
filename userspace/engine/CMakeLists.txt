@@ -39,7 +39,7 @@ PUBLIC
     ${LIBSCAP_INCLUDE_DIRS}
     ${LIBSINSP_INCLUDE_DIRS}
     ${PROJECT_BINARY_DIR}/userspace/engine
-    ${nlohmann_json_DIR}
+    ${nlohmann_json_INCLUDE_DIRS}
     ${TBB_INCLUDE_DIR}
     ${YAMLCPP_INCLUDE_DIR}
 )
