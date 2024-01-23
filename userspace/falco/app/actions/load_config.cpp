@@ -44,7 +44,7 @@ static falco::app::run_result apply_deprecated_options(falco::app::state& s)
 	if(s.config->m_min_priority == falco_common::PRIORITY_DEBUG)
 	{
 		falco_logger::log(falco_logger::level::WARNING,
-				"DEPRECATION NOTICE: 'syscall_event_drops' config is deprecated and will be removed in Falco 0.38! Use 'metrics' config instead. Note that the 'syscall_event_drops' config is enabled by default when the 'priority' is set to 'debug'. You can turn it off by setting the 'priority' to any higher level\n");
+				"DEPRECATION NOTICE: 'syscall_event_drops' config is deprecated and will be removed in Falco 0.38! If you rely on this config, use 'metrics.output_rule' along with 'metrics.kernel_event_counters_enabled' to monitor the number of drops. Note that the 'syscall_event_drops' config is enabled by default when the 'priority' is set to 'debug'. You can turn it off by setting the 'priority' to any higher level\n");
 	}
 
 	// Please note: is not possible to mix command line options and configs to obtain a configuration
