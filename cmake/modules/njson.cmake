@@ -19,8 +19,9 @@ if(USE_BUNDLED_NLOHMANN_JSON)
         CMAKE_ARGS -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${PROJECT_BINARY_DIR}/njson-prefix -DJSON_BuildTests=OFF -DBUILD_TESTING=OFF
     )
 
-    set(nlohmann_json_DIR ${PROJECT_BINARY_DIR}/njson-prefix/include)
+    set(nlohmann_json_INCLUDE_DIRS ${PROJECT_BINARY_DIR}/njson-prefix/include)
 else()
     find_package(nlohmann_json CONFIG REQUIRED)
+    get_target_property(nlohmann_json_INCLUDE_DIRS nlohmann_json::nlohmann_json INTERFACE_INCLUDE_DIRECTORIES)
     add_custom_target(njson)
 endif()
