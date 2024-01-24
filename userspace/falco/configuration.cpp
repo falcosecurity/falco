@@ -35,9 +35,10 @@ limitations under the License.
 
 #include "configuration.h"
 #include "logger.h"
-
+#include <iterator>
 #include <re2/re2.h>
-
+#include "valijson/adapters/yaml_cpp_adapters.hpp"
+#include "ValidationUtils.h"
 namespace fs = std::filesystem;
 
 // Reference: https://digitalfortress.tech/tips/top-15-commonly-used-regex/
@@ -177,38 +178,47 @@ void falco_configuration::load_engine_config(const std::string& config_name, con
 	}
 }
 
-std::unordered_set<std::string> extractKeys(const YAML::Node& node) {
-    std::unordered_set<std::string> keys;
 
-    for (auto it = node.begin(); it != node.end(); ++it) {
-        const auto& key = it->first.as<std::string>();
-        keys.insert(key);
-    }
+std::vector<std::string> fixedSchemaKeysVec = {
+"rules_file", "engine", "engine.kind", "engine.kmod", "engine.kmod.buf_size_preset", "engine.kmod.drop_failed_exit", "engine.ebpf", "engine.ebpf.probe", "engine.ebpf.buf_size_preset", "engine.ebpf.drop_failed_exit", "engine.modern_ebpf", "engine.modern_ebpf.cpus_for_each_buffer", "engine.modern_ebpf.buf_size_preset", "engine.modern_ebpf.drop_failed_exit", "engine.replay", "engine.replay.capture_file", "engine.gvisor", "engine.gvisor.config", "engine.gvisor.root", "load_plugins", "plugins", "plugins.name", "plugins.library_path", "plugins.init_config", "plugins.init_config.maxEventSize", "plugins.init_config.webhookMaxBatchSize", "plugins.init_config.sslCertificate", "plugins.open_params", "plugins.library_path", "watch_config_files", "time_format_iso_8601", "priority", "json_output", "json_include_output_property", "json_include_tags_property", "buffered_outputs", "rule_matching", "outputs_queue", "outputs_queue.capacity", "stdout_output", "stdout_output.enabled", "syslog_output", "syslog_output.enabled", "file_output", "file_output.enabled", "file_output.keep_alive", "file_output.filename", "http_output", "http_output.enabled", "http_output.url", "http_output.user_agent", "http_output.insecure", "http_output.ca_cert", "http_output.ca_bundle", "http_output.ca_path", "http_output.mtls", "http_output.client_cert", "http_output.client_key", "http_output.echo", "http_output.compress_uploads", "http_output.keep_alive", "program_output", "program_output.enabled", "program_output.keep_alive", "program_output.program", "grpc_output", "grpc_output.enabled", "grpc", "grpc.enabled", "grpc.bind_address", "grpc.threadiness", "webserver", "webserver.enabled", "webserver.threadiness", "webserver.listen_port", "webserver.listen_address", "webserver.k8s_healthz_endpoint", "webserver.ssl_enabled", "webserver.ssl_certificate", "log_stderr", "log_syslog", "log_level", "libs_logger", "libs_logger.enabled", "libs_logger.severity", "output_timeout", "syscall_event_timeouts", "syscall_event_timeouts.max_consecutives", "syscall_event_drops", "syscall_event_drops.threshold", "syscall_event_drops.actions", "syscall_event_drops.rate", "syscall_event_drops.max_burst", "syscall_event_drops.simulate_drops", "metrics", "metrics.enabled", "metrics.interval", "metrics.output_rule", "metrics.output_file", "metrics.resource_utilization_enabled", "metrics.state_counters_enabled", "metrics.kernel_event_counters_enabled", "metrics.libbpf_stats_enabled", "metrics.convert_memory_to_mb", "metrics.include_empty_values", "syscall_buf_size_preset", "syscall_drop_failed_exit", "base_syscalls", "base_syscalls.custom_set", "base_syscalls.repair", "modern_bpf", "modern_bpf.cpus_for_each_syscall_buffer"
 
-    return keys;
-}
+};
+valijson::adapters::YamlCppArray fixedSchemaArray;
 
-void validateLoadedYAML(const YAML::Node& loadedYAML, const std::unordered_set<std::string>& fixedSchemaKeys)
+for (const auto& key : fixedSchemaKeysVec) {
+    fixedSchemaArray.push_back(std::make_pair(key, YAML::Node()));
+} 
+
+valijson::adapters::YamlCppAdapter fixedSchemaAdapter(fixedSchemaArray);
+
+void validateKeysRecursive(const YAML::Node& node, const std::string& prefix, const std::unordered_set<std::string>& fixedSchemaKeys)
 {
-    std::unordered_set<std::string> loadedYAMLKeys = extractKeys(loadedYAML);
+    if (node.IsMap()) {
+        for (const auto& entry : node) {
+            std::string key = prefix + entry.first.as<std::string>();
 
-    // Check for keys in loaded YAML that are not in the fixed schema
-    for (const auto& key : loadedYAMLKeys) {
-        if (fixedSchemaKeys.find(key) == fixedSchemaKeys.end()) {
-            throw std::logic_error("Error: Key '" + key + "' does not exist in the fixed schema");
+            if (fixedSchemaKeys.find(key) == fixedSchemaKeys.end()) {
+                throw std::logic_error("Error: Key '" + key + "' is not allowed in the loaded YAML");
+            } 
+
+            validateKeysRecursive(entry.second, key + ".", fixedSchemaKeys);
         }
     }
 }
+
+void validateLoadedYAML(const YAML::Node& loadedYaml, const valijson::adapters::YamlCppAdapter& fixedSchemaAdapter)
+{
+    std::unordered_set<std::string> fixedSchemaKeys;
+
+    for (const auto& member : fixedSchemaAdapter.begin()) {
+        fixedSchemaKeys.insert(member.first);
+    }
+
+    validateKeysRecursive(loadedYaml, "", fixedSchemaKeys);
+}
+   
 void falco_configuration::load_yaml(const std::string& config_name, const yaml_helper& config)
-{   
-    YAML::Node fixedSchema = YAML::LoadFile("userspace/falco/fixed.yaml");
-	
-    // Extract keys from the fixed schema
-    std::unordered_set<std::string> fixedSchemaKeys = extractKeys(fixedSchema);
-
-    // Validate the loaded YAML against the fixed schema
-    validateLoadedYAML(config.get_node(), fixedSchemaKeys);
-
+{
 	load_engine_config(config_name, config);
 	m_log_level = config.get_scalar<std::string>("log_level", "info");
 
