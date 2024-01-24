@@ -140,7 +140,7 @@ spec:
           name: etc-fs
           readOnly: true
         {{- end -}}
-        {{- if and .Values.driver.enabled (eq .Values.driver.kind "kmod") }}
+        {{- if and .Values.driver.enabled (or (eq .Values.driver.kind "kmod") (eq .Values.driver.kind "module")) }}
         - mountPath: /host/dev
           name: dev-fs
           readOnly: true
@@ -238,7 +238,7 @@ spec:
       hostPath:
         path: /etc
     {{- end }}
-    {{- if and .Values.driver.enabled (eq .Values.driver.kind "kmod") }}
+    {{- if and .Values.driver.enabled (or (eq .Values.driver.kind "kmod") (eq .Values.driver.kind "module")) }}
     - name: dev-fs
       hostPath:
         path: /dev
@@ -349,7 +349,7 @@ spec:
   securityContext:
   {{- if .Values.driver.loader.initContainer.securityContext }}
     {{- toYaml .Values.driver.loader.initContainer.securityContext | nindent 4 }}
-  {{- else if eq .Values.driver.kind "kmod" }}
+  {{- else if (or (eq .Values.driver.kind "kmod") (eq .Values.driver.kind "module")) }}
     privileged: true
   {{- end }}
   volumeMounts:
@@ -378,7 +378,7 @@ spec:
 {{- define "falco.securityContext" -}}
 {{- $securityContext := dict -}}
 {{- if .Values.driver.enabled -}}
-  {{- if eq .Values.driver.kind "kmod" -}}
+  {{- if (or (eq .Values.driver.kind "kmod") (eq .Values.driver.kind "module")) -}}
     {{- $securityContext := set $securityContext "privileged" true -}}
   {{- end -}}
   {{- if eq .Values.driver.kind "ebpf" -}}
@@ -388,7 +388,7 @@ spec:
       {{- $securityContext := set $securityContext "privileged" true -}}
     {{- end -}}
   {{- end -}}
-  {{- if eq .Values.driver.kind "modern_ebpf" -}}
+  {{- if (or (eq .Values.driver.kind "modern_ebpf") (eq .Values.driver.kind "modern-bpf")) -}}
     {{- if .Values.driver.modernEbpf.leastPrivileged -}}
       {{- $securityContext := set $securityContext "capabilities" (dict "add" (list "BPF" "SYS_RESOURCE" "PERFMON" "SYS_PTRACE")) -}}
     {{- else -}}
