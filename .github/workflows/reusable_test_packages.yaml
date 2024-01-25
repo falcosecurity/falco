@@ -19,7 +19,7 @@ on:
 jobs:
   test-packages:
     # See https://github.com/actions/runner/issues/409#issuecomment-1158849936
-    runs-on: ${{ (inputs.arch == 'aarch64' && 'actuated-arm64-8cpu-16gb') || 'ubuntu-latest' }}
+    runs-on: ${{ (inputs.arch == 'aarch64' && 'actuated-arm64-8cpu-16gb') || 'ubuntu-22.04' }}
     steps:
       - name: Checkout
         uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
