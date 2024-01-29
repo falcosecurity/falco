@@ -29,13 +29,11 @@ falcoctl:
   config:
     artifact:
       install:
-        # -- Resolve the dependencies for artifacts.
-        resolveDeps: true
         # -- List of artifacts to be installed by the falcoctl init container.
-        refs: [falco-rules:2, k8saudit-rules:0.6]
+        refs: [falco-rules:3, k8saudit-rules:0.7]
       follow:
         # -- List of artifacts to be followed by the falcoctl sidecar container.
-        refs: [falco-rules:2, k8saudit-rules:0.6]
+        refs: [falco-rules:3, k8saudit-rules:0.7]
 
 services:
   - name: k8saudit-webhook
