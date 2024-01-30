@@ -137,7 +137,7 @@ jobs:
         run: |
           cp .github/release_template.md release-body.md
           LIBS_VERS=$(cat cmake/modules/falcosecurity-libs.cmake | grep 'set(FALCOSECURITY_LIBS_VERSION' | tail -n1 | grep -o '[[:digit:]]*\.[[:digit:]]*\.[[:digit:]]*')
-          DRIVER_VERS=$(cat cmake/modules/driver.cmake | grep 'set(DRIVER_VERSION' | tail -n1 | grep -o '[[:digit:]]*\.[[:digit:]]*\.[[:digit:]]*')
+          DRIVER_VERS=$(cat cmake/modules/driver.cmake | grep 'set(DRIVER_VERSION' | tail -n1 | grep -o '[[:digit:]]*\.[[:digit:]]*\.[[:digit:]]*+driver')
           sed -i s/LIBSVER/$LIBS_VERS/g release-body.md
           sed -i s/DRIVERVER/$DRIVER_VERS/g release-body.md
           
