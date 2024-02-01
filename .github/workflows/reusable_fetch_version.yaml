@@ -31,7 +31,7 @@ jobs:
       - name: Configure project
         run: |
           mkdir build && cd build
-          cmake -DUSE_BUNDLED_DEPS=On ..
+          cmake -DUSE_BUNDLED_DEPS=On -DUSE_DYNAMIC_LIBELF=Off ..
           
       - name: Load and store Falco version output
         id: store_version
