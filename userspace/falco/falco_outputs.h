@@ -20,7 +20,6 @@ limitations under the License.
 #include <memory>
 #include <map>
 
-#include <libsinsp/gen_filter.h>
 #include "falco_common.h"
 #include "falco_engine.h"
 #include "outputs.h"
@@ -59,7 +58,7 @@ public:
 		\brief Format then send the event to all configured outputs (`evt`
 		is an event that has matched some rule).
 	*/
-	void handle_event(gen_event *evt, std::string &rule, std::string &source,
+	void handle_event(sinsp_evt *evt, std::string &rule, std::string &source,
 			  falco_common::priority_type priority, std::string &format, std::set<std::string> &tags);
 
 	/*!

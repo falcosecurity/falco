@@ -22,6 +22,7 @@ limitations under the License.
 #include <string>
 #include <vector>
 #include <set>
+#include <list>
 
 namespace cxxopts { class Options; };
 

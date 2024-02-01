@@ -64,13 +64,13 @@ protected:
 		indexed_vector<falco_list>& lists,
 		const indexed_vector<rule_loader::macro_info>& macros,
 		const std::string& condition,
-		std::shared_ptr<gen_event_filter_factory> filter_factory,
+		std::shared_ptr<sinsp_filter_factory> filter_factory,
 		rule_loader::context cond_ctx,
 		rule_loader::context parent_ctx,
 		bool allow_unknown_fields,
 		indexed_vector<falco_macro>& macros_out,
 		std::shared_ptr<libsinsp::filter::ast::expr>& ast_out,
-		std::shared_ptr<gen_event_filter>& filter_out) const;
+		std::shared_ptr<sinsp_filter>& filter_out) const;
 
 private:
 	void compile_list_infos(

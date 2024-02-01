@@ -31,7 +31,7 @@ namespace
 class test_ruleset_factory : public evttype_index_ruleset_factory
 {
 public:
-	test_ruleset_factory(std::shared_ptr<gen_event_filter_factory> factory):
+	test_ruleset_factory(std::shared_ptr<sinsp_filter_factory> factory):
 		evttype_index_ruleset_factory(factory)
 	{
 		ruleset = evttype_index_ruleset_factory::new_ruleset();
@@ -54,9 +54,9 @@ TEST(AddSource, basic)
 	sinsp inspector;
 	sinsp_filter_check_list filterchecks;
 
-	auto filter_factory = std::shared_ptr<gen_event_filter_factory>(
+	auto filter_factory = std::shared_ptr<sinsp_filter_factory>(
 		new sinsp_filter_factory(&inspector, filterchecks));
-	auto formatter_factory = std::shared_ptr<gen_event_formatter_factory>(
+	auto formatter_factory = std::shared_ptr<sinsp_evt_formatter_factory>(
 		new sinsp_evt_formatter_factory(&inspector, filterchecks));
 	test_ruleset_factory *test_factory = new test_ruleset_factory(filter_factory);
 	auto ruleset_factory = std::shared_ptr<filter_ruleset_factory>(test_factory);

@@ -27,7 +27,6 @@ limitations under the License.
 #include <libsinsp/sinsp.h>
 #include <libsinsp/filter.h>
 #include <libsinsp/event.h>
-#include <libsinsp/gen_filter.h>
 
 /*!
 	\brief A filter_ruleset that indexes enabled rules by event type,
@@ -36,18 +35,18 @@ limitations under the License.
 class evttype_index_ruleset: public filter_ruleset
 {
 public:
-	evttype_index_ruleset(std::shared_ptr<gen_event_filter_factory> factory);
+	evttype_index_ruleset(std::shared_ptr<sinsp_filter_factory> factory);
 	virtual ~evttype_index_ruleset();
 
 	void add(
 		const falco_rule& rule,
-		std::shared_ptr<gen_event_filter> filter,
+		std::shared_ptr<sinsp_filter> filter,
 		std::shared_ptr<libsinsp::filter::ast::expr> condition) override;
 
 	void clear() override;
 
-	bool run(gen_event *evt, falco_rule& match, uint16_t ruleset_id) override;
-	bool run(gen_event *evt, std::vector<falco_rule>&matches, uint16_t ruleset_id) override;
+	bool run(sinsp_evt *evt, falco_rule& match, uint16_t ruleset_id) override;
+	bool run(sinsp_evt *evt, std::vector<falco_rule>&matches, uint16_t ruleset_id) override;
 
 	uint64_t enabled_count(uint16_t ruleset_id) override;
 
@@ -102,7 +101,7 @@ private:
 		falco_rule rule;
 		libsinsp::events::set<ppm_sc_code> sc_codes;
 		libsinsp::events::set<ppm_event_code> event_codes;
-		std::shared_ptr<gen_event_filter> filter;
+		std::shared_ptr<sinsp_filter> filter;
 	};
 
 	typedef std::list<std::shared_ptr<filter_wrapper>> filter_wrapper_list;
@@ -121,11 +120,11 @@ private:
 
 		// Evaluate an event against the ruleset and return the first rule
 		// that matched.
-		bool run(gen_event *evt, falco_rule& match);
+		bool run(sinsp_evt *evt, falco_rule& match);
 
 		//  Evaluate an event against the ruleset and return all the 
 		//	matching rules. 
-		bool run(gen_event *evt, std::vector<falco_rule>& matches);
+		bool run(sinsp_evt *evt, std::vector<falco_rule>& matches);
 
 		libsinsp::events::set<ppm_sc_code> sc_codes();
 
@@ -152,7 +151,7 @@ private:
 	// All filters added. The set of enabled filters is held in m_rulesets
 	std::set<std::shared_ptr<filter_wrapper>> m_filters;
 
-	std::shared_ptr<gen_event_filter_factory> m_filter_factory;
+	std::shared_ptr<sinsp_filter_factory> m_filter_factory;
 	std::vector<std::string> m_ruleset_names;
 };
 
@@ -160,7 +159,7 @@ class evttype_index_ruleset_factory: public filter_ruleset_factory
 {
 public:
 	inline evttype_index_ruleset_factory(
-		std::shared_ptr<gen_event_filter_factory> factory
+		std::shared_ptr<sinsp_filter_factory> factory
 	): m_filter_factory(factory) { }
 
 	inline std::shared_ptr<filter_ruleset> new_ruleset() override
@@ -171,5 +170,5 @@ public:
 	}
 
 private:
-	std::shared_ptr<gen_event_filter_factory> m_filter_factory;
+	std::shared_ptr<sinsp_filter_factory> m_filter_factory;
 };

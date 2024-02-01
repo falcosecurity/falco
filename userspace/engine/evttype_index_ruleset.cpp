@@ -20,7 +20,7 @@ limitations under the License.
 #include <algorithm>
 
 evttype_index_ruleset::evttype_index_ruleset(
-	std::shared_ptr<gen_event_filter_factory> f): m_filter_factory(f)
+	std::shared_ptr<sinsp_filter_factory> f): m_filter_factory(f)
 {
 }
 
@@ -111,7 +111,7 @@ uint64_t evttype_index_ruleset::ruleset_filters::num_filters()
 	return m_filters.size();
 }
 
-bool evttype_index_ruleset::ruleset_filters::run(gen_event *evt, falco_rule& match)
+bool evttype_index_ruleset::ruleset_filters::run(sinsp_evt *evt, falco_rule& match)
 {
     if(evt->get_type() < m_filter_by_event_type.size())
     {
@@ -138,7 +138,7 @@ bool evttype_index_ruleset::ruleset_filters::run(gen_event *evt, falco_rule& mat
 	return false;
 }
 
-bool evttype_index_ruleset::ruleset_filters::run(gen_event *evt, std::vector<falco_rule>& matches)
+bool evttype_index_ruleset::ruleset_filters::run(sinsp_evt *evt, std::vector<falco_rule>& matches)
 {
 	bool match_found = false;
 
@@ -194,7 +194,7 @@ libsinsp::events::set<ppm_event_code> evttype_index_ruleset::ruleset_filters::ev
 
 void evttype_index_ruleset::add(
 		const falco_rule& rule,
-		std::shared_ptr<gen_event_filter> filter,
+		std::shared_ptr<sinsp_filter> filter,
 		std::shared_ptr<libsinsp::filter::ast::expr> condition)
 {
 	try
@@ -332,7 +332,7 @@ uint64_t evttype_index_ruleset::enabled_count(uint16_t ruleset_id)
 	return m_rulesets[ruleset_id]->num_filters();
 }
 
-bool evttype_index_ruleset::run(gen_event *evt, falco_rule& match, uint16_t ruleset_id)
+bool evttype_index_ruleset::run(sinsp_evt *evt, falco_rule& match, uint16_t ruleset_id)
 {
 	if(m_rulesets.size() < (size_t)ruleset_id + 1)
 	{
@@ -342,7 +342,7 @@ bool evttype_index_ruleset::run(gen_event *evt, falco_rule& match, uint16_t rule
 	return m_rulesets[ruleset_id]->run(evt, match);
 }
 
-bool evttype_index_ruleset::run(gen_event *evt, std::vector<falco_rule>& matches, uint16_t ruleset_id)
+bool evttype_index_ruleset::run(sinsp_evt *evt, std::vector<falco_rule>& matches, uint16_t ruleset_id)
 {
 	if(m_rulesets.size() < (size_t)ruleset_id + 1)
 	{

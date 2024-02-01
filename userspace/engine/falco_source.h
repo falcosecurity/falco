@@ -49,8 +49,8 @@ struct falco_source
 	std::string name;
 	std::shared_ptr<filter_ruleset> ruleset;
 	std::shared_ptr<filter_ruleset_factory> ruleset_factory;
-	std::shared_ptr<gen_event_filter_factory> filter_factory;
-	std::shared_ptr<gen_event_formatter_factory> formatter_factory;
+	std::shared_ptr<sinsp_filter_factory> filter_factory;
+	std::shared_ptr<sinsp_evt_formatter_factory> formatter_factory;
 
 	// Used by the filter_ruleset interface. Filled in when a rule
 	// matches an event.

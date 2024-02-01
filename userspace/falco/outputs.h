@@ -21,7 +21,6 @@ limitations under the License.
 #include <map>
 
 #include "falco_common.h"
-#include <libsinsp/gen_filter.h>
 #include <nlohmann/json.hpp>
 
 namespace falco

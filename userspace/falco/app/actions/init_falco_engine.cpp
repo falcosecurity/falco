@@ -69,14 +69,14 @@ void add_source_to_engine(falco::app::state& s, const std::string& src)
 	auto& filterchecks = *src_info->filterchecks.get();
 	auto* inspector = src_info->inspector.get();
 
-	auto filter_factory = std::shared_ptr<gen_event_filter_factory>(
+	auto filter_factory = std::shared_ptr<sinsp_filter_factory>(
 		new sinsp_filter_factory(inspector, filterchecks));
-	auto formatter_factory = std::shared_ptr<gen_event_formatter_factory>(
+	auto formatter_factory = std::shared_ptr<sinsp_evt_formatter_factory>(
 		new sinsp_evt_formatter_factory(inspector, filterchecks));
 
 	if(s.config->m_json_output)
 	{
-		formatter_factory->set_output_format(gen_event_formatter::OF_JSON);
+		formatter_factory->set_output_format(sinsp_evt_formatter::OF_JSON);
 	}
 
 	src_info->engine_idx = s.engine->add_source(src, filter_factory, formatter_factory);
