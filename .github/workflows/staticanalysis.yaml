@@ -20,7 +20,7 @@ jobs:
       - name: Build and run cppcheck 🏎️
         run: |
           mkdir build
-          cd build && cmake -DUSE_BUNDLED_DEPS=On -DBUILD_WARNINGS_AS_ERRORS=ON -DCREATE_TEST_TARGETS=Off -DCMAKE_BUILD_TYPE="release" -DBUILD_BPF=Off -DBUILD_DRIVER=Off ..
+          cd build && cmake -DUSE_BUNDLED_DEPS=On -DUSE_DYNAMIC_LIBELF=Off -DBUILD_WARNINGS_AS_ERRORS=ON -DCREATE_TEST_TARGETS=Off -DCMAKE_BUILD_TYPE="release" -DBUILD_BPF=Off -DBUILD_DRIVER=Off ..
           make -j4 cppcheck
           make -j4 cppcheck_htmlreport
 
