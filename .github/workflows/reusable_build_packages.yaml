@@ -20,7 +20,7 @@ jobs:
       # Always install deps before invoking checkout action, to properly perform a full clone.
       - name: Install build dependencies
         run: |
-          dnf install -y bpftool ca-certificates cmake make automake gcc gcc-c++ kernel-devel clang git pkg-config autoconf automake libbpf-devel
+          dnf install -y bpftool ca-certificates cmake make automake gcc gcc-c++ kernel-devel clang git pkg-config autoconf automake libbpf-devel elfutils-libelf-devel
     
       - name: Checkout
         uses: actions/checkout@8ade135a41bc03ea155e62e844d188df1ea18608 # v4.1.0
@@ -50,7 +50,7 @@ jobs:
           yum -y install centos-release-scl
           yum -y install devtoolset-9-gcc devtoolset-9-gcc-c++
           source /opt/rh/devtoolset-9/enable
-          yum install -y wget git make m4 rpm-build perl-IPC-Cmd
+          yum install -y wget git make m4 rpm-build elfutils-libelf-devel perl-IPC-Cmd
     
       - name: Checkout
         # It is not possible to upgrade the checkout action to versions >= v4.0.0 because of incompatibilities with centos 7's libc.
