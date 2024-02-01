@@ -33,20 +33,20 @@ falco_formats::~falco_formats()
 {
 }
 
-std::string falco_formats::format_event(gen_event *evt, const std::string &rule, const std::string &source,
+std::string falco_formats::format_event(sinsp_evt *evt, const std::string &rule, const std::string &source,
 				   const std::string &level, const std::string &format, std::set<std::string> &tags,
 				   const std::string &hostname) const
 {
 	std::string line;
 
-	std::shared_ptr<gen_event_formatter> formatter;
+	std::shared_ptr<sinsp_evt_formatter> formatter;
 
 	formatter = m_falco_engine->create_formatter(source, format);
 
 	// Format the original output string, regardless of output format
-	formatter->tostring_withformat(evt, line, gen_event_formatter::OF_NORMAL);
+	formatter->tostring_withformat(evt, line, sinsp_evt_formatter::OF_NORMAL);
 
-	if(formatter->get_output_format() == gen_event_formatter::OF_JSON)
+	if(formatter->get_output_format() == sinsp_evt_formatter::OF_JSON)
 	{
 		std::string json_line;
 
@@ -131,10 +131,10 @@ std::string falco_formats::format_event(gen_event *evt, const std::string &rule,
 	return line.c_str();
 }
 
-std::map<std::string, std::string> falco_formats::get_field_values(gen_event *evt, const std::string &source,
+std::map<std::string, std::string> falco_formats::get_field_values(sinsp_evt *evt, const std::string &source,
 						    const std::string &format) const
 {
-	std::shared_ptr<gen_event_formatter> formatter;
+	std::shared_ptr<sinsp_evt_formatter> formatter;
 
 	formatter = m_falco_engine->create_formatter(source, format);
 

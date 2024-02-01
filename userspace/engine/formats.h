@@ -19,7 +19,6 @@ limitations under the License.
 
 #include <string>
 #include <map>
-#include <libsinsp/gen_filter.h>
 #include "falco_engine.h"
 
 class falco_formats
@@ -30,11 +29,11 @@ public:
 		      bool json_include_tags_property);
 	virtual ~falco_formats();
 
-	std::string format_event(gen_event *evt, const std::string &rule, const std::string &source,
+	std::string format_event(sinsp_evt *evt, const std::string &rule, const std::string &source,
 				 const std::string &level, const std::string &format, std::set<std::string> &tags,
 				 const std::string &hostname) const;
 
-	std::map<std::string, std::string> get_field_values(gen_event *evt, const std::string &source,
+	std::map<std::string, std::string> get_field_values(sinsp_evt *evt, const std::string &source,
 					     const std::string &format) const ;
 
 protected:

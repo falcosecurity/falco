@@ -15,12 +15,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Gen filtering TODO
-//  - DONE Clean up use/sharing of factories amongst engine-related classes.
-//  - DONE Fix outputs to actually use factories
-//  - Review gen_filter apis to see if they have only the required interfaces
-//  - Fix json filterchecks to split json and evt.time filterchecks.
-
 #pragma once
 
 #include <atomic>
@@ -30,7 +24,6 @@ limitations under the License.
 
 #include <nlohmann/json.hpp>
 
-#include <libsinsp/gen_filter.h>
 #include "filter_ruleset.h"
 #include "rule_loader.h"
 #include "rule_loader_reader.h"
@@ -180,7 +173,7 @@ public:
 	// Represents the result of matching an event against a set of
 	// rules.
 	struct rule_result {
-		gen_event *evt;
+		sinsp_evt *evt;
 		std::string rule;
 		std::string source;
 		falco_common::priority_type priority_num;
@@ -214,7 +207,7 @@ public:
 	// concurrently with the same source_idx would inherently cause data races
 	// and lead to undefined behavior.
 	std::unique_ptr<std::vector<rule_result>> process_event(std::size_t source_idx,
-		gen_event *ev, uint16_t ruleset_id, falco_common::rule_matching strategy);
+		sinsp_evt *ev, uint16_t ruleset_id, falco_common::rule_matching strategy);
 
 	//
 	// Wrapper assuming the default ruleset.
@@ -222,7 +215,7 @@ public:
 	// This inherits the same thread-safety guarantees.
 	//
 	std::unique_ptr<std::vector<rule_result>> process_event(std::size_t source_idx,
-		gen_event *ev, falco_common::rule_matching strategy);
+		sinsp_evt *ev, falco_common::rule_matching strategy);
 
 	//
 	// Configure the engine to support events with the provided
@@ -230,16 +223,16 @@ public:
 	// Return source index for fast lookup.
 	//
 	std::size_t add_source(const std::string &source,
-			       std::shared_ptr<gen_event_filter_factory> filter_factory,
-			       std::shared_ptr<gen_event_formatter_factory> formatter_factory);
+			       std::shared_ptr<sinsp_filter_factory> filter_factory,
+			       std::shared_ptr<sinsp_evt_formatter_factory> formatter_factory);
 
 	//
 	// Equivalent to above, but allows specifying a ruleset factory
 	// for the newly added source.
 	//
 	std::size_t add_source(const std::string &source,
-			       std::shared_ptr<gen_event_filter_factory> filter_factory,
-			       std::shared_ptr<gen_event_formatter_factory> formatter_factory,
+			       std::shared_ptr<sinsp_filter_factory> filter_factory,
+			       std::shared_ptr<sinsp_evt_formatter_factory> formatter_factory,
 			       std::shared_ptr<filter_ruleset_factory> ruleset_factory);
 
 	// Return whether or not there is a valid filter/formatter
@@ -250,15 +243,15 @@ public:
 	// Given a source, return a formatter factory that can create
 	// filters for events of that source.
 	//
-	std::shared_ptr<gen_event_filter_factory> filter_factory_for_source(const std::string& source);
-	std::shared_ptr<gen_event_filter_factory> filter_factory_for_source(std::size_t source_idx);
+	std::shared_ptr<sinsp_filter_factory> filter_factory_for_source(const std::string& source);
+	std::shared_ptr<sinsp_filter_factory> filter_factory_for_source(std::size_t source_idx);
 
 	//
 	// Given a source, return a formatter factory that can create
 	// formatters for an event.
 	//
-	std::shared_ptr<gen_event_formatter_factory> formatter_factory_for_source(const std::string& source);
-	std::shared_ptr<gen_event_formatter_factory> formatter_factory_for_source(std::size_t source_idx);
+	std::shared_ptr<sinsp_evt_formatter_factory> formatter_factory_for_source(const std::string& source);
+	std::shared_ptr<sinsp_evt_formatter_factory> formatter_factory_for_source(std::size_t source_idx);
 
 	//
 	// Given a source, return a ruleset factory that can create
@@ -300,10 +293,10 @@ public:
 
 	//
 	// Given a source and output string, return an
-	// gen_event_formatter that can format output strings for an
+	// sinsp_evt_formatter that can format output strings for an
 	// event.
 	//
-	std::shared_ptr<gen_event_formatter> create_formatter(const std::string &source,
+	std::shared_ptr<sinsp_evt_formatter> create_formatter(const std::string &source,
 							      const std::string &output) const;
 
 	// The rule loader definition is aliased as it is exactly what we need

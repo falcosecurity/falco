@@ -115,7 +115,7 @@ std::shared_ptr<rule_loader::compiler> falco_engine::get_rule_compiler()
 
 // Return a key that uniquely represents a field class.
 // For now, we assume name + shortdesc is unique.
-static std::string fieldclass_key(const gen_event_filter_factory::filter_fieldclass_info &fld_info)
+static std::string fieldclass_key(const sinsp_filter_factory::filter_fieldclass_info &fld_info)
 {
 	return fld_info.name + fld_info.shortdesc;
 }
@@ -372,14 +372,14 @@ libsinsp::events::set<ppm_event_code> falco_engine::event_codes_for_ruleset(cons
 	return find_source(source)->ruleset->enabled_event_codes(find_ruleset_id(ruleset));
 }
 
-std::shared_ptr<gen_event_formatter> falco_engine::create_formatter(const std::string &source,
+std::shared_ptr<sinsp_evt_formatter> falco_engine::create_formatter(const std::string &source,
 								    const std::string &output) const
 {
 	return find_source(source)->formatter_factory->create_formatter(output);
 }
 
 std::unique_ptr<std::vector<falco_engine::rule_result>> falco_engine::process_event(std::size_t source_idx,
-	gen_event *ev, uint16_t ruleset_id, falco_common::rule_matching strategy)
+	sinsp_evt *ev, uint16_t ruleset_id, falco_common::rule_matching strategy)
 {
 	// note: there are no thread-safety guarantees on the filter_ruleset::run()
 	// method, but the thread-safety assumptions of falco_engine::process_event()
@@ -437,14 +437,14 @@ std::unique_ptr<std::vector<falco_engine::rule_result>> falco_engine::process_ev
 }
 
 std::unique_ptr<std::vector<falco_engine::rule_result>> falco_engine::process_event(std::size_t source_idx,
-	gen_event *ev, falco_common::rule_matching strategy)
+	sinsp_evt *ev, falco_common::rule_matching strategy)
 {
 	return process_event(source_idx, ev, m_default_ruleset_id, strategy);
 }
 
 std::size_t falco_engine::add_source(const std::string &source,
-				     std::shared_ptr<gen_event_filter_factory> filter_factory,
-				     std::shared_ptr<gen_event_formatter_factory> formatter_factory)
+				     std::shared_ptr<sinsp_filter_factory> filter_factory,
+				     std::shared_ptr<sinsp_evt_formatter_factory> formatter_factory)
 {
 	// evttype_index_ruleset is the default ruleset implementation
 	std::shared_ptr<filter_ruleset_factory> ruleset_factory(
@@ -460,8 +460,8 @@ std::size_t falco_engine::add_source(const std::string &source,
 }
 
 std::size_t falco_engine::add_source(const std::string &source,
-	std::shared_ptr<gen_event_filter_factory> filter_factory,
-	std::shared_ptr<gen_event_formatter_factory> formatter_factory,
+	std::shared_ptr<sinsp_filter_factory> filter_factory,
+	std::shared_ptr<sinsp_evt_formatter_factory> formatter_factory,
 	std::shared_ptr<filter_ruleset_factory> ruleset_factory)
 {
 	falco_source src;
@@ -892,22 +892,22 @@ bool falco_engine::is_source_valid(const std::string &source) const
 	return m_sources.at(source) != nullptr;
 }
 
-std::shared_ptr<gen_event_filter_factory> falco_engine::filter_factory_for_source(const std::string& source)
+std::shared_ptr<sinsp_filter_factory> falco_engine::filter_factory_for_source(const std::string& source)
 {
 	return find_source(source)->filter_factory;
 }
 
-std::shared_ptr<gen_event_filter_factory> falco_engine::filter_factory_for_source(std::size_t source_idx)
+std::shared_ptr<sinsp_filter_factory> falco_engine::filter_factory_for_source(std::size_t source_idx)
 {
 	return find_source(source_idx)->filter_factory;
 }
 
-std::shared_ptr<gen_event_formatter_factory> falco_engine::formatter_factory_for_source(const std::string& source)
+std::shared_ptr<sinsp_evt_formatter_factory> falco_engine::formatter_factory_for_source(const std::string& source)
 {
 	return find_source(source)->formatter_factory;
 }
 
-std::shared_ptr<gen_event_formatter_factory> falco_engine::formatter_factory_for_source(std::size_t source_idx)
+std::shared_ptr<sinsp_evt_formatter_factory> falco_engine::formatter_factory_for_source(std::size_t source_idx)
 {
 	return find_source(source_idx)->formatter_factory;
 }

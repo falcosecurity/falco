@@ -135,7 +135,7 @@ void falco_outputs::add_output(falco::outputs::config oc)
 	}
 }
 
-void falco_outputs::handle_event(gen_event *evt, std::string &rule, std::string &source,
+void falco_outputs::handle_event(sinsp_evt *evt, std::string &rule, std::string &source,
 				 falco_common::priority_type priority, std::string &format, std::set<std::string> &tags)
 {
 	falco_outputs::ctrl_msg cmsg = {};

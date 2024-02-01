@@ -60,7 +60,7 @@ static bool is_format_valid(const falco_source& source, std::string fmt, std::st
 {
 	try
 	{
-		std::shared_ptr<gen_event_formatter> formatter;
+		std::shared_ptr<sinsp_evt_formatter> formatter;
 		formatter = source.formatter_factory->create_formatter(fmt);
 		return true;
 	}
@@ -410,13 +410,13 @@ bool rule_loader::compiler::compile_condition(
 	indexed_vector<falco_list>& lists,
 	const indexed_vector<rule_loader::macro_info>& macros,
 	const std::string& condition,
-	std::shared_ptr<gen_event_filter_factory> filter_factory,
+	std::shared_ptr<sinsp_filter_factory> filter_factory,
 	rule_loader::context cond_ctx,
 	rule_loader::context parent_ctx,
 	bool allow_unknown_fields,
 	indexed_vector<falco_macro>& macros_out,
 	std::shared_ptr<libsinsp::filter::ast::expr>& ast_out,
-	std::shared_ptr<gen_event_filter>& filter_out) const
+	std::shared_ptr<sinsp_filter>& filter_out) const
 {
 	std::set<falco::load_result::load_result::warning_code> warn_codes;
 	filter_warning_resolver warn_resolver;

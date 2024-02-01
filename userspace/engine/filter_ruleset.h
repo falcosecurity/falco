@@ -22,7 +22,6 @@ limitations under the License.
 #include <libsinsp/filter/ast.h>
 #include <libsinsp/filter.h>
 #include <libsinsp/event.h>
-#include <libsinsp/gen_filter.h>
 #include <libsinsp/events/sinsp_events.h>
 
 /*!
@@ -61,7 +60,7 @@ public:
 	*/
 	virtual void add(
 		const falco_rule& rule,
-		std::shared_ptr<gen_event_filter> filter,
+		std::shared_ptr<sinsp_filter> filter,
 		std::shared_ptr<libsinsp::filter::ast::expr> condition) = 0;
 
 	/*!
@@ -114,7 +113,7 @@ public:
 		\param ruleset_id The id of the ruleset to be used
 	*/
 	virtual bool run(
-		gen_event *evt,
+		sinsp_evt *evt,
 		falco_rule& match,
 		uint16_t ruleset_id) = 0;
 	
@@ -127,7 +126,7 @@ public:
 		\param ruleset_id The id of the ruleset to be used
 	*/
 	virtual bool run(
-		gen_event *evt,
+		sinsp_evt *evt,
 		std::vector<falco_rule>& matches,
 		uint16_t ruleset_id) = 0;
 

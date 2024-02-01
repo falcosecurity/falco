@@ -83,5 +83,5 @@ struct falco_rule
 	std::set<std::string> exception_fields;
 	falco_common::priority_type priority;
 	std::shared_ptr<libsinsp::filter::ast::expr> condition;
-	std::shared_ptr<gen_event_filter> filter;
+	std::shared_ptr<sinsp_filter> filter;
 };

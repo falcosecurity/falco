@@ -79,9 +79,9 @@ static std::shared_ptr<falco_engine> mock_engine_from_filters(const strset_t& fi
 	// create a falco engine and load the ruleset
 	sinsp_filter_check_list filterlist;
 	std::shared_ptr<falco_engine> res(new falco_engine());
-	auto filter_factory = std::shared_ptr<gen_event_filter_factory>(
+	auto filter_factory = std::shared_ptr<sinsp_filter_factory>(
 			new sinsp_filter_factory(nullptr, filterlist));
-	auto formatter_factory = std::shared_ptr<gen_event_formatter_factory>(
+	auto formatter_factory = std::shared_ptr<sinsp_evt_formatter_factory>(
 			new sinsp_evt_formatter_factory(nullptr, filterlist));
 	res->add_source(s_sample_source, filter_factory, formatter_factory);
 	res->load_rules(dummy_rules, "dummy_rules.yaml");

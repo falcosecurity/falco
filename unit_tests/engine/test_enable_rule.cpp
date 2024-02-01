@@ -56,9 +56,9 @@ static void load_rules(falco_engine& engine, sinsp& inspector, sinsp_filter_chec
 {
 	std::unique_ptr<falco::load_result> res;
 
-	auto filter_factory = std::shared_ptr<gen_event_filter_factory>(
+	auto filter_factory = std::shared_ptr<sinsp_filter_factory>(
 		new sinsp_filter_factory(&inspector, filterchecks));
-	auto formatter_factory = std::shared_ptr<gen_event_formatter_factory>(
+	auto formatter_factory = std::shared_ptr<sinsp_evt_formatter_factory>(
 		new sinsp_evt_formatter_factory(&inspector, filterchecks));
 
 	engine.add_source("syscall", filter_factory, formatter_factory);
