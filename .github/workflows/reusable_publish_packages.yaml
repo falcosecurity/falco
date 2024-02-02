@@ -65,7 +65,10 @@ jobs:
           name: falco-${{ inputs.version }}-aarch64.tar.gz
           path: /tmp/falco-build-bin
 
+      # The musl build job is currently disabled because we link libelf dynamically and it is
+      # not possible to dynamically link with musl
       - name: Download static binary x86_64
+        if: false
         uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3.0.2
         with:
           name: falco-${{ inputs.version }}-static-x86_64.tar.gz
@@ -89,8 +92,11 @@ jobs:
         run: |
           ./scripts/publish-bin -f /tmp/falco-build-bin/falco-${{ inputs.version }}-x86_64.tar.gz -r bin${{ inputs.bucket_suffix }} -a x86_64
           ./scripts/publish-bin -f /tmp/falco-build-bin/falco-${{ inputs.version }}-aarch64.tar.gz -r bin${{ inputs.bucket_suffix }} -a aarch64
-          
+
+      # The musl build job is currently disabled because we link libelf dynamically and it is
+      # not possible to dynamically link with musl
       - name: Publish static
+        if: false
         run: |
           ./scripts/publish-bin -f /tmp/falco-build-bin-static/falco-${{ inputs.version }}-static-x86_64.tar.gz -r bin${{ inputs.bucket_suffix }} -a x86_64
           
