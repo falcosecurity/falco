@@ -118,9 +118,12 @@ jobs:
           path: |
             ${{ github.workspace }}/build/falco-*.rpm
             
+  # The musl build job is currently disabled because we link libelf dynamically and it is
+  # not possible to dynamically link with musl
   build-musl-package:
     # x86_64 only for now
-    if: ${{ inputs.arch == 'x86_64' }}
+    # if: ${{ inputs.arch == 'x86_64' }}
+    if: false 
     runs-on: ubuntu-latest
     container: alpine:3.17
     steps:
