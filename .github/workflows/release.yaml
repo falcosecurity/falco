@@ -69,13 +69,16 @@ jobs:
   test-packages:
     needs: [release-settings, build-packages]
     uses: ./.github/workflows/reusable_test_packages.yaml
-    strategy:
-      fail-fast: false
-      matrix:
-        static: ["static", ""]
+
+    # The musl build job is currently disabled because we link libelf dynamically and it is
+    # not possible to dynamically link with musl
+    # strategy:
+    #   fail-fast: false
+    #   matrix:
+    #     static: ["static", ""]
     with:
       arch: x86_64
-      static: ${{ matrix.static != '' && true || false }}
+      # static: ${{ matrix.static != '' && true || false }}
       version: ${{ github.event.release.tag_name }}
   
   test-packages-arm64:
