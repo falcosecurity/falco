@@ -3,6 +3,10 @@
 This file documents all notable changes to Falco Helm Chart. The release
 numbering uses [semantic versioning](http://semver.org).
 
+## v4.0.1
+
+* Reintroduce the service account.
+
 ## v4.0.0
 The new chart introduces some breaking changes. For folks upgrading Falco please see the BREAKING-CHANGES.md file.
 
