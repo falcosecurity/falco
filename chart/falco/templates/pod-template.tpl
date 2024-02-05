@@ -16,6 +16,7 @@ metadata:
       {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
+  serviceAccountName: {{ include "falco.serviceAccountName" . }}
   {{- with .Values.podSecurityContext }}
   securityContext:
     {{- toYaml . | nindent 4}}
