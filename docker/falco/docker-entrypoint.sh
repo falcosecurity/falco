@@ -28,11 +28,12 @@ print_usage() {
 	echo "  ebpf           eBPF probe"
 	echo ""
 	echo "FALCO_DRIVER_LOADER_OPTIONS options:"
-	echo "  --help         show this help message"
-	echo "  --clean        try to remove an already present driver installation"
-	echo "  --compile      try to compile the driver locally (default true)"
-	echo "  --download     try to download a prebuilt driver (default true)"
-	echo "  --print-env    skip execution and print env variables for other tools to consume"
+	echo "  --help           show this help message"
+	echo "  --clean          try to remove an already present driver installation"
+	echo "  --compile        try to compile the driver locally (default true)"
+	echo "  --download       try to download a prebuilt driver (default true)"
+ 	echo "  --http-insecure	 enable insecure downloads"
+	echo "  --print-env      skip execution and print env variables for other tools to consume"
 	echo ""
 	echo "Environment variables:"
 	echo "  FALCOCTL_DRIVER_REPOS             specify different URL(s) where to look for prebuilt Falco drivers (comma separated)"
@@ -57,6 +58,7 @@ if [[ -z "${SKIP_DRIVER_LOADER}" ]]; then
 
     ENABLE_COMPILE="false"
     ENABLE_DOWNLOAD="false"
+    HTTP_INSECURE="false"
     has_driver=
     has_opts=
     for opt in "${falco_driver_loader_option_arr[@]}"
@@ -88,6 +90,9 @@ if [[ -z "${SKIP_DRIVER_LOADER}" ]]; then
                 ENABLE_DOWNLOAD="true"
                 has_opts="true"
                 ;;
+	    --http-insecure)
+		HTTP_INSECURE="true"
+		;;	
             --source-only)
                 >&2 echo "Support dropped in Falco 0.37.0."
                 print_usage
@@ -113,7 +118,7 @@ if [[ -z "${SKIP_DRIVER_LOADER}" ]]; then
         ENABLE_COMPILE="true"
         ENABLE_DOWNLOAD="true"
     fi
-    /usr/bin/falcoctl driver install --compile=$ENABLE_COMPILE --download=$ENABLE_DOWNLOAD
+    /usr/bin/falcoctl driver install --compile=$ENABLE_COMPILE --download=$ENABLE_DOWNLOAD --http-insecure=$HTTP_INSECURE
 
 fi
 
