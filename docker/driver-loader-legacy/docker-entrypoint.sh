@@ -21,18 +21,19 @@
 print_usage() {
 	echo ""
 	echo "Usage:"
-	echo "  docker run -i -t --privileged -v /root/.falco:/root/.falco -v /proc:/host/proc:ro -v /boot:/host/boot:ro -v /lib/modules:/host/lib/modules:ro -v /usr:/host/usr:ro -v /etc:/host/etc:ro falcosecurity/falco-driver-loader-legacy:latest [driver] [options]"
+	echo "  docker run -i -t --privileged -v /root/.falco:/root/.falco -v /proc:/host/proc:ro -v /boot:/host/boot:ro -v /lib/modules:/host/lib/modules:ro -v /usr:/host/usr:ro -v /etc:/host/etc:ro falcosecurity/falco-driver-loader:latest [driver] [options]"
 	echo ""
 	echo "Available drivers:"
 	echo "  kmod           kernel module (default)"
 	echo "  ebpf           eBPF probe"
 	echo ""
 	echo "Options:"
-	echo "  --help         show this help message"
-	echo "  --clean        try to remove an already present driver installation"
-	echo "  --compile      try to compile the driver locally (default true)"
-	echo "  --download     try to download a prebuilt driver (default true)"
-	echo "  --print-env    skip execution and print env variables for other tools to consume"
+	echo "  --help           show this help message"
+	echo "  --clean          try to remove an already present driver installation"
+	echo "  --compile        try to compile the driver locally (default true)"
+	echo "  --download       try to download a prebuilt driver (default true)"
+ 	echo "  --http-insecure	 enable insecure downloads"
+	echo "  --print-env      skip execution and print env variables for other tools to consume"
 	echo ""
 	echo "Environment variables:"
 	echo "  FALCOCTL_DRIVER_REPOS             specify different URL(s) where to look for prebuilt Falco drivers (comma separated)"
@@ -50,6 +51,7 @@ done
 
 ENABLE_COMPILE="false"
 ENABLE_DOWNLOAD="false"
+HTTP_INSECURE="false"
 has_driver=
 has_opts=
 while test $# -gt 0; do
@@ -80,6 +82,9 @@ while test $# -gt 0; do
 			ENABLE_DOWNLOAD="true"
 			has_opts="true"
 			;;
+		--http-insecure)
+			HTTP_INSECURE="true"
+			;;   
 		--source-only)
 		    >&2 echo "Support dropped in Falco 0.37.0."
 			print_usage
@@ -108,4 +113,4 @@ if [ -z "$has_opts" ]; then
 	ENABLE_DOWNLOAD="true"
 fi
 
-/usr/bin/falcoctl driver install --compile=$ENABLE_COMPILE --download=$ENABLE_DOWNLOAD
+/usr/bin/falcoctl driver install --compile=$ENABLE_COMPILE --download=$ENABLE_DOWNLOAD --http-insecure=$HTTP_INSECURE
