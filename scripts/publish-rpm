@@ -53,6 +53,47 @@ update_repo() {
     popd > /dev/null
 }
 
+reduce_dir_size() {
+    local DIR=$1
+    local MAX_SIZE_GB=$2
+    local EXTENSION=$3
+    local MAX_SIZE=$((MAX_SIZE_GB*1024*1024))  # Convert GB to KB for du command
+
+    # Check if directory exists
+    if [[ ! -d "$DIR" ]]; then
+        echo "The directory $DIR does not exist."
+        return 1
+    fi
+
+    # Calculate current directory size in KB
+    local CUR_SIZE=$(du -sk "$DIR" | cut -f1)
+
+    # Check if we need to delete any files
+    if ((CUR_SIZE <= MAX_SIZE)); then
+        return 0
+    fi
+
+    # Calculate size to delete in bytes
+    local DEL_SIZE=$(( (CUR_SIZE - MAX_SIZE) * 1024 ))
+
+    local ACC_SIZE=0
+    find "$DIR" -maxdepth 1 -type f -name "*.$EXTENSION" -printf "%T+ %s %p\n" | sort | while read -r date size file; do
+        if ((ACC_SIZE + size < DEL_SIZE)); then
+            rm "$file"
+            ACC_SIZE=$((ACC_SIZE + size))
+            
+            local asc_file="$file.asc"
+            if [[ -e "$asc_file" ]]; then
+                local asc_size=$(stat --format="%s" "$asc_file")
+                rm "$asc_file"
+                ACC_SIZE=$((ACC_SIZE + asc_size))
+            fi
+        else
+            break
+        fi
+    done
+}
+
 # parse options
 while getopts ":f::r::s" opt; do
     case "${opt}" in
@@ -115,6 +156,11 @@ if [ "${sign_all}" ]; then
   sign_repo ${tmp_repo_path}
 fi
 
+# remove old dev packages if necessary
+if [[ ${repo} == "rpm-dev" ]]; then
+  reduce_dir_size ${tmp_repo_path} 10 rpm
+fi
+
 # update the repo by adding new packages
 if ! [ ${#files[@]} -eq 0 ]; then
   for file in "${files[@]}"; do
@@ -139,3 +185,9 @@ fi
 # sync repodata
 aws s3 sync ${tmp_repo_path}/repodata ${s3_bucket_repo}/repodata --delete --acl public-read
 aws cloudfront create-invalidation --distribution-id ${AWS_CLOUDFRONT_DIST_ID} --paths ${cloudfront_path}/repodata/*
+
+# delete packages that have been pruned
+# the dryrun option is there so we can check that we're doing the right thing, can be removed after testing
+if [[ ${repo} == "rpm-dev" ]]; then
+  aws s3 sync ${tmp_repo_path} ${s3_bucket_repo} --dryrun --delete
+fi
