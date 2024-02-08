@@ -226,7 +226,13 @@ std::unique_ptr<load_result> falco_engine::load_rules(const std::string &rules_c
 			}
 
 			auto source = find_source(rule.source);
-			m_rules.insert(rule, rule.name);
+			auto rule_id = m_rules.insert(rule, rule.name);
+			if (rule_id != rule.id)
+			{
+				throw falco_exception("Incompatible ID for rule: " + rule.name +
+						      " | compiled ID: " + std::to_string(rule.id) +
+						      " | stats_mgr ID: " + std::to_string(rule_id));
+			}
 
 			// By default rules are enabled/disabled for the default ruleset
 			// skip the rule if below the minimum priority
