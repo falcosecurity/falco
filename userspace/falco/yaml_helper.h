@@ -78,6 +78,8 @@ private:
 class yaml_helper
 {
 public:
+	inline static const std::string includes_key = "includes";
+
 	/**
 	* Load the YAML document represented by the input string.
 	*/
@@ -98,7 +100,7 @@ public:
 		const auto config_folder = ppath.parent_path();
 		// Parse files to be included
 		std::vector<std::string> include_files;
-		get_sequence<std::vector<std::string>>(include_files, "includes");
+		get_sequence<std::vector<std::string>>(include_files, includes_key);
 		for(const std::string& include_file : include_files)
 		{
 			// If user specifies a relative include file,
@@ -111,7 +113,8 @@ public:
 			}
 			if (include_file_path == ppath)
 			{
-				throw std::runtime_error("Config error: 'includes' directive tried to recursively include main config file: " + path + ".");
+				throw std::runtime_error(
+					"Config error: '" + includes_key + "' directive tried to recursively include main config file: " + path + ".");
 			}
 			if (std::filesystem::exists(include_file_path) && std::filesystem::is_regular_file(include_file_path))
 			{
@@ -124,9 +127,10 @@ public:
 					 * (that use load_from_file_int recursively).
 					 */
 					const auto &key = n.first.Scalar();
-					if (key == "includes")
+					if (key == includes_key)
 					{
-						throw std::runtime_error("Config error: 'includes' directive in included config file " + include_file + ".");
+						throw std::runtime_error(
+							"Config error: '" + includes_key + "' directive in included config file " + include_file + ".");
 					}
 					// We allow to override keys.
 					// We don't need to use `get_node()` here,
