@@ -262,5 +262,5 @@ aws cloudfront create-invalidation --distribution-id ${AWS_CLOUDFRONT_DIST_ID} -
 # delete packages that have been pruned
 # the dryrun option is there so we can check that we're doing the right thing, can be removed after testing
 if [[ ${repo} == "deb-dev" ]]; then
-  aws s3 sync "${tmp_repo_path}/${debSuite}" ${s3_bucket_repo} --dryrun --delete
+  aws s3 sync "${tmp_repo_path}/${debSuite}" ${s3_bucket_repo} --dryrun --delete --acl public-read
 fi
