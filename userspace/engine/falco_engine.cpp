@@ -207,7 +207,6 @@ std::unique_ptr<load_result> falco_engine::load_rules(const std::string &rules_c
 		// clear the rules known by the engine and each ruleset
 		m_rules.clear();
 		for (auto &src : m_sources)
-
 		// add rules to each ruleset
 		{
 			src.ruleset = create_ruleset(src.ruleset_factory);
@@ -219,12 +218,6 @@ std::unique_ptr<load_result> falco_engine::load_rules(const std::string &rules_c
 		// add rules to the engine and the rulesets
 		for (const auto& rule : m_last_compile_output->rules)
 		{
-			// skip the rule if below the minimum priority
-			if (rule.priority > m_min_priority)
-			{
-				continue;
-			}
-
 			auto info = m_rule_collector->rules().at(rule.name);
 			if (!info)
 			{
@@ -233,10 +226,14 @@ std::unique_ptr<load_result> falco_engine::load_rules(const std::string &rules_c
 			}
 
 			auto source = find_source(rule.source);
-			auto rule_id = m_rules.insert(rule, rule.name);
-			m_rules.at(rule_id)->id = rule_id;
+			m_rules.insert(rule, rule.name);
 
 			// By default rules are enabled/disabled for the default ruleset
+			// skip the rule if below the minimum priority
+			if (rule.priority > m_min_priority)
+			{
+				continue;
+			}
 			if(info->enabled)
 			{
 				source->ruleset->enable(rule.name, true, m_default_ruleset_id);
