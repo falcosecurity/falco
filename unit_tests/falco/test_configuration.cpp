@@ -278,6 +278,39 @@ TEST(Configuration, configuration_include_files)
 	ASSERT_TRUE(conf.is_defined("base_value_2.id"));
 	ASSERT_EQ(conf.get_scalar<int>("base_value_2.id", 0), 2);
 
+	/* Test that empty includes list is accepted */
+	const std::string main_conf_yaml_empty_includes =
+		"includes:\n"
+		"foo: bar\n"
+		"base_value:\n"
+		"    id: 1\n"
+		"    name: foo\n";
+	outfile.open("main.yaml");
+	outfile << main_conf_yaml_empty_includes;
+	outfile.close();
+
+	ASSERT_NO_THROW(conf.load_from_file("main.yaml"));
+
+	ASSERT_TRUE(conf.is_defined("foo"));
+	ASSERT_EQ(conf.get_scalar<std::string>("foo", ""), "bar");
+	ASSERT_TRUE(conf.is_defined("base_value.id"));
+	ASSERT_EQ(conf.get_scalar<int>("base_value.id", 0), 1);
+	ASSERT_TRUE(conf.is_defined("base_value.name"));
+	ASSERT_EQ(conf.get_scalar<std::string>("base_value.name", ""), "foo");
+
+	/* Test that empty includes list is accepted */
+	const std::string main_conf_yaml_include_itself =
+		"includes: main.yaml\n"
+		"foo: bar\n"
+		"base_value:\n"
+		"    id: 1\n"
+		"    name: foo\n";
+	outfile.open("main.yaml");
+	outfile << main_conf_yaml_include_itself;
+	outfile.close();
+
+	ASSERT_ANY_THROW(conf.load_from_file("main.yaml"));
+
 	// Cleanup everything
 	std::filesystem::remove("main.yaml");
 	std::filesystem::remove("conf_2.yaml");

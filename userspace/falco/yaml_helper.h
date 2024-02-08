@@ -109,6 +109,10 @@ public:
 			{
 				include_file_path = config_folder / include_file;
 			}
+			if (include_file_path == ppath)
+			{
+				throw std::runtime_error("Config error: 'includes' directive tried to recursively include main config file: " + path + ".");
+			}
 			if (std::filesystem::exists(include_file_path) && std::filesystem::is_regular_file(include_file_path))
 			{
 				auto loaded_nodes = load_from_file_int(include_file_path.string());
