@@ -28,11 +28,11 @@ namespace outputs
 
 class output_file : public abstract_output
 {
-	void output(const message *msg);
+	void output(const message *msg) override;
 
-	void cleanup();
+	void cleanup() override;
 
-	void reopen();
+	void reopen() override;
 
 private:
 	void open_file();

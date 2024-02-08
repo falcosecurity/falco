@@ -64,9 +64,9 @@ public:
 	// Pointer to function that requests the system to start processing given requests
 	void (Service::AsyncService::*m_request_func)(::grpc::ServerContext*, Request*, ::grpc::ServerAsyncWriter<Response>*, ::grpc::CompletionQueue*, ::grpc::ServerCompletionQueue*, void*);
 
-	void start(server* srv);
-	void process(server* srv);
-	void end(server* srv, bool error);
+	void start(server* srv) override;
+	void process(server* srv) override;
+	void end(server* srv, bool error) override;
 
 private:
 	std::unique_ptr<::grpc::ServerAsyncWriter<Response>> m_res_writer;
@@ -91,9 +91,9 @@ public:
 	// Pointer to function that requests the system to start processing given requests
 	void (Service::AsyncService::*m_request_func)(::grpc::ServerContext*, Request*, ::grpc::ServerAsyncResponseWriter<Response>*, ::grpc::CompletionQueue*, ::grpc::ServerCompletionQueue*, void*);
 
-	void start(server* srv);
-	void process(server* srv);
-	void end(server* srv, bool error);
+	void start(server* srv) override;
+	void process(server* srv) override;
+	void end(server* srv, bool error) override;
 
 private:
 	std::unique_ptr<::grpc::ServerAsyncResponseWriter<Response>> m_res_writer;
@@ -115,9 +115,9 @@ public:
 	// Pointer to function that requests the system to start processing given requests
 	void (Service::AsyncService::*m_request_func)(::grpc::ServerContext*, ::grpc::ServerAsyncReaderWriter<Response, Request>*, ::grpc::CompletionQueue*, ::grpc::ServerCompletionQueue*, void*);
 
-	void start(server* srv);
-	void process(server* srv);
-	void end(server* srv, bool error);
+	void start(server* srv) override;
+	void process(server* srv) override;
+	void end(server* srv, bool error) override;
 
 private:
 	std::unique_ptr<::grpc::ServerAsyncReaderWriter<Response, Request>> m_reader_writer;
