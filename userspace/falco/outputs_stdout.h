@@ -26,9 +26,9 @@ namespace outputs
 
 class output_stdout : public abstract_output
 {
-	void output(const message *msg);
+	void output(const message *msg) override;
 
-	void cleanup();
+	void cleanup() override;
 };
 
 } // namespace outputs

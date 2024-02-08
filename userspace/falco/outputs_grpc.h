@@ -26,7 +26,7 @@ namespace outputs
 
 class output_grpc : public abstract_output
 {
-	void output(const message *msg);
+	void output(const message *msg) override;
 };
 
 } // namespace outputs
