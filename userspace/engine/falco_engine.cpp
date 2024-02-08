@@ -195,7 +195,13 @@ std::unique_ptr<load_result> falco_engine::load_rules(const std::string &rules_c
 			auto source = find_source(rule.source);
 			std::shared_ptr<gen_event_filter> filter(
 				sinsp_filter_compiler(source->filter_factory, rule.condition.get()).compile());
-			m_rules.insert(rule, rule.name);
+			auto rule_id = m_rules.insert(rule, rule.name);
+			if (rule_id != rule.id)
+			{
+				throw falco_exception("Incompatible ID for rule: " + rule.name +
+						      " | compiled ID: " + std::to_string(rule.id) +
+						      " | stats_mgr ID: " + std::to_string(rule_id));
+			}
 			source->ruleset->add(rule, filter, rule.condition);
 
 			// By default rules are enabled/disabled for the default ruleset
