@@ -36,6 +36,7 @@ options::options()
 	  list_plugins(false),
 	  list_syscall_events(false),
 	  markdown(false),
+	  unbuffered_outputs(false),
 	  dry_run(false)
 {
 }
