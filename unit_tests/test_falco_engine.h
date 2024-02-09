@@ -16,7 +16,7 @@ protected:
 
 		// create a falco engine ready to load the ruleset
 		m_inspector.reset(new sinsp());
-		m_engine.reset(new falco_engine());
+		m_engine = std::make_shared<falco_engine>();
 		m_filter_factory = std::shared_ptr<sinsp_filter_factory>(
 			new sinsp_filter_factory(m_inspector.get(), m_filterlist));
 		m_formatter_factory = std::shared_ptr<sinsp_evt_formatter_factory>(
@@ -111,7 +111,7 @@ protected:
 	sinsp_filter_check_list m_filterlist;
 	std::shared_ptr<sinsp_filter_factory> m_filter_factory;
 	std::shared_ptr<sinsp_evt_formatter_factory> m_formatter_factory;
-	std::unique_ptr<falco_engine> m_engine;
+	std::shared_ptr<falco_engine> m_engine;
 	std::unique_ptr<falco::load_result> m_load_result;
 	std::string m_load_result_string;
 	nlohmann::json m_load_result_json;
