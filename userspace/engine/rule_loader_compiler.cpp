@@ -21,7 +21,6 @@ limitations under the License.
 #include <vector>
 
 #include "rule_loader_compiler.h"
-#include "filter_macro_resolver.h"
 #include "filter_warning_resolver.h"
 
 #define MAX_VISIBILITY		((uint32_t) -1)
@@ -250,7 +249,8 @@ static bool resolve_list(std::string& cnd, const falco_list& list)
 	return used;
 }
 
-static void resolve_macros(
+static inline void resolve_macros(
+	filter_macro_resolver& macro_resolver,
 	const indexed_vector<rule_loader::macro_info>& infos,
 	indexed_vector<falco_macro>& macros,
 	std::shared_ptr<ast::expr>& ast,
@@ -258,7 +258,7 @@ static void resolve_macros(
 	uint32_t visibility,
 	const rule_loader::context &ctx)
 {
-	filter_macro_resolver macro_resolver;
+	macro_resolver.clear();
 	for (const auto &m : infos)
 	{
 		if (m.index < visibility)
@@ -391,10 +391,11 @@ void rule_loader::compiler::compile_macros_infos(
 		out.at(macro_id)->id = macro_id;
 	}
 
+	filter_macro_resolver macro_resolver;
 	for (auto &m : out)
 	{
 		auto info = macro_info_from_name(col, m.name);
-		resolve_macros(col.macros(), out, m.condition, info->cond, info->visibility, info->ctx);
+		resolve_macros(macro_resolver, col.macros(), out, m.condition, info->cond, info->visibility, info->ctx);
 	}
 }
 
@@ -407,12 +408,13 @@ static bool err_is_unknown_type_or_field(const std::string& err)
 
 bool rule_loader::compiler::compile_condition(
 	configuration& cfg,
+	filter_macro_resolver& macro_resolver,
 	indexed_vector<falco_list>& lists,
 	const indexed_vector<rule_loader::macro_info>& macros,
 	const std::string& condition,
 	std::shared_ptr<sinsp_filter_factory> filter_factory,
-	rule_loader::context cond_ctx,
-	rule_loader::context parent_ctx,
+	const rule_loader::context& cond_ctx,
+	const rule_loader::context& parent_ctx,
 	bool allow_unknown_fields,
 	indexed_vector<falco_macro>& macros_out,
 	std::shared_ptr<libsinsp::filter::ast::expr>& ast_out,
@@ -421,7 +423,7 @@ bool rule_loader::compiler::compile_condition(
 	std::set<falco::load_result::load_result::warning_code> warn_codes;
 	filter_warning_resolver warn_resolver;
 	ast_out = parse_condition(condition, lists, cond_ctx);
-	resolve_macros(macros, macros_out, ast_out, condition, MAX_VISIBILITY, parent_ctx);
+	resolve_macros(macro_resolver, macros, macros_out, ast_out, condition, MAX_VISIBILITY, parent_ctx);
 
 	// check for warnings in the filtering condition
 	if(warn_resolver.run(ast_out.get(), warn_codes))
@@ -470,6 +472,7 @@ void rule_loader::compiler::compile_rule_infos(
 	indexed_vector<falco_rule>& out) const
 {
 	std::string err, condition;
+	filter_macro_resolver macro_resolver;
 	for(const auto& r : col.rules())
 	{
 		// skip the rule if it has an unknown source
@@ -522,6 +525,7 @@ void rule_loader::compiler::compile_rule_infos(
 		}
 
 		if (!compile_condition(cfg,
+				  macro_resolver,
 				  lists,
 				  col.macros(),
 				  condition,

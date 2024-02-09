@@ -54,8 +54,8 @@ bool filter_macro_resolver::run(std::shared_ptr<libsinsp::filter::ast::expr>& fi
 }
 
 void filter_macro_resolver::set_macro(
-		std::string name,
-		std::shared_ptr<libsinsp::filter::ast::expr> macro)
+		const std::string& name,
+		const std::shared_ptr<libsinsp::filter::ast::expr>& macro)
 {
 	m_macros[name] = macro;
 }
