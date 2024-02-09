@@ -16,7 +16,9 @@ limitations under the License.
 
 */
 
-#include <falco_engine.h>
+#include "../../../test_falco_engine.h"
+
+#include <utility>
 
 #include <falco/app/app.h>
 #include "app_action_helpers.h"
@@ -57,14 +59,11 @@ static strset_t s_sample_nonsyscall_filters = {
 	"evt.type in (procexit, switch, pluginevent, container)"};
 
 
-// todo(jasondellaluce): once we have deeper and more modular
-// control on the falco engine, make this a little nicer
-static std::shared_ptr<falco_engine> mock_engine_from_filters(const strset_t& filters)
+static std::string ruleset_from_filters(const strset_t& filters)
 {
-	// craft a fake ruleset with the given filters
-	int n_rules = 0;
 	std::string dummy_rules;
 	falco::load_result::rules_contents_t content = {{"dummy_rules.yaml", dummy_rules}};
+	int n_rules = 0;
 	for (const auto& f : filters)
 	{
 		n_rules++;
@@ -76,28 +75,18 @@ static std::shared_ptr<falco_engine> mock_engine_from_filters(const strset_t& fi
 			+ "  priority: CRITICAL\n\n";
 	}
 
-	// create a falco engine and load the ruleset
-	sinsp_filter_check_list filterlist;
-	std::shared_ptr<falco_engine> res(new falco_engine());
-	auto filter_factory = std::shared_ptr<sinsp_filter_factory>(
-			new sinsp_filter_factory(nullptr, filterlist));
-	auto formatter_factory = std::shared_ptr<sinsp_evt_formatter_factory>(
-			new sinsp_evt_formatter_factory(nullptr, filterlist));
-	res->add_source(s_sample_source, filter_factory, formatter_factory);
-	res->load_rules(dummy_rules, "dummy_rules.yaml");
-	res->enable_rule("", true, s_sample_ruleset);
-	return res;
+	return dummy_rules;
 }
 
-TEST(ConfigureInterestingSets, engine_codes_syscalls_set)
+TEST_F(test_falco_engine, engine_codes_syscalls_set)
 {
+	load_rules(ruleset_from_filters(s_sample_filters), "dummy_ruleset.yaml");
 
-	auto engine = mock_engine_from_filters(s_sample_filters);
-	auto enabled_count = engine->num_rules_for_ruleset(s_sample_ruleset);
+	auto enabled_count = m_engine->num_rules_for_ruleset(s_sample_ruleset);
 	ASSERT_EQ(enabled_count, s_sample_filters.size());
 
 	// test if event code names were extracted from each rule in test ruleset.
-	auto rules_event_set = engine->event_codes_for_ruleset(s_sample_source);
+	auto rules_event_set = m_engine->event_codes_for_ruleset(s_sample_source);
 	auto rules_event_names = libsinsp::events::event_set_to_names(rules_event_set);
 	ASSERT_NAMES_EQ(rules_event_names, strset_t({
 		"connect", "accept", "accept4", "umount2", "open", "ptrace", "mmap", "execve", "read", "container", "asyncevent"}));
@@ -105,30 +94,30 @@ TEST(ConfigureInterestingSets, engine_codes_syscalls_set)
 	// test if sc code names were extracted from each rule in test ruleset.
 	// note, this is not supposed to contain "container", as that's an event
 	// not mapped through the ppm_sc_code enumerative.
-	auto rules_sc_set = engine->sc_codes_for_ruleset(s_sample_source);
+	auto rules_sc_set = m_engine->sc_codes_for_ruleset(s_sample_source);
 	auto rules_sc_names = libsinsp::events::sc_set_to_event_names(rules_sc_set);
 	ASSERT_NAMES_EQ(rules_sc_names, strset_t({
 		"connect", "accept", "accept4", "umount2", "open", "ptrace", "mmap", "execve", "read"}));
 }
 
-TEST(ConfigureInterestingSets, preconditions_postconditions)
+TEST_F(test_falco_engine, preconditions_postconditions)
 {
-	auto mock_engine = mock_engine_from_filters(s_sample_filters);
+	load_rules(ruleset_from_filters(s_sample_filters), "dummy_ruleset.yaml");
+
 	falco::app::state s1;
 
-	s1.engine = mock_engine;
-	s1.config = nullptr;
+	s1.engine = nullptr;
+	s1.config = std::make_shared<falco_configuration>();
 	auto result = falco::app::actions::configure_interesting_sets(s1);
 	ASSERT_FALSE(result.success);
 	ASSERT_NE(result.errstr, "");
 
-	s1.engine = nullptr;
-	s1.config = std::make_shared<falco_configuration>();
+	s1.engine = m_engine;
+	s1.config = nullptr;
 	result = falco::app::actions::configure_interesting_sets(s1);
 	ASSERT_FALSE(result.success);
 	ASSERT_NE(result.errstr, "");
 
-	s1.engine = mock_engine;
 	s1.config = std::make_shared<falco_configuration>();
 	result = falco::app::actions::configure_interesting_sets(s1);
 	ASSERT_TRUE(result.success);
@@ -141,17 +130,18 @@ TEST(ConfigureInterestingSets, preconditions_postconditions)
 	ASSERT_EQ(prev_selection_size, s1.selected_sc_set.size());
 }
 
-TEST(ConfigureInterestingSets, engine_codes_nonsyscalls_set)
+TEST_F(test_falco_engine, engine_codes_nonsyscalls_set)
 {
 	auto filters = s_sample_filters;
 	filters.insert(s_sample_generic_filters.begin(), s_sample_generic_filters.end());
 	filters.insert(s_sample_nonsyscall_filters.begin(), s_sample_nonsyscall_filters.end());
 
-	auto engine = mock_engine_from_filters(filters);
-	auto enabled_count = engine->num_rules_for_ruleset(s_sample_ruleset);
+	load_rules(ruleset_from_filters(filters), "dummy_ruleset.yaml");
+
+	auto enabled_count = m_engine->num_rules_for_ruleset(s_sample_ruleset);
 	ASSERT_EQ(enabled_count, filters.size());
 
-	auto rules_event_set = engine->event_codes_for_ruleset(s_sample_source);
+	auto rules_event_set = m_engine->event_codes_for_ruleset(s_sample_source);
 	auto rules_event_names = libsinsp::events::event_set_to_names(rules_event_set);
 	// note: including even one generic event will cause PPME_GENERIC_E to be
 	// included in the ruleset's event codes. As such, when translating to names,
@@ -164,7 +154,7 @@ TEST(ConfigureInterestingSets, engine_codes_nonsyscalls_set)
 	expected_names.insert(generic_names.begin(), generic_names.end());
 	ASSERT_NAMES_EQ(rules_event_names, expected_names);
 
-	auto rules_sc_set = engine->sc_codes_for_ruleset(s_sample_source);
+	auto rules_sc_set = m_engine->sc_codes_for_ruleset(s_sample_source);
 	auto rules_sc_names = libsinsp::events::sc_set_to_event_names(rules_sc_set);
 	ASSERT_NAMES_EQ(rules_sc_names, strset_t({
 		"connect", "accept", "accept4", "umount2", "open", "ptrace", "mmap", "execve", "read",
@@ -172,11 +162,13 @@ TEST(ConfigureInterestingSets, engine_codes_nonsyscalls_set)
 	}));
 }
 
-TEST(ConfigureInterestingSets, selection_not_allevents)
+TEST_F(test_falco_engine, selection_not_allevents)
 {
+	load_rules(ruleset_from_filters(s_sample_filters), "dummy_ruleset.yaml");
+
 	falco::app::state s2;
 	// run app action with fake engine and without the `-A` option
-	s2.engine = mock_engine_from_filters(s_sample_filters);
+	s2.engine = m_engine;
 	s2.options.all_events = false;
 
 	ASSERT_EQ(s2.options.all_events, false);
@@ -217,11 +209,13 @@ TEST(ConfigureInterestingSets, selection_not_allevents)
 	ASSERT_EQ(s2.selected_sc_set, union_set);
 }
 
-TEST(ConfigureInterestingSets, selection_allevents)
+TEST_F(test_falco_engine, selection_allevents)
 {
+	load_rules(ruleset_from_filters(s_sample_filters), "dummy_ruleset.yaml");
+
 	falco::app::state s3;
 	// run app action with fake engine and with the `-A` option
-	s3.engine = mock_engine_from_filters(s_sample_filters);
+	s3.engine = m_engine;
 	s3.options.all_events = true;
 	auto result = falco::app::actions::configure_interesting_sets(s3);
 	ASSERT_TRUE(result.success);
@@ -250,14 +244,15 @@ TEST(ConfigureInterestingSets, selection_allevents)
 	ASSERT_EQ(s3.selected_sc_set, union_set);
 }
 
-TEST(ConfigureInterestingSets, selection_generic_evts)
+TEST_F(test_falco_engine, selection_generic_evts)
 {
 	falco::app::state s4;
 	// run app action with fake engine and without the `-A` option
 	s4.options.all_events = false;
 	auto filters = s_sample_filters;
 	filters.insert(s_sample_generic_filters.begin(), s_sample_generic_filters.end());
-	s4.engine = mock_engine_from_filters(filters);
+	load_rules(ruleset_from_filters(filters), "dummy_ruleset.yaml");
+	s4.engine = m_engine;
 	auto result = falco::app::actions::configure_interesting_sets(s4);
 	ASSERT_TRUE(result.success);
 	ASSERT_EQ(result.errstr, "");
@@ -282,12 +277,14 @@ TEST(ConfigureInterestingSets, selection_generic_evts)
 //   (either default or custom positive set)
 // - events in the custom negative set are removed from the selected set
 // - if `-A` is not set, events from the IO set are removed from the selected set
-TEST(ConfigureInterestingSets, selection_custom_base_set)
+TEST_F(test_falco_engine, selection_custom_base_set)
 {
+	load_rules(ruleset_from_filters(s_sample_filters), "dummy_ruleset.yaml");
+
 	falco::app::state s5;
 	// run app action with fake engine and without the `-A` option
 	s5.options.all_events = true;
-	s5.engine = mock_engine_from_filters(s_sample_filters);
+	s5.engine = m_engine;
 	auto default_base_set = libsinsp::events::sinsp_state_sc_set();
 
 	// non-empty custom base set (both positive and negative)
@@ -365,12 +362,14 @@ TEST(ConfigureInterestingSets, selection_custom_base_set)
 	ASSERT_NAMES_NOCONTAIN(selected_sc_names, unexpected_sc_names);
 }
 
-TEST(ConfigureInterestingSets, selection_custom_base_set_repair)
+TEST_F(test_falco_engine, selection_custom_base_set_repair)
 {
+	load_rules(ruleset_from_filters(s_sample_filters), "dummy_ruleset.yaml");
+
 	falco::app::state s6;
 	// run app action with fake engine and without the `-A` option
 	s6.options.all_events = false;
-	s6.engine = mock_engine_from_filters(s_sample_filters);
+	s6.engine = m_engine;
 
 	// note: here we use file syscalls (e.g. open, openat) and have a custom
 	// positive set, so we expect syscalls such as "close" to be selected as
@@ -393,12 +392,14 @@ TEST(ConfigureInterestingSets, selection_custom_base_set_repair)
 	ASSERT_NAMES_NOCONTAIN(selected_sc_names, unexpected_sc_names);
 }
 
-TEST(ConfigureInterestingSets, selection_empty_custom_base_set_repair)
+TEST_F(test_falco_engine, selection_empty_custom_base_set_repair)
 {
+	load_rules(ruleset_from_filters(s_sample_filters), "dummy_ruleset.yaml");
+
 	falco::app::state s7;
 	// run app action with fake engine and with the `-A` option
 	s7.options.all_events = true;
-	s7.engine = mock_engine_from_filters(s_sample_filters);
+	s7.engine = m_engine;
 
 	// simulate empty custom set but repair option set.
 	s7.config->m_base_syscalls_custom_set = {};
