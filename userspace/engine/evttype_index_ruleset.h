@@ -35,7 +35,7 @@ limitations under the License.
 class evttype_index_ruleset: public filter_ruleset
 {
 public:
-	evttype_index_ruleset(std::shared_ptr<sinsp_filter_factory> factory);
+	explicit evttype_index_ruleset(std::shared_ptr<sinsp_filter_factory> factory);
 	virtual ~evttype_index_ruleset();
 
 	void add(
@@ -158,7 +158,7 @@ private:
 class evttype_index_ruleset_factory: public filter_ruleset_factory
 {
 public:
-	inline evttype_index_ruleset_factory(
+	inline explicit evttype_index_ruleset_factory(
 		std::shared_ptr<sinsp_filter_factory> factory
 	): m_filter_factory(factory) { }
 

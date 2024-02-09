@@ -42,7 +42,7 @@ class yaml_helper;
 class yaml_visitor {
 private:
 	using Callback = std::function<void(YAML::Node&)>;
-	yaml_visitor(Callback cb): seen(), cb(std::move(cb)) {}
+	explicit yaml_visitor(Callback cb): seen(), cb(std::move(cb)) {}
 
 	void operator()(YAML::Node &cur) {
 		seen.push_back(cur);

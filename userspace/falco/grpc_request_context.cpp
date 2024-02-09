@@ -123,7 +123,7 @@ template<>
 void request_context<version::service, version::request, version::response>::process(server* srv)
 {
 	version::response res;
-	(srv->*m_process_func)(m_srv_ctx.get(), m_req, res);
+	(srv->*m_process_func)(context(m_srv_ctx.get()), m_req, res);
 
 	// Notify the gRPC runtime that this processing is done
 	m_state = request_context_base::FINISH;

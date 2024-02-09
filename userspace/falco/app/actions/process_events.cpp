@@ -43,7 +43,7 @@ using namespace falco::app::actions;
 class source_sync_context
 {
 public:
-	source_sync_context(falco::semaphore& s)
+	explicit source_sync_context(falco::semaphore& s)
 		: m_finished(false), m_joined(false), m_semaphore(s) { }
 
 	inline void finish()

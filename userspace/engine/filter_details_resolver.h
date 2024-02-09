@@ -57,7 +57,7 @@ public:
 private:
 	struct visitor : public libsinsp::filter::ast::expr_visitor
 	{
-		visitor(filter_details& details) :
+		explicit visitor(filter_details& details) :
 			m_details(details),
 			m_expect_list(false),
 			m_expect_macro(false),

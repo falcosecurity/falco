@@ -31,7 +31,7 @@ namespace
 class test_ruleset_factory : public evttype_index_ruleset_factory
 {
 public:
-	test_ruleset_factory(std::shared_ptr<sinsp_filter_factory> factory):
+	explicit test_ruleset_factory(std::shared_ptr<sinsp_filter_factory> factory):
 		evttype_index_ruleset_factory(factory)
 	{
 		ruleset = evttype_index_ruleset_factory::new_ruleset();

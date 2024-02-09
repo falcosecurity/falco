@@ -124,7 +124,7 @@ protected:
 class test_ruleset : public evttype_index_ruleset
 {
 public:
-	test_ruleset(std::shared_ptr<sinsp_filter_factory> factory):
+	explicit test_ruleset(std::shared_ptr<sinsp_filter_factory> factory):
 		evttype_index_ruleset(factory){};
 	virtual ~test_ruleset() = default;
 
@@ -154,7 +154,7 @@ public:
 class test_ruleset_factory : public filter_ruleset_factory
 {
 public:
-	test_ruleset_factory(std::shared_ptr<sinsp_filter_factory> factory):
+	explicit test_ruleset_factory(std::shared_ptr<sinsp_filter_factory> factory):
 		m_filter_factory(factory)
 	{
 	}

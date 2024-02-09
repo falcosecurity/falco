@@ -34,7 +34,7 @@ namespace falco
          * @brief Construct a versions info by using an inspector to obtain
          * versions about the drivers and the loaded plugins.
          */
-        versions_info(const std::shared_ptr<sinsp>& inspector);
+        explicit versions_info(const std::shared_ptr<sinsp>& inspector);
         versions_info(versions_info&&) = default;
         versions_info& operator = (versions_info&&) = default;
         versions_info(const versions_info& s) = default;
