@@ -20,6 +20,7 @@ limitations under the License.
 #include "rule_loader.h"
 #include "rule_loader_compile_output.h"
 #include "rule_loader_collector.h"
+#include "filter_macro_resolver.h"
 #include "indexed_vector.h"
 #include "falco_rule.h"
 
@@ -61,12 +62,13 @@ protected:
         */
 	bool compile_condition(
 		configuration& cfg,
+		filter_macro_resolver& macro_resolver,
 		indexed_vector<falco_list>& lists,
 		const indexed_vector<rule_loader::macro_info>& macros,
 		const std::string& condition,
 		std::shared_ptr<sinsp_filter_factory> filter_factory,
-		rule_loader::context cond_ctx,
-		rule_loader::context parent_ctx,
+		const rule_loader::context& cond_ctx,
+		const rule_loader::context& parent_ctx,
 		bool allow_unknown_fields,
 		indexed_vector<falco_macro>& macros_out,
 		std::shared_ptr<libsinsp::filter::ast::expr>& ast_out,

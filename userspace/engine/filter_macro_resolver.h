@@ -56,8 +56,8 @@ class filter_macro_resolver
 			\param macro The AST of the macro.
 		*/
 		void set_macro(
-			std::string name,
-			std::shared_ptr<libsinsp::filter::ast::expr> macro);
+			const std::string& name,
+			const std::shared_ptr<libsinsp::filter::ast::expr>& macro);
 
 		/*!
 		    \brief used in get_{resolved,unknown}_macros and get_errors
@@ -85,6 +85,18 @@ class filter_macro_resolver
 			the latest invocation of run().
 		*/
 		const std::vector<value_info>& get_errors() const;
+
+		/*!
+			\brief Clears the resolver by resetting all state related to
+			known macros and everything related to the previous resolution run.
+		*/
+		inline void clear()
+		{
+			m_errors.clear();
+			m_unknown_macros.clear();
+			m_resolved_macros.clear();
+			m_macros.clear();
+		}
 
 	private:
 		typedef std::unordered_map<
