@@ -44,7 +44,7 @@ struct falco_exception : std::exception
 	{
 	}
 
-	falco_exception(std::string error_str)
+	explicit falco_exception(std::string error_str)
 	{
 		m_error_str = error_str;
 	}

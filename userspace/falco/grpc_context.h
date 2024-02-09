@@ -36,7 +36,7 @@ const std::string meta_request = "request_id";
 class context
 {
 public:
-	context(::grpc::ServerContext* ctx);
+	explicit context(::grpc::ServerContext* ctx);
 	virtual ~context() = default;
 
 	void get_metadata(std::string key, std::string& val);
@@ -49,7 +49,7 @@ private:
 class stream_context : public context
 {
 public:
-	stream_context(::grpc::ServerContext* ctx):
+	explicit stream_context(::grpc::ServerContext* ctx):
 		context(ctx){};
 	virtual ~stream_context() = default;
 
@@ -68,7 +68,7 @@ public:
 class bidi_context : public stream_context
 {
 public:
-	bidi_context(::grpc::ServerContext* ctx):
+	explicit bidi_context(::grpc::ServerContext* ctx):
 		stream_context(ctx){};
 	virtual ~bidi_context() = default;
 };

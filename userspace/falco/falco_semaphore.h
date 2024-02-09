@@ -31,7 +31,7 @@ namespace falco
         /**
          * @brief Creates a semaphore with the given initial counter value
          */
-        semaphore(int c = 0): count(c) {}
+        explicit semaphore(int c = 0): count(c) {}
 
         /**
          * @brief Increments the internal counter and unblocks acquirers

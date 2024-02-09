@@ -46,7 +46,7 @@ public:
      */
     using watch_list_t = std::vector<std::string>;
 
-    restart_handler(
+    explicit restart_handler(
         on_check_t on_check,
         const watch_list_t& watch_files = {},
         const watch_list_t& watch_dirs = {})
