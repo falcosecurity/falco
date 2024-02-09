@@ -1,125 +1,11 @@
 #include <gtest/gtest.h>
 
-#include "falco_engine.h"
-#include "rule_loader_reader.h"
-#include "rule_loader_compiler.h"
-#include "rule_loading_messages.h"
-
-class engine_loader_test : public ::testing::Test {
-protected:
-	void SetUp() override
-	{
-		m_sample_ruleset = "sample-ruleset";
-		m_sample_source = falco_common::syscall_source;
-
-		// create a falco engine ready to load the ruleset
-		m_inspector.reset(new sinsp());
-		m_engine.reset(new falco_engine());
-		m_filter_factory = std::shared_ptr<sinsp_filter_factory>(
-			new sinsp_filter_factory(m_inspector.get(), m_filterlist));
-		m_formatter_factory = std::shared_ptr<sinsp_evt_formatter_factory>(
-			new sinsp_evt_formatter_factory(m_inspector.get(), m_filterlist));
-		m_engine->add_source(m_sample_source, m_filter_factory, m_formatter_factory);
-	}
-
-	void TearDown() override
-	{
-
-	}
-
-	bool load_rules(std::string rules_content, std::string rules_filename)
-	{
-		bool ret = false;
-		falco::load_result::rules_contents_t rc = {{rules_filename, rules_content}};
-		m_load_result = m_engine->load_rules(rules_content, rules_filename);
-		m_load_result_string = m_load_result->as_string(true, rc);
-		m_load_result_json = m_load_result->as_json(rc);
-		ret = m_load_result->successful();
-
-		if (ret)
-		{
-			m_engine->enable_rule("", true, m_sample_ruleset);
-		}
-
-		return ret;
-	}
-
-	// This must be kept in line with the (private) falco_engine::s_default_ruleset
-	uint64_t num_rules_for_ruleset(std::string ruleset = "falco-default-ruleset")
-	{
-		return m_engine->num_rules_for_ruleset(ruleset);
-	}
-
-	bool has_warnings()
-	{
-		return m_load_result->has_warnings();
-	}
-
-	bool check_warning_message(std::string warning_msg)
-	{
-		if(!m_load_result->has_warnings())
-		{
-			return false;
-		}
-
-		for(auto &warn : m_load_result_json["warnings"])
-		{
-			std::string msg = warn["message"];
-			// Debug:
-			// printf("msg: %s\n", msg.c_str());
-			if(msg.find(warning_msg) != std::string::npos)
-			{
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	bool check_error_message(std::string error_msg)
-	{
-		// if the loading is successful there are no errors
-		if(m_load_result->successful())
-		{
-			return false;
-		}
-
-		for(auto &err : m_load_result_json["errors"])
-		{
-			std::string msg = err["message"];
-			// Debug:
-			// printf("msg: %s\n", msg.c_str());
-			if(msg.find(error_msg) != std::string::npos)
-			{
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	std::string get_compiled_rule_condition(std::string rule_name = "")
-	{
-		auto rule_description = m_engine->describe_rule(&rule_name, {});
-		return rule_description["rules"][0]["details"]["condition_compiled"].template get<std::string>();
-	}
-
-	std::string m_sample_ruleset;
-	std::string m_sample_source;
-	sinsp_filter_check_list m_filterlist;
-	std::shared_ptr<sinsp_filter_factory> m_filter_factory;
-	std::shared_ptr<sinsp_evt_formatter_factory> m_formatter_factory;
-	std::unique_ptr<falco_engine> m_engine;
-	std::unique_ptr<falco::load_result> m_load_result;
-	std::string m_load_result_string;
-	nlohmann::json m_load_result_json;
-	std::unique_ptr<sinsp> m_inspector;
-};
+#include "../test_falco_engine.h"
 
 std::string s_sample_ruleset = "sample-ruleset";
 std::string s_sample_source = falco_common::syscall_source;
 
-TEST_F(engine_loader_test, list_append)
+TEST_F(test_falco_engine, list_append)
 {
     std::string rules_content = R"END(
 - list: shell_binaries
@@ -141,7 +27,7 @@ TEST_F(engine_loader_test, list_append)
 	ASSERT_EQ(get_compiled_rule_condition("legit_rule"),"(evt.type = open and proc.name in (ash, bash, csh, ksh, sh, tcsh, zsh, dash, pwsh))");
 }
 
-TEST_F(engine_loader_test, condition_append)
+TEST_F(test_falco_engine, condition_append)
 {
     std::string rules_content = R"END(
 - macro: interactive
@@ -165,7 +51,7 @@ TEST_F(engine_loader_test, condition_append)
 	ASSERT_EQ(get_compiled_rule_condition("legit_rule"),"(evt.type = open and (((proc.aname = sshd and proc.name != sshd) or proc.name = systemd-logind or proc.name = login) or proc.name = ssh))");
 }
 
-TEST_F(engine_loader_test, rule_override_append)
+TEST_F(test_falco_engine, rule_override_append)
 {
     std::string rules_content = R"END(
 - rule: legit_rule
@@ -201,7 +87,7 @@ TEST_F(engine_loader_test, rule_override_append)
 	 	"legit rule description with append");
 }
 
-TEST_F(engine_loader_test, rule_append)
+TEST_F(test_falco_engine, rule_append)
 {
     std::string rules_content = R"END(
 - rule: legit_rule
@@ -223,7 +109,7 @@ TEST_F(engine_loader_test, rule_append)
 	ASSERT_EQ(get_compiled_rule_condition("legit_rule"),"(evt.type = open and proc.name = cat)");
 }
 
-TEST_F(engine_loader_test, rule_override_replace)
+TEST_F(test_falco_engine, rule_override_replace)
 {
     std::string rules_content = R"END(
 - rule: legit_rule
@@ -254,7 +140,7 @@ TEST_F(engine_loader_test, rule_override_replace)
 	 	"a replaced legit description");
 }
 
-TEST_F(engine_loader_test, rule_override_append_replace)
+TEST_F(test_falco_engine, rule_override_append_replace)
 {
     std::string rules_content = R"END(
 - rule: legit_rule
@@ -290,7 +176,7 @@ TEST_F(engine_loader_test, rule_override_append_replace)
 	 	"Warning");
 }
 
-TEST_F(engine_loader_test, rule_incorrect_override_type)
+TEST_F(test_falco_engine, rule_incorrect_override_type)
 {
     std::string rules_content = R"END(
 - rule: failing_rule
@@ -316,7 +202,7 @@ TEST_F(engine_loader_test, rule_incorrect_override_type)
 	ASSERT_TRUE(std::string(m_load_result_json["errors"][0]["context"]["snippet"]).find("priority: append") != std::string::npos);
 }
 
-TEST_F(engine_loader_test, rule_incorrect_append_override)
+TEST_F(test_falco_engine, rule_incorrect_append_override)
 {
     std::string rules_content = R"END(
 - rule: failing_rule
@@ -344,7 +230,7 @@ TEST_F(engine_loader_test, rule_incorrect_append_override)
 	ASSERT_TRUE(check_error_message(ERROR_OVERRIDE_APPEND));
 }
 
-TEST_F(engine_loader_test, macro_override_append_before_macro_definition)
+TEST_F(test_falco_engine, macro_override_append_before_macro_definition)
 {
     std::string rules_content = R"END(
 
@@ -369,7 +255,7 @@ TEST_F(engine_loader_test, macro_override_append_before_macro_definition)
 	ASSERT_TRUE(check_error_message(ERROR_NO_PREVIOUS_MACRO));
 }
 
-TEST_F(engine_loader_test, macro_override_replace_before_macro_definition)
+TEST_F(test_falco_engine, macro_override_replace_before_macro_definition)
 {
     std::string rules_content = R"END(
 
@@ -394,7 +280,7 @@ TEST_F(engine_loader_test, macro_override_replace_before_macro_definition)
 	ASSERT_EQ(get_compiled_rule_condition("test_rule"),"evt.type in (open, openat)");	
 }
 
-TEST_F(engine_loader_test, macro_append_before_macro_definition)
+TEST_F(test_falco_engine, macro_append_before_macro_definition)
 {
     std::string rules_content = R"END(
 
@@ -418,7 +304,7 @@ TEST_F(engine_loader_test, macro_append_before_macro_definition)
 	ASSERT_TRUE(check_error_message(ERROR_NO_PREVIOUS_MACRO));
 }
 
-TEST_F(engine_loader_test, macro_override_append_after_macro_definition)
+TEST_F(test_falco_engine, macro_override_append_after_macro_definition)
 {
     std::string rules_content = R"END(
 
@@ -443,7 +329,7 @@ TEST_F(engine_loader_test, macro_override_append_after_macro_definition)
 	ASSERT_EQ(get_compiled_rule_condition("test_rule"),"(evt.type in (open, openat) or evt.type = openat2)");
 }
 
-TEST_F(engine_loader_test, macro_append_after_macro_definition)
+TEST_F(test_falco_engine, macro_append_after_macro_definition)
 {
     std::string rules_content = R"END(
 
@@ -467,7 +353,7 @@ TEST_F(engine_loader_test, macro_append_after_macro_definition)
 	ASSERT_EQ(get_compiled_rule_condition("test_rule"),"(evt.type in (open, openat) or evt.type = openat2)");
 }
 
-TEST_F(engine_loader_test, rule_override_append_before_rule_definition)
+TEST_F(test_falco_engine, rule_override_append_before_rule_definition)
 {
     std::string rules_content = R"END(
 - rule: test_rule
@@ -487,7 +373,7 @@ TEST_F(engine_loader_test, rule_override_append_before_rule_definition)
 	ASSERT_TRUE(check_error_message(ERROR_NO_PREVIOUS_RULE_APPEND));
 }
 
-TEST_F(engine_loader_test, rule_override_replace_before_rule_definition)
+TEST_F(test_falco_engine, rule_override_replace_before_rule_definition)
 {
     std::string rules_content = R"END(
 - rule: test_rule
@@ -507,7 +393,7 @@ TEST_F(engine_loader_test, rule_override_replace_before_rule_definition)
 	ASSERT_TRUE(check_error_message(ERROR_NO_PREVIOUS_RULE_REPLACE));
 }
 
-TEST_F(engine_loader_test, rule_append_before_rule_definition)
+TEST_F(test_falco_engine, rule_append_before_rule_definition)
 {
     std::string rules_content = R"END(
 - rule: test_rule
@@ -526,7 +412,7 @@ TEST_F(engine_loader_test, rule_append_before_rule_definition)
 	ASSERT_TRUE(check_error_message(ERROR_NO_PREVIOUS_RULE_APPEND));
 }
 
-TEST_F(engine_loader_test, rule_override_append_after_rule_definition)
+TEST_F(test_falco_engine, rule_override_append_after_rule_definition)
 {
     std::string rules_content = R"END(
 - rule: test_rule
@@ -545,7 +431,7 @@ TEST_F(engine_loader_test, rule_override_append_after_rule_definition)
 	ASSERT_EQ(get_compiled_rule_condition("test_rule"),"(evt.type in (open, openat) and proc.name = cat)");
 }
 
-TEST_F(engine_loader_test, rule_append_after_rule_definition)
+TEST_F(test_falco_engine, rule_append_after_rule_definition)
 {
     std::string rules_content = R"END(
 - rule: test_rule
@@ -563,7 +449,7 @@ TEST_F(engine_loader_test, rule_append_after_rule_definition)
 	ASSERT_EQ(get_compiled_rule_condition("test_rule"),"(evt.type in (open, openat) and proc.name = cat)");
 }
 
-TEST_F(engine_loader_test, list_override_append_wrong_key)
+TEST_F(test_falco_engine, list_override_append_wrong_key)
 {
 	// todo: maybe we want to manage some non-existent keys
 	// Please note how the non-existent key 'non-existent keys' is ignored.
@@ -591,7 +477,7 @@ TEST_F(engine_loader_test, list_override_append_wrong_key)
 	ASSERT_EQ(get_compiled_rule_condition("test_rule"),"(evt.type = execve and proc.name in (blkid))");
 }
 
-TEST_F(engine_loader_test, list_override_append_before_list_definition)
+TEST_F(test_falco_engine, list_override_append_before_list_definition)
 {
     std::string rules_content = R"END(
 - list: dev_creation_binaries
@@ -615,7 +501,7 @@ TEST_F(engine_loader_test, list_override_append_before_list_definition)
 	ASSERT_TRUE(check_error_message(ERROR_NO_PREVIOUS_LIST));
 }
 
-TEST_F(engine_loader_test, list_override_replace_before_list_definition)
+TEST_F(test_falco_engine, list_override_replace_before_list_definition)
 {
     std::string rules_content = R"END(
 - list: dev_creation_binaries
@@ -639,7 +525,7 @@ TEST_F(engine_loader_test, list_override_replace_before_list_definition)
 	ASSERT_EQ(get_compiled_rule_condition("test_rule"),"(evt.type = execve and proc.name in (blkid))");
 }
 
-TEST_F(engine_loader_test, list_append_before_list_definition)
+TEST_F(test_falco_engine, list_append_before_list_definition)
 {
     std::string rules_content = R"END(
 - list: dev_creation_binaries
@@ -662,7 +548,7 @@ TEST_F(engine_loader_test, list_append_before_list_definition)
 	ASSERT_TRUE(check_error_message(ERROR_NO_PREVIOUS_LIST));
 }
 
-TEST_F(engine_loader_test, list_override_append_after_list_definition)
+TEST_F(test_falco_engine, list_override_append_after_list_definition)
 {
     std::string rules_content = R"END(
 - list: dev_creation_binaries
@@ -685,7 +571,7 @@ TEST_F(engine_loader_test, list_override_append_after_list_definition)
 	ASSERT_EQ(get_compiled_rule_condition("test_rule"),"(evt.type = execve and proc.name in (blkid, csi-provisioner, csi-attacher))");
 }
 
-TEST_F(engine_loader_test, list_append_after_list_definition)
+TEST_F(test_falco_engine, list_append_after_list_definition)
 {
     std::string rules_content = R"END(
 - list: dev_creation_binaries
@@ -706,7 +592,7 @@ TEST_F(engine_loader_test, list_append_after_list_definition)
 	ASSERT_EQ(get_compiled_rule_condition("test_rule"),"(evt.type = execve and proc.name in (blkid, csi-provisioner, csi-attacher))");
 }
 
-TEST_F(engine_loader_test, rule_override_without_field)
+TEST_F(test_falco_engine, rule_override_without_field)
 {
     std::string rules_content = R"END(
 - rule: failing_rule
@@ -728,7 +614,7 @@ TEST_F(engine_loader_test, rule_override_without_field)
 	ASSERT_TRUE(check_error_message("An append override for 'condition' was specified but 'condition' is not defined"));
 }
 
-TEST_F(engine_loader_test, rule_override_extra_field)
+TEST_F(test_falco_engine, rule_override_extra_field)
 {
     std::string rules_content = R"END(
 - rule: failing_rule
@@ -752,7 +638,7 @@ TEST_F(engine_loader_test, rule_override_extra_field)
 	ASSERT_TRUE(check_error_message("Unexpected key 'priority'"));
 }
 
-TEST_F(engine_loader_test, missing_enabled_key_with_override)
+TEST_F(test_falco_engine, missing_enabled_key_with_override)
 {
     std::string rules_content = R"END(
 - rule: test_rule
@@ -776,7 +662,7 @@ TEST_F(engine_loader_test, missing_enabled_key_with_override)
 	ASSERT_TRUE(check_error_message("'enabled' was specified but 'enabled' is not defined"));
 }
 
-TEST_F(engine_loader_test, rule_override_with_enabled)
+TEST_F(test_falco_engine, rule_override_with_enabled)
 {
     std::string rules_content = R"END(
 - rule: test_rule
@@ -802,7 +688,7 @@ TEST_F(engine_loader_test, rule_override_with_enabled)
 	EXPECT_EQ(num_rules_for_ruleset(), 1);
 }
 
-TEST_F(engine_loader_test, rule_not_enabled)
+TEST_F(test_falco_engine, rule_not_enabled)
 {
     std::string rules_content = R"END(
 - rule: test_rule
@@ -818,7 +704,7 @@ TEST_F(engine_loader_test, rule_not_enabled)
 	EXPECT_EQ(num_rules_for_ruleset(), 0);
 }
 
-TEST_F(engine_loader_test, rule_enabled_warning)
+TEST_F(test_falco_engine, rule_enabled_warning)
 {
     std::string rules_content = R"END(
 - rule: test_rule
@@ -839,7 +725,7 @@ TEST_F(engine_loader_test, rule_enabled_warning)
 }
 
 // todo!: Probably we shouldn't allow this syntax
-TEST_F(engine_loader_test, rule_enabled_is_ignored_by_append)
+TEST_F(test_falco_engine, rule_enabled_is_ignored_by_append)
 {
     std::string rules_content = R"END(
 - rule: test_rule
@@ -862,7 +748,7 @@ TEST_F(engine_loader_test, rule_enabled_is_ignored_by_append)
 }
 
 // todo!: Probably we shouldn't allow this syntax
-TEST_F(engine_loader_test, rewrite_rule)
+TEST_F(test_falco_engine, rewrite_rule)
 {
     std::string rules_content = R"END(
 - rule: test_rule
@@ -888,7 +774,7 @@ TEST_F(engine_loader_test, rewrite_rule)
 	ASSERT_EQ(get_compiled_rule_condition("test_rule"),"proc.name = cat");
 }
 
-TEST_F(engine_loader_test, required_engine_version_semver)
+TEST_F(test_falco_engine, required_engine_version_semver)
 {
     std::string rules_content = R"END(
 - required_engine_version: 0.26.0
@@ -906,7 +792,7 @@ TEST_F(engine_loader_test, required_engine_version_semver)
 	ASSERT_FALSE(has_warnings());
 }
 
-TEST_F(engine_loader_test, required_engine_version_not_semver)
+TEST_F(test_falco_engine, required_engine_version_not_semver)
 {
     std::string rules_content = R"END(
 - required_engine_version: 26
@@ -924,7 +810,7 @@ TEST_F(engine_loader_test, required_engine_version_not_semver)
 	ASSERT_FALSE(has_warnings());
 }
 
-TEST_F(engine_loader_test, required_engine_version_invalid)
+TEST_F(test_falco_engine, required_engine_version_invalid)
 {
     std::string rules_content = R"END(
 - required_engine_version: seven
@@ -943,7 +829,7 @@ TEST_F(engine_loader_test, required_engine_version_invalid)
 }
 
 // checks for issue described in https://github.com/falcosecurity/falco/pull/3028
-TEST_F(engine_loader_test, list_value_with_escaping)
+TEST_F(test_falco_engine, list_value_with_escaping)
 {
     std::string rules_content = R"END(
 - list: my_list
