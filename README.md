@@ -14,11 +14,11 @@ Falco, originally created by [Sysdig](https://sysdig.com), is an incubating proj
 
 For detailed technical information and insights into the cyber threats that Falco can detect, visit the official [Falco](https://falco.org/) website.
 
-For comprehensive information on the latest updates and changes to the project, please refer to the [change log](CHANGELOG.md). Additionally, we have documented the [release process](RELEASE.md) for delivering new versions of Falco.
+For comprehensive information on the latest updates and changes to the project, please refer to the [Change Log](CHANGELOG.md). Additionally, we have documented the [Release Process](RELEASE.md) for delivering new versions of Falco.
 
 ## Falco Repo: Powering the Core of The Falco Project
 
-This is the main Falco repository which contains the source code for building the Falco binary. By utilizing its [libraries](https://github.com/falcosecurity/libs) and the [falco.yaml](falco.yaml) configuration file, this repository forms the foundation of Falco's functionality. The Falco repository is closely interconnected with the following *core* repositories:
+This is the main Falco repository which contains the source code for building the Falco binary. By utilizing its [libs](https://github.com/falcosecurity/libs) and the [falco.yaml](falco.yaml) configuration file, this repository forms the foundation of Falco's functionality. The Falco repository is closely interconnected with the following *core* repositories:
 
 - [falcosecurity/libs](https://github.com/falcosecurity/libs): Falco's libraries are key to its fundamental operations, making up the greater portion of the source code of the Falco binary and providing essential features such as kernel drivers.
 - [falcosecurity/rules](https://github.com/falcosecurity/rules): Contains the official ruleset for Falco, providing pre-defined detection rules for various security threats and abnormal behaviors.
@@ -29,7 +29,7 @@ For more information, visit the official hub of The Falco Project: [falcosecurit
 
 ## Getting Started with Falco
 
-Carefully review and follow the [official guide and documentation](https://falco.org/docs/getting-started/).
+Carefully review and follow the [Official Documentation](https://falco.org/docs/install-operate/).
 
 Considerations and guidance for Falco adopters:
 
@@ -46,11 +46,11 @@ Considerations and guidance for Falco adopters:
 
 ## How to Contribute
 
-Please refer to the [contributing guide](https://github.com/falcosecurity/.github/blob/main/CONTRIBUTING.md) and the [code of conduct](https://github.com/falcosecurity/evolution/blob/main/CODE_OF_CONDUCT.md) for more information on how to contribute.
+Please refer to the [Contributing](https://github.com/falcosecurity/.github/blob/main/CONTRIBUTING.md) guide and the [Code of Conduct](https://github.com/falcosecurity/evolution/blob/main/CODE_OF_CONDUCT.md) for more information on how to contribute.
 
 ## Join the Community
 
-To get involved with the Falco Project please visit the [community repository](https://github.com/falcosecurity/community) to find more information and ways to get involved.
+To get involved with the Falco Project please visit the [Community](https://github.com/falcosecurity/community) repository to find more information and ways to get involved.
 
 If you have any questions about Falco or contributing, do not hesitate to file an issue or contact the Falco maintainers and community members for assistance.
 
@@ -64,7 +64,7 @@ How to reach out?
 
 Full reports of various security audits can be found [here](./audits/).
 
-In addition, you can refer to the [falco security](https://github.com/falcosecurity/falco/security) and [libs security](https://github.com/falcosecurity/libs/security) sections for detailed updates on security advisories and policies.
+In addition, you can refer to the [falco](https://github.com/falcosecurity/falco/security) and [libs](https://github.com/falcosecurity/libs/security) security sections for detailed updates on security advisories and policies.
 
 To report security vulnerabilities, please follow the community process outlined in the documentation found [here](https://github.com/falcosecurity/.github/blob/main/SECURITY.md).
 
@@ -76,7 +76,48 @@ Stay updated with Falco's evolving capabilities by exploring the [Falco Roadmap]
 
 Falco is licensed to you under the [Apache 2.0](./COPYING) open source license.
 
+## Testing
+
+<details>
+	<summary>Expand Testing Instructions</summary>
+
+Falco's [Build Falco from source](https://falco.org/docs/install-operate/source/) is the go-to resource to understand how to build Falco from source. In addition, the [falcosecurity/libs](https://github.com/falcosecurity/libs) repository offers additional valuable information about tests and debugging of Falco's underlying libraries and kernel drivers.
+
+Here's an example of a `cmake` command that will enable everything you need for all unit tests of this repository:
+
+```bash
+cmake \
+-DUSE_BUNDLED_DEPS=ON \
+-DBUILD_LIBSCAP_GVISOR=ON \
+-DBUILD_BPF=ON \
+-DBUILD_DRIVER=ON \
+-DBUILD_FALCO_MODERN_BPF=ON \
+-DCREATE_TEST_TARGETS=ON \
+-DBUILD_FALCO_UNIT_TESTS=ON ..;
+```
+
+Build and run the unit test suite:
+
+```bash
+nproc=$(grep processor /proc/cpuinfo | tail -n 1 | awk '{print $3}');
+make -j$(($nproc-1)) falco_unit_tests;
+# Run the tests
+sudo ./unit_tests/falco_unit_tests;
+```
+
+Optionally, build the driver of your choice and test run the Falco binary to perform manual tests.
+
+Lastly, The Falco Project has moved its Falco regression tests to [falcosecurity/testing](https://github.com/falcosecurity/testing).
+
+
+</details>
+
+</br>
+
 ## Why is Falco in C++ rather than Go or {language}?
+
+<details>
+	<summary>Expand Information</summary>
 
 1. The first lines of code at the base of Falco were written some time ago, where Go didn't yet have the same level of maturity and adoption as today.
 2. The Falco execution model is sequential and mono-thread due to the statefulness requirements of the tool, and so most of the concurrency-related selling points of the Go runtime would not be leveraged at all.
@@ -89,6 +130,8 @@ Falco is licensed to you under the [Apache 2.0](./COPYING) open source license.
 9. Memory safety is definitely a concern and we try our best to keep an high level of quality even though C++ is quite error prone. For instance, we try to use smart pointers whenever possible, we build the libraries with an address sanitizer in our CI, we run Falco through Valgrind before each release, and have ways to stress-test it to detect performance regressions or weird memory usage (e.g. https://github.com/falcosecurity/event-generator). On top of that, we also have third parties auditing the codebase by time to time. None of this make a perfect safety standpoint of course, but we try to maximize our odds. Go would definitely make our life easier from this perspective, however the tradeoffs never made it worth it so far due to the points above.
 10. The C++ codebase of falcosecurity/libs, which is at the core of Falco, is quite large and complex. Porting all that code to another language would be a major effort requiring lots of development resource and with an high chance of failure and regression. As such, our approach so far has been to choose refactors and code polishing instead, up until we'll reach an optimal level of stability, quality, and modularity, on that portion of code. This would allow further developments to be smoother and more feasibile in the future.
 
+</details>
+</br>
 
 ## Resources
 
@@ -99,3 +142,5 @@ Falco is licensed to you under the [Apache 2.0](./COPYING) open source license.
  - [Repositories Guidelines](https://github.com/falcosecurity/evolution/blob/main/REPOSITORIES.md)
  - [Repositories List](https://github.com/falcosecurity/evolution/blob/main/README.md#repositories)
  - [Adopters List](https://github.com/falcosecurity/falco/blob/master/ADOPTERS.md)
+ - [Install and Operate](https://falco.org/docs/install-operate/)
+ - [Troubleshooting](https://falco.org/docs/troubleshooting/)
