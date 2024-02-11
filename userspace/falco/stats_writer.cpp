@@ -169,9 +169,7 @@ stats_writer::ticker_t stats_writer::get_ticker()
 stats_writer::stats_writer(
 		const std::shared_ptr<falco_outputs>& outputs,
 		const std::shared_ptr<const falco_configuration>& config)
-	: m_initialized(false)
-	, m_total_samples(0)
-	, m_config(config)
+	: m_config(config)
 {
 	if (config->m_metrics_enabled)
 	{
@@ -303,8 +301,7 @@ void stats_writer::worker() noexcept
 }
 
 stats_writer::collector::collector(const std::shared_ptr<stats_writer>& writer)
-	: m_writer(writer), m_last_tick(0),
-	  m_last_now(0), m_last_n_evts(0), m_last_n_drops(0), m_last_num_evts(0)
+	: m_writer(writer)
 {
 }
 
