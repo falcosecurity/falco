@@ -17,9 +17,6 @@ limitations under the License.
 
 #include "versions_info.h"
 
-#include "config_falco.h"
-#include "falco_engine_version.h"
-
 #include <libsinsp/plugin_manager.h>
 
 // todo: move string conversion to scap
@@ -49,14 +46,9 @@ static inline std::string get_driver_schema_version(const std::shared_ptr<sinsp>
 }
 
 falco::versions_info::versions_info(const std::shared_ptr<sinsp>& inspector)
-    : falco_version(FALCO_VERSION)
-    , engine_version(FALCO_ENGINE_VERSION)
-    , libs_version(FALCOSECURITY_LIBS_VERSION)
-    , plugin_api_version(inspector->get_plugin_api_version())
+    : plugin_api_version(inspector->get_plugin_api_version())
     , driver_api_version(get_driver_api_version(inspector))
     , driver_schema_version(get_driver_schema_version(inspector))
-    , default_driver_version(DRIVER_VERSION)
-
 {
     for (const auto &p : inspector->get_plugin_manager()->plugins())
     {

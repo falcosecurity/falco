@@ -75,11 +75,11 @@ public:
 		void get_metrics_output_fields_additional(nlohmann::json& output_fields, const std::shared_ptr<sinsp>& inspector, double stats_snapshot_time_delta_sec, const std::string& src);
 
 		std::shared_ptr<stats_writer> m_writer;
-		stats_writer::ticker_t m_last_tick;
-		uint64_t m_last_now;
-		uint64_t m_last_n_evts;
-		uint64_t m_last_n_drops;
-		uint64_t m_last_num_evts;
+		stats_writer::ticker_t m_last_tick = 0;
+		uint64_t m_last_now = 0;
+		uint64_t m_last_n_evts = 0;
+		uint64_t m_last_n_drops = 0;
+		uint64_t m_last_num_evts = 0;
 	};
 
 	stats_writer(const stats_writer&) = delete;
@@ -123,14 +123,14 @@ public:
 private:
 	struct msg
 	{
-		msg(): stop(false), ts(0) {}
+		msg() {}
 		msg(msg&&) = default;
 		msg& operator = (msg&&) = default;
 		msg(const msg&) = default;
 		msg& operator = (const msg&) = default;
 
-		bool stop;
-		uint64_t ts;
+		bool stop = false;
+		uint64_t ts = 0;
 		std::string source;
 		nlohmann::json output_fields;
 	};
@@ -139,8 +139,8 @@ private:
 	void stop_worker();
 	inline void push(const stats_writer::msg& m);
 
-	bool m_initialized;
-	uint64_t m_total_samples;
+	bool m_initialized = false;
+	uint64_t m_total_samples = 0;
 	std::thread m_worker;
 	std::ofstream m_file_output;
 #ifndef __EMSCRIPTEN__
