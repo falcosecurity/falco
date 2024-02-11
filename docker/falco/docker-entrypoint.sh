@@ -36,8 +36,9 @@ print_usage() {
 	echo "  --print-env      skip execution and print env variables for other tools to consume"
 	echo ""
 	echo "Environment variables:"
-	echo "  FALCOCTL_DRIVER_REPOS             specify different URL(s) where to look for prebuilt Falco drivers (comma separated)"
-	echo "  FALCOCTL_DRIVER_NAME              specify a different name for the driver"
+	echo "  FALCOCTL_DRIVER_REPOS         specify different URL(s) where to look for prebuilt Falco drivers (comma separated)"
+	echo "  FALCOCTL_DRIVER_NAME          specify a different name for the driver"
+	echo "  FALCOCTL_DRIVER_HTTP_HEADERS  specify comma separated list of http headers for driver download (e.g. 'x-emc-namespace: default,Proxy-Authenticate: Basic')"
 	echo ""
 }
 
@@ -92,7 +93,7 @@ if [[ -z "${SKIP_DRIVER_LOADER}" ]]; then
                 ;;
 	    --http-insecure)
 		HTTP_INSECURE="true"
-		;;	
+		;;
             --source-only)
                 >&2 echo "Support dropped in Falco 0.37.0."
                 print_usage
@@ -118,7 +119,7 @@ if [[ -z "${SKIP_DRIVER_LOADER}" ]]; then
         ENABLE_COMPILE="true"
         ENABLE_DOWNLOAD="true"
     fi
-    /usr/bin/falcoctl driver install --compile=$ENABLE_COMPILE --download=$ENABLE_DOWNLOAD --http-insecure=$HTTP_INSECURE
+    /usr/bin/falcoctl driver install --compile=$ENABLE_COMPILE --download=$ENABLE_DOWNLOAD --http-insecure=$HTTP_INSECURE --http-headers="$FALCOCTL_DRIVER_HTTP_HEADERS"
 
 fi
 
