@@ -52,7 +52,7 @@ public:
 
 private:
 	std::string m_server_addr;
-	int m_threadiness;
+	int m_threadiness = 1;
 	std::string m_private_key;
 	std::string m_cert_chain;
 	std::string m_root_certs;
