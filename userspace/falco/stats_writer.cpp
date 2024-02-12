@@ -169,9 +169,10 @@ stats_writer::ticker_t stats_writer::get_ticker()
 stats_writer::stats_writer(
 		const std::shared_ptr<falco_outputs>& outputs,
 		const std::shared_ptr<const falco_configuration>& config)
-	: m_initialized(false), m_total_samples(0)
+	: m_initialized(false)
+	, m_total_samples(0)
+	, m_config(config)
 {
-	m_config = config;
 	if (config->m_metrics_enabled)
 	{
 		/* m_outputs should always be initialized because we use it
