@@ -135,7 +135,7 @@ falco::app::run_result falco::app::actions::load_rules_files(falco::app::state& 
 
 	if(!s.options.disabled_rule_tags.empty())
 	{
-		for(auto &tag : s.options.disabled_rule_tags)
+		for(const auto &tag : s.options.disabled_rule_tags)
 		{
 			falco_logger::log(falco_logger::level::INFO, "Disabling rules with tag: " + tag + "\n");
 		}
@@ -147,7 +147,7 @@ falco::app::run_result falco::app::actions::load_rules_files(falco::app::state& 
 		// Since we only want to enable specific
 		// rules, first disable all rules.
 		s.engine->enable_rule(all_rules, false);
-		for(auto &tag : s.options.enabled_rule_tags)
+		for(const auto &tag : s.options.enabled_rule_tags)
 		{
 			falco_logger::log(falco_logger::level::INFO, "Enabling rules with tag: " + tag + "\n");
 		}

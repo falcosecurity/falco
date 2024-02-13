@@ -33,7 +33,7 @@ static std::vector<std::string> rule_matching_names = {
 	"all"
 };
 
-bool falco_common::parse_priority(std::string v, priority_type& out)
+bool falco_common::parse_priority(const std::string& v, priority_type& out)
 {
 	for (size_t i = 0; i < priority_names.size(); i++)
 	{
@@ -50,7 +50,7 @@ bool falco_common::parse_priority(std::string v, priority_type& out)
 	return false;
 }
 
-falco_common::priority_type falco_common::parse_priority(std::string v)
+falco_common::priority_type falco_common::parse_priority(const std::string& v)
 {
 	falco_common::priority_type out;
 	if (!parse_priority(v, out))
@@ -87,7 +87,7 @@ std::string falco_common::format_priority(priority_type v, bool shortfmt)
 	return out;
 }
 
-bool falco_common::parse_rule_matching(std::string v, rule_matching& out)
+bool falco_common::parse_rule_matching(const std::string& v, rule_matching& out)
 {
 	for (size_t i = 0; i < rule_matching_names.size(); i++)
 	{

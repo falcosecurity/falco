@@ -140,7 +140,7 @@ std::string rule_loader::context::as_string()
 
 	bool first = true;
 
-	for(auto& loc : m_locs)
+	for(const auto& loc : m_locs)
 	{
 		os << (first ? "In " : "    ");
 		first = false;
@@ -174,7 +174,7 @@ nlohmann::json rule_loader::context::as_json()
 		throw falco_exception("rule_loader::context without location?");
 	}
 
-	for(auto& loc : m_locs)
+	for(const auto& loc : m_locs)
 	{
 		nlohmann::json jloc, jpos;
 

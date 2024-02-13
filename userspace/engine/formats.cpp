@@ -34,7 +34,7 @@ falco_formats::~falco_formats()
 }
 
 std::string falco_formats::format_event(sinsp_evt *evt, const std::string &rule, const std::string &source,
-				   const std::string &level, const std::string &format, std::set<std::string> &tags,
+				   const std::string &level, const std::string &format, const std::set<std::string> &tags,
 				   const std::string &hostname) const
 {
 	std::string line;
@@ -101,7 +101,7 @@ std::string falco_formats::format_event(sinsp_evt *evt, const std::string &rule,
 			}
 			else
 			{
-				for (auto &tag : tags)
+				for (const auto &tag : tags)
 				{
 					rule_tags[rule_tags_idx++] = tag;
 				}
@@ -128,7 +128,7 @@ std::string falco_formats::format_event(sinsp_evt *evt, const std::string &rule,
 		line = full_line;
 	}
 
-	return line.c_str();
+	return line;
 }
 
 std::map<std::string, std::string> falco_formats::get_field_values(sinsp_evt *evt, const std::string &source,

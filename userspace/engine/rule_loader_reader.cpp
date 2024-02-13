@@ -314,7 +314,7 @@ static void read_rule_exceptions(
 			rule_loader::context vals_ctx(exvals, rule_loader::context::EXCEPTION_VALUES, "", ex_ctx);
 			THROW(!exvals.IsSequence(),
 			       "Rule exception values must be a sequence", vals_ctx);
-			for (auto &val : exvals)
+			for (const auto &val : exvals)
 			{
 				rule_loader::context vctx(val, rule_loader::context::EXCEPTION_VALUE, "", vals_ctx);
 				rule_loader::rule_exception_info::entry v_ex_val;
@@ -654,7 +654,7 @@ void rule_loader::reader::read_item(
 			}
 
 			// if any expected key has not been defined throw an error
-			for (auto &key : expected_keys) {
+			for (const auto &key : expected_keys) {
 				rule_loader::context keyctx(item[key], rule_loader::context::OVERRIDE, key, ctx);
 				THROW(true, "Unexpected key '" + key + "': no corresponding entry under 'override' is defined.", keyctx);
 			}

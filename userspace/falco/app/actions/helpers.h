@@ -47,7 +47,7 @@ void read_files(InputIterator begin, InputIterator end,
 	// Read the contents in a first pass
 	for(auto it = begin; it != end; it++)
 	{
-		std::string &filename = *it;
+		const std::string &filename = *it;
 		std::ifstream is;
 		is.open(filename);
 		if (!is.is_open())

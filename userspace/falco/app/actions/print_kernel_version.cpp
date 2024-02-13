@@ -25,7 +25,7 @@ limitations under the License.
 using namespace falco::app;
 using namespace falco::app::actions;
 
-falco::app::run_result falco::app::actions::print_kernel_version(falco::app::state& s)
+falco::app::run_result falco::app::actions::print_kernel_version(const falco::app::state& s)
 {
 #ifdef __linux__
 	// We print this info only when a kernel driver is injected

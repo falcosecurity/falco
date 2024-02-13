@@ -58,8 +58,8 @@ public:
 		\brief Format then send the event to all configured outputs (`evt`
 		is an event that has matched some rule).
 	*/
-	void handle_event(sinsp_evt *evt, std::string &rule, std::string &source,
-			  falco_common::priority_type priority, std::string &format, std::set<std::string> &tags);
+	void handle_event(sinsp_evt *evt, const std::string &rule, const std::string &source,
+			  falco_common::priority_type priority, const std::string &format, std::set<std::string> &tags);
 
 	/*!
 		\brief Format then send a generic message to all outputs.
@@ -67,8 +67,8 @@ public:
 	*/
 	void handle_msg(uint64_t now,
 			falco_common::priority_type priority,
-			std::string &msg,
-			std::string &rule,
+			const std::string &msg,
+			const std::string &rule,
 			nlohmann::json &output_fields);
 
 	/*!
@@ -125,6 +125,6 @@ private:
 	inline void push_ctrl(ctrl_msg_type cmt);
 	void worker() noexcept;
 	void stop_worker();
-	void add_output(falco::outputs::config oc);
+	void add_output(const falco::outputs::config& oc);
 	inline void process_msg(falco::outputs::abstract_output* o, const ctrl_msg& cmsg);
 };

@@ -38,7 +38,7 @@ struct events_by_category
 	std::vector<event_entry> pluginevents;
 	std::vector<event_entry> metaevents;
 
-	void add_event(ppm_event_code e, bool available, std::string name = "") {
+	void add_event(ppm_event_code e, bool available, const std::string& name = "") {
 		event_entry entry;
 
 		entry.is_enter = PPME_IS_ENTER(e);

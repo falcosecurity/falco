@@ -84,7 +84,7 @@ falco_outputs::~falco_outputs()
 }
 
 // This function is called only at initialization-time by the constructor
-void falco_outputs::add_output(falco::outputs::config oc)
+void falco_outputs::add_output(const falco::outputs::config &oc)
 {
 	falco::outputs::abstract_output *oo;
 
@@ -135,8 +135,8 @@ void falco_outputs::add_output(falco::outputs::config oc)
 	}
 }
 
-void falco_outputs::handle_event(sinsp_evt *evt, std::string &rule, std::string &source,
-				 falco_common::priority_type priority, std::string &format, std::set<std::string> &tags)
+void falco_outputs::handle_event(sinsp_evt *evt, const std::string &rule, const std::string &source,
+				 falco_common::priority_type priority, const std::string &format, std::set<std::string> &tags)
 {
 	falco_outputs::ctrl_msg cmsg = {};
 	cmsg.ts = evt->get_ts();
@@ -177,8 +177,8 @@ void falco_outputs::handle_event(sinsp_evt *evt, std::string &rule, std::string 
 
 void falco_outputs::handle_msg(uint64_t ts,
 			       falco_common::priority_type priority,
-			       std::string &msg,
-			       std::string &rule,
+			       const std::string &msg,
+			       const std::string &rule,
 			       nlohmann::json &output_fields)
 {
 	if (!output_fields.is_object())

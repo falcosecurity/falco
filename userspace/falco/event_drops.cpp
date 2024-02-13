@@ -35,7 +35,7 @@ syscall_evt_drop_mgr::~syscall_evt_drop_mgr()
 
 void syscall_evt_drop_mgr::init(std::shared_ptr<sinsp> inspector,
 				std::shared_ptr<falco_outputs> outputs,
-				syscall_evt_drop_actions &actions,
+				const syscall_evt_drop_actions &actions,
 				double threshold,
 				double rate,
 				double max_tokens,
@@ -140,7 +140,7 @@ void syscall_evt_drop_mgr::print_stats()
 	fprintf(stderr, "   - num times actions taken: %lu\n", m_num_actions);
 }
 
-bool syscall_evt_drop_mgr::perform_actions(uint64_t now, scap_stats &delta, bool bpf_enabled)
+bool syscall_evt_drop_mgr::perform_actions(uint64_t now, const scap_stats &delta, bool bpf_enabled)
 {
 	std::string rule = "Falco internal: syscall event drop";
 	std::string msg = rule + ". " + std::to_string(delta.n_drops) + " system calls dropped in last second.";

@@ -115,7 +115,7 @@ bool evttype_index_ruleset::ruleset_filters::run(sinsp_evt *evt, falco_rule& mat
 {
     if(evt->get_type() < m_filter_by_event_type.size())
     {
-        for(auto &wrap : m_filter_by_event_type[evt->get_type()])
+        for(const auto &wrap : m_filter_by_event_type[evt->get_type()])
         {
             if(wrap->filter->run(evt))
             {
@@ -126,7 +126,7 @@ bool evttype_index_ruleset::ruleset_filters::run(sinsp_evt *evt, falco_rule& mat
     }
 
 	// Finally, try filters that are not specific to an event type.
-	for(auto &wrap : m_filter_all_event_types)
+	for(const auto &wrap : m_filter_all_event_types)
 	{
 		if(wrap->filter->run(evt))
 		{
@@ -144,7 +144,7 @@ bool evttype_index_ruleset::ruleset_filters::run(sinsp_evt *evt, std::vector<fal
 
 	if(evt->get_type() < m_filter_by_event_type.size())
 	{
-		for(auto &wrap : m_filter_by_event_type[evt->get_type()])
+		for(const auto &wrap : m_filter_by_event_type[evt->get_type()])
 		{
 			if(wrap->filter->run(evt))
 			{
@@ -160,7 +160,7 @@ bool evttype_index_ruleset::ruleset_filters::run(sinsp_evt *evt, std::vector<fal
 	}
 
 	// Finally, try filters that are not specific to an event type.
-	for(auto &wrap : m_filter_all_event_types)
+	for(const auto &wrap : m_filter_all_event_types)
 	{
 		if(wrap->filter->run(evt))
 		{
@@ -175,7 +175,7 @@ bool evttype_index_ruleset::ruleset_filters::run(sinsp_evt *evt, std::vector<fal
 libsinsp::events::set<ppm_sc_code> evttype_index_ruleset::ruleset_filters::sc_codes()
 {
 	libsinsp::events::set<ppm_sc_code> res;
-	for(auto &wrap : m_filters)
+	for(const auto &wrap : m_filters)
 	{
 		res.insert(wrap->sc_codes.begin(), wrap->sc_codes.end());
 	}
@@ -185,7 +185,7 @@ libsinsp::events::set<ppm_sc_code> evttype_index_ruleset::ruleset_filters::sc_co
 libsinsp::events::set<ppm_event_code> evttype_index_ruleset::ruleset_filters::event_codes()
 {
 	libsinsp::events::set<ppm_event_code> res;
-	for(auto &wrap : m_filters)
+	for(const auto &wrap : m_filters)
 	{
 		res.insert(wrap->event_codes.begin(), wrap->event_codes.end());
 	}

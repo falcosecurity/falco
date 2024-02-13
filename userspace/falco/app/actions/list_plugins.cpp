@@ -23,7 +23,7 @@ limitations under the License.
 using namespace falco::app;
 using namespace falco::app::actions;
 
-falco::app::run_result falco::app::actions::list_plugins(falco::app::state& s)
+falco::app::run_result falco::app::actions::list_plugins(const falco::app::state& s)
 {
 	if(s.options.list_plugins)
 	{

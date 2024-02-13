@@ -30,7 +30,7 @@ public:
 	virtual ~falco_formats();
 
 	std::string format_event(sinsp_evt *evt, const std::string &rule, const std::string &source,
-				 const std::string &level, const std::string &format, std::set<std::string> &tags,
+				 const std::string &level, const std::string &format, const std::set<std::string> &tags,
 				 const std::string &hostname) const;
 
 	std::map<std::string, std::string> get_field_values(sinsp_evt *evt, const std::string &source,

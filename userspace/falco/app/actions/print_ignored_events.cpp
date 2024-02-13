@@ -22,7 +22,7 @@ limitations under the License.
 using namespace falco::app;
 using namespace falco::app::actions;
 
-falco::app::run_result falco::app::actions::print_ignored_events(falco::app::state& s)
+falco::app::run_result falco::app::actions::print_ignored_events(const falco::app::state& s)
 {
 	if(!s.options.print_ignored_events)
 	{

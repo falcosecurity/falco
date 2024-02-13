@@ -23,7 +23,7 @@ limitations under the License.
 using namespace falco::app;
 using namespace falco::app::actions;
 
-falco::app::run_result falco::app::actions::print_page_size(falco::app::state& s)
+falco::app::run_result falco::app::actions::print_page_size(const falco::app::state& s)
 {
 	if(s.options.print_page_size)
 	{
