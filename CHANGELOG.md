@@ -1,5 +1,27 @@
 # Change Log
 
+## v0.37.1
+
+Released on 2024-02-13
+
+### Major Changes
+
+* new(docker): added option for insecure http driver download to falco and driver-loader images [[#3058](https://github.com/falcosecurity/falco/pull/3058)] - [@toamto94](https://github.com/toamto94)
+
+### Minor Changes
+
+* update(cmake): bumped falcoctl to v0.7.2 [[#3076](https://github.com/falcosecurity/falco/pull/3076)] - [@FedeDP](https://github.com/FedeDP)
+* update(build): link libelf dynamically [[#3048](https://github.com/falcosecurity/falco/pull/3048)] - [@LucaGuerra](https://github.com/LucaGuerra)
+
+### Bug Fixes
+
+* fix(userspace/engine): always consider all rules (even the ones below min_prio) in m_rule_stats_manager [[#3060](https://github.com/falcosecurity/falco/pull/3060)] - [@FedeDP](https://github.com/FedeDP)
+
+### Non user-facing changes
+
+* Added http headers option for driver download in docker images [[#3075](https://github.com/falcosecurity/falco/pull/3075)] - [@toamto94](https://github.com/toamto94)
+* fix(build): install libstdc++ in the Wolfi image [[#3053](https://github.com/falcosecurity/falco/pull/3053)] - [@LucaGuerra](https://github.com/LucaGuerra)
+
 ## v0.37.0
 
 Released on 2024-01-30
