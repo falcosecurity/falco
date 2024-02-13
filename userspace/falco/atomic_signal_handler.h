@@ -111,13 +111,13 @@ namespace falco
                             m_handled.store(true, std::memory_order_seq_cst);
                         }
                     }
-                    catch (std::exception& e)
+                    catch (std::exception&)
                     {
                         if (triggered())
                         {
                             m_handled.store(true, std::memory_order_seq_cst);
                         }
-                        throw e;
+                        throw;
                     }
                     return true;
                 }
