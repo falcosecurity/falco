@@ -43,7 +43,7 @@ public:
 
 	virtual ~filter_ruleset() = default;
 
-	void set_engine_state(engine_state_funcs &engine_state);
+	void set_engine_state(const engine_state_funcs &engine_state);
 	engine_state_funcs &get_engine_state();
 
 	/*!

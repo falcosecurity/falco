@@ -27,7 +27,7 @@ using namespace falco::app;
 using namespace falco::app::actions;
 
 // applies legacy/in-deprecation options to the current state
-static falco::app::run_result apply_deprecated_options(falco::app::state& s)
+static falco::app::run_result apply_deprecated_options(const falco::app::state& s)
 {
 	// Check that at most one command line option is provided
 	int open_modes = 0;
@@ -137,7 +137,7 @@ static falco::app::run_result apply_deprecated_options(falco::app::state& s)
 	return run_result::ok();
 }
 
-falco::app::run_result falco::app::actions::load_config(falco::app::state& s)
+falco::app::run_result falco::app::actions::load_config(const falco::app::state& s)
 {
 	try
 	{
@@ -175,7 +175,7 @@ falco::app::run_result falco::app::actions::load_config(falco::app::state& s)
 	return apply_deprecated_options(s);
 }
 
-falco::app::run_result falco::app::actions::require_config_file(falco::app::state& s)
+falco::app::run_result falco::app::actions::require_config_file(const falco::app::state& s)
 {
 #ifndef __EMSCRIPTEN__
 	if (s.options.conf_filename.empty())

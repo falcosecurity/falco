@@ -78,7 +78,7 @@ static void validate_exception_info(
 		THROW(ex.fields.items.size() != ex.comps.items.size(),
 		       "Fields and comps lists must have equal length",
 		       ex.ctx);
-		for (auto &v : ex.comps.items)
+		for (const auto &v : ex.comps.items)
 		{
 			THROW(!is_operator_defined(v.item),
 			      std::string("'") + v.item + "' is not a supported comparison operator",
@@ -86,7 +86,7 @@ static void validate_exception_info(
 		}
 		if (source)
 		{
-			for (auto &v : ex.fields.items)
+			for (const auto &v : ex.fields.items)
 			{
 				THROW(!source->is_field_defined(v.item),
 					std::string("'") + v.item + "' is not a supported filter field",
@@ -212,12 +212,12 @@ void rule_loader::collector::append(configuration& cfg, macro_info& info)
 
 void rule_loader::collector::define(configuration& cfg, rule_info& info)
 {
-	auto prev = m_rule_infos.at(info.name);
+	const auto* prev = m_rule_infos.at(info.name);
 	THROW(prev && prev->source != info.source,
 		"Rule has been re-defined with a different source",
 		info.ctx);
 
-	auto source = cfg.sources.at(info.source);
+	const auto* source = cfg.sources.at(info.source);
 	if (!source)
 	{
 		info.unknown_source = true;
@@ -248,7 +248,7 @@ void rule_loader::collector::append(configuration& cfg, rule_update_info& info)
 
 	// note: source can be nullptr in case we've collected a
 	// rule for which the source is unknown
-	falco_source* source = nullptr;
+	const falco_source* source = nullptr;
 	if (!prev->unknown_source)
 	{
 		// note: if the source is not unknown, this should not return nullptr
@@ -330,7 +330,7 @@ void rule_loader::collector::selective_replace(configuration& cfg, rule_update_i
 
 	// note: source can be nullptr in case we've collected a
 	// rule for which the source is unknown
-	falco_source* source = nullptr;
+	const falco_source* source = nullptr;
 	if (!prev->unknown_source)
 	{
 		// note: if the source is not unknown, this should not return nullptr

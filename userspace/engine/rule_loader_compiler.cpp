@@ -394,7 +394,7 @@ void rule_loader::compiler::compile_macros_infos(
 	filter_macro_resolver macro_resolver;
 	for (auto &m : out)
 	{
-		auto info = macro_info_from_name(col, m.name);
+		const auto* info = macro_info_from_name(col, m.name);
 		resolve_macros(macro_resolver, col.macros(), out, m.condition, info->cond, info->visibility, info->ctx);
 	}
 }

@@ -24,7 +24,7 @@ limitations under the License.
 using namespace falco::app;
 using namespace falco::app::actions;
 
-falco::app::run_result falco::app::actions::pidfile(falco::app::state& s)
+falco::app::run_result falco::app::actions::pidfile(const falco::app::state& s)
 {
 	if (s.options.dry_run)
 	{

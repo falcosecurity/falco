@@ -120,7 +120,7 @@ static std::string fieldclass_key(const sinsp_filter_factory::filter_fieldclass_
 	return fld_info.name + fld_info.shortdesc;
 }
 
-void falco_engine::list_fields(std::string &source, bool verbose, bool names_only, bool markdown) const
+void falco_engine::list_fields(const std::string &source, bool verbose, bool names_only, bool markdown) const
 {
 	// Maps from field class name + short desc to list of event
 	// sources for which this field class can be used.
@@ -360,7 +360,7 @@ uint64_t falco_engine::num_rules_for_ruleset(const std::string &ruleset)
 	return ret;
 }
 
-void falco_engine::evttypes_for_ruleset(std::string &source, std::set<uint16_t> &evttypes, const std::string &ruleset)
+void falco_engine::evttypes_for_ruleset(const std::string &source, std::set<uint16_t> &evttypes, const std::string &ruleset)
 {
 	find_source(source)->ruleset->enabled_evttypes(evttypes, find_ruleset_id(ruleset));
 }
@@ -422,7 +422,7 @@ std::unique_ptr<std::vector<falco_engine::rule_result>> falco_engine::process_ev
 	}
 
 	auto res = std::make_unique<std::vector<falco_engine::rule_result>>();
-	for(auto rule : source->m_rules)
+	for(const auto& rule : source->m_rules)
 	{
 		rule_result rule_result;
 		rule_result.evt = ev;
@@ -1025,7 +1025,7 @@ void falco_engine::fill_engine_state_funcs(filter_ruleset::engine_state_funcs &e
 {
 	engine_state.get_ruleset = [this](const std::string &source_name, std::shared_ptr<filter_ruleset> &ruleset) -> bool
 	{
-		falco_source *src = m_sources.at(source_name);
+		const falco_source *src = m_sources.at(source_name);
 		if(src == nullptr)
 		{
 			return false;
@@ -1055,7 +1055,7 @@ void falco_engine::set_sampling_multiplier(double sampling_multiplier)
 	m_sampling_multiplier = sampling_multiplier;
 }
 
-void falco_engine::set_extra(std::string &extra, bool replace_container_info)
+void falco_engine::set_extra(const std::string &extra, bool replace_container_info)
 {
 	m_extra = extra;
 	m_replace_container_info = replace_container_info;

@@ -20,7 +20,7 @@ limitations under the License.
 using namespace falco::app;
 using namespace falco::app::actions;
 
-falco::app::run_result falco::app::actions::configure_syscall_buffer_num(falco::app::state& s)
+falco::app::run_result falco::app::actions::configure_syscall_buffer_num(const falco::app::state& s)
 {
 #ifdef __linux__
 	if(!s.is_modern_ebpf())

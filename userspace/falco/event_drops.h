@@ -45,7 +45,7 @@ public:
 
 	void init(std::shared_ptr<sinsp> inspector,
 		  std::shared_ptr<falco_outputs> outputs,
-		  syscall_evt_drop_actions &actions,
+		  const syscall_evt_drop_actions &actions,
 		  double threshold,
 		  double rate,
 		  double max_tokens,
@@ -62,7 +62,7 @@ public:
 
 protected:
 	// Perform all configured actions.
-	bool perform_actions(uint64_t now, scap_stats &delta, bool bpf_enabled);
+	bool perform_actions(uint64_t now, const scap_stats &delta, bool bpf_enabled);
 
 	uint64_t m_num_syscall_evt_drops;
 	uint64_t m_num_actions;

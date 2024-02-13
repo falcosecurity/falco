@@ -69,7 +69,7 @@ falco::app::run_result falco::app::actions::validate_rules_files(falco::app::sta
 		std::string summary;
 
 		falco_logger::log(falco_logger::level::INFO, "Validating rules file(s):\n");
-		for(auto file : s.options.validate_rules_filenames)
+		for(const auto& file : s.options.validate_rules_filenames)
 		{
 			falco_logger::log(falco_logger::level::INFO, "   " + file + "\n");
 		}

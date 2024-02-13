@@ -326,7 +326,7 @@ static void process_inspector_events(
 		falco::app::state& s,
 		std::shared_ptr<sinsp> inspector,
 		std::shared_ptr<stats_writer> statsw,
-		std::string source, // an empty source represents capture mode
+		const std::string& source, // an empty source represents capture mode
 		source_sync_context* sync,
 		run_result* res) noexcept
 {

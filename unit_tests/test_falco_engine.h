@@ -29,7 +29,7 @@ protected:
 
 	}
 
-	bool load_rules(std::string rules_content, std::string rules_filename)
+	bool load_rules(const std::string& rules_content, const std::string& rules_filename)
 	{
 		bool ret = false;
 		falco::load_result::rules_contents_t rc = {{rules_filename, rules_content}};
@@ -47,7 +47,7 @@ protected:
 	}
 
 	// This must be kept in line with the (private) falco_engine::s_default_ruleset
-	uint64_t num_rules_for_ruleset(std::string ruleset = "falco-default-ruleset")
+	uint64_t num_rules_for_ruleset(const std::string& ruleset = "falco-default-ruleset")
 	{
 		return m_engine->num_rules_for_ruleset(ruleset);
 	}
@@ -57,14 +57,14 @@ protected:
 		return m_load_result->has_warnings();
 	}
 
-	bool check_warning_message(std::string warning_msg)
+	bool check_warning_message(const std::string& warning_msg) const
 	{
 		if(!m_load_result->has_warnings())
 		{
 			return false;
 		}
 
-		for(auto &warn : m_load_result_json["warnings"])
+		for(const auto &warn : m_load_result_json["warnings"])
 		{
 			std::string msg = warn["message"];
 			// Debug:
@@ -78,7 +78,7 @@ protected:
 		return false;
 	}
 
-	bool check_error_message(std::string error_msg)
+	bool check_error_message(const std::string& error_msg) const
 	{
 		// if the loading is successful there are no errors
 		if(m_load_result->successful())
@@ -86,7 +86,7 @@ protected:
 			return false;
 		}
 
-		for(auto &err : m_load_result_json["errors"])
+		for(const auto &err : m_load_result_json["errors"])
 		{
 			std::string msg = err["message"];
 			// Debug:
@@ -100,7 +100,7 @@ protected:
 		return false;
 	}
 
-	std::string get_compiled_rule_condition(std::string rule_name = "")
+	std::string get_compiled_rule_condition(std::string rule_name = "") const
 	{
 		auto rule_description = m_engine->describe_rule(&rule_name, {});
 		return rule_description["rules"][0]["details"]["condition_compiled"].template get<std::string>();

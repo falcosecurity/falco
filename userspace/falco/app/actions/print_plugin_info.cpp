@@ -23,7 +23,7 @@ limitations under the License.
 using namespace falco::app;
 using namespace falco::app::actions;
 
-falco::app::run_result falco::app::actions::print_plugin_info(falco::app::state& s)
+falco::app::run_result falco::app::actions::print_plugin_info(const falco::app::state& s)
 {
 	if(!s.options.print_plugin_info.empty())
 	{
@@ -83,7 +83,7 @@ falco::app::run_result falco::app::actions::print_plugin_info(falco::app::state&
 					else
 					{
 						os << "Suggested open params:" << std::endl;
-						for(auto &oparam : p->list_open_params())
+						for(const auto &oparam : p->list_open_params())
 						{
 							if(oparam.desc == "")
 							{

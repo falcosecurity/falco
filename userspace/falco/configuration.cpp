@@ -398,7 +398,7 @@ void falco_configuration::load_yaml(const std::string& config_name, const yaml_h
 	config.get_sequence(syscall_event_drop_acts, "syscall_event_drops.actions");
 
 	m_syscall_evt_drop_actions.clear();
-	for(std::string &act : syscall_event_drop_acts)
+	for(const std::string &act : syscall_event_drop_acts)
 	{
 		if(act == "ignore")
 		{

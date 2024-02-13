@@ -65,7 +65,7 @@ void falco_logger::set_time_format_iso_8601(bool val)
 	falco_logger::time_format_iso_8601 = val;
 }
 
-void falco_logger::set_level(std::string &level)
+void falco_logger::set_level(const std::string &level)
 {
 	if(level == "emergency")
 	{
@@ -169,7 +169,7 @@ void falco_logger::log(falco_logger::level priority, const std::string&& msg)
 		if(falco_logger::time_format_iso_8601)
 		{
 			char buf[sizeof "YYYY-MM-DDTHH:MM:SS-0000"];
-			struct tm *gtm = std::gmtime(&result);
+			const struct tm *gtm = std::gmtime(&result);
 			if(gtm != NULL &&
 			   (strftime(buf, sizeof(buf), "%FT%T%z", gtm) != 0))
 			{
@@ -178,7 +178,7 @@ void falco_logger::log(falco_logger::level priority, const std::string&& msg)
 		}
 		else
 		{
-			struct tm *ltm = std::localtime(&result);
+			const struct tm *ltm = std::localtime(&result);
 			char *atime = (ltm ? std::asctime(ltm) : NULL);
 			std::string tstr;
 			if(atime)
