@@ -330,6 +330,8 @@ static void process_inspector_events(
 		source_sync_context* sync,
 		run_result* res) noexcept
 {
+	run_result result;
+
 	try
 	{
 		double duration;
@@ -342,7 +344,7 @@ static void process_inspector_events(
 
 		duration = ((double)clock()) / CLOCKS_PER_SEC;
 
-		*res = do_inspect(s, inspector, source, statsw, sdropmgr, check_drops_timeouts,
+		result = do_inspect(s, inspector, source, statsw, sdropmgr, check_drops_timeouts,
 						uint64_t(s.options.duration_to_tot*ONE_SECOND_IN_NS),
 						num_evts);
 
@@ -373,13 +375,21 @@ static void process_inspector_events(
 	}
 	catch(const std::exception& e)
 	{
-		*res = run_result::fatal(e.what());
+		result = run_result::fatal(e.what());
 	}
 
 	if (sync)
 	{
-		sync->finish();
+		try {
+			sync->finish();
+		}
+		catch(const std::exception& e)
+		{
+			result = run_result::merge(result, run_result::fatal(e.what()));
+		}
 	}
+
+	*res = result;
 }
 
 static falco::app::run_result init_stats_writer(
