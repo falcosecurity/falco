@@ -126,6 +126,7 @@ void falco_configuration::load_engine_config(const std::string& config_name, con
 	m_syscall_buf_size_preset = config.get_scalar<int16_t>("syscall_buf_size_preset", DEFAULT_BUF_SIZE_PRESET);
 	m_cpus_for_each_syscall_buffer = config.get_scalar<uint16_t>("modern_bpf.cpus_for_each_syscall_buffer", DEFAULT_CPUS_FOR_EACH_SYSCALL_BUFFER);
 	m_syscall_drop_failed_exit = config.get_scalar<bool>("syscall_drop_failed_exit", DEFAULT_DROP_FAILED_EXIT);
+
 	switch (m_engine_mode)
 	{
 	case engine_kind_t::KMOD:
@@ -629,4 +630,3 @@ void falco_configuration::set_cmdline_option(yaml_helper& config, const std::str
 
 	config.set_scalar(keyval.first, keyval.second);
 }
-
