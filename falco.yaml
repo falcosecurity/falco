@@ -64,11 +64,7 @@
 #     syscall_event_drops -> [CHANGE NOTICE] Automatic notifications will be simplified in Falco 0.38! If you depend on the detailed drop counters payload, use 'metrics.output_rule' along with 'metrics.kernel_event_counters_enabled' instead
 #     metrics
 # Falco performance tuning (advanced)
-#     syscall_buf_size_preset [DEPRECATED] -> Replaced by `engine.<driver>.buf_size_preset` starting Falco 0.38!
-#     syscall_drop_failed_exit [DEPRECATED] -> Replaced by `engine.<driver>.drop_failed_exit` starting Falco 0.38! 
 #     base_syscalls
-#     modern_bpf.cpus_for_each_syscall_buffer [DEPRECATED] -> Replaced by `engine.modern_ebpf.cpus_for_each_buffer` starting Falco 0.38! 
-
 
 ################################
 # Falco command-line arguments #
@@ -95,10 +91,6 @@
 # - HOST_ROOT: Specifies the prefix to the underlying host `/proc` filesystem
 #   when deploying Falco over a container with read-only host mounts instead of
 #   directly on the host. Defaults to "/host". 
-#
-# - !!! [DEPRECATED] FALCO_BPF_PROBE: Specify a custom path to the BPF object code file (`bpf`
-#   driver). This is not needed for the modern_bpf driver. 
-#   -> Replaced by `engine.kind: ebpf` and `engine.ebpf` starting Falco 0.38!
 #
 # - FALCO_HOSTNAME: Customize the hostname output field logged by Falco by
 #   setting the "FALCO_HOSTNAME" environment variable.
@@ -993,76 +985,6 @@ metrics:
 # Falco performance tuning (advanced) #
 #######################################
 
-# [DEPRECATED] `syscall_buf_size_preset` -> Replaced by `engine.<driver>.buf_size_preset` starting Falco 0.38!
-#
-# Deprecated in favor of engine.{kmod,ebpf,modern_ebpf}.buf_size_preset.
-# This config is evaluated only if the default `engine` config block is not changed,
-# otherwise it is ignored.
-#
-# --- [Description]
-#
-# The syscall buffer index determines the size of the shared space between Falco
-# and its drivers. This shared space serves as a temporary storage for syscall
-# events, allowing them to be transferred from the kernel to the userspace
-# efficiently. The buffer size for each online CPU is determined by the buffer
-# index, and each CPU has its own dedicated buffer. Adjusting this index allows
-# you to control the overall size of the syscall buffers.
-#
-# --- [Usage]
-#
-# The index 0 is reserved, and each subsequent index corresponds to an
-# increasing size in bytes. For example, index 1 corresponds to a size of 1 MB,
-# index 2 corresponds to 2 MB, and so on:
-#
-# [(*), 1 MB, 2 MB, 4 MB, 8 MB, 16 MB, 32 MB, 64 MB, 128 MB, 256 MB, 512 MB]
-#   ^    ^     ^     ^     ^     ^      ^      ^       ^       ^       ^
-#   |    |     |     |     |     |      |      |       |       |       |
-#   0    1     2     3     4     5      6      7       8       9       10
-#
-#
-# The buffer dimensions in bytes are determined by the following requirements:
-# (1) a power of 2.
-# (2) a multiple of your system_page_dimension.
-# (3) greater than `2 * (system_page_dimension).
-#
-# The buffer size constraints may limit the usability of certain indexes. Let's
-# consider an example to illustrate this:
-#
-# If your system has a page size of 1 MB, the first available buffer size would
-# be 4 MB because 2 MB is exactly equal to 2 * (system_page_size), which is not
-# sufficient as we require more than 2 * (system_page_size). In this example, it
-# is evident that if the page size is 1 MB, the first index that can be used is 3.
-#
-# However, in most cases, these constraints do not pose a limitation, and all
-# indexes from 1 to 10 can be used. You can check your system's page size using
-# the Falco `--page-size` command-line option.
-# 
-# --- [Suggestions]
-#
-# The buffer size was previously fixed at 8 MB (index 4). You now have the
-# option to adjust the size based on your needs. Increasing the size, such as to
-# 16 MB (index 5), can reduce syscall drops in heavy production systems, but may
-# impact performance. Decreasing the size can speed up the system but may
-# increase syscall drops. It's important to note that the buffer size is mapped
-# twice in the process' virtual memory, so a buffer of 8 MB will result in a 16
-# MB area in virtual memory. Use this parameter with caution and only modify it
-# if the default size is not suitable for your use case.
-syscall_buf_size_preset: 4
-
-# [DEPRECATED] `syscall_drop_failed_exit` -> Replaced by `engine.<driver>.drop_failed_exit` starting Falco 0.38! 
-#
-# Deprecated in favor of engine.{kmod,ebpf,modern_ebpf}.drop_failed_exit.
-# This config is evaluated only if the default `engine` config block is not changed,
-# otherwise it is ignored.
-#
-# Enabling this option in Falco allows it to drop failed system call exit events
-# in the kernel drivers before pushing them onto the ring buffer. This
-# optimization can result in lower CPU usage and more efficient utilization of
-# the ring buffer, potentially reducing the number of event losses. However, it
-# is important to note that enabling this option also means sacrificing some
-# visibility into the system.
-syscall_drop_failed_exit: false
-
 # [Stable] `base_syscalls`, use with caution, read carefully
 #
 # --- [Description]
@@ -1177,90 +1099,6 @@ syscall_drop_failed_exit: false
 base_syscalls:
   custom_set: []
   repair: false
-
-# [DEPRECATED] `modern_bpf.cpus_for_each_syscall_buffer`, modern_bpf only -> Replaced by `engine.modern_ebpf.cpus_for_each_buffer` starting Falco 0.38! 
-#
-# Deprecated in favor of engine.modern_ebpf.cpus_for_each_buffer.
-# This config is evaluated only if the default `engine` config block is not changed,
-# otherwise it is ignored.
-#
-# --- [Description]
-#
-# The modern_bpf driver in Falco utilizes the new BPF ring buffer, which has a
-# different memory footprint compared to the current BPF driver that uses the
-# perf buffer. The Falco core maintainers have discussed the differences and
-# their implications, particularly in Kubernetes environments where limits need
-# to be carefully set to avoid interference with the Falco daemonset deployment
-# from the OOM killer. Based on guidance received from the kernel mailing list,
-# it is recommended to assign multiple CPUs to one buffer instead of allocating
-# a buffer for each CPU individually. This helps optimize resource allocation
-# and prevent potential issues related to memory usage.
-#
-# This is an index that controls how many CPUs you want to assign to a single
-# syscall buffer (ring buffer). By default, for modern_bpf every syscall buffer
-# is associated to 2 CPUs, so the mapping is 1:2. The modern BPF probe allows
-# you to choose different mappings, for example, changing the value to `1`
-# results in a 1:1 mapping and would mean one syscall buffer for each CPU (this
-# is the default for the `bpf` driver).
-#
-# --- [Usage]
-#
-# You can choose an index from 0 to MAX_NUMBER_ONLINE_CPUs to set the dimension
-# of the syscall buffers. The value 0 represents a single buffer shared among
-# all online CPUs. It serves as a flexible option when the exact number of
-# online CPUs is unknown. Here's an example to illustrate this:
-#
-# Consider a system with 7 online CPUs:
-#
-#          CPUs     0  X  2  3  X  X  6  7  8  9   (X means offline CPU)
-#
-# - `1` means a syscall buffer for each CPU so 7 buffers
-#
-#          CPUs     0  X  2  3  X  X  6  7  8  9   (X means offline CPU)
-#                   |     |  |        |  |  |  |
-#       BUFFERs     0     1  2        3  4  5  6
-#
-# - `2` (Default value) means a syscall buffer for each CPU pair, so 4 buffers
-#
-#          CPUs     0  X  2  3  X  X  6  7  8  9   (X means offline CPU)
-#                   |     |  |        |  |  |  |
-#       BUFFERs     0     0  1        1  2  2  3
-#
-# Please note that in this example, there are 4 buffers in total. Three of the
-# buffers are associated with pairs of CPUs, while the last buffer is mapped to
-# a single CPU. This arrangement is necessary because we have an odd number of
-# CPUs.
-#
-# - `0` or `MAX_NUMBER_ONLINE_CPUs` mean a syscall buffer shared between all
-#   CPUs, so 1 buffer
-#
-#          CPUs     0  X  2  3  X  X  6  7  8  9   (X means offline CPU)
-#                   |     |  |        |  |  |  |
-#       BUFFERs     0     0  0        0  0  0  0
-#
-# Moreover, you have the option to combine this parameter with
-# `syscall_buf_size_preset` index. For instance, you can create a large shared
-# syscall buffer of 512 MB (using syscall_buf_size_preset=10) that is
-# allocated among all the online CPUs.
-#
-# --- [Suggestions]
-#
-# The default choice of index 2 (one syscall buffer for each CPU pair) was made
-# because the modern bpf probe utilizes a different memory allocation strategy
-# compared to the other two drivers (bpf and kernel module). However, you have
-# the flexibility to experiment and find the optimal configuration for your
-# system.
-# 
-# When considering a fixed syscall_buf_size_preset and a fixed buffer dimension:
-# - Increasing this configs value results in lower number of buffers and you can
-#   speed up your system and reduce memory usage
-# - However, using too few buffers may increase contention in the kernel,
-#   leading to a slowdown.
-# 
-# If you have low event throughputs and minimal drops, reducing the number of
-# buffers (higher `cpus_for_each_syscall_buffer`) can lower the memory footprint.
-modern_bpf:
-  cpus_for_each_syscall_buffer: 2
 
 # [Stable] Guidance for Kubernetes container engine command-line args settings
 #
