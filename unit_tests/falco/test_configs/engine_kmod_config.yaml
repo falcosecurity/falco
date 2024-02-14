@@ -23,12 +23,12 @@
 engine:
   kind: kmod
   kmod:
-    buf_size_preset: 2 # changed default value
+    buf_size_preset: 2
     drop_failed_exit: false
   ebpf:
     probe: /path/to/probe.o
-    buf_size_preset: 4
-    drop_failed_exit: false
+    buf_size_preset: 7
+    drop_failed_exit: true
   modern_ebpf:
     cpus_for_each_buffer: 2
     buf_size_preset: 4
@@ -38,15 +38,3 @@ engine:
   gvisor:
     config: /path/to/gvisor_config.yaml
     root: ""
-
-#######################################
-# Falco performance tuning (advanced) #
-#######################################
-
-# These configs should be ignored since we have changed the `engine` config
-syscall_buf_size_preset: 6
-
-syscall_drop_failed_exit: true
-
-modern_bpf:
-  cpus_for_each_syscall_buffer: 7
