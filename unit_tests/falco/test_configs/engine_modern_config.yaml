@@ -20,34 +20,21 @@
 # Falco engine #
 ################
 
-# Unchanged
 engine:
-  kind: kmod
+  kind: modern_ebpf
   kmod:
-    buf_size_preset: 4
-    drop_failed_exit: false
+    buf_size_preset: 1
+    drop_failed_exit: true
   ebpf:
     probe: /path/to/probe.o
     buf_size_preset: 4
     drop_failed_exit: false
   modern_ebpf:
-    cpus_for_each_buffer: 2
-    buf_size_preset: 4
-    drop_failed_exit: false
+    cpus_for_each_buffer: 1
+    # missing `buf_size_preset` should be defaulted
+    drop_failed_exit: true
   replay:
     capture_file: /path/to/file.scap
   gvisor:
     config: /path/to/gvisor_config.yaml
     root: ""
-
-#######################################
-# Falco performance tuning (advanced) #
-#######################################
-
-# The `engine` config is unchanged so these configs are used
-syscall_buf_size_preset: 6
-
-syscall_drop_failed_exit: true
-
-modern_bpf:
-  cpus_for_each_syscall_buffer: 3

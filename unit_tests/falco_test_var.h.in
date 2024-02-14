@@ -1,4 +1,4 @@
 #pragma once
 
-#define NEW_ENGINE_CONFIG_CHANGED "${CMAKE_SOURCE_DIR}/unit_tests/falco/test_configs/new_engine_config_changed.yaml"
-#define NEW_ENGINE_CONFIG_UNCHANGED "${CMAKE_SOURCE_DIR}/unit_tests/falco/test_configs/new_engine_config_unchanged.yaml"
+#define TEST_ENGINE_KMOD_CONFIG "${CMAKE_SOURCE_DIR}/unit_tests/falco/test_configs/engine_kmod_config.yaml"
+#define TEST_ENGINE_MODERN_CONFIG "${CMAKE_SOURCE_DIR}/unit_tests/falco/test_configs/engine_modern_config.yaml"
