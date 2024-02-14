@@ -40,6 +40,10 @@ namespace fs = std::filesystem;
 // Reference: https://digitalfortress.tech/tips/top-15-commonly-used-regex/
 static re2::RE2 ip_address_re("((^\\s*((([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))\\s*$)|(^\\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)(\\.(25[0-5]|2[0-4]\\d|1\\d\\d|[1-9]?\\d)){3}))|:)))(%.+)?\\s*$))");
 
+#define DEFAULT_BUF_SIZE_PRESET 4
+#define DEFAULT_CPUS_FOR_EACH_SYSCALL_BUFFER 2
+#define DEFAULT_DROP_FAILED_EXIT false
+
 falco_configuration::falco_configuration():
 	m_json_output(false),
 	m_json_include_output_property(true),
@@ -122,27 +126,11 @@ void falco_configuration::load_engine_config(const std::string& config_name, con
 		throw std::logic_error("Error reading config file (" + config_name + "): engine.kind '"+ driver_mode_str + "' is not a valid kind.");
 	}
 
-	// Catch deprecated values from the config, to use them with the command line if needed
-	m_syscall_buf_size_preset = config.get_scalar<int16_t>("syscall_buf_size_preset", DEFAULT_BUF_SIZE_PRESET);
-	m_cpus_for_each_syscall_buffer = config.get_scalar<uint16_t>("modern_bpf.cpus_for_each_syscall_buffer", DEFAULT_CPUS_FOR_EACH_SYSCALL_BUFFER);
-	m_syscall_drop_failed_exit = config.get_scalar<bool>("syscall_drop_failed_exit", DEFAULT_DROP_FAILED_EXIT);
-
 	switch (m_engine_mode)
 	{
 	case engine_kind_t::KMOD:
 		m_kmod.m_buf_size_preset = config.get_scalar<int16_t>("engine.kmod.buf_size_preset", DEFAULT_BUF_SIZE_PRESET);
 		m_kmod.m_drop_failed_exit = config.get_scalar<bool>("engine.kmod.drop_failed_exit", DEFAULT_DROP_FAILED_EXIT);
-
-		if(m_kmod.m_buf_size_preset == DEFAULT_BUF_SIZE_PRESET && m_kmod.m_drop_failed_exit==DEFAULT_DROP_FAILED_EXIT)
-		{
-			// This could happen in 2 cases:
-			// 1. The user doesn't use the new config (it could also have commented it)
-			// 2. The user uses the new config unchanged.
-			// In these 2 cases the users are allowed to use the command line arguments to open an engine
-			m_changes_in_engine_config = false;
-			return;
-		}
-
 		break;
 	case engine_kind_t::EBPF:
 		// TODO: default value for `probe` should be $HOME/FALCO_PROBE_BPF_FILEPATH,
@@ -176,11 +164,6 @@ void falco_configuration::load_engine_config(const std::string& config_name, con
 	default:
 		break;
 	}
-	
-	// If we arrive here it means we have at least one change in the `engine` config.
-	// Please note that `load_config` could be called more than one time during initialization
-	// so the last time wins, the load config phase should be idempotent
-	m_changes_in_engine_config = true;
 }
 
 void falco_configuration::load_yaml(const std::string& config_name, const yaml_helper& config)

@@ -37,11 +37,6 @@ limitations under the License.
 #include "event_drops.h"
 #include "falco_outputs.h"
 
-// todo!: remove them in Falco 0.38.0
-#define DEFAULT_BUF_SIZE_PRESET 4
-#define DEFAULT_CPUS_FOR_EACH_SYSCALL_BUFFER 2
-#define DEFAULT_DROP_FAILED_EXIT false
-
 enum class engine_kind_t : uint8_t
 {
 	KMOD,
@@ -163,15 +158,6 @@ public:
 	modern_ebpf_config m_modern_ebpf = {};
 	replay_config m_replay = {};
 	gvisor_config m_gvisor = {};
-
-	// todo!: to remove in Falco 0.38.0
-	// used to keep track if the `engine` config is used.
-	bool m_changes_in_engine_config = false;
-	// Index corresponding to the syscall buffer dimension.
-	uint16_t m_syscall_buf_size_preset = DEFAULT_BUF_SIZE_PRESET;
-	// Number of CPUs associated with a single ring buffer.
-	uint16_t m_cpus_for_each_syscall_buffer = DEFAULT_CPUS_FOR_EACH_SYSCALL_BUFFER;
-	bool m_syscall_drop_failed_exit = DEFAULT_DROP_FAILED_EXIT;
 
 private:
 	void load_yaml(const std::string& config_name, const yaml_helper& config);
