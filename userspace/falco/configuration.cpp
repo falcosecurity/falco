@@ -27,6 +27,9 @@ limitations under the License.
 #include <sys/stat.h>
 #ifndef _WIN32
 #include <unistd.h>
+#else
+// Used in the ebpf probe path.
+#define PATH_MAX 260
 #endif
 #include "falco_utils.h"
 
