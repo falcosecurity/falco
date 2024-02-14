@@ -76,14 +76,6 @@ public:
 	bool print_page_size;
 	bool dry_run;
 
-	// todo!: remove them in Falco 0.38.0 since they are deprecated
-	std::string capture_file = "";
-	std::string gvisor_config = "";
-	std::string gvisor_root = "";
-	bool modern_bpf = false;
-	bool nodriver = false;
-
-
 	bool parse(int argc, char **argv, std::string &errstr);
 
 	const std::string& usage();
