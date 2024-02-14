@@ -157,17 +157,17 @@ void falco_configuration::load_engine_config(const std::string& config_name, con
 		m_modern_ebpf.m_drop_failed_exit = config.get_scalar<bool>("engine.modern_ebpf.drop_failed_exit", DEFAULT_DROP_FAILED_EXIT);
 		if (config.is_defined("filters"))
 		{
-			std::list<falco_configuration::filter_config_pre> filters;
-			config.get_sequence<std::list<falco_configuration::filter_config_pre>>(filters, std::string("filters"));
+			std::list<falco_configuration::filter_config_entry> filters;
+			config.get_sequence<std::list<falco_configuration::filter_config_entry>>(filters, std::string("filters"));
 			int filter_index = 0;
-			for (std::list<falco_configuration::filter_config_pre>::iterator it = filters.begin(); it != filters.end(); ++it) 
+			for (std::list<falco_configuration::filter_config_entry>::iterator it = filters.begin(); it != filters.end(); ++it) 
 			{
-				m_modern_ebpf.m_filters[filter_index].m_syscall = it->m_syscall;
-				m_modern_ebpf.m_filters[filter_index].m_arg = it->m_arg;
-				m_modern_ebpf.m_filters[filter_index].m_num_prefixes = (uint16_t) it->m_prefixes.size();
+				m_modern_ebpf.m_filters[filter_index].syscall = it->m_syscall;
+				m_modern_ebpf.m_filters[filter_index].entry.arg_num = it->m_arg_num;
+				m_modern_ebpf.m_filters[filter_index].entry.num_prefixes = (uint16_t) it->m_prefixes.size();
 				int i = 0;
 				for (std::_List_iterator<std::string> prefix_it = it->m_prefixes.begin(); prefix_it!=it->m_prefixes.end(); ++prefix_it) {
-					memcpy(&m_modern_ebpf.m_filters[filter_index].m_prefixes[i][0], (*prefix_it).c_str(), (*prefix_it).length());
+					memcpy(&m_modern_ebpf.m_filters[filter_index].entry.prefixes[i][0], (*prefix_it).c_str(), (*prefix_it).length());
 					i++;
 				}
 				filter_index++;

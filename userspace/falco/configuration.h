@@ -73,9 +73,9 @@ public:
 		bool m_drop_failed_exit;
 	};
 
-	struct filter_config_pre {
+	struct filter_config_entry {
 		std::uint32_t m_syscall;
-		std::uint16_t m_arg;
+		std::uint16_t m_arg_num;
 		std::list<std::string> m_prefixes;
 	};
 
@@ -268,17 +268,17 @@ namespace YAML {
 
 namespace YAML {
 	template<>
-	struct convert<falco_configuration::filter_config_pre> {
+	struct convert<falco_configuration::filter_config_entry> {
 
-		static Node encode(const falco_configuration::filter_config_pre & rhs) {
+		static Node encode(const falco_configuration::filter_config_entry & rhs) {
 			Node node;
 			node["syscall"] = rhs.m_syscall;
-			node["arg"] = rhs.m_arg;
+			node["arg"] = rhs.m_arg_num;
 			node["prefixes"] = rhs.m_prefixes;
 			return node;
 		}
 
-		static bool decode(const Node& node, falco_configuration::filter_config_pre & rhs) {
+		static bool decode(const Node& node, falco_configuration::filter_config_entry & rhs) {
 			if(!node.IsMap())
 			{
 				return false;
@@ -294,7 +294,7 @@ namespace YAML {
 			{
 				return false;
 			}
-			rhs.m_arg = node["arg"].as<std::int16_t>();
+			rhs.m_arg_num = node["arg"].as<std::int16_t>();
 
 			if(!node["prefixes"])
 			{
