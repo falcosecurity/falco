@@ -55,10 +55,10 @@ public:
 	test_compiler() = default;
 	virtual ~test_compiler() = default;
 
-	virtual std::unique_ptr<rule_loader::compile_output> new_compile_output()
+	std::unique_ptr<rule_loader::compile_output> new_compile_output() override
 	{
-		return std::unique_ptr<rule_loader::compile_output>(new test_compile_output());
-	};
+		return std::make_unique<test_compile_output>();
+	}
 
 	void compile(
 		rule_loader::configuration& cfg,
