@@ -179,7 +179,6 @@ include(rules)
 include(static-analysis)
 
 # Shared build variables
-set(FALCO_SINSP_LIBRARY sinsp)
 set(FALCO_SHARE_DIR share/falco)
 set(FALCO_ABSOLUTE_SHARE_DIR "${CMAKE_INSTALL_PREFIX}/${FALCO_SHARE_DIR}")
 set(FALCO_BIN_DIR bin)

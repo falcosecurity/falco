@@ -37,14 +37,14 @@ add_dependencies(falco_engine yamlcpp njson)
 
 target_include_directories(falco_engine
 PUBLIC
-    ${LIBS_DIR}/userspace
-    ${PROJECT_BINARY_DIR}/userspace/engine
+    ${CMAKE_CURRENT_SOURCE_DIR}
     ${nlohmann_json_INCLUDE_DIRS}
     ${TBB_INCLUDE_DIR}
     ${YAMLCPP_INCLUDE_DIR}
 )
 
 target_link_libraries(falco_engine
-    ${FALCO_SINSP_LIBRARY}
+PUBLIC
+    sinsp
     ${YAMLCPP_LIB}
 )
