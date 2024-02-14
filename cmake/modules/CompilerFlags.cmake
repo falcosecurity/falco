@@ -42,7 +42,8 @@ endif()
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(FALCO_SECURITY_FLAGS "")
 if(LINUX)
-  set(FALCO_SECURITY_FLAGS "${FALCO_SECURITY_FLAGS} -Wl,-z,relro,-z,now -fstack-protector-strong")
+  set(FALCO_SECURITY_FLAGS "${FALCO_SECURITY_FLAGS} -fstack-protector-strong")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-z,relro,-z,now")
 endif()
 
 
@@ -58,11 +59,12 @@ if(NOT MSVC)
 		set(CMAKE_SUPPRESSED_WARNINGS
 			"-Wno-unused-parameter -Wno-unused-variable -Wno-unused-but-set-variable -Wno-missing-field-initializers -Wno-sign-compare -Wno-type-limits -Wno-implicit-fallthrough -Wno-format-truncation -Wno-stringop-truncation -Wno-stringop-overflow -Wno-restrict"
 		)
-		set(CMAKE_COMMON_FLAGS "${CMAKE_COMMON_FLAGS} -Wextra -Werror ${CMAKE_SUPPRESSED_WARNINGS}")
+		set(CMAKE_COMPILE_WARNING_AS_ERROR ON)
+		set(CMAKE_COMMON_FLAGS "${CMAKE_COMMON_FLAGS} -Wextra ${CMAKE_SUPPRESSED_WARNINGS}")
 	endif()
 
 	set(CMAKE_C_FLAGS "${CMAKE_COMMON_FLAGS}")
-	set(CMAKE_CXX_FLAGS "-std=c++17 ${CMAKE_COMMON_FLAGS} -Wno-class-memaccess")
+	set(CMAKE_CXX_FLAGS "-std=c++17 ${CMAKE_COMMON_FLAGS}")
 
 	set(CMAKE_C_FLAGS_DEBUG "${FALCO_EXTRA_DEBUG_FLAGS}")
 	set(CMAKE_CXX_FLAGS_DEBUG "${FALCO_EXTRA_DEBUG_FLAGS}")
@@ -82,7 +84,7 @@ else() # MSVC
 		_CRT_SECURE_NO_WARNINGS
 		WIN32
 		MINIMAL_BUILD
-		WIN32_LEAN_AND_MEAN 
+		WIN32_LEAN_AND_MEAN
 	)
 
 	set(FALCOSECURITY_LIBS_COMMON_FLAGS "/EHsc /W3 /Zi /std:c++17")
